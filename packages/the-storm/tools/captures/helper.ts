@@ -9,10 +9,7 @@ import { PlayerCheckpointSchema } from "@shepherdjerred/mc-harness/protocol/capt
 import { createLookAt } from "@shepherdjerred/mc-harness/capture/camera.ts";
 
 /** A second genuine session created for this disposable map, never a Citizens actor. */
-export async function localHelper(
-  context: CaptureContext,
-  name = "TsmcDemoHelper",
-) {
+export async function localHelper(context: CaptureContext, name = "MapleFox") {
   if (context.target === "live")
     throw new Error("Demo helper commands require an isolated map copy");
   const transport = new CaptureTransport(

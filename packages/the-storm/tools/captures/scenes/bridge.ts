@@ -19,7 +19,7 @@ export default defineCaptureScene({
   name: "moving-bridge",
   description: "Toggle a sign-controlled bridge over a small temporary trench",
   bounds: { min: [-1, -3, 0], max: [9, 3, 6] },
-  staging: [-3, 0, -3],
+  staging: [-2.5, -5, 8.5],
   inspectors: ["wilderness", "shops", "banks"],
   setup: async (context) => {
     await context.track("mechanic", 2);
@@ -32,7 +32,7 @@ export default defineCaptureScene({
     await context.set(
       context.at(-1, -1, 0),
       context.at(9, -1, 6),
-      "minecraft:stone_bricks",
+      "minecraft:grass_block",
     );
     await context.set(
       context.at(2, -3, 3),

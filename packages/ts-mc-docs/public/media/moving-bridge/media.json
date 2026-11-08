@@ -14,16 +14,16 @@
       "from": [0.15, 0.2],
       "to": [0.15, 0.2],
       "text": "Walkway extended",
-      "startMs": 267,
-      "endMs": 1767
+      "startMs": 200,
+      "endMs": 1700
     },
     {
       "kind": "label",
       "from": [0.15, 0.2],
       "to": [0.15, 0.2],
       "text": "Walkway retracted",
-      "startMs": 2167,
-      "endMs": 3667
+      "startMs": 2100,
+      "endMs": 3600
     }
   ]
 }

@@ -16,6 +16,11 @@ import {
 import type { SuiteScenario } from "./define.ts";
 import { worldFolder } from "./fixture.ts";
 
+/** Minecraft centres integer x/z command arguments on their block. */
+function coordinate(value: number): string {
+  return Number.isInteger(value) ? value.toFixed(1) : value.toString();
+}
+
 async function enterWorld(
   transport: CaptureTransport,
   command: string,
@@ -124,20 +129,44 @@ export async function localSession(input: {
     target: server.id,
     prepare: async (scenario: SuiteScenario) => {
       const [x, y, zz] = scenario.anchor;
-      if (scenario.siteMode !== "preserve") {
+      const [sx, sy, sz] = scenario.scene.staging;
+      if (scenario.siteMode === undefined) {
+        const minX = x + Math.floor(scenario.scene.bounds.min[0]);
+        const minZ = zz + Math.floor(scenario.scene.bounds.min[2]);
+        const maxX = x + Math.ceil(scenario.scene.bounds.max[0]);
+        const maxZ = zz + Math.ceil(scenario.scene.bounds.max[2]);
+        const staging = {
+          x: x + Math.floor(sx),
+          y: y + Math.floor(sy),
+          z: zz + Math.floor(sz),
+        };
         const result = await transport.world(WeRunResponseSchema, "we", {
           world: scenario.world,
           session: "suite-bench",
           ops: [
             {
               command: "//set minecraft:air",
-              pos1: { x: x - 5, y, z: zz - 12 },
-              pos2: { x: x + 20, y: y + 12, z: zz + 20 },
+              pos1: { x: minX, y, z: minZ },
+              pos2: {
+                x: maxX,
+                y: y + Math.max(3, scenario.scene.bounds.max[1]),
+                z: maxZ,
+              },
             },
             {
-              command: "//set minecraft:stone_bricks",
-              pos1: { x: x - 5, y: y - 1, z: zz - 12 },
-              pos2: { x: x + 20, y: y - 1, z: zz + 20 },
+              command: "//set minecraft:grass_block",
+              pos1: { x: minX, y: y - 1, z: minZ },
+              pos2: { x: maxX, y: y - 1, z: maxZ },
+            },
+            {
+              command: "//set minecraft:grass_block",
+              pos1: { ...staging, y: staging.y - 1 },
+              pos2: { ...staging, y: staging.y - 1 },
+            },
+            {
+              command: "//set minecraft:air",
+              pos1: staging,
+              pos2: { ...staging, y: staging.y + 1 },
             },
           ],
         });
@@ -149,7 +178,7 @@ export async function localSession(input: {
         await enterWorld(transport, scenario.arrivalCommand, world);
       }
       await consoleCommand(
-        `minecraft:execute in ${world} run minecraft:tp XiguaJerred ${(x - 2.5).toString()} ${y.toString()} ${(zz - 2.5).toString()}`,
+        `minecraft:execute in ${world} run minecraft:tp XiguaJerred ${coordinate(x + sx)} ${coordinate(y + sy)} ${coordinate(zz + sz)}`,
       );
       const deadline = performance.now() + 30_000;
       for (;;) {
@@ -162,14 +191,14 @@ export async function localSession(input: {
           state.connected &&
           state.world === world &&
           state["terrainReady"] === true &&
-          Math.abs(state.position[0] - (x - 2.5)) < 0.5 &&
-          Math.abs(state.position[1] - y) < 0.001 &&
-          Math.abs(state.position[2] - (zz - 2.5)) < 0.5
+          Math.abs(state.position[0] - (x + sx)) < 0.5 &&
+          Math.abs(state.position[1] - (y + sy)) < 0.001 &&
+          Math.abs(state.position[2] - (zz + sz)) < 0.5
         )
           break;
         if (performance.now() > deadline)
           throw new Error(
-            `Native camera did not acknowledge the demo arrival: ${JSON.stringify({ expected: { world, position: [x - 2.5, y, zz - 2.5] }, observed: state.connected ? { world: state.world, position: state.position, screen: state.screen, terrainReady: state["terrainReady"], clientLoaded: state["clientLoaded"] } : state })}`,
+            `Native camera did not acknowledge the demo arrival: ${JSON.stringify({ expected: { world, position: [x + sx, y + sy, zz + sz] }, observed: state.connected ? { world: state.world, position: state.position, screen: state.screen, terrainReady: state["terrainReady"], clientLoaded: state["clientLoaded"] } : state })}`,
           );
         await Bun.sleep(100);
       }

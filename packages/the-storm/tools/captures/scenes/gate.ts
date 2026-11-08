@@ -11,7 +11,7 @@ export default defineCaptureScene({
   name: "moving-gate",
   description: "Raise and lower a three-column oak fence gate",
   bounds: { min: [0, -1, 0], max: [8, 7, 7] },
-  staging: [-3, 0, -3],
+  staging: [-2.5, 0, -2.5],
   inspectors,
   setup: async (context) => {
     await context.track("mechanic", 2);

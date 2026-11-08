@@ -5,6 +5,16 @@ import { resolveProfile } from "#sandbox/profiles.ts";
 import { captureConfig } from "#sandbox/capture-config.ts";
 import { SandboxCreateRequestSchema } from "#protocol/ipc.ts";
 
+it("loads the production MOTD owner for branded multiplayer-list captures", () => {
+  expect(
+    captureModules(["server-list"], {
+      sha256: "a".repeat(64),
+      files: 1,
+      bytes: 1,
+    }),
+  ).toEqual(["messages"]);
+});
+
 it("limits the annual-event preset to Stormnight's calendar while retaining its real doors and rewards", () => {
   const source =
     "mainWorld: world\ntimeZone: America/Los_Angeles\nevents:\n  - {id: stormnight, firstDay: 10-28, lastDay: 10-31, title: Stormnight, doors: [authored-door], rewards: [authored-reward]}\n  - {id: winter_vigil, firstDay: 12-24, lastDay: 01-01}";

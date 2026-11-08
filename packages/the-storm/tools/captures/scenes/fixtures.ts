@@ -11,7 +11,7 @@ export const chatVenue: Pick<
   "bounds" | "staging" | "inspectors"
 > = {
   bounds: { min: [0, -1, 0], max: [12, 4, 12] },
-  staging: [-3, 0, -3],
+  staging: [20.5, 2, -29.5],
   inspectors,
 };
 
@@ -76,7 +76,7 @@ export async function pad(context: CaptureContext, size: Point): Promise<void> {
   await context.set(
     context.at(0, -1, 0),
     context.at(size[0], -1, size[2]),
-    "minecraft:stone_bricks",
+    "minecraft:grass_block",
   );
 }
 
@@ -110,6 +110,11 @@ export async function camera(
   await context.teleport(context.at(...position), 0, 0);
   await context.lookAt(context.at(...look));
   await context.action("clear-overlays");
+}
+
+/** The real riverside overlook faces spawn town instead of an empty staging pad. */
+export async function chatCamera(context: CaptureContext): Promise<void> {
+  await camera(context, [0.5, 0, 0.5], [-63, 6, -66]);
 }
 
 export async function waitBlock(

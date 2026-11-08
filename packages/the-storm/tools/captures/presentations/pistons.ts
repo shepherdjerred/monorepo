@@ -37,7 +37,7 @@ export default [
         to: [0.2, 0.29],
         text: "Moved load",
         startMs: 0,
-        endMs: 12000,
+        endMs: 12_000,
       },
       {
         kind: "label",
@@ -45,7 +45,7 @@ export default [
         to: [0.66, 0.27],
         text: "Piston head",
         startMs: 0,
-        endMs: 12000,
+        endMs: 12_000,
       },
     ],
   },

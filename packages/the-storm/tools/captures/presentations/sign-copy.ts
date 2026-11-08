@@ -14,7 +14,7 @@ export default [
         to: [0.24, 0.29],
         text: "Source",
         startMs: 0,
-        endMs: 12000,
+        endMs: 12_000,
       },
       {
         kind: "label",
@@ -22,7 +22,7 @@ export default [
         to: [0.58, 0.29],
         text: "Pasted text",
         startMs: 0,
-        endMs: 12000,
+        endMs: 12_000,
       },
     ],
   },

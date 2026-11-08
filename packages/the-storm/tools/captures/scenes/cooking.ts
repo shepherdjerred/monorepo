@@ -6,7 +6,7 @@ export default defineCaptureScene({
   description:
     "Build and use a cooking pot in wilderness, then restore the site",
   bounds: { min: [0, -1, 0], max: [6, 3, 6] },
-  staging: [-3, 0, -3],
+  staging: [-2.5, 0, -2.5],
   inspectors: ["wilderness", "shops", "banks"],
   setup: async (context) => {
     await context.track("mechanic", 1);

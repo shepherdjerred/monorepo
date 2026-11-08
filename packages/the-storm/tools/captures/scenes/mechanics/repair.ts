@@ -37,7 +37,7 @@ export default defineCaptureScene({
   description:
     "Repair a damaged pickaxe through the real iron-block interaction",
   bounds: { min: [0, -1, 0], max: [8, 4, 8] },
-  staging: [-3, 0, -3],
+  staging: [-2.5, 0, -2.5],
   inspectors,
   setup: async (context) => {
     await pad(context, [8, 4, 8]);

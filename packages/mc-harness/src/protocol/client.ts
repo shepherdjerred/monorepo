@@ -8,8 +8,11 @@ const uiLimits = z
   .strictObject({
     minimumGuiScale: z.number().int().positive(),
     maximumGuiScale: z.number().int().positive(),
+    minimumFrameCap: z.number().int().min(30).max(240),
+    maximumFrameCap: z.number().int().min(30).max(240),
   })
   .refine((v) => v.maximumGuiScale >= v.minimumGuiScale)
+  .refine((v) => v.maximumFrameCap >= v.minimumFrameCap)
   .parse(uiContract);
 
 /**
@@ -151,6 +154,7 @@ export const ClientActionSchema = z.enum([
   "advancements",
   "hover-slot",
   "gui-scale",
+  "frame-cap",
   "screen-type",
   "respawn",
   "server-list",
@@ -211,6 +215,13 @@ export const CLIENT_ACTION_REQUEST_SCHEMAS = {
       .int()
       .min(uiLimits.minimumGuiScale)
       .max(uiLimits.maximumGuiScale),
+  }),
+  "frame-cap": z.strictObject({
+    fps: z
+      .number()
+      .int()
+      .min(uiLimits.minimumFrameCap)
+      .max(uiLimits.maximumFrameCap),
   }),
   "screen-type": z.strictObject({
     revision: z.string().min(1).max(100),

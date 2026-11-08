@@ -2,9 +2,15 @@ package com.shepherdjerred.thestorm.client;
 
 import static java.util.Objects.requireNonNull;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
+import javax.imageio.ImageIO;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.chunk.CompiledSectionMesh;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -12,6 +18,7 @@ import net.minecraft.util.Util;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
+import org.jspecify.annotations.Nullable;
 
 final class ClientSnapshot {
   private ClientSnapshot() {}
@@ -87,10 +94,34 @@ final class ClientSnapshot {
                 "state",
                 server.state().name(),
                 "ping",
-                server.ping));
+                server.ping,
+                "motd",
+                server.motd == null ? "" : server.motd.getString(),
+                "iconPixelsSha256",
+                iconSha256(server.getIconBytes())));
       }
     }
     return result;
+  }
+
+  private static String iconSha256(byte @Nullable [] icon) {
+    if (icon == null) return "";
+    try {
+      var image = requireNonNull(ImageIO.read(new ByteArrayInputStream(icon)));
+      var digest = MessageDigest.getInstance("SHA-256");
+      for (var y = 0; y < image.getHeight(); y++) {
+        for (var x = 0; x < image.getWidth(); x++) {
+          var rgba = image.getRGB(x, y);
+          digest.update((byte) (rgba >> 16));
+          digest.update((byte) (rgba >> 8));
+          digest.update((byte) rgba);
+          digest.update((byte) (rgba >> 24));
+        }
+      }
+      return HexFormat.of().formatHex(digest.digest());
+    } catch (NoSuchAlgorithmException | IOException error) {
+      throw new IllegalStateException("Server icon could not be fingerprinted", error);
+    }
   }
 
   private static boolean terrainLoaded(Minecraft client) {

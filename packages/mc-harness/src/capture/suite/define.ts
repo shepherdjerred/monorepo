@@ -44,7 +44,7 @@ export type SuiteScenario = {
   clientUi?: "server-list" | undefined;
   interactionSites?: Box[] | undefined;
   isolation?: "fresh" | undefined;
-  siteMode?: "preserve" | undefined;
+  siteMode?: "natural" | "preserve" | undefined;
   features?: z.infer<typeof CaptureFeatureSchema>[] | undefined;
   scene: CaptureScene;
   anchor: [number, number, number];
@@ -110,7 +110,7 @@ export const SuiteSchema = z.strictObject({
         clientUi: z.literal("server-list").optional(),
         interactionSites: z.array(BoxSchema).min(1).max(8).optional(),
         isolation: z.literal("fresh").optional(),
-        siteMode: z.literal("preserve").optional(),
+        siteMode: z.enum(["natural", "preserve"]).optional(),
         features: z.array(CaptureFeatureSchema).optional(),
         scene: SceneSchema,
         anchor: z.tuple([z.number(), z.number(), z.number()]),
@@ -126,6 +126,17 @@ function validateSite(suite: CaptureSuite, scenario: SuiteScenario) {
   const { bounds, staging } = scenario.scene;
   if (bounds.min.some((value, i) => value > (bounds.max[i] ?? -Infinity)))
     throw new Error(`Inverted scene ${scenario.id}`);
+  if (
+    scenario.siteMode !== "preserve" &&
+    !staging.some(
+      (value, i) =>
+        value < (bounds.min[i] ?? Infinity) ||
+        value > (bounds.max[i] ?? -Infinity) + 1,
+    )
+  )
+    throw new Error(
+      `Scenario ${scenario.id} requires staging outside its fixture for restoration`,
+    );
   const points = [[0, 0, 0], bounds.min, bounds.max, staging];
   const covered = suite.patches.some(
     (p) =>

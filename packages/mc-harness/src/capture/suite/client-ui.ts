@@ -12,6 +12,8 @@ import { InfoResponseSchema, PlayersResponseSchema } from "#protocol/bridge.ts";
 import { SandboxListResponseSchema } from "#protocol/ipc.ts";
 import type { Presentation } from "#protocol/media.ts";
 import { isImportedWorld } from "#sandbox/map-provenance.ts";
+import { STORM_PATHS } from "#sandbox/storm.ts";
+import sharp from "sharp";
 
 type Transport = Pick<CaptureTransport, "request" | "world">;
 const Menu = z.object({
@@ -25,6 +27,8 @@ const Menu = z.object({
       address: z.string(),
       state: z.string(),
       ping: z.number(),
+      motd: z.string(),
+      iconPixelsSha256: z.string(),
     }),
   ),
 });
@@ -78,6 +82,19 @@ export async function captureServerList(
       .int()
       .nonnegative()
       .parse(before.state["renderedFrames"]);
+    const iconPixels = await sharp(
+      path.resolve(
+        import.meta.dirname,
+        "../../../../..",
+        STORM_PATHS.serverIcon,
+      ),
+    )
+      .ensureAlpha()
+      .raw()
+      .toBuffer();
+    const expectedIcon = new Bun.CryptoHasher("sha256")
+      .update(iconPixels)
+      .digest("hex");
     run.origin = {
       world: before.state.world,
       position: before.state.position,
@@ -94,6 +111,7 @@ export async function captureServerList(
     );
     const deadline = performance.now() + 30_000;
     let ready = false;
+    let brandedFrame: number | undefined;
     while (performance.now() < deadline) {
       const { state } = await transport.request(
         ClientStatusResponseSchema,
@@ -109,17 +127,25 @@ export async function captureServerList(
             s.name === "The Storm" &&
             s.address === before.client.server &&
             s.state === "SUCCESSFUL" &&
-            s.ping >= 0,
+            s.ping >= 0 &&
+            s.iconPixelsSha256 === expectedIcon &&
+            /^The Storm \/\/ Survival\n.+$/u.test(s.motd),
         )
       ) {
-        ready = true;
-        break;
-      }
+        // Ping data arrives before the menu uploads and draws its server icon.
+        // Observe frames after the branded response, not before disconnecting.
+        brandedFrame ??= menu.data.renderedFrames;
+        if (menu.data.renderedFrames >= brandedFrame + 3) {
+          run.inspection = { "server-list": JSON.stringify(menu.data) };
+          ready = true;
+          break;
+        }
+      } else brandedFrame = undefined;
       await Bun.sleep(100);
     }
     if (!ready)
       throw new Error(
-        "Multiplayer screen did not render a successful ping to its actual server",
+        "Multiplayer screen did not render a successful ping with The Storm's production icon and two-line MOTD",
       );
     const source = await transport.request(
       ClientCaptureResponseSchema,

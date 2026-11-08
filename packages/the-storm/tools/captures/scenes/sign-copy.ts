@@ -5,7 +5,7 @@ export default defineCaptureScene({
   name: "sign-copying",
   description: "Copy one sign's text onto another with the feather tool",
   bounds: { min: [0, -1, 0], max: [7, 3, 6] },
-  staging: [-3, 0, -3],
+  staging: [-2.5, 0, -2.5],
   inspectors,
   setup: async (context) => {
     await context.track("mechanic", 3);

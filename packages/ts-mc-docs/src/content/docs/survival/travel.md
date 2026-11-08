@@ -12,7 +12,7 @@ Use `/rtp` to find a random wilderness location in Frontier, or `/worlds` to cho
 
 At your shelter, use `/sethome` to save a home and `/home` to return. Right-clicking a bed saves a separate respawn home named `bed`; `/home` without a name goes there. Use `/home <name>` to visit a named home. Your latest bed replaces the previous bed home.
 
-<div><storm-media data-manifest="/media/saved-homes/media.json"><figure><img alt="The saved-home list contains docs-camp, saved at the player&apos;s real position." src="/media/saved-homes/original.webp" width="1280" height="720" loading="lazy" decoding="async"><figcaption>Use /sethome docs-camp to save a location and /homes to list saved names.</figcaption></figure></storm-media></div>
+<div><storm-media data-manifest="/media/saved-homes/media.json"><figure><img alt="The saved-home list contains riverside, saved at the player&apos;s real position." src="/media/saved-homes/original.webp" width="1280" height="720" loading="lazy" decoding="async"><figcaption>Use /sethome riverside to save a location and /homes to list saved names.</figcaption></figure></storm-media></div>
 <p><a href="/media/saved-homes/annotated.webp" download>Download annotated image</a></p>
 
 Use `/spawn` to return to the windmill, `/back` to return to your previous location, or `/tpa <player>` to ask to visit another player. `/tpahere <player>` asks them to come to you; the other player must accept.

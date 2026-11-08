@@ -21,7 +21,7 @@ export default [
         to: [0.49, 0.48],
         text: "2-wide opening",
         startMs: 0,
-        endMs: 12000,
+        endMs: 12_000,
       },
       {
         kind: "box",
@@ -29,7 +29,7 @@ export default [
         to: [0.39, 0.49],
         text: "Button",
         startMs: 0,
-        endMs: 12000,
+        endMs: 12_000,
       },
     ],
   },

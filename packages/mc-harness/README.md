@@ -279,6 +279,16 @@ toolkit mc capture suite replay <run-id>
 toolkit mc capture suite render <run-id> --shot cooking-pot
 ```
 
+Use `siteMode: "natural"` to snapshot the copied terrain before a scene prepares
+its own fixtures. Use fresh isolation when earlier fixtures would alter that
+baseline: buried grass, for example, can decay under a temporary floor.
+Command examples can leave the terrain intact. Mechanism fixtures use only
+their declared footprint and grass ground; choose a real, inspected venue with
+useful surroundings. `siteMode: "preserve"` retains the fresh-server mode for
+existing native venues. The multiplayer-list preset loads the production MOTD
+module and server icon, and refuses captures unless both are visible in the
+successful native ping response.
+
 `--scenario` also accepts comma-separated IDs, such as `cooking,sorting`.
 The selection retains authored order and refuses duplicate or unknown IDs.
 
@@ -381,6 +391,11 @@ displays. Scenes can set native `gui-scale` from 1 through 4 to keep longer
 dialogs readable; the neutral client UI contract validates the same bounds in
 the harness and native client. Imported world registration disables Multiverse
 spawn adjustment, preserving authored offsets such as seasonal reward doors.
+
+Local helper clients can set `frame-cap` from 30 through 120 FPS to reserve
+rendering capacity for a recording client. Recording brings its window forward
+and requires focus throughout capture; every video still passes the strict
+30 FPS frame check.
 
 `worktree` builds and retains the current server, bridge and client artifacts,
 Git revision, source patch, untracked source, and pinned Paper/plugin jars.

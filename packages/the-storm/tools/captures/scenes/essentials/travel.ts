@@ -1,6 +1,6 @@
 import { defineCaptureScene } from "@shepherdjerred/mc-harness/capture/define.ts";
 import { localHelper } from "#captures/helper.ts";
-import { camera, chatVenue } from "#captures/scenes/fixtures.ts";
+import { chatCamera, chatVenue } from "#captures/scenes/fixtures.ts";
 import shots from "#captures/presentations/essentials/travel.ts";
 import { presentation } from "#captures/presentations/lookup.ts";
 
@@ -9,19 +9,19 @@ export default defineCaptureScene({
   description: "Save a home and receive a request from a genuine second player",
   ...chatVenue,
   setup: async (context) => {
-    await camera(context, [2.5, 0, 2.5], [12, 1, 12]);
+    await chatCamera(context);
     await context.defer({
       kind: "player-command",
-      command: "delhome docs-camp",
-      expectedMessage: "Deleted home docs-camp.",
-      standing: context.at(2.5, 0, 2.5),
-      look: context.at(12, 1, 12),
+      command: "delhome riverside",
+      expectedMessage: "Deleted home riverside.",
+      standing: context.at(0.5, 0, 0.5),
+      look: context.at(-63, 6, -66),
     });
-    await context.playerCommand("sethome docs-camp", "Home docs-camp.");
+    await context.playerCommand("sethome riverside", "Home riverside.");
   },
   run: async (context) => {
     await context.action("clear-overlays");
-    await context.playerCommand("homes", "docs-camp");
+    await context.playerCommand("homes", "riverside");
     await context.action("chat-open");
     await context.capture(presentation(shots, "saved-homes"));
     await context.action("close");

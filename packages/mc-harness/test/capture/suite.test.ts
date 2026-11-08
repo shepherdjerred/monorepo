@@ -15,6 +15,7 @@ import {
   presentScene,
   selectScenarios,
   type SuiteScenario,
+  type CaptureSuite,
   type TerrainPatch,
 } from "#src/capture/suite/define.ts";
 import type { CaptureContext } from "#src/capture/define.ts";
@@ -195,7 +196,7 @@ const scenario: SuiteScenario = {
     description: "Cook",
     bounds: { min: [0, 0, 0], max: [1, 1, 1] },
     inspectors: [],
-    staging: [0, 0, 0],
+    staging: [-1, 0, -1],
     setup: () => Promise.resolve(),
     run: (c) =>
       c.capture({
@@ -227,6 +228,43 @@ it("selects a named batch in authored order and refuses partial, duplicate, or e
   ]);
   for (const value of ["cook,missing", "cook,cook", "cook,", ""])
     expect(() => selectScenarios(suite, { scenario: value })).toThrow();
+});
+it("rejects fixture staging before a run unless it is beyond the restoration volume", () => {
+  const suite: CaptureSuite = {
+    id: "staging",
+    bootstrap: [0, 64, 0],
+    patches: [
+      {
+        world: "world",
+        min: [-16, -16],
+        max: [16, 16],
+        paddingChunks: 2,
+      },
+    ],
+    scenarios: [scenario],
+  };
+  const invalid: SuiteScenario["scene"]["staging"][] = [
+    [0.5, 0, 0.5],
+    [2, 0, 2],
+  ];
+  for (const staging of invalid) {
+    expect(() =>
+      defineCaptureSuite({
+        ...suite,
+        scenarios: [
+          {
+            ...scenario,
+            siteMode: "natural",
+            scene: { ...scenario.scene, staging },
+          },
+        ],
+      }),
+    ).toThrow("requires staging outside its fixture");
+  }
+  defineCaptureSuite({
+    ...suite,
+    scenarios: [{ ...scenario, siteMode: "natural" }],
+  });
 });
 it("validates output identity and rejects empty selections", () => {
   const suite = defineCaptureSuite({

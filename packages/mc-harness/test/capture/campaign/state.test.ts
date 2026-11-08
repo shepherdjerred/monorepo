@@ -65,7 +65,7 @@ it("bounds shared checkpoint loss and keeps fresh venues separate without droppi
         name: `scene-${index.toString()}`,
         description: "Test",
         bounds: { min: [0, 0, 0], max: [1, 1, 1] },
-        staging: [0, 0, 0],
+        staging: [3, 0, 3],
         inspectors: [],
         setup: () => Promise.resolve(),
         run: () => Promise.resolve(),

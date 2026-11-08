@@ -15,7 +15,7 @@ The message identifies the container's owner and describes its access and option
 
 New locks block redstone on dispensers, droppers, and crafters. The owner can use `/lock redstone on` to allow it, or `/lock redstone off` to block it again. To permit item transfers, use `/lock hopper on` on each locked container involved. Use `/lock hopperin on` or `/lock hopperout on` to allow only transfers in or out, respectively.
 
-<div><storm-media data-manifest="/media/lock-trusted/media.json"><figure><img alt="Lock information lists TsmcDemoHelper with manage access" src="/media/lock-trusted/original.webp" width="1280" height="720" loading="lazy" decoding="async"><figcaption>Manage access lets a trusted player open and break the locked container.</figcaption></figure></storm-media></div>
+<div><storm-media data-manifest="/media/lock-trusted/media.json"><figure><img alt="Lock information lists MapleFox with manage access" src="/media/lock-trusted/original.webp" width="1280" height="720" loading="lazy" decoding="async"><figcaption>Manage access lets a trusted player open and break the locked container.</figcaption></figure></storm-media></div>
 <p><a href="/media/lock-trusted/annotated.webp" download>Download annotated image</a></p>
 
 ## Choose a lock type

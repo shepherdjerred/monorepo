@@ -49,10 +49,7 @@ export default defineCaptureScene({
     await context.playerCommand("creative claim", "You claimed 7;1.");
     await shot(context, "creative-plot-claim");
     await context.action("clear-overlays");
-    await context.playerCommand(
-      "creative trust TsmcDemoHelper",
-      "Trusted TsmcDemoHelper",
-    );
+    await context.playerCommand("creative trust MapleFox", "Trusted MapleFox");
     const helper = await localHelper(context);
     await helper.command("creative", "Creative");
     await context.playerCommand("creative info", "7;1 owner");
@@ -117,18 +114,18 @@ export default defineCaptureScene({
     await context.action("clear-overlays");
     await context.capture(presentation(shots, "creative-plot"));
     await context.playerCommand(
-      "creative save docs-pavilion",
-      "Saved docs-pavilion.",
+      "creative save garden-pavilion",
+      "Saved garden-pavilion.",
     );
     await context.action("clear-overlays");
-    await context.playerCommand("creative load", "docs-pavilion");
+    await context.playerCommand("creative load", "garden-pavilion");
     await shot(context, "creative-saved-library");
     await context.playerCommand("creative clear confirm", "Cleared 7;1.");
     if ((await fingerprint(context)) === before)
       throw new Error("Creative clear left the build in place");
     await context.playerCommand(
-      "creative paste docs-pavilion",
-      "Pasted docs-pavilion onto 7;1.",
+      "creative paste garden-pavilion",
+      "Pasted garden-pavilion onto 7;1.",
     );
     if ((await fingerprint(context)) !== before)
       throw new Error("Restored build differs from the saved blocks");

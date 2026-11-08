@@ -14,7 +14,7 @@ function scenario(id: string, isolation?: "fresh"): SuiteScenario {
       name: id,
       description: id,
       bounds: { min: [0, 0, 0], max: [0, 0, 0] },
-      staging: [0, 0, 0],
+      staging: [-1, 0, -1],
       inspectors: [],
       setup: () => Promise.resolve(),
       run: () => Promise.resolve(),

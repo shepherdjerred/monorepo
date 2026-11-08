@@ -22,6 +22,7 @@ export function importedNormalWorlds(
     .map((dimension) => dimension.slice("minecraft:".length));
 }
 const modules: Record<Feature, readonly string[]> = {
+  "server-list": ["messages"],
   stargates: ["creative", "stargates"],
   quests: ["mobs", "npcs", "quests"],
   shards: ["shards"],

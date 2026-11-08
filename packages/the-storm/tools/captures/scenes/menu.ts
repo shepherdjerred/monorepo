@@ -4,7 +4,7 @@ export default defineCaptureScene({
   name: "inventory-menu",
   description: "An ordinary inventory screen over a real wilderness background",
   bounds: { min: [0, -1, 0], max: [0, -1, 0] },
-  staging: [-3, 0, -3],
+  staging: [-2.5, 0, -2.5],
   inspectors: ["wilderness", "shops", "banks", "stargates"],
   setup: () => Promise.resolve(),
   run: async (context) => {

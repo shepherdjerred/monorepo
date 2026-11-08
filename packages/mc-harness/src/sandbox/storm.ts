@@ -11,6 +11,7 @@ export const STORM_BUILD_COMMAND =
   "bunx turbo run build --filter=@shepherdjerred/the-storm";
 
 export const STORM_PATHS = {
+  serverIcon: path.join(STORM, "server", "assets", "server-icon.png"),
   jar: path.join(STORM, "plugin", "dist", "build", "libs", "TheStorm.jar"),
   fixturesJar: path.join(
     STORM,

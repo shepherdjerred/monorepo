@@ -3,7 +3,7 @@ export default [
   {
     schema: 1,
     name: "bounce-before",
-    alt: "TsmcDemoHelper stands on an upward-facing piston with a genuine Bounce sign.",
+    alt: "MapleFox stands on an upward-facing piston with a genuine Bounce sign.",
     caption:
       "Place a Bounce sign beside the piston and stand in front of its head.",
     annotations: [],

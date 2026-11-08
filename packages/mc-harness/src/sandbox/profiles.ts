@@ -76,6 +76,8 @@ export type StagedEntry =
 
 export type ResolvedProfile = {
   image: string;
+  /** Repository-owned icon seeded into /data before Paper starts. */
+  serverIcon?: string;
   env: Record<string, string>;
   /** Pinned third-party jars staged into /plugins. */
   plugins: readonly PluginPin[];
@@ -186,6 +188,7 @@ function stormDevProfile(
 ): ResolvedProfile {
   return {
     image: serverImage,
+    serverIcon: STORM_PATHS.serverIcon,
     env: {
       ...serverEnv(world, secrets),
       // TheStorm requires bootstrap Flipt settings even when rollout checks

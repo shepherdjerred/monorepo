@@ -5,7 +5,7 @@ export default defineCaptureScene({
   description:
     "Stock a player shop and verify its supported owner-testing transaction",
   bounds: { min: [0, -1, 0], max: [6, 3, 6] },
-  staging: [-3, 0, -3],
+  staging: [-2.5, 0, -2.5],
   inspectors: ["wilderness", "shops", "banks", "stargates"],
   setup: async (context) => {
     await context.track("shopkeeper", 1);
@@ -13,7 +13,7 @@ export default defineCaptureScene({
     await context.set(
       context.at(0, -1, 0),
       context.at(6, -1, 6),
-      "minecraft:stone_bricks",
+      "minecraft:grass_block",
     );
     await context.set(
       context.at(3, 0, 3),

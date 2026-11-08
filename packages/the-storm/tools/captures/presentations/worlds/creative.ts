@@ -10,7 +10,7 @@ export default [
   {
     schema: 1,
     name: "creative-plot-access",
-    alt: "The plot owner trusts TsmcDemoHelper on the claimed Creative plot.",
+    alt: "The plot owner trusts MapleFox on the claimed Creative plot.",
     caption: "Use /creative trust to give a friend access to your plot.",
     annotations: [],
   },
@@ -24,7 +24,7 @@ export default [
   {
     schema: 1,
     name: "creative-saved-library",
-    alt: "The actual schematic library lists docs-pavilion after saving the plot.",
+    alt: "The actual schematic library lists garden-pavilion after saving the plot.",
     caption:
       "Save your plot with /creative save, then use /creative load to list saved names.",
     annotations: [],

@@ -39,7 +39,7 @@ export default [
   {
     schema: 1,
     name: "lock-trusted",
-    alt: "Lock information lists TsmcDemoHelper with manage access",
+    alt: "Lock information lists MapleFox with manage access",
     caption:
       "Manage access lets a trusted player open and break the locked container.",
     annotations: [],

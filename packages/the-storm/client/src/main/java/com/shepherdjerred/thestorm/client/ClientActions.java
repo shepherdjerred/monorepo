@@ -205,6 +205,11 @@ final class ClientActions {
       case "chat-open", "advancements" -> ClientScreens.open(client, request.action(), args);
       case "hover-slot" -> ClientScreens.hover(client, args);
       case "gui-scale" -> ClientScreens.scale(client, args);
+      case "frame-cap" -> {
+        if (docs.active())
+          throw new IllegalStateException("Cannot change frame cap during capture");
+        yield ClientScreens.frameCap(client, args);
+      }
       case "close" -> close(client, args);
       case "click" -> click(client, args);
       case "command" -> command(client, args);

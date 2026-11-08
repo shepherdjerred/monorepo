@@ -11,7 +11,7 @@ export default defineCaptureScene({
   name: "deposit-bank",
   description: "Move cobblestone from a bank into its linked shelf",
   bounds: { min: [0, -1, 0], max: [7, 3, 6] },
-  staging: [-3, 0, -3],
+  staging: [-2.5, 0, -2.5],
   inspectors: ["wilderness", "shops", "banks"],
   setup: async (context) => {
     await context.command(`minecraft:gamemode creative ${context.name}`);
@@ -23,7 +23,7 @@ export default defineCaptureScene({
     await context.set(
       context.at(0, -1, 0),
       context.at(7, -1, 6),
-      "minecraft:stone_bricks",
+      "minecraft:grass_block",
     );
     for (const x of [2, 5]) {
       await context.set(

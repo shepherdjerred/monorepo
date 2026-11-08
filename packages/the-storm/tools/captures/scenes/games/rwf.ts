@@ -9,7 +9,7 @@ import { hoverItem } from "#captures/inventory.ts";
 import shots from "#captures/presentations/games/rwf.ts";
 import { presentation } from "#captures/presentations/lookup.ts";
 
-const helpers = ["TsmcDemoHelper", "TsmcRedTwo", "TsmcBlueTwo"];
+const helpers = ["MapleFox", "RiverOtter", "BirchOwl"];
 async function bombBlock(context: CaptureContext) {
   const transport = new CaptureTransport(
     context.target,
@@ -88,8 +88,17 @@ export default defineCaptureScene({
   staging: [-2.5, 0, -2.5],
   inspectors: [],
   setup: async (context) => {
+    await context.defer({ kind: "command", command: "rwf admin forcestop" });
     for (const name of helpers) {
       const helper = await localHelper(context, name);
+      const cap = await helper.action("frame-cap", { fps: 30 });
+      if (
+        typeof cap !== "object" ||
+        cap === null ||
+        !("fpsCap" in cap) ||
+        cap.fpsCap !== 30
+      )
+        throw new Error("RWF helper did not apply its render budget");
       await helper.command("rwf join", `${name} joined the match.`);
       await helper.action("command", { text: "rwf kit trooper" });
     }
@@ -136,7 +145,7 @@ export default defineCaptureScene({
     if (!safeBomb.startsWith("minecraft:tnt"))
       throw new Error("Blue bomb is not initially safe");
     await context.capture(presentation(shots, "rwf-bomb-safe"));
-    const attacker = await localHelper(context, "TsmcDemoHelper");
+    const attacker = await localHelper(context, "MapleFox");
     await arrive(context, attacker.name, [4144.5, 40, 5285.5]);
     await attacker.action("hotbar", { slot: 0 });
     await attacker.lookAt([4146.5, 41.5, 5285.5]);
@@ -166,7 +175,7 @@ export default defineCaptureScene({
     await context.capture(presentation(shots, "rwf-bomb-defused"));
     await context.action("close");
     await context.action("clear-overlays");
-    for (const name of ["TsmcDemoHelper", "TsmcRedTwo"]) {
+    for (const name of ["MapleFox", "RiverOtter"]) {
       const helper = await localHelper(context, name);
       await helper.action("command", { text: "suicide" });
     }
@@ -188,6 +197,5 @@ export default defineCaptureScene({
     await context.action("clear-overlays");
     await context.capture(presentation(shots, "rwf-spectator-view"));
     await context.action("command", { text: "rwf leave" });
-    await context.command("rwf admin forcestop");
   },
 });

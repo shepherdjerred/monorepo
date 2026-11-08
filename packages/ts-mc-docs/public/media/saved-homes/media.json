@@ -6,7 +6,7 @@
   "height": 720,
   "src": "/media/saved-homes/original.webp",
   "poster": "/media/saved-homes/poster.webp",
-  "alt": "The saved-home list contains docs-camp, saved at the player's real position.",
-  "caption": "Use /sethome docs-camp to save a location and /homes to list saved names.",
+  "alt": "The saved-home list contains riverside, saved at the player's real position.",
+  "caption": "Use /sethome riverside to save a location and /homes to list saved names.",
   "annotations": []
 }

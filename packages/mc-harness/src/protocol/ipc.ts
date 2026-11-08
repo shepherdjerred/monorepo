@@ -60,6 +60,7 @@ export const MapSourceSchema = z.strictObject({
 export const ProviderKindSchema = z.enum(["docker", "kubernetes"]);
 export type ProviderKind = z.infer<typeof ProviderKindSchema>;
 export const CaptureFeatureSchema = z.enum([
+  "server-list",
   "stargates",
   "quests",
   "shards",

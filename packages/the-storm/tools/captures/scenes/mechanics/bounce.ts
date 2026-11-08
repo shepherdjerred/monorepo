@@ -13,8 +13,8 @@ export default defineCaptureScene({
   name: "bounce-launch",
   description:
     "A real redstone pulse launches a genuine second player from a Bounce piston",
-  bounds: { min: [0, -1, 0], max: [12, 26, 12] },
-  staging: [-3, 0, -3],
+  bounds: { min: [0, -1, -4], max: [18, 26, 12] },
+  staging: [-2.5, 0, -2.5],
   inspectors,
   setup: async (context) => {
     await context.track("mechanic", 4);

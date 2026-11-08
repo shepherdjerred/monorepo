@@ -9,7 +9,7 @@ export default defineCaptureScene({
   description:
     "A real lava death leaves a recoverable grave at the player's last safe position",
   bounds: { min: [0, -1, 0], max: [10, 5, 10] },
-  staging: [-3, 0, -3],
+  staging: [-2.5, 0, -2.5],
   inspectors,
   setup: async (context) => {
     await pad(context, [10, 5, 10]);

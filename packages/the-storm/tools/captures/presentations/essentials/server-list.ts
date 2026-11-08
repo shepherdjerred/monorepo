@@ -3,7 +3,7 @@ export default [
   {
     schema: 1,
     name: "java-multiplayer-list",
-    alt: "The Java multiplayer screen lists The Storm and shows a successful ping to the actual demo server.",
+    alt: "The Storm appears in Java's multiplayer list with its branded server icon and Survival MOTD.",
     caption:
       "Add The Storm in Java Edition's multiplayer screen, then select its entry to connect.",
     annotations: [],

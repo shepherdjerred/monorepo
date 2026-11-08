@@ -34,7 +34,7 @@ export default defineCaptureScene({
   description:
     "Bind real foci, pay Mark's reagents, and Recall to the observed position",
   bounds: { min: [0, -1, 0], max: [12, 4, 12] },
-  staging: [-3, 0, -3],
+  staging: [-2.5, 0, -2.5],
   inspectors,
   setup: async (context) => {
     await pad(context, [12, 4, 12]);

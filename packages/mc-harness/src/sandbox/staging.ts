@@ -31,6 +31,20 @@ export async function stageSandboxFiles(options: {
   profile: ResolvedProfile;
 }): Promise<{ pluginsDir: string | null; seedFiles: SeedFile[] }> {
   const { dir, cacheDir, repoRoot, profile } = options;
+  const seedFiles: SeedFile[] = [];
+  if (profile.serverIcon !== undefined) {
+    await requireStagedSources(repoRoot, [
+      {
+        kind: "repo-file",
+        source: profile.serverIcon,
+        target: "server-icon.png",
+      },
+    ]);
+    seedFiles.push({
+      source: path.join(repoRoot, profile.serverIcon),
+      target: "server-icon.png",
+    });
+  }
   let pluginsDir: string | null = null;
   if (stagesPlugins(profile)) {
     pluginsDir = path.join(dir, "plugins");
@@ -42,7 +56,7 @@ export async function stageSandboxFiles(options: {
     await stageEntries(pluginsDir, repoRoot, profile.staged);
   }
   if (!profile.seedData) {
-    return { pluginsDir, seedFiles: [] };
+    return { pluginsDir, seedFiles };
   }
   const paperJar = path.join(cacheDir, paperJarName);
   await ensureArtifact(paperJar, paper);
@@ -51,6 +65,7 @@ export async function stageSandboxFiles(options: {
   return {
     pluginsDir,
     seedFiles: [
+      ...seedFiles,
       { source: bukkitYml, target: "bukkit.yml" },
       { source: paperJar, target: paperJarName },
     ],

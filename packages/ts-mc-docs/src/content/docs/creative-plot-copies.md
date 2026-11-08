@@ -11,7 +11,7 @@ Make a copy of one creative plot to restore it later or fetch it outside the wor
 2. Use `/creative load` to list your saved names. Names can contain letters, numbers, `_`, or `-`, up to 32 characters.
 3. Stand on a plot you own that matches the generator, then use `/creative paste house` to restore the copy.
 
-<div><storm-media data-manifest="/media/creative-saved-library/media.json"><figure><img alt="The actual schematic library lists docs-pavilion after saving the plot." src="/media/creative-saved-library/original.webp" width="1280" height="720" loading="lazy" decoding="async"><figcaption>Save your plot with /creative save, then use /creative load to list saved names.</figcaption></figure></storm-media></div>
+<div><storm-media data-manifest="/media/creative-saved-library/media.json"><figure><img alt="The actual schematic library lists garden-pavilion after saving the plot." src="/media/creative-saved-library/original.webp" width="1280" height="720" loading="lazy" decoding="async"><figcaption>Save your plot with /creative save, then use /creative load to list saved names.</figcaption></figure></storm-media></div>
 <p><a href="/media/creative-saved-library/annotated.webp" download>Download annotated image</a></p>
 
 <div><storm-media data-manifest="/media/creative-restored-build/media.json"><figure><img alt="The saved pavilion is restored after clearing the plot, with its blocks verified against the saved build." src="/media/creative-restored-build/original.webp" width="1280" height="720" loading="lazy" decoding="async"><figcaption>Paste a saved schematic onto a plot that matches the template.</figcaption></figure></storm-media></div>

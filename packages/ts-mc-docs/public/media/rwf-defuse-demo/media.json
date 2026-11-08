@@ -22,8 +22,8 @@
       "from": [0.08, 0.22],
       "to": [0.08, 0.22],
       "text": "Defused: your bomb is safe",
-      "startMs": 9400,
-      "endMs": 11400
+      "startMs": 9300,
+      "endMs": 11300
     }
   ]
 }
