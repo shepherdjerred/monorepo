@@ -217,6 +217,7 @@ const discordBot = z.strictObject({
     .string()
     .regex(/^\d+$/u, "expected_application_id must be numeric"),
   vault_item_id: nonEmptyString,
+  vault_field: nonEmptyString.default("DISCORD_TOKEN"),
   description: z.string().optional(),
   custom_install_url: z.url().optional(),
   interactions_endpoint_url: z.url().optional(),

@@ -61,18 +61,6 @@ export function previewAdoption(items: readonly OpItem[]) {
         reasons.push(
           "targets contain different values; retain both and investigate identity",
         );
-      if (key === "chartmuseum") {
-        const server = targetValue(items, {
-          vault_item_id: "wwoism5fsvmbisv4ef47yxqy2i",
-          vault_field: "username",
-        });
-        const ci = targetValue(items, {
-          vault_item_id: "cnutkdwa7uka5hk3wx5gimyfom",
-          vault_field: "CHARTMUSEUM_USERNAME",
-        });
-        if (server === undefined || ci === undefined || server !== ci)
-          reasons.push("ChartMuseum account identity differs or is unresolved");
-      }
       // The import profile uses byte lengths. Its ASCII contract is exercised
       // with both short and >72-byte values against the pinned provider.
       if (
@@ -344,6 +332,7 @@ export async function assertCleanHandoffSource(
       "packages/homelab/src/cdk8s/package.json",
       "packages/homelab/src/cdk8s/tsconfig.json",
       "scripts/onepassword",
+      "packages/homelab/src/delivery-platform-grants.ts",
       "packages/homelab/src/tofu",
       "packages/homelab/scripts/tofu",
       "packages/homelab/scripts/platform-desired-state.ts",
@@ -356,6 +345,25 @@ export async function assertCleanHandoffSource(
     throw new Error(
       "Verify requires clean owning source; preview remains available.",
     );
+  const ignored = await read(
+    [
+      "git",
+      "ls-files",
+      "--others",
+      "--ignored",
+      "--exclude-standard",
+      "--",
+      ":(top,glob)packages/homelab/src/tofu/application-secrets/terraform.tfvars*",
+      ":(top,glob)packages/homelab/src/tofu/application-secrets/*.auto.tfvars*",
+      ":(top,glob)packages/homelab/src/tofu/application-secrets/*.tf",
+      ":(top,glob)packages/homelab/src/tofu/application-secrets/*.tf.json",
+      ":(top,glob)packages/homelab/src/tofu/application-secrets/*.tofu",
+      ":(top,glob)packages/homelab/src/tofu/application-secrets/*.tofu.json",
+    ],
+    "ignored adoption inputs",
+  );
+  if (ignored.trim() !== "")
+    throw new Error("Uncommitted autoloaded adoption inputs are not allowed.");
 }
 
 export async function main(args: string[]): Promise<void> {

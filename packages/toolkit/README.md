@@ -359,6 +359,7 @@ toolkit kube credential               # kubectl exec plugin (admin@torvalds)
 toolkit aws credential <PROFILE>      # AWS credential_process
 toolkit run --env NAME[,NAME] -- CMD  # one command with named credentials
 toolkit credentials flush [NAME...]   # drop cached 1Password reads
+toolkit credentials references --json # effective op:// locators; no secret reads
 ```
 
 - `kube credential` prints a `client.authentication.k8s.io/v1`
@@ -375,6 +376,9 @@ toolkit credentials flush [NAME...]   # drop cached 1Password reads
   service-account token. Signals are forwarded and the exit status mirrored.
 - `credentials flush` removes cached reads after a rotation. Without names it
   flushes every registered credential.
+- `credentials references --json` inventories effective 1Password locators from
+  the evaluated registry and local overrides without resolving their values.
+  Environment values and Keychain-backed credentials are excluded.
 
 ## Monorepo workflows
 

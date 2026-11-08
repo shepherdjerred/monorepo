@@ -4,6 +4,7 @@ import path from "node:path";
 import { expect, test } from "vitest";
 import { z } from "zod";
 import { capturedRead, parsePrivateJson } from "./secret-read.ts";
+import { assertAdoptionPlan } from "./adopt-application-secrets.ts";
 
 const stackDir = new URL("../../src/tofu/application-secrets/", import.meta.url)
   .pathname;
@@ -79,10 +80,12 @@ test("encrypted fixture adoption preserves values and only an explicit revision 
     ).text();
     expect(savedPlan).not.toContain(adopted.first);
     expect(savedPlan).toContain("encrypted_data");
-    const initial = parsePrivateJson(
+    const rawPlan = parsePrivateJson(
       await command(["show", "-json", "adoption.plan"]),
-      PlanSchema,
+      z.unknown(),
     );
+    assertAdoptionPlan(rawPlan, adopted);
+    const initial = PlanSchema.parse(rawPlan);
     expect(
       initial.resource_changes.every(
         (change) => change.change.actions.join(",") === "no-op",

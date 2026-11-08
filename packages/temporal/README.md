@@ -485,15 +485,17 @@ kubectl --context admin@torvalds -n velero get backups -o custom-columns='NAME:.
 
 For an intact catalog, the existing guarded infrastructure command can reconcile
 only its already selected source. Use the recorded operation request UUID when
-one exists. Broker only the registered root Argo credential through the existing
+one exists. Broker the registered workload Argo credential through the existing
 service-account wrapper, and strip vault access from the child:
 
 ```bash
-ARGOCD_TOKEN=op://v64ocnykdqju4ui6j6pua56xw4/ga3ma76q6vw2bxeyvkqj4xaucy/ARGOCD_TOKEN scripts/onepassword/with-service-account.sh op run -- env -u OP_SERVICE_ACCOUNT_TOKEN bun packages/homelab/scripts/argocd/argocd.ts sync-managed delivery --revision ALREADY_SELECTED_REVISION --request-id RECORDED_OR_NEW_REQUEST_UUID
+ARGOCD_TOKEN=op://v64ocnykdqju4ui6j6pua56xw4/w7rrmm6v2agx7jk4qjsaybxaau/ARGOCD_TOKEN scripts/onepassword/with-service-account.sh op run -- env -u OP_SERVICE_ACCOUNT_TOKEN bun packages/homelab/scripts/argocd/argocd.ts sync-managed delivery --revision ALREADY_SELECTED_REVISION --request-id RECORDED_OR_NEW_REQUEST_UUID
 ```
 
-Use the same command with `delivery-control-plane` only after catalog integrity
-is established. It restores the already selected native resources; it neither
+For `delivery-control-plane`, use the platform credential
+`op://v64ocnykdqju4ui6j6pua56xw4/orpriiyv36sxmybxe3fg4szdxq/ARGOCD_TOKEN`
+with the same guarded command only after catalog integrity is established.
+It restores the already selected native resources; it neither
 changes PostgreSQL selection nor releases a lock. The root release and guarded
 sync commands remain independent infrastructure recovery tools after CI stops
 deploying workloads.

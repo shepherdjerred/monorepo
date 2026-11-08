@@ -196,10 +196,10 @@ async function loadCredentialOverrides(
   let document: unknown;
   try {
     document = Bun.TOML.parse(await Bun.file(configPath).text());
-  } catch (error) {
-    throw new Error(`toolkit: failed to parse config file ${configPath}`, {
-      cause: error,
-    });
+  } catch {
+    throw new Error(
+      `toolkit: failed to parse config file ${configPath}; private diagnostics withheld`,
+    );
   }
   const table = CredentialOverridesFileSchema.parse(document).credentials ?? {};
   const overrides: Record<string, string> = {};
@@ -386,6 +386,34 @@ async function credentialRef(
   }
   const spec = CREDENTIAL_REGISTRY[name];
   return spec?.source.kind === "op" ? spec.source.ref : null;
+}
+
+/** Effective locators only; never reads credentials, caches, or ambient values. */
+export async function credentialReferences(
+  configPath = defaultToolkitConfigPath(),
+) {
+  const overrides = await loadCredentialOverrides(configPath);
+  const names = [
+    ...new Set([
+      ...Object.keys(CREDENTIAL_REGISTRY),
+      ...Object.keys(overrides),
+    ]),
+  ].toSorted();
+  return names.flatMap((name) => {
+    const override = overrides[name];
+    const spec = CREDENTIAL_REGISTRY[name];
+    const ref =
+      override ?? (spec?.source.kind === "op" ? spec.source.ref : null);
+    return ref?.startsWith("op://") === true
+      ? [
+          {
+            name,
+            ref,
+            source: override === undefined ? "registry" : "override",
+          },
+        ]
+      : [];
+  });
 }
 
 /**

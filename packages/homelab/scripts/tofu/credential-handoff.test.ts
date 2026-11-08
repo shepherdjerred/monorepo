@@ -268,13 +268,34 @@ describe("label-only platform handoffs", () => {
 
 describe("credential preparation", () => {
   test.each([
-    "packages/homelab/package.json",
-    "packages/homelab/src/cdk8s/package.json",
-    "packages/homelab/tsconfig.scripts.json",
-    "tsconfig.base.json",
-    "bunfig.toml",
-    "bun.lock",
-  ])("verify rejects a dirty module-resolution input: %s", async (file) => {
+    { file: "packages/homelab/src/delivery-platform-grants.ts" },
+    { file: "packages/homelab/package.json" },
+    { file: "packages/homelab/src/cdk8s/package.json" },
+    { file: "packages/homelab/tsconfig.scripts.json" },
+    { file: "tsconfig.base.json" },
+    { file: "bunfig.toml" },
+    { file: "bun.lock" },
+    {
+      file: "packages/homelab/src/tofu/application-secrets/terraform.tfvars",
+      ignored: true,
+    },
+    {
+      file: "packages/homelab/src/tofu/application-secrets/local.auto.tfvars.json",
+      ignored: true,
+    },
+    {
+      file: "packages/homelab/src/tofu/application-secrets/local_override.tf",
+      ignored: true,
+    },
+    {
+      file: "packages/homelab/src/tofu/application-secrets/local_override.tofu",
+      ignored: true,
+    },
+    {
+      file: "packages/homelab/src/tofu/application-secrets/credentials.tofu.json",
+      ignored: true,
+    },
+  ])("handoff rejects uncommitted input: $file", async ({ file, ignored }) => {
     const fixture = await mkdtemp(path.join(tmpdir(), "handoff-source-"));
     const read = async (command: string[]) => {
       const child = Bun.spawn(command, {
@@ -293,13 +314,17 @@ describe("credential preparation", () => {
     try {
       await read(["git", "init", "--quiet"]);
       await assertCleanHandoffSource(read);
+      if (ignored)
+        await writeFile(path.join(fixture, ".gitignore"), "*.tf*\n*.tofu*\n");
       const fixturePath = path.join(fixture, file);
       await mkdir(path.dirname(fixturePath), { recursive: true });
       await writeFile(fixturePath, "synthetic module-resolution input\n");
       await expect(assertCleanHandoffSource(read)).rejects.toThrow(
-        "Verify requires clean owning source",
+        ignored
+          ? "Uncommitted autoloaded"
+          : "Verify requires clean owning source",
       );
-      await read(["git", "add", "--", file]);
+      await read(["git", "add", "--force", "--", file]);
       await expect(assertCleanHandoffSource(read)).rejects.toThrow(
         "Verify requires clean owning source",
       );
@@ -337,7 +362,9 @@ describe("credential preparation", () => {
       child.exited,
     ]);
     expect(exitCode).not.toBe(0);
-    expect(stdout + stderr).toContain("only validate is enabled");
+    expect(stdout + stderr).toContain(
+      "general application-secret live actions are disabled",
+    );
     expect(stdout + stderr).not.toContain("Missing credential");
   });
   test("committed language-neutral schema matches the runtime validator", () => {
@@ -480,7 +507,7 @@ describe("physical selector adoption", () => {
     ).toThrow("details withheld");
   });
 
-  test("missing/ambiguous fields and unequal ChartMuseum values block adoption", () => {
+  test("ambiguous targets fail and retired ChartMuseum copies do not define ownership", () => {
     expect(
       targetValue(
         [{ ...items[0]!, fields: [...items[0]!.fields, ...items[0]!.fields] }],
@@ -510,10 +537,11 @@ describe("physical selector adoption", () => {
       },
     ]);
     const unit = preview.find((entry) => entry.key === "chartmuseum");
-    expect(unit?.status).toBe("blocked");
-    expect(unit?.reasons).toContain(
-      "targets contain different values; retain both and investigate identity",
-    );
+    expect(unit?.status).toBe("preserve-value-adoption-candidate");
+    expect(unit?.targets.map((entry) => entry.vault_item_id)).toEqual([
+      "wwoism5fsvmbisv4ef47yxqy2i",
+    ]);
+    expect(unit?.reasons).toEqual([]);
     expect(JSON.stringify(preview)).not.toContain("server-value");
   });
 });

@@ -42,6 +42,7 @@ export const STACK_MANIFEST: Readonly<Record<TofuStack, StackDefinition>> = {
   "application-secrets": {
     externalFiles: [],
     encrypted: true,
+    operatorOnly: true,
     credentials: [
       {
         source: "TOFU_STATE_ENCRYPTION_PASSPHRASE",

@@ -1,16 +1,20 @@
 #!/usr/bin/env bun
 import path from "node:path";
+import { createHash } from "node:crypto";
 import { z } from "zod";
 import {
   buildVaultAudit,
   manifestAuditReferences,
   sourceAuditReferences,
-  pipelineGrantManifest,
+  pipelineGrantManifests,
   type AuditReference,
   type AuditCoverage,
 } from "./audit-core.ts";
 import { resolveAuditItem } from "./field-map.ts";
-import type { OpItem } from "homelab/src/cdk8s/scripts/onepassword-lib.ts";
+import {
+  VAULT_ID,
+  type OpItem,
+} from "homelab/src/cdk8s/scripts/onepassword-lib.ts";
 import {
   synthManifests,
   collectDesiredStateTargets,
@@ -38,6 +42,14 @@ async function sourceIdentity() {
   return {
     head: head.trim(),
     status: status.trim().split("\n").filter(Boolean),
+    diff: createHash("sha256")
+      .update(
+        await capturedRead(
+          ["git", "diff", "--no-ext-diff", "--no-textconv", "--binary", "HEAD"],
+          "source content identity",
+        ),
+      )
+      .digest("hex"),
   };
 }
 
@@ -71,7 +83,6 @@ async function trackedReferences(coverage: AuditCoverage) {
     "tracked source inventory",
   );
   const references: AuditReference[] = [];
-  const pipeline: unknown[] = [];
   for (const file of fileOutput.split("\0").filter(Boolean)) {
     if (/\.(?:test|spec)\.[cm]?[jt]sx?$/u.test(file)) continue;
     if (
@@ -91,13 +102,71 @@ async function trackedReferences(coverage: AuditCoverage) {
       ...sourceAuditReferences(text, file),
       ...literalManagedReferences(text, file),
     );
-    if (
-      file.startsWith("packages/woodpecker-config-extension/src/pipeline/") &&
-      file.endsWith(".ts")
-    )
-      pipeline.push(pipelineGrantManifest(text, file));
   }
-  return { references, pipeline };
+  return references;
+}
+
+async function generatedPipelineManifests(): Promise<unknown[]> {
+  const manifests: unknown[] = [];
+  for (const graph of [[], ["--delivery-catalog-v2"]]) {
+    const raw = parsePrivateJson(
+      await capturedRead(
+        [
+          "bun",
+          "packages/woodpecker-config-extension/src/dump-steps.ts",
+          "--include-canaries",
+          ...graph,
+        ],
+        "evaluated CI grants",
+      ),
+      z.unknown(),
+    );
+    manifests.push(
+      ...pipelineGrantManifests(raw, graph.length === 0 ? "ci" : "ci-v2"),
+    );
+  }
+  return manifests;
+}
+
+async function brokerReferences(): Promise<AuditReference[]> {
+  const locators = parsePrivateJson(
+    await capturedRead(
+      [
+        "bun",
+        "packages/toolkit/src/index.ts",
+        "credentials",
+        "references",
+        "--json",
+      ],
+      "broker reference metadata",
+    ),
+    z.array(z.object({ name: z.string(), ref: z.string() })),
+  );
+  return locators.flatMap((entry) =>
+    sourceAuditReferences(JSON.stringify(entry.ref), "broker:" + entry.name),
+  );
+}
+
+export function auditArguments(args: readonly string[]) {
+  const vaults: string[] = [];
+  let live = false;
+  for (let index = 0; index < args.length; index++) {
+    const arg = args[index];
+    const next = args[index + 1];
+    if (arg === "--live") live = true;
+    else if (
+      arg === "--vault" &&
+      next !== undefined &&
+      /^[a-z0-9]{26}$/u.test(next)
+    ) {
+      vaults.push(next);
+      index++;
+    } else throw new Error("Usage: audit-vault.ts [--live] [--vault ID ...]");
+  }
+  return {
+    live,
+    vaults: [...new Set(vaults.length === 0 ? [VAULT_ID] : vaults)],
+  };
 }
 
 async function consumerBindingChecks(items: readonly OpItem[]) {
@@ -230,14 +299,10 @@ async function liveReferences(coverage: AuditCoverage) {
 }
 
 async function main(): Promise<void> {
-  const args = Bun.argv.slice(2);
-  if (args.some((arg) => arg !== "--live"))
-    throw new Error(
-      "Usage: audit-vault.ts [--live] (read-only JSON on stdout)",
-    );
+  const args = auditArguments(Bun.argv.slice(2));
   const coverage: AuditCoverage = {
     inspected: [
-      "active Homelab vault (archived items excluded)",
+      "explicitly selected active vaults (archived items excluded)",
       "in-memory CDK8s synthesis",
       "platform desired state",
       "tracked production source reference scan including CI and dotfiles (test fixtures excluded)",
@@ -247,25 +312,67 @@ async function main(): Promise<void> {
       "archived items and attachment contents",
       "provider identities, permissions, revocation and consumer probes",
       "OpenTofu live state ownership/revision",
-      "computed CI grant names beyond literal source references",
     ],
   };
   const identity = await sourceIdentity();
-  const tracked = await trackedReferences(coverage);
-  const references = [...tracked.references, ...(await desiredReferences())];
+  const references = [
+    ...(await trackedReferences(coverage)),
+    ...(await desiredReferences()),
+    ...(await brokerReferences()),
+  ];
   const rendered = manifestAuditReferences(
-    [...(await synthManifests()), ...tracked.pipeline],
+    [...(await synthManifests()), ...(await generatedPipelineManifests())],
     "rendered",
   );
   references.push(...rendered.references);
-  const live = args.includes("--live")
+  const live = args.live
     ? await liveReferences(coverage)
     : { references: [], unresolved: [] };
-  if (!args.includes("--live"))
+  if (!args.live)
     coverage.gaps.push("live Kubernetes consumers not inspected (use --live)");
   references.push(...live.references);
-  const items = await readVault();
-  const audit = buildVaultAudit(items, references, coverage);
+  const available = parsePrivateJson(
+    await capturedRead(
+      [
+        "scripts/onepassword/with-service-account.sh",
+        "op",
+        "vault",
+        "list",
+        "--format",
+        "json",
+      ],
+      "vault identity metadata",
+    ),
+    z.array(z.object({ id: z.string(), name: z.string() })),
+  );
+  const normalized = references.map((reference) => {
+    if (reference.vault === undefined) return reference;
+    const matches = available.filter(
+      (vault) =>
+        vault.id.toLowerCase() === reference.vault?.toLowerCase() ||
+        vault.name.toLowerCase() === reference.vault?.toLowerCase(),
+    );
+    const first = matches[0];
+    return first !== undefined && matches.length === 1
+      ? { ...reference, vault: first.id }
+      : reference;
+  });
+  const outside = normalized.filter(
+    (reference) => !args.vaults.includes(reference.vault ?? VAULT_ID),
+  );
+  if (outside.length > 0)
+    coverage.gaps.push(
+      "consumer references outside the selected or accessible vaults",
+    );
+  const items: OpItem[] = [];
+  for (const vault of args.vaults) items.push(...(await readVault(vault)));
+  const audit = buildVaultAudit(
+    items,
+    normalized.filter((reference) =>
+      args.vaults.includes(reference.vault ?? VAULT_ID),
+    ),
+    coverage,
+  );
   const finished = await sourceIdentity();
   if (JSON.stringify(identity) !== JSON.stringify(finished))
     throw new Error(
@@ -274,11 +381,13 @@ async function main(): Promise<void> {
   console.log(
     JSON.stringify(
       {
-        schema_version: 1,
+        schema_version: 2,
         generated_at: new Date().toISOString(),
         source_revision: identity.head,
         source_worktree_status: identity.status,
+        source_worktree_diff: identity.diff,
         ...audit,
+        outside_vault_references: outside,
         unresolved: [
           ...audit.unresolved,
           ...rendered.unresolved,

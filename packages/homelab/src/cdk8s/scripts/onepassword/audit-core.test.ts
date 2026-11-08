@@ -4,7 +4,7 @@ import {
   credentialLocations,
   manifestAuditReferences,
   sourceAuditReferences,
-  pipelineGrantManifest,
+  pipelineGrantManifests,
 } from "./audit-core.ts";
 import {
   VAULT_ID,
@@ -45,31 +45,41 @@ const binding = (namespace: string, item: string) => ({
 });
 
 describe("read-only vault audit", () => {
-  test("CI grants join to the CI namespace and computed field grants protect the whole item", () => {
-    const pipeline = pipelineGrantManifest(
-      'grant("auth", "API_KEY"); grant("auth", STATE_PASSPHRASE_KEY); const g = { secret: "auth", key: "credential", env: "ENV" };',
+  test("evaluated CI grants resolve exact fields without opaque source guesses", () => {
+    const pipeline = pipelineGrantManifests(
+      [
+        {
+          key: "build",
+          secrets: [
+            { secret: "auth", key: "API_KEY" },
+            { secret: "auth", key: "STATE_PASSPHRASE" },
+            { secret: "auth", key: "credential" },
+          ],
+        },
+      ],
       "pipeline",
     );
     const refs = manifestAuditReferences(
-      [binding("woodpecker-ci", "first"), pipeline],
+      [binding("woodpecker-ci", "first"), ...pipeline],
       "test",
     );
     expect(refs.references).toContainEqual({
       item: "first",
       field: "API_KEY",
       access: "operator",
-      source: "test:woodpecker-ci/Pod/pipeline",
+      source: "test:woodpecker-ci/Pod/pipeline/build",
     });
     expect(refs.references).toContainEqual({
       item: "first",
-      wholeItem: true,
-      source: "test:woodpecker-ci/Pod/pipeline",
+      field: "STATE_PASSPHRASE",
+      access: "operator",
+      source: "test:woodpecker-ci/Pod/pipeline/build",
     });
     expect(refs.references).toContainEqual({
       item: "first",
       field: "credential",
       access: "operator",
-      source: "test:woodpecker-ci/Pod/pipeline",
+      source: "test:woodpecker-ci/Pod/pipeline/build",
     });
   });
   test("compares credentials in memory without emitting values or fingerprints", () => {
@@ -200,6 +210,7 @@ describe("read-only vault audit", () => {
       source: "test:other/Pod/pod",
       field: "config",
       access: "operator",
+      optional: true,
     });
     expect(refs.unresolved).toHaveLength(1);
   });
@@ -218,8 +229,118 @@ describe("read-only vault audit", () => {
     ]);
     expect(audit.archive_ready).toEqual([]);
   });
+});
 
-  test("dotfile reference scan emits paths only and respects vault scope", () => {
+describe("source reference inventory", () => {
+  test("projected files do not imply a whole-item consumer", () => {
+    const refs = manifestAuditReferences(
+      [
+        binding("app", "first"),
+        {
+          kind: "Pod",
+          metadata: { namespace: "app", name: "projection" },
+          spec: {
+            volumes: [
+              {
+                secret: {
+                  secretName: "auth",
+                  items: [{ key: "API_KEY", path: "key" }],
+                },
+              },
+            ],
+          },
+        },
+      ],
+      "fixture",
+    );
+    expect(refs.references).toContainEqual({
+      item: "first",
+      field: "API_KEY",
+      source: "fixture:app/Pod/projection",
+      access: "operator",
+    });
+    expect(refs.references.some((ref) => ref.wholeItem === true)).toBe(false);
+  });
+  test("a required reference wins over an optional reference to the same field", () => {
+    const refs = manifestAuditReferences(
+      [
+        binding("app", "first"),
+        {
+          kind: "Pod",
+          metadata: { namespace: "app", name: "mixed" },
+          spec: {
+            env: [
+              {
+                valueFrom: {
+                  secretKeyRef: {
+                    name: "auth",
+                    key: "API_KEY",
+                    optional: true,
+                  },
+                },
+              },
+              { valueFrom: { secretKeyRef: { name: "auth", key: "API_KEY" } } },
+            ],
+          },
+        },
+      ],
+      "fixture",
+    );
+    expect(
+      refs.references.find((ref) => ref.field === "API_KEY")?.optional,
+    ).toBeUndefined();
+  });
+  test.each([false, true])(
+    "required volume keys override optional env uses regardless of traversal order (%s)",
+    (volumeFirst) => {
+      const env = [
+        {
+          valueFrom: {
+            secretKeyRef: {
+              name: "auth",
+              key: "MISSING",
+              optional: true,
+            },
+          },
+        },
+      ];
+      const volumes = [
+        {
+          projected: {
+            sources: [
+              {
+                secret: {
+                  name: "auth",
+                  items: [{ key: "MISSING", path: "key" }],
+                },
+              },
+            ],
+          },
+        },
+      ];
+      const refs = manifestAuditReferences(
+        [
+          binding("app", "first"),
+          {
+            kind: "Pod",
+            metadata: { namespace: "app", name: "mixed-volume" },
+            spec: volumeFirst ? { volumes, env } : { env, volumes },
+          },
+        ],
+        "fixture",
+      );
+      const audit = buildVaultAudit(items, refs.references, {
+        inspected: ["fixture"],
+        gaps: [],
+      });
+      expect(
+        refs.references.find((ref) => ref.field === "MISSING")?.optional,
+      ).toBeUndefined();
+      expect(audit.unresolved).toHaveLength(1);
+      expect(audit.unresolved[0]).toContain("MISSING");
+    },
+  );
+  test("dotfile reference scan preserves explicit vault scope without values", () => {
     const refs = sourceAuditReferences(
       `onepasswordRead "op://${VAULT_ID}/first/password"\nTOKEN=${privateValue}\nop://Other/item/password`,
       "dotfile",
@@ -231,12 +352,27 @@ describe("read-only vault audit", () => {
         source: "dotfile",
         access: "onepassword",
       },
+      {
+        vault: "Other",
+        item: "item",
+        field: "password",
+        source: "dotfile",
+        access: "onepassword",
+      },
     ]);
     expect(JSON.stringify(refs)).not.toContain(privateValue);
   });
 });
 
 describe("secret reference syntax", () => {
+  test("examples and interpolation cannot masquerade as actual consumers", () => {
+    expect(
+      sourceAuditReferences(
+        "op://<vault>/<item>/<field> op://{vault}/{item}/TOKEN",
+        "examples",
+      ),
+    ).toEqual([]);
+  });
   test("quoted section references preserve spaces and metadata query selectors", () => {
     expect(
       sourceAuditReferences(
@@ -246,6 +382,7 @@ describe("secret reference syntax", () => {
     ).toEqual([
       {
         item: "first",
+        vault: "Homelab",
         field: "add more/field",
         source: "fixture",
         access: "onepassword",

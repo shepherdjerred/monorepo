@@ -6,6 +6,7 @@ import { CACHE_SERVICE, createCredentialCache } from "#lib/credential-cache.ts";
 import type { SecretStore } from "#lib/credential-cache.ts";
 import {
   flushCredentialCache,
+  credentialReferences,
   resolveCredentialValues,
   withoutServiceAccountToken,
 } from "#lib/credentials.ts";
@@ -78,6 +79,31 @@ function storeKey(o: { service: string; name: string }): string {
 const refuseResolution: CredentialRun = () => {
   throw new Error("must not resolve credentials");
 };
+
+test("reference inventory evaluates registry and overrides without resolving values", async () => {
+  const file = await absentConfig();
+  await Bun.write(
+    file,
+    '[credentials]\nARGOCD_AUTH_TOKEN = "op://test-vault/test-item/TOKEN"\nCUSTOM = "op://other-vault/other-item/password"\nWOODPECKER_TOKEN = "keychain:test-only"\n',
+  );
+  const spawn = vi.spyOn(Bun, "spawn").mockImplementation(() => {
+    throw new Error("must not read a credential");
+  });
+  const refs = await credentialReferences(file);
+  expect(refs).toContainEqual({
+    name: "ARGOCD_AUTH_TOKEN",
+    ref: "op://test-vault/test-item/TOKEN",
+    source: "override",
+  });
+  expect(refs).toContainEqual({
+    name: "CUSTOM",
+    ref: "op://other-vault/other-item/password",
+    source: "override",
+  });
+  expect(refs.some((ref) => ref.source === "registry")).toBe(true);
+  expect(refs.some((ref) => ref.name === "WOODPECKER_TOKEN")).toBe(false);
+  expect(spawn).not.toHaveBeenCalled();
+});
 
 function findKinds(text: string): string[] {
   return findSecrets(new TextEncoder().encode(text)).map((match) => match.kind);

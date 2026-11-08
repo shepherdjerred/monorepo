@@ -32,19 +32,23 @@ export function resolveAuditItem(
   items: readonly OpItem[],
   ref: string,
   caseInsensitive = false,
+  vaultId = VAULT_ID,
 ): OpItem | undefined {
   const matches = (value: string) =>
     caseInsensitive ? value.toLowerCase() === ref.toLowerCase() : value === ref;
-  const byId = items.filter((item) => matches(item.id));
+  const scoped = items.filter(
+    (item) => (item.vault?.id ?? VAULT_ID) === vaultId,
+  );
+  const byId = scoped.filter((item) => matches(item.id));
   if (byId.length > 0) return byId.length === 1 ? byId[0] : undefined;
-  const byTitle = items.filter((item) => matches(item.title));
+  const byTitle = scoped.filter((item) => matches(item.title));
   return byTitle.length === 1 ? byTitle[0] : undefined;
 }
 
 /** IDs are literal CLI components; spaces are supported, percent escaping is not. */
 function fieldReference(item: OpItem, field: Field): string | null {
   const components = [
-    VAULT_ID,
+    item.vault?.id ?? VAULT_ID,
     item.id,
     ...(field.section === undefined ? [] : [field.section.id]),
     field.id,
@@ -55,7 +59,7 @@ function fieldReference(item: OpItem, field: Field): string | null {
 }
 
 function itemEntries(item: OpItem): Entry[] {
-  const base = { vault_id: VAULT_ID, item_id: item.id };
+  const base = { vault_id: item.vault?.id ?? VAULT_ID, item_id: item.id };
   const fields: Entry[] = (item.fields ?? []).map((field, index) => ({
     locator: {
       ...base,
@@ -175,7 +179,7 @@ function collisions(
     const key =
       selector === "candidate_reference"
         ? value.toLowerCase()
-        : `${entry.locator.item_id}/${value}`;
+        : `${entry.locator.vault_id}/${entry.locator.item_id}/${value}`;
     groups.set(key, [...(groups.get(key) ?? []), entry]);
   }
   return [...groups.values()]
@@ -199,7 +203,12 @@ function selectorAliases(items: readonly OpItem[], entries: Entry[]) {
   for (const entry of entries) {
     if (entry.status !== "unique" || entry.candidate_reference === null)
       continue;
-    const item = resolveAuditItem(items, entry.locator.item_id, true);
+    const item = resolveAuditItem(
+      items,
+      entry.locator.item_id,
+      true,
+      entry.locator.vault_id,
+    );
     const selector = [entry.locator.section_id, entry.locator.field_id]
       .filter((part) => part !== null)
       .join("/");
@@ -209,7 +218,9 @@ function selectorAliases(items: readonly OpItem[], entries: Entry[]) {
         : matchingEntries(
             item,
             entries.filter(
-              (candidate) => candidate.locator.item_id === item.id,
+              (candidate) =>
+                candidate.locator.item_id === item.id &&
+                candidate.locator.vault_id === entry.locator.vault_id,
             ),
             {
               item: item.id,
@@ -263,11 +274,14 @@ function mapReference(
     items,
     reference.item,
     reference.access === "onepassword",
+    reference.vault,
   );
   if (item === undefined)
     return { reference, status: "missing-or-ambiguous-item", candidates: [] };
   const itemFields = entries.filter(
-    (entry) => entry.locator.item_id === item.id,
+    (entry) =>
+      entry.locator.item_id === item.id &&
+      entry.locator.vault_id === (item.vault?.id ?? VAULT_ID),
   );
   if (reference.field === undefined) {
     if (reference.wholeItem === true)
@@ -285,7 +299,10 @@ function mapReference(
   if (field === undefined)
     return {
       reference,
-      status: "missing-or-ambiguous-field",
+      status:
+        reference.optional === true && matches.length === 0
+          ? "optional-field-absent"
+          : "missing-or-ambiguous-field",
       candidates: matches.map((entry) => entry.locator),
     };
   field.consumers.push(reference);
@@ -339,7 +356,12 @@ export function buildFieldMapping(
       collisions: conflicts.length,
       unresolved_references: referenceMappings.filter(
         (mapping) =>
-          !["resolved", "whole-item", "item-binding"].includes(mapping.status),
+          ![
+            "resolved",
+            "whole-item",
+            "item-binding",
+            "optional-field-absent",
+          ].includes(mapping.status),
       ).length,
     },
     fields,

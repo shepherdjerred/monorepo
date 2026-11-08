@@ -92,8 +92,8 @@ export function artifactPublicationSteps(
       secrets: [
         GITHUB_DOWNLOAD,
         ...HANDOFF_KEYS,
-        grant("ci-chartmuseum-credentials", "CHARTMUSEUM_USERNAME"),
-        grant("ci-chartmuseum-credentials", "CHARTMUSEUM_PASSWORD"),
+        grant("ci-chartmuseum-basic-auth", "username", "CHARTMUSEUM_USERNAME"),
+        grant("ci-chartmuseum-basic-auth", "password", "CHARTMUSEUM_PASSWORD"),
         grant(
           "ci-delivery-credentials",
           "DELIVERY_PUBLISHER_TOKEN",

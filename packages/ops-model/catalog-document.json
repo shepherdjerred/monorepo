@@ -3247,7 +3247,7 @@
       "approvalPolicy": "none",
       "automatic": true,
       "recipeRevisionId": "tofu-discord/prod/1",
-      "configurationRevisionId": "tofu-discord/prod/1"
+      "configurationRevisionId": "tofu-discord/prod/2"
     },
     {
       "id": "tofu-dockerhub/prod",

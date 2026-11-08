@@ -52,8 +52,11 @@ export function parsePrivateJson<Schema extends z.ZodType>(
   }
 }
 
-export async function readVaultItem(id: string): Promise<OpItem> {
-  return parsePrivateJson(
+export async function readVaultItem(
+  id: string,
+  vaultId = VAULT_ID,
+): Promise<OpItem> {
+  const item = parsePrivateJson(
     await capturedRead(
       [
         `${repositoryRoot}/scripts/onepassword/with-service-account.sh`,
@@ -62,7 +65,7 @@ export async function readVaultItem(id: string): Promise<OpItem> {
         "get",
         id,
         "--vault",
-        VAULT_ID,
+        vaultId,
         "--format",
         "json",
       ],
@@ -70,9 +73,12 @@ export async function readVaultItem(id: string): Promise<OpItem> {
     ),
     OpItemSchema,
   );
+  if (item.vault !== undefined && item.vault.id !== vaultId)
+    throw new Error("1Password returned an item from a different vault.");
+  return { ...item, vault: { ...item.vault, id: vaultId } };
 }
 
-export async function readVault(): Promise<OpItem[]> {
+export async function readVault(vaultId = VAULT_ID): Promise<OpItem[]> {
   const items = parsePrivateJson(
     await capturedRead(
       [
@@ -81,7 +87,7 @@ export async function readVault(): Promise<OpItem[]> {
         "item",
         "list",
         "--vault",
-        VAULT_ID,
+        vaultId,
         "--format",
         "json",
       ],
@@ -97,7 +103,7 @@ export async function readVault(): Promise<OpItem[]> {
   for (let index = 0; index < items.length; index += 4) {
     const batch = items.slice(index, index + 4);
     result.push(
-      ...(await Promise.all(batch.map(({ id }) => readVaultItem(id)))),
+      ...(await Promise.all(batch.map(({ id }) => readVaultItem(id, vaultId)))),
     );
   }
   return result;

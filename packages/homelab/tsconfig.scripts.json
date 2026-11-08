@@ -68,6 +68,8 @@
     "scripts/tofu/tofu-stack.ts",
     "scripts/tofu/tofu-stack.test.ts",
     "scripts/tofu/application-secrets.ts",
+    "scripts/tofu/adopt-application-secrets.ts",
+    "scripts/tofu/adopt-application-secrets.test.ts",
     "scripts/tofu/secret-read.ts",
     "scripts/tofu/credential-handoff.ts",
     "scripts/tofu/credential-handoff.test.ts",

@@ -28,9 +28,9 @@ resource "random_password" "credentials" {
 import {
   for_each = var.adoption_keys
   to       = random_password.credentials[each.key]
-  # OpenTofu rejects sensitive import IDs. The future operator path must
-  # capture all diagnostics and use encrypted plans; the live wrapper is
-  # deliberately disabled. Never run this import with inherited stdout.
+  # OpenTofu rejects sensitive import IDs. The operator adoption path captures
+  # all diagnostics and uses encrypted plans. Never run this import with
+  # inherited stdout.
   id = nonsensitive(var.adoption_values[each.key])
 }
 

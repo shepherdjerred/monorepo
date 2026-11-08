@@ -1,6 +1,9 @@
 import { liveCredentialCache } from "#lib/credential-cache.ts";
 import type { CredentialCache } from "#lib/credential-cache.ts";
-import { flushCredentialCache } from "#lib/credentials.ts";
+import {
+  credentialReferences,
+  flushCredentialCache,
+} from "#lib/credentials.ts";
 import { loadToolkitConfig } from "#lib/toolkit-config.ts";
 
 /**
@@ -8,7 +11,7 @@ import { loadToolkitConfig } from "#lib/toolkit-config.ts";
  * rotation so the next use fetches the new value.
  */
 
-const USAGE = "Usage: toolkit credentials flush [NAME...]";
+const USAGE = "Usage: toolkit credentials flush [NAME...] | references --json";
 
 async function activeCache(): Promise<CredentialCache | null> {
   const config = await loadToolkitConfig();
@@ -21,6 +24,10 @@ export async function runCredentialsCommand(
   cache?: CredentialCache | null,
 ): Promise<number> {
   const [action, ...names] = args;
+  if (action === "references" && names.length === 1 && names[0] === "--json") {
+    console.log(JSON.stringify(await credentialReferences()));
+    return 0;
+  }
   if (action !== "flush") {
     console.error(USAGE);
     return 2;

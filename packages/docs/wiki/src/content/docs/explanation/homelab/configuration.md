@@ -55,10 +55,12 @@ several namespaces without maintaining several editable copies of its value.
 The [vault binding helper](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/misc/onepassword-vault.ts)
 supports stable item IDs so title changes do not change consumer identity.
 
-Retired items stay recoverable in the archive. Before removing fields from an
-active item, retain a complete archived copy, including attachments and passkeys.
-JSON templates cannot preserve passkeys, so field-only CLI copies are insufficient
-for those items. [1Password documents that limitation](https://www.1password.dev/cli/item-edit/)
+Retired items stay recoverable in the archive. Ordinary field edits use
+[1Password item history](https://support.1password.com/item-history/) for recovery;
+they do not require another editable copy of every credential.
+Targeted edits preserve unrelated fields, attachments, and passkeys.
+JSON templates overwrite passkeys, so those items require targeted field edits
+or the 1Password UI. [1Password documents that limitation](https://www.1password.dev/cli/item-edit/)
 and the [archive recovery behavior](https://support.1password.com/archive-delete-items/).
 
 ## Which layer?

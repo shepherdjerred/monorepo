@@ -1,8 +1,9 @@
-# Application credential preparation
+# Application credential adoption
 
 This stack declares local application credentials in `desired-state.json`.
-It has no 1Password provider, no CI credential grant, and no enabled live
-apply path. The stack wrapper currently accepts `validate` only.
+It has no 1Password provider or CI credential grant. The stack wrapper accepts
+`validate` and an operator-only `adopt EXPECTED_HEAD` command; general plan,
+apply and rotation remain disabled.
 
 The catalog has one rotation unit per credential and environment. A unit may
 have multiple fields only when they represent the same account, permission
@@ -18,9 +19,12 @@ adoption inputs must remain in memory. State and saved plans enforce AES-GCM
 encryption from their first write, with a unique stack passphrase.
 
 OpenTofu rejects sensitive import IDs. The import expression must therefore
-remove that marker for the provider's password-as-ID interface. A future
-operator runner must capture both output streams and suppress diagnostics;
-never run adoption with inherited stdout. This live path remains disabled.
+remove that marker for the provider's password-as-ID interface. The operator
+runner captures both output streams and suppresses private diagnostics. It
+requires clean owning source at the exact supplied revision, verifies every
+planned result against the existing value, and refuses creation, replacement
+or destruction. It rechecks item versions before applying the encrypted saved
+plan, then requires an unchanged second plan and matching vault values.
 
 After adoption, a separately reviewed revision increment replaces that unit
 with 64 lowercase alphanumeric characters, including a letter and a digit.
@@ -32,6 +36,7 @@ Contributor commands from the repository root:
 
 ```sh
 bun packages/homelab/scripts/tofu/tofu-stack.ts application-secrets validate
+bun packages/homelab/scripts/tofu/tofu-stack.ts application-secrets adopt EXPECTED_HEAD
 bun run --cwd packages/homelab test:secrets:tofu
 bun packages/homelab/scripts/tofu/credential-handoff.ts application-secrets preview
 bun run --cwd packages/homelab/src/cdk8s audit:1password --live
@@ -46,6 +51,12 @@ establish the source revision of live state. It
 reports that gap and still requires consumer probes before revocation.
 Neither command writes, imports, applies, archives or deletes anything.
 
+Adoption reads the unique `TOFU_STATE_ENCRYPTION_PASSPHRASE` field in
+`application-secrets-tofu-credentials` and the existing provider state
+credentials through the service-account wrapper. Preserve that passphrase in
+1Password for recovery. Importing establishes OpenTofu ownership while keeping
+the current value and its original provenance.
+
 Platform handoffs from OpenAI and Cloudflare can declare only a field label.
 The verifier accepts a sectioned field only when that label identifies exactly
 one physical field in the item. Duplicate labels remain unresolved even when
@@ -59,8 +70,12 @@ Refresh the snapshot after changing those selectors. The snapshot stores only
 hashed metadata and field emptiness, never credential values or fingerprints.
 
 The vault audit shares synthesis and field transforms with the structural
-checker, scans tracked references including CI and dotfiles, and optionally
-inspects live workload bindings. It excludes empty values and identifiers
+checker, evaluates CI grants and toolkit credential locators, scans tracked
+references including dotfiles, and optionally inspects live workload bindings.
+With no `--vault`, the audit selects the Kubernetes vault. Explicit flags replace
+that default: repeat `--vault ID` for every vault to inspect, including Kubernetes
+when required. References outside that selection remain coverage gaps.
+The audit excludes empty values and identifiers
 from exact credential comparison, including credential-shaped JSON leaves.
 Whole-secret consumers, ambiguous references, provider-owned items,
 attachments, recovery material and consumer coverage gaps prevent automatic

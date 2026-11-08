@@ -1082,6 +1082,11 @@
           "type": "string",
           "minLength": 1
         },
+        "vault_field": {
+          "type": "string",
+          "minLength": 1,
+          "default": "DISCORD_TOKEN"
+        },
         "description": {
           "type": "string"
         },

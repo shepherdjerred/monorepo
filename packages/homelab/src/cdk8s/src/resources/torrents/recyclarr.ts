@@ -19,10 +19,8 @@ import path from "node:path";
 const CURRENT_DIRNAME = import.meta.dir;
 
 /**
- * Recyclarr config is git-owned (ConfigMap). API keys still live in the
- * 1Password "Recyclarr" item as an embedded recyclarr.yaml (legacy). An init
- * container extracts radarr/sonarr api_key values into secrets.yml so the git
- * config can reference them via !secret without putting keys in git.
+ * Recyclarr config is git-owned. Its API keys share the canonical Radarr and
+ * Sonarr items used by OpenTofu; the init container renders only secrets.yml.
  */
 export async function createRecyclarrDeployment(chart: Chart) {
   const deployment = new Deployment(chart, "recyclarr", {
@@ -57,26 +55,43 @@ export async function createRecyclarrDeployment(chart: Chart) {
     },
   });
 
-  // Legacy 1Password item: full recyclarr.yaml with embedded API keys.
-  // Only the api_key lines are consumed (see init container).
-  const configItem = new OnePasswordItem(
-    chart,
-    "recyclarr-config-onepassword-homelab",
+  const credentialVolumes = [
     {
-      spec: {
-        itemPath: vaultItemPath("fu5ufvg6bx3kkcp7lqi5pmwj2a"),
-      },
-      metadata: {
-        name: "recyclarr-config-homelab",
-      },
+      name: "radarr",
+      itemId: "tvy75zdvgyajf57rvzywc7nqbu",
+      field: "RADARR_API_KEY",
     },
-  );
-
-  const secret = Secret.fromSecretName(
-    chart,
-    "recyclarr-config-secret",
-    configItem.name,
-  );
+    {
+      name: "sonarr",
+      itemId: "ou5byilomqmlx7askklqonyxfi",
+      field: "SONARR_API_KEY",
+    },
+  ].map(({ name, itemId, field }) => {
+    const item = new OnePasswordItem(
+      chart,
+      "recyclarr-" + name + "-credential",
+      {
+        spec: { itemPath: vaultItemPath(itemId) },
+        metadata: { name: "recyclarr-" + name + "-credential" },
+      },
+    );
+    const secret = Secret.fromSecretName(
+      chart,
+      "recyclarr-" + name + "-secret",
+      item.name,
+    );
+    return {
+      name,
+      volume: Volume.fromSecret(
+        chart,
+        "recyclarr-" + name + "-volume",
+        secret,
+        {
+          items: { [field]: { path: "api-key" } },
+        },
+      ),
+    };
+  });
 
   const configVolume = Volume.fromPersistentVolumeClaim(
     chart,
@@ -90,43 +105,14 @@ export async function createRecyclarrDeployment(chart: Chart) {
     configMap,
   );
 
-  const legacySecretVolume = Volume.fromSecret(
-    chart,
-    "recyclarr-legacy-secret-volume",
-    secret,
-    {
-      items: {
-        "recyclarr.yaml": {
-          path: "recyclarr.yaml",
-        },
-      },
-    },
-  );
-
-  // Extract api keys from the legacy 1P yaml into secrets.yml and install the
-  // git-owned recyclarr.yaml into /config (PVC). Pure shell — no yq needed.
   const initScript = [
     "set -eu",
+    "umask 077",
     "mkdir -p /config",
-    "LEGACY=/legacy/recyclarr.yaml",
-    'test -f "$LEGACY"',
-    "awk '",
-    '/^radarr:/{s="radarr"}',
-    '/^sonarr:/{s="sonarr"}',
-    "/^[[:space:]]*api_key:/{",
-    "  key=$2",
-    '  if (s=="radarr" && radarr=="") radarr=key',
-    '  if (s=="sonarr" && sonarr=="") sonarr=key',
-    "}",
-    "END {",
-    '  if (radarr=="" || sonarr=="") {',
-    '    print "failed to extract radarr/sonarr api_key from legacy 1Password recyclarr.yaml" > "/dev/stderr"',
-    "    exit 1",
-    "  }",
-    '  print "radarr_api_key: " radarr',
-    '  print "sonarr_api_key: " sonarr',
-    "}",
-    '\' "$LEGACY" > /config/secrets.yml',
+    "RADARR_KEY=$(cat /credentials/radarr/api-key)",
+    "SONARR_KEY=$(cat /credentials/sonarr/api-key)",
+    'test -n "$RADARR_KEY" && test -n "$SONARR_KEY"',
+    String.raw`printf "radarr_api_key: %s\nsonarr_api_key: %s\n" "$RADARR_KEY" "$SONARR_KEY" > /config/secrets.yml`,
     "cp /git/recyclarr.yaml /config/recyclarr.yaml",
     "chmod 600 /config/secrets.yml /config/recyclarr.yaml",
   ].join("\n");
@@ -149,7 +135,10 @@ export async function createRecyclarrDeployment(chart: Chart) {
     volumeMounts: [
       { path: "/config", volume: configVolume },
       { path: "/git", volume: gitConfigVolume },
-      { path: "/legacy", volume: legacySecretVolume },
+      ...credentialVolumes.map(({ name, volume }) => ({
+        path: "/credentials/" + name,
+        volume,
+      })),
     ],
   });
 
