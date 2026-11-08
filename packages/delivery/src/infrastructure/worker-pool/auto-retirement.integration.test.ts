@@ -1,30 +1,15 @@
-import { afterAll, beforeAll, beforeEach, expect, test } from "vitest";
-import { createTestDatabase } from "#testing/postgres.ts";
-import { freshWorkerProof, workerFixture } from "#testing/worker-fixture.ts";
+import { expect, test } from "vitest";
+import { freshWorkerProof } from "#testing/worker-fixture.ts";
+import { workerPoolSuite } from "#testing/worker-pool-suite.ts";
 import { testExecutor, testOperator } from "#testing/seed.ts";
-import { Delivery } from "#infrastructure/delivery.ts";
 import { AUTO_RETIRE_ACTOR } from "./auto-retirement.ts";
 
-let cluster: Awaited<ReturnType<typeof createTestDatabase>>;
-let delivery: Delivery;
-let fixture: Awaited<ReturnType<typeof workerFixture>>;
-beforeAll(async () => {
-  cluster = await createTestDatabase();
-  delivery = new Delivery(cluster.database);
-}, 60_000);
-afterAll(async () => {
-  await cluster.close();
-});
-beforeEach(async () => {
-  await cluster.database.$executeRawUnsafe(
-    'TRUNCATE "Environment", "Pipeline", "Build", "VersionSet", "Request", "Audit" CASCADE',
-  );
-  fixture = await workerFixture(delivery);
-});
+const suite = workerPoolSuite();
 
 test("an idle environment offers its retained, unreferenced hosts but never the accepted candidate", async () => {
-  const { workerA, workerB, env } = await fixture.acceptedPool();
-  const { environments } = await delivery.retirementCandidates(testExecutor);
+  const { workerA, workerB, env } = await suite.fixture.acceptedPool();
+  const { environments } =
+    await suite.delivery.retirementCandidates(testExecutor);
   expect(environments).toHaveLength(1);
   const [candidates] = environments;
   expect(candidates).toMatchObject({
@@ -45,12 +30,12 @@ test("an idle environment offers its retained, unreferenced hosts but never the 
 });
 
 test("the executor requests a guarded retirement as delivery/auto-retire, once per host generation", async () => {
-  const { workerA, env } = await fixture.acceptedPool();
+  const { workerA, env } = await suite.fixture.acceptedPool();
   const input = {
     expectedEnvironmentGeneration: env.generation,
     expectedWorkerGeneration: workerA.generation,
   };
-  const requested = await delivery.autoRetireWorker(
+  const requested = await suite.delivery.autoRetireWorker(
     workerA.id,
     input,
     testExecutor,
@@ -60,20 +45,21 @@ test("the executor requests a guarded retirement as delivery/auto-retire, once p
     requestedBy: AUTO_RETIRE_ACTOR.id,
   });
   expect(
-    await delivery.autoRetireWorker(workerA.id, input, testExecutor),
+    await suite.delivery.autoRetireWorker(workerA.id, input, testExecutor),
   ).toEqual(requested);
   // A pending retirement leaves the environment busy: nothing more is offered.
-  const { environments } = await delivery.retirementCandidates(testExecutor);
+  const { environments } =
+    await suite.delivery.retirementCandidates(testExecutor);
   expect(environments).toEqual([]);
 });
 
 test("only the executor proposes retirements", async () => {
-  const { workerA, env } = await fixture.acceptedPool();
+  const { workerA, env } = await suite.fixture.acceptedPool();
   await expect(
-    delivery.retirementCandidates(testOperator),
+    suite.delivery.retirementCandidates(testOperator),
   ).rejects.toMatchObject({ code: "FORBIDDEN" });
   await expect(
-    delivery.autoRetireWorker(
+    suite.delivery.autoRetireWorker(
       workerA.id,
       {
         expectedEnvironmentGeneration: env.generation,
@@ -85,22 +71,22 @@ test("only the executor proposes retirements", async () => {
 });
 
 test("a host whose retirement failed is left to an operator", async () => {
-  const { workerA, workerB, env } = await fixture.acceptedPool();
+  const { workerA, workerB, env } = await suite.fixture.acceptedPool();
   const input = {
     expectedEnvironmentGeneration: env.generation,
     expectedWorkerGeneration: workerA.generation,
   };
-  const requested = await delivery.autoRetireWorker(
+  const requested = await suite.delivery.autoRetireWorker(
     workerA.id,
     input,
     testExecutor,
   );
-  await delivery.claim(
+  await suite.delivery.claim(
     requested.id,
     testExecutor,
     freshWorkerProof(workerA, workerB.buildId),
   );
-  await delivery.finish(
+  await suite.delivery.finish(
     requested.id,
     {
       status: "failed",
@@ -110,10 +96,11 @@ test("a host whose retirement failed is left to an operator", async () => {
     },
     testExecutor,
   );
-  const { environments } = await delivery.retirementCandidates(testExecutor);
+  const { environments } =
+    await suite.delivery.retirementCandidates(testExecutor);
   expect(environments).toEqual([]);
   await expect(
-    delivery.autoRetireWorker(
+    suite.delivery.autoRetireWorker(
       workerA.id,
       { ...input, expectedWorkerGeneration: workerA.generation },
       testExecutor,
@@ -122,11 +109,12 @@ test("a host whose retirement failed is left to an operator", async () => {
 });
 
 test("an environment whose releases require approval keeps retirement an operator decision", async () => {
-  const { env } = await fixture.acceptedPool();
-  await cluster.database.environment.update({
+  const { env } = await suite.fixture.acceptedPool();
+  await suite.cluster.database.environment.update({
     where: { id: env.id },
     data: { approvalPolicy: "required" },
   });
-  const { environments } = await delivery.retirementCandidates(testExecutor);
+  const { environments } =
+    await suite.delivery.retirementCandidates(testExecutor);
   expect(environments).toEqual([]);
 });
