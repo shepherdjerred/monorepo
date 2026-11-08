@@ -288,8 +288,8 @@ toolkit run --env SEAWEEDFS_S3_ACCESS_KEY_ID,SEAWEEDFS_S3_SECRET_ACCESS_KEY -- b
 toolkit run --env SEAWEEDFS_S3_ACCESS_KEY_ID,SEAWEEDFS_S3_SECRET_ACCESS_KEY -- bun packages/the-storm/tools/captures/regenerate.ts --replay <campaign-id> --fresh
 ```
 
-The driver retains the shared mechanics as one batch, followed by one batch per
-fresh scenario. Successful batches keep their private S3 run records and publish
+The driver groups shared mechanics into batches of at most four, followed by one
+batch per fresh scenario. Successful batches keep their private S3 run records and publish
 their selected outputs. An atomic local checkpoint under
 `$TOOLKIT_MC_DIRECTORY/campaigns` records each completed batch; a failed batch
 remains pending. Resume skips completed batches and reuses the first batch's

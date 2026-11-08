@@ -31,20 +31,19 @@ function validateBatch(state: Campaign, part: Batch) {
     throw new Error("Fresh batch contains multiple scenarios");
 }
 
-/** Shared mechanics keep their common session; stateful venues each get a checkpoint. */
+/** Bound lost work while keeping related mechanics in a common session. */
 export function campaignPlan(suite: CaptureSuite): Batch[] {
   const shared = suite.scenarios.filter((s) => s.isolation !== "fresh");
+  const batches: Batch[] = [];
+  for (let index = 0; index < shared.length; index += 4)
+    batches.push({
+      ids: shared.slice(index, index + 4).map((s) => s.id),
+      fresh: false,
+      replayOf: null,
+      run: null,
+    });
   return [
-    ...(shared.length === 0
-      ? []
-      : [
-          {
-            ids: shared.map((s) => s.id),
-            fresh: false,
-            replayOf: null,
-            run: null,
-          },
-        ]),
+    ...batches,
     ...suite.scenarios
       .filter((s) => s.isolation === "fresh")
       .map((s) => ({
@@ -91,6 +90,7 @@ function validateResult(
     result.fixture !== state.fixture ||
     (state.runtime !== null && result.runtime !== state.runtime) ||
     result.selection.shot !== undefined ||
+    result.selection.scenario !== part.ids.join(",") ||
     JSON.stringify(result.scenarios.map((s) => s.id)) !==
       JSON.stringify(part.ids)
   )

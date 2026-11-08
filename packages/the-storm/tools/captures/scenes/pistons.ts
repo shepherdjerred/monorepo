@@ -75,7 +75,13 @@ export default defineCaptureScene({
       "crush-after",
       "Crush breaks the plank instead of pushing it ahead of the extended head.",
     );
-    await camera(context, [4.5, 0, 5.5], [4.5, 0.5, 6.5]);
+    // Retract the head before standing on the crushed block's actual drop cell.
+    // Standing beside the extended head can miss a naturally scattered item.
+    await power(context, false);
+    await waitBlock(context, [3, 0, 6], (block) =>
+      block.includes("extended=false"),
+    );
+    await camera(context, [4.5, 0, 6.5], [5.5, 0.5, 6.5]);
     await context.waitFor(
       "crushed plank collected",
       (state) =>

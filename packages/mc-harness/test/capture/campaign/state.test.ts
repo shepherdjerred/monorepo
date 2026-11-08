@@ -4,10 +4,12 @@ import {
   replayCampaign,
   validateCampaign,
   validatePlan,
+  campaignPlan,
   type Campaign,
   type Batch,
 } from "#src/capture/campaign/state.ts";
 import type { SuiteRun } from "#src/capture/suite/archive.ts";
+import { defineCaptureSuite } from "#src/capture/suite/define.ts";
 
 function pending(): Campaign {
   return validateCampaign({
@@ -37,6 +39,47 @@ function result(part: Batch): SuiteRun {
     scenarios: part.ids.map((id) => ({ id, archive: "d".repeat(64) })),
   };
 }
+
+it("bounds shared checkpoint loss and keeps fresh venues separate without dropping scenarios", () => {
+  const suite = defineCaptureSuite({
+    id: "test",
+    bootstrap: [0, 64, 0],
+    patches: [{ world: "world", min: [0, 0], max: [16, 16], paddingChunks: 2 }],
+    scenarios: Array.from({ length: 10 }, (_, index) => ({
+      id: `scene-${index.toString()}`,
+      world: "world",
+      anchor: [0, 64, 0],
+      helpers: [],
+      ...(index === 3 ? { isolation: "fresh" as const } : {}),
+      shots: [
+        {
+          schema: 1,
+          name: `shot-${index.toString()}`,
+          caption: "",
+          alt: "Test",
+          annotations: [],
+        },
+      ],
+      scene: {
+        name: `scene-${index.toString()}`,
+        description: "Test",
+        bounds: { min: [0, 0, 0], max: [1, 1, 1] },
+        staging: [0, 0, 0],
+        inspectors: [],
+        setup: () => Promise.resolve(),
+        run: () => Promise.resolve(),
+      },
+    })),
+  });
+  const plan = campaignPlan(suite);
+  expect(plan.map((b) => b.ids)).toEqual([
+    ["scene-0", "scene-1", "scene-2", "scene-4"],
+    ["scene-5", "scene-6", "scene-7", "scene-8"],
+    ["scene-9"],
+    ["scene-3"],
+  ]);
+  expect(plan.map((b) => b.fresh)).toEqual([false, false, false, true]);
+});
 it("keeps completed batches after a failure and resumes only the pending venue with the pinned runtime", async () => {
   let saved = pending();
   await expect(
@@ -82,6 +125,7 @@ it("does not checkpoint changed immutable inputs, missing scenarios, or a filter
     { runtime: "f".repeat(64) },
     { scenarios: [] },
     { selection: { shot: "first" } },
+    { selection: {} },
   ]) {
     const state = pending();
     state.runtime = "b".repeat(64);
