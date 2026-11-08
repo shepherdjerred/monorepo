@@ -290,6 +290,56 @@ describe("source reference inventory", () => {
       refs.references.find((ref) => ref.field === "API_KEY")?.optional,
     ).toBeUndefined();
   });
+  test.each([false, true])(
+    "required volume keys override optional env uses regardless of traversal order (%s)",
+    (volumeFirst) => {
+      const env = [
+        {
+          valueFrom: {
+            secretKeyRef: {
+              name: "auth",
+              key: "MISSING",
+              optional: true,
+            },
+          },
+        },
+      ];
+      const volumes = [
+        {
+          projected: {
+            sources: [
+              {
+                secret: {
+                  name: "auth",
+                  items: [{ key: "MISSING", path: "key" }],
+                },
+              },
+            ],
+          },
+        },
+      ];
+      const refs = manifestAuditReferences(
+        [
+          binding("app", "first"),
+          {
+            kind: "Pod",
+            metadata: { namespace: "app", name: "mixed-volume" },
+            spec: volumeFirst ? { volumes, env } : { env, volumes },
+          },
+        ],
+        "fixture",
+      );
+      const audit = buildVaultAudit(items, refs.references, {
+        inspected: ["fixture"],
+        gaps: [],
+      });
+      expect(
+        refs.references.find((ref) => ref.field === "MISSING")?.optional,
+      ).toBeUndefined();
+      expect(audit.unresolved).toHaveLength(1);
+      expect(audit.unresolved[0]).toContain("MISSING");
+    },
+  );
   test("dotfile reference scan preserves explicit vault scope without values", () => {
     const refs = sourceAuditReferences(
       `onepasswordRead "op://${VAULT_ID}/first/password"\nTOKEN=${privateValue}\nop://Other/item/password`,
