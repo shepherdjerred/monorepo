@@ -201,6 +201,11 @@ export function createDeliveryJobs(
  * RWO still lets a Job on the same node mount it while the Job's own lock
  * serializes use. Rebuildable from the revision and lockfile, so never backed
  * up; `ZfsPVCStorageHigh` is the fill backstop.
+ *
+ * The class binds a claim when its first consumer mounts it, and ArgoCD
+ * reports a Pending claim as Progressing. Without the health exemption the
+ * delivery-control-plane sync waits for a claim no stage Job has mounted yet,
+ * and that self-hosted deployment holds Delivery's dispatch barrier meanwhile.
  */
 function createStageWorkspaceClaims(
   chart: Chart,
@@ -218,6 +223,7 @@ function createStageWorkspaceClaims(
           "velero.io/backup": "disabled",
           "velero.io/exclude-from-backup": "true",
         },
+        annotations: { "argocd.argoproj.io/ignore-healthcheck": "true" },
       },
       spec: {
         accessModes: ["ReadWriteOnce"],

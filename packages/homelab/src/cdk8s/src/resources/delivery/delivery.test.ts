@@ -12,6 +12,7 @@ import { assertDeliveryRootPreservesSelection } from "@shepherdjerred/homelab/sc
 import { createArcadeChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/games/arcade.ts";
 import { createDeliveryJobs } from "./jobs.ts";
 import { createDeliveryWorker } from "./worker.ts";
+import { renderedClaims } from "@shepherdjerred/homelab/cdk8s/src/testing/claim-manifest-schema.ts";
 import { createWoodpeckerStepNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/src/resources/woodpecker/step-network-policy.ts";
 import { transitionRendering } from "@shepherdjerred/homelab/cdk8s/src/release-configuration.ts";
 import { CI_NPM_CREDENTIALS_ITEM } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/ci/woodpecker-credentials.ts";
@@ -372,25 +373,6 @@ describe("Delivery infrastructure", () => {
 
 describe("Delivery stage workspace claims", () => {
   it("gives each Job namespace its persistent stage workspace claims and never backs them up", () => {
-    const Claims = z.array(
-      z.object({
-        kind: z.string(),
-        metadata: z.object({
-          name: z.string(),
-          namespace: z.string(),
-          labels: z.record(z.string(), z.string()).optional(),
-        }),
-        spec: z
-          .object({
-            accessModes: z.array(z.string()),
-            storageClassName: z.string(),
-            resources: z.object({
-              requests: z.object({ storage: z.string() }),
-            }),
-          })
-          .optional(),
-      }),
-    );
     const claims = (["worker", "platform"] as const).flatMap((profile) => {
       const chart = new Chart(new App(), `${profile}-claims`, {
         namespace: "temporal",
@@ -401,17 +383,12 @@ describe("Delivery stage workspace claims", () => {
         "ngzmppq52zm7sii6ato2mv3sbi",
         profile === "platform" ? "xxk3nflc5cjsgnnyh7tpprzyfe" : undefined,
       );
-      return Claims.parse(
-        z
-          .array(z.object({ kind: z.string() }).loose())
-          .parse(chart.toJson())
-          .filter((resource) => resource.kind === "PersistentVolumeClaim"),
-      );
+      return renderedClaims(chart.toJson());
     });
     expect(
       claims.map(
         (claim) =>
-          `${claim.metadata.namespace}/${claim.metadata.name} ${claim.spec?.resources.requests.storage ?? ""}`,
+          `${claim.metadata.namespace}/${claim.metadata.name} ${claim.spec.resources.requests.storage}`,
       ),
     ).toEqual([
       "delivery-worker-jobs/delivery-stage-workspace-full 40Gi",
@@ -427,6 +404,11 @@ describe("Delivery stage workspace claims", () => {
       expect(claim.metadata.labels).toMatchObject({
         "velero.io/backup": "disabled",
         "velero.io/exclude-from-backup": "true",
+      });
+      // Binds on first mount; a Pending claim must not hold the
+      // delivery-control-plane sync (and the dispatch barrier) until then.
+      expect(claim.metadata.annotations).toEqual({
+        "argocd.argoproj.io/ignore-healthcheck": "true",
       });
     }
   });

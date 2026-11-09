@@ -1,38 +1,23 @@
 import { expect, test } from "vitest";
 import { App, Chart } from "cdk8s";
-import { z } from "zod";
 import {
   CI_WORKSPACE_VOLUME_SIZE,
   NVME_STORAGE_CLASS_LZ4,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
+import {
+  renderedClaims,
+  type ClaimManifest,
+} from "@shepherdjerred/homelab/cdk8s/src/testing/claim-manifest-schema.ts";
 import {
   createWoodpeckerCaches,
   WOODPECKER_MISE_INSTALLS_CLAIM,
   WOODPECKER_WORKSPACE_GOLDEN_CLAIM,
 } from "./caches.ts";
 
-const ClaimSchema = z.looseObject({
-  kind: z.literal("PersistentVolumeClaim"),
-  metadata: z.looseObject({
-    name: z.string(),
-    namespace: z.string(),
-    labels: z.record(z.string(), z.string()).optional(),
-    annotations: z.record(z.string(), z.string()).optional(),
-  }),
-  spec: z.looseObject({
-    accessModes: z.array(z.string()),
-    storageClassName: z.string(),
-    resources: z.object({ requests: z.object({ storage: z.string() }) }),
-  }),
-});
-
-function renderClaims(): z.infer<typeof ClaimSchema>[] {
+function renderClaims(): ClaimManifest[] {
   const chart = new Chart(new App(), "caches");
   createWoodpeckerCaches(chart);
-  return chart.toJson().flatMap((manifest: unknown) => {
-    const claim = ClaimSchema.safeParse(manifest);
-    return claim.success ? [claim.data] : [];
-  });
+  return renderedClaims(chart.toJson());
 }
 
 test("only the golden claim, unbound until its first refresh, is left out of application health", () => {
