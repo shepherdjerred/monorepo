@@ -5,7 +5,11 @@ import { loadWoodpeckerConfig } from "#lib/woodpecker/ci.ts";
 import { CiObserver } from "#lib/ci/observer.ts";
 import { EXIT_CODES, type Verdict } from "#lib/ci/readiness.ts";
 import type { WaitResult } from "#lib/ci/wait/wait.ts";
-import { formatResult, resultReport } from "#lib/ci/output.ts";
+import {
+  formatResult,
+  reportCommandError,
+  resultReport,
+} from "#lib/ci/output.ts";
 import { sanitizeText } from "#lib/ci/redaction.ts";
 import {
   buildPassthroughInvocation,
@@ -186,15 +190,6 @@ export async function landCommand(
       process.exitCode = EXIT_CODES[result.verdict.outcome];
     });
   } catch (error) {
-    const message = sanitizeText(
-      error instanceof Error ? error.message : String(error),
-      secrets,
-    );
-    if (options.json)
-      console.log(
-        JSON.stringify({ outcome: "error", ready: false, error: message }),
-      );
-    else console.error(message);
-    process.exitCode = 2;
+    reportCommandError(error, secrets, options.json);
   }
 }

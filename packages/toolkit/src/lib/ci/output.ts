@@ -173,3 +173,24 @@ export function formatResult(
     ...report.commands,
   ].join("\n");
 }
+
+/**
+ * Report an upstream or usage error as exit 2, with secrets removed. With
+ * `--json`, stdout still carries exactly one parseable report.
+ */
+export function reportCommandError(
+  error: unknown,
+  secrets: readonly string[],
+  json: boolean,
+): void {
+  const message = sanitizeText(
+    error instanceof Error ? error.message : String(error),
+    secrets,
+  );
+  if (json)
+    console.log(
+      JSON.stringify({ outcome: "error", ready: false, error: message }),
+    );
+  else console.error(message);
+  process.exitCode = 2;
+}

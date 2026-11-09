@@ -37,6 +37,7 @@ import { ciMaintenance } from "#lib/ci/maintenance.ts";
 import { latencyEvidence } from "#lib/ci/latency-evidence.ts";
 import {
   mainFailure,
+  reportCommandError,
   summarizeMain,
   resultReport,
   formatResult,
@@ -442,15 +443,6 @@ export async function ciCommand(
       options,
     );
   } catch (error) {
-    const message = sanitizeText(
-      error instanceof Error ? error.message : String(error),
-      secrets,
-    );
-    if (options.json)
-      console.log(
-        JSON.stringify({ outcome: "error", ready: false, error: message }),
-      );
-    else console.error(message);
-    process.exitCode = 2;
+    reportCommandError(error, secrets, options.json);
   }
 }
