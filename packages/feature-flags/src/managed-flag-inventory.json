@@ -1404,13 +1404,6 @@
           "issue": "AI-442",
           "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
           "reviewBy": "2026-12-07"
-        },
-        {
-          "environment": "prod",
-          "reason": "Cross-pod mise install locking on the shared claim is inferred from the lock-file location, not yet observed; ci-canary/* branches exercise it first through the beta-stage rollout.",
-          "issue": "AI-484",
-          "enableWhen": "Two concurrent canary pipelines pinning a tool the image lacks install it once into woodpecker-mise-installs, the second waits on mise's lock, no image tool is reinstalled, and both pods' /dev/nvme0n1 writes sit at the no-install floor.",
-          "reviewBy": "2026-11-30"
         }
       ]
     },
@@ -4902,7 +4895,7 @@
         {
           "key": "woodpecker-mise-shared-installs-enabled",
           "type": "boolean",
-          "default": false,
+          "default": true,
           "rollouts": [
             {
               "segmentKey": "woodpecker-performance-beta",
