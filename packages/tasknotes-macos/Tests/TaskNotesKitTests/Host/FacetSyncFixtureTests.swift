@@ -78,7 +78,7 @@ struct FacetSyncFixtureTests {
         var replicas: [FacetFixtureReplica] = []
         do {
             let first = try await FacetFixtureReplica.create(
-                directory: root.appendingPathComponent("first"), http: http)
+                directory: root.appendingPathComponent("first"), http: http, approveStandard: false)
             replicas.append(first)
             let second = try await FacetFixtureReplica.create(
                 directory: root.appendingPathComponent("second"), http: http)
@@ -104,6 +104,17 @@ struct FacetSyncFixtureTests {
         try await first.start(http: http)
         try await second.start(http: http)
         try await settled(first, second, title: nil)
+        // Neither a YAML file nor consent to defaults is a Sync prerequisite.
+        // Initial download must settle before the app asks for configuration.
+        let discovery = try await first.engine.features(
+            profileID: first.profileID, request: .object(["kind": .string("discovery")]))
+        #expect(discovery.object?.fields["initialSyncComplete"] == .bool(true))
+        #expect(discovery.object?.fields["configurationAvailable"] == .bool(false))
+        #expect(try await first.snapshot().configuration == .null)
+        let profile = try #require(await first.engine.profiles().first)
+        #expect(!profile.approveStandard)
+        try await first.engine.approveStandard(profile: profile)
+        _ = try await first.engine.refresh(profileID: first.profileID)
         try await first.engine.execute(
             profileID: first.profileID,
             command: .object([

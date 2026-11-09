@@ -59,6 +59,25 @@ struct FacetSyncStatusTests {
         }
     }
 
+    @Test func progressTracksDurableWorkWithoutTreatingAnEmptyQueueAsCompletion() {
+        let downloading = FacetSyncStatus(
+            transport: .connected, durable: durable(initial: false, remote: 42))
+        #expect(downloading.message.contains("42"))
+        let waiting = FacetSyncStatus(transport: .connected, durable: durable(initial: false))
+        #expect(waiting.phase == .syncing)
+        #expect(waiting.message == "Downloading your vault…")
+        let uploading = FacetSyncStatus(transport: .connected, durable: durable(upload: 3))
+        #expect(uploading.phase == .syncing)
+        #expect(uploading.message.contains("3"))
+        #expect(uploading.message != downloading.message)
+        var work = FacetSyncHostWork()
+        work.metadata = 7
+        let active = FacetSyncStatus(transport: .connected, work: work)
+        #expect(active.phase == .syncing)
+        #expect(active.message.contains("7"))
+        #expect(FacetSyncStatus(transport: .connected, durable: durable()).phase == .synced)
+    }
+
     @Test @MainActor func activityDuringDurableReadInvalidatesTheObservation() async throws {
         var revision: UInt64 = 0
         let state = try await FacetSyncStatusObservation.read(

@@ -81,7 +81,9 @@ internal final class FacetFixtureReplica {
         self.profileID = profileID
     }
 
-    static func create(directory: URL, http: FacetFixtureHTTP) async throws -> FacetFixtureReplica {
+    static func create(
+        directory: URL, http: FacetFixtureHTTP, approveStandard: Bool = true
+    ) async throws -> FacetFixtureReplica {
         let keys = FixtureSecrets()
         let runtime = try await FacetEngine.open(
             directory: directory.appendingPathComponent("engine"), secrets: keys)
@@ -109,7 +111,7 @@ internal final class FacetFixtureReplica {
             }
             let profile = try await ownerAccount.connect(
                 vaultID: http.ready.vaultID, password: "Å synthetic fixture １２３", engine: runtime)
-            try await runtime.approveStandard(profile: profile)
+            if approveStandard { try await runtime.approveStandard(profile: profile) }
             _ = try await runtime.refresh(profileID: profile.id)
             return FacetFixtureReplica(
                 directory: directory, secrets: keys, engine: runtime, account: ownerAccount,

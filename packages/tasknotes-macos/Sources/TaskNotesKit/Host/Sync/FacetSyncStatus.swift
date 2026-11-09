@@ -102,7 +102,7 @@ public struct FacetSyncStatus: Equatable, Sendable {
     public var message: String {
         switch phase {
         case .connecting: "Connecting to Obsidian Sync…"
-        case .syncing: "Syncing changes…"
+        case .syncing: progressMessage
         case .synced: "Synced with Obsidian."
         case .offline: "Offline. Your local changes will sync when connected."
         case .reconnectRequired: "Reconnect this vault to resume Obsidian Sync."
@@ -110,6 +110,33 @@ public struct FacetSyncStatus: Equatable, Sendable {
         case .failed: "Sync could not continue. Check network and storage access, then reconnect."
         case .stopped: "Sync is paused. Your local tasks are available."
         }
+    }
+
+    private var progressMessage: String {
+        guard let durable else {
+            return work.metadata > 0
+                ? "Syncing: \(changeCount(UInt64(work.metadata))) pending…"
+                : "Checking Sync progress…"
+        }
+        if !durable.initialSyncComplete {
+            return durable.pendingRemoteCount > 0
+                ? "Downloading vault: \(changeCount(durable.pendingRemoteCount)) pending…"
+                : "Downloading your vault…"
+        }
+        if durable.pendingRemoteCount > 0 {
+            return "Downloading \(changeCount(durable.pendingRemoteCount))…"
+        }
+        if durable.pendingUploadCount > 0 {
+            return "Uploading \(changeCount(durable.pendingUploadCount))…"
+        }
+        if durable.pendingMutationCount > 0 {
+            return "Finishing \(changeCount(durable.pendingMutationCount))…"
+        }
+        return "Finishing Sync…"
+    }
+
+    private func changeCount(_ count: UInt64) -> String {
+        "\(count) \(count == 1 ? "change" : "changes")"
     }
 }
 
