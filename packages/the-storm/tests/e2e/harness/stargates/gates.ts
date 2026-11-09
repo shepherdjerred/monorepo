@@ -1,10 +1,20 @@
 import { once } from "node:events";
 import type { Bot } from "mineflayer";
 import type { Vec3 } from "vec3";
-import { waitUntil } from "#e2e/harness/bot.ts";
+import { faceSeen, waitUntil } from "#e2e/harness/bot.ts";
 import type { RconClient } from "#e2e/harness/rcon.ts";
 
 type SignWood = "birch" | "oak";
+
+export async function activateStargateControl(
+  bot: Bot,
+  rcon: RconClient,
+  block: NonNullable<ReturnType<Bot["blockAt"]>>,
+) {
+  await bot.lookAt(block.position.offset(0.5, 0.5, 0.5));
+  await faceSeen(rcon, bot, bot.entity.yaw, bot.entity.pitch);
+  await bot.activateBlock(block);
+}
 
 export async function placeStargateControls(
   rcon: RconClient,
@@ -43,6 +53,7 @@ export async function openStargateSign(
   bot: Bot,
   position: Vec3,
   wood: SignWood,
+  rcon: RconClient,
 ): Promise<NonNullable<ReturnType<Bot["blockAt"]>>> {
   await waitUntil(
     "Stargate sign loaded",
@@ -53,7 +64,7 @@ export async function openStargateSign(
   const editor = once(bot._client, "open_sign_entity", {
     signal: AbortSignal.timeout(5000),
   });
-  await bot.activateBlock(sign);
+  await activateStargateControl(bot, rcon, sign);
   await editor;
   return sign;
 }

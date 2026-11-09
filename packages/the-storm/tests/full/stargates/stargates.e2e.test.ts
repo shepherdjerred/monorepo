@@ -6,6 +6,7 @@ import { waitForMessage, waitUntil } from "#e2e/harness/bot.ts";
 import { serverLogs } from "#e2e/harness/external/files.ts";
 import type { RconClient } from "#e2e/harness/rcon.ts";
 import {
+  activateStargateControl,
   buildClassicStargateFrame,
   openStargateSign,
 } from "#e2e/harness/stargates/gates.ts";
@@ -87,7 +88,7 @@ test("a private Stargate network admits its invited players and denies others", 
     const { right } = await buildClassicStargateFrame(rcon, x, "oak");
     await rcon.command(`tp ${bot.username} ${right}.5 71 3.5`);
     const signPos = new Vec3(x + 1, 72, 1);
-    const sign = await openStargateSign(bot, signPos, "oak");
+    const sign = await openStargateSign(bot, signPos, "oak", rcon);
     const named = x === 400 ? "First" : "Second";
     const saved = waitForMessage(
       bot,
@@ -115,7 +116,7 @@ test("a private Stargate network admits its invited players and denies others", 
   const visitorSign = secondBot.blockAt(new Vec3(401, 72, 1));
   if (visitorSign === null) throw new Error("Visitor cannot see the gate sign");
   const denied = waitForMessage(secondBot, /You cannot use this Stargate/u);
-  await secondBot.activateBlock(visitorSign);
+  await activateStargateControl(secondBot, rcon, visitorSign);
   await denied;
   const invited = waitForMessage(
     bot,
@@ -125,7 +126,7 @@ test("a private Stargate network admits its invited players and denies others", 
   await invited;
   const originalSign = await rcon.command("data get block 401 72 1 front_text");
   const allowed = waitForMessage(secondBot, /Destination: Second/u);
-  await secondBot.activateBlock(visitorSign);
+  await activateStargateControl(secondBot, rcon, visitorSign);
   await allowed;
   await waitUntil(
     "invited player sees the selected destination on the sign",
@@ -146,7 +147,7 @@ test("a private Stargate network admits its invited players and denies others", 
   const firstSign = bot.blockAt(new Vec3(401, 72, 1));
   if (firstSign === null) throw new Error("First gate sign is missing");
   const selected = waitForMessage(bot, /Second/iu);
-  await bot.activateBlock(firstSign);
+  await activateStargateControl(bot, rcon, firstSign);
   await selected;
   const button = bot.blockAt(new Vec3(398, 72, 1));
   if (button === null) throw new Error("First gate button is missing");
@@ -155,7 +156,7 @@ test("a private Stargate network admits its invited players and denies others", 
     "owner reaches button",
     () => Math.abs(bot.entity.position.x - 399.5) < 0.3,
   );
-  await bot.activateBlock(button);
+  await activateStargateControl(bot, rcon, button);
   await waitUntil(
     "portal opens",
     () => bot.blockAt(new Vec3(400, 71, 0))?.name === "nether_portal",
@@ -170,7 +171,7 @@ test("a private Stargate network admits its invited players and denies others", 
     secondBot,
     /You cannot use this Stargate/u,
   );
-  await secondBot.activateBlock(visitorSign);
+  await activateStargateControl(secondBot, rcon, visitorSign);
   await deniedAgain;
   await rcon.command(`tp ${secondBot.username} 400.5 71 2.5`);
   await waitUntil(
@@ -227,7 +228,7 @@ test("a private Stargate network admits its invited players and denies others", 
   if (bot.blockAt(new Vec3(400, 71, 0))?.name !== "nether_portal") {
     const resetButton = bot.blockAt(new Vec3(398, 72, 1));
     if (resetButton === null) throw new Error("First gate button is missing");
-    await bot.activateBlock(resetButton);
+    await activateStargateControl(bot, rcon, resetButton);
   }
   await waitUntil(
     "portal is open before reset",

@@ -37,7 +37,7 @@ test("an always-open Stargate recovers after Paper restarts", async ({
     const { right } = await buildClassicStargateFrame(rcon, x, "birch");
     await rcon.command(`tp ${bot.username} ${right}.5 71 3.5`);
     const signPos = new Vec3(x + 1, 72, 1);
-    const sign = await openStargateSign(bot, signPos, "birch");
+    const sign = await openStargateSign(bot, signPos, "birch", rcon);
     const name = x === 400 ? "First" : "Second";
     const saved = waitForMessage(
       bot,
