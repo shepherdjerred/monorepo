@@ -1,4 +1,4 @@
-import { expect, it } from "vitest";
+import { afterEach, expect, it, vi } from "vitest";
 import { localOwnerAlive } from "./process-owner.ts";
 import { promotionWindow } from "#shared/promotion/cadence.ts";
 import { initialPromotionState } from "#shared/promotion.ts";
@@ -9,6 +9,15 @@ import {
   dailyPromotionSolverCharges,
 } from "#activities/promotion/control/budget.ts";
 import { memoryPromotionStore } from "#activities/promotion/test-support.ts";
+afterEach(() => vi.unstubAllEnvs());
+
+it.each(["UTC", "Pacific/Honolulu"])(
+  "matches process start times with the caller timezone %s",
+  (timezone) => {
+    vi.stubEnv("TZ", timezone);
+    expect(localOwnerAlive(process.pid, new Date().toISOString())).toBe(true);
+  },
+);
 
 it("distinguishes a reused PID from the executor which acquired a claim", () => {
   expect(localOwnerAlive(process.pid, new Date().toISOString())).toBe(true);

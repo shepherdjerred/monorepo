@@ -20,7 +20,7 @@ export function localOwnerAlive(pid: number, acquiredAt?: string): boolean {
   if (!processAlive(pid)) return false;
   if (claimedAt === undefined) return true;
   const result = Bun.spawnSync(["ps", "-p", String(pid), "-o", "lstart="], {
-    env: { PATH: Bun.env["PATH"], LC_ALL: "C" },
+    env: { PATH: Bun.env["PATH"], TZ: Bun.env.TZ, LC_ALL: "C" },
   });
   if (result.exitCode !== 0) {
     if (!processAlive(pid)) return false;
