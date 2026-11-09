@@ -17,6 +17,11 @@ import {
   cloudflareChallengeActive,
 } from "./access/challenge-scripts.ts";
 import type { PromotionChallenge } from "./solver.ts";
+import {
+  PromotionBrowserProfile,
+  ProfilesSchema,
+  InstancesSchema,
+} from "./access/browser-profile.ts";
 
 const IdentifierSchema = z.object({
   id: z.string().optional(),
@@ -38,27 +43,12 @@ const SnapshotSchema = z.object({
   untrustedContent: z.boolean(),
   idpiWarning: z.string().optional(),
 });
-const ProfileSchema = z.object({ name: z.string() });
 const CloudflareResultSchema = z.object({
   solver: z.literal("cloudflare"),
   solved: z.boolean(),
   attempts: z.number().int().nonnegative(),
   handoff: z.literal("paused_handoff").optional(),
 });
-const ProfilesSchema = z.union([
-  z.array(ProfileSchema),
-  z.object({ profiles: z.array(ProfileSchema) }),
-]);
-const InstanceSchema = z.object({
-  id: z.string(),
-  profileName: z.string().optional(),
-  mode: z.enum(["headed", "headless"]).optional(),
-  headless: z.boolean().optional(),
-});
-const InstancesSchema = z.union([
-  z.array(InstanceSchema),
-  z.object({ instances: z.array(InstanceSchema) }),
-]);
 type SnapshotScope = {
   selector?: string | undefined;
   depth?: number | undefined;
@@ -78,7 +68,7 @@ export class PromotionBrowser {
   private readonly token: string;
   private readonly signal: AbortSignal;
   private tabId: string | undefined;
-  private readonly profile: string | undefined;
+  private readonly profile: PromotionBrowserProfile;
   private instanceId: string | undefined;
   private preserveLastTab = false;
   private challengeState: PromotionChallenge | undefined;
@@ -94,13 +84,13 @@ export class PromotionBrowser {
     target: PromotionTarget,
     baseUrl: string,
     token: string,
-    options: { signal: AbortSignal; profile?: string },
+    options: { signal: AbortSignal; profile?: string; temporaryProfile?: true },
   ) {
     this.target = target;
     this.baseUrl = baseUrl.replace(/\/$/, "");
     this.token = token;
     this.signal = options.signal;
-    this.profile = options.profile;
+    this.profile = new PromotionBrowserProfile(options);
   }
 
   private async request(
@@ -192,11 +182,13 @@ export class PromotionBrowser {
     this.controls.clear();
     this.lastSnapshot = undefined;
     if (this.tabId === undefined) {
-      const profile = this.profile ?? `storm-promotion-${this.target.account}`;
+      const profile =
+        this.profile.name ?? `storm-promotion-${this.target.account}`;
       const response = ProfilesSchema.parse(await this.json("/profiles"));
       const profiles = Array.isArray(response) ? response : response.profiles;
-      if (!profiles.some((existing) => existing.name === profile))
-        await this.json("/profiles", { name: profile });
+      await this.profile.prepare(profile, profiles, () =>
+        this.json("/profiles", { name: profile }),
+      );
       const instanceId = await this.instance(profile);
       const opened = IdentifierSchema.parse(
         await this.json(
@@ -474,6 +466,11 @@ export class PromotionBrowser {
   }
 
   async close(): Promise<void> {
+    if (await this.profile.close(this.baseUrl, this.token)) {
+      this.tabId = undefined;
+      this.instanceId = undefined;
+      return;
+    }
     if (this.tabId === undefined) return;
     const cleanupSignal = AbortSignal.timeout(10_000);
     if (this.preserveLastTab && this.instanceId !== undefined) {

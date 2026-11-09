@@ -1257,6 +1257,10 @@ The complete ledger remains available to the runner.
 element references, attributes, screenshots, and actions. The agent chooses its
 own controls and sequence; native input references work inside web components.
 The small connection helper scopes operations to the target's persistent profile.
+Reddit receipts are checked independently in a new anonymous profile. Its browser
+instance is stopped and its profile is deleted by the returned profile ID after
+verification, including failure or cancellation. Persistent signed-in profiles
+retain their existing tabs and sessions.
 Credential placeholders let the agent choose username, optional saved email, and password inputs while the
 parent supplies their values privately. A disabled sign-in control can be
 inspected and corrected; an actual or ambiguous sign-in submission is not retried.

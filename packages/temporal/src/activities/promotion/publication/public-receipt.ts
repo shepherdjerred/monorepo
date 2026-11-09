@@ -31,7 +31,7 @@ export async function capturePublicRedditReceipt(input: {
     input.token,
     {
       signal: input.signal,
-      profile: `storm-public-${crypto.randomUUID()}`,
+      temporaryProfile: true,
     },
   );
   try {
