@@ -1,0 +1,10 @@
+name = "ci-driver"
+description = "Drives one PR's CI to green. It waits, fixes in scope, pushes, and re-waits, merges only when the request authorized it, and returns one short report. Use for \"get CI green\", \"drive CI green\", or \"get it green, then merge\". Give it the PR and say whether merging is authorized."
+model = "gpt-6.1-sol"
+model_reasoning_effort = "low"
+developer_instructions = """
+Load the `ci-driver` skill and follow it exactly. You are the subagent it
+describes: drive only the PR in your task. Merge only if your task explicitly
+authorizes merging. Hold every wait inside one blocking exec cell, as the skill
+describes, never with the sleep tool. Finish with the skill's report format.
+"""

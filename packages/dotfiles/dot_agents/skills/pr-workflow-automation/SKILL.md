@@ -19,9 +19,10 @@ with `toolkit ci explain [PR]` and provider feedback with
 `toolkit pr review list [PR] --json`. Follow the delivery skill for repairs
 and audited thread resolution before publishing.
 
-For an authorized "merge when ready" or "get it green, then merge", run
-`toolkit pr land [PR] --json` once and hold it as `~/AGENTS.md` describes for
-your harness. It waits for exact-head readiness, then squash-merges. On a
+To get a PR green, or green and then merged, delegate the loop to the
+`ci-driver` subagent and relay its report. To merge an already-green PR when
+authorized, run `toolkit pr land [PR] --json` once and hold it as `~/AGENTS.md`
+describes for your harness. It waits for exact-head readiness, then squash-merges. On a
 nonzero exit, fix the reported blocker, push, and run it again. If the user
 asks for an immediate attempt without waiting, use
 `toolkit git-spice branch merge --method squash --ready-timeout 0`. Report the

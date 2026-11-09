@@ -595,9 +595,9 @@ These waits stay quiet until there is a result. When toolkit detects an agent
 harness, it prints one stderr line naming that harness's cheapest way to hold
 the process. Claude Code should run the command with `run_in_background` and
 act on the completion notification. Codex gets no completion notice, so it
-should keep the one session and poll it with an empty `write_stdin` and
-`yield_time_ms` 300000. That costs one model turn every five minutes, instead
-of `sleep` and status-command loops.
+should hold the session inside one `exec` cell (pragma `yield_time_ms` 3600000) that loops an empty `write_stdin` until the command exits. Measured on
+codex-cli 0.167.0, a 25-minute wait held this way cost two model turns in total,
+the same as a 7-minute one.
 
 GitHub credentials come from `GH_TOKEN` or `gh auth token`. One-shot commands
 (`ci explain`, `ci main`, `pr health`, `pr review`) still exit 2 on a GitHub

@@ -8,7 +8,7 @@ export type HintEnvironment = Readonly<Record<string, string | undefined>>;
  */
 export function agentWaitHint(env: HintEnvironment): string | null {
   if (env["CODEX_THREAD_ID"] !== undefined && env["CODEX_THREAD_ID"] !== "")
-    return "Codex: keep this one session and poll it with an empty write_stdin and yield_time_ms 300000. Do not use sleep, re-run status commands, or start another wait.";
+    return 'Codex: hold this session inside one exec cell with the pragma // @exec: {"yield_time_ms": 3600000}, looping tools.write_stdin({session_id, chars: "", yield_time_ms: 300000}) until it exits. Do not use sleep, re-run status commands, or start another wait.';
   return env["CLAUDECODE"] !== undefined && env["CLAUDECODE"] !== ""
     ? "Claude Code: run this with run_in_background and act on the completion notification. Do not read its output file, sleep, or start another wait meanwhile."
     : null;
