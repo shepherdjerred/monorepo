@@ -56,6 +56,70 @@ async function exists(file: string): Promise<boolean> {
 }
 
 describe("completeBinLinks", () => {
+  test.each([
+    {
+      peerDependencies: { "ffmpeg-static": "^5" },
+      peerDependenciesMeta: { "ffmpeg-static": { optional: true } },
+    },
+    { optionalDependencies: { "ffmpeg-static": "^5" } },
+  ])(
+    "accepts absent explicitly optional links in filtered production installs: %j",
+    async (manifest) => {
+      const missing: Package = {
+        entry: "ffmpeg-static@5.3.0",
+        name: "ffmpeg-static",
+        manifest: { name: "ffmpeg-static" },
+      };
+      const store = await storeWith([
+        {
+          entry: "@spectrum-ts+core@12.10.1",
+          name: "@spectrum-ts/core",
+          manifest: { name: "@spectrum-ts/core", ...manifest },
+          dependencies: [missing],
+        },
+      ]);
+      expect(await completeBinLinks(store)).toEqual([]);
+      const link = await lstat(
+        path.join(
+          store,
+          "@spectrum-ts+core@12.10.1/node_modules/ffmpeg-static",
+        ),
+      );
+      expect(link.isSymbolicLink()).toBe(true);
+    },
+  );
+
+  test.each([
+    { dependencies: { required: "1" } },
+    { peerDependencies: { required: "1" } },
+    {
+      dependencies: { required: "1" },
+      peerDependencies: { required: "1" },
+      peerDependenciesMeta: { required: { optional: true } },
+    },
+    {},
+  ])(
+    "fails loudly for missing required or undeclared links: %j",
+    async (manifest) => {
+      const missing: Package = {
+        entry: "required@1",
+        name: "required",
+        manifest: { name: "required" },
+      };
+      const store = await storeWith([
+        {
+          entry: "consumer@1",
+          name: "consumer",
+          manifest: { name: "consumer", ...manifest },
+          dependencies: [missing],
+        },
+      ]);
+      await expect(completeBinLinks(store)).rejects.toMatchObject({
+        code: "ENOENT",
+      });
+    },
+  );
+
   test("links the bins a lost race skipped between cycle members only", async () => {
     const browserslist: Package = {
       entry: "browserslist@4.28.8+hash",
