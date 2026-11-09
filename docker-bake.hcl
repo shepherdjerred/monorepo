@@ -272,7 +272,16 @@ target "storm-forum" {
 
 # ── Homelab infra images: self-contained contexts ────────────────────────────
 group "infra" {
-  targets = ["caddy-s3proxy", "obsidian-headless", "redlib", "the-storm-server", "velero-plugin", "zfs-driver"]
+  targets = ["caddy-s3proxy", "glitter-boys-launcher", "obsidian-headless", "redlib", "the-storm-server", "velero-plugin", "zfs-driver"]
+}
+
+# The launcher telemetry service: a Rust workspace built from its own package.
+target "glitter-boys-launcher" {
+  context    = "packages/glitter-boys-launcher"
+  target     = "image"
+  tags       = imagetags("glitter-boys-launcher")
+  cache-from = cachefrom("glitter-boys-launcher")
+  cache-to   = cacheto("glitter-boys-launcher")
 }
 
 target "zfs-driver" {

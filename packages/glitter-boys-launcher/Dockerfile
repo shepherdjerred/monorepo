@@ -1,7 +1,8 @@
 # syntax=docker/dockerfile:1-labs@sha256:63e440b412b6acba117974e793b7e7f702e58ee65e044bdff1b8d388ee0d853b
 FROM rust:1.98.1-bookworm@sha256:93ce27a88655056a51dbdd8f5f2d7ddc071c7b0070fb288a37b5a285fc83971e AS builder
 WORKDIR /src
-COPY packages/glitter-boys-launcher/ ./
+# The build context is this package (docker-bake.hcl target glitter-boys-launcher).
+COPY . ./
 RUN cargo build --release --locked --package glitter-boys-service
 
 FROM debian:trixie-slim@sha256:a99cfc517144bc59b1978475ec53b46ecabec7e43635402ee5b77cc54cd1b20a AS runtime

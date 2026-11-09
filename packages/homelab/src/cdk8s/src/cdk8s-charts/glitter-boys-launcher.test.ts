@@ -6,15 +6,24 @@ import { createGlitterBoysLauncherApp } from "@shepherdjerred/homelab/cdk8s/src/
 
 describe("launcher service release", () => {
   it("prepares without creating a workload or requiring credentials", () => {
-    const resources = Testing.synth(createGlitterBoysLauncherChart(new App()));
+    const prepared = { schemaVersion: 1, stage: "prepared" };
+    const resources = Testing.synth(
+      createGlitterBoysLauncherChart(new App(), prepared),
+    );
     expect(resources).toHaveLength(1);
     expect(resources[0]).toMatchObject({
       kind: "ConfigMap",
       data: { active: "false" },
     });
     const apps = new Chart(new App(), "apps");
-    createGlitterBoysLauncherApp(apps);
+    createGlitterBoysLauncherApp(apps, prepared);
     expect(Testing.synth(apps)).toEqual([]);
+  });
+
+  it("is active in the checked-in release state", () => {
+    const apps = new Chart(new App(), "apps");
+    createGlitterBoysLauncherApp(apps);
+    expect(Testing.synth(apps)).toHaveLength(1);
   });
 
   it("creates an Argo Application only for an active release", () => {

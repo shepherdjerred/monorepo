@@ -19,7 +19,8 @@
     "scout-beta": "scout-for-lol/beta",
     "scout-prod": "scout-for-lol/prod",
     "storm-forum": "storm-forum/prod",
-    "minecraft-tsmc": "minecraft/tsmc"
+    "minecraft-tsmc": "minecraft/tsmc",
+    "glitter-boys-launcher": "glitter-boys-launcher/prod"
   },
   "platformDeliveryDelegated": true,
   "services": [
@@ -266,15 +267,21 @@
     },
     {
       "id": "glitter-boys-launcher",
-      "rootReleaseExclusions": { "glitter-boys-launcher": "inactive" },
       "images": ["glitter-boys-launcher"],
       "charts": ["glitter-boys-launcher"],
       "title": "Glitter Boys launcher",
       "kind": "product",
       "package": "glitter-boys-launcher",
       "namespaces": ["glitter-boys-launcher"],
-      "argoApps": [],
-      "grafanaDashboards": ["glitter-boys-launcher"]
+      "argoApps": ["glitter-boys-launcher"],
+      "grafanaDashboards": ["glitter-boys-launcher"],
+      "deploy": [
+        {
+          "name": "default",
+          "versionKey": "shepherdjerred/glitter-boys-launcher",
+          "argoApp": "glitter-boys-launcher"
+        }
+      ]
     },
     {
       "id": "temporal",

@@ -89,6 +89,13 @@ export const TARGET_PATH_PREFIXES: Readonly<Record<string, readonly string[]>> =
       // The Dockerfile also reads these named contexts during plugin compilation.
       "packages/feature-flags/src/managed-flag-inventory.json",
       "packages/storm-brain/contracts/companion-chat.json",
+      // glitter-boys-launcher's context is its package; the image compiles the
+      // Cargo workspace there.
+      "packages/glitter-boys-launcher/.dockerignore",
+      "packages/glitter-boys-launcher/Cargo.lock",
+      "packages/glitter-boys-launcher/Cargo.toml",
+      "packages/glitter-boys-launcher/Dockerfile",
+      "packages/glitter-boys-launcher/crates/",
     ],
   };
 

@@ -135,9 +135,13 @@ function original(name: string) {
   });
 }
 
-test("all21 canonical recipes have a fixed component/repository/owner without Git selected versions", () => {
-  expect(CANONICAL_IMAGE_TARGETS).toHaveLength(21);
-  expect(new Set(CANONICAL_IMAGE_TARGETS).size).toBe(21);
+test("all22 canonical recipes have a fixed component/repository/owner without Git selected versions", () => {
+  expect(CANONICAL_IMAGE_TARGETS).toHaveLength(22);
+  expect(new Set(CANONICAL_IMAGE_TARGETS).size).toBe(22);
+  expect(imageIdentity("glitter-boys-launcher")).toMatchObject({
+    serviceId: "glitter-boys-launcher",
+    component: "image:glitter-boys-launcher",
+  });
   expect(CANONICAL_IMAGE_TARGETS).toContain("media");
   expect(imageIdentity("media")).toEqual({
     serviceId: "streambot",
