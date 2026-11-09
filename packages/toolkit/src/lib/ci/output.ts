@@ -2,7 +2,7 @@ import { pipelineUrl, type WoodpeckerPipeline } from "#lib/woodpecker/ci.ts";
 import { listReviewFeedback } from "#lib/review/feedback.ts";
 import { REPOSITORY } from "./github.ts";
 import type { CiObserver } from "./observer.ts";
-import type { WaitResult } from "./wait.ts";
+import type { WaitResult } from "./wait/wait.ts";
 import type { MainStatus } from "./main.ts";
 import { isFailure, workflowStatus } from "./status.ts";
 import { requiredChecks } from "./readiness.ts";
@@ -18,7 +18,7 @@ export function mainFailure(main: MainStatus): WoodpeckerPipeline | null {
     : main.lastVerdict;
 }
 
-function summarizePipeline(
+export function summarizePipeline(
   pipeline: WoodpeckerPipeline | null,
   observer: CiObserver,
 ) {
@@ -82,7 +82,7 @@ async function failureReviews(result: WaitResult, observer: CiObserver) {
   }
 }
 
-function diagnosticText(diagnostic: Diagnostic): string {
+export function diagnosticText(diagnostic: Diagnostic): string {
   return `${diagnostic.workflow}${diagnostic.step === null ? "" : ` / ${diagnostic.step}`} exit=${String(diagnostic.exitCode)}\n${diagnostic.error ?? ""}\n${diagnostic.logs}${diagnostic.truncated ? "\n[excerpt truncated]" : ""}\n${diagnostic.url}`;
 }
 
@@ -102,9 +102,13 @@ export async function resultReport(
     snapshot !== null && result.verdict.outcome === "main_red"
       ? mainFailure(snapshot.main)
       : (snapshot?.pipeline ?? null);
-  const quiet = ["ready", "timeout", "head_changed"].includes(
-    result.verdict.outcome,
-  );
+  const quiet = [
+    "ready",
+    "timeout",
+    "head_changed",
+    "merged",
+    "merge_failed",
+  ].includes(result.verdict.outcome);
   const [diagnostics, reviews] = await Promise.all([
     quiet
       ? []

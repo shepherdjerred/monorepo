@@ -1,6 +1,6 @@
 import { afterEach, expect, test, vi } from "vitest";
 import { GitHubClient } from "#lib/ci/github.ts";
-import { getMainStatus } from "#lib/ci/main.ts";
+import { getMainRun, getMainStatus } from "#lib/ci/main.ts";
 import type { WoodpeckerPipeline } from "#lib/woodpecker/ci.ts";
 import { CI_HEAD } from "./fixtures.ts";
 
@@ -169,4 +169,36 @@ test("pagination reads past completed partial manual runs to find full recovery"
   const result = await status();
   expect(result.state).toBe("green");
   expect(result.lastVerdict?.number).toBe(50);
+});
+
+const pinned = (sha: string) =>
+  getMainRun(new GitHubClient("test"), config, sha);
+
+test("a pinned main wait reads the newest verifying run of that exact commit", async () => {
+  mockApi([
+    [
+      { ...pipeline(12, "push", "running"), commit: "newer-main" },
+      pipeline(11, "push", "running"),
+      pipeline(10, "push", "failure"),
+    ],
+  ]);
+  const result = await pinned(CI_HEAD);
+  expect(result.sha).toBe(CI_HEAD);
+  expect(result.tipSha).toBe(CI_HEAD);
+  expect(result.run?.number).toBe(11);
+});
+
+test("a pinned main wait skips partial manual runs and reports none before one exists", async () => {
+  mockApi([
+    [
+      {
+        ...pipeline(9, "manual"),
+        workflows: [{ name: "ci-noop", state: "success" }],
+      },
+      { ...pipeline(8, "push"), commit: "older-main" },
+    ],
+  ]);
+  const result = await pinned(CI_HEAD);
+  expect(result.run).toBeNull();
+  expect(result.url).toBeNull();
 });

@@ -26,8 +26,10 @@ function validateOptions(
     (["main", "load", "timings", "maintenance"].includes(action) || values.main)
   )
     throw new Error("Unexpected positional arguments");
-  if (action !== "explain" && values.main)
-    throw new Error("--main is only valid with ci explain");
+  if (action !== "explain" && action !== "wait" && values.main)
+    throw new Error("--main is only valid with ci wait or ci explain");
+  if (action === "wait" && values.main && values.until !== "first-failure")
+    throw new Error("--until applies to PR waits, not ci wait --main");
   if (action !== "timings" && values.since !== undefined)
     throw new Error("--since is only valid with ci timings");
   if (
@@ -37,9 +39,10 @@ function validateOptions(
     throw new Error("--timeout and --until are wait options");
   if (
     values.head !== undefined &&
-    (["main", "load", "timings", "maintenance"].includes(action) || values.main)
+    (["main", "load", "timings", "maintenance"].includes(action) ||
+      (action !== "wait" && values.main))
   )
-    throw new Error("--head requires a PR wait or explanation");
+    throw new Error("--head requires a PR or main wait, or a PR explanation");
 }
 
 async function runAnalyze(args: string[]): Promise<void> {
@@ -81,6 +84,7 @@ export async function handleCiCommand(
       console.log(`toolkit ci - foreground PR waits and failure evidence
 
   wait [PR]       Wait for merge readiness; return on the first actionable blocker
+  wait --main     Wait for main's own verifying run at --head (default: main's tip)
   explain [PR]    Print failures, bounded logs, review feedback, and deeper commands
   main            Show main's current verification and latest completed verdict
   load            Show Woodpecker/Kueue queues and CPU, memory, disk, I/O pressure
@@ -92,17 +96,20 @@ export async function handleCiCommand(
 
 Options:
   --json                       One final JSON report on stdout
-  --head <SHA>                 Assert/pin the expected full PR head SHA
+  --head <SHA>                 Pin the full PR head SHA, or the main commit with --main
   --until first-failure|settled Default: first-failure; settled collects blocking results
   --timeout <duration>         Optional deadline (e.g. 2h); default: unlimited
-  --main                       explain main's failure without needing a PR
+  --main                       wait: main's run; explain: main's failure without a PR
   --since <duration>           timings history window (default: 72h)
 
 Wait exits: 0 ready, 1 check failure/conflict, 2 upstream/usage error,
-3 human intervention, 4 head changed, 5 main red, 6 timeout, 7 PR closed/merged.
-Long queues/builds are expected. Keep awaiting the same process, rather than
-starting another status poll. Keep working if main is red; do not try to fix
-main unless explicitly told.
+3 human intervention, 4 head changed, 5 PR ready but main red, 6 timeout,
+7 PR closed/merged. A red main never ends a PR wait early; exit 5 is reported
+only after the PR itself is ready. wait --main exits 0 when the pinned main
+commit's run passes and 1 when it fails. Long queues/builds are expected. Keep
+awaiting the same process, rather than starting another status poll. Keep
+working if main is red; do not try to fix main unless explicitly told. To wait
+and then merge, use toolkit pr land.
 `);
       return;
     }

@@ -54,8 +54,12 @@ project `AGENTS.md` or skill.
   React Native, Discord, terminal — use their own matching verification tool.
 - Render PDFs, Typst, documents, slides, spreadsheets, and visual assets with
   their matching skill and inspect the output, not only the source.
-- Use foreground polling or the product's monitoring facility for waits. Never
-  promise an agent will wake up after the turn ends.
+- For a long wait, start one blocking command that returns the result, and
+  hold it the way your harness makes cheapest. Claude Code: use
+  `run_in_background`, then act on the completion notification. Codex has no
+  completion notice: poll that one session with an empty `write_stdin` and
+  `yield_time_ms` 300000. Never loop `sleep` with status commands or restart a
+  running wait. Never promise an agent will wake up after the turn ends.
 
 ## Sharing results with Jerred
 

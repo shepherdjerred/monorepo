@@ -6,6 +6,8 @@ import {
   reviewResolveCommand,
 } from "#commands/pr/review.ts";
 import { healthCommand } from "#commands/pr/health.ts";
+import { landCommand } from "#commands/pr/land.ts";
+import { parseTimeout } from "#lib/ci/arguments.ts";
 
 function helpRequested(args: string[]): boolean {
   return args.includes("--help") || args.includes("-h");
@@ -14,6 +16,16 @@ function helpRequested(args: string[]): boolean {
 function printHealthUsage(): void {
   console.log("Usage: toolkit pr health [PR_NUMBER] [--json]");
 }
+
+const LAND_USAGE = `Usage: toolkit pr land [PR] [--head <SHA>] [--timeout <duration>] [--allow-red-main] [--json]
+
+Wait for exact-head merge readiness, then squash-merge with git-spice. Merge
+only when the task authorizes it. A red main keeps the wait open until main
+recovers unless --allow-red-main is passed.
+
+Exits: 0 merged, 1 check failure/conflict, 2 upstream/usage error, 3 human
+intervention, 4 head changed, 6 timeout, 7 PR closed/merged, 8 merge command
+failed after readiness. After a fix and push, run pr land again.`;
 
 function printAssetUsage(): void {
   console.log(
@@ -51,6 +63,52 @@ async function handleHealth(args: string[]): Promise<void> {
     allowPositionals: true,
   });
   await healthCommand(positionals[0], { json: values.json });
+}
+
+async function handleLand(args: string[]): Promise<void> {
+  if (helpRequested(args)) {
+    console.log(LAND_USAGE);
+    return;
+  }
+  const json = args.includes("--json");
+  let options: Parameters<typeof landCommand>[1];
+  let pr: string | undefined;
+  try {
+    const { values, positionals } = parseArgs({
+      args,
+      options: {
+        json: { type: "boolean", default: false },
+        head: { type: "string" },
+        timeout: { type: "string" },
+        "allow-red-main": { type: "boolean", default: false },
+      },
+      allowPositionals: true,
+    });
+    if (positionals.length > 1)
+      throw new Error("Unexpected positional arguments");
+    if (values.head !== undefined && !/^[a-f\d]{40}$/i.test(values.head))
+      throw new Error("--head must be a full 40-character commit SHA");
+    if (positionals[0] !== undefined && !/^[1-9]\d*$/.test(positionals[0]))
+      throw new Error("PR must be a positive number");
+    pr = positionals[0];
+    options = {
+      json: values.json,
+      head: values.head?.toLowerCase(),
+      timeoutMs:
+        values.timeout === undefined ? undefined : parseTimeout(values.timeout),
+      allowRedMain: values["allow-red-main"],
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (json)
+      console.log(
+        JSON.stringify({ outcome: "error", ready: false, error: message }),
+      );
+    else console.error(`${message}\n${LAND_USAGE}`);
+    process.exitCode = 2;
+    return;
+  }
+  await landCommand(pr, options);
 }
 
 async function handleAsset(args: string[]): Promise<void> {
@@ -141,6 +199,8 @@ toolkit pr - monorepo pull request workflows
 
 Subcommands:
   health [PR_NUMBER]         Check PR health (conflicts, CI, approval)
+  land [PR]                  Wait for exact-head readiness, then squash-merge
+                             with git-spice (only when merging is authorized)
   asset <PR> <FILE|DIR...>   Upload PR media (images, video, asciinema .cast,
                              static demo-site dirs) to public.sjer.red and
                              print URLs. Dirs need a root index.html; .cast
@@ -156,6 +216,9 @@ Subcommands:
 Options:
   --repo <owner/repo>   (review) Repository (default: auto-detect)
   --json                Output as JSON
+  --head <SHA>          (land) Pin the full PR head SHA
+  --timeout <duration>  (land) Optional deadline (e.g. 2h); default: unlimited
+  --allow-red-main      (land) Merge while main is red instead of waiting
   --markdown            (asset) Emit type-appropriate markdown (inline image
                         tags for images, labeled links for video/demo/player
                         pages) instead of bare URLs
@@ -177,6 +240,9 @@ Credentials (asset):
   switch (subcommand) {
     case "health":
       await handleHealth(args);
+      break;
+    case "land":
+      await handleLand(args);
       break;
     case "asset":
       await handleAsset(args);

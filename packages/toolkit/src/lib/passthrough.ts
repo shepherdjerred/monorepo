@@ -406,6 +406,7 @@ export async function runPassthrough(
  */
 export async function spawnPassthroughInvocation(
   invocation: PassthroughInvocation,
+  options: { stdoutToStderr?: boolean } = {},
 ): Promise<number> {
   const executable = resolveExecutable(invocation);
   if (executable === null) {
@@ -415,7 +416,13 @@ export async function spawnPassthroughInvocation(
   }
   const child = Bun.spawn([executable, ...invocation.args], {
     env: await nativeEnvironment(invocation),
-    stdio: ["inherit", "inherit", "inherit"],
+    // A caller that reserves stdout for its own report streams the child's
+    // stdout to stderr instead.
+    stdio: [
+      "inherit",
+      options.stdoutToStderr === true ? 2 : "inherit",
+      "inherit",
+    ],
   });
   return child.exited;
 }

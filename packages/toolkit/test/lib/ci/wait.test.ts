@@ -2,9 +2,10 @@ import { afterEach, describe, expect, test, vi } from "vitest";
 import { GitHubRateLimitError } from "@shepherdjerred/code-review/github-request";
 import {
   isRetriableSnapshotError,
+  waitFor,
   waitForCi,
   type WaitDependencies,
-} from "#lib/ci/wait.ts";
+} from "#lib/ci/wait/wait.ts";
 import { ciFixture, pendingCi, CI_HEAD } from "./fixtures.ts";
 
 function subscription(
@@ -289,5 +290,65 @@ describe("snapshot timeouts during a wait", () => {
       ),
     ).toBe(false);
     expect(isRetriableSnapshotError(snapshotTimeout())).toBe(true);
+  });
+  test("a ready PR keeps waiting through a red main when main is required", async () => {
+    let calls = 0;
+    const deps = dependencies(async () => {
+      calls++;
+      const snapshot = ciFixture();
+      if (calls <= 2) snapshot.main.state = "red";
+      return snapshot;
+    });
+    const result = await waitForCi(
+      {
+        head: CI_HEAD,
+        until: "first-failure",
+        mainPolicy: "require",
+        pollMs: 1,
+      },
+      deps,
+    );
+    expect(result.verdict.outcome).toBe("ready");
+    expect(result.snapshot?.main.state).toBe("pending");
+    expect(calls).toBe(4);
+  });
+
+  test("the default policy reports a red main only after the PR is ready", async () => {
+    let calls = 0;
+    const deps = dependencies(async () => {
+      calls++;
+      const snapshot = calls === 1 ? pendingCi() : ciFixture();
+      snapshot.main.state = "red";
+      return snapshot;
+    });
+    const result = await waitForCi(
+      { head: CI_HEAD, until: "first-failure", pollMs: 1 },
+      deps,
+    );
+    expect(result.verdict.outcome).toBe("main_red");
+    expect(calls).toBe(2);
+  });
+
+  test("the generic loop accepts any snapshot and verdict", async () => {
+    let calls = 0;
+    const result = await waitFor<number>(
+      { pollMs: 1 },
+      {
+        snapshot: async () => ++calls,
+        evaluate: async (count) => ({
+          snapshot: count,
+          verdict: {
+            outcome: count < 3 ? "waiting" : "failure",
+            reasons: [],
+            commands: [],
+          },
+        }),
+        heartbeat: vi.fn(),
+        subscribe: (signal, _wake, connected) =>
+          subscription(signal, connected),
+      },
+    );
+    expect(result.verdict.outcome).toBe("failure");
+    expect(result.snapshot).toBe(3);
   });
 });

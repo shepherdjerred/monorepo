@@ -18,9 +18,12 @@ export type Outcome =
   | "main_red"
   | "timeout"
   | "pr_closed"
+  | "merged"
+  | "merge_failed"
   | "error";
 export const EXIT_CODES: Readonly<Record<Outcome, number>> = {
   ready: 0,
+  merged: 0,
   waiting: 0,
   failure: 1,
   error: 2,
@@ -29,7 +32,15 @@ export const EXIT_CODES: Readonly<Record<Outcome, number>> = {
   main_red: 5,
   timeout: 6,
   pr_closed: 7,
+  merge_failed: 8,
 };
+/**
+ * How a red main affects an otherwise ready PR. A red main never ends a wait
+ * while the PR's own evidence is pending: `report` returns `main_red` once the
+ * PR is ready, `require` keeps waiting for main to recover, and `ignore`
+ * reports the PR ready.
+ */
+export type MainPolicy = "report" | "require" | "ignore";
 export type Snapshot = {
   pr: CiPullRequest;
   pipeline: WoodpeckerPipeline | null;
@@ -153,7 +164,7 @@ function structuralVerdict(
   snapshot: Snapshot,
   expectedHead: string,
 ): Verdict | null {
-  const { pr, pipeline, main } = snapshot;
+  const { pr, pipeline } = snapshot;
   if (pr.head.sha !== expectedHead)
     return {
       outcome: "head_changed",
@@ -165,14 +176,6 @@ function structuralVerdict(
       outcome: "pr_closed",
       reasons: [pr.merged ? "PR is already merged" : "PR is closed"],
       commands: [],
-    };
-  if (main.state === "red")
-    return {
-      outcome: "main_red",
-      reasons: [
-        "Main is red; keep working. Do not try to fix main unless explicitly told.",
-      ],
-      commands: ["toolkit ci main", "toolkit ci explain --main"],
     };
   if (
     snapshot.consistent === false ||
@@ -243,10 +246,29 @@ function pendingResults(
   );
 }
 
+function redMainVerdict(policy: MainPolicy): Verdict {
+  return policy === "require"
+    ? {
+        outcome: "waiting",
+        reasons: [
+          "The PR is ready, but main is red; waiting for main to recover before reporting ready.",
+        ],
+        commands: ["toolkit ci main"],
+      }
+    : {
+        outcome: "main_red",
+        reasons: [
+          "The PR is ready, but main is red. Keep working; do not try to fix main unless explicitly told.",
+        ],
+        commands: ["toolkit ci main", "toolkit ci explain --main"],
+      };
+}
+
 export function evaluateReadiness(
   snapshot: Snapshot,
   expectedHead: string,
   until: "first-failure" | "settled" = "first-failure",
+  mainPolicy: MainPolicy = "report",
 ): Verdict {
   const structural = structuralVerdict(snapshot, expectedHead);
   if (structural !== null) return structural;
@@ -258,16 +280,20 @@ export function evaluateReadiness(
       reasons: failures,
       commands: [`toolkit ci explain ${String(snapshot.pr.number)}`],
     };
-  return pending ||
+  if (
+    pending ||
     snapshot.pr.mergeable === null ||
     ["unknown", "blocked"].includes(snapshot.pr.mergeable_state)
-    ? {
-        outcome: "waiting",
-        reasons: [
-          "Waiting for blocking checks and merge metadata; long queues and builds are expected.",
-        ],
-        commands: ["toolkit ci load"],
-      }
+  )
+    return {
+      outcome: "waiting",
+      reasons: [
+        "Waiting for blocking checks and merge metadata; long queues and builds are expected.",
+      ],
+      commands: ["toolkit ci load"],
+    };
+  return mainPolicy !== "ignore" && snapshot.main.state === "red"
+    ? redMainVerdict(mainPolicy)
     : {
         outcome: "ready",
         reasons: [

@@ -1,38 +1,57 @@
 import { setTimeout as delay } from "node:timers/promises";
 import { GitHubRateLimitError } from "@shepherdjerred/code-review/github-request";
-import { evaluateReadiness, type Snapshot, type Verdict } from "./readiness.ts";
+import {
+  evaluateReadiness,
+  type MainPolicy,
+  type Snapshot,
+  type Verdict,
+} from "#lib/ci/readiness.ts";
 
-export type WaitDependencies = {
-  snapshot: (signal: AbortSignal, force: boolean) => Promise<Snapshot>;
-  subscribe: (
+type Subscribe = (
+  signal: AbortSignal,
+  wake: () => void,
+  connected: () => void,
+  fatal: (error: unknown) => void,
+) => Promise<void>;
+
+/** Everything a foreground wait needs besides how to judge a snapshot. */
+export type WaitLoopDependencies<S> = {
+  snapshot: (signal: AbortSignal, force: boolean) => Promise<S>;
+  /** Judge a fresh snapshot; may re-read before accepting a terminal verdict. */
+  evaluate: (
+    snapshot: S,
     signal: AbortSignal,
-    wake: () => void,
-    connected: () => void,
-    fatal: (error: unknown) => void,
-  ) => Promise<void>;
-  heartbeat: (snapshot: Snapshot | null) => void;
+  ) => Promise<{ snapshot: S; verdict: Verdict }>;
+  subscribe: Subscribe;
+  heartbeat: (snapshot: S | null) => void;
   /** Reports that GitHub refused a read on quota and when polling resumes. */
   rateLimited?: (error: GitHubRateLimitError, resumeAt: number) => void;
 };
-export type WaitOptions = {
-  head: string;
-  until: "first-failure" | "settled";
+export type WaitLoopOptions = {
   timeoutMs?: number;
   signal?: AbortSignal;
   pollMs?: number;
   heartbeatMs?: number;
 };
-export type WaitResult = {
-  snapshot: Snapshot | null;
+export type LoopResult<S> = {
+  snapshot: S | null;
   verdict: Verdict;
   elapsedMs: number;
 };
 
+export type WaitDependencies = Omit<WaitLoopDependencies<Snapshot>, "evaluate">;
+export type WaitOptions = WaitLoopOptions & {
+  head: string;
+  until: "first-failure" | "settled";
+  mainPolicy?: MainPolicy;
+};
+export type WaitResult = LoopResult<Snapshot>;
+
 /** The requested deadline elapsed; that says nothing about CI itself. */
-export function timeoutResult(
-  snapshot: Snapshot | null,
+export function timeoutResult<S>(
+  snapshot: S | null,
   started: number,
-): WaitResult {
+): LoopResult<S> {
   return {
     snapshot,
     verdict: {
@@ -113,35 +132,40 @@ function notifier() {
   };
 }
 
-type WaitContext = {
-  options: WaitOptions;
-  dependencies: WaitDependencies;
+type WaitContext<S> = {
+  options: WaitLoopOptions;
+  dependencies: WaitLoopDependencies<S>;
   signal: AbortSignal;
   updates: ReturnType<typeof notifier>;
   started: number;
-  snapshot: Snapshot | null;
+  snapshot: S | null;
   streamError: Error | null;
 };
 
-function assertStream(context: WaitContext): void {
+function assertStream<S>(context: WaitContext<S>): void {
   if (context.streamError !== null) throw context.streamError;
 }
 
+/** A ready PR candidate is accepted only after a forced, unchanged re-read. */
 async function candidate(
-  context: WaitContext,
+  options: WaitOptions,
+  reread: WaitDependencies["snapshot"],
   snapshot: Snapshot,
+  signal: AbortSignal,
 ): Promise<{ snapshot: Snapshot; verdict: Verdict }> {
   const verdict = evaluateReadiness(
     snapshot,
-    context.options.head,
-    context.options.until,
+    options.head,
+    options.until,
+    options.mainPolicy,
   );
   if (verdict.outcome !== "ready") return { snapshot, verdict };
-  const final = await context.dependencies.snapshot(context.signal, true);
+  const final = await reread(signal, true);
   const checked = evaluateReadiness(
     final,
-    context.options.head,
-    context.options.until,
+    options.head,
+    options.until,
+    options.mainPolicy,
   );
   const changed =
     final.pr.base.sha !== snapshot.pr.base.sha ||
@@ -162,18 +186,18 @@ async function candidate(
   };
 }
 
-async function runLoop(context: WaitContext): Promise<WaitResult> {
+async function runLoop<S>(context: WaitContext<S>): Promise<LoopResult<S>> {
   let heartbeatAt = context.started;
   for (;;) {
     context.signal.throwIfAborted();
     assertStream(context);
-    let result: Awaited<ReturnType<typeof candidate>>;
+    let result: { snapshot: S; verdict: Verdict };
     try {
       const current = await context.dependencies.snapshot(
         context.signal,
         false,
       );
-      result = await candidate(context, current);
+      result = await context.dependencies.evaluate(current, context.signal);
     } catch (error) {
       if (error instanceof GitHubRateLimitError) {
         await sleepUntilRateLimitReset(
@@ -211,8 +235,8 @@ async function runLoop(context: WaitContext): Promise<WaitResult> {
   }
 }
 
-async function subscribe(
-  context: WaitContext,
+async function subscribe<S>(
+  context: WaitContext<S>,
   connection: { resolve: () => void; reject: (error: unknown) => void },
 ): Promise<void> {
   const fatal = (error: unknown) => {
@@ -236,17 +260,17 @@ async function subscribe(
 }
 
 /** One foreground process; events coalesce and ordinary waiting has no deadline. */
-export async function waitForCi(
-  options: WaitOptions,
-  dependencies: WaitDependencies,
-): Promise<WaitResult> {
+export async function waitFor<S>(
+  options: WaitLoopOptions,
+  dependencies: WaitLoopDependencies<S>,
+): Promise<LoopResult<S>> {
   options.signal?.throwIfAborted();
   const controller = new AbortController();
   const signal =
     options.signal === undefined
       ? controller.signal
       : AbortSignal.any([controller.signal, options.signal]);
-  const context: WaitContext = {
+  const context: WaitContext<S> = {
     options,
     dependencies,
     signal,
@@ -291,4 +315,16 @@ export async function waitForCi(
     controller.abort();
     await subscription;
   }
+}
+
+/** Wait for one pinned PR head to become merge-ready or actionable. */
+export async function waitForCi(
+  options: WaitOptions,
+  dependencies: WaitDependencies,
+): Promise<WaitResult> {
+  return waitFor(options, {
+    ...dependencies,
+    evaluate: (snapshot, signal) =>
+      candidate(options, dependencies.snapshot, snapshot, signal),
+  });
 }
