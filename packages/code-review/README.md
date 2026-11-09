@@ -63,6 +63,16 @@ A `ReviewProvider` (see `src/types.ts`) declares everything consumers need:
   automatically.
 - **`botAuthoredPullRequestPolicy`** — whether bot-authored PRs still require
   this provider's review (`review`) or are explicitly skipped (`skip`).
+- **`botAuthorAllowlist`** — with policy `review`, the exact GitHub App logins
+  whose PRs the provider is known to review; every other `Bot` author is
+  skipped (`reviewGateSkipReasonForAuthor` → `bot-author`). Codex lists
+  `justin-principal-engineer[bot]` (the local agent runner) and
+  `long-summer-intern[bot]` (the ci-base/ci-playwright image pin promotions,
+  `ci/scripts/images/update-ci-image-pin-github.ts`). Promotion PRs arm
+  `gh pr merge --auto`, and the gate only passes with a review in hand: a
+  skipped Codex beside CodeRabbit's missing seat is a hard fail, which is why
+  #4312 waited 21 h for a human merge. Codex reviews App-authored PRs when
+  asked (#3588).
 
 ### Gate semantics
 

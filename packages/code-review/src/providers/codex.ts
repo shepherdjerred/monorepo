@@ -32,16 +32,26 @@ export function parseCodexReceiptHead(body: string): string | null {
  * Severity: Codex flags P0..P2 via shields.io badges (`![P2 Badge](…)`); the
  * docs claim P0/P1-only but live PRs show P2, so we keep the full P0..P3 range.
  *
- * Bot PRs: only the local justin-principal-engineer runner requires Codex's
- * review-at-head gate. Other bot PRs retain the skip behavior because Codex has
- * no documented skip marker and may not review those producers.
+ * Bot PRs: two GitHub App authors require Codex's review-at-head gate.
+ * `justin-principal-engineer[bot]` is the local agent runner.
+ * `long-summer-intern[bot]` authors the ci-base/ci-playwright image pin
+ * promotions (`ci/scripts/images/update-ci-image-pin-github.ts`), which arm
+ * `gh pr merge --auto`; without a Codex review the gate hard-fails on
+ * CodeRabbit's missing seat and the auto-merge never fires — #4312 opened
+ * 2026-11-08T03:24Z and was merged by hand at 2026-11-09T00:58Z, 21 h in which
+ * every verify re-installed the stale toolchain. Codex reviews App-authored
+ * PRs when asked (#3588). Other bot PRs retain the skip behavior because
+ * Codex has no documented skip marker and may not review those producers.
  */
 export const codexProvider: ReviewProvider = {
   id: "codex",
   displayName: "Codex",
   startsReviewOnPush: false,
   botAuthoredPullRequestPolicy: "review",
-  botAuthorAllowlist: ["justin-principal-engineer[bot]"],
+  botAuthorAllowlist: [
+    "justin-principal-engineer[bot]",
+    "long-summer-intern[bot]",
+  ],
   authorLogins: ["chatgpt-codex-connector"],
   parseSeverity: parseCodexSeverity,
   // Codex posts each finding once, as an addressable thread, so there is
