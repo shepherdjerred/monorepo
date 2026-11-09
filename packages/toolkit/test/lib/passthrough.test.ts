@@ -3,7 +3,10 @@ import { chmod, mkdir, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { z } from "zod";
-import { buildPassthroughInvocation } from "#lib/passthrough.ts";
+import {
+  buildPassthroughInvocation,
+  spawnPassthroughInvocation,
+} from "#lib/passthrough.ts";
 
 const HelpReport = z.object({
   args: z.array(z.string()),
@@ -451,6 +454,26 @@ console.log("library returned:" + code);
   expect(code).toBe(0);
   expect(stdout).toBe('--auth-token ""library returned:143\n');
   expect(stderr).toBe("");
+});
+
+test("library passthrough terminates its child when the caller cancels", async () => {
+  const directory = await fakePath();
+  await writeExecutable(directory, "git-spice", "#!/bin/sh\nexec sleep 30\n");
+  const controller = new AbortController();
+  const started = Date.now();
+  setTimeout(() => {
+    controller.abort();
+  }, 200);
+  const code = await spawnPassthroughInvocation(
+    {
+      executable: "git-spice",
+      args: ["branch", "merge"],
+      env: { ...Bun.env, PATH: `${directory}:/usr/bin:/bin` },
+    },
+    { stdoutToStderr: true, signal: controller.signal },
+  );
+  expect(code).toBe(143);
+  expect(Date.now() - started).toBeLessThan(10_000);
 });
 
 test.each(["--auth-token synthetic-secret", "--auth-token=synthetic-secret"])(

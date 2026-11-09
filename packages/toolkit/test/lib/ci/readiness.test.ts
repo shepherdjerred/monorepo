@@ -218,6 +218,10 @@ describe("review and structural readiness", () => {
     expect(evaluateReadiness(snapshot, CI_HEAD).outcome).toBe("main_red");
     snapshot.main.state = "green";
     snapshot.pr.mergeable = false;
+    snapshot.main.state = "red";
+    expect(evaluateReadiness(snapshot, CI_HEAD).outcome).toBe("failure");
+    snapshot.main.state = "green";
+    snapshot.pr.mergeable = false;
     expect(evaluateReadiness(snapshot, CI_HEAD).outcome).toBe("failure");
     snapshot.pr.mergeable = true;
     snapshot.pr.draft = true;
@@ -225,6 +229,43 @@ describe("review and structural readiness", () => {
     snapshot.pr.merged = true;
     expect(evaluateReadiness(snapshot, CI_HEAD).outcome).toBe("pr_closed");
     expect(EXIT_CODES.main_red).toBe(5);
+  });
+  test("a red main never ends a wait while the PR's own evidence is pending", () => {
+    const pending = pendingCi();
+    pending.main.state = "red";
+    for (const policy of ["report", "require", "ignore"] as const)
+      expect(
+        evaluateReadiness(pending, CI_HEAD, "first-failure", policy).outcome,
+      ).toBe("waiting");
+    const failed = pendingCi();
+    failed.main.state = "red";
+    failed.pipeline = {
+      number: 7,
+      commit: CI_HEAD,
+      status: "failure",
+      event: "pull_request",
+      workflows: [
+        { name: "verify", state: "failure" },
+        { name: "ci-complete", state: "failure" },
+      ],
+    };
+    expect(evaluateReadiness(failed, CI_HEAD).outcome).toBe("failure");
+  });
+  test("a ready PR reports, waits through, or ignores a red main by policy", () => {
+    const snapshot = ciFixture();
+    snapshot.main.state = "red";
+    expect(evaluateReadiness(snapshot, CI_HEAD).outcome).toBe("main_red");
+    expect(
+      evaluateReadiness(snapshot, CI_HEAD, "first-failure", "require").outcome,
+    ).toBe("waiting");
+    expect(
+      evaluateReadiness(snapshot, CI_HEAD, "first-failure", "ignore").outcome,
+    ).toBe("ready");
+    snapshot.main.state = "green";
+    for (const policy of ["report", "require", "ignore"] as const)
+      expect(
+        evaluateReadiness(snapshot, CI_HEAD, "first-failure", policy).outcome,
+      ).toBe("ready");
   });
   test("absence, incomplete merge metadata, and evidence races remain pending", () => {
     const snapshot = ciFixture();

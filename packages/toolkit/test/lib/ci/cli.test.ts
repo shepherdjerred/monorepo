@@ -13,7 +13,10 @@ test("help is available without credentials and describes the wait contract", as
   const { output, error, code } = await runCi(["--help"]);
   expect(code, error).toBe(0);
   expect(output).toContain("default: unlimited");
-  expect(output).toContain("5 main red");
+  expect(output).toContain("5 PR ready but main red");
+  expect(output).toContain("wait --main");
+  expect(output).toContain("toolkit pr land");
+  expect(output).toContain("--follow");
 });
 
 test("bad flags emit a single parseable JSON error and exit 2 before authentication", async () => {
@@ -25,6 +28,13 @@ test("bad flags emit a single parseable JSON error and exit 2 before authenticat
     ["timings", "--head", "a".repeat(40)],
     ["timings", "--since", "0h"],
     ["main", "--since", "1h"],
+    ["wait", "--main", "--until", "settled"],
+    ["wait", "--main", "99"],
+    ["main", "--head", "a".repeat(40)],
+    ["load", "--main"],
+    ["wait", "99", "--follow"],
+    ["explain", "--main", "--follow"],
+    ["wait", "--main", "--follow", "--head", "a".repeat(40)],
   ]) {
     const { output, error, code } = await runCi([...args, "--json"]);
     expect(code, error).toBe(2);

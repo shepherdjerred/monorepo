@@ -107,17 +107,43 @@ async function selectMainRuns(
   return { latest, lastVerdict };
 }
 
+/** Main's current tip commit. */
+export async function readMainTip(
+  github: GitHubClient,
+  signal?: AbortSignal,
+): Promise<string> {
+  const branch = await github.read(
+    `/repos/${github.repo}/branches/main`,
+    z.object({ commit: z.object({ sha: z.string() }) }),
+    signal,
+  );
+  return branch.commit.sha;
+}
+
+/** Throws unless `sha` is main's tip or one of its ancestors. */
+export async function assertOnMain(
+  github: GitHubClient,
+  sha: string,
+  signal?: AbortSignal,
+): Promise<void> {
+  const comparison = await github.read(
+    `/repos/${github.repo}/compare/${sha}...main`,
+    z.object({
+      status: z.enum(["ahead", "behind", "identical", "diverged"]),
+    }),
+    signal,
+  );
+  if (comparison.status !== "ahead" && comparison.status !== "identical")
+    throw new Error(`${sha} is not on main (main is ${comparison.status})`);
+}
+
 export async function getMainStatus(
   github: GitHubClient,
   config: WoodpeckerConfig,
   signal?: AbortSignal,
 ): Promise<MainStatus> {
-  const [branch, listed] = await Promise.all([
-    github.read(
-      `/repos/${github.repo}/branches/main`,
-      z.object({ commit: z.object({ sha: z.string() }) }),
-      signal,
-    ),
+  const [tip, listed] = await Promise.all([
+    readMainTip(github, signal),
     listPipelines(
       config,
       {
@@ -134,16 +160,72 @@ export async function getMainStatus(
     ),
   ]);
   const { latest, lastVerdict } = await selectMainRuns(
-    branch.commit.sha,
+    tip,
     listed,
     config,
     signal,
   );
   return {
-    headSha: branch.commit.sha,
+    headSha: tip,
     latest,
     lastVerdict,
     state: mainVerdict(latest, lastVerdict),
     url: latest === null ? null : pipelineUrl(latest, config),
+  };
+}
+
+/** Main runs searched for a pinned commit before reporting none exists yet. */
+const PINNED_RUN_WINDOW = 200;
+
+export type MainRunSnapshot = {
+  /** The pinned main commit this wait reports on. */
+  sha: string;
+  /** Main's tip when this snapshot was read. */
+  tipSha: string;
+  /** The newest run that verifies the pinned commit, if one exists. */
+  run: WoodpeckerPipeline | null;
+  url: string | null;
+};
+
+/** The newest verifying main run for one exact commit. */
+export async function getMainRun(
+  github: GitHubClient,
+  config: WoodpeckerConfig,
+  sha: string,
+  signal?: AbortSignal,
+): Promise<MainRunSnapshot> {
+  const [tip, listed] = await Promise.all([
+    readMainTip(github, signal),
+    listPipelines(
+      config,
+      {
+        event: ["push", "manual"],
+        branch: "main",
+        // Runs are listed newest first, and a commit's push run precedes any
+        // manual recovery of it. Once its push is listed, every newer run of
+        // that commit is too; a partial manual run must not stop the search.
+        stopWhen: (entries) =>
+          entries.length >= PINNED_RUN_WINDOW ||
+          entries.some(
+            (entry) => entry.commit === sha && entry.event === "push",
+          ),
+      },
+      signal,
+    ),
+  ]);
+  let run: WoodpeckerPipeline | null = null;
+  for (const entry of listed) {
+    if (entry.commit !== sha) continue;
+    const pipeline = await getPipeline(entry.number, config, signal);
+    assertMainIdentity(pipeline, entry);
+    if (!verifiesMain(pipeline)) continue;
+    run = pipeline;
+    break;
+  }
+  return {
+    sha,
+    tipSha: tip,
+    run,
+    url: run === null ? null : pipelineUrl(run, config),
   };
 }

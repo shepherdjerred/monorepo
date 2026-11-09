@@ -78,7 +78,8 @@ export type EventWatch = {
   wake: () => void;
   connected: () => void;
   fatal: (error: unknown) => void;
-  prNumber: number;
+  /** The PR whose pipelines wake the wait; null watches main only. */
+  prNumber: number | null;
 };
 
 function isCancelled(signal: AbortSignal): boolean {
@@ -115,6 +116,7 @@ async function consumeEvents(
     const event = EventSchema.parse(JSON.parse(frame));
     if (event.repo.id !== config.repoId) continue;
     const relevantPr =
+      watch.prNumber !== null &&
       isPrVerificationPipeline(event.pipeline) &&
       event.pipeline.ref.startsWith(`refs/pull/${String(watch.prNumber)}/`);
     const relevantMain =

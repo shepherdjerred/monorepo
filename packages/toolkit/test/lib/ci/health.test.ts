@@ -48,10 +48,22 @@ test("PR health retains pending publication and keeps work moving when main is r
   expect(buildPrHealthReport(input).overallStatus).toBe("PENDING");
   input.snapshot.main.state = "red";
   const report = buildPrHealthReport(input);
-  expect(report.overallStatus).toBe("UNHEALTHY");
+  // A red main is surfaced but does not override the PR's own pending verdict.
+  expect(report.overallStatus).toBe("PENDING");
   expect(report.nextSteps.join(" ")).toContain("keep working");
   expect(report.nextSteps.join(" ")).toContain(
     "Do not try to fix main unless explicitly told",
   );
   expect(report.nextSteps.join(" ")).not.toContain("fix hard failures");
+});
+
+test("PR health reports a ready PR against a red main as main red", () => {
+  const input = evidence();
+  if (input.snapshot === undefined) throw new Error("Missing snapshot fixture");
+  input.snapshot.main.state = "red";
+  const report = buildPrHealthReport(input);
+  expect(report.overallStatus).toBe("UNHEALTHY");
+  expect(report.nextSteps.join(" ")).toContain(
+    "The PR is ready, but main is red",
+  );
 });

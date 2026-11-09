@@ -46,14 +46,27 @@ branch, not the latest commit.
 
 ## Prove readiness
 
-- Woodpecker is authoritative for CI. Use `toolkit ci wait <PR> --json` for
-  merge readiness and `toolkit ci explain <PR>` for bounded failure evidence.
-  Keep awaiting the same foreground process. Long queues and builds are normal;
-  elapsed time alone is not a failure. Use `toolkit ci load` for capacity.
+- Woodpecker is authoritative for CI. Each request has one blocking command;
+  run it once and hold it as `~/AGENTS.md` describes for your harness:
+
+  | Request                                  | Command                                 |
+  | ---------------------------------------- | --------------------------------------- |
+  | Get the PR's CI green                    | `toolkit ci wait <PR> --json`           |
+  | Merge when ready / get green, then merge | `toolkit pr land <PR> --json`           |
+  | Get main green / verify a merge on main  | `toolkit ci wait --main [--head <SHA>]` |
+  | Wait until main is fixed                 | `toolkit ci wait --main --follow`       |
+  | Watch a deployment                       | `toolkit deploy wait <ID>`              |
+
+  Use `toolkit ci explain <PR>` for bounded failure evidence and
+  `toolkit ci load` for capacity. Long queues and builds are normal; elapsed
+  time alone is not a failure.
+
 - Wait exits distinguish CI failure (1), errors (2), human intervention (3),
-  head changes (4), red main (5), timeout (6), and closed/merged PRs (7).
-  Keep working if main is red; do not try to fix main unless explicitly told.
-  A timeout is not CI failure. A changed head requires an explicit new wait.
+  head changes (4), PR ready but main red (5), timeout (6), and closed/merged
+  PRs (7). `pr land` adds 0 for merged and 8 for a failed merge. A red main
+  never ends a wait early. Keep working if main is red; do not try to fix main
+  unless explicitly told. A timeout is not CI failure. A changed head requires
+  an explicit new wait.
   Use `--until settled` when collecting all blocking results is useful.
   Full command and credential details live in `packages/toolkit/README.md`.
 - Use `toolkit pr review list <PR> --json` for authors, priority, full feedback,
@@ -80,4 +93,5 @@ scope permits more than one PR.
 ## Merge when authorized
 
 Do not merge a PR unless the task authorizes it. For an authorized merge, use
-`toolkit git-spice branch merge --method squash`.
+`toolkit pr land <PR> --json`. It waits for exact-head readiness, then runs
+`toolkit git-spice branch merge --method squash` for you.

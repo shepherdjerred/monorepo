@@ -19,10 +19,14 @@ with `toolkit ci explain [PR]` and provider feedback with
 `toolkit pr review list [PR] --json`. Follow the delivery skill for repairs
 and audited thread resolution before publishing.
 
-For an authorized merge, use `toolkit git-spice branch merge --method squash`.
-If the user requests an immediate attempt without waiting, add
-`--ready-timeout 0`; this checks once and preserves the repository's gates.
-Report the actual merge result and any unverified CI or deployment layers.
+To get a PR green, or green and then merged, delegate the loop to the
+`ci-driver` subagent and relay its report. To merge an already-green PR when
+authorized, run `toolkit pr land [PR] --json` once and hold it as `~/AGENTS.md`
+describes for your harness. It waits for exact-head readiness, then squash-merges. On a
+nonzero exit, fix the reported blocker, push, and run it again. If the user
+asks for an immediate attempt without waiting, use
+`toolkit git-spice branch merge --method squash --ready-timeout 0`. Report the
+actual merge result and any unverified CI or deployment layers.
 
 When explicitly asked to operate the complete open PR fleet, use the
 foreground `bun run pr:fleet --model <provider>/<model-id>` controller. Its

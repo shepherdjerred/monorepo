@@ -261,14 +261,23 @@ export function buildPrHealthReport(evidence: PrHealthEvidence): HealthReport {
     overallStatus: aggregateStatuses(checks.map((check) => check.status)),
     checks,
     nextSteps:
-      verdict === null ? nextStepsFor(checks) : readinessSteps(verdict),
+      verdict === null
+        ? nextStepsFor(checks)
+        : readinessSteps(verdict, evidence.snapshot?.main.state === "red"),
   };
 }
 
-function readinessSteps(verdict: Verdict): string[] {
-  return verdict.outcome === "ready"
-    ? []
-    : [...verdict.reasons, ...verdict.commands];
+const RED_MAIN_STEP =
+  "Main is red; keep working. Do not try to fix main unless explicitly told.";
+
+function readinessSteps(verdict: Verdict, mainRed: boolean): string[] {
+  if (verdict.outcome === "ready") return [];
+  // A red main no longer decides a pending PR's verdict, but a one-shot
+  // report still surfaces it.
+  const steps = [...verdict.reasons, ...verdict.commands];
+  return mainRed && verdict.outcome !== "main_red"
+    ? [...steps, RED_MAIN_STEP]
+    : steps;
 }
 
 function evidenceCiHealth(evidence: PrHealthEvidence): HealthCheck {

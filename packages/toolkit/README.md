@@ -395,6 +395,10 @@ toolkit ci wait                         # Infer the PR for this branch
 toolkit ci wait 3447 --json             # One final report; progress on stderr
 toolkit ci wait 3447 --until settled    # Collect all blocking check results
 toolkit ci wait 3447 --timeout 2h       # Optional deadline; no default deadline
+toolkit ci wait --main --json           # Main's tip: wait for its own verifying run
+toolkit ci wait --main --head <SHA>     # One main commit, e.g. a merge commit
+toolkit ci wait --main --follow         # Follow new main commits until the tip passes
+toolkit pr land 3447 --json             # Wait for readiness, then squash-merge
 toolkit ci explain 3447                # Current blockers and bounded failure logs
 toolkit ci main                        # Current main verification and last completed verdict
 toolkit ci load                        # Queue, compute/gate admission, CPU/memory/disk/I/O
@@ -450,6 +454,22 @@ appear, human intervention is needed, or all merge requirements pass. A ready
 candidate gets a fresh check of head, base, pipeline attempt, rules, and main.
 `--until settled` waits for the remaining blocking results after a CI failure;
 head changes and structural blockers still return immediately.
+
+A red main never ends a PR wait early. The wait keeps running while the PR's
+own pipeline, required checks, or merge metadata are pending. A PR failure,
+conflict, or human blocker is still reported first. Exit 5 means the PR itself
+is ready while main is red. Main pushes wake the wait, so a ready PR waiting on
+main notices main's recovery promptly.
+
+`wait --main` waits for main's own verifying run of one commit: the tip when the
+wait starts, or `--head <full SHA>`. The commit must be main's tip or one of its
+ancestors. Push runs and full manual recoveries count; partial manual jobs do
+not. It exits 0 when that run passes and 1 with bounded failure logs when it
+fails. If main has moved on, the report says so but still judges the pinned
+commit. `--until` does not apply. `--follow` instead re-reads main's tip on
+every poll and keeps waiting through failed commits. It returns only when the
+current tip's own run passes, which makes it the wait for "until main is
+fixed". It cannot be combined with `--head`.
 
 PR observation considers both normal PR pipelines and signed ready-for-review
 metadata pipelines for the exact head. Title and label changes cannot replace
@@ -530,18 +550,18 @@ image publication, chart publication and ArgoCD reconciliation without skipped
 workflows; partial manual jobs cannot clear a failure. A failed last completed
 run keeps main red while its recovery build is pending. Keep working if main is
 red; do not try to fix main unless explicitly told. `ci explain --main` is an
-alias for `ci main`.
+alias for `ci main`. To wait for main itself, use `ci wait --main`.
 
-| Wait exit | Meaning                                                       |
-| --------- | ------------------------------------------------------------- |
-| 0         | Merge ready                                                   |
-| 1         | Blocking check failure or merge conflict                      |
-| 2         | Usage, authentication, API, or contract error                 |
-| 3         | Human intervention (review, draft, pipeline approval)         |
-| 4         | PR head changed; explicitly start a new wait for the new head |
-| 5         | Main red; keep working; fix main only when explicitly told    |
-| 6         | Requested timeout; this does not mean CI failed               |
-| 7         | PR closed or already merged                                   |
+| Wait exit | Meaning                                                         |
+| --------- | --------------------------------------------------------------- |
+| 0         | Merge ready (`--main`: the pinned main run passed)              |
+| 1         | Blocking check failure or merge conflict (`--main`: run failed) |
+| 2         | Usage, authentication, API, or contract error                   |
+| 3         | Human intervention (review, draft, pipeline approval)           |
+| 4         | PR head changed; explicitly start a new wait for the new head   |
+| 5         | PR ready but main red; fix main only when explicitly told       |
+| 6         | Requested timeout; this does not mean CI failed                 |
+| 7         | PR closed or already merged                                     |
 
 `--json` reserves stdout for one final JSON report. Failure reports include up
 to three failed workflows with at most 60 lines / 4,000 characters of logs
@@ -550,6 +570,38 @@ Secrets and terminal control sequences are removed before truncation.
 `explain` is a one-shot diagnostic; a pending report exits 0 and has
 `ready: false`. SIGINT and SIGTERM cancel the foreground wait with exits 130
 and 143. The command does not merge or mutate the PR.
+
+### Wait, then merge
+
+`toolkit pr land [PR] [--head <SHA>] [--timeout <duration>] [--allow-red-main] [--json]`
+merges, so run it only when the task authorizes merging. It runs the same
+pinned wait as `ci wait`, but treats a red main as a reason to keep waiting
+rather than a result. `--allow-red-main` merges while main is red. When the PR
+is ready, it rechecks the head and runs
+`git-spice branch merge --method squash --ready-timeout 0 --branch <head>`.
+git-spice output goes to stderr, so `--json` keeps stdout for one report. The
+report includes `mergeCommitSha` and a `ci wait --main --head` command for the
+merge commit.
+
+| Land exit | Meaning                                                         |
+| --------- | --------------------------------------------------------------- |
+| 0         | Merged, confirmed on GitHub                                     |
+| 1–4, 6, 7 | As for `ci wait`; nothing was merged. Fix, push, run land again |
+| 8         | Ready, but `git-spice branch merge` failed or did not merge     |
+
+Run `pr land` from a checkout where git-spice tracks the PR branch. To get a PR
+green and then merge, run `pr land`, fix whatever it reports, push, and run it
+again.
+
+### Holding a wait from an agent
+
+These waits stay quiet until there is a result. When toolkit detects an agent
+harness, it prints one stderr line naming that harness's cheapest way to hold
+the process. Claude Code should run the command with `run_in_background` and
+act on the completion notification. Codex gets no completion notice, so it
+should hold the session inside one `exec` cell (pragma `yield_time_ms` 3600000) that loops an empty `write_stdin` until the command exits. Measured on
+codex-cli 0.167.0, a 25-minute wait held this way cost two model turns in total,
+the same as a 7-minute one.
 
 GitHub credentials come from `GH_TOKEN` or `gh auth token`. One-shot commands
 (`ci explain`, `ci main`, `pr health`, `pr review`) still exit 2 on a GitHub

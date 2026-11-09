@@ -46,9 +46,11 @@ Credential helpers (no secrets on disk):
 Monorepo workflows:
   tracker <COMMAND>           First-party issues, comments, votes and actor identity
   ci wait [PR]                Block until merge readiness or an actionable blocker
+  ci wait --main              Block until main's own verifying run passes or fails
   ci explain|main|load        Failure evidence, main health, and CI capacity
   brim [--provider <id>] [--dry-run]  Start a session on the least-used AI subscription
   pr health [PR_NUMBER]        Check merge, exact-head Woodpecker CI, and review
+  pr land [PR]                 Wait for exact-head readiness, then squash-merge
   pr asset <PR> <FILE|DIR...>  Upload review media to public.sjer.red
   pr review <ACTION> <PR>      Inspect or resolve review-provider findings
   deployed [SELECTOR]          Trace a commit or service to the live homelab
