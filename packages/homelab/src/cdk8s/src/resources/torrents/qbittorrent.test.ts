@@ -192,7 +192,7 @@ describe("qBittorrent deployment", () => {
       requests: { cpu: "25m", memory: "64Mi" },
     });
     expect(getContainer("qbittorrent").resources).toEqual({
-      requests: { cpu: "200m", memory: "4608Mi" },
+      requests: { cpu: "200m", memory: "256Mi" },
       limits: { cpu: "2000m", memory: "6144Mi" },
     });
     expect(getContainer("qbittorrent-exporter").resources).toEqual({

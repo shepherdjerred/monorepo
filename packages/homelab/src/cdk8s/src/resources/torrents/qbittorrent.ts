@@ -245,8 +245,12 @@ export function createQBitTorrentDeployment(
         failureThreshold: 3,
       }),
       resources: {
+        // The request is anonymous memory, not working set: over 14 days
+        // (2026-11-08) RSS peaked at 60Mi while torrent page cache grew until
+        // the limit (cache p95 5.8Gi). That cache is reclaimable, so the limit
+        // keeps it bounded and the request no longer reserves it.
         memory: {
-          request: Size.mebibytes(4608),
+          request: Size.mebibytes(256),
           limit: Size.gibibytes(6),
         },
         cpu: {
