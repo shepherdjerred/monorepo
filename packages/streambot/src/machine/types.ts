@@ -105,6 +105,11 @@ export type ResolvedSource = {
   readonly ffmpegInputHeaders?: Readonly<Record<string, string>>;
   /** Provider-specific input demuxer options, never inferred from arbitrary user URLs. */
   readonly ffmpegInputOptions?: readonly string[];
+  /**
+   * A live broadcast rather than seekable media: it arrives at realtime and cannot be read ahead,
+   * so the send pacer keeps a rebuffer cushion behind the live edge (`stream.liveBufferMs`).
+   */
+  readonly live?: true;
   /** Live HLS whose segments may restart timestamps at an ad/content discontinuity. */
   readonly discontinuousLive?: boolean;
   /** Single video rendition to use when an HLS master advertises multiple tracks. */

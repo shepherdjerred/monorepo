@@ -139,6 +139,27 @@ little extra delay, and the headroom absorbs bursts. It is also where the `readr
 pre-roll has to land to cushion slow encoder moments. The voice connection carries no video, so
 music never sets it.
 
+## Why live sources rebuffer instead of catching up
+
+A seekable file can be read ahead, so when the send pacer falls behind its schedule it skips sleeps
+until it catches up. A live broadcast cannot: an HLS source only publishes media at realtime, and
+ffmpeg polls its playlist up to a segment late. After one upstream stall the pacer stays behind for
+the rest of the stream. It then forwards each segment the moment it arrives, a burst of two seconds
+of frames followed by a gap, and viewers see steady stutter even though the receiver buffers up to
+a second.
+
+Sports, LoL, and yt-dlp `is_live` sources are therefore marked live. Their Go Live pipeline shares
+one rebuffer hold between its audio and video streams
+([`LiveScheduleGate`](https://github.com/shepherdjerred/monorepo/blob/main/packages/discord-video-stream/src/media/LiveScheduleGate.ts)).
+When a frame goes out more than 250 ms late after the pacer sat waiting for it, both streams hold for
+[`stream.liveBufferMs`](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/config/schema.ts)
+(4 s by default, tunable through the `streambot-live-buffer-ms` flag) and then pace from a fresh
+anchor. The source's ordinary delivery jitter then drains
+that cushion instead of the screen. Each rebuffer is one freeze, counted by
+`streambot_live_schedule_events_total`. Lateness while frames are already queued, such as a GC pause,
+re-anchors without a hold, as does a forward timestamp jump left by segments that expired from the
+playlist.
+
 ## Why probing still matters
 
 Selection settles transport, but cannot create a video track that the source lacks.

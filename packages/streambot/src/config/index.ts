@@ -112,6 +112,7 @@ export function loadConfig(env: EnvLookup = Bun.env): Config {
       vaapiDevice: env["VAAPI_DEVICE"],
       readrate: num(env["STREAM_READRATE"]),
       readrateInitialBurst: num(env["STREAM_READRATE_INITIAL_BURST"]),
+      liveBufferMs: num(env["STREAM_LIVE_BUFFER_MS"]),
     },
     voice: {
       enabled: strictBool(

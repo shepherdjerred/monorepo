@@ -16,52 +16,167 @@ import { loadConfig } from "@shepherdjerred/streambot/config/index.ts";
 import { buildVideoPrepareOptions } from "@shepherdjerred/streambot/streamer/prepare-options.ts";
 
 // A credential-free measurement of the real ffmpeg → native demux → paced sender.
-// Run: bun e2e/pacing-local.ts [seconds=60] [regular|discontinuous] [flush]
+// Run: bun e2e/pacing-local.ts [seconds=60] [regular|discontinuous|live|live-ungated] [flush]
+//
+// `live` serves a local live HLS playlist shaped like Twitch's (2 s segments, published at
+// realtime, a sliding window) whose upstream stalls once for LIVE_STALL_MS partway through — the
+// shape that leaves a live pacer behind its schedule. `live` plays it with the production rebuffer
+// cushion (`stream.liveBufferMs`); `live-ungated` is the same input without it, for comparison.
 const seconds = Number(process.argv[2] ?? 60);
 assert.ok(Number.isInteger(seconds) && seconds >= 10 && seconds <= 600);
 const mode = process.argv[3] ?? "regular";
-assert.ok(mode === "regular" || mode === "discontinuous");
+assert.ok(
+  mode === "regular" ||
+    mode === "discontinuous" ||
+    mode === "live" ||
+    mode === "live-ungated",
+);
+const liveInput = mode === "live" || mode === "live-ungated";
 const flushPackets = process.argv[4] === "flush";
 const directory = await mkdtemp(path.join(tmpdir(), "streambot-pacing-"));
-const source = path.join(directory, "1080p.mp4");
 const config = loadConfig({
   BOT_TOKEN: "local-probe",
   USER_TOKENS: "local-probe",
   VIDEOS_DIR: directory,
 });
-const generated = Bun.spawnSync([
-  config.ffmpegPath,
-  "-hide_banner",
-  "-loglevel",
-  "error",
-  "-f",
-  "lavfi",
-  "-i",
-  "testsrc2=size=1920x1080:rate=30:duration=8",
-  "-f",
-  "lavfi",
-  "-i",
-  "sine=frequency=440:sample_rate=48000:duration=8",
-  "-c:v",
-  "libx264",
-  "-preset",
-  "ultrafast",
-  "-threads",
-  "2",
-  "-bf",
-  "0",
-  "-g",
-  "30",
-  "-pix_fmt",
-  "yuv420p",
-  "-b:v",
-  "4000k",
-  "-c:a",
-  "aac",
-  "-movflags",
-  "+faststart",
-  source,
-]);
+const SEGMENT_SECONDS = 2;
+/** Segments already published when playback starts, like joining a broadcast in progress. */
+const LIVE_PUBLISHED_AT_START = 4;
+/** Segments the live playlist lists at once. */
+const LIVE_WINDOW = 8;
+/** The one upstream stall: from this segment on, everything is published this much later. */
+const LIVE_STALL_SEGMENT = 8;
+const LIVE_STALL_MS = 5000;
+let liveServer: ReturnType<typeof Bun.serve> | undefined;
+const source = liveInput
+  ? servedLivePlaylist()
+  : path.join(directory, "1080p.mp4");
+
+function servedLivePlaylist(): string {
+  const segments = seconds / SEGMENT_SECONDS + LIVE_PUBLISHED_AT_START + 8;
+  const hls = Bun.spawnSync([
+    config.ffmpegPath,
+    "-hide_banner",
+    "-loglevel",
+    "error",
+    "-f",
+    "lavfi",
+    "-i",
+    `testsrc2=size=1920x1080:rate=30:duration=${String(segments * SEGMENT_SECONDS)}`,
+    "-f",
+    "lavfi",
+    "-i",
+    `sine=frequency=440:sample_rate=48000:duration=${String(segments * SEGMENT_SECONDS)}`,
+    "-c:v",
+    "libx264",
+    "-preset",
+    "ultrafast",
+    "-threads",
+    "2",
+    "-bf",
+    "0",
+    "-g",
+    "60",
+    "-keyint_min",
+    "60",
+    "-sc_threshold",
+    "0",
+    "-pix_fmt",
+    "yuv420p",
+    "-b:v",
+    "4000k",
+    "-c:a",
+    "aac",
+    "-f",
+    "hls",
+    "-hls_time",
+    String(SEGMENT_SECONDS),
+    "-hls_list_size",
+    "0",
+    "-hls_segment_filename",
+    path.join(directory, "seg%04d.ts"),
+    path.join(directory, "vod.m3u8"),
+  ]);
+  assert.equal(hls.exitCode, 0, hls.stderr.toString());
+  const startedAt = performance.now();
+  const publishedAt = (index: number) =>
+    startedAt +
+    (index - LIVE_PUBLISHED_AT_START + 1) * SEGMENT_SECONDS * 1000 +
+    (index >= LIVE_STALL_SEGMENT ? LIVE_STALL_MS : 0);
+  liveServer = Bun.serve({
+    port: 0,
+    hostname: "127.0.0.1",
+    fetch(request) {
+      const { pathname } = new URL(request.url);
+      if (pathname === "/live.m3u8") {
+        let published = 0;
+        while (
+          published < segments &&
+          publishedAt(published) <= performance.now()
+        ) {
+          published++;
+        }
+        const first = Math.max(0, published - LIVE_WINDOW);
+        const lines = [
+          "#EXTM3U",
+          "#EXT-X-VERSION:3",
+          `#EXT-X-TARGETDURATION:${String(SEGMENT_SECONDS)}`,
+          `#EXT-X-MEDIA-SEQUENCE:${String(first)}`,
+        ];
+        for (let index = first; index < published; index++) {
+          lines.push(
+            `#EXTINF:${SEGMENT_SECONDS.toFixed(3)},`,
+            `seg${String(index).padStart(4, "0")}.ts`,
+          );
+        }
+        return new Response(`${lines.join("\n")}\n`, {
+          headers: { "content-type": "application/vnd.apple.mpegurl" },
+        });
+      }
+      const segment = /^\/(seg\d{4}\.ts)$/.exec(pathname)?.[1];
+      return segment === undefined
+        ? new Response("not found", { status: 404 })
+        : new Response(Bun.file(path.join(directory, segment)));
+    },
+  });
+  return `http://127.0.0.1:${String(liveServer.port)}/live.m3u8`;
+}
+
+const generated = liveInput
+  ? { exitCode: 0, stderr: Buffer.from("") }
+  : Bun.spawnSync([
+      config.ffmpegPath,
+      "-hide_banner",
+      "-loglevel",
+      "error",
+      "-f",
+      "lavfi",
+      "-i",
+      "testsrc2=size=1920x1080:rate=30:duration=8",
+      "-f",
+      "lavfi",
+      "-i",
+      "sine=frequency=440:sample_rate=48000:duration=8",
+      "-c:v",
+      "libx264",
+      "-preset",
+      "ultrafast",
+      "-threads",
+      "2",
+      "-bf",
+      "0",
+      "-g",
+      "30",
+      "-pix_fmt",
+      "yuv420p",
+      "-b:v",
+      "4000k",
+      "-c:a",
+      "aac",
+      "-movflags",
+      "+faststart",
+      source,
+    ]);
 assert.equal(generated.exitCode, 0, generated.stderr.toString());
 
 type Sample = {
@@ -70,6 +185,7 @@ type Sample = {
   pts: number;
   behind: number;
   syncWait: number;
+  liveEvent: SendStats["liveEvent"];
 };
 const sends: Record<"video" | "audio", number[]> = { video: [], audio: [] };
 const ready: Record<"video" | "audio", number[]> = { video: [], audio: [] };
@@ -95,6 +211,7 @@ const observer = {
       pts: stats.ptsMs,
       behind: stats.behindMs,
       syncWait: stats.syncWaitMs,
+      liveEvent: stats.liveEvent,
     });
   },
 };
@@ -132,7 +249,9 @@ const prepare = buildVideoPrepareOptions({
     ffmpegInput: source,
     mediaKind: "video",
     chapters: [],
-    ffmpegInputOptions: ["-stream_loop", "-1"],
+    ...(liveInput
+      ? { live: true as const }
+      : { ffmpegInputOptions: ["-stream_loop", "-1"] }),
     ...(mode === "discontinuous" ? { discontinuousLive: true } : {}),
   },
   startSeconds: 0,
@@ -152,6 +271,7 @@ const player = createSeekablePlayer(streamer, source, {
     streamPreview: false,
     readrateInitialBurst: config.stream.readrateInitialBurst,
     videoPlayoutDelayMaxMs: config.stream.videoPlayoutDelayMaxMs,
+    ...(mode === "live" ? { liveBufferMs: config.stream.liveBufferMs } : {}),
   },
 });
 async function observeFailure() {
@@ -232,6 +352,22 @@ function summarize(kind: "video" | "audio") {
     syncWaitMs: Number(
       paced.reduce((sum, sample) => sum + sample.syncWait, 0).toFixed(2),
     ),
+    liveRebuffers: paced.filter((sample) => sample.liveEvent === "rebuffer")
+      .length,
+    liveReanchors: paced.filter((sample) => sample.liveEvent === "reanchor")
+      .length,
+    // Once the upstream stall has passed, a healthy live pacer is smooth again; an ungated one
+    // keeps forwarding each segment as a burst.
+    gapsOver200msAfterStall: gaps.filter(
+      (gap, index) =>
+        gap > 200 &&
+        (paced[index]?.pts ?? first.pts) - first.pts >
+          // ffmpeg joins a live playlist three segments from its end, so the first frame played
+          // is segment LIVE_PUBLISHED_AT_START - 3; count from two segments after the stall.
+          (LIVE_STALL_SEGMENT + 2 - (LIVE_PUBLISHED_AT_START - 3)) *
+            SEGMENT_SECONDS *
+            1000,
+    ).length,
   };
 }
 try {
@@ -264,7 +400,10 @@ try {
       seconds,
       mode,
       flushPackets,
-      input: "1920x1080@30 H264/AAC, looped and read at 1x",
+      input: liveInput
+        ? `local live HLS, ${String(SEGMENT_SECONDS)} s segments, one ${String(LIVE_STALL_MS)} ms upstream stall`
+        : "1920x1080@30 H264/AAC, looped and read at 1x",
+      liveBufferMs: mode === "live" ? config.stream.liveBufferMs : null,
       output: `${String(config.stream.width)}x${String(config.stream.height)}@${String(config.stream.fps)} H264/Opus`,
       encoding: "software",
       initialBurstSeconds: config.stream.readrateInitialBurst,
@@ -279,5 +418,6 @@ try {
   connection.stop();
   streamer.dispose();
   client.destroy();
+  await liveServer?.stop(true);
   await rm(directory, { recursive: true, force: true });
 }

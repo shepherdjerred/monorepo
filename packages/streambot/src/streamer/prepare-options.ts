@@ -167,3 +167,23 @@ export function buildVideoPrepareOptions(
         }),
   };
 }
+
+/**
+ * Go Live play options. The burst and the playout ceiling travel together (see the call site in
+ * the streamer). A live source also gets its rebuffer cushion; seekable media does not, because
+ * its pacer catches up after a dip by reading ahead, which a live input cannot do.
+ */
+export function buildGoLivePlayOptions(
+  stream: Pick<
+    Config["stream"],
+    "readrateInitialBurst" | "videoPlayoutDelayMaxMs" | "liveBufferMs"
+  >,
+  resolved: Pick<ResolvedSource, "live">,
+) {
+  return {
+    type: "go-live" as const,
+    readrateInitialBurst: stream.readrateInitialBurst,
+    videoPlayoutDelayMaxMs: stream.videoPlayoutDelayMaxMs,
+    ...(resolved.live === true ? { liveBufferMs: stream.liveBufferMs } : {}),
+  };
+}

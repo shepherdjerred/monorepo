@@ -334,7 +334,16 @@ native demuxing, and the production software playback options:
 ```bash
 bun e2e/pacing-local.ts 60 regular
 bun e2e/pacing-local.ts 60 discontinuous
+bun e2e/pacing-local.ts 60 live
+bun e2e/pacing-local.ts 60 live-ungated
 ```
+
+`live` serves a local live HLS playlist shaped like Twitch's (2 s segments
+published at realtime, a sliding window) that stalls once for 5 s, and plays it
+with the production `stream.liveBufferMs` rebuffer cushion. `live-ungated`
+plays the same input without the cushion. Compare `gapsOver200msAfterStall`:
+the gated pacer recovers with one rebuffer, while the ungated one keeps sending
+each segment as a burst.
 
 The probe loops generated 1080p video at real time, records audio/video send
 intervals and drift after the configured startup burst, and discards frames at

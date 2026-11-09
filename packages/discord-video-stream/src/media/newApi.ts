@@ -27,6 +27,7 @@ import { PassThrough, type Readable } from "node:stream";
 import { demux } from "./LibavDemuxer.js";
 import { VideoStream } from "./VideoStream.js";
 import { AudioStream } from "./AudioStream.js";
+import { LiveScheduleGate } from "./LiveScheduleGate.js";
 import { isBun, isDeno, isFiniteNonZero } from "../utils.js";
 import { AVCodecID } from "./LibavCodecId.js";
 import { createDecoder } from "./LibavDecoder.js";
@@ -1411,6 +1412,18 @@ export type PlayStreamOptions = {
   videoPlayoutDelayMaxMs: number | undefined;
 
   /**
+   * Set for a live input (an HLS broadcast, not a seekable file): the milliseconds of media the
+   * paced streams rebuild behind the live edge whenever the source runs dry. A live source never
+   * runs ahead of realtime, so the default recovery from lateness — skip sleeps until the schedule
+   * is met — cannot succeed and leaves every later segment forwarded as a burst. With this set, a
+   * starved schedule holds for this long and re-anchors, trading one brief freeze for smooth
+   * pacing afterwards. Size it above the source's segment duration plus its playlist-poll jitter.
+   * See {@link ./LiveScheduleGate.ts LiveScheduleGate}. Unset (the default) keeps the seekable
+   * behavior.
+   */
+  liveBufferMs: number | undefined;
+
+  /**
    * Optional observability seam. When supplied, per-frame send timing (frametime ratio) from the
    * video/audio send path is forwarded to the observer. No effect on behavior.
    */
@@ -1437,6 +1450,7 @@ const playStreamDefaultOptions = {
   readrateInitialBurst: undefined,
   streamPreview: false,
   videoPlayoutDelayMaxMs: undefined,
+  liveBufferMs: undefined,
 } satisfies PlayStreamOptions;
 
 /**
@@ -1484,6 +1498,11 @@ export function mergePlayStreamOptions(
       Number.isFinite(opts.videoPlayoutDelayMaxMs)
         ? opts.videoPlayoutDelayMaxMs
         : playStreamDefaultOptions.videoPlayoutDelayMaxMs,
+
+    liveBufferMs:
+      isFiniteNonZero(opts.liveBufferMs) && opts.liveBufferMs > 0
+        ? opts.liveBufferMs
+        : playStreamDefaultOptions.liveBufferMs,
 
     ...(opts.observer !== undefined ? { observer: opts.observer } : {}),
 
@@ -1668,6 +1687,12 @@ export async function attachPipeline(
       };
       clock.on("pts", stopBurst);
     }
+  }
+  if (options.liveBufferMs !== undefined) {
+    // One gate for the pipeline, so audio and video rebuffer together and resume in sync.
+    const gate = new LiveScheduleGate(options.liveBufferMs);
+    if (vStream) vStream.liveGate = gate;
+    if (aStream) aStream.liveGate = gate;
   }
   if (options.streamPreview && options.type === "go-live" && video) {
     (async () => {

@@ -332,6 +332,7 @@ export function toResolvedSource(
       ? {}
       : { audioInputHeaders: inputs.audioInputHeaders }),
     ...(info.duration === undefined ? {} : { durationSeconds: info.duration }),
+    ...(info.is_live === true ? { live: true } : {}),
     chapters: toChapters(
       (info.chapters ?? []).map((chapter) => ({
         startSeconds: chapter.start_time,

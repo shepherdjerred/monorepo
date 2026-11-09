@@ -3,6 +3,11 @@ import { setTimeout } from "node:timers/promises";
 import { Writable } from "node:stream";
 import type { Packet } from "node-av";
 import type { SendStats, StreamObserver } from "./StreamObserver.js";
+import {
+  LIVE_LATE_THRESHOLD_MS,
+  LIVE_STARVED_IDLE_MS,
+  type LiveScheduleGate,
+} from "./LiveScheduleGate.js";
 
 export class BaseMediaStream extends Writable {
   private _pts: number | undefined;
@@ -29,6 +34,9 @@ export class BaseMediaStream extends Writable {
   /** "video" | "audio" — the stream kind, reused as the {@link SendStats} label. */
   private _kind: SendStats["kind"];
   private _observer: StreamObserver | undefined;
+  private _liveGate: LiveScheduleGate | undefined;
+  /** When this stream last completed a frame and became ready for the next one. */
+  private _readyAt: number | undefined;
 
   constructor(type: SendStats["kind"], noSleep = false, observer?: StreamObserver) {
     super({ objectMode: true, highWaterMark: 0 });
@@ -55,6 +63,17 @@ export class BaseMediaStream extends Writable {
     if (stream !== undefined && this === stream.syncStream)
       throw new Error("Cannot sync 2 streams with eachother");
     this._syncStream = stream;
+  }
+  /**
+   * Rebuffer hold shared with the other paced streams of a live pipeline. Unset (the default) for
+   * seekable input, whose pacer catches up after a dip by skipping sleeps; see
+   * {@link LiveScheduleGate} for why a live input cannot.
+   */
+  get liveGate(): LiveScheduleGate | undefined {
+    return this._liveGate;
+  }
+  set liveGate(gate: LiveScheduleGate | undefined) {
+    this._liveGate = gate;
   }
   get noSleep(): boolean {
     return this._noSleep;
@@ -123,6 +142,30 @@ export class BaseMediaStream extends Writable {
 
     const frametime = (Number(duration) / timeBase.den) * timeBase.num * 1000;
 
+    // How long this stream sat ready with nothing to send: the signature of a starved source.
+    const arrivedAt = this.now();
+    const idleMs =
+      this._readyAt === undefined ? 0 : Math.max(0, arrivedAt - this._readyAt);
+    let liveHoldMs = 0;
+    const holdRemaining = this._liveGate?.remaining(arrivedAt) ?? 0;
+    if (holdRemaining > 0) {
+      // A live rebuffer is running: let the source queue its cushion, then pace from a fresh anchor.
+      await this.wait(holdRemaining);
+      // A stop or seek can tear this pipeline down during the hold. Its replacement already owns
+      // the connection, so a stale frame must not reach the packetizer.
+      if (this.destroyed) {
+        frame.free();
+        callback();
+        return;
+      }
+      liveHoldMs = holdRemaining;
+      this.resetTimingCompensation();
+    }
+    const ready = () => {
+      this._readyAt = this.now();
+      callback(null);
+    };
+
     const start_sendFrame = this.now();
     await this._sendFrame(Buffer.from(data), frametime);
     const end_sendFrame = this.now();
@@ -161,13 +204,30 @@ export class BaseMediaStream extends Writable {
       0,
       end_sendFrame - this._startTime - (this._pts - this._startPts),
     );
-    const sleep = Math.max(
+    let sleep = Math.max(
       0,
       this._pts -
         this._startPts +
         frametime -
         (end_sendFrame - this._startTime),
     );
+    // A live schedule that fell behind cannot be caught up — the source never runs ahead of
+    // realtime — so re-anchor instead. A starved source also gets a rebuffer hold; lateness with
+    // frames queued (a slow send, a GC pause, a timestamp reset) just resumes pacing from here. A
+    // forward timestamp jump past the cushion (segments that expired from the playlist) would
+    // otherwise sleep out the gap as a freeze.
+    let liveEvent: SendStats["liveEvent"];
+    if (this._liveGate !== undefined && !this._noSleep) {
+      if (behindMs > LIVE_LATE_THRESHOLD_MS) {
+        if (idleMs < LIVE_STARVED_IDLE_MS) liveEvent = "reanchor";
+        else if (this._liveGate.hold(end_sendFrame)) liveEvent = "rebuffer";
+        this.resetTimingCompensation();
+      } else if (sleep > this._liveGate.bufferMs) {
+        liveEvent = "reanchor";
+        this.resetTimingCompensation();
+        sleep = 0;
+      }
+    }
     let syncWaitMs = 0;
     let syncEvent: "ahead" | "behind" | undefined;
     const reportSendStats = () => {
@@ -180,11 +240,13 @@ export class BaseMediaStream extends Writable {
         behindMs,
         syncWaitMs,
         ...(syncEvent !== undefined ? { syncEvent } : {}),
+        ...(liveEvent !== undefined ? { liveEvent } : {}),
+        ...(liveHoldMs > 0 ? { liveHoldMs } : {}),
       });
     };
     if (this._noSleep || sleep === 0) {
       reportSendStats();
-      callback(null);
+      ready();
     } else if (this.sync && this.isBehind()) {
       syncEvent = "behind";
       this._loggerSync.debug(
@@ -198,7 +260,7 @@ export class BaseMediaStream extends Writable {
       );
       this.resetTimingCompensation();
       reportSendStats();
-      callback(null);
+      ready();
     } else if (this.sync && this.isAhead()) {
       syncEvent = "ahead";
       // Sleep only the excess beyond tolerance (re-checked each iteration as the partner stream
@@ -229,7 +291,7 @@ export class BaseMediaStream extends Writable {
       syncWaitMs = this.now() - waitStart;
       this.resetTimingCompensation();
       reportSendStats();
-      callback(null);
+      ready();
     } else {
       this._loggerSleep.debug(
         {
@@ -244,7 +306,7 @@ export class BaseMediaStream extends Writable {
         `Sleeping for ${sleep}ms`,
       );
       reportSendStats();
-      this.wait(sleep).then(() => callback(null));
+      this.wait(sleep).then(ready);
     }
     frame.free();
   }

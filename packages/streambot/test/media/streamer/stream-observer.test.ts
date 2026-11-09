@@ -3,11 +3,14 @@ import {
   commandUsesHardwareDecode,
   createStreamObserver,
   parseTimemarkSeconds,
+  STALL_AFTER_SECONDS,
 } from "@shepherdjerred/streambot/observability/stream-observer.ts";
+import { LIVE_BUFFER_MAX_MS } from "@shepherdjerred/streambot/config/schema.ts";
 import {
   ffmpegFps,
   ffmpegSpeedRatio,
   hwDecodeEngaged,
+  liveScheduleEventsTotal,
   pipelineQueueDepth,
   sendLateFramesTotal,
 } from "@shepherdjerred/streambot/observability/metrics.ts";
@@ -37,6 +40,15 @@ describe("commandUsesHardwareDecode", () => {
     ).toBe(false);
   });
 });
+
+async function liveEventCount(event: string): Promise<number> {
+  const metric = await liveScheduleEventsTotal.get();
+  return (
+    metric.values.find(
+      (v) => v.labels.kind === "video" && v.labels.event === event,
+    )?.value ?? 0
+  );
+}
 
 describe("createStreamObserver", () => {
   test("derives the realtime ratio from timemark advance vs wall-clock", async () => {
@@ -113,6 +125,27 @@ describe("createStreamObserver", () => {
     dispose();
   });
 
+  test("onSendStats counts live rebuffers and re-anchors by kind", async () => {
+    const beforeRebuffer = await liveEventCount("rebuffer");
+    const beforeReanchor = await liveEventCount("reanchor");
+    const { observer, dispose } = createStreamObserver(true);
+    const frame = {
+      kind: "video" as const,
+      ptsMs: 0,
+      ratio: 0.1,
+      sendTime: 1,
+      frametime: 33,
+      behindMs: 900,
+      syncWaitMs: 0,
+    };
+    observer.onSendStats?.({ ...frame, liveEvent: "rebuffer" });
+    observer.onSendStats?.({ ...frame, liveEvent: "reanchor" });
+    observer.onSendStats?.({ ...frame, behindMs: 0, liveHoldMs: 4000 });
+    expect((await liveEventCount("rebuffer")) - beforeRebuffer).toBe(1);
+    expect((await liveEventCount("reanchor")) - beforeReanchor).toBe(1);
+    dispose();
+  });
+
   test("dispose stops the progress-age timer so stale segments don't race on the gauge", async () => {
     let wall = 1000;
     const { observer, dispose } = createStreamObserver(true, () => wall);
@@ -156,6 +189,13 @@ function advanceMedia(
 }
 
 describe("createStreamObserver stall watchdog", () => {
+  test("the largest live rebuffer hold fits inside the stall budget with room for the starvation before it", () => {
+    // A hold freezes ffmpeg's progress; a cushion near the watchdog would restart a healthy stream.
+    expect(LIVE_BUFFER_MAX_MS).toBeLessThanOrEqual(
+      (STALL_AFTER_SECONDS * 1000) / 2,
+    );
+  });
+
   test("a wedged ffmpeg emitting the SAME timemark still trips the stall watchdog and reports the last media position", async () => {
     const { observer, dispose, wall, stalls } = stallWatchdogHarness();
     // First parseable sample arms the watchdog at wall=1000 with media at 5s.

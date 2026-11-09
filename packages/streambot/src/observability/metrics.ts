@@ -188,6 +188,19 @@ export const sendSyncEventsTotal = new Counter({
   registers: [register],
 });
 
+/**
+ * Live-input schedule corrections by the send pacer. `rebuffer` = the live source ran dry and the
+ * pacer held to rebuild `stream.liveBufferMs` of cushion (one freeze each); `reanchor` = the
+ * schedule restarted without a hold. A steady rebuffer rate means the cushion is too small for the
+ * source's delivery jitter.
+ */
+export const liveScheduleEventsTotal = new Counter({
+  name: "streambot_live_schedule_events_total",
+  help: "Live-input pacer corrections, by stream kind and event (rebuffer = held to rebuild the cushion, reanchor = restarted the schedule without a hold)",
+  labelNames: ["kind", "event"] as const,
+  registers: [register],
+});
+
 /** Wall-clock time spent waiting in ahead-sync corrections. rate() = fraction of time lost to sync waits. */
 export const sendSyncWaitSecondsTotal = new Counter({
   name: "streambot_send_sync_wait_seconds_total",

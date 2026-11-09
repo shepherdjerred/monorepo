@@ -7,6 +7,15 @@ import {
 import { VOICE_WAKE_WINDOW_MS } from "@shepherdjerred/voice-assistant/constants.ts";
 
 /** Local wake-word activation plus a one-shot, server-side OpenAI Realtime command turn. */
+/**
+ * Largest live rebuffer cushion (ms). A hold stops the pacers, which backpressures ffmpeg, so its
+ * progress stops for about this long on top of however long the source was already dry. The stall
+ * watchdog restarts a stream after `STALL_AFTER_SECONDS` (20 s) of no progress; half of it leaves
+ * the other half for the starvation that opened the hold.
+ */
+export const LIVE_BUFFER_MAX_MS = 10_000;
+export const LIVE_BUFFER_MIN_MS = 500;
+
 export const VoiceConfigSchema = z
   .strictObject({
     enabled: z.boolean().default(false),
@@ -187,6 +196,22 @@ export const ConfigSchema = z.strictObject({
      * only place the `readrateInitialBurst` pre-roll can actually land.
      */
     videoPlayoutDelayMaxMs: z.number().int().min(0).max(40_950).default(1000),
+    /**
+     * Media, in milliseconds, the Go Live pacer rebuilds behind the live edge whenever a live
+     * source (sports, LoL, yt-dlp `is_live`) runs dry. A live input never runs ahead of realtime,
+     * so without this the first upstream stall leaves the pacer permanently behind and every HLS
+     * segment goes out as a burst followed by a gap. Must exceed the source's segment duration
+     * plus its playlist-poll jitter: Twitch serves 2 s segments, and ffmpeg polls a live playlist
+     * up to one segment late. Each rebuffer is one freeze of about this length, then smooth
+     * playback with that much cushion. Capped at {@link LIVE_BUFFER_MAX_MS} so a hold cannot
+     * outlast the stall watchdog.
+     */
+    liveBufferMs: z
+      .number()
+      .int()
+      .min(LIVE_BUFFER_MIN_MS)
+      .max(LIVE_BUFFER_MAX_MS)
+      .default(4000),
   }),
   voice: VoiceConfigSchema.default({
     enabled: false,

@@ -177,8 +177,39 @@ test("falls back to the muxed Twitch stream when YouTube's companion has no audi
   );
   expect(result.ffmpegInput).toBe("https://twitch.example/live");
   expect(result.discontinuousLive).toBe(true);
+  expect(result.live).toBe(true);
   expect(resolve).toHaveBeenCalledTimes(2);
   expect(resolve.mock.calls[1]?.[1]).toMatchObject({
     url: "https://www.twitch.tv/riotgames",
   });
+});
+
+test("a StreamEast watch page resolves as a live source", async () => {
+  vi.spyOn(probe, "probeMedia").mockResolvedValue({
+    ...video,
+    audioCodec: "aac",
+    audioChannels: 2,
+  });
+  const result = await resolveSource(
+    config,
+    {
+      kind: "url",
+      url: "https://v2.streameast.ga/nfl/bears-vs-packers/",
+      mode: "video",
+    },
+    AbortSignal.timeout(1000),
+    {
+      sportsResolver: {
+        resolve: async () => ({
+          title: "Bears vs Packers",
+          input: "https://u.steast.io/ps/c283/index.m3u8",
+          headers: {
+            Referer: "https://v2.streameast.ga/nfl/bears-vs-packers/",
+          },
+        }),
+      },
+    },
+  );
+  // The pacer keys its live rebuffer cushion on this flag.
+  expect(result.live).toBe(true);
 });

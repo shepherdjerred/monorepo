@@ -554,6 +554,18 @@ describe("toResolvedSource", () => {
     expect(resolved.provenance?.provider).toBe("youtube");
   });
 
+  test("only a yt-dlp live broadcast is flagged live", () => {
+    const live = toResolvedSource(
+      parseYtdlpInfo(JSON.stringify({ ...JSON.parse(MINIMAL), is_live: true })),
+      { mediaKind: "video" },
+    );
+    expect(live.live).toBe(true);
+    const recorded = toResolvedSource(parseYtdlpInfo(MERGE), {
+      mediaKind: "video",
+    });
+    expect(recorded.live).toBeUndefined();
+  });
+
   test("a music item gets one input and no second input", () => {
     const resolved = toResolvedSource(parseYtdlpInfo(AUDIO_ONLY), {
       mediaKind: "music",

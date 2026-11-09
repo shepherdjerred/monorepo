@@ -439,6 +439,41 @@ describe("attachPipeline video requirements are unchanged", () => {
     ).rejects.toThrow("No video stream in media");
   });
 
+  test("a live buffer puts one shared rebuffer gate on both paced streams", async () => {
+    const video = videoTrack();
+    const audio = audioTrack();
+    demuxState.next = { video, audio };
+
+    const pipeline = await attach(makeConn(), makeStreamer(), {
+      type: "go-live",
+      liveBufferMs: 4000,
+    });
+    const vStream = pipedAudioStream(video.stream);
+    const aStream = pipedAudioStream(audio.stream);
+    // One gate, not one each: the streams must rebuffer together or the A/V sync check would
+    // fight a held stream back into burst sends.
+    expect(vStream.liveGate?.bufferMs).toBe(4000);
+    expect(aStream.liveGate).toBe(vStream.liveGate);
+
+    video.stream.end();
+    audio.stream.end();
+    await pipeline.done;
+  });
+
+  test("seekable input gets no rebuffer gate", async () => {
+    const video = videoTrack();
+    const audio = audioTrack();
+    demuxState.next = { video, audio };
+
+    const pipeline = await attach(makeConn(), makeStreamer(), { type: "go-live" });
+    expect(pipedAudioStream(video.stream).liveGate).toBeUndefined();
+    expect(pipedAudioStream(audio.stream).liveGate).toBeUndefined();
+
+    video.stream.end();
+    audio.stream.end();
+    await pipeline.done;
+  });
+
   test('type "go-live" still configures the connection for a video source', async () => {
     const video = videoTrack();
     const audio = audioTrack();

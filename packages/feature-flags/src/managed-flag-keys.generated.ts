@@ -279,6 +279,7 @@ export type StreambotBooleanFlagKey =
 
 export const STREAMBOT_VARIANT_FLAG_KEYS = [
   "streambot-idle-timeout-seconds",
+  "streambot-live-buffer-ms",
   "streambot-player-card-repost-after-messages",
   "streambot-player-card-tick-ms",
   "streambot-reconnect-delay-seconds",

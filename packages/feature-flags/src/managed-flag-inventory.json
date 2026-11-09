@@ -3078,6 +3078,18 @@
       "thresholdRollouts": []
     },
     {
+      "key": "streambot-live-buffer-ms",
+      "owner": "streambot",
+      "namespace": "streambot",
+      "source": "streambot-dynamic",
+      "purpose": "Milliseconds of media the Go Live pacer rebuilds behind the live edge when a live source runs dry; raise it for providers with longer segments or more delivery jitter.",
+      "type": "variant",
+      "default": "4000",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "streambot-music-over-voice-enabled",
       "owner": "streambot",
       "namespace": "streambot",
