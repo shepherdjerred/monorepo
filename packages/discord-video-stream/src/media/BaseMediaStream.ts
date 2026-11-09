@@ -151,6 +151,13 @@ export class BaseMediaStream extends Writable {
     if (holdRemaining > 0) {
       // A live rebuffer is running: let the source queue its cushion, then pace from a fresh anchor.
       await this.wait(holdRemaining);
+      // A stop or seek can tear this pipeline down during the hold. Its replacement already owns
+      // the connection, so a stale frame must not reach the packetizer.
+      if (this.destroyed) {
+        frame.free();
+        callback();
+        return;
+      }
       liveHoldMs = holdRemaining;
       this.resetTimingCompensation();
     }

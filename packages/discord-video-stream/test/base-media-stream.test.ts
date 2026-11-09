@@ -247,6 +247,34 @@ describe("BaseMediaStream live schedule gate", () => {
     stream.destroy();
   });
 
+  test("a stream destroyed during a hold never sends its held frame", async () => {
+    const sent: number[] = [];
+    const clock = new ManualClock();
+    class RecordingStream extends TestStream {
+      protected override _sendFrame(): Promise<void> {
+        sent.push(clock.now());
+        return Promise.resolve();
+      }
+    }
+    const stream = new RecordingStream("video", false, undefined, clock);
+    stream.liveGate = new LiveScheduleGate(4000);
+    await writeFrame(stream, 0);
+    clock.advance(1000);
+    await writeFrame(stream, FRAME_MS);
+    expect(sent).toHaveLength(2);
+
+    let freed = false;
+    stream.onWait = async (milliseconds) => {
+      // The seek/stop lands while the rebuffer hold is pending.
+      if (milliseconds === 4000) stream.destroy();
+    };
+    const held = { ...fakePacket(2 * FRAME_MS), free: () => (freed = true) };
+    stream.write(held);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(sent).toHaveLength(2);
+    expect(freed).toBe(true);
+  });
+
   test("rejects a non-positive cushion", () => {
     expect(() => new LiveScheduleGate(0)).toThrow("positive");
   });

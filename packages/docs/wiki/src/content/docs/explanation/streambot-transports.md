@@ -153,7 +153,8 @@ one rebuffer hold between its audio and video streams
 ([`LiveScheduleGate`](https://github.com/shepherdjerred/monorepo/blob/main/packages/discord-video-stream/src/media/LiveScheduleGate.ts)).
 When a frame goes out more than 250 ms late after the pacer sat waiting for it, both streams hold for
 [`stream.liveBufferMs`](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/config/schema.ts)
-(4 s by default) and then pace from a fresh anchor. The source's ordinary delivery jitter then drains
+(4 s by default, tunable through the `streambot-live-buffer-ms` flag) and then pace from a fresh
+anchor. The source's ordinary delivery jitter then drains
 that cushion instead of the screen. Each rebuffer is one freeze, counted by
 `streambot_live_schedule_events_total`. Lateness while frames are already queued, such as a GC pause,
 re-anchors without a hold, as does a forward timestamp jump left by segments that expired from the

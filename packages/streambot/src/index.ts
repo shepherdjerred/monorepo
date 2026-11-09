@@ -77,6 +77,7 @@ async function main(): Promise<void> {
       playerCardTickMs: config.playerCard.tickMs,
       playerCardRepostAfterMessages: config.playerCard.repostAfterMessages,
       idleTimeoutSeconds: config.idleTimeoutSeconds,
+      liveBufferMs: config.stream.liveBufferMs,
     },
     config,
     log: (message) => {

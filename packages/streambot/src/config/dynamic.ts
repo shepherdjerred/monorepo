@@ -136,6 +136,16 @@ const DEFINITION = {
       env: "IDLE_TIMEOUT_SECONDS",
     },
   },
+  // Read when each Go Live segment starts, so a change applies to the next live stream.
+  liveBufferMs: {
+    schema: z.coerce.number().int().min(500).max(30_000),
+    sources: ["flag", "env", "default"],
+    default: 4000,
+    names: {
+      flag: "streambot-live-buffer-ms",
+      env: "STREAM_LIVE_BUFFER_MS",
+    },
+  },
 } as const;
 
 const REFRESH_INTERVAL_MS = 60_000;
@@ -163,6 +173,7 @@ function buildSnapshot(
           playerCardTickMs: "number",
           playerCardRepostAfterMessages: "number",
           idleTimeoutSeconds: "number",
+          liveBufferMs: "number",
         },
       }),
       env: createEnvSource(environment),
@@ -192,6 +203,7 @@ export type DynamicConfigSeed = {
   readonly playerCardTickMs?: number;
   readonly playerCardRepostAfterMessages?: number;
   readonly idleTimeoutSeconds?: number;
+  readonly liveBufferMs?: number;
 };
 
 function applySnapshot(config: Config): void {
@@ -210,6 +222,7 @@ function applySnapshot(config: Config): void {
     "playerCardRepostAfterMessages",
   );
   config.idleTimeoutSeconds = snapshot.get("idleTimeoutSeconds");
+  config.stream.liveBufferMs = snapshot.get("liveBufferMs");
 }
 
 async function refreshSnapshot(config: Config | undefined): Promise<void> {
