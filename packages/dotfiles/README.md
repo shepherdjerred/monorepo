@@ -52,11 +52,17 @@ remembered per agent. Plan modes run with `AGENT_SAFE=1`, so the wrapper adds
 no bypass flag that would contradict them.
 
 Enter closes the dialog and starts `~/bin/herdr-new-worktree` detached. It
-names a branch and tab title with one OpenAI Responses call (`naming.js`, the
+names a branch and a title with one OpenAI Responses call (`naming.js`, the
 personal key read with `op read`), creates the worktree on the space's machine
-through `hc exec`, and opens a space whose agent starts with the message. A
-generated branch that already exists gets a `-2` suffix. A given `{ branch }`
-skips naming and runs in the dialog.
+through `hc exec`, and opens a space named with that title, whose agent starts
+with the message. A generated branch that already exists gets a `-2` suffix. A
+given `{ branch }` skips naming and runs in the dialog; that space stays
+unnamed.
+
+While a run is in progress it writes
+`~/.local/state/herdr-worktree/active/<id>.json` (the step, and the title,
+branch and path once known; no message text) and deletes it when the run
+finishes. The sidebar shows that file as a row under the repo.
 
 Every run appends one line to `~/.local/state/herdr-worktree/events.jsonl`
 (no message text) and to the unified log; a failure also posts a macOS

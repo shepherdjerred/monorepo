@@ -31,6 +31,64 @@ function find(node, id) {
   return null;
 }
 
+// Display names only. hc machine names and addresses stay as they are.
+const MACHINE_TITLES = {
+  "jerreds-macbook-pro": "MacBook",
+  "jerred-desktop": "Windows",
+  desktop: "Windows",
+  "mac-mini": "Karpathy",
+  karpathy: "Karpathy",
+  jobs: "Jobs",
+  "jerreds-mac-mini": "Jobs",
+};
+
+function hostKey(value) {
+  if (value == null) return "";
+  return String(value)
+    .trim()
+    .toLowerCase()
+    .replace(/\.local$/, "");
+}
+
+function machineTitle(name, info, localHost, platform) {
+  const keys = name == null ? [localHost] : [name, info?.host, info?.target];
+  for (const key of keys) {
+    const title = MACHINE_TITLES[hostKey(key)];
+    if (title) return title;
+  }
+  if (name == null && platform === "windows") return "Windows";
+  return name ?? "This computer";
+}
+
+// Same glyphs as the agents list. An unlisted machine keeps the generic server.
+const DEVICE_ICONS = {
+  karpathy: "mac-mini-top",
+  "mac-mini": "mac-mini-top",
+  jobs: "mac-mini-top",
+  "jerreds-mac-mini": "mac-mini-top",
+  desktop: "windows",
+  "jerred-desktop": "windows",
+  "jerreds-macbook-pro": "laptop",
+};
+
+function machineIcon(name, info, platform) {
+  if (name == null) return platform === "windows" ? "windows" : "laptop";
+  for (const key of [name, info?.target, info?.host]) {
+    const icon = DEVICE_ICONS[hostKey(key)];
+    if (icon) return icon;
+  }
+  return null;
+}
+
+function machineIconPath(name, info, platform) {
+  const icon = machineIcon(name, info, platform);
+  // The Windows layout keeps its glyphs in agents-filter; this Mac's are in my-agents.
+  const dir = platform === "windows" ? "mods/agents-filter" : "mods/my-agents";
+  return icon
+    ? `${dir}/${icon}.svg`
+    : `mods/workspace-chrome/${name ? "server" : "monitor"}.svg`;
+}
+
 // The sidebar's rail goes by its width, not a flag: dragging its edge narrows it too.
 const narrow = () => (find(layout(), "sidebar")?.size?.px ?? Infinity) < 160;
 
@@ -103,6 +161,7 @@ export default class Spaces extends View {
     this.pressed = null;
     this.over = null;
     this.machines = [];
+    this.hostName = null;
     this.folded = new Set(
       JSON.parse(localStorage.getItem("machines.folded") ?? "[]"),
     );
@@ -183,6 +242,13 @@ export default class Spaces extends View {
             (m) => !m.temporary,
           );
       } catch {}
+      if (this.hostName == null) {
+        try {
+          const host = await exec("hostname");
+          const name = host.stdout.trim().replace(/\.local$/, "");
+          if (host.code === 0 && name) this.hostName = name;
+        } catch {}
+      }
       cx.notify();
     });
   }
@@ -399,9 +465,10 @@ export default class Spaces extends View {
           cx.notify();
         })
         .child(
-          svg(`mods/workspace-chrome/${m ? "server" : "monitor"}.svg`)
+          svg(machineIconPath(m, machine, window().platform))
             .size(13)
-            .flex_none(),
+            .flex_none()
+            .text_color(t.dim),
         )
         .when(!collapsed, (el) =>
           el
@@ -409,7 +476,9 @@ export default class Spaces extends View {
               div()
                 .flex_1()
                 .truncate()
-                .child(m ?? "This computer"),
+                .child(
+                  machineTitle(m, machine, this.hostName, window().platform),
+                ),
             )
             .when(!connected, (el) =>
               el.child(

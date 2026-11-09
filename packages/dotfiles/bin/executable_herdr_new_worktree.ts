@@ -2,15 +2,27 @@
 // Started detached by the Herdr new-worktree dialog, which closes at once:
 // `herdr-new-worktree '<request json>'`. See herdr_new_worktree_core.ts.
 // `herdr-new-worktree --status` prints the last runs.
-import { appendFile, mkdir, readFile } from "node:fs/promises";
+import { randomUUID } from "node:crypto";
+import {
+  appendFile,
+  chmod,
+  mkdir,
+  readFile,
+  readdir,
+  rename,
+  rm,
+  writeFile,
+} from "node:fs/promises";
 import { homedir, hostname } from "node:os";
 import path from "node:path";
 import {
+  activeRun,
   createWorktree,
   fields,
   parseRequest,
   type ExecResult,
   type Named,
+  type Progress,
   type Runtime,
   type Step,
 } from "./herdr_new_worktree_core.ts";
@@ -24,7 +36,62 @@ const namingPath = path.join(
   ".config/herdr-app/mods/my-worktree/naming.js",
 );
 const eventsPath = path.join(home, ".local/state/herdr-worktree/events.jsonl");
+const activeDir = path.join(home, ".local/state/herdr-worktree/active");
 const logTag = "herdr-worktree";
+
+function errno(error: unknown): string | null {
+  if (typeof error !== "object" || error === null || !("code" in error))
+    return null;
+  return typeof error.code === "string" ? error.code : null;
+}
+
+function alive(pid: number): boolean {
+  if (!Number.isInteger(pid) || pid <= 0) return false;
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (error) {
+    return errno(error) === "EPERM";
+  }
+}
+
+/** Drop leftover temp files and runs whose worker is gone. */
+async function sweepActive(): Promise<void> {
+  let names: string[];
+  try {
+    names = await readdir(activeDir);
+  } catch (error) {
+    if (errno(error) === "ENOENT") return;
+    throw error;
+  }
+  await Promise.all(
+    names.map(async (name) => {
+      const file = path.join(activeDir, name);
+      if (name.endsWith(".tmp")) {
+        await rm(file, { force: true });
+        return;
+      }
+      if (!name.endsWith(".json")) return;
+      try {
+        const parsed: unknown = JSON.parse(await readFile(file, "utf8"));
+        const pid = fields(parsed, "active run").get("pid");
+        if (typeof pid === "number" && alive(pid)) return;
+      } catch {
+        // Malformed or unreadable.
+      }
+      await rm(file, { force: true });
+    }),
+  );
+}
+
+async function publishActive(file: string, body: unknown): Promise<void> {
+  await mkdir(activeDir, { recursive: true, mode: 0o700 });
+  await chmod(activeDir, 0o700);
+  const tmp = `${file}.${randomUUID()}.tmp`;
+  await writeFile(tmp, `${JSON.stringify(body)}\n`, { mode: 0o600 });
+  await chmod(tmp, 0o600);
+  await rename(tmp, file);
+}
 
 type Naming = {
   readonly keyRef: string;
@@ -287,6 +354,7 @@ async function status(): Promise<number> {
 async function run(json: string): Promise<number> {
   const started = Date.now();
   let step: Step | "request" = "request";
+  const activeFile = path.join(activeDir, `${randomUUID()}.json`);
   const event: Event = {
     ts: new Date(started).toISOString(),
     host: hostname(),
@@ -303,19 +371,38 @@ async function run(json: string): Promise<number> {
     messageSent: null,
   };
   try {
+    try {
+      await sweepActive();
+    } catch {
+      // A stale status file must not stop the worktree.
+    }
     const request = parseRequest(json);
     event.provider = request.provider;
     event.machine = request.machine;
     const outcome = await createWorktree(
       request,
       runtime(await loadNaming()),
-      (next) => {
-        step = next;
+      async (update: Progress) => {
+        step = update.step;
+        try {
+          await publishActive(
+            activeFile,
+            activeRun(request, update, process.pid),
+          );
+        } catch {
+          // The sidebar indicator is optional; the worktree still proceeds.
+        }
       },
     );
     Object.assign(event, outcome, { ok: true });
   } catch (error) {
     event.error = describe(error);
+  } finally {
+    try {
+      await rm(activeFile, { force: true });
+    } catch {
+      // Missing already: the row is gone.
+    }
   }
   event.step = step;
   event.ms = Date.now() - started;
