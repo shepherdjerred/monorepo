@@ -2,7 +2,10 @@ import { Context } from "@temporalio/activity";
 import { createTemporalReadClient } from "#client";
 import { parseTemporalNamespace } from "#shared/infra/temporal-namespace.ts";
 import { promotionConfig } from "#config/promotion.ts";
-import { promotionDispatchAt, promotionRunBlocked } from "#shared/promotion.ts";
+import {
+  promotionDispatchAt,
+  promotionRunBlocked,
+} from "#shared/promotion/model.ts";
 import { promotionWindow } from "#shared/promotion/cadence.ts";
 import {
   promotionManifest,

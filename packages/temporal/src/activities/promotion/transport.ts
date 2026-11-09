@@ -3,7 +3,7 @@ import type {
   PromotionRunInput,
   PromotionState,
   PromotionTarget,
-} from "#shared/promotion.ts";
+} from "#shared/promotion/model.ts";
 import type { PromotionStore } from "./store.ts";
 import { PromotionBrowser } from "./browser.ts";
 import { approvedDiscordCopy } from "./publication/approved-copy.ts";

@@ -10,7 +10,7 @@ import {
   PromotionAttemptSchema,
   promotionStateSummary,
   promotionFailurePause,
-} from "#shared/promotion.ts";
+} from "#shared/promotion/model.ts";
 import {
   readPromotionState,
   updatePromotionState,

@@ -1,4 +1,7 @@
-import type { PromotionAttempt, PromotionTarget } from "#shared/promotion.ts";
+import type {
+  PromotionAttempt,
+  PromotionTarget,
+} from "#shared/promotion/model.ts";
 import type { PromotionTaskResult } from "./task-contract.ts";
 import { promotionObservationText } from "./observation.ts";
 

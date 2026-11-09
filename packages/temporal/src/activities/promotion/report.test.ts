@@ -1,6 +1,6 @@
 import { MockActivityEnvironment } from "@temporalio/testing";
 import { describe, expect, it } from "vitest";
-import { initialPromotionState } from "#shared/promotion.ts";
+import { initialPromotionState } from "#shared/promotion/model.ts";
 import { ReportEnvelopeV1Schema } from "#shared/reports/report.ts";
 import { promotionAlertFingerprint, promotionReport } from "./report.ts";
 

@@ -1,7 +1,7 @@
 import { afterEach, expect, it, vi } from "vitest";
 import { localOwnerAlive } from "./process-owner.ts";
 import { promotionWindow } from "#shared/promotion/cadence.ts";
-import { initialPromotionState } from "#shared/promotion.ts";
+import { initialPromotionState } from "#shared/promotion/model.ts";
 import { promotionTarget } from "#activities/promotion/manifest.ts";
 import { approvedDiscordCopy } from "#activities/promotion/publication/approved-copy.ts";
 import {

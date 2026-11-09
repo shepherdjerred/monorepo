@@ -1,4 +1,4 @@
-import type { PromotionTarget } from "#shared/promotion.ts";
+import type { PromotionTarget } from "#shared/promotion/model.ts";
 import { PromotionBrowser } from "#activities/promotion/browser.ts";
 import { promotionObservationText } from "./observation.ts";
 

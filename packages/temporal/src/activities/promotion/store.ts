@@ -5,7 +5,7 @@ import {
   initialPromotionState,
   PromotionStateSchema,
   type PromotionState,
-} from "#shared/promotion.ts";
+} from "#shared/promotion/model.ts";
 import {
   conditionalWrite,
   readJson,

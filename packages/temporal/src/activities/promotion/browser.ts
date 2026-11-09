@@ -1,7 +1,10 @@
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { z } from "zod/v4";
 import { promotionPublicUrl, redactPromotionUrls } from "./redaction.ts";
-import { assertPromotionUrl, type PromotionTarget } from "#shared/promotion.ts";
+import {
+  assertPromotionUrl,
+  type PromotionTarget,
+} from "#shared/promotion/model.ts";
 import { reportReceiptStore } from "#activities/reports/report-object-store.ts";
 import { promotionStoragePrefix } from "./store.ts";
 import {

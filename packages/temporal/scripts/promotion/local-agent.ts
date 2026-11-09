@@ -7,7 +7,10 @@ import {
   readPromotionState,
   type PromotionStore,
 } from "#activities/promotion/store.ts";
-import type { PromotionRunInput, PromotionTarget } from "#shared/promotion.ts";
+import type {
+  PromotionRunInput,
+  PromotionTarget,
+} from "#shared/promotion/model.ts";
 import {
   executeLocalPromotion,
   type LocalPromotionSettings,

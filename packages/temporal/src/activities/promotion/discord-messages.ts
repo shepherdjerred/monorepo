@@ -18,3 +18,21 @@ export const Messages = z.object({
     }),
   ),
 });
+
+/** Preserve the message and embed text in both publication and reconciliation receipts. */
+export function discordMessageText(
+  message: z.infer<typeof Messages>["messages"][number],
+): string {
+  return [
+    message.content,
+    ...message.embeds.map((embed) =>
+      [
+        embed.title,
+        embed.description,
+        ...embed.fields.map((field) => `${field.name}: ${field.value}`),
+      ]
+        .filter(Boolean)
+        .join("\n"),
+    ),
+  ].join("\n");
+}

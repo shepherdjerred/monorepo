@@ -56,3 +56,20 @@ export function kubernetesApiEgressRule() {
     ports: [{ port: IntOrString.fromNumber(6443), protocol: "TCP" }],
   };
 }
+
+/** Metrics scraped by Prometheus from explicitly named workload ports. */
+export function prometheusIngressRule(ports: readonly number[]) {
+  return {
+    from: [
+      {
+        namespaceSelector: {
+          matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
+        },
+      },
+    ],
+    ports: ports.map((port) => ({
+      port: IntOrString.fromNumber(port),
+      protocol: "TCP",
+    })),
+  };
+}

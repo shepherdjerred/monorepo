@@ -8,7 +8,7 @@ import {
 } from "@temporalio/workflow";
 import type { PromotionActivities } from "#activities/promotion/index.ts";
 import type { ReportDeliveryActivities } from "#activities/reports/report-delivery.ts";
-import type { PromotionRunInput } from "#shared/promotion.ts";
+import type { PromotionRunInput } from "#shared/promotion/model.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import {
   REPORT_DELIVERY_ACTIVITY_RETRY,

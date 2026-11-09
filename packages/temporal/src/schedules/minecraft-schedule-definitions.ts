@@ -1,5 +1,9 @@
 import { ScheduleOverlapPolicy } from "@temporalio/client";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
+import {
+  PROMOTION_SWEEP_HOURS,
+  PROMOTION_TIMEZONE,
+} from "#shared/promotion/cadence.ts";
 import { schedulesInNamespace } from "./schedule-types.ts";
 
 export const MINECRAFT_SCHEDULES = schedulesInNamespace("prod", [
@@ -9,8 +13,8 @@ export const MINECRAFT_SCHEDULES = schedulesInNamespace("prod", [
     args: [],
     timing: {
       kind: "cron",
-      expression: "0 8,12,16,20 * * *",
-      timezone: "America/Los_Angeles",
+      expression: `0 ${PROMOTION_SWEEP_HOURS.join(",")} * * *`,
+      timezone: PROMOTION_TIMEZONE,
     },
     taskQueue: TASK_QUEUES.WORKFLOWS,
     overlap: ScheduleOverlapPolicy.SKIP,

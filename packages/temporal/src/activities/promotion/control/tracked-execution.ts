@@ -2,7 +2,7 @@ import { Context } from "@temporalio/activity";
 import {
   PromotionRunInputSchema,
   type PromotionRunInput,
-} from "#shared/promotion.ts";
+} from "#shared/promotion/model.ts";
 import {
   promotionStore,
   readPromotionState,

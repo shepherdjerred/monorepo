@@ -1,5 +1,5 @@
 import { expect, it, vi } from "vitest";
-import { initialPromotionState } from "#shared/promotion.ts";
+import { initialPromotionState } from "#shared/promotion/model.ts";
 import { promotionManifest } from "./manifest.ts";
 import { memoryPromotionStore } from "./test-support.ts";
 import {

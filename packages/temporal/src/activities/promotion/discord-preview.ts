@@ -1,10 +1,13 @@
 import { z } from "zod/v4";
-import type { PromotionTarget, PromotionState } from "#shared/promotion.ts";
+import type {
+  PromotionTarget,
+  PromotionState,
+} from "#shared/promotion/model.ts";
 import type { PromotionTaskJournal } from "./publication/task.ts";
 import type { PromotionTaskResult } from "./publication/task-contract.ts";
 import { cleanupDiscordReply } from "./discord-cleanup.ts";
 import { assertDiscordPayload } from "./publication/approved-copy.ts";
-import { Messages } from "./discord-messages.ts";
+import { Messages, discordMessageText } from "./discord-messages.ts";
 import {
   DiscordIndexPermissionsSchema,
   DiscordCommandPermissionFields,
@@ -344,18 +347,7 @@ export class PromotionDiscordPreview {
             message.content !== tool.body.content))
       )
         throw new Error("Discord publication has no matching readback");
-      const text = [
-        message.content,
-        ...message.embeds.map((embed) =>
-          [
-            embed.title,
-            embed.description,
-            ...embed.fields.map((field) => `${field.name}: ${field.value}`),
-          ]
-            .filter(Boolean)
-            .join("\n"),
-        ),
-      ].join("\n");
+      const text = discordMessageText(message);
       const url = `${this.input.target.url}/${message.id}`;
       if (this.input.saveEvidence === undefined)
         throw new Error("Discord evidence storage is unavailable");
@@ -465,18 +457,7 @@ export class PromotionDiscordPreview {
       throw new Error(
         "Receipt has no fresh readback from the assigned identity",
       );
-    const text = [
-      message.content,
-      ...message.embeds.map((embed) =>
-        [
-          embed.title,
-          embed.description,
-          ...embed.fields.map((field) => `${field.name}: ${field.value}`),
-        ]
-          .filter(Boolean)
-          .join("\n"),
-      ),
-    ].join("\n");
+    const text = discordMessageText(message);
     const screenshotKey = await this.input.saveEvidence(
       new TextEncoder().encode(JSON.stringify(message)),
     );

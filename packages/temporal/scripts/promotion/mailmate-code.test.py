@@ -2,7 +2,7 @@
 import runpy
 import tempfile
 import unittest
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from email.message import EmailMessage
 from email.utils import format_datetime
 from pathlib import Path
@@ -14,13 +14,20 @@ class MailMateCodeTest(unittest.TestCase):
     def setUp(self):
         self.directory = tempfile.TemporaryDirectory()
         self.root = Path(self.directory.name)
-        self.now = datetime.now(timezone.utc) - timedelta(seconds=5)
+        self.now = datetime.now(UTC) - timedelta(seconds=5)
         self.after = self.now - timedelta(minutes=1)
 
     def tearDown(self):
         self.directory.cleanup()
 
-    def message(self, filename, code, *, recipient="owner@example.test", date=None):
+    def message(
+        self,
+        filename: str,
+        code: str,
+        *,
+        recipient: str = "owner@example.test",
+        date: datetime | None = None,
+    ) -> None:
         message = EmailMessage()
         message["From"] = "no-reply@builtbybit.com"
         message["To"] = recipient

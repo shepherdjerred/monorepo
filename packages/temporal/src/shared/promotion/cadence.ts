@@ -1,5 +1,8 @@
-import type { PromotionState, PromotionTarget } from "#shared/promotion.ts";
-import { promotionDispatchAt } from "#shared/promotion.ts";
+import type {
+  PromotionState,
+  PromotionTarget,
+} from "#shared/promotion/model.ts";
+import { promotionDispatchAt } from "#shared/promotion/model.ts";
 
 export const PROMOTION_TIMEZONE = "America/Los_Angeles";
 export const PROMOTION_SWEEP_HOURS = [8, 12, 16, 20] as const;

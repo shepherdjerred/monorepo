@@ -1,5 +1,5 @@
 import { WorkflowNotFoundError } from "@temporalio/client";
-import type { PromotionState } from "#shared/promotion.ts";
+import type { PromotionState } from "#shared/promotion/model.ts";
 import {
   updatePromotionState,
   type PromotionStore,

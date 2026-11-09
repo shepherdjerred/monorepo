@@ -2,6 +2,7 @@ import { runInNewContext } from "node:vm";
 import { describe, expect, it, vi } from "vitest";
 import { z } from "zod/v4";
 import { PromotionBrowser } from "#activities/promotion/browser.ts";
+import { browserSessionFixtureRoute } from "./browser-test-support.ts";
 import { promotionTarget } from "#activities/promotion/manifest.ts";
 import { harness } from "#activities/promotion/tool-test-support.ts";
 import { cloudflareInterstitial } from "./challenge-scripts.ts";
@@ -26,14 +27,8 @@ async function browserFixture() {
     port: 0,
     fetch: async (request) => {
       const path = new URL(request.url).pathname;
-      if (path === "/profiles")
-        return Response.json([{ name: "storm-promotion-pmc" }]);
-      if (path === "/instances")
-        return Response.json([
-          { id: "owned", profileName: "storm-promotion-pmc" },
-        ]);
-      if (path === "/instances/owned/tabs") return Response.json([]);
-      if (path.endsWith("/tabs/open")) return Response.json({ tabId: "page" });
+      const session = browserSessionFixtureRoute(path, target);
+      if (session !== undefined) return session;
       if (path.endsWith("/snapshot"))
         return Response.json({
           nodes: [{ ref: "e1", role: "button", name: "Fixture control" }],

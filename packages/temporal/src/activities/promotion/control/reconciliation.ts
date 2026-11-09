@@ -1,5 +1,5 @@
 import { z } from "zod/v4";
-import type { PromotionState } from "#shared/promotion.ts";
+import type { PromotionState } from "#shared/promotion/model.ts";
 import type { PromotionStore } from "#activities/promotion/store.ts";
 
 const Probe = z.object({

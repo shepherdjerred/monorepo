@@ -3,7 +3,7 @@ import json
 import re
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from email import policy
 from email.parser import BytesParser
 from email.utils import getaddresses, parsedate_to_datetime
@@ -35,7 +35,7 @@ def find_code(root: Path, recipient: str, after: datetime) -> str | None:
         date = parsedate_to_datetime(str(message.get("Date", "")))
         if date.tzinfo is None:
             raise ValueError("Verification email is missing a timezone")
-        if date < after or date > datetime.now(timezone.utc):
+        if date < after or date > datetime.now(UTC):
             continue
         body = message.get_body(preferencelist=("plain",))
         if body is None:
@@ -53,5 +53,5 @@ if __name__ == "__main__":
         raise ValueError("Invalid MailMate code request")
     if type(data["after"]) not in (int, float):
         raise ValueError("Invalid verification request time")
-    code = find_code(Path(data["root"]), data["recipient"], datetime.fromtimestamp(data["after"] / 1000, timezone.utc))
+    code = find_code(Path(data["root"]), data["recipient"], datetime.fromtimestamp(data["after"] / 1000, UTC))
     print(json.dumps({"status": "pending"} if code is None else {"status": "found", "code": code}))

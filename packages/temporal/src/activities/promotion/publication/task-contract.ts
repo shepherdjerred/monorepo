@@ -1,5 +1,5 @@
 import { z } from "zod/v4";
-import { PromotionAgentResultSchema } from "#shared/promotion.ts";
+import { PromotionAgentResultSchema } from "#shared/promotion/model.ts";
 const TaskUrl = z
   .string()
   .refine((value) => URL.canParse(value), "Expected a URL");

@@ -1,4 +1,4 @@
-import type { PromotionRunInput } from "#shared/promotion.ts";
+import type { PromotionRunInput } from "#shared/promotion/model.ts";
 import {
   updatePromotionState,
   type PromotionStore,

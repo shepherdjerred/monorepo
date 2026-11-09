@@ -17,7 +17,7 @@ import {
   type PromotionState,
   type PromotionTarget,
   type PromotionRunInput,
-} from "#shared/promotion.ts";
+} from "#shared/promotion/model.ts";
 import { redactSecrets } from "#shared/redact.ts";
 import { agentTaskSecretTokens } from "#activities/agent/agent-task-env.ts";
 import { runBudgetedPromotion } from "./control/budgeted-agent.ts";

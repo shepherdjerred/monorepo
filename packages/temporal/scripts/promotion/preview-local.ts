@@ -17,7 +17,7 @@ import { PromotionLoginsSchema } from "#activities/promotion/tools.ts";
 import {
   promotionStateSummary,
   PromotionManifestSchema,
-} from "#shared/promotion.ts";
+} from "#shared/promotion/model.ts";
 import { redactSecrets } from "#shared/redact.ts";
 import { promotionDiagnosticKey } from "#activities/promotion/publication/diagnostic.ts";
 import { mailmateEmailCodeReader } from "./mailmate-code.ts";

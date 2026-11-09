@@ -7,7 +7,7 @@ import {
   promotionRunBlocked,
   type PromotionRunInput,
   type PromotionTarget,
-} from "#shared/promotion.ts";
+} from "#shared/promotion/model.ts";
 import {
   assertPromotionOwnership,
   type readPromotionState,

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { cleanupPromotionResources, runPromotionAgent } from "./agent.ts";
 import { promotionMaintenanceContext, promotionTarget } from "./manifest.ts";
-import { initialPromotionState } from "#shared/promotion.ts";
+import { initialPromotionState } from "#shared/promotion/model.ts";
 import { memoryPromotionStore } from "./test-support.ts";
 
 describe("promotion cleanup", () => {

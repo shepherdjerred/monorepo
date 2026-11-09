@@ -13,10 +13,14 @@ import {
   KubeNetworkPolicy,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
-import { dnsEgressRule } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
+import {
+  dnsEgressRule,
+  prometheusIngressRule,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import { temporalFeatureFlagEnvironment } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/feature-flags.ts";
 import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
 import { llmArchiveEnvVars } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-archive-env.ts";
+import { codexApiKeyEnvVars } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-provider-credentials.ts";
 import { createTemporalAgentWorker } from "./agent-worker.ts";
 
 export function createTemporalPromotionWorker(
@@ -68,10 +72,7 @@ export function createTemporalPromotionWorker(
       OTLP_ENDPOINT: EnvValue.fromValue(OTLP_GATEWAY_BASE_URL),
       TELEMETRY_SERVICE_NAME: EnvValue.fromValue("temporal-promotion-worker"),
       NODE_EXTRA_CA_CERTS: EnvValue.fromValue("/etc/kubernetes/ca.crt"),
-      OPENAI_API_KEY: EnvValue.fromSecretValue({
-        secret: props.temporalSecret,
-        key: "OPENAI_API_KEY",
-      }),
+      ...codexApiKeyEnvVars(props.temporalSecret),
       S3_ENDPOINT: EnvValue.fromValue(
         "http://seaweedfs-s3.seaweedfs.svc.cluster.local:8333",
       ),
@@ -122,19 +123,7 @@ export function createTemporalPromotionWorker(
           ],
           ports: [{ port: IntOrString.fromNumber(7343), protocol: "TCP" }],
         },
-        {
-          from: [
-            {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
-              },
-            },
-          ],
-          ports: [9464, 9465].map((port) => ({
-            port: IntOrString.fromNumber(port),
-            protocol: "TCP",
-          })),
-        },
+        prometheusIngressRule([9464, 9465]),
       ],
       egress: [
         dnsEgressRule(),

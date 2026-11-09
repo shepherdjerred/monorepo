@@ -1,6 +1,7 @@
 import { expect, it } from "vitest";
 import { z } from "zod/v4";
 import { PromotionBrowser } from "#activities/promotion/browser.ts";
+import { browserSessionFixtureRoute } from "./browser-test-support.ts";
 import { promotionTarget } from "#activities/promotion/manifest.ts";
 import { installChallengeCapture, readChallenge } from "./challenge-scripts.ts";
 
@@ -30,14 +31,8 @@ it("initializes CAPTCHA state again after a native same-URL reload", async () =>
     port: 0,
     fetch: async (request) => {
       const path = new URL(request.url).pathname;
-      if (path === "/profiles")
-        return Response.json([{ name: "storm-promotion-pmc" }]);
-      if (path === "/instances")
-        return Response.json([
-          { id: "owned", profileName: "storm-promotion-pmc" },
-        ]);
-      if (path === "/instances/owned/tabs") return Response.json([]);
-      if (path.endsWith("/tabs/open")) return Response.json({ tabId: "page" });
+      const session = browserSessionFixtureRoute(path, target);
+      if (session !== undefined) return session;
       if (path.endsWith("/action")) {
         captured = false;
         generation++;

@@ -1,5 +1,8 @@
 import { z } from "zod/v4";
-import type { PromotionTarget, PromotionRunInput } from "#shared/promotion.ts";
+import type {
+  PromotionTarget,
+  PromotionRunInput,
+} from "#shared/promotion/model.ts";
 import type { PromotionTaskResult } from "./publication/task-contract.ts";
 
 /** Parent-only cleanup after receipt persistence; never exposed as an agent tool. */

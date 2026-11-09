@@ -4,11 +4,14 @@ import {
   type PromotionBatch,
 } from "@shepherdjerred/ops-model/promotion/model.ts";
 import type { PromotionStore } from "#activities/promotion/store.ts";
-import type { PromotionTarget, PromotionState } from "#shared/promotion.ts";
+import type {
+  PromotionTarget,
+  PromotionState,
+} from "#shared/promotion/model.ts";
 import {
   promotionFailurePause,
   promotionDispatchAt,
-} from "#shared/promotion.ts";
+} from "#shared/promotion/model.ts";
 
 export const PromotionBatchIndex = z.array(z.string()).max(120);
 const key = (id: string) => `batches/${encodeURIComponent(id)}.json`;

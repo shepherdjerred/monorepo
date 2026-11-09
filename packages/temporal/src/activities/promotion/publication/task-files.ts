@@ -3,7 +3,7 @@ import {
   type PromotionRunInput,
   type PromotionState,
   type PromotionTarget,
-} from "#shared/promotion.ts";
+} from "#shared/promotion/model.ts";
 function toolClient(prefix = ""): string {
   return `const operation = process.argv[2];
 if (!operation) throw new Error("Usage: bun ${prefix === "" ? "browser" : "discord"}.ts <operation> [request.json]");

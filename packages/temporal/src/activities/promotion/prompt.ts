@@ -2,7 +2,7 @@ import type {
   PromotionRunInput,
   PromotionState,
   PromotionTarget,
-} from "#shared/promotion.ts";
+} from "#shared/promotion/model.ts";
 
 export function promotionPrompt(input: {
   target: PromotionTarget;

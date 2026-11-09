@@ -11,7 +11,7 @@ import {
   initialPromotionState,
   promotionDispatchAt,
   promotionFailurePause,
-} from "#shared/promotion.ts";
+} from "#shared/promotion/model.ts";
 import { promotionManifest } from "#activities/promotion/manifest.ts";
 import { PromotionBatchIndex } from "./batches.ts";
 import {

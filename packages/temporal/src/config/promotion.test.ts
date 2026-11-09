@@ -1,17 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type {
-  FlagConfigSource,
-  FlagSourceOptions,
+import {
+  createFlagConfigSource,
+  type FlagConfigSource,
 } from "@shepherdjerred/feature-flags/config-source.ts";
 
-const source = vi.hoisted(() => ({
-  get: vi.fn<FlagConfigSource["get"]>(),
-  create: vi.fn<(options: FlagSourceOptions) => FlagConfigSource>(),
-}));
 vi.mock("@shepherdjerred/feature-flags/config-source.ts", () => ({
-  createFlagConfigSource: source.create,
+  createFlagConfigSource: vi.fn(),
 }));
 import { promotionConfig } from "./promotion.ts";
+
+const source = {
+  get: vi.fn<FlagConfigSource["get"]>(),
+  create: vi.mocked(createFlagConfigSource),
+};
 
 beforeEach(() => {
   vi.resetAllMocks();

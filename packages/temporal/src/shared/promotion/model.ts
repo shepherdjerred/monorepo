@@ -130,7 +130,6 @@ export const PromotionPreflightSchema = z.strictObject({
   substantiveNewsAvailable: z.boolean(),
   explanation: z.string().min(10),
 });
-export type PromotionPreflight = z.infer<typeof PromotionPreflightSchema>;
 
 export const PromotionAttemptSchema = z.strictObject({
   occurrenceId: z.string().min(1),

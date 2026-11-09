@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { Context } from "@temporalio/activity";
 import { ReportEnvelopeV1Schema } from "#shared/reports/report.ts";
-import type { PromotionState } from "#shared/promotion.ts";
+import type { PromotionState } from "#shared/promotion/model.ts";
 
 export function promotionAlertFingerprint(
   state: PromotionState,

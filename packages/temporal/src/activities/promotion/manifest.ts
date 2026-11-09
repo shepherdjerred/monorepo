@@ -2,7 +2,7 @@ import manifest from "@shepherdjerred/the-storm/promotion/targets.json" with { t
 import {
   PromotionManifestSchema,
   type PromotionTarget,
-} from "#shared/promotion.ts";
+} from "#shared/promotion/model.ts";
 import { z } from "zod/v4";
 
 export const promotionManifest = PromotionManifestSchema.parse(manifest);

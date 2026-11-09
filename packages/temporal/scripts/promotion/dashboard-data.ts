@@ -1,5 +1,8 @@
 import type { PromotionBatch } from "@shepherdjerred/ops-model/promotion/model.ts";
-import type { PromotionTarget, PromotionState } from "#shared/promotion.ts";
+import type {
+  PromotionTarget,
+  PromotionState,
+} from "#shared/promotion/model.ts";
 import { Database } from "bun:sqlite";
 
 import { createHash } from "node:crypto";
@@ -16,7 +19,7 @@ import {
   PromotionStateSchema,
   promotionDispatchAt,
   promotionFailurePause,
-} from "#shared/promotion.ts";
+} from "#shared/promotion/model.ts";
 import { SolverBudgetSchema } from "#activities/promotion/store.ts";
 import { promotionSpendDay } from "#activities/promotion/control/budget.ts";
 import { promotionRunSummary } from "@shepherdjerred/ops-model/promotion/summary.ts";

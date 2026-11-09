@@ -1,4 +1,5 @@
 import type { Chart } from "cdk8s";
+import { codexApiKeyEnvVars } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-provider-credentials.ts";
 import {
   ConfigMap,
   EnvValue,
@@ -221,10 +222,7 @@ export function createTemporalWorkerDeployment(
         "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt",
       ),
       // Codex SDK and the LLM runtime use Temporal's own OpenAI project key.
-      OPENAI_API_KEY: EnvValue.fromSecretValue({
-        secret,
-        key: "OPENAI_API_KEY",
-      }),
+      ...codexApiKeyEnvVars(secret),
       CLAUDE_CODE_OAUTH_TOKEN: EnvValue.fromSecretValue({
         secret,
         key: "CLAUDE_CODE_OAUTH_TOKEN",
@@ -291,10 +289,7 @@ export function createTemporalWorkerDeployment(
         TELEMETRY_SERVICE_NAME: EnvValue.fromValue(
           "temporal-glitter-context-worker",
         ),
-        OPENAI_API_KEY: EnvValue.fromSecretValue({
-          secret,
-          key: "OPENAI_API_KEY",
-        }),
+        ...codexApiKeyEnvVars(secret),
         GITHUB_APP_ID: EnvValue.fromSecretValue({
           secret,
           key: "GITHUB_APP_ID",

@@ -10,8 +10,9 @@ import {
   type PromotionRunInput,
   type PromotionState,
   type PromotionTarget,
-} from "#shared/promotion.ts";
+} from "#shared/promotion/model.ts";
 import { envForProvider } from "#activities/agent/agent-task-env.ts";
+import { PROVIDER_CREDENTIAL_KEYS } from "#shared/agent/provider-credentials.ts";
 import { redactSecrets } from "#shared/redact.ts";
 import { redactAgentTaskPayloadStrings } from "#activities/agent/agent-task-result.ts";
 import {
@@ -271,7 +272,10 @@ export async function runPromotionAgent(input: PromotionAgentInput) {
       turnBudgetKind: "tool-steps",
       cwd: workdir,
       env,
-      auth: { kind: "openai-api-key", apiKey: required("OPENAI_API_KEY") },
+      auth: {
+        kind: "openai-api-key",
+        apiKey: required(PROVIDER_CREDENTIAL_KEYS.codex),
+      },
       signal,
       sandboxPolicy: {
         sandboxMode: "workspace-write",

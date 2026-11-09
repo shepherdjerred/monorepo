@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { assertPromotionTaskReceipt } from "./task-receipt.ts";
 import { promotionTarget } from "#activities/promotion/manifest.ts";
-import type { PromotionAttempt } from "#shared/promotion.ts";
+import type { PromotionAttempt } from "#shared/promotion/model.ts";
 
 const target = promotionTarget("reddit-mcservers");
 const pending: PromotionAttempt = {

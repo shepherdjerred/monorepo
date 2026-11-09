@@ -6,7 +6,7 @@ import { Database } from "bun:sqlite";
 import { localPromotionStore } from "./local-store.ts";
 import { prepareProductionHandoff } from "./production-handoff.ts";
 import { updatePromotionState } from "#activities/promotion/store.ts";
-import { PromotionStateSchema } from "#shared/promotion.ts";
+import { PromotionStateSchema } from "#shared/promotion/model.ts";
 
 it("refuses handoff while a local executor still owns the session", async () => {
   const directory = await mkdtemp(path.join(tmpdir(), "promotion-live-owner-"));

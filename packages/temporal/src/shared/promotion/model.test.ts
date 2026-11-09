@@ -3,8 +3,8 @@ import {
   assertPromotionUrl,
   policyEligibleAt,
   PromotionManifestSchema,
-} from "./promotion.ts";
-import type { PromotionTarget } from "./promotion.ts";
+} from "./model.ts";
+import type { PromotionTarget } from "./model.ts";
 
 describe("promotion history and target boundaries", () => {
   it("requires a fixed Discord assignment matching the actual thread URL", () => {

@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { realpath } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod/v4";
-import { PromotionStateSchema } from "#shared/promotion.ts";
+import { PromotionStateSchema } from "#shared/promotion/model.ts";
 import { PROMOTION_PREFIX } from "#activities/promotion/store.ts";
 import { PromotionBatchSchema } from "@shepherdjerred/ops-model/promotion/model.ts";
 import { localOwnerAlive } from "./process-owner.ts";

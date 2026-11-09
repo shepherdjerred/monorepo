@@ -3,7 +3,7 @@ import {
   initialPromotionState,
   promotionFailurePause,
   promotionRunBlocked,
-} from "#shared/promotion.ts";
+} from "#shared/promotion/model.ts";
 import { memoryPromotionStore } from "#activities/promotion/test-support.ts";
 import {
   readPromotionState,
