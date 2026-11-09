@@ -116,7 +116,7 @@ final class PaperProtection implements Protection {
   @Override
   public boolean mayOperateServerHistoricalCircuit(Location location) {
     requireMainThread();
-    return serverSpawnLift(guard.land(location));
+    return serverHistoricalCircuitLand(guard.land(location));
   }
 
   @Override
@@ -153,6 +153,11 @@ final class PaperProtection implements Protection {
         && underlying instanceof Land.Wilderness;
   }
 
+  /** Original logic can run on preserved staff-held land without inventing a player owner. */
+  static boolean serverHistoricalCircuitLand(Land land) {
+    return land instanceof Land.HeritageLand && serverHistoricalLiftLand(land);
+  }
+
   static boolean publicShopLift(Land land, UUID owner) {
     return land instanceof Land.HeritageLand(_, _, Land.ParcelLand(var parcel))
         && parcel.definition().kind()
@@ -160,6 +165,28 @@ final class PaperProtection implements Protection {
         && parcel.phase()
             == com.shepherdjerred.thestorm.towns.domain.parcel.ProtectedParcel.Phase.ACTIVE
         && parcel.owners().contains(owner);
+  }
+
+  @Override
+  public boolean mayOperateServerHistoricalGate(Location location) {
+    requireMainThread();
+    return !guard.isSealed(Guard.world(location)) && serverHistoricalGateLand(guard.land(location));
+  }
+
+  static boolean serverHistoricalGateLand(Land land) {
+    if (!(land instanceof Land.HeritageLand(var site, _, var underlying))) return false;
+    return underlying instanceof Land.Wilderness
+        || (underlying instanceof Land.ParcelLand(var parcel)
+            && parcel.definition().kind()
+                != com.shepherdjerred.thestorm.towns.domain.parcel.ParcelKind.RENTAL_SHOP
+            && parcel.phase()
+                == com.shepherdjerred.thestorm.towns.domain.parcel.ProtectedParcel.Phase.ACTIVE)
+        || (underlying instanceof Land.RegionLand(var region)
+            && site.kind()
+                == com.shepherdjerred.thestorm.towns.domain.heritage.HeritageSite.Kind.SERVER
+            && region.id().equals(site.id()))
+        || (underlying instanceof Land.TownLand(var claim)
+            && site.activeTownId().filter(claim.townId()::equals).isPresent());
   }
 
   /**

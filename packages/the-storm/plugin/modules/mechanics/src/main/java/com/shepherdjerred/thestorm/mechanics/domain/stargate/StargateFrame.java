@@ -14,7 +14,8 @@ public record StargateFrame(Pos origin, Direction across, Shape shape) {
 
   public enum Shape {
     PLAYER,
-    CIRCLE
+    CIRCLE,
+    LEGACY_CIRCLE
   }
 
   public StargateFrame(Pos origin, Direction across) {
@@ -31,7 +32,7 @@ public record StargateFrame(Pos origin, Direction across, Shape shape) {
 
   /** The obsidian outline, including the blocks that carry its controls. */
   public List<Pos> frameBlocks() {
-    if (shape == Shape.CIRCLE) return circleFrame();
+    if (shape != Shape.PLAYER) return circleFrame();
     var result = new ArrayList<Pos>();
     for (var y = 0; y < 5; y++) {
       if (y == 0 || y == 4) {
@@ -62,7 +63,7 @@ public record StargateFrame(Pos origin, Direction across, Shape shape) {
   /** The blocks filled by an open portal. */
   public List<Pos> interior() {
     var result = new ArrayList<Pos>();
-    if (shape == Shape.CIRCLE) {
+    if (shape != Shape.PLAYER) {
       for (var y = 1; y < 6; y++) {
         var radius = y == 1 || y == 5 ? 1 : 2;
         for (var x = -radius; x <= radius; x++) result.add(at(x, y));
@@ -98,15 +99,50 @@ public record StargateFrame(Pos origin, Direction across, Shape shape) {
             new StargateFrame(base.offset(across, -2), across),
             new StargateFrame(base.offset(across, 3), across, Shape.CIRCLE),
             new StargateFrame(base.offset(across, -3), across, Shape.CIRCLE));
-    var matches = candidates.stream().filter(frame -> frame.isClosed(grid)).toList();
+    var matches =
+        candidates.stream()
+            .filter(frame -> frame.isClosed(grid))
+            .map(frame -> frame.observedControls(grid, sign))
+            .flatMap(Optional::stream)
+            .toList();
     // Sharing a control block between frames is ambiguous and must not bind either one.
     return matches.size() == 1 ? Optional.of(matches.getFirst()) : Optional.empty();
   }
 
   /** The two blocks on which the sign and button are mounted. */
   public List<Pos> controls() {
-    if (shape == Shape.CIRCLE) return List.of(at(-3, 2), at(3, 2));
+    if (shape != Shape.PLAYER) return List.of(at(-3, 2), at(3, 2));
     return List.of(at(-1, 2), at(2, 2));
+  }
+
+  /** Surviving archive circles place their button below and inward from the sign. */
+  public Pos button(Pos sign) {
+    var facing = across.clockwise().clockwise().clockwise();
+    var support = sign.offset(facing.opposite());
+    if (shape == Shape.LEGACY_CIRCLE) {
+      var inward = support.equals(controls().getFirst()) ? across : across.opposite();
+      return sign.offset(Direction.DOWN).offset(inward);
+    }
+    return controls().stream()
+        .filter(pos -> !pos.equals(support))
+        .findFirst()
+        .orElseThrow()
+        .offset(facing);
+  }
+
+  /** The surviving controls choose the circle layout, including after an offline world edit. */
+  public Optional<StargateFrame> observedControls(BlockGrid grid, Pos sign) {
+    if (shape == Shape.PLAYER) return Optional.of(this);
+    var modern = new StargateFrame(origin, across, Shape.CIRCLE);
+    var legacy = new StargateFrame(origin, across, Shape.LEGACY_CIRCLE);
+    var originalButton = legacy.button(sign);
+    if (!grid.contains(originalButton)
+        || !grid.cellAt(originalButton).material().endsWith("_button")) return Optional.of(modern);
+    var oppositeButton = modern.button(sign);
+    return grid.contains(oppositeButton)
+            && grid.cellAt(oppositeButton).material().endsWith("_button")
+        ? Optional.empty()
+        : Optional.of(legacy);
   }
 
   private Pos at(int x, int y) {

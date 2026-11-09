@@ -3,6 +3,149 @@
 # plus a durable baseline captured with /plot admin baseline before admission.
 # Historical shop owners pay no rent and do not consume the new rental allowance.
 parcels:
+  - id: mondo-master
+    name: Legacy MondoChest master
+    kind: HERITAGE
+    area:
+      world: world
+      from: { x: 4376, y: 77, z: 215 }
+      to: { x: 4377, y: 77, z: 215 }
+    owners: [455dad50-64e1-45ce-a45e-550b90c1d7b0]
+    provenance: >-
+      Appointed to XiguaJerred as new private custodian by the server owner.
+      Historical ownership is unknown. Bounds cover only the surviving chest
+      and its paired half; no surrounding land is granted.
+    weeklyRent: 0
+  - id: mondo-shelf-01
+    name: Legacy MondoChest shelf 1
+    kind: HERITAGE
+    area:
+      world: world
+      from: { x: 4338, y: 73, z: 221 }
+      to: { x: 4338, y: 73, z: 222 }
+    owners: [455dad50-64e1-45ce-a45e-550b90c1d7b0]
+    provenance: >-
+      Appointed to XiguaJerred as new private custodian by the server owner.
+      Historical ownership is unknown. Bounds cover only the surviving chest
+      and its paired half; no surrounding land is granted.
+    weeklyRent: 0
+  - id: mondo-shelf-02
+    name: Legacy MondoChest shelf 2
+    kind: HERITAGE
+    area:
+      world: world
+      from: { x: 4338, y: 76, z: 241 }
+      to: { x: 4338, y: 76, z: 241 }
+    owners: [455dad50-64e1-45ce-a45e-550b90c1d7b0]
+    provenance: >-
+      Appointed to XiguaJerred as new private custodian by the server owner.
+      Historical ownership is unknown. Bounds cover only the surviving chest
+      and its paired half; no surrounding land is granted.
+    weeklyRent: 0
+  - id: mondo-shelf-03
+    name: Legacy MondoChest shelf 3
+    kind: HERITAGE
+    area:
+      world: world
+      from: { x: 4353, y: 73, z: 241 }
+      to: { x: 4354, y: 73, z: 241 }
+    owners: [455dad50-64e1-45ce-a45e-550b90c1d7b0]
+    provenance: >-
+      Appointed to XiguaJerred as new private custodian by the server owner.
+      Historical ownership is unknown. Bounds cover only the surviving chest
+      and its paired half; no surrounding land is granted.
+    weeklyRent: 0
+  - id: mondo-shelf-04
+    name: Legacy MondoChest shelf 4
+    kind: HERITAGE
+    area:
+      world: world
+      from: { x: 4359, y: 73, z: 241 }
+      to: { x: 4360, y: 73, z: 241 }
+    owners: [455dad50-64e1-45ce-a45e-550b90c1d7b0]
+    provenance: >-
+      Appointed to XiguaJerred as new private custodian by the server owner.
+      Historical ownership is unknown. Bounds cover only the surviving chest
+      and its paired half; no surrounding land is granted.
+    weeklyRent: 0
+  - id: mondo-shelf-05
+    name: Legacy MondoChest shelf 5
+    kind: HERITAGE
+    area:
+      world: world
+      from: { x: 4356, y: 73, z: 241 }
+      to: { x: 4357, y: 73, z: 241 }
+    owners: [455dad50-64e1-45ce-a45e-550b90c1d7b0]
+    provenance: >-
+      Appointed to XiguaJerred as new private custodian by the server owner.
+      Historical ownership is unknown. Bounds cover only the surviving chest
+      and its paired half; no surrounding land is granted.
+    weeklyRent: 0
+  - id: mondo-shelf-06
+    name: Legacy MondoChest shelf 6
+    kind: HERITAGE
+    area:
+      world: world
+      from: { x: 4362, y: 73, z: 241 }
+      to: { x: 4363, y: 73, z: 241 }
+    owners: [455dad50-64e1-45ce-a45e-550b90c1d7b0]
+    provenance: >-
+      Appointed to XiguaJerred as new private custodian by the server owner.
+      Historical ownership is unknown. Bounds cover only the surviving chest
+      and its paired half; no surrounding land is granted.
+    weeklyRent: 0
+  - id: mondo-shelf-07
+    name: Legacy MondoChest shelf 7
+    kind: HERITAGE
+    area:
+      world: world
+      from: { x: 4353, y: 76, z: 241 }
+      to: { x: 4354, y: 76, z: 241 }
+    owners: [455dad50-64e1-45ce-a45e-550b90c1d7b0]
+    provenance: >-
+      Appointed to XiguaJerred as new private custodian by the server owner.
+      Historical ownership is unknown. Bounds cover only the surviving chest
+      and its paired half; no surrounding land is granted.
+    weeklyRent: 0
+  - id: mondo-shelf-08
+    name: Legacy MondoChest shelf 8
+    kind: HERITAGE
+    area:
+      world: world
+      from: { x: 4359, y: 76, z: 241 }
+      to: { x: 4360, y: 76, z: 241 }
+    owners: [455dad50-64e1-45ce-a45e-550b90c1d7b0]
+    provenance: >-
+      Appointed to XiguaJerred as new private custodian by the server owner.
+      Historical ownership is unknown. Bounds cover only the surviving chest
+      and its paired half; no surrounding land is granted.
+    weeklyRent: 0
+  - id: mondo-shelf-09
+    name: Legacy MondoChest shelf 9
+    kind: HERITAGE
+    area:
+      world: world
+      from: { x: 4356, y: 76, z: 241 }
+      to: { x: 4357, y: 76, z: 241 }
+    owners: [455dad50-64e1-45ce-a45e-550b90c1d7b0]
+    provenance: >-
+      Appointed to XiguaJerred as new private custodian by the server owner.
+      Historical ownership is unknown. Bounds cover only the surviving chest
+      and its paired half; no surrounding land is granted.
+    weeklyRent: 0
+  - id: mondo-shelf-10
+    name: Legacy MondoChest shelf 10
+    kind: HERITAGE
+    area:
+      world: world
+      from: { x: 4362, y: 76, z: 241 }
+      to: { x: 4363, y: 76, z: 241 }
+    owners: [455dad50-64e1-45ce-a45e-550b90c1d7b0]
+    provenance: >-
+      Appointed to XiguaJerred as new private custodian by the server owner.
+      Historical ownership is unknown. Bounds cover only the surviving chest
+      and its paired half; no surrounding land is granted.
+    weeklyRent: 0
   - id: embassy-district
     name: Old Embassy District
     kind: HERITAGE

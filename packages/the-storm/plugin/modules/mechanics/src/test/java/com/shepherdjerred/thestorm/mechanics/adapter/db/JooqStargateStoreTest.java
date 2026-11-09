@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.mechanics.adapter.db;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -71,6 +72,65 @@ final class JooqStargateStoreTest {
     assertThat(store.deleteGate(GATE).get()).isTrue();
     assertThat(store.deleteGate(GATE).get()).isFalse();
     assertThat(store.load().get().gates()).isEmpty();
+  }
+
+  @Test
+  void legacyCircleUpgradeRetainsExistingGatesAndPrivateInvitations() throws Exception {
+    try (var legacy = StormDatabase.open(directory.resolve("legacy.db"))) {
+      for (var name :
+          java.util.List.of(
+              "V1__stargates.sql", "V2__stargate_shape.sql", "V3__stargate_fixed.sql"))
+        applySql(legacy, name);
+      var previous = new JooqStargateStore(legacy);
+      var network =
+          new StargateNetwork(NETWORK, "Friends", new NetworkAccess.Private(OWNER, Set.of(GUEST)));
+      var old =
+          new Stargate(
+              GATE,
+              NETWORK,
+              "Home",
+              OWNER,
+              WORLD,
+              new Pos(-1, 65, 2),
+              new StargateFrame(new Pos(2, 63, 3), Direction.EAST, StargateFrame.Shape.CIRCLE),
+              "Destination",
+              true);
+      previous.createNetwork(network).get();
+      previous.createGate(old).get();
+      applySql(legacy, "V4__legacy_circle_controls.sql");
+      assertThat(previous.load().get().networks()).containsExactly(network);
+      assertThat(previous.load().get().gates()).containsExactly(old);
+      var restored =
+          new Stargate(
+              new UUID(0, 6),
+              NETWORK,
+              "Archive",
+              OWNER,
+              WORLD,
+              new Pos(19, 65, 2),
+              new StargateFrame(
+                  new Pos(22, 63, 3), Direction.EAST, StargateFrame.Shape.LEGACY_CIRCLE),
+              null,
+              false);
+      previous.createGate(restored).get();
+      assertThat(previous.load().get().gates()).containsExactlyInAnyOrder(old, restored);
+    }
+  }
+
+  private void applySql(StormDatabase target, String migration) throws Exception {
+    try (var input = getClass().getResourceAsStream("/db/migration/mechanics/" + migration)) {
+      if (input == null) throw new IllegalStateException("missing migration " + migration);
+      var sql = new String(input.readAllBytes(), UTF_8);
+      target
+          .write(
+              dsl -> {
+                for (var statement : sql.split(";", -1)) {
+                  if (!statement.isBlank()) dsl.execute(statement);
+                }
+                return null;
+              })
+          .get();
+    }
   }
 
   @Test

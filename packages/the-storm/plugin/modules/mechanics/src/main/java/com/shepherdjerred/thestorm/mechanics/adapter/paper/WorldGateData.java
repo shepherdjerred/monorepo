@@ -134,7 +134,7 @@ public final class WorldGateData {
       throw new IllegalStateException("gate sign changed while removing");
   }
 
-  Optional<Definition> read(Block block) {
+  public Optional<Definition> read(Block block) {
     if (!(block.getState(false) instanceof Sign sign)) return Optional.empty();
     var data = sign.getPersistentDataContainer();
     if (data.has(REMOVED)) return Optional.empty();
@@ -166,11 +166,20 @@ public final class WorldGateData {
         && !lines.get(3).isBlank()
         && !lines.get(3).strip().equalsIgnoreCase("A")) return Optional.empty();
     var actual = PaperGrid.pos(block);
-    var frame =
+    if (original
+            .ownerId()
+            .equals(com.shepherdjerred.thestorm.core.protection.Protection.SERVER_HISTORICAL_GATE)
+        && (!original.sign().equals(actual)
+            || !original.worldId().equals(block.getWorld().getUID()))) return Optional.empty();
+    var grid = new PaperGrid(block.getWorld());
+    var observed =
         new StargateFrame(
-            move(original.frame().origin(), original.sign(), actual),
-            original.frame().across(),
-            original.frame().shape());
+                move(original.frame().origin(), original.sign(), actual),
+                original.frame().across(),
+                original.frame().shape())
+            .observedControls(grid, actual);
+    if (observed.isEmpty()) return Optional.empty();
+    var frame = observed.orElseThrow();
     final Stargate gate;
     try {
       gate =
@@ -191,7 +200,6 @@ public final class WorldGateData {
     }
     var network =
         new StargateNetwork(gate.networkId(), definition.networkName(), new NetworkAccess.Public());
-    var grid = new PaperGrid(block.getWorld());
     if (!StargateIntegrity.valid(grid, gate, network, false)
         && !StargateIntegrity.recoverable(grid, gate, network)) return Optional.empty();
     return Optional.of(new Definition(1, gate, definition.networkName(), definition.policy()));

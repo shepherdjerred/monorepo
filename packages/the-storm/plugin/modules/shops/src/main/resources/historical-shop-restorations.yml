@@ -3,6 +3,30 @@
 # Decimal prices use equivalent integral batches where practical; staff prices obey server price-loop limits.
 # Custom templates are copied from the recorded original slot, retaining item components.
 entries:
+  # The original Spider Head sign remains in PikachuPals' owned shop. Its lost
+  # remote link uses this empty shop chest and one copied surviving MHF_Spider
+  # template. The source container and its item are left untouched.
+  - {
+      "id": "2015-reconstructed-spider-head-158-68--130",
+      "world": "world",
+      "sign": { "x": 158, "y": 68, "z": -130 },
+      "container": { "x": 161, "y": 70, "z": -128 },
+      "owner": "af1c824a-8ff5-4912-9470-b32c07ffd1f8",
+      "ownerName": "PikachuPals",
+      "item": "player_head",
+      "quantity": 1,
+      "price": 225,
+      "stockTarget": 1,
+      "historicalItemName": "Spider Head",
+      "signFormat": "QUANTITY_ITEM",
+      "details":
+        {
+          "originalLines": ["[Buy]", "1 Spider", "Head", "225"],
+          "sourceSlot": 0,
+          "buysFromPlayer": false,
+          "rewrite": true,
+        },
+    }
   - {
       "id": "2016-reconstructed--21-67--124",
       "world": "map2",
@@ -7582,14 +7606,14 @@ entries:
       "owner": "00000000-0000-0000-0000-000000000000",
       "ownerName": "Staff custody",
       "item": "carrot",
-      "quantity": 1,
-      "price": 10,
+      "quantity": 64,
+      "price": 32,
       "stockTarget": 256,
       "historicalItemName": "Carrots",
       "signFormat": "QUANTITY_ITEM",
       "details":
         {
-          "originalLines": ["[Buy]", "Carrots", "for", "10"],
+          "originalLines": ["[Buy]", "64 Carrots", "for", "10"],
           "sourceSlot": -1,
           "buysFromPlayer": false,
           "rewrite": true,
@@ -7603,14 +7627,14 @@ entries:
       "owner": "00000000-0000-0000-0000-000000000000",
       "ownerName": "Staff custody",
       "item": "stone_bricks",
-      "quantity": 1,
+      "quantity": 64,
       "price": 17,
       "stockTarget": 256,
       "historicalItemName": "Stone Brick",
       "signFormat": "QUANTITY_ITEM",
       "details":
         {
-          "originalLines": ["[Buy]", "Stone Brick", "for", "17"],
+          "originalLines": ["[Buy]", "64 Stone Brick", "for", "17"],
           "sourceSlot": -1,
           "buysFromPlayer": false,
           "rewrite": true,
@@ -7624,14 +7648,14 @@ entries:
       "owner": "00000000-0000-0000-0000-000000000000",
       "ownerName": "Staff custody",
       "item": "stone_bricks",
-      "quantity": 1,
+      "quantity": 32,
       "price": 10,
       "stockTarget": 256,
       "historicalItemName": "Stone Brick",
       "signFormat": "QUANTITY_ITEM",
       "details":
         {
-          "originalLines": ["[Buy]", "Stone Brick", "for", "10"],
+          "originalLines": ["[Buy]", "32 Stone Brick", "for", "10"],
           "sourceSlot": -1,
           "buysFromPlayer": false,
           "rewrite": true,
@@ -7645,14 +7669,14 @@ entries:
       "owner": "00000000-0000-0000-0000-000000000000",
       "ownerName": "Staff custody",
       "item": "cobblestone",
-      "quantity": 1,
+      "quantity": 64,
       "price": 8,
       "stockTarget": 256,
       "historicalItemName": "Cobblestone",
       "signFormat": "QUANTITY_ITEM",
       "details":
         {
-          "originalLines": ["[Buy]", "Cobblestone", "for", "8"],
+          "originalLines": ["[Buy]", "64 Cobblestone", "for", "8"],
           "sourceSlot": -1,
           "buysFromPlayer": false,
           "rewrite": true,
@@ -7666,14 +7690,14 @@ entries:
       "owner": "00000000-0000-0000-0000-000000000000",
       "ownerName": "Staff custody",
       "item": "cobblestone",
-      "quantity": 1,
+      "quantity": 32,
       "price": 5,
       "stockTarget": 256,
       "historicalItemName": "Cobblestone",
       "signFormat": "QUANTITY_ITEM",
       "details":
         {
-          "originalLines": ["[Buy]", "Cobblestone", "for", "5"],
+          "originalLines": ["[Buy]", "32 Cobblestone", "for", "5"],
           "sourceSlot": -1,
           "buysFromPlayer": false,
           "rewrite": true,
@@ -7687,14 +7711,14 @@ entries:
       "owner": "00000000-0000-0000-0000-000000000000",
       "ownerName": "Staff custody",
       "item": "stone",
-      "quantity": 1,
+      "quantity": 32,
       "price": 10,
       "stockTarget": 256,
       "historicalItemName": "Stone",
       "signFormat": "QUANTITY_ITEM",
       "details":
         {
-          "originalLines": ["[Buy]", "Stone", "for", "10"],
+          "originalLines": ["[Buy]", "32 Stone", "for", "10"],
           "sourceSlot": -1,
           "buysFromPlayer": false,
           "rewrite": true,
@@ -7708,14 +7732,14 @@ entries:
       "owner": "00000000-0000-0000-0000-000000000000",
       "ownerName": "Staff custody",
       "item": "stone",
-      "quantity": 1,
+      "quantity": 64,
       "price": 17,
       "stockTarget": 256,
       "historicalItemName": "Stone",
       "signFormat": "QUANTITY_ITEM",
       "details":
         {
-          "originalLines": ["[Buy]", "Stone", "for", "17"],
+          "originalLines": ["[Buy]", "64 Stone", "for", "17"],
           "sourceSlot": -1,
           "buysFromPlayer": false,
           "rewrite": true,
@@ -7729,14 +7753,14 @@ entries:
       "owner": "00000000-0000-0000-0000-000000000000",
       "ownerName": "Staff custody",
       "item": "stone",
-      "quantity": 1,
+      "quantity": 64,
       "price": 17,
       "stockTarget": 256,
       "historicalItemName": "Stone",
       "signFormat": "QUANTITY_ITEM",
       "details":
         {
-          "originalLines": ["[Buy]", "Stone", "for", "17"],
+          "originalLines": ["[Buy]", "64 Stone", "for", "17"],
           "sourceSlot": -1,
           "buysFromPlayer": false,
           "rewrite": true,
@@ -7750,14 +7774,14 @@ entries:
       "owner": "00000000-0000-0000-0000-000000000000",
       "ownerName": "Staff custody",
       "item": "stone",
-      "quantity": 1,
+      "quantity": 32,
       "price": 10,
       "stockTarget": 256,
       "historicalItemName": "Stone",
       "signFormat": "QUANTITY_ITEM",
       "details":
         {
-          "originalLines": ["[Buy]", "Stone", "for", "10"],
+          "originalLines": ["[Buy]", "32 Stone", "for", "10"],
           "sourceSlot": -1,
           "buysFromPlayer": false,
           "rewrite": true,
@@ -7771,14 +7795,14 @@ entries:
       "owner": "00000000-0000-0000-0000-000000000000",
       "ownerName": "Staff custody",
       "item": "cobblestone",
-      "quantity": 1,
+      "quantity": 64,
       "price": 8,
       "stockTarget": 256,
       "historicalItemName": "Cobblestone",
       "signFormat": "QUANTITY_ITEM",
       "details":
         {
-          "originalLines": ["[Buy]", "Cobblestone", "for", "8"],
+          "originalLines": ["[Buy]", "64 Cobblestone", "for", "8"],
           "sourceSlot": -1,
           "buysFromPlayer": false,
           "rewrite": true,
@@ -7792,14 +7816,14 @@ entries:
       "owner": "00000000-0000-0000-0000-000000000000",
       "ownerName": "Staff custody",
       "item": "netherrack",
-      "quantity": 1,
+      "quantity": 32,
       "price": 10,
       "stockTarget": 256,
       "historicalItemName": "Netherrack",
       "signFormat": "QUANTITY_ITEM",
       "details":
         {
-          "originalLines": ["[Buy]", "Netherrack", "for", "10"],
+          "originalLines": ["[Buy]", "32 Netherrack", "for", "10"],
           "sourceSlot": -1,
           "buysFromPlayer": false,
           "rewrite": true,
@@ -7813,14 +7837,14 @@ entries:
       "owner": "00000000-0000-0000-0000-000000000000",
       "ownerName": "Staff custody",
       "item": "soul_sand",
-      "quantity": 1,
+      "quantity": 32,
       "price": 15,
       "stockTarget": 256,
       "historicalItemName": "Soul Sand",
       "signFormat": "QUANTITY_ITEM",
       "details":
         {
-          "originalLines": ["[Buy]", "Soul Sand", "for", "15"],
+          "originalLines": ["[Buy]", "32 Soul Sand", "for", "15"],
           "sourceSlot": -1,
           "buysFromPlayer": false,
           "rewrite": true,
@@ -7834,14 +7858,14 @@ entries:
       "owner": "00000000-0000-0000-0000-000000000000",
       "ownerName": "Staff custody",
       "item": "cooked_chicken",
-      "quantity": 1,
+      "quantity": 32,
       "price": 10,
       "stockTarget": 256,
       "historicalItemName": "Chicken",
       "signFormat": "QUANTITY_ITEM",
       "details":
         {
-          "originalLines": ["[Buy]", "Chicken", "for", "10"],
+          "originalLines": ["[Buy]", "32 Chicken", "for", "10"],
           "sourceSlot": -1,
           "buysFromPlayer": false,
           "rewrite": true,
@@ -7855,14 +7879,14 @@ entries:
       "owner": "00000000-0000-0000-0000-000000000000",
       "ownerName": "Staff custody",
       "item": "cooked_beef",
-      "quantity": 1,
+      "quantity": 32,
       "price": 15,
       "stockTarget": 256,
       "historicalItemName": "Beef",
       "signFormat": "QUANTITY_ITEM",
       "details":
         {
-          "originalLines": ["[Buy]", "Beef", "for", "15"],
+          "originalLines": ["[Buy]", "32 Beef", "for", "15"],
           "sourceSlot": -1,
           "buysFromPlayer": false,
           "rewrite": true,
@@ -7876,14 +7900,14 @@ entries:
       "owner": "00000000-0000-0000-0000-000000000000",
       "ownerName": "Staff custody",
       "item": "cooked_mutton",
-      "quantity": 1,
+      "quantity": 32,
       "price": 11,
       "stockTarget": 256,
       "historicalItemName": "Mutton",
       "signFormat": "QUANTITY_ITEM",
       "details":
         {
-          "originalLines": ["[Buy]", "Mutton", "for", "11"],
+          "originalLines": ["[Buy]", "32 Mutton", "for", "11"],
           "sourceSlot": -1,
           "buysFromPlayer": false,
           "rewrite": true,
@@ -7897,14 +7921,14 @@ entries:
       "owner": "00000000-0000-0000-0000-000000000000",
       "ownerName": "Staff custody",
       "item": "cooked_porkchop",
-      "quantity": 1,
+      "quantity": 32,
       "price": 15,
       "stockTarget": 256,
       "historicalItemName": "Porkchop",
       "signFormat": "QUANTITY_ITEM",
       "details":
         {
-          "originalLines": ["[Buy]", "Porkchop", "for", "15"],
+          "originalLines": ["[Buy]", "32 Porkchop", "for", "15"],
           "sourceSlot": -1,
           "buysFromPlayer": false,
           "rewrite": true,
@@ -7925,7 +7949,7 @@ entries:
       "signFormat": "QUANTITY_ITEM",
       "details":
         {
-          "originalLines": ["[Buy]", "Creeper Skull", "for", "150"],
+          "originalLines": ["[Buy]", "1 Creeper Skull", "for", "150"],
           "sourceSlot": -1,
           "buysFromPlayer": false,
           "rewrite": true,
@@ -7946,7 +7970,7 @@ entries:
       "signFormat": "QUANTITY_ITEM",
       "details":
         {
-          "originalLines": ["[Buy]", "Skeleton Skull", "for", "90"],
+          "originalLines": ["[Buy]", "1 Skeleton Skull", "for", "90"],
           "sourceSlot": -1,
           "buysFromPlayer": false,
           "rewrite": true,
@@ -7967,7 +7991,7 @@ entries:
       "signFormat": "QUANTITY_ITEM",
       "details":
         {
-          "originalLines": ["[Buy]", "Zombie Skull", "for", "85"],
+          "originalLines": ["[Buy]", "1 Zombie Skull", "for", "85"],
           "sourceSlot": -1,
           "buysFromPlayer": false,
           "rewrite": true,
@@ -7981,14 +8005,14 @@ entries:
       "owner": "00000000-0000-0000-0000-000000000000",
       "ownerName": "Staff custody",
       "item": "white_wool",
-      "quantity": 2,
+      "quantity": 16,
       "price": 1,
       "stockTarget": 256,
       "historicalItemName": "Wool",
       "signFormat": "QUANTITY_ITEM",
       "details":
         {
-          "originalLines": ["[Sell]", "Wool", "for", ".5"],
+          "originalLines": ["[Sell]", "8 Wool", "for", ".5"],
           "sourceSlot": -1,
           "buysFromPlayer": true,
           "rewrite": true,
@@ -8002,14 +8026,14 @@ entries:
       "owner": "00000000-0000-0000-0000-000000000000",
       "ownerName": "Staff custody",
       "item": "gold_ingot",
-      "quantity": 1,
-      "price": 15,
+      "quantity": 3,
+      "price": 21,
       "stockTarget": 32,
       "historicalItemName": "Gold Ingots",
       "signFormat": "QUANTITY_ITEM",
       "details":
         {
-          "originalLines": ["[Buy]", "Gold Ingots", "for", "15"],
+          "originalLines": ["[Buy]", "3 Gold Ingots", "for", "15"],
           "sourceSlot": -1,
           "buysFromPlayer": false,
           "rewrite": true,
@@ -8023,14 +8047,14 @@ entries:
       "owner": "00000000-0000-0000-0000-000000000000",
       "ownerName": "Staff custody",
       "item": "iron_ingot",
-      "quantity": 1,
-      "price": 10,
+      "quantity": 5,
+      "price": 20,
       "stockTarget": 32,
       "historicalItemName": "Iron Ingots",
       "signFormat": "QUANTITY_ITEM",
       "details":
         {
-          "originalLines": ["[Buy]", "Iron Ingots", "for", "10"],
+          "originalLines": ["[Buy]", "5 Iron Ingots", "for", "10"],
           "sourceSlot": -1,
           "buysFromPlayer": false,
           "rewrite": true,
@@ -8065,14 +8089,14 @@ entries:
       "owner": "00000000-0000-0000-0000-000000000000",
       "ownerName": "Staff custody",
       "item": "cod",
-      "quantity": 1,
+      "quantity": 5,
       "price": 3,
       "stockTarget": 32,
       "historicalItemName": "Fish",
       "signFormat": "QUANTITY_ITEM",
       "details":
         {
-          "originalLines": ["[Buy]", "Fish", "for", "3"],
+          "originalLines": ["[Buy]", "5 Raw Fish", "for", "3"],
           "sourceSlot": -1,
           "buysFromPlayer": false,
           "rewrite": true,
@@ -8093,7 +8117,7 @@ entries:
       "signFormat": "QUANTITY_ITEM",
       "details":
         {
-          "originalLines": ["[Buy]", "Diamond", "for", "60"],
+          "originalLines": ["[Buy]", "1 Diamond", "for", "60"],
           "sourceSlot": -1,
           "buysFromPlayer": false,
           "rewrite": true,
@@ -8114,7 +8138,7 @@ entries:
       "signFormat": "QUANTITY_ITEM",
       "details":
         {
-          "originalLines": ["[Buy]", "Emerald", "for", "50"],
+          "originalLines": ["[Buy]", "1 Emerald", "for", "50"],
           "sourceSlot": -1,
           "buysFromPlayer": false,
           "rewrite": true,
@@ -8128,14 +8152,14 @@ entries:
       "owner": "00000000-0000-0000-0000-000000000000",
       "ownerName": "Staff custody",
       "item": "salmon",
-      "quantity": 1,
+      "quantity": 5,
       "price": 3,
       "stockTarget": 32,
       "historicalItemName": "Salmon",
       "signFormat": "QUANTITY_ITEM",
       "details":
         {
-          "originalLines": ["[Buy]", "Salmon", "for", "3"],
+          "originalLines": ["[Buy]", "5 Raw Salmon", "for", "3"],
           "sourceSlot": -1,
           "buysFromPlayer": false,
           "rewrite": true,
@@ -8149,14 +8173,14 @@ entries:
       "owner": "00000000-0000-0000-0000-000000000000",
       "ownerName": "Staff custody",
       "item": "lapis_lazuli",
-      "quantity": 1,
+      "quantity": 16,
       "price": 20,
       "stockTarget": 32,
       "historicalItemName": "Lapis Lazuli",
       "signFormat": "QUANTITY_ITEM",
       "details":
         {
-          "originalLines": ["[Buy]", "Lapis Lazuli", "for", "20"],
+          "originalLines": ["[Buy]", "16 Lapis Lazuli", "for", "20"],
           "sourceSlot": -1,
           "buysFromPlayer": false,
           "rewrite": true,
@@ -8170,14 +8194,14 @@ entries:
       "owner": "00000000-0000-0000-0000-000000000000",
       "ownerName": "Staff custody",
       "item": "redstone",
-      "quantity": 1,
+      "quantity": 16,
       "price": 20,
       "stockTarget": 32,
       "historicalItemName": "Redstone",
       "signFormat": "QUANTITY_ITEM",
       "details":
         {
-          "originalLines": ["[Buy]", "Redstone", "for", "20"],
+          "originalLines": ["[Buy]", "16 Redstone", "for", "20"],
           "sourceSlot": -1,
           "buysFromPlayer": false,
           "rewrite": true,

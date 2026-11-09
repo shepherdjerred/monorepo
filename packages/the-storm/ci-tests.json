@@ -22,6 +22,7 @@
         "tests/rwf-status.test.ts",
         "tests/public-status.test.ts",
         "tests/server-files.test.ts",
+        "tests/server-facing.test.ts",
         "tests/external-server.test.ts",
         "tools/sandbox-qualification",
         "tests/capacity/capacity-bars.test.ts",

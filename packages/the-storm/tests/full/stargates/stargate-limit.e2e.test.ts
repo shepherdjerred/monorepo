@@ -22,7 +22,7 @@ async function editGate(
     () => Math.abs(bot.entity.position.x - (x + 1.5)) < 0.3,
   );
   const position = new Vec3(x + 1, 72, 1);
-  const sign = await openStargateSign(bot, position, "birch");
+  const sign = await openStargateSign(bot, position, "birch", rcon);
   const result = waitForMessage(bot, message);
   bot.updateSign(sign, `Gate${String(index)}\nDestination\n\nA`);
   await result;

@@ -4,6 +4,7 @@ import type { Bot } from "mineflayer";
 import type { RconClient } from "#e2e/harness/rcon.ts";
 import { test } from "#e2e/fixtures.ts";
 import { waitForMessage, waitUntil } from "#e2e/harness/bot.ts";
+import { activateStargateControl } from "#e2e/harness/stargates/gates.ts";
 
 async function buildHub(rcon: RconClient): Promise<void> {
   await waitUntil(
@@ -99,7 +100,7 @@ async function enterHub(
   let selected = false;
   for (let attempt = 0; !selected && attempt < 4; attempt++) {
     const next = waitForMessage(bot, /Destination: ([^.]+)/u);
-    await bot.activateBlock(sign);
+    await activateStargateControl(bot, rcon, sign);
     const match = await next;
     const choice = match[1];
     if (choice === undefined)
@@ -127,7 +128,7 @@ async function enterHub(
   );
   const button = bot.blockAt(new Vec3(957, 72, 1));
   if (button === null) throw new Error("World gate button is missing");
-  await bot.activateBlock(button);
+  await activateStargateControl(bot, rcon, button);
   await waitUntil(
     "world gate opens",
     () => bot.blockAt(new Vec3(960, 71, 0))?.name === "nether_portal",
@@ -369,7 +370,7 @@ test("a server gate on preserved land does not rewrite its sign or open its port
   const sign = bot.blockAt(new Vec3(103, 72, 101));
   if (sign === null) throw new Error("Protected gate sign is missing");
   const selected = waitForMessage(bot, /Destination: 2015/u);
-  await bot.activateBlock(sign);
+  await activateStargateControl(bot, rcon, sign);
   await selected;
   await waitUntil(
     "protected gate displays the selected world",
@@ -393,7 +394,7 @@ test("a server gate on preserved land does not rewrite its sign or open its port
   const button = bot.blockAt(new Vec3(97, 72, 101));
   if (button === null) throw new Error("Protected gate button is missing");
   const refused = waitForMessage(bot, /world gate is in preserved land/iu);
-  await bot.activateBlock(button);
+  await activateStargateControl(bot, rcon, button);
   await refused;
   expect(
     await rcon.command("execute if block 100 71 100 minecraft:air"),
@@ -404,6 +405,10 @@ test("an explicitly permitted preserved gate transports players and closes witho
   bot,
   rcon,
 }) => {
+  const messages: string[] = [];
+  bot.on("messagestr", (message) => {
+    messages.push(message);
+  });
   await rcon.command("forceload add 112 96 128 96");
   await rcon.command("forceload add 960 0");
   await rcon.command("fill 969 70 0 971 70 2 minecraft:stone");
@@ -439,8 +444,17 @@ test("an explicitly permitted preserved gate transports players and closes witho
   const sign = bot.blockAt(new Vec3(123, 72, 101));
   if (sign === null) throw new Error("Permitted gate sign is missing");
   const selected = waitForMessage(bot, /Destination: 2015/u);
-  await bot.activateBlock(sign);
-  await selected;
+  await activateStargateControl(bot, rcon, sign);
+  try {
+    await selected;
+  } catch (error) {
+    throw new Error(
+      `Preserved gate selection failed: ${messages.join(" | ")}`,
+      {
+        cause: error,
+      },
+    );
+  }
   expect(await rcon.command("data get block 123 72 101 front_text")).toContain(
     "Choose a world",
   );
@@ -451,7 +465,7 @@ test("an explicitly permitted preserved gate transports players and closes witho
   );
   const button = bot.blockAt(new Vec3(117, 72, 101));
   if (button === null) throw new Error("Permitted gate button is missing");
-  await bot.activateBlock(button);
+  await activateStargateControl(bot, rcon, button);
   await waitUntil(
     "permitted portal opens",
     () => bot.blockAt(new Vec3(120, 71, 100))?.name === "nether_portal",

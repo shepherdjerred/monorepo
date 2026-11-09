@@ -57,6 +57,20 @@ final class Guard {
         List.of(ProtectedAction.AUTOMATIC_BREAK, ProtectedAction.AUTOMATIC_BUILD));
   }
 
+  boolean historicalGateCell(UUID owner, org.bukkit.Location location) {
+    return owner.equals(Protection.SERVER_HISTORICAL_GATE)
+        && protection.mayOperateServerHistoricalGate(location);
+  }
+
+  boolean gateCells(UUID owner, PaperGrid grid, List<Pos> cells) {
+    return cells.stream()
+        .allMatch(
+            pos ->
+                historicalGateCell(owner, grid.location(pos))
+                    || (!protection.isPreserved(grid.location(pos))
+                        && automaticCells(owner, grid, List.of(pos)).isAllowed()));
+  }
+
   private Decision cells(
       UUID player, PaperGrid grid, List<Pos> cells, List<ProtectedAction> actions) {
     for (var pos : cells) {

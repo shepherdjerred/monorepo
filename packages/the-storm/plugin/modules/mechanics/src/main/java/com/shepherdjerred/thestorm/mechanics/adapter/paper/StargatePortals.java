@@ -186,11 +186,7 @@ final class StargatePortals implements Listener {
     if (!policy.permits(gate.ownerId(), town -> access.towns().isMember(gate.ownerId(), town)))
       return false;
     var grid = new PaperGrid(world);
-    return gate.frame().interior().stream()
-            .noneMatch(pos -> protection.isPreserved(grid.location(pos)))
-        && new Guard(protection)
-            .automaticCells(gate.ownerId(), grid, gate.frame().interior())
-            .isAllowed();
+    return new Guard(protection).gateCells(gate.ownerId(), grid, gate.frame().interior());
   }
 
   boolean enabled() {
@@ -223,9 +219,10 @@ final class StargatePortals implements Listener {
     }
     var gate = sign.orElseGet(button::orElseThrow);
     if (!allowed(player, gate)
-        || !protection
-            .check(player.getUniqueId(), ProtectedAction.INTERACT, block.getLocation())
-            .isAllowed()) {
+        || (!new Guard(protection).historicalGateCell(gate.ownerId(), block.getLocation())
+            && !protection
+                .check(player.getUniqueId(), ProtectedAction.INTERACT, block.getLocation())
+                .isAllowed())) {
       tell(player, "You cannot use this Stargate.");
       return;
     }
@@ -343,9 +340,7 @@ final class StargatePortals implements Listener {
     var world = context.plugin().getServer().getWorld(gate.worldId());
     if (world == null) return;
     var grid = new PaperGrid(world);
-    if (!new Guard(protection)
-        .automaticCells(gate.ownerId(), grid, gate.frame().interior())
-        .isAllowed()) {
+    if (!new Guard(protection).gateCells(gate.ownerId(), grid, gate.frame().interior())) {
       tell(player, "This Stargate no longer has permission to change its portal.");
       return;
     }
@@ -646,8 +641,7 @@ final class StargatePortals implements Listener {
             .filter(pos -> grid.loaded(pos) && grid.cellAt(pos).is("minecraft:nether_portal"))
             .toList();
     if (portal.isEmpty()) return;
-    if (portal.stream().anyMatch(pos -> protection.isPreserved(grid.location(pos)))
-        || !new Guard(protection).automaticCells(gate.ownerId(), grid, portal).isAllowed()) {
+    if (!new Guard(protection).gateCells(gate.ownerId(), grid, portal)) {
       context.logger().error("Stargate {} could not close due to land protection", gate.name());
       return;
     }

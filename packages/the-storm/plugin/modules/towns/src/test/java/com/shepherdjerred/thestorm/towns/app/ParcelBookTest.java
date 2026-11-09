@@ -55,11 +55,11 @@ final class ParcelBookTest {
                 });
     var mapOne =
         config.parcels().stream().filter(parcel -> parcel.area().world().equals("world")).toList();
-    assertThat(mapOne).hasSize(20);
+    assertThat(mapOne).hasSize(31);
     assertThat(mapOne.stream().filter(parcel -> parcel.kind() == ParcelKind.PERMANENT_SHOP))
         .hasSize(19)
         .allSatisfy(parcel -> assertThat(parcel.weeklyRent()).isZero());
-    assertThat(mapOne.stream().filter(parcel -> !parcel.owners().isEmpty())).hasSize(6);
+    assertThat(mapOne.stream().filter(parcel -> !parcel.owners().isEmpty())).hasSize(17);
     // Map 2 owners are sign/name matches against the January 2016 playerdata.
     assertThat(config.parcels().stream().filter(parcel -> parcel.area().world().equals("map2")))
         .hasSize(4)
@@ -101,6 +101,45 @@ final class ParcelBookTest {
                   .isAllowed())
           .isFalse();
     }
+  }
+
+  @Test
+  void newMondoCustodyCoversOnlyItsOriginalContainersAndPairedHalves() throws Exception {
+    var path = Path.of("../../../server/owned/plugins/TheStorm/parcels.yml");
+    var config =
+        StrictYaml.parse(path.toString(), Files.readString(path), ParcelsConfig.class)
+            .fold(
+                value -> value,
+                errors -> {
+                  throw new AssertionError(errors);
+                });
+    var owner = UUID.fromString("455dad50-64e1-45ce-a45e-550b90c1d7b0");
+    var custody = config.parcels().stream().filter(p -> p.id().startsWith("mondo-")).toList();
+    assertThat(custody)
+        .hasSize(11)
+        .allSatisfy(
+            p -> {
+              assertThat(p.owners()).containsExactly(owner);
+              assertThat(p.kind()).isEqualTo(ParcelKind.HERITAGE);
+              assertThat(p.weeklyRent()).isZero();
+              assertThat(p.area().from().y()).isEqualTo(p.area().to().y());
+              assertThat(p.area().to().x() - p.area().from().x()).isBetween(0, 1);
+              assertThat(p.area().to().z() - p.area().from().z()).isBetween(0, 1);
+              assertThat(p.provenance()).contains("Historical ownership is unknown");
+            });
+    var book = new ParcelBook(config, InstantSource.fixed(EXPIRY));
+    var state = new TownsState(new RegionIndex(List.of()));
+    state.attachParcels(book);
+    var master = state.landAt("world", 4377, 77, 215);
+    var protection = new ProtectionEngine(state, player -> false);
+    assertThat(protection.decide(Actor.player(owner), OPEN, master).isAllowed()).isTrue();
+    assertThat(protection.decide(Actor.player(STRANGER), OPEN, master).isAllowed()).isFalse();
+    var masterPartner = state.landAt("world", 4376, 77, 215);
+    assertThat(protection.decide(Actor.player(owner), OPEN, masterPartner).isAllowed()).isTrue();
+    assertThat(protection.decide(Actor.player(STRANGER), OPEN, masterPartner).isAllowed())
+        .isFalse();
+    assertThat(state.landAt("world", 4377, 76, 215)).isInstanceOf(Land.Wilderness.class);
+    assertThat(state.landAt("world", 4378, 77, 215)).isInstanceOf(Land.Wilderness.class);
   }
 
   @Test

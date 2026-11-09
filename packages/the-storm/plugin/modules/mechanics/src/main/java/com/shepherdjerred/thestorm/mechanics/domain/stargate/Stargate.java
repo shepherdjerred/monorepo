@@ -33,13 +33,8 @@ public record Stargate(
     return frame.across().clockwise().clockwise().clockwise();
   }
 
-  /** The button belongs on the opposite control, on the same face as the sign. */
+  /** The frame layout determines the physical button paired with the sign. */
   public Pos button() {
-    var support = sign.offset(facing().opposite());
-    return frame.controls().stream()
-        .filter(pos -> !pos.equals(support))
-        .findFirst()
-        .orElseThrow()
-        .offset(facing());
+    return frame.button(sign);
   }
 }

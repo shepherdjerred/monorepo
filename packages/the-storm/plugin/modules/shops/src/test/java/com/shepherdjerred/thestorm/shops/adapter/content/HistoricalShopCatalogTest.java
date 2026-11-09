@@ -127,11 +127,32 @@ final class HistoricalShopCatalogTest {
   void recoveredShopsRetainTheExactOriginalTextAndFiniteCustody() {
     var restored =
         HistoricalShopCatalog.load().stream().filter(e -> e.details().rewrite()).toList();
-    assertThat(restored).hasSize(482);
+    assertThat(restored).hasSize(483);
     assertThat(restored).allSatisfy(e -> assertThat(e.details().originalLines()).hasSize(4));
     assertThat(restored.stream().filter(e -> e.item().equals("diamond")))
         .allSatisfy(e -> assertThat(e.stockTarget()).isBetween(16, 32));
-    assertThat(restored.stream().filter(e -> e.details().sourceSlot() >= 0)).hasSize(25);
+    assertThat(restored.stream().filter(e -> e.details().sourceSlot() >= 0)).hasSize(26);
+  }
+
+  @Test
+  void coloredLegacyOffersRetainQuantitiesWithSafePricesAndEquivalentFractionalTrades() {
+    var entries = HistoricalShopCatalog.load();
+    assertThat(entries.stream().filter(e -> e.id().equals("2015-recovered-2132-64--3572")))
+        .singleElement()
+        .satisfies(
+            entry -> {
+              assertThat(entry.expectedLines()).containsExactly("[Buy]", "64 Carrots", "for", "10");
+              assertThat(entry.quantity()).isEqualTo(64);
+              assertThat(entry.price()).isEqualTo(32);
+            });
+    assertThat(entries.stream().filter(e -> e.id().equals("2015-recovered-2151-81--3466")))
+        .singleElement()
+        .satisfies(
+            entry -> {
+              assertThat(entry.expectedLines()).containsExactly("[Sell]", "8 Wool", "for", ".5");
+              assertThat(entry.quantity()).isEqualTo(16);
+              assertThat(entry.price()).isEqualTo(1);
+            });
   }
 
   @Test

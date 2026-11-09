@@ -84,6 +84,47 @@ describe("authenticated Prism control", () => {
     ).rejects.toThrow("unmanaged");
   });
 
+  it("prepares a named capture instance from pinned metadata without a user template", async () => {
+    const { dir, stagedMods, bootstrap } = await fixture();
+    const instanceName = "storm-capture-test";
+    await preparePrismInstance({
+      root: dir,
+      stagedMods,
+      bootstrap,
+      instanceName,
+    });
+    const instance = path.join(dir, "instances", instanceName);
+    const pack = JSON.parse(
+      await readFile(path.join(instance, "mmc-pack.json"), "utf8"),
+    );
+    expect(pack.components).toEqual([
+      { uid: "net.minecraft", version: "26.3", important: true },
+      { uid: "net.fabricmc.fabric-loader", version: "0.19.5" },
+    ]);
+    expect(
+      await readFile(
+        path.join(instance, "minecraft/mods/fabric-api.jar"),
+        "utf8",
+      ),
+    ).toBe("api");
+    await rm(path.join(instance, "storm-control-owned"));
+    await expect(
+      preparePrismInstance({ root: dir, stagedMods, bootstrap, instanceName }),
+    ).rejects.toThrow("unmanaged");
+  });
+
+  it("rejects instance names that escape the owned instance directory", async () => {
+    const { dir, stagedMods, bootstrap } = await fixture();
+    await expect(
+      preparePrismInstance({
+        root: dir,
+        stagedMods,
+        bootstrap,
+        instanceName: "../foreign",
+      }),
+    ).rejects.toThrow();
+  });
+
   it("requires explicit live target and refuses live privilege changes", () => {
     expect(
       ClientStartRequestSchema.parse({ target: "live", name: "Tester" }).op,

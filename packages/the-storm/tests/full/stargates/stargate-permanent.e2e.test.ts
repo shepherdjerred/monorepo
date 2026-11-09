@@ -129,7 +129,7 @@ test("sign-created fixed gate opens automatically and closes when its destinatio
     const { right } = await buildFrame(rcon, x);
     await rcon.command(`tp ${bot.username} ${right}.5 71 3.5`);
     const signPos = new Vec3(x === 400 ? x + 1 : x + 3, 72, 1);
-    const sign = await openStargateSign(bot, signPos, "birch");
+    const sign = await openStargateSign(bot, signPos, "birch", rcon);
     const name = x === 400 ? "First" : "Second";
     if (x === 400) {
       const invalid = waitForMessage(bot, /Leave line four blank or use A/u);

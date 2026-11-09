@@ -1,4 +1,5 @@
 import { describe, expect, onTestFinished } from "vitest";
+import { z } from "zod";
 import { test } from "#e2e/fixtures.ts";
 import {
   connectBot,
@@ -6,6 +7,19 @@ import {
   waitForMessage,
   waitUntil,
 } from "#e2e/harness/bot.ts";
+
+const { newcomerSpawn } = z
+  .object({ newcomerSpawn: z.object({ x: z.number(), z: z.number() }) })
+  .parse(
+    Bun.YAML.parse(
+      await Bun.file(
+        new URL(
+          "../../../server/owned/plugins/TheStorm/essentials.yml",
+          import.meta.url,
+        ),
+      ).text(),
+    ),
+  );
 
 describe("restored homes", () => {
   test("a missing native bed becomes an ordinary bed home and respawn", async ({
@@ -25,7 +39,9 @@ describe("restored homes", () => {
     onTestFinished(async () => disconnectBot(player));
     await waitUntil(
       "initial placement",
-      () => Math.abs(player.entity.position.x - 68.5) < 2,
+      () =>
+        Math.abs(player.entity.position.x - newcomerSpawn.x) < 2 &&
+        Math.abs(player.entity.position.z - newcomerSpawn.z) < 2,
     );
     const listed = waitForMessage(player, /bed/);
     player.chat("/homes");
@@ -76,7 +92,9 @@ describe("restored homes", () => {
     onTestFinished(async () => disconnectBot(player));
     await waitUntil(
       "initial spawn",
-      () => Math.abs(player.entity.position.x - 68.5) < 2,
+      () =>
+        Math.abs(player.entity.position.x - newcomerSpawn.x) < 2 &&
+        Math.abs(player.entity.position.z - newcomerSpawn.z) < 2,
     );
     await rcon.command("forceload add 1000 1000");
     await rcon.command("fill 998 69 998 1003 69 1003 minecraft:stone");

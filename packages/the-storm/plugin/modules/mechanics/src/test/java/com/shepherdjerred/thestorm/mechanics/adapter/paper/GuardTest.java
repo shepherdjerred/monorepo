@@ -1,6 +1,9 @@
 package com.shepherdjerred.thestorm.mechanics.adapter.paper;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.shepherdjerred.thestorm.core.protection.Decision;
 import com.shepherdjerred.thestorm.core.protection.HarmTarget;
@@ -20,6 +23,26 @@ final class GuardTest {
   @AfterEach
   void stop() {
     MockBukkit.unmock();
+  }
+
+  @Test
+  void historicalGateAuthorityRequiresItsDedicatedOwnerAndEveryCell() {
+    var grid = new PaperGrid(MockBukkit.mock().addSimpleWorld("world"));
+    var protection = mock(Protection.class);
+    when(protection.isPreserved(any())).thenReturn(true);
+    when(protection.mayOperateServerHistoricalGate(any()))
+        .thenAnswer(call -> ((Location) call.getArgument(0)).getBlockX() == 4);
+    var guard = new Guard(protection);
+    var approved = List.of(new Pos(4, 64, 4));
+    assertThat(guard.gateCells(Protection.SERVER_HISTORICAL_GATE, grid, approved)).isTrue();
+    assertThat(guard.gateCells(Protection.SERVER_AUTOMATION, grid, approved)).isFalse();
+    assertThat(guard.gateCells(UUID.randomUUID(), grid, approved)).isFalse();
+    assertThat(
+            guard.gateCells(
+                Protection.SERVER_HISTORICAL_GATE,
+                grid,
+                List.of(approved.getFirst(), new Pos(5, 64, 4))))
+        .isFalse();
   }
 
   @Test
