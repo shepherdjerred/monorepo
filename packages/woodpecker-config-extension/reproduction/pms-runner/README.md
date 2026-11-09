@@ -1,10 +1,11 @@
 # PMS component runner
 
-This operator-run program reproduces the existing `media-pms-wire` workflow
-through Woodpecker's pinned public compiler, runtime and Kubernetes backend.
-It allows testing the component before a deployed configuration extension can
-emit that lane. It does not create a Woodpecker server result, replace exact-head
-CI, or establish production Plex acceptance.
+This operator-run program runs the `media-pms-wire` workflow through
+Woodpecker's pinned public compiler, runtime and Kubernetes backend. It is the
+only way to run that lane: CI does not emit it, because movie editions need a
+Plex Pass server admin and the disposable server is deliberately unclaimed
+(AI-375). It does not create a Woodpecker server result, replace exact-head CI,
+or establish production Plex acceptance.
 
 ## Contributor checks
 

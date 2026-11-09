@@ -405,7 +405,10 @@ The credentialless Workflow worker runs separately in Node; Activity workers
 run in Bun. Catalog, provider, identity and PMS wire responses and ownership
 attestations are synthetic. This local scenario does not establish intended-build
 Plex compatibility, live provider compatibility, production isolation, or canary
-acceptance. The separate native PMS lane and household acceptance remain required.
+acceptance. The operator-run native PMS lane (see
+`packages/woodpecker-config-extension/reproduction/pms-runner`) and household
+acceptance remain required; CI cannot run it because movie editions need a
+licensed Plex server.
 
 To inspect the completed scenario in the actual built application, first build
 Media, then pass `--inspect-ui` to the coordinated command. It prints the exact

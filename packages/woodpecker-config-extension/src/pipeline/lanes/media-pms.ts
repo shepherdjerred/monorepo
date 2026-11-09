@@ -3,7 +3,12 @@ import type { CiStep } from "#src/pipeline/model.ts";
 import { MEDIUM_TIER } from "#src/pipeline/tiers.ts";
 import { GLOBAL_SELECTOR_INPUTS } from "#src/pipeline/inputs.ts";
 
-/** Real credentialless PMS wire acceptance on the native amd64 Kubernetes CI node. */
+/**
+ * Real credentialless PMS wire acceptance on the native amd64 Kubernetes CI node.
+ *
+ * Operator-run only through reproduction/pms-runner; buildPipelineSteps
+ * excludes it because its edition assertions need a licensed server (AI-375).
+ */
 export function mediaPmsSteps(images: CiImages): CiStep[] {
   const image = images.catalog["plexinc/pms-docker"];
   if (

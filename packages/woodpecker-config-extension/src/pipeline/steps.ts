@@ -26,7 +26,6 @@ import { scoutSteps } from "#src/pipeline/lanes/scout.ts";
 import { siteSteps } from "#src/pipeline/lanes/sites.ts";
 import { observabilityE2eSteps } from "#src/pipeline/lanes/observability-e2e.ts";
 import { stormE2eSteps } from "#src/pipeline/lanes/storm-e2e.ts";
-import { mediaPmsSteps } from "#src/pipeline/lanes/media-pms.ts";
 import { prGateSteps } from "#src/pipeline/lanes/pr-gates.ts";
 import {
   TURBO_CACHE_TOKEN,
@@ -209,7 +208,10 @@ export function buildPipelineSteps({
     // session. The lane definitions stay in macos.ts for restoration.
     ...observabilityE2eSteps(images),
     ...stormE2eSteps(images),
-    ...mediaPmsSteps(images),
+    // The native PMS lane (lanes/media-pms.ts) is not part of CI. Filename
+    // editions need a Plex Pass server admin, and the disposable server is
+    // deliberately unclaimed, so the lane cannot pass here (AI-375). Operators
+    // run it through reproduction/pms-runner.
     ...prGateSteps(images, trustedGateImage),
   ];
 
@@ -217,16 +219,19 @@ export function buildPipelineSteps({
   // ci-changed selectors must receive the same last-green base as the graph
   // selector; otherwise they fail open and publish, deploy, or rebuild on
   // every main push. Verify may override it with its newer successful base.
-  return steps.map((step) =>
-    withSharedToolCaches(
-      withSharedBunCache({
-        ...step,
-        environment: {
-          CI_CHANGED_BASE: changedBase,
-          ...step.environment,
-        },
-      }),
-    ),
+  return steps.map((step) => withLaneEnvironment(step, changedBase));
+}
+
+/** Give a lane the shared caches and the graph selector's changed base. */
+export function withLaneEnvironment(step: CiStep, changedBase: string): CiStep {
+  return withSharedToolCaches(
+    withSharedBunCache({
+      ...step,
+      environment: {
+        CI_CHANGED_BASE: changedBase,
+        ...step.environment,
+      },
+    }),
   );
 }
 

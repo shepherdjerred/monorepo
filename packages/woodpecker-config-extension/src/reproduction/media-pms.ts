@@ -2,7 +2,8 @@ import { createHash } from "node:crypto";
 import { z } from "zod";
 import { parse } from "yaml";
 import type { CiImages } from "#src/images.ts";
-import { buildPipelineSteps } from "#src/pipeline/steps.ts";
+import { withLaneEnvironment } from "#src/pipeline/steps.ts";
+import { mediaPmsSteps } from "#src/pipeline/lanes/media-pms.ts";
 import { routeSteps } from "#src/pipeline/routing.ts";
 import { emitWorkflow } from "#src/pipeline/emit.ts";
 import { SOURCE_CACHE_PREPARATION_IMAGE } from "#src/pipeline/source-cache.ts";
@@ -40,10 +41,11 @@ export function renderPmsReproduction(
   images: CiImages,
 ) {
   const identity = PmsReproductionIdentity.parse(rawIdentity);
-  const selected = buildPipelineSteps({
-    images,
-    changedBase: undefined,
-  }).filter((step) => step.key === "media-pms-wire");
+  // The lane is outside the CI graph, so decorate it exactly as the graph
+  // would rather than selecting it from buildPipelineSteps.
+  const selected = mediaPmsSteps(images)
+    .map((step) => withLaneEnvironment(step, ""))
+    .filter((step) => step.key === "media-pms-wire");
   if (selected.length !== 1) throw new Error("Expected exactly one PMS lane");
   const [lane] = routeSteps(selected, {
     event: "manual",

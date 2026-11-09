@@ -7,7 +7,7 @@ import { selectSteps } from "#src/pipeline/select.ts";
 import { emitWorkflow } from "#src/pipeline/emit.ts";
 import { TEST_IDENTITY, TEST_IMAGES } from "#test-identity";
 
-test("real PMS lane is mandatory for Media changes and uses only native catalogued image", () => {
+test("real PMS lane is operator-only and uses only native catalogued image", () => {
   const lane = mediaPmsSteps(TEST_IMAGES)[0];
   if (lane === undefined) throw new Error("PMS lane missing");
   expect(lane.allowFailure).toBeUndefined();
@@ -39,7 +39,8 @@ test("real PMS lane is mandatory for Media changes and uses only native catalogu
       changedFiles: ["packages/media/src/integrations/plex.ts"],
     },
   );
-  expect(selected.map((step) => step.key)).toContain("media-pms-wire");
+  // Unclaimed CI servers cannot recognize Plex Pass editions (AI-375).
+  expect(selected.map((step) => step.key)).not.toContain("media-pms-wire");
 });
 
 test("PMS emission accounts for both container resources and keeps the server on CI node", () => {
