@@ -41,7 +41,7 @@ unicode-normalization = "0.1.25"
 zeroize = "1.9.0"
 semver = "1.0"
 hex = "0.4.3"
-rusqlite = { version = "0.40.2", features = ["bundled", "blob"] }
+rusqlite = { version = "0.41.1", features = ["bundled", "blob"] }
 tempfile = "3"
 stats_alloc = "=0.1.10"
 

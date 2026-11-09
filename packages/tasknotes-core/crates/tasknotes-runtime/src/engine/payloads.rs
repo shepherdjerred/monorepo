@@ -247,9 +247,11 @@ pub(super) fn store_inline(db: &Connection, profile: &str, bytes: &[u8]) -> Resu
     }
     let size = i32::try_from(bytes.len())
         .map_err(|_| RuntimeError::Validation("note exceeds SQLite image range".to_owned()))?;
+    let blob_size = u64::try_from(size)
+        .map_err(|_| RuntimeError::Validation("invalid note size".to_owned()))?;
     db.execute(
         "INSERT INTO transfer_payloads(profile,id,size,revision,bytes,origin) VALUES(?,?,?,?,?,'content')",
-        params![profile, id, size, revision, ZeroBlob(size)],
+        params![profile, id, size, revision, ZeroBlob(blob_size)],
     )?;
     let row_id = db.last_insert_rowid();
     db.execute(
@@ -302,6 +304,8 @@ fn copy_legacy_image(
     let source = db.blob_open("main", table, column, row_id, true)?;
     let size = i32::try_from(source.len())
         .map_err(|_| RuntimeError::Storage("legacy image exceeds SQLite blob range".to_owned()))?;
+    let blob_size =
+        u64::try_from(size).map_err(|_| RuntimeError::Storage("invalid legacy size".to_owned()))?;
     let mut chunk = vec![0; PAYLOAD_CHUNK_BYTES];
     let mut digest = Sha256::new();
     let mut offset = 0;
@@ -332,7 +336,7 @@ fn copy_legacy_image(
     }
     db.execute(
         "INSERT INTO transfer_payloads(profile,id,size,revision,bytes,origin) VALUES(?,?,?,?,?,'content')",
-        params![profile, id, size, revision, ZeroBlob(size)],
+        params![profile, id, size, revision, ZeroBlob(blob_size)],
     )?;
     let target_row = db.last_insert_rowid();
     db.execute(
@@ -650,6 +654,7 @@ impl Engine {
                 "transfer payload exceeds supported Sync file limit".to_owned(),
             ));
         }
+        let blob_size = size;
         let size = i32::try_from(size)
             .map_err(|_| RuntimeError::Validation("invalid payload size".to_owned()))?;
         self.profile(profile)?;
@@ -668,7 +673,7 @@ impl Engine {
             }
             tx.execute(
                 "INSERT INTO transfer_payloads(profile,id,size,revision,bytes,origin) VALUES(?,?,?,?,?,?)",
-                params![profile, id, size, revision, ZeroBlob(size),if transfer {"incoming"}else {"content"}],
+                params![profile, id, size, revision, ZeroBlob(blob_size),if transfer {"incoming"}else {"content"}],
             )?;
             tx.execute("INSERT INTO transfer_payload_state(row_id,origin) VALUES(?,?)", params![tx.last_insert_rowid(),if transfer {"incoming"}else {"content"}])?;
             let info = required(&tx, profile, id)?.info;
