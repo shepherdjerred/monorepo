@@ -368,9 +368,16 @@ if [ -z "$(find "$POSTGRES_INSTALL/bin/pg_ctl" -perm -0555)" ]; then
   echo "toolchain.sh must keep shared-claim Postgres executables runnable by the test user" >&2
   exit 1
 fi
-if [ "$(find "$MISE_CLAIM/installs/node" "$MISE_CLAIM/downloads" -maxdepth 0 -perm 0700 | wc -l | tr -d ' ')" -ne 2 ] ||
-  [ -z "$(find "$MISE_CLAIM/installs/node/22.0.0/bin/node" -perm 0700)" ]; then
-  echo "toolchain.sh must expose only the Postgres install on the shared mise claim" >&2
+# Other tools and the downloads directory must stay unreachable by the nobody
+# test user: no other-read or other-execute bit. Bit tests rather than an exact
+# mode, because a pod volume's fsGroup can add group and setgid bits that the
+# preamble never touches.
+untouched=$(find "$MISE_CLAIM/installs/node" "$MISE_CLAIM/downloads" \
+  "$MISE_CLAIM/installs/node/22.0.0/bin/node" -maxdepth 0 \
+  \( -perm -0004 -o -perm -0001 \))
+if [ -n "$untouched" ]; then
+  echo "toolchain.sh must expose only the Postgres install on the shared mise claim; reachable by others:" >&2
+  ls -ld "$MISE_CLAIM/installs/node" "$MISE_CLAIM/downloads" "$MISE_CLAIM/installs/node/22.0.0/bin/node" >&2
   exit 1
 fi
 
