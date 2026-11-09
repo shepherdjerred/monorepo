@@ -2780,10 +2780,6 @@
       "clones": 1,
       "tokens": 79
     },
-    "packages/temporal/src/activities/media/future-series-workflow.integration.test.ts|packages/temporal/src/activities/media/managed-series-workflow.integration.test.ts": {
-      "clones": 1,
-      "tokens": 78
-    },
     "packages/temporal/src/activities/media/library-handoff.test.ts|packages/temporal/src/activities/media/library-handoff.test.ts": {
       "clones": 1,
       "tokens": 75
@@ -2802,7 +2798,7 @@
     },
     "packages/temporal/src/activities/media/managed-series-workflow.integration.test.ts|packages/temporal/src/activities/media/series-pack/rollback-role.integration.test.ts": {
       "clones": 1,
-      "tokens": 105
+      "tokens": 89
     },
     "packages/temporal/src/activities/media/movie-editions.test.ts|packages/temporal/src/activities/media/movie-editions.test.ts": {
       "clones": 1,
@@ -2869,8 +2865,8 @@
       "tokens": 1135
     },
     "packages/temporal/src/activities/media/series-pack/rollback-role.integration.test.ts|packages/temporal/src/activities/media/series-pack/workflow.integration.test.ts": {
-      "clones": 3,
-      "tokens": 367
+      "clones": 2,
+      "tokens": 253
     },
     "packages/temporal/src/shared/agent/agent-task-output.ts|packages/temporal/src/shared/agent/agent-task-output.ts": {
       "clones": 1,

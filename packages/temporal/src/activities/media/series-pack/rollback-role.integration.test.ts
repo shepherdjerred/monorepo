@@ -1,8 +1,4 @@
-import {
-  plexRoleActivities,
-  createMediaActivityTestWorker,
-  createAcquisitionFileTestWorker,
-} from "#activities/media/testing/activity-workers.ts";
+import { createAcquisitionRoleTestWorkers } from "#activities/media/testing/activity-workers.ts";
 import path from "node:path";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -11,7 +7,6 @@ import type { Worker } from "@temporalio/worker";
 import { afterAll, beforeAll, expect, test } from "vitest";
 import { z } from "zod";
 import { createPerEpisodeRollbackRoleFixtureV1 } from "@shepherdjerred/media/testing/per-episode-rollback-workflow";
-import { createAcquisitionNetworkWorkerActivities } from "#activities/media/acquisition.ts";
 
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import {
@@ -88,22 +83,12 @@ beforeAll(async () => {
     directory,
     childEnvironment,
   });
-  const network = await createMediaActivityTestWorker(environment, {
-    namespace: "dev",
-    taskQueue: TASK_QUEUES.MEDIA_NETWORK,
-    activities: {
-      ...createAcquisitionNetworkWorkerActivities(() =>
-        Promise.resolve({ acquisition: scenario.acquisition }),
-      ),
-      ...plexRoleActivities(() => Promise.resolve(scenario)),
-      finishMediaOperation: scenario.finishMediaOperation,
-    },
-  });
+  const { network, files } = await createAcquisitionRoleTestWorkers(
+    environment,
+    scenario,
+  );
   workers.push(network);
   running.push(network.run());
-  const files = await createAcquisitionFileTestWorker(environment, "dev", () =>
-    Promise.resolve({ acquisition: scenario.fileAcquisition }),
-  );
   workers.push(files);
   running.push(files.run());
   prepared = {

@@ -1,8 +1,4 @@
-import {
-  plexRoleActivities,
-  createMediaActivityTestWorker,
-  createAcquisitionFileTestWorker,
-} from "#activities/media/testing/activity-workers.ts";
+import { createAcquisitionRoleTestWorkers } from "#activities/media/testing/activity-workers.ts";
 import { replayWorkflowFile } from "#activities/media/testing/process.ts";
 import path from "node:path";
 import { mkdtemp } from "node:fs/promises";
@@ -12,7 +8,6 @@ import type { Worker } from "@temporalio/worker";
 import { historyToJSON } from "@temporalio/common/lib/proto-utils.js";
 import { expect, test } from "vitest";
 import { createManagedSeriesWorkflowFixture } from "@shepherdjerred/media/testing/managed-series-workflow";
-import { createAcquisitionNetworkWorkerActivities } from "./acquisition.ts";
 
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import {
@@ -59,24 +54,12 @@ test.each(["single_batch", "series_batches", "episode_batches"] as const)(
         directory,
         childEnvironment,
       });
-      const network = await createMediaActivityTestWorker(environment, {
-        namespace: "dev",
-        taskQueue: TASK_QUEUES.MEDIA_NETWORK,
-        activities: {
-          ...createAcquisitionNetworkWorkerActivities(() =>
-            Promise.resolve({ acquisition: scenario.acquisition }),
-          ),
-          ...plexRoleActivities(() => Promise.resolve(scenario)),
-          finishMediaOperation: scenario.finishMediaOperation,
-        },
-      });
+      const { network, files } = await createAcquisitionRoleTestWorkers(
+        environment,
+        scenario,
+      );
       workers.push(network);
       running.push(network.run());
-      const files = await createAcquisitionFileTestWorker(
-        environment,
-        "dev",
-        () => Promise.resolve({ acquisition: scenario.fileAcquisition }),
-      );
       workers.push(files);
       running.push(files.run());
       const started: string[] = [];

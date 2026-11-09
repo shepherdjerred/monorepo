@@ -1,8 +1,4 @@
-import {
-  plexRoleActivities,
-  createMediaActivityTestWorker,
-  createAcquisitionFileTestWorker,
-} from "#activities/media/testing/activity-workers.ts";
+import { createAcquisitionRoleTestWorkers } from "#activities/media/testing/activity-workers.ts";
 import path from "node:path";
 import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -11,7 +7,6 @@ import type { Worker } from "@temporalio/worker";
 import { expect, test } from "vitest";
 import { z } from "zod";
 import { createMultiSeasonRoleFixtureV1 } from "@shepherdjerred/media/testing/multi-season-workflow";
-import { createAcquisitionNetworkWorkerActivities } from "#activities/media/acquisition.ts";
 import { createSeriesPackFeedWorkerActivities } from "#activities/media/series-pack-feed.ts";
 
 import { TASK_QUEUES } from "#shared/task-queues.ts";
@@ -51,24 +46,12 @@ test("actual multi-season feed outbox reaches separate Node, Network and Files w
       directory,
       childEnvironment,
     });
-    const network = await createMediaActivityTestWorker(environment, {
-      namespace: "dev",
-      taskQueue: TASK_QUEUES.MEDIA_NETWORK,
-      activities: {
-        ...createAcquisitionNetworkWorkerActivities(() =>
-          Promise.resolve({ acquisition: scenario.acquisition }),
-        ),
-        ...createSeriesPackFeedWorkerActivities(() =>
-          Promise.resolve({ seriesPackFeed: scenario.seriesPackFeed }),
-        ),
-        ...plexRoleActivities(() => Promise.resolve(scenario)),
-        finishMediaOperation: scenario.finishMediaOperation,
-      },
-    });
-    const files = await createAcquisitionFileTestWorker(
+    const { network, files } = await createAcquisitionRoleTestWorkers(
       environment,
-      "dev",
-      () => Promise.resolve({ acquisition: scenario.fileAcquisition }),
+      scenario,
+      createSeriesPackFeedWorkerActivities(() =>
+        Promise.resolve({ seriesPackFeed: scenario.seriesPackFeed }),
+      ),
     );
     workers.push(network, files);
     running.push(network.run(), files.run());

@@ -1,6 +1,9 @@
 import { Worker } from "@temporalio/worker";
 import type { TestWorkflowEnvironment } from "@temporalio/testing";
-import { createAcquisitionFileWorkerActivities } from "#activities/media/acquisition.ts";
+import {
+  createAcquisitionFileWorkerActivities,
+  createAcquisitionNetworkWorkerActivities,
+} from "#activities/media/acquisition.ts";
 import { createPlexPublicationActivities } from "#activities/media/plex-publication.ts";
 import { createPlexBoundConsumerActivities } from "#activities/media/plex-consumers.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
@@ -44,4 +47,47 @@ export function createAcquisitionFileTestWorker(
     taskQueue: TASK_QUEUES.MEDIA_FILES,
     activities: createAcquisitionFileWorkerActivities(load),
   });
+}
+
+type NetworkAcquisition = Awaited<
+  ReturnType<Parameters<typeof createAcquisitionNetworkWorkerActivities>[0]>
+>["acquisition"];
+type FileAcquisition = Awaited<
+  ReturnType<Parameters<typeof createAcquisitionFileWorkerActivities>[0]>
+>["acquisition"];
+type PlexRoleRuntime = Awaited<
+  ReturnType<Parameters<typeof createPlexPublicationActivities>[0]>
+> &
+  Awaited<ReturnType<Parameters<typeof createPlexBoundConsumerActivities>[0]>>;
+
+/**
+ * The Network and Files role workers an acquisition journey needs: Network
+ * runs acquisition, Plex publication/consumers and operation completion.
+ * Constructor plumbing only; callers retain worker start/drain ordering.
+ */
+export async function createAcquisitionRoleTestWorkers(
+  environment: TestWorkflowEnvironment,
+  scenario: PlexRoleRuntime & {
+    acquisition: NetworkAcquisition;
+    fileAcquisition: FileAcquisition;
+    finishMediaOperation: (...args: never[]) => Promise<unknown>;
+  },
+  extraNetworkActivities: object = {},
+) {
+  const network = await createMediaActivityTestWorker(environment, {
+    namespace: "dev",
+    taskQueue: TASK_QUEUES.MEDIA_NETWORK,
+    activities: {
+      ...createAcquisitionNetworkWorkerActivities(() =>
+        Promise.resolve({ acquisition: scenario.acquisition }),
+      ),
+      ...extraNetworkActivities,
+      ...plexRoleActivities(() => Promise.resolve(scenario)),
+      finishMediaOperation: scenario.finishMediaOperation,
+    },
+  });
+  const files = await createAcquisitionFileTestWorker(environment, "dev", () =>
+    Promise.resolve({ acquisition: scenario.fileAcquisition }),
+  );
+  return { network, files };
 }
