@@ -158,3 +158,21 @@ test("the merge squashes exactly the ready branch and checks GitHub once", () =>
     "feature",
   ]);
 });
+
+test("a cancelled merge reports the cancellation, not a merge result", async () => {
+  stubPr({ value: false });
+  const controller = new AbortController();
+  const merge = vi.fn(async (_branch: string, signal: AbortSignal) => {
+    controller.abort();
+    expect(signal.aborted).toBe(true);
+    return 143;
+  });
+  await expect(
+    landPr(
+      { number: 99, observer: observer(), signal: controller.signal },
+      options,
+      { wait: async () => ready(), merge },
+    ),
+  ).rejects.toThrow();
+  expect(merge).toHaveBeenCalledWith("feature", controller.signal);
+});

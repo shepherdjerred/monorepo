@@ -20,8 +20,14 @@ export type LandOptions = {
   allowRedMain: boolean;
 };
 
-/** Merges one ready branch and returns the merge command's exit code. */
-export type MergeBranch = (branch: string) => Promise<number>;
+/**
+ * Merges one ready branch and returns the merge command's exit code. A
+ * cancelled `signal` must terminate the merge before it resolves.
+ */
+export type MergeBranch = (
+  branch: string,
+  signal: AbortSignal,
+) => Promise<number>;
 
 /**
  * git-spice keeps stack restacking and asks GitHub once (`--ready-timeout 0`)
@@ -41,14 +47,17 @@ export function gitSpiceMergeArgs(branch: string): string[] {
   ];
 }
 
-export const mergeWithGitSpice: MergeBranch = async (branch) => {
+export const mergeWithGitSpice: MergeBranch = async (branch, signal) => {
   const invocation = buildPassthroughInvocation(
     "git-spice",
     gitSpiceMergeArgs(branch),
     Bun.env,
   );
   if (invocation === null) throw new Error("git-spice passthrough is missing");
-  return spawnPassthroughInvocation(invocation, { stdoutToStderr: true });
+  return spawnPassthroughInvocation(invocation, {
+    stdoutToStderr: true,
+    signal,
+  });
 };
 
 const HeadSchema = z.object({
@@ -109,7 +118,10 @@ export async function landPr(
   console.error(
     `PR #${String(number)} is ready; merging ${head.head.ref} with git-spice.`,
   );
-  const code = await dependencies.merge(head.head.ref);
+  const code = await dependencies.merge(head.head.ref, signal);
+  // A cancelled merge may or may not have landed; report the cancellation,
+  // not a merge result read after it.
+  signal.throwIfAborted();
   const after = await observer.github.pr(number, signal);
   if (code === 0 && after.merged)
     return {

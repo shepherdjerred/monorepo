@@ -201,12 +201,13 @@ export async function getMainRun(
       {
         event: ["push", "manual"],
         branch: "main",
-        // A pinned commit can have a running push and an older completed
-        // recovery; read until a completed run of it is listed.
+        // Runs are listed newest first, and a commit's push run precedes any
+        // manual recovery of it. Once its push is listed, every newer run of
+        // that commit is too; a partial manual run must not stop the search.
         stopWhen: (entries) =>
           entries.length >= PINNED_RUN_WINDOW ||
           entries.some(
-            (entry) => entry.commit === sha && completedVerdict(entry),
+            (entry) => entry.commit === sha && entry.event === "push",
           ),
       },
       signal,

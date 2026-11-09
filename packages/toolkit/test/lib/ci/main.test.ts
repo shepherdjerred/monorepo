@@ -202,3 +202,18 @@ test("a pinned main wait skips partial manual runs and reports none before one e
   expect(result.run).toBeNull();
   expect(result.url).toBeNull();
 });
+
+test("a pinned main wait reads past a partial manual run to the commit's push run", async () => {
+  const partial = {
+    ...pipeline(160, "manual"),
+    workflows: [{ name: "ci-noop", state: "success" }],
+  };
+  const others = Array.from({ length: 49 }, (_, index) => ({
+    ...pipeline(159 - index, "push"),
+    commit: `other-${String(index)}`,
+  }));
+  mockApi([[partial, ...others], [pipeline(100, "push")]]);
+  const result = await pinned(CI_HEAD);
+  expect(result.run?.number).toBe(100);
+  expect(result.run?.event).toBe("push");
+});
