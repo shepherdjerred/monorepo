@@ -58,6 +58,7 @@ import { deliverPhotonResponse } from "./agent/photon/deliver.ts";
 import { waitForPhotonCommand } from "./agent/photon/wait.ts";
 import { woodpeckerRetentionActivities } from "./maintenance/woodpecker-retention.ts";
 import { ciMaintenanceActivities } from "./maintenance/ci-maintenance.ts";
+import { ciExtendedVerifyActivities } from "./maintenance/ci-extended-verify.ts";
 import { trackerAttachmentActivities } from "./maintenance/tracker-attachments.ts";
 
 export const homeActivities = {
@@ -106,6 +107,7 @@ export const opsWorkerActivities = { ...opsActivities };
 
 export const repoActivities = {
   ...ciMaintenanceActivities,
+  ...ciExtendedVerifyActivities,
   ...fetcherActivities,
   ...depsSummaryActivities,
   ...golinkSyncActivities,

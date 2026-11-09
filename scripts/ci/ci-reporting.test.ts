@@ -27,24 +27,62 @@ const WorkspacePackageSchema = z.object({
 });
 
 /**
- * A workspace runs its manifest steps through one test:ci script, or through
- * test:ci:<group> scripts that Turbo reaches via a transit test:ci task.
+ * A workspace runs its manifest steps through one test:ci script (and one
+ * test:extended script when it has extended steps), or through
+ * test:ci:<group> / test:extended:<group> scripts that Turbo reaches via a
+ * transit task. A tier's script exists exactly when the tier has a step:
+ * run-ci-test.ts refuses a tier with nothing to run, and a tier without a
+ * script never runs.
  */
 function expectTestCiScripts(
   scripts: Readonly<Record<string, string>>,
   steps: readonly TestStep[],
   relativeRunner: string,
 ): void {
-  const groups = [...new Set(steps.flatMap((step) => step.group ?? []))];
-  if (groups.length === 0) {
-    expect(scripts["test:ci"]).toBe(`bun ${relativeRunner}`);
-    return;
-  }
-  expect(scripts["test:ci"]).toBeUndefined();
+  const groups = [...new Set(steps.map((step) => step.group))];
   for (const group of groups) {
-    expect(scripts[`test:ci:${group}`]).toBe(
-      `bun ${relativeRunner} --group ${group}`,
+    const groupSteps = steps.filter((step) => step.group === group);
+    const hasCi = groupSteps.some(
+      (step) => step.tier === undefined || step.tier === "ci",
     );
+    const hasExtended = groupSteps.some((step) => step.tier === "extended");
+    const suffix = group === undefined ? "" : `:${group}`;
+    const groupArguments = group === undefined ? "" : ` --group ${group}`;
+    expect(scripts[`test:ci${suffix}`], `test:ci${suffix}`).toBe(
+      hasCi ? `bun ${relativeRunner}${groupArguments}` : undefined,
+    );
+    expect(scripts[`test:extended${suffix}`], `test:extended${suffix}`).toBe(
+      hasExtended
+        ? `bun ${relativeRunner}${groupArguments} --tier extended`
+        : undefined,
+    );
+  }
+  if (groups.some((group) => group !== undefined)) {
+    expect(scripts["test:ci"]).toBeUndefined();
+    expect(scripts["test:extended"]).toBeUndefined();
+  }
+}
+
+/**
+ * Turbo reaches a grouped workspace's per-group scripts through a transit
+ * task of the tier's name, so a grouped workspace with extended steps needs
+ * `test:extended` in its turbo.json just as it needs `test:ci`.
+ */
+async function expectTransitTierTasks(
+  directory: string,
+  steps: readonly TestStep[],
+): Promise<void> {
+  if (!steps.some((step) => step.group !== undefined)) return;
+  const PackageTurboSchema = z.object({
+    tasks: z.record(z.string(), z.unknown()),
+  });
+  const config = PackageTurboSchema.parse(
+    Bun.JSONC.parse(
+      await Bun.file(path.join(repositoryRoot, directory, "turbo.json")).text(),
+    ),
+  );
+  if (steps.some((step) => step.tier === "extended")) {
+    expect(config.tasks["test:extended"], `${directory} transit`).toBeDefined();
   }
 }
 
@@ -509,9 +547,12 @@ describe("CI reporting manifest", () => {
         ],
       },
     ]);
+    // The Temporal SDK workflow suites start the time-skipping test server, so
+    // they are extended-tier: never on pull requests, locally and nightly.
     expect(temporal?.steps.at(-1)).toEqual({
       runner: "vitest",
       name: "workflows",
+      tier: "extended",
       runtime: "node",
       runtimeReason:
         "The Temporal SDK worker requires authentic Node worker_threads, VM, promise hooks, and native worker support; Bun 1.4 exits the workflow thread with code 1.",
@@ -525,6 +566,7 @@ describe("CI reporting manifest", () => {
     expect(scoutTemporal?.steps.at(-1)).toEqual({
       runner: "vitest",
       name: "workflows",
+      tier: "extended",
       runtime: "node",
       runtimeReason:
         "The Temporal SDK worker requires authentic Node worker_threads, VM, promise hooks, and native worker support; Bun 1.4 exits the workflow thread with code 1.",
@@ -555,6 +597,7 @@ describe("CI reporting manifest", () => {
           .split(path.sep)
           .join("/");
         expectTestCiScripts(scripts, manifestEntry.steps, relativeRunner);
+        await expectTransitTierTasks(directory, manifestEntry.steps);
         expect(scripts["test:report"]).toBeUndefined();
       }
       if (noTestDirectories.has(directory)) {
@@ -603,26 +646,33 @@ describe("CI reporting manifest", () => {
   });
 });
 
+const RootTurboSchema = z.object({
+  globalDependencies: z.array(z.string()),
+  tasks: z.record(
+    z.string(),
+    z.object({ inputs: z.array(z.string()).optional() }).loose(),
+  ),
+});
+
+async function readRootTurbo() {
+  return RootTurboSchema.parse(
+    Bun.JSONC.parse(
+      await Bun.file(path.join(repositoryRoot, "turbo.json")).text(),
+    ),
+  );
+}
+
+const runnerInputs = [
+  "$TURBO_ROOT$/scripts/ci/ci-reporting.ts",
+  "$TURBO_ROOT$/scripts/ci/test-manifest-schema.ts",
+  "$TURBO_ROOT$/scripts/ci/run-ci-test.ts",
+  "$TURBO_ROOT$/scripts/ci/gradle-junit.ts",
+  "$TURBO_ROOT$/scripts/ci/mstest-configuration.ts",
+];
+
 describe("test:ci runner inputs", () => {
   test("hashes the shared runner into test:ci rather than every task", async () => {
-    const rootTurbo = await Bun.file(
-      path.join(repositoryRoot, "turbo.json"),
-    ).text();
-    const runnerInputs = [
-      "$TURBO_ROOT$/scripts/ci/ci-reporting.ts",
-      "$TURBO_ROOT$/scripts/ci/test-manifest-schema.ts",
-      "$TURBO_ROOT$/scripts/ci/run-ci-test.ts",
-      "$TURBO_ROOT$/scripts/ci/gradle-junit.ts",
-      "$TURBO_ROOT$/scripts/ci/mstest-configuration.ts",
-    ];
-    const RootTurboSchema = z.object({
-      globalDependencies: z.array(z.string()),
-      tasks: z.record(
-        z.string(),
-        z.object({ inputs: z.array(z.string()).optional() }).loose(),
-      ),
-    });
-    const root = RootTurboSchema.parse(Bun.JSONC.parse(rootTurbo));
+    const root = await readRootTurbo();
     expect(root.tasks["test:ci"]?.inputs).toEqual(
       expect.arrayContaining(["$TURBO_DEFAULT$", ...runnerInputs]),
     );
@@ -642,6 +692,47 @@ describe("test:ci runner inputs", () => {
         expect.arrayContaining(["$TURBO_ROOT$/vitest.config.ts"]),
       );
     }
+  });
+
+  test("keeps test files out of build and generate hashes but in the test tasks", async () => {
+    const root = await readRootTurbo();
+    // A test-only edit must not rehash every dependent's ^build / ^generate
+    // (no source file imports a test file), while the test tasks themselves
+    // keep the full default inputs so the edit still reruns them.
+    const testFileNegations = [
+      "!**/*.test.ts",
+      "!**/*.test.tsx",
+      "!**/*.spec.ts",
+      "!**/*.spec.tsx",
+    ];
+    for (const task of ["build", "generate"]) {
+      expect(root.tasks[task]?.inputs, task).toEqual(
+        expect.arrayContaining(["$TURBO_DEFAULT$", ...testFileNegations]),
+      );
+    }
+    for (const task of ["test", "test:ci"]) {
+      for (const negation of testFileNegations) {
+        expect(root.tasks[task]?.inputs, task).not.toContain(negation);
+      }
+    }
+  });
+
+  test("defines the extended tier as an uncached task", async () => {
+    const root = await readRootTurbo();
+    // The extended tier is uncached: its point is executing suites against
+    // servers Turbo cannot hash, and PR verify never requests it.
+    const ExtendedTaskSchema = z.object({
+      cache: z.literal(false),
+      dependsOn: z.array(z.string()),
+    });
+    const extended = ExtendedTaskSchema.parse(root.tasks["test:extended"]);
+    expect(extended.dependsOn).toEqual(
+      expect.arrayContaining(["^build", "generate"]),
+    );
+    expect(root.tasks["test:extended"]?.inputs).toBeUndefined();
+  });
+
+  test("package overrides keep the shared runner inputs", async () => {
     // A package override replaces the root inputs unless it extends them.
     const PackageTurboSchema = z.object({
       tasks: z

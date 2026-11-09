@@ -59,7 +59,7 @@ describe("dedicated CI agent pools", () => {
     const deployments = agents();
     expect(deployments).toHaveLength(4);
     for (const [pool, cap, queue, volume] of [
-      ["pr", "4", "default", "32Gi"],
+      ["pr", "8", "default", "32Gi"],
       ["main", "4", "default", "32Gi"],
       ["review", "3", "ci-gates", "1G"],
       ["completion", "1", "ci-gates", "1G"],

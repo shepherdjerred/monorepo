@@ -35,8 +35,9 @@ Three consequences are worth stating plainly:
   ed25519 signature — and recomputes the body digest rather than trusting the
   `Content-Digest` header it covers — before reading anything.
 
-Feature-branch pushes and ordinary pull-request metadata edits emit one
-clone-free no-op workflow. Draft PR pushes run a bounded preflight for formatting,
+Feature-branch pushes and ordinary pull-request metadata edits select no work,
+so the extension returns no workflows and Woodpecker records no pipeline and
+posts no status for them. Draft PR pushes run a bounded preflight for formatting,
 lockfile consistency, conflict markers and secrets. That feedback emits no merge
 verdict. Marking a draft ready selects full PR verification without requiring
 another commit. The signed ready event preserves the PR's credential approval
@@ -50,7 +51,11 @@ with the PR target branch. Within that workflow,
 runs six Turbo tasks at once. Most of them are short lint, typecheck and root
 checks that used to queue behind long test suites. Vitest workers are what
 oversubscribe the pod, so verify caps each suite at two workers. Six suites
-then stay within the 12-CPU limit.
+then stay within the 12-CPU limit. Verify runs only the `ci` test tier; the
+[second tier](#two-test-tiers) never runs on a pull request. Verify and
+verify-extended diagnostics also carry per-suite JUnit timings
+(`testTimings`), so `toolkit ci analyze --suites [--compare N]` explains a slow
+test task by its files and compares a PR run with the nightly like-for-like.
 
 Owner-requested local verification declares its build and test command names
 in `localScripts` on the existing `separateTests` entry in
@@ -107,6 +112,13 @@ stores and returns each client's artifact signature unchanged. Signing keys
 stay with their respective clients. Turbo rejects missing or invalid signatures,
 so a successful artifact download alone does not prove a cache hit.
 
+When the pinned CI image lacks a tool version, mise installs it once per node
+onto the shared `woodpecker-mise-installs` claim instead of each pod's writable
+layer (behind `woodpecker-mise-shared-installs-enabled`); the image's own
+installs stay the read-only shared directory, and the claim has no collector
+beyond `ZfsPVCStorageHigh` and the
+[prune how-to](/how-to/prune-the-ci-mise-install-claim/).
+
 Turbo caches whole package tasks, so any change to The Storm reruns its entire
 Gradle build. Each workflow's Gradle user home is private, which leaves Gradle's
 own local build cache empty. Verify therefore also uses a remote Gradle build
@@ -148,6 +160,35 @@ resource requests, without preempting production workloads.
 New verification replaces older work for the same PR, including ready events
 and target-branch changes. The extension checks pipeline identity again before
 canceling an older run. Newer runs, main and other PRs remain independent.
+
+## Two test tiers
+
+Verify runs the `ci` test tier: every step in a workspace's `ci-tests.json`
+except those marked `tier: "extended"`. The split exists because the slow part
+of verify was never the unit tests. In one main verify the integration suites
+took 71 minutes of Vitest file time against 0.6 minutes for everything else;
+media alone booted a private PostgreSQL cluster and ran 58 migrations in each
+of 354 files. A verify that reached one of those suites spent 18 to 25 minutes
+running a single task at two workers while holding its 8-CPU, 30 GiB slot, and
+every cluster it started wrote to the CI node's SSDs. Rather than tune each
+suite, the repository classifies them: a step that starts a server — a
+database, the Temporal test server, ffmpeg, a game server — or whose uncached
+p50 exceeds three minutes is `extended`, and pull requests do not run it. The
+[test tier reference](/reference/ci-test-tiers/) holds the rule and the
+per-workspace classification.
+
+The extended tier runs in two places. The committer runs it locally for the
+workspaces a branch affects before marking the PR ready, and records the
+command and result in the PR body. A nightly Temporal schedule then dispatches
+a manual pipeline on main that emits one `verify-extended` workflow at the
+lowest admission priority, so it waits behind every pull request and main push,
+and runs the whole tier uncached (see the
+[workflow inventory](/reference/temporal-workflows/)). That run is a safety net,
+not a main verdict: it gates no merge, and a red night raises an alert that
+names the pipeline, with `toolkit ci explain` giving the failing step.
+
+The accepted risk is that a PR whose author skips the local run can merge a
+regression that only the nightly catches, up to a day later.
 
 ## CI runs only for the owner's own accounts
 
@@ -251,7 +292,10 @@ remain unchanged.
   image Delivery already qualified, so a new set appears only when a digest
   changed or the service has none yet. Delivery qualifies that build against
   the push pipeline itself, which it would refuse for the manual maintenance
-  pipeline that runs the refresh.
+  pipeline that runs the refresh. Image-promotion PRs from
+  `long-summer-intern[bot]` are reviewed by Codex like any other PR and merge
+  through their own `gh pr merge --auto`; no human step remains unless Codex
+  is usage-limited.
   The macOS and Windows cross-compiler build lanes are paused; they do not add
   work to the default pipeline, and their images have no Delivery producer.
 

@@ -139,6 +139,15 @@ if rg -q 'chmod -R' "$TOOLCHAIN" ||
   echo "toolchain.sh must expose Postgres tools without a recursive chmod" >&2
   exit 1
 fi
+# Runtime installs on the shared mise claim need the same exposure, bounded to
+# the claim root, the installs directory and the Postgres install.
+if ! rg -Fq 'chmod a+rX "$(dirname "$MISE_INSTALLS_DIR")" "$MISE_INSTALLS_DIR"' "$TOOLCHAIN" ||
+  ! rg -Fq 'expose_tree "${MISE_INSTALLS_DIR}/github-theseus-rs-postgresql-binaries"' "$TOOLCHAIN" ||
+  rg -Fq 'export MISE_INSTALLS_DIR' "$TOOLCHAIN" ||
+  ! rg -Fq 'export MISE_DATA_DIR=/opt/mise' "$TOOLCHAIN"; then
+  echo "toolchain.sh must expose shared-claim Postgres installs while keeping MISE_DATA_DIR on the image" >&2
+  exit 1
+fi
 
 if ! rg -Fq 'flock --shared 9' "$BUN_INSTALL_WRAPPER" ||
   ! rg -Fq 'bun install "$@"' "$BUN_INSTALL_WRAPPER" ||
@@ -278,6 +287,99 @@ for profile in automation deployment tofu minecraft; do
   fi
 done
 rg -Fxq 'ln -sf /test/tools/gh /usr/local/bin/gh' "$TEST_ROOT/automation.log"
+
+# A root-hosted step with the shared mise claim mounted: the preamble must open
+# the claim root, its installs directory and the Postgres install there to the
+# nobody test user and leave other tools and the downloads directory alone. On
+# a host without the image's /opt/mise (a developer machine) it must also not
+# create it; on the CI image, which carries /opt/mise, the preamble's own
+# exposure of that tree runs as it does in every step, so only the claim branch
+# is asserted there.
+HOST_HAD_IMAGE_MISE=0
+if [ -e /opt/mise ]; then
+  HOST_HAD_IMAGE_MISE=1
+fi
+mkdir -p "$TEST_ROOT/root-bin"
+cat >"$TEST_ROOT/root-bin/id" <<'EOF'
+#!/usr/bin/env bash
+printf '0\n'
+EOF
+chmod +x "$TEST_ROOT/root-bin/id"
+# expose_tree uses GNU find's `-perm /mode`, which the Linux CI image has.
+# BSD find spells it `-perm +mode`; translate on a host without GNU find so
+# the fixture exercises the real function instead of skipping it.
+HOST_FIND=$(command -v find)
+if ! "$HOST_FIND" "$TEST_ROOT" -maxdepth 0 -perm /0111 >/dev/null 2>&1; then
+  cat >"$TEST_ROOT/root-bin/find" <<'EOF'
+#!/usr/bin/env bash
+args=()
+previous=""
+for argument in "$@"; do
+  if [ "$previous" = -perm ]; then
+    case "$argument" in /*) argument="+${argument#/}" ;; esac
+  fi
+  args+=("$argument")
+  previous="$argument"
+done
+exec "$CI_TEST_HOST_FIND" "${args[@]}"
+EOF
+  chmod +x "$TEST_ROOT/root-bin/find"
+fi
+MISE_CLAIM="$TEST_ROOT/mise-installs"
+POSTGRES_INSTALL="$MISE_CLAIM/installs/github-theseus-rs-postgresql-binaries/17.2.0"
+mkdir -p "$POSTGRES_INSTALL/bin" "$POSTGRES_INSTALL/lib" \
+  "$MISE_CLAIM/installs/node/22.0.0/bin" "$MISE_CLAIM/downloads"
+printf '#!/bin/sh\n' >"$POSTGRES_INSTALL/bin/pg_ctl"
+printf 'lib\n' >"$POSTGRES_INSTALL/lib/libpq.so"
+printf '#!/bin/sh\n' >"$MISE_CLAIM/installs/node/22.0.0/bin/node"
+# mise created everything under root's umask: nothing is reachable by nobody.
+find "$MISE_CLAIM" -type d -exec chmod 0700 {} +
+find "$MISE_CLAIM" -type f -exec chmod 0600 {} +
+chmod 0700 "$POSTGRES_INSTALL/bin/pg_ctl" "$MISE_CLAIM/installs/node/22.0.0/bin/node"
+root_log="$TEST_ROOT/root.log"
+HOME="$TEST_ROOT/profile-home" PATH="$TEST_ROOT/root-bin:$TEST_ROOT/profiles:$PATH" \
+  CI_PROFILE_COMMAND_LOG="$root_log" CI_TEST_HOST_FIND="$HOST_FIND" \
+  CI_COMMIT_SHA=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb \
+  MISE_INSTALLS_DIR="$MISE_CLAIM/installs" \
+  MISE_DOWNLOADS_DIR="$MISE_CLAIM/downloads" \
+  MISE_SHARED_INSTALL_DIRS=/opt/mise/installs \
+  MISE_TOOLCHAIN_SCOPE=postgres bash -c '
+    cd "$2"
+    . "$1"
+    test "$MISE_DATA_DIR" = /opt/mise
+    test "$MISE_INSTALLS_DIR" = "$3/installs"
+  ' _ "$TOOLCHAIN" "$TEST_ROOT/profile-workspace" "$MISE_CLAIM" >"$root_log.stdout"
+rg -q '^CI_BOOTSTRAP_DIAGNOSTIC \{"schemaVersion":1,"sourceSha":"b{40}","scope":"postgres","elapsedSeconds":[0-9]+\}$' "$root_log.stdout"
+rg -Fxq 'install --yes bun node github:theseus-rs/postgresql-binaries aqua:temporalio/cli' "$root_log"
+if [ "$HOST_HAD_IMAGE_MISE" -eq 0 ] && [ -e /opt/mise ]; then
+  echo "toolchain.sh must not create /opt/mise when the image lacks it" >&2
+  exit 1
+fi
+if [ -n "$(find "$MISE_CLAIM" "$MISE_CLAIM/installs" -maxdepth 0 ! -perm -0555)" ]; then
+  echo "toolchain.sh must open the mise claim root and installs directory to the test user" >&2
+  exit 1
+fi
+if [ -n "$(find "$MISE_CLAIM/installs/github-theseus-rs-postgresql-binaries" \
+  \( -type d ! -perm -0555 \) -o \( -type f ! -perm -0444 \))" ]; then
+  echo "toolchain.sh must make every shared-claim Postgres directory a+rX and file a+r" >&2
+  exit 1
+fi
+if [ -z "$(find "$POSTGRES_INSTALL/bin/pg_ctl" -perm -0555)" ]; then
+  echo "toolchain.sh must keep shared-claim Postgres executables runnable by the test user" >&2
+  exit 1
+fi
+# Other tools and the downloads directory must stay unreachable by the nobody
+# test user: no other-read or other-execute bit. Bit tests rather than an exact
+# mode, because a pod volume's fsGroup can add group and setgid bits that the
+# preamble never touches.
+untouched=$(find "$MISE_CLAIM/installs/node" "$MISE_CLAIM/downloads" \
+  "$MISE_CLAIM/installs/node/22.0.0/bin/node" -maxdepth 0 \
+  \( -perm -0004 -o -perm -0001 \))
+if [ -n "$untouched" ]; then
+  echo "toolchain.sh must expose only the Postgres install on the shared mise claim; reachable by others:" >&2
+  ls -ld "$MISE_CLAIM/installs/node" "$MISE_CLAIM/downloads" "$MISE_CLAIM/installs/node/22.0.0/bin/node" >&2
+  exit 1
+fi
 
 cat >"$TEST_ROOT/bin/df" <<'EOF'
 #!/usr/bin/env bash

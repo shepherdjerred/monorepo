@@ -6,7 +6,7 @@ import { verifySignedRequest } from "#src/signature.ts";
 import { emitWorkflows } from "#src/pipeline/emit.ts";
 import { isWorkEvent, selectSteps } from "#src/pipeline/select.ts";
 import { buildPipelineSteps } from "#src/pipeline/steps.ts";
-import { completionStep, noWorkStep } from "#src/pipeline/completion.ts";
+import { completionStep } from "#src/pipeline/completion.ts";
 import { resolveCiImages, type ImageFetcher } from "#src/images.ts";
 import type { CiStep } from "#src/pipeline/model.ts";
 import { changedFilesSince } from "#src/github-compare.ts";
@@ -27,6 +27,14 @@ import { cacheSourceSteps } from "#src/pipeline/source-cache.ts";
 import { performanceSteps } from "#src/pipeline/performance.ts";
 import { benchmarkResponse } from "#src/pipeline/benchmark-response.ts";
 import {
+  extendedRequest,
+  extendedSourcePipeline,
+  extendedSteps,
+  extendedSupersededStep,
+  isExtendedRequest,
+  type ExtendedRequest,
+} from "#src/pipeline/extended.ts";
+import {
   DISABLED_PERFORMANCE,
   type PerformanceOptions,
 } from "#src/performance-config.ts";
@@ -35,6 +43,8 @@ export type AppOptions = {
   readonly deliveryPublicationEnabled?: (branch: string) => Promise<boolean>;
   readonly deliveryCatalogV2Enabled?: (branch: string) => Promise<boolean>;
   readonly maintenanceEnabled?: (manual: boolean) => Promise<boolean>;
+  /** Admits the owner's manual `CI_EXTENDED_REQUEST` pipeline; off by default. */
+  readonly extendedVerifyEnabled?: () => Promise<boolean>;
   readonly sourceCacheEnabled?: (branch: string) => Promise<boolean>;
   readonly performanceOptions?: (branch: string) => Promise<PerformanceOptions>;
   readonly trustedGateImage?: string;
@@ -135,6 +145,7 @@ async function pipelineEmitter(
     defaultBranch,
     draft: pipeline.pr_draft,
     maintenance: pipeline.variables["CI_MAINTENANCE_KIND"] !== undefined,
+    extended: isExtendedRequest(pipeline),
     changedFiles: pipeline.changed_files,
   };
   let enabled = false;
@@ -245,7 +256,7 @@ function withPrCompletion(
  * Only the source-cache checkout fetches a commit other than the tip that
  * Woodpecker started; without it the request keeps the tip and is superseded.
  */
-async function maintenanceEmitter(
+async function sourcePinnedEmitter(
   pipeline: Pipeline,
   candidate: Pipeline,
   build: (target: Pipeline) => ReturnType<typeof pipelineEmitter>,
@@ -257,10 +268,71 @@ async function maintenanceEmitter(
   return { target: pipeline, emit: await build(pipeline) };
 }
 
+/**
+ * The extended test tier's manual lane. The request names the verified main
+ * commit it was selected for; the workflow runs against that commit when it is
+ * still the verified one and can be checked out in place of the tip, and
+ * otherwise emits a superseded receipt for the dispatcher to read.
+ */
+async function extendedVerifyResponse(
+  context: Context,
+  options: AppOptions,
+  {
+    repo,
+    pipeline,
+    owner,
+    enabled,
+  }: {
+    repo: { id: number; default_branch: string };
+    pipeline: Pipeline;
+    owner: boolean;
+    enabled: () => Promise<boolean>;
+  },
+) {
+  if (!isExtendedRequest(pipeline)) return;
+  if (!owner || !(await enabled()))
+    return context.json(
+      { error: "extended verification lane is not enabled for this request" },
+      403,
+    );
+  let request: ExtendedRequest | undefined;
+  try {
+    request = extendedRequest(pipeline, repo.default_branch, owner);
+  } catch {
+    return context.json(
+      { error: "invalid extended verification request" },
+      400,
+    );
+  }
+  if (request === undefined) return;
+  const source = request.source;
+  const { target, emit } = await sourcePinnedEmitter(
+    pipeline,
+    source === pipeline.commit
+      ? pipeline
+      : extendedSourcePipeline(
+          pipeline,
+          await options.changedBase(repo.id, repo.default_branch),
+        ),
+    (selected) =>
+      pipelineEmitter(options, selected, repo.default_branch, false),
+  );
+  const images = await resolveCiImages(target.commit, options.imageFetcher);
+  return context.json({
+    configs: emit(
+      target.commit === source
+        ? extendedSteps(images, request)
+        : [extendedSupersededStep(images.base)],
+    ),
+  });
+}
+
 export function createApp(options: AppOptions): Hono {
   const app = new Hono();
   const maintenanceEnabled =
     options.maintenanceEnabled ?? (() => Promise.resolve(false));
+  const extendedVerifyEnabled =
+    options.extendedVerifyEnabled ?? (() => Promise.resolve(false));
   const publishDelivery =
     options.deliveryPublicationEnabled ?? (() => Promise.resolve(false));
   const catalogV2 =
@@ -275,6 +347,13 @@ export function createApp(options: AppOptions): Hono {
       owner: authorization.actorClass === "owner-controlled",
     });
     if (benchmark !== undefined) return benchmark;
+    const extended = await extendedVerifyResponse(context, options, {
+      repo,
+      pipeline,
+      owner: authorization.actorClass === "owner-controlled",
+      enabled: extendedVerifyEnabled,
+    });
+    if (extended !== undefined) return extended;
     const maintenance = await maintenanceMode(
       pipeline,
       repo.default_branch,
@@ -315,7 +394,7 @@ export function createApp(options: AppOptions): Hono {
       const verifiedMain = () =>
         (verified ??= options.changedBase(repo.id, repo.default_branch));
       const source = pipeline.variables["CI_MAINTENANCE_SOURCE"];
-      const { target, emit } = await maintenanceEmitter(
+      const { target, emit } = await sourcePinnedEmitter(
         pipeline,
         source === undefined || source === pipeline.commit
           ? pipeline
@@ -340,6 +419,16 @@ export function createApp(options: AppOptions): Hono {
         ),
       });
     }
+    // Tag, release, cron, closed-PR and feature-branch push events, and
+    // ordinary PR metadata edits, select nothing. An empty configuration set
+    // makes the server delete the pipeline before it takes an agent slot, a
+    // workspace claim, a pod or a GitHub status; a refusal above stays an
+    // error response and never becomes an empty 200. Decided before the forge
+    // reads below, which such an event has no use for.
+    if (!isWorkEvent(selectionContext)) {
+      return context.json({ configs: [] });
+    }
+
     const images = await resolveCiImages(pipeline.commit, options.imageFetcher);
     const emit = await pipelineEmitter(
       options,
@@ -347,11 +436,6 @@ export function createApp(options: AppOptions): Hono {
       repo.default_branch,
       credentiallessAutomation,
     );
-    if (!isWorkEvent(selectionContext)) {
-      return context.json({
-        configs: emit([noWorkStep(images.base)]),
-      });
-    }
 
     const limited = limitedPrSteps({
       images,

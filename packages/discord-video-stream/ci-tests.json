@@ -3,7 +3,14 @@
   "package": "@shepherdjerred/discord-video-stream",
   "steps": [
     {
-      "runner": "vitest"
+      "runner": "vitest",
+      "args": ["--exclude", "**/*.integration.test.ts"]
+    },
+    {
+      "runner": "vitest",
+      "name": "integration",
+      "tier": "extended",
+      "args": [".integration.test.ts"]
     }
   ]
 }

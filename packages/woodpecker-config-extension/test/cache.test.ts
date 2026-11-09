@@ -4,11 +4,13 @@ import {
   BUN_CACHE_CONTROL,
   CARGO_CACHE,
   GO_CACHE,
+  MISE_INSTALLS,
   SCCACHE,
   TOOL_CACHE,
   UV_CACHE,
   sharedCacheEnvironment,
   withSharedBunCache,
+  withSharedMiseInstalls,
   withSharedToolCaches,
 } from "#src/pipeline/cache.ts";
 import type { CiCommandStep, CiStep } from "#src/pipeline/model.ts";
@@ -147,6 +149,56 @@ test("toolchain caches follow the toolchain scope of each container", () => {
   expect(ordered.orderedSteps?.map((command) => claims(command))).toEqual([
     [TOOL_CACHE.claim],
   ]);
+});
+
+test("shared mise installs mount on every toolchain container of any scope and nowhere else", () => {
+  const full = withSharedMiseInstalls(installStep());
+  expect(claims(full)).toEqual([MISE_INSTALLS.claim]);
+  const narrow = withSharedMiseInstalls(
+    installStep({ commands: [NARROW_TOOLCHAIN, INSTALL] }),
+  );
+  expect(claims(narrow)).toEqual([MISE_INSTALLS.claim]);
+  const already = installStep({ volumes: [TOOL_CACHE, MISE_INSTALLS] });
+  expect(withSharedMiseInstalls(already)).toBe(already);
+  const none = installStep({ commands: [INSTALL] });
+  expect(withSharedMiseInstalls(none)).toBe(none);
+  const host = installStep({ backend: "local" });
+  expect(withSharedMiseInstalls(host)).toBe(host);
+  const ordered = withSharedMiseInstalls(
+    installStep({
+      commands: ["echo setup"],
+      orderedSteps: [
+        installStep({ key: "inner", commands: [NARROW_TOOLCHAIN, INSTALL] }),
+        installStep({ key: "plain", commands: [INSTALL] }),
+      ],
+    }),
+  );
+  expect(ordered.volumes).toBeUndefined();
+  expect(ordered.orderedSteps?.map((command) => claims(command))).toEqual([
+    [MISE_INSTALLS.claim],
+    undefined,
+  ]);
+  // The claim is flag-gated: the default graph never carries it.
+  for (const step of testPipelineSteps())
+    for (const container of [step, ...(step.orderedSteps ?? [])])
+      expect(claims(container) ?? [], container.key).not.toContain(
+        MISE_INSTALLS.claim,
+      );
+});
+
+test("the mounted mise claim redirects installs and downloads while keeping the image's versions", () => {
+  expect(sharedCacheEnvironment([MISE_INSTALLS])).toEqual({
+    BUN_INSTALL_LOCK_MODE: "local",
+    MISE_INSTALLS_DIR: "/woodpecker/mise-installs/installs",
+    MISE_DOWNLOADS_DIR: "/woodpecker/mise-installs/downloads",
+    MISE_SHARED_INSTALL_DIRS: "/opt/mise/installs",
+  });
+  expect(sharedCacheEnvironment([TOOL_CACHE])).not.toHaveProperty(
+    "MISE_INSTALLS_DIR",
+  );
+  expect(() =>
+    sharedCacheEnvironment([{ ...MISE_INSTALLS, path: "/wrong" }]),
+  ).toThrow();
 });
 
 test("credentialless hosted automation never mounts shared caches", () => {

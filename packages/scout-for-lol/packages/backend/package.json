@@ -21,6 +21,7 @@
     "test:coverage": "bun --no-install --bun vitest --config ../../../../vitest.config.ts run --coverage",
     "test:coverage:threshold": "bun --no-install --bun vitest --config ../../../../vitest.config.ts run --coverage --bail=1",
     "test:ci": "bun ../../../../scripts/ci/run-ci-test.ts",
+    "test:extended": "bun ../../../../scripts/ci/run-ci-test.ts --tier extended",
     "test:fast": "bun --no-install --bun vitest --config ../../../../vitest.config.ts run --bail=3",
     "test:debug": "bun --no-install --bun vitest --config ../../../../vitest.config.ts run --sequence.shuffle",
     "lint": "NODE_OPTIONS=--max-old-space-size=8192 bun x eslint src --max-warnings=0 && check-architecture",

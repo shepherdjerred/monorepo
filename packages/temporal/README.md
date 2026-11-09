@@ -652,6 +652,41 @@ result, either completed or deferred for a ready PR. Deferred work does not
 advance its completed fingerprint. Main verification requires the complete
 release graph and cannot be cleared by a maintenance-only manual run.
 
+### Nightly extended verify
+
+The `ci-extended-verify-nightly` schedule runs `runCiExtendedVerifyWorkflow`
+at 02:00 America/Los_Angeles in `prod` with SKIP overlap, the default
+one-hour catchup window and a four-hour execution timeout. The Workflow runs on
+`monorepo-workflows`; its Woodpecker reads and the single write run on
+`repo-automation`. It selects the newest complete main build (the same
+`newestVerifiedMaintenanceSource` the coordinator uses), then POSTs one manual
+`main` pipeline with message `ci-extended-verify/<request-uuid>` and variables
+`CI_EXTENDED_REQUEST` and `CI_EXTENDED_SOURCE`. The config extension emits the
+`verify-extended` workflow for that request, or an `extended-superseded`
+no-work step when main's verified head moved first. The message is not a
+`ci-maintenance/` message, so maintenance admission ignores the nightly run.
+
+The write has one attempt. A lost response is read back by request ID after a
+minute and never resubmitted; no receipt fails the Workflow for operator
+review. While a `ci-canary/` run or maintenance pipeline is active the
+submission is deferred in ten-minute steps, up to an hour, so canary
+measurements are not skewed. The Workflow then polls the pipeline every two
+minutes and refreshes its `ciExtendedVerify` memo (request ID, source,
+pipeline number and URL, status, observation) on every tick.
+
+A red pipeline fails the Workflow with `ApplicationFailure.nonRetryable`
+naming the pipeline number, URL and failed workflows; `temporal-failure-watch`
+turns that into the usual Alertmanager occurrence, so there is no bespoke
+alert path. The dispatch flag `ci-extended-verify-dispatch-enabled` off, no
+verified source, an hour of deferral or a superseded source end the run as
+`skipped`, never failed. Registration creates the schedule paused because
+older stable workers do not register `runCiExtendedVerifyWorkflow`; once the
+candidate carrying it receives all Workflow traffic and the extension lane runs
+the merged revision, enable the dispatch flag and unpause this exact schedule
+(Tracker AI-485). Reconciliation preserves the operator's subsequent pause
+state. `toolkit ci timings` reports these pipelines in the `extended` cohort,
+and `toolkit ci main` ignores them because they lack the release graph.
+
 Vacuum start verification reads Home Assistant recorder history after each start
 request. Short cleaning transitions count as starts even when delayed state
 polling sees the vacuum docked again. A witnessed start followed by logbook

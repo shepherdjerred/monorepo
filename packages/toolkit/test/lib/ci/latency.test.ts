@@ -52,11 +52,25 @@ test("classifies executed workflow shapes, retaining legacy expensive drafts", (
     ["ci-noop", "noop"],
     ["draft-preflight", "draft"],
     ["maintenance-release-notes", "maintenance"],
+    ["verify-extended", "extended"],
   ]) {
     expect(
       pipelineKind(pipeline({ workflows: [{ name, state: "success" }] })),
     ).toBe(kind);
   }
+  expect(
+    pipelineKind(
+      pipeline({
+        event: "manual",
+        ref: "refs/heads/main",
+        branch: "main",
+        workflows: [
+          { name: "extended-superseded", state: "success" },
+          { name: "verify-extended", state: "failure" },
+        ],
+      }),
+    ),
+  ).toBe("extended");
   expect(
     pipelineKind(
       pipeline({

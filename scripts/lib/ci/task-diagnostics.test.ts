@@ -286,9 +286,86 @@ test.each([0, 42])(
       exitCode,
       collectionFailed: false,
       turbo: [],
+      testTimings: noSuites,
     });
   },
 );
+
+const noSuites = { version: 1 as const, suites: [] };
+const junitReport = `<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="1" failures="1" time="12.25">
+  <testsuite name="@test/package::src/slow.integration.test.ts" tests="1" failures="1" errors="0" skipped="0" time="12.25">
+    <testcase classname="@test/package::src/slow.integration.test.ts" name="boots" time="12.25">
+      <failure message="sentinel-failure">TOKEN=sentinel-secret</failure>
+      <system-out>sentinel-output</system-out>
+    </testcase>
+  </testsuite>
+</testsuites>
+`;
+const junitSuite = {
+  report: "test__package/vitest.xml",
+  name: "@test/package::src/slow.integration.test.ts",
+  seconds: 12.25,
+  tests: 1,
+  failures: 1,
+};
+
+test("the schema carries optional per-suite timings and rejects malformed ones", () => {
+  const base = { ...identity, collectionFailed: false, turbo: [] };
+  expect(TaskDiagnosticsSchema.parse(base).testTimings).toBeUndefined();
+  expect(
+    TaskDiagnosticsSchema.parse({
+      ...base,
+      testTimings: { version: 1, suites: [junitSuite] },
+    }).testTimings,
+  ).toEqual({ version: 1, suites: [junitSuite] });
+  for (const testTimings of [
+    { version: 1, suites: Array.from({ length: 20_001 }, () => junitSuite) },
+    { version: 1, suites: [{ ...junitSuite, name: "x".repeat(301) }] },
+    { version: 1, suites: [{ ...junitSuite, seconds: -1 }] },
+    { version: 1, suites: [{ ...junitSuite, report: "../escape.xml" }] },
+    { version: 2, suites: [] },
+  ]) {
+    expect(
+      TaskDiagnosticsSchema.safeParse({ ...base, testTimings }).success,
+    ).toBe(false);
+  }
+});
+
+test("attaches suite timings from JUnit reports without their test-case bodies", async () => {
+  const root = await repository();
+  const report = path.join(root, ".ci-reports/junit/test__package/vitest.xml");
+  await mkdir(path.dirname(report), { recursive: true });
+  await Bun.write(report, junitReport);
+  const upload = vi.fn<() => Promise<void>>().mockResolvedValue(undefined);
+  expect(await retainDiagnostics(identity, new Set(), root, upload)).toBe(0);
+  expect(upload).toHaveBeenCalledWith({
+    ...identity,
+    collectionFailed: false,
+    turbo: [],
+    testTimings: { version: 1, suites: [junitSuite] },
+  });
+  expect(JSON.stringify(upload.mock.calls)).not.toContain("sentinel");
+});
+
+test("a failed timing collection is omitted and never changes the result", async () => {
+  const root = await repository();
+  // A file where the JUnit directory belongs makes the scan fail (ENOTDIR).
+  await mkdir(path.join(root, ".ci-reports"));
+  await Bun.write(path.join(root, ".ci-reports/junit"), "sentinel-secret");
+  const upload = vi.fn<() => Promise<void>>().mockResolvedValue(undefined);
+  const error = vi.spyOn(console, "error").mockImplementation(vi.fn());
+  expect(await retainDiagnostics(identity, new Set(), root, upload)).toBe(0);
+  expect(upload).toHaveBeenCalledWith({
+    ...identity,
+    collectionFailed: false,
+    turbo: [],
+  });
+  expect(error.mock.calls.flat()).toContain(
+    "CI test timing collection failed; omitted",
+  );
+  expect(JSON.stringify(error.mock.calls)).not.toContain("sentinel");
+});
 
 test.each([0, 42])(
   "publication failure preserves nonzero task exit %i",
@@ -331,6 +408,7 @@ test("malformed summaries publish explicit failure metadata without parser value
     exitCode: 42,
     collectionFailed: true,
     turbo: [],
+    testTimings: noSuites,
   });
   expect(JSON.stringify(error.mock.calls)).not.toContain("sentinel");
 });
@@ -354,6 +432,7 @@ test("invalid input hashes fail collection explicitly instead of publishing part
     ...identity,
     collectionFailed: true,
     turbo: [],
+    testTimings: noSuites,
   });
   expect(JSON.stringify(error.mock.calls)).not.toContain("sentinel");
 });
@@ -392,24 +471,48 @@ async function runWrapper(
   return { stdout, stderr, exit };
 }
 
-test.each([
+const scratchBenchmark = {
+  CI_PIPELINE_NUMBER: "123",
+  CI_COMMIT_SHA: "a".repeat(40),
+  CI_BENCHMARK_FEATURE: "scratch",
+  CI_BENCHMARK_SOURCE: "a".repeat(40),
+  CI_BENCHMARK_PROFILE: "verify",
+  CI_BENCHMARK_VARIANT: "baseline",
+};
+
+test.each<{
+  mode: string[];
+  env?: Record<string, string>;
+  message: string;
+}>([
   { mode: ["invalid"], message: "Usage: run-with-diagnostics.ts" },
   {
     mode: ["verify", "--", "unused"],
     message: "require a pipeline number and full commit SHA",
   },
   {
+    // Accepted as a diagnostics kind: the failure is past the usage check.
+    mode: ["verify-extended", "--", "unused"],
+    message: "require a pipeline number and full commit SHA",
+  },
+  {
+    // Scratch benchmark resources stay verify-only.
+    mode: ["verify-extended", "--", "unused"],
+    env: scratchBenchmark,
+    message: "Invalid scratch benchmark resource request",
+  },
+  {
     mode: ["--retain", '{"pipeline":"sentinel-secret"}', "[]"],
     message: "CI task diagnostic process failed",
   },
 ])(
-  "reports safe wrapper errors and hides rejected values: $message",
-  async ({ mode, message }) => {
+  "reports safe wrapper errors and hides rejected values: $mode.0 $message",
+  async ({ mode, env, message }) => {
     const { stderr, exit } = await runWrapper(
       await repository(),
       new URL("../../ci/run-with-diagnostics.ts", import.meta.url).pathname,
       [],
-      { mode, env: { CI_PIPELINE_NUMBER: "", CI_COMMIT_SHA: "" } },
+      { mode, env: env ?? { CI_PIPELINE_NUMBER: "", CI_COMMIT_SHA: "" } },
     );
     expect(exit).toBe(1);
     expect(stderr).toContain(message);
@@ -450,6 +553,11 @@ async function wrapperFixture(root: string) {
     new URL("workspace-usage.ts", import.meta.url),
     path.join(library, "workspace-usage.ts"),
   );
+  await mkdir(path.join(library, "timings"), { recursive: true });
+  await cp(
+    new URL("timings/test-timings.ts", import.meta.url),
+    path.join(library, "timings", "test-timings.ts"),
+  );
   // Fake only the object-store boundary; the wrapper and collector run as
   // real subprocesses from a checkout with no installed dependencies.
   await Bun.write(
@@ -463,17 +571,22 @@ async function wrapperFixture(root: string) {
   return entrypoint;
 }
 
-test.each([0, 42])(
-  "collects in a fresh process after the child installs dependencies and exits %i",
-  async (exitCode) => {
+test.each([
+  { exitCode: 0, workflow: "verify" },
+  { exitCode: 42, workflow: "verify-extended" },
+])(
+  "collects in a fresh process after the child installs dependencies and exits $exitCode ($workflow)",
+  async ({ exitCode, workflow }) => {
     const root = await repository();
     const entrypoint = await wrapperFixture(root);
     const dependencies = new URL("../../node_modules", import.meta.url)
       .pathname;
     const install = `
-      import { symlink } from "node:fs/promises";
+      import { mkdir, symlink } from "node:fs/promises";
       await symlink(${JSON.stringify(dependencies)}, "scripts/node_modules");
       await Bun.write(".turbo/runs/child.json", ${JSON.stringify(JSON.stringify(summary()))});
+      await mkdir(".ci-reports/junit/test__package", { recursive: true });
+      await Bun.write(".ci-reports/junit/test__package/vitest.xml", ${JSON.stringify(junitReport)});
       process.exit(${String(exitCode)});
     `;
     // Neither scratch nor Git metadata can provide a transfer directory. A
@@ -485,7 +598,7 @@ test.each([0, 42])(
       entrypoint,
       [process.execPath, "-e", install],
       {
-        mode: ["verify", "--"],
+        mode: [workflow, "--"],
         env: {
           CI_PIPELINE_NUMBER: "123",
           CI_COMMIT_SHA: "a".repeat(40),
@@ -494,17 +607,21 @@ test.each([0, 42])(
       },
     );
     expect(stderr).toBe("");
-    expect(stdout).toContain("CI task diagnostics:");
+    expect(stdout).toContain(
+      `CI task diagnostics: ci-handoff/123/diagnostics-${workflow}.json`,
+    );
     expect(exit).toBe(exitCode);
     const report: unknown = await Bun.file(
       path.join(root, "published.json"),
     ).json();
     expect(report).toMatchObject({
       pipeline: "123",
+      workflow,
       exitCode,
       collectionFailed: false,
       turbo: [{ id: "run-one" }],
       workspaceUsage: expect.objectContaining({ version: 1 }),
+      testTimings: { version: 1, suites: [junitSuite] },
     });
     expect(JSON.stringify(report)).not.toContain("sentinel");
   },

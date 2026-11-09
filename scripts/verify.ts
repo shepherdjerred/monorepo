@@ -60,8 +60,12 @@ const turboTasks = [
   "test:contract",
 ] as const;
 
-const VERIFY_CONCURRENCY = 6;
-const VERIFY_VITEST_MAX_WORKERS = 2;
+/**
+ * Turbo slots and the Vitest worker cap per suite; scripts/verify-extended.ts
+ * runs the extended tier under the same budget.
+ */
+export const VERIFY_CONCURRENCY = 6;
+export const VERIFY_VITEST_MAX_WORKERS = 2;
 
 type GitValidator = (command: readonly string[]) => Promise<number>;
 type ChangedFilesReader = (

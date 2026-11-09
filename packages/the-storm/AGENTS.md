@@ -21,7 +21,8 @@ layout, layering table and commands.
   smoke selection to quick startup, plugin loading and client interactions;
   extended gameplay, all-module, load and native-client acceptance belongs to
   the committer outside CI. Run the applicable local suites and record results
-  (see README.md). This exception applies only to Minecraft.
+  (see README.md). Paper suites stay in `excludedSuites`, outside both test
+  tiers of the repository-wide rule in the root `AGENTS.md`.
 - Tag tests that play whole matches or long scenarios `@Tag("simulation")`.
   CI excludes the tag; the committer runs `:rwfbots:simulationTest` locally.
 - Keep test assertions intact; MockBukkit gaps are fixed by moving logic into

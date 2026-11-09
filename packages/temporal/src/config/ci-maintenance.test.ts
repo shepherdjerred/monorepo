@@ -1,26 +1,12 @@
-import { afterEach, beforeEach, expect, test, vi } from "vitest";
-import {
-  createFlagConfigSource,
-  type FlagConfigSource,
-} from "@shepherdjerred/feature-flags/config-source.ts";
+import { expect, test, vi } from "vitest";
+import { useMockedFlagSource } from "./flag-source.test-support.ts";
 
 vi.mock("@shepherdjerred/feature-flags/config-source.ts", () => ({
   createFlagConfigSource: vi.fn(),
 }));
 import { ciWorkspaceSeedRefreshEnabled } from "./ci-maintenance.ts";
 
-const source = {
-  create: vi.mocked(createFlagConfigSource),
-  get: vi.fn<FlagConfigSource["get"]>(),
-};
-
-beforeEach(() => {
-  vi.resetAllMocks();
-  vi.stubEnv("TEMPORAL_NAMESPACE", "prod");
-  source.get.mockResolvedValue(undefined);
-  source.create.mockImplementation(() => ({ name: "flag", get: source.get }));
-});
-afterEach(() => vi.unstubAllEnvs());
+const source = useMockedFlagSource();
 
 test.each([false, true])(
   "the deployed production worker honors seed refresh %s",

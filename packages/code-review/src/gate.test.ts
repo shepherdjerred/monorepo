@@ -70,6 +70,20 @@ describe("reviewGateSkipReasonForAuthor", () => {
     ).toBeNull();
   });
 
+  test("requires Codex review for the CI image promotion bot's PRs", () => {
+    // The promotion PR arms `gh pr merge --auto`; a skip here left #4312 to a
+    // human because CodeRabbit's missing seat hard-fails the gate alone.
+    expect(
+      reviewGateSkipReasonForAuthor({
+        author: {
+          login: "long-summer-intern[bot]",
+          type: "Bot",
+        },
+        provider: codexProvider,
+      }),
+    ).toBeNull();
+  });
+
   test("skips other GitHub App-authored PRs for Codex", () => {
     expect(
       reviewGateSkipReasonForAuthor({

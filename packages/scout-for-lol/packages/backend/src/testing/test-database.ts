@@ -5,7 +5,10 @@ import {
   devDatabaseUrl,
   devPostgresPort,
 } from "#src/testing/postgres-server.ts";
-import { getTestTemplateDatabase } from "#src/testing/test-template.ts";
+import {
+  ensureTestTemplateSync,
+  getTestTemplateDatabase,
+} from "#src/testing/test-template.ts";
 
 function extendClient(client: PrismaClient): ExtendedPrismaClient {
   return client.$extends({
@@ -50,8 +53,9 @@ function testDatabaseName(testName: string): string {
  *
  * Clones the pre-built hash-scoped test template database on the shared local
  * Postgres server (`createdb -T` is a server-side file copy, ~50–150ms —
- * the Postgres equivalent of the old copy-a-SQLite-file strategy). The
- * template is ensured/refreshed by the bun test preload (test-setup.ts).
+ * the Postgres equivalent of the old copy-a-SQLite-file strategy). The first
+ * call in a process starts the server and ensures the template; suites that
+ * never call this never start Postgres.
  *
  * @param testName - A unique name for this test suite (encoded into the
  *   database name)
@@ -64,6 +68,7 @@ export function createTestDatabase(testName: string): {
   dbUrl: string;
 } {
   const dbName = testDatabaseName(testName);
+  ensureTestTemplateSync();
   const templateDatabase = getTestTemplateDatabase();
   const port = devPostgresPort();
   const result = Bun.spawnSync(

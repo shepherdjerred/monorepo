@@ -118,11 +118,21 @@ function ciWorkspaceWrites(node: string, zpool: string): string {
 }
 
 /**
- * Each workspace claim's step: the step-key label of the pods that mounted it.
- * Clone pods carry no step key, and every workflow has one step pod, so a
- * claim maps to one step.
+ * Every step pod that mounted a workspace claim in the window, keyed by
+ * (claim, pod, step key). Clone pods carry no step key and drop out of the
+ * join.
  */
-const ciClaimSteps = `label_replace(max by (persistentvolumeclaim, label_ci_sjer_red_step_key) (last_over_time(kube_pod_spec_volumes_persistentvolumeclaims_info{namespace="${WOODPECKER_CI_NAMESPACE}",persistentvolumeclaim=~"wp-.*"}[24h]) * on(pod) group_left(label_ci_sjer_red_step_key) max by (pod, label_ci_sjer_red_step_key) (last_over_time(kube_pod_labels{namespace="${WOODPECKER_CI_NAMESPACE}",label_ci_sjer_red_step_key!=""}[24h]))), "step", "$1", "label_ci_sjer_red_step_key", "(.+)")`;
+const ciStepPods = `max by (persistentvolumeclaim, pod, label_ci_sjer_red_step_key) (last_over_time(kube_pod_spec_volumes_persistentvolumeclaims_info{namespace="${WOODPECKER_CI_NAMESPACE}",persistentvolumeclaim=~"wp-.*"}[24h]) * on(pod) group_left(label_ci_sjer_red_step_key) max by (pod, label_ci_sjer_red_step_key) (last_over_time(kube_pod_labels{namespace="${WOODPECKER_CI_NAMESPACE}",label_ci_sjer_red_step_key!=""}[24h])))`;
+
+/**
+ * Each workspace claim's step. A workflow with ordered containers
+ * (media-pms-wire then media-pms-native, small-pr-checks) runs several step
+ * pods on one claim, each under its own step key, so the claim is attributed
+ * to its earliest-created step pod: the workflow's own step. bottomk over the
+ * pods' creation times picks it; `> bool 0` turns the timestamp back into a
+ * join weight of 1.
+ */
+const ciClaimSteps = `label_replace(max by (persistentvolumeclaim, label_ci_sjer_red_step_key) (bottomk by (persistentvolumeclaim) (1, ${ciStepPods} * on(pod) group_left() max by (pod) (last_over_time(kube_pod_created{namespace="${WOODPECKER_CI_NAMESPACE}"}[24h]))) > bool 0), "step", "$1", "label_ci_sjer_red_step_key", "(.+)")`;
 
 function ciPoolDrive(): (typeof NVME_POOL_DRIVES)[number] {
   const drive = NVME_POOL_DRIVES.find(

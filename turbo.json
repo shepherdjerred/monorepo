@@ -36,7 +36,12 @@
     "GOMODCACHE",
     "GRADLE_USER_HOME",
     "MISE_DATA_DIR",
+    // mise resolves claim-installed tool versions through these three; shims
+    // inside tasks need them or a tool a stale CI image lacks goes missing.
+    "MISE_DOWNLOADS_DIR",
+    "MISE_INSTALLS_DIR",
     "MISE_LOCKED",
+    "MISE_SHARED_INSTALL_DIRS",
     "NUGET_PACKAGES",
     "RUSTC_WRAPPER",
     "SCCACHE_CACHE_SIZE",
@@ -56,9 +61,19 @@
     "build": {
       "dependsOn": ["^build"],
       // A build's hash reaches every dependent's tasks through ^build, and no
-      // build reads its README, so documentation edits stay local. A package
-      // task that reads its own README keeps it through $TURBO_DEFAULT$.
-      "inputs": ["$TURBO_DEFAULT$", "!**/README.md"],
+      // build reads its README or test files, so documentation and test-only
+      // edits stay local. No source file imports a *.test.* or *.spec.* file;
+      // typecheck, lint and test* keep the full default inputs. Fixture
+      // modules (*.test-fixture.ts, **/testing/**) stay in the hash because
+      // media exports its testing helpers to other packages' tests.
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "!**/README.md",
+        "!**/*.test.ts",
+        "!**/*.test.tsx",
+        "!**/*.spec.ts",
+        "!**/*.spec.tsx"
+      ],
       "outputs": ["dist/**"]
     },
     "@shepherdjerred/statically-typed#build": {
@@ -80,8 +95,15 @@
     // default chain (temporal → live Home Assistant, helm-types → chart repos).
     "generate": {
       // Like build: generate feeds dependents' hashes and no generator reads
-      // a README.
-      "inputs": ["$TURBO_DEFAULT$", "!**/README.md"],
+      // a README or a test file.
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "!**/README.md",
+        "!**/*.test.ts",
+        "!**/*.test.tsx",
+        "!**/*.spec.ts",
+        "!**/*.spec.tsx"
+      ],
       "outputs": ["generated/**"]
     },
     "generate:live": {
@@ -116,6 +138,19 @@
         "$TURBO_ROOT$/scripts/ci/run-ci-test.ts",
         "$TURBO_ROOT$/vitest.config.ts"
       ]
+    },
+    // The extended tier: steps marked `tier: "extended"` in a workspace's
+    // ci-tests.json (suites that start PostgreSQL, the Temporal test server,
+    // ffmpeg or a game server, or exceed a three-minute p50). Pull requests
+    // never run it; the committer runs it locally for affected packages and
+    // the nightly ci-extended-verify run executes it on main. Uncached on
+    // purpose: the point of the run is execution against binaries Turbo cannot
+    // hash, and a "cached" line would hide whether the suite ran.
+    "test:extended": {
+      "env": ["NODE_ENV"],
+      "passThroughEnv": ["MISE_DATA_DIR"],
+      "dependsOn": ["^build", "generate"],
+      "cache": false
     },
     "lint": {
       // "generate" for the same reason typecheck/test have it: type-aware

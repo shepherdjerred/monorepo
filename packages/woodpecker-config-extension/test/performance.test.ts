@@ -9,6 +9,8 @@ import { DISABLED_PERFORMANCE } from "#src/performance-config.ts";
 import { emitWorkflow } from "#src/pipeline/emit.ts";
 import { RAM_SCRATCH, ramScratchProfile } from "#src/pipeline/ram-scratch.ts";
 import { BROWSER_TIER, TURBO_VERIFY_TIER } from "#src/pipeline/tiers.ts";
+import { MISE_INSTALLS } from "#src/pipeline/cache.ts";
+import { credentiallessHostedAutomationSteps } from "#src/pipeline/steps.ts";
 import { PipelineSchema } from "#src/schemas.ts";
 import fixture from "./fixtures/woodpecker-v3.18.1-config-request.json" with { type: "json" };
 import { TEST_IMAGES, TEST_IDENTITY, testPipelineSteps } from "./identity.ts";
@@ -21,11 +23,14 @@ const enabled = {
   grouping: true,
   copyfile: true,
   scratch: true,
+  miseInstalls: true,
 };
 const helper = `docker.io/shepherdjerred/woodpecker-config-extension@sha256:${"a".repeat(64)}`;
 const backend = (environment?: Readonly<Record<string, string>>) =>
   environment?.["CI_BUN_INSTALL_BACKEND"];
 const gib = (value: string) => Number(value.replace(/Gi$/u, ""));
+const sourcesToolchain = (commands: readonly string[]) =>
+  commands.some((command) => command.includes("ci/scripts/toolchain.sh"));
 test("RAM scratch benchmarks stay exclusive to owner manual verify canaries", () => {
   const pipeline = PipelineSchema.parse({
     ...fixture.pipeline,
@@ -136,6 +141,69 @@ test("RAM scratch benchmarks stay exclusive to owner manual verify canaries", ()
   expect(
     gib(candidate.resources.memoryLimit) - gib(TURBO_VERIFY_TIER.memoryLimit),
   ).toBe(scratch);
+});
+test("shared mise installs mount wherever the toolchain is sourced, only when enabled, never credentialless", () => {
+  const steps = groupSmallChecks(testPipelineSteps(), true);
+  const mounted = performanceSteps(
+    steps,
+    { ...DISABLED_PERFORMANCE, miseInstalls: true },
+    true,
+    false,
+  );
+  const containers = mounted.flatMap((step) => [
+    step,
+    ...(step.orderedSteps ?? []),
+  ]);
+  const toolchain = containers.filter((container) =>
+    sourcesToolchain(container.commands),
+  );
+  expect(toolchain.length).toBeGreaterThan(10);
+  expect(
+    toolchain.some((container) =>
+      container.commands.some((command) =>
+        command.startsWith("MISE_TOOLCHAIN_SCOPE="),
+      ),
+    ),
+  ).toBe(true);
+  for (const container of containers) {
+    expect(
+      container.volumes?.some(
+        (volume) => volume.claim === MISE_INSTALLS.claim,
+      ) ?? false,
+      container.key,
+    ).toBe(sourcesToolchain(container.commands));
+  }
+  const verify = mounted.find((step) => step.key === "verify");
+  if (verify === undefined) throw new Error("Missing verify");
+  const emitted = z
+    .object({
+      steps: z.array(
+        z.object({ environment: z.record(z.string(), z.string()) }),
+      ),
+    })
+    .parse(parse(emitWorkflow(verify, TEST_IDENTITY)));
+  expect(emitted.steps[0]?.environment).toMatchObject({
+    MISE_INSTALLS_DIR: "/woodpecker/mise-installs/installs",
+    MISE_DOWNLOADS_DIR: "/woodpecker/mise-installs/downloads",
+    MISE_SHARED_INSTALL_DIRS: "/opt/mise/installs",
+  });
+  const plain = performanceSteps(steps, DISABLED_PERFORMANCE, true, false);
+  expect(
+    [...plain, ...plain.flatMap((step) => step.orderedSteps ?? [])].some(
+      (container) =>
+        container.volumes?.some(
+          (volume) => volume.claim === MISE_INSTALLS.claim,
+        ),
+    ),
+  ).toBe(false);
+  const credentialless = performanceSteps(
+    credentiallessHostedAutomationSteps(TEST_IMAGES),
+    enabled,
+    false,
+    true,
+  );
+  for (const step of credentialless)
+    expect(step.volumes ?? [], step.key).toEqual([]);
 });
 test("ordinary verify and browser execution pods carry their own scratch profile only when enabled", () => {
   const steps = testPipelineSteps();

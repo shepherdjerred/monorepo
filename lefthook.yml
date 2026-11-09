@@ -2,8 +2,9 @@ glob_matcher: doublestar
 
 # Local hooks inspect staged files, then run package-scoped typecheck and
 # lint for the workspaces that own those files (Turbo, concurrency 1).
-# CI owns the exhaustive whole-repo graph. The hook does not run
-# tests, dependents, or `bun run verify`.
+# CI owns the whole-repo `ci` test tier graph; the `extended` tier runs
+# locally before a PR is marked ready and nightly on main. The hook does not
+# run tests, dependents, or `bun run verify`.
 
 commit-msg:
   jobs:

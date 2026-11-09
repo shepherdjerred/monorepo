@@ -223,7 +223,7 @@ describe("kueue-config", () => {
     expect(quota(CI_GATE_CLUSTER_QUEUE, "pods")).toBe(
       String(CI_GATE_WORKFLOWS),
     );
-    expect(CI_COMPUTE_WORKFLOWS).toBe(8);
+    expect(CI_COMPUTE_WORKFLOWS).toBe(12);
     expect(CI_GATE_WORKFLOWS).toBe(4);
   });
 

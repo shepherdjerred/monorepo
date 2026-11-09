@@ -237,6 +237,50 @@ coverage baseline when no verified changed base is available. Fetching main
 alone does not remove a canary checkout's shallow boundary after a squash merge.
 A missing predecessor stops verification before an empty baseline can be exported.
 
+### Extended verification request contract
+
+Test steps in the `extended` tier (suites that start PostgreSQL, the Temporal
+test server, ffmpeg or a game server, or exceed a three-minute p50) do not run
+on pull requests. A Temporal schedule runs them nightly on main through this
+manual lane. The signed owner manual request must target the default branch
+and supply both variables; the dispatcher sets the pipeline message to
+`ci-extended-verify/<request>`, which the extension does not read.
+
+| Variable              | Values                                                    |
+| --------------------- | --------------------------------------------------------- |
+| `CI_EXTENDED_REQUEST` | The dispatcher's request identity, an RFC 9562 UUID       |
+| `CI_EXTENDED_SOURCE`  | Exact 40-character SHA of the newest verified main commit |
+
+The route is exclusive: it refuses `TOFU_PLATFORM_*`, `CI_MAINTENANCE_*`,
+`CI_BENCHMARK_*` and corpus variables, a pull-request or push event, another
+branch, or a non-owner actor, and the maintenance and benchmark routes refuse
+`CI_EXTENDED_*` in turn. The typed `woodpecker-extended-verify-enabled` flag
+gates it; a disabled flag or a hosted-automation actor receives HTTP 403 before
+any forge read, and a malformed request receives HTTP 400. The production
+inventory keeps the flag off until the extension image and the Temporal
+dispatcher run the same revision.
+
+An admitted request emits one `verify-extended` workflow: verify's image,
+tier, caches, remote Turbo cache and Gradle write identity in the trusted
+domain, running `bun run verify:extended` under `run-with-diagnostics.ts`
+with a 90-minute bound, serialized by the `verify-extended` concurrency group,
+and routed to the PR pool at draft priority. It holds no release, publication
+or deployment credential, and `CI_CHANGED_BASE` is empty because the tier runs
+every extended suite. Diagnostics publish as `diagnostics-verify-extended.json`
+in the handoff bucket. With RAM scratch on, the step carries the
+`verify-extended-v1` profile, verify's own allowance under a separate key, so
+private PostgreSQL clusters land in tmpfs. Both variables are echoed into the
+step's environment.
+
+Woodpecker starts the manual pipeline at main's tip. When `CI_EXTENDED_SOURCE`
+is the tip, the workflow runs there. When it is behind the tip but still the
+newest verified main commit and the source cache is on, the workflow checks
+that commit out in place of the tip, exactly as maintenance does. Otherwise
+the extension emits a clone-free `extended-superseded` receipt instead of
+running, and the dispatcher selects the newly verified source on its next run.
+`bun src/dump-steps.ts` includes the step so the admission-budget and
+credential checks cover it; `--include-canaries` adds its scratch profile.
+
 `CI_CHECKOUT_DIAGNOSTIC`, `CI_BOOTSTRAP_DIAGNOSTIC`, and
 `CI_INSTALL_DIAGNOSTIC` separate source, toolchain, and install time. Retained
 Turbo summaries provide task/cache evidence; `toolkit ci timings --json` also
@@ -284,6 +328,28 @@ tasks inherit them; `BUN_INSTALL_CACHE_DIR` is deliberately not passed, because
 it names the collected cache whose readers hold the collector's lock. None of
 these caches has a collector: Cargo, Go and sccache expire or bound
 their own entries, and the homelab's per-claim usage alert covers the rest.
+
+Tools the pinned CI image lacks are installed by `toolchain.sh` at runtime,
+once per pod, into `MISE_DATA_DIR=/opt/mise`, the container's writable layer
+on the CI node's OS disk, for as long as the image pin trails `.mise.toml`.
+When the typed `woodpecker-mise-shared-installs-enabled` flag is on,
+`withSharedMiseInstalls` mounts the `woodpecker-mise-installs` claim at
+`/woodpecker/mise-installs` on every trusted container that sources
+`toolchain.sh`, whatever its scope, and the emitter sets
+`MISE_INSTALLS_DIR=/woodpecker/mise-installs/installs`,
+`MISE_DOWNLOADS_DIR=/woodpecker/mise-installs/downloads` and
+`MISE_SHARED_INSTALL_DIRS=/opt/mise/installs`. `MISE_DATA_DIR` stays
+`/opt/mise`, so the image's shims and versions keep resolving; only the
+versions the image lacks install onto the claim, once per node, serialized by
+mise's own lock files beside the destination. The root `turbo.json` passes the
+three variables through so shims inside tasks resolve claim-installed versions.
+The preamble opens the claim root, the installs directory and a Postgres
+installed there to the `nobody` test user the same way it does for `/opt/mise`.
+The claim has no collector and no dedicated alert: the homelab's per-claim
+usage alert names it when it fills, and pruning versions absent from main's
+`mise.lock` is deferred until then. The production inventory keeps the flag
+off; `ci-canary/` branches receive it through the beta-stage rollout. The
+credentialless graph mounts nothing.
 The source-cache clone copies Git objects with the filesystem's clone facility
 (`cp -f --reflink=auto`), which ZFS turns into a block clone within the pool.
 A golden clone already holds read-only Git objects, so `-f` replaces any such
@@ -307,7 +373,11 @@ directory and does not use the shared provider cache.
 
 Marking a draft ready emits Woodpecker's signed `pull_request_metadata` event
 with reason `ready_for_review`. It selects the full PR graph without another
-commit. Title, label and other metadata changes emit only a no-op. Ready events
+commit. Title, label and other metadata changes select no work: the extension
+returns an empty configuration set and Woodpecker records no pipeline, so the
+edit takes no agent slot, workspace claim, pod or GitHub status. Tag, release,
+cron, closed-PR and feature-branch push events end the same way. A refusal
+stays an error response and never becomes an empty success. Ready events
 retain PR credential approval and cache namespaces, and use the PR merge base.
 Completion checks the native metadata statuses from its own pipeline. The
 server maps only that completion workflow to the existing required
@@ -319,7 +389,7 @@ producing an authorized PR configuration, the extension cancels older PR and
 ready-event runs for that exact PR, including duplicates at the same commit.
 It revalidates each
 pipeline immediately before cancellation and never cancels newer runs, main,
-or another PR. Metadata no-ops and unapproved automation do no cleanup.
+or another PR. Metadata edits and unapproved automation do no cleanup.
 The entire best-effort lookup has a three-second deadline; API failure leaves
 the replacement verification intact and emits a bounded warning.
 
@@ -337,9 +407,10 @@ observe a real ready transition through full CI before changing draft coverage.
 
 `routing.ts` assigns Kubernetes workflows to PR, main, review, or completion
 agents. A PR targeting the default branch still uses the PR pool; only a push
-or manual run on that branch uses main capacity. Native workflows keep their
-host labels. Metadata no-ops use compute capacity, leaving completion available
-for required verdicts.
+or manual run on that branch uses main capacity. Manual maintenance,
+benchmark and extended-tier runs on the default branch are background work:
+they use the PR pool at draft priority, below every ready PR, and leave main's
+reservation intact. Native workflows keep their host labels.
 
 Review and completion use their reserved pools only with the trusted policy
 image and no checkout or services. Each requests 250m CPU, 512 MiB memory, and

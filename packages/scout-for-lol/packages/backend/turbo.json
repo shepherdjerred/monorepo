@@ -24,6 +24,13 @@
       "env": ["DATABASE_URL", "SCOUT_PG_PORT"],
       "passThroughEnv": ["MISE_DATA_DIR"]
     },
+    // The extended tier (the *.integration.test.ts suites) clones the shared
+    // dev Postgres per file, so it reads the same URL and port.
+    "test:extended": {
+      "env": ["DATABASE_URL", "SCOUT_PG_PORT"],
+      "passThroughEnv": ["MISE_DATA_DIR"],
+      "cache": false
+    },
     // Typed lint (projectService) resolves the generated Prisma client; root's
     // lint task only depends on ^build, so on a cold container lint raced
     // generate and every prisma.competitionParticipant access became an error
@@ -44,8 +51,9 @@
     // shared engine/download cache (same synthetic edge the old setup.ts DAG
     // carried; observed flaky at -c 4 without it).
     // The hash-scoped test-template database on the shared local Postgres is
-    // not a turbo output: the bun test preload rebuilds it
-    // whenever its content hash (migrations + SEASONS + harness) changes.
+    // not a turbo output: the first createTestDatabase call in a test process
+    // rebuilds it whenever its content hash (migrations + SEASONS + harness)
+    // changes.
     "generate": {
       "dependsOn": ["@shepherdjerred/birmel#generate"],
       "inputs": [

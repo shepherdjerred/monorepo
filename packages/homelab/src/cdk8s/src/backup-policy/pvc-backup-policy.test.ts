@@ -119,18 +119,18 @@ it("retires per-app tailnet state while protecting the Delivery catalog", () => 
   ).toBe("enabled");
 });
 
-it("classifies 57 included and 45 excluded PVCs, including the separate BlueMap cache", () => {
+it("classifies 57 included and 46 excluded PVCs, including the separate BlueMap cache", () => {
   const keys = PVC_BACKUP_POLICY.map((entry) =>
     pvcBackupPolicyKey(entry.namespace, entry.name),
   );
-  expect(keys).toHaveLength(102);
-  expect(new Set(keys).size).toBe(102);
+  expect(keys).toHaveLength(103);
+  expect(new Set(keys).size).toBe(103);
   expect(
     PVC_BACKUP_POLICY.filter((entry) => entry.backup === "enabled"),
   ).toHaveLength(57);
   expect(
     PVC_BACKUP_POLICY.filter((entry) => entry.backup === "disabled"),
-  ).toHaveLength(45);
+  ).toHaveLength(46);
   expect(
     getPvcBackupPolicy("minecraft-tsmc", "minecraft-tsmc-bluemap").backup,
   ).toBe("disabled");
@@ -229,10 +229,11 @@ describe("PVC backup policy", () => {
 
     expect(pvcCount).toBeGreaterThan(0);
     expect(operatorManagedPvcCount).toBeGreaterThan(0);
-    // Includes one CI RAM scratch mutation per lane profile (verify, browser),
-    // the golden workspace clone mutation and the torvalds request overcommit.
-    expect(admissionKinds.get("MutatingAdmissionPolicy")).toBe(8);
-    expect(admissionKinds.get("MutatingAdmissionPolicyBinding")).toBe(8);
+    // Includes one CI RAM scratch mutation per lane profile (verify,
+    // verify-extended, browser), the golden workspace clone mutation and the
+    // torvalds request overcommit.
+    expect(admissionKinds.get("MutatingAdmissionPolicy")).toBe(9);
+    expect(admissionKinds.get("MutatingAdmissionPolicyBinding")).toBe(9);
     // The retired TSMC restoration controller no longer owns a copy guard.
     expect(admissionKinds.has("copy:ValidatingAdmissionPolicy")).toBe(false);
     expect(admissionKinds.has("copy:ValidatingAdmissionPolicyBinding")).toBe(

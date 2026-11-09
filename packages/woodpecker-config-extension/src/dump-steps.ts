@@ -17,6 +17,7 @@ import { completionStep } from "#src/pipeline/completion.ts";
 import { routeSteps } from "#src/pipeline/routing.ts";
 import { draftPreflightStep } from "#src/pipeline/draft.ts";
 import { benchmarkSteps } from "#src/pipeline/benchmark.ts";
+import { extendedSteps } from "#src/pipeline/extended.ts";
 import { DISABLED_PERFORMANCE } from "#src/performance-config.ts";
 import { performanceSteps } from "#src/pipeline/performance.ts";
 import { ramScratchProfile } from "#src/pipeline/ram-scratch.ts";
@@ -52,6 +53,18 @@ const steps = buildPipelineSteps({
   imageReleaseBase: "",
 });
 
+// The extended tier's manual lane is not part of the selected graph, but its
+// grants and requests must meet the same contracts. The request values are
+// placeholders like the images: nothing downstream reads them.
+const EXTENDED_REQUEST = { request: "0".repeat(32), source: "0".repeat(40) };
+const extendedContext = {
+  event: "manual",
+  branch: "main",
+  defaultBranch: "main",
+  draft: false,
+  extended: true,
+};
+
 // Include the dynamically appended verdict in admission and grant checks.
 const routed = routeSteps(
   [
@@ -66,6 +79,13 @@ const routed = routeSteps(
     draft: false,
   },
   gateImage,
+);
+routed.push(
+  ...routeSteps(
+    extendedSteps(PLACEHOLDER_IMAGES, EXTENDED_REQUEST),
+    extendedContext,
+    gateImage,
+  ),
 );
 // Admission must cover the larger manual canary alongside ordinary workflows.
 if (Bun.argv.includes("--include-canaries")) {
@@ -107,6 +127,17 @@ if (Bun.argv.includes("--include-canaries")) {
         defaultBranch: "main",
         draft: false,
       },
+      gateImage,
+    ),
+    // The extended tier reserves verify's scratch allowance under its own key.
+    ...routeSteps(
+      performanceSteps(
+        extendedSteps(PLACEHOLDER_IMAGES, EXTENDED_REQUEST),
+        { ...DISABLED_PERFORMANCE, scratch: true },
+        true,
+        false,
+      ),
+      extendedContext,
       gateImage,
     ),
   );

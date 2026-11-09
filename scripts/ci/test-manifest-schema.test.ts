@@ -5,9 +5,11 @@ import { describe, expect, test } from "vitest";
 import {
   loadTestManifest,
   readWorkspaceTests,
+  stepRunsInTier,
   WorkspaceTestsSchema,
   workspaceDirectories,
   workspaceTestsSchemaReference,
+  type TestStep,
 } from "./test-manifest-schema.ts";
 
 const root = {
@@ -179,5 +181,57 @@ describe("WorkspaceTestsSchema", () => {
       WorkspaceTestsSchema.safeParse({ ...appTests, $schema: "other.json" })
         .success,
     ).toBe(false);
+  });
+
+  test("accepts a tier on every runner and shared only on commands", () => {
+    for (const step of [
+      { runner: "vitest", tier: "extended" },
+      { runner: "go", tier: "ci", args: ["./..."] },
+      { runner: "cargo", tier: "extended", args: [] },
+      { runner: "dotnet", tier: "extended", args: ["Tests.csproj"] },
+      { runner: "gradle", tier: "extended", args: ["test"] },
+      { runner: "command", name: "stub", tier: "shared", command: ["true"] },
+    ]) {
+      expect(
+        WorkspaceTestsSchema.safeParse({ ...appTests, steps: [step] }).success,
+        JSON.stringify(step),
+      ).toBe(true);
+    }
+    expect(
+      WorkspaceTestsSchema.safeParse({
+        ...appTests,
+        steps: [{ runner: "vitest", tier: "shared" }],
+      }).success,
+    ).toBe(false);
+    expect(
+      WorkspaceTestsSchema.safeParse({
+        ...appTests,
+        steps: [{ runner: "vitest", tier: "nightly" }],
+      }).success,
+    ).toBe(false);
+  });
+});
+
+describe("stepRunsInTier", () => {
+  test("an omitted tier is ci", () => {
+    expect(stepRunsInTier({ runner: "vitest" }, "ci")).toBe(true);
+    expect(stepRunsInTier({ runner: "vitest" }, "extended")).toBe(false);
+  });
+
+  test("an extended step runs only in the extended tier", () => {
+    const step = { runner: "vitest", tier: "extended" } as const;
+    expect(stepRunsInTier(step, "extended")).toBe(true);
+    expect(stepRunsInTier(step, "ci")).toBe(false);
+  });
+
+  test("a shared command runs in both tiers", () => {
+    const step: TestStep = {
+      runner: "command",
+      name: "stub",
+      tier: "shared",
+      command: ["true"],
+    };
+    expect(stepRunsInTier(step, "ci")).toBe(true);
+    expect(stepRunsInTier(step, "extended")).toBe(true);
   });
 });
