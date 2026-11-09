@@ -56,6 +56,29 @@ test("status dispatcher accepts a coherent owned snapshot across atomic publicat
   expect(JSON.parse(await readFile(file, "utf8"))).toEqual(next);
 });
 
+test("publication accepts replacement after the read's metadata snapshot", async () => {
+  const { paths, file } = await publishedFile();
+  await writeFile(file, "old publication");
+  const read = handles.readExactHandle;
+  vi.spyOn(handles, "readExactHandle").mockImplementation(async (...args) => {
+    const bytes = await read(...args);
+    const [handle] = args;
+    const stat = handle.stat.bind(handle);
+    vi.spyOn(handle, "stat").mockImplementationOnce(async () => {
+      const metadata = await stat();
+      await replace(file, "new publication");
+      return metadata;
+    });
+    return bytes;
+  });
+  expect(
+    new TextDecoder().decode(
+      await readOwnedPublication(paths.stateDirectory, "control/status.json"),
+    ),
+  ).toBe("old publication");
+  expect(JSON.parse(await readFile(file, "utf8"))).toBe("new publication");
+});
+
 test("atomic publication does not relax stable vault or evidence pathname fencing", async () => {
   const { paths, file } = await publishedFile();
   await writeFile(file, "old");
