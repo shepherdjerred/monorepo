@@ -4,14 +4,14 @@ import { loadWoodpeckerConfig } from "#lib/woodpecker/ci.ts";
 import { CiObserver } from "#lib/ci/observer.ts";
 import { evaluateReadiness, EXIT_CODES } from "#lib/ci/readiness.ts";
 import {
-  sleepUntilRateLimitReset,
+  readThroughQuota,
   timeoutResult,
   waitFor,
   waitForCi,
   type LoopResult,
   type WaitResult,
 } from "#lib/ci/wait/wait.ts";
-import { GitHubRateLimitError } from "@shepherdjerred/code-review/github-request";
+import type { GitHubRateLimitError } from "@shepherdjerred/code-review/github-request";
 import { watchEvents } from "#lib/ci/events.ts";
 import { ciLoad, formatLoad } from "#lib/ci/load.ts";
 import { pipelineDiagnostics } from "#lib/ci/diagnostics.ts";
@@ -75,27 +75,19 @@ export function reportRateLimit(
   );
 }
 
-/**
- * The PR's current head, waiting out a quota refusal like every later poll.
- * Returns null when the requested deadline arrives first, so the caller can
- * report a timeout instead of a failure.
- */
-async function initialPr(
+/** The PR's current head, read through quota refusals until the deadline. */
+function initialPr(
   observer: CiObserver,
   number: number,
   signal: AbortSignal,
   deadline: number | null,
 ): Promise<Awaited<ReturnType<GitHubClient["pr"]>> | null> {
-  for (;;) {
-    try {
-      return await observer.github.pr(number, signal);
-    } catch (error) {
-      if (!(error instanceof GitHubRateLimitError)) throw error;
-      if (deadline !== null && error.resumeAt > deadline) return null;
-      await sleepUntilRateLimitReset(error, signal, reportRateLimit);
-      if (deadline !== null && Date.now() >= deadline) return null;
-    }
-  }
+  return readThroughQuota(
+    () => observer.github.pr(number, signal),
+    signal,
+    deadline,
+    reportRateLimit,
+  );
 }
 
 /** Print the start line and, inside an agent harness, how to hold the wait cheaply. */
@@ -227,16 +219,48 @@ async function runMainWait(
   options: CiOptions,
 ): Promise<void> {
   await withCancellation(async (signal) => {
-    const sha = options.head ?? (await readMainTip(observer.github, signal));
-    await assertOnMain(observer.github, sha, signal);
+    const started = Date.now();
+    const deadline =
+      options.timeoutMs === undefined ? null : started + options.timeoutMs;
+    // The pinned commit and its ancestry are GitHub reads too; a quota
+    // refusal before the loop starts must wait, not end the command.
+    const sha =
+      options.head ??
+      (await readThroughQuota(
+        () => readMainTip(observer.github, signal),
+        signal,
+        deadline,
+        reportRateLimit,
+      ));
+    const onMain =
+      sha === null
+        ? null
+        : await readThroughQuota(
+            async () => {
+              await assertOnMain(observer.github, sha, signal);
+              return true;
+            },
+            signal,
+            deadline,
+            reportRateLimit,
+          );
+    if (sha === null || onMain === null) {
+      await reportMainWait(
+        timeoutResult<MainRunSnapshot>(null, started),
+        observer,
+        options.json,
+        signal,
+      );
+      return;
+    }
     announceWait(
       `Waiting for main @ ${sha.slice(0, 12)}. Long queues and builds are expected; keep this process running. Use toolkit ci load for capacity information.`,
     );
     const result = await waitFor<MainRunSnapshot>(
       {
-        ...(options.timeoutMs === undefined
+        ...(deadline === null
           ? {}
-          : { timeoutMs: options.timeoutMs }),
+          : { timeoutMs: Math.max(0, deadline - Date.now()) }),
         signal,
       },
       {

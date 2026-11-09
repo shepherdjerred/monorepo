@@ -2,6 +2,7 @@ import { afterEach, describe, expect, test, vi } from "vitest";
 import { GitHubRateLimitError } from "@shepherdjerred/code-review/github-request";
 import {
   isRetriableSnapshotError,
+  readThroughQuota,
   waitFor,
   waitForCi,
   type WaitDependencies,
@@ -350,5 +351,46 @@ describe("snapshot timeouts during a wait", () => {
     );
     expect(result.verdict.outcome).toBe("failure");
     expect(result.snapshot).toBe(3);
+  });
+});
+
+describe("one-shot reads before a wait", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+  test("a quota refusal waits for the reset and then retries", async () => {
+    vi.spyOn(Math, "random").mockReturnValue(0);
+    let calls = 0;
+    const onWait = vi.fn();
+    const value = await readThroughQuota(
+      async () => {
+        calls++;
+        if (calls === 1) throw exhausted(Date.now() + 20);
+        return "tip";
+      },
+      new AbortController().signal,
+      null,
+      onWait,
+    );
+    expect(value).toBe("tip");
+    expect(calls).toBe(2);
+    expect(onWait).toHaveBeenCalledOnce();
+  });
+  test("a reset past the deadline returns null for a timeout report", async () => {
+    const value = await readThroughQuota(
+      () => Promise.reject(exhausted(Date.now() + 60_000)),
+      new AbortController().signal,
+      Date.now() + 1000,
+    );
+    expect(value).toBeNull();
+  });
+  test("other errors still fail loudly", async () => {
+    await expect(
+      readThroughQuota(
+        () => Promise.reject(new Error("contract")),
+        new AbortController().signal,
+        null,
+      ),
+    ).rejects.toThrow("contract");
   });
 });

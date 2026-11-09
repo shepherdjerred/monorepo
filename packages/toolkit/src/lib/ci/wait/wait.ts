@@ -101,6 +101,29 @@ export async function sleepUntilRateLimitReset(
   await delay(Math.max(0, resumeAt - Date.now()), undefined, { signal });
 }
 
+/**
+ * One GitHub read that waits out quota refusals like every later poll.
+ * Returns null when the caller's deadline arrives first, so the caller can
+ * report a timeout instead of an error.
+ */
+export async function readThroughQuota<T>(
+  read: () => Promise<T>,
+  signal: AbortSignal,
+  deadline: number | null,
+  onWait?: (error: GitHubRateLimitError, resumeAt: number) => void,
+): Promise<T | null> {
+  for (;;) {
+    try {
+      return await read();
+    } catch (error) {
+      if (!(error instanceof GitHubRateLimitError)) throw error;
+      if (deadline !== null && error.resumeAt > deadline) return null;
+      await sleepUntilRateLimitReset(error, signal, onWait);
+      if (deadline !== null && Date.now() >= deadline) return null;
+    }
+  }
+}
+
 function notifier() {
   let dirty = false;
   let notify: (() => void) | null = null;
