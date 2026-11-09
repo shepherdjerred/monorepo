@@ -159,6 +159,10 @@ expose_postgres_tools() {
   fi
 }
 
+# Name where a stale image's runtime installs land, so a step log shows whether
+# they reached the shared install claim or the container's writable layer (the
+# CI node's OS disk).
+echo "toolchain: runtime mise installs -> ${MISE_INSTALLS_DIR:-${MISE_DATA_DIR:-$HOME/.local/share/mise}/installs}"
 case "${MISE_TOOLCHAIN_SCOPE:-full}" in
   preflight)
     mise_ci install --yes bun gitleaks
