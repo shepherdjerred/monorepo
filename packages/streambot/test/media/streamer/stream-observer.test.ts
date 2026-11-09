@@ -3,7 +3,9 @@ import {
   commandUsesHardwareDecode,
   createStreamObserver,
   parseTimemarkSeconds,
+  STALL_AFTER_SECONDS,
 } from "@shepherdjerred/streambot/observability/stream-observer.ts";
+import { LIVE_BUFFER_MAX_MS } from "@shepherdjerred/streambot/config/schema.ts";
 import {
   ffmpegFps,
   ffmpegSpeedRatio,
@@ -187,6 +189,13 @@ function advanceMedia(
 }
 
 describe("createStreamObserver stall watchdog", () => {
+  test("the largest live rebuffer hold fits inside the stall budget with room for the starvation before it", () => {
+    // A hold freezes ffmpeg's progress; a cushion near the watchdog would restart a healthy stream.
+    expect(LIVE_BUFFER_MAX_MS).toBeLessThanOrEqual(
+      (STALL_AFTER_SECONDS * 1000) / 2,
+    );
+  });
+
   test("a wedged ffmpeg emitting the SAME timemark still trips the stall watchdog and reports the last media position", async () => {
     const { observer, dispose, wall, stalls } = stallWatchdogHarness();
     // First parseable sample arms the watchdog at wall=1000 with media at 5s.

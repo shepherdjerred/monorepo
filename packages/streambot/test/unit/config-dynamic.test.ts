@@ -174,5 +174,17 @@ describe("streambot dynamic config", () => {
       provider: new StaticProvider({ "streambot-live-buffer-ms": 100 }),
     });
     expect(guarded.stream.liveBufferMs).toBe(4000);
+    await shutdownDynamicConfig();
+
+    // Above the cap a hold could outlast the stall watchdog: also rejected.
+    const capped = loadConfig(VALID_ENVIRONMENT);
+    await initializeDynamicConfig({
+      environment: DISABLED,
+      seed: fullSeed(capped),
+      config: capped,
+      startPolling: false,
+      provider: new StaticProvider({ "streambot-live-buffer-ms": 30_000 }),
+    });
+    expect(capped.stream.liveBufferMs).toBe(4000);
   });
 });

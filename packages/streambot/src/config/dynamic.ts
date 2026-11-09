@@ -9,7 +9,11 @@ import {
   type InitFeatureFlagsOptions,
 } from "@shepherdjerred/feature-flags";
 import { createFlagConfigSource } from "@shepherdjerred/feature-flags/config-source.ts";
-import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
+import {
+  LIVE_BUFFER_MAX_MS,
+  LIVE_BUFFER_MIN_MS,
+  type Config,
+} from "@shepherdjerred/streambot/config/schema.ts";
 
 /**
  * streambot's dynamically configurable values.
@@ -138,7 +142,11 @@ const DEFINITION = {
   },
   // Read when each Go Live segment starts, so a change applies to the next live stream.
   liveBufferMs: {
-    schema: z.coerce.number().int().min(500).max(30_000),
+    schema: z.coerce
+      .number()
+      .int()
+      .min(LIVE_BUFFER_MIN_MS)
+      .max(LIVE_BUFFER_MAX_MS),
     sources: ["flag", "env", "default"],
     default: 4000,
     names: {
