@@ -20,12 +20,18 @@ export const LEGACY_DELIVERY_STAGE_LOCAL_QUEUE = "default";
  * Quantities use the form the API server stores, because ArgoCD diffs it.
  *
  * The workspace lives on a persistent claim (below), so the container's own
- * ephemeral storage holds only its logs: its root filesystem is read-only.
+ * ephemeral storage holds only its logs. The request still says 32Gi: this
+ * constant sizes the ClusterQueue too, ArgoCD applies the queue the moment a
+ * chart lands, and the running Delivery worker keeps rendering Jobs with the
+ * request it was built with until its own rollout — whose stage Jobs must be
+ * admitted by that queue — completes. A quota below an in-flight Job's request
+ * wedges every deployment behind the self-hosted barrier. Shrink the two
+ * together only after every worker renders the smaller request.
  */
 export const DELIVERY_STAGE_REQUESTS = {
   cpu: "2",
   memory: "8Gi",
-  "ephemeral-storage": "1Gi",
+  "ephemeral-storage": "32Gi",
 } as const;
 
 /**

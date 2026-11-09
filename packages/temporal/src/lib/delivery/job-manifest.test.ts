@@ -349,8 +349,8 @@ describe("persistent stage workspace", () => {
       expect(spec.volumes?.some((volume) => volume.emptyDir)).toBe(false);
       expect(spec.securityContext?.fsGroupChangePolicy).toBe("OnRootMismatch");
       expect(spec.containers[0]?.resources).toEqual({
-        requests: { cpu: "2", memory: "8Gi", "ephemeral-storage": "1Gi" },
-        limits: { cpu: "8", memory: "16Gi", "ephemeral-storage": "4Gi" },
+        requests: { cpu: "2", memory: "8Gi", "ephemeral-storage": "32Gi" },
+        limits: { cpu: "8", memory: "16Gi", "ephemeral-storage": "32Gi" },
       });
       expect(spec.containers[0]?.securityContext?.readOnlyRootFilesystem).toBe(
         true,
