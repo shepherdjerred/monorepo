@@ -33,23 +33,20 @@ final class SkytravelFixtures {
                     .registrar()
                     .register(
                         Commands.literal("skytravelprobe")
-                            .requires(
-                                source ->
-                                    source.getSender() instanceof ConsoleCommandSender
-                                        || source.getSender() instanceof RemoteConsoleCommandSender)
+                            .requires(source ->
+                                source.getSender() instanceof ConsoleCommandSender
+                                    || source.getSender() instanceof RemoteConsoleCommandSender)
                             .then(
                                 Commands.argument("action", StringArgumentType.word())
                                     .then(
                                         Commands.argument("player", StringArgumentType.word())
-                                            .executes(
-                                                context ->
-                                                    execute(
-                                                        plugin,
-                                                        context.getSource().getSender(),
-                                                        StringArgumentType.getString(
-                                                            context, "action"),
-                                                        StringArgumentType.getString(
-                                                            context, "player")))))
+                                            .executes(context ->
+                                                execute(
+                                                    plugin,
+                                                    context.getSource().getSender(),
+                                                    StringArgumentType.getString(context, "action"),
+                                                    StringArgumentType.getString(
+                                                        context, "player")))))
                             .build()));
   }
 

@@ -210,10 +210,9 @@ final class StargateServerHub implements Listener {
     var chunk = event.getChunk();
     hubs.stream()
         .filter(hub -> hub.gate().worldId().equals(chunk.getWorld().getUID()))
-        .filter(
-            hub ->
-                hub.gate().sign().x() >> 4 == chunk.getX()
-                    && hub.gate().sign().z() >> 4 == chunk.getZ())
+        .filter(hub ->
+            hub.gate().sign().x() >> 4 == chunk.getX()
+                && hub.gate().sign().z() >> 4 == chunk.getZ())
         .forEach(hub -> display(hub, event.getPlayer()));
   }
 

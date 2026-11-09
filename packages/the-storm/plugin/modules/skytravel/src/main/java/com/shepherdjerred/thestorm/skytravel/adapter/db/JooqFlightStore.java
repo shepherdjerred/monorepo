@@ -20,48 +20,44 @@ public final class JooqFlightStore implements FlightStore {
 
   @Override
   public CompletableFuture<List<FlightLease>> load() {
-    return database.read(
-        dsl ->
-            dsl.selectFrom(SKYTRAVEL_FLIGHTS)
-                .fetch(
-                    row ->
-                        new FlightLease(
-                            UUID.fromString(row.getPlayer()),
-                            FlightLease.Phase.valueOf(row.getPhase()),
-                            Instant.ofEpochMilli(row.getAssistedUntil()),
-                            Instant.ofEpochMilli(row.getProtectedUntil()),
-                            Instant.ofEpochMilli(row.getCooldownUntil()))));
+    return database.read(dsl ->
+        dsl.selectFrom(SKYTRAVEL_FLIGHTS)
+            .fetch(row ->
+                new FlightLease(
+                    UUID.fromString(row.getPlayer()),
+                    FlightLease.Phase.valueOf(row.getPhase()),
+                    Instant.ofEpochMilli(row.getAssistedUntil()),
+                    Instant.ofEpochMilli(row.getProtectedUntil()),
+                    Instant.ofEpochMilli(row.getCooldownUntil()))));
   }
 
   @Override
   public CompletableFuture<Void> save(FlightLease lease) {
-    return database.write(
-        dsl -> {
-          dsl.insertInto(SKYTRAVEL_FLIGHTS)
-              .set(SKYTRAVEL_FLIGHTS.PLAYER, lease.player().toString())
-              .set(SKYTRAVEL_FLIGHTS.PHASE, lease.phase().name())
-              .set(SKYTRAVEL_FLIGHTS.ASSISTED_UNTIL, lease.assistedUntil().toEpochMilli())
-              .set(SKYTRAVEL_FLIGHTS.PROTECTED_UNTIL, lease.protectedUntil().toEpochMilli())
-              .set(SKYTRAVEL_FLIGHTS.COOLDOWN_UNTIL, lease.cooldownUntil().toEpochMilli())
-              .onConflict(SKYTRAVEL_FLIGHTS.PLAYER)
-              .doUpdate()
-              .set(SKYTRAVEL_FLIGHTS.PHASE, lease.phase().name())
-              .set(SKYTRAVEL_FLIGHTS.ASSISTED_UNTIL, lease.assistedUntil().toEpochMilli())
-              .set(SKYTRAVEL_FLIGHTS.PROTECTED_UNTIL, lease.protectedUntil().toEpochMilli())
-              .set(SKYTRAVEL_FLIGHTS.COOLDOWN_UNTIL, lease.cooldownUntil().toEpochMilli())
-              .execute();
-          return (Void) null;
-        });
+    return database.write(dsl -> {
+      dsl.insertInto(SKYTRAVEL_FLIGHTS)
+          .set(SKYTRAVEL_FLIGHTS.PLAYER, lease.player().toString())
+          .set(SKYTRAVEL_FLIGHTS.PHASE, lease.phase().name())
+          .set(SKYTRAVEL_FLIGHTS.ASSISTED_UNTIL, lease.assistedUntil().toEpochMilli())
+          .set(SKYTRAVEL_FLIGHTS.PROTECTED_UNTIL, lease.protectedUntil().toEpochMilli())
+          .set(SKYTRAVEL_FLIGHTS.COOLDOWN_UNTIL, lease.cooldownUntil().toEpochMilli())
+          .onConflict(SKYTRAVEL_FLIGHTS.PLAYER)
+          .doUpdate()
+          .set(SKYTRAVEL_FLIGHTS.PHASE, lease.phase().name())
+          .set(SKYTRAVEL_FLIGHTS.ASSISTED_UNTIL, lease.assistedUntil().toEpochMilli())
+          .set(SKYTRAVEL_FLIGHTS.PROTECTED_UNTIL, lease.protectedUntil().toEpochMilli())
+          .set(SKYTRAVEL_FLIGHTS.COOLDOWN_UNTIL, lease.cooldownUntil().toEpochMilli())
+          .execute();
+      return (Void) null;
+    });
   }
 
   @Override
   public CompletableFuture<Void> reset(UUID player) {
-    return database.write(
-        dsl -> {
-          dsl.deleteFrom(SKYTRAVEL_FLIGHTS)
-              .where(SKYTRAVEL_FLIGHTS.PLAYER.eq(player.toString()))
-              .execute();
-          return (Void) null;
-        });
+    return database.write(dsl -> {
+      dsl.deleteFrom(SKYTRAVEL_FLIGHTS)
+          .where(SKYTRAVEL_FLIGHTS.PLAYER.eq(player.toString()))
+          .execute();
+      return (Void) null;
+    });
   }
 }

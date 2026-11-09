@@ -297,11 +297,10 @@ public final class LaunchFlights implements Listener {
     var _ =
         store
             .save(lease)
-            .whenComplete(
-                (ignored, failure) -> {
-                  if (failure != null)
-                    context.logger().error("Skylands flight transition did not persist", failure);
-                });
+            .whenComplete((ignored, failure) -> {
+              if (failure != null)
+                context.logger().error("Skylands flight transition did not persist", failure);
+            });
   }
 
   private boolean assistChecks(Player player) {
