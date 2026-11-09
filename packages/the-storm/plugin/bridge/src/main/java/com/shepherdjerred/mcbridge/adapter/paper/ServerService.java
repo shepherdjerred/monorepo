@@ -227,12 +227,11 @@ public final class ServerService {
             throw new BridgeException(ErrorCode.UNSUPPORTED, "Capture preparation is unavailable");
           return access
               .prepare(player.getUniqueId(), resource, identity)
-              .thenApply(
-                  _ -> {
-                    var result = new JsonObject();
-                    result.addProperty("prepared", true);
-                    return result;
-                  });
+              .thenApply(_ -> {
+                var result = new JsonObject();
+                result.addProperty("prepared", true);
+                return result;
+              });
         },
         MainThread.DEFAULT_TIMEOUT);
   }

@@ -64,11 +64,10 @@ final class Guard {
 
   boolean gateCells(UUID owner, PaperGrid grid, List<Pos> cells) {
     return cells.stream()
-        .allMatch(
-            pos ->
-                historicalGateCell(owner, grid.location(pos))
-                    || (!protection.isPreserved(grid.location(pos))
-                        && automaticCells(owner, grid, List.of(pos)).isAllowed()));
+        .allMatch(pos ->
+            historicalGateCell(owner, grid.location(pos))
+                || (!protection.isPreserved(grid.location(pos))
+                    && automaticCells(owner, grid, List.of(pos)).isAllowed()));
   }
 
   private Decision cells(

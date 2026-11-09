@@ -116,16 +116,15 @@ final class ParcelBookTest {
     var custody = config.parcels().stream().filter(p -> p.id().startsWith("mondo-")).toList();
     assertThat(custody)
         .hasSize(11)
-        .allSatisfy(
-            p -> {
-              assertThat(p.owners()).containsExactly(owner);
-              assertThat(p.kind()).isEqualTo(ParcelKind.HERITAGE);
-              assertThat(p.weeklyRent()).isZero();
-              assertThat(p.area().from().y()).isEqualTo(p.area().to().y());
-              assertThat(p.area().to().x() - p.area().from().x()).isBetween(0, 1);
-              assertThat(p.area().to().z() - p.area().from().z()).isBetween(0, 1);
-              assertThat(p.provenance()).contains("Historical ownership is unknown");
-            });
+        .allSatisfy(p -> {
+          assertThat(p.owners()).containsExactly(owner);
+          assertThat(p.kind()).isEqualTo(ParcelKind.HERITAGE);
+          assertThat(p.weeklyRent()).isZero();
+          assertThat(p.area().from().y()).isEqualTo(p.area().to().y());
+          assertThat(p.area().to().x() - p.area().from().x()).isBetween(0, 1);
+          assertThat(p.area().to().z() - p.area().from().z()).isBetween(0, 1);
+          assertThat(p.provenance()).contains("Historical ownership is unknown");
+        });
     var book = new ParcelBook(config, InstantSource.fixed(EXPIRY));
     var state = new TownsState(new RegionIndex(List.of()));
     state.attachParcels(book);

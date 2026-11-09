@@ -136,9 +136,8 @@ final class GravesPaperTest {
     harness.until(() -> harness.graves.ownedBy(alice.getUniqueId()).size() == 1);
     assertThat(harness.store.loadAll().join())
         .singleElement()
-        .satisfies(
-            contents ->
-                assertThat(contents.grave().pos()).isEqualTo(new GravePos("world", 30, 5, 0)));
+        .satisfies(contents ->
+            assertThat(contents.grave().pos()).isEqualTo(new GravePos("world", 30, 5, 0)));
     assertThat(GraveBlocks.idAt(harness.world.getBlockAt(30, 5, 0))).isPresent();
   }
 

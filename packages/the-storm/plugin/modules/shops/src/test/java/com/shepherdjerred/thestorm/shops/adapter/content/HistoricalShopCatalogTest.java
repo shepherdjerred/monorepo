@@ -127,20 +127,18 @@ final class HistoricalShopCatalogTest {
     var entries = HistoricalShopCatalog.load();
     assertThat(entries.stream().filter(e -> e.id().equals("2015-recovered-2132-64--3572")))
         .singleElement()
-        .satisfies(
-            entry -> {
-              assertThat(entry.expectedLines()).containsExactly("[Buy]", "64 Carrots", "for", "10");
-              assertThat(entry.quantity()).isEqualTo(64);
-              assertThat(entry.price()).isEqualTo(32);
-            });
+        .satisfies(entry -> {
+          assertThat(entry.expectedLines()).containsExactly("[Buy]", "64 Carrots", "for", "10");
+          assertThat(entry.quantity()).isEqualTo(64);
+          assertThat(entry.price()).isEqualTo(32);
+        });
     assertThat(entries.stream().filter(e -> e.id().equals("2015-recovered-2151-81--3466")))
         .singleElement()
-        .satisfies(
-            entry -> {
-              assertThat(entry.expectedLines()).containsExactly("[Sell]", "8 Wool", "for", ".5");
-              assertThat(entry.quantity()).isEqualTo(16);
-              assertThat(entry.price()).isEqualTo(1);
-            });
+        .satisfies(entry -> {
+          assertThat(entry.expectedLines()).containsExactly("[Sell]", "8 Wool", "for", ".5");
+          assertThat(entry.quantity()).isEqualTo(16);
+          assertThat(entry.price()).isEqualTo(1);
+        });
   }
 
   @Test

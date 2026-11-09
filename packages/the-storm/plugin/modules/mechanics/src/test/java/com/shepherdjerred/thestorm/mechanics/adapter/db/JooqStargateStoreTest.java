@@ -122,13 +122,12 @@ final class JooqStargateStoreTest {
       if (input == null) throw new IllegalStateException("missing migration " + migration);
       var sql = new String(input.readAllBytes(), UTF_8);
       target
-          .write(
-              dsl -> {
-                for (var statement : sql.split(";", -1)) {
-                  if (!statement.isBlank()) dsl.execute(statement);
-                }
-                return null;
-              })
+          .write(dsl -> {
+            for (var statement : sql.split(";", -1)) {
+              if (!statement.isBlank()) dsl.execute(statement);
+            }
+            return null;
+          })
           .get();
     }
   }
