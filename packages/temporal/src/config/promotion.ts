@@ -43,6 +43,7 @@ export async function promotionConfig() {
           maxSteps: 80,
           timeoutMinutes: 15,
           monthlySolverUsd: 10,
+          dailySpendUsd: 5,
           enabledTargets: [],
         }),
         names: { flag: "the-storm-promotion-settings" },
