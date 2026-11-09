@@ -21,6 +21,8 @@ mod instances;
 mod ios_agenda;
 #[path = "runtime_tests/live_configuration.rs"]
 mod live_configuration;
+#[path = "runtime_tests/features/plugin_metadata.rs"]
+mod plugin_metadata;
 
 #[path = "runtime_tests/binary_commands.rs"]
 mod binary_commands;

@@ -9,16 +9,14 @@ const PLUGIN: &str = ".obsidian/plugins/tasknotes/data.json";
 
 #[test]
 fn full_official_plugin_mapping_reindexes_downloaded_tasks() -> Result<()> {
-    let defaults: Value =
-        serde_json::from_str(include_str!("../../../tasknotes-vault/src/defaults.json"))?;
-    let mut mapping = defaults
+    let published: Value = serde_json::from_str(include_str!(
+        "../../../../../tasknotes-fixtures/vault/tasknotes-model-0.3.0-rc.18-mapping.json"
+    ))?;
+    let mapping = published
         .get("fieldMapping")
         .and_then(Value::as_object)
         .ok_or(RuntimeError::NotFound)?
         .clone();
-    for role in ["timeEstimate", "timeEntries", "pomodoros"] {
-        mapping.insert(role.to_owned(), json!(role));
-    }
     let plugin = serde_json::to_vec(&json!({
         "fieldMapping": mapping, "storeTitleInFilename": false,
         "taskIdentificationMethod": "tag", "taskTag": "task"
