@@ -106,6 +106,26 @@ final class HistoricalLiftProtectionTest {
             PaperProtection.serverHistoricalLiftLand(
                 new Land.HeritageLand(edited, Set.of(OWNER), new Land.Wilderness())))
         .isFalse();
+
+    assertThat(
+            PaperProtection.serverHistoricalCircuitLand(
+                new Land.HeritageLand(site, Set.of(), new Land.Wilderness())))
+        .isTrue();
+    assertThat(PaperProtection.serverHistoricalCircuitLand(new Land.Wilderness())).isFalse();
+    assertThat(PaperProtection.serverHistoricalCircuitLand(owned)).isFalse();
+    assertThat(PaperProtection.serverHistoricalCircuitLand(resetting)).isFalse();
+    assertThat(
+            PaperProtection.serverHistoricalCircuitLand(
+                new Land.HeritageLand(site, Set.of(), new Land.WorkLand(site.asRegion()))))
+        .isFalse();
+    assertThat(
+            PaperProtection.serverHistoricalCircuitLand(
+                new Land.HeritageLand(edited, Set.of(OWNER), new Land.Wilderness())))
+        .isFalse();
+    assertThat(
+            PaperProtection.serverHistoricalCircuitLand(
+                new Land.HeritageLand(site, Set.of(OWNER), new Land.Wilderness())))
+        .isFalse();
   }
 
   @Test

@@ -116,7 +116,7 @@ final class PaperProtection implements Protection {
   @Override
   public boolean mayOperateServerHistoricalCircuit(Location location) {
     requireMainThread();
-    return serverSpawnLift(guard.land(location));
+    return serverHistoricalCircuitLand(guard.land(location));
   }
 
   @Override
@@ -151,6 +151,11 @@ final class PaperProtection implements Protection {
         && site.editors().isEmpty()
         && editors.isEmpty()
         && underlying instanceof Land.Wilderness;
+  }
+
+  /** Original logic can run on preserved staff-held land without inventing a player owner. */
+  static boolean serverHistoricalCircuitLand(Land land) {
+    return land instanceof Land.HeritageLand && serverHistoricalLiftLand(land);
   }
 
   static boolean publicShopLift(Land land, UUID owner) {

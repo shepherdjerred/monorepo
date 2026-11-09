@@ -1635,6 +1635,11 @@ they do not need a coordinate catalog or a database row. Unsigned player
 interactions use the player's land rights. Background machinery uses a recorded
 creator or an unambiguous permitted land editor. Every affected cell still
 requires permission, and unloaded chunks stay unloaded.
+Original logic circuits can also operate within a preserved area held in staff
+custody when it has no player editors or underlying claim. This does not grant
+player building or inventory access; farm machines still check permissions for
+their resources and every affected cell. Ownership, rentals and recovery work
+boundaries stop this custody authority.
 
 The following original IC identifiers are recognized on the second sign line:
 
