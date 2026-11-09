@@ -1320,7 +1320,10 @@ bun packages/temporal/scripts/promotion/production-handoff.ts
 
 `--state-dir` selects a different local ledger. Applying additionally requires
 `--apply`, `TEMPORAL_NAMESPACE=prod`, publishing disabled, and the existing
-authenticated object-storage/flag environment. The importer refuses active
+authenticated object-storage/flag environment. The `--apply` CLI initializes
+and closes the flag provider using the existing `FEATURE_FLAGS_MODE`,
+`FLIPT_URL`, `FLIPT_NAMESPACE` and `FLIPT_ENVIRONMENT` bootstrap; dry runs do not
+connect to it. The importer refuses active
 local owners and conflicting production state. It preserves pauses, cooldowns,
 and unresolved effects, uploads content-addressed evidence, then records a
 completion digest. An interrupted identical import can resume; an existing

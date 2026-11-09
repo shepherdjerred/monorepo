@@ -14,11 +14,28 @@ vi.mock("#activities/promotion/store.ts", async (original) => ({
 }));
 import { promotionConfig } from "#config/promotion.ts";
 import { promotionStore } from "#activities/promotion/store.ts";
-import { applyProductionHandoff } from "./production-handoff.ts";
+import {
+  applyProductionHandoff,
+  runProductionHandoff,
+} from "./production-handoff.ts";
 import { z } from "zod/v4";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import { localPromotionStore } from "./local-store.ts";
+import {
+  initFeatureFlags,
+  shutdownFeatureFlags,
+} from "@shepherdjerred/feature-flags";
+vi.mock("@shepherdjerred/feature-flags", () => ({
+  initFeatureFlags: vi.fn(),
+  shutdownFeatureFlags: vi.fn(),
+}));
 beforeEach(() => {
   vi.stubEnv("TEMPORAL_NAMESPACE", "prod");
   storage.send.mockReset();
+  vi.mocked(initFeatureFlags).mockReset();
+  vi.mocked(shutdownFeatureFlags).mockReset();
   vi.mocked(promotionConfig).mockResolvedValue({
     available: true,
     enabled: false,
@@ -81,4 +98,28 @@ it("refuses import when publishing configuration could not be read freshly", asy
     "fresh publishing configuration",
   );
   expect(storage.send).not.toHaveBeenCalled();
+});
+it("initializes flags only when applying and closes them after a failed safety check", async () => {
+  const directory = await mkdtemp(
+    path.join(tmpdir(), "promotion-flag-lifecycle-"),
+  );
+  const database = await localPromotionStore(directory);
+  database.close();
+  try {
+    await runProductionHandoff(directory, false);
+    expect(initFeatureFlags).not.toHaveBeenCalled();
+    const configuration = await promotionConfig();
+    vi.mocked(promotionConfig).mockResolvedValue({
+      ...configuration,
+      available: false,
+    });
+    await expect(runProductionHandoff(directory, true)).rejects.toThrow(
+      "fresh publishing configuration",
+    );
+    expect(initFeatureFlags).toHaveBeenCalledOnce();
+    expect(shutdownFeatureFlags).toHaveBeenCalledOnce();
+    expect(storage.send).not.toHaveBeenCalled();
+  } finally {
+    await rm(directory, { recursive: true });
+  }
 });

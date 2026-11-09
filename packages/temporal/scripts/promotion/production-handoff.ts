@@ -6,6 +6,10 @@ import { realpath } from "node:fs/promises";
 import { parseArgs } from "node:util";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { z } from "zod/v4";
+import {
+  initFeatureFlags,
+  shutdownFeatureFlags,
+} from "@shepherdjerred/feature-flags";
 import type { PromotionBatchSchema } from "@shepherdjerred/ops-model/promotion/model.ts";
 import { promotionStore } from "#activities/promotion/store.ts";
 import { promotionConfig } from "#config/promotion.ts";
@@ -133,24 +137,31 @@ async function preflightWrites(
   return pending;
 }
 
+export async function runProductionHandoff(directory: string, apply: boolean) {
+  const plan = await prepareProductionHandoff(directory);
+  if (!apply)
+    return {
+      dryRun: true,
+      objects: plan.objects.size,
+      artifacts: plan.artifacts.size,
+    };
+  try {
+    await initFeatureFlags();
+    return await applyProductionHandoff(plan);
+  } finally {
+    await shutdownFeatureFlags();
+  }
+}
+
 if (import.meta.main) {
   const { values } = parseArgs({
     args: Bun.argv.slice(2),
     options: { "state-dir": { type: "string" }, apply: { type: "boolean" } },
   });
-  const plan = await prepareProductionHandoff(
+  const result = await runProductionHandoff(
     values["state-dir"] ??
       path.join(homedir(), ".local/state/the-storm/promotion"),
+    values.apply === true,
   );
-  process.stdout.write(
-    JSON.stringify(
-      values.apply === true
-        ? await applyProductionHandoff(plan)
-        : {
-            dryRun: true,
-            objects: plan.objects.size,
-            artifacts: plan.artifacts.size,
-          },
-    ) + "\n",
-  );
+  process.stdout.write(JSON.stringify(result) + "\n");
 }
