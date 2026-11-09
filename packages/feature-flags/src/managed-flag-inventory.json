@@ -1046,13 +1046,6 @@
           "issue": "AI-442",
           "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
           "reviewBy": "2026-12-07"
-        },
-        {
-          "environment": "prod",
-          "reason": "The Temporal worker that runs runCiExtendedVerifyWorkflow and the config extension that accepts CI_EXTENDED_REQUEST deploy from the same change; dispatching before both run would only record failures.",
-          "issue": "AI-485",
-          "enableWhen": "Both deployments run the merged revision and a triggered ci-extended-verify-nightly schedule produces one manual main pipeline whose verify-extended workflow completes successfully.",
-          "reviewBy": "2026-11-30"
         }
       ]
     },
@@ -1439,13 +1432,6 @@
           "issue": "AI-442",
           "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
           "reviewBy": "2026-12-07"
-        },
-        {
-          "environment": "prod",
-          "reason": "The config extension and the Temporal worker that dispatches the nightly run must be deployed from the same change before a request can succeed.",
-          "issue": "AI-485",
-          "enableWhen": "Both deployments run the merged revision and a triggered ci-extended-verify-nightly schedule produces one manual main pipeline whose verify-extended workflow completes successfully.",
-          "reviewBy": "2026-11-30"
         }
       ]
     },
@@ -4887,7 +4873,7 @@
         {
           "key": "woodpecker-extended-verify-enabled",
           "type": "boolean",
-          "default": false,
+          "default": true,
           "rollouts": [],
           "rules": [],
           "thresholdRollouts": []
@@ -4895,7 +4881,7 @@
         {
           "key": "ci-extended-verify-dispatch-enabled",
           "type": "boolean",
-          "default": false,
+          "default": true,
           "rollouts": [],
           "rules": [],
           "thresholdRollouts": []
