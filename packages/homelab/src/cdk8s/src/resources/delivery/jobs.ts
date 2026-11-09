@@ -3,11 +3,14 @@ import { ServiceAccount } from "cdk8s-plus-31";
 import {
   KubeNamespace,
   KubeNetworkPolicy,
+  KubePersistentVolumeClaim,
   KubeRole,
   KubeRoleBinding,
   KubeServiceAccount,
   IntOrString,
+  Quantity,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import { NVME_STORAGE_CLASS_LZ4 } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { LocalQueueV1Beta2 } from "@shepherdjerred/homelab/cdk8s/generated/imports/kueue.x-k8s.io.ts";
 import {
@@ -24,6 +27,8 @@ import {
 import { DELIVERY_PLATFORM_ITEMS } from "homelab/src/delivery-platform-grants.ts";
 import {
   DELIVERY_STAGE_LOCAL_QUEUE,
+  DELIVERY_STAGE_WORKSPACE_CLAIMS,
+  DELIVERY_STAGE_WORKSPACE_PROFILES_BY_NAMESPACE,
   LEGACY_DELIVERY_STAGE_LOCAL_QUEUE,
 } from "homelab/src/delivery-stage-admission.ts";
 
@@ -70,6 +75,7 @@ export function createDeliveryJobs(
     metadata: { name: "delivery-stage", namespace },
     automountServiceAccountToken: false,
   });
+  createStageWorkspaceClaims(chart, namespace);
   if (profile === "platform") createRecoveryInspector(chart, namespace);
   const account = new ServiceAccount(chart, controllerName, {
     metadata: { name: controllerName },
@@ -186,6 +192,40 @@ export function createDeliveryJobs(
     },
   });
   return account;
+}
+
+/**
+ * Persistent stage workspaces (`DELIVERY_STAGE_WORKSPACE_CLAIMS`). Stage pods
+ * run as uid 1000 with `fsGroup`, and the ZFS driver applies it only to
+ * ReadWriteOnce claims, so these are RWO: every stage Job runs on liskov, and
+ * RWO still lets a Job on the same node mount it while the Job's own lock
+ * serializes use. Rebuildable from the revision and lockfile, so never backed
+ * up; `ZfsPVCStorageHigh` is the fill backstop.
+ */
+function createStageWorkspaceClaims(
+  chart: Chart,
+  namespace: keyof typeof DELIVERY_STAGE_WORKSPACE_PROFILES_BY_NAMESPACE,
+) {
+  for (const profile of DELIVERY_STAGE_WORKSPACE_PROFILES_BY_NAMESPACE[
+    namespace
+  ]) {
+    const { claim, size } = DELIVERY_STAGE_WORKSPACE_CLAIMS[profile];
+    new KubePersistentVolumeClaim(chart, `${namespace}-${claim}`, {
+      metadata: {
+        name: claim,
+        namespace,
+        labels: {
+          "velero.io/backup": "disabled",
+          "velero.io/exclude-from-backup": "true",
+        },
+      },
+      spec: {
+        accessModes: ["ReadWriteOnce"],
+        storageClassName: NVME_STORAGE_CLASS_LZ4,
+        resources: { requests: { storage: Quantity.fromString(size) } },
+      },
+    });
+  }
 }
 
 /**

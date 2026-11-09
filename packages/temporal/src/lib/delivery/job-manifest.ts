@@ -14,12 +14,24 @@ import {
   DeliveryJobRequestSchema,
   deliveryJobArchive,
   deliveryJobNamespace,
+  deliveryStageWorkspaceClaim,
   type DeliveryJobRequest,
 } from "#shared/delivery-job.ts";
 import { RecoveryJobInputSchema } from "./platform/recovery/request.ts";
 
 const PREFIX = "delivery.shepherdjerred.com/";
 const QUEUE_LABEL = "kueue.x-k8s.io/queue-name";
+/** Logs only: the root filesystem is read-only and the workspace is a claim. */
+const STAGE_EPHEMERAL_STORAGE_LIMIT = "4Gi";
+/**
+ * The workspace layout of Jobs created before the persistent stage claims: a
+ * fresh emptyDir on the OS disk, sized and requested as ephemeral storage.
+ * Adoption and recovery treat exactly that layout as the current one.
+ */
+const RETIRED_WORKSPACE_LAYOUT = {
+  volume: { name: "workspace", emptyDir: { sizeLimit: "32Gi" } },
+  ephemeralStorage: "32Gi",
+} as const;
 export function deliveryJobManifest(raw: DeliveryJobRequest): V1Job {
   const input = DeliveryJobRequestSchema.parse(raw);
   const hash = createHash("sha256").update(canonicalJson(input)).digest("hex");
@@ -72,11 +84,19 @@ export function deliveryJobManifest(raw: DeliveryJobRequest): V1Job {
             runAsUser: 1000,
             runAsGroup: 1000,
             fsGroup: 1000,
+            // The workspace claim is chowned once, when first mounted, not
+            // recursively across a checkout and node_modules on every Job.
+            fsGroupChangePolicy: "OnRootMismatch",
             runAsNonRoot: true,
             seccompProfile: { type: "RuntimeDefault" },
           },
           volumes: [
-            { name: "workspace", emptyDir: { sizeLimit: "32Gi" } },
+            {
+              name: "workspace",
+              persistentVolumeClaim: {
+                claimName: deliveryStageWorkspaceClaim(input.recipe),
+              },
+            },
             {
               name: "docker",
               secret: {
@@ -180,7 +200,7 @@ export function deliveryJobManifest(raw: DeliveryJobRequest): V1Job {
                 limits: {
                   cpu: "8",
                   memory: "16Gi",
-                  "ephemeral-storage": "32Gi",
+                  "ephemeral-storage": STAGE_EPHEMERAL_STORAGE_LIMIT,
                 },
               },
             },
@@ -314,8 +334,11 @@ export function assertMatchingDeliveryJob(
   actual: V1Job,
   expected: V1Job,
 ): void {
-  const a = withCurrentBootstrap(actual.spec?.template.spec);
   const e = expected.spec?.template.spec;
+  const a = withCurrentWorkspace(
+    withCurrentBootstrap(actual.spec?.template.spec),
+    e,
+  );
   if (
     !jobIdentityMatches(actual, expected) ||
     canonicalJson(normalizePod(a)) !== canonicalJson(normalizePod(e)) ||
@@ -345,6 +368,65 @@ function withCurrentBootstrap(pod: V1PodSpec | undefined) {
   const adopted = structuredClone(pod);
   for (const container of adopted.containers)
     container.command = ["/bin/bash", "-c", DELIVERY_JOB_BOOTSTRAP];
+  return adopted;
+}
+
+/**
+ * Exactly the retired layout: the 32Gi emptyDir, the matching ephemeral
+ * request and limit, and no fsGroup change policy.
+ */
+function hasRetiredWorkspaceLayout(pod: V1PodSpec): boolean {
+  const container = pod.containers.length === 1 ? pod.containers[0] : undefined;
+  const workspace = pod.volumes?.find((volume) => volume.name === "workspace");
+  const retiredVolume =
+    workspace !== undefined &&
+    canonicalJson(workspace) === canonicalJson(RETIRED_WORKSPACE_LAYOUT.volume);
+  const retiredRequest =
+    container?.resources?.requests?.["ephemeral-storage"] ===
+    RETIRED_WORKSPACE_LAYOUT.ephemeralStorage;
+  const retiredLimit =
+    container?.resources?.limits?.["ephemeral-storage"] ===
+    RETIRED_WORKSPACE_LAYOUT.ephemeralStorage;
+  const noChangePolicy = pod.securityContext?.fsGroupChangePolicy === undefined;
+  return noChangePolicy && retiredVolume && retiredRequest && retiredLimit;
+}
+
+/**
+ * A Job created before the persistent stage claims keeps its emptyDir
+ * workspace and 32Gi ephemeral-storage request. Treat exactly that retired
+ * layout as the current claim, limit and fsGroup policy, so adoption and
+ * recovery still compare every other execution input; any other workspace
+ * volume or storage request fails.
+ */
+function withCurrentWorkspace(
+  pod: V1PodSpec | undefined,
+  expected: V1PodSpec | undefined,
+): V1PodSpec | undefined {
+  const expectedWorkspace = expected?.volumes?.find(
+    (volume) => volume.name === "workspace",
+  );
+  if (
+    pod === undefined ||
+    expectedWorkspace === undefined ||
+    !hasRetiredWorkspaceLayout(pod)
+  )
+    return pod;
+  const adopted = structuredClone(pod);
+  adopted.volumes = (adopted.volumes ?? []).map((volume) =>
+    volume.name === "workspace" ? structuredClone(expectedWorkspace) : volume,
+  );
+  const resources = adopted.containers[0]?.resources;
+  if (resources?.requests !== undefined && resources.limits !== undefined) {
+    resources.requests["ephemeral-storage"] =
+      DELIVERY_STAGE_REQUESTS["ephemeral-storage"];
+    resources.limits["ephemeral-storage"] = STAGE_EPHEMERAL_STORAGE_LIMIT;
+  }
+  const fsGroupChangePolicy = expected?.securityContext?.fsGroupChangePolicy;
+  if (
+    fsGroupChangePolicy !== undefined &&
+    adopted.securityContext !== undefined
+  )
+    adopted.securityContext.fsGroupChangePolicy = fsGroupChangePolicy;
   return adopted;
 }
 

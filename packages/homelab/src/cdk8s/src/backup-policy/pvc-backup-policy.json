@@ -12,6 +12,24 @@
     "reason": "Durable maintenance ownership and native resource identity receipts for Storm delivery and recovery"
   },
   {
+    "namespace": "delivery-worker-jobs",
+    "name": "delivery-stage-workspace-full",
+    "backup": "disabled",
+    "reason": "Persistent Delivery stage workspace (checkout, node_modules, Bun cache, linked mise toolchain) - rebuilt from the revision and lockfile by the next stage Job"
+  },
+  {
+    "namespace": "delivery-worker-jobs",
+    "name": "delivery-stage-workspace-production",
+    "backup": "disabled",
+    "reason": "Persistent Delivery stage workspace (checkout, node_modules, Bun cache, linked mise toolchain) - rebuilt from the revision and lockfile by the next stage Job"
+  },
+  {
+    "namespace": "delivery-platform-jobs",
+    "name": "delivery-stage-workspace-full",
+    "backup": "disabled",
+    "reason": "Persistent Delivery stage workspace (checkout, node_modules, Bun cache, linked mise toolchain) - rebuilt from the revision and lockfile by the next stage Job"
+  },
+  {
     "namespace": "minecraft-tsmc-delivery-validation",
     "name": "datadir-minecraft-tsmc-0",
     "backup": "disabled",

@@ -370,6 +370,68 @@ describe("Delivery infrastructure", () => {
   });
 });
 
+describe("Delivery stage workspace claims", () => {
+  it("gives each Job namespace its persistent stage workspace claims and never backs them up", () => {
+    const Claims = z.array(
+      z.object({
+        kind: z.string(),
+        metadata: z.object({
+          name: z.string(),
+          namespace: z.string(),
+          labels: z.record(z.string(), z.string()).optional(),
+        }),
+        spec: z
+          .object({
+            accessModes: z.array(z.string()),
+            storageClassName: z.string(),
+            resources: z.object({
+              requests: z.object({ storage: z.string() }),
+            }),
+          })
+          .optional(),
+      }),
+    );
+    const claims = (["worker", "platform"] as const).flatMap((profile) => {
+      const chart = new Chart(new App(), `${profile}-claims`, {
+        namespace: "temporal",
+      });
+      createDeliveryJobs(
+        chart,
+        profile,
+        "ngzmppq52zm7sii6ato2mv3sbi",
+        profile === "platform" ? "xxk3nflc5cjsgnnyh7tpprzyfe" : undefined,
+      );
+      return Claims.parse(
+        z
+          .array(z.object({ kind: z.string() }).loose())
+          .parse(chart.toJson())
+          .filter((resource) => resource.kind === "PersistentVolumeClaim"),
+      );
+    });
+    expect(
+      claims.map(
+        (claim) =>
+          `${claim.metadata.namespace}/${claim.metadata.name} ${claim.spec?.resources.requests.storage ?? ""}`,
+      ),
+    ).toEqual([
+      "delivery-worker-jobs/delivery-stage-workspace-full 40Gi",
+      "delivery-worker-jobs/delivery-stage-workspace-production 20Gi",
+      "delivery-platform-jobs/delivery-stage-workspace-full 40Gi",
+    ]);
+    for (const claim of claims) {
+      // RWO so the ZFS driver applies the stage pods' fsGroup; lz4 on the pool.
+      expect(claim.spec).toMatchObject({
+        accessModes: ["ReadWriteOnce"],
+        storageClassName: "zfs-ssd-lz4",
+      });
+      expect(claim.metadata.labels).toMatchObject({
+        "velero.io/backup": "disabled",
+        "velero.io/exclude-from-backup": "true",
+      });
+    }
+  });
+});
+
 describe("Delivery execution and service bootstrap", () => {
   it("keeps disposable stage Pods tokenless and controller grants confined to their own namespace", () => {
     const chart = new Chart(new App(), "job-contract", {
