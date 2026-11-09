@@ -142,6 +142,9 @@ the events itself. These need a real server:
   unless the power comes from a control or wire on land that is not equally
   private to the owner, including a claim of the same town whose switches are
   public. This is judged when the machine fires, so sharing a claim stops it.
+  Triggers the owner builds on the claim stay the owner's choice: a trapped
+  chest whose lock others can open, a sculk sensor or a lectern wired to the
+  machine lets others fire it, as in vanilla.
   Elsewhere redstone stays blocked until the owner runs `/lock redstone on`,
   because someone else could flip the owner's lever. Only players who can
   open the lock may wire beside it. `/lock info` shows grants and options.

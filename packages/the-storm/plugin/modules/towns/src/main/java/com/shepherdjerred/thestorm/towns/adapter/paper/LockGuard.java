@@ -141,7 +141,10 @@ final class LockGuard {
    * power it stands on such a claim too, so nobody else can work its controls. A neighbouring claim
    * of the same town counts only while it is private as well: its public switches would otherwise
    * let anyone fire the machine. Both are judged when the machine fires, so it stops on its own
-   * once a claim is shared or a control on other land is wired to it.
+   * once a claim is shared or a control on other land is wired to it. Only the owner can build on
+   * such a claim, so a trigger there that others can work (a trapped chest under a lock they may
+   * open, a sculk sensor) is the owner's own design, as in vanilla; the check looks one component
+   * deep and does not trace a circuit back to its source.
    */
   boolean mayAutomate(Block block) {
     var lock = lockOf(block);
