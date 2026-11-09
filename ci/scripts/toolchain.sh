@@ -51,7 +51,7 @@ fi
 MISE_BOOTSTRAP_VERSION="v2026.10.6"
 # An image baked before the pin carries an older mise that rejects the
 # lockfile's format, so replace any mise older than the pin, not only a missing
-# one. The installer targets ~/.local/bin, which the PATH below puts first.
+# one. The bootstrap targets ~/.local/bin, which the PATH below puts first.
 mise_current() {
   command -v mise >/dev/null || return 1
   installed=$(mise --version | awk 'NR == 1 {print $1}')
@@ -59,8 +59,44 @@ mise_current() {
   oldest=$(printf '%s\n%s\n' "${MISE_BOOTSTRAP_VERSION#v}" "$installed" | sort -V | head -n 1)
   [ "$oldest" = "${MISE_BOOTSTRAP_VERSION#v}" ]
 }
-mise_current ||
-  curl -fsSL https://mise.run | MISE_VERSION="$MISE_BOOTSTRAP_VERSION" sh
+# SHA-256 of the pinned release's portable musl archives, copied from its
+# minisign-verified SHASUMS256.txt (the key ci/ci-image/Dockerfile pins).
+# Checking against the repository rather than a manifest fetched at run time
+# means the bootstrap neither depends on GitHub serving that manifest nor runs
+# an unpinned installer script. Asset names carry the version, so a version
+# bump without new checksums fails scripts/checks/deps/check-mise-lock-sync.ts.
+MISE_BOOTSTRAP_SHA256="63b7d112411240a3c5a8cf381d3916997de7515483eb678f08920d5c77923dc4  mise-v2026.10.6-linux-x64-musl.tar.gz
+760b274537301cf78828254b133182ea38af27df2c0606766dc650f5c0618df0  mise-v2026.10.6-linux-arm64-musl.tar.gz"
+install_bootstrap_mise() {
+  case "$(uname -m)" in
+    x86_64 | amd64) mise_arch=x64 ;;
+    aarch64 | arm64) mise_arch=arm64 ;;
+    *)
+      echo "toolchain: no pinned mise bootstrap for $(uname -m)" >&2
+      return 1
+      ;;
+  esac
+  mise_asset="mise-${MISE_BOOTSTRAP_VERSION}-linux-${mise_arch}-musl.tar.gz"
+  mise_download=$(mktemp -d)
+  printf '%s\n' "$MISE_BOOTSTRAP_SHA256" |
+    awk -v asset="$mise_asset" '$2 == asset' >"$mise_download/SHA256SUMS"
+  if [ ! -s "$mise_download/SHA256SUMS" ]; then
+    echo "toolchain: no pinned checksum for $mise_asset" >&2
+    return 1
+  fi
+  # The pinned checksum, not the host, authenticates the archive. Like the
+  # upstream installer, prefer the release mirror and fall back to GitHub.
+  curl -fsSL "https://mise.jdx.dev/${MISE_BOOTSTRAP_VERSION}/${mise_asset}" \
+    -o "$mise_download/$mise_asset" ||
+    curl -fsSL "https://github.com/jdx/mise/releases/download/${MISE_BOOTSTRAP_VERSION}/${mise_asset}" \
+      -o "$mise_download/$mise_asset"
+  (cd "$mise_download" && sha256sum -c SHA256SUMS)
+  tar -xzf "$mise_download/$mise_asset" -C "$mise_download" mise/bin/mise
+  mkdir -p "$HOME/.local/bin"
+  mv "$mise_download/mise/bin/mise" "$HOME/.local/bin/mise"
+  rm -rf "$mise_download"
+}
+mise_current || install_bootstrap_mise
 if [ "$(id -u)" -eq 0 ]; then
   # Root-hosted tests drop Postgres server processes to nobody. Keep the
   # mise shims and installed binaries outside /root so that user can execute

@@ -88,21 +88,50 @@ describe("lockViolations", () => {
 
 describe("bootstrapViolations", () => {
   const dockerfile = "FROM x\nARG MISE_VERSION=v2026.10.6\n";
+  const sum = "a".repeat(64);
+  const toolchain = (version: string, assetVersion = version) =>
+    `MISE_BOOTSTRAP_VERSION="${version}"\nMISE_BOOTSTRAP_SHA256="${sum}  mise-${assetVersion}-linux-x64-musl.tar.gz\n${sum}  mise-${assetVersion}-linux-arm64-musl.tar.gz"\n`;
 
   test("accepts matching pins", () => {
-    expect(
-      bootstrapViolations(dockerfile, 'MISE_BOOTSTRAP_VERSION="v2026.10.6"\n'),
-    ).toEqual([]);
+    expect(bootstrapViolations(dockerfile, toolchain("v2026.10.6"))).toEqual(
+      [],
+    );
   });
 
   test("reports drift between ci-base and the stale-image bootstrap", () => {
-    expect(
-      bootstrapViolations(dockerfile, 'MISE_BOOTSTRAP_VERSION="v2026.9.1"\n'),
-    ).toEqual([
+    expect(bootstrapViolations(dockerfile, toolchain("v2026.9.1"))).toEqual([
       {
         file: "ci/scripts/toolchain.sh",
         message:
           'MISE_BOOTSTRAP_VERSION="v2026.9.1" does not match ci/ci-image/Dockerfile\'s ARG MISE_VERSION=v2026.10.6',
+      },
+    ]);
+  });
+
+  test("reports checksums left behind by a version bump", () => {
+    expect(
+      bootstrapViolations(dockerfile, toolchain("v2026.10.6", "v2026.9.1")),
+    ).toEqual([
+      {
+        file: "ci/scripts/toolchain.sh",
+        message:
+          "MISE_BOOTSTRAP_SHA256 has no checksum for mise-v2026.10.6-linux-x64-musl.tar.gz",
+      },
+      {
+        file: "ci/scripts/toolchain.sh",
+        message:
+          "MISE_BOOTSTRAP_SHA256 has no checksum for mise-v2026.10.6-linux-arm64-musl.tar.gz",
+      },
+    ]);
+  });
+
+  test("requires pinned bootstrap checksums", () => {
+    expect(
+      bootstrapViolations(dockerfile, 'MISE_BOOTSTRAP_VERSION="v2026.10.6"\n'),
+    ).toEqual([
+      {
+        file: "ci/scripts/toolchain.sh",
+        message: "no MISE_BOOTSTRAP_SHA256 found",
       },
     ]);
   });

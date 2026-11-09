@@ -128,13 +128,39 @@ export function bootstrapViolations(
       { file: TOOLCHAIN_SCRIPT, message: "no MISE_BOOTSTRAP_VERSION found" },
     ];
   }
-  if (imagePin === bootstrapPin) return [];
-  return [
-    {
+  const violations: Violation[] = [];
+  if (imagePin !== bootstrapPin) {
+    violations.push({
       file: TOOLCHAIN_SCRIPT,
       message: `MISE_BOOTSTRAP_VERSION="${bootstrapPin}" does not match ${CI_IMAGE_DOCKERFILE}'s ARG MISE_VERSION=${imagePin}`,
-    },
-  ];
+    });
+  }
+  // The bootstrap verifies its archive against these pinned checksums, so a
+  // version bump must refresh them from the release's signed SHASUMS256.txt.
+  const checksums = /^MISE_BOOTSTRAP_SHA256="([^"]*)"$/mu.exec(toolchain)?.[1];
+  if (checksums === undefined) {
+    violations.push({
+      file: TOOLCHAIN_SCRIPT,
+      message: "no MISE_BOOTSTRAP_SHA256 found",
+    });
+    return violations;
+  }
+  const pinned = new Set(
+    checksums
+      .split("\n")
+      .map((line) => /^[a-f0-9]{64} {2}(\S+)$/u.exec(line)?.[1])
+      .filter((asset) => asset !== undefined),
+  );
+  for (const arch of ["x64", "arm64"]) {
+    const asset = `mise-${bootstrapPin}-linux-${arch}-musl.tar.gz`;
+    if (!pinned.has(asset)) {
+      violations.push({
+        file: TOOLCHAIN_SCRIPT,
+        message: `MISE_BOOTSTRAP_SHA256 has no checksum for ${asset}`,
+      });
+    }
+  }
+  return violations;
 }
 
 async function main(): Promise<void> {
