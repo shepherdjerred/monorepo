@@ -1,7 +1,6 @@
 import {
   plexRoleActivities,
-  createMediaActivityTestWorker,
-  createAcquisitionFileTestWorker,
+  startMediaAcquisitionTestWorkers,
 } from "#activities/media/testing/activity-workers.ts";
 import { replayWorkflowFile } from "#activities/media/testing/process.ts";
 import path from "node:path";
@@ -141,10 +140,9 @@ test.each([undefined, "Season 02/03.mkv", "Season02/E03.mkv"])(
         directory,
         childEnvironment,
       });
-      const network = await createMediaActivityTestWorker(environment, {
-        namespace: "dev",
-        taskQueue: TASK_QUEUES.MEDIA_NETWORK,
-        activities: {
+      await startMediaAcquisitionTestWorkers(
+        environment,
+        {
           ...createAcquisitionNetworkWorkerActivities(scenario.loadAcquisition),
           ...createCatalogCoverageWorkerActivities(() =>
             Promise.resolve({ catalogCoverage: scenario.catalogCoverage }),
@@ -153,16 +151,9 @@ test.each([undefined, "Season 02/03.mkv", "Season02/E03.mkv"])(
           refreshMediaCatalog: scenario.refreshMediaCatalog,
           finishMediaOperation: scenario.finishMediaOperation,
         },
-      });
-      workers.push(network);
-      running.push(network.run());
-      const files = await createAcquisitionFileTestWorker(
-        environment,
-        "dev",
         () => Promise.resolve({ acquisition: scenario.fileAcquisition }),
+        { workers, running },
       );
-      workers.push(files);
-      running.push(files.run());
       const started = await runStages(scenario, environment);
       const evidence = await scenario.evidence();
       expect(evidence.episode).toMatchObject({

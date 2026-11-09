@@ -11,6 +11,21 @@ import {
 
 type AuthorityDatabase = RuntimeProofDatabase;
 
+/** Keep the caller's observed epoch/version stable under the runtime UPDATE lock. */
+export async function lockUnchangedRuntime(
+  tx: Prisma.TransactionClient,
+  before: { recoveryEpoch: number; version: number },
+) {
+  await tx.$queryRaw`SELECT id FROM "MediaRuntimeState" WHERE id = 'singleton' FOR UPDATE`;
+  const current = await tx.mediaRuntimeState.findUniqueOrThrow({
+    where: { id: "singleton" },
+  });
+  return current.recoveryEpoch === before.recoveryEpoch &&
+    current.version === before.version
+    ? current
+    : null;
+}
+
 /** Runtime permission requires current storage, or retired-writer proof for adopted storage. */
 export async function runtimeAuthority(
   db: AuthorityDatabase,

@@ -14,7 +14,7 @@ import { QuiescenceEvidenceSchema } from "#shared/legacy-observer.ts";
 import { LEGACY_OBSERVER_CONFIG } from "#integrations/legacy-observer/config.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import { runtimeAuthority } from "#infrastructure/handoff/authority.ts";
-import { queueOwnerHealth } from "#infrastructure/notifications/owner-health.ts";
+import { revokeObservedStorage } from "#infrastructure/handoff/storage.ts";
 import { assertNativeStorageRoots } from "./storage-provenance.ts";
 
 export async function refreshNativeStorageAuthorities(input: {
@@ -91,23 +91,9 @@ export async function refreshNativeStorageAuthorities(input: {
     await tx.$queryRaw`SELECT id FROM "LegacyWriterLease" WHERE id = 'singleton' FOR SHARE`;
     const valid = await verifyRenewal(tx, { proof, approved });
     if (!valid || proof === null || approved === null) {
-      await tx.mediaStorageAuthority.updateMany({
+      await revokeObservedStorage(tx, {
         where: { recoveryEpoch: runtime.recoveryEpoch },
-        data: { revokedAt: new Date(), version: { increment: 1 } },
-      });
-      const revoked = await tx.mediaRuntimeState.update({
-        where: { id: "singleton" },
-        data: {
-          mode: "observe",
-          ownershipConfirmed: false,
-          version: { increment: 1 },
-        },
-      });
-      await queueOwnerHealth(tx, {
-        schemaVersion: 1,
-        reason: "media_storage_authority_revoked",
-        recoveryEpoch: revoked.recoveryEpoch,
-        runtimeVersion: revoked.version,
+        revokeRuntime: true,
         evidenceDigest: snapshotHash(z.json().parse(proof)),
       });
       return;

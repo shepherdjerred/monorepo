@@ -148,6 +148,18 @@ export async function assertCompensationOwner(
   }
 }
 
+export async function assertCompensationPublicationRuntime(
+  tx: Prisma.TransactionClient,
+  epoch: number,
+  budget: PublicationAuthorityReadBudget,
+) {
+  const runtime = await runtimeAuthority(tx, budget);
+  if (!runtime.active || runtime.epoch !== epoch)
+    throw new NativeCompensationProtection(
+      "compensation_publication_runtime_changed",
+    );
+}
+
 export async function assertNativeCompensation(
   tx: Prisma.TransactionClient,
   input: NativeCompensationActivityInput,

@@ -1,3 +1,4 @@
+import { lockUnchangedRuntime } from "./authority.ts";
 import type { Database } from "#infrastructure/database.ts";
 import {
   QuiescenceEvidenceSchema,
@@ -22,15 +23,8 @@ export async function refreshManagedWriterLease(
   } catch {
     const failedAt = new Date();
     await db.$transaction(async (tx) => {
-      await tx.$queryRaw`SELECT id FROM "MediaRuntimeState" WHERE id = 'singleton' FOR UPDATE`;
-      const runtime = await tx.mediaRuntimeState.findUniqueOrThrow({
-        where: { id: "singleton" },
-      });
-      if (
-        runtime.recoveryEpoch !== before.recoveryEpoch ||
-        runtime.version !== before.version
-      )
-        return;
+      const runtime = await lockUnchangedRuntime(tx, before);
+      if (runtime === null) return;
       const previous = await tx.legacyWriterLease.findUnique({
         where: { id: "singleton" },
       });
@@ -98,15 +92,8 @@ export async function refreshWriterLease(
       ),
     );
   await db.$transaction(async (tx) => {
-    await tx.$queryRaw`SELECT id FROM "MediaRuntimeState" WHERE id = 'singleton' FOR UPDATE`;
-    const runtime = await tx.mediaRuntimeState.findUniqueOrThrow({
-      where: { id: "singleton" },
-    });
-    if (
-      runtime.recoveryEpoch !== before.recoveryEpoch ||
-      runtime.version !== before.version
-    )
-      return;
+    const runtime = await lockUnchangedRuntime(tx, before);
+    if (runtime === null) return;
     const previous = await tx.legacyWriterLease.findUnique({
       where: { id: "singleton" },
     });

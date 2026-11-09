@@ -1,4 +1,4 @@
-import { createAcquisitionRoleTestWorkers } from "#activities/media/testing/activity-workers.ts";
+import { startAcquisitionRoleTestWorkers } from "#activities/media/testing/activity-workers.ts";
 import path from "node:path";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -83,14 +83,12 @@ beforeAll(async () => {
     directory,
     childEnvironment,
   });
-  const { network, files } = await createAcquisitionRoleTestWorkers(
+  await startAcquisitionRoleTestWorkers(
     environment,
     scenario,
+    workers,
+    running,
   );
-  workers.push(network);
-  running.push(network.run());
-  workers.push(files);
-  running.push(files.run());
   prepared = {
     scenario,
     before,

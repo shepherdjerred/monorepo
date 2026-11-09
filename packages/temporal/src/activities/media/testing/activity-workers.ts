@@ -4,6 +4,7 @@ import {
   createAcquisitionFileWorkerActivities,
   createAcquisitionNetworkWorkerActivities,
 } from "#activities/media/acquisition.ts";
+import type { MediaNetworkActivities } from "@shepherdjerred/media/automation";
 import { createPlexPublicationActivities } from "#activities/media/plex-publication.ts";
 import { createPlexBoundConsumerActivities } from "#activities/media/plex-consumers.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
@@ -60,6 +61,26 @@ type PlexRoleRuntime = Awaited<
 > &
   Awaited<ReturnType<Parameters<typeof createPlexBoundConsumerActivities>[0]>>;
 
+type AcquisitionRoleScenario = PlexRoleRuntime & {
+  acquisition: NetworkAcquisition;
+  fileAcquisition: FileAcquisition;
+  finishMediaOperation: MediaNetworkActivities["finishMediaOperation"];
+};
+
+function acquisitionRoleActivities(
+  scenario: AcquisitionRoleScenario,
+  extraNetworkActivities: object = {},
+) {
+  return {
+    ...createAcquisitionNetworkWorkerActivities(() =>
+      Promise.resolve({ acquisition: scenario.acquisition }),
+    ),
+    ...extraNetworkActivities,
+    ...plexRoleActivities(() => Promise.resolve(scenario)),
+    finishMediaOperation: scenario.finishMediaOperation,
+  };
+}
+
 /**
  * The Network and Files role workers an acquisition journey needs: Network
  * runs acquisition, Plex publication/consumers and operation completion.
@@ -67,27 +88,54 @@ type PlexRoleRuntime = Awaited<
  */
 export async function createAcquisitionRoleTestWorkers(
   environment: TestWorkflowEnvironment,
-  scenario: PlexRoleRuntime & {
-    acquisition: NetworkAcquisition;
-    fileAcquisition: FileAcquisition;
-    finishMediaOperation: (...args: never[]) => Promise<unknown>;
-  },
+  scenario: AcquisitionRoleScenario,
   extraNetworkActivities: object = {},
 ) {
   const network = await createMediaActivityTestWorker(environment, {
     namespace: "dev",
     taskQueue: TASK_QUEUES.MEDIA_NETWORK,
-    activities: {
-      ...createAcquisitionNetworkWorkerActivities(() =>
-        Promise.resolve({ acquisition: scenario.acquisition }),
-      ),
-      ...extraNetworkActivities,
-      ...plexRoleActivities(() => Promise.resolve(scenario)),
-      finishMediaOperation: scenario.finishMediaOperation,
-    },
+    activities: acquisitionRoleActivities(scenario, extraNetworkActivities),
   });
   const files = await createAcquisitionFileTestWorker(environment, "dev", () =>
     Promise.resolve({ acquisition: scenario.fileAcquisition }),
   );
   return { network, files };
+}
+
+/** Register each owned worker before running it, retaining partial-start cleanup. */
+export async function startAcquisitionRoleTestWorkers(
+  environment: TestWorkflowEnvironment,
+  scenario: AcquisitionRoleScenario,
+  workers: Worker[],
+  running: Promise<void>[],
+) {
+  await startMediaAcquisitionTestWorkers(
+    environment,
+    acquisitionRoleActivities(scenario),
+    () => Promise.resolve({ acquisition: scenario.fileAcquisition }),
+    { workers, running },
+  );
+}
+
+/** Keep caller-specific lazy loaders and Activities on their original role queues. */
+export async function startMediaAcquisitionTestWorkers(
+  environment: TestWorkflowEnvironment,
+  activities: ActivityOptions["activities"],
+  loadFiles: Parameters<typeof createAcquisitionFileWorkerActivities>[0],
+  lifetime: { workers: Worker[]; running: Promise<void>[] },
+) {
+  const network = await createMediaActivityTestWorker(environment, {
+    namespace: "dev",
+    taskQueue: TASK_QUEUES.MEDIA_NETWORK,
+    activities,
+  });
+  lifetime.workers.push(network);
+  lifetime.running.push(network.run());
+  const files = await createAcquisitionFileTestWorker(
+    environment,
+    "dev",
+    loadFiles,
+  );
+  lifetime.workers.push(files);
+  lifetime.running.push(files.run());
 }

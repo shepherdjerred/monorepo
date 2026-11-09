@@ -1,3 +1,4 @@
+import { writerObservation } from "#testing/authority.ts";
 import { afterAll, expect, test } from "vitest";
 import { readFile, rm } from "node:fs/promises";
 import path from "node:path";
@@ -15,7 +16,6 @@ import {
   CanonicalMountEvidenceSchema,
   NativeStorageAuthoritySchema,
 } from "#shared/canonical-storage.ts";
-import { QuiescenceEvidenceSchema } from "#shared/legacy-observer.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import { LEGACY_OBSERVER_CONFIG } from "#integrations/legacy-observer/config.ts";
 import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
@@ -134,32 +134,7 @@ async function managedRestore() {
   });
   const stored = await db.mediaStorageAuthority.findFirstOrThrow();
   const mounts = CanonicalMountEvidenceSchema.parse(stored.evidence);
-  const quiescence = () => {
-    const now = new Date();
-    return QuiescenceEvidenceSchema.parse({
-      schemaVersion: 1,
-      namespace: "media",
-      capturedAt: now.toISOString(),
-      expiresAt: new Date(now.getTime() + 90_000).toISOString(),
-      configurationDigest: snapshotHash(LEGACY_OBSERVER_CONFIG),
-      targetsDigest: snapshotHash(LEGACY_OBSERVER_CONFIG.legacyDeployments),
-      inventoryDigest: "a".repeat(64),
-      quiescent: true,
-      blockers: [],
-      controllers: LEGACY_OBSERVER_CONFIG.legacyDeployments.map((name) => ({
-        kind: "Deployment",
-        name,
-        uid: name,
-        generation: 1,
-        resourceVersion: "1",
-        specDigest: "b".repeat(64),
-        observedGeneration: 1,
-        desired: 0,
-        current: 0,
-        ready: 0,
-      })),
-    });
-  };
+
   const observer: NativeRecoveryObserverContext = {
     db,
     expectedServerMachineId: "fixture-server",
@@ -167,7 +142,7 @@ async function managedRestore() {
     plex: harness.context().plex,
     qbittorrent: { listAll: async () => [] },
     observer: {
-      observe: async () => quiescence(),
+      observe: async () => writerObservation(true),
       observeCanonicalMounts: async () => mounts,
       observeMountBindings: async () => {
         throw new Error("Managed restore has no legacy bindings");

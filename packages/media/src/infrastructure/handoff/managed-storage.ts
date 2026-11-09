@@ -1,3 +1,4 @@
+import { lockUnchangedRuntime } from "./authority.ts";
 import type { Database } from "#infrastructure/database.ts";
 import type { createLegacyObserver } from "#integrations/legacy-observer/runtime.ts";
 import { CanonicalMountEvidenceSchema } from "#shared/canonical-storage.ts";
@@ -5,7 +6,7 @@ import { refreshNativeStorageAuthorities } from "#infrastructure/native-recovery
 import { LEGACY_OBSERVER_CONFIG } from "#integrations/legacy-observer/config.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import { isManagedStorage } from "./runtime-proof.ts";
-import { queueOwnerHealth } from "#infrastructure/notifications/owner-health.ts";
+import { revokeObservedStorage } from "./storage.ts";
 import { z } from "zod";
 
 /** A fresh installation observes its own ready file worker, independently of old apps. */
@@ -61,15 +62,8 @@ export async function refreshManagedStorage(
     /* Unavailable observations revoke permission, never invent storage identity. */
   }
   await db.$transaction(async (tx) => {
-    await tx.$queryRaw`SELECT id FROM "MediaRuntimeState" WHERE id = 'singleton' FOR UPDATE`;
-    const runtime = await tx.mediaRuntimeState.findUniqueOrThrow({
-      where: { id: "singleton" },
-    });
-    if (
-      runtime.version !== before.version ||
-      runtime.recoveryEpoch !== before.recoveryEpoch
-    )
-      return;
+    const runtime = await lockUnchangedRuntime(tx, before);
+    if (runtime === null) return;
     const current = await tx.mediaStorageAuthority.findMany({
       where: { rootPath: { in: ["/data/movies", "/data/tv"] } },
     });
@@ -98,27 +92,11 @@ export async function refreshManagedStorage(
       })
     ) {
       if (current.length === 0) return;
-      await tx.mediaStorageAuthority.updateMany({
+      await revokeObservedStorage(tx, {
         where: { rootPath: { in: ["/data/movies", "/data/tv"] } },
-        data: { revokedAt: new Date(), version: { increment: 1 } },
+        revokeRuntime: runtime.mode === "active",
+        evidenceDigest: snapshotHash(proof),
       });
-      if (runtime.mode === "active") {
-        const revoked = await tx.mediaRuntimeState.update({
-          where: { id: "singleton" },
-          data: {
-            mode: "observe",
-            ownershipConfirmed: false,
-            version: { increment: 1 },
-          },
-        });
-        await queueOwnerHealth(tx, {
-          schemaVersion: 1,
-          reason: "media_storage_authority_revoked",
-          recoveryEpoch: revoked.recoveryEpoch,
-          runtimeVersion: revoked.version,
-          evidenceDigest: snapshotHash(proof),
-        });
-      }
       return;
     }
     for (const mount of proof.mounts) {

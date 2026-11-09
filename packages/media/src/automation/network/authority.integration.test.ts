@@ -1,8 +1,7 @@
-import { afterAll, beforeAll, beforeEach, expect, test } from "vitest";
-import { startMediaTestPostgres } from "#testing/postgres.ts";
+import { beforeEach, expect, test } from "vitest";
+import { automationTestHarness } from "#testing/automation.ts";
+import { writerObservation } from "#testing/authority.ts";
 import { grantTestManagedStorage } from "#testing/managed-storage.ts";
-import { LEGACY_OBSERVER_CONFIG } from "#integrations/legacy-observer/config.ts";
-import { snapshotHash } from "#migration/profile-import.ts";
 import { CanonicalMountEvidenceSchema } from "#shared/canonical-storage.ts";
 import type { QuiescenceEvidence } from "#shared/legacy-observer.ts";
 import { refreshWriterLease } from "#infrastructure/handoff/lease.ts";
@@ -13,17 +12,11 @@ import {
 import { assertLatestLease } from "#automation/handoff/final-guards.ts";
 import { refreshMediaRuntimeAuthorities } from "#automation/network.ts";
 
-let cluster: Awaited<ReturnType<typeof startMediaTestPostgres>>;
-beforeAll(async () => {
-  cluster = await startMediaTestPostgres();
-}, 60_000);
-afterAll(async () => {
-  await cluster.close();
-});
+const { database } = automationTestHarness();
 beforeEach(async () => {
-  await cluster.database.mediaStorageAuthority.deleteMany();
-  await cluster.database.legacyWriterLease.deleteMany();
-  await cluster.database.mediaRuntimeState.update({
+  await database().mediaStorageAuthority.deleteMany();
+  await database().legacyWriterLease.deleteMany();
+  await database().mediaRuntimeState.update({
     where: { id: "singleton" },
     data: {
       mode: "active",
@@ -32,38 +25,11 @@ beforeEach(async () => {
       version: 0,
     },
   });
-  await grantTestManagedStorage(cluster.database);
+  await grantTestManagedStorage(database());
 });
 
-function stoppedWriters(): QuiescenceEvidence {
-  const now = Date.now();
-  return {
-    schemaVersion: 1,
-    namespace: "media",
-    capturedAt: new Date(now - 1000).toISOString(),
-    expiresAt: new Date(now + 89_000).toISOString(),
-    configurationDigest: snapshotHash(LEGACY_OBSERVER_CONFIG),
-    targetsDigest: snapshotHash(LEGACY_OBSERVER_CONFIG.legacyDeployments),
-    inventoryDigest: "a".repeat(64),
-    quiescent: true,
-    blockers: [],
-    controllers: LEGACY_OBSERVER_CONFIG.legacyDeployments.map((name) => ({
-      kind: "Deployment",
-      name,
-      uid: name,
-      generation: 1,
-      resourceVersion: "1",
-      specDigest: "b".repeat(64),
-      observedGeneration: 1,
-      desired: 0,
-      current: 0,
-      ready: 0,
-    })),
-  };
-}
-
 async function observer(observe: () => Promise<QuiescenceEvidence>) {
-  const row = await cluster.database.mediaStorageAuthority.findFirstOrThrow();
+  const row = await database().mediaStorageAuthority.findFirstOrThrow();
   const proof = CanonicalMountEvidenceSchema.parse(row.evidence);
   return {
     observe,
@@ -76,8 +42,8 @@ async function observer(observe: () => Promise<QuiescenceEvidence>) {
 }
 
 test("managed refresh records resumed legacy writers and rejects the previously reviewed handoff", async () => {
-  const db = cluster.database;
-  const stopped = stoppedWriters();
+  const db = database();
+  const stopped = writerObservation(true);
   await refreshWriterLease(db, async () => stopped);
   await expect(
     db.$transaction((tx) =>
@@ -111,8 +77,8 @@ test("managed refresh records resumed legacy writers and rejects the previously 
 test.each(["existing", "absent"] as const)(
   "unavailable legacy observer revokes %s handoff evidence without stopping managed acquisitions",
   async (prior) => {
-    const db = cluster.database;
-    const stopped = stoppedWriters();
+    const db = database();
+    const stopped = writerObservation(true);
     if (prior === "existing") await refreshWriterLease(db, async () => stopped);
     const before = await db.mediaStorageAuthority.findMany({
       orderBy: { rootPath: "asc" },
