@@ -21,8 +21,8 @@ import { RecoveryJobInputSchema } from "./platform/recovery/request.ts";
 
 const PREFIX = "delivery.shepherdjerred.com/";
 const QUEUE_LABEL = "kueue.x-k8s.io/queue-name";
-/** Logs only: the root filesystem is read-only and the workspace is a claim. */
-const STAGE_EPHEMERAL_STORAGE_LIMIT = "4Gi";
+/** Equal to the request: Kubernetes refuses a limit below it (see DELIVERY_STAGE_REQUESTS). */
+const STAGE_EPHEMERAL_STORAGE_LIMIT = "32Gi";
 /**
  * The workspace layout of Jobs created before the persistent stage claims: a
  * fresh emptyDir on the OS disk, sized and requested as ephemeral storage.
