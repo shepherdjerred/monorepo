@@ -96,10 +96,10 @@ test("performance flags preserve explicit false, reject invalid values and use d
   expect(await performanceConfig("main")).toEqual(defaults);
 });
 
-test("the extended verification lane defaults off, reads its production flag and fails closed on outage", async () => {
+test("the extended verification lane defaults on in production, reads its flag and keeps that default on outage", async () => {
   flag.mockResolvedValue(undefined);
   expect(await extendedVerifyConfig()).toMatchObject({
-    value: false,
+    value: true,
     source: "default",
   });
   expect(factory).toHaveBeenCalledWith({
@@ -125,7 +125,7 @@ test("the extended verification lane defaults off, reads its production flag and
   await expect(extendedVerifyConfig()).rejects.toThrow();
   flag.mockRejectedValue(new Error("Flag service unavailable"));
   expect(await extendedVerifyConfig()).toMatchObject({
-    value: false,
+    value: true,
     source: "default",
   });
 });
