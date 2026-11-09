@@ -4,20 +4,20 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "bun run generate && vite build",
+    "build": "vite build",
     "check:architecture": "check-architecture",
     "dev": "bun run src/dev.ts",
     "email:cancel-incident": "bun run scripts/cancel-pending-incident-email.ts",
     "docker:build": "docker buildx build --cache-from type=registry,ref=docker.io/shepherdjerred/alert-dashboard:buildcache ${DOCKER_BUILD_EXTRA_ARGS:-} --load -t alert-dashboard:dev -f Dockerfile ../..",
     "generate": "prisma generate",
-    "lint": "bun run generate && eslint . --max-warnings=0 && bun run check:architecture",
+    "lint": "eslint . --max-warnings=0 && bun run check:architecture",
     "migrate:deploy": "prisma migrate deploy",
     "start": "bun run src/server/index.ts",
-    "test": "bun run generate && bun --no-install --bun vitest --config ../../vitest.config.ts run src",
+    "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run src",
     "test:sqlite": "bun run generate && bun --no-install --bun vitest --config ../../vitest.config.ts run ./integration/sqlite.integration.test.ts",
     "test:e2e": "bun --no-install --bun playwright test",
     "test:ci": "bun ../../scripts/ci/run-ci-test.ts",
-    "typecheck": "bun run generate && PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit"
+    "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit"
   },
   "imports": {
     "#architecture": "./architecture.config.ts",

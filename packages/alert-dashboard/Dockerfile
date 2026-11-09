@@ -41,7 +41,7 @@ COPY --parents \
   packages/config \
   packages/feature-flags \
   ./
-RUN cd packages/alert-dashboard && bun run build
+RUN cd packages/alert-dashboard && bun run generate && bun run build
 
 FROM base AS prod-deps
 COPY --parents bun.lock bunfig.toml patches/ ./

@@ -3,12 +3,6 @@
   "package": "@shepherdjerred/delivery",
   "steps": [
     {
-      "runner": "command",
-      "name": "generate",
-      "tier": "shared",
-      "command": ["bun", "run", "generate"]
-    },
-    {
       "runner": "vitest",
       "args": ["src", "--exclude", "**/*.integration.test.ts"]
     },

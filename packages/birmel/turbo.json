@@ -27,6 +27,11 @@
     // backend hit exactly this in build 5789).
     "lint": {
       "dependsOn": ["^build", "generate"]
+    },
+    // The bundle resolves #generated/prisma; scripts never regenerate, so
+    // concurrent readers never observe a client mid-rewrite.
+    "build": {
+      "dependsOn": ["^build", "generate"]
     }
   }
 }

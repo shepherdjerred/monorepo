@@ -184,13 +184,18 @@ accepted occurrence remains in the SQLite ledger.
 
 ## Scripts
 
+Turbo's `generate` task produces the Prisma client before `build`, `test`,
+`typecheck`, and `lint`; run those through Turbo from the repository root, or
+run `bun run generate` first. `test:sqlite` runs alone in its own CI step and
+generates inline.
+
 | Command                      | What it does                                                                          |
 | ---------------------------- | ------------------------------------------------------------------------------------- |
 | `bun run dev`                | API server + Vite dev server                                                          |
 | `bun run start`              | Production server (`src/server/index.ts`)                                             |
-| `bun run build`              | Prisma generate + Vite production build                                               |
+| `bun run build`              | Vite production build                                                                 |
 | `bun run generate`           | Generate the Prisma client                                                            |
-| `bun run typecheck`          | TypeScript (native `tsc`) after codegen                                               |
+| `bun run typecheck`          | TypeScript (native `tsc`)                                                             |
 | `bun run test`               | Unit tests (`bun run test src`)                                                       |
 | `bun run test:sqlite`        | SQLite integration test (`integration/sqlite.integration.test.ts`)                    |
 | `bun run test:e2e`           | Playwright tests against the fixture server (`e2e/server.ts`)                         |

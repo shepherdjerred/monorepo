@@ -61,15 +61,17 @@ best-effort agent runs rather than a staged workflow engine.
 
 ## Commands
 
-Run from `packages/birmel`:
+Run from `packages/birmel`. Turbo generates the Prisma client before `build`,
+`test`, `typecheck`, and `lint`, so run those through it from the repository
+root (`bunx turbo run test --filter=@shepherdjerred/birmel`):
 
 ```bash
 bun run dev          # build glitter context, generate Prisma, apply migrations, watch-run src/index.ts
 bun run start        # production startup path (scripts/start.ts): migrate deploy, then run the bot
 bun run build        # bundle src/index.ts to dist/
-bun run test         # generate Prisma against .env.test, then bun run test
-bun run typecheck    # tsc --noEmit (generates Prisma first)
-bun run lint         # eslint (generates Prisma first)
+bun run test         # vitest against .env.test
+bun run typecheck    # tsc --noEmit
+bun run lint         # eslint and the architecture check
 bun run smoke        # image smoke test (scripts/smoke.ts)
 ```
 
@@ -78,9 +80,12 @@ End-to-end capability checks run through `bun run test:e2e:openclaw-docker`.
 ## Prisma
 
 The schema lives at `prisma/schema.prisma` with versioned migrations in
-`prisma/migrations`. `bun run generate` (invoked automatically by the build,
-dev, test, typecheck, and lint scripts) runs `scripts/generate-prisma.ts`, a
-lock-guarded `prisma generate`. Storage is SQLite through
+`prisma/migrations`. `bun run generate` runs `scripts/generate-prisma.ts`, a
+lock-guarded `prisma generate`. Turbo's `generate` task runs it once before
+`build`, `test`, `test:ci`, `typecheck`, and `lint`; those scripts never
+regenerate, because `prisma generate` rewrites the client in place and a
+concurrent reader could import it half-written. Only the single-process `dev`
+and `start` entry points generate inline. Storage is SQLite through
 `@prisma/adapter-libsql`; startup (`scripts/start.ts`) fingerprints an existing
 unmigrated database, resolves the verified baseline when appropriate, and runs
 `prisma migrate deploy` before starting the bot.

@@ -3,11 +3,6 @@
   "package": "@shepherdjerred/alert-dashboard",
   "steps": [
     {
-      "runner": "command",
-      "name": "generate",
-      "command": ["bun", "run", "generate"]
-    },
-    {
       "runner": "vitest",
       "args": ["src"]
     }

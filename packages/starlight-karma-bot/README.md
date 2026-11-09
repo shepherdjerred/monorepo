@@ -37,10 +37,15 @@ A Discord bot for tracking karma points, built with Bun, discord.js v14, and Pri
 
 ## Development
 
+Turbo generates the Prisma client before `typecheck`, `lint`, and `test`; run
+those through it from the repository root
+(`bunx turbo run test --filter=starlight-karma-bot`), or run `bun run generate`
+first.
+
 ```bash
 bun run generate   # generate the Prisma client (scripts/generate-prisma.ts)
 bun run migrate    # deploy database migrations (scripts/migrate.ts)
-bun run typecheck  # generates first, then tsc
+bun run typecheck  # tsc --noEmit
 bun run lint
 bun run test
 bun run format     # prettier --check
