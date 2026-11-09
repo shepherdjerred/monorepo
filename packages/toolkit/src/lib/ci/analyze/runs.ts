@@ -32,11 +32,26 @@ const DiagnosticTaskSchema = z
   })
   .loose();
 
+const DiagnosticSuiteSchema = z
+  .object({
+    report: z.string().min(1),
+    name: z.string().min(1),
+    seconds: z.number().nonnegative(),
+    tests: z.number().int().nonnegative(),
+    failures: z.number().int().nonnegative(),
+  })
+  .loose();
+
 const DiagnosticsSchema = z
   .object({
     pipeline: z.coerce.number().int().positive(),
     commit: z.string().regex(/^[a-f\d]{40}$/u),
     turbo: z.array(z.object({ tasks: z.array(DiagnosticTaskSchema) }).loose()),
+    /** Per-suite JUnit timings; absent from diagnostics that predate them. */
+    testTimings: z
+      .object({ suites: z.array(DiagnosticSuiteSchema) })
+      .loose()
+      .optional(),
   })
   .loose();
 
@@ -54,12 +69,32 @@ const RunTaskSchema = z.object({
 });
 export type RunTask = z.infer<typeof RunTaskSchema>;
 
+const RunSuiteSchema = z.object({
+  /** `<workspace-dir>/<step>.xml` under the run's `.ci-reports/junit`. */
+  report: z.string(),
+  /** The `<workspace>::`-prefixed JUnit suite name, usually a test file. */
+  name: z.string(),
+  seconds: z.number().nonnegative(),
+  tests: z.number().int().nonnegative(),
+  failures: z.number().int().nonnegative(),
+});
+export type RunSuite = z.infer<typeof RunSuiteSchema>;
+
 const VerifyRunSchema = z.object({
   pipeline: z.number().int().positive(),
   commit: z.string(),
   tasks: z.array(RunTaskSchema),
+  /** Null when the diagnostics predate per-suite timings, not when none ran. */
+  suites: z.array(RunSuiteSchema).nullable(),
 });
 export type VerifyRun = z.infer<typeof VerifyRunSchema>;
+
+/**
+ * Compacted-run cache format. Bumped when `VerifyRun` gains a field, so a
+ * compaction written before the field existed is re-read from the source
+ * instead of parsing as a run that lacks it.
+ */
+const CACHE_FORMAT = 2;
 
 function ownInputsDigest(task: z.infer<typeof DiagnosticTaskSchema>): string {
   const inputs = Object.entries(task.inputHashes ?? {}).toSorted(
@@ -96,6 +131,16 @@ export function compactDiagnostics(raw: unknown): VerifyRun {
     pipeline: diagnostics.pipeline,
     commit: diagnostics.commit,
     tasks,
+    suites:
+      diagnostics.testTimings?.suites.map(
+        ({ report, name, seconds, tests, failures }) => ({
+          report,
+          name,
+          seconds,
+          tests,
+          failures,
+        }),
+      ) ?? null,
   };
 }
 
@@ -117,8 +162,48 @@ function isMissingObject(error: unknown): boolean {
 }
 
 /**
- * A finished pipeline's verify diagnostics, compacted and cached locally:
- * the source objects are about 50 MB each. Null when the pipeline wrote none.
+ * The verify step's diagnostics object, or the nightly extended run's for a
+ * pipeline that has no PR-shaped verify. Null when the pipeline wrote neither.
+ */
+const DIAGNOSTIC_OBJECTS = [
+  "diagnostics-verify.json",
+  "diagnostics-verify-extended.json",
+] as const;
+
+async function diagnosticsBody(
+  client: S3Client,
+  pipeline: number,
+): Promise<Uint8Array | null> {
+  for (const object of DIAGNOSTIC_OBJECTS) {
+    const signal = AbortSignal.timeout(120_000);
+    try {
+      const response = await client.send(
+        new GetObjectCommand({
+          Bucket: BUCKET,
+          Key: `${String(pipeline)}/${object}`,
+        }),
+        { abortSignal: signal },
+      );
+      if (response.Body === undefined)
+        throw new Error(
+          `Pipeline ${String(pipeline)} diagnostics have no body`,
+        );
+      return await boundedBenchmarkBody(
+        response.Body.transformToWebStream(),
+        MAX_DIAGNOSTIC_BYTES,
+        signal,
+      );
+    } catch (error) {
+      if (!isMissingObject(error)) throw error;
+    }
+  }
+  return null;
+}
+
+/**
+ * A finished pipeline's verify (or verify-extended) diagnostics, compacted
+ * and cached locally: the source objects are about 50 MB each. Null when the
+ * pipeline wrote none.
  */
 export async function loadVerifyRun(
   client: S3Client,
@@ -126,30 +211,14 @@ export async function loadVerifyRun(
   cacheDirectory: string,
 ): Promise<VerifyRun | null> {
   const cached = Bun.file(
-    path.join(cacheDirectory, `${String(pipeline)}.json`),
+    path.join(
+      cacheDirectory,
+      `${String(pipeline)}.v${String(CACHE_FORMAT)}.json`,
+    ),
   );
   if (await cached.exists()) return VerifyRunSchema.parse(await cached.json());
-  const signal = AbortSignal.timeout(120_000);
-  let body: Uint8Array;
-  try {
-    const response = await client.send(
-      new GetObjectCommand({
-        Bucket: BUCKET,
-        Key: `${String(pipeline)}/diagnostics-verify.json`,
-      }),
-      { abortSignal: signal },
-    );
-    if (response.Body === undefined)
-      throw new Error(`Pipeline ${String(pipeline)} diagnostics have no body`);
-    body = await boundedBenchmarkBody(
-      response.Body.transformToWebStream(),
-      MAX_DIAGNOSTIC_BYTES,
-      signal,
-    );
-  } catch (error) {
-    if (isMissingObject(error)) return null;
-    throw error;
-  }
+  const body = await diagnosticsBody(client, pipeline);
+  if (body === null) return null;
   const run = compactDiagnostics(JSON.parse(new TextDecoder().decode(body)));
   await mkdir(cacheDirectory, { recursive: true });
   await Bun.write(cached, JSON.stringify(run));

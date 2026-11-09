@@ -6,8 +6,26 @@ import { startBenchmarkResources } from "./benchmark-resources.ts";
 
 type Identity = Omit<
   TaskDiagnostics,
-  "turbo" | "browserSelection" | "collectionFailed"
+  "turbo" | "browserSelection" | "collectionFailed" | "testTimings"
 >;
+
+/**
+ * Workflows that wrap their command here. `verify-extended` is the nightly
+ * extended-tier run on main; it shares verify's diagnostics shape but never
+ * the scratch benchmark resources, which stay verify-only below.
+ */
+const DIAGNOSTIC_WORKFLOWS = [
+  "verify",
+  "playwright-e2e",
+  "verify-extended",
+] as const satisfies readonly Identity["workflow"][];
+
+/** The workflow named on the command line, or undefined for anything else. */
+function diagnosticWorkflow(
+  value: string | undefined,
+): Identity["workflow"] | undefined {
+  return DIAGNOSTIC_WORKFLOWS.find((workflow) => workflow === value);
+}
 
 /** Keep this entrypoint dependency-free until the child has installed packages. */
 export async function prepareDiagnostics(
@@ -67,6 +85,20 @@ async function measureWorkspace(
   }
 }
 
+/** Best effort: per-suite JUnit timings never change the step result. */
+async function measureTestTimings(
+  root: string,
+): Promise<TaskDiagnostics["testTimings"]> {
+  try {
+    const { collectTestTimings } =
+      await import("../lib/ci/timings/test-timings.ts");
+    return await collectTestTimings(root);
+  } catch {
+    console.error("CI test timing collection failed; omitted");
+    return undefined;
+  }
+}
+
 export async function retainDiagnostics(
   identity: Identity,
   before: ReadonlySet<string>,
@@ -85,6 +117,8 @@ export async function retainDiagnostics(
     );
     report = { ...identity, collectionFailed: true, turbo: [] };
   }
+  const testTimings = await measureTestTimings(root);
+  if (testTimings !== undefined) report = { ...report, testTimings };
   try {
     await upload(report);
     console.log(
@@ -149,6 +183,7 @@ async function retainFromArgs(args: string[]): Promise<number> {
       browserSelection: true,
       collectionFailed: true,
       workspaceUsage: true,
+      testTimings: true,
     }).parse(identity);
     const root = process.cwd();
     const workspaceUsage = await measureWorkspace(root);
@@ -184,14 +219,11 @@ function invocation(args: string[]): {
   commit: string;
   command: string[];
 } {
-  const [workflow, separator, ...command] = args;
-  if (
-    separator !== "--" ||
-    command.length === 0 ||
-    (workflow !== "verify" && workflow !== "playwright-e2e")
-  ) {
+  const [candidate, separator, ...command] = args;
+  const workflow = diagnosticWorkflow(candidate);
+  if (separator !== "--" || workflow === undefined || command.length === 0) {
     throw new Error(
-      "Usage: run-with-diagnostics.ts verify|playwright-e2e -- <command> [args]",
+      `Usage: run-with-diagnostics.ts ${DIAGNOSTIC_WORKFLOWS.join("|")} -- <command> [args]`,
     );
   }
   const pipeline = Bun.env["CI_PIPELINE_NUMBER"] ?? "";

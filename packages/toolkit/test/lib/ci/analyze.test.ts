@@ -32,6 +32,7 @@ const runs: VerifyRun[] = [
   {
     pipeline: 1,
     commit: "a".repeat(40),
+    suites: null,
     tasks: [
       task("app#test", "MISS", [0, 600_000]),
       task("lib#build", "MISS", [0, 60_000]),
@@ -41,6 +42,7 @@ const runs: VerifyRun[] = [
   {
     pipeline: 2,
     commit: "b".repeat(40),
+    suites: null,
     tasks: [
       // Same own inputs as run 1, which had finished: an upstream re-run.
       task("app#test", "MISS", [700_000, 1_300_000]),

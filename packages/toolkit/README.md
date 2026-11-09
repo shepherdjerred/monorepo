@@ -404,6 +404,7 @@ toolkit ci main                        # Current main verification and last comp
 toolkit ci load                        # Queue, compute/gate admission, CPU/memory/disk/I/O
 toolkit ci timings --since 72h --json   # Recent timing cohorts and per-workflow phases
 toolkit ci analyze --since 72h           # Uncached work, critical path, repeated misses, hot files
+toolkit ci analyze --suites --compare 4300  # Slowest test suites of the newest run; deltas from pipeline 4300
 toolkit pr review list 3447 --json      # Human and provider feedback with full bodies
 ```
 
@@ -422,6 +423,21 @@ verify's task list in the current checkout. Each file's commits on `--ref`
 cost of every task hash the file reaches, directly or through `dependsOn`.
 `--no-hot-files` skips the local graph. Costs come from task IDs seen in the
 window, so a renamed task counts as free until new runs record it.
+
+`toolkit ci analyze --suites` explains a slow test task by the files inside
+it. Verify diagnostics carry the `<testsuite>` summaries (name, seconds, tests,
+failures) of every JUnit report under `.ci-reports/junit`, which
+`scripts/lib/ci/test-timings.ts` collects best-effort after the task; the
+nightly `verify-extended` run and local `test:extended` runs leave the same
+reports, so their suites compare like-for-like. By default it prints the
+slowest suites of the newest finished ready-PR or main pipeline in `--since`;
+`--pipeline N` names one instead (a nightly `verify-extended` pipeline's
+diagnostics are read when it has no verify), and `--compare N` prints the largest
+per-suite changes from pipeline N to that run, followed by a count of the
+suites only one of them executed. A suite is listed only when its test task
+ran: `test:ci` declares no Turbo outputs, so a cache hit restores no report
+and the suite shows `-` on that side. Diagnostics from before per-suite
+collection existed are refused rather than read as "no suites".
 
 `toolkit ci benchmark evidence <PIPELINE> --head <full SHA> --variant baseline|candidate`
 recovers a terminal manual verify canary's retained resource evidence without

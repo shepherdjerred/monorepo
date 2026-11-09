@@ -1,6 +1,7 @@
 import { readdir } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
+import { TestTimingsSchema } from "./timings/test-timings.ts";
 import { WorkspaceUsageSchema } from "./workspace-usage.ts";
 
 const Timestamp = z.number().int().nonnegative();
@@ -133,13 +134,15 @@ export const TaskDiagnosticsSchema = z.object({
   version: z.literal(1),
   pipeline: z.string().regex(/^\d+$/u),
   commit: z.string().regex(/^[a-f\d]{40}$/u),
-  workflow: z.enum(["verify", "playwright-e2e"]),
+  workflow: z.enum(["verify", "playwright-e2e", "verify-extended"]),
   startedAt: Timestamp,
   finishedAt: Timestamp,
   exitCode: z.number().int(),
   collectionFailed: z.boolean(),
   benchmarkResources: BenchmarkResourcesSchema.optional(),
   workspaceUsage: WorkspaceUsageSchema.optional(),
+  /** Per-suite JUnit wall time; absent when its best-effort collection failed. */
+  testTimings: TestTimingsSchema.optional(),
   turbo: z.array(TurboDiagnosticSchema),
   browserSelection: BrowserSelectionSchema.optional(),
 });
