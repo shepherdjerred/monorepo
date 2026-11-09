@@ -1,4 +1,8 @@
 import { z } from "zod";
+import {
+  DELIVERY_STAGE_WORKSPACE_CLAIMS,
+  type DeliveryStageWorkspaceProfile,
+} from "homelab/src/delivery-stage-admission.ts";
 
 /** A stack archive fetched by digest from the Delivery artifact bucket (X8). */
 export const DeliveryJobArchiveSchema = z
@@ -40,6 +44,22 @@ export function deliveryJobNamespace(
     ? "delivery-worker-jobs"
     : "delivery-platform-jobs";
 }
+/**
+ * The persistent workspace a recipe runs in. Image provenance installs only
+ * the Temporal workspace's production closure; every other recipe installs
+ * every workspace, and the two must not alternate on one claim.
+ */
+export function deliveryStageWorkspaceProfile(
+  recipe: DeliveryJobRequest["recipe"],
+): DeliveryStageWorkspaceProfile {
+  return recipe === "worker-images" ? "production" : "full";
+}
+export function deliveryStageWorkspaceClaim(
+  recipe: DeliveryJobRequest["recipe"],
+): string {
+  return DELIVERY_STAGE_WORKSPACE_CLAIMS[deliveryStageWorkspaceProfile(recipe)]
+    .claim;
+}
 /** The archive a Job request names, when its input selects archive mode. */
 export function deliveryJobArchive(
   request: Pick<DeliveryJobRequest, "recipe" | "input">,
@@ -72,8 +92,14 @@ export const DELIVERY_ARCHIVE_ENDPOINT =
 /**
  * Input is validated by the selected source-owned handler, never executed as shell.
  *
- * The workspace is an emptyDir on liskov's OS disk, so every byte written here
- * wears that drive. The image toolchain is linked, not copied: version
+ * `/workspace` is the persistent stage claim of the recipe's install profile
+ * (`deliveryStageWorkspaceClaim`), reused by every Job of that profile. The
+ * lock serializes Jobs that share it: Kueue admits one stage Job at a time,
+ * and the lock covers a Job still queued on the CI-shared LocalQueue. Each Job
+ * discards the previous Job's scratch, then checks out its exact revision over
+ * the previous checkout and removes everything untracked except
+ * `node_modules`, so the tree equals the revision and only what the lockfile
+ * changed is written. The image toolchain is re-linked, not copied: version
  * directories hold symlinks into the read-only image, while mise's per-tool
  * metadata and alias links are real copies, so mise still sees every image
  * tool as installed and adds only a version the image lacks. Image provenance
@@ -81,6 +107,63 @@ export const DELIVERY_ARCHIVE_ENDPOINT =
  * workspace's runtime closure instead of every workspace's packages.
  */
 export const DELIVERY_JOB_BOOTSTRAP = String.raw`set -euo pipefail
+unset OP_SERVICE_ACCOUNT_TOKEN
+exec 9>/workspace/.lock
+flock 9
+rm -rf /workspace/tmp /workspace/bin /workspace/buildx
+mkdir -p /workspace/source /workspace/home /workspace/tmp /workspace/bin /workspace/mise
+cp -Rsf /opt/mise/. /workspace/mise/
+(cd /opt/mise && find installs -mindepth 1 -maxdepth 2 ! -type d -exec cp -PT --remove-destination {} /workspace/mise/{} \;)
+export MISE_DATA_DIR=/workspace/mise
+export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+git init -q /workspace/source
+git -C /workspace/source fetch --quiet --depth=1 https://github.com/shepherdjerred/monorepo.git "$DELIVERY_SOURCE_REVISION"
+git -C /workspace/source checkout --quiet --detach --force FETCH_HEAD
+git -C /workspace/source worktree prune
+git -C /workspace/source clean -fdxq -e node_modules
+test "$(git -C /workspace/source rev-parse HEAD)" = "$DELIVERY_SOURCE_REVISION"
+cd /workspace/source
+mise trust .mise.toml
+MISE_LOCKED=1 mise install --yes bun node gh jq helm argocd awscli opentofu aqua:temporalio/cli github:theseus-rs/postgresql-binaries
+tool_paths=$(mise bin-paths bun node gh jq helm argocd awscli opentofu aqua:temporalio/cli github:theseus-rs/postgresql-binaries)
+test -n "$tool_paths"
+export PATH="$(echo "$tool_paths" | paste -sd:):$PATH"
+recipe=$(jq -er '.recipe' <<< "$DELIVERY_JOB_REQUEST")
+if [ "$recipe" = worker-images ]; then
+  bun install --frozen-lockfile --production --filter=@shepherdjerred/temporal
+else
+  bun install --frozen-lockfile
+  bunx turbo run generate --filter=@shepherdjerred/temporal^...
+  bun run --cwd packages/llm-models build:runtime
+  bun build packages/toolkit/src/index.ts --compile --external ffmpeg-static --outfile=/workspace/bin/toolkit
+  export PATH="/workspace/bin:$PATH"
+fi
+if [ "$recipe" = test ]; then
+  test_workspace=$(jq -er '.input.workspace' <<< "$DELIVERY_JOB_REQUEST")
+  bunx turbo run generate --filter="{./$test_workspace}..."
+fi
+archive_uri=$(jq -r '.input.archive.uri // empty' <<< "$DELIVERY_JOB_REQUEST")
+if [ -n "$archive_uri" ]; then
+  archive_digest=$(jq -er '.input.archive.digest' <<< "$DELIVERY_JOB_REQUEST")
+  mkdir -p /workspace/stack
+  AWS_ACCESS_KEY_ID="$DELIVERY_ARCHIVE_READER_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$DELIVERY_ARCHIVE_READER_SECRET_ACCESS_KEY" AWS_DEFAULT_REGION=us-east-1 AWS_REQUEST_CHECKSUM_CALCULATION=WHEN_REQUIRED AWS_RESPONSE_CHECKSUM_VALIDATION=WHEN_REQUIRED aws --endpoint-url ${DELIVERY_ARCHIVE_ENDPOINT} s3 cp "$archive_uri" /workspace/tmp/stack-archive.tar --no-progress
+  observed_digest="sha256:$(sha256sum /workspace/tmp/stack-archive.tar | cut -d' ' -f1)"
+  test "$observed_digest" = "$archive_digest"
+  tar -xf /workspace/tmp/stack-archive.tar -C /workspace/stack
+  export DELIVERY_STACK_ARCHIVE_DIR=/workspace/stack
+fi
+cd packages/temporal
+bun scripts/jobs/run-delivery-job.ts
+`;
+
+/**
+ * Bootstraps of earlier releases, accepted only when adopting or recovering a
+ * Job one of them created; a new Job always runs DELIVERY_JOB_BOOTSTRAP.
+ * Remove an entry once no retained Job or recovery receipt can still name it.
+ */
+export const PREVIOUS_DELIVERY_JOB_BOOTSTRAPS: readonly string[] = [
+  // Prepared a fresh emptyDir workspace on the OS disk for every Job.
+  String.raw`set -euo pipefail
 unset OP_SERVICE_ACCOUNT_TOKEN
 mkdir -p /workspace/source /workspace/home /workspace/tmp /workspace/bin /workspace/mise
 cp -Rs /opt/mise/. /workspace/mise/
@@ -123,14 +206,7 @@ if [ -n "$archive_uri" ]; then
 fi
 cd packages/temporal
 bun scripts/jobs/run-delivery-job.ts
-`;
-
-/**
- * Bootstraps of earlier releases, accepted only when adopting or recovering a
- * Job one of them created; a new Job always runs DELIVERY_JOB_BOOTSTRAP.
- * Remove an entry once no retained Job or recovery receipt can still name it.
- */
-export const PREVIOUS_DELIVERY_JOB_BOOTSTRAPS: readonly string[] = [
+`,
   // Linked the image toolchain; ran no test-workspace or stack-archive step.
   String.raw`set -euo pipefail
 unset OP_SERVICE_ACCOUNT_TOKEN

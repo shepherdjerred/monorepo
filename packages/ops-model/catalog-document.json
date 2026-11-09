@@ -3956,7 +3956,17 @@
     },
     {
       "dependent": "delivery-control-plane/prod",
+      "prerequisite": "cluster-platform/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "delivery-control-plane/prod",
       "prerequisite": "kueue/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "delivery-control-plane/prod",
+      "prerequisite": "openebs/prod",
       "rule": "any-accepted"
     },
     {

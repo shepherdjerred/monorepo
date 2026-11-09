@@ -318,28 +318,135 @@ describe("bounded revision-pinned Delivery Jobs", () => {
   });
 });
 
-describe("liskov OS-disk Job bootstrap", () => {
-  it("links the image toolchain instead of copying it into the Job workspace", () => {
+describe("persistent stage workspace", () => {
+  it.each([
+    ["worker-images", "delivery-stage-workspace-production"],
+    ["worker-step", "delivery-stage-workspace-full"],
+    ["worker-preflight", "delivery-stage-workspace-full"],
+    ["test", "delivery-stage-workspace-full"],
+    ["tofu-apply", "delivery-stage-workspace-full"],
+    ["control-plane", "delivery-stage-workspace-full"],
+  ] as const)(
+    "mounts %s on the %s claim, chowned once, with ephemeral storage for logs only",
+    (recipe, claim) => {
+      const spec = deliveryJobManifest({
+        ...request,
+        recipe,
+        stageKey: recipe,
+        input:
+          recipe === "test"
+            ? { suite: "test", workspace: "packages/delivery" }
+            : recipe === "tofu-apply"
+              ? request.input
+              : {},
+      }).spec!.template.spec!;
+      expect(
+        spec.volumes?.find((volume) => volume.name === "workspace"),
+      ).toEqual({
+        name: "workspace",
+        persistentVolumeClaim: { claimName: claim },
+      });
+      expect(spec.volumes?.some((volume) => volume.emptyDir)).toBe(false);
+      expect(spec.securityContext?.fsGroupChangePolicy).toBe("OnRootMismatch");
+      expect(spec.containers[0]?.resources).toEqual({
+        requests: { cpu: "2", memory: "8Gi", "ephemeral-storage": "1Gi" },
+        limits: { cpu: "8", memory: "16Gi", "ephemeral-storage": "4Gi" },
+      });
+      expect(spec.containers[0]?.securityContext?.readOnlyRootFilesystem).toBe(
+        true,
+      );
+    },
+  );
+  it("serializes Jobs on the claim and reuses only node_modules from the previous checkout", () => {
     const lines = DELIVERY_JOB_BOOTSTRAP.split("\n");
+    const at = (line: string) => {
+      const index = lines.indexOf(line);
+      if (index === -1) throw new Error(`Bootstrap lacks: ${line}`);
+      return index;
+    };
+    expect(at("flock 9")).toBe(at("exec 9>/workspace/.lock") + 1);
+    // Previous scratch goes before anything is prepared; the checkout is
+    // forced over the previous one, then stale worktrees and everything
+    // untracked except node_modules are removed before the revision check.
+    expect(at("rm -rf /workspace/tmp /workspace/bin /workspace/buildx")).toBe(
+      at("flock 9") + 1,
+    );
+    expect(
+      at(
+        "git -C /workspace/source checkout --quiet --detach --force FETCH_HEAD",
+      ),
+    ).toBeLessThan(at("git -C /workspace/source worktree prune"));
+    expect(at("git -C /workspace/source worktree prune")).toBeLessThan(
+      at("git -C /workspace/source clean -fdxq -e node_modules"),
+    );
+    expect(
+      at("git -C /workspace/source clean -fdxq -e node_modules"),
+    ).toBeLessThan(
+      at(
+        'test "$(git -C /workspace/source rev-parse HEAD)" = "$DELIVERY_SOURCE_REVISION"',
+      ),
+    );
     expect(lines).not.toContain("cp -R /opt/mise/. /workspace/mise/");
-    expect(lines).toContain("cp -Rs /opt/mise/. /workspace/mise/");
-    // Only mise's per-tool metadata and alias links become real copies.
+    expect(lines).not.toContain("cp -Rs /opt/mise/. /workspace/mise/");
+    // Re-linked on every Job over the previous links; only mise's per-tool
+    // metadata and alias links become real copies.
+    expect(lines).toContain("cp -Rsf /opt/mise/. /workspace/mise/");
     expect(lines).toContain(
       String.raw`(cd /opt/mise && find installs -mindepth 1 -maxdepth 2 ! -type d -exec cp -PT --remove-destination {} /workspace/mise/{} \;)`,
     );
-    expect(
-      lines.indexOf("export MISE_DATA_DIR=/workspace/mise"),
-    ).toBeGreaterThan(lines.indexOf("cp -Rs /opt/mise/. /workspace/mise/"));
+    expect(at("export MISE_DATA_DIR=/workspace/mise")).toBeGreaterThan(
+      at("cp -Rsf /opt/mise/. /workspace/mise/"),
+    );
+  });
+  it("adopts a Job with the retired emptyDir workspace layout and nothing else", () => {
+    const expected = deliveryJobManifest(request);
+    const retired = structuredClone(expected);
+    const pod = retired.spec!.template.spec!;
+    pod.volumes = pod.volumes!.map((volume) =>
+      volume.name === "workspace"
+        ? { name: "workspace", emptyDir: { sizeLimit: "32Gi" } }
+        : volume,
+    );
+    pod.containers[0]!.resources = {
+      requests: { cpu: "2", memory: "8Gi", "ephemeral-storage": "32Gi" },
+      limits: { cpu: "8", memory: "16Gi", "ephemeral-storage": "32Gi" },
+    };
+    delete pod.securityContext!.fsGroupChangePolicy;
+    expect(() => assertMatchingDeliveryJob(retired, expected)).not.toThrow();
+    for (const mutate of [
+      (spec: typeof pod) => {
+        spec.volumes!.find((volume) => volume.name === "workspace")!.emptyDir =
+          { sizeLimit: "64Gi" };
+      },
+      (spec: typeof pod) => {
+        spec.containers[0]!.resources!.limits!["ephemeral-storage"] = "64Gi";
+      },
+      (spec: typeof pod) => {
+        spec.securityContext!.fsGroupChangePolicy = "Always";
+      },
+      (spec: typeof pod) => {
+        spec.volumes!.find((volume) => volume.name === "workspace")!.emptyDir =
+          { sizeLimit: "32Gi", medium: "Memory" };
+      },
+    ]) {
+      const altered = structuredClone(retired);
+      mutate(altered.spec!.template.spec!);
+      expect(() => assertMatchingDeliveryJob(altered, expected)).toThrow(
+        "frozen request",
+      );
+    }
   });
   it("adopts a Job created with a previous reviewed bootstrap and nothing else", () => {
-    // The exact bootstraps that created Jobs before: linked toolchains with
-    // no test or stack-archive step, then the copied toolchain. A changed
-    // digest means a retained Job could no longer be adopted.
+    // The exact bootstraps that created Jobs before: the fresh emptyDir
+    // workspace, then linked toolchains with no test or stack-archive step,
+    // then the copied toolchain. A changed digest means a retained Job could
+    // no longer be adopted.
     expect(
       PREVIOUS_DELIVERY_JOB_BOOTSTRAPS.map((script) =>
         createHash("sha256").update(script).digest("hex"),
       ),
     ).toEqual([
+      "7fcc3559847d7a436fa42cdf5d4755bb357c8b789a4a665822556828c3e3434d",
       "011b625607e3c62d719e77b388dd7f80414dac3f609f317c8c7285738b9ff9a2",
       "a5c909be28ebe8674710740bf59914338db047cb7831571023c3be7ddb9c7c15",
     ]);
