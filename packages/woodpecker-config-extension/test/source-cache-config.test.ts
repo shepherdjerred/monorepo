@@ -65,6 +65,7 @@ test("performance flags preserve explicit false, reject invalid values and use d
     gradle: true,
     copyfile: true,
     scratch: true,
+    miseInstalls: true,
   };
   flag.mockResolvedValue(undefined);
   expect(await performanceConfig("main")).toEqual(defaults);
