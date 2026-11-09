@@ -503,6 +503,8 @@ const WORKFLOW_MAX_SLEEP_MS: Record<string, number> = {
 const WORKFLOWS_WITHOUT_EXECUTION_TIMEOUT = new Set<string>();
 
 const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
+  "dispatchStormPromotion",
+  "reportStormPromotion",
   "deliveryDispatchWorkflow",
   "maintainStormForumWorkflow",
   "fetchSkillCappedManifest",

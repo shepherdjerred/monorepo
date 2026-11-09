@@ -5,8 +5,9 @@ External promotion excludes The Storm's own forum on `ts-mc.net`; its announceme
 and administration are separate work.
 
 [targets.json](targets.json) is the machine-readable inventory for server-directory,
-PMC and Reddit promotion targets. Existing copy in this directory remains the approved
-content source. The remaining placements are manual.
+PMC, Discord and Reddit promotion targets. The [Temporal task reference](../../temporal/README.md#the-storm-promotion-task)
+defines execution controls, evidence and scheduling. Existing copy remains the approved
+content source; sources awaiting setup stay outside the publishing allowlist.
 
 Last reconciled: **2026-11-02** (Maintenance and ad-hoc bump pass). Dates and times below use UTC unless marked otherwise.
 Listing states record setup and targeted follow-up checks, not continuous monitoring.

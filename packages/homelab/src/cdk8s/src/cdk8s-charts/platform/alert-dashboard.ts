@@ -76,6 +76,17 @@ export function createAlertDashboardChart(app: App) {
         {
           to: [
             {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "temporal" },
+              },
+              podSelector: { matchLabels: { component: "promotion-worker" } },
+            },
+          ],
+          ports: [tcp(7343)],
+        },
+        {
+          to: [
+            {
               namespaceSelector: {},
               podSelector: { matchLabels: { "k8s-app": "kube-dns" } },
             },

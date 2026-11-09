@@ -21,6 +21,9 @@ const EnvironmentSchema = z
       .default("prometheus.tailnet-1a49.ts.net"),
     HOST: z.string().min(1).default("0.0.0.0"),
     OPS_INGEST_TOKEN: z.string().min(32),
+    PROMOTION_STATUS_URL: z
+      .url()
+      .default("http://promotion-status.temporal.svc.cluster.local:7343"),
     PROMETHEUS_URL: z.url(),
     PORT: z.coerce.number().int().min(1).max(65_535).default(7341),
     POSTAL_API_KEY: z.string().min(1).optional(),

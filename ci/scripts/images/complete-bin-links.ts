@@ -12,6 +12,8 @@
  * produce different production trees. Application Dockerfiles run this after
  * each production install to link every such bin: the tree Bun writes when no
  * race is lost.
+ * Absent optional peers can retain dangling links in a filtered install. They
+ * have no bin edges; missing required dependency links still fail the build.
  *
  * Usage: bun complete-bin-links.ts <node_modules/.bun store>
  */
@@ -74,11 +76,15 @@ async function readStore(store: string): Promise<Map<string, StoreEntry>> {
     const modules = path.join(store, name, "node_modules");
     if (!(await exists(modules))) continue;
     const dependencies = new Map<string, string>();
-    for (const packageName of await packageNames(modules)) {
-      const target = path.relative(
-        storeReal,
-        await realpath(path.join(modules, packageName)),
+    const names = await packageNames(modules);
+    const optional = await optionalLinkNames(modules, names);
+    for (const packageName of names) {
+      const resolved = await resolveLink(
+        path.join(modules, packageName),
+        optional.has(packageName),
       );
+      if (resolved === undefined) continue;
+      const target = path.relative(storeReal, resolved);
       const [entry] = target.split(path.sep);
       if (entry === undefined || entry === ".." || entry === name) continue;
       dependencies.set(packageName, entry);
@@ -86,6 +92,66 @@ async function readStore(store: string): Promise<Map<string, StoreEntry>> {
     entries.set(name, { name, dependencies });
   }
   return entries;
+}
+
+function manifestRecord(
+  manifest: Record<string, unknown>,
+  key: string,
+): Record<string, unknown> {
+  const value = manifest[key];
+  if (value === undefined) return {};
+  const record = asRecord(value);
+  if (record === undefined)
+    throw new TypeError(`Invalid package manifest ${key}`);
+  return record;
+}
+
+async function optionalLinkNames(modules: string, names: string[]) {
+  const optional = new Set<string>();
+  for (const name of names) {
+    const directory = path.join(modules, name);
+    const stat = await lstat(directory);
+    if (stat.isSymbolicLink()) continue;
+    const manifest = asRecord(
+      await Bun.file(path.join(directory, "package.json")).json(),
+    );
+    if (manifest === undefined)
+      throw new TypeError(`${name} has no manifest object`);
+    const dependencies = manifestRecord(manifest, "dependencies");
+    const optionalDependencies = manifestRecord(
+      manifest,
+      "optionalDependencies",
+    );
+    for (const dependency of Object.keys(optionalDependencies))
+      optional.add(dependency);
+    const peers = manifestRecord(manifest, "peerDependencies");
+    const metadata = manifestRecord(manifest, "peerDependenciesMeta");
+    for (const [peer, details] of Object.entries(metadata)) {
+      if (
+        peers[peer] !== undefined &&
+        asRecord(details)?.["optional"] === true &&
+        (dependencies[peer] === undefined ||
+          optionalDependencies[peer] !== undefined)
+      )
+        optional.add(peer);
+    }
+  }
+  return optional;
+}
+
+async function resolveLink(file: string, optional: boolean) {
+  try {
+    return await realpath(file);
+  } catch (error) {
+    if (
+      optional &&
+      error instanceof Error &&
+      "code" in error &&
+      error.code === "ENOENT"
+    )
+      return;
+    throw error;
+  }
 }
 
 /** Store entries that share a dependency cycle (Tarjan's strongly connected components). */

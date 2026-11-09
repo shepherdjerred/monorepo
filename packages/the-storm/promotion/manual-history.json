@@ -1,0 +1,324 @@
+[
+  {
+    "targetId": "disboard-native-bump",
+    "attempt": {
+      "occurrenceId": "manual/disboard-native-bump/2026-11-03T02:11:20Z",
+      "attemptedAt": "2026-11-03T02:11:20Z",
+      "settledAt": "2026-11-03T02:11:20Z",
+      "status": "verified",
+      "receiptUrl": "https://discord.com/channels/1043751242649829436/1043751242649829439",
+      "evidenceKey": null,
+      "contentHash": "manual-import",
+      "contentExcerpt": null,
+      "beforeSubmission": []
+    }
+  },
+  {
+    "targetId": "pmc",
+    "attempt": {
+      "occurrenceId": "manual/pmc/2026-11-03T02:07:54Z",
+      "attemptedAt": "2026-11-03T02:07:54Z",
+      "settledAt": "2026-11-03T02:07:54Z",
+      "status": "verified",
+      "receiptUrl": "https://www.planetminecraft.com/server/the-storm-3004178/",
+      "evidenceKey": null,
+      "contentHash": "manual-import",
+      "contentExcerpt": null,
+      "beforeSubmission": []
+    }
+  },
+  {
+    "targetId": "minecraft-serverlist",
+    "attempt": {
+      "occurrenceId": "manual/minecraft-serverlist/2026-11-03T02:10:10Z",
+      "attemptedAt": "2026-11-03T02:10:10Z",
+      "settledAt": "2026-11-03T02:10:10Z",
+      "status": "verified",
+      "receiptUrl": "https://minecraft-serverlist.com/server/6822",
+      "evidenceKey": null,
+      "contentHash": "manual-import",
+      "contentExcerpt": null,
+      "beforeSubmission": []
+    }
+  },
+  {
+    "targetId": "minecraftserver-buzz",
+    "attempt": {
+      "occurrenceId": "manual/minecraftserver-buzz/2026-11-03T02:09:28Z",
+      "attemptedAt": "2026-11-03T02:09:28Z",
+      "settledAt": "2026-11-03T02:09:28Z",
+      "status": "verified",
+      "receiptUrl": "https://minecraftserver.buzz/servers/the-storm",
+      "evidenceKey": null,
+      "contentHash": "manual-import",
+      "contentExcerpt": null,
+      "beforeSubmission": []
+    }
+  },
+  {
+    "targetId": "reddit-mcservers",
+    "attempt": {
+      "occurrenceId": "manual/reddit-mcservers/2026-10-30T21:21:17Z",
+      "attemptedAt": "2026-10-30T21:21:17Z",
+      "settledAt": "2026-10-30T21:21:17Z",
+      "status": "verified",
+      "receiptUrl": "https://www.reddit.com/r/mcservers/comments/1xjrs2z/the_storm_smp_java_bedrock_towns_land_claims/",
+      "evidenceKey": null,
+      "contentHash": "manual-import",
+      "contentExcerpt": null,
+      "beforeSubmission": []
+    }
+  },
+  {
+    "targetId": "reddit-minecraftserver",
+    "attempt": {
+      "occurrenceId": "manual/reddit-minecraftserver/2026-11-03T02:19:40Z",
+      "attemptedAt": "2026-11-03T02:19:40Z",
+      "settledAt": "2026-11-03T02:19:40Z",
+      "status": "verified",
+      "receiptUrl": "https://old.reddit.com/r/MinecraftServer/comments/1xmgu8r/the_storm_looking_for_founding_players_to_rebuild/",
+      "evidenceKey": null,
+      "contentHash": "manual-import",
+      "contentExcerpt": null,
+      "beforeSubmission": []
+    }
+  },
+  {
+    "targetId": "reddit-minecraftserverfinder",
+    "attempt": {
+      "occurrenceId": "manual/reddit-minecraftserverfinder/2026-11-03T02:24:49Z",
+      "attemptedAt": "2026-11-03T02:24:49Z",
+      "settledAt": "2026-11-03T02:24:49Z",
+      "status": "filtered",
+      "receiptUrl": "https://old.reddit.com/r/MinecraftServerFinder/comments/1xmgy89/the_storm_crossplay_survival_server_with_custom/",
+      "evidenceKey": null,
+      "contentHash": "manual-import",
+      "contentExcerpt": null,
+      "beforeSubmission": []
+    }
+  },
+  {
+    "targetId": "discord-mcadverts",
+    "attempt": {
+      "occurrenceId": "manual/discord-mcadverts/2026-11-03T02:11:52Z",
+      "attemptedAt": "2026-11-03T02:11:52Z",
+      "settledAt": "2026-11-03T02:11:52Z",
+      "status": "verified",
+      "receiptUrl": "https://discord.com/channels/1002626712321921074/1137725670491947069/1566998316904878131",
+      "evidenceKey": null,
+      "contentHash": "manual-import",
+      "contentExcerpt": null,
+      "beforeSubmission": []
+    }
+  },
+  {
+    "targetId": "discord-lfg-fast",
+    "attempt": {
+      "occurrenceId": "manual/discord-lfg-fast/2026-11-03T02:15:54Z",
+      "attemptedAt": "2026-11-03T02:15:54Z",
+      "settledAt": "2026-11-03T02:15:54Z",
+      "status": "verified",
+      "receiptUrl": "https://discord.com/channels/877714016351453184/1054901030644617327/1566999331729449081",
+      "evidenceKey": null,
+      "contentHash": "manual-import",
+      "contentExcerpt": null,
+      "beforeSubmission": []
+    }
+  },
+  {
+    "targetId": "discord-lfg-find-forum",
+    "attempt": {
+      "occurrenceId": "manual/discord-lfg-find-forum/2026-11-03T02:13:02Z",
+      "attemptedAt": "2026-11-03T02:13:02Z",
+      "settledAt": "2026-11-03T02:13:02Z",
+      "status": "verified",
+      "receiptUrl": "https://discord.com/channels/1088178322070065193/1560702451550519488/1566998610317680682",
+      "evidenceKey": null,
+      "contentHash": "manual-import",
+      "contentExcerpt": null,
+      "beforeSubmission": []
+    }
+  },
+  {
+    "targetId": "discord-lfg-6-hour",
+    "attempt": {
+      "occurrenceId": "manual/discord-lfg-6-hour/2026-11-03T02:12:28Z",
+      "attemptedAt": "2026-11-03T02:12:28Z",
+      "settledAt": "2026-11-03T02:12:28Z",
+      "status": "verified",
+      "receiptUrl": "https://discord.com/channels/877714016351453184/1061826526913507429/1566998466897645708",
+      "evidenceKey": null,
+      "contentHash": "manual-import",
+      "contentExcerpt": null,
+      "beforeSubmission": []
+    }
+  },
+  {
+    "targetId": "discord-lfg-2-hour",
+    "attempt": {
+      "occurrenceId": "manual/discord-lfg-2-hour/2026-11-03T02:16:58Z",
+      "attemptedAt": "2026-11-03T02:16:58Z",
+      "settledAt": "2026-11-03T02:16:58Z",
+      "status": "verified",
+      "receiptUrl": "https://discord.com/channels/877714016351453184/1061826335317696552/1566999603788910666",
+      "evidenceKey": null,
+      "contentHash": "manual-import",
+      "contentExcerpt": null,
+      "beforeSubmission": []
+    }
+  },
+  {
+    "targetId": "discord-lfg-1-hour",
+    "attempt": {
+      "occurrenceId": "manual/discord-lfg-1-hour/2026-11-03T02:16:26Z",
+      "attemptedAt": "2026-11-03T02:16:26Z",
+      "settledAt": "2026-11-03T02:16:26Z",
+      "status": "verified",
+      "receiptUrl": "https://discord.com/channels/877714016351453184/1061826190190587925/1566999468182736916",
+      "evidenceKey": null,
+      "contentHash": "manual-import",
+      "contentExcerpt": null,
+      "beforeSubmission": []
+    }
+  },
+  {
+    "targetId": "discord-lfg-bedrock",
+    "attempt": {
+      "occurrenceId": "manual/discord-lfg-bedrock/2026-11-03T02:14:16Z",
+      "attemptedAt": "2026-11-03T02:14:16Z",
+      "settledAt": "2026-11-03T02:14:16Z",
+      "status": "verified",
+      "receiptUrl": "https://discord.com/channels/877714016351453184/878037115403902986/1566998923200041120",
+      "evidenceKey": null,
+      "contentHash": "manual-import",
+      "contentExcerpt": null,
+      "beforeSubmission": []
+    }
+  },
+  {
+    "targetId": "discord-lfg-java",
+    "attempt": {
+      "occurrenceId": "manual/discord-lfg-java/2026-11-03T02:14:49Z",
+      "attemptedAt": "2026-11-03T02:14:49Z",
+      "settledAt": "2026-11-03T02:14:49Z",
+      "status": "verified",
+      "receiptUrl": "https://discord.com/channels/877714016351453184/877718073858199592/1566999059477045373",
+      "evidenceKey": null,
+      "contentHash": "manual-import",
+      "contentExcerpt": null,
+      "beforeSubmission": []
+    }
+  },
+  {
+    "targetId": "discord-lfg-smp",
+    "attempt": {
+      "occurrenceId": "manual/discord-lfg-smp/2026-11-03T02:15:21Z",
+      "attemptedAt": "2026-11-03T02:15:21Z",
+      "settledAt": "2026-11-03T02:15:21Z",
+      "status": "verified",
+      "receiptUrl": "https://discord.com/channels/877714016351453184/877718112919781417/1566999195322290307",
+      "evidenceKey": null,
+      "contentHash": "manual-import",
+      "contentExcerpt": null,
+      "beforeSubmission": []
+    }
+  },
+  {
+    "targetId": "discord-advertisement-forum",
+    "attempt": {
+      "occurrenceId": "manual/discord-advertisement-forum/2026-11-03T02:13:36Z",
+      "attemptedAt": "2026-11-03T02:13:36Z",
+      "settledAt": "2026-11-03T02:13:36Z",
+      "status": "verified",
+      "receiptUrl": "https://discord.com/channels/993668335642349579/1560703712056443081/1566998751573188649",
+      "evidenceKey": null,
+      "contentHash": "manual-import",
+      "contentExcerpt": null,
+      "beforeSubmission": []
+    }
+  },
+  {
+    "targetId": "discord-lfg-5-minute",
+    "attempt": {
+      "occurrenceId": "manual/discord-lfg-5-minute/2026-11-03T02:17:31Z",
+      "attemptedAt": "2026-11-03T02:17:31Z",
+      "settledAt": "2026-11-03T02:17:31Z",
+      "status": "verified",
+      "receiptUrl": "https://discord.com/channels/877714016351453184/1061825536449593365/1566999740300660759",
+      "evidenceKey": null,
+      "contentHash": "manual-import",
+      "contentExcerpt": null,
+      "beforeSubmission": []
+    }
+  },
+  {
+    "targetId": "discord-lfg-15-minute",
+    "attempt": {
+      "occurrenceId": "manual/discord-lfg-15-minute/2026-11-03T02:18:03Z",
+      "attemptedAt": "2026-11-03T02:18:03Z",
+      "settledAt": "2026-11-03T02:18:03Z",
+      "status": "verified",
+      "receiptUrl": "https://discord.com/channels/877714016351453184/1061825928155643908/1566999876170948688",
+      "evidenceKey": null,
+      "contentHash": "manual-import",
+      "contentExcerpt": null,
+      "beforeSubmission": []
+    }
+  },
+  {
+    "targetId": "discord-lfg-30-minute",
+    "attempt": {
+      "occurrenceId": "manual/discord-lfg-30-minute/2026-11-03T02:18:36Z",
+      "attemptedAt": "2026-11-03T02:18:36Z",
+      "settledAt": "2026-11-03T02:18:36Z",
+      "status": "verified",
+      "receiptUrl": "https://discord.com/channels/877714016351453184/1061826016345071636/1567000011797958738",
+      "evidenceKey": null,
+      "contentHash": "manual-import",
+      "contentExcerpt": null,
+      "beforeSubmission": []
+    }
+  },
+  {
+    "targetId": "reddit-minecraftservers",
+    "attempt": {
+      "occurrenceId": "manual/reddit-minecraftservers/2026-11-03T02:26:39Z",
+      "attemptedAt": "2026-11-03T02:26:39Z",
+      "settledAt": "2026-11-03T02:26:39Z",
+      "status": "filtered",
+      "receiptUrl": "https://old.reddit.com/r/MinecraftServers/comments/1xmgzng/the_storm_smp_chill_survival_community_rebuilding/",
+      "evidenceKey": null,
+      "contentHash": "manual-import",
+      "contentExcerpt": null,
+      "beforeSubmission": []
+    }
+  },
+  {
+    "targetId": "reddit-minecraftsmps",
+    "attempt": {
+      "occurrenceId": "manual/reddit-minecraftsmps/2026-10-30T21:22:56Z",
+      "attemptedAt": "2026-10-30T21:22:56Z",
+      "settledAt": "2026-10-30T21:22:56Z",
+      "status": "filtered",
+      "receiptUrl": "https://www.reddit.com/r/MinecraftSMPs/comments/1xjrthz/the_storm_java_bedrock_smp_towns_land_claims/",
+      "evidenceKey": null,
+      "contentHash": "manual-import",
+      "contentExcerpt": null,
+      "beforeSubmission": []
+    }
+  },
+  {
+    "targetId": "builtbybit",
+    "attempt": {
+      "occurrenceId": "manual/builtbybit/2026-10-27T20:53:50Z",
+      "attemptedAt": "2026-10-27T20:53:50Z",
+      "settledAt": "2026-10-27T20:53:50Z",
+      "status": "verified",
+      "receiptUrl": "https://builtbybit.com/threads/743099/",
+      "evidenceKey": null,
+      "contentHash": "manual-import",
+      "contentExcerpt": null,
+      "beforeSubmission": []
+    }
+  }
+]

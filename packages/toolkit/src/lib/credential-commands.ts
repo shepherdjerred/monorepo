@@ -59,7 +59,10 @@ export function requiredCredentialsFor(
     case "bugsink":
       return ["BUGSINK_TOKEN"];
     case "discord":
-      return ["DISCORD_BOT_TOKEN", "DISCORD_USER_TOKEN"];
+      if (args.includes("--password-login")) return [];
+      return args.includes("--user-only")
+        ? ["DISCORD_USER_TOKEN"]
+        : ["DISCORD_BOT_TOKEN", "DISCORD_USER_TOKEN"];
     case "pr":
       return ["WOODPECKER_TOKEN"];
     default:

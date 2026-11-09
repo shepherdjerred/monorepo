@@ -4,7 +4,8 @@ import {
   type PartialMessage as UserPartialMessage,
 } from "discord.js-selfbot-v13";
 import { isDeferredReply } from "#lib/discord/deferred-reply.ts";
-import { mapUserMessage, messageMatches } from "#lib/discord/handlers.ts";
+import { mapUserMessage } from "#lib/discord/handlers.ts";
+import { messageMatches } from "#lib/discord/message-match.ts";
 import type { DirectSlashResponse, IpcMessage } from "#lib/discord/ipc.ts";
 
 export type DirectSlashGateway = {

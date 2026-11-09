@@ -140,7 +140,7 @@ describe("Flipt consumer environments", () => {
       name: "Temporal",
       environment: "prod",
       namespace: "temporal",
-      count: 10,
+      count: 11,
       createChart: (app: App) => createTemporalChart(app),
     },
   ];

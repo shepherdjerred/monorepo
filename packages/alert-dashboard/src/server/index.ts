@@ -158,6 +158,7 @@ const app = createApp({
   ops,
   digests,
   opsIngestToken: config.OPS_INGEST_TOKEN,
+  promotionStatusUrl: config.PROMOTION_STATUS_URL,
 });
 const server = Bun.serve({
   hostname: config.HOST,

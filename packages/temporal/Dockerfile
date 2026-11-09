@@ -63,6 +63,8 @@ COPY --parents \
   tsconfig.base.json \
   packages/scout-for-lol/tsconfig.base.json \
   packages/temporal \
+  packages/the-storm/package.json \
+  packages/the-storm/promotion/ \
   packages/delivery/src/shared \
   packages/homelab \
   scripts/lib \
@@ -236,7 +238,12 @@ RUN set -e; \
 # package exposes a different command and does not supply this runtime contract.
 # Keep the upstream license alongside the binary; the lockfile pins its digest.
 COPY mise.lock /tmp/media-tools.lock
-RUN bun -e 'const lock = Bun.TOML.parse(await Bun.file("/tmp/media-tools.lock").text()); const platform = process.arch === "arm64" ? "linux-arm64" : process.arch === "x64" ? "linux-x64" : null; if (platform === null) throw new Error("Unsupported archive tool architecture"); const artifact = lock.tools["aqua:ip7z/7zip"][0]["platforms." + platform]; if (typeof artifact?.url !== "string" || !/^sha256:[a-f0-9]{64}$/.test(artifact.checksum)) throw new Error("Archive tool lock entry is missing"); const response = await fetch(artifact.url); if (!response.ok) throw new Error("Archive tool download failed"); const bytes = await response.arrayBuffer(); if ("sha256:" + new Bun.CryptoHasher("sha256").update(bytes).digest("hex") !== artifact.checksum) throw new Error("Archive tool checksum mismatch"); await Bun.write("/tmp/media-7zip.tar.xz", bytes);' \
+RUN set -e; \
+    archive_spec="$(bun -e 'const lock = Bun.TOML.parse(await Bun.file("/tmp/media-tools.lock").text()); const platform = process.arch === "arm64" ? "linux-arm64" : process.arch === "x64" ? "linux-x64" : null; if (platform === null) throw new Error("Unsupported archive tool architecture"); const artifact = lock.tools["aqua:ip7z/7zip"][0]["platforms." + platform]; if (typeof artifact?.url !== "string" || !/^sha256:[a-f0-9]{64}$/.test(artifact.checksum)) throw new Error("Archive tool lock entry is missing"); const url = new URL(artifact.url); if (url.protocol !== "https:") throw new Error("Archive tool requires HTTPS"); console.log(url.href + " " + artifact.checksum.slice(7));')"; \
+    archive_url="${archive_spec% *}"; \
+    archive_checksum="${archive_spec##* }"; \
+    curl --fail --silent --show-error --location --retry 5 --retry-delay 1 --retry-connrefused --connect-timeout 30 --max-time 120 "$archive_url" --output /tmp/media-7zip.tar.xz; \
+    printf '%s  %s\n' "$archive_checksum" /tmp/media-7zip.tar.xz | sha256sum --check --status \
     && mkdir -p /opt/media-7zip \
     && tar -xJf /tmp/media-7zip.tar.xz -C /opt/media-7zip \
     && ln -s /opt/media-7zip/7zz /usr/local/bin/7zz \
@@ -505,6 +512,8 @@ COPY --from=prod-deps --exclude=package.json --exclude=bun.lock --exclude=bunfig
 COPY --parents \
   tsconfig.base.json \
   packages/temporal \
+  packages/the-storm/package.json \
+  packages/the-storm/promotion/ \
   packages/delivery/src/shared \
   packages/delivery/src/domain/error.ts \
   packages/delivery/src/infrastructure/artifact-stores/oci-registry.ts \

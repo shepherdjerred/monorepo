@@ -68,6 +68,9 @@ export function Shell(): React.JSX.Element {
           <NavLink to="/ai">
             <BotIcon aria-hidden="true" /> AI
           </NavLink>
+          <NavLink to="/promotion">
+            <ActivityIcon aria-hidden="true" /> Promotion
+          </NavLink>
           <NavLink to="/maintenance">
             <WrenchIcon aria-hidden="true" /> Maintenance
           </NavLink>

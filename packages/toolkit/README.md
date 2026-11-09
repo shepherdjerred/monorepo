@@ -700,8 +700,46 @@ PinchTab credentials or config.
 - `toolkit bugsink ...` queries teams, projects, issues, events, stacktraces,
   and releases in self-hosted Bugsink.
 - `toolkit discord ...` operates the private local Discord session daemon.
+  `TOOLKIT_DISCORD_DIR` selects an isolated daemon directory and socket.
+  `discord daemon start --password-login` uses parent-injected
+  `DISCORD_USER_EMAIL` and `DISCORD_USER_PASSWORD` for a user-only session,
+  ignores the default bot/user tokens, and never reads desktop 1Password.
+  An optional parent-generated `DISCORD_USER_OTP_CODE` completes one TOTP login
+  challenge; the daemon never receives the authenticator seed or recovery codes.
+  Login and MFA share the Discord SDK's authentication transport and client context.
+  `discord daemon start --user-only` resolves only the registered user token
+  and leaves the bot token unloaded. These login modes are mutually exclusive.
+  Channel metadata includes effective `canManageMessages` for confirmation-cleanup
+  preflight, including `moderationMfaLevel` and `accountMfaEnabled` when the server
+  requires moderator 2FA. Exact-message deletion still verifies guild, channel, author, and
+  message identity and reads back absence.
+  `/edit-own-message` corrects one existing user-authored message with explicit
+  guild, channel, message and author pins. It verifies ownership before editing
+  and fetches the message again to require exact requested content. It never
+  creates a replacement message or repeats an ambiguous edit.
+  Credentials are exchanged in memory and removed from the daemon environment;
+  interactive verification fails explicitly. The daemon child never inherits
+  vault and inference credentials. `/channel?channelId=...` provides native user
+  guild/channel permissions for scoped preview adapters.
+  Internal `POST /read` accepts an optional numeric `messageId` for a fresh
+  exact-message fetch in the selected channel, independent of recent history.
+  The internal `POST /delete-reply` endpoint removes one explicitly authorized
+  bot reply, requiring exact guild, channel, message and expected author IDs.
+  It checks identity before deleting and confirms remote absence afterward;
+  already absent messages require no write. Permission failures remain explicit.
+  `/commands?channelId=...` reads the guild application-command index without
+  invoking commands, including native default permission bits and per-user
+  application/command permission metadata; failed lookups propagate as errors.
 - `toolkit mc ...` drives disposable Minecraft sandboxes through the
   mc-harness daemon. See [Minecraft sandboxes](#minecraft-sandboxes).
+- `toolkit promotion <status|preview|run|pause|resume|reconcile> [TARGET] [--json] [--dry-run]`
+  operates The Storm's promotion tasks in production Temporal. `preview`, `run`
+  and `reconcile` require an exact target ID; other actions may omit it for all
+  destinations. Previews cannot publish; budgeted CAPTCHA solving may prepare access. Manual
+  runs retain posting limits and buffers; reconciliation never submits again.
+  `--dry-run` prints the native invocation without starting a Workflow. See the
+  [promotion task reference](../temporal/README.md#the-storm-promotion-task) for
+  target inventory, ownership, credentials and activation requirements.
 - `toolkit history ...` searches the private, rebuildable local agent-history
   index. It never treats prior conversation as current deployment truth.
 

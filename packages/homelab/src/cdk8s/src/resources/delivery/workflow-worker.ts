@@ -4,7 +4,10 @@ import {
   IntOrString,
   KubeNetworkPolicy,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
-import { dnsEgressRule } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
+import {
+  dnsEgressRule,
+  prometheusIngressRule,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import { createTemporalDomainWorker } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/workers/domain-worker.ts";
 
 /** Deterministic orchestration has no provider, vault, API or Kubernetes authority. */
@@ -35,21 +38,7 @@ export function createDeliveryWorkflowWorker(
     spec: {
       podSelector: { matchLabels: { component: "delivery-workflows" } },
       policyTypes: ["Ingress", "Egress"],
-      ingress: [
-        {
-          from: [
-            {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
-              },
-            },
-          ],
-          ports: [9464, 9465].map((port) => ({
-            port: IntOrString.fromNumber(port),
-            protocol: "TCP",
-          })),
-        },
-      ],
+      ingress: [prometheusIngressRule([9464, 9465])],
       egress: [
         dnsEgressRule(),
         {

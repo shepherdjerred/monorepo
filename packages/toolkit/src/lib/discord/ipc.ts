@@ -4,7 +4,9 @@ import { z } from "zod";
 
 // Filesystem layout for the session-scoped daemon. The socket lives in the
 // user's home dir with 0600 perms; tokens never touch disk.
-export const DISCORD_DIR = path.join(os.homedir(), ".toolkit", "discord");
+export const DISCORD_DIR =
+  Bun.env["TOOLKIT_DISCORD_DIR"] ??
+  path.join(os.homedir(), ".toolkit", "discord");
 export const SOCKET_PATH = path.join(DISCORD_DIR, "daemon.sock");
 export const STATE_PATH = path.join(DISCORD_DIR, "state.json");
 export const LOGS_DIR = path.join(DISCORD_DIR, "logs");
@@ -81,6 +83,7 @@ export const ReadRequestSchema = z.object({
   channelId: z.string(),
   limit: z.number().int().min(1).max(100),
   as: IdentityKindSchema.optional(),
+  messageId: z.string().regex(/^\d+$/).optional(),
 });
 export const ReadResponseSchema = z.object({
   messages: z.array(MessageSchema),

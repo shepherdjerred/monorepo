@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./promotion/targets.json": "./promotion/targets.json",
     "./maintenance-status.json": "./maintenance-status.json",
     "./public-status.json": "./public-status.json",
     "./server/owned/plugins/TheStorm/plot-reconcile.json": "./server/owned/plugins/TheStorm/plot-reconcile.json",

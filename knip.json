@@ -44,6 +44,8 @@
     },
     "packages/alert-dashboard": {
       "entry": [
+        "src/client/promotion/main.tsx",
+        "vite.promotion.config.ts",
         "playwright.config.ts",
         "src/**/*.test.ts",
         "integration/**/*.ts",
@@ -411,7 +413,8 @@
         "src/workflows/media/fixtures/cleanup-before-input.ts",
         "src/workflows/media/fixtures/cleanup-before-observation.ts"
       ],
-      "project": ["src/**/*.ts", "scripts/**/*.ts"]
+      "project": ["src/**/*.ts", "scripts/**/*.ts"],
+      "ignoreBinaries": ["op"]
     },
     "packages/trmnl-dashboard": {
       "entry": ["src/__tests__/**/*.ts"],

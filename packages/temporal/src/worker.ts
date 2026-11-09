@@ -1,4 +1,5 @@
 import { Client, Connection } from "@temporalio/client";
+import { z } from "zod/v4";
 import * as Sentry from "@sentry/bun";
 import { bugsinkServerOptions } from "@shepherdjerred/bugsink-config/server";
 import { sanitizeHttpCredentialBreadcrumb } from "./observability/http-credentials.ts";
@@ -387,6 +388,7 @@ async function main(): Promise<void> {
 
   // The event-loop-backed health endpoint starts only after every worker in
   // this role has been created and all role-specific startup has completed.
+  const promotionStatus = await startPromotionStatus(role);
   startMetricsServer();
 
   // Guard against double-shutdown. Kubernetes may deliver SIGTERM more than
@@ -427,6 +429,7 @@ async function main(): Promise<void> {
       }
     }
     await stopMetricsServer();
+    await promotionStatus?.stop(true);
     await shutdownTracing();
     await shutdownCallGraphTracing();
     finishControlLifecycle?.();
@@ -449,6 +452,15 @@ async function main(): Promise<void> {
     await Promise.all(workerRuns);
     await closeMediaActivityRuntimes();
   }
+}
+
+async function startPromotionStatus(role: ReturnType<typeof parseWorkerRole>) {
+  if (role !== "promotion") return;
+  const { startPromotionStatusServer } =
+    await import("./activities/promotion/control/status-server.ts");
+  return startPromotionStatusServer(
+    z.string().min(32).parse(Bun.env["OPS_INGEST_TOKEN"]),
+  );
 }
 
 void (async () => {

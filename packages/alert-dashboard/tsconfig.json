@@ -36,6 +36,7 @@
     "e2e/**/*",
     "integration/**/*",
     "vite.config.ts",
+    "vite.promotion.config.ts",
     "playwright.config.ts",
     "prisma.config.ts"
   ],

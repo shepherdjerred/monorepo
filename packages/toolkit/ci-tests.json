@@ -13,6 +13,7 @@
         "test/history",
         "test/discord",
         "test/mc",
+        "test/promotion",
         "scripts",
         "test-integration/catalog.integration.test.ts"
       ]

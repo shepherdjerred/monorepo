@@ -3947,6 +3947,46 @@
       "thresholdRollouts": []
     },
     {
+      "key": "the-storm-promotion-enabled",
+      "owner": "the-storm",
+      "namespace": "temporal",
+      "source": "the-storm-promotion",
+      "purpose": "Enable eligible promotion agent submissions after worker provisioning and live acceptance.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "prod",
+          "reason": "Publishing waits for the dedicated worker, preserved local history and per-source production acceptance.",
+          "issue": "AI-365",
+          "enableWhen": "Deploy with publishing off, import the ledger without clearing holds, pass previews and eligible canaries, then activate accepted sources and schedules.",
+          "reviewBy": "2026-11-15"
+        },
+        {
+          "environment": "beta",
+          "reason": "Promotion uses production outreach identities; no separate beta publishing consumer is authorized.",
+          "issue": "AI-365",
+          "enableWhen": "A separate beta consumer and its outreach scope are authorized and accepted; otherwise retain publishing off.",
+          "reviewBy": "2026-11-15"
+        }
+      ]
+    },
+    {
+      "key": "the-storm-promotion-settings",
+      "owner": "the-storm",
+      "namespace": "temporal",
+      "source": "the-storm-promotion",
+      "purpose": "Validated promotion agent model, step/time budgets, solver allowance and enabled target IDs.",
+      "type": "variant",
+      "default": "{\"model\":\"gpt-5.6-luna\",\"maxSteps\":80,\"timeoutMinutes\":15,\"monthlySolverUsd\":10,\"dailySpendUsd\":5,\"enabledTargets\":[]}",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "the-storm-rwf-recording-archive-enabled",
       "owner": "the-storm",
       "namespace": "temporal",

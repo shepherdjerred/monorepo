@@ -32,6 +32,53 @@ manages the workload.
 
 ## Local development
 
+### The Storm promotion progress
+
+The normal Ops application includes `/promotion`. Its server forwards the
+read-only promotion API to the worker's internal status Service, authenticated
+with `OPS_INGEST_TOKEN`; browser clients never receive that credential.
+`PROMOTION_STATUS_URL` is an optional bootstrap service-address override.
+Production reads shared worker history; the standalone local launcher below
+reads the local SQLite ledger instead.
+
+From the repository root, run:
+
+```bash
+bun packages/temporal/scripts/promotion/dashboard.ts
+```
+
+Open `http://127.0.0.1:7342/promotion` on the Mac running the command. This
+local entry uses the Ops theme and layout without starting alert subscriptions.
+It reads the promotion SQLite database and saved reports through a read-only API
+on port 7343. It needs no site credentials, Grafana, or Temporal server.
+Use `--state-dir`, `--port`, and `--api-port` to select local storage and ports.
+
+The page opens on the latest full run, including later retries and corrections.
+Its headline shows completed actions, unresolved outcomes and sources not run.
+Sources are grouped as working, disabled (missing setup/access or paused), or
+needing attention. Normal cooldowns count as correct skips; a failed action,
+unconfirmed effect or unresolved cleanup failure prevents a pass. Successful
+retries and verified corrections count as working; recovery details remain in
+expandable receipts and history.
+An access failure is an error on its first occurrence. Two consecutive failed
+executions automatically pause publishing and appear as disabled; verified
+success resets that streak. Cooldown skips and previews do not count as failures.
+Disabled sources and cooldown reasons expand on demand; receipts and filtered
+history live beneath the summary. Targeted follow-ups do not replace the full
+run. Older journals infer full scope only when they cover the current inventory.
+Existing reports have unknown mode/timing where those were not recorded.
+Sources omitted from a run are not skips. New local runs record scope, queued
+targets, phases, outcomes and heartbeats; the page polls every five seconds.
+Uncertain effects and locks are never cleared by viewing the page. Historical
+receipts describe verification at the recorded time, not current visibility.
+
+The dashboard and runner are independent processes. Closing the page or stopping
+its launcher does not stop promotion execution. No publishing controls or
+unattended schedule are enabled by this command. Missing/invalid local storage
+is shown as unavailable; viewing does not initialize a database. Receipt files
+must remain beneath the state directory. From another machine, forward the
+frontend port over your existing SSH connection.
+
 From the repository root, point `DATABASE_URL` at a local SQLite file and apply
 the Prisma migration, then:
 

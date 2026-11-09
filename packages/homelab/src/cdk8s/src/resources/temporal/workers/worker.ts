@@ -1,4 +1,5 @@
 import type { Chart } from "cdk8s";
+import { codexApiKeyEnvVars } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-provider-credentials.ts";
 import {
   ConfigMap,
   EnvValue,
@@ -35,6 +36,7 @@ import {
 import { temporalFeatureFlagEnvironment } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/feature-flags.ts";
 import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
 import { llmArchiveEnvVars } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-archive-env.ts";
+import { createTemporalPromotionWorker } from "./promotion-worker.ts";
 
 export type CreateTemporalWorkerDeploymentProps = {
   serverServiceName: string;
@@ -54,6 +56,10 @@ export function createTemporalWorkerDeployment(
     "temporal-worker-secret",
     onePasswordItem.name,
   );
+  const promotionDeployment = createTemporalPromotionWorker(chart, {
+    serverServiceName: props.serverServiceName,
+    temporalSecret: secret,
+  });
   const fliptAuthItem = new OnePasswordItem(chart, "temporal-flipt-auth-1p", {
     metadata: { name: "temporal-flipt-auth" },
     spec: { itemPath: vaultItemPath("3mvuwmlazccxpq7tz7myqigtvq") },
@@ -216,10 +222,7 @@ export function createTemporalWorkerDeployment(
         "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt",
       ),
       // Codex SDK and the LLM runtime use Temporal's own OpenAI project key.
-      OPENAI_API_KEY: EnvValue.fromSecretValue({
-        secret,
-        key: "OPENAI_API_KEY",
-      }),
+      ...codexApiKeyEnvVars(secret),
       CLAUDE_CODE_OAUTH_TOKEN: EnvValue.fromSecretValue({
         secret,
         key: "CLAUDE_CODE_OAUTH_TOKEN",
@@ -286,10 +289,7 @@ export function createTemporalWorkerDeployment(
         TELEMETRY_SERVICE_NAME: EnvValue.fromValue(
           "temporal-glitter-context-worker",
         ),
-        OPENAI_API_KEY: EnvValue.fromSecretValue({
-          secret,
-          key: "OPENAI_API_KEY",
-        }),
+        ...codexApiKeyEnvVars(secret),
         GITHUB_APP_ID: EnvValue.fromSecretValue({
           secret,
           key: "GITHUB_APP_ID",
@@ -352,6 +352,7 @@ export function createTemporalWorkerDeployment(
   });
 
   return {
+    promotionDeployment,
     agentDeployment,
     gatewayDeployment,
     homeDeployment,

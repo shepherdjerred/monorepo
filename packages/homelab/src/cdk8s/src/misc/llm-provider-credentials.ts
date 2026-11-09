@@ -52,6 +52,13 @@ function requireTitle(
 
 const SYNCED = new WeakMap<Chart, Map<string, ISecret>>();
 
+/** Native Codex SDK workers use the owning workload's OpenAI project key. */
+export function codexApiKeyEnvVars(secret: ISecret) {
+  return {
+    OPENAI_API_KEY: EnvValue.fromSecretValue({ secret, key: "OPENAI_API_KEY" }),
+  };
+}
+
 /**
  * Sync one OpenTofu-written item into the chart's namespace, once per chart.
  * The Secret shares the item's title, so a chart that asks twice (Scout's

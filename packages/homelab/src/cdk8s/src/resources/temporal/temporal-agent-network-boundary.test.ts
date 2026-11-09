@@ -256,14 +256,13 @@ describe("Temporal agent provider network boundary", () => {
     );
     expect(JSON.stringify(agent.spec.egress)).toContain("seaweedfs");
     expect(JSON.stringify(agent.spec.egress)).toContain("8333");
-    expect(
-      (server.spec.ingress ?? []).some((entry) =>
-        (entry.from ?? []).some(
-          (source) =>
-            source.podSelector?.matchLabels?.["app"] ===
-            "temporal-agent-worker",
+    for (const app of ["temporal-agent-worker", "temporal-promotion-worker"])
+      expect(
+        (server.spec.ingress ?? []).some((entry) =>
+          (entry.from ?? []).some(
+            (source) => source.podSelector?.matchLabels?.["app"] === app,
+          ),
         ),
-      ),
-    ).toBe(true);
+      ).toBe(true);
   });
 });

@@ -155,6 +155,7 @@ describe("Temporal feature-flag boundary", () => {
           "glitter-corpus-worker",
           "glitter-context-worker",
           "agent-worker",
+          "promotion-worker",
         ],
       },
     ]);
