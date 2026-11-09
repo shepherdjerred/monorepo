@@ -4,7 +4,7 @@
   "steps": [
     {
       "runner": "vitest",
-      "args": ["src"]
+      "args": ["src", "--testTimeout", "60000", "--hookTimeout", "60000"]
     }
   ]
 }

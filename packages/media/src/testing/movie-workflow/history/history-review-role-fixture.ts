@@ -1,6 +1,5 @@
 import path from "node:path";
 import { readFile, readdir } from "node:fs/promises";
-import { createHash } from "node:crypto";
 import { z } from "zod";
 import { createMovieHistoryHttpFixture } from "./history-http-fixture.ts";
 import { movieVideoFixture } from "#testing/movie-video.ts";
@@ -17,6 +16,7 @@ import { RemovalPlanSchema } from "#automation/files/types.ts";
 import { ManifestSchema } from "#filesystem/operations-types.ts";
 import { exists } from "#filesystem/operations-io.ts";
 import { workerFilePath } from "#automation/files/paths/locations.ts";
+import { physicalFile } from "#testing/movie-workflow/physical-file.ts";
 
 /** Real initial scanner/adoption, HTTP household release, and Files/Network runtime; policy alone advances. */
 export async function createMovieHistoryReviewWorkflowFixture(
@@ -146,9 +146,16 @@ export async function createMovieHistoryReviewWorkflowFixture(
         const names = (await exists(path.join(journalRoot, "journal")))
           ? await readdir(path.join(journalRoot, "journal"))
           : [];
+        // saveManifest writes `<name>.json.tmp` and renames it into place, so
+        // only installed `.json` entries are journals; a listed temporary
+        // can be renamed away before it is read.
         const journals = await Promise.all(
           names
-            .filter((name) => name.startsWith(`${f.input.operationId}-`))
+            .filter(
+              (name) =>
+                name.startsWith(`${f.input.operationId}-`) &&
+                name.endsWith(".json"),
+            )
             .sort()
             .map(async (name) =>
               ManifestSchema.parse(
@@ -224,15 +231,4 @@ export async function createMovieHistoryReviewWorkflowFixture(
     }
     throw error;
   }
-}
-
-async function physicalFile(filename: string) {
-  return {
-    filename,
-    checksum: (await exists(filename))
-      ? createHash("sha256")
-          .update(await readFile(filename))
-          .digest("hex")
-      : null,
-  };
 }

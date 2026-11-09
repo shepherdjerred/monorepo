@@ -1,5 +1,4 @@
 import path from "node:path";
-import { createHash } from "node:crypto";
 import { readFile, readdir } from "node:fs/promises";
 import { z } from "zod";
 import { createMovieRetentionFixture } from "./retention-fixture.ts";
@@ -14,8 +13,8 @@ import {
 } from "#automation/store.ts";
 import { RemovalPlanSchema } from "#automation/files/types.ts";
 import { ManifestSchema } from "#filesystem/operations-types.ts";
-import { exists } from "#filesystem/operations-io.ts";
 import { workerFilePath } from "#automation/files/paths/locations.ts";
+import { physicalFile } from "#testing/movie-workflow/physical-file.ts";
 import { warningHistory } from "#automation/retention/fixtures/elapsed.ts";
 
 /** Real published/captioned bytes precede retention; only policy time advances from actual DB milestones. */
@@ -198,15 +197,5 @@ export async function createMovieRetentionWorkflowFixture(
       };
     },
     close: f.close,
-  };
-}
-
-async function physicalFile(filename: string) {
-  if (!(await exists(filename))) return { filename, checksum: null };
-  return {
-    filename,
-    checksum: createHash("sha256")
-      .update(await readFile(filename))
-      .digest("hex"),
   };
 }

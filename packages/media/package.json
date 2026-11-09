@@ -66,7 +66,7 @@
     "migrate:deploy": "prisma migrate deploy",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "lint": "eslint . --max-warnings=0 && check-architecture",
-    "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run src",
+    "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run src --testTimeout 60000 --hookTimeout 60000",
     "test:ci": "bun ../../scripts/ci/run-ci-test.ts"
   },
   "dependencies": {

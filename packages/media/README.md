@@ -373,6 +373,13 @@ they do not use a developer or production database. Filesystem tests use
 temporary directories and Python 3's `fcntl` advisory locks, including subprocess
 termination to exercise recovery.
 
+Both `test` and the CI step (`ci-tests.json`) give every test and hook a
+60-second limit instead of Vitest's 5-second and 10-second unit defaults. An
+integration journey starts PostgreSQL and file tools and can take several
+seconds alone, and longer while `verify` shares the pod with other suites. Its
+simulated authority clocks are the assertions; the wall-clock limit only
+catches hangs. Keep both copies of the flags in sync.
+
 Media inspection tests also require `ffmpeg` and `ffprobe` on `PATH`; the CI and
 Temporal images install them. The repository's mise configuration supplies the
 upstream `7zz` command used for bounded subtitle archive extraction.

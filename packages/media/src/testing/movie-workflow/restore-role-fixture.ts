@@ -1,5 +1,4 @@
 import path from "node:path";
-import { createHash } from "node:crypto";
 import { readFile, readdir } from "node:fs/promises";
 import { z } from "zod";
 import { createMovieRetentionFixture } from "./retention-fixture.ts";
@@ -18,8 +17,8 @@ import {
 } from "#automation/store.ts";
 import { RemovalPlanSchema } from "#automation/files/types.ts";
 import { ManifestSchema } from "#filesystem/operations-types.ts";
-import { exists } from "#filesystem/operations-io.ts";
 import { workerFilePath } from "#automation/files/paths/locations.ts";
+import { physicalFile } from "#testing/movie-workflow/physical-file.ts";
 import { warningHistory } from "#automation/retention/fixtures/elapsed.ts";
 import { PrismaPlexEventIngress } from "#infrastructure/plex-events/ingress.ts";
 import { ObserveMoviePlexHintV4Schema } from "#shared/plex-events/contract.ts";
@@ -215,8 +214,13 @@ async function restoreRoleEvidence(
     "journal",
   );
   const journalNames = await readdir(journalDirectory);
+  // Only installed journals: saveManifest's `.json.tmp` is renamed away.
   const names = journalNames
-    .filter((name) => name.startsWith(`${request.input.operationId}-`))
+    .filter(
+      (name) =>
+        name.startsWith(`${request.input.operationId}-`) &&
+        name.endsWith(".json"),
+    )
     .sort();
   const journals = await Promise.all(
     names.map(async (name) =>
@@ -340,15 +344,5 @@ async function restoreReadiness(f: Baseline, request: Request) {
         }),
       ),
     })),
-  };
-}
-
-async function physicalFile(filename: string) {
-  if (!(await exists(filename))) return { filename, checksum: null };
-  return {
-    filename,
-    checksum: createHash("sha256")
-      .update(await readFile(filename))
-      .digest("hex"),
   };
 }
