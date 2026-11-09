@@ -133,6 +133,8 @@ async function resolveSportsPage(
       ? {}
       : { ffmpegInputOptions: stream.inputOptions }),
     mediaKind: "video",
+    // The resolver only returns a provider's live player playlist.
+    live: true,
     chapters: [],
     provenance: { provider: "url", canonicalUrl: source.url },
   };
@@ -355,6 +357,8 @@ async function resolveLolSource(
         resolved: {
           ...candidate,
           title: event.title,
+          // Only a live broadcast gets this far (`requireLive` above).
+          live: true,
           ...(new URL(url).hostname === "www.twitch.tv"
             ? { discontinuousLive: true }
             : {}),

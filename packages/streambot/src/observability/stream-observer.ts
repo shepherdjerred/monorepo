@@ -24,6 +24,7 @@ import {
   ffmpegSpeedRatio,
   framesBehindScheduleTotal,
   hwDecodeEngaged,
+  liveScheduleEventsTotal,
   pipelineQueueDepth,
   playbackBehindSeconds,
   sendFrametimeRatio,
@@ -289,6 +290,20 @@ export function createStreamObserver(
           kind: stats.kind,
           direction: stats.syncEvent,
         });
+      }
+      if (stats.liveEvent !== undefined) {
+        liveScheduleEventsTotal.inc({
+          kind: stats.kind,
+          event: stats.liveEvent,
+        });
+        // Rare by design and each one is a visible freeze, so every rebuffer earns a log line.
+        if (stats.liveEvent === "rebuffer") {
+          log.warn("live source ran dry; rebuffering", {
+            kind: stats.kind,
+            behindMs: Math.round(stats.behindMs),
+            ptsMs: Math.round(stats.ptsMs),
+          });
+        }
       }
       if (stats.syncWaitMs > 0) {
         sendSyncWaitSecondsTotal.inc(

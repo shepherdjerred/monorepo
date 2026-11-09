@@ -8,6 +8,7 @@ import {
   ffmpegFps,
   ffmpegSpeedRatio,
   hwDecodeEngaged,
+  liveScheduleEventsTotal,
   pipelineQueueDepth,
   sendLateFramesTotal,
 } from "@shepherdjerred/streambot/observability/metrics.ts";
@@ -37,6 +38,15 @@ describe("commandUsesHardwareDecode", () => {
     ).toBe(false);
   });
 });
+
+async function liveEventCount(event: string): Promise<number> {
+  const metric = await liveScheduleEventsTotal.get();
+  return (
+    metric.values.find(
+      (v) => v.labels.kind === "video" && v.labels.event === event,
+    )?.value ?? 0
+  );
+}
 
 describe("createStreamObserver", () => {
   test("derives the realtime ratio from timemark advance vs wall-clock", async () => {
@@ -110,6 +120,27 @@ describe("createStreamObserver", () => {
     const after =
       afterMetric.values.find((v) => v.labels.kind === "video")?.value ?? 0;
     expect(after - before).toBe(1);
+    dispose();
+  });
+
+  test("onSendStats counts live rebuffers and re-anchors by kind", async () => {
+    const beforeRebuffer = await liveEventCount("rebuffer");
+    const beforeReanchor = await liveEventCount("reanchor");
+    const { observer, dispose } = createStreamObserver(true);
+    const frame = {
+      kind: "video" as const,
+      ptsMs: 0,
+      ratio: 0.1,
+      sendTime: 1,
+      frametime: 33,
+      behindMs: 900,
+      syncWaitMs: 0,
+    };
+    observer.onSendStats?.({ ...frame, liveEvent: "rebuffer" });
+    observer.onSendStats?.({ ...frame, liveEvent: "reanchor" });
+    observer.onSendStats?.({ ...frame, behindMs: 0, liveHoldMs: 4000 });
+    expect((await liveEventCount("rebuffer")) - beforeRebuffer).toBe(1);
+    expect((await liveEventCount("reanchor")) - beforeReanchor).toBe(1);
     dispose();
   });
 

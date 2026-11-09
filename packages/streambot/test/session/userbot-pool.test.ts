@@ -24,6 +24,7 @@ const STREAM_CONFIG: Pick<Config, "stream" | "voice"> = {
     readrate: 1,
     readrateInitialBurst: 2.5,
     videoPlayoutDelayMaxMs: 1000,
+    liveBufferMs: 4000,
   },
   voice: {
     enabled: false,

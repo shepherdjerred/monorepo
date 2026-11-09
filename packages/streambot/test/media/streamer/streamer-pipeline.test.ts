@@ -40,6 +40,7 @@ type PrepareSnapshot = {
   playType: string | undefined;
   hasAudioSink: boolean;
   videoPlayoutDelayMaxMs: number | undefined;
+  liveBufferMs: number | undefined;
   resolve: () => void;
   reject: (error: unknown) => void;
 };
@@ -63,6 +64,7 @@ function snapshotPlay(play: NonNullable<PlayerOptions>["play"]) {
     playType: play?.type,
     hasAudioSink: play?.audioSink !== undefined,
     videoPlayoutDelayMaxMs: play?.videoPlayoutDelayMaxMs,
+    liveBufferMs: play?.liveBufferMs,
   };
 }
 
@@ -339,6 +341,23 @@ describe("transport dispatch by media kind", () => {
 
     attempts[0]?.resolve();
     await run;
+  });
+
+  test("a live source gets the configured rebuffer cushion; seekable media does not", async () => {
+    const live = await startPipelineRun({
+      pipelineMode: "hw",
+      resolved: { ...RESOLVED_HDR_WITH_SUBS, live: true },
+    });
+    // A live input cannot be read ahead, so the pacer must rebuild a cushion instead of skipping
+    // sleeps to catch up — that catch-up never succeeds and turns every HLS segment into a burst.
+    expect(live.attempts[0]?.liveBufferMs).toBe(4000);
+    live.attempts[0]?.resolve();
+    await live.run;
+
+    const seekable = await startPipelineRun({ pipelineMode: "hw" });
+    expect(seekable.attempts[0]?.liveBufferMs).toBeUndefined();
+    seekable.attempts[0]?.resolve();
+    await seekable.run;
   });
 
   test("music never walks the encoder ladder, because it has no encoder", async () => {

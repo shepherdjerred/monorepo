@@ -42,7 +42,10 @@ import type { AssistantAudioPort } from "@shepherdjerred/streambot/streamer/audi
 import { AssistantTransport } from "@shepherdjerred/streambot/streamer/assistant-transport.ts";
 import { buildStallReport } from "@shepherdjerred/streambot/streamer/stall-report.ts";
 import { VoiceAudioMixer } from "@shepherdjerred/streambot/streamer/voice-audio-mixer.ts";
-import { buildPlaybackPrepareOptions } from "@shepherdjerred/streambot/streamer/prepare-options.ts";
+import {
+  buildPlaybackPrepareOptions,
+  buildGoLivePlayOptions,
+} from "@shepherdjerred/streambot/streamer/prepare-options.ts";
 import {
   EMPTY_VOICE_CLOSE_SOURCE,
   ordinaryVoiceCloseSource,
@@ -471,11 +474,7 @@ export class StreambotStreamer implements StreamerLike {
           // ceiling rides with them: it is the receiver headroom that burst lands in, and the
           // voice connection carries no video for it to apply to.
           ...(musicPort === null
-            ? {
-                type: "go-live" as const,
-                readrateInitialBurst: stream.readrateInitialBurst,
-                videoPlayoutDelayMaxMs: stream.videoPlayoutDelayMaxMs,
-              }
+            ? buildGoLivePlayOptions(stream, input.resolved)
             : { type: "voice" as const, audioSink: musicPort }),
           observer,
         },

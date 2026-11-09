@@ -54,6 +54,15 @@ export type SendStats = {
   syncWaitMs: number;
   /** A/V sync correction taken on this frame, if any. Each correction re-anchors the schedule. */
   syncEvent?: "ahead" | "behind";
+  /**
+   * Live-input schedule correction taken on this frame (only with a live rebuffer gate): `rebuffer`
+   * when the source ran dry and this frame opened a hold to rebuild the cushion, `reanchor` when
+   * the schedule restarted from here without one (lateness with frames queued, or a forward
+   * timestamp jump).
+   */
+  liveEvent?: "rebuffer" | "reanchor";
+  /** Wall-clock ms this frame waited for a running live rebuffer hold before sending. */
+  liveHoldMs?: number;
 };
 
 /** Encoded packet as soon as the NUT demuxer makes it available to the paced sender. */
