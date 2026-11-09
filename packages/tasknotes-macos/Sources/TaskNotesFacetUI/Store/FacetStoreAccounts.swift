@@ -418,6 +418,6 @@ extension FacetStore {
         guard ownsSyncCallback(profileID: profileID, generation: generation),
             selectedProfileID == profileID
         else { return }
-        await refresh(schedulingOccurrences: false)
+        await refresh(schedulingOccurrences: false, source: .syncProjection)
     }
 }

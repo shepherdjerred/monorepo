@@ -40,6 +40,9 @@ defaults. The status shows the current pending-change count rather than a
 percentage; it can grow while remote changes are discovered. Missing settings
 show vault setup instead of an empty task list. The existing TaskNotes plugin's
 settings can configure the app; a separate `tasknotes.yaml` is optional.
+Sync notifications read that committed index and discover settings without
+rescanning the growing replica. Manual refresh still imports provider changes
+and recovers interrupted writes.
 
 The standalone desktop uses `FacetNativeWorkspace`: a native split-view sidebar,
 task list or board, inline capture, and a persistent inspector. The iOS shell

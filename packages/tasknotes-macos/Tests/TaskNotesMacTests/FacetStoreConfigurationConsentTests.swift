@@ -5,6 +5,60 @@ import Testing
 @testable import TaskNotesKit
 
 @Suite @MainActor struct FacetStoreConfigurationConsentTests {
+    @Test func syncProjectionOffersDefaultsOnlyAfterTheDurableInitialBarrier() async throws {
+        let context = try await StoreContext.open()
+        let profile = try await context.first.registerReplica(
+            id: UUID().uuidString, name: "Unconfigured Sync replica")
+        context.store.profiles = [profile]
+        context.store.selectProfilePresentation(profile.id)
+        await context.store.refresh(schedulingOccurrences: false, source: .syncProjection)
+        #expect(!context.store.needsStandardConsent)
+        #expect(context.store.error == nil)
+        try await context.first.saveCheckpoint(
+            profileID: profile.id,
+            json: #"{"schema_version":1,"cursor":0,"initial":false,"pending":{}}"#)
+        await context.store.refresh(schedulingOccurrences: false, source: .syncProjection)
+        #expect(context.store.needsStandardConsent)
+        #expect(context.store.snapshot?.configuration == .null)
+        #expect(context.store.error == nil)
+        #expect(try await context.first.profiles().first?.approveStandard == false)
+        try await context.close()
+    }
+
+    @Test(arguments: [FacetRefreshSource.provider, .syncProjection])
+    func syncUpdatesDoNotRescanOwnedVaultFiles(source: FacetRefreshSource) async throws {
+        let context = try await StoreContext.open()
+        let profile = try await context.first.registerReplica(
+            id: UUID().uuidString, name: "Synthetic Sync replica")
+        try await context.first.approveStandard(profile: profile)
+        let cached = try await context.first.refresh(profileID: profile.id)
+        let discovery = try await context.first.features(
+            profileID: profile.id, request: .object(["kind": .string("discovery")]))
+        context.store.profiles = try await context.first.profiles()
+        context.store.selectProfilePresentation(profile.id)
+        var providerScans = 0
+        var snapshotReads = 0
+        await context.store.refreshWithOperations(
+            profileID: profile.id, logicalQuery: context.store.query(), source: source,
+            operations: FacetRefreshOperations(
+                cached: { cached }, discovery: { discovery },
+                refresh: {
+                    providerScans += 1
+                    _ = try await context.first.refresh(profileID: profile.id)
+                },
+                snapshot: {
+                    snapshotReads += 1
+                    return try await context.first.snapshot(
+                        profileID: profile.id, query: context.store.query())
+                }, ownsEngine: { context.store.engine === context.first }))
+        #expect(providerScans == (source == .provider ? 1 : 0))
+        #expect(snapshotReads == 1)
+        #expect(context.store.snapshot?.profileId == profile.id)
+        #expect(!context.store.needsStandardConsent)
+        #expect(context.store.error == nil)
+        try await context.close()
+    }
+
     @Test(arguments: [false, true])
     func missingInvalidAndValidConfigurationRetainDistinctConsent(pluginSettings: Bool) async throws
     {

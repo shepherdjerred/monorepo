@@ -1,5 +1,16 @@
 import TaskNotesKit
 
+internal enum FacetRefreshSource: Equatable, Sendable {
+    case provider, syncProjection
+
+    func importProviderChanges(_ operation: () async throws -> Void) async throws {
+        // Owned Sync commits already update the durable index. Scanning
+        // every downloaded file repeatedly rereads growing replicas and
+        // holds up the session's next transport event.
+        if self == .provider { try await operation() }
+    }
+}
+
 @MainActor
 internal struct FacetRefreshOperations {
     let cached: () async throws -> FacetSnapshot?
@@ -11,7 +22,8 @@ internal struct FacetRefreshOperations {
 
 extension FacetStore {
     internal func refreshWithOperations(
-        profileID: String, logicalQuery: FacetValue, operations: FacetRefreshOperations
+        profileID: String, logicalQuery: FacetValue, source: FacetRefreshSource = .provider,
+        operations: FacetRefreshOperations
     ) async {
         requestGeneration += 1
         let current = presentationOwner(profileID: profileID, ownsEngine: operations.ownsEngine)
@@ -35,7 +47,7 @@ extension FacetStore {
             {
                 return
             }
-            try await operations.refresh()
+            try await source.importProviderChanges(operations.refresh)
             guard current() else { return }
             let result = try await operations.snapshot()
             guard current() else { return }
