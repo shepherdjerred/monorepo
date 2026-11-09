@@ -43,7 +43,9 @@ Patches are applied to the base Talos machine configuration to customize the clu
 
 **Current settings**: `cluster.apiServer.resources.requests` is `200m` CPU (the Talos default) and `2816Mi` memory. The 512Mi Talos default was a fifth of the measured RSS (p95 2.59Gi, max 2.76Gi over 14 days), which made the control plane the kubelet's first eviction candidate under memory pressure. Static pods are mirror pods, so admission-time request scaling never applies to it.
 
-**Apply**: `talosctl patch machineconfig --patch @torvalds/patches/apiserver.yaml --mode=no-reboot`. The patch touches only map fields. Talos restarts the kube-apiserver static pod to pick up the new requests, so the API is briefly unavailable.
+**Apply**: `talosctl patch machineconfig --patch @torvalds/patches/apiserver.yaml --mode=no-reboot`. The patch touches only map fields.
+
+**Applied**: live on torvalds 2026-11-09 23:31Z. The API was down for about six minutes, not a brief restart. Talos re-rendered the kube-apiserver static pod and the kubelet stopped the old one. The kubelet then never started the new one: each sync ended with its volumes mounted and `context deadline exceeded`, and no sandbox was created. The kubelet's volume manager stays blocked while the API it would query is down. `talosctl service kubelet restart` cleared it within 30 seconds. On a single control-plane node, any change to the kube-apiserver static pod can hit this. Watch `talosctl containers -k` for a new `kube-apiserver` container, and restart the kubelet if none appears within a minute. The kubelet restart briefly unregisters the ZFS CSI driver, so `FailedMount` events and crashloops in API-dependent controllers follow for about two minutes before they clear on their own.
 
 ### zfs.yaml
 
