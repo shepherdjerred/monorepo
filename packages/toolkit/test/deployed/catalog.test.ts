@@ -77,6 +77,7 @@ describe("deployed registry derived from the service catalog", () => {
         "alert-dashboard default shepherdjerred/alert-dashboard alert-dashboard",
         "arcade default shepherdjerred/arcade arcade",
         "birmel default shepherdjerred/birmel birmel",
+        "glitter-boys-launcher default shepherdjerred/glitter-boys-launcher glitter-boys-launcher",
         "homelab default shepherdjerred/caddy-s3proxy s3-static-sites",
         "homelab redlib shepherdjerred/redlib redlib",
         "scout-for-lol beta shepherdjerred/scout-for-lol/beta scout-beta",
