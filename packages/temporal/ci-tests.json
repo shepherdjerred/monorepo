@@ -5,6 +5,7 @@
     {
       "runner": "command",
       "name": "ha-schema",
+      "tier": "shared",
       "command": ["bun", "run", "scripts/homelab/ensure-ha-schema.ts"]
     },
     {
@@ -24,12 +25,21 @@
         "src/worker-config.test.ts",
         "scripts/check-workflow-tracing-safety.test.ts",
         "scripts/cli-arguments.test.ts",
-        "scripts/rollout/temporal-operator-credentials.test.ts"
+        "scripts/rollout/temporal-operator-credentials.test.ts",
+        "--exclude",
+        "**/*.integration.test.ts"
       ]
     },
     {
       "runner": "vitest",
+      "name": "integration",
+      "tier": "extended",
+      "args": ["--dir", "src", ".integration.test.ts"]
+    },
+    {
+      "runner": "vitest",
       "name": "workflows",
+      "tier": "extended",
       "runtime": "node",
       "runtimeReason": "The Temporal SDK worker requires authentic Node worker_threads, VM, promise hooks, and native worker support; Bun 1.4 exits the workflow thread with code 1.",
       "args": [

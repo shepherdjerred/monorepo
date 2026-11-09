@@ -49,6 +49,21 @@ describe("agent pool routing", () => {
     },
   );
 
+  test.each([{ maintenance: true }, { extended: true }])(
+    "keeps default-branch background work %j in the PR pool at draft priority",
+    (background) => {
+      for (const event of ["manual", "push"]) {
+        expect(
+          routeSteps([verify], { ...context, event, ...background }, image)[0]
+            ?.agentLabels,
+        ).toEqual({
+          "ci-pool": "pr",
+          "kueue.x-k8s.io/priority-class": "ci-draft",
+        });
+      }
+    },
+  );
+
   test("uses draft priority without changing the verification graph", () => {
     const routed = routeSteps(steps, { ...context, draft: true }, image);
     expect(routed.map((step) => step.key)).toEqual(

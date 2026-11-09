@@ -13,8 +13,10 @@ import {
 import {
   WORKSPACE_TESTS_FILE,
   readWorkspaceTests,
+  stepRunsInTier,
   workspaceDirectories,
   type TestStep,
+  type TestTier,
 } from "./test-manifest-schema.ts";
 import {
   gradleJUnitReportPaths,
@@ -22,15 +24,48 @@ import {
 } from "./gradle-junit.ts";
 
 const repositoryRoot = path.resolve(import.meta.dir, "..", "..");
-const cliArguments = process.argv.slice(2);
-const [groupFlag, groupName, ...extraArguments] = cliArguments;
-const requestedGroup =
-  groupFlag === "--group" && extraArguments.length === 0
-    ? groupName
-    : undefined;
-if (requestedGroup === undefined && cliArguments.length > 0) {
-  throw new Error(`Unknown arguments: ${cliArguments.join(", ")}`);
+
+/**
+ * `--group <name>` selects one of a grouped workspace's step groups and
+ * `--tier ci|extended` selects the test tier (default `ci`); either order.
+ * Anything else is an error so a mistyped script never silently runs the
+ * wrong steps.
+ */
+function parseArguments(cliArguments: readonly string[]): {
+  requestedGroup: string | undefined;
+  requestedTier: TestTier;
+} {
+  let requestedGroup: string | undefined;
+  let requestedTier: TestTier | undefined;
+  const unknown: string[] = [];
+  for (let index = 0; index < cliArguments.length; index++) {
+    const flag = cliArguments[index];
+    const value = cliArguments[index + 1];
+    if (
+      flag === "--group" &&
+      value !== undefined &&
+      requestedGroup === undefined
+    ) {
+      requestedGroup = value;
+      index++;
+    } else if (
+      flag === "--tier" &&
+      requestedTier === undefined &&
+      (value === "ci" || value === "extended")
+    ) {
+      requestedTier = value;
+      index++;
+    } else {
+      unknown.push(flag ?? "");
+    }
+  }
+  if (unknown.length > 0) {
+    throw new Error(`Unknown arguments: ${unknown.join(", ")}`);
+  }
+  return { requestedGroup, requestedTier: requestedTier ?? "ci" };
 }
+
+const { requestedGroup, requestedTier } = parseArguments(process.argv.slice(2));
 const workspaceDirectory = path
   .relative(repositoryRoot, process.cwd())
   .split(path.sep)
@@ -60,6 +95,19 @@ if (requestedGroup === undefined && groups.size > 0) {
 if (requestedGroup !== undefined && !groups.has(requestedGroup)) {
   throw new Error(
     `${workspace.package} has no CI test group ${requestedGroup}`,
+  );
+}
+const selectedSteps = workspace.steps.filter(
+  (step) =>
+    step.group === requestedGroup && stepRunsInTier(step, requestedTier),
+);
+// A `test:<tier>` script whose tier has no steps would pass while running
+// nothing; `shared` prerequisites alone do not make a tier.
+if (!selectedSteps.some((step) => (step.tier ?? "ci") === requestedTier)) {
+  const scope =
+    requestedGroup === undefined ? "" : ` in group ${requestedGroup}`;
+  throw new Error(
+    `${workspace.package} has no ${requestedTier} steps${scope}; remove the test:${requestedTier} script`,
   );
 }
 const allWorkspaceDirectories = await workspaceDirectories(repositoryRoot);
@@ -288,9 +336,10 @@ function expectedCoveragePath(
     : path.join(rawCoverageDirectory, artifactFilename);
 }
 
-// Report names keep each step's index in ci-tests.json, so groups never collide.
+// Report names keep each step's index in ci-tests.json, so groups and tiers
+// never collide.
 for (const [index, step] of workspace.steps.entries()) {
-  if (step.group !== requestedGroup) continue;
+  if (!selectedSteps.includes(step)) continue;
   const name = testStepReportName(step, index);
   const reportPath = path.resolve(outputDirectory, `${name}.xml`);
   await removeExistingReport(reportPath);

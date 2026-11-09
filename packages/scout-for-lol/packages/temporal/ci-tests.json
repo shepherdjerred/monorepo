@@ -9,6 +9,7 @@
     {
       "runner": "vitest",
       "name": "workflows",
+      "tier": "extended",
       "runtime": "node",
       "runtimeReason": "The Temporal SDK worker requires authentic Node worker_threads, VM, promise hooks, and native worker support; Bun 1.4 exits the workflow thread with code 1.",
       "args": ["src/workflows", "--no-file-parallelism"]

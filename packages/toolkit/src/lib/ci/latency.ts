@@ -12,6 +12,9 @@ export function pipelineKind(pipeline: WoodpeckerPipeline): string {
     names.has("maintenance-workspace-seeds")
   )
     return "maintenance";
+  // The nightly extended test tier is a manual main run without the release
+  // graph; it must never be mistaken for a main verdict or a ready PR.
+  if (names.has("verify-extended")) return "extended";
   if (
     pipeline.branch === "main" &&
     ["push", "manual"].includes(pipeline.event ?? "") &&

@@ -5,7 +5,7 @@
  * without HA credentials. `bun run generate` replaces the file in full with
  * codegen output from the live HA instance.
  */
-import { copyFile, stat } from "node:fs/promises";
+import { copyFile, rename, stat } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -24,7 +24,12 @@ async function main(): Promise<void> {
     // fall through to copy
   }
 
-  await copyFile(stub, target);
+  // Write-then-rename so a concurrent reader (the ci and extended tiers, or
+  // typecheck and a test task, each run this as their first step) never sees
+  // a half-copied file.
+  const scratch = `${target}.${process.pid.toString()}.tmp`;
+  await copyFile(stub, scratch);
+  await rename(scratch, target);
   console.warn(`ensure-ha-schema: copied stub → ${target}`);
 }
 

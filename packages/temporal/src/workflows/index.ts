@@ -10,6 +10,11 @@ import * as ciMaintenance from "./ci/maintenance.ts";
 export const runCiMaintenanceTick = ciMaintenance.runCiMaintenanceTick;
 export const runCiMaintenanceCoordinator =
   ciMaintenance.runCiMaintenanceCoordinator;
+import { runCiExtendedVerifyWorkflow as _runCiExtendedVerifyWorkflow } from "./ci/extended-verify.ts";
+import type { CiExtendedVerifyResult } from "#shared/ci-extended-verify.ts";
+export async function runCiExtendedVerifyWorkflow(): Promise<CiExtendedVerifyResult> {
+  return _runCiExtendedVerifyWorkflow();
+}
 import { fetchSkillCappedManifest as _fetchSkillCappedManifest } from "./homelab/fetcher.ts";
 export const runWoodpeckerLogRetention = (
   input: Parameters<typeof _runWoodpeckerLogRetention>[0] = {},

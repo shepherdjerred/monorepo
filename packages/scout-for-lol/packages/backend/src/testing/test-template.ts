@@ -7,10 +7,12 @@
  * baseline migration SQL, the seeded SEASONS data, and this module — no
  * longer matches the hash recorded inside the template itself.
  *
- * Runs from the bun test preload; guarded by a cross-process lock in the
- * shared data root so parallel suites refresh exactly once. The database name
- * includes the content hash so parallel checkouts never rebuild one another's
- * template while sharing the machine-wide server.
+ * Runs lazily from the first createTestDatabase call in a test process (not
+ * from the test preload, so suites that never touch Postgres never start it);
+ * guarded by a cross-process lock in the shared data root so parallel suites
+ * refresh exactly once. The database name includes the content hash so
+ * parallel checkouts never rebuild one another's template while sharing the
+ * machine-wide server.
  */
 import { SEASONS } from "@scout-for-lol/data";
 import { createLogger } from "#src/logger.ts";
@@ -38,8 +40,13 @@ let activeTemplateDatabase: string | undefined;
 
 const BACKEND_ROOT = `${import.meta.dir}/../..`;
 const MIGRATIONS_DIR = `${BACKEND_ROOT}/prisma/migrations`;
+const ENSURE_TEMPLATE_SCRIPT = `${BACKEND_ROOT}/scripts/ensure-test-template.ts`;
 
-async function computeTemplateHash(): Promise<string> {
+/**
+ * Synchronous so createTestDatabase (called at suite module scope) can use it;
+ * Bun.mmap is the synchronous file read (Bun.file().text() is not).
+ */
+function computeTemplateHash(): string {
   const hasher = new Bun.CryptoHasher("sha256");
   hasher.update(TEMPLATE_SCHEMA_VERSION);
   const glob = new Bun.Glob("*/migration.sql");
@@ -49,7 +56,7 @@ async function computeTemplateHash(): Promise<string> {
   }
   for (const file of files) {
     hasher.update(file);
-    hasher.update(await Bun.file(`${MIGRATIONS_DIR}/${file}`).text());
+    hasher.update(Bun.mmap(`${MIGRATIONS_DIR}/${file}`));
   }
   hasher.update(JSON.stringify(SEASONS));
   return hasher.digest("hex");
@@ -62,10 +69,47 @@ function templateDatabaseName(hash: string): string {
 export function getTestTemplateDatabase(): string {
   if (activeTemplateDatabase === undefined) {
     throw new Error(
-      "Test template has not been initialized; run the backend test preload first",
+      "Test template has not been initialized; call ensureTestTemplate or ensureTestTemplateSync first",
     );
   }
   return activeTemplateDatabase;
+}
+
+/**
+ * The synchronous entry createTestDatabase uses: the first clone in a process
+ * ensures the server, sweeps leaked databases and checks the template hash;
+ * later clones return at once. A template rebuild seeds through Prisma, which
+ * is async, so a miss runs scripts/ensure-test-template.ts in a child Bun
+ * process and waits for it. Suites call createTestDatabase at module scope,
+ * so this path cannot await.
+ */
+export function ensureTestTemplateSync(): void {
+  if (activeTemplateDatabase !== undefined) return;
+  sweepStaleTestDatabases();
+  const wanted = computeTemplateHash();
+  const databaseName = templateDatabaseName(wanted);
+  if (currentTemplateHash(databaseName) !== wanted) {
+    const result = Bun.spawnSync(
+      ["bun", "--no-install", ENSURE_TEMPLATE_SCRIPT],
+      {
+        cwd: BACKEND_ROOT,
+        env: Bun.env,
+        stdout: "inherit",
+        stderr: "inherit",
+      },
+    );
+    if (result.exitCode !== 0) {
+      throw new Error(
+        `ensure-test-template exited with status ${result.exitCode.toString()}; the ${databaseName} template could not be rebuilt`,
+      );
+    }
+    if (currentTemplateHash(databaseName) !== wanted) {
+      throw new Error(
+        `${databaseName} does not carry hash ${wanted.slice(0, 12)}… after a rebuild`,
+      );
+    }
+  }
+  activeTemplateDatabase = databaseName;
 }
 
 function currentTemplateHash(databaseName: string): string | undefined {
@@ -195,7 +239,7 @@ async function rebuildTemplate(
  */
 export async function ensureTestTemplate(): Promise<void> {
   ensureDevPostgres();
-  const wanted = await computeTemplateHash();
+  const wanted = computeTemplateHash();
   const databaseName = templateDatabaseName(wanted);
   activeTemplateDatabase = databaseName;
   if (currentTemplateHash(databaseName) === wanted) {

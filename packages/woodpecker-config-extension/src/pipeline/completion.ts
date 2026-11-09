@@ -100,6 +100,16 @@ export function completionStep(
   };
 }
 
+/**
+ * A clone-free, tokenless receipt for a manual request that selected no work.
+ *
+ * Events that select nothing (tags, feature-branch pushes, closed pull
+ * requests, ordinary PR metadata edits) no longer emit this: `app.ts` returns
+ * an empty configuration set and Woodpecker records no pipeline at all. It
+ * remains the shape of the maintenance `superseded` and `unverified` receipts
+ * (`maintenance.ts`) and the extended tier's `superseded` receipt
+ * (`extended.ts`), whose Temporal dispatchers read the finished workflow.
+ */
 export function noWorkStep(image: string): CiStep {
   return {
     key: "ci-noop",

@@ -15,21 +15,35 @@ const TMP = { name: "ci-ram-tmp", path: "/woodpecker/tmp" } as const;
  * Verify qualified at a 24.1 GiB observed peak with no OOM under its 36Gi
  * limit. The browser lane peaks below 3 GiB; Scout's test PostgreSQL cluster
  * and browser profiles are its TMPDIR writers.
+ *
+ * The extended tier is the same Turbo graph running the heavier suites alone
+ * (every integration suite boots a private PostgreSQL cluster under TMPDIR),
+ * so it reuses verify's allowance under its own key: the homelab admission
+ * policy mounts tmpfs only for the exact step key a profile names.
  */
+const VERIFY_SCRATCH = {
+  label: LABEL,
+  volumes: [
+    { ...TMP, size: "8Gi" },
+    { name: "ci-ram-gradle", path: "/woodpecker/gradle", size: "4Gi" },
+  ],
+  resources: {
+    ...TURBO_VERIFY_TIER,
+    memoryRequest: "30Gi",
+    memoryLimit: "36Gi",
+  },
+} as const;
+
 export const RAM_SCRATCH_PROFILES = {
   verify: {
-    label: LABEL,
+    ...VERIFY_SCRATCH,
     stepKey: "verify",
     profile: "verify-v1",
-    volumes: [
-      { ...TMP, size: "8Gi" },
-      { name: "ci-ram-gradle", path: "/woodpecker/gradle", size: "4Gi" },
-    ],
-    resources: {
-      ...TURBO_VERIFY_TIER,
-      memoryRequest: "30Gi",
-      memoryLimit: "36Gi",
-    },
+  },
+  "verify-extended": {
+    ...VERIFY_SCRATCH,
+    stepKey: "verify-extended",
+    profile: "verify-extended-v1",
   },
   "playwright-e2e": {
     label: LABEL,

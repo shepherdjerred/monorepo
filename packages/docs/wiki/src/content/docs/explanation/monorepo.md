@@ -48,8 +48,14 @@ Local and CI verification deliberately have different scopes:
   [`staged-package-quality.ts`](https://github.com/shepherdjerred/monorepo/blob/main/scripts/checks/staged-package-quality.ts)
   runs `typecheck` and `lint` for owning workspaces at `--concurrency=1`.
   It does not run tests, dependents, or the whole-repo graph.
-- **Woodpecker CI** runs the exhaustive root `bun run verify` graph on every
-  PR. That is the real gate.
+- **Woodpecker CI** runs the `ci` test tier of the root `bun run verify` graph
+  on every PR. That is the real gate.
+- The **`extended` tier** — steps a workspace's `ci-tests.json` marks
+  `tier: "extended"` because they start a database, the Temporal test server
+  or a media tool — runs locally before a PR is marked ready and nightly on
+  main, never on pull requests. The
+  [test tier reference](/reference/ci-test-tiers/) lists the rule and what each
+  workspace puts there.
 
 Running the full graph locally is for reproducing a CI failure or changing the
 verification machinery, not for everyday work. There is no pre-push hook.

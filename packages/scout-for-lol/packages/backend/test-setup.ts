@@ -3,7 +3,6 @@
  * Configure test environment and global setup here
  */
 import { tmpdir } from "node:os";
-import path from "node:path";
 
 // Set test environment variables
 Bun.env.NODE_ENV = "test";
@@ -46,24 +45,14 @@ Bun.env["DATABASE_URL"] =
   Bun.env["DATABASE_URL"] ??
   `postgres://scout@127.0.0.1:${Bun.env["SCOUT_PG_PORT"] ?? "5471"}/scout_test_unbound`;
 
-// Ensure the shared dev Postgres is up, sweep leaked test databases from
-// crashed runs, and (re)build the hash-scoped test template database that
-// createTestDatabase clones — for BACKEND test runs only. This file is also
+// Nothing here starts Postgres. The first createTestDatabase call in a test
+// process ensures the shared dev server, sweeps leaked test databases and
+// (re)builds the hash-scoped template it clones (src/testing/test-template.ts),
+// so the `ci` tier — every suite outside *.integration.test.ts — pays for a
+// database only when a suite actually asks for one. This file is also
 // preloaded by the scout package root's bunfig.toml for its script suites,
-// where importing the harness would require a running Postgres for pure
-// script tests and drag @scout-for-lol/data into their coverage denominator
-// (the package coverage gate measures every loaded file).
-//
-// Compared with `path.relative`, not `===`: on Windows `process.cwd()` is
-// backslashed while vitest hands this module a forward-slashed
-// `import.meta.dir`, so string equality never held there and every
-// database-backed backend test failed before running.
-if (path.relative(process.cwd(), import.meta.dir) === "") {
-  const { ensureTestTemplate, sweepStaleTestDatabases } =
-    await import("./src/testing/test-template.ts");
-  sweepStaleTestDatabases();
-  await ensureTestTemplate();
-}
+// which must stay free of the harness and of @scout-for-lol/data in their
+// coverage denominator.
 
 // Deterministic HS256 signing secret for session-JWT tests (auth-web,
 // jwt). Must be >= 32 chars (jwt.ts#getKey refuses shorter) and must be

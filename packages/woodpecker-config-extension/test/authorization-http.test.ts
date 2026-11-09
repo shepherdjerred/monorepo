@@ -4,6 +4,10 @@ import { describe, expect, test, vi } from "vitest";
 import { z } from "zod";
 import { parse } from "yaml";
 import { createApp } from "#src/app.ts";
+import {
+  DISABLED_PERFORMANCE,
+  type PerformanceOptions,
+} from "#src/performance-config.ts";
 import fixture from "./fixtures/woodpecker-v3.18.1-config-request.json" with { type: "json" };
 import { TEST_IMAGES } from "./identity.ts";
 
@@ -19,11 +23,18 @@ const ConfigResponseSchema = z.object({
   configs: z.array(z.object({ name: z.string(), data: z.string() })),
 });
 
+/** Default-branch manual lanes and performance flags a harness may enable. */
+type HarnessLanes = {
+  readonly maintenance?: boolean;
+  readonly extended?: boolean;
+  readonly performance?: Partial<PerformanceOptions>;
+};
+
 function harness(
   hostedAutomationApproved = false,
   trustedGateImage?: string,
   cacheEnabled = false,
-  maintenanceEnabled = false,
+  lanes: HarnessLanes = {},
 ) {
   const imageFetcher = vi.fn((file: string) =>
     Promise.resolve(
@@ -36,11 +47,19 @@ function harness(
   );
   const cancelSupersededPr = vi.fn(() => Promise.resolve());
   const sourceCacheEnabled = vi.fn(() => Promise.resolve(cacheEnabled));
+  const performance = lanes.performance;
   const app = createApp({
     deliveryPublicationEnabled: () => Promise.resolve(true),
     deliveryCatalogV2Enabled: () => Promise.resolve(true),
-    maintenanceEnabled: () => Promise.resolve(maintenanceEnabled),
+    maintenanceEnabled: () => Promise.resolve(lanes.maintenance === true),
+    extendedVerifyEnabled: () => Promise.resolve(lanes.extended === true),
     sourceCacheEnabled,
+    ...(performance === undefined
+      ? {}
+      : {
+          performanceOptions: () =>
+            Promise.resolve({ ...DISABLED_PERFORMANCE, ...performance }),
+        }),
     ...(trustedGateImage === undefined ? {} : { trustedGateImage }),
     publicKey: () => Promise.resolve(publicKey),
     imageFetcher,
@@ -102,17 +121,30 @@ async function request(
 }
 
 describe("signed Justin pipeline authorization", () => {
-  test("non-work events with no source branch return a no-work verdict", async () => {
-    const { app, sourceCacheEnabled } = harness();
-    const response = await app.request(
-      await request({ event: "tag", branch: "", refspec: "" }),
-    );
-    expect(response.status).toBe(200);
-    expect(sourceCacheEnabled).not.toHaveBeenCalled();
-    const configs = ConfigResponseSchema.parse(await response.json());
-    expect(configs.configs).toHaveLength(1);
-    expect(configs.configs[0]?.data).toContain("ci-noop");
-  });
+  test.each([
+    { event: "tag", branch: "", ref: "refs/tags/v1.0.0", refspec: "" },
+    {
+      event: "push",
+      branch: "feature/scratch",
+      ref: "refs/heads/feature/scratch",
+      refspec: "",
+    },
+    { event: "pull_request_closed" },
+  ])(
+    "events that select no work emit no workflows, so no pipeline is recorded: %j",
+    async (event) => {
+      const { app, imageFetcher, sourceCacheEnabled, base, changedBase } =
+        harness();
+      const response = await app.request(await request(event));
+      expect(response.status).toBe(200);
+      expect(await response.json()).toEqual({ configs: [] });
+      // A no-work event has no use for the forge reads a real graph needs.
+      expect(imageFetcher).not.toHaveBeenCalled();
+      expect(sourceCacheEnabled).not.toHaveBeenCalled();
+      expect(base).not.toHaveBeenCalled();
+      expect(changedBase).not.toHaveBeenCalled();
+    },
+  );
   test("source cache canaries use the signed source refspec and keep PR storage separate", async () => {
     const image = `docker.io/shepherdjerred/woodpecker-config-extension@sha256:${"a".repeat(64)}`;
     const { app, sourceCacheEnabled } = harness(false, image, true);
@@ -218,14 +250,16 @@ describe("signed maintenance routing", () => {
     },
     { variables: { CI_MAINTENANCE_KIND: "unknown" } },
   ])("refuses a forged maintenance scope %j", async (change) => {
-    const { app } = harness(false, undefined, false, true);
+    const { app } = harness(false, undefined, false, { maintenance: true });
     const response = await app.request(await request({ ...manual, ...change }));
     expect(response.status).toBe(400);
   });
   test.each(["release-notes", "ci-images"])(
     "emits one %s workflow in the PR pool below ready priority",
     async (kind) => {
-      const { app, base, changedBase } = harness(false, undefined, false, true);
+      const { app, base, changedBase } = harness(false, undefined, false, {
+        maintenance: true,
+      });
       const response = await app.request(
         await request({ ...manual, variables: { CI_MAINTENANCE_KIND: kind } }),
       );
@@ -241,7 +275,7 @@ describe("signed maintenance routing", () => {
     },
   );
   test("main moving during submission emits no maintenance writes", async () => {
-    const { app } = harness(false, undefined, false, true);
+    const { app } = harness(false, undefined, false, { maintenance: true });
     const response = await app.request(
       await request({
         ...manual,
@@ -263,7 +297,9 @@ describe("signed maintenance routing", () => {
     variables: { ...manual.variables, CI_MAINTENANCE_SOURCE: verified },
   };
   test("a request for the verified commit behind the tip checks out that commit", async () => {
-    const { app, changedBase } = harness(false, gate, true, true);
+    const { app, changedBase } = harness(false, gate, true, {
+      maintenance: true,
+    });
     changedBase.mockResolvedValue(verified);
     const response = await app.request(await request(behindTip));
     const body = ConfigResponseSchema.parse(await response.json());
@@ -276,7 +312,9 @@ describe("signed maintenance routing", () => {
     expect(changedBase).toHaveBeenCalledOnce();
   });
   test("without the source cache a verified source behind the tip is superseded", async () => {
-    const { app, changedBase } = harness(false, gate, false, true);
+    const { app, changedBase } = harness(false, gate, false, {
+      maintenance: true,
+    });
     changedBase.mockResolvedValue(verified);
     const response = await app.request(await request(behindTip));
     const body = ConfigResponseSchema.parse(await response.json());
@@ -389,17 +427,19 @@ describe("signed workflow routing", () => {
     { event_reason: ["converted_to_draft"], pr_draft: true },
     { event_reason: ["ready_for_review"], pr_draft: true },
   ])(
-    "keeps other metadata from producing merge evidence: %j",
+    "keeps other metadata from producing merge evidence or a pipeline: %j",
     async (metadata) => {
-      const { app, cancelSupersededPr } = harness(true, gateImage);
+      const { app, cancelSupersededPr, imageFetcher } = harness(
+        true,
+        gateImage,
+      );
       const response = await app.request(
         await request({ event: "pull_request_metadata", ...metadata }),
       );
-      const result = ConfigResponseSchema.parse(await response.json());
-      expect(result.configs.map((entry) => entry.name)).toEqual([
-        ".woodpecker/ci-noop.yaml",
-      ]);
+      expect(response.status).toBe(200);
+      expect(await response.json()).toEqual({ configs: [] });
       expect(cancelSupersededPr).not.toHaveBeenCalled();
+      expect(imageFetcher).not.toHaveBeenCalled();
     },
   );
   test.each([[false, "ci-ready"]])(
@@ -467,16 +507,188 @@ describe("signed workflow routing", () => {
       expect(cancelSupersededPr).toHaveBeenCalledTimes(credentialless ? 0 : 1);
     },
   );
+});
 
-  test("keeps metadata no-ops out of the completion pool", async () => {
-    const { app } = harness(true, gateImage);
+describe("signed extended verification routing", () => {
+  const REQUEST = "8f6d3a2e-4c1b-4e7a-9f0d-2b5c6d7e8f90";
+  const manual = {
+    event: "manual",
+    branch: "main",
+    ref: "refs/heads/main",
+    variables: {
+      CI_EXTENDED_REQUEST: REQUEST,
+      CI_EXTENDED_SOURCE: fixture.pipeline.commit,
+    },
+  };
+  const gate = `docker.io/shepherdjerred/woodpecker-config-extension@sha256:${"c".repeat(64)}`;
+  const enabled = (cacheEnabled = false) =>
+    harness(false, gate, cacheEnabled, { extended: true });
+
+  test("a disabled flag refuses the owner's request before any forge read", async () => {
+    const { app, imageFetcher, changedBase } = harness(false, gate);
+    const response = await app.request(await request(manual));
+    expect(response.status).toBe(403);
+    expect(imageFetcher).not.toHaveBeenCalled();
+    expect(changedBase).not.toHaveBeenCalled();
+  });
+  test("hosted automation cannot request the extended tier", async () => {
+    const { app, imageFetcher } = enabled();
     const response = await app.request(
-      await request({ event: "pull_request_metadata" }),
+      await request({ ...manual, author: "renovate[bot]", sender: "" }),
     );
-    const result = ConfigResponseSchema.parse(await response.json());
-    expect(result.configs).toHaveLength(1);
-    const workflow: unknown = parse(result.configs[0]?.data ?? "");
-    expect(workflow).toMatchObject({ labels: { "ci-pool": "pr" } });
+    expect(response.status).toBe(403);
+    expect(imageFetcher).not.toHaveBeenCalled();
+  });
+  test.each([
+    { event: "push" },
+    { event: "pull_request" },
+    { branch: "ci-canary/extended", ref: "refs/heads/ci-canary/extended" },
+    { ref: "refs/pull/1/head" },
+    {
+      variables: { ...manual.variables, CI_MAINTENANCE_KIND: "release-notes" },
+    },
+    { variables: { ...manual.variables, CI_BENCHMARK_PROFILE: "verify" } },
+    { variables: { ...manual.variables, TOFU_PLATFORM_PLAN: "openai" } },
+    { variables: { ...manual.variables, CI_IO_FIXED_CORPUS: "x" } },
+    { variables: { ...manual.variables, CI_EXTENDED_SOURCE: "main" } },
+    { variables: { ...manual.variables, CI_EXTENDED_SOURCE: "B".repeat(40) } },
+    { variables: { ...manual.variables, CI_EXTENDED_REQUEST: "nightly" } },
+    { variables: { CI_EXTENDED_REQUEST: REQUEST } },
+  ])("refuses a malformed or mixed request %j", async (change) => {
+    const { app, imageFetcher } = enabled();
+    const response = await app.request(await request({ ...manual, ...change }));
+    expect(response.status).toBe(400);
+    expect(imageFetcher).not.toHaveBeenCalled();
+  });
+  test("a request for the tip emits one verify-extended workflow in the PR pool at draft priority", async () => {
+    const { app, base, changedBase, cancelSupersededPr } = enabled();
+    const response = await app.request(await request(manual));
+    expect(response.status).toBe(200);
+    const body = ConfigResponseSchema.parse(await response.json());
+    expect(body.configs.map((config) => config.name)).toEqual([
+      ".woodpecker/verify-extended.yaml",
+    ]);
+    const workflow = z
+      .object({
+        labels: z.record(z.string(), z.string()),
+        concurrency: z.object({ limit: z.number(), group: z.string() }),
+        depends_on: z.unknown().optional(),
+        steps: z.array(
+          z.object({
+            commands: z.array(z.string()),
+            environment: z.record(z.string(), z.string()),
+            backend_options: z.object({
+              kubernetes: z.object({
+                secrets: z.array(
+                  z.object({ target: z.object({ env: z.string() }) }),
+                ),
+              }),
+            }),
+          }),
+        ),
+      })
+      .parse(parse(body.configs[0]?.data ?? ""));
+    expect(workflow.labels).toMatchObject({
+      "ci-pool": "pr",
+      "kueue.x-k8s.io/priority-class": "ci-draft",
+    });
+    expect(workflow.concurrency).toEqual({
+      limit: 1,
+      group: "verify-extended",
+    });
+    expect(workflow.depends_on).toBeUndefined();
+    const [step] = workflow.steps;
+    expect(step?.environment).toMatchObject({
+      CI_EXTENDED_REQUEST: REQUEST,
+      CI_EXTENDED_SOURCE: fixture.pipeline.commit,
+      CI_CHANGED_BASE: "",
+      TURBO_TEAM: "monorepo",
+      GRADLE_BUILD_CACHE_USERNAME: "ci-main",
+    });
+    expect(step?.commands.join("\n")).toContain(
+      "run-with-diagnostics.ts verify-extended --",
+    );
+    expect(step?.commands.join("\n")).toContain(
+      "bun --no-install run verify:extended -- --output-logs=errors-only --summarize",
+    );
+    expect(
+      step?.backend_options.kubernetes.secrets
+        .map((secret) => secret.target.env)
+        .toSorted(),
+    ).toEqual([
+      "GITHUB_DOWNLOAD_TOKEN",
+      "GRADLE_BUILD_CACHE_WRITE_PASSWORD",
+      "SEAWEEDFS_HANDOFF_ACCESS_KEY_ID",
+      "SEAWEEDFS_HANDOFF_SECRET_ACCESS_KEY",
+      "TURBO_REMOTE_CACHE_SIGNATURE_KEY",
+      "TURBO_TOKEN",
+    ]);
+    // The tip is the requested source: no verified-main lookup is needed.
+    expect(changedBase).not.toHaveBeenCalled();
+    expect(base).not.toHaveBeenCalled();
+    expect(cancelSupersededPr).not.toHaveBeenCalled();
+  });
+  const verified = "b".repeat(40);
+  const behindTip = {
+    ...manual,
+    variables: { ...manual.variables, CI_EXTENDED_SOURCE: verified },
+  };
+  test("a verified source behind the tip is checked out through the main source cache", async () => {
+    const { app, changedBase, imageFetcher } = enabled(true);
+    changedBase.mockResolvedValue(verified);
+    const response = await app.request(await request(behindTip));
+    const body = ConfigResponseSchema.parse(await response.json());
+    expect(body.configs.map((config) => config.name)).toEqual([
+      ".woodpecker/verify-extended.yaml",
+    ]);
+    expect(body.configs[0]?.data).toContain("checkout.sh");
+    expect(body.configs[0]?.data).toContain(verified);
+    expect(body.configs[0]?.data).toContain("woodpecker-source-main");
+    expect(body.configs[0]?.data).not.toContain(fixture.pipeline.commit);
+    expect(changedBase).toHaveBeenCalledOnce();
+    // Images resolve at the pinned commit, not the tip.
+    expect(imageFetcher).toHaveBeenCalledWith(expect.any(String), verified);
+  });
+  test.each([
+    ["no longer verified", true, "c".repeat(40)],
+    ["without the source cache", false, verified],
+  ])(
+    "a source behind the tip that is %s emits a superseded receipt instead of running",
+    async (_case, cacheEnabled, newestVerified) => {
+      const { app, changedBase } = enabled(cacheEnabled);
+      changedBase.mockResolvedValue(newestVerified);
+      const response = await app.request(await request(behindTip));
+      const body = ConfigResponseSchema.parse(await response.json());
+      expect(body.configs.map((config) => config.name)).toEqual([
+        ".woodpecker/extended-superseded.yaml",
+      ]);
+      const receipt: unknown = parse(body.configs[0]?.data ?? "");
+      expect(receipt).toMatchObject({
+        skip_clone: true,
+        labels: {
+          "ci-pool": "pr",
+          "kueue.x-k8s.io/priority-class": "ci-draft",
+        },
+      });
+      expect(body.configs[0]?.data).not.toContain("secrets:");
+      expect(body.configs[0]?.data).not.toContain("verify:extended");
+    },
+  );
+  test("performance flags apply to the extended tier like verify", async () => {
+    const { app } = harness(false, gate, false, {
+      extended: true,
+      performance: { scratch: true, miseInstalls: true },
+    });
+    const response = await app.request(await request(manual));
+    const body = ConfigResponseSchema.parse(await response.json());
+    const data = body.configs[0]?.data ?? "";
+    expect(data).toContain("ci.sjer.red/ram-scratch: verify-extended-v1");
+    expect(data).toContain(
+      "woodpecker-mise-installs:/woodpecker/mise-installs",
+    );
+    expect(data).toContain(
+      "MISE_INSTALLS_DIR: /woodpecker/mise-installs/installs",
+    );
   });
 });
 

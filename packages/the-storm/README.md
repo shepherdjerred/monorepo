@@ -105,8 +105,10 @@ including setup.
 
 Extended Paper and gameplay acceptance is the committer's responsibility
 outside CI. Run the suites relevant to the change locally and record the
-commands and results in the PR's verification evidence. This policy is a
-Minecraft-only exception; other packages retain their normal CI gates.
+commands and results in the PR's verification evidence. These suites stay in
+the `excludedSuites` of `ci-tests.json`, outside both the `ci` and `extended`
+test tiers of the repository-wide rule (root `AGENTS.md`): they need a real
+Paper server or native client, which neither tier starts.
 
 The headless whole-match bot simulations are part of that acceptance. Their
 classes carry the JUnit tag `simulation`; the Gradle `test` task excludes the

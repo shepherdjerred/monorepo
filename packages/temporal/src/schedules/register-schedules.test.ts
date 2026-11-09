@@ -491,6 +491,10 @@ const WORKFLOW_MAX_SLEEP_MS: Record<string, number> = {
   // run-vacuum: verifyState delaySeconds=180 + 3 inter-attempt retry sleeps.
   // Activity time and retries are covered by SLACK_MS below.
   runVacuumIfNotHome: 7 * ONE_MINUTE,
+  // nightly extended verify: up to 6 × 10m deferrals behind a CI canary, a 1m
+  // read-back after an ambiguous write, then 2m polls for the life of the
+  // 90m verify-extended lane plus its Kueue admission wait.
+  runCiExtendedVerifyWorkflow: 3 * ONE_HOUR,
 };
 
 // Escape hatch for a long-sleeping workflow that deliberately runs without a

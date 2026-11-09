@@ -14,14 +14,17 @@ rebase, or create a feature PR with `gh pr create`.
 1. Inspect the current branch, worktree, and complete base diff. Preserve
    unrelated edits.
 2. Run focused package tasks with Turbo while iterating.
-3. For a browser-visible change, render it with PinchTab and capture the proof
+3. Run the extended test tier for affected workspaces; Woodpecker does not run
+   it on pull requests:
+   `bunx turbo run test:extended --filter='...[origin/main]' --continue`.
+4. For a browser-visible change, render it with PinchTab and capture the proof
    now, not after review: `pinchtab screenshot -o <file>` for a state,
    `pinchtab record` for a flow. Other user-visible surfaces use their own tool
    — a rendered asset, a Discord acceptance message, terminal output.
-4. Stage exact paths and run `bunx lefthook run pre-commit`.
-5. Commit as `type(scope): outcome`. The primary commit body has `Why`, `What`,
+5. Stage exact paths and run `bunx lefthook run pre-commit`.
+6. Commit as `type(scope): outcome`. The primary commit body has `Why`, `What`,
    and `Verification`.
-6. Inspect the complete branch diff before submission.
+7. Inspect the complete branch diff before submission.
 
 Create or update the PR explicitly:
 
@@ -75,12 +78,15 @@ branch, not the latest commit.
   evidence for the current commit.
 - Source, CI, artifact publication, ArgoCD deployment, and live behavior are
   separate claims. Report each independently.
+- Verification names the extended-tier run (command and result) or states that
+  no affected workspace has extended steps. The nightly `ci-extended-verify`
+  run on main is a safety net, not evidence for the PR.
 - Before pushing a review fix, list the finding and resolve or dismiss its
   thread with a specific audited reason when justified.
 - Never change a real gate, skip a test, or suppress an error merely to make a
   PR green.
 
-Attach the proof captured in step 3 with
+Attach the proof captured in step 4 with
 `toolkit pr asset <PR> <path> --profile seaweedfs --markdown`. A change with a
 visual or interactive surface reaches review with that artifact; "the diff is
 small" is not a reason to omit it. Pure logic and internal refactors give exact

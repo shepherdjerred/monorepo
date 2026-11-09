@@ -12,6 +12,7 @@ vi.mock("@shepherdjerred/feature-flags/config-source.ts", () => ({
 }));
 import { sourceCacheConfig } from "#src/checkout/config.ts";
 import { maintenanceConfig } from "#src/maintenance-config.ts";
+import { extendedVerifyConfig } from "#src/extended-config.ts";
 import {
   deliveryCatalogV2Enabled,
   deliveryPublicationEnabled,
@@ -81,11 +82,52 @@ test("performance flags preserve explicit false, reject invalid values and use d
   flag.mockResolvedValue({ value: true });
   expect(
     Object.values(await performanceConfig("ci-canary/performance")),
-  ).toEqual([true, true, true, true, true, true, true]);
+  ).toEqual([true, true, true, true, true, true, true, true]);
+  expect(
+    flag.mock.calls
+      .map((call) => call[0])
+      .filter(
+        (request) => request.flag === "woodpecker-mise-shared-installs-enabled",
+      ),
+  ).not.toEqual([]);
   flag.mockResolvedValue({ value: "true" });
   await expect(performanceConfig("main")).rejects.toThrow();
   flag.mockRejectedValue(new Error("unavailable"));
   expect(await performanceConfig("main")).toEqual(defaults);
+});
+
+test("the extended verification lane defaults off, reads its production flag and fails closed on outage", async () => {
+  flag.mockResolvedValue(undefined);
+  expect(await extendedVerifyConfig()).toMatchObject({
+    value: false,
+    source: "default",
+  });
+  expect(factory).toHaveBeenCalledWith({
+    targetingKey: "woodpecker-extended-verify",
+    attributes: { stage: "prod" },
+    kinds: { enabled: "boolean" },
+    requireFreshSnapshot: true,
+  });
+  expect(flag.mock.calls[0]?.[0]).toMatchObject({
+    flag: "woodpecker-extended-verify-enabled",
+  });
+  flag.mockResolvedValue({ value: false });
+  expect(await extendedVerifyConfig()).toMatchObject({
+    value: false,
+    source: "flag",
+  });
+  flag.mockResolvedValue({ value: true });
+  expect(await extendedVerifyConfig()).toMatchObject({
+    value: true,
+    source: "flag",
+  });
+  flag.mockResolvedValue({ value: "true" });
+  await expect(extendedVerifyConfig()).rejects.toThrow();
+  flag.mockRejectedValue(new Error("Flag service unavailable"));
+  expect(await extendedVerifyConfig()).toMatchObject({
+    value: false,
+    source: "default",
+  });
 });
 
 test.each(["main", "feature/example", "ci-canary/cache"])(

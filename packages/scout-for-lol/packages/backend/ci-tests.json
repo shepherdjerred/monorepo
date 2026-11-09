@@ -7,7 +7,18 @@
   "steps": [
     {
       "runner": "vitest",
-      "args": ["--testTimeout", "20000"]
+      "args": [
+        "--testTimeout",
+        "20000",
+        "--exclude",
+        "**/*.integration.test.ts"
+      ]
+    },
+    {
+      "runner": "vitest",
+      "name": "integration",
+      "tier": "extended",
+      "args": [".integration.test.ts", "--testTimeout", "20000"]
     }
   ]
 }

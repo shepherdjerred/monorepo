@@ -31,8 +31,9 @@ export function maintenanceRequest(pipeline: Pipeline, defaultBranch: string) {
     pipeline.event !== "manual" ||
     pipeline.branch !== defaultBranch ||
     pipeline.ref !== `refs/heads/${defaultBranch}` ||
-    Object.keys(pipeline.variables).some((key) =>
-      key.startsWith("TOFU_PLATFORM_"),
+    Object.keys(pipeline.variables).some(
+      (key) =>
+        key.startsWith("TOFU_PLATFORM_") || key.startsWith("CI_EXTENDED_"),
     )
   )
     throw new Error(
@@ -82,19 +83,32 @@ export function requestedMaintenanceSteps(
 /**
  * Woodpecker starts a manual pipeline at the branch tip, but main usually
  * advances before its pipelines finish. A request names the verified main
- * commit it was selected for; while that commit is still the verified one, the
- * workflow runs against it in place of the tip.
+ * commit it was selected for in `variable`; while that commit is still the
+ * verified one, the workflow runs against it in place of the tip. Any other
+ * source leaves the tip in place, and the caller supersedes the request.
  */
-export function maintenanceSourcePipeline(
+export function requestedSourcePipeline(
   pipeline: Pipeline,
+  variable: string,
   verifiedMain: string | undefined,
 ): Pipeline {
-  const source = pipeline.variables["CI_MAINTENANCE_SOURCE"];
+  const source = pipeline.variables[variable];
   return source !== undefined &&
     source === verifiedMain &&
     source !== pipeline.commit
     ? { ...pipeline, commit: source }
     : pipeline;
+}
+
+export function maintenanceSourcePipeline(
+  pipeline: Pipeline,
+  verifiedMain: string | undefined,
+): Pipeline {
+  return requestedSourcePipeline(
+    pipeline,
+    "CI_MAINTENANCE_SOURCE",
+    verifiedMain,
+  );
 }
 
 /** A manual seed request cannot promote an unverified main revision. */

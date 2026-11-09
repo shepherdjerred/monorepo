@@ -4,8 +4,10 @@
  * A package's own `test` script and its manifest steps are written separately,
  * so a suite added to one silently never runs in CI. This check reads the
  * tracked test files instead of either list: each one must be selected by a
- * Vitest step or named in the workspace's `excludedSuites` with the reason it
- * runs elsewhere. A CLI `--exclude` alone is not evidence that a test runs.
+ * Vitest step in either tier (`ci` or `extended`) or named in the workspace's
+ * `excludedSuites` with the reason it runs elsewhere. A CLI `--exclude` alone
+ * is not evidence that a test runs: a `ci` step that excludes
+ * `**\/*.integration.test.ts` needs an `extended` step that selects them.
  */
 import type { TestManifest, TestStep } from "./test-manifest-schema.ts";
 import { minimatch } from "minimatch";
@@ -136,7 +138,7 @@ export function unrunTestFiles(
       .filter((file) => !isAccountedFor(workspace, file))
       .map(
         (file) =>
-          `${workspace.directory}/ci-tests.json (${workspace.package}): no step runs ${file}; add it to a step or to excludedSuites with the reason it runs elsewhere`,
+          `${workspace.directory}/ci-tests.json (${workspace.package}): no step in either tier runs ${file}; add it to a ci or extended step, or to excludedSuites with the reason it runs elsewhere`,
       ),
   );
   const testsInTestlessWorkspaces = manifest.testlessWorkspaces.flatMap(

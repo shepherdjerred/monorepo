@@ -1,8 +1,15 @@
 import { describe, expect, test } from "vitest";
 import { selectSteps } from "#src/pipeline/select.ts";
-import { testPipelineSteps } from "./identity.ts";
+import { TEST_IMAGES, testPipelineSteps } from "./identity.ts";
 import { signRemoteCacheSteps } from "#src/pipeline/turbo-cache.ts";
 import { grantGradleBuildCache } from "#src/pipeline/gradle-build-cache.ts";
+import {
+  EXTENDED_STEP_KEY,
+  extendedRequest,
+  extendedSteps,
+} from "#src/pipeline/extended.ts";
+import { PipelineSchema } from "#src/schemas.ts";
+import fixture from "./fixtures/woodpecker-v3.18.1-config-request.json" with { type: "json" };
 
 /**
  * What a pull request can reach.
@@ -276,5 +283,47 @@ describe("what a pull request can reach", () => {
       step.secrets?.some((grant) => grant.env === "ARGOCD_AUTH_TOKEN"),
     );
     expect(holders).toEqual([]);
+  });
+
+  /**
+   * The extended tier is a second main-only holder of the trusted Turbo
+   * signing key and the Gradle write password, beside default-branch verify.
+   * It is not in the selected graph at all, and its request parser refuses
+   * every pull-request shape, so no pull request can reach it; its grants are
+   * pinned here so widening them is a reviewed change.
+   */
+  test("cannot reach the extended test tier, whose grants are verify's trusted set", () => {
+    expect(allSteps().map((step) => step.key)).not.toContain(EXTENDED_STEP_KEY);
+    const request = {
+      request: "8f6d3a2e-4c1b-4e7a-9f0d-2b5c6d7e8f90",
+      source: fixture.pipeline.commit,
+    };
+    const pullRequest = PipelineSchema.parse({
+      ...fixture.pipeline,
+      variables: {
+        CI_EXTENDED_REQUEST: request.request,
+        CI_EXTENDED_SOURCE: request.source,
+      },
+    });
+    for (const event of ["pull_request", "pull_request_metadata", "push"])
+      expect(() =>
+        extendedRequest({ ...pullRequest, event }, "main", true),
+      ).toThrow("exclusive owner manual request");
+    const [extended] = extendedSteps(TEST_IMAGES, request);
+    const mainVerify = defaultBranchPush(allSteps()).find(
+      (step) => step.key === "verify",
+    );
+    // Same identities as main's verify: handoff bucket, trusted Turbo cache,
+    // Gradle write user, GitHub downloads. Nothing that publishes or deploys.
+    expect(extended?.secrets?.map((grant) => grant.key).toSorted()).toEqual(
+      mainVerify?.secrets?.map((grant) => grant.key).toSorted(),
+    );
+    for (const secret of RELEASE_ONLY_SECRETS.filter(
+      (name) => name !== "GRADLE_BUILD_CACHE_WRITE_PASSWORD",
+    ))
+      expect(
+        extended?.secrets?.some((grant) => grant.env === secret),
+        secret,
+      ).toBe(false);
   });
 });

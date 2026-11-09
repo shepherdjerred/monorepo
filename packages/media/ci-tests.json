@@ -4,7 +4,29 @@
   "steps": [
     {
       "runner": "vitest",
-      "args": ["src", "--testTimeout", "60000", "--hookTimeout", "60000"]
+      "args": [
+        "src",
+        "--testTimeout",
+        "60000",
+        "--hookTimeout",
+        "60000",
+        "--exclude",
+        "**/*.integration.test.ts"
+      ]
+    },
+    {
+      "runner": "vitest",
+      "name": "integration",
+      "tier": "extended",
+      "args": [
+        "--dir",
+        "src",
+        ".integration.test.ts",
+        "--testTimeout",
+        "60000",
+        "--hookTimeout",
+        "60000"
+      ]
     }
   ]
 }

@@ -4,6 +4,7 @@
   "imports": {
     "#src/*": "./src/*",
     "#test-identity": "./test/identity.ts",
+    "#test-fixtures/*": "./test/fixtures/*",
     "#pms-runner-protocol": "./reproduction/pms-runner/protocol.schema.json"
   },
   "private": true,

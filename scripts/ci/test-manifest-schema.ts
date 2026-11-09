@@ -12,12 +12,44 @@ const group = z
   .regex(/^[a-z][a-z0-9-]*$/u)
   .optional();
 
+/**
+ * The tiers a Turbo task can request: `test:ci` runs the `ci` tier and
+ * `test:extended` the `extended` tier (`run-ci-test.ts --tier`).
+ */
+export type TestTier = "ci" | "extended";
+
+/**
+ * Which tier a step belongs to; `ci` when omitted.
+ *
+ * A step is `extended` when executing it starts or requires a process other
+ * than the test runner — a database server (`initdb`/`pg_ctl` or the shared
+ * dev PostgreSQL), the Temporal time-skipping test server
+ * (`TestWorkflowEnvironment`/`Worker.create`), a browser, a game server, a
+ * container service, or a media tool (ffmpeg/ffprobe/node-av) — or when its
+ * uncached CI p50 (`toolkit ci analyze`, 72 h) exceeds three minutes.
+ * Spawning a CLI that reads files and exits (`helm template`,
+ * `tofu validate`) or an in-process `Bun.serve` does not count. Everything
+ * else is `ci`.
+ *
+ * Pull requests never run the `extended` tier: Woodpecker's verify runs
+ * `test:ci`. The committer runs `test:extended` locally for affected
+ * workspaces before marking a PR ready, and the nightly `ci-extended-verify`
+ * run executes it on main.
+ *
+ * `shared` marks a prerequisite `command` step (a generated-file stub, a
+ * codegen run) that both tiers need; it runs in whichever tier is requested.
+ * `excludedSuites` keeps its meaning: those suites run in neither tier.
+ */
+const tier = z.enum(["ci", "extended"]).optional();
+const commandTier = z.enum(["ci", "extended", "shared"]).optional();
+
 const StepSchema = z.discriminatedUnion("runner", [
   z
     .object({
       runner: z.literal("vitest"),
       name: z.string().min(1).optional(),
       group,
+      tier,
       runtime: z.enum(["bun", "node"]).optional(),
       runtimeReason: z.string().min(1).optional(),
       runtimeArgs: z.array(z.string()).optional(),
@@ -29,6 +61,7 @@ const StepSchema = z.discriminatedUnion("runner", [
       runner: z.literal("go"),
       name: z.string().min(1).optional(),
       group,
+      tier,
       args: z.array(z.string()),
     })
     .strict(),
@@ -37,6 +70,7 @@ const StepSchema = z.discriminatedUnion("runner", [
       runner: z.literal("cargo"),
       name: z.string().min(1).optional(),
       group,
+      tier,
       args: z.array(z.string()),
     })
     .strict(),
@@ -45,6 +79,7 @@ const StepSchema = z.discriminatedUnion("runner", [
       runner: z.literal("dotnet"),
       name: z.string().min(1).optional(),
       group,
+      tier,
       args: z.array(z.string()).min(1),
       coverageConfig: z.string().min(1).optional(),
       mstest: z
@@ -61,6 +96,7 @@ const StepSchema = z.discriminatedUnion("runner", [
       runner: z.literal("gradle"),
       name: z.string().min(1).optional(),
       group,
+      tier,
       args: z.array(z.string()).min(1),
     })
     .strict(),
@@ -69,10 +105,20 @@ const StepSchema = z.discriminatedUnion("runner", [
       runner: z.literal("command"),
       name: z.string().min(1),
       group,
+      tier: commandTier,
       command: z.array(z.string()).min(1),
     })
     .strict(),
 ]);
+
+/**
+ * Whether `run-ci-test.ts --tier <tier>` runs this step: its own tier, or
+ * `shared`, which runs in both. An omitted tier is `ci`.
+ */
+export function stepRunsInTier(step: TestStep, requested: TestTier): boolean {
+  const own = step.tier ?? "ci";
+  return own === requested || own === "shared";
+}
 
 const workspaceTestFields = {
   package: z.string().min(1),

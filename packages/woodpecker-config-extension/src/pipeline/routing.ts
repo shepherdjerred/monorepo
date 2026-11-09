@@ -5,7 +5,10 @@ export type RoutingContext = {
   readonly branch: string;
   readonly defaultBranch: string;
   readonly draft: boolean;
+  /** Manual maintenance or benchmark work on the default branch. */
   readonly maintenance?: boolean;
+  /** The manual extended test tier (`CI_EXTENDED_REQUEST`) on the default branch. */
+  readonly extended?: boolean;
 };
 
 /** Agent pools and Kueue priority are separate from production pod priority. */
@@ -14,13 +17,17 @@ export function routeSteps(
   context: RoutingContext,
   trustedGateImage?: string,
 ): CiStep[] {
+  // Background work runs on the default branch yet must never take main's
+  // reserved capacity or outrank a ready pull request: it shares the PR pool
+  // at the lowest admission priority.
+  const background = context.maintenance === true || context.extended === true;
   const main =
-    context.maintenance !== true &&
+    !background &&
     (context.event === "push" || context.event === "manual") &&
     context.branch === context.defaultBranch;
   const priority = main
     ? "ci-main"
-    : context.draft || context.maintenance === true
+    : background || context.draft
       ? "ci-draft"
       : "ci-ready";
   return steps.map((step) => {

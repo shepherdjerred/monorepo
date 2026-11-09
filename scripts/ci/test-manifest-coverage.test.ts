@@ -122,6 +122,27 @@ describe("isAccountedFor", () => {
     expect(isAccountedFor(entry, "src/wasm.test.ts")).toBe(true);
   });
 
+  test("an extended step accounts for a file the ci step excludes", () => {
+    const entry = workspace({
+      steps: [
+        {
+          runner: "vitest",
+          args: ["src", "--exclude", "**/*.integration.test.ts"],
+        },
+        {
+          runner: "vitest",
+          name: "integration",
+          tier: "extended",
+          args: ["--dir", "src", ".integration.test.ts"],
+        },
+      ],
+    });
+    expect(isAccountedFor(entry, "src/db.integration.test.ts")).toBe(true);
+    expect(isAccountedFor(entry, "src/db.test.ts")).toBe(true);
+    // Neither tier selects a file outside the extended step's root.
+    expect(isAccountedFor(entry, "test/db.integration.test.ts")).toBe(false);
+  });
+
   test("a glob exclusion does not claim workflow tests are run", () => {
     const entry = workspace({
       steps: [
@@ -211,7 +232,7 @@ describe("unrunTestFiles", () => {
         ["scripts"],
       ),
     ).toEqual([
-      "scripts/ci-tests.json (@shepherdjerred/root-scripts): no step runs ../ci/scripts/b.test.ts; add it to a step or to excludedSuites with the reason it runs elsewhere",
+      "scripts/ci-tests.json (@shepherdjerred/root-scripts): no step in either tier runs ../ci/scripts/b.test.ts; add it to a ci or extended step, or to excludedSuites with the reason it runs elsewhere",
     ]);
   });
 
@@ -223,7 +244,7 @@ describe("unrunTestFiles", () => {
         ["packages/pkg"],
       ),
     ).toEqual([
-      "packages/pkg/ci-tests.json (@example/pkg): no step runs test/b.test.ts; add it to a step or to excludedSuites with the reason it runs elsewhere",
+      "packages/pkg/ci-tests.json (@example/pkg): no step in either tier runs test/b.test.ts; add it to a ci or extended step, or to excludedSuites with the reason it runs elsewhere",
     ]);
   });
 

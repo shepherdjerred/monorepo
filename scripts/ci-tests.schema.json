@@ -63,6 +63,10 @@
                 "type": "string",
                 "pattern": "^[a-z][a-z0-9-]*$"
               },
+              "tier": {
+                "description": "ci (default), or extended when the step starts an external runtime (database server, Temporal test server, browser, game server, container service, ffmpeg) or its uncached CI p50 exceeds three minutes. Pull requests never run extended steps.",
+                "enum": ["ci", "extended"]
+              },
               "runtime": {
                 "enum": ["bun", "node"]
               },
@@ -100,6 +104,10 @@
                 "type": "string",
                 "pattern": "^[a-z][a-z0-9-]*$"
               },
+              "tier": {
+                "description": "ci (default), or extended when the step starts an external runtime (database server, Temporal test server, browser, game server, container service, ffmpeg) or its uncached CI p50 exceeds three minutes. Pull requests never run extended steps.",
+                "enum": ["ci", "extended"]
+              },
               "args": {
                 "type": "array",
                 "items": {
@@ -124,6 +132,10 @@
                 "type": "string",
                 "pattern": "^[a-z][a-z0-9-]*$"
               },
+              "tier": {
+                "description": "ci (default), or extended when the step starts an external runtime (database server, Temporal test server, browser, game server, container service, ffmpeg) or its uncached CI p50 exceeds three minutes. Pull requests never run extended steps.",
+                "enum": ["ci", "extended"]
+              },
               "args": {
                 "type": "array",
                 "items": {
@@ -147,6 +159,10 @@
               "group": {
                 "type": "string",
                 "pattern": "^[a-z][a-z0-9-]*$"
+              },
+              "tier": {
+                "description": "ci (default), or extended when the step starts an external runtime (database server, Temporal test server, browser, game server, container service, ffmpeg) or its uncached CI p50 exceeds three minutes. Pull requests never run extended steps.",
+                "enum": ["ci", "extended"]
               },
               "args": {
                 "type": "array",
@@ -191,6 +207,10 @@
                 "type": "string",
                 "pattern": "^[a-z][a-z0-9-]*$"
               },
+              "tier": {
+                "description": "ci (default), or extended when the step starts an external runtime (database server, Temporal test server, browser, game server, container service, ffmpeg) or its uncached CI p50 exceeds three minutes. Pull requests never run extended steps.",
+                "enum": ["ci", "extended"]
+              },
               "args": {
                 "type": "array",
                 "minItems": 1,
@@ -215,6 +235,10 @@
               "group": {
                 "type": "string",
                 "pattern": "^[a-z][a-z0-9-]*$"
+              },
+              "tier": {
+                "description": "ci (default) or extended; shared runs a prerequisite command in both tiers.",
+                "enum": ["ci", "extended", "shared"]
               },
               "command": {
                 "type": "array",

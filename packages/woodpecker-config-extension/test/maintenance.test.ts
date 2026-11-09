@@ -5,7 +5,9 @@ import {
   separateMaintenance,
   maintenanceSteps,
   eligibleMaintenanceSteps,
+  maintenanceRequest,
   maintenanceSourcePipeline,
+  requestedSourcePipeline,
 } from "#src/pipeline/maintenance.ts";
 import { PipelineSchema } from "#src/schemas.ts";
 import fixture from "./fixtures/woodpecker-v3.18.1-config-request.json" with { type: "json" };
@@ -42,6 +44,21 @@ test("only the verified source replaces the tip, and any other source supersedes
   expect(maintenanceSourcePipeline(requested, "c".repeat(40))).toBe(requested);
   expect(maintenanceSourcePipeline(requested, undefined)).toBe(requested);
   expect(maintenanceSourcePipeline(tip, verified)).toBe(tip);
+  // The pin reads only the named variable, so another lane's source cannot
+  // move a maintenance request and vice versa.
+  expect(
+    requestedSourcePipeline(requested, "CI_EXTENDED_SOURCE", verified),
+  ).toBe(requested);
+  expect(
+    requestedSourcePipeline(
+      {
+        ...tip,
+        variables: { ...tip.variables, CI_EXTENDED_SOURCE: verified },
+      },
+      "CI_EXTENDED_SOURCE",
+      verified,
+    ).commit,
+  ).toBe(verified);
   // A stale golden request is superseded, not failed into a blocked kind.
   const stale = await eligibleMaintenanceSteps(
     TEST_IMAGES,
@@ -60,6 +77,35 @@ test("only the verified source replaces the tip, and any other source supersedes
     "maintenance-workspace-golden",
   ]);
 });
+test("a maintenance request refuses to share a pipeline with the extended tier or platform operations", () => {
+  const manual = {
+    ...PipelineSchema.parse(fixture.pipeline),
+    event: "manual",
+    branch: "main",
+    ref: "refs/heads/main",
+  };
+  expect(
+    maintenanceRequest(
+      { ...manual, variables: { CI_MAINTENANCE_KIND: "release-notes" } },
+      "main",
+    ),
+  ).toBe("release-notes");
+  for (const variables of [
+    { CI_MAINTENANCE_KIND: "release-notes", CI_EXTENDED_REQUEST: "x" },
+    { CI_MAINTENANCE_KIND: "release-notes", CI_EXTENDED_SOURCE: "x" },
+    { CI_MAINTENANCE_KIND: "release-notes", TOFU_PLATFORM_PLAN: "openai" },
+  ])
+    expect(() => maintenanceRequest({ ...manual, variables }, "main")).toThrow(
+      "exclusive",
+    );
+  expect(
+    maintenanceRequest(
+      { ...manual, variables: { CI_EXTENDED_REQUEST: "x" } },
+      "main",
+    ),
+  ).toBeUndefined();
+});
+
 test("workspace seeds publish both isolated profiles and emit their final receipt only after both", () => {
   const [step] = maintenanceSteps(TEST_IMAGES, "workspace-seeds");
   expect(step?.key).toBe("maintenance-workspace-seeds");

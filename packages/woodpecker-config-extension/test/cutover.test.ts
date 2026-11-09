@@ -91,7 +91,7 @@ describe("cutover event selection", () => {
     ).toEqual([]);
   });
 
-  test("uses a clone-free, tokenless workflow for ignored events", () => {
+  test("manual no-work receipts use a clone-free, tokenless workflow", () => {
     const noWork = noWorkStep(TEST_IMAGES.base);
     const emitted: unknown = parse(emitWorkflow(noWork, TEST_IDENTITY));
     expect(emitted).toMatchObject({

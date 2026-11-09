@@ -29,6 +29,7 @@
     "lint": "eslint . --max-warnings=0",
     "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run src",
     "test:ci": "bun ../../scripts/ci/run-ci-test.ts",
+    "test:extended": "bun ../../scripts/ci/run-ci-test.ts --tier extended",
     "test:e2e": "bun --no-install --bun playwright test"
   },
   "dependencies": {

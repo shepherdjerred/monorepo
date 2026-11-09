@@ -59,6 +59,7 @@ export function benchmarkRequest(
       (key) =>
         key.startsWith("TOFU_PLATFORM_") ||
         key.startsWith("CI_MAINTENANCE_") ||
+        key.startsWith("CI_EXTENDED_") ||
         key.includes("CORPUS"),
     )
   )
