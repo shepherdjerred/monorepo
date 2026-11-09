@@ -103,6 +103,18 @@ baseline; explicit opposite values are honored. Present malformed recognized
 plugin settings fail with typed configuration errors before compatibility
 mapping can drop them. Apps do not execute the development oracle.
 
+`vault/tasknotes-model-0.3.0-rc.18-mapping.json` in the shared fixtures captures
+the newer publisher's complete `DEFAULT_FIELD_MAPPING` from
+`package/dist/esm/mapping.js`, with its npm integrity and source revision.
+Configuration and runtime regressions consume that independent capture rather
+than deriving a compatibility example from embedded defaults. This supplements
+the pinned oracle without changing its fixtures or dependency version.
+The newer `assignees` and `recurrenceOriginalDate` mappings (including normalized
+`recurrence_original_date`) are accepted as preservation metadata. Configured
+physical keys and values survive ordinary edits and Undo, including strict
+unknown-field validation. They do not introduce assignee editing or new moved
+recurrence behavior. Empty or conflicting mappings and unknown roles still fail.
+
 Plugin settings support custom field names, status values and cycle rules,
 priority values, task identification, title storage, and creation status and
 priority. Portable YAML supports `mapping`, `status`, `defaults`, detection

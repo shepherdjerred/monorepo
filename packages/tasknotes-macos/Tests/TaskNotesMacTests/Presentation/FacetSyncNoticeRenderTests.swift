@@ -7,6 +7,63 @@ import Testing
 
 @Suite("Synthetic Sync status renders", .serialized) @MainActor
 struct FacetSyncNoticeRenderTests {
+    @Test func setupDoesNotHideInvalidOrUnknownConfigurationDiagnostics() throws {
+        let message =
+            "Waiting for TaskNotes configuration; editing requires configuration "
+            + "or explicit approval of standard settings"
+        #expect(
+            FacetVaultSetupView.explains(FacetProblem(path: "tasknotes.yaml", message: message)))
+        #expect(!FacetVaultSetupView.explains(FacetProblem(path: "Other.md", message: message)))
+        for problem in [
+            "Invalid TaskNotes configuration: malformed YAML", "Unknown provider failure",
+        ] {
+            #expect(
+                !FacetVaultSetupView.explains(
+                    FacetProblem(path: "tasknotes.yaml", message: problem)))
+        }
+    }
+
+    @Test(arguments: [false, true], [SnapshotAppearance.light, .dark])
+    func configurationSetup(initialComplete: Bool, appearance: SnapshotAppearance) throws {
+        let store = try FacetSurfaceFixtures.store(.empty)
+        let profileID = try #require(store.selectedProfileID)
+        let original = try #require(store.snapshot)
+        guard case .object(var fields) = try FacetJSON.parse(JSONEncoder().encode(original)) else {
+            throw FacetContractError.unsupportedResponse
+        }
+        fields["configuration"] = .null
+        fields["problems"] = .array([
+            .object([
+                "path": .string("tasknotes.yaml"),
+                "message": .string(
+                    "Waiting for TaskNotes configuration; editing requires configuration "
+                        + "or explicit approval of standard settings"
+                ),
+            ])
+        ])
+        store.snapshot = try FacetFeatureProjection.decode(
+            FacetSnapshot.self, from: .object(fields))
+        store.profiles = [
+            FacetProfile(
+                id: profileID, name: "Synthetic vault", kind: "obsidian_sync",
+                approveStandard: false)
+        ]
+        store.needsStandardConsent = initialComplete
+        store.syncStatuses[profileID] = FacetSyncStatus(
+            transport: .connected,
+            durable: FacetDurableSyncStatus(
+                schemaVersion: 1, profileId: profileID, profileKind: "obsidian_sync", version: 1,
+                initialSyncComplete: initialComplete, pendingRemoteCount: initialComplete ? 0 : 42,
+                pendingUploadCount: 0, conflictCount: 0, pendingMutationCount: 0))
+        try record(
+            FacetNativeWorkspace(
+                store: store, importsFolder: .constant(false), capturePresented: .constant(false),
+                sheets: FacetSheetPresentation()),
+            named: initialComplete
+                ? "facet-vault-configuration-consent" : "facet-vault-downloading",
+            size: CGSize(width: 1000, height: 700), appearance: appearance)
+    }
+
     @Test(arguments: [
         FacetSyncPhase.offline, .reconnectRequired, .conflict, .syncing, .synced,
     ])

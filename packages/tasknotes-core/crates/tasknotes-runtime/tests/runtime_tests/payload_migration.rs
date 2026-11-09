@@ -38,7 +38,6 @@ fn old_tables(db: &rusqlite::Connection) -> Result<BTreeMap<String, Vec<Vec<Valu
             db.prepare(&format!("SELECT {projection} FROM {table} ORDER BY rowid"))?;
         let names = statement
             .column_names()
-            .into_iter()
             .map(str::to_owned)
             .collect::<Vec<_>>();
         let count = statement.column_count();

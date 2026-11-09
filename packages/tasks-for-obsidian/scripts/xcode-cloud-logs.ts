@@ -8,7 +8,7 @@
  * script fetches the real build logs so the failing command + stderr are visible
  * locally.
  *
- * Credentials live in 1Password (item "App Store Connect API — Xcode Cloud", Personal vault):
+ * Credentials live in 1Password (item "App Store Connect API — Xcode Cloud", Homelab (Kubernetes) vault):
  *   - credential : the App Store Connect API private key (.p8, ES256)
  *   - key id     : the 10-char Key ID
  *   - issuer id  : the team Issuer ID (UUID)
@@ -36,10 +36,11 @@
 import { execFileSync } from "node:child_process";
 import { createSign } from "node:crypto";
 import { mkdirSync, writeFileSync } from "node:fs";
+import path from "node:path";
 import { z } from "zod";
 
-const OP_ITEM = "App Store Connect API — Xcode Cloud";
-const OP_VAULT = "Personal";
+const OP_ITEM = "a5cmba3v6x5bl4vozj3jvmk4he";
+const OP_VAULT = "v64ocnykdqju4ui6j6pua56xw4";
 const API_BASE = "https://api.appstoreconnect.apple.com";
 const JWT_AUDIENCE = "appstoreconnect-v1";
 // TasksForObsidian Xcode Cloud product. Stable per-app; list via `ciProducts` if it ever changes.
@@ -51,13 +52,17 @@ const OpFieldSchema = z.array(
   z.object({ label: z.string(), value: z.string() }),
 );
 
-/** Read the private key + Key ID + Issuer ID from 1Password in a single biometric-gated call. */
+/** Read all three fields once through the unattended service-account wrapper. */
 function loadCreds(): Creds {
   let stdout: string;
   try {
     stdout = execFileSync(
-      "op",
+      path.resolve(
+        import.meta.dir,
+        "../../../scripts/onepassword/with-service-account.sh",
+      ),
       [
+        "op",
         "item",
         "get",
         OP_ITEM,

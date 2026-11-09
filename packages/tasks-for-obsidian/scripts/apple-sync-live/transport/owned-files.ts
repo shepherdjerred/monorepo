@@ -126,16 +126,15 @@ async function readMeasuredBytes(
         before.size <= maximumFileBytes,
     );
     const bytes = await readExactHandle(handle, before.size, maximumFileBytes);
-    const after = await handle.stat();
-    assert.equal(after.size, before.size);
-    assert.equal(after.mtimeMs, before.mtimeMs);
-    assert.equal(after.uid, before.uid);
+    let after = await handle.stat();
     const actual = await lstat(file);
     assert.ok(
       actual.isFile() && !actual.isSymbolicLink() && actual.uid === before.uid,
     );
     const replaced = actual.dev !== before.dev || actual.ino !== before.ino;
     if (publication && replaced) {
+      // Replacement can occur after the first stat; measure its unlink from the still-open FD.
+      after = await handle.stat();
       // Unlinking the old publication can change ctime, but cannot change its measured bytes.
       assert.ok(after.nlink === 0 || after.nlink < before.nlink);
     } else {
@@ -143,6 +142,9 @@ async function readMeasuredBytes(
       assert.equal(actual.dev, before.dev);
       assert.equal(actual.ino, before.ino);
     }
+    assert.equal(after.size, before.size);
+    assert.equal(after.mtimeMs, before.mtimeMs);
+    assert.equal(after.uid, before.uid);
     return bytes;
   } finally {
     await handle.close();

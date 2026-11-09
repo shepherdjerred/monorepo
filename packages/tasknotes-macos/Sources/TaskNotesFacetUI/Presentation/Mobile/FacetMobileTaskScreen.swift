@@ -116,7 +116,7 @@
                         detail = $0
                     }
                     .safeAreaInset(edge: .top, spacing: 0) {
-                        if !globalSearch { listHeader(snapshot) }
+                        if !globalSearch && snapshot.configuration != .null { listHeader(snapshot) }
                     }
                 } else {
                     ProgressView("Opening view…").frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -132,7 +132,10 @@
                     }
                     .buttonStyle(.borderedProminent).buttonBorderShape(.circle)
                     .accessibilityLabel("Add task").accessibilityIdentifier("facet.capture.open")
-                    .disabled(store.selectedProfileID == nil)
+                    .disabled(
+                        store.selectedProfileID == nil || window.snapshot == nil
+                            || window.snapshot?.configuration == .null
+                    )
                     .padding(FacetNativeStyle.mobileCapturePadding)
                 }
             }

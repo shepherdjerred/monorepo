@@ -82,6 +82,19 @@ pub(crate) fn is_retired_role(role: &str) -> bool {
     )
 }
 
+// Newer plugin metadata is retained without claiming assignee or moved-instance
+// semantics. Keep this allowlist explicit: unknown roles still fail closed.
+fn is_extension_role(role: &str) -> bool {
+    matches!(
+        role,
+        "assignees" | "recurrenceOriginalDate" | "recurrence_original_date"
+    )
+}
+
+pub(crate) fn is_preserved_role(role: &str) -> bool {
+    is_retired_role(role) || is_extension_role(role)
+}
+
 /// Ordered role-to-field and field-to-role lookup tables.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -94,10 +107,10 @@ pub struct FieldMapping {
     pub display_name_key: String,
     /// Completed values declared or inferred by the spec mapping rules.
     pub completed_statuses: Vec<String>,
-    // Historical physical keys are preservation metadata, not semantic roles.
+    // Historical and newer plugin keys are preservation metadata, not roles.
     // Keep them out of the public mapping projection and wire contract.
     #[serde(skip)]
-    retired_fields: Vec<String>,
+    preserved_fields: Vec<String>,
 }
 
 impl Default for FieldMapping {
@@ -113,7 +126,7 @@ impl Default for FieldMapping {
                 .collect(),
             display_name_key: "title".to_owned(),
             completed_statuses: vec!["done".to_owned(), "cancelled".to_owned()],
-            retired_fields: Vec::new(),
+            preserved_fields: Vec::new(),
         }
     }
 }
@@ -141,8 +154,8 @@ impl FieldMapping {
             let role = role
                 .as_str()
                 .ok_or_else(|| VaultError::Configuration("tn_role must be a string".to_owned()))?;
-            if is_retired_role(role) {
-                result.retired_fields.push(field.clone());
+            if is_preserved_role(role) {
+                result.preserved_fields.push(field.clone());
                 continue;
             }
             if let Some(role) = canonical_role(role)
@@ -212,43 +225,60 @@ impl FieldMapping {
     /// Rejects empty keys, unknown roles, and two roles using one physical key.
     pub fn from_plugin(mapping: &IndexMap<String, String>) -> Result<Self> {
         let mut result = Self::default();
+        let mut extension_fields = IndexMap::new();
         for (role, field) in mapping {
             // Historical settings retain withdrawn roles as opaque metadata.
             // Their physical frontmatter stays untouched and is not projected,
             // validated or changed by task completion.
             if is_retired_role(role) {
                 if !field.trim().is_empty() {
-                    result.retired_fields.push(field.clone());
+                    result.preserved_fields.push(field.clone());
                 }
                 continue;
             }
-            let canonical = canonical_role(role).ok_or_else(|| {
-                VaultError::Configuration("unsupported field mapping role".to_owned())
-            })?;
             if field.trim().is_empty() {
                 return Err(VaultError::Configuration(
                     "field mapping keys cannot be empty".to_owned(),
                 ));
             }
+            if is_extension_role(role) {
+                if extension_fields
+                    .insert(field.clone(), role.clone())
+                    .is_some()
+                {
+                    return Err(VaultError::Configuration(
+                        "two roles map to the same field".to_owned(),
+                    ));
+                }
+                result.preserved_fields.push(field.clone());
+                continue;
+            }
+            let canonical = canonical_role(role).ok_or_else(|| {
+                VaultError::Configuration("unsupported field mapping role".to_owned())
+            })?;
             result
                 .role_to_field
                 .insert(canonical.to_owned(), field.clone());
         }
         let mut reverse = IndexMap::new();
         for (role, field) in &result.role_to_field {
-            if reverse.insert(field.clone(), role.clone()).is_some() {
+            if extension_fields.contains_key(field)
+                || reverse.insert(field.clone(), role.clone()).is_some()
+            {
                 return Err(VaultError::Configuration(
                     "two roles map to the same field".to_owned(),
                 ));
             }
         }
         result.field_to_role = reverse;
-        result.display_name_key = result.field("title").to_owned();
+        if let Some(title) = result.role_to_field.get("title") {
+            result.display_name_key.clone_from(title);
+        }
         Ok(result)
     }
 
-    pub(crate) fn preserves_retired_field(&self, field: &str) -> bool {
-        is_retired_role(field) || self.retired_fields.iter().any(|key| key == field)
+    pub(crate) fn preserves_opaque_field(&self, field: &str) -> bool {
+        is_retired_role(field) || self.preserved_fields.iter().any(|key| key == field)
     }
 
     /// Look up a known role's physical field.

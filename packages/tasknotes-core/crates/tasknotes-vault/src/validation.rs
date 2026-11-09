@@ -89,7 +89,7 @@ pub fn evaluate_mapped(
     for key in fm.keys() {
         if !mapping.role_to_field.contains_key(key)
             && !mapping.role_to_field.values().any(|f| f == key)
-            && !mapping.preserves_retired_field(key)
+            && !mapping.preserves_opaque_field(key)
         {
             issues.push(json!({"code":"unknown_field","severity":if reject_unknown_fields{"error"}else{"info"},"field":key,"message":"field is not mapped to a known semantic role"}));
         }

@@ -21,7 +21,7 @@ internal struct FacetNativeTaskList: View {
 
     var body: some View {
         Group {
-            if window.board { board } else { list }
+            if window.board && snapshot.configuration != .null { board } else { list }
         }
         .confirmationDialog(
             "Delete this task note?",
@@ -95,12 +95,19 @@ internal struct FacetNativeTaskList: View {
     private var list: some View {
         List(selection: selection) {
             if snapshot.tasks.isEmpty {
-                ContentUnavailableView(
-                    window.search.isEmpty ? "You're all caught up" : "No matching tasks",
-                    systemImage: window.search.isEmpty ? "checkmark.circle" : "magnifyingglass",
-                    description: Text(
-                        window.search.isEmpty
-                            ? "Add a task when you're ready." : "Try another search or view."))
+                if snapshot.configuration == .null {
+                    FacetVaultSetupView(
+                        state: store.syncStatuses[snapshot.profileId],
+                        needsStandardConsent: store.selectedProfileID == snapshot.profileId
+                            && store.needsStandardConsent)
+                } else {
+                    ContentUnavailableView(
+                        window.search.isEmpty ? "You're all caught up" : "No matching tasks",
+                        systemImage: window.search.isEmpty ? "checkmark.circle" : "magnifyingglass",
+                        description: Text(
+                            window.search.isEmpty
+                                ? "Add a task when you're ready." : "Try another search or view."))
+                }
             }
             if snapshot.groups.isEmpty {
                 taskRows(snapshot.tasks)
@@ -124,12 +131,17 @@ internal struct FacetNativeTaskList: View {
                 .disabled(window.isLoading)
             }
             #if os(macOS)
-                composeRow
+                composeRow.disabled(snapshot.configuration == .null)
             #endif
             ForEach(Array(snapshot.problems.enumerated()), id: \.offset) { _, problem in
-                Label(
-                    "\(problem.path): \(problem.message)", systemImage: "exclamationmark.triangle"
-                ).foregroundStyle(.orange)
+                // The runtime uses this path for its general setup notice, not
+                // a missing-file diagnosis. The setup view explains that state.
+                if snapshot.configuration != .null || !FacetVaultSetupView.explains(problem) {
+                    Label(
+                        "\(problem.path): \(problem.message)",
+                        systemImage: "exclamationmark.triangle"
+                    ).foregroundStyle(.orange)
+                }
             }
         }
         .refreshable {

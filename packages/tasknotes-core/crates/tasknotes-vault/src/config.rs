@@ -206,8 +206,8 @@ fn apply_portable(model: &mut ModelConfiguration, bytes: &[u8]) -> Result<()> {
     }
     if let Some(mapping) = settings.mapping {
         for (role, field) in mapping {
-            if crate::mapping::is_retired_role(&role) {
-                // Preserve historical declarations without assigning a current
+            if crate::mapping::is_preserved_role(&role) {
+                // Preserve compatibility declarations without assigning a current
                 // task role or reinterpreting the corresponding vault values.
                 model.field_mapping.insert(role, field);
                 continue;

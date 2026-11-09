@@ -52,11 +52,13 @@ extension FacetStore {
         await refresh(schedulingOccurrences: true)
     }
 
-    internal func refresh(schedulingOccurrences: Bool) async {
+    internal func refresh(
+        schedulingOccurrences: Bool, source: FacetRefreshSource = .provider
+    ) async {
         guard let engine, let profileID = selectedProfileID else { return }
         let logicalQuery = query()
         await refreshWithOperations(
-            profileID: profileID, logicalQuery: logicalQuery,
+            profileID: profileID, logicalQuery: logicalQuery, source: source,
             operations: FacetRefreshOperations(
                 cached: {
                     try await engine.cachedSnapshot(profileID: profileID, query: logicalQuery)

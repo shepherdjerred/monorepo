@@ -106,7 +106,7 @@ allow-build-scripts = [
   { name = "libc" },
   # Compiles the pinned bundled SQLite amalgamation using cc. Reviewed build.rs
   # has no network download; system-library discovery is unused with bundled.
-  { name = "libsqlite3-sys", version = "=0.38.2" },
+  { name = "libsqlite3-sys", version = "=0.39.1" },
   { name = "num-traits" },
   { name = "proc-macro2" },
   { name = "quote" },
