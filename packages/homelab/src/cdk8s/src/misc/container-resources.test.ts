@@ -236,6 +236,9 @@ afterAll(async () => {
   await rm(SYNTH_OUTDIR, { recursive: true, force: true });
 });
 
+// Declared requests. Live production pods on torvalds run with these scaled
+// at admission by the request overcommit policy
+// (src/resources/cluster-baseline/request-overcommit.ts).
 const AUDITED_PERSISTENT_RESERVATIONS = new Map<
   string,
   z.infer<typeof ContainerSchema>["resources"]
@@ -262,7 +265,7 @@ const AUDITED_PERSISTENT_RESERVATIONS = new Map<
   [
     "media-qbittorrent/qbittorrent",
     {
-      requests: { cpu: "200m", memory: "4608Mi" },
+      requests: { cpu: "200m", memory: "256Mi" },
       limits: { cpu: "2000m", memory: "6144Mi" },
     },
   ],

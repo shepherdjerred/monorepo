@@ -420,13 +420,15 @@ export async function createPrometheusApp(chart: Chart) {
         retention: "365d", // Keep data for 1 year
         retentionSize: "200GB", // Safety limit - keep headroom below PVC usage alerts
         // Baseline request so Prometheus isn't BestEffort (first evicted under
-        // memory pressure). 7d working set (2026-10-31): p95 5.3Gi, spike to
-        // ~26.6Gi (compaction/big queries) — request covers p95 plus a margin;
-        // deliberately no limit.
+        // memory pressure). Sized from anonymous memory, not working set: over
+        // 14 days (2026-11-08) RSS was p95 2.57Gi / max 3.06Gi, while the
+        // working set (p95 5.4Gi, spikes to ~26.6Gi on compaction and large
+        // queries) is mostly reclaimable TSDB mmap page cache. Deliberately no
+        // limit.
         resources: {
           requests: {
             cpu: "200m",
-            memory: "6Gi",
+            memory: "3584Mi",
           },
         },
         // Required so Tempo's metrics-generator can push service-graph,

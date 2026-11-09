@@ -58,6 +58,7 @@ const admissionPolicies: readonly [
   ["woodpecker-ram-scratch-guard.sjer.red", "Validating"],
   ["woodpecker-workspace-clone.sjer.red", "Mutating"],
   ["woodpecker-workspace-clone-guard.sjer.red", "Validating"],
+  ["torvalds-request-overcommit.sjer.red", "Mutating"],
   ...sourceWriterPolicy,
 ];
 

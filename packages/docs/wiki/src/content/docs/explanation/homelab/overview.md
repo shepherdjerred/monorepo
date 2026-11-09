@@ -58,7 +58,8 @@ no GPU workloads.
 
 Production workloads reserve their baseline memory and share spare RAM for bursts.
 Adding every application's independent peak would reserve memory that normally sits unused.
-Requests follow measured typical use, near the 30-day 95th percentile of the working set.
+Requests follow measured typical use, near the 95th percentile of each container's memory.
+Where page cache dominates the working set, requests follow anonymous memory instead, because the kernel reclaims cache under pressure.
 Container limits bound selected bursty apps so one outlier cannot consume the whole pool.
 The [workload resource definitions](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/misc/container-resources.test.ts) preserve these explicit decisions.
 
@@ -80,6 +81,29 @@ The [Glitter deployments](https://github.com/shepherdjerred/monorepo/blob/main/p
 Host reservations and eviction floors still protect Talos, Kubernetes daemons, and ZFS memory.
 Available-memory alerts warn before pressure reaches those floors.
 Their sources are the [kubelet budget](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/talos/torvalds/patches/kubelet.yaml) and [production memory alerts](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/monitoring/monitoring/rules/platform/resource-monitoring-production.ts).
+
+## The scheduler sees overcommitted requests
+
+Production pods are admitted with smaller requests than their workloads declare.
+Each declared request covers that workload's own peak, but those peaks rarely coincide.
+Summed, they left torvalds unschedulable while most of its CPU sat idle.
+In the 14 days before the change, pods requested 22.5 of 27 allocatable cores but used 4.7 at the 95th percentile.
+
+An admission policy therefore halves CPU requests and scales memory requests to 90% when a pod is created.
+CPU takes the larger cut because contention only slows pods; memory exhaustion evicts or kills them.
+Pods with burst or infrastructure priority keep their memory request, since a fixed JVM heap is real usage.
+Limits, priority classes and kubelet eviction keep their declared values.
+
+The policy leaves alone anything whose bookkeeping must stay exact.
+Liskov pods and Kueue-managed namespaces keep real requests, because CI admission quotas count them.
+kube-system, mirror pods and Guaranteed pods are also excluded.
+A scaled pod carries the `resources.sjer.red/request-overcommit` annotation naming its factors.
+Its owning workload still shows the declared request, which is what the
+[resource audit](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/misc/container-resources.test.ts) checks.
+
+A fault in the policy is ignored rather than blocking pod creation.
+A pod that misses the mutation simply keeps its declared requests.
+The [request overcommit policy](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/cluster-baseline/request-overcommit.ts) holds the factors and their measurements.
 
 ## Typed infrastructure, not YAML
 
