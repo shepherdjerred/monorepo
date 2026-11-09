@@ -54,8 +54,19 @@ project `AGENTS.md` or skill.
   React Native, Discord, terminal — use their own matching verification tool.
 - Render PDFs, Typst, documents, slides, spreadsheets, and visual assets with
   their matching skill and inspect the output, not only the source.
-- Use foreground polling or the product's monitoring facility for waits. Never
-  promise an agent will wake up after the turn ends.
+- For a long wait, start one blocking command that returns the result, and
+  hold it the way your harness makes cheapest. Claude Code: use
+  `run_in_background`, then act on the completion notification. Codex has no
+  completion notice: hold the command inside one `exec` cell with the pragma
+  `yield_time_ms` 3600000, looping an empty `write_stdin`
+  (`yield_time_ms` 300000) until it exits. Never loop `sleep` with status
+  commands or restart a running wait. Never promise an agent will wake up
+  after the turn ends.
+- For "get CI green", "drive CI green", or "get it green, then merge", delegate
+  to the `ci-driver` subagent with the PR and whether merging is authorized,
+  keep working meanwhile, and relay its report. In Codex, once your own work
+  is done, block on one `wait_agent` call with `timeout_ms` 3600000 rather
+  than polling.
 
 ## Sharing results with Jerred
 
