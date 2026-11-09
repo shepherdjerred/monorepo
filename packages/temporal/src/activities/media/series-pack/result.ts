@@ -1,5 +1,6 @@
 import {
   ServiceError,
+  isGrpcCancelledError,
   isGrpcServiceError,
   isGrpcDeadlineError,
 } from "@temporalio/client";
@@ -24,20 +25,16 @@ export async function seriesPackRoleResult(input: {
     { followRuns: false },
   );
   while (Date.now() < input.caseDeadline) {
+    const pollDeadline = Math.min(Date.now() + 20_000, input.caseDeadline);
     try {
       const result: unknown =
         await input.environment.client.connection.withDeadline(
-          Math.min(Date.now() + 20_000, input.caseDeadline),
+          pollDeadline,
           () => handle.result(),
         );
       return result;
     } catch (error) {
-      if (
-        !(error instanceof ServiceError) ||
-        !isGrpcServiceError(error.cause) ||
-        !isGrpcDeadlineError(error.cause)
-      )
-        throw error;
+      if (!boundedPollExpired(error, pollDeadline, Date.now())) throw error;
       if (!(await observeProgress(input, progress)))
         throw new Error(
           "Actual series pack role made no durable history progress",
@@ -46,6 +43,28 @@ export async function seriesPackRoleResult(input: {
     }
   }
   throw new Error("Actual series pack role exceeded its original case budget");
+}
+
+/**
+ * Whether a long-poll ended because its own bounded window elapsed.
+ *
+ * The client propagates the deadline to the Temporal server, which resets the
+ * stream when it expires. If that reset reaches grpc-js before the client's
+ * own deadline timer runs (a busy event loop delays the timer), the same expiry
+ * surfaces as CANCELLED rather than DEADLINE_EXCEEDED. A CANCELLED call counts
+ * as expiry only once the window has passed; earlier it is a real failure.
+ */
+export function boundedPollExpired(
+  error: unknown,
+  pollDeadline: number,
+  now: number,
+): boolean {
+  return (
+    error instanceof ServiceError &&
+    isGrpcServiceError(error.cause) &&
+    (isGrpcDeadlineError(error.cause) ||
+      (isGrpcCancelledError(error.cause) && now >= pollDeadline))
+  );
 }
 
 async function observeProgress(
