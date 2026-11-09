@@ -56,6 +56,14 @@ export const WOODPECKER_GO_CACHE_CLAIM = "woodpecker-go-cache";
 export const WOODPECKER_TOOL_CACHE_CLAIM = "woodpecker-tool-cache";
 export const WOODPECKER_GRADLE_HOME_CLAIM = "woodpecker-gradle-home";
 /**
+ * mise's install and download roots for tools a stale ci-base or
+ * ci-playwright image lacks (MISE_INSTALLS_DIR, MISE_DOWNLOADS_DIR). The
+ * image's own /opt/mise/installs stays the read-only shared dir
+ * (MISE_SHARED_INSTALL_DIRS), so only the versions the image is missing land
+ * here, once per node instead of once per pod into the OS disk.
+ */
+export const WOODPECKER_MISE_INSTALLS_CLAIM = "woodpecker-mise-installs";
+/**
  * A main checkout with dependencies installed, laid out like a workflow
  * workspace. Temporal snapshots it after each refresh, and new workspace
  * claims are cloned from the newest snapshot (workspace-clone-policy.ts), so
@@ -253,6 +261,19 @@ export function createWoodpeckerCaches(chart: Chart): void {
     "woodpecker-tool-cache-pvc",
     WOODPECKER_TOOL_CACHE_CLAIM,
     "10Gi",
+  );
+  // mise's install and download roots for tools a stale ci-base/ci-playwright
+  // image lacks; the image's /opt/mise/installs stays the read-only shared
+  // dir (MISE_SHARED_INSTALL_DIRS), so a version is installed here only until
+  // the next image promotion carries it. No collector: ZfsPVCStorageHigh is
+  // the backstop, and the how-to "Prune the CI mise install claim" is the
+  // operator action. Sized for months of version bumps at about 0.8 GB per
+  // Java and 0.3 GB per Gradle version.
+  createCacheClaim(
+    chart,
+    "woodpecker-mise-installs-pvc",
+    WOODPECKER_MISE_INSTALLS_CLAIM,
+    "20Gi",
   );
   // Gradle's user home is designed for concurrent builds (file-locked
   // dependency cache, per-process daemon registry) and expires unused entries

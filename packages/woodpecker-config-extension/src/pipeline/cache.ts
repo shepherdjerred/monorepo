@@ -55,6 +55,22 @@ export const TOOL_CACHE = {
   path: "/woodpecker/tool-cache",
 } as const satisfies StepVolume;
 
+/**
+ * Tool versions `ci/scripts/toolchain.sh` installs at runtime because the
+ * pinned CI image lacks them, plus mise's download staging. Without this
+ * claim every such install lands in `MISE_DATA_DIR=/opt/mise` -- the
+ * container's writable layer on the CI node's OS disk -- once per pod for as
+ * long as the image pin trails `.mise.toml`. Mounted only when the typed
+ * `woodpecker-mise-shared-installs-enabled` flag is on.
+ */
+export const MISE_INSTALLS = {
+  claim: "woodpecker-mise-installs",
+  path: "/woodpecker/mise-installs",
+} as const satisfies StepVolume;
+
+/** The image's own installs; mise keeps resolving them while writing elsewhere. */
+const IMAGE_MISE_INSTALLS = "/opt/mise/installs";
+
 /** sccache evicts least-recently-used objects above this size. */
 const SCCACHE_CACHE_SIZE = "30G";
 
@@ -108,6 +124,19 @@ const TOOLCHAIN_CACHE_ENVIRONMENT: readonly (readonly [
       // the collected shared cache, whose readers must hold the collector's
       // lock. Tasks' `bunx` calls fall back to this root instead of ~/.bun.
       BUN_INSTALL: `${TOOL_CACHE.path}/bun`,
+    },
+  ],
+  [
+    MISE_INSTALLS,
+    {
+      // MISE_DATA_DIR stays /opt/mise so the image's shims keep working; only
+      // new installs and their downloads move onto the claim. The shared
+      // install dirs keep every version the image already carries resolvable,
+      // so a stale image reinstalls exactly the versions it lacks. mise's own
+      // lock files sit beside the destination, serializing pods on one node.
+      MISE_INSTALLS_DIR: `${MISE_INSTALLS.path}/installs`,
+      MISE_DOWNLOADS_DIR: `${MISE_INSTALLS.path}/downloads`,
+      MISE_SHARED_INSTALL_DIRS: IMAGE_MISE_INSTALLS,
     },
   ],
 ];
@@ -192,10 +221,13 @@ function withBunCacheVolumes<T extends CiCommandStep>(command: T): T {
     : command;
 }
 
+/** The container's `toolchain.sh` preambles, whatever their scope. */
+function toolchainPreambles(command: CiCommandStep): string[] {
+  return command.commands.filter((line) => line.includes(TOOLCHAIN_PREAMBLE));
+}
+
 function withToolCacheVolumes<T extends CiCommandStep>(command: T): T {
-  const preambles = command.commands.filter((line) =>
-    line.includes(TOOLCHAIN_PREAMBLE),
-  );
+  const preambles = toolchainPreambles(command);
   const fullScope = preambles.some(
     (line) => !line.includes(TOOLCHAIN_SCOPE_PREFIX),
   );
@@ -205,6 +237,12 @@ function withToolCacheVolumes<T extends CiCommandStep>(command: T): T {
         ...COMMON_TOOL_CACHES,
         ...(fullScope ? FULL_TOOLCHAIN_CACHES : []),
       ]);
+}
+
+function withMiseInstallsVolume<T extends CiCommandStep>(command: T): T {
+  return toolchainPreambles(command).length === 0
+    ? command
+    : withVolumes(command, [MISE_INSTALLS]);
 }
 
 function mapContainers(
@@ -245,4 +283,16 @@ export function withSharedBunCache(step: CiStep): CiStep {
  */
 export function withSharedToolCaches(step: CiStep): CiStep {
   return mapContainers(step, withToolCacheVolumes);
+}
+
+/**
+ * Mount the shared mise install claim on every trusted container that sources
+ * `ci/scripts/toolchain.sh`, whatever its scope: each scope's `mise install`
+ * writes the versions the image lacks, and only the mount moves those writes
+ * off the OS disk. Applied by `performanceSteps` under its flag rather than
+ * from `COMMON_TOOL_CACHES`, so the claim can be rolled out to canary branches
+ * first; the credentialless graph never reaches either.
+ */
+export function withSharedMiseInstalls(step: CiStep): CiStep {
+  return mapContainers(step, withMiseInstallsVolume);
 }

@@ -1,9 +1,13 @@
 import { expect, test } from "vitest";
 import { App, Chart } from "cdk8s";
 import { z } from "zod";
-import { CI_WORKSPACE_VOLUME_SIZE } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
+import {
+  CI_WORKSPACE_VOLUME_SIZE,
+  NVME_STORAGE_CLASS_LZ4,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
 import {
   createWoodpeckerCaches,
+  WOODPECKER_MISE_INSTALLS_CLAIM,
   WOODPECKER_WORKSPACE_GOLDEN_CLAIM,
 } from "./caches.ts";
 
@@ -11,20 +15,28 @@ const ClaimSchema = z.looseObject({
   kind: z.literal("PersistentVolumeClaim"),
   metadata: z.looseObject({
     name: z.string(),
+    namespace: z.string(),
+    labels: z.record(z.string(), z.string()).optional(),
     annotations: z.record(z.string(), z.string()).optional(),
   }),
   spec: z.looseObject({
+    accessModes: z.array(z.string()),
+    storageClassName: z.string(),
     resources: z.object({ requests: z.object({ storage: z.string() }) }),
   }),
 });
 
-test("only the golden claim, unbound until its first refresh, is left out of application health", () => {
+function renderClaims(): z.infer<typeof ClaimSchema>[] {
   const chart = new Chart(new App(), "caches");
   createWoodpeckerCaches(chart);
-  const claims = chart.toJson().flatMap((manifest: unknown) => {
+  return chart.toJson().flatMap((manifest: unknown) => {
     const claim = ClaimSchema.safeParse(manifest);
     return claim.success ? [claim.data] : [];
   });
+}
+
+test("only the golden claim, unbound until its first refresh, is left out of application health", () => {
+  const claims = renderClaims();
   const ignored = claims
     .filter(
       (claim) =>
@@ -41,16 +53,32 @@ test("workspaces and the golden claim share one whole-GiB size, so a clone equal
   // ZFS rounds a volume up to whole GiB; a decimal size would leave the
   // snapshot larger than the clones that request it.
   expect(CI_WORKSPACE_VOLUME_SIZE).toMatch(/^[1-9]\d*Gi$/u);
-  const chart = new Chart(new App(), "caches");
-  createWoodpeckerCaches(chart);
-  const golden = chart
-    .toJson()
-    .flatMap((manifest: unknown) => {
-      const claim = ClaimSchema.safeParse(manifest);
-      return claim.success ? [claim.data] : [];
-    })
-    .find((claim) => claim.metadata.name === WOODPECKER_WORKSPACE_GOLDEN_CLAIM);
+  const golden = renderClaims().find(
+    (claim) => claim.metadata.name === WOODPECKER_WORKSPACE_GOLDEN_CLAIM,
+  );
   expect(golden?.spec.resources.requests.storage).toBe(
     CI_WORKSPACE_VOLUME_SIZE,
   );
+});
+
+test("the mise install claim is a shared, disposable NVMe cache sized for months of version bumps", () => {
+  const claims = renderClaims();
+  const claim = claims.find(
+    (entry) => entry.metadata.name === WOODPECKER_MISE_INSTALLS_CLAIM,
+  );
+  expect(WOODPECKER_MISE_INSTALLS_CLAIM).toBe("woodpecker-mise-installs");
+  expect(claim).toBeDefined();
+  expect(claim?.metadata.namespace).toBe("woodpecker-ci");
+  expect(claim?.spec.resources.requests.storage).toBe("20Gi");
+  // Many step pods, on any lane, install into it concurrently.
+  expect(claim?.spec.accessModes).toEqual(["ReadWriteMany"]);
+  expect(claim?.spec.storageClassName).toBe(NVME_STORAGE_CLASS_LZ4);
+  // Re-installable from mise.lock, so never backed up.
+  expect(claim?.metadata.labels).toEqual({
+    "velero.io/backup": "disabled",
+    "velero.io/exclude-from-backup": "true",
+  });
+  // Unlike the golden claim it needs no health exemption: it binds like every
+  // other cache claim, so ArgoCD must keep reporting on it.
+  expect(claim?.metadata.annotations).toBeUndefined();
 });

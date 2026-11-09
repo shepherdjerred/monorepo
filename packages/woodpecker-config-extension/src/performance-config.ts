@@ -18,6 +18,7 @@ export const DISABLED_PERFORMANCE = {
   grouping: false,
   copyfile: false,
   scratch: false,
+  miseInstalls: false,
 };
 export type PerformanceOptions = typeof DISABLED_PERFORMANCE;
 
@@ -33,6 +34,7 @@ export async function performanceConfig(
       grouping: booleanFlag("woodpecker-small-check-grouping-enabled"),
       copyfile: booleanFlag("woodpecker-bun-copyfile-enabled"),
       scratch: booleanFlag("woodpecker-ram-scratch-enabled"),
+      miseInstalls: booleanFlag("woodpecker-mise-shared-installs-enabled"),
     },
     sources: {
       flag: createFlagConfigSource({
@@ -48,6 +50,7 @@ export async function performanceConfig(
           grouping: "boolean",
           copyfile: "boolean",
           scratch: "boolean",
+          miseInstalls: "boolean",
         },
         requireFreshSnapshot: true,
       }),
@@ -68,6 +71,7 @@ export async function performanceConfig(
     grouping,
     copyfile,
     scratch,
+    miseInstalls,
   ] = await Promise.all([
     resolver.get("incremental"),
     resolver.get("prepared"),
@@ -76,6 +80,7 @@ export async function performanceConfig(
     resolver.get("grouping"),
     resolver.get("copyfile"),
     resolver.get("scratch"),
+    resolver.get("miseInstalls"),
   ]);
   return {
     incremental: incremental.value,
@@ -85,5 +90,6 @@ export async function performanceConfig(
     grouping: grouping.value,
     copyfile: copyfile.value,
     scratch: scratch.value,
+    miseInstalls: miseInstalls.value,
   };
 }

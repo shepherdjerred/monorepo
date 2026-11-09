@@ -129,6 +129,8 @@ export const WOODPECKER_BOOLEAN_FLAG_KEYS = [
   "woodpecker-ram-scratch-enabled",
   "woodpecker-small-check-grouping-enabled",
   "woodpecker-bun-copyfile-enabled",
+  "woodpecker-mise-shared-installs-enabled",
+  "woodpecker-extended-verify-enabled",
   "woodpecker-source-cache-enabled",
 ] as const;
 
@@ -338,6 +340,7 @@ export type TrmnlDashboardFlagKey = (typeof TRMNL_DASHBOARD_FLAG_KEYS)[number];
 
 export const TEMPORAL_BOOLEAN_FLAG_KEYS = [
   "ci-maintenance-dispatch-enabled",
+  "ci-extended-verify-dispatch-enabled",
   "ci-workspace-seed-refresh-enabled",
   "ci-workspace-golden-refresh-enabled",
   "temporal-daily-report-notifications-enabled",

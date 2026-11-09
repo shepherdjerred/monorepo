@@ -1029,6 +1029,34 @@
       ]
     },
     {
+      "key": "ci-extended-verify-dispatch-enabled",
+      "owner": "platform",
+      "namespace": "temporal",
+      "source": "ci-extended-verify",
+      "purpose": "Dispatch the nightly extended test tier run on main as a manual Woodpecker pipeline once the verify-extended lane is deployed and enabled.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "issue": "AI-442",
+          "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
+          "reviewBy": "2026-12-07"
+        },
+        {
+          "environment": "prod",
+          "reason": "The Temporal worker that runs runCiExtendedVerifyWorkflow and the config extension that accepts CI_EXTENDED_REQUEST deploy from the same change; dispatching before both run would only record failures.",
+          "issue": "AI-485",
+          "enableWhen": "Both deployments run the merged revision and a triggered ci-extended-verify-nightly schedule produces one manual main pipeline whose verify-extended workflow completes successfully.",
+          "reviewBy": "2026-11-30"
+        }
+      ]
+    },
+    {
       "key": "ci-workspace-seed-refresh-enabled",
       "owner": "platform",
       "namespace": "temporal",
@@ -1347,6 +1375,77 @@
           "issue": "AI-442",
           "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
           "reviewBy": "2026-12-07"
+        }
+      ]
+    },
+    {
+      "key": "woodpecker-mise-shared-installs-enabled",
+      "owner": "platform",
+      "namespace": "woodpecker",
+      "source": "woodpecker-performance",
+      "purpose": "Install tools a stale CI image lacks into the shared woodpecker-mise-installs claim instead of the container's writable layer on the CI node's OS disk.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "woodpecker-performance-beta",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "stage",
+              "operator": "eq",
+              "value": "beta"
+            }
+          ],
+          "result": true
+        }
+      ],
+      "rules": [],
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "issue": "AI-442",
+          "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
+          "reviewBy": "2026-12-07"
+        },
+        {
+          "environment": "prod",
+          "reason": "Cross-pod mise install locking on the shared claim is inferred from the lock-file location, not yet observed; ci-canary/* branches exercise it first through the beta-stage rollout.",
+          "issue": "AI-484",
+          "enableWhen": "Two concurrent canary pipelines pinning a tool the image lacks install it once into woodpecker-mise-installs, the second waits on mise's lock, no image tool is reinstalled, and both pods' /dev/nvme0n1 writes sit at the no-install floor.",
+          "reviewBy": "2026-11-30"
+        }
+      ]
+    },
+    {
+      "key": "woodpecker-extended-verify-enabled",
+      "owner": "platform",
+      "namespace": "woodpecker",
+      "source": "woodpecker-extended-verify",
+      "purpose": "Accept the owner's manual CI_EXTENDED_REQUEST pipeline on main and emit the verify-extended workflow that runs the extended test tier.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "issue": "AI-442",
+          "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
+          "reviewBy": "2026-12-07"
+        },
+        {
+          "environment": "prod",
+          "reason": "The config extension and the Temporal worker that dispatches the nightly run must be deployed from the same change before a request can succeed.",
+          "issue": "AI-485",
+          "enableWhen": "Both deployments run the merged revision and a triggered ci-extended-verify-nightly schedule produces one manual main pipeline whose verify-extended workflow completes successfully.",
+          "reviewBy": "2026-11-30"
         }
       ]
     },
@@ -4758,6 +4857,45 @@
           "key": "woodpecker-bun-copyfile-enabled",
           "type": "boolean",
           "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "woodpecker-mise-shared-installs-enabled",
+          "type": "boolean",
+          "default": false,
+          "rollouts": [
+            {
+              "segmentKey": "woodpecker-performance-beta",
+              "segmentOperator": "OR_SEGMENT_OPERATOR",
+              "matchType": "ALL_SEGMENT_MATCH_TYPE",
+              "constraints": [
+                {
+                  "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+                  "property": "stage",
+                  "operator": "eq",
+                  "value": "beta"
+                }
+              ],
+              "result": true
+            }
+          ],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "woodpecker-extended-verify-enabled",
+          "type": "boolean",
+          "default": false,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "ci-extended-verify-dispatch-enabled",
+          "type": "boolean",
+          "default": false,
           "rollouts": [],
           "rules": [],
           "thresholdRollouts": []

@@ -1,6 +1,7 @@
 import type { CiStep } from "./model.ts";
 import type { PerformanceOptions } from "#src/performance-config.ts";
 import { ramScratchProfile } from "./ram-scratch.ts";
+import { withSharedMiseInstalls } from "./cache.ts";
 
 export const WORKSPACE_SEEDS = {
   claim: "woodpecker-workspace-seeds",
@@ -63,9 +64,14 @@ export function performanceSteps(
   credentialless: boolean,
 ): CiStep[] {
   if (credentialless) return [...steps];
-  return steps.map((step) => {
-    if (step.backend === "local") return step;
-    if (step.skipClone === true) return step;
+  return steps.map((original) => {
+    if (original.backend === "local") return original;
+    if (original.skipClone === true) return original;
+    // Runtime mise installs move onto the shared claim on every container that
+    // bootstraps the toolchain, ordered containers included.
+    const step = options.miseInstalls
+      ? withSharedMiseInstalls(original)
+      : original;
     const profile = PROFILES[step.key];
     const prepared =
       options.prepared &&

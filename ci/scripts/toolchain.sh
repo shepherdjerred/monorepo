@@ -133,7 +133,8 @@ expose_tree() {
 }
 
 expose_postgres_tools() {
-  if [ "$(id -u)" -eq 0 ] && [ -d "${MISE_DATA_DIR:-}/shims" ]; then
+  [ "$(id -u)" -eq 0 ] || return 0
+  if [ -d "${MISE_DATA_DIR:-}/shims" ]; then
     # Root-hosted tests run the Postgres server as nobody. Runtime mise
     # installs inherit root's umask, so expose only the public shims and the
     # pinned Postgres installation to that test user.
@@ -144,6 +145,16 @@ expose_postgres_tools() {
     expose_tree "${MISE_DATA_DIR}/shims"
     if [ -d "${MISE_DATA_DIR}/installs/github-theseus-rs-postgresql-binaries" ]; then
       expose_tree "${MISE_DATA_DIR}/installs/github-theseus-rs-postgresql-binaries"
+    fi
+  fi
+  # When the pipeline mounts the shared mise install claim, runtime installs
+  # land under MISE_INSTALLS_DIR instead of MISE_DATA_DIR. The claim root and
+  # installs directory are created by mise with root's umask, so open them and
+  # a Postgres installed there the same way; other tools stay root-only.
+  if [ -n "${MISE_INSTALLS_DIR:-}" ] && [ -d "$MISE_INSTALLS_DIR" ]; then
+    chmod a+rX "$(dirname "$MISE_INSTALLS_DIR")" "$MISE_INSTALLS_DIR"
+    if [ -d "${MISE_INSTALLS_DIR}/github-theseus-rs-postgresql-binaries" ]; then
+      expose_tree "${MISE_INSTALLS_DIR}/github-theseus-rs-postgresql-binaries"
     fi
   fi
 }

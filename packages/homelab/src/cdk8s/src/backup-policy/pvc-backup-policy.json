@@ -199,6 +199,12 @@
   },
   {
     "namespace": "woodpecker-ci",
+    "name": "woodpecker-mise-installs",
+    "backup": "disabled",
+    "reason": "Disposable mise tool installs and downloads for versions a stale CI image lacks - re-installable from mise.lock"
+  },
+  {
+    "namespace": "woodpecker-ci",
     "name": "woodpecker-gradle-home",
     "backup": "disabled",
     "reason": "Disposable Gradle distributions and dependency cache - re-downloadable"
