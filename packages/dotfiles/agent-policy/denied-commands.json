@@ -1,0 +1,77 @@
+{
+  "commands": [
+    {
+      "pattern": [["sudo", "su"]],
+      "reason": "Agents never run privileged commands. The user runs any sudo step."
+    },
+    {
+      "pattern": ["rm", ["-rf", "-fr", "-Rf", "-fR"], "/"],
+      "reason": "Never force-delete the filesystem root."
+    },
+    {
+      "pattern": [
+        "diskutil",
+        ["eraseDisk", "eraseVolume", "secureErase", "zeroDisk"]
+      ],
+      "reason": "Never erase a disk or volume."
+    },
+    {
+      "pattern": [
+        "kubectl",
+        "delete",
+        [
+          "namespace",
+          "namespaces",
+          "ns",
+          "customresourcedefinition",
+          "customresourcedefinitions",
+          "crd",
+          "crds"
+        ]
+      ],
+      "reason": "Deleting a namespace or CRD cascades to every resource and volume under it. ArgoCD owns these objects."
+    },
+    {
+      "pattern": ["talosctl", ["reset", "wipe"]],
+      "toolkit": true,
+      "reason": "Never reset or wipe a Talos node."
+    },
+    {
+      "pattern": ["argocd", "cluster", "rm"],
+      "toolkit": true,
+      "reason": "Never remove a cluster from Argo CD."
+    },
+    {
+      "pattern": ["argocd", "app", "sync"],
+      "flag": "--prune",
+      "toolkit": true,
+      "reason": "Pruned syncs go through scripts/argocd/argocd.ts release-root, which checks prune candidates first."
+    },
+    {
+      "pattern": ["gh", "repo", "delete"],
+      "toolkit": true,
+      "reason": "Never delete a GitHub repository."
+    },
+    {
+      "pattern": ["op", "vault", "delete"],
+      "reason": "Never delete a 1Password vault."
+    },
+    {
+      "pattern": [
+        "security",
+        [
+          "find-generic-password",
+          "find-internet-password",
+          "dump-keychain",
+          "export"
+        ]
+      ],
+      "reason": "Never read Keychain secrets directly. toolkit and scripts/onepassword/with-service-account.sh resolve credentials without exposing them."
+    },
+    {
+      "pattern": ["cf", "zones", "delete"],
+      "toolkit": true,
+      "reason": "Deleting a Cloudflare zone takes down every record and site in it."
+    }
+  ]
+}

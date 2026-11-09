@@ -8,6 +8,8 @@
 # authoritative (a managed `deny` cannot be overridden, even in
 # bypassPermissions mode). So the durable, safety-critical config —
 # permission rails + enabledPlugins — lives here instead of user settings.
+# The deny rails are generated from ../agent-policy/denied-commands.json by
+# ../scripts/agent-policy.ts.
 #
 # See README.md in this directory for the full architecture and bootstrap.
 #

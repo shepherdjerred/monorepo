@@ -21,14 +21,38 @@ Managed permission rules are also **authoritative**: a `deny` here cannot be
 overridden by any lower tier — not even in `bypassPermissions` mode. So the
 destructive-command denylist becomes a hard floor rather than a soft default.
 
+## The denylist
+
+The deny rules are generated. Edit `../agent-policy/denied-commands.json`, then
+run `bun packages/dotfiles/scripts/agent-policy.ts` to rewrite both this file's
+`permissions.deny` and the Codex rules in `../private_dot_codex/rules/safety.rules`.
+The package test fails when either output drifts from the source.
+
+The list holds only commands that are catastrophic **and** have no legitimate
+agent use: privilege escalation, force-deleting `/`, erasing disks,
+deleting Kubernetes namespaces or CRDs, resetting Talos nodes, removing the
+Argo CD cluster, unsanctioned pruned syncs (release-root prunes through its own
+script), deleting GitHub repositories, 1Password vaults or Cloudflare zones,
+and reading Keychain secrets directly. Anything recoverable or occasionally
+legitimate stays allowed. There are no `ask` rules: agents run unattended, an
+ask still prompts in bypass mode, and non-interactive runs deny it outright.
+
+Prefix rules are a guard against the form an agent usually writes, not a
+security boundary. Flags placed before a subcommand
+(`kubectl --context x delete ns foo`) or a `bash -c` wrapper get past Claude's
+matcher, and Codex only matches a strict positional prefix of plain words. A
+`~` or `$HOME` argument makes Codex match the whole script instead, so neither
+tool's list covers deleting the home directory. Claude's built-in critical-path
+check still prompts for that, and denies it in non-interactive runs.
+
 ## The split
 
 | Config                                                                                  | Lives in                              | Managed by                                                | Rationale                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | --------------------------------------------------------------------------------------- | ------------------------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `permissions.deny` / `ask`                                                              | **managed** (`managed-settings.json`) | this dir + install script                                 | The enforcement policy — un-overridable safety rails. Rules merge across tiers; `deny` always wins.                                                                                                                                                                                                                                                                                                                                                                                              |
+| `permissions.deny`                                                                      | **managed** (`managed-settings.json`) | generated from `agent-policy/` + install script           | The enforcement policy — un-overridable safety rails. Rules merge across tiers; `deny` always wins.                                                                                                                                                                                                                                                                                                                                                                                              |
 | `env`                                                                                   | **managed** (`managed-settings.json`) | this dir + install script                                 | Plain tool defaults for agent shells: `EDITOR=true`, `PAGER=cat`, `GIT_CONFIG_GLOBAL` pointing at a curated agent gitconfig (`~/.config/agent/gitconfig`, no delta pager / difftastic external diff, but keeps gh credentials and git-spice settings), and `GH_CONFIG_DIR=~/.config/gh-agent`. Together they make agents commit, push, and call `gh` as the `derrej` machine account instead of Jerred. Modern tools (bat, eza, fd, nvim) stay on `PATH` as opt-in; nothing here restricts them. |
 | `enabledPlugins`                                                                        | **managed** (`managed-settings.json`) | this dir + install script                                 | Declarative plugin set. Managed **replaces** (does not merge) the user list, so `/plugin` UI toggles are intentionally inert — edit `managed-settings.json` + reinstall to change plugins.                                                                                                                                                                                                                                                                                                       |
-| `permissions.defaultMode: bypassPermissions`                                            | user (`~/.claude/settings.json`)      | seeded from `settings.user-reference.json`                | `defaultMode` at managed scope is undocumented, so it's kept user-side; `deny` stays enforced regardless.                                                                                                                                                                                                                                                                                                                                                                                        |
+| `permissions.defaultMode: bypassPermissions`                                            | user (`~/.claude/settings.json`)      | seeded from `settings.user-reference.json`                | Kept user-side, though managed scope now supports it too. The agent wrappers also pass the bypass flag. `deny` stays enforced regardless.                                                                                                                                                                                                                                                                                                                                                        |
 | Prefs: `editorMode`, `theme`, `skip*`, `alwaysThinkingEnabled`, `agentPushNotifEnabled` | user                                  | seeded from `settings.user-reference.json`                | Personal, not policy; `/config` keeps working normally.                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | `model`, `effortLevel`, fast mode                                                       | user (churned by the runtime)         | **untracked** — `.chezmoiignore`s `.claude/settings.json` | This is the whole point: these float freely and never pollute chezmoi again.                                                                                                                                                                                                                                                                                                                                                                                                                     |
 
@@ -52,6 +76,7 @@ a toolkit build containing `tracker` before installing this policy, then
 restart Claude Code to load it.
 
 - `managed-settings.json` — the authoritative policy (permissions + plugins).
+  Its `permissions.deny` array is generated; edit `../agent-policy/` instead.
 - `settings.user-reference.json` — seed/backup for `~/.claude/settings.json`.
 - `install-managed-settings.sh` — validates + installs the policy (needs sudo).
 
@@ -71,8 +96,8 @@ cd packages/dotfiles/claude-managed
 ```
 
 Destination (macOS): `/Library/Application Support/ClaudeCode/managed-settings.json`
-(root:wheel, mode 644). To change the policy, edit `managed-settings.json` and
-re-run the script.
+(root:wheel, mode 644). To change the policy, edit `managed-settings.json` (or
+the shared denylist source, then regenerate) and re-run the script.
 
 ## New-machine bootstrap
 
