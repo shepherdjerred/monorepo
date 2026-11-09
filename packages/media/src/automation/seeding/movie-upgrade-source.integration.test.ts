@@ -114,6 +114,8 @@ async function publishedUpgrade() {
   return { ...f, db, attempt, cleanup, old, successor };
 }
 
+// This full lifecycle also starts and migrates its own PostgreSQL cluster.
+// Match the bounded integration budget used by the neighboring cleanup journeys.
 test("an actual named upgrade drains its torrent source while the real future rollback cleanup preserves both library videos and captions", async () => {
   const f = await publishedUpgrade();
   expect(f.cleanup.state).toBe("pending");
@@ -157,4 +159,4 @@ test("an actual named upgrade drains its torrent source while the real future ro
     expect(await readFile(workerFilePath(f.files, caption.path))).toEqual(
       caption.bytes,
     );
-});
+}, 60_000);

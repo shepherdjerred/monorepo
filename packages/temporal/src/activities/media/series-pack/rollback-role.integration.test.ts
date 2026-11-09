@@ -4,11 +4,11 @@ import {
   createAcquisitionFileTestWorker,
 } from "#activities/media/testing/activity-workers.ts";
 import path from "node:path";
-import { mkdtemp } from "node:fs/promises";
+import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import type { Worker } from "@temporalio/worker";
 
-import { expect, test } from "vitest";
+import { afterAll, beforeAll, expect, test } from "vitest";
 import { z } from "zod";
 import { createPerEpisodeRollbackRoleFixtureV1 } from "@shepherdjerred/media/testing/per-episode-rollback-workflow";
 import { createAcquisitionNetworkWorkerActivities } from "#activities/media/acquisition.ts";
@@ -27,53 +27,110 @@ import { seriesPackRoleFailureEvidence } from "./failure-evidence.ts";
 import { assertSeriesPackRollbackActivities } from "./rollback-role-assertions.ts";
 import { seriesPackRoleResult } from "./result.ts";
 
-test("a genuine twenty-four-file outbox acquisition crosses actual Node/Network/Files roles, rejects false Plex Parts and restores both original library seasons", async () => {
-  const caseDeadline = Date.now() + 60_000;
+type Fixture = Awaited<
+  ReturnType<typeof createPerEpisodeRollbackRoleFixtureV1>
+>;
+let ownedEnvironment:
+  Awaited<ReturnType<typeof createMovieRoleEnvironment>> | undefined;
+let ownedDirectory: string | undefined;
+let fixture: Fixture | undefined;
+let workflow: Bun.Subprocess | undefined;
+const workers: Worker[] = [];
+const running: Promise<void>[] = [];
+const started: string[] = [];
+let prepared:
+  | {
+      scenario: Fixture;
+      before: Awaited<ReturnType<Fixture["evidence"]>>;
+      environment: Awaited<ReturnType<typeof createMovieRoleEnvironment>>;
+      directory: string;
+      node: string;
+      script: string;
+      childEnvironment: ReturnType<typeof movieWorkflowChildEnvironment>;
+    }
+  | undefined;
+
+// Cold infrastructure/worker startup has its own bounded prerequisite. The
+// complete acquisition and rollback retain their original sixty-second case.
+afterAll(async () => {
+  if (ownedEnvironment !== undefined && ownedDirectory !== undefined)
+    await closeMovieRoleFixture({
+      workers,
+      running,
+      workflow,
+      fixture,
+      environment: ownedEnvironment,
+      directory: ownedDirectory,
+    });
+  else if (ownedDirectory !== undefined)
+    await rm(ownedDirectory, { recursive: true, force: true });
+}, 60_000);
+
+beforeAll(async () => {
   const { temporal, node } = pinnedMovieRuntimes();
   const directory = await mkdtemp(
     path.join(tmpdir(), "media-series-pack-rollback-role-"),
   );
+  ownedDirectory = directory;
   const environment = await createMovieRoleEnvironment(temporal);
-  let fixture:
-    | Awaited<ReturnType<typeof createPerEpisodeRollbackRoleFixtureV1>>
-    | undefined;
-  let workflow: Bun.Subprocess | undefined;
-  const workers: Worker[] = [];
-  const running: Promise<void>[] = [];
-  const started: string[] = [];
+  ownedEnvironment = environment;
+  fixture = await createPerEpisodeRollbackRoleFixtureV1();
+  const scenario = fixture;
+  const before = await scenario.evidence();
+  expect(before.attempts).toEqual([]);
+  expect(before.personalRequests).toBe(0);
+  const script = mediaWorkflowWorkerScript;
+  const childEnvironment = movieWorkflowChildEnvironment();
+  workflow = await startMovieWorkflowWorker({
+    node,
+    script,
+    address: environment.address,
+    directory,
+    childEnvironment,
+  });
+  const network = await createMediaActivityTestWorker(environment, {
+    namespace: "dev",
+    taskQueue: TASK_QUEUES.MEDIA_NETWORK,
+    activities: {
+      ...createAcquisitionNetworkWorkerActivities(() =>
+        Promise.resolve({ acquisition: scenario.acquisition }),
+      ),
+      ...plexRoleActivities(() => Promise.resolve(scenario)),
+      finishMediaOperation: scenario.finishMediaOperation,
+    },
+  });
+  workers.push(network);
+  running.push(network.run());
+  const files = await createAcquisitionFileTestWorker(environment, "dev", () =>
+    Promise.resolve({ acquisition: scenario.fileAcquisition }),
+  );
+  workers.push(files);
+  running.push(files.run());
+  prepared = {
+    scenario,
+    before,
+    environment,
+    directory,
+    node,
+    script,
+    childEnvironment,
+  };
+}, 60_000);
+
+test("a genuine twenty-four-file outbox acquisition crosses actual Node/Network/Files roles, rejects false Plex Parts and restores both original library seasons", async () => {
+  const caseDeadline = Date.now() + 60_000;
+  if (prepared === undefined)
+    throw new Error("Actual rollback role prerequisites did not complete");
+  const {
+    scenario,
+    before,
+    environment,
+    directory,
+    node,
+    script,
+    childEnvironment,
+  } = prepared;
   try {
-    fixture = await createPerEpisodeRollbackRoleFixtureV1();
-    const scenario = fixture;
-    const before = await scenario.evidence();
-    expect(before.attempts).toEqual([]);
-    expect(before.personalRequests).toBe(0);
-    const script = mediaWorkflowWorkerScript;
-    const childEnvironment = movieWorkflowChildEnvironment();
-    workflow = await startMovieWorkflowWorker({
-      node,
-      script,
-      address: environment.address,
-      directory,
-      childEnvironment,
-    });
-    const network = await createMediaActivityTestWorker(environment, {
-      namespace: "dev",
-      taskQueue: TASK_QUEUES.MEDIA_NETWORK,
-      activities: {
-        ...createAcquisitionNetworkWorkerActivities(() =>
-          Promise.resolve({ acquisition: scenario.acquisition }),
-        ),
-        ...plexRoleActivities(() => Promise.resolve(scenario)),
-        finishMediaOperation: scenario.finishMediaOperation,
-      },
-    });
-    const files = await createAcquisitionFileTestWorker(
-      environment,
-      "dev",
-      () => Promise.resolve({ acquisition: scenario.fileAcquisition }),
-    );
-    workers.push(network, files);
-    running.push(network.run(), files.run());
     for (let page = 0; page < 8 && started.length === 0; page++)
       await scenario.dispatch(async (start) => {
         if (!scenario.roleCommand(start))
@@ -177,14 +234,5 @@ test("a genuine twenty-four-file outbox acquisition crosses actual Node/Network/
       `Actual series pack role failed: ${JSON.stringify({ state, evidence, workflowExitCode: workflow?.exitCode })}`,
       { cause: error },
     );
-  } finally {
-    await closeMovieRoleFixture({
-      workers,
-      running,
-      workflow,
-      fixture,
-      environment,
-      directory,
-    });
   }
 }, 60_000);

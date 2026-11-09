@@ -19,6 +19,8 @@ import {
 
 const harness = automationTestHarness();
 
+// The real publication/warning/quarantine journey includes PostgreSQL and file tools;
+// its simulated authority clock is not a five-second wall-clock performance budget.
 test("still-valid 31-second authority does not wait for an unnecessary refresh", async () => {
   const db = harness.database();
   const bound = await boundRetentionFixture(db, harness.context());
@@ -48,7 +50,7 @@ test("still-valid 31-second authority does not wait for an unnecessary refresh",
     f.context.db = db;
     await rm(f.directory, { recursive: true, force: true });
   }
-});
+}, 60_000);
 
 test("75-second original authority cannot renew during hashing; a new Network proof needs a new Files invocation", async () => {
   const db = harness.database();

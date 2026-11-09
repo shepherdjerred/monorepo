@@ -163,6 +163,9 @@ export function createNativeSeriesPackRecoveryRoleV1(
         );
         running.push(...workers.slice(-1).map((worker) => worker.run()));
       }
+      // A new publication command observes current platform storage
+      // after cold worker startup, just as the production sweeper does.
+      if (phase === "publication") await scenario.refreshSourceAuthority();
       const dispatched = await scenario.dispatch(async (start) => {
         if (start.input["operationId"] !== input.operationId)
           throw new Error("Unrelated commands remain for their own workers");

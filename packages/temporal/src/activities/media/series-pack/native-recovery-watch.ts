@@ -22,6 +22,7 @@ export async function assertNativeSeriesPackWatchV1(
   let cursor = "series-pack-native-tv-watch-v1:start";
   const completed = new Set<string>();
   for (let page = 0; page < 2; page++) {
+    await scenario.refreshSourceAuthority();
     const result = await nativeSeriesPackPaidV1(
       `watch_cursor_${String(page)}`,
       charges,

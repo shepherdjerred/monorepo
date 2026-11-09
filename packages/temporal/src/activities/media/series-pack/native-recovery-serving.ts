@@ -17,6 +17,7 @@ export async function reconcileNativeSeriesPackHouseholdV1(
   scenario: Fixture,
   charges: { method: string; paid: number }[],
 ) {
+  await scenario.refreshSourceAuthority();
   const paid = <T>(method: string, work: () => Promise<T>) =>
     nativeSeriesPackPaidV1(method, charges, work);
   await scenario.household.configureAccess();
@@ -68,6 +69,7 @@ export async function publishNativeSeriesPackV1(
   continuationId: string,
   charges: { method: string; paid: number }[],
 ) {
+  await scenario.refreshSourceAuthority();
   const row =
     await scenario.db.nativePublicationCompensationContinuation.findUniqueOrThrow(
       { where: { id: continuationId } },
