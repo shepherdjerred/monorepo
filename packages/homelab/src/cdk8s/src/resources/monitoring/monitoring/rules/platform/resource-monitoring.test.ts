@@ -243,7 +243,7 @@ describe("predictive PVC capacity alerts", () => {
 });
 
 describe("snapshot-aware ZFS PVC capacity alerts", () => {
-  it("joins ZFS dataset quota usage to namespace and PVC labels", () => {
+  it("joins ZFS dataset quota usage to the Bound claim's namespace and PVC labels", () => {
     const rules = getResourceMonitoringRuleGroups().find(
       (group) => group.name === "resource-zfs-pvc-monitoring",
     )?.rules;
@@ -258,6 +258,18 @@ describe("snapshot-aware ZFS PVC capacity alerts", () => {
     expect(warning?.expr.value).toContain(
       "group_left(namespace, persistentvolumeclaim)",
     );
+    // A restore namespace's claim can name the live PV's volume; only the
+    // Bound claim owns the dataset, and the dedupe is by phase, never by
+    // claim or namespace name.
+    for (const rule of [warning, critical]) {
+      expect(rule?.expr.value).toContain(
+        'kube_persistentvolumeclaim_status_phase{phase="Bound"} == 1',
+      );
+      expect(rule?.expr.value).toContain(
+        "* on (namespace, persistentvolumeclaim) group_left()",
+      );
+      expect(rule?.expr.value).not.toContain("restore");
+    }
     expect(warning?.expr.value).toContain("> 0.75");
     expect(warning?.expr.value).toContain(
       "unless on (namespace, persistentvolumeclaim)",

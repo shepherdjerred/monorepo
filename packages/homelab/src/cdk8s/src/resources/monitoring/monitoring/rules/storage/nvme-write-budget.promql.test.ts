@@ -92,40 +92,99 @@ function driveSeries(drive: Drive) {
   ];
 }
 
-function claim(name: string, values: string) {
+// When a workflow's pods were created. The rules only compare pods on one
+// claim, so a fixed epoch is enough; the clone pod comes first, step pods
+// follow at the offsets below.
+const CREATED_EPOCH = 1_762_560_000;
+
+// A series present for `steps` samples starting at sample `from`.
+type Presence = { from: number; steps: number };
+
+function presence(value: number, { from, steps }: Presence): string {
+  const gap = from > 0 ? `_x${String(from)} ` : "";
+  return `${gap}${String(value)}x${String(steps)}`;
+}
+
+function claim(name: string, present: Presence) {
   return {
     series: `kube_persistentvolumeclaim_info{namespace="woodpecker-ci",persistentvolumeclaim="${name}",storageclass="ci-workspace",volumename="pvc-${name}"}`,
-    values,
+    values: presence(1, present),
   };
 }
 
-// A workspace claim's dataset, its clone pod (no step key), and its step pod.
-function workspace(
+type StepPod = { step: string; createdAfterSeconds: number };
+
+// A workspace claim's dataset, its clone pod (no step key), and the step
+// pods that mounted it, each with its own step key and creation time.
+function workspacePods(
   name: string,
-  step: string,
-  present: string,
+  steps: readonly StepPod[],
+  present: Presence,
   writes: string,
 ) {
-  const pvc = (pod: string) => ({
-    series: `kube_pod_spec_volumes_persistentvolumeclaims_info{namespace="woodpecker-ci",persistentvolumeclaim="${name}",pod="${pod}"}`,
-    values: present,
-  });
+  const pod = (podName: string, createdAt: number, labels: string) => [
+    {
+      series: `kube_pod_spec_volumes_persistentvolumeclaims_info{namespace="woodpecker-ci",persistentvolumeclaim="${name}",pod="${podName}"}`,
+      values: presence(1, present),
+    },
+    {
+      series: `kube_pod_labels{namespace="woodpecker-ci",pod="${podName}"${labels}}`,
+      values: presence(1, present),
+    },
+    {
+      series: `kube_pod_created{namespace="woodpecker-ci",pod="${podName}"}`,
+      values: presence(createdAt, present),
+    },
+  ];
   return [
     {
       series: `node_zfs_zpool_dataset_nwritten{node="liskov",zpool="zfspv-pool-nvme",dataset="zfspv-pool-nvme/pvc-${name}"}`,
       values: writes,
     },
-    pvc(`${name}-clone`),
-    pvc(`${name}-step`),
-    {
-      series: `kube_pod_labels{namespace="woodpecker-ci",pod="${name}-clone"}`,
-      values: present,
-    },
-    {
-      series: `kube_pod_labels{namespace="woodpecker-ci",pod="${name}-step",label_ci_sjer_red_step_key="${step}"}`,
-      values: present,
-    },
+    ...pod(`${name}-clone`, CREATED_EPOCH, ""),
+    ...steps.flatMap(({ step, createdAfterSeconds }, index) =>
+      pod(
+        `${name}-step-${String(index)}`,
+        CREATED_EPOCH + createdAfterSeconds,
+        `,label_ci_sjer_red_step_key="${step}"`,
+      ),
+    ),
   ];
+}
+
+// The common workflow: one step pod on the claim.
+function workspace(
+  name: string,
+  step: string,
+  present: Presence,
+  writes: string,
+) {
+  return workspacePods(
+    name,
+    [{ step, createdAfterSeconds: 30 }],
+    present,
+    writes,
+  );
+}
+
+// A workflow with ordered containers (media-pms-wire then media-pms-native,
+// small-pr-checks): several step pods, each under its own step key, mount
+// the one claim in sequence, ten minutes apart.
+function orderedWorkspace(
+  name: string,
+  steps: readonly string[],
+  present: Presence,
+  writes: string,
+) {
+  return workspacePods(
+    name,
+    steps.map((step, index) => ({
+      step,
+      createdAfterSeconds: 30 + index * 600,
+    })),
+    present,
+    writes,
+  );
 }
 
 // Expected 5-year budget in GB/day, from the same definition the rules use.
@@ -204,23 +263,38 @@ test("NVMe write budget follows observed or rated wear and pages over-budget dri
                 values: `0+${String(logicalPerStep)}x${steps}`,
               },
               // Outside the 24h window at eval time: not counted.
-              claim("wp-old", "1x12"),
-              claim("wp-a", `_x240 1x12`),
-              claim("wp-b", `_x300 1x${String(EVAL_HOURS * 12 - 300)}`),
+              claim("wp-old", { from: 0, steps: 12 }),
+              claim("wp-a", { from: 240, steps: 12 }),
+              claim("wp-b", { from: 300, steps: EVAL_HOURS * 12 - 300 }),
+              claim("wp-c", { from: 200, steps: 100 }),
               // wp-old's 9 GB is outside the window; wp-a wrote 5.5 GB and
               // wp-b 2 GB, each counted once despite its clone pod.
-              ...workspace("wp-old", "verify", "1x12", "0+1000000000x9"),
+              ...workspace(
+                "wp-old",
+                "verify",
+                { from: 0, steps: 12 },
+                "0+1000000000x9",
+              ),
               ...workspace(
                 "wp-a",
                 "verify",
-                "_x240 1x12",
+                { from: 240, steps: 12 },
                 "_x240 0+500000000x11",
               ),
               ...workspace(
                 "wp-b",
                 "playwright-e2e",
-                `_x300 1x${String(EVAL_HOURS * 12 - 300)}`,
+                { from: 300, steps: EVAL_HOURS * 12 - 300 },
                 "_x300 0+100000000x20",
+              ),
+              // wp-c's 3 GB belongs to the workflow's own step, the first
+              // step pod created: media-pms-wire, even though
+              // media-pms-native sorts first.
+              ...orderedWorkspace(
+                "wp-c",
+                ["media-pms-wire", "media-pms-native"],
+                { from: 200, steps: 100 },
+                "_x200 0+300000000x10",
               ),
             ],
             promql_expr_test: [
@@ -250,14 +324,14 @@ test("NVMe write budget follows observed or rated wear and pages over-budget dri
                   },
                 ],
               },
-              // 400 GB/day over two claims in the window.
+              // 400 GB/day over three claims in the window.
               {
                 expr: `round(${CI_WORKSPACE_PHYSICAL_BYTES_PER_PVC_24H} / 1e9)`,
                 eval_time: evalTime,
                 exp_samples: [
                   {
                     labels: '{node="liskov",zpool="zfspv-pool-nvme"}',
-                    value: 200,
+                    value: 133,
                   },
                 ],
               },
@@ -267,6 +341,7 @@ test("NVMe write budget follows observed or rated wear and pages over-budget dri
                 exp_samples: [
                   { labels: '{step="verify"}', value: 55 },
                   { labels: '{step="playwright-e2e"}', value: 20 },
+                  { labels: '{step="media-pms-wire"}', value: 30 },
                 ],
               },
               {
@@ -275,6 +350,7 @@ test("NVMe write budget follows observed or rated wear and pages over-budget dri
                 exp_samples: [
                   { labels: '{step="verify"}', value: 1 },
                   { labels: '{step="playwright-e2e"}', value: 1 },
+                  { labels: '{step="media-pms-wire"}', value: 1 },
                 ],
               },
             ],
