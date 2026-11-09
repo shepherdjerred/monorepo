@@ -42,6 +42,11 @@ eslint-suppressions.json
 # never placed by chezmoi.
 claude-managed
 
+# Shared source for the Claude and Codex command denylists. scripts/agent-policy.ts
+# generates claude-managed/managed-settings.json deny rules and
+# .codex/rules/safety.rules from it; it is repo-only input, not a home file.
+agent-policy
+
 # System launchd configuration is installed with admin access, outside $HOME.
 macos-file-limits
 
