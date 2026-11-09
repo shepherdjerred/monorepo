@@ -6,6 +6,15 @@ internal struct FacetVaultSetupView: View {
     let state: FacetSyncStatus?
     let needsStandardConsent: Bool
 
+    /// Only this legacy notice has a synthetic file path. Actual YAML errors
+    /// and unknown diagnostics must remain visible beside the setup state.
+    static func explains(_ problem: FacetProblem) -> Bool {
+        problem.path == "tasknotes.yaml"
+            && problem.message
+                == "Waiting for TaskNotes configuration; editing requires configuration "
+                + "or explicit approval of standard settings"
+    }
+
     var body: some View {
         ContentUnavailableView {
             Label(title, systemImage: "icloud.and.arrow.down")

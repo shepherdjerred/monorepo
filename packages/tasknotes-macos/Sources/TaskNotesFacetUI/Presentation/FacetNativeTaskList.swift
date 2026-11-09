@@ -136,7 +136,7 @@ internal struct FacetNativeTaskList: View {
             ForEach(Array(snapshot.problems.enumerated()), id: \.offset) { _, problem in
                 // The runtime uses this path for its general setup notice, not
                 // a missing-file diagnosis. The setup view explains that state.
-                if snapshot.configuration != .null || problem.path != "tasknotes.yaml" {
+                if snapshot.configuration != .null || !FacetVaultSetupView.explains(problem) {
                     Label(
                         "\(problem.path): \(problem.message)",
                         systemImage: "exclamationmark.triangle"

@@ -7,6 +7,22 @@ import Testing
 
 @Suite("Synthetic Sync status renders", .serialized) @MainActor
 struct FacetSyncNoticeRenderTests {
+    @Test func setupDoesNotHideInvalidOrUnknownConfigurationDiagnostics() throws {
+        let message =
+            "Waiting for TaskNotes configuration; editing requires configuration "
+            + "or explicit approval of standard settings"
+        #expect(
+            FacetVaultSetupView.explains(FacetProblem(path: "tasknotes.yaml", message: message)))
+        #expect(!FacetVaultSetupView.explains(FacetProblem(path: "Other.md", message: message)))
+        for problem in [
+            "Invalid TaskNotes configuration: malformed YAML", "Unknown provider failure",
+        ] {
+            #expect(
+                !FacetVaultSetupView.explains(
+                    FacetProblem(path: "tasknotes.yaml", message: problem)))
+        }
+    }
+
     @Test(arguments: [false, true], [SnapshotAppearance.light, .dark])
     func configurationSetup(initialComplete: Bool, appearance: SnapshotAppearance) throws {
         let store = try FacetSurfaceFixtures.store(.empty)
