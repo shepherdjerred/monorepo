@@ -10,6 +10,17 @@ import org.junit.jupiter.api.Test;
 
 class ProtocolTest {
   @Test
+  void EnforcesSharedFrameCapBounds() {
+    assertThat(ClientScreens.frameCap(Protocol.JSON.readTree("{\"fps\":30}"))).isEqualTo(30);
+    assertThat(ClientScreens.frameCap(Protocol.JSON.readTree("{\"fps\":120}"))).isEqualTo(120);
+    for (var invalid :
+        java.util.List.of(
+            "{\"fps\":29}", "{\"fps\":121}", "{\"fps\":30.5}", "{\"fps\":30,\"extra\":true}"))
+      assertThatThrownBy(() -> ClientScreens.frameCap(Protocol.JSON.readTree(invalid)))
+          .isInstanceOf(RuntimeException.class);
+  }
+
+  @Test
   void SharedFixturesRejectContractDrift() throws IOException {
     var fixtures = Protocol.JSON.readTree(Files.readString(Path.of("protocol-fixtures.json")));
     for (var valid : fixtures.required("valid")) {

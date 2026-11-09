@@ -1,5 +1,8 @@
 import { z } from "zod";
-import { CaptureCleanupRequestSchema } from "#protocol/capture.ts";
+import {
+  CaptureCleanupRequestSchema,
+  CapturePreparationSchema,
+} from "#protocol/capture.ts";
 import { BoxSchema } from "#protocol/bridge.ts";
 import { body, DaemonError } from "./http.ts";
 import { guarded } from "./live-routes.ts";
@@ -16,6 +19,29 @@ export async function capturePost(call: {
   const { ctx, request, target, action } = call;
   const { bridge, id } = target;
   switch (action) {
+    case "capture-prepare": {
+      if (id === "live" || target.kind === "live")
+        throw new DaemonError(
+          "Capture preparation requires a disposable local server",
+          403,
+        );
+      const input = await body(request, CapturePreparationSchema);
+      const controlled = ctx.clients
+        .list()
+        .find((client) => client.name === input.name && client.target === id);
+      if (controlled === undefined)
+        throw new DaemonError(
+          "Capture preparation requires the owned client",
+          409,
+        );
+      const { state } = await ctx.clients.status(controlled.name);
+      if (!state.connected)
+        throw new DaemonError(
+          "Capture preparation client is disconnected",
+          409,
+        );
+      return Response.json(await bridge.capturePrepare(input));
+    }
     case "capture-player": {
       const { name } = await body(
         request,

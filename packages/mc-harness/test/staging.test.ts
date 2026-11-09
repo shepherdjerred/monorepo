@@ -11,6 +11,44 @@ async function mode(file: string): Promise<number> {
 }
 
 describe("stageSandboxFiles", () => {
+  it("seeds the owned server icon even when the profile already supplies Paper", async () => {
+    const root = await mkdtemp(path.join(tmpdir(), "mc-icon-staging-"));
+    const repoRoot = path.join(root, "repo");
+    const icon = path.join("assets", "server-icon.png");
+    await Bun.write(path.join(repoRoot, icon), "owned icon bytes");
+    const profile: ResolvedProfile = {
+      image: "example/paper@sha256:0",
+      env: {},
+      plugins: [],
+      staged: [],
+      pluginMount: "directory",
+      seedData: false,
+      serverIcon: icon,
+      ports: [],
+      defaultProvider: "docker",
+      memory: { request: "1Gi", limit: "1Gi" },
+    };
+    const result = await stageSandboxFiles({
+      dir: path.join(root, "sandbox"),
+      cacheDir: path.join(root, "cache"),
+      repoRoot,
+      profile,
+    });
+    expect(result.seedFiles).toEqual([
+      { source: path.join(repoRoot, icon), target: "server-icon.png" },
+    ]);
+    const seeded = result.seedFiles[0];
+    if (seeded === undefined) throw new Error("Missing staged server icon");
+    expect(await Bun.file(seeded.source).text()).toBe("owned icon bytes");
+    await expect(
+      stageSandboxFiles({
+        dir: path.join(root, "other"),
+        cacheDir: path.join(root, "cache"),
+        repoRoot,
+        profile: { ...profile, serverIcon: "missing.png" },
+      }),
+    ).rejects.toThrow("missing.png is missing");
+  });
   it("stages a /plugins tree the image's unprivileged user can read", async () => {
     const root = await mkdtemp(path.join(tmpdir(), "mc-staging-"));
     const repoRoot = path.join(root, "repo");

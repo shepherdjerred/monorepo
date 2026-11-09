@@ -10,6 +10,24 @@ export function captureConfig(source: string, entry: Entry): string {
     .parse(Bun.YAML.parse(source));
   const [x, y, zz] = entry.spawn;
   switch (entry.content) {
+    case "seasonal": {
+      const events = z
+        .array(
+          z.looseObject({
+            id: z.string(),
+            firstDay: z.string(),
+            lastDay: z.string(),
+          }),
+        )
+        .parse(parsed["events"]);
+      const event = events.find((candidate) => candidate.id === "stormnight");
+      if (event === undefined)
+        throw new Error("Capture content lacks Stormnight");
+      return Bun.YAML.stringify({
+        ...parsed,
+        events: [{ ...event, firstDay: "01-01", lastDay: "12-31" }],
+      });
+    }
     case "arena-survival": {
       // This feature captures the Colosseum. Unrelated survival arenas have
       // separate terrain and readiness requirements, even on an imported world.
@@ -18,8 +36,8 @@ export function captureConfig(source: string, entry: Entry): string {
     case "multiverse":
       return Bun.YAML.stringify(
         Object.fromEntries(
-          (entry.additionalWorlds ?? []).map((name) => [
-            `minecraft:${name}`,
+          ["world", ...(entry.additionalWorlds ?? [])].map((name) => [
+            name === "world" ? "minecraft:overworld" : `minecraft:${name}`,
             {
               "auto-load": true,
               biome: "",
@@ -45,7 +63,7 @@ export function captureConfig(source: string, entry: Entry): string {
           ...(entry.additionalWorlds ?? []).map((name) => ({
             name,
             preset: "normal",
-            rtp: false,
+            rtp: entry.publicHub === true && name === "frontier",
           })),
         ],
         borders: [
@@ -77,6 +95,7 @@ export function captureConfig(source: string, entry: Entry): string {
       });
     }
     case "travel":
+      if (entry.publicHub === true) return Bun.YAML.stringify(parsed);
       return Bun.YAML.stringify({
         ...parsed,
         destinations: [
@@ -91,6 +110,7 @@ export function captureConfig(source: string, entry: Entry): string {
         portals: [],
       });
     case "stargates":
+      if (entry.publicHub === true) return Bun.YAML.stringify(parsed);
       // Server hubs refer to realms omitted from the disposable import.
       // Player-built networks retain their ordinary configuration.
       return Bun.YAML.stringify({ ...parsed, serverGates: [] });

@@ -7,7 +7,7 @@ NPCs offer conversations, quests, and other services around the world. Interact 
 
 An indicator above an NPC can show that a quest is available or ready to hand in. Read the objectives and return to the appropriate NPC when you finish. Quests are offered and progress in the permanent main world.
 
-![Winston offers a quest, with Accept and Not now choices in the conversation](/screenshots/npc-quest-offer.webp)
+![Thomas offers A Blacksmith's Task, with Accept and Not now choices in the conversation.](/screenshots/npc-quest-offer.webp)
 
 Quest offers explain the request before you choose whether to accept it.
 

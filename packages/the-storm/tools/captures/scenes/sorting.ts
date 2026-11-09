@@ -15,7 +15,7 @@ export default defineCaptureScene({
   name: "container-sorting",
   description: "Sort a real barrel with the ordinary empty-hand shortcut",
   bounds: { min: [0, -1, 0], max: [6, 3, 6] },
-  staging: [-3, 0, -3],
+  staging: [-2.5, 0, -2.5],
   inspectors: ["wilderness", "shops", "banks"],
   setup: async (context) => {
     await pad(context, [6, 3, 6]);
@@ -89,6 +89,13 @@ export default defineCaptureScene({
     );
     await context.action("clear-overlays");
     await context.capture(presentation(presentations, "sorting-after"));
+    await context.action("close");
+    await context.action("command", { text: "sort" });
+    await context.waitFor(
+      "sorting preferences",
+      (state) => state.connected && state.screen === "Sorting",
+    );
+    await context.capture(presentation(presentations, "sorting-settings"));
     await context.action("close");
   },
 });

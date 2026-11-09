@@ -34,7 +34,8 @@ const CleanupSchema = z.union([
 ]);
 export const RunSchema = z.strictObject({
   schema: z.literal(1),
-  mode: z.literal("observation").optional(),
+  mode: z.enum(["observation", "venue", "client-ui"]).optional(),
+  interactionSites: z.array(BoxSchema).optional(),
   id: z.string(),
   target: z.string(),
   mapSource: MapSourceSchema.optional(),

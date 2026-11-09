@@ -1,8 +1,19 @@
 import { z } from "zod";
+import uiContract from "./client-ui.json";
 import { ConnectedClientStateShape } from "./client-socket.ts";
 import { GameModeSchema } from "./bridge.ts";
 import { SandboxIdSchema } from "./ipc.ts";
 import { LIVE_TARGET_ID } from "./live.ts";
+const uiLimits = z
+  .strictObject({
+    minimumGuiScale: z.number().int().positive(),
+    maximumGuiScale: z.number().int().positive(),
+    minimumFrameCap: z.number().int().min(30).max(240),
+    maximumFrameCap: z.number().int().min(30).max(240),
+  })
+  .refine((v) => v.maximumGuiScale >= v.minimumGuiScale)
+  .refine((v) => v.maximumFrameCap >= v.minimumFrameCap)
+  .parse(uiContract);
 
 /**
  * The real rendered Minecraft client (the-storm's Fabric preview mod), owned
@@ -142,8 +153,11 @@ export const ClientActionSchema = z.enum([
   "chat-open",
   "advancements",
   "hover-slot",
+  "gui-scale",
+  "frame-cap",
   "screen-type",
   "respawn",
+  "server-list",
   "sign-write",
   "click",
   "messages",
@@ -195,6 +209,20 @@ export const CLIENT_ACTION_REQUEST_SCHEMAS = {
     stateId: z.number().int(),
     slot: z.number().int().nonnegative(),
   }),
+  "gui-scale": z.strictObject({
+    scale: z
+      .number()
+      .int()
+      .min(uiLimits.minimumGuiScale)
+      .max(uiLimits.maximumGuiScale),
+  }),
+  "frame-cap": z.strictObject({
+    fps: z
+      .number()
+      .int()
+      .min(uiLimits.minimumFrameCap)
+      .max(uiLimits.maximumFrameCap),
+  }),
   "screen-type": z.strictObject({
     revision: z.string().min(1).max(100),
     id: z.number().int().nonnegative(),
@@ -204,6 +232,7 @@ export const CLIENT_ACTION_REQUEST_SCHEMAS = {
       .regex(/^[^\r\n]*$/u),
   }),
   respawn: z.strictObject({}),
+  "server-list": z.strictObject({}),
   "sign-write": z.strictObject({
     lines: z.tuple([
       z.string().max(15),

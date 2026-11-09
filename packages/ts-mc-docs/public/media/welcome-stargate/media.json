@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "name": "welcome-stargate",
+  "kind": "image",
+  "width": 1280,
+  "height": 720,
+  "src": "/media/welcome-stargate/original.webp",
+  "poster": "/media/welcome-stargate/poster.webp",
+  "alt": "The preserved welcome plaza's circular gate is open to Skylands.",
+  "caption": "The open welcome gate connects to the world selected on its sign.",
+  "annotations": []
+}

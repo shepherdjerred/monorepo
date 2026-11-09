@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "name": "quest-journal",
+  "kind": "image",
+  "width": 1280,
+  "height": 720,
+  "src": "/media/quest-journal/original.webp",
+  "poster": "/media/quest-journal/poster.webp",
+  "alt": "The Quest Journal shows an active Blacksmith's Task with its saved progress.",
+  "caption": "Use /quests to return to your active quests and discoveries.",
+  "annotations": []
+}

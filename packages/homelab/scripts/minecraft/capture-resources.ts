@@ -5,6 +5,17 @@ export const CaptureResourceInput = z.strictObject({
   sourceClaim: z.literal("datadir-minecraft-tsmc-0"),
   capacity: z.string().regex(/^\d+Gi$/u),
   image: z.string().regex(/^.+@sha256:[a-f0-9]{64}$/u),
+  imagePullSecrets: z
+    .array(
+      z.strictObject({
+        name: z
+          .string()
+          .min(1)
+          .max(253)
+          .regex(/^[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$/u),
+      }),
+    )
+    .min(1),
 });
 
 /** On-demand fixture reads use their own disposable class, never a writable source mount. */
@@ -50,6 +61,7 @@ export function captureResources(value: unknown) {
         metadata,
         spec: {
           automountServiceAccountToken: false,
+          imagePullSecrets: input.imagePullSecrets,
           restartPolicy: "Never",
           activeDeadlineSeconds: 900,
           securityContext: {

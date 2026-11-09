@@ -208,6 +208,36 @@ public final class ServerService {
         MainThread.DEFAULT_TIMEOUT);
   }
 
+  public JsonObject capturePrepare(String name, String resource, String id) {
+    requireStorm();
+    java.util.UUID identity;
+    try {
+      identity = java.util.UUID.fromString(id);
+      if (!identity.toString().equals(id)) throw new IllegalArgumentException("Noncanonical UUID");
+    } catch (IllegalArgumentException failure) {
+      throw new BridgeException(ErrorCode.BAD_REQUEST, "Invalid capture preparation id");
+    }
+    return mainThread.callAsync(
+        () -> {
+          var player = server.getPlayerExact(name);
+          var access =
+              server
+                  .getServicesManager()
+                  .load(com.shepherdjerred.thestorm.core.capture.CaptureInspection.class);
+          if (player == null || access == null)
+            throw new BridgeException(ErrorCode.UNSUPPORTED, "Capture preparation is unavailable");
+          return access
+              .prepare(player.getUniqueId(), resource, identity)
+              .thenApply(
+                  _ -> {
+                    var result = new JsonObject();
+                    result.addProperty("prepared", true);
+                    return result;
+                  });
+        },
+        MainThread.DEFAULT_TIMEOUT);
+  }
+
   public JsonObject restoreCapturePlayer(com.shepherdjerred.mcbridge.adapter.http.Fields request) {
     requireStorm();
     var checkpoint =

@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "name": "mob-arena-classes",
+  "kind": "image",
+  "width": 1280,
+  "height": 720,
+  "src": "/media/mob-arena-classes/original.webp",
+  "poster": "/media/mob-arena-classes/poster.webp",
+  "alt": "The preserved Colosseum's underground lobby has its real class signs and ready block.",
+  "caption": "Choose a class in the Colosseum lobby before readying up.",
+  "annotations": []
+}

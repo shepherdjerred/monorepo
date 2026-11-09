@@ -27,6 +27,7 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
@@ -107,6 +108,38 @@ final class GravesPaperTest {
         .isNotEmpty();
     assertThat(alice.getInventory().isEmpty()).isTrue();
     assertThat(harness.saved).contains(alice.getUniqueId());
+  }
+
+  @Test
+  void lavaDeathUsesSafeGroundVisitedAfterJoining() {
+    var alice = aliceWithKit();
+    var joined = alice.getLocation();
+    var safe = new Location(harness.world, 30.5, 5, 0.5);
+    harness.world.getBlockAt(30, 4, 0).setType(Material.STONE);
+    alice.teleport(safe);
+    harness.server.getPluginManager().callEvent(new PlayerMoveEvent(alice, joined, safe));
+    var lava = new Location(harness.world, 60.5, 5, 0.5);
+    harness.world.getBlockAt(60, 5, 0).setType(Material.LAVA);
+    alice.teleport(lava);
+    harness.server.getPluginManager().callEvent(new PlayerMoveEvent(alice, safe, lava));
+    harness
+        .server
+        .getPluginManager()
+        .callEvent(
+            new PlayerDeathEvent(
+                alice,
+                DamageSource.builder(DamageType.LAVA).build(),
+                new ArrayList<>(List.of(new ItemStack(Material.DIAMOND, 3))),
+                0,
+                net.kyori.adventure.text.Component.empty(),
+                true));
+    harness.until(() -> harness.graves.ownedBy(alice.getUniqueId()).size() == 1);
+    assertThat(harness.store.loadAll().join())
+        .singleElement()
+        .satisfies(
+            contents ->
+                assertThat(contents.grave().pos()).isEqualTo(new GravePos("world", 30, 5, 0)));
+    assertThat(GraveBlocks.idAt(harness.world.getBlockAt(30, 5, 0))).isPresent();
   }
 
   void holdsAlicesKit(GraveContents contents) {

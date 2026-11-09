@@ -2,20 +2,11 @@
   "schema": 1,
   "name": "quest-field-note",
   "kind": "image",
-  "width": 2560,
-  "height": 1440,
+  "width": 1280,
+  "height": 720,
   "src": "/media/quest-field-note/original.webp",
   "poster": "/media/quest-field-note/poster.webp",
-  "alt": "Picking up wheat reveals the Town Harvest field note and records it in the journal.",
-  "caption": "Picking up wheat reveals the Town Harvest field note and records it in the journal.",
-  "annotations": [
-    {
-      "kind": "arrow",
-      "from": [0.74, 0.23],
-      "to": [0.5, 0.48],
-      "text": "Discovery recorded",
-      "startMs": 0,
-      "endMs": 12000
-    }
-  ]
+  "alt": "Picking up wheat reveals the Town Harvest field note in the Quest Journal.",
+  "caption": "First pickups can reveal authored field notes in your journal.",
+  "annotations": []
 }

@@ -2,20 +2,11 @@
   "schema": 1,
   "name": "mob-arena-knight-kit",
   "kind": "image",
-  "width": 2560,
-  "height": 1440,
+  "width": 1280,
+  "height": 720,
   "src": "/media/mob-arena-knight-kit/original.webp",
   "poster": "/media/mob-arena-knight-kit/poster.webp",
-  "alt": "Choosing Knight equips its arena armor and weapons; your survival belongings return when you leave.",
-  "caption": "Choosing Knight equips its arena armor and weapons; your survival belongings return when you leave.",
-  "annotations": [
-    {
-      "kind": "arrow",
-      "from": [0.73, 0.32],
-      "to": [0.44, 0.44],
-      "text": "Arena kit",
-      "startMs": 0,
-      "endMs": 15000
-    }
-  ]
+  "alt": "The actual starter Knight kit appears in the player's arena inventory.",
+  "caption": "Knight starts with close-range equipment; arena gear stays inside the arena.",
+  "annotations": []
 }

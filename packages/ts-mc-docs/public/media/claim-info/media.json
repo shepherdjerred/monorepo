@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "name": "claim-info",
+  "kind": "image",
+  "width": 1280,
+  "height": 720,
+  "src": "/media/claim-info/original.webp",
+  "poster": "/media/claim-info/poster.webp",
+  "alt": "Claim information identifies the camp owning the chunk and its protection flags.",
+  "caption": "Use /claim info while standing in a claimed chunk to check its owner and flags.",
+  "annotations": []
+}

@@ -6,7 +6,7 @@ export default defineCaptureScene({
   description: "Operate a hidden switch and toggle a bulb and candle together",
   // Include the light switch's complete eight-block search radius.
   bounds: { min: [-1, -7, -5], max: [15, 9, 11] },
-  staging: [-3, 0, -3],
+  staging: [-2.5, -5, 8.5],
   inspectors,
   setup: async (context) => {
     await context.track("mechanic", 1);

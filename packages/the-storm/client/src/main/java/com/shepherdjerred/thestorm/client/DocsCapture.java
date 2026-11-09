@@ -9,6 +9,7 @@ import java.util.concurrent.ExecutorService;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
 import org.jspecify.annotations.Nullable;
+import org.lwjgl.sdl.SDLVideo;
 import tools.jackson.databind.JsonNode;
 
 /** Records ordinary player actions and UI without changing simulation or camera position. */
@@ -48,6 +49,8 @@ final class DocsCapture implements AutoCloseable {
       throw new IllegalStateException("Recording requires a visible windowed client");
     width = client.getWindow().getScreenWidth();
     height = client.getWindow().getScreenHeight();
+    if (!SDLVideo.SDL_RaiseWindow(client.getWindow().handle()))
+      throw new IllegalStateException("Capture window could not take focus");
     DocsViewport.apply(client);
     error = "";
     observations.clear();
@@ -87,6 +90,7 @@ final class DocsCapture implements AutoCloseable {
     try {
       if (client.getWindow().isIconified())
         throw new IllegalStateException("Capture window minimized");
+      if (!focused(client)) return;
       var target = client.gameRenderer.mainRenderTarget();
       if (target.width != DocsViewport.target().width()
           || target.height != DocsViewport.target().height()) {
@@ -119,6 +123,12 @@ final class DocsCapture implements AutoCloseable {
     var marker = new Marker(name, java.util.Objects.requireNonNull(clock).frames());
     markers.add(marker);
     return marker;
+  }
+
+  private boolean focused(Minecraft client) {
+    if (client.isWindowActive()) return true;
+    if (state.equals("ARMING")) return false;
+    throw new IllegalStateException("Capture window lost focus");
   }
 
   private void captureFrame(Minecraft client, FrameClock timing, VideoFrames frames, long now) {

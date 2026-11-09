@@ -1,0 +1,8 @@
+{
+  "resource": "mail-reward",
+  "title": "Welcome supplies",
+  "choices": [
+    { "id": "iron", "material": "IRON_INGOT", "amount": 8 },
+    { "id": "gold", "material": "GOLD_INGOT", "amount": 4 }
+  ]
+}

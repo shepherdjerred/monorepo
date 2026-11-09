@@ -1,8 +1,19 @@
-import type { CaptureContext } from "@shepherdjerred/mc-harness/capture/define.ts";
+import type {
+  CaptureContext,
+  CaptureScene,
+} from "@shepherdjerred/mc-harness/capture/define.ts";
 import { z } from "zod";
 
 export type Point = [number, number, number];
 export const inspectors = ["wilderness", "shops", "banks"];
+export const chatVenue: Pick<
+  CaptureScene,
+  "bounds" | "staging" | "inspectors"
+> = {
+  bounds: { min: [0, -1, 0], max: [12, 4, 12] },
+  staging: [20.5, 2, -29.5],
+  inspectors,
+};
 
 /** Capture a confirmed command reply with the chat open, then return to gameplay. */
 export async function commandShot(
@@ -65,7 +76,7 @@ export async function pad(context: CaptureContext, size: Point): Promise<void> {
   await context.set(
     context.at(0, -1, 0),
     context.at(size[0], -1, size[2]),
-    "minecraft:stone_bricks",
+    "minecraft:grass_block",
   );
 }
 
@@ -99,6 +110,11 @@ export async function camera(
   await context.teleport(context.at(...position), 0, 0);
   await context.lookAt(context.at(...look));
   await context.action("clear-overlays");
+}
+
+/** The real riverside overlook faces spawn town instead of an empty staging pad. */
+export async function chatCamera(context: CaptureContext): Promise<void> {
+  await camera(context, [0.5, 0, 0.5], [-63, 6, -66]);
 }
 
 export async function waitBlock(

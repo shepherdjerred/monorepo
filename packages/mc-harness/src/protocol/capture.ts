@@ -17,6 +17,14 @@ export const CaptureCleanupRequestSchema = z.union(
   ),
 );
 export type CaptureResource = z.infer<typeof CaptureResourceSchema>;
+export const CapturePreparationSchema = z.strictObject({
+  name: ClientNameSchema,
+  resource: z.string().regex(/^[a-z][a-z-]{1,39}$/u),
+  id: z.uuid(),
+});
+export const CapturePreparationResponseSchema = z.strictObject({
+  prepared: z.literal(true),
+});
 export const CaptureInspectionSchema = z.strictObject({
   inspection: z.record(z.string(), z.string()),
 });

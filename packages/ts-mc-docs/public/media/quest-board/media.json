@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "name": "quest-board",
+  "kind": "image",
+  "width": 1280,
+  "height": 720,
+  "src": "/media/quest-board/original.webp",
+  "poster": "/media/quest-board/poster.webp",
+  "alt": "Tamsin's actual quest-board conversation offers daily and weekly work on the copied main map.",
+  "caption": "Visit the quest board for the current daily and weekly jobs.",
+  "annotations": []
+}

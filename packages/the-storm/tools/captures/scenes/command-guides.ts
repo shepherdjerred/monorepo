@@ -1,11 +1,11 @@
 import { defineCaptureScene } from "@shepherdjerred/mc-harness/capture/define.ts";
-import { camera, inspectors } from "./fixtures.ts";
+import { chatCamera, inspectors } from "./fixtures.ts";
 
 export default defineCaptureScene({
   name: "command-guides",
   description: "Capture real command output over the populated map",
   bounds: { min: [0, -1, 0], max: [0, -1, 0] },
-  staging: [-3, 0, -3],
+  staging: [20.5, 2, -29.5],
   inspectors,
   setup: async (context) => {
     if (context.target === "live")
@@ -14,10 +14,22 @@ export default defineCaptureScene({
       kind: "command",
       command: `minecraft:op ${context.name}`,
     });
-    await camera(context, [-2.5, 0, -2.5], [0, 1, 0]);
+    await chatCamera(context);
   },
   run: async (context) => {
     for (const [name, command, feedback, caption] of [
+      [
+        "crystal-balance",
+        "balance",
+        "Balance:",
+        "The wallet command shows crystals and the separate Credits balance.",
+      ],
+      [
+        "skill-mining",
+        "skills mining",
+        "Mining: level",
+        "Use /skills mining to see your Mining level and progress toward the next level.",
+      ],
       [
         "perks-overview",
         "perks",

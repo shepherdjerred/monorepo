@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "name": "creative-plot",
+  "kind": "image",
+  "width": 1280,
+  "height": 720,
+  "src": "/media/creative-plot/original.webp",
+  "poster": "/media/creative-plot/poster.webp",
+  "alt": "A small demonstration pavilion stands inside a claimed plot on the recovered Creative map.",
+  "caption": "Creative plots provide a separate place to build.",
+  "annotations": []
+}

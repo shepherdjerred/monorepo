@@ -55,10 +55,12 @@ export type StagedEntry =
         | "stargates"
         | "multiverse"
         | "arena-survival"
-        | "shards";
+        | "shards"
+        | "seasonal";
       spawn: [number, number, number];
       sha256: string;
       additionalWorlds?: readonly string[];
+      publicHub?: boolean;
     }
   | { kind: "repo-file"; source: string; target: string; build?: string }
   | { kind: "repo-dir"; source: string; target: string }
@@ -74,6 +76,8 @@ export type StagedEntry =
 
 export type ResolvedProfile = {
   image: string;
+  /** Repository-owned icon seeded into /data before Paper starts. */
+  serverIcon?: string;
   env: Record<string, string>;
   /** Pinned third-party jars staged into /plugins. */
   plugins: readonly PluginPin[];
@@ -184,6 +188,7 @@ function stormDevProfile(
 ): ResolvedProfile {
   return {
     image: serverImage,
+    serverIcon: STORM_PATHS.serverIcon,
     env: {
       ...serverEnv(world, secrets),
       // TheStorm requires bootstrap Flipt settings even when rollout checks
@@ -457,11 +462,24 @@ export function resolveProfile(
           source: path.join(STORM_PATHS.ownedConfigDir, `${content}.yml`),
           target: `TheStorm/${content}.yml`,
           content,
+          publicHub: request.captureFeatures?.includes("public-hub") === true,
           spawn,
           sha256: mapSource.sha256,
           additionalWorlds,
         }),
       ),
+      ...(request.captureFeatures?.includes("stormnight") === true
+        ? [
+            {
+              kind: "capture-content" as const,
+              source: path.join(STORM_PATHS.ownedConfigDir, "seasonal.yml"),
+              target: "TheStorm/seasonal.yml",
+              content: "seasonal" as const,
+              spawn,
+              sha256: mapSource.sha256,
+            },
+          ]
+        : []),
       ...["survival", "rustworks"].map((arena) => ({
         kind: "capture-content" as const,
         source: path.join(STORM_PATHS.ownedConfigDir, "arena", `${arena}.yml`),

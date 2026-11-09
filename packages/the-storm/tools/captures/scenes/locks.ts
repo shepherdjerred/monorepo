@@ -1,16 +1,18 @@
 import { defineCaptureScene } from "@shepherdjerred/mc-harness/capture/define.ts";
 import { pad, camera, inspectors } from "./fixtures.ts";
+import { localHelper } from "#captures/helper.ts";
 
 export default defineCaptureScene({
   name: "container-locks",
   description:
     "Show private, public, donation, supply and display locks plus a trusted player",
   bounds: { min: [0, -1, 0], max: [7, 3, 6] },
-  staging: [-3, 0, -3],
+  staging: [-2.5, 0, -2.5],
   inspectors,
   setup: async (context) => {
     if (context.target === "live")
       throw new Error("Lock examples require an isolated map copy");
+    await localHelper(context);
     await pad(context, [7, 3, 6]);
     await context.set(
       context.at(3, 0, 3),
@@ -60,16 +62,16 @@ export default defineCaptureScene({
     }
     await context.playerCommand("lock private", "This lock is now private.");
     await context.playerCommand(
-      "lock trust TsmcDemoHelper manage",
+      "lock trust MapleFox manage",
       "can now open and break it.",
     );
     await context.action("clear-overlays");
-    await context.playerCommand("lock info", "TsmcDemoHelper (manage)");
+    await context.playerCommand("lock info", "MapleFox (manage)");
     await context.action("chat-open");
     await context.capture({
       schema: 1,
       name: "lock-trusted",
-      alt: "Lock information lists TsmcDemoHelper with manage access",
+      alt: "Lock information lists MapleFox with manage access",
       caption:
         "Manage access lets a trusted player open and break the locked container.",
       annotations: [],

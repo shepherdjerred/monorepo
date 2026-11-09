@@ -2,20 +2,11 @@
   "schema": 1,
   "name": "mob-arena-wave",
   "kind": "image",
-  "width": 2560,
-  "height": 1440,
+  "width": 1280,
+  "height": 720,
   "src": "/media/mob-arena-wave/original.webp",
   "poster": "/media/mob-arena-wave/poster.webp",
-  "alt": "The arena announces each new wave; defeat its monsters to move on.",
-  "caption": "The arena announces each new wave; defeat its monsters to move on.",
-  "annotations": [
-    {
-      "kind": "arrow",
-      "from": [0.7, 0.63],
-      "to": [0.15, 0.88],
-      "text": "Wave announced",
-      "startMs": 0,
-      "endMs": 15000
-    }
-  ]
+  "alt": "The first actual Mob Arena wave begins on the preserved Colosseum floor.",
+  "caption": "Ready up to enter the arena and face its waves with your group.",
+  "annotations": []
 }

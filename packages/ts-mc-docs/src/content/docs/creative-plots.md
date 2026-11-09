@@ -5,9 +5,11 @@ description: Set plot permissions and options, invite builders, and visit plots.
 
 Manage a plot you own in the [creative world](/creative/).
 
-<div><storm-media data-manifest="/media/creative-plot-claim/media.json"><figure><img src="/media/creative-plot-claim/original.webp" width="2560" height="1440" loading="lazy" alt="Your claimed plot remains part of the recovered creative world." /><figcaption>Your claimed plot remains part of the recovered creative world. <a href="/media/creative-plot-claim/annotated.webp">Download annotated image</a>.</figcaption></figure></storm-media></div>
+<div><storm-media data-manifest="/media/creative-plot-claim/media.json"><figure><img alt="The player claims an unclaimed plot in the recovered Creative map." src="/media/creative-plot-claim/original.webp" width="1280" height="720" loading="lazy" decoding="async"><figcaption>Stand inside an available plot and use /creative claim.</figcaption></figure></storm-media></div>
+<p><a href="/media/creative-plot-claim/annotated.webp" download>Download annotated image</a></p>
 
-<div><storm-media data-manifest="/media/creative-plot-access/media.json"><figure><img src="/media/creative-plot-access/original.webp" width="2560" height="1440" loading="lazy" alt="The owner trusts an online helper and enables visitor interactions on this plot." /><figcaption>The owner trusts an online helper and enables visitor interactions on this plot. <a href="/media/creative-plot-access/annotated.webp">Download annotated image</a>.</figcaption></figure></storm-media></div>
+<div><storm-media data-manifest="/media/creative-plot-access/media.json"><figure><img alt="The plot owner trusts MapleFox on the claimed Creative plot." src="/media/creative-plot-access/original.webp" width="1280" height="720" loading="lazy" decoding="async"><figcaption>Use /creative trust to give a friend access to your plot.</figcaption></figure></storm-media></div>
+<p><a href="/media/creative-plot-access/annotated.webp" download>Download annotated image</a></p>
 
 ## Name, trust, and visit
 

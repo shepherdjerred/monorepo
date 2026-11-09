@@ -1,8 +1,114 @@
 import { it, expect } from "vitest";
+import { z } from "zod";
 import { captureModules } from "#sandbox/capture-features.ts";
 import { resolveProfile } from "#sandbox/profiles.ts";
 import { captureConfig } from "#sandbox/capture-config.ts";
 import { SandboxCreateRequestSchema } from "#protocol/ipc.ts";
+
+it("loads the production MOTD owner for branded multiplayer-list captures", () => {
+  expect(
+    captureModules(["server-list"], {
+      sha256: "a".repeat(64),
+      files: 1,
+      bytes: 1,
+    }),
+  ).toEqual(["messages"]);
+});
+
+it("limits the annual-event preset to Stormnight's calendar while retaining its real doors and rewards", () => {
+  const source =
+    "mainWorld: world\ntimeZone: America/Los_Angeles\nevents:\n  - {id: stormnight, firstDay: 10-28, lastDay: 10-31, title: Stormnight, doors: [authored-door], rewards: [authored-reward]}\n  - {id: winter_vigil, firstDay: 12-24, lastDay: 01-01}";
+  const spawn: [number, number, number] = [0, 65, 0];
+  const entry = {
+    kind: "capture-content" as const,
+    content: "seasonal" as const,
+    source: "unused",
+    target: "unused",
+    spawn,
+    sha256: "a".repeat(64),
+  };
+  const before = z
+    .looseObject({ events: z.array(z.looseObject({ id: z.string() })) })
+    .parse(Bun.YAML.parse(source));
+  const rendered = Bun.YAML.parse(captureConfig(source, entry));
+  expect(rendered).toEqual({
+    ...before,
+    events: [{ ...before.events[0], firstDay: "01-01", lastDay: "12-31" }],
+  });
+  expect(Bun.YAML.parse(source)).toEqual(before);
+  expect(() => captureConfig("events: []", entry)).toThrow("lacks Stormnight");
+});
+
+it("keeps public hub destinations only when their authentic worlds are imported", () => {
+  const spawn: [number, number, number] = [0, 64, 0];
+  const source = {
+    sha256: "a".repeat(64),
+    files: 7,
+    bytes: 100,
+    dimensions: [
+      "minecraft:overworld",
+      "minecraft:creative",
+      "minecraft:frontier",
+      "minecraft:skylands",
+      "minecraft:map2",
+    ],
+  };
+  expect(captureModules(["public-hub"], source)).toEqual([
+    "creative",
+    "stargates",
+  ]);
+  for (const missing of source.dimensions.slice(1))
+    expect(() =>
+      captureModules(["public-hub"], {
+        ...source,
+        dimensions: source.dimensions.filter((d) => d !== missing),
+      }),
+    ).toThrow("requires imported");
+  for (const content of ["travel", "stargates"] as const) {
+    const config =
+      content === "travel"
+        ? "destinations: [{id: skylands, world: skylands}]\nportals: []"
+        : "serverGates: [{id: welcome-world-gate}]";
+    const entry = {
+      kind: "capture-content" as const,
+      content,
+      source: "unused",
+      target: "unused",
+      spawn,
+      sha256: source.sha256,
+    };
+    expect(
+      Bun.YAML.parse(captureConfig(config, { ...entry, publicHub: true })),
+    ).toEqual(Bun.YAML.parse(config));
+    expect(Bun.YAML.parse(captureConfig(config, entry))).not.toEqual(
+      Bun.YAML.parse(config),
+    );
+  }
+  const worldEntry = {
+    kind: "capture-content" as const,
+    content: "world" as const,
+    source: "unused",
+    target: "unused",
+    spawn,
+    sha256: source.sha256,
+    additionalWorlds: ["frontier", "map2", "rwf"],
+  };
+  expect(
+    Bun.YAML.parse(
+      captureConfig("worlds: []\nborders: []", {
+        ...worldEntry,
+        publicHub: true,
+      }),
+    ),
+  ).toMatchObject({
+    worlds: [
+      { name: "world", rtp: true },
+      { name: "frontier", rtp: true },
+      { name: "map2", rtp: false },
+      { name: "rwf", rtp: false },
+    ],
+  });
+});
 
 it("places returning and first-time players at the imported map's selected landing point", () => {
   const actual = Bun.YAML.parse(
@@ -98,6 +204,10 @@ it("requires imported RWF terrain and resolves the full milestone service graph"
     throw new Error("Missing imported-world startup registry");
   const startup = Bun.YAML.parse(captureConfig("worlds: []", registry));
   expect(startup).toMatchObject({
+    "minecraft:overworld": {
+      "adjust-spawn": false,
+      "read-only": { "legacy-world-name": "world" },
+    },
     "minecraft:rwf": { "auto-load": true },
     "minecraft:settlement": { "auto-load": true },
   });

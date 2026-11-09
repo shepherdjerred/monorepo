@@ -7,12 +7,12 @@ export default defineCaptureScene({
   description:
     "Create four sign formats and complete paid customer trades with a second genuine player",
   bounds: { min: [0, -1, 0], max: [13, 4, 8] },
-  staging: [-3, 0, -3],
+  staging: [-2.5, 0, -2.5],
   inspectors,
   setup: async (context) => {
     const helper = await localHelper(context);
     for (const permission of [
-      "thestorm.shops.other.create.tsmcdemohelper",
+      `thestorm.shops.other.create.${helper.name.toLowerCase()}`,
       "thestorm.shops.admin",
     ])
       await context.prepare(

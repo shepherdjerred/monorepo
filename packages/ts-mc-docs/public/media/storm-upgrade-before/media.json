@@ -2,20 +2,11 @@
   "schema": 1,
   "name": "storm-upgrade-before",
   "kind": "image",
-  "width": 2560,
-  "height": 1440,
+  "width": 1280,
+  "height": 720,
   "src": "/media/storm-upgrade-before/original.webp",
   "poster": "/media/storm-upgrade-before/poster.webp",
-  "alt": "Hold eligible equipment and right-click an authored emerald-block altar in the rain.",
-  "caption": "Hold eligible equipment and right-click an authored emerald-block altar in the rain.",
-  "annotations": [
-    {
-      "kind": "arrow",
-      "from": [0.73, 0.28],
-      "to": [0.5, 0.5],
-      "text": "Authored altar",
-      "startMs": 0,
-      "endMs": 12000
-    }
-  ]
+  "alt": "The diamond sword has no Storm upgrade before the altar interaction.",
+  "caption": "Hold eligible gear and bring a shard to the windmill altar while it rains.",
+  "annotations": []
 }

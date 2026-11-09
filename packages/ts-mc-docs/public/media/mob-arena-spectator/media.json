@@ -2,11 +2,11 @@
   "schema": 1,
   "name": "mob-arena-spectator",
   "kind": "image",
-  "width": 2560,
-  "height": 1440,
+  "width": 1280,
+  "height": 720,
   "src": "/media/mob-arena-spectator/original.webp",
   "poster": "/media/mob-arena-spectator/poster.webp",
-  "alt": "Watch the Colosseum from the spectator position while the remaining fighter continues.",
-  "caption": "Watch the Colosseum from the spectator position while the remaining fighter continues.",
+  "alt": "A spectator watches an active Colosseum game from the preserved balcony.",
+  "caption": "Use /arena spec colosseum to watch a game without joining the fight.",
   "annotations": []
 }

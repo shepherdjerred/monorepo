@@ -2,20 +2,11 @@
   "schema": 1,
   "name": "creative-saved-library",
   "kind": "image",
-  "width": 2560,
-  "height": 1440,
+  "width": 1280,
+  "height": 720,
   "src": "/media/creative-saved-library/original.webp",
   "poster": "/media/creative-saved-library/poster.webp",
-  "alt": "Save the plot as DocsGazebo, then list the genuine schematic library with /creative load.",
-  "caption": "Save the plot as DocsGazebo, then list the genuine schematic library with /creative load.",
-  "annotations": [
-    {
-      "kind": "arrow",
-      "from": [0.63, 0.66],
-      "to": [0.19, 0.84],
-      "text": "Saved name",
-      "startMs": 0,
-      "endMs": 12000
-    }
-  ]
+  "alt": "The actual schematic library lists garden-pavilion after saving the plot.",
+  "caption": "Save your plot with /creative save, then use /creative load to list saved names.",
+  "annotations": []
 }

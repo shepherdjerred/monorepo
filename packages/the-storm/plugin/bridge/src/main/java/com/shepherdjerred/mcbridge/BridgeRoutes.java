@@ -97,6 +97,17 @@ final class BridgeRoutes {
                     server.capturePlayer(request.json(Set.of("name")).nonEmptyString("name"))))
         .add(
             "POST",
+            "/v1/capture/prepare",
+            request -> {
+              var fields = request.json(Set.of("name", "resource", "id"));
+              return Response.json(
+                  server.capturePrepare(
+                      fields.nonEmptyString("name"),
+                      fields.nonEmptyString("resource"),
+                      fields.nonEmptyString("id")));
+            })
+        .add(
+            "POST",
             "/v1/capture/cleanup",
             request -> {
               var fields = request.json(Set.of("name", "resource", "id"));

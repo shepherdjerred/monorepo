@@ -1,13 +1,21 @@
 import { z } from "zod";
 import type { CaptureContext } from "./define.ts";
 
-/** Wall signs occupy the supporting side of their cell, rather than its center. */
+/** Thin controls occupy their supporting face, rather than the centre of the block cell. */
 export function fixtureAim(
   position: [number, number, number],
   block: string,
 ): [number, number, number] {
   const [x, y, zz] = position;
-  if (!block.includes("_wall_sign[")) return [x + 0.5, y + 0.5, zz + 0.5];
+  if (block.includes("_button[") && block.includes("face=floor"))
+    return [x + 0.5, y + 0.0625, zz + 0.5];
+  if (block.includes("_button[") && block.includes("face=ceiling"))
+    return [x + 0.5, y + 0.9375, zz + 0.5];
+  if (
+    !block.includes("_wall_sign[") &&
+    !(block.includes("_button[") && block.includes("face=wall"))
+  )
+    return [x + 0.5, y + 0.5, zz + 0.5];
   const facing = /facing=(north|south|east|west)/u.exec(block)?.[1];
   const offsets: Record<string, [number, number, number]> = {
     north: [0.5, 0.5, 0.9375],
@@ -39,12 +47,18 @@ export function createLookAt(
       yaw: (Math.atan2(-dx, dz) * 180) / Math.PI,
       pitch: (-Math.atan2(dy, Math.hypot(dx, dz)) * 180) / Math.PI,
     });
+    // RPC latency can advance several frames before the look is applied. Count
+    // from a snapshot taken after the command, so an old raycast cannot pass.
+    const applied = await status();
+    if (!applied.connected)
+      throw new Error("Client disconnected after camera aim");
+    const rendered = z.object({ renderedFrames: z.number() }).parse(applied);
     await waitFor(
       "freshly rendered camera aim",
       (current) =>
         current.connected &&
         typeof current["renderedFrames"] === "number" &&
-        current["renderedFrames"] >= before.renderedFrames + 3,
+        current["renderedFrames"] >= rendered.renderedFrames + 3,
     );
   };
 }

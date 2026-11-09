@@ -257,6 +257,8 @@ the private `messages` history remains available for assertions. The isolated
 camera profile uses a larger interface scale. Scene screenshots wait for fresh
 rendered frames and a completed hand swing, and aimed interactions wait for a
 fresh raycast. Sneaking interactions wait for the player's crouching pose.
+Terrain readiness includes Minecraft's world loading handshake. Native use and
+attack actions refuse to predict an interaction before that handshake completes.
 
 ## Documentation capture
 
@@ -269,16 +271,73 @@ authored outputs before choosing a full run or a narrow selection:
 ```bash
 toolkit mc capture suite list tsmc
 toolkit mc capture suite check tsmc --shot cooking-pot
+toolkit mc capture suite check tsmc --docs ts-mc-docs
 toolkit mc capture suite run tsmc --runtime worktree --scenario cooking
+toolkit mc capture suite run tsmc --runtime worktree --fixture <sha256>
 toolkit mc capture suite run tsmc --runtime saved:<run-id> --shot cooking-pot
 toolkit mc capture suite replay <run-id>
 toolkit mc capture suite render <run-id> --shot cooking-pot
 ```
 
-`run` always flushes saved live terrain, takes a CSI snapshot, and reads a
-read-only disposable clone. It crops native region, entity and POI records to
+Use `siteMode: "natural"` to snapshot the copied terrain before a scene prepares
+its own fixtures. Use fresh isolation when earlier fixtures would alter that
+baseline: buried grass, for example, can decay under a temporary floor.
+Command examples can leave the terrain intact. Mechanism fixtures use only
+their declared footprint and grass ground; choose a real, inspected venue with
+useful surroundings. `siteMode: "preserve"` retains the fresh-server mode for
+existing native venues. The multiplayer-list preset loads the production MOTD
+module and server icon, and refuses captures unless both are visible in the
+successful native ping response.
+
+`--scenario` also accepts comma-separated IDs, such as `cooking,sorting`.
+The selection retains authored order and refuses duplicate or unknown IDs.
+
+For the entire TSMC catalog, use the resumable driver with an existing fixture:
+
+```bash
+toolkit run --env SEAWEEDFS_S3_ACCESS_KEY_ID,SEAWEEDFS_S3_SECRET_ACCESS_KEY -- bun packages/the-storm/tools/captures/regenerate.ts --fixture <sha256>
+toolkit run --env SEAWEEDFS_S3_ACCESS_KEY_ID,SEAWEEDFS_S3_SECRET_ACCESS_KEY -- bun packages/the-storm/tools/captures/regenerate.ts --fixture <sha256> --verify-replay
+toolkit run --env SEAWEEDFS_S3_ACCESS_KEY_ID,SEAWEEDFS_S3_SECRET_ACCESS_KEY -- bun packages/the-storm/tools/captures/regenerate.ts --resume <campaign-id>
+toolkit run --env SEAWEEDFS_S3_ACCESS_KEY_ID,SEAWEEDFS_S3_SECRET_ACCESS_KEY -- bun packages/the-storm/tools/captures/regenerate.ts --replay <campaign-id> --fresh
+```
+
+The driver groups shared mechanics into batches of at most four, followed by one
+batch per fresh scenario. Successful batches keep their private S3 run records and publish
+their selected outputs. An atomic local checkpoint under
+`$TOOLKIT_MC_DIRECTORY/campaigns` records each completed batch; a failed batch
+remains pending. Resume skips completed batches and reuses the first batch's
+immutable runtime and terrain. Capturing edited recipes requires a new campaign. Commit media
+only after the entire campaign and visual review pass.
+
+Complete campaign manifests are content-addressed and indexed privately in S3.
+`--verify-replay` captures the full catalog and then replays all fresh scenarios
+from its saved inputs in the same credentialed process. It returns the completed
+replay campaign, whose `replay` field identifies the full capture campaign. If
+replay fails, resume its reported checkpoint with `--resume <replay-id>`.
+Replay follows the retained catalog even if current recipes have changed, and
+restores each batch's own saved rollout decisions; `--fresh` selects the
+fresh scenarios, while omitting it replays every batch. The driver refuses
+concurrent runs of the same campaign. After an interrupted process, confirm it
+has stopped before removing its reported stale `.lock` directory. Partial
+campaign checkpoints remain local to the capture host.
+
+By default, `run` flushes saved live terrain, takes a CSI snapshot, and reads a
+read-only disposable clone. An explicit `--fixture <sha256>` reuses an already
+retained private S3 fixture and requires its terrain patches to match the suite
+exactly. This supports editing recipes against a fixed map without live-server
+or Kubernetes access. Both paths retain the selected runtime and verify every
+restored blob. A fresh export crops native region, entity and POI records to
 the suite's padded patches. Every required terrain column must already exist;
 missing terrain, corrupt NBT and mismatched chunk coordinates fail the export.
+
+`check --docs ts-mc-docs` reconciles the complete suite with the public media
+inventory, including legacy screenshots and demos that are no longer embedded.
+It fails with the exact URLs that still lack a producer; a filtered shot does
+not hide gaps elsewhere in the catalog. Optional `legacyOutputs` entries map
+`{ shot, path }` to an existing `/screenshots/<name>.webp` or `/demos/<name>.mp4`
+URL. Successful runs and annotation rerenders update aliases only for selected
+shots, using the verified plain image/video derivative. Previous legacy bytes
+are retained privately under `legacy-before`; unrelated files remain untouched.
 Native world settings and datapacks accompany the crop. Player files, plugin
 databases, session locks and credentials stay outside the fixture.
 
@@ -298,9 +357,45 @@ owns a disposable real-map server and genuine local clients. The camera is
 `TOOLKIT_MC_DIRECTORY` bootstrap gives the worker a private socket, state,
 cache and Docker ownership scope. Interactive daemons and their sandboxes
 remain independently owned.
+
+Ordinary scenarios share a server and use the restored demonstration bench.
+Use `isolation: "fresh"` for progression, inventory-body transitions, or other
+state that belongs to a new database. Each fresh scenario gets a new server and
+only its declared helpers. `siteMode: "preserve"` retains the imported venue
+instead of clearing a bench; it requires fresh isolation. The suite stops every
+owned server successfully before archiving or publishing any result.
+
+An optional `arrivalCommand`, such as `creative` or `rwf join`, enters the
+scenario's world through its normal player command before camera placement.
+Preserved venues may declare `interactionSites` for additional worlds visited
+during the flow. Each site must fit a retained terrain patch; interactions use
+the current world's declared box and still enforce the native crosshair bounds.
+Local right-clicks on NPC player bodies and armed TNT entities require their
+complete bounding box to fit the fixture. Live entity interactions remain refused.
+
+`clientUi: "server-list"` is a separate fresh scenario with one still. It verifies
+the connected camera's identity and real-map origin, opens Minecraft's multiplayer
+screen, waits for fresh rendered frames and a successful ping to that exact server,
+then captures the menu. It does not require terrain readiness after disconnecting.
+
+Module-owned documentation data can be prepared through `capture-prepare` for an
+owned connected local client; the daemon refuses live targets. Mail's neutral
+`capture-mail-fixture.json` supplies both the recipe and the module's durable
+delivery producer. Its screenshots claim a real queued reward through `/mail`,
+and the assertions verify the selected items and exclusive choice. This data stays
+in the fresh sandbox database and never enters the map fixture or public media.
+
 Preview clients size their physical framebuffer from the neutral docs-video
 contract, keeping screenshots and clips at 1280×720 on ordinary and Retina
-displays.
+displays. Scenes can set native `gui-scale` from 1 through 4 to keep longer
+dialogs readable; the neutral client UI contract validates the same bounds in
+the harness and native client. Imported world registration disables Multiverse
+spawn adjustment, preserving authored offsets such as seasonal reward doors.
+
+Local helper clients can set `frame-cap` from 30 through 120 FPS to reserve
+rendering capacity for a recording client. Recording brings its window forward
+and requires focus throughout capture; every video still passes the strict
+30 FPS frame check.
 
 `worktree` builds and retains the current server, bridge and client artifacts,
 Git revision, source patch, untracked source, and pinned Paper/plugin jars.
@@ -336,6 +431,11 @@ are retained. Successful publication replaces the stable `public/media/<name>`
 assets and generated docs figures. Previous assets remain in the private run
 directory for recovery. Review the rendered results and repository diff before
 committing. A filtered shot still executes the scenario's complete gameplay.
+If the native recorder misses a real-time frame, the suite discards that owned
+session and retakes the entire scenario once on a pristine map. The rejected
+clip remains failed in its private journal, and the replacement must pass the
+same frame-completeness checks. Gameplay failures, disposal failures, and a
+second missed frame stop the campaign without publishing its assets.
 
 Exceptions clean up owned clients, the local server, the export pod, clone PVC
 and snapshot. Hard interruption leaves an export receipt under

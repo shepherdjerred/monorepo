@@ -1,0 +1,6 @@
+{
+  "minimumGuiScale": 1,
+  "maximumGuiScale": 4,
+  "minimumFrameCap": 30,
+  "maximumFrameCap": 120
+}

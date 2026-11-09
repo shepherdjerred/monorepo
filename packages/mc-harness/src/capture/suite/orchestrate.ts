@@ -7,7 +7,11 @@ import { MC_DIR } from "#protocol/paths.ts";
 import { exportMedia } from "#src/capture/export.ts";
 import { renderMedia } from "#src/capture/media.ts";
 import { verifyLiveFixtureClass, withLiveFixture } from "./csi.ts";
-import { retainFixture, restoreFixture } from "./fixture.ts";
+import {
+  retainFixture,
+  restoreFixture,
+  verifyFixturePatches,
+} from "./fixture.ts";
 import { retainRuntime, restoreRuntime } from "./runtime.ts";
 import { verifyRuntimeInputs } from "./runtime-sources.ts";
 import { localSession } from "./session.ts";
@@ -17,6 +21,7 @@ import {
   SuiteSchema,
   selectScenarios,
   type CaptureSuite,
+  type SuiteScenario,
 } from "./define.ts";
 import {
   archiveCapture,
@@ -32,6 +37,8 @@ import { localRollout } from "./rollout.ts";
 import { syncEmbeds } from "./embeds.ts";
 import { SuiteRunSchema } from "./archive.ts";
 import { awsStore } from "./aws-store.ts";
+import { publishLegacy } from "./legacy.ts";
+import { runScenarioSessions } from "./sessions.ts";
 
 export async function loadSuite(file: string): Promise<CaptureSuite> {
   const imported: unknown = await import(pathToFileURL(file).href);
@@ -43,6 +50,7 @@ export type SuiteOptions = {
   repoRoot: string;
   suiteFile: string;
   runtime: string;
+  fixture?: string | undefined;
   scenario?: string | undefined;
   shot?: string | undefined;
 };
@@ -98,7 +106,7 @@ async function runtimeRoot(
   return { sourceDirectory, hash: previous.runtime };
 }
 
-/** Refresh is mandatory here; replay has an explicit separate entry point. */
+/** Refresh by default; an explicit content-addressed fixture reuses verified terrain. */
 export async function runSuite(options: SuiteOptions) {
   const id = randomUUID(),
     directory = path.join(MC_DIR, "suites", id),
@@ -109,7 +117,7 @@ export async function runSuite(options: SuiteOptions) {
   selectScenarios(suite, options);
   if (options.runtime === "worktree")
     await verifyRuntimeInputs(options.repoRoot, options.suiteFile);
-  await verifyLiveFixtureClass();
+  if (options.fixture === undefined) await verifyLiveFixtureClass();
   const store = awsStore("the-storm-capture-fixtures");
   const runtime = await runtimeRoot({ ...options, store }, directory, cache);
   const recordedSuite = await loadSuite(
@@ -119,9 +127,16 @@ export async function runSuite(options: SuiteOptions) {
     ),
   );
   selectScenarios(recordedSuite, options);
-  const fixture = await withLiveFixture(options.repoRoot, (source) =>
-    retainFixture(source, recordedSuite.patches, store),
-  );
+  const fixture =
+    options.fixture === undefined
+      ? await withLiveFixture(options.repoRoot, (source) =>
+          retainFixture(source, recordedSuite.patches, store),
+        )
+      : z
+          .string()
+          .regex(/^[a-f0-9]{64}$/u)
+          .parse(options.fixture);
+  await verifyFixturePatches(store, cache, fixture, recordedSuite.patches);
   return dispatchCapture({
     ...options,
     store,
@@ -194,34 +209,42 @@ export async function captureSuite(options: CaptureOptions) {
     options.fixture,
     mapDirectory,
   );
-  const helpers = [...new Set(selected.flatMap((s) => s.helpers))];
+  const helpers = [
+    ...new Set(
+      selected.filter((s) => s.isolation !== "fresh").flatMap((s) => s.helpers),
+    ),
+  ];
   const rollout = await startRollout(options, suite);
-  let session: Awaited<ReturnType<typeof localSession>> | undefined;
-  const results = [];
   const docsPublic = path.join(options.repoRoot, "packages/ts-mc-docs/public");
-  try {
-    session = await localSession({
+  const startSession = (scenario: SuiteScenario) =>
+    localSession({
       mapDirectory,
       sourceDirectory: options.runtime.sourceDirectory,
       spawn: suite.bootstrap,
-      helpers,
-      ...(suite.features === undefined ? {} : { features: suite.features }),
+      helpers: scenario.isolation === "fresh" ? scenario.helpers : helpers,
+      features: [
+        ...new Set([...(suite.features ?? []), ...(scenario.features ?? [])]),
+      ],
       ...(rollout === undefined ? {} : { rollout: rollout.bootstrap }),
     });
-    for (const scenario of selected) {
-      await session.prepare(scenario);
-      results.push(
-        await executeScenario({
+  try {
+    const results = await runScenarioSessions(
+      selected,
+      startSession,
+      (scenario, session) =>
+        executeScenario({
           scenario,
           suiteFile,
           target: session.target,
           account: "XiguaJerred",
           docsPublic,
           publish: false,
+          ...(scenario.isolation === "fresh"
+            ? { ownedFreshTarget: session.target }
+            : {}),
           ...(options.shot === undefined ? {} : { shot: options.shot }),
         }),
-      );
-    }
+    );
     const scenarios = [];
     for (const result of results)
       scenarios.push({
@@ -247,6 +270,12 @@ export async function captureSuite(options: CaptureOptions) {
     await retainSuiteRun(options.store, run);
     for (const result of results)
       await exportMedia(result.run, result.rendered, docsPublic);
+    await publishLegacy(
+      suite.legacyOutputs ?? [],
+      results.flatMap((result) => result.shots),
+      docsPublic,
+      path.join(options.directory, "legacy-before"),
+    );
     await syncEmbeds(
       options.repoRoot,
       results.flatMap((result) => result.shots),
@@ -257,11 +286,7 @@ export async function captureSuite(options: CaptureOptions) {
     );
     return run;
   } finally {
-    try {
-      await session?.stop();
-    } finally {
-      await rollout?.stop();
-    }
+    await rollout?.stop();
   }
 }
 
@@ -354,6 +379,12 @@ export async function renderSuite(
       capture,
       rendered,
       path.join(options.repoRoot, "packages/ts-mc-docs/public"),
+    );
+    await publishLegacy(
+      suite.legacyOutputs ?? [],
+      capture.captures.map((c) => c.name),
+      path.join(options.repoRoot, "packages/ts-mc-docs/public"),
+      path.join(directory, "legacy-before"),
     );
     await syncEmbeds(
       options.repoRoot,

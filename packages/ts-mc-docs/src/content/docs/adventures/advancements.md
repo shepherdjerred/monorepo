@@ -9,7 +9,7 @@ Storm milestones recognize achievements across the server. Your [quest journal](
 
 ## Storm tabs
 
-<div><storm-media data-manifest="/media/storm-advancement-tabs/media.json"><figure><img alt="The Storm advancement tab on live TSMC, with the server's milestone tabs visible" src="/media/storm-advancement-tabs/original.webp" width="1708" height="960" loading="lazy" decoding="async"><figcaption>Open the Storm tabs to follow server milestones alongside Minecraft's vanilla advancements.</figcaption></figure></storm-media></div>
+<div><storm-media data-manifest="/media/storm-advancement-tabs/media.json"><figure><img alt="The actual Storm advancement tab shows server milestones beside the other advancement roots." src="/media/storm-advancement-tabs/original.webp" width="1280" height="720" loading="lazy" decoding="async"><figcaption>Open Advancements and choose The Storm to follow server milestones.</figcaption></figure></storm-media></div>
 
 | Tab                | What it tracks                                                  |
 | ------------------ | --------------------------------------------------------------- |

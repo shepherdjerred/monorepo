@@ -1,0 +1,189 @@
+import path from "node:path";
+import { parseArgs } from "node:util";
+import { mkdir, rename, rmdir } from "node:fs/promises";
+import { z } from "zod";
+import { SuiteRunSchema } from "@shepherdjerred/mc-harness/capture/suite/archive.ts";
+import { MC_DIR } from "@shepherdjerred/mc-harness/protocol/paths.ts";
+import { awsStore } from "@shepherdjerred/mc-harness/capture/suite/aws-store.ts";
+import {
+  retainBlob,
+  cachedBlob,
+} from "@shepherdjerred/mc-harness/capture/suite/store.ts";
+import {
+  campaignPlan,
+  executeCampaign,
+  replayCampaign,
+  validateCampaign,
+  validatePlan,
+  validateReplayPlan,
+  type Campaign,
+} from "@shepherdjerred/mc-harness/capture/campaign/state.ts";
+
+const { values } = parseArgs({
+  options: {
+    fixture: { type: "string" },
+    resume: { type: "string" },
+    replay: { type: "string" },
+    fresh: { type: "boolean" },
+    "verify-replay": { type: "boolean" },
+  },
+});
+const root = path.resolve(import.meta.dirname, "../../../..");
+const directory = path.join(MC_DIR, "campaigns");
+const store = awsStore("the-storm-capture-fixtures");
+const cache = path.join(MC_DIR, "suite-blobs");
+async function currentSuite() {
+  const module = await import("./suite.ts");
+  return module.default;
+}
+if (
+  [values.fixture, values.resume, values.replay].filter((v) => v !== undefined)
+    .length !== 1 ||
+  (values.fresh === true && values.replay === undefined) ||
+  (values["verify-replay"] === true && values.replay !== undefined)
+)
+  throw new Error(
+    "Choose --fixture SHA256 [--verify-replay], --resume UUID [--verify-replay], or --replay UUID [--fresh]",
+  );
+async function saved(id: string) {
+  z.uuid().parse(id);
+  const pointer = z
+    .strictObject({ sha256: z.string().regex(/^[a-f0-9]{64}$/u) })
+    .parse(
+      JSON.parse(
+        new TextDecoder().decode(await store.read(`campaigns/${id}.json`)),
+      ),
+    );
+  const state = validateCampaign(
+    await Bun.file(await cachedBlob(store, cache, pointer.sha256)).json(),
+  );
+  if (state.id !== id || state.batches.some((b) => b.run === null))
+    throw new Error("Retained campaign identity or completion differs");
+  return state;
+}
+async function initial(): Promise<Campaign> {
+  if (values.resume !== undefined) {
+    const id = z.uuid().parse(values.resume);
+    const state = validateCampaign(
+      await Bun.file(path.join(directory, `${id}.json`)).json(),
+    );
+    if (state.id !== id) throw new Error("Checkpoint identity differs");
+    return state;
+  }
+  if (values.replay !== undefined)
+    return replayCampaign(await saved(values.replay), values.fresh === true);
+  const suite = await currentSuite();
+  return validateCampaign({
+    schema: 1,
+    id: crypto.randomUUID(),
+    suite: suite.id,
+    fixture: z
+      .string()
+      .regex(/^[a-f0-9]{64}$/u)
+      .parse(values.fixture),
+    runtime: null,
+    replay: null,
+    scope: "all",
+    batches: campaignPlan(suite),
+  });
+}
+async function persist(next: Campaign) {
+  await mkdir(directory, { recursive: true, mode: 0o700 });
+  const file = path.join(directory, `${next.id}.json`),
+    temporary = `${file}.${crypto.randomUUID()}.tmp`;
+  await Bun.write(temporary, JSON.stringify(next, null, 2), { mode: 0o600 });
+  await rename(temporary, file);
+}
+async function run(state: Campaign) {
+  if (state.suite !== "tsmc") throw new Error("This driver only captures TSMC");
+  if (state.replay === null) validatePlan(state, await currentSuite());
+  else validateReplayPlan(state, await saved(state.replay));
+  await persist(state);
+  console.error(
+    JSON.stringify({
+      campaign: state.id,
+      checkpoint: path.join(directory, `${state.id}.json`),
+    }),
+  );
+  const complete = await executeCampaign(
+    state,
+    persist,
+    async (part, baseline) => {
+      const args =
+        part.replayOf === null
+          ? [
+              "run",
+              "tsmc",
+              "--runtime",
+              baseline === undefined ? "worktree" : `saved:${baseline}`,
+              "--fixture",
+              state.fixture,
+              "--scenario",
+              part.ids.join(","),
+            ]
+          : ["replay", part.replayOf];
+      console.error(
+        JSON.stringify({ batch: part.ids, replayOf: part.replayOf }),
+      );
+      const child = Bun.spawn(["toolkit", "mc", "capture", "suite", ...args], {
+        cwd: root,
+        env: {
+          ...Bun.env,
+          OP_SERVICE_ACCOUNT_TOKEN: undefined,
+          MC_BRIDGE_TOKEN: undefined,
+        },
+        stdout: "pipe",
+        stderr: "inherit",
+      });
+      const [output, code] = await Promise.all([
+        new Response(child.stdout).text(),
+        child.exited,
+      ]);
+      if (code !== 0)
+        throw new Error(
+          `Batch failed (${code.toString()}); resume with --resume ${state.id}`,
+        );
+      return SuiteRunSchema.parse(JSON.parse(output.trim()));
+    },
+  );
+  const hash = await retainBlob(
+    store,
+    new TextEncoder().encode(JSON.stringify(complete)),
+  );
+  const pointer = new TextEncoder().encode(JSON.stringify({ sha256: hash }));
+  await store.write(`campaigns/${complete.id}.json`, pointer);
+  if (
+    new TextDecoder().decode(
+      await store.read(`campaigns/${complete.id}.json`),
+    ) !== new TextDecoder().decode(pointer)
+  )
+    throw new Error("Campaign index readback differs");
+  return complete;
+}
+async function locked(first: Campaign, reload: boolean) {
+  await mkdir(directory, { recursive: true, mode: 0o700 });
+  const lock = path.join(directory, `${first.id}.lock`);
+  try {
+    await mkdir(lock, { mode: 0o700 });
+  } catch (error) {
+    throw new Error(
+      `Cannot acquire campaign lock ${lock}; confirm the previous runner has stopped before removing a stale lock`,
+      { cause: error },
+    );
+  }
+  try {
+    // A concurrent process may have completed a batch while the checkpoint loaded.
+    return await run(reload ? await initial() : first);
+  } finally {
+    await rmdir(lock);
+  }
+}
+const first = await initial();
+if (values["verify-replay"] === true && first.replay !== null)
+  throw new Error(
+    "Use --resume without --verify-replay for a saved replay checkpoint",
+  );
+let complete = await locked(first, values.resume !== undefined);
+if (values["verify-replay"] === true)
+  complete = await locked(replayCampaign(complete, true), false);
+process.stdout.write(JSON.stringify(complete) + "\n");

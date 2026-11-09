@@ -6,6 +6,7 @@ const input = {
   sourceClaim: "datadir-minecraft-tsmc-0",
   capacity: "128Gi",
   image: `docker.io/shepherdjerred/the-storm-server@sha256:${"a".repeat(64)}`,
+  imagePullSecrets: [{ name: "dockerhub-pull-minecraft-tsmc" }],
 };
 it("mounts only the disposable clone read-only and never mounts the source claim", () => {
   const rendered = captureResources(input);
@@ -13,12 +14,24 @@ it("mounts only the disposable clone read-only and never mounts the source claim
   expect(json).toContain('"storageClassName":"mc-capture-fixture"');
   expect(json).toContain('"readOnly":true');
   expect(json).toContain('"automountServiceAccountToken":false');
+  expect(json).toContain(
+    '"imagePullSecrets":[{"name":"dockerhub-pull-minecraft-tsmc"}]',
+  );
   expect(json.match(/datadir-minecraft-tsmc-0/gu)).toHaveLength(1);
   expect(rendered.items.map((i) => i.kind)).toEqual([
     "VolumeSnapshot",
     "PersistentVolumeClaim",
     "Pod",
   ]);
+});
+it("requires explicit image pull credential references", () => {
+  expect(() => captureResources({ ...input, imagePullSecrets: [] })).toThrow();
+  expect(() =>
+    captureResources({ ...input, imagePullSecrets: undefined }),
+  ).toThrow();
+  expect(() =>
+    captureResources({ ...input, imagePullSecrets: [{ name: "../secret" }] }),
+  ).toThrow();
 });
 it("requires an immutable image and the exact intended source claim", () => {
   expect(() =>

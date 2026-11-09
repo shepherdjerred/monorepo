@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "name": "skylands",
+  "kind": "image",
+  "width": 1280,
+  "height": 720,
+  "src": "/media/skylands/original.webp",
+  "poster": "/media/skylands/poster.webp",
+  "alt": "The camera arrives on the copied live Skylands terrain through the actual world gate.",
+  "caption": "Skylands is a separate survival world reached through the welcome gate or Travel menu.",
+  "annotations": []
+}

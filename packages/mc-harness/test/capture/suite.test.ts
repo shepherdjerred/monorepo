@@ -15,11 +15,53 @@ import {
   presentScene,
   selectScenarios,
   type SuiteScenario,
+  type CaptureSuite,
+  type TerrainPatch,
 } from "#src/capture/suite/define.ts";
 import type { CaptureContext } from "#src/capture/define.ts";
-import { integer } from "./suite-fixtures.ts";
+import { integer, memoryStore } from "./suite-fixtures.ts";
+import { verifyFixturePatches } from "#src/capture/suite/fixture.ts";
 
 const compound = Buffer.from([10, 0, 0, 0]);
+
+it("reuses a verified terrain fixture only when every requested padded patch matches", async () => {
+  const cache = await mkdtemp(path.join(os.tmpdir(), "pinned-fixture-test-"));
+  const store = memoryStore();
+  const patches: TerrainPatch[] = [
+    { world: "world", min: [-16, -16], max: [16, 16], paddingChunks: 2 },
+    { world: "creative", min: [0, 0], max: [32, 32], paddingChunks: 2 },
+  ];
+  try {
+    const fixture = await retainBlob(
+      store,
+      new TextEncoder().encode(
+        JSON.stringify({
+          schema: 1,
+          source: "accepted-csi-export",
+          capturedAt: "2026-11-01T00:00:00.000Z",
+          patches,
+          files: [{ path: "level.dat", sha256: "a".repeat(64) }],
+        }),
+      ),
+    );
+    await expect(
+      verifyFixturePatches(store, cache, fixture, patches.toReversed()),
+    ).resolves.toBeUndefined();
+    await expect(
+      verifyFixturePatches(store, cache, fixture, patches.slice(1)),
+    ).rejects.toThrow("Pinned terrain patches differ");
+    await expect(
+      verifyFixturePatches(
+        store,
+        cache,
+        fixture,
+        patches.map((p) => ({ ...p, paddingChunks: 3 })),
+      ),
+    ).rejects.toThrow("Pinned terrain patches differ");
+  } finally {
+    await rm(cache, { recursive: true, force: true });
+  }
+});
 const unexpected = (): never => {
   throw new Error("Unexpected scene operation");
 };
@@ -154,7 +196,7 @@ const scenario: SuiteScenario = {
     description: "Cook",
     bounds: { min: [0, 0, 0], max: [1, 1, 1] },
     inspectors: [],
-    staging: [0, 0, 0],
+    staging: [-1, 0, -1],
     setup: () => Promise.resolve(),
     run: (c) =>
       c.capture({
@@ -166,6 +208,64 @@ const scenario: SuiteScenario = {
       }),
   },
 };
+it("selects a named batch in authored order and refuses partial, duplicate, or empty IDs", () => {
+  const other = {
+    ...scenario,
+    id: "other",
+    shots: scenario.shots.map((p) => ({ ...p, name: "other-shot" })),
+  };
+  const suite = defineCaptureSuite({
+    id: "batch",
+    bootstrap: [0, 64, 0],
+    patches: [
+      { world: "world", min: [-16, -16], max: [16, 16], paddingChunks: 2 },
+    ],
+    scenarios: [scenario, other],
+  });
+  expect(selectScenarios(suite, { scenario: "other,cook" })).toEqual([
+    scenario,
+    other,
+  ]);
+  for (const value of ["cook,missing", "cook,cook", "cook,", ""])
+    expect(() => selectScenarios(suite, { scenario: value })).toThrow();
+});
+it("rejects fixture staging before a run unless it is beyond the restoration volume", () => {
+  const suite: CaptureSuite = {
+    id: "staging",
+    bootstrap: [0, 64, 0],
+    patches: [
+      {
+        world: "world",
+        min: [-16, -16],
+        max: [16, 16],
+        paddingChunks: 2,
+      },
+    ],
+    scenarios: [scenario],
+  };
+  const invalid: SuiteScenario["scene"]["staging"][] = [
+    [0.5, 0, 0.5],
+    [2, 0, 2],
+  ];
+  for (const staging of invalid) {
+    expect(() =>
+      defineCaptureSuite({
+        ...suite,
+        scenarios: [
+          {
+            ...scenario,
+            siteMode: "natural",
+            scene: { ...scenario.scene, staging },
+          },
+        ],
+      }),
+    ).toThrow("requires staging outside its fixture");
+  }
+  defineCaptureSuite({
+    ...suite,
+    scenarios: [{ ...scenario, siteMode: "natural" }],
+  });
+});
 it("validates output identity and rejects empty selections", () => {
   const suite = defineCaptureSuite({
     id: "example",
@@ -184,6 +284,106 @@ it("validates output identity and rejects empty selections", () => {
   ).toThrow("bootstrap");
   defineCaptureSuite({ ...suite, bootstrap: [16 * 3 + 0.5, 64, 0] });
   expect(() => selectScenarios(suite, { shot: "missing" })).toThrow();
+  expect(() =>
+    defineCaptureSuite({
+      ...suite,
+      scenarios: [{ ...scenario, arrivalCommand: "creative" }],
+    }),
+  ).toThrow("requires fresh isolation");
+  expect(() =>
+    defineCaptureSuite({
+      ...suite,
+      scenarios: [{ ...scenario, clientUi: "server-list" }],
+    }),
+  ).toThrow("requires fresh isolation");
+  const venue: SuiteScenario = {
+    ...scenario,
+    isolation: "fresh",
+    siteMode: "preserve",
+    interactionSites: [
+      {
+        world: "creative",
+        min: { x: 0, y: 64, z: 0 },
+        max: { x: 8, y: 72, z: 8 },
+      },
+    ],
+  };
+  expect(() => defineCaptureSuite({ ...suite, scenarios: [venue] })).toThrow(
+    "lacks covering real terrain",
+  );
+  const patches = [
+    ...suite.patches,
+    {
+      world: "creative",
+      min: [-16, -16],
+      max: [16, 16],
+      paddingChunks: 2,
+    } satisfies (typeof suite.patches)[number],
+  ];
+  defineCaptureSuite({ ...suite, patches, scenarios: [venue] });
+  expect(() =>
+    defineCaptureSuite({
+      ...suite,
+      patches,
+      scenarios: [{ ...venue, isolation: undefined }],
+    }),
+  ).toThrow("requires fresh isolation");
+  expect(() =>
+    defineCaptureSuite({
+      ...suite,
+      patches,
+      scenarios: [
+        {
+          ...venue,
+          interactionSites: [
+            {
+              world: "world",
+              min: { x: 0, y: 64, z: 0 },
+              max: { x: 8, y: 72, z: 8 },
+            },
+          ],
+        },
+      ],
+    }),
+  ).toThrow("Duplicate interaction world");
+  expect(() =>
+    defineCaptureSuite({
+      ...suite,
+      scenarios: [{ ...scenario, siteMode: "preserve" }],
+    }),
+  ).toThrow("requires fresh isolation");
+  expect(() =>
+    defineCaptureSuite({
+      ...suite,
+      scenarios: [{ ...scenario, features: ["quests"] }],
+    }),
+  ).toThrow("require fresh isolation");
+  defineCaptureSuite({
+    ...suite,
+    scenarios: [
+      {
+        ...scenario,
+        isolation: "fresh",
+        siteMode: "preserve",
+        features: ["quests"],
+      },
+    ],
+  });
+  expect(() =>
+    defineCaptureSuite({
+      ...suite,
+      legacyOutputs: [{ shot: "missing", path: "/screenshots/old.webp" }],
+    }),
+  ).toThrow("Unknown legacy shot");
+  expect(() =>
+    defineCaptureSuite({
+      ...suite,
+      legacyOutputs: [
+        { shot: "pot", path: "/screenshots/old.webp" },
+        { shot: "pot", path: "/screenshots/old.webp" },
+      ],
+    }),
+  ).toThrow("Duplicate legacy destination");
   expect(() =>
     defineCaptureSuite({
       ...suite,

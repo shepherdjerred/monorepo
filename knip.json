@@ -380,7 +380,8 @@
     // Vitest configs and global setup are reached through test:e2e, test:full, test:startup,
     // test:load, test:capacity* and test:stargate-restart. The Woodpecker lane invokes prepare-sidecar.ts
     // as a script. Map authoring compiles the named authored programs and lobby
-    // annex by file path. Knip cannot infer these command-line entries from imports.
+    // annex by file path. Capture suites and their regeneration driver are also
+    // invoked by CLI path. Knip cannot infer these command-line entries from imports.
     "packages/the-storm": {
       "entry": [
         "vitest.capacity.config.ts",
@@ -398,6 +399,7 @@
         // author-towers.py copies this into externally compiled build workspaces.
         "tools/skylands/towers/beacon.ts",
         "tools/captures/suite.ts",
+        "tools/captures/regenerate.ts",
         "tools/captures/scenes/*.ts",
         "playtests/**/*.playtest.ts"
       ]

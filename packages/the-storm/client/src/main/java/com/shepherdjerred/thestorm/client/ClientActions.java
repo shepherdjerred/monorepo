@@ -204,6 +204,12 @@ final class ClientActions {
       case "inventory" -> inventory(client, args);
       case "chat-open", "advancements" -> ClientScreens.open(client, request.action(), args);
       case "hover-slot" -> ClientScreens.hover(client, args);
+      case "gui-scale" -> ClientScreens.scale(client, args);
+      case "frame-cap" -> {
+        if (docs.active())
+          throw new IllegalStateException("Cannot change frame cap during capture");
+        yield ClientScreens.frameCap(client, args);
+      }
       case "close" -> close(client, args);
       case "click" -> click(client, args);
       case "command" -> command(client, args);
@@ -469,6 +475,8 @@ final class ClientActions {
     if (!recovery) Protocol.keys(request.arguments(), Set.of());
     if (client.gui.screen() != null)
       throw new IllegalStateException("Close the screen to interact");
+    if (!java.util.Objects.requireNonNull(client.getConnection()).hasClientLoaded())
+      throw new IllegalStateException("Wait for the world loading handshake before interacting");
     var player = java.util.Objects.requireNonNull(client.player);
     var mode = java.util.Objects.requireNonNull(client.gameMode);
     var hit = client.hitResult;

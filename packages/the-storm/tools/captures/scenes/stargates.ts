@@ -5,7 +5,7 @@ export default defineCaptureScene({
   description:
     "Create a private pair of Stargates, travel, and remove the private network",
   bounds: { min: [0, -1, -4], max: [7, 5, 14] },
-  staging: [-3, 0, -3],
+  staging: [-2.5, 0, -2.5],
   inspectors: ["wilderness", "shops", "banks", "stargates"],
   setup: async (context) => {
     await context.track("mechanic", 3);
@@ -19,7 +19,7 @@ export default defineCaptureScene({
     await context.set(
       context.at(0, -1, -4),
       context.at(7, -1, 14),
-      "minecraft:stone_bricks",
+      "minecraft:grass_block",
     );
     await context.set(
       context.at(2, 0, -4),

@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "name": "welcome-gate",
+  "kind": "video",
+  "width": 1280,
+  "height": 720,
+  "src": "/media/welcome-gate/clip.mp4",
+  "poster": "/media/welcome-gate/poster.webp",
+  "alt": "Select and open the welcome gate, then walk through it to the authentic Skylands map.",
+  "caption": "Walk into the open portal to visit the selected world.",
+  "annotations": [
+    {
+      "kind": "label",
+      "from": [0.08, 0.12],
+      "to": [0.08, 0.12],
+      "text": "Press the gate button",
+      "startMs": 67,
+      "endMs": 767
+    },
+    {
+      "kind": "label",
+      "from": [0.08, 0.42],
+      "to": [0.08, 0.42],
+      "text": "Walk through to Skylands",
+      "startMs": 467,
+      "endMs": 2667
+    }
+  ]
+}

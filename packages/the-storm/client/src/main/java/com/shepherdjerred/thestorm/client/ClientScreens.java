@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.client;
 
 import com.shepherdjerred.thestorm.client.mixin.ContainerScreenAccessor;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import net.minecraft.client.Minecraft;
@@ -12,7 +13,56 @@ import tools.jackson.databind.JsonNode;
 
 /** Ordinary screen controls used to capture readable help and real item tooltips. */
 final class ClientScreens {
+  private record UiLimits(
+      int minimumGuiScale, int maximumGuiScale, int minimumFrameCap, int maximumFrameCap) {
+    UiLimits {
+      if (minimumGuiScale < 1 || maximumGuiScale < minimumGuiScale)
+        throw new IllegalArgumentException("Invalid GUI scale contract");
+      if (minimumFrameCap < FrameClock.FPS
+          || maximumFrameCap < minimumFrameCap
+          || maximumFrameCap > 240)
+        throw new IllegalArgumentException("Invalid frame cap contract");
+    }
+  }
+
+  private static final UiLimits UI = loadUiLimits();
+
   private ClientScreens() {}
+
+  private static UiLimits loadUiLimits() {
+    try (var input =
+        Objects.requireNonNull(ClientScreens.class.getResourceAsStream("/storm-docs-ui.json"))) {
+      var contract = Protocol.JSON.readTree(input);
+      Protocol.keys(
+          contract,
+          Set.of("minimumGuiScale", "maximumGuiScale", "minimumFrameCap", "maximumFrameCap"));
+      return new UiLimits(
+          Protocol.integer(contract, "minimumGuiScale", 1, 16),
+          Protocol.integer(contract, "maximumGuiScale", 1, 16),
+          Protocol.integer(contract, "minimumFrameCap", FrameClock.FPS, 240),
+          Protocol.integer(contract, "maximumFrameCap", FrameClock.FPS, 240));
+    } catch (java.io.IOException failure) {
+      throw new java.io.UncheckedIOException("Cannot load docs UI contract", failure);
+    }
+  }
+
+  static Object scale(Minecraft client, JsonNode args) {
+    Protocol.keys(args, Set.of("scale"));
+    var scale = Protocol.integer(args, "scale", UI.minimumGuiScale(), UI.maximumGuiScale());
+    client.options.guiScale().set(scale);
+    client.resizeGui();
+    return "GUI scale updated";
+  }
+
+  static int frameCap(JsonNode args) {
+    Protocol.keys(args, Set.of("fps"));
+    return Protocol.integer(args, "fps", UI.minimumFrameCap(), UI.maximumFrameCap());
+  }
+
+  static Object frameCap(Minecraft client, JsonNode args) {
+    client.options.framerateLimit().set(frameCap(args));
+    return Map.of("fpsCap", client.options.framerateLimit().get());
+  }
 
   static Object open(Minecraft client, String action, JsonNode args) {
     var tab = args.get("tab");
@@ -21,6 +71,8 @@ final class ClientScreens {
     if (action.equals("chat-open")) {
       if (tab != null) throw new IllegalArgumentException("Chat has no advancement tab");
       client.gui.setScreen(new ChatScreen("", false));
+      // Keep the real command transcript readable when chat's first-open notice appears.
+      client.gui.toastManager().clear();
     } else {
       var advancements = Objects.requireNonNull(client.getConnection()).getAdvancements();
       var root =

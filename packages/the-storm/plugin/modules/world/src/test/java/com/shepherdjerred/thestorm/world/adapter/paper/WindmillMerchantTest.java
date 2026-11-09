@@ -18,6 +18,7 @@ import org.bukkit.entity.WanderingTrader;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
 import org.junit.jupiter.api.AfterEach;
@@ -63,6 +64,46 @@ final class WindmillMerchantTest {
   @AfterEach
   void tearDown() {
     MockBukkit.unmock();
+  }
+
+  @Test
+  void npcArrivalsNeverEvaluateHumanRolloutsOrStartVisits() {
+    var evaluations = new java.util.concurrent.atomic.AtomicInteger();
+    merchant =
+        new WindmillMerchant(
+            plugin,
+            config,
+            new WindmillMerchant.Services(
+                InstantSource.fixed(Instant.parse("2026-09-27T18:30:00Z")),
+                ComponentLogger.logger("windmill-merchant-test"),
+                playerId -> {
+                  evaluations.incrementAndGet();
+                  return java.util.concurrent.CompletableFuture.completedFuture(true);
+                },
+                Runnable::run));
+    var npc =
+        new PlayerMock(server, "MerchantNpc") {
+          @Override
+          public boolean hasMetadata(String metadataKey) {
+            return metadataKey.equals("NPC");
+          }
+        };
+    npc.teleport(place());
+    player.teleport(place());
+
+    merchant.onJoin(new PlayerJoinEvent(npc, Component.empty()));
+    merchant.onWorldChange(new PlayerChangedWorldEvent(npc, wilds));
+    merchant.onMove(new PlayerMoveEvent(npc, place().clone().add(1, 0, 0), place()));
+    merchant.onTeleport(
+        new PlayerTeleportEvent(
+            npc, place().clone().add(1, 0, 0), place(), PlayerTeleportEvent.TeleportCause.COMMAND));
+
+    assertThat(evaluations).hasValue(0);
+    assertThat(traders()).isEmpty();
+
+    merchant.onJoin(new PlayerJoinEvent(player, Component.empty()));
+    assertThat(evaluations).hasValue(1);
+    assertThat(traders()).hasSize(1);
   }
 
   @Test

@@ -20,6 +20,11 @@ const ClaimSchema = z.object({
   }),
 });
 const PodSchema = z.object({
+  spec: z.object({
+    imagePullSecrets: z
+      .array(z.strictObject({ name: z.string().min(1) }))
+      .min(1),
+  }),
   status: z.object({
     containerStatuses: z.array(
       z.object({ name: z.string(), imageID: z.string() }),
@@ -159,6 +164,7 @@ export async function withLiveFixture<T>(
       sourceClaim: "datadir-minecraft-tsmc-0",
       capacity: claim.spec.resources.requests.storage,
       image,
+      imagePullSecrets: pod.spec.imagePullSecrets,
     }),
   );
   await command([

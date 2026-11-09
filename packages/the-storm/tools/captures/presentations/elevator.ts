@@ -14,16 +14,7 @@ export default [
     name: "elevator-lower",
     alt: "The lower elevator sign in the wilderness",
     caption: "Right-click Lift Up to reach the aligned upper stop.",
-    annotations: [
-      {
-        kind: "arrow",
-        from: [0.7, 0.25],
-        to: [0.5, 0.5],
-        text: "Lower stop",
-        startMs: 0,
-        endMs: 12_000,
-      },
-    ],
+    annotations: [],
   },
   {
     schema: 1,
@@ -32,18 +23,18 @@ export default [
     caption: "The signs move the player between aligned stops.",
     annotations: [
       {
-        kind: "arrow",
+        kind: "label",
         from: [0.65, 0.28],
-        to: [0.5, 0.5],
+        to: [0.65, 0.28],
         text: "Upper stop",
         atStep: "up-end",
         startMs: 0,
         endMs: 1800,
       },
       {
-        kind: "arrow",
+        kind: "label",
         from: [0.65, 0.28],
-        to: [0.5, 0.5],
+        to: [0.65, 0.28],
         text: "Back at ground",
         atStep: "down-end",
         startMs: 0,

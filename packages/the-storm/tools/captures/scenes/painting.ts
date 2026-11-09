@@ -5,7 +5,7 @@ export default defineCaptureScene({
   name: "painting-selection",
   description: "Cycle a real painting without changing its size",
   bounds: { min: [0, -1, 0], max: [8, 5, 7] },
-  staging: [-3, 0, -3],
+  staging: [-2.5, 0, -2.5],
   inspectors,
   setup: async (context) => {
     if (context.target === "live")

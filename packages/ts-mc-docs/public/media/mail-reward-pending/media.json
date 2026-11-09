@@ -2,20 +2,11 @@
   "schema": 1,
   "name": "mail-reward-pending",
   "kind": "image",
-  "width": 2560,
-  "height": 1440,
+  "width": 1280,
+  "height": 720,
   "src": "/media/mail-reward-pending/original.webp",
   "poster": "/media/mail-reward-pending/poster.webp",
-  "alt": "A pending delivery lists its claim command; choose an option to collect it.",
-  "caption": "A pending delivery lists its claim command; choose an option to collect it.",
-  "annotations": [
-    {
-      "kind": "arrow",
-      "from": [0.68, 0.62],
-      "to": [0.26, 0.85],
-      "text": "Claim command",
-      "startMs": 0,
-      "endMs": 15000
-    }
-  ]
+  "alt": "The real mailbox lists a pending documentation reward delivery and its exclusive claim options.",
+  "caption": "A pending delivery lists its claim command; choose one option to collect it.",
+  "annotations": []
 }

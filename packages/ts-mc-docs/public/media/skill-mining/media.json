@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "name": "skill-mining",
+  "kind": "image",
+  "width": 1280,
+  "height": 720,
+  "src": "/media/skill-mining/original.webp",
+  "poster": "/media/skill-mining/poster.webp",
+  "alt": "The Mining detail shows the player's level and experience progress.",
+  "caption": "Use /skills mining to see your Mining level and progress toward the next level.",
+  "annotations": []
+}
