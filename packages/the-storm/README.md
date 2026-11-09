@@ -1608,7 +1608,9 @@ Stargates keep their owners and options in their signs' world data and rebuild
 their gate index from loaded chunks. Their rendered signs use the old
 `-Name-`, `>Destination<` and `(Network)` layout; creation still takes name,
 destination, network and the optional `A` flag. Public networks are recoverable
-from world definitions. Private invitations and town membership require their
+from world definitions. Dialing shows the selected destination and neighboring
+choices on the sign for players viewing the gate, including on preserved land;
+the stored sign remains intact. Private invitations and town membership require their
 durable access records; missing access data never makes a gate public.
 Server-owned gate locations and approved landings remain declared in owned
 configuration.

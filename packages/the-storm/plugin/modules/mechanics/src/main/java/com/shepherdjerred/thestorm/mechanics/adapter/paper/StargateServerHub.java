@@ -35,9 +35,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
-import org.bukkit.block.Sign;
 import org.bukkit.block.data.Orientable;
-import org.bukkit.block.sign.Side;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
@@ -189,12 +187,34 @@ final class StargateServerHub implements Listener {
     var world = world(hub);
     var signBlock =
         world.getBlockAt(hub.gate().sign().x(), hub.gate().sign().y(), hub.gate().sign().z());
-    if (!protection.isPreserved(signBlock.getLocation())
-        && signBlock.getState() instanceof Sign sign) {
-      sign.getSide(Side.FRONT).line(1, Component.text(name));
-      sign.update();
-    }
+    signBlock.getChunk().getPlayersSeeingChunk().forEach(viewer -> display(hub, viewer));
     tell(player, "Destination: " + name + ". Press the button to open the gate.");
+  }
+
+  private void display(Hub hub, Player player) {
+    var index = selection.get(hub.gate().id());
+    if (index == null) return;
+    var pos = hub.gate().sign();
+    var world = world(hub);
+    if (!world.isChunkLoaded(pos.x() >> 4, pos.z() >> 4)) return;
+    var labels = hub.config().destinations().stream().map(ServerGate.Destination::label).toList();
+    StargateDialSign.show(
+        player,
+        world.getBlockAt(pos.x(), pos.y(), pos.z()),
+        StargateDialSign.lines(hub.gate().name(), labels, index));
+  }
+
+  @EventHandler
+  void playerChunkLoaded(io.papermc.paper.event.packet.PlayerChunkLoadEvent event) {
+    if (!enabled.getAsBoolean() || !book.ready()) return;
+    var chunk = event.getChunk();
+    hubs.stream()
+        .filter(hub -> hub.gate().worldId().equals(chunk.getWorld().getUID()))
+        .filter(
+            hub ->
+                hub.gate().sign().x() >> 4 == chunk.getX()
+                    && hub.gate().sign().z() >> 4 == chunk.getZ())
+        .forEach(hub -> display(hub, event.getPlayer()));
   }
 
   private void activate(Player player, Hub hub) {
@@ -547,6 +567,17 @@ final class StargateServerHub implements Listener {
       if (entry != null) {
         entry.closing().cancel();
         close(hub);
+      }
+      if (selection.containsKey(hub.gate().id())) {
+        var pos = hub.gate().sign();
+        var world = world(hub);
+        if (world.isChunkLoaded(pos.x() >> 4, pos.z() >> 4)) {
+          var block = world.getBlockAt(pos.x(), pos.y(), pos.z());
+          block
+              .getChunk()
+              .getPlayersSeeingChunk()
+              .forEach(player -> StargateDialSign.restore(player, block));
+        }
       }
     }
   }

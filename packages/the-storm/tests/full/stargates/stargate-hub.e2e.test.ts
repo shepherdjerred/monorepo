@@ -101,7 +101,16 @@ async function enterHub(
     const next = waitForMessage(bot, /Destination: ([^.]+)/u);
     await bot.activateBlock(sign);
     const match = await next;
-    selected = match[1] === destination;
+    const choice = match[1];
+    if (choice === undefined)
+      throw new Error("Destination message had no label");
+    await waitUntil(
+      `world gate sign shows ${choice}`,
+      () =>
+        JSON.stringify(bot.blockAt(signPos)?.entity)?.includes(`>${choice}<`) ??
+        false,
+    );
+    selected = choice === destination;
   }
   if (!selected)
     throw new Error(`Could not select world gate destination ${destination}`);
@@ -111,6 +120,10 @@ async function enterHub(
     () =>
       Math.abs(bot.entity.position.x - 957.5) < 0.3 &&
       bot.entity.position.z > 2,
+  );
+  await waitUntil(
+    "world gate button loaded",
+    () => bot.blockAt(new Vec3(957, 72, 1))?.name === "stone_button",
   );
   const button = bot.blockAt(new Vec3(957, 72, 1));
   if (button === null) throw new Error("World gate button is missing");
@@ -316,6 +329,7 @@ test("server world gate reaches all four worlds and preserves survival inventory
 
 test("a server gate on preserved land does not rewrite its sign or open its portal", async ({
   bot,
+  secondBot,
   rcon,
 }) => {
   await rcon.command("forceload add 96 96");
@@ -340,6 +354,13 @@ test("a server gate on preserved land does not rewrite its sign or open its port
   await rcon.command(
     'data merge block 103 72 101 {front_text:{messages:["World Gate","Choose a world","Worlds","Press button"]}}',
   );
+  await rcon.command(`tp ${secondBot.username} 1000.5 80 1000.5`);
+  await waitUntil(
+    "observer unloads the gate chunk",
+    () =>
+      secondBot.entity.position.x > 900 &&
+      secondBot.blockAt(new Vec3(103, 72, 101)) === null,
+  );
   await rcon.command(`tp ${bot.username} 103.5 70 103.5`);
   await waitUntil(
     "protected gate sign loaded",
@@ -350,6 +371,21 @@ test("a server gate on preserved land does not rewrite its sign or open its port
   const selected = waitForMessage(bot, /Destination: 2015/u);
   await bot.activateBlock(sign);
   await selected;
+  await waitUntil(
+    "protected gate displays the selected world",
+    () =>
+      JSON.stringify(bot.blockAt(new Vec3(103, 72, 101))?.entity)?.includes(
+        ">2015<",
+      ) ?? false,
+  );
+  await rcon.command(`tp ${secondBot.username} 103.5 70 104.5`);
+  await waitUntil(
+    "another player sees the selected world after loading the chunk",
+    () =>
+      JSON.stringify(
+        secondBot.blockAt(new Vec3(103, 72, 101))?.entity,
+      )?.includes(">2015<") ?? false,
+  );
   expect(await rcon.command("data get block 103 72 101 front_text")).toContain(
     "Choose a world",
   );
