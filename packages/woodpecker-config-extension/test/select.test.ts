@@ -9,6 +9,7 @@ import {
 import { BUN_CACHE, BUN_CACHE_CONTROL } from "#src/pipeline/cache.ts";
 import type { CiStep } from "#src/pipeline/model.ts";
 import { LIGHT_TIER, MEDIUM_TIER } from "#src/pipeline/tiers.ts";
+import { HANDOFF_KEYS } from "#src/pipeline/lanes/tofu.ts";
 import { TEST_IDENTITY, TEST_IMAGES as IMAGES } from "./identity.ts";
 
 function step(key: string, overrides: Partial<CiStep> = {}): CiStep {
@@ -532,8 +533,19 @@ describe("selected lane contracts", () => {
     );
     const steps = buildPipelineSteps({ images: IMAGES, changedBase: "x" });
     expect(steps.filter((s) => s.key.startsWith("resume"))).toHaveLength(1);
-    expect(steps.find((s) => s.key === "resume-build")?.commands[0]).toContain(
-      "MISE_TOOLCHAIN_SCOPE=runtime . ci/scripts/toolchain.sh",
+    const resume = steps.find((s) => s.key === "resume-build");
+    // TeX Live compiles without grants or a runtime toolchain bootstrap; the
+    // toolchain image publishes the PDF from the shared checkout.
+    expect(resume?.image).toBe(IMAGES.catalog["texlive/texlive"]);
+    expect(resume?.secrets ?? []).toEqual([]);
+    expect(resume?.commands.join("\n")).not.toContain("toolchain.sh");
+    const publish = resume?.orderedSteps?.[0];
+    expect(publish?.image).toBe(IMAGES.base);
+    expect(publish?.commands).toContain(
+      "bun --no-install scripts/ci/ci-artifact.ts put resume-pdf",
+    );
+    expect(publish?.secrets?.map((secret) => secret.key)).toEqual(
+      expect.arrayContaining(HANDOFF_KEYS.map((secret) => secret.key)),
     );
   });
 

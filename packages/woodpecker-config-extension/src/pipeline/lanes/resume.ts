@@ -13,6 +13,11 @@ import { GITHUB_DOWNLOAD, HANDOFF_KEYS } from "#src/pipeline/lanes/tofu.ts";
  * The built PDF is an input to the site deploy on the default branch, so it is
  * published to the handoff store rather than left in the workspace -- each
  * Woodpecker workflow gets its own.
+ *
+ * The TeX Live image only compiles. Publishing needs the repo-pinned Bun,
+ * which the toolchain image already carries, so an ordered container on that
+ * image uploads the PDF from the shared checkout. Running the upload in the
+ * TeX Live image instead would bootstrap mise from the network on every run.
  */
 export function resumeSteps(images: CiImages): CiStep[] {
   return [
@@ -21,23 +26,30 @@ export function resumeSteps(images: CiImages): CiStep[] {
       label: "resume",
       image: images.catalog["texlive/texlive"],
       commands: [
-        // The TeX Live image does not include Bun; the PDF handoff uses the
-        // repo-pinned runtime from mise.
-        "MISE_TOOLCHAIN_SCOPE=runtime . ci/scripts/toolchain.sh",
-        "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production",
         // The image ships several TeX Live trees and does not put xelatex on
         // PATH; find it rather than hard-coding a year-stamped directory.
         'export PATH="$(dirname "$(find /usr/local/texlive -name xelatex | head -1)"):$PATH"',
         "cd packages/resume",
         "xelatex resume.tex",
-        "cd ../..",
-        // The deploy lane consumes this with --prebuilt rather than
-        // reinstalling a TeX toolchain to rebuild it.
-        "bun --no-install scripts/ci/ci-artifact.ts put resume-pdf",
       ],
-      timeoutMinutes: 20,
+      timeoutMinutes: 10,
       resources: MEDIUM_TIER,
-      secrets: [GITHUB_DOWNLOAD, ...HANDOFF_KEYS],
+      orderedSteps: [
+        {
+          key: "resume-publish",
+          image: images.base,
+          commands: [
+            "MISE_TOOLCHAIN_SCOPE=runtime . ci/scripts/toolchain.sh",
+            "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production",
+            // The deploy lane consumes this with --prebuilt rather than
+            // reinstalling a TeX toolchain to rebuild it.
+            "bun --no-install scripts/ci/ci-artifact.ts put resume-pdf",
+          ],
+          timeoutMinutes: 10,
+          resources: MEDIUM_TIER,
+          secrets: [GITHUB_DOWNLOAD, ...HANDOFF_KEYS],
+        },
+      ],
       changed: {
         include: [
           ...GLOBAL_SELECTOR_INPUTS,

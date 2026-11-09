@@ -13,6 +13,15 @@ const allSteps = () =>
   });
 const step = (key: string) => allSteps().find((s) => s.key === key);
 
+/** Every command a workflow runs, including its ordered containers. */
+const workflowCommands = (candidate: {
+  commands: readonly string[];
+  orderedSteps?: readonly { commands: readonly string[] }[];
+}) => [
+  ...candidate.commands,
+  ...(candidate.orderedSteps ?? []).flatMap((ordered) => ordered.commands),
+];
+
 function dependsTransitivelyOn(
   steps: readonly { key: string; dependsOn?: readonly string[] }[],
   key: string,
@@ -38,7 +47,7 @@ describe("artifact producers and consumers line up", () => {
   const consumedBy: { key: string; artifact: string }[] = [];
 
   for (const candidate of allSteps()) {
-    const command = candidate.commands.join("\n");
+    const command = workflowCommands(candidate).join("\n");
     for (const put of command.matchAll(
       /ci-artifact\.ts put (?<name>[\w-]+)/gu,
     )) {
@@ -94,7 +103,7 @@ describe("handoff producers and consumers line up", () => {
       Object.entries(SCRIPT_PUBLISHED_HANDOFFS),
     );
     for (const candidate of steps) {
-      for (const command of candidate.commands) {
+      for (const command of workflowCommands(candidate)) {
         const put = /write-ci-handoff\.ts (?<name>[\w-]+)/u.exec(command);
         if (put?.groups?.["name"] !== undefined) {
           producedBy.set(put.groups["name"], candidate.key);
@@ -102,7 +111,7 @@ describe("handoff producers and consumers line up", () => {
       }
     }
     for (const candidate of steps) {
-      for (const command of candidate.commands) {
+      for (const command of workflowCommands(candidate)) {
         const get = /read-ci-handoff\.ts (?<name>[\w-]+)/u.exec(command);
         const artifact = get?.groups?.["name"];
         if (artifact === undefined) continue;
