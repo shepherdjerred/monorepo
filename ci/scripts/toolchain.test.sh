@@ -290,11 +290,14 @@ rg -Fxq 'ln -sf /test/tools/gh /usr/local/bin/gh' "$TEST_ROOT/automation.log"
 
 # A root-hosted step with the shared mise claim mounted: the preamble must open
 # the claim root, its installs directory and the Postgres install there to the
-# nobody test user, leave other tools and the downloads directory alone, and
-# never touch the image's /opt/mise, which this host does not have.
+# nobody test user and leave other tools and the downloads directory alone. On
+# a host without the image's /opt/mise (a developer machine) it must also not
+# create it; on the CI image, which carries /opt/mise, the preamble's own
+# exposure of that tree runs as it does in every step, so only the claim branch
+# is asserted there.
+HOST_HAD_IMAGE_MISE=0
 if [ -e /opt/mise ]; then
-  echo "the root toolchain fixture needs a host without /opt/mise" >&2
-  exit 1
+  HOST_HAD_IMAGE_MISE=1
 fi
 mkdir -p "$TEST_ROOT/root-bin"
 cat >"$TEST_ROOT/root-bin/id" <<'EOF'
@@ -348,7 +351,7 @@ HOME="$TEST_ROOT/profile-home" PATH="$TEST_ROOT/root-bin:$TEST_ROOT/profiles:$PA
   ' _ "$TOOLCHAIN" "$TEST_ROOT/profile-workspace" "$MISE_CLAIM" >"$root_log.stdout"
 rg -q '^CI_BOOTSTRAP_DIAGNOSTIC \{"schemaVersion":1,"sourceSha":"b{40}","scope":"postgres","elapsedSeconds":[0-9]+\}$' "$root_log.stdout"
 rg -Fxq 'install --yes bun node github:theseus-rs/postgresql-binaries aqua:temporalio/cli' "$root_log"
-if [ -e /opt/mise ]; then
+if [ "$HOST_HAD_IMAGE_MISE" -eq 0 ] && [ -e /opt/mise ]; then
   echo "toolchain.sh must not create /opt/mise when the image lacks it" >&2
   exit 1
 fi
