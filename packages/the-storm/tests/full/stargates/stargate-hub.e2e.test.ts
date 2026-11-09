@@ -101,14 +101,16 @@ async function enterHub(
     const next = waitForMessage(bot, /Destination: ([^.]+)/u);
     await bot.activateBlock(sign);
     const match = await next;
+    const choice = match[1];
+    if (choice === undefined)
+      throw new Error("Destination message had no label");
     await waitUntil(
-      `world gate sign shows ${match[1]}`,
+      `world gate sign shows ${choice}`,
       () =>
-        JSON.stringify(bot.blockAt(signPos)?.entity)?.includes(
-          `>${match[1]}<`,
-        ) ?? false,
+        JSON.stringify(bot.blockAt(signPos)?.entity)?.includes(`>${choice}<`) ??
+        false,
     );
-    selected = match[1] === destination;
+    selected = choice === destination;
   }
   if (!selected)
     throw new Error(`Could not select world gate destination ${destination}`);
