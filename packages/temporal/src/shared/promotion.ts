@@ -38,6 +38,13 @@ export const PromotionTargetSchema = z.strictObject({
       guildId: z.string().regex(/^\d+$/),
       channelId: z.string().regex(/^\d+$/),
       username: z.string().min(1),
+      slash: z
+        .strictObject({
+          botId: z.string().regex(/^\d+$/),
+          command: z.string().regex(/^[a-z0-9_-]+$/),
+          args: z.array(z.string()).max(20),
+        })
+        .optional(),
     })
     .optional(),
 });
@@ -148,6 +155,12 @@ export const PromotionStateSchema = z.strictObject({
   version: z.literal(1),
   targetId: z.string().min(1),
   paused: z.boolean(),
+  executionHealth: z
+    .object({
+      consecutiveFailures: z.number().int().nonnegative(),
+      lastOccurrenceId: z.string().nullable(),
+    })
+    .default({ consecutiveFailures: 0, lastOccurrenceId: null }),
   blockedReason: z.string().nullable(),
   nextEligibleAt: z.iso.datetime().nullable(),
   // Chosen once per occurrence, including the first occurrence. Rechecks do
@@ -163,6 +176,23 @@ export const PromotionStateSchema = z.strictObject({
   lastOccurrenceId: z.string().nullable(),
 });
 export type PromotionState = z.infer<typeof PromotionStateSchema>;
+
+export function promotionFailurePause(state: PromotionState): string | null {
+  return state.executionHealth.consecutiveFailures >= 2
+    ? `Automatically paused after ${String(state.executionHealth.consecutiveFailures)} consecutive failures`
+    : null;
+}
+
+/** Diagnostics alone do not prevent a second, caller-selected attempt. */
+export function promotionRunBlocked(state: PromotionState): boolean {
+  return (
+    state.paused ||
+    state.blockedReason ===
+      "Site cooldown was reported without a future deadline" ||
+    promotionFailurePause(state) !== null ||
+    state.attempts.some((attempt) => attempt.status === "uncertain")
+  );
+}
 
 /** The caller checks saved cadence before starting an executor. */
 export function promotionDispatchAt(
@@ -234,6 +264,9 @@ export function initialPromotionState(
 }
 
 export const PromotionRunInputSchema = z.strictObject({
+  scheduled: z.boolean().optional(),
+  batchId: z.string().optional(),
+  notBefore: z.iso.datetime().optional(),
   targetId: z.string().min(1),
   mode: z.enum(["run", "preview", "reconcile"]).default("run"),
 });

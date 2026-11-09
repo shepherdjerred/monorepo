@@ -3,6 +3,8 @@ import {
   ParentClosePolicy,
   proxyActivities,
   startChild,
+  sleep,
+  patched,
 } from "@temporalio/workflow";
 import type { PromotionActivities } from "#activities/promotion/index.ts";
 import type { ReportDeliveryActivities } from "#activities/reports/report-delivery.ts";
@@ -20,6 +22,7 @@ const reads = proxyActivities<
     | "managePromotion"
     | "acknowledgePromotionAlert"
     | "collectPromotionDailyReport"
+    | "finishPromotionBatch"
   >
 >({
   taskQueue: TASK_QUEUES.PROMOTION_CONTROL,
@@ -41,27 +44,76 @@ const reports = proxyActivities<
 });
 
 export async function runStormPromotion(input: PromotionRunInput) {
+  if (input.notBefore !== undefined && Date.parse(input.notBefore) > Date.now())
+    await sleep(Date.parse(input.notBefore) - Date.now());
   return await writes.executePromotion(input);
 }
 
 export async function dispatchStormPromotion() {
-  const tick = await reads.inspectPromotionTick();
-  for (const targetId of tick.dueTargetIds) {
-    try {
-      await startChild(runStormPromotion, {
-        workflowId: `storm-promotion/${targetId}`,
-        args: [{ targetId, mode: "run" }],
-        parentClosePolicy: ParentClosePolicy.ABANDON,
-      });
-    } catch (error: unknown) {
-      if (!(error instanceof WorkflowExecutionAlreadyStartedError)) throw error;
-    }
+  const scheduled = patched("promotion-core-hours-v1");
+  const tick = scheduled
+    ? await reads.inspectPromotionTick(true)
+    : await reads.inspectPromotionTick();
+  const completions: Promise<unknown>[] = [];
+  const overlaps: string[] = [];
+  const selected = scheduled
+    ? [...tick.dueTargetIds, ...tick.reconcileTargetIds]
+    : tick.dueTargetIds;
+  for (const targetId of selected) {
+    const child = await startSource(
+      targetId,
+      assignment(targetId, tick, scheduled),
+    );
+    if (child === null) overlaps.push(targetId);
+    else if (scheduled) completions.push(settleChild(child));
+  }
+  if (scheduled && tick.batchId !== null) {
+    await Promise.all(completions);
+    await reads.finishPromotionBatch({ id: tick.batchId, overlaps });
   }
   for (const alert of tick.alerts) {
     await reports.deliverReport(alert.report);
     await reads.acknowledgePromotionAlert(alert.targetId, alert.fingerprint);
   }
   return { dispatched: tick.dueTargetIds.length, alerts: tick.alerts.length };
+}
+
+type Tick = Awaited<ReturnType<PromotionActivities["inspectPromotionTick"]>>;
+function assignment(
+  targetId: string,
+  tick: Tick,
+  scheduled: boolean,
+): PromotionRunInput {
+  if (!scheduled) return { targetId, mode: "run" };
+  const reconcile = tick.reconcileTargetIds.includes(targetId);
+  return {
+    targetId,
+    mode: reconcile ? "reconcile" : "run",
+    scheduled: true,
+    ...(reconcile ? {} : { notBefore: tick.notBefore[targetId] }),
+    ...(tick.batchId === null ? {} : { batchId: tick.batchId }),
+  };
+}
+async function startSource(targetId: string, input: PromotionRunInput) {
+  try {
+    return await startChild(runStormPromotion, {
+      workflowId: `storm-promotion/${targetId}`,
+      args: [input],
+      parentClosePolicy: ParentClosePolicy.ABANDON,
+    });
+  } catch (error) {
+    if (!(error instanceof WorkflowExecutionAlreadyStartedError)) throw error;
+    return null;
+  }
+}
+async function settleChild(
+  child: NonNullable<Awaited<ReturnType<typeof startSource>>>,
+) {
+  try {
+    return await child.result();
+  } catch {
+    return null;
+  }
 }
 
 export async function manageStormPromotion(

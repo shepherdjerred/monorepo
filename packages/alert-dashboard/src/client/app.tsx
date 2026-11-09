@@ -2,6 +2,11 @@ import { lazy, Suspense } from "react";
 import { Route, Routes } from "react-router";
 
 import { Shell } from "./shell.tsx";
+const PromotionPage = lazy(async () => {
+  const module = await import("./promotion/page.tsx");
+  await import("./promotion/promotion.css");
+  return { default: module.PromotionPage };
+});
 
 // Each page is its own chunk so the uPlot and ops-model code only loads on the
 // pages that render it.
@@ -67,6 +72,7 @@ function page(element: React.JSX.Element): React.JSX.Element {
 export function App(): React.JSX.Element {
   return (
     <Routes>
+      <Route path="promotion" element={page(<PromotionPage />)} />
       <Route element={<Shell />}>
         <Route index element={page(<OverviewPage />)} />
         <Route path="services" element={page(<ServicesPage />)} />

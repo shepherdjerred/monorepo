@@ -11,6 +11,10 @@ import {
 import { createUserMessageUpdateWatcher } from "#lib/discord/deferred-reply.ts";
 import { DaemonError } from "#lib/discord/error.ts";
 import { userChannelInfo } from "#lib/discord/channel.ts";
+import { userApplicationCommands } from "#lib/discord/application-commands.ts";
+import { handleDeleteReply } from "#lib/discord/delete-reply.ts";
+import { handleEditOwnMessage } from "#lib/discord/edit-own-message.ts";
+import { messageMatches } from "#lib/discord/message-match.ts";
 import {
   ReadRequestSchema,
   SendRequestSchema,
@@ -178,6 +182,17 @@ async function handleRead(ctx: DaemonContext, body: unknown): Promise<unknown> {
   const as: IdentityKind = request.as ?? (ctx.bot === null ? "user" : "bot");
   if (as === "bot") {
     const channel = await requireBotChannel(ctx, request.channelId);
+    if (request.messageId !== undefined)
+      return {
+        messages: [
+          mapBotMessage(
+            await channel.messages.fetch({
+              message: request.messageId,
+              force: true,
+            }),
+          ),
+        ],
+      };
     const fetched = await channel.messages.fetch({ limit: request.limit });
     const messages = [...fetched.values()]
       .toSorted((a, b) => a.createdTimestamp - b.createdTimestamp)
@@ -185,40 +200,22 @@ async function handleRead(ctx: DaemonContext, body: unknown): Promise<unknown> {
     return { messages };
   }
   const channel = await requireUserChannel(ctx, request.channelId);
+  if (request.messageId !== undefined)
+    return {
+      messages: [
+        mapUserMessage(
+          await channel.messages.fetch(request.messageId, {
+            force: true,
+            cache: false,
+          }),
+        ),
+      ],
+    };
   const fetched = await channel.messages.fetch({ limit: request.limit });
   const messages = [...fetched.values()]
     .toSorted((a, b) => a.createdTimestamp - b.createdTimestamp)
     .map((message) => mapUserMessage(message));
   return { messages };
-}
-
-export function messageMatches(
-  message: IpcMessage,
-  request: {
-    channelId: string;
-    fromUserId?: string | undefined;
-    contains?: string | undefined;
-  },
-): boolean {
-  if (message.channelId !== request.channelId) {
-    return false;
-  }
-  if (request.fromUserId != null && message.authorId !== request.fromUserId) {
-    return false;
-  }
-  if (request.contains == null) {
-    return true;
-  }
-  const haystack = [
-    message.content,
-    ...message.embeds.flatMap((embed) => [
-      embed.title ?? "",
-      embed.description ?? "",
-    ]),
-  ]
-    .join("\n")
-    .toLowerCase();
-  return haystack.includes(request.contains.toLowerCase());
 }
 
 function handleWait(ctx: DaemonContext, body: unknown): Promise<unknown> {
@@ -455,6 +452,10 @@ async function dispatch(
       return handleWait(ctx, await request.json());
     case "/slash":
       return handleSlash(ctx, await request.json());
+    case "/delete-reply":
+      return handleDeleteReply(ctx.user, await request.json());
+    case "/edit-own-message":
+      return handleEditOwnMessage(ctx.user, await request.json());
     case "/voice/join":
       return handleVoiceJoin(ctx, await request.json());
     case "/voice/leave":
@@ -470,6 +471,12 @@ async function dispatch(
       if (channelId === null || channelId === "")
         throw new DaemonError("channelId is required");
       return userChannelInfo(ctx.user, channelId);
+    }
+    case "/commands": {
+      const channelId = url.searchParams.get("channelId");
+      if (channelId === null || channelId === "")
+        throw new DaemonError("channelId is required");
+      return userApplicationCommands(ctx.user, channelId);
     }
     default:
       throw new DaemonError(`Unknown path ${url.pathname}`, 404);

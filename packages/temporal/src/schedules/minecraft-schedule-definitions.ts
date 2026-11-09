@@ -7,11 +7,15 @@ export const MINECRAFT_SCHEDULES = schedulesInNamespace("prod", [
     id: "the-storm-promotion-dispatch",
     workflowType: "dispatchStormPromotion",
     args: [],
-    timing: { kind: "interval", every: "1 minute" },
+    timing: {
+      kind: "cron",
+      expression: "0 8,12,16,20 * * *",
+      timezone: "America/Los_Angeles",
+    },
     taskQueue: TASK_QUEUES.WORKFLOWS,
     overlap: ScheduleOverlapPolicy.SKIP,
     catchupWindow: "1 minute",
-    workflowExecutionTimeout: "10 minutes",
+    workflowExecutionTimeout: "8 hours",
     memo: "Dispatch eligible promotion targets; durable claims and buffered posting limits prevent duplicate actions",
     initialPauseNote:
       "Awaiting promotion worker provisioning and eligible live canary acceptance",

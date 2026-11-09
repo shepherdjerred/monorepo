@@ -18,6 +18,16 @@ export async function userChannelInfo(
     name: channel.name,
     type: channel.type,
     canView: permissions?.has("VIEW_CHANNEL") === true,
+    canUseApplicationCommands:
+      permissions?.has("USE_APPLICATION_COMMANDS") === true,
+    canManageServer: permissions?.has("MANAGE_GUILD") === true,
+    canManageMessages:
+      permissions?.has("MANAGE_MESSAGES") === true &&
+      (channel.guild.mfaLevel !== "ELEVATED" || user.mfaEnabled),
+    moderationMfaLevel: channel.guild.mfaLevel,
+    accountMfaEnabled: user.mfaEnabled,
+    administrator: permissions?.has("ADMINISTRATOR") === true,
+    memberPermissions: permissions?.bitfield.toString() ?? null,
     canSend:
       permissions?.has(
         channel.isThread() ? "SEND_MESSAGES_IN_THREADS" : "SEND_MESSAGES",

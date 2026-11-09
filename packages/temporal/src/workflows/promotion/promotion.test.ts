@@ -1,9 +1,63 @@
 import { TestWorkflowEnvironment } from "@temporalio/testing";
+import { Worker } from "@temporalio/worker";
 import { describe, expect, it } from "vitest";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { runWorkflowWithActivityWorker } from "#workflows/test-support.ts";
 
 describe("promotion Workflow effects", () => {
+  it("waits durably for the evening deadline and closes the batch after its child settles", async () => {
+    const environment = await TestWorkflowEnvironment.createTimeSkipping();
+    const due = (await environment.currentTimeMs()) + 2 * 60 * 60 * 1000;
+    const events: string[] = [];
+    try {
+      await runWorkflowWithActivityWorker(environment, {
+        workflowPath: new URL("index.ts", import.meta.url).pathname,
+        activityTaskQueue: TASK_QUEUES.PROMOTION_CONTROL,
+        activities: {
+          inspectPromotionTick: () => ({
+            dueTargetIds: ["pmc"],
+            reconcileTargetIds: [],
+            alerts: [],
+            batchId: "fixture",
+            notBefore: { pmc: new Date(due).toISOString() },
+          }),
+          finishPromotionBatch: () => {
+            events.push("finished");
+          },
+        },
+        execute: async () => {
+          const writer = await Worker.create({
+            connection: environment.nativeConnection,
+            taskQueue: TASK_QUEUES.PROMOTION,
+            activities: {
+              executePromotion: async (input: unknown) => {
+                expect(input).toMatchObject({
+                  targetId: "pmc",
+                  scheduled: true,
+                  batchId: "fixture",
+                });
+                expect(
+                  await environment.currentTimeMs(),
+                ).toBeGreaterThanOrEqual(due);
+                events.push("executed");
+                return { status: "verified" };
+              },
+            },
+          });
+          return await writer.runUntil(() =>
+            environment.client.workflow.execute("dispatchStormPromotion", {
+              workflowId: `dispatch-fixture-${crypto.randomUUID()}`,
+              taskQueue: TASK_QUEUES.WORKFLOWS,
+              args: [],
+            }),
+          );
+        },
+      });
+      expect(events).toEqual(["executed", "finished"]);
+    } finally {
+      await environment.teardown();
+    }
+  }, 60_000);
   it("never retries a browser agent after an ambiguous Activity failure", async () => {
     const environment = await TestWorkflowEnvironment.createTimeSkipping();
     let calls = 0;

@@ -3,6 +3,8 @@ import path from "node:path";
 import { z } from "zod/v4";
 import { stat } from "node:fs/promises";
 import { PromotionLoginsSchema } from "#activities/promotion/tools.ts";
+import { redactSecrets } from "#shared/redact.ts";
+import { promotionTotp } from "#activities/promotion/access/otp.ts";
 
 if (Bun.env["OP_SERVICE_ACCOUNT_TOKEN"] !== undefined)
   throw new Error(
@@ -55,6 +57,7 @@ async function toolkit(operation: string, passwordLogin = false) {
   if (passwordLogin) {
     env["DISCORD_USER_EMAIL"] = Bun.env["DISCORD_USER_EMAIL"];
     env["DISCORD_USER_PASSWORD"] = Bun.env["DISCORD_USER_PASSWORD"];
+    env["DISCORD_USER_OTP_CODE"] = Bun.env["DISCORD_USER_OTP_CODE"];
   }
   const child = Bun.spawn(
     [
@@ -74,7 +77,7 @@ async function toolkit(operation: string, passwordLogin = false) {
   ]);
   if (results[2] !== 0)
     throw new Error(
-      `Outreach Discord ${operation} failed; inspect its redacted daemon log`,
+      `Outreach Discord ${operation} failed: ${redactSecrets(results[1].slice(-4000), [Bun.env["DISCORD_USER_EMAIL"], Bun.env["DISCORD_USER_PASSWORD"], Bun.env["DISCORD_USER_OTP_CODE"]])}`,
     );
 }
 const existing = await stat(socket).catch((error: unknown) => {
@@ -99,6 +102,8 @@ if (existing?.isSocket() === true) {
   z.email().parse(email);
   Bun.env["DISCORD_USER_EMAIL"] = email;
   Bun.env["DISCORD_USER_PASSWORD"] = login.password;
+  if (login.otp !== undefined)
+    Bun.env["DISCORD_USER_OTP_CODE"] = promotionTotp(login.otp);
   try {
     await toolkit("start", true);
     try {
@@ -112,5 +117,6 @@ if (existing?.isSocket() === true) {
   } finally {
     delete Bun.env["DISCORD_USER_EMAIL"];
     delete Bun.env["DISCORD_USER_PASSWORD"];
+    delete Bun.env["DISCORD_USER_OTP_CODE"];
   }
 }

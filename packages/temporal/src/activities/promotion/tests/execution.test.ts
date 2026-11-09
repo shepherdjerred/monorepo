@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { promotionConfig } from "#config/promotion.ts";
 import type * as StoreModule from "#activities/promotion/store.ts";
 import { promotionPrompt } from "#activities/promotion/prompt.ts";
-import { promotionTaskFiles } from "#activities/promotion/task-files.ts";
+import { promotionTaskFiles } from "#activities/promotion/publication/task-files.ts";
 import { promotionTarget } from "#activities/promotion/manifest.ts";
 import {
   promotionAgentActivities,
@@ -83,11 +83,13 @@ describe("promotion execution boundaries", () => {
     vi.mocked(promotionStore).mockReturnValue(memoryPromotionStore());
     vi.mocked(promotionConfig).mockResolvedValue({
       enabled: true,
+      available: true,
       enabledTargets: ["pmc"],
       model: "fixture",
       maxSteps: 1,
       timeoutMinutes: 1,
       monthlySolverUsd: 0,
+      dailySpendUsd: 5,
     });
     vi.mocked(runPromotionAgent).mockReset();
     vi.mocked(runPromotionAgent).mockResolvedValue({

@@ -2,6 +2,69 @@ import { describe, expect, it, vi } from "vitest";
 import { harness } from "./tool-test-support.ts";
 
 describe("native browser connection", () => {
+  it("requires solving a CAPTCHA before consuming the single login submission", async () => {
+    const test = await harness();
+    await test.handle({
+      endpoint: "action",
+      body: { kind: "fill", ref: "e2", credential: "password" },
+    });
+    test.action.mockClear();
+    test.requiresCaptchaResponse.mockResolvedValueOnce(true);
+    const login = { endpoint: "action", body: { kind: "click", ref: "e3" } };
+    await expect(test.handle(login)).rejects.toMatchObject({
+      code: "captcha_required",
+      dispatchState: "not_started",
+    });
+    expect(test.action).not.toHaveBeenCalled();
+    await expect(test.handle(login)).resolves.toBeDefined();
+    expect(test.action).toHaveBeenCalledTimes(1);
+    await expect(test.handle(login)).rejects.toThrow("already submitted");
+    expect(test.action).toHaveBeenCalledTimes(1);
+  });
+  it("distinguishes inspection failure before dispatch from an uncertain action", async () => {
+    const test = await harness(false);
+    test.controlState.mockRejectedValueOnce(
+      new Error("Native visibility HTTP 500"),
+    );
+    await expect(
+      test.handle({ endpoint: "action", body: { kind: "click", ref: "e4" } }),
+    ).rejects.toMatchObject({
+      code: "control_inspection_failed",
+      dispatchState: "not_started",
+    });
+    expect(test.action).not.toHaveBeenCalled();
+    await expect(
+      test.handle({ endpoint: "action", body: { kind: "click", ref: "e5" } }),
+    ).resolves.toBeDefined();
+    expect(test.action).toHaveBeenCalledTimes(1);
+  });
+  it("rejects hidden controls before dispatch and permits a later visible action", async () => {
+    const test = await harness(false);
+    const state = test.controlState;
+    state.mockResolvedValueOnce({
+      rendered: false,
+      enabled: true,
+      onScreen: false,
+    });
+    await expect(
+      test.handle({ endpoint: "action", body: { kind: "click", ref: "e4" } }),
+    ).rejects.toMatchObject({ dispatchState: "not_started" });
+    expect(test.action).not.toHaveBeenCalled();
+    await expect(
+      test.handle({
+        endpoint: "action",
+        body: { kind: "fill", ref: "e1", text: "Public draft" },
+      }),
+    ).resolves.toBeDefined();
+    state.mockResolvedValueOnce({
+      rendered: true,
+      enabled: true,
+      onScreen: false,
+    });
+    await expect(
+      test.handle({ endpoint: "action", body: { kind: "click", ref: "e4" } }),
+    ).resolves.toBeDefined();
+  });
   it("injects the saved alternate email privately when the observed form requests it", async () => {
     const test = await harness();
     expect(
@@ -331,14 +394,49 @@ describe("credential isolation and preview restrictions", () => {
     );
     expect(test.action).toHaveBeenCalledOnce();
   });
-  it("never signs in during reconciliation", async () => {
+  it("recognizes a native disabled cooldown without clicking or consuming a publication", async () => {
+    const test = await harness(false);
+    test.controlState.mockResolvedValue({
+      rendered: true,
+      enabled: false,
+      onScreen: true,
+    });
+    test.control.mockResolvedValue({
+      ref: "e9",
+      role: "button",
+      name: "Bump server on cooldown",
+    });
+    await expect(
+      test.handle({ endpoint: "action", body: { kind: "click", ref: "e9" } }),
+    ).rejects.toThrow();
+    expect(test.action).not.toHaveBeenCalled();
+    const result = test.journal.resolveDraft({
+      status: "blocked",
+      summary: "Native button is on cooldown",
+      performedAction: false,
+      nextEligibleAt: null,
+      preparedContent: "",
+      evidence: [],
+      receipt: null,
+    });
+    test.journal.normalizeNativeCooldown(result);
+    expect(result.status).toBe("deferred");
+    await test.journal.finish(result);
+  });
+  it("permits private authentication during reconciliation while still blocking publication", async () => {
     const test = await harness(false, true);
     await expect(
       test.handle({
         endpoint: "action",
         body: { kind: "fill", ref: "e2", credential: "password" },
       }),
-    ).rejects.toThrow("never signs in");
+    ).resolves.toEqual({ filled: true });
+    await expect(
+      test.handle({
+        endpoint: "action",
+        body: { kind: "fill", ref: "e99", text: "Do not publish" },
+      }),
+    ).rejects.toThrow("Read-only mode");
   });
 });
 
@@ -358,10 +456,13 @@ describe("preview access CAPTCHA solving", () => {
       );
     try {
       const test = await harness();
-      vi.spyOn(test.browser, "challenge").mockResolvedValue({
-        type: "TurnstileTaskProxyless",
-        websiteURL: test.target.url,
-        websiteKey: "fixture-key",
+      vi.spyOn(test.browser, "challengeContext").mockResolvedValue({
+        documentId: "fixture-document",
+        challenge: {
+          type: "TurnstileTaskProxyless",
+          websiteURL: test.target.url,
+          websiteKey: "fixture-key",
+        },
       });
       const apply = vi
         .spyOn(test.browser, "applyChallenge")

@@ -5,7 +5,11 @@ import {
 } from "@shepherdjerred/unix-socket-daemon";
 import { Client as BotClient, Events, GatewayIntentBits } from "discord.js";
 import { Client as UserClient } from "discord.js-selfbot-v13";
-import { discordPasswordToken } from "#lib/discord/auth.ts";
+import { withinDiscordCaller } from "#lib/discord/caller-lifetime.ts";
+import {
+  discordPasswordToken,
+  discordDaemonEnvironment,
+} from "#lib/discord/auth.ts";
 import {
   type DaemonContext,
   identities,
@@ -61,7 +65,11 @@ async function loginBot(token: string): Promise<BotClient> {
 }
 
 async function loginUser(token: string): Promise<UserClient> {
-  const user = new UserClient();
+  const user = new UserClient({
+    retryLimit: 0,
+    restRequestTimeout: 20_000,
+    rejectOnRateLimit: () => true,
+  });
   user.on("error", (error) => {
     logLine("user client error", { error: getErrorMessage(error) });
   });
@@ -74,9 +82,11 @@ async function loginUser(token: string): Promise<UserClient> {
 
 async function loginUserWithPassword(): Promise<UserClient> {
   const email = Bun.env["DISCORD_USER_EMAIL"],
-    password = Bun.env["DISCORD_USER_PASSWORD"];
+    password = Bun.env["DISCORD_USER_PASSWORD"],
+    otpCode = Bun.env["DISCORD_USER_OTP_CODE"];
   delete Bun.env["DISCORD_USER_EMAIL"];
   delete Bun.env["DISCORD_USER_PASSWORD"];
+  delete Bun.env["DISCORD_USER_OTP_CODE"];
   if (
     email === undefined ||
     email === "" ||
@@ -84,9 +94,18 @@ async function loginUserWithPassword(): Promise<UserClient> {
     password === ""
   )
     throw new Error("Discord login credentials are missing");
-  const user = new UserClient();
+  const user = new UserClient({
+    retryLimit: 0,
+    restRequestTimeout: 20_000,
+    rejectOnRateLimit: () => true,
+  });
   try {
-    const token = await discordPasswordToken(email, password);
+    const token = await discordPasswordToken(
+      email,
+      password,
+      undefined,
+      otpCode,
+    );
     await Promise.all([waitForReady(user, "user"), user.login(token)]);
     logLine("user ready", { tag: user.user?.tag });
     return user;
@@ -99,10 +118,21 @@ async function loginUserWithPassword(): Promise<UserClient> {
 }
 
 export async function runDiscordDaemon(
-  options: { passwordLogin?: boolean } = {},
+  options: { passwordLogin?: boolean; userOnly?: boolean } = {},
 ): Promise<void> {
-  const botToken = Bun.env["DISCORD_BOT_TOKEN"];
-  const userToken = Bun.env["DISCORD_USER_TOKEN"];
+  if (options.passwordLogin === true && options.userOnly === true)
+    throw new Error("Choose --password-login or --user-only, not both");
+  const credentials: Record<string, string> =
+    options.passwordLogin === true
+      ? {}
+      : discordDaemonEnvironment(Bun.env, {
+          passwordLogin: false,
+          userOnly: options.userOnly === true,
+        });
+  const botToken = credentials["DISCORD_BOT_TOKEN"];
+  const userToken = credentials["DISCORD_USER_TOKEN"];
+  delete Bun.env["DISCORD_BOT_TOKEN"];
+  delete Bun.env["DISCORD_USER_TOKEN"];
   const hasBot = botToken != null && botToken.length > 0;
   const hasUser = userToken != null && userToken.length > 0;
   if (!hasBot && !hasUser && options.passwordLogin !== true) {
@@ -171,7 +201,14 @@ async function startDaemon(opts: {
     state,
     ttlSeconds,
     lastActivity: () => ctx.lastActivity,
-    handle: (url, request) => routeRequest(ctx, url, request),
+    handle: async (url, request) => {
+      // A disconnected writer must not leave an SDK request queued in this process.
+      return url.pathname === "/send" || url.pathname === "/slash"
+        ? await withinDiscordCaller(request, () =>
+            routeRequest(ctx, url, request),
+          )
+        : await routeRequest(ctx, url, request);
+    },
     onShutdown: async () => {
       leaveVoice(ctx);
       if (ctx.user !== null) {

@@ -13,6 +13,7 @@ import type { Metrics } from "#server/metrics";
 import { withSpan } from "#infrastructure/observability";
 import { opsErrorResponse, registerOpsRoutes } from "#server/ops-routes";
 import { appRouter } from "#server/trpc";
+import { registerPromotionRoutes } from "#server/promotion-routes";
 import {
   AlertDetailInputSchema,
   AlertListInputSchema,
@@ -29,6 +30,7 @@ type AppOptions = {
   ops: OpsService;
   digests: DigestService;
   opsIngestToken: string;
+  promotionStatusUrl?: string;
 };
 
 const clientRoot = `${import.meta.dir}/../../dist/client`;
@@ -234,6 +236,11 @@ export function createApp(options: AppOptions): Hono {
   app.all("/trpc/*", handleTrpc);
 
   registerOpsRoutes(app, options);
+  registerPromotionRoutes(
+    app,
+    options.promotionStatusUrl,
+    options.opsIngestToken,
+  );
 
   app.all("/api", apiNotFound);
   app.all("/api/*", apiNotFound);

@@ -1,12 +1,17 @@
 import { randomInt } from "node:crypto";
 import { Context } from "@temporalio/activity";
-import { createTemporalReadClient } from "#client";
+import {
+  states,
+  solverSpend,
+  inspectPromotionTick,
+} from "./control/dispatch.ts";
 import { parseTemporalNamespace } from "#shared/infra/temporal-namespace.ts";
 import { z } from "zod/v4";
 import { promotionConfig } from "#config/promotion.ts";
 import {
   PromotionRunInputSchema,
   promotionDispatchAt,
+  promotionRunBlocked,
   nextPromotionEligibleAt,
   promotionStateSummary,
   type PromotionState,
@@ -15,17 +20,20 @@ import {
 } from "#shared/promotion.ts";
 import { redactSecrets } from "#shared/redact.ts";
 import { agentTaskSecretTokens } from "#activities/agent/agent-task-env.ts";
-import { runPromotionAgent } from "./agent.ts";
-import type { PromotionTaskResult } from "./task-contract.ts";
-import { reconcileClosedPromotionOwner } from "./ownership.ts";
+import { runBudgetedPromotion } from "./control/budgeted-agent.ts";
+import type { PromotionTaskResult } from "./publication/task-contract.ts";
 import { promotionManifest, promotionTarget } from "./manifest.ts";
 import { promotionAlertFingerprint, promotionReport } from "./report.ts";
+import { recordPromotionExecutionHealth } from "./control/execution-health.ts";
+import { PromotionBudgetStop } from "./control/budget.ts";
+import { promotionWindow } from "#shared/promotion/cadence.ts";
+import { trackPromotionExecution } from "./control/tracked-execution.ts";
+import { resetReconciliation } from "./control/reconciliation.ts";
+import { finishPromotionBatch } from "./control/batches.ts";
 import {
   assertPromotionOwnership,
   promotionStore,
   readPromotionState,
-  solverReservedMicrousd,
-  SolverBudgetSchema,
   updatePromotionState,
 } from "./store.ts";
 
@@ -82,77 +90,6 @@ function scheduleAfterReceipt(
   };
 }
 
-async function states() {
-  const store = promotionStore();
-  return await Promise.all(
-    promotionManifest.targets.map((target) =>
-      readPromotionState(store, target.id),
-    ),
-  );
-}
-
-async function solverSpend() {
-  const current = await promotionStore().read(
-    `solver/${new Date().toISOString().slice(0, 7)}.json`,
-    SolverBudgetSchema,
-  );
-  return current === undefined ? 0 : solverReservedMicrousd(current.value);
-}
-
-async function inspectPromotionTick() {
-  const config = await promotionConfig();
-  for (const id of config.enabledTargets) promotionTarget(id);
-  const store = promotionStore();
-  const currentStates = await states();
-  const snapshots = await Promise.all(
-    currentStates.map((state) =>
-      reconcileClosedPromotionOwner({
-        store,
-        state,
-        ownerRunning: async (workflowId, runId) => {
-          const client = await createTemporalReadClient(
-            parseTemporalNamespace(Bun.env["TEMPORAL_NAMESPACE"]),
-          );
-          const description = await client.workflow
-            .getHandle(workflowId, runId)
-            .describe();
-          return description.status.name === "RUNNING";
-        },
-      }),
-    ),
-  );
-  const dueTargetIds = config.enabled
-    ? snapshots
-        .filter(
-          (state) =>
-            config.enabledTargets.includes(state.targetId) &&
-            !state.paused &&
-            state.lock === null &&
-            state.blockedReason === null &&
-            !["pending", "inspect"].includes(
-              promotionTarget(state.targetId).action,
-            ) &&
-            promotionDispatchAt(promotionTarget(state.targetId), state) <=
-              Date.now(),
-        )
-        .map((state) => state.targetId)
-    : [];
-  const spend = await solverSpend();
-  const alerts = snapshots.flatMap((state) => {
-    const fingerprint = promotionAlertFingerprint(state);
-    return fingerprint === null || fingerprint === state.lastAlertFingerprint
-      ? []
-      : [
-          {
-            targetId: state.targetId,
-            fingerprint,
-            report: promotionReport([state], spend, fingerprint),
-          },
-        ];
-  });
-  return { dueTargetIds, alerts };
-}
-
 function executionBlocker(
   state: PromotionState,
   result: PromotionTaskResult,
@@ -166,10 +103,11 @@ function executionBlocker(
   if (result.status === "blocked") return result.summary;
   return !verified &&
     result.status === "deferred" &&
+    result.nativeCooldownObserved !== true &&
     (state.nextEligibleAt === null ||
       Date.parse(state.nextEligibleAt) <= Date.now())
     ? "Site cooldown was reported without a future deadline"
-    : state.blockedReason;
+    : null;
 }
 
 function assertPublishingNamespace(mode: PromotionRunInput["mode"]): void {
@@ -180,7 +118,34 @@ function assertPublishingNamespace(mode: PromotionRunInput["mode"]): void {
     throw new Error("Promotion publishing requires the production namespace");
 }
 
+function scheduledWindowAllowed(
+  input: PromotionRunInput,
+  target: PromotionTarget,
+  state: PromotionState,
+) {
+  return (
+    input.mode === "reconcile" ||
+    input.scheduled !== true ||
+    promotionWindow(target, state, Date.now()).allowed
+  );
+}
+
 async function executePromotion(raw: PromotionRunInput) {
+  return await trackPromotionExecution(raw, executePromotionTask);
+}
+
+function publishingDisabled(
+  input: PromotionRunInput,
+  target: PromotionTarget,
+  config: Awaited<ReturnType<typeof promotionConfig>>,
+) {
+  return (
+    input.mode === "run" &&
+    (!config.enabled || !config.enabledTargets.includes(target.id))
+  );
+}
+
+async function executePromotionTask(raw: PromotionRunInput) {
   const input = PromotionRunInputSchema.parse(raw);
   assertPublishingNamespace(input.mode);
   const target = promotionTarget(input.targetId);
@@ -193,10 +158,13 @@ async function executePromotion(raw: PromotionRunInput) {
   const occurrenceId = `${info.workflowExecution.workflowId}/${info.workflowExecution.runId}`;
   const before = await readPromotionState(store, target.id);
   const config = await promotionConfig();
-  if (
-    input.mode === "run" &&
-    (!config.enabled || !config.enabledTargets.includes(target.id))
-  )
+  if (!scheduledWindowAllowed(input, target, before))
+    return {
+      targetId: target.id,
+      status: "deferred",
+      summary: "Outside preferred window or daily action limit reached",
+    };
+  if (publishingDisabled(input, target, config))
     return {
       targetId: target.id,
       status: "deferred",
@@ -207,8 +175,7 @@ async function executePromotion(raw: PromotionRunInput) {
   if (
     input.mode !== "reconcile" &&
     (before.lock !== null ||
-      (input.mode === "run" &&
-        (before.paused || before.blockedReason !== null)))
+      (input.mode === "run" && promotionRunBlocked(before)))
   )
     return {
       targetId: target.id,
@@ -226,8 +193,7 @@ async function executePromotion(raw: PromotionRunInput) {
     if (
       input.mode !== "reconcile" &&
       (current.lock !== null ||
-        (input.mode === "run" &&
-          (current.paused || current.blockedReason !== null)))
+        (input.mode === "run" && promotionRunBlocked(current)))
     )
       throw new Error("Promotion target is already owned or paused");
     if (
@@ -242,13 +208,18 @@ async function executePromotion(raw: PromotionRunInput) {
     };
   });
   try {
-    const outcome = await runPromotionAgent({
-      target,
-      state,
-      occurrenceId,
-      mode: input.mode,
-      store,
-    });
+    const outcome = await runBudgetedPromotion(
+      {
+        ...(input.batchId === undefined ? {} : { batchId: input.batchId }),
+        ...(input.scheduled === true ? { scheduled: true } : {}),
+        target,
+        state,
+        occurrenceId,
+        mode: input.mode,
+        store,
+      },
+      { model: config.model, dailySpendUsd: config.dailySpendUsd },
+    );
     const result = outcome.result;
     const recorded = await store.put(
       `runs/${encodeURIComponent(occurrenceId)}.json`,
@@ -292,32 +263,69 @@ async function executePromotion(raw: PromotionRunInput) {
       summary: settled.blockedReason ?? result.summary,
     };
   } catch (error: unknown) {
-    const reason = redactSecrets(
-      error instanceof Error ? error.message : String(error),
-      agentTaskSecretTokens(undefined),
-    );
+    return await failedExecution({
+      store,
+      target,
+      occurrenceId,
+      state,
+      mode: input.mode,
+      error,
+    });
+  }
+}
+
+async function failedExecution(input: {
+  store: ReturnType<typeof promotionStore>;
+  target: PromotionTarget;
+  occurrenceId: string;
+  state: PromotionState;
+  mode: PromotionRunInput["mode"];
+  error: unknown;
+}) {
+  const { store, target, occurrenceId, state, error } = input;
+  if (error instanceof PromotionBudgetStop) {
     await updatePromotionState(store, target.id, (current) => {
       assertPromotionOwnership(current, occurrenceId);
-      const uncertain = current.attempts.some(
-        (attempt) => attempt.status === "uncertain",
-      );
-      return scheduleAfterReceipt(
-        target,
-        {
-          ...current,
-          lock: uncertain ? current.lock : null,
-          blockedReason: reason,
-        },
-        verifiedOccurrence(
-          current,
-          state,
-          occurrenceId,
-          input.mode === "reconcile",
-        ),
-      );
+      return { ...current, lock: null };
     });
-    return { targetId: target.id, status: "blocked", summary: reason };
+    return {
+      targetId: target.id,
+      status: "deferred",
+      summary: error.message,
+    };
   }
+  await recordPromotionExecutionHealth({
+    store,
+    targetId: target.id,
+    occurrenceId,
+    mode: input.mode,
+    outcome: "failure",
+  });
+  const reason = redactSecrets(
+    error instanceof Error ? error.message : String(error),
+    agentTaskSecretTokens(undefined),
+  );
+  await updatePromotionState(store, target.id, (current) => {
+    assertPromotionOwnership(current, occurrenceId);
+    const uncertain = current.attempts.some(
+      (attempt) => attempt.status === "uncertain",
+    );
+    return scheduleAfterReceipt(
+      target,
+      {
+        ...current,
+        lock: uncertain ? current.lock : null,
+        blockedReason: reason,
+      },
+      verifiedOccurrence(
+        current,
+        state,
+        occurrenceId,
+        input.mode === "reconcile",
+      ),
+    );
+  });
+  return { targetId: target.id, status: "blocked", summary: reason };
 }
 
 async function managePromotion(raw: z.infer<typeof PromotionControlSchema>) {
@@ -340,6 +348,12 @@ async function managePromotion(raw: z.infer<typeof PromotionControlSchema>) {
       updatePromotionState(promotionStore(), target.id, (state) => ({
         ...state,
         paused,
+        executionHealth: paused
+          ? state.executionHealth
+          : {
+              consecutiveFailures: 0,
+              lastOccurrenceId: state.executionHealth.lastOccurrenceId,
+            },
         blockedReason:
           paused ||
           state.attempts.some((attempt) => attempt.status === "uncertain")
@@ -349,6 +363,9 @@ async function managePromotion(raw: z.infer<typeof PromotionControlSchema>) {
       })),
     ),
   );
+  if (!paused)
+    for (const state of changed)
+      await resetReconciliation(promotionStore(), state);
   return changed.map((state) => promotionStateSummary(state));
 }
 
@@ -369,6 +386,8 @@ async function collectPromotionDailyReport() {
 }
 
 export const promotionControlActivities = {
+  finishPromotionBatch: async (input: { id: string; overlaps: string[] }) =>
+    finishPromotionBatch({ ...input, store: promotionStore() }),
   inspectPromotionTick,
   managePromotion,
   acknowledgePromotionAlert,

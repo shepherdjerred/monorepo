@@ -171,7 +171,7 @@ async function resolveCommandCredentials(
       failures.push(error instanceof Error ? error.message : String(error));
     }
   }
-  if (failures.length === names.length) {
+  if (names.length > 0 && failures.length === names.length) {
     throw new Error(failures.join("\n"));
   }
 }

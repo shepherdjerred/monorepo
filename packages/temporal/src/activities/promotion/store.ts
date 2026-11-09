@@ -91,6 +91,7 @@ export function assertPromotionOwnership(
 }
 
 const SolverChargeSchema = z.strictObject({
+  createdAt: z.iso.datetime().optional(),
   occurrenceId: z.string(),
   taskId: z.number().int().positive().nullable(),
   reservedMicrousd: z.number().int().nonnegative(),

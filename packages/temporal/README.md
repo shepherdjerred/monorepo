@@ -1260,11 +1260,72 @@ The small connection helper scopes operations to the target's persistent profile
 Credential placeholders let the agent choose username, optional saved email, and password inputs while the
 parent supplies their values privately. A disabled sign-in control can be
 inspected and corrected; an actual or ambiguous sign-in submission is not retried.
+Google's separate identifier and password stages each permit one observed Next
+submission after the corresponding private credential is filled. This permission
+is restricted to `accounts.google.com`; ordinary form continuations stay blocked.
 The additional `captcha.ts` helper solves supported response-field reCAPTCHA v2
 and Turnstile widgets without submitting the page.
+When a detected widget still lacks a response, login submission returns
+`captcha_required` before dispatch and preserves the one allowed login attempt.
+The agent solves the challenge, inspects the form, and submits the login once.
+Before creating a paid task, it checks whether the current response fields are
+already populated. `alreadyStaged:true` reports that state without exposing a
+response value or buying another solve. A challenge iframe can remain present
+after the native widget completes; its presence alone is not a blocker.
+Paid results are cached privately for the current widget and browser document.
+Repeated calls return the same task and `reused:true` without another charge.
+If applying a solved response times out, the next call retries application of
+that cached result. An ambiguous provider failure is retained instead of
+silently buying another task. A new document or changed widget gets a distinct
+cache entry and remains subject to the occurrence and monthly budgets.
+The agent must report an unresolved required CAPTCHA as blocked.
+`bun browser.ts solve-cloudflare` invokes PinchTab's named native solver after a
+scanned snapshot of a Cloudflare interstitial. It rejects ordinary login and
+publication forms, allows one attempt per page and two pages per run, and checks
+that the challenge title has cleared. A paused handoff is a blocker, not a retry.
+The agent must inspect the resulting page to establish actual access.
 
 `runStormPromotion({ targetId, mode })` accepts `run`, `preview`, or `reconcile`.
 The stable Workflow ID is `storm-promotion/<targetId>`.
+
+The production dispatcher uses Pacific sweeps at 08:00, 12:00, 16:00 and 20:00.
+Daily and less frequent sources are assigned in the 16:00–20:00 window;
+a durable Workflow timer waits for a source's recorded cooldown within that
+window. Fast sources allow at most four attempted publications per Pacific day.
+These limits never shorten a native or subreddit-specific cooldown.
+The `promotion-core-hours-v1` patch preserves earlier dispatcher histories.
+
+The promotion worker exposes authenticated, read-only status on port 7343.
+The Ops server proxies `/api/v1/promotion`, `/history`, and hash-addressed
+`/evidence/<id>` requests to the `promotion-status` Service using its existing
+parent-only `OPS_INGEST_TOKEN`. The normal Ops client renders `/promotion`.
+Status reads do not initialize target state or release duplicate-prevention holds.
+Each scheduled sweep journals all selected and skipped sources; targeted
+previews and reconciliations retain their own scope and effective mode.
+
+`the-storm-promotion-enabled` defaults off and settings default to an empty
+source allowlist. `dailySpendUsd` defaults to 5 and cannot exceed 5. Recorded
+AI charges and CAPTCHA reservations stop admission of additional paid tasks;
+unknown provider usage also stops admission. This is an operational spending
+stop, not a provider billing ceiling. Setup failures before generation record
+zero usage. The worker bootstraps the isolated outreach Discord daemon from
+its assigned login, verifies its identity, and withholds vault and inference
+credentials from that child process.
+
+The one-time history handoff utility reads local SQLite in read-only mode:
+
+```bash
+bun packages/temporal/scripts/promotion/production-handoff.ts
+```
+
+`--state-dir` selects a different local ledger. Applying additionally requires
+`--apply`, `TEMPORAL_NAMESPACE=prod`, publishing disabled, and the existing
+authenticated object-storage/flag environment. The importer refuses active
+local owners and conflicting production state. It preserves pauses, cooldowns,
+and unresolved effects, uploads content-addressed evidence, then records a
+completion digest. An interrupted identical import can resume; an existing
+different completion digest cannot be replaced. Stop local publishing before
+handoff and keep it stopped while production owns the ledger.
 
 For a local dry run, start the local PinchTab daemon and run from the repository
 root with the enrolled 1Password service account:
@@ -1276,12 +1337,111 @@ scripts/onepassword/with-service-account.sh op run \
   pmc minecraft-serverlist reddit-mcservers
 ```
 
-This uses the local browser configuration, real LLM and stored logins, with
+For persistent local development, use `scripts/promotion/local.ts` instead of
+the disposable preview command above. It invokes the same executor and tools
+without connecting to a Temporal server or starting a schedule. `run` means a
+real external action even though execution is local; invoke it only for the
+targets the operator requested.
+
+```bash
+bun packages/temporal/scripts/promotion/local.ts import-history \
+  --history packages/the-storm/promotion/manual-history.json
+bun packages/temporal/scripts/promotion/local.ts status --all
+scripts/onepassword/with-service-account.sh op run \
+  --env-file packages/temporal/scripts/promotion/preview-local.env.references \
+  -- env -u OP_SERVICE_ACCOUNT_TOKEN bun packages/temporal/scripts/promotion/local.ts \
+  preview pmc
+```
+
+Replace `preview pmc` with `run pmc` only when a real bump is requested. Multiple
+explicit IDs or `--all` select a sequential batch. The canonical `targets.json`
+includes Discord, Reddit, forums, directories and onboarding blockers; passing
+the old supplemental inventory is unnecessary. `pause`, `resume`, and
+`reconcile` accept exact IDs. Resume clears the automatic failure streak but retains posting
+history. Reconciliation never sends a new promotion; a live prior process
+cannot be displaced. Discord reconciliation currently searches the latest
+30 channel messages and reports a blocker when the receipt is outside that window.
+
+A transient executor failure leaves the source retryable on the next selected
+run. Two consecutive failed executions automatically pause publishing; a verified
+success resets the streak. Previews, cooldown skips and unsuccessful read-only
+reconciliation do not increase it. Repeated delivery of the same outcome counts
+once. An uncertain publication still blocks another publication immediately
+until its remote outcome is established. Explicit pauses are independent of the
+failure streak; existing saved pauses are retained. `resume` clears the streak
+after repair without discarding receipts, cooldowns or uncertain attempts.
+
+After a verified DISBOARD bump, the parent saves the receipt evidence and effect
+history, then deletes only that bot confirmation through toolkit's exact-message
+cleanup endpoint. It verifies the guild, channel, message ID and bot author before
+deleting, and confirms remote absence afterward. An already deleted reply needs
+no further write. Permission or transport failures are recorded as cleanup
+blockers; they never trigger another bump or erase its cooldown. Ordinary ads
+are retained. Preview never deletes messages.
+
+View local progress without credentials or a Temporal server:
+
+```bash
+bun packages/temporal/scripts/promotion/dashboard.ts
+```
+
+The local Ops page at `http://127.0.0.1:7342/promotion` reads the same SQLite
+state and retained reports. The default view summarizes the latest full run,
+with working, disabled and attention groups; follow-up retries and corrections
+remain in history without replacing that run. Confirmed recoveries count as
+success; only unresolved failures keep the run in the attention state.
+New executions record full/selected scope, queued sources, phases,
+heartbeats, typed controller skips, and terminal outcomes. Confirmed effects
+remain authoritative in the existing attempt journal; a dashboard or reporting
+failure never authorizes repeating a publication. Preview, real publishing,
+reconciliation and reply cleanup are displayed separately. Older reports retain
+unknown metadata where no mode or exact execution timestamp was saved.
+The dashboard is read-only and independent of the runner. See the Ops README
+for ports, storage options and access from another machine.
+
+State defaults to `~/.local/state/the-storm/promotion`; `--state-dir` selects a
+different directory. SQLite conditional writes retain attempts, ownership,
+pauses, and both budgets between invocations. One executor may run at a time;
+status and pause remain available. Import is idempotent and filtered receipts
+pause only their target. Before the first real action on a target, import its
+manual history. The checked-in seed comes from recorded receipts through
+November 3, 2026; import any newer manual activity before a run.
+
+`--settings FILE` accepts typed JSON with `model`, `maxSteps`, `timeoutMinutes`,
+`dailySpendUsd`, and `monthlySolverUsd`. Defaults are the configured Luna model,
+80 tool steps, 15 minutes, a $5 daily recorded-spend stop for AI plus CAPTCHA
+in America/Los_Angeles, and the existing $10 monthly CAPTCHA ceiling. The runner
+checks recorded spend before each task and records reported token usage afterward.
+Missing usage stays unknown without a hypothetical charge. This is an operational
+spend check, not a provider billing guarantee. The older disposable
+preview command below does not share this ledger; use the persistent command
+for development runs. `--mailmate` enables only the gated BuiltByBit code tool.
+
+Each batch writes private `runs/<batch-id>/summary.json` artifacts and browser
+receipt PNGs. Discord receipts currently retain structured native readback JSON;
+rendered Discord screenshots remain part of operator acceptance. No cluster
+deployment, email delivery, or unattended schedule is activated by these commands.
+
+The disposable preview above uses the local browser configuration, real LLM and stored logins, with
 in-memory task state and no Temporal server or production ledger. It prints
 private temporary paths for the structured results and browser diagnostics.
 The agent inspects the assigned execution path rather than conducting an
 eligibility review. The references file
 contains only 1Password locators; credentials are injected in memory.
+Add `--mailmate` to a local BuiltByBit preview to enable private email-code fill.
+It requires `python3`, `rg`, and the locally synced MailMate message directory.
+The parent accepts only a provider confirmation email addressed to the stored
+account and dated after the current run began. Codes stay in parent memory,
+expire with the verification context, and permit one observed confirmation.
+The fill tool accepts only the BuiltByBit account on its `/login/two-step` page.
+The Codex task uses a native permission profile that denies direct reads of
+the MailMate directory, including through symlinks; the parent code reader
+retains access. Its Unix socket remains reachable from the task workspace.
+This does not restrict ordinary network access. No mailbox access is enabled
+for deployed workers. Check the parser with
+`python3 packages/temporal/scripts/promotion/mailmate-code.test.py` and the
+native macOS boundary with
+`bun packages/temporal/scripts/promotion/verify-code-gate.ts` (synthetic mail only).
 Use `--all` instead of target IDs to inspect every assigned target; pending
 placements have no execution task and are excluded. `inspect` assignments are
 preview-only and can check existing account access without inventing news. An optional
@@ -1289,6 +1449,12 @@ preview-only and can check existing account access without inventing news. An op
 inspection without changing production targets or schedules. Duplicate IDs fail.
 `--profile <existing-profile>` can inspect an existing signed-in browser profile
 in preview only; it does not prove that the deployed per-account profile is ready.
+The transport clicks native navigation links after validating their destination;
+this preserves account menus and client-side routing. Effect URLs and effect
+links remain guarded. On a headed profile, cleanup keeps its last tab on the
+assigned landing page so closing the last window cannot strand the instance.
+Other tabs are preserved; headless task tabs are closed normally. Cleanup checks
+that a closed task tab has disappeared before returning.
 
 Credential enrollment also uses the service account exclusively. Run
 `scripts/promotion/enroll-logins.ts --bindings <bindings.json> --apply` through
@@ -1309,15 +1475,29 @@ Local Discord previews use an isolated toolkit userbot daemon, selected by
 the actual user identity, guild/channel and permissions before exposing reads.
 The model receives `discord.ts` and `DISCORD.md`; its message or slash-command
 tool records one proposed payload without calling Discord's publication APIs.
+Slash assignments additionally pin `discord.slash` with `botId`, `command`
+and `args`. The bridge reads the guild's native application-command index and
+checks application-command permission before preparing the exact assigned
+payload. Missing commands or permissions fail rather than producing a preview.
+It also checks native default permission bits and application/command overrides.
+Commands without required bits or overrides can be prepared by an ordinary
+member. Configured custom overrides currently fail closed for explicit resolution.
+This verifies Discord's reported requirements, not the bot's response to an
+interaction; no interaction is sent during preview.
 Mixed bot/user daemons and account/destination mismatches fail. Discord live
 execution is disabled; production Discord placements remain manually maintained.
-Use `--inventory packages/the-storm/promotion/preview-targets.json --all` to
-include the saved Discord channel assignments in a local preview.
+Use `--inventory packages/the-storm/promotion/preview-targets.json` with explicit
+Discord target IDs for a Discord-only local preview. `--all` also includes the
+default browser targets.
 Start that daemon with `scripts/promotion/start-discord.ts` through the same
 service-account `op run` injection and `env -u OP_SERVICE_ACCOUNT_TOKEN` boundary.
 It uses the login-map account `discord`, verifies `the.storm.mc` in the isolated
 session, and refuses unrelated identities. Missing credentials fail without
 desktop lookup. The script prints the socket path for `PROMOTION_DISCORD_SOCKET`.
+For an enrolled authenticator, the parent derives a current TOTP from the login
+map and injects only that code into the bootstrap. The daemon exchanges it once
+when Discord requests MFA, then removes the injected credentials. Enrollment
+and recovery codes remain in 1Password.
 
 | Operator command                           | Result                                                            |
 | ------------------------------------------ | ----------------------------------------------------------------- |
@@ -1362,10 +1542,38 @@ endpoint/action/ref/error metadata without credential values.
 Agents return evidence as `{ observationId, ref }` selections from successful
 snapshots. The parent resolves immutable captured nodes to their exact URL and
 text; foreign observations, empty nodes and model-authored quotes are rejected.
+Draft receipts contain only `{status, observationId, ref}`. The parent derives
+the URL and receipt quote from that captured node, then
+independently rereads the live page before settlement. Persistent confirmation
+text avoids transient toasts and adjacent countdown nodes changing during readback.
+The parent also binds receipt occurrence IDs: a real run uses its claimed ID;
+read-only reconciliation requires exactly one uncertain attempt for the assigned
+target and settles that original ID with `performedAction: false`.
+Browser `control-state` reports rendered/enabled and viewport state. Hidden or
+disabled click targets fail before dispatch without poisoning the publishing
+guard. Unknown post-dispatch errors retain the uncertainty lock.
+Inspection errors before dispatch are also explicitly safe to recover from;
+viewport state is null when the native endpoint does not report it.
+Snapshots retain native hierarchy depth and element tags so the executor can
+select an enclosing visible element when text-node inspection fails.
+Navigation checkpoints retain each newly visited page's pre-mutation baseline, while an
+existing page's original baseline remains immutable.
+
+DISBOARD checks effective Manage Messages permission before invoking `/bump`.
+This includes the server's moderation 2FA requirement and the outreach account's
+MFA state; a role permission alone is insufficient on servers requiring 2FA.
+To retry only cleanup of a saved verified confirmation, use
+`local.ts cleanup disboard-native-bump --occurrence <original-occurrence-id>`
+with the isolated outreach daemon running. This records a separate cleanup
+result without inference, another bump, or a change to the original cooldown.
+Known Discord receipt messages are fetched directly by ID for fresh readback,
+so later channel activity does not hide an older confirmation.
 Discord status/read operations supply equivalent references. Stored results
 retain the URL/quote format. Failed runs retain the rejected draft, captured
 observations and redacted tool trace under private `diagnostics/` keys, including
 local preview artifacts. Historical notes cannot stand in for captured evidence.
+Local previews also retain redacted frozen observations for structured blocked
+results, so an authentication error can be inspected beyond its generic heading.
 
 Preview blocks promotion clicks, form edits, Enter submissions, action URLs and
 receipt settlement outside the prompt. Budgeted CAPTCHA solving is available;
@@ -1374,8 +1582,10 @@ and unsettled charges. A staged response token need not change the visible
 checkbox; site acceptance remains unverified until an authorized submission.
 Ordinary form callbacks never run automatically. Captured Cloudflare
 interstitial callbacks may complete security navigation. Managed challenges that
-render before capture installation still require a browser page-init capability;
-current-document evaluation alone does not guarantee managed-challenge coverage.
+the native Cloudflare solver cannot clear still require complete captured
+parameters for the paid solver. Capturing them before render requires a browser
+page-init capability; current-document evaluation alone does not guarantee that
+paid managed-challenge path.
 Preview permits
 navigation, screenshots, scrolling, native read-only search inputs and one
 stored-credential sign-in. Message composers remain blocked.
@@ -1384,7 +1594,8 @@ accessibility metadata while blocking submit/reset and effect controls.
 Browser requests
 are serialized within each run, and controls use the refs from its current
 snapshot rather than silently taking another snapshot during credential fill.
-Reconciliation never signs in or creates another effect. These modes use the
+Reconciliation permits private stored-credential authentication for inspection,
+but never creates another promotional effect or buys a CAPTCHA task. These modes use the
 same task-driven agent and browser connection as a publishing run.
 
 The `the-storm-promotion-enabled` flag defaults off. Typed
@@ -1393,14 +1604,27 @@ allowance; defaults are an empty target list, 80 steps, 15 minutes and $10 month
 solver spending. Both declared Schedules start paused. An authenticated publishing
 canary and its receipt are separate acceptance requirements before activation.
 
+The dispatch schedule selects 08:00, 12:00, 16:00 and 20:00 Pacific sweeps.
+Daily and less-frequent sources use 16:00–20:00, with durable Workflow timers
+waiting for a stored cooldown within that window. Scheduled actions recheck the
+window before mutation. Source cooldowns and four-attempt daily limits remain
+additional constraints. Production AI usage uses a shared daily spending stop
+(default $5 including recorded solver charges); unknown prior usage stops new
+paid work. This is an admission stop, not a provider-side billing guarantee.
+
 Namespace-separated SeaweedFS state holds assessments, run audits, attempts,
 evidence and solver reservations. The dedicated 1Password item supplies the
 solver key and account-keyed login map; profiles are named
 `storm-promotion-<account>`. Browser, solver, storage, site-login and report
 credentials stay outside the provider subprocess. The separate promotion worker
 uses the shared agent runner. Daily reports and deduplicated actionable alerts
-use the existing reports worker and Postal recipient. Discord placements remain
-manually maintained.
+use the existing reports worker and Postal recipient. Production Discord tasks
+bootstrap the isolated outreach daemon through the packaged toolkit. They pass
+only the outreach login and one current TOTP into that child. Approved variants
+are supplied as JSON and checked before dispatch; rate limits reject rather than
+queue retries, and a disconnected writer terminates its isolated daemon.
+Publishing still requires the production flag and a target allowlist; these
+source capabilities do not establish production deployment or live acceptance.
 
 ## Documentation
 

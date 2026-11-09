@@ -52,6 +52,11 @@ describe("promotion worker authority", () => {
     expect(names).toContain("ANTI_CAPTCHA_API_KEY");
     expect(names).toContain("PINCHTAB_TOKEN");
     expect(names).toContain("STORM_PROMOTION_LOGINS");
+    expect(names).toContain("OPS_INGEST_TOKEN");
+    expect(container.env).toContainEqual({
+      name: "PROMOTION_DISCORD_SOCKET",
+      value: "/tmp/storm-promotion-discord/daemon.sock",
+    });
     expect(names).not.toContain("POSTAL_API_KEY");
     expect(names).not.toContain("GH_TOKEN");
     expect(names).not.toContain("CLAUDE_CODE_OAUTH_TOKEN");
@@ -65,5 +70,22 @@ describe("promotion worker authority", () => {
       allowPrivilegeEscalation: false,
     });
     expect(pod.initContainers[0]?.args.join(" ")).toContain("--uid-owner 1001");
+    const service = parseAllDocuments(app.synthYaml())
+      .map((document) => document.toJSON() as unknown)
+      .find(
+        (value) =>
+          z
+            .object({
+              kind: z.literal("Service"),
+              metadata: z.object({ name: z.literal("promotion-status") }),
+            })
+            .safeParse(value).success,
+      );
+    expect(service).toMatchObject({
+      spec: {
+        selector: { component: "promotion-worker" },
+        ports: [{ port: 7343 }],
+      },
+    });
   });
 });

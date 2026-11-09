@@ -34,6 +34,7 @@ export async function promotionConfig() {
               timeoutMinutes: z.number().int().min(1).max(15),
               monthlySolverUsd: z.number().min(0).max(10),
               enabledTargets: z.array(z.string()),
+              dailySpendUsd: z.number().nonnegative().max(5).default(5),
             }),
           ),
         sources: ["flag", "default"],
@@ -68,5 +69,9 @@ export async function promotionConfig() {
     resolver.value("enabled"),
     resolver.value("settings"),
   ]);
-  return { enabled: availability.value && enabled, ...settings };
+  return {
+    enabled: availability.value && enabled,
+    ...settings,
+    available: availability.value,
+  };
 }

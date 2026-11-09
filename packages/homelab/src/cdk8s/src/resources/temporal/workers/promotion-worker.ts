@@ -1,5 +1,12 @@
 import type { Chart } from "cdk8s";
-import { EnvValue, Secret, ServiceAccount, type ISecret } from "cdk8s-plus-31";
+import {
+  EnvValue,
+  Secret,
+  ServiceAccount,
+  Service,
+  Pods,
+  type ISecret,
+} from "cdk8s-plus-31";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import {
   IntOrString,
@@ -51,6 +58,9 @@ export function createTemporalPromotionWorker(
       TEMPORAL_ADDRESS: EnvValue.fromValue(`${props.serverServiceName}:7233`),
       TEMPORAL_NAMESPACE: EnvValue.fromValue("prod"),
       TEMPORAL_WORKER_ROLE: EnvValue.fromValue("promotion"),
+      PROMOTION_DISCORD_SOCKET: EnvValue.fromValue(
+        "/tmp/storm-promotion-discord/daemon.sock",
+      ),
       TEMPORAL_METRICS_ADDRESS: EnvValue.fromValue("0.0.0.0:9464"),
       AGENT_PROVIDER_UID: EnvValue.fromValue("1001"),
       ENVIRONMENT: EnvValue.fromValue("production"),
@@ -88,6 +98,10 @@ export function createTemporalPromotionWorker(
         secret: credentialSecret,
         key: "STORM_PROMOTION_LOGINS",
       }),
+      OPS_INGEST_TOKEN: EnvValue.fromSecretValue({
+        secret: props.temporalSecret,
+        key: "OPS_INGEST_TOKEN",
+      }),
     },
   });
   new KubeNetworkPolicy(chart, "temporal-promotion-worker-netpol", {
@@ -96,6 +110,18 @@ export function createTemporalPromotionWorker(
       podSelector: { matchLabels: { component: "promotion-worker" } },
       policyTypes: ["Ingress", "Egress"],
       ingress: [
+        {
+          from: [
+            {
+              namespaceSelector: {
+                matchLabels: {
+                  "kubernetes.io/metadata.name": "alert-dashboard",
+                },
+              },
+            },
+          ],
+          ports: [{ port: IntOrString.fromNumber(7343), protocol: "TCP" }],
+        },
         {
           from: [
             {
@@ -133,6 +159,13 @@ export function createTemporalPromotionWorker(
         { ports: [{ port: IntOrString.fromNumber(443), protocol: "TCP" }] },
       ],
     },
+  });
+  new Service(chart, "promotion-status-service", {
+    metadata: { name: "promotion-status" },
+    selector: Pods.select(chart, "promotion-status-pods", {
+      labels: { component: "promotion-worker" },
+    }),
+    ports: [{ port: 7343, name: "http" }],
   });
   return deployment;
 }

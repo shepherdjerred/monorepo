@@ -26,6 +26,7 @@ describe("promotion configuration", () => {
       enabledTargets: [],
       monthlySolverUsd: 10,
       maxSteps: 80,
+      dailySpendUsd: 5,
     });
   });
   it("preserves false and a zero solver allowance", async () => {
@@ -39,6 +40,7 @@ describe("promotion configuration", () => {
                 maxSteps: 10,
                 timeoutMinutes: 5,
                 monthlySolverUsd: 0,
+                dailySpendUsd: 0,
                 enabledTargets: ["pmc"],
               }),
       }),
@@ -46,6 +48,7 @@ describe("promotion configuration", () => {
     expect(await promotionConfig()).toMatchObject({
       enabled: false,
       monthlySolverUsd: 0,
+      dailySpendUsd: 0,
       enabledTargets: ["pmc"],
     });
   });
@@ -62,7 +65,10 @@ describe("promotion configuration", () => {
   );
   it("disables publishing on provider errors", async () => {
     source.get.mockRejectedValue(new Error("provider unavailable"));
-    expect(await promotionConfig()).toMatchObject({ enabled: false });
+    expect(await promotionConfig()).toMatchObject({
+      enabled: false,
+      available: false,
+    });
   });
   it("requires a fresh flag snapshot even when a stale true answer is returned", async () => {
     source.get.mockImplementation((names) => {

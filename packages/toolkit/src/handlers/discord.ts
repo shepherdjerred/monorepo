@@ -23,7 +23,7 @@ const USAGE = `
 toolkit discord — act on Discord through a session daemon
 
 Daemon (start once per session; tokens resolved by toolkit from Keychain):
-  toolkit discord daemon start [--ttl 4h]   Needs DISCORD_BOT_TOKEN and/or DISCORD_USER_TOKEN
+  toolkit discord daemon start [--ttl 4h] [--user-only|--password-login]
   toolkit discord daemon status [--json]
   toolkit discord daemon stop
 
@@ -74,6 +74,7 @@ async function handleDaemon(args: string[]): Promise<void> {
         options: {
           ttl: { type: "string" },
           "password-login": { type: "boolean", default: false },
+          "user-only": { type: "boolean", default: false },
         },
         allowPositionals: false,
       });
@@ -82,6 +83,7 @@ async function handleDaemon(args: string[]): Promise<void> {
       await daemonStartCommand({
         ttlSeconds,
         passwordLogin: values["password-login"],
+        userOnly: values["user-only"],
       });
       break;
     }
@@ -269,6 +271,7 @@ export async function handleDiscordCommand(
         const { runDiscordDaemon } = await import("#lib/discord/serve.ts");
         await runDiscordDaemon({
           passwordLogin: args.includes("--password-login"),
+          userOnly: args.includes("--user-only"),
         });
         break;
       }

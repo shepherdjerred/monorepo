@@ -12,7 +12,7 @@
       "action": "bump",
       "content": "directory",
       "minimumIntervalSeconds": 86400,
-      "notes": "Use the existing listing's native Bump Submission control; preserve copy and gallery."
+      "notes": "Use the existing listing's native Bump Submission control, historically located inside Edit Page → Update Log. Opening the existing owner's editor and inspecting its Update Log tab is read-only navigation permitted in preview; do not treat seeing Edit Page alone as proof that bumping is unavailable. In preview locate the actual bump control without clicking it. Preserve copy, gallery and update history; never save edits or submit an update as a substitute bump. For receipt verification and read-only reconciliation, use the persistent post-bump Update Log confirmation, such as the new text that this submission was updated or bumped today. The success toast disappears before independent readback; avoid a timer value that changes during verification. Reconciliation must only inspect and settle the original occurrence, never bump again."
     },
     {
       "id": "minecraft-mp",
@@ -128,11 +128,11 @@
       "url": "https://old.reddit.com/r/mcservers/",
       "rulesUrl": "https://old.reddit.com/r/mcservers/wiki/index",
       "account": "reddit",
-      "hosts": ["old.reddit.com"],
+      "hosts": ["old.reddit.com", "www.reddit.com"],
       "action": "repost",
       "content": "reddit-mcservers",
       "minimumIntervalSeconds": 604800,
-      "notes": "Use the approved title tags and copy. The caller owns the seven-day cadence; report the actual submission response and observed moderation outcome."
+      "notes": "Use the approved title tags and copy. The caller owns the seven-day cadence; report the actual submission response and observed moderation outcome. The prior submission was rejected because post flair was required; fresh account history confirmed no new post. Inspect the current flair controls and available choices during preview. In run mode select an appropriate available flair before submitting once. Sidebar gameplay tags do not prove that matching post flairs exist; inspect actual picker choices. If the picker has no available choices, report blocked before submitting. Preserve the assigned title and approved copy; inspect history after any ambiguous response instead of resubmitting."
     },
     {
       "id": "reddit-minecraftserver",
@@ -140,7 +140,7 @@
       "url": "https://old.reddit.com/r/MinecraftServer/",
       "rulesUrl": "https://old.reddit.com/r/MinecraftServer/about/rules/",
       "account": "reddit",
-      "hosts": ["old.reddit.com"],
+      "hosts": ["old.reddit.com", "www.reddit.com"],
       "action": "repost",
       "content": "reddit-minecraftserver",
       "minimumIntervalSeconds": 86400,
@@ -152,7 +152,7 @@
       "url": "https://old.reddit.com/r/MinecraftServerFinder/",
       "rulesUrl": "https://old.reddit.com/r/MinecraftServerFinder/about/rules/",
       "account": "reddit",
-      "hosts": ["old.reddit.com"],
+      "hosts": ["old.reddit.com", "www.reddit.com"],
       "action": "repost",
       "content": "reddit-minecraftserver",
       "minimumIntervalSeconds": 86400,
@@ -217,6 +217,321 @@
       "content": "directory",
       "minimumIntervalSeconds": 0,
       "notes": "Deferred; server-age eligibility and disclosure requirements remain unconfirmed."
+    },
+    {
+      "id": "disboard-native-bump",
+      "name": "DISBOARD native bump in The Storm",
+      "url": "https://discord.com/channels/1043751242649829436/1043751242649829439",
+      "rulesUrl": "https://discord.com/channels/1043751242649829436/1043751242649829439",
+      "account": "discord",
+      "hosts": ["discord.com"],
+      "action": "bump",
+      "content": "directory",
+      "minimumIntervalSeconds": 7200,
+      "notes": "The caller selected the pinned DISBOARD /bump command with no arguments in The Storm's general channel. In run mode invoke it once and verify the bot's actual reply; in preview mode only prepare it without invoking. Report native cooldown or permission obstacles. Never send a substitute promotional message or repeat an ambiguous interaction.",
+      "discord": {
+        "guildId": "1043751242649829436",
+        "channelId": "1043751242649829439",
+        "username": "the.storm.mc",
+        "slash": {
+          "botId": "302050872383242240",
+          "command": "bump",
+          "args": []
+        }
+      }
+    },
+    {
+      "id": "discord-mcadverts",
+      "name": "MCAdverts server channel",
+      "url": "https://discord.com/channels/1002626712321921074/1137725670491947069",
+      "rulesUrl": "https://discord.com/channels/1002626712321921074/1137725670491947069",
+      "account": "discord",
+      "hosts": ["discord.com"],
+      "action": "repost",
+      "content": "directory",
+      "minimumIntervalSeconds": 7200,
+      "notes": "The caller selected one message to this exact existing channel or thread through the outreach userbot. In run mode send it once and verify native readback; in preview mode prepare the payload without sending. Use the approved copy and report actual account or channel-access obstacles. Never select another destination or repeat an ambiguous send.",
+      "discord": {
+        "guildId": "1002626712321921074",
+        "channelId": "1137725670491947069",
+        "username": "the.storm.mc"
+      }
+    },
+    {
+      "id": "discord-lfg-fast",
+      "name": "Minecraft LFG fast channel",
+      "url": "https://discord.com/channels/877714016351453184/1054901030644617327",
+      "rulesUrl": "https://discord.com/channels/877714016351453184/1054901030644617327",
+      "account": "discord",
+      "hosts": ["discord.com"],
+      "action": "repost",
+      "content": "directory",
+      "minimumIntervalSeconds": 60,
+      "notes": "The caller selected one message to this exact existing channel or thread through the outreach userbot. In run mode send it once and verify native readback; in preview mode prepare the payload without sending. Use the approved copy and report actual account or channel-access obstacles. Never select another destination or repeat an ambiguous send.",
+      "discord": {
+        "guildId": "877714016351453184",
+        "channelId": "1054901030644617327",
+        "username": "the.storm.mc"
+      }
+    },
+    {
+      "id": "discord-lfg-find-forum",
+      "name": "Minecraft LFG find-servers forum thread",
+      "url": "https://discord.com/channels/1088178322070065193/1560702451550519488",
+      "rulesUrl": "https://discord.com/channels/1088178322070065193/1560702451550519488",
+      "account": "discord",
+      "hosts": ["discord.com"],
+      "action": "repost",
+      "content": "directory",
+      "minimumIntervalSeconds": 172800,
+      "notes": "The caller selected one message to this exact existing channel or thread through the outreach userbot. In run mode send it once and verify native readback; in preview mode prepare the payload without sending. Use the approved copy and report actual account or channel-access obstacles. Never select another destination or repeat an ambiguous send.",
+      "discord": {
+        "guildId": "1088178322070065193",
+        "channelId": "1560702451550519488",
+        "username": "the.storm.mc"
+      }
+    },
+    {
+      "id": "discord-lfg-6-hour",
+      "name": "Minecraft LFG six-hour channel",
+      "url": "https://discord.com/channels/877714016351453184/1061826526913507429",
+      "rulesUrl": "https://discord.com/channels/877714016351453184/1061826526913507429",
+      "account": "discord",
+      "hosts": ["discord.com"],
+      "action": "repost",
+      "content": "directory",
+      "minimumIntervalSeconds": 21600,
+      "notes": "The caller selected one message to this exact existing channel or thread through the outreach userbot. In run mode send it once and verify native readback; in preview mode prepare the payload without sending. Use the approved copy and report actual account or channel-access obstacles. Never select another destination or repeat an ambiguous send.",
+      "discord": {
+        "guildId": "877714016351453184",
+        "channelId": "1061826526913507429",
+        "username": "the.storm.mc"
+      }
+    },
+    {
+      "id": "discord-lfg-2-hour",
+      "name": "Minecraft LFG two-hour channel",
+      "url": "https://discord.com/channels/877714016351453184/1061826335317696552",
+      "rulesUrl": "https://discord.com/channels/877714016351453184/1061826335317696552",
+      "account": "discord",
+      "hosts": ["discord.com"],
+      "action": "repost",
+      "content": "directory",
+      "minimumIntervalSeconds": 7200,
+      "notes": "The caller selected one message to this exact existing channel or thread through the outreach userbot. In run mode send it once and verify native readback; in preview mode prepare the payload without sending. Use the approved copy and report actual account or channel-access obstacles. Never select another destination or repeat an ambiguous send.",
+      "discord": {
+        "guildId": "877714016351453184",
+        "channelId": "1061826335317696552",
+        "username": "the.storm.mc"
+      }
+    },
+    {
+      "id": "discord-lfg-1-hour",
+      "name": "Minecraft LFG one-hour channel",
+      "url": "https://discord.com/channels/877714016351453184/1061826190190587925",
+      "rulesUrl": "https://discord.com/channels/877714016351453184/1061826190190587925",
+      "account": "discord",
+      "hosts": ["discord.com"],
+      "action": "repost",
+      "content": "directory",
+      "minimumIntervalSeconds": 3600,
+      "notes": "The caller selected one message to this exact existing channel or thread through the outreach userbot. In run mode send it once and verify native readback; in preview mode prepare the payload without sending. Use the approved copy and report actual account or channel-access obstacles. Never select another destination or repeat an ambiguous send.",
+      "discord": {
+        "guildId": "877714016351453184",
+        "channelId": "1061826190190587925",
+        "username": "the.storm.mc"
+      }
+    },
+    {
+      "id": "discord-lfg-bedrock",
+      "name": "Minecraft LFG Bedrock",
+      "url": "https://discord.com/channels/877714016351453184/878037115403902986",
+      "rulesUrl": "https://discord.com/channels/877714016351453184/878037115403902986",
+      "account": "discord",
+      "hosts": ["discord.com"],
+      "action": "repost",
+      "content": "directory",
+      "minimumIntervalSeconds": 86400,
+      "notes": "The caller selected one message to this exact existing channel or thread through the outreach userbot. In run mode send it once and verify native readback; in preview mode prepare the payload without sending. Use the approved copy and report actual account or channel-access obstacles. Never select another destination or repeat an ambiguous send.",
+      "discord": {
+        "guildId": "877714016351453184",
+        "channelId": "878037115403902986",
+        "username": "the.storm.mc"
+      }
+    },
+    {
+      "id": "discord-lfg-java",
+      "name": "Minecraft LFG Java",
+      "url": "https://discord.com/channels/877714016351453184/877718073858199592",
+      "rulesUrl": "https://discord.com/channels/877714016351453184/877718073858199592",
+      "account": "discord",
+      "hosts": ["discord.com"],
+      "action": "repost",
+      "content": "directory",
+      "minimumIntervalSeconds": 86400,
+      "notes": "The caller selected one message to this exact existing channel or thread through the outreach userbot. In run mode send it once and verify native readback; in preview mode prepare the payload without sending. Use the approved copy and report actual account or channel-access obstacles. Never select another destination or repeat an ambiguous send.",
+      "discord": {
+        "guildId": "877714016351453184",
+        "channelId": "877718073858199592",
+        "username": "the.storm.mc"
+      }
+    },
+    {
+      "id": "discord-lfg-smp",
+      "name": "Minecraft LFG SMP",
+      "url": "https://discord.com/channels/877714016351453184/877718112919781417",
+      "rulesUrl": "https://discord.com/channels/877714016351453184/877718112919781417",
+      "account": "discord",
+      "hosts": ["discord.com"],
+      "action": "repost",
+      "content": "directory",
+      "minimumIntervalSeconds": 86400,
+      "notes": "The caller selected one message to this exact existing channel or thread through the outreach userbot. In run mode send it once and verify native readback; in preview mode prepare the payload without sending. Use the approved copy and report actual account or channel-access obstacles. Never select another destination or repeat an ambiguous send.",
+      "discord": {
+        "guildId": "877714016351453184",
+        "channelId": "877718112919781417",
+        "username": "the.storm.mc"
+      }
+    },
+    {
+      "id": "discord-advertisement-forum",
+      "name": "Minecraft Advertisement forum thread",
+      "url": "https://discord.com/channels/993668335642349579/1560703712056443081",
+      "rulesUrl": "https://discord.com/channels/993668335642349579/1560703712056443081",
+      "account": "discord",
+      "hosts": ["discord.com"],
+      "action": "repost",
+      "content": "directory",
+      "minimumIntervalSeconds": 21600,
+      "notes": "The caller selected one message to this exact existing channel or thread through the outreach userbot. In run mode send it once and verify native readback; in preview mode prepare the payload without sending. Use the approved copy and report actual account or channel-access obstacles. Never select another destination or repeat an ambiguous send.",
+      "discord": {
+        "guildId": "993668335642349579",
+        "channelId": "1560703712056443081",
+        "username": "the.storm.mc"
+      }
+    },
+    {
+      "id": "discord-lfg-5-minute",
+      "name": "Minecraft LFG 5-minute reserve",
+      "url": "https://discord.com/channels/877714016351453184/1061825536449593365",
+      "rulesUrl": "https://discord.com/channels/877714016351453184/1061825536449593365",
+      "account": "discord",
+      "hosts": ["discord.com"],
+      "action": "repost",
+      "content": "directory",
+      "minimumIntervalSeconds": 300,
+      "notes": "The caller selected one message to this exact existing channel or thread through the outreach userbot. In run mode send it once and verify native readback; in preview mode prepare the payload without sending. Use the approved copy and report actual account or channel-access obstacles. Never select another destination or repeat an ambiguous send.",
+      "discord": {
+        "guildId": "877714016351453184",
+        "channelId": "1061825536449593365",
+        "username": "the.storm.mc"
+      }
+    },
+    {
+      "id": "discord-lfg-15-minute",
+      "name": "Minecraft LFG 15-minute reserve",
+      "url": "https://discord.com/channels/877714016351453184/1061825928155643908",
+      "rulesUrl": "https://discord.com/channels/877714016351453184/1061825928155643908",
+      "account": "discord",
+      "hosts": ["discord.com"],
+      "action": "repost",
+      "content": "directory",
+      "minimumIntervalSeconds": 900,
+      "notes": "The caller selected one message to this exact existing channel or thread through the outreach userbot. In run mode send it once and verify native readback; in preview mode prepare the payload without sending. Use the approved copy and report actual account or channel-access obstacles. Never select another destination or repeat an ambiguous send.",
+      "discord": {
+        "guildId": "877714016351453184",
+        "channelId": "1061825928155643908",
+        "username": "the.storm.mc"
+      }
+    },
+    {
+      "id": "discord-lfg-30-minute",
+      "name": "Minecraft LFG 30-minute reserve",
+      "url": "https://discord.com/channels/877714016351453184/1061826016345071636",
+      "rulesUrl": "https://discord.com/channels/877714016351453184/1061826016345071636",
+      "account": "discord",
+      "hosts": ["discord.com"],
+      "action": "repost",
+      "content": "directory",
+      "minimumIntervalSeconds": 1800,
+      "notes": "The caller selected one message to this exact existing channel or thread through the outreach userbot. In run mode send it once and verify native readback; in preview mode prepare the payload without sending. Use the approved copy and report actual account or channel-access obstacles. Never select another destination or repeat an ambiguous send.",
+      "discord": {
+        "guildId": "877714016351453184",
+        "channelId": "1061826016345071636",
+        "username": "the.storm.mc"
+      }
+    },
+    {
+      "id": "reddit-minecraftservers",
+      "name": "r/MinecraftServers",
+      "url": "https://old.reddit.com/r/MinecraftServers/",
+      "rulesUrl": "https://old.reddit.com/r/MinecraftServers/about/rules/",
+      "account": "reddit",
+      "hosts": ["old.reddit.com", "www.reddit.com"],
+      "action": "repost",
+      "content": "reddit-minecraftserver",
+      "minimumIntervalSeconds": 86400,
+      "notes": "Use u/the_storm_mc and the approved copy. The caller owns the subreddit-specific 24-hour cadence, including filtered attempts; no account-wide daily lock applies. Report the actual submission outcome without claiming public visibility from an owner-only view."
+    },
+    {
+      "id": "reddit-minecraftsmps",
+      "name": "r/MinecraftSMPs",
+      "url": "https://old.reddit.com/r/MinecraftSMPs/",
+      "rulesUrl": "https://old.reddit.com/r/MinecraftSMPs/about/rules/",
+      "account": "reddit",
+      "hosts": ["old.reddit.com", "www.reddit.com"],
+      "action": "repost",
+      "content": "reddit-minecraftserver",
+      "minimumIntervalSeconds": 604800,
+      "notes": "Use u/the_storm_mc and the approved copy. The caller owns the subreddit-specific 24-hour cadence, including filtered attempts; no account-wide daily lock applies. Report the actual submission outcome without claiming public visibility from an owner-only view."
+    },
+    {
+      "id": "builtbybit",
+      "name": "BuiltByBit",
+      "url": "https://builtbybit.com/threads/743099/",
+      "rulesUrl": "https://builtbybit.com/threads/743099/",
+      "account": "builtbybit",
+      "hosts": ["builtbybit.com"],
+      "action": "bump",
+      "content": "directory",
+      "minimumIntervalSeconds": 86400,
+      "notes": "Use the existing showcase thread native bump once. Never add a bump-only reply. Numeric site cooldown is unconfirmed; report the actual response."
+    },
+    {
+      "id": "minecraft-forum",
+      "name": "Minecraft Forum",
+      "url": "https://www.minecraftforum.net/forums/servers-java-edition/pc-servers/3232377-the-storm-is-back-survival-towns-quests-java",
+      "rulesUrl": "https://www.minecraftforum.net/forums/servers-java-edition/pc-servers/3232377-the-storm-is-back-survival-towns-quests-java",
+      "account": "minecraft-forum",
+      "hosts": ["www.minecraftforum.net"],
+      "action": "inspect",
+      "content": "directory",
+      "minimumIntervalSeconds": 86400,
+      "notes": "Inspect the existing thread. Replies need substantive news or a real question; no routine bump reply."
+    },
+    {
+      "id": "realm-explorer",
+      "name": "Realm Explorer",
+      "url": "https://www.realmexplorer.xyz/",
+      "rulesUrl": "https://www.realmexplorer.xyz/",
+      "account": "realm-explorer",
+      "hosts": ["www.realmexplorer.xyz"],
+      "action": "pending",
+      "content": "directory",
+      "minimumIntervalSeconds": 86400,
+      "notes": "Website onboarding is required. Prepare the listing and hand off new OAuth consent if requested."
+    },
+    {
+      "id": "discord-level-ads",
+      "name": "Discord LFG LEVEL ADS",
+      "url": "https://discord.com/channels/877714016351453184",
+      "rulesUrl": "https://discord.com/channels/877714016351453184",
+      "account": "discord-level-ads",
+      "hosts": ["discord.com"],
+      "action": "pending",
+      "content": "directory",
+      "minimumIntervalSeconds": 86400,
+      "notes": "Advertising channels require earned level roles. Report the missing roles; do not manufacture activity."
     }
   ]
 }

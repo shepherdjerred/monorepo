@@ -207,6 +207,18 @@ describe("alert dashboard network paths", () => {
     }
   });
 
+  it("reaches the promotion status worker without opening other Temporal ports", () => {
+    const dashboard = findPolicy(
+      synthesize(
+        createAlertDashboardChart,
+        ".test-synth-promotion-status-egress",
+      ),
+      "alert-dashboard-app-netpol",
+    );
+    expect(allowsEgress(dashboard.spec.egress, "temporal", 7343)).toBe(true);
+    expect(allowsEgress(dashboard.spec.egress, "temporal", 7233)).toBe(false);
+  });
+
   it("reaches Flipt for the digest flag", () => {
     const dashboard = findPolicy(
       synthesize(

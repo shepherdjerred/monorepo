@@ -1,3 +1,4 @@
+import { promotionLoginEmail } from "#activities/promotion/access/login-email.ts";
 import { parseArgs } from "node:util";
 import { spawn } from "node:child_process";
 import { z } from "zod/v4";
@@ -147,11 +148,7 @@ for (const binding of bindings) {
       ? entry.type === "OTP"
       : entry.label === binding.fields.otp,
   )?.value;
-  const email = source.fields.find((entry) =>
-    binding.fields === undefined
-      ? entry.label.toLowerCase() === "email"
-      : entry.label === binding.fields.email,
-  )?.value;
+  const email = promotionLoginEmail(source.fields, binding.fields?.email);
   if (
     username === undefined ||
     password === undefined ||

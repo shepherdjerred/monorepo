@@ -14,7 +14,7 @@ describe("Cloudflare challenge bridge", () => {
       window: { turnstile?: { render: typeof render } };
       document: { querySelector: () => null };
     } = { window: {}, document: { querySelector: () => null } };
-    runInNewContext(installChallengeCapture, context);
+    runInNewContext(installChallengeCapture, { ...context, crypto });
     context.window.turnstile = { render };
     const options = {
       sitekey: "fixture-key",

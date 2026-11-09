@@ -33,6 +33,12 @@ export type PromotionChallenge = {
   chlPageData?: string | undefined;
 };
 
+export type PromotionCaptchaSolution = {
+  token: string;
+  userAgent: string | undefined;
+  result: { taskId: number; costMicrousd: number };
+};
+
 /** Result tokens stay inside this Activity, never in Temporal input/output. */
 export async function solvePromotionChallenge(input: {
   store: PromotionStore;
@@ -45,6 +51,7 @@ export async function solvePromotionChallenge(input: {
   apply: (token: string, userAgent?: string) => Promise<void>;
   request?: (url: string, options: RequestInit) => Promise<Response>;
   registerSecret?: ((value: string) => void) | undefined;
+  onSolved?: (solution: PromotionCaptchaSolution) => void;
 }): Promise<{ taskId: number; costMicrousd: number }> {
   const request = input.request ?? fetch;
   const month = new Date().toISOString().slice(0, 7);
@@ -68,6 +75,7 @@ export async function solvePromotionChallenge(input: {
       charges: {
         ...budget.charges,
         [reservationId]: {
+          createdAt: new Date().toISOString(),
           occurrenceId: input.occurrenceId,
           taskId: null,
           reservedMicrousd: reservation,
@@ -141,6 +149,11 @@ export async function solvePromotionChallenge(input: {
       };
     });
     input.registerSecret?.(token);
+    input.onSolved?.({
+      token,
+      userAgent: result.solution?.userAgent,
+      result: { taskId, costMicrousd },
+    });
     await input.apply(token, result.solution?.userAgent);
     return { taskId, costMicrousd };
   }

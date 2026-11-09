@@ -3,6 +3,28 @@
   "serverIdentity": "the-storm",
   "targets": [
     {
+      "id": "disboard-native-bump",
+      "name": "DISBOARD native bump in The Storm",
+      "url": "https://discord.com/channels/1043751242649829436/1043751242649829439",
+      "rulesUrl": "https://discord.com/channels/1043751242649829436/1043751242649829439",
+      "account": "discord",
+      "hosts": ["discord.com"],
+      "action": "bump",
+      "content": "directory",
+      "minimumIntervalSeconds": 7200,
+      "notes": "Prepare exactly the pinned DISBOARD /bump command with no arguments in The Storm's general channel. The caller selected the native bump; no new promotional message is required. Verify native command metadata and account/channel permissions, then record the slash payload without invoking it. Report actual execution obstacles; do not audit posting history or choose eligibility.",
+      "discord": {
+        "guildId": "1043751242649829436",
+        "channelId": "1043751242649829439",
+        "username": "the.storm.mc",
+        "slash": {
+          "botId": "302050872383242240",
+          "command": "bump",
+          "args": []
+        }
+      }
+    },
+    {
       "id": "discord-mcadverts",
       "name": "MCAdverts server channel",
       "url": "https://discord.com/channels/1002626712321921074/1137725670491947069",
@@ -164,7 +186,7 @@
       "hosts": ["discord.com"],
       "action": "repost",
       "content": "directory",
-      "minimumIntervalSeconds": 0,
+      "minimumIntervalSeconds": 21600,
       "notes": "Prepare the caller-selected message for this exact existing channel/thread using the outreach userbot. Record the payload without sending. Report actual account or channel-access obstacles.",
       "discord": {
         "guildId": "993668335642349579",

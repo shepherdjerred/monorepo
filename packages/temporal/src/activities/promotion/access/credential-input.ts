@@ -2,6 +2,27 @@ import { z } from "zod/v4";
 import { promotionTotp } from "./otp.ts";
 
 type Credential = "username" | "email" | "password" | "otp";
+export type PromotionEmailCodeReader = (input: {
+  account: string;
+  recipient: string;
+  after: number;
+  signal: AbortSignal;
+}) => Promise<string>;
+
+export function assertPromotionEmailCodePage(
+  account: string,
+  address: string,
+): void {
+  const url = new URL(address);
+  if (
+    account !== "builtbybit" ||
+    url.hostname !== "builtbybit.com" ||
+    !/^\/login\/two-step\/?$/.test(url.pathname)
+  )
+    throw new Error(
+      "Email-code access is restricted to BuiltByBit's observed sign-in verification page",
+    );
+}
 export function promotionCredentialValue(
   login: {
     username: string;
@@ -36,7 +57,7 @@ export function promotionCredentialValue(
 export function assertPromotionCredentialInput(
   node: { role: string; name?: string | undefined },
   type: string | null,
-  kind: Credential,
+  kind: Credential | "email-code",
 ): void {
   let matches = false;
   if (node.role === "textbox") {
@@ -45,8 +66,9 @@ export function assertPromotionCredentialInput(
         matches = type === "password";
         break;
       case "otp":
+      case "email-code":
         matches =
-          /verification|authenticator|security code|one.time|two.factor/i.test(
+          /verification|confirmation code|authenticator|security code|one.time|two.factor/i.test(
             node.name ?? "",
           ) && ["text", "tel", "number", null].includes(type);
         break;

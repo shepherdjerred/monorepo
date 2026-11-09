@@ -1,12 +1,26 @@
 import { z } from "zod/v4";
-import type { PromotionTarget } from "#shared/promotion.ts";
-import type { PromotionTaskJournal } from "./task.ts";
+import type { PromotionTarget, PromotionState } from "#shared/promotion.ts";
+import type { PromotionTaskJournal } from "./publication/task.ts";
+import type { PromotionTaskResult } from "./publication/task-contract.ts";
+import { cleanupDiscordReply } from "./discord-cleanup.ts";
+import { assertDiscordPayload } from "./publication/approved-copy.ts";
+import { Messages } from "./discord-messages.ts";
+import {
+  DiscordIndexPermissionsSchema,
+  DiscordCommandPermissionFields,
+  discordCommandPermission,
+} from "./access/discord-permissions.ts";
 
 export const PromotionDiscordToolSchema = z.discriminatedUnion("endpoint", [
   z.strictObject({ endpoint: z.literal("discord-status") }),
   z.strictObject({
     endpoint: z.literal("discord-read"),
-    body: z.strictObject({ limit: z.number().int().min(1).max(30) }).optional(),
+    body: z
+      .strictObject({
+        limit: z.number().int().min(1).max(30).optional(),
+        messageId: z.string().regex(/^\d+$/).optional(),
+      })
+      .optional(),
   }),
   z.strictObject({
     endpoint: z.literal("discord-send"),
@@ -34,29 +48,38 @@ const Channel = z.object({
   type: z.string(),
   canView: z.boolean(),
   canSend: z.boolean(),
+  canUseApplicationCommands: z.boolean(),
+  canManageServer: z.boolean(),
+  canManageMessages: z.boolean(),
+  moderationMfaLevel: z.enum(["NONE", "ELEVATED"]),
+  accountMfaEnabled: z.boolean().nullable(),
+  administrator: z.boolean(),
+  memberPermissions: z.string().regex(/^\d+$/),
   slowmodeSeconds: z.number().nullable(),
 });
-const Messages = z.object({
-  messages: z.array(
+const Commands = z.object({
+  channelId: z.string(),
+  guildId: z.string(),
+  applications: z.array(
     z.object({
       id: z.string(),
-      channelId: z.string(),
-      authorId: z.string(),
-      authorTag: z.string(),
-      content: z.string(),
-      createdAt: z.string(),
-      embeds: z.array(
-        z.object({
-          title: z.string().nullable(),
-          description: z.string().nullable(),
-          fields: z.array(z.object({ name: z.string(), value: z.string() })),
-        }),
-      ),
+      name: z.string(),
+      permissions: DiscordIndexPermissionsSchema.optional(),
+    }),
+  ),
+  application_commands: z.array(
+    z.object({
+      id: z.string(),
+      application_id: z.string(),
+      name: z.string(),
+      description: z.string(),
+      type: z.number().int(),
+      ...DiscordCommandPermissionFields,
     }),
   ),
 });
 
-/** The native toolkit daemon owns the session; this bridge can only inspect or prepare. */
+/** The native toolkit daemon owns the session; this bridge pins each assignment. */
 export class PromotionDiscordPreview {
   readonly preparedActions: {
     guildId: string;
@@ -65,15 +88,25 @@ export class PromotionDiscordPreview {
     operation: unknown;
   }[] = [];
   private calls = 0;
+  private readonly observedMessages = new Map<
+    string,
+    z.infer<typeof Messages>["messages"][number]
+  >();
+  private receipt:
+    { url: string; text: string; screenshotKey: string } | undefined;
   private readonly assignment: NonNullable<PromotionTarget["discord"]>;
   constructor(
     private readonly input: {
       target: PromotionTarget;
+      state?: PromotionState;
       socket: string;
       signal: AbortSignal;
       journal: PromotionTaskJournal;
       heartbeat: () => void;
       maxCalls: number;
+      mode?: "run" | "preview" | "reconcile";
+      approvedMessages: Promise<string[]>;
+      saveEvidence?: (bytes: Uint8Array) => Promise<string>;
     },
   ) {
     if (input.target.discord === undefined)
@@ -123,7 +156,11 @@ export class PromotionDiscordPreview {
       throw new Error(
         "Promotion requires an isolated user-only Discord daemon",
       );
-    if (identities.user.tag.replace(/#0$/, "") !== expected.username)
+    if (
+      identities.user.tag.replace(/#0$/, "") !== expected.username ||
+      (this.input.mode === "run" &&
+        identities.user.id !== "1560536854556839948")
+    )
       throw new Error(
         `Discord identity mismatch: expected ${expected.username}; no channel operation performed`,
       );
@@ -139,10 +176,56 @@ export class PromotionDiscordPreview {
       throw new Error(
         "Assigned Discord channel is not visible to the outreach account",
       );
+    const applicationCommand = await this.inspectCommand(channel);
+    if (
+      this.input.target.id === "disboard-native-bump" &&
+      this.input.mode !== "reconcile" &&
+      !channel.canManageMessages
+    )
+      throw new Error(
+        channel.moderationMfaLevel === "ELEVATED" &&
+          channel.accountMfaEnabled !== true
+          ? "DISBOARD cleanup requires 2FA on the outreach account because the server requires 2FA for moderation"
+          : "DISBOARD requires Manage Messages for confirmation cleanup before bumping",
+      );
     const evidence = this.observe(
-      `Account: ${expected.username}\nGuild: ${channel.guildId}\nChannel: ${channel.name}\nChannel ID: ${channel.id}\nCan send: ${String(channel.canSend)}`,
+      `Account: ${expected.username}\nGuild: ${channel.guildId}\nChannel: ${channel.name}\nChannel ID: ${channel.id}\nCan send: ${String(channel.canSend)}${applicationCommand === null ? "" : `\nApplication: ${applicationCommand.application}\nCommand: /${applicationCommand.name}\nCommand ID: ${applicationCommand.id}\nCan use application commands: true\nCommand permission: ${applicationCommand.permission.reason}\nManage Server: ${String(channel.canManageServer)}\nBot invocation: not performed`}`,
     );
-    return { identity: identities.user, channel, evidence };
+    return { identity: identities.user, channel, applicationCommand, evidence };
+  }
+
+  private async inspectCommand(channel: z.infer<typeof Channel>) {
+    const assigned = this.assignment.slash;
+    if (assigned === undefined) return null;
+    if (!channel.canUseApplicationCommands)
+      throw new Error("Assigned channel does not permit application commands");
+    const index = Commands.parse(
+      await this.request(`/commands?channelId=${channel.id}`),
+    );
+    if (index.channelId !== channel.id || index.guildId !== channel.guildId)
+      throw new Error("Command metadata is outside the assigned guild/channel");
+    const application = index.applications.find(
+      (app) => app.id === assigned.botId,
+    );
+    const command = index.application_commands.find(
+      (entry) =>
+        entry.application_id === assigned.botId &&
+        entry.name === assigned.command &&
+        entry.type === 1,
+    );
+    if (application === undefined || command === undefined)
+      throw new Error(
+        "Assigned bot slash command is not available in this guild",
+      );
+    const permission = discordCommandPermission({
+      administrator: channel.administrator,
+      memberPermissions: channel.memberPermissions,
+      required: command.default_member_permissions,
+      application: application.permissions,
+      command: command.permissions,
+    });
+    if (!permission.allowed) throw new Error(permission.reason);
+    return { ...command, application: application.name, permission };
   }
 
   async handle(raw: unknown): Promise<unknown> {
@@ -157,6 +240,7 @@ export class PromotionDiscordPreview {
         await this.request("/read", {
           channelId: context.channel.id,
           limit: tool.body?.limit ?? 20,
+          messageId: tool.body?.messageId,
         }),
       );
       if (
@@ -166,13 +250,26 @@ export class PromotionDiscordPreview {
       )
         throw new Error("Discord read returned a foreign channel");
       const evidence = result.messages.map((message) =>
-        this.observe(
+        this.observeMessage(
+          message,
           `${message.authorTag}\n${message.createdAt}\n${message.content}\n${message.embeds.map((embed) => [embed.title, embed.description, ...embed.fields.map((field) => `${field.name}: ${field.value}`)].filter(Boolean).join("\n")).join("\n")}`,
         ),
       );
       return { untrustedDiscordContent: result, evidence };
     }
-    if (!context.channel.canSend)
+    if (tool.endpoint === "discord-slash") {
+      const assigned = this.assignment.slash;
+      if (
+        tool.body.botId !== assigned?.botId ||
+        tool.body.command !== assigned.command ||
+        JSON.stringify(tool.body.args) !== JSON.stringify(assigned.args)
+      )
+        throw new Error(
+          "Slash payload does not match the caller-assigned command",
+        );
+    } else if (this.assignment.slash !== undefined) {
+      throw new Error("This assignment requires the pinned slash command");
+    } else if (!context.channel.canSend)
       throw new Error("Assigned Discord channel is read-only for this account");
     if (this.preparedActions.length > 0)
       throw new Error("One prepared Discord action per assignment");
@@ -185,7 +282,204 @@ export class PromotionDiscordPreview {
         ...tool.body,
       },
     };
+    await assertDiscordPayload(tool, this.input.approvedMessages);
+    if (this.input.mode === "reconcile")
+      throw new Error("Reconciliation cannot publish");
     this.preparedActions.push(plan);
-    return { mode: "preview", prepared: plan, posted: false };
+    return this.input.mode === "run"
+      ? await this.publish(tool, context)
+      : { mode: "preview", prepared: plan, posted: false };
+  }
+
+  private async publish(
+    tool: Extract<
+      z.infer<typeof PromotionDiscordToolSchema>,
+      { endpoint: "discord-send" | "discord-slash" }
+    >,
+    context: Awaited<ReturnType<PromotionDiscordPreview["inspect"]>>,
+  ) {
+    await this.input.journal.beforeMutation({
+      key: "discord",
+      text:
+        tool.endpoint === "discord-send"
+          ? tool.body.content
+          : `/${tool.body.command}`,
+    });
+    await this.input.journal.beforeMutation();
+    try {
+      const response =
+        tool.endpoint === "discord-send"
+          ? await this.request("/send", {
+              channelId: context.channel.id,
+              content: tool.body.content,
+              as: "user",
+            })
+          : await this.request("/slash", {
+              channelId: context.channel.id,
+              ...tool.body,
+            });
+      const parsed =
+        tool.endpoint === "discord-send"
+          ? z.object({ messageId: z.string() }).parse(response).messageId
+          : z
+              .object({ reply: z.object({ id: z.string() }).nullable() })
+              .parse(response).reply?.id;
+      if (parsed === undefined)
+        throw new Error(
+          "Slash accepted without a readable reply; reconcile manually",
+        );
+      const readback = Messages.parse(
+        await this.request("/read", {
+          channelId: context.channel.id,
+          limit: 30,
+        }),
+      );
+      const message = readback.messages.find(
+        (item) => item.id === parsed && item.channelId === context.channel.id,
+      );
+      if (
+        message === undefined ||
+        (tool.endpoint === "discord-send" &&
+          (message.authorId !== context.identity.id ||
+            message.content !== tool.body.content))
+      )
+        throw new Error("Discord publication has no matching readback");
+      const text = [
+        message.content,
+        ...message.embeds.map((embed) =>
+          [
+            embed.title,
+            embed.description,
+            ...embed.fields.map((field) => `${field.name}: ${field.value}`),
+          ]
+            .filter(Boolean)
+            .join("\n"),
+        ),
+      ].join("\n");
+      const url = `${this.input.target.url}/${message.id}`;
+      if (this.input.saveEvidence === undefined)
+        throw new Error("Discord evidence storage is unavailable");
+      const evidenceKey = await this.input.saveEvidence(
+        new TextEncoder().encode(JSON.stringify(message)),
+      );
+      this.receipt = { url, text, screenshotKey: evidenceKey };
+      const observation = this.input.journal.observe({ url, text });
+      return {
+        posted: true,
+        url,
+        text,
+        evidence: { observationId: observation.reference, ref: "text" },
+      };
+    } catch (error) {
+      this.input.journal.mutationFailed();
+      throw error;
+    }
+  }
+
+  capture() {
+    if (this.receipt === undefined)
+      throw new Error("Discord has no matching publication readback");
+    return this.readReceipt(this.receipt.url);
+  }
+
+  selectReceipt(url: string) {
+    const prefix = `${this.input.target.url}/`;
+    if (!url.startsWith(prefix) || !/^\d+$/.test(url.slice(prefix.length)))
+      throw new Error("Receipt is outside the assigned channel");
+    this.receipt = { url, text: "", screenshotKey: "" };
+  }
+
+  async resolveReceipt(receipt: NonNullable<PromotionTaskResult["receipt"]>) {
+    const url =
+      receipt.url === this.input.target.url
+        ? this.receiptUrl(receipt.occurrenceId)
+        : receipt.url;
+    this.selectReceipt(url);
+    const page = await this.capture();
+    // The model chooses the receipt; the parent supplies exact native text.
+    return { ...receipt, url, quote: page.text.trim().slice(0, 500) };
+  }
+
+  async cleanupVerifiedReply(result: PromotionTaskResult) {
+    return await cleanupDiscordReply({
+      target: this.input.target,
+      mode: this.input.mode,
+      result,
+      request: (path, body) => this.request(path, body),
+    });
+  }
+
+  private observeMessage(
+    message: z.infer<typeof Messages>["messages"][number],
+    text: string,
+  ) {
+    this.observedMessages.set(message.id, message);
+    const observation = this.input.journal.observe({
+      url: `${this.input.target.url}/${message.id}`,
+      text,
+    });
+    return { observationId: observation.reference, ref: "text" };
+  }
+
+  private receiptUrl(occurrenceId: string | null) {
+    if (this.input.mode === "run" && this.receipt !== undefined)
+      return this.receipt.url;
+    const pending = this.input.state?.attempts.find(
+      (attempt) =>
+        attempt.occurrenceId === occurrenceId && attempt.status === "uncertain",
+    );
+    if (pending === undefined)
+      throw new Error(
+        "Receipt must identify the original uncertain occurrence",
+      );
+    const author = this.assignment.slash?.botId ?? "1560536854556839948";
+    const candidates = [...this.observedMessages.values()].filter(
+      (message) =>
+        message.authorId === author &&
+        Date.parse(message.createdAt) >=
+          Date.parse(pending.attemptedAt) - 60_000,
+    );
+    const candidate = candidates[0];
+    if (candidate === undefined || candidates.length !== 1)
+      throw new Error("Receipt needs one fresh matching native message");
+    return `${this.input.target.url}/${candidate.id}`;
+  }
+
+  private async readReceipt(url: string) {
+    const id = z.string().regex(/^\d+$/).parse(url.split("/").at(-1));
+    const result = Messages.parse(
+      await this.request("/read", {
+        channelId: this.assignment.channelId,
+        limit: 30,
+        messageId: id,
+      }),
+    );
+    const author = this.assignment.slash?.botId ?? "1560536854556839948";
+    const message = result.messages.find(
+      (item) =>
+        item.id === id &&
+        item.channelId === this.assignment.channelId &&
+        item.authorId === author,
+    );
+    if (message === undefined || this.input.saveEvidence === undefined)
+      throw new Error(
+        "Receipt has no fresh readback from the assigned identity",
+      );
+    const text = [
+      message.content,
+      ...message.embeds.map((embed) =>
+        [
+          embed.title,
+          embed.description,
+          ...embed.fields.map((field) => `${field.name}: ${field.value}`),
+        ]
+          .filter(Boolean)
+          .join("\n"),
+      ),
+    ].join("\n");
+    const screenshotKey = await this.input.saveEvidence(
+      new TextEncoder().encode(JSON.stringify(message)),
+    );
+    return { url, text, screenshotKey, publishedAt: message.createdAt };
   }
 }

@@ -83,6 +83,7 @@ export const ReadRequestSchema = z.object({
   channelId: z.string(),
   limit: z.number().int().min(1).max(100),
   as: IdentityKindSchema.optional(),
+  messageId: z.string().regex(/^\d+$/).optional(),
 });
 export const ReadResponseSchema = z.object({
   messages: z.array(MessageSchema),
