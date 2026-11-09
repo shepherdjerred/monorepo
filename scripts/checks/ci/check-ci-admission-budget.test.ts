@@ -260,7 +260,7 @@ describe("pooled CI admission budget", () => {
     expect(
       pooledAdmissionBudgetViolations([compute], {
         ...budget,
-        maxWorkflows: 13,
+        maxWorkflows: 17,
         gateQuota: { ...budget.gateQuota, cpu: "2" },
       }),
     ).toEqual([

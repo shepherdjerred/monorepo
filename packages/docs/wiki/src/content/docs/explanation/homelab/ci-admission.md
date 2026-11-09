@@ -59,6 +59,13 @@ Ephemeral storage is in the budget deliberately. A build that fills the node's
 disk makes the kubelet evict _other_ pods. Metering it makes disk a scheduling
 constraint instead of an afterthought.
 
+Woodpecker's per-pool workflow caps sit above Kueue's admission on purpose.
+An agent holds a workflow's slot while Kueue gates its pod, so a cap tight
+enough to bind would put PR work back into the agent's first-in-first-out
+queue, where a lint pod waits behind a 30Gi verify that does not fit. The
+pull-request cap is sized so Kueue orders that wait instead: it admits the
+small pod past the blocked head, and ready PRs outrank drafts.
+
 ## Why gates have reserved capacity
 
 A review poller can occupy a workflow slot while waiting for an external
@@ -72,7 +79,7 @@ agents. A backlog of review polls therefore cannot consume the completion slot.
 
 Mandatory agent labels keep a pool from taking unrelated workflows.
 All generated workflows use their assigned pool. The admission proof covers
-eight compute slots and four gate slots. Its pod backstop also includes
+twelve compute slots and four gate slots. Its pod backstop also includes
 compute services, so partially started workflows cannot fill every slot before
 a step can run. The legacy pool has zero slots and no agent Deployment.
 

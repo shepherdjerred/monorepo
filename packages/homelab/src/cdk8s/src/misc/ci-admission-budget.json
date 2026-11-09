@@ -1,6 +1,6 @@
 {
-  "$comment": "CI admission budget on the liskov CI node. cdk8s builds the Kueue ClusterQueue and the Woodpecker agent's workflow cap from this file, and scripts/checks/ci/check-ci-admission-budget.ts proves the generated pipeline fits it. Quotas sit below liskov's allocatable (29 CPU, ~91.5Gi) on purpose: they are a guard, not permission to consume the node to zero. Delivery's executor reserve (2 CPU, 8Gi) is a separate Kueue queue beside this budget, so computeQuota.memory gives up the same 8Gi: every queue plus buildkitd must stay under the allocatable memory.",
-  "maxWorkflows": 12,
+  "$comment": "CI admission budget on the liskov CI node. cdk8s builds the Kueue ClusterQueue and the Woodpecker agent's workflow cap from this file, and scripts/checks/ci/check-ci-admission-budget.ts proves the generated pipeline fits it. Quotas sit below liskov's allocatable (29 CPU, ~91.5Gi) on purpose: they are a guard, not permission to consume the node to zero. Delivery's executor reserve (2 CPU, 8Gi) is a separate Kueue queue beside this budget, so computeQuota.memory gives up the same 8Gi: every queue plus buildkitd must stay under the allocatable memory. The pool workflow caps are a backstop above Kueue's resource admission: an agent holds a workflow's slot while Kueue gates its pod, so the pr cap is sized so that Kueue, not the agent's first-in-first-out queue, orders waiting PR work.",
+  "maxWorkflows": 16,
   "legacyMaxWorkflows": 0,
   "maxServicesPerWorkflow": 2,
   "quota": {
@@ -19,7 +19,7 @@
     "ephemeral-storage": "4Gi"
   },
   "pools": {
-    "pr": { "maxWorkflows": 4, "queue": "default" },
+    "pr": { "maxWorkflows": 8, "queue": "default" },
     "main": { "maxWorkflows": 4, "queue": "default" },
     "review": { "maxWorkflows": 3, "queue": "ci-gates" },
     "completion": { "maxWorkflows": 1, "queue": "ci-gates" }
