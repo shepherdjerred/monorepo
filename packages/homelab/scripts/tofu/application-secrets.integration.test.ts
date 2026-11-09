@@ -29,6 +29,8 @@ test("encrypted fixture adoption preserves values and only an explicit revision 
   const env = {
     PATH: Bun.env["PATH"],
     HOME: Bun.env["HOME"],
+    // CI's mise shims resolve installed tools under this nonsecret bootstrap path.
+    MISE_DATA_DIR: Bun.env["MISE_DATA_DIR"],
     TF_VAR_tofu_state_encryption_passphrase:
       "fixture-only-encryption-passphrase",
     TF_VAR_adoption_lengths: JSON.stringify(
