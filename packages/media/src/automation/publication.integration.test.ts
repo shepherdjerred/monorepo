@@ -1,5 +1,5 @@
 import { rm } from "node:fs/promises";
-import { afterAll, expect, test } from "vitest";
+import { afterAll, expect, onTestFinished, test } from "vitest";
 import { createPublicationActivities } from "./publication.ts";
 import { automationTestHarness } from "#testing/automation.ts";
 import { mappedPublicationFixture } from "./publication-proof/test-fixture.ts";
@@ -12,6 +12,7 @@ import { defaultScope } from "#shared/editions/scope.ts";
 import { targetWhere } from "#infrastructure/editions/targets.ts";
 import { PrismaMediaCommands } from "#infrastructure/commands.ts";
 import { grantTestRequesterAccess } from "#testing/authority.ts";
+import { grantTestManagedStorage } from "#testing/managed-storage.ts";
 
 const { database, context } = automationTestHarness();
 const directories: string[] = [];
@@ -20,12 +21,14 @@ afterAll(async () => {
     await rm(directory, { recursive: true, force: true });
 });
 
-test.each(["acquisition", "restore"])(
+test.each(["acquisition", "restore", "parallel acquisition"])(
   "Plex %s publication verifies all episodes sharing one file",
   async (mode) => {
     const db = database();
     const files = await sharedTvFileFixture(db, mappedPublicationFixture);
     directories.push(files.directory);
+    if (mode === "parallel acquisition")
+      onTestFinished(await grantTestManagedStorage(db));
     const published = await preparePhysicalPublication(files);
     const mediaIds = published.entry.mediaIds;
     expect(mediaIds).toHaveLength(2);

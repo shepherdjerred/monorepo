@@ -10,6 +10,86 @@ const base: ReleaseMatchInput = {
   media: { id: "movie", kind: "movie", title: "The Film", year: 2026 },
 };
 
+describe("native Blu-ray rip source names", () => {
+  it.each(["BRRip", "BDRip"])(
+    "recognizes %s before resolution without losing the release year",
+    (tag) => {
+      const title = `The.Film.2026.${tag}.1080p.x264`;
+      expect(parseReleaseName(title)).toMatchObject({
+        title: "the film",
+        year: 2026,
+        quality: "Bluray-1080p",
+      });
+      expect(matchRelease({ ...base, title }).attributes).toMatchObject({
+        identityConfidence: "exact",
+        quality: "Bluray-1080p",
+        mediaIds: ["movie"],
+        audioLanguages: [],
+      });
+    },
+  );
+
+  it.each(["BRRip", "The Film 2025 BRRip"])(
+    "preserves the genuine movie title %s before its release year",
+    (title) => {
+      const releaseTitle = `${title.replaceAll(" ", ".")}.2026.1080p.WEB-DL.x264`;
+      expect(parseReleaseName(releaseTitle)).toMatchObject({
+        title: title.toLowerCase(),
+        year: 2026,
+        quality: "WEB-1080p",
+      });
+      expect(
+        matchRelease({
+          ...base,
+          title: releaseTitle,
+          media: { ...base.media, title },
+        }).attributes.identityConfidence,
+      ).toBe("exact");
+    },
+  );
+
+  it.each([
+    [
+      "Harry Potter and the Philosopher's Stone (2001) 1080p BRRip 5.1 x264 -YTS",
+      "Bluray-1080p",
+    ],
+    [
+      "Harry Potter and the Philosopher's Stone (2001) 720p BRRip x264 -YTS",
+      "Bluray-720p",
+    ],
+    [
+      "Harry Potter and the Philosopher's Stone (2001) 2160p BRRip 5.1 10Bit x265 -YTS",
+      "Bluray-2160p",
+    ],
+  ])("recognizes the verified source of %s", (title, quality) => {
+    const result = matchRelease({
+      ...base,
+      title,
+      media: {
+        id: "movie",
+        kind: "movie",
+        title: "Harry Potter and the Philosopher's Stone",
+        year: 2001,
+      },
+    });
+    expect(result.attributes).toMatchObject({
+      identityConfidence: "exact",
+      mediaIds: ["movie"],
+      quality,
+      audioLanguages: [],
+    });
+  });
+
+  it.each(["UnknownRip", "BRRipish"])(
+    "keeps an unrecognized source %s unknown",
+    (source) => {
+      expect(
+        parseReleaseName(`The.Film.2026.1080p.${source}.x264`).quality,
+      ).toBe("unknown-1080p");
+    },
+  );
+});
+
 describe("release identity proof", () => {
   it("matches punctuation-normalized movie title and year", () => {
     const result = matchRelease(base);

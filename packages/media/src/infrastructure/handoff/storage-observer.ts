@@ -1,3 +1,4 @@
+import { lockUnchangedRuntime } from "./authority.ts";
 import { z } from "zod";
 import type { Database } from "#infrastructure/database.ts";
 import type { createLegacyObserver } from "#integrations/legacy-observer/runtime.ts";
@@ -8,7 +9,7 @@ import {
   type MountBindingRequest,
 } from "#shared/legacy-observer.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
-import { queueOwnerHealth } from "#infrastructure/notifications/owner-health.ts";
+import { revokeObservedStorage } from "./storage.ts";
 import { refreshNativeStorageAuthorities } from "#infrastructure/native-recovery/storage-refresh.ts";
 
 /** Refresh may move to a new executing Pod, but never to a new storage identity. */
@@ -75,15 +76,8 @@ export async function refreshStorageAuthorities(
       ? {}
       : z.record(z.string(), z.json()).parse(JSON.parse(wire));
   await db.$transaction(async (tx) => {
-    await tx.$queryRaw`SELECT id FROM "MediaRuntimeState" WHERE id = 'singleton' FOR UPDATE`;
-    const runtime = await tx.mediaRuntimeState.findUniqueOrThrow({
-      where: { id: "singleton" },
-    });
-    if (
-      runtime.version !== before.version ||
-      runtime.recoveryEpoch !== before.recoveryEpoch
-    )
-      return;
+    const runtime = await lockUnchangedRuntime(tx, before);
+    if (runtime === null) return;
     const current = await tx.mediaStorageAuthority.findMany({
       where: { recoveryEpoch: runtime.recoveryEpoch },
       orderBy: { rootPath: "asc" },
@@ -134,23 +128,9 @@ export async function refreshStorageAuthorities(
         );
       });
     if (!unchanged) {
-      await tx.mediaStorageAuthority.updateMany({
+      await revokeObservedStorage(tx, {
         where: { recoveryEpoch: runtime.recoveryEpoch },
-        data: { revokedAt: new Date(), version: { increment: 1 } },
-      });
-      const revoked = await tx.mediaRuntimeState.update({
-        where: { id: "singleton" },
-        data: {
-          mode: "observe",
-          ownershipConfirmed: false,
-          version: { increment: 1 },
-        },
-      });
-      await queueOwnerHealth(tx, {
-        schemaVersion: 1,
-        reason: "media_storage_authority_revoked",
-        recoveryEpoch: revoked.recoveryEpoch,
-        runtimeVersion: revoked.version,
+        revokeRuntime: true,
         evidenceDigest: snapshotHash(serialized),
       });
       return;

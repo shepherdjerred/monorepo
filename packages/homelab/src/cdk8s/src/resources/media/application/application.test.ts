@@ -4,6 +4,7 @@ import { PersistentVolumeClaim, Secret } from "cdk8s-plus-31";
 import { z } from "zod";
 import { createUnifiedMediaApplication } from "./index.ts";
 import { mediaImageReference } from "./image.ts";
+import { createMediaChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/media/media.ts";
 import { resetProbeRegistry } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/probe-registry.ts";
 import { applyOrdinaryDeliveryImageBindings } from "@shepherdjerred/homelab/cdk8s/src/ordinary-delivery-image-bindings.ts";
 import {
@@ -13,6 +14,43 @@ import {
 
 beforeEach(resetProbeRegistry);
 const image = `docker.io/shepherdjerred/media@sha256:${"1".repeat(64)}`;
+
+test("installing Media preserves every existing stack resource", async () => {
+  const legacy = new App();
+  await createMediaChart(legacy);
+  const before = z
+    .array(
+      z.looseObject({
+        kind: z.string(),
+        metadata: z.looseObject({ name: z.string() }),
+      }),
+    )
+    .parse(legacy.charts[0]?.toJson());
+  resetProbeRegistry();
+  const parallel = new App();
+  await createMediaChart(
+    parallel,
+    "docker.io/shepherdjerred/media:delivery-recipe",
+  );
+  const after = z
+    .array(
+      z.looseObject({
+        kind: z.string(),
+        metadata: z.looseObject({ name: z.string() }),
+      }),
+    )
+    .parse(parallel.charts[0]?.toJson());
+  for (const resource of before)
+    expect(
+      after.find(
+        (candidate) =>
+          candidate.kind === resource.kind &&
+          candidate.metadata.name === resource.metadata.name,
+      ),
+    ).toEqual(resource);
+  expect(after.length).toBeGreaterThan(before.length);
+});
+
 function resources(selection = image, bindSelection = false) {
   const app = new App();
   const chart = new Chart(app, "media", {

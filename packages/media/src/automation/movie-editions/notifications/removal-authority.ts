@@ -1,3 +1,4 @@
+import { readRuntimeProof } from "#infrastructure/handoff/runtime-proof.ts";
 import {
   movieNoticeConfigurationError,
   assertMovieNoticeAccessUnchanged,
@@ -142,9 +143,7 @@ async function readRemovalNoticeAuthority(
     throw new PlexBindingProtection("scope_changed");
   if (delivery.event.actorId !== choice.choice.actorId)
     throw new Error("Movie removal notification actor attribution changed");
-  const lease = await tx.legacyWriterLease.findUniqueOrThrow({
-    where: { id: "singleton" },
-  });
+  const lease = await readRuntimeProof(tx);
   return { choice, writerExpiresAtMs: lease.expiresAt.getTime() };
 }
 

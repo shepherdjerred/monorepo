@@ -10,10 +10,7 @@ import {
   ClosedCoordinatorObservationSchema,
   type ClosedCoordinatorObservation,
 } from "#shared/publication-proof/references.ts";
-import {
-  runtimeAuthority,
-  recordsAuthorized,
-} from "#infrastructure/handoff/authority.ts";
+import { recordsAuthorized } from "#infrastructure/handoff/authority.ts";
 import { effectiveRequestWhere } from "#infrastructure/request-claims.ts";
 import { assertLegacyClaimsResolved } from "#infrastructure/recovery/legacy-claims/protection.ts";
 import { assertNativeStorageRoots } from "#infrastructure/native-recovery/storage-provenance.ts";
@@ -25,6 +22,7 @@ import { compensationRecord, compensationAncestors } from "./records.ts";
 import {
   lockNativeCompensationScope,
   assertCompensationOwner,
+  assertCompensationPublicationRuntime,
 } from "./guards.ts";
 import { assertCompensationFenceOwner } from "./fence.ts";
 import { NativeCompensationProtection } from "./protection.ts";
@@ -47,11 +45,7 @@ async function publicationContext(
       "compensation_physical_completion_required",
     );
   await assertCompensationOwner(tx, row.receipt.actorId);
-  const runtime = await runtimeAuthority(tx);
-  if (!runtime.active || runtime.epoch !== row.recoveryEpoch)
-    throw new NativeCompensationProtection(
-      "compensation_publication_runtime_changed",
-    );
+  await assertCompensationPublicationRuntime(tx, row.recoveryEpoch, budget);
   // The scope lock holds this exact lease and both storage roots through return.
   const lease = await tx.legacyWriterLease.findUniqueOrThrow({
     where: { id: "singleton" },

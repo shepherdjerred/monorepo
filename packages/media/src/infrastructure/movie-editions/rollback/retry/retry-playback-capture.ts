@@ -1,3 +1,4 @@
+import { readRuntimeProof } from "#infrastructure/handoff/runtime-proof.ts";
 import {
   Prisma,
   type MediaIntent,
@@ -96,9 +97,7 @@ export async function captureMovieRollbackRetryPlaybackV1(
       parent.intent.originalItem.binding.associationHash
   )
     throw new FileGuardError("movie_rollback_pair_changed");
-  const writer = await tx.legacyWriterLease.findUniqueOrThrow({
-    where: { id: "singleton" },
-  });
+  const writer = await readRuntimeProof(tx);
   invocation.budget.consume(1);
   if (
     writer.revokedAt !== null ||

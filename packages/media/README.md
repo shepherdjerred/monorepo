@@ -874,11 +874,39 @@ episodes may use an approved canonical series scope; unrelated or ambiguous
 items remain unowned. No previous acquisition or notification birth epoch is
 rewritten.
 
-Effects also require a fresh trusted legacy-writer lease and current per-record
-epochs. Minute reconciliation refreshes the lease and observed worker storage
-bindings. Resumed writers or changed PVC/subpath identities revoke authority
-when observed; expired evidence protects effects when observation fails. A
-replacement files Pod on the same verified storage requires a fresh binding.
+Adopted-library effects also require a fresh trusted legacy-writer lease and
+current per-record epochs. Minute reconciliation refreshes the lease and observed
+worker storage bindings. Resumed writers revoke adopted-library authority when
+observed. Changed PVC/subpath identities and expired evidence protect effects.
+A replacement files Pod on the same verified storage requires a fresh binding.
+
+### Running alongside the existing stack
+
+Media can manage new requests while the existing controllers continue running.
+It shares Plex and qBittorrent, uses its own `media` torrent category and
+`/downloads/media/<attempt-id>` transfer directories, and keeps existing files
+and transfers unowned. Publication retains its per-item ownership and overwrite
+checks. Existing-library ownership handoff remains a separate operation.
+
+Maintainerr can remove items directly through Plex, independently of Media's
+ownership records. To limit its cleanup to the old stack, add a final AND
+condition requiring a positive Radarr movie file size or Sonarr show disk size
+to the corresponding cleanup rules. This also protects existing items whose
+Plex identities cannot resolve to their old-manager files.
+
+The authenticated owner API exposes `GET /api/v1/admin/runtime` and
+`PUT /api/v1/admin/runtime`. PUT requires CSRF, an `Idempotency-Key`, and
+`{ "mode": "active" | "observe", "expectedVersion": <current version> }`.
+The response contains mode, version, recovery epoch, and ownership confirmation.
+Starting requires fresh trusted canonical storage observations from the workers;
+it does not require importing a migration bundle or stopping legacy controllers.
+Pausing stops Media automation while the existing stack continues operating.
+Owner activation preserves an immutable approval of the exact canonical storage
+identity. After a restore, native recovery can use that approval to reprove
+Media-created files without requiring a legacy migration bundle. Recovery retains
+its existing owner review and quiescence requirements; normal managed automation
+uses fresh storage observations after recovery. Legacy adoption keeps its separate
+quiescence requirements.
 
 Whole-media requests with exact current Plex account access can be adopted;
 whole-series requests retain future episode monitoring through bounded coverage

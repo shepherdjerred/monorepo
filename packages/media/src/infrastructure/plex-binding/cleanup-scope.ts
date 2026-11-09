@@ -40,6 +40,7 @@ import type { CleanupReadInvocation } from "./cleanup/invocation.ts";
 import { lockMovieCommand } from "#infrastructure/movie-editions/locks.ts";
 import { movieCleanupRecordsAuthorized } from "#infrastructure/movie-editions/cleanup/authority.ts";
 import { cleanupAuthorityDeadline } from "./cleanup/deadline.ts";
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 
 /** Exact existing purged-row ACK, not a new immutable purge receipt. No fresh access lookup. */
 export async function readUpgradeCleanupCommand(
@@ -198,7 +199,12 @@ export async function captureUpgradeCleanupExpected(
     paths,
     pathsHash: identityHash(paths),
     authorityExpiresAt: new Date(
-      await cleanupAuthorityDeadline(tx, cleanup.recoveryEpoch, access),
+      await cleanupAuthorityDeadline(
+        tx,
+        cleanup.recoveryEpoch,
+        access,
+        invocation.budget,
+      ),
     ).toISOString(),
   });
 }
@@ -323,6 +329,7 @@ export async function lockUpgradeCleanupObservation(
   tx: Prisma.TransactionClient,
   expected: UpgradeCleanupPlexExpected,
   freshness: PlexBindingFreshness,
+  budget?: PublicationAuthorityReadBudget,
 ) {
   freshness.assertActive();
   if (expected.schemaVersion === 1) {
@@ -330,7 +337,7 @@ export async function lockUpgradeCleanupObservation(
     await lockExistingDefaultTargets(tx, expected.mediaIds);
     await lockEffectiveRequests(tx, expected.mediaIds);
   } else await lockMovieCommand(tx, expected.scope);
-  if (!(await lockRuntimeAuthority(tx, expected.recoveryEpoch)))
+  if (!(await lockRuntimeAuthority(tx, expected.recoveryEpoch, budget)))
     throw new PlexBindingProtection("ownership_changed");
   if (expected.userIds.length > 0) {
     await tx.$queryRaw(

@@ -11,10 +11,7 @@ import type {
 } from "#shared/plex-binding/expected.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import { nativeJson } from "#infrastructure/native-recovery/snapshots.ts";
-import {
-  runtimeAuthority,
-  recordsAuthorized,
-} from "#infrastructure/handoff/authority.ts";
+import { recordsAuthorized } from "#infrastructure/handoff/authority.ts";
 import { effectiveRequestWhere } from "#infrastructure/request-claims.ts";
 import { assertLegacyClaimsResolved } from "#infrastructure/recovery/legacy-claims/protection.ts";
 import { assertNativeStorageRoots } from "#infrastructure/native-recovery/storage-provenance.ts";
@@ -30,6 +27,7 @@ import {
 import {
   lockNativeCompensationScope,
   assertCompensationOwner,
+  assertCompensationPublicationRuntime,
 } from "#infrastructure/native-compensation/guards.ts";
 import { assertValidatedCompensationFenceOwner } from "#infrastructure/native-compensation/fence.ts";
 import { NativeCompensationProtection } from "#infrastructure/native-compensation/protection.ts";
@@ -117,7 +115,12 @@ export async function loadCompensationPublicationPhase(
     record.descriptor.scope.storageRoots,
     budget,
   );
-  const current = await assertPublicationCurrentRows(tx, record, timing);
+  const current = await assertPublicationCurrentRows(
+    tx,
+    record,
+    timing,
+    budget,
+  );
   const authority = publicationAuthority(
     record,
     chain,
@@ -220,10 +223,15 @@ export async function assertCompensationPublicationPhaseCurrent(
   budget: PublicationAuthorityReadBudget,
 ) {
   assertCompensationPublicationPhase(tx, phase, budget);
-  const current = await assertPublicationCurrentRows(tx, phase.record, {
-    ...phase.timing,
-    originalFreshness: phase.freshness,
-  });
+  const current = await assertPublicationCurrentRows(
+    tx,
+    phase.record,
+    {
+      ...phase.timing,
+      originalFreshness: phase.freshness,
+    },
+    budget,
+  );
   const authority = publicationAuthority(
     phase.record,
     phase.chain,
@@ -252,15 +260,12 @@ async function assertPublicationCurrentRows(
   tx: Prisma.TransactionClient,
   record: CompletedRecord,
   timing: CompensationPublicationTiming,
+  budget: PublicationAuthorityReadBudget,
 ) {
   const { row, descriptor, completion } = record;
   timing.originalFreshness.assertActive();
   await assertCompensationOwner(tx, row.receipt.actorId);
-  const runtime = await runtimeAuthority(tx);
-  if (!runtime.active || runtime.epoch !== row.recoveryEpoch)
-    throw new NativeCompensationProtection(
-      "compensation_publication_runtime_changed",
-    );
+  await assertCompensationPublicationRuntime(tx, row.recoveryEpoch, budget);
   const lease = await tx.legacyWriterLease.findUniqueOrThrow({
     where: { id: "singleton" },
   });

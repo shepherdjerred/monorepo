@@ -32,7 +32,7 @@ export async function assertSeriesPackNativePublicationCurrentV1(
   )
     throw new NativeCompensationProtection("compensation_publication_changed");
   const { row, descriptor, completion } = record;
-  const runtime = await runtimeAuthority(tx);
+  const runtime = await runtimeAuthority(tx, record.budget);
   const lease = await tx.legacyWriterLease.findUniqueOrThrow({
     where: { id: "singleton" },
   });

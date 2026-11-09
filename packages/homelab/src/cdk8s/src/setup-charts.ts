@@ -95,7 +95,7 @@ export async function setupCharts(app: App): Promise<void> {
   createCloudflareTunnelChart(app);
 
   // Torvalds namespace charts (separate apps for easier future migration)
-  await createMediaChart(app);
+  await createMediaChart(app, firstPartyImageRecipe("media"));
   await createHomeChart(app);
   createPostalChart(app);
   createSyncthingChart(app);

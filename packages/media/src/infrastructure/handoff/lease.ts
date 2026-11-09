@@ -1,3 +1,4 @@
+import { lockUnchangedRuntime } from "./authority.ts";
 import type { Database } from "#infrastructure/database.ts";
 import {
   QuiescenceEvidenceSchema,
@@ -6,6 +7,53 @@ import {
 import { snapshotHash } from "#migration/profile-import.ts";
 import { LEGACY_OBSERVER_CONFIG } from "#integrations/legacy-observer/config.ts";
 import { queueOwnerHealth } from "#infrastructure/notifications/owner-health.ts";
+import { isManagedStorage } from "./runtime-proof.ts";
+
+/** Keep handoff revocation current without making unrelated managed work depend on legacy health. */
+export async function refreshManagedWriterLease(
+  db: Database,
+  observe: () => Promise<QuiescenceEvidence>,
+): Promise<void> {
+  const before = await db.mediaRuntimeState.findUniqueOrThrow({
+    where: { id: "singleton" },
+  });
+  let evidence: QuiescenceEvidence;
+  try {
+    evidence = await observe();
+  } catch {
+    const failedAt = new Date();
+    await db.$transaction(async (tx) => {
+      const runtime = await lockUnchangedRuntime(tx, before);
+      if (runtime === null) return;
+      const previous = await tx.legacyWriterLease.findUnique({
+        where: { id: "singleton" },
+      });
+      if (previous !== null && previous.observedAt > failedAt) return;
+      const data = {
+        recoveryEpoch: runtime.recoveryEpoch,
+        targetsDigest: snapshotHash(LEGACY_OBSERVER_CONFIG.legacyDeployments),
+        configurationDigest: snapshotHash(LEGACY_OBSERVER_CONFIG),
+        observation: {
+          kind: "legacy_observer_unavailable",
+          failedAt: failedAt.toISOString(),
+        },
+        observedAt: failedAt,
+        expiresAt: new Date(
+          failedAt.getTime() + LEGACY_OBSERVER_CONFIG.evidenceLifetimeMs,
+        ),
+        revokedAt: failedAt,
+      };
+      // This is an explicit failure/revocation record, never stopped-writer evidence.
+      await tx.legacyWriterLease.upsert({
+        where: { id: "singleton" },
+        create: { id: "singleton", ...data },
+        update: { ...data, version: { increment: 1 } },
+      });
+    });
+    return;
+  }
+  await refreshWriterLease(db, () => Promise.resolve(evidence));
+}
 
 /** Only the injected trusted observer produces evidence; no HTTP endpoint accepts it. */
 export async function refreshWriterLease(
@@ -44,15 +92,8 @@ export async function refreshWriterLease(
       ),
     );
   await db.$transaction(async (tx) => {
-    await tx.$queryRaw`SELECT id FROM "MediaRuntimeState" WHERE id = 'singleton' FOR UPDATE`;
-    const runtime = await tx.mediaRuntimeState.findUniqueOrThrow({
-      where: { id: "singleton" },
-    });
-    if (
-      runtime.recoveryEpoch !== before.recoveryEpoch ||
-      runtime.version !== before.version
-    )
-      return;
+    const runtime = await lockUnchangedRuntime(tx, before);
+    if (runtime === null) return;
     const previous = await tx.legacyWriterLease.findUnique({
       where: { id: "singleton" },
     });
@@ -71,7 +112,13 @@ export async function refreshWriterLease(
       create: { id: "singleton", ...data },
       update: { ...data, version: { increment: 1 } },
     });
-    if (!clear && runtime.mode === "active") {
+    const storage = await tx.mediaStorageAuthority.findMany({
+      where: { rootPath: { in: ["/data/movies", "/data/tv"] } },
+    });
+    const managed =
+      storage.length === 2 &&
+      storage.every((row) => isManagedStorage(row.evidence));
+    if (!clear && !managed && runtime.mode === "active") {
       const revoked = await tx.mediaRuntimeState.update({
         where: { id: "singleton" },
         data: {

@@ -64,13 +64,13 @@ export function mediaBehaviorConfig(
       requestsEnabled: {
         schema: z.boolean(),
         sources: ["flag", "default"],
-        default: false,
+        default: true,
         names: { flag: "media-requests-enabled" },
       },
       acquisitionEnabled: {
         schema: z.boolean(),
         sources: ["flag", "default"],
-        default: false,
+        default: true,
         names: { flag: "media-acquisition-enabled" },
       },
       capacityObservationEnabled: {

@@ -1,3 +1,4 @@
+import { readRuntimeProof } from "#infrastructure/handoff/runtime-proof.ts";
 import { z } from "zod";
 import type { MediaAutomationContext } from "#automation/context.ts";
 import type { PlexBindingExecution } from "#shared/plex-binding/activities.ts";
@@ -90,9 +91,7 @@ export async function finalizeMovieRestorationV4(
       throw new Error(
         "Movie restoration finalization lost its immutable Plex completion",
       );
-    const lease = await tx.legacyWriterLease.findUniqueOrThrow({
-      where: { id: "singleton" },
-    });
+    const lease = await readRuntimeProof(tx);
     const freshness = plexBindingFreshness({
       observed: execution.observed,
       expiresAtMs: Math.min(execution.expiresAtMs, lease.expiresAt.getTime()),

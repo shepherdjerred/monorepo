@@ -35,7 +35,7 @@ export async function loadSeriesPackNativeReviewPhaseV1(
   const runtime = await tx.mediaRuntimeState.findUniqueOrThrow({
     where: { id: "singleton" },
   });
-  const authority = await runtimeAuthority(tx);
+  const authority = await runtimeAuthority(tx, budget);
   if (
     !["preparing", "awaiting_review", "applying"].includes(plan.state) ||
     operation.userId !== plan.actorId ||

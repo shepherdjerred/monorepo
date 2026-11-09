@@ -41,7 +41,7 @@ export async function assertNativeQuarantineSnapshot(
   });
   const mode = scope.request.activation === "activate" ? "observe" : "active";
   budget.consume(1);
-  const authority = await runtimeAuthority(tx);
+  const authority = await runtimeAuthority(tx, budget);
   if (
     runtime.mode !== mode ||
     runtime.recoveryEpoch !== plan.recoveryEpoch ||

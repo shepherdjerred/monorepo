@@ -469,6 +469,16 @@
           "producer": "first-party"
         },
         {
+          "name": "image:temporal-worker",
+          "producer": "reference",
+          "source": {
+            "service": "temporal",
+            "component": "image:temporal-worker",
+            "mode": "tracking",
+            "environment": "temporal/prod"
+          }
+        },
+        {
           "name": "chart:media",
           "producer": "first-party"
         }
@@ -2830,7 +2840,7 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "streambot/prod/2",
+      "recipeRevisionId": "streambot/prod/3",
       "configurationRevisionId": "streambot/prod/1"
     },
     {
@@ -5066,7 +5076,17 @@
     },
     {
       "dependent": "streambot/prod",
+      "prerequisite": "postgres-operator/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "streambot/prod",
       "prerequisite": "prometheus/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "streambot/prod",
+      "prerequisite": "temporal/prod",
       "rule": "any-accepted"
     },
     {

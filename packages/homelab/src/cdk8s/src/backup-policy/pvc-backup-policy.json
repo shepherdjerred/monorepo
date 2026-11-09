@@ -307,6 +307,12 @@
   },
   {
     "namespace": "media",
+    "name": "pgdata-media-postgresql-0",
+    "backup": "enabled",
+    "reason": "Media requests, library ownership, runtime authority and durable recovery receipts"
+  },
+  {
+    "namespace": "media",
     "name": "plex-movies-hdd-pvc",
     "backup": "disabled",
     "reason": "Large replaceable movie library"

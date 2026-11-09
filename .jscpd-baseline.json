@@ -1124,10 +1124,6 @@
       "clones": 1,
       "tokens": 72
     },
-    "packages/media/src/automation/movie-editions/retention/removal-completion.ts|packages/media/src/automation/movie-editions/retention/restore-finalization.ts": {
-      "clones": 1,
-      "tokens": 73
-    },
     "packages/media/src/automation/movie-editions/retention/restore-finalization.integration.test.ts|packages/media/src/automation/movie-editions/retention/restore-plex.integration.test.ts": {
       "clones": 3,
       "tokens": 352
@@ -1183,10 +1179,6 @@
     "packages/media/src/automation/movie-editions/retry/continuation/support.ts|packages/temporal/src/activities/media/movie-editions/continuation-workflow.integration.test.ts": {
       "clones": 1,
       "tokens": 79
-    },
-    "packages/media/src/automation/movie-editions/retry/recovery.ts|packages/media/src/automation/movie-editions/retry/sweep.ts": {
-      "clones": 1,
-      "tokens": 71
     },
     "packages/media/src/automation/movie-editions/rollback/manual-playback.ts|packages/media/src/automation/movie-editions/rollback/retry-handoff.ts": {
       "clones": 1,
@@ -1544,10 +1536,6 @@
       "clones": 1,
       "tokens": 202
     },
-    "packages/media/src/automation/notifications/health-fixture.ts|packages/media/src/infrastructure/handoff/authority.integration.test.ts": {
-      "clones": 1,
-      "tokens": 173
-    },
     "packages/media/src/automation/notifications/message.ts|packages/media/src/automation/notifications/message.ts": {
       "clones": 1,
       "tokens": 70
@@ -1772,10 +1760,6 @@
       "clones": 1,
       "tokens": 81
     },
-    "packages/media/src/infrastructure/handoff/storage-observer.ts|packages/media/src/infrastructure/native-recovery/storage-refresh.ts": {
-      "clones": 1,
-      "tokens": 115
-    },
     "packages/media/src/infrastructure/movie-editions/cleanup/expected.ts|packages/media/src/infrastructure/plex-binding/cleanup-scope.ts": {
       "clones": 2,
       "tokens": 186
@@ -1960,10 +1944,6 @@
       "clones": 1,
       "tokens": 103
     },
-    "packages/media/src/infrastructure/native-archive/service.ts|packages/media/src/infrastructure/native-compensation/series-pack/service.ts": {
-      "clones": 1,
-      "tokens": 86
-    },
     "packages/media/src/infrastructure/native-archive/service.ts|packages/media/src/infrastructure/native-compensation/service.ts": {
       "clones": 3,
       "tokens": 265
@@ -2014,7 +1994,7 @@
     },
     "packages/media/src/infrastructure/native-compensation/publication.ts|packages/media/src/infrastructure/native-compensation/publication/phase.ts": {
       "clones": 2,
-      "tokens": 584
+      "tokens": 564
     },
     "packages/media/src/infrastructure/native-compensation/publication.ts|packages/media/src/infrastructure/native-compensation/series-pack/publication/current.ts": {
       "clones": 3,
@@ -2796,10 +2776,6 @@
       "clones": 1,
       "tokens": 87
     },
-    "packages/temporal/src/activities/media/managed-series-workflow.integration.test.ts|packages/temporal/src/activities/media/series-pack/rollback-role.integration.test.ts": {
-      "clones": 1,
-      "tokens": 89
-    },
     "packages/temporal/src/activities/media/movie-editions.test.ts|packages/temporal/src/activities/media/movie-editions.test.ts": {
       "clones": 1,
       "tokens": 72
@@ -2866,7 +2842,7 @@
     },
     "packages/temporal/src/activities/media/series-pack/rollback-role.integration.test.ts|packages/temporal/src/activities/media/series-pack/workflow.integration.test.ts": {
       "clones": 2,
-      "tokens": 253
+      "tokens": 239
     },
     "packages/temporal/src/shared/agent/agent-task-output.ts|packages/temporal/src/shared/agent/agent-task-output.ts": {
       "clones": 1,

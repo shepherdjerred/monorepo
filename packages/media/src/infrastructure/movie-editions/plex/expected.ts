@@ -1,3 +1,4 @@
+import { readRuntimeProof } from "#infrastructure/handoff/runtime-proof.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
 import type { MovieAttemptOperationV4 } from "#shared/movie-editions/lifecycle/automation-v4.ts";
 import type { MovieChoiceAccess } from "#infrastructure/movie-editions/access.ts";
@@ -44,9 +45,7 @@ export async function captureMoviePlexExpectedV2(
   await assertNoPublicationCompensationFence(tx, {
     mediaIds: [input.scope.mediaId],
   });
-  const lease = await tx.legacyWriterLease.findUniqueOrThrow({
-    where: { id: "singleton" },
-  });
+  const lease = await readRuntimeProof(tx);
   await lockMovieChoiceIdentities(tx, { mediaIds: [input.scope.mediaId] });
   const authority = await movieAttemptEffectAuthorityV4(
     tx,

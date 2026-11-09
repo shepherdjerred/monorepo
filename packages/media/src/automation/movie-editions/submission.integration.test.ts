@@ -1,4 +1,4 @@
-import { afterEach, expect, test, vi } from "vitest";
+import { afterEach, expect, onTestFinished, test, vi } from "vitest";
 import { setTimeout } from "node:timers/promises";
 import { automationTestHarness } from "#testing/automation.ts";
 import { requestTestMovieV4 } from "#testing/movie-v4.ts";
@@ -10,6 +10,7 @@ import { submitMovieTorrentV4, validMovieAttemptV4 } from "./submission.ts";
 import { observeMovieAcquisitionV4 } from "./observation.ts";
 import { reconcileUnconfirmedSubmission } from "#automation/acquisition-management/recovery.ts";
 import { QualityRulesSchema } from "#shared/api.ts";
+import { grantTestManagedStorage } from "#testing/managed-storage.ts";
 import { testPlexBindingExecution } from "#testing/plex-binding-execution.ts";
 import {
   MovieEditionKeySchema,
@@ -179,6 +180,17 @@ async function fixture(edition: MovieEditionKey = "extended_cut") {
     cancel,
   };
 }
+
+test("Media-owned movie submits through qBit with canonical storage and no legacy writer lease", async () => {
+  const f = await fixture();
+  onTestFinished(await grantTestManagedStorage(f.db));
+  expect(await submitMovieTorrentV4(f.context, f.input)).toEqual({
+    status: "submitted",
+    reason: null,
+  });
+  expect(f.wire.state.adds).toBe(1);
+  expect(await f.db.legacyWriterLease.count()).toBe(0);
+});
 
 test("v4 submits a named movie through the actual qBit client and records scoped acquisition plus independent seeding exactly once", async () => {
   const f = await fixture();

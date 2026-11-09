@@ -9,11 +9,17 @@ import {
   SubtitleTargetListSchema,
 } from "#shared/admin.ts";
 import { IdempotencyKeySchema } from "#infrastructure/commands.ts";
+import { SetRuntimeSchema } from "#shared/runtime/contract.ts";
 import { parseInput, readJson } from "./validation.ts";
 
 export type AdminApplication = Pick<
   PrismaAdminApplication,
-  "providers" | "saveProvider" | "subtitleTargets" | "uploadSubtitle"
+  | "providers"
+  | "saveProvider"
+  | "subtitleTargets"
+  | "uploadSubtitle"
+  | "runtime"
+  | "setRuntime"
 >;
 
 /** Register after the application's authenticated, CSRF-protected /api middleware. */
@@ -21,6 +27,18 @@ export function registerAdminRoutes(
   app: Hono<{ Variables: { actor: MediaActor; requestId: string } }>,
   admin: AdminApplication,
 ): void {
+  app.get("/api/v1/admin/runtime", async (c) =>
+    c.json(await admin.runtime(c.get("actor"))),
+  );
+  app.put("/api/v1/admin/runtime", async (c) =>
+    c.json(
+      await admin.setRuntime(
+        c.get("actor"),
+        parseInput(IdempotencyKeySchema, c.req.header("Idempotency-Key")),
+        parseInput(SetRuntimeSchema, await readJson(c.req.raw)),
+      ),
+    ),
+  );
   app.get("/api/v1/admin/providers", async (c) =>
     c.json(await admin.providers(c.get("actor"))),
   );

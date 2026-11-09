@@ -1,3 +1,4 @@
+import { readRuntimeProof } from "#infrastructure/handoff/runtime-proof.ts";
 import {
   movieNoticeConfigurationError,
   assertMovieNoticeAccessUnchanged,
@@ -210,9 +211,7 @@ async function readMovieNoticeAuthorityV4(
       },
     };
   }
-  const lease = await tx.legacyWriterLease.findUniqueOrThrow({
-    where: { id: "singleton" },
-  });
+  const lease = await readRuntimeProof(tx);
   return {
     choice,
     binding,

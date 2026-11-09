@@ -1,3 +1,4 @@
+import { readRuntimeProof } from "#infrastructure/handoff/runtime-proof.ts";
 import { Prisma } from "#generated/prisma/client.ts";
 import { z } from "zod";
 import type { MovieRollbackOperationV1 } from "#shared/movie-editions/rollback/operation.ts";
@@ -85,9 +86,7 @@ export async function captureRequestedMovieRollbackPlaybackV1(
     captured.freshness,
     handoff,
   );
-  const writer = await tx.legacyWriterLease.findUniqueOrThrow({
-    where: { id: "singleton" },
-  });
+  const writer = await readRuntimeProof(tx);
   invocation.budget.consume(1);
   if (
     writer.revokedAt !== null ||

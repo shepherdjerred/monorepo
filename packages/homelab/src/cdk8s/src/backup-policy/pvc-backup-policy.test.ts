@@ -94,16 +94,19 @@ it.each([
   },
 );
 
-it("includes Tracker's operator-managed database in backups before activation", () => {
-  expect(
-    getPvcBackupLabels(
-      getPvcBackupPolicy("tracker", "pgdata-tracker-postgresql-0"),
-    ),
-  ).toEqual({
-    "velero.io/backup": "enabled",
-    "velero.io/exclude-from-backup": "false",
-  });
-});
+it.each(["tracker", "media"])(
+  "includes %s's operator-managed database in backups before activation",
+  (namespace) => {
+    expect(
+      getPvcBackupLabels(
+        getPvcBackupPolicy(namespace, `pgdata-${namespace}-postgresql-0`),
+      ),
+    ).toEqual({
+      "velero.io/backup": "enabled",
+      "velero.io/exclude-from-backup": "false",
+    });
+  },
+);
 
 it("retires per-app tailnet state while protecting the Delivery catalog", () => {
   expect(
@@ -116,15 +119,15 @@ it("retires per-app tailnet state while protecting the Delivery catalog", () => 
   ).toBe("enabled");
 });
 
-it("classifies 56 included and 45 excluded PVCs, including the separate BlueMap cache", () => {
+it("classifies 57 included and 45 excluded PVCs, including the separate BlueMap cache", () => {
   const keys = PVC_BACKUP_POLICY.map((entry) =>
     pvcBackupPolicyKey(entry.namespace, entry.name),
   );
-  expect(keys).toHaveLength(101);
-  expect(new Set(keys).size).toBe(101);
+  expect(keys).toHaveLength(102);
+  expect(new Set(keys).size).toBe(102);
   expect(
     PVC_BACKUP_POLICY.filter((entry) => entry.backup === "enabled"),
-  ).toHaveLength(56);
+  ).toHaveLength(57);
   expect(
     PVC_BACKUP_POLICY.filter((entry) => entry.backup === "disabled"),
   ).toHaveLength(45);

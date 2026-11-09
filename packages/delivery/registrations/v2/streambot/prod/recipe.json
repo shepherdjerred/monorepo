@@ -1,5 +1,5 @@
 {
-  "id": "streambot/prod/2",
+  "id": "streambot/prod/3",
   "definition": {
     "kind": "kubernetes-application",
     "application": {
@@ -30,6 +30,14 @@
     "artifactParameters": {
       "delivery.images.streambot": {
         "component": "image:streambot",
+        "format": "reference"
+      },
+      "delivery.images.media": {
+        "component": "image:media",
+        "format": "reference"
+      },
+      "delivery.dependencies.temporal-worker": {
+        "component": "image:temporal-worker",
         "format": "reference"
       }
     },

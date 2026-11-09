@@ -29,6 +29,40 @@ afterAll(async () => {
   if (cluster !== undefined) await cluster.close();
 });
 
+test("runtime controls enforce ownership, current version, and storage proof with immutable replay", async () => {
+  expect(() =>
+    admin.setRuntime(member, "member-start", {
+      mode: "active",
+      expectedVersion: 0,
+    }),
+  ).toThrow();
+  await expect(admin.runtime(member)).rejects.toMatchObject({ status: 403 });
+  const state = await admin.runtime(owner);
+  await expect(
+    admin.setRuntime(owner, "unproved-start", {
+      mode: "active",
+      expectedVersion: state.version,
+    }),
+  ).rejects.toMatchObject({ status: 409 });
+  const paused = await admin.setRuntime(owner, "owner-pause", {
+    mode: "observe",
+    expectedVersion: state.version,
+  });
+  expect(paused).toMatchObject({ mode: "observe", version: state.version + 1 });
+  expect(
+    await admin.setRuntime(owner, "owner-pause", {
+      mode: "observe",
+      expectedVersion: state.version,
+    }),
+  ).toEqual(paused);
+  await expect(
+    admin.setRuntime(owner, "stale-pause", {
+      mode: "observe",
+      expectedVersion: state.version,
+    }),
+  ).rejects.toMatchObject({ status: 409 });
+});
+
 test("encrypts provider credentials, keeps reads/events secret-free, and rejects stale updates", async () => {
   const settings: SaveProvider = {
     expectedUpdatedAt: null,

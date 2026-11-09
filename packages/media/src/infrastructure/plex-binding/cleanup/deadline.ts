@@ -1,19 +1,20 @@
+import { readRuntimeProof } from "#infrastructure/handoff/runtime-proof.ts";
 import { z } from "zod";
 import type { Prisma } from "#generated/prisma/client.ts";
 import type { PlexAccess } from "#shared/plex-binding/contract.ts";
 import { CAPACITY_ROOTS } from "#shared/capacity/contract.ts";
 import { requirePlexExclusionDatabaseProof } from "#automation/plex-exclusion/proof.ts";
 import { PlexBindingProtection } from "#infrastructure/plex-binding/errors.ts";
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 
 /** Storage and writer bounds use real clocks, independently of retention policy time. */
 export async function cleanupAuthorityDeadline(
   tx: Prisma.TransactionClient,
   epoch: number,
   access: readonly PlexAccess[],
+  budget?: PublicationAuthorityReadBudget,
 ) {
-  const lease = await tx.legacyWriterLease.findUniqueOrThrow({
-    where: { id: "singleton" },
-  });
+  const lease = await readRuntimeProof(tx, budget);
   if (
     lease.revokedAt !== null ||
     lease.recoveryEpoch !== epoch ||

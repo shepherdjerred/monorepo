@@ -255,12 +255,12 @@ export async function lockPlexBindingScope(
   await lockEffectiveRequests(tx, scope.mediaIds);
   freshness.assertActive();
   if (purpose === undefined && compensationPhase === undefined) {
-    if (!(await lockRuntimeAuthority(tx, scope.expected.recoveryEpoch)))
+    if (!(await lockRuntimeAuthority(tx, scope.expected.recoveryEpoch, budget)))
       throw new PlexBindingProtection("ownership_changed");
   } else {
     await tx.$queryRaw`SELECT id FROM "MediaRuntimeState" WHERE id='singleton' FOR UPDATE`;
     await tx.$queryRaw`SELECT id FROM "LegacyWriterLease" WHERE id='singleton' FOR UPDATE`;
-    const runtime = await runtimeAuthority(tx);
+    const runtime = await runtimeAuthority(tx, budget);
     if (!runtime.active || runtime.epoch !== scope.expected.recoveryEpoch)
       throw new PlexBindingProtection("ownership_changed");
   }

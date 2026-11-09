@@ -1,3 +1,4 @@
+import { readRuntimeProof } from "#infrastructure/handoff/runtime-proof.ts";
 import { seedingObservation } from "#automation/seeding/observation.ts";
 import path from "node:path";
 import type { Prisma, Torrent } from "#generated/prisma/client.ts";
@@ -243,9 +244,7 @@ async function underLocks(
   }
   if (!(await sourceDirectoryExclusive(context, observed.hash, isolated)))
     return protect("source_directory_shared");
-  const writer = await tx.legacyWriterLease.findUniqueOrThrow({
-    where: { id: "singleton" },
-  });
+  const writer = await readRuntimeProof(tx);
   budget.consume(1);
   const freshness = plexBindingFreshness({
     observed: execution.observed,

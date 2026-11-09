@@ -1,3 +1,4 @@
+import { readRuntimeProof } from "#infrastructure/handoff/runtime-proof.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
 import type { PlexAccess } from "#shared/plex-binding/contract.ts";
 import type { PlexBindingExecution } from "#shared/plex-binding/activities.ts";
@@ -17,9 +18,7 @@ export async function retentionDeadline(
   const runtime = await runtimeAuthority(tx);
   initial.assertActive();
   if (!runtime.active) throw new PlexBindingProtection("ownership_changed");
-  const lease = await tx.legacyWriterLease.findUniqueOrThrow({
-    where: { id: "singleton" },
-  });
+  const lease = await readRuntimeProof(tx);
   initial.assertActive();
   const deadlines = [initial.expiresAtMs, lease.expiresAt.getTime()];
   for (const configured of access) {

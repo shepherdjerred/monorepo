@@ -86,7 +86,7 @@ export async function assertNativeArchiveSnapshot(
   const runtime = await tx.mediaRuntimeState.findUniqueOrThrow({
     where: { id: "singleton" },
   });
-  const authority = await runtimeAuthority(tx);
+  const authority = await runtimeAuthority(tx, budget);
   budget.consume(1);
   if (
     runtime.recoveryEpoch !== plan.recoveryEpoch ||

@@ -1,4 +1,4 @@
-import { createAcquisitionRoleTestWorkers } from "#activities/media/testing/activity-workers.ts";
+import { startAcquisitionRoleTestWorkers } from "#activities/media/testing/activity-workers.ts";
 import { replayWorkflowFile } from "#activities/media/testing/process.ts";
 import path from "node:path";
 import { mkdtemp } from "node:fs/promises";
@@ -54,14 +54,12 @@ test.each(["single_batch", "series_batches", "episode_batches"] as const)(
         directory,
         childEnvironment,
       });
-      const { network, files } = await createAcquisitionRoleTestWorkers(
+      await startAcquisitionRoleTestWorkers(
         environment,
         scenario,
+        workers,
+        running,
       );
-      workers.push(network);
-      running.push(network.run());
-      workers.push(files);
-      running.push(files.run());
       const started: string[] = [];
       const dispatched = await scenario.dispatch(async (start) => {
         if (

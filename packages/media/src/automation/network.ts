@@ -45,7 +45,12 @@ import {
 } from "./plex-exclusion/proof.ts";
 import { PlexMaintenanceClient } from "#integrations/plex-maintenance.ts";
 import { createLegacyObserver } from "#integrations/legacy-observer/runtime.ts";
-import { refreshWriterLease } from "#infrastructure/handoff/lease.ts";
+import {
+  refreshManagedWriterLease,
+  refreshWriterLease,
+} from "#infrastructure/handoff/lease.ts";
+import type { Database } from "#infrastructure/database.ts";
+import { refreshManagedStorage } from "#infrastructure/handoff/managed-storage.ts";
 import { refreshStorageAuthorities } from "#infrastructure/handoff/storage-observer.ts";
 import { requireStorageAuthority } from "#infrastructure/handoff/storage.ts";
 import { createHandoffNetworkActivities } from "./network/handoff.ts";
@@ -119,8 +124,7 @@ export async function createMediaNetworkContext(
     },
     refreshWriterLease: async () => {
       const observer = createLegacyObserver(environment);
-      await refreshWriterLease(db, () => observer.observe());
-      await refreshStorageAuthorities(db, observer);
+      await refreshMediaRuntimeAuthorities(db, observer);
     },
     async refreshExclusionProofs() {
       const [movie, series] = await Promise.all([
@@ -164,6 +168,19 @@ export async function createMediaNetworkContext(
     publicOrigin: config.PUBLIC_ORIGIN,
     ...ports,
   };
+}
+
+/** Managed storage and legacy handoff evidence have independent authority. */
+export async function refreshMediaRuntimeAuthorities(
+  db: Database,
+  observer: ReturnType<typeof createLegacyObserver>,
+): Promise<void> {
+  if (await refreshManagedStorage(db, observer)) {
+    await refreshManagedWriterLease(db, () => observer.observe());
+    return;
+  }
+  await refreshWriterLease(db, () => observer.observe());
+  await refreshStorageAuthorities(db, observer);
 }
 
 export async function createMediaFileRuntime(

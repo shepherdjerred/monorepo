@@ -1,3 +1,4 @@
+import { readRuntimeProof } from "#infrastructure/handoff/runtime-proof.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
 import { queueOperation, serializable } from "#automation/store.ts";
 import { networkMovieAccess } from "#automation/editions/access.ts";
@@ -72,9 +73,7 @@ export async function finalizeMovieAcquisitionV4(
       !(await lockRuntimeAuthority(tx, current.recoveryEpoch))
     )
       throw new PlexBindingProtection("ownership_changed");
-    const lease = await tx.legacyWriterLease.findUniqueOrThrow({
-      where: { id: "singleton" },
-    });
+    const lease = await readRuntimeProof(tx);
     const freshness = await movieFinalizationFreshnessV4(tx, {
       attempt: current,
       target,

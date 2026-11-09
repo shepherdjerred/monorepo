@@ -100,7 +100,7 @@ export async function assertNativeCompensationSnapshot(
   const runtime = await tx.mediaRuntimeState.findUniqueOrThrow({
     where: { id: "singleton" },
   });
-  const authority = await runtimeAuthority(tx);
+  const authority = await runtimeAuthority(tx, budget);
   budget.consume(1);
   if (
     runtime.recoveryEpoch !== plan.recoveryEpoch ||
@@ -146,6 +146,18 @@ export async function assertCompensationOwner(
       throw new NativeCompensationProtection("compensation_owner_changed");
     throw error;
   }
+}
+
+export async function assertCompensationPublicationRuntime(
+  tx: Prisma.TransactionClient,
+  epoch: number,
+  budget: PublicationAuthorityReadBudget,
+) {
+  const runtime = await runtimeAuthority(tx, budget);
+  if (!runtime.active || runtime.epoch !== epoch)
+    throw new NativeCompensationProtection(
+      "compensation_publication_runtime_changed",
+    );
 }
 
 export async function assertNativeCompensation(
@@ -265,7 +277,7 @@ export async function assertNativeCompensationPhase(
   };
   if (completion !== null) return phase;
   await assertCompensationOwner(tx, row.receipt.actorId);
-  const runtime = await runtimeAuthority(tx);
+  const runtime = await runtimeAuthority(tx, budget);
   if (!runtime.active || runtime.epoch !== row.recoveryEpoch)
     throw new NativeCompensationProtection("compensation_runtime_protected");
   {

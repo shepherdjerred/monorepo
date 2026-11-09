@@ -36,7 +36,7 @@ export async function assertSeriesPackNativeCurrentV1(
   await assertNoSubtitleReplacement(tx, row.assetIds);
   await assertNativeExclusion(tx);
   await assertLegacyClaimsResolved(tx, row.mediaIds, record.budget);
-  const runtime = await runtimeAuthority(tx);
+  const runtime = await runtimeAuthority(tx, record.budget);
   if (!runtime.active || runtime.epoch !== row.recoveryEpoch)
     throw new NativeCompensationProtection("compensation_runtime_protected");
   await tx.$queryRaw`SELECT media_series_pack_native_before_v1(${z.json().parse(scope.publication.intent)}::jsonb,${row.recoveryEpoch})::text`;
