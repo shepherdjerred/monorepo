@@ -2616,10 +2616,6 @@
       "clones": 4,
       "tokens": 301
     },
-    "packages/streambot/test/unit/config-dynamic.test.ts|packages/streambot/test/unit/config-dynamic.test.ts": {
-      "clones": 1,
-      "tokens": 104
-    },
     "packages/streambot/test/voice/fake-realtime-transport.ts|packages/streambot/test/voice/fake-realtime-transport.ts": {
       "clones": 1,
       "tokens": 90
