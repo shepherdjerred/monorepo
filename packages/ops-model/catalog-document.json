@@ -3002,7 +3002,7 @@
       "automatic": true,
       "promotionSourceEnvironmentId": "minecraft/sandbox",
       "recipeRevisionId": "minecraft-tsmc/8",
-      "configurationRevisionId": "minecraft-tsmc/8"
+      "configurationRevisionId": "minecraft-tsmc/9"
     },
     {
       "id": "mc-router/prod",
@@ -3202,7 +3202,7 @@
       "approvalPolicy": "none",
       "automatic": true,
       "recipeRevisionId": "chartmuseum/prod/1",
-      "configurationRevisionId": "chartmuseum/prod/1"
+      "configurationRevisionId": "chartmuseum/prod/2"
     },
     {
       "id": "tofu-anthropic/prod",
@@ -3386,7 +3386,7 @@
       "approvalPolicy": "none",
       "automatic": true,
       "recipeRevisionId": "loki/prod/1",
-      "configurationRevisionId": "loki/prod/2"
+      "configurationRevisionId": "loki/prod/3"
     },
     {
       "id": "tempo/prod",
@@ -3498,7 +3498,7 @@
       "approvalPolicy": "none",
       "automatic": true,
       "recipeRevisionId": "velero/prod/1",
-      "configurationRevisionId": "velero/prod/4"
+      "configurationRevisionId": "velero/prod/5"
     },
     {
       "id": "postgres-operator/prod",

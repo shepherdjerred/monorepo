@@ -187,7 +187,7 @@ describe("Scout activity worker topology", () => {
       expect(container?.["resources"]).toEqual({
         requests: {
           cpu: "50m",
-          memory: stage === "beta" ? "3584Mi" : "1792Mi",
+          memory: stage === "beta" ? "4224Mi" : "1792Mi",
         },
         limits: { memory: "8192Mi" },
       });

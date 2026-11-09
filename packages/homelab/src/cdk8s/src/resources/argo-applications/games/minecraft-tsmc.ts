@@ -171,10 +171,10 @@ export function createMinecraftTsmcApp(chart: Chart) {
     // 8G heap also needs native-memory headroom while loading and upgrading
     // chunks: the previous 10Gi container limit OOM-killed a pregeneration scan.
     // CPU stays unlimited so bursts are not throttled. The memory request is
-    // the measured p95 working set (10.2Gi over 7d, 2026-10-31) plus a margin.
+    // the measured p95 working set (11.34Gi over 14d to 2026-11-08).
     resources: {
       requests: {
-        memory: "11Gi",
+        memory: "11648Mi",
         cpu: "3",
       },
       limits: {

@@ -81,9 +81,10 @@ export function createScoutActivityWorkerDeployment(
   // scheduling constraint rather than an accident of current node placement.
   deployment.scheduling.colocate(options.colocateWith);
 
-  // Measured p95 working set (7d, 2026-10-31): beta 3.45Gi, prod 1.70Gi.
+  // Beta is the larger of its 14d p95 RSS (4.07Gi) and working set (3.76Gi)
+  // to 2026-11-08. Prod's measured p95 (1.84Gi RSS) is within its request.
   const containerBase = scoutAdminRoleContainerBase(
-    stage === "beta" ? Size.mebibytes(3584) : Size.mebibytes(1792),
+    stage === "beta" ? Size.mebibytes(4224) : Size.mebibytes(1792),
   );
   deployment.addContainer(
     withCommonProps({

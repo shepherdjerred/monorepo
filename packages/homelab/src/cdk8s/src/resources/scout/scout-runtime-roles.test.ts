@@ -332,7 +332,7 @@ describe("Scout gateway report-lake sharing", () => {
     }
 
     expect(app.template.spec.containers[0]?.resources).toMatchObject({
-      requests: { memory: "2304Mi" },
+      requests: { memory: "2816Mi" },
       limits: { memory: "8192Mi" },
     });
     expect(gateway.template.spec.containers[0]?.resources).toMatchObject({
@@ -341,7 +341,7 @@ describe("Scout gateway report-lake sharing", () => {
     });
     expect(activityWorker.template.spec.containers[0]?.resources).toMatchObject(
       {
-        requests: { memory: "3584Mi" },
+        requests: { memory: "4224Mi" },
         limits: { memory: "8192Mi" },
       },
     );

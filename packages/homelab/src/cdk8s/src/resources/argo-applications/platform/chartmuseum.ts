@@ -41,6 +41,15 @@ export function createChartMuseumApp(chart: Chart) {
   const basicAuth = createChartMuseumResources(chart);
 
   const chartMuseumValues: HelmValuesForChart<"chartmuseum"> = {
+    // The chart declares no requests, which left chartmuseum BestEffort: the
+    // first pod evicted under memory pressure. Over 14d to 2026-11-08 its p95
+    // was 0.18 CPU and 0.61Gi RSS (max 0.94Gi).
+    resources: {
+      requests: {
+        cpu: "200m",
+        memory: "640Mi",
+      },
+    },
     persistence: {
       enabled: true,
       storageClass: SATA_STORAGE_CLASS,
