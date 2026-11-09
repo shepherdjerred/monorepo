@@ -117,6 +117,8 @@ function duration(ms) {
 
 // Which machine an agent runs on: this one by its platform, another by its name.
 function hostIcon(machine) {
+  if (machine === "jobs" || machine === "jerreds-mac-mini")
+    return "mods/agents-filter/mac-mini-top.svg";
   const os = machine
     ? /mac/i.test(machine)
       ? "macos"

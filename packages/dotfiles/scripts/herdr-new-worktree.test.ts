@@ -1,8 +1,10 @@
 import { expect, test } from "vitest";
 import {
+  activeRun,
   createWorktree,
   launch,
   parseRequest,
+  repoName,
   slug,
   type ExecResult,
   type Request,
@@ -90,11 +92,45 @@ test("a caller's own program gets the message as its task, and keeps its tab", a
     typed: false,
   });
   const fake = fakeRuntime();
-  await createWorktree(custom, fake.runtime, (step) => steps.push(step));
+  await createWorktree(custom, fake.runtime, (update) => {
+    steps.push(update.step);
+  });
   expect(fake.spaces[0]).toMatchObject({ tab: "work", argv: ["pi"] });
   expect(
     parseRequest(JSON.stringify({ ...base, argv: undefined, tab: undefined })),
   ).toMatchObject({ argv: null, tab: null });
+});
+
+test("an active run names the repo and carries no message", () => {
+  const run = activeRun(
+    {
+      ...base,
+      machine: "mac-mini",
+      root: "/Users/jerred/.herdr/worktrees/monorepo",
+      message: "secret prompt",
+    },
+    {
+      step: "worktree",
+      title: "Fix the cache",
+      branch: "fix-cache",
+      path: "/Users/jerred/.herdr/worktrees/monorepo/fix-cache",
+    },
+    42,
+  );
+  expect(run).toEqual({
+    pid: 42,
+    machine: "mac-mini",
+    repo: "monorepo",
+    step: "worktree",
+    title: "Fix the cache",
+    branch: "fix-cache",
+    path: "/Users/jerred/.herdr/worktrees/monorepo/fix-cache",
+  });
+  expect(JSON.stringify(run)).not.toContain("secret prompt");
+  expect(repoName(String.raw`C:\Users\Jerred\.herdr\worktrees\monorepo`)).toBe(
+    "monorepo",
+  );
+  expect(repoName("/Users/jerred/.herdr/worktrees/monorepo/")).toBe("monorepo");
 });
 
 test("slug turns slashes and spaces into dashes", () => {
@@ -158,7 +194,9 @@ test("creates a fresh branch and opens the space on the right machine", async ()
   const outcome = await createWorktree(
     { ...base, machine: "mac-mini" },
     fake.runtime,
-    (step) => steps.push(step),
+    (update) => {
+      steps.push(update.step);
+    },
   );
   expect(outcome).toEqual({
     branch: "fix-cache-2",
@@ -181,6 +219,7 @@ test("creates a fresh branch and opens the space on the right machine", async ()
     {
       folder: "/home/.herdr/worktrees/repo/fix-cache-2",
       machine: "mac-mini",
+      name: "Fix the cache",
       tab: "Fix the cache",
       argv: ["brim", "--provider", "codex", "--", "--"],
       task: "- fix the cache",
@@ -207,7 +246,9 @@ test("Kimi's message is typed once it is idle, at its machine address", async ()
   const outcome = await createWorktree(
     { ...base, provider: "kimi", machine: "mac-mini" },
     fake.runtime,
-    (step) => steps.push(step),
+    (update) => {
+      steps.push(update.step);
+    },
   );
   expect(outcome.messageSent).toBe("typed");
   expect(steps.slice(-5)).toEqual([
@@ -225,7 +266,9 @@ test("failures stop before any side effect they depend on", async () => {
     name: () => Promise.reject(new Error("OpenAI 401: bad key")),
   });
   await expect(
-    createWorktree(base, naming.runtime, (step) => steps.push(step)),
+    createWorktree(base, naming.runtime, (update) => {
+      steps.push(update.step);
+    }),
   ).rejects.toThrow("OpenAI 401");
   expect(naming.git).toEqual([]);
   const adding = fakeRuntime({
@@ -237,7 +280,9 @@ test("failures stop before any side effect they depend on", async () => {
       ),
   });
   await expect(
-    createWorktree(base, adding.runtime, (step) => steps.push(step)),
+    createWorktree(base, adding.runtime, (update) => {
+      steps.push(update.step);
+    }),
   ).rejects.toThrow("fatal: path exists");
   expect(adding.spaces).toEqual([]);
 });

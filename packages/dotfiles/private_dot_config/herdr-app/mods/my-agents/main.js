@@ -207,7 +207,22 @@ function duration(ms) {
 // Which device an agent runs on: another machine by its SSH target (`hc machine ls`
 // `target`, which stays put when Herdr renames a machine after its host), its name or
 // its host; this computer by its platform. An unlisted machine shows its name.
-const DEVICES = { karpathy: "mac-mini-top", desktop: "windows" };
+const DEVICES = {
+  karpathy: "mac-mini-top",
+  "mac-mini": "mac-mini-top",
+  jobs: "mac-mini-top",
+  "jerreds-mac-mini": "mac-mini-top",
+  desktop: "windows",
+  "jerred-desktop": "windows",
+};
+const DEVICE_TITLES = {
+  karpathy: "Karpathy",
+  "mac-mini": "Karpathy",
+  jobs: "Jobs",
+  "jerreds-mac-mini": "Jobs",
+  desktop: "Windows",
+  "jerred-desktop": "Windows",
+};
 // Machine name -> [target, host], refreshed with the machine list.
 let machineAliases = {};
 async function loadMachineAliases() {
@@ -225,6 +240,42 @@ function device(machine) {
   );
   return key ? DEVICES[key] : null;
 }
+function deviceTitle(machine) {
+  if (!machine) return "This computer";
+  const key = [machine, ...(machineAliases[machine] ?? [])].find(
+    (k) => k in DEVICE_TITLES,
+  );
+  return key ? DEVICE_TITLES[key] : machine;
+}
+
+// A mark the person sets on a chat. "none" is only a filter bucket.
+const PRIORITIES = [
+  { id: "p0", label: "P0", tone: "blocked" },
+  { id: "p1", label: "P1", tone: "working" },
+  { id: "p2", label: "P2", tone: "accent" },
+  { id: "p3", label: "P3", tone: "foreground" },
+  { id: "p4", label: "P4", tone: "muted" },
+  { id: "later", label: "Later", tone: "dim" },
+];
+const priorityMarks = () => {
+  const marks = shared("agents.priorities");
+  return marks && typeof marks === "object" ? marks : {};
+};
+const priorityOf = (address) => {
+  const level = priorityMarks()[address];
+  return PRIORITIES.some((p) => p.id === level) ? level : null;
+};
+const hiddenPriorities = () => {
+  const raw = shared("agents.priorityHidden");
+  const known = new Set([...PRIORITIES.map((p) => p.id), "none"]);
+  return Array.isArray(raw) ? raw.filter((id) => known.has(id)) : [];
+};
+function writePriority(address, level) {
+  const marks = { ...priorityMarks() };
+  if (level) marks[address] = level;
+  else delete marks[address];
+  setShared("agents.priorities", marks);
+}
 
 // The agent's icon from the app's program table: a one-color glyph or a picture.
 function icon(p, size, color) {
@@ -236,7 +287,8 @@ function icon(p, size, color) {
 
 export default class Agents extends View {
   init(_props, cx) {
-    if (props()?.sortMenu) return;
+    if (props()?.sortMenu || props()?.priorityMenu || props()?.filterMenu)
+      return;
     this.folded = new Set();
     // Each agent's last state and when it changed (ms), kept across restarts.
     this.changed = JSON.parse(localStorage.getItem("changed") ?? "{}");
@@ -322,6 +374,30 @@ export default class Agents extends View {
     localStorage.setItem("pins", JSON.stringify(pins));
   }
 
+  // Drops marks for chats that ended. A machine the list has not heard from yet keeps its marks.
+  prunePriorities(all) {
+    const marks = priorityMarks();
+    const machine = (addr) => (addr.includes("/") ? addr.split("/")[0] : "");
+    const heard = new Set(all.map((k) => machine(k.address)));
+    const live = new Set(
+      all.filter((k) => k.state === "live").map((k) => k.address),
+    );
+    const next = {};
+    let dirty = false;
+    for (const [addr, level] of Object.entries(marks)) {
+      if (!PRIORITIES.some((p) => p.id === level)) {
+        dirty = true;
+        continue;
+      }
+      if (heard.has(machine(addr)) && !live.has(addr)) {
+        dirty = true;
+        continue;
+      }
+      next[addr] = level;
+    }
+    if (dirty) setShared("agents.priorities", next);
+  }
+
   // Drops pins of agents that ended. Only for machines the list has heard from:
   // right after a start, or while a machine connects, its agents aren't listed yet.
   prunePins(all) {
@@ -405,6 +481,100 @@ export default class Agents extends View {
               ),
             ),
         ),
+      );
+  }
+
+  // One choice. Picking the current mark clears it.
+  priorityMenu(t) {
+    const address = props().address;
+    const current = priorityOf(address);
+    const choices = [...PRIORITIES, { id: null, label: "None", tone: "muted" }];
+    return v_flex()
+      .w_full()
+      .p(5)
+      .bg(t.popover)
+      .text_size(12.8)
+      .child(
+        div()
+          .px(8)
+          .pt(4)
+          .pb(6)
+          .text_size(11)
+          .text_color(t.dim)
+          .child("Priority"),
+      )
+      .children(
+        choices.map((p) =>
+          h_flex()
+            .id(`pri-${p.id ?? "none"}`)
+            .h(31)
+            .px(8)
+            .gap(9)
+            .rounded(7)
+            .items_center()
+            .text_color(t[p.tone] ?? t.foreground)
+            .hover((el) => el.bg(t.hover))
+            .on_click(() => {
+              writePriority(address, current === p.id ? null : p.id);
+              closeOverlay(props().overlay);
+            })
+            .child(div().flex_1().child(p.label))
+            .when(current === p.id, (el) =>
+              el.child(
+                svg("mods/workspace-chrome/check.svg")
+                  .size(14)
+                  .flex_none()
+                  .text_color(t.foreground),
+              ),
+            ),
+        ),
+      );
+  }
+
+  // A check means those chats stay listed. Toggling keeps the menu open.
+  filterMenu(t) {
+    const hidden = new Set(hiddenPriorities());
+    const rows = [
+      ...PRIORITIES,
+      { id: "none", label: "No priority", tone: "muted" },
+    ];
+    return v_flex()
+      .w_full()
+      .p(5)
+      .bg(t.popover)
+      .text_size(12.8)
+      .child(
+        div().px(8).pt(4).pb(6).text_size(11).text_color(t.dim).child("Show"),
+      )
+      .children(
+        rows.map((p) => {
+          const on = !hidden.has(p.id);
+          return h_flex()
+            .id(`filter-${p.id}`)
+            .h(31)
+            .px(8)
+            .gap(9)
+            .rounded(7)
+            .items_center()
+            .text_color(on ? (t[p.tone] ?? t.foreground) : t.muted)
+            .hover((el) => el.bg(t.hover))
+            .on_click((_e, cx) => {
+              const now = new Set(hiddenPriorities());
+              if (on) now.add(p.id);
+              else now.delete(p.id);
+              setShared("agents.priorityHidden", [...now]);
+              cx.notify();
+            })
+            .child(div().flex_1().child(p.label))
+            .when(on, (el) =>
+              el.child(
+                svg("mods/workspace-chrome/check.svg")
+                  .size(14)
+                  .flex_none()
+                  .text_color(t.foreground),
+              ),
+            );
+        }),
       );
   }
 
@@ -537,6 +707,8 @@ export default class Agents extends View {
   render(cx) {
     const t = theme();
     if (props()?.sortMenu) return this.sortMenu(t);
+    if (props()?.priorityMenu) return this.priorityMenu(t);
+    if (props()?.filterMenu) return this.filterMenu(t);
     const collapsed = narrow();
     const sort = sortOf();
     const all = terminals();
@@ -557,6 +729,13 @@ export default class Agents extends View {
     const now = Date.now();
     this.track(list, now);
     this.hold(list);
+    this.prunePriorities(all);
+    const hiddenPri = hiddenPriorities();
+    const hadAgents = list.length > 0;
+    const matched = hiddenPri.length
+      ? list.filter((a) => !hiddenPri.includes(priorityOf(a.address) ?? "none"))
+      : list;
+    list = matched;
     const byPriority = sort.id === "priority";
     const urgency = new Map(
       list.map((a) => [
@@ -682,6 +861,7 @@ export default class Agents extends View {
       }
       const when = this.since(a);
       const idle = (a.status === "idle" || !a.status) && !a.focused;
+      const pri = PRIORITIES.find((p) => p.id === priorityOf(a.address));
       const isPinned = this.pins.includes(a.address);
       const pin = div()
         .id(`pin-${a.address}`)
@@ -773,18 +953,47 @@ export default class Agents extends View {
               ),
             ),
         )
+        .when(Boolean(pri) || this.hovered === a.address, (el) =>
+          el.child(
+            div()
+              .id(`pri-${a.address}`)
+              .flex_none()
+              .px(4)
+              .rounded(4)
+              .text_size(10)
+              .font_semibold()
+              .text_color(pri ? (t[pri.tone] ?? t.foreground) : t.dim)
+              .cursor_pointer()
+              .tooltip(pri ? `Priority ${pri.label}` : "Set priority")
+              .hover((s) => s.bg(t.hover))
+              .on_click((_e, cx) => {
+                cx.stop_propagation();
+                openOverlay({
+                  mod: "my-agents",
+                  kind: "popup",
+                  width: 160,
+                  height: 64 + (PRIORITIES.length + 1) * 31,
+                  props: { priorityMenu: true, address: a.address },
+                });
+              })
+              .child(pri ? pri.label : "P"),
+          ),
+        )
         .child(
           div()
             .id(`host-${a.address}`)
             .flex_none()
-            .tooltip(machine ?? "This computer")
+            .tooltip(deviceTitle(machine))
             .child(
               host
                 ? svg(`mods/my-agents/${host}.svg`)
                     .size(12)
                     .flex_none()
                     .text_color(t.dim)
-                : div().text_size(10).text_color(t.dim).child(machine),
+                : div()
+                    .text_size(10)
+                    .text_color(t.dim)
+                    .child(deviceTitle(machine)),
             ),
         )
         .when(subs.length > 0, (el) => el.child(fold(a, subs)))
@@ -897,22 +1106,60 @@ export default class Agents extends View {
                 .child("Agents"),
             )
             .child(
-              div()
-                .id("ag-sort")
-                .text_size(11)
-                .text_color(t.dim)
-                .hover((s) => s.text_color(t.foreground))
-                .on_click(() =>
-                  openOverlay({
-                    mod: "my-agents",
-                    kind: "popup",
-                    width: 200,
-                    height: 140,
-                    props: { sortMenu: true },
-                  }),
+              h_flex()
+                .gap(10)
+                .items_center()
+                .child(
+                  div()
+                    .id("ag-filter")
+                    .text_size(11)
+                    .text_color(hiddenPri.length ? t.foreground : t.dim)
+                    .hover((s) => s.text_color(t.foreground))
+                    .on_click(() =>
+                      openOverlay({
+                        mod: "my-agents",
+                        kind: "popup",
+                        width: 180,
+                        height: 64 + (PRIORITIES.length + 1) * 31,
+                        props: { filterMenu: true },
+                      }),
+                    )
+                    .tooltip(
+                      hiddenPri.length
+                        ? `Showing ${
+                            [
+                              ...PRIORITIES.filter(
+                                (p) => !hiddenPri.includes(p.id),
+                              ).map((p) => p.label),
+                              ...(hiddenPri.includes("none")
+                                ? []
+                                : ["No priority"]),
+                            ].join(", ") || "nothing"
+                          }`
+                        : "Filter by priority",
+                    )
+                    .child(svg("mods/my-agents/funnel.svg").size(14)),
                 )
-                .tooltip(`Sort agents: ${sort.label}`)
-                .child(svg(`mods/workspace-chrome/${sort.icon}.svg`).size(14)),
+                .child(
+                  div()
+                    .id("ag-sort")
+                    .text_size(11)
+                    .text_color(t.dim)
+                    .hover((s) => s.text_color(t.foreground))
+                    .on_click(() =>
+                      openOverlay({
+                        mod: "my-agents",
+                        kind: "popup",
+                        width: 200,
+                        height: 140,
+                        props: { sortMenu: true },
+                      }),
+                    )
+                    .tooltip(`Sort agents: ${sort.label}`)
+                    .child(
+                      svg(`mods/workspace-chrome/${sort.icon}.svg`).size(14),
+                    ),
+                ),
             ),
         ),
       )
@@ -923,7 +1170,9 @@ export default class Agents extends View {
             .text_size(12)
             .text_color(t.dim)
             .child(
-              "No agent status yet. Agents show up here when they report their status. Older versions and agents inside tmux may not.",
+              hadAgents
+                ? "Nothing matches this filter."
+                : "No agent status yet. Agents show up here when they report their status. Older versions and agents inside tmux may not.",
             ),
         ),
       )

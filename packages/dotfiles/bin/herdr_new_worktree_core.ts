@@ -1,7 +1,7 @@
 // The work behind the Herdr new-worktree dialog, run detached after the
-// dialog closes: name the branch and tab from the first message, create the
-// worktree on the space's machine, and open a space whose agent starts with
-// that message. The dialog only gathers choices; this owns the slow parts.
+// dialog closes: name the branch, space and tab from the first message, create
+// the worktree on the space's machine, and open a space whose agent starts
+// with that message. The dialog only gathers choices; this owns the slow parts.
 
 export type Request = {
   /** The agent's first message; also what the branch and tab are named from. */
@@ -55,6 +55,47 @@ export type Runtime = {
 };
 
 export type Step = "naming" | "branch" | "worktree" | "space" | "message";
+
+/** One step of a run, for the sidebar. Title, branch and path fill in as known. */
+export type Progress = {
+  readonly step: Step;
+  readonly title: string | null;
+  readonly branch: string | null;
+  readonly path: string | null;
+};
+
+/** What the sidebar reads while a run is in progress. No message text. */
+export type ActiveRun = {
+  readonly pid: number;
+  readonly machine: string | null;
+  readonly repo: string;
+  readonly step: Step;
+  readonly title: string | null;
+  readonly branch: string | null;
+  readonly path: string | null;
+};
+
+/** The repo folder `root` names, with either slash style and a trailing slash. */
+export function repoName(root: string): string {
+  const parts = root.split(/[/\\]/).filter((part) => part.length > 0);
+  return parts.at(-1) ?? root;
+}
+
+export function activeRun(
+  request: Request,
+  progress: Progress,
+  pid: number,
+): ActiveRun {
+  return {
+    pid,
+    machine: request.machine,
+    repo: repoName(request.root),
+    step: progress.step,
+    title: progress.title,
+    branch: progress.branch,
+    path: progress.path,
+  };
+}
 
 export type Outcome = {
   readonly branch: string;
@@ -193,12 +234,18 @@ async function typeFirstMessage(
 export async function createWorktree(
   request: Request,
   runtime: Runtime,
-  progress: (step: Step) => void,
+  progress: (update: Progress) => void | Promise<void>,
 ): Promise<Outcome> {
   const { machine } = request;
-  progress("naming");
+  const report = (
+    step: Step,
+    title: string | null,
+    branch: string | null,
+    path: string | null,
+  ) => progress({ step, title, branch, path });
+  await report("naming", null, null, null);
   const named = await runtime.name(request.message);
-  progress("branch");
+  await report("branch", named.title, null, null);
   const taken = async (name: string) => {
     const shown = await runtime.git(machine, request.repoMain, [
       "show-ref",
@@ -218,7 +265,7 @@ export async function createWorktree(
   if (valid.code !== 0)
     throw new Error(firstLine(valid, `git rejects the branch ${branch}.`));
   const path = `${request.root}/${slug(branch)}`;
-  progress("worktree");
+  await report("worktree", named.title, branch, path);
   const added = await runtime.git(machine, request.repoTop, [
     "worktree",
     "add",
@@ -229,19 +276,20 @@ export async function createWorktree(
   ]);
   if (added.code !== 0)
     throw new Error(firstLine(added, "git worktree add failed."));
-  progress("space");
+  await report("space", named.title, branch, path);
   const { argv, task, typed } = launch(request, { branch, title: named.title });
-  // Spaces stay unnamed so they follow the checkout and nest under the repo;
-  // the generated title names the first tab.
+  // Nesting follows the checkout folder. The generated title names the space
+  // and, unless the caller named it, the first tab.
   const terminal = await runtime.newSpace({
     folder: path,
     machine: machine ?? "",
+    name: named.title,
     tab: request.tab ?? named.title,
     ...(argv === null ? {} : { argv }),
     ...(task === null ? {} : { task }),
   });
   if (typed) {
-    progress("message");
+    await report("message", named.title, branch, path);
     const remote = machine !== null && !terminal.includes("/");
     await typeFirstMessage(
       runtime,
