@@ -60,7 +60,7 @@ function assertTempoAndLoki(documents: readonly unknown[]): void {
         resources: z.object({
           requests: z.object({
             cpu: z.literal("250m"),
-            memory: z.literal("1920Mi"),
+            memory: z.literal("2176Mi"),
           }),
           limits: z.object({
             cpu: z.literal("4"),
@@ -112,7 +112,7 @@ function assertTempoAndLoki(documents: readonly unknown[]): void {
     .parse(applicationValues(documents, "loki"));
 
   expect(loki.singleBinary.resources).toEqual({
-    requests: { cpu: "250m", memory: "1920Mi" },
+    requests: { cpu: "250m", memory: "2176Mi" },
     limits: { cpu: "4", memory: "6Gi" },
   });
   expect(loki.resultsCache).toEqual({

@@ -95,10 +95,10 @@ export function createScoutDeployment(
         s3BucketName: "scout-beta",
         selinuxLevel: zfsVolumeSelinuxLevels.scoutBeta,
         cpuRequest: Cpu.millis(50),
-        // Measured p95 working set (7d, 2026-10-31) is 2.17Gi. The gateway
+        // 14d p95 to 2026-11-08: RSS 2.68Gi, working set 2.41Gi. The gateway
         // owns voice and reserves its own resident baseline; voice and report
         // peaks share the node's burst memory within their limits.
-        memoryRequest: Size.mebibytes(2304),
+        memoryRequest: Size.mebibytes(2816),
       };
     })
     .with("prod", () => {
@@ -108,8 +108,8 @@ export function createScoutDeployment(
         s3BucketName: "scout-prod",
         selinuxLevel: zfsVolumeSelinuxLevels.scoutProd,
         cpuRequest: Cpu.millis(100),
-        // Measured p95 working set (7d, 2026-10-31) is 2.04Gi.
-        memoryRequest: Size.mebibytes(2176),
+        // 14d p95 to 2026-11-08: RSS 2.66Gi, working set 2.20Gi.
+        memoryRequest: Size.mebibytes(2816),
       };
     })
     .exhaustive();

@@ -309,14 +309,14 @@ const AUDITED_PERSISTENT_RESERVATIONS = new Map<
   [
     "scout-beta-scout-backend/main",
     {
-      requests: { cpu: "50m", memory: "2304Mi" },
+      requests: { cpu: "50m", memory: "2816Mi" },
       limits: { memory: "8192Mi" },
     },
   ],
   [
     "scout-prod-scout-backend/main",
     {
-      requests: { cpu: "100m", memory: "2176Mi" },
+      requests: { cpu: "100m", memory: "2816Mi" },
       limits: { memory: "8192Mi" },
     },
   ],
@@ -511,7 +511,7 @@ describe("Burst-memory sharing policy", () => {
     });
     for (const [name, cpu, request, limit, heap, mapPort, mapName] of [
       ["minecraft-shuxin", "500m", "8Gi", "8Gi", "7G", 8100, "bluemap"],
-      ["minecraft-tsmc", "3", "11Gi", "16Gi", "8G", 8100, "bluemap"],
+      ["minecraft-tsmc", "3", "11648Mi", "16Gi", "8G", 8100, "bluemap"],
       ["minecraft-sjerred", "2", "6Gi", "8Gi", "5G", 8123, "dynmap"],
     ] as const) {
       const values = applications.find((app) => app.metadata.name === name)

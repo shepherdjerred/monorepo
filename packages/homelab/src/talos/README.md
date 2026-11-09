@@ -37,6 +37,14 @@ Patches are applied to the base Talos machine configuration to customize the clu
 
 **2026-10-31 systemReserved cut**: applied live with `talosctl patch machineconfig --mode=no-reboot`, changing only `systemReserved.memory` 24Gi → 18Gi. Allocatable memory rose from `93728788Ki` to `100020244Ki`, `/sys/fs/cgroup/system/memory.max` reads 18 GiB, and `enforceNodeAllocatable` remained `[pods, system-reserved, kube-reserved]` (the patch touched no list field).
 
+### apiserver.yaml
+
+**Purpose**: Size the kube-apiserver static pod's requests to its measured footprint.
+
+**Current settings**: `cluster.apiServer.resources.requests` is `200m` CPU (the Talos default) and `2816Mi` memory. The 512Mi Talos default was a fifth of the measured RSS (p95 2.59Gi, max 2.76Gi over 14 days), which made the control plane the kubelet's first eviction candidate under memory pressure. Static pods are mirror pods, so admission-time request scaling never applies to it.
+
+**Apply**: `talosctl patch machineconfig --patch @torvalds/patches/apiserver.yaml --mode=no-reboot`. The patch touches only map fields. Talos restarts the kube-apiserver static pod to pick up the new requests, so the API is briefly unavailable.
+
 ### zfs.yaml
 
 **Purpose**: Configure ZFS kernel module parameters

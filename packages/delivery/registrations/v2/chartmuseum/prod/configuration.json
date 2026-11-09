@@ -1,7 +1,7 @@
 {
-  "id": "chartmuseum/prod/1",
+  "id": "chartmuseum/prod/2",
   "content": {
-    "helm.valuesObject": "{\"env\":{\"existingSecret\":\"chartmuseum-basic-auth\",\"existingSecretMappings\":{\"BASIC_AUTH_PASS\":\"password\",\"BASIC_AUTH_USER\":\"username\"},\"open\":{\"AUTH_ANONYMOUS_GET\":true,\"DISABLE_API\":false}},\"persistence\":{\"enabled\":true,\"size\":\"8Gi\",\"storageClass\":\"zfs-hdd\"}}"
+    "helm.valuesObject": "{\"env\":{\"existingSecret\":\"chartmuseum-basic-auth\",\"existingSecretMappings\":{\"BASIC_AUTH_PASS\":\"password\",\"BASIC_AUTH_USER\":\"username\"},\"open\":{\"AUTH_ANONYMOUS_GET\":true,\"DISABLE_API\":false}},\"persistence\":{\"enabled\":true,\"size\":\"8Gi\",\"storageClass\":\"zfs-hdd\"},\"resources\":{\"requests\":{\"cpu\":\"200m\",\"memory\":\"640Mi\"}}}"
   },
   "forwardOnly": []
 }

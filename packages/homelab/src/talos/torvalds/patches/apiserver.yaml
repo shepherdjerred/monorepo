@@ -1,0 +1,13 @@
+# kube-apiserver is a static pod, so its requests come from Talos rather than
+# a chart. The Talos default (200m / 512Mi) left it requesting a fifth of its
+# real footprint: over 14 days to 2026-11-08 its RSS p95 was 2.59Gi (max
+# 2.76Gi). A pod far above its request is the kubelet's first eviction
+# candidate under node memory pressure, and this one is the control plane.
+# The CPU request keeps the Talos default; both keys are set explicitly so the
+# override does not depend on Talos merging partial requests with defaults.
+cluster:
+  apiServer:
+    resources:
+      requests:
+        cpu: 200m
+        memory: 2816Mi
