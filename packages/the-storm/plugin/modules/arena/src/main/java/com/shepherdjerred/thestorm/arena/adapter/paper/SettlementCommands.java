@@ -13,33 +13,30 @@ final class SettlementCommands {
             .requires(source -> source.getSender().hasPermission(ArenaPermissions.ADMIN))
             .then(
                 Commands.literal("preview")
-                    .executes(
-                        c -> {
-                          provisioner.preview(c.getSource().getSender());
-                          return 1;
-                        }))
+                    .executes(c -> {
+                      provisioner.preview(c.getSource().getSender());
+                      return 1;
+                    }))
             .then(
                 Commands.literal("apply")
                     .then(
                         Commands.argument("token", StringArgumentType.word())
-                            .executes(
-                                c -> {
-                                  provisioner.apply(
-                                      c.getSource().getSender(),
-                                      StringArgumentType.getString(c, "token"));
-                                  return 1;
-                                })))
+                            .executes(c -> {
+                              provisioner.apply(
+                                  c.getSource().getSender(),
+                                  StringArgumentType.getString(c, "token"));
+                              return 1;
+                            })))
             .then(
                 Commands.literal("restore")
                     .then(
                         Commands.argument("token", StringArgumentType.word())
-                            .executes(
-                                c -> {
-                                  provisioner.restore(
-                                      c.getSource().getSender(),
-                                      StringArgumentType.getString(c, "token"));
-                                  return 1;
-                                })))
+                            .executes(c -> {
+                              provisioner.restore(
+                                  c.getSource().getSender(),
+                                  StringArgumentType.getString(c, "token"));
+                              return 1;
+                            })))
             .build(),
         "Preview, provision, or restore the authored " + map + " footprint");
   }

@@ -179,12 +179,10 @@ public final class StargateBook {
         () ->
             store
                 .deleteGate(id)
-                .thenApply(
-                    removed -> {
-                      if (!removed)
-                        throw new IllegalStateException("stored Stargate vanished: " + id);
-                      return null;
-                    }));
+                .thenApply(removed -> {
+                  if (!removed) throw new IllegalStateException("stored Stargate vanished: " + id);
+                  return null;
+                }));
   }
 
   /** Removes only a private, unshared, empty capture fixture network. */
@@ -210,12 +208,11 @@ public final class StargateBook {
         () ->
             store
                 .deleteEmptyNetwork(network.id())
-                .thenApply(
-                    removed -> {
-                      if (!removed)
-                        throw new IllegalStateException("Capture network disappeared from storage");
-                      return null;
-                    }));
+                .thenApply(removed -> {
+                  if (!removed)
+                    throw new IllegalStateException("Capture network disappeared from storage");
+                  return null;
+                }));
   }
 
   /** Remove an account's gates, invitations and owned private networks atomically. */
@@ -223,30 +220,27 @@ public final class StargateBook {
     var current = current();
     var removedNetworks =
         current.networks().stream()
-            .filter(
-                network ->
-                    network.access() instanceof NetworkAccess.Private(var owner, _)
-                        && owner.equals(player))
+            .filter(network ->
+                network.access() instanceof NetworkAccess.Private(var owner, _)
+                    && owner.equals(player))
             .map(StargateNetwork::id)
             .collect(java.util.stream.Collectors.toUnmodifiableSet());
     var networks =
         current.networks().stream()
             .filter(network -> !removedNetworks.contains(network.id()))
-            .map(
-                network -> {
-                  if (!(network.access() instanceof NetworkAccess.Private(var owner, var invited)))
-                    return network;
-                  var remaining = new java.util.HashSet<>(invited);
-                  remaining.remove(player);
-                  return new StargateNetwork(
-                      network.id(), network.name(), new NetworkAccess.Private(owner, remaining));
-                })
+            .map(network -> {
+              if (!(network.access() instanceof NetworkAccess.Private(var owner, var invited)))
+                return network;
+              var remaining = new java.util.HashSet<>(invited);
+              remaining.remove(player);
+              return new StargateNetwork(
+                  network.id(), network.name(), new NetworkAccess.Private(owner, remaining));
+            })
             .toList();
     var gates =
         current.gates().stream()
-            .filter(
-                gate ->
-                    !gate.ownerId().equals(player) && !removedNetworks.contains(gate.networkId()))
+            .filter(gate ->
+                !gate.ownerId().equals(player) && !removedNetworks.contains(gate.networkId()))
             .toList();
     return save(new StargateStore.Snapshot(networks, gates), () -> store.resetPlayer(player));
   }

@@ -28,16 +28,12 @@ final class Leap implements Spell {
 
   @Override
   public Result<Effect, CastProblem> prepare(Player caster) {
-    return Result.ok(
-        () -> {
-          var velocity =
-              Knockback.leap(Magic.at(caster).getYaw(), settings.forward(), settings.upward());
-          caster.setVelocity(Magic.vector(velocity));
-          tools
-              .state()
-              .featherFall()
-              .start(caster.getUniqueId(), FEATHER_FALL, tools.time().instant());
-          tools.fx().cast(kind(), Magic.at(caster));
-        });
+    return Result.ok(() -> {
+      var velocity =
+          Knockback.leap(Magic.at(caster).getYaw(), settings.forward(), settings.upward());
+      caster.setVelocity(Magic.vector(velocity));
+      tools.state().featherFall().start(caster.getUniqueId(), FEATHER_FALL, tools.time().instant());
+      tools.fx().cast(kind(), Magic.at(caster));
+    });
   }
 }

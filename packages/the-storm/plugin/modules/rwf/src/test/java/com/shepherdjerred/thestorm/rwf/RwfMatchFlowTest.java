@@ -248,18 +248,16 @@ final class RwfMatchFlowTest {
         .isEqualTo(Money.crystals(0));
     assertThat(receipt.reason()).isEqualTo(PayoutService.reason(matchId, MatchStore.Outcome.WIN));
     var store = new JooqMatchStore(harness.database);
-    harness.until(
-        () ->
-            store.players(matchId).join().stream()
-                .anyMatch(row -> row.status() == MatchStore.PayoutStatus.PAID));
+    harness.until(() ->
+        store.players(matchId).join().stream()
+            .anyMatch(row -> row.status() == MatchStore.PayoutStatus.PAID));
     assertThat(store.players(matchId).join())
         .singleElement()
-        .satisfies(
-            row -> {
-              assertThat(row.player()).isEqualTo(alice.getUniqueId());
-              assertThat(row.outcome()).isEqualTo(MatchStore.Outcome.WIN);
-              assertThat(row.creditsOwed()).isEqualTo(1);
-            });
+        .satisfies(row -> {
+          assertThat(row.player()).isEqualTo(alice.getUniqueId());
+          assertThat(row.outcome()).isEqualTo(MatchStore.Outcome.WIN);
+          assertThat(row.creditsOwed()).isEqualTo(1);
+        });
 
     harness.tick(Duration.ofSeconds(16));
     harness.until(() -> harness.snapshot().phase() == MatchSnapshot.PhaseKind.LOBBY);
@@ -361,11 +359,10 @@ final class RwfMatchFlowTest {
     harness.until(() -> !store.players(matchId).join().isEmpty());
     assertThat(store.players(matchId).join())
         .singleElement()
-        .satisfies(
-            row -> {
-              assertThat(row.outcome()).isEqualTo(MatchStore.Outcome.STOPPED);
-              assertThat(row.status()).isEqualTo(MatchStore.PayoutStatus.NONE);
-            });
+        .satisfies(row -> {
+          assertThat(row.outcome()).isEqualTo(MatchStore.Outcome.STOPPED);
+          assertThat(row.status()).isEqualTo(MatchStore.PayoutStatus.NONE);
+        });
     assertThat(store.unpaid().join()).isEmpty();
   }
 
@@ -490,12 +487,11 @@ final class RwfMatchFlowTest {
     harness.until(() -> !store.players(matchId).join().isEmpty());
     assertThat(store.players(matchId).join())
         .singleElement()
-        .satisfies(
-            row -> {
-              assertThat(row.outcome()).isEqualTo(MatchStore.Outcome.WIN);
-              assertThat(row.creditsOwed()).as("shorter than minMatchLength").isZero();
-              assertThat(row.status()).isEqualTo(MatchStore.PayoutStatus.NONE);
-            });
+        .satisfies(row -> {
+          assertThat(row.outcome()).isEqualTo(MatchStore.Outcome.WIN);
+          assertThat(row.creditsOwed()).as("shorter than minMatchLength").isZero();
+          assertThat(row.status()).isEqualTo(MatchStore.PayoutStatus.NONE);
+        });
     assertThat(harness.wallets.receipts()).isEmpty();
 
     harness.tick(Duration.ofSeconds(16));
@@ -559,37 +555,32 @@ final class RwfMatchFlowTest {
 
     assertThat(harness.wallets.receipts())
         .singleElement()
-        .satisfies(
-            receipt -> {
-              assertThat(receipt.from()).isEqualTo(account);
-              assertThat(receipt.to()).isEqualTo(new AccountId.Server());
-              assertThat(receipt.amount()).isEqualTo(Money.rwfCredits(2));
-              assertThat(receipt.reason())
-                  .isEqualTo(PayoutService.reason(matchId, MatchStore.Outcome.AFK));
-            });
+        .satisfies(receipt -> {
+          assertThat(receipt.from()).isEqualTo(account);
+          assertThat(receipt.to()).isEqualTo(new AccountId.Server());
+          assertThat(receipt.amount()).isEqualTo(Money.rwfCredits(2));
+          assertThat(receipt.reason())
+              .isEqualTo(PayoutService.reason(matchId, MatchStore.Outcome.AFK));
+        });
     var store = new JooqMatchStore(harness.database);
-    harness.until(
-        () ->
-            store.players(matchId).join().stream()
-                .anyMatch(row -> row.status() == MatchStore.PayoutStatus.PAID));
+    harness.until(() ->
+        store.players(matchId).join().stream()
+            .anyMatch(row -> row.status() == MatchStore.PayoutStatus.PAID));
     assertThat(store.players(matchId).join())
         .singleElement()
-        .satisfies(
-            row -> {
-              assertThat(row.outcome()).isEqualTo(MatchStore.Outcome.AFK);
-              assertThat(row.currency()).isEqualTo(CurrencyId.RWF_CREDITS);
-              assertThat(row.creditsOwed()).isEqualTo(-2);
-              assertThat(row.creditsPaid()).isEqualTo(-2);
-            });
+        .satisfies(row -> {
+          assertThat(row.outcome()).isEqualTo(MatchStore.Outcome.AFK);
+          assertThat(row.currency()).isEqualTo(CurrencyId.RWF_CREDITS);
+          assertThat(row.creditsOwed()).isEqualTo(-2);
+          assertThat(row.creditsPaid()).isEqualTo(-2);
+        });
     assertThat(harness.wallets.held(account, CurrencyId.RWF_CREDITS))
         .isEqualTo(Money.rwfCredits(3));
     var seen = new ArrayList<String>();
-    harness.until(
-        () -> {
-          seen.addAll(RwfHarness.messages(alice));
-          return seen.stream()
-              .anyMatch(m -> m.contains("you earned nothing and 2 credits were taken"));
-        });
+    harness.until(() -> {
+      seen.addAll(RwfHarness.messages(alice));
+      return seen.stream().anyMatch(m -> m.contains("you earned nothing and 2 credits were taken"));
+    });
     assertThat(seen).noneMatch(m -> m.contains("You earned"));
   }
 
@@ -622,11 +613,10 @@ final class RwfMatchFlowTest {
     harness.until(() -> !store.players(matchId).join().isEmpty());
     assertThat(store.players(matchId).join())
         .singleElement()
-        .satisfies(
-            row -> {
-              assertThat(row.deaths()).isEqualTo(1);
-              assertThat(row.outcome()).isEqualTo(MatchStore.Outcome.LOSE);
-            });
+        .satisfies(row -> {
+          assertThat(row.deaths()).isEqualTo(1);
+          assertThat(row.outcome()).isEqualTo(MatchStore.Outcome.LOSE);
+        });
   }
 
   @Test
@@ -638,12 +628,11 @@ final class RwfMatchFlowTest {
     var deaths = new ArrayList<MatchEvent.Died>();
     harness
         .events()
-        .subscribe(
-            notification -> {
-              if (notification.event() instanceof MatchEvent.Died died) {
-                deaths.add(died);
-              }
-            });
+        .subscribe(notification -> {
+          if (notification.event() instanceof MatchEvent.Died died) {
+            deaths.add(died);
+          }
+        });
     alice.teleport(new Location(harness.rwf, 31.5, 65, 20.5));
     attacker.entity().teleport(new Location(harness.rwf, 31.5, 65, 22.5));
 

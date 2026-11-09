@@ -41,24 +41,22 @@ final class AnalyticsPaper implements Listener, AutoCloseable {
                   var bootstrap = AnalyticsBootstrap.fromEnvironment(System.getenv());
                   return analytics
                       .start(bootstrap, context.scheduler().mainThread())
-                      .thenRun(
-                          () -> {
-                            for (var player : context.plugin().getServer().getOnlinePlayers()) {
-                              if (Humans.isHuman(player))
-                                analytics.joined(player.getUniqueId(), player.getName());
-                            }
-                          });
+                      .thenRun(() -> {
+                        for (var player : context.plugin().getServer().getOnlinePlayers()) {
+                          if (Humans.isHuman(player))
+                            analytics.joined(player.getUniqueId(), player.getName());
+                        }
+                      });
                 },
                 context.scheduler().mainThread())
-            .whenComplete(
-                (done, failure) -> {
-                  if (failure != null)
-                    context
-                        .logger()
-                        .error(
-                            "Product analytics activation failed; collection remains disabled",
-                            failure);
-                });
+            .whenComplete((done, failure) -> {
+              if (failure != null)
+                context
+                    .logger()
+                    .error(
+                        "Product analytics activation failed; collection remains disabled",
+                        failure);
+            });
   }
 
   @EventHandler(priority = EventPriority.MONITOR)

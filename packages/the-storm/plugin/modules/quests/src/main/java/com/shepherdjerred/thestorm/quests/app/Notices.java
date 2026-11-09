@@ -42,12 +42,10 @@ final class Notices {
           catalog
               .quest(quest)
               .map(Quest::giver)
-              .map(
-                  giver ->
-                      HouseStyle.info(
-                          LABEL,
-                          Component.text(
-                              "Return to " + lookup.npc().apply(giver) + " to decide.")));
+              .map(giver ->
+                  HouseStyle.info(
+                      LABEL,
+                      Component.text("Return to " + lookup.npc().apply(giver) + " to decide.")));
       case Effect.Completed(var quest) ->
           Optional.of(success("Quest complete: ", Journal.name(catalog, quest)));
       case Effect.Failed(var quest) ->
@@ -103,13 +101,12 @@ final class Notices {
         .quest(quest)
         .flatMap(found -> found.stage(stageId))
         .filter(stage -> stage.objectives().size() > objective)
-        .map(
-            stage ->
-                Component.text(
-                    Describe.objective(stage.objectives().get(objective), lookup)
-                        + "  "
-                        + Describe.progress(count, required),
-                    count >= required ? NamedTextColor.GREEN : NamedTextColor.GRAY));
+        .map(stage ->
+            Component.text(
+                Describe.objective(stage.objectives().get(objective), lookup)
+                    + "  "
+                    + Describe.progress(count, required),
+                count >= required ? NamedTextColor.GREEN : NamedTextColor.GRAY));
   }
 
   static Component info(String message) {

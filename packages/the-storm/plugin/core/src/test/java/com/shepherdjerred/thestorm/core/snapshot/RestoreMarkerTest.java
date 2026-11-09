@@ -75,47 +75,42 @@ final class RestoreMarkerTest {
 
   @Test
   void invalidVersionAndImpossibleFlightFailLoudly() {
-    assertThatThrownBy(
-            () ->
-                new Vitals(
-                    new Vitals.Condition(20, 20, 0, 0),
-                    "SURVIVAL",
-                    new Vitals.Flight(false, true, 0.1f),
-                    20))
+    assertThatThrownBy(() ->
+            new Vitals(
+                new Vitals.Condition(20, 20, 0, 0),
+                "SURVIVAL",
+                new Vitals.Flight(false, true, 0.1f),
+                20))
         .hasMessageContaining("flying");
-    assertThatThrownBy(
-            () ->
-                new Vitals(
-                    new Vitals.Condition(20, 20, 0, 0),
-                    "SURVIVAL",
-                    new Vitals.Flight(false, false, Float.NaN),
-                    20))
+    assertThatThrownBy(() ->
+            new Vitals(
+                new Vitals.Condition(20, 20, 0, 0),
+                "SURVIVAL",
+                new Vitals.Flight(false, false, Float.NaN),
+                20))
         .hasMessageContaining("flySpeed");
-    assertThatThrownBy(
-            () ->
-                new Vitals(
-                    new Vitals.Condition(20, 20, 0, 0),
-                    "SURVIVAL",
-                    new Vitals.Flight(false, false, 0.1f),
-                    -1))
+    assertThatThrownBy(() ->
+            new Vitals(
+                new Vitals.Condition(20, 20, 0, 0),
+                "SURVIVAL",
+                new Vitals.Flight(false, false, 0.1f),
+                -1))
         .hasMessageContaining("maximumNoDamageTicks");
-    assertThatThrownBy(
-            () ->
-                new Vitals(
-                    new Vitals.Condition(20, 20, 0, 0),
-                    "SURVIVAL",
-                    new Vitals.Flight(false, false, 0.1f),
-                    20,
-                    3))
+    assertThatThrownBy(() ->
+            new Vitals(
+                new Vitals.Condition(20, 20, 0, 0),
+                "SURVIVAL",
+                new Vitals.Flight(false, false, 0.1f),
+                20,
+                3))
         .hasMessageContaining("version");
-    assertThatThrownBy(
-            () ->
-                new Vitals(
-                    new Vitals.Condition(20, 20, 0, 0),
-                    "SURVIVAL",
-                    new Vitals.Flight(true, true, 0.1f),
-                    20,
-                    1))
+    assertThatThrownBy(() ->
+            new Vitals(
+                new Vitals.Condition(20, 20, 0, 0),
+                "SURVIVAL",
+                new Vitals.Flight(true, true, 0.1f),
+                20,
+                1))
         .hasMessageContaining("historical");
   }
 }

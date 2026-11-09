@@ -130,31 +130,29 @@ public final class QolPaper {
             area -> {
               if (!banks.isLoaded()) throw new IllegalStateException("Banks are loading");
               return banks.all().stream()
-                  .filter(
-                      bank ->
-                          area.contains(
-                                  bank.sign().world(),
-                                  bank.sign().x(),
-                                  bank.sign().y(),
-                                  bank.sign().z())
-                              || area.contains(
-                                  bank.container().world(),
-                                  bank.container().x(),
-                                  bank.container().y(),
-                                  bank.container().z())
-                              || bank.shelves().stream()
-                                  .anyMatch(
-                                      shelf ->
-                                          area.contains(
-                                                  shelf.sign().world(),
-                                                  shelf.sign().x(),
-                                                  shelf.sign().y(),
-                                                  shelf.sign().z())
-                                              || area.contains(
-                                                  shelf.container().world(),
-                                                  shelf.container().x(),
-                                                  shelf.container().y(),
-                                                  shelf.container().z())))
+                  .filter(bank ->
+                      area.contains(
+                              bank.sign().world(),
+                              bank.sign().x(),
+                              bank.sign().y(),
+                              bank.sign().z())
+                          || area.contains(
+                              bank.container().world(),
+                              bank.container().x(),
+                              bank.container().y(),
+                              bank.container().z())
+                          || bank.shelves().stream()
+                              .anyMatch(shelf ->
+                                  area.contains(
+                                          shelf.sign().world(),
+                                          shelf.sign().x(),
+                                          shelf.sign().y(),
+                                          shelf.sign().z())
+                                      || area.contains(
+                                          shelf.container().world(),
+                                          shelf.container().x(),
+                                          shelf.container().y(),
+                                          shelf.container().z())))
                   .map(Object::toString)
                   .sorted()
                   .collect(java.util.stream.Collectors.joining("\n"));
@@ -170,18 +168,16 @@ public final class QolPaper {
     var paper = new QolPaper(permissions, app.combat(), sleep, banks, sorts, context.logger());
 
     app.guards()
-        .add(
-            (mover, destination) ->
-                app.combat()
-                    .remaining(mover)
-                    .map(
-                        remaining ->
-                            HouseStyle.error(
-                                Say.COMBAT,
-                                Component.text(
-                                    "You cannot teleport while in combat ("
-                                        + DurationText.of(remaining)
-                                        + " left)."))));
+        .add((mover, destination) ->
+            app.combat()
+                .remaining(mover)
+                .map(remaining ->
+                    HouseStyle.error(
+                        Say.COMBAT,
+                        Component.text(
+                            "You cannot teleport while in combat ("
+                                + DurationText.of(remaining)
+                                + " left)."))));
 
     var commands = new QolCommands(runtime, app.graves(), policy);
     var bankCommands = new BankCommands(bankListener);
@@ -223,13 +219,12 @@ public final class QolPaper {
         () ->
             server
                 .getOnlinePlayers()
-                .forEach(
-                    player -> {
-                      deaths.recover(player);
-                      opening.recover(player);
-                      upkeep.expireNear(player);
-                      opening.nearby(player);
-                    }));
+                .forEach(player -> {
+                  deaths.recover(player);
+                  opening.recover(player);
+                  upkeep.expireNear(player);
+                  opening.nearby(player);
+                }));
     runtime.onMain(
         context
             .services()

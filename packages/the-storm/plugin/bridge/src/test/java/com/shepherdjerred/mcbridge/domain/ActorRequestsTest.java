@@ -69,10 +69,8 @@ final class ActorRequestsTest {
         .isEqualTo(new ActorRequests.AttackTarget.NearestOfType("minecraft:zombie"));
     assertThatThrownBy(() -> ActorRequests.attackTarget(Optional.empty(), Optional.empty()))
         .hasMessageContaining("exactly one");
-    assertThatThrownBy(
-            () ->
-                ActorRequests.attackTarget(
-                    Optional.of(id.toString()), Optional.of("minecraft:zombie")))
+    assertThatThrownBy(() ->
+            ActorRequests.attackTarget(Optional.of(id.toString()), Optional.of("minecraft:zombie")))
         .hasMessageContaining("exactly one");
     assertThatThrownBy(() -> ActorRequests.attackTarget(Optional.of("nope"), Optional.empty()))
         .hasMessageContaining("UUID");

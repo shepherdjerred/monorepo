@@ -60,65 +60,55 @@ public final class ContentCompiler {
       var source = sourced.source();
       var file = sourced.file();
       file.factions()
-          .forEach(
-              (id, entry) ->
-                  claim(source, "factions", id)
-                      .flatMap(
-                          path ->
-                              build(
-                                  source,
-                                  path,
-                                  () ->
-                                      new Faction(
-                                          id,
-                                          entry.name(),
-                                          entry.ranks().stream()
-                                              .map(
-                                                  rank ->
-                                                      new Faction.Rank(rank.name(), rank.from()))
-                                              .toList())))
-                      .ifPresent(faction -> factions.put(id, faction)));
+          .forEach((id, entry) ->
+              claim(source, "factions", id)
+                  .flatMap(path ->
+                      build(
+                          source,
+                          path,
+                          () ->
+                              new Faction(
+                                  id,
+                                  entry.name(),
+                                  entry.ranks().stream()
+                                      .map(rank -> new Faction.Rank(rank.name(), rank.from()))
+                                      .toList())))
+                  .ifPresent(faction -> factions.put(id, faction)));
       describe(source, "variables", file.variables(), variables);
       describe(source, "hooks", file.hooks(), hooks);
       file.regions()
-          .forEach(
-              (id, entry) ->
-                  claim(source, "regions", id)
-                      .flatMap(
-                          path ->
-                              build(
-                                  source,
-                                  path,
-                                  () ->
-                                      new Region(
-                                          id,
-                                          entry.name(),
-                                          entry.world(),
-                                          entry.x(),
-                                          entry.y(),
-                                          entry.z(),
-                                          entry.radius())))
-                      .ifPresent(region -> regions.put(id, region)));
+          .forEach((id, entry) ->
+              claim(source, "regions", id)
+                  .flatMap(path ->
+                      build(
+                          source,
+                          path,
+                          () ->
+                              new Region(
+                                  id,
+                                  entry.name(),
+                                  entry.world(),
+                                  entry.x(),
+                                  entry.y(),
+                                  entry.z(),
+                                  entry.radius())))
+                  .ifPresent(region -> regions.put(id, region)));
       file.quests()
-          .forEach(
-              (id, entry) ->
-                  claim(source, "quests", id)
-                      .flatMap(path -> quest(source, path, id, entry))
-                      .ifPresent(
-                          quest -> {
-                            quests.put(id, quest);
-                            sources.put(id, source);
-                          }));
+          .forEach((id, entry) ->
+              claim(source, "quests", id)
+                  .flatMap(path -> quest(source, path, id, entry))
+                  .ifPresent(quest -> {
+                    quests.put(id, quest);
+                    sources.put(id, source);
+                  }));
       file.templates()
-          .forEach(
-              (id, entry) ->
-                  claim(source, "templates", id)
-                      .flatMap(path -> template(source, path, id, entry))
-                      .ifPresent(
-                          template -> {
-                            templates.put(id, template);
-                            sources.put(id, source);
-                          }));
+          .forEach((id, entry) ->
+              claim(source, "templates", id)
+                  .flatMap(path -> template(source, path, id, entry))
+                  .ifPresent(template -> {
+                    templates.put(id, template);
+                    sources.put(id, source);
+                  }));
     }
     return new QuestContent(quests, factions, variables, regions, hooks, templates, sources);
   }
@@ -140,17 +130,15 @@ public final class ContentCompiler {
 
   private void describe(
       String source, String kind, Map<String, String> entries, Map<String, String> into) {
-    entries.forEach(
-        (id, description) ->
-            claim(source, kind, id)
-                .ifPresent(
-                    path -> {
-                      if (description.isBlank()) {
-                        problem(source, path, "needs a description");
-                      } else {
-                        into.put(id, description);
-                      }
-                    }));
+    entries.forEach((id, description) ->
+        claim(source, kind, id)
+            .ifPresent(path -> {
+              if (description.isBlank()) {
+                problem(source, path, "needs a description");
+              } else {
+                into.put(id, description);
+              }
+            }));
   }
 
   private Optional<Quest> quest(String source, String path, String id, QuestEntry entry) {
@@ -163,10 +151,9 @@ public final class ContentCompiler {
     var stages = new HashMap<String, Stage>();
     entry
         .stages()
-        .forEach(
-            (stageId, stageEntry) ->
-                stage(source, path + ".stages." + stageId, stageId, stageEntry)
-                    .ifPresent(stage -> stages.put(stageId, stage)));
+        .forEach((stageId, stageEntry) ->
+            stage(source, path + ".stages." + stageId, stageId, stageEntry)
+                .ifPresent(stage -> stages.put(stageId, stage)));
     if (problems.size() > before || category.isEmpty() || repeat.isEmpty()) {
       return Optional.empty();
     }
@@ -291,15 +278,14 @@ public final class ContentCompiler {
                 entry.finish(),
                 entry.baseReward(),
                 entry.targets().stream()
-                    .map(
-                        target ->
-                            new Template.Target(
-                                target.id(),
-                                target.difficulty(),
-                                target.min(),
-                                target.max(),
-                                target.reward(),
-                                target.minutes()))
+                    .map(target ->
+                        new Template.Target(
+                            target.id(),
+                            target.difficulty(),
+                            target.min(),
+                            target.max(),
+                            target.reward(),
+                            target.minutes()))
                     .toList()));
   }
 

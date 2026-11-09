@@ -44,6 +44,7 @@ function fullTreeScanCommand(): string[] {
     ".",
     "--no-git",
     "--redact",
+    "--verbose",
     "--no-banner",
   ];
 }
@@ -117,6 +118,7 @@ export async function gitleaksCommand(
         "git",
         `--log-opts=${base}..HEAD`,
         "--redact",
+        "--verbose",
         "--no-banner",
         ".",
       ];

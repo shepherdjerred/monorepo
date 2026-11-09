@@ -85,38 +85,33 @@ public final class KitShop {
     }
     return store
         .owned(player)
-        .thenCompose(
-            owned -> {
-              if (owned.contains(kit.id())) {
-                return CompletableFuture.completedFuture(
-                    Result.<Purchase, ShopError>err(new ShopError.AlreadyOwned(kit.id())));
-              }
-              return store
-                  .pending()
-                  .thenCompose(
-                      pending -> {
-                        var previous =
-                            pending.stream()
-                                .filter(
-                                    purchase ->
-                                        purchase.player().equals(player)
-                                            && purchase.kit().equals(kit.id()))
-                                .findFirst();
-                        if (previous.isPresent()) {
-                          return resume(player, kit.id(), now);
-                        }
-                        if (!pool.allows(kit.id())) {
-                          return CompletableFuture.completedFuture(
-                              Result.<Purchase, ShopError>err(new ShopError.NotForSale(kit.id())));
-                        }
-                        var purchase = new Purchase(ids.get(), player, kit.id(), kit.price(), now);
-                        return store
-                            .begin(purchase)
-                            .thenCompose(
-                                opened ->
-                                    opened ? charge(purchase, now) : resume(player, kit.id(), now));
-                      });
-            });
+        .thenCompose(owned -> {
+          if (owned.contains(kit.id())) {
+            return CompletableFuture.completedFuture(
+                Result.<Purchase, ShopError>err(new ShopError.AlreadyOwned(kit.id())));
+          }
+          return store
+              .pending()
+              .thenCompose(pending -> {
+                var previous =
+                    pending.stream()
+                        .filter(purchase ->
+                            purchase.player().equals(player) && purchase.kit().equals(kit.id()))
+                        .findFirst();
+                if (previous.isPresent()) {
+                  return resume(player, kit.id(), now);
+                }
+                if (!pool.allows(kit.id())) {
+                  return CompletableFuture.completedFuture(
+                      Result.<Purchase, ShopError>err(new ShopError.NotForSale(kit.id())));
+                }
+                var purchase = new Purchase(ids.get(), player, kit.id(), kit.price(), now);
+                return store
+                    .begin(purchase)
+                    .thenCompose(
+                        opened -> opened ? charge(purchase, now) : resume(player, kit.id(), now));
+              });
+        });
   }
 
   /** A committed charge can finish its grant on retry without waiting for a server restart. */
@@ -124,52 +119,47 @@ public final class KitShop {
       UUID player, String kit, Instant now) {
     return store
         .pending()
-        .thenCompose(
-            pending -> {
-              var previous =
-                  pending.stream()
-                      .filter(
-                          purchase ->
-                              purchase.player().equals(player) && purchase.kit().equals(kit))
-                      .findFirst();
-              if (previous.isEmpty()) {
-                return CompletableFuture.completedFuture(Result.err(new ShopError.InProgress(kit)));
-              }
-              var purchase = previous.orElseThrow();
-              return wallets
-                  .receiptFor(purchase.id())
-                  .thenCompose(
-                      receipt ->
-                          receipt.isPresent()
-                              ? store
-                                  .grant(purchase.id(), now)
-                                  .thenApply(ignored -> Result.<Purchase, ShopError>ok(purchase))
-                              : CompletableFuture.completedFuture(
-                                  Result.err(new ShopError.InProgress(kit))));
-            });
+        .thenCompose(pending -> {
+          var previous =
+              pending.stream()
+                  .filter(
+                      purchase -> purchase.player().equals(player) && purchase.kit().equals(kit))
+                  .findFirst();
+          if (previous.isEmpty()) {
+            return CompletableFuture.completedFuture(Result.err(new ShopError.InProgress(kit)));
+          }
+          var purchase = previous.orElseThrow();
+          return wallets
+              .receiptFor(purchase.id())
+              .thenCompose(receipt ->
+                  receipt.isPresent()
+                      ? store
+                          .grant(purchase.id(), now)
+                          .thenApply(ignored -> Result.<Purchase, ShopError>ok(purchase))
+                      : CompletableFuture.completedFuture(
+                          Result.err(new ShopError.InProgress(kit))));
+        });
   }
 
   private CompletableFuture<Result<Purchase, ShopError>> charge(Purchase purchase, Instant now) {
     return wallets
         .transferOnce(transfer(purchase))
-        .thenCompose(
-            result ->
-                switch (result) {
-                  case Result.Ok<Receipt, EconomyError> _ ->
-                      store
-                          .grant(purchase.id(), now)
-                          .thenApply(ignored -> Result.<Purchase, ShopError>ok(purchase));
-                  case Result.Err<Receipt, EconomyError>(
-                          EconomyError.InsufficientFunds(var _, var balance, var required)) ->
-                      store
-                          .cancel(purchase.id(), now)
-                          .thenApply(
-                              ignored ->
-                                  Result.<Purchase, ShopError>err(
-                                      new ShopError.TooPoor(required.amount(), balance.amount())));
-                  case Result.Err<Receipt, EconomyError>(var error) ->
-                      throw new IllegalStateException("a kit purchase was refused: " + error);
-                });
+        .thenCompose(result ->
+            switch (result) {
+              case Result.Ok<Receipt, EconomyError> _ ->
+                  store
+                      .grant(purchase.id(), now)
+                      .thenApply(ignored -> Result.<Purchase, ShopError>ok(purchase));
+              case Result.Err<Receipt, EconomyError>(
+                      EconomyError.InsufficientFunds(var _, var balance, var required)) ->
+                  store
+                      .cancel(purchase.id(), now)
+                      .thenApply(ignored ->
+                          Result.<Purchase, ShopError>err(
+                              new ShopError.TooPoor(required.amount(), balance.amount())));
+              case Result.Err<Receipt, EconomyError>(var error) ->
+                  throw new IllegalStateException("a kit purchase was refused: " + error);
+            });
   }
 
   private static KeyedTransfer transfer(Purchase purchase) {
@@ -188,31 +178,27 @@ public final class KitShop {
   public CompletableFuture<List<Settled>> replay(Instant now) {
     return store
         .pending()
-        .thenCompose(
-            pending -> {
-              CompletableFuture<List<Settled>> chain =
-                  CompletableFuture.completedFuture(new ArrayList<>());
-              for (var purchase : pending) {
-                chain = chain.thenCompose(settled -> settle(purchase, now, settled));
-              }
-              return chain.thenApply(List::copyOf);
-            });
+        .thenCompose(pending -> {
+          CompletableFuture<List<Settled>> chain =
+              CompletableFuture.completedFuture(new ArrayList<>());
+          for (var purchase : pending) {
+            chain = chain.thenCompose(settled -> settle(purchase, now, settled));
+          }
+          return chain.thenApply(List::copyOf);
+        });
   }
 
   private CompletableFuture<List<Settled>> settle(
       Purchase purchase, Instant now, List<Settled> settled) {
     return wallets
         .receiptFor(purchase.id())
-        .thenCompose(
-            receipt -> {
-              var granted = receipt.isPresent();
-              var write =
-                  granted ? store.grant(purchase.id(), now) : store.cancel(purchase.id(), now);
-              return write.thenApply(
-                  ignored -> {
-                    settled.add(new Settled(purchase, granted));
-                    return settled;
-                  });
-            });
+        .thenCompose(receipt -> {
+          var granted = receipt.isPresent();
+          var write = granted ? store.grant(purchase.id(), now) : store.cancel(purchase.id(), now);
+          return write.thenApply(ignored -> {
+            settled.add(new Settled(purchase, granted));
+            return settled;
+          });
+        });
   }
 }

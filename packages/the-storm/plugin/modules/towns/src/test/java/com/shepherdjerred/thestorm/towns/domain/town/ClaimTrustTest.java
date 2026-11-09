@@ -79,10 +79,8 @@ final class ClaimTrustTest {
 
   @Test
   void theClaimMustBeTheTowns() {
-    assertThatThrownBy(
-            () ->
-                ClaimTrust.of(
-                    aegis, claim(TOWN_B, 0, 0), NOMAD, new Act(Action.BUILD, Subject.BLOCK)))
+    assertThatThrownBy(() ->
+            ClaimTrust.of(aegis, claim(TOWN_B, 0, 0), NOMAD, new Act(Action.BUILD, Subject.BLOCK)))
         .isInstanceOf(IllegalArgumentException.class);
   }
 

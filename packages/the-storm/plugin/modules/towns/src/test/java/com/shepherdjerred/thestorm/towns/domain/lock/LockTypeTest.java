@@ -85,17 +85,16 @@ final class LockTypeTest {
         .isEqualTo(Result.err(List.of(new LockProblem.NotYourLock())));
     assertThat(LockRules.type(OWNER, lock, LockType.PASSWORD, "  "))
         .isEqualTo(Result.err(List.of(new LockProblem.PasswordMissing())));
-    assertThatThrownBy(
-            () ->
-                new Lock.Options(
-                    false,
-                    false,
-                    LockType.PUBLIC,
-                    "secret",
-                    Lock.Flags.NONE,
-                    Set.of(),
-                    Set.of(),
-                    Instant.EPOCH))
+    assertThatThrownBy(() ->
+            new Lock.Options(
+                false,
+                false,
+                LockType.PUBLIC,
+                "secret",
+                Lock.Flags.NONE,
+                Set.of(),
+                Set.of(),
+                Instant.EPOCH))
         .isInstanceOf(IllegalArgumentException.class);
   }
 

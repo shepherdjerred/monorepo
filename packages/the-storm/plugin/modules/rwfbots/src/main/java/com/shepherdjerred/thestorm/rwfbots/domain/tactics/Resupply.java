@@ -78,11 +78,10 @@ public final class Resupply {
     }
     var need = 1 - (double) quiver.arrows() / RESUPPLY_BELOW;
     return nearest(situation, context, memory)
-        .map(
-            pickup -> {
-              var walk = Math.min(1, pickup.cell().distance(situation.self().pos()) / SEARCH);
-              return new Trip(pickup, (BASE + NEED * need) * (1 - WALK_DISCOUNT * walk));
-            });
+        .map(pickup -> {
+          var walk = Math.min(1, pickup.cell().distance(situation.self().pos()) / SEARCH);
+          return new Trip(pickup, (BASE + NEED * need) * (1 - WALK_DISCOUNT * walk));
+        });
   }
 
   /** Whether {@code quiver} spends arrows and is short enough to fetch more. */
@@ -104,11 +103,10 @@ public final class Resupply {
   static boolean clear(Situation situation) {
     var self = situation.self().pos();
     return situation.knownEnemies().stream()
-        .noneMatch(
-            enemy ->
-                enemy.visible()
-                    ? enemy.pos().distance(self) <= SAFE_RANGE
-                    : enemy.confidence() >= 0.5 && enemy.pos().distance(self) <= CLEAR_RANGE);
+        .noneMatch(enemy ->
+            enemy.visible()
+                ? enemy.pos().distance(self) <= SAFE_RANGE
+                : enemy.confidence() >= 0.5 && enemy.pos().distance(self) <= CLEAR_RANGE);
   }
 
   /**

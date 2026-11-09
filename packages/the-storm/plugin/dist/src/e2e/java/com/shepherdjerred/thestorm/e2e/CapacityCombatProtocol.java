@@ -33,13 +33,12 @@ record CapacityCombatProtocol(
           || !wire.deathCauses().equals(List.of("Melee", "Projectile"))
           || !wire.records().keySet().equals(types.keySet()))
         throw new IllegalStateException("capacity combat contract incompatible");
-      types.forEach(
-          (name, type) -> {
-            var fields =
-                Arrays.stream(type.getRecordComponents()).map(field -> field.getName()).toList();
-            if (!fields.equals(wire.records().get(name)))
-              throw new IllegalStateException("capacity combat fields differ: " + name);
-          });
+      types.forEach((name, type) -> {
+        var fields =
+            Arrays.stream(type.getRecordComponents()).map(field -> field.getName()).toList();
+        if (!fields.equals(wire.records().get(name)))
+          throw new IllegalStateException("capacity combat fields differ: " + name);
+      });
       return wire;
     } catch (IOException failure) {
       throw new IllegalStateException("capacity combat contract unreadable", failure);

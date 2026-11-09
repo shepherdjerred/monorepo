@@ -29,9 +29,8 @@ final class ItemStacks {
     var registry = RegistryAccess.registryAccess().getRegistry(RegistryKey.ENCHANTMENT);
     stack
         .getEnchantments()
-        .forEach(
-            (enchantment, level) ->
-                enchantments.put(registry.getKeyOrThrow(enchantment).getKey(), level));
+        .forEach((enchantment, level) ->
+            enchantments.put(registry.getKeyOrThrow(enchantment).getKey(), level));
     Optional<String> name = Optional.empty();
     Optional<String> potion = Optional.empty();
     var meta = stack.getItemMeta();
@@ -43,10 +42,8 @@ final class ItemStacks {
       if (meta instanceof EnchantmentStorageMeta stored) {
         stored
             .getStoredEnchants()
-            .forEach(
-                (enchantment, level) ->
-                    enchantments.merge(
-                        registry.getKeyOrThrow(enchantment).getKey(), level, Math::max));
+            .forEach((enchantment, level) ->
+                enchantments.merge(registry.getKeyOrThrow(enchantment).getKey(), level, Math::max));
       }
       if (meta instanceof PotionMeta potionMeta && potionMeta.hasBasePotionType()) {
         var type = potionMeta.getBasePotionType();
@@ -116,10 +113,9 @@ final class ItemStacks {
     var enchantments = RegistryAccess.registryAccess().getRegistry(RegistryKey.ENCHANTMENT);
     match
         .enchantments()
-        .forEach(
-            (key, level) ->
-                stack.addUnsafeEnchantment(
-                    enchantments.getOrThrow(NamespacedKey.minecraft(key)), level));
+        .forEach((key, level) ->
+            stack.addUnsafeEnchantment(
+                enchantments.getOrThrow(NamespacedKey.minecraft(key)), level));
     if (match.name().isEmpty() && match.potion().isEmpty()) {
       return;
     }
@@ -128,12 +124,11 @@ final class ItemStacks {
     if (meta instanceof PotionMeta potionMeta) {
       match
           .potion()
-          .ifPresent(
-              key ->
-                  potionMeta.setBasePotionType(
-                      RegistryAccess.registryAccess()
-                          .getRegistry(RegistryKey.POTION)
-                          .getOrThrow(NamespacedKey.minecraft(key))));
+          .ifPresent(key ->
+              potionMeta.setBasePotionType(
+                  RegistryAccess.registryAccess()
+                      .getRegistry(RegistryKey.POTION)
+                      .getOrThrow(NamespacedKey.minecraft(key))));
     }
     stack.setItemMeta(meta);
   }

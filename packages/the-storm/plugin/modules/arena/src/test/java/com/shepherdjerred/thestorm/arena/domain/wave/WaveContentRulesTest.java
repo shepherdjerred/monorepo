@@ -73,10 +73,9 @@ final class WaveContentRulesTest {
 
   @Test
   void cooldownsAreAtLeastASecond() {
-    assertThatThrownBy(
-            () ->
-                new AbilitySpec(
-                    AbilityType.DISORIENT, Duration.ofMillis(500), 5, 3, 0, Optional.empty()))
+    assertThatThrownBy(() ->
+            new AbilitySpec(
+                AbilityType.DISORIENT, Duration.ofMillis(500), 5, 3, 0, Optional.empty()))
         .hasMessageContaining("cooldown");
   }
 
@@ -90,10 +89,8 @@ final class WaveContentRulesTest {
         .isTrue();
     assertThat(new BossDefinition("zombie", "King", 200, BarColor.GREEN, List.of()).hasHeart())
         .isFalse();
-    assertThatThrownBy(
-            () ->
-                new BossDefinition(
-                    "creaking", "Heartwood", 200, BarColor.GREEN, List.of(heart, heart)))
+    assertThatThrownBy(() ->
+            new BossDefinition("creaking", "Heartwood", 200, BarColor.GREEN, List.of(heart, heart)))
         .hasMessageContaining("one heart");
     assertThatThrownBy(() -> new BossDefinition("zombie", " ", 200, BarColor.GREEN, List.of()))
         .hasMessageContaining("name");
@@ -103,33 +100,31 @@ final class WaveContentRulesTest {
 
   @Test
   void kamikazeMobsNeedABlastAndOthersMustNotHaveOne() {
-    assertThatThrownBy(
-            () ->
-                new MobArchetype(
-                    "SHEEP",
-                    1,
-                    1,
-                    1,
-                    1,
-                    Optional.empty(),
-                    Map.of(),
-                    Optional.empty(),
-                    Behavior.KAMIKAZE,
-                    0))
+    assertThatThrownBy(() ->
+            new MobArchetype(
+                "SHEEP",
+                1,
+                1,
+                1,
+                1,
+                Optional.empty(),
+                Map.of(),
+                Optional.empty(),
+                Behavior.KAMIKAZE,
+                0))
         .hasMessageContaining("blast");
-    assertThatThrownBy(
-            () ->
-                new MobArchetype(
-                    "SHEEP",
-                    1,
-                    1,
-                    1,
-                    1,
-                    Optional.empty(),
-                    Map.of(),
-                    Optional.empty(),
-                    Behavior.CHASE,
-                    2))
+    assertThatThrownBy(() ->
+            new MobArchetype(
+                "SHEEP",
+                1,
+                1,
+                1,
+                1,
+                Optional.empty(),
+                Map.of(),
+                Optional.empty(),
+                Behavior.CHASE,
+                2))
         .hasMessageContaining("blast");
   }
 
@@ -139,33 +134,31 @@ final class WaveContentRulesTest {
     assertThatThrownBy(() -> archetype("ZOMBIE", 0, 1)).hasMessageContaining("health");
     assertThatThrownBy(() -> archetype("ZOMBIE", 1, 17)).hasMessageContaining("scale");
     assertThatThrownBy(() -> archetype("ZOMBIE", 1, 0.01)).hasMessageContaining("scale");
-    assertThatThrownBy(
-            () ->
-                new MobArchetype(
-                    "ZOMBIE",
-                    1,
-                    1,
-                    1,
-                    1,
-                    Optional.empty(),
-                    Map.of(Slot.HEAD, "iron_helmet"),
-                    Optional.empty(),
-                    Behavior.VANILLA,
-                    0))
+    assertThatThrownBy(() ->
+            new MobArchetype(
+                "ZOMBIE",
+                1,
+                1,
+                1,
+                1,
+                Optional.empty(),
+                Map.of(Slot.HEAD, "iron_helmet"),
+                Optional.empty(),
+                Behavior.VANILLA,
+                0))
         .hasMessageContaining("equipment");
-    assertThatThrownBy(
-            () ->
-                new MobArchetype(
-                    "ZOMBIE",
-                    1,
-                    1,
-                    1,
-                    1,
-                    Optional.of(""),
-                    Map.of(),
-                    Optional.empty(),
-                    Behavior.VANILLA,
-                    0))
+    assertThatThrownBy(() ->
+            new MobArchetype(
+                "ZOMBIE",
+                1,
+                1,
+                1,
+                1,
+                Optional.of(""),
+                Map.of(),
+                Optional.empty(),
+                Behavior.VANILLA,
+                0))
         .hasMessageContaining("name");
     assertThat(archetype("ZOMBIE", 1, 4).scale()).isEqualTo(4);
   }

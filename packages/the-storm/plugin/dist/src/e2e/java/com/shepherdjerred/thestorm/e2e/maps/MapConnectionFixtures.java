@@ -74,29 +74,27 @@ public final class MapConnectionFixtures implements AutoCloseable {
                                 source -> source.getSender() instanceof RemoteConsoleCommandSender)
                             .then(
                                 Commands.literal("status")
-                                    .executes(
-                                        command -> {
-                                          command.getSource().getSender().sendMessage(status);
-                                          return 1;
-                                        }))
+                                    .executes(command -> {
+                                      command.getSource().getSender().sendMessage(status);
+                                      return 1;
+                                    }))
                             .then(
                                 Commands.literal("start")
-                                    .executes(
-                                        command -> {
-                                          if (started)
-                                            throw new IllegalStateException(
-                                                "One catalog per disposable server");
-                                          started = true;
-                                          status = "{\"state\":\"working\"}";
-                                          var version =
-                                              WorldEdit.getInstance()
-                                                  .getPlatformManager()
-                                                  .queryCapability(Capability.WORLD_EDITING)
-                                                  .getDataVersion();
-                                          worker.execute(() -> convert(version));
-                                          command.getSource().getSender().sendMessage(status);
-                                          return 1;
-                                        }))
+                                    .executes(command -> {
+                                      if (started)
+                                        throw new IllegalStateException(
+                                            "One catalog per disposable server");
+                                      started = true;
+                                      status = "{\"state\":\"working\"}";
+                                      var version =
+                                          WorldEdit.getInstance()
+                                              .getPlatformManager()
+                                              .queryCapability(Capability.WORLD_EDITING)
+                                              .getDataVersion();
+                                      worker.execute(() -> convert(version));
+                                      command.getSource().getSender().sendMessage(status);
+                                      return 1;
+                                    }))
                             .build()));
   }
 

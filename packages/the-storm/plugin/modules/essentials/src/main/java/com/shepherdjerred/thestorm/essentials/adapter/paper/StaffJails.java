@@ -88,12 +88,11 @@ final class StaffJails implements Listener {
                     + String.join(
                         ", ",
                         tools.state.keys("jail-place").stream()
-                            .filter(
-                                name ->
-                                    !tools
-                                        .state
-                                        .find("jail-deleted", name, Boolean.class)
-                                        .orElse(false))
+                            .filter(name ->
+                                !tools
+                                    .state
+                                    .find("jail-deleted", name, Boolean.class)
+                                    .orElse(false))
                             .toList())));
     tools.add(
         "jailedplayers",
@@ -194,12 +193,11 @@ final class StaffJails implements Listener {
 
   private void enforce(Player player) {
     active(player.getUniqueId())
-        .ifPresent(
-            jail -> {
-              if (!inside(jail, Positions.current(player))) {
-                var _ = player.teleportAsync(location(jail.destination()));
-              }
-            });
+        .ifPresent(jail -> {
+          if (!inside(jail, Positions.current(player))) {
+            var _ = player.teleportAsync(location(jail.destination()));
+          }
+        });
   }
 
   private void returnTo(Player player, StaffState.Jail jail) {
@@ -210,38 +208,35 @@ final class StaffJails implements Listener {
     for (var player : tools.context.plugin().getServer().getOnlinePlayers())
       recorded(player.getUniqueId())
           .filter(StaffState.Jail::active)
-          .ifPresent(
-              jail -> {
-                if (tools.context.time().instant().isBefore(jail.expires())) {
-                  enforce(player);
-                  return;
-                }
-                var released =
-                    new StaffState.Jail(
-                        jail.name(), jail.destination(), jail.returning(), jail.expires(), false);
-                var audit =
-                    new com.shepherdjerred.thestorm.essentials.app.StaffStore.Audit(
-                        "system",
-                        "jail.expire",
-                        player.getUniqueId().toString(),
-                        tools.context.time().instant());
-                tools.complete(
-                    player,
-                    tools.state.commit(
-                        List.of(
-                            tools.state.entry("jail", player.getUniqueId().toString(), released)),
-                        audit),
-                    _ -> returnTo(player, jail));
-              });
+          .ifPresent(jail -> {
+            if (tools.context.time().instant().isBefore(jail.expires())) {
+              enforce(player);
+              return;
+            }
+            var released =
+                new StaffState.Jail(
+                    jail.name(), jail.destination(), jail.returning(), jail.expires(), false);
+            var audit =
+                new com.shepherdjerred.thestorm.essentials.app.StaffStore.Audit(
+                    "system",
+                    "jail.expire",
+                    player.getUniqueId().toString(),
+                    tools.context.time().instant());
+            tools.complete(
+                player,
+                tools.state.commit(
+                    List.of(tools.state.entry("jail", player.getUniqueId().toString(), released)),
+                    audit),
+                _ -> returnTo(player, jail));
+          });
   }
 
   @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
   void move(PlayerMoveEvent event) {
     active(event.getPlayer().getUniqueId())
-        .ifPresent(
-            jail -> {
-              if (!inside(jail, requireNonNull(event.getTo()))) event.setCancelled(true);
-            });
+        .ifPresent(jail -> {
+          if (!inside(jail, requireNonNull(event.getTo()))) event.setCancelled(true);
+        });
   }
 
   @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)

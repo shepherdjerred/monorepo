@@ -36,10 +36,8 @@ final class AirborneRoutes {
             .filter(candidate -> deadline.isEmpty() || candidate.ticks() <= deadline.orElseThrow())
             .min(Comparator.comparingDouble(RouteNavigator.Candidate::cost));
     return feasible
-        .or(
-            () ->
-                candidates.stream()
-                    .min(Comparator.comparingDouble(RouteNavigator.Candidate::ticks)))
+        .or(() ->
+            candidates.stream().min(Comparator.comparingDouble(RouteNavigator.Candidate::ticks)))
         .map(RouteNavigator.Candidate::points)
         .orElseGet(List::of);
   }
@@ -61,26 +59,25 @@ final class AirborneRoutes {
             remaining);
     if (path.isEmpty() && contact.node() != endpoints.to()) return Optional.empty();
     return RouteNavigator.score(context, start, path, remaining)
-        .map(
-            route -> {
-              var points = new ArrayList<Waypoint>();
-              points.add(
-                  new Waypoint(
-                      start,
-                      contact.landing() == Waypoint.Landing.CLIMB ? Hop.CLIMB : Hop.DROP,
-                      Optional.empty(),
-                      contact.landing()));
-              points.addAll(route.points());
-              var prefixCost =
-                  contact.ticks()
-                      + contact.damage() * tolls.risk().policy().ticksPerHealthPoint()
-                      + RouteNavigator.densityCost(
-                          context,
-                          tolls,
-                          new RouteNavigator.Span(endpoints.source(), start, contact.ticks()));
-              return new RouteNavigator.Candidate(
-                  points, contact.ticks() + route.ticks(), prefixCost + route.cost());
-            });
+        .map(route -> {
+          var points = new ArrayList<Waypoint>();
+          points.add(
+              new Waypoint(
+                  start,
+                  contact.landing() == Waypoint.Landing.CLIMB ? Hop.CLIMB : Hop.DROP,
+                  Optional.empty(),
+                  contact.landing()));
+          points.addAll(route.points());
+          var prefixCost =
+              contact.ticks()
+                  + contact.damage() * tolls.risk().policy().ticksPerHealthPoint()
+                  + RouteNavigator.densityCost(
+                      context,
+                      tolls,
+                      new RouteNavigator.Span(endpoints.source(), start, contact.ticks()));
+          return new RouteNavigator.Candidate(
+              points, contact.ticks() + route.ticks(), prefixCost + route.cost());
+        });
   }
 
   private static List<Vec3> nearbyWater(NavArtifact nav, Vec3 source) {

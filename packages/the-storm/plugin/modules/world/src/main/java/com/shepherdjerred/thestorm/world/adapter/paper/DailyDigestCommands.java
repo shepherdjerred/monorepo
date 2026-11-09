@@ -60,9 +60,8 @@ public final class DailyDigestCommands {
                   var online =
                       Math.toIntExact(
                           player.getServer().getOnlinePlayers().stream()
-                              .filter(
-                                  other ->
-                                      other.getWorld().getName().equals(runtime.config().world()))
+                              .filter(other ->
+                                  other.getWorld().getName().equals(runtime.config().world()))
                               .count());
                   var view =
                       new DailyDigestText.View(

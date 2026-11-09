@@ -47,9 +47,8 @@ final class CollectionsLoaderTest {
             value -> java.util.List.of(),
             problems -> problems.stream().map(Object::toString).toList());
     assertThat(descriptions)
-        .anySatisfy(
-            problem ->
-                assertThat(problem)
-                    .contains("collections.yml", "collections.relic.material", "OLD_FISH"));
+        .anySatisfy(problem ->
+            assertThat(problem)
+                .contains("collections.yml", "collections.relic.material", "OLD_FISH"));
   }
 }

@@ -27,96 +27,91 @@ public final class JooqLetters implements Letters {
       return CompletableFuture.completedFuture(Result.err("The letter is empty or too long."));
     if (letter.sender().equals(letter.recipient()))
       return CompletableFuture.completedFuture(Result.err("You cannot mail yourself."));
-    return database.write(
-        dsl -> {
-          var last =
-              dsl.select(MAIL_LETTERS.SENT_AT)
-                  .from(MAIL_LETTERS)
-                  .where(MAIL_LETTERS.SENDER.eq(letter.sender().toString()))
-                  .orderBy(MAIL_LETTERS.SENT_AT.desc())
-                  .limit(1)
-                  .fetchOne(MAIL_LETTERS.SENT_AT);
-          if (last != null
-              && letter
-                  .sentAt()
-                  .isBefore(Instant.ofEpochMilli(last).plusSeconds(limits.intervalSeconds())))
-            return Result.err("Wait " + limits.intervalSeconds() + " seconds between letters.");
-          if (dsl.fetchCount(
-                  MAIL_LETTERS,
-                  MAIL_LETTERS
-                      .RECIPIENT
-                      .eq(letter.recipient().toString())
-                      .and(MAIL_LETTERS.DELETED.eq(0)))
-              >= limits.inboxLimit()) return Result.err("That mailbox is full.");
-          dsl.insertInto(MAIL_LETTERS)
-              .set(MAIL_LETTERS.ID, letter.id().toString())
-              .set(MAIL_LETTERS.SENDER, letter.sender().toString())
-              .set(MAIL_LETTERS.SENDER_NAME, letter.senderName())
-              .set(MAIL_LETTERS.RECIPIENT, letter.recipient().toString())
-              .set(MAIL_LETTERS.TEXT, letter.text())
-              .set(MAIL_LETTERS.SENT_AT, letter.sentAt().toEpochMilli())
-              .set(MAIL_LETTERS.DELETED, 0)
-              .execute();
-          return Result.ok(letter.id());
-        });
+    return database.write(dsl -> {
+      var last =
+          dsl.select(MAIL_LETTERS.SENT_AT)
+              .from(MAIL_LETTERS)
+              .where(MAIL_LETTERS.SENDER.eq(letter.sender().toString()))
+              .orderBy(MAIL_LETTERS.SENT_AT.desc())
+              .limit(1)
+              .fetchOne(MAIL_LETTERS.SENT_AT);
+      if (last != null
+          && letter
+              .sentAt()
+              .isBefore(Instant.ofEpochMilli(last).plusSeconds(limits.intervalSeconds())))
+        return Result.err("Wait " + limits.intervalSeconds() + " seconds between letters.");
+      if (dsl.fetchCount(
+              MAIL_LETTERS,
+              MAIL_LETTERS
+                  .RECIPIENT
+                  .eq(letter.recipient().toString())
+                  .and(MAIL_LETTERS.DELETED.eq(0)))
+          >= limits.inboxLimit()) return Result.err("That mailbox is full.");
+      dsl.insertInto(MAIL_LETTERS)
+          .set(MAIL_LETTERS.ID, letter.id().toString())
+          .set(MAIL_LETTERS.SENDER, letter.sender().toString())
+          .set(MAIL_LETTERS.SENDER_NAME, letter.senderName())
+          .set(MAIL_LETTERS.RECIPIENT, letter.recipient().toString())
+          .set(MAIL_LETTERS.TEXT, letter.text())
+          .set(MAIL_LETTERS.SENT_AT, letter.sentAt().toEpochMilli())
+          .set(MAIL_LETTERS.DELETED, 0)
+          .execute();
+      return Result.ok(letter.id());
+    });
   }
 
   @Override
   public CompletableFuture<List<Letter>> inbox(UUID recipient) {
-    return database.read(
-        dsl ->
-            dsl.selectFrom(MAIL_LETTERS)
-                .where(MAIL_LETTERS.RECIPIENT.eq(recipient.toString()))
-                .and(MAIL_LETTERS.DELETED.eq(0))
-                .orderBy(MAIL_LETTERS.SENT_AT.desc())
-                .fetch()
-                .map(JooqLetters::letter));
+    return database.read(dsl ->
+        dsl.selectFrom(MAIL_LETTERS)
+            .where(MAIL_LETTERS.RECIPIENT.eq(recipient.toString()))
+            .and(MAIL_LETTERS.DELETED.eq(0))
+            .orderBy(MAIL_LETTERS.SENT_AT.desc())
+            .fetch()
+            .map(JooqLetters::letter));
   }
 
   @Override
   public CompletableFuture<Optional<Letter>> find(UUID recipient, UUID id) {
-    return database.read(
-        dsl ->
-            Optional.ofNullable(
-                    dsl.selectFrom(MAIL_LETTERS)
-                        .where(MAIL_LETTERS.ID.eq(id.toString()))
-                        .and(MAIL_LETTERS.RECIPIENT.eq(recipient.toString()))
-                        .and(MAIL_LETTERS.DELETED.eq(0))
-                        .fetchOne())
-                .map(JooqLetters::letter));
+    return database.read(dsl ->
+        Optional.ofNullable(
+                dsl.selectFrom(MAIL_LETTERS)
+                    .where(MAIL_LETTERS.ID.eq(id.toString()))
+                    .and(MAIL_LETTERS.RECIPIENT.eq(recipient.toString()))
+                    .and(MAIL_LETTERS.DELETED.eq(0))
+                    .fetchOne())
+            .map(JooqLetters::letter));
   }
 
   @Override
   public CompletableFuture<Optional<Letter>> read(UUID recipient, UUID id, Instant at) {
-    return database.write(
-        dsl -> {
-          var row =
-              dsl.selectFrom(MAIL_LETTERS)
-                  .where(MAIL_LETTERS.ID.eq(id.toString()))
-                  .and(MAIL_LETTERS.RECIPIENT.eq(recipient.toString()))
-                  .and(MAIL_LETTERS.DELETED.eq(0))
-                  .fetchOne();
-          if (row == null) return Optional.empty();
-          if (row.getReadAt() == null)
-            dsl.update(MAIL_LETTERS)
-                .set(MAIL_LETTERS.READ_AT, at.toEpochMilli())
-                .where(MAIL_LETTERS.ID.eq(id.toString()))
-                .execute();
-          return Optional.of(letter(row));
-        });
+    return database.write(dsl -> {
+      var row =
+          dsl.selectFrom(MAIL_LETTERS)
+              .where(MAIL_LETTERS.ID.eq(id.toString()))
+              .and(MAIL_LETTERS.RECIPIENT.eq(recipient.toString()))
+              .and(MAIL_LETTERS.DELETED.eq(0))
+              .fetchOne();
+      if (row == null) return Optional.empty();
+      if (row.getReadAt() == null)
+        dsl.update(MAIL_LETTERS)
+            .set(MAIL_LETTERS.READ_AT, at.toEpochMilli())
+            .where(MAIL_LETTERS.ID.eq(id.toString()))
+            .execute();
+      return Optional.of(letter(row));
+    });
   }
 
   @Override
   public CompletableFuture<Boolean> delete(UUID recipient, UUID id) {
-    return database.write(
-        dsl ->
-            dsl.update(MAIL_LETTERS)
-                    .set(MAIL_LETTERS.DELETED, 1)
-                    .where(MAIL_LETTERS.ID.eq(id.toString()))
-                    .and(MAIL_LETTERS.RECIPIENT.eq(recipient.toString()))
-                    .and(MAIL_LETTERS.DELETED.eq(0))
-                    .execute()
-                == 1);
+    return database.write(dsl ->
+        dsl.update(MAIL_LETTERS)
+                .set(MAIL_LETTERS.DELETED, 1)
+                .where(MAIL_LETTERS.ID.eq(id.toString()))
+                .and(MAIL_LETTERS.RECIPIENT.eq(recipient.toString()))
+                .and(MAIL_LETTERS.DELETED.eq(0))
+                .execute()
+            == 1);
   }
 
   private static Letter letter(MailLettersRecord row) {

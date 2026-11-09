@@ -86,20 +86,16 @@ final class CampCommands {
                 .executes(context -> TownCommands.asPlayer(context, player -> delete(player, "")))
                 .then(
                     Commands.argument("confirm", word())
-                        .executes(
-                            context ->
-                                TownCommands.asPlayer(
-                                    context,
-                                    player -> delete(player, getString(context, "confirm"))))))
+                        .executes(context ->
+                            TownCommands.asPlayer(
+                                context, player -> delete(player, getString(context, "confirm"))))))
         .then(
             Commands.literal("graduate")
                 .then(
                     Commands.argument("name", word())
-                        .executes(
-                            context ->
-                                TownCommands.asPlayer(
-                                    context,
-                                    player -> graduate(player, getString(context, "name"))))))
+                        .executes(context ->
+                            TownCommands.asPlayer(
+                                context, player -> graduate(player, getString(context, "name"))))))
         .build();
   }
 
@@ -108,15 +104,14 @@ final class CampCommands {
         .then(
             Commands.argument(TownCommands.PLAYER, word())
                 .suggests(TownCommands::suggestOnline)
-                .executes(
-                    context ->
-                        TownCommands.asPlayer(
-                            context,
-                            player ->
-                                names.resolve(
-                                    player,
-                                    getString(context, TownCommands.PLAYER),
-                                    target -> invite(player, target)))));
+                .executes(context ->
+                    TownCommands.asPlayer(
+                        context,
+                        player ->
+                            names.resolve(
+                                player,
+                                getString(context, TownCommands.PLAYER),
+                                target -> invite(player, target)))));
   }
 
   private com.mojang.brigadier.builder.LiteralArgumentBuilder<CommandSourceStack> kick() {
@@ -124,25 +119,23 @@ final class CampCommands {
         .then(
             Commands.argument(TownCommands.PLAYER, word())
                 .suggests(TownCommands::suggestOnline)
-                .executes(
-                    context ->
-                        TownCommands.asPlayer(
-                            context,
-                            player ->
-                                names.resolve(
-                                    player,
-                                    getString(context, TownCommands.PLAYER),
-                                    target -> kick(player, target)))));
+                .executes(context ->
+                    TownCommands.asPlayer(
+                        context,
+                        player ->
+                            names.resolve(
+                                player,
+                                getString(context, TownCommands.PLAYER),
+                                target -> kick(player, target)))));
   }
 
   private com.mojang.brigadier.builder.LiteralArgumentBuilder<CommandSourceStack> join() {
     return Commands.literal("join")
         .then(
             Commands.argument("owner", word())
-                .executes(
-                    context ->
-                        TownCommands.asPlayer(
-                            context, player -> join(player, getString(context, "owner")))));
+                .executes(context ->
+                    TownCommands.asPlayer(
+                        context, player -> join(player, getString(context, "owner")))));
   }
 
   private void status(Player player) {

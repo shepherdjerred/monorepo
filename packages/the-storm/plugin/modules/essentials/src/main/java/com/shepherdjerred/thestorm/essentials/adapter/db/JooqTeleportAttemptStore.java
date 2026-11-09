@@ -22,39 +22,35 @@ public final class JooqTeleportAttemptStore implements TeleportAttemptStore {
   @Override
   public CompletableFuture<Void> insert(TeleportAttempt attempt) {
     return database
-        .write(
-            dsl ->
-                dsl.insertInto(ESSENTIALS_TELEPORT_ATTEMPTS)
-                    .set(ESSENTIALS_TELEPORT_ATTEMPTS.ID, attempt.id().toString())
-                    .set(ESSENTIALS_TELEPORT_ATTEMPTS.PAYER, attempt.payer().toString())
-                    .set(ESSENTIALS_TELEPORT_ATTEMPTS.KIND, attempt.kind().id())
-                    .set(ESSENTIALS_TELEPORT_ATTEMPTS.COST, attempt.cost())
-                    .execute())
+        .write(dsl ->
+            dsl.insertInto(ESSENTIALS_TELEPORT_ATTEMPTS)
+                .set(ESSENTIALS_TELEPORT_ATTEMPTS.ID, attempt.id().toString())
+                .set(ESSENTIALS_TELEPORT_ATTEMPTS.PAYER, attempt.payer().toString())
+                .set(ESSENTIALS_TELEPORT_ATTEMPTS.KIND, attempt.kind().id())
+                .set(ESSENTIALS_TELEPORT_ATTEMPTS.COST, attempt.cost())
+                .execute())
         .thenAccept(ignored -> {});
   }
 
   @Override
   public CompletableFuture<List<TeleportAttempt>> pending() {
-    return database.read(
-        dsl ->
-            dsl.selectFrom(ESSENTIALS_TELEPORT_ATTEMPTS)
-                .fetch(
-                    row ->
-                        new TeleportAttempt(
-                            UUID.fromString(row.getId()),
-                            UUID.fromString(row.getPayer()),
-                            TeleportKind.fromId(row.getKind()),
-                            row.getCost())));
+    return database.read(dsl ->
+        dsl.selectFrom(ESSENTIALS_TELEPORT_ATTEMPTS)
+            .fetch(row ->
+                new TeleportAttempt(
+                    UUID.fromString(row.getId()),
+                    UUID.fromString(row.getPayer()),
+                    TeleportKind.fromId(row.getKind()),
+                    row.getCost())));
   }
 
   @Override
   public CompletableFuture<Void> delete(UUID id) {
     return database
-        .write(
-            dsl ->
-                dsl.deleteFrom(ESSENTIALS_TELEPORT_ATTEMPTS)
-                    .where(ESSENTIALS_TELEPORT_ATTEMPTS.ID.eq(id.toString()))
-                    .execute())
+        .write(dsl ->
+            dsl.deleteFrom(ESSENTIALS_TELEPORT_ATTEMPTS)
+                .where(ESSENTIALS_TELEPORT_ATTEMPTS.ID.eq(id.toString()))
+                .execute())
         .thenAccept(ignored -> {});
   }
 }

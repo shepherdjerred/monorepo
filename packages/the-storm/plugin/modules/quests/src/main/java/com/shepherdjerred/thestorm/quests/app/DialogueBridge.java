@@ -47,18 +47,15 @@ public final class DialogueBridge {
     var nodes = new HashMap<String, DialogueNode>();
     dialogue
         .nodes()
-        .forEach(
-            (id, node) ->
-                nodes.put(
-                    id,
-                    new DialogueNode(
-                        node.text(),
-                        Optional.empty(),
-                        node.options().stream()
-                            .map(
-                                option ->
-                                    new DialogueOption(option.label(), effect(option.choice())))
-                            .toList())));
+        .forEach((id, node) ->
+            nodes.put(
+                id,
+                new DialogueNode(
+                    node.text(),
+                    Optional.empty(),
+                    node.options().stream()
+                        .map(option -> new DialogueOption(option.label(), effect(option.choice())))
+                        .toList())));
     return new DialogueGraph("quests-" + npc, dialogue.title(), dialogue.start(), nodes);
   }
 

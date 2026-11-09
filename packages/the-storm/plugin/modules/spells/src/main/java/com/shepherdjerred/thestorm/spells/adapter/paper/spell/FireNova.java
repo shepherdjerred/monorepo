@@ -32,12 +32,11 @@ final class FireNova implements Spell {
             .withDamage(settings.damage())
             .withFire(Magic.ticks(settings.fireSeconds()));
     return Aim.creaturesAround(tools, caster, settings.radius())
-        .map(
-            victims ->
-                () -> {
-                  victims.forEach(victim -> tools.harm().strike(caster, victim, blow));
-                  tools.fx().sound(kind(), Magic.at(caster));
-                  tools.fx().ring(kind(), Magic.at(caster), settings.radius());
-                });
+        .map(victims ->
+            () -> {
+              victims.forEach(victim -> tools.harm().strike(caster, victim, blow));
+              tools.fx().sound(kind(), Magic.at(caster));
+              tools.fx().ring(kind(), Magic.at(caster), settings.radius());
+            });
   }
 }

@@ -59,14 +59,13 @@ final class SurvivalActions {
       runner.feedback().animate(player, sign, SurvivalFeedback.Cue.UNLOCK);
       runner
           .online()
-          .forEach(
-              p ->
-                  Texts.info(
-                      p,
-                      player.getName()
-                          + " opened "
-                          + zone.name()
-                          + ". New enemy entrances are active."));
+          .forEach(p ->
+              Texts.info(
+                  p,
+                  player.getName()
+                      + " opened "
+                      + zone.name()
+                      + ". New enemy entrances are active."));
     }
   }
 
@@ -76,13 +75,12 @@ final class SurvivalActions {
         zone.requires().stream()
             .filter(id -> !runner.map().state().accessible(id))
             .sorted()
-            .map(
-                id ->
-                    runner.map().content().zones().stream()
-                        .filter(z -> z.id().equals(id))
-                        .findFirst()
-                        .orElseThrow()
-                        .name())
+            .map(id ->
+                runner.map().content().zones().stream()
+                    .filter(z -> z.id().equals(id))
+                    .findFirst()
+                    .orElseThrow()
+                    .name())
             .collect(java.util.stream.Collectors.joining(" + "));
     return "Open " + missing + " first to connect " + zone.name() + ".";
   }

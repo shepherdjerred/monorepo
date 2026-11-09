@@ -35,9 +35,8 @@ final class Keys {
   }
 
   void rarity(ItemStack stack, com.shepherdjerred.thestorm.arena.domain.survival.GearRarity value) {
-    stack.editMeta(
-        meta ->
-            meta.getPersistentDataContainer().set(rarity, PersistentDataType.STRING, value.name()));
+    stack.editMeta(meta ->
+        meta.getPersistentDataContainer().set(rarity, PersistentDataType.STRING, value.name()));
   }
 
   com.shepherdjerred.thestorm.arena.domain.survival.GearRarity rarity(ItemStack stack) {
@@ -48,10 +47,9 @@ final class Keys {
   }
 
   void identity(ItemStack stack, java.util.UUID value) {
-    stack.editMeta(
-        meta ->
-            meta.getPersistentDataContainer()
-                .set(identity, PersistentDataType.STRING, value.toString()));
+    stack.editMeta(meta ->
+        meta.getPersistentDataContainer()
+            .set(identity, PersistentDataType.STRING, value.toString()));
   }
 
   java.util.UUID identity(ItemStack stack) {
@@ -66,9 +64,8 @@ final class Keys {
 
   void legendary(
       ItemStack stack, com.shepherdjerred.thestorm.arena.domain.survival.LegendaryWeapon id) {
-    stack.editMeta(
-        meta ->
-            meta.getPersistentDataContainer().set(legendary, PersistentDataType.STRING, id.name()));
+    stack.editMeta(meta ->
+        meta.getPersistentDataContainer().set(legendary, PersistentDataType.STRING, id.name()));
   }
 
   Optional<com.shepherdjerred.thestorm.arena.domain.survival.LegendaryWeapon> legendary(
@@ -120,10 +117,8 @@ final class Keys {
 
   void tag(ItemStack stack, java.util.UUID runId) {
     tag(stack);
-    stack.editMeta(
-        meta ->
-            meta.getPersistentDataContainer()
-                .set(run, PersistentDataType.STRING, runId.toString()));
+    stack.editMeta(meta ->
+        meta.getPersistentDataContainer().set(run, PersistentDataType.STRING, runId.toString()));
   }
 
   boolean belongsTo(ItemStack stack, java.util.UUID runId) {

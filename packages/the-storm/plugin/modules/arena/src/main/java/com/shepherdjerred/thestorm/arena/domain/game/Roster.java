@@ -42,13 +42,12 @@ final class Roster {
   /** Players, as opposed to spectators, counting those still joining. */
   private static long players(Draft draft) {
     return draft.members().stream()
-        .filter(
-            member ->
-                switch (member) {
-                  case Pending pending -> pending.role() == Role.PLAYER;
-                  case InLobby _, Fighter _ -> true;
-                  case Watcher _ -> false;
-                })
+        .filter(member ->
+            switch (member) {
+              case Pending pending -> pending.role() == Role.PLAYER;
+              case InLobby _, Fighter _ -> true;
+              case Watcher _ -> false;
+            })
         .count();
   }
 

@@ -90,23 +90,21 @@ public final class ChatFlow {
     return services
         .brain()
         .classify(new ClassifyCase(current.player(), current.playerName(), List.copyOf(lines)))
-        .thenCompose(
-            verdict ->
-                decide(
-                    current,
-                    new Verdict(
-                        offenseOf(verdict),
-                        verdict.confidence(),
-                        verdict.label(),
-                        signal + ": " + verdict.reasoning(),
-                        verdict.model(),
-                        verdict.costMicros())))
+        .thenCompose(verdict ->
+            decide(
+                current,
+                new Verdict(
+                    offenseOf(verdict),
+                    verdict.confidence(),
+                    verdict.label(),
+                    signal + ": " + verdict.reasoning(),
+                    verdict.model(),
+                    verdict.costMicros())))
         // A switched-off flow is steady state: the line passes unjudged and unrecorded.
-        .exceptionallyCompose(
-            failure ->
-                BrainDisabledException.isCauseOf(failure)
-                    ? CompletableFuture.completedFuture(null)
-                    : CompletableFuture.failedFuture(failure));
+        .exceptionallyCompose(failure ->
+            BrainDisabledException.isCauseOf(failure)
+                ? CompletableFuture.completedFuture(null)
+                : CompletableFuture.failedFuture(failure));
   }
 
   private CompletableFuture<Void> decide(ChatSample current, Verdict verdict) {
@@ -120,16 +118,15 @@ public final class ChatFlow {
             verdict.offense().orElse(Offense.OTHER),
             since,
             services.config().shadow())
-        .thenCompose(
-            strikes ->
-                settle(
-                    current,
-                    new JudgeInput(
-                        verdict.offense(),
-                        verdict.confidence(),
-                        services.config().classifyThreshold(),
-                        strikes),
-                    verdict));
+        .thenCompose(strikes ->
+            settle(
+                current,
+                new JudgeInput(
+                    verdict.offense(),
+                    verdict.confidence(),
+                    services.config().classifyThreshold(),
+                    strikes),
+                verdict));
   }
 
   private CompletableFuture<Void> settle(ChatSample current, JudgeInput input, Verdict verdict) {
@@ -160,62 +157,57 @@ public final class ChatFlow {
                   "unexecutable rung reached perform: " + step.action());
         };
     return record(new Attempt(current, verdict, action, Optional.of(rung), "rung " + rung))
-        .thenCompose(
-            done -> {
-              if (services.config().shadow()) {
-                return CompletableFuture.completedFuture(null);
-              }
-              return switch (step.action()) {
-                case WARN ->
-                    contact.tell(current.player(), warningFor(verdict)).thenApply(sent -> null);
-                case MUTE -> {
-                  chat.mute(
-                      current.player(),
-                      step.length().orElseThrow(),
-                      Notes.clip(verdict.label(), REASON_LENGTH),
-                      ISSUER);
-                  yield CompletableFuture.completedFuture(null);
-                }
-                case KICK ->
-                    contact
-                        .kick(current.player(), Notes.clip(verdict.label(), REASON_LENGTH))
-                        .thenApply(sent -> null);
-                case TEMPBAN, ESCALATE ->
-                    throw new IllegalStateException(
-                        "unexecutable rung reached perform: " + step.action());
-              };
-            });
+        .thenCompose(done -> {
+          if (services.config().shadow()) {
+            return CompletableFuture.completedFuture(null);
+          }
+          return switch (step.action()) {
+            case WARN ->
+                contact.tell(current.player(), warningFor(verdict)).thenApply(sent -> null);
+            case MUTE -> {
+              chat.mute(
+                  current.player(),
+                  step.length().orElseThrow(),
+                  Notes.clip(verdict.label(), REASON_LENGTH),
+                  ISSUER);
+              yield CompletableFuture.completedFuture(null);
+            }
+            case KICK ->
+                contact
+                    .kick(current.player(), Notes.clip(verdict.label(), REASON_LENGTH))
+                    .thenApply(sent -> null);
+            case TEMPBAN, ESCALATE ->
+                throw new IllegalStateException(
+                    "unexecutable rung reached perform: " + step.action());
+          };
+        });
   }
 
   private CompletableFuture<Void> escalate(
       ChatSample current, Verdict verdict, Optional<Integer> rung, String detail) {
     return record(new Attempt(current, verdict, DecisionAction.ESCALATE, rung, detail))
-        .thenCompose(
-            decision -> {
-              if (services.config().shadow()) {
-                return CompletableFuture.completedFuture(null);
-              }
-              var offense = verdict.offense().map(Offense::id).orElse("review");
-              return services
-                  .tickets()
-                  .openAgentReport(
-                      categoryFor(verdict.offense()),
-                      "Agent escalation: " + offense + " by " + current.playerName())
-                  .thenCompose(
-                      opened ->
-                          switch (opened) {
-                            case Result.Ok<TicketSnapshot, TicketFailure>(var ticket) ->
-                                services
-                                    .tickets()
-                                    .addAgentComment(
-                                        ticket.id(),
-                                        evidence(decision.id(), current, verdict),
-                                        true)
-                                    .thenApply(noted -> null);
-                            case Result.Err<TicketSnapshot, TicketFailure> _ ->
-                                CompletableFuture.completedFuture(null);
-                          });
-            });
+        .thenCompose(decision -> {
+          if (services.config().shadow()) {
+            return CompletableFuture.completedFuture(null);
+          }
+          var offense = verdict.offense().map(Offense::id).orElse("review");
+          return services
+              .tickets()
+              .openAgentReport(
+                  categoryFor(verdict.offense()),
+                  "Agent escalation: " + offense + " by " + current.playerName())
+              .thenCompose(opened ->
+                  switch (opened) {
+                    case Result.Ok<TicketSnapshot, TicketFailure>(var ticket) ->
+                        services
+                            .tickets()
+                            .addAgentComment(
+                                ticket.id(), evidence(decision.id(), current, verdict), true)
+                            .thenApply(noted -> null);
+                    case Result.Err<TicketSnapshot, TicketFailure> _ ->
+                        CompletableFuture.completedFuture(null);
+                  });
+        });
   }
 
   private CompletableFuture<AgentDecision> record(Attempt attempt) {

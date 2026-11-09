@@ -688,6 +688,16 @@ export type MinecraftHelmValuesMcbackup = {
    */
   enabled?: boolean;
   /**
+   * Adds a preStop lifecycle hook to the mc-backup sidecar which will wait till the server has shut down and then performs a final backup.
+   * This also configures a preStop hook for the main server container (if no custom preStop hook was set) so the server marks itself as paused after shutting down.
+   * Otherwise, mc-backup would need to ensure rcon connectivity which will fail.
+   * It is recommended to adjust the terminationGracePeriodSeconds to ensure there is enough time for the server shutdown and final backup.
+   * Note! preStop logs are not made available in the pod logs.
+   *
+   * @default false
+   */
+  backupOnTerminate?: boolean;
+  /**
    * @default {"repository":"itzg/mc-backup","tag":"latest","pullPolicy":"IfNotPresent"}
    */
   image?: MinecraftHelmValuesMcbackupImage;
@@ -910,6 +920,12 @@ export type MinecraftHelmValues = {
    */
   replicaCount?: number;
   /**
+   * Enable if mc-router or another controller is used to autoscale the Minecraft servers.
+   *
+   * @default false
+   */
+  autoscaled?: boolean;
+  /**
    * @default ""
    */
   nameOverride?: string;
@@ -961,6 +977,10 @@ export type MinecraftHelmValues = {
    * @default 10
    */
   revisionHistoryLimit?: number;
+  /**
+   * @default 30
+   */
+  terminationGracePeriodSeconds?: number;
   /**
    * @default {...} (5 keys)
    */
@@ -1064,7 +1084,7 @@ export type MinecraftHelmValues = {
   /**
    * PLEASE NOTE! rcon must be enabled above!  It does NOT require a nodePort or loadBalancerIP
    *
-   * @default {...} (28 keys)
+   * @default {...} (29 keys)
    */
   mcbackup?: MinecraftHelmValuesMcbackup;
 };
@@ -1075,6 +1095,7 @@ export type MinecraftHelmParameters = {
   "image.pullPolicy"?: string;
   "image.pullSecret"?: string;
   replicaCount?: string;
+  autoscaled?: string;
   nameOverride?: string;
   fullnameOverride?: string;
   resources?: string;
@@ -1086,6 +1107,7 @@ export type MinecraftHelmParameters = {
   tolerations?: string;
   affinity?: string;
   revisionHistoryLimit?: string;
+  terminationGracePeriodSeconds?: string;
   "podSecurityContext.runAsUser"?: string;
   "podSecurityContext.runAsGroup"?: string;
   "podSecurityContext.runAsNonRoot"?: string;
@@ -1218,6 +1240,7 @@ export type MinecraftHelmParameters = {
   "persistence.dataDir.Size"?: string;
   "persistence.dataDir.accessModes"?: string;
   "mcbackup.enabled"?: string;
+  "mcbackup.backupOnTerminate"?: string;
   "mcbackup.image.repository"?: string;
   "mcbackup.image.tag"?: string;
   "mcbackup.image.pullPolicy"?: string;

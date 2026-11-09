@@ -93,23 +93,21 @@ final class JooqPlotStoreTest {
   @Test
   void placementCannotUseForeignOrStaleTokensAndSurvivesRestart() throws Exception {
     var saved = available();
-    assertThatThrownBy(
-            () ->
-                await(
-                    recoveries.placing(
-                        new RecoveryStore.Placement(
-                            saved.id(), UUID.randomUUID(), saved.token(), DESTINATION, ARCHIVE))))
+    assertThatThrownBy(() ->
+            await(
+                recoveries.placing(
+                    new RecoveryStore.Placement(
+                        saved.id(), UUID.randomUUID(), saved.token(), DESTINATION, ARCHIVE))))
         .hasRootCauseInstanceOf(IllegalStateException.class);
     var replacement = UUID.randomUUID();
     await(recoveries.reissue(saved.id(), owner, saved.token(), replacement));
     await(recoveries.reissue(saved.id(), owner, saved.token(), replacement));
     assertThat(await(recoveries.byId(saved.id())).orElseThrow().token()).isEqualTo(replacement);
-    assertThatThrownBy(
-            () ->
-                await(
-                    recoveries.placing(
-                        new RecoveryStore.Placement(
-                            saved.id(), owner, saved.token(), DESTINATION, ARCHIVE))))
+    assertThatThrownBy(() ->
+            await(
+                recoveries.placing(
+                    new RecoveryStore.Placement(
+                        saved.id(), owner, saved.token(), DESTINATION, ARCHIVE))))
         .hasRootCauseInstanceOf(IllegalStateException.class);
     var placement =
         new RecoveryStore.Placement(saved.id(), owner, replacement, DESTINATION, ARCHIVE);

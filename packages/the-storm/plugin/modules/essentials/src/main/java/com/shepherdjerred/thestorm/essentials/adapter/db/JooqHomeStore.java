@@ -45,30 +45,63 @@ public final class JooqHomeStore implements HomeStore {
 
   @Override
   public CompletableFuture<List<Home>> homes(UUID player) {
-    return read(
-        dsl ->
-            dsl.selectFrom(ESSENTIALS_HOMES)
-                .where(ESSENTIALS_HOMES.PLAYER.eq(player.toString()))
-                .orderBy(ESSENTIALS_HOMES.NAME)
-                .fetch(JooqHomeStore::toHome));
+    return read(dsl ->
+        dsl.selectFrom(ESSENTIALS_HOMES)
+            .where(ESSENTIALS_HOMES.PLAYER.eq(player.toString()))
+            .orderBy(ESSENTIALS_HOMES.NAME)
+            .fetch(JooqHomeStore::toHome));
   }
 
   @Override
   public CompletableFuture<Result<HomeRules.Change, HomeError>> set(
       UUID player, Home home, int limit) {
-    return write(
-        dsl -> {
-          var existing =
-              dsl.select(ESSENTIALS_HOMES.NAME)
-                  .from(ESSENTIALS_HOMES)
-                  .where(ESSENTIALS_HOMES.PLAYER.eq(player.toString()))
-                  .fetch(row -> new PlaceName(row.value1()));
-          var decision = HomeRules.set(existing, home.name(), limit);
-          if (decision.isOk()) {
-            var position = home.position();
-            dsl.insertInto(ESSENTIALS_HOMES)
+    return write(dsl -> {
+      var existing =
+          dsl.select(ESSENTIALS_HOMES.NAME)
+              .from(ESSENTIALS_HOMES)
+              .where(ESSENTIALS_HOMES.PLAYER.eq(player.toString()))
+              .fetch(row -> new PlaceName(row.value1()));
+      var decision = HomeRules.set(existing, home.name(), limit);
+      if (decision.isOk()) {
+        var position = home.position();
+        dsl.insertInto(ESSENTIALS_HOMES)
+            .set(ESSENTIALS_HOMES.PLAYER, player.toString())
+            .set(ESSENTIALS_HOMES.NAME, home.name().value())
+            .set(ESSENTIALS_HOMES.WORLD, position.world())
+            .set(ESSENTIALS_HOMES.X, position.x())
+            .set(ESSENTIALS_HOMES.Y, position.y())
+            .set(ESSENTIALS_HOMES.Z, position.z())
+            .set(ESSENTIALS_HOMES.YAW, (double) position.yaw())
+            .set(ESSENTIALS_HOMES.PITCH, (double) position.pitch())
+            .onConflict(ESSENTIALS_HOMES.PLAYER, ESSENTIALS_HOMES.NAME)
+            .doUpdate()
+            .set(ESSENTIALS_HOMES.WORLD, position.world())
+            .set(ESSENTIALS_HOMES.X, position.x())
+            .set(ESSENTIALS_HOMES.Y, position.y())
+            .set(ESSENTIALS_HOMES.Z, position.z())
+            .set(ESSENTIALS_HOMES.YAW, (double) position.yaw())
+            .set(ESSENTIALS_HOMES.PITCH, (double) position.pitch())
+            .execute();
+      }
+      return decision;
+    });
+  }
+
+  @Override
+  public CompletableFuture<Set<UUID>> bedOwners() {
+    return read(dsl ->
+        dsl.select(ESSENTIALS_HOMES.PLAYER)
+            .from(ESSENTIALS_HOMES)
+            .where(ESSENTIALS_HOMES.NAME.eq(HomeRules.BED.value()))
+            .fetchSet(row -> UUID.fromString(row.value1())));
+  }
+
+  @Override
+  public CompletableFuture<Boolean> insertBedIfAbsent(UUID player, Position position) {
+    return write(dsl ->
+        dsl.insertInto(ESSENTIALS_HOMES)
                 .set(ESSENTIALS_HOMES.PLAYER, player.toString())
-                .set(ESSENTIALS_HOMES.NAME, home.name().value())
+                .set(ESSENTIALS_HOMES.NAME, HomeRules.BED.value())
                 .set(ESSENTIALS_HOMES.WORLD, position.world())
                 .set(ESSENTIALS_HOMES.X, position.x())
                 .set(ESSENTIALS_HOMES.Y, position.y())
@@ -76,75 +109,36 @@ public final class JooqHomeStore implements HomeStore {
                 .set(ESSENTIALS_HOMES.YAW, (double) position.yaw())
                 .set(ESSENTIALS_HOMES.PITCH, (double) position.pitch())
                 .onConflict(ESSENTIALS_HOMES.PLAYER, ESSENTIALS_HOMES.NAME)
-                .doUpdate()
-                .set(ESSENTIALS_HOMES.WORLD, position.world())
-                .set(ESSENTIALS_HOMES.X, position.x())
-                .set(ESSENTIALS_HOMES.Y, position.y())
-                .set(ESSENTIALS_HOMES.Z, position.z())
-                .set(ESSENTIALS_HOMES.YAW, (double) position.yaw())
-                .set(ESSENTIALS_HOMES.PITCH, (double) position.pitch())
-                .execute();
-          }
-          return decision;
-        });
-  }
-
-  @Override
-  public CompletableFuture<Set<UUID>> bedOwners() {
-    return read(
-        dsl ->
-            dsl.select(ESSENTIALS_HOMES.PLAYER)
-                .from(ESSENTIALS_HOMES)
-                .where(ESSENTIALS_HOMES.NAME.eq(HomeRules.BED.value()))
-                .fetchSet(row -> UUID.fromString(row.value1())));
-  }
-
-  @Override
-  public CompletableFuture<Boolean> insertBedIfAbsent(UUID player, Position position) {
-    return write(
-        dsl ->
-            dsl.insertInto(ESSENTIALS_HOMES)
-                    .set(ESSENTIALS_HOMES.PLAYER, player.toString())
-                    .set(ESSENTIALS_HOMES.NAME, HomeRules.BED.value())
-                    .set(ESSENTIALS_HOMES.WORLD, position.world())
-                    .set(ESSENTIALS_HOMES.X, position.x())
-                    .set(ESSENTIALS_HOMES.Y, position.y())
-                    .set(ESSENTIALS_HOMES.Z, position.z())
-                    .set(ESSENTIALS_HOMES.YAW, (double) position.yaw())
-                    .set(ESSENTIALS_HOMES.PITCH, (double) position.pitch())
-                    .onConflict(ESSENTIALS_HOMES.PLAYER, ESSENTIALS_HOMES.NAME)
-                    .doNothing()
-                    .execute()
-                == 1);
+                .doNothing()
+                .execute()
+            == 1);
   }
 
   @Override
   public CompletableFuture<Boolean> deleteBedIfMatches(UUID player, Position position) {
-    return write(
-        dsl ->
-            dsl.deleteFrom(ESSENTIALS_HOMES)
-                    .where(
-                        ESSENTIALS_HOMES.PLAYER.eq(player.toString()),
-                        ESSENTIALS_HOMES.NAME.eq(HomeRules.BED.value()),
-                        ESSENTIALS_HOMES.WORLD.eq(position.world()),
-                        ESSENTIALS_HOMES.X.eq(position.x()),
-                        ESSENTIALS_HOMES.Y.eq(position.y()),
-                        ESSENTIALS_HOMES.Z.eq(position.z()),
-                        ESSENTIALS_HOMES.YAW.eq((double) position.yaw()),
-                        ESSENTIALS_HOMES.PITCH.eq((double) position.pitch()))
-                    .execute()
-                == 1);
+    return write(dsl ->
+        dsl.deleteFrom(ESSENTIALS_HOMES)
+                .where(
+                    ESSENTIALS_HOMES.PLAYER.eq(player.toString()),
+                    ESSENTIALS_HOMES.NAME.eq(HomeRules.BED.value()),
+                    ESSENTIALS_HOMES.WORLD.eq(position.world()),
+                    ESSENTIALS_HOMES.X.eq(position.x()),
+                    ESSENTIALS_HOMES.Y.eq(position.y()),
+                    ESSENTIALS_HOMES.Z.eq(position.z()),
+                    ESSENTIALS_HOMES.YAW.eq((double) position.yaw()),
+                    ESSENTIALS_HOMES.PITCH.eq((double) position.pitch()))
+                .execute()
+            == 1);
   }
 
   @Override
   public CompletableFuture<Boolean> delete(UUID player, PlaceName name) {
-    return write(
-        dsl ->
-            dsl.deleteFrom(ESSENTIALS_HOMES)
-                    .where(ESSENTIALS_HOMES.PLAYER.eq(player.toString()))
-                    .and(ESSENTIALS_HOMES.NAME.eq(name.value()))
-                    .execute()
-                > 0);
+    return write(dsl ->
+        dsl.deleteFrom(ESSENTIALS_HOMES)
+                .where(ESSENTIALS_HOMES.PLAYER.eq(player.toString()))
+                .and(ESSENTIALS_HOMES.NAME.eq(name.value()))
+                .execute()
+            > 0);
   }
 
   private static Home toHome(EssentialsHomesRecord row) {
@@ -161,19 +155,17 @@ public final class JooqHomeStore implements HomeStore {
 
   @Override
   public CompletableFuture<Boolean> rename(UUID player, PlaceName from, PlaceName to) {
-    return write(
-        sql -> {
-          var owner = ESSENTIALS_HOMES.PLAYER.eq(player.toString());
-          if (sql.fetchExists(
-              sql.selectFrom(ESSENTIALS_HOMES)
-                  .where(owner)
-                  .and(ESSENTIALS_HOMES.NAME.eq(to.value())))) return false;
-          return sql.update(ESSENTIALS_HOMES)
-                  .set(ESSENTIALS_HOMES.NAME, to.value())
-                  .where(owner)
-                  .and(ESSENTIALS_HOMES.NAME.eq(from.value()))
-                  .execute()
-              == 1;
-        });
+    return write(sql -> {
+      var owner = ESSENTIALS_HOMES.PLAYER.eq(player.toString());
+      if (sql.fetchExists(
+          sql.selectFrom(ESSENTIALS_HOMES).where(owner).and(ESSENTIALS_HOMES.NAME.eq(to.value()))))
+        return false;
+      return sql.update(ESSENTIALS_HOMES)
+              .set(ESSENTIALS_HOMES.NAME, to.value())
+              .where(owner)
+              .and(ESSENTIALS_HOMES.NAME.eq(from.value()))
+              .execute()
+          == 1;
+    });
   }
 }

@@ -30,10 +30,9 @@ final class SurvivalAnnouncements {
       return;
     runner
         .online()
-        .forEach(
-            p ->
-                Texts.info(
-                    p, player.getName() + " joined the lobby. Click the ready block when ready."));
+        .forEach(p ->
+            Texts.info(
+                p, player.getName() + " joined the lobby. Click the ready block when ready."));
     if (!lobbyShown) {
       lobbyShown = true;
       publicNotice(
@@ -75,15 +74,14 @@ final class SurvivalAnnouncements {
         "join");
     runner
         .online()
-        .forEach(
-            p ->
-                Texts.info(
-                    p,
-                    "Run ended at round "
-                        + runner.game().round()
-                        + ". Belongings restored; /arena join "
-                        + runner.id()
-                        + " to play again."));
+        .forEach(p ->
+            Texts.info(
+                p,
+                "Run ended at round "
+                    + runner.game().round()
+                    + ". Belongings restored; /arena join "
+                    + runner.id()
+                    + " to play again."));
   }
 
   private void publicNotice(Kind kind, String message, String action, String command) {

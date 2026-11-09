@@ -97,11 +97,10 @@ final class Guard {
     if (land instanceof Land.TownLand(var claim)) {
       return claim
           .resident()
-          .or(
-              () ->
-                  state
-                      .town(claim.townId())
-                      .flatMap(com.shepherdjerred.thestorm.towns.domain.town.Town::mayor));
+          .or(() ->
+              state
+                  .town(claim.townId())
+                  .flatMap(com.shepherdjerred.thestorm.towns.domain.town.Town::mayor));
     }
     return land instanceof Land.Wilderness
         ? Optional.of(com.shepherdjerred.thestorm.core.protection.Protection.SERVER_AUTOMATION)

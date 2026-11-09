@@ -76,10 +76,8 @@ final class SupplyCrates {
         crates.keySet().stream()
                 .anyMatch(at -> Delivery.crowded(at.x(), at.z(), target.getX(), target.getZ()))
             || falling.stream()
-                .anyMatch(
-                    at ->
-                        Delivery.crowded(
-                            at.getBlockX(), at.getBlockZ(), target.getX(), target.getZ()));
+                .anyMatch(at ->
+                    Delivery.crowded(at.getBlockX(), at.getBlockZ(), target.getX(), target.getZ()));
     if (near) {
       return Optional.of("Too close to another supply crate!");
     }
@@ -138,13 +136,12 @@ final class SupplyCrates {
       }
       runner
           .entity(member.id())
-          .ifPresent(
-              viewer -> {
-                if (!viewer.equals(owner)) {
-                  viewer.showEntity(context.plugin(), labels.get(1));
-                }
-                viewer.hideEntity(context.plugin(), labels.get(2));
-              });
+          .ifPresent(viewer -> {
+            if (!viewer.equals(owner)) {
+              viewer.showEntity(context.plugin(), labels.get(1));
+            }
+            viewer.hideEntity(context.plugin(), labels.get(2));
+          });
     }
     return labels;
   }

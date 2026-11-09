@@ -22,47 +22,44 @@ public final class JooqWarpStore implements WarpStore {
 
   @Override
   public CompletableFuture<List<Warp>> all() {
-    return database.read(
-        dsl ->
-            dsl.selectFrom(ESSENTIALS_WARPS)
-                .orderBy(ESSENTIALS_WARPS.NAME)
-                .fetch(JooqWarpStore::toWarp));
+    return database.read(dsl ->
+        dsl.selectFrom(ESSENTIALS_WARPS)
+            .orderBy(ESSENTIALS_WARPS.NAME)
+            .fetch(JooqWarpStore::toWarp));
   }
 
   @Override
   public CompletableFuture<Void> save(Warp warp) {
     var position = warp.position();
     return database
-        .write(
-            dsl -> {
-              dsl.insertInto(ESSENTIALS_WARPS)
-                  .set(ESSENTIALS_WARPS.NAME, warp.name().value())
-                  .set(ESSENTIALS_WARPS.WORLD, position.world())
-                  .set(ESSENTIALS_WARPS.X, position.x())
-                  .set(ESSENTIALS_WARPS.Y, position.y())
-                  .set(ESSENTIALS_WARPS.Z, position.z())
-                  .set(ESSENTIALS_WARPS.YAW, (double) position.yaw())
-                  .set(ESSENTIALS_WARPS.PITCH, (double) position.pitch())
-                  .onConflict(ESSENTIALS_WARPS.NAME)
-                  .doUpdate()
-                  .set(ESSENTIALS_WARPS.WORLD, position.world())
-                  .set(ESSENTIALS_WARPS.X, position.x())
-                  .set(ESSENTIALS_WARPS.Y, position.y())
-                  .set(ESSENTIALS_WARPS.Z, position.z())
-                  .set(ESSENTIALS_WARPS.YAW, (double) position.yaw())
-                  .set(ESSENTIALS_WARPS.PITCH, (double) position.pitch())
-                  .execute();
-              return true;
-            })
+        .write(dsl -> {
+          dsl.insertInto(ESSENTIALS_WARPS)
+              .set(ESSENTIALS_WARPS.NAME, warp.name().value())
+              .set(ESSENTIALS_WARPS.WORLD, position.world())
+              .set(ESSENTIALS_WARPS.X, position.x())
+              .set(ESSENTIALS_WARPS.Y, position.y())
+              .set(ESSENTIALS_WARPS.Z, position.z())
+              .set(ESSENTIALS_WARPS.YAW, (double) position.yaw())
+              .set(ESSENTIALS_WARPS.PITCH, (double) position.pitch())
+              .onConflict(ESSENTIALS_WARPS.NAME)
+              .doUpdate()
+              .set(ESSENTIALS_WARPS.WORLD, position.world())
+              .set(ESSENTIALS_WARPS.X, position.x())
+              .set(ESSENTIALS_WARPS.Y, position.y())
+              .set(ESSENTIALS_WARPS.Z, position.z())
+              .set(ESSENTIALS_WARPS.YAW, (double) position.yaw())
+              .set(ESSENTIALS_WARPS.PITCH, (double) position.pitch())
+              .execute();
+          return true;
+        })
         .thenAccept(done -> {});
   }
 
   @Override
   public CompletableFuture<Boolean> delete(PlaceName name) {
-    return database.write(
-        dsl ->
-            dsl.deleteFrom(ESSENTIALS_WARPS).where(ESSENTIALS_WARPS.NAME.eq(name.value())).execute()
-                > 0);
+    return database.write(dsl ->
+        dsl.deleteFrom(ESSENTIALS_WARPS).where(ESSENTIALS_WARPS.NAME.eq(name.value())).execute()
+            > 0);
   }
 
   private static Warp toWarp(EssentialsWarpsRecord row) {

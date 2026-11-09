@@ -47,11 +47,10 @@ final class EntityKinds {
   /** What right-clicking {@code entity} does, or empty when it is not protected. */
   static Optional<Act> use(Entity entity) {
     return subject(entity)
-        .map(
-            subject ->
-                subject == Subject.VEHICLE && entity instanceof InventoryHolder
-                    ? new Act(Action.OPEN_CONTAINER, Subject.CONTAINER)
-                    : new Act(Action.INTERACT_ENTITY, subject));
+        .map(subject ->
+            subject == Subject.VEHICLE && entity instanceof InventoryHolder
+                ? new Act(Action.OPEN_CONTAINER, Subject.CONTAINER)
+                : new Act(Action.INTERACT_ENTITY, subject));
   }
 
   /** What {@code entity} is to {@code attacker} when they hurt, push or pull it. */

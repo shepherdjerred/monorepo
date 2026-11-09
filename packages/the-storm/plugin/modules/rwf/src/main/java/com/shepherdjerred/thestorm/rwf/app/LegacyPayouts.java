@@ -35,21 +35,19 @@ final class LegacyPayouts {
         CompletableFuture.completedFuture(new ArrayList<>());
     for (var row : rows) {
       chain =
-          chain.thenCompose(
-              payments ->
-                  wallets
-                      .receiptFor(PayoutService.key(row.matchId(), player))
-                      .thenApply(
-                          receipt -> {
-                            if (receipt.isPresent()) {
-                              payments.add(payment(row, receipt.orElseThrow()));
-                            } else if (row.status() == MatchStore.PayoutStatus.PAID
-                                && row.creditsPaid() != 0) {
-                              throw new IllegalStateException(
-                                  "paid legacy payout has no receipt: " + row.matchId());
-                            }
-                            return payments;
-                          }));
+          chain.thenCompose(payments ->
+              wallets
+                  .receiptFor(PayoutService.key(row.matchId(), player))
+                  .thenApply(receipt -> {
+                    if (receipt.isPresent()) {
+                      payments.add(payment(row, receipt.orElseThrow()));
+                    } else if (row.status() == MatchStore.PayoutStatus.PAID
+                        && row.creditsPaid() != 0) {
+                      throw new IllegalStateException(
+                          "paid legacy payout has no receipt: " + row.matchId());
+                    }
+                    return payments;
+                  }));
     }
     return chain.thenCompose(payments -> store.reconcileLegacy(player, List.copyOf(payments)));
   }

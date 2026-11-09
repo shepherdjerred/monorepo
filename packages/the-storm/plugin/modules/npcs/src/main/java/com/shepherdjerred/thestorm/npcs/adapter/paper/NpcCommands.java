@@ -77,32 +77,29 @@ final class NpcCommands {
             Commands.literal("tp")
                 .then(
                     npcArgument()
-                        .executes(
-                            context ->
-                                tp(context.getSource().getSender(), getString(context, ID)))))
+                        .executes(context ->
+                            tp(context.getSource().getSender(), getString(context, ID)))))
         .then(
             Commands.literal("reload").executes(context -> reload(context.getSource().getSender())))
         .then(
             Commands.literal("here")
                 .then(
                     Commands.argument(ID, word())
-                        .executes(
-                            context ->
-                                here(context.getSource().getSender(), getString(context, ID)))))
+                        .executes(context ->
+                            here(context.getSource().getSender(), getString(context, ID)))))
         .build();
   }
 
   private RequiredArgumentBuilder<CommandSourceStack, String> npcArgument() {
     return Commands.argument(ID, word())
-        .suggests(
-            (context, builder) -> {
-              var prefix = builder.getRemainingLowerCase();
-              wiring.catalog().content().npcs().keySet().stream()
-                  .filter(id -> id.startsWith(prefix))
-                  .sorted()
-                  .forEach(builder::suggest);
-              return builder.buildFuture();
-            });
+        .suggests((context, builder) -> {
+          var prefix = builder.getRemainingLowerCase();
+          wiring.catalog().content().npcs().keySet().stream()
+              .filter(id -> id.startsWith(prefix))
+              .sorted()
+              .forEach(builder::suggest);
+          return builder.buildFuture();
+        });
   }
 
   private int list(CommandSender sender) {

@@ -58,12 +58,11 @@ public final class StructureToggle {
       return Result.err(new StructureProblem.StockFull());
     }
     return movable(standing, grid)
-        .map(
-            cells -> {
-              var changes =
-                  cells.stream().map(pos -> new BlockChange(pos, material, Cell.AIR)).toList();
-              return new StructurePlan(true, changes, stock.plus(material, cells.size()));
-            });
+        .map(cells -> {
+          var changes =
+              cells.stream().map(pos -> new BlockChange(pos, material, Cell.AIR)).toList();
+          return new StructurePlan(true, changes, stock.plus(material, cells.size()));
+        });
   }
 
   private static Result<StructurePlan, StructureProblem> close(

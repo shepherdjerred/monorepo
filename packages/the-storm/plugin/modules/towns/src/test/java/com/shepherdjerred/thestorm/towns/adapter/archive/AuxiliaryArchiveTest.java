@@ -61,17 +61,15 @@ final class AuxiliaryArchiveTest {
     assertThatThrownBy(
             () -> AuxiliaryArchive.decode("{}".getBytes(java.nio.charset.StandardCharsets.UTF_8)))
         .isInstanceOf(IllegalStateException.class);
-    assertThatThrownBy(
-            () ->
-                AuxiliaryArchive.decode(
-                    "{\"version\":3,\"shops\":\"\",\"locks\":[]}"
-                        .getBytes(java.nio.charset.StandardCharsets.UTF_8)))
+    assertThatThrownBy(() ->
+            AuxiliaryArchive.decode(
+                "{\"version\":3,\"shops\":\"\",\"locks\":[]}"
+                    .getBytes(java.nio.charset.StandardCharsets.UTF_8)))
         .isInstanceOf(IllegalStateException.class);
-    assertThatThrownBy(
-            () ->
-                AuxiliaryArchive.decode(
-                    "{\"version\":1,\"shops\":\"\",\"locks\":[{}]}"
-                        .getBytes(java.nio.charset.StandardCharsets.UTF_8)))
+    assertThatThrownBy(() ->
+            AuxiliaryArchive.decode(
+                "{\"version\":1,\"shops\":\"\",\"locks\":[{}]}"
+                    .getBytes(java.nio.charset.StandardCharsets.UTF_8)))
         .isInstanceOf(IllegalStateException.class);
   }
 }

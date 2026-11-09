@@ -88,14 +88,13 @@ public record CombatTags(Map<UUID, Instant> until) {
   public Swept sweep(Instant now) {
     var next = new HashMap<UUID, Instant>();
     var ended = new ArrayList<UUID>();
-    until.forEach(
-        (player, ends) -> {
-          if (now.isBefore(ends)) {
-            next.put(player, ends);
-          } else {
-            ended.add(player);
-          }
-        });
+    until.forEach((player, ends) -> {
+      if (now.isBefore(ends)) {
+        next.put(player, ends);
+      } else {
+        ended.add(player);
+      }
+    });
     ended.sort(UUID::compareTo);
     return new Swept(new CombatTags(next), ended);
   }

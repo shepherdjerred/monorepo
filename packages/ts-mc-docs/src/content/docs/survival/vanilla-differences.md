@@ -11,5 +11,6 @@ You can gather, craft, build, and explore as usual. The Storm adds shared-world 
 - **Community:** townsfolk offer quests and rewards, and players can trade with crystals. Storm Shards can improve equipment. Use `/quests` for your journal and `/bal` for your balance.
 - **A shared home:** the worlds are permanent, so other players' builds and choices remain part of the landscape. Check who owns land before building and ask before changing another player's work. See [playing in a shared world](/survival/shared-world/).
 - **Sleep:** half of the players in an overworld need to sleep to skip the night; AFK players are excluded unless they are in bed.
+- **Redstone and farms:** redstone, hoppers, mob and crop farms, ender pearl stasis chambers, hunger and weather work as in vanilla. Duplication glitches (TNT, carpet, rail and sand duping) and breaking bedrock or end portal frames are disabled. Monsters are stronger far from spawn and deep underground, and the mob caps are higher than vanilla.
 
 For the rules that keep shared worlds enjoyable, read [norms](/norms/).

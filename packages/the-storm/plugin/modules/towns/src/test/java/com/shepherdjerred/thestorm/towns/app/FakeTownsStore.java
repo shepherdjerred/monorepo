@@ -105,44 +105,41 @@ final class FakeTownsStore implements TownsStore {
     return record(
             () -> {
               towns.put(town.id(), town);
-              claims.replaceAll(
-                  (chunk, claim) -> {
-                    if (!claim.townId().equals(town.id())) {
-                      return claim;
-                    }
-                    var next = claim.withTrust(departed, false);
-                    return next.resident().filter(departed::equals).isPresent()
-                        ? next.withResident(Optional.empty())
-                        : next;
-                  });
+              claims.replaceAll((chunk, claim) -> {
+                if (!claim.townId().equals(town.id())) {
+                  return claim;
+                }
+                var next = claim.withTrust(departed, false);
+                return next.resident().filter(departed::equals).isPresent()
+                    ? next.withResident(Optional.empty())
+                    : next;
+              });
             })
         .thenApply(done -> Set.of());
   }
 
   @Override
   public CompletableFuture<Void> deleteTown(TownPayout payout) {
-    return record(
-        () -> {
-          towns.remove(payout.townId());
-          payouts.put(payout.townId(), payout);
-          var remaining = new HashMap<>(claims);
-          remaining.values().removeIf(claim -> claim.townId().equals(payout.townId()));
-          claims.clear();
-          claims.putAll(remaining);
-        });
+    return record(() -> {
+      towns.remove(payout.townId());
+      payouts.put(payout.townId(), payout);
+      var remaining = new HashMap<>(claims);
+      remaining.values().removeIf(claim -> claim.townId().equals(payout.townId()));
+      claims.clear();
+      claims.putAll(remaining);
+    });
   }
 
   @Override
   public CompletableFuture<Void> deleteCamp(UUID townId, Map<UUID, String> messages) {
-    return record(
-        () -> {
-          towns.remove(townId);
-          var remaining = new HashMap<>(claims);
-          remaining.values().removeIf(claim -> claim.townId().equals(townId));
-          claims.clear();
-          claims.putAll(remaining);
-          notices.putAll(messages);
-        });
+    return record(() -> {
+      towns.remove(townId);
+      var remaining = new HashMap<>(claims);
+      remaining.values().removeIf(claim -> claim.townId().equals(townId));
+      claims.clear();
+      claims.putAll(remaining);
+      notices.putAll(messages);
+    });
   }
 
   @Override
@@ -172,11 +169,10 @@ final class FakeTownsStore implements TownsStore {
 
   @Override
   public CompletableFuture<Void> addClaimAndSaveTown(Claim claim, Instant at, Town town) {
-    return record(
-        () -> {
-          claims.put(claim.chunk(), claim);
-          towns.put(town.id(), town);
-        });
+    return record(() -> {
+      claims.put(claim.chunk(), claim);
+      towns.put(town.id(), town);
+    });
   }
 
   @Override

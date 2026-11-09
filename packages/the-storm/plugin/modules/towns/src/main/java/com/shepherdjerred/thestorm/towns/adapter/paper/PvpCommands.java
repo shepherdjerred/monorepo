@@ -50,11 +50,10 @@ final class PvpCommands {
     var on = pvp.pvpOn(player.getUniqueId());
     var next = pvp.nextChange(player.getUniqueId());
     var when =
-        next.map(
-                at ->
-                    "You can change it again in "
-                        + Explanations.wait(Duration.between(pvp.now(), at))
-                        + ".")
+        next.map(at ->
+                "You can change it again in "
+                    + Explanations.wait(Duration.between(pvp.now(), at))
+                    + ".")
             .orElseGet(() -> "You can change it now with /pvp " + (on ? "off" : "on") + ".");
     player.sendMessage(Notices.info("Your PvP is " + (on ? "on" : "off") + ". " + when));
   }

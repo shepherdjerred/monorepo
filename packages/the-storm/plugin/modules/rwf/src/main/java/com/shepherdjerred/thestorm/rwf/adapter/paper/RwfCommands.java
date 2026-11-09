@@ -127,18 +127,17 @@ final class RwfCommands {
                         .then(
                             Commands.argument("third", StringArgumentType.word())
                                 .suggests(suggest(RwfCommands::rewardIds))
-                                .executes(
-                                    ctx ->
-                                        asPlayer(
-                                            ctx,
-                                            player ->
-                                                selectRewards(
-                                                    player,
-                                                    List.of(
-                                                        StringArgumentType.getString(ctx, "first"),
-                                                        StringArgumentType.getString(ctx, "second"),
-                                                        StringArgumentType.getString(
-                                                            ctx, "third"))))))));
+                                .executes(ctx ->
+                                    asPlayer(
+                                        ctx,
+                                        player ->
+                                            selectRewards(
+                                                player,
+                                                List.of(
+                                                    StringArgumentType.getString(ctx, "first"),
+                                                    StringArgumentType.getString(ctx, "second"),
+                                                    StringArgumentType.getString(
+                                                        ctx, "third"))))))));
   }
 
   private static Collection<String> rewardIds() {
@@ -187,52 +186,45 @@ final class RwfCommands {
                 .then(
                     Commands.argument("player", StringArgumentType.word())
                         .suggests(suggest(this::followableNames))
-                        .executes(
-                            ctx ->
-                                asPlayer(
-                                    ctx,
-                                    player ->
-                                        spectating
-                                            .goTo(
-                                                player, StringArgumentType.getString(ctx, "player"))
-                                            .ifPresent(message -> Texts.error(player, message))))))
+                        .executes(ctx ->
+                            asPlayer(
+                                ctx,
+                                player ->
+                                    spectating
+                                        .goTo(player, StringArgumentType.getString(ctx, "player"))
+                                        .ifPresent(message -> Texts.error(player, message))))))
         .then(
             Commands.literal("kit")
                 .requires(permission(RwfPermissions.PLAY))
                 .then(
                     Commands.argument("kit", StringArgumentType.word())
                         .suggests(suggest(kits::kitIds))
-                        .executes(
-                            ctx ->
-                                asPlayer(
-                                    ctx,
-                                    player ->
-                                        pickKit(
-                                            player, StringArgumentType.getString(ctx, "kit"))))))
+                        .executes(ctx ->
+                            asPlayer(
+                                ctx,
+                                player ->
+                                    pickKit(player, StringArgumentType.getString(ctx, "kit"))))))
         .then(
             Commands.literal("kits")
                 .requires(permission(RwfPermissions.PLAY))
-                .executes(
-                    ctx ->
-                        asPlayer(
-                            ctx,
-                            player ->
-                                runner
-                                    .picker()
-                                    .open(player)
-                                    .ifPresent(message -> Texts.error(player, message)))))
+                .executes(ctx ->
+                    asPlayer(
+                        ctx,
+                        player ->
+                            runner
+                                .picker()
+                                .open(player)
+                                .ifPresent(message -> Texts.error(player, message)))))
         .then(
             Commands.literal("buy")
                 .requires(permission(RwfPermissions.PLAY))
                 .then(
                     Commands.argument("kit", StringArgumentType.word())
                         .suggests(suggest(kits::kitIds))
-                        .executes(
-                            ctx ->
-                                asPlayer(
-                                    ctx,
-                                    player ->
-                                        buy(player, StringArgumentType.getString(ctx, "kit"))))))
+                        .executes(ctx ->
+                            asPlayer(
+                                ctx,
+                                player -> buy(player, StringArgumentType.getString(ctx, "kit"))))))
         .then(
             Commands.literal("rotation")
                 .requires(permission(RwfPermissions.PLAY))
@@ -251,15 +243,14 @@ final class RwfCommands {
                 .then(
                     Commands.argument("map", StringArgumentType.word())
                         .suggests(suggest(this::ballotIds))
-                        .executes(
-                            ctx ->
-                                asPlayer(
-                                    ctx,
-                                    player ->
-                                        runner
-                                            .visitCandidate(
-                                                player, StringArgumentType.getString(ctx, "map"))
-                                            .ifPresent(error -> Texts.error(player, error))))))
+                        .executes(ctx ->
+                            asPlayer(
+                                ctx,
+                                player ->
+                                    runner
+                                        .visitCandidate(
+                                            player, StringArgumentType.getString(ctx, "map"))
+                                        .ifPresent(error -> Texts.error(player, error))))))
         .then(
             Commands.literal("return")
                 .requires(permission(RwfPermissions.PLAY))
@@ -271,12 +262,10 @@ final class RwfCommands {
                 .then(
                     Commands.argument("map", StringArgumentType.word())
                         .suggests(suggest(this::ballotIds))
-                        .executes(
-                            ctx ->
-                                asPlayer(
-                                    ctx,
-                                    player ->
-                                        vote(player, StringArgumentType.getString(ctx, "map"))))))
+                        .executes(ctx ->
+                            asPlayer(
+                                ctx,
+                                player -> vote(player, StringArgumentType.getString(ctx, "map"))))))
         .then(
             Commands.literal("time")
                 .requires(permission(RwfPermissions.PLAY).or(permission(RwfPermissions.SPECTATE)))
@@ -311,24 +300,22 @@ final class RwfCommands {
         .executes(ctx -> asPlayer(ctx, this::spectate))
         .then(
             Commands.literal("next")
-                .executes(
-                    ctx ->
-                        asPlayer(
-                            ctx,
-                            player ->
-                                spectating
-                                    .cycle(player, 1)
-                                    .ifPresent(message -> Texts.error(player, message)))))
+                .executes(ctx ->
+                    asPlayer(
+                        ctx,
+                        player ->
+                            spectating
+                                .cycle(player, 1)
+                                .ifPresent(message -> Texts.error(player, message)))))
         .then(
             Commands.literal("previous")
-                .executes(
-                    ctx ->
-                        asPlayer(
-                            ctx,
-                            player ->
-                                spectating
-                                    .cycle(player, -1)
-                                    .ifPresent(message -> Texts.error(player, message)))));
+                .executes(ctx ->
+                    asPlayer(
+                        ctx,
+                        player ->
+                            spectating
+                                .cycle(player, -1)
+                                .ifPresent(message -> Texts.error(player, message)))));
   }
 
   private LiteralArgumentBuilder<CommandSourceStack> admin() {
@@ -343,11 +330,10 @@ final class RwfCommands {
                 .then(
                     Commands.argument(
                             "bots", IntegerArgumentType.integer(1, config.match().maxCombatants()))
-                        .executes(
-                            ctx ->
-                                loadTest(
-                                    ctx.getSource().getSender(),
-                                    IntegerArgumentType.getInteger(ctx, "bots")))))
+                        .executes(ctx ->
+                            loadTest(
+                                ctx.getSource().getSender(),
+                                IntegerArgumentType.getInteger(ctx, "bots")))))
         .then(
             Commands.literal("showcase")
                 .executes(
@@ -355,11 +341,10 @@ final class RwfCommands {
                 .then(
                     Commands.argument(
                             "count", IntegerArgumentType.integer(2, config.match().maxCombatants()))
-                        .executes(
-                            ctx ->
-                                showcase(
-                                    ctx.getSource().getSender(),
-                                    IntegerArgumentType.getInteger(ctx, "count")))))
+                        .executes(ctx ->
+                            showcase(
+                                ctx.getSource().getSender(),
+                                IntegerArgumentType.getInteger(ctx, "count")))))
         .then(
             run("start")
                 .executes(ctx -> refusal(ctx, new MatchEvent.ForceStart(runner.now()), "Started.")))
@@ -372,24 +357,22 @@ final class RwfCommands {
             run("extend")
                 .then(
                     Commands.argument("seconds", IntegerArgumentType.integer(1, 600))
-                        .executes(
-                            ctx ->
-                                refusal(
-                                    ctx,
-                                    new MatchEvent.Extend(
-                                        Duration.ofSeconds(
-                                            IntegerArgumentType.getInteger(ctx, "seconds"))),
-                                    "Extended."))))
+                        .executes(ctx ->
+                            refusal(
+                                ctx,
+                                new MatchEvent.Extend(
+                                    Duration.ofSeconds(
+                                        IntegerArgumentType.getInteger(ctx, "seconds"))),
+                                "Extended."))))
         .then(
             run("setmap")
                 .then(
                     Commands.argument("map", StringArgumentType.word())
                         .suggests(suggest(this::mapIds))
-                        .executes(
-                            ctx ->
-                                setMap(
-                                    ctx.getSource().getSender(),
-                                    StringArgumentType.getString(ctx, "map")))))
+                        .executes(ctx ->
+                            setMap(
+                                ctx.getSource().getSender(),
+                                StringArgumentType.getString(ctx, "map")))))
         .then(
             run("team")
                 .then(
@@ -398,12 +381,11 @@ final class RwfCommands {
                         .then(
                             Commands.argument("team", StringArgumentType.word())
                                 .suggests(suggest(RwfCommands::teamNames))
-                                .executes(
-                                    ctx ->
-                                        team(
-                                            ctx.getSource().getSender(),
-                                            StringArgumentType.getString(ctx, "player"),
-                                            StringArgumentType.getString(ctx, "team"))))))
+                                .executes(ctx ->
+                                    team(
+                                        ctx.getSource().getSender(),
+                                        StringArgumentType.getString(ctx, "player"),
+                                        StringArgumentType.getString(ctx, "team"))))))
         .then(
             run("forcekit")
                 .then(
@@ -412,32 +394,29 @@ final class RwfCommands {
                         .then(
                             Commands.argument("kit", StringArgumentType.word())
                                 .suggests(suggest(kits::kitIds))
-                                .executes(
-                                    ctx ->
-                                        forceKit(
-                                            ctx.getSource().getSender(),
-                                            StringArgumentType.getString(ctx, "player"),
-                                            StringArgumentType.getString(ctx, "kit"))))))
+                                .executes(ctx ->
+                                    forceKit(
+                                        ctx.getSource().getSender(),
+                                        StringArgumentType.getString(ctx, "player"),
+                                        StringArgumentType.getString(ctx, "kit"))))))
         .then(
             run("quarantine")
                 .then(
                     Commands.argument("map", StringArgumentType.word())
                         .suggests(suggest(this::mapIds))
-                        .executes(
-                            ctx ->
-                                quarantine(
-                                    ctx.getSource().getSender(),
-                                    StringArgumentType.getString(ctx, "map")))))
+                        .executes(ctx ->
+                            quarantine(
+                                ctx.getSource().getSender(),
+                                StringArgumentType.getString(ctx, "map")))))
         .then(
             run("unquarantine")
                 .then(
                     Commands.argument("map", StringArgumentType.word())
                         .suggests(suggest(this::mapIds))
-                        .executes(
-                            ctx ->
-                                unquarantine(
-                                    ctx.getSource().getSender(),
-                                    StringArgumentType.getString(ctx, "map")))));
+                        .executes(ctx ->
+                            unquarantine(
+                                ctx.getSource().getSender(),
+                                StringArgumentType.getString(ctx, "map")))));
   }
 
   private static LiteralArgumentBuilder<CommandSourceStack> run(String name) {
@@ -473,13 +452,12 @@ final class RwfCommands {
                 Commands.argument(
                         "players",
                         IntegerArgumentType.integer(1, config.match().maxCombatants() / 2))
-                    .executes(
-                        ctx ->
-                            setSize(
-                                ctx.getSource().getSender(),
-                                new LobbySizing.Selection(
-                                    LobbySizing.Mode.TEAM,
-                                    IntegerArgumentType.getInteger(ctx, "players"))))));
+                    .executes(ctx ->
+                        setSize(
+                            ctx.getSource().getSender(),
+                            new LobbySizing.Selection(
+                                LobbySizing.Mode.TEAM,
+                                IntegerArgumentType.getInteger(ctx, "players"))))));
     return command.build();
   }
 
@@ -495,13 +473,10 @@ final class RwfCommands {
     return runner
         .match()
         .ballot()
-        .flatMap(
-            ballot ->
-                ballot
-                    .chosen()
-                    .or(
-                        () ->
-                            ballot.candidates().stream().findFirst().map(Ballot.Candidate::mapId)))
+        .flatMap(ballot ->
+            ballot
+                .chosen()
+                .or(() -> ballot.candidates().stream().findFirst().map(Ballot.Candidate::mapId)))
         .flatMap(id -> runner.rotation().byId(id))
         .map(MapWorld::definition);
   }
@@ -805,12 +780,11 @@ final class RwfCommands {
     var joined =
         view.combatants().stream()
             .filter(c -> team.isEmpty() || c.team().equals(team))
-            .map(
-                c ->
-                    c.name()
-                        + (c.id().isBot() ? Scoreboards.BOT_SUFFIX : "")
-                        + c.kit().map(kit -> " [" + kit + "]").orElse("")
-                        + (c.alive() ? "" : " (out)"))
+            .map(c ->
+                c.name()
+                    + (c.id().isBot() ? Scoreboards.BOT_SUFFIX : "")
+                    + c.kit().map(kit -> " [" + kit + "]").orElse("")
+                    + (c.alive() ? "" : " (out)"))
             .toList();
     return joined.isEmpty() ? "nobody" : String.join(", ", joined);
   }
@@ -849,16 +823,15 @@ final class RwfCommands {
             + runner.rotation().playable().size());
     runner
         .currentMap()
-        .ifPresent(
-            map ->
-                Texts.info(
-                    sender,
-                    "Map "
-                        + map.id()
-                        + " busy: "
-                        + map.busy()
-                        + ", cratered blocks: "
-                        + map.crateredBlocks()));
+        .ifPresent(map ->
+            Texts.info(
+                sender,
+                "Map "
+                    + map.id()
+                    + " busy: "
+                    + map.busy()
+                    + ", cratered blocks: "
+                    + map.crateredBlocks()));
     var lobby = runner.lobbyRoom();
     Texts.info(sender, "Lobby ready: " + lobby.ready() + ", busy: " + lobby.busy());
     return OK;
@@ -877,19 +850,14 @@ final class RwfCommands {
     }
     Texts.info(
         sender, "Verifying the lobby" + current.map(m -> " and " + m.id()).orElse("") + "...");
-    lobby.verifyAndRepair(
-        intact -> {
-          Texts.info(sender, intact ? "The lobby is intact." : "Lobby repair failed; see the log.");
-          current.ifPresent(
-              map ->
-                  map.verifyAndRepair(
-                      ok ->
-                          Texts.info(
-                              sender,
-                              ok
-                                  ? "Map " + map.id() + " is intact."
-                                  : "Map repair failed; see the log.")));
-        });
+    lobby.verifyAndRepair(intact -> {
+      Texts.info(sender, intact ? "The lobby is intact." : "Lobby repair failed; see the log.");
+      current.ifPresent(map ->
+          map.verifyAndRepair(ok ->
+              Texts.info(
+                  sender,
+                  ok ? "Map " + map.id() + " is intact." : "Map repair failed; see the log.")));
+    });
     return OK;
   }
 
@@ -1008,10 +976,9 @@ final class RwfCommands {
     }
     runner
         .handle(new MatchEvent.MapQuarantined(mapId))
-        .ifPresent(
-            error -> {
-              throw new IllegalStateException("quarantined map stayed on the ballot: " + error);
-            });
+        .ifPresent(error -> {
+          throw new IllegalStateException("quarantined map stayed on the ballot: " + error);
+        });
     context.onMain(
         quarantines.quarantine(
             mapId, "quarantined by an operator", sender.getName(), context.time().instant()),

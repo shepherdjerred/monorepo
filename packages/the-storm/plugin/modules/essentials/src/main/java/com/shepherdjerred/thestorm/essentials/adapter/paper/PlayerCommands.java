@@ -38,17 +38,15 @@ final class PlayerCommands {
     commands.register(
         literal("guide")
             .requires(Cmd.permission(EssentialsPermissions.GUIDE))
-            .executes(
-                context ->
-                    Cmd.asPlayer(
-                        context,
-                        player -> {
-                          player.openBook(guide);
-                          runtime
-                              .analytics()
-                              .interaction(
-                                  player.getUniqueId(), ProductAnalytics.Action.GUIDE_OPENED);
-                        }))
+            .executes(context ->
+                Cmd.asPlayer(
+                    context,
+                    player -> {
+                      player.openBook(guide);
+                      runtime
+                          .analytics()
+                          .interaction(player.getUniqueId(), ProductAnalytics.Action.GUIDE_OPENED);
+                    }))
             .build(),
         "Read the first-session guide");
     commands.register(

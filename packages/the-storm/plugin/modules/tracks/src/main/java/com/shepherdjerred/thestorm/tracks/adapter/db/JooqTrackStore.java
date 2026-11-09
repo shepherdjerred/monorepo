@@ -38,21 +38,19 @@ public final class JooqTrackStore implements TrackStore {
   public <E> CompletableFuture<Result<TrackProgress, E>> update(
       UUID player, Function<TrackProgress, Result<TrackProgress, E>> change) {
     var id = player.toString();
-    return database.write(
-        dsl -> {
-          var current = fetch(dsl, id);
-          return change
-              .apply(current)
-              .map(
-                  next -> {
-                    if (next.equals(current)) {
-                      return current;
-                    }
-                    store(dsl, id, next);
-                    // Read back what was stored (times keep only milliseconds).
-                    return fetch(dsl, id);
-                  });
-        });
+    return database.write(dsl -> {
+      var current = fetch(dsl, id);
+      return change
+          .apply(current)
+          .map(next -> {
+            if (next.equals(current)) {
+              return current;
+            }
+            store(dsl, id, next);
+            // Read back what was stored (times keep only milliseconds).
+            return fetch(dsl, id);
+          });
+    });
   }
 
   private static TrackProgress fetch(DSLContext dsl, String id) {

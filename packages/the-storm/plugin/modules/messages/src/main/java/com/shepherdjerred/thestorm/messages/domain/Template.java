@@ -76,10 +76,9 @@ public record Template(List<Segment> segments) {
       var name = source.substring(index + 1, close);
       var placeholder =
           Placeholder.named(name)
-              .orElseThrow(
-                  () ->
-                      new IllegalArgumentException(
-                          "unknown placeholder {" + name + "} in template: " + source));
+              .orElseThrow(() ->
+                  new IllegalArgumentException(
+                      "unknown placeholder {" + name + "} in template: " + source));
       flush(text, segments);
       segments.add(new Segment.Slot(placeholder));
       index = close + 1;

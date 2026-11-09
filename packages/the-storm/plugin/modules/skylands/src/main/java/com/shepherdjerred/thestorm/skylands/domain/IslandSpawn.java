@@ -19,9 +19,8 @@ public final class IslandSpawn {
   private static final int REACH = 2;
 
   private static final Comparator<SpawnColumn> NEAREST =
-      comparingLong(
-              (SpawnColumn column) ->
-                  (long) column.x() * column.x() + (long) column.z() * column.z())
+      comparingLong((SpawnColumn column) ->
+              (long) column.x() * column.x() + (long) column.z() * column.z())
           .thenComparingInt(SpawnColumn::x)
           .thenComparingInt(SpawnColumn::z);
 

@@ -46,10 +46,9 @@ public final class BeginnerClock {
     this.advanced = advanced;
     ready = store.load().thenAccept(this::loaded);
     var _ =
-        ready.whenComplete(
-            (value, failure) -> {
-              if (failure != null) failed.accept(failure);
-            });
+        ready.whenComplete((value, failure) -> {
+          if (failure != null) failed.accept(failure);
+        });
   }
 
   private synchronized void loaded(Map<UUID, Long> saved) {
@@ -104,13 +103,12 @@ public final class BeginnerClock {
   }
 
   public synchronized void close() {
-    entries.forEach(
-        (id, entry) -> {
-          advance(id, entry);
-          entry.active = false;
-          entry.enabled = false;
-          save(id, entry);
-        });
+    entries.forEach((id, entry) -> {
+      advance(id, entry);
+      entry.active = false;
+      entry.enabled = false;
+      save(id, entry);
+    });
   }
 
   private void advance(UUID id, Entry entry) {
@@ -130,10 +128,9 @@ public final class BeginnerClock {
     var _ =
         store
             .save(id, entry.millis)
-            .whenComplete(
-                (value, failure) -> {
-                  if (failure != null) failed.accept(failure);
-                });
+            .whenComplete((value, failure) -> {
+              if (failure != null) failed.accept(failure);
+            });
   }
 
   private void requireReady() {

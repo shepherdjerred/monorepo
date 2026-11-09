@@ -51,9 +51,8 @@ public final class TicketsModule implements StormModule {
     context
         .services()
         .find(DiscordRelay.class)
-        .ifPresent(
-            relay ->
-                relay.addCommand(new TicketDiscordCommand(service, context.logger()).command()));
+        .ifPresent(relay ->
+            relay.addCommand(new TicketDiscordCommand(service, context.logger()).command()));
 
     context
         .lifecycle()

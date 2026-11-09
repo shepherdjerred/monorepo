@@ -80,18 +80,15 @@ final class ShopCommand {
                 .executes(context -> heldItem(context.getSource().getSender()))
                 .then(
                     Commands.argument(ITEM, word())
-                        .executes(
-                            context ->
-                                namedItem(
-                                    context.getSource().getSender(), getString(context, ITEM)))))
+                        .executes(context ->
+                            namedItem(context.getSource().getSender(), getString(context, ITEM)))))
         .then(
             Commands.argument(CATALOG, word())
                 .requires(source -> source.getSender().hasPermission(ShopsPermissions.OPEN_CATALOG))
-                .suggests(
-                    (context, builder) -> {
-                      serverShops.catalogIds().stream().sorted().forEach(builder::suggest);
-                      return builder.buildFuture();
-                    })
+                .suggests((context, builder) -> {
+                  serverShops.catalogIds().stream().sorted().forEach(builder::suggest);
+                  return builder.buildFuture();
+                })
                 .executes(
                     context -> open(context.getSource().getSender(), getString(context, CATALOG))))
         .build();
@@ -122,24 +119,22 @@ final class ShopCommand {
     if (player.hasPermission(ShopsPermissions.OPEN_CATALOG)) {
       registry
           .closed()
-          .forEach(
-              (id, why) ->
-                  registry
-                      .byId(id)
-                      .ifPresent(
-                          shop ->
-                              player.sendMessage(
-                                  Replies.error(
-                                      "Admin shop "
-                                          + id
-                                          + " at "
-                                          + shop.sign().x()
-                                          + " "
-                                          + shop.sign().y()
-                                          + " "
-                                          + shop.sign().z()
-                                          + " is closed: "
-                                          + why))));
+          .forEach((id, why) ->
+              registry
+                  .byId(id)
+                  .ifPresent(shop ->
+                      player.sendMessage(
+                          Replies.error(
+                              "Admin shop "
+                                  + id
+                                  + " at "
+                                  + shop.sign().x()
+                                  + " "
+                                  + shop.sign().y()
+                                  + " "
+                                  + shop.sign().z()
+                                  + " is closed: "
+                                  + why))));
     }
     return Command.SINGLE_SUCCESS;
   }
@@ -149,9 +144,8 @@ final class ShopCommand {
         .executes(context -> heldItem(context.getSource().getSender()))
         .then(
             Commands.argument(ITEM, word())
-                .executes(
-                    context ->
-                        namedItem(context.getSource().getSender(), getString(context, ITEM))))
+                .executes(context ->
+                    namedItem(context.getSource().getSender(), getString(context, ITEM))))
         .build();
   }
 
@@ -199,15 +193,14 @@ final class ShopCommand {
     found
         .item()
         .filter(com.shepherdjerred.thestorm.shops.domain.shop.ItemFingerprint::bundleDeal)
-        .ifPresent(
-            bundle -> {
-              for (var item : new ItemTemplates().bundleItems(bundle)) {
-                player.sendMessage(
-                    net.kyori.adventure.text.Component.text(item.getAmount() + " × ")
-                        .append(item.displayName())
-                        .hoverEvent(item.asHoverEvent()));
-              }
-            });
+        .ifPresent(bundle -> {
+          for (var item : new ItemTemplates().bundleItems(bundle)) {
+            player.sendMessage(
+                net.kyori.adventure.text.Component.text(item.getAmount() + " × ")
+                    .append(item.displayName())
+                    .hoverEvent(item.asHoverEvent()));
+          }
+        });
     return Command.SINGLE_SUCCESS;
   }
 

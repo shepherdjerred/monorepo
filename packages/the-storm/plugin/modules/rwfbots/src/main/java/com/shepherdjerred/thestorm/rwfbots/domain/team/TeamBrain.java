@@ -173,10 +173,9 @@ public final class TeamBrain {
   private static boolean stuckWorker(Blackboard board, long now) {
     var plan = board.plan();
     return plan.assignment().entrySet().stream()
-        .anyMatch(
-            entry ->
-                plan.slot(entry.getValue()).map(slot -> slot.role() == Role.RETAKE).orElse(false)
-                    && board.pinned(entry.getKey(), now));
+        .anyMatch(entry ->
+            plan.slot(entry.getValue()).map(slot -> slot.role() == Role.RETAKE).orElse(false)
+                && board.pinned(entry.getKey(), now));
   }
 
   /** The living bots stuck in a fight, whom fuse work passes over. */
@@ -416,9 +415,8 @@ public final class TeamBrain {
   private static boolean sightingsNear(Blackboard board, long now, List<CombatantView> alive) {
     return board.visibleSightings(now).stream()
         .filter(sighting -> now - sighting.seenTick() <= ROLE_PERIOD_TICKS)
-        .anyMatch(
-            sighting ->
-                alive.stream().anyMatch(bot -> bot.pos().distance(sighting.pos()) <= CONTACT));
+        .anyMatch(sighting ->
+            alive.stream().anyMatch(bot -> bot.pos().distance(sighting.pos()) <= CONTACT));
   }
 
   /**
@@ -438,12 +436,10 @@ public final class TeamBrain {
     var enemyBomb =
         objective
             .filter(bomb -> bomb.owner() instanceof BombOwner.Team)
-            .or(
-                () ->
-                    snapshot.bombs().stream()
-                        .filter(
-                            bomb -> bomb.owner() instanceof BombOwner.Team && !bomb.belongsTo(team))
-                        .findFirst());
+            .or(() ->
+                snapshot.bombs().stream()
+                    .filter(bomb -> bomb.owner() instanceof BombOwner.Team && !bomb.belongsTo(team))
+                    .findFirst());
     var end = enemyBomb.map(BombView::pos).orElseGet(() -> enemyHome(nav, team, home));
     var site = nearestSite(nav.sites().bombs(), end);
     var spawn = nav.sites().spawns().stream().filter(s -> ownedBy(s, team)).findFirst();
@@ -458,9 +454,8 @@ public final class TeamBrain {
 
   private static Optional<NavSites.Site> nearestSite(List<NavSites.Site> sites, Vec3 pos) {
     return sites.stream()
-        .min(
-            (a, b) ->
-                Double.compare(a.cell().center().distance(pos), b.cell().center().distance(pos)));
+        .min((a, b) ->
+            Double.compare(a.cell().center().distance(pos), b.cell().center().distance(pos)));
   }
 
   /**
@@ -477,15 +472,14 @@ public final class TeamBrain {
     return snapshot.bombs().stream()
         .filter(bomb -> bomb.owner() instanceof BombOwner.Nuke)
         .filter(bomb -> !(bomb.state() instanceof BombState.Destroyed))
-        .filter(
-            bomb -> {
-              var idle = !bomb.state().isLit();
-              var threatened =
-                  contested(board, snapshot.tick(), bomb)
-                      || snapshot.aliveEnemiesOf(team).size() <= LAST_FEW;
-              return (idle && (retook(previous, bomb) || guarded(previous, bomb)))
-                  || (litBy(bomb, team) && threatened);
-            })
+        .filter(bomb -> {
+          var idle = !bomb.state().isLit();
+          var threatened =
+              contested(board, snapshot.tick(), bomb)
+                  || snapshot.aliveEnemiesOf(team).size() <= LAST_FEW;
+          return (idle && (retook(previous, bomb) || guarded(previous, bomb)))
+              || (litBy(bomb, team) && threatened);
+        })
         .findFirst();
   }
 

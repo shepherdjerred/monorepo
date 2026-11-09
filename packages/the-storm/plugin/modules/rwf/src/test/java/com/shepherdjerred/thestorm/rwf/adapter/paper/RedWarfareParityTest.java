@@ -36,9 +36,8 @@ final class RedWarfareParityTest {
     assertThat(armed.decoration(TextDecoration.OBFUSCATED)).isEqualTo(TextDecoration.State.FALSE);
     assertThat(
             armed.children().stream()
-                .filter(
-                    child ->
-                        child.decoration(TextDecoration.OBFUSCATED) == TextDecoration.State.TRUE))
+                .filter(child ->
+                    child.decoration(TextDecoration.OBFUSCATED) == TextDecoration.State.TRUE))
         .hasSize(2);
   }
 

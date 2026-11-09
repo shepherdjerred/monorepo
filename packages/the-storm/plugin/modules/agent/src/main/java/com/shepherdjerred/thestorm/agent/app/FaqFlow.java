@@ -84,38 +84,33 @@ public final class FaqFlow {
     return services
         .tickets()
         .snapshot(ticketId)
-        .thenCompose(
-            found -> {
-              if (found.isEmpty()) {
-                return CompletableFuture.completedFuture(new AnswerOutcome.Missing(ticketId));
-              }
-              var ticket = found.orElseThrow();
-              if (entryId.isPresent()) {
-                var named = byId(entryId.orElseThrow());
-                if (named.isEmpty()) {
-                  return CompletableFuture.completedFuture(
-                      new AnswerOutcome.UnknownEntry(entryId.orElseThrow()));
+        .thenCompose(found -> {
+          if (found.isEmpty()) {
+            return CompletableFuture.completedFuture(new AnswerOutcome.Missing(ticketId));
+          }
+          var ticket = found.orElseThrow();
+          if (entryId.isPresent()) {
+            var named = byId(entryId.orElseThrow());
+            if (named.isEmpty()) {
+              return CompletableFuture.completedFuture(
+                  new AnswerOutcome.UnknownEntry(entryId.orElseThrow()));
+            }
+            return post(ticket, named.orElseThrow(), false, true)
+                .thenApply(done -> new AnswerOutcome.Answered(ticketId, named.orElseThrow().id()));
+          }
+          return services
+              .tickets()
+              .commentSnapshots(ticketId)
+              .thenCompose(comments -> {
+                var match = FaqMatcher.match(textOf(ticket, comments), entries());
+                if (match.isEmpty()) {
+                  return CompletableFuture.completedFuture(new AnswerOutcome.NoMatch(ticketId));
                 }
-                return post(ticket, named.orElseThrow(), false, true)
+                return post(ticket, match.orElseThrow(), false, true)
                     .thenApply(
-                        done -> new AnswerOutcome.Answered(ticketId, named.orElseThrow().id()));
-              }
-              return services
-                  .tickets()
-                  .commentSnapshots(ticketId)
-                  .thenCompose(
-                      comments -> {
-                        var match = FaqMatcher.match(textOf(ticket, comments), entries());
-                        if (match.isEmpty()) {
-                          return CompletableFuture.completedFuture(
-                              new AnswerOutcome.NoMatch(ticketId));
-                        }
-                        return post(ticket, match.orElseThrow(), false, true)
-                            .thenApply(
-                                done ->
-                                    new AnswerOutcome.Answered(ticketId, match.orElseThrow().id()));
-                      });
-            });
+                        done -> new AnswerOutcome.Answered(ticketId, match.orElseThrow().id()));
+              });
+        });
   }
 
   private CompletableFuture<Void> match(TicketSnapshot ticket, List<CommentSnapshot> comments) {
@@ -143,23 +138,22 @@ public final class FaqFlow {
     return services
         .tickets()
         .addAgentComment(ticket.id(), body, false)
-        .thenCompose(
-            added ->
-                switch (added) {
-                  case Result.Ok<CommentSnapshot, TicketFailure> _ -> {
-                    var now = services.time().instant();
-                    memory.recordHit(
-                        ticket.reporter(),
-                        entry.id(),
-                        now,
-                        Duration.ofHours(services.config().faq().halfLifeHours()));
-                    yield record(ticket, entry, cut, staffForced ? "staff-forced" : "replied")
-                        .thenApply(done -> null);
-                  }
-                  // The ticket moved on while the answer posted; nothing to do.
-                  case Result.Err<CommentSnapshot, TicketFailure> _ ->
-                      CompletableFuture.completedFuture(null);
-                });
+        .thenCompose(added ->
+            switch (added) {
+              case Result.Ok<CommentSnapshot, TicketFailure> _ -> {
+                var now = services.time().instant();
+                memory.recordHit(
+                    ticket.reporter(),
+                    entry.id(),
+                    now,
+                    Duration.ofHours(services.config().faq().halfLifeHours()));
+                yield record(ticket, entry, cut, staffForced ? "staff-forced" : "replied")
+                    .thenApply(done -> null);
+              }
+              // The ticket moved on while the answer posted; nothing to do.
+              case Result.Err<CommentSnapshot, TicketFailure> _ ->
+                  CompletableFuture.completedFuture(null);
+            });
   }
 
   private CompletableFuture<AgentDecision> record(

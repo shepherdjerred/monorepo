@@ -86,9 +86,8 @@ public final class JumpController {
         previous
             .filter(value -> value.waypoint().equals(waypoint))
             .map(value -> value.withIntent(request.intent()))
-            .orElseGet(
-                () ->
-                    new ActiveJump(waypoint, request.intent(), ActiveJump.Stage.APPROACH, now, -1));
+            .orElseGet(() ->
+                new ActiveJump(waypoint, request.intent(), ActiveJump.Stage.APPROACH, now, -1));
     if (WaypointArrival.reached(self, waypoint))
       return new Step(Optional.empty(), self.pos(), false, false);
     if (now - active.startedTick() > 120)

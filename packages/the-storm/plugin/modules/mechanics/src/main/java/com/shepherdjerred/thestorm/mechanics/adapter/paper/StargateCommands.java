@@ -51,10 +51,8 @@ final class StargateCommands {
           Commands.literal(kind)
               .then(
                   Commands.argument("name", string())
-                      .executes(
-                          call ->
-                              create(
-                                  call.getSource().getSender(), kind, getString(call, "name")))));
+                      .executes(call ->
+                          create(call.getSource().getSender(), kind, getString(call, "name")))));
     }
     network.then(create);
     for (var verb : new String[] {"invite", "uninvite"}) {
@@ -64,13 +62,12 @@ final class StargateCommands {
                   Commands.argument("network", string())
                       .then(
                           Commands.argument("player", word())
-                              .executes(
-                                  call ->
-                                      invite(
-                                          call.getSource().getSender(),
-                                          getString(call, "network"),
-                                          getString(call, "player"),
-                                          verb.equals("invite"))))));
+                              .executes(call ->
+                                  invite(
+                                      call.getSource().getSender(),
+                                      getString(call, "network"),
+                                      getString(call, "player"),
+                                      verb.equals("invite"))))));
     }
     root.then(network);
     root.then(
@@ -79,12 +76,11 @@ final class StargateCommands {
                 Commands.argument("network", string())
                     .then(
                         Commands.argument("gate", string())
-                            .executes(
-                                call ->
-                                    remove(
-                                        call.getSource().getSender(),
-                                        getString(call, "network"),
-                                        getString(call, "gate"))))));
+                            .executes(call ->
+                                remove(
+                                    call.getSource().getSender(),
+                                    getString(call, "network"),
+                                    getString(call, "gate"))))));
     commands.register(root.build(), "Manage Stargate networks");
   }
 

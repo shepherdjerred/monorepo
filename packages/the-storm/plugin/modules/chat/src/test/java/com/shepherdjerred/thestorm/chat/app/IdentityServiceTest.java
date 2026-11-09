@@ -40,19 +40,17 @@ final class IdentityServiceTest {
       assertThat(service.effective(first)).isEqualTo(Identity.fresh());
       assertThat(service.named("Thunder")).contains(first);
       assertThat(service.activelyNamed("Thunder")).isEmpty();
-      assertThatThrownBy(
-              () ->
-                  service
-                      .change(second, identity -> identity.named(Optional.of("thunder")), audit)
-                      .join())
+      assertThatThrownBy(() ->
+              service
+                  .change(second, identity -> identity.named(Optional.of("thunder")), audit)
+                  .join())
           .isInstanceOf(java.util.concurrent.CompletionException.class);
       assertThat(service.identity(second)).isEqualTo(Identity.fresh());
       int count =
-          db.read(
-                  sql ->
-                      sql.fetchCount(
-                          com.shepherdjerred.thestorm.chat.adapter.db.generated.Tables
-                              .CHAT_IDENTITY_AUDIT))
+          db.read(sql ->
+                  sql.fetchCount(
+                      com.shepherdjerred.thestorm.chat.adapter.db.generated.Tables
+                          .CHAT_IDENTITY_AUDIT))
               .join();
       assertThat(count).isEqualTo(2);
     }
@@ -82,11 +80,8 @@ final class IdentityServiceTest {
               }
             });
     service.load().join();
-    assertThatThrownBy(
-            () ->
-                service
-                    .change(first, identity -> identity.named(Optional.of("Thunder")), audit)
-                    .join())
+    assertThatThrownBy(() ->
+            service.change(first, identity -> identity.named(Optional.of("Thunder")), audit).join())
         .hasRootCauseMessage("disk full");
     assertThat(service.identity(first)).isEqualTo(Identity.fresh());
   }

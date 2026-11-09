@@ -68,21 +68,18 @@ final class PerksAdminCommands {
                             PerksCommands.trackArgument()
                                 .then(
                                     Commands.argument(LEVEL, integer(0, Track.MAX_LEVEL))
-                                        .executes(
-                                            context ->
-                                                set(
-                                                    context.getSource().getSender(),
-                                                    getString(context, PLAYER),
-                                                    getString(context, PerksCommands.TRACK),
-                                                    getInteger(context, LEVEL)))))))
+                                        .executes(context ->
+                                            set(
+                                                context.getSource().getSender(),
+                                                getString(context, PLAYER),
+                                                getString(context, PerksCommands.TRACK),
+                                                getInteger(context, LEVEL)))))))
         .then(
             Commands.literal("reset")
                 .then(
                     playerArgument()
-                        .executes(
-                            context ->
-                                reset(
-                                    context.getSource().getSender(), getString(context, PLAYER)))));
+                        .executes(context ->
+                            reset(context.getSource().getSender(), getString(context, PLAYER)))));
   }
 
   private RequiredArgumentBuilder<CommandSourceStack, String> playerArgument() {

@@ -83,11 +83,8 @@ final class CurrencyMigrationTest {
 
   private List<List<Object>> rows(String query) throws Exception {
     return await(
-        database.read(
-            dsl ->
-                dsl.fetch(query).stream()
-                    .map(record -> Arrays.asList(record.intoArray()))
-                    .toList()));
+        database.read(dsl ->
+            dsl.fetch(query).stream().map(record -> Arrays.asList(record.intoArray())).toList()));
   }
 
   private Record one(String query) throws Exception {
@@ -208,21 +205,19 @@ final class CurrencyMigrationTest {
     assertThat(await(store.balance(alice, CurrencyId.CRYSTALS))).isEqualTo(crystalsBefore);
     var keyed = await(store.receiptFor(new UUID(9, 0))).orElseThrow();
     assertThat(keyed.amount().currency()).isEqualTo(CurrencyId.CRYSTALS);
-    assertThatThrownBy(
-            () ->
-                sql(
-                    "INSERT INTO economy_ledger (from_kind, from_id, to_kind, to_id, currency,"
-                        + " amount, reason, at, idempotency_key) VALUES ('server', 'server',"
-                        + " 'player', ?, 'rwf_credits', 1, 'dupe', 1, ?)",
-                    alice.uuid().toString(),
-                    new UUID(9, 0).toString()))
+    assertThatThrownBy(() ->
+            sql(
+                "INSERT INTO economy_ledger (from_kind, from_id, to_kind, to_id, currency,"
+                    + " amount, reason, at, idempotency_key) VALUES ('server', 'server',"
+                    + " 'player', ?, 'rwf_credits', 1, 'dupe', 1, ?)",
+                alice.uuid().toString(),
+                new UUID(9, 0).toString()))
         .isInstanceOf(ExecutionException.class)
         .hasMessageContaining("UNIQUE");
-    assertThatThrownBy(
-            () ->
-                sql(
-                    "INSERT INTO economy_account (kind, id, currency, balance)"
-                        + " VALUES ('player', 'x', 'shards', 1)"))
+    assertThatThrownBy(() ->
+            sql(
+                "INSERT INTO economy_account (kind, id, currency, balance)"
+                    + " VALUES ('player', 'x', 'shards', 1)"))
         .isInstanceOf(ExecutionException.class)
         .hasMessageContaining("CHECK");
   }

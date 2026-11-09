@@ -28,16 +28,14 @@ record BodyState(
   static BodyState capture(Player player) {
     var attributes =
         Registry.ATTRIBUTE.stream()
-            .flatMap(
-                attribute ->
-                    Optional.ofNullable(player.getAttribute(attribute))
-                        .map(
-                            instance ->
-                                new AttributeState(
-                                    attribute,
-                                    instance.getBaseValue(),
-                                    List.copyOf(instance.getModifiers())))
-                        .stream())
+            .flatMap(attribute ->
+                Optional.ofNullable(player.getAttribute(attribute))
+                    .map(instance ->
+                        new AttributeState(
+                            attribute,
+                            instance.getBaseValue(),
+                            List.copyOf(instance.getModifiers())))
+                    .stream())
             .toList();
     return new BodyState(
         Gear.capture(player),

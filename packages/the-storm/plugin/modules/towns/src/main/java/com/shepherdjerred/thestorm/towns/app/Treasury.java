@@ -118,25 +118,22 @@ public final class Treasury {
           CompletableFuture.completedFuture(
               towns
                   .disband(player, confirmation)
-                  .map(
-                      change -> {
-                        var payout = TownPayout.of(town);
-                        var saved =
-                            change
-                                .saved()
-                                .thenCompose(
-                                    ignored -> {
-                                      members.forgetTown(town.id());
-                                      return payPayout(payout);
-                                    })
-                                .exceptionallyCompose(
-                                    failure ->
-                                        towns.settling().state().town(town.id()).isEmpty()
-                                            ? CompletableFuture.failedFuture(
-                                                new PayoutPending(payout.townId(), failure))
-                                            : CompletableFuture.failedFuture(failure));
-                        return new Change<>(town, saved);
-                      }));
+                  .map(change -> {
+                    var payout = TownPayout.of(town);
+                    var saved =
+                        change
+                            .saved()
+                            .thenCompose(ignored -> {
+                              members.forgetTown(town.id());
+                              return payPayout(payout);
+                            })
+                            .exceptionallyCompose(failure ->
+                                towns.settling().state().town(town.id()).isEmpty()
+                                    ? CompletableFuture.failedFuture(
+                                        new PayoutPending(payout.townId(), failure))
+                                    : CompletableFuture.failedFuture(failure));
+                    return new Change<>(town, saved);
+                  }));
       case Result.Err<Town, List<TownProblem>>(var problems) ->
           CompletableFuture.completedFuture(Result.err(problems));
     };
@@ -148,10 +145,9 @@ public final class Treasury {
         .settling()
         .store()
         .pendingPayouts()
-        .thenCompose(
-            payouts ->
-                CompletableFuture.allOf(
-                    payouts.stream().map(this::payPayout).toArray(CompletableFuture[]::new)));
+        .thenCompose(payouts ->
+            CompletableFuture.allOf(
+                payouts.stream().map(this::payPayout).toArray(CompletableFuture[]::new)));
   }
 
   private CompletableFuture<Void> payPayout(TownPayout payout) {
@@ -160,40 +156,36 @@ public final class Treasury {
     var reason = "town:delete:" + payout.townId();
     return wallets
         .receiptFor(payout.transferKey())
-        .thenCompose(
-            existing -> {
-              if (existing.isPresent()) {
-                var receipt = existing.orElseThrow();
-                if (!receipt.from().equals(treasury)
-                    || !receipt.to().equals(owner)
-                    || !receipt.reason().equals(reason)) {
-                  return CompletableFuture.failedFuture(
-                      new IllegalStateException("town payout key belongs to another transfer"));
+        .thenCompose(existing -> {
+          if (existing.isPresent()) {
+            var receipt = existing.orElseThrow();
+            if (!receipt.from().equals(treasury)
+                || !receipt.to().equals(owner)
+                || !receipt.reason().equals(reason)) {
+              return CompletableFuture.failedFuture(
+                  new IllegalStateException("town payout key belongs to another transfer"));
+            }
+            return towns.settling().store().clearPayout(payout);
+          }
+          return wallets
+              .balance(treasury, CurrencyId.CRYSTALS)
+              .thenCompose(balance -> {
+                if (balance.amount() == 0) {
+                  return towns.settling().store().clearPayout(payout);
                 }
-                return towns.settling().store().clearPayout(payout);
-              }
-              return wallets
-                  .balance(treasury, CurrencyId.CRYSTALS)
-                  .thenCompose(
-                      balance -> {
-                        if (balance.amount() == 0) {
-                          return towns.settling().store().clearPayout(payout);
-                        }
-                        return wallets
-                            .transferOnce(
-                                new KeyedTransfer(
-                                    payout.transferKey(), treasury, owner, balance, reason))
-                            .thenCompose(
-                                result -> {
-                                  if (result instanceof Result.Err<Receipt, EconomyError> error) {
-                                    return CompletableFuture.failedFuture(
-                                        new IllegalStateException(
-                                            "town payout transfer failed: " + error.error()));
-                                  }
-                                  return towns.settling().store().clearPayout(payout);
-                                });
-                      });
-            });
+                return wallets
+                    .transferOnce(
+                        new KeyedTransfer(payout.transferKey(), treasury, owner, balance, reason))
+                    .thenCompose(result -> {
+                      if (result instanceof Result.Err<Receipt, EconomyError> error) {
+                        return CompletableFuture.failedFuture(
+                            new IllegalStateException(
+                                "town payout transfer failed: " + error.error()));
+                      }
+                      return towns.settling().store().clearPayout(payout);
+                    });
+              });
+        });
   }
 
   /** Deletion committed, but its durable payout still needs recovery. */

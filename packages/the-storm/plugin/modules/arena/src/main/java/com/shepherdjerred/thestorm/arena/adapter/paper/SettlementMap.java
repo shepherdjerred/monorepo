@@ -165,12 +165,10 @@ final class SettlementMap {
     visitors.clear();
     for (var zone : content.zones()) {
       zone.defenses()
-          .forEach(
-              d -> {
-                if (d.type() == SurvivalContent.DefenseType.BARRICADE)
-                  barricade(d, Material.OAK_FENCE);
-                else world.setBlock(d.block(), Material.STONE_PRESSURE_PLATE);
-              });
+          .forEach(d -> {
+            if (d.type() == SurvivalContent.DefenseType.BARRICADE) barricade(d, Material.OAK_FENCE);
+            else world.setBlock(d.block(), Material.STONE_PRESSURE_PLATE);
+          });
     }
     gates();
     labels();
@@ -180,19 +178,14 @@ final class SettlementMap {
     content.arena().classSigns().forEach((id, block) -> label(block, id, "Select class", "", ""));
     for (var zone : content.zones()) {
       zone.purchaseSigns()
-          .forEach(
-              p -> {
-                if (state.accessible(zone.id())) world.setBlock(p, Material.AIR);
-                else {
-                  world.setBlock(p, Material.OAK_SIGN);
-                  label(
-                      p,
-                      zone.name(),
-                      zone.emeralds() + " emeralds",
-                      "Click twice",
-                      "within 3 seconds");
-                }
-              });
+          .forEach(p -> {
+            if (state.accessible(zone.id())) world.setBlock(p, Material.AIR);
+            else {
+              world.setBlock(p, Material.OAK_SIGN);
+              label(
+                  p, zone.name(), zone.emeralds() + " emeralds", "Click twice", "within 3 seconds");
+            }
+          });
     }
     content
         .planeParts()
@@ -294,37 +287,33 @@ final class SettlementMap {
         .flatMap(z -> z.defenses().stream())
         .filter(d -> d.type() == SurvivalContent.DefenseType.BARRICADE)
         .filter(d -> Places.location(world.world(), d.block().center()).distanceSquared(at) < 25)
-        .forEach(
-            d -> {
-              while (state.strength(d.id()) > 0) state.breach(d.id());
-              barricade(d, Material.AIR);
-            });
+        .forEach(d -> {
+          while (state.strength(d.id()) > 0) state.breach(d.id());
+          barricade(d, Material.AIR);
+        });
   }
 
   void repairAll() {
     open().stream()
         .flatMap(z -> z.defenses().stream())
         .filter(d -> d.type() == SurvivalContent.DefenseType.BARRICADE)
-        .forEach(
-            d -> {
-              state.repair(d.id());
-              barricade(d, Material.OAK_FENCE);
-            });
+        .forEach(d -> {
+          state.repair(d.id());
+          barricade(d, Material.OAK_FENCE);
+        });
   }
 
   void restoreNearby(Location at, UUID owner) {
     open().stream()
         .flatMap(zone -> zone.defenses().stream())
-        .filter(
-            defense ->
-                Places.location(world.world(), defense.block().center()).distanceSquared(at) <= 144)
-        .forEach(
-            defense -> {
-              if (defense.type() == SurvivalContent.DefenseType.BARRICADE) {
-                if (state.strength(defense.id()) < 5) state.repair(defense.id());
-                barricade(defense, Material.OAK_FENCE);
-              } else if (state.strength(defense.id()) == 0) arm(defense, owner);
-            });
+        .filter(defense ->
+            Places.location(world.world(), defense.block().center()).distanceSquared(at) <= 144)
+        .forEach(defense -> {
+          if (defense.type() == SurvivalContent.DefenseType.BARRICADE) {
+            if (state.strength(defense.id()) < 5) state.repair(defense.id());
+            barricade(defense, Material.OAK_FENCE);
+          } else if (state.strength(defense.id()) == 0) arm(defense, owner);
+        });
   }
 
   void tick(java.util.function.BiConsumer<org.bukkit.entity.LivingEntity, UUID> credit) {
@@ -346,12 +335,11 @@ final class SettlementMap {
       var owner =
           java.util.Objects.requireNonNull(
               trapOwners.remove(defense.id()), "Charged trap has no owner");
-      enemies.forEach(
-          e -> {
-            credit.accept(e, owner);
-            e.damage(12);
-            if (defense.type() == SurvivalContent.DefenseType.FLAME_TRAP) e.setFireTicks(80);
-          });
+      enemies.forEach(e -> {
+        credit.accept(e, owner);
+        e.damage(12);
+        if (defense.type() == SurvivalContent.DefenseType.FLAME_TRAP) e.setFireTicks(80);
+      });
       world.world().playSound(at, org.bukkit.Sound.BLOCK_ANVIL_LAND, 0.5f, 1.5f);
     }
   }

@@ -112,13 +112,11 @@ public final class HumanSupport {
   public static Optional<BombView> arming(WorldSnapshot snapshot, CombatantView human) {
     return snapshot.bombs().stream()
         .filter(bomb -> !bomb.belongsTo(human.team()))
-        .filter(
-            bomb ->
-                bomb.state() instanceof BombState.Arming(var team, var _, var _)
-                    ? team.equals(human.team())
-                        && bomb.pos().horizontalDistance(human.pos()) <= ARMING_REACH
-                    : bomb.state().isLit()
-                        && bomb.pos().horizontalDistance(human.pos()) <= GUARD_REACH)
+        .filter(bomb ->
+            bomb.state() instanceof BombState.Arming(var team, var _, var _)
+                ? team.equals(human.team())
+                    && bomb.pos().horizontalDistance(human.pos()) <= ARMING_REACH
+                : bomb.state().isLit() && bomb.pos().horizontalDistance(human.pos()) <= GUARD_REACH)
         .findFirst();
   }
 

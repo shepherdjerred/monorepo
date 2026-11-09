@@ -177,17 +177,16 @@ final class LevelCalculatorTest {
         .hasMessageContaining("start with a band from 0");
     assertThatThrownBy(() -> new LevelRules(50, List.of(), world, depth, MOON))
         .hasMessageContaining("start with a band from 0");
-    assertThatThrownBy(
-            () ->
-                new LevelRules(
-                    50,
-                    List.of(
-                        new DistanceBand(0, 1, 1),
-                        new DistanceBand(500, 1, 2),
-                        new DistanceBand(500, 2, 3)),
-                    world,
-                    depth,
-                    MOON))
+    assertThatThrownBy(() ->
+            new LevelRules(
+                50,
+                List.of(
+                    new DistanceBand(0, 1, 1),
+                    new DistanceBand(500, 1, 2),
+                    new DistanceBand(500, 2, 3)),
+                world,
+                depth,
+                MOON))
         .hasMessageContaining("ordered by from");
     assertThatThrownBy(
             () -> new LevelRules(10, List.of(new DistanceBand(0, 1, 11)), world, depth, MOON))

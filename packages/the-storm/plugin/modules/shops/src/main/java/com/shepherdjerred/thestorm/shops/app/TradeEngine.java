@@ -86,14 +86,13 @@ public final class TradeEngine {
       return completedFuture(Optional.empty());
     }
     return ledger(() -> wallets.balance(payer, due.currency()))
-        .thenApply(
-            balance ->
-                balance.isAtLeast(due)
-                    ? Optional.empty()
-                    : Optional.of(
-                        payer.equals(deal.customer().account())
-                            ? new TradeProblem.CustomerCannotPay(balance.amount(), due.amount())
-                            : new TradeProblem.OwnerCannotPay()));
+        .thenApply(balance ->
+            balance.isAtLeast(due)
+                ? Optional.empty()
+                : Optional.of(
+                    payer.equals(deal.customer().account())
+                        ? new TradeProblem.CustomerCannotPay(balance.amount(), due.amount())
+                        : new TradeProblem.OwnerCannotPay()));
   }
 
   private CompletableFuture<TradeOutcome> buy(Deal deal, LedgerTrail trail) {
@@ -215,12 +214,11 @@ public final class TradeEngine {
       return move(new Payment(deal.payer().account(), TREASURY, tax, taxReason), trail);
     }
     return move(new Payment(deal.payer().account(), TREASURY, tax, taxReason), trail)
-        .thenApply(
-            taxResult ->
-                switch (taxResult) {
-                  case Result.Ok<Receipt, EconomyError> _ -> Result.ok(unmoved(deal));
-                  case Result.Err<Receipt, EconomyError> failed -> failed;
-                });
+        .thenApply(taxResult ->
+            switch (taxResult) {
+              case Result.Ok<Receipt, EconomyError> _ -> Result.ok(unmoved(deal));
+              case Result.Err<Receipt, EconomyError> failed -> failed;
+            });
   }
 
   private CompletableFuture<Result<Receipt, EconomyError>> paySplit(Deal deal, LedgerTrail trail) {
@@ -268,17 +266,16 @@ public final class TradeEngine {
                       split.net(),
                       "refund:" + split.deal().reason()),
                   split.trail())
-              .thenApply(
-                  reversed -> {
-                    if (reversed instanceof Result.Err) {
-                      refunds.failed(
-                          netReceipt,
-                          "refund:" + split.deal().reason(),
-                          "tax transfer failed and the net could not be returned",
-                          Optional.empty());
-                    }
-                    return failed;
-                  });
+              .thenApply(reversed -> {
+                if (reversed instanceof Result.Err) {
+                  refunds.failed(
+                      netReceipt,
+                      "refund:" + split.deal().reason(),
+                      "tax transfer failed and the net could not be returned",
+                      Optional.empty());
+                }
+                return failed;
+              });
     };
   }
 
@@ -287,9 +284,8 @@ public final class TradeEngine {
   private CompletableFuture<Result<Receipt, EconomyError>> move(
       Payment payment, LedgerTrail trail) {
     var paymentResult =
-        ledger(
-            () ->
-                wallets.transfer(payment.from(), payment.to(), payment.amount(), payment.reason()));
+        ledger(() ->
+            wallets.transfer(payment.from(), payment.to(), payment.amount(), payment.reason()));
     note(paymentResult, "payment", trail);
     return paymentResult;
   }
@@ -336,10 +332,9 @@ public final class TradeEngine {
       return completedFuture(outcome);
     }
     var taxBack =
-        ledger(
-            () ->
-                wallets.transfer(
-                    TREASURY, deal.payer().account(), Money.crystals(deal.tax()), reason + ":tax"));
+        ledger(() ->
+            wallets.transfer(
+                TREASURY, deal.payer().account(), Money.crystals(deal.tax()), reason + ":tax"));
     note(taxBack, "refund", trail);
     return taxBack.handleAsync(
         (result, error) -> {
@@ -383,23 +378,22 @@ public final class TradeEngine {
   private static void note(
       CompletableFuture<Result<Receipt, EconomyError>> transfer, String what, LedgerTrail trail) {
     var _ =
-        transfer.whenComplete(
-            (result, error) -> {
-              if (error != null) {
-                trail.record(what + " failed: " + error);
-              } else if (result instanceof Result.Ok<Receipt, EconomyError>(var receipt)) {
-                var committed = what + " committed as ledger entry " + receipt.transactionId();
-                if ("payment".equals(what)) {
-                  trail.paymentCommitted(committed);
-                } else if ("refund".equals(what)) {
-                  trail.refundCommitted(committed);
-                } else {
-                  trail.record(committed);
-                }
-              } else {
-                trail.record(what + " refused: " + result);
-              }
-            });
+        transfer.whenComplete((result, error) -> {
+          if (error != null) {
+            trail.record(what + " failed: " + error);
+          } else if (result instanceof Result.Ok<Receipt, EconomyError>(var receipt)) {
+            var committed = what + " committed as ledger entry " + receipt.transactionId();
+            if ("payment".equals(what)) {
+              trail.paymentCommitted(committed);
+            } else if ("refund".equals(what)) {
+              trail.refundCommitted(committed);
+            } else {
+              trail.record(committed);
+            }
+          } else {
+            trail.record(what + " refused: " + result);
+          }
+        });
   }
 
   static Optional<TradeProblem> goodsProblem(Deal deal) {

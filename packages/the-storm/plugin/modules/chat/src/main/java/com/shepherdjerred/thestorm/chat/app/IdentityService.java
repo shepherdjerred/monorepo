@@ -24,11 +24,10 @@ public final class IdentityService {
   public CompletableFuture<Void> load() {
     return store
         .load()
-        .thenAccept(
-            rows -> {
-              identities.putAll(rows);
-              ready = true;
-            });
+        .thenAccept(rows -> {
+          identities.putAll(rows);
+          ready = true;
+        });
   }
 
   public boolean ready() {
@@ -92,11 +91,10 @@ public final class IdentityService {
     }
     return store
         .save(player, next, audit)
-        .thenApply(
-            saved -> {
-              identities.put(player, next);
-              return next;
-            })
+        .thenApply(saved -> {
+          identities.put(player, next);
+          return next;
+        })
         .whenComplete((value, failure) -> writing.remove(player));
   }
 }

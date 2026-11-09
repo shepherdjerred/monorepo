@@ -98,13 +98,12 @@ final class SurvivalTips {
     if (blocked || now.isBefore(state.next) || runner.hud().busy(player)) return;
     graph
         .next(state.contexts, state.seen)
-        .ifPresent(
-            tip -> {
-              state.active = tip;
-              state.finishes = now.plusSeconds(6);
-              runner.hud().hint(player, caption(tip), 6);
-              Texts.info(player, "Tip · " + tip.text());
-            });
+        .ifPresent(tip -> {
+          state.active = tip;
+          state.finishes = now.plusSeconds(6);
+          runner.hud().hint(player, caption(tip), 6);
+          Texts.info(player, "Tip · " + tip.text());
+        });
   }
 
   private void contexts(Player player) {
@@ -113,10 +112,9 @@ final class SurvivalTips {
     if (runner.talents().build(player.getUniqueId()).pending() > 0)
       encounter(player, TutorialKey.of(Topic.SPECIALIZATIONS));
     if (runner.online().stream()
-        .anyMatch(
-            other ->
-                runner.downed(other.getUniqueId())
-                    && Places.at(other).distanceSquared(Places.at(player)) <= 64))
+        .anyMatch(other ->
+            runner.downed(other.getUniqueId())
+                && Places.at(other).distanceSquared(Places.at(player)) <= 64))
       encounter(player, TutorialKey.of(Topic.REVIVAL));
     runner.map().open().forEach(zone -> zoneContexts(player, zone));
     fixtureContexts(player);
@@ -135,25 +133,23 @@ final class SurvivalTips {
   private void zoneContexts(Player player, SurvivalContent.Zone zone) {
     zone.resources().stream()
         .filter(resource -> near(player, resource.block()))
-        .forEach(
-            resource -> {
-              encounter(player, TutorialKey.of(Topic.GATHERING));
-              if (player.isSneaking()) encounter(player, TutorialKey.of(Topic.NODE_UPGRADES));
-            });
+        .forEach(resource -> {
+          encounter(player, TutorialKey.of(Topic.GATHERING));
+          if (player.isSneaking()) encounter(player, TutorialKey.of(Topic.NODE_UPGRADES));
+        });
     zone.stations().stream()
         .filter(station -> near(player, station.block()))
-        .forEach(
-            station -> {
-              encounter(
-                  player,
-                  TutorialKey.of(
-                      station.type() == SurvivalContent.StationType.BANK
-                          ? Topic.BANKING
-                          : Topic.CRAFTING));
-              if (station.type() == SurvivalContent.StationType.ALCHEMY
-                  || station.type() == SurvivalContent.StationType.FORGE)
-                encounter(player, TutorialKey.of(Topic.ENCHANTING));
-            });
+        .forEach(station -> {
+          encounter(
+              player,
+              TutorialKey.of(
+                  station.type() == SurvivalContent.StationType.BANK
+                      ? Topic.BANKING
+                      : Topic.CRAFTING));
+          if (station.type() == SurvivalContent.StationType.ALCHEMY
+              || station.type() == SurvivalContent.StationType.FORGE)
+            encounter(player, TutorialKey.of(Topic.ENCHANTING));
+        });
     zone.defenses().stream()
         .filter(defense -> near(player, defense.block()))
         .forEach(defense -> encounter(player, TutorialKey.of(Topic.DEFENSES)));
@@ -199,13 +195,12 @@ final class SurvivalTips {
     runner
         .combat()
         .boss()
-        .ifPresent(
-            boss -> {
-              encounter(player, new TutorialKey(Topic.BOSS, boss.id()));
-              boss.cast()
-                  .ifPresent(
-                      cast -> encounter(player, new TutorialKey(Topic.CAST, cast.shape().name())));
-            });
+        .ifPresent(boss -> {
+          encounter(player, new TutorialKey(Topic.BOSS, boss.id()));
+          boss.cast()
+              .ifPresent(
+                  cast -> encounter(player, new TutorialKey(Topic.CAST, cast.shape().name())));
+        });
   }
 
   private void equipmentContexts(Player player) {

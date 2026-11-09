@@ -32,17 +32,16 @@ public record TacticsState(
    */
   public TacticsState abandon(long tick) {
     var goal =
-        plan.flatMap(
-            current ->
-                switch (current.current()) {
-                  case PlanStep.Route route -> Optional.of(route.goal());
-                  case PlanStep.Hold hold -> Optional.of(hold.pos());
-                  case PlanStep.Cover cover -> Optional.of(cover.pos());
-                  case PlanStep.Heal heal -> Optional.of(heal.cover());
-                  case PlanStep.Flee flee -> Optional.of(flee.goal());
-                  case PlanStep.Pickup pickup -> Optional.of(pickup.cell());
-                  default -> Optional.<Vec3>empty();
-                });
+        plan.flatMap(current ->
+            switch (current.current()) {
+              case PlanStep.Route route -> Optional.of(route.goal());
+              case PlanStep.Hold hold -> Optional.of(hold.pos());
+              case PlanStep.Cover cover -> Optional.of(cover.pos());
+              case PlanStep.Heal heal -> Optional.of(heal.cover());
+              case PlanStep.Flee flee -> Optional.of(flee.goal());
+              case PlanStep.Pickup pickup -> Optional.of(pickup.cell());
+              default -> Optional.<Vec3>empty();
+            });
     return new TacticsState(
         Optional.empty(),
         lastThinkTick,

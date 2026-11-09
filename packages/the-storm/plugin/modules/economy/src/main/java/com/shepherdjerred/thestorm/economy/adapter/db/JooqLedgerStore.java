@@ -57,14 +57,13 @@ public final class JooqLedgerStore implements LedgerStore {
 
   @Override
   public CompletableFuture<Map<CurrencyId, Money>> balances(AccountId account) {
-    return database.read(
-        dsl -> {
-          var balances = new EnumMap<CurrencyId, Money>(CurrencyId.class);
-          for (var currency : CurrencyId.values()) {
-            balances.put(currency, storedBalance(dsl, account, currency));
-          }
-          return Collections.unmodifiableMap(balances);
-        });
+    return database.read(dsl -> {
+      var balances = new EnumMap<CurrencyId, Money>(CurrencyId.class);
+      for (var currency : CurrencyId.values()) {
+        balances.put(currency, storedBalance(dsl, account, currency));
+      }
+      return Collections.unmodifiableMap(balances);
+    });
   }
 
   @Override
@@ -75,26 +74,25 @@ public final class JooqLedgerStore implements LedgerStore {
 
   @Override
   public CompletableFuture<Result<Receipt, EconomyError>> transferOnce(KeyedTransfer transfer) {
-    return database.write(
-        dsl -> {
-          var previous = findReceipt(dsl, transfer.key());
-          if (previous.isPresent()) {
-            var receipt = previous.get();
-            if (!receipt.from().equals(transfer.from())
-                || !receipt.to().equals(transfer.to())
-                || !receipt.amount().equals(transfer.amount())
-                || !receipt.reason().equals(transfer.reason())) {
-              throw new IllegalArgumentException(
-                  "transfer key reused for different details: " + transfer.key());
-            }
-            return new Result.Ok<Receipt, EconomyError>(receipt);
-          }
-          return apply(
-              dsl,
-              new Transfer(transfer.from(), transfer.to(), transfer.amount()),
-              transfer.reason(),
-              Optional.of(transfer.key()));
-        });
+    return database.write(dsl -> {
+      var previous = findReceipt(dsl, transfer.key());
+      if (previous.isPresent()) {
+        var receipt = previous.get();
+        if (!receipt.from().equals(transfer.from())
+            || !receipt.to().equals(transfer.to())
+            || !receipt.amount().equals(transfer.amount())
+            || !receipt.reason().equals(transfer.reason())) {
+          throw new IllegalArgumentException(
+              "transfer key reused for different details: " + transfer.key());
+        }
+        return new Result.Ok<Receipt, EconomyError>(receipt);
+      }
+      return apply(
+          dsl,
+          new Transfer(transfer.from(), transfer.to(), transfer.amount()),
+          transfer.reason(),
+          Optional.of(transfer.key()));
+    });
   }
 
   @Override
@@ -104,71 +102,64 @@ public final class JooqLedgerStore implements LedgerStore {
 
   @Override
   public CompletableFuture<List<RankedPlayer>> top(CurrencyId currency, int limit) {
-    return database.read(
-        dsl ->
-            dsl.select(ECONOMY_ACCOUNT.ID, ECONOMY_ACCOUNT.BALANCE, ECONOMY_PLAYER_SEEN.LAST_NAME)
-                .from(ECONOMY_ACCOUNT)
-                .leftJoin(ECONOMY_PLAYER_SEEN)
-                .on(ECONOMY_PLAYER_SEEN.PLAYER_ID.eq(ECONOMY_ACCOUNT.ID))
-                .where(
-                    ECONOMY_ACCOUNT.KIND.eq(AccountKey.PLAYER),
-                    ECONOMY_ACCOUNT.CURRENCY.eq(currency.key()),
-                    ECONOMY_ACCOUNT.BALANCE.gt(0L))
-                .orderBy(ECONOMY_ACCOUNT.BALANCE.desc(), ECONOMY_ACCOUNT.ID.asc())
-                .limit(limit)
-                .fetch(
-                    row ->
-                        new RankedPlayer(
-                            new AccountId.Player(UUID.fromString(row.value1())),
-                            Optional.ofNullable(row.value3()),
-                            Money.of(currency, row.value2()))));
+    return database.read(dsl ->
+        dsl.select(ECONOMY_ACCOUNT.ID, ECONOMY_ACCOUNT.BALANCE, ECONOMY_PLAYER_SEEN.LAST_NAME)
+            .from(ECONOMY_ACCOUNT)
+            .leftJoin(ECONOMY_PLAYER_SEEN)
+            .on(ECONOMY_PLAYER_SEEN.PLAYER_ID.eq(ECONOMY_ACCOUNT.ID))
+            .where(
+                ECONOMY_ACCOUNT.KIND.eq(AccountKey.PLAYER),
+                ECONOMY_ACCOUNT.CURRENCY.eq(currency.key()),
+                ECONOMY_ACCOUNT.BALANCE.gt(0L))
+            .orderBy(ECONOMY_ACCOUNT.BALANCE.desc(), ECONOMY_ACCOUNT.ID.asc())
+            .limit(limit)
+            .fetch(row ->
+                new RankedPlayer(
+                    new AccountId.Player(UUID.fromString(row.value1())),
+                    Optional.ofNullable(row.value3()),
+                    Money.of(currency, row.value2()))));
   }
 
   @Override
   public CompletableFuture<Optional<Receipt>> welcome(
       SeenPlayer player, Money grant, String reason) {
-    return database.write(
-        dsl -> {
-          var firstJoin = remember(dsl, player);
-          if (!firstJoin || grant.isZero()) {
-            return Optional.empty();
-          }
-          var transfer = new Transfer(new AccountId.Server(), player.account(), grant);
-          return Optional.of(applyOrFail(dsl, transfer, reason));
-        });
+    return database.write(dsl -> {
+      var firstJoin = remember(dsl, player);
+      if (!firstJoin || grant.isZero()) {
+        return Optional.empty();
+      }
+      var transfer = new Transfer(new AccountId.Server(), player.account(), grant);
+      return Optional.of(applyOrFail(dsl, transfer, reason));
+    });
   }
 
   /** Removes balances, transfer history and the starting-balance receipt for one player. */
   public CompletableFuture<Void> reset(UUID player) {
     var id = player.toString();
     return database
-        .write(
-            dsl -> {
-              dsl.deleteFrom(ECONOMY_LEDGER)
-                  .where(ECONOMY_LEDGER.FROM_KIND.eq("player").and(ECONOMY_LEDGER.FROM_ID.eq(id)))
-                  .or(ECONOMY_LEDGER.TO_KIND.eq("player").and(ECONOMY_LEDGER.TO_ID.eq(id)))
-                  .execute();
-              dsl.deleteFrom(ECONOMY_ACCOUNT)
-                  .where(ECONOMY_ACCOUNT.KIND.eq("player"), ECONOMY_ACCOUNT.ID.eq(id))
-                  .execute();
-              dsl.deleteFrom(ECONOMY_PLAYER_SEEN)
-                  .where(ECONOMY_PLAYER_SEEN.PLAYER_ID.eq(id))
-                  .execute();
-              return true;
-            })
+        .write(dsl -> {
+          dsl.deleteFrom(ECONOMY_LEDGER)
+              .where(ECONOMY_LEDGER.FROM_KIND.eq("player").and(ECONOMY_LEDGER.FROM_ID.eq(id)))
+              .or(ECONOMY_LEDGER.TO_KIND.eq("player").and(ECONOMY_LEDGER.TO_ID.eq(id)))
+              .execute();
+          dsl.deleteFrom(ECONOMY_ACCOUNT)
+              .where(ECONOMY_ACCOUNT.KIND.eq("player"), ECONOMY_ACCOUNT.ID.eq(id))
+              .execute();
+          dsl.deleteFrom(ECONOMY_PLAYER_SEEN).where(ECONOMY_PLAYER_SEEN.PLAYER_ID.eq(id)).execute();
+          return true;
+        })
         .thenAccept(ignored -> {});
   }
 
   @Override
   public CompletableFuture<Optional<SeenPlayer>> findPlayer(String name) {
-    return database.read(
-        dsl ->
-            dsl.select(ECONOMY_PLAYER_SEEN.PLAYER_ID, ECONOMY_PLAYER_SEEN.LAST_NAME)
-                .from(ECONOMY_PLAYER_SEEN)
-                .where(ECONOMY_PLAYER_SEEN.LAST_NAME.collate("NOCASE").eq(name))
-                .orderBy(ECONOMY_PLAYER_SEEN.UPDATED_AT.desc())
-                .limit(1)
-                .fetchOptional(row -> new SeenPlayer(UUID.fromString(row.value1()), row.value2())));
+    return database.read(dsl ->
+        dsl.select(ECONOMY_PLAYER_SEEN.PLAYER_ID, ECONOMY_PLAYER_SEEN.LAST_NAME)
+            .from(ECONOMY_PLAYER_SEEN)
+            .where(ECONOMY_PLAYER_SEEN.LAST_NAME.collate("NOCASE").eq(name))
+            .orderBy(ECONOMY_PLAYER_SEEN.UPDATED_AT.desc())
+            .limit(1)
+            .fetchOptional(row -> new SeenPlayer(UUID.fromString(row.value1()), row.value2())));
   }
 
   /** Stores {@code player}'s current name; true when this is the first time they are seen. */
@@ -198,10 +189,9 @@ public final class JooqLedgerStore implements LedgerStore {
     if (!Accounts.hasBalance(account)) {
       throw new IllegalArgumentException("the server account has no balance to set");
     }
-    return database.write(
-        dsl ->
-            Adjustments.toReach(account, storedBalance(dsl, account, target.currency()), target)
-                .map(transfer -> applyOrFail(dsl, transfer, reason)));
+    return database.write(dsl ->
+        Adjustments.toReach(account, storedBalance(dsl, account, target.currency()), target)
+            .map(transfer -> applyOrFail(dsl, transfer, reason)));
   }
 
   /** A transfer the domain built to be valid; a refusal here is a broken invariant. */
@@ -267,15 +257,14 @@ public final class JooqLedgerStore implements LedgerStore {
   private static Optional<Receipt> findReceipt(DSLContext dsl, UUID key) {
     return dsl.selectFrom(ECONOMY_LEDGER)
         .where(ECONOMY_LEDGER.IDEMPOTENCY_KEY.eq(key.toString()))
-        .fetchOptional(
-            row ->
-                new Receipt(
-                    row.getId(),
-                    AccountKey.toAccount(row.getFromKind(), row.getFromId()),
-                    AccountKey.toAccount(row.getToKind(), row.getToId()),
-                    Money.of(CurrencyId.fromKey(row.getCurrency()), row.getAmount()),
-                    row.getReason(),
-                    Instant.ofEpochMilli(row.getAt())));
+        .fetchOptional(row ->
+            new Receipt(
+                row.getId(),
+                AccountKey.toAccount(row.getFromKind(), row.getFromId()),
+                AccountKey.toAccount(row.getToKind(), row.getToId()),
+                Money.of(CurrencyId.fromKey(row.getCurrency()), row.getAmount()),
+                row.getReason(),
+                Instant.ofEpochMilli(row.getAt())));
   }
 
   private static Money storedBalance(DSLContext dsl, AccountId account, CurrencyId currency) {

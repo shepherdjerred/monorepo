@@ -202,17 +202,12 @@ public final class LobbyTicker {
     parts
         .actions()
         .pickKit(visitor.bot.uuid(), kit)
-        .ifPresent(
-            refusal -> {
-              visitor.bot.refused(refusal);
-              parts
-                  .logger()
-                  .warn(
-                      "rwfbots: {} could not switch to kit {}: {}",
-                      visitor.bot.name(),
-                      kit,
-                      refusal);
-            });
+        .ifPresent(refusal -> {
+          visitor.bot.refused(refusal);
+          parts
+              .logger()
+              .warn("rwfbots: {} could not switch to kit {}: {}", visitor.bot.name(), kit, refusal);
+        });
   }
 
   private LobbyLoop.Round round(long tick, MatchState state, Map<UUID, Player> inLobby) {

@@ -28,16 +28,15 @@ final class Captures {
         client.gameRenderer.mainRenderTarget(),
         image ->
             ForkJoinPool.commonPool()
-                .execute(
-                    () -> {
-                      try (image) {
-                        java.nio.file.Files.createFile(destination);
-                        image.writeToFile(destination);
-                        result.complete(Map.of("path", destination.toString()));
-                      } catch (IOException | RuntimeException e) {
-                        result.completeExceptionally(e);
-                      }
-                    }));
+                .execute(() -> {
+                  try (image) {
+                    java.nio.file.Files.createFile(destination);
+                    image.writeToFile(destination);
+                    result.complete(Map.of("path", destination.toString()));
+                  } catch (IOException | RuntimeException e) {
+                    result.completeExceptionally(e);
+                  }
+                }));
     return result;
   }
 }

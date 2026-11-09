@@ -38,14 +38,8 @@ final class Positions {
   /** The location of {@code position}, or empty if its world is not loaded. */
   static Optional<Location> toLocation(Server server, Position position) {
     return Optional.ofNullable(server.getWorld(position.world()))
-        .map(
-            world ->
-                new Location(
-                    world,
-                    position.x(),
-                    position.y(),
-                    position.z(),
-                    position.yaw(),
-                    position.pitch()));
+        .map(world ->
+            new Location(
+                world, position.x(), position.y(), position.z(), position.yaw(), position.pitch()));
   }
 }

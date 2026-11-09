@@ -47,13 +47,12 @@ final class Farm implements Spell {
     if (screened.isEmpty()) {
       return Result.err(CastProblem.nothingAllowed(screened, "crop to grow"));
     }
-    return Result.ok(
-        () -> {
-          for (var crop : screened.allowed()) {
-            grow(caster, crop);
-          }
-          tools.fx().sound(kind(), Magic.at(caster));
-        });
+    return Result.ok(() -> {
+      for (var crop : screened.allowed()) {
+        grow(caster, crop);
+      }
+      tools.fx().sound(kind(), Magic.at(caster));
+    });
   }
 
   private static boolean growable(Block block) {

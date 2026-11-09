@@ -109,9 +109,8 @@ final class JooqLedgerStoreTest {
 
     var serverRows =
         await(
-            database.read(
-                dsl ->
-                    dsl.fetchCount(ECONOMY_ACCOUNT, ECONOMY_ACCOUNT.KIND.eq(AccountKey.SERVER))));
+            database.read(dsl ->
+                dsl.fetchCount(ECONOMY_ACCOUNT, ECONOMY_ACCOUNT.KIND.eq(AccountKey.SERVER))));
     assertThat(serverRows).isZero();
     assertThat(await(store.balance(SERVER, CRYSTALS))).isEqualTo(Money.crystals(0));
   }
@@ -188,12 +187,11 @@ final class JooqLedgerStoreTest {
             new RankedPlayer(ALICE, Optional.empty(), Money.rwfCredits(1)));
     var currencies =
         await(
-            database.read(
-                dsl ->
-                    dsl.select(ECONOMY_LEDGER.CURRENCY)
-                        .from(ECONOMY_LEDGER)
-                        .orderBy(ECONOMY_LEDGER.ID)
-                        .fetch(ECONOMY_LEDGER.CURRENCY)));
+            database.read(dsl ->
+                dsl.select(ECONOMY_LEDGER.CURRENCY)
+                    .from(ECONOMY_LEDGER)
+                    .orderBy(ECONOMY_LEDGER.ID)
+                    .fetch(ECONOMY_LEDGER.CURRENCY)));
     assertThat(currencies).containsExactly("crystals", "rwf_credits", "rwf_credits");
   }
 
@@ -241,11 +239,10 @@ final class JooqLedgerStoreTest {
     var key = UUID.randomUUID();
     await(store.transferOnce(new KeyedTransfer(key, SERVER, ALICE, Money.crystals(3), "r")));
 
-    assertThatThrownBy(
-            () ->
-                await(
-                    store.transferOnce(
-                        new KeyedTransfer(key, SERVER, ALICE, Money.rwfCredits(3), "r"))))
+    assertThatThrownBy(() ->
+            await(
+                store.transferOnce(
+                    new KeyedTransfer(key, SERVER, ALICE, Money.rwfCredits(3), "r"))))
         .isInstanceOf(ExecutionException.class)
         .hasMessageContaining("transfer key reused");
     assertThat(await(store.balance(ALICE, RWF_CREDITS))).isEqualTo(Money.rwfCredits(0));
@@ -291,11 +288,10 @@ final class JooqLedgerStoreTest {
   void aFailureMidTransferRollsTheWholeTransferBack() throws Exception {
     fund(ALICE, 100);
     await(
-        database.write(
-            dsl ->
-                dsl.execute(
-                    "CREATE TRIGGER fail_ledger BEFORE INSERT ON economy_ledger"
-                        + " BEGIN SELECT RAISE(ABORT, 'ledger unavailable'); END")));
+        database.write(dsl ->
+            dsl.execute(
+                "CREATE TRIGGER fail_ledger BEFORE INSERT ON economy_ledger"
+                    + " BEGIN SELECT RAISE(ABORT, 'ledger unavailable'); END")));
     var rowsBefore = ledgerRows();
 
     assertThatThrownBy(() -> await(store.transfer(ALICE, BOB, Money.crystals(40), "pay")))
@@ -307,9 +303,8 @@ final class JooqLedgerStoreTest {
     assertThat(ledgerRows()).isEqualTo(rowsBefore);
     var bobRows =
         await(
-            database.read(
-                dsl ->
-                    dsl.fetchCount(ECONOMY_ACCOUNT, ECONOMY_ACCOUNT.ID.eq(BOB.uuid().toString()))));
+            database.read(dsl ->
+                dsl.fetchCount(ECONOMY_ACCOUNT, ECONOMY_ACCOUNT.ID.eq(BOB.uuid().toString()))));
     assertThat(bobRows).isZero();
   }
 
@@ -336,10 +331,9 @@ final class JooqLedgerStoreTest {
   void welcomesSubmittedTogetherAreSerializedByTheWriterAndPayOnce() throws Exception {
     var futures =
         IntStream.range(0, 50)
-            .mapToObj(
-                i ->
-                    store.welcome(
-                        new SeenPlayer(BOB.uuid(), "Bob"), Money.crystals(500), "starting-balance"))
+            .mapToObj(i ->
+                store.welcome(
+                    new SeenPlayer(BOB.uuid(), "Bob"), Money.crystals(500), "starting-balance"))
             .toList();
     CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).get(30, TimeUnit.SECONDS);
 
@@ -446,17 +440,16 @@ final class JooqLedgerStoreTest {
   private Map<Map.Entry<AccountKey, String>, Long> replayLedger() throws Exception {
     var rows =
         await(
-            database.read(
-                dsl ->
-                    dsl.select(
-                            ECONOMY_LEDGER.FROM_KIND,
-                            ECONOMY_LEDGER.FROM_ID,
-                            ECONOMY_LEDGER.TO_KIND,
-                            ECONOMY_LEDGER.TO_ID,
-                            ECONOMY_LEDGER.AMOUNT,
-                            ECONOMY_LEDGER.CURRENCY)
-                        .from(ECONOMY_LEDGER)
-                        .fetch()));
+            database.read(dsl ->
+                dsl.select(
+                        ECONOMY_LEDGER.FROM_KIND,
+                        ECONOMY_LEDGER.FROM_ID,
+                        ECONOMY_LEDGER.TO_KIND,
+                        ECONOMY_LEDGER.TO_ID,
+                        ECONOMY_LEDGER.AMOUNT,
+                        ECONOMY_LEDGER.CURRENCY)
+                    .from(ECONOMY_LEDGER)
+                    .fetch()));
     var net = new HashMap<Map.Entry<AccountKey, String>, Long>();
     for (var row : rows) {
       var from = Map.entry(new AccountKey(row.value1(), row.value2()), row.value6());

@@ -189,25 +189,22 @@ final class StaffCommands {
   }
 
   void register(Commands commands) {
-    definitions.forEach(
-        (name, definition) ->
-            commands.register(
-                literal(name)
-                    .requires(
-                        source ->
-                            state.ready()
-                                && source.getSender().hasPermission("thestorm.essentials." + name))
-                    .executes(command -> invoke(command.getSource().getSender(), name, ""))
-                    .then(
-                        argument("arguments", greedyString())
-                            .executes(
-                                command ->
-                                    invoke(
-                                        command.getSource().getSender(),
-                                        name,
-                                        command.getArgument("arguments", String.class))))
-                    .build(),
-                definition.usage()));
+    definitions.forEach((name, definition) ->
+        commands.register(
+            literal(name)
+                .requires(source ->
+                    state.ready()
+                        && source.getSender().hasPermission("thestorm.essentials." + name))
+                .executes(command -> invoke(command.getSource().getSender(), name, ""))
+                .then(
+                    argument("arguments", greedyString())
+                        .executes(command ->
+                            invoke(
+                                command.getSource().getSender(),
+                                name,
+                                command.getArgument("arguments", String.class))))
+                .build(),
+            definition.usage()));
   }
 
   void stop() {
@@ -217,11 +214,10 @@ final class StaffCommands {
 
   Map<String, String> guide(CommandSender sender) {
     var visible = new java.util.TreeMap<String, String>();
-    definitions.forEach(
-        (name, definition) -> {
-          if (sender.hasPermission("thestorm.essentials." + name))
-            visible.put(name, definition.usage());
-        });
+    definitions.forEach((name, definition) -> {
+      if (sender.hasPermission("thestorm.essentials." + name))
+        visible.put(name, definition.usage());
+    });
     return visible;
   }
 

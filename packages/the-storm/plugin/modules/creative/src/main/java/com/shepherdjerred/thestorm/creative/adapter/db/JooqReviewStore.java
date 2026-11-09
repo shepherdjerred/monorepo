@@ -36,52 +36,48 @@ public final class JooqReviewStore implements ReviewStore {
       Optional<StoredClaim> ensure, PlotId plot, UUID player, int score) {
     PlotReviews.rate(java.util.Map.of(), player, score);
     return done(
-        database.write(
-            dsl -> {
-              ensure(dsl, ensure);
-              dsl.insertInto(CREATIVE_RATINGS)
-                  .set(CREATIVE_RATINGS.PLOT_X, plot.x())
-                  .set(CREATIVE_RATINGS.PLOT_Z, plot.z())
-                  .set(CREATIVE_RATINGS.PLAYER, player.toString())
-                  .set(CREATIVE_RATINGS.SCORE, score)
-                  .onConflict(
-                      CREATIVE_RATINGS.PLOT_X, CREATIVE_RATINGS.PLOT_Z, CREATIVE_RATINGS.PLAYER)
-                  .doUpdate()
-                  .set(CREATIVE_RATINGS.SCORE, score)
-                  .execute();
-              return true;
-            }));
+        database.write(dsl -> {
+          ensure(dsl, ensure);
+          dsl.insertInto(CREATIVE_RATINGS)
+              .set(CREATIVE_RATINGS.PLOT_X, plot.x())
+              .set(CREATIVE_RATINGS.PLOT_Z, plot.z())
+              .set(CREATIVE_RATINGS.PLAYER, player.toString())
+              .set(CREATIVE_RATINGS.SCORE, score)
+              .onConflict(CREATIVE_RATINGS.PLOT_X, CREATIVE_RATINGS.PLOT_Z, CREATIVE_RATINGS.PLAYER)
+              .doUpdate()
+              .set(CREATIVE_RATINGS.SCORE, score)
+              .execute();
+          return true;
+        }));
   }
 
   @Override
   public CompletableFuture<Void> comment(Optional<StoredClaim> ensure, Comment comment) {
     return done(
-        database.write(
-            dsl -> {
-              ensure(dsl, ensure);
-              dsl.insertInto(CREATIVE_COMMENTS)
-                  .set(CREATIVE_COMMENTS.PLOT_X, comment.plot().x())
-                  .set(CREATIVE_COMMENTS.PLOT_Z, comment.plot().z())
-                  .set(CREATIVE_COMMENTS.PLAYER, comment.player().toString())
-                  .set(CREATIVE_COMMENTS.AUTHOR, comment.author())
-                  .set(CREATIVE_COMMENTS.BODY, comment.body())
-                  .set(CREATIVE_COMMENTS.POSTED, comment.posted())
-                  .execute();
-              return true;
-            }));
+        database.write(dsl -> {
+          ensure(dsl, ensure);
+          dsl.insertInto(CREATIVE_COMMENTS)
+              .set(CREATIVE_COMMENTS.PLOT_X, comment.plot().x())
+              .set(CREATIVE_COMMENTS.PLOT_Z, comment.plot().z())
+              .set(CREATIVE_COMMENTS.PLAYER, comment.player().toString())
+              .set(CREATIVE_COMMENTS.AUTHOR, comment.author())
+              .set(CREATIVE_COMMENTS.BODY, comment.body())
+              .set(CREATIVE_COMMENTS.POSTED, comment.posted())
+              .execute();
+          return true;
+        }));
   }
 
   @Override
   public CompletableFuture<Void> delete(PlotId plot, UUID player, int posted) {
     return done(
-        database.write(
-            dsl ->
-                dsl.deleteFrom(CREATIVE_COMMENTS)
-                    .where(CREATIVE_COMMENTS.PLOT_X.eq(plot.x()))
-                    .and(CREATIVE_COMMENTS.PLOT_Z.eq(plot.z()))
-                    .and(CREATIVE_COMMENTS.PLAYER.eq(player.toString()))
-                    .and(CREATIVE_COMMENTS.POSTED.eq(posted))
-                    .execute()));
+        database.write(dsl ->
+            dsl.deleteFrom(CREATIVE_COMMENTS)
+                .where(CREATIVE_COMMENTS.PLOT_X.eq(plot.x()))
+                .and(CREATIVE_COMMENTS.PLOT_Z.eq(plot.z()))
+                .and(CREATIVE_COMMENTS.PLAYER.eq(player.toString()))
+                .and(CREATIVE_COMMENTS.POSTED.eq(posted))
+                .execute()));
   }
 
   private static Snapshot readAll(DSLContext dsl) {

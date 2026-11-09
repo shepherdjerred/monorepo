@@ -371,11 +371,10 @@ final class StuckSpotsTest {
               situation(nav, self, Optional.empty(), 100),
               context,
               new Planner.CoverSearch(pool, threat, 8));
-      cover.ifPresent(
-          spot -> {
-            assertThat(graph.water().contains(graph.cell(spot.node()))).as("in water").isFalse();
-            assertThat(RecoverySteps.sink(context, spot.node())).as("in a sink").isFalse();
-          });
+      cover.ifPresent(spot -> {
+        assertThat(graph.water().contains(graph.cell(spot.node()))).as("in water").isFalse();
+        assertThat(RecoverySteps.sink(context, spot.node())).as("in a sink").isFalse();
+      });
     }
   }
 
@@ -484,11 +483,10 @@ final class StuckSpotsTest {
             context(nav),
             new SplittableRandom(1));
     assertThat(thought.decision().waypoints())
-        .allSatisfy(
-            waypoint ->
-                assertThat(graph.water().contains(BlockPos.of(waypoint.pos())))
-                    .as("back into the water at %s", waypoint.pos())
-                    .isFalse());
+        .allSatisfy(waypoint ->
+            assertThat(graph.water().contains(BlockPos.of(waypoint.pos())))
+                .as("back into the water at %s", waypoint.pos())
+                .isFalse());
   }
 
   /** A deep, exitless well beside open ground: water up to y 14, walls three blocks above it. */
@@ -750,12 +748,11 @@ final class StuckSpotsTest {
     // The walker's recovery steps never take the leaps its body refuses.
     for (var tick = 100L; tick < 300; tick += 20) {
       var step = RecoverySteps.step(situation(nav, walker(floor), Optional.empty(), tick), context);
-      step.ifPresent(
-          to -> {
-            for (var edge = nav.graph().edgeStart(node); edge < nav.graph().edgeEnd(node); edge++)
-              if (nav.graph().feet(nav.graph().edgeTarget(edge)).equals(to))
-                assertThat(nav.graph().edgeHop(edge)).isNotEqualTo(Hop.LEAP);
-          });
+      step.ifPresent(to -> {
+        for (var edge = nav.graph().edgeStart(node); edge < nav.graph().edgeEnd(node); edge++)
+          if (nav.graph().feet(nav.graph().edgeTarget(edge)).equals(to))
+            assertThat(nav.graph().edgeHop(edge)).isNotEqualTo(Hop.LEAP);
+      });
     }
   }
 

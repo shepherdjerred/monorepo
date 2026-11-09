@@ -46,16 +46,15 @@ final class RangedKitsTest {
 
   private static String json(java.util.List<RangedKits.Ranged> kits) {
     return kits.stream()
-        .map(
-            kit ->
-                String.format(
-                    Locale.ROOT,
-                    "    {%n      \"id\": \"%s\",%n      \"weapon\": \"%s\",%n"
-                        + "      \"ammo\": \"%s\",%n      \"arrows\": %d%n    }",
-                    kit.kit(),
-                    kit.weapon().name().toLowerCase(Locale.ROOT),
-                    kit.ammo().name().toLowerCase(Locale.ROOT),
-                    kit.arrows()))
+        .map(kit ->
+            String.format(
+                Locale.ROOT,
+                "    {%n      \"id\": \"%s\",%n      \"weapon\": \"%s\",%n"
+                    + "      \"ammo\": \"%s\",%n      \"arrows\": %d%n    }",
+                kit.kit(),
+                kit.weapon().name().toLowerCase(Locale.ROOT),
+                kit.ammo().name().toLowerCase(Locale.ROOT),
+                kit.arrows()))
         .collect(Collectors.joining(",\n", "{\n  \"kits\": [\n", "\n  ]\n}\n"))
         .replace("\r\n", "\n");
   }

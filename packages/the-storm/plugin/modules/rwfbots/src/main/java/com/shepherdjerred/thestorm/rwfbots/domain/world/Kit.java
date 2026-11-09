@@ -152,13 +152,12 @@ public enum Kit {
    */
   public static Kit closest(String id, Traits seen) {
     return known(id)
-        .orElseGet(
-            () -> {
-              if (seen.invisible()) {
-                return GHOST;
-              }
-              return seen.bow() ? LONGBOW : TROOPER;
-            });
+        .orElseGet(() -> {
+          if (seen.invisible()) {
+            return GHOST;
+          }
+          return seen.bow() ? LONGBOW : TROOPER;
+        });
   }
 
   /**

@@ -78,11 +78,10 @@ final class CombatListener implements Listener {
     var culprit =
         guard
             .culprit(source)
-            .or(
-                () ->
-                    event instanceof EntityDamageByEntityEvent byEntity
-                        ? guard.culprit(byEntity.getDamager())
-                        : Optional.empty());
+            .or(() ->
+                event instanceof EntityDamageByEntityEvent byEntity
+                    ? guard.culprit(byEntity.getDamager())
+                    : Optional.empty());
     if (culprit.isPresent()) {
       if (!guard.permitsHarm(culprit.get(), victim, true)) {
         event.setCancelled(true);
@@ -155,17 +154,15 @@ final class CombatListener implements Listener {
     var attacker =
         guard
             .culprit(event.getDamageSource())
-            .or(
-                () ->
-                    event instanceof EntityDamageByEntityEvent hit
-                        ? guard.culprit(hit.getDamager())
-                        : Optional.empty());
-    attacker.ifPresent(
-        found -> {
-          if (!found.id().equals(victim.getUniqueId())) {
-            pvp.recordFight(found.id(), victim.getUniqueId());
-          }
-        });
+            .or(() ->
+                event instanceof EntityDamageByEntityEvent hit
+                    ? guard.culprit(hit.getDamager())
+                    : Optional.empty());
+    attacker.ifPresent(found -> {
+      if (!found.id().equals(victim.getUniqueId())) {
+        pvp.recordFight(found.id(), victim.getUniqueId());
+      }
+    });
   }
 
   /**

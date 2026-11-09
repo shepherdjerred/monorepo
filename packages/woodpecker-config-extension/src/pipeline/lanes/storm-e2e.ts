@@ -5,7 +5,7 @@ import { GLOBAL_SELECTOR_INPUTS } from "#src/pipeline/inputs.ts";
 import { GITHUB_DOWNLOAD } from "#src/pipeline/lanes/tofu.ts";
 
 const PAPER_SERVER_IMAGE =
-  "itzg/minecraft-server:2026.9.1-java25@sha256:e8640538dac5d54c2838d57fa9641e735ad0cf2b71fb0e8a68da3b542a315749";
+  "itzg/minecraft-server:2026.10.1-java25@sha256:d12aed7e35981dfe259b60fbfee77d23a19b5898a7a31dca298d18b47b7b5776";
 const REPO_ROOT = "/woodpecker/src/github.com/shepherdjerred/monorepo";
 const PAPER_WORKSPACE =
   "/woodpecker/src/github.com/shepherdjerred/monorepo/packages/the-storm/.cache/e2e/woodpecker";
@@ -103,7 +103,7 @@ function stormSmokeStep(images: CiImages): CiStep {
           EULA: "TRUE",
           TYPE: "PAPER",
           VERSION: "26.3",
-          PAPER_BUILD: "223",
+          PAPER_BUILD: "244",
           ONLINE_MODE: "FALSE",
           ENABLE_RCON: "true",
           RCON_PASSWORD,

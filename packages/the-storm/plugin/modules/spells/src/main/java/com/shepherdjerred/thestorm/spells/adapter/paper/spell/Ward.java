@@ -30,22 +30,21 @@ final class Ward implements Spell {
   @Override
   public Result<Effect, CastProblem> prepare(Player caster) {
     var centre = Magic.at(caster);
-    return Result.ok(
-        () -> {
-          var until = tools.time().instant().plus(Duration.ofSeconds(settings.durationSeconds()));
-          tools
-              .state()
-              .wards()
-              .raise(
-                  new Wards.Ward(
-                      caster.getUniqueId(),
-                      centre.getWorld().getKey().asString(),
-                      Magic.vec(centre),
-                      settings.radius(),
-                      settings.pushStrength(),
-                      until));
-          tools.fx().sound(kind(), centre);
-          tools.fx().ring(kind(), centre, settings.radius());
-        });
+    return Result.ok(() -> {
+      var until = tools.time().instant().plus(Duration.ofSeconds(settings.durationSeconds()));
+      tools
+          .state()
+          .wards()
+          .raise(
+              new Wards.Ward(
+                  caster.getUniqueId(),
+                  centre.getWorld().getKey().asString(),
+                  Magic.vec(centre),
+                  settings.radius(),
+                  settings.pushStrength(),
+                  until));
+      tools.fx().sound(kind(), centre);
+      tools.fx().ring(kind(), centre, settings.radius());
+    });
   }
 }

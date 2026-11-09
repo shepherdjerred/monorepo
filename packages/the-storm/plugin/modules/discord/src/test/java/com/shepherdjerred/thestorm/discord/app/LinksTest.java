@@ -49,11 +49,10 @@ final class LinksTest {
         @Override
         public CompletableFuture<Boolean> setDms(UUID player, boolean on) {
           var found = saved.stream().filter(l -> l.player().equals(player)).findFirst();
-          found.ifPresent(
-              l -> {
-                saved.remove(l);
-                saved.add(new Links.Link(player, l.discordUser(), on));
-              });
+          found.ifPresent(l -> {
+            saved.remove(l);
+            saved.add(new Links.Link(player, l.discordUser(), on));
+          });
           return CompletableFuture.completedFuture(found.isPresent());
         }
       };

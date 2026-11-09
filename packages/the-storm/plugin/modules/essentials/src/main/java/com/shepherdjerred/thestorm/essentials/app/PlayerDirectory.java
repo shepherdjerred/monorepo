@@ -42,11 +42,10 @@ public final class PlayerDirectory {
    * essentials started tracking.
    */
   public CompletableFuture<Boolean> joined(KnownPlayer player, Optional<String> starterKit) {
-    return loaded.thenCompose(
-        ready -> {
-          remember(player);
-          return store.recordJoin(player, starterKit);
-        });
+    return loaded.thenCompose(ready -> {
+      remember(player);
+      return store.recordJoin(player, starterKit);
+    });
   }
 
   /** The player last seen with {@code name}, ignoring case. */

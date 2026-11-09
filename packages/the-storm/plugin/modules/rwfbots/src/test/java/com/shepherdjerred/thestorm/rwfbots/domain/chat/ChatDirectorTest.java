@@ -340,12 +340,11 @@ final class ChatDirectorTest {
 
     assertThat(taunts)
         .singleElement()
-        .satisfies(
-            line -> {
-              assertThat(line.speaker()).as("only living bots taunt").isIn(REDBOT, REDBOT2);
-              assertThat(line.moment()).isEqualTo(Moment.TAUNT);
-              assertThat(line.template()).isIn(LINES.taunt());
-            });
+        .satisfies(line -> {
+          assertThat(line.speaker()).as("only living bots taunt").isIn(REDBOT, REDBOT2);
+          assertThat(line.moment()).isEqualTo(Moment.TAUNT);
+          assertThat(line.template()).isIn(LINES.taunt());
+        });
     assertThat(director.on(new ChatMoment.Idle(), scene, T0.plusSeconds(46))).isEmpty();
   }
 
@@ -364,11 +363,10 @@ final class ChatDirectorTest {
     assertThat(available)
         .isEqualTo(untouched.on(new ChatMoment.Idle(), scene, due.plusSeconds(5), REDBOT2::equals))
         .singleElement()
-        .satisfies(
-            line -> {
-              assertThat(line.speaker()).isEqualTo(REDBOT2);
-              assertThat(line.moment()).isEqualTo(Moment.TAUNT);
-            });
+        .satisfies(line -> {
+          assertThat(line.speaker()).isEqualTo(REDBOT2);
+          assertThat(line.moment()).isEqualTo(Moment.TAUNT);
+        });
     assertThat(waiting.on(new ChatMoment.Idle(), scene, due.plusSeconds(6), uuid -> true))
         .as("after a candidate draw the ordinary idle cadence resumes")
         .isEmpty();
@@ -389,11 +387,10 @@ final class ChatDirectorTest {
     assertThat(director.on(new ChatMoment.Idle(), afterDeath, T0.plusSeconds(100), uuid -> false))
         .as("team calls use the real complete team, independent of casual admission")
         .singleElement()
-        .satisfies(
-            line -> {
-              assertThat(line.speaker()).isEqualTo(REDBOT2);
-              assertThat(line.moment()).isEqualTo(Moment.ON_LAST_ALIVE);
-            });
+        .satisfies(line -> {
+          assertThat(line.speaker()).isEqualTo(REDBOT2);
+          assertThat(line.moment()).isEqualTo(Moment.ON_LAST_ALIVE);
+        });
   }
 
   @Test
@@ -402,17 +399,15 @@ final class ChatDirectorTest {
     var lines = director(settings(1), 12).on(new ChatMoment.Ended(Optional.of(RED)), scene, T0);
 
     assertThat(lines)
-        .anySatisfy(
-            line -> {
-              assertThat(line.speaker()).isEqualTo(REDBOT);
-              assertThat(line.moment()).isEqualTo(Moment.ON_WIN);
-              assertThat(line.text()).isIn("gg Red Team", "we did it");
-            })
-        .anySatisfy(
-            line -> {
-              assertThat(line.speaker()).as("dead bots still say gg").isEqualTo(BLUEBOT);
-              assertThat(line.moment()).isEqualTo(Moment.ON_LOSS);
-            });
+        .anySatisfy(line -> {
+          assertThat(line.speaker()).isEqualTo(REDBOT);
+          assertThat(line.moment()).isEqualTo(Moment.ON_WIN);
+          assertThat(line.text()).isIn("gg Red Team", "we did it");
+        })
+        .anySatisfy(line -> {
+          assertThat(line.speaker()).as("dead bots still say gg").isEqualTo(BLUEBOT);
+          assertThat(line.moment()).isEqualTo(Moment.ON_LOSS);
+        });
     assertThat(director(settings(1), 12).on(new ChatMoment.Ended(Optional.empty()), scene, T0))
         .isEmpty();
   }
@@ -442,12 +437,11 @@ final class ChatDirectorTest {
       assertThat(lines)
           .as("only the always_gg bot speaks at chance 0")
           .singleElement()
-          .satisfies(
-              line -> {
-                assertThat(line.speaker()).isEqualTo(REDBOT2);
-                assertThat(line.moment()).isEqualTo(Moment.ON_LOSS);
-                assertThat(line.text()).isEqualTo("gg wp");
-              });
+          .satisfies(line -> {
+            assertThat(line.speaker()).isEqualTo(REDBOT2);
+            assertThat(line.moment()).isEqualTo(Moment.ON_LOSS);
+            assertThat(line.text()).isEqualTo("gg wp");
+          });
     }
   }
 
@@ -629,12 +623,9 @@ final class ChatDirectorTest {
   @Test
   void aMomentNamingSomeoneOutsideTheMatchIsABrokenContract() {
     var director = director(settings(1), 15);
-    assertThatThrownBy(
-            () ->
-                director.on(
-                    new ChatMoment.Died(ALICE, Optional.empty()),
-                    new ChatScene(List.of(KILLER)),
-                    T0))
+    assertThatThrownBy(() ->
+            director.on(
+                new ChatMoment.Died(ALICE, Optional.empty()), new ChatScene(List.of(KILLER)), T0))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining("not in the match");
   }
@@ -653,53 +644,50 @@ final class ChatDirectorTest {
     var good = settings(0.5);
     var chances = new EnumMap<>(good.chances());
     chances.put(Moment.TAUNT, 1.5);
-    assertThatThrownBy(
-            () ->
-                new ChatSettings(
-                    chances,
-                    good.verbosity(),
-                    good.rivalBoost(),
-                    good.botCooldown(),
-                    good.window(),
-                    good.maxLinesPerWindow(),
-                    good.minGap(),
-                    good.reactionMin(),
-                    good.reactionMax(),
-                    good.maxDelay(),
-                    good.recentDeath(),
-                    good.tauntEvery()))
+    assertThatThrownBy(() ->
+            new ChatSettings(
+                chances,
+                good.verbosity(),
+                good.rivalBoost(),
+                good.botCooldown(),
+                good.window(),
+                good.maxLinesPerWindow(),
+                good.minGap(),
+                good.reactionMin(),
+                good.reactionMax(),
+                good.maxDelay(),
+                good.recentDeath(),
+                good.tauntEvery()))
         .hasMessageContaining("taunt");
-    assertThatThrownBy(
-            () ->
-                new ChatSettings(
-                    good.chances(),
-                    good.verbosity(),
-                    good.rivalBoost(),
-                    good.botCooldown(),
-                    good.window(),
-                    good.maxLinesPerWindow(),
-                    good.minGap(),
-                    Duration.ofSeconds(2),
-                    Duration.ofSeconds(1),
-                    good.maxDelay(),
-                    good.recentDeath(),
-                    good.tauntEvery()))
+    assertThatThrownBy(() ->
+            new ChatSettings(
+                good.chances(),
+                good.verbosity(),
+                good.rivalBoost(),
+                good.botCooldown(),
+                good.window(),
+                good.maxLinesPerWindow(),
+                good.minGap(),
+                Duration.ofSeconds(2),
+                Duration.ofSeconds(1),
+                good.maxDelay(),
+                good.recentDeath(),
+                good.tauntEvery()))
         .hasMessageContaining("reaction");
-    assertThatThrownBy(
-            () ->
-                new ChatSettings(
-                    good.chances(),
-                    good.verbosity(),
-                    5,
-                    good.botCooldown(),
-                    good.window(),
-                    good.maxLinesPerWindow(),
-                    good.minGap(),
-                    good.reactionMin(),
-                    good.reactionMax(),
-                    good.maxDelay(),
-                    good.recentDeath(),
-                    good.tauntEvery()))
+    assertThatThrownBy(() ->
+            new ChatSettings(
+                good.chances(),
+                good.verbosity(),
+                5,
+                good.botCooldown(),
+                good.window(),
+                good.maxLinesPerWindow(),
+                good.minGap(),
+                good.reactionMin(),
+                good.reactionMax(),
+                good.maxDelay(),
+                good.recentDeath(),
+                good.tauntEvery()))
         .hasMessageContaining("rivalBoost");
   }
 }

@@ -44,17 +44,15 @@ final class DuelActor {
     action = computed;
     computed
         .filter(ticket -> ticket.tick() > acceptedTick)
-        .ifPresent(
-            ticket -> {
-              validate(ticket);
-              accept(ticket);
-            });
+        .ifPresent(ticket -> {
+          validate(ticket);
+          accept(ticket);
+        });
     if (!external) return frame.authored().commands();
     var response =
-        action.filter(
-            ticket ->
-                ticket.applies(
-                    frame.matchId(), frame.body(), frame.life(), frame.input().snapshot().tick()));
+        action.filter(ticket ->
+            ticket.applies(
+                frame.matchId(), frame.body(), frame.life(), frame.input().snapshot().tick()));
     if (!CombatCommands.eligible(frame.controls())
         || response
             .filter(ticket -> !CombatCommands.eligible(frame.controls(), ticket))
@@ -104,14 +102,12 @@ final class DuelActor {
     fields.put("used", List.copyOf(used));
     fields.put("applied", applied);
     fields.put("fallback", fallback);
-    latest.ifPresent(
-        frame -> {
-          fields.put("body", frame.body().toString());
-          fields.put("life", frame.life());
-          fields.put("tick", frame.input().snapshot().tick());
-          if (live)
-            frame.observation().ifPresent(sample -> fields.put("observation", sample.values()));
-        });
+    latest.ifPresent(frame -> {
+      fields.put("body", frame.body().toString());
+      fields.put("life", frame.life());
+      fields.put("tick", frame.input().snapshot().tick());
+      if (live) frame.observation().ifPresent(sample -> fields.put("observation", sample.values()));
+    });
     return fields;
   }
 }

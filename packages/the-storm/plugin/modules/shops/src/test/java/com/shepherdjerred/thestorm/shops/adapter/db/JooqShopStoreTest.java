@@ -246,16 +246,14 @@ final class JooqShopStoreTest {
 
   @Test
   void heldItemsNeedBothAnItemAndAQuantity() {
-    assertThatThrownBy(
-            () ->
-                database
-                    .write(
-                        dsl ->
-                            dsl.execute(
-                                "insert into shops_refund_failure (payer_kind, payer_id,"
-                                    + " payee_kind, payee_id, amount, reason, at, held_item)"
-                                    + " values ('player', 'a', 'player', 'b', 1, 'r', 0, 'coal')"))
-                    .get())
+    assertThatThrownBy(() ->
+            database
+                .write(dsl ->
+                    dsl.execute(
+                        "insert into shops_refund_failure (payer_kind, payer_id,"
+                            + " payee_kind, payee_id, amount, reason, at, held_item)"
+                            + " values ('player', 'a', 'player', 'b', 1, 'r', 0, 'coal')"))
+                .get())
         .isInstanceOf(ExecutionException.class)
         .hasMessageContaining("CHECK");
   }
@@ -277,16 +275,14 @@ final class JooqShopStoreTest {
     assertThat(row.getHeldItem()).isEqualTo("emerald");
     assertThat(row.getHeldQuantity()).isEqualTo(4);
 
-    assertThatThrownBy(
-            () ->
-                database
-                    .write(
-                        dsl ->
-                            dsl.execute(
-                                "insert into shops_refund_failure (payer_kind, payer_id,"
-                                    + " payee_kind, payee_id, amount, reason, at)"
-                                    + " values ('player', 'a', 'player', 'b', 0, 'r', 0)"))
-                    .get())
+    assertThatThrownBy(() ->
+            database
+                .write(dsl ->
+                    dsl.execute(
+                        "insert into shops_refund_failure (payer_kind, payer_id,"
+                            + " payee_kind, payee_id, amount, reason, at)"
+                            + " values ('player', 'a', 'player', 'b', 0, 'r', 0)"))
+                .get())
         .isInstanceOf(ExecutionException.class)
         .hasMessageContaining("CHECK");
   }

@@ -49,48 +49,44 @@ public final class CampRenames {
     CompletableFuture<Void> chain = CompletableFuture.completedFuture(null);
     for (var camp : List.copyOf(generated)) {
       chain =
-          chain.thenCompose(
-              ignored ->
-                  directory
-                      .byId(camp.owner())
-                      .thenCompose(
-                          found -> {
-                            if (found.isEmpty()) {
-                              log.accept(
-                                  "left camp "
-                                      + camp.name()
-                                      + " unnamed; owner "
-                                      + camp.owner()
-                                      + " is not in the player directory");
-                              return CompletableFuture.completedFuture(null);
-                            }
-                            reserved.remove(camp.name().toLowerCase(Locale.ROOT));
-                            var next =
-                                rename(
-                                    camp,
-                                    found.orElseThrow().lastName(),
-                                    candidate ->
-                                        reserved.contains(candidate.toLowerCase(Locale.ROOT)));
-                            if (next.isEmpty()) {
-                              reserved.add(camp.name().toLowerCase(Locale.ROOT));
-                              log.accept(
-                                  "left camp "
-                                      + camp.name()
-                                      + " unnamed; "
-                                      + found.orElseThrow().lastName()
-                                      + " is not a usable camp name");
-                              return CompletableFuture.completedFuture(null);
-                            }
-                            var town = next.orElseThrow();
-                            reserved.add(town.name().toLowerCase(Locale.ROOT));
-                            return store
-                                .saveTown(town)
-                                .thenRun(
-                                    () -> {
-                                      state.replaceTown(town);
-                                      renamed[0]++;
-                                    });
-                          }));
+          chain.thenCompose(ignored ->
+              directory
+                  .byId(camp.owner())
+                  .thenCompose(found -> {
+                    if (found.isEmpty()) {
+                      log.accept(
+                          "left camp "
+                              + camp.name()
+                              + " unnamed; owner "
+                              + camp.owner()
+                              + " is not in the player directory");
+                      return CompletableFuture.completedFuture(null);
+                    }
+                    reserved.remove(camp.name().toLowerCase(Locale.ROOT));
+                    var next =
+                        rename(
+                            camp,
+                            found.orElseThrow().lastName(),
+                            candidate -> reserved.contains(candidate.toLowerCase(Locale.ROOT)));
+                    if (next.isEmpty()) {
+                      reserved.add(camp.name().toLowerCase(Locale.ROOT));
+                      log.accept(
+                          "left camp "
+                              + camp.name()
+                              + " unnamed; "
+                              + found.orElseThrow().lastName()
+                              + " is not a usable camp name");
+                      return CompletableFuture.completedFuture(null);
+                    }
+                    var town = next.orElseThrow();
+                    reserved.add(town.name().toLowerCase(Locale.ROOT));
+                    return store
+                        .saveTown(town)
+                        .thenRun(() -> {
+                          state.replaceTown(town);
+                          renamed[0]++;
+                        });
+                  }));
     }
     return chain.thenApply(ignored -> renamed[0]);
   }

@@ -52,23 +52,21 @@ public final class TeamBalancer {
     }
     var sizes = new EnumMap<TeamColor, Integer>(TeamColor.class);
     var spread = new EnumMap<TeamColor, Integer>(TeamColor.class);
-    teams.forEach(
-        team -> {
-          sizes.put(team, 0);
-          spread.put(team, 0);
-        });
+    teams.forEach(team -> {
+      sizes.put(team, 0);
+      spread.put(team, 0);
+    });
     var assignment = new LinkedHashMap<CombatantId, TeamColor>();
     for (var seat : seats) {
       seat.pinned()
           .filter(teams::contains)
-          .ifPresent(
-              team -> {
-                assignment.put(seat.id(), team);
-                sizes.merge(team, 1, Integer::sum);
-                if (spreads(seat, spreadKits)) {
-                  spread.merge(team, 1, Integer::sum);
-                }
-              });
+          .ifPresent(team -> {
+            assignment.put(seat.id(), team);
+            sizes.merge(team, 1, Integer::sum);
+            if (spreads(seat, spreadKits)) {
+              spread.merge(team, 1, Integer::sum);
+            }
+          });
     }
     for (var seat : seats) {
       if (assignment.containsKey(seat.id()) || !spreads(seat, spreadKits)) {

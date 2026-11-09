@@ -24,11 +24,10 @@ public record CookingPotConfig(
     if (fuels.isEmpty()) {
       throw new IllegalArgumentException("fuels must list at least one item");
     }
-    fuels.forEach(
-        (item, units) -> {
-          Cell.requireMaterialKey(item);
-          Checks.range("fuels." + item, units, 1, MAX_FUEL);
-        });
+    fuels.forEach((item, units) -> {
+      Cell.requireMaterialKey(item);
+      Checks.range("fuels." + item, units, 1, MAX_FUEL);
+    });
     fuels = Map.copyOf(fuels);
     Checks.range("maxFuel", maxFuel, 1, MAX_FUEL);
   }

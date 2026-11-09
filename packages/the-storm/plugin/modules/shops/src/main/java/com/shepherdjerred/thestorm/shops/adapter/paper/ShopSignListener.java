@@ -104,16 +104,15 @@ final class ShopSignListener implements Listener {
     var player = event.getPlayer();
     registry
         .atSign(ShopBlocks.pos(block))
-        .ifPresent(
-            existing -> {
-              if (blocks.shopAtSign(block).isPresent()) {
-                event.setCancelled(true);
-                player.sendMessage(
-                    Replies.error("Shop signs cannot be edited; break it and make a new one."));
-              } else {
-                shops.remove(existing);
-              }
-            });
+        .ifPresent(existing -> {
+          if (blocks.shopAtSign(block).isPresent()) {
+            event.setCancelled(true);
+            player.sendMessage(
+                Replies.error("Shop signs cannot be edited; break it and make a new one."));
+          } else {
+            shops.remove(existing);
+          }
+        });
     if (event.isCancelled()) {
       return;
     }
@@ -164,12 +163,11 @@ final class ShopSignListener implements Listener {
     var block = event.getBlock();
     // The server writes the event's lines after this handler; stamp the id once they are in place.
     // A sign broken within that tick takes its shop with it.
-    scheduler.runOnMainThread(
-        () -> {
-          if (registry.byId(shop.id()).isPresent() && !blocks.stamp(block, shop)) {
-            shops.remove(shop);
-          }
-        });
+    scheduler.runOnMainThread(() -> {
+      if (registry.byId(shop.id()).isPresent() && !blocks.stamp(block, shop)) {
+        shops.remove(shop);
+      }
+    });
     event.getPlayer().sendMessage(Replies.success(created(shop)));
   }
 
@@ -241,20 +239,18 @@ final class ShopSignListener implements Listener {
     }
     var lookup = directory.orElseThrow().byName(name);
     var _ =
-        lookup.whenComplete(
-            (found, error) ->
-                scheduler.runOnMainThread(
-                    () -> {
-                      if (error != null || found == null || found.isEmpty()) {
-                        finishLater(player, block, townOrRefuse(attempt, name));
-                        return;
-                      }
-                      var known = found.orElseThrow();
-                      finishLater(
-                          player,
-                          block,
-                          ready(attempt, new ShopOwner.Player(known.uuid(), known.lastName())));
-                    }));
+        lookup.whenComplete((found, error) ->
+            scheduler.runOnMainThread(() -> {
+              if (error != null || found == null || found.isEmpty()) {
+                finishLater(player, block, townOrRefuse(attempt, name));
+                return;
+              }
+              var known = found.orElseThrow();
+              finishLater(
+                  player,
+                  block,
+                  ready(attempt, new ShopOwner.Player(known.uuid(), known.lastName())));
+            }));
     return new Outcome.Later();
   }
 
@@ -298,12 +294,11 @@ final class ShopSignListener implements Listener {
       }
       sign.update();
     }
-    scheduler.runOnMainThread(
-        () -> {
-          if (registry.byId(shop.id()).isPresent() && !blocks.stamp(block, shop)) {
-            shops.remove(shop);
-          }
-        });
+    scheduler.runOnMainThread(() -> {
+      if (registry.byId(shop.id()).isPresent() && !blocks.stamp(block, shop)) {
+        shops.remove(shop);
+      }
+    });
     player.sendMessage(Replies.success(created(shop)));
   }
 
@@ -353,11 +348,10 @@ final class ShopSignListener implements Listener {
           .prices()
           .forDirection(side)
           .flatMap(price -> settings.prices().check(side, price.crystals(), material))
-          .ifPresent(
-              violation ->
-                  problems.add(
-                      new SignProblem.PriceOutOfBand(
-                          violation.side(), violation.price(), violation.min(), violation.max())));
+          .ifPresent(violation ->
+              problems.add(
+                  new SignProblem.PriceOutOfBand(
+                      violation.side(), violation.price(), violation.min(), violation.max())));
     }
     return problems;
   }
@@ -376,21 +370,19 @@ final class ShopSignListener implements Listener {
                 new AccountId.Server(),
                 amount,
                 "shop:create:" + shop.id())
-            .whenComplete(
-                (result, error) ->
-                    scheduler.runOnMainThread(
-                        () -> {
-                          if (error == null && result instanceof Result.Ok) {
-                            return;
-                          }
-                          shops.remove(shop);
-                          block.breakNaturally();
-                          player.sendMessage(
-                              Replies.error(
-                                  "Opening a shop costs "
-                                      + settings.creationFee()
-                                      + " crystals. The sign was removed."));
-                        }));
+            .whenComplete((result, error) ->
+                scheduler.runOnMainThread(() -> {
+                  if (error == null && result instanceof Result.Ok) {
+                    return;
+                  }
+                  shops.remove(shop);
+                  block.breakNaturally();
+                  player.sendMessage(
+                      Replies.error(
+                          "Opening a shop costs "
+                              + settings.creationFee()
+                              + " crystals. The sign was removed."));
+                }));
   }
 
   private int levelFor(Player creator, ShopOwner owner) {
@@ -444,13 +436,10 @@ final class ShopSignListener implements Listener {
     container.stream()
         .flatMap(block -> ShopBlocks.containerBlocks(block).stream())
         .map(pos -> blocks.block(pos).orElseThrow())
-        .forEach(
-            block ->
-                checks.add(
-                    protection.check(
-                        player.getUniqueId(),
-                        ProtectedAction.OPEN_CONTAINER,
-                        block.getLocation())));
+        .forEach(block ->
+            checks.add(
+                protection.check(
+                    player.getUniqueId(), ProtectedAction.OPEN_CONTAINER, block.getLocation())));
     for (var decision : checks) {
       if (decision instanceof Decision.Denied(var reason)) {
         player.sendMessage(HouseStyle.error(Replies.LABEL, reason));

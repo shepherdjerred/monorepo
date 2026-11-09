@@ -95,23 +95,21 @@ public final class HttpConversation implements ConversationService {
             .build();
     return client
         .sendAsync(request, HttpResponse.BodyHandlers.ofString())
-        .thenApply(
-            response -> {
-              if (response.statusCode() == 429 || response.statusCode() == 503)
-                return Optional.empty();
-              if (response.statusCode() != 200)
-                throw new IllegalStateException(
-                    "companion conversation returned HTTP " + response.statusCode());
-              if (response.body().length() > 4096)
-                throw new IllegalStateException("companion conversation response exceeds limits");
-              var reply = JSON.readValue(response.body(), Reply.class);
-              if (reply.text().isBlank()
-                  || reply.text().length() > contract.maxReplyChars()
-                  || reply.model().isBlank()
-                  || reply.costMicros() < 0)
-                throw new IllegalStateException("invalid companion conversation response");
-              return Optional.of(reply.text());
-            });
+        .thenApply(response -> {
+          if (response.statusCode() == 429 || response.statusCode() == 503) return Optional.empty();
+          if (response.statusCode() != 200)
+            throw new IllegalStateException(
+                "companion conversation returned HTTP " + response.statusCode());
+          if (response.body().length() > 4096)
+            throw new IllegalStateException("companion conversation response exceeds limits");
+          var reply = JSON.readValue(response.body(), Reply.class);
+          if (reply.text().isBlank()
+              || reply.text().length() > contract.maxReplyChars()
+              || reply.model().isBlank()
+              || reply.costMicros() < 0)
+            throw new IllegalStateException("invalid companion conversation response");
+          return Optional.of(reply.text());
+        });
   }
 
   @Override

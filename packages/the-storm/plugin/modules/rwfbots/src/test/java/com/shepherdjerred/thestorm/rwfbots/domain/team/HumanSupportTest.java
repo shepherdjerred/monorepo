@@ -167,11 +167,10 @@ final class HumanSupportTest {
     var cover = support(plan, HUMAN);
     assertThat(cover).hasSize(HumanSupport.URGENT);
     assertThat(cover)
-        .allSatisfy(
-            slot -> {
-              assertThat(slot.role()).isEqualTo(Role.ESCORT);
-              assertThat(Math.abs(slot.side())).isEqualTo(HumanSupport.COVER_SIDE);
-            });
+        .allSatisfy(slot -> {
+          assertThat(slot.role()).isEqualTo(Role.ESCORT);
+          assertThat(Math.abs(slot.side())).isEqualTo(HumanSupport.COVER_SIDE);
+        });
     assertThat(holders(plan, HUMAN)).containsExactly(bots.get(4).id(), bots.get(5).id());
     // The team's own plan still stands: a planter, and one slot per bot.
     assertThat(plan.holderOf("plant-0")).isPresent();

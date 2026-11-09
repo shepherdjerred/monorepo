@@ -48,13 +48,12 @@ public final class WorldModule implements StormModule {
         .getPluginManager()
         .registerEvents(new EmptyServerArrival(context.plugin().getServer()), context.plugin());
     WorldPaper.circles(config, context.scheduler().mainThread())
-        .ifPresent(
-            circles ->
-                context
-                    .plugin()
-                    .getServer()
-                    .getPluginManager()
-                    .registerEvents(circles, context.plugin()));
+        .ifPresent(circles ->
+            context
+                .plugin()
+                .getServer()
+                .getPluginManager()
+                .registerEvents(circles, context.plugin()));
     context.services().provide(WildWorlds.class, worlds);
     if (context.plugin().getServer().getPluginManager().getPlugin("BlueMap") != null) {
       var map =

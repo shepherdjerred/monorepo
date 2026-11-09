@@ -207,20 +207,17 @@ final class ShopRulesTest {
     var sign = new BlockPos(WORLD, 0, 0, 0);
     var owner = new ShopOwner.Player(ALICE, "Alice");
     var prices = ShopPrices.buyOnly(1);
-    assertThatThrownBy(
-            () ->
-                new SignShop(
-                    0, sign, Optional.of(sign), owner, 1, prices, Optional.empty(), Instant.EPOCH))
+    assertThatThrownBy(() ->
+            new SignShop(
+                0, sign, Optional.of(sign), owner, 1, prices, Optional.empty(), Instant.EPOCH))
         .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(
-            () ->
-                new SignShop(
-                    1, sign, Optional.of(sign), owner, 0, prices, Optional.empty(), Instant.EPOCH))
+    assertThatThrownBy(() ->
+            new SignShop(
+                1, sign, Optional.of(sign), owner, 0, prices, Optional.empty(), Instant.EPOCH))
         .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(
-            () ->
-                new SignShop(
-                    1, sign, Optional.empty(), owner, 1, prices, Optional.empty(), Instant.EPOCH))
+    assertThatThrownBy(() ->
+            new SignShop(
+                1, sign, Optional.empty(), owner, 1, prices, Optional.empty(), Instant.EPOCH))
         .hasMessageContaining("needs a container");
     assertThatThrownBy(() -> new ItemFingerprint(" ", "x", false))
         .isInstanceOf(IllegalArgumentException.class);

@@ -64,10 +64,9 @@ final class StreakSelectionPaperTest {
     harness.ticks(2);
     assertThat(selected(harness, alice)).isEqualTo(StreakLoadout.DEFAULT);
     alice.performCommand("rwf killstreaks");
-    harness.until(
-        () ->
-            alice.getOpenInventory().getType() == InventoryType.CHEST
-                && alice.getOpenInventory().getTopInventory().getHolder() instanceof StreakMenu);
+    harness.until(() ->
+        alice.getOpenInventory().getType() == InventoryType.CHEST
+            && alice.getOpenInventory().getTopInventory().getHolder() instanceof StreakMenu);
     click(harness, alice, 12);
     click(harness, alice, StreakMenu.SAVE);
     var wolves =

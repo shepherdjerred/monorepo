@@ -34,14 +34,11 @@ final class KitBridge {
     }
     return runner
         .memberOf(entity)
-        .flatMap(
-            member ->
-                member
-                    .kit()
-                    .map(
-                        kit ->
-                            new KitCombat.Side(
-                                kit, runner.match().abilities().state(member.id()))));
+        .flatMap(member ->
+            member
+                .kit()
+                .map(
+                    kit -> new KitCombat.Side(kit, runner.match().abilities().state(member.id()))));
   }
 
   /**

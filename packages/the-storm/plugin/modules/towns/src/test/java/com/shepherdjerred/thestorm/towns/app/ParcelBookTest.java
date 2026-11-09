@@ -63,12 +63,11 @@ final class ParcelBookTest {
     // Map 2 owners are sign/name matches against the January 2016 playerdata.
     assertThat(config.parcels().stream().filter(parcel -> parcel.area().world().equals("map2")))
         .hasSize(4)
-        .allSatisfy(
-            parcel -> {
-              assertThat(parcel.kind()).isEqualTo(ParcelKind.PERMANENT_SHOP);
-              assertThat(parcel.weeklyRent()).isZero();
-              assertThat(parcel.owners()).hasSizeLessThanOrEqualTo(1);
-            })
+        .allSatisfy(parcel -> {
+          assertThat(parcel.kind()).isEqualTo(ParcelKind.PERMANENT_SHOP);
+          assertThat(parcel.weeklyRent()).isZero();
+          assertThat(parcel.owners()).hasSizeLessThanOrEqualTo(1);
+        })
         .filteredOn(parcel -> !parcel.owners().isEmpty())
         .hasSize(3);
     var shared =

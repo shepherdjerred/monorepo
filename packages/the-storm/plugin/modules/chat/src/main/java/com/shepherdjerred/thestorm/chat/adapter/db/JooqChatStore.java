@@ -38,11 +38,10 @@ public final class JooqChatStore implements ChatStore {
 
   @Override
   public CompletableFuture<ChatSnapshot> loadAll(Instant now, ChannelKey defaultFocus) {
-    return database.write(
-        dsl -> {
-          dsl.deleteFrom(CHAT_MUTE).where(CHAT_MUTE.UNTIL_MS.le(now.toEpochMilli())).execute();
-          return new ChatSnapshot(loadProfiles(dsl, defaultFocus), loadMutes(dsl));
-        });
+    return database.write(dsl -> {
+      dsl.deleteFrom(CHAT_MUTE).where(CHAT_MUTE.UNTIL_MS.le(now.toEpochMilli())).execute();
+      return new ChatSnapshot(loadProfiles(dsl, defaultFocus), loadMutes(dsl));
+    });
   }
 
   @Override
@@ -63,70 +62,66 @@ public final class JooqChatStore implements ChatStore {
   /** {@link #saveProfile}, returning the write for callers that wait on it. */
   public CompletableFuture<Integer> writeProfile(UUID player, ChatProfile profile) {
     var id = player.toString();
-    return database.write(
-        dsl -> {
-          dsl.deleteFrom(CHAT_FOCUS).where(CHAT_FOCUS.PLAYER.eq(id)).execute();
-          dsl.deleteFrom(CHAT_HIDDEN_CHANNEL).where(CHAT_HIDDEN_CHANNEL.PLAYER.eq(id)).execute();
-          dsl.deleteFrom(CHAT_IGNORE).where(CHAT_IGNORE.PLAYER.eq(id)).execute();
-          var rows =
-              dsl.insertInto(CHAT_FOCUS)
-                  .set(CHAT_FOCUS.PLAYER, id)
-                  .set(CHAT_FOCUS.CHANNEL, profile.focus().id())
-                  .execute();
-          for (var channel : profile.hidden()) {
-            rows +=
-                dsl.insertInto(CHAT_HIDDEN_CHANNEL)
-                    .set(CHAT_HIDDEN_CHANNEL.PLAYER, id)
-                    .set(CHAT_HIDDEN_CHANNEL.CHANNEL, channel.id())
-                    .execute();
-          }
-          for (var ignored : profile.ignored().entrySet()) {
-            rows +=
-                dsl.insertInto(CHAT_IGNORE)
-                    .set(CHAT_IGNORE.PLAYER, id)
-                    .set(CHAT_IGNORE.IGNORED, ignored.getKey().toString())
-                    .set(CHAT_IGNORE.IGNORED_NAME, ignored.getValue())
-                    .execute();
-          }
-          return rows;
-        });
+    return database.write(dsl -> {
+      dsl.deleteFrom(CHAT_FOCUS).where(CHAT_FOCUS.PLAYER.eq(id)).execute();
+      dsl.deleteFrom(CHAT_HIDDEN_CHANNEL).where(CHAT_HIDDEN_CHANNEL.PLAYER.eq(id)).execute();
+      dsl.deleteFrom(CHAT_IGNORE).where(CHAT_IGNORE.PLAYER.eq(id)).execute();
+      var rows =
+          dsl.insertInto(CHAT_FOCUS)
+              .set(CHAT_FOCUS.PLAYER, id)
+              .set(CHAT_FOCUS.CHANNEL, profile.focus().id())
+              .execute();
+      for (var channel : profile.hidden()) {
+        rows +=
+            dsl.insertInto(CHAT_HIDDEN_CHANNEL)
+                .set(CHAT_HIDDEN_CHANNEL.PLAYER, id)
+                .set(CHAT_HIDDEN_CHANNEL.CHANNEL, channel.id())
+                .execute();
+      }
+      for (var ignored : profile.ignored().entrySet()) {
+        rows +=
+            dsl.insertInto(CHAT_IGNORE)
+                .set(CHAT_IGNORE.PLAYER, id)
+                .set(CHAT_IGNORE.IGNORED, ignored.getKey().toString())
+                .set(CHAT_IGNORE.IGNORED_NAME, ignored.getValue())
+                .execute();
+      }
+      return rows;
+    });
   }
 
   /** {@link #saveMute}, returning the write for callers that wait on it. */
   public CompletableFuture<Integer> writeMute(UUID player, Mute mute) {
-    return database.write(
-        dsl -> {
-          return dsl.insertInto(CHAT_MUTE)
-              .set(CHAT_MUTE.PLAYER, player.toString())
-              .set(CHAT_MUTE.UNTIL_MS, mute.until().toEpochMilli())
-              .set(CHAT_MUTE.REASON, mute.reason())
-              .set(CHAT_MUTE.ISSUER, mute.issuer())
-              .onConflict(CHAT_MUTE.PLAYER)
-              .doUpdate()
-              .set(CHAT_MUTE.UNTIL_MS, mute.until().toEpochMilli())
-              .set(CHAT_MUTE.REASON, mute.reason())
-              .set(CHAT_MUTE.ISSUER, mute.issuer())
-              .execute();
-        });
+    return database.write(dsl -> {
+      return dsl.insertInto(CHAT_MUTE)
+          .set(CHAT_MUTE.PLAYER, player.toString())
+          .set(CHAT_MUTE.UNTIL_MS, mute.until().toEpochMilli())
+          .set(CHAT_MUTE.REASON, mute.reason())
+          .set(CHAT_MUTE.ISSUER, mute.issuer())
+          .onConflict(CHAT_MUTE.PLAYER)
+          .doUpdate()
+          .set(CHAT_MUTE.UNTIL_MS, mute.until().toEpochMilli())
+          .set(CHAT_MUTE.REASON, mute.reason())
+          .set(CHAT_MUTE.ISSUER, mute.issuer())
+          .execute();
+    });
   }
 
   /** {@link #deleteMute}, returning the write for callers that wait on it. */
   public CompletableFuture<Integer> removeMute(UUID player) {
-    return database.write(
-        dsl -> {
-          return dsl.deleteFrom(CHAT_MUTE).where(CHAT_MUTE.PLAYER.eq(player.toString())).execute();
-        });
+    return database.write(dsl -> {
+      return dsl.deleteFrom(CHAT_MUTE).where(CHAT_MUTE.PLAYER.eq(player.toString())).execute();
+    });
   }
 
   private void report(CompletableFuture<Integer> write) {
     // Fire and forget: the in-memory state is authoritative; a failure is only reported.
     var _ =
-        write.whenComplete(
-            (ignored, error) -> {
-              if (error != null) {
-                failures.accept(error);
-              }
-            });
+        write.whenComplete((ignored, error) -> {
+          if (error != null) {
+            failures.accept(error);
+          }
+        });
   }
 
   private static Map<UUID, ChatProfile> loadProfiles(DSLContext dsl, ChannelKey defaultFocus) {
@@ -135,19 +130,17 @@ public final class JooqChatStore implements ChatStore {
         .forEach(row -> focus.put(UUID.fromString(row.getPlayer()), channel(row.getChannel())));
     var hidden = new HashMap<UUID, Set<ChannelKey>>();
     dsl.selectFrom(CHAT_HIDDEN_CHANNEL)
-        .forEach(
-            row ->
-                hidden
-                    .computeIfAbsent(
-                        UUID.fromString(row.getPlayer()), id -> EnumSet.noneOf(ChannelKey.class))
-                    .add(channel(row.getChannel())));
+        .forEach(row ->
+            hidden
+                .computeIfAbsent(
+                    UUID.fromString(row.getPlayer()), id -> EnumSet.noneOf(ChannelKey.class))
+                .add(channel(row.getChannel())));
     var ignored = new HashMap<UUID, Map<UUID, String>>();
     dsl.selectFrom(CHAT_IGNORE)
-        .forEach(
-            row ->
-                ignored
-                    .computeIfAbsent(UUID.fromString(row.getPlayer()), id -> new HashMap<>())
-                    .put(UUID.fromString(row.getIgnored()), row.getIgnoredName()));
+        .forEach(row ->
+            ignored
+                .computeIfAbsent(UUID.fromString(row.getPlayer()), id -> new HashMap<>())
+                .put(UUID.fromString(row.getIgnored()), row.getIgnoredName()));
     var players = new HashSet<UUID>(focus.keySet());
     players.addAll(hidden.keySet());
     players.addAll(ignored.keySet());
@@ -166,12 +159,11 @@ public final class JooqChatStore implements ChatStore {
   private static Map<UUID, Mute> loadMutes(DSLContext dsl) {
     var mutes = new HashMap<UUID, Mute>();
     dsl.selectFrom(CHAT_MUTE)
-        .forEach(
-            row ->
-                mutes.put(
-                    UUID.fromString(row.getPlayer()),
-                    new Mute(
-                        Instant.ofEpochMilli(row.getUntilMs()), row.getReason(), row.getIssuer())));
+        .forEach(row ->
+            mutes.put(
+                UUID.fromString(row.getPlayer()),
+                new Mute(
+                    Instant.ofEpochMilli(row.getUntilMs()), row.getReason(), row.getIssuer())));
     return mutes;
   }
 

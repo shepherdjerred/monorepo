@@ -37,9 +37,8 @@ final class TemporaryBlockGuardTest {
                   harness.async,
                   harness.protection,
                   harness.changes))
-          .withLoader(
-              (world, key) ->
-                  CompletableFuture.completedFuture(world.getBlockAt(key.x(), key.y(), key.z())));
+          .withLoader((world, key) ->
+              CompletableFuture.completedFuture(world.getBlockAt(key.x(), key.y(), key.z())));
   private final TemporaryBlockGuard guard = new TemporaryBlockGuard(blocks);
 
   private Block wall;

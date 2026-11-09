@@ -99,9 +99,8 @@ final class Keys {
 
   /** Marks a layout editor's {@code stack} as the kit's item at position {@code index}. */
   void tagLayoutIndex(ItemStack stack, int index) {
-    stack.editMeta(
-        meta ->
-            meta.getPersistentDataContainer().set(layoutIndex, PersistentDataType.INTEGER, index));
+    stack.editMeta(meta ->
+        meta.getPersistentDataContainer().set(layoutIndex, PersistentDataType.INTEGER, index));
   }
 
   /** The kit item position a layout editor's {@code stack} stands for, if it is one. */
@@ -121,10 +120,8 @@ final class Keys {
    */
   void tagStreak(ItemStack stack, Killstreak reward) {
     tag(stack);
-    stack.editMeta(
-        meta ->
-            meta.getPersistentDataContainer()
-                .set(streak, PersistentDataType.STRING, reward.name()));
+    stack.editMeta(meta ->
+        meta.getPersistentDataContainer().set(streak, PersistentDataType.STRING, reward.name()));
   }
 
   /** The killstreak reward {@code stack} carries, if it is a killstreak item. */

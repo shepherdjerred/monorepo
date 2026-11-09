@@ -68,18 +68,17 @@ final class TravelHub implements Listener {
   void register(Commands commands) {
     commands.register(
         Commands.literal("worlds")
-            .executes(
-                command -> {
-                  if (command.getSource().getSender() instanceof Player player) {
-                    player.showDialog(dialog);
-                  } else {
-                    command
-                        .getSource()
-                        .getSender()
-                        .sendMessage(Messages.error("Only players can do that."));
-                  }
-                  return Command.SINGLE_SUCCESS;
-                })
+            .executes(command -> {
+              if (command.getSource().getSender() instanceof Player player) {
+                player.showDialog(dialog);
+              } else {
+                command
+                    .getSource()
+                    .getSender()
+                    .sendMessage(Messages.error("Only players can do that."));
+              }
+              return Command.SINGLE_SUCCESS;
+            })
             .build(),
         "Travel to another world");
   }
@@ -192,27 +191,26 @@ final class TravelHub implements Listener {
                   options)));
     }
     var primary = config.destinations().getFirst().label();
-    return Dialog.create(
-        factory ->
-            factory
-                .empty()
-                .base(
-                    DialogBase.builder(Component.text("Travel"))
-                        .canCloseWithEscape(true)
-                        .pause(false)
-                        .body(
-                            List.of(
-                                DialogBody.plainMessage(
-                                    Component.text(
-                                        primary
-                                            + " is where most survival happens. /spawn always"
-                                            + " brings you back to the main spawn."))))
-                        .build())
-                .type(
-                    DialogType.multiAction(buttons)
-                        .columns(2)
-                        .exitAction(ActionButton.builder(Component.text("Stay")).build())
-                        .build()));
+    return Dialog.create(factory ->
+        factory
+            .empty()
+            .base(
+                DialogBase.builder(Component.text("Travel"))
+                    .canCloseWithEscape(true)
+                    .pause(false)
+                    .body(
+                        List.of(
+                            DialogBody.plainMessage(
+                                Component.text(
+                                    primary
+                                        + " is where most survival happens. /spawn always"
+                                        + " brings you back to the main spawn."))))
+                    .build())
+            .type(
+                DialogType.multiAction(buttons)
+                    .columns(2)
+                    .exitAction(ActionButton.builder(Component.text("Stay")).build())
+                    .build()));
   }
 
   private static void validate(ModuleContext context, TravelConfig config) {

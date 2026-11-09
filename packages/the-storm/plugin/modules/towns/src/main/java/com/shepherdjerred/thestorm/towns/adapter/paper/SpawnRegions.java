@@ -89,23 +89,21 @@ final class SpawnRegions implements Listener {
     }
     state
         .parcels()
-        .ifPresent(
-            book ->
-                book.definitions()
-                    .forEach(
-                        def ->
-                            regions.add(
-                                new AdminRegion(
-                                    "holding_"
-                                        + UUID.nameUUIDFromBytes(def.id().getBytes(UTF_8))
-                                            .toString()
-                                            .replace("-", "")
-                                            .substring(0, 24),
-                                    def.name(),
-                                    new RegionAreas(List.of(), List.of(def.area())),
-                                    List.of(),
-                                    RegionSpawns.unlimited(),
-                                    RegionProfile.PRESERVE))));
+        .ifPresent(book ->
+            book.definitions()
+                .forEach(def ->
+                    regions.add(
+                        new AdminRegion(
+                            "holding_"
+                                + UUID.nameUUIDFromBytes(def.id().getBytes(UTF_8))
+                                    .toString()
+                                    .replace("-", "")
+                                    .substring(0, 24),
+                            def.name(),
+                            new RegionAreas(List.of(), List.of(def.area())),
+                            List.of(),
+                            RegionSpawns.unlimited(),
+                            RegionProfile.PRESERVE))));
     state.replaceRegions(new RegionIndex(regions));
   }
 

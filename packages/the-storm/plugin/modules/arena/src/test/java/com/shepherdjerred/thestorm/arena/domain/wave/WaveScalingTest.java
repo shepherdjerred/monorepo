@@ -51,9 +51,8 @@ final class WaveScalingTest {
 
   @Test
   void rangesCannotBeWalkedBackwards() {
-    assertThatThrownBy(
-            () ->
-                WaveScaling.count(new SpawnGroup("z", 1, 0), -1, new Difficulty(1, FLAT, SCALING)))
+    assertThatThrownBy(() ->
+            WaveScaling.count(new SpawnGroup("z", 1, 0), -1, new Difficulty(1, FLAT, SCALING)))
         .isInstanceOf(IllegalArgumentException.class);
   }
 

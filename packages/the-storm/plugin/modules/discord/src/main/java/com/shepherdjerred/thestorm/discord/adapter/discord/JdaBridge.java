@@ -57,30 +57,29 @@ public final class JdaBridge implements DiscordGateway {
       Links links) {
     Thread.ofVirtual()
         .name("storm-discord-login")
-        .start(
-            () -> {
-              try {
-                var client =
-                    JDABuilder.createLight(
-                            credentials.token(),
-                            GatewayIntent.GUILD_MESSAGES,
-                            GatewayIntent.MESSAGE_CONTENT)
-                        .setActivity(Activity.customStatus(relay.status()))
-                        .addEventListeners(
-                            new JdaListener(
-                                this,
-                                relay,
-                                new JdaListener.Handlers(commands, links),
-                                credentials.channelId()))
-                        .build();
-                jda.set(client);
-                if (stopped) {
-                  client.shutdownNow();
-                }
-              } catch (RuntimeException e) {
-                logger.error("Discord login failed; the bridge is offline", e);
-              }
-            });
+        .start(() -> {
+          try {
+            var client =
+                JDABuilder.createLight(
+                        credentials.token(),
+                        GatewayIntent.GUILD_MESSAGES,
+                        GatewayIntent.MESSAGE_CONTENT)
+                    .setActivity(Activity.customStatus(relay.status()))
+                    .addEventListeners(
+                        new JdaListener(
+                            this,
+                            relay,
+                            new JdaListener.Handlers(commands, links),
+                            credentials.channelId()))
+                    .build();
+            jda.set(client);
+            if (stopped) {
+              client.shutdownNow();
+            }
+          } catch (RuntimeException e) {
+            logger.error("Discord login failed; the bridge is offline", e);
+          }
+        });
   }
 
   /**

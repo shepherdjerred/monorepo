@@ -75,12 +75,11 @@ public final class ChatService {
   public CompletableFuture<Void> load() {
     return store
         .loadAll(time.instant(), config.defaultChannelKey())
-        .thenAccept(
-            snapshot -> {
-              snapshot.profiles().forEach(profiles::putIfAbsent);
-              snapshot.mutes().forEach(mutes::putIfAbsent);
-              ready = true;
-            });
+        .thenAccept(snapshot -> {
+          snapshot.profiles().forEach(profiles::putIfAbsent);
+          snapshot.mutes().forEach(mutes::putIfAbsent);
+          ready = true;
+        });
   }
 
   /** Evicts an account after its durable chat state has been erased. */
@@ -186,13 +185,12 @@ public final class ChatService {
   public List<ChannelStatus> channels(Speaker speaker) {
     var profile = profile(speaker.id());
     return Arrays.stream(ChannelKey.values())
-        .map(
-            channel ->
-                new ChannelStatus(
-                    channel,
-                    access(speaker, channel),
-                    profile.focus() == channel,
-                    !profile.receives(channel)))
+        .map(channel ->
+            new ChannelStatus(
+                channel,
+                access(speaker, channel),
+                profile.focus() == channel,
+                !profile.receives(channel)))
         .toList();
   }
 
@@ -257,9 +255,8 @@ public final class ChatService {
   /** Lifts only the mute issued for this evidence, preserving any later staff action. */
   public boolean unmute(UUID player, String issuer, UUID evidence) {
     return activeMute(player)
-            .filter(
-                mute ->
-                    mute.issuer().equals(issuer) && mute.reason().endsWith(" evidence " + evidence))
+            .filter(mute ->
+                mute.issuer().equals(issuer) && mute.reason().endsWith(" evidence " + evidence))
             .isPresent()
         && unmute(player);
   }
@@ -530,12 +527,11 @@ public final class ChatService {
   private Resolution resolveMembers(Speaker speaker, ChannelKey channel) {
     return extensions
         .membership(channel)
-        .map(
-            membership ->
-                membership
-                    .members(speaker.id())
-                    .map(Resolution::granted)
-                    .orElseGet(() -> new Resolution(ChannelAccess.NOT_A_MEMBER, Set.of())))
+        .map(membership ->
+            membership
+                .members(speaker.id())
+                .map(Resolution::granted)
+                .orElseGet(() -> new Resolution(ChannelAccess.NOT_A_MEMBER, Set.of())))
         .orElseGet(() -> new Resolution(ChannelAccess.UNAVAILABLE, Set.of()));
   }
 

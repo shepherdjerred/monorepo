@@ -54,15 +54,14 @@ final class SqlPlayerDirectoryTest {
       players.recordJoin(RIOT, "RiotShielder", Instant.EPOCH).get(5, TimeUnit.SECONDS);
       players.recordJoin(OTHER, "Other", Instant.EPOCH).get(5, TimeUnit.SECONDS);
       database
-          .write(
-              dsl ->
-                  dsl.insertInto(
-                          org.jooq.impl.DSL.table("core_analytics_player"),
-                          org.jooq.impl.DSL.field("player_uuid"),
-                          org.jooq.impl.DSL.field("stage"),
-                          org.jooq.impl.DSL.field("first_seen"))
-                      .values(RIOT.toString(), "survival", 1L)
-                      .execute())
+          .write(dsl ->
+              dsl.insertInto(
+                      org.jooq.impl.DSL.table("core_analytics_player"),
+                      org.jooq.impl.DSL.field("player_uuid"),
+                      org.jooq.impl.DSL.field("stage"),
+                      org.jooq.impl.DSL.field("first_seen"))
+                  .values(RIOT.toString(), "survival", 1L)
+                  .execute())
           .get(5, TimeUnit.SECONDS);
 
       players.reset(RIOT).get(5, TimeUnit.SECONDS);

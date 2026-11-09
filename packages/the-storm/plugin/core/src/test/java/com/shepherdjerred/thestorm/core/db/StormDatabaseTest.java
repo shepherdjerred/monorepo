@@ -22,23 +22,21 @@ final class StormDatabaseTest {
       for (var amount = 1; amount <= 10; amount++) {
         var value = amount;
         database
-            .write(
-                dsl ->
-                    dsl.insertInto(table("ledger"), field("player"), field("amount"))
-                        .values("RiotShielder", value)
-                        .execute())
+            .write(dsl ->
+                dsl.insertInto(table("ledger"), field("player"), field("amount"))
+                    .values("RiotShielder", value)
+                    .execute())
             .get(5, TimeUnit.SECONDS);
       }
 
       var total =
           database
-              .read(
-                  dsl ->
-                      dsl.select(sum(field("amount", Integer.class)))
-                          .from(table("ledger"))
-                          .fetchSingle()
-                          .value1()
-                          .intValue())
+              .read(dsl ->
+                  dsl.select(sum(field("amount", Integer.class)))
+                      .from(table("ledger"))
+                      .fetchSingle()
+                      .value1()
+                      .intValue())
               .get(5, TimeUnit.SECONDS);
 
       assertThat(total).isEqualTo(55);
@@ -52,13 +50,12 @@ final class StormDatabaseTest {
       var release = new CountDownLatch(1);
 
       var slowWrite =
-          database.write(
-              dsl -> {
-                awaitQuietly(release);
-                return dsl.insertInto(table("ledger"), field("player"), field("amount"))
-                    .values("RiotShielder", 7)
-                    .execute();
-              });
+          database.write(dsl -> {
+            awaitQuietly(release);
+            return dsl.insertInto(table("ledger"), field("player"), field("amount"))
+                .values("RiotShielder", 7)
+                .execute();
+          });
       var count = database.read(dsl -> dsl.fetchCount(table("ledger")));
       release.countDown();
 
@@ -75,22 +72,20 @@ final class StormDatabaseTest {
       var releaseWrite = new CountDownLatch(1);
       var migrationStarted = new CountDownLatch(1);
       var write =
-          database.write(
-              dsl -> {
-                writeStarted.countDown();
-                awaitQuietly(releaseWrite);
-                return dsl.insertInto(table("ledger"), field("player"), field("amount"))
-                    .values("RiotShielder", 7)
-                    .execute();
-              });
+          database.write(dsl -> {
+            writeStarted.countDown();
+            awaitQuietly(releaseWrite);
+            return dsl.insertInto(table("ledger"), field("player"), field("amount"))
+                .values("RiotShielder", 7)
+                .execute();
+          });
       assertThat(writeStarted.await(5, TimeUnit.SECONDS)).isTrue();
 
       var migration =
-          CompletableFuture.runAsync(
-              () -> {
-                migrationStarted.countDown();
-                database.migrate("second", StormDatabaseTest.class.getClassLoader());
-              });
+          CompletableFuture.runAsync(() -> {
+            migrationStarted.countDown();
+            database.migrate("second", StormDatabaseTest.class.getClassLoader());
+          });
       try {
         assertThat(migrationStarted.await(5, TimeUnit.SECONDS)).isTrue();
         Thread.sleep(50);

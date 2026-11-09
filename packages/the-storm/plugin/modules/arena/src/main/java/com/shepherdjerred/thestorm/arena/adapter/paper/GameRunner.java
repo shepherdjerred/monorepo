@@ -336,12 +336,8 @@ final class GameRunner implements ArenaRunner {
     var activity = services.context().activity();
     game.members().stream()
         .filter(member -> !(member instanceof Member.Pending))
-        .filter(
-            member ->
-                previous
-                    .member(member.id())
-                    .filter(old -> !(old instanceof Member.Pending))
-                    .isEmpty())
+        .filter(member ->
+            previous.member(member.id()).filter(old -> !(old instanceof Member.Pending)).isEmpty())
         .forEach(member -> activity.joined(member.id()));
     if (!previous.phase().running() && game.phase().running()) {
       activity.started(game.fighters().stream().map(Member::id).toList());
@@ -487,13 +483,12 @@ final class GameRunner implements ArenaRunner {
     }
     arenaClass
         .effects()
-        .forEach(
-            (key, amplifier) ->
-                player.addPotionEffect(
-                    new PotionEffect(
-                        ItemFactory.effect(key).orElseThrow(),
-                        PotionEffect.INFINITE_DURATION,
-                        amplifier)));
+        .forEach((key, amplifier) ->
+            player.addPotionEffect(
+                new PotionEffect(
+                    ItemFactory.effect(key).orElseThrow(),
+                    PotionEffect.INFINITE_DURATION,
+                    amplifier)));
   }
 
   private void upgrade(Player player, String kit, int wave) {

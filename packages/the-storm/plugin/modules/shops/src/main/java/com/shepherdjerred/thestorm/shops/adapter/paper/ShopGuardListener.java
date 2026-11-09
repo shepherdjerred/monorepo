@@ -68,13 +68,12 @@ final class ShopGuardListener implements Listener {
       return;
     }
     refusal(event.getPlayer(), shopsHere, "container", false)
-        .ifPresent(
-            reason -> {
-              event.setUseInteractedBlock(Event.Result.DENY);
-              if (event.getHand() == EquipmentSlot.HAND) {
-                event.getPlayer().sendMessage(Replies.error(reason));
-              }
-            });
+        .ifPresent(reason -> {
+          event.setUseInteractedBlock(Event.Result.DENY);
+          if (event.getHand() == EquipmentSlot.HAND) {
+            event.getPlayer().sendMessage(Replies.error(reason));
+          }
+        });
   }
 
   /** Any other way a shop container's inventory opens. */
@@ -85,11 +84,10 @@ final class ShopGuardListener implements Listener {
       return;
     }
     refusal(player, shopsHere, "container", false)
-        .ifPresent(
-            reason -> {
-              event.setCancelled(true);
-              player.sendMessage(Replies.error(reason));
-            });
+        .ifPresent(reason -> {
+          event.setCancelled(true);
+          player.sendMessage(Replies.error(reason));
+        });
   }
 
   @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -257,13 +255,12 @@ final class ShopGuardListener implements Listener {
 
   private static String owners(List<SignShop> shopsHere) {
     return shopsHere.stream()
-        .map(
-            shop ->
-                switch (shop.owner()) {
-                  case ShopOwner.Player(_, var name) -> name;
-                  case ShopOwner.Town(_, var name) -> name;
-                  case ShopOwner.Admin(_) -> "the server";
-                })
+        .map(shop ->
+            switch (shop.owner()) {
+              case ShopOwner.Player(_, var name) -> name;
+              case ShopOwner.Town(_, var name) -> name;
+              case ShopOwner.Admin(_) -> "the server";
+            })
         .distinct()
         .reduce((a, b) -> a + " and " + b)
         .orElseThrow();

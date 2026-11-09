@@ -466,15 +466,13 @@ final class StargatePortals implements Listener {
     var chunk = event.getChunk();
     context
         .scheduler()
-        .runOnMainThread(
-            () ->
-                book.committed()
-                    .ifPresent(
-                        registry ->
-                            registry.gates().stream()
-                                .filter(gate -> gate.worldId().equals(chunk.getWorld().getUID()))
-                                .filter(gate -> touchesChunk(gate, chunk.getX(), chunk.getZ()))
-                                .forEach(this::recover)));
+        .runOnMainThread(() ->
+            book.committed()
+                .ifPresent(registry ->
+                    registry.gates().stream()
+                        .filter(gate -> gate.worldId().equals(chunk.getWorld().getUID()))
+                        .filter(gate -> touchesChunk(gate, chunk.getX(), chunk.getZ()))
+                        .forEach(this::recover)));
   }
 
   void reconcileLoaded() {
@@ -508,12 +506,11 @@ final class StargatePortals implements Listener {
     var registry = book.registry();
     var affected =
         registry.gates().stream()
-            .filter(
-                gate ->
-                    gate.ownerId().equals(player)
-                        || (registry.network(gate.networkId()).orElseThrow().access()
-                                instanceof NetworkAccess.Private(var owner, _)
-                            && owner.equals(player)))
+            .filter(gate ->
+                gate.ownerId().equals(player)
+                    || (registry.network(gate.networkId()).orElseThrow().access()
+                            instanceof NetworkAccess.Private(var owner, _)
+                        && owner.equals(player)))
             .toList();
     var chunks = new HashSet<WorldChunk>();
     for (var gate : affected) {

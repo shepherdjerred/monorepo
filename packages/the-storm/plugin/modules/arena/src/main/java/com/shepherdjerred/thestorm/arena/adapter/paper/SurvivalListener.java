@@ -64,17 +64,16 @@ final class SurvivalListener implements Listener {
     if (player == null || !(event.getEntity() instanceof LivingEntity target)) return;
     of(player)
         .filter(r -> r.world().isWaveMob(target))
-        .ifPresent(
-            r -> {
-              if (r.combat().scriptedDamage()) return;
-              var factor =
-                  event.getDamager() instanceof Projectile projectile
-                      ? r.combat().projectileMultiplier(projectile)
-                      : event.getDamager() instanceof Wolf wolf && r.world().isFriendlyWolf(wolf)
-                          ? r.talents().companionDamage(player.getUniqueId())
-                          : heldDamage(r, player);
-              event.setDamage(event.getDamage() * factor);
-            });
+        .ifPresent(r -> {
+          if (r.combat().scriptedDamage()) return;
+          var factor =
+              event.getDamager() instanceof Projectile projectile
+                  ? r.combat().projectileMultiplier(projectile)
+                  : event.getDamager() instanceof Wolf wolf && r.world().isFriendlyWolf(wolf)
+                      ? r.talents().companionDamage(player.getUniqueId())
+                      : heldDamage(r, player);
+          event.setDamage(event.getDamage() * factor);
+        });
   }
 
   private static double heldDamage(SurvivalRunner runner, Player player) {
@@ -84,22 +83,20 @@ final class SurvivalListener implements Listener {
   private void incoming(EntityDamageByEntityEvent event) {
     var source = damageSource(event.getDamager());
     enemy(source)
-        .ifPresent(
-            r -> {
-              if (r.combat().bossEntity(source) && !r.combat().boss().orElseThrow().striking()) {
-                event.setCancelled(true);
-              } else if (event.getDamager() instanceof Projectile
-                  && event.getEntity() instanceof Player) {
-                event.setDamage(r.combat().incoming(source, event.getDamage()));
-              }
-            });
+        .ifPresent(r -> {
+          if (r.combat().bossEntity(source) && !r.combat().boss().orElseThrow().striking()) {
+            event.setCancelled(true);
+          } else if (event.getDamager() instanceof Projectile
+              && event.getEntity() instanceof Player) {
+            event.setDamage(r.combat().incoming(source, event.getDamage()));
+          }
+        });
     if (event.getEntity() instanceof Player player && event.getDamager() instanceof LivingEntity) {
       of(player)
           .filter(r -> r.world().isWaveMob(source) && !r.combat().bossEntity(source))
-          .filter(
-              r ->
-                  r.game().player(player.getUniqueId()).orElseThrow().role()
-                      == com.shepherdjerred.thestorm.arena.domain.survival.SurvivalClass.FIGHTER)
+          .filter(r ->
+              r.game().player(player.getUniqueId()).orElseThrow().role()
+                  == com.shepherdjerred.thestorm.arena.domain.survival.SurvivalClass.FIGHTER)
           .ifPresent(_ -> event.setDamage(event.getDamage() * .9));
     }
   }
@@ -121,10 +118,9 @@ final class SurvivalListener implements Listener {
     if (event.getEntity().getShooter() instanceof LivingEntity shooter
         && !(shooter instanceof Player)) {
       enemy(shooter)
-          .ifPresent(
-              r -> {
-                if (!r.combat().shot(shooter)) event.setCancelled(true);
-              });
+          .ifPresent(r -> {
+            if (!r.combat().shot(shooter)) event.setCancelled(true);
+          });
     }
   }
 
@@ -164,37 +160,34 @@ final class SurvivalListener implements Listener {
   void damage(EntityDamageEvent event) {
     if (event.getEntity() instanceof Player player) {
       of(player)
-          .ifPresent(
-              runner -> {
-                if (runner.downed(player.getUniqueId())
-                    || !runner.isFighter(player.getUniqueId())) {
-                  event.setCancelled(true);
-                  return;
-                }
-                var armor =
-                    java.util.Arrays.stream(player.getInventory().getArmorContents())
-                        .filter(java.util.Objects::nonNull)
-                        .filter(runner.items()::equipment)
-                        .mapToInt(runner.items()::tier)
-                        .sum();
-                event.setDamage(event.getDamage() * (1 - Math.min(.2, armor * .02)));
-                var lethal = event.getFinalDamage() >= player.getHealth();
-                if (lethal) {
-                  event.setCancelled(true);
-                }
-                runner.hurt(player, event.getFinalDamage());
-              });
+          .ifPresent(runner -> {
+            if (runner.downed(player.getUniqueId()) || !runner.isFighter(player.getUniqueId())) {
+              event.setCancelled(true);
+              return;
+            }
+            var armor =
+                java.util.Arrays.stream(player.getInventory().getArmorContents())
+                    .filter(java.util.Objects::nonNull)
+                    .filter(runner.items()::equipment)
+                    .mapToInt(runner.items()::tier)
+                    .sum();
+            event.setDamage(event.getDamage() * (1 - Math.min(.2, armor * .02)));
+            var lethal = event.getFinalDamage() >= player.getHealth();
+            if (lethal) {
+              event.setCancelled(true);
+            }
+            runner.hurt(player, event.getFinalDamage());
+          });
     } else if (event.getEntity() instanceof LivingEntity enemy) {
       arenas.all().stream()
           .filter(SurvivalRunner.class::isInstance)
           .map(SurvivalRunner.class::cast)
           .filter(r -> r.world().owns(enemy))
-          .forEach(
-              r ->
-                  r.combat()
-                      .boss()
-                      .filter(b -> b.entity().equals(enemy))
-                      .ifPresent(b -> protectBoss(b, event, r.context().time().instant())));
+          .forEach(r ->
+              r.combat()
+                  .boss()
+                  .filter(b -> b.entity().equals(enemy))
+                  .ifPresent(b -> protectBoss(b, event, r.context().time().instant())));
     }
   }
 
@@ -234,32 +227,30 @@ final class SurvivalListener implements Listener {
         .filter(SurvivalRunner.class::isInstance)
         .map(SurvivalRunner.class::cast)
         .filter(r -> r.world().isWaveMob(event.getEntity()))
-        .forEach(
-            runner -> {
-              runner.drops().died(event.getEntity());
-              runner
-                  .combat()
-                  .died(
-                      event.getEntity(),
-                      runner.game().participants().stream()
-                          .map(p -> p.id())
-                          .collect(java.util.stream.Collectors.toUnmodifiableSet()));
-            });
+        .forEach(runner -> {
+          runner.drops().died(event.getEntity());
+          runner
+              .combat()
+              .died(
+                  event.getEntity(),
+                  runner.game().participants().stream()
+                      .map(p -> p.id())
+                      .collect(java.util.stream.Collectors.toUnmodifiableSet()));
+        });
   }
 
   @EventHandler(priority = EventPriority.HIGHEST)
   void move(PlayerMoveEvent event) {
     of(event.getPlayer())
         .filter(r -> r.downed(event.getPlayer().getUniqueId()))
-        .ifPresent(
-            _ -> {
-              if (event.hasChangedPosition()) {
-                var to = event.getFrom().clone();
-                to.setYaw(event.getTo().getYaw());
-                to.setPitch(event.getTo().getPitch());
-                event.setTo(to);
-              }
-            });
+        .ifPresent(_ -> {
+          if (event.hasChangedPosition()) {
+            var to = event.getFrom().clone();
+            to.setYaw(event.getTo().getYaw());
+            to.setPitch(event.getTo().getPitch());
+            event.setTo(to);
+          }
+        });
   }
 
   @EventHandler(priority = EventPriority.HIGHEST)
@@ -332,13 +323,12 @@ final class SurvivalListener implements Listener {
     if (runner
         .combat()
         .boss()
-        .filter(
-            b ->
-                b.objective(
-                    player,
-                    pos,
-                    runner.context().time().instant(),
-                    () -> runner.combat().hit(b.entity(), player)))
+        .filter(b ->
+            b.objective(
+                player,
+                pos,
+                runner.context().time().instant(),
+                () -> runner.combat().hit(b.entity(), player)))
         .isPresent()) {
       event.setCancelled(true);
       return;
@@ -346,36 +336,32 @@ final class SurvivalListener implements Listener {
     runner
         .map()
         .gate(pos)
-        .ifPresent(
-            zone -> {
-              event.setCancelled(true);
-              runner.actions().unlock(player, zone, pos);
-            });
+        .ifPresent(zone -> {
+          event.setCancelled(true);
+          runner.actions().unlock(player, zone, pos);
+        });
     runner
         .map()
         .station(pos)
-        .ifPresent(
-            station -> {
-              event.setCancelled(true);
-              runner.menus().open(player, station);
-            });
+        .ifPresent(station -> {
+          event.setCancelled(true);
+          runner.menus().open(player, station);
+        });
     runner
         .map()
         .resource(pos)
-        .ifPresent(
-            resource -> {
-              event.setCancelled(true);
-              if (player.isSneaking()) runner.menus().resource(player, resource);
-              else runner.actions().gather(player, resource);
-            });
+        .ifPresent(resource -> {
+          event.setCancelled(true);
+          if (player.isSneaking()) runner.menus().resource(player, resource);
+          else runner.actions().gather(player, resource);
+        });
     runner
         .map()
         .defense(pos)
-        .ifPresent(
-            defense -> {
-              event.setCancelled(true);
-              runner.actions().repair(player, defense);
-            });
+        .ifPresent(defense -> {
+          event.setCancelled(true);
+          runner.actions().repair(player, defense);
+        });
     if (runner.map().gate(pos).isEmpty()
         && runner.map().station(pos).isEmpty()
         && runner.map().resource(pos).isEmpty()
@@ -442,17 +428,16 @@ final class SurvivalListener implements Listener {
   void drag(InventoryDragEvent event) {
     if (event.getWhoClicked() instanceof Player player) {
       of(player)
-          .filter(
-              r ->
-                  ((r.menus().isMenu(event.getView().getTopInventory())
-                              || r.classMenus().isMenu(event.getView().getTopInventory()))
-                          && event.getRawSlots().stream()
-                              .anyMatch(slot -> slot < event.getView().getTopInventory().getSize()))
-                      || event
-                          .getRawSlots()
-                          .contains(event.getView().getTopInventory().getSize() + 27 + 8)
-                      || r.items().ability(event.getOldCursor())
-                      || r.downed(player.getUniqueId()))
+          .filter(r ->
+              ((r.menus().isMenu(event.getView().getTopInventory())
+                          || r.classMenus().isMenu(event.getView().getTopInventory()))
+                      && event.getRawSlots().stream()
+                          .anyMatch(slot -> slot < event.getView().getTopInventory().getSize()))
+                  || event
+                      .getRawSlots()
+                      .contains(event.getView().getTopInventory().getSize() + 27 + 8)
+                  || r.items().ability(event.getOldCursor())
+                  || r.downed(player.getUniqueId()))
           .ifPresent(_ -> event.setCancelled(true));
     }
   }
@@ -497,11 +482,10 @@ final class SurvivalListener implements Listener {
   @EventHandler(priority = EventPriority.MONITOR)
   void stopUsing(io.papermc.paper.event.player.PlayerStopUsingItemEvent event) {
     of(event.getPlayer())
-        .ifPresent(
-            runner -> {
-              runner.legendary().repeater().stop(event.getPlayer().getUniqueId());
-              runner.relics().release(event.getPlayer());
-            });
+        .ifPresent(runner -> {
+          runner.legendary().repeater().stop(event.getPlayer().getUniqueId());
+          runner.relics().release(event.getPlayer());
+        });
   }
 
   @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -520,10 +504,8 @@ final class SurvivalListener implements Listener {
   @EventHandler(priority = EventPriority.HIGHEST)
   void swap(org.bukkit.event.player.PlayerSwapHandItemsEvent event) {
     of(event.getPlayer())
-        .filter(
-            r ->
-                r.items().ability(event.getMainHandItem())
-                    || r.items().ability(event.getOffHandItem()))
+        .filter(r ->
+            r.items().ability(event.getMainHandItem()) || r.items().ability(event.getOffHandItem()))
         .ifPresent(_ -> event.setCancelled(true));
   }
 
@@ -541,12 +523,10 @@ final class SurvivalListener implements Listener {
       of(player)
           .filter(
               r -> !r.items().weaponsFit(player, java.util.List.of(event.getItem().getItemStack())))
-          .ifPresent(
-              _ -> {
-                event.setCancelled(true);
-                Texts.info(
-                    player, "Carry up to four weapons. Store one in your bank locker first.");
-              });
+          .ifPresent(_ -> {
+            event.setCancelled(true);
+            Texts.info(player, "Carry up to four weapons. Store one in your bank locker first.");
+          });
   }
 
   @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -563,28 +543,26 @@ final class SurvivalListener implements Listener {
         && event.getFinalDamage() == 0)
       of(player)
           .filter(r -> r.world().isWaveMob(damageSource(event.getDamager())))
-          .ifPresent(
-              r -> {
-                r.boons().block(player);
-                r.relics().block(player, event.getDamage());
-              });
+          .ifPresent(r -> {
+            r.boons().block(player);
+            r.relics().block(player, event.getDamage());
+          });
   }
 
   @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
   void shieldDisabled(io.papermc.paper.event.player.PlayerShieldDisableEvent event) {
     of(event.getPlayer())
-        .ifPresent(
-            r -> {
-              var player = event.getPlayer();
-              var held = player.getInventory().getItemInMainHand();
-              var shield =
-                  held.getType() == org.bukkit.Material.SHIELD
-                      ? held
-                      : player.getInventory().getItemInOffHand();
-              if (r.items().equipment(shield))
-                event.setCooldown(
-                    (int) Math.ceil(event.getCooldown() * (1 - .1 * r.items().tier(shield))));
-            });
+        .ifPresent(r -> {
+          var player = event.getPlayer();
+          var held = player.getInventory().getItemInMainHand();
+          var shield =
+              held.getType() == org.bukkit.Material.SHIELD
+                  ? held
+                  : player.getInventory().getItemInOffHand();
+          if (r.items().equipment(shield))
+            event.setCooldown(
+                (int) Math.ceil(event.getCooldown() * (1 - .1 * r.items().tier(shield))));
+        });
   }
 
   @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)

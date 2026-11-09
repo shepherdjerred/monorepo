@@ -29,16 +29,15 @@ final class Purge implements Spell {
   public Result<Effect, CastProblem> prepare(Player caster) {
     var blow = Harm.Blow.none().withDamage(settings.damage());
     return Aim.hostiles(tools, caster, settings.radius(), "monster nearby")
-        .map(
-            monsters ->
-                () -> {
-                  for (var monster : monsters) {
-                    if (tools.harm().strike(caster, monster, blow)) {
-                      tools.fx().burst(kind(), Magic.chest(monster), 10, 0.3);
-                    }
-                  }
-                  tools.fx().sound(kind(), Magic.at(caster));
-                  tools.fx().ring(kind(), Magic.at(caster), settings.radius());
-                });
+        .map(monsters ->
+            () -> {
+              for (var monster : monsters) {
+                if (tools.harm().strike(caster, monster, blow)) {
+                  tools.fx().burst(kind(), Magic.chest(monster), 10, 0.3);
+                }
+              }
+              tools.fx().sound(kind(), Magic.at(caster));
+              tools.fx().ring(kind(), Magic.at(caster), settings.radius());
+            });
   }
 }

@@ -136,13 +136,12 @@ public final class WrittenContentGate implements Listener {
     var matches =
         java.util.stream.IntStream.concat(
                 java.util.stream.IntStream.range(0, 9), java.util.stream.IntStream.of(40))
-            .filter(
-                slot -> {
-                  var item = player.getInventory().getItem(slot);
-                  return item != null
-                      && item.getType() == Material.WRITABLE_BOOK
-                      && java.util.Objects.equals(item.getItemMeta(), previous);
-                })
+            .filter(slot -> {
+              var item = player.getInventory().getItem(slot);
+              return item != null
+                  && item.getType() == Material.WRITABLE_BOOK
+                  && java.util.Objects.equals(item.getItemMeta(), previous);
+            })
             .toArray();
     return matches.length == 1 ? matches[0] : -1;
   }

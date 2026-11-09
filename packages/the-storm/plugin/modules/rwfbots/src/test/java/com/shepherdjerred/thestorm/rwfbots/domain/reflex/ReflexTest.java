@@ -437,9 +437,8 @@ final class ReflexTest {
             context(levers(1)),
             random);
     assertThat(first.commands())
-        .noneMatch(
-            command ->
-                command instanceof BodyCommand.Swing || command instanceof BodyCommand.Attack);
+        .noneMatch(command ->
+            command instanceof BodyCommand.Swing || command instanceof BodyCommand.Attack);
     target = target.withPos(new Vec3(8, 1, 5.5));
     var contact =
         Reflex.tick(

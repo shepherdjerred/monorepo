@@ -400,11 +400,10 @@ final class RwfKitMenuTest {
     fund(harness, alice, 800);
     harness
         .database
-        .write(
-            dsl ->
-                dsl.execute(
-                    "CREATE TRIGGER reject_kit_grant BEFORE INSERT ON rwf_kit_owned "
-                        + "BEGIN SELECT RAISE(ABORT, 'grant unavailable'); END"))
+        .write(dsl ->
+            dsl.execute(
+                "CREATE TRIGGER reject_kit_grant BEFORE INSERT ON rwf_kit_owned "
+                    + "BEGIN SELECT RAISE(ABORT, 'grant unavailable'); END"))
         .join();
     alice.performCommand("rwf buy berserker");
     harness.until(() -> said(alice, "Berserker is still being completed"));
@@ -432,10 +431,9 @@ final class RwfKitMenuTest {
     harness.until(() -> said(alice, "You have 42 credits"));
 
     assertThat(heard)
-        .anyMatch(
-            m ->
-                m.contains("Free this week: ")
-                    && free.stream().allMatch(kit -> m.contains(kit.name())));
+        .anyMatch(m ->
+            m.contains("Free this week: ")
+                && free.stream().allMatch(kit -> m.contains(kit.name())));
   }
 
   @Test
@@ -446,33 +444,29 @@ final class RwfKitMenuTest {
     var free = KitRotation.of(KitRotation.Week.of(Samples.T0), KitBook.ALL);
     var tag = new org.bukkit.NamespacedKey("thestorm", "rwf_lobby");
 
-    harness.until(
-        () ->
-            harness.lobbyWorld.getEntitiesByClass(org.bukkit.entity.ItemDisplay.class).stream()
-                .anyMatch(
-                    display ->
-                        "rotation-item:1"
-                            .equals(
-                                display
-                                    .getPersistentDataContainer()
-                                    .get(tag, org.bukkit.persistence.PersistentDataType.STRING))));
+    harness.until(() ->
+        harness.lobbyWorld.getEntitiesByClass(org.bukkit.entity.ItemDisplay.class).stream()
+            .anyMatch(display ->
+                "rotation-item:1"
+                    .equals(
+                        display
+                            .getPersistentDataContainer()
+                            .get(tag, org.bukkit.persistence.PersistentDataType.STRING))));
 
     // The fixture's wall has two slots: the first two free kits fill them, in order.
     for (var slot = 1; slot <= 2; slot++) {
       var part = "rotation-label:" + slot;
       var kit = free.get(slot - 1);
       assertThat(harness.lobbyWorld.getEntitiesByClass(org.bukkit.entity.TextDisplay.class))
-          .filteredOn(
-              display ->
-                  part.equals(
-                      display
-                          .getPersistentDataContainer()
-                          .get(tag, org.bukkit.persistence.PersistentDataType.STRING)))
+          .filteredOn(display ->
+              part.equals(
+                  display
+                      .getPersistentDataContainer()
+                      .get(tag, org.bukkit.persistence.PersistentDataType.STRING)))
           .singleElement()
-          .satisfies(
-              display ->
-                  assertThat(PlainTextComponentSerializer.plainText().serialize(display.text()))
-                      .isEqualTo(kit.name()));
+          .satisfies(display ->
+              assertThat(PlainTextComponentSerializer.plainText().serialize(display.text()))
+                  .isEqualTo(kit.name()));
     }
   }
 
@@ -497,11 +491,10 @@ final class RwfKitMenuTest {
     var tag = new org.bukkit.NamespacedKey("thestorm", "rwf_lobby");
     assertThat(
             harness.lobbyWorld.getEntities().stream()
-                .map(
-                    entity ->
-                        entity
-                            .getPersistentDataContainer()
-                            .get(tag, org.bukkit.persistence.PersistentDataType.STRING))
+                .map(entity ->
+                    entity
+                        .getPersistentDataContainer()
+                        .get(tag, org.bukkit.persistence.PersistentDataType.STRING))
                 .filter(part -> part != null && part.startsWith("alcove-"))
                 .toList())
         .containsExactlyInAnyOrder("alcove-item:trooper", "alcove-label:trooper");

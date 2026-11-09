@@ -149,12 +149,11 @@ final class MatchAnalyticsTest {
     assertThat(recording.games)
         .filteredOn(entry -> entry.getKey() == ProductAnalytics.GameEvent.RWF_MATCH_COMPLETED)
         .singleElement()
-        .satisfies(
-            entry ->
-                assertThat(entry.getValue())
-                    .containsEntry("result", "win")
-                    .containsEntry("duration_s", 75L)
-                    .containsEntry("kills", 1));
+        .satisfies(entry ->
+            assertThat(entry.getValue())
+                .containsEntry("result", "win")
+                .containsEntry("duration_s", 75L)
+                .containsEntry("kills", 1));
   }
 
   @ParameterizedTest
@@ -179,15 +178,14 @@ final class MatchAnalyticsTest {
     assertThat(recording.games)
         .filteredOn(entry -> entry.getKey() == ProductAnalytics.GameEvent.RWF_MATCH_COMPLETED)
         .singleElement()
-        .satisfies(
-            entry ->
-                assertThat(entry.getValue())
-                    .containsEntry("result", stopped ? "stopped" : "loss")
-                    .containsEntry("kit", "longbow")
-                    .containsEntry("humans", 1L)
-                    .containsEntry("bots", stopped ? 2L : 1L)
-                    .containsEntry("duration_s", stopped ? 75L : 30L)
-                    .containsEntry("survived", false));
+        .satisfies(entry ->
+            assertThat(entry.getValue())
+                .containsEntry("result", stopped ? "stopped" : "loss")
+                .containsEntry("kit", "longbow")
+                .containsEntry("humans", 1L)
+                .containsEntry("bots", stopped ? 2L : 1L)
+                .containsEntry("duration_s", stopped ? 75L : 30L)
+                .containsEntry("survived", false));
   }
 
   private static RwfMatch start(RwfAnalytics events) {
@@ -248,16 +246,15 @@ final class MatchAnalyticsTest {
         Optional.empty(),
         List.of(),
         roster.stream()
-            .map(
-                id ->
-                    new MatchSnapshot.CombatantView(
-                        id,
-                        "Player",
-                        Optional.empty(),
-                        Optional.empty(),
-                        true,
-                        false,
-                        com.shepherdjerred.thestorm.rwf.domain.match.Score.ZERO))
+            .map(id ->
+                new MatchSnapshot.CombatantView(
+                    id,
+                    "Player",
+                    Optional.empty(),
+                    Optional.empty(),
+                    true,
+                    false,
+                    com.shepherdjerred.thestorm.rwf.domain.match.Score.ZERO))
             .toList(),
         List.of(),
         Optional.empty(),

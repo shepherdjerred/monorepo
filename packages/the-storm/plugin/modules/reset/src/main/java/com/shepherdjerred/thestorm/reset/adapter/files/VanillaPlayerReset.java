@@ -44,27 +44,25 @@ public final class VanillaPlayerReset {
   /** Removes the target's files from the supplied world directories. */
   public CompletableFuture<Void> erase(java.util.List<Path> worlds, UUID player) {
     var paths = java.util.List.copyOf(worlds);
-    return compute.submit(
-        () -> {
-          for (var world : paths) {
-            erase(world, player);
-          }
-          return null;
-        });
+    return compute.submit(() -> {
+      for (var world : paths) {
+        erase(world, player);
+      }
+      return null;
+    });
   }
 
   /** Checks on the compute pool that no vanilla player files remain. */
   public CompletableFuture<Boolean> missing(UUID player) {
     var paths = java.util.List.copyOf(worlds.get());
-    return compute.submit(
-        () -> {
-          for (var world : paths) {
-            if (!missing(world, player)) {
-              return false;
-            }
-          }
-          return true;
-        });
+    return compute.submit(() -> {
+      for (var world : paths) {
+        if (!missing(world, player)) {
+          return false;
+        }
+      }
+      return true;
+    });
   }
 
   private static boolean missing(Path world, UUID player) {

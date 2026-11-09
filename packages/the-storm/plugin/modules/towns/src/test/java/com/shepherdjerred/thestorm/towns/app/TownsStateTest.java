@@ -101,10 +101,8 @@ final class TownsStateTest {
     assertThatThrownBy(
             () -> state.replaceTown(Fixtures.townA().withMember(OTHER_TOWN_OWNER, TownRole.MEMBER)))
         .isInstanceOf(IllegalStateException.class);
-    assertThatThrownBy(
-            () ->
-                state.replaceTown(
-                    Town.found(UUID.randomUUID(), "Nowhere", Fixtures.FOUNDED, NOMAD)))
+    assertThatThrownBy(() ->
+            state.replaceTown(Town.found(UUID.randomUUID(), "Nowhere", Fixtures.FOUNDED, NOMAD)))
         .isInstanceOf(IllegalStateException.class);
   }
 

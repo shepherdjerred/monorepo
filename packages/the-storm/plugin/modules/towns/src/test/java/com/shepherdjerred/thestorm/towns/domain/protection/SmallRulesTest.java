@@ -54,11 +54,10 @@ final class SmallRulesTest {
     var opening =
         Arrays.stream(Action.values())
             .map(OutsiderAccess::opening)
-            .flatMap(
-                open ->
-                    open instanceof OutsiderAccess.Opening.ByFlag(var flag)
-                        ? java.util.stream.Stream.of(flag)
-                        : java.util.stream.Stream.empty())
+            .flatMap(open ->
+                open instanceof OutsiderAccess.Opening.ByFlag(var flag)
+                    ? java.util.stream.Stream.of(flag)
+                    : java.util.stream.Stream.empty())
             .distinct()
             .toList();
     assertThat(opening)

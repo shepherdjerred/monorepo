@@ -54,11 +54,10 @@ final class PaperLoadouts {
     var player = body.orElseThrow();
     var inventory = player.getInventory();
     return loadout.kitItems().stream()
-        .filter(
-            item -> {
-              var stack = inventory.getItem(item.slot());
-              return stack != null && !stack.isEmpty() && !player.hasCooldown(stack);
-            })
+        .filter(item -> {
+          var stack = inventory.getItem(item.slot());
+          return stack != null && !stack.isEmpty() && !player.hasCooldown(stack);
+        })
         .toList();
   }
 

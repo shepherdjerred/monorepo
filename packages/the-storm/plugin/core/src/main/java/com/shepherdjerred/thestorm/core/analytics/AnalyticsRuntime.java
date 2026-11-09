@@ -113,10 +113,8 @@ public final class AnalyticsRuntime implements ProductAnalytics, AutoCloseable {
 
   private void observe(CompletableFuture<?> future, String operation) {
     var _ =
-        future.whenComplete(
-            (done, failure) -> {
-              if (failure != null)
-                logger.error("Product analytics could not {}", operation, failure);
-            });
+        future.whenComplete((done, failure) -> {
+          if (failure != null) logger.error("Product analytics could not {}", operation, failure);
+        });
   }
 }

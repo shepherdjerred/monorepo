@@ -43,15 +43,13 @@ class BridgeConfigTest {
 
   @Test
   void refusesInvalidPorts() {
-    assertThatThrownBy(
-            () ->
-                BridgeConfig.fromEnv(
-                    Map.of(BridgeConfig.TOKEN_ENV, TOKEN, BridgeConfig.PORT_ENV, "http")))
+    assertThatThrownBy(() ->
+            BridgeConfig.fromEnv(
+                Map.of(BridgeConfig.TOKEN_ENV, TOKEN, BridgeConfig.PORT_ENV, "http")))
         .isInstanceOf(IllegalStateException.class);
-    assertThatThrownBy(
-            () ->
-                BridgeConfig.fromEnv(
-                    Map.of(BridgeConfig.TOKEN_ENV, TOKEN, BridgeConfig.PORT_ENV, "70000")))
+    assertThatThrownBy(() ->
+            BridgeConfig.fromEnv(
+                Map.of(BridgeConfig.TOKEN_ENV, TOKEN, BridgeConfig.PORT_ENV, "70000")))
         .isInstanceOf(IllegalStateException.class);
   }
 }

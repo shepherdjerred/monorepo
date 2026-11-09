@@ -244,10 +244,9 @@ final class SurvivalRunner implements ArenaRunner {
   public Optional<PublicGameDirectory.Game> publicGame() {
     var players =
         game.players().stream()
-            .filter(
-                player ->
-                    player.status() != Survivor.Status.JOINING
-                        && player.status() != Survivor.Status.SPECTATOR)
+            .filter(player ->
+                player.status() != Survivor.Status.JOINING
+                    && player.status() != Survivor.Status.SPECTATOR)
             .map(Survivor::id)
             .toList();
     if (players.isEmpty()) return Optional.empty();
@@ -533,10 +532,9 @@ final class SurvivalRunner implements ArenaRunner {
     var _ =
         context()
             .compute()
-            .submit(
-                () ->
-                    com.shepherdjerred.thestorm.arena.domain.survival.SurvivalBlueprint.blocks(
-                        map.content()))
+            .submit(() ->
+                com.shepherdjerred.thestorm.arena.domain.survival.SurvivalBlueprint.blocks(
+                    map.content()))
             .whenCompleteAsync(
                 (blueprint, failure) -> {
                   if (startup.isDone()) {
@@ -635,11 +633,10 @@ final class SurvivalRunner implements ArenaRunner {
     game.expire(context().time().instant());
     before.stream()
         .filter(p -> p.status() == Survivor.Status.DOWNED)
-        .filter(
-            p ->
-                game.player(p.id())
-                    .filter(next -> next.status() == Survivor.Status.WAITING)
-                    .isPresent())
+        .filter(p ->
+            game.player(p.id())
+                .filter(next -> next.status() == Survivor.Status.WAITING)
+                .isPresent())
         .forEach(p -> waiting(p.id()));
     return before;
   }
@@ -727,15 +724,13 @@ final class SurvivalRunner implements ArenaRunner {
       var id = rescuer.getUniqueId();
       var target =
           online().stream()
-              .filter(
-                  p ->
-                      game.player(p.getUniqueId())
-                          .filter(s -> s.status() == Survivor.Status.DOWNED)
-                          .isPresent())
-              .filter(
-                  p ->
-                      Places.at(p).distanceSquared(Places.at(rescuer)) <= 9
-                          && rescuer.hasLineOfSight(p))
+              .filter(p ->
+                  game.player(p.getUniqueId())
+                      .filter(s -> s.status() == Survivor.Status.DOWNED)
+                      .isPresent())
+              .filter(p ->
+                  Places.at(p).distanceSquared(Places.at(rescuer)) <= 9
+                      && rescuer.hasLineOfSight(p))
               .findFirst();
       if (!rescuer.isSneaking() || target.isEmpty()) {
         revival.interrupt(id);

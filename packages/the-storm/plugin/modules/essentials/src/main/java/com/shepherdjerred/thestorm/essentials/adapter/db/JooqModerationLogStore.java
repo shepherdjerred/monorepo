@@ -26,44 +26,41 @@ public final class JooqModerationLogStore implements ModerationLogStore {
   @Override
   public CompletableFuture<Void> append(AuditEntry entry) {
     return database
-        .write(
-            dsl -> {
-              dsl.insertInto(ESSENTIALS_MODERATION_LOG)
-                  .set(ESSENTIALS_MODERATION_LOG.TARGET, entry.target().toString())
-                  .set(ESSENTIALS_MODERATION_LOG.ACTION, entry.action().id())
-                  .set(
-                      ESSENTIALS_MODERATION_LOG.ACTOR,
-                      entry.actor().uuid().map(UUID::toString).orElse(null))
-                  .set(ESSENTIALS_MODERATION_LOG.ACTOR_NAME, entry.actor().name())
-                  .set(ESSENTIALS_MODERATION_LOG.REASON, entry.reason())
-                  .set(ESSENTIALS_MODERATION_LOG.AT, entry.at().toEpochMilli())
-                  .set(
-                      ESSENTIALS_MODERATION_LOG.EXPIRES_AT,
-                      entry.expiresAt().map(Instant::toEpochMilli).orElse(null))
-                  .execute();
-              return true;
-            })
+        .write(dsl -> {
+          dsl.insertInto(ESSENTIALS_MODERATION_LOG)
+              .set(ESSENTIALS_MODERATION_LOG.TARGET, entry.target().toString())
+              .set(ESSENTIALS_MODERATION_LOG.ACTION, entry.action().id())
+              .set(
+                  ESSENTIALS_MODERATION_LOG.ACTOR,
+                  entry.actor().uuid().map(UUID::toString).orElse(null))
+              .set(ESSENTIALS_MODERATION_LOG.ACTOR_NAME, entry.actor().name())
+              .set(ESSENTIALS_MODERATION_LOG.REASON, entry.reason())
+              .set(ESSENTIALS_MODERATION_LOG.AT, entry.at().toEpochMilli())
+              .set(
+                  ESSENTIALS_MODERATION_LOG.EXPIRES_AT,
+                  entry.expiresAt().map(Instant::toEpochMilli).orElse(null))
+              .execute();
+          return true;
+        })
         .thenAccept(done -> {});
   }
 
   @Override
   public CompletableFuture<List<AuditEntry>> all() {
-    return database.read(
-        dsl ->
-            dsl.selectFrom(ESSENTIALS_MODERATION_LOG)
-                .orderBy(ESSENTIALS_MODERATION_LOG.ID)
-                .fetch(JooqModerationLogStore::toEntry));
+    return database.read(dsl ->
+        dsl.selectFrom(ESSENTIALS_MODERATION_LOG)
+            .orderBy(ESSENTIALS_MODERATION_LOG.ID)
+            .fetch(JooqModerationLogStore::toEntry));
   }
 
   @Override
   public CompletableFuture<List<AuditEntry>> history(UUID target, int limit) {
-    return database.read(
-        dsl ->
-            dsl.selectFrom(ESSENTIALS_MODERATION_LOG)
-                .where(ESSENTIALS_MODERATION_LOG.TARGET.eq(target.toString()))
-                .orderBy(ESSENTIALS_MODERATION_LOG.ID.desc())
-                .limit(limit)
-                .fetch(JooqModerationLogStore::toEntry));
+    return database.read(dsl ->
+        dsl.selectFrom(ESSENTIALS_MODERATION_LOG)
+            .where(ESSENTIALS_MODERATION_LOG.TARGET.eq(target.toString()))
+            .orderBy(ESSENTIALS_MODERATION_LOG.ID.desc())
+            .limit(limit)
+            .fetch(JooqModerationLogStore::toEntry));
   }
 
   private static AuditEntry toEntry(EssentialsModerationLogRecord row) {

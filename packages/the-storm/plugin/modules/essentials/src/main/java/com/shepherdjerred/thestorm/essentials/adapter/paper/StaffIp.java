@@ -24,9 +24,8 @@ final class StaffIp {
                 tools
                     .state
                     .find("ip-ban", address, StaffState.IpBan.class)
-                    .filter(
-                        ban ->
-                            ban.active() && tools.context.time().instant().isBefore(ban.expires()))
+                    .filter(ban ->
+                        ban.active() && tools.context.time().instant().isBefore(ban.expires()))
                     .map(ban -> "IP banned: " + ban.reason()));
   }
 
@@ -62,14 +61,11 @@ final class StaffIp {
   private void ban(StaffCommands.Request request, boolean temporary) {
     var literal = ForwardedClients.publicAddress(request.word(0));
     var address =
-        literal.orElseGet(
-            () ->
-                clients
-                    .verified(tools.player(request.actor(), request.word(0)).getUniqueId())
-                    .orElseThrow(
-                        () ->
-                            new IllegalArgumentException(
-                                "That player has no verified public client IP.")));
+        literal.orElseGet(() ->
+            clients
+                .verified(tools.player(request.actor(), request.word(0)).getUniqueId())
+                .orElseThrow(() ->
+                    new IllegalArgumentException("That player has no verified public client IP.")));
     var expires =
         temporary ? tools.context.time().instant().plus(duration(request.word(1))) : Instant.MAX;
     int reasonIndex = temporary ? 2 : 1;

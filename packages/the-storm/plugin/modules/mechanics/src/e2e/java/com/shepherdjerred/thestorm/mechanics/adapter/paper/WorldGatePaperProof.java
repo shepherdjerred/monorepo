@@ -373,13 +373,12 @@ public final class WorldGatePaperProof {
             ignored ->
                 store
                     .deleteEmptyNetwork(network.id())
-                    .handle(
-                        (removed, failure) -> {
-                          require(
-                              failure != null,
-                              "a rebuildable index cannot hide existing world gates during cleanup");
-                          return null;
-                        }),
+                    .handle((removed, failure) -> {
+                      require(
+                          failure != null,
+                          "a rebuildable index cannot hide existing world gates during cleanup");
+                      return null;
+                    }),
             context.scheduler().mainThread())
         .thenComposeAsync(ignored -> store.createNetwork(capture), context.scheduler().mainThread())
         .thenComposeAsync(

@@ -106,10 +106,8 @@ final class BundleHoldings implements Holdings {
         inventory.get().orElseThrow(() -> new IllegalStateException("bundle inventory is gone"));
     var changed =
         plan(requireNonNull(live.getStorageContents(), "storage contents"), quantity, adding)
-            .orElseThrow(
-                () ->
-                    new IllegalStateException(
-                        "the complete shop bundle does not fit or is not held"));
+            .orElseThrow(() ->
+                new IllegalStateException("the complete shop bundle does not fit or is not held"));
     live.setStorageContents(changed);
   }
 
@@ -136,12 +134,10 @@ final class BundleHoldings implements Holdings {
 
   private static List<Slot> slots(@Nullable ItemStack[] contents, ItemStack template) {
     return Arrays.stream(contents)
-        .<Slot>map(
-            item -> {
-              if (item == null || item.getType().isAir() || item.getAmount() < 1)
-                return Slot.empty();
-              return template.isSimilar(item) ? Slot.same(item.getAmount()) : Slot.other();
-            })
+        .<Slot>map(item -> {
+          if (item == null || item.getType().isAir() || item.getAmount() < 1) return Slot.empty();
+          return template.isSimilar(item) ? Slot.same(item.getAmount()) : Slot.other();
+        })
         .toList();
   }
 }

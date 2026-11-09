@@ -100,14 +100,11 @@ final class Standings {
         draft
             .damage
             .lastAttack(victim)
-            .filter(
-                hit ->
-                    vitals
-                        .map(
-                            v ->
-                                !KillCredit.hit(hit.at())
-                                    .pruned(now, v.maxHealth() - v.health(), true))
-                        .orElse(true))
+            .filter(hit ->
+                vitals
+                    .map(v ->
+                        !KillCredit.hit(hit.at()).pruned(now, v.maxHealth() - v.health(), true))
+                    .orElse(true))
             .flatMap(DamageLog.Entry::attacker);
     // Red Warfare turned death messages off while a bomb killed its team.
     return credit(
@@ -132,43 +129,38 @@ final class Standings {
     var shares = draft.damage.responsibility(victimId);
     var killer =
         seen.killer()
-            .or(
-                () ->
-                    witnessed
-                        ? draft.damage.lastAttack(victimId).flatMap(DamageLog.Entry::attacker)
-                        : Optional.empty())
+            .or(() ->
+                witnessed
+                    ? draft.damage.lastAttack(victimId).flatMap(DamageLog.Entry::attacker)
+                    : Optional.empty())
             .filter(id -> !id.equals(victimId))
             .filter(id -> draft.member(id).isPresent());
     var assists = new LinkedHashMap<CombatantId, Double>();
-    shares.forEach(
-        (id, share) -> {
-          if (!id.equals(victimId)
-              && killer.filter(id::equals).isEmpty()
-              && share > 0
-              && draft.member(id).isPresent()) {
-            assists.put(id, share);
-          }
-        });
-    killer.ifPresent(
-        id -> {
-          var by = draft.member(id).orElseThrow();
-          scored(draft, by, by.score().kill());
-          draft.effect(new MatchEffect.RecordStat(id, "Kills"));
-          if (shares.getOrDefault(id, 0.0) <= DamageLog.STOLEN_SHARE && shares.containsKey(id)) {
-            draft.tell(id, Notice.of(NoticeKind.STOLEN_KILL));
-          }
-        });
-    assists.forEach(
-        (id, share) -> {
-          var by = draft.member(id).orElseThrow();
-          var counts = share > DamageLog.STOLEN_SHARE && share < 1;
-          scored(draft, by, by.score().assist(share, counts));
-          if (counts) {
-            draft.tell(
-                id,
-                Notice.of(NoticeKind.KILL_ASSIST, "share", tenths(Math.floor(share * 10) / 10)));
-          }
-        });
+    shares.forEach((id, share) -> {
+      if (!id.equals(victimId)
+          && killer.filter(id::equals).isEmpty()
+          && share > 0
+          && draft.member(id).isPresent()) {
+        assists.put(id, share);
+      }
+    });
+    killer.ifPresent(id -> {
+      var by = draft.member(id).orElseThrow();
+      scored(draft, by, by.score().kill());
+      draft.effect(new MatchEffect.RecordStat(id, "Kills"));
+      if (shares.getOrDefault(id, 0.0) <= DamageLog.STOLEN_SHARE && shares.containsKey(id)) {
+        draft.tell(id, Notice.of(NoticeKind.STOLEN_KILL));
+      }
+    });
+    assists.forEach((id, share) -> {
+      var by = draft.member(id).orElseThrow();
+      var counts = share > DamageLog.STOLEN_SHARE && share < 1;
+      scored(draft, by, by.score().assist(share, counts));
+      if (counts) {
+        draft.tell(
+            id, Notice.of(NoticeKind.KILL_ASSIST, "share", tenths(Math.floor(share * 10) / 10)));
+      }
+    });
     if (killer.isPresent() && killerHealth.isPresent()) {
       draft.tell(
           victimId,

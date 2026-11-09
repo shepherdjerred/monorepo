@@ -18,16 +18,15 @@ public final class JooqPlayerReset {
   public CompletableFuture<Void> reset(UUID player) {
     var id = player.toString();
     return database
-        .write(
-            dsl ->
-                dsl.deleteFrom(AGENT_DECISION)
-                    .where(
-                        AGENT_DECISION
-                            .PLAYER
-                            .eq(id)
-                            .or(AGENT_DECISION.OVERTURNED_BY.eq(id))
-                            .or(AGENT_DECISION.ENDORSED_BY.eq(id)))
-                    .execute())
+        .write(dsl ->
+            dsl.deleteFrom(AGENT_DECISION)
+                .where(
+                    AGENT_DECISION
+                        .PLAYER
+                        .eq(id)
+                        .or(AGENT_DECISION.OVERTURNED_BY.eq(id))
+                        .or(AGENT_DECISION.ENDORSED_BY.eq(id)))
+                .execute())
         .thenAccept(ignored -> {});
   }
 }

@@ -142,10 +142,9 @@ final class ClientSnapshot {
     var now = Util.getMillis();
     var fade = Util.toMillis(client.options.chunkSectionFadeInTime().get());
     return sections.stream()
-        .allMatch(
-            section ->
-                !CompiledSectionMesh.UNCOMPILED.equals(section.getSectionMesh())
-                    && section.getVisibility(now, fade) >= 1.0f);
+        .allMatch(section ->
+            !CompiledSectionMesh.UNCOMPILED.equals(section.getSectionMesh())
+                && section.getVisibility(now, fade) >= 1.0f);
   }
 
   private static Item item(int slot, ItemStack stack) {

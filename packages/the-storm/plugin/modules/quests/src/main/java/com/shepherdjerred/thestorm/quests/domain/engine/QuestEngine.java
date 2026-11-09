@@ -115,10 +115,9 @@ public final class QuestEngine {
     return catalog
         .require(active.quest())
         .stage(active.stage())
-        .orElseThrow(
-            () ->
-                new IllegalStateException(
-                    "quest " + active.quest() + " has no stage " + active.stage()));
+        .orElseThrow(() ->
+            new IllegalStateException(
+                "quest " + active.quest() + " has no stage " + active.stage()));
   }
 
   // ---- player operations ---------------------------------------------------------------------

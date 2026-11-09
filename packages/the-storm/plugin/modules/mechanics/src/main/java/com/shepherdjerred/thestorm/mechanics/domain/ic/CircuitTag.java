@@ -66,16 +66,15 @@ public record CircuitTag(Kind kind, boolean selfTriggered) {
           case "MC1253" -> Optional.of(Kind.FIREWORK_SHOW);
           default -> Optional.<Kind>empty();
         };
-    return kind.map(
-        found ->
-            new CircuitTag(
-                found,
-                found == Kind.CLOCK
-                    || found == Kind.FIREWORK_SHOW
-                    || (found != Kind.INVERTER
-                        && found != Kind.AND
-                        && found != Kind.TRANSMITTER
-                        && found != Kind.FIREWORK_SHOW
-                        && match.group(2) != null)));
+    return kind.map(found ->
+        new CircuitTag(
+            found,
+            found == Kind.CLOCK
+                || found == Kind.FIREWORK_SHOW
+                || (found != Kind.INVERTER
+                    && found != Kind.AND
+                    && found != Kind.TRANSMITTER
+                    && found != Kind.FIREWORK_SHOW
+                    && match.group(2) != null)));
   }
 }

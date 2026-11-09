@@ -23,22 +23,19 @@ public final class JooqPlayerReset {
   public CompletableFuture<Void> reset(UUID player) {
     var id = player.toString();
     return database
-        .write(
-            dsl -> {
-              dsl.deleteFrom(CHAT_FOCUS).where(CHAT_FOCUS.PLAYER.eq(id)).execute();
-              dsl.deleteFrom(CHAT_HIDDEN_CHANNEL)
-                  .where(CHAT_HIDDEN_CHANNEL.PLAYER.eq(id))
-                  .execute();
-              dsl.deleteFrom(CHAT_IGNORE)
-                  .where(CHAT_IGNORE.PLAYER.eq(id).or(CHAT_IGNORE.IGNORED.eq(id)))
-                  .execute();
-              dsl.deleteFrom(CHAT_MUTE).where(CHAT_MUTE.PLAYER.eq(id)).execute();
-              dsl.deleteFrom(CHAT_IDENTITY).where(CHAT_IDENTITY.PLAYER.eq(id)).execute();
-              dsl.deleteFrom(CHAT_IDENTITY_AUDIT)
-                  .where(CHAT_IDENTITY_AUDIT.ACTOR.eq(id).or(CHAT_IDENTITY_AUDIT.TARGET.eq(id)))
-                  .execute();
-              return true;
-            })
+        .write(dsl -> {
+          dsl.deleteFrom(CHAT_FOCUS).where(CHAT_FOCUS.PLAYER.eq(id)).execute();
+          dsl.deleteFrom(CHAT_HIDDEN_CHANNEL).where(CHAT_HIDDEN_CHANNEL.PLAYER.eq(id)).execute();
+          dsl.deleteFrom(CHAT_IGNORE)
+              .where(CHAT_IGNORE.PLAYER.eq(id).or(CHAT_IGNORE.IGNORED.eq(id)))
+              .execute();
+          dsl.deleteFrom(CHAT_MUTE).where(CHAT_MUTE.PLAYER.eq(id)).execute();
+          dsl.deleteFrom(CHAT_IDENTITY).where(CHAT_IDENTITY.PLAYER.eq(id)).execute();
+          dsl.deleteFrom(CHAT_IDENTITY_AUDIT)
+              .where(CHAT_IDENTITY_AUDIT.ACTOR.eq(id).or(CHAT_IDENTITY_AUDIT.TARGET.eq(id)))
+              .execute();
+          return true;
+        })
         .thenAccept(ignored -> {});
   }
 }

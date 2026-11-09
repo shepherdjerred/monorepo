@@ -95,20 +95,18 @@ final class IntegratedCircuits implements Listener {
     var chunk = event.getChunk();
     var removed =
         circuits.keySet().stream()
-            .filter(
-                key ->
-                    key.world().equals(event.getWorld().getUID())
-                        && key.x() >> 4 == chunk.getX()
-                        && key.z() >> 4 == chunk.getZ())
+            .filter(key ->
+                key.world().equals(event.getWorld().getUID())
+                    && key.x() >> 4 == chunk.getX()
+                    && key.z() >> 4 == chunk.getZ())
             .toList();
-    removed.forEach(
-        key -> {
-          circuits.remove(key);
-          pending.remove(key);
-          problems.remove(key);
-          wireless.forget(key);
-          transmitters.remove(key);
-        });
+    removed.forEach(key -> {
+      circuits.remove(key);
+      pending.remove(key);
+      problems.remove(key);
+      wireless.forget(key);
+      transmitters.remove(key);
+    });
   }
 
   private void scan(Chunk chunk) {
@@ -140,11 +138,10 @@ final class IntegratedCircuits implements Listener {
           var block = circuits.get(key);
           if (block != null && pending.add(key))
             kit.scheduler()
-                .runOnMainThread(
-                    () -> {
-                      pending.remove(key);
-                      evaluate(block, false);
-                    });
+                .runOnMainThread(() -> {
+                  pending.remove(key);
+                  evaluate(block, false);
+                });
         }
   }
 
@@ -213,22 +210,17 @@ final class IntegratedCircuits implements Listener {
     if (circuit.output().getType() == Material.LEVER) pins.add(circuit.output());
     if (protection.mayOperateServerHistoricalCircuit(block.getLocation())
         && pins.stream()
-            .allMatch(
-                pin ->
-                    protection.sameLand(block.getLocation(), pin.getLocation())
-                        && protection.mayOperateServerHistoricalCircuit(pin.getLocation())))
+            .allMatch(pin ->
+                protection.sameLand(block.getLocation(), pin.getLocation())
+                    && protection.mayOperateServerHistoricalCircuit(pin.getLocation())))
       return true;
     return owner.isPresent()
         && pins.stream()
-            .allMatch(
-                pin ->
-                    protection.sameLand(block.getLocation(), pin.getLocation())
-                        && protection
-                            .check(
-                                owner.orElseThrow(),
-                                ProtectedAction.USE_REDSTONE,
-                                pin.getLocation())
-                            .isAllowed());
+            .allMatch(pin ->
+                protection.sameLand(block.getLocation(), pin.getLocation())
+                    && protection
+                        .check(owner.orElseThrow(), ProtectedAction.USE_REDSTONE, pin.getLocation())
+                        .isAllowed());
   }
 
   private void runFarm(Circuit circuit, UUID owner, boolean poll) {
@@ -317,11 +309,8 @@ final class IntegratedCircuits implements Listener {
     pins.add(receiver.block());
     pins.add(receiver.output());
     return pins.stream()
-        .allMatch(
-            pin ->
-                protection
-                    .check(actor, ProtectedAction.USE_REDSTONE, pin.getLocation())
-                    .isAllowed());
+        .allMatch(pin ->
+            protection.check(actor, ProtectedAction.USE_REDSTONE, pin.getLocation()).isAllowed());
   }
 
   private static Optional<Switch> outputLever(Circuit circuit) {
@@ -339,13 +328,12 @@ final class IntegratedCircuits implements Listener {
 
   private void setOutput(Circuit circuit, boolean value) {
     outputLever(circuit)
-        .ifPresent(
-            lever -> {
-              if (lever.isPowered() != value) {
-                lever.setPowered(value);
-                kit.changes().set("#storm-circuits", circuit.output(), lever, true);
-              }
-            });
+        .ifPresent(lever -> {
+          if (lever.isPowered() != value) {
+            lever.setPowered(value);
+            kit.changes().set("#storm-circuits", circuit.output(), lever, true);
+          }
+        });
   }
 
   private Optional<Boolean> clock(Circuit circuit, boolean disabled, boolean output) {

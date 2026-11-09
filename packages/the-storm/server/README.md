@@ -13,7 +13,7 @@ operational parameter overrides with the declared list; recording credentials
 remain supplied by the chart's `extraEnv` secret references.
 
 The Storm uses mc-router's default backend for `ts-mc.net`, `mc.ts-mc.net`,
-and status checks that send a resolved IP. The pinned mc-router 1.47.2 ignores
+and status checks that send a resolved IP. The pinned mc-router 1.55.0 ignores
 `defaultServer` when `externalServerName` is also present, so the Service must
 declare only the default annotation. Other servers retain their explicit
 hostname routes and take precedence. This keeps the default attached to the
@@ -279,6 +279,18 @@ Configuration belongs in these places:
 | Homelab chart                                              | Server identity, credentials, and service bootstrap                           |
 | Persistent volume                                          | Worlds, vanilla inventories, permissions, plugin databases, and runtime state |
 
+The patches keep survival mechanics vanilla where Spigot and Paper defaults
+diverge. Hunger and thunder use vanilla values. Entity activation throttling is
+off, so far-away farm mobs tick normally. Full hoppers have no extra cooldown,
+entity collisions are uncapped, players take cramming damage, phantoms attack
+anyone, and pearls in unloaded chunks keep their thrower, so stasis chambers
+work. Every Paper `unsupported-settings` exploit stays explicitly off: no TNT,
+carpet, rail or sand duplication, no headless pistons, and no breaking of
+bedrock or end portal frames. The mob caps above vanilla, the 15-minute item
+despawn, and levelled mobs remain deliberate Storm changes. Patches overwrite
+volume files on every boot, so removing an op leaves its last value in place;
+restore a default by putting its value explicitly.
+
 Never add `plugins/TheStorm` itself to `owned.roots`: it contains the runtime
 database. Floodgate generates its private key on the volume; the image never
 owns or copies that key. `plugins/Citizens` is not an owned root either: it
@@ -363,7 +375,7 @@ backup. Do not combine an old plugin database with newer player data.
 Citizens publishes only mutable Maven snapshots; the runnable plugin jar exists
 only on Jenkins,
 `https://ci.citizensnpcs.co/job/Citizens2/<build>/artifact/dist/target/`.
-`plugins.json` pins build 4256 (`2.0.44-b4256`, 2026-09-26) by URL and sha256,
+`plugins.json` pins build 4269 (`2.0.44-b4269`, 2026-11-01) by URL and sha256,
 as does `tests/e2e/harness/pins.ts`. The plugin compiles against the same
 Jenkins jar: `plugin/gradle/libs.versions.toml` pins `citizens` to that build,
 `settings.gradle.kts` resolves it through an ivy repository, and

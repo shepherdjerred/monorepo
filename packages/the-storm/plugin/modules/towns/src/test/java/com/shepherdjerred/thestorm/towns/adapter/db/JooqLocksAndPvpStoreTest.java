@@ -134,14 +134,13 @@ final class JooqLocksAndPvpStoreTest {
   @Test
   void aStoredLockWithoutBlocksFailsTheLoad() throws Exception {
     await(
-        database.write(
-            dsl ->
-                dsl.execute(
-                    "INSERT INTO towns_lock (id, owner_id) VALUES ('"
-                        + UUID.randomUUID()
-                        + "', '"
-                        + OWNER
-                        + "')")));
+        database.write(dsl ->
+            dsl.execute(
+                "INSERT INTO towns_lock (id, owner_id) VALUES ('"
+                    + UUID.randomUUID()
+                    + "', '"
+                    + OWNER
+                    + "')")));
 
     assertThatThrownBy(() -> await(locks.loadAll())).isInstanceOf(ExecutionException.class);
   }

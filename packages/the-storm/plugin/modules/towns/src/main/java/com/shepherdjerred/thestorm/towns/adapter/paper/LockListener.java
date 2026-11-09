@@ -307,13 +307,6 @@ final class LockListener implements Listener {
       event.setCancelled(true);
       return;
     }
-    if (service.book().countOf(player.getUniqueId()) >= service.policy().maxPerPlayer()
-        && Chests.partner(block).map(locks::lockOf).orElse(null) == null
-        && Doors.otherHalf(block).map(locks::lockOf).orElse(null) == null) {
-      player.sendMessage(
-          Notices.error("Your lock limit is full; unlock a container before placing another."));
-      event.setCancelled(true);
-    }
   }
 
   /**
@@ -381,12 +374,11 @@ final class LockListener implements Listener {
         extended
             .get()
             .saved()
-            .whenComplete(
-                (saved, failure) -> {
-                  if (failure != null) {
-                    revokeUnstoredPlacement(player, block, position);
-                  }
-                });
+            .whenComplete((saved, failure) -> {
+              if (failure != null) {
+                revokeUnstoredPlacement(player, block, position);
+              }
+            });
     return true;
   }
 
@@ -411,12 +403,11 @@ final class LockListener implements Listener {
         extended
             .get()
             .saved()
-            .whenComplete(
-                (saved, failure) -> {
-                  if (failure != null) {
-                    revokeUnstoredPlacement(player, block, position);
-                  }
-                });
+            .whenComplete((saved, failure) -> {
+              if (failure != null) {
+                revokeUnstoredPlacement(player, block, position);
+              }
+            });
     return true;
   }
 
@@ -432,24 +423,42 @@ final class LockListener implements Listener {
         var _ =
             change
                 .saved()
-                .whenComplete(
-                    (saved, failure) -> {
-                      if (!pendingAutoLocks.remove(position, token)) {
-                        return;
-                      }
-                      if (failure != null) {
-                        revokeUnstoredPlacement(player, block, position);
-                        return;
-                      }
-                      LockFee.charge(
-                          new LockFee.Bill(wallets, scheduler, service, player), change.value());
-                    });
+                .whenComplete((saved, failure) -> {
+                  if (!pendingAutoLocks.remove(position, token)) {
+                    return;
+                  }
+                  if (failure != null) {
+                    revokeUnstoredPlacement(player, block, position);
+                    return;
+                  }
+                  LockFee.charge(
+                      new LockFee.Bill(wallets, scheduler, service, player), change.value());
+                });
       }
-      case Result.Err<Change<Lock>, List<LockProblem>>(var _) -> {
+      case Result.Err<Change<Lock>, List<LockProblem>>(var problems) -> {
         pendingAutoLocks.remove(position, token);
+        if (onlyLimitReached(problems)) {
+          // Past the limit the block stays, unlocked; its placer is recorded so they can lock it
+          // once they free a lock.
+          player.sendMessage(Notices.info(limitNotice(service.policy().maxPerPlayer())));
+          return;
+        }
         revokeUnstoredPlacement(player, block, position);
       }
     }
+  }
+
+  private static boolean onlyLimitReached(List<LockProblem> problems) {
+    return !problems.isEmpty()
+        && problems.stream().allMatch(LockProblem.LimitReached.class::isInstance);
+  }
+
+  /** Told when a placed block stays unlocked because its placer holds the most locks allowed. */
+  private static String limitNotice(int limit) {
+    return "You hold "
+        + limit
+        + " locks, the most allowed, so this was placed unlocked. /unlock an old lock, then /lock"
+        + " this one to protect it.";
   }
 
   private void revokeUnstoredPlacement(Player player, Block block, BlockPos position) {

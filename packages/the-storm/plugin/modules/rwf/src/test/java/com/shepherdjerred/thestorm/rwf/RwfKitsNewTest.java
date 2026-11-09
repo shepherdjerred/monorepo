@@ -94,12 +94,11 @@ final class RwfKitsNewTest {
         .isInstanceOf(MatchSnapshot.BombView.State.Arming.class);
     // The display refresh runs every five server ticks; the four arming clock jumps above
     // need not include a refresh after the first interaction. Wait with the clock held still.
-    harness.until(
-        () ->
-            harness.rwf.getEntitiesByClass(TextDisplay.class).stream()
-                    .filter(d -> d.getLocation().distance(block.getLocation()) < 4)
-                    .count()
-                == 2);
+    harness.until(() ->
+        harness.rwf.getEntitiesByClass(TextDisplay.class).stream()
+                .filter(d -> d.getLocation().distance(block.getLocation()) < 4)
+                .count()
+            == 2);
     var holograms =
         harness.rwf.getEntitiesByClass(TextDisplay.class).stream()
             .filter(d -> d.getLocation().distance(block.getLocation()) < 4)

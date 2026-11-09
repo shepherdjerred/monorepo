@@ -32,16 +32,15 @@ public final class TownListings implements TownRead {
     var shown =
         towns.stream()
             .sorted(
-                Comparator.comparingInt(
-                        (TownSummary town) ->
-                            town.name().equals("Spawn")
-                                ? 0
-                                : town.kind()
-                                            == com.shepherdjerred.thestorm.towns.domain.heritage
-                                                .HeritageSite.Kind.HERITAGE
-                                        && town.name().startsWith("Historic ")
-                                    ? 2
-                                    : 1)
+                Comparator.comparingInt((TownSummary town) ->
+                        town.name().equals("Spawn")
+                            ? 0
+                            : town.kind()
+                                        == com.shepherdjerred.thestorm.towns.domain.heritage
+                                            .HeritageSite.Kind.HERITAGE
+                                    && town.name().startsWith("Historic ")
+                                ? 2
+                                : 1)
                     .thenComparing(TownSummary::name, String.CASE_INSENSITIVE_ORDER))
             .skip((long) (page - 1) * limit)
             .limit(limit)

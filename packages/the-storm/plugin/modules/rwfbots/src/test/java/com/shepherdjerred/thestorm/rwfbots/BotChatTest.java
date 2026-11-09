@@ -130,12 +130,11 @@ final class BotChatTest {
                     .filter(c -> c.id().uuid().equals(speaker))
                     .findFirst()
                     .flatMap(MatchSnapshot.CombatantView::team)
-                    .map(
-                        team ->
-                            harness.match.snapshot().combatants().stream()
-                                .filter(c -> c.team().equals(Optional.of(team)))
-                                .map(c -> c.id().uuid())
-                                .collect(toUnmodifiableSet())));
+                    .map(team ->
+                        harness.match.snapshot().combatants().stream()
+                            .filter(c -> c.team().equals(Optional.of(team)))
+                            .map(c -> c.id().uuid())
+                            .collect(toUnmodifiableSet())));
   }
 
   /** Alice (blue) and two bots, red then blue, live on the synthetic map. */
@@ -479,17 +478,16 @@ final class BotChatTest {
         .filter(decision -> decision.option() == Option.HOLD_SLOT)
         .filter(decision -> decision.target().isEmpty() && decision.ability().isEmpty())
         .filter(decision -> decision.routeFailure().isEmpty() && !decision.waypoints().isEmpty())
-        .ifPresent(
-            decision -> {
-              var position = decision.waypoints().getLast().pos();
-              harness
-                  .paper()
-                  .roster()
-                  .bodies()
-                  .entity(uuid)
-                  .orElseThrow()
-                  .teleport(new Location(harness.world, position.x(), position.y(), position.z()));
-            });
+        .ifPresent(decision -> {
+          var position = decision.waypoints().getLast().pos();
+          harness
+              .paper()
+              .roster()
+              .bodies()
+              .entity(uuid)
+              .orElseThrow()
+              .teleport(new Location(harness.world, position.x(), position.y(), position.z()));
+        });
   }
 
   private record Anchor(
@@ -690,14 +688,13 @@ final class BotChatTest {
     // Bot lines pass chat's filters like a player's: an ALL CAPS personality is calmed.
     var expected =
         personality.lines().onKill().stream()
-            .map(
-                line ->
-                    "[G][● "
-                        + body.name()
-                        + " ✦]: "
-                        + Shouting.calm(
-                            line.replace("{victim}", "Alice").replace("{team}", "Red Team"),
-                            RwfBotsHarness.CHAT_FILTER.maxCapsWords()))
+            .map(line ->
+                "[G][● "
+                    + body.name()
+                    + " ✦]: "
+                    + Shouting.calm(
+                        line.replace("{victim}", "Alice").replace("{team}", "Red Team"),
+                        RwfBotsHarness.CHAT_FILTER.maxCapsWords()))
             .toList();
     var aliceHeard = heard(alice);
     assertThat(aliceHeard).singleElement().isIn(expected);

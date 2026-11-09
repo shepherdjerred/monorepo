@@ -19,11 +19,10 @@ final class BehaviorTest {
   }
 
   private static Behavior<Trace> leaf(String name, Status status) {
-    return Behavior.action(
-        trace -> {
-          trace.ran.add(name);
-          return status;
-        });
+    return Behavior.action(trace -> {
+      trace.ran.add(name);
+      return status;
+    });
   }
 
   @Test

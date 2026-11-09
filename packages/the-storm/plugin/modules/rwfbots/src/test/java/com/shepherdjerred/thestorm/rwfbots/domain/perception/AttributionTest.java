@@ -97,11 +97,10 @@ final class AttributionTest {
     assertThat(percept.state().grudge()).isEmpty();
     assertThat(percept.state().memory().of(shooter.id()))
         .as("it only heard the hit land, by the victim")
-        .hasValueSatisfying(
-            heard -> {
-              assertThat(heard.pos().distance(VICTIM.pos())).isLessThan(5);
-              assertThat(heard.confidence()).isEqualTo(Perception.SOUND_CONFIDENCE);
-            });
+        .hasValueSatisfying(heard -> {
+          assertThat(heard.pos().distance(VICTIM.pos())).isLessThan(5);
+          assertThat(heard.confidence()).isEqualTo(Perception.SOUND_CONFIDENCE);
+        });
   }
 
   @Test

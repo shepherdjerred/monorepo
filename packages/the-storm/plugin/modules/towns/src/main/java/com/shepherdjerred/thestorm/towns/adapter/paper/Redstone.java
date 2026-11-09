@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.towns.adapter.paper;
 import com.shepherdjerred.thestorm.towns.domain.land.Land;
 import com.shepherdjerred.thestorm.towns.domain.world.WorldEffect;
 import java.util.List;
+import java.util.function.Predicate;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.Bisected;
@@ -37,13 +38,14 @@ final class Redstone {
     if (land instanceof Land.Wilderness) {
       return false;
     }
-    if (reachesFromElsewhere(block, land)) {
+    var trusted = flowsInto(land);
+    if (reachesFrom(block, trusted)) {
       return true;
     }
     if (block.getBlockData() instanceof Bisected half) {
       var other =
           block.getRelative(half.getHalf() == Bisected.Half.TOP ? BlockFace.DOWN : BlockFace.UP);
-      return reachesFromElsewhere(other, land);
+      return reachesFrom(other, trusted);
     }
     return false;
   }
@@ -57,36 +59,47 @@ final class Redstone {
     if (land instanceof Land.Wilderness) {
       return false;
     }
-    return reachesFromElsewhere(piston, land)
-        || reachesFromElsewhere(piston.getRelative(BlockFace.UP), land);
+    return untrustedPistonPower(piston, flowsInto(land));
   }
 
   /**
-   * True when a redstone component on other land touches {@code block}, or touches a solid block
-   * that touches it. Checked when the block is being powered, so the component is a likely source;
-   * the check looks at block types only, never at power levels, so it stays cheap.
+   * True when a redstone component that could power a piston-like block at {@code piston}, or the
+   * block above it, stands on land {@code trusted} rejects.
    */
-  private boolean reachesFromElsewhere(Block block, Land land) {
+  boolean untrustedPistonPower(Block piston, Predicate<Land> trusted) {
+    return reachesFrom(piston, trusted) || reachesFrom(piston.getRelative(BlockFace.UP), trusted);
+  }
+
+  private static Predicate<Land> flowsInto(Land land) {
+    return source -> Guard.flows(WorldEffect.REDSTONE, source, land);
+  }
+
+  /**
+   * True when a redstone component on land {@code trusted} rejects touches {@code block}, or
+   * touches a solid block that touches it. Checked when the block is being powered, so the
+   * component is a likely source; the check looks at block types only, never at power levels, so it
+   * stays cheap.
+   */
+  private boolean reachesFrom(Block block, Predicate<Land> trusted) {
     for (var face : FACES) {
       var neighbour = block.getRelative(face);
       var type = neighbour.getType();
-      if (kinds.isRedstone(type)
-          && !Guard.flows(WorldEffect.REDSTONE, guard.land(neighbour), land)) {
+      if (kinds.isRedstone(type) && !trusted.test(guard.land(neighbour))) {
         return true;
       }
-      if (type.isOccluding() && componentBeyond(neighbour, block, land)) {
+      if (type.isOccluding() && componentBeyond(neighbour, block, trusted)) {
         return true;
       }
     }
     return false;
   }
 
-  private boolean componentBeyond(Block solid, Block from, Land land) {
+  private boolean componentBeyond(Block solid, Block from, Predicate<Land> trusted) {
     for (var face : FACES) {
       var beyond = solid.getRelative(face);
       if (!beyond.equals(from)
           && kinds.isRedstone(beyond.getType())
-          && !Guard.flows(WorldEffect.REDSTONE, guard.land(beyond), land)) {
+          && !trusted.test(guard.land(beyond))) {
         return true;
       }
     }

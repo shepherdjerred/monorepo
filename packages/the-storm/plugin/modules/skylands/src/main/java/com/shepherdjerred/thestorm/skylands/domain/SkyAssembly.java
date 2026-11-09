@@ -92,22 +92,19 @@ final class SkyAssembly {
     return (int)
         root.template().joins().stream()
             .filter(join -> join.direction().y() == 0)
-            .filter(
-                join ->
-                    pieces.stream()
-                        .skip(1)
-                        .anyMatch(
-                            child ->
-                                child.template().joins().stream()
-                                    .anyMatch(
-                                        other ->
-                                            join.target().equals(other.name())
-                                                && root.at(join.position())
-                                                    .add(root.direction(join.direction()))
-                                                    .equals(child.at(other.position()))
-                                                && root.direction(join.direction())
-                                                    .add(child.direction(other.direction()))
-                                                    .equals(new SkyPosition(0, 0, 0)))))
+            .filter(join ->
+                pieces.stream()
+                    .skip(1)
+                    .anyMatch(child ->
+                        child.template().joins().stream()
+                            .anyMatch(other ->
+                                join.target().equals(other.name())
+                                    && root.at(join.position())
+                                        .add(root.direction(join.direction()))
+                                        .equals(child.at(other.position()))
+                                    && root.direction(join.direction())
+                                        .add(child.direction(other.direction()))
+                                        .equals(new SkyPosition(0, 0, 0)))))
             .count();
   }
 }

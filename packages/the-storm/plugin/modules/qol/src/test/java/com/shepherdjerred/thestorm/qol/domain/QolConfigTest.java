@@ -34,10 +34,9 @@ final class QolConfigTest {
         java.util.List.of(
             new com.shepherdjerred.thestorm.qol.domain.rtp.BorderSearch("world", 256),
             new com.shepherdjerred.thestorm.qol.domain.rtp.BorderSearch("world", 512));
-    org.assertj.core.api.Assertions.assertThatThrownBy(
-            () ->
-                new QolConfig(
-                    "PT15S", "PT5M", 24, 512, 1500, 128, 90, java.util.List.of("plains"), twice))
+    org.assertj.core.api.Assertions.assertThatThrownBy(() ->
+            new QolConfig(
+                "PT15S", "PT5M", 24, 512, 1500, 128, 90, java.util.List.of("plains"), twice))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining("listed twice");
   }

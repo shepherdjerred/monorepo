@@ -32,10 +32,8 @@ final class ClimbCapabilityTest {
     assertThat(graph.climbable(1)).isTrue();
     assertThatThrownBy(() -> graph.climbable(2)).isInstanceOf(IllegalArgumentException.class);
     bits.set(2);
-    assertThatThrownBy(
-            () ->
-                new NavGraph.NodeData(
-                    new int[] {0, 1}, WaterIndex.empty(bounds), new byte[2], bits))
+    assertThatThrownBy(() ->
+            new NavGraph.NodeData(new int[] {0, 1}, WaterIndex.empty(bounds), new byte[2], bits))
         .isInstanceOf(IllegalArgumentException.class);
   }
 }

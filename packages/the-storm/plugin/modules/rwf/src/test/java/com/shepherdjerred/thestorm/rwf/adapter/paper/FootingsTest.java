@@ -76,8 +76,7 @@ final class FootingsTest {
             Map.entry(Material.CHEST, Footing.STANDABLE),
             Map.entry(Material.SOUL_SAND, Footing.STANDABLE),
             Map.entry(Material.RED_BED, Footing.STANDABLE));
-    expected.forEach(
-        (material, footing) ->
-            assertThat(Footings.of(material)).as(material.name()).isEqualTo(footing));
+    expected.forEach((material, footing) ->
+        assertThat(Footings.of(material)).as(material.name()).isEqualTo(footing));
   }
 }

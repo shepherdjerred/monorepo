@@ -105,14 +105,13 @@ public final class LobbySteering {
     }
     var sneak = sneak(state, plan.sneakTaps() && index >= path.size(), tick);
     sneak.command().ifPresent(commands::add);
-    lookAt.ifPresent(
-        at -> {
-          var eye = body.feet().plus(0, CombatantView.EYE_HEIGHT, 0);
-          if (at.minus(eye).length() > 0.1) {
-            var turned = body.facing().turnToward(Facing.looking(eye, at), TURN_PER_TICK);
-            commands.add(new BodyCommand.Look(turned.yaw(), turned.pitch()));
-          }
-        });
+    lookAt.ifPresent(at -> {
+      var eye = body.feet().plus(0, CombatantView.EYE_HEIGHT, 0);
+      if (at.minus(eye).length() > 0.1) {
+        var turned = body.facing().turnToward(Facing.looking(eye, at), TURN_PER_TICK);
+        commands.add(new BodyCommand.Look(turned.yaw(), turned.pitch()));
+      }
+    });
     return new Step(
         new State(plan.untilTick(), index, sneak.sneaking(), sneak.toggled(), lastJump), commands);
   }

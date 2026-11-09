@@ -64,11 +64,10 @@ final class KitPurchaseMenu implements InventoryHolder {
 
   private static ItemStack button(Material material, String text, NamedTextColor color) {
     var stack = ItemStack.of(material);
-    stack.editMeta(
-        meta ->
-            meta.displayName(
-                Component.text(text, color, TextDecoration.BOLD)
-                    .decoration(TextDecoration.ITALIC, false)));
+    stack.editMeta(meta ->
+        meta.displayName(
+            Component.text(text, color, TextDecoration.BOLD)
+                .decoration(TextDecoration.ITALIC, false)));
     return stack;
   }
 }

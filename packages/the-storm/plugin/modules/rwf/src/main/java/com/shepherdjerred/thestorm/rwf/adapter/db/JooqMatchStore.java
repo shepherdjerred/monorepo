@@ -39,118 +39,112 @@ public final class JooqMatchStore implements MatchStore {
       }
     }
     return Writes.done(
-        database.write(
-            dsl -> {
-              dsl.insertInto(RWF_MATCH)
-                  .set(RWF_MATCH.ID, match.matchId().toString())
-                  .set(RWF_MATCH.MAP, match.mapId())
-                  .set(RWF_MATCH.STARTED_AT, match.startedAt().toEpochMilli())
-                  .set(RWF_MATCH.ENDED_AT, match.endedAt().toEpochMilli())
-                  .set(RWF_MATCH.WINNER, match.winner().map(TeamColor::name).orElse(null))
-                  .set(RWF_MATCH.HUMANS, match.humans())
-                  .set(RWF_MATCH.BOTS, match.bots())
-                  .set(RWF_MATCH.RECORDING_BYTES, 0L)
-                  .set(RWF_MATCH.DROPPED_FRAMES, 0)
-                  .execute();
-              for (var player : players) {
-                dsl.insertInto(RWF_MATCH_PLAYER)
-                    .set(RWF_MATCH_PLAYER.MATCH_ID, match.matchId().toString())
-                    .set(RWF_MATCH_PLAYER.PLAYER, player.player().toString())
-                    .set(RWF_MATCH_PLAYER.TEAM, player.team().name())
-                    .set(RWF_MATCH_PLAYER.KIT, player.kit())
-                    .set(RWF_MATCH_PLAYER.KILLS, player.kills())
-                    .set(RWF_MATCH_PLAYER.DEATHS, player.deaths())
-                    .set(RWF_MATCH_PLAYER.RESULT, player.outcome().name())
-                    .set(RWF_MATCH_PLAYER.CURRENCY, player.currency().key())
-                    .set(RWF_MATCH_PLAYER.CREDITS_OWED, player.creditsOwed())
-                    .set(RWF_MATCH_PLAYER.PAYOUT_STATUS, player.status().name())
-                    .set(RWF_MATCH_PLAYER.CREDITS_PAID, player.creditsPaid())
-                    .execute();
-              }
-              stats.ifPresent(played -> StatsWrites.write(dsl, match, played));
-              return true;
-            }));
+        database.write(dsl -> {
+          dsl.insertInto(RWF_MATCH)
+              .set(RWF_MATCH.ID, match.matchId().toString())
+              .set(RWF_MATCH.MAP, match.mapId())
+              .set(RWF_MATCH.STARTED_AT, match.startedAt().toEpochMilli())
+              .set(RWF_MATCH.ENDED_AT, match.endedAt().toEpochMilli())
+              .set(RWF_MATCH.WINNER, match.winner().map(TeamColor::name).orElse(null))
+              .set(RWF_MATCH.HUMANS, match.humans())
+              .set(RWF_MATCH.BOTS, match.bots())
+              .set(RWF_MATCH.RECORDING_BYTES, 0L)
+              .set(RWF_MATCH.DROPPED_FRAMES, 0)
+              .execute();
+          for (var player : players) {
+            dsl.insertInto(RWF_MATCH_PLAYER)
+                .set(RWF_MATCH_PLAYER.MATCH_ID, match.matchId().toString())
+                .set(RWF_MATCH_PLAYER.PLAYER, player.player().toString())
+                .set(RWF_MATCH_PLAYER.TEAM, player.team().name())
+                .set(RWF_MATCH_PLAYER.KIT, player.kit())
+                .set(RWF_MATCH_PLAYER.KILLS, player.kills())
+                .set(RWF_MATCH_PLAYER.DEATHS, player.deaths())
+                .set(RWF_MATCH_PLAYER.RESULT, player.outcome().name())
+                .set(RWF_MATCH_PLAYER.CURRENCY, player.currency().key())
+                .set(RWF_MATCH_PLAYER.CREDITS_OWED, player.creditsOwed())
+                .set(RWF_MATCH_PLAYER.PAYOUT_STATUS, player.status().name())
+                .set(RWF_MATCH_PLAYER.CREDITS_PAID, player.creditsPaid())
+                .execute();
+          }
+          stats.ifPresent(played -> StatsWrites.write(dsl, match, played));
+          return true;
+        }));
   }
 
   @Override
   public CompletableFuture<Void> recordingFinished(UUID matchId, RecordingSummary summary) {
     return Writes.done(
-        database.write(
-            dsl ->
-                dsl.update(RWF_MATCH)
-                    .set(RWF_MATCH.RECORDING_FILE, summary.file().orElse(null))
-                    .set(RWF_MATCH.RECORDING_BYTES, summary.bytes())
-                    .set(RWF_MATCH.DROPPED_FRAMES, summary.droppedFrames())
-                    .where(RWF_MATCH.ID.eq(matchId.toString()))
-                    .execute()));
+        database.write(dsl ->
+            dsl.update(RWF_MATCH)
+                .set(RWF_MATCH.RECORDING_FILE, summary.file().orElse(null))
+                .set(RWF_MATCH.RECORDING_BYTES, summary.bytes())
+                .set(RWF_MATCH.DROPPED_FRAMES, summary.droppedFrames())
+                .where(RWF_MATCH.ID.eq(matchId.toString()))
+                .execute()));
   }
 
   @Override
   public CompletableFuture<List<PlayerRow>> unpaid() {
-    return database.read(
-        dsl ->
-            dsl
-                .select(RWF_MATCH_PLAYER.fields())
-                .from(RWF_MATCH_PLAYER)
-                .join(RWF_MATCH)
-                .on(RWF_MATCH.ID.eq(RWF_MATCH_PLAYER.MATCH_ID))
-                .where(
-                    RWF_MATCH_PLAYER.PAYOUT_STATUS.in(
-                        PayoutStatus.PENDING.name(), PayoutStatus.PAYING.name()))
-                .orderBy(RWF_MATCH.ENDED_AT, RWF_MATCH_PLAYER.PLAYER)
-                .fetchInto(RWF_MATCH_PLAYER)
-                .stream()
-                .map(JooqMatchStore::toRow)
-                .toList());
+    return database.read(dsl ->
+        dsl
+            .select(RWF_MATCH_PLAYER.fields())
+            .from(RWF_MATCH_PLAYER)
+            .join(RWF_MATCH)
+            .on(RWF_MATCH.ID.eq(RWF_MATCH_PLAYER.MATCH_ID))
+            .where(
+                RWF_MATCH_PLAYER.PAYOUT_STATUS.in(
+                    PayoutStatus.PENDING.name(), PayoutStatus.PAYING.name()))
+            .orderBy(RWF_MATCH.ENDED_AT, RWF_MATCH_PLAYER.PLAYER)
+            .fetchInto(RWF_MATCH_PLAYER)
+            .stream()
+            .map(JooqMatchStore::toRow)
+            .toList());
   }
 
   @Override
   public CompletableFuture<List<PlayerRow>> legacyPayouts(UUID player) {
-    return database.read(
-        dsl ->
-            dsl
-                .selectFrom(RWF_MATCH_PLAYER)
-                .where(RWF_MATCH_PLAYER.PLAYER.eq(player.toString()))
-                .and(RWF_MATCH_PLAYER.CURRENCY.eq(CurrencyId.CRYSTALS.key()))
-                .orderBy(RWF_MATCH_PLAYER.MATCH_ID)
-                .fetch()
-                .stream()
-                .map(JooqMatchStore::toRow)
-                .toList());
+    return database.read(dsl ->
+        dsl
+            .selectFrom(RWF_MATCH_PLAYER)
+            .where(RWF_MATCH_PLAYER.PLAYER.eq(player.toString()))
+            .and(RWF_MATCH_PLAYER.CURRENCY.eq(CurrencyId.CRYSTALS.key()))
+            .orderBy(RWF_MATCH_PLAYER.MATCH_ID)
+            .fetch()
+            .stream()
+            .map(JooqMatchStore::toRow)
+            .toList());
   }
 
   @Override
   public CompletableFuture<Void> reconcileLegacy(UUID player, List<LegacyPayment> payments) {
     return Writes.done(
-        database.write(
-            dsl -> {
-              LegacyEarnings.reconcile(dsl, player, payments);
-              return true;
-            }));
+        database.write(dsl -> {
+          LegacyEarnings.reconcile(dsl, player, payments);
+          return true;
+        }));
   }
 
   @Override
   public CompletableFuture<Long> beginPayout(UUID matchId, UUID player, LocalDate today) {
-    return database.write(
-        dsl -> {
-          var row = fetch(dsl, matchId, player);
-          var owed = row.getCreditsOwed();
-          return switch (PayoutStatus.valueOf(row.getPayoutStatus())) {
-            case NONE, PAID -> 0L;
-            case PAYING -> owed < 0 ? owed : row.getCreditsPaid();
-            case PENDING -> {
-              var legacy = CurrencyId.fromKey(row.getCurrency()) == CurrencyId.CRYSTALS;
-              var amount = legacy ? reserveLegacy(dsl, player, today, owed) : owed;
-              dsl.update(RWF_MATCH_PLAYER)
-                  .set(RWF_MATCH_PLAYER.PAYOUT_STATUS, PayoutStatus.PAYING.name())
-                  .set(RWF_MATCH_PLAYER.CREDITS_PAID, amount < 0 ? 0L : amount)
-                  .where(RWF_MATCH_PLAYER.MATCH_ID.eq(matchId.toString()))
-                  .and(RWF_MATCH_PLAYER.PLAYER.eq(player.toString()))
-                  .execute();
-              yield amount;
-            }
-          };
-        });
+    return database.write(dsl -> {
+      var row = fetch(dsl, matchId, player);
+      var owed = row.getCreditsOwed();
+      return switch (PayoutStatus.valueOf(row.getPayoutStatus())) {
+        case NONE, PAID -> 0L;
+        case PAYING -> owed < 0 ? owed : row.getCreditsPaid();
+        case PENDING -> {
+          var legacy = CurrencyId.fromKey(row.getCurrency()) == CurrencyId.CRYSTALS;
+          var amount = legacy ? reserveLegacy(dsl, player, today, owed) : owed;
+          dsl.update(RWF_MATCH_PLAYER)
+              .set(RWF_MATCH_PLAYER.PAYOUT_STATUS, PayoutStatus.PAYING.name())
+              .set(RWF_MATCH_PLAYER.CREDITS_PAID, amount < 0 ? 0L : amount)
+              .where(RWF_MATCH_PLAYER.MATCH_ID.eq(matchId.toString()))
+              .and(RWF_MATCH_PLAYER.PLAYER.eq(player.toString()))
+              .execute();
+          yield amount;
+        }
+      };
+    });
   }
 
   /** Cuts a legacy crystal payout to what is left of {@code today}'s cap and reserves it. */
@@ -177,59 +171,56 @@ public final class JooqMatchStore implements MatchStore {
   @Override
   public CompletableFuture<Void> finishPayout(UUID matchId, UUID player, long paid) {
     return Writes.done(
-        database.write(
-            dsl -> {
-              // The row refuses an amount that exceeds or opposes what was owed.
-              var _ = toRow(fetch(dsl, matchId, player)).paid(paid);
-              var updated =
-                  dsl.update(RWF_MATCH_PLAYER)
-                      .set(RWF_MATCH_PLAYER.PAYOUT_STATUS, PayoutStatus.PAID.name())
-                      .set(RWF_MATCH_PLAYER.CREDITS_PAID, paid)
-                      .where(RWF_MATCH_PLAYER.MATCH_ID.eq(matchId.toString()))
-                      .and(RWF_MATCH_PLAYER.PLAYER.eq(player.toString()))
-                      .and(RWF_MATCH_PLAYER.PAYOUT_STATUS.eq(PayoutStatus.PAYING.name()))
-                      .execute();
-              if (updated != 1) {
-                throw new IllegalStateException(
-                    player + " in match " + matchId + " was not paying; nothing to finish");
-              }
-              return true;
-            }));
+        database.write(dsl -> {
+          // The row refuses an amount that exceeds or opposes what was owed.
+          var _ = toRow(fetch(dsl, matchId, player)).paid(paid);
+          var updated =
+              dsl.update(RWF_MATCH_PLAYER)
+                  .set(RWF_MATCH_PLAYER.PAYOUT_STATUS, PayoutStatus.PAID.name())
+                  .set(RWF_MATCH_PLAYER.CREDITS_PAID, paid)
+                  .where(RWF_MATCH_PLAYER.MATCH_ID.eq(matchId.toString()))
+                  .and(RWF_MATCH_PLAYER.PLAYER.eq(player.toString()))
+                  .and(RWF_MATCH_PLAYER.PAYOUT_STATUS.eq(PayoutStatus.PAYING.name()))
+                  .execute();
+          if (updated != 1) {
+            throw new IllegalStateException(
+                player + " in match " + matchId + " was not paying; nothing to finish");
+          }
+          return true;
+        }));
   }
 
   @Override
   public CompletableFuture<List<PlayerRow>> players(UUID matchId) {
-    return database.read(
-        dsl ->
-            dsl
-                .selectFrom(RWF_MATCH_PLAYER)
-                .where(RWF_MATCH_PLAYER.MATCH_ID.eq(matchId.toString()))
-                .orderBy(RWF_MATCH_PLAYER.PLAYER)
-                .fetch()
-                .stream()
-                .map(JooqMatchStore::toRow)
-                .toList());
+    return database.read(dsl ->
+        dsl
+            .selectFrom(RWF_MATCH_PLAYER)
+            .where(RWF_MATCH_PLAYER.MATCH_ID.eq(matchId.toString()))
+            .orderBy(RWF_MATCH_PLAYER.PLAYER)
+            .fetch()
+            .stream()
+            .map(JooqMatchStore::toRow)
+            .toList());
   }
 
   @Override
   public CompletableFuture<Career> career(UUID player) {
-    return database.read(
-        dsl -> {
-          var rows =
-              dsl
-                  .selectFrom(RWF_MATCH_PLAYER)
-                  .where(RWF_MATCH_PLAYER.PLAYER.eq(player.toString()))
-                  .fetch()
-                  .stream()
-                  .map(JooqMatchStore::toRow)
-                  .toList();
-          return new Career(
-              rows.size(),
-              (int) rows.stream().filter(row -> row.outcome() == Outcome.WIN).count(),
-              (int) rows.stream().filter(row -> row.outcome() == Outcome.LOSE).count(),
-              rows.stream().mapToInt(PlayerRow::kills).sum(),
-              rows.stream().mapToInt(PlayerRow::deaths).sum());
-        });
+    return database.read(dsl -> {
+      var rows =
+          dsl
+              .selectFrom(RWF_MATCH_PLAYER)
+              .where(RWF_MATCH_PLAYER.PLAYER.eq(player.toString()))
+              .fetch()
+              .stream()
+              .map(JooqMatchStore::toRow)
+              .toList();
+      return new Career(
+          rows.size(),
+          (int) rows.stream().filter(row -> row.outcome() == Outcome.WIN).count(),
+          (int) rows.stream().filter(row -> row.outcome() == Outcome.LOSE).count(),
+          rows.stream().mapToInt(PlayerRow::kills).sum(),
+          rows.stream().mapToInt(PlayerRow::deaths).sum());
+    });
   }
 
   private static RwfMatchPlayerRecord fetch(DSLContext dsl, UUID matchId, UUID player) {

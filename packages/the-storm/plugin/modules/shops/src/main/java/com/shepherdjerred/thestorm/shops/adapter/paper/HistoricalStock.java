@@ -121,10 +121,8 @@ final class HistoricalStock {
     if (!(block.getState(false) instanceof Container container)) return false;
     var values =
         halves(block, container).stream()
-            .map(
-                half ->
-                    half.getPersistentDataContainer()
-                        .get(marker(sourceId), PersistentDataType.BYTE))
+            .map(half ->
+                half.getPersistentDataContainer().get(marker(sourceId), PersistentDataType.BYTE))
             .filter(Objects::nonNull)
             .toList();
     return completeMarkers(values);

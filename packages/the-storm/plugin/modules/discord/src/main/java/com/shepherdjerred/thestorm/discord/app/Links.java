@@ -64,48 +64,43 @@ public final class Links implements LinkedAccounts {
     var link = new Link(player, discordUser.orElseThrow(), false);
     return store
         .link(link, time.instant())
-        .thenApply(
-            saved -> {
-              byPlayer.values().removeIf(old -> old.discordUser() == link.discordUser());
-              byPlayer.put(player, link);
-              return Optional.of(link);
-            });
+        .thenApply(saved -> {
+          byPlayer.values().removeIf(old -> old.discordUser() == link.discordUser());
+          byPlayer.put(player, link);
+          return Optional.of(link);
+        });
   }
 
   /** Unlinks {@code player}; true if they were linked. */
   public CompletableFuture<Boolean> unlink(UUID player) {
     return store
         .unlinkPlayer(player)
-        .thenApply(
-            removed -> {
-              byPlayer.remove(player);
-              return removed;
-            });
+        .thenApply(removed -> {
+          byPlayer.remove(player);
+          return removed;
+        });
   }
 
   /** Unlinks {@code discordUser}; true if they were linked. */
   public CompletableFuture<Boolean> unlinkDiscord(long discordUser) {
     return store
         .unlinkDiscord(discordUser)
-        .thenApply(
-            removed -> {
-              byPlayer.values().removeIf(link -> link.discordUser() == discordUser);
-              return removed;
-            });
+        .thenApply(removed -> {
+          byPlayer.values().removeIf(link -> link.discordUser() == discordUser);
+          return removed;
+        });
   }
 
   /** Turns result DMs on or off; false if {@code player} is not linked. */
   public CompletableFuture<Boolean> setDms(UUID player, boolean on) {
     return store
         .setDms(player, on)
-        .thenApply(
-            linked -> {
-              if (linked) {
-                byPlayer.computeIfPresent(
-                    player, (id, link) -> new Link(id, link.discordUser(), on));
-              }
-              return linked;
-            });
+        .thenApply(linked -> {
+          if (linked) {
+            byPlayer.computeIfPresent(player, (id, link) -> new Link(id, link.discordUser(), on));
+          }
+          return linked;
+        });
   }
 
   /** {@code player}'s link, if any. */

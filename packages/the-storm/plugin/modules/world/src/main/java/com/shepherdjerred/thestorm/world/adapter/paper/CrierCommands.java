@@ -41,15 +41,11 @@ public final class CrierCommands {
 
   public void register(Commands commands) {
     var root = Commands.literal("crier").executes(context -> announce(context.getSource()));
-    digest.ifPresent(
-        daily ->
-            root.then(
-                Commands.literal("digest")
-                    .executes(
-                        context ->
-                            runGated(
-                                context.getSource(),
-                                player -> daily.announce(context.getSource())))));
+    digest.ifPresent(daily ->
+        root.then(
+            Commands.literal("digest")
+                .executes(context ->
+                    runGated(context.getSource(), player -> daily.announce(context.getSource())))));
     commands.register(root.build(), "Hear the main-world town crier");
   }
 

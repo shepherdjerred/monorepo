@@ -83,11 +83,10 @@ public final class AdvancementFeeds implements Listener {
     sources.arenaEvents().subscribe(this::arena);
     sources
         .spells()
-        .subscribe(
-            cast -> {
-              award(cast.player(), Grants.firstSpell());
-              award(cast.player(), Grants.spell(cast.spell()));
-            });
+        .subscribe(cast -> {
+          award(cast.player(), Grants.firstSpell());
+          award(cast.player(), Grants.spell(cast.spell()));
+        });
     sources.careers().subscribe(this::career);
     sources.homeSignals().subscribe(player -> award(player, Grants.home()));
     sources.locks().subscribe(player -> award(player, Grants.lock()));

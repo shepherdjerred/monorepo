@@ -73,25 +73,24 @@ final class MatchAdmission {
   Optional<String> snapshotRefusal(Player player, Runnable retry) {
     return snapshots
         .refusal(player.getUniqueId())
-        .map(
-            refusal ->
-                switch (refusal) {
-                  case NOT_LOADED -> "The match is still starting up; try again in a moment.";
-                  case CLEANUP_PENDING -> {
-                    snapshots.whenClean(
-                        player.getUniqueId(),
-                        () -> {
-                          if (player.isOnline()) retry.run();
-                        });
-                    yield "Your belongings from your last match are still being saved; trying again in a moment.";
-                  }
-                  case CLEANUP_STALLED ->
-                      "Your restored belongings could not be confirmed as saved. Reconnect to finish recovery.";
-                  case RESTORE_PENDING -> {
-                    snapshots.recoverWhileOnline(player);
-                    yield "Your belongings from your last match were restored first; try again.";
-                  }
-                });
+        .map(refusal ->
+            switch (refusal) {
+              case NOT_LOADED -> "The match is still starting up; try again in a moment.";
+              case CLEANUP_PENDING -> {
+                snapshots.whenClean(
+                    player.getUniqueId(),
+                    () -> {
+                      if (player.isOnline()) retry.run();
+                    });
+                yield "Your belongings from your last match are still being saved; trying again in a moment.";
+              }
+              case CLEANUP_STALLED ->
+                  "Your restored belongings could not be confirmed as saved. Reconnect to finish recovery.";
+              case RESTORE_PENDING -> {
+                snapshots.recoverWhileOnline(player);
+                yield "Your belongings from your last match were restored first; try again.";
+              }
+            });
   }
 
   void capture(CombatantId id) {

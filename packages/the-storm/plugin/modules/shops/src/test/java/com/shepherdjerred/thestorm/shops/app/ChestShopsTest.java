@@ -319,16 +319,15 @@ final class ChestShopsTest {
     assertThat(wallets.balanceOf(new AccountId.Player(ALICE.id()))).isEqualTo(50);
     assertThat(store.trades)
         .singleElement()
-        .satisfies(
-            logged -> {
-              assertThat(logged.notified()).isTrue();
-              assertThat(logged.trade().site()).isEqualTo(new TradeSite.Chest(1, ALICE.id()));
-              assertThat(logged.trade().customerName()).isEqualTo("Bob");
-              assertThat(logged.trade().material()).isEqualTo("coal");
-              assertThat(logged.trade().quantity()).isEqualTo(16);
-              assertThat(logged.trade().price()).isEqualTo(50);
-              assertThat(logged.trade().at()).isEqualTo(NOW);
-            });
+        .satisfies(logged -> {
+          assertThat(logged.notified()).isTrue();
+          assertThat(logged.trade().site()).isEqualTo(new TradeSite.Chest(1, ALICE.id()));
+          assertThat(logged.trade().customerName()).isEqualTo("Bob");
+          assertThat(logged.trade().material()).isEqualTo("coal");
+          assertThat(logged.trade().quantity()).isEqualTo(16);
+          assertThat(logged.trade().price()).isEqualTo(50);
+          assertThat(logged.trade().at()).isEqualTo(NOW);
+        });
     assertThat(locks.idle()).isTrue();
   }
 

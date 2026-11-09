@@ -85,21 +85,20 @@ final class CatalogTradesTest {
     assertThat(wallets.receipts().getFirst().reason()).isEqualTo("shop:catalog:exchange:coal:buy");
     assertThat(store.trades)
         .singleElement()
-        .satisfies(
-            logged -> {
-              assertThat(logged.trade())
-                  .isEqualTo(
-                      new TradeRecord(
-                          new TradeSite.Catalog("exchange"),
-                          ALICE.id(),
-                          "Alice",
-                          Direction.BUY,
-                          "coal",
-                          48,
-                          144,
-                          NOW));
-              assertThat(logged.notified()).isTrue();
-            });
+        .satisfies(logged -> {
+          assertThat(logged.trade())
+              .isEqualTo(
+                  new TradeRecord(
+                      new TradeSite.Catalog("exchange"),
+                      ALICE.id(),
+                      "Alice",
+                      Direction.BUY,
+                      "coal",
+                      48,
+                      144,
+                      NOW));
+          assertThat(logged.notified()).isTrue();
+        });
   }
 
   @Test

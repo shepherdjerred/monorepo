@@ -58,14 +58,13 @@ final class MarkerEntities implements MarkerDisplays {
     }
     displays
         .getOrDefault(npc, Map.of())
-        .forEach(
-            (kind, display) -> {
-              if (kind == marker) {
-                player.showEntity(plugin, display);
-              } else {
-                player.hideEntity(plugin, display);
-              }
-            });
+        .forEach((kind, display) -> {
+          if (kind == marker) {
+            player.showEntity(plugin, display);
+          } else {
+            player.hideEntity(plugin, display);
+          }
+        });
   }
 
   /** Moves {@code npc}'s markers above {@code feet}. */
@@ -102,15 +101,14 @@ final class MarkerEntities implements MarkerDisplays {
     }
     npcLocation
         .apply(npc)
-        .ifPresent(
-            feet ->
-                markers.put(
-                    marker,
-                    feet.getWorld()
-                        .spawn(
-                            feet.clone().add(0, settings.height(), 0),
-                            TextDisplay.class,
-                            display -> dress(display, marker))));
+        .ifPresent(feet ->
+            markers.put(
+                marker,
+                feet.getWorld()
+                    .spawn(
+                        feet.clone().add(0, settings.height(), 0),
+                        TextDisplay.class,
+                        display -> dress(display, marker))));
   }
 
   private void dress(TextDisplay display, QuestMarker marker) {

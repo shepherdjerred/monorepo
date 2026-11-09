@@ -43,25 +43,20 @@ final class Dowse implements Spell {
     List<LivingEntity> burning =
         centre.getWorld().getNearbyLivingEntities(centre, settings.radius()).stream()
             .filter(creature -> creature.getFireTicks() > 0)
-            .filter(
-                creature ->
-                    creature.equals(caster) || tools.guard().harmDenial(caster, creature).isEmpty())
+            .filter(creature ->
+                creature.equals(caster) || tools.guard().harmDenial(caster, creature).isEmpty())
             .toList();
     if (screened.isEmpty() && burning.isEmpty()) {
       return Result.err(CastProblem.nothingAllowed(screened, "fire nearby"));
     }
     List<Block> doused = screened.allowed();
-    return Result.ok(
-        () -> {
-          doused.forEach(
-              block ->
-                  tools
-                      .changes()
-                      .set(caster.getName(), block, Material.AIR.createBlockData(), false));
-          burning.forEach(creature -> creature.setFireTicks(0));
-          tools.fx().cast(kind(), centre);
-          doused.forEach(
-              block -> tools.fx().burst(kind(), block.getLocation().add(0.5, 0.5, 0.5), 6, 0.3));
-        });
+    return Result.ok(() -> {
+      doused.forEach(block ->
+          tools.changes().set(caster.getName(), block, Material.AIR.createBlockData(), false));
+      burning.forEach(creature -> creature.setFireTicks(0));
+      tools.fx().cast(kind(), centre);
+      doused.forEach(
+          block -> tools.fx().burst(kind(), block.getLocation().add(0.5, 0.5, 0.5), 6, 0.3));
+    });
   }
 }

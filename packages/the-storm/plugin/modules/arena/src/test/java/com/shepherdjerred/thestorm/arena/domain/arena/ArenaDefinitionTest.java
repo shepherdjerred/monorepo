@@ -52,25 +52,24 @@ final class ArenaDefinitionTest {
 
   @Test
   void everyPointButTheExitMustBeInside() {
-    assertThatThrownBy(
-            () ->
-                new ArenaDefinition(
-                    "colosseum",
-                    "Colosseum",
-                    "world",
-                    REGION,
-                    OUTSIDE,
-                    OUTSIDE,
-                    INSIDE,
-                    List.of(OUTSIDE),
-                    List.of(new Point(50, 64, 50)),
-                    Map.of("knight", new BlockPos(-1, 64, 5)),
-                    new BlockPos(6, 90, 5),
-                    List.of(new BlockPos(41, 61, 1)),
-                    List.of(),
-                    1,
-                    1,
-                    4))
+    assertThatThrownBy(() ->
+            new ArenaDefinition(
+                "colosseum",
+                "Colosseum",
+                "world",
+                REGION,
+                OUTSIDE,
+                OUTSIDE,
+                INSIDE,
+                List.of(OUTSIDE),
+                List.of(new Point(50, 64, 50)),
+                Map.of("knight", new BlockPos(-1, 64, 5)),
+                new BlockPos(6, 90, 5),
+                List.of(new BlockPos(41, 61, 1)),
+                List.of(),
+                1,
+                1,
+                4))
         .hasMessageContaining("lobby")
         .hasMessageContaining("spectator")
         .hasMessageContaining("exit")
@@ -83,90 +82,86 @@ final class ArenaDefinitionTest {
 
   @Test
   void fixturesCannotShareABlock() {
-    assertThatThrownBy(
-            () ->
-                new ArenaDefinition(
-                    "colosseum",
-                    "Colosseum",
-                    "world",
-                    REGION,
-                    INSIDE,
-                    INSIDE,
-                    OUTSIDE,
-                    List.of(INSIDE),
-                    List.of(new Point(20, 64, 20)),
-                    Map.of("knight", new BlockPos(5, 64, 5)),
-                    new BlockPos(5, 64, 5),
-                    List.of(),
-                    List.of(),
-                    1,
-                    1,
-                    4))
+    assertThatThrownBy(() ->
+            new ArenaDefinition(
+                "colosseum",
+                "Colosseum",
+                "world",
+                REGION,
+                INSIDE,
+                INSIDE,
+                OUTSIDE,
+                List.of(INSIDE),
+                List.of(new Point(20, 64, 20)),
+                Map.of("knight", new BlockPos(5, 64, 5)),
+                new BlockPos(5, 64, 5),
+                List.of(),
+                List.of(),
+                1,
+                1,
+                4))
         .hasMessageContaining("used twice");
   }
 
   @Test
   void basicsAreChecked() {
     assertThatThrownBy(() -> arena("Colosseum", REGION)).hasMessageContaining("kebab-case");
-    assertThatThrownBy(
-            () ->
-                new ArenaDefinition(
-                    "a",
-                    "A",
-                    "world",
-                    REGION,
-                    INSIDE,
-                    INSIDE,
-                    OUTSIDE,
-                    List.of(),
-                    List.of(new Point(1, 64, 1)),
-                    Map.of(),
-                    new BlockPos(6, 64, 5),
-                    List.of(),
-                    List.of(),
-                    1,
-                    1,
-                    4))
+    assertThatThrownBy(() ->
+            new ArenaDefinition(
+                "a",
+                "A",
+                "world",
+                REGION,
+                INSIDE,
+                INSIDE,
+                OUTSIDE,
+                List.of(),
+                List.of(new Point(1, 64, 1)),
+                Map.of(),
+                new BlockPos(6, 64, 5),
+                List.of(),
+                List.of(),
+                1,
+                1,
+                4))
         .hasMessageContaining("player spawns");
-    assertThatThrownBy(
-            () ->
-                new ArenaDefinition(
-                    "a",
-                    "A",
-                    "world",
-                    REGION,
-                    INSIDE,
-                    INSIDE,
-                    OUTSIDE,
-                    List.of(INSIDE),
-                    List.of(new Point(1, 64, 1)),
-                    Map.of(),
-                    new BlockPos(6, 64, 5),
-                    List.of(),
-                    List.of(),
-                    1,
-                    3,
-                    2))
+    assertThatThrownBy(() ->
+            new ArenaDefinition(
+                "a",
+                "A",
+                "world",
+                REGION,
+                INSIDE,
+                INSIDE,
+                OUTSIDE,
+                List.of(INSIDE),
+                List.of(new Point(1, 64, 1)),
+                Map.of(),
+                new BlockPos(6, 64, 5),
+                List.of(),
+                List.of(),
+                1,
+                3,
+                2))
         .hasMessageContaining("minPlayers");
-    assertThatThrownBy(
-            () ->
-                new ArenaDefinition(
-                    "a",
-                    "A",
-                    "world",
-                    REGION,
-                    INSIDE,
-                    INSIDE,
-                    OUTSIDE,
-                    List.of(INSIDE),
-                    List.of(new Point(1, 64, 1)),
-                    Map.of(),
-                    new BlockPos(6, 64, 5),
-                    List.of(),
-                    List.of(),
-                    0,
-                    1,
-                    2))
+    assertThatThrownBy(() ->
+            new ArenaDefinition(
+                "a",
+                "A",
+                "world",
+                REGION,
+                INSIDE,
+                INSIDE,
+                OUTSIDE,
+                List.of(INSIDE),
+                List.of(new Point(1, 64, 1)),
+                Map.of(),
+                new BlockPos(6, 64, 5),
+                List.of(),
+                List.of(),
+                0,
+                1,
+                2))
         .hasMessageContaining("tier");
   }
 

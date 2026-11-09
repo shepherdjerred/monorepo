@@ -91,10 +91,9 @@ final class CropCircuits {
     if (data instanceof Directional cocoa && plant.orElseThrow() == Material.COCOA) {
       var support =
           List.of(BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST).stream()
-              .filter(
-                  face ->
-                      PaperGrid.loaded(block.getRelative(face))
-                          && Tag.JUNGLE_LOGS.isTagged(block.getRelative(face).getType()))
+              .filter(face ->
+                  PaperGrid.loaded(block.getRelative(face))
+                      && Tag.JUNGLE_LOGS.isTagged(block.getRelative(face).getType()))
               .findFirst();
       if (support.isEmpty()) return false;
       cocoa.setFacing(support.orElseThrow());

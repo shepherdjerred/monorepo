@@ -412,18 +412,17 @@ final class HistoricalShopsTest extends ShopsFixture {
     var blocker =
         plugin
             .database()
-            .write(
-                ignored -> {
-                  writerStarted.countDown();
-                  try {
-                    if (!hold.await(10, java.util.concurrent.TimeUnit.SECONDS))
-                      throw new IllegalStateException("Database hold timed out");
-                  } catch (InterruptedException error) {
-                    Thread.currentThread().interrupt();
-                    throw new IllegalStateException(error);
-                  }
-                  return 0;
-                });
+            .write(ignored -> {
+              writerStarted.countDown();
+              try {
+                if (!hold.await(10, java.util.concurrent.TimeUnit.SECONDS))
+                  throw new IllegalStateException("Database hold timed out");
+              } catch (InterruptedException error) {
+                Thread.currentThread().interrupt();
+                throw new IllegalStateException(error);
+              }
+              return 0;
+            });
     assertThat(writerStarted.await(5, java.util.concurrent.TimeUnit.SECONDS)).isTrue();
     try {
       var restore = importer(registry, blocks, store).restore(List.of(entry()));

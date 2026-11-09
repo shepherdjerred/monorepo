@@ -54,13 +54,12 @@ final class LobbyChatTest {
 
     assertThat(lines)
         .singleElement()
-        .satisfies(
-            line -> {
-              assertThat(line.speaker()).isEqualTo(TWO);
-              assertThat(line.moment()).isEqualTo(Moment.GREET);
-              assertThat(line.team()).isEmpty();
-              assertThat(line.text()).isEqualTo("hello");
-            });
+        .satisfies(line -> {
+          assertThat(line.speaker()).isEqualTo(TWO);
+          assertThat(line.moment()).isEqualTo(Moment.GREET);
+          assertThat(line.team()).isEmpty();
+          assertThat(line.text()).isEqualTo("hello");
+        });
   }
 
   @Test
@@ -76,18 +75,16 @@ final class LobbyChatTest {
 
     assertThat(hello)
         .singleElement()
-        .satisfies(
-            line -> {
-              assertThat(line.moment()).isEqualTo(Moment.GREET);
-              assertThat(line.speaker()).isNotEqualTo(ALICE);
-            });
+        .satisfies(line -> {
+          assertThat(line.moment()).isEqualTo(Moment.GREET);
+          assertThat(line.speaker()).isNotEqualTo(ALICE);
+        });
     assertThat(chat)
         .singleElement()
-        .satisfies(
-            line -> {
-              assertThat(line.moment()).isEqualTo(Moment.LOBBY);
-              assertThat(line.text()).isIn("ready up", "which kit?", "gl all");
-            });
+        .satisfies(line -> {
+          assertThat(line.moment()).isEqualTo(Moment.LOBBY);
+          assertThat(line.text()).isIn("ready up", "which kit?", "gl all");
+        });
   }
 
   @Test
@@ -111,11 +108,10 @@ final class LobbyChatTest {
 
     assertThat(lines)
         .singleElement()
-        .satisfies(
-            line -> {
-              assertThat(line.moment()).isEqualTo(Moment.LOBBY);
-              assertThat(line.text()).doesNotContain("{");
-            });
+        .satisfies(line -> {
+          assertThat(line.moment()).isEqualTo(Moment.LOBBY);
+          assertThat(line.text()).doesNotContain("{");
+        });
   }
 
   @Test

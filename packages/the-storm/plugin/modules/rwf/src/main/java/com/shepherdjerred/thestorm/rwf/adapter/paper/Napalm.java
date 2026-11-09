@@ -105,11 +105,10 @@ final class Napalm {
   /** The item that holds napalm's fireballs apart: Red Warfare named each uniquely. */
   private ItemStack fireball() {
     var stack = ItemStack.of(Material.FIRE_CHARGE);
-    stack.editMeta(
-        meta ->
-            meta.displayName(
-                Component.text(String.valueOf(System.nanoTime()), NamedTextColor.GRAY)
-                    .decoration(TextDecoration.ITALIC, false)));
+    stack.editMeta(meta ->
+        meta.displayName(
+            Component.text(String.valueOf(System.nanoTime()), NamedTextColor.GRAY)
+                .decoration(TextDecoration.ITALIC, false)));
     return stack;
   }
 

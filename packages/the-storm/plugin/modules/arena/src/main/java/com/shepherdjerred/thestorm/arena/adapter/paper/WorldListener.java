@@ -213,13 +213,11 @@ final class WorldListener implements Listener {
       }
       case SLIME_SPLIT, SPELL, REINFORCEMENTS ->
           running(event.getLocation())
-              .ifPresent(
-                  runner -> {
-                    if (runner instanceof SurvivalRunner
-                        || !runner.world().adopt(event.getEntity())) {
-                      event.setCancelled(true);
-                    }
-                  });
+              .ifPresent(runner -> {
+                if (runner instanceof SurvivalRunner || !runner.world().adopt(event.getEntity())) {
+                  event.setCancelled(true);
+                }
+              });
       default -> {
         // Only offspring are adopted; the arena tags its own spawns itself.
       }
@@ -288,16 +286,13 @@ final class WorldListener implements Listener {
     event.setDroppedExp(0);
     arenas
         .byId(arena.orElseThrow())
-        .ifPresent(
-            runner ->
-                runner
-                    .world()
-                    .boss()
-                    .filter(boss -> boss.entity().equals(entity))
-                    .ifPresent(
-                        boss ->
-                            runner.announce(
-                                Notice.of(NoticeKind.BOSS_DEFEATED, "boss", boss.name()))));
+        .ifPresent(runner ->
+            runner
+                .world()
+                .boss()
+                .filter(boss -> boss.entity().equals(entity))
+                .ifPresent(boss ->
+                    runner.announce(Notice.of(NoticeKind.BOSS_DEFEATED, "boss", boss.name()))));
   }
 
   /** Daylight never burns arena mobs; fire and fire aspect still do. */

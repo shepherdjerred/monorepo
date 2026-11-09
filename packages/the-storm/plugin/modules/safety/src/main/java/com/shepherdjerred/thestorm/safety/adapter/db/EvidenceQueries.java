@@ -69,88 +69,77 @@ public final class EvidenceQueries implements EvidenceAccess {
             "");
     return store
         .attempt(audit, time.instant())
-        .thenCompose(
-            done ->
-                database.read(
-                    dsl -> {
-                      var selected =
-                          dsl.select(
-                                  field("rowid", Long.class).as("sequence"),
-                                  field("id"),
-                                  field("player"),
-                                  field("name"),
-                                  field("surface"),
-                                  field("audience"),
-                                  field("object_ref"),
-                                  field("original_text"),
-                                  field("components"),
-                                  field("created_at"))
-                              .from(table("safety_submission"))
-                              .where(field("surface", String.class).ne("evidence-access"));
-                      if (query.action().equals("show"))
-                        selected = selected.and(field("id", String.class).eq(query.id()));
-                      else {
-                        selected =
-                            selected
-                                .and(
-                                    field("player", String.class)
-                                        .containsIgnoreCase(query.player())
-                                        .or(
-                                            field("name", String.class)
-                                                .containsIgnoreCase(query.player())))
-                                .and(
-                                    field("original_text", String.class)
-                                        .containsIgnoreCase(query.text()))
-                                .and(
-                                    field("surface", String.class)
-                                        .containsIgnoreCase(query.surface()))
-                                .and(
-                                    field("created_at", String.class)
-                                        .ge(JooqEvidenceStore.stamp(Instant.parse(query.since()))))
-                                .and(
-                                    field("created_at", String.class)
-                                        .le(JooqEvidenceStore.stamp(Instant.parse(query.until()))));
-                        if (query.action().equals("export"))
-                          selected = selected.and(field("rowid", Long.class).gt(query.after()));
-                      }
-                      var rows =
-                          selected
-                              .orderBy(
-                                  query.action().equals("export")
-                                      ? field("rowid").asc()
-                                      : field("rowid").desc())
-                              .limit(query.limit())
-                              .fetch();
-                      var ids = rows.getValues("id", String.class);
-                      var events =
-                          dsl.selectFrom(table("safety_event"))
-                              .where(field("submission_id", String.class).in(ids))
-                              .and(
-                                  field("created_at", String.class)
-                                      .le(JooqEvidenceStore.stamp(Instant.parse(query.until()))))
-                              .orderBy(field("sequence"))
-                              .fetch()
-                              .intoMaps();
-                      long next =
-                          rows.isEmpty()
-                              ? query.after()
-                              : rows.getLast().get("sequence", Long.class);
-                      return json.writeValueAsString(
-                          Map.of(
-                              "version",
-                              1,
-                              "rows",
-                              rows.intoMaps(),
-                              "events",
-                              events,
-                              "next",
-                              next,
-                              "hasMore",
-                              rows.size() == query.limit()));
-                    }))
-        .thenCompose(
-            result ->
-                store.event(id, "evidence-viewed", "", time.instant()).thenApply(done -> result));
+        .thenCompose(done ->
+            database.read(dsl -> {
+              var selected =
+                  dsl.select(
+                          field("rowid", Long.class).as("sequence"),
+                          field("id"),
+                          field("player"),
+                          field("name"),
+                          field("surface"),
+                          field("audience"),
+                          field("object_ref"),
+                          field("original_text"),
+                          field("components"),
+                          field("created_at"))
+                      .from(table("safety_submission"))
+                      .where(field("surface", String.class).ne("evidence-access"));
+              if (query.action().equals("show"))
+                selected = selected.and(field("id", String.class).eq(query.id()));
+              else {
+                selected =
+                    selected
+                        .and(
+                            field("player", String.class)
+                                .containsIgnoreCase(query.player())
+                                .or(field("name", String.class).containsIgnoreCase(query.player())))
+                        .and(field("original_text", String.class).containsIgnoreCase(query.text()))
+                        .and(field("surface", String.class).containsIgnoreCase(query.surface()))
+                        .and(
+                            field("created_at", String.class)
+                                .ge(JooqEvidenceStore.stamp(Instant.parse(query.since()))))
+                        .and(
+                            field("created_at", String.class)
+                                .le(JooqEvidenceStore.stamp(Instant.parse(query.until()))));
+                if (query.action().equals("export"))
+                  selected = selected.and(field("rowid", Long.class).gt(query.after()));
+              }
+              var rows =
+                  selected
+                      .orderBy(
+                          query.action().equals("export")
+                              ? field("rowid").asc()
+                              : field("rowid").desc())
+                      .limit(query.limit())
+                      .fetch();
+              var ids = rows.getValues("id", String.class);
+              var events =
+                  dsl.selectFrom(table("safety_event"))
+                      .where(field("submission_id", String.class).in(ids))
+                      .and(
+                          field("created_at", String.class)
+                              .le(JooqEvidenceStore.stamp(Instant.parse(query.until()))))
+                      .orderBy(field("sequence"))
+                      .fetch()
+                      .intoMaps();
+              long next =
+                  rows.isEmpty() ? query.after() : rows.getLast().get("sequence", Long.class);
+              return json.writeValueAsString(
+                  Map.of(
+                      "version",
+                      1,
+                      "rows",
+                      rows.intoMaps(),
+                      "events",
+                      events,
+                      "next",
+                      next,
+                      "hasMore",
+                      rows.size() == query.limit()));
+            }))
+        .thenCompose(result ->
+            store.event(id, "evidence-viewed", "", time.instant()).thenApply(done -> result));
   }
 
   private EvidenceQuery parse(String raw) {

@@ -101,12 +101,11 @@ final class ReadyDraw {
     return snapshot.alive(self.team()).stream()
         .filter(ally -> !ally.id().equals(self.id()))
         .map(ally -> ally.pos().plus(0, 1.0, 0).minus(eye))
-        .anyMatch(
-            offset -> {
-              var reach = offset.dot(along);
-              return reach > 0
-                  && reach < length
-                  && offset.minus(along.scale(reach)).length() <= ALLY_CLEARANCE;
-            });
+        .anyMatch(offset -> {
+          var reach = offset.dot(along);
+          return reach > 0
+              && reach < length
+              && offset.minus(along.scale(reach)).length() <= ALLY_CLEARANCE;
+        });
   }
 }

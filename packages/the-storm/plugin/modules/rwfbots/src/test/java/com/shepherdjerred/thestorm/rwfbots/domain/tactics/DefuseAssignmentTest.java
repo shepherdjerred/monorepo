@@ -96,18 +96,17 @@ final class DefuseAssignmentTest {
     var workers = nav.bombScreens().require(nav.sites().bombs().getFirst().name()).workers();
     var slots =
         IntStream.range(0, world.combatants().size())
-            .mapToObj(
-                index ->
-                    new Slot(
-                        "station-" + index,
-                        SlotKind.ANCHOR,
-                        admitted && index < 2 ? Role.RETAKE : Role.DEFEND,
-                        nav.graph().feet(workers.get(index % workers.size())),
-                        bomb.pos(),
-                        -1,
-                        -1,
-                        Optional.empty(),
-                        0))
+            .mapToObj(index ->
+                new Slot(
+                    "station-" + index,
+                    SlotKind.ANCHOR,
+                    admitted && index < 2 ? Role.RETAKE : Role.DEFEND,
+                    nav.graph().feet(workers.get(index % workers.size())),
+                    bomb.pos(),
+                    -1,
+                    -1,
+                    Optional.empty(),
+                    0))
             .toList();
     var assignments =
         IntStream.range(0, slots.size())

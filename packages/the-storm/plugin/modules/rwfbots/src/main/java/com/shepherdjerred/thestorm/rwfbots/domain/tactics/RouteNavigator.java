@@ -159,23 +159,20 @@ final class RouteNavigator {
       TacticsContext context, Endpoints endpoints, Tolls tolls, Search search) {
     return context
         .route(search.request(), search.edges())
-        .flatMap(
-            route -> {
-              var points = new ArrayList<Waypoint>();
-              points.addAll(route.path().toFollow());
-              if (submerged(context, endpoints.goal()))
-                points.add(new Waypoint(endpoints.goal(), Hop.SWIM));
-              else if (points.isEmpty()
-                  && endpoints
-                          .source()
-                          .horizontalDistance(context.nav().graph().feet(endpoints.to()))
-                      > 0) {
-                // Sharing a graph cell does not mean the body has reached its cover point.
-                points.add(new Waypoint(context.nav().graph().feet(endpoints.to()), Hop.WALK));
-              }
-              return refine(context, endpoints.source(), points, tolls)
-                  .flatMap(refined -> score(context, endpoints.source(), refined, tolls));
-            });
+        .flatMap(route -> {
+          var points = new ArrayList<Waypoint>();
+          points.addAll(route.path().toFollow());
+          if (submerged(context, endpoints.goal()))
+            points.add(new Waypoint(endpoints.goal(), Hop.SWIM));
+          else if (points.isEmpty()
+              && endpoints.source().horizontalDistance(context.nav().graph().feet(endpoints.to()))
+                  > 0) {
+            // Sharing a graph cell does not mean the body has reached its cover point.
+            points.add(new Waypoint(context.nav().graph().feet(endpoints.to()), Hop.WALK));
+          }
+          return refine(context, endpoints.source(), points, tolls)
+              .flatMap(refined -> score(context, endpoints.source(), refined, tolls));
+        });
   }
 
   private static Optional<Candidate> water(

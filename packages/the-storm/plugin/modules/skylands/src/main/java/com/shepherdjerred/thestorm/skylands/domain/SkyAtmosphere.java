@@ -44,13 +44,12 @@ final class SkyAtmosphere {
 
   private static double distance(SkyPosition p, List<SkyPiece> pieces) {
     return pieces.stream()
-        .mapToDouble(
-            piece -> {
-              var b = piece.bounds();
-              var dx = Math.max(0, Math.max(b.min().x() - p.x(), p.x() - b.max().x()));
-              var dz = Math.max(0, Math.max(b.min().z() - p.z(), p.z() - b.max().z()));
-              return Math.hypot(dx, dz) + Math.abs(p.y() - piece.origin().y()) * .5;
-            })
+        .mapToDouble(piece -> {
+          var b = piece.bounds();
+          var dx = Math.max(0, Math.max(b.min().x() - p.x(), p.x() - b.max().x()));
+          var dz = Math.max(0, Math.max(b.min().z() - p.z(), p.z() - b.max().z()));
+          return Math.hypot(dx, dz) + Math.abs(p.y() - piece.origin().y()) * .5;
+        })
         .min()
         .orElseThrow();
   }

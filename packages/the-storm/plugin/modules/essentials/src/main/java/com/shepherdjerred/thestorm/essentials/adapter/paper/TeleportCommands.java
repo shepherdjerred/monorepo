@@ -102,15 +102,14 @@ final class TeleportCommands {
             .then(
                 argument("name", word())
                     .suggests(homeNames())
-                    .executes(
-                        context ->
-                            Cmd.asPlayer(
-                                context,
-                                player ->
-                                    withName(
-                                        player,
-                                        Cmd.string(context, "name"),
-                                        name -> home(player, Optional.of(name))))))
+                    .executes(context ->
+                        Cmd.asPlayer(
+                            context,
+                            player ->
+                                withName(
+                                    player,
+                                    Cmd.string(context, "name"),
+                                    name -> home(player, Optional.of(name))))))
             .build(),
         "Teleport to one of your homes");
     commands.register(
@@ -120,15 +119,14 @@ final class TeleportCommands {
                 context -> Cmd.asPlayer(context, player -> setHome(player, HomeRules.DEFAULT_NAME)))
             .then(
                 argument("name", word())
-                    .executes(
-                        context ->
-                            Cmd.asPlayer(
-                                context,
-                                player ->
-                                    withName(
-                                        player,
-                                        Cmd.string(context, "name"),
-                                        name -> setHome(player, name)))))
+                    .executes(context ->
+                        Cmd.asPlayer(
+                            context,
+                            player ->
+                                withName(
+                                    player,
+                                    Cmd.string(context, "name"),
+                                    name -> setHome(player, name)))))
             .build(),
         "Set a home where you stand");
     commands.register(
@@ -137,15 +135,14 @@ final class TeleportCommands {
             .then(
                 argument("name", word())
                     .suggests(homeNames())
-                    .executes(
-                        context ->
-                            Cmd.asPlayer(
-                                context,
-                                player ->
-                                    withName(
-                                        player,
-                                        Cmd.string(context, "name"),
-                                        name -> deleteHome(player, name)))))
+                    .executes(context ->
+                        Cmd.asPlayer(
+                            context,
+                            player ->
+                                withName(
+                                    player,
+                                    Cmd.string(context, "name"),
+                                    name -> deleteHome(player, name)))))
             .build(),
         "Delete one of your homes");
     commands.register(
@@ -164,15 +161,12 @@ final class TeleportCommands {
             .then(
                 argument("name", word())
                     .suggests(Cmd.suggest(this::warpNames))
-                    .executes(
-                        context ->
-                            Cmd.asPlayer(
-                                context,
-                                player ->
-                                    withName(
-                                        player,
-                                        Cmd.string(context, "name"),
-                                        n -> warp(player, n)))))
+                    .executes(context ->
+                        Cmd.asPlayer(
+                            context,
+                            player ->
+                                withName(
+                                    player, Cmd.string(context, "name"), n -> warp(player, n)))))
             .build(),
         "Teleport to a warp");
     commands.register(
@@ -180,15 +174,12 @@ final class TeleportCommands {
             .requires(Cmd.permission(EssentialsPermissions.SET_WARP))
             .then(
                 argument("name", word())
-                    .executes(
-                        context ->
-                            Cmd.asPlayer(
-                                context,
-                                player ->
-                                    withName(
-                                        player,
-                                        Cmd.string(context, "name"),
-                                        n -> setWarp(player, n)))))
+                    .executes(context ->
+                        Cmd.asPlayer(
+                            context,
+                            player ->
+                                withName(
+                                    player, Cmd.string(context, "name"), n -> setWarp(player, n)))))
             .build(),
         "Set a warp where you stand");
     commands.register(
@@ -197,15 +188,14 @@ final class TeleportCommands {
             .then(
                 argument("name", word())
                     .suggests(Cmd.suggest(this::warpNames))
-                    .executes(
-                        context ->
-                            Cmd.asPlayer(
-                                context,
-                                player ->
-                                    withName(
-                                        player,
-                                        Cmd.string(context, "name"),
-                                        n -> deleteWarp(player, n)))))
+                    .executes(context ->
+                        Cmd.asPlayer(
+                            context,
+                            player ->
+                                withName(
+                                    player,
+                                    Cmd.string(context, "name"),
+                                    n -> deleteWarp(player, n)))))
             .build(),
         "Delete a warp");
   }
@@ -408,11 +398,10 @@ final class TeleportCommands {
       return places
           .homes()
           .homes(player.getUniqueId())
-          .thenApply(
-              homes -> {
-                Cmd.addMatching(builder, homes.stream().map(h -> h.name().value()).toList());
-                return builder.build();
-              });
+          .thenApply(homes -> {
+            Cmd.addMatching(builder, homes.stream().map(h -> h.name().value()).toList());
+            return builder.build();
+          });
     };
   }
 

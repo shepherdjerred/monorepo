@@ -30,11 +30,10 @@ final class TacticalKitListener implements Listener {
         .powers()
         .tactical()
         .input(player, item.getType())
-        .ifPresent(
-            input -> {
-              event.setUseItemInHand(Event.Result.DENY);
-              event.setUseInteractedBlock(Event.Result.DENY);
-              runner.kits().act(player, input);
-            });
+        .ifPresent(input -> {
+          event.setUseItemInHand(Event.Result.DENY);
+          event.setUseInteractedBlock(Event.Result.DENY);
+          runner.kits().act(player, input);
+        });
   }
 }

@@ -52,12 +52,11 @@ final class SimulatorTest {
     var runs = simulate(quest);
     assertThat(runs)
         .singleElement()
-        .satisfies(
-            run -> {
-              assertThat(run.completed()).as(String.join("\n", run.transcript())).isTrue();
-              assertThat(run.crystals()).isEqualTo(10);
-              assertThat(run.transcript()).last().isEqualTo("completed");
-            });
+        .satisfies(run -> {
+          assertThat(run.completed()).as(String.join("\n", run.transcript())).isTrue();
+          assertThat(run.crystals()).isEqualTo(10);
+          assertThat(run.transcript()).last().isEqualTo("completed");
+        });
   }
 
   @Test
@@ -107,11 +106,10 @@ final class SimulatorTest {
     var runs = simulate(quest, prior);
     assertThat(runs)
         .singleElement()
-        .satisfies(
-            run -> {
-              assertThat(run.completed()).as(String.join("\n", run.transcript())).isTrue();
-              assertThat(run.transcript()).contains("wait for complete");
-            });
+        .satisfies(run -> {
+          assertThat(run.completed()).as(String.join("\n", run.transcript())).isTrue();
+          assertThat(run.transcript()).contains("wait for complete");
+        });
   }
 
   @Test
@@ -123,19 +121,17 @@ final class SimulatorTest {
             .build();
     assertThat(simulate(locked))
         .singleElement()
-        .satisfies(
-            run -> {
-              assertThat(run.completed()).isFalse();
-              assertThat(run.transcript()).anyMatch(line -> line.startsWith("refused"));
-            });
+        .satisfies(run -> {
+          assertThat(run.completed()).isFalse();
+          assertThat(run.transcript()).anyMatch(line -> line.startsWith("refused"));
+        });
     var failing = quest("fails").stage(stage("s").objective(talk("giver")).then("fail")).build();
     assertThat(simulate(failing))
         .singleElement()
-        .satisfies(
-            run -> {
-              assertThat(run.completed()).isFalse();
-              assertThat(run.transcript()).last().isEqualTo("ended without completing");
-            });
+        .satisfies(run -> {
+          assertThat(run.completed()).isFalse();
+          assertThat(run.transcript()).last().isEqualTo("ended without completing");
+        });
     var stuck =
         quest("stuck")
             .stage(
@@ -158,10 +154,9 @@ final class SimulatorTest {
             .build();
     assertThat(simulate(waiting))
         .singleElement()
-        .satisfies(
-            run -> {
-              assertThat(run.completed()).isFalse();
-              assertThat(run.transcript()).anyMatch(line -> line.startsWith("stuck in stage"));
-            });
+        .satisfies(run -> {
+          assertThat(run.completed()).isFalse();
+          assertThat(run.transcript()).anyMatch(line -> line.startsWith("stuck in stage"));
+        });
   }
 }

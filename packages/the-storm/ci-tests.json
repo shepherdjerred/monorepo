@@ -17,6 +17,7 @@
       "runner": "vitest",
       "group": "tools",
       "args": [
+        "tests/pins.test.ts",
         "tests/rcon.test.ts",
         "tests/rwf-recording.test.ts",
         "tests/rwf-status.test.ts",

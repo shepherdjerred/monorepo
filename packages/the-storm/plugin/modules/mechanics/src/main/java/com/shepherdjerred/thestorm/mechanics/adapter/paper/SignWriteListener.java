@@ -52,12 +52,11 @@ final class SignWriteListener implements Listener {
     var lines = event.lines().stream().map(PaperGrid::plain).toList();
     var tagged = SignTags.parse(lines.get(SignTags.TAG_LINE));
     if (event.getSide() == Side.BACK) {
-      tagged.ifPresent(
-          mechanism -> {
-            event.setCancelled(true);
-            Replies.error(
-                player, mechanism.feature(), "Mechanism signs are written on the front of a sign.");
-          });
+      tagged.ifPresent(mechanism -> {
+        event.setCancelled(true);
+        Replies.error(
+            player, mechanism.feature(), "Mechanism signs are written on the front of a sign.");
+      });
       return;
     }
     var grid = new PaperGrid(block.getWorld());

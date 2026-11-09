@@ -180,9 +180,8 @@ public final class RwfModule implements StormModule {
                 shop,
                 hooks
                     .server()
-                    .orElseGet(
-                        () ->
-                            ServerHooks.production(context.services().require(ChunkTickets.class))),
+                    .orElseGet(() ->
+                        ServerHooks.production(context.services().require(ChunkTickets.class))),
                 features(context, config),
                 stats,
                 new com.shepherdjerred.thestorm.rwf.adapter.db.JooqQuarantineStore(
@@ -198,57 +197,52 @@ public final class RwfModule implements StormModule {
     context
         .services()
         .find(com.shepherdjerred.thestorm.core.safety.ContentSafety.class)
-        .ifPresent(
-            safety ->
-                safety.evidenceContext(
-                    "rwf",
-                    player ->
-                        started
-                            .view()
-                            .current()
-                            .map(
-                                match ->
-                                    "match="
-                                        + match.matchId()
-                                        + " map="
-                                        + match.mapId()
-                                        + " phase="
-                                        + match.phase()
-                                        + " fighter="
-                                        + match.combatants().stream()
-                                            .filter(fighter -> fighter.id().uuid().equals(player))
-                                            .toList()
-                                        + " noFallUntil="
-                                        + started.view().noFallUntil(player))
-                            .orElse("none")));
+        .ifPresent(safety ->
+            safety.evidenceContext(
+                "rwf",
+                player ->
+                    started
+                        .view()
+                        .current()
+                        .map(match ->
+                            "match="
+                                + match.matchId()
+                                + " map="
+                                + match.mapId()
+                                + " phase="
+                                + match.phase()
+                                + " fighter="
+                                + match.combatants().stream()
+                                    .filter(fighter -> fighter.id().uuid().equals(player))
+                                    .toList()
+                                + " noFallUntil="
+                                + started.view().noFallUntil(player))
+                        .orElse("none")));
     context.services().provide(MatchEvents.class, started.events());
     discordPosts =
         context
             .services()
             .find(DiscordRelay.class)
-            .map(
-                relay ->
-                    new RwfDiscordPosts(
-                        relay,
-                        content.maps().stream()
-                            .map(MapSource::definition)
-                            .collect(
-                                Collectors.toUnmodifiableMap(
-                                    MapDefinition::id, MapDefinition::name)),
-                        context.logger()))
+            .map(relay ->
+                new RwfDiscordPosts(
+                    relay,
+                    content.maps().stream()
+                        .map(MapSource::definition)
+                        .collect(
+                            Collectors.toUnmodifiableMap(MapDefinition::id, MapDefinition::name)),
+                    context.logger()))
             .map(posts -> started.events().subscribe(posts::accept))
             .orElse(null);
     context
         .services()
         .find(DiscordRelay.class)
-        .ifPresent(
-            relay ->
-                relay.addCommand(
-                    new RwfStatsCommand(
-                            matches,
-                            context.services().require(PlayerDirectory.class),
-                            context.logger())
-                        .command()));
+        .ifPresent(relay ->
+            relay.addCommand(
+                new RwfStatsCommand(
+                        matches,
+                        context.services().require(PlayerDirectory.class),
+                        context.logger())
+                    .command()));
     context.services().provide(CombatantActions.class, started.actions());
     context
         .services()
@@ -269,33 +263,29 @@ public final class RwfModule implements StormModule {
     var _ =
         payouts
             .replay()
-            .whenComplete(
-                (paid, failure) -> {
-                  if (failure != null) {
-                    context.logger().error("Could not replay rwf payouts", failure);
-                  } else if (!paid.isEmpty()) {
-                    context
-                        .logger()
-                        .info("Replayed {} rwf payouts left by the last run", paid.size());
-                  }
-                });
+            .whenComplete((paid, failure) -> {
+              if (failure != null) {
+                context.logger().error("Could not replay rwf payouts", failure);
+              } else if (!paid.isEmpty()) {
+                context.logger().info("Replayed {} rwf payouts left by the last run", paid.size());
+              }
+            });
   }
 
   private static void replayPurchases(ModuleContext context, KitShop shop) {
     var _ =
         shop.replay(context.time().instant())
-            .whenComplete(
-                (settled, failure) -> {
-                  if (failure != null) {
-                    context.logger().error("Could not settle pending rwf kit purchases", failure);
-                  } else if (!settled.isEmpty()) {
-                    context
-                        .logger()
-                        .info(
-                            "Settled {} rwf kit purchases left pending by the last run",
-                            settled.size());
-                  }
-                });
+            .whenComplete((settled, failure) -> {
+              if (failure != null) {
+                context.logger().error("Could not settle pending rwf kit purchases", failure);
+              } else if (!settled.isEmpty()) {
+                context
+                    .logger()
+                    .info(
+                        "Settled {} rwf kit purchases left pending by the last run",
+                        settled.size());
+              }
+            });
   }
 
   /**
@@ -354,33 +344,31 @@ public final class RwfModule implements StormModule {
     var _ =
         context
             .compute()
-            .submit(
-                () ->
-                    Retention.prune(
-                        recorder.root(),
-                        Duration.ofDays(config.recording().retentionDays()),
-                        config.recording().maxBytes(),
-                        now))
-            .whenComplete(
-                (report, failure) -> {
-                  if (failure != null) {
-                    context.logger().error("Could not prune rwf recordings", failure);
-                  } else {
-                    if (report.deleted() > 0) {
-                      context.logger().info("Pruned {} archived rwf recordings", report.deleted());
-                    }
-                    if (report.bytesOverCap() > 0) {
-                      context
-                          .logger()
-                          .warn(
-                              "rwf recordings exceed their {}-byte cap by {} bytes; {} are not"
-                                  + " archived yet and are kept",
-                              config.recording().maxBytes(),
-                              report.bytesOverCap(),
-                              report.unarchived());
-                    }
-                  }
-                });
+            .submit(() ->
+                Retention.prune(
+                    recorder.root(),
+                    Duration.ofDays(config.recording().retentionDays()),
+                    config.recording().maxBytes(),
+                    now))
+            .whenComplete((report, failure) -> {
+              if (failure != null) {
+                context.logger().error("Could not prune rwf recordings", failure);
+              } else {
+                if (report.deleted() > 0) {
+                  context.logger().info("Pruned {} archived rwf recordings", report.deleted());
+                }
+                if (report.bytesOverCap() > 0) {
+                  context
+                      .logger()
+                      .warn(
+                          "rwf recordings exceed their {}-byte cap by {} bytes; {} are not"
+                              + " archived yet and are kept",
+                          config.recording().maxBytes(),
+                          report.bytesOverCap(),
+                          report.unarchived());
+                }
+              }
+            });
     return recorder;
   }
 

@@ -145,10 +145,9 @@ final class TeleportListener implements Listener {
       return;
     }
     Positions.toLocation(runtime.server(), spawn.spawn())
-        .ifPresent(
-            fallback -> {
-              var _ = player.teleportAsync(fallback);
-            });
+        .ifPresent(fallback -> {
+          var _ = player.teleportAsync(fallback);
+        });
   }
 
   private static boolean stillAtBed(Player player, Location spot) {

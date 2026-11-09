@@ -259,10 +259,9 @@ public final class QuestService implements QuestHooks, QuestProgress, QuestCompl
           wiring
               .content()
               .template(entry.template())
-              .orElseThrow(
-                  () ->
-                      new IllegalStateException(
-                          "Stored board template no longer exists: " + entry.template()));
+              .orElseThrow(() ->
+                  new IllegalStateException(
+                      "Stored board template no longer exists: " + entry.template()));
       board.add(BoardQuests.quest(template, entry, wiring.config().board().npc()));
     }
     return wiring.content().catalog().with(board);
@@ -310,12 +309,11 @@ public final class QuestService implements QuestHooks, QuestProgress, QuestCompl
     var nodes = new HashMap<String, QuestDialogue.Node>();
     dialogue
         .nodes()
-        .forEach(
-            (id, node) ->
-                nodes.put(
-                    id,
-                    new QuestDialogue.Node(
-                        textRenderer.render(node.text(), state, context), node.options())));
+        .forEach((id, node) ->
+            nodes.put(
+                id,
+                new QuestDialogue.Node(
+                    textRenderer.render(node.text(), state, context), node.options())));
     return new QuestDialogue(dialogue.title(), dialogue.start(), nodes);
   }
 
@@ -808,15 +806,13 @@ public final class QuestService implements QuestHooks, QuestProgress, QuestCompl
       return;
     }
     context(player, state)
-        .ifPresent(
-            context -> {
-              if (requireCurrentBoard && boardExpired(state, context.now())) {
-                refresh(
-                    player, () -> withContext(player, step, requireCurrentBoard, context.facts()));
-              } else {
-                step.run(state, context);
-              }
-            });
+        .ifPresent(context -> {
+          if (requireCurrentBoard && boardExpired(state, context.now())) {
+            refresh(player, () -> withContext(player, step, requireCurrentBoard, context.facts()));
+          } else {
+            step.run(state, context);
+          }
+        });
   }
 
   private void withContext(UUID player, Step step, boolean requireCurrentBoard, Facts facts) {
@@ -874,13 +870,12 @@ public final class QuestService implements QuestHooks, QuestProgress, QuestCompl
         outcome.effects().stream()
             .filter(Effect.World.class::isInstance)
             .map(Effect.World.class::cast)
-            .map(
-                effect ->
-                    new PendingWorld(
-                        new UUID(wiring.random().nextLong(), wiring.random().nextLong()),
-                        player,
-                        effect.quest(),
-                        effect.action()))
+            .map(effect ->
+                new PendingWorld(
+                    new UUID(wiring.random().nextLong(), wiring.random().nextLong()),
+                    player,
+                    effect.quest(),
+                    effect.action()))
             .toList();
     if (after.equals(before) && pending.isEmpty()) {
       if (save.measured()) measure(player, outcome, catalog);
@@ -920,11 +915,10 @@ public final class QuestService implements QuestHooks, QuestProgress, QuestCompl
                   }
                 },
                 wiring.mainThread())
-            .exceptionally(
-                failure -> {
-                  wiring.logger().error("Quest commit callback failed for {}", player, failure);
-                  return null;
-                });
+            .exceptionally(failure -> {
+              wiring.logger().error("Quest commit callback failed for {}", player, failure);
+              return null;
+            });
   }
 
   private void saved(UUID player, PendingCommit committed, Throwable failure) {
@@ -982,11 +976,10 @@ public final class QuestService implements QuestHooks, QuestProgress, QuestCompl
           catalog
               .quest(id)
               .filter(QuestMilestone::worthTelling)
-              .ifPresent(
-                  quest -> {
-                    var milestone = new QuestMilestone(player, quest.name());
-                    List.copyOf(milestones).forEach(listener -> listener.accept(milestone));
-                  });
+              .ifPresent(quest -> {
+                var milestone = new QuestMilestone(player, quest.name());
+                List.copyOf(milestones).forEach(listener -> listener.accept(milestone));
+              });
           if (catalog
               .quest(id)
               .filter(quest -> QuestCompletions.counts(quest.category()))
@@ -1030,11 +1023,10 @@ public final class QuestService implements QuestHooks, QuestProgress, QuestCompl
     for (var effect : outcome.effects()) {
       if (!(effect instanceof Effect.World)) {
         if (effect instanceof Effect.Say(var npc, var text)) {
-          context.ifPresent(
-              current ->
-                  executor.run(
-                      new Effect.Say(npc, textRenderer.render(text, outcome.state(), current)),
-                      catalog));
+          context.ifPresent(current ->
+              executor.run(
+                  new Effect.Say(npc, textRenderer.render(text, outcome.state(), current)),
+                  catalog));
         } else {
           executor.run(effect, catalog);
         }

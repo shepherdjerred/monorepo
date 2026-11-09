@@ -100,27 +100,24 @@ final class Structures {
     return binder
         .bind(use.site(records(grid)))
         .mapError(Structures::explain)
-        .flatMap(
-            bind -> {
-              var rights = kit.guard().cells(creator, grid, bind.cells());
-              for (var write : bind.writes()) {
-                if (rights.isAllowed() && !write.sign().equals(use.sign())) {
-                  rights = kit.guard().check(creator, ProtectedAction.BUILD, grid, write.sign());
-                }
-              }
-              if (rights instanceof Decision.Denied(var reason)) {
-                return Result.err(reason);
-              }
-              return Result.ok(
-                  () ->
-                      bind.writes()
-                          .forEach(
-                              write -> {
-                                var sign = sign(grid, write.sign());
-                                kit.signs().setBinding(sign, write.binding());
-                                update(sign);
-                              }));
-            });
+        .flatMap(bind -> {
+          var rights = kit.guard().cells(creator, grid, bind.cells());
+          for (var write : bind.writes()) {
+            if (rights.isAllowed() && !write.sign().equals(use.sign())) {
+              rights = kit.guard().check(creator, ProtectedAction.BUILD, grid, write.sign());
+            }
+          }
+          if (rights instanceof Decision.Denied(var reason)) {
+            return Result.err(reason);
+          }
+          return Result.ok(() ->
+              bind.writes()
+                  .forEach(write -> {
+                    var sign = sign(grid, write.sign());
+                    kit.signs().setBinding(sign, write.binding());
+                    update(sign);
+                  }));
+        });
   }
 
   /** A right-click: add the held blocks if they are the structure's, otherwise toggle it. */
@@ -133,12 +130,11 @@ final class Structures {
     var held = player.getInventory().getItemInMainHand();
     var bound = binder.resolve(use.site(records(use.grid()))).mapError(Structures::explain);
     var outcome =
-        bound.flatMap(
-            structure ->
-                !held.isEmpty()
-                        && PaperGrid.key(held.getType()).equals(structure.structure().material())
-                    ? deposit(use.grid(), structure.keeper(), held)
-                    : toggle(owner, use, structure, Target.TOGGLE).map(Structures::describe));
+        bound.flatMap(structure ->
+            !held.isEmpty()
+                    && PaperGrid.key(held.getType()).equals(structure.structure().material())
+                ? deposit(use.grid(), structure.keeper(), held)
+                : toggle(owner, use, structure, Target.TOGGLE).map(Structures::describe));
     switch (outcome) {
       case Result.Ok<String, Component>(var message) -> Replies.info(player, feature, message);
       case Result.Err<String, Component>(var reason) -> Replies.error(player, feature, reason);
@@ -150,12 +146,11 @@ final class Structures {
     return binder
         .resolve(use.site(records(use.grid())))
         .mapError(Structures::explain)
-        .flatMap(
-            bound -> {
-              if (kit.guard().automaticCells(owner, use.grid(), bound.structure().cells())
-                  instanceof Decision.Denied(var reason)) return Result.err(reason);
-              return toggle(owner, use, bound, target);
-            });
+        .flatMap(bound -> {
+          if (kit.guard().automaticCells(owner, use.grid(), bound.structure().cells())
+              instanceof Decision.Denied(var reason)) return Result.err(reason);
+          return toggle(owner, use, bound, target);
+        });
   }
 
   private Result<StructurePlan, Component> toggle(
@@ -199,13 +194,12 @@ final class Structures {
     var offered = Stock.of(material, held.getAmount());
     return StructureToggle.deposit(material, kit.signs().stock(keeper), offered)
         .mapError(Structures::explain)
-        .map(
-            stock -> {
-              kit.signs().setStock(keeper, stock);
-              update(keeper);
-              held.setAmount(0);
-              return "Added " + offered.count() + holding(stock);
-            });
+        .map(stock -> {
+          kit.signs().setStock(keeper, stock);
+          update(keeper);
+          held.setAmount(0);
+          return "Added " + offered.count() + holding(stock);
+        });
   }
 
   private static Component explain(StructureProblem problem) {

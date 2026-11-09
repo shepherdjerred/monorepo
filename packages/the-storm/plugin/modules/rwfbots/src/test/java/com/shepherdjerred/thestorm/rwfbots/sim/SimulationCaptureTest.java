@@ -53,12 +53,11 @@ final class SimulationCaptureTest {
             .toList();
     assertThat(endings)
         .hasSize(16)
-        .allSatisfy(
-            end -> {
-              assertThat(end.contact()).isNotNull().isPositive();
-              assertThat(end.tick()).isEqualTo(Math.max(Advance.BY, end.contact()));
-              assertThat(end.measurements()).hasSize(2);
-            });
+        .allSatisfy(end -> {
+          assertThat(end.contact()).isNotNull().isPositive();
+          assertThat(end.tick()).isEqualTo(Math.max(Advance.BY, end.contact()));
+          assertThat(end.measurements()).hasSize(2);
+        });
     assertThatThrownBy(() -> SimulationCapture.capture(file))
         .isInstanceOf(FileAlreadyExistsException.class);
     assertThat(Files.readAllBytes(file)).isEqualTo(original);
@@ -72,15 +71,13 @@ final class SimulationCaptureTest {
             json.replace("\"firstSeed\":10", "\"firstSeed\":11"), SimulationContract.Spec.class);
     assertThatThrownBy(() -> SimulationContract.validate(changed))
         .hasMessageContaining("fixed advancement test");
-    assertThatThrownBy(
-            () ->
-                PromotionContract.JSON.readValue(
-                    json.replace("\"firstSeed\":10,", ""), SimulationContract.Spec.class))
+    assertThatThrownBy(() ->
+            PromotionContract.JSON.readValue(
+                json.replace("\"firstSeed\":10,", ""), SimulationContract.Spec.class))
         .hasMessageContaining("firstSeed");
-    assertThatThrownBy(
-            () ->
-                PromotionContract.JSON.readValue(
-                    json.replace("{", "{\"unexpected\":true,"), SimulationContract.Spec.class))
+    assertThatThrownBy(() ->
+            PromotionContract.JSON.readValue(
+                json.replace("{", "{\"unexpected\":true,"), SimulationContract.Spec.class))
         .hasMessageContaining("unexpected");
   }
 }

@@ -11,6 +11,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.towns.domain.land.BlockPos;
+import com.shepherdjerred.thestorm.towns.domain.land.ChunkPos;
+import com.shepherdjerred.thestorm.towns.domain.land.Claim;
+import com.shepherdjerred.thestorm.towns.domain.land.ClaimFlag;
+import com.shepherdjerred.thestorm.towns.domain.land.ClaimFlags;
 import com.shepherdjerred.thestorm.towns.domain.town.PlayerRef;
 import java.util.HashMap;
 import java.util.List;
@@ -314,6 +318,23 @@ final class LockRulesTest {
   }
 
   @Test
+  void aClaimIsPrivateOnlyWhenNobodyButItsOwnerCanWorkItsSwitches() {
+    var chunk = new ChunkPos("world", 0, 0);
+    var town = UUID.randomUUID();
+    var solo = new Claim(chunk, town, ClaimFlags.none());
+    var trusted = new Claim(chunk, town, ClaimFlags.none(), Set.of(NOMAD));
+    var publicSwitches = new Claim(chunk, town, ClaimFlags.of(ClaimFlag.PUBLIC_SWITCHES));
+    var publicBuild = new Claim(chunk, town, ClaimFlags.of(ClaimFlag.PUBLIC_BUILD));
+
+    assertThat(LockAccess.privateTo(OWNER, solo, Set.of(OWNER))).isTrue();
+    assertThat(LockAccess.privateTo(OWNER, solo, Set.of(OWNER, MEMBER))).isFalse();
+    assertThat(LockAccess.privateTo(OWNER, trusted, Set.of(OWNER))).isFalse();
+    assertThat(LockAccess.privateTo(OWNER, publicSwitches, Set.of(OWNER))).isFalse();
+    assertThat(LockAccess.privateTo(OWNER, publicBuild, Set.of(OWNER))).isFalse();
+    assertThat(LockAccess.privateTo(NOMAD, solo, Set.of(OWNER))).isFalse();
+  }
+
+  @Test
   void aLockCoversOneOrTwoBlocksAndNeverTrustsItsOwner() {
     assertThatThrownBy(() -> Lock.of(NEW_ID, OWNER, Set.of()))
         .isInstanceOf(IllegalArgumentException.class);
@@ -323,10 +344,9 @@ final class LockRulesTest {
     assertThatThrownBy(() -> Lock.of(NEW_ID, OWNER, Set.of(LEFT)).withTrust(OWNER, LockGrant.USE))
         .isInstanceOf(IllegalArgumentException.class);
     assertThatThrownBy(() -> new LockPolicy(0, true)).isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(
-            () ->
-                new LockAttempt(
-                    OWNER, List.of(), new LockAttempt.Standing(null, true, OPEN, false), NEW_ID))
+    assertThatThrownBy(() ->
+            new LockAttempt(
+                OWNER, List.of(), new LockAttempt.Standing(null, true, OPEN, false), NEW_ID))
         .isInstanceOf(IllegalArgumentException.class);
   }
 

@@ -127,17 +127,27 @@ the events itself. These need a real server:
   town (not their land); in the wilderness anyone may lock one nobody is
   recorded as placing.
 - A new container is locked for its placer. `/unlock` removes the lock, but
-  claimed land still requires claim access. Once a player reaches 64 locks,
-  placing another container is refused until they
-  unlock one. A player cannot join their chest to someone else's unlocked
+  claimed land still requires claim access. Once a player reaches 1024 locks,
+  another container is still placed but stays unlocked, with a notice, until
+  they unlock one. A player cannot join their chest to someone else's unlocked
   chest and take ownership through automatic locking. While locks are saving,
   placement waits; if the new lock cannot be saved, the placed container is
   broken back into an item instead of being left public.
 - `/lock trust Bob`: Bob opens it but cannot break it; `/lock trust Bob manage`
   allows both; `/lock untrust Bob` removes access. `/lock share on` lets town
   mates open it, never break it; sharing starts off for new locks.
-- `/lock redstone on` permits wiring a locked dispenser, dropper or crafter;
-  redstone starts blocked for new locks. `/lock info` shows grants and options.
+- On a claim only its owner can use (sole member of the camp or town, nobody
+  trusted on the claim, switches and building not public), redstone fires the
+  owner's locked dispenser, dropper or crafter without `/lock redstone on`,
+  unless the power comes from a control or wire on land that is not equally
+  private to the owner, including a claim of the same town whose switches are
+  public. This is judged when the machine fires, so sharing a claim stops it.
+  Triggers the owner builds on the claim stay the owner's choice: a trapped
+  chest whose lock others can open, a sculk sensor or a lectern wired to the
+  machine lets others fire it, as in vanilla.
+  Elsewhere redstone stays blocked until the owner runs `/lock redstone on`,
+  because someone else could flip the owner's lever. Only players who can
+  open the lock may wire beside it. `/lock info` shows grants and options.
 - A hopper under a locked chest that the owner did not lock drains nothing;
   once the owner locks the hopper too, it drains. A hopper minecart under a
   locked chest takes nothing. A dropper or crafter pushing into a locked chest

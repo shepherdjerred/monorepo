@@ -321,10 +321,9 @@ final class Flow {
     var map = draft.map();
     var seats =
         draft.members().stream()
-            .map(
-                m ->
-                    new TeamBalancer.Seat(
-                        m.id(), m.kit(), Optional.ofNullable(draft.pinned.get(m.id()))))
+            .map(m ->
+                new TeamBalancer.Seat(
+                    m.id(), m.kit(), Optional.ofNullable(draft.pinned.get(m.id()))))
             .toList();
     var assignment =
         TeamBalancer.assign(
@@ -471,16 +470,15 @@ final class Flow {
   private static Optional<Participation> participation(Combatant member) {
     return member
         .team()
-        .map(
-            team ->
-                new Participation(
-                    member.id(),
-                    team,
-                    true,
-                    member.diedAt(),
-                    member.leftAt(),
-                    member.forfeited(),
-                    member.afk()));
+        .map(team ->
+            new Participation(
+                member.id(),
+                team,
+                true,
+                member.diedAt(),
+                member.leftAt(),
+                member.forfeited(),
+                member.afk()));
   }
 
   static Optional<MatchError> stop(Draft draft) {

@@ -131,14 +131,13 @@ public final class TpaRequests {
   /** Removes and returns the request {@code selector} names. Used for accepting and denying. */
   public Result<Taken, TpaError> take(UUID target, TpaSelector selector, Instant now) {
     return peek(target, selector, now)
-        .map(
-            request ->
-                new Taken(
-                    new TpaRequests(
-                        rules,
-                        state.withRequests(
-                            state.requests().stream().filter(r -> !r.equals(request)).toList())),
-                    request));
+        .map(request ->
+            new Taken(
+                new TpaRequests(
+                    rules,
+                    state.withRequests(
+                        state.requests().stream().filter(r -> !r.equals(request)).toList())),
+                request));
   }
 
   /** {@code target}'s live requests, most recent first. */

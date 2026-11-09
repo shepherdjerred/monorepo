@@ -90,9 +90,8 @@ public final class ChatCommands {
         .requires(source -> service.ready() && isPlayer(source))
         .then(
             Commands.argument(MESSAGE, StringArgumentType.greedyString())
-                .executes(
-                    context ->
-                        emote(player(context), StringArgumentType.getString(context, MESSAGE))))
+                .executes(context ->
+                    emote(player(context), StringArgumentType.getString(context, MESSAGE))))
         .build();
   }
 
@@ -110,24 +109,18 @@ public final class ChatCommands {
 
   private LiteralCommandNode<CommandSourceStack> channelCommand(String label, ChannelKey channel) {
     return Commands.literal(label)
-        .requires(
-            source ->
-                service.ready()
-                    && source.getSender() instanceof Player player
-                    && (channel != ChannelKey.STAFF || Speakers.isStaff(player)))
-        .executes(
-            context ->
-                channel.focusable()
-                    ? focus(player(context), channel)
-                    : usage(player(context), label, channel))
+        .requires(source ->
+            service.ready()
+                && source.getSender() instanceof Player player
+                && (channel != ChannelKey.STAFF || Speakers.isStaff(player)))
+        .executes(context ->
+            channel.focusable()
+                ? focus(player(context), channel)
+                : usage(player(context), label, channel))
         .then(
             Commands.argument(MESSAGE, StringArgumentType.greedyString())
-                .executes(
-                    context ->
-                        say(
-                            player(context),
-                            channel,
-                            StringArgumentType.getString(context, MESSAGE))))
+                .executes(context ->
+                    say(player(context), channel, StringArgumentType.getString(context, MESSAGE))))
         .build();
   }
 
@@ -147,9 +140,8 @@ public final class ChatCommands {
         .then(
             Commands.argument(PLAYER, StringArgumentType.word())
                 .suggests(this::suggestIgnored)
-                .executes(
-                    context ->
-                        unignore(player(context), StringArgumentType.getString(context, PLAYER))))
+                .executes(context ->
+                    unignore(player(context), StringArgumentType.getString(context, PLAYER))))
         .build();
   }
 

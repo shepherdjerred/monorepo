@@ -74,9 +74,8 @@ public final class ActivityWrites implements AutoCloseable {
     pending.clear();
     var _ =
         persist(remaining)
-            .whenComplete(
-                (done, failure) -> {
-                  if (failure != null) failures.accept(failure);
-                });
+            .whenComplete((done, failure) -> {
+              if (failure != null) failures.accept(failure);
+            });
   }
 }

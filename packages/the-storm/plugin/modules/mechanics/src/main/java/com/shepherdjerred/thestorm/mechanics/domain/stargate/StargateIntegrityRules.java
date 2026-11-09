@@ -32,11 +32,10 @@ public final class StargateIntegrityRules {
     var gate = inspection.gate();
     var interior = gate.frame().interior();
     return interior.stream()
-            .allMatch(
-                pos ->
-                    grid.contains(pos)
-                        && (grid.cellAt(pos).is(Cell.AIR)
-                            || grid.cellAt(pos).is("minecraft:nether_portal")))
+            .allMatch(pos ->
+                grid.contains(pos)
+                    && (grid.cellAt(pos).is(Cell.AIR)
+                        || grid.cellAt(pos).is("minecraft:nether_portal")))
         && interior.stream().anyMatch(pos -> grid.cellAt(pos).is("minecraft:nether_portal"));
   }
 

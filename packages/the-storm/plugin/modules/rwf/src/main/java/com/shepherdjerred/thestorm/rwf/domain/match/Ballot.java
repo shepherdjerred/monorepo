@@ -189,12 +189,11 @@ public record Ballot(
   Ballot without(String mapId) {
     var left = candidates.stream().filter(c -> !c.mapId().equals(mapId)).toList();
     var kept = new LinkedHashMap<CombatantId, String>();
-    votes.forEach(
-        (voter, vote) -> {
-          if (!vote.equals(mapId)) {
-            kept.put(voter, vote);
-          }
-        });
+    votes.forEach((voter, vote) -> {
+      if (!vote.equals(mapId)) {
+        kept.put(voter, vote);
+      }
+    });
     return new Ballot(left, kept, Optional.empty(), visits);
   }
 }

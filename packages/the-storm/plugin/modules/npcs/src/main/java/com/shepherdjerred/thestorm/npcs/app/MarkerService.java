@@ -47,13 +47,12 @@ public final class MarkerService implements NpcMarkers {
   public void showNpc(String npc, Function<UUID, @Nullable Player> online) {
     board
         .above(npc)
-        .forEach(
-            (id, marker) -> {
-              var player = online.apply(id);
-              if (player != null) {
-                displays.update(player, npc, marker);
-              }
-            });
+        .forEach((id, marker) -> {
+          var player = online.apply(id);
+          if (player != null) {
+            displays.update(player, npc, marker);
+          }
+        });
   }
 
   /** Forgets {@code player}'s markers (they quit). */

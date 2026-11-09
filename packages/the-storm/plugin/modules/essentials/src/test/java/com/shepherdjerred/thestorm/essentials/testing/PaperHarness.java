@@ -188,11 +188,10 @@ public final class PaperHarness implements AutoCloseable {
   /** Runs ticks until {@code player} has been sent a message containing {@code text}. */
   public List<String> awaitMessage(PlayerMock player, String text) {
     var seen = new ArrayList<String>();
-    until(
-        () -> {
-          seen.addAll(messages(player));
-          return seen.stream().anyMatch(message -> message.contains(text));
-        });
+    until(() -> {
+      seen.addAll(messages(player));
+      return seen.stream().anyMatch(message -> message.contains(text));
+    });
     return seen;
   }
 

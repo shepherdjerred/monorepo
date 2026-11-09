@@ -59,13 +59,12 @@ final class NameTagSightTest {
     var percept = perceive(WALLED);
     assertThat(percept.sees(WALLED.id())).as("its body is behind the wall").isFalse();
     assertThat(percept.state().memory().of(WALLED.id()))
-        .hasValueSatisfying(
-            tag -> {
-              assertThat(tag.pos()).isEqualTo(WALLED.pos());
-              assertThat(tag.confidence()).isEqualTo(Perception.NAME_TAG_CONFIDENCE);
-              assertThat(tag.direct()).isFalse();
-              assertThat(tag.shareable()).as("a tag read through a wall stays private").isFalse();
-            });
+        .hasValueSatisfying(tag -> {
+          assertThat(tag.pos()).isEqualTo(WALLED.pos());
+          assertThat(tag.confidence()).isEqualTo(Perception.NAME_TAG_CONFIDENCE);
+          assertThat(tag.direct()).isFalse();
+          assertThat(tag.shareable()).as("a tag read through a wall stays private").isFalse();
+        });
   }
 
   @Test

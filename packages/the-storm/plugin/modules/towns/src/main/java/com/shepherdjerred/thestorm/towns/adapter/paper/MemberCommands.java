@@ -78,12 +78,10 @@ final class MemberCommands {
             Commands.literal("rename")
                 .then(
                     Commands.argument(TownCommands.NAME, word())
-                        .executes(
-                            context ->
-                                TownCommands.asPlayer(
-                                    context,
-                                    player ->
-                                        rename(player, getString(context, TownCommands.NAME))))))
+                        .executes(context ->
+                            TownCommands.asPlayer(
+                                context,
+                                player -> rename(player, getString(context, TownCommands.NAME))))))
         .then(
             Commands.literal("info")
                 .executes(context -> TownCommands.asPlayer(context, this::infoOwn)));
@@ -96,15 +94,14 @@ final class MemberCommands {
         .then(
             Commands.argument(TownCommands.PLAYER, word())
                 .suggests(TownCommands::suggestOnline)
-                .executes(
-                    context ->
-                        TownCommands.asPlayer(
-                            context,
-                            player ->
-                                names.resolve(
-                                    player,
-                                    getString(context, TownCommands.PLAYER),
-                                    target -> action.accept(player, target)))));
+                .executes(context ->
+                    TownCommands.asPlayer(
+                        context,
+                        player ->
+                            names.resolve(
+                                player,
+                                getString(context, TownCommands.PLAYER),
+                                target -> action.accept(player, target)))));
   }
 
   /** {@code /town <literal> <town>}. */
@@ -114,10 +111,9 @@ final class MemberCommands {
         .then(
             Commands.argument(TOWN, word())
                 .suggests(this::suggestInvitations)
-                .executes(
-                    context ->
-                        TownCommands.asPlayer(
-                            context, player -> action.accept(player, getString(context, TOWN)))));
+                .executes(context ->
+                    TownCommands.asPlayer(
+                        context, player -> action.accept(player, getString(context, TOWN)))));
   }
 
   void invite(Player player, PlayerRef target) {
@@ -274,42 +270,40 @@ final class MemberCommands {
     var _ =
         names
             .namesOf(town.members().keySet())
-            .whenComplete(
-                (known, failure) -> {
-                  if (failure != null) {
-                    player.sendMessage(Notices.error("Could not look up the town; try again."));
-                    return;
-                  }
-                  player.sendMessage(Notices.info(town.name() + ": " + ranks(town, known)));
-                  runtime
-                      .analytics()
-                      .interaction(player.getUniqueId(), ProductAnalytics.Action.TOWN_VIEWED);
-                  player.sendMessage(
-                      Notices.info(
-                          "Land: "
-                              + claims
-                              + " of "
-                              + limit
-                              + " chunks (owner's Governor level "
-                              + level
-                              + ")."));
-                });
+            .whenComplete((known, failure) -> {
+              if (failure != null) {
+                player.sendMessage(Notices.error("Could not look up the town; try again."));
+                return;
+              }
+              player.sendMessage(Notices.info(town.name() + ": " + ranks(town, known)));
+              runtime
+                  .analytics()
+                  .interaction(player.getUniqueId(), ProductAnalytics.Action.TOWN_VIEWED);
+              player.sendMessage(
+                  Notices.info(
+                      "Land: "
+                          + claims
+                          + " of "
+                          + limit
+                          + " chunks (owner's Governor level "
+                          + level
+                          + ")."));
+            });
   }
 
   private static String ranks(Town town, Map<UUID, String> known) {
     return List.of(TownRole.OWNER, TownRole.ASSISTANT, TownRole.MEMBER).stream()
-        .map(
-            role -> {
-              var holders =
-                  town.members().entrySet().stream()
-                      .filter(entry -> entry.getValue() == role)
-                      .map(entry -> requireNonNull(known.get(entry.getKey())))
-                      .sorted()
-                      .toList();
-              return holders.isEmpty()
-                  ? ""
-                  : role.name().toLowerCase(Locale.ROOT) + " " + String.join(", ", holders);
-            })
+        .map(role -> {
+          var holders =
+              town.members().entrySet().stream()
+                  .filter(entry -> entry.getValue() == role)
+                  .map(entry -> requireNonNull(known.get(entry.getKey())))
+                  .sorted()
+                  .toList();
+          return holders.isEmpty()
+              ? ""
+              : role.name().toLowerCase(Locale.ROOT) + " " + String.join(", ", holders);
+        })
         .filter(part -> !part.isEmpty())
         .collect(joining("; "));
   }

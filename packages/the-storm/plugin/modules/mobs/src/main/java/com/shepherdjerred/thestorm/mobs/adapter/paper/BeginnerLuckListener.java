@@ -142,11 +142,10 @@ final class BeginnerLuckListener implements Listener {
     var from = event.getFrom();
     context
         .scheduler()
-        .runOnMainThread(
-            () -> {
-              nearby(from);
-              nearby(event.getPlayer().getLocation());
-            });
+        .runOnMainThread(() -> {
+          nearby(from);
+          nearby(event.getPlayer().getLocation());
+        });
   }
 
   /** Melee damage was computed before this event; correct its old attribute multiplier too. */

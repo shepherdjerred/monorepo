@@ -28,12 +28,11 @@ final class ObjectiveChoice {
     if (sources.length == 0) return Optional.empty();
     var candidates =
         situation.snapshot().bombsArmableBy(board.team()).stream()
-            .map(
-                bomb ->
-                    new Candidate(
-                        bomb,
-                        priority(board.strategy(), bomb),
-                        median(field(situation.nav(), bomb), sources)))
+            .map(bomb ->
+                new Candidate(
+                    bomb,
+                    priority(board.strategy(), bomb),
+                    median(field(situation.nav(), bomb), sources)))
             .filter(candidate -> Double.isFinite(candidate.cost()))
             .sorted(
                 Comparator.comparingInt(Candidate::priority)
@@ -44,16 +43,13 @@ final class ObjectiveChoice {
     var best = candidates.getFirst();
     var committed =
         candidates.stream()
-            .filter(
-                candidate ->
-                    board.plan().objective().filter(candidate.bomb().id()::equals).isPresent())
+            .filter(candidate ->
+                board.plan().objective().filter(candidate.bomb().id()::equals).isPresent())
             .findFirst();
     return Optional.of(
         committed
-            .filter(
-                candidate ->
-                    candidate.priority() == best.priority()
-                        && candidate.cost() <= best.cost() * 1.25)
+            .filter(candidate ->
+                candidate.priority() == best.priority() && candidate.cost() <= best.cost() * 1.25)
             .orElse(best)
             .bomb());
   }

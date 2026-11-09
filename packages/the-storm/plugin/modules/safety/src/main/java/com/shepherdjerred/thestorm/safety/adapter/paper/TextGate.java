@@ -53,32 +53,27 @@ public final class TextGate implements Listener {
     context
         .scheduler()
         .mainThread()
-        .execute(
-            () -> {
-              var submission =
-                  admission.submission(
-                      player,
-                      new ContentAdmission.Draft(
-                          "chat",
-                          safety.audience(player.getUniqueId(), text),
-                          text,
-                          components,
-                          ""));
-              if (previouslyCancelled) {
-                admission.observe(submission, "chat-already-cancelled");
-                return;
-              }
-              admission.publish(
+        .execute(() -> {
+          var submission =
+              admission.submission(
                   player,
-                  submission,
-                  () -> {
-                    if (!safety.audience(player.getUniqueId(), text).equals(submission.audience()))
-                      return "stale-audience";
-                    var approved = new ApprovedChatEvent(player, message, submission.id());
-                    context.plugin().getServer().getPluginManager().callEvent(approved);
-                    return approved.delivered() ? "delivered" : "denied-by-chat";
-                  });
-            });
+                  new ContentAdmission.Draft(
+                      "chat", safety.audience(player.getUniqueId(), text), text, components, ""));
+          if (previouslyCancelled) {
+            admission.observe(submission, "chat-already-cancelled");
+            return;
+          }
+          admission.publish(
+              player,
+              submission,
+              () -> {
+                if (!safety.audience(player.getUniqueId(), text).equals(submission.audience()))
+                  return "stale-audience";
+                var approved = new ApprovedChatEvent(player, message, submission.id());
+                context.plugin().getServer().getPluginManager().callEvent(approved);
+                return approved.delivered() ? "delivered" : "denied-by-chat";
+              });
+        });
   }
 
   @EventHandler(priority = EventPriority.LOWEST)
@@ -106,11 +101,10 @@ public final class TextGate implements Listener {
       var _ =
           safety
               .observe(submission, "command-attempt")
-              .exceptionally(
-                  failure -> {
-                    context.logger().error("Command audit failed for {}", submission.id(), failure);
-                    return null;
-                  });
+              .exceptionally(failure -> {
+                context.logger().error("Command audit failed for {}", submission.id(), failure);
+                return null;
+              });
       return;
     }
     event.setCancelled(true);

@@ -290,11 +290,10 @@ public class CreativeClaimCommandsPlugin extends JavaPlugin {
 
     @Override
     public CompletableFuture<Void> delete(PlotId plot, UUID player, int posted) {
-      comments.removeIf(
-          comment ->
-              comment.plot().equals(plot)
-                  && comment.player().equals(player)
-                  && comment.posted() == posted);
+      comments.removeIf(comment ->
+          comment.plot().equals(plot)
+              && comment.player().equals(player)
+              && comment.posted() == posted);
       return CompletableFuture.completedFuture(null);
     }
   }

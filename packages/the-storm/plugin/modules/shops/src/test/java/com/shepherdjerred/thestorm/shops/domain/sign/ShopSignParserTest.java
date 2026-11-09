@@ -167,10 +167,9 @@ final class ShopSignParserTest {
 
   @Test
   void draftsNeedAPositiveQuantity() {
-    assertThatThrownBy(
-            () ->
-                new ShopSignDraft(
-                    new OwnerLine.Creator(), 0, ShopPrices.buyOnly(1), new ItemLine.Pending()))
+    assertThatThrownBy(() ->
+            new ShopSignDraft(
+                new OwnerLine.Creator(), 0, ShopPrices.buyOnly(1), new ItemLine.Pending()))
         .isInstanceOf(IllegalArgumentException.class);
   }
 }

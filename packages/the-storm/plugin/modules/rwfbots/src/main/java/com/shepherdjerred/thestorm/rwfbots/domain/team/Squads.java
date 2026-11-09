@@ -23,9 +23,8 @@ public final class Squads {
       return regroup(previous, bots);
     var ordered = new ArrayList<>(bots);
     ordered.sort(
-        Comparator.comparingDouble(
-                (CombatantView bot) ->
-                    affinity(java.util.Objects.requireNonNull(members.get(bot.id()))))
+        Comparator.comparingDouble((CombatantView bot) ->
+                affinity(java.util.Objects.requireNonNull(members.get(bot.id()))))
             .thenComparing(CombatantView::id));
     var solos = bots.size() == 1 ? 1 : bots.size() / 4;
     var result = new HashMap<CombatantId, Integer>();

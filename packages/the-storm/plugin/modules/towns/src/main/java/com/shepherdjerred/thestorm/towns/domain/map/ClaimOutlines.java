@@ -68,13 +68,12 @@ public final class ClaimOutlines {
       holesOf.computeIfAbsent(enclosing(hole, outers), outer -> new ArrayList<>()).add(hole);
     }
     return outers.stream()
-        .map(
-            outer ->
-                new Outline(
-                    blocks(outer),
-                    holesOf.getOrDefault(outer, List.of()).stream()
-                        .map(ClaimOutlines::blocks)
-                        .toList()))
+        .map(outer ->
+            new Outline(
+                blocks(outer),
+                holesOf.getOrDefault(outer, List.of()).stream()
+                    .map(ClaimOutlines::blocks)
+                    .toList()))
         .toList();
   }
 

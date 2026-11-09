@@ -46,12 +46,9 @@ final class EvidenceQueriesTest {
       var store = new JooqEvidenceStore(database);
       var batch =
           java.util.stream.IntStream.rangeClosed(1, 3)
-              .mapToObj(
-                  index ->
-                      new com.shepherdjerred.thestorm.safety.app.EvidenceStore.Observation(
-                          submission(index),
-                          index == 2 ? "denied" : "observed",
-                          NOW.plusMillis(index)))
+              .mapToObj(index ->
+                  new com.shepherdjerred.thestorm.safety.app.EvidenceStore.Observation(
+                      submission(index), index == 2 ? "denied" : "observed", NOW.plusMillis(index)))
               .toList();
       store.observations(batch).join();
       assertThat(

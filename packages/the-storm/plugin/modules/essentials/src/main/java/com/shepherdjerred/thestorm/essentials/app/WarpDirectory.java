@@ -53,25 +53,22 @@ public final class WarpDirectory {
 
   /** Creates or moves a warp. */
   public CompletableFuture<Void> set(Warp warp) {
-    return loaded.thenCompose(
-        ready -> {
-          return store.save(warp).thenRun(() -> warps.put(warp.name(), warp));
-        });
+    return loaded.thenCompose(ready -> {
+      return store.save(warp).thenRun(() -> warps.put(warp.name(), warp));
+    });
   }
 
   /** Deletes a warp; completes with false if it did not exist. */
   public CompletableFuture<Boolean> delete(PlaceName name) {
-    return loaded.thenCompose(
-        ready -> {
-          return store
-              .delete(name)
-              .thenApply(
-                  deleted -> {
-                    if (deleted) {
-                      warps.remove(name);
-                    }
-                    return deleted;
-                  });
-        });
+    return loaded.thenCompose(ready -> {
+      return store
+          .delete(name)
+          .thenApply(deleted -> {
+            if (deleted) {
+              warps.remove(name);
+            }
+            return deleted;
+          });
+    });
   }
 }

@@ -8,6 +8,34 @@
         "value": "${CFG_PROXY_PROTOCOL}",
         "value-type": "bool"
       }
+    },
+    {
+      "$put": {
+        "path": "$.unsupported-settings",
+        "key": "allow-headless-pistons",
+        "value": false
+      }
+    },
+    {
+      "$put": {
+        "path": "$.unsupported-settings",
+        "key": "allow-permanent-block-break-exploits",
+        "value": false
+      }
+    },
+    {
+      "$put": {
+        "path": "$.unsupported-settings",
+        "key": "allow-piston-duplication",
+        "value": false
+      }
+    },
+    {
+      "$put": {
+        "path": "$.unsupported-settings",
+        "key": "allow-unsafe-end-portal-teleportation",
+        "value": false
+      }
     }
   ]
 }

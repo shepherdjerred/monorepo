@@ -243,10 +243,10 @@ final class NpcTalkTest {
     assertThat(presenter.last().screen().body())
         .isEqualTo(
             """
-                You are now level 1 in Mechanic. Mechanic is your primary track.
-                Mechanic: level 1 of 5.
-                Level 2 costs 2500 crystals.\
-                """);
+            You are now level 1 in Mechanic. Mechanic is your primary track.
+            Mechanic: level 1 of 5.
+            Level 2 costs 2500 crystals.\
+            """);
   }
 
   @Test
@@ -291,10 +291,10 @@ final class NpcTalkTest {
     assertThat(screen.body())
         .isEqualTo(
             """
-                Shopkeeper: level 0 of 5.
-                That costs 1000 crystals, and you have 250 crystals.
-                You trained recently. Come back in 1 hour 30 minutes.\
-                """);
+            Shopkeeper: level 0 of 5.
+            That costs 1000 crystals, and you have 250 crystals.
+            You trained recently. Come back in 1 hour 30 minutes.\
+            """);
     assertThat(screen.buttons()).extracting(button -> button.label()).containsExactly("Close");
   }
 

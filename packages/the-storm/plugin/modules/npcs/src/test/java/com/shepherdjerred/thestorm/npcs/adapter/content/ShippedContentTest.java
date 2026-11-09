@@ -100,10 +100,9 @@ final class ShippedContentTest {
       assertThat(npc.roles()).contains("trainer");
       var dialogue = content.dialogue(npc).orElseThrow();
       assertThat(dialogue.nodes().values())
-          .anySatisfy(
-              node ->
-                  assertThat(node.options())
-                      .anyMatch(option -> option.effect() instanceof OptionEffect.OpenTrainer));
+          .anySatisfy(node ->
+              assertThat(node.options())
+                  .anyMatch(option -> option.effect() instanceof OptionEffect.OpenTrainer));
     }
   }
 
@@ -145,11 +144,10 @@ final class ShippedContentTest {
         problems(ContentLoader.load(data, RULES).fold(content -> List.of(), found -> found));
     assertThat(problems)
         .singleElement()
-        .satisfies(
-            problem -> {
-              assertThat(problem.source()).isEqualTo("npcs/b.yml");
-              assertThat(problem.message()).contains("npcs");
-            });
+        .satisfies(problem -> {
+          assertThat(problem.source()).isEqualTo("npcs/b.yml");
+          assertThat(problem.message()).contains("npcs");
+        });
   }
 
   @Test

@@ -467,14 +467,13 @@ public final class BotTicker {
         .combatant(seen.id())
         .or(() -> input.snapshot().summon(seen.id()).map(SummonView::asTarget))
         .filter(CombatantView::alive)
-        .filter(
-            enemy ->
-                !enemy.invisible()
-                    || enemy.armorValue() > 0
-                    || enemy.pos().distance(input.self().pos()) <= Perception.INVISIBLE_NOTICE_RANGE
-                    || (enemy.lastHurtTick() >= 0
-                        && input.snapshot().tick() - enemy.lastHurtTick()
-                            <= Perception.HIT_FLASH_TICKS))
+        .filter(enemy ->
+            !enemy.invisible()
+                || enemy.armorValue() > 0
+                || enemy.pos().distance(input.self().pos()) <= Perception.INVISIBLE_NOTICE_RANGE
+                || (enemy.lastHurtTick() >= 0
+                    && input.snapshot().tick() - enemy.lastHurtTick()
+                        <= Perception.HIT_FLASH_TICKS))
         .filter(enemy -> Perception.hasLineOfSight(grid, input.self().eye(), enemy));
   }
 
@@ -518,17 +517,16 @@ public final class BotTicker {
     return roster
         .bodies()
         .entity(bot.uuid())
-        .map(
-            entity -> {
-              var count = 0;
-              for (var slot = 0; slot < HOTBAR_AND_STORAGE; slot++) {
-                var stack = entity.getInventory().getItem(slot);
-                if (stack != null && StreakItems.DROPPED.contains(stack.getType().name())) {
-                  count += stack.getAmount();
-                }
-              }
-              return count;
-            })
+        .map(entity -> {
+          var count = 0;
+          for (var slot = 0; slot < HOTBAR_AND_STORAGE; slot++) {
+            var stack = entity.getInventory().getItem(slot);
+            if (stack != null && StreakItems.DROPPED.contains(stack.getType().name())) {
+              count += stack.getAmount();
+            }
+          }
+          return count;
+        })
         .orElse(0);
   }
 

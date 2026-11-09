@@ -108,20 +108,19 @@ final class SurvivalClassMenus {
               .orElseThrow();
       profile
           .specializations()
-          .forEach(
-              s ->
-                  choices.add(
-                      new Choice(
-                          s.name(),
-                          icon(build.role()),
-                          List.of(
-                              s.description(),
-                              "Replaces your active ability for this run.",
-                              "Click to choose; cannot respec during the run."),
-                          () -> {
-                            if (runner.talents().build(player.getUniqueId()).select(s.id()))
-                              selected(player);
-                          })));
+          .forEach(s ->
+              choices.add(
+                  new Choice(
+                      s.name(),
+                      icon(build.role()),
+                      List.of(
+                          s.description(),
+                          "Replaces your active ability for this run.",
+                          "Click to choose; cannot respec during the run."),
+                      () -> {
+                        if (runner.talents().build(player.getUniqueId()).select(s.id()))
+                          selected(player);
+                      })));
     } else if (build.pending() > 0) {
       choices.add(
           new Choice(
@@ -173,15 +172,14 @@ final class SurvivalClassMenus {
     for (var i = 0; i < choices.size(); i++) {
       var choice = choices.get(i);
       var icon = ItemStack.of(choice.icon());
-      icon.editMeta(
-          meta -> {
-            meta.displayName(Component.text(choice.name()));
-            meta.lore(
-                choice.lore().stream()
-                    .flatMap(line -> wrap(line).stream())
-                    .map(Component::text)
-                    .toList());
-          });
+      icon.editMeta(meta -> {
+        meta.displayName(Component.text(choice.name()));
+        meta.lore(
+            choice.lore().stream()
+                .flatMap(line -> wrap(line).stream())
+                .map(Component::text)
+                .toList());
+      });
       inventory.setItem(i, icon);
     }
     player.openInventory(inventory);

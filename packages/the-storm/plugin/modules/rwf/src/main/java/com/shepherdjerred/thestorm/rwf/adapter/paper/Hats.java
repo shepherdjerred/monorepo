@@ -101,8 +101,7 @@ final class Hats implements Listener {
         .memberOf(fighter.getUniqueId())
         .filter(Combatant::alive)
         .flatMap(Combatant::team)
-        .ifPresent(
-            team ->
-                viewer.sendEquipmentChange(fighter, EquipmentSlot.HEAD, new ItemStack(hat(team))));
+        .ifPresent(team ->
+            viewer.sendEquipmentChange(fighter, EquipmentSlot.HEAD, new ItemStack(hat(team))));
   }
 }

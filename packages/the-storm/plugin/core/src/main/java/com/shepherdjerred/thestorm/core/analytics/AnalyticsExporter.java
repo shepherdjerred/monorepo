@@ -27,17 +27,15 @@ final class AnalyticsExporter implements AutoCloseable {
     if (stopped) return CompletableFuture.completedFuture(null);
     return store
         .pending()
-        .thenCompose(
-            batch -> {
-              if (batch.isEmpty() || stopped) return CompletableFuture.completedFuture(null);
-              return transport
-                  .send(batch)
-                  .thenCompose(
-                      done -> {
-                        if (stopped) return CompletableFuture.completedFuture(null);
-                        return store.acknowledge(batch).thenCompose(acknowledged -> drain());
-                      });
-            });
+        .thenCompose(batch -> {
+          if (batch.isEmpty() || stopped) return CompletableFuture.completedFuture(null);
+          return transport
+              .send(batch)
+              .thenCompose(done -> {
+                if (stopped) return CompletableFuture.completedFuture(null);
+                return store.acknowledge(batch).thenCompose(acknowledged -> drain());
+              });
+        });
   }
 
   @Override

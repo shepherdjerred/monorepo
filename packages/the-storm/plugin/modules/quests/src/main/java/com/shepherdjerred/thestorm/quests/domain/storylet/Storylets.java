@@ -33,10 +33,9 @@ public final class Storylets {
         context.catalog().all().stream()
             .filter(quest -> quest.giver().equals(npc))
             .filter(quest -> quest.category() != Quest.Category.HIDDEN)
-            .filter(
-                quest ->
-                    QuestEngine.availability(state, quest, context)
-                        == QuestEngine.Availability.OFFERABLE)
+            .filter(quest ->
+                QuestEngine.availability(state, quest, context)
+                    == QuestEngine.Availability.OFFERABLE)
             .map(quest -> new Candidate(quest, salience(quest), 1))
             .toList();
     long seed =

@@ -27,12 +27,11 @@ public final class NaturalBlockAudit implements AutoCloseable {
           if (rows == null) throw new IllegalStateException("CoreProtect lookup failed");
           return rows.stream()
               .map(api::parseResult)
-              .allMatch(
-                  row ->
-                      row.getActionId() != 1
-                          || row.getPlayer().equals(owner)
-                          || row.getPlayer().equals(actorName)
-                          || row.isRolledBack());
+              .allMatch(row ->
+                  row.getActionId() != 1
+                      || row.getPlayer().equals(owner)
+                      || row.getPlayer().equals(actorName)
+                      || row.isRolledBack());
         },
         executor);
   }
@@ -43,12 +42,11 @@ public final class NaturalBlockAudit implements AutoCloseable {
     if (rows == null) throw new IllegalStateException("CoreProtect queue lookup failed");
     return rows.stream()
         .map(api::parseResult)
-        .allMatch(
-            row ->
-                row.getActionId() != 1
-                    || row.getPlayer().equals(owner)
-                    || row.getPlayer().equals(actorName)
-                    || row.isRolledBack());
+        .allMatch(row ->
+            row.getActionId() != 1
+                || row.getPlayer().equals(owner)
+                || row.getPlayer().equals(actorName)
+                || row.isRolledBack());
   }
 
   public void placed(String owner, Location location, Material material, BlockData data) {

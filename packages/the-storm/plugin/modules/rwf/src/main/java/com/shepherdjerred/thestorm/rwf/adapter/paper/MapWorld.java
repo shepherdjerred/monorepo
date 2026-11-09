@@ -190,19 +190,17 @@ final class MapWorld implements MapRotation.Entry {
             chunks);
     terrain = prepared;
     var terrainReady = new CompletableFuture<Boolean>();
-    prepared.prepare(
-        ok -> {
-          if (!ok) terrainReady.complete(false);
-          else {
-            var _ =
-                restoreDetails()
-                    .whenComplete(
-                        (restored, failure) -> {
-                          if (failure != null) terrainReady.completeExceptionally(failure);
-                          else terrainReady.complete(restored);
-                        });
-          }
-        });
+    prepared.prepare(ok -> {
+      if (!ok) terrainReady.complete(false);
+      else {
+        var _ =
+            restoreDetails()
+                .whenComplete((restored, failure) -> {
+                  if (failure != null) terrainReady.completeExceptionally(failure);
+                  else terrainReady.complete(restored);
+                });
+      }
+    });
     if (!activate) return terrainReady;
     return terrainReady.thenCombineAsync(
         resources.prepare(definition()),
@@ -230,17 +228,16 @@ final class MapWorld implements MapRotation.Entry {
               } else {
                 var _ =
                     restoreDetails()
-                        .whenComplete(
-                            (restored, failure) -> {
-                              if (request != generation) return;
-                              if (failure != null)
-                                context
-                                    .logger()
-                                    .error("Could not restore details of {}", id(), failure);
-                              loading = false;
-                              prepared = failure == null && Boolean.TRUE.equals(restored);
-                              done.accept(prepared);
-                            });
+                        .whenComplete((restored, failure) -> {
+                          if (request != generation) return;
+                          if (failure != null)
+                            context
+                                .logger()
+                                .error("Could not restore details of {}", id(), failure);
+                          loading = false;
+                          prepared = failure == null && Boolean.TRUE.equals(restored);
+                          done.accept(prepared);
+                        });
               }
             });
   }

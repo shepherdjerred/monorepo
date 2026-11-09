@@ -71,29 +71,25 @@ public final class TeleportPayments {
   /** What a teleport would cost now, without charging or recording anything. */
   public CompletableFuture<Result<Quote, TeleportRefusal>> quote(
       UUID payer, TeleportKind kind, Exemptions exemptions) {
-    return loaded.thenCompose(
-        ready ->
-            usage
-                .find(payer)
-                .thenApply(
-                    found ->
-                        pricer
-                            .quote(
-                                kind, found.orElse(TeleportUsage.EMPTY), exemptions, time.instant())
-                            .mapError(TeleportRefusal.Cooldown::new)));
+    return loaded.thenCompose(ready ->
+        usage
+            .find(payer)
+            .thenApply(found ->
+                pricer
+                    .quote(kind, found.orElse(TeleportUsage.EMPTY), exemptions, time.instant())
+                    .mapError(TeleportRefusal.Cooldown::new)));
   }
 
   /** Re-quotes, records the obligation, then takes crystals. Records no usage. */
   public CompletableFuture<Result<Charge, TeleportRefusal>> charge(
       UUID payer, TeleportKind kind, Exemptions exemptions) {
     return quote(payer, kind, exemptions)
-        .thenCompose(
-            quoted ->
-                switch (quoted) {
-                  case Result.Err<Quote, TeleportRefusal>(var refusal) ->
-                      completedFuture(Result.err(refusal));
-                  case Result.Ok<Quote, TeleportRefusal>(var quote) -> take(payer, quote);
-                });
+        .thenCompose(quoted ->
+            switch (quoted) {
+              case Result.Err<Quote, TeleportRefusal>(var refusal) ->
+                  completedFuture(Result.err(refusal));
+              case Result.Ok<Quote, TeleportRefusal>(var quote) -> take(payer, quote);
+            });
   }
 
   /** The player arrived: records that command's cooldown and clears the charge. */
@@ -132,37 +128,33 @@ public final class TeleportPayments {
     var attempt = new TeleportAttempt(UUID.randomUUID(), payer, quote.kind(), quote.cost());
     return attempts
         .insert(attempt)
-        .thenCompose(
-            saved ->
-                wallets
-                    .transferOnce(
-                        new KeyedTransfer(
-                            attempt.id(),
-                            new AccountId.Player(payer),
-                            new AccountId.Server(),
-                            Money.crystals(quote.cost()),
-                            "teleport:" + quote.kind().id()))
-                    .thenCompose(
-                        transfer ->
-                            switch (transfer) {
-                              case Result.Ok<Receipt, EconomyError> _ ->
-                                  completedFuture(
-                                      Result.ok(
-                                          new Charge(attempt.id(), quote, Optional.of(attempt))));
-                              case Result.Err<Receipt, EconomyError>(var error) ->
-                                  attempts
-                                      .delete(attempt.id())
-                                      .thenApply(done -> Result.err(refusal(error)));
-                            }));
+        .thenCompose(saved ->
+            wallets
+                .transferOnce(
+                    new KeyedTransfer(
+                        attempt.id(),
+                        new AccountId.Player(payer),
+                        new AccountId.Server(),
+                        Money.crystals(quote.cost()),
+                        "teleport:" + quote.kind().id()))
+                .thenCompose(transfer ->
+                    switch (transfer) {
+                      case Result.Ok<Receipt, EconomyError> _ ->
+                          completedFuture(
+                              Result.ok(new Charge(attempt.id(), quote, Optional.of(attempt))));
+                      case Result.Err<Receipt, EconomyError>(var error) ->
+                          attempts
+                              .delete(attempt.id())
+                              .thenApply(done -> Result.err(refusal(error)));
+                    }));
   }
 
   private CompletableFuture<Void> recoverPending() {
     return attempts
         .pending()
-        .thenCompose(
-            pending ->
-                CompletableFuture.allOf(
-                    pending.stream().map(this::reconcile).toArray(CompletableFuture[]::new)));
+        .thenCompose(pending ->
+            CompletableFuture.allOf(
+                pending.stream().map(this::reconcile).toArray(CompletableFuture[]::new)));
   }
 
   private CompletableFuture<Void> reconcile(TeleportAttempt attempt) {
@@ -181,11 +173,10 @@ public final class TeleportPayments {
                 new AccountId.Player(attempt.payer()),
                 Money.crystals(attempt.cost()),
                 "teleport:refund:" + attempt.kind().id()))
-        .thenCompose(
-            result -> {
-              requireOk(result);
-              return attempts.delete(attempt.id());
-            });
+        .thenCompose(result -> {
+          requireOk(result);
+          return attempts.delete(attempt.id());
+        });
   }
 
   private static TeleportRefusal refusal(EconomyError error) {

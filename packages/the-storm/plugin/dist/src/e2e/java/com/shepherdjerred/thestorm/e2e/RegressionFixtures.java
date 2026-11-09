@@ -282,10 +282,9 @@ final class RegressionFixtures implements BasicCommand, CombatHarness.Controller
     storm()
         .service(ShowcaseControl.class)
         .stop(match.orElseThrow())
-        .ifPresent(
-            refusal -> {
-              throw new IllegalStateException("native healing finish refused: " + refusal);
-            });
+        .ifPresent(refusal -> {
+          throw new IllegalStateException("native healing finish refused: " + refusal);
+        });
   }
 
   private boolean playerCase() {
@@ -383,15 +382,14 @@ final class RegressionFixtures implements BasicCommand, CombatHarness.Controller
             state.phase().name(),
             state.winner().orElse(""),
             state.combatants().stream()
-                .map(
-                    f ->
-                        new Fighter(
-                            f.uuid(),
-                            f.bot(),
-                            f.personalityId().orElse(""),
-                            f.team().orElse(""),
-                            f.kit().orElse(""),
-                            f.alive()))
+                .map(f ->
+                    new Fighter(
+                        f.uuid(),
+                        f.bot(),
+                        f.personalityId().orElse(""),
+                        f.team().orElse(""),
+                        f.kit().orElse(""),
+                        f.alive()))
                 .toList()));
     if (prepared && state.phase() == MatchState.Phase.COUNTDOWN) prepareTroopers(state);
     if (state.phase() == MatchState.Phase.LIVE) result = "live";
@@ -411,11 +409,9 @@ final class RegressionFixtures implements BasicCommand, CombatHarness.Controller
         if (fighter.kit().filter("trooper"::equals).isEmpty())
           actions
               .pickKit(fighter.uuid(), "trooper")
-              .ifPresent(
-                  refusal -> {
-                    throw new IllegalStateException(
-                        "native Trooper preparation refused: " + refusal);
-                  });
+              .ifPresent(refusal -> {
+                throw new IllegalStateException("native Trooper preparation refused: " + refusal);
+              });
       }
     } finally {
       preparing = false;
@@ -517,10 +513,8 @@ final class RegressionFixtures implements BasicCommand, CombatHarness.Controller
       var observation =
           frame
               .observation()
-              .orElseThrow(
-                  () ->
-                      new IllegalStateException(
-                          "living regression Trooper lacks fair observation"));
+              .orElseThrow(() ->
+                  new IllegalStateException("living regression Trooper lacks fair observation"));
       if (!observation.contract().equals(ObservationContract.ID))
         throw new IllegalArgumentException("regression observation contract differs");
       var request =

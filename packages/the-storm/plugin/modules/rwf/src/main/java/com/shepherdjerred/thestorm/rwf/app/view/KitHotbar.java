@@ -29,14 +29,13 @@ public record KitHotbar(String kit, List<Slot> slots) {
   /** The hotbar of kit {@code id}, if rwf has it. */
   public static Optional<KitHotbar> of(String id) {
     return KitBook.byId(id)
-        .map(
-            spec ->
-                new KitHotbar(
-                    id,
-                    spec.layout().stream()
-                        .filter(placement -> placement.slot() > 0 && placement.slot() <= 8)
-                        .map(KitHotbar::slot)
-                        .toList()));
+        .map(spec ->
+            new KitHotbar(
+                id,
+                spec.layout().stream()
+                    .filter(placement -> placement.slot() > 0 && placement.slot() <= 8)
+                    .map(KitHotbar::slot)
+                    .toList()));
   }
 
   private static Slot slot(KitSpec.Placement placement) {

@@ -96,10 +96,9 @@ public final class KitRotation {
    */
   public static List<KitSpec> of(Week week, List<KitSpec> kits, long seed) {
     return ofOptional(week, kits, seed)
-        .orElseThrow(
-            () ->
-                new IllegalStateException(
-                    "too few bought kits to rotate " + SIZE + " a week without repeats"));
+        .orElseThrow(() ->
+            new IllegalStateException(
+                "too few bought kits to rotate " + SIZE + " a week without repeats"));
   }
 
   /** The rotation when the pool supports it, or empty when its tiers or repeats prevent one. */

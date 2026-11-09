@@ -123,11 +123,10 @@ final class SavedRespawnTest {
     assertThat(scan.found()).containsExactly(new SavedRespawn.Found(ALICE, spot));
     assertThat(scan.problems())
         .singleElement()
-        .satisfies(
-            problem -> {
-              assertThat(problem.file()).isEqualTo(corrupt.toString());
-              assertThat(problem.failure()).isInstanceOf(java.io.UncheckedIOException.class);
-            });
+        .satisfies(problem -> {
+          assertThat(problem.file()).isEqualTo(corrupt.toString());
+          assertThat(problem.failure()).isInstanceOf(java.io.UncheckedIOException.class);
+        });
   }
 
   private static Map<String, Object> root(SavedRespawn.Spot spot) {

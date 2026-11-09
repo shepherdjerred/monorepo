@@ -147,11 +147,10 @@ final class SafetyServiceTest {
                   InstantSource.fixed(NOW),
                   CONFIG,
                   player -> CompletableFuture.completedFuture(true)));
-      service.penalties(
-          request -> {
-            reached.complete(null);
-            return pending;
-          });
+      service.penalties(request -> {
+        reached.complete(null);
+        return pending;
+      });
       var result = service.check(submission("n" + "igger"));
       reached.join();
       assertThat(result).isNotDone();
@@ -238,11 +237,10 @@ final class SafetyServiceTest {
                   InstantSource.fixed(NOW),
                   CONFIG,
                   player -> CompletableFuture.completedFuture(true)));
-      service.penalties(
-          request -> {
-            penalties.incrementAndGet();
-            return CompletableFuture.completedFuture(null);
-          });
+      service.penalties(request -> {
+        penalties.incrementAndGet();
+        return CompletableFuture.completedFuture(null);
+      });
       assertThat(service.check(submission("n" + "igger")).join().muteSeconds()).isEqualTo(600);
       assertThat(service.check(submission("n" + "igger")).join().muteSeconds()).isEqualTo(3600);
       assertThat(service.check(submission("a threat")).join().muteSeconds()).isZero();
@@ -317,14 +315,12 @@ final class SafetyServiceTest {
                   CONFIG,
                   player -> CompletableFuture.completedFuture(true)));
       var applied = new AtomicInteger();
-      service.penalties(
-          request -> {
-            applied.incrementAndGet();
-            return CompletableFuture.completedFuture(null);
-          });
-      service.reviews(
-          (submission, review) ->
-              CompletableFuture.failedFuture(new IllegalStateException("review storage down")));
+      service.penalties(request -> {
+        applied.incrementAndGet();
+        return CompletableFuture.completedFuture(null);
+      });
+      service.reviews((submission, review) ->
+          CompletableFuture.failedFuture(new IllegalStateException("review storage down")));
       assertThatThrownBy(() -> service.check(submission("n" + "igger")).join())
           .hasMessageContaining("temporarily unavailable");
       assertThat(applied.get()).isZero();

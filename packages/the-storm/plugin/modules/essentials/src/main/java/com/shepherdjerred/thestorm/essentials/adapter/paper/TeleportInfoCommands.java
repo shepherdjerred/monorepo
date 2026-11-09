@@ -29,19 +29,16 @@ final class TeleportInfoCommands {
             .executes(context -> Cmd.asPlayer(context, player -> show(player, Optional.empty())))
             .then(
                 Commands.argument("category", word())
-                    .suggests(
-                        (context, builder) -> {
-                          for (var kind : TeleportKind.values()) {
-                            builder.suggest(kind.id());
-                          }
-                          builder.suggest("tpahere");
-                          return builder.buildFuture();
-                        })
-                    .executes(
-                        context ->
-                            Cmd.asPlayer(
-                                context,
-                                player -> category(player, Cmd.string(context, "category")))))
+                    .suggests((context, builder) -> {
+                      for (var kind : TeleportKind.values()) {
+                        builder.suggest(kind.id());
+                      }
+                      builder.suggest("tpahere");
+                      return builder.buildFuture();
+                    })
+                    .executes(context ->
+                        Cmd.asPlayer(
+                            context, player -> category(player, Cmd.string(context, "category")))))
             .build(),
         "Teleport prices and cooldowns");
   }

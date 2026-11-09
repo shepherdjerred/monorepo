@@ -119,12 +119,11 @@ final class FireListener implements Listener {
   private void filter(List<Block> blocks, Land from, Optional<Culprit> player) {
     // One actor for the whole blast: its bypass check is a permission lookup.
     var actor = player.map(Culprit::actor).orElse(null);
-    blocks.removeIf(
-        block -> {
-          var land = guard.land(block);
-          return !Guard.flows(WorldEffect.EXPLOSION, from, land)
-              || (actor != null && !guard.permitsQuietly(actor, BUILD, land));
-        });
+    blocks.removeIf(block -> {
+      var land = guard.land(block);
+      return !Guard.flows(WorldEffect.EXPLOSION, from, land)
+          || (actor != null && !guard.permitsQuietly(actor, BUILD, land));
+    });
   }
 
   private boolean mayTrigger(Actor player, Block block) {

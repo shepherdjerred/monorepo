@@ -24,28 +24,26 @@ public final class SqlAccountEpochs implements AccountEpochs.Store {
 
   @Override
   public CompletableFuture<Map<UUID, Long>> load() {
-    return database.read(
-        sql ->
-            sql.select(PLAYER, GENERATION)
-                .from(EPOCHS)
-                .fetchMap(row -> UUID.fromString(row.value1()), row -> row.value2()));
+    return database.read(sql ->
+        sql.select(PLAYER, GENERATION)
+            .from(EPOCHS)
+            .fetchMap(row -> UUID.fromString(row.value1()), row -> row.value2()));
   }
 
   @Override
   public CompletableFuture<Long> advance(UUID player) {
-    return database.write(
-        sql -> {
-          sql.insertInto(EPOCHS, PLAYER, GENERATION)
-              .values(player.toString(), 1L)
-              .onConflict(PLAYER)
-              .doUpdate()
-              .set(GENERATION, GENERATION.add(1L))
-              .execute();
-          return java.util.Objects.requireNonNull(
-              sql.select(GENERATION)
-                  .from(EPOCHS)
-                  .where(PLAYER.eq(player.toString()))
-                  .fetchSingle(GENERATION));
-        });
+    return database.write(sql -> {
+      sql.insertInto(EPOCHS, PLAYER, GENERATION)
+          .values(player.toString(), 1L)
+          .onConflict(PLAYER)
+          .doUpdate()
+          .set(GENERATION, GENERATION.add(1L))
+          .execute();
+      return java.util.Objects.requireNonNull(
+          sql.select(GENERATION)
+              .from(EPOCHS)
+              .where(PLAYER.eq(player.toString()))
+              .fetchSingle(GENERATION));
+    });
   }
 }

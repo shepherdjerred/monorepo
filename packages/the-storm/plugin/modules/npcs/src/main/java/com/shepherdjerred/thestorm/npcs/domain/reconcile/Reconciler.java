@@ -72,13 +72,11 @@ public final class Reconciler {
     var keep = new ArrayList<Assigned>();
     var remove = new ArrayList<Removal>();
     var entitiesByNpc = group(spawned);
-    entitiesByNpc.forEach(
-        (npc, entities) -> {
-          if (!byId.containsKey(npc)) {
-            entities.forEach(
-                entity -> remove.add(new Removal(entity.entity(), npc, Reason.ORPHAN)));
-          }
-        });
+    entitiesByNpc.forEach((npc, entities) -> {
+      if (!byId.containsKey(npc)) {
+        entities.forEach(entity -> remove.add(new Removal(entity.entity(), npc, Reason.ORPHAN)));
+      }
+    });
     for (var definition : byId.values()) {
       var entities = entitiesByNpc.getOrDefault(definition.id(), List.of());
       if (entities.isEmpty()) {
@@ -98,9 +96,8 @@ public final class Reconciler {
       }
       entities.stream()
           .filter(entity -> !entity.equals(chosen))
-          .forEach(
-              entity ->
-                  remove.add(new Removal(entity.entity(), definition.id(), Reason.DUPLICATE)));
+          .forEach(entity ->
+              remove.add(new Removal(entity.entity(), definition.id(), Reason.DUPLICATE)));
     }
     return new Plan(spawn, update, keep, remove);
   }

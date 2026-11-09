@@ -35,10 +35,9 @@ final class PlotFootprintTest {
     assertThat(PlotFootprint.matchesTemplate(GRID, cell, one, GRID::generated)).isTrue();
     assertThat(PlotFootprint.matchesTemplate(GRID, cell, one, (x, y, z) -> "minecraft:oak_planks"))
         .isFalse();
-    assertThatThrownBy(
-            () ->
-                PlotFootprint.matchesTemplate(
-                    GRID, cell, new PlotFootprint.Band(65, 64), GRID::generated))
+    assertThatThrownBy(() ->
+            PlotFootprint.matchesTemplate(
+                GRID, cell, new PlotFootprint.Band(65, 64), GRID::generated))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining("inverted");
   }

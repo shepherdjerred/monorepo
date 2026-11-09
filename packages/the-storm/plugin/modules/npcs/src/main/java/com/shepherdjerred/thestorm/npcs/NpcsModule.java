@@ -90,15 +90,12 @@ public final class NpcsModule implements StormModule {
     // Modules after this one register their actions during enable; check once they all have.
     context
         .scheduler()
-        .runOnMainThread(
-            () -> {
-              var missing = actions.missing(catalog.content().dialogues().values());
-              if (!missing.isEmpty()) {
-                context
-                    .logger()
-                    .error("NPC dialogues use actions no module registered: {}", missing);
-              }
-            });
+        .runOnMainThread(() -> {
+          var missing = actions.missing(catalog.content().dialogues().values());
+          if (!missing.isEmpty()) {
+            context.logger().error("NPC dialogues use actions no module registered: {}", missing);
+          }
+        });
   }
 
   @Override

@@ -22,11 +22,10 @@ class DuelWindowTest {
     assertThat(receipt.bindings().subList(0, 30))
         .allSatisfy(binding -> assertThat(binding.sourceFrame()).isEqualTo(binding.index()));
     assertThat(receipt.bindings().subList(30, 900))
-        .allSatisfy(
-            binding -> {
-              assertThat(binding.sourceFrame()).isEqualTo(30);
-              assertThat(binding.marker().result()).isEqualTo("loss");
-            });
+        .allSatisfy(binding -> {
+          assertThat(binding.sourceFrame()).isEqualTo(30);
+          assertThat(binding.marker().result()).isEqualTo("loss");
+        });
   }
 
   @Test

@@ -177,16 +177,15 @@ public final class FakeMatch implements MatchView, MatchEvents, CombatantActions
         Optional.of(map.id()),
         map.teamColors(),
         members.values().stream()
-            .map(
-                m ->
-                    new MatchSnapshot.CombatantView(
-                        m.id(),
-                        m.name(),
-                        m.team(),
-                        m.kit(),
-                        m.alive(),
-                        false,
-                        com.shepherdjerred.thestorm.rwf.domain.match.Score.ZERO))
+            .map(m ->
+                new MatchSnapshot.CombatantView(
+                    m.id(),
+                    m.name(),
+                    m.team(),
+                    m.kit(),
+                    m.alive(),
+                    false,
+                    com.shepherdjerred.thestorm.rwf.domain.match.Score.ZERO))
             .toList(),
         phase == MatchSnapshot.PhaseKind.LOBBY || phase == MatchSnapshot.PhaseKind.COUNTDOWN
             ? List.of()

@@ -101,20 +101,19 @@ public final class WaveTable {
     var boss =
         entry
             .boss()
-            .map(
-                id -> {
-                  var definition = file.bosses().get(id);
-                  if (definition == null) {
-                    throw new IllegalStateException("unknown boss " + id);
-                  }
-                  return new BossOrder(
-                      id,
-                      definition,
-                      WaveScaling.bossHealth(definition, difficulty),
-                      WaveScaling.damage(mob(definition.mob()), wave, difficulty),
-                      entities(definition.mob()),
-                      difficulty.players());
-                });
+            .map(id -> {
+              var definition = file.bosses().get(id);
+              if (definition == null) {
+                throw new IllegalStateException("unknown boss " + id);
+              }
+              return new BossOrder(
+                  id,
+                  definition,
+                  WaveScaling.bossHealth(definition, difficulty),
+                  WaveScaling.damage(mob(definition.mob()), wave, difficulty),
+                  entities(definition.mob()),
+                  difficulty.players());
+            });
     return new ResolvedWave(wave, entry.kind(), units, boss);
   }
 
@@ -178,9 +177,8 @@ public final class WaveTable {
         ability
             .summon()
             .filter(summon -> !file.mobs().containsKey(summon))
-            .ifPresent(
-                summon ->
-                    problems.add("boss " + entry.getKey() + " summons unknown mob " + summon));
+            .ifPresent(summon ->
+                problems.add("boss " + entry.getKey() + " summons unknown mob " + summon));
       }
     }
   }

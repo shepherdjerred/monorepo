@@ -189,13 +189,9 @@ public final class TemporaryBlocks {
     var records =
         blocks.stream()
             .filter(block -> !protection.isPreserved(block.getLocation()))
-            .map(
-                block ->
-                    new TemporaryBlock(
-                        key(block),
-                        block.getBlockData().getAsString(),
-                        placed.getAsString(),
-                        revertAt))
+            .map(block ->
+                new TemporaryBlock(
+                    key(block), block.getBlockData().getAsString(), placed.getAsString(), revertAt))
             .toList();
     var reserved = ledger.reserve(records);
     if (reserved.isEmpty()) {
@@ -253,11 +249,8 @@ public final class TemporaryBlocks {
     reserved.stream()
         .map(TemporaryBlock::key)
         .filter(key -> !stored.contains(key))
-        .forEach(
-            key ->
-                async
-                    .logger()
-                    .error("Temporary-block position already has a recovery row: {}", key));
+        .forEach(key ->
+            async.logger().error("Temporary-block position already has a recovery row: {}", key));
     return applied;
   }
 

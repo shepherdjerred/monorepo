@@ -90,19 +90,18 @@ public final class Teleports {
           var _ =
               world
                   .getChunkAtAsync(x, z, true)
-                  .whenComplete(
-                      (chunk, failure) -> {
-                        if (failure != null) {
-                          Bukkit.getLogger()
-                              .warning(
-                                  "Could not load Recall destination chunk "
-                                      + chunkX
-                                      + ", "
-                                      + chunkZ
-                                      + ": "
-                                      + failure.getMessage());
-                        }
-                      });
+                  .whenComplete((chunk, failure) -> {
+                    if (failure != null) {
+                      Bukkit.getLogger()
+                          .warning(
+                              "Could not load Recall destination chunk "
+                                  + chunkX
+                                  + ", "
+                                  + chunkZ
+                                  + ": "
+                                  + failure.getMessage());
+                    }
+                  });
         }
       }
     }

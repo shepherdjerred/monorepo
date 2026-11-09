@@ -65,12 +65,11 @@ final class WorldConfigTest {
             org.assertj.core.groups.Tuple.tuple("skylands", 6000.0),
             org.assertj.core.groups.Tuple.tuple("creative", 3000.0));
     assertThat(config.borders())
-        .allSatisfy(
-            border -> {
-              assertThat(border.centerX()).isZero();
-              assertThat(border.centerZ()).isZero();
-              assertThat(border.shape()).isEqualTo("circle");
-            });
+        .allSatisfy(border -> {
+          assertThat(border.centerX()).isZero();
+          assertThat(border.centerZ()).isZero();
+          assertThat(border.shape()).isEqualTo("circle");
+        });
     assertThat(SleepFraction.skips(1, 2, config.sleepPercentage())).isTrue();
   }
 
@@ -118,44 +117,38 @@ final class WorldConfigTest {
         .hasMessageContaining("main world");
     assertThatThrownBy(() -> new DigestConfig(true, "world", "not-a-zone"))
         .isInstanceOf(java.time.DateTimeException.class);
-    assertThatThrownBy(
-            () ->
-                new WorldConfig(
-                    50,
-                    java.util.List.of(new WorldSpec("wilds", "normal", true)),
-                    java.util.List.of(),
-                    new CrierConfig(false, "world"),
-                    new AmbientConfig(false, "world", -440, 71, -66, 24, 8, "America/Los_Angeles"),
-                    new DigestConfig(true, "world", "America/Los_Angeles"),
-                    new MerchantConfig(
-                        false, "world", java.util.List.of(), 12, 20, "America/Los_Angeles")))
+    assertThatThrownBy(() ->
+            new WorldConfig(
+                50,
+                java.util.List.of(new WorldSpec("wilds", "normal", true)),
+                java.util.List.of(),
+                new CrierConfig(false, "world"),
+                new AmbientConfig(false, "world", -440, 71, -66, 24, 8, "America/Los_Angeles"),
+                new DigestConfig(true, "world", "America/Los_Angeles"),
+                new MerchantConfig(
+                    false, "world", java.util.List.of(), 12, 20, "America/Los_Angeles")))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining("requires the crier");
   }
 
   @Test
   void merchantRequiresVerifiedMainWorldAnchorBeforeEnablement() {
-    assertThatThrownBy(
-            () ->
-                new MerchantConfig(
-                    true, "world", java.util.List.of(), 12, 20, "America/Los_Angeles"))
+    assertThatThrownBy(() ->
+            new MerchantConfig(true, "world", java.util.List.of(), 12, 20, "America/Los_Angeles"))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining("measured anchor");
-    assertThatThrownBy(
-            () ->
-                new MerchantConfig(
-                    true,
-                    "frontier",
-                    java.util.List.of(new MerchantAnchor(10, 80, 10)),
-                    12,
-                    20,
-                    "America/Los_Angeles"))
+    assertThatThrownBy(() ->
+            new MerchantConfig(
+                true,
+                "frontier",
+                java.util.List.of(new MerchantAnchor(10, 80, 10)),
+                12,
+                20,
+                "America/Los_Angeles"))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining("main world");
-    assertThatThrownBy(
-            () ->
-                new MerchantConfig(
-                    false, "world", java.util.List.of(), 3, 20, "America/Los_Angeles"))
+    assertThatThrownBy(() ->
+            new MerchantConfig(false, "world", java.util.List.of(), 3, 20, "America/Los_Angeles"))
         .isInstanceOf(IllegalArgumentException.class);
     assertThatThrownBy(
             () -> new MerchantConfig(false, "world", java.util.List.of(), 12, 20, "not-a-zone"))

@@ -246,7 +246,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "2026.9.1-java25@sha256:e8640538dac5d54c2838d57fa9641e735ad0cf2b71fb0e8a68da3b542a315749",
+      "value": "2026.10.1-java25@sha256:d12aed7e35981dfe259b60fbfee77d23a19b5898a7a31dca298d18b47b7b5776",
       "notes": [
         "java25 variant: Paper 26.2 (pinned below) requires Java 25+; the java21",
         "image crashes every server at startup (\"Minecraft 26.1 and newer requires",
@@ -626,7 +626,7 @@
         "registryUrl": "https://itzg.github.io/minecraft-server-charts",
         "versioning": "semver"
       },
-      "value": "5.2.0",
+      "value": "5.3.1",
       "component": true
     },
     {
@@ -652,7 +652,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "1.47.2@sha256:64ae69eaa7a6800a79bbf962f027f4020878efa25183359115bc7f6ee569c36e",
+      "value": "1.55.0@sha256:0e89cb4e8e1e73f9ccec4211fab5c6b8336bd2768b82b7cca25c6290ed5a2f4a",
       "component": true
     },
     {

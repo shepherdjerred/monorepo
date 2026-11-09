@@ -82,7 +82,35 @@
       "$put": {
         "path": "$.fixes",
         "key": "disable-unloaded-chunk-enderpearl-exploit",
+        "value": false
+      }
+    },
+    {
+      "$put": {
+        "path": "$.hopper",
+        "key": "cooldown-when-full",
+        "value": false
+      }
+    },
+    {
+      "$put": {
+        "path": "$.collisions",
+        "key": "max-entity-collisions",
+        "value": 2147483647
+      }
+    },
+    {
+      "$put": {
+        "path": "$.collisions",
+        "key": "allow-player-cramming-damage",
         "value": true
+      }
+    },
+    {
+      "$put": {
+        "path": "$.entities.behavior",
+        "key": "phantoms-only-attack-insomniacs",
+        "value": false
       }
     }
   ]

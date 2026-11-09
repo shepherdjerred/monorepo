@@ -91,9 +91,8 @@ final class ModerationCommands {
                     .executes(context -> ban(context, Optional.empty(), NO_REASON))
                     .then(
                         argument(REASON, greedyString())
-                            .executes(
-                                context ->
-                                    ban(context, Optional.empty(), Cmd.string(context, REASON)))))
+                            .executes(context ->
+                                ban(context, Optional.empty(), Cmd.string(context, REASON)))))
             .build(),
         "Ban a player permanently");
     commands.register(
@@ -421,13 +420,12 @@ final class ModerationCommands {
   }
 
   private SuggestionProvider<CommandSourceStack> knownPlayers() {
-    return Cmd.suggest(
-        () ->
-            Stream.concat(
-                    runtime.server().getOnlinePlayers().stream().map(Player::getName),
-                    players.names().stream())
-                .distinct()
-                .toList());
+    return Cmd.suggest(() ->
+        Stream.concat(
+                runtime.server().getOnlinePlayers().stream().map(Player::getName),
+                players.names().stream())
+            .distinct()
+            .toList());
   }
 
   private static Actor actor(CommandSender sender) {

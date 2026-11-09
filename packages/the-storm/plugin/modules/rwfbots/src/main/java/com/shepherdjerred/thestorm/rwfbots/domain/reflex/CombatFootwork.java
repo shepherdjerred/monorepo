@@ -161,13 +161,12 @@ public final class CombatFootwork {
     var carried = Math.max(self.vel().horizontal().length(), MovementMotor.SPRINT_SPEED);
     var heading = direction.horizontal().normalized();
     return flight(MovementMotor.hop(heading.scale(carried), heading))
-        .map(
-            envelope ->
-                new Corridor(
-                    self.pos(),
-                    self.pos().plus(heading.scale(envelope.radius())),
-                    HALF_DIAGONAL + envelope.drift(),
-                    self.pos().y() + envelope.rise()))
+        .map(envelope ->
+            new Corridor(
+                self.pos(),
+                self.pos().plus(heading.scale(envelope.radius())),
+                HALF_DIAGONAL + envelope.drift(),
+                self.pos().y() + envelope.rise()))
         .filter(corridor -> corridor.inside(nav.graph().bounds()))
         .filter(corridor -> clearCorridor(nav, corridor))
         .isPresent();

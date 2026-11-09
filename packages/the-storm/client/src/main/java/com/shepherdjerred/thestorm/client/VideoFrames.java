@@ -212,10 +212,9 @@ final class VideoFrames {
                   return null;
                 },
                 io)
-            .whenComplete(
-                (_, error) -> {
-                  if (error != null && !executed.get()) reject(error.toString());
-                });
+            .whenComplete((_, error) -> {
+              if (error != null && !executed.get()) reject(error.toString());
+            });
     holds.add(future);
   }
 
@@ -302,14 +301,13 @@ final class VideoFrames {
           var frames =
               written.values().stream()
                   .sorted(java.util.Comparator.comparingInt(entry -> entry.frame().index()))
-                  .map(
-                      entry ->
-                          new DocsWritten(
-                              entry.frame(),
-                              entry.file(),
-                              entry.sha256(),
-                              java.util.Objects.requireNonNull(
-                                  observations.get(entry.frame().index()))))
+                  .map(entry ->
+                      new DocsWritten(
+                          entry.frame(),
+                          entry.file(),
+                          entry.sha256(),
+                          java.util.Objects.requireNonNull(
+                              observations.get(entry.frame().index()))))
                   .toList();
           var result =
               new DocsReceipt(

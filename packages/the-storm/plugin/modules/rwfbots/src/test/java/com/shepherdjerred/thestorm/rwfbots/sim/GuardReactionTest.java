@@ -57,9 +57,8 @@ final class GuardReactionTest {
       if (!body.alive || !body.bot || first.containsKey(body.id) || !guard(world, body)) continue;
       var answering =
           body.decision
-              .map(
-                  decision ->
-                      decision.option() == Option.RETAKE || decision.option() == Option.ENGAGE)
+              .map(decision ->
+                  decision.option() == Option.RETAKE || decision.option() == Option.ENGAGE)
               .orElse(false);
       if (answering) first.put(body.id, attackerRange(world, body));
     }

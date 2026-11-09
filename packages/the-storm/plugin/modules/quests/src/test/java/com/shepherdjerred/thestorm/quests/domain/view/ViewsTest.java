@@ -180,21 +180,20 @@ final class ViewsTest {
   void atMostFiveMattersAreListedWithLongNamesClipped() {
     var quests =
         java.util.stream.IntStream.range(0, 7)
-            .mapToObj(
-                index ->
-                    new Quest(
-                        "q" + index,
-                        "An extraordinarily long quest name number " + index,
-                        "thomas",
-                        Quest.Category.SIDE,
-                        Quest.Repeat.ONCE,
-                        5,
-                        List.of(),
-                        new Quest.QuestText("o", "a", "d", "f", "s", List.of()),
-                        "s",
-                        Map.of("s", stage("s").objective(talk("thomas")).build()),
-                        List.of(),
-                        List.of()))
+            .mapToObj(index ->
+                new Quest(
+                    "q" + index,
+                    "An extraordinarily long quest name number " + index,
+                    "thomas",
+                    Quest.Category.SIDE,
+                    Quest.Repeat.ONCE,
+                    5,
+                    List.of(),
+                    new Quest.QuestText("o", "a", "d", "f", "s", List.of()),
+                    "s",
+                    Map.of("s", stage("s").objective(talk("thomas")).build()),
+                    List.of(),
+                    List.of()))
             .toArray(Quest[]::new);
     var dialogue =
         Dialogues.forNpc(

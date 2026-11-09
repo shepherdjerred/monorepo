@@ -157,20 +157,15 @@ final class ProtectionMatrixTest {
     return MATRIX
         .lines()
         .filter(line -> !line.isBlank() && !line.startsWith("#"))
-        .flatMap(
-            line -> {
-              var parts = line.trim().split("\\s+", -1);
-              var action = Action.valueOf(parts[0]);
-              var relation = Relation.valueOf(parts[1]);
-              return java.util.stream.IntStream.range(0, COLUMNS.size())
-                  .mapToObj(
-                      column ->
-                          Arguments.of(
-                              action,
-                              relation,
-                              COLUMNS.get(column),
-                              parts[2 + column].equals("+")));
-            });
+        .flatMap(line -> {
+          var parts = line.trim().split("\\s+", -1);
+          var action = Action.valueOf(parts[0]);
+          var relation = Relation.valueOf(parts[1]);
+          return java.util.stream.IntStream.range(0, COLUMNS.size())
+              .mapToObj(column ->
+                  Arguments.of(
+                      action, relation, COLUMNS.get(column), parts[2 + column].equals("+")));
+        });
   }
 
   @Test

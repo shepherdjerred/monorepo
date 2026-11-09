@@ -67,13 +67,12 @@ public record Situation(
         .state()
         .memory()
         .sightings()
-        .forEach(
-            (id, sighting) -> {
-              var confidence = sighting.confidenceAt(now(), Perception.TAU_TICKS);
-              if (!known.containsKey(id) && isAlive(id)) {
-                known.put(id, new KnownEnemy(id, sighting.predictedPos(now()), confidence, false));
-              }
-            });
+        .forEach((id, sighting) -> {
+          var confidence = sighting.confidenceAt(now(), Perception.TAU_TICKS);
+          if (!known.containsKey(id) && isAlive(id)) {
+            known.put(id, new KnownEnemy(id, sighting.predictedPos(now()), confidence, false));
+          }
+        });
     for (var shared : board.visibleSightings(now())) {
       var existing = known.get(shared.enemy());
       var age = now() - shared.seenTick();
@@ -134,13 +133,12 @@ public record Situation(
         .objective()
         .flatMap(snapshot::bomb)
         .filter(bomb -> bomb.threatens(self.team()) && bomb.state().isLit())
-        .or(
-            () ->
-                snapshot.bombs().stream()
-                    .filter(bomb -> bomb.threatens(self.team()) && bomb.state().isLit())
-                    .min(
-                        java.util.Comparator.comparingLong(Situation::fuseTicks)
-                            .thenComparing(BombView::id)));
+        .or(() ->
+            snapshot.bombs().stream()
+                .filter(bomb -> bomb.threatens(self.team()) && bomb.state().isLit())
+                .min(
+                    java.util.Comparator.comparingLong(Situation::fuseTicks)
+                        .thenComparing(BombView::id)));
   }
 
   private static long fuseTicks(BombView bomb) {
@@ -159,10 +157,9 @@ public record Situation(
   /** A bomb a teammate is arming right now. */
   public Optional<BombView> bombBeingArmedByUs() {
     return snapshot.bombs().stream()
-        .filter(
-            bomb ->
-                bomb.state() instanceof BombState.Arming(var team, var _, var _)
-                    && team.equals(self.team()))
+        .filter(bomb ->
+            bomb.state() instanceof BombState.Arming(var team, var _, var _)
+                && team.equals(self.team()))
         .findFirst();
   }
 
@@ -226,19 +223,17 @@ public record Situation(
   public List<KnownEnemy> chaseableEnemies() {
     return knownEnemies().stream()
         .sorted(
-            comparingDouble(
-                enemy ->
-                    enemy.pos().distance(self.pos())
-                        + CHASER_DISTANCE * board.chasers(enemy.id(), self.id())))
-        .filter(
-            enemy ->
-                board.chasers(enemy.id(), self.id()) < MAX_CHASERS
-                    || enemy.pos().distance(self.pos()) <= POINT_BLANK
-                    || (enemy.visible()
-                        && snapshot
-                            .combatant(enemy.id())
-                            .map(view -> view.effectiveHealth() <= LOW_ENEMY_HEALTH)
-                            .orElse(false)))
+            comparingDouble(enemy ->
+                enemy.pos().distance(self.pos())
+                    + CHASER_DISTANCE * board.chasers(enemy.id(), self.id())))
+        .filter(enemy ->
+            board.chasers(enemy.id(), self.id()) < MAX_CHASERS
+                || enemy.pos().distance(self.pos()) <= POINT_BLANK
+                || (enemy.visible()
+                    && snapshot
+                        .combatant(enemy.id())
+                        .map(view -> view.effectiveHealth() <= LOW_ENEMY_HEALTH)
+                        .orElse(false)))
         .toList();
   }
 

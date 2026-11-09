@@ -47,10 +47,8 @@ final class Recall implements Spell {
     return tools
         .teleports()
         .arrival(caster, mark.get(), settings.searchRadius())
-        .map(
-            destination ->
-                guarded(
-                    caster, destination, Magic.teleportEffect(kind(), tools, caster, destination)));
+        .map(destination ->
+            guarded(caster, destination, Magic.teleportEffect(kind(), tools, caster, destination)));
   }
 
   private boolean sealedDestination(Location destination) {

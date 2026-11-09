@@ -85,14 +85,12 @@ final class PlotResetting {
     return chain.thenApplyAsync(
         ignored ->
             parts.parcels().definitions().stream()
-                    .anyMatch(
-                        def ->
-                            parts
-                                .parcels()
-                                .lease(def.id())
-                                .filter(
-                                    lease -> lease.reclaimable(parts.context().time().instant()))
-                                .isPresent())
+                    .anyMatch(def ->
+                        parts
+                            .parcels()
+                            .lease(def.id())
+                            .filter(lease -> lease.reclaimable(parts.context().time().instant()))
+                            .isPresent())
                 ? "BUSY"
                 : "COMPLETE",
         main());
@@ -117,23 +115,17 @@ final class PlotResetting {
       }
       var locks =
           parts.locks().all().stream()
-              .filter(
-                  lock ->
-                      lock.blocks().stream()
-                          .anyMatch(
-                              block ->
-                                  def.area()
-                                      .contains(block.world(), block.x(), block.y(), block.z())))
+              .filter(lock ->
+                  lock.blocks().stream()
+                      .anyMatch(block ->
+                          def.area().contains(block.world(), block.x(), block.y(), block.z())))
               .toList();
       if (locks.stream()
-          .anyMatch(
-              lock ->
-                  !lock.owner().equals(expected.owner())
-                      || lock.blocks().stream()
-                          .anyMatch(
-                              block ->
-                                  !def.area()
-                                      .contains(block.world(), block.x(), block.y(), block.z())))) {
+          .anyMatch(lock ->
+              !lock.owner().equals(expected.owner())
+                  || lock.blocks().stream()
+                      .anyMatch(block ->
+                          !def.area().contains(block.world(), block.x(), block.y(), block.z())))) {
         throw new IllegalStateException("lock ownership or bounds cross the plot");
       }
       var auxiliary =
@@ -313,14 +305,13 @@ final class PlotResetting {
               if (!captured.clipboard().getEntities().isEmpty()
                   || java.util.stream.StreamSupport.stream(
                           captured.clipboard().getRegion().spliterator(), false)
-                      .anyMatch(
-                          pos ->
-                              !captured
-                                  .clipboard()
-                                  .getBlock(pos)
-                                  .getBlockType()
-                                  .getMaterial()
-                                  .isAir())) {
+                      .anyMatch(pos ->
+                          !captured
+                              .clipboard()
+                              .getBlock(pos)
+                              .getBlockType()
+                              .getMaterial()
+                              .isAir())) {
                 throw new IllegalStateException(
                     "rental building volume must be air; keep server ground, roads and infrastructure outside it");
               }
@@ -328,17 +319,16 @@ final class PlotResetting {
                   id, ParcelFingerprint.of(def), new Blob(Schematics.encode(captured.clipboard())));
             },
             parts.archives())
-        .thenCompose(
-            saved ->
-                parts
-                    .recoveries()
-                    .baseline(saved)
-                    .thenRunAsync(
-                        () -> {
-                          parts.baselines().put(id, saved);
-                          parts.parcels().baselineReady(id);
-                        },
-                        main()))
+        .thenCompose(saved ->
+            parts
+                .recoveries()
+                .baseline(saved)
+                .thenRunAsync(
+                    () -> {
+                      parts.baselines().put(id, saved);
+                      parts.parcels().baselineReady(id);
+                    },
+                    main()))
         .whenCompleteAsync((ignored, failure) -> parts.parcels().end(id), main());
   }
 

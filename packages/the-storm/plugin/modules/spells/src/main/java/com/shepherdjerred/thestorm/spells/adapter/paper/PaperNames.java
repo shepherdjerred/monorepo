@@ -55,30 +55,25 @@ public final class PaperNames {
     config
         .spells()
         .all()
-        .forEach(
-            (kind, entry) -> {
-              var prefix = "spells." + kind.id() + ".";
-              entry
-                  .reagents()
-                  .keySet()
-                  .forEach(
-                      material -> {
-                        if (item(material).isEmpty()) {
-                          problems.add(prefix + "reagents: unknown item " + material);
-                        }
-                      });
-              itemModel(entry.look().model())
-                  .ifPresent(p -> problems.add(prefix + "look.model: " + p));
-              if (particle(entry.fx().particle()).isEmpty()) {
-                problems.add(
-                    prefix + "fx.particle: unknown or data-bearing " + entry.fx().particle());
-              }
-              if (sound(entry.fx().sound()).isEmpty()) {
-                problems.add(prefix + "fx.sound: unknown sound " + entry.fx().sound());
-              }
-              settingsProblems(entry.settings())
-                  .forEach(p -> problems.add(prefix + "settings." + p));
-            });
+        .forEach((kind, entry) -> {
+          var prefix = "spells." + kind.id() + ".";
+          entry
+              .reagents()
+              .keySet()
+              .forEach(material -> {
+                if (item(material).isEmpty()) {
+                  problems.add(prefix + "reagents: unknown item " + material);
+                }
+              });
+          itemModel(entry.look().model()).ifPresent(p -> problems.add(prefix + "look.model: " + p));
+          if (particle(entry.fx().particle()).isEmpty()) {
+            problems.add(prefix + "fx.particle: unknown or data-bearing " + entry.fx().particle());
+          }
+          if (sound(entry.fx().sound()).isEmpty()) {
+            problems.add(prefix + "fx.sound: unknown sound " + entry.fx().sound());
+          }
+          settingsProblems(entry.settings()).forEach(p -> problems.add(prefix + "settings." + p));
+        });
     return problems;
   }
 

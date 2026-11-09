@@ -121,18 +121,16 @@ final class VisiblePursuitTest {
         .singleElement()
         .isEqualTo(new BodyCommand.MoveToward(launch.runUpStart(), true));
     assertThat(step.state().activeJump())
-        .hasValueSatisfying(
-            active -> {
-              assertThat(active.waypoint()).isEqualTo(first);
-              assertThat(active.stage()).isEqualTo(ActiveJump.Stage.BACKUP);
-            });
+        .hasValueSatisfying(active -> {
+          assertThat(active.waypoint()).isEqualTo(first);
+          assertThat(active.stage()).isEqualTo(ActiveJump.Stage.BACKUP);
+        });
     var desired = Facing.looking(self.eye(), enemy.pos().plus(0, 1.3, 0));
     assertThat(step.state().aim().look().differenceTo(desired))
         .isLessThan(self.facing().differenceTo(desired));
     assertThat(step.commands())
-        .noneMatch(
-            command ->
-                command instanceof BodyCommand.Attack || command instanceof BodyCommand.Swing);
+        .noneMatch(command ->
+            command instanceof BodyCommand.Attack || command instanceof BodyCommand.Swing);
   }
 
   @Test
@@ -173,10 +171,9 @@ final class VisiblePursuitTest {
     assertThat(step.commands())
         .filteredOn(BodyCommand.MoveToward.class::isInstance)
         .singleElement()
-        .satisfies(
-            command ->
-                assertThat(((BodyCommand.MoveToward) command).waypoint())
-                    .isNotEqualTo(oldApproach.pos()));
+        .satisfies(command ->
+            assertThat(((BodyCommand.MoveToward) command).waypoint())
+                .isNotEqualTo(oldApproach.pos()));
   }
 
   private static Decision decision(CombatantView self, CombatantView enemy) {

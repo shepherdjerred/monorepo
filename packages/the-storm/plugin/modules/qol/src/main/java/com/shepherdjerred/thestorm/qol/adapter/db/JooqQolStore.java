@@ -33,88 +33,75 @@ public final class JooqQolStore implements QolStore {
 
   @Override
   public CompletableFuture<Void> setLastRtp(UUID player, Instant when) {
-    return write(
-        dsl ->
-            dsl.update(QOL_PLAYER)
-                .set(QOL_PLAYER.LAST_RTP, when.toEpochMilli())
-                .where(QOL_PLAYER.PLAYER.eq(player.toString()))
-                .execute());
+    return write(dsl ->
+        dsl.update(QOL_PLAYER)
+            .set(QOL_PLAYER.LAST_RTP, when.toEpochMilli())
+            .where(QOL_PLAYER.PLAYER.eq(player.toString()))
+            .execute());
   }
 
   @Override
   public CompletableFuture<Void> insertRtpAttempt(RtpAttempt attempt) {
-    return write(
-        dsl ->
-            dsl.insertInto(QOL_RTP_ATTEMPT)
-                .set(QOL_RTP_ATTEMPT.ID, attempt.id().toString())
-                .set(QOL_RTP_ATTEMPT.PLAYER, attempt.player().toString())
-                .set(QOL_RTP_ATTEMPT.COST, attempt.cost())
-                .execute());
+    return write(dsl ->
+        dsl.insertInto(QOL_RTP_ATTEMPT)
+            .set(QOL_RTP_ATTEMPT.ID, attempt.id().toString())
+            .set(QOL_RTP_ATTEMPT.PLAYER, attempt.player().toString())
+            .set(QOL_RTP_ATTEMPT.COST, attempt.cost())
+            .execute());
   }
 
   @Override
   public CompletableFuture<Integer> spendStarterCharge(UUID player) {
-    return database.write(
-        dsl -> {
-          dsl.update(QOL_PLAYER)
-              .set(QOL_PLAYER.STARTER_RTP_CHARGES, QOL_PLAYER.STARTER_RTP_CHARGES.minus(1))
-              .set(
-                  QOL_PLAYER.STARTER_RTP_PENDING,
-                  org.jooq
-                      .impl
-                      .DSL
-                      .when(QOL_PLAYER.STARTER_RTP_CHARGES.minus(1).gt(0), 1)
-                      .otherwise(0))
-              .where(
-                  QOL_PLAYER.PLAYER.eq(player.toString()).and(QOL_PLAYER.STARTER_RTP_CHARGES.gt(0)))
-              .execute();
-          var left =
-              dsl.select(QOL_PLAYER.STARTER_RTP_CHARGES)
-                  .from(QOL_PLAYER)
-                  .where(QOL_PLAYER.PLAYER.eq(player.toString()))
-                  .fetchOne(QOL_PLAYER.STARTER_RTP_CHARGES);
-          return left == null ? 0 : left;
-        });
+    return database.write(dsl -> {
+      dsl.update(QOL_PLAYER)
+          .set(QOL_PLAYER.STARTER_RTP_CHARGES, QOL_PLAYER.STARTER_RTP_CHARGES.minus(1))
+          .set(
+              QOL_PLAYER.STARTER_RTP_PENDING,
+              org.jooq.impl.DSL.when(QOL_PLAYER.STARTER_RTP_CHARGES.minus(1).gt(0), 1).otherwise(0))
+          .where(QOL_PLAYER.PLAYER.eq(player.toString()).and(QOL_PLAYER.STARTER_RTP_CHARGES.gt(0)))
+          .execute();
+      var left =
+          dsl.select(QOL_PLAYER.STARTER_RTP_CHARGES)
+              .from(QOL_PLAYER)
+              .where(QOL_PLAYER.PLAYER.eq(player.toString()))
+              .fetchOne(QOL_PLAYER.STARTER_RTP_CHARGES);
+      return left == null ? 0 : left;
+    });
   }
 
   @Override
   public CompletableFuture<Void> discardStarterCompass(UUID player) {
-    return write(
-        dsl ->
-            dsl.update(QOL_PLAYER)
-                .set(QOL_PLAYER.STARTER_RTP_CHARGES, 0)
-                .set(QOL_PLAYER.STARTER_RTP_PENDING, 0)
-                .where(QOL_PLAYER.PLAYER.eq(player.toString()))
-                .execute());
+    return write(dsl ->
+        dsl.update(QOL_PLAYER)
+            .set(QOL_PLAYER.STARTER_RTP_CHARGES, 0)
+            .set(QOL_PLAYER.STARTER_RTP_PENDING, 0)
+            .where(QOL_PLAYER.PLAYER.eq(player.toString()))
+            .execute());
   }
 
   @Override
   public CompletableFuture<List<RtpAttempt>> pendingRtpAttempts() {
-    return database.read(
-        dsl ->
-            dsl.selectFrom(QOL_RTP_ATTEMPT)
-                .fetch(
-                    row ->
-                        new RtpAttempt(
-                            UUID.fromString(row.getId()),
-                            UUID.fromString(row.getPlayer()),
-                            row.getCost())));
+    return database.read(dsl ->
+        dsl.selectFrom(QOL_RTP_ATTEMPT)
+            .fetch(row ->
+                new RtpAttempt(
+                    UUID.fromString(row.getId()),
+                    UUID.fromString(row.getPlayer()),
+                    row.getCost())));
   }
 
   @Override
   public CompletableFuture<Void> deleteRtpAttempt(UUID id) {
-    return write(
-        dsl ->
-            dsl.deleteFrom(QOL_RTP_ATTEMPT).where(QOL_RTP_ATTEMPT.ID.eq(id.toString())).execute());
+    return write(dsl ->
+        dsl.deleteFrom(QOL_RTP_ATTEMPT).where(QOL_RTP_ATTEMPT.ID.eq(id.toString())).execute());
   }
 
   private CompletableFuture<Void> write(Consumer<DSLContext> work) {
     return database
-        .write(
-            dsl -> {
-              work.accept(dsl);
-              return Boolean.TRUE;
-            })
+        .write(dsl -> {
+          work.accept(dsl);
+          return Boolean.TRUE;
+        })
         .thenAccept(done -> {});
   }
 

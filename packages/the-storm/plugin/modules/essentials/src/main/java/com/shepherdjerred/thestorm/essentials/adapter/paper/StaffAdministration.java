@@ -169,10 +169,9 @@ final class StaffAdministration {
                     + String.join(
                         ", ",
                         tools.context.plugin().getServer().getOnlinePlayers().stream()
-                            .filter(
-                                player ->
-                                    com.shepherdjerred.thestorm.core.players.PlayerVisibility
-                                        .visibleTo(request.actor(), player))
+                            .filter(player ->
+                                com.shepherdjerred.thestorm.core.players.PlayerVisibility.visibleTo(
+                                    request.actor(), player))
                             .map(Player::getName)
                             .sorted()
                             .toList())));

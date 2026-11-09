@@ -109,11 +109,10 @@ final class ArenaSafetyTest {
   /** Joins, returning as soon as the arena accepts the player (while they are still joining). */
   private void join(PlayerMock player, String command) {
     harness()
-        .until(
-            () -> {
-              player.performCommand(command);
-              return presence().arenaOf(player.getUniqueId()).isPresent();
-            });
+        .until(() -> {
+          player.performCommand(command);
+          return presence().arenaOf(player.getUniqueId()).isPresent();
+        });
   }
 
   private boolean inLobby(PlayerMock player) {
@@ -132,13 +131,12 @@ final class ArenaSafetyTest {
     lobby(player);
     player.performCommand("arena class knight");
     harness()
-        .until(
-            () -> {
-              harness()
-                  .server
-                  .dispatchCommand(harness().server.getConsoleSender(), "arena start colosseum");
-              return player.getLocation().getX() == 1030.5;
-            });
+        .until(() -> {
+          harness()
+              .server
+              .dispatchCommand(harness().server.getConsoleSender(), "arena start colosseum");
+          return player.getLocation().getX() == 1030.5;
+        });
   }
 
   private static ItemStack tagged(Material material) {
@@ -196,11 +194,10 @@ final class ArenaSafetyTest {
     harness.until(() -> new JooqSnapshotStore(harness.database).loadAll().join().isEmpty());
     harness
         .database
-        .write(
-            dsl -> {
-              dsl.execute("DROP TABLE arena_snapshot_effects");
-              return dsl.execute("DROP TABLE arena_snapshots");
-            })
+        .write(dsl -> {
+          dsl.execute("DROP TABLE arena_snapshot_effects");
+          return dsl.execute("DROP TABLE arena_snapshots");
+        })
         .join();
     messages(alice);
 
@@ -210,11 +207,10 @@ final class ArenaSafetyTest {
     alice.setLocation(new Location(harness.world, 70.5, 70, -30.5));
 
     var seen = new ArrayList<String>();
-    harness.until(
-        () -> {
-          seen.addAll(messages(alice));
-          return seen.stream().anyMatch(m -> m.contains("could not be saved"));
-        });
+    harness.until(() -> {
+      seen.addAll(messages(alice));
+      return seen.stream().anyMatch(m -> m.contains("could not be saved"));
+    });
 
     assertThat(presence().arenaOf(alice.getUniqueId())).isEmpty();
     assertThat(diamonds(alice)).isEqualTo(5);
@@ -712,11 +708,10 @@ final class ArenaSafetyTest {
     harness.rejoinAfterSave(alice);
     harness.until(() -> new JooqSnapshotStore(harness.database).loadAll().join().isEmpty());
 
-    harness.until(
-        () -> {
-          alice.performCommand("arena join colosseum");
-          return presence().arenaOf(alice.getUniqueId()).isPresent();
-        });
+    harness.until(() -> {
+      alice.performCommand("arena join colosseum");
+      return presence().arenaOf(alice.getUniqueId()).isPresent();
+    });
     alice.setHealth(0);
     harness.server.getScheduler().performTicks(20);
     assertThat(diamonds(alice)).isZero();

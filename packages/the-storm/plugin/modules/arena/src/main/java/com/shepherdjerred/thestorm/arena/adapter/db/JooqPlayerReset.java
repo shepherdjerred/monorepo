@@ -24,25 +24,22 @@ public final class JooqPlayerReset {
   public CompletableFuture<Void> reset(UUID player) {
     var id = player.toString();
     return database
-        .write(
-            dsl -> {
-              dsl.deleteFrom(ARENA_SNAPSHOTS).where(ARENA_SNAPSHOTS.PLAYER.eq(id)).execute();
-              dsl.deleteFrom(ARENA_BEST_WAVES).where(ARENA_BEST_WAVES.PLAYER.eq(id)).execute();
-              dsl.deleteFrom(ARENA_VAULT_CLAIMS).where(ARENA_VAULT_CLAIMS.PLAYER.eq(id)).execute();
-              dsl.deleteFrom(ARENA_PENDING_REWARDS)
-                  .where(ARENA_PENDING_REWARDS.PLAYER.eq(id))
-                  .execute();
-              dsl.deleteFrom(ARENA_SURVIVAL_CREDITS)
-                  .where(ARENA_SURVIVAL_CREDITS.PLAYER.eq(id))
-                  .execute();
-              dsl.deleteFrom(ARENA_SURVIVAL_TIPS)
-                  .where(ARENA_SURVIVAL_TIPS.PLAYER.eq(id))
-                  .execute();
-              dsl.deleteFrom(ARENA_SURVIVAL_TIP_PREFERENCES)
-                  .where(ARENA_SURVIVAL_TIP_PREFERENCES.PLAYER.eq(id))
-                  .execute();
-              return true;
-            })
+        .write(dsl -> {
+          dsl.deleteFrom(ARENA_SNAPSHOTS).where(ARENA_SNAPSHOTS.PLAYER.eq(id)).execute();
+          dsl.deleteFrom(ARENA_BEST_WAVES).where(ARENA_BEST_WAVES.PLAYER.eq(id)).execute();
+          dsl.deleteFrom(ARENA_VAULT_CLAIMS).where(ARENA_VAULT_CLAIMS.PLAYER.eq(id)).execute();
+          dsl.deleteFrom(ARENA_PENDING_REWARDS)
+              .where(ARENA_PENDING_REWARDS.PLAYER.eq(id))
+              .execute();
+          dsl.deleteFrom(ARENA_SURVIVAL_CREDITS)
+              .where(ARENA_SURVIVAL_CREDITS.PLAYER.eq(id))
+              .execute();
+          dsl.deleteFrom(ARENA_SURVIVAL_TIPS).where(ARENA_SURVIVAL_TIPS.PLAYER.eq(id)).execute();
+          dsl.deleteFrom(ARENA_SURVIVAL_TIP_PREFERENCES)
+              .where(ARENA_SURVIVAL_TIP_PREFERENCES.PLAYER.eq(id))
+              .execute();
+          return true;
+        })
         .thenAccept(ignored -> {});
   }
 }

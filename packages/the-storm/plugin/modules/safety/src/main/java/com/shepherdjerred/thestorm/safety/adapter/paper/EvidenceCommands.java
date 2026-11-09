@@ -30,20 +30,18 @@ public final class EvidenceCommands {
                 Commands.literal("search")
                     .then(
                         Commands.argument("player", StringArgumentType.word())
-                            .executes(
-                                command ->
-                                    search(
-                                        command.getSource().getSender(),
-                                        StringArgumentType.getString(command, "player"),
-                                        ""))
+                            .executes(command ->
+                                search(
+                                    command.getSource().getSender(),
+                                    StringArgumentType.getString(command, "player"),
+                                    ""))
                             .then(
                                 Commands.argument("text", StringArgumentType.greedyString())
-                                    .executes(
-                                        command ->
-                                            search(
-                                                command.getSource().getSender(),
-                                                StringArgumentType.getString(command, "player"),
-                                                StringArgumentType.getString(command, "text"))))))
+                                    .executes(command ->
+                                        search(
+                                            command.getSource().getSender(),
+                                            StringArgumentType.getString(command, "player"),
+                                            StringArgumentType.getString(command, "text"))))))
             .build(),
         "Search the permanent private evidence archive");
   }
@@ -64,17 +62,15 @@ public final class EvidenceCommands {
     var _ =
         store
             .attempt(query, context.time().instant())
-            .thenCompose(
-                done ->
-                    store.search(
-                        player.equals("*") ? "" : player,
-                        com.shepherdjerred.thestorm.safety.domain.ContentRules.redact(text),
-                        20))
-            .thenCompose(
-                result ->
-                    store
-                        .event(id, "evidence-viewed", "", context.time().instant())
-                        .thenApply(done -> result))
+            .thenCompose(done ->
+                store.search(
+                    player.equals("*") ? "" : player,
+                    com.shepherdjerred.thestorm.safety.domain.ContentRules.redact(text),
+                    20))
+            .thenCompose(result ->
+                store
+                    .event(id, "evidence-viewed", "", context.time().instant())
+                    .thenApply(done -> result))
             .whenCompleteAsync(
                 (result, failure) -> {
                   if (failure != null) {

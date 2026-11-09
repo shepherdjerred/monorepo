@@ -105,15 +105,14 @@ final class JooqTownsStoreTest {
     assertThat(result.conflicts()).isEmpty();
     assertThat(result.towns())
         .hasSize(7)
-        .allSatisfy(
-            town ->
-                assertThat(
-                        sites.stream()
-                            .filter(site -> site.activeTownId().orElseThrow().equals(town.id()))
-                            .findFirst()
-                            .orElseThrow()
-                            .world())
-                    .isEqualTo("map2"));
+        .allSatisfy(town ->
+            assertThat(
+                    sites.stream()
+                        .filter(site -> site.activeTownId().orElseThrow().equals(town.id()))
+                        .findFirst()
+                        .orElseThrow()
+                        .world())
+                .isEqualTo("map2"));
     assertThat(load().towns()).hasSize(14);
     assertThat(await(store.importHeritage(sites, CLAIMED)).towns()).isEmpty();
   }
@@ -173,16 +172,14 @@ final class JooqTownsStoreTest {
     assertThat(load().towns()).containsExactlyElementsOf(first.towns());
     assertThat(await(store.importHeritage(List.of(site), CLAIMED)).towns()).isEmpty();
     await(
-        database.write(
-            dsl -> {
-              dsl.execute(
-                  "delete from towns_member where town_id = ?",
-                  site.activeTownId().orElseThrow().toString());
-              dsl.execute(
-                  "delete from towns_town where id = ?",
-                  site.activeTownId().orElseThrow().toString());
-              return true;
-            }));
+        database.write(dsl -> {
+          dsl.execute(
+              "delete from towns_member where town_id = ?",
+              site.activeTownId().orElseThrow().toString());
+          dsl.execute(
+              "delete from towns_town where id = ?", site.activeTownId().orElseThrow().toString());
+          return true;
+        }));
     assertThat(await(store.importHeritage(List.of(site), CLAIMED)).towns()).isEmpty();
     assertThat(load().towns()).isEmpty();
   }
@@ -299,10 +296,8 @@ final class JooqTownsStoreTest {
     assertThat(snapshot.claims()).containsExactly(claim(TOWN_B, 10, 0, ClaimFlag.PVP));
     assertThat(flagRows()).isEqualTo(1);
     await(store.createTown(Fixtures.townA()));
-    assertThatThrownBy(
-            () ->
-                await(
-                    store.deleteTown(new TownPayout(UUID.randomUUID(), OWNER, UUID.randomUUID()))))
+    assertThatThrownBy(() ->
+            await(store.deleteTown(new TownPayout(UUID.randomUUID(), OWNER, UUID.randomUUID()))))
         .isInstanceOf(ExecutionException.class);
   }
 
@@ -337,9 +332,8 @@ final class JooqTownsStoreTest {
   void aPlayerBelongsToOneTown() throws Exception {
     await(store.createTown(Fixtures.townA()));
 
-    assertThatThrownBy(
-            () ->
-                await(store.createTown(Town.found(UUID.randomUUID(), "Carthage", FOUNDED, OWNER))))
+    assertThatThrownBy(() ->
+            await(store.createTown(Town.found(UUID.randomUUID(), "Carthage", FOUNDED, OWNER))))
         .isInstanceOf(ExecutionException.class);
     assertThat(load().towns()).containsExactly(Fixtures.townA());
   }
@@ -351,16 +345,15 @@ final class JooqTownsStoreTest {
     // The CHECK constraint keeps bad flags out; drop it by rebuilding the table, as a bad
     // hand-edit or a half-applied future migration might.
     await(
-        database.write(
-            dsl -> {
-              dsl.execute("PRAGMA foreign_keys = OFF");
-              dsl.execute("ALTER TABLE towns_claim_flag RENAME TO old_flags");
-              dsl.execute(
-                  "CREATE TABLE towns_claim_flag (world TEXT, chunk_x INTEGER, chunk_z INTEGER,"
-                      + " flag TEXT)");
-              dsl.execute("INSERT INTO towns_claim_flag VALUES ('world', 0, 0, 'FLYING')");
-              return 0;
-            }));
+        database.write(dsl -> {
+          dsl.execute("PRAGMA foreign_keys = OFF");
+          dsl.execute("ALTER TABLE towns_claim_flag RENAME TO old_flags");
+          dsl.execute(
+              "CREATE TABLE towns_claim_flag (world TEXT, chunk_x INTEGER, chunk_z INTEGER,"
+                  + " flag TEXT)");
+          dsl.execute("INSERT INTO towns_claim_flag VALUES ('world', 0, 0, 'FLYING')");
+          return 0;
+        }));
 
     assertThatThrownBy(this::load).isInstanceOf(ExecutionException.class);
   }
@@ -487,13 +480,12 @@ final class JooqTownsStoreTest {
     var lock = Lock.of(UUID.randomUUID(), MEMBER, Set.of(new BlockPos("world", 1, 64, 1)));
     await(locks.save(lock));
     await(
-        database.write(
-            dsl -> {
-              dsl.execute(
-                  "CREATE TRIGGER fail_lock_transfer BEFORE UPDATE OF owner_id ON towns_lock "
-                      + "BEGIN SELECT RAISE(FAIL, 'lock write failed'); END");
-              return 0;
-            }));
+        database.write(dsl -> {
+          dsl.execute(
+              "CREATE TRIGGER fail_lock_transfer BEFORE UPDATE OF owner_id ON towns_lock "
+                  + "BEGIN SELECT RAISE(FAIL, 'lock write failed'); END");
+          return 0;
+        }));
 
     assertThatThrownBy(() -> await(store.saveDeparture(original.withoutMember(MEMBER), MEMBER)))
         .isInstanceOf(ExecutionException.class);

@@ -402,14 +402,12 @@ final class Summons implements MatchSummons {
     Harm.take(player, landed);
     runner
         .memberOf(player.getUniqueId())
-        .ifPresent(
-            member ->
-                runner
-                    .kits()
-                    .act(
-                        member.id(),
-                        new AbilityInput.Hurt(
-                            Optional.of(summon.owner()), AttackType.MELEE, landed)));
+        .ifPresent(member ->
+            runner
+                .kits()
+                .act(
+                    member.id(),
+                    new AbilityInput.Hurt(Optional.of(summon.owner()), AttackType.MELEE, landed)));
     return true;
   }
 

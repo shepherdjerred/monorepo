@@ -24,71 +24,65 @@ public final class JooqNpcStateStore implements NpcStateStore {
 
   @Override
   public CompletableFuture<Snapshot> load() {
-    return database.read(
-        connection ->
-            connection.transactionResult(
-                transaction -> {
-                  var dsl = transaction.dsl();
-                  return new Snapshot(
-                      dsl.selectFrom(NPC_WARNING)
-                          .fetch(
-                              row ->
-                                  new Warning(
-                                      requireNonNull(row.getWorld()),
-                                      requireNonNull(row.getNpc()),
-                                      UUID.fromString(requireNonNull(row.getPlayerUuid())),
-                                      requireNonNull(row.getHits()),
-                                      requireNonNull(row.getUntilTick()))),
-                      dsl.selectFrom(NPC_WANTED)
-                          .fetch(
-                              row ->
-                                  new Wanted(
-                                      requireNonNull(row.getWorld()),
-                                      UUID.fromString(requireNonNull(row.getPlayerUuid())),
-                                      requireNonNull(row.getUntilTick()))),
-                      dsl.selectFrom(NPC_DEATH)
-                          .fetch(
-                              row ->
-                                  new Death(
-                                      requireNonNull(row.getWorld()),
-                                      requireNonNull(row.getNpc()),
-                                      requireNonNull(row.getUntilTick()))));
-                }));
+    return database.read(connection ->
+        connection.transactionResult(transaction -> {
+          var dsl = transaction.dsl();
+          return new Snapshot(
+              dsl.selectFrom(NPC_WARNING)
+                  .fetch(row ->
+                      new Warning(
+                          requireNonNull(row.getWorld()),
+                          requireNonNull(row.getNpc()),
+                          UUID.fromString(requireNonNull(row.getPlayerUuid())),
+                          requireNonNull(row.getHits()),
+                          requireNonNull(row.getUntilTick()))),
+              dsl.selectFrom(NPC_WANTED)
+                  .fetch(row ->
+                      new Wanted(
+                          requireNonNull(row.getWorld()),
+                          UUID.fromString(requireNonNull(row.getPlayerUuid())),
+                          requireNonNull(row.getUntilTick()))),
+              dsl.selectFrom(NPC_DEATH)
+                  .fetch(row ->
+                      new Death(
+                          requireNonNull(row.getWorld()),
+                          requireNonNull(row.getNpc()),
+                          requireNonNull(row.getUntilTick()))));
+        }));
   }
 
   @Override
   public CompletableFuture<Void> save(Snapshot snapshot) {
     return database
-        .write(
-            dsl -> {
-              dsl.deleteFrom(NPC_WARNING).execute();
-              dsl.deleteFrom(NPC_WANTED).execute();
-              dsl.deleteFrom(NPC_DEATH).execute();
-              for (var warning : snapshot.warnings()) {
-                dsl.insertInto(NPC_WARNING)
-                    .set(NPC_WARNING.WORLD, warning.world())
-                    .set(NPC_WARNING.NPC, warning.npc())
-                    .set(NPC_WARNING.PLAYER_UUID, warning.player().toString())
-                    .set(NPC_WARNING.HITS, warning.hits())
-                    .set(NPC_WARNING.UNTIL_TICK, warning.until())
-                    .execute();
-              }
-              for (var offender : snapshot.wanted()) {
-                dsl.insertInto(NPC_WANTED)
-                    .set(NPC_WANTED.WORLD, offender.world())
-                    .set(NPC_WANTED.PLAYER_UUID, offender.player().toString())
-                    .set(NPC_WANTED.UNTIL_TICK, offender.until())
-                    .execute();
-              }
-              for (var death : snapshot.deaths()) {
-                dsl.insertInto(NPC_DEATH)
-                    .set(NPC_DEATH.NPC, death.npc())
-                    .set(NPC_DEATH.WORLD, death.world())
-                    .set(NPC_DEATH.UNTIL_TICK, death.until())
-                    .execute();
-              }
-              return Boolean.TRUE;
-            })
+        .write(dsl -> {
+          dsl.deleteFrom(NPC_WARNING).execute();
+          dsl.deleteFrom(NPC_WANTED).execute();
+          dsl.deleteFrom(NPC_DEATH).execute();
+          for (var warning : snapshot.warnings()) {
+            dsl.insertInto(NPC_WARNING)
+                .set(NPC_WARNING.WORLD, warning.world())
+                .set(NPC_WARNING.NPC, warning.npc())
+                .set(NPC_WARNING.PLAYER_UUID, warning.player().toString())
+                .set(NPC_WARNING.HITS, warning.hits())
+                .set(NPC_WARNING.UNTIL_TICK, warning.until())
+                .execute();
+          }
+          for (var offender : snapshot.wanted()) {
+            dsl.insertInto(NPC_WANTED)
+                .set(NPC_WANTED.WORLD, offender.world())
+                .set(NPC_WANTED.PLAYER_UUID, offender.player().toString())
+                .set(NPC_WANTED.UNTIL_TICK, offender.until())
+                .execute();
+          }
+          for (var death : snapshot.deaths()) {
+            dsl.insertInto(NPC_DEATH)
+                .set(NPC_DEATH.NPC, death.npc())
+                .set(NPC_DEATH.WORLD, death.world())
+                .set(NPC_DEATH.UNTIL_TICK, death.until())
+                .execute();
+          }
+          return Boolean.TRUE;
+        })
         .thenAccept(done -> {});
   }
 }

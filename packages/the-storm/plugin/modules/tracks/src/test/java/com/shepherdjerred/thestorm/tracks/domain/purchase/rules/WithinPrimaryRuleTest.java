@@ -27,10 +27,9 @@ final class WithinPrimaryRuleTest {
   static Stream<Arguments> everyPrimaryAndRequestedLevel() {
     return IntStream.rangeClosed(1, Track.MAX_LEVEL)
         .boxed()
-        .flatMap(
-            primary ->
-                IntStream.rangeClosed(1, Track.MAX_LEVEL)
-                    .mapToObj(requested -> Arguments.of(primary, requested)));
+        .flatMap(primary ->
+            IntStream.rangeClosed(1, Track.MAX_LEVEL)
+                .mapToObj(requested -> Arguments.of(primary, requested)));
   }
 
   @ParameterizedTest(name = "primary {0}, secondary asks for {1}")

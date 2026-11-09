@@ -165,11 +165,8 @@ public final class KitPlay {
   private static boolean hurtAllyNear(ReflexInput input, double reach) {
     var self = input.self();
     return input.snapshot().alive(self.team()).stream()
-        .anyMatch(
-            ally ->
-                !ally.id().equals(self.id())
-                    && ally.health() < HURT
-                    && near(self, ally.pos(), reach));
+        .anyMatch(ally ->
+            !ally.id().equals(self.id()) && ally.health() < HURT && near(self, ally.pos(), reach));
   }
 
   private static boolean within(CombatantView self, Vec3 point, KitMove move) {

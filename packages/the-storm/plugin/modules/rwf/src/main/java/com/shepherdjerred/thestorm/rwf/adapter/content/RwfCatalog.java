@@ -23,9 +23,8 @@ public record RwfCatalog(
       var admitted = maps.stream().map(MapSource::id).toList();
       if (!admitted.containsAll(selected)
           || maps.stream()
-              .noneMatch(
-                  map ->
-                      selected.contains(map.id()) && !config.quarantine().containsKey(map.id()))) {
+              .noneMatch(map ->
+                  selected.contains(map.id()) && !config.quarantine().containsKey(map.id()))) {
         throw new IllegalStateException("experience rotation must contain admitted playable maps");
       }
     }

@@ -134,18 +134,15 @@ public final class Roster implements BotBodies {
         harness
             .draft(matchId, slots, parts.personalities())
             .map(bots -> new Director.Pick(bots, 0))
-            .orElseGet(
-                () ->
-                    Director.pick(
-                        request,
-                        parts
-                            .view()
-                            .experience(matchId)
-                            .orElseThrow(
-                                () ->
-                                    new IllegalStateException(
-                                        "match experience must freeze before draft")),
-                        parts.random()));
+            .orElseGet(() ->
+                Director.pick(
+                    request,
+                    parts
+                        .view()
+                        .experience(matchId)
+                        .orElseThrow(() ->
+                            new IllegalStateException("match experience must freeze before draft")),
+                    parts.random()));
     var pick =
         harness.controlled(matchId)
             ? ordinary
@@ -159,9 +156,8 @@ public final class Roster implements BotBodies {
             ? pick.bots()
             : pick.bots().stream()
                 .sorted(
-                    Comparator.comparing(
-                        (Director.Drafted drafted) ->
-                            drafted.personality().quirks().contains(Quirk.LATE_TO_EVERYTHING)))
+                    Comparator.comparing((Director.Drafted drafted) ->
+                        drafted.personality().quirks().contains(Quirk.LATE_TO_EVERYTHING)))
                 .toList();
     for (var drafted : order) {
       var uuid = parts.bodies().create(drafted.personality());

@@ -20,8 +20,8 @@ import org.bukkit.entity.Player;
 
 /**
  * The quest journal as a dialog: a plain-text body and a column of Track buttons (at most five, so
- * Bedrock's simple form shows it), then Close. Runtime dialogs are not in MockBukkit; the real-
- * server suite covers this.
+ * Bedrock's simple form shows it), then Close. Runtime dialogs are not in MockBukkit; the
+ * real-server suite covers this.
  */
 final class JournalDialog {
 
@@ -60,12 +60,8 @@ final class JournalDialog {
             .body(List.of(DialogBody.plainMessage(Component.text(view.body()))))
             .build();
     player.showDialog(
-        Dialog.create(
-            factory ->
-                factory
-                    .empty()
-                    .base(base)
-                    .type(DialogType.multiAction(buttons).columns(1).build())));
+        Dialog.create(factory ->
+            factory.empty().base(base).type(DialogType.multiAction(buttons).columns(1).build())));
   }
 
   private void onMainThread(Runnable task) {

@@ -60,9 +60,8 @@ public final class VanillaPlainText {
     }
     var args =
         component.arguments().stream()
-            .map(
-                argument ->
-                    argument.value() instanceof Component nested ? plain(nested) : argument.value())
+            .map(argument ->
+                argument.value() instanceof Component nested ? plain(nested) : argument.value())
             .toArray();
     return String.format(java.util.Locale.US, template, args);
   }

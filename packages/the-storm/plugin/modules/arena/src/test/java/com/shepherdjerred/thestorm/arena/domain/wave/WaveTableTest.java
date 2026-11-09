@@ -126,12 +126,11 @@ final class WaveTableTest {
     var two = cavalry.resolve(2, new Difficulty(1, FLAT, NO_SCALING));
     assertThat(two.units()).isEmpty();
     assertThat(two.boss())
-        .hasValueSatisfying(
-            boss -> {
-              assertThat(boss.id()).isEqualTo("king");
-              assertThat(boss.entities()).isEqualTo(2);
-              assertThat(boss.maxHealth()).isEqualTo(100);
-            });
+        .hasValueSatisfying(boss -> {
+          assertThat(boss.id()).isEqualTo("king");
+          assertThat(boss.entities()).isEqualTo(2);
+          assertThat(boss.maxHealth()).isEqualTo(100);
+        });
   }
 
   @Test

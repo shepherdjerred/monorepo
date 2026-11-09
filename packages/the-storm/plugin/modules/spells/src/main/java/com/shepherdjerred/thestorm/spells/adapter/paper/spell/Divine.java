@@ -51,20 +51,19 @@ final class Divine implements Spell {
     var ore = found.get();
     var centre = ore.getLocation().add(0.5, 0.5, 0.5);
     var delta = Magic.vec(centre).minus(Magic.vec(eyes));
-    return Result.ok(
-        () -> {
-          var toward = Magic.vec(eyes).plus(delta.normalized().times(Math.min(3, delta.length())));
-          tools.fx().line(kind(), eyes, eyes.clone().set(toward.x(), toward.y(), toward.z()));
-          tools.fx().sound(kind(), eyes);
-          tools
-              .say()
-              .info(
-                  caster,
-                  "You sense "
-                      + RefusalText.materialName(ore.getType().name())
-                      + " "
-                      + Compass.describe(delta)
-                      + ".");
-        });
+    return Result.ok(() -> {
+      var toward = Magic.vec(eyes).plus(delta.normalized().times(Math.min(3, delta.length())));
+      tools.fx().line(kind(), eyes, eyes.clone().set(toward.x(), toward.y(), toward.z()));
+      tools.fx().sound(kind(), eyes);
+      tools
+          .say()
+          .info(
+              caster,
+              "You sense "
+                  + RefusalText.materialName(ore.getType().name())
+                  + " "
+                  + Compass.describe(delta)
+                  + ".");
+    });
   }
 }

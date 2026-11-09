@@ -125,11 +125,10 @@ public final class RwfHarness implements AutoCloseable {
     @Override
     public CompletableFuture<Chunk> getChunkAtAsync(
         int x, int z, boolean generate, boolean urgent) {
-      return chunkLoads.thenApply(
-          _ -> {
-            loadChunk(x, z);
-            return getChunkAt(x, z);
-          });
+      return chunkLoads.thenApply(_ -> {
+        loadChunk(x, z);
+        return getChunkAt(x, z);
+      });
     }
   }
 
@@ -343,11 +342,10 @@ public final class RwfHarness implements AutoCloseable {
    * snapshots are still being read back.
    */
   public void enter(PlayerMock player) {
-    until(
-        () -> {
-          player.performCommand("rwf join");
-          return inMatch(player);
-        });
+    until(() -> {
+      player.performCommand("rwf join");
+      return inMatch(player);
+    });
     until(() -> player.getWorld().equals(lobbyWorld));
   }
 

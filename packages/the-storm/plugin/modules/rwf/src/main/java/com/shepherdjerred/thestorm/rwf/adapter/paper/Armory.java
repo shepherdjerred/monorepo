@@ -144,17 +144,16 @@ final class Armory {
     waiting.put(player, queue);
     var expanded =
         gate.allows(player)
-            .exceptionally(
-                failure -> {
-                  context
-                      .logger()
-                      .warn(
-                          "Could not evaluate the rwf kits flag for {}; offering the first"
-                              + " four kits",
-                          player,
-                          failure);
-                  return false;
-                });
+            .exceptionally(failure -> {
+              context
+                  .logger()
+                  .warn(
+                      "Could not evaluate the rwf kits flag for {}; offering the first"
+                          + " four kits",
+                      player,
+                      failure);
+              return false;
+            });
     var owned = shop.owned(player);
     // Stored prefs that cannot be read are a broken contract: the load fails rather than starting
     // from empty prefs that the next saved layout would write over the player's real ones.

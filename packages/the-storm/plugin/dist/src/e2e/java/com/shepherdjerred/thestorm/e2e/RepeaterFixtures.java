@@ -97,25 +97,24 @@ final class RepeaterFixtures implements Listener {
                                 Commands.argument("action", StringArgumentType.word())
                                     .then(
                                         Commands.argument("player", StringArgumentType.word())
-                                            .executes(
-                                                command -> {
-                                                  var player =
-                                                      Objects.requireNonNull(
-                                                          plugin
-                                                              .getServer()
-                                                              .getPlayerExact(
-                                                                  StringArgumentType.getString(
-                                                                      command, "player")));
-                                                  command
-                                                      .getSource()
-                                                      .getSender()
-                                                      .sendMessage(
-                                                          fixture.command(
-                                                              player,
+                                            .executes(command -> {
+                                              var player =
+                                                  Objects.requireNonNull(
+                                                      plugin
+                                                          .getServer()
+                                                          .getPlayerExact(
                                                               StringArgumentType.getString(
-                                                                  command, "action")));
-                                                  return 1;
-                                                })))
+                                                                  command, "player")));
+                                              command
+                                                  .getSource()
+                                                  .getSender()
+                                                  .sendMessage(
+                                                      fixture.command(
+                                                          player,
+                                                          StringArgumentType.getString(
+                                                              command, "action")));
+                                              return 1;
+                                            })))
                             .build()));
   }
 

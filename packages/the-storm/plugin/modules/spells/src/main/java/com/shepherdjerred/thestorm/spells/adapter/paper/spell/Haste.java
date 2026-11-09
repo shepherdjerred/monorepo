@@ -24,13 +24,12 @@ final class Haste implements Spell {
 
   @Override
   public Result<Effect, CastProblem> prepare(Player caster) {
-    return Result.ok(
-        () -> {
-          Magic.potion(
-              caster, PotionEffectType.SPEED, settings.durationSeconds(), settings.amplifier());
-          Magic.potion(
-              caster, PotionEffectType.HASTE, settings.durationSeconds(), settings.amplifier());
-          tools.fx().cast(kind(), Magic.at(caster));
-        });
+    return Result.ok(() -> {
+      Magic.potion(
+          caster, PotionEffectType.SPEED, settings.durationSeconds(), settings.amplifier());
+      Magic.potion(
+          caster, PotionEffectType.HASTE, settings.durationSeconds(), settings.amplifier());
+      tools.fx().cast(kind(), Magic.at(caster));
+    });
   }
 }

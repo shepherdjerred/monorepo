@@ -70,11 +70,10 @@ final class Patrol {
     return posts.stream()
         .filter(node -> node != home)
         .sorted(
-            Comparator.comparingDouble(
-                node -> {
-                  var offset = graph.feet(node).minus(hold);
-                  return StrictMath.atan2(offset.z(), offset.x());
-                }))
+            Comparator.comparingDouble(node -> {
+              var offset = graph.feet(node).minus(hold);
+              return StrictMath.atan2(offset.z(), offset.x());
+            }))
         .toList();
   }
 
@@ -114,10 +113,9 @@ final class Patrol {
         for (var dy = -1; dy <= 1; dy++) {
           graph
               .nodeAt(base.offset(dx, dy, dz))
-              .ifPresent(
-                  node -> {
-                    if (post(graph, area, node)) posts.add(node);
-                  });
+              .ifPresent(node -> {
+                if (post(graph, area, node)) posts.add(node);
+              });
         }
       }
     }

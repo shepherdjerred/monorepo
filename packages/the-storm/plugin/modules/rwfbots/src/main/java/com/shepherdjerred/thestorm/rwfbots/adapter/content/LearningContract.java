@@ -19,14 +19,13 @@ public final class LearningContract {
       return new ObservationContract(
           reader
               .lines()
-              .map(
-                  line -> {
-                    var fields = line.split("\t", -1);
-                    if (fields.length != 2)
-                      throw new IllegalArgumentException("invalid feature contract row");
-                    return new ObservationContract.Field(
-                        Feature.valueOf(fields[0]), Double.parseDouble(fields[1]));
-                  })
+              .map(line -> {
+                var fields = line.split("\t", -1);
+                if (fields.length != 2)
+                  throw new IllegalArgumentException("invalid feature contract row");
+                return new ObservationContract.Field(
+                    Feature.valueOf(fields[0]), Double.parseDouble(fields[1]));
+              })
               .toList());
     } catch (IOException error) {
       throw new UncheckedIOException(error);

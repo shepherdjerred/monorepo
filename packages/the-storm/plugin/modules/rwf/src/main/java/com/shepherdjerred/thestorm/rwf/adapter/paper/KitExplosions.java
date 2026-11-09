@@ -147,9 +147,8 @@ final class KitExplosions {
             : runner
                 .member(blast.owner())
                 .flatMap(Combatant::kit)
-                .map(
-                    kit ->
-                        new KitCombat.Side(kit, runner.match().abilities().state(blast.owner())));
+                .map(kit ->
+                    new KitCombat.Side(kit, runner.match().abilities().state(blast.owner())));
     var computed =
         KitCombat.damage(
             hit, attackerSide, victimSide.orElseThrow(), runner.match().random(runner.now()));

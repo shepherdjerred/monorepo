@@ -119,23 +119,21 @@ final class KitItems {
       String kitName, Material material, KitItem item, List<String> problems) {
     var stack = ItemStack.of(material, item.amount());
     item.name()
-        .ifPresent(
-            name ->
-                stack.setData(
-                    DataComponentTypes.CUSTOM_NAME,
-                    MINI.deserialize(name)
-                        .decorationIfAbsent(TextDecoration.ITALIC, TextDecoration.State.FALSE)));
+        .ifPresent(name ->
+            stack.setData(
+                DataComponentTypes.CUSTOM_NAME,
+                MINI.deserialize(name)
+                    .decorationIfAbsent(TextDecoration.ITALIC, TextDecoration.State.FALSE)));
     var enchantments = RegistryAccess.registryAccess().getRegistry(RegistryKey.ENCHANTMENT);
     item.enchantments()
-        .forEach(
-            (key, level) -> {
-              var enchantment = enchantments.get(Key.key(key));
-              if (enchantment == null) {
-                problems.add("kit " + kitName + ": unknown enchantment " + key);
-              } else {
-                stack.addUnsafeEnchantment(enchantment, level);
-              }
-            });
+        .forEach((key, level) -> {
+          var enchantment = enchantments.get(Key.key(key));
+          if (enchantment == null) {
+            problems.add("kit " + kitName + ": unknown enchantment " + key);
+          } else {
+            stack.addUnsafeEnchantment(enchantment, level);
+          }
+        });
     return stack;
   }
 }

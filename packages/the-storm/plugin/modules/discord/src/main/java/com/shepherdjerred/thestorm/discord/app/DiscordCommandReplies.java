@@ -21,17 +21,15 @@ final class DiscordCommandReplies {
             + String.join(
                 "\n",
                 IntStream.range(0, ranked.size())
-                    .mapToObj(
-                        index -> {
-                          var player = ranked.get(index);
-                          var name =
-                              player.name().orElseGet(() -> player.account().uuid().toString());
-                          return (index + 1)
-                              + ". "
-                              + DiscordText.forDiscord(name)
-                              + " — "
-                              + DiscordText.forDiscord(formatter.symbol(player.balance()));
-                        })
+                    .mapToObj(index -> {
+                      var player = ranked.get(index);
+                      var name = player.name().orElseGet(() -> player.account().uuid().toString());
+                      return (index + 1)
+                          + ". "
+                          + DiscordText.forDiscord(name)
+                          + " — "
+                          + DiscordText.forDiscord(formatter.symbol(player.balance()));
+                    })
                     .toList());
     return DiscordText.truncate(page, DiscordText.DISCORD_LIMIT);
   }
@@ -46,18 +44,17 @@ final class DiscordCommandReplies {
     }
     var lines =
         listing.towns().stream()
-            .map(
-                town ->
-                    DiscordText.forDiscord(town.name())
-                        + " — "
-                        + town.members()
-                        + " members, "
-                        + town.claims()
-                        + " claims; "
-                        + town.kind()
-                        + "; "
-                        + town.protectedChunks()
-                        + " protected chunks")
+            .map(town ->
+                DiscordText.forDiscord(town.name())
+                    + " — "
+                    + town.members()
+                    + " members, "
+                    + town.claims()
+                    + " claims; "
+                    + town.kind()
+                    + "; "
+                    + town.protectedChunks()
+                    + " protected chunks")
             .toList();
     var page =
         "Towns ("

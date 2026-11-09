@@ -101,21 +101,19 @@ final class ContentAdmission {
     var _ =
         safety
             .finish(id, outcome)
-            .exceptionally(
-                failure -> {
-                  context.logger().error("Could not persist content outcome {}", id, failure);
-                  return null;
-                });
+            .exceptionally(failure -> {
+              context.logger().error("Could not persist content outcome {}", id, failure);
+              return null;
+            });
   }
 
   void observe(ContentSubmission submission, String outcome) {
     var _ =
         safety
             .observe(submission, outcome)
-            .exceptionally(
-                failure -> {
-                  context.logger().error("Evidence write failed: {}", submission.id(), failure);
-                  return null;
-                });
+            .exceptionally(failure -> {
+              context.logger().error("Evidence write failed: {}", submission.id(), failure);
+              return null;
+            });
   }
 }

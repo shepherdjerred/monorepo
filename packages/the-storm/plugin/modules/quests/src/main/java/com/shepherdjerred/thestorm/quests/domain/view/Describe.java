@@ -55,13 +55,12 @@ public final class Describe {
     var details = new StringBuilder();
     item.potion().ifPresent(potion -> details.append(Names.pretty(potion)));
     item.enchantments()
-        .forEach(
-            (key, level) -> {
-              if (!details.isEmpty()) {
-                details.append(", ");
-              }
-              details.append(Names.pretty(key)).append(' ').append(level);
-            });
+        .forEach((key, level) -> {
+          if (!details.isEmpty()) {
+            details.append(", ");
+          }
+          details.append(Names.pretty(key)).append(' ').append(level);
+        });
     return base + " (" + details + ")";
   }
 

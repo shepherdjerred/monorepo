@@ -149,21 +149,19 @@ final class NativeTemplateGeometry {
       }
     }
     return candidates.stream()
-        .filter(
-            p ->
-                !occupied.contains(p)
-                    && clear(p, room.cells(), room.size())
-                    && clear(p.above(1), room.cells(), room.size())
-                    && floor(p, room.cells()))
+        .filter(p ->
+            !occupied.contains(p)
+                && clear(p, room.cells(), room.size())
+                && clear(p.above(1), room.cells(), room.size())
+                && floor(p, room.cells()))
         .min(
             Comparator.comparingLong((SkyPosition p) -> p.distanceSquared(bed))
                 .thenComparingInt(SkyPosition::x)
                 .thenComparingInt(SkyPosition::z)
                 .thenComparingInt(SkyPosition::y))
-        .orElseThrow(
-            () ->
-                new IllegalStateException(
-                    "Native bed has no accessible standing position: " + room.key() + " " + bed));
+        .orElseThrow(() ->
+            new IllegalStateException(
+                "Native bed has no accessible standing position: " + room.key() + " " + bed));
   }
 
   private static boolean clear(

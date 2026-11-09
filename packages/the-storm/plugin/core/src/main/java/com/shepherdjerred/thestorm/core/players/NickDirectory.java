@@ -23,17 +23,16 @@ public final class NickDirectory implements PlayerDirectory {
   public CompletableFuture<Optional<KnownPlayer>> byName(String name) {
     return accounts
         .byName(name)
-        .thenCompose(
-            found -> {
-              if (found.isPresent()) {
-                return CompletableFuture.completedFuture(found);
-              }
-              var nick = services.find(Nicknames.class).flatMap(nicknames -> nicknames.named(name));
-              if (nick.isEmpty()) {
-                return CompletableFuture.completedFuture(Optional.empty());
-              }
-              return accounts.byId(nick.orElseThrow());
-            });
+        .thenCompose(found -> {
+          if (found.isPresent()) {
+            return CompletableFuture.completedFuture(found);
+          }
+          var nick = services.find(Nicknames.class).flatMap(nicknames -> nicknames.named(name));
+          if (nick.isEmpty()) {
+            return CompletableFuture.completedFuture(Optional.empty());
+          }
+          return accounts.byId(nick.orElseThrow());
+        });
   }
 
   @Override

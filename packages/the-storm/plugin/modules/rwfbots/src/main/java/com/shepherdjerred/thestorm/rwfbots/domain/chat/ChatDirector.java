@@ -233,11 +233,10 @@ public final class ChatDirector {
       var team = member.team().orElseThrow();
       var aimed =
           scene.members().stream()
-              .anyMatch(
-                  other ->
-                      other.alive()
-                          && other.team().filter(t -> !t.equals(team)).isPresent()
-                          && rival(bot, other));
+              .anyMatch(other ->
+                  other.alive()
+                      && other.team().filter(t -> !t.equals(team)).isPresent()
+                      && rival(bot, other));
       candidates.add(
           new Candidate(
               member,
@@ -259,15 +258,14 @@ public final class ChatDirector {
       }
       var last = alive.getFirst();
       last.bot()
-          .ifPresent(
-              bot ->
-                  candidates.add(
-                      new Candidate(
-                          last,
-                          bot,
-                          Moment.ON_LAST_ALIVE,
-                          Chattiness.Context.PLAIN,
-                          Map.of(Placeholder.TEAM, team))));
+          .ifPresent(bot ->
+              candidates.add(
+                  new Candidate(
+                      last,
+                      bot,
+                      Moment.ON_LAST_ALIVE,
+                      Chattiness.Context.PLAIN,
+                      Map.of(Placeholder.TEAM, team))));
     }
     return candidates;
   }

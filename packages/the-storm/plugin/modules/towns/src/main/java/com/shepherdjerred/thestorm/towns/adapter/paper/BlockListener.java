@@ -247,10 +247,9 @@ final class BlockListener implements Listener {
   void onCauldron(CauldronLevelChangeEvent event) {
     guard
         .culprit(event.getEntity())
-        .filter(
-            culprit ->
-                !guard.permits(
-                    culprit, new Act(Action.BUILD, Subject.BLOCK), guard.land(event.getBlock())))
+        .filter(culprit ->
+            !guard.permits(
+                culprit, new Act(Action.BUILD, Subject.BLOCK), guard.land(event.getBlock())))
         .ifPresent(culprit -> event.setCancelled(true));
   }
 

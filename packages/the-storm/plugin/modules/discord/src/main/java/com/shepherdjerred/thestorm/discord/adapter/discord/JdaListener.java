@@ -139,9 +139,8 @@ final class JdaListener extends ListenerAdapter {
         .deferReply(true)
         .queue(
             hook ->
-                answer.accept(
-                    text ->
-                        bridge.editReply(hook, relay.isStopping() ? relay.stopMessage() : text)),
+                answer.accept(text ->
+                    bridge.editReply(hook, relay.isStopping() ? relay.stopMessage() : text)),
             error -> bridge.logCommandFailure("deferring Discord read command", error));
   }
 

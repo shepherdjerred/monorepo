@@ -39,9 +39,8 @@ final class TownRulesTest {
         @Override
         public Optional<Town> named(String name) {
           return towns.stream()
-              .filter(
-                  town ->
-                      town.name().toLowerCase(Locale.ROOT).equals(name.toLowerCase(Locale.ROOT)))
+              .filter(town ->
+                  town.name().toLowerCase(Locale.ROOT).equals(name.toLowerCase(Locale.ROOT)))
               .findFirst();
         }
       };
@@ -58,31 +57,29 @@ final class TownRulesTest {
 
   @Test
   void aTownHasExactlyOneOwner() {
-    assertThatThrownBy(
-            () ->
-                new Town(
-                    NEW_ID,
-                    "Nowhere",
-                    FOUNDED,
-                    Map.of(MEMBER, TownRole.MEMBER),
-                    0,
-                    TownKind.TOWN,
-                    Optional.empty(),
-                    false,
-                    false))
+    assertThatThrownBy(() ->
+            new Town(
+                NEW_ID,
+                "Nowhere",
+                FOUNDED,
+                Map.of(MEMBER, TownRole.MEMBER),
+                0,
+                TownKind.TOWN,
+                Optional.empty(),
+                false,
+                false))
         .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(
-            () ->
-                new Town(
-                    NEW_ID,
-                    "Twice",
-                    FOUNDED,
-                    Map.of(OWNER, TownRole.OWNER, MEMBER, TownRole.OWNER),
-                    0,
-                    TownKind.TOWN,
-                    Optional.empty(),
-                    false,
-                    false))
+    assertThatThrownBy(() ->
+            new Town(
+                NEW_ID,
+                "Twice",
+                FOUNDED,
+                Map.of(OWNER, TownRole.OWNER, MEMBER, TownRole.OWNER),
+                0,
+                TownKind.TOWN,
+                Optional.empty(),
+                false,
+                false))
         .isInstanceOf(IllegalArgumentException.class);
     assertThat(Fixtures.townA().owner()).isEqualTo(OWNER);
     assertThat(Fixtures.townA().roleOf(ASSISTANT)).contains(TownRole.ASSISTANT);

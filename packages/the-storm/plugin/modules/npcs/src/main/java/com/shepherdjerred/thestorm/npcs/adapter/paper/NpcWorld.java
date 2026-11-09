@@ -201,11 +201,10 @@ final class NpcWorld {
       parts
           .bodies()
           .read(mannequin)
-          .ifPresent(
-              npc -> {
-                spawned.add(npc);
-                found.put(mannequin.getUniqueId(), mannequin);
-              });
+          .ifPresent(npc -> {
+            spawned.add(npc);
+            found.put(mannequin.getUniqueId(), mannequin);
+          });
     }
     var eligible =
         content.npcs().values().stream().filter(npc -> !combat().awaitingDawn(npc.id())).toList();
@@ -458,17 +457,15 @@ final class NpcWorld {
             new NpcBrain.Situation(
                 TimeOfDay.fromWorldTicks(world.getTime()),
                 world.hasStorm(),
-                threat.map(
-                    enemy ->
-                        new Spot(
-                            npc.home().world(),
-                            Mannequins.position(enemy.getLocation()),
-                            Mannequins.facing(enemy.getLocation()))),
+                threat.map(enemy ->
+                    new Spot(
+                        npc.home().world(),
+                        Mannequins.position(enemy.getLocation()),
+                        Mannequins.facing(enemy.getLocation()))),
                 threat
                     .filter(enemy -> !npc.roles().contains("guard"))
-                    .map(
-                        enemy ->
-                            EscapeRoutes.away(feet, enemy, config.guard().detectionRadius()))));
+                    .map(enemy ->
+                        EscapeRoutes.away(feet, enemy, config.guard().detectionRadius()))));
     return walker == null
         ? follower.start(intent, at, tick)
         : follower.retarget(walker, intent, at, tick);

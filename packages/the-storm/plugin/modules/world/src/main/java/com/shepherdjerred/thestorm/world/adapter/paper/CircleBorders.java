@@ -127,10 +127,9 @@ final class CircleBorders implements Listener {
               player.sendActionBar(EDGE);
             },
             mainThread)
-        .exceptionally(
-            failure -> {
-              mainThread.execute(() -> returning.remove(player.getUniqueId()));
-              return null;
-            });
+        .exceptionally(failure -> {
+          mainThread.execute(() -> returning.remove(player.getUniqueId()));
+          return null;
+        });
   }
 }

@@ -73,15 +73,14 @@ final class TacticalWorld implements VisualOcclusion, TacticalCasting {
       case TacticalEffect.RallySignal signal ->
           runner
               .entity(signal.owner())
-              .ifPresent(
-                  player -> {
-                    var sound =
-                        signal.stage() == TacticalEffect.Stage.COMPLETE
-                            ? Sound.ITEM_GOAT_HORN_SOUND_0
-                            : Sound.BLOCK_NOTE_BLOCK_DIDGERIDOO;
-                    if (signal.stage() != TacticalEffect.Stage.CANCELLED)
-                      player.getWorld().playSound(Places.at(player), sound, 0.8F, 1);
-                  });
+              .ifPresent(player -> {
+                var sound =
+                    signal.stage() == TacticalEffect.Stage.COMPLETE
+                        ? Sound.ITEM_GOAT_HORN_SOUND_0
+                        : Sound.BLOCK_NOTE_BLOCK_DIDGERIDOO;
+                if (signal.stage() != TacticalEffect.Stage.CANCELLED)
+                  player.getWorld().playSound(Places.at(player), sound, 0.8F, 1);
+              });
     }
   }
 
@@ -97,9 +96,8 @@ final class TacticalWorld implements VisualOcclusion, TacticalCasting {
     }
     posts
         .entrySet()
-        .removeIf(
-            entry ->
-                !runner.fighting(entry.getKey().uuid()) || !now.isBefore(entry.getValue().until()));
+        .removeIf(entry ->
+            !runner.fighting(entry.getKey().uuid()) || !now.isBefore(entry.getValue().until()));
     hear(now);
     if (ticks % 4 == 0) draw();
   }
@@ -132,12 +130,10 @@ final class TacticalWorld implements VisualOcclusion, TacticalCasting {
       if (member.alive() && member.team().equals(team))
         runner
             .entity(member.id())
-            .ifPresent(
-                player ->
-                    player.sendActionBar(
-                        Component.text(
-                            "Listening post: enemy sound " + direction + ".",
-                            NamedTextColor.AQUA)));
+            .ifPresent(player ->
+                player.sendActionBar(
+                    Component.text(
+                        "Listening post: enemy sound " + direction + ".", NamedTextColor.AQUA)));
     }
   }
 

@@ -39,11 +39,10 @@ final class SurvivalRulesTest {
       var plan = Blueprint.shelter(random, "OAK_PLANKS");
       assertThat(plan.blocks()).hasSizeLessThanOrEqualTo(256).doesNotHaveDuplicates();
       assertThat(plan.blocks())
-          .noneMatch(
-              block ->
-                  block.z() == 0
-                      && block.x() == plan.width() / 2
-                      && (block.y() == 1 || block.y() == 2));
+          .noneMatch(block ->
+              block.z() == 0
+                  && block.x() == plan.width() / 2
+                  && (block.y() == 1 || block.y() == 2));
       assertThat(plan.blocks()).allMatch(block -> block.y() < 8);
     }
     assertThatThrownBy(() -> Blueprint.rectangular(13, 5, "OAK_PLANKS"))

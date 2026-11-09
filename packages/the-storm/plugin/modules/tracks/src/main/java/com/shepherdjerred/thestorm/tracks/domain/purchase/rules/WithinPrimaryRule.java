@@ -22,9 +22,8 @@ public final class WithinPrimaryRule implements PurchaseRule {
         .primary()
         .filter(primary -> primary.track() != attempt.track())
         .filter(primary -> attempt.level() > primary.level())
-        .map(
-            primary ->
-                new PurchaseProblem.AbovePrimary(
-                    attempt.track(), attempt.level(), primary.track(), primary.level()));
+        .map(primary ->
+            new PurchaseProblem.AbovePrimary(
+                attempt.track(), attempt.level(), primary.track(), primary.level()));
   }
 }

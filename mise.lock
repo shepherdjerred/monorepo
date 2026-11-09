@@ -236,19 +236,19 @@ url_api = "https://api.github.com/repos/golangci/golangci-lint/releases/assets/5
 provenance = "github-attestations"
 
 [[tools.gradle]]
-version = "9.7.1"
+version = "9.8.2"
 backend = "aqua:gradle/gradle-distributions"
-specifiers = ["9.7.1"]
+specifiers = ["9.8.2"]
 
 [tools.gradle."platforms.linux-x64"]
-checksum = "sha256:acd53f1edaf02f1a8ff99879f8a34b302661a057d9b063ae9e35b552f804d20a"
-url = "https://github.com/gradle/gradle-distributions/releases/download/v9.7.1/gradle-9.7.1-bin.zip"
-url_api = "https://api.github.com/repos/gradle/gradle-distributions/releases/assets/520945879"
+checksum = "sha256:21bd5da2de49b642904077f38c0efdc7778e92b3ed0889392dca61b97e389607"
+url = "https://github.com/gradle/gradle-distributions/releases/download/v9.8.2/gradle-9.8.2-bin.zip"
+url_api = "https://api.github.com/repos/gradle/gradle-distributions/releases/assets/656830895"
 
 [tools.gradle."platforms.macos-arm64"]
-checksum = "sha256:acd53f1edaf02f1a8ff99879f8a34b302661a057d9b063ae9e35b552f804d20a"
-url = "https://github.com/gradle/gradle-distributions/releases/download/v9.7.1/gradle-9.7.1-bin.zip"
-url_api = "https://api.github.com/repos/gradle/gradle-distributions/releases/assets/520945879"
+checksum = "sha256:21bd5da2de49b642904077f38c0efdc7778e92b3ed0889392dca61b97e389607"
+url = "https://github.com/gradle/gradle-distributions/releases/download/v9.8.2/gradle-9.8.2-bin.zip"
+url_api = "https://api.github.com/repos/gradle/gradle-distributions/releases/assets/656830895"
 
 [[tools.hadolint]]
 version = "2.15.1"
@@ -281,17 +281,17 @@ checksum = "sha256:d3870437e1e95b67f8edbde964156c84a26503f560821d40c542441658934
 url = "https://get.helm.sh/helm-v4.3.0-darwin-arm64.tar.gz"
 
 [[tools.java]]
-version = "corretto-25.0.4.8.1"
+version = "corretto-25.0.5.0.10"
 backend = "core:java"
-specifiers = ["corretto-25.0.4.8.1"]
+specifiers = ["corretto-25.0.5.0.10"]
 
 [tools.java."platforms.linux-x64"]
-checksum = "sha256:b838e42c8e915019ed34e4cc54c7cda2e7e00d2a2a49be44578814735fc9accc"
-url = "https://corretto.aws/downloads/resources/25.0.4.8.1/amazon-corretto-25.0.4.8.1-linux-x64.tar.gz"
+checksum = "sha256:1d89b4194f20ee513f4dd9fc2aadd038de3c713c37fd444d77566b3da7b0ee65"
+url = "https://corretto.aws/downloads/resources/25.0.5.0.10/amazon-corretto-25.0.5.0.10-linux-x64.tar.gz"
 
 [tools.java."platforms.macos-arm64"]
-checksum = "sha256:b3040e5db181d09c79499728c86d250773f7f5018a3e4c124a0b08b96a75c42b"
-url = "https://corretto.aws/downloads/resources/25.0.4.8.1/amazon-corretto-25.0.4.8.1-macosx-aarch64.tar.gz"
+checksum = "sha256:0da6df8bf4f849939951089e1d10f9fea5df82a7da9f66434f6c2b31c497fe75"
+url = "https://corretto.aws/downloads/resources/25.0.5.0.10/amazon-corretto-25.0.5.0.10-macosx-aarch64.tar.gz"
 
 [[tools.jq]]
 version = "1.8.2"

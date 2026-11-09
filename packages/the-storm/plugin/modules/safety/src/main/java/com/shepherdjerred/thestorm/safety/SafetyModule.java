@@ -48,15 +48,14 @@ public final class SafetyModule implements StormModule {
     var _ =
         store
             .recover(context.time().instant())
-            .whenComplete(
-                (count, failure) -> {
-                  if (failure != null)
-                    context.logger().error("Safety evidence recovery failed", failure);
-                  else if (count > 0)
-                    context
-                        .logger()
-                        .warn("Recorded {} interrupted evidence submissions; none replayed", count);
-                });
+            .whenComplete((count, failure) -> {
+              if (failure != null)
+                context.logger().error("Safety evidence recovery failed", failure);
+              else if (count > 0)
+                context
+                    .logger()
+                    .warn("Recorded {} interrupted evidence submissions; none replayed", count);
+            });
     context
         .plugin()
         .getServer()
@@ -79,18 +78,17 @@ public final class SafetyModule implements StormModule {
                   var cached = flags.cachedEnabled(ManagedGameplay.CONTENT_SAFETY, player);
                   return cached
                       .map(java.util.concurrent.CompletableFuture::completedFuture)
-                      .orElseGet(
-                          () ->
-                              flags.enabledOrDefault(
-                                  ManagedGameplay.CONTENT_SAFETY,
-                                  player,
-                                  false,
-                                  failure ->
-                                      context
-                                          .logger()
-                                          .warn(
-                                              "Safety rollout provider unavailable; retaining unscreened legacy enforcement",
-                                              failure)));
+                      .orElseGet(() ->
+                          flags.enabledOrDefault(
+                              ManagedGameplay.CONTENT_SAFETY,
+                              player,
+                              false,
+                              failure ->
+                                  context
+                                      .logger()
+                                      .warn(
+                                          "Safety rollout provider unavailable; retaining unscreened legacy enforcement",
+                                          failure)));
                 }));
     context.services().provide(ContentSafety.class, service);
     grim = new GrimHooks(context, service);

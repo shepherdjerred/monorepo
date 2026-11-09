@@ -331,14 +331,13 @@ final class CompanionActor {
   private void eat(Player player) {
     var food =
         java.util.Arrays.stream(requireNonNull(player.getInventory().getStorageContents()))
-            .filter(
-                item ->
-                    item != null
-                        && item.getType().isEdible()
-                        && item.getType() != Material.ROTTEN_FLESH
-                        && item.getType() != Material.SPIDER_EYE
-                        && item.getType() != Material.POISONOUS_POTATO
-                        && item.getType() != Material.PUFFERFISH)
+            .filter(item ->
+                item != null
+                    && item.getType().isEdible()
+                    && item.getType() != Material.ROTTEN_FLESH
+                    && item.getType() != Material.SPIDER_EYE
+                    && item.getType() != Material.POISONOUS_POTATO
+                    && item.getType() != Material.PUFFERFISH)
             .findFirst();
     if (food.isEmpty()) return;
     effect(
@@ -384,10 +383,9 @@ final class CompanionActor {
   private Optional<Location> workbench(Player player) {
     return NearbyBlocks.box(requireNonNull(player.getLocation()), 3, 1)
         .filter(block -> block.getType() == Material.CRAFTING_TABLE)
-        .filter(
-            block ->
-                actions.allowed(player, ProtectedAction.INTERACT, block)
-                    && SurvivalActions.reach(player, block))
+        .filter(block ->
+            actions.allowed(player, ProtectedAction.INTERACT, block)
+                && SurvivalActions.reach(player, block))
         .map(Block::getLocation)
         .findFirst();
   }
@@ -396,14 +394,13 @@ final class CompanionActor {
       Player player, java.util.List<org.bukkit.entity.Entity> nearby) {
     return aggressor
         .filter(entity -> entity.isValid() && context.time().instant().isBefore(defendUntil))
-        .or(
-            () ->
-                nearby.stream()
-                    .filter(Monster.class::isInstance)
-                    .map(Monster.class::cast)
-                    .filter(monster -> player.equals(monster.getTarget()))
-                    .map(LivingEntity.class::cast)
-                    .findFirst());
+        .or(() ->
+            nearby.stream()
+                .filter(Monster.class::isInstance)
+                .map(Monster.class::cast)
+                .filter(monster -> player.equals(monster.getTarget()))
+                .map(LivingEntity.class::cast)
+                .findFirst());
   }
 
   private boolean pickup(Player player, java.util.List<org.bukkit.entity.Entity> nearby) {
@@ -474,12 +471,11 @@ final class CompanionActor {
     var plot =
         NativeRecipes.stock(player).getOrDefault("WHEAT_SEEDS", 0) > 0
             ? NearbyBlocks.box(requireNonNull(player.getLocation()), 4, 1)
-                .filter(
-                    block ->
-                        block.isEmpty()
-                            && block.getRelative(0, -1, 0).getType() == Material.FARMLAND
-                            && actions.allowed(player, ProtectedAction.BUILD, block)
-                            && SurvivalActions.reach(player, block))
+                .filter(block ->
+                    block.isEmpty()
+                        && block.getRelative(0, -1, 0).getType() == Material.FARMLAND
+                        && actions.allowed(player, ProtectedAction.BUILD, block)
+                        && SurvivalActions.reach(player, block))
                 .findFirst()
             : Optional.<Block>empty();
     if (plot.isPresent())
@@ -512,12 +508,11 @@ final class CompanionActor {
             org.bukkit.block.BlockFace.WEST)
         .stream()
         .map(block::getRelative)
-        .anyMatch(
-            neighbor ->
-                neighbor.getY() >= neighbor.getWorld().getMinHeight()
-                    && neighbor.getY() < neighbor.getWorld().getMaxHeight()
-                    && neighbor.getWorld().isChunkLoaded(neighbor.getX() >> 4, neighbor.getZ() >> 4)
-                    && neighbor.isPassable());
+        .anyMatch(neighbor ->
+            neighbor.getY() >= neighbor.getWorld().getMinHeight()
+                && neighbor.getY() < neighbor.getWorld().getMaxHeight()
+                && neighbor.getWorld().isChunkLoaded(neighbor.getX() >> 4, neighbor.getZ() >> 4)
+                && neighbor.isPassable());
   }
 
   private void mine(Player player, Block block) {
@@ -551,13 +546,11 @@ final class CompanionActor {
 
   private boolean completeBuilding() {
     return building
-        .filter(
-            progress ->
-                progress.nextBlock()
-                    == Blueprint.rectangular(
-                            progress.width(), progress.depth(), progress.material())
-                        .blocks()
-                        .size())
+        .filter(progress ->
+            progress.nextBlock()
+                == Blueprint.rectangular(progress.width(), progress.depth(), progress.material())
+                    .blocks()
+                    .size())
         .isPresent();
   }
 

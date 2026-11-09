@@ -138,11 +138,10 @@ final class StaffEntities implements Listener {
             : tools.settings.effectRadius();
     var entities =
         self.getNearbyEntities(radius, radius, radius).stream()
-            .filter(
-                entity ->
-                    !(entity instanceof Player)
-                        && !entity.hasMetadata("NPC")
-                        && (type == null || entity.getType() == type))
+            .filter(entity ->
+                !(entity instanceof Player)
+                    && !entity.hasMetadata("NPC")
+                    && (type == null || entity.getType() == type))
             .limit(tools.settings.entityLimit())
             .toList();
     for (var entity : entities) {
@@ -185,10 +184,9 @@ final class StaffEntities implements Listener {
               .enabled(com.shepherdjerred.thestorm.core.expansion.ManagedGameplay.STAFF, id)
               .handle((enabled, error) -> error == null && Boolean.TRUE.equals(enabled));
       var _ =
-          authorization.whenComplete(
-              (enabled, error) -> {
-                if (error != null || !player.isOnline()) pending.remove(id);
-              });
+          authorization.whenComplete((enabled, error) -> {
+            if (error != null || !player.isOnline()) pending.remove(id);
+          });
       tools.complete(
           player,
           authorization,

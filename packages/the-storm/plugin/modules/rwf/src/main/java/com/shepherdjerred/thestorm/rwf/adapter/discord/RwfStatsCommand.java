@@ -42,27 +42,23 @@ public final class RwfStatsCommand {
     var _ =
         players
             .byName(name.strip())
-            .thenCompose(
-                found ->
-                    found
-                        .map(
-                            player ->
-                                matches
-                                    .career(player.uuid())
-                                    .thenApply(career -> text(player.lastName(), career)))
-                        .orElseGet(
-                            () ->
-                                java.util.concurrent.CompletableFuture.completedFuture(
-                                    DiscordRelay.escape(name) + " has never played on The Storm.")))
-            .whenComplete(
-                (text, failure) -> {
-                  if (failure != null) {
-                    logger.error(Component.text("rwf: reading stats for Discord failed"), failure);
-                    reply.accept("Could not read Search and Destroy stats right now.");
-                  } else {
-                    reply.accept(text);
-                  }
-                });
+            .thenCompose(found ->
+                found
+                    .map(player ->
+                        matches
+                            .career(player.uuid())
+                            .thenApply(career -> text(player.lastName(), career)))
+                    .orElseGet(() ->
+                        java.util.concurrent.CompletableFuture.completedFuture(
+                            DiscordRelay.escape(name) + " has never played on The Storm.")))
+            .whenComplete((text, failure) -> {
+              if (failure != null) {
+                logger.error(Component.text("rwf: reading stats for Discord failed"), failure);
+                reply.accept("Could not read Search and Destroy stats right now.");
+              } else {
+                reply.accept(text);
+              }
+            });
   }
 
   static String text(String player, MatchStore.Career career) {

@@ -266,11 +266,10 @@ final class QolHarness implements AutoCloseable {
           new PluginDescriptionFile("TheStorm", "1", HarnessPlugin.class.getName()));
       if (!unreadable) {
         harness.until(harness.graves::isLoaded);
-        harness.until(
-            () -> {
-              var started = harness.paper;
-              return started != null && started.banks().isLoaded() && started.sorts().isLoaded();
-            });
+        harness.until(() -> {
+          var started = harness.paper;
+          return started != null && started.banks().isLoaded() && started.sorts().isLoaded();
+        });
       }
     } catch (RuntimeException e) {
       harness.close();
@@ -314,11 +313,10 @@ final class QolHarness implements AutoCloseable {
   List<String> awaitMessage(PlayerMock player, String text) {
     var seen = new ArrayList<String>();
     try {
-      until(
-          () -> {
-            seen.addAll(messages(player));
-            return seen.stream().anyMatch(message -> message.contains(text));
-          });
+      until(() -> {
+        seen.addAll(messages(player));
+        return seen.stream().anyMatch(message -> message.contains(text));
+      });
     } catch (AssertionError timeout) {
       throw new AssertionError("Expected message containing " + text + "; saw " + seen, timeout);
     }

@@ -21,9 +21,8 @@ final class SurvivalGuide {
         com.shepherdjerred.thestorm.arena.domain.survival.SurvivalTutorials.catalog()
             .tips()
             .stream()
-            .map(
-                tip ->
-                    new Chapter(title(tip.key()), paginate(title(tip.key()) + "\n\n" + tip.text())))
+            .map(tip ->
+                new Chapter(title(tip.key()), paginate(title(tip.key()) + "\n\n" + tip.text())))
             .toList();
     var pages = new ArrayList<Component>();
     var indexPages = Math.ceilDiv(entries.size(), 7);
@@ -44,13 +43,12 @@ final class SurvivalGuide {
     entries.forEach(chapter -> pages.addAll(chapter.pages()));
     if (pages.size() > 100)
       throw new IllegalStateException("Survivor handbook exceeds native book capacity");
-    book.editMeta(
-        meta -> {
-          var written = (BookMeta) meta;
-          written.title(Component.text("Survivor's handbook"));
-          written.author(Component.text("The Storm"));
-          written.pages(pages);
-        });
+    book.editMeta(meta -> {
+      var written = (BookMeta) meta;
+      written.title(Component.text("Survivor's handbook"));
+      written.author(Component.text("The Storm"));
+      written.pages(pages);
+    });
     return book;
   }
 

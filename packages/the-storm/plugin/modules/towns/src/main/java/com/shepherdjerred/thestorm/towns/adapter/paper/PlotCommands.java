@@ -40,45 +40,41 @@ final class PlotCommands {
               .requires(source -> source.getSender() instanceof Player)
               .then(
                   Commands.argument("id", word())
-                      .executes(
-                          c ->
-                              pay(
-                                  (Player) c.getSource().getSender(),
-                                  getString(c, "id"),
-                                  name.equals("renew")))));
+                      .executes(c ->
+                          pay(
+                              (Player) c.getSource().getSender(),
+                              getString(c, "id"),
+                              name.equals("renew")))));
     }
     root.then(
         Commands.literal("confirm")
             .requires(source -> source.getSender() instanceof Player)
-            .executes(
-                c ->
-                    start(
-                        c.getSource().getSender(),
-                        () -> packed.confirm((Player) c.getSource().getSender()),
-                        "Your shop has been unpacked.")));
+            .executes(c ->
+                start(
+                    c.getSource().getSender(),
+                    () -> packed.confirm((Player) c.getSource().getSender()),
+                    "Your shop has been unpacked.")));
     root.then(
         Commands.literal("cancel")
             .requires(source -> source.getSender() instanceof Player)
-            .executes(
-                c -> {
-                  packed.cancel(((Player) c.getSource().getSender()).getUniqueId());
-                  c.getSource().getSender().sendMessage(Notices.info("Preview cancelled."));
-                  return Command.SINGLE_SUCCESS;
-                }));
+            .executes(c -> {
+              packed.cancel(((Player) c.getSource().getSender()).getUniqueId());
+              c.getSource().getSender().sendMessage(Notices.info("Preview cancelled."));
+              return Command.SINGLE_SUCCESS;
+            }));
     root.then(
         Commands.literal("reissue")
             .requires(source -> source.getSender() instanceof Player)
             .then(
                 Commands.argument("id", word())
-                    .executes(
-                        c ->
-                            start(
-                                c.getSource().getSender(),
-                                () ->
-                                    packed.reissue(
-                                        ((Player) c.getSource().getSender()).getUniqueId(),
-                                        UUID.fromString(getString(c, "id"))),
-                                "Replacement sent to /mail. Previous copies are now invalid."))));
+                    .executes(c ->
+                        start(
+                            c.getSource().getSender(),
+                            () ->
+                                packed.reissue(
+                                    ((Player) c.getSource().getSender()).getUniqueId(),
+                                    UUID.fromString(getString(c, "id"))),
+                            "Replacement sent to /mail. Previous copies are now invalid."))));
     root.then(
         Commands.literal("admin")
             .requires(source -> source.getSender().hasPermission(RegionCommands.ADMIN_PERMISSION))
@@ -86,38 +82,32 @@ final class PlotCommands {
                 Commands.literal("rollback")
                     .then(
                         Commands.argument("id", word())
-                            .executes(
-                                c ->
-                                    start(
-                                        c.getSource().getSender(),
-                                        () -> packed.rollback(UUID.fromString(getString(c, "id"))),
-                                        "Placement rolled back. The packed shop can be used again."))))
+                            .executes(c ->
+                                start(
+                                    c.getSource().getSender(),
+                                    () -> packed.rollback(UUID.fromString(getString(c, "id"))),
+                                    "Placement rolled back. The packed shop can be used again."))))
             .then(
                 Commands.literal("baseline")
                     .then(
                         Commands.argument("id", word())
-                            .executes(
-                                c ->
-                                    start(
-                                        c.getSource().getSender(),
-                                        () -> resetting.baseline(getString(c, "id")),
-                                        "Recovery baseline saved."))))
+                            .executes(c ->
+                                start(
+                                    c.getSource().getSender(),
+                                    () -> resetting.baseline(getString(c, "id")),
+                                    "Recovery baseline saved."))))
             .then(
                 Commands.literal("reconcile")
                     .then(
                         Commands.argument("operation", word())
-                            .executes(
-                                c ->
-                                    reconcile(
-                                        c.getSource().getSender(), getString(c, "operation")))))
+                            .executes(c ->
+                                reconcile(c.getSource().getSender(), getString(c, "operation")))))
             .then(
                 Commands.literal("status")
                     .then(
                         Commands.argument("operation", word())
-                            .executes(
-                                c ->
-                                    status(
-                                        c.getSource().getSender(), getString(c, "operation"))))));
+                            .executes(c ->
+                                status(c.getSource().getSender(), getString(c, "operation"))))));
     commands.register(root.build(), "Protected holdings, weekly shops and recovered builds");
   }
 
@@ -139,11 +129,8 @@ final class PlotCommands {
                     + def.weeklyRent()
                     + " CR/week, manual renewal. "
                     + lease
-                        .map(
-                            value ->
-                                "Paid through "
-                                    + value.paidThrough()
-                                    + "; seven-day grace follows.")
+                        .map(value ->
+                            "Paid through " + value.paidThrough() + "; seven-day grace follows.")
                         .orElseGet(() -> "Use /plot rent " + def.id() + ".")));
       }
     }

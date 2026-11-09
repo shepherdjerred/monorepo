@@ -430,12 +430,10 @@ final class GravesPaperTest {
     }
     harness.clock.advance(Duration.ofHours(2));
 
-    harness.until(
-        () -> {
-          rightClick(bob, graveBlock());
-          return QolHarness.messages(bob).stream()
-              .anyMatch(message -> message.contains("2 are left"));
-        });
+    harness.until(() -> {
+      rightClick(bob, graveBlock());
+      return QolHarness.messages(bob).stream().anyMatch(message -> message.contains("2 are left"));
+    });
 
     assertThat(bob.getInventory().getItem(0)).isNotNull();
     assertThat(harness.graves.all())
@@ -626,21 +624,19 @@ final class GravesPaperTest {
   void graveMarkerPlacementAndRemovalHaveExplicitAuditActors() {
     var alice = aliceDies();
     assertThat(harness.recordedChanges)
-        .anySatisfy(
-            change -> {
-              assertThat(change.actor()).isEqualTo("#storm-graves");
-              assertThat(change.before().getMaterial()).isEqualTo(Material.AIR);
-              assertThat(change.after().getMaterial()).isEqualTo(Material.PLAYER_HEAD);
-            });
+        .anySatisfy(change -> {
+          assertThat(change.actor()).isEqualTo("#storm-graves");
+          assertThat(change.before().getMaterial()).isEqualTo(Material.AIR);
+          assertThat(change.after().getMaterial()).isEqualTo(Material.PLAYER_HEAD);
+        });
     rightClick(alice, graveBlock());
     harness.until(() -> harness.graves.all().isEmpty());
     assertThat(harness.recordedChanges)
-        .anySatisfy(
-            change -> {
-              assertThat(change.actor()).isEqualTo("#storm-graves");
-              assertThat(change.before().getMaterial()).isEqualTo(Material.PLAYER_HEAD);
-              assertThat(change.after().getMaterial()).isEqualTo(Material.AIR);
-            });
+        .anySatisfy(change -> {
+          assertThat(change.actor()).isEqualTo("#storm-graves");
+          assertThat(change.before().getMaterial()).isEqualTo(Material.PLAYER_HEAD);
+          assertThat(change.after().getMaterial()).isEqualTo(Material.AIR);
+        });
   }
 
   @Test
@@ -724,9 +720,8 @@ final class GravesPaperTest {
     harness.close();
     harness = QolHarness.start(directory, true);
 
-    harness.until(
-        () ->
-            PlayerDeathEvent.getHandlerList().getRegisteredListeners().length == 0
-                && !harness.graves.isLoaded());
+    harness.until(() ->
+        PlayerDeathEvent.getHandlerList().getRegisteredListeners().length == 0
+            && !harness.graves.isLoaded());
   }
 }

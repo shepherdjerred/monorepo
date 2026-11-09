@@ -117,17 +117,15 @@ final class SurvivalBoss {
     var casting =
         mechanics
             .cast()
-            .map(
-                c ->
-                    " · "
-                        + c.shape().label()
-                        + " "
-                        + String.format(
-                            java.util.Locale.ROOT,
-                            "%.1fs",
-                            Math.max(
-                                0,
-                                java.time.Duration.between(now, c.impact()).toMillis() / 1000.0)))
+            .map(c ->
+                " · "
+                    + c.shape().label()
+                    + " "
+                    + String.format(
+                        java.util.Locale.ROOT,
+                        "%.1fs",
+                        Math.max(
+                            0, java.time.Duration.between(now, c.impact()).toMillis() / 1000.0)))
             .orElse("");
     bar.name(Component.text(name() + " · Phase " + phase + immunity + recovery + casting));
     audience.forEach(this::show);
@@ -143,17 +141,16 @@ final class SurvivalBoss {
     if (phases.add(phase)) adds.accept(phase);
     if (mechanics.begin(
         now, Places.point(entity.getLocation()), Places.point(Places.at(target)), fraction)) {
-      audience.forEach(
-          player -> {
-            Texts.info(
-                player,
-                name()
-                    + " casts "
-                    + mechanics.cast().orElseThrow().shape().label()
-                    + " — leave the marked ground! Phase "
-                    + mechanics.phase(fraction));
-            player.playSound(entity.getLocation(), Sound.BLOCK_NOTE_BLOCK_BELL, 1, 0.6f);
-          });
+      audience.forEach(player -> {
+        Texts.info(
+            player,
+            name()
+                + " casts "
+                + mechanics.cast().orElseThrow().shape().label()
+                + " — leave the marked ground! Phase "
+                + mechanics.phase(fraction));
+        player.playSound(entity.getLocation(), Sound.BLOCK_NOTE_BLOCK_BELL, 1, 0.6f);
+      });
     }
     if (!now.isBefore(nextVisual)) {
       nextVisual = now.plusMillis(250);
@@ -197,10 +194,9 @@ final class SurvivalBoss {
                   java.util.Comparator.comparingDouble(at -> at.distanceSquared(Places.at(player))))
               .limit(64)
               .toList();
-      particles.forEach(
-          at ->
-              player.spawnParticle(
-                  imminent ? Particle.SOUL_FIRE_FLAME : Particle.FLAME, at, 2, .12, .05, .12, 0));
+      particles.forEach(at ->
+          player.spawnParticle(
+              imminent ? Particle.SOUL_FIRE_FLAME : Particle.FLAME, at, 2, .12, .05, .12, 0));
       player.spawnParticle(
           Particle.ENCHANT,
           Places.location(world.world(), cast.origin()).add(0, 1.3, 0),
@@ -419,13 +415,12 @@ final class SurvivalBoss {
   }
 
   void end() {
-    viewers.forEach(
-        id -> {
-          var player = entity.getServer().getPlayer(id);
-          if (player != null) {
-            player.hideBossBar(bar);
-          }
-        });
+    viewers.forEach(id -> {
+      var player = entity.getServer().getPlayer(id);
+      if (player != null) {
+        player.hideBossBar(bar);
+      }
+    });
     viewers.clear();
   }
 }

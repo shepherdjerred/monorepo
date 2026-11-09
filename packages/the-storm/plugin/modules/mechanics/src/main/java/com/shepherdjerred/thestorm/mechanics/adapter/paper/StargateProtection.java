@@ -135,10 +135,9 @@ final class StargateProtection implements Listener {
   void editSign(SignChangeEvent event) {
     if (book.committed().isEmpty()
         || book.committed()
-            .flatMap(
-                registry ->
-                    registry.sign(
-                        event.getBlock().getWorld().getUID(), PaperGrid.pos(event.getBlock())))
+            .flatMap(registry ->
+                registry.sign(
+                    event.getBlock().getWorld().getUID(), PaperGrid.pos(event.getBlock())))
             .isPresent()) {
       event.setCancelled(true);
       event.getPlayer().sendMessage(Component.text("Remove the Stargate before editing its sign."));

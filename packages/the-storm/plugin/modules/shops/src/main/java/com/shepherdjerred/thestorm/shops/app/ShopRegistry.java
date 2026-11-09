@@ -96,11 +96,8 @@ public final class ShopRegistry {
     byId.put(shop.id(), shop);
     bySign.put(shop.sign(), shop.id());
     shop.container()
-        .ifPresent(
-            container ->
-                byContainer
-                    .computeIfAbsent(container, key -> new LinkedHashSet<>())
-                    .add(shop.id()));
+        .ifPresent(container ->
+            byContainer.computeIfAbsent(container, key -> new LinkedHashSet<>()).add(shop.id()));
     lastId = Math.max(lastId, shop.id());
   }
 
@@ -156,16 +153,15 @@ public final class ShopRegistry {
     }
     bySign.remove(shop.sign());
     shop.container()
-        .ifPresent(
-            container -> {
-              var ids = byContainer.get(container);
-              if (ids != null) {
-                ids.remove(id);
-                if (ids.isEmpty()) {
-                  byContainer.remove(container);
-                }
-              }
-            });
+        .ifPresent(container -> {
+          var ids = byContainer.get(container);
+          if (ids != null) {
+            ids.remove(id);
+            if (ids.isEmpty()) {
+              byContainer.remove(container);
+            }
+          }
+        });
   }
 
   /** Removes every shop owned by a reset account after storage has deleted them. */

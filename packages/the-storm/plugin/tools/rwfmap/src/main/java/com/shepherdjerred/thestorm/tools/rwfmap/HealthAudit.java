@@ -95,10 +95,9 @@ public final class HealthAudit {
       var source =
           nav.graph()
               .nodeAt(spawn.cell())
-              .orElseThrow(
-                  () ->
-                      new IllegalArgumentException(
-                          "health audit spawn is not navigable: " + spawn.name()));
+              .orElseThrow(() ->
+                  new IllegalArgumentException(
+                      "health audit spawn is not navigable: " + spawn.name()));
       var damage = minimumDamage(nav.graph(), source, HEALTH_BUDGET);
       for (var bomb : nav.sites().bombs()) results.add(site(nav, spawn.name(), bomb, damage));
     }
@@ -119,10 +118,9 @@ public final class HealthAudit {
       int[] damage) {
     var canonical =
         nav.approachNode(bomb)
-            .orElseThrow(
-                () ->
-                    new IllegalArgumentException(
-                        "health audit bomb has no interaction node: " + bomb.name()));
+            .orElseThrow(() ->
+                new IllegalArgumentException(
+                    "health audit bomb has no interaction node: " + bomb.name()));
     var workers =
         nav.bombScreens().require(bomb.name()).workers().stream()
             .map(node -> new Worker(node, damage[node]))

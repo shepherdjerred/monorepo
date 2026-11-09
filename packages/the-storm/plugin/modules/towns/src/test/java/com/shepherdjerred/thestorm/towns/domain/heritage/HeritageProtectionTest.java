@@ -57,12 +57,11 @@ final class HeritageProtectionTest {
     assertThat(catalog.sites().stream().filter(site -> !site.world().equals("map2"))).hasSize(234);
     assertThat(catalog.sites().stream().filter(site -> site.id().startsWith("archive-")))
         .hasSize(166)
-        .allSatisfy(
-            site -> {
-              assertThat(site.kind()).isEqualTo(HeritageSite.Kind.HERITAGE);
-              assertThat(site.editors()).isEmpty();
-              assertThat(site.editingChunks()).isEmpty();
-            });
+        .allSatisfy(site -> {
+          assertThat(site.kind()).isEqualTo(HeritageSite.Kind.HERITAGE);
+          assertThat(site.editors()).isEmpty();
+          assertThat(site.editingChunks()).isEmpty();
+        });
     assertThat(catalog.sites().stream().filter(site -> site.id().equals("settlement")))
         .singleElement()
         .extracting(HeritageSite::world)
@@ -73,9 +72,8 @@ final class HeritageProtectionTest {
         .isEqualTo("rustworks");
     assertThat(
             catalog.sites().stream()
-                .filter(
-                    site ->
-                        site.world().equals("world") && site.kind() == HeritageSite.Kind.PLAYER))
+                .filter(site ->
+                    site.world().equals("world") && site.kind() == HeritageSite.Kind.PLAYER))
         .hasSize(7);
     assertThat(catalog.archive("main-map1-2015-07-09"))
         .contains(
@@ -99,12 +97,11 @@ final class HeritageProtectionTest {
     var mapTwo = catalog.sites().stream().filter(site -> site.world().equals("map2")).toList();
     assertThat(mapTwo)
         .hasSize(60)
-        .allSatisfy(
-            site -> {
-              assertThat(site.id()).startsWith("map2-");
-              assertThat(site.profile()).isEqualTo(RegionProfile.SAFE);
-              assertThat(site.editingChunks().isEmpty()).isEqualTo(site.editors().isEmpty());
-            });
+        .allSatisfy(site -> {
+          assertThat(site.id()).startsWith("map2-");
+          assertThat(site.profile()).isEqualTo(RegionProfile.SAFE);
+          assertThat(site.editingChunks().isEmpty()).isEqualTo(site.editors().isEmpty());
+        });
     assertThat(mapTwo.stream().filter(site -> site.kind() == HeritageSite.Kind.SERVER))
         .extracting(HeritageSite::id)
         .containsExactly("map2-spawn");
@@ -128,13 +125,12 @@ final class HeritageProtectionTest {
             site -> assertThat(mapOneMayors).doesNotContain(site.editors().getFirst().player()));
     assertThat(mapTwo.stream().filter(site -> site.id().equals("map2-the-island")))
         .singleElement()
-        .satisfies(
-            site -> {
-              assertThat(site.kind()).isEqualTo(HeritageSite.Kind.HERITAGE);
-              assertThat(site.editors())
-                  .extracting(HeritageSite.Editor::name)
-                  .containsExactly("EdeTheWolf");
-            });
+        .satisfies(site -> {
+          assertThat(site.kind()).isEqualTo(HeritageSite.Kind.HERITAGE);
+          assertThat(site.editors())
+              .extracting(HeritageSite.Editor::name)
+              .containsExactly("EdeTheWolf");
+        });
     assertThat(
             catalog.sites().stream()
                 .filter(site -> site.id().equals("heritage-003"))
@@ -221,11 +217,9 @@ final class HeritageProtectionTest {
   void mapTwoConstructionKeepsTwoChunksOfProtectedBufferInsideTheBorder() throws Exception {
     var mapTwo = catalog().sites().stream().filter(site -> site.world().equals("map2")).toList();
     var protectedChunks = new java.util.HashSet<HeritageSite.Chunk>();
-    mapTwo.forEach(
-        site ->
-            site.footprint()
-                .forEach(
-                    chunk -> protectedChunks.add(new HeritageSite.Chunk(chunk.x(), chunk.z()))));
+    mapTwo.forEach(site ->
+        site.footprint()
+            .forEach(chunk -> protectedChunks.add(new HeritageSite.Chunk(chunk.x(), chunk.z()))));
     for (var site : mapTwo) {
       var unprotected =
           site.editingChunks().stream()
@@ -241,10 +235,9 @@ final class HeritageProtectionTest {
       HeritageSite.Chunk core) {
     return java.util.stream.IntStream.rangeClosed(-2, 2)
         .boxed()
-        .flatMap(
-            dx ->
-                java.util.stream.IntStream.rangeClosed(-2, 2)
-                    .mapToObj(dz -> new HeritageSite.Chunk(core.x() + dx, core.z() + dz)));
+        .flatMap(dx ->
+            java.util.stream.IntStream.rangeClosed(-2, 2)
+                .mapToObj(dz -> new HeritageSite.Chunk(core.x() + dx, core.z() + dz)));
   }
 
   /** Chunks that meet the open radius-12000 disc centred on block corner 0,0. */
@@ -351,20 +344,18 @@ final class HeritageProtectionTest {
         catalog().sites().stream().filter(site -> site.id().startsWith("archive-bed-")).toList();
     assertThat(sites)
         .hasSize(11)
-        .allSatisfy(
-            site -> {
-              assertThat(site.profile()).isEqualTo(RegionProfile.SAFE);
-              assertThat(site.editors()).isEmpty();
-              assertThat(site.editingChunks()).isEmpty();
-              assertThat(site.provenance()).contains("not ownership", "visually reviewed");
-              assertThat(site.protectedAreas())
-                  .singleElement()
-                  .satisfies(
-                      area -> {
-                        assertThat(area.from().y()).isEqualTo(-64);
-                        assertThat(area.to().y()).isEqualTo(319);
-                      });
-            });
+        .allSatisfy(site -> {
+          assertThat(site.profile()).isEqualTo(RegionProfile.SAFE);
+          assertThat(site.editors()).isEmpty();
+          assertThat(site.editingChunks()).isEmpty();
+          assertThat(site.provenance()).contains("not ownership", "visually reviewed");
+          assertThat(site.protectedAreas())
+              .singleElement()
+              .satisfies(area -> {
+                assertThat(area.from().y()).isEqualTo(-64);
+                assertThat(area.to().y()).isEqualTo(319);
+              });
+        });
   }
 
   @Test

@@ -49,11 +49,10 @@ public final class TutorialGraph {
     var relevant = new HashSet<TutorialKey>();
     contexts.forEach(key -> ancestors(key, relevant));
     return order.stream()
-        .filter(
-            tip ->
-                relevant.contains(tip.key())
-                    && !seen.contains(tip.key())
-                    && seen.containsAll(tip.parents()))
+        .filter(tip ->
+            relevant.contains(tip.key())
+                && !seen.contains(tip.key())
+                && seen.containsAll(tip.parents()))
         .findFirst();
   }
 

@@ -149,11 +149,10 @@ final class TradeEngineTest {
   void aRefundTheLedgerRefusesIsLoggedAndNoItemsMove() throws Exception {
     wallets.set(ALICE, 100);
     shop.count = 16;
-    wallets.afterNextTransfer(
-        () -> {
-          shop.count = 0;
-          wallets.set(OWNER, 0);
-        });
+    wallets.afterNextTransfer(() -> {
+      shop.count = 0;
+      wallets.set(OWNER, 0);
+    });
 
     var outcome = run(deal(Direction.BUY, OWNER, shop));
 
@@ -163,24 +162,22 @@ final class TradeEngineTest {
     assertThat(customer.count).isZero();
     assertThat(store.refundFailures)
         .singleElement()
-        .satisfies(
-            failure -> {
-              assertThat(failure.payer()).isEqualTo(OWNER);
-              assertThat(failure.payee()).isEqualTo(ALICE);
-              assertThat(failure.amount()).isEqualTo(Money.crystals(50));
-              assertThat(failure.reason()).isEqualTo("refund:shop:1:buy");
-            });
+        .satisfies(failure -> {
+          assertThat(failure.payer()).isEqualTo(OWNER);
+          assertThat(failure.payee()).isEqualTo(ALICE);
+          assertThat(failure.amount()).isEqualTo(Money.crystals(50));
+          assertThat(failure.reason()).isEqualTo("refund:shop:1:buy");
+        });
   }
 
   @Test
   void aRefundThatFailsOutrightIsLoggedToo() throws Exception {
     wallets.set(ALICE, 100);
     shop.count = 16;
-    wallets.afterNextTransfer(
-        () -> {
-          shop.count = 0;
-          wallets.failNext(new IllegalStateException("database down"));
-        });
+    wallets.afterNextTransfer(() -> {
+      shop.count = 0;
+      wallets.failNext(new IllegalStateException("database down"));
+    });
 
     var outcome = run(deal(Direction.BUY, OWNER, shop));
 
@@ -309,11 +306,10 @@ final class TradeEngineTest {
     journal.unsettled(deal, trail);
     assertThat(store.refundFailures)
         .singleElement()
-        .satisfies(
-            failure -> {
-              assertThat(failure.amount()).isEqualTo(Money.crystals(0));
-              assertThat(failure.held()).contains(new HeldItems("coal", 16));
-            });
+        .satisfies(failure -> {
+          assertThat(failure.amount()).isEqualTo(Money.crystals(0));
+          assertThat(failure.held()).contains(new HeldItems("coal", 16));
+        });
   }
 
   @Test
@@ -321,11 +317,10 @@ final class TradeEngineTest {
     wallets.set(OWNER, 100);
     customer.count = 16;
     // While the owner pays, the shop fills up and the customer drains the payment with /pay.
-    wallets.afterNextTransfer(
-        () -> {
-          shop.count = 60;
-          wallets.set(ALICE, 0);
-        });
+    wallets.afterNextTransfer(() -> {
+      shop.count = 60;
+      wallets.set(ALICE, 0);
+    });
 
     var outcome = run(deal(Direction.SELL, OWNER, shop));
 
@@ -339,23 +334,21 @@ final class TradeEngineTest {
     assertThat(shop.dropped).isZero();
     assertThat(store.refundFailures)
         .singleElement()
-        .satisfies(
-            failure -> {
-              assertThat(failure.payer()).isEqualTo(ALICE);
-              assertThat(failure.payee()).isEqualTo(OWNER);
-              assertThat(failure.held()).contains(new HeldItems("coal", 16));
-            });
+        .satisfies(failure -> {
+          assertThat(failure.payer()).isEqualTo(ALICE);
+          assertThat(failure.payee()).isEqualTo(OWNER);
+          assertThat(failure.held()).contains(new HeldItems("coal", 16));
+        });
   }
 
   @Test
   void aBuyRefundThatFailsHoldsNoItems() throws Exception {
     wallets.set(ALICE, 100);
     shop.count = 16;
-    wallets.afterNextTransfer(
-        () -> {
-          shop.count = 0;
-          wallets.set(OWNER, 0);
-        });
+    wallets.afterNextTransfer(() -> {
+      shop.count = 0;
+      wallets.set(OWNER, 0);
+    });
 
     run(deal(Direction.BUY, OWNER, shop));
 
@@ -493,31 +486,29 @@ final class TradeEngineTest {
 
   @Test
   void dealsValidateThemselves() {
-    assertThatThrownBy(
-            () ->
-                new Deal(
-                    Direction.BUY,
-                    0,
-                    Money.crystals(1),
-                    new Deal.Party(ALICE, customer),
-                    new Deal.Party(OWNER, shop),
-                    "x",
-                    "coal",
-                    0L,
-                    false))
+    assertThatThrownBy(() ->
+            new Deal(
+                Direction.BUY,
+                0,
+                Money.crystals(1),
+                new Deal.Party(ALICE, customer),
+                new Deal.Party(OWNER, shop),
+                "x",
+                "coal",
+                0L,
+                false))
         .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(
-            () ->
-                new Deal(
-                    Direction.BUY,
-                    1,
-                    Money.crystals(0),
-                    new Deal.Party(ALICE, customer),
-                    new Deal.Party(OWNER, shop),
-                    "x",
-                    "coal",
-                    0L,
-                    false))
+    assertThatThrownBy(() ->
+            new Deal(
+                Direction.BUY,
+                1,
+                Money.crystals(0),
+                new Deal.Party(ALICE, customer),
+                new Deal.Party(OWNER, shop),
+                "x",
+                "coal",
+                0L,
+                false))
         .isInstanceOf(IllegalArgumentException.class);
   }
 }

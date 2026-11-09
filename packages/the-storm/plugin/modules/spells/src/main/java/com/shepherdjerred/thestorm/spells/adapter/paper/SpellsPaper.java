@@ -156,13 +156,12 @@ public final class SpellsPaper {
     config
         .spells()
         .all()
-        .forEach(
-            (kind, entry) ->
-                resolved.put(
-                    kind,
-                    new Fx.Resolved(
-                        PaperNames.particle(entry.fx().particle()).orElseThrow(),
-                        PaperNames.sound(entry.fx().sound()).orElseThrow())));
+        .forEach((kind, entry) ->
+            resolved.put(
+                kind,
+                new Fx.Resolved(
+                    PaperNames.particle(entry.fx().particle()).orElseThrow(),
+                    PaperNames.sound(entry.fx().sound()).orElseThrow())));
     return new Fx(resolved);
   }
 

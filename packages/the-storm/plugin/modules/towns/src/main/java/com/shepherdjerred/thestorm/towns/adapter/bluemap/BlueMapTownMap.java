@@ -80,44 +80,39 @@ public final class BlueMapTownMap implements TownMap {
       Map<String, List<Outline>> outlines,
       List<TownMap.Labelled> personal) {
     BlueMapAPI.getInstance()
-        .ifPresent(
-            api -> {
-              erase(api, townId);
-              outlines.forEach(
-                  (worldName, pieces) ->
-                      paint(
-                          api,
-                          new Stroke(
-                              worldName, campPrefix(townId), name, pieces, CAMP_LINE, CAMP_FILL)));
-              for (var i = 0; i < personal.size(); i++) {
-                var piece = personal.get(i);
-                var index = i;
-                piece
-                    .outlines()
-                    .forEach(
-                        (worldName, pieces) ->
-                            paint(
-                                api,
-                                new Stroke(
-                                    worldName,
-                                    campPrefix(townId) + "p-" + index + "-",
-                                    piece.name(),
-                                    pieces,
-                                    PERSONAL_LINE,
-                                    PERSONAL_FILL)));
-              }
-            });
+        .ifPresent(api -> {
+          erase(api, townId);
+          outlines.forEach((worldName, pieces) ->
+              paint(
+                  api,
+                  new Stroke(worldName, campPrefix(townId), name, pieces, CAMP_LINE, CAMP_FILL)));
+          for (var i = 0; i < personal.size(); i++) {
+            var piece = personal.get(i);
+            var index = i;
+            piece
+                .outlines()
+                .forEach((worldName, pieces) ->
+                    paint(
+                        api,
+                        new Stroke(
+                            worldName,
+                            campPrefix(townId) + "p-" + index + "-",
+                            piece.name(),
+                            pieces,
+                            PERSONAL_LINE,
+                            PERSONAL_FILL)));
+          }
+        });
   }
 
   @Override
   public void draw(UUID townId, String name, Map<String, List<Outline>> outlines) {
     BlueMapAPI.getInstance()
-        .ifPresent(
-            api -> {
-              erase(api, townId);
-              var label = new Label(townId, name);
-              outlines.forEach((worldName, pieces) -> drawWorld(api, label, worldName, pieces));
-            });
+        .ifPresent(api -> {
+          erase(api, townId);
+          var label = new Label(townId, name);
+          outlines.forEach((worldName, pieces) -> drawWorld(api, label, worldName, pieces));
+        });
   }
 
   /** A town as its markers name it. */
@@ -132,15 +127,14 @@ public final class BlueMapTownMap implements TownMap {
           "town " + name + " holds land in unloaded world " + worldName);
     }
     api.getWorld(world)
-        .ifPresent(
-            blueWorld -> {
-              for (var map : blueWorld.getMaps()) {
-                var set = markers(map);
-                for (var i = 0; i < pieces.size(); i++) {
-                  set.put(markerId(townId, i), marker(name, pieces.get(i), LINE, FILL));
-                }
-              }
-            });
+        .ifPresent(blueWorld -> {
+          for (var map : blueWorld.getMaps()) {
+            var set = markers(map);
+            for (var i = 0; i < pieces.size(); i++) {
+              set.put(markerId(townId, i), marker(name, pieces.get(i), LINE, FILL));
+            }
+          }
+        });
   }
 
   @Override
@@ -166,19 +160,18 @@ public final class BlueMapTownMap implements TownMap {
   @Override
   public void eraseAll() {
     BlueMapAPI.getInstance()
-        .ifPresent(
-            api -> {
-              for (var map : api.getMaps()) {
-                var set = map.getMarkerSets().get(SET_ID);
-                if (set != null) {
-                  set.getMarkers().clear();
-                }
-                var camps = map.getMarkerSets().get(CAMP_SET_ID);
-                if (camps != null) {
-                  camps.getMarkers().clear();
-                }
-              }
-            });
+        .ifPresent(api -> {
+          for (var map : api.getMaps()) {
+            var set = map.getMarkerSets().get(SET_ID);
+            if (set != null) {
+              set.getMarkers().clear();
+            }
+            var camps = map.getMarkerSets().get(CAMP_SET_ID);
+            if (camps != null) {
+              camps.getMarkers().clear();
+            }
+          }
+        });
   }
 
   private static MarkerSet markers(BlueMapMap map) {
@@ -202,17 +195,16 @@ public final class BlueMapTownMap implements TownMap {
           "claim " + stroke.name() + " holds land in unloaded world " + stroke.worldName());
     }
     api.getWorld(world)
-        .ifPresent(
-            blueWorld -> {
-              for (var map : blueWorld.getMaps()) {
-                var set = campMarkers(map);
-                for (var i = 0; i < stroke.pieces().size(); i++) {
-                  set.put(
-                      stroke.idPrefix() + i,
-                      marker(stroke.name(), stroke.pieces().get(i), stroke.line(), stroke.fill()));
-                }
-              }
-            });
+        .ifPresent(blueWorld -> {
+          for (var map : blueWorld.getMaps()) {
+            var set = campMarkers(map);
+            for (var i = 0; i < stroke.pieces().size(); i++) {
+              set.put(
+                  stroke.idPrefix() + i,
+                  marker(stroke.name(), stroke.pieces().get(i), stroke.line(), stroke.fill()));
+            }
+          }
+        });
   }
 
   private static MarkerSet campMarkers(BlueMapMap map) {

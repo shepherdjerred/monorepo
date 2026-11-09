@@ -33,7 +33,7 @@ dependencyResolutionManagement {
     }
     maven("https://maven.playpro.com") { content { includeGroup("net.coreprotect") } }
     // Compile against the exact API shipped by the immutable runtime artifact.
-    ivy("https://cdn.modrinth.com/data/LJNGWSvH/versions/clrLeCYp") {
+    ivy("https://cdn.modrinth.com/data/LJNGWSvH/versions/j42l2u1k") {
       patternLayout { artifact("[artifact]-[revision].[ext]") }
       metadataSources { artifact() }
       content { includeModule("ac.grim.artifact", "grimac-bukkit") }

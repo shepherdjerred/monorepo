@@ -47,11 +47,10 @@ final class StaffStateTest {
       assertThat(new RuntimeDestinations(state, new Position("world", 0, 60, 0, 0, 0)).spawn())
           .isEqualTo(point);
       assertThat(
-              db.read(
-                      sql ->
-                          sql.fetchCount(
-                              com.shepherdjerred.thestorm.essentials.adapter.db.generated.Tables
-                                  .ESSENTIALS_STAFF_AUDIT))
+              db.read(sql ->
+                      sql.fetchCount(
+                          com.shepherdjerred.thestorm.essentials.adapter.db.generated.Tables
+                              .ESSENTIALS_STAFF_AUDIT))
                   .join())
           .isEqualTo(1);
     }
@@ -72,13 +71,12 @@ final class StaffStateTest {
                 return CompletableFuture.failedFuture(new IllegalStateException("disk full"));
               }
             });
-    assertThatThrownBy(
-            () ->
-                state
-                    .commit(
-                        List.of(state.entry("jail-deleted", "cell", true)),
-                        new StaffStore.Audit("staff", "deljail", "cell", Instant.EPOCH))
-                    .join())
+    assertThatThrownBy(() ->
+            state
+                .commit(
+                    List.of(state.entry("jail-deleted", "cell", true)),
+                    new StaffStore.Audit("staff", "deljail", "cell", Instant.EPOCH))
+                .join())
         .hasRootCauseMessage("disk full");
     assertThat(state.find("jail-deleted", "cell", Boolean.class)).isEmpty();
   }

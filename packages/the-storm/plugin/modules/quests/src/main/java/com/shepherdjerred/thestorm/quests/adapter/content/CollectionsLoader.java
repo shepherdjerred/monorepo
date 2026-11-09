@@ -36,9 +36,8 @@ public final class CollectionsLoader {
       case Result.Err<File, List<com.shepherdjerred.thestorm.core.config.Problem>>(var problems) ->
           Result.err(
               problems.stream()
-                  .map(
-                      problem ->
-                          new ContentProblem(problem.source(), problem.path(), problem.message()))
+                  .map(problem ->
+                      new ContentProblem(problem.source(), problem.path(), problem.message()))
                   .toList());
       case Result.Ok<File, List<com.shepherdjerred.thestorm.core.config.Problem>>(var file) ->
           validate(file, items);
@@ -49,33 +48,29 @@ public final class CollectionsLoader {
     var problems = new ArrayList<ContentProblem>();
     var entries = new TreeMap<String, Collections.Entry>();
     new TreeMap<>(file.collections())
-        .forEach(
-            (id, entry) -> {
-              var path = "collections." + id;
-              if (!ContentCompiler.ID.matcher(id).matches()) {
-                problems.add(new ContentProblem(SOURCE, path, "invalid collection id"));
-              }
-              if (entry.name().isBlank() || entry.name().length() > 48) {
-                problems.add(new ContentProblem(SOURCE, path + ".name", "must be 1–48 characters"));
-              }
-              if (!items.contains(entry.material())) {
-                problems.add(
-                    new ContentProblem(
-                        SOURCE, path + ".material", "unknown item " + entry.material()));
-              }
-              if (entry.region().isBlank() || entry.region().length() > 48) {
-                problems.add(
-                    new ContentProblem(SOURCE, path + ".region", "must be 1–48 characters"));
-              }
-              if (entry.note().isBlank() || entry.note().length() > 200) {
-                problems.add(
-                    new ContentProblem(SOURCE, path + ".note", "must be 1–200 characters"));
-              }
-              entries.put(
-                  id,
-                  new Collections.Entry(
-                      id, entry.name(), entry.material(), entry.region(), entry.note()));
-            });
+        .forEach((id, entry) -> {
+          var path = "collections." + id;
+          if (!ContentCompiler.ID.matcher(id).matches()) {
+            problems.add(new ContentProblem(SOURCE, path, "invalid collection id"));
+          }
+          if (entry.name().isBlank() || entry.name().length() > 48) {
+            problems.add(new ContentProblem(SOURCE, path + ".name", "must be 1–48 characters"));
+          }
+          if (!items.contains(entry.material())) {
+            problems.add(
+                new ContentProblem(SOURCE, path + ".material", "unknown item " + entry.material()));
+          }
+          if (entry.region().isBlank() || entry.region().length() > 48) {
+            problems.add(new ContentProblem(SOURCE, path + ".region", "must be 1–48 characters"));
+          }
+          if (entry.note().isBlank() || entry.note().length() > 200) {
+            problems.add(new ContentProblem(SOURCE, path + ".note", "must be 1–200 characters"));
+          }
+          entries.put(
+              id,
+              new Collections.Entry(
+                  id, entry.name(), entry.material(), entry.region(), entry.note()));
+        });
     return problems.isEmpty()
         ? Result.ok(new Collections(entries))
         : Result.err(List.copyOf(problems));

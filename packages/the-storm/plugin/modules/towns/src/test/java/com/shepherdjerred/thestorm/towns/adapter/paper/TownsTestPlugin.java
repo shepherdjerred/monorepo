@@ -53,6 +53,12 @@ public class TownsTestPlugin extends JavaPlugin {
   /** Where the test wants config and the database; set before MockBukkit loads the plugin. */
   static @Nullable Path directory;
 
+  /**
+   * A lock limit replacing the shipped {@code locks.maxPerPlayer}, so a test can reach it; null
+   * keeps the shipped value. Reset after every test.
+   */
+  static @Nullable Integer lockLimit;
+
   final Services services = new Services();
   final FakeWallets wallets = new FakeWallets();
 
@@ -82,6 +88,14 @@ public class TownsTestPlugin extends JavaPlugin {
     }
     try {
       var shipped = Files.readString(SHIPPED_CONFIG);
+      if (lockLimit != null) {
+        var limited =
+            shipped.replaceFirst("(?m)^  maxPerPlayer: \\d+$", "  maxPerPlayer: " + lockLimit);
+        if (limited.equals(shipped)) {
+          throw new IllegalStateException("shipped towns config has no locks.maxPerPlayer");
+        }
+        shipped = limited;
+      }
       var regions = shipped.indexOf("\nregions:");
       if (regions < 0) {
         throw new IllegalStateException("shipped towns config has no regions section");

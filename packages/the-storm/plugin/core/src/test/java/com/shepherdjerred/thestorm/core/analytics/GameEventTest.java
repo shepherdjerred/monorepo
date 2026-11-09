@@ -33,23 +33,21 @@ final class GameEventTest {
             .toList();
     assertThat(votes)
         .singleElement()
-        .satisfies(
-            vote ->
-                assertThat(vote.properties())
-                    .containsEntry("map", "harbour")
-                    .containsEntry("candidates", 3)
-                    .containsEntry("mode", "search_and_destroy"));
+        .satisfies(vote ->
+            assertThat(vote.properties())
+                .containsEntry("map", "harbour")
+                .containsEntry("candidates", 3)
+                .containsEntry("mode", "search_and_destroy"));
   }
 
   @Test
   void aPropertyThatIsNotAPlainValueIsRefused() {
-    assertThatThrownBy(
-            () ->
-                ProductAnalytics.disabled()
-                    .game(
-                        UUID.randomUUID(),
-                        ProductAnalytics.GameEvent.RWF_KIT_SELECTED,
-                        Map.of("kit", List.of("trooper"))))
+    assertThatThrownBy(() ->
+            ProductAnalytics.disabled()
+                .game(
+                    UUID.randomUUID(),
+                    ProductAnalytics.GameEvent.RWF_KIT_SELECTED,
+                    Map.of("kit", List.of("trooper"))))
         .isInstanceOf(IllegalArgumentException.class);
     assertThat(ProductAnalytics.GameEvent.RWF_KILLSTREAK_USED.eventName())
         .isEqualTo("rwf_killstreak_used");

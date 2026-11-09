@@ -46,24 +46,22 @@ public final class JooqClaimStore implements ClaimStore {
   @Override
   public CompletableFuture<Void> saveAll(List<StoredClaim> claims) {
     return done(
-        database.write(
-            dsl -> {
-              for (var claim : claims) {
-                replace(dsl, claim);
-              }
-              return true;
-            }));
+        database.write(dsl -> {
+          for (var claim : claims) {
+            replace(dsl, claim);
+          }
+          return true;
+        }));
   }
 
   @Override
   public CompletableFuture<Void> delete(PlotId id) {
     return done(
-        database.write(
-            dsl ->
-                dsl.deleteFrom(CREATIVE_CLAIMS)
-                    .where(CREATIVE_CLAIMS.PLOT_X.eq(id.x()))
-                    .and(CREATIVE_CLAIMS.PLOT_Z.eq(id.z()))
-                    .execute()));
+        database.write(dsl ->
+            dsl.deleteFrom(CREATIVE_CLAIMS)
+                .where(CREATIVE_CLAIMS.PLOT_X.eq(id.x()))
+                .and(CREATIVE_CLAIMS.PLOT_Z.eq(id.z()))
+                .execute()));
   }
 
   private static List<StoredClaim> readAll(DSLContext dsl) {

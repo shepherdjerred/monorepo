@@ -88,66 +88,62 @@ public final class TicketService {
       long id, CommentDraft draft) {
     return store
         .find(id)
-        .thenCompose(
-            found ->
-                found.isEmpty()
-                    ? CompletableFuture.completedFuture(Result.err(TicketError.TICKET_NOT_FOUND))
-                    : store.addComment(id, draft, time.instant()).thenApply(Result::ok));
+        .thenCompose(found ->
+            found.isEmpty()
+                ? CompletableFuture.completedFuture(Result.err(TicketError.TICKET_NOT_FOUND))
+                : store.addComment(id, draft, time.instant()).thenApply(Result::ok));
   }
 
   /** Moves ticket {@code id} to {@code next}. */
   public CompletableFuture<Result<Ticket, TicketError>> transition(long id, TicketStatus next) {
     return store
         .find(id)
-        .thenCompose(
-            found -> {
-              if (found.isEmpty()) {
-                return CompletableFuture.completedFuture(Result.err(TicketError.TICKET_NOT_FOUND));
-              }
-              var moved = found.orElseThrow().transitionTo(next, time.instant());
-              return switch (moved) {
-                case Result.Ok<Ticket, TicketError>(var ticket) ->
-                    store.save(ticket).thenApply(saved -> Result.ok(moved(ticket)));
-                case Result.Err<Ticket, TicketError>(var error) ->
-                    CompletableFuture.completedFuture(Result.err(error));
-              };
-            });
+        .thenCompose(found -> {
+          if (found.isEmpty()) {
+            return CompletableFuture.completedFuture(Result.err(TicketError.TICKET_NOT_FOUND));
+          }
+          var moved = found.orElseThrow().transitionTo(next, time.instant());
+          return switch (moved) {
+            case Result.Ok<Ticket, TicketError>(var ticket) ->
+                store.save(ticket).thenApply(saved -> Result.ok(moved(ticket)));
+            case Result.Err<Ticket, TicketError>(var error) ->
+                CompletableFuture.completedFuture(Result.err(error));
+          };
+        });
   }
 
   /** Claims ticket {@code id} for {@code staff}. */
   public CompletableFuture<Result<Ticket, TicketError>> claim(long id, UUID staff) {
     return store
         .find(id)
-        .thenCompose(
-            found -> {
-              if (found.isEmpty()) {
-                return CompletableFuture.completedFuture(Result.err(TicketError.TICKET_NOT_FOUND));
-              }
-              var claimed = found.orElseThrow().claim(staff, time.instant());
-              return switch (claimed) {
-                case Result.Ok<Ticket, TicketError>(var ticket) ->
-                    store.save(ticket).thenApply(saved -> Result.ok(claimed(ticket)));
-                case Result.Err<Ticket, TicketError>(var error) ->
-                    CompletableFuture.completedFuture(Result.err(error));
-              };
-            });
+        .thenCompose(found -> {
+          if (found.isEmpty()) {
+            return CompletableFuture.completedFuture(Result.err(TicketError.TICKET_NOT_FOUND));
+          }
+          var claimed = found.orElseThrow().claim(staff, time.instant());
+          return switch (claimed) {
+            case Result.Ok<Ticket, TicketError>(var ticket) ->
+                store.save(ticket).thenApply(saved -> Result.ok(claimed(ticket)));
+            case Result.Err<Ticket, TicketError>(var error) ->
+                CompletableFuture.completedFuture(Result.err(error));
+          };
+        });
   }
 
   /** Attaches {@code triage} to ticket {@code id}, adopting its priority. */
   public CompletableFuture<Result<Ticket, TicketError>> triage(long id, Triage triage) {
     return store
         .find(id)
-        .thenCompose(
-            found -> {
-              if (found.isEmpty()) {
-                return CompletableFuture.completedFuture(Result.err(TicketError.TICKET_NOT_FOUND));
-              }
-              var ticket = found.orElseThrow().withTriage(triage, time.instant());
-              return store
-                  .save(ticket)
-                  .thenCompose(saved -> store.saveTriage(id, triage))
-                  .thenApply(saved -> Result.ok(triaged(ticket)));
-            });
+        .thenCompose(found -> {
+          if (found.isEmpty()) {
+            return CompletableFuture.completedFuture(Result.err(TicketError.TICKET_NOT_FOUND));
+          }
+          var ticket = found.orElseThrow().withTriage(triage, time.instant());
+          return store
+              .save(ticket)
+              .thenCompose(saved -> store.saveTriage(id, triage))
+              .thenApply(saved -> Result.ok(triaged(ticket)));
+        });
   }
 
   /** The snapshot of ticket {@code id}, when it exists. */
@@ -196,14 +192,13 @@ public final class TicketService {
       return CompletableFuture.completedFuture(Result.err(TicketFailure.INVALID_INPUT));
     }
     return comment(id, draft)
-        .thenApply(
-            added ->
-                switch (added) {
-                  case Result.Ok<TicketComment, TicketError>(var comment) ->
-                      Result.ok(TicketSnapshots.from(comment));
-                  case Result.Err<TicketComment, TicketError> _ ->
-                      Result.err(TicketFailure.TICKET_NOT_FOUND);
-                });
+        .thenApply(added ->
+            switch (added) {
+              case Result.Ok<TicketComment, TicketError>(var comment) ->
+                  Result.ok(TicketSnapshots.from(comment));
+              case Result.Err<TicketComment, TicketError> _ ->
+                  Result.err(TicketFailure.TICKET_NOT_FOUND);
+            });
   }
 
   /** Attaches the agent's triage to ticket {@code id}, adopting its priority. */
@@ -222,14 +217,12 @@ public final class TicketService {
       return CompletableFuture.completedFuture(Result.err(TicketFailure.INVALID_INPUT));
     }
     return triage(id, triage)
-        .thenApply(
-            attached ->
-                switch (attached) {
-                  case Result.Ok<Ticket, TicketError>(var ticket) ->
-                      Result.ok(TicketSnapshots.from(ticket));
-                  case Result.Err<Ticket, TicketError> _ ->
-                      Result.err(TicketFailure.TICKET_NOT_FOUND);
-                });
+        .thenApply(attached ->
+            switch (attached) {
+              case Result.Ok<Ticket, TicketError>(var ticket) ->
+                  Result.ok(TicketSnapshots.from(ticket));
+              case Result.Err<Ticket, TicketError> _ -> Result.err(TicketFailure.TICKET_NOT_FOUND);
+            });
   }
 
   /** Resolves ticket {@code id} with a public note from the agent. */
@@ -242,14 +235,13 @@ public final class TicketService {
       return CompletableFuture.completedFuture(Result.err(TicketFailure.INVALID_INPUT));
     }
     return transition(id, TicketStatus.RESOLVED)
-        .thenCompose(
-            moved ->
-                switch (moved) {
-                  case Result.Ok<Ticket, TicketError>(var ticket) ->
-                      comment(id, note).thenApply(noted -> Result.ok(TicketSnapshots.from(ticket)));
-                  case Result.Err<Ticket, TicketError> _ ->
-                      CompletableFuture.completedFuture(Result.err(TicketFailure.INVALID_INPUT));
-                });
+        .thenCompose(moved ->
+            switch (moved) {
+              case Result.Ok<Ticket, TicketError>(var ticket) ->
+                  comment(id, note).thenApply(noted -> Result.ok(TicketSnapshots.from(ticket)));
+              case Result.Err<Ticket, TicketError> _ ->
+                  CompletableFuture.completedFuture(Result.err(TicketFailure.INVALID_INPUT));
+            });
   }
 
   /** Escalates ticket {@code id} to human review with a staff-only note from the agent. */
@@ -262,14 +254,13 @@ public final class TicketService {
       return CompletableFuture.completedFuture(Result.err(TicketFailure.INVALID_INPUT));
     }
     return transition(id, TicketStatus.ESCALATED)
-        .thenCompose(
-            moved ->
-                switch (moved) {
-                  case Result.Ok<Ticket, TicketError>(var ticket) ->
-                      comment(id, note).thenApply(noted -> Result.ok(TicketSnapshots.from(ticket)));
-                  case Result.Err<Ticket, TicketError> _ ->
-                      CompletableFuture.completedFuture(Result.err(TicketFailure.INVALID_INPUT));
-                });
+        .thenCompose(moved ->
+            switch (moved) {
+              case Result.Ok<Ticket, TicketError>(var ticket) ->
+                  comment(id, note).thenApply(noted -> Result.ok(TicketSnapshots.from(ticket)));
+              case Result.Err<Ticket, TicketError> _ ->
+                  CompletableFuture.completedFuture(Result.err(TicketFailure.INVALID_INPUT));
+            });
   }
 
   private void emit(TicketEvent event) {

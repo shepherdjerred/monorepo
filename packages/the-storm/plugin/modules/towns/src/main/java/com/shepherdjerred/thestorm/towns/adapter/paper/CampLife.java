@@ -133,13 +133,12 @@ final class CampLife implements Listener {
       var idle = CampClock.decide(town, now, false, policy);
       if (!online.isEmpty()) {
         if (idle == CampClock.Action.WARN) {
-          online.forEach(
-              player ->
-                  player.sendMessage(
-                      Notices.info(
-                          "Your camp will be released in "
-                              + policy.warnDays()
-                              + " days of nobody being online. Being here refreshed it.")));
+          online.forEach(player ->
+              player.sendMessage(
+                  Notices.info(
+                      "Your camp will be released in "
+                          + policy.warnDays()
+                          + " days of nobody being online. Being here refreshed it.")));
         }
         var last = town.lastActive().orElseGet(town::createdAt);
         if (idle == CampClock.Action.WARN || last.isBefore(now.minus(REFRESH_EVERY))) {
@@ -160,15 +159,14 @@ final class CampLife implements Listener {
     var notices = new HashMap<UUID, String>();
     town.members()
         .keySet()
-        .forEach(
-            member -> {
-              var online = context.plugin().getServer().getPlayer(member);
-              if (online != null) {
-                online.sendMessage(Notices.info(message));
-              } else {
-                notices.put(member, message);
-              }
-            });
+        .forEach(member -> {
+          var online = context.plugin().getServer().getPlayer(member);
+          if (online != null) {
+            online.sendMessage(Notices.info(message));
+          } else {
+            notices.put(member, message);
+          }
+        });
     var result = towns.disbandCamp(town.owner(), "delete", Map.copyOf(notices));
     if (result instanceof Result.Err<?, ?>) {
       context.logger().error("A lapsed camp could not be removed: {}", town.id());
@@ -264,14 +262,13 @@ final class CampLife implements Listener {
         var _ =
             change
                 .saved()
-                .whenComplete(
-                    (ok, failure) -> {
-                      if (failure != null) {
-                        sites.remove(player.getUniqueId());
-                        return;
-                      }
-                      claim(player, chunk, where);
-                    });
+                .whenComplete((ok, failure) -> {
+                  if (failure != null) {
+                    sites.remove(player.getUniqueId());
+                    return;
+                  }
+                  claim(player, chunk, where);
+                });
       }
     }
   }
@@ -285,14 +282,13 @@ final class CampLife implements Listener {
         var _ =
             change
                 .saved()
-                .whenComplete(
-                    (ok, failure) -> {
-                      sites.remove(player.getUniqueId());
-                      if (failure != null || !player.isOnline()) {
-                        return;
-                      }
-                      tell(player, where);
-                    });
+                .whenComplete((ok, failure) -> {
+                  sites.remove(player.getUniqueId());
+                  if (failure != null || !player.isOnline()) {
+                    return;
+                  }
+                  tell(player, where);
+                });
       }
     }
   }
@@ -303,24 +299,23 @@ final class CampLife implements Listener {
       var _ =
           change
               .saved()
-              .whenComplete(
-                  (ok, failure) -> {
-                    sites.remove(player.getUniqueId());
-                    refused.put(player.getUniqueId(), chunk);
-                    if (!player.isOnline()) {
-                      return;
-                    }
-                    var why =
-                        problems.isEmpty()
-                            ? "that chunk cannot be claimed"
-                            : Explanations.explain(problems.getFirst(), id -> "your camp");
-                    player.sendMessage(
-                        Notices.error(
-                            "A camp was not kept here: "
-                                + why
-                                + ". Move to another chunk and the next shelter can start one."
-                                + " /camp help explains claiming."));
-                  });
+              .whenComplete((ok, failure) -> {
+                sites.remove(player.getUniqueId());
+                refused.put(player.getUniqueId(), chunk);
+                if (!player.isOnline()) {
+                  return;
+                }
+                var why =
+                    problems.isEmpty()
+                        ? "that chunk cannot be claimed"
+                        : Explanations.explain(problems.getFirst(), id -> "your camp");
+                player.sendMessage(
+                    Notices.error(
+                        "A camp was not kept here: "
+                            + why
+                            + ". Move to another chunk and the next shelter can start one."
+                            + " /camp help explains claiming."));
+              });
     }
   }
 

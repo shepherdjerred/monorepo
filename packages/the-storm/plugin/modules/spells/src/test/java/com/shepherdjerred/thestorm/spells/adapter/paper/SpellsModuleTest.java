@@ -8,8 +8,11 @@ import com.shepherdjerred.thestorm.tracks.app.Track;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Location;
@@ -72,10 +75,28 @@ final class SpellsModuleTest {
     }
   }
 
+  /** Lines a bind heard while it waited for its outcome; {@link #said} returns them first. */
+  private final Map<UUID, List<String>> heard = new HashMap<>();
+
+  /**
+   * Binds a focus and ticks until the player hears the outcome, not just the "Binding your
+   * focus..." progress line: the bind saves asynchronously, so a fixed wait is too short on a busy
+   * machine.
+   */
   private void bind(PlayerMock player, String spell) {
     player.performCommand("spells bind " + spell);
+    var lines = heard.computeIfAbsent(player.getUniqueId(), id -> new ArrayList<>());
+    var start = lines.size();
     try {
-      settle();
+      for (var tick = 0; tick < 2_000; tick++) {
+        server.getScheduler().performOneTick();
+        lines.addAll(drain(player));
+        if (lines.subList(start, lines.size()).stream()
+            .anyMatch(line -> !line.contains("Binding your focus"))) {
+          return;
+        }
+        Thread.sleep(5);
+      }
     } catch (InterruptedException failure) {
       Thread.currentThread().interrupt();
       throw new IllegalStateException("interrupted while waiting for a focus bind", failure);
@@ -86,7 +107,14 @@ final class SpellsModuleTest {
     return PlainTextComponentSerializer.plainText().serialize(component);
   }
 
-  private static List<String> said(PlayerMock player) {
+  private List<String> said(PlayerMock player) {
+    var lines = new ArrayList<>(heard.getOrDefault(player.getUniqueId(), List.of()));
+    heard.remove(player.getUniqueId());
+    lines.addAll(drain(player));
+    return lines;
+  }
+
+  private static List<String> drain(PlayerMock player) {
     var lines = new ArrayList<String>();
     for (var message = player.nextComponentMessage();
         message != null;

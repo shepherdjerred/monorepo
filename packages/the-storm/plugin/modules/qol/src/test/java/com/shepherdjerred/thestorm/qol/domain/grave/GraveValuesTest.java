@@ -121,15 +121,9 @@ final class GraveValuesTest {
         .hasMessageContaining("index");
     assertThatThrownBy(() -> new GraveItem(0, OptionalInt.of(-1), item(1)))
         .hasMessageContaining("slot");
-    assertThatThrownBy(
-            () ->
-                new Grave(
-                    UUID.randomUUID(),
-                    UUID.randomUUID(),
-                    "",
-                    DEATH,
-                    Instant.EPOCH,
-                    "minecraft:air"))
+    assertThatThrownBy(() ->
+            new Grave(
+                UUID.randomUUID(), UUID.randomUUID(), "", DEATH, Instant.EPOCH, "minecraft:air"))
         .hasMessageContaining("ownerName");
     assertThatThrownBy(
             () -> new Grave(UUID.randomUUID(), UUID.randomUUID(), "Al", DEATH, Instant.EPOCH, " "))

@@ -169,15 +169,14 @@ public final class Director {
     var picked = pick(request, random);
     return new Pick(
         picked.bots().stream()
-            .map(
-                bot ->
-                    new Drafted(
-                        bot.personality(),
-                        bot.kit(),
-                        MatchCompetence.levers(
-                            bot.personality(), experience.settings(), experience.seed()),
-                        bot.rating(),
-                        MatchCompetence.style(bot.personality(), experience.settings())))
+            .map(bot ->
+                new Drafted(
+                    bot.personality(),
+                    bot.kit(),
+                    MatchCompetence.levers(
+                        bot.personality(), experience.settings(), experience.seed()),
+                    bot.rating(),
+                    MatchCompetence.style(bot.personality(), experience.settings())))
             .toList(),
         0);
   }
@@ -193,16 +192,14 @@ public final class Director {
   public static Pick inBand(Pick pick, BotDifficulty difficulty) {
     var bots =
         pick.bots().stream()
-            .map(
-                bot ->
-                    new Drafted(
-                        bot.personality(),
-                        bot.kit(),
-                        LeverCurves.at(
-                            difficulty.skill(bot.personality().skill()),
-                            offsets(bot.personality())),
-                        bot.rating(),
-                        bot.style()))
+            .map(bot ->
+                new Drafted(
+                    bot.personality(),
+                    bot.kit(),
+                    LeverCurves.at(
+                        difficulty.skill(bot.personality().skill()), offsets(bot.personality())),
+                    bot.rating(),
+                    bot.style()))
             .toList();
     return new Pick(bots, 0);
   }

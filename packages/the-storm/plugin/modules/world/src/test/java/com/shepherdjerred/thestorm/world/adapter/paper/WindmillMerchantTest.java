@@ -116,13 +116,12 @@ final class WindmillMerchantTest {
     assertThat(Invulnerability.marked(trader)).isTrue();
     assertThat(trader.getRecipes()).hasSize(2);
     assertThat(trader.getRecipes())
-        .allSatisfy(
-            recipe -> {
-              assertThat(recipe.getIngredients()).hasSize(1);
-              assertThat(recipe.getMaxUses()).isBetween(4, 8);
-              assertThat(recipe.getPriceMultiplier()).isZero();
-              assertThat(recipe.shouldIgnoreDiscounts()).isTrue();
-            });
+        .allSatisfy(recipe -> {
+          assertThat(recipe.getIngredients()).hasSize(1);
+          assertThat(recipe.getMaxUses()).isBetween(4, 8);
+          assertThat(recipe.getPriceMultiplier()).isZero();
+          assertThat(recipe.shouldIgnoreDiscounts()).isTrue();
+        });
 
     trader.remove();
     merchant.onMove(new PlayerMoveEvent(player, place(), place().clone().add(1, 0, 0)));

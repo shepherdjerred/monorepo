@@ -60,13 +60,12 @@ final class GlobalChatHubTest {
 
   @Test
   void failedPublicationCannotLeakItsModeIntoLaterChat() {
-    assertThatThrownBy(
-            () ->
-                com.shepherdjerred.thestorm.core.safety.ContentPublication.deliver(
-                    true,
-                    () -> {
-                      throw new IllegalStateException("native publication failed");
-                    }))
+    assertThatThrownBy(() ->
+            com.shepherdjerred.thestorm.core.safety.ContentPublication.deliver(
+                true,
+                () -> {
+                  throw new IllegalStateException("native publication failed");
+                }))
         .isInstanceOf(IllegalStateException.class);
     assertThat(com.shepherdjerred.thestorm.core.safety.ContentPublication.screened()).isFalse();
   }
@@ -132,10 +131,9 @@ final class GlobalChatHubTest {
   @Test
   void aFailingListenerDoesNotStopTheOthers() {
     var lines = new ArrayList<ChatLine>();
-    hub.subscribe(
-        line -> {
-          throw new IllegalStateException("bridge down");
-        });
+    hub.subscribe(line -> {
+      throw new IllegalStateException("bridge down");
+    });
     hub.subscribe(lines::add);
 
     hub.published(line(ChannelKey.GLOBAL, "hello"));

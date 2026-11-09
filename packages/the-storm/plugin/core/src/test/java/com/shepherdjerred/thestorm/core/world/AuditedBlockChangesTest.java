@@ -25,31 +25,28 @@ final class AuditedBlockChangesTest {
     block.setType(Material.STONE);
     var records = new ArrayList<AuditedBlockChanges.Change>();
     var changes =
-        new AuditedBlockChanges(
-            change -> {
-              assertThat(block.getType()).isEqualTo(Material.STONE);
-              records.add(change);
-            });
+        new AuditedBlockChanges(change -> {
+          assertThat(block.getType()).isEqualTo(Material.STONE);
+          records.add(change);
+        });
     changes.set("#storm-spells", block, Material.PACKED_ICE.createBlockData(), false);
     assertThat(block.getType()).isEqualTo(Material.PACKED_ICE);
     assertThat(records)
         .singleElement()
-        .satisfies(
-            change -> {
-              assertThat(change.actor()).isEqualTo("#storm-spells");
-              assertThat(change.before().getMaterial()).isEqualTo(Material.STONE);
-              assertThat(change.after().getMaterial()).isEqualTo(Material.PACKED_ICE);
-            });
+        .satisfies(change -> {
+          assertThat(change.actor()).isEqualTo("#storm-spells");
+          assertThat(change.before().getMaterial()).isEqualTo(Material.STONE);
+          assertThat(change.after().getMaterial()).isEqualTo(Material.PACKED_ICE);
+        });
   }
 
   @Test
   void aRefusedAuditLeavesTheWorldUnchanged() {
     block.setType(Material.STONE);
     var changes =
-        new AuditedBlockChanges(
-            change -> {
-              throw new IllegalStateException("audit queue unavailable");
-            });
+        new AuditedBlockChanges(change -> {
+          throw new IllegalStateException("audit queue unavailable");
+        });
     assertThatThrownBy(
             () -> changes.set("#storm-mechanics", block, Material.AIR.createBlockData(), true))
         .hasMessage("audit queue unavailable");
@@ -74,12 +71,11 @@ final class AuditedBlockChangesTest {
             assertThat(getType()).isEqualTo(Material.STONE);
             assertThat(records)
                 .singleElement()
-                .satisfies(
-                    change -> {
-                      assertThat(change.before().getMaterial()).isEqualTo(Material.STONE);
-                      assertThat(change.after().getMaterial()).isEqualTo(Material.AIR);
-                      assertThat(change.actor()).isEqualTo("#storm-mechanics-crush");
-                    });
+                .satisfies(change -> {
+                  assertThat(change.before().getMaterial()).isEqualTo(Material.STONE);
+                  assertThat(change.after().getMaterial()).isEqualTo(Material.AIR);
+                  assertThat(change.actor()).isEqualTo("#storm-mechanics-crush");
+                });
             setType(Material.AIR);
             return true;
           }
@@ -100,10 +96,9 @@ final class AuditedBlockChangesTest {
           }
         };
     var changes =
-        new AuditedBlockChanges(
-            change -> {
-              throw new IllegalStateException("audit queue unavailable");
-            });
+        new AuditedBlockChanges(change -> {
+          throw new IllegalStateException("audit queue unavailable");
+        });
     assertThatThrownBy(() -> changes.breakNaturally("#storm-mechanics-crush", natural))
         .hasMessage("audit queue unavailable");
     assertThat(natural.getType()).isEqualTo(Material.STONE);
@@ -115,19 +110,17 @@ final class AuditedBlockChangesTest {
     var second = block.getRelative(1, 0, 0);
     second.setType(Material.DIRT);
     var changes =
-        new AuditedBlockChanges(
-            change -> {
-              if (change.before().getMaterial() == Material.DIRT) {
-                throw new IllegalStateException("audit queue unavailable");
-              }
-            });
-    assertThatThrownBy(
-            () ->
-                changes.prepare(
-                    "#storm-mechanics",
-                    List.of(
-                        new BlockChanges.Update(block, Material.AIR.createBlockData(), false),
-                        new BlockChanges.Update(second, Material.STONE.createBlockData(), false))))
+        new AuditedBlockChanges(change -> {
+          if (change.before().getMaterial() == Material.DIRT) {
+            throw new IllegalStateException("audit queue unavailable");
+          }
+        });
+    assertThatThrownBy(() ->
+            changes.prepare(
+                "#storm-mechanics",
+                List.of(
+                    new BlockChanges.Update(block, Material.AIR.createBlockData(), false),
+                    new BlockChanges.Update(second, Material.STONE.createBlockData(), false))))
         .hasMessage("audit queue unavailable");
     assertThat(block.getType()).isEqualTo(Material.STONE);
     assertThat(second.getType()).isEqualTo(Material.DIRT);
@@ -153,10 +146,9 @@ final class AuditedBlockChangesTest {
   @Test
   void duplicateTargetsAreRejectedBeforeAnythingIsLogged() {
     var changes =
-        new AuditedBlockChanges(
-            change -> {
-              throw new AssertionError("A duplicate batch reached the recorder");
-            });
+        new AuditedBlockChanges(change -> {
+          throw new AssertionError("A duplicate batch reached the recorder");
+        });
     var update = new BlockChanges.Update(block, Material.STONE.createBlockData(), false);
     assertThatThrownBy(() -> changes.prepare("#storm-mechanics", List.of(update, update)))
         .hasMessage("A batch requires one final state per block");
@@ -165,15 +157,13 @@ final class AuditedBlockChangesTest {
   @Test
   void backgroundThreadsCannotReadOrChangeTheWorld() {
     var changes =
-        new AuditedBlockChanges(
-            change -> {
-              throw new AssertionError("An off-thread change reached the recorder");
-            });
+        new AuditedBlockChanges(change -> {
+          throw new AssertionError("An off-thread change reached the recorder");
+        });
     var data = Material.AIR.createBlockData();
-    assertThatThrownBy(
-            () ->
-                CompletableFuture.runAsync(() -> changes.set("#storm-spells", block, data, false))
-                    .join())
+    assertThatThrownBy(() ->
+            CompletableFuture.runAsync(() -> changes.set("#storm-spells", block, data, false))
+                .join())
         .hasCauseInstanceOf(IllegalStateException.class);
   }
 }

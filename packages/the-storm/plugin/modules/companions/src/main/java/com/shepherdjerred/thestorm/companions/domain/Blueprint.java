@@ -13,14 +13,13 @@ public record Blueprint(int width, int depth, List<Placement> blocks) {
     if (width < 3 || width > 12 || depth < 3 || depth > 12 || blocks.size() > 256)
       throw new IllegalArgumentException("building exceeds limits");
     if (blocks.stream()
-        .anyMatch(
-            block ->
-                block.x() < 0
-                    || block.x() >= width
-                    || block.z() < 0
-                    || block.z() >= depth
-                    || block.y() < 0
-                    || block.y() >= 8))
+        .anyMatch(block ->
+            block.x() < 0
+                || block.x() >= width
+                || block.z() < 0
+                || block.z() >= depth
+                || block.y() < 0
+                || block.y() >= 8))
       throw new IllegalArgumentException("block outside building bounds");
   }
 

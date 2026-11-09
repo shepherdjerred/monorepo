@@ -1,7 +1,10 @@
 package com.shepherdjerred.thestorm.towns.domain.lock;
 
+import com.shepherdjerred.thestorm.towns.domain.land.Claim;
+import com.shepherdjerred.thestorm.towns.domain.land.ClaimFlag;
 import java.util.Collection;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -181,6 +184,20 @@ public final class LockAccess {
   private boolean sameTown(UUID owner, UUID player) {
     var ownerTown = towns.townIdOf(owner);
     return ownerTown.isPresent() && ownerTown.equals(towns.townIdOf(player));
+  }
+
+  /**
+   * True when a claim lets nobody but {@code owner} work its switches: {@code owner} is its town's
+   * only member, nobody else is trusted on it, and neither its switches nor its building are
+   * public. A locked machine there may run from redstone without its owner allowing it, since every
+   * lever and button around it is theirs to use alone.
+   */
+  public static boolean privateTo(UUID owner, Claim claim, Set<UUID> townMembers) {
+    return townMembers.equals(Set.of(owner))
+        && claim.trusted().isEmpty()
+        && claim.resident().map(owner::equals).orElse(true)
+        && !claim.flags().has(ClaimFlag.PUBLIC_SWITCHES)
+        && !claim.flags().has(ClaimFlag.PUBLIC_BUILD);
   }
 
   /**

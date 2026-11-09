@@ -141,12 +141,11 @@ final class KitDisplays {
     for (var member : runner.match().members()) {
       runner
           .entity(member.id())
-          .ifPresent(
-              player -> {
-                var mine = member.onTeam(team);
-                show(player, sign.team(), mine);
-                show(player, sign.enemy(), !mine);
-              });
+          .ifPresent(player -> {
+            var mine = member.onTeam(team);
+            show(player, sign.team(), mine);
+            show(player, sign.enemy(), !mine);
+          });
     }
   }
 

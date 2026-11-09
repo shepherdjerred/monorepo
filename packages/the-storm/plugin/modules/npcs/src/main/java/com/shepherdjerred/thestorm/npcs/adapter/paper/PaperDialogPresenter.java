@@ -55,12 +55,8 @@ final class PaperDialogPresenter implements DialogPresenter {
             .body(List.of(DialogBody.plainMessage(Component.text(screen.body()))))
             .build();
     player.showDialog(
-        Dialog.create(
-            factory ->
-                factory
-                    .empty()
-                    .base(base)
-                    .type(DialogType.multiAction(buttons).columns(1).build())));
+        Dialog.create(factory ->
+            factory.empty().base(base).type(DialogType.multiAction(buttons).columns(1).build())));
   }
 
   @Override

@@ -20,12 +20,11 @@ final class StarterRtpPersistenceTest {
       database.migrate("qol", getClass().getClassLoader());
       var player = UUID.randomUUID();
       database
-          .write(
-              dsl ->
-                  dsl.execute(
-                      "INSERT INTO qol_player (player, first_seen) VALUES (?, ?)",
-                      player.toString(),
-                      0L))
+          .write(dsl ->
+              dsl.execute(
+                  "INSERT INTO qol_player (player, first_seen) VALUES (?, ?)",
+                  player.toString(),
+                  0L))
           .join();
       var ensured = new JooqQolStore(database).ensure(player, Instant.EPOCH).join();
       assertThat(ensured.created()).isFalse();
@@ -47,12 +46,11 @@ final class StarterRtpPersistenceTest {
       }
       var player = UUID.randomUUID();
       database
-          .write(
-              dsl ->
-                  dsl.execute(
-                      "INSERT INTO qol_player (player, first_seen, starter_rtp_pending) VALUES (?, ?, 1)",
-                      player.toString(),
-                      0L))
+          .write(dsl ->
+              dsl.execute(
+                  "INSERT INTO qol_player (player, first_seen, starter_rtp_pending) VALUES (?, ?, 1)",
+                  player.toString(),
+                  0L))
           .join();
       apply(database, "V6__starter_charges.sql");
       apply(database, "V7__fifteen_starter_charges.sql");
@@ -74,13 +72,12 @@ final class StarterRtpPersistenceTest {
             .filter(line -> !line.stripLeading().startsWith("--"))
             .collect(java.util.stream.Collectors.joining("\n"));
     database
-        .write(
-            dsl -> {
-              for (var statement : sql.split(";", -1)) {
-                if (!statement.isBlank()) dsl.execute(statement);
-              }
-              return Boolean.TRUE;
-            })
+        .write(dsl -> {
+          for (var statement : sql.split(";", -1)) {
+            if (!statement.isBlank()) dsl.execute(statement);
+          }
+          return Boolean.TRUE;
+        })
         .join();
   }
 

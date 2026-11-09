@@ -31,44 +31,26 @@ final class QuestsConfigTest {
     var budget = new QuestsConfig.Budget(25, 100);
     var party = new QuestsConfig.Party(24, 60);
     var board = new QuestsConfig.BoardSettings("board", 3, 1);
-    assertThatThrownBy(
-            () ->
-                new QuestsConfig("UTC", "MONDAY", "", budget, party, board, 40, 300, 8, 10, LABELS))
+    assertThatThrownBy(() ->
+            new QuestsConfig("UTC", "MONDAY", "", budget, party, board, 40, 300, 8, 10, LABELS))
         .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(
-            () ->
-                new QuestsConfig(
-                    "Mars/Olympus",
-                    "MONDAY",
-                    "world",
-                    budget,
-                    party,
-                    board,
-                    40,
-                    300,
-                    8,
-                    10,
-                    LABELS))
+    assertThatThrownBy(() ->
+            new QuestsConfig(
+                "Mars/Olympus", "MONDAY", "world", budget, party, board, 40, 300, 8, 10, LABELS))
         .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(
-            () ->
-                new QuestsConfig(
-                    "UTC", "FUNDAY", "world", budget, party, board, 40, 300, 8, 10, LABELS))
+    assertThatThrownBy(() ->
+            new QuestsConfig(
+                "UTC", "FUNDAY", "world", budget, party, board, 40, 300, 8, 10, LABELS))
         .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(
-            () ->
-                new QuestsConfig(
-                    "UTC", "MONDAY", "world", budget, party, board, 0, 300, 8, 10, LABELS))
+    assertThatThrownBy(() ->
+            new QuestsConfig("UTC", "MONDAY", "world", budget, party, board, 0, 300, 8, 10, LABELS))
         .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(
-            () ->
-                new QuestsConfig(
-                    "UTC", "MONDAY", "world", budget, party, board, 40, 300, 15, 10, LABELS))
+    assertThatThrownBy(() ->
+            new QuestsConfig(
+                "UTC", "MONDAY", "world", budget, party, board, 40, 300, 15, 10, LABELS))
         .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(
-            () ->
-                new QuestsConfig(
-                    "UTC", "MONDAY", "world", budget, party, board, 40, 300, 8, 0, LABELS))
+    assertThatThrownBy(() ->
+            new QuestsConfig("UTC", "MONDAY", "world", budget, party, board, 40, 300, 8, 0, LABELS))
         .isInstanceOf(IllegalArgumentException.class);
     assertThatThrownBy(() -> new QuestsConfig.Budget(-1, 0))
         .isInstanceOf(IllegalArgumentException.class);

@@ -104,40 +104,38 @@ final class KitBookTest {
 
     @Test
     void aKitSpecRejectsNonsense() {
-      assertThatThrownBy(
-              () ->
-                  new KitSpec(
-                      "x",
-                      "X",
-                      "d",
-                      100,
-                      KitTier.BASIC,
-                      KitCategory.CLASSIC,
-                      KitAvailability.FREE,
-                      Optional.empty(),
-                      List.of(),
-                      List.of(),
-                      Optional.empty(),
-                      MENU))
+      assertThatThrownBy(() ->
+              new KitSpec(
+                  "x",
+                  "X",
+                  "d",
+                  100,
+                  KitTier.BASIC,
+                  KitCategory.CLASSIC,
+                  KitAvailability.FREE,
+                  Optional.empty(),
+                  List.of(),
+                  List.of(),
+                  Optional.empty(),
+                  MENU))
           .isInstanceOf(IllegalArgumentException.class)
           .hasMessageContaining("PURCHASE");
-      assertThatThrownBy(
-              () ->
-                  new KitSpec(
-                      "x",
-                      "X",
-                      "d",
-                      0,
-                      KitTier.BASIC,
-                      KitCategory.CLASSIC,
-                      KitAvailability.FREE,
-                      Optional.empty(),
-                      List.of(),
-                      List.of(
-                          ItemSpec.armor("IRON_BOOTS", ArmorSlot.BOOTS),
-                          ItemSpec.armor("GOLDEN_BOOTS", ArmorSlot.BOOTS)),
-                      Optional.empty(),
-                      MENU))
+      assertThatThrownBy(() ->
+              new KitSpec(
+                  "x",
+                  "X",
+                  "d",
+                  0,
+                  KitTier.BASIC,
+                  KitCategory.CLASSIC,
+                  KitAvailability.FREE,
+                  Optional.empty(),
+                  List.of(),
+                  List.of(
+                      ItemSpec.armor("IRON_BOOTS", ArmorSlot.BOOTS),
+                      ItemSpec.armor("GOLDEN_BOOTS", ArmorSlot.BOOTS)),
+                  Optional.empty(),
+                  MENU))
           .isInstanceOf(IllegalArgumentException.class)
           .hasMessageContaining("two pieces");
     }

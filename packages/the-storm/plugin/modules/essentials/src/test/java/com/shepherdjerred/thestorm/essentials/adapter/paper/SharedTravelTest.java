@@ -223,11 +223,10 @@ final class SharedTravelTest {
                 Result.ok(
                     new TeleportTravel.Landing(landing(), released::incrementAndGet, () -> {}))));
     var seen = new ArrayList<String>();
-    harness.until(
-        () -> {
-          seen.addAll(messages(alice));
-          return seen.stream().anyMatch(line -> line.contains("Don't move"));
-        });
+    harness.until(() -> {
+      seen.addAll(messages(alice));
+      return seen.stream().anyMatch(line -> line.contains("Don't move"));
+    });
     flow.damaged(alice);
     assertThat(flow.isBusy(alice.getUniqueId())).isFalse();
     assertThat(released.get()).isEqualTo(1);

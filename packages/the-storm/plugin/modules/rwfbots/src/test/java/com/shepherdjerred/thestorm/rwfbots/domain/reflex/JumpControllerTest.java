@@ -99,12 +99,11 @@ final class JumpControllerTest {
         JumpController.tick(
             Optional.of(underWay), new JumpController.Request(GAP, movedGoal), running, 4);
     assertThat(step.state())
-        .hasValueSatisfying(
-            next -> {
-              assertThat(next.stage()).isEqualTo(ActiveJump.Stage.RUN_UP);
-              assertThat(next.startedTick()).isEqualTo(1);
-              assertThat(next.intent()).isEqualTo(movedGoal);
-            });
+        .hasValueSatisfying(next -> {
+          assertThat(next.stage()).isEqualTo(ActiveJump.Stage.RUN_UP);
+          assertThat(next.startedTick()).isEqualTo(1);
+          assertThat(next.intent()).isEqualTo(movedGoal);
+        });
     assertThat(step.moveTo()).isEqualTo(GAP.launch().orElseThrow().takeoff());
   }
 

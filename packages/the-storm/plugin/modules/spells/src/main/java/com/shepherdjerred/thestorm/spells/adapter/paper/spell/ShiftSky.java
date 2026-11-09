@@ -33,18 +33,17 @@ final class ShiftSky implements Spell {
 
   @Override
   public Result<Effect, CastProblem> prepare(Player caster) {
-    return Result.ok(
-        () -> {
-          var offset = PersonalTime.offset(caster.getWorld().getTime(), settings.targetTime());
-          caster.setPlayerTime(offset, true);
-          tools
-              .state()
-              .timeShifts()
-              .start(
-                  caster.getUniqueId(),
-                  Duration.ofMinutes(settings.durationMinutes()),
-                  tools.time().instant());
-          tools.fx().cast(kind, Magic.at(caster));
-        });
+    return Result.ok(() -> {
+      var offset = PersonalTime.offset(caster.getWorld().getTime(), settings.targetTime());
+      caster.setPlayerTime(offset, true);
+      tools
+          .state()
+          .timeShifts()
+          .start(
+              caster.getUniqueId(),
+              Duration.ofMinutes(settings.durationMinutes()),
+              tools.time().instant());
+      tools.fx().cast(kind, Magic.at(caster));
+    });
   }
 }

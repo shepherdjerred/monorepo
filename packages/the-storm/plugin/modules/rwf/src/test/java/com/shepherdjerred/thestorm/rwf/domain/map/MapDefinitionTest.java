@@ -17,55 +17,50 @@ final class MapDefinitionTest {
 
     @Test
     void aMapNeedsAtLeastTwoTeams() {
-      assertThatThrownBy(
-              () ->
-                  Samples.map(
-                      List.of(Samples.red()),
-                      List.of(Samples.teamBomb("red-1", TeamColor.RED, Samples.RED_BOMB))))
+      assertThatThrownBy(() ->
+              Samples.map(
+                  List.of(Samples.red()),
+                  List.of(Samples.teamBomb("red-1", TeamColor.RED, Samples.RED_BOMB))))
           .isInstanceOf(IllegalArgumentException.class)
           .hasMessage("Not enough teams: 1");
     }
 
     @Test
     void aTeamMayNotBeListedTwice() {
-      assertThatThrownBy(
-              () ->
-                  Samples.map(
-                      List.of(Samples.red(), Samples.red()),
-                      List.of(Samples.teamBomb("red-1", TeamColor.RED, Samples.RED_BOMB))))
+      assertThatThrownBy(() ->
+              Samples.map(
+                  List.of(Samples.red(), Samples.red()),
+                  List.of(Samples.teamBomb("red-1", TeamColor.RED, Samples.RED_BOMB))))
           .isInstanceOf(IllegalArgumentException.class)
           .hasMessageContaining("listed twice");
     }
 
     @Test
     void spawnsAndBombsStayInsideTheBorder() {
-      assertThatThrownBy(
-              () ->
-                  Samples.map(
-                      List.of(Samples.red(), Samples.team(TeamColor.BLUE, new BlockPos(60, 64, 0))),
-                      List.of(
-                          Samples.teamBomb("red-1", TeamColor.RED, Samples.RED_BOMB),
-                          Samples.teamBomb("blue-1", TeamColor.BLUE, Samples.BLUE_BOMB))))
+      assertThatThrownBy(() ->
+              Samples.map(
+                  List.of(Samples.red(), Samples.team(TeamColor.BLUE, new BlockPos(60, 64, 0))),
+                  List.of(
+                      Samples.teamBomb("red-1", TeamColor.RED, Samples.RED_BOMB),
+                      Samples.teamBomb("blue-1", TeamColor.BLUE, Samples.BLUE_BOMB))))
           .isInstanceOf(IllegalArgumentException.class)
           .hasMessageContaining("spawn outside the border");
-      assertThatThrownBy(
-              () ->
-                  Samples.map(
-                      List.of(Samples.red(), Samples.blue()),
-                      List.of(
-                          Samples.teamBomb("red-1", TeamColor.RED, new BlockPos(0, 200, 0)),
-                          Samples.teamBomb("blue-1", TeamColor.BLUE, Samples.BLUE_BOMB))))
+      assertThatThrownBy(() ->
+              Samples.map(
+                  List.of(Samples.red(), Samples.blue()),
+                  List.of(
+                      Samples.teamBomb("red-1", TeamColor.RED, new BlockPos(0, 200, 0)),
+                      Samples.teamBomb("blue-1", TeamColor.BLUE, Samples.BLUE_BOMB))))
           .isInstanceOf(IllegalArgumentException.class)
           .hasMessage("bomb is outside the border: red-1");
     }
 
     @Test
     void everyTeamNeedsABombUnlessThereIsANuke() {
-      assertThatThrownBy(
-              () ->
-                  Samples.map(
-                      List.of(Samples.red(), Samples.blue()),
-                      List.of(Samples.teamBomb("red-1", TeamColor.RED, Samples.RED_BOMB))))
+      assertThatThrownBy(() ->
+              Samples.map(
+                  List.of(Samples.red(), Samples.blue()),
+                  List.of(Samples.teamBomb("red-1", TeamColor.RED, Samples.RED_BOMB))))
           .isInstanceOf(IllegalArgumentException.class)
           .hasMessage("Blue Team does not have a bomb set");
 
@@ -81,32 +76,29 @@ final class MapDefinitionTest {
 
     @Test
     void bombsBelongToFieldedTeamsAndAreUnique() {
-      assertThatThrownBy(
-              () ->
-                  Samples.map(
-                      List.of(Samples.red(), Samples.blue()),
-                      List.of(
-                          Samples.teamBomb("red-1", TeamColor.RED, Samples.RED_BOMB),
-                          Samples.teamBomb("blue-1", TeamColor.BLUE, Samples.BLUE_BOMB),
-                          Samples.teamBomb("green-1", TeamColor.GREEN, Samples.GREEN_BOMB))))
+      assertThatThrownBy(() ->
+              Samples.map(
+                  List.of(Samples.red(), Samples.blue()),
+                  List.of(
+                      Samples.teamBomb("red-1", TeamColor.RED, Samples.RED_BOMB),
+                      Samples.teamBomb("blue-1", TeamColor.BLUE, Samples.BLUE_BOMB),
+                      Samples.teamBomb("green-1", TeamColor.GREEN, Samples.GREEN_BOMB))))
           .isInstanceOf(IllegalArgumentException.class)
           .hasMessageContaining("does not field");
-      assertThatThrownBy(
-              () ->
-                  Samples.map(
-                      List.of(Samples.red(), Samples.blue()),
-                      List.of(
-                          Samples.teamBomb("red-1", TeamColor.RED, Samples.RED_BOMB),
-                          Samples.teamBomb("red-1", TeamColor.BLUE, Samples.BLUE_BOMB))))
+      assertThatThrownBy(() ->
+              Samples.map(
+                  List.of(Samples.red(), Samples.blue()),
+                  List.of(
+                      Samples.teamBomb("red-1", TeamColor.RED, Samples.RED_BOMB),
+                      Samples.teamBomb("red-1", TeamColor.BLUE, Samples.BLUE_BOMB))))
           .isInstanceOf(IllegalArgumentException.class)
           .hasMessage("bomb id is used twice: red-1");
-      assertThatThrownBy(
-              () ->
-                  Samples.map(
-                      List.of(Samples.red(), Samples.blue()),
-                      List.of(
-                          Samples.teamBomb("red-1", TeamColor.RED, Samples.RED_BOMB),
-                          Samples.teamBomb("blue-1", TeamColor.BLUE, Samples.RED_BOMB))))
+      assertThatThrownBy(() ->
+              Samples.map(
+                  List.of(Samples.red(), Samples.blue()),
+                  List.of(
+                      Samples.teamBomb("red-1", TeamColor.RED, Samples.RED_BOMB),
+                      Samples.teamBomb("blue-1", TeamColor.BLUE, Samples.RED_BOMB))))
           .isInstanceOf(IllegalArgumentException.class)
           .hasMessageContaining("share a block");
     }
@@ -115,32 +107,30 @@ final class MapDefinitionTest {
     void idsAndHashesAreStrict() {
       assertThatThrownBy(() -> new BombSite("Red Bomb", new BombOwner.Nuke(), Samples.NUKE))
           .isInstanceOf(IllegalArgumentException.class);
-      assertThatThrownBy(
-              () ->
-                  new MapDefinition(
-                      "Harbour",
-                      "Harbour",
-                      "a",
-                      "An arena with opposing bases.",
-                      List.of(Samples.red(), Samples.blue()),
-                      List.of(Samples.nuke("nuke-1", Samples.NUKE)),
-                      Samples.BORDER,
-                      Samples.twoTeams().spectatorPoint(),
-                      Samples.SHA))
+      assertThatThrownBy(() ->
+              new MapDefinition(
+                  "Harbour",
+                  "Harbour",
+                  "a",
+                  "An arena with opposing bases.",
+                  List.of(Samples.red(), Samples.blue()),
+                  List.of(Samples.nuke("nuke-1", Samples.NUKE)),
+                  Samples.BORDER,
+                  Samples.twoTeams().spectatorPoint(),
+                  Samples.SHA))
           .isInstanceOf(IllegalArgumentException.class)
           .hasMessageContaining("kebab-case");
-      assertThatThrownBy(
-              () ->
-                  new MapDefinition(
-                      "harbour",
-                      "Harbour",
-                      "a",
-                      "An arena with opposing bases.",
-                      List.of(Samples.red(), Samples.blue()),
-                      List.of(Samples.nuke("nuke-1", Samples.NUKE)),
-                      Samples.BORDER,
-                      Samples.twoTeams().spectatorPoint(),
-                      "abc"))
+      assertThatThrownBy(() ->
+              new MapDefinition(
+                  "harbour",
+                  "Harbour",
+                  "a",
+                  "An arena with opposing bases.",
+                  List.of(Samples.red(), Samples.blue()),
+                  List.of(Samples.nuke("nuke-1", Samples.NUKE)),
+                  Samples.BORDER,
+                  Samples.twoTeams().spectatorPoint(),
+                  "abc"))
           .isInstanceOf(IllegalArgumentException.class)
           .hasMessageContaining("hex");
     }
@@ -158,12 +148,11 @@ final class MapDefinitionTest {
                       java.util.Collections.nCopies(163, Samples.red().spawns().getFirst()))
                   .spawns())
           .hasSize(163);
-      assertThatThrownBy(
-              () ->
-                  new MapTeam(
-                      TeamColor.RED,
-                      java.util.Collections.nCopies(
-                          MapTeam.MAX_SAVED_SPAWNS + 1, Samples.red().spawns().getFirst())))
+      assertThatThrownBy(() ->
+              new MapTeam(
+                  TeamColor.RED,
+                  java.util.Collections.nCopies(
+                      MapTeam.MAX_SAVED_SPAWNS + 1, Samples.red().spawns().getFirst())))
           .isInstanceOf(IllegalArgumentException.class)
           .hasMessageContaining("too many spawn points");
     }

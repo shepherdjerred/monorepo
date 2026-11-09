@@ -157,14 +157,13 @@ final class ProtectionPortTest extends AegisServer {
     var thrown = new AtomicReference<Throwable>();
     var here = at(170, Z);
     var worker =
-        new Thread(
-            () -> {
-              try {
-                port.sameLand(here, here);
-              } catch (IllegalStateException e) {
-                thrown.set(e);
-              }
-            });
+        new Thread(() -> {
+          try {
+            port.sameLand(here, here);
+          } catch (IllegalStateException e) {
+            thrown.set(e);
+          }
+        });
 
     worker.start();
     worker.join();

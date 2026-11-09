@@ -177,9 +177,8 @@ final class ShopClickListener implements Listener {
     }
     if (item.bundleDeal()
         && templates.bundleItems(item).stream()
-            .anyMatch(
-                part ->
-                    !ShopMaterialAccess.may(player, action, ItemTemplates.key(part.getType())))) {
+            .anyMatch(part ->
+                !ShopMaterialAccess.may(player, action, ItemTemplates.key(part.getType())))) {
       player.sendMessage(Replies.error("You cannot trade an item in this bundle here."));
       return;
     }

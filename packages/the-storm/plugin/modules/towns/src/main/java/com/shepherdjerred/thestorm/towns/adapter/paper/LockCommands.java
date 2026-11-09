@@ -90,10 +90,8 @@ final class LockCommands {
         "Removes your lock from the container you look at");
     commands.register(
         Commands.literal("cprivate")
-            .executes(
-                context ->
-                    onTarget(
-                        context, (player, block) -> typed(player, block, LockType.PRIVATE, "")))
+            .executes(context ->
+                onTarget(context, (player, block) -> typed(player, block, LockType.PRIVATE, "")))
             .build(),
         "Locks the container you look at as private");
     commands.register(
@@ -116,69 +114,60 @@ final class LockCommands {
                 .then(
                     Commands.argument(PLAYER, word())
                         .suggests(TownCommands::suggestOnline)
-                        .executes(
-                            context ->
-                                onTarget(
-                                    context,
-                                    (player, block) ->
-                                        trust(
-                                            player,
-                                            block,
-                                            getString(context, PLAYER),
-                                            Optional.of(LockGrant.USE))))
+                        .executes(context ->
+                            onTarget(
+                                context,
+                                (player, block) ->
+                                    trust(
+                                        player,
+                                        block,
+                                        getString(context, PLAYER),
+                                        Optional.of(LockGrant.USE))))
                         .then(
                             Commands.literal("manage")
-                                .executes(
-                                    context ->
-                                        onTarget(
-                                            context,
-                                            (player, block) ->
-                                                trust(
-                                                    player,
-                                                    block,
-                                                    getString(context, PLAYER),
-                                                    Optional.of(LockGrant.MANAGE)))))))
+                                .executes(context ->
+                                    onTarget(
+                                        context,
+                                        (player, block) ->
+                                            trust(
+                                                player,
+                                                block,
+                                                getString(context, PLAYER),
+                                                Optional.of(LockGrant.MANAGE)))))))
         .then(
             Commands.literal("untrust")
                 .then(
                     Commands.argument(PLAYER, word())
                         .suggests(TownCommands::suggestOnline)
-                        .executes(
-                            context ->
-                                onTarget(
-                                    context,
-                                    (player, block) ->
-                                        trust(
-                                            player,
-                                            block,
-                                            getString(context, PLAYER),
-                                            Optional.empty())))))
+                        .executes(context ->
+                            onTarget(
+                                context,
+                                (player, block) ->
+                                    trust(
+                                        player,
+                                        block,
+                                        getString(context, PLAYER),
+                                        Optional.empty())))))
         .then(
             Commands.literal("share")
                 .then(
                     Commands.literal("on")
-                        .executes(
-                            context ->
-                                onTarget(context, (player, block) -> share(player, block, true))))
+                        .executes(context ->
+                            onTarget(context, (player, block) -> share(player, block, true))))
                 .then(
                     Commands.literal("off")
-                        .executes(
-                            context ->
-                                onTarget(context, (player, block) -> share(player, block, false)))))
+                        .executes(context ->
+                            onTarget(context, (player, block) -> share(player, block, false)))))
         .then(
             Commands.literal("redstone")
                 .then(
                     Commands.literal("on")
-                        .executes(
-                            context ->
-                                onTarget(
-                                    context, (player, block) -> redstone(player, block, true))))
+                        .executes(context ->
+                            onTarget(context, (player, block) -> redstone(player, block, true))))
                 .then(
                     Commands.literal("off")
-                        .executes(
-                            context ->
-                                onTarget(
-                                    context, (player, block) -> redstone(player, block, false)))))
+                        .executes(context ->
+                            onTarget(context, (player, block) -> redstone(player, block, false)))))
         .then(typeCommand("private", LockType.PRIVATE))
         .then(typeCommand("public", LockType.PUBLIC))
         .then(typeCommand("donation", LockType.DONATION))
@@ -188,16 +177,15 @@ final class LockCommands {
             Commands.literal("password")
                 .then(
                     Commands.argument("password", word())
-                        .executes(
-                            context ->
-                                onTarget(
-                                    context,
-                                    (player, block) ->
-                                        typed(
-                                            player,
-                                            block,
-                                            LockType.PASSWORD,
-                                            getString(context, "password"))))))
+                        .executes(context ->
+                            onTarget(
+                                context,
+                                (player, block) ->
+                                    typed(
+                                        player,
+                                        block,
+                                        LockType.PASSWORD,
+                                        getString(context, "password"))))))
         .then(flagCommand("hopper", LockFlag.HOPPER))
         .then(flagCommand("hopperin", LockFlag.HOPPER_IN))
         .then(flagCommand("hopperout", LockFlag.HOPPER_OUT))
@@ -243,29 +231,25 @@ final class LockCommands {
             Commands.literal("find")
                 .then(
                     Commands.argument(PLAYER, word())
-                        .executes(
-                            context ->
-                                TownCommands.asPlayer(
-                                    context, player -> find(player, getString(context, PLAYER))))))
+                        .executes(context ->
+                            TownCommands.asPlayer(
+                                context, player -> find(player, getString(context, PLAYER))))))
         .then(
             Commands.literal("purge")
                 .then(
                     Commands.argument(PLAYER, word())
-                        .executes(
-                            context ->
-                                TownCommands.asPlayer(
-                                    context,
-                                    player -> askPurge(player, getString(context, PLAYER))))))
+                        .executes(context ->
+                            TownCommands.asPlayer(
+                                context, player -> askPurge(player, getString(context, PLAYER))))))
         .then(
             Commands.literal("owner")
                 .then(
                     Commands.argument(PLAYER, word())
-                        .executes(
-                            context ->
-                                onTarget(
-                                    context,
-                                    (player, block) ->
-                                        askOwner(player, block, getString(context, PLAYER))))));
+                        .executes(context ->
+                            onTarget(
+                                context,
+                                (player, block) ->
+                                    askOwner(player, block, getString(context, PLAYER))))));
   }
 
   private LiteralArgumentBuilder<CommandSourceStack> typeCommand(String name, LockType type) {
@@ -277,14 +261,12 @@ final class LockCommands {
     return Commands.literal(name)
         .then(
             Commands.literal("on")
-                .executes(
-                    context ->
-                        onTarget(context, (player, block) -> flag(player, block, flag, true))))
+                .executes(context ->
+                    onTarget(context, (player, block) -> flag(player, block, flag, true))))
         .then(
             Commands.literal("off")
-                .executes(
-                    context ->
-                        onTarget(context, (player, block) -> flag(player, block, flag, false))));
+                .executes(context ->
+                    onTarget(context, (player, block) -> flag(player, block, flag, false))));
   }
 
   private int onTarget(
@@ -357,20 +339,18 @@ final class LockCommands {
       var _ =
           change
               .saved()
-              .whenComplete(
-                  (saved, failure) -> {
-                    if (failure == null) {
-                      parts
-                          .runtime()
-                          .scheduler()
-                          .runOnMainThread(
-                              () ->
-                                  LockFee.charge(
-                                      new LockFee.Bill(
-                                          wallets, parts.runtime().scheduler(), service, player),
-                                      change.value()));
-                    }
-                  });
+              .whenComplete((saved, failure) -> {
+                if (failure == null) {
+                  parts
+                      .runtime()
+                      .scheduler()
+                      .runOnMainThread(() ->
+                          LockFee.charge(
+                              new LockFee.Bill(
+                                  wallets, parts.runtime().scheduler(), service, player),
+                              change.value()));
+                }
+              });
     }
     report(
         player,
@@ -437,15 +417,14 @@ final class LockCommands {
                   lock ->
                       Notices.success(
                           level
-                              .map(
-                                  value ->
-                                      target.name()
-                                          + " can now "
-                                          + switch (value) {
-                                            case MANAGE -> "open and break it.";
-                                            case ADMIN -> "open it and edit the list.";
-                                            case USE -> "open it.";
-                                          })
+                              .map(value ->
+                                  target.name()
+                                      + " can now "
+                                      + switch (value) {
+                                        case MANAGE -> "open and break it.";
+                                        case ADMIN -> "open it and edit the list.";
+                                        case USE -> "open it.";
+                                      })
                               .orElseGet(() -> target.name() + " can no longer open it.")));
             });
   }
@@ -515,6 +494,8 @@ final class LockCommands {
       player.sendMessage(Notices.info("That is not locked; anyone may open it."));
       return;
     }
+    // Judged here, on the main thread, before the name lookup completes elsewhere.
+    var privateClaim = locks.onOwnersPrivateClaim(found, block);
     var people = new ArrayList<UUID>();
     people.addAll(
         found.owners().stream()
@@ -525,30 +506,28 @@ final class LockCommands {
         parts
             .names()
             .namesOf(people)
-            .whenComplete(
-                (names, failure) -> {
-                  if (failure != null) {
-                    player.sendMessage(Notices.error("Could not look up the lock; try again."));
-                    return;
-                  }
-                  var resolved = new java.util.HashMap<>(found.restoration().owners());
-                  resolved.putAll(names);
-                  player.sendMessage(Notices.info(describe(found, resolved)));
-                });
+            .whenComplete((names, failure) -> {
+              if (failure != null) {
+                player.sendMessage(Notices.error("Could not look up the lock; try again."));
+                return;
+              }
+              var resolved = new java.util.HashMap<>(found.restoration().owners());
+              resolved.putAll(names);
+              player.sendMessage(Notices.info(describe(found, resolved, privateClaim)));
+            });
   }
 
-  private String describe(Lock lock, Map<UUID, String> names) {
+  private String describe(Lock lock, Map<UUID, String> names, boolean privateClaim) {
     Function<UUID, String> nameOf = id -> requireNonNull(names.get(id), "a name for " + id);
     var trusted =
         lock.trusted().isEmpty()
             ? "nobody else"
             : lock.trusted().entrySet().stream()
-                .map(
-                    entry ->
-                        nameOf.apply(entry.getKey())
-                            + " ("
-                            + entry.getValue().name().toLowerCase(java.util.Locale.ROOT)
-                            + ")")
+                .map(entry ->
+                    nameOf.apply(entry.getKey())
+                        + " ("
+                        + entry.getValue().name().toLowerCase(java.util.Locale.ROOT)
+                        + ")")
                 .sorted()
                 .collect(joining(", "));
     return "Locked by "
@@ -557,10 +536,17 @@ final class LockCommands {
         + (lock.options().sharedWithTown() ? "; their town may open it" : "")
         + "; trusted: "
         + trusted
-        + (lock.options().redstone() ? "; redstone allowed" : "; redstone blocked")
+        + redstone(lock, privateClaim)
         + "; "
         + lock.options().type().name().toLowerCase(java.util.Locale.ROOT)
         + ".";
+  }
+
+  private static String redstone(Lock lock, boolean privateClaim) {
+    if (lock.options().redstone()) {
+      return "; redstone allowed";
+    }
+    return privateClaim ? "; redstone allowed on this private claim" : "; redstone blocked";
   }
 
   /** The position of the locked block of the container at {@code block}, or {@code block}. */

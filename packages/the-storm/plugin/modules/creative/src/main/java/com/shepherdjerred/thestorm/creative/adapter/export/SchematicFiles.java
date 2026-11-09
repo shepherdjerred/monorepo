@@ -28,11 +28,10 @@ public final class SchematicFiles {
 
   public CompletableFuture<Void> write(String name, byte[] bytes) {
     return done(
-        database.write(
-            dsl -> {
-              writeFile(name, bytes);
-              return dsl.dialect();
-            }));
+        database.write(dsl -> {
+          writeFile(name, bytes);
+          return dsl.dialect();
+        }));
   }
 
   /** Names saved for {@code player}, without the {@code .schem} suffix. */

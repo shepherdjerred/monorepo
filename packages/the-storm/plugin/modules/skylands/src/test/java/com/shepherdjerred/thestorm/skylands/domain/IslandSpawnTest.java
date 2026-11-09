@@ -31,10 +31,9 @@ final class IslandSpawnTest {
     var spawn = IslandSpawn.find(new SkyTerrain(12345L), 0);
 
     assertThat(spawn)
-        .hasValueSatisfying(
-            column -> {
-              assertThat(column.x()).isBetween(0, 15);
-              assertThat(column.z()).isBetween(0, 15);
-            });
+        .hasValueSatisfying(column -> {
+          assertThat(column.x()).isBetween(0, 15);
+          assertThat(column.z()).isBetween(0, 15);
+        });
   }
 }

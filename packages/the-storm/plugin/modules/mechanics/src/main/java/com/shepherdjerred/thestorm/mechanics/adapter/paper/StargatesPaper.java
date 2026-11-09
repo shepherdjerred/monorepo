@@ -41,13 +41,12 @@ public final class StargatesPaper {
         player -> {
           if (!book.ready()) throw new IllegalStateException("Stargates are loading or saving");
           return book.registry().networks().stream()
-              .filter(
-                  network ->
-                      network.access()
-                              instanceof
-                              com.shepherdjerred.thestorm.mechanics.domain.stargate.NetworkAccess
-                                  .Private(var owner, _)
-                          && owner.equals(player))
+              .filter(network ->
+                  network.access()
+                          instanceof
+                          com.shepherdjerred.thestorm.mechanics.domain.stargate.NetworkAccess
+                              .Private(var owner, _)
+                      && owner.equals(player))
               .map(network -> network.id() + ":" + network.name())
               .sorted()
               .collect(java.util.stream.Collectors.joining(","));
@@ -60,10 +59,9 @@ public final class StargatesPaper {
             area -> {
               if (!book.ready()) throw new IllegalStateException("Stargates are loading or saving");
               return book.registry().gates().stream()
-                  .filter(
-                      gate ->
-                          area.contains(
-                              gate.worldId(), gate.sign().x(), gate.sign().y(), gate.sign().z()))
+                  .filter(gate ->
+                      area.contains(
+                          gate.worldId(), gate.sign().x(), gate.sign().y(), gate.sign().z()))
                   .map(gate -> gate.id().toString())
                   .sorted()
                   .collect(java.util.stream.Collectors.joining(","));

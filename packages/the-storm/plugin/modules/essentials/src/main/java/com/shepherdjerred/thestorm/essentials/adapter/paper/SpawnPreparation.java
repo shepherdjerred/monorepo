@@ -44,12 +44,11 @@ final class SpawnPreparation implements Listener {
       var _ =
           at.getWorld()
               .getChunkAtAsync(at.getBlockX() >> 4, at.getBlockZ() >> 4, true, true)
-              .whenComplete(
-                  (chunk, failure) ->
-                      context
-                          .scheduler()
-                          .runOnMainThread(
-                              () -> preparation.finishLoad(spawn, at, failure, chunk == null)));
+              .whenComplete((chunk, failure) ->
+                  context
+                      .scheduler()
+                      .runOnMainThread(
+                          () -> preparation.finishLoad(spawn, at, failure, chunk == null)));
     }
     return preparation;
   }

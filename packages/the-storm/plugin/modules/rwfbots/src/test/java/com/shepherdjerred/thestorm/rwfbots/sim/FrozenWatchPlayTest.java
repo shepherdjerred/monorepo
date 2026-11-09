@@ -49,16 +49,15 @@ final class FrozenWatchPlayTest {
                       snapshot);
               stillness.put(body.id, step.state());
               step.frozen()
-                  .ifPresent(
-                      ticks ->
-                          frozen.add(
-                              "seed %d bot %d at %s tick %d: %s"
-                                  .formatted(
-                                      match,
-                                      body.id.value(),
-                                      body.pos,
-                                      w.tick,
-                                      body.decision.orElseThrow().planLabel())));
+                  .ifPresent(ticks ->
+                      frozen.add(
+                          "seed %d bot %d at %s tick %d: %s"
+                              .formatted(
+                                  match,
+                                  body.id.value(),
+                                  body.pos,
+                                  w.tick,
+                                  body.decision.orElseThrow().planLabel())));
             }
             return false;
           });

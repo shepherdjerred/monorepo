@@ -26,23 +26,21 @@ public final class JooqPlayerReset {
   public CompletableFuture<Void> reset(UUID player) {
     var id = player.toString();
     return database
-        .write(
-            dsl -> {
-              var graves =
-                  dsl.select(QOL_GRAVES.ID).from(QOL_GRAVES).where(QOL_GRAVES.OWNER.eq(id));
-              dsl.deleteFrom(QOL_GRAVE_CLAIMS)
-                  .where(QOL_GRAVE_CLAIMS.TAKER.eq(id).or(QOL_GRAVE_CLAIMS.GRAVE.in(graves)))
-                  .execute();
-              dsl.deleteFrom(QOL_GRAVE_CREATIONS).where(QOL_GRAVE_CREATIONS.OWNER.eq(id)).execute();
-              dsl.deleteFrom(QOL_GRAVES).where(QOL_GRAVES.OWNER.eq(id)).execute();
-              dsl.deleteFrom(QOL_GRAVE).where(QOL_GRAVE.OWNER.eq(id)).execute();
-              dsl.deleteFrom(QOL_NOTICES).where(QOL_NOTICES.PLAYER.eq(id)).execute();
-              dsl.deleteFrom(QOL_RTP_ATTEMPT).where(QOL_RTP_ATTEMPT.PLAYER.eq(id)).execute();
-              dsl.deleteFrom(QOL_PLAYER).where(QOL_PLAYER.PLAYER.eq(id)).execute();
-              dsl.deleteFrom(QOL_BANK_GRANT).where(QOL_BANK_GRANT.PLAYER.eq(id)).execute();
-              dsl.deleteFrom(QOL_BANK).where(QOL_BANK.OWNER.eq(id)).execute();
-              return true;
-            })
+        .write(dsl -> {
+          var graves = dsl.select(QOL_GRAVES.ID).from(QOL_GRAVES).where(QOL_GRAVES.OWNER.eq(id));
+          dsl.deleteFrom(QOL_GRAVE_CLAIMS)
+              .where(QOL_GRAVE_CLAIMS.TAKER.eq(id).or(QOL_GRAVE_CLAIMS.GRAVE.in(graves)))
+              .execute();
+          dsl.deleteFrom(QOL_GRAVE_CREATIONS).where(QOL_GRAVE_CREATIONS.OWNER.eq(id)).execute();
+          dsl.deleteFrom(QOL_GRAVES).where(QOL_GRAVES.OWNER.eq(id)).execute();
+          dsl.deleteFrom(QOL_GRAVE).where(QOL_GRAVE.OWNER.eq(id)).execute();
+          dsl.deleteFrom(QOL_NOTICES).where(QOL_NOTICES.PLAYER.eq(id)).execute();
+          dsl.deleteFrom(QOL_RTP_ATTEMPT).where(QOL_RTP_ATTEMPT.PLAYER.eq(id)).execute();
+          dsl.deleteFrom(QOL_PLAYER).where(QOL_PLAYER.PLAYER.eq(id)).execute();
+          dsl.deleteFrom(QOL_BANK_GRANT).where(QOL_BANK_GRANT.PLAYER.eq(id)).execute();
+          dsl.deleteFrom(QOL_BANK).where(QOL_BANK.OWNER.eq(id)).execute();
+          return true;
+        })
         .thenAccept(ignored -> {});
   }
 }

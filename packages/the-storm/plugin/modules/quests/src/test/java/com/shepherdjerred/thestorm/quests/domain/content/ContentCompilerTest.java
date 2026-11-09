@@ -115,11 +115,10 @@ final class ContentCompilerTest {
     var found = problems(new Sourced("a.yml", file(one)), new Sourced("b.yml", file(one)));
     assertThat(found)
         .singleElement()
-        .satisfies(
-            problem -> {
-              assertThat(problem.source()).isEqualTo("b.yml");
-              assertThat(problem.message()).contains("already defined in a.yml");
-            });
+        .satisfies(problem -> {
+          assertThat(problem.source()).isEqualTo("b.yml");
+          assertThat(problem.message()).contains("already defined in a.yml");
+        });
   }
 
   @Test

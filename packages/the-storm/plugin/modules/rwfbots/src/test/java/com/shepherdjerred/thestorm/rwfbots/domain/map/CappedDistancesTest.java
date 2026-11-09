@@ -84,16 +84,15 @@ final class CappedDistancesTest {
     }
     assertThatThrownBy(() -> graph.cappedCostsToTargets(-1, new int[] {1}, 128, workspace))
         .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(
-            () ->
-                graph.path(
-                    0,
-                    1,
-                    ignored -> {
-                      graph.cappedCostsToTargets(0, new int[] {1}, 128, workspace);
-                      return 0;
-                    },
-                    workspace))
+    assertThatThrownBy(() ->
+            graph.path(
+                0,
+                1,
+                ignored -> {
+                  graph.cappedCostsToTargets(0, new int[] {1}, 128, workspace);
+                  return 0;
+                },
+                workspace))
         .isInstanceOf(IllegalStateException.class);
     assertThat(graph.cappedCostsToTargets(0, new int[] {1}, 128, workspace)).containsExactly(1);
     assertThat(graph.cappedCostsToTargets(0, new int[0], 128, workspace)).isEmpty();

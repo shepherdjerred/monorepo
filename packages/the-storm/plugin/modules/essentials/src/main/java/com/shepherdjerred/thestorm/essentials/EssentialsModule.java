@@ -94,12 +94,11 @@ public final class EssentialsModule implements StormModule {
             player ->
                 reset
                     .reset(player)
-                    .thenRun(
-                        () -> {
-                          moderation.forget(player);
-                          players.forget(player);
-                          staff.forget(player.toString());
-                        }));
+                    .thenRun(() -> {
+                      moderation.forget(player);
+                      players.forget(player);
+                      staff.forget(player.toString());
+                    }));
     context
         .services()
         .provide(
@@ -125,22 +124,19 @@ public final class EssentialsModule implements StormModule {
         context
             .compute()
             .submit(HistoricalHomeCatalog::load)
-            .thenCompose(
-                homes ->
-                    savedRespawns.thenCompose(
-                        scan -> {
-                          if (!scan.problems().isEmpty())
-                            throw new IllegalStateException(
-                                "Cannot restore homes with unreadable player respawns: "
-                                    + scan.problems());
-                          var nativeOwners =
-                              scan.found().stream()
-                                  .map(SavedRespawn.Found::player)
-                                  .collect(java.util.stream.Collectors.toUnmodifiableSet());
-                          return historical
-                              .importHomes(homes)
-                              .thenCompose(ignored -> historical.importBeds(homes, nativeOwners));
-                        }))
+            .thenCompose(homes ->
+                savedRespawns.thenCompose(scan -> {
+                  if (!scan.problems().isEmpty())
+                    throw new IllegalStateException(
+                        "Cannot restore homes with unreadable player respawns: " + scan.problems());
+                  var nativeOwners =
+                      scan.found().stream()
+                          .map(SavedRespawn.Found::player)
+                          .collect(java.util.stream.Collectors.toUnmodifiableSet());
+                  return historical
+                      .importHomes(homes)
+                      .thenCompose(ignored -> historical.importBeds(homes, nativeOwners));
+                }))
             .thenAccept(count -> {});
     logLoad(context, historicalReady, "historical homes");
     var stores =
@@ -179,13 +175,10 @@ public final class EssentialsModule implements StormModule {
 
   private static void logLoad(ModuleContext context, CompletableFuture<Void> load, String what) {
     var _ =
-        load.whenComplete(
-            (done, failure) -> {
-              if (failure != null) {
-                context
-                    .logger()
-                    .error(Component.text("essentials could not load " + what), failure);
-              }
-            });
+        load.whenComplete((done, failure) -> {
+          if (failure != null) {
+            context.logger().error(Component.text("essentials could not load " + what), failure);
+          }
+        });
   }
 }

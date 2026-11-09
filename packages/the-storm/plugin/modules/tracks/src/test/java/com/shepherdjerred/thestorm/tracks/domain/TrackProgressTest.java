@@ -111,11 +111,10 @@ final class TrackProgressTest {
 
   @Test
   void aTrackCannotBeOwnedTwice() {
-    assertThatThrownBy(
-            () ->
-                new TrackProgress(
-                    List.of(new TrackLevel(MECHANIC, 1), new TrackLevel(MECHANIC, 1)),
-                    Optional.empty()))
+    assertThatThrownBy(() ->
+            new TrackProgress(
+                List.of(new TrackLevel(MECHANIC, 1), new TrackLevel(MECHANIC, 1)),
+                Optional.empty()))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining("owned twice");
   }

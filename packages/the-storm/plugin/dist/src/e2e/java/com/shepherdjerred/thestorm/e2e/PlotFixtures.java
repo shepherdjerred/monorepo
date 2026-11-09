@@ -31,68 +31,58 @@ final class PlotFixtures {
                     .registrar()
                     .register(
                         Commands.literal("plotfixture")
-                            .requires(
-                                source ->
-                                    source.getSender()
-                                            instanceof org.bukkit.command.ConsoleCommandSender
-                                        || source.getSender()
-                                            instanceof
-                                            org.bukkit.command.RemoteConsoleCommandSender)
+                            .requires(source ->
+                                source.getSender()
+                                        instanceof org.bukkit.command.ConsoleCommandSender
+                                    || source.getSender()
+                                        instanceof org.bukkit.command.RemoteConsoleCommandSender)
                             .then(
                                 Commands.literal("active")
                                     .then(
                                         Commands.argument("owner", StringArgumentType.word())
-                                            .executes(
-                                                context -> {
-                                                  seed(
-                                                      StringArgumentType.getString(
-                                                          context, "owner"),
-                                                      false,
-                                                      true);
-                                                  return 1;
-                                                })))
+                                            .executes(context -> {
+                                              seed(
+                                                  StringArgumentType.getString(context, "owner"),
+                                                  false,
+                                                  true);
+                                              return 1;
+                                            })))
                             .then(
                                 Commands.literal("materials")
                                     .then(
                                         Commands.argument("owner", StringArgumentType.word())
-                                            .executes(
-                                                context -> {
-                                                  seed(
-                                                      StringArgumentType.getString(
-                                                          context, "owner"),
-                                                      false,
-                                                      false);
-                                                  return 1;
-                                                })))
+                                            .executes(context -> {
+                                              seed(
+                                                  StringArgumentType.getString(context, "owner"),
+                                                  false,
+                                                  false);
+                                              return 1;
+                                            })))
                             .then(
                                 Commands.literal("check")
                                     .then(
                                         Commands.argument("owner", StringArgumentType.word())
-                                            .executes(
-                                                context -> {
-                                                  check(
-                                                      StringArgumentType.getString(
-                                                          context, "owner"));
-                                                  context
-                                                      .getSource()
-                                                      .getSender()
-                                                      .sendMessage("PLOT_FIXTURE CHECKED");
-                                                  return 1;
-                                                })))
+                                            .executes(context -> {
+                                              check(StringArgumentType.getString(context, "owner"));
+                                              context
+                                                  .getSource()
+                                                  .getSender()
+                                                  .sendMessage("PLOT_FIXTURE CHECKED");
+                                              return 1;
+                                            })))
                             .then(
                                 Commands.argument("owner", StringArgumentType.word())
-                                    .executes(
-                                        context -> {
-                                          seed(
-                                              StringArgumentType.getString(context, "owner"),
-                                              true,
-                                              false);
-                                          context
-                                              .getSource()
-                                              .getSender()
-                                              .sendMessage("PLOT_FIXTURE RUNNING");
-                                          return 1;
-                                        }))
+                                    .executes(context -> {
+                                      seed(
+                                          StringArgumentType.getString(context, "owner"),
+                                          true,
+                                          false);
+                                      context
+                                          .getSource()
+                                          .getSender()
+                                          .sendMessage("PLOT_FIXTURE RUNNING");
+                                      return 1;
+                                    }))
                             .build()));
   }
 
@@ -123,38 +113,33 @@ final class PlotFixtures {
         store
             .prepare(payment)
             .thenCompose(ignored -> store.applied(payment))
-            .whenComplete(
-                (written, failure) -> {
-                  plugin
-                      .getServer()
-                      .getScheduler()
-                      .runTask(
-                          plugin,
-                          () -> {
-                            if (failure == null) {
-                              book.committed(payment.lease());
-                              var _ =
-                                  (withShop
-                                          ? stockShop(storm, player)
-                                          : CompletableFuture.<Void>completedFuture(null))
-                                      .thenRun(
-                                          () ->
-                                              plugin
-                                                  .getServer()
-                                                  .broadcast(
-                                                      net.kyori.adventure.text.Component.text(
-                                                          "PLOT_FIXTURE READY")));
-                            } else {
-                              plugin
-                                  .getLogger()
-                                  .log(
-                                      java.util.logging.Level.SEVERE,
-                                      "Plot fixture failed",
-                                      failure);
-                            }
-                          });
-                  var _ = CompletableFuture.runAsync(database::close);
-                });
+            .whenComplete((written, failure) -> {
+              plugin
+                  .getServer()
+                  .getScheduler()
+                  .runTask(
+                      plugin,
+                      () -> {
+                        if (failure == null) {
+                          book.committed(payment.lease());
+                          var _ =
+                              (withShop
+                                      ? stockShop(storm, player)
+                                      : CompletableFuture.<Void>completedFuture(null))
+                                  .thenRun(() ->
+                                      plugin
+                                          .getServer()
+                                          .broadcast(
+                                              net.kyori.adventure.text.Component.text(
+                                                  "PLOT_FIXTURE READY")));
+                        } else {
+                          plugin
+                              .getLogger()
+                              .log(java.util.logging.Level.SEVERE, "Plot fixture failed", failure);
+                        }
+                      });
+              var _ = CompletableFuture.runAsync(database::close);
+            });
   }
 
   private CompletableFuture<Void> stockShop(TheStormPlugin storm, org.bukkit.entity.Player player) {

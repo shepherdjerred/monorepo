@@ -64,13 +64,12 @@ public final class FliptLearningGate implements LearningGate {
             .build();
     return client
         .sendAsync(request, HttpResponse.BodyHandlers.ofString())
-        .handle(
-            (response, failure) -> {
-              if (failure == null) return parse(response);
-              var cause = failure instanceof CompletionException ? failure.getCause() : failure;
-              if (cause instanceof IOException) return new Decision(false, Source.UNAVAILABLE);
-              throw new CompletionException(failure);
-            });
+        .handle((response, failure) -> {
+          if (failure == null) return parse(response);
+          var cause = failure instanceof CompletionException ? failure.getCause() : failure;
+          if (cause instanceof IOException) return new Decision(false, Source.UNAVAILABLE);
+          throw new CompletionException(failure);
+        });
   }
 
   static Decision parse(HttpResponse<String> response) {

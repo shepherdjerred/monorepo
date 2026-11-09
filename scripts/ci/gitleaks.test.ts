@@ -66,6 +66,7 @@ describe("gitleaks CI scope", () => {
       "git",
       "--log-opts=abc123..HEAD",
       "--redact",
+      "--verbose",
       "--no-banner",
       ".",
     ]);
@@ -79,6 +80,7 @@ describe("gitleaks CI scope", () => {
       ".",
       "--no-git",
       "--redact",
+      "--verbose",
       "--no-banner",
     ]);
     expect(
@@ -92,6 +94,7 @@ describe("gitleaks CI scope", () => {
       ".",
       "--no-git",
       "--redact",
+      "--verbose",
       "--no-banner",
     ]);
   });
@@ -112,6 +115,7 @@ describe("gitleaks CI scope", () => {
         ".",
         "--no-git",
         "--redact",
+        "--verbose",
         "--no-banner",
       ]);
     },

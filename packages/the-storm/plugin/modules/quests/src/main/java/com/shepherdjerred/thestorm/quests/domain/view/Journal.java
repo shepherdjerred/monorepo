@@ -117,31 +117,29 @@ public final class Journal {
               Comparator.comparing(Collections.Entry::region)
                   .thenComparing(Collections.Entry::name))
           .filter(entry -> state.discoveries().containsKey(entry.id()))
-          .forEach(
-              entry ->
-                  text.append("  ")
-                      .append(entry.region())
-                      .append(" · ")
-                      .append(entry.name())
-                      .append(": ")
-                      .append(entry.note())
-                      .append('\n'));
+          .forEach(entry ->
+              text.append("  ")
+                  .append(entry.region())
+                  .append(" · ")
+                  .append(entry.name())
+                  .append(": ")
+                  .append(entry.note())
+                  .append('\n'));
     }
     state
         .reputation()
-        .forEach(
-            (id, value) -> {
-              var faction = Optional.ofNullable(content.factions().get(id));
-              text.append(faction.map(Faction::name).orElse(id))
-                  .append(": ")
-                  .append(value)
-                  .append(
-                      faction
-                          .flatMap(found -> found.rank(value))
-                          .map(rank -> " (" + rank.name() + ")")
-                          .orElse(""))
-                  .append('\n');
-            });
+        .forEach((id, value) -> {
+          var faction = Optional.ofNullable(content.factions().get(id));
+          text.append(faction.map(Faction::name).orElse(id))
+              .append(": ")
+              .append(value)
+              .append(
+                  faction
+                      .flatMap(found -> found.rank(value))
+                      .map(rank -> " (" + rank.name() + ")")
+                      .orElse(""))
+              .append('\n');
+        });
     return new View(text.toString().strip(), active);
   }
 

@@ -44,17 +44,15 @@ final class RegionCommands {
                 .executes(context -> here(context.getSource().getSender()))
                 .then(
                     Commands.argument(ID, word())
-                        .suggests(
-                            (context, builder) -> {
-                              state.regions().all().stream()
-                                  .map(AdminRegion::id)
-                                  .filter(id -> id.startsWith(builder.getRemainingLowerCase()))
-                                  .forEach(builder::suggest);
-                              return builder.buildFuture();
-                            })
-                        .executes(
-                            context ->
-                                byId(context.getSource().getSender(), getString(context, ID)))))
+                        .suggests((context, builder) -> {
+                          state.regions().all().stream()
+                              .map(AdminRegion::id)
+                              .filter(id -> id.startsWith(builder.getRemainingLowerCase()))
+                              .forEach(builder::suggest);
+                          return builder.buildFuture();
+                        })
+                        .executes(context ->
+                            byId(context.getSource().getSender(), getString(context, ID)))))
         .build();
   }
 

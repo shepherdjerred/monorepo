@@ -41,33 +41,30 @@ public final class CaseFlow {
     return services
         .tickets()
         .snapshot(id)
-        .thenCompose(
-            found -> {
-              if (found.isEmpty()) {
-                return CompletableFuture.completedFuture(Optional.<CaseView>empty());
-              }
-              var ticket = found.orElseThrow();
-              var trail = services.log().decisionsForTicket(id);
-              var precedents = services.log().recentBy(ticket.reporter(), PRECEDENT_LINES);
-              var banned =
-                  moderation
-                      .map(
-                          moderate ->
-                              moderate.activeBan(ticket.reporter()).thenApply(Optional::isPresent))
-                      .orElseGet(() -> CompletableFuture.completedFuture(false));
-              var history =
-                  moderation
-                      .map(moderate -> moderate.historyView(ticket.reporter(), HISTORY_LINES))
-                      .orElseGet(() -> CompletableFuture.completedFuture(List.of()));
-              return CompletableFuture.allOf(trail, precedents, banned, history)
-                  .thenApply(
-                      done ->
-                          Optional.of(
-                              new CaseView(
-                                  ticket,
-                                  trail.join(),
-                                  new Standing(banned.join(), history.join()),
-                                  precedents.join())));
-            });
+        .thenCompose(found -> {
+          if (found.isEmpty()) {
+            return CompletableFuture.completedFuture(Optional.<CaseView>empty());
+          }
+          var ticket = found.orElseThrow();
+          var trail = services.log().decisionsForTicket(id);
+          var precedents = services.log().recentBy(ticket.reporter(), PRECEDENT_LINES);
+          var banned =
+              moderation
+                  .map(moderate ->
+                      moderate.activeBan(ticket.reporter()).thenApply(Optional::isPresent))
+                  .orElseGet(() -> CompletableFuture.completedFuture(false));
+          var history =
+              moderation
+                  .map(moderate -> moderate.historyView(ticket.reporter(), HISTORY_LINES))
+                  .orElseGet(() -> CompletableFuture.completedFuture(List.of()));
+          return CompletableFuture.allOf(trail, precedents, banned, history)
+              .thenApply(done ->
+                  Optional.of(
+                      new CaseView(
+                          ticket,
+                          trail.join(),
+                          new Standing(banned.join(), history.join()),
+                          precedents.join())));
+        });
   }
 }

@@ -38,13 +38,12 @@ final class NativeTemplateGeometryTest {
               "village/savanna/houses/savanna_medium_house_2", new SkyPosition(10, 8, 11), cells);
       assertThat(shape.residents())
           .singleElement()
-          .satisfies(
-              p -> {
-                assertThat(p.y()).isEqualTo(1);
-                assertThat(world.getBlockAt(p.x(), p.y() - 1, p.z()).getType())
-                    .isEqualTo(Material.ACACIA_PLANKS);
-                assertThat(p).isNotEqualTo(new SkyPosition(4, 1, 2));
-              });
+          .satisfies(p -> {
+            assertThat(p.y()).isEqualTo(1);
+            assertThat(world.getBlockAt(p.x(), p.y() - 1, p.z()).getType())
+                .isEqualTo(Material.ACACIA_PLANKS);
+            assertThat(p).isNotEqualTo(new SkyPosition(4, 1, 2));
+          });
     } finally {
       MockBukkit.unmock();
     }

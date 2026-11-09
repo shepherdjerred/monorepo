@@ -188,23 +188,20 @@ final class Killstreaks {
   ItemStack item(Killstreak streak) {
     var look = streak.look();
     var stack = ItemStack.of(Material.valueOf(streak.item()));
-    stack.editMeta(
-        meta -> {
-          var name =
-              Component.text(look.name(), color(look.color()))
-                  .decoration(TextDecoration.ITALIC, false);
-          meta.displayName(look.bold() ? name.decorate(TextDecoration.BOLD) : name);
-          if (!look.lore().isEmpty()) {
-            meta.lore(
-                look.lore().stream()
-                    .map(
-                        line ->
-                            (Component)
-                                Component.text(line, color(look.loreColor()))
-                                    .decoration(TextDecoration.ITALIC, false))
-                    .toList());
-          }
-        });
+    stack.editMeta(meta -> {
+      var name =
+          Component.text(look.name(), color(look.color())).decoration(TextDecoration.ITALIC, false);
+      meta.displayName(look.bold() ? name.decorate(TextDecoration.BOLD) : name);
+      if (!look.lore().isEmpty()) {
+        meta.lore(
+            look.lore().stream()
+                .map(line ->
+                    (Component)
+                        Component.text(line, color(look.loreColor()))
+                            .decoration(TextDecoration.ITALIC, false))
+                .toList());
+      }
+    });
     keys.tagStreak(stack, streak);
     return stack;
   }

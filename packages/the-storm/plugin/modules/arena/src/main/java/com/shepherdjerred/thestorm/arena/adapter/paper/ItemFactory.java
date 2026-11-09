@@ -102,24 +102,21 @@ final class ItemFactory {
     }
     var stack = ItemStack.of(material, spec.amount());
     spec.name()
-        .ifPresent(
-            name ->
-                stack.editMeta(
-                    meta ->
-                        meta.displayName(
-                            Component.text(name)
-                                .decoration(TextDecoration.ITALIC, TextDecoration.State.FALSE))));
+        .ifPresent(name ->
+            stack.editMeta(meta ->
+                meta.displayName(
+                    Component.text(name)
+                        .decoration(TextDecoration.ITALIC, TextDecoration.State.FALSE))));
     var enchantments = RegistryAccess.registryAccess().getRegistry(RegistryKey.ENCHANTMENT);
     spec.enchantments()
-        .forEach(
-            (key, level) -> {
-              var enchantment = enchantments.get(Key.key(key));
-              if (enchantment == null) {
-                problems.add("unknown enchantment " + key + " on " + spec.material());
-              } else {
-                stack.addUnsafeEnchantment(enchantment, level);
-              }
-            });
+        .forEach((key, level) -> {
+          var enchantment = enchantments.get(Key.key(key));
+          if (enchantment == null) {
+            problems.add("unknown enchantment " + key + " on " + spec.material());
+          } else {
+            stack.addUnsafeEnchantment(enchantment, level);
+          }
+        });
     spec.potion().ifPresent(potion -> setPotion(stack, potion, problems));
     if (material.getMaxDurability() > 0) {
       stack.editMeta(meta -> meta.setUnbreakable(true));

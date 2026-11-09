@@ -17,11 +17,10 @@ public final class LuckPermsReset {
     return luckPerms
         .getUserManager()
         .loadUser(player)
-        .thenCompose(
-            user -> {
-              user.data().clear();
-              user.setPrimaryGroup("default");
-              return luckPerms.getUserManager().saveUser(user);
-            });
+        .thenCompose(user -> {
+          user.data().clear();
+          user.setPrimaryGroup("default");
+          return luckPerms.getUserManager().saveUser(user);
+        });
   }
 }

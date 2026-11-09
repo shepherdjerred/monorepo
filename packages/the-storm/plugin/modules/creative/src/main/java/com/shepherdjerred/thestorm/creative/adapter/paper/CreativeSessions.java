@@ -418,12 +418,11 @@ public final class CreativeSessions {
 
   private void logFailure(CompletableFuture<?> future, String what) {
     var _ =
-        future.whenComplete(
-            (value, failure) -> {
-              if (failure != null) {
-                context.logger().error("Could not {}", what, failure);
-              }
-            });
+        future.whenComplete((value, failure) -> {
+          if (failure != null) {
+            context.logger().error("Could not {}", what, failure);
+          }
+        });
   }
 
   private void guarded(String what, Runnable work) {

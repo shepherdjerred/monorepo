@@ -56,27 +56,24 @@ final class SurvivalPresentation {
                 machine.block(), machineParticle(machine.type()), machineHeight(machine.type())));
     runner.map().content().boxSites().stream()
         .filter(site -> site.id().equals(runner.machines().box().active()))
-        .forEach(
-            site ->
-                markers.add(
-                    new Marker(
-                        site.block(),
-                        runner.machines().powered() ? Particle.END_ROD : Particle.ASH)));
+        .forEach(site ->
+            markers.add(
+                new Marker(
+                    site.block(), runner.machines().powered() ? Particle.END_ROD : Particle.ASH)));
     markers.stream()
         .filter(marker -> distance(player, marker) <= 144)
         .sorted(java.util.Comparator.comparingDouble(marker -> distance(player, marker)))
         .limit(8)
-        .forEach(
-            marker ->
-                player.spawnParticle(
-                    marker.particle(),
-                    Places.location(player.getWorld(), marker.block().center())
-                        .add(0, marker.height(), 0),
-                    4,
-                    .4,
-                    .35,
-                    .4,
-                    .01));
+        .forEach(marker ->
+            player.spawnParticle(
+                marker.particle(),
+                Places.location(player.getWorld(), marker.block().center())
+                    .add(0, marker.height(), 0),
+                4,
+                .4,
+                .35,
+                .4,
+                .01));
     hint(player);
   }
 
@@ -199,9 +196,7 @@ final class SurvivalPresentation {
         + " · "
         + switch (type) {
           case FOOD -> "3 bread for 2 emeralds";
-          case RUNEFORGE -> {
-            yield "select equipment · augment I–III";
-          }
+          case RUNEFORGE -> "select equipment · augment I–III";
           case STONEWARD, GALESTRIDE, EMBERWEAVE, SOULBOND -> {
             var perk =
                 com.shepherdjerred.thestorm.arena.domain.survival.SurvivalPerk.valueOf(type.name());

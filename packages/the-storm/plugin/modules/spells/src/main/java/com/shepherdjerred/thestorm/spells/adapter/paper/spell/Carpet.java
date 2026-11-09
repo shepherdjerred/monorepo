@@ -45,44 +45,41 @@ final class Carpet implements Spell {
   @Override
   public Result<Effect, CastProblem> prepare(Player caster) {
     return cloud(caster)
-        .map(
-            ignored ->
-                new Effect() {
-                  @Override
-                  public void beforeCommit(Runnable commit, Runnable failed) {
-                    if (cloud(caster) instanceof Result.Ok<List<Block>, CastProblem>(var blocks)) {
-                      var world = caster.getWorld();
-                      var under = Aim.pos(Magic.at(caster).getBlock()).below();
-                      tools
-                          .blocks()
-                          .place(
-                              blocks,
-                              material.createBlockData(),
-                              Duration.ofSeconds(settings.durationSeconds()),
-                              new TemporaryBlocks.GuardedPlacement(
-                                  () ->
-                                      caster.isOnline()
-                                          && caster.getWorld().equals(world)
-                                          && Aim.pos(Magic.at(caster).getBlock())
-                                              .below()
-                                              .equals(under),
-                                  saved -> {
-                                    if (saved) {
-                                      commit.run();
-                                    } else {
-                                      failed.run();
-                                    }
-                                  }));
-                    } else {
-                      failed.run();
-                    }
-                  }
+        .map(ignored ->
+            new Effect() {
+              @Override
+              public void beforeCommit(Runnable commit, Runnable failed) {
+                if (cloud(caster) instanceof Result.Ok<List<Block>, CastProblem>(var blocks)) {
+                  var world = caster.getWorld();
+                  var under = Aim.pos(Magic.at(caster).getBlock()).below();
+                  tools
+                      .blocks()
+                      .place(
+                          blocks,
+                          material.createBlockData(),
+                          Duration.ofSeconds(settings.durationSeconds()),
+                          new TemporaryBlocks.GuardedPlacement(
+                              () ->
+                                  caster.isOnline()
+                                      && caster.getWorld().equals(world)
+                                      && Aim.pos(Magic.at(caster).getBlock()).below().equals(under),
+                              saved -> {
+                                if (saved) {
+                                  commit.run();
+                                } else {
+                                  failed.run();
+                                }
+                              }));
+                } else {
+                  failed.run();
+                }
+              }
 
-                  @Override
-                  public void apply() {
-                    weave(caster);
-                  }
-                });
+              @Override
+              public void apply() {
+                weave(caster);
+              }
+            });
   }
 
   /** The open air under the caster's feet they may build in, or why there is none. */

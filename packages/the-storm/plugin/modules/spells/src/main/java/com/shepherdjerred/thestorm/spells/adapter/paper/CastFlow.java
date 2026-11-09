@@ -153,23 +153,21 @@ final class CastFlow {
               pending.remove(key);
               Reagents.refund(inventory, reserved)
                   .values()
-                  .forEach(
-                      leftover ->
-                          cast.caster()
-                              .getWorld()
-                              .dropItem(cast.caster().getEyeLocation(), leftover)
-                              .setOwner(cast.caster().getUniqueId()));
+                  .forEach(leftover ->
+                      cast.caster()
+                          .getWorld()
+                          .dropItem(cast.caster().getEyeLocation(), leftover)
+                          .setOwner(cast.caster().getUniqueId()));
               if (cast.mode() == CastMode.SCROLL) {
                 cast.caster()
                     .getInventory()
                     .addItem(item.asQuantity(1))
                     .values()
-                    .forEach(
-                        leftover ->
-                            cast.caster()
-                                .getWorld()
-                                .dropItem(cast.caster().getEyeLocation(), leftover)
-                                .setOwner(cast.caster().getUniqueId()));
+                    .forEach(leftover ->
+                        cast.caster()
+                            .getWorld()
+                            .dropItem(cast.caster().getEyeLocation(), leftover)
+                            .setOwner(cast.caster().getUniqueId()));
               }
               tools
                   .say()

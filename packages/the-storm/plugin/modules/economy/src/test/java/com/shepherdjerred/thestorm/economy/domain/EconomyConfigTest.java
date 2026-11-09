@@ -73,10 +73,9 @@ final class EconomyConfigTest {
     assertThatThrownBy(() -> new EconomyConfig(Map.of("crystals", CRYSTAL), 500, 10))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining("rwf_credits");
-    assertThatThrownBy(
-            () ->
-                new EconomyConfig(
-                    Map.of("crystals", CRYSTAL, "rwf_credits", CREDIT, "shards", CRYSTAL), 500, 10))
+    assertThatThrownBy(() ->
+            new EconomyConfig(
+                Map.of("crystals", CRYSTAL, "rwf_credits", CREDIT, "shards", CRYSTAL), 500, 10))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining("shards");
   }

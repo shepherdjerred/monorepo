@@ -154,15 +154,14 @@ final class NpcCombat {
     var at = victim.getWorld();
     attacker
         .filter(this::responsible)
-        .ifPresent(
-            source -> {
-              if (source instanceof Player player) {
-                ledger.accuse(at.getKey().asString(), player.getUniqueId(), at.getFullTime());
-              }
-              if (eligible(source)) {
-                alert(victim.getLocation(), source);
-              }
-            });
+        .ifPresent(source -> {
+          if (source instanceof Player player) {
+            ledger.accuse(at.getKey().asString(), player.getUniqueId(), at.getFullTime());
+          }
+          if (eligible(source)) {
+            alert(victim.getLocation(), source);
+          }
+        });
     ledger.died(at.getKey().asString(), npc.id(), at.getFullTime());
     persist();
     forget(npc.id());
@@ -204,10 +203,9 @@ final class NpcCombat {
             .filter(candidate -> !protectedFrom(npc, candidate))
             .filter(candidate -> !retreating(npc.id(), candidate))
             .filter(candidate -> candidate.getWorld().equals(feet.getWorld()))
-            .filter(
-                candidate ->
-                    candidate.getLocation().distanceSquared(feet)
-                        <= config.guard().detectionRadius() * config.guard().detectionRadius())
+            .filter(candidate ->
+                candidate.getLocation().distanceSquared(feet)
+                    <= config.guard().detectionRadius() * config.guard().detectionRadius())
             .filter(candidate -> !(candidate instanceof Player) || wanted(candidate, feet))
             .filter(candidate -> visible(entity, candidate));
     if (target.isPresent()) {

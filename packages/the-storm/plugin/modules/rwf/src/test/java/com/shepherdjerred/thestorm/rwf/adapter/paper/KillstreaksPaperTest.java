@@ -295,13 +295,12 @@ final class KillstreaksPaperTest {
     var collar = aliceTeam() == TeamColor.RED ? DyeColor.RED : DyeColor.BLUE;
     assertThat(harness().rwf.getEntitiesByClass(Wolf.class))
         .hasSize(3)
-        .allSatisfy(
-            wolf -> {
-              assertThat(wolf.getOwner()).isEqualTo(alice());
-              assertThat(wolf.getCollarColor()).isEqualTo(collar);
-              assertThat(wolf.getHealth()).isEqualTo(14);
-              assertThat(wolf.getVariant()).isEqualTo(Wolf.Variant.PALE);
-            });
+        .allSatisfy(wolf -> {
+          assertThat(wolf.getOwner()).isEqualTo(alice());
+          assertThat(wolf.getCollarColor()).isEqualTo(collar);
+          assertThat(wolf.getHealth()).isEqualTo(14);
+          assertThat(wolf.getVariant()).isEqualTo(Wolf.Variant.PALE);
+        });
   }
 
   @Test

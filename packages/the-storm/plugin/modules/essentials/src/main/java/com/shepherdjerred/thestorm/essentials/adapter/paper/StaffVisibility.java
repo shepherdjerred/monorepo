@@ -81,11 +81,10 @@ final class StaffVisibility implements Listener {
           int radius = request.words().length == 0 ? 100 : request.number(0, 1, 1000);
           var names =
               self.getWorld().getPlayers().stream()
-                  .filter(
-                      player ->
-                          PlayerVisibility.visibleTo(self, player)
-                              && Positions.current(player).distanceSquared(Positions.current(self))
-                                  <= (double) radius * radius)
+                  .filter(player ->
+                      PlayerVisibility.visibleTo(self, player)
+                          && Positions.current(player).distanceSquared(Positions.current(self))
+                              <= (double) radius * radius)
                   .map(Player::getName)
                   .toList();
           request.say("Nearby: " + String.join(", ", names));
@@ -237,11 +236,10 @@ final class StaffVisibility implements Listener {
                     "logout",
                     player.getUniqueId().toString(),
                     tools.context.time().instant()))
-            .exceptionally(
-                failure -> {
-                  tools.context.logger().error("Could not record logout", failure);
-                  return null;
-                });
+            .exceptionally(failure -> {
+              tools.context.logger().error("Could not record logout", failure);
+              return null;
+            });
     joined.remove(player.getUniqueId());
   }
 }

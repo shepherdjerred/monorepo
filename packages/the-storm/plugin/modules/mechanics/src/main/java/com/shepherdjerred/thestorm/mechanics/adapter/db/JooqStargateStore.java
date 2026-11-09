@@ -31,93 +31,88 @@ public final class JooqStargateStore implements StargateStore {
 
   @Override
   public CompletableFuture<Snapshot> load() {
-    return database.read(
-        dsl ->
-            dsl.transactionResult(
-                configuration -> {
-                  var tx = configuration.dsl();
-                  var invitations = new HashMap<UUID, Set<UUID>>();
-                  for (var row : tx.selectFrom(MECHANICS_STARGATE_INVITE).fetch()) {
-                    invitations
-                        .computeIfAbsent(UUID.fromString(row.getNetworkId()), _ -> new HashSet<>())
-                        .add(UUID.fromString(row.getPlayerId()));
-                  }
-                  var networks =
-                      tx.selectFrom(MECHANICS_STARGATE_NETWORK).fetch().stream()
-                          .map(row -> network(row, invitations))
-                          .toList();
-                  var gates =
-                      tx.selectFrom(MECHANICS_STARGATE_GATE).fetch().stream()
-                          .map(JooqStargateStore::gate)
-                          .toList();
-                  return new Snapshot(networks, gates);
-                }));
+    return database.read(dsl ->
+        dsl.transactionResult(configuration -> {
+          var tx = configuration.dsl();
+          var invitations = new HashMap<UUID, Set<UUID>>();
+          for (var row : tx.selectFrom(MECHANICS_STARGATE_INVITE).fetch()) {
+            invitations
+                .computeIfAbsent(UUID.fromString(row.getNetworkId()), _ -> new HashSet<>())
+                .add(UUID.fromString(row.getPlayerId()));
+          }
+          var networks =
+              tx.selectFrom(MECHANICS_STARGATE_NETWORK).fetch().stream()
+                  .map(row -> network(row, invitations))
+                  .toList();
+          var gates =
+              tx.selectFrom(MECHANICS_STARGATE_GATE).fetch().stream()
+                  .map(JooqStargateStore::gate)
+                  .toList();
+          return new Snapshot(networks, gates);
+        }));
   }
 
   @Override
   public CompletableFuture<Void> createNetwork(StargateNetwork network) {
-    return database.write(
-        dsl -> {
-          var row = dsl.newRecord(MECHANICS_STARGATE_NETWORK);
-          row.setId(network.id().toString());
-          row.setName(network.name());
-          row.setNameKey(key(network.name()));
-          switch (network.access()) {
-            case NetworkAccess.Public _ -> row.setKind("public");
-            case NetworkAccess.Private(var owner, _) -> {
-              row.setKind("private");
-              row.setOwnerId(owner.toString());
-            }
-            case NetworkAccess.Town(var town) -> {
-              row.setKind("town");
-              row.setTownId(town.toString());
-            }
-          }
-          row.store();
-          if (network.access() instanceof NetworkAccess.Private(_, var invited)) {
-            for (var player : invited) {
-              dsl.insertInto(MECHANICS_STARGATE_INVITE)
-                  .set(MECHANICS_STARGATE_INVITE.NETWORK_ID, network.id().toString())
-                  .set(MECHANICS_STARGATE_INVITE.PLAYER_ID, player.toString())
-                  .execute();
-            }
-          }
-          return null;
-        });
+    return database.write(dsl -> {
+      var row = dsl.newRecord(MECHANICS_STARGATE_NETWORK);
+      row.setId(network.id().toString());
+      row.setName(network.name());
+      row.setNameKey(key(network.name()));
+      switch (network.access()) {
+        case NetworkAccess.Public _ -> row.setKind("public");
+        case NetworkAccess.Private(var owner, _) -> {
+          row.setKind("private");
+          row.setOwnerId(owner.toString());
+        }
+        case NetworkAccess.Town(var town) -> {
+          row.setKind("town");
+          row.setTownId(town.toString());
+        }
+      }
+      row.store();
+      if (network.access() instanceof NetworkAccess.Private(_, var invited)) {
+        for (var player : invited) {
+          dsl.insertInto(MECHANICS_STARGATE_INVITE)
+              .set(MECHANICS_STARGATE_INVITE.NETWORK_ID, network.id().toString())
+              .set(MECHANICS_STARGATE_INVITE.PLAYER_ID, player.toString())
+              .execute();
+        }
+      }
+      return null;
+    });
   }
 
   @Override
   public CompletableFuture<Void> replaceInvitations(UUID networkId, Set<UUID> players) {
     var snapshot = Set.copyOf(players);
-    return database.write(
-        dsl -> {
-          var network =
-              dsl.selectFrom(MECHANICS_STARGATE_NETWORK)
-                  .where(MECHANICS_STARGATE_NETWORK.ID.eq(networkId.toString()))
-                  .fetchOne();
-          if (network == null || !network.getKind().equals("private")) {
-            throw new IllegalStateException("invitations require a private network: " + networkId);
-          }
-          dsl.deleteFrom(MECHANICS_STARGATE_INVITE)
-              .where(MECHANICS_STARGATE_INVITE.NETWORK_ID.eq(networkId.toString()))
-              .execute();
-          for (var player : snapshot) {
-            dsl.insertInto(MECHANICS_STARGATE_INVITE)
-                .set(MECHANICS_STARGATE_INVITE.NETWORK_ID, networkId.toString())
-                .set(MECHANICS_STARGATE_INVITE.PLAYER_ID, player.toString())
-                .execute();
-          }
-          return null;
-        });
+    return database.write(dsl -> {
+      var network =
+          dsl.selectFrom(MECHANICS_STARGATE_NETWORK)
+              .where(MECHANICS_STARGATE_NETWORK.ID.eq(networkId.toString()))
+              .fetchOne();
+      if (network == null || !network.getKind().equals("private")) {
+        throw new IllegalStateException("invitations require a private network: " + networkId);
+      }
+      dsl.deleteFrom(MECHANICS_STARGATE_INVITE)
+          .where(MECHANICS_STARGATE_INVITE.NETWORK_ID.eq(networkId.toString()))
+          .execute();
+      for (var player : snapshot) {
+        dsl.insertInto(MECHANICS_STARGATE_INVITE)
+            .set(MECHANICS_STARGATE_INVITE.NETWORK_ID, networkId.toString())
+            .set(MECHANICS_STARGATE_INVITE.PLAYER_ID, player.toString())
+            .execute();
+      }
+      return null;
+    });
   }
 
   @Override
   public CompletableFuture<Void> createGate(Stargate gate) {
-    return database.write(
-        dsl -> {
-          insertGate(dsl, gate);
-          return null;
-        });
+    return database.write(dsl -> {
+      insertGate(dsl, gate);
+      return null;
+    });
   }
 
   @Override
@@ -125,17 +120,16 @@ public final class JooqStargateStore implements StargateStore {
     if (!(network.access() instanceof NetworkAccess.Public)
         || !network.id().equals(gate.networkId()))
       throw new IllegalArgumentException("gate must belong to the new public network");
-    return database.write(
-        dsl -> {
-          var row = dsl.newRecord(MECHANICS_STARGATE_NETWORK);
-          row.setId(network.id().toString());
-          row.setName(network.name());
-          row.setNameKey(key(network.name()));
-          row.setKind("public");
-          row.store();
-          insertGate(dsl, gate);
-          return null;
-        });
+    return database.write(dsl -> {
+      var row = dsl.newRecord(MECHANICS_STARGATE_NETWORK);
+      row.setId(network.id().toString());
+      row.setName(network.name());
+      row.setNameKey(key(network.name()));
+      row.setKind("public");
+      row.store();
+      insertGate(dsl, gate);
+      return null;
+    });
   }
 
   private static void insertGate(org.jooq.DSLContext dsl, Stargate gate) {
@@ -161,87 +155,82 @@ public final class JooqStargateStore implements StargateStore {
 
   @Override
   public CompletableFuture<Void> indexGate(StargateNetwork network, Stargate gate) {
-    return database.write(
-        dsl -> {
-          dsl.transaction(
-              configuration -> {
-                var tx = configuration.dsl();
-                if (!tx.fetchExists(
-                    MECHANICS_STARGATE_NETWORK,
-                    MECHANICS_STARGATE_NETWORK.ID.eq(network.id().toString()))) {
-                  if (!(network.access() instanceof NetworkAccess.Public))
-                    throw new IllegalStateException(
-                        "cannot reconstruct private network membership from a sign");
-                  tx.insertInto(MECHANICS_STARGATE_NETWORK)
-                      .set(MECHANICS_STARGATE_NETWORK.ID, network.id().toString())
-                      .set(MECHANICS_STARGATE_NETWORK.NAME, network.name())
-                      .set(MECHANICS_STARGATE_NETWORK.NAME_KEY, key(network.name()))
-                      .set(MECHANICS_STARGATE_NETWORK.KIND, "public")
-                      .execute();
-                }
-                tx.deleteFrom(MECHANICS_STARGATE_GATE)
-                    .where(MECHANICS_STARGATE_GATE.ID.eq(gate.id().toString()))
-                    .execute();
-                insertGate(tx, gate);
-              });
-          return null;
-        });
+    return database.write(dsl -> {
+      dsl.transaction(configuration -> {
+        var tx = configuration.dsl();
+        if (!tx.fetchExists(
+            MECHANICS_STARGATE_NETWORK,
+            MECHANICS_STARGATE_NETWORK.ID.eq(network.id().toString()))) {
+          if (!(network.access() instanceof NetworkAccess.Public))
+            throw new IllegalStateException(
+                "cannot reconstruct private network membership from a sign");
+          tx.insertInto(MECHANICS_STARGATE_NETWORK)
+              .set(MECHANICS_STARGATE_NETWORK.ID, network.id().toString())
+              .set(MECHANICS_STARGATE_NETWORK.NAME, network.name())
+              .set(MECHANICS_STARGATE_NETWORK.NAME_KEY, key(network.name()))
+              .set(MECHANICS_STARGATE_NETWORK.KIND, "public")
+              .execute();
+        }
+        tx.deleteFrom(MECHANICS_STARGATE_GATE)
+            .where(MECHANICS_STARGATE_GATE.ID.eq(gate.id().toString()))
+            .execute();
+        insertGate(tx, gate);
+      });
+      return null;
+    });
   }
 
   @Override
   public CompletableFuture<Boolean> deleteGate(UUID id) {
-    return database.write(
-        dsl ->
-            dsl.deleteFrom(MECHANICS_STARGATE_GATE)
-                    .where(MECHANICS_STARGATE_GATE.ID.eq(id.toString()))
-                    .execute()
-                == 1);
+    return database.write(dsl ->
+        dsl.deleteFrom(MECHANICS_STARGATE_GATE)
+                .where(MECHANICS_STARGATE_GATE.ID.eq(id.toString()))
+                .execute()
+            == 1);
   }
 
   @Override
   public CompletableFuture<Boolean> deleteEmptyNetwork(UUID id) {
-    return database.write(
-        dsl -> {
-          if (dsl.fetchExists(
-              dsl.selectOne()
-                  .from(MECHANICS_STARGATE_GATE)
-                  .where(MECHANICS_STARGATE_GATE.NETWORK_ID.eq(id.toString()))))
-            throw new IllegalStateException("Capture network still has gates");
-          return dsl.deleteFrom(MECHANICS_STARGATE_NETWORK)
-                  .where(MECHANICS_STARGATE_NETWORK.ID.eq(id.toString()))
-                  .execute()
-              == 1;
-        });
+    return database.write(dsl -> {
+      if (dsl.fetchExists(
+          dsl.selectOne()
+              .from(MECHANICS_STARGATE_GATE)
+              .where(MECHANICS_STARGATE_GATE.NETWORK_ID.eq(id.toString()))))
+        throw new IllegalStateException("Capture network still has gates");
+      return dsl.deleteFrom(MECHANICS_STARGATE_NETWORK)
+              .where(MECHANICS_STARGATE_NETWORK.ID.eq(id.toString()))
+              .execute()
+          == 1;
+    });
   }
 
   @Override
   public CompletableFuture<Void> resetPlayer(UUID player) {
     var id = player.toString();
-    return database.write(
-        dsl -> {
-          var ownedNetworks =
-              dsl.select(MECHANICS_STARGATE_NETWORK.ID)
-                  .from(MECHANICS_STARGATE_NETWORK)
-                  .where(MECHANICS_STARGATE_NETWORK.OWNER_ID.eq(id));
-          dsl.deleteFrom(MECHANICS_STARGATE_GATE)
-              .where(
-                  MECHANICS_STARGATE_GATE
-                      .OWNER_ID
-                      .eq(id)
-                      .or(MECHANICS_STARGATE_GATE.NETWORK_ID.in(ownedNetworks)))
-              .execute();
-          dsl.deleteFrom(MECHANICS_STARGATE_INVITE)
-              .where(
-                  MECHANICS_STARGATE_INVITE
-                      .PLAYER_ID
-                      .eq(id)
-                      .or(MECHANICS_STARGATE_INVITE.NETWORK_ID.in(ownedNetworks)))
-              .execute();
-          dsl.deleteFrom(MECHANICS_STARGATE_NETWORK)
-              .where(MECHANICS_STARGATE_NETWORK.OWNER_ID.eq(id))
-              .execute();
-          return null;
-        });
+    return database.write(dsl -> {
+      var ownedNetworks =
+          dsl.select(MECHANICS_STARGATE_NETWORK.ID)
+              .from(MECHANICS_STARGATE_NETWORK)
+              .where(MECHANICS_STARGATE_NETWORK.OWNER_ID.eq(id));
+      dsl.deleteFrom(MECHANICS_STARGATE_GATE)
+          .where(
+              MECHANICS_STARGATE_GATE
+                  .OWNER_ID
+                  .eq(id)
+                  .or(MECHANICS_STARGATE_GATE.NETWORK_ID.in(ownedNetworks)))
+          .execute();
+      dsl.deleteFrom(MECHANICS_STARGATE_INVITE)
+          .where(
+              MECHANICS_STARGATE_INVITE
+                  .PLAYER_ID
+                  .eq(id)
+                  .or(MECHANICS_STARGATE_INVITE.NETWORK_ID.in(ownedNetworks)))
+          .execute();
+      dsl.deleteFrom(MECHANICS_STARGATE_NETWORK)
+          .where(MECHANICS_STARGATE_NETWORK.OWNER_ID.eq(id))
+          .execute();
+      return null;
+    });
   }
 
   private static String key(String name) {

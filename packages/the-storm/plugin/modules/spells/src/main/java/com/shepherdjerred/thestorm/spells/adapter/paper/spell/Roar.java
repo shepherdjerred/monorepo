@@ -30,19 +30,17 @@ final class Roar implements Spell {
   public Result<Effect, CastProblem> prepare(Player caster) {
     var taunt =
         Harm.Blow.none()
-            .then(
-                monster -> {
-                  if (monster instanceof Mob mob) {
-                    mob.setTarget(caster);
-                  }
-                });
+            .then(monster -> {
+              if (monster instanceof Mob mob) {
+                mob.setTarget(caster);
+              }
+            });
     return Aim.hostiles(tools, caster, settings.radius(), "monster nearby")
-        .map(
-            monsters ->
-                () -> {
-                  monsters.forEach(monster -> tools.harm().strike(caster, monster, taunt));
-                  tools.fx().cast(kind(), Magic.at(caster));
-                  tools.fx().ring(kind(), Magic.at(caster), settings.radius());
-                });
+        .map(monsters ->
+            () -> {
+              monsters.forEach(monster -> tools.harm().strike(caster, monster, taunt));
+              tools.fx().cast(kind(), Magic.at(caster));
+              tools.fx().ring(kind(), Magic.at(caster), settings.radius());
+            });
   }
 }

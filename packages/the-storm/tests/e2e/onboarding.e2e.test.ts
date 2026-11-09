@@ -265,6 +265,9 @@ describe("player reset", () => {
     await waitUntil("replacement starter kit", () =>
       fresh.inventory.items().some((item) => item.name === "cooked_porkchop"),
     );
+    // The kit and the biome dialog arrive independently after the join; wait
+    // for the dialog rather than assuming it precedes the kit.
+    await waitUntil("replayed biome dialog", () => dialogs >= 2);
     expect(dialogs).toBe(2);
     expect(
       fresh.inventory.items().some((item) => item.name === "diamond"),

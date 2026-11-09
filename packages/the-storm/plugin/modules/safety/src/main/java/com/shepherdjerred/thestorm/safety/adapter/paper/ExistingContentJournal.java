@@ -90,12 +90,9 @@ public final class ExistingContentJournal implements Listener {
     var _ =
         safety
             .observe(submission, "snapshot-creator-unknown")
-            .exceptionally(
-                failure -> {
-                  context
-                      .logger()
-                      .error("Saved content snapshot failed: {}", submission.id(), failure);
-                  return null;
-                });
+            .exceptionally(failure -> {
+              context.logger().error("Saved content snapshot failed: {}", submission.id(), failure);
+              return null;
+            });
   }
 }

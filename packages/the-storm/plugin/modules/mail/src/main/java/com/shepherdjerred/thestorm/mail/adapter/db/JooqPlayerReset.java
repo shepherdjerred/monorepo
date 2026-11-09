@@ -22,21 +22,20 @@ public final class JooqPlayerReset {
   public CompletableFuture<Void> reset(UUID player) {
     var id = player.toString();
     return database
-        .write(
-            dsl -> {
-              var messages =
-                  dsl.select(MAIL_MESSAGES.MESSAGE_ID)
-                      .from(MAIL_MESSAGES)
-                      .where(MAIL_MESSAGES.OWNER_ID.eq(id));
-              dsl.deleteFrom(MAIL_BATCHES).where(MAIL_BATCHES.OWNER_ID.eq(id)).execute();
-              dsl.deleteFrom(MAIL_ITEMS).where(MAIL_ITEMS.MESSAGE_ID.in(messages)).execute();
-              dsl.deleteFrom(MAIL_OPTIONS).where(MAIL_OPTIONS.MESSAGE_ID.in(messages)).execute();
-              dsl.deleteFrom(MAIL_MESSAGES).where(MAIL_MESSAGES.OWNER_ID.eq(id)).execute();
-              dsl.deleteFrom(MAIL_LETTERS)
-                  .where(MAIL_LETTERS.SENDER.eq(id).or(MAIL_LETTERS.RECIPIENT.eq(id)))
-                  .execute();
-              return true;
-            })
+        .write(dsl -> {
+          var messages =
+              dsl.select(MAIL_MESSAGES.MESSAGE_ID)
+                  .from(MAIL_MESSAGES)
+                  .where(MAIL_MESSAGES.OWNER_ID.eq(id));
+          dsl.deleteFrom(MAIL_BATCHES).where(MAIL_BATCHES.OWNER_ID.eq(id)).execute();
+          dsl.deleteFrom(MAIL_ITEMS).where(MAIL_ITEMS.MESSAGE_ID.in(messages)).execute();
+          dsl.deleteFrom(MAIL_OPTIONS).where(MAIL_OPTIONS.MESSAGE_ID.in(messages)).execute();
+          dsl.deleteFrom(MAIL_MESSAGES).where(MAIL_MESSAGES.OWNER_ID.eq(id)).execute();
+          dsl.deleteFrom(MAIL_LETTERS)
+              .where(MAIL_LETTERS.SENDER.eq(id).or(MAIL_LETTERS.RECIPIENT.eq(id)))
+              .execute();
+          return true;
+        })
         .thenAccept(ignored -> {});
   }
 }

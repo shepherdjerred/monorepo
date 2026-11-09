@@ -22,15 +22,14 @@ public final class JooqPlayerReset {
   public CompletableFuture<Void> reset(UUID player) {
     var id = player.toString();
     return database
-        .write(
-            dsl -> {
-              dsl.deleteFrom(CREATIVE_BODIES).where(CREATIVE_BODIES.PLAYER.eq(id)).execute();
-              dsl.deleteFrom(CREATIVE_TRUST).where(CREATIVE_TRUST.MEMBER.eq(id)).execute();
-              dsl.deleteFrom(CREATIVE_RATINGS).where(CREATIVE_RATINGS.PLAYER.eq(id)).execute();
-              dsl.deleteFrom(CREATIVE_COMMENTS).where(CREATIVE_COMMENTS.PLAYER.eq(id)).execute();
-              dsl.deleteFrom(CREATIVE_CLAIMS).where(CREATIVE_CLAIMS.OWNER.eq(id)).execute();
-              return true;
-            })
+        .write(dsl -> {
+          dsl.deleteFrom(CREATIVE_BODIES).where(CREATIVE_BODIES.PLAYER.eq(id)).execute();
+          dsl.deleteFrom(CREATIVE_TRUST).where(CREATIVE_TRUST.MEMBER.eq(id)).execute();
+          dsl.deleteFrom(CREATIVE_RATINGS).where(CREATIVE_RATINGS.PLAYER.eq(id)).execute();
+          dsl.deleteFrom(CREATIVE_COMMENTS).where(CREATIVE_COMMENTS.PLAYER.eq(id)).execute();
+          dsl.deleteFrom(CREATIVE_CLAIMS).where(CREATIVE_CLAIMS.OWNER.eq(id)).execute();
+          return true;
+        })
         .thenAccept(ignored -> {});
   }
 }

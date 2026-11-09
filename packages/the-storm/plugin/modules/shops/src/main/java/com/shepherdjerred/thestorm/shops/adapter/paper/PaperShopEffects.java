@@ -31,12 +31,11 @@ final class PaperShopEffects implements ShopEffects {
             .map(block -> managedTrades.active(block.getLocation()))
             .orElse(false)
         && shop.container().stream()
-            .allMatch(
-                pos ->
-                    blocks
-                        .block(pos)
-                        .map(block -> managedTrades.active(block.getLocation()))
-                        .orElse(false))
+            .allMatch(pos ->
+                blocks
+                    .block(pos)
+                    .map(block -> managedTrades.active(block.getLocation()))
+                    .orElse(false))
         && blocks.block(shop.sign()).flatMap(blocks::shopAtSign).filter(shop::equals).isPresent();
   }
 
@@ -51,9 +50,8 @@ final class PaperShopEffects implements ShopEffects {
       blocks
           .block(pos)
           .flatMap(ShopBlocks::inventoryOf)
-          .ifPresent(
-              inventory ->
-                  new ArrayList<>(inventory.getViewers()).forEach(HumanEntity::closeInventory));
+          .ifPresent(inventory ->
+              new ArrayList<>(inventory.getViewers()).forEach(HumanEntity::closeInventory));
     }
   }
 }

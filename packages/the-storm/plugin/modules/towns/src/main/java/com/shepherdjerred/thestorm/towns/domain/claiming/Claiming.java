@@ -81,37 +81,35 @@ public final class Claiming {
   public Result<Claim, List<ClaimProblem>> trust(
       ClaimAttempt attempt, PlayerRef player, boolean on) {
     return check(manageRules, attempt)
-        .flatMap(
-            ok -> {
-              var claim = held(attempt);
-              if (attempt.town().roleOf(player.id()).isPresent()) {
-                return Result.err(List.of(new ClaimProblem.TrustsMember(player.name())));
-              }
-              var trusted = claim.trusted().contains(player.id());
-              if (on && trusted) {
-                return Result.err(List.of(new ClaimProblem.AlreadyTrusted(player.name())));
-              }
-              if (!on && !trusted) {
-                return Result.err(List.of(new ClaimProblem.NotTrusted(player.name())));
-              }
-              return Result.ok(claim.withTrust(player.id(), on));
-            });
+        .flatMap(ok -> {
+          var claim = held(attempt);
+          if (attempt.town().roleOf(player.id()).isPresent()) {
+            return Result.err(List.of(new ClaimProblem.TrustsMember(player.name())));
+          }
+          var trusted = claim.trusted().contains(player.id());
+          if (on && trusted) {
+            return Result.err(List.of(new ClaimProblem.AlreadyTrusted(player.name())));
+          }
+          if (!on && !trusted) {
+            return Result.err(List.of(new ClaimProblem.NotTrusted(player.name())));
+          }
+          return Result.ok(claim.withTrust(player.id(), on));
+        });
   }
 
   /** The claim with {@code attempt}'s player as its resident. */
   public Result<Claim, List<ClaimProblem>> personal(ClaimAttempt attempt) {
     return check(List.of(new OwnClaimRule()), attempt)
-        .flatMap(
-            ok -> {
-              var claim = held(attempt);
-              if (claim.resident().equals(Optional.of(attempt.player()))) {
-                return Result.err(List.of(new ClaimProblem.AlreadyPersonal()));
-              }
-              if (claim.resident().isPresent()) {
-                return Result.err(List.of(new ClaimProblem.NotYourChunk()));
-              }
-              return Result.ok(claim.withResident(Optional.of(attempt.player())));
-            });
+        .flatMap(ok -> {
+          var claim = held(attempt);
+          if (claim.resident().equals(Optional.of(attempt.player()))) {
+            return Result.err(List.of(new ClaimProblem.AlreadyPersonal()));
+          }
+          if (claim.resident().isPresent()) {
+            return Result.err(List.of(new ClaimProblem.NotYourChunk()));
+          }
+          return Result.ok(claim.withResident(Optional.of(attempt.player())));
+        });
   }
 
   /** The claim shared by the whole group again. The resident or the owner may do this. */

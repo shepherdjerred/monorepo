@@ -129,11 +129,10 @@ final class JooqStoresTest {
 
     assertThat(store.unpaid().join())
         .singleElement()
-        .satisfies(
-            row -> {
-              assertThat(row.player()).isEqualTo(ALICE);
-              assertThat(row.status()).isEqualTo(PayoutStatus.PENDING);
-            });
+        .satisfies(row -> {
+          assertThat(row.player()).isEqualTo(ALICE);
+          assertThat(row.status()).isEqualTo(PayoutStatus.PENDING);
+        });
     assertThat(store.players(id).join()).hasSize(2);
   }
 
@@ -165,13 +164,12 @@ final class JooqStoresTest {
     assertThat(store.beginPayout(first, ALICE, DAY).join()).as("paid rows pay nothing").isZero();
     assertThat(store.players(second).join())
         .singleElement()
-        .satisfies(
-            row -> {
-              assertThat(row.currency()).isEqualTo(CurrencyId.RWF_CREDITS);
-              assertThat(row.creditsOwed()).isEqualTo(3);
-              assertThat(row.creditsPaid()).isEqualTo(3);
-              assertThat(row.status()).isEqualTo(PayoutStatus.PAID);
-            });
+        .satisfies(row -> {
+          assertThat(row.currency()).isEqualTo(CurrencyId.RWF_CREDITS);
+          assertThat(row.creditsOwed()).isEqualTo(3);
+          assertThat(row.creditsPaid()).isEqualTo(3);
+          assertThat(row.status()).isEqualTo(PayoutStatus.PAID);
+        });
   }
 
   @Test
@@ -230,13 +228,12 @@ final class JooqStoresTest {
 
     assertThat(store.players(id).join())
         .singleElement()
-        .satisfies(
-            row -> {
-              assertThat(row.outcome()).isEqualTo(Outcome.AFK);
-              assertThat(row.creditsOwed()).isEqualTo(-2);
-              assertThat(row.creditsPaid()).isEqualTo(-1);
-              assertThat(row.status()).isEqualTo(PayoutStatus.PAID);
-            });
+        .satisfies(row -> {
+          assertThat(row.outcome()).isEqualTo(Outcome.AFK);
+          assertThat(row.creditsOwed()).isEqualTo(-2);
+          assertThat(row.creditsPaid()).isEqualTo(-1);
+          assertThat(row.status()).isEqualTo(PayoutStatus.PAID);
+        });
   }
 
   @Test
@@ -280,12 +277,11 @@ final class JooqStoresTest {
 
     var row =
         database
-            .read(
-                dsl ->
-                    dsl.selectFrom(
-                            com.shepherdjerred.thestorm.rwf.adapter.db.generated.Tables.RWF_MATCH)
-                        .fetchOptional()
-                        .orElseThrow())
+            .read(dsl ->
+                dsl.selectFrom(
+                        com.shepherdjerred.thestorm.rwf.adapter.db.generated.Tables.RWF_MATCH)
+                    .fetchOptional()
+                    .orElseThrow())
             .join();
     assertThat(row.getRecordingFile()).isEqualTo("rwf-recordings/2026/10/03/x.rwfrec.gz");
     assertThat(row.getRecordingBytes()).isEqualTo(1234);

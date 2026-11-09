@@ -43,13 +43,12 @@ final class LuckPermsPlan {
    */
   static List<GroupDeclaration> declarations() {
     return TrackGroups.definitions().stream()
-        .map(
-            definition -> {
-              var nodes = new ArrayList<NodeSpec>(2);
-              nodes.add(new NodeSpec.Permission(definition.permission()));
-              definition.parent().ifPresent(parent -> nodes.add(new NodeSpec.Inherit(parent)));
-              return new GroupDeclaration(definition.name(), nodes);
-            })
+        .map(definition -> {
+          var nodes = new ArrayList<NodeSpec>(2);
+          nodes.add(new NodeSpec.Permission(definition.permission()));
+          definition.parent().ifPresent(parent -> nodes.add(new NodeSpec.Inherit(parent)));
+          return new GroupDeclaration(definition.name(), nodes);
+        })
         .toList();
   }
 

@@ -335,19 +335,17 @@ public final class CompanionsE2EPlugin extends JavaPlugin implements BasicComman
 
   private static boolean exposed(org.bukkit.block.Block block) {
     return Arrays.stream(org.bukkit.block.BlockFace.values())
-        .filter(
-            face ->
-                face.getModX() * face.getModX()
-                        + face.getModY() * face.getModY()
-                        + face.getModZ() * face.getModZ()
-                    == 1)
+        .filter(face ->
+            face.getModX() * face.getModX()
+                    + face.getModY() * face.getModY()
+                    + face.getModZ() * face.getModZ()
+                == 1)
         .map(block::getRelative)
-        .anyMatch(
-            neighbor ->
-                neighbor.getY() >= neighbor.getWorld().getMinHeight()
-                    && neighbor.getY() < neighbor.getWorld().getMaxHeight()
-                    && neighbor.getWorld().isChunkLoaded(neighbor.getX() >> 4, neighbor.getZ() >> 4)
-                    && neighbor.isPassable());
+        .anyMatch(neighbor ->
+            neighbor.getY() >= neighbor.getWorld().getMinHeight()
+                && neighbor.getY() < neighbor.getWorld().getMaxHeight()
+                && neighbor.getWorld().isChunkLoaded(neighbor.getX() >> 4, neighbor.getZ() >> 4)
+                && neighbor.isPassable());
   }
 
   private void nativeActions(CommandSourceStack source) {

@@ -33,13 +33,12 @@ public final class CalloutLog {
   public boolean repeats(Callout callout, Instant now) {
     prune(now);
     return said.stream()
-        .anyMatch(
-            entry ->
-                entry.callout().team().equals(callout.team())
-                    && entry.callout().kind() == callout.kind()
-                    && now.isBefore(entry.at().plus(window(callout.kind())))
-                    && samePlace(entry.callout(), callout)
-                    && covers(entry.callout(), callout));
+        .anyMatch(entry ->
+            entry.callout().team().equals(callout.team())
+                && entry.callout().kind() == callout.kind()
+                && now.isBefore(entry.at().plus(window(callout.kind())))
+                && samePlace(entry.callout(), callout)
+                && covers(entry.callout(), callout));
   }
 
   /** Records that {@code callout} was said at {@code now}. */

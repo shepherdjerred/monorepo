@@ -158,11 +158,10 @@ final class TreasuryTest {
     assertThat(wallets.balanceOf(new AccountId.Player(OWNER))).isEqualTo(850);
     assertThat(wallets.receipts())
         .singleElement()
-        .satisfies(
-            receipt -> {
-              assertThat(receipt.from()).isEqualTo(TREASURY);
-              assertThat(receipt.to()).isEqualTo(new AccountId.Player(OWNER));
-            });
+        .satisfies(receipt -> {
+          assertThat(receipt.from()).isEqualTo(TREASURY);
+          assertThat(receipt.to()).isEqualTo(new AccountId.Player(OWNER));
+        });
   }
 
   @Test

@@ -34,112 +34,107 @@ public final class JooqBodyStore implements BodyStore {
   @Override
   public CompletableFuture<Void> save(VisitBody body) {
     return done(
-        database.write(
-            dsl -> {
-              var player = body.snapshot().player().toString();
-              var role = body.role().wire();
-              dsl.deleteFrom(CREATIVE_BODIES)
-                  .where(CREATIVE_BODIES.PLAYER.eq(player))
-                  .and(CREATIVE_BODIES.ROLE.eq(role))
-                  .execute();
-              var position = body.snapshot().position();
-              var vitals = body.snapshot().vitals();
-              var experience = body.snapshot().experience();
-              dsl.insertInto(CREATIVE_BODIES)
-                  .set(CREATIVE_BODIES.PLAYER, player)
-                  .set(CREATIVE_BODIES.ROLE, role)
-                  .set(CREATIVE_BODIES.WORLD, position.world())
-                  .set(CREATIVE_BODIES.X, position.x())
-                  .set(CREATIVE_BODIES.Y, position.y())
-                  .set(CREATIVE_BODIES.Z, position.z())
-                  .set(CREATIVE_BODIES.YAW, (double) position.yaw())
-                  .set(CREATIVE_BODIES.PITCH, (double) position.pitch())
-                  .set(CREATIVE_BODIES.HEALTH, vitals.health())
-                  .set(CREATIVE_BODIES.FOOD, vitals.food())
-                  .set(CREATIVE_BODIES.SATURATION, (double) vitals.saturation())
-                  .set(CREATIVE_BODIES.EXHAUSTION, (double) vitals.exhaustion())
-                  .set(CREATIVE_BODIES.GAME_MODE, vitals.gameMode())
-                  .set(CREATIVE_BODIES.ALLOW_FLIGHT, vitals.allowFlight())
-                  .set(CREATIVE_BODIES.FLYING, vitals.flying())
-                  .set(CREATIVE_BODIES.FLY_SPEED, (double) vitals.flySpeed())
-                  .set(CREATIVE_BODIES.MAXIMUM_NO_DAMAGE_TICKS, vitals.maximumNoDamageTicks())
-                  .set(CREATIVE_BODIES.VITALS_VERSION, vitals.formatVersion())
-                  .set(CREATIVE_BODIES.LEVEL, experience.level())
-                  .set(CREATIVE_BODIES.PROGRESS, (double) experience.progress())
-                  .set(CREATIVE_BODIES.TOTAL_EXPERIENCE, experience.total())
-                  .set(CREATIVE_BODIES.INVENTORY, body.snapshot().inventory().bytes())
-                  .set(CREATIVE_BODIES.ENDER_CHEST, body.enderChest().bytes())
-                  .set(CREATIVE_BODIES.TAKEN_AT, body.snapshot().takenAt().toEpochMilli())
-                  .execute();
-              var effects = body.snapshot().effects();
-              for (var i = 0; i < effects.size(); i++) {
-                var effect = effects.get(i);
-                dsl.insertInto(CREATIVE_BODY_EFFECTS)
-                    .set(CREATIVE_BODY_EFFECTS.PLAYER, player)
-                    .set(CREATIVE_BODY_EFFECTS.ROLE, role)
-                    .set(CREATIVE_BODY_EFFECTS.POSITION, i)
-                    .set(CREATIVE_BODY_EFFECTS.EFFECT, effect.type())
-                    .set(CREATIVE_BODY_EFFECTS.AMPLIFIER, effect.amplifier())
-                    .set(CREATIVE_BODY_EFFECTS.DURATION, effect.duration())
-                    .set(CREATIVE_BODY_EFFECTS.AMBIENT, effect.ambient())
-                    .set(CREATIVE_BODY_EFFECTS.PARTICLES, effect.particles())
-                    .set(CREATIVE_BODY_EFFECTS.ICON, effect.icon())
-                    .execute();
-              }
-              return true;
-            }));
+        database.write(dsl -> {
+          var player = body.snapshot().player().toString();
+          var role = body.role().wire();
+          dsl.deleteFrom(CREATIVE_BODIES)
+              .where(CREATIVE_BODIES.PLAYER.eq(player))
+              .and(CREATIVE_BODIES.ROLE.eq(role))
+              .execute();
+          var position = body.snapshot().position();
+          var vitals = body.snapshot().vitals();
+          var experience = body.snapshot().experience();
+          dsl.insertInto(CREATIVE_BODIES)
+              .set(CREATIVE_BODIES.PLAYER, player)
+              .set(CREATIVE_BODIES.ROLE, role)
+              .set(CREATIVE_BODIES.WORLD, position.world())
+              .set(CREATIVE_BODIES.X, position.x())
+              .set(CREATIVE_BODIES.Y, position.y())
+              .set(CREATIVE_BODIES.Z, position.z())
+              .set(CREATIVE_BODIES.YAW, (double) position.yaw())
+              .set(CREATIVE_BODIES.PITCH, (double) position.pitch())
+              .set(CREATIVE_BODIES.HEALTH, vitals.health())
+              .set(CREATIVE_BODIES.FOOD, vitals.food())
+              .set(CREATIVE_BODIES.SATURATION, (double) vitals.saturation())
+              .set(CREATIVE_BODIES.EXHAUSTION, (double) vitals.exhaustion())
+              .set(CREATIVE_BODIES.GAME_MODE, vitals.gameMode())
+              .set(CREATIVE_BODIES.ALLOW_FLIGHT, vitals.allowFlight())
+              .set(CREATIVE_BODIES.FLYING, vitals.flying())
+              .set(CREATIVE_BODIES.FLY_SPEED, (double) vitals.flySpeed())
+              .set(CREATIVE_BODIES.MAXIMUM_NO_DAMAGE_TICKS, vitals.maximumNoDamageTicks())
+              .set(CREATIVE_BODIES.VITALS_VERSION, vitals.formatVersion())
+              .set(CREATIVE_BODIES.LEVEL, experience.level())
+              .set(CREATIVE_BODIES.PROGRESS, (double) experience.progress())
+              .set(CREATIVE_BODIES.TOTAL_EXPERIENCE, experience.total())
+              .set(CREATIVE_BODIES.INVENTORY, body.snapshot().inventory().bytes())
+              .set(CREATIVE_BODIES.ENDER_CHEST, body.enderChest().bytes())
+              .set(CREATIVE_BODIES.TAKEN_AT, body.snapshot().takenAt().toEpochMilli())
+              .execute();
+          var effects = body.snapshot().effects();
+          for (var i = 0; i < effects.size(); i++) {
+            var effect = effects.get(i);
+            dsl.insertInto(CREATIVE_BODY_EFFECTS)
+                .set(CREATIVE_BODY_EFFECTS.PLAYER, player)
+                .set(CREATIVE_BODY_EFFECTS.ROLE, role)
+                .set(CREATIVE_BODY_EFFECTS.POSITION, i)
+                .set(CREATIVE_BODY_EFFECTS.EFFECT, effect.type())
+                .set(CREATIVE_BODY_EFFECTS.AMPLIFIER, effect.amplifier())
+                .set(CREATIVE_BODY_EFFECTS.DURATION, effect.duration())
+                .set(CREATIVE_BODY_EFFECTS.AMBIENT, effect.ambient())
+                .set(CREATIVE_BODY_EFFECTS.PARTICLES, effect.particles())
+                .set(CREATIVE_BODY_EFFECTS.ICON, effect.icon())
+                .execute();
+          }
+          return true;
+        }));
   }
 
   @Override
   public CompletableFuture<List<VisitBody>> load(UUID player) {
-    return database.read(
-        dsl -> {
-          var id = player.toString();
-          Map<EffectKey, List<CreativeBodyEffectsRecord>> effects =
-              dsl
-                  .selectFrom(CREATIVE_BODY_EFFECTS)
-                  .where(CREATIVE_BODY_EFFECTS.PLAYER.eq(id))
-                  .orderBy(CREATIVE_BODY_EFFECTS.ROLE, CREATIVE_BODY_EFFECTS.POSITION)
-                  .fetch()
-                  .stream()
-                  .collect(groupingBy(JooqBodyStore::effectKey));
-          return dsl
-              .selectFrom(CREATIVE_BODIES)
-              .where(CREATIVE_BODIES.PLAYER.eq(id))
-              .orderBy(CREATIVE_BODIES.ROLE.desc())
+    return database.read(dsl -> {
+      var id = player.toString();
+      Map<EffectKey, List<CreativeBodyEffectsRecord>> effects =
+          dsl
+              .selectFrom(CREATIVE_BODY_EFFECTS)
+              .where(CREATIVE_BODY_EFFECTS.PLAYER.eq(id))
+              .orderBy(CREATIVE_BODY_EFFECTS.ROLE, CREATIVE_BODY_EFFECTS.POSITION)
               .fetch()
               .stream()
-              .map(
-                  row ->
-                      toBody(
-                          row,
-                          effects.getOrDefault(
-                              new EffectKey(
-                                  column(row.getPlayer(), "player"), column(row.getRole(), "role")),
-                              List.of())))
-              .toList();
-        });
+              .collect(groupingBy(JooqBodyStore::effectKey));
+      return dsl
+          .selectFrom(CREATIVE_BODIES)
+          .where(CREATIVE_BODIES.PLAYER.eq(id))
+          .orderBy(CREATIVE_BODIES.ROLE.desc())
+          .fetch()
+          .stream()
+          .map(row ->
+              toBody(
+                  row,
+                  effects.getOrDefault(
+                      new EffectKey(
+                          column(row.getPlayer(), "player"), column(row.getRole(), "role")),
+                      List.of())))
+          .toList();
+    });
   }
 
   @Override
   public CompletableFuture<Void> delete(UUID player) {
     return done(
-        database.write(
-            dsl ->
-                dsl.deleteFrom(CREATIVE_BODIES)
-                    .where(CREATIVE_BODIES.PLAYER.eq(player.toString()))
-                    .execute()));
+        database.write(dsl ->
+            dsl.deleteFrom(CREATIVE_BODIES)
+                .where(CREATIVE_BODIES.PLAYER.eq(player.toString()))
+                .execute()));
   }
 
   @Override
   public CompletableFuture<Void> delete(UUID player, BodyRole role) {
     return done(
-        database.write(
-            dsl ->
-                dsl.deleteFrom(CREATIVE_BODIES)
-                    .where(CREATIVE_BODIES.PLAYER.eq(player.toString()))
-                    .and(CREATIVE_BODIES.ROLE.eq(role.wire()))
-                    .execute()));
+        database.write(dsl ->
+            dsl.deleteFrom(CREATIVE_BODIES)
+                .where(CREATIVE_BODIES.PLAYER.eq(player.toString()))
+                .and(CREATIVE_BODIES.ROLE.eq(role.wire()))
+                .execute()));
   }
 
   private static EffectKey effectKey(CreativeBodyEffectsRecord row) {

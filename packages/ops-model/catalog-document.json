@@ -2977,7 +2977,7 @@
       "approvalPolicy": "none",
       "automatic": true,
       "recipeRevisionId": "minecraft-shuxin/prod/1",
-      "configurationRevisionId": "minecraft-shuxin/prod/1"
+      "configurationRevisionId": "minecraft-shuxin/prod/2"
     },
     {
       "id": "minecraft-sjerred/prod",
@@ -2985,7 +2985,7 @@
       "approvalPolicy": "none",
       "automatic": true,
       "recipeRevisionId": "minecraft-sjerred/prod/1",
-      "configurationRevisionId": "minecraft-sjerred/prod/1"
+      "configurationRevisionId": "minecraft-sjerred/prod/2"
     },
     {
       "id": "minecraft/sandbox",
@@ -4327,6 +4327,11 @@
     {
       "dependent": "mc-router/prod",
       "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "minecraft-shuxin/prod",
+      "prerequisite": "1password/prod",
       "rule": "any-accepted"
     },
     {

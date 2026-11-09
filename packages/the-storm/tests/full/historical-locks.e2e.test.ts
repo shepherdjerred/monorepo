@@ -93,7 +93,7 @@ test("imported double chests load, grant both owners management, block outsiders
       "[]",
     );
 
-    // Seventy imported locks exceed the ordinary limit of 64, but do not spend that quota.
+    // Seventy imported locks exceed the full suite's lock limit of 64, but do not spend that quota.
     await target(alpha, rcon, 344);
     const locked = waitForMessage(alpha, /Locked\. You can grant/u);
     alpha.chat("/lock");

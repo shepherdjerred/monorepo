@@ -297,16 +297,14 @@ final class RwfPaperTest {
     enter(alice);
 
     assertThat(seen)
-        .anyMatch(
-            n ->
-                n.event() instanceof com.shepherdjerred.thestorm.rwf.domain.match.MatchEvent.Join
-                    && n.after().combatants().size() == 1);
+        .anyMatch(n ->
+            n.event() instanceof com.shepherdjerred.thestorm.rwf.domain.match.MatchEvent.Join
+                && n.after().combatants().size() == 1);
     subscription.close();
     alice.performCommand("rwf leave");
     assertThat(seen)
-        .noneMatch(
-            n ->
-                n.event() instanceof com.shepherdjerred.thestorm.rwf.domain.match.MatchEvent.Leave);
+        .noneMatch(n ->
+            n.event() instanceof com.shepherdjerred.thestorm.rwf.domain.match.MatchEvent.Leave);
   }
 
   @Test

@@ -95,45 +95,41 @@ public final class MembershipService {
       return Result.err(List.of(new TownProblem.Busy()));
     }
     return Membership.invite(inviter, invitee, state(), campMembers)
-        .map(
-            town -> {
-              invitations.invite(town.id(), invitee.id(), now());
-              return town;
-            });
+        .map(town -> {
+          invitations.invite(town.id(), invitee.id(), now());
+          return town;
+        });
   }
 
   /** {@code player} joins the town named {@code townName}, which invited them. */
   public Result<Change<Town>, List<TownProblem>> accept(UUID player, String townName) {
     return named(townName)
         .flatMap(town -> notBusy(town, player))
-        .flatMap(
-            town ->
-                Membership.join(
-                    player,
-                    town,
-                    state(),
-                    new Membership.JoinTerms(
-                        invitations.isInvited(town.id(), player, now()), campMembers)))
-        .map(
-            town ->
-                save(
-                    town,
-                    player,
-                    () -> {
-                      invitations.forgetInvitee(player);
-                      hooks.joins().joined(town.name(), player);
-                    }));
+        .flatMap(town ->
+            Membership.join(
+                player,
+                town,
+                state(),
+                new Membership.JoinTerms(
+                    invitations.isInvited(town.id(), player, now()), campMembers)))
+        .map(town ->
+            save(
+                town,
+                player,
+                () -> {
+                  invitations.forgetInvitee(player);
+                  hooks.joins().joined(town.name(), player);
+                }));
   }
 
   /** {@code player} turns down the town named {@code townName}; returns that town. */
   public Result<Town, List<TownProblem>> deny(UUID player, String townName) {
     return named(townName)
         .flatMap(town -> notBusy(town, player))
-        .flatMap(
-            town ->
-                invitations.withdraw(town.id(), player, now())
-                    ? Result.ok(town)
-                    : Result.err(List.of(new TownProblem.NotInvited(town.name()))));
+        .flatMap(town ->
+            invitations.withdraw(town.id(), player, now())
+                ? Result.ok(town)
+                : Result.err(List.of(new TownProblem.NotInvited(town.name()))));
   }
 
   /** The towns whose invitations {@code player} may still accept. */
@@ -182,11 +178,10 @@ public final class MembershipService {
       return Result.err(List.of(new TownProblem.Busy()));
     }
     return Membership.transferable(actor, target, state())
-        .map(
-            town -> {
-              transfers.request(town.id(), target, now());
-              return town;
-            });
+        .map(town -> {
+          transfers.request(town.id(), target, now());
+          return town;
+        });
   }
 
   /**

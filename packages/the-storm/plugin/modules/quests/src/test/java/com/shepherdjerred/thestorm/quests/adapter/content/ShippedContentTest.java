@@ -330,10 +330,8 @@ final class ShippedContentTest {
     for (var quest : content.quests().values()) {
       for (var stage : quest.stages().values()) {
         assertThat(stage.objectives())
-            .noneMatch(
-                objective ->
-                    objective instanceof Objective.Kill(var entity, _, _)
-                        && "PLAYER".equals(entity));
+            .noneMatch(objective ->
+                objective instanceof Objective.Kill(var entity, _, _) && "PLAYER".equals(entity));
       }
     }
   }
@@ -464,9 +462,8 @@ final class ShippedContentTest {
 
   private static long crystals(List<Action> actions) {
     return actions.stream()
-        .flatMap(
-            action ->
-                action instanceof Action.Crystals(var amount) ? Stream.of(amount) : Stream.of())
+        .flatMap(action ->
+            action instanceof Action.Crystals(var amount) ? Stream.of(amount) : Stream.of())
         .mapToLong(Long::longValue)
         .sum();
   }

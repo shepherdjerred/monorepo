@@ -316,17 +316,16 @@ public final class StormFixtures extends JavaPlugin implements Listener {
         (int) Math.floor(survival.arena().lobby().z()));
     arenaWorld.setDifficulty(org.bukkit.Difficulty.NORMAL);
     com.shepherdjerred.thestorm.arena.domain.survival.SurvivalBlueprint.blocks(survival)
-        .forEach(
-            (pos, material) -> {
-              arenaWorld.getChunkAt(pos.x() >> 4, pos.z() >> 4).setForceLoaded(true);
-              arenaWorld
-                  .getBlockAt(pos.x(), pos.y(), pos.z())
-                  .setBlockData(
-                      material.startsWith("minecraft:")
-                          ? org.bukkit.Bukkit.createBlockData(material)
-                          : Material.valueOf(material).createBlockData(),
-                      false);
-            });
+        .forEach((pos, material) -> {
+          arenaWorld.getChunkAt(pos.x() >> 4, pos.z() >> 4).setForceLoaded(true);
+          arenaWorld
+              .getBlockAt(pos.x(), pos.y(), pos.z())
+              .setBlockData(
+                  material.startsWith("minecraft:")
+                      ? org.bukkit.Bukkit.createBlockData(material)
+                      : Material.valueOf(material).createBlockData(),
+                  false);
+        });
   }
 
   /** Region protection needs its named worlds even when the arena module is disabled. */
@@ -337,10 +336,9 @@ public final class StormFixtures extends JavaPlugin implements Listener {
             com.shepherdjerred.thestorm.towns.domain.TownsConfig.class);
     var modules = section(yaml("config.yml"), "modules");
     towns.claims().worlds().stream()
-        .filter(
-            name ->
-                !(name.equals("skylands") && switchedOn(modules, "skylands"))
-                    && !(name.equals("creative") && switchedOn(modules, "creative")))
+        .filter(name ->
+            !(name.equals("skylands") && switchedOn(modules, "skylands"))
+                && !(name.equals("creative") && switchedOn(modules, "creative")))
         .filter(name -> getServer().getWorld(name) == null)
         .forEach(this::voidWorld);
     towns.regions().stream()

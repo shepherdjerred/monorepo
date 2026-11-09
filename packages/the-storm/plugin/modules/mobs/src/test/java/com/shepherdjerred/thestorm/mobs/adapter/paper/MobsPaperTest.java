@@ -271,13 +271,12 @@ final class MobsPaperTest {
             Stat.MAX_HEALTH, Attribute.MAX_HEALTH,
             Stat.ATTACK_DAMAGE, Attribute.ATTACK_DAMAGE,
             Stat.MOVEMENT_SPEED, Attribute.MOVEMENT_SPEED)
-        .forEach(
-            (stat, attribute) -> {
-              var instance = zombie.getAttribute(attribute);
-              if (instance != null) {
-                assertThat(instance.getModifier(MobKeys.modifier(stat))).isNull();
-              }
-            });
+        .forEach((stat, attribute) -> {
+          var instance = zombie.getAttribute(attribute);
+          if (instance != null) {
+            assertThat(instance.getModifier(MobKeys.modifier(stat))).isNull();
+          }
+        });
     assertThat(zombie.getHealth()).isEqualTo(20);
     assertThat(zombie.customName()).isNull();
     levels.strip(zombie);

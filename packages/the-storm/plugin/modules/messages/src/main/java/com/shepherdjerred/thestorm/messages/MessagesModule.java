@@ -65,11 +65,10 @@ public final class MessagesModule implements StormModule {
             new DeathMessageListener.Sources(context.random(), context.time())),
         new MotdListener(
             config.motd().stream()
-                .map(
-                    motd ->
-                        MiniText.parse(motd.top(), "motd top")
-                            .append(Component.newline())
-                            .append(MiniText.parse(motd.bottom(), "motd bottom")))
+                .map(motd ->
+                    MiniText.parse(motd.top(), "motd top")
+                        .append(Component.newline())
+                        .append(MiniText.parse(motd.bottom(), "motd bottom")))
                 .toList()),
         new TabListListener(
             MiniText.parse(config.tab().header(), "tab.header"),

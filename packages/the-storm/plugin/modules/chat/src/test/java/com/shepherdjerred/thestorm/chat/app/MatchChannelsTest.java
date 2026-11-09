@@ -141,14 +141,12 @@ final class MatchChannelsTest {
   void theFirstRouterThatAnswersWinsAndCanStripAPrefix() {
     var asked = new ArrayList<ChannelRouter.Request>();
     var _ =
-        extensions.registerRouter(
-            request -> {
-              asked.add(request);
-              return !request.command() && request.text().startsWith("@")
-                  ? Optional.of(
-                      new ChannelRouter.Routed(ChatChannel.TEAM, request.text().substring(1)))
-                  : Optional.empty();
-            });
+        extensions.registerRouter(request -> {
+          asked.add(request);
+          return !request.command() && request.text().startsWith("@")
+              ? Optional.of(new ChannelRouter.Routed(ChatChannel.TEAM, request.text().substring(1)))
+              : Optional.empty();
+        });
     var second =
         extensions.registerRouter(
             request -> Optional.of(new ChannelRouter.Routed(ChatChannel.DEAD, request.text())));
@@ -190,10 +188,9 @@ final class MatchChannelsTest {
   void aFailingTapDoesNotSilenceTheOthers() {
     var heard = new ArrayList<ChatTap.Heard>();
     var _ =
-        extensions.registerTap(
-            line -> {
-              throw new IllegalStateException("broken tap");
-            });
+        extensions.registerTap(line -> {
+          throw new IllegalStateException("broken tap");
+        });
     var _ = extensions.registerTap(heard::add);
 
     var line = sent(service.prepare(ALICE_SPEAKS, ChannelKey.GLOBAL, "hi"));

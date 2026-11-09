@@ -373,11 +373,9 @@ final class JooqStoresTest {
         .isEqualTo(T0.plusSeconds(120));
     assertThat(store.find(ALICE).join().orElseThrow().until(TeleportKind.WARP))
         .isEqualTo(T0.plusSeconds(31));
-    assertThatThrownBy(
-            () ->
-                confirm(
-                    store,
-                    new Confirmation(BOB, operation, TeleportKind.HOME, T0.plusSeconds(120))))
+    assertThatThrownBy(() ->
+            confirm(
+                store, new Confirmation(BOB, operation, TeleportKind.HOME, T0.plusSeconds(120))))
         .hasRootCauseInstanceOf(IllegalStateException.class);
     assertThat(store.find(BOB).join()).isEmpty();
   }

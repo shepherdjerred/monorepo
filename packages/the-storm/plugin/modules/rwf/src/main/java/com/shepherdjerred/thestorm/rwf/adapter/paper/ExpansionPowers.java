@@ -52,22 +52,19 @@ final class ExpansionPowers {
       case ExpansionEffect.DisableShield disable ->
           runner
               .entity(disable.victim())
-              .ifPresent(
-                  player -> {
-                    player.clearActiveItem();
-                    player.setCooldown(Material.SHIELD, disable.ticks());
-                  });
+              .ifPresent(player -> {
+                player.clearActiveItem();
+                player.setCooldown(Material.SHIELD, disable.ticks());
+              });
       case ExpansionEffect.Flask flask ->
           runner
               .entity(flask.owner())
-              .ifPresent(
-                  player -> {
-                    var potion = player.launchProjectile(ThrownPotion.class);
-                    potion.setItem(
-                        factory.kitItem(ExpansionKits.ALCHEMIST.hotbar().get(1).times(1)));
-                    keys.tagKitEntity(potion);
-                    flasks.put(potion.getUniqueId(), flask.owner());
-                  });
+              .ifPresent(player -> {
+                var potion = player.launchProjectile(ThrownPotion.class);
+                potion.setItem(factory.kitItem(ExpansionKits.ALCHEMIST.hotbar().get(1).times(1)));
+                keys.tagKitEntity(potion);
+                flasks.put(potion.getUniqueId(), flask.owner());
+              });
       case ExpansionEffect.Salvage drop -> {
         var display =
             context
@@ -95,16 +92,14 @@ final class ExpansionPowers {
     var isolated =
         runner.match().members().stream()
             .filter(member -> member.alive())
-            .filter(
-                member ->
-                    !member.id().uuid().equals(attacker.getUniqueId())
-                        && !member.id().uuid().equals(victim.getUniqueId()))
+            .filter(member ->
+                !member.id().uuid().equals(attacker.getUniqueId())
+                    && !member.id().uuid().equals(victim.getUniqueId()))
             .map(member -> runner.entity(member.id()))
             .flatMap(java.util.Optional::stream)
-            .noneMatch(
-                other ->
-                    other.getWorld().equals(victim.getWorld())
-                        && Places.at(other).distance(at) <= Duelist.RADIUS);
+            .noneMatch(other ->
+                other.getWorld().equals(victim.getWorld())
+                    && Places.at(other).distance(at) <= Duelist.RADIUS);
     runner
         .kits()
         .act(attacker, new ExpansionInput.StrikeFacts(AttackType.MELEE, isolated, 0, false));
@@ -173,11 +168,8 @@ final class ExpansionPowers {
     if (ravager)
       runner
           .memberOf(victim.getUniqueId())
-          .ifPresent(
-              member ->
-                  runner
-                      .kits()
-                      .act(strike.attacker(), new ExpansionInput.ShieldContact(member.id())));
+          .ifPresent(member ->
+              runner.kits().act(strike.attacker(), new ExpansionInput.ShieldContact(member.id())));
     return ravager || defending.equals(Knight.ID) || defending.equals("lancer");
   }
 
@@ -189,15 +181,13 @@ final class ExpansionPowers {
     var targets =
         runner.match().members().stream()
             .filter(member -> member.alive())
-            .filter(
-                member ->
-                    runner
-                        .entity(member.id())
-                        .filter(
-                            player ->
-                                player.getWorld().equals(at.getWorld())
-                                    && Places.at(player).distance(at) <= 3)
-                        .isPresent())
+            .filter(member ->
+                runner
+                    .entity(member.id())
+                    .filter(player ->
+                        player.getWorld().equals(at.getWorld())
+                            && Places.at(player).distance(at) <= 3)
+                    .isPresent())
             .map(member -> member.id())
             .toList();
     runner.kits().act(owner, new ExpansionInput.FlaskSplash(targets));

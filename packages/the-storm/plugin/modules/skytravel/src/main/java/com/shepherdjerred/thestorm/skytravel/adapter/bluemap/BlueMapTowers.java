@@ -30,23 +30,21 @@ public final class BlueMapTowers {
 
   private void draw(BlueMapAPI api) {
     api.getWorld(world)
-        .ifPresent(
-            blue -> {
-              for (var map : blue.getMaps()) {
-                var markers =
-                    MarkerSet.builder().label("Skylands beacons").toggleable(true).build();
-                for (var tower : config.towers()) {
-                  if (!tower.commissioned()) continue;
-                  markers.put(tower.id(), marker("Beacon " + tower.id(), tower.pad()));
-                  for (var i = 0; i < tower.entrances().size(); i++) {
-                    markers.put(
-                        tower.id() + "-entrance-" + i,
-                        marker("Beacon " + tower.id() + " entrance", tower.entrances().get(i)));
-                  }
-                }
-                map.getMarkerSets().put(ID, markers);
+        .ifPresent(blue -> {
+          for (var map : blue.getMaps()) {
+            var markers = MarkerSet.builder().label("Skylands beacons").toggleable(true).build();
+            for (var tower : config.towers()) {
+              if (!tower.commissioned()) continue;
+              markers.put(tower.id(), marker("Beacon " + tower.id(), tower.pad()));
+              for (var i = 0; i < tower.entrances().size(); i++) {
+                markers.put(
+                    tower.id() + "-entrance-" + i,
+                    marker("Beacon " + tower.id() + " entrance", tower.entrances().get(i)));
               }
-            });
+            }
+            map.getMarkerSets().put(ID, markers);
+          }
+        });
   }
 
   private static POIMarker marker(String label, LaunchConfig.Block block) {

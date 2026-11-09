@@ -88,14 +88,13 @@ public final class StimulusCollector implements Listener {
       return;
     }
     responsible(event.getDamager())
-        .ifPresent(
-            attacker ->
-                add(
-                    new Raw(
-                        Stimulus.Kind.HIT,
-                        Places.at(victim),
-                        attacker.getUniqueId(),
-                        Optional.of(victim.getUniqueId()))));
+        .ifPresent(attacker ->
+            add(
+                new Raw(
+                    Stimulus.Kind.HIT,
+                    Places.at(victim),
+                    attacker.getUniqueId(),
+                    Optional.of(victim.getUniqueId()))));
   }
 
   @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)

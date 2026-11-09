@@ -118,11 +118,10 @@ final class HistoricalShops implements Listener {
   }
 
   void containerChanged(List<com.shepherdjerred.thestorm.shops.domain.shop.BlockPos> blocks) {
-    main.execute(
-        () -> {
-          changedContainers.addAll(blocks);
-          retryChangedContainers();
-        });
+    main.execute(() -> {
+      changedContainers.addAll(blocks);
+      retryChangedContainers();
+    });
   }
 
   void retryChangedContainers() {
@@ -131,15 +130,14 @@ final class HistoricalShops implements Listener {
     changedContainers.clear();
     var entries =
         awaitingContainer.stream()
-            .filter(
-                entry -> {
-                  var world = server.getWorld(entry.world());
-                  var pos = entry.container();
-                  return world != null
-                      && changed.contains(
-                          new com.shepherdjerred.thestorm.shops.domain.shop.BlockPos(
-                              world.getUID(), pos.x(), pos.y(), pos.z()));
-                })
+            .filter(entry -> {
+              var world = server.getWorld(entry.world());
+              var pos = entry.container();
+              return world != null
+                  && changed.contains(
+                      new com.shepherdjerred.thestorm.shops.domain.shop.BlockPos(
+                          world.getUID(), pos.x(), pos.y(), pos.z()));
+            })
             .toList();
     if (entries.isEmpty()) return;
     retrying = true;
@@ -289,9 +287,8 @@ final class HistoricalShops implements Listener {
     var targets =
         fingerprint.bundleDeal()
             ? templates.bundleItems(fingerprint).stream()
-                .map(
-                    item ->
-                        item.asQuantity(Math.multiplyExact(item.getAmount(), entry.stockTarget())))
+                .map(item ->
+                    item.asQuantity(Math.multiplyExact(item.getAmount(), entry.stockTarget())))
                 .toList()
             : List.of(templates.template(fingerprint).asQuantity(entry.stockTarget()));
     var stocked = stock.stock(chest, entry.id(), targets);
@@ -340,10 +337,8 @@ final class HistoricalShops implements Listener {
     if (entry.details().sourceSlot() >= 0) {
       var original =
           originalItem(entry, material, chest)
-              .orElseThrow(
-                  () ->
-                      new IllegalStateException(
-                          "Validated original shop item changed: " + entry.id()));
+              .orElseThrow(() ->
+                  new IllegalStateException("Validated original shop item changed: " + entry.id()));
       return historicalBundle(entry, original);
     }
     var restored = restoredEnchantment(entry, material);

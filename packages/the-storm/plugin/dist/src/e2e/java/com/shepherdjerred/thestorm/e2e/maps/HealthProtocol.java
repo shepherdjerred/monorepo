@@ -138,13 +138,12 @@ record HealthProtocol(
               TraversalState.class);
       if (!wire.records().keySet().equals(types.keySet()))
         throw new IllegalStateException("health proof record inventory differs");
-      types.forEach(
-          (name, type) -> {
-            var fields =
-                Arrays.stream(type.getRecordComponents()).map(value -> value.getName()).toList();
-            if (!fields.equals(wire.records().get(name)))
-              throw new IllegalStateException("health proof fields differ: " + name);
-          });
+      types.forEach((name, type) -> {
+        var fields =
+            Arrays.stream(type.getRecordComponents()).map(value -> value.getName()).toList();
+        if (!fields.equals(wire.records().get(name)))
+          throw new IllegalStateException("health proof fields differ: " + name);
+      });
       return wire;
     } catch (IOException failure) {
       throw new IllegalStateException("health proof contract unreadable", failure);

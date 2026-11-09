@@ -195,10 +195,9 @@ final class PromotionBundleTest {
     for (var mutate : mutations) {
       var changed = original.deepCopy();
       mutate.accept(changed);
-      assertThatThrownBy(
-              () ->
-                  PromotionContract.JSON.readValue(
-                      PromotionContract.JSON.writeValueAsString(changed), PromotionProof.class))
+      assertThatThrownBy(() ->
+              PromotionContract.JSON.readValue(
+                  PromotionContract.JSON.writeValueAsString(changed), PromotionProof.class))
           .isInstanceOf(tools.jackson.core.JacksonException.class);
     }
   }

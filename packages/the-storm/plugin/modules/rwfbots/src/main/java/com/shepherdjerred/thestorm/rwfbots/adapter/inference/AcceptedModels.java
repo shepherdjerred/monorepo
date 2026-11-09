@@ -34,17 +34,16 @@ public final class AcceptedModels implements AcceptedInference, AutoCloseable {
     var submitted =
         parts
             .compute()
-            .submit(
-                () -> {
-                  var actor = OnnxActor.load(parts.directory(), ActorManifest.Acceptance.ACCEPTED);
-                  try {
-                    ActorWarmup.run(actor);
-                    return own(actor, seed);
-                  } catch (RuntimeException failure) {
-                    actor.close();
-                    throw failure;
-                  }
-                });
+            .submit(() -> {
+              var actor = OnnxActor.load(parts.directory(), ActorManifest.Acceptance.ACCEPTED);
+              try {
+                ActorWarmup.run(actor);
+                return own(actor, seed);
+              } catch (RuntimeException failure) {
+                actor.close();
+                throw failure;
+              }
+            });
     loading = submitted;
     return submitted;
   }

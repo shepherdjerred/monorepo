@@ -49,12 +49,11 @@ public final class MapSync implements TownEvents {
       var personal =
           state.claimsOf(townId).stream()
               .filter(claim -> claim.resident().isPresent())
-              .map(
-                  claim ->
-                      new TownMap.Labelled(
-                          personalId(townId, claim.chunk()),
-                          names.apply(claim.resident().orElseThrow()),
-                          ClaimOutlines.of(List.of(claim.chunk()))))
+              .map(claim ->
+                  new TownMap.Labelled(
+                      personalId(townId, claim.chunk()),
+                      names.apply(claim.resident().orElseThrow()),
+                      ClaimOutlines.of(List.of(claim.chunk()))))
               .toList();
       map.drawCamp(
           townId, "Camp " + names.apply(town.get().owner()), ClaimOutlines.of(chunks), personal);
@@ -80,29 +79,25 @@ public final class MapSync implements TownEvents {
     state
         .heritage()
         .sites()
-        .forEach(
-            site ->
-                map.draw(
-                    UUID.nameUUIDFromBytes(
-                        ("heritage:" + site.id())
-                            .getBytes(java.nio.charset.StandardCharsets.UTF_8)),
-                    site.name() + " (" + site.kind() + "; permanently protected)",
-                    heritageOutlines(site)));
+        .forEach(site ->
+            map.draw(
+                UUID.nameUUIDFromBytes(
+                    ("heritage:" + site.id()).getBytes(java.nio.charset.StandardCharsets.UTF_8)),
+                site.name() + " (" + site.kind() + "; permanently protected)",
+                heritageOutlines(site)));
     state
         .parcels()
-        .ifPresent(
-            book ->
-                book.definitions()
-                    .forEach(
-                        def -> {
-                          var area = def.area();
-                          map.draw(
-                              UUID.nameUUIDFromBytes(
-                                  ("holding:" + def.id())
-                                      .getBytes(java.nio.charset.StandardCharsets.UTF_8)),
-                              def.name() + " (" + def.kind() + ")",
-                              Map.of(area.world(), List.of(outline(area))));
-                        }));
+        .ifPresent(book ->
+            book.definitions()
+                .forEach(def -> {
+                  var area = def.area();
+                  map.draw(
+                      UUID.nameUUIDFromBytes(
+                          ("holding:" + def.id())
+                              .getBytes(java.nio.charset.StandardCharsets.UTF_8)),
+                      def.name() + " (" + def.kind() + ")",
+                      Map.of(area.world(), List.of(outline(area))));
+                }));
   }
 
   private static Map<String, List<Outline>> heritageOutlines(HeritageSite site) {

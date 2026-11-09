@@ -138,12 +138,11 @@ final class ShardItemsTest {
   @Test
   void aCorruptTierFailsLoudly() {
     var sword = ItemStack.of(Material.DIAMOND_SWORD);
-    sword.editPersistentDataContainer(
-        pdc ->
-            pdc.set(
-                Objects.requireNonNull(NamespacedKey.fromString("thestorm:storm_tier")),
-                PersistentDataType.INTEGER,
-                9));
+    sword.editPersistentDataContainer(pdc ->
+        pdc.set(
+            Objects.requireNonNull(NamespacedKey.fromString("thestorm:storm_tier")),
+            PersistentDataType.INTEGER,
+            9));
 
     assertThatThrownBy(() -> gear.tierOf(sword)).isInstanceOf(IllegalArgumentException.class);
   }

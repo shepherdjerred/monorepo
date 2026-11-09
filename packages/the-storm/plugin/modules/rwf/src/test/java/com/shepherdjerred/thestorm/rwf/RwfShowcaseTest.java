@@ -69,11 +69,10 @@ final class RwfShowcaseTest {
     player.performCommand(command);
     var seen = new ArrayList<String>();
     harness()
-        .until(
-            () -> {
-              seen.addAll(RwfHarness.messages(player));
-              return seen.stream().anyMatch(m -> m.contains(text));
-            });
+        .until(() -> {
+          seen.addAll(RwfHarness.messages(player));
+          return seen.stream().anyMatch(m -> m.contains(text));
+        });
     return seen;
   }
 
@@ -152,9 +151,8 @@ final class RwfShowcaseTest {
     running = harness;
     harness.features = RwfFeatures.ALL;
     harness.enable(directory);
-    harness.until(
-        () ->
-            harness.snapshot().ballot().orElseThrow().visits().orElseThrow().readyAt().isPresent());
+    harness.until(() ->
+        harness.snapshot().ballot().orElseThrow().visits().orElseThrow().readyAt().isPresent());
     return harness;
   }
 
@@ -285,15 +283,14 @@ final class RwfShowcaseTest {
     var subscription =
         harness()
             .events()
-            .subscribe(
-                notification -> {
-                  if (notification.event() instanceof MatchEvent.MapReady) {
-                    assertThat(harness().bots.known())
-                        .as("map listeners run before drafting")
-                        .isEmpty();
-                    heardReady.set(true);
-                  }
-                });
+            .subscribe(notification -> {
+              if (notification.event() instanceof MatchEvent.MapReady) {
+                assertThat(harness().bots.known())
+                    .as("map listeners run before drafting")
+                    .isEmpty();
+                heardReady.set(true);
+              }
+            });
     var control = harness().services.require(ShowcaseControl.class);
 
     assertThat(control.startSeeded(before.matchId(), 4, 600_090_001L)).isEmpty();
@@ -396,12 +393,11 @@ final class RwfShowcaseTest {
   private MatchRecord recording() {
     var files = new ArrayList<Path>();
     harness()
-        .until(
-            () -> {
-              files.clear();
-              files.addAll(Retention.list(directory.resolve("rwf-recordings")));
-              return !files.isEmpty();
-            });
+        .until(() -> {
+          files.clear();
+          files.addAll(Retention.list(directory.resolve("rwf-recordings")));
+          return !files.isEmpty();
+        });
     try (var in = new GZIPInputStream(Files.newInputStream(files.getFirst()))) {
       var text = new String(in.readAllBytes(), StandardCharsets.UTF_8);
       return switch (RecordCodec.decode(text)) {

@@ -129,9 +129,8 @@ final class PerksCommandsTest {
     server.dispatchCommand(alice, "perks buy mechanic");
     var offer = awaitLine(alice, "to confirm");
     assertThat(offer)
-        .anyMatch(
-            line ->
-                line.startsWith("[Tracks]: Train Mechanic I for 1,000 crystals? It will be your"));
+        .anyMatch(line ->
+            line.startsWith("[Tracks]: Train Mechanic I for 1,000 crystals? It will be your"));
     assertThat(plugin.cache.level(alice.getUniqueId(), Track.MECHANIC)).isZero();
 
     server.dispatchCommand(alice, "perks buy mechanic");

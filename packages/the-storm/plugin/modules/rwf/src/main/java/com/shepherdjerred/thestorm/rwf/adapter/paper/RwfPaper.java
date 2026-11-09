@@ -320,13 +320,12 @@ public final class RwfPaper {
     var spectating = new Spectating(runner, watchers, keys, context);
     // The dead's star opens the layout editor for the kit they fought with, as the kit menu's
     // right-click does.
-    spectating.kitLayouts(
-        player ->
-            runner
-                .memberOf(player.getUniqueId())
-                .flatMap(member -> member.kit())
-                .flatMap(com.shepherdjerred.thestorm.rwf.domain.kit.KitBook::byId)
-                .ifPresent(kit -> menus.editLayout(player, kit)));
+    spectating.kitLayouts(player ->
+        runner
+            .memberOf(player.getUniqueId())
+            .flatMap(member -> member.kit())
+            .flatMap(com.shepherdjerred.thestorm.rwf.domain.kit.KitBook::byId)
+            .ifPresent(kit -> menus.editLayout(player, kit)));
     var teamChat =
         new TeamChat(
             new TeamChat.Parts(
@@ -337,12 +336,11 @@ public final class RwfPaper {
                 line ->
                     runner
                         .memberOf(line.speaker())
-                        .ifPresent(
-                            member ->
-                                recordings.chat(
-                                    member.id(),
-                                    MatchRunner.machineName(line.channel().name()),
-                                    line.text()))));
+                        .ifPresent(member ->
+                            recordings.chat(
+                                member.id(),
+                                MatchRunner.machineName(line.channel().name()),
+                                line.text()))));
     runner.tools(spectating, teamChat);
     bombs.effects(() -> runner.features().bombEffects());
     runner.onDeath(spectating::death);
@@ -352,15 +350,13 @@ public final class RwfPaper {
     statsHolder.set(stats);
     // The leaderboards are read again as each lobby opens its vote, after the last match settled.
     var _ =
-        runner.subscribe(
-            notification -> {
-              if (notification.event()
-                      instanceof
-                      com.shepherdjerred.thestorm.rwf.domain.match.MatchEvent.BallotOpened
-                  && runner.features().stats()) {
-                stats.refreshLeaders(() -> {});
-              }
-            });
+        runner.subscribe(notification -> {
+          if (notification.event()
+                  instanceof com.shepherdjerred.thestorm.rwf.domain.match.MatchEvent.BallotOpened
+              && runner.features().stats()) {
+            stats.refreshLeaders(() -> {});
+          }
+        });
     featureHolder.set(runner);
     List<Listener> listeners =
         List.of(
@@ -471,31 +467,29 @@ public final class RwfPaper {
 
   /** Prepares the lobby. The runner prepares each map the lobby votes for. */
   private void prepareMaps() {
-    lobby.prepare(
-        ok -> {
-          if (!ok) {
-            context.logger().error("rwf: the lobby could not be prepared; admission stays closed");
-            return;
-          }
-          context.logger().info("rwf: the lobby is ready; {} maps in rotation", maps.size());
-          // The operator's quarantines outlast a restart: they leave the rotation before the
-          // first vote is offered.
-          context.onMain(
-              quarantines.all(),
-              kept -> {
-                kept.forEach(
-                    (mapId, reason) -> {
-                      if (runner.rotation().byId(mapId).isPresent()
-                          && runner.rotation().playable().size() > 1) {
-                        var _ = runner.rotation().quarantine(mapId);
-                        context.logger().info("rwf: {} stays quarantined: {}", mapId, reason);
-                      }
-                    });
-                displays.open();
-                runner.open();
-              },
-              "read the quarantined rwf maps");
-        });
+    lobby.prepare(ok -> {
+      if (!ok) {
+        context.logger().error("rwf: the lobby could not be prepared; admission stays closed");
+        return;
+      }
+      context.logger().info("rwf: the lobby is ready; {} maps in rotation", maps.size());
+      // The operator's quarantines outlast a restart: they leave the rotation before the
+      // first vote is offered.
+      context.onMain(
+          quarantines.all(),
+          kept -> {
+            kept.forEach((mapId, reason) -> {
+              if (runner.rotation().byId(mapId).isPresent()
+                  && runner.rotation().playable().size() > 1) {
+                var _ = runner.rotation().quarantine(mapId);
+                context.logger().info("rwf: {} stays quarantined: {}", mapId, reason);
+              }
+            });
+            displays.open();
+            runner.open();
+          },
+          "read the quarantined rwf maps");
+    });
   }
 
   public MatchView view() {

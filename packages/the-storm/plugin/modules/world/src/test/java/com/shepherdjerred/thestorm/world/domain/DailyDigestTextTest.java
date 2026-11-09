@@ -42,13 +42,12 @@ final class DailyDigestTextTest {
   @Test
   void rejectsReportForAnotherDateAndNegativeCounts() {
     var yesterday = new DailyReport(DATE.minusDays(1), Instant.EPOCH, 1, 0);
-    assertThatThrownBy(
-            () ->
-                new DailyDigestText.View(
-                    DATE,
-                    Optional.of(yesterday),
-                    new DailyDigestText.WorldNow(1, false, false),
-                    PACIFIC))
+    assertThatThrownBy(() ->
+            new DailyDigestText.View(
+                DATE,
+                Optional.of(yesterday),
+                new DailyDigestText.WorldNow(1, false, false),
+                PACIFIC))
         .isInstanceOf(IllegalArgumentException.class);
     assertThatThrownBy(() -> new DailyReport(DATE, Instant.EPOCH, -1, 0))
         .isInstanceOf(IllegalArgumentException.class);

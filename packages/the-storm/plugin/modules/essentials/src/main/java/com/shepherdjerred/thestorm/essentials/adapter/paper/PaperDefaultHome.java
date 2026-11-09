@@ -48,16 +48,15 @@ final class PaperDefaultHome implements DefaultHome {
             where.getPitch());
     return homes
         .homes(player)
-        .thenCompose(
-            existing -> {
-              var taken =
-                  existing.stream().anyMatch(home -> home.name().equals(HomeRules.DEFAULT_NAME));
-              if (taken) {
-                return CompletableFuture.completedFuture(false);
-              }
-              return homes
-                  .set(player, new Home(HomeRules.DEFAULT_NAME, position), limit)
-                  .thenApply(result -> result instanceof Result.Ok<?, ?>);
-            });
+        .thenCompose(existing -> {
+          var taken =
+              existing.stream().anyMatch(home -> home.name().equals(HomeRules.DEFAULT_NAME));
+          if (taken) {
+            return CompletableFuture.completedFuture(false);
+          }
+          return homes
+              .set(player, new Home(HomeRules.DEFAULT_NAME, position), limit)
+              .thenApply(result -> result instanceof Result.Ok<?, ?>);
+        });
   }
 }

@@ -41,24 +41,24 @@ export const thirdPartyPlugins: readonly PluginPin[] = z
     },
     {
       name: "Citizens",
-      version: "2.0.44-b4256",
-      url: "https://ci.citizensnpcs.co/job/Citizens2/4256/artifact/dist/target/Citizens-2.0.44-b4256.jar",
+      version: "2.0.44-b4269",
+      url: "https://ci.citizensnpcs.co/job/Citizens2/4269/artifact/dist/target/Citizens-2.0.44-b4269.jar",
       sha256:
-        "d1f02151fd7c1ccd0b8d317249ea9cf60039711b4e3317bd6641a385878946c6",
+        "e6b0a0e3346bd2cb982bcd3e1b628143629042e1a50479ae3c24858e2cacde22",
     },
     {
       name: "ViaVersion",
-      version: "5.12.1",
-      url: "https://cdn.modrinth.com/data/P1OZGk5p/versions/5WgnasGG/ViaVersion-5.12.1.jar",
+      version: "5.12.2",
+      url: "https://cdn.modrinth.com/data/P1OZGk5p/versions/Fkfcr89K/ViaVersion-5.12.2.jar",
       sha256:
-        "551265afd892e78bb869162e08b4fdd151c518e245fce60af36b0603ad695d76",
+        "c0b63badcb0f7d38f4443e06820f2b8142dd4f0d3b0511f9330ff1050430e6b2",
     },
     {
       name: "ViaBackwards",
-      version: "5.12.1",
-      url: "https://cdn.modrinth.com/data/NpvuJQoq/versions/dWw67APC/ViaBackwards-5.12.1.jar",
+      version: "5.12.2",
+      url: "https://cdn.modrinth.com/data/NpvuJQoq/versions/WFO37e8T/ViaBackwards-5.12.2.jar",
       sha256:
-        "dd72f7a459cbf1ea7862781dac92ed0ba738aa3cb3b7955e716ba379889d612a",
+        "e989440e0aad7e12d4685d7a57df854691b67660966a95ec0450e20ce98e87ab",
     },
     // TheStorm's required plugins, shared with the mc-harness storm-dev profile.
     luckPerms,

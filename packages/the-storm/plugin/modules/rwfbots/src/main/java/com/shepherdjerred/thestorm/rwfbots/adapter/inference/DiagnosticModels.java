@@ -31,18 +31,17 @@ public final class DiagnosticModels implements DiagnosticInference, AutoCloseabl
     var seed = parts.random().nextLong();
     return parts
         .compute()
-        .submit(
-            () -> {
-              var actor =
-                  OnnxActor.load(parts.directory(), ActorManifest.Acceptance.UNACCEPTED_DIAGNOSTIC);
-              try {
-                ActorWarmup.run(actor);
-                return own(actor, seed);
-              } catch (RuntimeException failure) {
-                actor.close();
-                throw failure;
-              }
-            });
+        .submit(() -> {
+          var actor =
+              OnnxActor.load(parts.directory(), ActorManifest.Acceptance.UNACCEPTED_DIAGNOSTIC);
+          try {
+            ActorWarmup.run(actor);
+            return own(actor, seed);
+          } catch (RuntimeException failure) {
+            actor.close();
+            throw failure;
+          }
+        });
   }
 
   private synchronized BatchedInference own(RecurrentActor actor, long seed) {

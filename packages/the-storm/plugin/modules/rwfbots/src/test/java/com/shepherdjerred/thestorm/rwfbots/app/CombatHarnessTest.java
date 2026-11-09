@@ -113,9 +113,8 @@ final class CombatHarnessTest {
     var catalog =
         new PersonalityCatalog(
             java.util.stream.IntStream.range(0, 100)
-                .mapToObj(
-                    index ->
-                        Fixtures.personality("body-" + index, "Body" + index + "x" + index, .5))
+                .mapToObj(index ->
+                    Fixtures.personality("body-" + index, "Body" + index + "x" + index, .5))
                 .toList());
     for (var size : List.of(20, 50, 100)) {
       harness.attach(42, size, new Passthrough());

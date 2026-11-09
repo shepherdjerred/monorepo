@@ -15,11 +15,10 @@ final class NpcAttackers {
 
   static Optional<LivingEntity> attacker(EntityDamageEvent event) {
     return attacker(event.getDamageSource())
-        .or(
-            () ->
-                event instanceof EntityDamageByEntityEvent hit
-                    ? behind(hit.getDamager())
-                    : Optional.empty());
+        .or(() ->
+            event instanceof EntityDamageByEntityEvent hit
+                ? behind(hit.getDamager())
+                : Optional.empty());
   }
 
   static Optional<LivingEntity> attacker(DamageSource source) {

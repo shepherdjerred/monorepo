@@ -89,29 +89,28 @@ public final class PvpService implements PvpPreferences {
     var timing =
         new PvpRules.Timing(policy.cooldown(), Optional.ofNullable(fightUntil.get(player)));
     return PvpRules.change(setting(player), on, now(), timing)
-        .map(
-            setting -> {
-              if (!on) {
-                settings.put(player, setting);
-              }
-              busy.add(player);
-              var saved = new CompletableFuture<Void>();
-              var _ =
-                  store
-                      .save(player, setting)
-                      .whenCompleteAsync(
-                          (ok, failure) -> {
-                            busy.remove(player);
-                            if (failure == null) {
-                              settings.put(player, setting);
-                              saved.complete(null);
-                            } else {
-                              reload(saved, failure);
-                            }
-                          },
-                          clocks.mainThread());
-              return new Change<>(setting, saved);
-            });
+        .map(setting -> {
+          if (!on) {
+            settings.put(player, setting);
+          }
+          busy.add(player);
+          var saved = new CompletableFuture<Void>();
+          var _ =
+              store
+                  .save(player, setting)
+                  .whenCompleteAsync(
+                      (ok, failure) -> {
+                        busy.remove(player);
+                        if (failure == null) {
+                          settings.put(player, setting);
+                          saved.complete(null);
+                        } else {
+                          reload(saved, failure);
+                        }
+                      },
+                      clocks.mainThread());
+          return new Change<>(setting, saved);
+        });
   }
 
   private void reload(CompletableFuture<Void> saved, Throwable failure) {

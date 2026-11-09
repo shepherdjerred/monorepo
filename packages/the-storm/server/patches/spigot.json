@@ -2,7 +2,11 @@
   "file": "/data/spigot.yml",
   "ops": [
     {
-      "$put": { "path": "$.commands", "key": "log", "value": false }
+      "$put": {
+        "path": "$.commands",
+        "key": "log",
+        "value": false
+      }
     },
     {
       "$put": {
@@ -29,28 +33,28 @@
       "$put": {
         "path": "$.world-settings.default.entity-activation-range",
         "key": "animals",
-        "value": 64
+        "value": 0
       }
     },
     {
       "$put": {
         "path": "$.world-settings.default.entity-activation-range",
         "key": "monsters",
-        "value": 64
+        "value": 0
       }
     },
     {
       "$put": {
         "path": "$.world-settings.default.entity-activation-range",
         "key": "raiders",
-        "value": 128
+        "value": 0
       }
     },
     {
       "$put": {
         "path": "$.world-settings.default.entity-activation-range",
         "key": "misc",
-        "value": 64
+        "value": 0
       }
     },
     {
@@ -99,42 +103,42 @@
       "$put": {
         "path": "$.world-settings.default.hunger",
         "key": "jump-walk-exhaustion",
-        "value": 0.075
+        "value": 0.05
       }
     },
     {
       "$put": {
         "path": "$.world-settings.default.hunger",
         "key": "jump-sprint-exhaustion",
-        "value": 0.3
+        "value": 0.2
       }
     },
     {
       "$put": {
         "path": "$.world-settings.default.hunger",
         "key": "combat-exhaustion",
-        "value": 0.2
+        "value": 0.1
       }
     },
     {
       "$put": {
         "path": "$.world-settings.default.hunger",
         "key": "regen-exhaustion",
-        "value": 5.0
+        "value": 6.0
       }
     },
     {
       "$put": {
         "path": "$.world-settings.default.hunger",
         "key": "swim-multiplier",
-        "value": 0.04
+        "value": 0.01
       }
     },
     {
       "$put": {
         "path": "$.world-settings.default.hunger",
         "key": "sprint-multiplier",
-        "value": 0.2
+        "value": 0.1
       }
     },
     {
@@ -162,7 +166,28 @@
       "$put": {
         "path": "$.world-settings.default",
         "key": "thunder-chance",
-        "value": 10000
+        "value": 100000
+      }
+    },
+    {
+      "$put": {
+        "path": "$.world-settings.default.entity-activation-range",
+        "key": "water",
+        "value": 0
+      }
+    },
+    {
+      "$put": {
+        "path": "$.world-settings.default.entity-activation-range",
+        "key": "villagers",
+        "value": 0
+      }
+    },
+    {
+      "$put": {
+        "path": "$.world-settings.default.entity-activation-range",
+        "key": "flying-monsters",
+        "value": 0
       }
     }
   ]

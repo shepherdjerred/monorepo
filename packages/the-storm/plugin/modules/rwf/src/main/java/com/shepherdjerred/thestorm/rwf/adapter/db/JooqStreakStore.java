@@ -21,36 +21,33 @@ public final class JooqStreakStore implements StreakStore {
 
   @Override
   public CompletableFuture<Optional<StreakLoadout>> load(UUID player) {
-    return database.read(
-        dsl ->
-            dsl.selectFrom(RWF_STREAK_PREFS)
-                .where(RWF_STREAK_PREFS.PLAYER.eq(player.toString()))
-                .fetchOptional()
-                .map(
-                    row ->
-                        new StreakLoadout(
-                            List.of(
-                                Killstreak.valueOf(row.getReward_1()),
-                                Killstreak.valueOf(row.getReward_2()),
-                                Killstreak.valueOf(row.getReward_3())))));
+    return database.read(dsl ->
+        dsl.selectFrom(RWF_STREAK_PREFS)
+            .where(RWF_STREAK_PREFS.PLAYER.eq(player.toString()))
+            .fetchOptional()
+            .map(row ->
+                new StreakLoadout(
+                    List.of(
+                        Killstreak.valueOf(row.getReward_1()),
+                        Killstreak.valueOf(row.getReward_2()),
+                        Killstreak.valueOf(row.getReward_3())))));
   }
 
   @Override
   public CompletableFuture<Void> save(UUID player, StreakLoadout loadout) {
     var rewards = loadout.rewards();
     return Writes.done(
-        database.write(
-            dsl ->
-                dsl.insertInto(RWF_STREAK_PREFS)
-                    .set(RWF_STREAK_PREFS.PLAYER, player.toString())
-                    .set(RWF_STREAK_PREFS.REWARD_1, rewards.get(0).name())
-                    .set(RWF_STREAK_PREFS.REWARD_2, rewards.get(1).name())
-                    .set(RWF_STREAK_PREFS.REWARD_3, rewards.get(2).name())
-                    .onConflict(RWF_STREAK_PREFS.PLAYER)
-                    .doUpdate()
-                    .set(RWF_STREAK_PREFS.REWARD_1, rewards.get(0).name())
-                    .set(RWF_STREAK_PREFS.REWARD_2, rewards.get(1).name())
-                    .set(RWF_STREAK_PREFS.REWARD_3, rewards.get(2).name())
-                    .execute()));
+        database.write(dsl ->
+            dsl.insertInto(RWF_STREAK_PREFS)
+                .set(RWF_STREAK_PREFS.PLAYER, player.toString())
+                .set(RWF_STREAK_PREFS.REWARD_1, rewards.get(0).name())
+                .set(RWF_STREAK_PREFS.REWARD_2, rewards.get(1).name())
+                .set(RWF_STREAK_PREFS.REWARD_3, rewards.get(2).name())
+                .onConflict(RWF_STREAK_PREFS.PLAYER)
+                .doUpdate()
+                .set(RWF_STREAK_PREFS.REWARD_1, rewards.get(0).name())
+                .set(RWF_STREAK_PREFS.REWARD_2, rewards.get(1).name())
+                .set(RWF_STREAK_PREFS.REWARD_3, rewards.get(2).name())
+                .execute()));
   }
 }

@@ -56,10 +56,8 @@ final class MoneyFormatTest {
 
   @Test
   void everyCurrencyNeedsNames() {
-    assertThatThrownBy(
-            () ->
-                new MoneyFormat(
-                    Map.of(CurrencyId.CRYSTALS, new Currency("crystal", "crystals", "CR"))))
+    assertThatThrownBy(() ->
+            new MoneyFormat(Map.of(CurrencyId.CRYSTALS, new Currency("crystal", "crystals", "CR"))))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining("rwf_credits");
   }

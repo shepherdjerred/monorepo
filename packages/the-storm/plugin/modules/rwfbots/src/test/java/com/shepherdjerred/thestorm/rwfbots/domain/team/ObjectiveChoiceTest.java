@@ -29,13 +29,12 @@ final class ObjectiveChoiceTest {
   private static List<BombView> bombs() {
     var sites = NAV.sites().bombs();
     return java.util.stream.IntStream.range(0, sites.size())
-        .mapToObj(
-            index ->
-                new BombView(
-                    new BombId(index),
-                    new BombOwner.Team(Fixtures.BLUE),
-                    sites.get(index).cell().center(),
-                    new BombState.Idle()))
+        .mapToObj(index ->
+            new BombView(
+                new BombId(index),
+                new BombOwner.Team(Fixtures.BLUE),
+                sites.get(index).cell().center(),
+                new BombState.Idle()))
         .toList();
   }
 

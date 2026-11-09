@@ -283,11 +283,10 @@ final class SnapshotCaptureTest {
     assertThat(hits)
         .as("the sword and the arrow name Bob; the wolf's bite names nobody")
         .hasSize(2)
-        .allSatisfy(
-            hit -> {
-              assertThat(hit.source()).contains(ids.combatant(bob.getUniqueId()));
-              assertThat(hit.victim()).contains(ids.combatant(alice.getUniqueId()));
-            });
+        .allSatisfy(hit -> {
+          assertThat(hit.source()).contains(ids.combatant(bob.getUniqueId()));
+          assertThat(hit.victim()).contains(ids.combatant(alice.getUniqueId()));
+        });
   }
 
   private void hit(Entity damager, DamageType type, Entity causing) {
@@ -336,11 +335,10 @@ final class SnapshotCaptureTest {
     assertThat(snapshot.stimuli())
         .filteredOn(stimulus -> stimulus.kind() == Stimulus.Kind.HIT)
         .singleElement()
-        .satisfies(
-            hit -> {
-              assertThat(hit.source()).contains(id);
-              assertThat(hit.victim()).contains(ids.combatant(alice.getUniqueId()));
-            });
+        .satisfies(hit -> {
+          assertThat(hit.source()).contains(id);
+          assertThat(hit.victim()).contains(ids.combatant(alice.getUniqueId()));
+        });
   }
 
   @Test

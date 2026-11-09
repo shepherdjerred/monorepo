@@ -146,10 +146,9 @@ public final class TownsPaper {
           plots
               .book()
               .byId(baseline.parcelId())
-              .orElseThrow(
-                  () ->
-                      new IllegalStateException(
-                          "stored baseline has no configured plot " + baseline.parcelId()));
+              .orElseThrow(() ->
+                  new IllegalStateException(
+                      "stored baseline has no configured plot " + baseline.parcelId()));
       if (!baseline
           .definitionHash()
           .equals(
@@ -219,7 +218,13 @@ public final class TownsPaper {
     var locks =
         new LockGuard(
             new LockGuard.Parts(
-                loaded.locks().book(), new LockAccess(state), kinds, notices, state, sealed));
+                loaded.locks().book(),
+                new LockAccess(state),
+                kinds,
+                notices,
+                state,
+                sealed,
+                new Redstone(guard, kinds)));
     var placers = new Placers(new NamespacedKey(plugin, "placed_by"));
     var runtime =
         new TownCommands.Services(context.scheduler(), context.logger(), context.analytics());

@@ -95,16 +95,15 @@ final class NavGraphTest {
     var workspace = graph.workspace();
     var from = node(SyntheticMap.RED_SPAWN);
     var to = node(new BlockPos(29, 1, 2));
-    assertThatThrownBy(
-            () ->
-                graph.path(
-                    from,
-                    to,
-                    ignored -> {
-                      graph.path(from, to, node -> 0, workspace);
-                      return 0;
-                    },
-                    workspace))
+    assertThatThrownBy(() ->
+            graph.path(
+                from,
+                to,
+                ignored -> {
+                  graph.path(from, to, node -> 0, workspace);
+                  return 0;
+                },
+                workspace))
         .isInstanceOf(IllegalStateException.class)
         .hasMessage("workspace already in use");
     assertThat(graph.path(from, to, ignored -> 0, workspace)).isEqualTo(graph.path(from, to));

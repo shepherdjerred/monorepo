@@ -18,40 +18,36 @@ final class LegacyRtpRecovery {
   static CompletableFuture<Void> start(QolStore store, Wallets wallets) {
     return store
         .pendingRtpAttempts()
-        .thenCompose(
-            attempts ->
-                CompletableFuture.allOf(
-                    attempts.stream()
-                        .map(attempt -> recover(store, wallets, attempt))
-                        .toArray(CompletableFuture<?>[]::new)));
+        .thenCompose(attempts ->
+            CompletableFuture.allOf(
+                attempts.stream()
+                    .map(attempt -> recover(store, wallets, attempt))
+                    .toArray(CompletableFuture<?>[]::new)));
   }
 
   private static CompletableFuture<Void> recover(
       QolStore store, Wallets wallets, RtpAttempt attempt) {
     return wallets
         .receiptFor(attempt.id())
-        .thenCompose(
-            receipt -> {
-              if (receipt.isEmpty()) {
-                return store.deleteRtpAttempt(attempt.id());
-              }
-              return wallets
-                  .transferOnce(
-                      new KeyedTransfer(
-                          attempt.refundKey(),
-                          new AccountId.Server(),
-                          new AccountId.Player(attempt.player()),
-                          Money.crystals(attempt.cost()),
-                          "rtp refund"))
-                  .thenCompose(
-                      result ->
-                          switch (result) {
-                            case Result.Ok<Receipt, EconomyError> _ ->
-                                store.deleteRtpAttempt(attempt.id());
-                            case Result.Err<Receipt, EconomyError>(var error) ->
-                                CompletableFuture.failedFuture(
-                                    new IllegalStateException("RTP refund refused: " + error));
-                          });
-            });
+        .thenCompose(receipt -> {
+          if (receipt.isEmpty()) {
+            return store.deleteRtpAttempt(attempt.id());
+          }
+          return wallets
+              .transferOnce(
+                  new KeyedTransfer(
+                      attempt.refundKey(),
+                      new AccountId.Server(),
+                      new AccountId.Player(attempt.player()),
+                      Money.crystals(attempt.cost()),
+                      "rtp refund"))
+              .thenCompose(result ->
+                  switch (result) {
+                    case Result.Ok<Receipt, EconomyError> _ -> store.deleteRtpAttempt(attempt.id());
+                    case Result.Err<Receipt, EconomyError>(var error) ->
+                        CompletableFuture.failedFuture(
+                            new IllegalStateException("RTP refund refused: " + error));
+                  });
+        });
   }
 }

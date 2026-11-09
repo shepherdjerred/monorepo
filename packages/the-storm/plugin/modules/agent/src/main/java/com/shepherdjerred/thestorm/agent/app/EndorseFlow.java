@@ -39,25 +39,24 @@ public final class EndorseFlow {
     return services
         .log()
         .find(id)
-        .thenCompose(
-            found -> {
-              if (found.isEmpty()) {
-                return CompletableFuture.completedFuture(new Outcome.Missing(id));
-              }
-              var decision = found.orElseThrow();
-              if (decision.overturnedBy().isPresent()) {
-                return CompletableFuture.completedFuture(
-                    new Outcome.AlreadyOverturned(decision, decision.overturnedBy().orElseThrow()));
-              }
-              if (decision.endorsedBy().isPresent()) {
-                return CompletableFuture.completedFuture(
-                    new Outcome.AlreadyEndorsed(decision, decision.endorsedBy().orElseThrow()));
-              }
-              // The row existed a moment ago and rows are never deleted, so the mark lands.
-              return services
-                  .log()
-                  .endorse(decision.id(), staff, services.time().instant())
-                  .thenApply(marked -> new Outcome.Endorsed(decision));
-            });
+        .thenCompose(found -> {
+          if (found.isEmpty()) {
+            return CompletableFuture.completedFuture(new Outcome.Missing(id));
+          }
+          var decision = found.orElseThrow();
+          if (decision.overturnedBy().isPresent()) {
+            return CompletableFuture.completedFuture(
+                new Outcome.AlreadyOverturned(decision, decision.overturnedBy().orElseThrow()));
+          }
+          if (decision.endorsedBy().isPresent()) {
+            return CompletableFuture.completedFuture(
+                new Outcome.AlreadyEndorsed(decision, decision.endorsedBy().orElseThrow()));
+          }
+          // The row existed a moment ago and rows are never deleted, so the mark lands.
+          return services
+              .log()
+              .endorse(decision.id(), staff, services.time().instant())
+              .thenApply(marked -> new Outcome.Endorsed(decision));
+        });
   }
 }

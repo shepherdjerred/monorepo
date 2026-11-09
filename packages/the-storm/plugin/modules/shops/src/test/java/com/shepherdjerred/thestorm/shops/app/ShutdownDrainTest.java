@@ -123,14 +123,13 @@ final class ShutdownDrainTest {
     assertThat(bobsItems.count).isZero();
     assertThat(store.refundFailures)
         .singleElement()
-        .satisfies(
-            failure -> {
-              assertThat(failure.payer()).isEqualTo(BOB.account());
-              assertThat(failure.payee()).isEqualTo(new AccountId.Player(ALICE));
-              assertThat(failure.reason())
-                  .startsWith("unsettled at shutdown: shop:1:buy")
-                  .contains("whether the payment committed is unknown");
-            });
+        .satisfies(failure -> {
+          assertThat(failure.payer()).isEqualTo(BOB.account());
+          assertThat(failure.payee()).isEqualTo(new AccountId.Player(ALICE));
+          assertThat(failure.reason())
+              .startsWith("unsettled at shutdown: shop:1:buy")
+              .contains("whether the payment committed is unknown");
+        });
   }
 
   @Test
@@ -174,12 +173,11 @@ final class ShutdownDrainTest {
     assertThat(drain.drain(Duration.ofMillis(1))).isEqualTo(1);
     assertThat(store.refundFailures)
         .singleElement()
-        .satisfies(
-            failure -> {
-              assertThat(failure.amount()).isEqualTo(Money.crystals(0));
-              assertThat(failure.held()).contains(new HeldItems("emerald", 4));
-              assertThat(failure.reason()).contains("do not transfer money");
-            });
+        .satisfies(failure -> {
+          assertThat(failure.amount()).isEqualTo(Money.crystals(0));
+          assertThat(failure.held()).contains(new HeldItems("emerald", 4));
+          assertThat(failure.reason()).contains("do not transfer money");
+        });
   }
 
   @Test

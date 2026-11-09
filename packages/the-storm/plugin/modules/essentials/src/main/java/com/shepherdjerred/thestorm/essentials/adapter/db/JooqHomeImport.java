@@ -26,63 +26,60 @@ public final class JooqHomeImport {
         .sorted(Comparator.comparing(HistoricalHome::archive).reversed())
         .forEach(home -> newest.putIfAbsent(home.player(), home));
     var preserved = Set.copyOf(nativeOwners);
-    return database.write(
-        sql -> {
-          var inserted = 0;
-          for (var original : newest.values()) {
-            var home = new HistoricalHome(original.player(), "bed", original.position());
-            if (receipt(sql, home)) continue;
-            var p = home.position();
-            if (!preserved.contains(home.player())) {
-              inserted +=
-                  sql.execute(
-                      "insert into essentials_homes (player, name, world, x, y, z, yaw, pitch) values (?, 'bed', ?, ?, ?, ?, 0, 0) on conflict (player, name) do nothing",
-                      home.player().toString(),
-                      p.world(),
-                      p.x(),
-                      p.y(),
-                      p.z());
-            }
-            sql.execute(
-                "insert into essentials_home_import (player, source, world, x, y, z) values (?, 'bed', ?, ?, ?, ?)",
-                home.player().toString(),
-                p.world(),
-                p.x(),
-                p.y(),
-                p.z());
-          }
-          return inserted;
-        });
+    return database.write(sql -> {
+      var inserted = 0;
+      for (var original : newest.values()) {
+        var home = new HistoricalHome(original.player(), "bed", original.position());
+        if (receipt(sql, home)) continue;
+        var p = home.position();
+        if (!preserved.contains(home.player())) {
+          inserted +=
+              sql.execute(
+                  "insert into essentials_homes (player, name, world, x, y, z, yaw, pitch) values (?, 'bed', ?, ?, ?, ?, 0, 0) on conflict (player, name) do nothing",
+                  home.player().toString(),
+                  p.world(),
+                  p.x(),
+                  p.y(),
+                  p.z());
+        }
+        sql.execute(
+            "insert into essentials_home_import (player, source, world, x, y, z) values (?, 'bed', ?, ?, ?, ?)",
+            home.player().toString(),
+            p.world(),
+            p.x(),
+            p.y(),
+            p.z());
+      }
+      return inserted;
+    });
   }
 
   public CompletableFuture<Integer> importHomes(List<HistoricalHome> homes) {
     var ordered =
         homes.stream()
             .sorted(
-                Comparator.comparing(
-                        (HistoricalHome home) ->
-                            home.archive().equals("town") ? "" : home.archive())
+                Comparator.comparing((HistoricalHome home) ->
+                        home.archive().equals("town") ? "" : home.archive())
                     .reversed())
             .toList();
-    return database.write(
-        sql -> {
-          var imported = 0;
-          for (var home : ordered) {
-            if (receipt(sql, home)) continue;
-            restore(sql, home, primary(ordered, home.player()));
-            var p = home.position();
-            sql.execute(
-                "insert into essentials_home_import (player, source, world, x, y, z) values (?, ?, ?, ?, ?, ?)",
-                home.player().toString(),
-                home.archive(),
-                p.world(),
-                p.x(),
-                p.y(),
-                p.z());
-            imported++;
-          }
-          return imported;
-        });
+    return database.write(sql -> {
+      var imported = 0;
+      for (var home : ordered) {
+        if (receipt(sql, home)) continue;
+        restore(sql, home, primary(ordered, home.player()));
+        var p = home.position();
+        sql.execute(
+            "insert into essentials_home_import (player, source, world, x, y, z) values (?, ?, ?, ?, ?, ?)",
+            home.player().toString(),
+            home.archive(),
+            p.world(),
+            p.x(),
+            p.y(),
+            p.z());
+        imported++;
+      }
+      return imported;
+    });
   }
 
   private static String primary(List<HistoricalHome> homes, UUID player) {

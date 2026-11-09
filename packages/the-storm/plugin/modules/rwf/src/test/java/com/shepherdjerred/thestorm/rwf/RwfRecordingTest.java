@@ -138,19 +138,18 @@ final class RwfRecordingTest {
     assertThat(record.occurrences())
         .as("a ballot row and a row for the effect Alice gained")
         .anyMatch(com.shepherdjerred.thestorm.rwf.domain.record.Occurrence.Ballot.class::isInstance)
-        .anyMatch(
-            occurrence ->
-                occurrence
-                        instanceof
-                        com.shepherdjerred.thestorm.rwf.domain.record.Occurrence.EffectApplied(
-                            var _,
-                            var subject,
-                            var effect,
-                            var amplifier,
-                            var _)
-                    && subject.equals(pseudonym)
-                    && effect.equals("speed")
-                    && amplifier == 1);
+        .anyMatch(occurrence ->
+            occurrence
+                    instanceof
+                    com.shepherdjerred.thestorm.rwf.domain.record.Occurrence.EffectApplied(
+                        var _,
+                        var subject,
+                        var effect,
+                        var amplifier,
+                        var _)
+                && subject.equals(pseudonym)
+                && effect.equals("speed")
+                && amplifier == 1);
   }
 
   /** The one recording, which the direct compute pool has finished by the time the match ends. */

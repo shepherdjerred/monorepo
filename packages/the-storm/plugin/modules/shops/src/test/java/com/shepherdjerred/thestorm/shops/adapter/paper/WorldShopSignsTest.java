@@ -106,11 +106,9 @@ final class WorldShopSignsTest extends ShopsFixture {
     assertThat(lines(event)).containsExactly("Alice", "64", "B 10:S 5", "Cobblestone");
     assertThat(storedShops())
         .singleElement()
-        .satisfies(
-            shop ->
-                assertThat(shop.item())
-                    .hasValueSatisfying(
-                        item -> assertThat(item.material()).isEqualTo("cobblestone")));
+        .satisfies(shop ->
+            assertThat(shop.item())
+                .hasValueSatisfying(item -> assertThat(item.material()).isEqualTo("cobblestone")));
   }
 
   @Test
@@ -173,12 +171,11 @@ final class WorldShopSignsTest extends ShopsFixture {
         new ShopBlocks(
             plugin, new ShopRegistry(List.of(stale), stale.id()), Set.of(Material.CHEST));
     assertThat(blocks.shopAtSign(sign))
-        .hasValueSatisfying(
-            shop -> {
-              assertThat(shop.quantity()).isEqualTo(32);
-              assertThat(shop.prices().buy().orElseThrow().crystals()).isEqualTo(7);
-              assertThat(shop.prices().sell().orElseThrow().crystals()).isEqualTo(3);
-            });
+        .hasValueSatisfying(shop -> {
+          assertThat(shop.quantity()).isEqualTo(32);
+          assertThat(shop.prices().buy().orElseThrow().crystals()).isEqualTo(7);
+          assertThat(shop.prices().sell().orElseThrow().crystals()).isEqualTo(3);
+        });
   }
 
   @Test

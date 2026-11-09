@@ -43,18 +43,16 @@ public final class LuckPermsSync implements PermissionSync {
       chain =
           chain
               .thenCompose(ignored -> groups.loadGroup(declaration.name()))
-              .thenCompose(
-                  existing ->
-                      existing
-                          .map(CompletableFuture::completedFuture)
-                          .orElseGet(() -> groups.createAndLoadGroup(declaration.name())))
-              .thenCompose(
-                  group -> {
-                    for (var node : declaration.nodes()) {
-                      group.data().add(toNode(node));
-                    }
-                    return groups.saveGroup(group);
-                  });
+              .thenCompose(existing ->
+                  existing
+                      .map(CompletableFuture::completedFuture)
+                      .orElseGet(() -> groups.createAndLoadGroup(declaration.name())))
+              .thenCompose(group -> {
+                for (var node : declaration.nodes()) {
+                  group.data().add(toNode(node));
+                }
+                return groups.saveGroup(group);
+              });
     }
     return chain;
   }

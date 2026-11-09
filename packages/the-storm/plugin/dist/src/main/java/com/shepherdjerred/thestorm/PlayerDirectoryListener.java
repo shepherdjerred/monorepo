@@ -28,11 +28,10 @@ final class PlayerDirectoryListener implements Listener {
     var _ =
         players
             .recordJoin(player.getUniqueId(), name, time.instant())
-            .whenComplete(
-                (done, failure) -> {
-                  if (failure != null) {
-                    logger.error("Could not record {} in the player directory", name, failure);
-                  }
-                });
+            .whenComplete((done, failure) -> {
+              if (failure != null) {
+                logger.error("Could not record {} in the player directory", name, failure);
+              }
+            });
   }
 }

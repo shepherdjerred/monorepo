@@ -111,13 +111,12 @@ final class WorldRulesMatrixTest {
         .lines()
         .skip(1)
         .filter(line -> !line.isBlank())
-        .flatMap(
-            line -> {
-              var parts = line.trim().split("\\s+", -1);
-              var effect = WorldEffect.valueOf(parts[0]);
-              return IntStream.range(0, columns.size())
-                  .mapToObj(i -> Arguments.of(effect, columns.get(i), parts[1 + i].equals("+")));
-            });
+        .flatMap(line -> {
+          var parts = line.trim().split("\\s+", -1);
+          var effect = WorldEffect.valueOf(parts[0]);
+          return IntStream.range(0, columns.size())
+              .mapToObj(i -> Arguments.of(effect, columns.get(i), parts[1 + i].equals("+")));
+        });
   }
 
   @Test

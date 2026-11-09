@@ -46,31 +46,29 @@ public final class LetterCommands {
                 argument("player", word())
                     .then(
                         argument("text", greedyString())
-                            .executes(
-                                command -> {
-                                  var actor = (Player) command.getSource().getSender();
-                                  gated(
-                                      actor,
-                                      () ->
-                                          resolve(
-                                              actor,
-                                              command.getArgument("player", String.class),
-                                              command.getArgument("text", String.class)));
-                                  return 1;
-                                }))));
+                            .executes(command -> {
+                              var actor = (Player) command.getSource().getSender();
+                              gated(
+                                  actor,
+                                  () ->
+                                      resolve(
+                                          actor,
+                                          command.getArgument("player", String.class),
+                                          command.getArgument("text", String.class)));
+                              return 1;
+                            }))));
     for (var action : java.util.List.of("read", "delete", "reply")) {
       var node =
           literal(action)
               .then(
                   argument("id", word())
-                      .executes(
-                          command -> {
-                            var actor = (Player) command.getSource().getSender();
-                            gated(
-                                actor,
-                                () -> open(actor, action, command.getArgument("id", String.class)));
-                            return 1;
-                          }));
+                      .executes(command -> {
+                        var actor = (Player) command.getSource().getSender();
+                        gated(
+                            actor,
+                            () -> open(actor, action, command.getArgument("id", String.class)));
+                        return 1;
+                      }));
       if ("reply".equals(action))
         node =
             literal(action)
@@ -78,18 +76,17 @@ public final class LetterCommands {
                     argument("id", word())
                         .then(
                             argument("text", greedyString())
-                                .executes(
-                                    command -> {
-                                      var actor = (Player) command.getSource().getSender();
-                                      gated(
-                                          actor,
-                                          () ->
-                                              reply(
-                                                  actor,
-                                                  command.getArgument("id", String.class),
-                                                  command.getArgument("text", String.class)));
-                                      return 1;
-                                    })));
+                                .executes(command -> {
+                                  var actor = (Player) command.getSource().getSender();
+                                  gated(
+                                      actor,
+                                      () ->
+                                          reply(
+                                              actor,
+                                              command.getArgument("id", String.class),
+                                              command.getArgument("text", String.class)));
+                                  return 1;
+                                })));
       root.then(node);
     }
   }
@@ -103,20 +100,18 @@ public final class LetterCommands {
                 player,
                 letters.inbox(player.getUniqueId()),
                 inbox -> {
-                  inbox.forEach(
-                      letter ->
-                          player.sendMessage(
-                              Component.text(
-                                      (letter.read() ? "[Letter] " : "[Unread letter] ")
-                                          + letter.senderName()
-                                          + " — "
-                                          + letter.sentAt()
-                                          + " ")
-                                  .append(
-                                      Component.text("[Read]")
-                                          .clickEvent(
-                                              ClickEvent.runCommand(
-                                                  "/mail read " + letter.id())))));
+                  inbox.forEach(letter ->
+                      player.sendMessage(
+                          Component.text(
+                                  (letter.read() ? "[Letter] " : "[Unread letter] ")
+                                      + letter.senderName()
+                                      + " — "
+                                      + letter.sentAt()
+                                      + " ")
+                              .append(
+                                  Component.text("[Read]")
+                                      .clickEvent(
+                                          ClickEvent.runCommand("/mail read " + letter.id())))));
                   if (inbox.isEmpty()) player.sendMessage(Component.text("You have no letters."));
                 }));
   }

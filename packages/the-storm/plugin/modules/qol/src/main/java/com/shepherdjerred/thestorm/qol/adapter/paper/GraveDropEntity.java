@@ -54,12 +54,11 @@ final class GraveDropEntity {
         continue;
       }
       key(display)
-          .ifPresent(
-              id -> {
-                if (!expected.containsKey(id) || present.putIfAbsent(id, display) != null) {
-                  display.remove();
-                }
-              });
+          .ifPresent(id -> {
+            if (!expected.containsKey(id) || present.putIfAbsent(id, display) != null) {
+              display.remove();
+            }
+          });
     }
     for (Map.Entry<Key, GraveStore.Drop> entry : expected.entrySet()) {
       if (!present.containsKey(entry.getKey())) {

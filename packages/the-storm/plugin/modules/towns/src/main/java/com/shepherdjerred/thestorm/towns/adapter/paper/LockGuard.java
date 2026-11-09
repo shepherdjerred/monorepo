@@ -42,6 +42,7 @@ final class LockGuard {
   private final Notices notices;
   private final TownsState towns;
   private final SealedWorlds sealed;
+  private final Redstone redstone;
 
   /** Password locks a player has opened since they logged in. */
   private final Map<UUID, Set<UUID>> passwords = new ConcurrentHashMap<>();
@@ -58,7 +59,8 @@ final class LockGuard {
       BlockKinds kinds,
       Notices notices,
       TownsState towns,
-      SealedWorlds sealed) {}
+      SealedWorlds sealed,
+      Redstone redstone) {}
 
   LockGuard(Parts parts) {
     this.book = parts.book();
@@ -67,6 +69,7 @@ final class LockGuard {
     this.notices = parts.notices();
     this.towns = parts.towns();
     this.sealed = parts.sealed();
+    this.redstone = parts.redstone();
   }
 
   /** True in a world a minigame sealed, where no container is ever locked. */
@@ -132,10 +135,39 @@ final class LockGuard {
     return false;
   }
 
-  /** A locked machine may use its own inventory from redstone only by explicit owner choice. */
+  /**
+   * A locked machine may use its own inventory from redstone when its owner allowed redstone, or
+   * when it stands on a claim nobody but its owner can use and every redstone component that could
+   * power it stands on such a claim too, so nobody else can work its controls. A neighbouring claim
+   * of the same town counts only while it is private as well: its public switches would otherwise
+   * let anyone fire the machine. Both are judged when the machine fires, so it stops on its own
+   * once a claim is shared or a control on other land is wired to it. Only the owner can build on
+   * such a claim, so a trigger there that others can work (a trapped chest under a lock they may
+   * open, a sculk sensor) is the owner's own design, as in vanilla; the check looks one component
+   * deep and does not trace a circuit back to its source.
+   */
   boolean mayAutomate(Block block) {
     var lock = lockOf(block);
-    return lock == null || lock.options().redstone();
+    return lock == null
+        || lock.options().redstone()
+        || (onOwnersPrivateClaim(lock, block)
+            && !redstone.untrustedPistonPower(block, land -> ownersPrivate(lock, land)));
+  }
+
+  /** True when {@code block} stands on a claim only {@code lock}'s owner can use. */
+  boolean onOwnersPrivateClaim(Lock lock, Block block) {
+    return ownersPrivate(
+        lock, towns.landAt(block.getWorld().getName(), block.getX(), block.getY(), block.getZ()));
+  }
+
+  private boolean ownersPrivate(Lock lock, Land land) {
+    if (!(land instanceof Land.TownLand(var claim))) {
+      return false;
+    }
+    return towns
+        .town(claim.townId())
+        .filter(town -> LockAccess.privateTo(lock.owner(), claim, town.members().keySet()))
+        .isPresent();
   }
 
   /**
@@ -205,11 +237,12 @@ final class LockGuard {
       if (lock == null) {
         continue;
       }
-      if (operation == Operation.WIRE && lock.options().redstone()) {
-        continue;
-      }
+      // A machine redstone may drive can be wired by anyone who may open it; otherwise wiring
+      // beside it is as protected as breaking it.
+      var effective =
+          operation == Operation.WIRE && lock.options().redstone() ? Operation.OPEN : operation;
       var allowed =
-          switch (operation) {
+          switch (effective) {
             case OPEN ->
                 access.open(
                     lock,

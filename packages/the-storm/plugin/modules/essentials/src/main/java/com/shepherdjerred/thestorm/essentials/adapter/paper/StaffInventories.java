@@ -93,14 +93,12 @@ final class StaffInventories implements Listener {
         tools
             .state
             .commit(List.of(), audit)
-            .thenCompose(
-                _ ->
-                    tools
-                        .context
-                        .services()
-                        .require(com.shepherdjerred.thestorm.core.expansion.ManagedGameplay.class)
-                        .enabled(
-                            com.shepherdjerred.thestorm.core.expansion.ManagedGameplay.STAFF, id))
+            .thenCompose(_ ->
+                tools
+                    .context
+                    .services()
+                    .require(com.shepherdjerred.thestorm.core.expansion.ManagedGameplay.class)
+                    .enabled(com.shepherdjerred.thestorm.core.expansion.ManagedGameplay.STAFF, id))
             .whenCompleteAsync(
                 (enabled, failure) -> {
                   busy.remove(id);

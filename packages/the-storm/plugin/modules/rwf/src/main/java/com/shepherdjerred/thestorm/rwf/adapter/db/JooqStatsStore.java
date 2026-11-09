@@ -30,12 +30,11 @@ public final class JooqStatsStore implements StatsStore {
 
   @Override
   public CompletableFuture<Optional<Totals>> totals(UUID player) {
-    return database.read(
-        dsl ->
-            dsl.selectFrom(RWF_PLAYER_STATS)
-                .where(RWF_PLAYER_STATS.PLAYER.eq(player.toString()))
-                .fetchOptional()
-                .map(JooqStatsStore::totals));
+    return database.read(dsl ->
+        dsl.selectFrom(RWF_PLAYER_STATS)
+            .where(RWF_PLAYER_STATS.PLAYER.eq(player.toString()))
+            .fetchOptional()
+            .map(JooqStatsStore::totals));
   }
 
   @Override
@@ -43,16 +42,15 @@ public final class JooqStatsStore implements StatsStore {
     if (limit < 1) {
       throw new IllegalArgumentException("limit must be positive");
     }
-    return database.read(
-        dsl ->
-            dsl
-                .selectFrom(RWF_PLAYER_STATS)
-                .orderBy(field(stat).desc(), RWF_PLAYER_STATS.NAME.asc())
-                .limit(limit)
-                .fetch()
-                .stream()
-                .map(JooqStatsStore::totals)
-                .toList());
+    return database.read(dsl ->
+        dsl
+            .selectFrom(RWF_PLAYER_STATS)
+            .orderBy(field(stat).desc(), RWF_PLAYER_STATS.NAME.asc())
+            .limit(limit)
+            .fetch()
+            .stream()
+            .map(JooqStatsStore::totals)
+            .toList());
   }
 
   private static Field<Integer> field(Stat stat) {
@@ -74,66 +72,62 @@ public final class JooqStatsStore implements StatsStore {
     if (limit < 1) {
       throw new IllegalArgumentException("limit must be positive");
     }
-    return database.read(
-        dsl ->
-            dsl.select(
-                    RWF_MATCH.ID,
-                    RWF_MATCH.MAP,
-                    RWF_MATCH.ENDED_AT,
-                    RWF_MATCH_PLAYER.KIT,
-                    RWF_MATCH_PLAYER.RESULT,
-                    RWF_MATCH_PLAYER.KILLS,
-                    RWF_MATCH_PLAYER.ASSISTS,
-                    RWF_MATCH_PLAYER.DEATHS)
-                .from(RWF_MATCH_PLAYER)
-                .join(RWF_MATCH)
-                .on(RWF_MATCH.ID.eq(RWF_MATCH_PLAYER.MATCH_ID))
-                .where(RWF_MATCH_PLAYER.PLAYER.eq(player.toString()))
-                .orderBy(RWF_MATCH.ENDED_AT.desc())
-                .limit(limit)
-                .fetch(
-                    row ->
-                        new HistoryRow(
-                            UUID.fromString(row.get(RWF_MATCH.ID)),
-                            row.get(RWF_MATCH.MAP),
-                            Instant.ofEpochMilli(row.get(RWF_MATCH.ENDED_AT)),
-                            row.get(RWF_MATCH_PLAYER.KIT),
-                            row.get(RWF_MATCH_PLAYER.RESULT),
-                            row.get(RWF_MATCH_PLAYER.KILLS),
-                            Optional.ofNullable(row.get(RWF_MATCH_PLAYER.ASSISTS)),
-                            row.get(RWF_MATCH_PLAYER.DEATHS))));
+    return database.read(dsl ->
+        dsl.select(
+                RWF_MATCH.ID,
+                RWF_MATCH.MAP,
+                RWF_MATCH.ENDED_AT,
+                RWF_MATCH_PLAYER.KIT,
+                RWF_MATCH_PLAYER.RESULT,
+                RWF_MATCH_PLAYER.KILLS,
+                RWF_MATCH_PLAYER.ASSISTS,
+                RWF_MATCH_PLAYER.DEATHS)
+            .from(RWF_MATCH_PLAYER)
+            .join(RWF_MATCH)
+            .on(RWF_MATCH.ID.eq(RWF_MATCH_PLAYER.MATCH_ID))
+            .where(RWF_MATCH_PLAYER.PLAYER.eq(player.toString()))
+            .orderBy(RWF_MATCH.ENDED_AT.desc())
+            .limit(limit)
+            .fetch(row ->
+                new HistoryRow(
+                    UUID.fromString(row.get(RWF_MATCH.ID)),
+                    row.get(RWF_MATCH.MAP),
+                    Instant.ofEpochMilli(row.get(RWF_MATCH.ENDED_AT)),
+                    row.get(RWF_MATCH_PLAYER.KIT),
+                    row.get(RWF_MATCH_PLAYER.RESULT),
+                    row.get(RWF_MATCH_PLAYER.KILLS),
+                    Optional.ofNullable(row.get(RWF_MATCH_PLAYER.ASSISTS)),
+                    row.get(RWF_MATCH_PLAYER.DEATHS))));
   }
 
   @Override
   public CompletableFuture<Prefs> prefs(UUID player) {
-    return database.read(
-        dsl ->
-            dsl.selectFrom(RWF_PLAYER_PREFS)
-                .where(RWF_PLAYER_PREFS.PLAYER.eq(player.toString()))
-                .fetchOptional()
-                .map(row -> new Prefs(Optional.ofNullable(row.getLastKit()), row.getTeamChat()))
-                .orElse(Prefs.DEFAULT));
+    return database.read(dsl ->
+        dsl.selectFrom(RWF_PLAYER_PREFS)
+            .where(RWF_PLAYER_PREFS.PLAYER.eq(player.toString()))
+            .fetchOptional()
+            .map(row -> new Prefs(Optional.ofNullable(row.getLastKit()), row.getTeamChat()))
+            .orElse(Prefs.DEFAULT));
   }
 
   @Override
   public CompletableFuture<Void> teamChat(UUID player, boolean on) {
     return Writes.done(
-        database.write(
-            dsl -> {
-              var updated =
-                  dsl.update(RWF_PLAYER_PREFS)
-                      .set(RWF_PLAYER_PREFS.TEAM_CHAT, on)
-                      .where(RWF_PLAYER_PREFS.PLAYER.eq(player.toString()))
-                      .execute();
-              if (updated == 0) {
-                dsl.insertInto(RWF_PLAYER_PREFS)
-                    .set(RWF_PLAYER_PREFS.PLAYER, player.toString())
-                    .set(RWF_PLAYER_PREFS.TEAM_CHAT, on)
-                    .set(RWF_PLAYER_PREFS.KIT_LAYOUTS, "{}")
-                    .execute();
-              }
-              return true;
-            }));
+        database.write(dsl -> {
+          var updated =
+              dsl.update(RWF_PLAYER_PREFS)
+                  .set(RWF_PLAYER_PREFS.TEAM_CHAT, on)
+                  .where(RWF_PLAYER_PREFS.PLAYER.eq(player.toString()))
+                  .execute();
+          if (updated == 0) {
+            dsl.insertInto(RWF_PLAYER_PREFS)
+                .set(RWF_PLAYER_PREFS.PLAYER, player.toString())
+                .set(RWF_PLAYER_PREFS.TEAM_CHAT, on)
+                .set(RWF_PLAYER_PREFS.KIT_LAYOUTS, "{}")
+                .execute();
+          }
+          return true;
+        }));
   }
 
   private static Totals totals(RwfPlayerStatsRecord row) {

@@ -206,10 +206,8 @@ final class HealthRoutesTest {
             .orElseThrow();
     assertThat(still.path().nodes()).containsExactly(0);
     assertThat(still.damage()).isZero();
-    assertThatThrownBy(
-            () ->
-                HealthRoutes.find(
-                    course(), new HealthRoutes.Request(0, 4, 5, node -> 0), edge -> -1))
+    assertThatThrownBy(() ->
+            HealthRoutes.find(course(), new HealthRoutes.Request(0, 4, 5, node -> 0), edge -> -1))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining("edge damage");
   }

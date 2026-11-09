@@ -46,25 +46,23 @@ final class ArrivalDialog {
                   options)));
     }
     dialog =
-        Dialog.create(
-            factory ->
-                factory
-                    .empty()
-                    .base(
-                        DialogBase.builder(Component.text("Welcome to The Storm!"))
-                            .canCloseWithEscape(true)
-                            .pause(false)
-                            .body(
-                                List.of(
-                                    DialogBody.plainMessage(
-                                        Component.text("Choose a biome, or explore spawn."))))
-                            .build())
-                    .type(
-                        DialogType.multiAction(buttons)
-                            .columns(2)
-                            .exitAction(
-                                ActionButton.builder(Component.text("Explore Spawn")).build())
-                            .build()));
+        Dialog.create(factory ->
+            factory
+                .empty()
+                .base(
+                    DialogBase.builder(Component.text("Welcome to The Storm!"))
+                        .canCloseWithEscape(true)
+                        .pause(false)
+                        .body(
+                            List.of(
+                                DialogBody.plainMessage(
+                                    Component.text("Choose a biome, or explore spawn."))))
+                        .build())
+                .type(
+                    DialogType.multiAction(buttons)
+                        .columns(2)
+                        .exitAction(ActionButton.builder(Component.text("Explore Spawn")).build())
+                        .build()));
   }
 
   void show(Player player) {

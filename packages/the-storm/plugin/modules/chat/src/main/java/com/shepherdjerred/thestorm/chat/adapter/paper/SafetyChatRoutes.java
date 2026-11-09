@@ -16,36 +16,32 @@ public final class SafetyChatRoutes {
       ChatService chat,
       com.shepherdjerred.thestorm.core.module.ModuleContext context) {
     var server = context.plugin().getServer();
-    safety.commandRoutes(
-        (player, command) -> {
-          var pieces = command.split("\\s+", 2);
-          if (pieces[0].replaceFirst("^/[^:]+:", "/").equalsIgnoreCase("/r")
-              && pieces.length == 2) {
-            return chat.replyTarget(player)
-                .map(target -> "/msg " + target.name() + " " + pieces[1])
-                .orElse(command);
-          }
-          return command;
-        });
+    safety.commandRoutes((player, command) -> {
+      var pieces = command.split("\\s+", 2);
+      if (pieces[0].replaceFirst("^/[^:]+:", "/").equalsIgnoreCase("/r") && pieces.length == 2) {
+        return chat.replyTarget(player)
+            .map(target -> "/msg " + target.name() + " " + pieces[1])
+            .orElse(command);
+      }
+      return command;
+    });
     safety.audiences((player, text) -> audience(chat, server, player, text));
-    safety.penalties(
-        request ->
-            java.util.concurrent.CompletableFuture.runAsync(
-                () -> {
-                  if (!context.time().instant().isBefore(request.deadline()))
-                    throw new IllegalStateException("Safety penalty deadline exceeded");
-                  chat.mute(
-                      request.submission().player(),
-                      java.time.Duration.ofSeconds(request.review().muteSeconds()),
-                      request.review().category() + " evidence " + request.submission().id(),
-                      "StormSafety");
-                },
-                context.scheduler().mainThread()));
-    safety.mutes(
-        player ->
-            java.util.concurrent.CompletableFuture.supplyAsync(
-                () -> !chat.ready() || chat.activeMute(player).isPresent(),
-                context.scheduler().mainThread()));
+    safety.penalties(request ->
+        java.util.concurrent.CompletableFuture.runAsync(
+            () -> {
+              if (!context.time().instant().isBefore(request.deadline()))
+                throw new IllegalStateException("Safety penalty deadline exceeded");
+              chat.mute(
+                  request.submission().player(),
+                  java.time.Duration.ofSeconds(request.review().muteSeconds()),
+                  request.review().category() + " evidence " + request.submission().id(),
+                  "StormSafety");
+            },
+            context.scheduler().mainThread()));
+    safety.mutes(player ->
+        java.util.concurrent.CompletableFuture.supplyAsync(
+            () -> !chat.ready() || chat.activeMute(player).isPresent(),
+            context.scheduler().mainThread()));
   }
 
   private static String audience(ChatService chat, Server server, UUID player, String text) {

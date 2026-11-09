@@ -175,13 +175,11 @@ final class KitProjectiles {
     runner
         .member(owner)
         .flatMap(Combatant::team)
-        .ifPresent(
-            team ->
-                stack.editMeta(
-                    FireworkEffectMeta.class,
-                    meta ->
-                        meta.setEffect(
-                            FireworkEffect.builder().withColor(Classic.dye(team)).build())));
+        .ifPresent(team ->
+            stack.editMeta(
+                FireworkEffectMeta.class,
+                meta ->
+                    meta.setEffect(FireworkEffect.builder().withColor(Classic.dye(team)).build())));
     var at = player.getEyeLocation().subtract(0, 0.2, 0);
     var look = Places.at(player).getDirection().normalize();
     var item =

@@ -28,11 +28,10 @@ public final class PreviewGameTest implements FabricClientGameTest {
       context.getInput().holdKey(options -> options.keyUp);
       context.waitFor(client -> client.options.keyUp.isDown());
       var held =
-          context.computeOnClient(
-              client -> {
-                actions.tick(client);
-                return client.options.keyUp.isDown();
-              });
+          context.computeOnClient(client -> {
+            actions.tick(client);
+            return client.options.keyUp.isDown();
+          });
       if (!held) throw new IllegalStateException("Idle recorder cleared a human movement key");
       context.getInput().releaseKey(options -> options.keyUp);
       context.getInput().pressKey(options -> options.keyInventory);

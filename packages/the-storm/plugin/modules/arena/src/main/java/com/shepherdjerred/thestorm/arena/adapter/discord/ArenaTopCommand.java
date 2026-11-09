@@ -61,14 +61,13 @@ public final class ArenaTopCommand {
     var _ =
         leaderboard
             .top(arena.id(), LIMIT)
-            .whenComplete(
-                (top, failure) -> {
-                  if (failure != null) {
-                    failed(reply, failure);
-                  } else {
-                    reply.accept(ArenaReplies.top(arena.name(), top));
-                  }
-                });
+            .whenComplete((top, failure) -> {
+              if (failure != null) {
+                failed(reply, failure);
+              } else {
+                reply.accept(ArenaReplies.top(arena.name(), top));
+              }
+            });
   }
 
   private void everyArena(Consumer<String> reply) {
@@ -76,18 +75,17 @@ public final class ArenaTopCommand {
     arenas.forEach(arena -> bests.add(leaderboard.top(arena.id(), 1)));
     var _ =
         CompletableFuture.allOf(bests.toArray(CompletableFuture[]::new))
-            .whenComplete(
-                (done, failure) -> {
-                  if (failure != null) {
-                    failed(reply, failure);
-                    return;
-                  }
-                  var rows = new ArrayList<ArenaReplies.Best>();
-                  for (var i = 0; i < arenas.size(); i++) {
-                    rows.add(new ArenaReplies.Best(arenas.get(i).name(), bests.get(i).join()));
-                  }
-                  reply.accept(ArenaReplies.bests(rows));
-                });
+            .whenComplete((done, failure) -> {
+              if (failure != null) {
+                failed(reply, failure);
+                return;
+              }
+              var rows = new ArrayList<ArenaReplies.Best>();
+              for (var i = 0; i < arenas.size(); i++) {
+                rows.add(new ArenaReplies.Best(arenas.get(i).name(), bests.get(i).join()));
+              }
+              reply.accept(ArenaReplies.bests(rows));
+            });
   }
 
   private void failed(Consumer<String> reply, Throwable failure) {

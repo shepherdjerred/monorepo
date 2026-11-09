@@ -17,12 +17,11 @@ public final class TownRules {
     var problems = new ArrayList<TownProblem>();
     towns
         .townOf(founding.founder())
-        .ifPresent(
-            town ->
-                problems.add(
-                    town.isCamp()
-                        ? new TownProblem.AlreadyInCamp()
-                        : new TownProblem.AlreadyInTown(town.name())));
+        .ifPresent(town ->
+            problems.add(
+                town.isCamp()
+                    ? new TownProblem.AlreadyInCamp()
+                    : new TownProblem.AlreadyInTown(town.name())));
     if (founding.governorLevel() < 1) {
       problems.add(new TownProblem.NeedsGovernor());
     }

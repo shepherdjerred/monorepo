@@ -59,40 +59,35 @@ public record SurvivalPlacement(int x, int z) {
             arena.maxPlayers());
     var zones =
         source.zones().stream()
-            .map(
-                zone ->
-                    new SurvivalContent.Zone(
-                        zone.id(),
-                        zone.name(),
-                        zone.areas().stream().map(this::cuboid).toList(),
-                        zone.emeralds(),
-                        zone.requires(),
-                        point(zone.entrance()),
-                        zone.spawns().stream().map(this::point).toList(),
-                        zone.safePoints().stream().map(this::point).toList(),
-                        zone.purchaseSigns().stream().map(this::block).toList(),
-                        zone.gate().stream().map(this::block).toList(),
-                        zone.stations().stream()
-                            .map(
-                                station ->
-                                    new SurvivalContent.Station(
-                                        block(station.block()), station.type()))
-                            .toList(),
-                        zone.resources().stream()
-                            .map(
-                                resource ->
-                                    new SurvivalContent.Resource(
-                                        block(resource.block()),
-                                        resource.material(),
-                                        resource.amount(),
-                                        resource.perRound()))
-                            .toList(),
-                        zone.defenses().stream()
-                            .map(
-                                defense ->
-                                    new SurvivalContent.Defense(
-                                        defense.id(), block(defense.block()), defense.type()))
-                            .toList()))
+            .map(zone ->
+                new SurvivalContent.Zone(
+                    zone.id(),
+                    zone.name(),
+                    zone.areas().stream().map(this::cuboid).toList(),
+                    zone.emeralds(),
+                    zone.requires(),
+                    point(zone.entrance()),
+                    zone.spawns().stream().map(this::point).toList(),
+                    zone.safePoints().stream().map(this::point).toList(),
+                    zone.purchaseSigns().stream().map(this::block).toList(),
+                    zone.gate().stream().map(this::block).toList(),
+                    zone.stations().stream()
+                        .map(station ->
+                            new SurvivalContent.Station(block(station.block()), station.type()))
+                        .toList(),
+                    zone.resources().stream()
+                        .map(resource ->
+                            new SurvivalContent.Resource(
+                                block(resource.block()),
+                                resource.material(),
+                                resource.amount(),
+                                resource.perRound()))
+                        .toList(),
+                    zone.defenses().stream()
+                        .map(defense ->
+                            new SurvivalContent.Defense(
+                                defense.id(), block(defense.block()), defense.type()))
+                        .toList()))
             .toList();
     var expedition = source.expedition();
     return new SurvivalContent(
@@ -110,12 +105,11 @@ public record SurvivalPlacement(int x, int z) {
             expedition.spawns().stream().map(this::point).toList(),
             expedition.safePoints().stream().map(this::point).toList()),
         source.machines().stream()
-            .map(
-                machine ->
-                    new SurvivalContent.Machine(
-                        block(machine.block()),
-                        machine.type(),
-                        machine.interactions().stream().map(this::block).toList()))
+            .map(machine ->
+                new SurvivalContent.Machine(
+                    block(machine.block()),
+                    machine.type(),
+                    machine.interactions().stream().map(this::block).toList()))
             .toList(),
         source.planeParts().stream()
             .map(part -> new SurvivalContent.PlanePart(part.id(), part.name(), block(part.block())))
@@ -124,10 +118,9 @@ public record SurvivalPlacement(int x, int z) {
         block(source.bossObjective()),
         source.routes(),
         source.boxSites().stream()
-            .map(
-                site ->
-                    new SurvivalContent.BoxSite(
-                        site.id(), site.zone(), block(site.block()), block(site.beacon())))
+            .map(site ->
+                new SurvivalContent.BoxSite(
+                    site.id(), site.zone(), block(site.block()), block(site.beacon())))
             .toList(),
         source.classes(),
         source.legendaries(),

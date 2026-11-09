@@ -127,11 +127,10 @@ final class ZombiesMachines {
                 SurvivalFeedback.Cue.POWER);
         runner
             .online()
-            .forEach(
-                p ->
-                    Texts.info(
-                        p,
-                        "The fortress has power. Rune shrines, the runic cache and the Runeforge are active."));
+            .forEach(p ->
+                Texts.info(
+                    p,
+                    "The fortress has power. Rune shrines, the runic cache and the Runeforge are active."));
       }
       return;
     }

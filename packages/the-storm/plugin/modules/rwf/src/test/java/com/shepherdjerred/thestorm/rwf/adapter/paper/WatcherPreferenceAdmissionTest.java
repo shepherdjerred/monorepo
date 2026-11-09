@@ -57,10 +57,9 @@ final class WatcherPreferenceAdmissionTest {
     bob.performCommand("rwf join");
     harness.until(() -> bob.getGameMode() == GameMode.SPECTATOR);
     var snapshots = new JooqSnapshotStore(harness.database);
-    harness.until(
-        () ->
-            snapshots.loadAll().join().stream()
-                .anyMatch(row -> row.player().equals(bob.getUniqueId())));
+    harness.until(() ->
+        snapshots.loadAll().join().stream()
+            .anyMatch(row -> row.player().equals(bob.getUniqueId())));
     harness.ticks(2);
     RwfHarness.messages(bob);
     return bob;
@@ -69,10 +68,9 @@ final class WatcherPreferenceAdmissionTest {
   private static void openNextLobby(RwfHarness harness, PlayerMock bob) {
     var previous = harness.snapshot().matchId();
     assertThat(((MatchRunner) harness.view()).handle(new MatchEvent.Stop())).isEmpty();
-    harness.until(
-        () ->
-            !harness.snapshot().matchId().equals(previous)
-                && harness.snapshot().phase() == MatchSnapshot.PhaseKind.LOBBY);
+    harness.until(() ->
+        !harness.snapshot().matchId().equals(previous)
+            && harness.snapshot().phase() == MatchSnapshot.PhaseKind.LOBBY);
     assertThat(harness.inMatch(bob)).isFalse();
     assertThat(bob.getGameMode()).isEqualTo(GameMode.SPECTATOR);
     assertThat(RwfHarness.messages(bob))
@@ -97,10 +95,9 @@ final class WatcherPreferenceAdmissionTest {
     bob.performCommand("rwf join");
     harness.until(() -> bob.getGameMode() == GameMode.SPECTATOR);
     var snapshots = new JooqSnapshotStore(harness.database);
-    harness.until(
-        () ->
-            snapshots.loadAll().join().stream()
-                .anyMatch(row -> row.player().equals(bob.getUniqueId())));
+    harness.until(() ->
+        snapshots.loadAll().join().stream()
+            .anyMatch(row -> row.player().equals(bob.getUniqueId())));
     harness.ticks(2);
     RwfHarness.messages(bob);
     return future;
@@ -190,17 +187,15 @@ final class WatcherPreferenceAdmissionTest {
       bob.performCommand("rwf spectate");
       harness.until(() -> bob.getGameMode() == GameMode.SPECTATOR);
       var snapshots = new JooqSnapshotStore(harness.database);
-      harness.until(
-          () ->
-              snapshots.loadAll().join().stream()
-                  .anyMatch(row -> row.player().equals(bob.getUniqueId())));
+      harness.until(() ->
+          snapshots.loadAll().join().stream()
+              .anyMatch(row -> row.player().equals(bob.getUniqueId())));
       harness.ticks(2);
       if (rewatch == Rewatch.JOIN_AGAIN) {
         bob.performCommand("rwf join");
-        harness.until(
-            () ->
-                RwfHarness.messages(bob).stream()
-                    .anyMatch(message -> message.contains("Loading your killstreak preferences")));
+        harness.until(() ->
+            RwfHarness.messages(bob).stream()
+                .anyMatch(message -> message.contains("Loading your killstreak preferences")));
         replacement = Optional.of(pendingRead(harness, bob.getUniqueId()));
         assertThat(replacement.orElseThrow()).isNotSameAs(original);
       }
@@ -306,16 +301,15 @@ final class WatcherPreferenceAdmissionTest {
       configuration = databaseDsl(database).configuration();
       listeners = configuration.executeListenerProviders();
       configuration.setAppending(
-          ExecuteListener.onExecuteStart(
-              context -> {
-                var sql = context.sql();
-                if (context.type() == ExecuteType.READ
-                    && sql != null
-                    && sql.contains("rwf_streak_prefs")) {
-                  entered.complete(null);
-                  release.join();
-                }
-              }));
+          ExecuteListener.onExecuteStart(context -> {
+            var sql = context.sql();
+            if (context.type() == ExecuteType.READ
+                && sql != null
+                && sql.contains("rwf_streak_prefs")) {
+              entered.complete(null);
+              release.join();
+            }
+          }));
     }
 
     boolean entered() {
@@ -348,11 +342,10 @@ final class WatcherPreferenceAdmissionTest {
 
     DatabasePause(StormDatabase database) {
       barrier =
-          database.write(
-              _ -> {
-                release.join();
-                return true;
-              });
+          database.write(_ -> {
+            release.join();
+            return true;
+          });
     }
 
     boolean pending() {

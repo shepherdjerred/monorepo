@@ -92,17 +92,14 @@ public final class AgentModule implements StormModule {
     context
         .services()
         .find(com.shepherdjerred.thestorm.core.safety.ContentSafety.class)
-        .ifPresent(
-            safety ->
-                safety.reviews(
-                    (submission, review) ->
-                        java.util.concurrent.CompletableFuture.completedFuture(null)
-                            .thenComposeAsync(
-                                ignored ->
-                                    new com.shepherdjerred.thestorm.agent.app.SafetyReviews(
-                                            services)
-                                        .record(submission, review),
-                                context.scheduler().mainThread())));
+        .ifPresent(safety ->
+            safety.reviews((submission, review) ->
+                java.util.concurrent.CompletableFuture.completedFuture(null)
+                    .thenComposeAsync(
+                        ignored ->
+                            new com.shepherdjerred.thestorm.agent.app.SafetyReviews(services)
+                                .record(submission, review),
+                        context.scheduler().mainThread())));
     var recents = new RecentChat();
     var chatFlow =
         new ChatFlow(
@@ -129,13 +126,12 @@ public final class AgentModule implements StormModule {
               sweep
                   .sweep()
                   .thenAccept(report -> logSweep(context, report))
-                  .exceptionally(
-                      failure -> {
-                        context
-                            .logger()
-                            .error(Component.text("agent: sweeping stale tickets failed"), failure);
-                        return null;
-                      });
+                  .exceptionally(failure -> {
+                    context
+                        .logger()
+                        .error(Component.text("agent: sweeping stale tickets failed"), failure);
+                    return null;
+                  });
         };
     // The boot sweep catches what crashed or slept through triage; the tick repeats it while
     // awake. The sweep itself never blocks: every ticket resolves on worker futures.
@@ -169,10 +165,9 @@ public final class AgentModule implements StormModule {
                         context
                             .services()
                             .find(com.shepherdjerred.thestorm.core.safety.ContentSafety.class)
-                            .map(
-                                safety ->
-                                    com.shepherdjerred.thestorm.agent.app.SafetyReviews.overturn(
-                                        safety, decision, staff))
+                            .map(safety ->
+                                com.shepherdjerred.thestorm.agent.app.SafetyReviews.overturn(
+                                    safety, decision, staff))
                             .orElseGet(
                                 () -> java.util.concurrent.CompletableFuture.completedFuture(null)),
                     context.scheduler().mainThread()),
@@ -201,11 +196,10 @@ public final class AgentModule implements StormModule {
   /** Runs a ticket flow, logging its failure instead of breaking tickets. */
   private static void listen(ModuleContext context, CompletableFuture<Void> run, String what) {
     var _ =
-        run.exceptionally(
-            failure -> {
-              context.logger().error(Component.text(what), failure);
-              return null;
-            });
+        run.exceptionally(failure -> {
+          context.logger().error(Component.text(what), failure);
+          return null;
+        });
   }
 
   /** Logs a sweep report, quietly when nothing happened. */
@@ -240,12 +234,11 @@ public final class AgentModule implements StormModule {
     return environment
         .apply(config.brain().bearerTokenEnv())
         .filter(token -> !token.isBlank())
-        .orElseThrow(
-            () ->
-                new IllegalStateException(
-                    "The agent module cannot start: "
-                        + config.brain().bearerTokenEnv()
-                        + " is not set. Wire the secret or switch the module off in config.yml."));
+        .orElseThrow(() ->
+            new IllegalStateException(
+                "The agent module cannot start: "
+                    + config.brain().bearerTokenEnv()
+                    + " is not set. Wire the secret or switch the module off in config.yml."));
   }
 
   private record Running(

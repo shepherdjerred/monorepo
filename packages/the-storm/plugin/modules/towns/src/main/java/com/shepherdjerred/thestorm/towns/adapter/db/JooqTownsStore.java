@@ -66,41 +66,39 @@ public final class JooqTownsStore implements TownsStore {
   /** Imports catalogued towns and their receipts atomically, without replacing player data. */
   public CompletableFuture<HeritageTownImport.Plan> importHeritage(
       List<HeritageSite> sites, Instant now) {
-    return database.write(
-        dsl -> {
-          var existing = load(dsl).towns();
-          var completed = new HashSet<UUID>();
-          for (var row : dsl.fetch("select town_id from towns_heritage_import")) {
-            completed.add(UUID.fromString(row.get(0, String.class)));
-          }
-          // Existing historical identities may have been imported by an earlier restoration.
-          for (var site : sites) {
-            var id = site.activeTownId();
-            if (id.isPresent()
-                && existing.stream().anyMatch(town -> town.id().equals(id.orElseThrow()))
-                && completed.add(id.orElseThrow())) {
-              dsl.execute(
-                  "insert into towns_heritage_import (town_id) values (?)",
-                  id.orElseThrow().toString());
-            }
-          }
-          var plan = HeritageTownImport.plan(sites, existing, completed, now);
-          for (var town : plan.towns()) {
-            dsl.insertInto(TOWNS_TOWN)
-                .set(TOWNS_TOWN.ID, town.id().toString())
-                .set(TOWNS_TOWN.NAME, town.name())
-                .set(TOWNS_TOWN.CREATED_AT, town.createdAt().toEpochMilli())
-                .set(TOWNS_TOWN.GOVERNOR_LEVEL, town.governorLevel())
-                .set(TOWNS_TOWN.KIND, town.kind().name())
-                .set(TOWNS_TOWN.HISTORICAL_CUSTODY, town.historicalCustody() ? 1 : 0)
-                .set(TOWNS_TOWN.EXPIRY_WARNED, 0)
-                .execute();
-            insertMembers(dsl, town);
-            dsl.execute(
-                "insert into towns_heritage_import (town_id) values (?)", town.id().toString());
-          }
-          return plan;
-        });
+    return database.write(dsl -> {
+      var existing = load(dsl).towns();
+      var completed = new HashSet<UUID>();
+      for (var row : dsl.fetch("select town_id from towns_heritage_import")) {
+        completed.add(UUID.fromString(row.get(0, String.class)));
+      }
+      // Existing historical identities may have been imported by an earlier restoration.
+      for (var site : sites) {
+        var id = site.activeTownId();
+        if (id.isPresent()
+            && existing.stream().anyMatch(town -> town.id().equals(id.orElseThrow()))
+            && completed.add(id.orElseThrow())) {
+          dsl.execute(
+              "insert into towns_heritage_import (town_id) values (?)",
+              id.orElseThrow().toString());
+        }
+      }
+      var plan = HeritageTownImport.plan(sites, existing, completed, now);
+      for (var town : plan.towns()) {
+        dsl.insertInto(TOWNS_TOWN)
+            .set(TOWNS_TOWN.ID, town.id().toString())
+            .set(TOWNS_TOWN.NAME, town.name())
+            .set(TOWNS_TOWN.CREATED_AT, town.createdAt().toEpochMilli())
+            .set(TOWNS_TOWN.GOVERNOR_LEVEL, town.governorLevel())
+            .set(TOWNS_TOWN.KIND, town.kind().name())
+            .set(TOWNS_TOWN.HISTORICAL_CUSTODY, town.historicalCustody() ? 1 : 0)
+            .set(TOWNS_TOWN.EXPIRY_WARNED, 0)
+            .execute();
+        insertMembers(dsl, town);
+        dsl.execute("insert into towns_heritage_import (town_id) values (?)", town.id().toString());
+      }
+      return plan;
+    });
   }
 
   private static TownsSnapshot load(DSLContext dsl) {
@@ -113,21 +111,20 @@ public final class JooqTownsStore implements TownsStore {
     var towns =
         dsl.selectFrom(TOWNS_TOWN)
             .orderBy(TOWNS_TOWN.CREATED_AT, TOWNS_TOWN.ID)
-            .fetch(
-                row -> {
-                  var id = UUID.fromString(row.getId());
-                  var active = row.getLastActiveAt();
-                  return new Town(
-                      id,
-                      row.getName(),
-                      Instant.ofEpochMilli(row.getCreatedAt()),
-                      members.getOrDefault(id, Map.of()),
-                      row.getGovernorLevel(),
-                      TownKind.valueOf(row.getKind()),
-                      active == null ? Optional.empty() : Optional.of(Instant.ofEpochMilli(active)),
-                      row.getExpiryWarned() != 0,
-                      row.getHistoricalCustody() != 0);
-                });
+            .fetch(row -> {
+              var id = UUID.fromString(row.getId());
+              var active = row.getLastActiveAt();
+              return new Town(
+                  id,
+                  row.getName(),
+                  Instant.ofEpochMilli(row.getCreatedAt()),
+                  members.getOrDefault(id, Map.of()),
+                  row.getGovernorLevel(),
+                  TownKind.valueOf(row.getKind()),
+                  active == null ? Optional.empty() : Optional.of(Instant.ofEpochMilli(active)),
+                  row.getExpiryWarned() != 0,
+                  row.getHistoricalCustody() != 0);
+            });
     var flags = new HashMap<ChunkPos, Set<ClaimFlag>>();
     for (var row : dsl.selectFrom(TOWNS_CLAIM_FLAG).fetch()) {
       flags
@@ -147,38 +144,34 @@ public final class JooqTownsStore implements TownsStore {
     var claims =
         dsl.selectFrom(TOWNS_CLAIM)
             .orderBy(TOWNS_CLAIM.CLAIMED_AT, TOWNS_CLAIM.WORLD, TOWNS_CLAIM.CHUNK_X)
-            .fetch(
-                row -> {
-                  var chunk = new ChunkPos(row.getWorld(), row.getChunkX(), row.getChunkZ());
-                  return new Claim(
-                      chunk,
-                      UUID.fromString(row.getTownId()),
-                      new ClaimFlags(flags.getOrDefault(chunk, Set.of())),
-                      trusted.getOrDefault(chunk, Set.of()),
-                      Optional.ofNullable(row.getResidentId()).map(UUID::fromString));
-                });
+            .fetch(row -> {
+              var chunk = new ChunkPos(row.getWorld(), row.getChunkX(), row.getChunkZ());
+              return new Claim(
+                  chunk,
+                  UUID.fromString(row.getTownId()),
+                  new ClaimFlags(flags.getOrDefault(chunk, Set.of())),
+                  trusted.getOrDefault(chunk, Set.of()),
+                  Optional.ofNullable(row.getResidentId()).map(UUID::fromString));
+            });
     return new TownsSnapshot(towns, claims);
   }
 
   @Override
   public CompletableFuture<Void> createTown(Town town) {
-    return write(
-        dsl -> {
-          var id = town.id().toString();
-          dsl.insertInto(TOWNS_TOWN)
-              .set(TOWNS_TOWN.ID, id)
-              .set(TOWNS_TOWN.NAME, town.name())
-              .set(TOWNS_TOWN.CREATED_AT, town.createdAt().toEpochMilli())
-              .set(TOWNS_TOWN.GOVERNOR_LEVEL, town.governorLevel())
-              .set(TOWNS_TOWN.KIND, town.kind().name())
-              .set(TOWNS_TOWN.HISTORICAL_CUSTODY, town.historicalCustody() ? 1 : 0)
-              .set(
-                  TOWNS_TOWN.LAST_ACTIVE_AT,
-                  town.lastActive().map(Instant::toEpochMilli).orElse(null))
-              .set(TOWNS_TOWN.EXPIRY_WARNED, town.expiryWarned() ? 1 : 0)
-              .execute();
-          insertMembers(dsl, town);
-        });
+    return write(dsl -> {
+      var id = town.id().toString();
+      dsl.insertInto(TOWNS_TOWN)
+          .set(TOWNS_TOWN.ID, id)
+          .set(TOWNS_TOWN.NAME, town.name())
+          .set(TOWNS_TOWN.CREATED_AT, town.createdAt().toEpochMilli())
+          .set(TOWNS_TOWN.GOVERNOR_LEVEL, town.governorLevel())
+          .set(TOWNS_TOWN.KIND, town.kind().name())
+          .set(TOWNS_TOWN.HISTORICAL_CUSTODY, town.historicalCustody() ? 1 : 0)
+          .set(TOWNS_TOWN.LAST_ACTIVE_AT, town.lastActive().map(Instant::toEpochMilli).orElse(null))
+          .set(TOWNS_TOWN.EXPIRY_WARNED, town.expiryWarned() ? 1 : 0)
+          .execute();
+      insertMembers(dsl, town);
+    });
   }
 
   /**
@@ -196,72 +189,68 @@ public final class JooqTownsStore implements TownsStore {
     if (town.members().containsKey(departed)) {
       throw new IllegalArgumentException("departed player remains a town member");
     }
-    return database.write(
-        dsl -> {
-          if (!dsl.fetchExists(
-              TOWNS_MEMBER,
-              TOWNS_MEMBER.TOWN_ID.eq(town.id().toString()),
-              TOWNS_MEMBER.PLAYER_ID.eq(departed.toString()))) {
-            throw new IllegalStateException("departed player is not a stored member of this town");
-          }
-          saveTown(dsl, town);
-          dsl.deleteFrom(TOWNS_CLAIM_TRUST)
-              .where(TOWNS_CLAIM_TRUST.PLAYER_ID.eq(departed.toString()))
-              .and(
-                  DSL.row(
-                          TOWNS_CLAIM_TRUST.WORLD,
-                          TOWNS_CLAIM_TRUST.CHUNK_X,
-                          TOWNS_CLAIM_TRUST.CHUNK_Z)
-                      .in(
-                          DSL.select(TOWNS_CLAIM.WORLD, TOWNS_CLAIM.CHUNK_X, TOWNS_CLAIM.CHUNK_Z)
-                              .from(TOWNS_CLAIM)
-                              .where(TOWNS_CLAIM.TOWN_ID.eq(town.id().toString()))))
-              .execute();
-          var blocks = TOWNS_LOCK_BLOCK.as("blocks");
-          var claims = TOWNS_CLAIM.as("claims");
-          var onTownLand =
-              DSL.selectOne()
-                  .from(claims)
-                  .where(claims.TOWN_ID.eq(town.id().toString()))
-                  .and(claims.WORLD.eq(blocks.WORLD))
-                  .and(blocks.X.ge(claims.CHUNK_X.mul(16)))
-                  .and(blocks.X.lt(claims.CHUNK_X.add(1).mul(16)))
-                  .and(blocks.Z.ge(claims.CHUNK_Z.mul(16)))
-                  .and(blocks.Z.lt(claims.CHUNK_Z.add(1).mul(16)));
-          var ownedBlock = DSL.selectOne().from(blocks).where(blocks.LOCK_ID.eq(TOWNS_LOCK.ID));
-          var outsideBlock =
-              DSL.selectOne()
-                  .from(blocks)
-                  .where(blocks.LOCK_ID.eq(TOWNS_LOCK.ID))
-                  .andNotExists(onTownLand);
-          var ids =
-              dsl.select(TOWNS_LOCK.ID)
-                  .from(TOWNS_LOCK)
-                  .where(TOWNS_LOCK.OWNER_ID.eq(departed.toString()))
-                  .andNotExists(
-                      DSL.selectOne()
-                          .from(TOWNS_LOCK_RESTORATION)
-                          .where(TOWNS_LOCK_RESTORATION.LOCK_ID.eq(TOWNS_LOCK.ID)))
-                  .andExists(ownedBlock)
-                  .andNotExists(outsideBlock)
-                  .fetchSet(TOWNS_LOCK.ID);
-          if (!ids.isEmpty()) {
-            dsl.update(TOWNS_LOCK)
-                .set(TOWNS_LOCK.OWNER_ID, town.owner().toString())
-                .where(TOWNS_LOCK.ID.in(ids))
-                .execute();
-            dsl.deleteFrom(TOWNS_LOCK_TRUST)
-                .where(TOWNS_LOCK_TRUST.LOCK_ID.in(ids))
-                .and(TOWNS_LOCK_TRUST.PLAYER_ID.eq(town.owner().toString()))
-                .execute();
-          }
-          dsl.update(TOWNS_CLAIM)
-              .set(TOWNS_CLAIM.RESIDENT_ID, (String) null)
-              .where(TOWNS_CLAIM.TOWN_ID.eq(town.id().toString()))
-              .and(TOWNS_CLAIM.RESIDENT_ID.eq(departed.toString()))
-              .execute();
-          return ids.stream().map(UUID::fromString).collect(toUnmodifiableSet());
-        });
+    return database.write(dsl -> {
+      if (!dsl.fetchExists(
+          TOWNS_MEMBER,
+          TOWNS_MEMBER.TOWN_ID.eq(town.id().toString()),
+          TOWNS_MEMBER.PLAYER_ID.eq(departed.toString()))) {
+        throw new IllegalStateException("departed player is not a stored member of this town");
+      }
+      saveTown(dsl, town);
+      dsl.deleteFrom(TOWNS_CLAIM_TRUST)
+          .where(TOWNS_CLAIM_TRUST.PLAYER_ID.eq(departed.toString()))
+          .and(
+              DSL.row(TOWNS_CLAIM_TRUST.WORLD, TOWNS_CLAIM_TRUST.CHUNK_X, TOWNS_CLAIM_TRUST.CHUNK_Z)
+                  .in(
+                      DSL.select(TOWNS_CLAIM.WORLD, TOWNS_CLAIM.CHUNK_X, TOWNS_CLAIM.CHUNK_Z)
+                          .from(TOWNS_CLAIM)
+                          .where(TOWNS_CLAIM.TOWN_ID.eq(town.id().toString()))))
+          .execute();
+      var blocks = TOWNS_LOCK_BLOCK.as("blocks");
+      var claims = TOWNS_CLAIM.as("claims");
+      var onTownLand =
+          DSL.selectOne()
+              .from(claims)
+              .where(claims.TOWN_ID.eq(town.id().toString()))
+              .and(claims.WORLD.eq(blocks.WORLD))
+              .and(blocks.X.ge(claims.CHUNK_X.mul(16)))
+              .and(blocks.X.lt(claims.CHUNK_X.add(1).mul(16)))
+              .and(blocks.Z.ge(claims.CHUNK_Z.mul(16)))
+              .and(blocks.Z.lt(claims.CHUNK_Z.add(1).mul(16)));
+      var ownedBlock = DSL.selectOne().from(blocks).where(blocks.LOCK_ID.eq(TOWNS_LOCK.ID));
+      var outsideBlock =
+          DSL.selectOne()
+              .from(blocks)
+              .where(blocks.LOCK_ID.eq(TOWNS_LOCK.ID))
+              .andNotExists(onTownLand);
+      var ids =
+          dsl.select(TOWNS_LOCK.ID)
+              .from(TOWNS_LOCK)
+              .where(TOWNS_LOCK.OWNER_ID.eq(departed.toString()))
+              .andNotExists(
+                  DSL.selectOne()
+                      .from(TOWNS_LOCK_RESTORATION)
+                      .where(TOWNS_LOCK_RESTORATION.LOCK_ID.eq(TOWNS_LOCK.ID)))
+              .andExists(ownedBlock)
+              .andNotExists(outsideBlock)
+              .fetchSet(TOWNS_LOCK.ID);
+      if (!ids.isEmpty()) {
+        dsl.update(TOWNS_LOCK)
+            .set(TOWNS_LOCK.OWNER_ID, town.owner().toString())
+            .where(TOWNS_LOCK.ID.in(ids))
+            .execute();
+        dsl.deleteFrom(TOWNS_LOCK_TRUST)
+            .where(TOWNS_LOCK_TRUST.LOCK_ID.in(ids))
+            .and(TOWNS_LOCK_TRUST.PLAYER_ID.eq(town.owner().toString()))
+            .execute();
+      }
+      dsl.update(TOWNS_CLAIM)
+          .set(TOWNS_CLAIM.RESIDENT_ID, (String) null)
+          .where(TOWNS_CLAIM.TOWN_ID.eq(town.id().toString()))
+          .and(TOWNS_CLAIM.RESIDENT_ID.eq(departed.toString()))
+          .execute();
+      return ids.stream().map(UUID::fromString).collect(toUnmodifiableSet());
+    });
   }
 
   private static void saveTown(DSLContext dsl, Town town) {
@@ -297,143 +286,121 @@ public final class JooqTownsStore implements TownsStore {
 
   @Override
   public CompletableFuture<Void> deleteTown(TownPayout payout) {
-    return write(
-        dsl -> {
-          var id = payout.townId().toString();
-          dsl.deleteFrom(TOWNS_CLAIM_TRUST)
-              .where(
-                  DSL.row(
-                          TOWNS_CLAIM_TRUST.WORLD,
-                          TOWNS_CLAIM_TRUST.CHUNK_X,
-                          TOWNS_CLAIM_TRUST.CHUNK_Z)
-                      .in(
-                          DSL.select(TOWNS_CLAIM.WORLD, TOWNS_CLAIM.CHUNK_X, TOWNS_CLAIM.CHUNK_Z)
-                              .from(TOWNS_CLAIM)
-                              .where(TOWNS_CLAIM.TOWN_ID.eq(id))))
-              .execute();
-          dsl.deleteFrom(TOWNS_CLAIM_FLAG)
-              .where(
-                  DSL.row(
-                          TOWNS_CLAIM_FLAG.WORLD,
-                          TOWNS_CLAIM_FLAG.CHUNK_X,
-                          TOWNS_CLAIM_FLAG.CHUNK_Z)
-                      .in(
-                          DSL.select(TOWNS_CLAIM.WORLD, TOWNS_CLAIM.CHUNK_X, TOWNS_CLAIM.CHUNK_Z)
-                              .from(TOWNS_CLAIM)
-                              .where(TOWNS_CLAIM.TOWN_ID.eq(id))))
-              .execute();
-          dsl.deleteFrom(TOWNS_CLAIM).where(TOWNS_CLAIM.TOWN_ID.eq(id)).execute();
-          dsl.deleteFrom(TOWNS_MEMBER).where(TOWNS_MEMBER.TOWN_ID.eq(id)).execute();
-          var deleted = dsl.deleteFrom(TOWNS_TOWN).where(TOWNS_TOWN.ID.eq(id)).execute();
-          if (deleted != 1) {
-            throw new IllegalStateException("town " + payout.townId() + " is not stored");
-          }
-          dsl.insertInto(TOWNS_PENDING_PAYOUT)
-              .set(TOWNS_PENDING_PAYOUT.TOWN_ID, id)
-              .set(TOWNS_PENDING_PAYOUT.OWNER_ID, payout.ownerId().toString())
-              .set(TOWNS_PENDING_PAYOUT.TRANSFER_KEY, payout.transferKey().toString())
-              .execute();
-        });
+    return write(dsl -> {
+      var id = payout.townId().toString();
+      dsl.deleteFrom(TOWNS_CLAIM_TRUST)
+          .where(
+              DSL.row(TOWNS_CLAIM_TRUST.WORLD, TOWNS_CLAIM_TRUST.CHUNK_X, TOWNS_CLAIM_TRUST.CHUNK_Z)
+                  .in(
+                      DSL.select(TOWNS_CLAIM.WORLD, TOWNS_CLAIM.CHUNK_X, TOWNS_CLAIM.CHUNK_Z)
+                          .from(TOWNS_CLAIM)
+                          .where(TOWNS_CLAIM.TOWN_ID.eq(id))))
+          .execute();
+      dsl.deleteFrom(TOWNS_CLAIM_FLAG)
+          .where(
+              DSL.row(TOWNS_CLAIM_FLAG.WORLD, TOWNS_CLAIM_FLAG.CHUNK_X, TOWNS_CLAIM_FLAG.CHUNK_Z)
+                  .in(
+                      DSL.select(TOWNS_CLAIM.WORLD, TOWNS_CLAIM.CHUNK_X, TOWNS_CLAIM.CHUNK_Z)
+                          .from(TOWNS_CLAIM)
+                          .where(TOWNS_CLAIM.TOWN_ID.eq(id))))
+          .execute();
+      dsl.deleteFrom(TOWNS_CLAIM).where(TOWNS_CLAIM.TOWN_ID.eq(id)).execute();
+      dsl.deleteFrom(TOWNS_MEMBER).where(TOWNS_MEMBER.TOWN_ID.eq(id)).execute();
+      var deleted = dsl.deleteFrom(TOWNS_TOWN).where(TOWNS_TOWN.ID.eq(id)).execute();
+      if (deleted != 1) {
+        throw new IllegalStateException("town " + payout.townId() + " is not stored");
+      }
+      dsl.insertInto(TOWNS_PENDING_PAYOUT)
+          .set(TOWNS_PENDING_PAYOUT.TOWN_ID, id)
+          .set(TOWNS_PENDING_PAYOUT.OWNER_ID, payout.ownerId().toString())
+          .set(TOWNS_PENDING_PAYOUT.TRANSFER_KEY, payout.transferKey().toString())
+          .execute();
+    });
   }
 
   @Override
   public CompletableFuture<Void> deleteCamp(UUID townId, Map<UUID, String> notices) {
-    return write(
-        dsl -> {
-          var id = townId.toString();
-          dsl.deleteFrom(TOWNS_CLAIM_TRUST)
-              .where(
-                  DSL.row(
-                          TOWNS_CLAIM_TRUST.WORLD,
-                          TOWNS_CLAIM_TRUST.CHUNK_X,
-                          TOWNS_CLAIM_TRUST.CHUNK_Z)
-                      .in(
-                          DSL.select(TOWNS_CLAIM.WORLD, TOWNS_CLAIM.CHUNK_X, TOWNS_CLAIM.CHUNK_Z)
-                              .from(TOWNS_CLAIM)
-                              .where(TOWNS_CLAIM.TOWN_ID.eq(id))))
-              .execute();
-          dsl.deleteFrom(TOWNS_CLAIM_FLAG)
-              .where(
-                  DSL.row(
-                          TOWNS_CLAIM_FLAG.WORLD,
-                          TOWNS_CLAIM_FLAG.CHUNK_X,
-                          TOWNS_CLAIM_FLAG.CHUNK_Z)
-                      .in(
-                          DSL.select(TOWNS_CLAIM.WORLD, TOWNS_CLAIM.CHUNK_X, TOWNS_CLAIM.CHUNK_Z)
-                              .from(TOWNS_CLAIM)
-                              .where(TOWNS_CLAIM.TOWN_ID.eq(id))))
-              .execute();
-          dsl.deleteFrom(TOWNS_CLAIM).where(TOWNS_CLAIM.TOWN_ID.eq(id)).execute();
-          dsl.deleteFrom(TOWNS_MEMBER).where(TOWNS_MEMBER.TOWN_ID.eq(id)).execute();
-          var deleted = dsl.deleteFrom(TOWNS_TOWN).where(TOWNS_TOWN.ID.eq(id)).execute();
-          if (deleted != 1) {
-            throw new IllegalStateException("camp " + townId + " is not stored");
-          }
-          for (var notice : notices.entrySet()) {
-            var player = notice.getKey().toString();
-            dsl.deleteFrom(TOWNS_CAMP_NOTICE)
-                .where(TOWNS_CAMP_NOTICE.PLAYER_ID.eq(player))
-                .execute();
-            dsl.insertInto(TOWNS_CAMP_NOTICE)
-                .set(TOWNS_CAMP_NOTICE.PLAYER_ID, player)
-                .set(TOWNS_CAMP_NOTICE.MESSAGE, notice.getValue())
-                .execute();
-          }
-        });
+    return write(dsl -> {
+      var id = townId.toString();
+      dsl.deleteFrom(TOWNS_CLAIM_TRUST)
+          .where(
+              DSL.row(TOWNS_CLAIM_TRUST.WORLD, TOWNS_CLAIM_TRUST.CHUNK_X, TOWNS_CLAIM_TRUST.CHUNK_Z)
+                  .in(
+                      DSL.select(TOWNS_CLAIM.WORLD, TOWNS_CLAIM.CHUNK_X, TOWNS_CLAIM.CHUNK_Z)
+                          .from(TOWNS_CLAIM)
+                          .where(TOWNS_CLAIM.TOWN_ID.eq(id))))
+          .execute();
+      dsl.deleteFrom(TOWNS_CLAIM_FLAG)
+          .where(
+              DSL.row(TOWNS_CLAIM_FLAG.WORLD, TOWNS_CLAIM_FLAG.CHUNK_X, TOWNS_CLAIM_FLAG.CHUNK_Z)
+                  .in(
+                      DSL.select(TOWNS_CLAIM.WORLD, TOWNS_CLAIM.CHUNK_X, TOWNS_CLAIM.CHUNK_Z)
+                          .from(TOWNS_CLAIM)
+                          .where(TOWNS_CLAIM.TOWN_ID.eq(id))))
+          .execute();
+      dsl.deleteFrom(TOWNS_CLAIM).where(TOWNS_CLAIM.TOWN_ID.eq(id)).execute();
+      dsl.deleteFrom(TOWNS_MEMBER).where(TOWNS_MEMBER.TOWN_ID.eq(id)).execute();
+      var deleted = dsl.deleteFrom(TOWNS_TOWN).where(TOWNS_TOWN.ID.eq(id)).execute();
+      if (deleted != 1) {
+        throw new IllegalStateException("camp " + townId + " is not stored");
+      }
+      for (var notice : notices.entrySet()) {
+        var player = notice.getKey().toString();
+        dsl.deleteFrom(TOWNS_CAMP_NOTICE).where(TOWNS_CAMP_NOTICE.PLAYER_ID.eq(player)).execute();
+        dsl.insertInto(TOWNS_CAMP_NOTICE)
+            .set(TOWNS_CAMP_NOTICE.PLAYER_ID, player)
+            .set(TOWNS_CAMP_NOTICE.MESSAGE, notice.getValue())
+            .execute();
+      }
+    });
   }
 
   @Override
   public CompletableFuture<Optional<String>> notice(UUID player) {
-    return database.write(
-        dsl ->
-            Optional.ofNullable(
-                dsl.select(TOWNS_CAMP_NOTICE.MESSAGE)
-                    .from(TOWNS_CAMP_NOTICE)
-                    .where(TOWNS_CAMP_NOTICE.PLAYER_ID.eq(player.toString()))
-                    .fetchOne(TOWNS_CAMP_NOTICE.MESSAGE)));
+    return database.write(dsl ->
+        Optional.ofNullable(
+            dsl.select(TOWNS_CAMP_NOTICE.MESSAGE)
+                .from(TOWNS_CAMP_NOTICE)
+                .where(TOWNS_CAMP_NOTICE.PLAYER_ID.eq(player.toString()))
+                .fetchOne(TOWNS_CAMP_NOTICE.MESSAGE)));
   }
 
   @Override
   public CompletableFuture<Void> clearNotice(UUID player) {
-    return write(
-        dsl -> {
-          dsl.deleteFrom(TOWNS_CAMP_NOTICE)
-              .where(TOWNS_CAMP_NOTICE.PLAYER_ID.eq(player.toString()))
-              .execute();
-        });
+    return write(dsl -> {
+      dsl.deleteFrom(TOWNS_CAMP_NOTICE)
+          .where(TOWNS_CAMP_NOTICE.PLAYER_ID.eq(player.toString()))
+          .execute();
+    });
   }
 
   @Override
   public CompletableFuture<List<TownPayout>> pendingPayouts() {
-    return database.write(
-        dsl ->
-            dsl.selectFrom(TOWNS_PENDING_PAYOUT)
-                .orderBy(TOWNS_PENDING_PAYOUT.TOWN_ID)
-                .fetch(
-                    row ->
-                        new TownPayout(
-                            UUID.fromString(row.getTownId()),
-                            UUID.fromString(row.getOwnerId()),
-                            UUID.fromString(row.getTransferKey()))));
+    return database.write(dsl ->
+        dsl.selectFrom(TOWNS_PENDING_PAYOUT)
+            .orderBy(TOWNS_PENDING_PAYOUT.TOWN_ID)
+            .fetch(row ->
+                new TownPayout(
+                    UUID.fromString(row.getTownId()),
+                    UUID.fromString(row.getOwnerId()),
+                    UUID.fromString(row.getTransferKey()))));
   }
 
   @Override
   public CompletableFuture<Void> clearPayout(TownPayout payout) {
-    return write(
-        dsl -> {
-          var deleted =
-              dsl.deleteFrom(TOWNS_PENDING_PAYOUT)
-                  .where(TOWNS_PENDING_PAYOUT.TOWN_ID.eq(payout.townId().toString()))
-                  .and(TOWNS_PENDING_PAYOUT.OWNER_ID.eq(payout.ownerId().toString()))
-                  .and(TOWNS_PENDING_PAYOUT.TRANSFER_KEY.eq(payout.transferKey().toString()))
-                  .execute();
-          if (deleted == 0
-              && dsl.fetchExists(
-                  TOWNS_PENDING_PAYOUT,
-                  TOWNS_PENDING_PAYOUT.TOWN_ID.eq(payout.townId().toString()))) {
-            throw new IllegalStateException("town payout intent changed: " + payout);
-          }
-        });
+    return write(dsl -> {
+      var deleted =
+          dsl.deleteFrom(TOWNS_PENDING_PAYOUT)
+              .where(TOWNS_PENDING_PAYOUT.TOWN_ID.eq(payout.townId().toString()))
+              .and(TOWNS_PENDING_PAYOUT.OWNER_ID.eq(payout.ownerId().toString()))
+              .and(TOWNS_PENDING_PAYOUT.TRANSFER_KEY.eq(payout.transferKey().toString()))
+              .execute();
+      if (deleted == 0
+          && dsl.fetchExists(
+              TOWNS_PENDING_PAYOUT, TOWNS_PENDING_PAYOUT.TOWN_ID.eq(payout.townId().toString()))) {
+        throw new IllegalStateException("town payout intent changed: " + payout);
+      }
+    });
   }
 
   @Override
@@ -446,11 +413,10 @@ public final class JooqTownsStore implements TownsStore {
     if (!claim.townId().equals(town.id())) {
       throw new IllegalArgumentException("claim and town ids differ");
     }
-    return write(
-        dsl -> {
-          insertClaim(dsl, claim, at);
-          saveTown(dsl, town);
-        });
+    return write(dsl -> {
+      insertClaim(dsl, claim, at);
+      saveTown(dsl, town);
+    });
   }
 
   private static void insertClaim(DSLContext dsl, Claim claim, Instant at) {
@@ -468,57 +434,54 @@ public final class JooqTownsStore implements TownsStore {
 
   @Override
   public CompletableFuture<Void> removeClaim(ChunkPos chunk) {
-    return write(
-        dsl -> {
-          deleteSettings(dsl, chunk);
-          var deleted =
-              dsl.deleteFrom(TOWNS_CLAIM)
-                  .where(
-                      TOWNS_CLAIM.WORLD.eq(chunk.world()),
-                      TOWNS_CLAIM.CHUNK_X.eq(chunk.x()),
-                      TOWNS_CLAIM.CHUNK_Z.eq(chunk.z()))
-                  .execute();
-          if (deleted != 1) {
-            throw new IllegalStateException("claim " + chunk + " is not stored");
-          }
-        });
-  }
-
-  @Override
-  public CompletableFuture<Void> saveClaim(Claim claim) {
-    return write(
-        dsl -> {
-          var chunk = claim.chunk();
-          var stored =
-              dsl.fetchExists(
-                  TOWNS_CLAIM,
-                  TOWNS_CLAIM.WORLD.eq(chunk.world()),
-                  TOWNS_CLAIM.CHUNK_X.eq(chunk.x()),
-                  TOWNS_CLAIM.CHUNK_Z.eq(chunk.z()),
-                  TOWNS_CLAIM.TOWN_ID.eq(claim.townId().toString()));
-          if (!stored) {
-            throw new IllegalStateException("claim " + chunk + " is not stored for that town");
-          }
-          deleteSettings(dsl, chunk);
-          insertSettings(dsl, claim);
-          dsl.update(TOWNS_CLAIM)
-              .set(TOWNS_CLAIM.RESIDENT_ID, claim.resident().map(UUID::toString).orElse(null))
+    return write(dsl -> {
+      deleteSettings(dsl, chunk);
+      var deleted =
+          dsl.deleteFrom(TOWNS_CLAIM)
               .where(
                   TOWNS_CLAIM.WORLD.eq(chunk.world()),
                   TOWNS_CLAIM.CHUNK_X.eq(chunk.x()),
                   TOWNS_CLAIM.CHUNK_Z.eq(chunk.z()))
               .execute();
-        });
+      if (deleted != 1) {
+        throw new IllegalStateException("claim " + chunk + " is not stored");
+      }
+    });
+  }
+
+  @Override
+  public CompletableFuture<Void> saveClaim(Claim claim) {
+    return write(dsl -> {
+      var chunk = claim.chunk();
+      var stored =
+          dsl.fetchExists(
+              TOWNS_CLAIM,
+              TOWNS_CLAIM.WORLD.eq(chunk.world()),
+              TOWNS_CLAIM.CHUNK_X.eq(chunk.x()),
+              TOWNS_CLAIM.CHUNK_Z.eq(chunk.z()),
+              TOWNS_CLAIM.TOWN_ID.eq(claim.townId().toString()));
+      if (!stored) {
+        throw new IllegalStateException("claim " + chunk + " is not stored for that town");
+      }
+      deleteSettings(dsl, chunk);
+      insertSettings(dsl, claim);
+      dsl.update(TOWNS_CLAIM)
+          .set(TOWNS_CLAIM.RESIDENT_ID, claim.resident().map(UUID::toString).orElse(null))
+          .where(
+              TOWNS_CLAIM.WORLD.eq(chunk.world()),
+              TOWNS_CLAIM.CHUNK_X.eq(chunk.x()),
+              TOWNS_CLAIM.CHUNK_Z.eq(chunk.z()))
+          .execute();
+    });
   }
 
   /** Runs {@code work} in a write transaction. */
   private CompletableFuture<Void> write(Consumer<DSLContext> work) {
     return database
-        .write(
-            dsl -> {
-              work.accept(dsl);
-              return Boolean.TRUE;
-            })
+        .write(dsl -> {
+          work.accept(dsl);
+          return Boolean.TRUE;
+        })
         .thenAccept(done -> {});
   }
 

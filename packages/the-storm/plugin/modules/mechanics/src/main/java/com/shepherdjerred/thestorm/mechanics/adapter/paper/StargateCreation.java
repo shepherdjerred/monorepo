@@ -213,12 +213,9 @@ final class StargateCreation implements Listener {
 
   private boolean mayBuild(UUID actor, PaperGrid grid, Pos sign, java.util.List<Pos> cells) {
     return cells.stream()
-        .allMatch(
-            pos ->
-                protection.sameLand(grid.location(sign), grid.location(pos))
-                    && protection
-                        .check(actor, ProtectedAction.BUILD, grid.location(pos))
-                        .isAllowed());
+        .allMatch(pos ->
+            protection.sameLand(grid.location(sign), grid.location(pos))
+                && protection.check(actor, ProtectedAction.BUILD, grid.location(pos)).isAllowed());
   }
 
   private static boolean hasButton(

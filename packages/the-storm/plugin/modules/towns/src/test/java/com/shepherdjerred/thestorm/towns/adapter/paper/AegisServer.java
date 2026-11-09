@@ -74,6 +74,7 @@ abstract class AegisServer {
   @AfterEach
   void stop() {
     MockBukkit.unmock();
+    TownsTestPlugin.lockLimit = null;
   }
 
   TownsTestPlugin load() {

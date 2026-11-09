@@ -339,17 +339,16 @@ final class CombatListener implements Listener {
     }
     runner
         .memberOf(player.getUniqueId())
-        .ifPresent(
-            member ->
-                runner
-                    .hooks()
-                    .effectApplied(
-                        member.id(),
-                        effect.getType().getKey().getKey(),
-                        effect.getAmplifier(),
-                        // A kit's effect for the rest of the match is infinite; the row keeps the
-                        // longest duration it can hold.
-                        effect.isInfinite() ? Integer.MAX_VALUE : effect.getDuration()));
+        .ifPresent(member ->
+            runner
+                .hooks()
+                .effectApplied(
+                    member.id(),
+                    effect.getType().getKey().getKey(),
+                    effect.getAmplifier(),
+                    // A kit's effect for the rest of the match is infinite; the row keeps the
+                    // longest duration it can hold.
+                    effect.isInfinite() ? Integer.MAX_VALUE : effect.getDuration()));
   }
 
   /** Damage from the world (fall, fire, lava) is left to vanilla but remembered for attribution. */

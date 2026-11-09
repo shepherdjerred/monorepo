@@ -53,10 +53,9 @@ final class PaintingListener implements Listener {
     var registry = RegistryAccess.registryAccess().getRegistry(RegistryKey.PAINTING_VARIANT);
     var sameSize =
         registry.stream()
-            .filter(
-                art ->
-                    art.getBlockWidth() == current.getBlockWidth()
-                        && art.getBlockHeight() == current.getBlockHeight())
+            .filter(art ->
+                art.getBlockWidth() == current.getBlockWidth()
+                    && art.getBlockHeight() == current.getBlockHeight())
             .sorted(Comparator.comparing(art -> registry.getKeyOrThrow(art).asString()))
             .toList();
     var next = Cycle.step(sameSize, current, !player.isSneaking());

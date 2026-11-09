@@ -98,14 +98,13 @@ public final class FakeWallets implements Wallets {
       return completedFuture(Result.ok(requireNonNull(keyedReceipts.get(transfer.key()))));
     }
     return transfer(transfer.from(), transfer.to(), transfer.amount(), transfer.reason())
-        .thenApply(
-            result -> {
-              if (result instanceof Result.Ok<Receipt, EconomyError>(var receipt)) {
-                keyed.put(transfer.key(), transfer);
-                keyedReceipts.put(transfer.key(), receipt);
-              }
-              return result;
-            });
+        .thenApply(result -> {
+          if (result instanceof Result.Ok<Receipt, EconomyError>(var receipt)) {
+            keyed.put(transfer.key(), transfer);
+            keyedReceipts.put(transfer.key(), receipt);
+          }
+          return result;
+        });
   }
 
   @Override

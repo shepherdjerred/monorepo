@@ -115,9 +115,8 @@ final class SpellItemsTest {
   @Test
   void aForgedSpellKeyIsABrokenInvariant() {
     var forged = ItemStack.of(Material.PAPER);
-    forged.editPersistentDataContainer(
-        pdc ->
-            pdc.set(new NamespacedKey(harness.plugin, "spell"), PersistentDataType.STRING, "wall"));
+    forged.editPersistentDataContainer(pdc ->
+        pdc.set(new NamespacedKey(harness.plugin, "spell"), PersistentDataType.STRING, "wall"));
 
     assertThatThrownBy(() -> items.identify(forged)).isInstanceOf(IllegalStateException.class);
   }

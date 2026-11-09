@@ -77,19 +77,17 @@ final class SettingsMenu implements InventoryHolder {
 
   private static ItemStack item(Material material, String title, String... lore) {
     var stack = ItemStack.of(material);
-    stack.editMeta(
-        meta -> {
-          meta.displayName(
-              Component.text(title, NamedTextColor.GOLD).decoration(TextDecoration.ITALIC, false));
-          meta.lore(
-              List.of(lore).stream()
-                  .map(
-                      line ->
-                          Component.text(line, NamedTextColor.GRAY)
-                              .decoration(TextDecoration.ITALIC, false))
-                  .map(Component.class::cast)
-                  .toList());
-        });
+    stack.editMeta(meta -> {
+      meta.displayName(
+          Component.text(title, NamedTextColor.GOLD).decoration(TextDecoration.ITALIC, false));
+      meta.lore(
+          List.of(lore).stream()
+              .map(line ->
+                  Component.text(line, NamedTextColor.GRAY)
+                      .decoration(TextDecoration.ITALIC, false))
+              .map(Component.class::cast)
+              .toList());
+    });
     return stack;
   }
 
