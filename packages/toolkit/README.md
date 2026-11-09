@@ -397,6 +397,7 @@ toolkit ci wait 3447 --until settled    # Collect all blocking check results
 toolkit ci wait 3447 --timeout 2h       # Optional deadline; no default deadline
 toolkit ci wait --main --json           # Main's tip: wait for its own verifying run
 toolkit ci wait --main --head <SHA>     # One main commit, e.g. a merge commit
+toolkit ci wait --main --follow         # Follow new main commits until the tip passes
 toolkit pr land 3447 --json             # Wait for readiness, then squash-merge
 toolkit ci explain 3447                # Current blockers and bounded failure logs
 toolkit ci main                        # Current main verification and last completed verdict
@@ -465,7 +466,10 @@ wait starts, or `--head <full SHA>`. The commit must be main's tip or one of its
 ancestors. Push runs and full manual recoveries count; partial manual jobs do
 not. It exits 0 when that run passes and 1 with bounded failure logs when it
 fails. If main has moved on, the report says so but still judges the pinned
-commit. `--until` does not apply.
+commit. `--until` does not apply. `--follow` instead re-reads main's tip on
+every poll and keeps waiting through failed commits. It returns only when the
+current tip's own run passes, which makes it the wait for "until main is
+fixed". It cannot be combined with `--head`.
 
 PR observation considers both normal PR pipelines and signed ready-for-review
 metadata pipelines for the exact head. Title and label changes cannot replace

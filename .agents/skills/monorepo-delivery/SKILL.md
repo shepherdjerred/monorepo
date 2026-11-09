@@ -54,6 +54,7 @@ branch, not the latest commit.
   | Get the PR's CI green                    | `toolkit ci wait <PR> --json`           |
   | Merge when ready / get green, then merge | `toolkit pr land <PR> --json`           |
   | Get main green / verify a merge on main  | `toolkit ci wait --main [--head <SHA>]` |
+  | Wait until main is fixed                 | `toolkit ci wait --main --follow`       |
   | Watch a deployment                       | `toolkit deploy wait <ID>`              |
 
   Use `toolkit ci explain <PR>` for bounded failure evidence and

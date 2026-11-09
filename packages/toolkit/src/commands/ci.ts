@@ -24,6 +24,7 @@ import {
   type MainRunSnapshot,
 } from "#lib/ci/main.ts";
 import {
+  evaluateFollowedMain,
   evaluateMainRun,
   formatMainWait,
   mainWaitReport,
@@ -47,6 +48,8 @@ export type CiOptions = {
   timeoutMs?: number | undefined;
   until: "first-failure" | "settled";
   main: boolean;
+  /** `wait --main`: follow main's tip until a current tip passes. */
+  follow?: boolean | undefined;
   sinceMs?: number | undefined;
 };
 
@@ -213,7 +216,11 @@ async function reportMainWait(
   process.exitCode = EXIT_CODES[result.verdict.outcome];
 }
 
-/** Wait for one main commit's own verifying run to pass or fail. */
+/**
+ * Wait for main. Pinned (default): one commit's own verifying run passes or
+ * fails. `--follow`: re-read main's tip every poll and return only when the
+ * current tip passes, so a failed commit waits for the fix that follows it.
+ */
 async function runMainWait(
   observer: CiObserver,
   options: CiOptions,
@@ -222,6 +229,7 @@ async function runMainWait(
     const started = Date.now();
     const deadline =
       options.timeoutMs === undefined ? null : started + options.timeoutMs;
+    const follow = options.follow === true;
     // The pinned commit and its ancestry are GitHub reads too; a quota
     // refusal before the loop starts must wait, not end the command.
     const sha =
@@ -233,12 +241,12 @@ async function runMainWait(
         reportRateLimit,
       ));
     const onMain =
-      sha === null
-        ? null
+      sha === null || follow
+        ? sha
         : await readThroughQuota(
             async () => {
               await assertOnMain(observer.github, sha, signal);
-              return true;
+              return sha;
             },
             signal,
             deadline,
@@ -254,7 +262,9 @@ async function runMainWait(
       return;
     }
     announceWait(
-      `Waiting for main @ ${sha.slice(0, 12)}. Long queues and builds are expected; keep this process running. Use toolkit ci load for capacity information.`,
+      follow
+        ? `Following main from ${sha.slice(0, 12)} until its current tip passes. Long queues and builds are expected; keep this process running.`
+        : `Waiting for main @ ${sha.slice(0, 12)}. Long queues and builds are expected; keep this process running. Use toolkit ci load for capacity information.`,
     );
     const result = await waitFor<MainRunSnapshot>(
       {
@@ -264,10 +274,20 @@ async function runMainWait(
         signal,
       },
       {
-        snapshot: (read) =>
-          getMainRun(observer.github, observer.woodpecker, sha, read),
+        snapshot: async (read) =>
+          getMainRun(
+            observer.github,
+            observer.woodpecker,
+            follow ? await readMainTip(observer.github, read) : sha,
+            read,
+          ),
         evaluate: (snapshot) =>
-          Promise.resolve({ snapshot, verdict: evaluateMainRun(snapshot) }),
+          Promise.resolve({
+            snapshot,
+            verdict: follow
+              ? evaluateFollowedMain(snapshot)
+              : evaluateMainRun(snapshot),
+          }),
         subscribe: (read, wake, connected, fatal) =>
           watchEvents(observer.woodpecker, {
             signal: read,
@@ -279,7 +299,7 @@ async function runMainWait(
         rateLimited: reportRateLimit,
         heartbeat: (snapshot) => {
           console.error(
-            `Still waiting for main @ ${sha.slice(0, 12)}; pipeline ${snapshot?.run?.status ?? "not created"}. Long waits are expected.`,
+            `Still waiting for main @ ${(snapshot?.sha ?? sha).slice(0, 12)}; pipeline ${snapshot?.run?.status ?? "not created"}. Long waits are expected.`,
           );
         },
       },

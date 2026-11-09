@@ -9,6 +9,24 @@ import { formatTiming, pipelineTiming } from "#lib/ci/timing.ts";
 
 const short = (sha: string) => sha.slice(0, 12);
 
+/**
+ * Following main: a failed tip is not a result, because a fix may land next.
+ * Only the current tip's own passing run ends the wait.
+ */
+export function evaluateFollowedMain(snapshot: MainRunSnapshot): Verdict {
+  const verdict = evaluateMainRun(snapshot);
+  return verdict.outcome === "failure"
+    ? {
+        outcome: "waiting",
+        reasons: [
+          ...verdict.reasons,
+          "Following main: waiting for a later commit to pass.",
+        ],
+        commands: ["toolkit ci main"],
+      }
+    : verdict;
+}
+
 /** Judge the pinned main commit's own verifying run. */
 export function evaluateMainRun(snapshot: MainRunSnapshot): Verdict {
   const moved =

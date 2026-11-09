@@ -8,28 +8,42 @@ import { ciAnalyzeCommand } from "#commands/ci-analyze.ts";
 import { requiredCredentialsFor } from "#lib/credential-commands.ts";
 import { resolveCredentials } from "#lib/credentials.ts";
 
-function validateOptions(
-  action: string,
-  values: {
-    main: boolean;
-    timeout?: string | undefined;
-    head?: string | undefined;
-    since?: string | undefined;
-    until: string;
-  },
-  positionals: string[],
-): void {
-  if (positionals.length > 1)
-    throw new Error("Unexpected positional arguments");
-  if (
-    positionals.length > 0 &&
-    (["main", "load", "timings", "maintenance"].includes(action) || values.main)
-  )
-    throw new Error("Unexpected positional arguments");
+type OptionValues = {
+  main: boolean;
+  follow: boolean;
+  timeout?: string | undefined;
+  head?: string | undefined;
+  since?: string | undefined;
+  until: string;
+};
+
+const NO_TARGET_ACTIONS = new Set(["main", "load", "timings", "maintenance"]);
+
+/** Rules for `--main`, which turns wait and explain into main-only commands. */
+function validateMainOptions(action: string, values: OptionValues): void {
+  const mainWait = action === "wait" && values.main;
   if (action !== "explain" && action !== "wait" && values.main)
     throw new Error("--main is only valid with ci wait or ci explain");
-  if (action === "wait" && values.main && values.until !== "first-failure")
+  if (mainWait && values.until !== "first-failure")
     throw new Error("--until applies to PR waits, not ci wait --main");
+  if (!mainWait && values.follow)
+    throw new Error("--follow is only valid with ci wait --main");
+  if (values.follow && values.head !== undefined)
+    throw new Error("--follow follows main's tip; it cannot pin --head");
+}
+
+function validateOptions(
+  action: string,
+  values: OptionValues,
+  positionals: string[],
+): void {
+  const noTarget = NO_TARGET_ACTIONS.has(action);
+  if (
+    positionals.length > 1 ||
+    (positionals.length > 0 && (noTarget || values.main))
+  )
+    throw new Error("Unexpected positional arguments");
+  validateMainOptions(action, values);
   if (action !== "timings" && values.since !== undefined)
     throw new Error("--since is only valid with ci timings");
   if (
@@ -39,8 +53,7 @@ function validateOptions(
     throw new Error("--timeout and --until are wait options");
   if (
     values.head !== undefined &&
-    (["main", "load", "timings", "maintenance"].includes(action) ||
-      (action !== "wait" && values.main))
+    (noTarget || (action !== "wait" && values.main))
   )
     throw new Error("--head requires a PR or main wait, or a PR explanation");
 }
@@ -85,6 +98,7 @@ export async function handleCiCommand(
 
   wait [PR]       Wait for merge readiness; return on the first actionable blocker
   wait --main     Wait for main's own verifying run at --head (default: main's tip)
+  wait --main --follow  Follow main's tip until its current commit passes
   explain [PR]    Print failures, bounded logs, review feedback, and deeper commands
   main            Show main's current verification and latest completed verdict
   load            Show Woodpecker/Kueue queues and CPU, memory, disk, I/O pressure
@@ -100,6 +114,7 @@ Options:
   --until first-failure|settled Default: first-failure; settled collects blocking results
   --timeout <duration>         Optional deadline (e.g. 2h); default: unlimited
   --main                       wait: main's run; explain: main's failure without a PR
+  --follow                     wait --main: keep following new main commits until one passes
   --since <duration>           timings history window (default: 72h)
 
 Wait exits: 0 ready, 1 check failure/conflict, 2 upstream/usage error,
@@ -126,6 +141,7 @@ and then merge, use toolkit pr land.
         timeout: { type: "string" },
         since: { type: "string" },
         main: { type: "boolean", default: false },
+        follow: { type: "boolean", default: false },
       },
     });
     validateOptions(action, values, positionals);
@@ -142,6 +158,7 @@ and then merge, use toolkit pr land.
         values.timeout === undefined ? undefined : parseTimeout(values.timeout),
       until: z.enum(["first-failure", "settled"]).parse(values.until),
       main: values.main,
+      follow: values.follow,
       sinceMs: parseTimeout(values.since ?? "72h", "--since"),
     };
     await resolveCredentials(requiredCredentialsFor("ci", action));

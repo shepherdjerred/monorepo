@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { evaluateMainRun } from "#lib/ci/wait/main.ts";
+import { evaluateFollowedMain, evaluateMainRun } from "#lib/ci/wait/main.ts";
 import type { MainRunSnapshot } from "#lib/ci/main.ts";
 import type { WoodpeckerPipeline } from "#lib/woodpecker/ci.ts";
 import { CI_HEAD } from "./fixtures.ts";
@@ -43,4 +43,14 @@ test("a superseded tip still reports the pinned commit's verdict and says so", (
   const verdict = evaluateMainRun(snapshot(run("success"), "c".repeat(40)));
   expect(verdict.outcome).toBe("ready");
   expect(verdict.reasons.join(" ")).toContain("Main has advanced");
+});
+
+test("following main keeps waiting through a failed tip and ends on a passing one", () => {
+  const failed = evaluateFollowedMain(snapshot(run("failure", "verify")));
+  expect(failed.outcome).toBe("waiting");
+  expect(failed.reasons.join(" ")).toContain("waiting for a later commit");
+  expect(evaluateFollowedMain(snapshot(run("running"))).outcome).toBe(
+    "waiting",
+  );
+  expect(evaluateFollowedMain(snapshot(run("success"))).outcome).toBe("ready");
 });
