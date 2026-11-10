@@ -156,12 +156,16 @@ export async function submitMovieTorrentV4(
     input.scope,
     context.movieManagement.budget,
   );
-  if (attempt.state !== "imported" && attempt.state !== "completed")
+  const recovering =
+    attempt.state === "submitting" || attempt.state === "submission_unknown";
+  if (
+    !recovering &&
+    attempt.state !== "imported" &&
+    attempt.state !== "completed"
+  )
     await refreshMovieAttemptRequesterAccessV4(context, input.scope, attempt);
   const prerequisite = await submissionPrerequisiteV4(context, attempt, input);
   if (prerequisite !== null) return prerequisite;
-  const recovering =
-    attempt.state === "submitting" || attempt.state === "submission_unknown";
   if (attempt.release.encryptedSource === null)
     throw new Error("Movie v4 attempt lost its encrypted provider source");
   const source = StoredCandidateSchema.parse(

@@ -12,6 +12,7 @@ import { reconcileUnconfirmedSubmission } from "#automation/acquisition-manageme
 import { QualityRulesSchema } from "#shared/api.ts";
 import { grantTestManagedStorage } from "#testing/managed-storage.ts";
 import { testPlexBindingExecution } from "#testing/plex-binding-execution.ts";
+import { MediaError } from "#application/errors.ts";
 import {
   MovieEditionKeySchema,
   type MovieEditionKey,
@@ -556,6 +557,35 @@ test.each(MovieEditionKeySchema.options)(
     ).toBe(0);
   },
 );
+
+test("uncertain-add observation still refuses a foreign torrent when requester renewal would deny access", async () => {
+  const f = await fixture();
+  f.wire.state.loseReply = true;
+  expect(await submitMovieTorrentV4(f.context, f.input)).toEqual({
+    status: "blocked",
+    reason: "outcome-unknown",
+  });
+  if (f.wire.state.torrent === null)
+    throw new Error("Synthetic lost reply did not retain its external torrent");
+  f.wire.state.torrent["tags"] = "foreign-owner";
+  const renewal = vi.fn(() =>
+    Promise.reject(
+      new MediaError("plex_credentials_required", "Reconnect fixture", 409),
+    ),
+  );
+  f.context.refreshRequesterAccess = renewal;
+  expect(await submitMovieTorrentV4(f.context, f.input)).toEqual({
+    status: "blocked",
+    reason: "torrent_ownership_conflict",
+  });
+  expect(renewal).not.toHaveBeenCalled();
+  expect(f.wire.state.adds).toBe(1);
+  expect(
+    await f.db.torrent.count({
+      where: { infoHash: f.candidate.source.infoHash },
+    }),
+  ).toBe(0);
+});
 
 test("an uncertain absent torrent is protected and never blindly submitted again", async () => {
   const f = await fixture();

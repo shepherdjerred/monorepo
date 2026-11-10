@@ -9,6 +9,7 @@ import type { MovieEditionScope } from "#shared/movie-editions/registry.ts";
 import { MovieAcquisitionIdentitySchema } from "#shared/movie-editions/management/contracts.ts";
 import { readMovieAttemptSponsorRowsV4 } from "#infrastructure/movie-editions/attempt-sponsor.ts";
 import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
+import { MediaError } from "#application/errors.ts";
 import { movieManagementContext } from "./management-context.ts";
 
 /** Renew literal retained principals before current authority reads, never inside effect transactions. */
@@ -107,7 +108,7 @@ export async function refreshMovieScopeRequestersV4(
       0,
     ),
   );
-  await refreshChoices(context, scope, requests);
+  await refreshChoices(context, scope, requests, true);
 }
 
 async function refreshChoices(
@@ -116,6 +117,7 @@ async function refreshChoices(
   requests: (MediaRequest & {
     movieEditionChoice: MovieEditionChoice | null;
   })[],
+  independentRequesters = false,
 ) {
   const { execution, budget } = context.movieManagement;
   execution.assertActive();
@@ -144,7 +146,34 @@ async function refreshChoices(
       );
     return [{ userId: choice.subjectUserId, actorId: choice.actorId }];
   });
-  await context.refreshRequesterAccess(sponsors, execution, budget);
+  if (independentRequesters) {
+    const distinct = new Map(
+      sponsors.map((sponsor) => [identityHash(sponsor), sponsor]),
+    );
+    for (const sponsor of distinct.values()) {
+      try {
+        await context.refreshRequesterAccess([sponsor], execution, budget);
+      } catch (error) {
+        if (
+          !(error instanceof MediaError) ||
+          ![
+            "plex_credentials_required",
+            "plex_library_access_required",
+            "plex_token_expired",
+            "plex_profile_reconnect",
+            "requests_restricted",
+            "managed_profile_required",
+            "forbidden",
+          ].includes(error.code)
+        )
+          throw error;
+      }
+      execution.assertActive();
+      execution.signal.throwIfAborted();
+    }
+  } else {
+    await context.refreshRequesterAccess(sponsors, execution, budget);
+  }
   execution.assertActive();
   execution.signal.throwIfAborted();
 }
