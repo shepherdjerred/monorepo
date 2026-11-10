@@ -54,6 +54,16 @@ const TOOL_CALL_BLOCK_TYPES = new Set([
   "web_search",
 ]);
 
+/** Codex app-server items that are tool invocations (activity is not). */
+const CODEX_TOOL_CALL_ITEM_TYPES = new Set([
+  "collabAgentToolCall",
+  "commandExecution",
+  "fileChange",
+  "imageView",
+  "mcpToolCall",
+  "webSearch",
+]);
+
 export const INDEXED_MESSAGE_PARSE_LIMIT = 8000;
 
 const messageEnvelopes = new WeakMap<HistoryMessage, object>();
@@ -112,7 +122,7 @@ function named(
 
 /**
  * The text of a tool call whose input has no indexed text: its string
- * arguments, or its name when it has none. The call itself is never dropped.
+ * arguments, or its name when it has none.
  */
 function toolCallText(
   block: unknown,
@@ -121,6 +131,26 @@ function toolCallText(
 ): string {
   const text = cleanText(extractToolArguments(block, maxCharacters));
   return text === "" ? toolName : text;
+}
+
+/**
+ * A tool call's message, named. The call itself is never dropped when its
+ * payload has no indexed text, so it still counts toward the session's tools.
+ */
+function toolCallMessage(
+  call: Omit<HistoryMessage, "text"> & { readonly toolName: string },
+  value: unknown,
+  maxCharacters: number,
+): HistoryMessage {
+  const { role, createdAt, toolName } = call;
+  return {
+    ...(message(role, value, createdAt, maxCharacters) ?? {
+      role,
+      text: toolCallText(value, toolName, maxCharacters),
+      createdAt,
+    }),
+    toolName,
+  };
 }
 
 function blockToolName(
@@ -156,17 +186,14 @@ function messagesFromContent(
     const blockRole =
       blockType !== null && TOOL_BLOCK_TYPES.has(blockType) ? "tool" : role;
     const toolName = blockToolName(blockType, record);
-    const parsed = named(
-      message(blockRole, block, createdAt, maxCharacters) ??
-        (toolName === null
-          ? null
-          : {
-              role: blockRole,
-              text: toolCallText(block, toolName, maxCharacters),
-              createdAt,
-            }),
-      toolName,
-    );
+    const parsed =
+      toolName === null
+        ? message(blockRole, block, createdAt, maxCharacters)
+        : toolCallMessage(
+            { role: blockRole, createdAt, toolName },
+            block,
+            maxCharacters,
+          );
     if (parsed !== null) {
       messageEnvelopes.set(parsed, envelope);
       result.push(parsed);
@@ -257,10 +284,11 @@ export function parseCodexItem(
     default:
       return [];
   }
-  const parsed = named(
-    message(role, value, createdAt, maxCharacters),
-    role === "tool" ? codexItemToolName(itemType, value) : null,
-  );
+  const toolName = role === "tool" ? codexItemToolName(itemType, value) : null;
+  const parsed =
+    toolName !== null && CODEX_TOOL_CALL_ITEM_TYPES.has(itemType)
+      ? toolCallMessage({ role, createdAt, toolName }, value, maxCharacters)
+      : named(message(role, value, createdAt, maxCharacters), toolName);
   return parsed === null ? [] : [parsed];
 }
 
