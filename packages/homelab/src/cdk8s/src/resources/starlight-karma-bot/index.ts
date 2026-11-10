@@ -52,7 +52,7 @@ export function createStarlightKarmaBotDeployment(chart: Chart, stage: Stage) {
     .with("prod", () => {
       return {
         image: firstPartyImageRecipe("starlight-karma-bot"),
-        path: "vaults/v64ocnykdqju4ui6j6pua56xw4/items/cmp6si6n5syhr4smxew3qfcmfi",
+        path: vaultItemPath("cmp6si6n5syhr4smxew3qfcmfi"),
         applicationId: "716834761418735638",
       };
     })

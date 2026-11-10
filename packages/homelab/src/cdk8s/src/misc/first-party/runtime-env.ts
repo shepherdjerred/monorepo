@@ -1,7 +1,7 @@
 import { EnvValue, type ISecret } from "cdk8s-plus-31";
 import type { Construct } from "constructs";
-import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
-import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
+import type { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
+import { onePasswordSecret } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
 
 /**
@@ -130,10 +130,12 @@ export const seaweedfsS3 = {
    * resulting Secret's name; without it cdk8s derives one from `id`.
    */
   item(scope: Construct, id: string, name?: string): OnePasswordItem {
-    return new OnePasswordItem(scope, id, {
-      spec: { itemPath: vaultItemPath(SEAWEEDFS_S3_ITEM_ID) },
-      ...(name === undefined ? {} : { metadata: { name } }),
-    });
+    return onePasswordSecret(
+      scope,
+      id,
+      SEAWEEDFS_S3_ITEM_ID,
+      name === undefined ? undefined : { name },
+    );
   },
 
   /**

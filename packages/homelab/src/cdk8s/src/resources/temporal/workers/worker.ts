@@ -8,7 +8,10 @@ import {
   Volume,
 } from "cdk8s-plus-31";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
-import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
+import {
+  vaultItemPath,
+  onePasswordSecret,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import {
   createTemporalWorkerAuditRbac,
   createTemporalWorkerTasknotesCanaryRbac,
@@ -122,16 +125,11 @@ export function createTemporalWorkerDeployment(
       spec: { itemPath: vaultItemPath("freshrss-sync") },
     },
   );
-  const agentCodexCredentialItem = new OnePasswordItem(
+  const agentCodexCredentialItem = onePasswordSecret(
     chart,
     "temporal-agent-codex-1p",
-    {
-      metadata: { name: "temporal-agent-codex" },
-      spec: {
-        itemPath:
-          "vaults/v64ocnykdqju4ui6j6pua56xw4/items/hwyhh64dyu3s7w37q7oj7r4qn4",
-      },
-    },
+    "hwyhh64dyu3s7w37q7oj7r4qn4",
+    { name: "temporal-agent-codex" },
   );
   const agentCodexCredential = Secret.fromSecretName(
     chart,

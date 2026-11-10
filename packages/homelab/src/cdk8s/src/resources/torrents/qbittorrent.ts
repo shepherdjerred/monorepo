@@ -23,7 +23,7 @@ import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zf
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
-import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
+import { onePasswordSecret } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 
 const CURRENT_FILENAME = fileURLToPath(import.meta.url);
 const CURRENT_DIRNAME = path.dirname(CURRENT_FILENAME);
@@ -36,19 +36,17 @@ export function createQBitTorrentDeployment(
     downloads: PersistentVolumeClaim;
   },
 ) {
-  const item = new OnePasswordItem(chart, "mullvad", {
-    spec: {
-      itemPath:
-        "vaults/v64ocnykdqju4ui6j6pua56xw4/items/74rqjncejp7rpgelymnmul5ssm",
-    },
-  });
+  const item = onePasswordSecret(
+    chart,
+    "mullvad",
+    "74rqjncejp7rpgelymnmul5ssm",
+  );
 
-  const qBitTorrentItem = new OnePasswordItem(chart, "qbittorrent-item", {
-    spec: {
-      itemPath:
-        "vaults/v64ocnykdqju4ui6j6pua56xw4/items/2bbw7oe6s5clygljwmeflwtovm",
-    },
-  });
+  const qBitTorrentItem = onePasswordSecret(
+    chart,
+    "qbittorrent-item",
+    "2bbw7oe6s5clygljwmeflwtovm",
+  );
 
   const deployment = new Deployment(chart, "qbittorrent", {
     replicas: 1,

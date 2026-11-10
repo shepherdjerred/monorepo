@@ -6,7 +6,10 @@ import { createMinecraftPublicStatus } from "@shepherdjerred/homelab/cdk8s/src/m
 import { Size } from "cdk8s";
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
-import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
+import {
+  vaultItemPath,
+  onePasswordSecret,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { BURST_SERVICE_PRIORITY } from "@shepherdjerred/homelab/cdk8s/src/misc/priority-classes.ts";
 import { getMinecraftBlueMapPort } from "@shepherdjerred/homelab/cdk8s/src/misc/minecraft/minecraft-ports.ts";
@@ -69,16 +72,12 @@ export function createMinecraftTsmcResources(chart: Chart): void {
   createMinecraftPublicStatus(chart);
   // The Storm bridge credentials. Required fields (UPPERCASE_SNAKE labels, matching
   // the env-var ref below): DISCORD_BOT_TOKEN. Channel routing lives in Git.
-  new OnePasswordItem(chart, "minecraft-tsmc-discord-1p", {
-    spec: {
-      itemPath:
-        "vaults/v64ocnykdqju4ui6j6pua56xw4/items/yqp25gif2grm5gkg6l44e6vmxy",
-    },
-    metadata: {
-      name: SECRET_NAME,
-      namespace: NAMESPACE,
-    },
-  });
+  onePasswordSecret(
+    chart,
+    "minecraft-tsmc-discord-1p",
+    "yqp25gif2grm5gkg6l44e6vmxy",
+    { name: SECRET_NAME, namespace: NAMESPACE },
+  );
 
   new OnePasswordItem(chart, "minecraft-tsmc-brain-1p", {
     spec: { itemPath: vaultItemPath("mpv7cti3fpwrfobgr6ydnemydy") },

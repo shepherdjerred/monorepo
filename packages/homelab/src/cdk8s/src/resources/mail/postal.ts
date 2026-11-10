@@ -18,7 +18,10 @@ import {
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
 import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
-import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
+import {
+  vaultItemPath,
+  onePasswordSecret,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { PostalMariaDB } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/postal-mariadb.ts";
@@ -52,12 +55,11 @@ export function createPostalDeployment(
   });
 
   // Fastmail SMTP credentials for the relay sidecar
-  const fastmailItem = new OnePasswordItem(chart, "fastmail-smtp-credentials", {
-    spec: {
-      itemPath:
-        "vaults/v64ocnykdqju4ui6j6pua56xw4/items/y2xpkfyirxjlcq7oluqxoyxxce",
-    },
-  });
+  const fastmailItem = onePasswordSecret(
+    chart,
+    "fastmail-smtp-credentials",
+    "y2xpkfyirxjlcq7oluqxoyxxce",
+  );
   const fastmailSecret = Secret.fromSecretName(
     chart,
     "fastmail-secret",

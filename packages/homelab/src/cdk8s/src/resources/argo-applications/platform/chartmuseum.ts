@@ -2,12 +2,13 @@ import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
-import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
+import type { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
 import { SATA_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
 import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
+import { onePasswordSecret } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 /** Objects the root renders beside the Application; the `chartmuseum-companion` companion chart renders the same objects under transition rendering. */
 export function createChartMuseumResources(chart: Chart): OnePasswordItem {
   createIngress(chart, "chartmuseum-ingress", {
@@ -25,16 +26,12 @@ export function createChartMuseumResources(chart: Chart): OnePasswordItem {
     port: 8080,
   });
 
-  return new OnePasswordItem(chart, "chartmuseum-admin-password", {
-    spec: {
-      itemPath:
-        "vaults/v64ocnykdqju4ui6j6pua56xw4/items/wwoism5fsvmbisv4ef47yxqy2i",
-    },
-    metadata: {
-      name: "chartmuseum-basic-auth",
-      namespace: "chartmuseum",
-    },
-  });
+  return onePasswordSecret(
+    chart,
+    "chartmuseum-admin-password",
+    "wwoism5fsvmbisv4ef47yxqy2i",
+    { name: "chartmuseum-basic-auth", namespace: "chartmuseum" },
+  );
 }
 
 export function createChartMuseumApp(chart: Chart) {

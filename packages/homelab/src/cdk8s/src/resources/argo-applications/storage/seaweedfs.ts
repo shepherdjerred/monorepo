@@ -2,7 +2,6 @@ import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/version
 import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
-import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import {
   IntOrString,
   KubeNetworkPolicy,
@@ -26,6 +25,7 @@ import {
   tailscaleIngressRule,
   prometheusIngressRule,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
+import { onePasswordSecret } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 
 const FILER_UPSTREAM_PORT = 8888;
 const FILER_GATEWAY_PORT = 8889;
@@ -88,29 +88,21 @@ export function createSeaweedfsResources(chart: Chart): void {
   }
 
   // 1Password secret for S3 credentials
-  new OnePasswordItem(chart, "seaweedfs-credentials-onepassword", {
-    spec: {
-      itemPath:
-        "vaults/v64ocnykdqju4ui6j6pua56xw4/items/seaweedfs-s3-credentials",
-    },
-    metadata: {
-      name: "seaweedfs-s3-credentials",
-      namespace: "seaweedfs",
-    },
-  });
+  onePasswordSecret(
+    chart,
+    "seaweedfs-credentials-onepassword",
+    "seaweedfs-s3-credentials",
+    { name: "seaweedfs-s3-credentials", namespace: "seaweedfs" },
+  );
 
   createSeaweedfsBackup(chart);
 
-  new OnePasswordItem(chart, "seaweedfs-filer-auth-onepassword", {
-    spec: {
-      itemPath:
-        "vaults/v64ocnykdqju4ui6j6pua56xw4/items/zkvjvzfvj3zzhxq5pumebqdoiu",
-    },
-    metadata: {
-      name: FILER_AUTH_SECRET,
-      namespace: "seaweedfs",
-    },
-  });
+  onePasswordSecret(
+    chart,
+    "seaweedfs-filer-auth-onepassword",
+    "zkvjvzfvj3zzhxq5pumebqdoiu",
+    { name: FILER_AUTH_SECRET, namespace: "seaweedfs" },
+  );
 
   // S3 API is tailnet-only (seaweedfs-s3.tailnet-1a49.ts.net). It is NOT exposed
   // on the public Cloudflare tunnel: the state bucket (homelab-tofu-state) and

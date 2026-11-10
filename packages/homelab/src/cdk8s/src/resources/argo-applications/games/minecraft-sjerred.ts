@@ -7,7 +7,10 @@ import {
   Quantity,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
-import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
+import {
+  vaultItemPath,
+  onePasswordSecret,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { BURST_SERVICE_PRIORITY } from "@shepherdjerred/homelab/cdk8s/src/misc/priority-classes.ts";
 import { getMinecraftDynmapPort } from "@shepherdjerred/homelab/cdk8s/src/misc/minecraft/minecraft-ports.ts";
 import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
@@ -63,28 +66,20 @@ export function createMinecraftSjerredResources(chart: Chart): void {
 
   // Existing Discord bot item. Only the init container receives these fields,
   // and it interpolates them into a writable emptyDir rather than the PVC.
-  new OnePasswordItem(chart, "minecraft-sjerred-discord-1p", {
-    spec: {
-      itemPath:
-        "vaults/v64ocnykdqju4ui6j6pua56xw4/items/yqp25gif2grm5gkg6l44e6vmxy",
-    },
-    metadata: {
-      name: DISCORD_SECRET_NAME,
-      namespace: NAMESPACE,
-    },
-  });
+  onePasswordSecret(
+    chart,
+    "minecraft-sjerred-discord-1p",
+    "yqp25gif2grm5gkg6l44e6vmxy",
+    { name: DISCORD_SECRET_NAME, namespace: NAMESPACE },
+  );
 
   // Existing Minecraft item containing the CurseForge API key.
-  new OnePasswordItem(chart, "minecraft-sjerred-curseforge-1p", {
-    spec: {
-      itemPath:
-        "vaults/v64ocnykdqju4ui6j6pua56xw4/items/evbgkoazs6dquzlrl5fv7h2gtm",
-    },
-    metadata: {
-      name: CURSEFORGE_SECRET_NAME,
-      namespace: NAMESPACE,
-    },
-  });
+  onePasswordSecret(
+    chart,
+    "minecraft-sjerred-curseforge-1p",
+    "evbgkoazs6dquzlrl5fv7h2gtm",
+    { name: CURSEFORGE_SECRET_NAME, namespace: NAMESPACE },
+  );
 
   createIngress(chart, "minecraft-sjerred-dynmap-ingress", {
     namespace: NAMESPACE,
