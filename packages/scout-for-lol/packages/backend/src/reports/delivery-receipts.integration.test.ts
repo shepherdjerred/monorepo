@@ -8,8 +8,10 @@ import {
 import {
   deliverReportChunk,
   freezeReportDelivery,
+  ReportDeliveryFailedError,
   ReportDeliveryUnknownError,
 } from "#src/reports/delivery-receipts.ts";
+import { ChannelSendError } from "#src/league/discord/channel.ts";
 import { executeOperationsIntent } from "#src/operations/operations-execution.ts";
 import { OperationsIntentPayloadSchema } from "@scout-for-lol/data";
 
@@ -252,5 +254,52 @@ describe("durable report chunk delivery", () => {
     expect(
       await prisma.reportDeliveryChunk.count({ where: { state: "PENDING" } }),
     ).toBe(chunks.length);
+  });
+});
+
+describe("a send that definitely did not post", () => {
+  test("a refusal send handled is a definite, terminal non-send", async () => {
+    const [chunk] = await freezeReportDelivery(await dispatch(), prisma);
+    if (chunk === undefined) throw new Error("Missing chunk");
+    const send = vi.fn(async (): Promise<{ id: string }> => {
+      throw new ChannelSendError(
+        "Missing Access",
+        testChannelId("91002"),
+        true,
+        { code: 50_001, message: "Missing Access" },
+      );
+    });
+    await expect(
+      deliverReportChunk(chunk, send, prisma),
+    ).rejects.toBeInstanceOf(ReportDeliveryFailedError);
+    // Not UNKNOWN: nothing left, so no operator has to say what landed. The
+    // chunk keeps its unspent nonce, as an operator's "not delivered" leaves it.
+    expect(await prisma.reportDeliveryChunk.findFirstOrThrow()).toMatchObject({
+      state: "PENDING",
+      nonce: chunk.nonce,
+      sendStartedAt: null,
+      lastError: "permission-denied: Missing Access",
+    });
+  });
+
+  test("a send error that send did not handle stays unknown", async () => {
+    // Whatever code it carries, a failure from inside the send itself may
+    // have reached Discord first.
+    const [chunk] = await freezeReportDelivery(await dispatch(), prisma);
+    if (chunk === undefined) throw new Error("Missing chunk");
+    const send = vi.fn(async (): Promise<{ id: string }> => {
+      throw new ChannelSendError(
+        "socket hang up",
+        testChannelId("91002"),
+        false,
+        { code: 50_001, message: "Missing Access" },
+      );
+    });
+    await expect(
+      deliverReportChunk(chunk, send, prisma),
+    ).rejects.toBeInstanceOf(ReportDeliveryUnknownError);
+    expect(await prisma.reportDeliveryChunk.findFirstOrThrow()).toMatchObject({
+      state: "UNKNOWN",
+    });
   });
 });

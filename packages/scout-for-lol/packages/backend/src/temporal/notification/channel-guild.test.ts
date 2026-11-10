@@ -1,5 +1,8 @@
 import { beforeEach, expect, test, vi } from "vitest";
-import { DiscordChannelIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
+import {
+  DiscordChannelIdSchema,
+  DiscordGuildIdSchema,
+} from "@scout-for-lol/domain/identity/discord.ts";
 import { deliveryGuildId } from "#src/temporal/notification/channel-guild.ts";
 
 const stubs = vi.hoisted(() => ({
@@ -15,7 +18,7 @@ vi.mock("#src/database/index.ts", () => ({
 }));
 
 const CHANNEL_ID = DiscordChannelIdSchema.parse("100000000000000001");
-const GUILD_ID = "100000000000000099";
+const GUILD_ID = DiscordGuildIdSchema.parse("100000000000000099");
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -48,6 +51,30 @@ test("Missing Access uses the guild stored on the subscription", async () => {
     distinct: ["serverId"],
     select: { serverId: true },
   });
+});
+
+test("Missing Access uses the guild the caller recorded instead", async () => {
+  // A product announcement channel has no subscription row; its frozen
+  // announcement is the guild this delivery already knows.
+  stubs.fetchChannelForDelivery.mockRejectedValue({
+    code: 50_001,
+    message: "Missing Access",
+  });
+
+  await expect(deliveryGuildId(CHANNEL_ID, async () => GUILD_ID)).resolves.toBe(
+    GUILD_ID,
+  );
+  expect(stubs.findMany).not.toHaveBeenCalled();
+});
+
+test("a channel Discord returns outranks the recorded guild", async () => {
+  stubs.fetchChannelForDelivery.mockResolvedValue({
+    guildId: "100000000000000098",
+  });
+
+  await expect(deliveryGuildId(CHANNEL_ID, async () => GUILD_ID)).resolves.toBe(
+    "100000000000000098",
+  );
 });
 
 test("a fetch timeout stays a failure", async () => {

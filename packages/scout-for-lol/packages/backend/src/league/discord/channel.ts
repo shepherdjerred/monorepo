@@ -49,6 +49,26 @@ export class ChannelSendError extends Error {
   }
 }
 
+/**
+ * Why a failed send definitely did not post, or `undefined` when nobody can say.
+ *
+ * `permissionError` is set for every failure `send` HANDLED before or around
+ * the request — a channel it could not resolve, a channel it cannot post in, a
+ * permission Discord named — and each of those means the message did not go
+ * out. It is false only when the send itself threw, which is exactly when the
+ * request may have reached Discord first. A handled failure Discord did not
+ * label as a permission (a deleted channel, or one `send` could not resolve at
+ * all) leaves no target this bot can post in.
+ */
+export function definiteChannelSendFailure(
+  error: ChannelSendError,
+): "permission-denied" | "target-not-found" | undefined {
+  if (!error.permissionError) return undefined;
+  return isPermissionError(error.originalError)
+    ? "permission-denied"
+    : "target-not-found";
+}
+
 const replyPermissionErrors = new WeakSet<ChannelSendError>();
 
 export function markReplyPermissionError(

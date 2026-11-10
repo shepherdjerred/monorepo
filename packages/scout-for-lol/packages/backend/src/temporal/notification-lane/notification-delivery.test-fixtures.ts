@@ -73,6 +73,7 @@ export async function channelModuleWithSend(
   Pick<
     typeof DiscordChannelModule,
     | "ChannelSendError"
+    | "definiteChannelSendFailure"
     | "isReplyPermissionError"
     | "markReplyPermissionError"
     | "send"
@@ -83,6 +84,7 @@ export async function channelModuleWithSend(
   );
   return {
     ChannelSendError: actual.ChannelSendError,
+    definiteChannelSendFailure: actual.definiteChannelSendFailure,
     isReplyPermissionError: actual.isReplyPermissionError,
     markReplyPermissionError: actual.markReplyPermissionError,
     send,

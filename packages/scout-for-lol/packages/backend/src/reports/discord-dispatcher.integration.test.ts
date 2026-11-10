@@ -5,6 +5,7 @@ import {
   testChannelId,
   testGuildId,
 } from "#src/testing/test-ids.ts";
+import { ChannelSendError } from "#src/league/discord/channel.ts";
 
 const mocks = vi.hoisted(() => ({
   send: vi.fn(),
@@ -144,5 +145,41 @@ describe("report delivery analytics", () => {
     expect(
       await prisma.reportRun.findUniqueOrThrow({ where: { id: run.id } }),
     ).toMatchObject({ deliveryState: "UNKNOWN" });
+  });
+
+  test("a channel Scout lost access to fails the run without asking an operator", async () => {
+    const { dispatch, run } = await pendingRun();
+    mocks.send.mockRejectedValueOnce(
+      new ChannelSendError("Missing Access", dispatch.report.channelId, true, {
+        code: 50_001,
+        message: "Missing Access",
+      }),
+    );
+
+    expect(
+      await deliverReportDispatch(dispatch, "report_scheduled", "isolate", {
+        isInstalled: installed,
+        database: prisma,
+      }),
+    ).toBe(false);
+
+    expect(mocks.recordCoreOutputDelivered).not.toHaveBeenCalled();
+    expect(
+      await prisma.reportRun.findUniqueOrThrow({ where: { id: run.id } }),
+    ).toMatchObject({
+      deliveryState: "FAILED",
+      deliveryError: expect.stringContaining("permission-denied"),
+    });
+    // Reconciliation reads only PENDING runs, so nothing sends it again.
+    await deliverPendingReportDispatches(
+      {
+        reportId: dispatch.report.id,
+        trigger: "SCHEDULED",
+        failureMode: "isolate",
+        isInstalled: installed,
+      },
+      prisma,
+    );
+    expect(mocks.send).toHaveBeenCalledTimes(1);
   });
 });

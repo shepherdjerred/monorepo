@@ -25,6 +25,7 @@ import {
   freezeReportDelivery,
   deliverReportChunk,
   reportAttachmentDigest,
+  ReportDeliveryFailedError,
   ReportDeliveryUnknownError,
 } from "#src/reports/delivery-receipts.ts";
 
@@ -167,8 +168,8 @@ export async function deliverReportDispatch(
 
   // Isolate each delivery: one failed report must not abort the rest of the
   // batch. Permission errors are already recorded (DB + owner notify) and other
-  // errors captured to Bugsink inside `send`, so a ChannelSendError just gets a
-  // warning here; anything unexpected is reported and we move on.
+  // errors captured to Bugsink inside `send`, so a refusal `send` handled just
+  // gets a warning here; anything unexpected is reported and we move on.
   try {
     await deliverChunks(dispatch, database);
     await markRunDelivered(dispatch, outputKind, database);
@@ -183,7 +184,21 @@ export async function deliverReportDispatch(
         data: { deliveryState: "UNKNOWN", deliveryError: error.message },
       });
     }
-    if (error instanceof ChannelSendError) {
+    if (error instanceof ReportDeliveryFailedError) {
+      // Definite and terminal: nothing reconciles a FAILED run again, and
+      // `send` has already recorded the refusal and told the guild owner.
+      await database.reportRun.updateMany({
+        where: {
+          id: ReportRunIdSchema.parse(dispatch.result.runId),
+          deliveryState: "PENDING",
+        },
+        data: { deliveryState: "FAILED", deliveryError: error.message },
+      });
+    }
+    if (
+      error instanceof ChannelSendError ||
+      error instanceof ReportDeliveryFailedError
+    ) {
       logger.warn(
         `[ReportDispatch] Failed to deliver report ${reportId.toString()} to channel ${channelId}: ${getErrorMessage(error)}`,
       );
