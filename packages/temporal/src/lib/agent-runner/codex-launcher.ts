@@ -43,11 +43,20 @@ async function materializeProviderWrapper(
     const wrappedCommand = providerSubprocessCommand(command, environment)
       .map((part) => shellQuote(part))
       .join(" ");
+    const schemaHelper = fileURLToPath(
+      new URL("codex-permissions/output-schema.ts", import.meta.url),
+    );
     const prepareSchema = [
+      "/usr/bin/env",
+      "-i",
+      `HOME=${directory}`,
+      `XDG_CONFIG_HOME=${directory}`,
       process.execPath,
-      fileURLToPath(
-        new URL("codex-permissions/output-schema.ts", import.meta.url),
-      ),
+      "--no-env-file",
+      "--no-install",
+      "--no-macros",
+      "--config=/dev/null",
+      schemaHelper,
       providerUid.toString(),
       os.tmpdir(),
     ]
@@ -55,7 +64,7 @@ async function materializeProviderWrapper(
       .join(" ");
     await writeFile(
       executable,
-      `#!/bin/sh\n${prepareSchema} "$@" || exit $?\nexec ${wrappedCommand} "$@"\n`,
+      `#!/bin/sh\n(cd ${shellQuote(path.dirname(schemaHelper))} && exec ${prepareSchema} "$@") || exit $?\nexec ${wrappedCommand} "$@"\n`,
       {
         encoding: "utf8",
         mode: 0o755,
@@ -70,7 +79,7 @@ async function materializeProviderWrapper(
 }
 
 export async function providerPathOverride(
-  input: RunCodexAgentTurnInput,
+  input: Pick<RunCodexAgentTurnInput, "codexPathOverride">,
 ): Promise<{
   pathOverride: Pick<CodexOptions, "codexPathOverride"> | undefined;
   wrapperDirectory: string | undefined;
