@@ -3,7 +3,8 @@
     {
       "registryUrl": "https://registry.opentofu.org",
       "source": "1password/onepassword",
-      "version": "3.4.1"
+      "version": "3.4.1",
+      "bindings": true
     },
     {
       "registryUrl": "https://registry.terraform.io",

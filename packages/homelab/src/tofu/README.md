@@ -79,6 +79,8 @@ A hand-written HCL stack keeps its own `required_providers` constraints and
 its lock is still maintained by Renovate's terraform manager, so it may differ
 from the pin until the stack is ported.
 
+To port a stack, follow `packages/homelab-cdktn/README.md`.
+
 ## Prerequisites
 
 - OpenTofu (`mise` manages the version)
