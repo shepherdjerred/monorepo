@@ -194,7 +194,7 @@ ARG GITHUB_MCP_SERVER_VERSION=1.3.0
 # renovate: datasource=github-releases depName=siderolabs/talos
 ARG TALOSCTL_VERSION=v1.14.2
 # renovate: datasource=github-releases depName=opentofu/opentofu
-ARG TOFU_VERSION=1.12.3
+ARG TOFU_VERSION=1.13.1
 # renovate: datasource=github-releases depName=argoproj/argo-cd
 ARG ARGOCD_CLI_VERSION=v3.4.5
 # renovate: datasource=github-releases depName=vmware-tanzu/velero
