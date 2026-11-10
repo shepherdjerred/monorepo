@@ -22,6 +22,8 @@ function observation(input: {
   guildId?: string | null;
   pinned?: boolean;
   timestamp?: string;
+  authorId?: string;
+  authorBot?: boolean;
   authorUsername?: string;
   authorAvatar?: string | null;
   attachments?: DiscordAttachment[];
@@ -40,11 +42,11 @@ function observation(input: {
     channelId: "456",
     messageId: input.messageId ?? "789",
     author: {
-      id: "111",
+      id: input.authorId ?? "111",
       username: input.authorUsername ?? "person",
       globalName: "Person",
       discriminator: "0",
-      bot: false,
+      bot: input.authorBot ?? false,
       avatar: input.authorAvatar ?? null,
     },
     content: input.content,
@@ -445,5 +447,120 @@ describe("Glitter corpus observation metadata", () => {
     const second = first.toReversed();
     expect(serializeProjection(first)).toBe(serializeProjection(second));
     expect(projectionChecksum(first)).toBe(projectionChecksum(second));
+  });
+});
+
+describe("Glitter corpus deleted account author rewrite", () => {
+  const deletedUserId = "456226577798135808";
+  const botAuthor = {
+    authorId: "1094065369058131978",
+    authorBot: true,
+    authorUsername: "Pokébot Helper",
+  };
+  const placeholderAuthor = {
+    authorId: deletedUserId,
+    authorBot: false,
+    authorUsername: "Deleted User",
+  };
+  const beforeDeletion = observation({
+    sourceKey: "page-before-deletion",
+    content: "same",
+    observedAt: "2026-10-17T00:00:00.000Z",
+    ...botAuthor,
+  });
+  const afterDeletion = observation({
+    sourceKey: "page-after-deletion",
+    content: "same",
+    observedAt: "2026-10-26T00:00:00.000Z",
+    ...placeholderAuthor,
+  });
+
+  test("a later placeholder observation replaces the deleted author without an edit", () => {
+    for (const observations of [
+      [beforeDeletion, afterDeletion],
+      [afterDeletion, beforeDeletion],
+    ]) {
+      const projected = buildCurrentProjection(observations);
+      expect(projected[0]?.author.id).toBe(deletedUserId);
+      expect(projected[0]?.author.bot).toBe(false);
+    }
+
+    const merged = mergeCurrentProjection(
+      buildCurrentProjection([beforeDeletion]),
+      [afterDeletion],
+    );
+    expect(merged).toHaveLength(1);
+    expect(merged[0]?.author.id).toBe(deletedUserId);
+    expect(merged[0]?.selectedObservationKey).toBe("page-after-deletion");
+  });
+
+  test("a placeholder observed earlier than the real author fails loudly", () => {
+    const placeholderFirst = observation({
+      sourceKey: "page-placeholder",
+      content: "same",
+      observedAt: "2026-10-17T00:00:00.000Z",
+      ...placeholderAuthor,
+    });
+    const realLater = observation({
+      sourceKey: "page-real",
+      content: "same",
+      observedAt: "2026-10-26T00:00:00.000Z",
+      ...botAuthor,
+    });
+
+    expect(() => buildCurrentProjection([placeholderFirst, realLater])).toThrow(
+      "(differing fields: author.id, author.bot)",
+    );
+    expect(() =>
+      mergeCurrentProjection(buildCurrentProjection([placeholderFirst]), [
+        realLater,
+      ]),
+    ).toThrow("(differing fields: author.id, author.bot)");
+  });
+
+  test("a placeholder observed at the same instant fails loudly", () => {
+    const sameInstant = observation({
+      sourceKey: "page-same-instant",
+      content: "same",
+      observedAt: beforeDeletion.observedAt,
+      ...placeholderAuthor,
+    });
+
+    expect(() => buildCurrentProjection([beforeDeletion, sameInstant])).toThrow(
+      "(differing fields: author.id, author.bot)",
+    );
+  });
+
+  test("one real author replacing another fails loudly", () => {
+    const otherAuthor = observation({
+      sourceKey: "page-other-author",
+      content: "same",
+      observedAt: "2026-10-26T00:00:00.000Z",
+      authorId: "222",
+    });
+
+    expect(() => buildCurrentProjection([beforeDeletion, otherAuthor])).toThrow(
+      "(differing fields: author.id, author.bot)",
+    );
+    expect(() =>
+      mergeCurrentProjection(buildCurrentProjection([beforeDeletion]), [
+        otherAuthor,
+      ]),
+    ).toThrow("(differing fields: author.id, author.bot)");
+  });
+
+  test("the placeholder does not excuse other same-version differences", () => {
+    const rewrittenContent = observation({
+      sourceKey: "page-rewritten-content",
+      content: "different",
+      observedAt: "2026-10-26T00:00:00.000Z",
+      ...placeholderAuthor,
+    });
+
+    expect(() =>
+      mergeCurrentProjection(buildCurrentProjection([beforeDeletion]), [
+        rewrittenContent,
+      ]),
+    ).toThrow("(differing fields: author.id, author.bot, content)");
   });
 });
