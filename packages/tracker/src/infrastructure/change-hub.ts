@@ -16,6 +16,9 @@ export function parseChange(payload: string): LiveMessage {
   return { type: "change", ...LiveChangeSchema.parse(raw) };
 }
 
+const backoff = (failures: number) =>
+  Math.min(MAX_BACKOFF_MS, 250 * 2 ** failures);
+
 function describe(message: string, error: unknown) {
   return JSON.stringify({
     message,
@@ -87,27 +90,34 @@ export function createChangeHub(
     client = next;
   }
 
+  /** One connect attempt; false means it failed and was cleaned up. */
+  async function attemptListen() {
+    const next = listen();
+    try {
+      await connect(next);
+      return true;
+    } catch (error) {
+      console.warn(describe("tracker_live_updates_connect_failed", error));
+      await next.end().catch(() => null);
+      return false;
+    }
+  }
+
   /**
    * Retry with backoff until listening or stopped. A database outage must not
    * stop the server from booting; browsers keep working without live updates.
    */
-  async function establish(attempt: number) {
-    for (let current = attempt; !isStopped(); current += 1) {
-      if (current > 0)
-        await Bun.sleep(Math.min(MAX_BACKOFF_MS, 250 * 2 ** current));
-      if (isStopped()) return;
-      const next = listen();
-      try {
-        await connect(next);
-        // Subscribers may have refetched before LISTEN was active (flag
-        // enabled after boot), so repair that gap on every first listen too.
-        publish({ type: "resync" });
-        return;
-      } catch (error) {
-        console.warn(describe("tracker_live_updates_connect_failed", error));
-        await next.end().catch(() => null);
-      }
+  async function establish(failures: number) {
+    let delayMs = failures === 0 ? 0 : backoff(failures);
+    while (!isStopped()) {
+      await Bun.sleep(delayMs);
+      if (isStopped() || (await attemptListen())) break;
+      failures += 1;
+      delayMs = backoff(failures);
     }
+    // Subscribers may have refetched before LISTEN was active (flag enabled
+    // after boot), so repair that gap on every successful listen.
+    if (client !== null) publish({ type: "resync" });
   }
 
   async function reconnect(previous: pg.Client) {

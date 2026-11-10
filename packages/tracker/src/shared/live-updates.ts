@@ -11,7 +11,6 @@ export const LiveChangeSchema = z.object({
   requestId: z.string().min(1),
   occurredAt: z.iso.datetime(),
 });
-export type LiveChange = z.infer<typeof LiveChangeSchema>;
 
 /**
  * A message on `GET /api/events/stream`. `change` names one committed event;
