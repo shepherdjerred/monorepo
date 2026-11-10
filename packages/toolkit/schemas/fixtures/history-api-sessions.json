@@ -1,0 +1,57 @@
+{
+  "apiVersion": 1,
+  "query": "argocd prune",
+  "sessions": [
+    {
+      "id": 42,
+      "source": "claude",
+      "sourceId": "-Users-jerred-git-monorepo/0f1e2d3c.jsonl",
+      "title": "Prune stale ArgoCD applications",
+      "agent": "Claude Code",
+      "machine": null,
+      "workspace": "/Users/jerred/git/monorepo",
+      "gitBranch": "fix-argocd-prune",
+      "primaryModel": "claude-opus-5-5",
+      "createdAt": "2026-11-08T17:02:11.000Z",
+      "updatedAt": "2026-11-08T18:40:03.000Z",
+      "messageCount": 128,
+      "toolCallCount": 57,
+      "usage": {
+        "inputTokens": 1820,
+        "outputTokens": 40211,
+        "cacheReadTokens": 6120334,
+        "cacheCreationTokens": 210044,
+        "cachedInputTokens": 0,
+        "reasoningTokens": 0,
+        "costUsd": 14.52,
+        "costComplete": true
+      }
+    },
+    {
+      "id": 7,
+      "source": "codex-mirror",
+      "sourceId": "jerred-desktop/2026/11/07/rollout-2026-11-07T21-10-00-abc.jsonl",
+      "title": "Fix the Windows scheduled task",
+      "agent": "Codex · jerred-desktop",
+      "machine": "jerred-desktop",
+      "workspace": "C:\\Users\\jerred\\git\\monorepo",
+      "gitBranch": null,
+      "primaryModel": "gpt-5.5-codex",
+      "createdAt": "2026-11-07T21:10:00.000Z",
+      "updatedAt": "2026-11-07T21:44:52.000Z",
+      "messageCount": 40,
+      "toolCallCount": 12,
+      "usage": {
+        "inputTokens": 912004,
+        "outputTokens": 18233,
+        "cacheReadTokens": 0,
+        "cacheCreationTokens": 0,
+        "cachedInputTokens": 840112,
+        "reasoningTokens": 5120,
+        "costUsd": 0.88,
+        "costComplete": false
+      }
+    }
+  ],
+  "hasMore": true
+}

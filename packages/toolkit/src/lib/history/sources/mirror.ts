@@ -72,6 +72,7 @@ function relabel(
     ...document,
     source: spec.name,
     sourceId: `${root.key}/${document.sourceId}`,
+    machine: root.machine.machineId,
     agent: `${document.agent ?? spec.label} · ${root.machine.displayName}`,
   };
 }

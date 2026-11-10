@@ -7,7 +7,10 @@ import {
   RowSchema,
 } from "#lib/history/sources-shared.ts";
 import { parseTimestamp, stringValue } from "#lib/history/query/text.ts";
-import type { HistoryDocument } from "#lib/history/types.ts";
+import {
+  EMPTY_DOCUMENT_DETAILS,
+  type HistoryDocument,
+} from "#lib/history/types.ts";
 
 export async function scanCodexCatalog(
   filePath: string,
@@ -51,6 +54,8 @@ export async function scanCodexCatalog(
           .filter((value) => value !== null)
           .join("\n"),
         usageEvents: [],
+        ...EMPTY_DOCUMENT_DETAILS,
+        gitBranch: branch,
       } satisfies HistoryDocument;
     });
   } finally {

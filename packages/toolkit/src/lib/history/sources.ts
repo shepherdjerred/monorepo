@@ -58,6 +58,8 @@ type ClaudeUsageEntry = {
 };
 
 type ClaudeTranscript = {
+  readonly cwd: string | null;
+  readonly gitBranch: string | null;
   readonly messages: readonly HistoryMessage[];
   readonly createdAt: string | null;
   readonly updatedAt: string | null;
@@ -181,6 +183,17 @@ function parseClaudeLine(
   }
 }
 
+/**
+ * Only these records are conversation. Claude Code also logs bookkeeping
+ * records (`attachment`, `api-request`, `api-request-blob`, `mode`, ...),
+ * some of which repeat message bodies; reading them as dialogue would
+ * duplicate turns and inflate message counts.
+ */
+const CLAUDE_CONVERSATION_TYPES: ReadonlySet<string> = new Set([
+  "user",
+  "assistant",
+]);
+
 async function readClaudeTranscript(
   file: string,
   maxCharacters = Number.POSITIVE_INFINITY,
@@ -191,6 +204,8 @@ async function readClaudeTranscript(
   let createdAt: string | null = null;
   let updatedAt: string | null = null;
   let runtimeId: string | null = null;
+  let cwd: string | null = null;
+  let gitBranch: string | null = null;
   const lines = raw.split("\n");
   for (const [index, line] of lines.entries()) {
     if (line.trim().length === 0) {
@@ -203,6 +218,9 @@ async function readClaudeTranscript(
     }
     runtimeId ??=
       stringValue(record["sessionId"]) ?? stringValue(record["session_id"]);
+    // The latest values win: a session can `cd` or switch branches.
+    cwd = stringValue(record["cwd"]) ?? cwd;
+    gitBranch = stringValue(record["gitBranch"]) ?? gitBranch;
     const timestamp = stringValue(record["timestamp"]);
     const parsedTimestamp =
       timestamp === null ? null : parseTimestamp(timestamp, new Date(0));
@@ -222,6 +240,9 @@ async function readClaudeTranscript(
       // being dropped.
       usageEntriesById.set(usageEntry.messageId, usageEntry);
     }
+    if (!CLAUDE_CONVERSATION_TYPES.has(stringValue(record["type"]) ?? "")) {
+      continue;
+    }
     messages.push(
       ...parseConversationEnvelope(
         value,
@@ -232,7 +253,15 @@ async function readClaudeTranscript(
     );
   }
   const usageEntries = [...usageEntriesById.values()];
-  return { messages, createdAt, updatedAt, runtimeId, usageEntries };
+  return {
+    cwd,
+    gitBranch,
+    messages,
+    createdAt,
+    updatedAt,
+    runtimeId,
+    usageEntries,
+  };
 }
 
 function claudeUsageEvents(
@@ -268,7 +297,8 @@ async function parseClaudeDocument(
         "Claude Code session",
       ),
       path: file,
-      workspace: path.dirname(path.dirname(file)),
+      workspace: transcript.cwd,
+      gitBranch: transcript.gitBranch,
       agent: "Claude Code",
       createdAt: transcript.createdAt ?? fallback,
       updatedAt: transcript.updatedAt ?? fallback,

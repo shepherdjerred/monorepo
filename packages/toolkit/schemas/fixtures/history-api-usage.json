@@ -1,0 +1,43 @@
+{
+  "apiVersion": 1,
+  "groupBy": "day",
+  "since": "2026-11-02T00:00:00.000Z",
+  "total": {
+    "inputTokens": 913824,
+    "outputTokens": 58444,
+    "cacheReadTokens": 6120334,
+    "cacheCreationTokens": 210044,
+    "cachedInputTokens": 840112,
+    "reasoningTokens": 5120,
+    "costUsd": 15.4,
+    "costComplete": false
+  },
+  "rows": [
+    {
+      "key": "2026-11-07",
+      "sessionCount": 1,
+      "events": 31,
+      "inputTokens": 912004,
+      "outputTokens": 18233,
+      "cacheReadTokens": 0,
+      "cacheCreationTokens": 0,
+      "cachedInputTokens": 840112,
+      "reasoningTokens": 5120,
+      "costUsd": 0.88,
+      "costComplete": false
+    },
+    {
+      "key": "2026-11-08",
+      "sessionCount": 1,
+      "events": 64,
+      "inputTokens": 1820,
+      "outputTokens": 40211,
+      "cacheReadTokens": 6120334,
+      "cacheCreationTokens": 210044,
+      "cachedInputTokens": 0,
+      "reasoningTokens": 0,
+      "costUsd": 14.52,
+      "costComplete": true
+    }
+  ]
+}

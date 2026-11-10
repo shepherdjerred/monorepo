@@ -8,10 +8,11 @@ import {
   type UsageExportTotals,
 } from "#lib/history/usage-export.ts";
 import type { ExportableUsageEvent } from "#lib/history/usage-query.ts";
-import type {
-  HistoryDocument,
-  HistorySourceResult,
-  UsageEventEntry,
+import {
+  EMPTY_DOCUMENT_DETAILS,
+  type HistoryDocument,
+  type HistorySourceResult,
+  type UsageEventEntry,
 } from "#lib/history/types.ts";
 import { useTempDirectories } from "#test/support/temp-directories.ts";
 
@@ -58,6 +59,7 @@ function document(
     dialogueText: `dialogue ${sourceId} ${String(usageEvents.length)}`,
     toolOutputText: "",
     usageEvents,
+    ...EMPTY_DOCUMENT_DETAILS,
   };
 }
 

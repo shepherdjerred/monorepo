@@ -1,0 +1,50 @@
+{
+  "apiVersion": 1,
+  "session": {
+    "id": 42,
+    "source": "claude",
+    "sourceId": "-Users-jerred-git-monorepo/0f1e2d3c.jsonl",
+    "title": "Prune stale ArgoCD applications",
+    "agent": "Claude Code",
+    "machine": null,
+    "workspace": "/Users/jerred/git/monorepo",
+    "gitBranch": "fix-argocd-prune",
+    "primaryModel": "claude-opus-5-5",
+    "createdAt": "2026-11-08T17:02:11.000Z",
+    "updatedAt": "2026-11-08T18:40:03.000Z",
+    "messageCount": 128,
+    "toolCallCount": 57,
+    "usage": {
+      "inputTokens": 1820,
+      "outputTokens": 40211,
+      "cacheReadTokens": 6120334,
+      "cacheCreationTokens": 210044,
+      "cachedInputTokens": 0,
+      "reasoningTokens": 0,
+      "costUsd": 14.52,
+      "costComplete": true
+    }
+  },
+  "messages": [
+    {
+      "role": "user",
+      "text": "Prune the stale ArgoCD applications left from the old root.",
+      "createdAt": "2026-11-08T17:02:11.000Z",
+      "toolName": null
+    },
+    {
+      "role": "tool",
+      "text": "Bash argocd app list -o name",
+      "createdAt": "2026-11-08T17:02:20.000Z",
+      "toolName": "Bash"
+    },
+    {
+      "role": "assistant",
+      "text": "Three applications are no longer owned by the root.",
+      "createdAt": null,
+      "toolName": null
+    }
+  ],
+  "offset": 0,
+  "totalMessages": 3
+}

@@ -1,8 +1,10 @@
 import { cleanText, extractText, parseRecord, stringValue } from "./text.ts";
 import type {
   HistoryDocument,
+  HistoryDocumentDetails,
   HistoryMessage,
   HistoryMessageRole,
+  HistoryToolCall,
 } from "#lib/history/types.ts";
 
 const OMITTED_BLOCK_TYPES = new Set([
@@ -33,6 +35,18 @@ const INDEXED_DIALOGUE_MESSAGE_LIMIT = 4000;
 const INDEXED_DIALOGUE_DOCUMENT_LIMIT = 64_000;
 const INDEXED_TOOL_MESSAGE_LIMIT = 160;
 const INDEXED_TOOL_DOCUMENT_LIMIT = 2000;
+
+/** Tool blocks that are invocations (results carry no tool name). */
+const TOOL_CALL_BLOCK_TYPES = new Set([
+  "command_execution",
+  "file_change",
+  "function",
+  "function_call",
+  "image_view",
+  "mcp_tool_call",
+  "tool_use",
+  "web_search",
+]);
 
 export const INDEXED_MESSAGE_PARSE_LIMIT = 8000;
 
@@ -81,6 +95,26 @@ function message(
     : { role, text, createdAt };
 }
 
+function named(
+  parsed: HistoryMessage | null,
+  toolName: string | null,
+): HistoryMessage | null {
+  return parsed === null || toolName === null
+    ? parsed
+    : { ...parsed, toolName };
+}
+
+function blockToolName(
+  blockType: string | null,
+  record: Record<string, unknown> | null,
+): string | null {
+  return blockType === null || !TOOL_CALL_BLOCK_TYPES.has(blockType)
+    ? null
+    : (stringValue(record?.["name"]) ??
+        stringValue(record?.["tool"]) ??
+        blockType);
+}
+
 function messagesFromContent(
   value: unknown,
   role: HistoryMessageRole,
@@ -102,7 +136,10 @@ function messagesFromContent(
     }
     const blockRole =
       blockType !== null && TOOL_BLOCK_TYPES.has(blockType) ? "tool" : role;
-    const parsed = message(blockRole, block, createdAt, maxCharacters);
+    const parsed = named(
+      message(blockRole, block, createdAt, maxCharacters),
+      blockToolName(blockType, record),
+    );
     if (parsed !== null) {
       messageEnvelopes.set(parsed, envelope);
       result.push(parsed);
@@ -193,8 +230,18 @@ export function parseCodexItem(
     default:
       return [];
   }
-  const parsed = message(role, value, createdAt, maxCharacters);
+  const parsed = named(
+    message(role, value, createdAt, maxCharacters),
+    role === "tool" ? codexItemToolName(itemType, value) : null,
+  );
   return parsed === null ? [] : [parsed];
+}
+
+function codexItemToolName(itemType: string, value: unknown): string {
+  const record = parseRecord(value);
+  return (
+    stringValue(record?.["tool"]) ?? stringValue(record?.["name"]) ?? itemType
+  );
 }
 
 function boundedIndexedText(
@@ -295,15 +342,38 @@ export function openingPromptHash(value: string | null): string | null {
   return hasher.digest("hex");
 }
 
+export function documentDetails(
+  messages: readonly HistoryMessage[],
+  gitBranch: string | null = null,
+): HistoryDocumentDetails {
+  const toolCalls: HistoryToolCall[] = [];
+  for (const entry of messages) {
+    if (entry.toolName !== undefined) {
+      toolCalls.push({ name: entry.toolName, occurredAt: entry.createdAt });
+    }
+  }
+  return {
+    gitBranch,
+    machine: null,
+    messageCount: messages.length,
+    toolCalls,
+  };
+}
+
 export function makeHistoryDocument(
   metadata: Omit<
     HistoryDocument,
-    "dialogueText" | "toolOutputText" | "openingPromptHash"
-  >,
+    | "dialogueText"
+    | "toolOutputText"
+    | "openingPromptHash"
+    | keyof HistoryDocumentDetails
+  > & { readonly gitBranch?: string | null },
   messages: readonly HistoryMessage[],
 ): HistoryDocument {
+  const { gitBranch = null, ...rest } = metadata;
   return {
-    ...metadata,
+    ...rest,
+    ...documentDetails(messages, gitBranch),
     openingPromptHash: openingPromptHash(openingPrompt(messages)),
     dialogueText: dialogueText(messages),
     toolOutputText: toolOutputText(messages),

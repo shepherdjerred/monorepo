@@ -1,0 +1,147 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "apiVersion": {
+      "type": "number",
+      "const": 1
+    },
+    "groupBy": {
+      "type": "string",
+      "enum": ["day", "source", "model", "workspace", "machine"]
+    },
+    "since": {
+      "type": ["string", "null"]
+    },
+    "total": {
+      "type": "object",
+      "properties": {
+        "inputTokens": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "outputTokens": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "cacheReadTokens": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "cacheCreationTokens": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "cachedInputTokens": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "reasoningTokens": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "costUsd": {
+          "type": "number",
+          "minimum": 0
+        },
+        "costComplete": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "inputTokens",
+        "outputTokens",
+        "cacheReadTokens",
+        "cacheCreationTokens",
+        "cachedInputTokens",
+        "reasoningTokens",
+        "costUsd",
+        "costComplete"
+      ],
+      "additionalProperties": false,
+      "title": "HistoryApiUsage"
+    },
+    "rows": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "inputTokens": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "outputTokens": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "cacheReadTokens": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "cacheCreationTokens": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "cachedInputTokens": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "reasoningTokens": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "costUsd": {
+            "type": "number",
+            "minimum": 0
+          },
+          "costComplete": {
+            "type": "boolean"
+          },
+          "key": {
+            "type": ["string", "null"]
+          },
+          "sessionCount": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "events": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "inputTokens",
+          "outputTokens",
+          "cacheReadTokens",
+          "cacheCreationTokens",
+          "cachedInputTokens",
+          "reasoningTokens",
+          "costUsd",
+          "costComplete",
+          "key",
+          "sessionCount",
+          "events"
+        ],
+        "additionalProperties": false,
+        "title": "HistoryApiUsageRow"
+      }
+    }
+  },
+  "required": ["apiVersion", "groupBy", "since", "total", "rows"],
+  "additionalProperties": false,
+  "title": "HistoryApiUsageResponse"
+}

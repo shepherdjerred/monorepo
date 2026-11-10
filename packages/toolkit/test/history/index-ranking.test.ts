@@ -6,10 +6,11 @@ import path from "node:path";
 import { HistoryIndex } from "#lib/history/index.ts";
 import { defaultHistoryRuntimePaths } from "#lib/history/paths.ts";
 import { ftsQuery } from "#lib/history/query/query.ts";
-import type {
-  HistoryDocument,
-  HistorySourceName,
-  HistorySourceResult,
+import {
+  EMPTY_DOCUMENT_DETAILS,
+  type HistoryDocument,
+  type HistorySourceName,
+  type HistorySourceResult,
 } from "#lib/history/types.ts";
 
 const roots: string[] = [];
@@ -47,6 +48,7 @@ function document(
     dialogueText: values.dialogue ?? "",
     toolOutputText: values.tool ?? "",
     usageEvents: [],
+    ...EMPTY_DOCUMENT_DETAILS,
   };
 }
 

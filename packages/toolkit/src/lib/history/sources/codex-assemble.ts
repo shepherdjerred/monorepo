@@ -105,6 +105,7 @@ function overlayCatalog(
     ...document,
     title: catalog.title,
     workspace: catalog.workspace,
+    gitBranch: catalog.gitBranch ?? document.gitBranch,
     agent: catalog.agent,
     toolOutputText: [document.toolOutputText, catalog.toolOutputText]
       .filter((text) => text.length > 0)

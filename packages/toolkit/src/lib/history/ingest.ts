@@ -62,6 +62,8 @@ type IngestStatements = {
   readonly deleteDocument: ReturnType<Database["prepare"]>;
   readonly deleteUsageEvents: ReturnType<Database["prepare"]>;
   readonly insertUsageEvent: ReturnType<Database["prepare"]>;
+  readonly deleteToolCalls: ReturnType<Database["prepare"]>;
+  readonly insertToolCall: ReturnType<Database["prepare"]>;
   readonly updateState: ReturnType<Database["prepare"]>;
 };
 
@@ -70,8 +72,9 @@ function prepareIngestStatements(database: Database): IngestStatements {
     upsert: database.prepare(`
       INSERT INTO documents
         (source, source_id, title, path, workspace, agent, created_at, updated_at,
-         runtime_id, opening_prompt_hash, content_hash)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         runtime_id, opening_prompt_hash, content_hash, machine, git_branch,
+         primary_model, message_count, tool_call_count)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(source, source_id) DO UPDATE SET
         title = excluded.title,
         path = excluded.path,
@@ -81,7 +84,12 @@ function prepareIngestStatements(database: Database): IngestStatements {
         updated_at = excluded.updated_at,
         runtime_id = excluded.runtime_id,
         opening_prompt_hash = excluded.opening_prompt_hash,
-        content_hash = excluded.content_hash
+        content_hash = excluded.content_hash,
+        machine = excluded.machine,
+        git_branch = excluded.git_branch,
+        primary_model = excluded.primary_model,
+        message_count = excluded.message_count,
+        tool_call_count = excluded.tool_call_count
     `),
     findExisting: database.prepare(
       "SELECT id, content_hash FROM documents WHERE source = ? AND source_id = ?",
@@ -101,6 +109,12 @@ function prepareIngestStatements(database: Database): IngestStatements {
          reasoning_tokens, cost_usd, cost_complete)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `),
+    deleteToolCalls: database.prepare(
+      "DELETE FROM tool_calls WHERE document_id = ?",
+    ),
+    insertToolCall: database.prepare(
+      "INSERT INTO tool_calls (document_id, occurred_at, name) VALUES (?, ?, ?)",
+    ),
     updateState: database.prepare(`
       INSERT INTO source_state
         (source, available, indexed_documents, fingerprint, last_scan_at, error)
@@ -113,6 +127,23 @@ function prepareIngestStatements(database: Database): IngestStatements {
         error = excluded.error
     `),
   };
+}
+
+/** The model with the most usage events; ties go to the first seen. */
+export function primaryModel(document: HistoryDocument): string | null {
+  const counts = new Map<string, number>();
+  for (const event of document.usageEvents) {
+    counts.set(event.model, (counts.get(event.model) ?? 0) + 1);
+  }
+  let best: string | null = null;
+  let bestCount = 0;
+  for (const [model, count] of counts) {
+    if (count > bestCount) {
+      best = model;
+      bestCount = count;
+    }
+  }
+  return best;
 }
 
 function upsertDocument(
@@ -147,6 +178,11 @@ function upsertDocument(
     document.runtimeId,
     document.openingPromptHash,
     contentHash,
+    document.machine,
+    document.gitBranch,
+    primaryModel(document),
+    document.messageCount,
+    document.toolCalls.length,
   );
   const documentId = z
     .object({ id: z.number() })
@@ -158,6 +194,10 @@ function upsertDocument(
       document.dialogueText,
       document.toolOutputText,
     );
+  }
+  statements.deleteToolCalls.run(documentId);
+  for (const call of document.toolCalls) {
+    statements.insertToolCall.run(documentId, call.occurredAt, call.name);
   }
   statements.deleteUsageEvents.run(documentId);
   for (const event of document.usageEvents) {
@@ -208,6 +248,7 @@ function ingestSourceResult(
       if (!seenIds.has(existingId.source_id)) {
         statements.deleteFts.run(existingId.id);
         statements.deleteUsageEvents.run(existingId.id);
+        statements.deleteToolCalls.run(existingId.id);
         statements.deleteDocument.run(existingId.id);
       }
     }

@@ -1,5 +1,6 @@
 import {
   dialogueText,
+  documentDetails,
   INDEXED_MESSAGE_PARSE_LIMIT,
   openingPrompt,
   openingPromptHash,
@@ -119,6 +120,7 @@ async function cursorDocuments(
           dialogueText: dialogueText(messages),
           toolOutputText: toolOutputText(messages),
           usageEvents: [],
+          ...documentDetails(messages),
         } satisfies HistoryDocument,
       ];
     });

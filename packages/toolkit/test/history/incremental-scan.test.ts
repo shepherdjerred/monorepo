@@ -15,13 +15,14 @@ import {
   type StagedScan,
 } from "#lib/history/sources-shared.ts";
 import { createHistorySources } from "#lib/history/sources.ts";
-import type {
-  HistoryDocument,
-  HistoryScanOptions,
-  HistorySource,
-  HistorySourceName,
-  HistorySourceResult,
-  HistorySourceStatus,
+import {
+  EMPTY_DOCUMENT_DETAILS,
+  type HistoryDocument,
+  type HistoryScanOptions,
+  type HistorySource,
+  type HistorySourceName,
+  type HistorySourceResult,
+  type HistorySourceStatus,
 } from "#lib/history/types.ts";
 import { writeAntigravityFixture } from "./history-fixtures/antigravity.ts";
 import { writeClaudeFixture } from "./history-fixtures/claude.ts";
@@ -622,6 +623,7 @@ function atomicDocument(sourceId: string): HistoryDocument {
     dialogueText: `dialogue ${sourceId}`,
     toolOutputText: "",
     usageEvents: [],
+    ...EMPTY_DOCUMENT_DETAILS,
   };
 }
 

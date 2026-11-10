@@ -47,6 +47,7 @@ type Rollout = {
   readonly updatedAt: string | null;
   readonly runtimeId: string | null;
   readonly workspace: string | null;
+  readonly gitBranch: string | null;
 };
 
 /** Injected context and instructions Codex records as user turns. */
@@ -68,7 +69,7 @@ function contentText(value: unknown): string | null {
 
 function itemMessage(
   payload: Record<string, unknown>,
-): { role: HistoryMessageRole; text: string } | null {
+): { role: HistoryMessageRole; text: string; toolName?: string } | null {
   const type = stringValue(payload["type"]);
   switch (type) {
     case "message":
@@ -78,7 +79,11 @@ function itemMessage(
       const name = stringValue(payload["name"]) ?? "tool";
       const input =
         stringValue(payload["arguments"]) ?? stringValue(payload["input"]);
-      return { role: "tool", text: input === null ? name : `${name} ${input}` };
+      return {
+        role: "tool",
+        text: input === null ? name : `${name} ${input}`,
+        toolName: name,
+      };
     }
     case "function_call_output":
     case "custom_tool_call_output": {
@@ -108,6 +113,7 @@ type RolloutState = {
   updatedAt: string | null;
   runtimeId: string | null;
   workspace: string | null;
+  gitBranch: string | null;
 };
 
 function applyRecord(
@@ -127,18 +133,23 @@ function applyRecord(
     state.runtimeId ??=
       stringValue(payload["id"]) ?? stringValue(payload["session_id"]);
     state.workspace ??= stringValue(payload["cwd"]);
+    state.gitBranch ??= stringValue(parseRecord(payload["git"])?.["branch"]);
     return;
   }
   if (type !== "response_item") return;
   const item = itemMessage(payload);
   if (item === null) return;
+  const parsed = parseConversationEnvelope(
+    item.text,
+    item.role,
+    timestamp,
+    maxCharacters,
+  );
+  const toolName = item.toolName;
   state.messages.push(
-    ...parseConversationEnvelope(
-      item.text,
-      item.role,
-      timestamp,
-      maxCharacters,
-    ),
+    ...(toolName === undefined
+      ? parsed
+      : parsed.map((entry) => ({ ...entry, toolName }))),
   );
 }
 
@@ -153,6 +164,7 @@ async function readRollout(
     updatedAt: null,
     runtimeId: null,
     workspace: null,
+    gitBranch: null,
   };
   for (const [index, line] of raw.split("\n").entries()) {
     if (line.trim().length === 0) continue;
@@ -189,6 +201,7 @@ async function parseRolloutDocument(
       ),
       path: file,
       workspace: rollout.workspace,
+      gitBranch: rollout.gitBranch,
       agent: "Codex",
       createdAt: rollout.createdAt ?? fallback,
       updatedAt: rollout.updatedAt ?? fallback,

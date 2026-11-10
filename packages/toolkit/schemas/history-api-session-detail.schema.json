@@ -1,0 +1,179 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "apiVersion": {
+      "type": "number",
+      "const": 1
+    },
+    "session": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "source": {
+          "type": "string",
+          "enum": [
+            "conductor",
+            "claude",
+            "codex",
+            "cursor",
+            "antigravity",
+            "grok",
+            "claude-mirror",
+            "codex-mirror"
+          ]
+        },
+        "sourceId": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "agent": {
+          "type": ["string", "null"]
+        },
+        "machine": {
+          "type": ["string", "null"]
+        },
+        "workspace": {
+          "type": ["string", "null"]
+        },
+        "gitBranch": {
+          "type": ["string", "null"]
+        },
+        "primaryModel": {
+          "type": ["string", "null"]
+        },
+        "createdAt": {
+          "type": "string"
+        },
+        "updatedAt": {
+          "type": "string"
+        },
+        "messageCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "toolCallCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "usage": {
+          "type": "object",
+          "properties": {
+            "inputTokens": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "outputTokens": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "cacheReadTokens": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "cacheCreationTokens": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "cachedInputTokens": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "reasoningTokens": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "costUsd": {
+              "type": "number",
+              "minimum": 0
+            },
+            "costComplete": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "inputTokens",
+            "outputTokens",
+            "cacheReadTokens",
+            "cacheCreationTokens",
+            "cachedInputTokens",
+            "reasoningTokens",
+            "costUsd",
+            "costComplete"
+          ],
+          "additionalProperties": false,
+          "title": "HistoryApiUsage"
+        }
+      },
+      "required": [
+        "id",
+        "source",
+        "sourceId",
+        "title",
+        "agent",
+        "machine",
+        "workspace",
+        "gitBranch",
+        "primaryModel",
+        "createdAt",
+        "updatedAt",
+        "messageCount",
+        "toolCallCount",
+        "usage"
+      ],
+      "additionalProperties": false,
+      "title": "HistoryApiSession"
+    },
+    "messages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": ["user", "assistant", "tool", "unknown"]
+          },
+          "text": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": ["string", "null"]
+          },
+          "toolName": {
+            "type": ["string", "null"]
+          }
+        },
+        "required": ["role", "text", "createdAt", "toolName"],
+        "additionalProperties": false,
+        "title": "HistoryApiMessage"
+      }
+    },
+    "offset": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "totalMessages": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    }
+  },
+  "required": ["apiVersion", "session", "messages", "offset", "totalMessages"],
+  "additionalProperties": false,
+  "title": "HistoryApiSessionDetailResponse"
+}

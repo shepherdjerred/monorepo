@@ -16,12 +16,13 @@ import {
   sourceReadResult,
 } from "@shepherdjerred/toolkit/lib/history/sources-shared.ts";
 import { parseJsonLine } from "@shepherdjerred/toolkit/lib/history/query/text.ts";
-import type {
-  HistoryDocument,
-  HistoryMessage,
-  HistoryRecord,
-  HistorySourceReadResult,
-  UsageEventEntry,
+import {
+  EMPTY_DOCUMENT_DETAILS,
+  type HistoryDocument,
+  type HistoryMessage,
+  type HistoryRecord,
+  type HistorySourceReadResult,
+  type UsageEventEntry,
 } from "@shepherdjerred/toolkit/lib/history/types.ts";
 import { scanCodexCatalog } from "./codex-catalog.ts";
 import { readCodexHistoryJsonl } from "./codex-history.ts";
@@ -266,6 +267,7 @@ export function usageOnlyCodexDocument(
     dialogueText: "",
     toolOutputText: "",
     usageEvents: events,
+    ...EMPTY_DOCUMENT_DETAILS,
   } satisfies HistoryDocument;
 }
 

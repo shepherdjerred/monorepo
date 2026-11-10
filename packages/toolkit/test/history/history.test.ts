@@ -13,10 +13,11 @@ import {
 import { createHistorySources } from "#lib/history/sources.ts";
 import { scanHistorySources } from "#lib/history/serve.ts";
 import { readCursorDatabase } from "#lib/history/sources-shared.ts";
-import type {
-  HistoryDocument,
-  HistoryRecord,
-  UsageEventEntry,
+import {
+  EMPTY_DOCUMENT_DETAILS,
+  type HistoryDocument,
+  type HistoryRecord,
+  type UsageEventEntry,
 } from "#lib/history/types.ts";
 import {
   writeAntigravityFixture,
@@ -1092,6 +1093,7 @@ describe("history index", () => {
       dialogueText: "priced",
       toolOutputText: "",
       usageEvents: [pricedEvent],
+      ...EMPTY_DOCUMENT_DETAILS,
     };
     const unpricedEvent: UsageEventEntry = {
       occurredAt: "2026-08-10T00:00:00.000Z",
@@ -1185,6 +1187,7 @@ describe("history index", () => {
       dialogueText: "long-lived",
       toolOutputText: "",
       usageEvents: [oldEvent, recentEvent],
+      ...EMPTY_DOCUMENT_DETAILS,
     };
     await index.ingest([
       {

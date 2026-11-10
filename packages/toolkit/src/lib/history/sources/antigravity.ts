@@ -22,11 +22,12 @@ import {
   sourceResult,
   type StagedScan,
 } from "@shepherdjerred/toolkit/lib/history/sources-shared.ts";
-import type {
-  HistoryDocument,
-  HistoryMessage,
-  HistoryRecord,
-  HistorySource,
+import {
+  EMPTY_DOCUMENT_DETAILS,
+  type HistoryDocument,
+  type HistoryMessage,
+  type HistoryRecord,
+  type HistorySource,
 } from "@shepherdjerred/toolkit/lib/history/types.ts";
 import {
   catalogCost,
@@ -204,6 +205,7 @@ async function buildAntigravityDocument(
     dialogueText: "",
     toolOutputText: "",
     usageEvents,
+    ...EMPTY_DOCUMENT_DETAILS,
   } satisfies HistoryDocument;
 }
 
