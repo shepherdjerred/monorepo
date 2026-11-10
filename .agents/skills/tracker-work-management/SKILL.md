@@ -27,6 +27,20 @@ exact target, and change only fields required by the task. Keep issue state
 synchronized with observable work. Do not mark complete merely because code
 exists locally. Use `--expected-revision` when editing an inspected issue.
 
+Break a larger issue into sub-issues and give work a deadline with:
+
+```bash
+toolkit tracker issue create --team AI --title "<step>" --parent AI-123 --due 2026-12-01
+toolkit tracker issue update AI-124 --parent AI-123 --due 2026-12-01
+toolkit tracker issue update AI-124 --parent none --due none
+toolkit tracker issue list --team AI --parent AI-123 --sort due --json
+toolkit tracker issue list --team AI --overdue --state started --json
+```
+
+A sub-issue shares its parent's team and nests at most five levels. Due dates
+are calendar days in `YYYY-MM-DD`. `issue view` shows `parent`, `children` and
+`dueDate`.
+
 Tracker is private to the tailnet and requires no issue-service credential.
 The toolkit supplies the native session actor and model metadata; inspect
 `whoami` rather than inventing an identity. A runner supplies its stable actor

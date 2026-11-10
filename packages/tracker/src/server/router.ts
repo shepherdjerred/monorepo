@@ -10,14 +10,18 @@ import { presentActor } from "#infrastructure/issue-repository.ts";
 import {
   ColorSchema,
   CreateIssueSchema,
+  CreateViewSchema,
   IdentifierSchema,
   IssueListSchema,
   IssueReferenceSchema,
   MutationSchema,
+  ReorderViewsSchema,
   SlugSchema,
   StateTypeSchema,
   TeamKeySchema,
   UpdateIssueSchema,
+  UpdateViewSchema,
+  ViewReferenceSchema,
 } from "#shared/schema.ts";
 
 export type RouterContext = {
@@ -177,6 +181,7 @@ export const appRouter = t.router({
         labels,
         projects,
         actors: actors.map((actor) => presentActor(actor)),
+        views: await ctx.catalog.views.list(db),
         writesEnabled,
       };
     }),
@@ -266,6 +271,33 @@ export const appRouter = t.router({
       )
       .mutation(({ ctx, input }) =>
         ctx.catalog.project(input, false, ctx.requestId),
+      ),
+  }),
+  views: t.router({
+    list: procedure
+      .input(teamInput)
+      .query(({ ctx, input }) =>
+        ctx.catalog.views.list(ctx.issues.database, input.teamKey),
+      ),
+    create: mutation
+      .input(CreateViewSchema)
+      .mutation(({ ctx, input }) =>
+        ctx.catalog.views.create(input, ctx.requestId),
+      ),
+    update: mutation
+      .input(UpdateViewSchema)
+      .mutation(({ ctx, input }) =>
+        ctx.catalog.views.update(input, ctx.requestId),
+      ),
+    delete: mutation
+      .input(ViewReferenceSchema)
+      .mutation(({ ctx, input }) =>
+        ctx.catalog.views.delete(input, ctx.requestId),
+      ),
+    reorder: mutation
+      .input(ReorderViewsSchema)
+      .mutation(({ ctx, input }) =>
+        ctx.catalog.views.reorder(input, ctx.requestId),
       ),
   }),
   issues: t.router({

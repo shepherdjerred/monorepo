@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { issueCommand } from "#commands/tracker/issues.ts";
 import { catalogCommand } from "#commands/tracker/catalog.ts";
+import { viewCommand } from "#commands/tracker/views.ts";
 import { parseTrackerArgs, required } from "#commands/tracker/options.ts";
 import { trackerApi, trackerClient, trackerUrl } from "#lib/tracker/client.ts";
 import { actorContext, detectActor } from "#lib/tracker/actor.ts";
@@ -15,14 +16,24 @@ identity-hook claude-code|cursor     Native harness hook (JSON on stdin)
 team|state|label|project list        List catalog entries (--team AI|SJ)
 label create --team --name           Create a label (--color optional)
 project view <slug>                  Show a project
+view list                            Saved issue views (--team adds a team's)
+view create --name --icon            --input-json '<list params>', --team optional
+view delete <VIEW-ID>                Remove a saved view
 issue list                          Filter by --team, --state, --label, --project,
-                                    --priority, --assignee, --creator, --sort,
-                                    --include-archived, --limit N|all, --cursor
+                                    --priority, --assignee, --creator, --parent,
+                                    --due-before, --due-after (YYYY-MM-DD),
+                                    --overdue (before --today, default this
+                                    machine's date), --include-archived,
+                                    --sort updated|created|priority|votes|
+                                    board|due, --limit N|all, --cursor
 issue search <text>                 Search open issues (--all-states optional)
-issue view <ID>                      Show comments, relations, files and votes
+issue view <ID>                      Show parent, sub-issues, due date, comments,
+                                    relations, files and votes
 issue create --team --title          --description or --description-file,
-                                    --priority, --state, --project, --label
+                                    --priority, --state, --project, --label,
+                                    --parent <ID>, --due <YYYY-MM-DD>
 issue update <ID>                    Patch fields, --add-label, --remove-label,
+                                    --parent <ID|none>, --due <YYYY-MM-DD|none>,
                                     --archive|--unarchive, --expected-revision
 issue delete <ID>                    Requires --expected-revision
 issue comment add|list <ID>          --body or --body-file
@@ -95,6 +106,9 @@ export async function handleTrackerCommand(
       break;
     case "issue":
       result = await issueCommand(context, positionals, values);
+      break;
+    case "view":
+      result = await viewCommand(context, positionals, values);
       break;
     case "api": {
       const procedure = required(positionals[0], "Procedure name");

@@ -20,6 +20,10 @@ export const SlugSchema = z
   .string()
   .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/u)
   .max(100);
+/** A calendar day, `YYYY-MM-DD`, with no time or time zone. */
+export const DueDateSchema = z.iso
+  .date()
+  .refine((value) => value >= "0001-01-01", "Year must be 0001 or later");
 export const MutationSchema = z.object({ actor: ActorSchema });
 export const IssueReferenceSchema = z.object({ identifier: IdentifierSchema });
 export const IssueFieldsSchema = z.object({
@@ -30,6 +34,8 @@ export const IssueFieldsSchema = z.object({
   stateType: StateTypeSchema.optional(),
   projectSlug: SlugSchema.nullable().optional(),
   assigneeKey: ActorSchema.shape.key.nullable().optional(),
+  parentIdentifier: IdentifierSchema.nullable().optional(),
+  dueDate: DueDateSchema.nullable().optional(),
 });
 export const CreateIssueSchema = MutationSchema.extend({
   teamKey: TeamKeySchema,
@@ -48,7 +54,7 @@ export const UpdateIssueSchema = MutationSchema.extend({
   expectedRevision: z.number().int().positive().optional(),
   attachmentIds: z.array(z.string()).max(100).default([]),
 });
-export const IssueListSchema = z.object({
+const issueListShape = {
   teamKey: TeamKeySchema.optional(),
   projectSlug: SlugSchema.optional(),
   states: z.array(z.string()).default([]),
@@ -58,14 +64,71 @@ export const IssueListSchema = z.object({
   priority: z.number().int().min(0).max(4).optional(),
   search: z.string().max(500).optional(),
   includeArchived: z.boolean().default(false),
+  parentIdentifier: IdentifierSchema.optional(),
+  hasParent: z.boolean().optional(),
+  /** Inclusive bounds; issues without a due date never match. */
+  dueBefore: DueDateSchema.optional(),
+  dueAfter: DueDateSchema.optional(),
+  /** Due strictly before `today`, which the caller supplies. */
+  overdue: z.boolean().optional(),
+  today: DueDateSchema.optional(),
   sort: z
-    .enum(["updated", "created", "priority", "votes", "board"])
+    .enum(["updated", "created", "priority", "votes", "board", "due"])
     .default("updated"),
   limit: z
     .union([z.number().int().min(1).max(500), z.literal("all")])
     .default(100),
   cursor: z.string().optional(),
+};
+export const IssueListSchema = z
+  .object(issueListShape)
+  .refine((input) => input.overdue === undefined || input.today !== undefined, {
+    path: ["today"],
+    message: "today (YYYY-MM-DD) is required with overdue",
+  });
+
+/** Paging and the caller's clock are not part of a saved view. */
+const viewParamKeys = [
+  ...Object.keys(issueListShape).filter(
+    (key) => !["cursor", "limit", "today"].includes(key),
+  ),
+  "group",
+  "view",
+];
+/** The list URL parameters a view stores: filters plus display options. */
+export const ViewParamsSchema = z
+  .record(
+    z.string(),
+    z.union([z.string().max(500), z.array(z.string().max(500)).max(100)]),
+  )
+  .refine(
+    (params) => Object.keys(params).every((key) => viewParamKeys.includes(key)),
+    `View parameters allow only: ${viewParamKeys.join(", ")}`,
+  );
+const viewFields = {
+  name: z.string().trim().min(1).max(200),
+  icon: z.string().trim().min(1).max(32),
+  params: ViewParamsSchema,
+  teamKey: TeamKeySchema.nullable(),
+};
+export const CreateViewSchema = MutationSchema.extend({
+  ...viewFields,
+  teamKey: viewFields.teamKey.default(null),
 });
+export const UpdateViewSchema = MutationSchema.extend({
+  id: z.string().min(1).max(200),
+  ...z.object(viewFields).partial().shape,
+});
+export const ViewReferenceSchema = MutationSchema.extend({
+  id: z.string().min(1).max(200),
+});
+export const ReorderViewsSchema = MutationSchema.extend({
+  ids: z.array(z.string().min(1).max(200)).max(1000),
+});
+export type CreateViewInput = z.infer<typeof CreateViewSchema>;
+export type UpdateViewInput = z.infer<typeof UpdateViewSchema>;
+export type ViewReferenceInput = z.infer<typeof ViewReferenceSchema>;
+export type ReorderViewsInput = z.infer<typeof ReorderViewsSchema>;
 export type IssueListInput = z.infer<typeof IssueListSchema>;
 export type CreateIssueInput = z.infer<typeof CreateIssueSchema>;
 export type UpdateIssueInput = z.infer<typeof UpdateIssueSchema>;

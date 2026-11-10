@@ -3,6 +3,7 @@ import type { UnitOfWork } from "#application/unit-of-work.ts";
 import type { StateType } from "#generated/prisma/client.ts";
 import { TrackerError } from "#domain/error.ts";
 import { audit } from "./issue-repository.ts";
+import { Views } from "./views.ts";
 
 function projectChanges(input: {
   name?: string | undefined;
@@ -32,7 +33,10 @@ function labelChanges(input: {
 }
 
 export class Catalog {
-  constructor(private readonly unit: UnitOfWork) {}
+  readonly views: Views;
+  constructor(private readonly unit: UnitOfWork) {
+    this.views = new Views(unit);
+  }
 
   project(
     input: {
