@@ -36,6 +36,7 @@ import {
 import { createLogger } from "#src/logger.ts";
 import {
   scoutExploreActiveRuns,
+  scoutExploreInvalidCardSelectionsTotal,
   scoutExploreTurnDurationSeconds,
   scoutExploreTurnsTotal,
 } from "#src/metrics/explore.ts";
@@ -113,6 +114,18 @@ export function exploreFailureCode(
   return error instanceof ExploreCardSelectionError
     ? `explore:invalid_${error.cardType}_card`
     : "explore:execution_failed";
+}
+
+function recordTurnFailure(error: unknown): void {
+  if (error instanceof ExploreCardSelectionError) {
+    // The model's repaired selection was still invalid. The turn is still
+    // rejected; this is a model-output outcome, not a Scout fault.
+    logger.warn("Explore turn rejected an invalid card selection");
+    scoutExploreInvalidCardSelectionsTotal.inc({ card_type: error.cardType });
+    return;
+  }
+  logger.error("Explore turn failed mid-stream", errorMessage(error));
+  Sentry.captureException(error, { tags: { source: "explore-turn-run" } });
 }
 
 function visibleError(outcome: ExploreTurnOutcome, error: unknown): string {
@@ -336,12 +349,7 @@ export async function runPersistedExploreTurn(
       ? resolveCancellationOutcome(cancellationOutcome)
       : "failed";
     runStatus = outcome === "failed" ? "error" : "cancelled";
-    if (outcome === "failed") {
-      logger.error("Explore turn failed mid-stream", errorMessage(error));
-      Sentry.captureException(error, {
-        tags: { source: "explore-turn-run" },
-      });
-    }
+    if (outcome === "failed") recordTurnFailure(error);
 
     // A failure after the complete answer was saved — the title update, the
     // quota read, the final emit — still leaves a whole answer. Replacing it

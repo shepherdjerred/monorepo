@@ -26,6 +26,7 @@ import {
   ScoutClientObservationConflict,
   startAcceptedClientMatches,
 } from "./ingress.ts";
+import { ClientBindingReconciliationPending } from "./late-binding.ts";
 import { MAX_REPLAY_BYTES, uploadReplay } from "./replay-upload.ts";
 import { ReplayUploadError } from "./replay/upload-result.ts";
 import { drainRequestBody } from "./replay/drain.ts";
@@ -278,18 +279,34 @@ export async function handleScoutClientRoute(
       device,
     );
   } catch (error) {
-    if (error instanceof ScoutClientRequestError) {
-      return new Response(error.message, { status: error.status });
-    }
-    if (error instanceof ScoutClientObservationConflict) {
-      return jsonResponse({ error: "observation_conflict" }, 409);
-    }
-    if (error instanceof ReplayUploadError) {
-      return jsonResponse(
+    const response = typedErrorResponse(error);
+    if (response === null) throw error;
+    return response;
+  }
+}
+
+/** Answer the failures this boundary expects; anything else is a 500. */
+function typedErrorResponse(error: unknown): Response | null {
+  if (error instanceof ScoutClientRequestError) {
+    return new Response(error.message, { status: error.status });
+  }
+  if (error instanceof ScoutClientObservationConflict) {
+    return jsonResponse({ error: "observation_conflict" }, 409);
+  }
+  if (error instanceof ClientBindingReconciliationPending) {
+    // The observations are durable; the outbox keeps the batch and retries
+    // the idempotent call once the match Workflow commits its stages.
+    const response = jsonResponse(
+      { error: "binding_reconciliation_pending", message: error.message },
+      503,
+    );
+    response.headers.set("Retry-After", "5");
+    return response;
+  }
+  return error instanceof ReplayUploadError
+    ? jsonResponse(
         { error: "replay_rejected", message: error.message },
         error.status,
-      );
-    }
-    throw error;
-  }
+      )
+    : null;
 }

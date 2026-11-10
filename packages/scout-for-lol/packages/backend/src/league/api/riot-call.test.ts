@@ -1,5 +1,15 @@
-import { describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import { ZodError, z } from "zod";
+import type * as SentryModule from "@sentry/bun";
+
+const sentry = vi.hoisted(() => ({ capture: vi.fn() }));
+vi.mock("@sentry/bun", async (original) => ({
+  ...(await original<typeof SentryModule>()),
+  captureException: sentry.capture,
+}));
+beforeEach(() => {
+  sentry.capture.mockClear();
+});
 import {
   callRiotOrThrow,
   callRiotOrUndefined,
@@ -288,5 +298,63 @@ describe("transport retry", () => {
     );
     expect(result).toBeUndefined();
     expect(fn).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("expectedAbsenceStatuses", () => {
+  test("an expected 403 is returned as the HTTP error without a Bugsink capture", async () => {
+    const error = httpError(403);
+    await expect(
+      callRiotOrUndefinedOn404(
+        {
+          source: "test-expected-403",
+          schema: Schema,
+          context: { matchId: "NA1_1" },
+          bugsink: true,
+          expectedAbsenceStatuses: [403],
+        },
+        fails(error),
+      ),
+    ).rejects.toBe(error);
+    expect(sentry.capture).not.toHaveBeenCalled();
+  });
+
+  test("a 403 the caller did not expect is still captured", async () => {
+    const error = httpError(403);
+    await expect(
+      callRiotOrThrow(
+        {
+          source: "test-unexpected-403",
+          schema: Schema,
+          context: { matchId: "NA1_1" },
+          bugsink: true,
+        },
+        fails(error),
+      ),
+    ).rejects.toBe(error);
+    expect(sentry.capture).toHaveBeenCalledWith(error, {
+      tags: {
+        source: "test-unexpected-403",
+        httpStatus: "403",
+        matchId: "NA1_1",
+      },
+    });
+  });
+
+  test("other statuses keep their reporting when an absence is expected", async () => {
+    const error = httpError(500);
+    await expect(
+      callRiotOrThrow(
+        {
+          source: "test-expected-403-got-500",
+          schema: Schema,
+          context: {},
+          bugsink: true,
+          expectedAbsenceStatuses: [403],
+        },
+        fails(error),
+      ),
+    ).rejects.toBe(error);
+    expect(sentry.capture).toHaveBeenCalledOnce();
   });
 });

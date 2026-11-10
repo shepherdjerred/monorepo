@@ -29,30 +29,34 @@ function requirePositional(
   return val;
 }
 
+function parseCount(value: string | undefined): number | undefined {
+  return value != null && value.length > 0
+    ? Number.parseInt(value, 10)
+    : undefined;
+}
+
+const PAGINATION_OPTIONS = {
+  limit: { type: "string" },
+  "max-pages": { type: "string" },
+} as const;
+
 async function handleIssues(args: string[]): Promise<void> {
   const { values } = parseArgs({
     args,
     options: {
       json: { type: "boolean", default: false },
       project: { type: "string" },
-      limit: { type: "string" },
-      "max-pages": { type: "string" },
+      all: { type: "boolean", default: false },
+      ...PAGINATION_OPTIONS,
     },
     allowPositionals: true,
   });
-  const limit =
-    values.limit != null && values.limit.length > 0
-      ? Number.parseInt(values.limit, 10)
-      : undefined;
-  const maxPages =
-    values["max-pages"] != null && values["max-pages"].length > 0
-      ? Number.parseInt(values["max-pages"], 10)
-      : undefined;
   await issuesCommand({
     json: values.json,
     project: values.project,
-    limit,
-    maxPages,
+    all: values.all,
+    limit: parseCount(values.limit),
+    maxPages: parseCount(values["max-pages"]),
   });
 }
 
@@ -104,13 +108,24 @@ async function handleProject(args: string[]): Promise<void> {
 }
 
 async function handleEvents(args: string[]): Promise<void> {
-  const { values, positionals } = parseJsonFlag(args);
+  const { values, positionals } = parseArgs({
+    args,
+    options: {
+      json: { type: "boolean", default: false },
+      ...PAGINATION_OPTIONS,
+    },
+    allowPositionals: true,
+  });
   const uuid = requirePositional(
     positionals,
     "Issue UUID",
-    "tools bugsink events <issue-uuid> [--json]",
+    "tools bugsink events <issue-uuid> [--json] [--limit <n>] [--max-pages <n>]",
   );
-  await eventsCommand(uuid, { json: values.json });
+  await eventsCommand(uuid, {
+    json: values.json,
+    limit: parseCount(values.limit),
+    maxPages: parseCount(values["max-pages"]),
+  });
 }
 
 async function handleEvent(args: string[]): Promise<void> {
@@ -169,7 +184,7 @@ export async function handleBugsinkCommand(
 tools bugsink - Bugsink error tracking
 
 Subcommands:
-  issues                List unresolved issues
+  issues                List unresolved, unmuted issues (--all for every issue)
   issue <ID>            View issue details with latest event
   teams                 List teams
   team <UUID>           View team details
@@ -183,10 +198,13 @@ Subcommands:
 
 Options:
   --json                Output as JSON
-  --project <slug|id>   (issues/releases) Filter by project
+  --project <slug|id>   (issues/releases) Filter by project; issues without
+                        it covers every project
+  --all                 (issues) Include resolved and muted issues
   --team <uuid>         (projects) Filter by team UUID
-  --limit <n>           Maximum total results (client-side cap)
-  --max-pages <n>       Maximum pages to fetch (default 100)
+  --limit <n>           (issues/events) Maximum total results (client-side cap)
+  --max-pages <n>       (issues/events) Maximum pages to fetch per listing
+                        (default 100)
 
 Environment:
   BUGSINK_URL           Required. Your Bugsink instance URL.
@@ -196,9 +214,10 @@ Examples:
   tools bugsink issues
   tools bugsink issue 12345678
   tools bugsink issues --project my-app
+  tools bugsink issues --all --json
   tools bugsink teams
   tools bugsink projects --team <uuid>
-  tools bugsink events <issue-uuid>
+  tools bugsink events <issue-uuid> --limit 5
   tools bugsink stacktrace <event-uuid>
   tools bugsink releases --project my-app
 `);

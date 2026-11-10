@@ -42,8 +42,8 @@ if (
     ...bugsinkServerOptions({
       dsn: configuration.bugsinkDsn,
       environment: configuration.environment,
-      // Use image tag (e.g. "2.0.0-998") as the release so Bugsink groups
-      // events per deploy and matches what ArgoCD reports.
+      // `VERSION` is baked into the image at build: the CI release number
+      // (e.g. "1016115"), so Bugsink groups events per release.
       release: configuration.version,
     }),
     // Scout's NodeSDK owns the global OpenTelemetry providers. The Sentry SDK remains

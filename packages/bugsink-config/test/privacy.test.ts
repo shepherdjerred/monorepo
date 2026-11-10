@@ -5,6 +5,7 @@ import {
   bugsinkBrowserOptions,
   bugsinkDataCollection,
 } from "@shepherdjerred/bugsink-config";
+import { bugsinkServerOptions } from "@shepherdjerred/bugsink-config/server";
 
 afterEach(async () => {
   await Sentry.close();
@@ -27,6 +28,7 @@ test.each([
       dsn: "https://public@example.com/1",
       environment: "production",
       release: expected,
+      attachStacktrace: false,
       dataCollection: bugsinkDataCollection(),
     });
   },
@@ -116,4 +118,37 @@ test("the SDK keeps permissive v11 categories disabled", () => {
     queues: false,
     graphQL: { document: false, variables: false },
   });
+});
+
+test("captured messages stay plain message events without a synthetic exception", async () => {
+  const envelopes: Envelope[] = [];
+  Sentry.init({
+    ...bugsinkServerOptions({
+      dsn: "https://public@example.com/1",
+      environment: "test",
+      release: "message-test",
+      env: {},
+    }),
+    enableOpenTelemetrySetup: false,
+    defaultIntegrations: false,
+    transport: () => ({
+      send(envelope) {
+        envelopes.push(envelope);
+        return Promise.resolve({ statusCode: 200 });
+      },
+      flush() {
+        return Promise.resolve(true);
+      },
+    }),
+  });
+  Sentry.captureMessage("Supervisor restarted", "warning");
+  await Sentry.flush();
+
+  expect(envelopes).toHaveLength(1);
+  const sent = envelopes[0]?.[1][0]?.[1];
+  expect(sent).toMatchObject({
+    message: "Supervisor restarted",
+    level: "warning",
+  });
+  expect(sent).not.toHaveProperty("exception");
 });

@@ -1,36 +1,87 @@
 import {
+  bugsinkPaginationOptionsError,
   bugsinkRequest,
   bugsinkRequestPaginated,
-  bugsinkRequestPostRaw,
 } from "./client.ts";
 import { BugsinkIssueSchema } from "./schemas.ts";
 import type { BugsinkIssue } from "./types.ts";
 import { getProjects } from "./queries.ts";
 
 export type GetIssuesOptions = {
+  /** Project slug or numeric id. Omitted lists issues across every project. */
   project?: string | undefined;
   limit?: number | undefined;
+  /** Page cap per project listing. */
   maxPages?: number | undefined;
+  /** Include resolved and muted issues. Defaults to unresolved, unmuted only. */
+  all?: boolean | undefined;
 };
 
+export function isOpenIssue(issue: BugsinkIssue): boolean {
+  return !issue.is_resolved && !issue.is_muted;
+}
+
+/**
+ * List issues. The canonical API requires a `project` on `/issues/`, so
+ * without one this lists every project and reads each project's issues in
+ * turn, stopping once `limit` issues are collected.
+ */
 export async function getIssues(
   options: GetIssuesOptions = {},
 ): Promise<BugsinkIssue[]> {
+  const optionsError = bugsinkPaginationOptionsError(options);
+  if (optionsError != null) {
+    throw new Error(optionsError);
+  }
   if (options.limit === 0) {
     return [];
   }
 
-  const params: Record<string, string> = {};
+  const projectIds = await issueProjectIds(options);
 
-  if (options.project != null && options.project.length > 0) {
-    params["project"] = await resolveProjectFilter(options.project);
+  const issues: BugsinkIssue[] = [];
+  for (const projectId of projectIds) {
+    const remaining =
+      options.limit === undefined ? undefined : options.limit - issues.length;
+    if (remaining === 0) {
+      break;
+    }
+    issues.push(
+      ...(await getProjectIssues(projectId, {
+        limit: remaining,
+        maxPages: options.maxPages,
+        all: options.all,
+      })),
+    );
   }
+  return issues;
+}
 
+async function issueProjectIds(
+  options: Pick<GetIssuesOptions, "project" | "maxPages">,
+): Promise<string[]> {
+  if (options.project != null && options.project.length > 0) {
+    return [await resolveProjectFilter(options.project)];
+  }
+  const projects = await getProjects(undefined, {
+    maxPages: options.maxPages,
+  });
+  return projects.map((project) => String(project.id));
+}
+
+async function getProjectIssues(
+  projectId: string,
+  options: Pick<GetIssuesOptions, "limit" | "maxPages" | "all">,
+): Promise<BugsinkIssue[]> {
   const result = await bugsinkRequestPaginated(
     "/issues/",
     BugsinkIssueSchema,
-    params,
-    { limit: options.limit, maxPages: options.maxPages },
+    { project: projectId },
+    {
+      limit: options.limit,
+      maxPages: options.maxPages,
+      include: options.all === true ? undefined : isOpenIssue,
+    },
   );
 
   if (!result.success || !result.data) {
@@ -67,48 +118,4 @@ export async function getIssue(issueId: string): Promise<BugsinkIssue | null> {
   }
 
   return result.data ?? null;
-}
-
-export type BugsinkIssueResolvePayload = {
-  project: number;
-  digest_order: number;
-  last_seen: string;
-  first_seen: string;
-  digested_event_count: number;
-  calculated_type: string;
-  calculated_value: string;
-  transaction: string;
-  is_resolved: true;
-  is_resolved_unconditionally: false;
-  is_resolved_by_next_release: boolean;
-  is_muted: false;
-};
-
-export function buildIssueResolvePayload(
-  issue: BugsinkIssue,
-): BugsinkIssueResolvePayload {
-  return {
-    project: issue.project,
-    digest_order: issue.digest_order,
-    last_seen: issue.last_seen,
-    first_seen: issue.first_seen,
-    digested_event_count: issue.digested_event_count,
-    calculated_type: issue.calculated_type,
-    calculated_value: issue.calculated_value,
-    transaction: issue.transaction,
-    is_resolved: true,
-    is_resolved_unconditionally: false,
-    is_resolved_by_next_release: issue.is_resolved_by_next_release,
-    is_muted: false,
-  };
-}
-
-export async function resolveIssue(issue: BugsinkIssue): Promise<void> {
-  const result = await bugsinkRequestPostRaw(
-    `/issues/${issue.id}/resolve/`,
-    buildIssueResolvePayload(issue),
-  );
-  if (!result.success) {
-    throw new Error(result.error ?? "Failed to resolve issue");
-  }
 }

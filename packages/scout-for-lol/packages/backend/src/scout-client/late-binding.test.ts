@@ -44,7 +44,8 @@ vi.mock("#src/temporal/match/match-reads.ts", () => ({
   readMatchPipelineState: mocks.readState,
 }));
 
-const { reconcileProcessedClientBinding } = await import("./late-binding.ts");
+const { ClientBindingReconciliationPending, reconcileProcessedClientBinding } =
+  await import("./late-binding.ts");
 const riotMatchId = RiotMatchIdSchema.parse("NA1_1234567890");
 const gameCreation = Date.parse("2026-09-21T12:00:00.000Z");
 const matchData = {
@@ -116,14 +117,16 @@ test("leaves a new match for its ordinary workflow", async () => {
   expect(mocks.finalizeCustom).not.toHaveBeenCalled();
 });
 
-test("leaves an active match pipeline to consume the binding", async () => {
+test("asks the caller to retry while the match pipeline is still applying binding stages", async () => {
   mocks.readState.mockResolvedValue(
     pipelineState([SCOUT_MATCH_RECEIPT_KINDS.observation]),
   );
 
-  await expect(reconcileProcessedClientBinding(riotMatchId)).rejects.toThrow(
-    "is still applying binding-dependent stages",
+  const pending = reconcileProcessedClientBinding(riotMatchId);
+  await expect(pending).rejects.toBeInstanceOf(
+    ClientBindingReconciliationPending,
   );
+  await expect(pending).rejects.toMatchObject({ riotMatchId });
 
   expect(mocks.resolveContext).not.toHaveBeenCalled();
   expect(mocks.finalizeCustom).not.toHaveBeenCalled();

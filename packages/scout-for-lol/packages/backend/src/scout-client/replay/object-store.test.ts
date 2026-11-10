@@ -1,11 +1,12 @@
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { expect, test } from "vitest";
+import { createS3Client } from "#src/storage/s3-client.ts";
 import { persistReplayFile } from "./object-store.ts";
 
-test("uploads and reads back binary replay bytes through the real SDK transport", async () => {
+test("uploads and reads back binary replay bytes through the production S3 client", async () => {
   const directory = await mkdtemp(path.join(tmpdir(), "scout-replay-sdk-"));
   const replayPath = path.join(directory, "fixture.rofl");
   const bytes = Buffer.concat([
@@ -28,12 +29,12 @@ test("uploads and reads back binary replay bytes through the real SDK transport"
       return new Response(stored);
     },
   });
-  const client = new S3Client({
+  // The production client, so its streaming-safe checksum settings are what
+  // this upload exercises.
+  const client = createS3Client({
     endpoint: server.url.toString(),
     region: "us-east-1",
-    forcePathStyle: true,
     credentials: { accessKeyId: "fixture", secretAccessKey: "fixture" },
-    requestChecksumCalculation: "WHEN_REQUIRED",
   });
   try {
     await persistReplayFile(client, {

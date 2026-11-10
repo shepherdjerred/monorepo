@@ -60,6 +60,7 @@ import {
 import { createQueueWorker } from "./worker-factory.ts";
 import { restoreGlitterCorpusMetricsAfterWorkerStart } from "./observability/restore-startup-metrics.ts";
 import { prepareAgentChatRuntimeRoot } from "./activities/agent/chat/runtime-root.ts";
+import { connectTemporalWhenReady } from "./lib/temporal-startup-connection.ts";
 
 const DEFAULT_ADDRESS = "temporal-server.temporal.svc.cluster.local:7233";
 const DEFAULT_METRICS_ADDRESS = "0.0.0.0:9464";
@@ -235,8 +236,10 @@ async function startRoleServices(options: StartRoleServicesOptions): Promise<{
   ) {
     return {};
   }
-  const clientConnection = await Connection.connect({
+  const clientConnection = await connectTemporalWhenReady({
+    target: "client",
     address: options.address,
+    connect: () => Connection.connect({ address: options.address }),
   });
   const client = new Client({
     connection: clientConnection,
@@ -328,7 +331,12 @@ async function main(): Promise<void> {
     namespace,
   });
 
-  const connection = await NativeConnection.connect({ address });
+  // /healthz starts after this; a long outage hits the startup probe (pod restart) before escalation.
+  const connection = await connectTemporalWhenReady({
+    target: "worker",
+    address,
+    connect: () => NativeConnection.connect({ address }),
+  });
 
   const workflowsPath = new URL("workflows/index.ts", import.meta.url).pathname;
   const workflowUiInterceptorPath = new URL(

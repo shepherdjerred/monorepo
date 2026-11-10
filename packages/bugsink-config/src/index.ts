@@ -1,6 +1,10 @@
 import type { DataCollection } from "@sentry/core";
 
-/** Combine application identity with the shared browser privacy policy. */
+/**
+ * Combine application identity with the shared browser privacy policy.
+ * `attachStacktrace` is false, the SDK v10 default, so `captureMessage`
+ * reports a plain message rather than a synthetic exception.
+ */
 export function bugsinkBrowserOptions({
   dsn,
   environment,
@@ -13,12 +17,14 @@ export function bugsinkBrowserOptions({
   dsn: string;
   environment: string;
   release: string | undefined;
+  attachStacktrace: false;
   dataCollection: DataCollection;
 } {
   return {
     dsn,
     environment,
     release: typeof release === "string" ? release : undefined,
+    attachStacktrace: false,
     dataCollection: bugsinkDataCollection(),
   };
 }

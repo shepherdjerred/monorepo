@@ -689,6 +689,10 @@ fn record_backend_outcome<T>(
         .http_response(outcome.as_ref().map_or(status, |_| Some(200)));
     let (level, result) = match &outcome {
         Ok(_) => (DiagnosticLevel::Info, DiagnosticOutcome::Succeeded),
+        // The server asked for this retry; below Error, so no sink reports it.
+        Err(error) if error.is_designed_retry() => {
+            (DiagnosticLevel::Warn, DiagnosticOutcome::Deferred)
+        }
         Err(_) => (DiagnosticLevel::Error, DiagnosticOutcome::Failed),
     };
     let mut event = DiagnosticEvent::new(level, DiagnosticCategory::Backend, operation, result)
@@ -2386,12 +2390,58 @@ mod tests {
     use super::{
         END_OF_GAME_SLOT, GAME_CLIENT_END_OF_GAME_SLOT, RuntimeState, apply_observation_receipt,
         bind_observed_lobby, clear_replay_error, clear_runtime_error, find_string,
-        game_start_evidence, ids_from, optional_lockfile, outbox_file_name,
+        game_start_evidence, ids_from, optional_lockfile, outbox_file_name, record_backend_outcome,
         record_endpoint_payload, replay_platform_id, replay_sha256, set_error, set_replay_error,
         should_emit_live_game_frame, should_refresh_lobby, update_state,
     };
-    use scout_client_core::diagnostics::Diagnostics;
+    use scout_client_core::backend::BackendError;
+    use scout_client_core::diagnostics::{DiagnosticLevel, DiagnosticOutcome, Diagnostics};
     use std::collections::HashMap;
+
+    #[test]
+    fn a_pending_binding_retry_is_recorded_below_error_and_still_fails_the_call() {
+        let diagnostics = Diagnostics::in_memory();
+        let pending = BackendError::Rejected {
+            status: 503,
+            message:
+                r#"{"error":"binding_reconciliation_pending","message":"retry reconciliation"}"#
+                    .to_owned(),
+        };
+        let unavailable = BackendError::Rejected {
+            status: 503,
+            message: "Service Unavailable".to_owned(),
+        };
+        for error in [pending, unavailable] {
+            let outcome: Result<(), BackendError> = Err(error);
+            // Still an error to the caller, so the outbox keeps and resends the batch.
+            assert!(
+                record_backend_outcome(
+                    &diagnostics,
+                    "upload_observations",
+                    std::time::Instant::now(),
+                    outcome,
+                    None,
+                )
+                .is_err()
+            );
+        }
+        let recorded: Vec<_> = diagnostics
+            .events()
+            .into_iter()
+            .map(|event| (event.level, event.outcome, event.status))
+            .collect();
+        assert_eq!(
+            recorded,
+            [
+                (
+                    DiagnosticLevel::Warn,
+                    DiagnosticOutcome::Deferred,
+                    Some(503)
+                ),
+                (DiagnosticLevel::Error, DiagnosticOutcome::Failed, Some(503)),
+            ]
+        );
+    }
 
     fn lobby_bindings(diagnostics: &Diagnostics) -> Option<u64> {
         diagnostics

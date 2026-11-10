@@ -1,20 +1,18 @@
 import * as Sentry from "@sentry/browser";
-import { bugsinkDataCollection } from "@shepherdjerred/bugsink-config";
+import { bugsinkBrowserOptions } from "@shepherdjerred/bugsink-config";
 
 /** Initialize the frontend's Bugsink client (Sentry SDK). */
 export function initializeBugsink(): void {
-  // PUBLIC_BUGSINK_RELEASE is injected at build time by the CI site-deploy
-  // step (2.0.0-<build>). Guard the untyped env access so `release` stays
-  // `string | undefined`, never `any`.
-  const bugsinkRelease =
-    typeof import.meta.env["PUBLIC_BUGSINK_RELEASE"] === "string"
-      ? import.meta.env["PUBLIC_BUGSINK_RELEASE"]
-      : undefined;
+  // PUBLIC_BUGSINK_RELEASE is the content-addressed site identity
+  // (`scout-site@sha256:…`) that scripts/release/scout-site-release.ts injects
+  // at build time; bugsinkBrowserOptions narrows the untyped value to
+  // `string | undefined`.
   Sentry.init({
-    dataCollection: bugsinkDataCollection(),
-    dsn: "https://337945d2208840dca4a573be311a1bbb@bugsink.sjer.red/1",
-    release: bugsinkRelease,
-    environment: import.meta.env.MODE,
+    ...bugsinkBrowserOptions({
+      dsn: "https://337945d2208840dca4a573be311a1bbb@bugsink.sjer.red/1",
+      environment: import.meta.env.MODE,
+      release: import.meta.env["PUBLIC_BUGSINK_RELEASE"],
+    }),
     // Safari reports a blocked/failed third-party fetch as the generic
     // "TypeError: Load failed" with no useful frames, so it slips past the
     // beforeSend Pinterest matcher below — drop the frameless generic

@@ -23,6 +23,19 @@ export const scoutExploreToolCallsTotal = new Counter({
   registers: [registry],
 });
 
+/**
+ * Turns rejected because the model's card selection stayed outside the latest
+ * query's supported results after its one repair. A model output failure, not
+ * a Scout fault: it is counted here rather than reported to Bugsink, and the
+ * turn still fails with `explore:invalid_<card_type>_card`.
+ */
+export const scoutExploreInvalidCardSelectionsTotal = new Counter({
+  name: "scout_explore_invalid_card_selections_total",
+  help: "Explore turns rejected for an invalid model card selection, by card type.",
+  labelNames: ["card_type"] as const,
+  registers: [registry],
+});
+
 export const scoutExploreSkillLoadsTotal = new Counter({
   name: "scout_explore_skill_loads_total",
   help: "Explore load_skill calls by skill name and status.",

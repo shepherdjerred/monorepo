@@ -37,6 +37,13 @@ function makeRiotError(status: number): RiotHttpError {
   });
 }
 
+function riotGrouped(status: number): ErrorEvent {
+  return {
+    ...baseEvent,
+    fingerprint: ["riot-http", status.toString(), "na1.api.riotgames.com/test"],
+  };
+}
+
 /**
  * Random function that returns a value just under 1 — always above any
  * realistic sample rate (≤ 0.5), but still in the legal `Math.random()`
@@ -65,7 +72,7 @@ describe("filterScoutBugsinkEvent — Riot upstream sampling", () => {
       makeHint(makeRiotError(502)),
       alwaysSample,
     );
-    expect(result).toEqual(baseEvent);
+    expect(result).toEqual(riotGrouped(502));
   });
 });
 
@@ -120,7 +127,7 @@ describe("filterScoutBugsinkEvent — Riot upstream sample-rate env override", (
       makeHint(makeRiotError(502)),
       alwaysDrop,
     );
-    expect(result).toEqual(baseEvent);
+    expect(result).toEqual(riotGrouped(502));
   });
 
   test("invalid env value falls back to default 1%", () => {
@@ -153,7 +160,7 @@ describe("filterScoutBugsinkEvent — keeps non-noise events regardless of sampl
         makeHint(makeRiotError(status)),
         alwaysDrop,
       );
-      expect(result).toEqual(baseEvent);
+      expect(result).toEqual(riotGrouped(status));
     }
   });
 
@@ -300,5 +307,98 @@ describe("filterScoutBugsinkEvent — passthrough", () => {
   test("keeps events with no original exception", () => {
     const result = filterScoutBugsinkEvent(baseEvent, {});
     expect(result).toEqual(baseEvent);
+  });
+});
+
+function riotErrorAt(status: number, url: string): RiotHttpError {
+  return new RiotHttpError({
+    status,
+    statusText: "Forbidden",
+    body: null,
+    url,
+    headers: new Headers(),
+  });
+}
+
+function riotFingerprint(status: number, url: string) {
+  return filterScoutBugsinkEvent(baseEvent, makeHint(riotErrorAt(status, url)))
+    ?.fingerprint;
+}
+
+describe("filterScoutBugsinkEvent — grouping", () => {
+  test("one issue per Riot status and endpoint, not per match", () => {
+    const fingerprints = ["NA1_5012345678", "EUW1_7001"].map(
+      (matchId) =>
+        filterScoutBugsinkEvent(
+          { ...baseEvent, message: `Riot API HTTP 403 for ${matchId}` },
+          makeHint(
+            riotErrorAt(
+              403,
+              `https://americas.api.riotgames.com/lol/match/v5/matches/${matchId}/timeline`,
+            ),
+          ),
+        )?.fingerprint,
+    );
+    expect(fingerprints).toEqual([
+      [
+        "riot-http",
+        "403",
+        "americas.api.riotgames.com/lol/match/v5/matches/{matchId}/timeline",
+      ],
+      [
+        "riot-http",
+        "403",
+        "americas.api.riotgames.com/lol/match/v5/matches/{matchId}/timeline",
+      ],
+    ]);
+  });
+
+  test("statuses and endpoints stay distinct issues", () => {
+    const match =
+      "https://americas.api.riotgames.com/lol/match/v5/matches/NA1_1";
+    expect(riotFingerprint(403, match)).not.toEqual(
+      riotFingerprint(500, match),
+    );
+    expect(riotFingerprint(403, match)).not.toEqual(
+      riotFingerprint(403, `${match}/timeline`),
+    );
+  });
+
+  test("drops still win over grouping", () => {
+    expect(
+      filterScoutBugsinkEvent(
+        baseEvent,
+        makeHint(
+          riotErrorAt(
+            503,
+            "https://americas.api.riotgames.com/lol/match/v5/matches/NA1_1",
+          ),
+        ),
+        alwaysDrop,
+      ),
+    ).toBeNull();
+  });
+
+  test("groups DuckDB out-of-memory errors into one issue", () => {
+    const result = filterScoutBugsinkEvent(
+      baseEvent,
+      makeHint(
+        new Error(
+          "Out of Memory Error: failed to allocate data of size 16.0 MiB (1.9 GiB/2.0 GiB used)",
+        ),
+      ),
+    );
+    expect(result).toEqual({
+      ...baseEvent,
+      fingerprint: ["duckdb", "out-of-memory"],
+    });
+  });
+
+  test("leaves other errors on default grouping", () => {
+    const result = filterScoutBugsinkEvent(
+      baseEvent,
+      makeHint(new Error("Memory usage is Out of Memory Error: high")),
+    );
+    expect(result?.fingerprint).toBeUndefined();
   });
 });

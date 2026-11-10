@@ -5,7 +5,6 @@ import {
   type RawTimeline,
   type PlayerConfigEntry,
 } from "@scout-for-lol/data";
-import type { ArtifactResolution } from "@scout-for-lol/domain/artifacts/resolution.ts";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { TIMELINE_RECOVERY_WINDOW_MS } from "@scout-for-lol/domain/match-processing/eligibility.ts";
 import { prisma } from "#src/database/index.ts";
@@ -19,9 +18,13 @@ import { recordTimelineForReportStore } from "#src/report-store/live-ingest.ts";
 import { platformRouteOf } from "#src/durable/match/match-identity.ts";
 import { evidenceRecoveryEnabled } from "./admission.ts";
 import {
+  expectedRiotAbsenceStatuses,
   isExpectedSourceReadError,
-  optionalSourceRead,
+  readSource,
+  riotAbsenceOf,
+  type EvidenceResolution,
 } from "./source-read.ts";
+import type { RiotSourceAbsence } from "#src/league/api/client/errors.ts";
 import * as Sentry from "@sentry/bun";
 
 export type TimelinePersistence =
@@ -42,12 +45,13 @@ type TimelineCandidate = { timeline: RawTimeline; sourceId: string };
 const PINNED_MISSING = {
   kind: "unavailable",
   reason: "Processing pinned missing timeline coverage",
+  definitiveAbsence: undefined,
 } as const;
 
 /** Resolution, availability and durable capture belong at the artifact boundary. */
 export async function resolveMatchTimeline(
   input: TimelineInput,
-): Promise<ArtifactResolution<RawTimeline>> {
+): Promise<EvidenceResolution<RawTimeline>> {
   const matchId = input.match.metadata.matchId;
   const admission =
     input.purpose !== "history" && evidenceRecoveryEnabled()
@@ -70,7 +74,7 @@ export async function resolveMatchTimeline(
   if (candidate.kind === "conflict") return candidate;
   return candidate.kind === "candidate"
     ? await persistTimeline(input, candidate.value, admission)
-    : await resolveAbsence(input, admission, deadline);
+    : await resolveAbsence(input, admission, deadline, candidate.riotAbsence);
 }
 
 async function processingDeadline(
@@ -101,8 +105,8 @@ async function acquireTimeline(
   deadline: Date | null,
 ): Promise<
   | { kind: "candidate"; value: TimelineCandidate }
-  | { kind: "missing" }
-  | Extract<ArtifactResolution<RawTimeline>, { kind: "conflict" }>
+  | { kind: "missing"; riotAbsence: RiotSourceAbsence | undefined }
+  | Extract<EvidenceResolution<RawTimeline>, { kind: "conflict" }>
 > {
   const matchId = input.match.metadata.matchId;
   const remainingMs =
@@ -112,18 +116,18 @@ async function acquireTimeline(
   const skipRiot =
     isArenaQueueOrMode(input.match.info.queueId, input.match.info.gameMode) ||
     (!evidenceRecoveryEnabled() && input.players.length === 0);
+  const bestEffort = input.persistence === "best_effort";
   const [riotRead, clientRead] = await Promise.allSettled([
     skipRiot
       ? undefined
-      : optionalSourceRead(
+      : readSource(
           "RIOT",
           () =>
             fetchMatchTimeline(
               matchId,
               platformRouteOf(matchId),
-              input.persistence === "best_effort"
-                ? "return_undefined"
-                : "return_undefined_on_404",
+              bestEffort ? "return_undefined" : "return_undefined_on_404",
+              expectedRiotAbsenceStatuses(),
             ),
           remainingMs,
         ),
@@ -135,7 +139,8 @@ async function acquireTimeline(
     !isExpectedSourceReadError(clientRead.reason)
   )
     throw clientRead.reason;
-  const riot = riotRead.value;
+  const riot =
+    riotRead.value?.kind === "read" ? riotRead.value.value : undefined;
   if (riot !== undefined) {
     if (!timelineMatchesResult(riot, input.match))
       throw new Error(
@@ -147,7 +152,16 @@ async function acquireTimeline(
   if (clientRead.status === "rejected") throw clientRead.reason;
   const local = clientRead.value;
   const chosen = local[0];
-  if (chosen === undefined) return { kind: "missing" };
+  if (chosen === undefined)
+    return {
+      kind: "missing",
+      // A skipped read, or a best-effort one that folds every failure into
+      // `undefined`, says nothing definitive about Riot's copy.
+      riotAbsence:
+        bestEffort || riotRead.value === undefined
+          ? undefined
+          : riotAbsenceOf(riotRead.value),
+    };
   if (
     local.some(
       (candidate) =>
@@ -171,7 +185,7 @@ async function persistTimeline(
   input: TimelineInput,
   candidate: TimelineCandidate,
   admission: TimelineAdmission | null,
-): Promise<ArtifactResolution<RawTimeline>> {
+): Promise<EvidenceResolution<RawTimeline>> {
   const matchId = input.match.metadata.matchId;
   const staged = await stageTimeline(input, candidate.timeline);
   if (!staged && input.persistence !== "best_effort")
@@ -218,7 +232,8 @@ async function resolveAbsence(
   input: TimelineInput,
   admission: TimelineAdmission | null,
   deadline: Date | null,
-): Promise<ArtifactResolution<RawTimeline>> {
+  riotAbsence: RiotSourceAbsence | undefined,
+): Promise<EvidenceResolution<RawTimeline>> {
   const matchId = input.match.metadata.matchId;
   if (deadline !== null && deadline.getTime() > Date.now())
     return { kind: "pending", retryAt: deadline.toISOString() };
@@ -241,14 +256,18 @@ async function resolveAbsence(
     throw new Error(
       `Timeline lake staging failed for ${matchId}; match processing must retry.`,
     );
-  return { kind: "unavailable", reason: "No compatible timeline evidence" };
+  return {
+    kind: "unavailable",
+    reason: "No compatible timeline evidence",
+    definitiveAbsence: riotAbsence,
+  };
 }
 
 function available(
   value: RawTimeline,
   sourceId: string,
   frozen: boolean,
-): ArtifactResolution<RawTimeline> {
+): EvidenceResolution<RawTimeline> {
   return {
     kind: "available",
     value,

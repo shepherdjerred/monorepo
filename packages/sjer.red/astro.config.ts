@@ -20,6 +20,21 @@ const fontPath = fileURLToPath(
 );
 const fontData = readFileSync(fontPath).buffer;
 
+// Bugsink release: Turbo's content hash of this build task. CI builds the
+// deployed dist through `turbo run build`, so a remote-cache hit and a fresh
+// build of the same inputs carry the same identity, and unchanged inputs still
+// rebuild to identical bytes that Delivery retains. No commit or build number
+// is baked in. Builds outside Turbo (local dev) report no release.
+const turboHash = process.env["TURBO_HASH"];
+const bugsinkReleaseDefine =
+  turboHash === undefined || turboHash === ""
+    ? {}
+    : {
+        "import.meta.env.PUBLIC_BUGSINK_RELEASE": JSON.stringify(
+          `sjer-red@turbo:${turboHash}`,
+        ),
+      };
+
 // https://astro.build/config
 export default defineConfig({
   compressHTML: true,
@@ -90,6 +105,7 @@ export default defineConfig({
   prefetch: true,
 
   vite: {
+    define: bugsinkReleaseDefine,
     plugins: [tailwindcss()],
     resolve: {
       noExternal: ["entities", "rss-parser"],
