@@ -11,6 +11,8 @@ import {
 import type { FetchTransport } from "#integrations/http.ts";
 import { MediaCommandBase } from "./command-base.ts";
 import type { Database } from "./database.ts";
+import type { PlexBindingFreshness } from "#shared/plex-binding/contract.ts";
+import { bindPlexTransactionDeadline } from "./plex-binding/freshness.ts";
 
 const CredentialSchema = z.object({
   token: z.string().min(1),
@@ -226,7 +228,12 @@ export class PrismaPlexAdministration extends MediaCommandBase {
     );
   }
 
-  async refreshProfileAccess(actor: MediaActor, userId: string): Promise<void> {
+  async refreshProfileAccess(
+    actor: MediaActor,
+    userId: string,
+    freshness?: PlexBindingFreshness,
+  ): Promise<void> {
+    freshness?.assertActive();
     requireOwner(actor);
     const user = await this.db.mediaUser.findUniqueOrThrow({
       where: { id: userId },
@@ -244,7 +251,9 @@ export class PrismaPlexAdministration extends MediaCommandBase {
         403,
       );
     const credential = await this.credentials(userId, user.plexAccountId);
+    freshness?.assertActive();
     const access = await this.plex.resolveServerAccess(credential.token);
+    freshness?.assertActive();
     if (
       access?.accountId !== user.plexAccountId ||
       access.serverMachineId !== this.server.serverMachineId
@@ -265,6 +274,8 @@ export class PrismaPlexAdministration extends MediaCommandBase {
       );
     }
     await this.db.$transaction(async (tx) => {
+      if (freshness !== undefined)
+        await bindPlexTransactionDeadline(tx, freshness);
       const changed = await tx.plexIdentityMapping.updateMany({
         where: { userId, version: mapping.version },
         data: {
@@ -290,6 +301,7 @@ export class PrismaPlexAdministration extends MediaCommandBase {
           ),
         },
       });
+      freshness?.assertActive();
     });
   }
 }

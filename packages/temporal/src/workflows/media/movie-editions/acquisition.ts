@@ -54,15 +54,35 @@ const files = proxyActivities<MovieFileActivitiesV4>({
 export function reconcileMovieEditionV4Workflow(
   raw: Coordinator,
 ): Promise<MediaWorkflowResult> {
-  const input = {
+  const input: Coordinator = {
     schemaVersion: raw.schemaVersion,
     operationId: raw.operationId,
     mediaId: raw.mediaId,
     scope: raw.scope,
     generation: raw.generation,
+    ...(raw.providerSearchProgress === undefined
+      ? {}
+      : { providerSearchProgress: raw.providerSearchProgress }),
   };
   return recoverable(input.operationId, async () => {
     const result = await network.reconcileMovieIntentV4(input);
+    if (
+      result.status === "waiting" &&
+      result.reason === "provider_deferred" &&
+      patched("movie-provider-admission-deferral-v1")
+    ) {
+      const delay = result.retryAfterSeconds;
+      if (delay === undefined || !Number.isSafeInteger(delay) || delay <= 0)
+        throw new Error("Provider admission deferral lost its retry deadline");
+      const progress = patched("movie-provider-search-progress-v1")
+        ? result.providerSearchProgress
+        : undefined;
+      await sleep(delay * 1000);
+      return continueAsNew<typeof reconcileMovieEditionV4Workflow>({
+        ...input,
+        ...(progress === undefined ? {} : { providerSearchProgress: progress }),
+      });
+    }
     if (result.status !== "acquire")
       return finish(input.operationId, {
         status: result.status === "available" ? "completed" : result.status,

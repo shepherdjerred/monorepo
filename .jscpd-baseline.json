@@ -2868,13 +2868,21 @@
       "clones": 1,
       "tokens": 70
     },
+    "packages/temporal/src/workflows/media/movie-editions/acquisition-before-preparation.fixture.ts|packages/temporal/src/workflows/media/movie-editions/acquisition-before-provider-progress.fixture.ts": {
+      "clones": 2,
+      "tokens": 220
+    },
     "packages/temporal/src/workflows/media/movie-editions/acquisition-before-preparation.fixture.ts|packages/temporal/src/workflows/media/movie-editions/acquisition-before-rollback.fixture.ts": {
       "clones": 2,
       "tokens": 980
     },
     "packages/temporal/src/workflows/media/movie-editions/acquisition-before-preparation.fixture.ts|packages/temporal/src/workflows/media/movie-editions/acquisition.ts": {
+      "clones": 3,
+      "tokens": 658
+    },
+    "packages/temporal/src/workflows/media/movie-editions/acquisition-before-provider-progress.fixture.ts|packages/temporal/src/workflows/media/movie-editions/acquisition.ts": {
       "clones": 2,
-      "tokens": 765
+      "tokens": 200
     },
     "packages/temporal/src/workflows/media/movie-editions/acquisition-before-rollback.fixture.ts|packages/temporal/src/workflows/media/movie-editions/acquisition.ts": {
       "clones": 1,

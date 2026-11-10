@@ -2,7 +2,7 @@ import { afterAll, beforeAll, expect, test } from "vitest";
 import { startMediaTestPostgres } from "#testing/postgres.ts";
 import { PrismaMediaApplication } from "./media-service.ts";
 import type { MediaActor } from "#application/auth.ts";
-import { MediaAuth } from "#application/auth.ts";
+import { MediaAuth } from "#application/media-auth.ts";
 import { CredentialCipher, tokenHash } from "#application/security.ts";
 import { PrismaAuthStore } from "./auth-store.ts";
 import { randomBytes } from "node:crypto";

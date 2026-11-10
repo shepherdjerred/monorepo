@@ -1,6 +1,8 @@
 import { expect, test } from "vitest";
-import { DatabaseProviderRegistry } from "#automation/providers.ts";
-import { IntegrationError } from "#integrations/http.ts";
+import {
+  DatabaseProviderRegistry,
+  ProviderAdmissionDeferred,
+} from "#automation/providers.ts";
 import { automationTestHarness } from "#testing/automation.ts";
 
 const h = automationTestHarness();
@@ -149,7 +151,7 @@ test("credential rotation and rejected tokens require a new paced login", async 
 
 test("an active provider lease blocks another registry before any authentication", async () => {
   const { db } = await fixture();
-  await db.providerLease.create({
+  const held = await db.providerLease.create({
     data: {
       providerId: "privatehd",
       ownerId: "another-worker",
@@ -160,10 +162,37 @@ test("an active provider lease blocks another registry before any authentication
   const registry = new DatabaseProviderRegistry(db, h.cipher, () => {
     throw new Error("A contending worker must not issue HTTP requests");
   });
-  await expect(recent(registry)).rejects.toBeInstanceOf(IntegrationError);
+  await expect(recent(registry)).rejects.toMatchObject({
+    admission: "lease_busy",
+    retryAfterSeconds: expect.any(Number),
+  });
   expect(
     await db.providerLease.findUniqueOrThrow({
       where: { providerId: "privatehd" },
     }),
-  ).toMatchObject({ ownerId: "another-worker" });
+  ).toEqual(held);
+});
+
+test("local cooldown reports its stored eligibility without issuing HTTP or changing the lease", async () => {
+  const { db } = await fixture();
+  const retryAt = new Date(Date.now() + 120_000);
+  const held = await db.providerLease.create({
+    data: { providerId: "privatehd", nextAllowedAt: retryAt },
+  });
+  const registry = new DatabaseProviderRegistry(db, h.cipher, () => {
+    throw new Error("A cooling provider must not issue HTTP requests");
+  });
+  await expect(recent(registry)).rejects.toBeInstanceOf(
+    ProviderAdmissionDeferred,
+  );
+  await expect(recent(registry)).rejects.toMatchObject({
+    admission: "cooldown",
+    retryAt,
+    retryAfterSeconds: expect.any(Number),
+  });
+  expect(
+    await db.providerLease.findUniqueOrThrow({
+      where: { providerId: "privatehd" },
+    }),
+  ).toEqual(held);
 });

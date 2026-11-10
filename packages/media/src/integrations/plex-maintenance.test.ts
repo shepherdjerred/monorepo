@@ -129,7 +129,7 @@ test.each([false, true])(
   },
 );
 
-test("uses live-observed section inventory and accepts empty activities without Activity key", async () => {
+test("scans the validated section without a path restriction and accepts empty activities", async () => {
   const calls: string[] = [];
   const client = new PlexMaintenanceClient(
     {
@@ -151,7 +151,7 @@ test("uses live-observed section inventory and accepts empty activities without 
         return Response.json({ MediaContainer: { size: 0 } });
       if (url.pathname.endsWith("/refresh")) {
         expect(init.method).toBe("POST");
-        expect(url.searchParams.get("path")).toBe("/data/movies");
+        expect(url.search).toBe("");
         return new Response(null, {
           headers: { "X-Plex-Activity": "scan-id" },
         });
@@ -184,6 +184,7 @@ test("uses live-observed section inventory and accepts empty activities without 
   await expect(
     client.scanRoot(topology, "/data/movies/.media-control"),
   ).rejects.toMatchObject({ kind: "conflict" });
+  expect(calls.filter((call) => call.endsWith("/refresh"))).toHaveLength(1);
   expect(calls).not.toContain("/library/sections/1");
 });
 

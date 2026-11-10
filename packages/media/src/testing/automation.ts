@@ -37,6 +37,9 @@ export function createAutomationTestContext(
   };
   return {
     db,
+    // Synthetic contexts retain their explicit fixture permission snapshots.
+    // Account-renewal tests inject the actual refresher with a protocol boundary.
+    refreshRequesterAccess: () => Promise.resolve(),
     watchExecution: testWatchExecution,
     plexBindingExecution: testPlexBindingExecution,
     plexAccess: (sectionType) =>

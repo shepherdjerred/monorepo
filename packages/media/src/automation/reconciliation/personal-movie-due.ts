@@ -98,7 +98,7 @@ async function queuePersonalMovieDueV4(
   });
 }
 
-/** One exact named target per Activity retains the original shared100 and bounded cursor progress. */
+/** One exact chosen target per Activity retains the original shared100 and bounded cursor progress. */
 export async function sweepPersonalMovieDueV4(
   context: MediaAutomationContext,
   raw: string,
@@ -113,12 +113,29 @@ export async function sweepPersonalMovieDueV4(
   const cursor = encoded === "start" ? null : Cursor.parse(encoded.split(":"));
   const targets = await context.db.mediaIntent.findMany({
     where: {
-      edition: { not: "default" },
       desiredPresence: true,
       monitoring: true,
       libraryMonitoring: false,
       media: { kind: "movie" },
-      ...movieTargetAfter(cursor),
+      AND: [
+        {
+          OR: [
+            { edition: { not: "default" } },
+            {
+              edition: "default",
+              requests: {
+                some: {
+                  active: true,
+                  direct: true,
+                  excluded: false,
+                  movieEditionChoiceId: { not: null },
+                },
+              },
+            },
+          ],
+        },
+        movieTargetAfter(cursor),
+      ],
     },
     orderBy: [{ mediaId: "asc" }, { edition: "asc" }],
     take: 2,

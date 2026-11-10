@@ -83,7 +83,9 @@ async function fixture(retainMetadata = false) {
         return Response.json({ MediaContainer: { size: 0 } });
       if (url.pathname.endsWith("/refresh")) {
         scans++;
-        scannedAt = Math.floor(clock / 1000);
+        // Plex completes path-restricted scans without advancing the section's
+        // scan watermark, even when those scans discover the positive probe.
+        if (!url.searchParams.has("path")) scannedAt = Math.floor(clock / 1000);
         visible = scans === 1 || retainMetadata;
         return new Response(null, { headers: { "X-Plex-Activity": "scan" } });
       }

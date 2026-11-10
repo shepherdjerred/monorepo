@@ -3,6 +3,8 @@ import { MediaError } from "#application/errors.ts";
 import type { Database } from "./database.ts";
 import type { PlexPermissionSnapshot } from "#application/plex-access.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
+import type { PlexBindingFreshness } from "#shared/plex-binding/contract.ts";
+import { bindPlexTransactionDeadline } from "./plex-binding/freshness.ts";
 
 function publicActor(user: MediaActor): MediaActor {
   return {
@@ -16,7 +18,10 @@ function publicActor(user: MediaActor): MediaActor {
 }
 
 export class PrismaAuthStore implements AuthStore {
-  constructor(private readonly database: Database) {}
+  constructor(
+    private readonly database: Database,
+    private readonly commitGuard?: PlexBindingFreshness,
+  ) {}
 
   async saveLogin(input: Parameters<AuthStore["saveLogin"]>[0]): Promise<void> {
     await this.database.plexLogin.create({
@@ -99,10 +104,21 @@ export class PrismaAuthStore implements AuthStore {
     ciphertext: string,
     expectedCiphertext: string,
   ): Promise<boolean> {
-    const result = await this.database.credential.updateMany({
-      where: { userId, kind: "plex", ciphertext: expectedCiphertext },
-      data: { ciphertext },
-    });
+    const write = (db: Pick<Prisma.TransactionClient, "credential">) =>
+      db.credential.updateMany({
+        where: { userId, kind: "plex", ciphertext: expectedCiphertext },
+        data: { ciphertext },
+      });
+    const guard = this.commitGuard;
+    const result =
+      guard === undefined
+        ? await write(this.database)
+        : await this.database.$transaction(async (tx) => {
+            await bindPlexTransactionDeadline(tx, guard);
+            const updated = await write(tx);
+            guard.assertActive();
+            return updated;
+          });
     return result.count === 1;
   }
 
@@ -114,9 +130,13 @@ export class PrismaAuthStore implements AuthStore {
     userId: string,
     access: PlexPermissionSnapshot,
   ): Promise<MediaActor> {
-    return this.database.$transaction((db) =>
-      saveAccountAccess(db, userId, access),
-    );
+    return this.database.$transaction(async (db) => {
+      if (this.commitGuard !== undefined)
+        await bindPlexTransactionDeadline(db, this.commitGuard);
+      const actor = await saveAccountAccess(db, userId, access);
+      this.commitGuard?.assertActive();
+      return actor;
+    });
   }
 }
 

@@ -1,4 +1,5 @@
-import { MediaAuth, type PlexAuthentication } from "#application/auth.ts";
+import type { PlexAuthentication } from "#application/auth.ts";
+import { MediaAuth } from "#application/media-auth.ts";
 import type { CredentialCipher } from "#application/security.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
 import {

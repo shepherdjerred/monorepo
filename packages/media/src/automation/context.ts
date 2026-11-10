@@ -10,6 +10,7 @@ import type { PlexAccess } from "#shared/plex-binding/contract.ts";
 import type { PlexBindingExecution } from "#shared/plex-binding/activities.ts";
 import type { MovieManagementInvocation } from "#infrastructure/movie-editions/management/invocation.ts";
 import type { LibraryManagementInvocation } from "#infrastructure/acquisition-identity/library-policy.ts";
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import type {
   ReceiptQuery,
   ReceiptObservation,
@@ -22,6 +23,11 @@ export type MediaAutomationContext = {
   watchExecution: () => WatchExecution;
   plexAccess: (sectionType: "movie" | "show") => Promise<PlexAccess>;
   plexBindingExecution: () => PlexBindingExecution;
+  refreshRequesterAccess: (
+    sponsors: readonly { userId: string; actorId: string }[],
+    execution: PlexBindingExecution,
+    budget: PublicationAuthorityReadBudget,
+  ) => Promise<void>;
   movieManagement?: MovieManagementInvocation;
   libraryManagement?: LibraryManagementInvocation;
   serverMachineId?: string;

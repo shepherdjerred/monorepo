@@ -2,6 +2,7 @@ import type { MediaAutomationContext } from "#automation/context.ts";
 import type {
   MovieOperationV4,
   MovieAttemptOperationV4,
+  MovieReconcileOperationV4,
 } from "#shared/movie-editions/lifecycle/automation-v4.ts";
 import type { PlexBindingExecution } from "#shared/plex-binding/activities.ts";
 import { MediaError } from "#application/errors.ts";
@@ -107,7 +108,7 @@ export function createMovieNetworkFacetV4(
       }
     },
     async reconcileMovieIntentV4(
-      input: MovieOperationV4,
+      input: MovieReconcileOperationV4,
       execution: PlexBindingExecution,
     ) {
       try {

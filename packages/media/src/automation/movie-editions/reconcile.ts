@@ -2,13 +2,19 @@ import { z } from "zod";
 import type { MediaAutomationContext } from "#automation/context.ts";
 import type { MovieNetworkActivitiesV4 } from "#shared/movie-editions/lifecycle/activities-v4.ts";
 import {
-  MovieOperationV4Schema,
+  MovieReconcileOperationV4Schema,
+  type MovieReconcileOperationV4,
   type MovieOperationV4,
+  type MovieProviderSearchProgressV4,
 } from "#shared/movie-editions/lifecycle/automation-v4.ts";
 import { assertMovieAcquisitionOperationV4 } from "#infrastructure/movie-editions/lifecycle/operation.ts";
 import { runtimeAuthority } from "#infrastructure/handoff/authority.ts";
 import { MediaError } from "#application/errors.ts";
-import { searchMovieCandidatesV4 } from "./candidates.ts";
+import { ProviderAdmissionDeferred } from "#automation/providers.ts";
+import {
+  searchMovieCandidatesV4,
+  MovieProviderSearchDeferredV4,
+} from "./candidates.ts";
 import { assessRetainedMovieRelease } from "./release-assessment.ts";
 import { reserveMovieCandidateV4 } from "./reservation.ts";
 import { resumeMovieAttempt } from "./retry/resume.ts";
@@ -17,14 +23,16 @@ import {
   dispatchMovieRetryV4,
 } from "./retry/dispatch.ts";
 import { movieManagementContext } from "./management-context.ts";
+import type { PlexBindingExecution } from "#shared/plex-binding/activities.ts";
 
 /** One coordinator retains its own scope and attempt; another cut cannot sponsor a resume. */
 export async function reconcileMovieIntentV4(
   initial: MediaAutomationContext,
-  raw: MovieOperationV4,
+  raw: MovieReconcileOperationV4,
 ): ReturnType<MovieNetworkActivitiesV4["reconcileMovieIntentV4"]> {
   const context = movieManagementContext(initial);
-  const input = MovieOperationV4Schema.parse(raw);
+  const { providerSearchProgress, ...input } =
+    MovieReconcileOperationV4Schema.parse(raw);
   const execution = context.plexBindingExecution();
   execution.assertActive();
   const record = await context.db.operation.findUniqueOrThrow({
@@ -118,7 +126,49 @@ export async function reconcileMovieIntentV4(
       attemptId: null,
       reason: "retention_in_progress",
     };
-  const selected = await selectMovieCandidate(context, input, releaseId);
+  return reserveSelectedMovie(context, input, {
+    releaseId,
+    epoch: runtime.epoch,
+    execution,
+    providerSearchProgress,
+  });
+}
+
+async function reserveSelectedMovie(
+  context: MediaAutomationContext,
+  input: MovieOperationV4,
+  options: {
+    releaseId: string | undefined;
+    epoch: number;
+    execution: PlexBindingExecution;
+    providerSearchProgress: MovieProviderSearchProgressV4 | undefined;
+  },
+): ReturnType<MovieNetworkActivitiesV4["reconcileMovieIntentV4"]> {
+  const { releaseId, epoch, execution } = options;
+  let selected: Awaited<ReturnType<typeof selectMovieCandidate>>;
+  try {
+    selected = await selectMovieCandidate(
+      context,
+      input,
+      releaseId,
+      options.providerSearchProgress,
+    );
+  } catch (error) {
+    if (!(error instanceof ProviderAdmissionDeferred)) throw error;
+    execution.assertActive();
+    return {
+      status: "waiting",
+      attemptId: null,
+      reason: "provider_deferred",
+      retryAfterSeconds: Math.max(
+        1,
+        Math.ceil((error.retryAt.getTime() - Date.now()) / 1000),
+      ),
+      ...(error instanceof MovieProviderSearchDeferredV4
+        ? { providerSearchProgress: error.progress }
+        : {}),
+    };
+  }
   execution.assertActive();
   if (selected === undefined)
     return {
@@ -130,7 +180,7 @@ export async function reconcileMovieIntentV4(
     context,
     input,
     selected,
-    runtime.epoch,
+    epoch,
   );
   execution.assertActive();
   return {
@@ -144,9 +194,15 @@ async function selectMovieCandidate(
   context: MediaAutomationContext,
   input: MovieOperationV4,
   releaseId: string | undefined,
+  providerSearchProgress: MovieProviderSearchProgressV4 | undefined,
 ) {
   if (releaseId === undefined) {
-    const candidates = await searchMovieCandidatesV4(context, input.scope);
+    const candidates = await searchMovieCandidatesV4(context, input.scope, {
+      ...input,
+      ...(providerSearchProgress === undefined
+        ? {}
+        : { providerSearchProgress }),
+    });
     return candidates[0];
   }
   const assessed = await assessRetainedMovieRelease(context, {

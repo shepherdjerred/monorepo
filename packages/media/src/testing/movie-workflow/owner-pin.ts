@@ -1,4 +1,5 @@
-import { MediaAuth, type MediaActor } from "#application/auth.ts";
+import type { MediaActor } from "#application/auth.ts";
+import { MediaAuth } from "#application/media-auth.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
 import { PrismaAuthStore } from "#infrastructure/auth-store.ts";
 import { z } from "zod";

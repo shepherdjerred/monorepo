@@ -21,6 +21,7 @@ import { MovieAcquisitionIdentityV2Schema } from "#shared/movie-editions/acquisi
 import { QualityRulesSchema } from "#shared/api.ts";
 import { LIBRARY_MOVIE_DUE_CURSOR } from "./library-movies.ts";
 import { PERSONAL_MOVIE_DUE_CURSOR } from "./personal-movie-due.ts";
+import { requestTestMovieV4 } from "#testing/movie-v4.ts";
 
 let bytes: Uint8Array;
 beforeAll(async () => {
@@ -116,6 +117,239 @@ async function fixture(edition: MovieEditionKey) {
     },
   };
 }
+
+async function sweepDueToCompletion(h: Awaited<ReturnType<typeof fixture>>) {
+  let cursor: string | null = null;
+  let pages = 0;
+  do {
+    const budget = new PublicationAuthorityReadBudget();
+    const page = await h.sweep(cursor, budget);
+    expect(budget.take).toBeGreaterThan(0);
+    cursor = page.nextCursor;
+    expect(++pages).toBeLessThan(100);
+  } while (cursor !== null);
+  return pages;
+}
+
+test("default personal choice resumes through the scoped due coordinator after no results", async () => {
+  const h = await fixture("default");
+  const { f, db } = h;
+  try {
+    const movie = createMovieNetworkFacetV4(h.context);
+    expect(
+      await movie.reconcileMovieIntentV4(f.input, testPlexBindingExecution()),
+    ).toMatchObject({ reason: "no_acceptable_release" });
+    await f.finishMediaOperation({
+      operationId: f.input.operationId,
+      status: "completed",
+      reason: "no_acceptable_release",
+    });
+    const before = await h.source();
+    await sweepDueToCompletion(h);
+    await sweepDueToCompletion(h);
+    const queued = await h.pending();
+    expect(queued).toHaveLength(1);
+    const operation = queued[0];
+    if (operation === undefined)
+      throw new Error("Default due sweep omitted its scoped command");
+    expect(operation).toMatchObject({
+      kind: "reconcile_movie_edition_v4",
+      targetId: f.input.mediaId,
+      userId: f.source.user.id,
+    });
+    const input = MovieOperationV4Schema.parse(
+      z.object(MovieOperationV4Schema.shape).parse(operation.payload),
+    );
+    expect(input.scope).toEqual(f.input.scope);
+    expect(
+      await db.operation.count({
+        where: { idempotencyKey: { startsWith: "due:" } },
+      }),
+    ).toBe(0);
+    expect(await h.source()).toEqual(before);
+    h.show();
+    expect(
+      await movie.reconcileMovieIntentV4(input, testPlexBindingExecution()),
+    ).toMatchObject({ status: "acquire" });
+    expect(await db.acquisitionAttempt.count()).toBe(1);
+  } finally {
+    await f.close();
+  }
+});
+
+test.each(["restricted requester", "existing reservation"])(
+  "default chosen demand with %s cannot fall back to generic due work",
+  async (guard) => {
+    const h = await fixture("default");
+    const { f, db } = h;
+    try {
+      if (guard === "restricted requester") {
+        await db.mediaUser.update({
+          where: { id: f.source.user.id },
+          data: { restricted: true },
+        });
+      } else {
+        h.show();
+        expect(
+          await createMovieNetworkFacetV4(h.context).reconcileMovieIntentV4(
+            f.input,
+            testPlexBindingExecution(),
+          ),
+        ).toMatchObject({ status: "acquire" });
+      }
+      const before = await h.source();
+      await sweepDueToCompletion(h);
+      expect(await h.pending()).toEqual([]);
+      expect(
+        await db.operation.count({
+          where: { idempotencyKey: { startsWith: "due:" } },
+        }),
+      ).toBe(0);
+      expect(await h.source()).toEqual(before);
+      expect(f.source.wire.additions()).toBe(0);
+    } finally {
+      await f.close();
+    }
+  },
+);
+
+test("default pre-choice legacy demand retains its existing due route", async () => {
+  const h = await fixture("default");
+  const { f, db } = h;
+  try {
+    await db.mediaRequest.updateMany({
+      where: { mediaId: f.input.mediaId },
+      data: {
+        movieEditionChoiceId: null,
+        movieEditionChoiceRevision: { increment: 1 },
+        version: { increment: 1 },
+        active: false,
+        direct: false,
+        excluded: true,
+      },
+    });
+    const legacy = await db.mediaUser.create({
+      data: {
+        plexAccountId: crypto.randomUUID(),
+        displayName: "Pre-choice legacy requester",
+      },
+    });
+    await db.mediaRequest.create({
+      data: { userId: legacy.id, mediaId: f.input.mediaId, edition: "default" },
+    });
+    await h.sweep(null);
+    await h.sweep(`${PERSONAL_MOVIE_DUE_CURSOR}start`);
+    expect(await h.pending()).toEqual([]);
+    expect(
+      await db.operation.findFirstOrThrow({
+        where: { idempotencyKey: { startsWith: "due:" } },
+      }),
+    ).toMatchObject({ kind: "reconcile_media", targetId: f.input.mediaId });
+  } finally {
+    await f.close();
+  }
+});
+
+test("default chosen due work cannot replace its original pre-spent shared budget", async () => {
+  const h = await fixture("default");
+  try {
+    const budget = new PublicationAuthorityReadBudget();
+    budget.consume(99);
+    await h.sweep(null, budget);
+    expect(await h.sweep(`${PERSONAL_MOVIE_DUE_CURSOR}start`, budget)).toEqual({
+      processed: 1,
+      nextCursor: null,
+    });
+    expect(budget.take).toBeLessThanOrEqual(0);
+    expect(await h.pending()).toEqual([]);
+    expect(
+      await h.db.operation.count({
+        where: { idempotencyKey: { startsWith: "due:" } },
+      }),
+    ).toBe(0);
+  } finally {
+    await h.f.close();
+  }
+});
+
+test("eight default movie choices progress within the unchanged shared due-page budget", async () => {
+  const h = await fixture("default");
+  try {
+    for (let index = 1; index < 8; index++) {
+      const media = await h.db.mediaItem.create({
+        data: {
+          kind: "movie",
+          title: `Default due fixture ${String(index)}`,
+          year: 2020,
+          tmdbId: 202_020 + index,
+          runtimeMinutes: 1,
+          originalLanguage: "en",
+        },
+      });
+      await requestTestMovieV4(h.db, h.f.source.user, media.id, "default");
+    }
+    await sweepDueToCompletion(h);
+    expect(await h.pending()).toHaveLength(8);
+    expect(
+      await h.db.operation.count({
+        where: { idempotencyKey: { startsWith: "due:" } },
+      }),
+    ).toBe(0);
+  } finally {
+    await h.f.close();
+  }
+});
+
+test("fifty default choices cross discovery pages and complete bounded personal pages without starving TV", async () => {
+  const h = await fixture("default");
+  try {
+    for (let index = 1; index < 50; index++) {
+      const media = await h.db.mediaItem.create({
+        data: {
+          kind: "movie",
+          title: `Full default due page ${String(index)}`,
+          year: 2020,
+          tmdbId: 303_030 + index,
+          runtimeMinutes: 1,
+          originalLanguage: "en",
+        },
+      });
+      await requestTestMovieV4(h.db, h.f.source.user, media.id, "default");
+    }
+    const tv = await h.db.mediaItem.create({
+      data: {
+        kind: "series",
+        title: "TV following chosen default movies",
+        intents: { create: { generation: 1 } },
+      },
+    });
+    await h.db.mediaRequest.create({
+      data: { userId: h.f.source.user.id, mediaId: tv.id },
+    });
+    const pages = await sweepDueToCompletion(h);
+    expect(pages).toBe(2 + 1 + 50);
+    expect(await h.pending()).toHaveLength(50);
+    expect(
+      await h.db.operation.findFirstOrThrow({
+        where: { idempotencyKey: { startsWith: "due:" }, targetId: tv.id },
+      }),
+    ).toMatchObject({ kind: "refresh_catalog", targetId: tv.id });
+    expect(
+      await h.db.operation.count({
+        where: {
+          idempotencyKey: { startsWith: "due:" },
+          kind: "reconcile_media",
+        },
+      }),
+    ).toBe(0);
+    // Existing queued commands are charged again, but every cursor invocation
+    // keeps its own original 100-record allowance and remains idempotent.
+    expect(await sweepDueToCompletion(h)).toBe(pages);
+    expect(await h.pending()).toHaveLength(50);
+  } finally {
+    await h.f.close();
+  }
+}, 60_000);
 
 for (const edition of MovieEditionKeySchema.options.filter(
   (key) => key !== "default",

@@ -1,7 +1,10 @@
 import type { Prisma } from "#generated/prisma/client.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
 import { persistCandidateSnapshot } from "#automation/candidate-evidence.ts";
-import { ProviderIdSchema } from "#automation/providers.ts";
+import {
+  ProviderAdmissionDeferred,
+  ProviderIdSchema,
+} from "#automation/providers.ts";
 import { networkMovieAccess } from "#automation/editions/access.ts";
 import { requireMovieChoiceAccess } from "#infrastructure/movie-editions/access.ts";
 import { eligibleAcquisitionSponsors } from "#infrastructure/movie-editions/authority.ts";
@@ -33,6 +36,31 @@ import { requireMovieAcquisitionAuthorityV4 } from "./acquisition-authority.ts";
 import { movieManagementContext } from "./management-context.ts";
 import { movieCurrentQuality } from "./current-quality.ts";
 import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
+import type {
+  MovieProviderSearchProgressV4,
+  MovieReconcileOperationV4,
+} from "#shared/movie-editions/lifecycle/automation-v4.ts";
+
+export class MovieProviderSearchDeferredV4 extends ProviderAdmissionDeferred {
+  constructor(
+    deferred: ProviderAdmissionDeferred,
+    readonly progress: MovieProviderSearchProgressV4,
+  ) {
+    super(deferred.service, deferred.retryAt, deferred.admission);
+  }
+}
+
+function completedProviders(
+  progress: MovieProviderSearchProgressV4 | undefined,
+  criteriaDigest: string,
+) {
+  return new Set<string>(
+    progress?.criteriaDigest === criteriaDigest
+      ? progress.completedProviderIds
+      : [],
+  );
+}
 
 export type MovieCandidateV4 = {
   releaseId: string;
@@ -243,6 +271,10 @@ async function assessProviderResults(
 export async function searchMovieCandidatesV4(
   initial: MediaAutomationContext,
   input: MovieEditionScope,
+  continuation?: Pick<
+    MovieReconcileOperationV4,
+    "operationId" | "generation" | "providerSearchProgress"
+  >,
 ) {
   const context = movieManagementContext(initial);
   const scope = MovieEditionScopeSchema.parse(input);
@@ -266,7 +298,29 @@ export async function searchMovieCandidatesV4(
     context.movieManagement.budget,
   );
   const accepted: MovieCandidateV4[] = [];
-  for (const provider of providers) {
+  const query = { query: target.media.title, kind: "movie" as const, page: 1 };
+  // Only stable search criteria bind progress: successful admission itself
+  // changes updatedAt/lastError and lease timestamps, so none belongs here.
+  const criteriaDigest = identityHash({
+    operationId: continuation?.operationId ?? null,
+    generation: continuation?.generation ?? null,
+    scope,
+    query,
+    canonicalHash: target.canonicalHash,
+    profile: target.profile,
+    rejected: [...rejected].sort(),
+    providers: providers.map((provider) => ({
+      id: provider.id,
+      configuration: provider.configuration,
+      credentialId: provider.credentialId,
+    })),
+  });
+  const completed = completedProviders(
+    continuation?.providerSearchProgress,
+    criteriaDigest,
+  );
+  let deferred: ProviderAdmissionDeferred | undefined;
+  for (const provider of providers.filter((item) => !completed.has(item.id))) {
     try {
       const sources = await context.providers.withProvider(
         provider.id,
@@ -278,11 +332,7 @@ export async function searchMovieCandidatesV4(
             context.movieManagement,
           );
           sponsor.freshness.assertActive();
-          return client.search({
-            query: target.media.title,
-            kind: "movie",
-            page: 1,
-          });
+          return client.search(query);
         },
       );
       accepted.push(
@@ -291,10 +341,28 @@ export async function searchMovieCandidatesV4(
           rejected,
         })),
       );
+      completed.add(provider.id);
     } catch (error) {
-      if (!(error instanceof IntegrationError)) throw error;
+      if (error instanceof ProviderAdmissionDeferred) {
+        if (
+          deferred === undefined ||
+          error.retryAt.getTime() < deferred.retryAt.getTime()
+        )
+          deferred = error;
+      } else if (error instanceof IntegrationError) {
+        // A terminal remote result settles this provider for this search pass;
+        // another provider's local wait must not manufacture remote retries.
+        completed.add(provider.id);
+      } else throw error;
     }
   }
+  if (deferred !== undefined && accepted.length === 0)
+    throw new MovieProviderSearchDeferredV4(deferred, {
+      criteriaDigest,
+      completedProviderIds: providers
+        .filter((provider) => completed.has(provider.id))
+        .map((provider) => ProviderIdSchema.parse(provider.id)),
+    });
   return accepted.sort(
     (left, right) =>
       right.rank - left.rank ||

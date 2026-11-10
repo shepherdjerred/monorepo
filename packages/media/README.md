@@ -901,6 +901,14 @@ The response contains mode, version, recovery epoch, and ownership confirmation.
 Starting requires fresh trusted canonical storage observations from the workers;
 it does not require importing a migration bundle or stopping legacy controllers.
 Pausing stops Media automation while the existing stack continues operating.
+Personal TV Network Activities renew expired Plex access from the requester's
+existing encrypted account credential and registered device. Managed Home
+requests first revalidate their recorded owner, then use the exact stored profile
+token through the existing profile-access resolver. Fresh mappings avoid extra
+Plex calls. Renewal keeps the five-minute access check, original Activity deadline
+and shared record allowance; denied, restricted or mismatched access cannot
+authorize the transfer or publication. It preserves the original acquisition
+sponsor and torrent and requires no active browser session.
 Owner activation preserves an immutable approval of the exact canonical storage
 identity. After a restore, native recovery can use that approval to reprove
 Media-created files without requiring a legacy migration bundle. Recovery retains
@@ -1018,8 +1026,9 @@ until it is `prepared`. Review the exact server/section identity, scanner,
 library/control roots, existing and proposed marker contents, synthetic probe
 paths, and cleanup policy before submitting its digest/version to `execute`.
 Execution preserves existing `.plexignore` lines, adds the reviewed exclusion,
-writes two identical valid synthetic videos, and requests a root-scoped scan.
-It never scans the hidden control subtree directly.
+writes two identical valid synthetic videos, and requests a scan of the reviewed
+section without a path restriction so Plex advances its section scan watermark.
+It never scans other sections or the hidden control subtree directly.
 
 Scan issuance waits until the whole second after staging or cleanup finishes;
 proof rejects any watermark from that completion second or earlier. Proof
@@ -1235,6 +1244,16 @@ TPB and MagnetDownload provide title searches only and report
 `unsupported_recent_feed`. Private tracker tokens remain in worker memory,
 bound to the current credential. Each invocation retains its own database lease
 and pacing; a deferred listing can reuse authentication on its next invocation.
+
+Movie searches deferred by a local provider lease or cooldown retain the same
+scoped coordinator and wait durably before checking admission again. Each resumed
+Activity rechecks current intent, sponsorship, reservations and authority with its
+original bounds. Remote authentication failures and download quotas do not gain
+this retry behavior. A completed search with no acceptable release returns to
+normal six-hour due searches. Default movie requests with an explicit current
+edition choice use the guarded scoped coordinator on that due pass; a blocked
+choice cannot fall through to historical unscoped acquisition. Pre-choice legacy
+requests retain their existing due route.
 
 MagnetDownload title searches retain their encrypted search results and resolved
 hash prefix in a typed `ReconciliationScan` checkpoint for the exact query, kind

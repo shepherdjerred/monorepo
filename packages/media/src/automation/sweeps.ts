@@ -178,6 +178,29 @@ async function queueDue(
   )
     return;
   if (item.airDate !== null && item.airDate.getTime() > Date.now()) return;
+  if (item.kind === "movie") {
+    const demand = await context.db.mediaRequest.findFirst({
+      where: {
+        mediaId: item.id,
+        edition: "default",
+        active: true,
+        direct: true,
+        excluded: false,
+        movieEditionChoiceId: { not: null },
+      },
+      select: { id: true },
+    });
+    const invocation = context.movieManagement;
+    if (invocation === undefined)
+      throw new Error("Default movie due work lost its original capability");
+    invocation.budget.consume(demand === null ? 0 : 1);
+    if (demand !== null) {
+      // The personal tail processes one chosen target per Activity under its
+      // original shared budget. This discovery page cannot fall through to
+      // historical unscoped acquisition, including when the choice is blocked.
+      return;
+    }
+  }
   await serializable(context.db, async (tx) => {
     await queueOperation(tx, {
       key: `due:${item.id}:${String(Math.floor(Date.now() / 21_600_000))}`,
