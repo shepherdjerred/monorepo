@@ -1,7 +1,7 @@
 {
-  "id": "chartmuseum/prod/2",
+  "id": "chartmuseum/prod/3",
   "content": {
-    "helm.valuesObject": "{\"env\":{\"existingSecret\":\"chartmuseum-basic-auth\",\"existingSecretMappings\":{\"BASIC_AUTH_PASS\":\"password\",\"BASIC_AUTH_USER\":\"username\"},\"open\":{\"AUTH_ANONYMOUS_GET\":true,\"DISABLE_API\":false}},\"persistence\":{\"enabled\":true,\"size\":\"8Gi\",\"storageClass\":\"zfs-hdd\"},\"resources\":{\"requests\":{\"cpu\":\"200m\",\"memory\":\"640Mi\"}}}"
+    "helm.valuesObject": "{\"env\":{\"existingSecret\":\"chartmuseum-basic-auth\",\"existingSecretMappings\":{\"BASIC_AUTH_PASS\":\"password\",\"BASIC_AUTH_USER\":\"username\"},\"open\":{\"AUTH_ANONYMOUS_GET\":true,\"DISABLE_API\":false}},\"persistence\":{\"enabled\":true,\"size\":\"8Gi\",\"storageClass\":\"zfs-hdd\"},\"resources\":{\"requests\":{\"cpu\":\"200m\",\"memory\":\"640Mi\"}},\"strategy\":{\"rollingUpdate\":{\"maxSurge\":0,\"maxUnavailable\":1},\"type\":\"RollingUpdate\"}}"
   },
   "forwardOnly": []
 }

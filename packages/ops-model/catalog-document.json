@@ -3202,7 +3202,7 @@
       "approvalPolicy": "none",
       "automatic": true,
       "recipeRevisionId": "chartmuseum/prod/1",
-      "configurationRevisionId": "chartmuseum/prod/2"
+      "configurationRevisionId": "chartmuseum/prod/3"
     },
     {
       "id": "tofu-anthropic/prod",
