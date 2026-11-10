@@ -2,8 +2,14 @@ import { findSection } from "@shepherdjerred/ops-model/assemble.ts";
 import { SnapshotSchema } from "@shepherdjerred/ops-model/snapshot.ts";
 import { expect, test } from "vitest";
 
-import { firingAlertSignals } from "./home-signals.ts";
+import { firingAlertSignals, firingAlertsHint } from "./home-signals.ts";
 import { fixtureOpsIngest } from "#test-fixtures/ops-snapshot";
+
+test("the tile hint says how many groups the firing alerts are in", () => {
+  expect(firingAlertsHint(1, "1")).toBe("in 1 group · 1 critical");
+  expect(firingAlertsHint(4, "0")).toBe("in 4 groups · 0 critical");
+  expect(firingAlertsHint(0, "—")).toBe("in 0 groups · — critical");
+});
 
 test("lists informational alerts and leaves out the silences summary", () => {
   const { snapshot } = fixtureOpsIngest("2026-08-08T12:00:00Z");

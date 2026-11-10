@@ -12,7 +12,7 @@ test("home summarizes status, alerts, what waits on me, and Tracker triage", asy
   const glance = page.getByRole("list", { name: "At a glance" });
   const firing = glance.getByRole("link", { name: /Firing alerts/u });
   await expect(firing).toContainText("3");
-  await expect(firing).toContainText("1 critical");
+  await expect(firing).toContainText("in 1 group · 1 critical");
   await expect(firing).toHaveAttribute("href", "/alerts");
   await expect(
     glance.getByRole("link", { name: /Waiting on you/u }),
@@ -25,8 +25,11 @@ test("home summarizes status, alerts, what waits on me, and Tracker triage", asy
   );
 
   const firingList = page.locator("section", {
-    has: page.getByRole("heading", { name: /Firing alerts/u }),
+    has: page.getByRole("heading", { name: /Firing alert groups/u }),
   });
+  await expect(
+    firingList.getByRole("heading", { name: /Firing alert groups/u }),
+  ).toContainText("1");
   await expect(firingList.locator(".signal").first()).toContainText(
     "Velero backup is 41 hours old",
   );

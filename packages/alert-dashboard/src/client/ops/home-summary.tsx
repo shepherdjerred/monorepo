@@ -12,7 +12,7 @@ import { APP_HOSTS } from "@shepherdjerred/ops-model/tool-links.ts";
 import { ArrowRightIcon, ExternalLinkIcon } from "lucide-react";
 import { Link } from "react-router";
 
-import { firingAlertSignals } from "./home-signals.ts";
+import { firingAlertSignals, firingAlertsHint } from "./home-signals.ts";
 import { SignalList, SnapshotBlock, StatusBanner } from "./ops-ui.tsx";
 import { formatValue } from "#shared/ops-format";
 
@@ -90,7 +90,7 @@ function Summary({
           label="Firing alerts"
           value={firing.text}
           severity={firing.severity}
-          hint={`${critical.text} critical`}
+          hint={firingAlertsHint(firingSignals.length, critical.text)}
           target={{ to: "/alerts" }}
         />
         <Stat
@@ -112,7 +112,7 @@ function Summary({
         <section className="panel list-panel" aria-labelledby="firing-heading">
           <header className="panel-heading">
             <h2 id="firing-heading">
-              Firing alerts{" "}
+              Firing alert groups{" "}
               <span className="count">{firingSignals.length}</span>
             </h2>
             <Link className="panel-link" to="/alerts">
