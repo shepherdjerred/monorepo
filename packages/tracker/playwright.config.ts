@@ -34,6 +34,7 @@ export default defineConfig({
     {
       name: "mobile",
       use: { ...devices["iPhone 13"], defaultBrowserType: "chromium" },
+      testIgnore: /\.desktop\.spec\.ts$/u,
     },
   ],
   webServer: {
