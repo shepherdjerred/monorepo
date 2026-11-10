@@ -50,7 +50,7 @@ export const DELIVERY_STAGE_WORKSPACE_CLAIMS = {
   /** Every workspace's dependencies, generated code and the toolkit binary. */
   full: { claim: "delivery-stage-workspace-full", size: "40Gi" },
   /** Image provenance: the Temporal workspace's production closure only. */
-  production: { claim: "delivery-stage-workspace-production", size: "20Gi" },
+  production: { claim: "delivery-stage-workspace-production", size: "40Gi" },
 } as const;
 export type DeliveryStageWorkspaceProfile =
   keyof typeof DELIVERY_STAGE_WORKSPACE_CLAIMS;

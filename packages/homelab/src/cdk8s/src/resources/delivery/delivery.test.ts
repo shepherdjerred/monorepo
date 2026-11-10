@@ -392,7 +392,7 @@ describe("Delivery stage workspace claims", () => {
       ),
     ).toEqual([
       "delivery-worker-jobs/delivery-stage-workspace-full 40Gi",
-      "delivery-worker-jobs/delivery-stage-workspace-production 20Gi",
+      "delivery-worker-jobs/delivery-stage-workspace-production 40Gi",
       "delivery-platform-jobs/delivery-stage-workspace-full 40Gi",
     ]);
     for (const claim of claims) {
