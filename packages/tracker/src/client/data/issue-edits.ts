@@ -438,4 +438,3 @@ export function createIssueEdits(deps: {
     },
   };
 }
-export type IssueEdits = ReturnType<typeof createIssueEdits>;
