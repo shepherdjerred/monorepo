@@ -269,6 +269,40 @@ function brimBillingLineIsAllowed(source: string): boolean {
 
 type Exemption = (filePath: string, source: string) => boolean;
 
+// These exact metadata checks verify the CLI/helper bundled by the native SDK;
+// they do not add a CLI dependency or launch an alternative inference path.
+const CODEX_BUNDLED_PROVENANCE_LINES = new Map<string, ReadonlySet<string>>([
+  [
+    "ci/scripts/images/harden-codex-launcher.ts",
+    new Set(['manifest["name"] !== "@openai/codex" ||']),
+  ],
+  [
+    "ci/scripts/images/harden-codex-launcher.test.ts",
+    new Set([
+      'JSON.stringify({ name: "@openai/codex", bin: { codex: "bin/codex.js" } }),',
+    ]),
+  ],
+  [
+    "packages/temporal/src/lib/agent-runner/codex-bubblewrap.ts",
+    new Set(['name: z.literal("@openai/codex"),']),
+  ],
+  [
+    "packages/temporal/src/lib/agent-runner/codex-bubblewrap.test.ts",
+    new Set([
+      'expect(cli.name).toBe("@openai/codex");',
+      '`"${pin.package}": ["@openai/codex@${pin.packageVersion}"`,',
+      '{ name: "@openai/codex", version: expected },',
+      '{ name: "@openai/codex", version: "0.0.0" },',
+    ]),
+  ],
+]);
+
+function isBundledCodexProvenance(filePath: string, source: string): boolean {
+  return (
+    CODEX_BUNDLED_PROVENANCE_LINES.get(filePath)?.has(source.trim()) ?? false
+  );
+}
+
 function inSet(paths: ReadonlySet<string>): Exemption {
   return (filePath) => paths.has(filePath);
 }
@@ -344,7 +378,10 @@ const RULE_EXEMPTIONS: Readonly<Record<string, readonly Exemption[]>> = {
     isPath(WORKLOAD_IDENTITY_MANIFEST_PATH),
     inSet(OPENAI_NATIVE_VOICE_AUDIO_PATHS),
   ],
-  "agent-cli-dependency": [isPath(NATIVE_SDK_CONTRACT_TEST)],
+  "agent-cli-dependency": [
+    isPath(NATIVE_SDK_CONTRACT_TEST),
+    isBundledCodexProvenance,
+  ],
 };
 
 function isAllowedViolation(
