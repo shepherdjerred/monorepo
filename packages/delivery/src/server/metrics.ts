@@ -264,7 +264,7 @@ export async function deliveryMetrics(database: Database): Promise<string> {
   // `service_id`, not `service`: the scrape's target label already owns `service`.
   metric(
     "delivery_recovery_required_deployments",
-    "Recovery-required deployments by environment and catalog service; each holds the dispatch barrier (D8).",
+    "Recovery-required deployments by environment and catalog service; a self-hosted one holds the dispatch barrier (D8).",
     RecoveryRequiredSchema.parse(recoveries).map((row) => ({
       labels: {
         environment: row.environment,

@@ -560,7 +560,9 @@ which releases them (D11).
   native Job may re-record its own running stage, which renews nothing.
 - D8. A deployment of a `self-hosted` service acquires a global dispatch
   barrier before effects: no other deployment is claimed while the barrier
-  is held, queues are drained first, and the deployment's evidence source is
+  is held, running deployments finish first (a recovery-required deployment
+  of another, non-self-hosted service does not hold it), and the
+  deployment's evidence source is
   frozen before applying. After applying, the outgoing executor leaves the
   deployment `owned` with a `handoff` marker and a frozen lease that does
   not expire; the successor executor takes ownership by reading the frozen
