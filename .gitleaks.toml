@@ -10,6 +10,9 @@ regexes = [
   '''^xdstbl5gobpao35rjprlp3hzgi$''',
   # Public 1Password item reference for the Delivery TRMNL capability.
   '''^p7th6tqeel7k2sm47mrrto7oca$''',
+  # Discord's shared "Deleted User" placeholder account ID, a public user
+  # snowflake that Discord substitutes for deleted message authors.
+  '''^456226577798135808$''',
 ]
 paths = [
   '''packages/dotfiles/Library/Application Support/pinchtab/config\.json''',

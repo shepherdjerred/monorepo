@@ -122,7 +122,8 @@ function sameInstant(left: string | null, right: string | null): boolean {
  * observations of the same message version. Discord changes `pinned`, the
  * author profile, signed attachment URLs and the edit-free flag bits without
  * an edit, so those resolve by observation preference instead of appearing
- * here. Only field names are returned, never values.
+ * here. A deleted account's author rewrite does appear here and is accepted
+ * by `isDeletedAuthorRewrite`. Only field names are returned, never values.
  */
 function versionFieldDifferences(
   left: ImmutableMessageVersion,
@@ -165,20 +166,71 @@ function versionFieldDifferences(
   return checks.filter(([, equal]) => !equal).map(([field]) => field);
 }
 
+/**
+ * Discord's shared "Deleted User" placeholder account. When a user or bot
+ * account is deleted, Discord's REST API rewrites the author of every message
+ * that account sent to this ID (username "Deleted User", discriminator
+ * "0000", no bot flag) without updating `edited_timestamp`. Content,
+ * timestamps, type, flags, webhook and application stay as they were, so the
+ * rewrite is an edit-free change to `author.id` and `author.bot` only.
+ */
+const DISCORD_DELETED_USER_ID = "456226577798135808";
+
+/**
+ * Accepts the deleted-account author rewrite: the author fields are the only
+ * difference, exactly one side carries the non-bot placeholder, and that side
+ * is the strictly later observation. A real author replacing the placeholder,
+ * or one real author replacing another, is still a conflict.
+ */
+function isDeletedAuthorRewrite(
+  left: ImmutableMessageVersion,
+  right: ImmutableMessageVersion,
+  leftObservedAfterRight: number,
+  differences: readonly string[],
+): boolean {
+  if (
+    !differences.includes("author.id") ||
+    !differences.every(
+      (field) => field === "author.id" || field === "author.bot",
+    )
+  ) {
+    return false;
+  }
+  // `author.id` differs, so at most one side carries the placeholder.
+  const placeholderIsLeft = left.author.id === DISCORD_DELETED_USER_ID;
+  const placeholder = placeholderIsLeft ? left : right;
+  if (
+    placeholder.author.id !== DISCORD_DELETED_USER_ID ||
+    placeholder.author.bot
+  ) {
+    return false;
+  }
+  return placeholderIsLeft
+    ? leftObservedAfterRight > 0
+    : leftObservedAfterRight < 0;
+}
+
 type SameVersionResolution = "equivalent" | "seed-content-drift";
 
 /**
  * Classifies two observations of the same message version. Content drift
  * between a trusted seed row and Discord is the only tolerated content
- * difference; every other identity or edit-versioned difference throws.
+ * difference, and a later observation may replace a deleted account's author
+ * with Discord's placeholder; every other identity or edit-versioned
+ * difference throws. `leftObservedAfterRight` is the left side's observed
+ * instant minus the right side's, in milliseconds.
  */
 function resolveSameVersion(
   left: ImmutableMessageVersion,
   right: ImmutableMessageVersion,
+  leftObservedAfterRight: number,
   conflictMessage: string,
 ): SameVersionResolution {
   const differences = versionFieldDifferences(left, right);
-  if (differences.length === 0) {
+  if (
+    differences.length === 0 ||
+    isDeletedAuthorRewrite(left, right, leftObservedAfterRight, differences)
+  ) {
     return "equivalent";
   }
   if (
@@ -261,6 +313,8 @@ export function selectCurrentObservation(
     const resolution = resolveSameVersion(
       candidate,
       selected,
+      instantMilliseconds(candidate.observedAt) -
+        instantMilliseconds(selected.observedAt),
       `conflicting payloads for message ${first.messageId} at version ${candidate.editedTimestamp ?? candidate.timestamp}`,
     );
     if (resolution === "seed-content-drift") {
@@ -409,6 +463,8 @@ export function mergeCurrentProjection(
     const resolution = resolveSameVersion(
       message,
       existing,
+      instantMilliseconds(message.selectedObservedAt) -
+        instantMilliseconds(existing.selectedObservedAt),
       `projection has conflicting payloads for message ${message.messageId} at ${message.editedTimestamp ?? message.timestamp}`,
     );
     if (resolution === "seed-content-drift") {
