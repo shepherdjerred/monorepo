@@ -443,59 +443,6 @@ resource "terraform_data" "streambot_voice_captures_lifecycle" {
   }
 }
 
-# Versioned scout-for-lol site artifacts — one prod-flavored build of the
-# marketing site + SPA per main build, under `2.0.0-<build>/` with a sibling
-# `2.0.0-<build>.json` manifest. Written by the CI sites step
-# (scripts/release/scout-site-release.ts archive); the prod bucket is synced from a
-# pinned version here at promotion time (reconcile-prod), so prod site content
-# always matches the promoted backend image. This bucket MUST exist via Tofu
-# before the first archive sync runs — SeaweedFS auto-creates buckets on first
-# PutObject, which would force the stocks-style import-block adoption dance.
-# 365-day retention: promotion cadence is far shorter, and the reconcile no-op
-# path (marker == pin) needs no archive at all.
-#
-# The resource landed on main (#5847) without this import block, and its build
-# was canceled mid-apply — SeaweedFS had already auto-created the bucket on the
-# first archive PutObject, so every subsequent `tofu apply` hit
-# `BucketAlreadyExists` (build 5864). This is exactly the stocks-style adoption
-# dance the resource comment anticipated: the bucket already exists, so adopt it
-# into state on the next apply instead of letting Tofu CreateBucket over it.
-# Safe because the import + resource land together; a no-op once in state, and
-# may be removed after the first successful apply.
-import {
-  to = aws_s3_bucket.scout_site_releases
-  id = "scout-site-releases"
-}
-
-resource "aws_s3_bucket" "scout_site_releases" {
-  bucket = "scout-site-releases"
-}
-
-resource "terraform_data" "scout_site_releases_lifecycle" {
-  input = {
-    bucket       = aws_s3_bucket.scout_site_releases.id
-    expire_days  = 365
-    endpoint_url = "https://seaweedfs-s3.tailnet-1a49.ts.net"
-  }
-
-  provisioner "local-exec" {
-    environment = local.seaweedfs_deploy_environment
-    command     = <<-EOT
-      aws s3api put-bucket-lifecycle-configuration \
-        --bucket "${self.input.bucket}" \
-        --endpoint-url "${self.input.endpoint_url}" \
-        --lifecycle-configuration '{
-          "Rules": [{
-            "ID": "expire-scout-site-releases",
-            "Status": "Enabled",
-            "Filter": {"Prefix": ""},
-            "Expiration": {"Days": ${self.input.expire_days}}
-          }]
-        }'
-    EOT
-  }
-}
-
 # Build-scoped CI handoff and artifact store. Steps pass values to later steps
 # in the same pipeline as `<pipeline number>/<key>.json`, and directory trees
 # under `artifacts/` — see scripts/lib/ci/ci-handoff.ts and ci-artifact.ts.
@@ -510,12 +457,11 @@ resource "terraform_data" "scout_site_releases_lifecycle" {
 #
 # The import block is here because the bucket already exists: it was created
 # empty, ahead of this declaration, precisely so that adoption is a fact rather
-# than a race. Left to itself the outcome was going to be the scout-site-releases
-# story again -- `verify` writes the caddyfile handoff on every build including
-# pull requests, `tofu-apply-seaweedfs` runs later in the same pipeline, so
-# SeaweedFS would auto-create the bucket on that first PutObject and every
-# subsequent apply would fail with BucketAlreadyExists. Creating it up front
-# removes the ordering question entirely.
+# than a race. Left to itself, `verify` would write the caddyfile handoff on
+# every build including pull requests before any apply ran, SeaweedFS would
+# auto-create the bucket on that first PutObject, and every subsequent apply
+# would fail with BucketAlreadyExists. Creating it up front removes the
+# ordering question entirely.
 import {
   to = aws_s3_bucket.ci_handoff
   id = "ci-handoff"
@@ -523,6 +469,38 @@ import {
 
 resource "aws_s3_bucket" "ci_handoff" {
   bucket = "ci-handoff"
+}
+
+# Every handoff value and artifact tree is build-scoped: steps read only their
+# own pipeline's keys, and the one cross-pipeline read — a reviewed platform
+# plan (packages/homelab/scripts/tofu/platform-plan-handoff.ts) — is refused
+# once it is 24 hours old. Thirty days leaves room to inspect a failed run's
+# diagnostics (`toolkit ci analyze` defaults to 72 hours) without letting the
+# bucket grow without bound. Anything that must outlive that belongs in a
+# durable bucket, not here.
+resource "terraform_data" "ci_handoff_lifecycle" {
+  input = {
+    bucket       = aws_s3_bucket.ci_handoff.id
+    expire_days  = 30
+    endpoint_url = "https://seaweedfs-s3.tailnet-1a49.ts.net"
+  }
+
+  provisioner "local-exec" {
+    environment = local.seaweedfs_deploy_environment
+    command     = <<-EOT
+      aws s3api put-bucket-lifecycle-configuration \
+        --bucket "${self.input.bucket}" \
+        --endpoint-url "${self.input.endpoint_url}" \
+        --lifecycle-configuration '{
+          "Rules": [{
+            "ID": "expire-ci-handoff",
+            "Status": "Enabled",
+            "Filter": {"Prefix": ""},
+            "Expiration": {"Days": ${self.input.expire_days}}
+          }]
+        }'
+    EOT
+  }
 }
 
 # Immutable deployment artifacts outlive the producing CI pipeline. No age-based
