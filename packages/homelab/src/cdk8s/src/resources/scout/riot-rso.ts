@@ -4,8 +4,8 @@ import type { Stage } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/scout
 // Credential bootstrap only. Set a stage true after provisioning both fields
 // and refreshing the vault snapshot. Product rollout belongs to Flipt.
 export const SCOUT_RSO_PROVISIONED: Readonly<Record<Stage, boolean>> = {
-  beta: false,
-  prod: false,
+  beta: true,
+  prod: true,
 };
 
 export function riotRsoEnv(secret: ISecret): Record<string, EnvValue> {
