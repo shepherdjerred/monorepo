@@ -1,0 +1,501 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: birmel
+  namespace: birmel
+  labels:
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/enforce: privileged
+    pod-security.kubernetes.io/warn: restricted
+spec: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: birmel
+  namespace: birmel
+  annotations:
+    ignore-check.kube-linter.io/no-read-only-root-fs: Birmel requires writable filesystem for SQLite databases
+    ignore-check.kube-linter.io/run-as-non-root: Birmel requires flexible user permissions for container operations
+spec:
+  minReadySeconds: 0
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      cdk8s.io/metadata.addr: birmel-c88a8d94
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        ci.sjer.red/pod-security-enforcement: privileged
+      labels:
+        cdk8s.io/metadata.addr: birmel-c88a8d94
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - env:
+            - name: TZ
+              value: America/Los_Angeles
+            - name: DISCORD_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  key: DISCORD_TOKEN
+                  name: birmel-birmel-1p
+            - name: DISCORD_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  key: DISCORD_CLIENT_ID
+                  name: birmel-birmel-1p
+            - name: FEATURE_FLAGS_MODE
+              value: flipt
+            - name: FLIPT_ENVIRONMENT
+              value: prod
+            - name: FLIPT_NAMESPACE
+              value: birmel
+            - name: FLIPT_URL
+              value: http://flipt-flipt-service.flipt.svc.cluster.local:8080
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: OPENAI_API_KEY
+                  name: birmel-birmel-1p
+            - name: GEMINI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: GEMINI_API_KEY
+                  name: llm-gemini-birmel-prod
+            - name: LLM_MODEL
+              value: gpt-5.6-sol
+            - name: LLM_CLASSIFIER_MODEL
+              value: gpt-5.4-nano
+            - name: LLM_MEMORY_MODEL
+              value: gpt-5.4-nano
+            - name: LLM_EMBEDDING_MODEL
+              value: text-embedding-3-small
+            - name: LLM_REASONING_EFFORT
+              value: medium
+            - name: DATABASE_URL
+              value: file:/app/data/birmel.db
+            - name: OPS_DATABASE_URL
+              value: file:/app/data/birmel-ops.db
+            - name: HEALTH_PORT
+              value: "8080"
+            - name: TELEMETRY_ENABLED
+              value: "true"
+            - name: TELEMETRY_SERVICE_NAME
+              value: birmel
+            - name: OTLP_ENDPOINT
+              value: http://alloy-gateway.alloy-gateway.svc.cluster.local:4318
+            - name: LLM_OBSERVABILITY_ENABLED
+              value: "true"
+            - name: LLM_ARCHIVE_S3_BUCKET
+              value: llm-archive
+            - name: LLM_ARCHIVE_S3_PREFIX
+              value: llm
+            - name: LLM_ARCHIVE_REGION
+              value: us-east-1
+            - name: S3_ENDPOINT
+              value: http://seaweedfs-s3.seaweedfs.svc.cluster.local:8333
+            - name: S3_FORCE_PATH_STYLE
+              value: "true"
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  key: SEAWEEDFS_ACCESS_KEY_ID
+                  name: birmel-seaweedfs-s3-credentials
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: SEAWEEDFS_SECRET_ACCESS_KEY
+                  name: birmel-seaweedfs-s3-credentials
+            - name: BUGSINK_ENABLED
+              value: "true"
+            - name: BUGSINK_DSN
+              valueFrom:
+                secretKeyRef:
+                  key: BUGSINK_DSN
+                  name: birmel-birmel-1p
+            - name: BUGSINK_ENVIRONMENT
+              value: production
+            - name: BUGSINK_RELEASE
+              value: '{{ required `Delivery requires image:birmel` (get (get (.Values.delivery | default dict) "images" | default dict) "birmel") }}'
+            - name: LOG_LEVEL
+              value: info
+            - name: WEB_SEARCH_PROVIDER
+              value: openai
+            - name: PINCHTAB_BASE_URL
+              value: http://pinchtab.pinchtab.svc.cluster.local:9867
+            - name: PINCHTAB_PROFILE
+              value: birmel
+            - name: PINCHTAB_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  key: PINCHTAB_TOKEN
+                  name: birmel-pinchtab-token
+            - name: ANTHROPIC_ORGANIZATION_ID
+              valueFrom:
+                secretKeyRef:
+                  key: ANTHROPIC_ORGANIZATION_ID
+                  name: llm-anthropic-federation-birmel-prod
+            - name: ANTHROPIC_FEDERATION_RULE_ID
+              valueFrom:
+                secretKeyRef:
+                  key: ANTHROPIC_FEDERATION_RULE_ID
+                  name: llm-anthropic-federation-birmel-prod
+            - name: ANTHROPIC_SERVICE_ACCOUNT_ID
+              valueFrom:
+                secretKeyRef:
+                  key: ANTHROPIC_SERVICE_ACCOUNT_ID
+                  name: llm-anthropic-federation-birmel-prod
+            - name: ANTHROPIC_WORKSPACE_ID
+              valueFrom:
+                secretKeyRef:
+                  key: ANTHROPIC_WORKSPACE_ID
+                  name: llm-anthropic-federation-birmel-prod
+            - name: ANTHROPIC_IDENTITY_TOKEN_FILE
+              value: /var/run/secrets/anthropic.com/token
+          image: '{{ required `Delivery requires image:birmel` (get (get (.Values.delivery | default dict) "images" | default dict) "birmel") }}'
+          imagePullPolicy: Always
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /live
+              port: 8080
+              scheme: HTTP
+            periodSeconds: 30
+          name: main
+          ports:
+            - containerPort: 8080
+              name: health
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /ready
+              port: 8080
+              scheme: HTTP
+            periodSeconds: 10
+          resources:
+            limits:
+              memory: 2048Mi
+            requests:
+              cpu: 50m
+              memory: 224Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: false
+            runAsNonRoot: false
+          startupProbe:
+            failureThreshold: 24
+            httpGet:
+              path: /live
+              port: 8080
+              scheme: HTTP
+            periodSeconds: 5
+          volumeMounts:
+            - mountPath: /app/data
+              name: pvc-birmel-pvc
+            - mountPath: /var/run/secrets/anthropic.com
+              name: anthropic-identity
+              readOnly: true
+        - command:
+            - tini
+            - -s
+            - --
+            - bun
+            - src/sandbox/server.ts
+          env:
+            - name: TZ
+              value: America/Los_Angeles
+          image: '{{ required `Delivery requires image:birmel` (get (get (.Values.delivery | default dict) "images" | default dict) "birmel") }}'
+          imagePullPolicy: Always
+          livenessProbe:
+            exec:
+              command:
+                - bun
+                - -e
+                - const r=await fetch('http://127.0.0.1:8090/health');process.exit(r.ok?0:1)
+            failureThreshold: 3
+            periodSeconds: 30
+          name: code-sandbox
+          readinessProbe:
+            exec:
+              command:
+                - bun
+                - -e
+                - const r=await fetch('http://127.0.0.1:8090/health');process.exit(r.ok?0:1)
+            failureThreshold: 3
+            periodSeconds: 10
+          resources:
+            limits:
+              cpu: 1000m
+              memory: 2560Mi
+            requests:
+              cpu: 50m
+              memory: 32Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              add:
+                - CHOWN
+                - DAC_OVERRIDE
+                - FOWNER
+                - KILL
+                - SETGID
+                - SETPCAP
+                - SETUID
+              drop:
+                - ALL
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsGroup: 0
+            runAsNonRoot: false
+            runAsUser: 0
+          startupProbe:
+            exec:
+              command:
+                - bun
+                - -e
+                - const r=await fetch('http://127.0.0.1:8090/health');process.exit(r.ok?0:1)
+            failureThreshold: 12
+            periodSeconds: 5
+          volumeMounts:
+            - mountPath: /tmp/birmel-sandbox
+              name: code-sandbox-tmp
+      dnsPolicy: ClusterFirst
+      hostNetwork: false
+      imagePullSecrets:
+        - name: dockerhub-pull-birmel
+      initContainers:
+        - args:
+            - |-
+              set -eu
+              for firewall in iptables ip6tables; do
+                for uid in 1001 1002; do
+                  "$firewall" -A OUTPUT -m owner --uid-owner "$uid" -j REJECT
+                done
+                "$firewall" -L OUTPUT -n
+              done
+          command:
+            - /bin/sh
+            - -c
+          env:
+            - name: TZ
+              value: America/Los_Angeles
+          image: '{{ required `Delivery requires image:birmel` (get (get (.Values.delivery | default dict) "images" | default dict) "birmel") }}'
+          imagePullPolicy: Always
+          name: install-code-sandbox-firewall
+          resources:
+            limits:
+              cpu: 100m
+              memory: 64Mi
+            requests:
+              cpu: 10m
+              memory: 16Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              add:
+                - NET_ADMIN
+              drop:
+                - ALL
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsGroup: 0
+            runAsNonRoot: false
+            runAsUser: 0
+          volumeMounts:
+            - mountPath: /run
+              name: sandbox-firewall-run
+      restartPolicy: Always
+      securityContext:
+        fsGroup: 1000
+        fsGroupChangePolicy: Always
+        runAsNonRoot: false
+      setHostnameAsFQDN: false
+      shareProcessNamespace: false
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - name: pvc-birmel-pvc
+          persistentVolumeClaim:
+            claimName: birmel-pvc
+            readOnly: false
+        - emptyDir:
+            sizeLimit: 64Mi
+          name: code-sandbox-tmp
+        - emptyDir: {}
+          name: sandbox-firewall-run
+        - name: anthropic-identity
+          projected:
+            sources:
+              - serviceAccountToken:
+                  audience: https://api.anthropic.com
+                  expirationSeconds: 600
+                  path: token
+---
+apiVersion: onepassword.com/v1
+kind: OnePasswordItem
+metadata:
+  name: birmel-birmel-1p
+  namespace: birmel
+spec:
+  itemPath: vaults/v64ocnykdqju4ui6j6pua56xw4/items/w5c27dzybxor3j6dzl7lub2soe
+---
+apiVersion: onepassword.com/v1
+kind: OnePasswordItem
+metadata:
+  name: birmel-seaweedfs-s3-credentials
+  namespace: birmel
+spec:
+  itemPath: vaults/v64ocnykdqju4ui6j6pua56xw4/items/vet52jaeh75chsalu6lulugium
+---
+apiVersion: onepassword.com/v1
+kind: OnePasswordItem
+metadata:
+  name: birmel-pinchtab-token
+  namespace: birmel
+spec:
+  itemPath: vaults/v64ocnykdqju4ui6j6pua56xw4/items/t2dgtdx47yd2gegad6zeelzylu
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: birmel-pvc
+  namespace: birmel
+  labels:
+    velero.io/backup: enabled
+    velero.io/exclude-from-backup: "false"
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+  storageClassName: zfs-ssd
+  volumeMode: Filesystem
+---
+apiVersion: onepassword.com/v1
+kind: OnePasswordItem
+metadata:
+  name: llm-gemini-birmel-prod
+  namespace: birmel
+spec:
+  itemPath: vaults/v64ocnykdqju4ui6j6pua56xw4/items/llm-gemini-birmel-prod
+---
+apiVersion: onepassword.com/v1
+kind: OnePasswordItem
+metadata:
+  name: llm-anthropic-federation-birmel-prod
+  namespace: birmel
+spec:
+  itemPath: vaults/v64ocnykdqju4ui6j6pua56xw4/items/llm-anthropic-federation-birmel-prod
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: birmel-birmel-health-service
+  namespace: birmel
+  labels:
+    app: birmel-health
+spec:
+  externalIPs: []
+  ports:
+    - name: metrics
+      port: 8080
+  selector:
+    cdk8s.io/metadata.addr: birmel-c88a8d94
+  type: ClusterIP
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: birmel-service-monitor
+  namespace: birmel
+  labels:
+    release: prometheus
+spec:
+  endpoints:
+    - interval: 30s
+      path: /metrics
+      port: metrics
+  selector:
+    matchLabels:
+      app: birmel-health
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: birmel-ingress-netpol
+  namespace: birmel
+spec:
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: prometheus
+      ports:
+        - port: 8080
+          protocol: TCP
+  podSelector: {}
+  policyTypes:
+    - Ingress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: birmel-egress-netpol
+  namespace: birmel
+spec:
+  egress:
+    - ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+      to:
+        - namespaceSelector: {}
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+    - ports:
+        - port: 4318
+          protocol: TCP
+      to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: alloy-gateway
+    - ports:
+        - port: 8080
+          protocol: TCP
+      to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: flipt
+    - ports:
+        - port: 9867
+          protocol: TCP
+      to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: pinchtab
+    - ports:
+        - port: 443
+          protocol: TCP
+      to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+  podSelector: {}
+  policyTypes:
+    - Egress
+---
+apiVersion: onepassword.com/v1
+kind: OnePasswordItem
+metadata:
+  name: dockerhub-pull-birmel
+  namespace: birmel
+spec:
+  itemPath: vaults/v64ocnykdqju4ui6j6pua56xw4/items/ngzmppq52zm7sii6ato2mv3sbi
+type: kubernetes.io/dockerconfigjson
