@@ -733,6 +733,14 @@ PinchTab credentials or config.
   bot reply, requiring exact guild, channel, message and expected author IDs.
   It checks identity before deleting and confirms remote absence afterward;
   already absent messages require no write. Permission failures remain explicit.
+  Userbot sends and slash invocations return HTTP 429 with
+  `code: "DISCORD_COOLDOWN"`, `effect: "not-sent"`, `retryAfterMs` and
+  `nextEligibleAt` only when the SDK rejects the matching initial mutation.
+  Readback failures and unclassified errors never establish non-publication.
+  The 3.7.1 SDK patch owns both the slash POST and reply promises, preventing a
+  rejected POST from escaping as an unhandled background operation. It also
+  preserves the longer `Retry-After` deadline for a channel sublimit. Remove it
+  when upstream passes the native rejection, sublimit and fast-reply regressions.
   `/commands?channelId=...` reads the guild application-command index without
   invoking commands, including native default permission bits and per-user
   application/command permission metadata; failed lookups propagate as errors.

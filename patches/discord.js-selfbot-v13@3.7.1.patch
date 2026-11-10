@@ -1,0 +1,24 @@
+diff --git a/src/rest/RequestHandler.js b/src/rest/RequestHandler.js
+index 2fd9a21460a5e2ce85c8f749cd0ef56bc0ca94d7..177af007958271320df317102ad6a8bb4841b971 100644
+--- a/src/rest/RequestHandler.js
++++ b/src/rest/RequestHandler.js
+@@ -345 +345 @@ class RequestHandler {
+-        await this.onRateLimit(request, limit, timeout, isGlobal);
++        await this.onRateLimit(request, limit, Math.max(timeout, sublimitTimeout ?? 0), isGlobal);
+diff --git a/src/structures/interfaces/TextBasedChannel.js b/src/structures/interfaces/TextBasedChannel.js
+index 67c446ff82fe58e71ca9fa38d61d81dccf0ebc5d..7bc77138c5f640a80d3f3d16f0faa8818d1dceec 100644
+--- a/src/structures/interfaces/TextBasedChannel.js
++++ b/src/structures/interfaces/TextBasedChannel.js
+@@ -378,9 +378,10 @@ class TextBasedChannel {
+       postData,
+       attachments,
+     );
+-    this.client.api.interactions.post({
++    const request = this.client.api.interactions.post({
+       data: body,
+       usePayloadJSON: true,
+     });
+-    return Util.createPromiseInteraction(this.client, nonce, 5000);
++    const reply = Util.createPromiseInteraction(this.client, nonce, 5000);
++    return (await Promise.all([request, reply]))[1];
+   }

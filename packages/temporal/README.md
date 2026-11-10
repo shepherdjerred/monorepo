@@ -1694,6 +1694,12 @@ bootstrap the isolated outreach daemon through the packaged toolkit. They pass
 only the outreach login and one current TOTP into that child. Approved variants
 are supplied as JSON and checked before dispatch; rate limits reject rather than
 queue retries, and a disconnected writer terminates its isolated daemon.
+An SDK-confirmed cooldown on the initial Discord write is returned with its
+deadline and saved as a deferral without a publication receipt. The recorded
+native deadline takes precedence over the model's result. An error during
+readback after a possible acceptance, or an unclassified transport failure,
+retains the uncertain-effect hold; neither path permits a second write in that
+occurrence.
 Publishing still requires the production flag and a target allowlist; these
 source capabilities do not establish production deployment or live acceptance.
 

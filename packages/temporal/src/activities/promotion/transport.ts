@@ -135,6 +135,7 @@ export function promotionTransport(input: {
         };
       },
       validateResult: async (result: PromotionTaskResult) => {
+        discord.normalizeResult(result);
         if (result.receipt !== null)
           result.receipt = await discord.resolveReceipt(result.receipt);
         if (result.status === "preview" && discord.preparedActions.length !== 1)
