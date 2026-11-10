@@ -1,6 +1,6 @@
 # @shepherdjerred/mc-build
 
-Pure library behind `toolkit mc build`: the Minecraft 26.2 block registry,
+Pure library behind `toolkit mc build`: the Minecraft 26.3 block registry,
 block grids, Sponge schematics, the build DSL, lint, and an offline renderer.
 It never talks to a server; mc-harness wires it to sandboxes through the
 daemon.
@@ -9,7 +9,7 @@ daemon.
 
 | Path            | What it is                                                                                                                                                                                                                      |
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `src/registry/` | Committed `generated/blocks-26.2.json` (ids, property enums, defaults) and `BlockRegistry` validation with suggestions                                                                                                          |
+| `src/registry/` | Committed `generated/blocks-26.3.json` (ids, property enums, defaults) and `BlockRegistry` validation with suggestions                                                                                                          |
 | `src/core/`     | Block-state parsing, `BlockGrid` (palette + YZX `Uint32Array`), Sponge v3 `.schem` read/write, Litematica `.litematic` reading (multi-region, signed sizes), region-read decoding, site analysis (heightmap, masks, `siteHash`) |
 | `src/dsl/`      | Build DSL: sparse canvas (KEEP vs explicit AIR), `geo`, `mat`, connection pass for panes/fences/walls; `craft.ts` merges the primitive modules in `dsl/craft/` (walls, roofs, structures, furnish)                              |
 | `src/import/`   | Mesh import: OBJ/MTL parsing (colors, textures), triangle/box voxelization with optional solid fill, OKLab nearest-block palettes from the cached textures                                                                      |
@@ -58,9 +58,9 @@ faces, plus tinted glass; fences, bars and partial slabs transmit light.
 
 ## Renderer assets
 
-Block models and textures come from Mojang's 26.2 client jar, downloaded from
+Block models and textures come from Mojang's 26.3 client jar, downloaded from
 piston-meta on first render, sha1-verified, and cached in
-`~/.cache/toolkit/mc/assets/26.2`. They are never committed.
+`~/.cache/toolkit/mc/assets/26.3`. They are never committed.
 An existing cache without a valid completion marker fails before any download,
 with its exact directory path; explicitly remove that damaged cache to rebuild it.
 Required blockstates and models, including file-backed parents, are read strictly.

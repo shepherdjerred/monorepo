@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Minecraft build library: the 26.2 block registry, block grids, Sponge schematics, the build DSL, lint, and the offline renderer.",
+  "description": "Minecraft build library: the 26.3 block registry, block grids, Sponge schematics, the build DSL, lint, and the offline renderer.",
   "exports": {
     "./components/*": "./components/*",
     "./*": "./src/*"
