@@ -10,7 +10,9 @@ from __future__ import annotations
 import gzip
 import json
 import stat
+from collections.abc import Iterator
 from pathlib import Path
+from typing import Any
 
 import brim_capture
 import pytest
@@ -41,7 +43,7 @@ ROUTES = [
 
 
 @pytest.fixture
-def addon(tmp_path: Path):
+def addon(tmp_path: Path) -> Iterator[brim_capture.BrimCapture]:
     instance = brim_capture.BrimCapture()
     with taddons.context(instance) as tctx:
         tctx.configure(
@@ -53,8 +55,8 @@ def addon(tmp_path: Path):
         instance.done()
 
 
-def records(tmp_path: Path) -> list[dict]:
-    lines: list[dict] = []
+def records(tmp_path: Path) -> list[dict[str, Any]]:
+    lines: list[dict[str, Any]] = []
     for segment in sorted((tmp_path / "spool").glob("*.jsonl")):
         lines.extend(json.loads(line) for line in segment.read_text().splitlines())
     for record in lines:
@@ -63,7 +65,7 @@ def records(tmp_path: Path) -> list[dict]:
     return lines
 
 
-def claude_flow(path: str = "/v1/messages?beta=true", **response_kwargs) -> http.HTTPFlow:
+def claude_flow(path: str = "/v1/messages?beta=true", **response_kwargs: Any) -> http.HTTPFlow:
     request = tutils.treq(
         host="api.anthropic.com",
         port=443,
@@ -90,14 +92,16 @@ def drive_http(addon: brim_capture.BrimCapture, flow: http.HTTPFlow, chunks: lis
     addon.requestheaders(flow)
     addon.responseheaders(flow)
     if chunks is not None:
-        assert callable(flow.response.stream)
+        response = flow.response
+        assert response is not None
+        assert callable(response.stream)
         for chunk in [*chunks, b""]:
-            assert flow.response.stream(chunk) == chunk
-        flow.response.content = None
+            assert response.stream(chunk) == chunk
+        response.content = None
     addon.response(flow)
 
 
-def test_records_an_allowed_request_without_credential_headers(addon, tmp_path):
+def test_records_an_allowed_request_without_credential_headers(addon: brim_capture.BrimCapture, tmp_path: Path) -> None:
     flow = claude_flow(headers=http.Headers([(b"Set-Cookie", b"a=b"), (b"Content-Type", b"application/json")]))
     drive_http(addon, flow)
     addon.done()
@@ -115,14 +119,14 @@ def test_records_an_allowed_request_without_credential_headers(addon, tmp_path):
     assert "secret" not in json.dumps(record)
 
 
-def test_ignores_non_inference_paths_on_an_intercepted_host(addon, tmp_path):
+def test_ignores_non_inference_paths_on_an_intercepted_host(addon: brim_capture.BrimCapture, tmp_path: Path) -> None:
     drive_http(addon, claude_flow(path="/api/event_logging/v2/batch"))
     drive_http(addon, claude_flow(path="/v1/messages/count_tokens"))
     addon.done()
     assert records(tmp_path) == []
 
 
-def test_tees_a_streamed_response_without_changing_it(addon, tmp_path):
+def test_tees_a_streamed_response_without_changing_it(addon: brim_capture.BrimCapture, tmp_path: Path) -> None:
     flow = claude_flow(headers=http.Headers([(b"Content-Type", b"text/event-stream")]), content=b"")
     chunks = [b"event: message_start\ndata: {}\n\n", b"event: message_stop\ndata: {}\n\n"]
     drive_http(addon, flow, chunks)
@@ -132,7 +136,7 @@ def test_tees_a_streamed_response_without_changing_it(addon, tmp_path):
     assert record["response"]["body"]["text"] == b"".join(chunks).decode()
 
 
-def test_decodes_a_compressed_response(addon, tmp_path):
+def test_decodes_a_compressed_response(addon: brim_capture.BrimCapture, tmp_path: Path) -> None:
     flow = claude_flow(
         headers=http.Headers([(b"Content-Encoding", b"gzip"), (b"Content-Type", b"application/json")]),
         content=b"",
@@ -143,7 +147,7 @@ def test_decodes_a_compressed_response(addon, tmp_path):
     assert record["response"]["body"] == {"text": '{"ok":true}'}
 
 
-def test_records_a_failed_flow(addon, tmp_path):
+def test_records_a_failed_flow(addon: brim_capture.BrimCapture, tmp_path: Path) -> None:
     flow = claude_flow()
     flow.response = None
     addon.requestheaders(flow)
@@ -155,7 +159,7 @@ def test_records_a_failed_flow(addon, tmp_path):
     assert record["error"] == "connection reset"
 
 
-def test_records_websocket_messages_in_both_directions(addon, tmp_path):
+def test_records_websocket_messages_in_both_directions(addon: brim_capture.BrimCapture, tmp_path: Path) -> None:
     flow = tflow.tflow(
         req=tutils.treq(
             host="chatgpt.com",
@@ -174,24 +178,28 @@ def test_records_websocket_messages_in_both_directions(addon, tmp_path):
         resp=tutils.tresp(status_code=101),
         ws=True,
     )
-    flow.websocket.messages = []
+    ws = flow.websocket
+    response = flow.response
+    assert ws is not None
+    assert response is not None
+    ws.messages = []
     addon.requestheaders(flow)
     addon.responseheaders(flow)
-    assert flow.response.stream is False
+    assert response.stream is False
     addon.response(flow)
     addon.websocket_start(flow)
     for from_client, payload in [
         (True, {"type": "response.create", "input": [], "model": "gpt"}),
         (False, {"type": "response.completed", "response": {"id": "resp_1"}}),
     ]:
-        flow.websocket.messages.append(
+        ws.messages.append(
             websocket.WebSocketMessage(Opcode.TEXT, from_client, json.dumps(payload).encode(), 1794280980.5)
         )
         addon.websocket_message(flow)
-    flow.websocket.messages.append(websocket.WebSocketMessage(Opcode.BINARY, False, b"\xff\x00", 1794280981.0))
+    ws.messages.append(websocket.WebSocketMessage(Opcode.BINARY, False, b"\xff\x00", 1794280981.0))
     addon.websocket_message(flow)
-    flow.websocket.close_code = 1000
-    flow.websocket.close_reason = ""
+    ws.close_code = 1000
+    ws.close_reason = ""
     addon.websocket_end(flow)
     addon.done()
     opened, client, server, binary, closed = records(tmp_path)
@@ -215,7 +223,7 @@ def test_records_websocket_messages_in_both_directions(addon, tmp_path):
     }
 
 
-def test_spool_is_private_and_closed_segments_are_renamed(addon, tmp_path):
+def test_spool_is_private_and_closed_segments_are_renamed(addon: brim_capture.BrimCapture, tmp_path: Path) -> None:
     drive_http(addon, claude_flow())
     spool = tmp_path / "spool"
     [open_segment] = spool.glob("*.jsonl.part")
@@ -241,5 +249,5 @@ def test_spool_is_private_and_closed_segments_are_renamed(addon, tmp_path):
         ("thread-id", False),
     ],
 )
-def test_sensitive_header_names(name, sensitive):
+def test_sensitive_header_names(name: str, sensitive: bool) -> None:
     assert brim_capture.is_sensitive_header(name) is sensitive

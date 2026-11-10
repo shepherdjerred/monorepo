@@ -73,11 +73,15 @@ def decoded(data: bytes, content_encoding: str | None) -> bytes:
     if not content_encoding or content_encoding.lower() == "identity":
         return data
     try:
-        return encoding.decode(data, content_encoding)
+        result = encoding.decode(data, content_encoding)
     except ValueError:
         # Unknown or corrupt encoding: keep the raw bytes; ingest records
         # them as an undecodable body rather than guessing.
         return data
+    # mitmproxy returns bytes for bytes input; a str here is a contract break.
+    if not isinstance(result, bytes):
+        raise TypeError(f"mitmproxy decoded {content_encoding} bytes to {type(result).__name__}")
+    return result
 
 
 class Route:
