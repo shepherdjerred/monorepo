@@ -20,6 +20,7 @@ import { movieTransferObservationProblem } from "./transfer-reuse/observation.ts
 import { reserveMovieTransferObservationWriteV1 } from "#infrastructure/movie-editions/transfer-reuse/observation-write.ts";
 import { movieRollbackObservationV1 } from "#infrastructure/movie-editions/rollback/dispatch.ts";
 import type { PlexBindingExecution } from "#shared/plex-binding/activities.ts";
+import { refreshMovieAttemptRequesterAccessV4 } from "./requester-access.ts";
 
 export async function observeMovieAcquisitionV4(
   initial: MediaAutomationContext,
@@ -51,6 +52,7 @@ async function observeForwardMovieAcquisitionV4(
   await readMovieAttemptIdentityV4(context.db, attempt, input.scope);
   if (attempt.state === "imported" || attempt.state === "completed")
     return { status: "ready", reason: "resume_committed_publication" };
+  await refreshMovieAttemptRequesterAccessV4(context, input.scope, attempt);
   if (!(await validMovieAttemptV4(context, input)))
     return {
       status: attempt.filePlan === null ? "obsolete" : "blocked",

@@ -30,6 +30,7 @@ import { movieRetryTerminalV1 } from "#automation/movie-editions/retry/terminal.
 import { movieRetryTorrentV1 } from "#automation/movie-editions/retry/torrent.ts";
 import { MediaError } from "#application/errors.ts";
 import { CandidateSourceEvidenceSchema } from "#shared/acquisition/identity.ts";
+import { refreshMovieAttemptRequesterAccessV4 } from "#automation/movie-editions/requester-access.ts";
 
 /** Explicit prepared/imported continuation preserves its actual plan and original physical publication history. */
 export async function reconcileMovieContinuationV2(
@@ -81,6 +82,11 @@ export async function reconcileMovieContinuationV2(
       "Actual prepared movie phase changed before continuation",
       409,
     );
+  await refreshMovieAttemptRequesterAccessV4(
+    context,
+    input.command.scope,
+    observed.source.attempt,
+  );
   const terminal = await movieRetryTerminalV1(
     context,
     {

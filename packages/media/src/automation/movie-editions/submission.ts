@@ -30,6 +30,7 @@ import type { MediaNetworkActivities } from "#shared/automation.ts";
 import { authorizedMovieSubmissionV4 } from "./submission-authority.ts";
 import { MediaError } from "#application/errors.ts";
 import { claimMovieTransferReuseV1 } from "./transfer-reuse/claim.ts";
+import { refreshMovieAttemptRequesterAccessV4 } from "./requester-access.ts";
 
 async function prepareMovieTorrent(
   context: MediaAutomationContext,
@@ -119,6 +120,7 @@ async function submissionPrerequisiteV4(
   if (!recovering) {
     if (!(await context.gates.acquisition()))
       return { status: "blocked", reason: "acquisition_disabled" };
+    await refreshMovieAttemptRequesterAccessV4(context, input.scope, attempt);
     if (!(await validMovieAttemptV4(context, input)))
       return {
         status: attempt.filePlan === null ? "obsolete" : "blocked",
@@ -155,10 +157,10 @@ export async function submitMovieTorrentV4(
     input.scope,
     context.movieManagement.budget,
   );
-  const prerequisite = await submissionPrerequisiteV4(context, attempt, input);
-  if (prerequisite !== null) return prerequisite;
   const recovering =
     attempt.state === "submitting" || attempt.state === "submission_unknown";
+  const prerequisite = await submissionPrerequisiteV4(context, attempt, input);
+  if (prerequisite !== null) return prerequisite;
   if (attempt.release.encryptedSource === null)
     throw new Error("Movie v4 attempt lost its encrypted provider source");
   const source = StoredCandidateSchema.parse(

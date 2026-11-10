@@ -71,14 +71,17 @@ export class OperationJournal {
     return completed;
   }
 
-  async save(manifest: FileOperationManifest): Promise<void> {
+  async save(
+    manifest: FileOperationManifest,
+    hooks?: ManifestSaveHooks,
+  ): Promise<void> {
     const path = await this.controlPath(`journal/${manifest.operationId}.json`);
-    await saveManifest(
-      path,
-      manifest,
-      this.beforeInstall === undefined
-        ? undefined
-        : { beforeInstall: this.beforeInstall },
-    );
+    await saveManifest(path, manifest, {
+      ...hooks,
+      beforeInstall: () => {
+        this.beforeInstall?.();
+        hooks?.beforeInstall?.();
+      },
+    });
   }
 }

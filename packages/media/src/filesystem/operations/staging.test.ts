@@ -14,8 +14,13 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { createHash } from "node:crypto";
 import { FileOperations } from "#filesystem/operations.ts";
-import { FileOperationConflict } from "#filesystem/operations-types.ts";
+import {
+  FileOperationConflict,
+  ManifestSchema,
+} from "#filesystem/operations-types.ts";
 import { ContentProof } from "#filesystem/content-proof.ts";
+import { saveManifest } from "#filesystem/operations-io.ts";
+import { OperationJournal } from "#filesystem/operations/journal.ts";
 import type * as FsPromises from "node:fs/promises";
 
 const observation = vi.hoisted(
@@ -153,17 +158,189 @@ it("prepares only an owned partial, then commits exact original staged manifest 
   expect(JSON.parse(raw)).toMatchObject({ phase: "prepared" });
   await f.files.commitPreparedImport(prepared, f.authority);
   expect(await readFile(f.staged, "utf8")).toBe(f.bytes);
-  expect(await readFile(f.journal, "utf8")).toBe(
-    raw.replace('"phase":"prepared"', '"phase":"staged"'),
-  );
+  const accepted = ManifestSchema.parse(JSON.parse(raw));
+  accepted.phase = "staged";
+  expect(await readFile(f.journal, "utf8")).toBe(JSON.stringify(accepted));
   await expect(
     access(path.join(f.roots.library, f.input.libraryPath)),
   ).rejects.toMatchObject({ code: "ENOENT" });
   const retry = await f.files.prepareImport(f.input);
   await f.files.commitPreparedImport(retry, f.authority);
-  expect(await readFile(f.journal, "utf8")).toBe(
-    raw.replace('"phase":"prepared"', '"phase":"staged"'),
+  expect(await readFile(f.journal, "utf8")).toBe(JSON.stringify(accepted));
+});
+
+it("a cold invocation reuses the exact acknowledged complete partial without replacing its inode", async () => {
+  const f = await fixture();
+  await f.files.prepareImport(f.input);
+  const before = await lstat(f.partial, { bigint: true });
+  const raw = await readFile(f.journal, "utf8");
+  expect(JSON.parse(raw)).toMatchObject({
+    preparedPartial: {
+      schemaVersion: 1,
+      sizeBytes: String(Buffer.byteLength(f.bytes)),
+      identity: { inode: before.ino.toString() },
+    },
+  });
+  const cold = new FileOperations(f.roots, f.options);
+  const prepared = await cold.prepareImport(f.input);
+  expect(await readFile(f.journal, "utf8")).toBe(raw);
+  await cold.commitPreparedImport(prepared, f.authority);
+  const after = await lstat(f.staged, { bigint: true });
+  expect({ inode: after.ino, device: after.dev }).toEqual({
+    inode: before.ino,
+    device: before.dev,
+  });
+  expect(await readFile(f.staged, "utf8")).toBe(f.bytes);
+});
+
+it.each(["torn", "changed source"])(
+  "cold recovery preserves an acknowledged partial when %s bytes fail fresh verification",
+  async (kind) => {
+    const f = await fixture();
+    await f.files.prepareImport(f.input);
+    const raw = await readFile(f.journal, "utf8");
+    const before = await lstat(f.partial, { bigint: true });
+    if (kind === "torn") await writeFile(f.partial, "Incomplete");
+    else await writeFile(path.join(f.roots.downloads, "video.mkv"), "Changed");
+    const retained = await readFile(f.partial, "utf8");
+    await expect(
+      new FileOperations(f.roots, f.options).prepareImport(f.input),
+    ).rejects.toBeInstanceOf(FileOperationConflict);
+    const after = await lstat(f.partial, { bigint: true });
+    expect(after.ino).toBe(before.ino);
+    expect(await readFile(f.partial, "utf8")).toBe(retained);
+    expect(await readFile(f.journal, "utf8")).toBe(raw);
+    await expect(access(f.staged)).rejects.toMatchObject({ code: "ENOENT" });
+  },
+);
+
+it("expiry before the completed-copy acknowledgment leaves an unproven partial protected from cold adoption", async () => {
+  const f = await fixture();
+  let copied = false;
+  const files = new FileOperations(f.roots, {
+    ...f.options,
+    checkpoint: (phase) => {
+      if (phase === "copying") copied = true;
+      return Promise.resolve();
+    },
+    beforeEffect: () => {
+      if (copied) throw new Error("Expired before copy acknowledgment");
+    },
+  });
+  await expect(files.prepareImport(f.input)).rejects.toThrow(
+    "Expired before copy acknowledgment",
   );
+  expect(copied).toBe(true);
+  const before = await lstat(f.partial, { bigint: true });
+  const raw = await readFile(f.journal, "utf8");
+  expect(JSON.parse(raw)).not.toHaveProperty("preparedPartial");
+  await expect(
+    new FileOperations(f.roots, f.options).prepareImport(f.input),
+  ).rejects.toThrow("Unproven import partial requires recovery");
+  const after = await lstat(f.partial, { bigint: true });
+  expect(after.ino).toBe(before.ino);
+  expect(await readFile(f.partial, "utf8")).toBe(f.bytes);
+  expect(await readFile(f.journal, "utf8")).toBe(raw);
+});
+
+it("a same-byte journal swap during copying cannot be overwritten by the completed-copy acknowledgment", async () => {
+  const f = await fixture();
+  let swapped = false;
+  let foreign = "";
+  let foreignInode = 0n;
+  const files = new FileOperations(f.roots, {
+    ...f.options,
+    checkpoint: async (phase) => {
+      if (phase !== "copying" || swapped) return;
+      swapped = true;
+      foreign = await readFile(f.journal, "utf8");
+      const replacement = `${f.journal}.foreign`;
+      await writeFile(replacement, foreign);
+      await rename(replacement, f.journal);
+      const foreignInfo = await lstat(f.journal, { bigint: true });
+      foreignInode = foreignInfo.ino;
+    },
+  });
+  await expect(files.prepareImport(f.input)).rejects.toBeInstanceOf(
+    FileOperationConflict,
+  );
+  expect(swapped).toBe(true);
+  const after = await lstat(f.journal, { bigint: true });
+  expect(after.ino).toBe(foreignInode);
+  expect(await readFile(f.journal, "utf8")).toBe(foreign);
+  expect(JSON.parse(foreign)).not.toHaveProperty("preparedPartial");
+  expect(await readFile(f.partial, "utf8")).toBe(f.bytes);
+  await expect(access(f.staged)).rejects.toMatchObject({ code: "ENOENT" });
+});
+
+it("cold recovery rejects same-inode same-byte writes that changed the acknowledged timestamps", async () => {
+  const f = await fixture();
+  await f.files.prepareImport(f.input);
+  const before = await lstat(f.partial, { bigint: true });
+  const raw = await readFile(f.journal, "utf8");
+  await writeFile(f.partial, f.bytes);
+  const after = await lstat(f.partial, { bigint: true });
+  expect(after.ino).toBe(before.ino);
+  await expect(
+    new FileOperations(f.roots, f.options).prepareImport(f.input),
+  ).rejects.toThrow("Prepared import partial identity changed");
+  expect(await readFile(f.partial, "utf8")).toBe(f.bytes);
+  expect(await readFile(f.journal, "utf8")).toBe(raw);
+  await expect(access(f.staged)).rejects.toMatchObject({ code: "ENOENT" });
+});
+
+it("journal validation awaits before the final synchronous authority guard and cannot install after expiry", async () => {
+  const f = await fixture();
+  await f.files.prepareImport(f.input);
+  const raw = await readFile(f.journal, "utf8");
+  const manifest = ManifestSchema.parse(JSON.parse(raw));
+  const order: string[] = [];
+  let expired = false;
+  await expect(
+    saveManifest(
+      f.journal,
+      { ...manifest, phase: "staged" },
+      {
+        validateBeforeInstall: async () => {
+          order.push("validation");
+          await Promise.resolve();
+          expired = true;
+        },
+        beforeInstall: () => {
+          order.push("guard");
+          if (expired) throw new Error("Authority expired during validation");
+        },
+      },
+    ),
+  ).rejects.toThrow("Authority expired during validation");
+  expect(order).toEqual(["validation", "guard"]);
+  expect(await readFile(f.journal, "utf8")).toBe(raw);
+  expect(await readFile(f.partial, "utf8")).toBe(f.bytes);
+  await expect(access(f.staged)).rejects.toMatchObject({ code: "ENOENT" });
+});
+
+it("a journal acknowledgment preserves both the base and supplied synchronous installation guards", async () => {
+  const f = await fixture();
+  await f.files.prepareImport(f.input);
+  const raw = await readFile(f.journal, "utf8");
+  const order: string[] = [];
+  const journal = new OperationJournal(
+    (relative) => Promise.resolve(path.join(f.roots.control, relative)),
+    undefined,
+    () => {
+      order.push("base");
+    },
+  );
+  await expect(
+    journal.save(ManifestSchema.parse(JSON.parse(raw)), {
+      beforeInstall: () => {
+        order.push("caller");
+        throw new Error("Caller denied acknowledgment");
+      },
+    }),
+  ).rejects.toThrow("Caller denied acknowledgment");
+  expect(order).toEqual(["base", "caller"]);
+  expect(await readFile(f.journal, "utf8")).toBe(raw);
 });
 
 it.each(["partial", "journal"] as const)(

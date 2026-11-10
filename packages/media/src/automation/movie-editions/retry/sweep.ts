@@ -20,6 +20,7 @@ import {
   plexBindingFreshness,
 } from "#infrastructure/plex-binding/freshness.ts";
 import { movieRetryTerminalV1 } from "./terminal.ts";
+import { refreshMovieAttemptRequesterAccessV4 } from "#automation/movie-editions/requester-access.ts";
 
 /** Real movie identity selects this route for default and named attempts; ordinary recovery remains literal. */
 export async function queueTerminalMovieRetryV4(
@@ -53,6 +54,12 @@ export async function queueTerminalMovieRetryV4(
       execution,
     );
     if (terminal === null) return;
+    if (source.attempt.state !== "completed")
+      await refreshMovieAttemptRequesterAccessV4(
+        context,
+        input.scope,
+        source.attempt,
+      );
     const access = requireMovieChoiceAccess(
       (await networkMovieAccess(context, [input.scope.mediaId])) ?? {},
     );

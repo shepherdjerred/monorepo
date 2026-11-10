@@ -36,6 +36,7 @@ import { assertMovieSubtitleOperationV4 } from "./operation.ts";
 import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { FileGuardError } from "#automation/files/types.ts";
 import { plexBindingFreshness } from "#infrastructure/plex-binding/freshness.ts";
+import { refreshMovieScopeRequestersV4 } from "#automation/movie-editions/requester-access.ts";
 
 type Result = Awaited<ReturnType<MediaNetworkActivities["findMediaSubtitles"]>>;
 const blocked = (reason: string): Result => ({
@@ -223,12 +224,17 @@ export async function findMovieSubtitlesV4(
 ): Promise<Result> {
   const execution = initial.plexBindingExecution();
   execution.assertActive();
-  const context = { ...initial, plexBindingExecution: () => execution };
   const input = MovieSubtitleOperationV4Schema.parse(raw);
   const budget =
-    context.movieManagement?.budget ?? new PublicationAuthorityReadBudget();
+    initial.movieManagement?.budget ?? new PublicationAuthorityReadBudget();
+  const context = {
+    ...initial,
+    plexBindingExecution: () => execution,
+    movieManagement: { execution, budget },
+  };
   if (!(await context.gates.acquisition()))
     return blocked("acquisition_disabled");
+  await refreshMovieScopeRequestersV4(context, input.scope);
   const work = await authorizedWork(context, input, budget);
   if (work === null) return obsolete();
   const existing = work.asset.subtitles.find((subtitle) =>

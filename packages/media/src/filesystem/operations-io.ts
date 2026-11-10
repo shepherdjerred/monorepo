@@ -81,6 +81,8 @@ export async function saveManifest(
   } finally {
     await handle.close();
   }
+  if (hooks?.validateBeforeInstall !== undefined)
+    await hooks.validateBeforeInstall();
   hooks?.beforeInstall?.();
   await rename(temporary, path);
   await syncDirectory(nodePath.dirname(path));
@@ -99,6 +101,7 @@ export type ManifestInstallation = {
 };
 
 export type ManifestSaveHooks = {
+  validateBeforeInstall?: () => Promise<void>;
   beforeInstall?: () => void;
   acknowledge?: (installed: ManifestInstallation) => Promise<void>;
 };

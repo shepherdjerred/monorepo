@@ -24,6 +24,7 @@ import {
 } from "./retry/dispatch.ts";
 import { movieManagementContext } from "./management-context.ts";
 import type { PlexBindingExecution } from "#shared/plex-binding/activities.ts";
+import { refreshMovieCommandRequesterAccessV4 } from "./requester-access.ts";
 
 /** One coordinator retains its own scope and attempt; another cut cannot sponsor a resume. */
 export async function reconcileMovieIntentV4(
@@ -126,6 +127,11 @@ export async function reconcileMovieIntentV4(
       attemptId: null,
       reason: "retention_in_progress",
     };
+  await refreshMovieCommandRequesterAccessV4(
+    context,
+    input.scope,
+    record.payload,
+  );
   return reserveSelectedMovie(context, input, {
     releaseId,
     epoch: runtime.epoch,

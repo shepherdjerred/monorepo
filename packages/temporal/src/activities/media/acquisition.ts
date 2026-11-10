@@ -11,6 +11,22 @@ import { compensationCall } from "./compensation-execution.ts";
 import { PublicationAuthorityReadBudget } from "@shepherdjerred/media/publication-authority-budget";
 import { createSeriesPackStagingWorkerActivitiesV1 } from "./series-pack/staging.ts";
 import { createSeriesPackPublicationWorkerActivitiesV1 } from "./series-pack/publication.ts";
+import { ApplicationFailure } from "@temporalio/activity";
+
+/** Local invocation expiry is retryable; a new Activity still reacquires every real guard. */
+function retryPublicationExpiry<T extends { status: string; reason?: string }>(
+  result: T,
+): T {
+  if (
+    result.status === "blocked" &&
+    result.reason === "publication_authority_expired"
+  )
+    throw ApplicationFailure.create({
+      message: "Media publication invocation expired",
+      type: "MediaPublicationInvocationExpired",
+    });
+  return result;
+}
 
 /** Preserve Activity names and arguments; the SDK capability is never serialized into history. */
 export function createAcquisitionNetworkWorkerActivities(
@@ -100,11 +116,13 @@ export function createAcquisitionFileWorkerActivities(
       return compensationCall(async (sdk) => {
         const runtime = await load();
         sdk.assertActive();
-        return runtime.acquisition.inspectAndStageMedia(input, {
-          ...sdk,
-          observed,
-          checkpoint: () => sdk.checkpoint("media-inspection"),
-        });
+        return retryPublicationExpiry(
+          await runtime.acquisition.inspectAndStageMedia(input, {
+            ...sdk,
+            observed,
+            checkpoint: () => sdk.checkpoint("media-inspection"),
+          }),
+        );
       });
     },
     promoteMediaFiles: (input) => {
@@ -112,11 +130,13 @@ export function createAcquisitionFileWorkerActivities(
       return compensationCall(async (sdk) => {
         const runtime = await load();
         sdk.assertActive();
-        return runtime.acquisition.promoteMediaFiles(input, {
-          ...sdk,
-          observed,
-          checkpoint: () => sdk.checkpoint("media-publication"),
-        });
+        return retryPublicationExpiry(
+          await runtime.acquisition.promoteMediaFiles(input, {
+            ...sdk,
+            observed,
+            checkpoint: () => sdk.checkpoint("media-publication"),
+          }),
+        );
       });
     },
   };

@@ -49,10 +49,28 @@ submission and file publication recheck the current exact choice. Copying and
 hashing prepare an operation-owned partial outside PostgreSQL locks; accepting
 staging rechecks the whole attempt under those locks before bounded filesystem
 effects. Before copying, preparation refuses an existing partial without proof
-of creation; a path or matching checksum does not authorize replacement. Current
+of creation; a path or matching checksum does not authorize replacement. Newly
+completed copies retain a journal acknowledgment of their exact native file
+identity. A fresh invocation can reuse an acknowledged partial only after
+rechecking its source, bytes, inode, timestamps and ancestors. Unacknowledged,
+foreign or incomplete partials require explicit owner recovery and are never
+overwritten by staging retries. Exact local publication invocation expiry uses
+the existing bounded Temporal Activity retries; each retry reacquires current
+authority with its own original sixty-second limit. Current
 Plex access has a process-local expiry guard checked after final awaited work,
 alongside the existing storage and execution deadlines. Previously committed
 receipts and exact recorded compensation retain their separate recovery paths.
+
+Personal movie Network activities renew stale Plex access through the existing
+registered account or managed-profile credential before checking current choice
+authority. Renewal retains the immutable birth actor/subject pair, the shared
+100-record allowance and the invocation's original deadline; it creates no
+browser session or new consent. Search uses its recorded request; the one-target
+due page and independent caption discovery use only live choices of the exact
+edition scope. Download recovery renews the retained birth pair before queueing
+a continuation of the same attempt and torrent. Loss of access still blocks
+forward work. Library-management births, committed receipts and inverse recovery
+keep their existing authority boundaries.
 
 The version-4 public movie API starts exact-edition acquisition for new choices.
 The UI uses it for requests, cancellation, choice revocation and edition lifecycle

@@ -119,6 +119,10 @@ test("external error details are absent from the new Activity failure", async ()
     await environment().run(activities.reverifyPlexBinding, input);
     throw new Error("Expected failure");
   } catch (error) {
+    expect(error).toMatchObject({
+      type: "PlexBindingActivityFailure",
+      nonRetryable: false,
+    });
     expect(String(error)).not.toContain("PRIVATE_PLEX_TOKEN_CANARY");
   }
 });
