@@ -1,0 +1,176 @@
+import { beforeAll, describe, expect, test } from "vitest";
+import {
+  againstDebt,
+  loadFleet,
+  selectorMatches,
+  type Fleet,
+} from "./fleet.ts";
+import {
+  containersAllowingPrivilegeEscalation,
+  containersWithoutSeccomp,
+  portContainersWithoutProbe,
+  servedWorkloadsWithoutProbe,
+  upstreamNamespacesWithoutPolicy,
+  workloadsWithoutPolicy,
+} from "./rules.ts";
+import {
+  CONTAINERS_ALLOWING_PRIVILEGE_ESCALATION,
+  CONTAINERS_WITHOUT_SECCOMP,
+  PORT_CONTAINERS_WITHOUT_PROBE,
+  SERVED_WORKLOADS_WITHOUT_PROBE,
+  UPSTREAM_NAMESPACES_WITHOUT_EGRESS_POLICY,
+  UPSTREAM_NAMESPACES_WITHOUT_INGRESS_POLICY,
+  WORKLOADS_WITHOUT_EGRESS_POLICY,
+  WORKLOADS_WITHOUT_INGRESS_POLICY,
+} from "./debt-allowlists.ts";
+
+/**
+ * Fleet policy backstop over the synthesized manifests.
+ *
+ * Every rule holds for the whole fleet except the entries in
+ * `debt-allowlists.ts`. Each rule is asserted in both directions: nothing
+ * outside the allowlist may break it, and nothing inside the allowlist may
+ * satisfy it. Fix a workload, then delete its entry.
+ */
+
+let fleet: Fleet;
+beforeAll(async () => {
+  fleet = await loadFleet();
+});
+
+const RULES: readonly {
+  name: string;
+  violations: (fleet: Fleet) => string[];
+  allowlist: ReadonlySet<string>;
+}[] = [
+  {
+    name: "every workload is selected by an Ingress NetworkPolicy",
+    violations: (current) => workloadsWithoutPolicy(current, "Ingress"),
+    allowlist: WORKLOADS_WITHOUT_INGRESS_POLICY,
+  },
+  {
+    name: "every workload is selected by an Egress NetworkPolicy",
+    violations: (current) => workloadsWithoutPolicy(current, "Egress"),
+    allowlist: WORKLOADS_WITHOUT_EGRESS_POLICY,
+  },
+  {
+    name: "every upstream-chart namespace has an Ingress NetworkPolicy",
+    violations: (current) =>
+      upstreamNamespacesWithoutPolicy(current, "Ingress"),
+    allowlist: UPSTREAM_NAMESPACES_WITHOUT_INGRESS_POLICY,
+  },
+  {
+    name: "every upstream-chart namespace has an Egress NetworkPolicy",
+    violations: (current) => upstreamNamespacesWithoutPolicy(current, "Egress"),
+    allowlist: UPSTREAM_NAMESPACES_WITHOUT_EGRESS_POLICY,
+  },
+  {
+    name: "every container that declares a port has a readiness or startup probe",
+    violations: portContainersWithoutProbe,
+    allowlist: PORT_CONTAINERS_WITHOUT_PROBE,
+  },
+  {
+    name: "every workload behind a Service has a readiness or startup probe",
+    violations: servedWorkloadsWithoutProbe,
+    allowlist: SERVED_WORKLOADS_WITHOUT_PROBE,
+  },
+  {
+    name: "every container forbids privilege escalation",
+    violations: containersAllowingPrivilegeEscalation,
+    allowlist: CONTAINERS_ALLOWING_PRIVILEGE_ESCALATION,
+  },
+  {
+    name: "every container runs under a seccomp profile",
+    violations: containersWithoutSeccomp,
+    allowlist: CONTAINERS_WITHOUT_SECCOMP,
+  },
+];
+
+describe("fleet policy", () => {
+  test("synthesizes a meaningful fleet (sanity check)", () => {
+    expect(fleet.workloads.length).toBeGreaterThan(50);
+    expect(fleet.networkPolicies.length).toBeGreaterThan(50);
+    expect(fleet.applicationNamespaces.size).toBeGreaterThan(50);
+    expect(fleet.serviceSelectors.length).toBeGreaterThan(50);
+  });
+
+  describe.each(RULES)("$name", ({ violations, allowlist }) => {
+    test("holds outside the debt allowlist", () => {
+      expect(againstDebt(violations(fleet), allowlist).unexpected).toEqual([]);
+    });
+
+    test("has no stale debt allowlist entry", () => {
+      expect(againstDebt(violations(fleet), allowlist).stale).toEqual([]);
+    });
+  });
+});
+
+describe("againstDebt", () => {
+  test("reports new violations and stale entries separately", () => {
+    expect(againstDebt(["a", "b"], new Set(["b", "c"]))).toEqual({
+      unexpected: ["a"],
+      stale: ["c"],
+    });
+  });
+});
+
+function expression(key: string, operator: "Exists" | "DoesNotExist") {
+  return { matchExpressions: [{ key, operator }] };
+}
+
+describe("selectorMatches", () => {
+  const labels = { app: "sonarr", tier: "media" };
+
+  test("an empty selector matches every pod", () => {
+    expect(selectorMatches({}, labels)).toBe(true);
+  });
+
+  test("matchLabels requires every label", () => {
+    expect(selectorMatches({ matchLabels: { app: "sonarr" } }, labels)).toBe(
+      true,
+    );
+    expect(
+      selectorMatches({ matchLabels: { app: "sonarr", tier: "home" } }, labels),
+    ).toBe(false);
+  });
+
+  test.each([
+    ["In", ["sonarr", "radarr"], true],
+    ["In", ["radarr"], false],
+    ["NotIn", ["radarr"], true],
+    ["NotIn", ["sonarr"], false],
+  ] as const)("matchExpressions %s %j", (operator, values, expected) => {
+    expect(
+      selectorMatches(
+        { matchExpressions: [{ key: "app", operator, values: [...values] }] },
+        labels,
+      ),
+    ).toBe(expected);
+  });
+
+  test("matchExpressions Exists and DoesNotExist", () => {
+    expect(selectorMatches(expression("app", "Exists"), labels)).toBe(true);
+    expect(selectorMatches(expression("missing", "Exists"), labels)).toBe(
+      false,
+    );
+    expect(selectorMatches(expression("missing", "DoesNotExist"), labels)).toBe(
+      true,
+    );
+    expect(selectorMatches(expression("app", "DoesNotExist"), labels)).toBe(
+      false,
+    );
+  });
+
+  test("NotIn matches a pod without the label", () => {
+    expect(
+      selectorMatches(
+        {
+          matchExpressions: [
+            { key: "missing", operator: "NotIn", values: ["x"] },
+          ],
+        },
+        labels,
+      ),
+    ).toBe(true);
+  });
+});
