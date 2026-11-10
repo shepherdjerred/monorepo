@@ -117,18 +117,18 @@ struct UsageHistoryView: View {
     .chartYScale(domain: 0...100)
     .chartXAxis {
       AxisMarks(values: .automatic(desiredCount: 3)) { _ in
-        AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5))
-          .foregroundStyle(Color.secondary.opacity(0.16))
-        AxisTick(stroke: StrokeStyle(lineWidth: 0.5))
-          .foregroundStyle(Color.secondary.opacity(0.35))
+        AxisGridLine(stroke: BrimChartStyle.gridLine)
+          .foregroundStyle(BrimChartStyle.gridColor)
+        AxisTick(stroke: BrimChartStyle.gridLine)
+          .foregroundStyle(BrimChartStyle.tickColor)
         AxisValueLabel(format: range.axisFormat)
           .foregroundStyle(Color.secondary)
       }
     }
     .chartYAxis {
       AxisMarks(position: .trailing, values: [0, 25, 50, 75, 100]) { value in
-        AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5))
-          .foregroundStyle(Color.secondary.opacity(0.16))
+        AxisGridLine(stroke: BrimChartStyle.gridLine)
+          .foregroundStyle(BrimChartStyle.gridColor)
         AxisValueLabel {
           if let percentage = value.as(Int.self) {
             Text("\(percentage)%")
@@ -138,9 +138,7 @@ struct UsageHistoryView: View {
       }
     }
     .chartPlotStyle { plotArea in
-      plotArea
-        .background(Color.secondary.opacity(0.045))
-        .clipShape(RoundedRectangle(cornerRadius: 6))
+      plotArea.brimPlotArea()
     }
     .frame(height: 220)
     .accessibilityLabel("Subscription usage history")

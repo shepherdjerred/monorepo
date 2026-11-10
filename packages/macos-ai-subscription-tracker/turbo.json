@@ -17,7 +17,8 @@
       "dependsOn": ["build:macos"],
       "inputs": [
         "$TURBO_DEFAULT$",
-        "$TURBO_ROOT$/packages/toolkit/schemas/fixtures/brim-sync-mirror-index.json"
+        "$TURBO_ROOT$/packages/toolkit/schemas/fixtures/brim-sync-mirror-index.json",
+        "$TURBO_ROOT$/packages/toolkit/schemas/fixtures/history-api-*.json"
       ],
       "outputs": [".build/**"]
     },
