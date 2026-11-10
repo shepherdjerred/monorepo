@@ -6,6 +6,7 @@ import {
   LINUXSERVER_GID,
   withCommonLinuxServerProps,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/linux-server.ts";
+import { setRevisionHistoryLimit } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
@@ -61,6 +62,8 @@ export function createSyncthingDeployment(chart: Chart) {
       ],
     }),
   );
+
+  setRevisionHistoryLimit(deployment);
 
   const service = new Service(chart, "syncthing-service", {
     selector: deployment,

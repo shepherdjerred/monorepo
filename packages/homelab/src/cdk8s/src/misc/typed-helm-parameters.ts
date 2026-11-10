@@ -74,6 +74,7 @@ import type { ArgocdHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/h
 import type { CertmanagerHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/cert-manager.types";
 import type { ChartmuseumHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/chartmuseum.types";
 import type { ConnectHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/connect.types";
+import type { InteldevicepluginsgpuHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/intel-device-plugins-gpu.types";
 import type { InteldevicepluginsoperatorHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/intel-device-plugins-operator.types";
 import type { KubeprometheusstackHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/kube-prometheus-stack.types";
 import type { PrometheusadapterHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/prometheus-adapter.types";
@@ -100,6 +101,7 @@ type HelmChartValuesMap = {
   "cert-manager": CertmanagerHelmValues;
   chartmuseum: ChartmuseumHelmValues;
   connect: ConnectHelmValues;
+  "intel-device-plugins-gpu": InteldevicepluginsgpuHelmValues;
   "intel-device-plugins-operator": InteldevicepluginsoperatorHelmValues;
   "kube-prometheus-stack": KubeprometheusstackHelmValues;
   "prometheus-adapter": PrometheusadapterHelmValues;
