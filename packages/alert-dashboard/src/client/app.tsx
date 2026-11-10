@@ -1,61 +1,12 @@
-import { lazy, Suspense } from "react";
+import { Suspense } from "react";
 import { Route, Routes } from "react-router";
 
+import { registry } from "./modules.ts";
+import type { ResolvedRoute } from "./platform/module.ts";
 import { Shell } from "./shell.tsx";
-const PromotionPage = lazy(async () => {
-  const module = await import("./promotion/page.tsx");
-  await import("./promotion/promotion.css");
-  return { default: module.PromotionPage };
-});
 
-// Each page is its own chunk so the uPlot and ops-model code only loads on the
-// pages that render it.
-const OverviewPage = lazy(async () => {
-  const module = await import("./ops/overview-page.tsx");
-  return { default: module.OverviewPage };
-});
-const ServicesPage = lazy(async () => {
-  const module = await import("./ops/services-page.tsx");
-  return { default: module.ServicesPage };
-});
-const ServicePage = lazy(async () => {
-  const module = await import("./ops/service-page.tsx");
-  return { default: module.ServicePage };
-});
-const DeliveryPage = lazy(async () => {
-  const module = await import("./ops/section-page.tsx");
-  return { default: module.DeliveryPage };
-});
-const MaintenancePage = lazy(async () => {
-  const module = await import("./ops/section-page.tsx");
-  return { default: module.MaintenancePage };
-});
-const AiPage = lazy(async () => {
-  const module = await import("./ops/ai-page.tsx");
-  return { default: module.AiPage };
-});
-const ReviewPage = lazy(async () => {
-  const module = await import("./ops/review-page.tsx");
-  return { default: module.ReviewPage };
-});
-const DashboardPage = lazy(async () => {
-  const module = await import("./dashboard-page.tsx");
-  return { default: module.DashboardPage };
-});
-const AlertDetailPage = lazy(async () => {
-  const module = await import("./alert-detail-page.tsx");
-  return { default: module.AlertDetailPage };
-});
-const HistoryPage = lazy(async () => {
-  const module = await import("./history-page.tsx");
-  return { default: module.HistoryPage };
-});
-const SystemPage = lazy(async () => {
-  const module = await import("./system-page.tsx");
-  return { default: module.SystemPage };
-});
-
-function page(element: React.JSX.Element): React.JSX.Element {
+function page(route: ResolvedRoute): React.JSX.Element {
+  const Page = route.page;
   return (
     <Suspense
       fallback={
@@ -64,27 +15,29 @@ function page(element: React.JSX.Element): React.JSX.Element {
         </main>
       }
     >
-      {element}
+      <Page />
     </Suspense>
+  );
+}
+
+function routeElement(route: ResolvedRoute): React.JSX.Element {
+  return route.path === "/" ? (
+    <Route key={route.path} index element={page(route)} />
+  ) : (
+    <Route key={route.path} path={route.path} element={page(route)} />
   );
 }
 
 export function App(): React.JSX.Element {
   return (
     <Routes>
-      <Route path="promotion" element={page(<PromotionPage />)} />
-      <Route element={<Shell />}>
-        <Route index element={page(<OverviewPage />)} />
-        <Route path="services" element={page(<ServicesPage />)} />
-        <Route path="services/:id" element={page(<ServicePage />)} />
-        <Route path="delivery" element={page(<DeliveryPage />)} />
-        <Route path="ai" element={page(<AiPage />)} />
-        <Route path="maintenance" element={page(<MaintenancePage />)} />
-        <Route path="review" element={page(<ReviewPage />)} />
-        <Route path="alerts" element={page(<DashboardPage />)} />
-        <Route path="alerts/:id" element={page(<AlertDetailPage />)} />
-        <Route path="history" element={page(<HistoryPage />)} />
-        <Route path="system" element={page(<SystemPage />)} />
+      {registry.routes
+        .filter((route) => route.chrome === "bare")
+        .map((route) => routeElement(route))}
+      <Route element={<Shell nav={registry.nav} />}>
+        {registry.routes
+          .filter((route) => route.chrome === "shell")
+          .map((route) => routeElement(route))}
         <Route
           path="*"
           element={

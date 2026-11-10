@@ -1,5 +1,39 @@
 import { defineArchitecture } from "@shepherdjerred/architecture";
 
+/**
+ * Modules under `src/modules/<id>/`. The architecture meta-test fails when
+ * this list and the directories on disk disagree, so a module can never ship
+ * without its boundary.
+ */
+export const MODULE_IDS: readonly string[] = [];
+
+/** The core module's inner layers, which no other module may reach into. */
+const CORE_INNER_LAYERS = ["domain", "application", "infrastructure"];
+
+/**
+ * One boundary per module: it may use the platform contracts and the shared
+ * UI, but not the core module's inner layers or any other module.
+ *
+ * A module is a single layer. The checker refuses layers in a containment
+ * relationship, so `modules/<id>` cannot also declare `modules/<id>/client`
+ * and `modules/<id>/server`, and `modules` as a whole cannot be a rule source
+ * beside them. Each boundary needs its own negative fixture named
+ * `modules-<id>-<what-it-does>.ts`.
+ */
+export function moduleBoundaries(ids: readonly string[]) {
+  return ids.map((id) => ({
+    name: `module-${id}-is-self-contained`,
+    comment:
+      "A module owns its own storage, API, and pages. Reaching into the core layers or another " +
+      "module couples two areas that are meant to change, and be removed, independently.",
+    from: `modules/${id}`,
+    to: [
+      ...CORE_INNER_LAYERS,
+      ...ids.filter((other) => other !== id).map((other) => `modules/${other}`),
+    ],
+  }));
+}
+
 export default defineArchitecture({
   boundaries: [
     {
@@ -8,7 +42,7 @@ export default defineArchitecture({
         "The domain layer holds the alerting model and its invariants. It must be usable — and " +
         "testable — without a database, an HTTP server, or a browser.",
       from: "domain",
-      to: ["application", "infrastructure", "server", "client"],
+      to: ["application", "infrastructure", "server", "client", "modules"],
     },
     {
       name: "application-does-not-depend-on-adapters",
@@ -16,7 +50,7 @@ export default defineArchitecture({
         "Use cases talk to ports, never to the adapters that implement them. Depending on an " +
         "adapter directly pins a use case to one storage or transport choice.",
       from: "application",
-      to: ["infrastructure", "server", "client"],
+      to: ["infrastructure", "server", "client", "modules"],
     },
     {
       name: "infrastructure-does-not-depend-on-transports",
@@ -24,7 +58,7 @@ export default defineArchitecture({
         "Adapters are driven by the server and the client, never the other way round. An adapter " +
         "reaching back into a transport makes it unusable from any other entry point.",
       from: "infrastructure",
-      to: ["server", "client"],
+      to: ["server", "client", "modules"],
     },
     {
       name: "server-does-not-depend-on-client",
@@ -42,5 +76,6 @@ export default defineArchitecture({
       from: "client",
       to: ["server"],
     },
+    ...moduleBoundaries(MODULE_IDS),
   ],
 });

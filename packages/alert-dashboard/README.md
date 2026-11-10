@@ -257,3 +257,38 @@ snapshot and in-memory adapters that the unit tests and the Playwright fixture
 server share.
 
 Circular dependencies are forbidden anywhere in `src/`.
+
+### Modules
+
+The app is composed from modules. Ops and the alert ledger are the built-in
+`core` module: they stay in the layered tree above and keep their root-level
+URLs. Every other module is a self-contained area with its own URL prefix.
+
+| Half   | Contract                        | Composition root        | Where it is served                                            |
+| ------ | ------------------------------- | ----------------------- | ------------------------------------------------------------- |
+| Client | `src/client/platform/module.ts` | `src/client/modules.ts` | Routes and nav under the module's `basePath`                  |
+| Server | `src/server/platform/module.ts` | `src/server/modules.ts` | `/api/<id>/*`, `/api/<id>/trpc`, and readiness `/readyz/<id>` |
+
+A client module declares `id`, `title`, `icon`, `basePath`, `routes`, and
+`nav`, plus optional `commands`, `search`, and `homeCards`. The router and the
+shell navigation are generated from the composition root. Only `core` may use
+an empty `basePath`; the registry refuses duplicate ids, duplicate routes, and
+a `basePath` that collides with another module or a server path, at startup.
+
+A server module declares `id` and `register(app)`, plus optional `trpc`,
+`ready`, and `close`. Modules mount before the `/api/*` catch-all, so an
+unmatched module path still returns the shared JSON 404. `/readyz` reports the
+core database only, so one module's outage does not take the pod out of
+service; `/readyz/<id>` reports a single module.
+
+A small module lives in `src/modules/<id>/`. To add one:
+
+1. Add its id to `MODULE_IDS` in `architecture.config.ts`. That generates the
+   module's boundary: it may not import the core `domain`, `application`, or
+   `infrastructure` layers, or any other module.
+2. Commit a negative fixture `architecture-fixtures/modules-<id>-<what>.ts`
+   that breaks the boundary.
+3. Register its halves in the two composition roots.
+
+A module is one layer to the architecture checker, which refuses nested
+layers, so a module cannot declare its own inner client and server layers.

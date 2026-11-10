@@ -12,6 +12,7 @@ import type { ChangeBus } from "#server/change-bus";
 import type { Metrics } from "#server/metrics";
 import { withSpan } from "#infrastructure/observability";
 import { opsErrorResponse, registerOpsRoutes } from "#server/ops-routes";
+import { mountModules, type ServerModule } from "#server/platform/module";
 import { appRouter } from "#server/trpc";
 import { registerPromotionRoutes } from "#server/promotion-routes";
 import {
@@ -31,6 +32,8 @@ type AppOptions = {
   digests: DigestService;
   opsIngestToken: string;
   promotionStatusUrl?: string;
+  /** Modules mounted under `/api/<id>` beside the built-in core routes. */
+  modules?: readonly ServerModule[];
 };
 
 const clientRoot = `${import.meta.dir}/../../dist/client`;
@@ -241,6 +244,9 @@ export function createApp(options: AppOptions): Hono {
     options.promotionStatusUrl,
     options.opsIngestToken,
   );
+
+  // `/readyz` above stays core-only; each module reports at `/readyz/<id>`.
+  mountModules(app, options.modules ?? []);
 
   app.all("/api", apiNotFound);
   app.all("/api/*", apiNotFound);
