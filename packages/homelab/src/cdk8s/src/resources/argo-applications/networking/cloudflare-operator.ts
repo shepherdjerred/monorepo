@@ -4,10 +4,12 @@ import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { CLOUDFLARE_TUNNEL_SECRET_NAME } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
 import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
+import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 
 // 1Password item path for Cloudflare API token
-const CLOUDFLARE_TUNNEL_1PASSWORD_ITEM_PATH =
-  "vaults/v64ocnykdqju4ui6j6pua56xw4/items/sc5kj6xthlxmdn7k4mesdr2mju";
+const CLOUDFLARE_TUNNEL_1PASSWORD_ITEM_PATH = vaultItemPath(
+  "sc5kj6xthlxmdn7k4mesdr2mju",
+);
 
 /** Objects the root renders beside the Application; the `cloudflare-operator-companion` companion chart renders the same objects under transition rendering. */
 export function createCloudflareOperatorResources(chart: Chart): void {

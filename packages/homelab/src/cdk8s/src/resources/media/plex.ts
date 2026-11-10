@@ -21,8 +21,8 @@ import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailsca
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
-import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { Quantity } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import { onePasswordSecret } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 
 export function createPlexDeployment(
   chart: Chart,
@@ -34,12 +34,11 @@ export function createPlexDeployment(
   const GID = 1000;
 
   // OnePassword item for Plex token
-  const plexSecrets = new OnePasswordItem(chart, "plex-secrets", {
-    spec: {
-      itemPath:
-        "vaults/v64ocnykdqju4ui6j6pua56xw4/items/xov5k65uwjmm3nfhc7udwmvhny",
-    },
-  });
+  const plexSecrets = onePasswordSecret(
+    chart,
+    "plex-secrets",
+    "xov5k65uwjmm3nfhc7udwmvhny",
+  );
 
   const deployment = createBurstDeployment(chart, "plex", {
     replicas: 1,

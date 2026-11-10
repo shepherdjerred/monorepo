@@ -1,6 +1,5 @@
 import { beforeAll, describe, expect, test } from "vitest";
 import { fileURLToPath } from "node:url";
-import { LITERAL_VAULT_PATH_SITES } from "./debt-allowlists.ts";
 
 /**
  * Fleet conventions that synthesis cannot see because the rendered manifest
@@ -63,7 +62,7 @@ function importedSources(file: string, source: string): string[] {
 }
 
 describe("1Password item paths", () => {
-  test("are built by vaultItemPath, except the listed literal sites", () => {
+  test("are built by vaultItemPath, never spelled as a literal", () => {
     const literalSites = Object.fromEntries(
       [...sources]
         .filter(([file]) => file !== VAULT_PATH_BUILDER)
@@ -76,9 +75,8 @@ describe("1Password item paths", () => {
         )
         .filter(([, count]) => count > 0),
     );
-    // Exact in both directions: a new literal site fails, and so does a
-    // listed count that is now too high.
-    expect(literalSites).toEqual(LITERAL_VAULT_PATH_SITES);
+    // No exceptions remain: every site was converted, so any literal fails.
+    expect(literalSites).toEqual({});
   });
 });
 

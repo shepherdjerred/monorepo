@@ -12,7 +12,7 @@ import {
   setRevisionHistoryLimit,
   withCommonProps,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
-import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
+import { onePasswordSecret } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 export function createDdnsDeployment(chart: Chart) {
@@ -27,12 +27,11 @@ export function createDdnsDeployment(chart: Chart) {
     },
   });
 
-  const item = new OnePasswordItem(chart, "ddns-config", {
-    spec: {
-      itemPath:
-        "vaults/v64ocnykdqju4ui6j6pua56xw4/items/nhyb6lnjpvjsau2gkmb7n42oeq",
-    },
-  });
+  const item = onePasswordSecret(
+    chart,
+    "ddns-config",
+    "nhyb6lnjpvjsau2gkmb7n42oeq",
+  );
 
   const secret = Secret.fromSecretName(
     chart,

@@ -14,17 +14,16 @@ import {
   ROOT_UID,
   ROOT_GID,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
+import { onePasswordSecret } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
-import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 
 export function createWhisperbridgeDeployment(chart: Chart) {
   // OnePassword item for Groq API key
-  const groqSecrets = new OnePasswordItem(chart, "groq-secrets", {
-    spec: {
-      itemPath:
-        "vaults/v64ocnykdqju4ui6j6pua56xw4/items/uaem4aeb4divtzkgtn3azu2wna",
-    },
-  });
+  const groqSecrets = onePasswordSecret(
+    chart,
+    "groq-secrets",
+    "uaem4aeb4divtzkgtn3azu2wna",
+  );
 
   const deployment = new Deployment(chart, "whisperbridge", {
     replicas: 1,

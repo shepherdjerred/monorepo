@@ -95,7 +95,7 @@ export function createScoutDeployment(
   } = match(stage)
     .with("beta", () => {
       return {
-        path: "vaults/v64ocnykdqju4ui6j6pua56xw4/items/rtu44pohnp5ixdp2njuv5f6t2e",
+        path: vaultItemPath("rtu44pohnp5ixdp2njuv5f6t2e"),
         applicationId: "1311755320745394317",
         s3BucketName: "scout-beta",
         selinuxLevel: zfsVolumeSelinuxLevels.scoutBeta,
@@ -108,7 +108,7 @@ export function createScoutDeployment(
     })
     .with("prod", () => {
       return {
-        path: "vaults/v64ocnykdqju4ui6j6pua56xw4/items/pacrc4wfbtct4y3qazkvazop5a",
+        path: vaultItemPath("pacrc4wfbtct4y3qazkvazop5a"),
         applicationId: "1182800769188110366",
         s3BucketName: "scout-prod",
         selinuxLevel: zfsVolumeSelinuxLevels.scoutProd,

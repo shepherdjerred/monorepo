@@ -317,29 +317,3 @@ export const CONTAINERS_WITHOUT_SECCOMP: ReadonlySet<string> = new Set([
   "woodpecker/woodpecker-woodpecker-config-extension/woodpecker-config-extension",
   "woodpecker/woodpecker-woodpecker-server/woodpecker-server",
 ]);
-
-/**
- * Source files that spell a 1Password item path as a string literal instead of
- * calling `vaultItemPath`, with the number of literals in each. Paths are
- * relative to `src/`. The count is exact: converting a site means lowering or
- * deleting its entry.
- */
-export const LITERAL_VAULT_PATH_SITES: Readonly<Record<string, number>> = {
-  "resources/argo-applications/games/minecraft-sjerred.ts": 2,
-  "resources/argo-applications/games/minecraft-tsmc.ts": 1,
-  "resources/argo-applications/networking/cloudflare-operator.ts": 1,
-  "resources/argo-applications/networking/tailscale.ts": 1,
-  "resources/argo-applications/platform/chartmuseum.ts": 1,
-  "resources/argo-applications/storage/seaweedfs.ts": 2,
-  "resources/bugsink/index.ts": 1,
-  "resources/ddns.ts": 1,
-  "resources/gickup.ts": 1,
-  "resources/mail/postal.ts": 1,
-  "resources/media/plex.ts": 1,
-  "resources/s3-static-sites/index.ts": 1,
-  "resources/scout/index.ts": 2,
-  "resources/starlight-karma-bot/index.ts": 1,
-  "resources/temporal/workers/worker.ts": 1,
-  "resources/torrents/qbittorrent.ts": 2,
-  "resources/torrents/whisperbridge.ts": 1,
-};

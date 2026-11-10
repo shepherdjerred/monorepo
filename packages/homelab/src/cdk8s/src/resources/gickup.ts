@@ -14,9 +14,9 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { ZfsSataVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-sata-volume.ts";
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
-import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { fileURLToPath } from "node:url";
+import { onePasswordSecret } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import path from "node:path";
 
 const CURRENT_FILENAME = fileURLToPath(import.meta.url);
@@ -63,15 +63,12 @@ export async function createGickupDeployment(chart: Chart) {
   // Create 1Password item for GitHub token
   // Create a new item in 1Password with your GitHub personal access token
   // The token needs: repo, read:org, read:user permissions
-  const githubToken = new OnePasswordItem(chart, "gickup-github-token", {
-    spec: {
-      itemPath:
-        "vaults/v64ocnykdqju4ui6j6pua56xw4/items/zshiow4egtiuec5n7stcskyxmm",
-    },
-    metadata: {
-      name: "gickup-github-token",
-    },
-  });
+  const githubToken = onePasswordSecret(
+    chart,
+    "gickup-github-token",
+    "zshiow4egtiuec5n7stcskyxmm",
+    { name: "gickup-github-token" },
+  );
 
   deployment.addContainer(
     withCommonProps({
