@@ -64,10 +64,15 @@ export function definiteChannelSendFailure(
   error: ChannelSendError,
 ): "permission-denied" | "target-not-found" | undefined {
   if (!error.permissionError) return undefined;
+  // The re-fetch that classified this ran AFTER the send threw an error nobody
+  // could label, so the request may have been accepted before access was lost.
+  if (diagnosedAfterSend.has(error)) return undefined;
   return isPermissionError(error.originalError)
     ? "permission-denied"
     : "target-not-found";
 }
+
+const diagnosedAfterSend = new WeakSet<ChannelSendError>();
 
 const replyPermissionErrors = new WeakSet<ChannelSendError>();
 
@@ -342,6 +347,7 @@ export async function send(
     // or some other (likely transient) error.
     let kind: DeliveryFailureKind | "other";
     let permissionReason: string | undefined;
+    let diagnosed = false;
     if (isPermissionError(error)) {
       kind = "permission";
     } else if (isMissingChannelError(error)) {
@@ -350,6 +356,7 @@ export async function send(
       // Re-fetch to diagnose, then fall through to the shared logging /
       // escalation / throw below with the classified `kind`.
       const diagnosis = await diagnoseSendFailure(channelId);
+      diagnosed = true;
       kind = diagnosis.kind;
       permissionReason = diagnosis.permissionReason;
     }
@@ -386,11 +393,13 @@ export async function send(
 
     // permissionError=true marks "handled delivery problem" so callers don't
     // double-report it; false for genuinely-unexpected errors.
-    throw new ChannelSendError(
+    const sendError = new ChannelSendError(
       errorMessage,
       channelId,
       kind !== "other",
       error,
     );
+    if (diagnosed) diagnosedAfterSend.add(sendError);
+    throw sendError;
   }
 }

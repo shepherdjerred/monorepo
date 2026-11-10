@@ -18,7 +18,7 @@ vi.mock("#src/discord/client.ts", () => ({
   client: { channels: { fetch: discord.fetchChannel } },
 }));
 
-const { ChannelSendError, send } =
+const { ChannelSendError, definiteChannelSendFailure, send } =
   await import("#src/league/discord/channel.ts");
 const { discordPermissionErrorsTotal } = await import("#src/metrics/index.ts");
 const { mockMessage, mockTextChannel } =
@@ -119,6 +119,29 @@ describe("send still recognises a channel that is genuinely gone", () => {
     await expect(send("scheduled report", CHANNEL_ID)).rejects.toThrow(
       ChannelSendError,
     );
+  });
+});
+
+describe("a failure diagnosed only after the send threw is not a definite non-send", () => {
+  test("keeps the outcome unknown when the re-fetch finds the channel gone", async () => {
+    const channel = guildlessChannel({
+      send: () => Promise.reject(new Error("socket hang up")),
+    });
+    let fetches = 0;
+    discord.fetchChannel.mockImplementation(() => {
+      fetches += 1;
+      return Promise.resolve(fetches === 1 ? channel : null);
+    });
+
+    let error: unknown = new Error("send did not reject");
+    try {
+      await send("scheduled report", CHANNEL_ID);
+    } catch (error_) {
+      error = error_;
+    }
+    if (!(error instanceof ChannelSendError))
+      throw new Error("expected send to reject");
+    expect(definiteChannelSendFailure(error)).toBeUndefined();
   });
 });
 
