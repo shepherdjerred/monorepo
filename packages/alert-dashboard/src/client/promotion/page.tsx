@@ -33,10 +33,10 @@ export function PromotionPage() {
   };
   return (
     <>
-      <title>The Storm promotion · Ops</title>
+      <title>The Storm promotion · Hub</title>
       <header className="app-header">
         <a className="brand" href="/">
-          Ops
+          Hub
         </a>
         <nav aria-label="Primary navigation">
           <a href="/promotion" aria-current="page">

@@ -121,7 +121,7 @@ export function ServicePage(): React.JSX.Element {
   const detail = Loaded.fromQuery(useQuery(serviceQuery(id)));
   return (
     <main>
-      <title>{`${id} · Ops`}</title>
+      <title>{`${id} · Hub`}</title>
       <LoadingBlock
         values={{ detail }}
         fallback={<div className="loading-state">Loading service…</div>}

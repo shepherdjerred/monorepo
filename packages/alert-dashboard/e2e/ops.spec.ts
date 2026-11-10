@@ -4,7 +4,7 @@ test("home summarizes status, alerts, what waits on me, and Tracker triage", asy
   page,
 }) => {
   await page.goto("/");
-  await expect(page).toHaveTitle("Home · Ops");
+  await expect(page).toHaveTitle("Home · Hub");
   await expect(
     page.getByRole("region", { name: "Overall status" }),
   ).toContainText("7 areas need attention");
@@ -39,7 +39,7 @@ test("home summarizes status, alerts, what waits on me, and Tracker triage", asy
   await expect(waiting.locator(".signal")).toHaveCount(4);
   await waiting.getByRole("link", { name: "Overview" }).click();
   await expect(page).toHaveURL(/\/overview$/u);
-  await expect(page).toHaveTitle("Overview · Ops");
+  await expect(page).toHaveTitle("Overview · Hub");
 });
 
 test("home launches the app's pages, the other apps, and the tools", async ({
@@ -78,14 +78,14 @@ test("home launches the app's pages, the other apps, and the tools", async ({
     .getByRole("link", { name: "Flow" })
     .click();
   await expect(page).toHaveURL(/\/delivery$/u);
-  await expect(page).toHaveTitle("Delivery · Ops");
+  await expect(page).toHaveTitle("Delivery · Hub");
 });
 
 test("overview ranks attention, lists what waits on me, and marks all seen", async ({
   page,
 }) => {
   await page.goto("/overview");
-  await expect(page).toHaveTitle("Overview · Ops");
+  await expect(page).toHaveTitle("Overview · Hub");
   const banner = page.getByRole("region", { name: "Overall status" });
   await expect(banner).toContainText("7 areas need attention");
   await expect(banner).toContainText("Error");
@@ -118,7 +118,7 @@ test("service detail joins signals, the change timeline, and drill-down links", 
   page,
 }) => {
   await page.goto("/services/scout-for-lol");
-  await expect(page).toHaveTitle("scout-for-lol · Ops");
+  await expect(page).toHaveTitle("scout-for-lol · Hub");
   await expect(
     page.getByRole("heading", { name: "Scout for LoL", level: 1 }),
   ).toBeVisible();
@@ -143,7 +143,7 @@ test("AI page shows quota windows, spend against budget, and charts", async ({
   page,
 }) => {
   await page.goto("/ai?range=24h");
-  await expect(page).toHaveTitle("AI · Ops");
+  await expect(page).toHaveTitle("AI · Hub");
   await expect(page.getByRole("meter")).toHaveCount(5);
   await expect(
     page.getByRole("meter", { name: "claude 7d quota used" }),

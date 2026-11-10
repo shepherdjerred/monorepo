@@ -1,11 +1,11 @@
 ---
 title: Operations overview
-description: One Temporal-collected snapshot answers "is anything wrong, and what is waiting on me" for the web dashboard, TRMNL, email digest, and agents.
+description: One Temporal-collected snapshot answers "is anything wrong, and what is waiting on me" for Hub, TRMNL, email digest, and agents.
 ---
 
 The operations overview gives one answer to "is anything wrong, and what is
-waiting on me?". Every surface reads the same stored snapshot. The web
-dashboard, the TRMNL screen, the email digest, and `toolkit ops summary` never
+waiting on me?". Every surface reads the same stored snapshot. Hub, the
+TRMNL screen, the email digest, and `toolkit ops summary` never
 query upstreams themselves.
 
 ## The questions it answers
@@ -30,12 +30,12 @@ existing dashboards rather than embedding panels.
 ```mermaid
 flowchart LR
   accTitle: Operations overview data flow
-  accDescr: A Temporal schedule collects every upstream into one snapshot and posts it to the ops dashboard, which stores it in SQLite. The web UI, TRMNL, the email digest, and the toolkit CLI read that snapshot. The Mac pushes AI usage metrics to Prometheus through the Alloy gateway, and the collector reads them back from Prometheus.
+  accDescr: A Temporal schedule collects every upstream into one snapshot and posts it to Hub, which stores it in SQLite. The web UI, TRMNL, the email digest, and the toolkit CLI read that snapshot. The Mac pushes AI usage metrics to Prometheus through the Alloy gateway, and the collector reads them back from Prometheus.
 
   SRC[Upstreams\nAlertmanager, Kubernetes, Argo CD, Talos,\nGitHub, Renovate, Tracker, Bugsink,\nPostHog, Loki, Tempo, Prometheus]
   TEMPORAL[Temporal ops-snapshot\nevery 5 minutes]
   PROM[(Prometheus)]
-  DASH[Ops dashboard\nalert-dashboard service]
+  DASH[Hub\nalert-dashboard service]
   DB[(SQLite ledger\nsnapshots, changes, alerts)]
   MAC[Mac toolkit history daemon]
   ALLOY[Alloy gateway\nmetrics-only receiver]
@@ -147,13 +147,14 @@ records which signals a viewer has already seen.
 The email digest follows the same rule. A daily glance and a weekly review
 summarize the stored snapshots. Alertmanager remains the only paging path.
 
-## Why it lives in the alert dashboard
+## Why it lives beside the alert ledger
 
-The alert dashboard already had the durable SQLite ledger, the Postal outbox,
-Grafana deep links, and a tailnet UI. The overview extends that service in
-place rather than adding a sibling. The deployed identity stays
-`alert-dashboard`, so the ledger volume and webhook URL do not move. The same
-service answers on both the `alerts` and `ops` tailnet hosts. See
+The alert ledger already had the durable SQLite store, the Postal outbox,
+Grafana deep links, and a tailnet UI. The overview extended that service in
+place rather than adding a sibling. Together they are the `core` module of
+Hub. [Why Hub is one app built from modules](/explanation/homelab/hub/)
+explains that app, its hosts, and why it is still deployed as
+`alert-dashboard`. See
 [Alerts and incident history](/explanation/homelab/alerts/) for the ledger
 itself.
 
@@ -163,7 +164,7 @@ itself.
 - Upstream clients: `packages/ops-clients/`.
 - Collector workflow and schedules: `packages/temporal/src/workflows/ops-snapshot.ts`
   and `packages/temporal/src/activities/ops/`.
-- Dashboard, digest, and API: `packages/alert-dashboard/`.
+- Hub UI, digest, and API: `packages/alert-dashboard/`.
 - Mac export: `packages/toolkit/src/lib/history/`.
 - Alloy receiver: `packages/homelab/src/cdk8s/src/resources/argo-applications/observability/alloy-gateway.ts`.
 - Operator authentication: [Homelab control-plane access](/reference/homelab-control-plane-access/).

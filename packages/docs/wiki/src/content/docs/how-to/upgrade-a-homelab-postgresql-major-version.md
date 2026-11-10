@@ -134,7 +134,7 @@ namespace `velero`. A plain `describe` can create one too. To inspect without
 writing, read the Restore, the ZFSBackups, and the server log as above.
 :::
 
-A failed or partial restore stays on the Ops maintenance list until you
+A failed or partial restore stays on Hub's Maintenance page until you
 classify it. When a later restore of the same backup completed and passed these
 checks, record that on the failed Restore with two annotations:
 `ops.sjer.red/restore-failure-classification=superseded-by-accepted-restore`

@@ -144,7 +144,7 @@ export function DashboardPage(): React.JSX.Element {
     );
   return (
     <main>
-      <title>Active alerts · Ops</title>
+      <title>Active alerts · Hub</title>
       <StaleNotice errors={page.status === "degraded" ? page.errors : []} />
       <div className="page-heading">
         <div>

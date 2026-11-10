@@ -1,12 +1,17 @@
-# Ops dashboard (`alert-dashboard`)
+# Hub (`alert-dashboard`)
 
-`@shepherdjerred/alert-dashboard` is the homelab's ops overview and durable,
-read-only alert ledger. The deployed identity (package, namespace, Service,
-PVC, and webhook URL) stays `alert-dashboard` so the ledger history is kept;
-the UI is titled **Ops** and is served on both the `alerts` and `ops` tailnet
-hosts.
+`@shepherdjerred/alert-dashboard` is **Hub**, the homelab's web app for
+personal tools, composed of [modules](#modules). Its built-in `core` module is
+the ops overview and the durable, read-only alert ledger.
 
-It has two halves in one process:
+Hub is the product name only. The package, namespace, Service, PVC, Flipt
+namespace, image, metrics, 1Password item, Argo CD Application, and webhook URL
+all stay `alert-dashboard`, so the ledger history is kept. The app is served on
+the `hub`, `ops`, and `alerts` tailnet hosts. The wiki's
+[Why Hub is one app built from modules](../docs/wiki/src/content/docs/explanation/homelab/hub.md)
+explains the naming, the module model, and why Delivery stays a separate app.
+
+The core module has two halves in one process:
 
 - **Ops overview.** The Temporal `ops-snapshot` workflow posts an
   [`@shepherdjerred/ops-model`](../ops-model/README.md) snapshot and change
@@ -36,7 +41,7 @@ manages the workload.
 
 ### The Storm promotion progress
 
-The normal Ops application includes `/promotion`. Its server forwards the
+Hub includes `/promotion`. Its server forwards the
 read-only promotion API to the worker's internal status Service, authenticated
 with `OPS_INGEST_TOKEN`; browser clients never receive that credential.
 `PROMOTION_STATUS_URL` is an optional bootstrap service-address override.
@@ -50,7 +55,7 @@ bun packages/temporal/scripts/promotion/dashboard.ts
 ```
 
 Open `http://127.0.0.1:7342/promotion` on the Mac running the command. This
-local entry uses the Ops theme and layout without starting alert subscriptions.
+local entry uses Hub's theme and layout without starting alert subscriptions.
 It reads the promotion SQLite database and saved reports through a read-only API
 on port 7343. It needs no site credentials, Grafana, or Temporal server.
 Use `--state-dir`, `--port`, and `--api-port` to select local storage and ports.
@@ -298,3 +303,8 @@ A small module lives in `src/modules/<id>/`. To add one:
 
 A module is one layer to the architecture checker, which refuses nested
 layers, so a module cannot declare its own inner client and server layers.
+
+A module that needs its own storage stays a separate workspace package that
+exports `./hub-server` and `./hub-client`. Its `src/modules/<id>/` adapter
+checks those exports with `satisfies` against the two module contracts, so
+the storage never enters this package.

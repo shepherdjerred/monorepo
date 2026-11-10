@@ -169,10 +169,16 @@ export function createAlertDashboardDeployment(chart: Chart) {
     host: "alerts",
     probePath: "/healthz",
   });
-  // The same app serves the ops overview. `alerts` stays for existing links.
+  // The same app serves the ops overview.
   new TailscaleIngress(chart, "alert-dashboard-ops-ingress", {
     service,
     host: "ops",
+    probePath: "/healthz",
+  });
+  // The product is Hub; `ops` and `alerts` stay for existing links.
+  new TailscaleIngress(chart, "alert-dashboard-hub-ingress", {
+    service,
+    host: "hub",
     probePath: "/healthz",
   });
   return deployment;

@@ -179,7 +179,7 @@ Every route is under `/api/v1`.
 | `POST /recovery-intents/:id/settle`          | `admin`   | `deploy recover <DEPLOYMENT_ID> --operation-id <UUID>` | [I2](packages/delivery/docs/model.md#415-recovery-intent)   |
 | `GET /recovery-intents/:id`                  | `read`    | `deploy recovery <INTENT_ID>`                          | [4.15](packages/delivery/docs/model.md#415-recovery-intent) |
 | `POST /catalog/reconcile`                    | `admin`   | `deploy catalog reconcile --file <PATH>`               | [4.1](packages/delivery/docs/model.md#41-catalog)           |
-| `GET /catalog`                               | `read`    | None; the hub                                          | [4.1](packages/delivery/docs/model.md#41-catalog)           |
+| `GET /catalog`                               | `read`    | None; the web app                                      | [4.1](packages/delivery/docs/model.md#41-catalog)           |
 | `POST /services/:id/retire`                  | `admin`   | `deploy retire <SERVICE>`                              | [S3](packages/delivery/docs/model.md#42-service)            |
 | `GET /monitors/watching`                     | `execute` | None; the dispatch monitor loop                        | [W1](packages/delivery/docs/model.md#419-monitor)           |
 | `POST /deployments/:id/monitor/observations` | `execute` | None; the dispatch monitor loop                        | [W2](packages/delivery/docs/model.md#419-monitor)           |

@@ -75,7 +75,7 @@ export function HomePage(): React.JSX.Element {
   const { modules } = useRegistry();
   return (
     <main>
-      <title>Home · Ops</title>
+      <title>Home · Hub</title>
       <PageHeading eyebrow="Homelab" title="Home" />
       {modules.flatMap((module) =>
         (module.homeCards ?? []).map((entry) => (

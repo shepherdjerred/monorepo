@@ -303,6 +303,11 @@
       "exposure": "ingress"
     },
     {
+      "host": "hub",
+      "namespace": "alert-dashboard",
+      "exposure": "ingress"
+    },
+    {
       "host": "loki",
       "namespace": "loki",
       "exposure": "ingress"

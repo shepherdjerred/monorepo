@@ -15,13 +15,13 @@ test("URL-backed filters survive navigation, history, and reload", async ({
   page,
 }) => {
   await page.goto("/alerts");
-  await expect(page).toHaveTitle("Active alerts · Ops");
+  await expect(page).toHaveTitle("Active alerts · Hub");
   await expect(page.getByRole("link", { name: /DiskFull/u })).toBeVisible();
   await page.getByLabel("Severity").selectOption("critical");
   await expect(page).toHaveURL(/severity=critical/u);
   await expect(page.getByText("No alerts match these filters.")).toBeVisible();
   await page.getByRole("link", { name: "History" }).click();
-  await expect(page).toHaveTitle("History · Ops");
+  await expect(page).toHaveTitle("History · Hub");
   await page.goBack();
   await expect(page).toHaveURL(/severity=critical/u);
   await page.reload();
@@ -60,7 +60,7 @@ test("bookmarked history leads to delivery evidence and independent preview stat
   await expect(page.getByLabel("Event")).toHaveValue("opened");
   await expect(page.getByLabel("From")).toHaveValue("2026-08-08T00:00:00Z");
   await page.getByRole("link", { name: "DiskFull" }).click();
-  await expect(page).toHaveTitle("DiskFull · Ops");
+  await expect(page).toHaveTitle("DiskFull · Hub");
   await expect(
     page.getByRole("heading", { name: "Webhook evidence" }),
   ).toBeVisible();
@@ -81,7 +81,7 @@ test("bookmarked history leads to delivery evidence and independent preview stat
 test("malformed alert bookmarks render a not-found state", async ({ page }) => {
   await page.goto("/alerts/foo");
 
-  await expect(page).toHaveTitle("Alert not found · Ops");
+  await expect(page).toHaveTitle("Alert not found · Hub");
   await expect(page.getByText("Alert not found.")).toBeVisible();
 });
 
@@ -90,7 +90,7 @@ test("malformed dashboard bookmarks render a filter error", async ({
 }) => {
   await page.goto("/alerts?state=typo");
 
-  await expect(page).toHaveTitle("Active alerts · Ops");
+  await expect(page).toHaveTitle("Active alerts · Hub");
   await expect(page.getByText("Invalid active alert filters.")).toBeVisible();
   await expect(
     page.getByRole("link", { name: /ResolvedFixture/u }),
@@ -148,7 +148,7 @@ test("semantic navigation is keyboard reachable and responsive", async ({
   await page.goto("/alerts");
   await page.keyboard.press("Tab");
   await expect(
-    page.getByRole("link", { name: "Ops", exact: true }),
+    page.getByRole("link", { name: "Hub", exact: true }),
   ).toBeFocused();
   await expect(
     page.getByRole("navigation", { name: "Primary navigation" }),
@@ -161,7 +161,7 @@ test("semantic navigation is keyboard reachable and responsive", async ({
   expect(tableBox.width).toBeLessThanOrEqual(362);
   await expect(table.locator('td[data-label="Last seen"]')).toBeVisible();
   await page.getByRole("link", { name: "System" }).click();
-  await expect(page).toHaveTitle("System · Ops");
+  await expect(page).toHaveTitle("System · Hub");
   await expect(page.getByRole("heading", { name: "Database" })).toBeVisible();
   await expect(
     page.getByRole("definition").filter({ hasText: "disabled" }),

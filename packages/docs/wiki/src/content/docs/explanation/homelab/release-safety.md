@@ -330,5 +330,5 @@ Application-wide replacement does not bypass the check.
 
 - [Cut a homelab release](/how-to/cut-a-homelab-release/)
 - [Delivery model reference](/reference/delivery-model/)
-- [How the Delivery hub follows a change](/explanation/homelab/delivery-hub/)
+- [How the Delivery web app follows a change](/explanation/homelab/delivery-hub/)
 - [About the homelab](/explanation/homelab/overview/)
