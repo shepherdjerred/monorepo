@@ -185,7 +185,8 @@ case "${MISE_TOOLCHAIN_SCOPE:-full}" in
     # each container still resolves its own pinned runtime from the CI image.
     # Node runs `cdktn get`, which generates the provider bindings the
     # synthesized stacks are checked against; its CLI does not run under Bun.
-    mise_ci install --yes bun node opentofu
+    # Go builds the repository-owned AsusWRT provider its stack validates with.
+    mise_ci install --yes bun node opentofu go
     mise_ci reshim
     ;;
   automation)

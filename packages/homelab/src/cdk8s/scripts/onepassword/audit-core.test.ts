@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import {
   buildVaultAudit,
   credentialLocations,
+  managedItemReferences,
   manifestAuditReferences,
   sourceAuditReferences,
   pipelineGrantManifests,
@@ -388,5 +389,54 @@ describe("secret reference syntax", () => {
         access: "onepassword",
       },
     ]);
+  });
+});
+
+const managed = (item: string, source: string) => ({
+  item,
+  source,
+  managed: true,
+  wholeItem: true,
+});
+
+describe("items an OpenTofu stack writes", () => {
+  test("reads literal titles from HCL and from a synthesized stack alike", () => {
+    const hcl = "packages/homelab/src/tofu/argocd/token.tf";
+    expect(
+      managedItemReferences(
+        'resource "onepassword_item" "delivery" {\n  title = "delivery-argocd-token"\n}\nresource "onepassword_item" "each" {\n  title = each.value.title\n}\n',
+        hcl,
+      ),
+    ).toEqual([managed("delivery-argocd-token", hcl)]);
+    const json = "packages/homelab/src/tofu/argocd/main.tf.json";
+    expect(
+      managedItemReferences(
+        JSON.stringify({
+          resource: {
+            onepassword_item: {
+              delivery: { title: "delivery-argocd-token" },
+              each: { title: "${each.value.title}" },
+            },
+            argocd_account_token: { delivery: { title: "not-an-item" } },
+          },
+        }),
+        json,
+      ),
+    ).toEqual([managed("delivery-argocd-token", json)]);
+  });
+
+  test("ignores files that are not stack configuration", () => {
+    expect(
+      managedItemReferences(
+        '{"resource":{"onepassword_item":{"x":{"title":"x"}}}}',
+        "packages/homelab/src/tofu/argocd/desired-state.json",
+      ),
+    ).toEqual([]);
+    expect(
+      managedItemReferences(
+        'title = "x"',
+        "packages/homelab/src/tofu/argocd/variables.tf",
+      ),
+    ).toEqual([]);
   });
 });

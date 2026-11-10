@@ -46,21 +46,32 @@ export function grant(secret: string, key: string, env = key): SecretGrant {
   return { secret, key, env };
 }
 
-const VALIDATED_STACKS = [
-  "seaweedfs",
-  "tailscale",
-  "arr",
-  "backblaze",
-  "github",
-  "cloudflare",
-  "posthog",
+/**
+ * Every stack under packages/homelab/src/tofu; select.test.ts compares this
+ * with the directories on disk, so a new stack cannot go unvalidated.
+ * Validation is offline and holds no credential, so operator-only stacks
+ * (anthropic-federation, argocd, google) and the LAN-only asuswrt stack are
+ * validated like the rest.
+ */
+export const VALIDATED_STACKS = [
+  "anthropic",
+  "anthropic-federation",
   "application-secrets",
+  "argocd",
+  "arr",
+  "asuswrt",
+  "backblaze",
+  "cloudflare",
+  "cloudflare-tokens",
+  "discord",
   "dockerhub",
   "dockerhub-tokens",
+  "github",
+  "google",
   "openai",
-  "anthropic",
-  "discord",
-  "cloudflare-tokens",
+  "posthog",
+  "seaweedfs",
+  "tailscale",
 ] as const;
 
 /** CI validates configuration offline. Operational plans and applies run in Delivery. */
@@ -93,6 +104,8 @@ export function tofuValidationSteps(images: CiImages): CiStep[] {
           "packages/homelab-cdktn/**",
           "packages/homelab/scripts/tofu/**",
           "packages/homelab/src/tofu/**",
+          // asuswrt validates against the provider built from this source.
+          "packages/terraform-provider-asuswrt/**",
         ],
       },
       secrets: [GITHUB_DOWNLOAD],

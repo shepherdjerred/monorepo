@@ -253,6 +253,9 @@ export const lanePaths: Readonly<Record<string, readonly string[]>> = {
   "tofu-posthog": [
     ...workspacePaths,
     "packages/homelab/src/tofu/posthog",
+    // Its CDK Terrain source and provider pins, once the stack is ported.
+    "packages/homelab-cdktn",
+    "packages/homelab/src/tofu/provider-versions.json",
     "packages/homelab/scripts/tofu/tofu-stack.ts",
     "scripts/lib/transient-error.ts",
     "packages/homelab/src/cdk8s/src/resources/argo-applications/ci/woodpecker-credentials.ts",

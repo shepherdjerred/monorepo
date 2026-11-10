@@ -75,7 +75,7 @@ const REQUIRED_ENV_GROUPS: readonly RequiredEnvGroup[] = [
   { label: "AWS_SECRET_ACCESS_KEY", names: ["AWS_SECRET_ACCESS_KEY"] },
 ];
 
-const CLOUDFLARE_TOFU_DIR = "packages/homelab/src/cdk8s/src/tofu/cloudflare";
+const CLOUDFLARE_TOFU_DIR = "packages/homelab/src/tofu/cloudflare";
 
 function hasEnv(names: readonly string[]): boolean {
   return names.some((name) => {
@@ -227,11 +227,7 @@ async function collectRemoteWarnings(): Promise<string[]> {
     { name: "Velero", args: ["velero", "backup", "get"] },
     {
       name: "Cloudflare tofu",
-      args: [
-        "tofu",
-        "-chdir=packages/homelab/src/cdk8s/src/tofu/cloudflare",
-        "version",
-      ],
+      args: ["tofu", "-chdir=packages/homelab/src/tofu/cloudflare", "version"],
     },
   ];
 

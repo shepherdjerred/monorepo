@@ -1,0 +1,107 @@
+{
+  "providers": [
+    {
+      "registryUrl": "https://registry.opentofu.org",
+      "source": "1password/onepassword",
+      "version": "3.4.1"
+    },
+    {
+      "registryUrl": "https://registry.terraform.io",
+      "source": "alpaca744/discord",
+      "version": "0.1.3"
+    },
+    {
+      "registryUrl": "https://registry.opentofu.org",
+      "source": "argoproj-labs/argocd",
+      "version": "7.17.1"
+    },
+    {
+      "registryUrl": "https://registry.opentofu.org",
+      "source": "backblaze/b2",
+      "version": "0.14.0"
+    },
+    {
+      "registryUrl": "https://registry.opentofu.org",
+      "source": "cloudflare/cloudflare",
+      "version": "5.27.0"
+    },
+    {
+      "registryUrl": "https://registry.opentofu.org",
+      "source": "devopsarr/prowlarr",
+      "version": "3.2.2"
+    },
+    {
+      "registryUrl": "https://registry.opentofu.org",
+      "source": "devopsarr/radarr",
+      "version": "2.5.0"
+    },
+    {
+      "registryUrl": "https://registry.opentofu.org",
+      "source": "devopsarr/sonarr",
+      "version": "3.5.0"
+    },
+    {
+      "registryUrl": "https://registry.opentofu.org",
+      "source": "docker/docker",
+      "version": "0.7.0"
+    },
+    {
+      "registryUrl": "https://registry.opentofu.org",
+      "source": "hashicorp/aws",
+      "version": "6.68.0"
+    },
+    {
+      "registryUrl": "https://registry.opentofu.org",
+      "source": "hashicorp/google",
+      "version": "8.6.0"
+    },
+    {
+      "registryUrl": "https://registry.opentofu.org",
+      "source": "hashicorp/http",
+      "version": "3.6.2"
+    },
+    {
+      "registryUrl": "https://registry.opentofu.org",
+      "source": "hashicorp/random",
+      "version": "3.9.1"
+    },
+    {
+      "registryUrl": "https://registry.opentofu.org",
+      "source": "integrations/github",
+      "version": "6.13.0",
+      "bindings": true
+    },
+    {
+      "registryUrl": "https://registry.terraform.io",
+      "source": "ippontech/anthropic",
+      "version": "1.60.0"
+    },
+    {
+      "registryUrl": "https://registry.opentofu.org",
+      "source": "jianyuan/openai",
+      "version": "0.7.0",
+      "bindingsName": "openaikeys"
+    },
+    {
+      "registryUrl": "https://registry.opentofu.org",
+      "source": "openai/openai",
+      "version": "1.3.1"
+    },
+    {
+      "registryUrl": "https://registry.opentofu.org",
+      "source": "posthog/posthog",
+      "version": "1.0.17"
+    },
+    {
+      "registryUrl": "https://registry.opentofu.org",
+      "source": "shepherdjerred/asuswrt",
+      "version": "0.1.0",
+      "local": true
+    },
+    {
+      "registryUrl": "https://registry.opentofu.org",
+      "source": "tailscale/tailscale",
+      "version": "0.29.2"
+    }
+  ]
+}

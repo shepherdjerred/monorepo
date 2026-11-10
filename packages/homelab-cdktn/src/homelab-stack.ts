@@ -1,6 +1,9 @@
 import type { Construct } from "constructs";
 import { S3Backend, TerraformStack } from "cdktn";
 
+/** OpenTofu releases the app, and the bindings generated for it, target. */
+export const OPENTOFU_TARGET_VERSION = ">=1.11.0";
+
 /** The SeaweedFS bucket every stack keeps its state in. */
 export const STATE_BUCKET = "homelab-tofu-state";
 

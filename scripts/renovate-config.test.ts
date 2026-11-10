@@ -476,3 +476,47 @@ test("groups eslint and prettier bumps across the workspace into single PRs", as
   expect(eslintRule?.matchDepNames).toEqual(["eslint"]);
   expect(prettierRule?.matchDepNames).toEqual(["prettier"]);
 });
+
+test("extracts every OpenTofu provider pin with its registry", async () => {
+  const config = RenovateConfigSchema.parse(
+    await Bun.file(`${root}/renovate.json`).json(),
+  );
+  const file = "packages/homelab/src/tofu/provider-versions.json";
+  const manager = config.customManagers.find((candidate) =>
+    candidate.managerFilePatterns.includes(file),
+  );
+  const pattern = manager?.matchStrings[0];
+  if (pattern === undefined) throw new Error("missing provider pin manager");
+  const pins = z
+    .object({
+      providers: z.array(
+        z.looseObject({
+          registryUrl: z.string(),
+          source: z.string(),
+          version: z.string(),
+        }),
+      ),
+    })
+    .parse(await Bun.file(`${root}/${file}`).json()).providers;
+  const text = await Bun.file(`${root}/${file}`).text();
+  const extracted = [...text.matchAll(new RegExp(pattern, "gu"))].map(
+    (match) => ({
+      registryUrl: match.groups?.["registryUrl"],
+      source: match.groups?.["depName"],
+      version: match.groups?.["currentValue"],
+    }),
+  );
+  expect(extracted).toEqual(
+    pins.map(({ registryUrl, source, version }) => ({
+      registryUrl,
+      source,
+      version,
+    })),
+  );
+  // The repository-built provider is pinned here but has no registry release.
+  expect(
+    config.packageRules.find((rule) =>
+      rule.matchPackageNames?.includes("shepherdjerred/asuswrt"),
+    ),
+  ).toMatchObject({ matchDatasources: ["terraform-provider"], enabled: false });
+});

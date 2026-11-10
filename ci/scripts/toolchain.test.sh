@@ -18,8 +18,8 @@ if ! rg -Fq 'mise_ci install --yes bun gitleaks' "$TOOLCHAIN"; then
   exit 1
 fi
 
-if ! rg -Fq 'mise_ci install --yes bun node opentofu' "$TOOLCHAIN"; then
-  echo "OpenTofu containers must install only Bun, Node and OpenTofu" >&2
+if ! rg -Fxq '    mise_ci install --yes bun node opentofu go' "$TOOLCHAIN"; then
+  echo "OpenTofu containers must install only Bun, Node, OpenTofu and Go" >&2
   exit 1
 fi
 
@@ -272,7 +272,7 @@ for profile in automation deployment tofu minecraft; do
   case "$profile" in
     automation) expected_tools='install --yes bun gh jq' ;;
     deployment) expected_tools='install --yes bun node gh jq helm argocd awscli' ;;
-    tofu) expected_tools='install --yes bun node opentofu' ;;
+    tofu) expected_tools='install --yes bun node opentofu go' ;;
     minecraft) expected_tools='install --yes bun java gradle' ;;
   esac
   actual_tools=$(rg '^install ' "$profile_log")

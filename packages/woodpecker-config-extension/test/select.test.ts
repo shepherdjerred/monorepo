@@ -9,7 +9,7 @@ import {
 import { BUN_CACHE, BUN_CACHE_CONTROL } from "#src/pipeline/cache.ts";
 import type { CiStep } from "#src/pipeline/model.ts";
 import { LIGHT_TIER, MEDIUM_TIER } from "#src/pipeline/tiers.ts";
-import { HANDOFF_KEYS } from "#src/pipeline/lanes/tofu.ts";
+import { HANDOFF_KEYS, VALIDATED_STACKS } from "#src/pipeline/lanes/tofu.ts";
 import { TEST_IDENTITY, TEST_IMAGES as IMAGES } from "./identity.ts";
 
 function step(key: string, overrides: Partial<CiStep> = {}): CiStep {
@@ -616,6 +616,24 @@ describe("selected lane contracts", () => {
     expect(check).toBeLessThan(
       commands.findIndex((command) => command.includes("TF_PLUGIN_CACHE_DIR")),
     );
+  });
+
+  test("every OpenTofu stack directory is validated, including the locally built provider's", () => {
+    // A stack is hand-written HCL (providers.tf) or a synthesis (main.tf.json).
+    const stacks = [
+      ...new Bun.Glob("*/{providers.tf,main.tf.json}").scanSync({
+        cwd: `${import.meta.dir}/../../homelab/src/tofu`,
+      }),
+    ].map((file) => file.replace(/\/[^/]+$/u, ""));
+    expect(stacks.length).toBeGreaterThanOrEqual(18);
+    expect([...VALIDATED_STACKS].toSorted()).toEqual(stacks.toSorted());
+    const steps = buildPipelineSteps({ images: IMAGES, changedBase: "x" });
+    expect(
+      steps.find((s) => s.key === "tofu-validate")?.commands.join("\n"),
+    ).toContain(`for stack in ${VALIDATED_STACKS.join(" ")}; do`);
+    expect(
+      keysFor(["packages/terraform-provider-asuswrt/internal/provider.go"]),
+    ).toContain("tofu-validate");
   });
 
   test("configuration validation receives no provider or remote-state authority", () => {

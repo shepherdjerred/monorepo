@@ -1,6 +1,8 @@
 export const legacyTofuPaths = [
-  // The CDK Terrain app that synthesizes src/tofu/<stack>/main.tf.json.
+  // The CDK Terrain app that synthesizes src/tofu/<stack>/main.tf.json, and
+  // the provider pins its bindings and every lock file follow.
   "packages/homelab-cdktn",
+  "packages/homelab/src/tofu/provider-versions.json",
   "packages/homelab/src/domain-registry.json",
   "packages/homelab/scripts/tofu/tofu-stack-manifest.ts",
   "packages/homelab/src/tofu/argocd",
@@ -13,6 +15,9 @@ export const legacyTofuPaths = [
 ] as const;
 
 export const platformTofuPaths = [
+  // Platform stacks are synthesized from the same CDK Terrain app once ported.
+  "packages/homelab-cdktn",
+  "packages/homelab/src/tofu/provider-versions.json",
   "packages/homelab/scripts/tofu/tofu-stack-manifest.ts",
   "packages/homelab/src/tofu/anthropic",
   "packages/homelab/src/tofu/anthropic-federation",

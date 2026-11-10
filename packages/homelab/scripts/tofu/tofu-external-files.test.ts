@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { TofuStackSchema } from "@shepherdjerred/ops-model/platform-policy.ts";
 import { STACK_MANIFEST } from "./tofu-stack-manifest.ts";
+import { lintTargets } from "./lint-tofu.ts";
 import {
   TOFU_STACK_ROOT,
   fileReferences,
@@ -153,6 +154,100 @@ describe("stack external file declarations", () => {
   });
 });
 
+describe("synthesized (JSON) configuration", () => {
+  const input = {
+    repoRoot: "/repo",
+    stackDirectory: `/repo/${TOFU_STACK_ROOT}/cloudflare`,
+    file: `/repo/${TOFU_STACK_ROOT}/cloudflare/main.tf.json`,
+  };
+
+  test("finds the file calls JSON syntax escapes inside its string values", () => {
+    const content = JSON.stringify({
+      locals: {
+        registry:
+          '${jsondecode(file("${path.module}/../../domain-registry.json"))}',
+      },
+      resource: {
+        aws_s3_object: {
+          index: [{ source_hash: '${filemd5("public/index.html")}' }],
+        },
+      },
+    });
+    expect(
+      fileReferences({ ...input, content })
+        .map((reference) => reference.target)
+        .sort(),
+    ).toEqual([
+      "packages/homelab/src/domain-registry.json",
+      `${TOFU_STACK_ROOT}/cloudflare/public/index.html`,
+    ]);
+  });
+
+  test("rejects a non-literal read the same way HCL does", () => {
+    expect(() =>
+      fileReferences({
+        ...input,
+        content: JSON.stringify({ locals: { x: "${file(var.registry)}" } }),
+      }),
+    ).toThrow("without a literal path");
+  });
+
+  test("a synthesized root and its local HCL module are both searched", async () => {
+    const { repoRoot, stackDirectory } = await fixture("");
+    await rm(path.join(stackDirectory, "main.tf"));
+    await Bun.write(
+      path.join(stackDirectory, "main.tf.json"),
+      JSON.stringify({
+        locals: {
+          registry:
+            '${jsondecode(file("${path.module}/../../domain-registry.json"))}',
+        },
+      }),
+    );
+    const references = await verifyStackExternalFiles({
+      repoRoot,
+      stackDirectory,
+      declared: ["packages/homelab/src/domain-registry.json"],
+    });
+    expect(references.map((reference) => reference.target).sort()).toEqual([
+      "packages/homelab/src/domain-registry.json",
+      `${TOFU_STACK_ROOT}/cloudflare/modules/static-cache/rule.tftpl`,
+    ]);
+  });
+});
+
+describe("tflint targets", () => {
+  test("lints every HCL directory and leaves a synthesized-only stack to its own checks", async () => {
+    const { repoRoot, stackDirectory } = await fixture("");
+    const tofuRoot = path.dirname(stackDirectory);
+    await mkdir(path.join(tofuRoot, "github"), { recursive: true });
+    await Bun.write(path.join(tofuRoot, "github/main.tf.json"), "{}\n");
+    // A synthesized root that still calls a local HCL module.
+    await mkdir(path.join(tofuRoot, "mixed/modules/x"), { recursive: true });
+    await Bun.write(path.join(tofuRoot, "mixed/main.tf.json"), "{}\n");
+    await Bun.write(path.join(tofuRoot, "mixed/modules/x/main.tf"), "\n");
+    const relative = (directories: string[]) =>
+      directories.map((directory) => path.relative(tofuRoot, directory));
+    const targets = lintTargets(tofuRoot);
+    expect(relative(targets.hcl)).toEqual([
+      "cloudflare",
+      "cloudflare/modules/static-cache",
+      "cloudflare/tests",
+      "mixed/modules/x",
+    ]);
+    expect(relative(targets.synthesizedOnly)).toEqual(["github", "mixed"]);
+    expect(repoRoot).not.toBe("");
+  });
+
+  test("the live tree still has both kinds", () => {
+    const targets = lintTargets(path.join(repository, TOFU_STACK_ROOT));
+    expect(targets.hcl.length).toBeGreaterThan(0);
+    expect(
+      targets.synthesizedOnly.map((directory) => path.basename(directory)),
+    ).toContain("github");
+  });
+});
+
 describe("stack configuration format", () => {
   test("every stack is hand-written HCL or a cdktn synthesis, never both", async () => {
     const synthesized: string[] = [];
@@ -163,7 +258,9 @@ describe("stack configuration format", () => {
       );
       if (format === "synthesized") synthesized.push(stack);
     }
-    expect(synthesized.toSorted()).toEqual(["github"]);
+    // Which stacks are synthesized is asserted where the list lives, in
+    // packages/homelab-cdktn/src/synth.test.ts.
+    expect(synthesized).toContain("github");
   });
 
   test("rejects a stack directory that mixes or lacks configuration", async () => {
