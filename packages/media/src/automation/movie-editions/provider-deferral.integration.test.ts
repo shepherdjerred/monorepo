@@ -253,8 +253,36 @@ async function staggeredEmptySearch(remoteStatus?: number) {
   return { f, movie, calls, foreign, progress: first.providerSearchProgress };
 }
 
+async function resumeEmptySearch(
+  fixture: Awaited<ReturnType<typeof staggeredEmptySearch>>,
+) {
+  const { f, movie, calls, progress } = fixture;
+  const { db } = f.source;
+  await db.providerLease.update({
+    where: { providerId: "thepiratebay" },
+    data: {
+      ownerId: null,
+      leaseUntil: null,
+      nextAllowedAt: new Date(Date.now() - 1),
+    },
+  });
+  expect(
+    await movie.reconcileMovieIntentV4(
+      { ...f.input, providerSearchProgress: progress },
+      testPlexBindingExecution(),
+    ),
+  ).toEqual({
+    status: "waiting",
+    attemptId: null,
+    reason: "no_acceptable_release",
+  });
+  expect(calls).toEqual(["knaben", "thepiratebay"]);
+  expect(await db.acquisitionAttempt.count()).toBe(0);
+}
+
 test("two staggered admitted empty providers finish without reclaiming the first provider's cooldown", async () => {
-  const { f, movie, calls, foreign, progress } = await staggeredEmptySearch();
+  const fixture = await staggeredEmptySearch();
+  const { f, calls, foreign, progress } = fixture;
   const { db } = f.source;
   try {
     expect(progress.completedProviderIds).toEqual(["knaben"]);
@@ -268,31 +296,12 @@ test("two staggered admitted empty providers finish without reclaiming the first
       where: { providerId: "knaben" },
     });
     expect(cooling.nextAllowedAt.getTime()).toBeGreaterThan(Date.now());
-    await db.providerLease.update({
-      where: { providerId: "thepiratebay" },
-      data: {
-        ownerId: null,
-        leaseUntil: null,
-        nextAllowedAt: new Date(Date.now() - 1),
-      },
-    });
-    expect(
-      await movie.reconcileMovieIntentV4(
-        { ...f.input, providerSearchProgress: progress },
-        testPlexBindingExecution(),
-      ),
-    ).toEqual({
-      status: "waiting",
-      attemptId: null,
-      reason: "no_acceptable_release",
-    });
-    expect(calls).toEqual(["knaben", "thepiratebay"]);
+    await resumeEmptySearch(fixture);
     expect(
       await db.providerLease.findUniqueOrThrow({
         where: { providerId: "knaben" },
       }),
     ).toEqual(cooling);
-    expect(await db.acquisitionAttempt.count()).toBe(0);
     expect(f.source.wire.additions()).toBe(0);
   } finally {
     await f.close();
@@ -302,8 +311,8 @@ test("two staggered admitted empty providers finish without reclaiming the first
 test.each([401, 429, 503])(
   "a remote HTTP%s settles once while another provider waits locally",
   async (remoteStatus) => {
-    const { f, movie, calls, progress } =
-      await staggeredEmptySearch(remoteStatus);
+    const fixture = await staggeredEmptySearch(remoteStatus);
+    const { f, progress } = fixture;
     const { db } = f.source;
     try {
       expect(progress.completedProviderIds).toEqual(["knaben"]);
@@ -317,31 +326,12 @@ test.each([401, 429, 503])(
             ? "rate-limited"
             : "unavailable",
       );
-      await db.providerLease.update({
-        where: { providerId: "thepiratebay" },
-        data: {
-          ownerId: null,
-          leaseUntil: null,
-          nextAllowedAt: new Date(Date.now() - 1),
-        },
-      });
-      expect(
-        await movie.reconcileMovieIntentV4(
-          { ...f.input, providerSearchProgress: progress },
-          testPlexBindingExecution(),
-        ),
-      ).toEqual({
-        status: "waiting",
-        attemptId: null,
-        reason: "no_acceptable_release",
-      });
-      expect(calls).toEqual(["knaben", "thepiratebay"]);
+      await resumeEmptySearch(fixture);
       expect(
         await db.mediaProvider.findUniqueOrThrow({
           where: { id: "knaben" },
         }),
       ).toEqual(failed);
-      expect(await db.acquisitionAttempt.count()).toBe(0);
     } finally {
       await f.close();
     }
