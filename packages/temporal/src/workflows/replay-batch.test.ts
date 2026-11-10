@@ -5,8 +5,14 @@ import { replayTemporalHistoryBatch } from "@shepherdjerred/root-scripts/tempora
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { z } from "zod";
 
-const fixture = (name: string) =>
-  new URL(`replay-fixtures/${name}`, import.meta.url).pathname;
+const recorded = new URL(
+  "replay-fixtures/replay-batch-before.ts",
+  import.meta.url,
+).pathname;
+const nondeterministic = new URL(
+  "replay-fixtures/replay-batch-after.ts",
+  import.meta.url,
+).pathname;
 
 describe("candidate history replay with one bundle", () => {
   let environment: TestWorkflowEnvironment | undefined;
@@ -29,7 +35,7 @@ describe("candidate history replay with one bundle", () => {
     const worker = await Worker.create({
       connection: environment.nativeConnection,
       taskQueue,
-      workflowsPath: fixture("replay-batch-before.ts"),
+      workflowsPath: recorded,
       activities: { completeReplayBatchProbe: (step: string) => step },
     });
     const types = [
@@ -69,7 +75,7 @@ describe("candidate history replay with one bundle", () => {
 
     const outcomes = await replayTemporalHistoryBatch({
       histories,
-      workflowsPath: fixture("replay-batch-before.ts"),
+      workflowsPath: recorded,
       log,
     });
     expect(outcomes).toEqual(
@@ -86,7 +92,7 @@ describe("candidate history replay with one bundle", () => {
     await expect(
       replayTemporalHistoryBatch({
         histories,
-        workflowsPath: fixture("replay-batch-after.ts"),
+        workflowsPath: nondeterministic,
         log,
       }),
     ).rejects.toThrow(

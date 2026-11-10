@@ -1,11 +1,10 @@
-import { proxyActivities } from "@temporalio/workflow";
-
-const { completeReplayBatchProbe } = proxyActivities<{
-  completeReplayBatchProbe: (step: string) => Promise<string>;
-}>({ startToCloseTimeout: "10 seconds", retry: { maximumAttempts: 1 } });
+import {
+  completeReplayBatchProbe,
+  stableReplayBatchProbe,
+} from "./replay-batch-shared.ts";
 
 export async function replayBatchStableProbe(): Promise<string> {
-  return completeReplayBatchProbe("stable");
+  return stableReplayBatchProbe();
 }
 
 export async function replayBatchChangedProbe(): Promise<string> {

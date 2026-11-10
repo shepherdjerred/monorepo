@@ -9,25 +9,6 @@ const name = z.string().regex(/^[A-Za-z_$][\w$-]*$/u);
 /** Visibility reads per registered type overlap; selection order stays the type order. */
 export const REPLAY_SELECTION_CONCURRENCY = 8;
 
-async function mapWithConcurrency<T, R>(
-  items: readonly T[],
-  limit: number,
-  map: (item: T) => Promise<R>,
-): Promise<R[]> {
-  const results: R[] = [];
-  let next = 0;
-  async function lane(): Promise<void> {
-    for (let index = next++; index < items.length; index = next++) {
-      const item = items[index];
-      if (item === undefined) throw new Error("Missing concurrent item");
-      results[index] = await map(item);
-    }
-  }
-  await Promise.all(
-    Array.from({ length: Math.min(limit, items.length) }, () => lane()),
-  );
-  return results;
-}
 export function workerReplayRoute(target: Target) {
   WorkerDeploymentRolloutTargetSchema.parse(target);
   return {
@@ -60,31 +41,41 @@ export async function selectWorkerReplayTargets(
   if (new Set(types).size !== types.length)
     throw new Error("Duplicate registered Workflow types");
   const queues = taskQueues.map((queue) => `'${queue}'`).join(", ");
-  const selected = await mapWithConcurrency(
-    types,
-    REPLAY_SELECTION_CONCURRENCY,
-    async (type) => {
-      const query = `TaskQueue IN (${queues}) AND WorkflowType = '${type}'`;
-      const raw =
-        (await first(`${query} AND ExecutionStatus = 'Running'`)) ??
-        (await first(`${query} AND ExecutionStatus != 'Running'`));
-      if (raw === null) return { type, execution: null };
-      const execution = z
-        .object({
-          workflowId: z.string().min(1),
-          runId: z.uuid(),
-          type: z.literal(type),
-          taskQueue: z.string(),
-        })
-        .parse(raw);
-      if (!taskQueues.includes(execution.taskQueue))
-        throw new Error("Replay history belongs to another task queue");
-      return {
-        type,
-        execution: { workflowId: execution.workflowId, runId: execution.runId },
-      };
-    },
-  );
+  const select = async (type: string) => {
+    const query = `TaskQueue IN (${queues}) AND WorkflowType = '${type}'`;
+    const raw =
+      (await first(`${query} AND ExecutionStatus = 'Running'`)) ??
+      (await first(`${query} AND ExecutionStatus != 'Running'`));
+    if (raw === null) return { type, execution: null };
+    const execution = z
+      .object({
+        workflowId: z.string().min(1),
+        runId: z.uuid(),
+        type: z.literal(type),
+        taskQueue: z.string(),
+      })
+      .parse(raw);
+    if (!taskQueues.includes(execution.taskQueue))
+      throw new Error("Replay history belongs to another task queue");
+    return {
+      type,
+      execution: { workflowId: execution.workflowId, runId: execution.runId },
+    };
+  };
+  // Fixed-size ordered batches keep at most the bound in flight.
+  const selected = [];
+  for (
+    let start = 0;
+    start < types.length;
+    start += REPLAY_SELECTION_CONCURRENCY
+  )
+    selected.push(
+      ...(await Promise.all(
+        types
+          .slice(start, start + REPLAY_SELECTION_CONCURRENCY)
+          .map((type) => select(type)),
+      )),
+    );
   const targets: { workflowId: string; runId: string }[] = [],
     missingTypes: string[] = [];
   for (const { type, execution } of selected)
