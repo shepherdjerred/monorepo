@@ -2,7 +2,7 @@
 // { folder, machine } for a repo without a space; optional { branch, tab, argv }.
 // New takes the first message for the agent instead of a branch name, plus the
 // agent (from Brim's ranking) and its mode, model and effort. Enter hands that
-// to ~/bin/herdr-new-worktree and closes: it names the branch and tab with
+// to ~/bin/herdr-new-worktree and closes: it names the branch, space and tab with
 // OpenAI (naming.js), creates the worktree and opens the space in the
 // background. A given { branch } skips naming and runs here.
 

@@ -14,6 +14,8 @@ import {
   openOverlay,
   exec,
   hc,
+  home,
+  readTextFile,
   theme,
   shared,
   setShared,
@@ -83,6 +85,97 @@ function allAtLimit(s, ps, argvOf, limits) {
 const rowHeight = ({ tree }) => (tree ? 28 : 30);
 const where = (s, ps) => JSON.stringify([s.machine ?? null, place(s, ps)]);
 const base = (path) => path.replace(/\/+$/, "").split("/").pop();
+const folderBase = (folder) => {
+  const parts = String(folder ?? "")
+    .replace(/[\\/]+$/, "")
+    .split(/[\\/]/);
+  return parts[parts.length - 1] ?? "";
+};
+
+// Display names only. hc machine names and addresses stay as they are.
+const MACHINE_TITLES = {
+  "jerreds-macbook-pro": "MacBook",
+  "jerred-desktop": "Windows",
+  desktop: "Windows",
+  "mac-mini": "Karpathy",
+  karpathy: "Karpathy",
+  jobs: "Jobs",
+  "jerreds-mac-mini": "Jobs",
+};
+
+function hostKey(value) {
+  if (value == null) return "";
+  return String(value)
+    .trim()
+    .toLowerCase()
+    .replace(/\.local$/, "");
+}
+
+function machineTitle(name, info, localHost, platform) {
+  const keys = name == null ? [localHost] : [name, info?.host, info?.target];
+  for (const key of keys) {
+    const title = MACHINE_TITLES[hostKey(key)];
+    if (title) return title;
+  }
+  if (name == null && platform === "windows") return "Windows";
+  return name ?? "This computer";
+}
+
+// Same glyphs as the agents list. An unlisted machine keeps the generic server.
+const DEVICE_ICONS = {
+  karpathy: "mac-mini-top",
+  "mac-mini": "mac-mini-top",
+  jobs: "mac-mini-top",
+  "jerreds-mac-mini": "mac-mini-top",
+  desktop: "windows",
+  "jerred-desktop": "windows",
+  "jerreds-macbook-pro": "laptop",
+};
+
+function machineIcon(name, info, platform) {
+  if (name == null) return platform === "windows" ? "windows" : "laptop";
+  for (const key of [name, info?.target, info?.host]) {
+    const icon = DEVICE_ICONS[hostKey(key)];
+    if (icon) return icon;
+  }
+  return null;
+}
+
+function machineIconPath(name, info, platform) {
+  const icon = machineIcon(name, info, platform);
+  // The Windows layout keeps its glyphs in agents-filter; this Mac's are in my-agents.
+  const dir = platform === "windows" ? "mods/agents-filter" : "mods/my-agents";
+  return icon
+    ? `${dir}/${icon}.svg`
+    : `mods/workspace-chrome/${name ? "server" : "monitor"}.svg`;
+}
+
+// A named space keeps its name. Otherwise a generated tab title, never the
+// branch, the checkout folder, or a positional name like "1".
+function spaceLabel(w) {
+  if (w.named) return w.name;
+  const folder = folderBase(w.folder);
+  const branch = w.branch ?? "";
+  const tab = (w.tabs ?? []).find((item) => {
+    if (!item.named || /^\d+$/.test(item.name ?? "")) return false;
+    const title = item.name.trim().toLowerCase();
+    if (!title) return false;
+    if (folder && title === folder.toLowerCase()) return false;
+    if (branch && title === branch.toLowerCase()) return false;
+    return true;
+  });
+  return tab?.name || w.name;
+}
+
+const STEP_LABEL = {
+  naming: "Naming",
+  branch: "Choosing a branch",
+  worktree: "Creating checkout",
+  space: "Opening",
+  message: "Starting the agent",
+};
+const activeDir = () => `${home()}/.local/state/herdr-worktree/active`;
+const awakeDir = () => `${home()}/.local/state/herdr-caffeinate`;
 // Changes made outside Herdr (an editor's save, a commit in another app): looked
 // for this often, in repos the list shows, while the window is in front.
 const FALLBACK = 60000;
@@ -124,10 +217,14 @@ export default class Spaces extends View {
     this.pressed = null;
     this.over = null;
     this.machines = [];
+    this.hostName = null;
+    this.jobs = [];
+    this.awake = false;
     this.folded = new Set(
       JSON.parse(localStorage.getItem("machines.folded") ?? "[]"),
     );
     this.refreshMachines(cx);
+    this.watchJobs(cx);
     cx.timer.every(15000, (cx) => this.refreshMachines(cx));
     // `git status` walks the whole tree, on another machine a process there:
     // only when its answer could have changed (see `due`).
@@ -203,6 +300,124 @@ export default class Spaces extends View {
           this.machines = (JSON.parse(r.stdout).machines ?? []).filter(
             (m) => !m.temporary,
           );
+      } catch {}
+      if (this.hostName == null) {
+        try {
+          const host = await exec("hostname");
+          const name = host.stdout.trim().replace(/\.local$/, "");
+          if (host.code === 0 && name) this.hostName = name;
+        } catch {}
+      }
+      try {
+        await this.loadJobs();
+      } catch {}
+      if (this.caffeinateHere(null)) {
+        try {
+          await this.readAwake();
+        } catch {}
+      }
+      cx.notify();
+    });
+  }
+
+  // Runs the dialog started, on this computer, until the worker deletes them.
+  async loadJobs() {
+    const listed = await exec("ls", ["-1", activeDir()]);
+    const jobs = [];
+    if (listed.code !== 0) {
+      this.jobs = [];
+      return;
+    }
+    for (const name of listed.stdout.split("\n")) {
+      if (!name.endsWith(".json")) continue;
+      const text = await readTextFile(`${activeDir()}/${name}`);
+      if (!text) continue;
+      let job;
+      try {
+        job = JSON.parse(text);
+      } catch {
+        continue;
+      }
+      if (!job || typeof job.pid !== "number" || typeof job.repo !== "string")
+        continue;
+      const live = await exec("kill", ["-0", String(job.pid)]);
+      if (live.code !== 0) continue;
+      jobs.push({ ...job, id: name.slice(0, -".json".length) });
+    }
+    this.jobs = jobs;
+  }
+
+  watchJobs(cx) {
+    cx.spawn(async (cx) => {
+      for (;;) {
+        try {
+          await this.loadJobs();
+          cx.notify();
+          await watchFolder(activeDir());
+        } catch {
+          // The folder appears with the first run. Don't spin until then.
+          await exec("sleep", ["2"]);
+        }
+      }
+    });
+  }
+
+  caffeinateHere(m) {
+    return (
+      m == null &&
+      window().platform === "macos" &&
+      machineTitle(null, null, this.hostName, window().platform) === "MacBook"
+    );
+  }
+
+  // `ps -o comm=` has to run in a shell: the trailing "=" is the header
+  // suppressor, and it has to reach ps intact.
+  async caffeinateComm(pid) {
+    const ps = await exec("sh", ["-c", 'ps -p "$0" -o comm=', String(pid)]);
+    return ps.code === 0 ? ps.stdout.trim() : "";
+  }
+
+  async readAwake() {
+    const text = await readTextFile(`${awakeDir()}/pid`);
+    const pid = Number.parseInt(String(text ?? "").trim(), 10);
+    if (!Number.isInteger(pid) || pid <= 0) {
+      this.awake = false;
+      return;
+    }
+    this.awake = /(^|\/)caffeinate$/.test(await this.caffeinateComm(pid));
+  }
+
+  async startAwake() {
+    await this.readAwake();
+    if (this.awake) return;
+    const dir = awakeDir();
+    // setsid, then exec, so the pid file is caffeinate itself and the shell
+    // exits. A backgrounded nohup records the wrapper, which is not caffeinate.
+    await exec("sh", [
+      "-c",
+      'mkdir -p "$0" && chmod 700 "$0"; perl -MPOSIX -e \'POSIX::setsid(); exec "caffeinate", "-i" or die\' >/dev/null 2>&1 & echo $! > "$0/pid"; chmod 600 "$0/pid"',
+      dir,
+    ]);
+  }
+
+  async stopAwake() {
+    const pidfile = `${awakeDir()}/pid`;
+    const text = await readTextFile(pidfile);
+    const pid = Number.parseInt(String(text ?? "").trim(), 10);
+    if (Number.isInteger(pid) && pid > 0) {
+      if (/(^|\/)caffeinate$/.test(await this.caffeinateComm(pid)))
+        await exec("kill", [String(pid)]);
+    }
+    await exec("rm", ["-f", pidfile]);
+  }
+
+  toggleAwake(cx) {
+    cx.spawn(async (cx) => {
+      try {
+        await this.readAwake();
+        if (this.awake) await this.stopAwake();
+        else await this.startAwake();
+        await this.readAwake();
       } catch {}
       cx.notify();
     });
@@ -373,6 +588,73 @@ export default class Spaces extends View {
     return out;
   }
 
+  jobsFor(m) {
+    return (this.jobs ?? []).filter((job) => (job.machine ?? null) === m);
+  }
+
+  // In-progress worktrees sit under their repo, or under the machine when that
+  // group is not in the list yet. Hidden while the sidebar is collapsed.
+  rowsWithJobs(rows, m, collapsed, t, draw) {
+    if (collapsed) return rows.map(draw);
+    const jobs = this.jobsFor(m);
+    const matched = new Set();
+    const drawn = [];
+    for (const row of rows) {
+      drawn.push(draw(row));
+      if (row.tree || !row.g?.name) continue;
+      for (const job of jobs) {
+        if (job.repo !== row.g.name || matched.has(job.id)) continue;
+        matched.add(job.id);
+        drawn.push(this.jobRow(job, t));
+      }
+    }
+    const loose = jobs
+      .filter((job) => !matched.has(job.id))
+      .map((job) => this.jobRow(job, t));
+    return [...loose, ...drawn];
+  }
+
+  jobRow(job, t) {
+    return h_flex()
+      .id(`worktree-job-${job.id}`)
+      .h(28)
+      .flex_none()
+      .px(8)
+      .items_center()
+      .child(
+        h_flex()
+          .pl(22)
+          .gap(9)
+          .flex_1()
+          .min_w(0)
+          .items_center()
+          .child(
+            svg("mods/workspace-chrome/spinner.svg")
+              .size(13)
+              .flex_none()
+              .text_color(t.dim)
+              .spin(900),
+          )
+          .child(
+            div()
+              .flex_shrink(0)
+              .max_w(150)
+              .truncate()
+              .text_color(t.foreground)
+              .child(job.title || "New worktree"),
+          )
+          .child(
+            div()
+              .flex_1()
+              .min_w(0)
+              .truncate()
+              .text_size(11.5)
+              .text_color(t.dim)
+              .child(STEP_LABEL[job.step] ?? ""),
+          ),
+      );
+  }
+
   // The rows, under a header per machine once one isn't this computer.
   grouped(t, collapsed) {
     const rows = this.ordered();
@@ -401,10 +683,10 @@ export default class Spaces extends View {
         .text_size(12)
         .text_color(t.dim)
         .child(collapsed ? "…" : "Loading…");
-    if (!remote.length)
-      return loading(null) && !rows.length
-        ? [loadingRow(null)]
-        : rows.map(draw);
+    if (!remote.length) {
+      const jobs = this.rowsWithJobs(rows, null, collapsed, t, draw);
+      return loading(null) && !rows.length ? [loadingRow(null), ...jobs] : jobs;
+    }
     const machineNames = [null, ...remote];
     return machineNames.flatMap((m) => {
       const mine = rows.filter((r) => (r.w.machine ?? null) === m);
@@ -431,9 +713,10 @@ export default class Spaces extends View {
           cx.notify();
         })
         .child(
-          svg(`mods/workspace-chrome/${m ? "server" : "monitor"}.svg`)
+          svg(machineIconPath(m, machine, window().platform))
             .size(13)
-            .flex_none(),
+            .flex_none()
+            .text_color(t.dim),
         )
         .when(!collapsed, (el) =>
           el
@@ -441,13 +724,53 @@ export default class Spaces extends View {
               div()
                 .flex_1()
                 .truncate()
-                .child(m ?? "This computer"),
+                .child(
+                  machineTitle(m, machine, this.hostName, window().platform),
+                ),
             )
             .when(!connected, (el) =>
               el.child(
                 div()
                   .flex_none()
                   .child((machine?.state ?? "asleep").replace(/_/g, " ")),
+              ),
+            )
+            .when(connected && this.caffeinateHere(m), (el) =>
+              el.child(
+                h_flex()
+                  .id("machine-awake")
+                  .flex_none()
+                  .gap(5)
+                  .items_center()
+                  .tooltip(
+                    this.awake ? "Keeping this Mac awake" : "Allow sleep",
+                  )
+                  .on_click((_e, cx) => {
+                    cx.stop_propagation();
+                    this.toggleAwake(cx);
+                  })
+                  .child(
+                    div()
+                      .text_color(this.awake ? t.accent : t.foreground)
+                      .child(this.awake ? "Awake" : "Off"),
+                  )
+                  .child(
+                    h_flex()
+                      .w(22)
+                      .h(12)
+                      .rounded(6)
+                      .px(2)
+                      .items_center()
+                      .flex_none()
+                      .bg(this.awake ? t.accent : t.raised)
+                      .when(this.awake, (track) => track.justify_end())
+                      .child(
+                        div()
+                          .size(8)
+                          .rounded(4)
+                          .bg(this.awake ? t.accent_foreground : t.foreground),
+                      ),
+                  ),
               ),
             )
             .when(connected, (el) =>
@@ -499,15 +822,18 @@ export default class Spaces extends View {
         ...(folded
           ? []
           : mine.length
-            ? mine.map(draw)
-            : [loading(m) ? loadingRow(m) : empty]),
+            ? this.rowsWithJobs(mine, m, collapsed, t, draw)
+            : [
+                ...this.rowsWithJobs([], m, collapsed, t, draw),
+                loading(m) ? loadingRow(m) : empty,
+              ]),
       ];
     });
   }
 
-  // Only what's unusual, after the name: "herdr \u00b7 spike \u21912 \u21931". The repo or
-  // branch goes when the name already says it (a worktree is named after its branch),
-  // and master/main go: nearly every space is on one.
+  // Only what's unusual, after the name: "herdr \u00b7 spike \u21912 \u21931". `name` is
+  // the checkout folder, so a titled space does not also print its branch.
+  // master/main go: nearly every space is on one.
   gitTail(g, tree, name, t) {
     const raw = g.branch ?? "detached";
     const same = (a) => a.toLowerCase() === name.toLowerCase();
@@ -539,6 +865,7 @@ export default class Spaces extends View {
 
   row({ w, i, g, tree }, t) {
     const on = w.active;
+    const label = spaceLabel(w);
     const colors = shared("space.colors") ?? {};
     const color = colors[w.id] ?? "ansi6";
     const fill = color.startsWith("#") ? color : (MARK[color] ?? t[color]);
@@ -594,7 +921,7 @@ export default class Spaces extends View {
                 .text_size(10.5)
                 .font_bold()
                 .text_color("#ffffff")
-                .child([...w.name][0]?.toUpperCase() ?? "?"),
+                .child([...label][0]?.toUpperCase() ?? "?"),
             ),
           )
           .child(
@@ -603,9 +930,13 @@ export default class Spaces extends View {
               .max_w(150)
               .truncate()
               .text_color(t.foreground)
-              .child(w.name),
+              .child(label),
           )
-          .child(g ? this.gitTail(g, tree, w.name, t) : div().flex_1()),
+          .child(
+            g
+              ? this.gitTail(g, tree, folderBase(w.folder) || w.name, t)
+              : div().flex_1(),
+          ),
       );
   }
 
