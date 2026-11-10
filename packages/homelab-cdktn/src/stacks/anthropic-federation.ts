@@ -11,7 +11,7 @@ import { Item } from "#generated/providers/onepassword/item/index.ts";
 import { OnepasswordProvider } from "#generated/providers/onepassword/provider/index.ts";
 import { HomelabStack } from "#src/homelab-stack.ts";
 import { HOMELAB_VAULT_ID } from "#src/onepassword.ts";
-import { encryptState } from "#src/state-encryption.ts";
+import { encryptStateAndPlans } from "#src/encryption.ts";
 
 /**
  * Anthropic workload identity federation: the cluster's token issuer, and
@@ -25,7 +25,12 @@ export class AnthropicFederationStack extends HomelabStack {
       requiredVersion: ">= 1.9.0",
       providerConstraints: { anthropic: "1.60.0", onepassword: "~> 3.0" },
     });
-    encryptState(this);
+    encryptStateAndPlans(this, {
+      description:
+        "OpenTofu state and plan encryption passphrase from 1Password",
+      errorMessage:
+        "The OpenTofu state encryption passphrase must be at least 16 characters.",
+    });
 
     const workspaces = new TerraformVariable(
       this,
