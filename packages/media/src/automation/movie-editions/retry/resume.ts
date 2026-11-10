@@ -33,15 +33,16 @@ export async function resumeMovieAttempt(
     };
   if (["cancelled", "failed"].includes(existing.state))
     return { status: "obsolete", attemptId: null, reason: "attempt_terminal" };
+  if (["submitting", "submission_unknown"].includes(existing.state))
+    return { status: "acquire", attemptId: existing.id, reason: null };
   await refreshMovieAttemptRequesterAccessV4(context, input.scope, existing);
   if (
-    ["submitting", "submission_unknown"].includes(existing.state) ||
-    (await validMovieAttemptV4(context, {
+    await validMovieAttemptV4(context, {
       schemaVersion: 4,
       operationId: input.operationId,
       attemptId: existing.id,
       scope: input.scope,
-    }))
+    })
   )
     return { status: "acquire", attemptId: existing.id, reason: null };
   return {

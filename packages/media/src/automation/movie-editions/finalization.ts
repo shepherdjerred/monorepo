@@ -23,7 +23,10 @@ import { queueMovieSubtitleTargetsV4 } from "./subtitles/queue.ts";
 import { queueMoviePublicationNoticesV4 } from "./notifications/producer.ts";
 import { queueReadyMovieCaptionNoticesV4 } from "./notifications/captions.ts";
 import { movieFinalizationFreshnessV4 } from "#infrastructure/movie-editions/lifecycle/retry/retry-finalization.ts";
-import { refreshMovieAttemptRequesterAccessV4 } from "./requester-access.ts";
+import {
+  refreshMovieAttemptRequesterAccessV4,
+  isMovieRequesterAccessDenial,
+} from "./requester-access.ts";
 
 /** Logical completion uses the real immutable Plex publication, never a fabricated acquisition parent. */
 export async function finalizeMovieAcquisitionV4(
@@ -45,7 +48,13 @@ export async function finalizeMovieAcquisitionV4(
   budget.consume(1);
   execution.assertActive();
   if (attempt.state === "completed") return;
-  await refreshMovieAttemptRequesterAccessV4(context, input.scope, attempt);
+  try {
+    await refreshMovieAttemptRequesterAccessV4(context, input.scope, attempt);
+  } catch (error) {
+    if (retry === true || !isMovieRequesterAccessDenial(error)) throw error;
+  }
+  execution.assertActive();
+  execution.signal.throwIfAborted();
   const invocation = plexBindingFreshness({
     observed: execution.observed,
     expiresAtMs: execution.expiresAtMs,

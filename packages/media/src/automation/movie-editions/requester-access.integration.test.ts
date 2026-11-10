@@ -24,6 +24,8 @@ import { currentMovieSubtitleWorkV4 } from "./subtitles/authority.ts";
 import { captionProviderFixture } from "./notifications/caption-provider.test-fixture.ts";
 import { plexBindingFreshness } from "#infrastructure/plex-binding/freshness.ts";
 import { MediaError } from "#application/errors.ts";
+import { finalizeMovieAcquisitionV4 } from "./finalization.ts";
+import { readMoviePlexReceiptV2 } from "#infrastructure/movie-editions/plex/receipt.ts";
 
 async function reservedInput(
   f: Awaited<ReturnType<typeof movieRequesterAccessFixture>>,
@@ -428,6 +430,160 @@ async function secondRequester(f: RequesterFixture) {
   return { actor, request };
 }
 
+test.each([
+  { mode: "revoked", independent: false },
+  { mode: "credentials", independent: false },
+  { mode: "revoked", independent: true },
+  { mode: "credentials", independent: true },
+] as const)(
+  "committed movie settlement survives $mode denial with independent requester=$independent while retry remains strict",
+  async ({ mode, independent }) => {
+    const f = await movieRequesterAccessFixture(
+      await movieVideoFixture(1920, []),
+    );
+    try {
+      const input = await reservedInput(f);
+      expect(
+        await f.movie.submitMovieTorrentV4(input, testPlexBindingExecution()),
+      ).toEqual({ status: "submitted", reason: null });
+      expect(
+        await f.movie.observeMovieAcquisitionV4(
+          input,
+          testPlexBindingExecution(),
+        ),
+      ).toEqual({ status: "ready", reason: null });
+      expect(
+        await f.fileMovie.inspectAndStageMovieV4(
+          input,
+          testPublicationExecution(),
+        ),
+      ).toMatchObject({ status: "staged" });
+      expect(
+        await f.fileMovie.promoteMovieFilesV4(
+          input,
+          testPublicationExecution(),
+        ),
+      ).toMatchObject({ status: "published" });
+      expect(
+        await f.movie.publishMovieToPlexV4(input, testPlexBindingExecution()),
+      ).toEqual({ status: "available", reason: null });
+      const receipt = await readMoviePlexReceiptV2(
+        f.db,
+        input,
+        new PublicationAuthorityReadBudget(),
+      );
+      expect(receipt).not.toBeNull();
+      const before = await f.db.acquisitionAttempt.findUniqueOrThrow({
+        where: { id: input.attemptId },
+      });
+      expect(before.state).toBe("imported");
+      const assets = await f.db.libraryAsset.findMany();
+      const bindings = await f.db.plexBindingCurrent.findMany();
+      const permitted = independent ? await secondRequester(f) : null;
+      for (const userId of [f.source.user.id, permitted?.actor.id].filter(
+        (id) => id !== undefined,
+      ))
+        await f.db.notificationPreference.create({
+          data: { userId, emailEnabled: true },
+        });
+      const priorCaptions = await f.db.operation.findMany({
+        where: { kind: "acquire_movie_subtitles_v4" },
+      });
+      await denyRequester(f, mode);
+      await expect(
+        finalizeMovieAcquisitionV4(
+          f.network,
+          input,
+          testPlexBindingExecution(),
+          true,
+        ),
+      ).rejects.toMatchObject({
+        code:
+          mode === "revoked"
+            ? "plex_library_access_required"
+            : "plex_credentials_required",
+      });
+      expect(
+        await f.db.acquisitionAttempt.findUniqueOrThrow({
+          where: { id: input.attemptId },
+        }),
+      ).toEqual(before);
+      expect(
+        await f.db.acquisitionReservation.count({
+          where: { attemptId: input.attemptId },
+        }),
+      ).toBe(1);
+      await f.movie.finalizeMovieAcquisitionV4(
+        input,
+        testPlexBindingExecution(),
+      );
+      expect(
+        await f.db.acquisitionAttempt.findUniqueOrThrow({
+          where: { id: input.attemptId },
+        }),
+      ).toMatchObject({
+        state: "completed",
+        identityEvidence: before.identityEvidence,
+        movieEditionAuthority: before.movieEditionAuthority,
+        torrentId: before.torrentId,
+      });
+      expect(
+        await f.db.acquisitionReservation.count({
+          where: { attemptId: input.attemptId },
+        }),
+      ).toBe(0);
+      const seeding = await f.db.operation.findMany({
+        where: { kind: "maintain_torrent", targetId: before.torrentId },
+        include: { outbox: true },
+      });
+      expect(seeding).toHaveLength(1);
+      expect(seeding[0]?.outbox).not.toBeNull();
+      const captions = await f.db.operation.findMany({
+        where: { kind: "acquire_movie_subtitles_v4" },
+      });
+      expect(
+        captions.filter((row) =>
+          priorCaptions.some((old) => old.id === row.id),
+        ),
+      ).toEqual(priorCaptions);
+      const newCaptions = captions.filter(
+        (row) => !priorCaptions.some((old) => old.id === row.id),
+      );
+      expect(newCaptions).toHaveLength(independent ? 1 : 0);
+      if (independent)
+        expect(newCaptions[0]?.payload).toMatchObject({ language: "en" });
+      const deliveries = await f.db.notificationDelivery.findMany();
+      expect(deliveries.map((row) => row.userId)).toEqual(
+        permitted === null ? [] : [permitted.actor.id],
+      );
+      expect(await f.db.libraryAsset.findMany()).toEqual(assets);
+      expect(await f.db.plexBindingCurrent.findMany()).toEqual(bindings);
+      expect(
+        await readMoviePlexReceiptV2(
+          f.db,
+          input,
+          new PublicationAuthorityReadBudget(),
+        ),
+      ).toEqual(receipt);
+      const calls = f.calls.length;
+      await f.movie.finalizeMovieAcquisitionV4(
+        input,
+        testPlexBindingExecution(),
+      );
+      expect(f.calls).toHaveLength(calls);
+      expect(
+        await f.db.operation.count({
+          where: { kind: "maintain_torrent", targetId: before.torrentId },
+        }),
+      ).toBe(1);
+      expect(f.source.wire.additions()).toBe(1);
+      expect(await f.db.mediaSession.count()).toBe(0);
+    } finally {
+      await f.close();
+    }
+  },
+);
+
 test.each(["revoked", "credentials"] as const)(
   "personal movie due preserves an independent permitted requester after %s renewal is denied",
   async (mode) => {
@@ -739,6 +895,17 @@ test.each(["revoked", "credentials"] as const)(
       });
       await denyRequester(f, mode);
       const calls = f.calls.length;
+      expect(
+        await f.movie.reconcileMovieIntentV4(
+          f.input,
+          testPlexBindingExecution(),
+        ),
+      ).toEqual({
+        status: "acquire",
+        attemptId: input.attemptId,
+        reason: null,
+      });
+      expect(await f.db.acquisitionAttempt.count()).toBe(1);
       expect(
         await f.movie.submitMovieTorrentV4(input, testPlexBindingExecution()),
       ).toEqual({ status: "submitted", reason: null });

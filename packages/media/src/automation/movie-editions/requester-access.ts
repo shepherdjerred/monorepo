@@ -154,19 +154,7 @@ async function refreshChoices(
       try {
         await context.refreshRequesterAccess([sponsor], execution, budget);
       } catch (error) {
-        if (
-          !(error instanceof MediaError) ||
-          ![
-            "plex_credentials_required",
-            "plex_library_access_required",
-            "plex_token_expired",
-            "plex_profile_reconnect",
-            "requests_restricted",
-            "managed_profile_required",
-            "forbidden",
-          ].includes(error.code)
-        )
-          throw error;
+        if (!isMovieRequesterAccessDenial(error)) throw error;
       }
       execution.assertActive();
       execution.signal.throwIfAborted();
@@ -176,4 +164,20 @@ async function refreshChoices(
   }
   execution.assertActive();
   execution.signal.throwIfAborted();
+}
+
+/** Expected principal refusals do not invalidate an already committed publication. */
+export function isMovieRequesterAccessDenial(error: unknown) {
+  return (
+    error instanceof MediaError &&
+    [
+      "plex_credentials_required",
+      "plex_library_access_required",
+      "plex_token_expired",
+      "plex_profile_reconnect",
+      "requests_restricted",
+      "managed_profile_required",
+      "forbidden",
+    ].includes(error.code)
+  );
 }
