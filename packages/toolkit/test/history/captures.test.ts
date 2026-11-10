@@ -557,6 +557,31 @@ describe("capture spool handling", () => {
     ).toBe(2);
     expect(blobs()).toBe(0);
   });
+
+  test("keeps a WebSocket open past retention and prunes it once closed", async () => {
+    const context = await fixture();
+    const [open, ...messages] = codexToolTurn();
+    if (open === undefined) throw new Error("codexToolTurn has no ws-open");
+    await ingest(context, [open, ...messages.slice(0, 3)]);
+    const later = new Date("2026-11-20T00:00:00.000Z");
+    pruneCaptures(context.store, 1, later);
+    const flows = () =>
+      Count.parse(context.store.get("SELECT COUNT(*) AS count FROM ws_flows"))
+        .count;
+    expect(flows()).toBe(1);
+
+    const [, ...closing] = codexToolTurn({ close: true });
+    const report = await ingest(
+      context,
+      closing.slice(3),
+      "0002-1-000001.jsonl",
+    );
+    expect(report.captures).toBe(3);
+    pruneCaptures(context.store, 30, later);
+    expect(flows()).toBe(1);
+    pruneCaptures(context.store, 1, later);
+    expect(flows()).toBe(0);
+  });
 });
 
 describe("capture correlation and storage", () => {

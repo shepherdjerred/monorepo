@@ -129,7 +129,10 @@ export async function spoolSegments(spoolDir: string): Promise<string[]> {
 
 const CountRowSchema = z.object({ count: z.number() });
 
-/** Deletes captures older than the retention window and orphaned blobs. */
+/**
+ * Deletes captures older than the retention window, WebSockets closed before
+ * it, and orphaned blobs.
+ */
 export function pruneCaptures(
   store: CaptureStore,
   retentionDays: number,
@@ -145,7 +148,11 @@ export function pruneCaptures(
       ),
     );
     store.run("DELETE FROM captures WHERE started_at < ?", cutoff);
-    store.run("DELETE FROM ws_flows WHERE opened_at < ?", cutoff);
+    // An open WebSocket keeps its row however old: its later messages need it.
+    store.run(
+      "DELETE FROM ws_flows WHERE closed_at IS NOT NULL AND closed_at < ?",
+      cutoff,
+    );
     store.run("DELETE FROM spool_segments WHERE ingested_at < ?", cutoff);
     if (count > 0) {
       store.run(`DELETE FROM blobs WHERE hash NOT IN (
