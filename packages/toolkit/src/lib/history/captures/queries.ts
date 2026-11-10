@@ -5,7 +5,7 @@ import type {
   HistoryApiCaptureDetailResponse,
 } from "#lib/history/api/schema.ts";
 import type { HistorySourceName } from "#lib/history/types.ts";
-import { captureBlocks, diffBlocks } from "./blocks.ts";
+import { captureBlocks, storedNewKeys } from "./blocks.ts";
 import { asRecord, parseJsonOrText, type JsonRecord } from "./json.ts";
 import { dumpProtobuf, type ProtoDumpField } from "./protobuf-dump.ts";
 import { renderBlock, summarizeResponse } from "./render.ts";
@@ -184,12 +184,7 @@ function detailBlocks(
   sent: { section: BlockSection; value: unknown }[];
 } {
   const refs = captureBlocks(store, row.id);
-  const diff = diffBlocks(
-    refs,
-    row.previous_capture_id === null
-      ? null
-      : captureBlocks(store, row.previous_capture_id),
-  );
+  const newKeys = storedNewKeys(store, row.id);
   const positions = new Map<BlockSection, number>();
   const sent: { section: BlockSection; value: unknown }[] = [];
   const blocks = refs.map((ref): DetailBlock => {
@@ -212,7 +207,7 @@ function detailBlocks(
       role: rendered.role,
       bytes: ref.bytes,
       inherited: ref.inherited,
-      isNew: diff.newKeys.has(`${ref.section}:${String(index)}`),
+      isNew: newKeys.has(`${ref.section}:${String(index)}`),
       parts: [...rendered.parts],
     };
   });

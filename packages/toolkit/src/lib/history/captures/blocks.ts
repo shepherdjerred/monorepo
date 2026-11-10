@@ -1,3 +1,4 @@
+import type { SQLQueryBindings } from "bun:sqlite";
 import { z } from "zod";
 import {
   BLOCK_CATEGORIES,
@@ -6,7 +7,6 @@ import {
   type BlockSection,
   type ParsedBlock,
 } from "./request.ts";
-import type { CaptureStore } from "./store.ts";
 
 /**
  * A capture's context is an ordered list of block references. Diffing two
@@ -15,6 +15,14 @@ import type { CaptureStore } from "./store.ts";
  */
 
 const PREVIOUS_CANDIDATES = 20;
+
+/**
+ * The store's read surface. Structural, so the store can migrate block rows
+ * with these helpers without an import cycle.
+ */
+type BlockReader = {
+  all: (sql: string, ...values: SQLQueryBindings[]) => unknown[];
+};
 
 export type BlockRef = {
   readonly section: BlockSection;
@@ -45,7 +53,7 @@ const SECTION_ORDER =
   "CASE section WHEN 'system' THEN 0 WHEN 'tools' THEN 1 ELSE 2 END";
 
 export function captureBlocks(
-  store: CaptureStore,
+  store: BlockReader,
   captureId: number,
 ): BlockRef[] {
   return store
@@ -58,6 +66,45 @@ export function captureBlocks(
       const parsed = BlockRowSchema.parse(row);
       return { ...parsed, inherited: parsed.inherited === 1 };
     });
+}
+
+/** Each block with its position in its section and its `section:position` key. */
+export function positioned<T extends { readonly section: BlockSection }>(
+  blocks: readonly T[],
+): { block: T; position: number; key: string }[] {
+  const positions = new Map<BlockSection, number>();
+  return blocks.map((block) => {
+    const position = positions.get(block.section) ?? 0;
+    positions.set(block.section, position + 1);
+    return { block, position, key: `${block.section}:${String(position)}` };
+  });
+}
+
+const NewBlockRowSchema = z.object({
+  section: z.enum(BLOCK_SECTIONS),
+  position: z.number(),
+});
+
+/**
+ * The `section:position` keys of the blocks a capture added, as diffed when
+ * it was ingested. Stored, because the capture it was diffed against may
+ * since have been pruned.
+ */
+export function storedNewKeys(
+  store: BlockReader,
+  captureId: number,
+): Set<string> {
+  return new Set(
+    store
+      .all(
+        "SELECT section, position FROM capture_blocks WHERE capture_id = ? AND is_new = 1",
+        captureId,
+      )
+      .map((row) => {
+        const { section, position } = NewBlockRowSchema.parse(row);
+        return `${section}:${String(position)}`;
+      }),
+  );
 }
 
 function conversationIdentities(blocks: readonly BlockRef[]): string[] {
@@ -105,11 +152,7 @@ export function diffBlocks(
   );
   const newKeys = new Set<string>();
   const bytes = { system: 0, tools: 0, history: 0, new: 0 };
-  const positions = new Map<BlockSection, number>();
-  for (const block of current) {
-    const position = positions.get(block.section) ?? 0;
-    positions.set(block.section, position + 1);
-    const key = `${block.section}:${String(position)}`;
+  for (const { block, position, key } of positioned(current)) {
     const shared =
       block.section === "messages"
         ? position < prefix
@@ -141,7 +184,7 @@ const IdRowSchema = z.object({ id: z.number() });
  * request chained from one diffs against the last real turn, or nothing.
  */
 export function choosePrevious(
-  store: CaptureStore,
+  store: BlockReader,
   capture: {
     readonly id: number;
     readonly sessionKey: string | null;

@@ -1,3 +1,4 @@
+import { Database } from "bun:sqlite";
 import { afterEach, describe, expect, test } from "vitest";
 import { readdir, rm } from "node:fs/promises";
 import path from "node:path";
@@ -619,6 +620,34 @@ describe("capture spool handling", () => {
     expect(blobs()).toBe(0);
   });
 
+  test("keeps a capture's new blocks after the capture it diffed against is pruned", async () => {
+    const context = await fixture();
+    const [first, second] = claudeToolTurn();
+    if (second === undefined || first?.kind !== "http") {
+      throw new Error("claudeToolTurn has no HTTP pair");
+    }
+    await ingest(context, [
+      { ...first, startedAt: "2026-11-01T03:23:00.000Z" },
+      second,
+    ]);
+    const [child] = listCaptures(context.store, {
+      session: null,
+      limit: 1,
+      offset: 0,
+    }).captures;
+    const before = await detail(context, child?.id ?? 0);
+    expect(before.capture.previousCaptureId).not.toBeNull();
+    expect(before.newBlocks).toHaveLength(before.capture.newBlockCount);
+
+    expect(
+      pruneCaptures(context.store, 5, new Date("2026-11-10T04:00:00.000Z")),
+    ).toBe(1);
+    const after = await detail(context, child?.id ?? 0);
+    expect(after.newBlocks).toEqual(before.newBlocks);
+    expect(after.request).toEqual(before.request);
+    expect(after.capture).toEqual(before.capture);
+  });
+
   test("keeps a WebSocket open past retention and prunes it once closed", async () => {
     const context = await fixture();
     const [open, ...messages] = codexToolTurn();
@@ -824,6 +853,53 @@ describe("capture correlation and storage", () => {
       dryRun: true,
     });
     expect(again.redactedBlobs).toBe(0);
+  });
+});
+
+/** A store ingested at v2, then rewound to the v1 shape. */
+async function v1Store(records: readonly CaptureRecord[]) {
+  const context = await fixture();
+  await ingest(context, records);
+  const dbPath = context.store.path;
+  const novelty = context.store.all(
+    "SELECT capture_id, section, position, is_new FROM capture_blocks ORDER BY capture_id, section, position",
+  );
+  context.store.close();
+  opened.splice(opened.indexOf(context.store), 1);
+  const database = new Database(dbPath, { strict: true });
+  database.run("ALTER TABLE capture_blocks DROP COLUMN is_new");
+  database.run("PRAGMA user_version = 1");
+  return { dbPath, database, novelty };
+}
+
+describe("capture store migration", () => {
+  test("recomputes v1 block novelty against each stored predecessor", async () => {
+    const { dbPath, database, novelty } = await v1Store(claudeToolTurn());
+    database.close();
+    const store = await CaptureStore.open(dbPath);
+    opened.push(store);
+    expect(
+      store.all(
+        "SELECT capture_id, section, position, is_new FROM capture_blocks ORDER BY capture_id, section, position",
+      ),
+    ).toEqual(novelty);
+    expect(store.get("PRAGMA user_version")).toEqual({ user_version: 2 });
+  });
+
+  test("refuses a v1 store whose capture was diffed against a pruned one", async () => {
+    const { dbPath, database } = await v1Store(claudeToolTurn());
+    database.run(
+      "DELETE FROM captures WHERE id = (SELECT MIN(id) FROM captures)",
+    );
+    database.close();
+    await expect(CaptureStore.open(dbPath)).rejects.toThrow(
+      /was diffed against capture \d+, which was pruned/,
+    );
+    const reopened = new Database(dbPath, { strict: true });
+    expect(reopened.query("PRAGMA user_version").get()).toEqual({
+      user_version: 1,
+    });
+    reopened.close();
   });
 });
 

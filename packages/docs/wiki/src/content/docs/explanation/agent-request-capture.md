@@ -53,7 +53,9 @@ stores each block once, by content hash, compressed with zstd. A request
 becomes an ordered list of references.
 
 The same list gives the diff a person wants: which blocks a request added over
-the previous one in its session. Each block renders as an
+the previous one in its session. The diff is stored when the request is
+ingested, so retention deleting the previous request does not change it. Each
+block renders as an
 [OpenTelemetry GenAI](https://opentelemetry.io/docs/specs/semconv/gen-ai/)
 message, so a request's new blocks can later become a span unchanged.
 
@@ -70,7 +72,8 @@ chain whose start was never captured is marked incomplete rather than guessed.
 The history index is rebuilt from transcripts whenever its schema changes.
 Captures cannot be rebuilt: the spool is deleted once ingested. So they live
 in their own `captures.sqlite`, are linked to a session by the CLI's session
-id at read time, and are deleted only by retention.
+id at read time, and are deleted only by retention. A schema change migrates
+the store forward and fails when it cannot.
 
 ## Limits
 

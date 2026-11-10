@@ -2,6 +2,7 @@ import { Database, type SQLQueryBindings } from "bun:sqlite";
 import { chmod, mkdir } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
+import { captureBlocks, diffBlocks, positioned } from "./blocks.ts";
 import { sha256 } from "./json.ts";
 
 /**
@@ -14,7 +15,7 @@ import { sha256 } from "./json.ts";
  * block resent on every request of a session is stored once.
  */
 
-const CAPTURE_SCHEMA_VERSION = 1;
+const CAPTURE_SCHEMA_VERSION = 2;
 
 function createSchema(database: Database): void {
   database.run(`
@@ -73,6 +74,7 @@ function createSchema(database: Database): void {
       identity TEXT NOT NULL,
       bytes INTEGER NOT NULL,
       inherited INTEGER NOT NULL,
+      is_new INTEGER NOT NULL,
       PRIMARY KEY(capture_id, section, position)
     );
     CREATE INDEX IF NOT EXISTS capture_blocks_hash_idx ON capture_blocks(hash);
@@ -93,6 +95,57 @@ function createSchema(database: Database): void {
     );
     PRAGMA user_version = ${String(CAPTURE_SCHEMA_VERSION)};
   `);
+}
+
+const MigrationRowSchema = z.object({
+  id: z.number(),
+  previous_capture_id: z.number().nullable(),
+  new_block_count: z.number(),
+});
+
+/**
+ * v1 to v2: each block stores whether it was new when ingested, so a capture
+ * keeps its new blocks after the capture it was diffed against is pruned.
+ * v1 novelty is recomputed against the stored predecessor and must reproduce
+ * the stored `new_block_count`; a predecessor that retention already pruned
+ * cannot be recomputed, so the migration fails rather than guess.
+ */
+function migrateV1(store: CaptureStore, database: Database): void {
+  database.run(
+    "ALTER TABLE capture_blocks ADD COLUMN is_new INTEGER NOT NULL DEFAULT 0",
+  );
+  const rows = store
+    .all("SELECT id, previous_capture_id, new_block_count FROM captures")
+    .map((row) => MigrationRowSchema.parse(row));
+  const ids = new Set(rows.map((row) => row.id));
+  for (const row of rows) {
+    const previous = row.previous_capture_id;
+    if (previous !== null && !ids.has(previous)) {
+      throw new Error(
+        `${store.path}: capture ${String(row.id)} was diffed against capture ${String(previous)}, which was pruned, so its new blocks cannot be migrated to capture schema v2.`,
+      );
+    }
+    const blocks = captureBlocks(store, row.id);
+    const diff = diffBlocks(
+      blocks,
+      previous === null ? null : captureBlocks(store, previous),
+    );
+    if (diff.newKeys.size !== row.new_block_count) {
+      throw new Error(
+        `${store.path}: capture ${String(row.id)} recomputes ${String(diff.newKeys.size)} new blocks but stored ${String(row.new_block_count)}; refusing to migrate to capture schema v2.`,
+      );
+    }
+    for (const { position, key, block } of positioned(blocks)) {
+      if (!diff.newKeys.has(key)) continue;
+      store.run(
+        "UPDATE capture_blocks SET is_new = 1 WHERE capture_id = ? AND section = ? AND position = ?",
+        row.id,
+        block.section,
+        position,
+      );
+    }
+  }
+  database.run("PRAGMA user_version = 2");
 }
 
 async function secure(dbPath: string): Promise<void> {
@@ -127,9 +180,20 @@ export class CaptureStore {
         `${dbPath} is capture schema v${String(version)}, newer than this toolkit (v${String(CAPTURE_SCHEMA_VERSION)}); update toolkit.`,
       );
     }
-    createSchema(database);
+    const store = new CaptureStore(database, dbPath);
+    try {
+      if (version === 1) {
+        store.transaction(() => {
+          migrateV1(store, database);
+        });
+      }
+      createSchema(database);
+    } catch (error) {
+      database.close();
+      throw error;
+    }
     await secure(dbPath);
-    return new CaptureStore(database, dbPath);
+    return store;
   }
 
   get path(): string {

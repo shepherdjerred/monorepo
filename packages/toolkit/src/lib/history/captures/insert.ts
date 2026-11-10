@@ -4,6 +4,7 @@ import {
   choosePrevious,
   diffBlocks,
   fromParsed,
+  positioned,
   type BlockRef,
 } from "./blocks.ts";
 import { asRecord } from "./json.ts";
@@ -12,7 +13,6 @@ import {
   chainedOutput,
   makeBlock,
   requestCwd,
-  type BlockSection,
   type CaptureFormat,
   type ParsedRequest,
 } from "./request.ts";
@@ -125,19 +125,18 @@ function insertRow(store: CaptureStore, capture: NewCapture): number | null {
   return changes === 0 ? null : lastInsertRowid;
 }
 
+/** Stores each block with whether it was new, so pruning cannot change it. */
 function insertBlocks(
   store: CaptureStore,
   id: number,
   blocks: readonly BlockRef[],
+  newKeys: ReadonlySet<string>,
 ): void {
-  const positions = new Map<BlockSection, number>();
-  for (const block of blocks) {
-    const position = positions.get(block.section) ?? 0;
-    positions.set(block.section, position + 1);
+  for (const { block, position, key } of positioned(blocks)) {
     if (block.json !== undefined) store.putBlob(block.json);
     store.run(
-      `INSERT INTO capture_blocks (capture_id, section, position, category, hash, identity, bytes, inherited)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO capture_blocks (capture_id, section, position, category, hash, identity, bytes, inherited, is_new)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       id,
       block.section,
       position,
@@ -146,6 +145,7 @@ function insertBlocks(
       block.identity,
       block.bytes,
       block.inherited ? 1 : 0,
+      newKeys.has(key) ? 1 : 0,
     );
   }
 }
@@ -167,7 +167,6 @@ export function insertCapture(
 ): number | null {
   const id = insertRow(store, capture);
   if (id === null) return null;
-  insertBlocks(store, id, capture.blocks);
   // A warm-up holds no conversation, so it is never what a request is
   // diffed against, even when the request chains from it.
   const previous =
@@ -179,6 +178,7 @@ export function insertCapture(
     capture.blocks,
     previous === null ? null : captureBlocks(store, previous),
   );
+  insertBlocks(store, id, capture.blocks, diff.newKeys);
   store.run(
     `UPDATE captures SET previous_capture_id = ?, system_bytes = ?, tools_bytes = ?,
        history_bytes = ?, new_bytes = ?, block_count = ?, new_block_count = ?
