@@ -46,6 +46,7 @@ test("the palette filters pages and navigates with the keyboard", async ({
 
   const reopened = await openPalette(page);
   await expect(reopened.getByRole("combobox")).toHaveValue("");
+  await expect(reopened.getByRole("combobox")).toBeFocused();
   await page.keyboard.press("ArrowDown");
   await expect(
     reopened.getByRole("option", { name: "Go to Overview" }),
