@@ -15,6 +15,7 @@ import {
   CreateViewSchema as CreateView,
   UpdateViewSchema as UpdateView,
 } from "./schema.ts";
+import type { CLIENT_REQUEST_ID_HEADER as ClientRequestIdHeader } from "./live-updates.ts";
 import {
   LiveChangeSchema as LiveChange,
   LiveMessageSchema as LiveMessageUnion,
@@ -39,5 +40,8 @@ export type DueDate = z.infer<typeof DueDate>;
 export type ViewParams = z.infer<typeof ViewParams>;
 export const LiveChangeSchema = LiveChange.clone();
 export const LiveMessageSchema = LiveMessageUnion.clone();
+/** Its literal type makes the compiler hold it equal to the server's value. */
+export const CLIENT_REQUEST_ID_HEADER: typeof ClientRequestIdHeader =
+  "x-tracker-request-id";
 export type LiveChange = z.infer<typeof LiveChange>;
 export type LiveMessage = z.infer<typeof LiveMessageUnion>;

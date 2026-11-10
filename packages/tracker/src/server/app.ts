@@ -13,6 +13,7 @@ import type { Attachments } from "#infrastructure/attachments.ts";
 import { TrackerError } from "#domain/error.ts";
 import { ActorSchema } from "#shared/actor.ts";
 import { avatarSvg } from "#shared/avatar.ts";
+import { CLIENT_REQUEST_ID_HEADER } from "#shared/live-updates.ts";
 import { traceRequest, reportError } from "#infrastructure/observability.ts";
 
 type AppOptions = Omit<RouterContext, "requestId"> &
@@ -28,8 +29,20 @@ export function createApp(options: AppOptions) {
   const app = new Hono();
   const requests = new Map<string, number>();
   app.use(secureHeaders());
+  // A browser names its own mutations so it can recognise their change
+  // notifications, which can arrive before the mutation response does.
   app.use(async (context, next) => {
-    const requestId = crypto.randomUUID();
+    const supplied = context.req.header(CLIENT_REQUEST_ID_HEADER);
+    return supplied === undefined || z.uuid().safeParse(supplied).success
+      ? next()
+      : context.json(
+          { error: `${CLIENT_REQUEST_ID_HEADER} must be a UUID` },
+          400,
+        );
+  });
+  app.use(async (context, next) => {
+    const requestId =
+      context.req.header(CLIENT_REQUEST_ID_HEADER) ?? crypto.randomUUID();
     context.header("x-request-id", requestId);
     // A stream's handler returns its Response as soon as it connects, so
     // this records the connection and never waits for the stream to end.

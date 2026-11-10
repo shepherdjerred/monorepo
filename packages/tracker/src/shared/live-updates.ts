@@ -1,5 +1,12 @@
 import { z } from "zod";
 
+/**
+ * Optional request header carrying a client-chosen UUID. It becomes the
+ * mutation's `requestId`, so a browser recognises its own changes on the
+ * stream even when a change arrives before the mutation's response.
+ */
+export const CLIENT_REQUEST_ID_HEADER = "x-tracker-request-id";
+
 /** One committed audit event, as named by the `tracker_events` notification. */
 export const LiveChangeSchema = z.object({
   eventId: z.string().min(1),

@@ -18,7 +18,11 @@ import {
 import { behaviorConfig } from "#infrastructure/config.ts";
 import { createApp } from "#server/app.ts";
 import { ActorSchema } from "#shared/actor.ts";
-import { LiveMessageSchema, type LiveMessage } from "#shared/contract.ts";
+import {
+  CLIENT_REQUEST_ID_HEADER,
+  LiveMessageSchema,
+  type LiveMessage,
+} from "#shared/contract.ts";
 import { CreateIssueSchema, UpdateIssueSchema } from "#shared/schema.ts";
 
 const actor = ActorSchema.parse({
@@ -249,14 +253,19 @@ it("streams resync, then each change as an SSE frame, and releases the subscribe
     // An idle stream carries comment frames, which EventSource ignores.
     expect(await frames.next()).toEqual({ "": "heartbeat" });
 
-    // A browser learns the request ID of its own mutation from the response.
+    // A browser names its own mutation, so it recognises the change before
+    // the mutation's response arrives.
+    const requestId = crypto.randomUUID();
     const created = await fetch(`${origin}/trpc/issues.create`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        [CLIENT_REQUEST_ID_HEADER]: requestId,
+      },
       body: JSON.stringify({ actor, teamKey: "AI", title: "Streamed" }),
     });
     expect(created.status).toBe(200);
-    const requestId = z.uuid().parse(created.headers.get("x-request-id"));
+    expect(created.headers.get("x-request-id")).toBe(requestId);
     let frame = await frames.next();
     while (frame["event"] === undefined) frame = await frames.next();
     const event = await suite.database.event.findFirstOrThrow({
@@ -293,6 +302,23 @@ it("streams resync, then each change as an SSE frame, and releases the subscribe
   } finally {
     await server.stop(true);
   }
+});
+
+it("rejects a client request ID that is not a UUID", async () => {
+  const hub = createChangeHub(suite.url);
+  hubs.push(hub);
+  const response = await appFor(hub, true).request("/trpc/issues.create", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      [CLIENT_REQUEST_ID_HEADER]: "not-a-uuid",
+    },
+    body: JSON.stringify({ actor, teamKey: "AI", title: "Rejected" }),
+  });
+  expect(response.status).toBe(400);
+  expect(
+    await suite.database.issue.count({ where: { title: "Rejected" } }),
+  ).toBe(0);
 });
 
 it("returns 404 and opens no LISTEN connection while the flag is off", async () => {

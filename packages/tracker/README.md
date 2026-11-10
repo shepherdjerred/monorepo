@@ -197,7 +197,11 @@ matching `LiveMessageSchema` from `@shepherdjerred/tracker/contract`:
   replay and `Last-Event-ID` is ignored.
 
 `requestId` equals the `x-request-id` response header of the mutation that
-caused the change. The change can arrive before that response does.
+caused the change. The change can arrive before that response does, so a client
+that needs to recognise its own changes sends a UUID of its choosing in the
+`X-Tracker-Request-Id` request header (`CLIENT_REQUEST_ID_HEADER` in the
+contract); the server uses it as the request ID and rejects a value that is not
+a UUID with 400. Without the header the server generates the ID.
 
 The first message sets `retry: 3000`. An idle stream sends a `: heartbeat`
 comment every 8 seconds, because `Bun.serve` closes connections idle for its
