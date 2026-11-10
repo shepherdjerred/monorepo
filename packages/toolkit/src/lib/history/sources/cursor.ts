@@ -120,7 +120,9 @@ async function cursorDocuments(
           dialogueText: dialogueText(messages),
           toolOutputText: toolOutputText(messages),
           usageEvents: [],
-          ...documentDetails(messages),
+          // Counts follow the detail reader's shape (the whole body as one
+          // message), not the sampled indexing windows above.
+          ...documentDetails(cursorBodyMessages(body, updatedAt, Infinity)),
         } satisfies HistoryDocument,
       ];
     });

@@ -271,6 +271,28 @@ describe("history source adapters", () => {
     expect(cursor?.dialogueText).toContain("cursor-tail-search-marker");
   });
 
+  test("counts a long Cursor conversation the way its detail reads it", async () => {
+    const cursorSource = createHistorySources().find(
+      (source) => source.name === "cursor",
+    );
+    if (cursorSource === undefined) {
+      throw new Error("Cursor source is missing");
+    }
+    const scanned = await cursorSource.scan(paths);
+    const conversation = scanned.documents.find(
+      (document) => document.runtimeId === "c1",
+    );
+    if (conversation === undefined) {
+      throw new Error("Cursor fixture conversation is missing");
+    }
+    const detail = await cursorSource.read(paths, [
+      recordFromDocument(conversation, 1),
+    ]);
+
+    expect(detail.messages.get(conversation.sourceId)).toHaveLength(1);
+    expect(conversation.messageCount).toBe(1);
+  });
+
   test("indexes middle messages and later oversized Conductor blocks", async () => {
     const conductor = createHistorySources().find(
       (source) => source.name === "conductor",
