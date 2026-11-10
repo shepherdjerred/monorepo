@@ -37,6 +37,20 @@ afterAll(async () => {
   await prisma.$disconnect();
 });
 
+async function settleUndelivered(
+  dispatch: Awaited<ReturnType<typeof pendingRun>>["dispatch"],
+  runId: number,
+) {
+  expect(
+    await deliverReportDispatch(dispatch, "report_scheduled", "isolate", {
+      isInstalled: installed,
+      database: prisma,
+    }),
+  ).toBe(false);
+  expect(mocks.recordCoreOutputDelivered).not.toHaveBeenCalled();
+  return await prisma.reportRun.findUniqueOrThrow({ where: { id: runId } });
+}
+
 async function pendingRun() {
   const report = await prisma.report.create({
     data: {
@@ -134,17 +148,9 @@ describe("report delivery analytics", () => {
       new Error("response lost after Discord accepted"),
     );
 
-    expect(
-      await deliverReportDispatch(dispatch, "report_scheduled", "isolate", {
-        isInstalled: installed,
-        database: prisma,
-      }),
-    ).toBe(false);
-
-    expect(mocks.recordCoreOutputDelivered).not.toHaveBeenCalled();
-    expect(
-      await prisma.reportRun.findUniqueOrThrow({ where: { id: run.id } }),
-    ).toMatchObject({ deliveryState: "UNKNOWN" });
+    expect(await settleUndelivered(dispatch, run.id)).toMatchObject({
+      deliveryState: "UNKNOWN",
+    });
   });
 
   test("a channel Scout lost access to fails the run without asking an operator", async () => {
@@ -156,17 +162,7 @@ describe("report delivery analytics", () => {
       }),
     );
 
-    expect(
-      await deliverReportDispatch(dispatch, "report_scheduled", "isolate", {
-        isInstalled: installed,
-        database: prisma,
-      }),
-    ).toBe(false);
-
-    expect(mocks.recordCoreOutputDelivered).not.toHaveBeenCalled();
-    expect(
-      await prisma.reportRun.findUniqueOrThrow({ where: { id: run.id } }),
-    ).toMatchObject({
+    expect(await settleUndelivered(dispatch, run.id)).toMatchObject({
       deliveryState: "FAILED",
       deliveryError: expect.stringContaining("permission-denied"),
     });
