@@ -75,6 +75,9 @@ Only then release the separately reviewed chart opt-in.
 The node receipt does not establish that the promotion workload's sandbox or network boundaries work.
 
 After rollout, inspect the running promotion container's selected profile, effective capabilities, and `NoNewPrivs` state.
+Verify that its mounted `/tmp` is owned by root with mode `01777`.
+The promotion pod's existing [firewall init container](packages/homelab/src/cdk8s/src/resources/temporal/workers/agent-worker.ts) verifies ownership and sets this mode on the shared temporary volume before the worker starts.
+Its sticky bit prevents provider subprocesses from replacing parent-owned temporary files; the runtime guard rejects an unprotected directory.
 Run its offline sandbox boundary probe before resuming promotion work.
 Keep production publishing disabled until its own approved acceptance checks pass.
 
