@@ -122,9 +122,10 @@ export async function buildLlmModels(
 
 /**
  * Build the browser/node-safe Glitter context workspace inside an
- * already-installed clone. Its exports point at gitignored dist files, so
- * Scout and Temporal consumers must never run before this producer has been
- * generated and built.
+ * already-installed clone. Its exports point at gitignored dist files, so its
+ * consumers must never run before this producer has been generated and
+ * built. No Scout workspace consumes it, so `installScoutWorkspace` does not
+ * build it.
  */
 export async function buildGlitterContext(
   repoDir: string,
@@ -158,7 +159,8 @@ export async function generateScoutBackend(
 
 /**
  * Install the one root workspace in a bot clone, generate Scout's backend, then
- * build both generated shared-package producers Scout imports. Package-local
+ * build the generated shared-package producer Scout imports
+ * (`@shepherdjerred/llm-models`, used by the backend). Package-local
  * installs are invalid in this monorepo: every workspace dependency is
  * resolved by the root package.json and root bun.lock.
  */
@@ -169,7 +171,6 @@ export async function installScoutWorkspace(
   await rootInstallWithoutHooks(repoDir, commandRunner);
   await generateScoutBackend(repoDir, commandRunner);
   await buildLlmModels(repoDir, commandRunner);
-  await buildGlitterContext(repoDir, commandRunner);
 }
 
 /**

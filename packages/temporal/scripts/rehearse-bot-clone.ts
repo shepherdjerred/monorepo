@@ -10,8 +10,10 @@
  *
  * Canaries (each maps to a real weekly failure from June/July 2026):
  *  1. scout    — the root workspace installs, the llm-models producer builds
- *                and resolves from scout's data package, and a plain
- *                `bun run test` on the report package passes.
+ *                and resolves from its Scout consumer (the backend), and a
+ *                plain `bun run test` on the report package passes. No Scout
+ *                workspace depends on @shepherdjerred/glitter-context, so
+ *                this leg runs before anything builds that package.
  *  2. snapshot — `update-data-dragon.ts --snapshots-only`, the snapshot-test
  *                step that failed in scout-data-dragon-weekly-refresh even
  *                after the (1) fix. It historically also covered a second root
@@ -69,8 +71,11 @@ import {
 // 2026-06-20 → 2026-07-11 (via `update-data-dragon.ts`'s snapshot refresh).
 const REPORT_PACKAGE = "packages/scout-for-lol/packages/report";
 const REALDATA_TEST = "src/html/arena/realdata.integration.test.ts";
-// The import that broke: packages/data → @shepherdjerred/llm-models.
 const DATA_PACKAGE = "packages/scout-for-lol/packages/data";
+// The import that broke in June 2026 was a Scout workspace resolving the
+// unbuilt @shepherdjerred/llm-models. Since #4089 the backend is its only
+// Scout consumer, so resolve it from there.
+const LLM_MODELS_CONSUMER = "packages/scout-for-lol/packages/backend";
 const LANE_PRIOR_ARTIFACT =
   "packages/scout-for-lol/packages/data/src/lane-priors/lane-priors.generated.json";
 const BASELINE_ADD_BATCH_SIZE = 250;
@@ -151,22 +156,13 @@ async function ensureScratchGitRepo(
 
 async function rehearseScoutWorkspace(repoDir: string): Promise<void> {
   console.error(
-    "[rehearsal] scout: installScoutWorkspace (root install + shared producers)",
+    "[rehearsal] scout: installScoutWorkspace (root install + llm-models producer)",
   );
   await installScoutWorkspace(repoDir);
   console.error("[rehearsal] scout: resolving @shepherdjerred/llm-models");
   await runCommand(
     ["bun", "-e", "await import('@shepherdjerred/llm-models')"],
-    { cwd: `${repoDir}/${DATA_PACKAGE}` },
-  );
-  console.error("[rehearsal] scout: resolving shared Glitter context");
-  await runCommand(
-    [
-      "bun",
-      "-e",
-      "const context = await import('@shepherdjerred/glitter-context'); if (context.listStyleCardNames().length !== 13) process.exit(1)",
-    ],
-    { cwd: `${repoDir}/${DATA_PACKAGE}` },
+    { cwd: `${repoDir}/${LLM_MODELS_CONSUMER}` },
   );
   console.error(`[rehearsal] scout: bun run test -- ${REALDATA_TEST}`);
   // Clear ENVIRONMENT like data-dragon.ts does: scout's env-var validation
