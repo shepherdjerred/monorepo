@@ -66,6 +66,7 @@ export function isCredentialFreeTalosctl(args: readonly string[]): boolean {
   return (
     subcommand === "help" ||
     subcommand === "completion" ||
+    subcommand === "validate" ||
     (subcommand === "version" && args.includes("--client"))
   );
 }
@@ -114,7 +115,7 @@ export async function runTalosctl(
 ): Promise<number> {
   // Linux exposes a spawned pipe that Bun creates as a socket, which
   // /dev/fd/3 cannot reopen by path; the handoff relies on macOS dup semantics.
-  if (process.platform !== "darwin") {
+  if (process.platform !== "darwin" && !isCredentialFreeTalosctl(args)) {
     console.error(
       "toolkit: `toolkit talosctl` hands the talosconfig over /dev/fd/3 and requires macOS; elsewhere pass --talosconfig explicitly.",
     );

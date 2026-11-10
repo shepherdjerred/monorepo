@@ -54,32 +54,33 @@ function originalExecution(): NativeCompensationExecutionContext {
   };
 }
 
-async function installCommitObservation(
-  execution: NativeCompensationExecutionContext,
-  delay: boolean,
-) {
+async function installCommitObservation(delay: boolean) {
   const db = harness.database();
   const continuationId = z.uuid().parse(activity.continuationId);
-  const deadline = String(
-    z.number().int().positive().parse(execution.expiresAtMs),
-  );
   await db.$executeRawUnsafe(
     'CREATE SEQUENCE "compensation_sdk_commit_visits"',
   );
-  // The literal inputs are a validated UUID, safe integer, and boolean. The
-  // sleeper observes the real physical completion transaction only, not the
+  await db.$executeRawUnsafe(
+    'CREATE TABLE "compensation_sdk_original_deadline" ("deadlineMs" bigint NOT NULL)',
+  );
+  // The literal inputs are a validated UUID and boolean. The original deadline
+  // is bound once after this fixture DDL, before the actual execution begins.
+  // Observer setup must not consume the activity's original two-second clock.
+  // The sleeper observes the real physical completion transaction only, not the
   // earlier execution-record transaction. It never implements the fence itself.
   await db.$executeRawUnsafe(`CREATE FUNCTION compensation_sdk_commit_observe() RETURNS trigger LANGUAGE plpgsql AS $$
+    DECLARE original_deadline numeric;
     BEGIN
       IF EXISTS (SELECT 1 FROM "NativePublicationCompensationContinuation"
         WHERE id='${continuationId}'::text AND completion IS NOT NULL) THEN
-        IF NEW."deadlineMs" <> ${deadline} OR
-          current_setting('media.plex_deadline_ms')::numeric <> ${deadline} THEN
+        SELECT "deadlineMs" INTO STRICT original_deadline FROM "compensation_sdk_original_deadline";
+        IF NEW."deadlineMs" <> original_deadline OR
+          current_setting('media.plex_deadline_ms')::numeric <> original_deadline THEN
           RAISE EXCEPTION 'Compensation commit did not retain the original SDK minimum';
         END IF;
         PERFORM nextval('compensation_sdk_commit_visits');
         IF ${delay ? "TRUE" : "FALSE"} THEN
-          PERFORM pg_sleep(GREATEST(0, (${deadline} - extract(epoch FROM clock_timestamp()) * 1000) / 1000)::double precision + 0.025);
+          PERFORM pg_sleep(GREATEST(0, (original_deadline - extract(epoch FROM clock_timestamp()) * 1000) / 1000)::double precision + 0.025);
         END IF;
       END IF;
       RETURN NULL;
@@ -124,6 +125,9 @@ async function removeCommitObservation() {
   );
   await db.$executeRawUnsafe(
     'DROP SEQUENCE IF EXISTS "compensation_sdk_commit_visits"',
+  );
+  await db.$executeRawUnsafe(
+    'DROP TABLE IF EXISTS "compensation_sdk_original_deadline"',
   );
 }
 
@@ -205,9 +209,11 @@ test.each([false, true])(
         },
       },
     };
-    const execution = originalExecution();
     try {
-      await installCommitObservation(execution, delay);
+      await installCommitObservation(delay);
+      const execution = originalExecution();
+      const deadline = z.number().int().positive().parse(execution.expiresAtMs);
+      await db.$executeRaw`INSERT INTO "compensation_sdk_original_deadline" ("deadlineMs") VALUES (${deadline})`;
       const running = executeNativeCompensation(
         compensationInvocation(context, execution),
         activity,

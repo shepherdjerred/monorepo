@@ -1,4 +1,6 @@
 import { expect, test } from "vitest";
+import { z } from "zod";
+import { fileURLToPath } from "node:url";
 import { checkKnip, generateCommands, knipCommand } from "./knip.ts";
 
 test("knip gate enforces configuration hints via knip's structured flag", () => {
@@ -27,4 +29,51 @@ test("checkKnip propagates knip's non-zero exit as a thrown error", async () => 
   await expect(
     checkKnip(["--config", "knip.does-not-exist.json"]),
   ).rejects.toThrow(/Command failed/);
+});
+
+test("cold-checkout Knip orders provider generation even when only the root gate is selected", async () => {
+  const child = Bun.spawn(
+    [
+      "bunx",
+      "--no-install",
+      "turbo",
+      "run",
+      "knip",
+      "--filter=//",
+      "--dry=json",
+    ],
+    {
+      cwd: fileURLToPath(new URL("../..", import.meta.url)),
+      stdout: "pipe",
+      stderr: "pipe",
+    },
+  );
+  const [stdout, stderr, exitCode] = await Promise.all([
+    new Response(child.stdout).text(),
+    new Response(child.stderr).text(),
+    child.exited,
+  ]);
+  expect({ exitCode, stderr: exitCode === 0 ? "" : stderr }).toEqual({
+    exitCode: 0,
+    stderr: "",
+  });
+  const plan = z
+    .object({
+      tasks: z.array(
+        z.object({
+          taskId: z.string(),
+          dependencies: z.array(z.string()),
+          dependents: z.array(z.string()),
+          outputs: z.array(z.string()).nullable(),
+        }),
+      ),
+    })
+    .parse(JSON.parse(stdout));
+  const knip = plan.tasks.find((task) => task.taskId === "//#knip");
+  const producer = plan.tasks.find(
+    (task) => task.taskId === "@homelab/cdktn#generate",
+  );
+  expect(knip?.dependencies).toContain("@homelab/cdktn#generate");
+  expect(producer?.dependents).toContain("//#knip");
+  expect(producer?.outputs).toContain("generated/**");
 });

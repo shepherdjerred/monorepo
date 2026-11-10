@@ -172,88 +172,30 @@ directory named by the error, with stdout capped at 16 MiB and diagnostics at
 
 ### Talos
 
-1. Create `secrets.yaml`.
-2. From `src/talos`, generate the machine configuration (create
-   `torvalds/patches/tailscale.yaml` from `tailscale.example.yaml` first — the
-   real file holds the auth key and is never committed):
+The version catalog pins the Talos and Kubernetes releases. The source validator
+merges every public Torvalds patch into a complete synthetic configuration and
+runs the native Talos validator. Generated fixture credentials stay in memory;
+only the validation summary is printed.
 
 ```bash
-talosctl gen config \
-  --with-secrets secrets.yaml \
-  --talos-version v1.14.2 \
-  --kubernetes-version 1.37.1 \
-  --config-patch-control-plane @torvalds/patches/scheduling.yaml \
-  --config-patch-control-plane @torvalds/patches/certsans.yaml \
-  --config-patch-control-plane @torvalds/patches/etcd-metrics.yaml \
-  --config-patch @torvalds/patches/image.yaml \
-  --config-patch @torvalds/patches/tailscale.yaml \
-  --config-patch @torvalds/patches/dns.yaml \
-  --config-patch @torvalds/patches/kubelet.yaml \
-  --config-patch @torvalds/patches/sysctls.yaml \
-  --config-patch @torvalds/patches/watchdog.yaml \
-  --config-patch @torvalds/patches/zfs.yaml \
-  --config-patch @torvalds/patches/interface.yaml \
-  torvalds https://192.168.1.81:6443 --force
+bun run --cwd packages/homelab talos:config validate-source
 ```
 
-`watchdog.yaml` arms the iTCO hardware watchdog — the primary auto-recovery
-mechanism for the CI-freeze failure mode; see
-[`src/talos/README.md`](src/talos/README.md) for what each patch does.
+Talos 1.14 patches use native configuration documents for the installer,
+resolver, node taints, kubelet, API server, and proxy. Keep their semantic settings
+in source; do not reintroduce conflicting legacy fields into generated documents.
+See [Talos contributor reference](src/talos/README.md) for the tooling API.
 
-The generated control-plane endpoint is an internal cluster identity. Keep it
-on the stable LAN address unless every control-plane component is deliberately
-migrated together. It does not determine the endpoint used by external
-`talosctl` or `kubectl` clients.
+For promotion sandbox prerequisites on an existing node, use
+[Install promotion sandbox prerequisites](../docs/wiki/src/content/docs/how-to/install-promotion-sandbox-prerequisites.md).
+Its operator command retains live credentials and unrelated settings in memory,
+checks the allowed policy delta, and validates the full configuration before an
+explicit apply. Source generation is a validation tool, not a replacement for
+an existing node's identities and configuration.
 
-3. Configure the normal `talosconfig` endpoint and node with the Torvalds
-   Tailscale FQDN:
-   - `endpoints: ["torvalds.tailnet-1a49.ts.net"]` — only control-plane nodes
-     are endpoints.
-   - `nodes: ["torvalds.tailnet-1a49.ts.net"]`.
-
-   Liskov's Talos API certificate also includes
-   `liskov.tailnet-1a49.ts.net`. Add it as a normal target only after the
-   tailnet policy permits the Torvalds control-plane proxy to reach Liskov on
-   TCP/50000; a worker cannot be used as its own Talos proxy endpoint.
-
-4. Move the talosconfig so commands run without the `--talosconfig` argument:
-
-```bash
-mv talosconfig ~/.talos/config
-```
-
-5. Apply the configuration:
-
-```bash
-MAINTENANCE_IP=<ip-from-the-Talos-console>
-talosctl apply-config --insecure --nodes "$MAINTENANCE_IP" --file controlplane.yaml
-```
-
-To update an already-configured node:
-
-```bash
-talosctl apply-config --nodes torvalds.tailnet-1a49.ts.net --file controlplane.yaml
-```
-
-6. Bootstrap the Kubernetes cluster:
-
-```bash
-talosctl bootstrap --nodes torvalds.tailnet-1a49.ts.net
-```
-
-7. Create a Kubernetes configuration:
-
-```bash
-talosctl kubeconfig --nodes torvalds.tailnet-1a49.ts.net
-```
-
-Steps 4 and 7 write admin key material to disk and belong only on the
-bootstrapping machine. Store the resulting talosconfig fields and kubeconfig
-client data in the homelab 1Password items that toolkit's credential registry
-reads, then remove the local files. Every other workstation, including agent
-hosts, uses `toolkit talosctl` and the `toolkit kube credential` exec plugin
-instead; see
-[Set up workstation credentials](../docs/wiki/src/content/docs/how-to/set-up-workstation-credentials.md).
+Use [workstation credentials](../docs/wiki/src/content/docs/how-to/set-up-workstation-credentials.md)
+for authenticated `toolkit talosctl` access. Keep the internal control-plane
+endpoint stable; external clients use the configured Tailscale management endpoint.
 
 ### Kubernetes
 

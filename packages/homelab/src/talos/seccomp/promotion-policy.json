@@ -1,0 +1,39 @@
+{
+  "profileName": "promotion-codex-01621-containerd-236-v1.json",
+  "architecture": "amd64",
+  "talosVersion": "1.14.2",
+  "containerdVersion": "2.3.6",
+  "codexVersion": "0.162.1",
+  "bubblewrapVersion": "0.12.0",
+  "baselineSha256": "b04db442b4d43beebf21106d989650d2ed544207413659a8f7c6e92effe1ec8e",
+  "capabilities": [
+    "CAP_CHOWN",
+    "CAP_DAC_OVERRIDE",
+    "CAP_KILL",
+    "CAP_SETGID",
+    "CAP_SETUID"
+  ],
+  "delta": [
+    {
+      "names": ["clone"],
+      "action": "SCMP_ACT_ALLOW",
+      "args": [{ "index": 0, "value": 939655185, "op": "SCMP_CMP_EQ" }]
+    },
+    {
+      "names": ["clone"],
+      "action": "SCMP_ACT_ALLOW",
+      "args": [{ "index": 0, "value": 2013397009, "op": "SCMP_CMP_EQ" }]
+    },
+    {
+      "names": ["unshare"],
+      "action": "SCMP_ACT_ALLOW",
+      "args": [{ "index": 0, "value": 268435456, "op": "SCMP_CMP_EQ" }]
+    },
+    { "names": ["mount", "pivot_root"], "action": "SCMP_ACT_ALLOW" },
+    {
+      "names": ["umount2"],
+      "action": "SCMP_ACT_ALLOW",
+      "args": [{ "index": 1, "value": 2, "op": "SCMP_CMP_EQ" }]
+    }
+  ]
+}

@@ -10,6 +10,11 @@
     }
   },
   "include": [
+    "src/talos/catalog-pins.test.ts",
+    "src/talos/machine-config.ts",
+    "src/talos/machine-config.test.ts",
+    "src/talos/promotion-sandbox.ts",
+    "src/talos/promotion-sandbox.test.ts",
     "scripts/minecraft/capture-resources.ts",
     "scripts/minecraft/capture-resources.test.ts",
     "src/application-release-contract.ts",

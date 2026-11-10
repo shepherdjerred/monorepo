@@ -1,6 +1,6 @@
 # Kubelet node-resource reservations for the single-node torvalds cluster.
 #
-# IMPORTANT — mechanism: reservations live under `extraConfig` (a
+# IMPORTANT — mechanism: reservations live under `KubeletConfig.config` (a
 # KubeletConfiguration override that Talos deep-merges into the generated kubelet
 # config), NOT under `extraArgs`. From 2026-03-18 (commit c649ada3d) until
 # 2026-07-05 these were set as `--system-reserved` / `--eviction-hard` *flags* in
@@ -10,111 +10,111 @@
 # allocatable, so CI pods + the ZFS ARC could oversubscribe RAM and hard-freeze the
 # node. KubeletConfiguration is the canonical, reliably-applied form.
 # See the original investigation.
-machine:
-  kubelet:
-    extraArgs:
-      max-pods: "300"
-    extraConfig:
-      # system-reserved must cover everything OUTSIDE the kubepods cgroup: the ZFS
-      # ARC (zfs_arc_max = 16 GiB, see talos/patches/zfs.yaml) plus host kernel / OS
-      # / kubelet / containerd / apid / etcd overhead. These amounts are
-      # always subtracted from node allocatable (kubelet accounts for
-      # systemReserved/kubeReserved regardless of enforceNodeAllocatable), and as
-      # of 2026-07-10 are also *hard cgroup ceilings* via enforceNodeAllocatable +
-      # the *ReservedCgroup paths below (the /system ceiling tracks this value;
-      # the ARC and kernel slab are kernel memory capped/bounded outside the
-      # cgroup — the reservation still budgets for them in allocatable math).
-      #
-      # 18Gi = 16Gi ARC + ~2Gi host OS/daemons. Cut from 24Gi on 2026-10-31:
-      # the live /system cgroup (every non-Kubernetes Talos daemon) peaked at
-      # ~1.2Gi, and pod memory requests (not real usage) were what stalled
-      # scheduling at ~99% of allocatable. CI jobs run on the dedicated liskov
-      # worker, so the torvalds reservation no longer budgets for the
-      # historical CI build storm. Keep this reservation above the ARC cap and
-      # re-raise it in lockstep with zfs_arc_max if production measurements
-      # demonstrate a larger host burst.
-      # If ZfsArcHitRateLow fires sustained, raise zfs_arc_max and this value in
-      # lockstep.
-      systemReserved:
-        cpu: "4"
-        memory: "18Gi"
-      # /system — Talos's CgroupSystem: every non-Kubernetes Talos daemon (udevd,
-      # apid, trustd, extensions, dashboard, the system-level containerd) runs
-      # here. Sourced from siderolabs/talos `pkg/machinery/constants/constants.go`
-      # and confirmed via a live default-kubelet startup log showing Talos already
-      # sets kubelet's own `SystemCgroupsName: "/system"` by default.
-      systemReservedCgroup: /system
-      # 8Gi, NOT 2Gi: the 2026-07-10 rollout enforced this as a hard ceiling at
-      # 2Gi, but /podruntime's real usage is >2Gi (the Kubernetes containerd at
-      # /podruntime/runtime alone was measured at ~1.65Gi, plus kubelet + etcd).
-      # The kernel memcg-OOM-killed containerd/etcd/kubelet in a loop, the
-      # (also newly enabled) hardware watchdog rebooted the node, and the
-      # kube-apiserver stayed down until the ceiling was raised to 8Gi live on
-      # 2026-07-11 (usage immediately settled at ~2.2Gi). If this ever needs
-      # resizing again, measure /sys/fs/cgroup/podruntime/memory.peak first.
-      # See the original investigation.
-      # Re-measured 2026-10-18 before a proposed cut to 3Gi: /podruntime sat
-      # at the 8Gi ceiling (anon 1.9Gi, page cache 4.7Gi, kernel 1.4Gi) with
-      # 271,879 memory.max reclaim events and no OOM kills. The unreclaimable
-      # floor alone exceeds 3Gi, so this stays 8Gi.
-      kubeReserved:
-        cpu: "1"
-        memory: "8Gi"
-      # /podruntime — Talos's CgroupPodRuntimeRoot: covers kubelet
-      # (/podruntime/kubelet), the Kubernetes-scoped containerd runtime
-      # (/podruntime/runtime), and etcd (/podruntime/etcd) — the parent cgroup
-      # covering both kubelet and the container runtime, per upstream Kubernetes'
-      # own guidance for what kube-reserved-cgroup should scope.
-      kubeReservedCgroup: /podruntime
-      # Raised 2/4Gi -> 4/8Gi on 2026-07-11: during the global-OOM freeze the
-      # kernel entered direct-reclaim thrash (ZFS slab reclaim is slow; load15
-      # peaked >13k) before kubelet eviction at 2Gi ever fired. Earlier eviction
-      # gives kubelet a chance to shed pods while the node is still responsive.
-      evictionHard:
-        memory.available: "4Gi"
-        nodefs.available: "10%"
-      evictionSoft:
-        memory.available: "8Gi"
-        nodefs.available: "15%"
-      evictionSoftGracePeriod:
-        memory.available: "2m"
-        nodefs.available: "2m"
-      # Age-based image GC (2026-08-28 /var capacity investigation): kubelet's
-      # default is threshold-only GC (85/80) with imageMaximumGCAge disabled, so
-      # image history accrued ~13 GiB/day for 465 days — 2.7 TiB of images with
-      # 99.1% of the bytes unreferenced (~16 GiB in use by running pods) — and
-      # the first GC would have fired at 85%, the exact nodefs soft-eviction
-      # line above, so GC churn and eviction pressure would arrive together.
-      # Expire images unused for 30 days and keep threshold GC (70/60) well
-      # below the eviction band. Worst case for an expired image is a re-pull.
-      imageMaximumGCAge: "720h"
-      imageGCHighThresholdPercent: 70
-      imageGCLowThresholdPercent: 60
-      # 2026-07 CI-freeze hardening. podPidsLimit: cluster-wide (single node, so
-      # effectively node-wide — Kubernetes has no per-pod override) cgroup
-      # pids.max cap. 4096 is the standard Kubernetes-documented default for
-      # clusters that set this field (more restrictive CIS-hardening guidance of
-      # 1024 targets adversarial multi-tenant threat models, not this
-      # single-trusted-workload homelab). Sized during the freeze
-      # investigation, which observed a CI build engine's goroutine count
-      # explode 24 -> 1164 in under 60s; 4096 sits well above
-      # any plausible legitimate footprint while still being a hard, finite
-      # ceiling instead of unbounded.
-      # Verify PID headroom under real heavy-concurrency load before trusting
-      # this value; watch for PIDPressure node conditions after rollout.
-      #
-      # enforceNodeAllocatable: real cgroup ceilings for system-reserved and
-      # kube-reserved, not just accounting. 2026-07-09 first attempted this
-      # without the *ReservedCgroup fields above — kubelet refuses to start in
-      # that case (exit code 1, "systemReservedCgroup ... must be specified when
-      # \"system-reserved\" ... included in enforceNodeAllocatable"), which
-      # crash-looped the node on every boot until reverted. Fixed 2026-07-10 by
-      # adding the cgroup paths above (sourced from Talos's own constants, not
-      # guessed) and live-verified working: kubelet came up Running/OK
-      # immediately, and the resulting cgroup limits matched exactly (see comment
-      # above).
-      podPidsLimit: 4096
-      enforceNodeAllocatable:
-        - pods
-        - system-reserved
-        - kube-reserved
+apiVersion: v1alpha1
+kind: KubeletConfig
+extraArgs:
+  max-pods: "300"
+config:
+  # system-reserved must cover everything OUTSIDE the kubepods cgroup: the ZFS
+  # ARC (zfs_arc_max = 16 GiB, see talos/patches/zfs.yaml) plus host kernel / OS
+  # / kubelet / containerd / apid / etcd overhead. These amounts are
+  # always subtracted from node allocatable (kubelet accounts for
+  # systemReserved/kubeReserved regardless of enforceNodeAllocatable), and as
+  # of 2026-07-10 are also *hard cgroup ceilings* via enforceNodeAllocatable +
+  # the *ReservedCgroup paths below (the /system ceiling tracks this value;
+  # the ARC and kernel slab are kernel memory capped/bounded outside the
+  # cgroup — the reservation still budgets for them in allocatable math).
+  #
+  # 18Gi = 16Gi ARC + ~2Gi host OS/daemons. Cut from 24Gi on 2026-10-31:
+  # the live /system cgroup (every non-Kubernetes Talos daemon) peaked at
+  # ~1.2Gi, and pod memory requests (not real usage) were what stalled
+  # scheduling at ~99% of allocatable. CI jobs run on the dedicated liskov
+  # worker, so the torvalds reservation no longer budgets for the
+  # historical CI build storm. Keep this reservation above the ARC cap and
+  # re-raise it in lockstep with zfs_arc_max if production measurements
+  # demonstrate a larger host burst.
+  # If ZfsArcHitRateLow fires sustained, raise zfs_arc_max and this value in
+  # lockstep.
+  systemReserved:
+    cpu: "4"
+    memory: "18Gi"
+  # /system — Talos's CgroupSystem: every non-Kubernetes Talos daemon (udevd,
+  # apid, trustd, extensions, dashboard, the system-level containerd) runs
+  # here. Sourced from siderolabs/talos `pkg/machinery/constants/constants.go`
+  # and confirmed via a live default-kubelet startup log showing Talos already
+  # sets kubelet's own `SystemCgroupsName: "/system"` by default.
+  systemReservedCgroup: /system
+  # 8Gi, NOT 2Gi: the 2026-07-10 rollout enforced this as a hard ceiling at
+  # 2Gi, but /podruntime's real usage is >2Gi (the Kubernetes containerd at
+  # /podruntime/runtime alone was measured at ~1.65Gi, plus kubelet + etcd).
+  # The kernel memcg-OOM-killed containerd/etcd/kubelet in a loop, the
+  # (also newly enabled) hardware watchdog rebooted the node, and the
+  # kube-apiserver stayed down until the ceiling was raised to 8Gi live on
+  # 2026-07-11 (usage immediately settled at ~2.2Gi). If this ever needs
+  # resizing again, measure /sys/fs/cgroup/podruntime/memory.peak first.
+  # See the original investigation.
+  # Re-measured 2026-10-18 before a proposed cut to 3Gi: /podruntime sat
+  # at the 8Gi ceiling (anon 1.9Gi, page cache 4.7Gi, kernel 1.4Gi) with
+  # 271,879 memory.max reclaim events and no OOM kills. The unreclaimable
+  # floor alone exceeds 3Gi, so this stays 8Gi.
+  kubeReserved:
+    cpu: "1"
+    memory: "8Gi"
+  # /podruntime — Talos's CgroupPodRuntimeRoot: covers kubelet
+  # (/podruntime/kubelet), the Kubernetes-scoped containerd runtime
+  # (/podruntime/runtime), and etcd (/podruntime/etcd) — the parent cgroup
+  # covering both kubelet and the container runtime, per upstream Kubernetes'
+  # own guidance for what kube-reserved-cgroup should scope.
+  kubeReservedCgroup: /podruntime
+  # Raised 2/4Gi -> 4/8Gi on 2026-07-11: during the global-OOM freeze the
+  # kernel entered direct-reclaim thrash (ZFS slab reclaim is slow; load15
+  # peaked >13k) before kubelet eviction at 2Gi ever fired. Earlier eviction
+  # gives kubelet a chance to shed pods while the node is still responsive.
+  evictionHard:
+    memory.available: "4Gi"
+    nodefs.available: "10%"
+  evictionSoft:
+    memory.available: "8Gi"
+    nodefs.available: "15%"
+  evictionSoftGracePeriod:
+    memory.available: "2m"
+    nodefs.available: "2m"
+  # Age-based image GC (2026-08-28 /var capacity investigation): kubelet's
+  # default is threshold-only GC (85/80) with imageMaximumGCAge disabled, so
+  # image history accrued ~13 GiB/day for 465 days — 2.7 TiB of images with
+  # 99.1% of the bytes unreferenced (~16 GiB in use by running pods) — and
+  # the first GC would have fired at 85%, the exact nodefs soft-eviction
+  # line above, so GC churn and eviction pressure would arrive together.
+  # Expire images unused for 30 days and keep threshold GC (70/60) well
+  # below the eviction band. Worst case for an expired image is a re-pull.
+  imageMaximumGCAge: "720h"
+  imageGCHighThresholdPercent: 70
+  imageGCLowThresholdPercent: 60
+  # 2026-07 CI-freeze hardening. podPidsLimit: cluster-wide (single node, so
+  # effectively node-wide — Kubernetes has no per-pod override) cgroup
+  # pids.max cap. 4096 is the standard Kubernetes-documented default for
+  # clusters that set this field (more restrictive CIS-hardening guidance of
+  # 1024 targets adversarial multi-tenant threat models, not this
+  # single-trusted-workload homelab). Sized during the freeze
+  # investigation, which observed a CI build engine's goroutine count
+  # explode 24 -> 1164 in under 60s; 4096 sits well above
+  # any plausible legitimate footprint while still being a hard, finite
+  # ceiling instead of unbounded.
+  # Verify PID headroom under real heavy-concurrency load before trusting
+  # this value; watch for PIDPressure node conditions after rollout.
+  #
+  # enforceNodeAllocatable: real cgroup ceilings for system-reserved and
+  # kube-reserved, not just accounting. 2026-07-09 first attempted this
+  # without the *ReservedCgroup fields above — kubelet refuses to start in
+  # that case (exit code 1, "systemReservedCgroup ... must be specified when
+  # \"system-reserved\" ... included in enforceNodeAllocatable"), which
+  # crash-looped the node on every boot until reverted. Fixed 2026-07-10 by
+  # adding the cgroup paths above (sourced from Talos's own constants, not
+  # guessed) and live-verified working: kubelet came up Running/OK
+  # immediately, and the resulting cgroup limits matched exactly (see comment
+  # above).
+  podPidsLimit: 4096
+  enforceNodeAllocatable:
+    - pods
+    - system-reserved
+    - kube-reserved

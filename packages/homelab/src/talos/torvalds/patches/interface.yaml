@@ -1,4 +1,4 @@
-cluster:
-  proxy:
-    extraArgs:
-      nodeport-addresses: 0.0.0.0/0
+apiVersion: v1alpha1
+kind: KubeProxyConfig
+extraArgs:
+  nodeport-addresses: 0.0.0.0/0

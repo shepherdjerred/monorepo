@@ -29,3 +29,7 @@ machine:
   sysctls:
     kernel.kptr_restrict: "1"
     kernel.panic_on_rcu_stall: "1"
+    # Bounded per-user quota required by Codex's nested Bubblewrap sandbox.
+    # This changes shared production-host policy; ordinary pods retain
+    # RuntimeDefault's namespace syscall denial. CI node policy is unchanged.
+    user.max_user_namespaces: "128"

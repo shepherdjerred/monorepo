@@ -28,6 +28,7 @@ import {
   hasExplicitTalosconfig,
   isCredentialFreeTalosctl,
   refusalFor,
+  runTalosctl,
   talosSubcommand,
   talosconfigDocument,
 } from "#commands/brokered/talosctl.ts";
@@ -356,6 +357,25 @@ describe("talosctl", () => {
     expect(isCredentialFreeTalosctl(["--help"])).toBe(true);
     expect(isCredentialFreeTalosctl(["version", "--client"])).toBe(true);
     expect(isCredentialFreeTalosctl(["version"])).toBe(false);
+  });
+
+  test("local validation does not resolve credentials or inject a talosconfig pipe", async () => {
+    const args = ["validate", "--config", "/dev/stdin", "--mode", "metal"];
+    expect(isCredentialFreeTalosctl(args)).toBe(true);
+    vi.spyOn(Bun, "which").mockReturnValue("/trusted-native/talosctl");
+    const spawn = vi.spyOn(Bun, "spawn").mockImplementation(() => {
+      throw new Error("fixture reached native spawn");
+    });
+    await expect(
+      runTalosctl(args, { run: refuseResolution, cache: null }),
+    ).rejects.toThrow("fixture reached native spawn");
+    expect(spawn).toHaveBeenCalledExactlyOnceWith(
+      ["/trusted-native/talosctl", ...args],
+      expect.objectContaining({ stdio: ["inherit", "inherit", "inherit"] }),
+    );
+    expect(
+      isCredentialFreeTalosctl(["apply-config", "--file", "/dev/stdin"]),
+    ).toBe(false);
   });
 
   test("an explicit talosconfig is honored", () => {

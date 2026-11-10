@@ -1,2 +1,6 @@
-cluster:
-  allowSchedulingOnControlPlanes: true
+apiVersion: v1alpha1
+kind: KubeNodeConfig
+# Equivalent to allowSchedulingOnControlPlanes: true. Clear the generator's
+# default control-plane taint, retaining its control-plane identity labels.
+taints:
+  $patch: delete

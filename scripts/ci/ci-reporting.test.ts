@@ -541,6 +541,8 @@ describe("CI reporting manifest", () => {
           "scripts/tofu/credential-handoff.test.ts",
           "scripts/tofu/adopt-application-secrets.test.ts",
           "src/talos/catalog-pins.test.ts",
+          "src/talos/machine-config.test.ts",
+          "src/talos/promotion-sandbox.test.ts",
           "scripts/homelab-build-inputs.test.ts",
           "scripts/minecraft/capture-resources.test.ts",
           "scripts/tofu/application-secrets.integration.test.ts",
