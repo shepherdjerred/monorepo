@@ -67,7 +67,7 @@ func fixtureTransport(failing failingPath: String? = nil) -> FakeHistoryTranspor
       return jsonResponse(try sharedHistoryFixture("facets"))
     case "/v1/captures":
       return jsonResponse(try sharedHistoryFixture("captures"))
-    case "/v1/captures/2":
+    case "/v1/captures/5":
       return jsonResponse(try sharedHistoryFixture("capture-detail"))
     default:
       return jsonResponse(#"{"error":"Not found"}"#, status: 404)

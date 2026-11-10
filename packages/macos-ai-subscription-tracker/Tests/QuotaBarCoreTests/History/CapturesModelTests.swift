@@ -13,21 +13,21 @@ final class CapturesModelTests: XCTestCase {
     await model.load(session: 42)
     XCTAssertEqual(model.session, 42)
     XCTAssertEqual(model.listPhase, .loaded)
-    XCTAssertEqual(model.captures.map(\.id), [5, 4])
+    XCTAssertEqual(model.captures.map(\.id), [5, 4, 3])
     XCTAssertTrue(model.hasMore)
 
     await model.load(session: 42)
     await model.loadMore()
-    XCTAssertEqual(model.captures.count, 4)
+    XCTAssertEqual(model.captures.count, 6)
     await model.load(session: 42, force: true)
-    XCTAssertEqual(model.captures.count, 2)
+    XCTAssertEqual(model.captures.count, 3)
 
     let targets = await transport.log.targets
     XCTAssertEqual(
       targets,
       [
         "/v1/captures?session=42&limit=100&offset=0",
-        "/v1/captures?session=42&limit=100&offset=2",
+        "/v1/captures?session=42&limit=100&offset=3",
         "/v1/captures?session=42&limit=100&offset=0",
       ])
   }
@@ -40,10 +40,10 @@ final class CapturesModelTests: XCTestCase {
     XCTAssertEqual(model.detailPhase, .idle)
     XCTAssertNil(model.detail)
 
-    model.selectedCaptureID = 2
+    model.selectedCaptureID = 5
     await model.loadSelectedDetail()
     XCTAssertEqual(model.detailPhase, .loaded)
-    XCTAssertEqual(model.detail?.capture.id, 2)
+    XCTAssertEqual(model.detail?.capture.id, 5)
     await model.loadSelectedDetail()
 
     model.selectedCaptureID = nil
@@ -51,13 +51,13 @@ final class CapturesModelTests: XCTestCase {
     XCTAssertNil(model.detail)
 
     let targets = await transport.log.targets
-    XCTAssertEqual(targets.filter { $0.hasPrefix("/v1/captures/") }, ["/v1/captures/2"])
+    XCTAssertEqual(targets.filter { $0.hasPrefix("/v1/captures/") }, ["/v1/captures/5"])
   }
 
   func testAnotherSessionResetsTheSelection() async {
     let model = CapturesModel(client: HistoryClient(transport: fixtureTransport()))
     await model.load(session: 42)
-    model.selectedCaptureID = 2
+    model.selectedCaptureID = 5
     await model.loadSelectedDetail()
     await model.load(session: 43)
     XCTAssertEqual(model.session, 43)
@@ -115,9 +115,11 @@ final class CaptureTextTests: XCTestCase {
   }
 
   func testTokensNameOnlyWhatTheAPISent() throws {
-    let detail: HistoryCaptureDetail = try HistoryClient.decode(
-      jsonResponse(try sharedHistoryFixture("capture-detail")), path: "/v1/captures/2")
-    XCTAssertEqual(CaptureText.tokens(detail.capture.usage), "in 2 · out 9 · cache r 34K w 92")
+    let json =
+      #"{"inputTokens":2,"outputTokens":9,"cacheReadTokens":34031,"#
+      + #""cacheCreationTokens":92,"cachedInputTokens":0,"reasoningTokens":0}"#
+    let anthropic = try JSONDecoder().decode(CaptureUsage.self, from: Data(json.utf8))
+    XCTAssertEqual(CaptureText.tokens(anthropic), "in 2 · out 9 · cache r 34K w 92")
     let page: HistoryCapturesPage = try HistoryClient.decode(
       jsonResponse(try sharedHistoryFixture("captures")), path: "/v1/captures")
     XCTAssertEqual(CaptureText.tokens(page.captures[0].usage), "in 26.3K · out 7 · cached 26.1K")
@@ -126,6 +128,9 @@ final class CaptureTextTests: XCTestCase {
       "in 26.2K · out 48 · cached 7.2K · reasoning 3")
     XCTAssertEqual(CaptureText.tokens(nil), "no usage")
     XCTAssertFalse(CaptureText.incompleteContextNote.isEmpty)
+    XCTAssertTrue(CaptureText.inheritedNote(previous: 4).hasPrefix("This request continues #4."))
+    XCTAssertTrue(
+      CaptureText.inheritedNote(previous: nil).hasPrefix("This request continues an earlier"))
   }
 
   func testPartsReadAsText() {
@@ -133,19 +138,21 @@ final class CaptureTextTests: XCTestCase {
       .text("hi"), .reasoning("hmm"),
       .toolCall(id: "t", name: "Bash", arguments: .object(["command": .string("ls")])),
       .toolCallResponse(id: "t", response: .string("out")),
-      .toolDefinition(name: "Read", description: "Read a file"),
-      .toolDefinition(name: "Edit", description: nil), .other(.integer(1)),
+      .toolDefinition(
+        name: "exec", namespace: "functions", description: "Run a command", parameters: .null),
+      .toolDefinition(name: "Edit", namespace: nil, description: nil, parameters: .null),
+      .other(.integer(1)),
     ]
     XCTAssertEqual(
       parts.map(CaptureText.text),
       [
-        "hi", "hmm", "Bash {\n  \"command\" : \"ls\"\n}", "out", "Read: Read a file", "Edit",
-        "1",
+        "hi", "hmm", "Bash {\n  \"command\" : \"ls\"\n}", "out", "functions.exec: Run a command",
+        "Edit", "1",
       ])
     XCTAssertEqual(
       parts.map(CaptureText.label),
       [
-        "text", "reasoning", "tool call Bash", "tool result", "tool Read", "tool Edit", "other",
+        "text", "reasoning", "tool call Bash", "tool result", "tool exec", "tool Edit", "other",
       ])
   }
 }

@@ -8,7 +8,9 @@ final class CaptureDecodingTests: XCTestCase {
     let page: HistoryCapturesPage = try decode("captures", path: "/v1/captures")
     XCTAssertNil(page.session)
     XCTAssertTrue(page.hasMore)
-    XCTAssertEqual(page.captures.map(\.id), [5, 4])
+    XCTAssertEqual(page.captures.map(\.id), [5, 4, 3])
+    XCTAssertEqual(page.captures.map(\.warmup), [false, false, true])
+    XCTAssertEqual(page.captures.map(\.previousCaptureId), [4, nil, nil])
     let capture = page.captures[0]
     XCTAssertEqual(capture.cli, "codex")
     XCTAssertEqual(capture.transport, .websocket)
@@ -23,54 +25,69 @@ final class CaptureDecodingTests: XCTestCase {
     XCTAssertNil(capture.error)
     XCTAssertEqual(capture.usage?.cachedInputTokens, 26_112)
     XCTAssertEqual(capture.usage?.totalTokens, 26_317)
-    XCTAssertEqual(capture.context.newBytes, 251)
-    XCTAssertEqual(capture.context.totalBytes, 697)
+    XCTAssertEqual(capture.context.toolsBytes, 567)
+    XCTAssertEqual(capture.context.totalBytes, 1_144)
     XCTAssertEqual(capture.blockCount, 7)
     XCTAssertEqual(capture.newBlockCount, 3)
     XCTAssertTrue(capture.contextComplete)
-    XCTAssertEqual(capture.previousCaptureId, 4)
     XCTAssertEqual(page.captures[1].usage?.reasoningTokens, 3)
+    let warmup = page.captures[2]
+    XCTAssertNil(warmup.cwd)
+    XCTAssertEqual(warmup.blockCount, 0)
+    XCTAssertEqual(warmup.context.totalBytes, 0)
   }
 
   func testDecodesTheSharedCaptureDetailFixture() throws {
-    let detail: HistoryCaptureDetail = try decode("capture-detail", path: "/v1/captures/2")
-    XCTAssertEqual(detail.capture.id, 2)
-    XCTAssertEqual(detail.capture.format, .anthropicMessages)
-    XCTAssertEqual(detail.capture.httpStatus, 200)
-    XCTAssertEqual(detail.capture.usage?.cacheReadTokens, 34_031)
-    XCTAssertEqual(detail.request.system.map(\.isNew), [false, false, true])
-    XCTAssertEqual(detail.request.system.first?.inherited, true)
-    XCTAssertEqual(detail.request.tools.compactMap(CaptureText.toolName), ["Bash", "Read"])
-    XCTAssertEqual(detail.request.tools.first?.section, .tools)
-    XCTAssertNil(detail.request.tools.first?.role)
-    XCTAssertEqual(detail.request.messages.map(\.role), ["user", "assistant", "user"])
-    XCTAssertEqual(detail.request.messages.first?.category, .conversation)
+    let detail: HistoryCaptureDetail = try decode("capture-detail", path: "/v1/captures/5")
+    XCTAssertEqual(detail.capture.id, 5)
+    XCTAssertEqual(detail.capture.previousCaptureId, 4)
+    XCTAssertFalse(detail.capture.warmup)
+    XCTAssertTrue(detail.request.system.isEmpty)
+    XCTAssertTrue(detail.request.tools.isEmpty)
+    let messages = detail.request.messages
+    XCTAssertEqual(messages.map(\.index), Array(0...6))
+    XCTAssertEqual(messages.map(\.sentIndex), [nil, nil, nil, nil, nil, nil, 0])
+    XCTAssertEqual(messages.map(\.inherited), [true, true, true, true, true, true, false])
+    XCTAssertEqual(messages.first?.category, .tools)
+    XCTAssertEqual(messages.first?.role, "developer")
+    XCTAssertEqual(detail.blocks(.system).map(\.index), [1])
+    XCTAssertEqual(detail.blocks(.tools).map(\.index), [0])
+    XCTAssertEqual(detail.blocks(.conversation).map(\.index), [2, 3, 4, 5, 6])
+    XCTAssertEqual(messages[1].parts, [.text("You are Codex.")])
     XCTAssertEqual(
-      detail.request.messages[1].parts,
-      [.toolCall(id: "toolu_1", name: "Bash", arguments: .object(["command": .string("echo hi")]))])
+      messages[5].parts,
+      [.toolCall(id: "call_1", name: "exec", arguments: .object(["cmd": .string("echo hi")]))])
+    XCTAssertEqual(messages[6].parts, [.toolCallResponse(id: "call_1", response: .string("hi"))])
+
+    XCTAssertEqual(detail.toolDefinitions.map(\.name), ["exec", "apply_patch", "sleep"])
     XCTAssertEqual(
-      detail.request.messages[2].parts, [.toolCallResponse(id: "toolu_1", response: .string("hi"))])
+      detail.toolDefinitions.map(\.id), ["messages-0-0", "messages-0-1", "messages-0-2"])
+    XCTAssertEqual(detail.toolDefinitions.first?.description, "Run a command")
+    XCTAssertEqual(detail.toolDefinitions.last?.parameters, .null)
+    XCTAssertEqual(
+      detail.toolDefinitions.first?.parameters["properties"]?["cmd"]?["type"], .string("string"))
+    XCTAssertEqual(detail.toolGroups.map(\.namespace), ["functions", "clock"])
+    XCTAssertEqual(detail.toolGroups.map(\.id), ["functions", "clock"])
+    XCTAssertEqual(detail.toolGroups.first?.tools.map(\.name), ["exec", "apply_patch"])
+
     XCTAssertEqual(detail.response?.text, "hi")
     XCTAssertEqual(detail.response?.reasoning, "")
     XCTAssertEqual(detail.response?.toolCalls, [])
-    XCTAssertEqual(detail.response?.stopReason, "end_turn")
-    XCTAssertEqual(detail.newBlocks.map(\.id), ["system-2", "messages-1", "messages-2"])
-    XCTAssertEqual(detail.rawRequest["model"], .string("claude-opus-5-5"))
-    XCTAssertEqual(detail.rawRequest["stream"], .bool(true))
-    XCTAssertEqual(detail.rawResponse["usage"]?["input_tokens"], .integer(2))
+    XCTAssertEqual(detail.response?.stopReason, "completed")
+    XCTAssertEqual(detail.newBlocks.map(\.id), ["messages-4", "messages-5", "messages-6"])
+    XCTAssertEqual(detail.newBlocks.map(\.sentIndex), [nil, nil, 0])
+    XCTAssertEqual(detail.rawRequest["previous_response_id"], .string("resp_1"))
+    XCTAssertEqual(detail.rawRequest["input"]?.arrayValue?.count, 1)
+    XCTAssertTrue(detail.omitsInheritedContext)
+    XCTAssertNotEqual(detail.rawResponse, .null)
     XCTAssertNil(detail.fields)
-    XCTAssertEqual(detail.blocks(.system).count, 3)
-    XCTAssertEqual(detail.blocks(.conversation).count, 3)
-    XCTAssertEqual(detail.toolDefinitions.map(\.name), ["Bash", "Read"])
-    XCTAssertEqual(detail.toolDefinitions.map(\.id), ["tools-0-0", "tools-1-0"])
-    XCTAssertEqual(detail.toolDefinitions.first?.description, "Run a shell command")
-    XCTAssertNil(detail.rawToolDefinition(detail.toolDefinitions[0]))
   }
 
   func testDecodesEveryPartTypeAndAProtobufDump() throws {
     let body = """
       {"apiVersion":1,"capture":\(captureJSON),"request":{"system":[],"tools":[\(block(
-        #"{"type":"tool_definition","name":"Read","description":null}"#, category: "tools"))],"messages":[\(block(
+        #"{"type":"tool_definition","name":"Read","namespace":null,"description":null}"#,
+        category: "tools"))],"messages":[\(block(
         #"{"type":"reasoning","content":"think"},{"type":"other","content":{"k":[1,2.5]}},"#
         + #"{"type":"tool_call","id":null,"name":"x"}"#))]},\
       "response":null,"newBlocks":[],\
@@ -80,7 +97,11 @@ final class CaptureDecodingTests: XCTestCase {
     let detail: HistoryCaptureDetail = try HistoryClient.decode(
       jsonResponse(body), path: "/v1/captures/9")
     XCTAssertEqual(
-      detail.request.tools[0].parts, [.toolDefinition(name: "Read", description: nil)])
+      detail.request.tools[0].parts,
+      [.toolDefinition(name: "Read", namespace: nil, description: nil, parameters: .null)])
+    XCTAssertEqual(detail.toolGroups.map(\.namespace), [nil])
+    XCTAssertEqual(detail.toolGroups.first?.id, "")
+    XCTAssertFalse(detail.omitsInheritedContext)
     XCTAssertEqual(
       detail.request.messages[0].parts,
       [
@@ -90,32 +111,6 @@ final class CaptureDecodingTests: XCTestCase {
     XCTAssertNil(detail.response)
     XCTAssertEqual(detail.rawResponse, .null)
     XCTAssertEqual(detail.fields, [CaptureProtoField(path: "1.2", wire: .varint, value: "7")])
-    XCTAssertEqual(
-      detail.rawToolDefinition(detail.toolDefinitions[0]),
-      .object(["type": .string("function"), "function": .object(["name": .string("Read")])]))
-  }
-
-  func testFindsACodexToolInsideItsRawInputItem() throws {
-    let tools =
-      #"{"type":"tool_definition","name":"functions","description":""},"#
-      + #"{"type":"tool_definition","name":"clock","description":"time"}"#
-    let body = """
-      {"apiVersion":1,"capture":\(captureJSON),"request":{"system":[],"tools":[],"messages":[\(
-        block(tools, category: "tools")),\(block(#"{"type":"text","content":"hi"}"#))]},\
-      "response":null,"newBlocks":[],"rawRequest":{"input":[{"type":"additional_tools",\
-      "tools":[{"type":"namespace","name":"functions","tools":[]},{"name":"clock","x":1}]}]},\
-      "rawResponse":null,"fields":null}
-      """
-    let detail: HistoryCaptureDetail = try HistoryClient.decode(
-      jsonResponse(body), path: "/v1/captures/9")
-    XCTAssertEqual(detail.toolDefinitions.map(\.name), ["functions", "clock"])
-    XCTAssertEqual(detail.blocks(.tools).count, 1)
-    XCTAssertEqual(detail.blocks(.conversation).count, 1)
-    XCTAssertEqual(
-      detail.rawToolDefinition(detail.toolDefinitions[1]),
-      .object(["name": .string("clock"), "x": .integer(1)]))
-    XCTAssertEqual(
-      detail.rawToolDefinition(detail.toolDefinitions[0])?["type"], .string("namespace"))
   }
 
   func testRejectsAnUnknownPartType() {
@@ -160,13 +155,14 @@ final class CaptureDecodingTests: XCTestCase {
     "startedAt":"2026-11-10T03:30:08Z","endedAt":null,"durationMs":null,"model":null,\
     "status":"pending","httpStatus":null,"error":null,"usage":null,\
     "context":{"systemBytes":0,"toolsBytes":0,"historyBytes":0,"newBytes":0},\
-    "blockCount":0,"newBlockCount":0,"contextComplete":false,"previousCaptureId":null}
+    "blockCount":0,"newBlockCount":0,"contextComplete":false,"previousCaptureId":null,\
+    "warmup":false}
     """
 
   private func block(_ parts: String, category: String = "conversation") -> String {
     """
     {"hash":"h","section":"messages","category":"\(category)","index":0,"role":"user",\
-    "bytes":1,"inherited":false,"isNew":true,"parts":[\(parts)]}
+    "bytes":1,"inherited":false,"isNew":true,"sentIndex":0,"parts":[\(parts)]}
     """
   }
 

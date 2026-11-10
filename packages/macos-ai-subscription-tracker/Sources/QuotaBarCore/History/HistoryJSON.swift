@@ -46,26 +46,6 @@ public enum HistoryJSON: Decodable, Equatable, Sendable {
     return value
   }
 
-  /// The first object, depth first (arrays in order, object keys sorted),
-  /// that satisfies `predicate`.
-  public func firstObject(where predicate: (Self) -> Bool) -> Self? {
-    switch self {
-    case let .object(fields):
-      if predicate(self) { return self }
-      for key in fields.keys.sorted() {
-        if let match = fields[key]?.firstObject(where: predicate) { return match }
-      }
-      return nil
-    case let .array(items):
-      for item in items {
-        if let match = item.firstObject(where: predicate) { return match }
-      }
-      return nil
-    case .null, .bool, .integer, .number, .string:
-      return nil
-    }
-  }
-
   /// Two-space indented JSON with sorted keys, or the bare text of a
   /// top-level string.
   public var prettyPrinted: String {

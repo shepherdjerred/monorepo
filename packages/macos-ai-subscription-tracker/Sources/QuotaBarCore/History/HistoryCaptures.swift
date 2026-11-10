@@ -77,8 +77,10 @@ public struct HistoryCapture: Decodable, Equatable, Identifiable, Sendable {
   public let newBlockCount: Int
   /// False when a chained request's parent was never captured.
   public let contextComplete: Bool
-  /// The request this one is diffed against.
+  /// The request this one is diffed against; never a warm-up.
   public let previousCaptureId: Int?
+  /// A Codex warm-up (`generate: false`): it carries no context or output.
+  public let warmup: Bool
 }
 
 /// `/v1/captures`.
@@ -97,11 +99,14 @@ public enum CapturePart: Decodable, Equatable, Sendable {
   case reasoning(String)
   case toolCall(id: String?, name: String, arguments: HistoryJSON)
   case toolCallResponse(id: String?, response: HistoryJSON)
-  case toolDefinition(name: String, description: String?)
+  /// `namespace` is the dotted path of the namespaces that grouped the tool
+  /// (Codex `functions`); `parameters` is its argument schema or grammar.
+  case toolDefinition(
+    name: String, namespace: String?, description: String?, parameters: HistoryJSON)
   case other(HistoryJSON)
 
   private enum CodingKeys: String, CodingKey {
-    case type, content, id, name, arguments, response, description
+    case type, content, id, name, arguments, response, description, namespace, parameters
   }
 
   public init(from decoder: any Decoder) throws {
@@ -124,7 +129,9 @@ public enum CapturePart: Decodable, Equatable, Sendable {
     case "tool_definition":
       self = .toolDefinition(
         name: try container.decode(String.self, forKey: .name),
-        description: try container.decode(String?.self, forKey: .description))
+        namespace: try container.decode(String?.self, forKey: .namespace),
+        description: try container.decode(String?.self, forKey: .description),
+        parameters: try container.decodeOpenValue(forKey: .parameters))
     case "other":
       self = .other(try container.decodeOpenValue(forKey: .content))
     default:
@@ -161,6 +168,8 @@ public struct CaptureBlock: Decodable, Equatable, Identifiable, Sendable {
   public let inherited: Bool
   /// New relative to the previous request in the session.
   public let isNew: Bool
+  /// The block's position in `rawRequest`; `nil` when it was inherited.
+  public let sentIndex: Int?
   public let parts: [CapturePart]
 
   public var id: String { "\(section.rawValue)-\(index)" }
@@ -213,7 +222,8 @@ public struct HistoryCaptureDetail: HistoryVersionedResponse, Equatable, Sendabl
   public let response: CaptureResponse?
   /// The blocks this request added over `previousCaptureId`, in order.
   public let newBlocks: [CaptureBlock]
-  /// The request body as sent, rebuilt from its blocks; redacted.
+  /// The body exactly as sent (redacted). A chained request's holds only its
+  /// incremental input; `request` is the full rebuilt context.
   public let rawRequest: HistoryJSON
   /// The final response object, assembled from SSE or WebSocket events.
   public let rawResponse: HistoryJSON
@@ -242,32 +252,37 @@ public struct HistoryCaptureDetail: HistoryVersionedResponse, Equatable, Sendabl
     (request.system + request.tools + request.messages).filter { $0.category == category }
   }
 
-  /// Each tool definition the request sent, one per `tool_definition` part.
+  /// Each tool definition, one per `tool_definition` part.
   public var toolDefinitions: [CaptureToolDefinition] {
     blocks(.tools).flatMap { block in
       block.parts.enumerated().compactMap { offset, part in
-        guard case let .toolDefinition(name, description) = part else { return nil }
+        guard case let .toolDefinition(name, namespace, description, parameters) = part else {
+          return nil
+        }
         return CaptureToolDefinition(
-          id: "\(block.id)-\(offset)", name: name, description: description, block: block)
+          id: "\(block.id)-\(offset)", name: name, namespace: namespace,
+          description: description, parameters: parameters, block: block)
       }
     }
   }
 
-  /// The tool's definition as the request sent it: a match by name in the
-  /// raw body's `tools` (Anthropic `name`, OpenAI `name` or `function.name`),
-  /// else inside the raw input item its block came from (Codex
-  /// `additional_tools`). An inherited block was not sent, so it has none.
-  public func rawToolDefinition(_ tool: CaptureToolDefinition) -> HistoryJSON? {
-    let named = { (value: HistoryJSON) in
-      value["name"]?.stringValue == tool.name
-        || value["function"]?["name"]?.stringValue == tool.name
+  /// Tool definitions grouped by namespace, in the order each namespace
+  /// first appears; top-level tools have a `nil` namespace.
+  public var toolGroups: [CaptureToolGroup] {
+    var groups: [CaptureToolGroup] = []
+    for tool in toolDefinitions {
+      if let index = groups.firstIndex(where: { $0.namespace == tool.namespace }) {
+        groups[index].tools.append(tool)
+      } else {
+        groups.append(CaptureToolGroup(namespace: tool.namespace, tools: [tool]))
+      }
     }
-    if let match = rawRequest["tools"]?.arrayValue?.first(where: named) { return match }
-    guard tool.block.section == .messages, !tool.block.inherited,
-      let items = rawRequest["input"]?.arrayValue ?? rawRequest["messages"]?.arrayValue,
-      items.indices.contains(tool.block.index)
-    else { return nil }
-    return items[tool.block.index].firstObject(where: named)
+    return groups
+  }
+
+  /// Whether `rawRequest` leaves out context this request inherited.
+  public var omitsInheritedContext: Bool {
+    (request.system + request.tools + request.messages).contains(where: \.inherited)
   }
 }
 
@@ -275,8 +290,19 @@ public struct HistoryCaptureDetail: HistoryVersionedResponse, Equatable, Sendabl
 public struct CaptureToolDefinition: Equatable, Identifiable, Sendable {
   public let id: String
   public let name: String
+  public let namespace: String?
   public let description: String?
+  /// The argument schema or grammar; `.null` when the tool declares none.
+  public let parameters: HistoryJSON
   public let block: CaptureBlock
+}
+
+/// The tools of one namespace.
+public struct CaptureToolGroup: Equatable, Identifiable, Sendable {
+  public let namespace: String?
+  public var tools: [CaptureToolDefinition]
+
+  public var id: String { namespace ?? "" }
 }
 
 extension KeyedDecodingContainer {

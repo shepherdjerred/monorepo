@@ -57,8 +57,9 @@ public enum CaptureText {
       "\(name) \(arguments.prettyPrinted)"
     case let .toolCallResponse(_, response):
       response.prettyPrinted
-    case let .toolDefinition(name, description):
-      description.map { "\(name): \($0)" } ?? name
+    case let .toolDefinition(name, namespace, description, _):
+      [namespace.map { "\($0).\(name)" } ?? name, description].compactMap(\.self)
+        .joined(separator: ": ")
     case let .other(content):
       content.prettyPrinted
     }
@@ -71,16 +72,15 @@ public enum CaptureText {
     case .reasoning: "reasoning"
     case let .toolCall(_, name, _): "tool call \(name)"
     case .toolCallResponse: "tool result"
-    case let .toolDefinition(name, _): "tool \(name)"
+    case let .toolDefinition(name, _, _, _): "tool \(name)"
     case .other: "other"
     }
   }
 
-  /// The tool name of a tools block, from its definition part.
-  public static func toolName(_ block: CaptureBlock) -> String? {
-    for part in block.parts {
-      if case let .toolDefinition(name, _) = part { return name }
-    }
-    return nil
+  /// Explains why the as-sent body is shorter than the rebuilt request.
+  public static func inheritedNote(previous: Int?) -> String {
+    let parent = previous.map { "#\($0)" } ?? "an earlier request"
+    return "This request continues \(parent). Blocks it inherited were not sent, so they are "
+      + "not in this body; the Request view shows the full rebuilt context."
   }
 }

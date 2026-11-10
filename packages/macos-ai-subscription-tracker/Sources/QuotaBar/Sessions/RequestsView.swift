@@ -101,6 +101,14 @@ private struct CaptureRow: View {
       VStack(alignment: .leading, spacing: 2) {
         HStack(spacing: 6) {
           Text(capture.model ?? capture.cli).font(.body.weight(.medium))
+          if capture.warmup {
+            Text("warm-up")
+              .font(.caption2.weight(.semibold))
+              .padding(.horizontal, 5)
+              .padding(.vertical, 1)
+              .background(.secondary.opacity(0.18), in: Capsule())
+              .help("A Codex warm-up: it sends no context and generates nothing.")
+          }
           if let attention = CaptureText.attention(capture) {
             Text(attention)
               .font(.caption2.weight(.semibold))
@@ -136,6 +144,7 @@ private struct CaptureRow: View {
       }
     }
     .padding(.vertical, 2)
+    .opacity(capture.warmup ? 0.45 : 1)
   }
 }
 

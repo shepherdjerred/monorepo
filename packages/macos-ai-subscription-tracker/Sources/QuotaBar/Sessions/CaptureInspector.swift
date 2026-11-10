@@ -5,7 +5,7 @@ import SwiftUI
 enum CaptureInspectorMode: String, CaseIterable, Identifiable {
   case sections = "Request"
   case new = "New in this request"
-  case raw = "Raw JSON"
+  case raw = "As sent"
   case fields = "Fields"
 
   var id: Self { self }
@@ -73,14 +73,17 @@ private struct CaptureSectionsView: View {
     ScrollView {
       LazyVStack(alignment: .leading, spacing: 14) {
         let system = detail.blocks(.system)
-        let tools = detail.toolDefinitions
+        let groups = detail.toolGroups
         let messages = detail.blocks(.conversation)
         InspectorSection(title: "System", blocks: system) {
           ForEach(system) { BlockView(block: $0) }
         }
-        InspectorSection(title: "Tools", blocks: detail.blocks(.tools), count: tools.count) {
-          ForEach(tools) { tool in
-            ToolDefinitionView(tool: tool, raw: detail.rawToolDefinition(tool))
+        InspectorSection(
+          title: "Tools", blocks: detail.blocks(.tools),
+          count: groups.map(\.tools.count).reduce(0, +)
+        ) {
+          ForEach(groups) { group in
+            ToolGroupView(group: group)
           }
         }
         InspectorSection(title: "Messages", blocks: messages) {
@@ -182,34 +185,47 @@ private struct PartView: View {
   }
 }
 
+/// A namespace's tools; top-level tools are listed without a heading.
+private struct ToolGroupView: View {
+  let group: CaptureToolGroup
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 4) {
+      if let namespace = group.namespace {
+        Text("\(namespace) · \(group.tools.count)")
+          .font(.caption.weight(.semibold))
+          .foregroundStyle(.secondary)
+          .padding(.top, 2)
+      }
+      ForEach(group.tools) { tool in
+        ToolDefinitionView(tool: tool)
+      }
+    }
+  }
+}
+
 private struct ToolDefinitionView: View {
   let tool: CaptureToolDefinition
-  let raw: HistoryJSON?
 
   var body: some View {
     DisclosureGroup {
       VStack(alignment: .leading, spacing: 4) {
-        if let description = tool.description, !description.isEmpty {
-          Text(description).font(.caption).textSelection(.enabled)
-        }
-        if let raw {
-          CodeBlock(text: raw.prettyPrinted)
+        if tool.parameters == .null {
+          Text("Declares no parameters.").font(.caption).foregroundStyle(.secondary)
         } else {
-          Text("The request's raw body has no separate definition for this tool.")
-            .font(.caption)
-            .foregroundStyle(.secondary)
+          CodeBlock(text: tool.parameters.prettyPrinted)
         }
       }
     } label: {
       HStack(spacing: 6) {
         Image(systemName: "wrench.and.screwdriver")
         Text(tool.name).font(.caption.weight(.semibold))
+        if let description = tool.description, !description.isEmpty {
+          Text(description).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+        }
         if tool.block.isNew { Badge(text: "new", color: .accentColor) }
         if tool.block.inherited { Badge(text: "inherited", color: .gray) }
         Spacer(minLength: 4)
-        Text(tool.block.role ?? tool.block.section.rawValue)
-          .font(.caption2)
-          .foregroundStyle(.tertiary)
       }
     }
     .padding(.horizontal, 8)
@@ -320,13 +336,21 @@ private struct RawJSONView: View {
 
   var body: some View {
     VStack(alignment: .leading, spacing: 6) {
+      if !showsResponse, detail.omitsInheritedContext {
+        Label(
+          CaptureText.inheritedNote(previous: detail.capture.previousCaptureId),
+          systemImage: "info.circle"
+        )
+        .font(.caption)
+        .foregroundStyle(.secondary)
+      }
       Picker("Body", selection: $showsResponse) {
-        Text("Request").tag(false)
+        Text("Request as sent").tag(false)
         Text("Response").tag(true)
       }
       .pickerStyle(.segmented)
       .labelsHidden()
-      .frame(maxWidth: 240)
+      .frame(maxWidth: 300)
       MonospacedTextView(
         text: (showsResponse ? detail.rawResponse : detail.rawRequest).prettyPrinted
       )
