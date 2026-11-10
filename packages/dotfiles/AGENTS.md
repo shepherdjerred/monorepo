@@ -134,7 +134,8 @@ itself, open it locally. Load `tailscale-helper` for anything beyond this.
   code block. Prefer bar and hist, which print values; zero-fill time-series
   gaps first.
 - Draw flowcharts and sequence diagrams inline with `mermaid-ascii`; render
-  other diagrams with `mmdc -o <file>.png` and send the image.
+  other diagrams with `mmdc -p ~/.config/mermaid/puppeteer.json -o <file>.png`
+  and send the image.
 
 ## Delivery
 

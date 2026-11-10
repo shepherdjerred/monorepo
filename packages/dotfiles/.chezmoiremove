@@ -17,3 +17,4 @@
 .local/bin/plannotator
 .agents/skills/oai-solution-reviewer
 .local/bin/tailscale
+.local/bin/mmdc
