@@ -632,6 +632,42 @@ async function waitsOnAdvisoryLock() {
 }
 
 describe("admission against a concurrent monitor write (M2, W1)", () => {
+  test("a promotion rejected as stale blocks only its own set; the source's newer acceptance promotes automatically (D2, M2)", async () => {
+    const baseline = await acceptedBaseline();
+    await setMonitor(baseline.id, "settled");
+    await canary();
+    const promoted = await context.delivery.createDeployment(
+      {
+        requestId: "stale-promotion",
+        environmentId: "arcade/canary",
+        expectedGeneration: 0,
+        kind: "promote",
+        sourceEnvironmentId: context.fixture.environment.id,
+      },
+      testOperator,
+    );
+    const second = await secondSet();
+    await acceptInSource(second.id, "settled");
+    await expect(
+      context.delivery.claim(promoted.id, testExecutor),
+    ).rejects.toThrow(/stale/u);
+    await context.cluster.database.environment.update({
+      where: { id: "arcade/canary" },
+      data: { automatic: true },
+    });
+    const { deployments } = await context.delivery.reconcile(
+      ["arcade/canary"],
+      testExecutor,
+    );
+    expect(deployments).toHaveLength(1);
+    const [next] = deployments;
+    if (next === undefined) throw new Error("Automatic promotion missing");
+    expect(await deploymentRow(next)).toMatchObject({
+      kind: "promote",
+      versionSetRevisionId: second.id,
+    });
+  });
+
   test("admission waits for the source monitor's lock and reads its state after it", async () => {
     const baseline = await acceptedBaseline();
     await setMonitor(baseline.id, "settled");

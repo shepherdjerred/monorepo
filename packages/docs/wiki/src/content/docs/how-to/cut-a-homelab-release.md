@@ -548,17 +548,17 @@ hosts. It admits no further deployment
 Check each cause in order with `toolkit deploy versions SERVICE --json` and
 `toolkit deploy status --json`.
 
-| Symptom                                         | Cause                                                                                                                        |
-| ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| No new set revision; build `pending` or failed  | Only verified builds compose ([B1](packages/delivery/docs/model.md#44-build))                                                |
-| Build stays `pending` after its pipeline passed | It retains an artifact of an earlier pipeline's build that is still pending ([B2](packages/delivery/docs/model.md#44-build)) |
-| Build failed naming a retained artifact         | The earlier build it retained from failed; the next pipeline rebuilds ([B2](packages/delivery/docs/model.md#44-build))       |
-| No new set revision; build verified             | Every digest matched the base, so nothing changed ([R2](packages/delivery/docs/model.md#46-set-revision))                    |
-| New set revision is not the live set            | Its order key is below the live set's ([R4](packages/delivery/docs/model.md#46-set-revision))                                |
-| No deployment queued                            | A failed deployment blocks automatic successors ([D2](packages/delivery/docs/model.md#412-deployment))                       |
-| No deployment queued after a cancel or alarm    | That set revision is suppressed ([D3](packages/delivery/docs/model.md#412-deployment))                                       |
-| Deployment queued but not admitted              | A prerequisite edge is unmet ([Z1](packages/delivery/docs/model.md#418-prerequisite-edge))                                   |
-| Nothing queued in prod                          | Prod has a promotion source; promote from it ([M2](packages/delivery/docs/model.md#416-promotion-tree))                      |
+| Symptom                                         | Cause                                                                                                                                              |
+| ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| No new set revision; build `pending` or failed  | Only verified builds compose ([B1](packages/delivery/docs/model.md#44-build))                                                                      |
+| Build stays `pending` after its pipeline passed | It retains an artifact of an earlier pipeline's build that is still pending ([B2](packages/delivery/docs/model.md#44-build))                       |
+| Build failed naming a retained artifact         | The earlier build it retained from failed; the next pipeline rebuilds ([B2](packages/delivery/docs/model.md#44-build))                             |
+| No new set revision; build verified             | Every digest matched the base, so nothing changed ([R2](packages/delivery/docs/model.md#46-set-revision))                                          |
+| New set revision is not the live set            | Its order key is below the live set's ([R4](packages/delivery/docs/model.md#46-set-revision))                                                      |
+| No deployment queued                            | A recovery-required deployment holds it; a settled failure blocks only its own set revision ([D2](packages/delivery/docs/model.md#412-deployment)) |
+| No deployment queued after a cancel or alarm    | That set revision is suppressed ([D3](packages/delivery/docs/model.md#412-deployment))                                                             |
+| Deployment queued but not admitted              | A prerequisite edge is unmet ([Z1](packages/delivery/docs/model.md#418-prerequisite-edge))                                                         |
+| Nothing queued in prod                          | Prod has a promotion source; promote from it ([M2](packages/delivery/docs/model.md#416-promotion-tree))                                            |
 
 ## If a static-site deploy gets AccessDenied
 
