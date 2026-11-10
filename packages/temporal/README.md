@@ -1051,9 +1051,20 @@ normally routed verification.
 The candidate's locked Node toolchain also runs its Workflow unit tests. Replay
 selects one exact retained execution per exported Workflow type in the target
 namespace and worker queues, preferring the latest open run and otherwise the
-latest closed run. Types without retained history are reported; an entirely
-empty selection fails. Each selected Workflow and run ID is passed explicitly
-to the candidate, without provider credentials or history payload logging.
+latest closed run, with a bounded number of visibility reads in flight. Types
+without retained history are reported; an entirely empty selection fails. Each
+selected Workflow and run ID is passed explicitly to the candidate, without
+provider credentials or history payload logging. The candidate fetches those
+histories and replays them all against one Workflow bundle, reporting each
+history's result; any nondeterminism fails the replay after every history has
+been reported.
+
+The unit tests and replay do not depend on the served namespace, so a preflight
+runs them once for the whole rollout. It first proves the image and the
+candidate's pollers in every served namespace, then runs the shared unit tests
+and replay, then the pinned canary, any acceptance prerequisite and the stable
+route in each namespace. Preflight changes no routing. Each phase writes a
+`worker-release-phase` JSON line with its outcome and duration to the Job log.
 
 After a guarded native sync succeeds, transport timeouts recording its completion
 are handled by bounded, identical journal POSTs with fresh claim, operation and

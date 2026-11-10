@@ -6,6 +6,28 @@ import { WorkerDeploymentRolloutTargetSchema } from "#lib/worker-deployment-targ
 
 type Target = z.infer<typeof WorkerDeploymentRolloutTargetSchema>;
 const name = z.string().regex(/^[A-Za-z_$][\w$-]*$/u);
+/** Visibility reads per registered type overlap; selection order stays the type order. */
+export const REPLAY_SELECTION_CONCURRENCY = 8;
+
+async function mapWithConcurrency<T, R>(
+  items: readonly T[],
+  limit: number,
+  map: (item: T) => Promise<R>,
+): Promise<R[]> {
+  const results: R[] = [];
+  let next = 0;
+  async function lane(): Promise<void> {
+    for (let index = next++; index < items.length; index = next++) {
+      const item = items[index];
+      if (item === undefined) throw new Error("Missing concurrent item");
+      results[index] = await map(item);
+    }
+  }
+  await Promise.all(
+    Array.from({ length: Math.min(limit, items.length) }, () => lane()),
+  );
+  return results;
+}
 export function workerReplayRoute(target: Target) {
   WorkerDeploymentRolloutTargetSchema.parse(target);
   return {
@@ -37,30 +59,37 @@ export async function selectWorkerReplayTargets(
   z.array(name).min(1).parse(taskQueues);
   if (new Set(types).size !== types.length)
     throw new Error("Duplicate registered Workflow types");
+  const queues = taskQueues.map((queue) => `'${queue}'`).join(", ");
+  const selected = await mapWithConcurrency(
+    types,
+    REPLAY_SELECTION_CONCURRENCY,
+    async (type) => {
+      const query = `TaskQueue IN (${queues}) AND WorkflowType = '${type}'`;
+      const raw =
+        (await first(`${query} AND ExecutionStatus = 'Running'`)) ??
+        (await first(`${query} AND ExecutionStatus != 'Running'`));
+      if (raw === null) return { type, execution: null };
+      const execution = z
+        .object({
+          workflowId: z.string().min(1),
+          runId: z.uuid(),
+          type: z.literal(type),
+          taskQueue: z.string(),
+        })
+        .parse(raw);
+      if (!taskQueues.includes(execution.taskQueue))
+        throw new Error("Replay history belongs to another task queue");
+      return {
+        type,
+        execution: { workflowId: execution.workflowId, runId: execution.runId },
+      };
+    },
+  );
   const targets: { workflowId: string; runId: string }[] = [],
     missingTypes: string[] = [];
-  const queues = taskQueues.map((queue) => `'${queue}'`).join(", ");
-  for (const type of types) {
-    const query = `TaskQueue IN (${queues}) AND WorkflowType = '${type}'`;
-    const raw =
-      (await first(`${query} AND ExecutionStatus = 'Running'`)) ??
-      (await first(`${query} AND ExecutionStatus != 'Running'`));
-    if (raw === null) {
-      missingTypes.push(type);
-      continue;
-    }
-    const execution = z
-      .object({
-        workflowId: z.string().min(1),
-        runId: z.uuid(),
-        type: z.literal(type),
-        taskQueue: z.string(),
-      })
-      .parse(raw);
-    if (!taskQueues.includes(execution.taskQueue))
-      throw new Error("Replay history belongs to another task queue");
-    targets.push({ workflowId: execution.workflowId, runId: execution.runId });
-  }
+  for (const { type, execution } of selected)
+    if (execution === null) missingTypes.push(type);
+    else targets.push(execution);
   if (targets.length === 0)
     throw new Error(
       `No retained histories for registered Workflow types: ${missingTypes.join(", ")}`,
@@ -78,6 +107,7 @@ export async function workerReplayArguments(directory: string, target: Target) {
   });
   try {
     const client = new Client({ connection, namespace: route.namespace });
+    const started = performance.now();
     const selection = await selectWorkerReplayTargets(
       types,
       route.taskQueues,
@@ -97,6 +127,7 @@ export async function workerReplayArguments(directory: string, target: Target) {
         namespace: route.namespace,
         selectedTypes: selection.targets.length,
         typesWithoutRetainedHistory: selection.missingTypes,
+        durationMs: Math.round(performance.now() - started),
       }),
     );
     return selection.targets.flatMap(({ workflowId, runId }) => [

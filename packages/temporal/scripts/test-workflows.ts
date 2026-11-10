@@ -14,6 +14,8 @@ await runTemporalNodeCommand({
     "src/workflows",
     "--exclude",
     "src/workflows/agent-task.test.ts",
-    "--no-file-parallelism",
+    // Files run in parallel forks (the shared config's maxWorkers): each test
+    // starts its own SDK-managed Temporal server on an ephemeral port, and no
+    // file shares process, filesystem or server state with another.
   ],
 });

@@ -25,10 +25,12 @@ import {
   requireAcceptancePrerequisite,
   requireHealthyWorkflowPoller,
   requireReplayCheckout,
-  runWorkerDeploymentPreflight,
+  runWorkerDeploymentPinnedCanary,
+  runWorkerDeploymentReplayProofs,
   verifyCandidateImageBuildId,
 } from "#lib/worker-deployment-proofs.ts";
 import type { RolloutCommandRunner } from "#lib/worker-deployment-proofs.ts";
+import { timedWorkerPhase } from "./worker-phase-timing.ts";
 import { workerRolloutTarget } from "./worker-pool.ts";
 import {
   workerAcceptanceMode,
@@ -157,50 +159,48 @@ async function requireCandidate(options: Options, run: RolloutCommandRunner) {
   }
 }
 
-/** Candidate code runs separately from the controller's routing/image proofs. */
+/** The namespace-specific proofs: pinned canary, acceptance, stable routing. */
 async function prepareRoute(
   detail: WorkerRoutingSnapshot,
-  connection: DeliveryWorkerConnection,
+  options: Options,
   runners: {
     run: RolloutCommandRunner;
     candidate: RolloutCommandRunner;
     restored: WorkerRoutingSnapshot | null;
   },
-  namespace: "prod" | "beta",
 ): Promise<WorkerRolloutPlan> {
   const { run, candidate } = runners;
-  const options = { ...rolloutOptions(detail, connection), namespace };
-  await verifyCandidateImageBuildId(
-    options.candidateImage,
-    options.buildId,
-    run,
-  );
-  await requireCandidate(options, run);
-  await runWorkerDeploymentPreflight(options, candidate);
+  const route = { namespace: options.namespace };
+  await runWorkerDeploymentPinnedCanary(options, candidate);
   if (workerAcceptanceMode(detail, runners.restored) === "prerequisite")
-    await requireAcceptancePrerequisite(options, run);
-  const state = await routing(options, run);
-  // A previous attempt may have promoted this exact candidate before final verification failed.
-  // It must still pass the full preflight above and the exclusive-current verification below.
-  if (state.currentVersionBuildID === "")
-    throw new Error(
-      "A rollout requires an explicitly established stable current worker",
+    await timedWorkerPhase("acceptance-prerequisite", route, () =>
+      requireAcceptancePrerequisite(options, run),
     );
-  if (
-    state.rampingVersionBuildID !== "" ||
-    state.rampingVersionPercentage !== 0
-  )
-    throw new Error("Worker deployment already has an active ramp");
-  await requireHealthyWorkflowPoller(
-    {
-      namespace: options.namespace,
-      deploymentName: options.deploymentName,
-      buildId: state.currentVersionBuildID,
-      taskQueue: options.taskQueue,
-    },
-    run,
-    "stable",
-  );
+  const state = await timedWorkerPhase("stable-routing", route, async () => {
+    const current = await routing(options, run);
+    // A previous attempt may have promoted this exact candidate before final verification failed.
+    // It must still pass the full preflight above and the exclusive-current verification below.
+    if (current.currentVersionBuildID === "")
+      throw new Error(
+        "A rollout requires an explicitly established stable current worker",
+      );
+    if (
+      current.rampingVersionBuildID !== "" ||
+      current.rampingVersionPercentage !== 0
+    )
+      throw new Error("Worker deployment already has an active ramp");
+    await requireHealthyWorkflowPoller(
+      {
+        namespace: options.namespace,
+        deploymentName: options.deploymentName,
+        buildId: current.currentVersionBuildID,
+        taskQueue: options.taskQueue,
+      },
+      run,
+      "stable",
+    );
+    return current;
+  });
   return WorkerRolloutPlanSchema.parse({
     target: options.target,
     namespace: options.namespace,
@@ -223,20 +223,30 @@ export async function prepareDeliveryWorkerRollout(
   },
 ): Promise<WorkerRolloutPlan> {
   const options = rolloutOptions(detail, connection);
-  const plans = [];
-  for (const route of workerHostSpecification(options.target).routes)
-    plans.push(
-      await prepareRoute(
-        detail,
-        connection,
-        {
-          run,
-          candidate: proof?.candidate ?? run,
-          restored: proof?.restored ?? null,
-        },
-        route.namespace,
-      ),
+  const runners = {
+    run,
+    candidate: proof?.candidate ?? run,
+    restored: proof?.restored ?? null,
+  };
+  const routes = workerHostSpecification(options.target).routes.map(
+    (route) => ({ ...options, namespace: route.namespace }),
+  );
+  // Cheap controller proofs fail fast before the candidate's long checks.
+  await timedWorkerPhase("candidate-image", {}, () =>
+    verifyCandidateImageBuildId(options.candidateImage, options.buildId, run),
+  );
+  for (const route of routes)
+    await timedWorkerPhase(
+      "candidate-pollers",
+      { namespace: route.namespace },
+      () => requireCandidate(route, run),
     );
+  // Workflow unit tests and retained-history replay are namespace-independent:
+  // every route shares one run. Nothing here or below changes routing.
+  await runWorkerDeploymentReplayProofs(options, runners.candidate);
+  const plans = [];
+  for (const route of routes)
+    plans.push(await prepareRoute(detail, route, runners));
   const primary = plans[0];
   if (primary === undefined)
     throw new Error("Worker rollout has no served namespaces");
