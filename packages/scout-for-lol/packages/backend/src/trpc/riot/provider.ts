@@ -45,7 +45,7 @@ export function riotAuthorizeUrl(
     nonce: flow.nonce,
     code_challenge: pkceChallenge(flow.verifier),
     code_challenge_method: "S256",
-    prompt: "select_account",
+    prompt: "login",
   }).toString();
   return url.toString();
 }
