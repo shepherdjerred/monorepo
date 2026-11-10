@@ -50,7 +50,7 @@ export type ModuleCommand = {
   readonly icon?: LucideIcon;
   /** Extra words the palette matches besides the label. */
   readonly keywords?: readonly string[];
-  readonly run: (context: ModuleCommandContext) => void;
+  readonly run: (context: ModuleCommandContext) => void | Promise<void>;
 };
 
 export type ModuleSearchResult = {

@@ -1,8 +1,9 @@
-import { MonitorIcon, MoonIcon, SunIcon } from "lucide-react";
+import { MonitorIcon, MoonIcon, SearchIcon, SunIcon } from "lucide-react";
 import { NavLink, Outlet } from "react-router";
 
 import { Changes } from "./changes.tsx";
 import type { ResolvedNavItem } from "./platform/module.ts";
+import { CommandPalette, setPaletteOpen } from "./platform/palette.tsx";
 import {
   setThemePreference,
   useThemePreference,
@@ -43,6 +44,7 @@ export function Shell({
   return (
     <>
       <Changes />
+      <CommandPalette />
       <header className="app-header">
         <NavLink className="brand" to="/" end>
           Ops
@@ -54,6 +56,19 @@ export function Shell({
             </NavLink>
           ))}
         </nav>
+        <button
+          className="palette-trigger"
+          type="button"
+          aria-label="Search and commands"
+          aria-keyshortcuts="Meta+K Control+K"
+          onClick={() => {
+            setPaletteOpen(true);
+          }}
+        >
+          <SearchIcon aria-hidden="true" />
+          <span>Search</span>
+          <kbd>⌘K</kbd>
+        </button>
         <ThemeToggle />
       </header>
       <Outlet />

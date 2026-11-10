@@ -272,7 +272,11 @@ URLs. Every other module is a self-contained area with its own URL prefix.
 | Server | `src/server/platform/module.ts` | `src/server/modules.ts` | `/api/<id>/*`, `/api/<id>/trpc`, and readiness `/readyz/<id>` |
 
 A client module declares `id`, `title`, `icon`, `basePath`, `routes`, and
-`nav`, plus optional `commands`, `search`, and `homeCards`. The router and the
+`nav`, plus optional `commands`, `search`, and `homeCards`. Home renders
+every module's `homeCards`, and the ⌘K command palette
+(`src/client/platform/palette.tsx`) lists every module's nav entries and
+`commands` and calls each `search` with the debounced query; the core module
+searches catalog services and recent alerts. The router and the
 shell navigation are generated from the composition root. Only `core` may use
 an empty `basePath`; the registry refuses duplicate ids, duplicate routes, and
 a `basePath` that collides with another module or a server path, at startup.

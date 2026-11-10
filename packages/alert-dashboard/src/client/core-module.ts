@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { lazy } from "react";
 
+import { coreCommands, coreSearch } from "./core-palette.ts";
 import { CORE_MODULE_ID, type ClientModule } from "./platform/module.ts";
 
 // Each page is its own chunk so the uPlot and ops-model code only loads on the
@@ -113,5 +114,7 @@ export const coreModule: ClientModule = {
     { label: "History", icon: HistoryIcon, path: "history" },
     { label: "System", icon: ServerCogIcon, path: "system" },
   ],
+  commands: coreCommands,
+  search: coreSearch,
   homeCards: [{ id: "summary", card: OpsHomeSummary }],
 };
