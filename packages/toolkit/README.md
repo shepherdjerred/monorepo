@@ -990,6 +990,8 @@ grammar, and omitting it means no lower bound.
 | `/v1/usage?groupBy=day\|source\|model\|workspace\|machine&since&source` | Usage totals per group (`day` is the local calendar day)                     |
 | `/v1/tools?since&limit`                                                 | Tool calls and the number of sessions that made them, per tool               |
 | `/v1/facets`                                                            | Every machine, source, and workspace with indexed sessions, and their counts |
+| `/v1/captures?session&limit&offset`                                     | Captured requests (see [Brim capture](#brim-capture))                        |
+| `/v1/captures/<id>`                                                     | One captured request, rebuilt, with its new blocks                           |
 
 `machine=local` selects this machine's own sessions; mirrored sessions carry
 their `brim sync` machine id. A session's `usageEvents` of zero means its
@@ -1138,6 +1140,74 @@ which is why `redact` retires generations explicitly.
 Pull writes `~/.toolkit/brim-sync/mirror/index.json`, whose contract is
 [`schemas/brim-sync-mirror-index.schema.json`](schemas/brim-sync-mirror-index.schema.json).
 Brim reads it to add other machines to its daily usage caption.
+
+`brim sync redact` also redacts captured requests (see `brim capture redact`).
+
+#### Brim capture
+
+`brim capture` (also `toolkit brim capture`) records the raw API requests the
+coding-agent CLIs send, through an observe-only local proxy. The history daemon
+ingests them and serves them on `/v1/captures`. Setup, the per-CLI status, and
+purging are in the
+[Capture raw agent requests](../docs/wiki/src/content/docs/how-to/capture-raw-agent-requests.md)
+how-to.
+
+```bash
+brim capture install | uninstall    # LaunchAgent com.jerred.brim-capture (KeepAlive)
+brim capture status [--json]        # settings, proxy, CA, spool, and store
+brim capture env <cli>              # shell exports the agent wrappers eval
+brim capture redact [--dry-run] [--json]
+brim capture run                    # the proxy in the foreground
+```
+
+| Exit               | Meaning                                                              |
+| ------------------ | -------------------------------------------------------------------- |
+| `env` 0, no output | Capture is off, or `brim.capture.clis` does not list the CLI         |
+| `env` 0, exports   | Proxy variables plus the CLI's CA trust variable                     |
+| `env` 1            | Capture is on for the CLI but the proxy is down or the CA is missing |
+| 2                  | Missing or unknown action, or extra arguments                        |
+
+The proxy is `mitmdump` from mitmproxy, pinned in
+[`src/lib/brim/capture/engine.ts`](src/lib/brim/capture/engine.ts) and run
+through `uvx`, on `127.0.0.1:<brim.capture.port>`. It intercepts only the
+hosts of the wrapped CLIs (`allow_hosts`) and records only their inference
+routes, from the table in
+[`src/lib/brim/capture/clis.ts`](src/lib/brim/capture/clis.ts). The addon,
+[`capture/brim_capture.py`](capture/brim_capture.py), is embedded in the binary
+and written to `~/.toolkit/brim-capture/` on start. It drops `authorization`,
+`x-api-key`, `cookie`, `set-cookie`, and any header whose name contains
+`token`, `key`, `secret`, or `auth` before writing, tees streamed responses
+without buffering them, and never modifies a flow.
+
+| Path under `~/.toolkit/`     | Contents                                                       |
+| ---------------------------- | -------------------------------------------------------------- |
+| `brim-capture/ca/`           | The capture CA (key 0600), its host list, and `bundle.pem`     |
+| `brim-capture/mitmproxy/`    | mitmproxy's confdir copy of the CA                             |
+| `brim-capture/spool/*.jsonl` | 0600 segments awaiting ingest; `.part` is still being written  |
+| `history/captures.sqlite`    | Ingested captures; not rebuildable, kept `retention.days` days |
+
+The CA is generated with the system `openssl` and carries a critical
+`nameConstraints` extension that permits only the capture hosts. It is never
+added to a keychain: each CLI trusts it through `NODE_EXTRA_CA_CERTS`,
+`CODEX_CA_CERTIFICATE`, or `SSL_CERT_FILE`. `bundle.pem` is the macOS system
+roots plus the CA, because `SSL_CERT_FILE` replaces a runtime's roots and is
+inherited by the agent's children.
+
+Each daemon scan redacts closed spool segments with the `brim sync` patterns,
+applies them in one transaction, and deletes them. Requests are split into
+blocks (system parts, tool definitions, `messages[]` or Responses `input[]`
+items) stored once each by SHA-256 and zstd-compressed; unknown and protobuf
+bodies are kept whole. A request that continues a server-side response (Codex
+`previous_response_id`, Claude Code `thread.continue`) is rebuilt from the
+captures it continues. `/v1/captures?session=<id>` links captures to a history
+session by the CLI's session id (Claude `x-claude-code-session-id`, Codex
+`thread-id`) and falls back to CLI, time window, and working directory for
+captures without one. The record contract is
+[`schemas/brim-capture-flow.schema.json`](schemas/brim-capture-flow.schema.json);
+the API contracts are `schemas/history-api-captures*.schema.json`. The addon's
+pytest suite runs in CI as the `capture-addon` step of
+[`ci-tests.json`](ci-tests.json); run that command from this directory to run
+it locally.
 
 Run `toolkit --help` or a workflow’s `--help` for the complete command surface.
 
@@ -1296,6 +1366,10 @@ value or unparseable file is an error, not a fallback.
 | `BRIM_SYNC_S3_CREDENTIALS` / `brim.sync.s3.credentials`           | `profile` (`broker` on agent hosts)                   |
 | `BRIM_SYNC_RECIPIENT` / `brim.sync.recipient`                     | the archive's age public key                          |
 | `BRIM_SYNC_PULL_SINCE_DAYS` / `brim.sync.pull.since.days`         | `30`                                                  |
+| `BRIM_CAPTURE_ENABLED` / `brim.capture.enabled`                   | `false`                                               |
+| `BRIM_CAPTURE_PORT` / `brim.capture.port`                         | `47821`                                               |
+| `BRIM_CAPTURE_RETENTION_DAYS` / `brim.capture.retention.days`     | `30`                                                  |
+| `BRIM_CAPTURE_CLIS` / `brim.capture.clis`                         | `["claude", "codex"]` (comma list in the environment) |
 | `CREDENTIAL_CACHE_TTL_SECONDS` / `credential.cache.ttl.seconds`   | `86400` (`0` disables the Keychain read cache)        |
 
 The history daemon runs under launchd without your shell environment, so set

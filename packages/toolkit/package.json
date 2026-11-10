@@ -12,6 +12,7 @@
     "#build": "./src/build.ts",
     "#lib/*": "./src/lib/*",
     "#commands/*": "./src/commands/*",
+    "#capture/*": "./capture/*",
     "#test/*": "./test/*"
   },
   "bin": {

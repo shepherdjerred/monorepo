@@ -9,6 +9,8 @@ import {
   type UsageMetricsExport,
 } from "./usage-metrics.ts";
 import { handleHistoryApiRequest } from "./api/handler.ts";
+import { ingestCaptureSpool } from "./captures/ingest.ts";
+import { CaptureStore } from "./captures/store.ts";
 import { createHistorySources } from "./sources.ts";
 import { targetedMessages } from "./targeted.ts";
 import { HistoryIndex } from "./index.ts";
@@ -137,6 +139,11 @@ export async function runHistoryDaemon(): Promise<void> {
   await rm(runtimePaths.socket, { force: true });
 
   const index = await HistoryIndex.open(runtimePaths);
+  const captures = await CaptureStore.open(runtimePaths.capturesDb);
+  const toolkitConfig = await loadToolkitConfig();
+  const captureRetentionDays = await toolkitConfig.value(
+    "brimCaptureRetentionDays",
+  );
   const metricsExport = await startMetricsExportIfEnabled(runtimePaths);
   const sources = createHistorySources();
   const labels = new Map(sources.map((source) => [source.name, source.label]));
@@ -163,6 +170,25 @@ export async function runHistoryDaemon(): Promise<void> {
       }
     } catch (error: unknown) {
       await logLine(runtimePaths, "usage metrics refresh failed", {
+        error: getErrorMessage(error),
+      });
+    }
+  };
+
+  // Captures are a side channel too: a broken spool record is logged on
+  // every scan until it is fixed, without stopping history ingestion.
+  const ingestCaptures = async (): Promise<void> => {
+    try {
+      const report = await ingestCaptureSpool({
+        store: captures,
+        spoolDir: runtimePaths.captureSpoolDir,
+        retentionDays: captureRetentionDays,
+      });
+      if (report.segments > 0 || report.prunedCaptures > 0) {
+        await logLine(runtimePaths, "captures ingested", { ...report });
+      }
+    } catch (error: unknown) {
+      await logLine(runtimePaths, "capture ingest failed", {
         error: getErrorMessage(error),
       });
     }
@@ -207,6 +233,7 @@ export async function runHistoryDaemon(): Promise<void> {
         })),
       });
       await refreshMetrics();
+      await ingestCaptures();
     } catch (error: unknown) {
       await logLine(runtimePaths, "history scan failed", {
         error: getErrorMessage(error),
@@ -258,6 +285,7 @@ export async function runHistoryDaemon(): Promise<void> {
       });
     }
     index.close();
+    captures.close();
     await rm(runtimePaths.socket, { force: true });
     await rm(runtimePaths.state, { force: true });
     process.exit(0);
@@ -268,7 +296,7 @@ export async function runHistoryDaemon(): Promise<void> {
     fetch: async (request): Promise<Response> => {
       try {
         const api = await handleHistoryApiRequest(
-          { index, readMessages: targetedMessages },
+          { index, captures, readMessages: targetedMessages },
           request,
         );
         if (api !== null) {

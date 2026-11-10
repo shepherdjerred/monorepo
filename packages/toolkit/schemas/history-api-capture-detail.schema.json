@@ -1,0 +1,914 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "apiVersion": {
+      "type": "number",
+      "const": 1
+    },
+    "capture": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "cli": {
+          "type": "string"
+        },
+        "transport": {
+          "type": "string",
+          "enum": ["http", "websocket"]
+        },
+        "format": {
+          "type": "string",
+          "enum": [
+            "anthropic-messages",
+            "openai-responses",
+            "openai-chat",
+            "unknown"
+          ]
+        },
+        "host": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "sessionId": {
+          "type": ["string", "null"]
+        },
+        "cwd": {
+          "type": ["string", "null"]
+        },
+        "startedAt": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+        },
+        "endedAt": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "durationMs": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "model": {
+          "type": ["string", "null"]
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "ok", "error", "incomplete"]
+        },
+        "httpStatus": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "error": {
+          "type": ["string", "null"]
+        },
+        "usage": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "inputTokens": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "outputTokens": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "cacheReadTokens": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "cacheCreationTokens": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "cachedInputTokens": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "reasoningTokens": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "inputTokens",
+                "outputTokens",
+                "cacheReadTokens",
+                "cacheCreationTokens",
+                "cachedInputTokens",
+                "reasoningTokens"
+              ],
+              "additionalProperties": false,
+              "title": "HistoryApiCaptureUsage"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "context": {
+          "type": "object",
+          "properties": {
+            "systemBytes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "toolsBytes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "historyBytes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "newBytes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": ["systemBytes", "toolsBytes", "historyBytes", "newBytes"],
+          "additionalProperties": false,
+          "title": "HistoryApiCaptureContext"
+        },
+        "blockCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "newBlockCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "contextComplete": {
+          "type": "boolean"
+        },
+        "previousCaptureId": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "cli",
+        "transport",
+        "format",
+        "host",
+        "path",
+        "sessionId",
+        "cwd",
+        "startedAt",
+        "endedAt",
+        "durationMs",
+        "model",
+        "status",
+        "httpStatus",
+        "error",
+        "usage",
+        "context",
+        "blockCount",
+        "newBlockCount",
+        "contextComplete",
+        "previousCaptureId"
+      ],
+      "additionalProperties": false,
+      "title": "HistoryApiCapture"
+    },
+    "request": {
+      "type": "object",
+      "properties": {
+        "system": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "hash": {
+                "type": "string"
+              },
+              "section": {
+                "type": "string",
+                "enum": ["system", "tools", "messages"]
+              },
+              "category": {
+                "type": "string",
+                "enum": ["system", "tools", "conversation"]
+              },
+              "index": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "role": {
+                "type": ["string", "null"]
+              },
+              "bytes": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "inherited": {
+                "type": "boolean"
+              },
+              "isNew": {
+                "type": "boolean"
+              },
+              "parts": {
+                "type": "array",
+                "items": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "text"
+                        },
+                        "content": {
+                          "type": "string"
+                        }
+                      },
+                      "required": ["type", "content"],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "reasoning"
+                        },
+                        "content": {
+                          "type": "string"
+                        }
+                      },
+                      "required": ["type", "content"],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "tool_call"
+                        },
+                        "id": {
+                          "type": ["string", "null"]
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "arguments": {}
+                      },
+                      "required": ["type", "id", "name", "arguments"],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "tool_call_response"
+                        },
+                        "id": {
+                          "type": ["string", "null"]
+                        },
+                        "response": {}
+                      },
+                      "required": ["type", "id", "response"],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "tool_definition"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "type": ["string", "null"]
+                        }
+                      },
+                      "required": ["type", "name", "description"],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "other"
+                        },
+                        "content": {}
+                      },
+                      "required": ["type", "content"],
+                      "additionalProperties": false
+                    }
+                  ],
+                  "title": "HistoryApiCapturePart"
+                }
+              }
+            },
+            "required": [
+              "hash",
+              "section",
+              "category",
+              "index",
+              "role",
+              "bytes",
+              "inherited",
+              "isNew",
+              "parts"
+            ],
+            "additionalProperties": false,
+            "title": "HistoryApiCaptureBlock"
+          }
+        },
+        "tools": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "hash": {
+                "type": "string"
+              },
+              "section": {
+                "type": "string",
+                "enum": ["system", "tools", "messages"]
+              },
+              "category": {
+                "type": "string",
+                "enum": ["system", "tools", "conversation"]
+              },
+              "index": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "role": {
+                "type": ["string", "null"]
+              },
+              "bytes": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "inherited": {
+                "type": "boolean"
+              },
+              "isNew": {
+                "type": "boolean"
+              },
+              "parts": {
+                "type": "array",
+                "items": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "text"
+                        },
+                        "content": {
+                          "type": "string"
+                        }
+                      },
+                      "required": ["type", "content"],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "reasoning"
+                        },
+                        "content": {
+                          "type": "string"
+                        }
+                      },
+                      "required": ["type", "content"],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "tool_call"
+                        },
+                        "id": {
+                          "type": ["string", "null"]
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "arguments": {}
+                      },
+                      "required": ["type", "id", "name", "arguments"],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "tool_call_response"
+                        },
+                        "id": {
+                          "type": ["string", "null"]
+                        },
+                        "response": {}
+                      },
+                      "required": ["type", "id", "response"],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "tool_definition"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "type": ["string", "null"]
+                        }
+                      },
+                      "required": ["type", "name", "description"],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "other"
+                        },
+                        "content": {}
+                      },
+                      "required": ["type", "content"],
+                      "additionalProperties": false
+                    }
+                  ],
+                  "title": "HistoryApiCapturePart"
+                }
+              }
+            },
+            "required": [
+              "hash",
+              "section",
+              "category",
+              "index",
+              "role",
+              "bytes",
+              "inherited",
+              "isNew",
+              "parts"
+            ],
+            "additionalProperties": false,
+            "title": "HistoryApiCaptureBlock"
+          }
+        },
+        "messages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "hash": {
+                "type": "string"
+              },
+              "section": {
+                "type": "string",
+                "enum": ["system", "tools", "messages"]
+              },
+              "category": {
+                "type": "string",
+                "enum": ["system", "tools", "conversation"]
+              },
+              "index": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "role": {
+                "type": ["string", "null"]
+              },
+              "bytes": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "inherited": {
+                "type": "boolean"
+              },
+              "isNew": {
+                "type": "boolean"
+              },
+              "parts": {
+                "type": "array",
+                "items": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "text"
+                        },
+                        "content": {
+                          "type": "string"
+                        }
+                      },
+                      "required": ["type", "content"],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "reasoning"
+                        },
+                        "content": {
+                          "type": "string"
+                        }
+                      },
+                      "required": ["type", "content"],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "tool_call"
+                        },
+                        "id": {
+                          "type": ["string", "null"]
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "arguments": {}
+                      },
+                      "required": ["type", "id", "name", "arguments"],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "tool_call_response"
+                        },
+                        "id": {
+                          "type": ["string", "null"]
+                        },
+                        "response": {}
+                      },
+                      "required": ["type", "id", "response"],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "tool_definition"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "type": ["string", "null"]
+                        }
+                      },
+                      "required": ["type", "name", "description"],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "other"
+                        },
+                        "content": {}
+                      },
+                      "required": ["type", "content"],
+                      "additionalProperties": false
+                    }
+                  ],
+                  "title": "HistoryApiCapturePart"
+                }
+              }
+            },
+            "required": [
+              "hash",
+              "section",
+              "category",
+              "index",
+              "role",
+              "bytes",
+              "inherited",
+              "isNew",
+              "parts"
+            ],
+            "additionalProperties": false,
+            "title": "HistoryApiCaptureBlock"
+          }
+        }
+      },
+      "required": ["system", "tools", "messages"],
+      "additionalProperties": false
+    },
+    "response": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "text": {
+              "type": "string"
+            },
+            "reasoning": {
+              "type": "string"
+            },
+            "toolCalls": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": ["string", "null"]
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "arguments": {}
+                },
+                "required": ["id", "name", "arguments"],
+                "additionalProperties": false
+              }
+            },
+            "stopReason": {
+              "type": ["string", "null"]
+            }
+          },
+          "required": ["text", "reasoning", "toolCalls", "stopReason"],
+          "additionalProperties": false
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "newBlocks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "hash": {
+            "type": "string"
+          },
+          "section": {
+            "type": "string",
+            "enum": ["system", "tools", "messages"]
+          },
+          "category": {
+            "type": "string",
+            "enum": ["system", "tools", "conversation"]
+          },
+          "index": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "role": {
+            "type": ["string", "null"]
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "inherited": {
+            "type": "boolean"
+          },
+          "isNew": {
+            "type": "boolean"
+          },
+          "parts": {
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "const": "text"
+                    },
+                    "content": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["type", "content"],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "const": "reasoning"
+                    },
+                    "content": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["type", "content"],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "const": "tool_call"
+                    },
+                    "id": {
+                      "type": ["string", "null"]
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "arguments": {}
+                  },
+                  "required": ["type", "id", "name", "arguments"],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "const": "tool_call_response"
+                    },
+                    "id": {
+                      "type": ["string", "null"]
+                    },
+                    "response": {}
+                  },
+                  "required": ["type", "id", "response"],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "const": "tool_definition"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": ["string", "null"]
+                    }
+                  },
+                  "required": ["type", "name", "description"],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "const": "other"
+                    },
+                    "content": {}
+                  },
+                  "required": ["type", "content"],
+                  "additionalProperties": false
+                }
+              ],
+              "title": "HistoryApiCapturePart"
+            }
+          }
+        },
+        "required": [
+          "hash",
+          "section",
+          "category",
+          "index",
+          "role",
+          "bytes",
+          "inherited",
+          "isNew",
+          "parts"
+        ],
+        "additionalProperties": false,
+        "title": "HistoryApiCaptureBlock"
+      }
+    },
+    "rawRequest": {},
+    "rawResponse": {},
+    "fields": {
+      "anyOf": [
+        {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string"
+              },
+              "wire": {
+                "type": "string",
+                "enum": ["varint", "fixed64", "fixed32", "string", "bytes"]
+              },
+              "value": {
+                "type": "string"
+              }
+            },
+            "required": ["path", "wire", "value"],
+            "additionalProperties": false,
+            "title": "HistoryApiProtoField"
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "apiVersion",
+    "capture",
+    "request",
+    "response",
+    "newBlocks",
+    "rawRequest",
+    "rawResponse",
+    "fields"
+  ],
+  "additionalProperties": false,
+  "title": "HistoryApiCaptureDetailResponse"
+}

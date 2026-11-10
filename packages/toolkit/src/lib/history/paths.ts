@@ -1,5 +1,6 @@
 import os from "node:os";
 import path from "node:path";
+import { defaultBrimCapturePaths } from "#lib/brim/capture/paths.ts";
 
 export type HistoryPaths = {
   readonly home: string;
@@ -20,6 +21,10 @@ export type HistoryRuntimePaths = {
   readonly historyDir: string;
   readonly indexDb: string;
   readonly usageExportDb: string;
+  /** Captured agent requests; not rebuildable, unlike the index. */
+  readonly capturesDb: string;
+  /** Spool the capture proxy writes and the daemon consumes. */
+  readonly captureSpoolDir: string;
   readonly socket: string;
   readonly state: string;
   readonly logsDir: string;
@@ -65,6 +70,8 @@ export function defaultHistoryRuntimePaths(
     historyDir,
     indexDb: path.join(historyDir, "index.sqlite"),
     usageExportDb: path.join(historyDir, "usage-export.sqlite"),
+    capturesDb: path.join(historyDir, "captures.sqlite"),
+    captureSpoolDir: defaultBrimCapturePaths(home).spoolDir,
     socket: path.join(historyDir, "daemon.sock"),
     state: path.join(historyDir, "state.json"),
     logsDir: path.join(historyDir, "logs"),

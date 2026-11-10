@@ -16,6 +16,7 @@
 export const SECRET_KINDS = [
   "anthropic-key",
   "openai-key",
+  "openai-session",
   "linear-key",
   "jwt",
   "onepassword-service-account",
@@ -40,6 +41,8 @@ const PATTERNS: readonly { kind: SecretKind; pattern: RegExp }[] = [
     pattern: /sk-ant-(?:api|admin)\d\d-[\w-]{40,}/g,
   },
   { kind: "openai-key", pattern: /sk-proj-[\w-]{40,240}/g },
+  // OpenAI/ChatGPT session keys (`sess-` plus 40 alphanumerics).
+  { kind: "openai-session", pattern: /sess-[A-Za-z0-9]{40}/g },
   { kind: "linear-key", pattern: /lin_api_[A-Za-z0-9]{40}/g },
   {
     kind: "jwt",
