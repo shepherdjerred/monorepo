@@ -365,20 +365,26 @@ describe("persistent stage workspace", () => {
       return index;
     };
     expect(at("flock 9")).toBe(at("exec 9>/workspace/.lock") + 1);
-    // Previous scratch goes before anything is prepared; the checkout is
-    // forced over the previous one, then stale worktrees and everything
-    // untracked except node_modules are removed before the revision check.
+    // Previous scratch goes before anything is prepared; the previous
+    // repository goes before the fetch, so the claim keeps one revision's
+    // objects. The checkout is forced over the previous tree, then everything
+    // untracked except node_modules is removed before the revision check.
     expect(at("rm -rf /workspace/tmp /workspace/bin /workspace/buildx")).toBe(
       at("flock 9") + 1,
+    );
+    expect(at("git init -q /workspace/source")).toBe(
+      at("rm -rf /workspace/source/.git") + 1,
+    );
+    expect(at("git init -q /workspace/source")).toBeLessThan(
+      at(
+        'git -C /workspace/source fetch --quiet --depth=1 https://github.com/shepherdjerred/monorepo.git "$DELIVERY_SOURCE_REVISION"',
+      ),
     );
     expect(
       at(
         "git -C /workspace/source checkout --quiet --detach --force FETCH_HEAD",
       ),
-    ).toBeLessThan(at("git -C /workspace/source worktree prune"));
-    expect(at("git -C /workspace/source worktree prune")).toBeLessThan(
-      at("git -C /workspace/source clean -fdxq -e node_modules"),
-    );
+    ).toBeLessThan(at("git -C /workspace/source clean -fdxq -e node_modules"));
     expect(
       at("git -C /workspace/source clean -fdxq -e node_modules"),
     ).toBeLessThan(
@@ -449,6 +455,7 @@ describe("persistent stage workspace", () => {
       "7fcc3559847d7a436fa42cdf5d4755bb357c8b789a4a665822556828c3e3434d",
       "011b625607e3c62d719e77b388dd7f80414dac3f609f317c8c7285738b9ff9a2",
       "a5c909be28ebe8674710740bf59914338db047cb7831571023c3be7ddb9c7c15",
+      "3fd9e4b9b8d049d2c56fabbf38f78eff2f10eeebfccd8419e97f98bcd85cb40a",
     ]);
     for (const recipe of [
       "worker-images",
