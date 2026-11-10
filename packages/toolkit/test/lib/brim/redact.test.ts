@@ -43,6 +43,20 @@ describe("findSecrets", () => {
     expect(findSecrets(bytes(`${anthropic}=`))).toEqual([]);
   });
 
+  test("treats a JSON escape before a secret as a boundary at any depth", () => {
+    const once = JSON.stringify({ content: `line\n${openai}\t${linear}` });
+    const twice = JSON.stringify({ body: once });
+    for (const input of [once, twice]) {
+      expect(countByKind(findSecrets(bytes(input)))).toEqual({
+        "openai-key": 1,
+        "linear-key": 1,
+      });
+    }
+    expect(findSecrets(bytes(String.raw`\u00e9${linear}`))).toHaveLength(1);
+    expect(findSecrets(bytes(String.raw`\u0041${linear}`))).toEqual([]);
+    expect(findSecrets(bytes(`n${linear}`))).toEqual([]);
+  });
+
   test("accepts a JWT only when header and payload decode to JSON objects", () => {
     expect(findSecrets(bytes(jwt))).toHaveLength(1);
     expect(findSecrets(bytes("eyJhbGciOi.eyJzdWIi.signature"))).toEqual([]);

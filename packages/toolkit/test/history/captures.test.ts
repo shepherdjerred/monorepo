@@ -457,6 +457,55 @@ describe("capture spool handling", () => {
     expect(body).toContain("REDACTED-anthropic-key");
   });
 
+  test("redacts a credential that follows a newline, in text and base64 bodies", async () => {
+    const context = await fixture();
+    // Fabricated, low-entropy stand-in; not a real credential.
+    const key = `sk-proj-${"c".repeat(60)}`;
+    const leak = claudeHttp({
+      id: "leak-newline",
+      at: "2026-11-10T03:23:00.000Z",
+      body: {
+        model: "m",
+        messages: [{ role: "user", content: `my key is\n${key}` }],
+      },
+      response: [],
+    });
+    const binary = {
+      ...claudeHttp({
+        id: "leak-binary",
+        at: "2026-11-10T03:24:00.000Z",
+        body: {},
+        response: [],
+      }),
+      cli: "cursor-agent",
+      host: "api2.cursor.sh",
+      path: "/aiserver.v1.ChatService/StreamUnifiedChatWithTools",
+      request: {
+        headers: [],
+        body: { base64: Buffer.from(`\u0000\n${key}\n`).toString("base64") },
+      },
+    } satisfies CaptureRecord;
+    const report = await ingest(context, [leak, binary]);
+    expect(report.redactedSecrets).toBe(2);
+    const { captures } = HistoryApiCapturesResponseSchema.parse(
+      await fetchJson(context, "/v1/captures"),
+    );
+    for (const capture of captures) {
+      const body = JSON.stringify(await detail(context, capture.id));
+      expect(body).not.toContain(key);
+    }
+    const stored = context.store
+      .all("SELECT hash FROM blobs")
+      .map((row) =>
+        new TextDecoder().decode(
+          context.store.blob(z.object({ hash: z.string() }).parse(row).hash),
+        ),
+      )
+      .join("");
+    expect(stored).not.toContain(key);
+    expect(stored).toContain("REDACTED-openai-key");
+  });
+
   test("ingests a segment once, drops a torn tail, and fails loudly on a bad record", async () => {
     const context = await fixture();
     const records = claudeToolTurn();
@@ -581,10 +630,11 @@ describe("capture correlation and storage", () => {
           "SELECT hash FROM capture_blocks WHERE section = 'messages' LIMIT 1",
         ),
       );
-    // Simulate a capture stored before a pattern existed.
+    // Simulate a capture stored before a pattern existed; the token follows
+    // a newline, which JSON escapes as `\n`.
     const leaked = JSON.stringify({
       role: "user",
-      content: `token ghp_${"b".repeat(36)}`,
+      content: `token:\nghp_${"b".repeat(36)}`,
     });
     const leakedHash = context.store.putBlob(leaked);
     context.store.run(
