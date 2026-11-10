@@ -27,12 +27,13 @@ function module(overrides: Partial<ClientModule>): ClientModule {
 const core = module({ id: CORE_MODULE_ID, basePath: "" });
 
 describe("the composed module registry", () => {
-  it("keeps every URL the app served before the module platform", () => {
+  it("serves Home at the root, Overview at /overview, and every other URL unchanged", () => {
     expect(
       registry.routes.map((route) => `${route.chrome} ${route.path}`),
     ).toEqual([
       "bare /promotion",
       "shell /",
+      "shell /overview",
       "shell /services",
       "shell /services/:id",
       "shell /delivery",
@@ -48,9 +49,10 @@ describe("the composed module registry", () => {
 
   it("keeps the primary navigation in order", () => {
     expect(registry.nav.map((item) => `${item.label} ${item.to}`)).toEqual([
-      "Overview /",
+      "Home /",
+      "Overview /overview",
       "Services /services",
-      "Delivery /delivery",
+      "Flow /delivery",
       "AI /ai",
       "Promotion /promotion",
       "Maintenance /maintenance",

@@ -1,9 +1,90 @@
 import { expect, test } from "@playwright/test";
 
-test("overview ranks attention, lists what waits on me, and marks all seen", async ({
+test("home summarizes status, alerts, what waits on me, and Tracker triage", async ({
   page,
 }) => {
   await page.goto("/");
+  await expect(page).toHaveTitle("Home · Ops");
+  await expect(
+    page.getByRole("region", { name: "Overall status" }),
+  ).toContainText("7 areas need attention");
+
+  const glance = page.getByRole("list", { name: "At a glance" });
+  const firing = glance.getByRole("link", { name: /Firing alerts/u });
+  await expect(firing).toContainText("3");
+  await expect(firing).toContainText("in 1 group · 1 critical");
+  await expect(firing).toHaveAttribute("href", "/alerts");
+  await expect(
+    glance.getByRole("link", { name: /Waiting on you/u }),
+  ).toContainText("4");
+  const triage = glance.getByRole("link", { name: /Tracker triage/u });
+  await expect(triage).toContainText("2");
+  await expect(triage).toHaveAttribute(
+    "href",
+    "https://tracker.tailnet-1a49.ts.net",
+  );
+
+  const firingList = page.locator("section", {
+    has: page.getByRole("heading", { name: /Firing alert groups/u }),
+  });
+  await expect(
+    firingList.getByRole("heading", { name: /Firing alert groups/u }),
+  ).toContainText("1");
+  await expect(firingList.locator(".signal").first()).toContainText(
+    "Velero backup is 41 hours old",
+  );
+  const waiting = page.locator("section", {
+    has: page.getByRole("heading", { name: /Waiting on you/u }),
+  });
+  await expect(waiting.locator(".signal")).toHaveCount(4);
+  await waiting.getByRole("link", { name: "Overview" }).click();
+  await expect(page).toHaveURL(/\/overview$/u);
+  await expect(page).toHaveTitle("Overview · Ops");
+});
+
+test("home launches the app's pages, the other apps, and the tools", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const launcher = page.locator("section", {
+    has: page.getByRole("heading", { name: "Launcher" }),
+  });
+  const pages = launcher.getByRole("list", { name: "Pages" });
+  await expect(pages.getByRole("link")).toHaveText([
+    "Overview",
+    "Services",
+    "Flow",
+    "AI",
+    "Promotion",
+    "Maintenance",
+    "Review",
+    "Alerts",
+    "History",
+    "System",
+  ]);
+  await expect(
+    launcher.getByRole("list", { name: "Apps" }).getByRole("link", {
+      name: "Delivery",
+    }),
+  ).toHaveAttribute("href", "https://delivery.tailnet-1a49.ts.net");
+  await expect(
+    launcher.getByRole("list", { name: "Tools" }).getByRole("link", {
+      name: "Grafana",
+    }),
+  ).toHaveAttribute("href", "https://grafana.tailnet-1a49.ts.net");
+
+  await page
+    .getByRole("navigation", { name: "Primary navigation" })
+    .getByRole("link", { name: "Flow" })
+    .click();
+  await expect(page).toHaveURL(/\/delivery$/u);
+  await expect(page).toHaveTitle("Delivery · Ops");
+});
+
+test("overview ranks attention, lists what waits on me, and marks all seen", async ({
+  page,
+}) => {
+  await page.goto("/overview");
   await expect(page).toHaveTitle("Overview · Ops");
   const banner = page.getByRole("region", { name: "Overall status" });
   await expect(banner).toContainText("7 areas need attention");
@@ -85,7 +166,13 @@ test("the ops layout fits a phone without horizontal scrolling", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 375, height: 812 });
-  for (const path of ["/", "/services/scout-for-lol", "/ai", "/review"]) {
+  for (const path of [
+    "/",
+    "/overview",
+    "/services/scout-for-lol",
+    "/ai",
+    "/review",
+  ]) {
     await page.goto(path);
     await expect(page.locator("main h1")).toBeVisible();
     const overflow = await page.evaluate(

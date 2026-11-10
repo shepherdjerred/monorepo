@@ -315,10 +315,10 @@ export function RangePicker({
 }
 
 /**
- * Loads the latest snapshot and hands it to the page. Before the first
- * ingest the page explains that instead of showing an error.
+ * Loads the latest snapshot and hands it to its children. Before the first
+ * ingest it explains that instead of showing an error.
  */
-export function WithSnapshot({
+export function SnapshotBlock({
   title,
   children,
 }: {
@@ -327,29 +327,42 @@ export function WithSnapshot({
 }): React.JSX.Element {
   const snapshot = Loaded.fromQuery(useQuery(snapshotQuery()));
   return (
+    <LoadingBlock
+      values={{ snapshot }}
+      fallback={<div className="loading-state">Loading {title}…</div>}
+      renderError={(errors) =>
+        isSnapshotUnavailable(errors[0].error) ? (
+          <div className="empty-state">
+            No ops snapshot has been ingested yet. The Temporal ops-snapshot
+            workflow posts one every five minutes.
+          </div>
+        ) : (
+          <div className="error-state">The ops snapshot is unavailable.</div>
+        )
+      }
+    >
+      {({ snapshot: value }, meta) => (
+        <>
+          <StaleNotice errors={meta.errors} />
+          {children(value)}
+        </>
+      )}
+    </LoadingBlock>
+  );
+}
+
+/** A whole page that renders from the latest snapshot. */
+export function WithSnapshot({
+  title,
+  children,
+}: {
+  readonly title: string;
+  readonly children: (snapshot: SnapshotResponse) => ReactNode;
+}): React.JSX.Element {
+  return (
     <main>
       <title>{`${title} · Ops`}</title>
-      <LoadingBlock
-        values={{ snapshot }}
-        fallback={<div className="loading-state">Loading {title}…</div>}
-        renderError={(errors) =>
-          isSnapshotUnavailable(errors[0].error) ? (
-            <div className="empty-state">
-              No ops snapshot has been ingested yet. The Temporal ops-snapshot
-              workflow posts one every five minutes.
-            </div>
-          ) : (
-            <div className="error-state">The ops snapshot is unavailable.</div>
-          )
-        }
-      >
-        {({ snapshot: value }, meta) => (
-          <>
-            <StaleNotice errors={meta.errors} />
-            {children(value)}
-          </>
-        )}
-      </LoadingBlock>
+      <SnapshotBlock title={title}>{children}</SnapshotBlock>
     </main>
   );
 }
