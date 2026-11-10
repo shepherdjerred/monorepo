@@ -1,5 +1,5 @@
 import type { Hono } from "hono";
-import { streamSSE } from "hono/streaming";
+import { streamSSE, type SSEStreamingApi } from "hono/streaming";
 import type { ChangeHub } from "#infrastructure/change-hub.ts";
 import type { LiveMessage } from "#shared/live-updates.ts";
 
@@ -18,6 +18,50 @@ export type EventsRouteOptions = {
   heartbeatMs?: number;
 };
 
+/** Resolves `idle` on the next `wake` or after one heartbeat; leaves no timer. */
+function createWaiter(heartbeatMs: number) {
+  let wakeUp: (() => void) | undefined;
+  return {
+    wake: () => wakeUp?.(),
+    idle: () =>
+      new Promise<void>((resolve) => {
+        const timer = setTimeout(() => {
+          wakeUp?.();
+        }, heartbeatMs);
+        wakeUp = () => {
+          clearTimeout(timer);
+          wakeUp = undefined;
+          resolve();
+        };
+      }),
+  };
+}
+
+function writeMessage(
+  stream: SSEStreamingApi,
+  message: LiveMessage,
+  first: boolean,
+) {
+  return stream.writeSSE({
+    event: message.type,
+    data: JSON.stringify(message),
+    ...(message.type === "change" ? { id: message.eventId } : {}),
+    ...(first ? { retry: 3000 } : {}),
+  });
+}
+
+/** Rate-limits flag reads to one per heartbeat, independent of traffic. */
+function createFlagGate(enabled: () => Promise<boolean>, intervalMs: number) {
+  let checkedAt = Date.now();
+  return {
+    due: () => Date.now() - checkedAt >= intervalMs,
+    check: () => {
+      checkedAt = Date.now();
+      return enabled();
+    },
+  };
+}
+
 /**
  * Server-Sent Events of committed changes. Each message names the changed
  * entity; browsers refetch what they show. There is no replay: every
@@ -35,16 +79,16 @@ export function registerEventsRoute(app: Hono, options: EventsRouteOptions) {
       const queue: LiveMessage[] = [RESYNC];
       let open = true;
       const isOpen = () => open && !stream.aborted;
-      let wake: (() => void) | undefined;
+      const waiter = createWaiter(heartbeatMs);
       const close = () => {
         open = false;
-        wake?.();
+        waiter.wake();
       };
       const unsubscribe = options.changes.subscribe({
         message(message) {
           if (queue.length >= MAX_QUEUED) queue.splice(0, queue.length, RESYNC);
           else queue.push(message);
-          wake?.();
+          waiter.wake();
         },
         closed: close,
       });
@@ -52,36 +96,22 @@ export function registerEventsRoute(app: Hono, options: EventsRouteOptions) {
         unsubscribe();
         close();
       });
-      /** Resolves on the next message, close or heartbeat; leaves no timer. */
-      const idle = () =>
-        new Promise<void>((resolve) => {
-          const timer = setTimeout(() => {
-            wake?.();
-          }, heartbeatMs);
-          wake = () => {
-            clearTimeout(timer);
-            wake = undefined;
-            resolve();
-          };
-        });
       try {
         let first = true;
+        const flag = createFlagGate(options.liveUpdatesEnabled, heartbeatMs);
         while (isOpen()) {
+          // Turning the flag off ends open streams within one heartbeat, even
+          // while changes keep arriving.
+          if (flag.due() && !(await flag.check())) break;
           const message = queue.shift();
           if (message === undefined) {
-            await idle();
+            await waiter.idle();
             if (queue.length > 0 || !isOpen()) continue;
-            // Turning the flag off ends open streams within one heartbeat.
-            if (!(await options.liveUpdatesEnabled())) break;
+            if (!(await flag.check())) break;
             await stream.write(": heartbeat\n\n");
             continue;
           }
-          await stream.writeSSE({
-            event: message.type,
-            data: JSON.stringify(message),
-            ...(message.type === "change" ? { id: message.eventId } : {}),
-            ...(first ? { retry: 3000 } : {}),
-          });
+          await writeMessage(stream, message, first);
           first = false;
           if (message.type === "change") delivered += 1;
         }

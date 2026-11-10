@@ -99,7 +99,9 @@ export function createChangeHub(
       const next = listen();
       try {
         await connect(next);
-        if (current > 0) publish({ type: "resync" });
+        // Subscribers may have refetched before LISTEN was active (flag
+        // enabled after boot), so repair that gap on every first listen too.
+        publish({ type: "resync" });
         return;
       } catch (error) {
         console.warn(describe("tracker_live_updates_connect_failed", error));
