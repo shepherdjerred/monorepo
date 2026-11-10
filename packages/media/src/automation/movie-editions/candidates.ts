@@ -1,7 +1,10 @@
 import type { Prisma } from "#generated/prisma/client.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
 import { persistCandidateSnapshot } from "#automation/candidate-evidence.ts";
-import { ProviderIdSchema } from "#automation/providers.ts";
+import {
+  ProviderAdmissionDeferred,
+  ProviderIdSchema,
+} from "#automation/providers.ts";
 import { networkMovieAccess } from "#automation/editions/access.ts";
 import { requireMovieChoiceAccess } from "#infrastructure/movie-editions/access.ts";
 import { eligibleAcquisitionSponsors } from "#infrastructure/movie-editions/authority.ts";
@@ -266,6 +269,7 @@ export async function searchMovieCandidatesV4(
     context.movieManagement.budget,
   );
   const accepted: MovieCandidateV4[] = [];
+  let deferred: ProviderAdmissionDeferred | undefined;
   for (const provider of providers) {
     try {
       const sources = await context.providers.withProvider(
@@ -292,9 +296,16 @@ export async function searchMovieCandidatesV4(
         })),
       );
     } catch (error) {
-      if (!(error instanceof IntegrationError)) throw error;
+      if (error instanceof ProviderAdmissionDeferred) {
+        if (
+          deferred === undefined ||
+          error.retryAt.getTime() < deferred.retryAt.getTime()
+        )
+          deferred = error;
+      } else if (!(error instanceof IntegrationError)) throw error;
     }
   }
+  if (deferred !== undefined && accepted.length === 0) throw deferred;
   return accepted.sort(
     (left, right) =>
       right.rank - left.rank ||

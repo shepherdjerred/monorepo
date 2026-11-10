@@ -50,6 +50,8 @@ export type MovieNetworkActivitiesV4 = {
     status: "acquire" | "available" | "waiting" | "blocked" | "obsolete";
     attemptId: string | null;
     reason: string | null;
+    /** Present only when a local provider lease/cooldown prevented searching. */
+    retryAfterSeconds?: number;
   }>;
   submitMovieTorrentV4: (input: MovieAttemptOperationV4) => Promise<{
     status: "submitted" | "waiting" | "blocked" | "obsolete";

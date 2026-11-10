@@ -63,6 +63,17 @@ export function reconcileMovieEditionV4Workflow(
   };
   return recoverable(input.operationId, async () => {
     const result = await network.reconcileMovieIntentV4(input);
+    if (
+      result.status === "waiting" &&
+      result.reason === "provider_deferred" &&
+      patched("movie-provider-admission-deferral-v1")
+    ) {
+      const delay = result.retryAfterSeconds;
+      if (delay === undefined || !Number.isSafeInteger(delay) || delay <= 0)
+        throw new Error("Provider admission deferral lost its retry deadline");
+      await sleep(delay * 1000);
+      return continueAsNew<typeof reconcileMovieEditionV4Workflow>(input);
+    }
     if (result.status !== "acquire")
       return finish(input.operationId, {
         status: result.status === "available" ? "completed" : result.status,

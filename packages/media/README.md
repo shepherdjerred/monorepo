@@ -1237,6 +1237,16 @@ TPB and MagnetDownload provide title searches only and report
 bound to the current credential. Each invocation retains its own database lease
 and pacing; a deferred listing can reuse authentication on its next invocation.
 
+Movie searches deferred by a local provider lease or cooldown retain the same
+scoped coordinator and wait durably before checking admission again. Each resumed
+Activity rechecks current intent, sponsorship, reservations and authority with its
+original bounds. Remote authentication failures and download quotas do not gain
+this retry behavior. A completed search with no acceptable release returns to
+normal six-hour due searches. Default movie requests with an explicit current
+edition choice use the guarded scoped coordinator on that due pass; a blocked
+choice cannot fall through to historical unscoped acquisition. Pre-choice legacy
+requests retain their existing due route.
+
 MagnetDownload title searches retain their encrypted search results and resolved
 hash prefix in a typed `ReconciliationScan` checkpoint for the exact query, kind
 and page. After pacing defers a resolution, another leased invocation resumes

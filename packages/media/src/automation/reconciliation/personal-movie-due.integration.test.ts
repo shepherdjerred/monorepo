@@ -21,6 +21,8 @@ import { MovieAcquisitionIdentityV2Schema } from "#shared/movie-editions/acquisi
 import { QualityRulesSchema } from "#shared/api.ts";
 import { LIBRARY_MOVIE_DUE_CURSOR } from "./library-movies.ts";
 import { PERSONAL_MOVIE_DUE_CURSOR } from "./personal-movie-due.ts";
+import { NativeArchiveScopeProtection } from "#infrastructure/native-archive/errors.ts";
+import { requestTestMovieV4 } from "#testing/movie-v4.ts";
 
 let bytes: Uint8Array;
 beforeAll(async () => {
@@ -116,6 +118,171 @@ async function fixture(edition: MovieEditionKey) {
     },
   };
 }
+
+test("default personal choice resumes through the scoped due coordinator after no results", async () => {
+  const h = await fixture("default");
+  const { f, db } = h;
+  try {
+    const movie = createMovieNetworkFacetV4(h.context);
+    expect(
+      await movie.reconcileMovieIntentV4(f.input, testPlexBindingExecution()),
+    ).toMatchObject({ reason: "no_acceptable_release" });
+    await f.finishMediaOperation({
+      operationId: f.input.operationId,
+      status: "completed",
+      reason: "no_acceptable_release",
+    });
+    const before = await h.source();
+    await h.sweep(null);
+    await h.sweep(null);
+    const queued = await h.pending();
+    expect(queued).toHaveLength(1);
+    const operation = queued[0];
+    if (operation === undefined)
+      throw new Error("Default due sweep omitted its scoped command");
+    expect(operation).toMatchObject({
+      kind: "reconcile_movie_edition_v4",
+      targetId: f.input.mediaId,
+      userId: f.source.user.id,
+    });
+    const input = MovieOperationV4Schema.parse(
+      z.object(MovieOperationV4Schema.shape).parse(operation.payload),
+    );
+    expect(input.scope).toEqual(f.input.scope);
+    expect(
+      await db.operation.count({
+        where: { idempotencyKey: { startsWith: "due:" } },
+      }),
+    ).toBe(0);
+    expect(await h.source()).toEqual(before);
+    h.show();
+    expect(
+      await movie.reconcileMovieIntentV4(input, testPlexBindingExecution()),
+    ).toMatchObject({ status: "acquire" });
+    expect(await db.acquisitionAttempt.count()).toBe(1);
+  } finally {
+    await f.close();
+  }
+});
+
+test.each(["restricted requester", "existing reservation"])(
+  "default chosen demand with %s cannot fall back to generic due work",
+  async (guard) => {
+    const h = await fixture("default");
+    const { f, db } = h;
+    try {
+      if (guard === "restricted requester") {
+        await db.mediaUser.update({
+          where: { id: f.source.user.id },
+          data: { restricted: true },
+        });
+      } else {
+        h.show();
+        expect(
+          await createMovieNetworkFacetV4(h.context).reconcileMovieIntentV4(
+            f.input,
+            testPlexBindingExecution(),
+          ),
+        ).toMatchObject({ status: "acquire" });
+      }
+      const before = await h.source();
+      await h.sweep(null);
+      expect(await h.pending()).toEqual([]);
+      expect(
+        await db.operation.count({
+          where: { idempotencyKey: { startsWith: "due:" } },
+        }),
+      ).toBe(0);
+      expect(await h.source()).toEqual(before);
+      expect(f.source.wire.additions()).toBe(0);
+    } finally {
+      await f.close();
+    }
+  },
+);
+
+test("default pre-choice legacy demand retains its existing due route", async () => {
+  const h = await fixture("default");
+  const { f, db } = h;
+  try {
+    await db.mediaRequest.updateMany({
+      where: { mediaId: f.input.mediaId },
+      data: {
+        movieEditionChoiceId: null,
+        movieEditionChoiceRevision: { increment: 1 },
+        version: { increment: 1 },
+        active: false,
+        direct: false,
+        excluded: true,
+      },
+    });
+    const legacy = await db.mediaUser.create({
+      data: {
+        plexAccountId: crypto.randomUUID(),
+        displayName: "Pre-choice legacy requester",
+      },
+    });
+    await db.mediaRequest.create({
+      data: { userId: legacy.id, mediaId: f.input.mediaId, edition: "default" },
+    });
+    await h.sweep(null);
+    expect(await h.pending()).toEqual([]);
+    expect(
+      await db.operation.findFirstOrThrow({
+        where: { idempotencyKey: { startsWith: "due:" } },
+      }),
+    ).toMatchObject({ kind: "reconcile_media", targetId: f.input.mediaId });
+  } finally {
+    await f.close();
+  }
+});
+
+test("default chosen due work cannot replace its original pre-spent shared budget", async () => {
+  const h = await fixture("default");
+  try {
+    const budget = new PublicationAuthorityReadBudget();
+    budget.consume(99);
+    await expect(h.sweep(null, budget)).rejects.toThrow(
+      NativeArchiveScopeProtection,
+    );
+    expect(await h.pending()).toEqual([]);
+    expect(
+      await h.db.operation.count({
+        where: { idempotencyKey: { startsWith: "due:" } },
+      }),
+    ).toBe(0);
+  } finally {
+    await h.f.close();
+  }
+});
+
+test("eight default movie choices progress within the unchanged shared due-page budget", async () => {
+  const h = await fixture("default");
+  try {
+    for (let index = 1; index < 8; index++) {
+      const media = await h.db.mediaItem.create({
+        data: {
+          kind: "movie",
+          title: `Default due fixture ${String(index)}`,
+          year: 2020,
+          tmdbId: 202_020 + index,
+          runtimeMinutes: 1,
+          originalLanguage: "en",
+        },
+      });
+      await requestTestMovieV4(h.db, h.f.source.user, media.id, "default");
+    }
+    await h.sweep(null);
+    expect(await h.pending()).toHaveLength(8);
+    expect(
+      await h.db.operation.count({
+        where: { idempotencyKey: { startsWith: "due:" } },
+      }),
+    ).toBe(0);
+  } finally {
+    await h.f.close();
+  }
+});
 
 for (const edition of MovieEditionKeySchema.options.filter(
   (key) => key !== "default",

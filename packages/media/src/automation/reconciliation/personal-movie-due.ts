@@ -22,7 +22,7 @@ export const PERSONAL_MOVIE_DUE_CURSOR = "personal-movie-due-v4:";
 const Cursor = z.tuple([z.uuid(), MovieEditionKeySchema]);
 
 /** Scheduling never supplies acquisition birth: the coordinator rereads the actual current choice. */
-async function queuePersonalMovieDueV4(
+export async function queuePersonalMovieDueV4(
   context: MediaAutomationContext,
   scope: MovieEditionScope,
 ) {

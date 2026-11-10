@@ -57,6 +57,22 @@ export type ProviderRegistry = {
   ) => Promise<T>;
 };
 
+/** Only local admission can promise a safe recheck; remote failures keep their own semantics. */
+export class ProviderAdmissionDeferred extends IntegrationError {
+  constructor(
+    service: string,
+    readonly retryAt: Date,
+    readonly admission: "lease_busy" | "cooldown",
+  ) {
+    super(
+      service,
+      "rate-limited",
+      429,
+      Math.max(1, Math.ceil((retryAt.getTime() - Date.now()) / 1000)),
+    );
+  }
+}
+
 export class DatabaseProviderRegistry implements ProviderRegistry {
   private readonly sessions = new Map<
     string,
@@ -154,8 +170,29 @@ export class DatabaseProviderRegistry implements ProviderRegistry {
       },
       data: { ownerId, leaseUntil: new Date(now.getTime() + 300_000) },
     });
-    if (leased.count !== 1)
-      throw new IntegrationError(providerId, "rate-limited");
+    if (leased.count !== 1) {
+      const current = await this.db.providerLease.findUniqueOrThrow({
+        where: { providerId },
+      });
+      const observedAt = Date.now();
+      const busy =
+        current.leaseUntil !== null &&
+        current.leaseUntil.getTime() > observedAt;
+      // A live owner may release early. Recheck at normal pacing or its expiry;
+      // the next claim must still prove both lease availability and cooldown.
+      const recheckAt =
+        busy && current.leaseUntil !== null
+          ? Math.min(
+              current.leaseUntil.getTime(),
+              observedAt + policy.minimumIntervalSeconds * 1000,
+            )
+          : observedAt + 1000;
+      throw new ProviderAdmissionDeferred(
+        providerId,
+        new Date(Math.max(recheckAt, current.nextAllowedAt.getTime())),
+        busy ? "lease_busy" : "cooldown",
+      );
+    }
     let backoffSeconds = policy.minimumIntervalSeconds;
     try {
       const result = await work(
