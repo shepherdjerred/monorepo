@@ -1,0 +1,4 @@
+-- DuckDB 2.0 probes a terminal's background color at startup, waits five
+-- seconds when the terminal never answers (asciinema, Codex exec cells), then
+-- prints a warning into the output. A fixed highlight mode skips the probe.
+.highlight_mode dark
