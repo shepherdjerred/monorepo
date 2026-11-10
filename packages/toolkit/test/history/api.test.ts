@@ -15,6 +15,7 @@ import {
 import { HistoryIndex } from "#lib/history/index.ts";
 import { defaultHistoryRuntimePaths } from "#lib/history/paths.ts";
 import { documentDetails } from "#lib/history/query/messages.ts";
+import { buildCodexThreadDocument } from "#lib/history/sources/codex.ts";
 import type {
   HistoryDocument,
   HistoryMessage,
@@ -345,4 +346,23 @@ describe("history API contracts", () => {
       expect(() => schema.parse(fixture)).not.toThrow();
     },
   );
+});
+
+describe("Codex thread titles", () => {
+  test("a subagent thread without a user turn takes its first reply", () => {
+    const thread = buildCodexThreadDocument(
+      "/fixture/thread_history_1.sqlite",
+      { threadId: "01a1-sub", createdAtMs: 0, updatedAtMs: 1000 },
+      [
+        { role: "tool", text: "rg mirror", createdAt: null, toolName: "exec" },
+        {
+          role: "assistant",
+          text: "Auditing the mirror index",
+          createdAt: null,
+        },
+      ],
+      [],
+    );
+    expect(thread.title).toBe("Auditing the mirror index");
+  });
 });

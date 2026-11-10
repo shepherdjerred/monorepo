@@ -142,8 +142,11 @@ export function buildCodexThreadDocument(
     {
       source: "codex",
       sourceId: `${filePath}:${item.threadId}`,
+      // Subagent threads have no user turn; their first reply names the task.
       title: firstText(
-        openingPrompt(threadMessages) ?? item.threadId,
+        openingPrompt(threadMessages) ??
+          threadMessages.find((entry) => entry.role === "assistant")?.text ??
+          item.threadId,
         item.threadId,
       ),
       path: filePath,
