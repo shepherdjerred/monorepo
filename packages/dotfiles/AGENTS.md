@@ -73,7 +73,9 @@ listing what is left.
 ## Tools and research
 
 - Use `rg` and `rg --files` for search. Use `apply_patch` for hand-authored file
-  edits.
+  edits. Use `ast-grep` for syntax-aware code search and rewrites.
+- Convert command output to JSON with `jc` rather than parsing text; query
+  CSV, JSON, or Parquet with `duckdb`.
 - Use code for arithmetic, conversions, and data analysis instead of mental
   calculation.
 - Tracker holds issues and Bugsink holds errors. Linear, Sentry, and PagerDuty
@@ -127,6 +129,12 @@ itself, open it locally. Load `tailscale-helper` for anything beyond this.
   with `tailscale serve --https=<port> off` when done or asked.
 - If `tailscale file cp` fails because the MacBook is offline, say so, then
   serve the file or report its path.
+- Show results inline from tool output, never hand-drawn: tables from
+  `duckdb -markdown`, and charts from `uplot bar|hist|count|line -o -M` in a
+  code block. Prefer bar and hist, which print values; zero-fill time-series
+  gaps first.
+- Draw flowcharts and sequence diagrams inline with `mermaid-ascii`; render
+  other diagrams with `mmdc -o <file>.png` and send the image.
 
 ## Delivery
 

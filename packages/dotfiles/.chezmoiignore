@@ -9,6 +9,8 @@ AppData_*
 
 {{- if ne .chezmoi.os "darwin" }}
 Library/
+# Wraps Homebrew mermaid-cli, which only the macOS Brewfile installs.
+.local/bin/mmdc
 {{- end }}
 
 scripts

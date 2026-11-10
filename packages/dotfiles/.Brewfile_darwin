@@ -21,6 +21,8 @@ brew "agg"
 brew "argocd"
 # Record and share terminal sessions
 brew "asciinema"
+# Code searching, linting, rewriting
+brew "ast-grep"
 # Improved shell history for zsh, bash, fish and nushell
 brew "atuin"
 # Official Amazon AWS command-line interface
@@ -45,6 +47,8 @@ brew "cocoapods"
 brew "crane"
 # Diff that understands syntax
 brew "difftastic"
+# Embeddable SQL OLAP Database Management System
+brew "duckdb"
 # Static file server
 brew "dufs"
 # Select default apps for documents and URL schemes on macOS
@@ -69,8 +73,12 @@ brew "gcc"
 brew "gcx"
 # GitHub command-line tool
 brew "gh"
+# Serializes the output of command-line tools to structured JSON output
+brew "jc"
 # Image processing and image analysis library
 brew "leptonica"
+# CLI for Mermaid library
+brew "mermaid-cli"
 # OCR (Optical Character Recognition) engine
 brew "tesseract"
 # Distributed revision control system
@@ -171,6 +179,8 @@ brew "wget"
 brew "woodpecker-cli"
 # Generate your Xcode project from a spec file and your folder structure
 brew "xcodegen"
+# Command-line tool that draw plots on the terminal
+brew "youplot"
 # Process YAML, JSON, XML, CSV and properties documents from the CLI
 brew "yq"
 # Feature-rich command-line audio/video downloader
@@ -314,6 +324,7 @@ vscode "tomoki1207.pdf"
 vscode "vscodevim.vim"
 go "cmd/go"
 go "cmd/gofmt"
+go "github.com/AlexanderGrooff/mermaid-ascii"
 uv "browser-use"
 uv "docling[asr,easyocr,htmlrender,ocrmac,onnxruntime,rapidocr,remote-serving,tesserocr,vlm,xbrl]"
 uv "trafilatura"
