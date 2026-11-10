@@ -94,6 +94,21 @@ describe("deliveryRequest keeps every Delivery answer as it was", () => {
     });
   });
 
+  test("a 503 UNAVAILABLE, a dependency that did not answer, is retryable", async () => {
+    fetchMock.mockResolvedValueOnce(
+      json(503, {
+        error: {
+          code: "UNAVAILABLE",
+          message: "The Kubernetes API did not answer",
+          requestId: "r4",
+        },
+      }),
+    );
+    const error = await failure(read());
+    expect(error).toBeInstanceOf(DeliveryApiUnavailableError);
+    expect(error).not.toBeInstanceOf(ApplicationFailure);
+  });
+
   test("BUSY stays non-retryable", async () => {
     fetchMock.mockResolvedValueOnce(
       json(409, {

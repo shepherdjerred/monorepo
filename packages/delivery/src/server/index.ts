@@ -93,7 +93,6 @@ const drain = createDrain({
 });
 const app = createApp({
   drain,
-  readApplication,
   delivery,
   workerRecoveryReaders: {
     readApplication,

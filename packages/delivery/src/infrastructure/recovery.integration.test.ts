@@ -114,6 +114,111 @@ async function checkModelSyncStage(detail: DeploymentDetail) {
   }
 }
 
+const companionOperationId = "44444444-4444-4444-8444-444444444444";
+
+/**
+ * A compound recipe made only of Applications, like chartmuseum's companion
+ * and server: each sub-recipe's sync step records the deployment's one
+ * request, and each Application carries its own Argo operation identity.
+ */
+function companionCompound(detail: DeploymentDetail) {
+  const application = recipeFromPipeline(arcadePipeline);
+  if (application.kind !== "kubernetes-application")
+    throw new Error("Expected an Application recipe");
+  const companion = structuredClone(application);
+  companion.application.name = "arcade-companion";
+  companion.steps = companion.steps.map((step) => ({
+    ...step,
+    instance: "application:arcade-companion",
+  }));
+  const definition = RecipeDefinitionSchema.parse({
+    kind: "compound",
+    subRecipes: [
+      { instance: "application:arcade-companion", definition: companion },
+      { instance: "application:arcade", definition: application },
+    ],
+  });
+  const reconcile = detail.stages.find((stage) => stage.key === "reconcile");
+  if (reconcile === undefined) throw new Error("Expected the v1 stage");
+  const selected: DeploymentDetail = {
+    ...detail,
+    pipeline: { ...detail.pipeline, definition },
+    stages: [
+      { ...reconcile, key: "sub1-step-sync" },
+      { ...reconcile, key: "sub2-step-sync" },
+    ],
+  };
+  const applications = {
+    "arcade-companion": observation("Succeeded"),
+    arcade: observation("Succeeded"),
+  };
+  const companionState = applications["arcade-companion"];
+  companionState.metadata.name = "arcade-companion";
+  companionState.status.operationState.operation.info = [
+    { name: "ci.sjer.red/request-id", value: requestId },
+    { name: "ci.sjer.red/operation-id", value: companionOperationId },
+  ];
+  const inspect = createRecoveryInspector({
+    readApplication: async (name) =>
+      name === "arcade" || name === "arcade-companion"
+        ? applications[name]
+        : null,
+  });
+  return { selected, applications, inspect };
+}
+
+async function checkCompoundApplications(detail: DeploymentDetail) {
+  const { selected, inspect } = companionCompound(detail);
+  const automatic = await inspect(selected, { reason: recovery.reason });
+  expect(automatic.map((entry) => [entry.kind, entry.operationId])).toEqual([
+    ["reconciliation", companionOperationId],
+    ["reconciliation", externalOperationId],
+  ]);
+  // An operator names either Application's operation; both are still read.
+  for (const operationId of [companionOperationId, externalOperationId])
+    expect(await inspect(selected, { ...recovery, operationId })).toEqual(
+      automatic,
+    );
+  await expect(
+    inspect(selected, {
+      ...recovery,
+      operationId: "33333333-3333-4333-8333-333333333333",
+    }),
+  ).rejects.toMatchObject({ code: "CONFLICT" });
+  await checkUnsettledCompound(detail);
+}
+
+async function checkUnsettledCompound(detail: DeploymentDetail) {
+  const running = companionCompound(detail);
+  running.applications.arcade.status.operationState.phase = "Running";
+  await expect(
+    running.inspect(running.selected, { reason: recovery.reason }),
+  ).rejects.toMatchObject({ code: "CONFLICT" });
+  const foreign = companionCompound(detail);
+  foreign.applications[
+    "arcade-companion"
+  ].status.operationState.operation.info[0] = {
+    name: "ci.sjer.red/request-id",
+    value: crypto.randomUUID(),
+  };
+  await expect(
+    foreign.inspect(foreign.selected, { reason: recovery.reason }),
+  ).rejects.toMatchObject({ code: "CONFLICT" });
+  // The second sync never recorded its request: its body may be written.
+  const unsynced = companionCompound(detail);
+  await expect(
+    unsynced.inspect(
+      {
+        ...unsynced.selected,
+        stages: unsynced.selected.stages.filter(
+          (stage) => stage.key !== "sub2-step-sync",
+        ),
+      },
+      { reason: recovery.reason },
+    ),
+  ).rejects.toMatchObject({ code: "CONFLICT" });
+}
+
 describe("independent Argo recovery", () => {
   let cluster: Awaited<ReturnType<typeof createTestDatabase>>;
   let delivery: Delivery;
@@ -275,6 +380,9 @@ describe("independent Argo recovery", () => {
   });
   test("a model recipe's sync step, prefixed inside a compound recipe, names the recorded request (T3)", async () => {
     await checkModelSyncStage(detail);
+  });
+  test("a compound recipe made only of Applications settles only when every Application proves its own sync", async () => {
+    await checkCompoundApplications(detail);
   });
   test("stores exact independent readback before releasing only the owned lock", async () => {
     const inspect = createRecoveryInspector({

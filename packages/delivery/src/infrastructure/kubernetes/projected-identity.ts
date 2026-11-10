@@ -4,6 +4,16 @@ import { request } from "node:https";
 const LIMIT = 1024 * 1024;
 
 /**
+ * The Kubernetes API did not answer: it refused or dropped the connection,
+ * timed out, or answered 429 or 5xx, as it does while the control plane
+ * restarts. Retrying the same read may succeed; a refused identity (401,
+ * 403) or a missing projection is not this.
+ */
+export class KubernetesUnavailableError extends Error {
+  override readonly name = "KubernetesUnavailableError";
+}
+
+/**
  * One read through a projected, short-lived Kubernetes identity mounted at
  * `directory` (`token` and `ca.crt`). Credentials load lazily on each read
  * so rotation needs no restart. Resolves the parsed body, or null when the
@@ -31,7 +41,13 @@ export async function readProjectedKubernetes(
         }
         if (response.statusCode !== 200) {
           response.resume();
-          reject(new Error("Kubernetes identity read did not succeed"));
+          const status = response.statusCode ?? 0;
+          const message = `Kubernetes identity read answered HTTP ${String(status)}`;
+          reject(
+            status === 429 || status >= 500
+              ? new KubernetesUnavailableError(message)
+              : new Error(message),
+          );
           return;
         }
         response.on("data", (chunk: Uint8Array) => {
@@ -51,7 +67,9 @@ export async function readProjectedKubernetes(
       },
     );
     const timer = setTimeout(() => {
-      child.destroy(new Error("Kubernetes identity read timed out"));
+      child.destroy(
+        new KubernetesUnavailableError("Kubernetes identity read timed out"),
+      );
     }, 5000);
     child.on("close", () => {
       clearTimeout(timer);

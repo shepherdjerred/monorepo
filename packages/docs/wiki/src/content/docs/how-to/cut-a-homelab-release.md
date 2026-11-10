@@ -293,9 +293,12 @@ succeeds ([4.15](packages/delivery/docs/model.md#415-recovery-intent)).
 
 Delivery opens the intent itself on its next dispatch tick, and worker,
 platform and `argo` intents settle without you when their reader proves the
-target. Follow these steps only for a content or compound target, or when
-`DeliveryRecoveryRequired` keeps firing because the automatic intent failed:
-`toolkit deploy recovery --pending --json` shows it, with its evidence.
+target, a compound recipe made only of Applications included. A failed
+intent is reopened five minutes after it finished, up to five automatic
+intents. Follow these steps only for a content target, or when
+`DeliveryRecoveryRequired` keeps firing because the automatic intents
+failed: `toolkit deploy recovery --pending --json` shows a pending one, with
+its evidence.
 
 1. Read the deployment's environment generation, its recipe and the sub-step
    it names:

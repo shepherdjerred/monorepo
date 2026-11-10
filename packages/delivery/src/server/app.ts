@@ -1,5 +1,4 @@
 import { Hono } from "hono";
-import type { ApplicationReader } from "#infrastructure/kubernetes/application-reader.ts";
 import { serveStatic } from "hono/bun";
 import { secureHeaders } from "hono/secure-headers";
 import { bodyLimit } from "hono/body-limit";
@@ -69,9 +68,8 @@ type Options = {
   peerAddress: (request: Request) => string | null;
   ciOrigin: string;
   ciRepositoryId: number;
+  /** The API's own Application readback; it also settles argo intents automatically. */
   inspectRecovery?: ReturnType<typeof createRecoveryInspector>;
-  /** The API's own Application reader, for automatic argo settlement. */
-  readApplication?: ApplicationReader;
   /** Independent readers that observe a pending worker recovery (D5, I2). */
   workerRecoveryReaders?: WorkerRecoveryReaders;
   inspectMinecraftRecovery?: InspectMinecraftRecovery;
@@ -365,13 +363,9 @@ export function createApp(options: Options) {
       c.get("principal"),
     );
     const recoverySettled =
-      options.inspectRecovery === undefined ||
-      options.readApplication === undefined
+      options.inspectRecovery === undefined
         ? []
-        : await delivery.settleAutomaticArgoIntents(
-            options.inspectRecovery,
-            options.readApplication,
-          );
+        : await delivery.settleAutomaticArgoIntents(options.inspectRecovery);
     return c.json({
       ...result,
       ...(recoverySettled.length === 0 ? {} : { recoverySettled }),
@@ -441,6 +435,7 @@ export function createApp(options: Options) {
         UNAUTHORIZED: 401,
         FORBIDDEN: 403,
         PAUSED: 503,
+        UNAVAILABLE: 503,
         CONFLICT: 409,
         BUSY: 409,
         INVALID: 400,
