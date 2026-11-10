@@ -1,12 +1,13 @@
 import { Size, type Chart } from "cdk8s";
 import { Cpu, EnvValue } from "cdk8s-plus-31";
-import {
-  IntOrString,
-  KubeNetworkPolicy,
-} from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import { KubeNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { createTemporalDomainWorker } from "./domain-worker.ts";
 import { streambotSchedulerSecret } from "@shepherdjerred/homelab/cdk8s/src/resources/streambot/scheduling.ts";
-import { dnsEgressRule } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
+import {
+  dnsEgressRule,
+  tcp,
+  nsPeer,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import { metricsIngress } from "./worker-network-policies.ts";
 import {
   temporalTelemetryEnvironment,
@@ -51,18 +52,16 @@ export function createStreambotWorker(chart: Chart, serverServiceName: string) {
         temporalTelemetryEgressRule(),
         {
           to: [{ podSelector: { matchLabels: { app: "temporal-server" } } }],
-          ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
+          ports: [tcp(7233)],
         },
         {
           to: [
             {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "media" },
-              },
+              ...nsPeer("media"),
               podSelector: { matchLabels: { app: "streambot" } },
             },
           ],
-          ports: [{ port: IntOrString.fromNumber(8081), protocol: "TCP" }],
+          ports: [tcp(8081)],
         },
       ],
     },

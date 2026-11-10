@@ -3,6 +3,10 @@ import {
   IntOrString,
   KubeNetworkPolicy,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import {
+  tcp,
+  nsPeer,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 
 /** PROXY headers are trusted only on TCP ingress from the router namespace. */
 export function createMinecraftProxyTrust(
@@ -19,21 +23,16 @@ export function createMinecraftProxyTrust(
         {
           from: [
             {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "mc-router" },
-              },
+              ...nsPeer("mc-router"),
               podSelector: {
                 matchLabels: { "app.kubernetes.io/name": "mc-router" },
               },
             },
           ],
-          ports: [{ protocol: "TCP", port: IntOrString.fromNumber(proxyPort) }],
+          ports: [tcp(proxyPort)],
         },
         {
-          ports: [8123, 8100, 25_575, 25_580].map((port) => ({
-            protocol: "TCP",
-            port: IntOrString.fromNumber(port),
-          })),
+          ports: [8123, 8100, 25_575, 25_580].map((port) => tcp(port)),
         },
         { ports: [{ protocol: "UDP", port: IntOrString.fromNumber(19_132) }] },
       ],

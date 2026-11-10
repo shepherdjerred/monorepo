@@ -1,8 +1,9 @@
 import type { Chart } from "cdk8s";
+import { KubeNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import {
-  IntOrString,
-  KubeNetworkPolicy,
-} from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+  tcp,
+  nsPeer,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 
 export function createTemporalScoutBetaNetworkPolicy(chart: Chart): void {
   const egress = (constructId: string, name: string, component: string) =>
@@ -15,15 +16,11 @@ export function createTemporalScoutBetaNetworkPolicy(chart: Chart): void {
           {
             to: [
               {
-                namespaceSelector: {
-                  matchLabels: {
-                    "kubernetes.io/metadata.name": "scout-beta",
-                  },
-                },
+                ...nsPeer("scout-beta"),
                 podSelector: { matchLabels: { app: "scout-backend" } },
               },
             ],
-            ports: [{ port: IntOrString.fromNumber(3000), protocol: "TCP" }],
+            ports: [tcp(3000)],
           },
         ],
       },

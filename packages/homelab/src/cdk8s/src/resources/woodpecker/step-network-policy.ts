@@ -1,11 +1,10 @@
 import type { Chart } from "cdk8s";
-import {
-  IntOrString,
-  KubeNetworkPolicy,
-} from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import { KubeNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import {
   dnsEgressRule,
   externalHttpsEgressRule,
+  nsPeer,
+  tcp,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import { WOODPECKER_CI_NAMESPACE } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/ci/woodpecker-credentials.ts";
 
@@ -84,13 +83,11 @@ export function createWoodpeckerStepNetworkPolicy(chart: Chart) {
         {
           to: [
             {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "delivery" },
-              },
+              ...nsPeer("delivery"),
               podSelector: { matchLabels: { app: "delivery" } },
             },
           ],
-          ports: [{ port: IntOrString.fromNumber(7353), protocol: "TCP" }],
+          ports: [tcp(7353)],
         },
       ],
     },
@@ -117,18 +114,8 @@ export function createWoodpeckerStepNetworkPolicy(chart: Chart) {
           // endpoint. It is the one in-cluster destination steps need, and the
           // only reason this policy is not HTTPS-only; buildkitd's own policy
           // already restricts ingress to this namespace.
-          to: [
-            {
-              namespaceSelector: {
-                matchLabels: {
-                  "kubernetes.io/metadata.name": BUILDKITD_NAMESPACE,
-                },
-              },
-            },
-          ],
-          ports: [
-            { port: IntOrString.fromNumber(BUILDKITD_PORT), protocol: "TCP" },
-          ],
+          to: [nsPeer(BUILDKITD_NAMESPACE)],
+          ports: [tcp(BUILDKITD_PORT)],
         },
         // Everything else a step reaches is HTTPS: github.com and its API,
         // ghcr.io, registry.npmjs.org, the published sites, and SeaweedFS S3

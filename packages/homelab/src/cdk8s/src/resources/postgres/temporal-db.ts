@@ -4,10 +4,7 @@ import {
   PostgresqlSpecPostgresqlVersion,
   PostgresqlSpecUsers,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/acid.zalan.do";
-import {
-  IntOrString,
-  KubeNetworkPolicy,
-} from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import { KubeNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { postgresClusterPodLabels } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/cluster-label.ts";
 import {
   TEMPORAL_POSTGRES_TLS_CA_FILE,
@@ -16,6 +13,7 @@ import {
   TEMPORAL_POSTGRES_TLS_SECRET,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/temporal-db-tls.ts";
 import { ZFS_WAL_PARAMETERS } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/zfs-wal-parameters.ts";
+import { tcp } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 
 export const TEMPORAL_POSTGRES_CLUSTER = "temporal-postgresql";
 
@@ -63,7 +61,7 @@ export function createTemporalPostgreSQLNetworkPolicy(chart: Chart) {
               },
             },
           ],
-          ports: [{ port: IntOrString.fromNumber(5432), protocol: "TCP" }],
+          ports: [tcp(5432)],
         },
       ],
     },

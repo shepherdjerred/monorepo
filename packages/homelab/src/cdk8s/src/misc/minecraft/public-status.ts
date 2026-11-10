@@ -4,6 +4,7 @@ import {
   KubeNetworkPolicy,
   KubeService,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import { nsPeer } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 
 /** Query stays private; neither this service nor polling traverses mc-router. */
 export function createMinecraftPublicStatus(chart: Chart): void {
@@ -27,9 +28,7 @@ export function createMinecraftPublicStatus(chart: Chart): void {
       ingress: [
         {
           from: ["storm-forum", "storm-forum-beta"].map((name) => ({
-            namespaceSelector: {
-              matchLabels: { "kubernetes.io/metadata.name": name },
-            },
+            ...nsPeer(name),
             podSelector: {
               matchLabels: { app: "storm-forum", component: "web" },
             },

@@ -21,7 +21,10 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com.ts";
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
-import { dnsEgressRule } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
+import {
+  dnsEgressRule,
+  nsPeer,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import {
   withCommonProps,
   setRevisionHistoryLimit,
@@ -128,25 +131,11 @@ export function createGlitterBoysLauncherChart(
       policyTypes: ["Ingress", "Egress"],
       ingress: [
         {
-          from: [
-            {
-              namespaceSelector: {
-                matchLabels: {
-                  "kubernetes.io/metadata.name": "cloudflare-tunnel",
-                },
-              },
-            },
-          ],
+          from: [nsPeer("cloudflare-tunnel")],
           ports: [{ port: IntOrString.fromNumber(8080) }],
         },
         {
-          from: [
-            {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
-              },
-            },
-          ],
+          from: [nsPeer("prometheus")],
           ports: [
             { port: IntOrString.fromNumber(8080) },
             { port: IntOrString.fromNumber(9091) },

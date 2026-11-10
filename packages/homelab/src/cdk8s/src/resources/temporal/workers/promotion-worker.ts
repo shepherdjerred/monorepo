@@ -8,14 +8,13 @@ import {
   type ISecret,
 } from "cdk8s-plus-31";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
-import {
-  IntOrString,
-  KubeNetworkPolicy,
-} from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import { KubeNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import {
   dnsEgressRule,
   prometheusIngressRule,
+  nsPeer,
+  tcp,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import { temporalFeatureFlagEnvironment } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/feature-flags.ts";
 import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
@@ -115,16 +114,8 @@ export function createTemporalPromotionWorker(
       policyTypes: ["Ingress", "Egress"],
       ingress: [
         {
-          from: [
-            {
-              namespaceSelector: {
-                matchLabels: {
-                  "kubernetes.io/metadata.name": "alert-dashboard",
-                },
-              },
-            },
-          ],
-          ports: [{ port: IntOrString.fromNumber(7343), protocol: "TCP" }],
+          from: [nsPeer("alert-dashboard")],
+          ports: [tcp(7343)],
         },
         prometheusIngressRule([9464, 9465]),
       ],
@@ -132,23 +123,17 @@ export function createTemporalPromotionWorker(
         dnsEgressRule(),
         {
           to: [{ podSelector: { matchLabels: { app: "temporal-server" } } }],
-          ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
+          ports: [tcp(7233)],
         },
         ...[
           { namespace: "pinchtab", port: 9867 },
           { namespace: "seaweedfs", port: 8333 },
           { namespace: "alloy-gateway", port: 4318 },
         ].map(({ namespace, port }) => ({
-          to: [
-            {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": namespace },
-              },
-            },
-          ],
-          ports: [{ port: IntOrString.fromNumber(port), protocol: "TCP" }],
+          to: [nsPeer(namespace)],
+          ports: [tcp(port)],
         })),
-        { ports: [{ port: IntOrString.fromNumber(443), protocol: "TCP" }] },
+        { ports: [tcp(443)] },
       ],
     },
   });

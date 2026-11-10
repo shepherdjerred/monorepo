@@ -7,11 +7,12 @@ import {
   type Deployment,
 } from "cdk8s-plus-31";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
-import {
-  IntOrString,
-  KubeNetworkPolicy,
-} from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import { KubeNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
+import {
+  tcp,
+  nsPeer,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 
 export function streambotSchedulerSecret(chart: Chart) {
   const item = new OnePasswordItem(chart, "streambot-scheduler-1p", {
@@ -46,13 +47,11 @@ export function createStreambotScheduling(
         {
           from: [
             {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "temporal" },
-              },
+              ...nsPeer("temporal"),
               podSelector: { matchLabels: { component: "streambot-worker" } },
             },
           ],
-          ports: [{ port: IntOrString.fromNumber(8081), protocol: "TCP" }],
+          ports: [tcp(8081)],
         },
       ],
     },

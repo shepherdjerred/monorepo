@@ -1,14 +1,15 @@
 import { Size, type Chart } from "cdk8s";
 import { Cpu, EnvValue, Secret } from "cdk8s-plus-31";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
-import {
-  KubeNetworkPolicy,
-  IntOrString,
-} from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import { KubeNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import {
   dnsEgressRule,
   kubernetesApiEgressRule,
+  nsPeer,
+  tcp,
+  fliptEgress,
+  prometheusIngressRule,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import { createTemporalDomainWorker } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/workers/domain-worker.ts";
 import { createDeliveryJobs } from "./jobs.ts";
@@ -16,14 +17,7 @@ import {
   temporalTelemetryEnvironment,
   temporalTelemetryEgressRule,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/telemetry.ts";
-const namespace = (name: string) => ({
-  namespaceSelector: { matchLabels: { "kubernetes.io/metadata.name": name } },
-});
-const ports = (...numbers: number[]) =>
-  numbers.map((port) => ({
-    port: IntOrString.fromNumber(port),
-    protocol: "TCP",
-  }));
+const ports = (...numbers: number[]) => numbers.map((port) => tcp(port));
 
 /** No ordinary worker queue or worker Job capability shares this provider-bearing account. */
 export function createDeliveryPlatformWorker(
@@ -82,7 +76,7 @@ export function createDeliveryPlatformWorker(
     spec: {
       podSelector: { matchLabels: { component: "delivery-platform-worker" } },
       policyTypes: ["Ingress", "Egress"],
-      ingress: [{ from: [namespace("prometheus")], ports: ports(9464, 9465) }],
+      ingress: [prometheusIngressRule([9464, 9465])],
       egress: [
         dnsEgressRule(),
         temporalTelemetryEgressRule(),
@@ -92,8 +86,8 @@ export function createDeliveryPlatformWorker(
           to: [{ podSelector: { matchLabels: { app: "temporal-server" } } }],
           ports: ports(7233),
         },
-        { to: [namespace("delivery")], ports: ports(7353) },
-        { to: [namespace("flipt")], ports: ports(8080) },
+        { to: [nsPeer("delivery")], ports: ports(7353) },
+        fliptEgress(),
       ],
     },
   });

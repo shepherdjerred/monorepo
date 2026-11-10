@@ -1,12 +1,15 @@
 import type { App } from "cdk8s";
 import { Chart } from "cdk8s";
 import { Namespace } from "cdk8s-plus-31";
-import {
-  KubeNetworkPolicy,
-  IntOrString,
-} from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import { KubeNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { createPinchtabDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/pinchtab/index.ts";
-import { dnsEgressRule } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
+import {
+  dnsEgressRule,
+  nsPeer,
+  tcp,
+  externalHttpsEgressRule,
+  blackboxProbeIngressRule,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 
 const PINCHTAB_PORT = 9867;
 
@@ -40,58 +43,29 @@ export function createPinchtabChart(app: App) {
         {
           from: [
             {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "temporal" },
-              },
+              ...nsPeer("temporal"),
               podSelector: { matchLabels: { component: "promotion-worker" } },
             },
             {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "media" },
-              },
+              ...nsPeer("media"),
               podSelector: { matchLabels: { app: "bazarr" } },
             },
             {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "media" },
-              },
+              ...nsPeer("media"),
               podSelector: { matchLabels: { app: "streambot" } },
             },
             {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "media" },
-              },
+              ...nsPeer("media"),
               podSelector: { matchLabels: { component: "media-network" } },
             },
-            {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "birmel" },
-              },
-            },
-            {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "tailscale" },
-              },
-            },
+            nsPeer("birmel"),
+            nsPeer("tailscale"),
           ],
-          ports: [
-            { port: IntOrString.fromNumber(PINCHTAB_PORT), protocol: "TCP" },
-          ],
+          ports: [tcp(PINCHTAB_PORT)],
         },
         // Allow blackbox-exporter's in-cluster health probe (pinchtab port
         // only — not every port on the pod)
-        {
-          from: [
-            {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
-              },
-            },
-          ],
-          ports: [
-            { port: IntOrString.fromNumber(PINCHTAB_PORT), protocol: "TCP" },
-          ],
-        },
+        blackboxProbeIngressRule(PINCHTAB_PORT),
       ],
     },
   });
@@ -107,10 +81,7 @@ export function createPinchtabChart(app: App) {
         // DNS
         dnsEgressRule(),
         // External HTTPS for public browsing.
-        {
-          to: [{ ipBlock: { cidr: "0.0.0.0/0" } }],
-          ports: [{ port: IntOrString.fromNumber(443), protocol: "TCP" }],
-        },
+        externalHttpsEgressRule(),
       ],
     },
   });

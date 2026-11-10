@@ -12,10 +12,7 @@ import {
   Service,
   Volume,
 } from "cdk8s-plus-31";
-import {
-  IntOrString,
-  KubeNetworkPolicy,
-} from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import { KubeNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import {
@@ -23,8 +20,13 @@ import {
   withCommonProps,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
+import {
+  nsPeer,
+  tcp,
+  postgresEgress,
+  dnsEgressRule,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
-import { postgresClusterPodLabels } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/cluster-label.ts";
 
 export const PHOENIX_HTTP_PORT = 6006;
 // The nonroot image's fixed UID/GID.
@@ -197,45 +199,13 @@ export function createPhoenixDeployment(chart: Chart) {
         {
           // OTLP from the trace gateway, the UI via Tailscale, and the
           // blackbox health probe.
-          from: ["alloy-gateway", "tailscale", "prometheus"].map(
-            (namespace) => ({
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": namespace },
-              },
-            }),
+          from: ["alloy-gateway", "tailscale", "prometheus"].map((namespace) =>
+            nsPeer(namespace),
           ),
-          ports: [
-            {
-              port: IntOrString.fromNumber(PHOENIX_HTTP_PORT),
-              protocol: "TCP",
-            },
-          ],
+          ports: [tcp(PHOENIX_HTTP_PORT)],
         },
       ],
-      egress: [
-        {
-          to: [
-            {
-              namespaceSelector: {},
-              podSelector: { matchLabels: { "k8s-app": "kube-dns" } },
-            },
-          ],
-          ports: [
-            { port: IntOrString.fromNumber(53), protocol: "UDP" },
-            { port: IntOrString.fromNumber(53), protocol: "TCP" },
-          ],
-        },
-        {
-          to: [
-            {
-              podSelector: {
-                matchLabels: postgresClusterPodLabels("phoenix-postgresql"),
-              },
-            },
-          ],
-          ports: [{ port: IntOrString.fromNumber(5432), protocol: "TCP" }],
-        },
-      ],
+      egress: [dnsEgressRule(), postgresEgress("phoenix-postgresql")],
     },
   });
 

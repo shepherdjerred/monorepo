@@ -8,15 +8,11 @@ import {
 import {
   dnsEgressRule,
   externalHttpsEgressRule,
+  nsPeer,
+  tcp,
+  tailscaleIngressRule,
+  prometheusIngressRule,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
-
-const port = (number: number) => ({
-  port: IntOrString.fromNumber(number),
-  protocol: "TCP",
-});
-const namespace = (name: string) => ({
-  namespaceSelector: { matchLabels: { "kubernetes.io/metadata.name": name } },
-});
 
 export function createForumNetwork(chart: Chart, stage: "beta" | "prod"): void {
   new KubeNetworkPolicy(chart, "database-network", {
@@ -39,7 +35,7 @@ export function createForumNetwork(chart: Chart, stage: "beta" | "prod"): void {
               },
             },
           ],
-          ports: [port(3306)],
+          ports: [tcp(3306)],
         },
       ],
       egress: [dnsEgressRule()],
@@ -52,22 +48,22 @@ export function createForumNetwork(chart: Chart, stage: "beta" | "prod"): void {
       ingress: [
         {
           from: [
-            namespace(
+            nsPeer(
               stage === "beta" ? "tailscale" : "cloudflare-operator-system",
             ),
           ],
-          ports: [port(8080)],
+          ports: [tcp(8080)],
         },
-        { from: [namespace("tailscale")], ports: [port(8081)] },
-        { from: [namespace("prometheus")], ports: [port(8080), port(8081)] },
+        tailscaleIngressRule([8081]),
+        prometheusIngressRule([8080, 8081]),
         {
           from: [
             {
-              ...namespace("delivery"),
+              ...nsPeer("delivery"),
               podSelector: { matchLabels: { app: "delivery" } },
             },
           ],
-          ports: [port(8082)],
+          ports: [tcp(8082)],
         },
       ],
       egress: forumEgress(),
@@ -116,7 +112,7 @@ function forumEgress() {
     {
       to: [
         {
-          ...namespace("minecraft-tsmc"),
+          ...nsPeer("minecraft-tsmc"),
           podSelector: {
             matchLabels: {
               "app.kubernetes.io/instance": "minecraft-tsmc",
@@ -138,7 +134,7 @@ function forumEgress() {
           },
         },
       ],
-      ports: [port(3306)],
+      ports: [tcp(3306)],
     },
     ...[
       ["seaweedfs", 8333],
@@ -146,8 +142,8 @@ function forumEgress() {
       ["temporal", 7233],
       ["flipt", 8080],
     ].map(([name, number]) => ({
-      to: [namespace(String(name))],
-      ports: [port(Number(number))],
+      to: [nsPeer(String(name))],
+      ports: [tcp(Number(number))],
     })),
   ];
 }

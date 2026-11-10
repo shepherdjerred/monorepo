@@ -12,10 +12,7 @@ import {
   Service,
   Volume,
 } from "cdk8s-plus-31";
-import {
-  IntOrString,
-  KubeNetworkPolicy,
-} from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import { KubeNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import {
   setRevisionHistoryLimit,
@@ -26,7 +23,11 @@ import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailsca
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
 import { ZfsSataVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-sata-volume.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
-import { dnsEgressRule } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
+import {
+  dnsEgressRule,
+  nsPeer,
+  tcp,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 
 const PORT = 9999;
 const LABELS = { app: "stash" };
@@ -237,29 +238,15 @@ export function createStashDeployment(chart: Chart) {
       policyTypes: ["Ingress", "Egress"],
       ingress: [
         {
-          from: [
-            {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "tailscale" },
-              },
-            },
-            {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
-              },
-            },
-          ],
-          ports: [{ port: IntOrString.fromNumber(PORT), protocol: "TCP" }],
+          from: [nsPeer("tailscale"), nsPeer("prometheus")],
+          ports: [tcp(PORT)],
         },
       ],
       egress: [
         dnsEgressRule(),
         {
           to: [{ ipBlock: { cidr: "0.0.0.0/0" } }],
-          ports: [
-            { port: IntOrString.fromNumber(80), protocol: "TCP" },
-            { port: IntOrString.fromNumber(443), protocol: "TCP" },
-          ],
+          ports: [tcp(80), tcp(443)],
         },
       ],
     },

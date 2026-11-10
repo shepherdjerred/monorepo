@@ -1,15 +1,16 @@
 import type { App } from "cdk8s";
 import { Chart } from "cdk8s";
 import { Namespace } from "cdk8s-plus-31";
-import {
-  KubeNetworkPolicy,
-  IntOrString,
-} from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import { KubeNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import {
   createFliptDeployment,
   FLIPT_PORT,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/flipt/index.ts";
-import { dnsEgressRule } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
+import {
+  dnsEgressRule,
+  nsPeer,
+  tcp,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 
 /**
  * Namespaces allowed to evaluate flags.
@@ -68,27 +69,13 @@ export function createFliptChart(app: App) {
       ingress: [
         {
           from: [
-            {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "tailscale" },
-              },
-            },
-            {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
-              },
-            },
+            nsPeer("tailscale"),
+            nsPeer("prometheus"),
             // Consumer namespaces. Each service is added here as it adopts
             // flags; native authentication separately protects management.
-            ...CONSUMER_NAMESPACES.map((namespace) => ({
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": namespace },
-              },
-            })),
+            ...CONSUMER_NAMESPACES.map((namespace) => nsPeer(namespace)),
           ],
-          ports: [
-            { port: IntOrString.fromNumber(FLIPT_PORT), protocol: "TCP" },
-          ],
+          ports: [tcp(FLIPT_PORT)],
         },
       ],
     },

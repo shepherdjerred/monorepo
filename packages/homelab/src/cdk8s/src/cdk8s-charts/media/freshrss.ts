@@ -1,11 +1,15 @@
 import type { App } from "cdk8s";
 import { Chart } from "cdk8s";
-import {
-  KubeNetworkPolicy,
-  IntOrString,
-} from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import { KubeNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { createFreshRssDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/freshrss/freshrss.ts";
-import { dnsEgressRule } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
+import {
+  dnsEgressRule,
+  tcp,
+  tailscaleIngressRule,
+  cloudflareTunnelIngressRule,
+  blackboxProbeIngressRule,
+  nsPeer,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 
 export async function createFreshRssChart(app: App): Promise<void> {
   const chart = new Chart(app, "freshrss", {
@@ -25,9 +29,7 @@ export async function createFreshRssChart(app: App): Promise<void> {
         {
           from: [
             {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "temporal" },
-              },
+              ...nsPeer("temporal"),
               podSelector: {
                 matchLabels: {
                   component: "repo-worker",
@@ -35,40 +37,13 @@ export async function createFreshRssChart(app: App): Promise<void> {
               },
             },
           ],
-          ports: [{ port: IntOrString.fromNumber(80), protocol: "TCP" }],
+          ports: [tcp(80)],
         },
-        {
-          from: [
-            {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "tailscale" },
-              },
-            },
-          ],
-        },
-        {
-          from: [
-            {
-              namespaceSelector: {
-                matchLabels: {
-                  "kubernetes.io/metadata.name": "cloudflare-tunnel",
-                },
-              },
-            },
-          ],
-        },
+        tailscaleIngressRule(),
+        cloudflareTunnelIngressRule(),
         // Allow blackbox-exporter's in-cluster health probe (service port
         // only — not every port on the pod)
-        {
-          from: [
-            {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
-              },
-            },
-          ],
-          ports: [{ port: IntOrString.fromNumber(80), protocol: "TCP" }],
-        },
+        blackboxProbeIngressRule(80),
       ],
     },
   });
@@ -85,10 +60,7 @@ export async function createFreshRssChart(app: App): Promise<void> {
         // HTTP and HTTPS for RSS feeds (many feeds still use HTTP)
         {
           to: [{ ipBlock: { cidr: "0.0.0.0/0" } }],
-          ports: [
-            { port: IntOrString.fromNumber(80), protocol: "TCP" },
-            { port: IntOrString.fromNumber(443), protocol: "TCP" },
-          ],
+          ports: [tcp(80), tcp(443)],
         },
       ],
     },

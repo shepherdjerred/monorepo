@@ -1,15 +1,16 @@
 import { Size, type Chart } from "cdk8s";
 import { Cpu, EnvValue, Secret } from "cdk8s-plus-31";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
-import {
-  IntOrString,
-  KubeNetworkPolicy,
-} from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import { KubeNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import {
   dnsEgressRule,
   externalHttpsEgressRule,
   kubernetesApiEgressRule,
+  nsPeer,
+  tcp,
+  fliptEgress,
+  prometheusIngressRule,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import { PROMETHEUS_GATEWAY_PORT } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/monitoring-auth-gateways.ts";
 import { createTemporalDomainWorker } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/workers/domain-worker.ts";
@@ -22,14 +23,6 @@ import {
   temporalTelemetryEnvironment,
   temporalTelemetryEgressRule,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/telemetry.ts";
-
-const tcp = (port: number) => ({
-  port: IntOrString.fromNumber(port),
-  protocol: "TCP",
-});
-const ns = (name: string) => ({
-  namespaceSelector: { matchLabels: { "kubernetes.io/metadata.name": name } },
-});
 
 export function createDeliveryWorker(
   chart: Chart,
@@ -194,7 +187,7 @@ export function createDeliveryWorker(
     spec: {
       podSelector: { matchLabels: { component: "delivery-worker" } },
       policyTypes: ["Ingress", "Egress"],
-      ingress: [{ from: [ns("prometheus")], ports: [tcp(9464), tcp(9465)] }],
+      ingress: [prometheusIngressRule([9464, 9465])],
       egress: [
         dnsEgressRule(),
         temporalTelemetryEgressRule(),
@@ -206,11 +199,11 @@ export function createDeliveryWorker(
           to: [{ podSelector: { matchLabels: { app: "temporal-server" } } }],
           ports: [tcp(7233)],
         },
-        { to: [ns("delivery")], ports: [tcp(7353)] },
-        { to: [ns("flipt")], ports: [tcp(8080)] },
+        { to: [nsPeer("delivery")], ports: [tcp(7353)] },
+        fliptEgress(),
         // Worker poller proofs query Prometheus. NetworkPolicy matches the pod
         // port, the authenticated gateway's, not the Service's 9090.
-        { to: [ns("prometheus")], ports: [tcp(PROMETHEUS_GATEWAY_PORT)] },
+        { to: [nsPeer("prometheus")], ports: [tcp(PROMETHEUS_GATEWAY_PORT)] },
       ],
     },
   });

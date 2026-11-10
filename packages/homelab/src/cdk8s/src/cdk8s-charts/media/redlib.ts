@@ -1,14 +1,13 @@
 import type { App } from "cdk8s";
 import { Chart } from "cdk8s";
 import { Namespace } from "cdk8s-plus-31";
-import {
-  KubeNetworkPolicy,
-  IntOrString,
-} from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import { KubeNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { createRedlibDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/frontends/redlib.ts";
 import {
   dnsEgressRule,
   externalHttpsEgressRule,
+  tailscaleIngressRule,
+  blackboxProbeIngressRule,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 
 export function createRedlibChart(app: App) {
@@ -32,27 +31,10 @@ export function createRedlibChart(app: App) {
       podSelector: {},
       policyTypes: ["Ingress"],
       ingress: [
-        {
-          from: [
-            {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "tailscale" },
-              },
-            },
-          ],
-        },
+        tailscaleIngressRule(),
         // Allow blackbox-exporter's in-cluster health probe (service port
         // only — not every port on the pod)
-        {
-          from: [
-            {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
-              },
-            },
-          ],
-          ports: [{ port: IntOrString.fromNumber(8080), protocol: "TCP" }],
-        },
+        blackboxProbeIngressRule(8080),
       ],
     },
   });

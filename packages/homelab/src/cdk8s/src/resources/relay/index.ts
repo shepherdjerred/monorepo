@@ -11,10 +11,7 @@ import {
   Service,
   Volume,
 } from "cdk8s-plus-31";
-import {
-  IntOrString,
-  KubeNetworkPolicy,
-} from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import { KubeNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
 import {
@@ -22,6 +19,12 @@ import {
   setRevisionHistoryLimit,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
+import {
+  cloudflareTunnelIngressRule,
+  blackboxProbeIngressRule,
+  seaweedfsEgress,
+  dnsEgressRule,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 // In-cluster SeaweedFS S3 gateway. relay-server runs in this cluster, so it
@@ -221,59 +224,15 @@ export function createRelayDeployment(chart: Chart) {
       podSelector: { matchLabels: { app: "relay" } },
       policyTypes: ["Egress", "Ingress"],
       ingress: [
-        {
-          from: [
-            {
-              namespaceSelector: {
-                matchLabels: {
-                  "kubernetes.io/metadata.name": "cloudflare-tunnel",
-                },
-              },
-            },
-          ],
-          ports: [{ port: IntOrString.fromNumber(8080), protocol: "TCP" }],
-        },
-        {
-          // Allow blackbox-exporter's in-cluster health probe
-          from: [
-            {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
-              },
-            },
-          ],
-          ports: [{ port: IntOrString.fromNumber(8080), protocol: "TCP" }],
-        },
+        cloudflareTunnelIngressRule([8080]),
+        // Allow blackbox-exporter's in-cluster health probe
+        blackboxProbeIngressRule(8080),
       ],
       egress: [
-        {
-          // DNS
-          to: [
-            {
-              namespaceSelector: {},
-              podSelector: {
-                matchLabels: { "k8s-app": "kube-dns" },
-              },
-            },
-          ],
-          ports: [
-            { port: IntOrString.fromNumber(53), protocol: "UDP" },
-            { port: IntOrString.fromNumber(53), protocol: "TCP" },
-          ],
-        },
-        {
-          // In-cluster SeaweedFS S3 gateway (object storage)
-          to: [
-            {
-              namespaceSelector: {
-                matchLabels: {
-                  "kubernetes.io/metadata.name": "seaweedfs",
-                },
-              },
-            },
-          ],
-          ports: [{ port: IntOrString.fromNumber(8333), protocol: "TCP" }],
-        },
+        // DNS
+        dnsEgressRule(),
+        // In-cluster SeaweedFS S3 gateway (object storage)
+        seaweedfsEgress(),
       ],
     },
   });

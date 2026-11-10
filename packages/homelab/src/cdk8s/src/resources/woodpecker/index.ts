@@ -22,7 +22,6 @@ import {
   setRevisionHistoryLimit,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
-import { postgresClusterPodLabels } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/cluster-label.ts";
 import {
   WOODPECKER_GRPC_PORT,
   WOODPECKER_HTTP_PORT,
@@ -30,6 +29,14 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/src/misc/woodpecker.ts";
 import { CONFIG_EXTENSION_ENDPOINT } from "@shepherdjerred/homelab/cdk8s/src/resources/woodpecker/config-extension.ts";
 import { escapeHelmGoTemplate } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/rules/shared.ts";
+import {
+  nsPeer,
+  tcp,
+  postgresEgress,
+  prometheusIngressRule,
+  dnsEgressRule,
+  externalHttpsEgressRule,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 
 /**
  * Compose the Postgres DSN from parts.
@@ -260,84 +267,23 @@ export function createWoodpeckerServer(chart: Chart) {
       policyTypes: ["Egress", "Ingress"],
       ingress: [
         {
-          from: [
-            {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "tailscale" },
-              },
-            },
-            {
-              namespaceSelector: {
-                matchLabels: {
-                  "kubernetes.io/metadata.name": "cloudflare-tunnel",
-                },
-              },
-            },
-          ],
-          ports: [
-            {
-              port: IntOrString.fromNumber(WOODPECKER_HTTP_PORT),
-              protocol: "TCP",
-            },
-          ],
+          from: [nsPeer("tailscale"), nsPeer("cloudflare-tunnel")],
+          ports: [tcp(WOODPECKER_HTTP_PORT)],
         },
         {
           // Agents hold a long-lived gRPC stream: the in-cluster ones directly,
           // the macOS agent through the tailnet proxy created above.
           from: [
             { podSelector: { matchLabels: { app: "woodpecker-agent" } } },
-            {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "tailscale" },
-              },
-            },
+            nsPeer("tailscale"),
           ],
-          ports: [
-            {
-              port: IntOrString.fromNumber(WOODPECKER_GRPC_PORT),
-              protocol: "TCP",
-            },
-          ],
+          ports: [tcp(WOODPECKER_GRPC_PORT)],
         },
-        {
-          from: [
-            {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
-              },
-            },
-          ],
-          ports: [
-            {
-              port: IntOrString.fromNumber(WOODPECKER_HTTP_PORT),
-              protocol: "TCP",
-            },
-          ],
-        },
+        prometheusIngressRule([WOODPECKER_HTTP_PORT]),
       ],
       egress: [
-        {
-          to: [
-            {
-              namespaceSelector: {},
-              podSelector: { matchLabels: { "k8s-app": "kube-dns" } },
-            },
-          ],
-          ports: [
-            { port: IntOrString.fromNumber(53), protocol: "UDP" },
-            { port: IntOrString.fromNumber(53), protocol: "TCP" },
-          ],
-        },
-        {
-          to: [
-            {
-              podSelector: {
-                matchLabels: postgresClusterPodLabels("woodpecker-postgresql"),
-              },
-            },
-          ],
-          ports: [{ port: IntOrString.fromNumber(5432), protocol: "TCP" }],
-        },
+        dnsEgressRule(),
+        postgresEgress("woodpecker-postgresql"),
         {
           // The configuration extension generates each build's pipeline.
           to: [
@@ -347,15 +293,12 @@ export function createWoodpeckerServer(chart: Chart) {
               },
             },
           ],
-          ports: [{ port: IntOrString.fromNumber(3000), protocol: "TCP" }],
+          ports: [tcp(3000)],
         },
-        {
-          // GitHub: OAuth token exchange, status posts, and repo metadata.
-          // Restricted to HTTPS rather than a CIDR because GitHub's egress
-          // ranges change and a stale list would silently break status posts.
-          to: [{ ipBlock: { cidr: "0.0.0.0/0" } }],
-          ports: [{ port: IntOrString.fromNumber(443), protocol: "TCP" }],
-        },
+        // GitHub: OAuth token exchange, status posts, and repo metadata.
+        // Restricted to HTTPS rather than a CIDR because GitHub's egress
+        // ranges change and a stale list would silently break status posts.
+        externalHttpsEgressRule(),
       ],
     },
   });

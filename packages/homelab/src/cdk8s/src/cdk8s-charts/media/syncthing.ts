@@ -5,7 +5,12 @@ import {
   IntOrString,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { createSyncthingDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/syncthing.ts";
-import { dnsEgressRule } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
+import {
+  dnsEgressRule,
+  tcp,
+  tailscaleIngressRule,
+  blackboxProbeIngressRule,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 
 export function createSyncthingChart(app: App) {
   const chart = new Chart(app, "syncthing", {
@@ -22,27 +27,10 @@ export function createSyncthingChart(app: App) {
       podSelector: {},
       policyTypes: ["Ingress"],
       ingress: [
-        {
-          from: [
-            {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "tailscale" },
-              },
-            },
-          ],
-        },
+        tailscaleIngressRule(),
         // Allow blackbox-exporter's in-cluster health probe (GUI service port
         // only — not every port on the pod)
-        {
-          from: [
-            {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
-              },
-            },
-          ],
-          ports: [{ port: IntOrString.fromNumber(8384), protocol: "TCP" }],
-        },
+        blackboxProbeIngressRule(8384),
       ],
     },
   });
@@ -60,17 +48,17 @@ export function createSyncthingChart(app: App) {
         {
           to: [{ ipBlock: { cidr: "0.0.0.0/0" } }],
           ports: [
-            { port: IntOrString.fromNumber(22_000), protocol: "TCP" }, // BEP sync
+            tcp(22_000), // BEP sync
             { port: IntOrString.fromNumber(22_000), protocol: "UDP" }, // QUIC sync
             { port: IntOrString.fromNumber(21_027), protocol: "UDP" }, // Local discovery
-            { port: IntOrString.fromNumber(443), protocol: "TCP" }, // Global discovery + relay pool lookup
+            tcp(443), // Global discovery + relay pool lookup
             // Relay data connection. torvalds accepts no inbound sync connections
             // (only the 8384 GUI is exposed), so peers behind symmetric NAT — with
             // no directly-dialable address of their own — can only meet it on a
             // relay. Public relays (strelaysrv) listen on 22067; without this,
             // relaying silently fails and those peers never connect. See
             // the original investigation.
-            { port: IntOrString.fromNumber(22_067), protocol: "TCP" }, // Relay data connection
+            tcp(22_067), // Relay data connection
           ],
         },
       ],

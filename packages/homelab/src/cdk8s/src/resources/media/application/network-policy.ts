@@ -1,43 +1,29 @@
 import type { Chart } from "cdk8s";
-import {
-  IntOrString,
-  KubeNetworkPolicy,
-} from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import { KubeNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import {
   dnsEgressRule,
   externalHttpsEgressRule,
+  nsPeer,
+  tcp,
+  fliptEgress,
+  otlpEgress,
+  postgresEgress,
+  prometheusIngressRule,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import { postgresClusterPodLabels } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/cluster-label.ts";
 import { MEDIA_APPLICATION_LABEL } from "./environment.ts";
 
-const namespace = (name: string) => ({
-  namespaceSelector: { matchLabels: { "kubernetes.io/metadata.name": name } },
-});
-const tcp = (port: number) => ({
-  port: IntOrString.fromNumber(port),
-  protocol: "TCP",
-});
-
 export function createMediaApplicationNetworkPolicies(chart: Chart): void {
-  const database = {
-    to: [
-      {
-        podSelector: {
-          matchLabels: postgresClusterPodLabels("media-postgresql"),
-        },
-      },
-    ],
-    ports: [tcp(5432)],
-  };
-  const flipt = { to: [namespace("flipt")], ports: [tcp(8080)] };
-  const telemetry = { to: [namespace("alloy-gateway")], ports: [tcp(4318)] };
+  const database = postgresEgress("media-postgresql");
+  const flipt = fliptEgress();
+  const telemetry = otlpEgress();
   new KubeNetworkPolicy(chart, "media-api-netpol", {
     spec: {
       podSelector: { matchLabels: { app: "media-api" } },
       policyTypes: ["Ingress", "Egress"],
       ingress: [
         {
-          from: [namespace("tailscale"), namespace("prometheus")],
+          from: [nsPeer("tailscale"), nsPeer("prometheus")],
           ports: [tcp(7352)],
         },
       ],
@@ -52,7 +38,7 @@ export function createMediaApplicationNetworkPolicies(chart: Chart): void {
         {
           to: [
             {
-              ...namespace("temporal"),
+              ...nsPeer("temporal"),
               podSelector: { matchLabels: { app: "temporal-server" } },
             },
           ],
@@ -66,9 +52,7 @@ export function createMediaApplicationNetworkPolicies(chart: Chart): void {
       spec: {
         podSelector: { matchLabels: { component: role } },
         policyTypes: ["Ingress", "Egress"],
-        ingress: [
-          { from: [namespace("prometheus")], ports: [tcp(9464), tcp(9465)] },
-        ],
+        ingress: [prometheusIngressRule([9464, 9465])],
         egress: [
           dnsEgressRule(),
           database,
@@ -77,7 +61,7 @@ export function createMediaApplicationNetworkPolicies(chart: Chart): void {
           {
             to: [
               {
-                ...namespace("temporal"),
+                ...nsPeer("temporal"),
                 podSelector: { matchLabels: { app: "temporal-server" } },
               },
             ],
@@ -97,8 +81,8 @@ export function createMediaApplicationNetworkPolicies(chart: Chart): void {
                   ],
                   ports: [tcp(8080)],
                 },
-                { to: [namespace("pinchtab")], ports: [tcp(9867)] },
-                { to: [namespace("postal")], ports: [tcp(5000)] },
+                { to: [nsPeer("pinchtab")], ports: [tcp(9867)] },
+                { to: [nsPeer("postal")], ports: [tcp(5000)] },
               ]),
         ],
       },
@@ -122,7 +106,7 @@ export function createMediaApplicationNetworkPolicies(chart: Chart): void {
           ports: [tcp(5432)],
         },
         {
-          from: [namespace("postgres-operator")],
+          from: [nsPeer("postgres-operator")],
           ports: [tcp(5432), tcp(8008)],
         },
         {

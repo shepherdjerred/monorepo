@@ -1,12 +1,10 @@
 import { Size, type Chart } from "cdk8s";
 import { Cpu, EnvValue } from "cdk8s-plus-31";
-import {
-  IntOrString,
-  KubeNetworkPolicy,
-} from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import { KubeNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import {
   dnsEgressRule,
   prometheusIngressRule,
+  tcp,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import { createTemporalDomainWorker } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/workers/domain-worker.ts";
 
@@ -43,7 +41,7 @@ export function createDeliveryWorkflowWorker(
         dnsEgressRule(),
         {
           to: [{ podSelector: { matchLabels: { app: "temporal-server" } } }],
-          ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
+          ports: [tcp(7233)],
         },
       ],
     },
