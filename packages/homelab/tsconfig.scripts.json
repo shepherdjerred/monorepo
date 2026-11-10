@@ -19,6 +19,7 @@
     "scripts/minecraft/capture-resources.test.ts",
     "src/application-release-contract.ts",
     "src/domain-registry.ts",
+    "src/platform-model.ts",
     "src/delivery-storage.ts",
     "src/static-site-delivery-ownership.ts",
     "src/delivery-platform-grants.ts",

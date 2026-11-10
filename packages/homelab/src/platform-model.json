@@ -1,0 +1,618 @@
+{
+  "cloudflareTunnel": {
+    "name": "homelab-tunnel",
+    "kind": "ClusterTunnel",
+    "id": "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3"
+  },
+  "tailnet": {
+    "domain": "tailnet-1a49.ts.net",
+    "defaultProxyTags": ["tag:k8s"],
+    "tags": [
+      "tag:ci",
+      "tag:delivery",
+      "tag:iot",
+      "tag:k8s",
+      "tag:k8s-operator",
+      "tag:monitoring",
+      "tag:server"
+    ]
+  },
+  "seaweedfs": {
+    "namespace": "seaweedfs",
+    "s3InClusterEndpoint": "http://seaweedfs-s3.seaweedfs.svc.cluster.local:8333",
+    "s3TailnetHost": "seaweedfs-s3"
+  },
+  "onePassword": {
+    "vaultId": "v64ocnykdqju4ui6j6pua56xw4",
+    "vaultName": "Homelab (Kubernetes)"
+  },
+  "staticSiteOrigin": {
+    "namespace": "s3-static-sites",
+    "service": "s3-static-sites"
+  },
+  "publicHostnames": [
+    {
+      "hostname": "arcade.sjer.red",
+      "namespace": "arcade",
+      "service": "arcade-edge-bootstrap"
+    },
+    {
+      "hostname": "argocd.sjer.red",
+      "namespace": "argocd",
+      "service": "argocd-server"
+    },
+    {
+      "hostname": "bluemap.ts-mc.net",
+      "namespace": "minecraft-tsmc",
+      "service": "minecraft-tsmc-bluemap"
+    },
+    {
+      "hostname": "bugsink.sjer.red",
+      "namespace": "bugsink",
+      "service": "bugsink-bugsink-service"
+    },
+    {
+      "hostname": "chartmuseum.sjer.red",
+      "namespace": "chartmuseum",
+      "service": "chartmuseum"
+    },
+    {
+      "hostname": "dynmap.sjer.red",
+      "namespace": "minecraft-sjerred",
+      "service": "minecraft-sjerred-dynmap"
+    },
+    {
+      "hostname": "freshrss.sjer.red",
+      "namespace": "freshrss",
+      "service": "freshrss-service"
+    },
+    {
+      "hostname": "homeassistant.sjer.red",
+      "namespace": "home",
+      "service": "home-homeassistant-service"
+    },
+    {
+      "hostname": "launcher.glitter-boys.com",
+      "namespace": "glitter-boys-launcher",
+      "service": "glitter-boys-launcher-http"
+    },
+    {
+      "hostname": "livemap.ts-mc.net",
+      "namespace": "minecraft-tsmc",
+      "service": "minecraft-tsmc-bluemap"
+    },
+    {
+      "hostname": "plex.sjer.red",
+      "namespace": "media",
+      "service": "media-plex-service"
+    },
+    {
+      "hostname": "pr-bot.sjer.red",
+      "namespace": "temporal",
+      "service": "temporal-worker-gh-webhook"
+    },
+    {
+      "hostname": "relay.sjer.red",
+      "namespace": "relay",
+      "service": "relay-relay-service"
+    },
+    {
+      "hostname": "seerr.sjer.red",
+      "namespace": "media",
+      "service": "media-seerr-service"
+    },
+    {
+      "hostname": "shuxin-bluemap.sjer.red",
+      "namespace": "minecraft-shuxin",
+      "service": "minecraft-shuxin-bluemap"
+    },
+    {
+      "hostname": "streambot.sjer.red",
+      "namespace": "media",
+      "service": "streambot-web"
+    },
+    {
+      "hostname": "temporal-agent-tasks.sjer.red",
+      "namespace": "temporal",
+      "service": "temporal-worker-agent-tasks"
+    },
+    {
+      "hostname": "temporal-sleep.sjer.red",
+      "namespace": "temporal",
+      "service": "temporal-worker-sleep-webhook"
+    },
+    {
+      "hostname": "trmnl.sjer.red",
+      "namespace": "trmnl-dashboard",
+      "service": "trmnl-dashboard-trmnl-dashboard-service"
+    },
+    {
+      "hostname": "ts-mc.net",
+      "namespace": "storm-forum",
+      "service": "storm-forum"
+    },
+    {
+      "hostname": "woodpecker.sjer.red",
+      "namespace": "woodpecker",
+      "service": "woodpecker-server"
+    },
+    {
+      "hostname": "xcode-cloud-webhook.sjer.red",
+      "namespace": "temporal",
+      "service": "temporal-worker-xcode-cloud-webhook"
+    }
+  ],
+  "staticSites": [
+    {
+      "hostname": "statically-typed.com",
+      "bucket": "statically-typed",
+      "immutablePrefixes": []
+    },
+    {
+      "hostname": "sjer.red",
+      "bucket": "sjer-red",
+      "immutablePrefixes": ["_astro/"]
+    },
+    {
+      "hostname": "webring.sjer.red",
+      "bucket": "webring",
+      "immutablePrefixes": []
+    },
+    {
+      "hostname": "resume.sjer.red",
+      "bucket": "resume",
+      "immutablePrefixes": []
+    },
+    {
+      "hostname": "scout-for-lol.com",
+      "bucket": "scout-frontend",
+      "immutablePrefixes": ["app/assets/", "_astro/"]
+    },
+    {
+      "hostname": "beta.scout-for-lol.com",
+      "bucket": "scout-frontend-beta",
+      "immutablePrefixes": ["app/assets/", "_astro/"]
+    },
+    {
+      "hostname": "design.scout-for-lol.com",
+      "bucket": "scout-design-system",
+      "immutablePrefixes": []
+    },
+    {
+      "hostname": "better-skill-capped.com",
+      "bucket": "better-skill-capped",
+      "immutablePrefixes": ["assets/"]
+    },
+    {
+      "hostname": "clauderon.com",
+      "bucket": "clauderon",
+      "immutablePrefixes": []
+    },
+    {
+      "hostname": "docs.ts-mc.net",
+      "bucket": "ts-mc-docs",
+      "immutablePrefixes": ["_astro/"]
+    },
+    {
+      "hostname": "glitter-boys.com",
+      "bucket": "glitter-boys",
+      "immutablePrefixes": ["_astro/"]
+    },
+    {
+      "hostname": "ppl.glitter-boys.com",
+      "bucket": "glitter-boys-ppl",
+      "immutablePrefixes": []
+    },
+    {
+      "hostname": "cook.sjer.red",
+      "bucket": "cook",
+      "immutablePrefixes": ["_astro/"]
+    },
+    {
+      "hostname": "cross-compilers.sjer.red",
+      "bucket": "cross-compilers",
+      "immutablePrefixes": ["_astro/"]
+    },
+    {
+      "hostname": "stocks.sjer.red",
+      "bucket": "stocks-sjer-red",
+      "immutablePrefixes": ["_astro/"]
+    },
+    {
+      "hostname": "public.ts-mc.net",
+      "bucket": "landing-pages",
+      "immutablePrefixes": ["_astro/"]
+    },
+    {
+      "hostname": "wiki.sjer.red",
+      "bucket": "wiki-sjer-red",
+      "immutablePrefixes": ["_astro/"]
+    },
+    {
+      "hostname": "public.sjer.red",
+      "bucket": "public-sjer-red",
+      "immutablePrefixes": []
+    }
+  ],
+  "tailnetServices": [
+    {
+      "host": "alertmanager",
+      "namespace": "prometheus",
+      "exposure": "ingress"
+    },
+    {
+      "host": "alerts",
+      "namespace": "alert-dashboard",
+      "exposure": "ingress"
+    },
+    {
+      "host": "argocd",
+      "namespace": "argocd",
+      "exposure": "ingress"
+    },
+    {
+      "host": "bazarr",
+      "namespace": "media",
+      "exposure": "ingress"
+    },
+    {
+      "host": "bugsink",
+      "namespace": "bugsink",
+      "exposure": "ingress"
+    },
+    {
+      "host": "chartmuseum",
+      "namespace": "chartmuseum",
+      "exposure": "ingress"
+    },
+    {
+      "host": "delivery",
+      "namespace": "delivery",
+      "exposure": "ingress",
+      "tags": ["tag:delivery"]
+    },
+    {
+      "host": "flipt",
+      "namespace": "flipt",
+      "exposure": "ingress"
+    },
+    {
+      "host": "freshrss",
+      "namespace": "freshrss",
+      "exposure": "ingress"
+    },
+    {
+      "host": "go",
+      "namespace": "golink",
+      "exposure": "tsnet",
+      "tags": ["tag:k8s-operator"]
+    },
+    {
+      "host": "gradle-build-cache",
+      "namespace": "gradle-build-cache",
+      "exposure": "ingress"
+    },
+    {
+      "host": "grafana",
+      "namespace": "prometheus",
+      "exposure": "ingress"
+    },
+    {
+      "host": "homeassistant",
+      "namespace": "home",
+      "exposure": "ingress"
+    },
+    {
+      "host": "loki",
+      "namespace": "loki",
+      "exposure": "ingress"
+    },
+    {
+      "host": "maintainerr",
+      "namespace": "media",
+      "exposure": "ingress"
+    },
+    {
+      "host": "media",
+      "namespace": "media",
+      "exposure": "ingress"
+    },
+    {
+      "host": "minecraft-shuxin-bluemap",
+      "namespace": "minecraft-shuxin",
+      "exposure": "ingress"
+    },
+    {
+      "host": "minecraft-sjerred-dynmap",
+      "namespace": "minecraft-sjerred",
+      "exposure": "ingress"
+    },
+    {
+      "host": "minecraft-tsmc-bluemap",
+      "namespace": "minecraft-tsmc",
+      "exposure": "ingress"
+    },
+    {
+      "host": "ops",
+      "namespace": "alert-dashboard",
+      "exposure": "ingress"
+    },
+    {
+      "host": "otlp-metrics",
+      "namespace": "alloy-gateway",
+      "exposure": "ingress"
+    },
+    {
+      "host": "phoenix",
+      "namespace": "phoenix",
+      "exposure": "ingress"
+    },
+    {
+      "host": "pinchtab",
+      "namespace": "pinchtab",
+      "exposure": "ingress"
+    },
+    {
+      "host": "plex",
+      "namespace": "media",
+      "exposure": "ingress"
+    },
+    {
+      "host": "postal",
+      "namespace": "postal",
+      "exposure": "ingress"
+    },
+    {
+      "host": "prometheus",
+      "namespace": "prometheus",
+      "exposure": "ingress"
+    },
+    {
+      "host": "prowlarr",
+      "namespace": "media",
+      "exposure": "ingress"
+    },
+    {
+      "host": "qbittorrent",
+      "namespace": "media",
+      "exposure": "ingress"
+    },
+    {
+      "host": "radarr",
+      "namespace": "media",
+      "exposure": "ingress"
+    },
+    {
+      "host": "redlib",
+      "namespace": "redlib",
+      "exposure": "ingress"
+    },
+    {
+      "host": "scrypted",
+      "namespace": "home",
+      "exposure": "ingress"
+    },
+    {
+      "host": "seaweedfs-filer",
+      "namespace": "seaweedfs",
+      "exposure": "ingress"
+    },
+    {
+      "host": "seaweedfs-s3",
+      "namespace": "seaweedfs",
+      "exposure": "ingress"
+    },
+    {
+      "host": "seerr",
+      "namespace": "media",
+      "exposure": "ingress"
+    },
+    {
+      "host": "sonarr",
+      "namespace": "media",
+      "exposure": "ingress"
+    },
+    {
+      "host": "stash",
+      "namespace": "stash",
+      "exposure": "ingress"
+    },
+    {
+      "host": "storm-forum-admin",
+      "namespace": "storm-forum",
+      "exposure": "ingress"
+    },
+    {
+      "host": "syncthing",
+      "namespace": "syncthing",
+      "exposure": "ingress"
+    },
+    {
+      "host": "tasknotes",
+      "namespace": "tasknotes",
+      "exposure": "ingress"
+    },
+    {
+      "host": "tautulli",
+      "namespace": "media",
+      "exposure": "ingress"
+    },
+    {
+      "host": "temporal",
+      "namespace": "temporal",
+      "exposure": "ingress"
+    },
+    {
+      "host": "temporal-ui",
+      "namespace": "temporal",
+      "exposure": "ingress"
+    },
+    {
+      "host": "tracker",
+      "namespace": "tracker",
+      "exposure": "ingress"
+    },
+    {
+      "host": "turbo-cache",
+      "namespace": "turbo-cache",
+      "exposure": "ingress"
+    },
+    {
+      "host": "woodpecker",
+      "namespace": "woodpecker",
+      "exposure": "ingress"
+    },
+    {
+      "host": "woodpecker-grpc",
+      "namespace": "woodpecker",
+      "exposure": "loadBalancer"
+    },
+    {
+      "host": "zwave",
+      "namespace": "home",
+      "exposure": "ingress"
+    }
+  ],
+  "scopedCredentials": [
+    {
+      "itemTitle": "delivery-argocd-token",
+      "writer": {
+        "stack": "argocd",
+        "resource": "onepassword_item.argocd_delivery_token"
+      }
+    },
+    {
+      "itemTitle": "delivery-argocd-observer-token",
+      "writer": {
+        "stack": "argocd",
+        "resource": "onepassword_item.argocd_delivery_observer_token"
+      }
+    },
+    {
+      "itemTitle": "delivery-argocd-platform-token",
+      "writer": {
+        "stack": "argocd",
+        "resource": "onepassword_item.argocd_delivery_platform_token"
+      }
+    },
+    {
+      "itemTitle": "delivery-argocd-operator-run-token",
+      "writer": {
+        "stack": "argocd",
+        "resource": "onepassword_item.argocd_operator_run_token"
+      }
+    },
+    {
+      "itemTitle": "argocd-workstation-token",
+      "writer": {
+        "stack": "argocd",
+        "resource": "onepassword_item.argocd_workstation_token"
+      }
+    },
+    {
+      "itemTitle": "argocd-homelab-audit-token",
+      "writer": {
+        "stack": "argocd",
+        "resource": "onepassword_item.argocd_homelab_audit_token"
+      }
+    },
+    {
+      "itemTitle": "backblaze-seaweedfs-backups",
+      "writer": {
+        "stack": "backblaze",
+        "resource": "onepassword_item.backup"
+      }
+    },
+    {
+      "itemTitle": "backblaze-velero",
+      "writer": {
+        "stack": "backblaze",
+        "resource": "onepassword_item.backup"
+      }
+    },
+    {
+      "itemTitle": "backblaze-postgres-wal",
+      "writer": {
+        "stack": "backblaze",
+        "resource": "onepassword_item.backup"
+      }
+    }
+  ],
+  "bucketConsumers": [
+    {
+      "bucket": "better-skill-capped",
+      "namespace": "temporal",
+      "env": "S3_BUCKET_NAME"
+    },
+    {
+      "bucket": "glitter-discord-corpus",
+      "namespace": "temporal",
+      "env": "GLITTER_CORPUS_S3_BUCKET"
+    },
+    {
+      "bucket": "llm-archive",
+      "namespace": "arcade",
+      "env": "LLM_ARCHIVE_S3_BUCKET"
+    },
+    {
+      "bucket": "llm-archive",
+      "namespace": "birmel",
+      "env": "LLM_ARCHIVE_S3_BUCKET"
+    },
+    {
+      "bucket": "llm-archive",
+      "namespace": "scout-beta",
+      "env": "LLM_ARCHIVE_S3_BUCKET"
+    },
+    {
+      "bucket": "llm-archive",
+      "namespace": "scout-prod",
+      "env": "LLM_ARCHIVE_S3_BUCKET"
+    },
+    {
+      "bucket": "llm-archive",
+      "namespace": "temporal",
+      "env": "LLM_ARCHIVE_S3_BUCKET"
+    },
+    {
+      "bucket": "scout-beta",
+      "namespace": "scout-beta",
+      "env": "S3_BUCKET_NAME"
+    },
+    {
+      "bucket": "scout-prod",
+      "namespace": "scout-prod",
+      "env": "S3_BUCKET_NAME"
+    },
+    {
+      "bucket": "scout-support-beta",
+      "namespace": "scout-beta",
+      "env": "SUPPORT_BUCKET_NAME"
+    },
+    {
+      "bucket": "scout-support-prod",
+      "namespace": "scout-prod",
+      "env": "SUPPORT_BUCKET_NAME"
+    },
+    {
+      "bucket": "storm-forum-releases",
+      "namespace": "storm-forum",
+      "env": "BUNDLE_BUCKET"
+    },
+    {
+      "bucket": "streambot-voice-captures",
+      "namespace": "media",
+      "env": "VOICE_CAPTURE_BUCKET"
+    },
+    {
+      "bucket": "the-storm-rwf-recordings",
+      "namespace": "temporal",
+      "env": "RWF_ARCHIVE_S3_BUCKET"
+    },
+    {
+      "bucket": "tracker-attachments",
+      "namespace": "tracker",
+      "env": "S3_BUCKET"
+    }
+  ]
+}
