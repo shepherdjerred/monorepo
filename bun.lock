@@ -1061,6 +1061,7 @@
     "packages/homelab-cdktn": {
       "name": "@homelab/cdktn",
       "dependencies": {
+        "@shepherdjerred/version-catalog": "workspace:*",
         "cdktn": "0.25.0",
         "cdktn-cli": "0.25.0",
         "constructs": "10.8.1",

@@ -33,7 +33,7 @@ Each subdirectory is an independent root module with its own `backend.tf` (S3 st
 
 ### Stacks synthesized from TypeScript
 
-`github` has no `.tf` files. Its configuration is
+`dockerhub` and `github` have no `.tf` files. Their configuration is
 `main.tf.json`, synthesized by the [CDK Terrain](https://cdktn.io/docs) app in
 [`packages/homelab-cdktn`](../../../homelab-cdktn) and committed next to the stack's `.terraform.lock.hcl`.
 OpenTofu, `tofu-stack.ts`, the stack archive and Delivery read that file like
@@ -50,7 +50,8 @@ A stack holds either hand-written HCL or a synthesized `main.tf.json`, never
 both; `tofu-stack.ts` refuses a directory that mixes them. Resource addresses
 are the construct ids in `packages/homelab-cdktn/src/stacks/<stack>.ts`, so renaming one is a
 state change. A synthesized stack is accepted only on a plan against live state
-that reports no changes.
+that reports no changes. `tofu validate -backend=false` does not evaluate the
+`encryption` block, so validation alone does not prove an encrypted stack.
 
 ### Provider versions
 

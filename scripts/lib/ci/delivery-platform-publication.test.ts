@@ -88,8 +88,10 @@ test("a stack's declared external inputs select it like its own directory", () =
   expect(changedPlatformStacks(["config/analytics-sites.json"])).toEqual([
     "posthog",
   ]);
+  // The synthesized dockerhub stack carries the image registry inline, so
+  // its own main.tf.json, not the registry, selects it.
   expect(
-    changedPlatformStacks(["packages/version-catalog/src/image-registry.json"]),
+    changedPlatformStacks(["packages/homelab/src/tofu/dockerhub/main.tf.json"]),
   ).toEqual(["dockerhub"]);
 });
 

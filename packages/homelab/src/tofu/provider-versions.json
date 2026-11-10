@@ -44,7 +44,8 @@
     {
       "registryUrl": "https://registry.opentofu.org",
       "source": "docker/docker",
-      "version": "0.7.0"
+      "version": "0.7.0",
+      "bindings": true
     },
     {
       "registryUrl": "https://registry.opentofu.org",

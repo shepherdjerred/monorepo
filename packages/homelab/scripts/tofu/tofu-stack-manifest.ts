@@ -190,7 +190,8 @@ export const STACK_MANIFEST: Readonly<Record<TofuStack, StackDefinition>> = {
     ],
   },
   dockerhub: {
-    externalFiles: ["packages/version-catalog/src/image-registry.json"],
+    // The synthesized stack carries the image registry inline.
+    externalFiles: [],
     encrypted: true,
     credentials: [
       { source: "DOCKERHUB_USERNAME", target: "DOCKER_USERNAME" },

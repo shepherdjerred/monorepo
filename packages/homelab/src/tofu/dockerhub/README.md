@@ -1,8 +1,12 @@
 # Docker Hub repository management
 
 This stack owns first-party repositories in the personal `shepherdjerred`
-Docker Hub namespace. It reads names and visibility from
-`packages/version-catalog/src/image-registry.json`. Existing unrelated Docker
+Docker Hub namespace. Its configuration is synthesized from
+`packages/homelab-cdktn/src/stacks/dockerhub.ts`, which imports names and
+visibility from `packages/version-catalog/src/image-registry.json`. After a
+registry change, run `bun run --cwd packages/homelab-cdktn synth` and commit
+the updated `main.tf.json`; the `@homelab/cdktn` checks fail while it is
+stale. Existing unrelated Docker
 Hub repositories are outside the stack. Repository deletion is protected by
 `prevent_destroy`.
 
@@ -31,6 +35,6 @@ Its Jobs receive only the `dockerhub-tofu-credentials` item: the username, the
 management PAT and the state passphrase. No plan can destroy or replace a
 repository, because every declared repository has `prevent_destroy`, so an
 apply needs no approval. If a declared repository already exists,
-adopt it through a declarative import block after verifying its namespace and
-visibility; never delete and recreate it. Registry ownership does not change
+adopt it through a declarative import (`importInstance` in the stack) after
+verifying its namespace and visibility; never delete and recreate it. Registry ownership does not change
 application release pins, activate workloads, or delete GHCR packages.

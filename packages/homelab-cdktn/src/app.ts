@@ -2,6 +2,7 @@ import { App } from "cdktn";
 import type { Construct } from "constructs";
 import { OPENTOFU_TARGET_VERSION } from "#src/homelab-stack.ts";
 import type { HomelabStack } from "#src/homelab-stack.ts";
+import { DockerhubStack } from "#src/stacks/dockerhub.ts";
 import { GithubStack } from "#src/stacks/github.ts";
 
 /**
@@ -9,12 +10,13 @@ import { GithubStack } from "#src/stacks/github.ts";
  * by their directory under `packages/homelab/src/tofu`. Porting a stack adds
  * it here and to {@link STACKS}; keep both sorted.
  */
-export const SYNTHESIZED_STACKS = ["github"] as const;
+export const SYNTHESIZED_STACKS = ["dockerhub", "github"] as const;
 
 export type SynthesizedStack = (typeof SYNTHESIZED_STACKS)[number];
 
 const STACKS: Record<SynthesizedStack, new (scope: Construct) => HomelabStack> =
   {
+    dockerhub: DockerhubStack,
     github: GithubStack,
   };
 

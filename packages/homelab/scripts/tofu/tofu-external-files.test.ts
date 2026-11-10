@@ -68,9 +68,6 @@ describe("stack external file declarations", () => {
     expect(STACK_MANIFEST.posthog.externalFiles).toEqual([
       "config/analytics-sites.json",
     ]);
-    expect(STACK_MANIFEST.dockerhub.externalFiles).toEqual([
-      "packages/version-catalog/src/image-registry.json",
-    ]);
   });
 
   test("resolves module-relative, root-relative and bare paths against the right directory", async () => {
