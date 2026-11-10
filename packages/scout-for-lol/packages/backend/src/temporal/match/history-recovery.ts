@@ -24,6 +24,11 @@ import type { RiotSourceAbsence } from "#src/league/api/client/errors.ts";
 /** Give-up bound separating Riot's "not yet published" 404 from "never published". */
 export const RIOT_NOT_FOUND_ABANDON_AFTER_MS = 7 * 24 * 60 * 60 * 1000;
 
+type AttemptClock = {
+  now: Date;
+  evidenceReadAt: Date;
+};
+
 const NOT_ABANDONED = {
   recoveryAbandonedAt: null,
   recoveryAbandonedReason: null,
@@ -44,7 +49,7 @@ function abandonment(
   admission: { createdAt: Date },
   artifact: "match" | "timeline",
   absence: RiotSourceAbsence | undefined,
-  now: Date,
+  { now, evidenceReadAt }: AttemptClock,
 ): {
   recoveryAbandonedAt: Date | null;
   recoveryAbandonedReason: string | null;
@@ -57,8 +62,10 @@ function abandonment(
   if (now.getTime() - admission.createdAt.getTime() < window)
     return NOT_ABANDONED;
   return {
-    // Wall-clock, not `now`: it is compared with client receipt times.
-    recoveryAbandonedAt: new Date(),
+    // Wall-clock watermark taken before this attempt read any evidence, not
+    // `now`: client evidence received during the attempt compares newer and
+    // reopens the row instead of being skipped unexamined.
+    recoveryAbandonedAt: evidenceReadAt,
     recoveryAbandonedReason: `riot_${artifact}_${absence}`,
   };
 }
@@ -67,10 +74,10 @@ function abandonment(
 function matchAbandonment(
   admission: { createdAt: Date },
   match: EvidenceResolution<RawMatch>,
-  now: Date,
+  clock: AttemptClock,
 ) {
   return match.kind === "unavailable"
-    ? abandonment(admission, "match", match.definitiveAbsence, now)
+    ? abandonment(admission, "match", match.definitiveAbsence, clock)
     : NOT_ABANDONED;
 }
 
@@ -82,11 +89,11 @@ function timelineAbandonment(
   admission: { createdAt: Date; policy: string },
   timeline: EvidenceResolution<RawTimeline>,
   reportComplete: boolean,
-  now: Date,
+  clock: AttemptClock,
 ) {
   return (reportComplete || admission.policy === "FULL") &&
     timeline.kind === "unavailable"
-    ? abandonment(admission, "timeline", timeline.definitiveAbsence, now)
+    ? abandonment(admission, "timeline", timeline.definitiveAbsence, clock)
     : NOT_ABANDONED;
 }
 
@@ -174,6 +181,8 @@ export async function reconcileMatchHistory(now = new Date()): Promise<number> {
       },
     });
     if (claimed.count === 0) continue;
+    // Taken before any evidence read so uploads arriving mid-attempt reopen.
+    const clock = { now, evidenceReadAt: new Date() };
     try {
       const matchId = RiotMatchIdSchema.parse(item.riotMatchId);
       const admission = await prisma.matchEvidenceAdmission.findUniqueOrThrow({
@@ -197,7 +206,7 @@ export async function reconcileMatchHistory(now = new Date()): Promise<number> {
             recoveryClaimId: null,
             historyReportComplete: reportComplete,
             recoveryError: null,
-            ...matchAbandonment(admission, match, now),
+            ...matchAbandonment(admission, match, clock),
           },
         });
         continue;
@@ -239,7 +248,7 @@ export async function reconcileMatchHistory(now = new Date()): Promise<number> {
           historyTimelineRecovered: timeline.kind === "available",
           recoveryClaimId: null,
           recoveryError: null,
-          ...timelineAbandonment(admission, timeline, reportComplete, now),
+          ...timelineAbandonment(admission, timeline, reportComplete, clock),
         },
       });
     } catch (error) {
