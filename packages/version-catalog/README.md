@@ -14,7 +14,9 @@ throw before a publisher can create a repository with unintended visibility.
 Public compiler products are explicit entries. Application, infrastructure,
 and CI images have private visibility.
 
-The homelab Docker Hub OpenTofu stack consumes the same registry manifest.
+The homelab Docker Hub OpenTofu stack consumes the same registry manifest
+through its synthesized configuration, so a registry change also needs
+`bun run --cwd packages/homelab-cdktn synth`.
 Adding an image requires a registry entry before provisioning or publishing;
 adding a registry entry does not activate a workload or resume a paused
 publisher. Historical immutable catalog snapshots remain parseable; the active

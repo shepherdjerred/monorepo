@@ -4,6 +4,7 @@ import { Repository } from "#generated/providers/github/repository/index.ts";
 import {
   adopt,
   forget,
+  importInstance,
   moved,
   protect,
   retire,
@@ -140,5 +141,46 @@ describe("stack-level state migrations", () => {
         retire(scope, { from: 'a.each["k"]', as: 'a.retired["k"]' });
       }),
     ).rejects.toThrow("whole-resource address");
+  });
+});
+
+describe("importing a for_each instance", () => {
+  test("writes the instance's import block next to a resource's own import", async () => {
+    const stack = await synthesizeStack((scope) => {
+      new GithubProvider(scope, "github", {});
+      adopt(
+        new Repository(scope, "monorepo", { name: "monorepo" }),
+        "monorepo",
+      );
+      importInstance(
+        scope,
+        'docker_hub_repository.image["delivery"]',
+        "shepherdjerred/delivery",
+      );
+      importInstance(
+        scope,
+        'docker_hub_repository.image["media"]',
+        "shepherdjerred/media",
+      );
+    });
+    expect(stack.import).toEqual([
+      { id: "monorepo", to: "github_repository.monorepo" },
+      {
+        id: "shepherdjerred/delivery",
+        to: 'docker_hub_repository.image["delivery"]',
+      },
+      {
+        id: "shepherdjerred/media",
+        to: 'docker_hub_repository.image["media"]',
+      },
+    ]);
+  });
+
+  test("refuses a whole resource, which importFrom() addresses", async () => {
+    await expect(
+      synthesizeStack((scope) => {
+        importInstance(scope, "docker_hub_repository.image", "x/y");
+      }),
+    ).rejects.toThrow("use importFrom() or adopt()");
   });
 });

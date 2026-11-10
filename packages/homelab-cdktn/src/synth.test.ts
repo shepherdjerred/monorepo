@@ -1,6 +1,7 @@
 import path from "node:path";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
+import { imageRegistry } from "@shepherdjerred/version-catalog/image-registry";
 import { SYNTHESIZED_STACKS } from "#src/app.ts";
 import {
   staleStacks,
@@ -25,6 +26,8 @@ const ConfigurationSchema = z.looseObject({
   resource: z.record(z.string(), z.record(z.string(), z.unknown())),
   import: z.array(z.object({ to: z.string(), id: z.string() })).optional(),
   removed: z.array(z.looseObject({ from: z.string() })).optional(),
+  moved: z.array(z.object({ from: z.string(), to: z.string() })).optional(),
+  locals: z.record(z.string(), z.unknown()).optional(),
 });
 
 async function configuration(stack: (typeof SYNTHESIZED_STACKS)[number]) {
@@ -85,6 +88,70 @@ describe("synthesized OpenTofu configuration", () => {
       "~> 6.12",
     );
     expect(github.terraform.encryption).toBeUndefined();
+  });
+});
+
+describe("dockerhub", () => {
+  test("keeps one protected repository per registered image, its imports and retirements", async () => {
+    const dockerhub = await configuration("dockerhub");
+    expect(addresses(dockerhub.resource)).toEqual([
+      "docker_hub_repository.image",
+    ]);
+    expect(
+      dockerhub.resource["docker_hub_repository"]?.["image"],
+    ).toMatchObject({
+      for_each: "${local.images}",
+      name: "${each.key}",
+      namespace: "${local.registry.namespace}",
+      private: '${(each.value.visibility == "private")}',
+      lifecycle: { prevent_destroy: true },
+    });
+    // The for_each keys come from the registry the stack imports.
+    expect(dockerhub.locals).toEqual({
+      registry: imageRegistry,
+      images: "${{ for image in local.registry.images : image.name => image }}",
+    });
+    expect(dockerhub.import).toEqual([
+      {
+        id: "shepherdjerred/delivery",
+        to: 'docker_hub_repository.image["delivery"]',
+      },
+      {
+        id: "shepherdjerred/media",
+        to: 'docker_hub_repository.image["media"]',
+      },
+    ]);
+    expect(dockerhub.moved).toEqual([
+      {
+        from: 'docker_hub_repository.image["discord-plays-pokemon"]',
+        to: "docker_hub_repository.retired_discord_plays_pokemon",
+      },
+      {
+        from: 'docker_hub_repository.image["discord-plays-mario-kart"]',
+        to: "docker_hub_repository.retired_discord_plays_mario_kart",
+      },
+    ]);
+    expect(dockerhub.removed).toEqual([
+      {
+        from: "docker_hub_repository.retired_discord_plays_pokemon",
+        lifecycle: { destroy: false },
+      },
+      {
+        from: "docker_hub_repository.retired_discord_plays_mario_kart",
+        lifecycle: { destroy: false },
+      },
+    ]);
+    expect(dockerhub.terraform.required_providers["docker"]).toEqual({
+      source: "docker/docker",
+      version: "0.7.0",
+    });
+    expect(dockerhub.terraform.encryption).toMatchObject({
+      state: { method: "method.aes_gcm.encrypted", enforced: true },
+      plan: { method: "method.aes_gcm.encrypted", enforced: true },
+    });
+    expect(Object.keys(dockerhub.variable ?? {})).toEqual([
+      "tofu_state_encryption_passphrase",
+    ]);
   });
 });
 

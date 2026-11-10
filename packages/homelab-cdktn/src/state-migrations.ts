@@ -2,20 +2,26 @@ import type { TerraformResource, TerraformStack } from "cdktn";
 
 type MovedBlock = { from: string; to: string };
 type RemovedBlock = { from: string; lifecycle: { destroy: false } };
-type Migrations = { moved: MovedBlock[]; removed: RemovedBlock[] };
+type ImportBlock = { to: string; id: string };
+type Migrations = {
+  moved: MovedBlock[];
+  removed: RemovedBlock[];
+  imports: ImportBlock[];
+};
 
 const migrations = new WeakMap<TerraformStack, Migrations>();
 
 /**
  * cdktn has no construct for `removed` blocks, and a stack-level override
- * replaces whatever is already at its path. Every stack-level `moved` and
- * `removed` block therefore goes through this one list per stack, re-applied
- * whole on each addition.
+ * replaces whatever is already at its path. Every stack-level `moved`,
+ * `removed` and `import` block therefore goes through this one list per
+ * stack, re-applied whole on each addition. Synthesis appends the stack's
+ * `import` list to the blocks its resources' own `importFrom` renders.
  */
 function migrationsOf(stack: TerraformStack): Migrations {
   const existing = migrations.get(stack);
   if (existing !== undefined) return existing;
-  const created: Migrations = { moved: [], removed: [] };
+  const created: Migrations = { moved: [], removed: [], imports: [] };
   migrations.set(stack, created);
   return created;
 }
@@ -63,6 +69,27 @@ export function retire(
     );
   moved(stack, retired.from, retired.as);
   forget(stack, retired.as);
+}
+
+/**
+ * Imports an existing object as one `for_each` instance, the stack-level
+ * `import` block HCL writes for it. A whole resource uses `importFrom` or
+ * `adopt()` instead, which cannot name an instance key:
+ *
+ *     importInstance(this, 'docker_hub_repository.image["delivery"]', "shepherdjerred/delivery");
+ */
+export function importInstance(
+  stack: TerraformStack,
+  to: string,
+  id: string,
+): void {
+  if (!/\[.+\]$/u.test(to))
+    throw new Error(
+      `${to} is a whole resource: use importFrom() or adopt() on it instead`,
+    );
+  const { imports } = migrationsOf(stack);
+  imports.push({ to, id });
+  stack.addOverride("import", imports);
 }
 
 /**

@@ -83,7 +83,8 @@ Never run `apply`, `import`, or any `state` subcommand as part of a port.
 - `for_each` becomes `TerraformIterator.fromMap` or `fromList` passed as the
   resource's `forEach`; instance keys must equal the HCL keys.
 - An `import` block is `resource.importFrom(id)`. `adopt(resource, id)` in
-  `src/state-migrations.ts` adds `prevent_destroy` with it.
+  `src/state-migrations.ts` adds `prevent_destroy` with it. An `import` block
+  addressing one `for_each` instance is `importInstance(stack, to, id)`.
 - Keep every existing `moved` and `removed` block until state no longer holds
   the old address. `moved()`, `forget()` and `retire()` in
   `src/state-migrations.ts` write them; use those for every stack-level block
@@ -102,12 +103,18 @@ Never run `apply`, `import`, or any `state` subcommand as part of a port.
   (`variable.stringValue`), and attach a validation after the variable
   exists with `variable.addValidation({ condition, errorMessage })`.
 - **`removed` blocks and the `encryption` block have no construct.** They are
-  stack overrides (`addOverride`). In JSON syntax the encryption `method`
-  reference is the bare address `method.aes_gcm.encrypted`, not an
-  interpolation.
+  stack overrides (`addOverride`), written by `forget()`/`retire()` and
+  `encryptStateAndPlans()`. In JSON syntax the encryption `method` reference
+  is the bare address `method.aes_gcm.encrypted`, not an interpolation.
+  Encrypted state records its key provider's address, so a port keeps the
+  stack's variable, key provider and method names.
 - **`tofu validate -backend=false` does not evaluate the encryption block.**
-  An encrypted stack is proven by reading its existing encrypted state in the
+  `src/encryption.test.ts` runs the block through a real encrypted plan, and
+  an encrypted stack is proven by reading its existing encrypted state in the
   pre-merge plan.
+- **A raw `"${local.x}"` passed to `Op` or `Fn` is escaped too.** Refer to a
+  local's attribute through `ref("local.x.attribute")`; a raw expression
+  string is passed through only as a whole attribute or local value.
 - **Provider source spelling follows the pin.** A provider from OpenTofu's
   default registry synthesizes its bare `namespace/type` in lower case
   (`1password/onepassword`); OpenTofu treats that as the address the lock
@@ -126,6 +133,8 @@ Never run `apply`, `import`, or any `state` subcommand as part of a port.
 | `onePasswordWrite`          | `src/onepassword.ts`      | A `onepassword_item` holding concealed fields in one section |
 | `adopt`, `protect`          | `src/state-migrations.ts` | `import` with `prevent_destroy`; `prevent_destroy` alone     |
 | `moved`, `forget`, `retire` | `src/state-migrations.ts` | Stack-level `moved` and `removed` blocks                     |
+| `importInstance`            | `src/state-migrations.ts` | An `import` block for one `for_each` instance                |
+| `encryptStateAndPlans`      | `src/encryption.ts`       | Passphrase variable and enforced state and plan encryption   |
 
 Each helper creates resources in the scope it is given with the id it is
 given, so it is safe in pass one.

@@ -1,0 +1,137 @@
+{
+  "import": [
+    {
+      "id": "shepherdjerred/delivery",
+      "to": "docker_hub_repository.image[\"delivery\"]"
+    },
+    {
+      "id": "shepherdjerred/media",
+      "to": "docker_hub_repository.image[\"media\"]"
+    }
+  ],
+  "locals": {
+    "images": "${{ for image in local.registry.images : image.name => image }}",
+    "registry": {
+      "$schema": "./image-registry.schema.json",
+      "images": [
+        { "name": "arcade", "visibility": "private" },
+        { "name": "alert-dashboard", "visibility": "private" },
+        { "name": "birmel", "visibility": "private" },
+        { "name": "caddy-s3proxy", "visibility": "private" },
+        { "name": "ci-base", "visibility": "private" },
+        { "name": "ci-playwright", "visibility": "private" },
+        { "name": "delivery", "visibility": "private" },
+        { "name": "glitter-boys-launcher", "visibility": "private" },
+        { "name": "macos-cross-compiler", "visibility": "public" },
+        { "name": "media", "visibility": "private" },
+        { "name": "obsidian-headless", "visibility": "private" },
+        { "name": "redlib", "visibility": "private" },
+        { "name": "scout-for-lol", "visibility": "private" },
+        { "name": "starlight-karma-bot", "visibility": "private" },
+        { "name": "storm-brain", "visibility": "private" },
+        { "name": "storm-forum", "visibility": "private" },
+        { "name": "streambot", "visibility": "private" },
+        { "name": "tasknotes-server", "visibility": "private" },
+        { "name": "temporal-worker", "visibility": "private" },
+        { "name": "the-storm-server", "visibility": "private" },
+        { "name": "tracker", "visibility": "private" },
+        { "name": "trmnl-dashboard", "visibility": "private" },
+        { "name": "velero-plugin", "visibility": "private" },
+        { "name": "windows-cross-compiler", "visibility": "public" },
+        { "name": "windows-cross-compiler-winui", "visibility": "public" },
+        { "name": "woodpecker-config-extension", "visibility": "private" },
+        { "name": "zfs-driver", "visibility": "private" }
+      ],
+      "namespace": "shepherdjerred",
+      "registry": "docker.io",
+      "schemaVersion": 1
+    }
+  },
+  "moved": [
+    {
+      "from": "docker_hub_repository.image[\"discord-plays-pokemon\"]",
+      "to": "docker_hub_repository.retired_discord_plays_pokemon"
+    },
+    {
+      "from": "docker_hub_repository.image[\"discord-plays-mario-kart\"]",
+      "to": "docker_hub_repository.retired_discord_plays_mario_kart"
+    }
+  ],
+  "provider": { "docker": [{}] },
+  "removed": [
+    {
+      "from": "docker_hub_repository.retired_discord_plays_pokemon",
+      "lifecycle": { "destroy": false }
+    },
+    {
+      "from": "docker_hub_repository.retired_discord_plays_mario_kart",
+      "lifecycle": { "destroy": false }
+    }
+  ],
+  "resource": {
+    "docker_hub_repository": {
+      "image": {
+        "description": "First-party ${each.key} image from shepherdjerred/monorepo",
+        "for_each": "${local.images}",
+        "lifecycle": {
+          "precondition": [
+            {
+              "condition": "${(((local.registry.registry == \"docker.io\") && (local.registry.namespace == \"shepherdjerred\")) && contains([\"private\", \"public\"], each.value.visibility))}",
+              "error_message": "Docker Hub repositories require the declared personal namespace and explicit visibility."
+            }
+          ],
+          "prevent_destroy": true
+        },
+        "name": "${each.key}",
+        "namespace": "${local.registry.namespace}",
+        "private": "${(each.value.visibility == \"private\")}"
+      }
+    }
+  },
+  "terraform": {
+    "backend": {
+      "s3": {
+        "bucket": "homelab-tofu-state",
+        "endpoints": { "s3": "https://seaweedfs-s3.tailnet-1a49.ts.net" },
+        "key": "dockerhub/terraform.tfstate",
+        "region": "auto",
+        "skip_credentials_validation": true,
+        "skip_metadata_api_check": true,
+        "skip_region_validation": true,
+        "skip_requesting_account_id": true,
+        "skip_s3_checksum": true,
+        "use_lockfile": true,
+        "use_path_style": true
+      }
+    },
+    "encryption": {
+      "key_provider": {
+        "pbkdf2": {
+          "state": { "passphrase": "${var.tofu_state_encryption_passphrase}" }
+        }
+      },
+      "method": {
+        "aes_gcm": { "encrypted": { "keys": "${key_provider.pbkdf2.state}" } }
+      },
+      "plan": { "enforced": true, "method": "method.aes_gcm.encrypted" },
+      "state": { "enforced": true, "method": "method.aes_gcm.encrypted" }
+    },
+    "required_providers": {
+      "docker": { "source": "docker/docker", "version": "0.7.0" }
+    },
+    "required_version": ">= 1.11.0"
+  },
+  "variable": {
+    "tofu_state_encryption_passphrase": {
+      "description": "Passphrase encrypting Docker Hub state and plans.",
+      "sensitive": true,
+      "type": "string",
+      "validation": [
+        {
+          "condition": "${(length(var.tofu_state_encryption_passphrase) >= 16)}",
+          "error_message": "The state encryption passphrase must contain at least 16 characters."
+        }
+      ]
+    }
+  }
+}
