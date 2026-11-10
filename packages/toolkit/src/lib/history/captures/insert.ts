@@ -212,8 +212,10 @@ type ChainedContext = {
  * The full context a request ran with. A request that continues a response
  * server-side sends only what is new, so its context is the parent's context,
  * then the parent's response, then what it sent. System and tool blocks the
- * parent already had are inherited; sent ones it lacked follow them. A parent
- * that was never captured leaves the context incomplete.
+ * parent had and the request did not resend are inherited; every sent block
+ * follows them as sent, in order, so the as-sent request keeps a resent block
+ * and its `cache_control` even though its identity matches the parent's copy.
+ * A parent that was never captured leaves the context incomplete.
  */
 export function chainedContext(
   store: CaptureStore,
@@ -241,13 +243,13 @@ export function chainedContext(
       : asRecord(store.blobJson(parent.response_hash));
   const merged: BlockRef[] = [];
   for (const section of ["system", "tools"] as const) {
-    const had = inherited.filter((block) => block.section === section);
-    const known = new Set(had.map((block) => block.identity));
+    const resent = sent.filter((block) => block.section === section);
+    const identities = new Set(resent.map((block) => block.identity));
     merged.push(
-      ...had,
-      ...sent.filter(
-        (block) => block.section === section && !known.has(block.identity),
+      ...inherited.filter(
+        (block) => block.section === section && !identities.has(block.identity),
       ),
+      ...resent,
     );
   }
   const output =

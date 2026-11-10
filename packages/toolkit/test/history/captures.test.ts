@@ -368,6 +368,66 @@ describe("capture context reconstruction", () => {
   });
 });
 
+describe("chained request blocks", () => {
+  test("keeps system and tool blocks a chained request resends as sent", async () => {
+    const context = await fixture();
+    const [first, second] = claudeToolTurn();
+    const parentBody = z
+      .object({
+        system: z.array(z.record(z.string(), z.unknown())),
+        tools: z.array(z.unknown()),
+      })
+      .parse(requestBody(first));
+    const childBody = z
+      .object({ system: z.array(z.unknown()) })
+      .loose()
+      .parse(requestBody(second));
+    // The main prompt is resent with its cache marker moved, and the tools
+    // are resent unchanged.
+    const { cache_control: _moved, ...mainPrompt } = parentBody.system[1] ?? {};
+    const body = {
+      ...childBody,
+      system: [...childBody.system, mainPrompt],
+      tools: parentBody.tools,
+    };
+    if (first === undefined || second?.kind !== "http") {
+      throw new Error("claudeToolTurn has no chained HTTP request");
+    }
+    await ingest(context, [
+      first,
+      {
+        ...second,
+        request: {
+          ...second.request,
+          body: { text: JSON.stringify(body) },
+        },
+      },
+    ]);
+    const [, child] = HistoryApiCapturesResponseSchema.parse(
+      await fetchJson(context, "/v1/captures"),
+    ).captures.toReversed();
+    const parsed = await detail(context, child?.id ?? 0);
+    expect(parsed.rawRequest).toEqual(body);
+    expect(
+      parsed.request.system.map((block) => [
+        block.inherited,
+        block.sentIndex,
+        block.isNew,
+      ]),
+    ).toEqual([
+      [true, null, false],
+      [false, 0, true],
+      [false, 1, false],
+    ]);
+    expect(
+      parsed.request.tools.map((block) => [block.inherited, block.isNew]),
+    ).toEqual([
+      [false, false],
+      [false, false],
+    ]);
+  });
+});
+
 describe("Codex warm-ups", () => {
   test("a resumed session diffs against the last real turn, not its warm-up", async () => {
     const context = await fixture();
