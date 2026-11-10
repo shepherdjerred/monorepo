@@ -23,6 +23,7 @@ import {
   window,
   layout,
 } from "herdr";
+import { readdir } from "fs/promises";
 
 function find(node, id) {
   if (node?.id === id) return node;
@@ -176,6 +177,31 @@ const STEP_LABEL = {
 };
 const activeDir = () => `${home()}/.local/state/herdr-worktree/active`;
 const awakeDir = () => `${home()}/.local/state/herdr-caffeinate`;
+
+// Windows has no kill or sleep on PATH; tasklist and PowerShell stand in.
+async function running(pid) {
+  if (window().platform !== "windows")
+    return (await exec("kill", ["-0", String(pid)])).code === 0;
+  const r = await exec("tasklist", [
+    "/FI",
+    `PID eq ${pid}`,
+    "/FO",
+    "CSV",
+    "/NH",
+  ]);
+  return r.code === 0 && r.stdout.includes(`"${pid}"`);
+}
+
+async function pause() {
+  if (window().platform !== "windows") await exec("sleep", ["2"]);
+  else
+    await exec("powershell.exe", [
+      "-NoProfile",
+      "-NonInteractive",
+      "-Command",
+      "Start-Sleep -Seconds 2",
+    ]);
+}
 // Changes made outside Herdr (an editor's save, a commit in another app): looked
 // for this often, in repos the list shows, while the window is in front.
 const FALLBACK = 60000;
@@ -322,13 +348,15 @@ export default class Spaces extends View {
 
   // Runs the dialog started, on this computer, until the worker deletes them.
   async loadJobs() {
-    const listed = await exec("ls", ["-1", activeDir()]);
-    const jobs = [];
-    if (listed.code !== 0) {
+    let names;
+    try {
+      names = await readdir(activeDir());
+    } catch {
       this.jobs = [];
       return;
     }
-    for (const name of listed.stdout.split("\n")) {
+    const jobs = [];
+    for (const name of names) {
       if (!name.endsWith(".json")) continue;
       const text = await readTextFile(`${activeDir()}/${name}`);
       if (!text) continue;
@@ -340,8 +368,7 @@ export default class Spaces extends View {
       }
       if (!job || typeof job.pid !== "number" || typeof job.repo !== "string")
         continue;
-      const live = await exec("kill", ["-0", String(job.pid)]);
-      if (live.code !== 0) continue;
+      if (!(await running(job.pid))) continue;
       jobs.push({ ...job, id: name.slice(0, -".json".length) });
     }
     this.jobs = jobs;
@@ -349,14 +376,27 @@ export default class Spaces extends View {
 
   watchJobs(cx) {
     cx.spawn(async (cx) => {
+      // The worker makes the folder on its first run; make it now so there is
+      // something to watch until then. Mods may only write under
+      // ~/.config/herdr-app, so this goes through exec.
+      try {
+        await (window().platform === "windows"
+          ? exec("cmd.exe", [
+              "/d",
+              "/c",
+              "mkdir",
+              activeDir().replaceAll("/", "\\"),
+            ])
+          : exec("mkdir", ["-p", "-m", "700", activeDir()]));
+      } catch {}
       for (;;) {
         try {
           await this.loadJobs();
           cx.notify();
           await watchFolder(activeDir());
         } catch {
-          // The folder appears with the first run. Don't spin until then.
-          await exec("sleep", ["2"]);
+          // Not watchable after all. Don't spin.
+          await pause();
         }
       }
     });
