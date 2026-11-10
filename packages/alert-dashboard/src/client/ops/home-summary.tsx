@@ -3,10 +3,7 @@ import {
   needsMeSignals,
 } from "@shepherdjerred/ops-model/assemble.ts";
 import { METRIC_IDS } from "@shepherdjerred/ops-model/metric-ids.ts";
-import {
-  isAttention,
-  type Severity,
-} from "@shepherdjerred/ops-model/severity.ts";
+import type { Severity } from "@shepherdjerred/ops-model/severity.ts";
 import type {
   Section,
   SnapshotResponse,
@@ -15,6 +12,7 @@ import { APP_HOSTS } from "@shepherdjerred/ops-model/tool-links.ts";
 import { ArrowRightIcon, ExternalLinkIcon } from "lucide-react";
 import { Link } from "react-router";
 
+import { firingAlertSignals } from "./home-signals.ts";
 import { SignalList, SnapshotBlock, StatusBanner } from "./ops-ui.tsx";
 import { formatValue } from "#shared/ops-format";
 
@@ -78,9 +76,7 @@ function Summary({
   const alerts = findSection(snapshot, "alerts");
   const firing = reading(alerts, METRIC_IDS.alertsFiring);
   const critical = reading(alerts, METRIC_IDS.alertsCritical);
-  const firingSignals = alerts.signals.filter((signal) =>
-    isAttention(signal.severity),
-  );
+  const firingSignals = firingAlertSignals(alerts);
   const needsMe = needsMeSignals(snapshot);
   const triage = reading(
     findSection(snapshot, "work"),
