@@ -35,15 +35,32 @@ async function materializeProviderWrapper(
     path.join(os.tmpdir(), "agent-codex-provider-"),
   );
   try {
+    const providerUid = providerSubprocessUid(environment);
+    if (providerUid === undefined)
+      throw new Error("Isolated Codex launcher requires a provider uid");
     await chmod(directory, 0o755);
     const executable = path.join(directory, "codex");
     const wrappedCommand = providerSubprocessCommand(command, environment)
       .map((part) => shellQuote(part))
       .join(" ");
-    await writeFile(executable, `#!/bin/sh\nexec ${wrappedCommand} "$@"\n`, {
-      encoding: "utf8",
-      mode: 0o755,
-    });
+    const prepareSchema = [
+      process.execPath,
+      fileURLToPath(
+        new URL("codex-permissions/output-schema.ts", import.meta.url),
+      ),
+      providerUid.toString(),
+      os.tmpdir(),
+    ]
+      .map((part) => shellQuote(part))
+      .join(" ");
+    await writeFile(
+      executable,
+      `#!/bin/sh\n${prepareSchema} "$@" || exit $?\nexec ${wrappedCommand} "$@"\n`,
+      {
+        encoding: "utf8",
+        mode: 0o755,
+      },
+    );
     await chmod(executable, 0o755);
     return { directory, executable };
   } catch (error: unknown) {
