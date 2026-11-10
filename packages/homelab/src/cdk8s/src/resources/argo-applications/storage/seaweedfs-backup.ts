@@ -40,7 +40,6 @@ export const SEAWEEDFS_BACKUP_EXCLUDED_BUCKETS: Readonly<
   "scout-design-system": "Static site, rebuilt from the repository",
   "scout-frontend": "Static site, rebuilt from the repository",
   "scout-frontend-beta": "Static site, rebuilt from the repository",
-  "scout-site-releases": "Release artifacts, rebuilt from the repository",
   "sjer-red": "Static site, rebuilt from the repository",
   "statically-typed": "Static site, rebuilt from the repository",
   "stocks-sjer-red": "Static site, rebuilt from the repository",
