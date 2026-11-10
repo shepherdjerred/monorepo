@@ -20,6 +20,10 @@ import {
   withCommonProps,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
+import {
+  fliptEnv,
+  bugsinkEnv,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
 
 export const OPS_DASHBOARD_URL =
   "http://alert-dashboard-alert-dashboard-service.alert-dashboard:7341";
@@ -70,12 +74,11 @@ export function createTrmnlDashboardDeployment(chart: Chart) {
           key: "HA_TOKEN",
         }),
         DISPLAY_TIME_ZONE: EnvValue.fromValue("America/Los_Angeles"),
-        FEATURE_FLAGS_MODE: EnvValue.fromValue("flipt"),
-        FLIPT_NAMESPACE: EnvValue.fromValue("trmnl-dashboard"),
-        FLIPT_URL: EnvValue.fromValue(
-          "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
-        ),
-        FLIPT_ENVIRONMENT: EnvValue.fromValue("prod"),
+        ...fliptEnv({
+          namespace: "trmnl-dashboard",
+          environment: "prod",
+          order: ["FLIPT_NAMESPACE", "FLIPT_URL", "FLIPT_ENVIRONMENT"],
+        }),
         // The homelab screen renders from the ops snapshot the ops dashboard
         // (deployed as alert-dashboard) serves.
         OPS_DASHBOARD_URL: EnvValue.fromValue(OPS_DASHBOARD_URL),
@@ -83,10 +86,7 @@ export function createTrmnlDashboardDeployment(chart: Chart) {
         // dashboard's OWN error tracking. Required (fail-fast): the item must
         // carry BUGSINK_DSN. VERSION is baked into the image; it and ENVIRONMENT
         // become the Bugsink release and environment.
-        BUGSINK_DSN: EnvValue.fromSecretValue({
-          secret,
-          key: "BUGSINK_DSN",
-        }),
+        ...bugsinkEnv(secret),
         ENVIRONMENT: EnvValue.fromValue("production"),
       },
       // The image ends with `USER bun` (non-numeric). The cdk8s-plus default

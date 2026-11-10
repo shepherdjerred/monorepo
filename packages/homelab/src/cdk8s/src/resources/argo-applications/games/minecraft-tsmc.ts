@@ -20,6 +20,7 @@ import {
   blueMapStorageResources,
   blueMapStorageVolumes,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/minecraft/bluemap-storage.ts";
+import { FLIPT_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
 
 const NAMESPACE = "minecraft-tsmc";
 const analytics = siteAnalyticsConfiguration("ts-mc");
@@ -254,7 +255,7 @@ export function createMinecraftTsmcApp(chart: Chart) {
       OPS: "",
       // Empty OPS must clear persisted ops.json entries, not merge with them.
       EXISTING_OPS_FILE: "SYNCHRONIZE",
-      FLIPT_URL: "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
+      FLIPT_URL,
       FLIPT_ENVIRONMENT: "prod",
       POSTHOG_API_HOST: analytics.apiHost,
       POSTHOG_PROJECT_TOKEN: analytics.projectToken,

@@ -21,10 +21,14 @@ import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zf
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
-import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
 import { llmArchiveEnvVars } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-archive-env.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { peerUserbotIds } from "@shepherdjerred/homelab/cdk8s/src/resources/userbot-ids.ts";
+import {
+  telemetryEnv,
+  seaweedfsS3,
+  FLIPT_URL,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
 
 export const APP_ROOT = "/app/packages/arcade";
 const ARCADE_NODE_SELECTOR = { "kubernetes.io/hostname": "torvalds" };
@@ -164,9 +168,7 @@ model = "gpt-5.6-sol"
     "arcade-credential-secret",
     credentials.name,
   );
-  const archiveItem = new OnePasswordItem(chart, "arcade-archive", {
-    spec: { itemPath: vaultItemPath("vet52jaeh75chsalu6lulugium") },
-  });
+  const archiveItem = seaweedfsS3.item(chart, "arcade-archive");
   const archiveSecret = Secret.fromSecretName(
     chart,
     "arcade-archive-secret",
@@ -183,9 +185,7 @@ model = "gpt-5.6-sol"
         FLIPT_NAMESPACE: EnvValue.fromValue("arcade"),
         FLIPT_ENVIRONMENT: EnvValue.fromValue("prod"),
         DEPLOYMENT_ENVIRONMENT: EnvValue.fromValue("prod"),
-        FLIPT_URL: EnvValue.fromValue(
-          "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
-        ),
+        FLIPT_URL: EnvValue.fromValue(FLIPT_URL),
         PEER_USERBOT_IDS: EnvValue.fromValue(peerUserbotIds("arcade1")),
         // Shared origin for Discord links, OAuth, and browser controller traffic.
         WEB_PUBLIC_ORIGIN: EnvValue.fromValue("https://arcade.sjer.red"),
@@ -211,23 +211,10 @@ model = "gpt-5.6-sol"
         }),
         CODEX_HOME: EnvValue.fromValue("/data/goal-auth/codex"),
         LIBVA_DRIVER_NAME: EnvValue.fromValue("iHD"),
-        TELEMETRY_ENABLED: EnvValue.fromValue("true"),
-        TELEMETRY_SERVICE_NAME: EnvValue.fromValue("arcade"),
-        OTLP_ENDPOINT: EnvValue.fromValue(OTLP_GATEWAY_BASE_URL),
-        AWS_ACCESS_KEY_ID: EnvValue.fromSecretValue({
-          secret: archiveSecret,
-          key: "SEAWEEDFS_ACCESS_KEY_ID",
-        }),
-        AWS_SECRET_ACCESS_KEY: EnvValue.fromSecretValue({
-          secret: archiveSecret,
-          key: "SEAWEEDFS_SECRET_ACCESS_KEY",
-        }),
-        AWS_ENDPOINT_URL: EnvValue.fromValue(
-          "http://seaweedfs-s3.seaweedfs.svc.cluster.local:8333",
-        ),
-        S3_ENDPOINT: EnvValue.fromValue(
-          "http://seaweedfs-s3.seaweedfs.svc.cluster.local:8333",
-        ),
+        ...telemetryEnv({ serviceName: "arcade", serviceNameFirst: true }),
+        ...seaweedfsS3.credentialsEnv(archiveSecret),
+        AWS_ENDPOINT_URL: EnvValue.fromValue(seaweedfsS3.endpoint),
+        S3_ENDPOINT: EnvValue.fromValue(seaweedfsS3.endpoint),
         S3_FORCE_PATH_STYLE: EnvValue.fromValue("true"),
         AWS_REGION: EnvValue.fromValue("us-east-1"),
         ...llmArchiveEnvVars(),

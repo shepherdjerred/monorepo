@@ -5,6 +5,7 @@ import { createTemporalDomainWorker } from "./domain-worker.ts";
 import { sleepWebhookEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/http-services.ts";
 import { temporalRuntimeEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/runtime-env.ts";
 import { createTemporalWorkerHttpServices } from "./worker-http-services.ts";
+import { seaweedfsS3 } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
 
 export function createTemporalIngressWorkers(
   chart: Chart,
@@ -128,9 +129,7 @@ export function createTemporalIngressWorkers(
         "reports",
         "temporal-reports-worker",
       ),
-      S3_ENDPOINT: EnvValue.fromValue(
-        "http://seaweedfs-s3.seaweedfs.svc.cluster.local:8333",
-      ),
+      S3_ENDPOINT: EnvValue.fromValue(seaweedfsS3.endpoint),
       S3_REGION: EnvValue.fromValue("us-east-1"),
       S3_FORCE_PATH_STYLE: EnvValue.fromValue("true"),
       AWS_ACCESS_KEY_ID: EnvValue.fromSecretValue({

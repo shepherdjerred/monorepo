@@ -12,15 +12,17 @@ import {
 import { llmArchiveEnvVars } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-archive-env.ts";
 import { createTemporalDomainWorker } from "./domain-worker.ts";
 import { temporalRuntimeEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/runtime-env.ts";
-import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
 import { opsSnapshotEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/ops-snapshot-env.ts";
 import { rwfArchiveEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/rwf-archive-env.ts";
+import {
+  telemetryEnv,
+  seaweedfsS3,
+  FLIPT_URL,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
 
 function s3Env(secret: ISecret): Record<string, EnvValue> {
   return {
-    S3_ENDPOINT: EnvValue.fromValue(
-      "http://seaweedfs-s3.seaweedfs.svc.cluster.local:8333",
-    ),
+    S3_ENDPOINT: EnvValue.fromValue(seaweedfsS3.endpoint),
     S3_REGION: EnvValue.fromValue("us-east-1"),
     AWS_REGION: EnvValue.fromValue("us-east-1"),
     AWS_DEFAULT_REGION: EnvValue.fromValue("us-east-1"),
@@ -176,9 +178,7 @@ export function createTemporalOperationsWorkers(
       TEMPORAL_WORKER_ROLE: EnvValue.fromValue("billing"),
       FEATURE_FLAGS_MODE: EnvValue.fromValue("disabled"),
       ENVIRONMENT: EnvValue.fromValue("production"),
-      TELEMETRY_ENABLED: EnvValue.fromValue("true"),
-      OTLP_ENDPOINT: EnvValue.fromValue(OTLP_GATEWAY_BASE_URL),
-      TELEMETRY_SERVICE_NAME: EnvValue.fromValue("temporal-billing-worker"),
+      ...telemetryEnv({ serviceName: "temporal-billing-worker" }),
       OPENAI_ADMIN_KEY: EnvValue.fromSecretValue({
         secret: props.billingSecret,
         key: "OPENAI_ADMIN_KEY",
@@ -234,9 +234,7 @@ export function createTemporalOperationsWorkers(
       ALERTMANAGER_URL: EnvValue.fromValue(
         "http://prometheus-kube-prometheus-alertmanager.prometheus:9093",
       ),
-      FLIPT_URL: EnvValue.fromValue(
-        "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
-      ),
+      FLIPT_URL: EnvValue.fromValue(FLIPT_URL),
       FLIPT_OPERATOR_TOKEN: EnvValue.fromSecretValue({
         secret: props.fliptAuthSecret,
         key: "operator-token",

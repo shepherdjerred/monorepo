@@ -6,7 +6,6 @@ import {
   ConfigMap,
   Deployment,
   DeploymentStrategy,
-  EnvValue,
   Secret,
   Service,
   Volume,
@@ -19,6 +18,7 @@ import {
   mailPolicyText,
   type MailPolicy,
 } from "homelab/src/domain-registry.ts";
+import { seaweedfsS3 } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
 
 export type MailPolicyHost = {
   hostname: string;
@@ -407,14 +407,7 @@ export class S3StaticSites extends Construct {
         image: firstPartyImageRecipe("caddy-s3proxy"),
         portNumber: STATIC_SITE_HTTP_PORT,
         envVariables: {
-          AWS_ACCESS_KEY_ID: EnvValue.fromSecretValue({
-            secret: credentialsSecret,
-            key: "SEAWEEDFS_ACCESS_KEY_ID",
-          }),
-          AWS_SECRET_ACCESS_KEY: EnvValue.fromSecretValue({
-            secret: credentialsSecret,
-            key: "SEAWEEDFS_SECRET_ACCESS_KEY",
-          }),
+          ...seaweedfsS3.credentialsEnv(credentialsSecret),
         },
         securityContext: {
           readOnlyRootFilesystem: false,

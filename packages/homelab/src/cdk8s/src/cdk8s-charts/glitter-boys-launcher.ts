@@ -4,7 +4,6 @@ import {
   ConfigMap,
   Cpu,
   Deployment,
-  EnvValue,
   Namespace,
   Probe,
   Secret,
@@ -35,6 +34,7 @@ import {
   launcherRelease,
   LauncherReleaseSchema,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/glitter-boys-launcher/release.ts";
+import { bugsinkEnv } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
 
 export function createGlitterBoysLauncherChart(
   app: App,
@@ -79,7 +79,7 @@ export function createGlitterBoysLauncherChart(
         { number: 9091, name: "metrics" },
       ],
       envVariables: {
-        BUGSINK_DSN: EnvValue.fromSecretValue({ secret, key: "BUGSINK_DSN" }),
+        ...bugsinkEnv(secret),
       },
       securityContext: {
         user: 1000,

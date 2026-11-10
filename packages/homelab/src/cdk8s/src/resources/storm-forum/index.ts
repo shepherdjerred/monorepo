@@ -28,6 +28,7 @@ import {
 } from "./upgrade-environment.ts";
 import type { ForumRelease, ForumStage } from "./release-schema.ts";
 import { forumTemplateInputs } from "./delivery-inputs.ts";
+import { FLIPT_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
 
 // Requests follow each container's measured p95 working set (7d,
 // 2026-10-31): php 112Mi, activities 135Mi, nginx 4Mi.
@@ -301,8 +302,7 @@ export function createStormForumChart(
                 { name: "FLIPT_ENVIRONMENT", value: release.stage },
                 {
                   name: "FLIPT_URL",
-                  value:
-                    "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
+                  value: FLIPT_URL,
                 },
               ],
             },

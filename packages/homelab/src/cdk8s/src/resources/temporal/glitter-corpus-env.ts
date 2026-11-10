@@ -1,13 +1,12 @@
 import { EnvValue, type ISecret } from "cdk8s-plus-31";
+import { seaweedfsS3 } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
 
 function glitterCorpusStorageEnv(
   workerSecret: ISecret,
 ): Record<string, EnvValue> {
   return {
     GLITTER_DISCORD_GUILD_ID: EnvValue.fromValue("208425771172102144"),
-    GLITTER_CORPUS_S3_ENDPOINT: EnvValue.fromValue(
-      "http://seaweedfs-s3.seaweedfs.svc.cluster.local:8333",
-    ),
+    GLITTER_CORPUS_S3_ENDPOINT: EnvValue.fromValue(seaweedfsS3.endpoint),
     GLITTER_CORPUS_S3_BUCKET: EnvValue.fromValue("glitter-discord-corpus"),
     GLITTER_CORPUS_S3_ACCESS_KEY_ID: EnvValue.fromSecretValue({
       secret: workerSecret,

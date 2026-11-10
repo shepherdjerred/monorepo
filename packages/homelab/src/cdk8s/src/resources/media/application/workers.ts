@@ -9,7 +9,6 @@ import {
   Volume,
 } from "cdk8s-plus-31";
 import { createTemporalDomainWorker } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/workers/domain-worker.ts";
-import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
 import { createLegacyObserverAccount } from "./legacy-observer.ts";
 import {
   MEDIA_APPLICATION_LABEL,
@@ -17,6 +16,7 @@ import {
   mediaDatabaseEnvironment,
   mediaFeatureFlagEnvironment,
 } from "./environment.ts";
+import { telemetryEnv } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
 
 export type MediaApplicationClaims = {
   movies: PersistentVolumeClaim;
@@ -44,8 +44,7 @@ export function createMediaActivityWorkers(
     TEMPORAL_NAMESPACE: EnvValue.fromValue("prod"),
     TEMPORAL_METRICS_ADDRESS: EnvValue.fromValue("0.0.0.0:9464"),
     ENVIRONMENT: EnvValue.fromValue("production"),
-    TELEMETRY_ENABLED: EnvValue.fromValue("true"),
-    OTLP_ENDPOINT: EnvValue.fromValue(OTLP_GATEWAY_BASE_URL),
+    ...telemetryEnv(),
   };
   const network = createTemporalDomainWorker(chart, {
     name: "media-network",

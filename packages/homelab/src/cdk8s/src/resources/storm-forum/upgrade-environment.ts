@@ -1,6 +1,7 @@
 import type { EnvVar } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import type { ForumRelease } from "./release-schema.ts";
 import { FORUM_RECOVERY_ANNOTATIONS } from "@shepherdjerred/ops-model/forum-recovery.ts";
+import { seaweedfsS3 } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
 
 export function forumRecoveryEnvironment(release: ForumRelease): EnvVar[] {
   return [
@@ -28,7 +29,7 @@ export function forumBootstrapEnvironment(
     { name: "DB_USER", value: "storm" },
     {
       name: "BUNDLE_ENDPOINT",
-      value: "http://seaweedfs-s3.seaweedfs.svc.cluster.local:8333",
+      value: seaweedfsS3.endpoint,
     },
     { name: "BUNDLE_BUCKET", value: "storm-forum-releases" },
     { name: "BUNDLE_KEY", value: release.bundleKey },

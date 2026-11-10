@@ -20,6 +20,7 @@ import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zf
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
+import { bugsinkEnv } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
 
 export function createTasknotesDeployment(chart: Chart) {
   const deployment = new Deployment(chart, "tasknotes", {
@@ -109,18 +110,16 @@ export function createTasknotesDeployment(chart: Chart) {
         }),
 
         // Bugsink error reporting
-        BUGSINK_ENABLED: EnvValue.fromValue("true"),
-        BUGSINK_DSN: EnvValue.fromSecretValue({
-          secret: Secret.fromSecretName(
+        ...bugsinkEnv(
+          Secret.fromSecretName(
             chart,
             "tasknotes-bugsink-dsn-secret",
             onePasswordItem.name,
           ),
-          key: "BUGSINK_DSN",
-        }),
-        BUGSINK_ENVIRONMENT: EnvValue.fromValue("production"),
-        BUGSINK_RELEASE: EnvValue.fromValue(
-          firstPartyImageRecipe("tasknotes-server"),
+          {
+            environment: "production",
+            release: firstPartyImageRecipe("tasknotes-server"),
+          },
         ),
       },
     }),

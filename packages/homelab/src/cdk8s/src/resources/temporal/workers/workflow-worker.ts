@@ -2,7 +2,7 @@ import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
 import { Cpu, type Deployment, EnvValue } from "cdk8s-plus-31";
 import { createTemporalDomainWorker } from "./domain-worker.ts";
-import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
+import { telemetryEnv } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
 
 const DEPLOYMENT_NAME = "monorepo-central-workflows";
 
@@ -39,9 +39,7 @@ function createWorkflowWorker(
       TEMPORAL_WORKER_ROLE: EnvValue.fromValue("workflows"),
       TEMPORAL_WORKER_DEPLOYMENT_NAME: EnvValue.fromValue(DEPLOYMENT_NAME),
       ENVIRONMENT: EnvValue.fromValue("production"),
-      TELEMETRY_ENABLED: EnvValue.fromValue("true"),
-      OTLP_ENDPOINT: EnvValue.fromValue(OTLP_GATEWAY_BASE_URL),
-      TELEMETRY_SERVICE_NAME: EnvValue.fromValue("temporal-central-workflows"),
+      ...telemetryEnv({ serviceName: "temporal-central-workflows" }),
     },
   });
 }

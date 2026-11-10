@@ -16,6 +16,10 @@ import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepasswor
 import { match } from "ts-pattern";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
+import {
+  fliptEnv,
+  bugsinkEnv,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
 
 export type Stage = "prod" | "beta";
 
@@ -132,26 +136,24 @@ export function createStarlightKarmaBotDeployment(chart: Chart, stage: Stage) {
         // flag.
         KARMA_ADMIN_USER_ID: EnvValue.fromValue("160509172704739328"),
         // Bootstrap for the flag client itself — it cannot come from a flag.
-        FEATURE_FLAGS_MODE: EnvValue.fromValue("flipt"),
-        FLIPT_ENVIRONMENT: EnvValue.fromValue(stage),
-        FLIPT_NAMESPACE: EnvValue.fromValue("starlight-karma-bot"),
-        FLIPT_URL: EnvValue.fromValue(
-          "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
-        ),
+        ...fliptEnv({
+          namespace: "starlight-karma-bot",
+          environment: stage,
+          order: ["FLIPT_ENVIRONMENT", "FLIPT_NAMESPACE", "FLIPT_URL"],
+        }),
         DATA_DIR: EnvValue.fromValue("/data"),
         // Prisma-native database, backfilled once from the legacy TypeORM
         // `glitter.sqlite`, which stays on the volume untouched.
         DATABASE_PATH: EnvValue.fromValue("/data/karma.db"),
         ENVIRONMENT: EnvValue.fromValue(stage),
         PORT: EnvValue.fromValue("8000"),
-        BUGSINK_DSN: EnvValue.fromSecretValue({
-          secret: Secret.fromSecretName(
+        ...bugsinkEnv(
+          Secret.fromSecretName(
             chart,
             "bugsink-dsn-secret",
             onePasswordItem.name,
           ),
-          key: "BUGSINK_DSN",
-        }),
+        ),
       },
     }),
   );
