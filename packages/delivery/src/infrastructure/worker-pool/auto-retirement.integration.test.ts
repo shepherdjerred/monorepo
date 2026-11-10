@@ -129,3 +129,51 @@ test("an environment that no longer admits releases is never offered", async () 
     await suite.delivery.retirementCandidates(testExecutor);
   expect(environments).toEqual([]);
 });
+
+test("a host retirement keeps the watch of the deployment it follows (W1)", async () => {
+  const { workerA, workerB, env } = await suite.fixture.acceptedPool();
+  const accepted = await suite.cluster.database.environment.findUniqueOrThrow({
+    where: { id: env.id },
+  });
+  if (accepted.acceptedDeploymentId === null)
+    throw new Error("Fixture pool has no accepted deployment");
+  const settledAt = new Date("2026-11-10T00:00:00.000Z");
+  await suite.cluster.database.deployment.update({
+    where: { id: accepted.acceptedDeploymentId },
+    data: { monitorState: "settled", monitorSettledAt: settledAt },
+  });
+  const requested = await suite.delivery.autoRetireWorker(
+    workerA.id,
+    {
+      expectedEnvironmentGeneration: env.generation,
+      expectedWorkerGeneration: workerA.generation,
+    },
+    testExecutor,
+  );
+  await suite.delivery.claim(
+    requested.id,
+    testExecutor,
+    freshWorkerProof(workerA, workerB.buildId),
+  );
+  await suite.delivery.finish(
+    requested.id,
+    {
+      status: "succeeded",
+      message: "Retired",
+      recoveryRequired: false,
+      observedRevisionId: requested.versionSetRevisionId,
+      evidence: [
+        { kind: "reconciliation", summary: "Exact frozen pool applied" },
+        { kind: "acceptance", summary: "Retired host absent" },
+      ],
+    },
+    testExecutor,
+  );
+  const retired = await suite.cluster.database.deployment.findUniqueOrThrow({
+    where: { id: requested.id },
+  });
+  expect(retired).toMatchObject({
+    monitorState: "settled",
+    monitorSettledAt: settledAt,
+  });
+});
