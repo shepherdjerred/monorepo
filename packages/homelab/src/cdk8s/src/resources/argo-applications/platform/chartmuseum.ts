@@ -40,7 +40,21 @@ export function createChartMuseumResources(chart: Chart): OnePasswordItem {
 export function createChartMuseumApp(chart: Chart) {
   const basicAuth = createChartMuseumResources(chart);
 
+  // Its data lives on a ReadWriteOnce ZFS volume, so a surge pod can never
+  // mount it while the old pod holds it, and the chart's default RollingUpdate
+  // (25% surge, 25% unavailable: 1 and 0 for one replica) deadlocks every
+  // rollout. Stopping the old pod first is the only order that works. Recreate
+  // cannot be set on the existing Deployment: it keeps API-defaulted
+  // rollingUpdate params that Recreate forbids. The chart passes `strategy`
+  // through verbatim, but its values file declares only `type`, so the object
+  // is declared apart from the values literal.
+  const strategy = {
+    type: "RollingUpdate",
+    rollingUpdate: { maxSurge: 0, maxUnavailable: 1 },
+  };
+
   const chartMuseumValues: HelmValuesForChart<"chartmuseum"> = {
+    strategy,
     // The chart declares no requests, which left chartmuseum BestEffort: the
     // first pod evicted under memory pressure. Over 14d to 2026-11-08 its p95
     // was 0.18 CPU and 0.61Gi RSS (max 0.94Gi).

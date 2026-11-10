@@ -349,6 +349,16 @@ describe("capacity-remediation synthesis", () => {
     assertTempoAndLoki(documents);
   });
 
+  it("rolls chartmuseum out by stopping the pod that holds its RWO volume first", () => {
+    const values = z
+      .object({ strategy: z.unknown() })
+      .parse(applicationValues(documents, "chartmuseum"));
+    expect(values.strategy).toEqual({
+      type: "RollingUpdate",
+      rollingUpdate: { maxSurge: 0, maxUnavailable: 1 },
+    });
+  });
+
   it("adds request-only baselines to monitoring helpers", () => {
     assertMonitoringHelpers(documents);
   });
