@@ -45,12 +45,16 @@ export const DELIVERY_STAGE_REQUESTS = {
  * alternating a production subset with a full install would rewrite the
  * difference every time. Bun copies rather than hardlinks from its cache, so a
  * shared cache alone would only have moved the writes.
+ *
+ * Each Job's shallow fetch currently adds a ~1 GiB pack that is never
+ * compacted, so these sizes are headroom, not a steady state. zfs-ssd-lz4
+ * allows expansion; a claim may grow but never shrink in place.
  */
 export const DELIVERY_STAGE_WORKSPACE_CLAIMS = {
   /** Every workspace's dependencies, generated code and the toolkit binary. */
-  full: { claim: "delivery-stage-workspace-full", size: "40Gi" },
+  full: { claim: "delivery-stage-workspace-full", size: "100Gi" },
   /** Image provenance: the Temporal workspace's production closure only. */
-  production: { claim: "delivery-stage-workspace-production", size: "20Gi" },
+  production: { claim: "delivery-stage-workspace-production", size: "60Gi" },
 } as const;
 export type DeliveryStageWorkspaceProfile =
   keyof typeof DELIVERY_STAGE_WORKSPACE_CLAIMS;

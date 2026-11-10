@@ -391,9 +391,9 @@ describe("Delivery stage workspace claims", () => {
           `${claim.metadata.namespace}/${claim.metadata.name} ${claim.spec.resources.requests.storage}`,
       ),
     ).toEqual([
-      "delivery-worker-jobs/delivery-stage-workspace-full 40Gi",
-      "delivery-worker-jobs/delivery-stage-workspace-production 20Gi",
-      "delivery-platform-jobs/delivery-stage-workspace-full 40Gi",
+      "delivery-worker-jobs/delivery-stage-workspace-full 100Gi",
+      "delivery-worker-jobs/delivery-stage-workspace-production 60Gi",
+      "delivery-platform-jobs/delivery-stage-workspace-full 100Gi",
     ]);
     for (const claim of claims) {
       // RWO so the ZFS driver applies the stage pods' fsGroup; lz4 on the pool.
