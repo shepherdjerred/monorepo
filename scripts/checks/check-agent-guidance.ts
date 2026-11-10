@@ -20,6 +20,7 @@ import {
   isGlobalReferenceSkill,
   isSkill,
   listGuidanceEntries,
+  listStagedGuidancePaths,
   parseSkillFrontmatter,
   PERSONAL_AGENT_PATH,
   PERSONAL_SKILLS_PATH,
@@ -387,24 +388,39 @@ export function validateAgentGuidance(
 }
 export async function checkAgentGuidance(
   readMode: GuidanceReadMode = "worktree",
-  options?: ValidateAgentGuidanceOptions,
+  options?: ValidateAgentGuidanceOptions &
+    Readonly<{ repositoryRoot?: string }>,
 ): Promise<void> {
   const extraTrackedPaths = new Set([
     ...REQUIRED_SOURCE_ADAPTERS.keys(),
     "packages/dotfiles/private_dot_cursor/rules/agent-guidance.mdc",
   ]);
+  const stagedPaths =
+    readMode === "index"
+      ? await listStagedGuidancePaths(
+          extraTrackedPaths,
+          options?.repositoryRoot,
+        )
+      : undefined;
+  if (stagedPaths?.length === 0) {
+    console.log("No staged agent guidance changes; skipping guidance check.");
+    return;
+  }
   const entries = await listGuidanceEntries(
     extraTrackedPaths,
-    undefined,
+    options?.repositoryRoot,
     readMode,
   );
   const homeAgentPath =
     options?.homeAgentPath ?? path.join(os.homedir(), "AGENTS.md");
-  let liveContent = options?.liveContent;
-  if (liveContent === undefined) {
-    const homeFile = Bun.file(homeAgentPath);
-    if (await homeFile.exists()) {
-      liveContent = await homeFile.text();
+  let liveContent: string | undefined;
+  if (stagedPaths === undefined || stagedPaths.includes(PERSONAL_AGENT_PATH)) {
+    liveContent = options?.liveContent;
+    if (liveContent === undefined) {
+      const homeFile = Bun.file(homeAgentPath);
+      if (await homeFile.exists()) {
+        liveContent = await homeFile.text();
+      }
     }
   }
   const violations = validateAgentGuidance(entries, {

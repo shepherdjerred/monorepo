@@ -636,7 +636,7 @@ Only the clicking survival player launches. A two-second countdown cancels on
 leaving the pad, taking damage, entering combat, teleporting or disconnecting.
 Passengers, vehicles, duplicate requests and players in combat are refused.
 The managed `the-storm-skylands-launch-enabled` flag gates new launches only;
-its production default is off and its beta default is on. Flag failures close
+its production and beta defaults are on. Flag failures close
 new launches. Flight recovery, expiry and landing cleanup do not read that flag.
 
 The updraft reaches Y480, then grants up to 120 seconds of view-steered gliding.

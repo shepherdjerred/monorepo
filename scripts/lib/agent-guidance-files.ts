@@ -154,6 +154,19 @@ export async function listGuidanceEntries(
   return entries.flatMap((entry) => (entry === undefined ? [] : [entry]));
 }
 
+export async function listStagedGuidancePaths(
+  extraTrackedPaths: ReadonlySet<string>,
+  repositoryRoot = path.resolve(import.meta.dir, "../.."),
+): Promise<string[]> {
+  const changed = await run(
+    ["git", "diff", "--cached", "--name-only", "--no-renames", "-z"],
+    { cwd: repositoryRoot, capture: true, secret: true },
+  );
+  return changed.stdout
+    .split("\0")
+    .filter((entryPath) => isGuidancePath(entryPath, extraTrackedPaths));
+}
+
 export function validateHomeAgentDrift(
   personalAgentContent: string | undefined,
   liveContent: string | undefined,
@@ -165,7 +178,7 @@ export function validateHomeAgentDrift(
     return {
       rule: "personal-agent-drift",
       path: "packages/dotfiles/AGENTS.md",
-      message: `differs from live ${homeAgentPath}; run 'chezmoi apply' to sync`,
+      message: `differs from live ${homeAgentPath}; inspect the diff and choose the intended synchronization direction`,
     };
   }
   return undefined;
