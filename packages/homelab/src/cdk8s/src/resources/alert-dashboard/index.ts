@@ -1,22 +1,20 @@
 import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { Chart } from "cdk8s";
 import {
-  Capability,
   Cpu,
   Deployment,
   DeploymentStrategy,
   EnvValue,
-  Probe,
   Secret,
-  SeccompProfileType,
   Service,
   Volume,
 } from "cdk8s-plus-31";
-import { Duration, Size } from "cdk8s";
+import { Size } from "cdk8s";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import {
   withCommonProps,
   setRevisionHistoryLimit,
+  restrictedContainer,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
@@ -24,6 +22,7 @@ import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepasswor
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
 import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
 import { fliptEnv } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
+import { httpProbes } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/kubelet-probes.ts";
 
 const IMAGE = firstPartyImageRecipe("alert-dashboard");
 
@@ -75,16 +74,7 @@ export function createAlertDashboardDeployment(chart: Chart) {
         cpu: { request: Cpu.millis(25), limit: Cpu.millis(250) },
         memory: { request: Size.mebibytes(64), limit: Size.mebibytes(256) },
       },
-      securityContext: {
-        user: 1000,
-        group: 1000,
-        ensureNonRoot: true,
-        readOnlyRootFilesystem: true,
-        allowPrivilegeEscalation: false,
-        privileged: false,
-        capabilities: { drop: [Capability.ALL] },
-        seccompProfile: { type: SeccompProfileType.RUNTIME_DEFAULT },
-      },
+      securityContext: restrictedContainer(1000),
       envVariables: {
         DATABASE_URL: EnvValue.fromValue("file:/data/alert-dashboard.db"),
         HOME: EnvValue.fromValue("/tmp"),
@@ -107,30 +97,11 @@ export function createAlertDashboardDeployment(chart: Chart) {
         // limit, which OOM-killed it 191 times in that week.
         memory: { request: Size.mebibytes(512), limit: Size.gibibytes(1) },
       },
-      securityContext: {
-        user: 1000,
-        group: 1000,
-        ensureNonRoot: true,
-        readOnlyRootFilesystem: true,
-        allowPrivilegeEscalation: false,
-        privileged: false,
-        capabilities: { drop: [Capability.ALL] },
-        seccompProfile: { type: SeccompProfileType.RUNTIME_DEFAULT },
-      },
-      startup: Probe.fromHttpGet("/healthz", {
-        port: 7341,
-        periodSeconds: Duration.seconds(5),
-        failureThreshold: 18,
-      }),
-      liveness: Probe.fromHttpGet("/healthz", {
-        port: 7341,
-        periodSeconds: Duration.seconds(30),
-        failureThreshold: 3,
-      }),
-      readiness: Probe.fromHttpGet("/readyz", {
-        port: 7341,
-        periodSeconds: Duration.seconds(10),
-        failureThreshold: 3,
+      securityContext: restrictedContainer(1000),
+      ...httpProbes(7341, {
+        live: "/healthz",
+        ready: "/readyz",
+        startup: { failureThreshold: 18 },
       }),
       volumeMounts: databaseMounts,
       envVariables: {

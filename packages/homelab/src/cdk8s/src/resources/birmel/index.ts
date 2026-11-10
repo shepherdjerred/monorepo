@@ -35,6 +35,7 @@ import {
   bugsinkEnv,
   seaweedfsS3,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
+import { httpProbes } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/kubelet-probes.ts";
 
 export function createBirmelDeployment(chart: Chart) {
   const deployment = new Deployment(chart, "birmel", {
@@ -136,20 +137,10 @@ done`,
         },
       },
       ports: [{ number: 8080, name: "health" }],
-      startup: Probe.fromHttpGet("/live", {
-        port: 8080,
-        periodSeconds: Duration.seconds(5),
-        failureThreshold: 24,
-      }),
-      liveness: Probe.fromHttpGet("/live", {
-        port: 8080,
-        periodSeconds: Duration.seconds(30),
-        failureThreshold: 3,
-      }),
-      readiness: Probe.fromHttpGet("/ready", {
-        port: 8080,
-        periodSeconds: Duration.seconds(10),
-        failureThreshold: 3,
+      ...httpProbes(8080, {
+        live: "/live",
+        ready: "/ready",
+        startup: { failureThreshold: 24 },
       }),
       volumeMounts: [
         {

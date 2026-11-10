@@ -1,20 +1,18 @@
 import type { Chart } from "cdk8s";
-import { Duration, Size } from "cdk8s";
+import { Size } from "cdk8s";
 import {
-  Capability,
   Cpu,
   Deployment,
   DeploymentStrategy,
   EnvValue,
   type ISecret,
-  Probe,
-  SeccompProfileType,
   Service,
   Volume,
 } from "cdk8s-plus-31";
 import {
   setRevisionHistoryLimit,
   withCommonProps,
+  restrictedContainer,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
@@ -24,6 +22,7 @@ import {
   mediaDatabaseEnvironment,
   mediaFeatureFlagEnvironment,
 } from "./environment.ts";
+import { httpProbes } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/kubelet-probes.ts";
 
 export function createMediaApi(
   chart: Chart,
@@ -50,16 +49,7 @@ export function createMediaApi(
     },
     securityContext: { fsGroup: 1000 },
   });
-  const securityContext = {
-    user: 1000,
-    group: 1000,
-    ensureNonRoot: true,
-    readOnlyRootFilesystem: true,
-    allowPrivilegeEscalation: false,
-    privileged: false,
-    capabilities: { drop: [Capability.ALL] },
-    seccompProfile: { type: SeccompProfileType.RUNTIME_DEFAULT },
-  };
+  const securityContext = restrictedContainer(1000);
   const volumeMounts = [
     {
       path: "/tmp",
@@ -116,20 +106,10 @@ export function createMediaApi(
         ),
         TEMPORAL_NAMESPACE: EnvValue.fromValue("prod"),
       },
-      startup: Probe.fromHttpGet("/health", {
-        port: 7352,
-        periodSeconds: Duration.seconds(5),
-        failureThreshold: 24,
-      }),
-      liveness: Probe.fromHttpGet("/health", {
-        port: 7352,
-        periodSeconds: Duration.seconds(30),
-        failureThreshold: 3,
-      }),
-      readiness: Probe.fromHttpGet("/readyz", {
-        port: 7352,
-        periodSeconds: Duration.seconds(10),
-        failureThreshold: 3,
+      ...httpProbes(7352, {
+        live: "/health",
+        ready: "/readyz",
+        startup: { failureThreshold: 24 },
       }),
       resources: {
         cpu: { request: Cpu.millis(100), limit: Cpu.millis(1000) },

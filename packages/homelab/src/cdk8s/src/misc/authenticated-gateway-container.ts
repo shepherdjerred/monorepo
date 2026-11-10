@@ -1,10 +1,6 @@
 import { Size } from "cdk8s";
-import {
-  Capability,
-  Cpu,
-  SeccompProfileType,
-  type ContainerProps,
-} from "cdk8s-plus-31";
+import { Cpu, type ContainerProps } from "cdk8s-plus-31";
+import { restrictedContainer } from "./common.ts";
 
 type AuthenticatedGatewayContainerDefaults = Pick<
   ContainerProps,
@@ -21,15 +17,6 @@ export function authenticatedGatewayContainerDefaults(
       cpu: { request: Cpu.millis(5), limit: Cpu.millis(100) },
       memory: { request: Size.mebibytes(16), limit: Size.mebibytes(64) },
     },
-    securityContext: {
-      user,
-      group,
-      ensureNonRoot: true,
-      readOnlyRootFilesystem: true,
-      allowPrivilegeEscalation: false,
-      privileged: false,
-      capabilities: { drop: [Capability.ALL] },
-      seccompProfile: { type: SeccompProfileType.RUNTIME_DEFAULT },
-    },
+    securityContext: restrictedContainer(user, group),
   };
 }

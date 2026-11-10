@@ -8,8 +8,8 @@ import {
 import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
 import {
-  LINUXSERVER_GID,
   withCommonLinuxServerProps,
+  linuxServerPod,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/linux-server.ts";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
@@ -20,17 +20,7 @@ export function createMaintainerrDeployment(chart: Chart) {
   const deployment = new Deployment(chart, "maintainerr", {
     replicas: 1,
     strategy: DeploymentStrategy.recreate(),
-    securityContext: {
-      fsGroup: LINUXSERVER_GID,
-    },
-    metadata: {
-      annotations: {
-        "ignore-check.kube-linter.io/run-as-non-root":
-          "LinuxServer.io images run as root internally",
-        "ignore-check.kube-linter.io/no-read-only-root-fs":
-          "LinuxServer.io images require writable filesystem",
-      },
-    },
+    ...linuxServerPod({ fsGroup: true }),
   });
 
   const localPathVolume = new ZfsNvmeVolume(chart, "maintainerr-pvc", {

@@ -15,6 +15,7 @@ import {
   LINUXSERVER_UID,
   LINUXSERVER_GID,
   withCommonLinuxServerProps,
+  linuxServerPod,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/linux-server.ts";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
@@ -60,14 +61,7 @@ export function createBazarrDeployment(
       labels: { app: "bazarr" },
       annotations: { "checksum/subtitle-providers": providerRevision },
     },
-    metadata: {
-      annotations: {
-        "ignore-check.kube-linter.io/run-as-non-root":
-          "LinuxServer.io images run as root internally",
-        "ignore-check.kube-linter.io/no-read-only-root-fs":
-          "LinuxServer.io images require writable filesystem",
-      },
-    },
+    ...linuxServerPod(),
   });
 
   const localPathVolume = new ZfsNvmeVolume(chart, "bazarr-pvc", {

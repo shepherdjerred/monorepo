@@ -21,6 +21,7 @@ import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailsca
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
 import { bugsinkEnv } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
+import { httpProbes } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/kubelet-probes.ts";
 
 export function createTasknotesDeployment(chart: Chart) {
   const deployment = new Deployment(chart, "tasknotes", {
@@ -79,20 +80,10 @@ export function createTasknotesDeployment(chart: Chart) {
           limit: Size.gibibytes(1),
         },
       },
-      startup: Probe.fromHttpGet("/api/health", {
-        port: 3000,
-        periodSeconds: Duration.seconds(5),
-        failureThreshold: 12,
-      }),
-      liveness: Probe.fromHttpGet("/api/health", {
-        port: 3000,
-        periodSeconds: Duration.seconds(30),
-        failureThreshold: 3,
-      }),
-      readiness: Probe.fromHttpGet("/api/health", {
-        port: 3000,
-        periodSeconds: Duration.seconds(10),
-        failureThreshold: 3,
+      ...httpProbes(3000, {
+        live: "/api/health",
+        ready: "/api/health",
+        startup: { failureThreshold: 12 },
       }),
       volumeMounts: [sharedVaultMount],
       envVariables: {

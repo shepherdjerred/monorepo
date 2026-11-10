@@ -1,7 +1,10 @@
 import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
 import { Deployment, DeploymentStrategy, Service, Volume } from "cdk8s-plus-31";
-import { withCommonLinuxServerProps } from "@shepherdjerred/homelab/cdk8s/src/misc/linux-server.ts";
+import {
+  withCommonLinuxServerProps,
+  linuxServerPod,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/linux-server.ts";
 import { setRevisionHistoryLimit } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
@@ -11,14 +14,7 @@ export function createTautulliDeployment(chart: Chart) {
   const deployment = new Deployment(chart, "tautulli", {
     replicas: 1,
     strategy: DeploymentStrategy.recreate(),
-    metadata: {
-      annotations: {
-        "ignore-check.kube-linter.io/run-as-non-root":
-          "LinuxServer.io images run as root internally",
-        "ignore-check.kube-linter.io/no-read-only-root-fs":
-          "LinuxServer.io images require writable filesystem",
-      },
-    },
+    ...linuxServerPod(),
   });
 
   const localPathVolume = new ZfsNvmeVolume(chart, "tautulli-pvc", {

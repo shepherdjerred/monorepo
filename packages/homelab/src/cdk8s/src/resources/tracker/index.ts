@@ -1,20 +1,18 @@
 import type { Chart } from "cdk8s";
-import { Duration, Size } from "cdk8s";
+import { Size } from "cdk8s";
 import {
-  Capability,
   Cpu,
   Deployment,
   DeploymentStrategy,
   EnvValue,
-  Probe,
   Secret,
-  SeccompProfileType,
   Service,
   Volume,
 } from "cdk8s-plus-31";
 import {
   withCommonProps,
   setRevisionHistoryLimit,
+  restrictedContainer,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
@@ -23,6 +21,7 @@ import {
   fliptEnv,
   seaweedfsS3,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
+import { httpProbes } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/kubelet-probes.ts";
 
 function databaseUrl() {
   const protocol = "postgresql";
@@ -57,16 +56,7 @@ export function createTrackerDeployment(chart: Chart, image: string) {
     strategy: DeploymentStrategy.recreate(),
     securityContext: { fsGroup: 1000 },
   });
-  const securityContext = {
-    user: 1000,
-    group: 1000,
-    ensureNonRoot: true,
-    readOnlyRootFilesystem: true,
-    allowPrivilegeEscalation: false,
-    privileged: false,
-    capabilities: { drop: [Capability.ALL] },
-    seccompProfile: { type: SeccompProfileType.RUNTIME_DEFAULT },
-  };
+  const securityContext = restrictedContainer(1000);
   const tmp = Volume.fromEmptyDir(chart, "tracker-tmp", "tmp");
   const volumeMounts = [{ path: "/tmp", volume: tmp }];
   deployment.addInitContainer(
@@ -95,20 +85,10 @@ export function createTrackerDeployment(chart: Chart, image: string) {
         cpu: { request: Cpu.millis(50), limit: Cpu.millis(500) },
         memory: { request: Size.mebibytes(128), limit: Size.mebibytes(512) },
       },
-      startup: Probe.fromHttpGet("/healthz", {
-        port: 7351,
-        periodSeconds: Duration.seconds(5),
-        failureThreshold: 18,
-      }),
-      liveness: Probe.fromHttpGet("/healthz", {
-        port: 7351,
-        periodSeconds: Duration.seconds(30),
-        failureThreshold: 3,
-      }),
-      readiness: Probe.fromHttpGet("/readyz", {
-        port: 7351,
-        periodSeconds: Duration.seconds(10),
-        failureThreshold: 3,
+      ...httpProbes(7351, {
+        live: "/healthz",
+        ready: "/readyz",
+        startup: { failureThreshold: 18 },
       }),
       envVariables: {
         ...dbEnv,

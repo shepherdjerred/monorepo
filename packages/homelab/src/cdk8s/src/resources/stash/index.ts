@@ -1,12 +1,11 @@
 import type { Chart } from "cdk8s";
-import { ApiObject, Duration, JsonPatch, Size } from "cdk8s";
+import { ApiObject, JsonPatch, Size } from "cdk8s";
 import {
   Capability,
   Cpu,
   Deployment,
   DeploymentStrategy,
   EnvValue,
-  Probe,
   SeccompProfileType,
   Secret,
   Service,
@@ -28,6 +27,7 @@ import {
   nsPeer,
   tcp,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
+import { httpProbes } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/kubelet-probes.ts";
 
 const PORT = 9999;
 const LABELS = { app: "stash" };
@@ -155,20 +155,10 @@ export function createStashDeployment(chart: Chart) {
       command: ["stash"],
       args: ["--nobrowser"],
       ports: [{ number: PORT, name: "http" }],
-      startup: Probe.fromHttpGet("/healthz", {
-        port: PORT,
-        periodSeconds: Duration.seconds(5),
-        failureThreshold: 60,
-      }),
-      readiness: Probe.fromHttpGet("/healthz", {
-        port: PORT,
-        periodSeconds: Duration.seconds(10),
-        failureThreshold: 3,
-      }),
-      liveness: Probe.fromHttpGet("/healthz", {
-        port: PORT,
-        periodSeconds: Duration.seconds(30),
-        failureThreshold: 3,
+      ...httpProbes(PORT, {
+        live: "/healthz",
+        ready: "/healthz",
+        startup: { failureThreshold: 60 },
       }),
       resources: {
         cpu: { request: Cpu.millis(250), limit: Cpu.units(4) },
