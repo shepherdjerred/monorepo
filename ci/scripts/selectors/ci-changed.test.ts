@@ -205,6 +205,10 @@ test("forces every runtime-selected fixed-corpus lane", () => {
   }
 });
 
+test("the CDK Terrain app selects the OpenTofu lane", () => {
+  expect(selectorPathsForLane("tofu")).toContain("packages/homelab-cdktn");
+});
+
 test("domain registry changes select the OpenTofu lane", () => {
   expect(selectorPathsForLane("tofu")).toContain(
     "packages/homelab/src/domain-registry.json",

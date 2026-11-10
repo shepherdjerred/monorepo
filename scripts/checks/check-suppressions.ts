@@ -77,6 +77,12 @@ const EXCLUDED_FILES = [
   // Refreshed by the homelab-crd-imports-daily Temporal schedule; the
   // quality-ratchet likewise excludes /generated/ paths.
   "packages/homelab/src/cdk8s/generated/imports/",
+  // Same category: the generator of the uncommitted cdktn provider bindings
+  // prepends `// @ts-nocheck` to them, because `cdktn get` emits no `override`
+  // modifiers (TS4114 under noImplicitOverride on every binding). The script
+  // spells the header it writes; the stacks that import the bindings stay
+  // fully checked.
+  "packages/homelab-cdktn/scripts/generate-bindings.ts",
   // Intentional: compile-time type tests — @ts-expect-error is the whole point
   "packages/home-assistant/test/typed-client.test-d.ts",
   // Documentation: AGENTS.md files and docs mention suppression patterns as things to avoid

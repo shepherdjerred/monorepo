@@ -1,0 +1,13 @@
+{
+  "language": "typescript",
+  "app": "bun run src/app.ts",
+  "output": "cdktf.out",
+  "codeMakerOutput": "generated",
+  "sendCrashReports": "false",
+  "sendUsageTelemetry": "false",
+  "targetVersions": {
+    "opentofu": ">=1.11.0"
+  },
+  "terraformProviders": ["integrations/github@6.13.0"],
+  "terraformModules": []
+}

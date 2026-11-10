@@ -1,4 +1,6 @@
 export const legacyTofuPaths = [
+  // The CDK Terrain app that synthesizes src/tofu/<stack>/main.tf.json.
+  "packages/homelab-cdktn",
   "packages/homelab/src/domain-registry.json",
   "packages/homelab/scripts/tofu/tofu-stack-manifest.ts",
   "packages/homelab/src/tofu/argocd",

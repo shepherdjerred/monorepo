@@ -31,6 +31,31 @@ tofu/
 
 Each subdirectory is an independent root module with its own `backend.tf` (S3 state on SeaweedFS), `providers.tf`, and `variables.tf`.
 
+### Stacks synthesized from TypeScript
+
+`github` has no `.tf` files. Its configuration is
+`main.tf.json`, synthesized by the [CDK Terrain](https://cdktn.io/docs) app in
+[`packages/homelab-cdktn`](../../../homelab-cdktn) and committed next to the stack's `.terraform.lock.hcl`.
+OpenTofu, `tofu-stack.ts`, the stack archive and Delivery read that file like
+any other configuration; nothing synthesizes at plan or apply time. Never edit
+`main.tf.json` by hand:
+
+```bash
+bunx turbo run generate --filter=@homelab/cdktn   # provider bindings (cdktn get, needs tofu and Node)
+bun run --cwd packages/homelab-cdktn synth    # rewrite src/tofu/<stack>/main.tf.json
+bunx turbo run build test --filter=@homelab/cdktn # fails when a committed file is stale
+```
+
+A stack holds either hand-written HCL or a synthesized `main.tf.json`, never
+both; `tofu-stack.ts` refuses a directory that mixes them. Resource addresses
+are the construct ids in `packages/homelab-cdktn/src/stacks/<stack>.ts`, so renaming one is a
+state change. A synthesized stack is accepted only on a plan against live state
+that reports no changes.
+
+Bindings are generated from the provider versions pinned in
+`packages/homelab-cdktn/cdktf.json`, which must equal the versions in each synthesized stack's
+lock file.
+
 ## Prerequisites
 
 - OpenTofu (`mise` manages the version)

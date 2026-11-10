@@ -1,0 +1,6 @@
+# Provider bindings from `bun run generate` (cdktn get); never committed.
+generated/
+# Scratch synthesis output; the reviewed copy is src/tofu/<stack>/main.tf.json.
+cdktf.out/
+*.tsbuildinfo
+.eslintcache

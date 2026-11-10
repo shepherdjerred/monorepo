@@ -2,10 +2,12 @@ import { afterEach, describe, expect, test } from "vitest";
 import { mkdir, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { TofuStackSchema } from "@shepherdjerred/ops-model/platform-policy.ts";
 import { STACK_MANIFEST } from "./tofu-stack-manifest.ts";
 import {
   TOFU_STACK_ROOT,
   fileReferences,
+  stackConfigurationFormat,
   stackFileReferences,
   verifyStackExternalFiles,
   verifyTofuExternalFiles,
@@ -148,5 +150,37 @@ describe("stack external file declarations", () => {
         target: `${TOFU_STACK_ROOT}/cloudflare/public/index.html`,
       },
     ]);
+  });
+});
+
+describe("stack configuration format", () => {
+  test("every stack is hand-written HCL or a cdktn synthesis, never both", async () => {
+    const synthesized: string[] = [];
+    for (const stack of TofuStackSchema.options) {
+      const format = await stackConfigurationFormat(
+        stack,
+        path.join(repository, TOFU_STACK_ROOT, stack),
+      );
+      if (format === "synthesized") synthesized.push(stack);
+    }
+    expect(synthesized.toSorted()).toEqual(["github"]);
+  });
+
+  test("rejects a stack directory that mixes or lacks configuration", async () => {
+    const directory = await mkdtemp(path.join(tmpdir(), "tofu-format-"));
+    scratch.push(directory);
+    await expect(stackConfigurationFormat("github", directory)).rejects.toThrow(
+      "neither providers.tf nor a synthesized main.tf.json",
+    );
+    await Bun.write(path.join(directory, "main.tf.json"), "{}\n");
+    expect(await stackConfigurationFormat("github", directory)).toBe(
+      "synthesized",
+    );
+    await Bun.write(path.join(directory, "providers.tf"), "");
+    await expect(stackConfigurationFormat("github", directory)).rejects.toThrow(
+      "both a synthesized main.tf.json and HCL files",
+    );
+    await rm(path.join(directory, "main.tf.json"));
+    expect(await stackConfigurationFormat("github", directory)).toBe("hcl");
   });
 });

@@ -127,6 +127,7 @@
     "packages/hkctl",
     "packages/home-assistant",
     "packages/homelab",
+    "packages/homelab-cdktn",
     "packages/homelab/src/cdk8s",
     "packages/homelab/src/helm-types",
     "packages/justin-principal-engineer",

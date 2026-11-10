@@ -40,6 +40,33 @@ const PATH_EXPRESSION =
 const CONFIGURATION_FILES = "**/*.tf";
 const SKIPPED_DIRECTORIES = new Set([".terraform", "tests"]);
 
+export type StackConfigurationFormat = "hcl" | "synthesized";
+
+/**
+ * A stack is either hand-written HCL (`providers.tf`) or the committed cdktn
+ * synthesis (`main.tf.json`, from `packages/homelab-cdktn`). OpenTofu loads both kinds
+ * from one directory, so a stack holding both would declare everything twice.
+ */
+export async function stackConfigurationFormat(
+  stack: TofuStack,
+  stackDir: string,
+): Promise<StackConfigurationFormat> {
+  const synthesized = await Bun.file(`${stackDir}/main.tf.json`).exists();
+  const hcl = await Array.fromAsync(
+    new Bun.Glob("*.tf").scan({ cwd: stackDir }),
+  );
+  if (synthesized && hcl.length > 0) {
+    throw new Error(
+      `Stack ${stack} has both a synthesized main.tf.json and HCL files: ${hcl.toSorted().join(", ")}`,
+    );
+  }
+  if (synthesized) return "synthesized";
+  if (hcl.includes("providers.tf")) return "hcl";
+  throw new Error(
+    `Stack ${stack} has neither providers.tf nor a synthesized main.tf.json`,
+  );
+}
+
 export type StackFileReference = {
   /** Repository-relative configuration file holding the reference. */
   source: string;

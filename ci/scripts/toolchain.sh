@@ -183,7 +183,9 @@ case "${MISE_TOOLCHAIN_SCOPE:-full}" in
   tofu)
     # Grouped PR plan containers share installed workspace dependencies, but
     # each container still resolves its own pinned runtime from the CI image.
-    mise_ci install --yes bun opentofu
+    # Node runs `cdktn get`, which generates the provider bindings the
+    # synthesized stacks are checked against; its CLI does not run under Bun.
+    mise_ci install --yes bun node opentofu
     mise_ci reshim
     ;;
   automation)

@@ -97,6 +97,7 @@ hold only scoped invariants that agents must keep in context.
 | Package                                                   | Description                                                                    |
 | --------------------------------------------------------- | ------------------------------------------------------------------------------ |
 | [homelab](homelab/)                                       | Kubernetes homelab: Talos, cdk8s, OpenTofu, ArgoCD                             |
+| [homelab-cdktn](homelab-cdktn/)                           | CDK Terrain app that synthesizes homelab OpenTofu stacks to committed JSON     |
 | [mc-build](mc-build/)                                     | Minecraft block registry, schematics, build DSL, lint, and offline renderer    |
 | [mc-harness](mc-harness/)                                 | Minecraft sandboxes, MCBridge client, and the daemon behind `toolkit mc`       |
 | [unix-socket-daemon](unix-socket-daemon/)                 | Shared unix-socket HTTP daemon scaffolding (serve, idle TTL, PID identity)     |
