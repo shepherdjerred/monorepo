@@ -7,7 +7,6 @@ import {
   KubeRole,
   KubeRoleBinding,
   KubeServiceAccount,
-  IntOrString,
   Quantity,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { NVME_STORAGE_CLASS_LZ4 } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
@@ -17,6 +16,9 @@ import {
   dnsEgressRule,
   externalHttpsEgressRule,
   kubernetesApiEgressRule,
+  nsPeer,
+  tcp,
+  seaweedfsEgress,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { PROMETHEUS_GATEWAY_PORT } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/monitoring-auth-gateways.ts";
@@ -142,52 +144,25 @@ export function createDeliveryJobs(
               {
                 to: [
                   {
-                    namespaceSelector: {
-                      matchLabels: {
-                        "kubernetes.io/metadata.name": "delivery",
-                      },
-                    },
+                    ...nsPeer("delivery"),
                     podSelector: { matchLabels: { app: "delivery" } },
                   },
                 ],
-                ports: [
-                  { protocol: "TCP", port: IntOrString.fromNumber(7353) },
-                ],
+                ports: [tcp(7353)],
               },
             ]
           : []),
         {
           to: [
             {
-              namespaceSelector: {
-                matchLabels: {
-                  "kubernetes.io/metadata.name": "temporal",
-                },
-              },
+              ...nsPeer("temporal"),
               podSelector: { matchLabels: { app: "temporal-server" } },
             },
           ],
-          ports: [{ protocol: "TCP", port: IntOrString.fromNumber(7233) }],
+          ports: [tcp(7233)],
         },
         ...(profile === "worker" ? [prometheusQueryEgressRule()] : []),
-        ...(profile === "platform"
-          ? [
-              {
-                to: [
-                  {
-                    namespaceSelector: {
-                      matchLabels: {
-                        "kubernetes.io/metadata.name": "seaweedfs",
-                      },
-                    },
-                  },
-                ],
-                ports: [
-                  { protocol: "TCP", port: IntOrString.fromNumber(8333) },
-                ],
-              },
-            ]
-          : []),
+        ...(profile === "platform" ? [seaweedfsEgress()] : []),
       ],
     },
   });
@@ -241,19 +216,8 @@ function createStageWorkspaceClaims(
  */
 function prometheusQueryEgressRule() {
   return {
-    to: [
-      {
-        namespaceSelector: {
-          matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
-        },
-      },
-    ],
-    ports: [
-      {
-        protocol: "TCP",
-        port: IntOrString.fromNumber(PROMETHEUS_GATEWAY_PORT),
-      },
-    ],
+    to: [nsPeer("prometheus")],
+    ports: [tcp(PROMETHEUS_GATEWAY_PORT)],
   };
 }
 

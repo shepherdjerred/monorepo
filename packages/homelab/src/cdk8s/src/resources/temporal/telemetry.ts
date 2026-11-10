@@ -1,6 +1,6 @@
 import { EnvValue } from "cdk8s-plus-31";
-import { IntOrString } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
+import { otlpEgress } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 
 export function temporalTelemetryEnvironment(serviceName: string) {
   return {
@@ -12,14 +12,5 @@ export function temporalTelemetryEnvironment(serviceName: string) {
 
 /** The internal OTLP collector is the only additional destination. */
 export function temporalTelemetryEgressRule() {
-  return {
-    to: [
-      {
-        namespaceSelector: {
-          matchLabels: { "kubernetes.io/metadata.name": "alloy-gateway" },
-        },
-      },
-    ],
-    ports: [{ port: IntOrString.fromNumber(4318), protocol: "TCP" }],
-  };
+  return otlpEgress();
 }

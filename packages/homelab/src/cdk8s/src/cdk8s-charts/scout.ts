@@ -7,11 +7,16 @@ import {
   KubeNetworkPolicy,
   IntOrString,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
-import { FLIPT_PORT } from "@shepherdjerred/homelab/cdk8s/src/resources/flipt/index.ts";
 import { createScoutWorkflowWorker } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/workflow-worker.ts";
 import {
   dnsEgressRule,
   externalHttpsEgressRule,
+  nsPeer,
+  tcp,
+  fliptEgress,
+  otlpEgress,
+  seaweedfsEgress,
+  prometheusIngressRule,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import { SCOUT_GATEWAY_APP_LABEL } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/gateway.ts";
 import { SCOUT_ACTIVITY_WORKER_APP_LABEL } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/activity-worker.ts";
@@ -36,55 +41,23 @@ function scoutRuntimeEgressRules() {
   return [
     dnsEgressRule(),
     // OTLP trace gateway (alloy-gateway.alloy-gateway.svc.cluster.local:4318)
-    {
-      to: [
-        {
-          namespaceSelector: {
-            matchLabels: { "kubernetes.io/metadata.name": "alloy-gateway" },
-          },
-        },
-      ],
-      ports: [{ port: IntOrString.fromNumber(4318), protocol: "TCP" }],
-    },
+    otlpEgress(),
     // SeaweedFS S3 (seaweedfs-s3.seaweedfs.svc.cluster.local:8333)
-    {
-      to: [
-        {
-          namespaceSelector: {
-            matchLabels: { "kubernetes.io/metadata.name": "seaweedfs" },
-          },
-        },
-      ],
-      ports: [{ port: IntOrString.fromNumber(8333), protocol: "TCP" }],
-    },
+    seaweedfsEgress(),
     // Flipt evaluation (flipt-flipt-service.flipt.svc.cluster.local:8080)
-    {
-      to: [
-        {
-          namespaceSelector: {
-            matchLabels: { "kubernetes.io/metadata.name": "flipt" },
-          },
-        },
-      ],
-      ports: [{ port: IntOrString.fromNumber(FLIPT_PORT), protocol: "TCP" }],
-    },
+    fliptEgress(),
     // In-namespace PostgreSQL (scout-<stage>-postgresql:5432)
-    {
-      to: [{ podSelector: {} }],
-      ports: [{ port: IntOrString.fromNumber(5432), protocol: "TCP" }],
-    },
+    { to: [{ podSelector: {} }], ports: [tcp(5432)] },
     // Temporal gRPC for the stage-local competition dispatcher and the
     // embedded Scout workers. Restrict both to the server pod and port.
     {
       to: [
         {
-          namespaceSelector: {
-            matchLabels: { "kubernetes.io/metadata.name": "temporal" },
-          },
+          ...nsPeer("temporal"),
           podSelector: { matchLabels: { app: "temporal-server" } },
         },
       ],
-      ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
+      ports: [tcp(7233)],
     },
     // External HTTPS (Riot API, Discord, OpenAI, Gemini, and Bugsink via its
     // public bugsink.sjer.red DSN host)
@@ -126,21 +99,7 @@ function discordVoiceRtpEgressRule() {
  * that run Workers. Prometheus only: nothing else reads the SDK's metrics.
  */
 function prometheusTemporalMetricsIngressRule() {
-  return {
-    from: [
-      {
-        namespaceSelector: {
-          matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
-        },
-      },
-    ],
-    ports: [
-      {
-        port: IntOrString.fromNumber(SCOUT_TEMPORAL_METRICS_PORT),
-        protocol: "TCP",
-      },
-    ],
-  };
+  return prometheusIngressRule([SCOUT_TEMPORAL_METRICS_PORT]);
 }
 
 export function createScoutChart(app: App, stage: Stage) {
@@ -175,27 +134,13 @@ export function createScoutChart(app: App, stage: Stage) {
       ingress: [
         {
           from: [
-            {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
-              },
-            },
+            nsPeer("prometheus"),
             { podSelector: {} },
-            {
-              namespaceSelector: {
-                matchLabels: {
-                  "kubernetes.io/metadata.name": "s3-static-sites",
-                },
-              },
-            },
+            nsPeer("s3-static-sites"),
             ...(stage === "beta"
               ? [
                   {
-                    namespaceSelector: {
-                      matchLabels: {
-                        "kubernetes.io/metadata.name": "temporal",
-                      },
-                    },
+                    ...nsPeer("temporal"),
                     podSelector: {
                       matchLabels: { component: "scout-worker" },
                     },
@@ -203,7 +148,7 @@ export function createScoutChart(app: App, stage: Stage) {
                 ]
               : []),
           ],
-          ports: [{ port: IntOrString.fromNumber(3000), protocol: "TCP" }],
+          ports: [tcp(3000)],
         },
         prometheusTemporalMetricsIngressRule(),
       ],
@@ -238,16 +183,7 @@ export function createScoutChart(app: App, stage: Stage) {
         // s3-static-sites reverse proxy and serves no tRPC/OAuth/SSE surface.
         ingress: [
           prometheusTemporalMetricsIngressRule(),
-          {
-            from: [
-              {
-                namespaceSelector: {
-                  matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
-                },
-              },
-            ],
-            ports: [{ port: IntOrString.fromNumber(3000), protocol: "TCP" }],
-          },
+          prometheusIngressRule([3000]),
         ],
         egress: [
           ...scoutRuntimeEgressRules(),
@@ -268,16 +204,7 @@ export function createScoutChart(app: App, stage: Stage) {
         },
         policyTypes: ["Ingress", "Egress"],
         ingress: [
-          {
-            from: [
-              {
-                namespaceSelector: {
-                  matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
-                },
-              },
-            ],
-            ports: [{ port: IntOrString.fromNumber(3000), protocol: "TCP" }],
-          },
+          prometheusIngressRule([3000]),
           prometheusTemporalMetricsIngressRule(),
         ],
         egress: scoutRuntimeEgressRules(),
@@ -295,34 +222,17 @@ export function createScoutChart(app: App, stage: Stage) {
         matchLabels: { "worker-family": `scout-${stage}-workflows` },
       },
       policyTypes: ["Ingress", "Egress"],
-      ingress: [
-        {
-          from: [
-            {
-              namespaceSelector: {
-                matchLabels: {
-                  "kubernetes.io/metadata.name": "prometheus",
-                },
-              },
-            },
-          ],
-          ports: [{ port: IntOrString.fromNumber(9464), protocol: "TCP" }],
-        },
-      ],
+      ingress: [prometheusIngressRule([9464])],
       egress: [
         dnsEgressRule(),
         {
           to: [
             {
-              namespaceSelector: {
-                matchLabels: {
-                  "kubernetes.io/metadata.name": "temporal",
-                },
-              },
+              ...nsPeer("temporal"),
               podSelector: { matchLabels: { app: "temporal-server" } },
             },
           ],
-          ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
+          ports: [tcp(7233)],
         },
       ],
     },

@@ -1,12 +1,15 @@
 import type { App } from "cdk8s";
 import { Chart } from "cdk8s";
-import {
-  IntOrString,
-  KubeNetworkPolicy,
-} from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import { KubeNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { PostalMariaDB } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/postal-mariadb.ts";
 import { createPostalDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/mail/postal.ts";
-import { dnsEgressRule } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
+import {
+  dnsEgressRule,
+  nsPeer,
+  tcp,
+  tailscaleIngressRule,
+  blackboxProbeIngressRule,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 
 export function createPostalChart(app: App) {
   const chart = new Chart(app, "postal", {
@@ -27,7 +30,7 @@ export function createPostalChart(app: App) {
   // Every Postal component reaches MariaDB within the namespace.
   const mariadbEgress = {
     to: [{ podSelector: { matchLabels: { ...postalMariadb.podLabels } } }],
-    ports: [{ port: IntOrString.fromNumber(3306), protocol: "TCP" }],
+    ports: [tcp(3306)],
   };
 
   // DNS records (rp.sjer.red, MX, SPF) are managed by OpenTofu (src/tofu/cloudflare/)
@@ -42,16 +45,8 @@ export function createPostalChart(app: App) {
         {
           // Allow SMTP from application namespaces.
           from: [
-            {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "bugsink" },
-              },
-            },
-            {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "birmel" },
-              },
-            },
+            nsPeer("bugsink"),
+            nsPeer("birmel"),
             {
               // Alertmanager's independent alert-dashboard fallback receiver.
               namespaceSelector: {
@@ -59,7 +54,7 @@ export function createPostalChart(app: App) {
               },
             },
           ],
-          ports: [{ port: IntOrString.fromNumber(25), protocol: "TCP" }],
+          ports: [tcp(25)],
         },
       ],
       egress: [
@@ -69,7 +64,7 @@ export function createPostalChart(app: App) {
         // Allow external SMTP relay to Fastmail
         {
           to: [{ ipBlock: { cidr: "0.0.0.0/0" } }],
-          ports: [{ port: IntOrString.fromNumber(587), protocol: "TCP" }],
+          ports: [tcp(587)],
         },
       ],
     },
@@ -82,52 +77,24 @@ export function createPostalChart(app: App) {
       podSelector: { matchLabels: { app: "postal-web" } },
       policyTypes: ["Ingress", "Egress"],
       ingress: [
-        {
-          from: [
-            {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "tailscale" },
-              },
-            },
-          ],
-          ports: [{ port: IntOrString.fromNumber(5000), protocol: "TCP" }],
-        },
+        tailscaleIngressRule([5000]),
         // Allow blackbox-exporter's in-cluster health probe (web service port
         // only — not every port on the pod)
-        {
-          from: [
-            {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
-              },
-            },
-          ],
-          ports: [{ port: IntOrString.fromNumber(5000), protocol: "TCP" }],
-        },
+        blackboxProbeIngressRule(5000),
         // Alert Dashboard submits opening notifications through Postal's API.
         {
-          from: [
-            {
-              namespaceSelector: {
-                matchLabels: {
-                  "kubernetes.io/metadata.name": "alert-dashboard",
-                },
-              },
-            },
-          ],
-          ports: [{ port: IntOrString.fromNumber(5000), protocol: "TCP" }],
+          from: [nsPeer("alert-dashboard")],
+          ports: [tcp(5000)],
         },
         // Media's Network worker submits notifications through Postal's API.
         {
           from: [
             {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "media" },
-              },
+              ...nsPeer("media"),
               podSelector: { matchLabels: { component: "media-network" } },
             },
           ],
-          ports: [{ port: IntOrString.fromNumber(5000), protocol: "TCP" }],
+          ports: [tcp(5000)],
         },
       ],
       egress: [
@@ -151,7 +118,7 @@ export function createPostalChart(app: App) {
         // Allow external SMTP relay to Fastmail (via postfix sidecar)
         {
           to: [{ ipBlock: { cidr: "0.0.0.0/0" } }],
-          ports: [{ port: IntOrString.fromNumber(587), protocol: "TCP" }],
+          ports: [tcp(587)],
         },
       ],
     },
@@ -170,7 +137,7 @@ export function createPostalChart(app: App) {
             { podSelector: { matchLabels: { app: "postal-web" } } },
             { podSelector: { matchLabels: { app: "postal-worker" } } },
           ],
-          ports: [{ port: IntOrString.fromNumber(3306), protocol: "TCP" }],
+          ports: [tcp(3306)],
         },
       ],
     },

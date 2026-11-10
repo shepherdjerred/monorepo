@@ -10,10 +10,7 @@ import {
   Service,
   Volume,
 } from "cdk8s-plus-31";
-import {
-  IntOrString,
-  KubeNetworkPolicy,
-} from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import { KubeNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
@@ -22,7 +19,13 @@ import {
   setRevisionHistoryLimit,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
-import { postgresClusterPodLabels } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/cluster-label.ts";
+import {
+  nsPeer,
+  tcp,
+  blackboxProbeIngressRule,
+  postgresEgress,
+  dnsEgressRule,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 
 // Build the postgres URL from parts. Composed at runtime from string
 // concatenation (not a literal) to avoid false-positive "Password in URL"
@@ -349,74 +352,25 @@ export function createBugsinkDeployment(chart: Chart) {
           // Allow from Tailscale and Cloudflare Tunnel
           from: [
             // Tailscale operator
-            {
-              namespaceSelector: {
-                matchLabels: {
-                  "kubernetes.io/metadata.name": "tailscale",
-                },
-              },
-            },
+            nsPeer("tailscale"),
             // Cloudflare tunnel
-            {
-              namespaceSelector: {
-                matchLabels: {
-                  "kubernetes.io/metadata.name": "cloudflare-tunnel",
-                },
-              },
-            },
+            nsPeer("cloudflare-tunnel"),
           ],
-          ports: [{ port: IntOrString.fromNumber(8000), protocol: "TCP" }],
+          ports: [tcp(8000)],
         },
-        {
-          // Allow blackbox-exporter's in-cluster health probe
-          from: [
-            {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
-              },
-            },
-          ],
-          ports: [{ port: IntOrString.fromNumber(8000), protocol: "TCP" }],
-        },
+        // Allow blackbox-exporter's in-cluster health probe
+        blackboxProbeIngressRule(8000),
       ],
       egress: [
-        {
-          // Allow DNS
-          to: [
-            {
-              namespaceSelector: {},
-              podSelector: {
-                matchLabels: {
-                  "k8s-app": "kube-dns",
-                },
-              },
-            },
-          ],
-          ports: [
-            { port: IntOrString.fromNumber(53), protocol: "UDP" },
-            { port: IntOrString.fromNumber(53), protocol: "TCP" },
-          ],
-        },
-        {
-          // Allow PostgreSQL within namespace
-          to: [
-            {
-              podSelector: {
-                matchLabels: postgresClusterPodLabels("bugsink-postgresql"),
-              },
-            },
-          ],
-          ports: [{ port: IntOrString.fromNumber(5432), protocol: "TCP" }],
-        },
+        // Allow DNS
+        dnsEgressRule(),
+        // Allow PostgreSQL within namespace
+        postgresEgress("bugsink-postgresql"),
         {
           // Allow Postal SMTP in postal namespace
           to: [
             {
-              namespaceSelector: {
-                matchLabels: {
-                  "kubernetes.io/metadata.name": "postal",
-                },
-              },
+              ...nsPeer("postal"),
               podSelector: {
                 matchLabels: {
                   app: "postal-smtp",
@@ -424,7 +378,7 @@ export function createBugsinkDeployment(chart: Chart) {
               },
             },
           ],
-          ports: [{ port: IntOrString.fromNumber(25), protocol: "TCP" }],
+          ports: [tcp(25)],
         },
       ],
     },

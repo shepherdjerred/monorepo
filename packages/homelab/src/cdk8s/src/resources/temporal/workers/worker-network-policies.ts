@@ -4,7 +4,15 @@ import {
   KubeNetworkPolicy,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { createTemporalScoutBetaNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/scout-beta-network.ts";
-import { dnsEgressRule } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
+import {
+  dnsEgressRule,
+  nsPeer,
+  tcp,
+  cloudflareTunnelIngressRule,
+  fliptEgress,
+  otlpEgress,
+  prometheusIngressRule,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import {
   ALERTMANAGER_GATEWAY_PORT,
   PROMETHEUS_GATEWAY_PORT,
@@ -20,53 +28,28 @@ export function monitoringEgress(
   port: typeof PROMETHEUS_GATEWAY_PORT | typeof ALERTMANAGER_GATEWAY_PORT,
 ) {
   return {
-    to: [
-      {
-        namespaceSelector: {
-          matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
-        },
-      },
-    ],
-    ports: [{ port: IntOrString.fromNumber(port), protocol: "TCP" }],
+    to: [nsPeer("prometheus")],
+    ports: [tcp(port)],
   };
 }
 
 export function metricsIngress(ports: readonly number[]) {
-  return [
-    {
-      from: [
-        {
-          namespaceSelector: {
-            matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
-          },
-        },
-      ],
-      ports: ports.map((port) => ({
-        port: IntOrString.fromNumber(port),
-        protocol: "TCP",
-      })),
-    },
-  ];
+  return [prometheusIngressRule(ports)];
 }
 
 function temporalServerEgress() {
   return {
     to: [{ podSelector: { matchLabels: { app: "temporal-server" } } }],
-    ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
+    ports: [tcp(7233)],
   };
 }
 
-function fliptEgress() {
+function fliptPodEgress() {
   return {
     to: [
-      {
-        namespaceSelector: {
-          matchLabels: { "kubernetes.io/metadata.name": "flipt" },
-        },
-        podSelector: { matchLabels: { app: "flipt" } },
-      },
+      { ...nsPeer("flipt"), podSelector: { matchLabels: { app: "flipt" } } },
     ],
-    ports: [{ port: IntOrString.fromNumber(8080), protocol: "TCP" }],
+    ports: [tcp(8080)],
   };
 }
 
@@ -107,7 +90,7 @@ function createTemporalWorkersFliptEgressPolicy(chart: Chart): void {
         ],
       },
       policyTypes: ["Egress"],
-      egress: [fliptEgress()],
+      egress: [fliptPodEgress()],
     },
   });
 }
@@ -137,9 +120,7 @@ function createTemporalWorkersSeaweedfsEgressPolicy(chart: Chart): void {
         {
           to: [
             {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "seaweedfs" },
-              },
+              ...nsPeer("seaweedfs"),
               podSelector: {
                 matchLabels: {
                   "app.kubernetes.io/name": "seaweedfs",
@@ -149,7 +130,7 @@ function createTemporalWorkersSeaweedfsEgressPolicy(chart: Chart): void {
               },
             },
           ],
-          ports: [{ port: IntOrString.fromNumber(8333), protocol: "TCP" }],
+          ports: [tcp(8333)],
         },
       ],
     },
@@ -169,17 +150,8 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
       egress: [
         dnsEgressRule(),
         temporalServerEgress(),
-        fliptEgress(),
-        {
-          to: [
-            {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "alloy-gateway" },
-              },
-            },
-          ],
-          ports: [{ port: IntOrString.fromNumber(4318), protocol: "TCP" }],
-        },
+        fliptPodEgress(),
+        otlpEgress(),
       ],
     },
   });
@@ -204,8 +176,8 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
         egress: [
           dnsEgressRule(),
           temporalServerEgress(),
-          { ports: [{ port: IntOrString.fromNumber(443), protocol: "TCP" }] },
-          { ports: [{ port: IntOrString.fromNumber(4318), protocol: "TCP" }] },
+          { ports: [tcp(443)] },
+          { ports: [tcp(4318)] },
         ],
       },
     });
@@ -216,25 +188,7 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
     spec: {
       podSelector: { matchLabels: { component: "gateway" } },
       policyTypes: ["Ingress", "Egress"],
-      ingress: [
-        {
-          from: [
-            {
-              namespaceSelector: {
-                matchLabels: {
-                  "kubernetes.io/metadata.name": "cloudflare-tunnel",
-                },
-              },
-            },
-          ],
-          ports: [
-            { port: IntOrString.fromNumber(9466), protocol: "TCP" },
-            { port: IntOrString.fromNumber(9467), protocol: "TCP" },
-            { port: IntOrString.fromNumber(9468), protocol: "TCP" },
-            { port: IntOrString.fromNumber(9469), protocol: "TCP" },
-          ],
-        },
-      ],
+      ingress: [cloudflareTunnelIngressRule([9466, 9467, 9468, 9469])],
       egress: [monitoringEgress(ALERTMANAGER_GATEWAY_PORT)],
     },
   });
@@ -245,7 +199,7 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
       podSelector: { matchLabels: { component: "reports-worker" } },
       policyTypes: ["Egress"],
       egress: [
-        { ports: [{ port: IntOrString.fromNumber(5000), protocol: "TCP" }] },
+        { ports: [tcp(5000)] },
         monitoringEgress(ALERTMANAGER_GATEWAY_PORT),
       ],
     },
@@ -265,18 +219,7 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
     spec: {
       podSelector: { matchLabels: { component: "repo-worker" } },
       policyTypes: ["Egress"],
-      egress: [
-        {
-          to: [
-            {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "flipt" },
-              },
-            },
-          ],
-          ports: [{ port: IntOrString.fromNumber(8080), protocol: "TCP" }],
-        },
-      ],
+      egress: [fliptEgress()],
     },
   });
 
@@ -289,26 +232,22 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
       podSelector: { matchLabels: { component: "infra-worker" } },
       policyTypes: ["Egress"],
       egress: [
-        { ports: [{ port: IntOrString.fromNumber(6443), protocol: "TCP" }] },
+        { ports: [tcp(6443)] },
         monitoringEgress(PROMETHEUS_GATEWAY_PORT),
-        { ports: [{ port: IntOrString.fromNumber(7341), protocol: "TCP" }] },
+        { ports: [tcp(7341)] },
         {
           to: [
             {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "tracker" },
-              },
+              ...nsPeer("tracker"),
               podSelector: { matchLabels: { app: "tracker" } },
             },
           ],
-          ports: [{ port: IntOrString.fromNumber(7351), protocol: "TCP" }],
+          ports: [tcp(7351)],
         },
         {
           to: [
             {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
-              },
+              ...nsPeer("prometheus"),
               podSelector: {
                 matchLabels: {
                   "app.kubernetes.io/name": "grafana",
@@ -322,24 +261,12 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
         },
         monitoringEgress(ALERTMANAGER_GATEWAY_PORT),
         {
-          to: [
-            {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "loki" },
-              },
-            },
-          ],
-          ports: [{ port: IntOrString.fromNumber(3100), protocol: "TCP" }],
+          to: [nsPeer("loki")],
+          ports: [tcp(3100)],
         },
         {
-          to: [
-            {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "tempo" },
-              },
-            },
-          ],
-          ports: [{ port: IntOrString.fromNumber(3200), protocol: "TCP" }],
+          to: [nsPeer("tempo")],
+          ports: [tcp(3200)],
         },
       ],
     },
@@ -354,15 +281,11 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
         {
           to: [
             {
-              namespaceSelector: {
-                matchLabels: {
-                  "kubernetes.io/metadata.name": "freshrss",
-                },
-              },
+              ...nsPeer("freshrss"),
               podSelector: { matchLabels: { app: "freshrss" } },
             },
           ],
-          ports: [{ port: IntOrString.fromNumber(80), protocol: "TCP" }],
+          ports: [tcp(80)],
         },
       ],
     },

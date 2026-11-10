@@ -21,6 +21,11 @@ import {
 import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
 import { createSeaweedfsBackup } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/storage/seaweedfs-backup.ts";
+import {
+  nsPeer,
+  tailscaleIngressRule,
+  prometheusIngressRule,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 
 const FILER_UPSTREAM_PORT = 8888;
 const FILER_GATEWAY_PORT = 8889;
@@ -182,51 +187,13 @@ export function createSeaweedfsResources(chart: Chart): void {
         {
           // SeaweedFS master, volume, S3, and Filer pods retain their existing
           // internal protocol access, including raw HTTP and gRPC.
-          from: [
-            {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "seaweedfs" },
-              },
-            },
-          ],
+          from: [nsPeer("seaweedfs")],
         },
-        {
-          // Tailscale can reach only the authenticated UI gateway.
-          from: [
-            {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "tailscale" },
-              },
-            },
-          ],
-          ports: [
-            {
-              port: IntOrString.fromNumber(FILER_GATEWAY_PORT),
-              protocol: "TCP",
-            },
-          ],
-        },
-        {
-          // Prometheus retains metrics access and probes the public health
-          // path on the same authenticated gateway used by Tailscale.
-          from: [
-            {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
-              },
-            },
-          ],
-          ports: [
-            {
-              port: IntOrString.fromNumber(9327),
-              protocol: "TCP",
-            },
-            {
-              port: IntOrString.fromNumber(FILER_GATEWAY_PORT),
-              protocol: "TCP",
-            },
-          ],
-        },
+        // Tailscale can reach only the authenticated UI gateway.
+        tailscaleIngressRule([FILER_GATEWAY_PORT]),
+        // Prometheus retains metrics access and probes the public health
+        // path on the same authenticated gateway used by Tailscale.
+        prometheusIngressRule([9327, FILER_GATEWAY_PORT]),
       ],
     },
   });

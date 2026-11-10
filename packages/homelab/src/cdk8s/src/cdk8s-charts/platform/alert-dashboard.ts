@@ -6,16 +6,19 @@ import {
   KubeNetworkPolicy,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { createAlertDashboardDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/alert-dashboard/index.ts";
-import { FLIPT_PORT } from "@shepherdjerred/homelab/cdk8s/src/resources/flipt/index.ts";
 import {
   ALERTMANAGER_GATEWAY_PORT,
   PROMETHEUS_GATEWAY_PORT,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/monitoring-auth-gateways.ts";
-
-const tcp = (port: number) => ({
-  port: IntOrString.fromNumber(port),
-  protocol: "TCP",
-});
+import {
+  nsPeer,
+  tcp,
+  tailscaleIngressRule,
+  fliptEgress,
+  otlpEgress,
+  prometheusIngressRule,
+  dnsEgressRule,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 
 export function createAlertDashboardChart(app: App) {
   const chart = new Chart(app, "alert-dashboard", {
@@ -34,41 +37,10 @@ export function createAlertDashboardChart(app: App) {
       podSelector: appSelector,
       policyTypes: ["Ingress", "Egress"],
       ingress: [
+        tailscaleIngressRule([7341]),
+        prometheusIngressRule([7341]),
         {
-          from: [
-            {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "tailscale" },
-              },
-            },
-          ],
-          ports: [tcp(7341)],
-        },
-        {
-          from: [
-            {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
-              },
-            },
-          ],
-          ports: [tcp(7341)],
-        },
-        {
-          from: [
-            {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "temporal" },
-              },
-            },
-            {
-              namespaceSelector: {
-                matchLabels: {
-                  "kubernetes.io/metadata.name": "trmnl-dashboard",
-                },
-              },
-            },
-          ],
+          from: [nsPeer("temporal"), nsPeer("trmnl-dashboard")],
           ports: [tcp(7341)],
         },
       ],
@@ -76,34 +48,15 @@ export function createAlertDashboardChart(app: App) {
         {
           to: [
             {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "temporal" },
-              },
+              ...nsPeer("temporal"),
               podSelector: { matchLabels: { component: "promotion-worker" } },
             },
           ],
           ports: [tcp(7343)],
         },
+        dnsEgressRule(),
         {
-          to: [
-            {
-              namespaceSelector: {},
-              podSelector: { matchLabels: { "k8s-app": "kube-dns" } },
-            },
-          ],
-          ports: [
-            { port: IntOrString.fromNumber(53), protocol: "UDP" },
-            tcp(53),
-          ],
-        },
-        {
-          to: [
-            {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
-              },
-            },
-          ],
+          to: [nsPeer("prometheus")],
           // Grafana, Alertmanager, and the ops series presets proxied from
           // Prometheus. NetworkPolicy matches the destination pod port, not
           // the Service's 80, 9090 or 9093: Grafana's named backend and the
@@ -114,36 +67,12 @@ export function createAlertDashboardChart(app: App) {
             tcp(ALERTMANAGER_GATEWAY_PORT),
           ],
         },
+        fliptEgress(),
         {
-          to: [
-            {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "flipt" },
-              },
-            },
-          ],
-          ports: [tcp(FLIPT_PORT)],
-        },
-        {
-          to: [
-            {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "postal" },
-              },
-            },
-          ],
+          to: [nsPeer("postal")],
           ports: [tcp(5000)],
         },
-        {
-          to: [
-            {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "alloy-gateway" },
-              },
-            },
-          ],
-          ports: [tcp(4318)],
-        },
+        otlpEgress(),
       ],
     },
   });

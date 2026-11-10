@@ -1,15 +1,18 @@
 import type { App } from "cdk8s";
 import { Chart } from "cdk8s";
 import { Namespace } from "cdk8s-plus-31";
-import {
-  IntOrString,
-  KubeNetworkPolicy,
-} from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import { KubeNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import {
   createTrmnlDashboardDeployment,
   trmnlDashboardPorts,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/trmnl-dashboard/index.ts";
-import { dnsEgressRule } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
+import {
+  dnsEgressRule,
+  nsPeer,
+  tcp,
+  cloudflareTunnelIngressRule,
+  blackboxProbeIngressRule,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 
 export function createTrmnlDashboardChart(app: App) {
   const chart = new Chart(app, "trmnl-dashboard", {
@@ -31,29 +34,9 @@ export function createTrmnlDashboardChart(app: App) {
       podSelector: {},
       policyTypes: ["Ingress"],
       ingress: [
-        {
-          from: [
-            {
-              namespaceSelector: {
-                matchLabels: {
-                  "kubernetes.io/metadata.name": "cloudflare-tunnel",
-                },
-              },
-            },
-          ],
-          ports: [{ port: IntOrString.fromNumber(3000), protocol: "TCP" }],
-        },
-        {
-          // Allow blackbox-exporter's in-cluster health probe
-          from: [
-            {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
-              },
-            },
-          ],
-          ports: [{ port: IntOrString.fromNumber(3000), protocol: "TCP" }],
-        },
+        cloudflareTunnelIngressRule([3000]),
+        // Allow blackbox-exporter's in-cluster health probe
+        blackboxProbeIngressRule(3000),
       ],
     },
   });
@@ -71,16 +54,8 @@ export function createTrmnlDashboardChart(app: App) {
         },
         {
           // The ops snapshot behind /api/homelab.
-          to: [
-            {
-              namespaceSelector: {
-                matchLabels: {
-                  "kubernetes.io/metadata.name": "alert-dashboard",
-                },
-              },
-            },
-          ],
-          ports: [{ port: IntOrString.fromNumber(7341), protocol: "TCP" }],
+          to: [nsPeer("alert-dashboard")],
+          ports: [tcp(7341)],
         },
       ],
     },

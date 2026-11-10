@@ -18,10 +18,14 @@ import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src
 import { createUnifiedMediaApplication } from "@shepherdjerred/homelab/cdk8s/src/resources/media/application/index.ts";
 import { mediaImageReference } from "@shepherdjerred/homelab/cdk8s/src/resources/media/application/image.ts";
 import { MEDIA_APPLICATION_LABEL } from "@shepherdjerred/homelab/cdk8s/src/resources/media/application/environment.ts";
+import { KubeNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import {
-  IntOrString,
-  KubeNetworkPolicy,
-} from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+  nsPeer,
+  tcp,
+  tailscaleIngressRule,
+  cloudflareTunnelIngressRule,
+  intraNamespaceRule,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 
 export async function createMediaChart(app: App, applicationImage?: string) {
   const mediaImage = mediaImageReference(applicationImage);
@@ -118,56 +122,28 @@ export async function createMediaChart(app: App, applicationImage?: string) {
       policyTypes: ["Ingress"],
       ingress: [
         // Allow from Tailscale (private access)
-        {
-          from: [
-            {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "tailscale" },
-              },
-            },
-          ],
-        },
+        tailscaleIngressRule(),
         // Allow from Cloudflare tunnel (public access for Plex, Seerr, Streambot)
-        {
-          from: [
-            {
-              namespaceSelector: {
-                matchLabels: {
-                  "kubernetes.io/metadata.name": "cloudflare-tunnel",
-                },
-              },
-            },
-          ],
-        },
+        cloudflareTunnelIngressRule(),
         // Allow all intra-namespace communication
         // Media services are highly interconnected: sonarr<->radarr<->prowlarr<->qbittorrent<->bazarr<->plex<->seerr<->maintainerr
-        {
-          from: [{ podSelector: {} }],
-        },
+        intraNamespaceRule(),
         // Allow Prometheus scraping from monitoring namespace
         {
-          from: [
-            {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
-              },
-            },
-          ],
+          from: [nsPeer("prometheus")],
         },
         {
           // Kometa runs in the Woodpecker-owned Temporal maintenance worker and
           // only needs Plex's HTTP API.
           from: [
             {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "woodpecker-ci" },
-              },
+              ...nsPeer("woodpecker-ci"),
               podSelector: {
                 matchLabels: { app: "temporal-maintenance-worker" },
               },
             },
           ],
-          ports: [{ port: IntOrString.fromNumber(32_400), protocol: "TCP" }],
+          ports: [tcp(32_400)],
         },
       ],
     },

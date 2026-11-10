@@ -10,10 +10,7 @@ import {
   Secret,
   Service,
 } from "cdk8s-plus-31";
-import {
-  IntOrString,
-  KubeNetworkPolicy,
-} from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import { KubeNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import {
   setRevisionHistoryLimit,
   withCommonProps,
@@ -28,6 +25,12 @@ import {
   CONFIG_EXTENSION_APP_LABEL,
   CONFIG_EXTENSION_PORT,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/woodpecker/config-extension.ts";
+import {
+  tcp,
+  dnsEgressRule,
+  externalHttpsEgressRule,
+  nsPeer,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 
 /**
  * The service that generates every build's pipeline.
@@ -124,46 +127,25 @@ export function createWoodpeckerConfigExtension(chart: Chart): void {
           from: [
             { podSelector: { matchLabels: { app: "woodpecker-server" } } },
           ],
-          ports: [
-            {
-              port: IntOrString.fromNumber(CONFIG_EXTENSION_PORT),
-              protocol: "TCP",
-            },
-          ],
+          ports: [tcp(CONFIG_EXTENSION_PORT)],
         },
       ],
       egress: [
         {
           to: [
             {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "flipt" },
-              },
+              ...nsPeer("flipt"),
               podSelector: { matchLabels: { app: "flipt" } },
             },
           ],
-          ports: [{ port: IntOrString.fromNumber(8080), protocol: "TCP" }],
+          ports: [tcp(8080)],
         },
-        {
-          to: [
-            {
-              namespaceSelector: {},
-              podSelector: { matchLabels: { "k8s-app": "kube-dns" } },
-            },
-          ],
-          ports: [
-            { port: IntOrString.fromNumber(53), protocol: "UDP" },
-            { port: IntOrString.fromNumber(53), protocol: "TCP" },
-          ],
-        },
-        {
-          // The server's own API (to resolve the last green commit) and
-          // raw.githubusercontent.com (to read the committed image digests at
-          // the commit being built). Both are HTTPS on the public internet;
-          // GitHub's ranges change, so a CIDR list would silently rot.
-          to: [{ ipBlock: { cidr: "0.0.0.0/0" } }],
-          ports: [{ port: IntOrString.fromNumber(443), protocol: "TCP" }],
-        },
+        dnsEgressRule(),
+        // The server's own API (to resolve the last green commit) and
+        // raw.githubusercontent.com (to read the committed image digests at
+        // the commit being built). Both are HTTPS on the public internet;
+        // GitHub's ranges change, so a CIDR list would silently rot.
+        externalHttpsEgressRule(),
       ],
     },
   });

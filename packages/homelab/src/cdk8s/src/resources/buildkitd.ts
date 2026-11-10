@@ -15,10 +15,7 @@ import {
   Service,
   Volume,
 } from "cdk8s-plus-31";
-import {
-  KubeNetworkPolicy,
-  IntOrString,
-} from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import { KubeNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import {
   setRevisionHistoryLimit,
   withCommonProps,
@@ -30,6 +27,11 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { WOODPECKER_CI_NAMESPACE } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/ci/woodpecker-credentials.ts";
+import {
+  nsPeer,
+  tcp,
+  prometheusIngressRule,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 
 // Plaintext gRPC port. BuildKit serves the build API here; the buildx `remote`
 // driver in CI connects to it in-cluster. No TLS/mTLS: the endpoint is a
@@ -250,30 +252,11 @@ export function createBuildkitdDeployment(chart: Chart) {
       policyTypes: ["Ingress"],
       ingress: [
         {
-          from: [
-            {
-              namespaceSelector: {
-                matchLabels: {
-                  "kubernetes.io/metadata.name": WOODPECKER_CI_NAMESPACE,
-                },
-              },
-            },
-          ],
-          ports: [{ port: IntOrString.fromNumber(PORT), protocol: "TCP" }],
+          from: [nsPeer(WOODPECKER_CI_NAMESPACE)],
+          ports: [tcp(PORT)],
         },
-        {
-          // Prometheus scrapes the debug endpoint (/metrics, pprof) only.
-          from: [
-            {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
-              },
-            },
-          ],
-          ports: [
-            { port: IntOrString.fromNumber(DEBUG_PORT), protocol: "TCP" },
-          ],
-        },
+        // Prometheus scrapes the debug endpoint (/metrics, pprof) only.
+        prometheusIngressRule([DEBUG_PORT]),
       ],
     },
   });

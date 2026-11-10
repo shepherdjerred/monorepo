@@ -1,13 +1,17 @@
 import type { App } from "cdk8s";
 import { Chart } from "cdk8s";
 import { Namespace } from "cdk8s-plus-31";
-import {
-  KubeNetworkPolicy,
-  IntOrString,
-} from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import { KubeNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { createBirmelDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/birmel/index.ts";
-import { FLIPT_PORT } from "@shepherdjerred/homelab/cdk8s/src/resources/flipt/index.ts";
-import { dnsEgressRule } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
+import {
+  dnsEgressRule,
+  nsPeer,
+  tcp,
+  fliptEgress,
+  otlpEgress,
+  prometheusIngressRule,
+  externalHttpsEgressRule,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 
 export function createBirmelChart(app: App) {
   const chart = new Chart(app, "birmel", {
@@ -38,16 +42,7 @@ export function createBirmelChart(app: App) {
       ingress: [
         // Allow Prometheus to scrape the health service metrics, without
         // opening other pod ports to the monitoring namespace.
-        {
-          from: [
-            {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
-              },
-            },
-          ],
-          ports: [{ port: IntOrString.fromNumber(8080), protocol: "TCP" }],
-        },
+        prometheusIngressRule([8080]),
       ],
     },
   });
@@ -62,46 +57,17 @@ export function createBirmelChart(app: App) {
         // DNS
         dnsEgressRule(),
         // OTLP trace gateway (alloy-gateway.alloy-gateway.svc.cluster.local:4318)
-        {
-          to: [
-            {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "alloy-gateway" },
-              },
-            },
-          ],
-          ports: [{ port: IntOrString.fromNumber(4318), protocol: "TCP" }],
-        },
+        otlpEgress(),
         // Flipt evaluation (flipt-flipt-service.flipt.svc.cluster.local:8080)
-        {
-          to: [
-            {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "flipt" },
-              },
-            },
-          ],
-          ports: [
-            { port: IntOrString.fromNumber(FLIPT_PORT), protocol: "TCP" },
-          ],
-        },
+        fliptEgress(),
         // PinchTab browser automation (pinchtab.pinchtab.svc.cluster.local:9867)
         {
-          to: [
-            {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "pinchtab" },
-              },
-            },
-          ],
-          ports: [{ port: IntOrString.fromNumber(9867), protocol: "TCP" }],
+          to: [nsPeer("pinchtab")],
+          ports: [tcp(9867)],
         },
         // External HTTPS (Discord, OpenAI, Anthropic, GitHub, and Bugsink via its
         // public bugsink.sjer.red DSN host)
-        {
-          to: [{ ipBlock: { cidr: "0.0.0.0/0" } }],
-          ports: [{ port: IntOrString.fromNumber(443), protocol: "TCP" }],
-        },
+        externalHttpsEgressRule(),
       ],
     },
   });

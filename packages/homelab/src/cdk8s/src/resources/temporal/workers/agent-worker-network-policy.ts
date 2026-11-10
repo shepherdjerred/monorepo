@@ -1,9 +1,13 @@
 import type { Chart } from "cdk8s";
+import { KubeNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import {
-  IntOrString,
-  KubeNetworkPolicy,
-} from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
-import { dnsEgressRule } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
+  dnsEgressRule,
+  nsPeer,
+  tcp,
+  otlpEgress,
+  seaweedfsEgress,
+  prometheusIngressRule,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import { PROMETHEUS_GATEWAY_PORT } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/monitoring-auth-gateways.ts";
 import { monitoringEgress } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/workers/worker-network-policies.ts";
 
@@ -20,23 +24,7 @@ export function createTemporalAgentWorkerNetworkPolicy(chart: Chart): void {
         matchLabels: { component: "agent-worker" },
       },
       policyTypes: ["Ingress", "Egress"],
-      ingress: [
-        {
-          from: [
-            {
-              namespaceSelector: {
-                matchLabels: {
-                  "kubernetes.io/metadata.name": "prometheus",
-                },
-              },
-            },
-          ],
-          ports: [
-            { port: IntOrString.fromNumber(9464), protocol: "TCP" },
-            { port: IntOrString.fromNumber(9465), protocol: "TCP" },
-          ],
-        },
-      ],
+      ingress: [prometheusIngressRule([9464, 9465])],
       egress: [
         dnsEgressRule(),
         {
@@ -47,50 +35,22 @@ export function createTemporalAgentWorkerNetworkPolicy(chart: Chart): void {
               },
             },
           ],
-          ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
+          ports: [tcp(7233)],
         },
         monitoringEgress(PROMETHEUS_GATEWAY_PORT),
         {
-          to: [
-            {
-              namespaceSelector: {
-                matchLabels: {
-                  "kubernetes.io/metadata.name": "alert-dashboard",
-                },
-              },
-            },
-          ],
-          ports: [{ port: IntOrString.fromNumber(7341), protocol: "TCP" }],
+          to: [nsPeer("alert-dashboard")],
+          ports: [tcp(7341)],
         },
-        {
-          to: [
-            {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "alloy-gateway" },
-              },
-            },
-          ],
-          ports: [{ port: IntOrString.fromNumber(4318), protocol: "TCP" }],
-        },
-        {
-          to: [
-            {
-              namespaceSelector: {
-                matchLabels: {
-                  "kubernetes.io/metadata.name": "seaweedfs",
-                },
-              },
-            },
-          ],
-          ports: [{ port: IntOrString.fromNumber(8333), protocol: "TCP" }],
-        },
+        otlpEgress(),
+        seaweedfsEgress(),
         // Flipt egress (8080, for temporalFeatureFlagEnvironment()'s
         // temporal-call-graph-tracing check) is granted by the shared
         // temporal-workers-flipt-egress policy in worker-network-policies.ts,
         // which already selects component=agent-worker.
         // Provider APIs, GitHub, registry metadata, and the Kubernetes API.
-        { ports: [{ port: IntOrString.fromNumber(443), protocol: "TCP" }] },
-        { ports: [{ port: IntOrString.fromNumber(6443), protocol: "TCP" }] },
+        { ports: [tcp(443)] },
+        { ports: [tcp(6443)] },
       ],
     },
   });
