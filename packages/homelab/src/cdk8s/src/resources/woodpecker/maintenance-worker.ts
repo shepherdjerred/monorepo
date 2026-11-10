@@ -27,7 +27,6 @@ import {
   withCommonProps,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { temporalFeatureFlagEnvironment } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/feature-flags.ts";
-import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
 import { WOODPECKER_CI_NAMESPACE } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/ci/woodpecker-credentials.ts";
 import { CI_MAINTENANCE_LOCAL_QUEUE } from "@shepherdjerred/homelab/cdk8s/src/resources/kueue-config.ts";
 import {
@@ -41,6 +40,7 @@ import {
   WOODPECKER_UV_CACHE_CLAIM,
   WOODPECKER_UV_CACHE_PATH,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/woodpecker/caches.ts";
+import { telemetryEnv } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
 
 /**
  * Temporal worker that maintains the CI caches in place.
@@ -371,9 +371,7 @@ export function createWoodpeckerMaintenanceWorker(chart: Chart): void {
         TEMPORAL_METRICS_ADDRESS: EnvValue.fromValue("0.0.0.0:9464"),
         TEMPORAL_WORKER_ROLE: EnvValue.fromValue("maintenance"),
         ENVIRONMENT: EnvValue.fromValue("production"),
-        TELEMETRY_ENABLED: EnvValue.fromValue("true"),
-        OTLP_ENDPOINT: EnvValue.fromValue(OTLP_GATEWAY_BASE_URL),
-        TELEMETRY_SERVICE_NAME: EnvValue.fromValue(WORKER_NAME),
+        ...telemetryEnv({ serviceName: WORKER_NAME }),
         HOME: EnvValue.fromValue("/tmp"),
         KOMETA_PLEXTOKEN_FILE: EnvValue.fromValue(
           "/run/secrets/kometa-plex/plex-token",

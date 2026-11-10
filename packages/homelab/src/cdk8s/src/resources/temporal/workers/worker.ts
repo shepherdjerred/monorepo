@@ -34,9 +34,13 @@ import {
   createTemporalWorkerServiceAccount,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/worker-rbac.ts";
 import { temporalFeatureFlagEnvironment } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/feature-flags.ts";
-import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
 import { llmArchiveEnvVars } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-archive-env.ts";
 import { createTemporalPromotionWorker } from "./promotion-worker.ts";
+import {
+  telemetryEnv,
+  bugsinkEnv,
+  seaweedfsS3,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
 
 export type CreateTemporalWorkerDeploymentProps = {
   serverServiceName: string;
@@ -214,9 +218,7 @@ export function createTemporalWorkerDeployment(
       AGENT_PROVIDER_UID: EnvValue.fromValue("1001"),
       ENVIRONMENT: EnvValue.fromValue("production"),
       DISABLE_AUTOUPDATER: EnvValue.fromValue("1"),
-      TELEMETRY_ENABLED: EnvValue.fromValue("true"),
-      OTLP_ENDPOINT: EnvValue.fromValue(OTLP_GATEWAY_BASE_URL),
-      TELEMETRY_SERVICE_NAME: EnvValue.fromValue("temporal-agent-worker"),
+      ...telemetryEnv({ serviceName: "temporal-agent-worker" }),
       ...llmArchiveEnvVars(),
       NODE_EXTRA_CA_CERTS: EnvValue.fromValue(
         "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt",
@@ -231,9 +233,7 @@ export function createTemporalWorkerDeployment(
         secret: agentCodexCredential,
         key: "CODEX_AUTH_JSON_B64",
       }),
-      S3_ENDPOINT: EnvValue.fromValue(
-        "http://seaweedfs-s3.seaweedfs.svc.cluster.local:8333",
-      ),
+      S3_ENDPOINT: EnvValue.fromValue(seaweedfsS3.endpoint),
       AWS_ACCESS_KEY_ID: EnvValue.fromSecretValue({
         secret,
         key: "AWS_ACCESS_KEY_ID",
@@ -268,9 +268,8 @@ export function createTemporalWorkerDeployment(
     TEMPORAL_NAMESPACE: EnvValue.fromValue("prod"),
     TEMPORAL_METRICS_ADDRESS: EnvValue.fromValue("0.0.0.0:9464"),
     ENVIRONMENT: EnvValue.fromValue("production"),
-    TELEMETRY_ENABLED: EnvValue.fromValue("true"),
-    OTLP_ENDPOINT: EnvValue.fromValue(OTLP_GATEWAY_BASE_URL),
-    BUGSINK_DSN: EnvValue.fromSecretValue({ secret, key: "BUGSINK_DSN" }),
+    ...telemetryEnv(),
+    ...bugsinkEnv(secret),
   };
   const { corpusDeployment, contextDeployment } = createTemporalGlitterWorkers(
     chart,

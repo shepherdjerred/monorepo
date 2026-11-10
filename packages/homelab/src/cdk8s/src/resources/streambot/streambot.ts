@@ -20,13 +20,17 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
-import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
 import { peerUserbotIds } from "@shepherdjerred/homelab/cdk8s/src/resources/userbot-ids.ts";
 import {
   createStreambotWeb,
   streambotWebProbes,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/streambot/web.ts";
+import {
+  fliptEnv,
+  telemetryEnv,
+  seaweedfsS3,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
 
 const STREAMBOT_UID = 1000;
 const STREAMBOT_GID = 1000;
@@ -104,14 +108,11 @@ export function createStreambotDeployment(
   // Mirror the shared SeaweedFS credentials into the media namespace. Voice
   // diagnostics use a private, lifecycle-managed bucket and never make the
   // audio part of logs or telemetry.
-  const seaweedfsItem = new OnePasswordItem(chart, "streambot-seaweedfs-1p", {
-    spec: {
-      itemPath: vaultItemPath("vet52jaeh75chsalu6lulugium"),
-    },
-    metadata: {
-      name: "streambot-seaweedfs-s3-credentials",
-    },
-  });
+  const seaweedfsItem = seaweedfsS3.item(
+    chart,
+    "streambot-seaweedfs-1p",
+    "streambot-seaweedfs-s3-credentials",
+  );
   const seaweedfsSecret = Secret.fromSecretName(
     chart,
     "streambot-seaweedfs-secret",
@@ -177,12 +178,11 @@ export function createStreambotDeployment(
         // detector excludes them from the "real viewers" count and leaves once the
         // last human exits. Sourced from the canonical map in resources/userbot-ids.ts.
         // Bootstrap for the flag client — cannot come from a flag.
-        FEATURE_FLAGS_MODE: EnvValue.fromValue("flipt"),
-        FLIPT_ENVIRONMENT: EnvValue.fromValue("prod"),
-        FLIPT_NAMESPACE: EnvValue.fromValue("streambot"),
-        FLIPT_URL: EnvValue.fromValue(
-          "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
-        ),
+        ...fliptEnv({
+          namespace: "streambot",
+          environment: "prod",
+          order: ["FLIPT_ENVIRONMENT", "FLIPT_NAMESPACE", "FLIPT_URL"],
+        }),
         PINCHTAB_BASE_URL: EnvValue.fromValue(
           "http://pinchtab.pinchtab.svc.cluster.local:9867",
         ),
@@ -210,22 +210,11 @@ export function createStreambotDeployment(
         VOICE_KWS_RUNTIME: EnvValue.fromValue("auto"),
         VOICE_CAPTURE_ENABLED: EnvValue.fromValue("true"),
         VOICE_CAPTURE_BUCKET: EnvValue.fromValue("streambot-voice-captures"),
-        S3_ENDPOINT: EnvValue.fromValue(
-          "http://seaweedfs-s3.seaweedfs.svc.cluster.local:8333",
-        ),
+        S3_ENDPOINT: EnvValue.fromValue(seaweedfsS3.endpoint),
         S3_FORCE_PATH_STYLE: EnvValue.fromValue("true"),
         AWS_REGION: EnvValue.fromValue("us-east-1"),
-        AWS_ACCESS_KEY_ID: EnvValue.fromSecretValue({
-          secret: seaweedfsSecret,
-          key: "SEAWEEDFS_ACCESS_KEY_ID",
-        }),
-        AWS_SECRET_ACCESS_KEY: EnvValue.fromSecretValue({
-          secret: seaweedfsSecret,
-          key: "SEAWEEDFS_SECRET_ACCESS_KEY",
-        }),
-        TELEMETRY_ENABLED: EnvValue.fromValue("true"),
-        TELEMETRY_SERVICE_NAME: EnvValue.fromValue("streambot"),
-        OTLP_ENDPOINT: EnvValue.fromValue(OTLP_GATEWAY_BASE_URL),
+        ...seaweedfsS3.credentialsEnv(seaweedfsSecret),
+        ...telemetryEnv({ serviceName: "streambot", serviceNameFirst: true }),
         LOKI_OTLP_ENDPOINT: EnvValue.fromValue(
           "http://loki-gateway.loki/otlp/v1/logs",
         ),

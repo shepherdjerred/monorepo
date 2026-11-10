@@ -23,13 +23,18 @@ import {
   addAnthropicFederation,
   geminiApiKeyEnv,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-provider-credentials.ts";
-import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
 import {
   NET_ADMIN_FIREWALL_RESOURCES,
   netAdminFirewallSecurityContext,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/net-admin-firewall.ts";
+import {
+  fliptEnv,
+  telemetryEnv,
+  bugsinkEnv,
+  seaweedfsS3,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
 
 export function createBirmelDeployment(chart: Chart) {
   const deployment = new Deployment(chart, "birmel", {
@@ -90,14 +95,11 @@ done`,
   // SEAWEEDFS_ACCESS_KEY_ID / SEAWEEDFS_SECRET_ACCESS_KEY pair — same item
   // used by s3-static-sites) into birmel's namespace so the LLM archive can
   // PUT to s3://llm-archive without crossing namespaces.
-  const seaweedfsCreds = new OnePasswordItem(chart, "birmel-seaweedfs-1p", {
-    spec: {
-      itemPath: vaultItemPath("vet52jaeh75chsalu6lulugium"),
-    },
-    metadata: {
-      name: "birmel-seaweedfs-s3-credentials",
-    },
-  });
+  const seaweedfsCreds = seaweedfsS3.item(
+    chart,
+    "birmel-seaweedfs-1p",
+    "birmel-seaweedfs-s3-credentials",
+  );
 
   // Shared "PinchTab" 1Password item synced into the birmel namespace so birmel
   // and the in-cluster pinchtab service (pinchtab namespace) share one bearer
@@ -179,12 +181,11 @@ done`,
         }),
 
         // Bootstrap for the flag client — these cannot come from a flag.
-        FEATURE_FLAGS_MODE: EnvValue.fromValue("flipt"),
-        FLIPT_ENVIRONMENT: EnvValue.fromValue("prod"),
-        FLIPT_NAMESPACE: EnvValue.fromValue("birmel"),
-        FLIPT_URL: EnvValue.fromValue(
-          "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
-        ),
+        ...fliptEnv({
+          namespace: "birmel",
+          environment: "prod",
+          order: ["FLIPT_ENVIRONMENT", "FLIPT_NAMESPACE", "FLIPT_URL"],
+        }),
         // Provider credentials for the LLM runtime, from Birmel's own OpenAI
         // project and the Gemini key the google stack minted. Anthropic
         // arrives through addAnthropicFederation below instead of a key.
@@ -211,44 +212,31 @@ done`,
         HEALTH_PORT: EnvValue.fromValue("8080"),
 
         // Telemetry configuration (OpenTelemetry)
-        TELEMETRY_ENABLED: EnvValue.fromValue("true"),
-        TELEMETRY_SERVICE_NAME: EnvValue.fromValue("birmel"),
-        OTLP_ENDPOINT: EnvValue.fromValue(OTLP_GATEWAY_BASE_URL),
+        ...telemetryEnv({ serviceName: "birmel", serviceNameFirst: true }),
 
         ...llmArchiveEnvVars(),
-        S3_ENDPOINT: EnvValue.fromValue(
-          "http://seaweedfs-s3.seaweedfs.svc.cluster.local:8333",
-        ),
+        S3_ENDPOINT: EnvValue.fromValue(seaweedfsS3.endpoint),
         S3_FORCE_PATH_STYLE: EnvValue.fromValue("true"),
-        AWS_ACCESS_KEY_ID: EnvValue.fromSecretValue({
-          secret: Secret.fromSecretName(
+        ...seaweedfsS3.credentialsEnv(
+          Secret.fromSecretName(
             chart,
             "birmel-aws-access-key-id",
             seaweedfsCreds.name,
           ),
-          key: "SEAWEEDFS_ACCESS_KEY_ID",
-        }),
-        AWS_SECRET_ACCESS_KEY: EnvValue.fromSecretValue({
-          secret: Secret.fromSecretName(
-            chart,
-            "birmel-aws-secret-access-key",
-            seaweedfsCreds.name,
-          ),
-          key: "SEAWEEDFS_SECRET_ACCESS_KEY",
-        }),
+        ),
 
         // Bugsink error reporting
-        BUGSINK_ENABLED: EnvValue.fromValue("true"),
-        BUGSINK_DSN: EnvValue.fromSecretValue({
-          secret: Secret.fromSecretName(
+        ...bugsinkEnv(
+          Secret.fromSecretName(
             chart,
             "birmel-bugsink-dsn-secret",
             onePasswordItem.name,
           ),
-          key: "BUGSINK_DSN",
-        }),
-        BUGSINK_ENVIRONMENT: EnvValue.fromValue("production"),
-        BUGSINK_RELEASE: EnvValue.fromValue(firstPartyImageRecipe("birmel")),
+          {
+            environment: "production",
+            release: firstPartyImageRecipe("birmel"),
+          },
+        ),
 
         // General configuration
         LOG_LEVEL: EnvValue.fromValue("info"),

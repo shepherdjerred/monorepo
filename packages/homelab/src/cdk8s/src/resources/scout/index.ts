@@ -28,7 +28,6 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/src/misc/selinux.ts";
 import { scoutAnalyticsConfiguration } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/analytics.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
-import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
 import {
   createScoutGatewayDeployment,
   SCOUT_DUCKDB_SCRATCH,
@@ -45,6 +44,12 @@ import {
   scoutTemporalMetricsEnv,
   scoutTemporalMetricsServicePort,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/temporal-metrics.ts";
+import {
+  telemetryEnv,
+  bugsinkEnv,
+  seaweedfsS3,
+  FLIPT_URL,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
 
 function requiredVoiceOpenAiSecret(secret: ISecret | undefined): ISecret {
   if (secret === undefined) {
@@ -232,21 +237,15 @@ export function createScoutDeployment(
       ),
       key: "AWS_SECRET_ACCESS_KEY",
     }),
-    AWS_ENDPOINT_URL: EnvValue.fromValue(
-      "http://seaweedfs-s3.seaweedfs.svc.cluster.local:8333",
-    ),
+    AWS_ENDPOINT_URL: EnvValue.fromValue(seaweedfsS3.endpoint),
     // S3_ENDPOINT mirrors AWS_ENDPOINT_URL for llm-observability + any other
     // tool that reads the SDK-style env var rather than the AWS-CLI one.
-    S3_ENDPOINT: EnvValue.fromValue(
-      "http://seaweedfs-s3.seaweedfs.svc.cluster.local:8333",
-    ),
+    S3_ENDPOINT: EnvValue.fromValue(seaweedfsS3.endpoint),
     S3_FORCE_PATH_STYLE: EnvValue.fromValue("true"),
     AWS_REGION: EnvValue.fromValue("us-east-1"),
     // OpenTelemetry → Tempo. The scout-backend tracing.ts bootstrap gates on
     // TELEMETRY_ENABLED.
-    TELEMETRY_ENABLED: EnvValue.fromValue("true"),
-    TELEMETRY_SERVICE_NAME: EnvValue.fromValue("scout-backend"),
-    OTLP_ENDPOINT: EnvValue.fromValue(OTLP_GATEWAY_BASE_URL),
+    ...telemetryEnv({ serviceName: "scout-backend", serviceNameFirst: true }),
     TEMPORAL_ADDRESS: EnvValue.fromValue(
       "temporal-temporal-server-service.temporal.svc.cluster.local:7233",
     ),
@@ -269,14 +268,9 @@ export function createScoutDeployment(
     }),
     S3_BUCKET_NAME: EnvValue.fromValue(s3BucketName),
     SUPPORT_BUCKET_NAME: EnvValue.fromValue(`scout-support-${stage}`),
-    BUGSINK_DSN: EnvValue.fromSecretValue({
-      secret: Secret.fromSecretName(
-        chart,
-        "bugsink-dsn-secret",
-        onePasswordItem.name,
-      ),
-      key: "BUGSINK_DSN",
-    }),
+    ...bugsinkEnv(
+      Secret.fromSecretName(chart, "bugsink-dsn-secret", onePasswordItem.name),
+    ),
     ENVIRONMENT: EnvValue.fromValue(stage),
     // Bootstrap for the flag client — these cannot come from a flag.
     FEATURE_FLAGS_MODE: EnvValue.fromValue("flipt"),
@@ -285,9 +279,7 @@ export function createScoutDeployment(
     TEMPORAL_NAMESPACE: EnvValue.fromValue(stage),
     // Scout owns and reconciles report schedules in its stage namespace.
     TEMPORAL_SCHEDULE_RECONCILIATION: EnvValue.fromValue("auto"),
-    FLIPT_URL: EnvValue.fromValue(
-      "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
-    ),
+    FLIPT_URL: EnvValue.fromValue(FLIPT_URL),
     POSTHOG_PROJECT_TOKEN: EnvValue.fromValue(analytics.projectToken),
     POSTHOG_API_HOST: EnvValue.fromValue(analytics.apiHost),
     POSTHOG_SITE_KEY: EnvValue.fromValue(analytics.siteKey),

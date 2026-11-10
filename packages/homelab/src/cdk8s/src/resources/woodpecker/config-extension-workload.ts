@@ -31,6 +31,7 @@ import {
   externalHttpsEgressRule,
   nsPeer,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
+import { fliptEnv } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
 
 /**
  * The service that generates every build's pipeline.
@@ -75,12 +76,11 @@ export function createWoodpeckerConfigExtension(chart: Chart): void {
       image: firstPartyImageRecipe("woodpecker-config-extension"),
       ports: [{ name: "http", number: CONFIG_EXTENSION_PORT }],
       envVariables: {
-        FEATURE_FLAGS_MODE: EnvValue.fromValue("flipt"),
-        FLIPT_URL: EnvValue.fromValue(
-          "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
-        ),
-        FLIPT_NAMESPACE: EnvValue.fromValue("woodpecker"),
-        FLIPT_ENVIRONMENT: EnvValue.fromValue("prod"),
+        ...fliptEnv({
+          namespace: "woodpecker",
+          environment: "prod",
+          order: ["FLIPT_URL", "FLIPT_NAMESPACE", "FLIPT_ENVIRONMENT"],
+        }),
         CI_GATE_IMAGE: EnvValue.fromValue(
           firstPartyImageRecipe("woodpecker-config-extension"),
         ),

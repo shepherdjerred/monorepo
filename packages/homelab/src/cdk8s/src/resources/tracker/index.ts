@@ -12,15 +12,17 @@ import {
   Service,
   Volume,
 } from "cdk8s-plus-31";
-import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import {
   withCommonProps,
   setRevisionHistoryLimit,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
-import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
+import {
+  fliptEnv,
+  seaweedfsS3,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
 
 function databaseUrl() {
   const protocol = "postgresql";
@@ -41,9 +43,7 @@ export function createTrackerDeployment(chart: Chart, image: string) {
     "tracker-pg",
     "tracker.tracker-postgresql.credentials.postgresql.acid.zalan.do",
   );
-  const s3Item = new OnePasswordItem(chart, "tracker-seaweedfs-1p", {
-    spec: { itemPath: vaultItemPath("vet52jaeh75chsalu6lulugium") },
-  });
+  const s3Item = seaweedfsS3.item(chart, "tracker-seaweedfs-1p");
   const s3 = Secret.fromSecretName(chart, "tracker-s3", s3Item.name);
   const dbEnv = {
     DB_USER: EnvValue.fromSecretValue({ secret: pg, key: "username" }),
@@ -116,25 +116,11 @@ export function createTrackerDeployment(chart: Chart, image: string) {
         HOST: EnvValue.fromValue("0.0.0.0"),
         PORT: EnvValue.fromValue("7351"),
         ENVIRONMENT: EnvValue.fromValue("production"),
-        S3_ENDPOINT: EnvValue.fromValue(
-          "http://seaweedfs-s3.seaweedfs.svc.cluster.local:8333",
-        ),
+        S3_ENDPOINT: EnvValue.fromValue(seaweedfsS3.endpoint),
         S3_BUCKET: EnvValue.fromValue("tracker-attachments"),
         S3_REGION: EnvValue.fromValue("us-east-1"),
-        AWS_ACCESS_KEY_ID: EnvValue.fromSecretValue({
-          secret: s3,
-          key: "SEAWEEDFS_ACCESS_KEY_ID",
-        }),
-        AWS_SECRET_ACCESS_KEY: EnvValue.fromSecretValue({
-          secret: s3,
-          key: "SEAWEEDFS_SECRET_ACCESS_KEY",
-        }),
-        FEATURE_FLAGS_MODE: EnvValue.fromValue("flipt"),
-        FLIPT_NAMESPACE: EnvValue.fromValue("tracker"),
-        FLIPT_ENVIRONMENT: EnvValue.fromValue("prod"),
-        FLIPT_URL: EnvValue.fromValue(
-          "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
-        ),
+        ...seaweedfsS3.credentialsEnv(s3),
+        ...fliptEnv({ namespace: "tracker", environment: "prod" }),
         OTEL_EXPORTER_OTLP_ENDPOINT: EnvValue.fromValue(OTLP_GATEWAY_BASE_URL),
       },
     }),

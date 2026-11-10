@@ -1,4 +1,5 @@
 import type { StaticSiteConfig } from "@shepherdjerred/homelab/cdk8s/src/misc/s3-static-site.ts";
+import { seaweedfsS3 } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
 
 /**
  * CSP for the Scout release bucket (`/`, `/app/`, and `/docs/`).
@@ -308,6 +309,5 @@ export const staticSites: StaticSiteConfig[] = [
 // depend on Cloudflare being up, and is a SigV4-behind-a-reverse-proxy hazard
 // (intermittent `SignatureDoesNotMatch` 403s → broken assets that need a refresh).
 // This matches the canonical internal endpoint used by scout/birmel/pokemon.
-export const S3_ENDPOINT =
-  "http://seaweedfs-s3.seaweedfs.svc.cluster.local:8333";
+export const S3_ENDPOINT = seaweedfsS3.endpoint;
 export const S3_CREDENTIALS_SECRET_NAME = "seaweedfs-s3-credentials";

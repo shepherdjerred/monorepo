@@ -23,6 +23,7 @@ import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailsca
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
 import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
+import { fliptEnv } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
 
 const IMAGE = firstPartyImageRecipe("alert-dashboard");
 
@@ -146,12 +147,11 @@ export function createAlertDashboardDeployment(chart: Chart) {
         PROMETHEUS_URL: EnvValue.fromValue(
           "http://prometheus-kube-prometheus-prometheus.prometheus:9090",
         ),
-        FEATURE_FLAGS_MODE: EnvValue.fromValue("flipt"),
-        FLIPT_NAMESPACE: EnvValue.fromValue("alert-dashboard"),
-        FLIPT_URL: EnvValue.fromValue(
-          "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
-        ),
-        FLIPT_ENVIRONMENT: EnvValue.fromValue("prod"),
+        ...fliptEnv({
+          namespace: "alert-dashboard",
+          environment: "prod",
+          order: ["FLIPT_NAMESPACE", "FLIPT_URL", "FLIPT_ENVIRONMENT"],
+        }),
         POSTAL_HOST: EnvValue.fromValue(
           "http://postal-postal-web-service.postal.svc.cluster.local:5000",
         ),

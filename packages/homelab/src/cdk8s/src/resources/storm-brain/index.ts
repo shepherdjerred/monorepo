@@ -21,6 +21,7 @@ import {
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
+import { fliptEnv } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
 
 export const BRAIN_PORT = 3000;
 export const BRAIN_METRICS_PORT = 9090;
@@ -72,12 +73,11 @@ export function createStormBrainDeployment(chart: Chart) {
           secret: brainSecretRef,
           key: "OPENAI_API_KEY",
         }),
-        FEATURE_FLAGS_MODE: EnvValue.fromValue("flipt"),
-        FLIPT_URL: EnvValue.fromValue(
-          "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
-        ),
-        FLIPT_NAMESPACE: EnvValue.fromValue("storm"),
-        FLIPT_ENVIRONMENT: EnvValue.fromValue("prod"),
+        ...fliptEnv({
+          namespace: "storm",
+          environment: "prod",
+          order: ["FLIPT_URL", "FLIPT_NAMESPACE", "FLIPT_ENVIRONMENT"],
+        }),
       },
       securityContext: {
         user: 1000,

@@ -17,11 +17,14 @@ import {
   tcp,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import { temporalFeatureFlagEnvironment } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/feature-flags.ts";
-import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
 import { llmArchiveEnvVars } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-archive-env.ts";
 import { codexApiKeyEnvVars } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-provider-credentials.ts";
 import { createTemporalAgentWorker } from "./agent-worker.ts";
 import promotionPolicy from "homelab/src/talos/seccomp/promotion-policy.json" with { type: "json" };
+import {
+  telemetryEnv,
+  seaweedfsS3,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
 
 export function createTemporalPromotionWorker(
   chart: Chart,
@@ -71,14 +74,10 @@ export function createTemporalPromotionWorker(
       TEMPORAL_METRICS_ADDRESS: EnvValue.fromValue("0.0.0.0:9464"),
       AGENT_PROVIDER_UID: EnvValue.fromValue("1001"),
       ENVIRONMENT: EnvValue.fromValue("production"),
-      TELEMETRY_ENABLED: EnvValue.fromValue("true"),
-      OTLP_ENDPOINT: EnvValue.fromValue(OTLP_GATEWAY_BASE_URL),
-      TELEMETRY_SERVICE_NAME: EnvValue.fromValue("temporal-promotion-worker"),
+      ...telemetryEnv({ serviceName: "temporal-promotion-worker" }),
       NODE_EXTRA_CA_CERTS: EnvValue.fromValue("/etc/kubernetes/ca.crt"),
       ...codexApiKeyEnvVars(props.temporalSecret),
-      S3_ENDPOINT: EnvValue.fromValue(
-        "http://seaweedfs-s3.seaweedfs.svc.cluster.local:8333",
-      ),
+      S3_ENDPOINT: EnvValue.fromValue(seaweedfsS3.endpoint),
       AWS_ACCESS_KEY_ID: EnvValue.fromSecretValue({
         secret: props.temporalSecret,
         key: "AWS_ACCESS_KEY_ID",

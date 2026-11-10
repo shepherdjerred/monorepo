@@ -12,26 +12,25 @@ import {
   Volume,
 } from "cdk8s-plus-31";
 import { KubeNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
-import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
 import {
   withCommonProps,
   setRevisionHistoryLimit,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
-import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import {
   cloudflareTunnelIngressRule,
   blackboxProbeIngressRule,
   seaweedfsEgress,
   dnsEgressRule,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
+import { seaweedfsS3 } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 // In-cluster SeaweedFS S3 gateway. relay-server runs in this cluster, so it
 // reaches SeaweedFS directly via the Kubernetes service — NOT the public
 // `https://seaweedfs.sjer.red` Cloudflare ingress (which would hairpin every
 // request). Same endpoint used by scout/birmel/pokemon/s3-static-sites.
-const S3_ENDPOINT = "http://seaweedfs-s3.seaweedfs.svc.cluster.local:8333";
+const S3_ENDPOINT = seaweedfsS3.endpoint;
 
 // Full relay.toml, mounted over the image default at /app/relay.toml.
 //
@@ -98,14 +97,11 @@ export function createRelayDeployment(chart: Chart) {
   // Shared SeaweedFS S3 credentials (item id vet52jaeh75chsalu6lulugium),
   // mirrored into the relay namespace. Fields: SEAWEEDFS_ACCESS_KEY_ID /
   // SEAWEEDFS_SECRET_ACCESS_KEY (remapped to AWS_* below).
-  const seaweedfsCreds = new OnePasswordItem(chart, "relay-seaweedfs-1p", {
-    spec: {
-      itemPath: vaultItemPath("vet52jaeh75chsalu6lulugium"),
-    },
-    metadata: {
-      name: "relay-seaweedfs-s3-credentials",
-    },
-  });
+  const seaweedfsCreds = seaweedfsS3.item(
+    chart,
+    "relay-seaweedfs-1p",
+    "relay-seaweedfs-s3-credentials",
+  );
 
   const config = new ConfigMap(chart, "relay-config", {
     data: { "relay.toml": RELAY_TOML },
@@ -145,22 +141,13 @@ export function createRelayDeployment(chart: Chart) {
         // Store config (endpoint/bucket/path-style) lives in relay.toml above;
         // only the S3 credentials + region come from env.
         AWS_REGION: EnvValue.fromValue("us-east-1"),
-        AWS_ACCESS_KEY_ID: EnvValue.fromSecretValue({
-          secret: Secret.fromSecretName(
+        ...seaweedfsS3.credentialsEnv(
+          Secret.fromSecretName(
             chart,
             "relay-aws-access-key-id",
             seaweedfsCreds.name,
           ),
-          key: "SEAWEEDFS_ACCESS_KEY_ID",
-        }),
-        AWS_SECRET_ACCESS_KEY: EnvValue.fromSecretValue({
-          secret: Secret.fromSecretName(
-            chart,
-            "relay-aws-secret-access-key",
-            seaweedfsCreds.name,
-          ),
-          key: "SEAWEEDFS_SECRET_ACCESS_KEY",
-        }),
+        ),
       },
       volumeMounts: [
         {

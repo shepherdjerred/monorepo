@@ -1,5 +1,8 @@
 import { EnvValue, type ISecret } from "cdk8s-plus-31";
-import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
+import {
+  telemetryEnv,
+  bugsinkEnv,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
 
 export type TemporalRuntimeRole =
   "billing" | "control" | "home" | "reports" | "infra" | "repo" | "scout";
@@ -16,9 +19,7 @@ export function temporalRuntimeEnv(
     TEMPORAL_METRICS_ADDRESS: EnvValue.fromValue("0.0.0.0:9464"),
     TEMPORAL_WORKER_ROLE: EnvValue.fromValue(role),
     ENVIRONMENT: EnvValue.fromValue("production"),
-    TELEMETRY_ENABLED: EnvValue.fromValue("true"),
-    OTLP_ENDPOINT: EnvValue.fromValue(OTLP_GATEWAY_BASE_URL),
-    TELEMETRY_SERVICE_NAME: EnvValue.fromValue(serviceName),
-    BUGSINK_DSN: EnvValue.fromSecretValue({ secret, key: "BUGSINK_DSN" }),
+    ...telemetryEnv({ serviceName }),
+    ...bugsinkEnv(secret),
   };
 }
