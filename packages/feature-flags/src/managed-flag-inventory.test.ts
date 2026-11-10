@@ -36,6 +36,61 @@ test.each(["beta", "prod"])(
   },
 );
 
+test.each(["beta", "prod"])(
+  "retires the removed Scout report action flag in %s",
+  (environment) => {
+    const key = "scout_support_report_action_enabled";
+    const flags = materializeManagedNamespaceEnvironment(
+      managedFlagInventory,
+      environment,
+      "scout",
+    );
+    expect(flags.some((flag) => flag.key === key)).toBe(false);
+    expect(retiredFlagDeclarations).toContainEqual({
+      environment,
+      namespace: "scout",
+      key,
+    });
+  },
+);
+
+const streambotMusicAndEsportsFlags = [
+  "streambot-music-catalog-enabled",
+  "streambot-spotify-links-enabled",
+  "streambot-playlists-enabled",
+  "streambot-lol-esports-enabled",
+  "streambot-lol-autoplay-enabled",
+];
+
+test.each(streambotMusicAndEsportsFlags)(
+  "keeps both beta Streambot guilds and global prod enablement for %s",
+  (key) => {
+    const beta = materializeManagedNamespaceEnvironment(
+      managedFlagInventory,
+      "beta",
+      "streambot",
+    ).find((flag) => flag.key === key);
+    if (beta?.type !== "boolean") throw new Error(`${key} missing in beta`);
+    expect(beta.default).toBe(false);
+    expect(beta.rollouts.map((rollout) => rollout.segmentKey)).toEqual([
+      "streambot-guild-1337623164146155593",
+      "streambot-guild-208425771172102144",
+    ]);
+    const prod = materializeManagedNamespaceEnvironment(
+      managedFlagInventory,
+      "prod",
+      "streambot",
+    ).find((flag) => flag.key === key);
+    expect(prod).toMatchObject({
+      type: "boolean",
+      default: true,
+      rollouts: [],
+      rules: [],
+      thresholdRollouts: [],
+    });
+  },
+);
+
 function inventory(overrides: unknown[] = []) {
   return {
     version: 3,

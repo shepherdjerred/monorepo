@@ -232,4 +232,16 @@ export const retiredFlagDeclarations = [
     namespace: "scout",
     key: "scout-betting-parlay-ai-model",
   },
+  // New match reports no longer carry feedback/help actions (reader removed in
+  // #4087). It was a base inventory flag, so it exists in both environments.
+  {
+    environment: "beta",
+    namespace: "scout",
+    key: "scout_support_report_action_enabled",
+  },
+  {
+    environment: "prod",
+    namespace: "scout",
+    key: "scout_support_report_action_enabled",
+  },
 ] as const;

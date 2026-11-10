@@ -242,6 +242,8 @@ test("only audited keys are retired, preserving managed targeting and other unkn
     "prod/scout/bucks_dares_enabled",
     "prod/scout/bucks_transfers_enabled",
     "prod/scout/scout-betting-parlay-ai-model",
+    "beta/scout/scout_support_report_action_enabled",
+    "prod/scout/scout_support_report_action_enabled",
   ]);
   const server = fakeServer();
   const managedBefore = structuredClone(

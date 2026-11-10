@@ -3159,6 +3159,20 @@
             }
           ],
           "result": true
+        },
+        {
+          "segmentKey": "streambot-guild-208425771172102144",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "server",
+              "operator": "eq",
+              "value": "208425771172102144"
+            }
+          ],
+          "result": true
         }
       ],
       "rules": [],
@@ -3195,6 +3209,20 @@
             }
           ],
           "result": true
+        },
+        {
+          "segmentKey": "streambot-guild-208425771172102144",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "server",
+              "operator": "eq",
+              "value": "208425771172102144"
+            }
+          ],
+          "result": true
         }
       ],
       "rules": [],
@@ -3228,6 +3256,20 @@
               "property": "server",
               "operator": "eq",
               "value": "1337623164146155593"
+            }
+          ],
+          "result": true
+        },
+        {
+          "segmentKey": "streambot-guild-208425771172102144",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "server",
+              "operator": "eq",
+              "value": "208425771172102144"
             }
           ],
           "result": true
@@ -3382,6 +3424,20 @@
             }
           ],
           "result": true
+        },
+        {
+          "segmentKey": "streambot-guild-208425771172102144",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "server",
+              "operator": "eq",
+              "value": "208425771172102144"
+            }
+          ],
+          "result": true
         }
       ],
       "rules": [],
@@ -3415,6 +3471,20 @@
               "property": "server",
               "operator": "eq",
               "value": "1337623164146155593"
+            }
+          ],
+          "result": true
+        },
+        {
+          "segmentKey": "streambot-guild-208425771172102144",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "server",
+              "operator": "eq",
+              "value": "208425771172102144"
             }
           ],
           "result": true
