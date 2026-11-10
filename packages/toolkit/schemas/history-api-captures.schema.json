@@ -216,6 +216,9 @@
                 "type": "null"
               }
             ]
+          },
+          "warmup": {
+            "type": "boolean"
           }
         },
         "required": [
@@ -239,7 +242,8 @@
           "blockCount",
           "newBlockCount",
           "contextComplete",
-          "previousCaptureId"
+          "previousCaptureId",
+          "warmup"
         ],
         "additionalProperties": false,
         "title": "HistoryApiCapture"

@@ -28,14 +28,15 @@
       },
       "context": {
         "systemBytes": 95,
-        "toolsBytes": 120,
+        "toolsBytes": 567,
         "historyBytes": 231,
         "newBytes": 251
       },
       "blockCount": 7,
       "newBlockCount": 3,
       "contextComplete": true,
-      "previousCaptureId": 4
+      "previousCaptureId": 4,
+      "warmup": false
     },
     {
       "id": 4,
@@ -63,14 +64,51 @@
       },
       "context": {
         "systemBytes": 95,
-        "toolsBytes": 120,
+        "toolsBytes": 567,
         "historyBytes": 0,
         "newBytes": 231
       },
       "blockCount": 4,
       "newBlockCount": 4,
       "contextComplete": true,
-      "previousCaptureId": 3
+      "previousCaptureId": null,
+      "warmup": false
+    },
+    {
+      "id": 3,
+      "cli": "codex",
+      "transport": "websocket",
+      "format": "openai-responses",
+      "host": "chatgpt.com",
+      "path": "/backend-api/codex/responses",
+      "sessionId": "01a1c37b-1894-7231-a7ae-e3d2da985034",
+      "cwd": null,
+      "startedAt": "2026-11-10T03:30:00.000Z",
+      "endedAt": "2026-11-10T03:30:03.000Z",
+      "durationMs": 3000,
+      "model": "gpt-6.1-sol",
+      "status": "ok",
+      "httpStatus": null,
+      "error": null,
+      "usage": {
+        "inputTokens": 2,
+        "outputTokens": 0,
+        "cacheReadTokens": 0,
+        "cacheCreationTokens": 0,
+        "cachedInputTokens": 0,
+        "reasoningTokens": 0
+      },
+      "context": {
+        "systemBytes": 0,
+        "toolsBytes": 0,
+        "historyBytes": 0,
+        "newBytes": 0
+      },
+      "blockCount": 0,
+      "newBlockCount": 0,
+      "contextComplete": true,
+      "previousCaptureId": null,
+      "warmup": true
     }
   ],
   "hasMore": true

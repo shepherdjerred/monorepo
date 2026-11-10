@@ -57,6 +57,7 @@ function createSchema(database: Database): void {
       new_bytes INTEGER NOT NULL DEFAULT 0,
       block_count INTEGER NOT NULL DEFAULT 0,
       new_block_count INTEGER NOT NULL DEFAULT 0,
+      warmup INTEGER NOT NULL DEFAULT 0,
       UNIQUE(flow_id, seq)
     );
     CREATE INDEX IF NOT EXISTS captures_session_idx ON captures(session_key, started_at);

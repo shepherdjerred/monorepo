@@ -235,8 +235,16 @@ export const HistoryApiCaptureSchema = z
     newBlockCount: z.number().int().nonnegative(),
     /** False when a chained request's parent was never captured. */
     contextComplete: z.boolean(),
-    /** The request this one is diffed against. */
+    /**
+     * The request this one is diffed against: the latest earlier non-warm-up
+     * request in the session sharing its conversation prefix.
+     */
     previousCaptureId: z.number().int().positive().nullable(),
+    /**
+     * A request that asked for no output (Codex's `generate: false`), sent to
+     * open a connection. Listed, but never a `previousCaptureId`.
+     */
+    warmup: z.boolean(),
   })
   .meta({ title: "HistoryApiCapture" });
 export type HistoryApiCapture = z.infer<typeof HistoryApiCaptureSchema>;
@@ -273,11 +281,26 @@ export const HistoryApiCapturePartSchema = z
       id: z.string().nullable(),
       response: z.unknown(),
     }),
-    z.strictObject({
-      type: z.literal("tool_definition"),
-      name: z.string(),
-      description: z.string().nullable(),
-    }),
+    z
+      .strictObject({
+        type: z.literal("tool_definition"),
+        name: z.string(),
+        /**
+         * The dotted path of the namespaces that grouped it, such as
+         * `functions` or `collaboration` for Codex; null at the top level.
+         */
+        namespace: z.string().nullable(),
+        description: z.string().nullable(),
+        /**
+         * The arguments' JSON Schema (`input_schema` or `parameters`), or a
+         * custom tool's grammar `format`; null when the tool declares none.
+         */
+        parameters: z.unknown(),
+      })
+      .meta({
+        description:
+          "One callable tool. Containers (Codex namespaces, Gemini functionDeclarations) are expanded into one part per tool.",
+      }),
     z.strictObject({ type: z.literal("other"), content: z.unknown() }),
   ])
   .meta({ title: "HistoryApiCapturePart" });
@@ -297,10 +320,20 @@ export const HistoryApiCaptureBlockSchema = z
      * `developer` messages and its tools as an `additional_tools` item.
      */
     category: z.enum(["system", "tools", "conversation"]),
-    index: z.number().int().nonnegative(),
+    index: z.number().int().nonnegative().meta({
+      description:
+        "Position in this section of the rebuilt context: the block's index in the detail's request.system, request.tools, or request.messages array. Inherited blocks count.",
+    }),
+    sentIndex: z.number().int().nonnegative().nullable().meta({
+      description:
+        "Position in the matching rawRequest array (system or instructions, tools, messages or input); null for an inherited block, which was not sent. When the wire field is a string rather than an array, 0 means the field itself.",
+    }),
     role: z.string().nullable(),
     bytes: z.number().int().nonnegative(),
-    /** Not sent in this request; rebuilt from the chained parent (Codex). */
+    /**
+     * Not sent in this request; rebuilt from the request it continues
+     * server-side (Codex `previous_response_id`, Claude `thread.continue`).
+     */
     inherited: z.boolean(),
     /** New relative to the previous request in the session. */
     isNew: z.boolean(),
@@ -320,11 +353,16 @@ export const HistoryApiCaptureDetailResponseSchema = z
   .strictObject({
     apiVersion: ApiVersionSchema,
     capture: HistoryApiCaptureSchema,
-    request: z.strictObject({
-      system: z.array(HistoryApiCaptureBlockSchema),
-      tools: z.array(HistoryApiCaptureBlockSchema),
-      messages: z.array(HistoryApiCaptureBlockSchema),
-    }),
+    request: z
+      .strictObject({
+        system: z.array(HistoryApiCaptureBlockSchema),
+        tools: z.array(HistoryApiCaptureBlockSchema),
+        messages: z.array(HistoryApiCaptureBlockSchema),
+      })
+      .meta({
+        description:
+          "The full context the model saw, by wire section, including blocks inherited from the request this one continues. A block's index is its position in its section array here.",
+      }),
     response: z
       .strictObject({
         text: z.string(),
@@ -341,8 +379,10 @@ export const HistoryApiCaptureDetailResponseSchema = z
       .nullable(),
     /** The blocks this request added over `previousCaptureId`, in order. */
     newBlocks: z.array(HistoryApiCaptureBlockSchema),
-    /** The request body as sent, rebuilt from its blocks; redacted. */
-    rawRequest: z.unknown(),
+    rawRequest: z.unknown().meta({
+      description:
+        "The request body exactly as sent on the wire (redacted), rebuilt from its sent blocks with the original key order. It never contains inherited blocks: a chained request's rawRequest holds only its incremental input, while `request` holds the full rebuilt context. A block's sentIndex locates it here. The unparsed body (JSON or text) for format `unknown`.",
+    }),
     /** The final response object (assembled from SSE or WebSocket events). */
     rawResponse: z.unknown(),
     /** A schema-less dump when the request body is protobuf, else null. */

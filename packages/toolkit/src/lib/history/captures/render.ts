@@ -32,7 +32,11 @@ export type CapturePart =
   | {
       readonly type: "tool_definition";
       readonly name: string;
+      /** The enclosing namespace path, such as `functions`; null at top level. */
+      readonly namespace: string | null;
       readonly description: string | null;
+      /** The argument JSON Schema, or a custom tool's grammar `format`. */
+      readonly parameters: unknown;
     }
   | { readonly type: "other"; readonly content: unknown };
 
@@ -83,18 +87,60 @@ function anthropicPart(value: unknown): CapturePart {
   }
 }
 
-function toolDefinition(value: unknown): CapturePart {
+const MAX_TOOL_NESTING = 4;
+
+function qualified(
+  namespace: string | null,
+  name: string | null,
+): string | null {
+  if (name === null) return namespace;
+  return namespace === null ? name : `${namespace}.${name}`;
+}
+
+/** The tools a container holds: a Codex namespace or a Gemini declaration list. */
+function nestedTools(tool: JsonRecord): readonly unknown[] | null {
+  return asArray(tool["tools"]) ?? asArray(tool["functionDeclarations"]);
+}
+
+/**
+ * One tool definition per callable tool. Containers are expanded: Codex
+ * groups its tools into `{ type: "namespace", name, tools }` (sent at the top
+ * level or inside an `additional_tools` item), and Gemini into
+ * `{ functionDeclarations }`. Anthropic (`input_schema`), OpenAI function
+ * (`parameters` or `function.parameters`), and custom grammar (`format`)
+ * tools each become one part.
+ */
+function toolDefinitions(
+  value: unknown,
+  namespace: string | null = null,
+  depth = 0,
+): CapturePart[] {
   const tool = asRecord(value) ?? {};
+  const nested = nestedTools(tool);
+  if (nested !== null && depth < MAX_TOOL_NESTING) {
+    const inner = qualified(namespace, asString(tool["name"]));
+    return nested.flatMap((entry) => toolDefinitions(entry, inner, depth + 1));
+  }
   const fn = asRecord(tool["function"]);
-  return {
-    type: "tool_definition",
-    name:
-      asString(fn?.["name"]) ??
-      asString(tool["name"]) ??
-      asString(tool["type"]) ??
-      "",
-    description: asString(fn?.["description"]) ?? asString(tool["description"]),
-  };
+  return [
+    {
+      type: "tool_definition",
+      name:
+        asString(fn?.["name"]) ??
+        asString(tool["name"]) ??
+        asString(tool["type"]) ??
+        "",
+      namespace,
+      description:
+        asString(fn?.["description"]) ?? asString(tool["description"]),
+      parameters:
+        fn?.["parameters"] ??
+        tool["parameters"] ??
+        tool["input_schema"] ??
+        tool["format"] ??
+        null,
+    },
+  ];
 }
 
 function responsesMessageParts(content: unknown): CapturePart[] {
@@ -122,8 +168,8 @@ function responsesItem(value: unknown): RenderedBlock {
     case "additional_tools":
       return {
         role,
-        parts: (asArray(item["tools"]) ?? []).map((tool) =>
-          toolDefinition(tool),
+        parts: (asArray(item["tools"]) ?? []).flatMap((tool) =>
+          toolDefinitions(tool),
         ),
       };
     case "reasoning":
@@ -226,8 +272,7 @@ export function renderBlock(
   section: BlockSection,
   value: unknown,
 ): RenderedBlock {
-  if (section === "tools")
-    return { role: null, parts: [toolDefinition(value)] };
+  if (section === "tools") return { role: null, parts: toolDefinitions(value) };
   if (section === "system")
     return { role: "system", parts: [anthropicPart(value)] };
   switch (format) {

@@ -137,8 +137,8 @@ const IdRowSchema = z.object({ id: z.number() });
  * (or connection) sharing the longest conversation prefix. Subagents and side
  * calls share a session id with the main loop but not its prefix, so they
  * never diff against it. A chained request's parent shares its whole prefix,
- * so it wins unless it is an empty warm-up (Codex's `generate: false`); a
- * resumed session's first request then diffs against the last turn instead.
+ * so it wins. Warm-ups (Codex's `generate: false`) are never candidates: a
+ * request chained from one diffs against the last real turn, or nothing.
  */
 export function choosePrevious(
   store: CaptureStore,
@@ -153,7 +153,7 @@ export function choosePrevious(
   const column = capture.sessionKey === null ? "connection_id" : "session_key";
   const candidates = store
     .all(
-      `SELECT id FROM captures WHERE ${column} = ? AND id != ? AND started_at <= ?
+      `SELECT id FROM captures WHERE ${column} = ? AND id != ? AND started_at <= ? AND warmup = 0
         ORDER BY started_at DESC, id DESC LIMIT ${String(PREVIOUS_CANDIDATES)}`,
       capture.sessionKey ?? capture.connectionId,
       capture.id,

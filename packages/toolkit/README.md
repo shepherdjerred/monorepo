@@ -1202,7 +1202,25 @@ bodies are kept whole. A request that continues a server-side response (Codex
 captures it continues. `/v1/captures?session=<id>` links captures to a history
 session by the CLI's session id (Claude `x-claude-code-session-id`, Codex
 `thread-id`) and falls back to CLI, time window, and working directory for
-captures without one. The record contract is
+captures without one.
+
+In `/v1/captures/<id>`, `request` is the full rebuilt context, inherited
+blocks included, and `rawRequest` is only what was sent on the wire. For a
+chained request, `rawRequest` holds just the incremental input.
+
+| Block field | Meaning                                                                                                                   |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `index`     | Position in its `request.system`, `request.tools`, or `request.messages` array, inherited blocks counted                  |
+| `sentIndex` | Position in the matching `rawRequest` array (`system`/`instructions`, `tools`, `messages`/`input`); `null` when inherited |
+| `inherited` | Rebuilt from the request this one continues, not sent                                                                     |
+| `isNew`     | Added over `previousCaptureId`                                                                                            |
+
+A capture with `warmup: true` asked for no output (Codex `generate: false`).
+It is listed but is never a `previousCaptureId`, so the request chained from
+it diffs against the last real turn. Tool definitions are one
+`tool_definition` part per callable tool, with `namespace`, `description`, and
+`parameters`. Codex namespaces and Gemini `functionDeclarations` are expanded.
+The record contract is
 [`schemas/brim-capture-flow.schema.json`](schemas/brim-capture-flow.schema.json);
 the API contracts are `schemas/history-api-captures*.schema.json`. The addon's
 pytest suite runs in CI as the `capture-addon` step of

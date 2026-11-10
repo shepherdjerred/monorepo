@@ -40,6 +40,7 @@ const CaptureRowSchema = z.object({
   new_block_count: z.number(),
   context_complete: z.number(),
   previous_capture_id: z.number().nullable(),
+  warmup: z.number(),
   stop_reason: z.string().nullable(),
   envelope_hash: z.string().nullable(),
   response_hash: z.string().nullable(),
@@ -94,6 +95,7 @@ function toCapture(row: CaptureRow): HistoryApiCapture {
     newBlockCount: row.new_block_count,
     contextComplete: row.context_complete === 1,
     previousCaptureId: row.previous_capture_id,
+    warmup: row.warmup === 1,
   };
 }
 
@@ -194,6 +196,11 @@ function detailBlocks(
     const index = positions.get(ref.section) ?? 0;
     positions.set(ref.section, index + 1);
     const value = store.blobJson(ref.hash);
+    // rawRequest is rebuilt from the sent blocks in order, so a sent block's
+    // position among its section's sent blocks is its index there.
+    const sentIndex = ref.inherited
+      ? null
+      : sent.filter((entry) => entry.section === ref.section).length;
     if (!ref.inherited) sent.push({ section: ref.section, value });
     const rendered = renderBlock(row.format, ref.section, value);
     return {
@@ -201,6 +208,7 @@ function detailBlocks(
       section: ref.section,
       category: ref.category,
       index,
+      sentIndex,
       role: rendered.role,
       bytes: ref.bytes,
       inherited: ref.inherited,

@@ -110,6 +110,11 @@ export type ParsedRequest = {
   readonly envelope: JsonRecord | null;
   /** The response this request continues server-side, if any. */
   readonly previousResponseId: string | null;
+  /**
+   * A request that asks for no output (Codex's `generate: false`), sent to
+   * open a connection and prime the server-side chain.
+   */
+  readonly warmup: boolean;
 };
 
 export function detectFormat(host: string, body: JsonRecord): CaptureFormat {
@@ -150,6 +155,7 @@ export function parseRequest(host: string, body: JsonRecord): ParsedRequest {
       blocks: [],
       envelope: null,
       previousResponseId: null,
+      warmup: false,
     };
   }
   const keys = SECTION_KEYS[format];
@@ -171,6 +177,7 @@ export function parseRequest(host: string, body: JsonRecord): ParsedRequest {
     blocks,
     envelope,
     previousResponseId: chainParent(body),
+    warmup: body["generate"] === false,
   };
 }
 

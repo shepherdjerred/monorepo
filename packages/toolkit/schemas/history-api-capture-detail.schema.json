@@ -197,6 +197,9 @@
               "type": "null"
             }
           ]
+        },
+        "warmup": {
+          "type": "boolean"
         }
       },
       "required": [
@@ -220,7 +223,8 @@
         "blockCount",
         "newBlockCount",
         "contextComplete",
-        "previousCaptureId"
+        "previousCaptureId",
+        "warmup"
       ],
       "additionalProperties": false,
       "title": "HistoryApiCapture"
@@ -247,7 +251,21 @@
               "index": {
                 "type": "integer",
                 "minimum": 0,
-                "maximum": 9007199254740991
+                "maximum": 9007199254740991,
+                "description": "Position in this section of the rebuilt context: the block's index in the detail's request.system, request.tools, or request.messages array. Inherited blocks count."
+              },
+              "sentIndex": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Position in the matching rawRequest array (system or instructions, tools, messages or input); null for an inherited block, which was not sent. When the wire field is a string rather than an array, 0 means the field itself."
               },
               "role": {
                 "type": ["string", "null"]
@@ -338,12 +356,23 @@
                         "name": {
                           "type": "string"
                         },
+                        "namespace": {
+                          "type": ["string", "null"]
+                        },
                         "description": {
                           "type": ["string", "null"]
-                        }
+                        },
+                        "parameters": {}
                       },
-                      "required": ["type", "name", "description"],
-                      "additionalProperties": false
+                      "required": [
+                        "type",
+                        "name",
+                        "namespace",
+                        "description",
+                        "parameters"
+                      ],
+                      "additionalProperties": false,
+                      "description": "One callable tool. Containers (Codex namespaces, Gemini functionDeclarations) are expanded into one part per tool."
                     },
                     {
                       "type": "object",
@@ -367,6 +396,7 @@
               "section",
               "category",
               "index",
+              "sentIndex",
               "role",
               "bytes",
               "inherited",
@@ -396,7 +426,21 @@
               "index": {
                 "type": "integer",
                 "minimum": 0,
-                "maximum": 9007199254740991
+                "maximum": 9007199254740991,
+                "description": "Position in this section of the rebuilt context: the block's index in the detail's request.system, request.tools, or request.messages array. Inherited blocks count."
+              },
+              "sentIndex": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Position in the matching rawRequest array (system or instructions, tools, messages or input); null for an inherited block, which was not sent. When the wire field is a string rather than an array, 0 means the field itself."
               },
               "role": {
                 "type": ["string", "null"]
@@ -487,12 +531,23 @@
                         "name": {
                           "type": "string"
                         },
+                        "namespace": {
+                          "type": ["string", "null"]
+                        },
                         "description": {
                           "type": ["string", "null"]
-                        }
+                        },
+                        "parameters": {}
                       },
-                      "required": ["type", "name", "description"],
-                      "additionalProperties": false
+                      "required": [
+                        "type",
+                        "name",
+                        "namespace",
+                        "description",
+                        "parameters"
+                      ],
+                      "additionalProperties": false,
+                      "description": "One callable tool. Containers (Codex namespaces, Gemini functionDeclarations) are expanded into one part per tool."
                     },
                     {
                       "type": "object",
@@ -516,6 +571,7 @@
               "section",
               "category",
               "index",
+              "sentIndex",
               "role",
               "bytes",
               "inherited",
@@ -545,7 +601,21 @@
               "index": {
                 "type": "integer",
                 "minimum": 0,
-                "maximum": 9007199254740991
+                "maximum": 9007199254740991,
+                "description": "Position in this section of the rebuilt context: the block's index in the detail's request.system, request.tools, or request.messages array. Inherited blocks count."
+              },
+              "sentIndex": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Position in the matching rawRequest array (system or instructions, tools, messages or input); null for an inherited block, which was not sent. When the wire field is a string rather than an array, 0 means the field itself."
               },
               "role": {
                 "type": ["string", "null"]
@@ -636,12 +706,23 @@
                         "name": {
                           "type": "string"
                         },
+                        "namespace": {
+                          "type": ["string", "null"]
+                        },
                         "description": {
                           "type": ["string", "null"]
-                        }
+                        },
+                        "parameters": {}
                       },
-                      "required": ["type", "name", "description"],
-                      "additionalProperties": false
+                      "required": [
+                        "type",
+                        "name",
+                        "namespace",
+                        "description",
+                        "parameters"
+                      ],
+                      "additionalProperties": false,
+                      "description": "One callable tool. Containers (Codex namespaces, Gemini functionDeclarations) are expanded into one part per tool."
                     },
                     {
                       "type": "object",
@@ -665,6 +746,7 @@
               "section",
               "category",
               "index",
+              "sentIndex",
               "role",
               "bytes",
               "inherited",
@@ -677,7 +759,8 @@
         }
       },
       "required": ["system", "tools", "messages"],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "description": "The full context the model saw, by wire section, including blocks inherited from the request this one continues. A block's index is its position in its section array here."
     },
     "response": {
       "anyOf": [
@@ -738,7 +821,21 @@
           "index": {
             "type": "integer",
             "minimum": 0,
-            "maximum": 9007199254740991
+            "maximum": 9007199254740991,
+            "description": "Position in this section of the rebuilt context: the block's index in the detail's request.system, request.tools, or request.messages array. Inherited blocks count."
+          },
+          "sentIndex": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Position in the matching rawRequest array (system or instructions, tools, messages or input); null for an inherited block, which was not sent. When the wire field is a string rather than an array, 0 means the field itself."
           },
           "role": {
             "type": ["string", "null"]
@@ -829,12 +926,23 @@
                     "name": {
                       "type": "string"
                     },
+                    "namespace": {
+                      "type": ["string", "null"]
+                    },
                     "description": {
                       "type": ["string", "null"]
-                    }
+                    },
+                    "parameters": {}
                   },
-                  "required": ["type", "name", "description"],
-                  "additionalProperties": false
+                  "required": [
+                    "type",
+                    "name",
+                    "namespace",
+                    "description",
+                    "parameters"
+                  ],
+                  "additionalProperties": false,
+                  "description": "One callable tool. Containers (Codex namespaces, Gemini functionDeclarations) are expanded into one part per tool."
                 },
                 {
                   "type": "object",
@@ -858,6 +966,7 @@
           "section",
           "category",
           "index",
+          "sentIndex",
           "role",
           "bytes",
           "inherited",
@@ -868,7 +977,9 @@
         "title": "HistoryApiCaptureBlock"
       }
     },
-    "rawRequest": {},
+    "rawRequest": {
+      "description": "The request body exactly as sent on the wire (redacted), rebuilt from its sent blocks with the original key order. It never contains inherited blocks: a chained request's rawRequest holds only its incremental input, while `request` holds the full rebuilt context. A block's sentIndex locates it here. The unparsed body (JSON or text) for format `unknown`."
+    },
     "rawResponse": {},
     "fields": {
       "anyOf": [

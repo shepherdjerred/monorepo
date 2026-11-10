@@ -24,10 +24,12 @@ import {
   WORKSPACE,
   claudeHttp,
   claudeToolTurn,
+  CODEX_EXEC_PARAMETERS,
   codexToolTurn,
   tempDir,
   writeSegment,
 } from "#test/support/brim-capture.ts";
+import { codexResume } from "#test/support/brim-capture-resume.ts";
 
 const roots: string[] = [];
 const opened: { close: () => void }[] = [];
@@ -205,22 +207,40 @@ describe("capture context reconstruction", () => {
       { id: "toolu_1", name: "Bash", arguments: { command: "echo hi" } },
     ]);
     expect(parent.response?.stopReason).toBe("tool_use");
-    expect(parent.request.tools.map((block) => block.parts[0])).toEqual([
-      {
-        type: "tool_definition",
-        name: "Bash",
-        description: "Run a shell command",
-      },
-      { type: "tool_definition", name: "Read", description: "Read a file" },
+    expect(parent.request.tools.map((block) => block.parts)).toEqual([
+      [
+        {
+          type: "tool_definition",
+          name: "Bash",
+          namespace: null,
+          description: "Run a shell command",
+          parameters: { type: "object" },
+        },
+      ],
+      [
+        {
+          type: "tool_definition",
+          name: "Read",
+          namespace: null,
+          description: "Read a file",
+          parameters: { type: "object" },
+        },
+      ],
     ]);
 
     const child = await detail(context, second?.id ?? 0);
     expect(child.response?.text).toBe("hi");
     // The parent's system and tools, plus the one new billing header.
-    expect(child.request.system.map((block) => block.inherited)).toEqual([
-      true,
-      true,
-      false,
+    expect(
+      child.request.system.map((block) => [
+        block.index,
+        block.inherited,
+        block.sentIndex,
+      ]),
+    ).toEqual([
+      [0, true, null],
+      [1, true, null],
+      [2, false, 0],
     ]);
     expect(child.request.tools).toHaveLength(2);
     expect(
@@ -259,7 +279,19 @@ describe("capture context reconstruction", () => {
       "ok",
       "ok",
     ]);
-    const [, toolCall, answer] = list.captures;
+    const [warmup, toolCall, answer] = list.captures;
+    expect(list.captures.map((capture) => capture.warmup)).toEqual([
+      true,
+      false,
+      false,
+    ]);
+    // Chained from the warm-up, but never diffed against it.
+    expect(toolCall).toMatchObject({
+      previousCaptureId: null,
+      newBlockCount: 4,
+      contextComplete: true,
+    });
+    expect(warmup?.blockCount).toBe(0);
     expect(toolCall).toMatchObject({
       transport: "websocket",
       sessionId: CODEX_THREAD,
@@ -291,8 +323,39 @@ describe("capture context reconstruction", () => {
       ["conversation", false],
     ]);
     expect(full.request.messages[0]?.parts).toEqual([
-      { type: "tool_definition", name: "exec", description: "Run a command" },
+      {
+        type: "tool_definition",
+        name: "exec",
+        namespace: "functions",
+        description: "Run a command",
+        parameters: CODEX_EXEC_PARAMETERS,
+      },
+      {
+        type: "tool_definition",
+        name: "apply_patch",
+        namespace: "functions",
+        description: "Apply a patch",
+        parameters: { type: "grammar", syntax: "lark", definition: "start: x" },
+      },
+      {
+        type: "tool_definition",
+        name: "sleep",
+        namespace: "clock",
+        description: "Pause",
+        parameters: null,
+      },
     ]);
+    // `index` is the position in the rebuilt context; `sentIndex` locates
+    // the block in rawRequest, which holds only what was sent.
+    const sent = full.request.messages.filter((block) => !block.inherited);
+    expect(sent.map((block) => [block.index, block.sentIndex])).toEqual([
+      [6, 0],
+    ]);
+    expect(
+      full.request.messages
+        .filter((block) => block.inherited)
+        .map((block) => block.sentIndex),
+    ).toEqual([null, null, null, null, null, null]);
     expect(
       full.newBlocks.flatMap((block) => block.parts.map((part) => part.type)),
     ).toEqual(["text", "tool_call", "tool_call_response"]);
@@ -302,6 +365,46 @@ describe("capture context reconstruction", () => {
         { type: "function_call_output", call_id: "call_1", output: "hi" },
       ],
     });
+  });
+});
+
+describe("Codex warm-ups", () => {
+  test("a resumed session diffs against the last real turn, not its warm-up", async () => {
+    const context = await fixture();
+    await ingest(context, [...codexToolTurn(), ...codexResume()]);
+    const sessions = await indexSessions(context);
+    const list = HistoryApiCapturesResponseSchema.parse(
+      await fetchJson(
+        context,
+        `/v1/captures?session=${String(sessions.codex)}`,
+      ),
+    );
+    expect(list.captures.map((capture) => capture.warmup)).toEqual([
+      true,
+      false,
+      false,
+      true,
+      false,
+    ]);
+    const answer = list.captures[2];
+    const resumed = list.captures[4];
+    expect(resumed).toMatchObject({
+      previousCaptureId: answer?.id,
+      newBlockCount: 2,
+    });
+    const warmupIds = new Set(
+      list.captures
+        .filter((capture) => capture.warmup)
+        .map((capture) => capture.id),
+    );
+    for (const capture of list.captures) {
+      expect(warmupIds.has(capture.previousCaptureId ?? -1)).toBe(false);
+    }
+    const parsed = await detail(context, resumed?.id ?? 0);
+    expect(parsed.newBlocks.map((block) => block.role)).toEqual([
+      "assistant",
+      "user",
+    ]);
   });
 });
 

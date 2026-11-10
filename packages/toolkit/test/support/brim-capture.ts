@@ -218,25 +218,31 @@ export function claudeToolTurn(): CaptureRecord[] {
   ];
 }
 
-function wsMessage(
+export type WsFlow = { readonly id: string; readonly start: string };
+
+const CODEX_FLOW: WsFlow = {
+  id: "codex-ws",
+  start: "2026-11-10T03:30:00.000Z",
+};
+
+export function wsMessage(
   seq: number,
   fromClient: boolean,
   payload: Record<string, unknown>,
+  flow: WsFlow = CODEX_FLOW,
 ): CaptureRecord {
   return {
     v: 1,
     kind: "ws-message",
-    id: "codex-ws",
+    id: flow.id,
     seq,
-    at: new Date(
-      Date.parse("2026-11-10T03:30:00.000Z") + seq * 1000,
-    ).toISOString(),
+    at: new Date(Date.parse(flow.start) + seq * 1000).toISOString(),
     fromClient,
     body: { text: JSON.stringify(payload) },
   };
 }
 
-function completed(
+export function completed(
   id: string,
   output: readonly unknown[],
   usage: Record<string, unknown>,
@@ -247,17 +253,49 @@ function completed(
   };
 }
 
-const CODEX_TOOLS_ITEM = {
+/** Codex groups its tools in namespaces inside one `additional_tools` item. */
+export const CODEX_EXEC_PARAMETERS = {
+  type: "object",
+  properties: { cmd: { type: "string" } },
+};
+export const CODEX_TOOLS_ITEM = {
   type: "additional_tools",
   role: "developer",
-  tools: [{ type: "function", name: "exec", description: "Run a command" }],
+  tools: [
+    {
+      type: "namespace",
+      name: "functions",
+      description: "",
+      tools: [
+        {
+          type: "function",
+          name: "exec",
+          description: "Run a command",
+          strict: false,
+          parameters: CODEX_EXEC_PARAMETERS,
+        },
+        {
+          type: "custom",
+          name: "apply_patch",
+          description: "Apply a patch",
+          format: { type: "grammar", syntax: "lark", definition: "start: x" },
+        },
+      ],
+    },
+    {
+      type: "namespace",
+      name: "clock",
+      description: "Tools for reading and waiting on time.",
+      tools: [{ type: "function", name: "sleep", description: "Pause" }],
+    },
+  ],
 };
-const CODEX_DEVELOPER = {
+export const CODEX_DEVELOPER = {
   type: "message",
   role: "developer",
   content: [{ type: "input_text", text: "You are Codex." }],
 };
-const CODEX_USER = {
+export const CODEX_USER = {
   type: "message",
   role: "user",
   content: [
@@ -267,7 +305,7 @@ const CODEX_USER = {
     },
   ],
 };
-const CODEX_PROMPT = {
+export const CODEX_PROMPT = {
   type: "message",
   role: "user",
   content: [{ type: "input_text", text: "run echo hi" }],

@@ -93,8 +93,8 @@ function insertRow(store: CaptureStore, capture: NewCapture): number | null {
        session_key, cwd, started_at, ended_at, status, http_status, error,
        model, stop_reason, response_id, previous_response_id, context_complete,
        usage_json, envelope_hash, response_hash, raw_request_hash,
-       raw_response_hash)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       raw_response_hash, warmup)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     capture.flowId,
     capture.seq,
     capture.connectionId,
@@ -120,6 +120,7 @@ function insertRow(store: CaptureStore, capture: NewCapture): number | null {
     storeResponse(store, response),
     capture.rawRequestHash,
     capture.rawResponseHash,
+    request?.warmup === true ? 1 : 0,
   );
   return changes === 0 ? null : lastInsertRowid;
 }
@@ -149,6 +150,16 @@ function insertBlocks(
   }
 }
 
+const WarmupRowSchema = z.object({ warmup: z.number() });
+
+function isWarmup(store: CaptureStore, id: number): boolean {
+  return (
+    WarmupRowSchema.parse(
+      store.get("SELECT warmup FROM captures WHERE id = ?", id),
+    ).warmup === 1
+  );
+}
+
 /** Inserts a capture and its blocks; null when it was already ingested. */
 export function insertCapture(
   store: CaptureStore,
@@ -157,9 +168,13 @@ export function insertCapture(
   const id = insertRow(store, capture);
   if (id === null) return null;
   insertBlocks(store, id, capture.blocks);
+  // A warm-up holds no conversation, so it is never what a request is
+  // diffed against, even when the request chains from it.
   const previous =
     choosePrevious(store, { ...capture, id }, capture.blocks) ??
-    capture.chainedFrom;
+    (capture.chainedFrom !== null && !isWarmup(store, capture.chainedFrom)
+      ? capture.chainedFrom
+      : null);
   const diff = diffBlocks(
     capture.blocks,
     previous === null ? null : captureBlocks(store, previous),

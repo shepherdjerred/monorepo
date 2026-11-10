@@ -1,135 +1,132 @@
 {
   "apiVersion": 1,
   "capture": {
-    "id": 2,
-    "cli": "claude",
-    "transport": "http",
-    "format": "anthropic-messages",
-    "host": "api.anthropic.com",
-    "path": "/v1/messages?beta=true",
-    "sessionId": "08d800da-5eeb-43c2-8b7c-93423a00bac5",
+    "id": 5,
+    "cli": "codex",
+    "transport": "websocket",
+    "format": "openai-responses",
+    "host": "chatgpt.com",
+    "path": "/backend-api/codex/responses",
+    "sessionId": "01a1c37b-1894-7231-a7ae-e3d2da985034",
     "cwd": "/Users/me/repo",
-    "startedAt": "2026-11-10T03:23:05.000Z",
-    "endedAt": "2026-11-10T03:23:06.500Z",
-    "durationMs": 1500,
-    "model": "claude-opus-5-5",
+    "startedAt": "2026-11-10T03:30:08.000Z",
+    "endedAt": "2026-11-10T03:30:10.000Z",
+    "durationMs": 2000,
+    "model": "gpt-6.1-sol",
     "status": "ok",
-    "httpStatus": 200,
+    "httpStatus": null,
     "error": null,
     "usage": {
-      "inputTokens": 2,
-      "outputTokens": 9,
-      "cacheReadTokens": 34031,
-      "cacheCreationTokens": 92,
-      "cachedInputTokens": 0,
+      "inputTokens": 26310,
+      "outputTokens": 7,
+      "cacheReadTokens": 0,
+      "cacheCreationTokens": 0,
+      "cachedInputTokens": 26112,
       "reasoningTokens": 0
     },
     "context": {
-      "systemBytes": 293,
-      "toolsBytes": 160,
-      "historyBytes": 101,
-      "newBytes": 237
+      "systemBytes": 95,
+      "toolsBytes": 567,
+      "historyBytes": 231,
+      "newBytes": 251
     },
-    "blockCount": 8,
+    "blockCount": 7,
     "newBlockCount": 3,
     "contextComplete": true,
-    "previousCaptureId": 1
+    "previousCaptureId": 4,
+    "warmup": false
   },
   "request": {
-    "system": [
-      {
-        "hash": "cc84a612282b24031941ee0183004f17cfee3a2dc5f1e7ddcda400d4205770c4",
-        "section": "system",
-        "category": "system",
-        "index": 0,
-        "role": "system",
-        "bytes": 83,
-        "inherited": true,
-        "isNew": false,
-        "parts": [
-          {
-            "type": "text",
-            "content": "x-anthropic-billing-header: cc_version=2.1.319; cch=aaaaa;"
-          }
-        ]
-      },
-      {
-        "hash": "daee0517c488bf097011cb28eec0fc8f201cc1f1c8020aa28ef8e4d7aa9988fb",
-        "section": "system",
-        "category": "system",
-        "index": 1,
-        "role": "system",
-        "bytes": 127,
-        "inherited": true,
-        "isNew": false,
-        "parts": [
-          {
-            "type": "text",
-            "content": "You are Claude Code.\nPrimary working directory: /Users/me/repo\n"
-          }
-        ]
-      },
-      {
-        "hash": "05ead0aefcc291d4b31b01045d41df33a2d211059dfbc2b4698e282723dd9509",
-        "section": "system",
-        "category": "system",
-        "index": 2,
-        "role": "system",
-        "bytes": 83,
-        "inherited": false,
-        "isNew": true,
-        "parts": [
-          {
-            "type": "text",
-            "content": "x-anthropic-billing-header: cc_version=2.1.319; cch=bbbbb;"
-          }
-        ]
-      }
-    ],
-    "tools": [
-      {
-        "hash": "a5b1c38eeee4a7bad0e0edb83ad24c863e9317995b503b9ccaa752110e6ed5eb",
-        "section": "tools",
-        "category": "tools",
-        "index": 0,
-        "role": null,
-        "bytes": 84,
-        "inherited": true,
-        "isNew": false,
-        "parts": [
-          {
-            "type": "tool_definition",
-            "name": "Bash",
-            "description": "Run a shell command"
-          }
-        ]
-      },
-      {
-        "hash": "0cad00e1c8645a0d8bfdd8748e37d21bdc4dc03bdc5f7f3835ddee75afbd0ac7",
-        "section": "tools",
-        "category": "tools",
-        "index": 1,
-        "role": null,
-        "bytes": 76,
-        "inherited": true,
-        "isNew": false,
-        "parts": [
-          {
-            "type": "tool_definition",
-            "name": "Read",
-            "description": "Read a file"
-          }
-        ]
-      }
-    ],
+    "system": [],
+    "tools": [],
     "messages": [
       {
-        "hash": "b401886a0041890819ee02a501887a1db0fb6adcac9376160398b4e14f7be9ef",
+        "hash": "1fb515004e06edab9d6c253fc4928500551ded5f27d974a865245601e647cd4b",
+        "section": "messages",
+        "category": "tools",
+        "index": 0,
+        "sentIndex": null,
+        "role": "developer",
+        "bytes": 567,
+        "inherited": true,
+        "isNew": false,
+        "parts": [
+          {
+            "type": "tool_definition",
+            "name": "exec",
+            "namespace": "functions",
+            "description": "Run a command",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "cmd": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          {
+            "type": "tool_definition",
+            "name": "apply_patch",
+            "namespace": "functions",
+            "description": "Apply a patch",
+            "parameters": {
+              "type": "grammar",
+              "syntax": "lark",
+              "definition": "start: x"
+            }
+          },
+          {
+            "type": "tool_definition",
+            "name": "sleep",
+            "namespace": "clock",
+            "description": "Pause",
+            "parameters": null
+          }
+        ]
+      },
+      {
+        "hash": "7f616fbd6befa47e113ac3f7bef4d3edbb8d855138798dd191154cb5555a4797",
+        "section": "messages",
+        "category": "system",
+        "index": 1,
+        "sentIndex": null,
+        "role": "developer",
+        "bytes": 95,
+        "inherited": true,
+        "isNew": false,
+        "parts": [
+          {
+            "type": "text",
+            "content": "You are Codex."
+          }
+        ]
+      },
+      {
+        "hash": "3e8af7db2d71b962ace530486d0eee7a4ead20578f0995a0fb79587382b9d0e6",
         "section": "messages",
         "category": "conversation",
-        "index": 0,
+        "index": 2,
+        "sentIndex": null,
         "role": "user",
-        "bytes": 101,
+        "bytes": 144,
+        "inherited": true,
+        "isNew": false,
+        "parts": [
+          {
+            "type": "text",
+            "content": "<environment_context><cwd>/Users/me/repo</cwd></environment_context>"
+          }
+        ]
+      },
+      {
+        "hash": "691525953ec9829c07c160d6ff63d9f56fde741c6121e8205f9bff8dde88d8fe",
+        "section": "messages",
+        "category": "conversation",
+        "index": 3,
+        "sentIndex": null,
+        "role": "user",
+        "bytes": 87,
         "inherited": true,
         "isNew": false,
         "parts": [
@@ -140,38 +137,57 @@
         ]
       },
       {
-        "hash": "1a3b7481dfa7bc7c2f9c3e50a4ce08af322920a9461744cf41d7bab91be718c0",
+        "hash": "ca5cd881968873ff45c80df3e5ca346c55acd53a7bb80d22f7abc616a1c50a65",
         "section": "messages",
         "category": "conversation",
-        "index": 1,
+        "index": 4,
+        "sentIndex": null,
         "role": "assistant",
-        "bytes": 111,
+        "bytes": 94,
+        "inherited": true,
+        "isNew": true,
+        "parts": [
+          {
+            "type": "text",
+            "content": "I'll run it."
+          }
+        ]
+      },
+      {
+        "hash": "7a156f405d515a491d5277dc2d363bd6f994e2e1c6b1b72e3375774511bdee6b",
+        "section": "messages",
+        "category": "conversation",
+        "index": 5,
+        "sentIndex": null,
+        "role": "assistant",
+        "bytes": 93,
         "inherited": true,
         "isNew": true,
         "parts": [
           {
             "type": "tool_call",
-            "id": "toolu_1",
-            "name": "Bash",
+            "id": "call_1",
+            "name": "exec",
             "arguments": {
-              "command": "echo hi"
+              "cmd": "echo hi"
             }
           }
         ]
       },
       {
-        "hash": "09a5652c7863f488cbec513bd61920f83c2b05bffa076b0568efbccb3d7747f5",
+        "hash": "58909b0192f10a9306d1f4d077caa1bd5b828b4e553de4c50219aed1dfbfdc0e",
         "section": "messages",
         "category": "conversation",
-        "index": 2,
-        "role": "user",
-        "bytes": 126,
+        "index": 6,
+        "sentIndex": 0,
+        "role": "tool",
+        "bytes": 64,
         "inherited": false,
         "isNew": true,
         "parts": [
           {
             "type": "tool_call_response",
-            "id": "toolu_1",
+            "id": "call_1",
             "response": "hi"
           }
         ]
@@ -182,109 +198,101 @@
     "text": "hi",
     "reasoning": "",
     "toolCalls": [],
-    "stopReason": "end_turn"
+    "stopReason": "completed"
   },
   "newBlocks": [
     {
-      "hash": "05ead0aefcc291d4b31b01045d41df33a2d211059dfbc2b4698e282723dd9509",
-      "section": "system",
-      "category": "system",
-      "index": 2,
-      "role": "system",
-      "bytes": 83,
-      "inherited": false,
+      "hash": "ca5cd881968873ff45c80df3e5ca346c55acd53a7bb80d22f7abc616a1c50a65",
+      "section": "messages",
+      "category": "conversation",
+      "index": 4,
+      "sentIndex": null,
+      "role": "assistant",
+      "bytes": 94,
+      "inherited": true,
       "isNew": true,
       "parts": [
         {
           "type": "text",
-          "content": "x-anthropic-billing-header: cc_version=2.1.319; cch=bbbbb;"
+          "content": "I'll run it."
         }
       ]
     },
     {
-      "hash": "1a3b7481dfa7bc7c2f9c3e50a4ce08af322920a9461744cf41d7bab91be718c0",
+      "hash": "7a156f405d515a491d5277dc2d363bd6f994e2e1c6b1b72e3375774511bdee6b",
       "section": "messages",
       "category": "conversation",
-      "index": 1,
+      "index": 5,
+      "sentIndex": null,
       "role": "assistant",
-      "bytes": 111,
+      "bytes": 93,
       "inherited": true,
       "isNew": true,
       "parts": [
         {
           "type": "tool_call",
-          "id": "toolu_1",
-          "name": "Bash",
+          "id": "call_1",
+          "name": "exec",
           "arguments": {
-            "command": "echo hi"
+            "cmd": "echo hi"
           }
         }
       ]
     },
     {
-      "hash": "09a5652c7863f488cbec513bd61920f83c2b05bffa076b0568efbccb3d7747f5",
+      "hash": "58909b0192f10a9306d1f4d077caa1bd5b828b4e553de4c50219aed1dfbfdc0e",
       "section": "messages",
       "category": "conversation",
-      "index": 2,
-      "role": "user",
-      "bytes": 126,
+      "index": 6,
+      "sentIndex": 0,
+      "role": "tool",
+      "bytes": 64,
       "inherited": false,
       "isNew": true,
       "parts": [
         {
           "type": "tool_call_response",
-          "id": "toolu_1",
+          "id": "call_1",
           "response": "hi"
         }
       ]
     }
   ],
   "rawRequest": {
-    "model": "claude-opus-5-5",
-    "system": [
+    "type": "response.create",
+    "model": "gpt-6.1-sol",
+    "previous_response_id": "resp_1",
+    "input": [
       {
-        "type": "text",
-        "text": "x-anthropic-billing-header: cc_version=2.1.319; cch=bbbbb;"
+        "type": "function_call_output",
+        "call_id": "call_1",
+        "output": "hi"
       }
-    ],
-    "messages": [
+    ]
+  },
+  "rawResponse": {
+    "id": "resp_2",
+    "model": "gpt-6.1-sol",
+    "status": "completed",
+    "output": [
       {
-        "role": "user",
+        "type": "message",
+        "role": "assistant",
         "content": [
           {
-            "type": "tool_result",
-            "tool_use_id": "toolu_1",
-            "content": "hi",
-            "cache_control": {
-              "type": "ephemeral"
-            }
+            "type": "output_text",
+            "text": "hi"
           }
         ]
       }
     ],
-    "thread": {
-      "type": "continue",
-      "previous_message_id": "msg_1"
-    },
-    "stream": true
-  },
-  "rawResponse": {
-    "id": "msg_2",
-    "model": "claude-opus-5-5",
-    "role": "assistant",
-    "content": [
-      {
-        "type": "text",
-        "text": "hi"
-      }
-    ],
     "usage": {
-      "input_tokens": 2,
-      "cache_creation_input_tokens": 92,
-      "cache_read_input_tokens": 34031,
-      "output_tokens": 9
-    },
-    "stop_reason": "end_turn"
+      "input_tokens": 26310,
+      "input_tokens_details": {
+        "cached_tokens": 26112
+      },
+      "output_tokens": 7
+    }
   },
   "fields": null
 }
