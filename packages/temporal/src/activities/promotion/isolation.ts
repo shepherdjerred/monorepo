@@ -1,5 +1,15 @@
 import { providerSubprocessUid } from "#shared/agent/agent-subprocess-identity.ts";
 import { parseTemporalNamespace } from "#shared/infra/temporal-namespace.ts";
+import type { RunCodexAgentTurnInput } from "#lib/agent-runner/contract.ts";
+
+export function promotionLinuxSandboxHelper(
+  providerUid: number | undefined,
+  platform = process.platform,
+): Pick<RunCodexAgentTurnInput, "linuxSandboxHelper"> {
+  return providerUid !== undefined && platform === "linux"
+    ? { linuxSandboxHelper: "bundled-codex" }
+    : {};
+}
 
 export function promotionProviderUid(
   environment: Readonly<Record<string, string | undefined>> = Bun.env,

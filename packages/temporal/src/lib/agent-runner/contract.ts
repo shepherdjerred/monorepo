@@ -33,6 +33,9 @@ export const SandboxPolicySchema = z.object({
 });
 export type SandboxPolicy = z.infer<typeof SandboxPolicySchema>;
 
+export const LinuxSandboxHelperSchema = z.literal("bundled-codex");
+export type LinuxSandboxHelper = z.infer<typeof LinuxSandboxHelperSchema>;
+
 /**
  * Codex authentication is explicit: automation authenticates with the owning
  * OpenAI project's API key, while durable chats pass the complete short-lived
@@ -96,6 +99,8 @@ export type RunCodexAgentTurnInput = AgentTurnCommonInput & {
   readonly skipGitRepoCheck?: boolean;
   /** Optional executable wrapper used to launch the CLI under a provider uid. */
   readonly codexPathOverride?: string;
+  /** Immutable per-run helper selection; requires an isolated Linux root launcher. */
+  readonly linuxSandboxHelper?: LinuxSandboxHelper;
   /** Native API-key tool sandbox; denied file reads and exact IPC grants. */
   readonly scopedPermissions?: {
     readonly denyReadPaths: readonly string[];

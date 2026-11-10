@@ -7,7 +7,11 @@ import {
   providerSubprocessCommand,
   providerSubprocessUid,
 } from "#shared/agent/agent-subprocess-identity.ts";
-import type { RunCodexAgentTurnInput } from "./contract.ts";
+import {
+  LinuxSandboxHelperSchema,
+  type RunCodexAgentTurnInput,
+} from "./contract.ts";
+import { materializeCodexBubblewrap } from "./codex-bubblewrap.ts";
 
 function shellQuote(value: string): string {
   return `'${value.replaceAll("'", `'"'"'`)}'`;
@@ -30,6 +34,7 @@ export function codexLauncherPath(): string {
 async function materializeProviderWrapper(
   command: readonly string[],
   environment: Readonly<Record<string, string | undefined>>,
+  bundledBubblewrap: boolean,
 ): Promise<{ directory: string; executable: string }> {
   const directory = await mkdtemp(
     path.join(os.tmpdir(), "agent-codex-provider-"),
@@ -39,6 +44,12 @@ async function materializeProviderWrapper(
     if (providerUid === undefined)
       throw new Error("Isolated Codex launcher requires a provider uid");
     await chmod(directory, 0o755);
+    if (bundledBubblewrap) {
+      await materializeCodexBubblewrap({
+        codexLauncherPath: codexLauncherPath(),
+        wrapperDirectory: directory,
+      });
+    }
     const executable = path.join(directory, "codex");
     const wrappedCommand = providerSubprocessCommand(command, environment)
       .map((part) => shellQuote(part))
@@ -64,7 +75,7 @@ async function materializeProviderWrapper(
       .join(" ");
     await writeFile(
       executable,
-      `#!/bin/sh\n(cd ${shellQuote(path.dirname(schemaHelper))} && exec ${prepareSchema} "$@") || exit $?\nexec ${wrappedCommand} "$@"\n`,
+      `#!/bin/sh\n(cd ${shellQuote(path.dirname(schemaHelper))} && exec ${prepareSchema} "$@") || exit $?\n${bundledBubblewrap ? `PATH=${shellQuote(directory)}:"$PATH" ` : ""}exec ${wrappedCommand} "$@"\n`,
       {
         encoding: "utf8",
         mode: 0o755,
@@ -79,12 +90,37 @@ async function materializeProviderWrapper(
 }
 
 export async function providerPathOverride(
-  input: Pick<RunCodexAgentTurnInput, "codexPathOverride">,
+  input: Pick<
+    RunCodexAgentTurnInput,
+    "codexPathOverride" | "linuxSandboxHelper"
+  > &
+    Partial<Pick<RunCodexAgentTurnInput, "env">>,
 ): Promise<{
   pathOverride: Pick<CodexOptions, "codexPathOverride"> | undefined;
   wrapperDirectory: string | undefined;
 }> {
   const providerUid = providerSubprocessUid();
+  const helper = LinuxSandboxHelperSchema.optional().parse(
+    input.linuxSandboxHelper,
+  );
+  if (helper !== undefined) {
+    if (input.codexPathOverride !== undefined)
+      throw new Error(
+        "Bundled Codex bubblewrap cannot use a custom Codex executable",
+      );
+    if (
+      providerUid === undefined ||
+      process.platform !== "linux" ||
+      process.getuid?.() !== 0
+    )
+      throw new Error(
+        "Bundled Codex bubblewrap requires an isolated provider UID and Linux root parent",
+      );
+    if (input.env?.["PATH"] === undefined || input.env["PATH"] === "")
+      throw new Error(
+        "Bundled Codex bubblewrap requires the original provider PATH",
+      );
+  }
   if (providerUid === undefined)
     return {
       pathOverride:
@@ -97,9 +133,13 @@ export async function providerPathOverride(
     input.codexPathOverride === undefined
       ? [process.execPath, codexLauncherPath()]
       : [input.codexPathOverride];
-  const wrapper = await materializeProviderWrapper(command, {
-    AGENT_PROVIDER_UID: providerUid.toString(),
-  });
+  const wrapper = await materializeProviderWrapper(
+    command,
+    {
+      AGENT_PROVIDER_UID: providerUid.toString(),
+    },
+    helper !== undefined,
+  );
   return {
     pathOverride: { codexPathOverride: wrapper.executable },
     wrapperDirectory: wrapper.directory,

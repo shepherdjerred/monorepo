@@ -9,6 +9,14 @@ import { defaultScope } from "#shared/editions/scope.ts";
 import { createMediaFileActivities } from "#automation/files/activities.ts";
 import { completeTvObservation } from "./tv.test-support.ts";
 
+export function mixedVisibilityFileNames(attemptId: string) {
+  // A raw e-prefixed UUID can be parsed as another episode token.
+  return [
+    `Coastlines.S01E01E02.fixture-${attemptId}.mkv`,
+    `Coastlines.S01E03.fixture-${attemptId}.mkv`,
+  ];
+}
+
 /** One real three-leaf attempt: a two-episode file plus an independent third file. */
 export async function mixedVisibilityFixture(db: Database) {
   const series = await db.mediaItem.create({
@@ -77,10 +85,7 @@ export async function mixedVisibilityFixture(db: Database) {
       "Visibility three-leaf pack",
       mediaIds,
     );
-    const names = [
-      `Coastlines.S01E01E02.${acquired.attempt.id}.mkv`,
-      `Coastlines.S01E03.${acquired.attempt.id}.mkv`,
-    ];
+    const names = mixedVisibilityFileNames(acquired.attempt.id);
     for (const name of names)
       await writeFile(path.join(file.roots.downloads, name), acquired.content);
     const torrent = await db.torrent.update({

@@ -1,5 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { promotionProviderUid } from "./isolation.ts";
+import {
+  promotionProviderUid,
+  promotionLinuxSandboxHelper,
+} from "./isolation.ts";
+
+it("only isolated Linux promotion runs select the pinned official helper", () => {
+  expect(promotionLinuxSandboxHelper(1001, "linux")).toEqual({
+    linuxSandboxHelper: "bundled-codex",
+  });
+  expect(promotionLinuxSandboxHelper(undefined, "linux")).toEqual({});
+  expect(promotionLinuxSandboxHelper(1001, "darwin")).toEqual({});
+});
 
 describe("promotion process isolation", () => {
   it("requires a distinct deployed provider identity while allowing explicit local development", () => {

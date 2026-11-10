@@ -9,13 +9,15 @@ const nestedWorkspace = "src/cdk8s/";
 
 /**
  * homelab's transit build task hashes only scripts/** and top-level src
- * modules plus the Discord credential contract (turbo.json). Its dependents
+ * modules plus the Discord credential contract and reviewed promotion policy
+ * (turbo.json). Its dependents
  * inherit that hash through ^build, so any additional input needs coverage.
  */
 function insideBuildInputs(relativePath: string): boolean {
   return (
     relativePath.startsWith("scripts/") ||
     relativePath === "src/tofu/discord/desired-state.json" ||
+    relativePath === "src/talos/seccomp/promotion-policy.json" ||
     (relativePath.startsWith("src/") &&
       !relativePath.slice("src/".length).includes("/"))
   );
@@ -104,6 +106,21 @@ async function moduleImports(module: string): Promise<string[]> {
 }
 
 describe("homelab build inputs", () => {
+  it("hashes the exact reviewed promotion policy consumed by CDK", async () => {
+    const configuration = z
+      .object({
+        tasks: z.object({ build: z.object({ inputs: z.array(z.string()) }) }),
+      })
+      .parse(
+        Bun.JSONC.parse(
+          await Bun.file(path.join(packageRoot, "turbo.json")).text(),
+        ),
+      );
+    expect(configuration.tasks.build.inputs).toContain(
+      "src/talos/seccomp/promotion-policy.json",
+    );
+  });
+
   it("cover every homelab module its dependents load", async () => {
     const dependents = await dependentDirectories();
     expect(dependents.length).toBeGreaterThan(0);

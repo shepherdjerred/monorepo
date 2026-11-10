@@ -5,6 +5,7 @@ import {
   startChild,
   sleep,
   patched,
+  workflowInfo,
 } from "@temporalio/workflow";
 import type { PromotionActivities } from "#activities/promotion/index.ts";
 import type { ReportDeliveryActivities } from "#activities/reports/report-delivery.ts";
@@ -124,4 +125,12 @@ export async function manageStormPromotion(
 
 export async function reportStormPromotion() {
   return await reports.deliverReport(await reads.collectPromotionDailyReport());
+}
+
+export async function reportStormPromotionAcceptance() {
+  const report = await reads.collectPromotionDailyReport();
+  return await reports.deliverReport({
+    ...report,
+    reportRunId: `storm-promotion/acceptance/${workflowInfo().runId}`,
+  });
 }

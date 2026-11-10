@@ -62,6 +62,7 @@ describe("central Temporal execution metadata", () => {
       "manageStormPromotion",
       "dispatchStormPromotion",
       "reportStormPromotion",
+      "reportStormPromotionAcceptance",
     ])("keeps %s visible in the agent domain", (workflowType) => {
       expect(
         executionDomainForWorkflow(workflowType, TASK_QUEUES.WORKFLOWS),

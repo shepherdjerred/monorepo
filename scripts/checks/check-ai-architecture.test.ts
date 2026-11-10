@@ -5,6 +5,69 @@ import {
   isTextArchitectureFile,
 } from "./check-ai-architecture.ts";
 
+describe("SDK-bundled helper provenance boundary", () => {
+  test("permits only reviewed SDK-bundled helper provenance metadata", () => {
+    const provenance = [
+      {
+        path: "ci/scripts/images/harden-codex-launcher.ts",
+        contents: 'manifest["name"] !== "@openai/codex" ||',
+      },
+      {
+        path: "ci/scripts/images/harden-codex-launcher.test.ts",
+        contents:
+          'JSON.stringify({ name: "@openai/codex", bin: { codex: "bin/codex.js" } }),',
+      },
+      {
+        path: "packages/temporal/src/lib/agent-runner/codex-bubblewrap.ts",
+        contents: 'name: z.literal("@openai/codex"),',
+      },
+      {
+        path: "packages/temporal/src/lib/agent-runner/codex-bubblewrap.test.ts",
+        contents: [
+          'expect(cli.name).toBe("@openai/codex");',
+          '`"${pin.package}": ["@openai/codex@${pin.packageVersion}"`,',
+          '{ name: "@openai/codex", version: expected },',
+          '{ name: "@openai/codex", version: "0.0.0" },',
+        ].join("\n"),
+      },
+    ];
+    expect(findAiArchitectureViolations(provenance)).toEqual([]);
+    expect(
+      findAiArchitectureViolations(
+        provenance.map((file) => ({
+          ...file,
+          path: "packages/app/src/helper.ts",
+        })),
+      ),
+    ).toHaveLength(7);
+
+    for (const { path } of provenance) {
+      expect(
+        findAiArchitectureViolations([
+          {
+            path,
+            contents: [
+              '"@openai/codex": "0.162.1",',
+              'import codex from "@openai/codex";',
+              'const codex = require("@openai/codex");',
+              'const codex = await import("@openai/codex");',
+              '"@anthropic-ai/claude-code": "1.0.0",',
+              'Bun.spawn(["codex", "exec"]);',
+            ].join("\n"),
+          },
+        ]).map(({ rule }) => rule),
+      ).toEqual([
+        "agent-cli-dependency",
+        "agent-cli-dependency",
+        "agent-cli-dependency",
+        "agent-cli-dependency",
+        "agent-cli-dependency",
+        "agent-cli-subprocess",
+      ]);
+    }
+  });
+});
+
 describe("AI architecture guard", () => {
   test("rejects frameworks, direct providers, provider keys, and agent subprocesses", () => {
     const violations = findAiArchitectureViolations([

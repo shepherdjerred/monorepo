@@ -168,6 +168,7 @@ const WORKFLOW_TYPE_DOMAINS: Readonly<Record<string, ExecutionDomain>> = {
   manageStormPromotion: "agent",
   dispatchStormPromotion: "agent",
   reportStormPromotion: "agent",
+  reportStormPromotionAcceptance: "agent",
   agentChatWorkflow: "agent",
   blueBubblesIngressWorkflow: "agent",
   imessageAgentChatWorkflow: "agent",

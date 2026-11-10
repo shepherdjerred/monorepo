@@ -60,7 +60,11 @@ export const TARGET_PATH_PREFIXES: Readonly<Record<string, readonly string[]>> =
     ],
     // Temporal compiles toolkit into the worker image as an embedded CLI, but
     // toolkit is deliberately not a runtime workspace dependency.
-    "temporal-worker": ["packages/toolkit/"],
+    // Its dependency stage also owns the Codex launcher permission producer.
+    "temporal-worker": [
+      "packages/toolkit/",
+      "ci/scripts/images/harden-codex-launcher.ts",
+    ],
     // Arcade's native SpaghettiKart context is the Mario Kart Dockerfile's
     // spaghetti-builder stage, built from the pinned spaghetti-src inputs. Its
     // Emerald ABI context is the Pokemon Dockerfile's wasm-abi-test stage,

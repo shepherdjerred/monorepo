@@ -128,6 +128,8 @@ RUN bun install --frozen-lockfile --production --filter '@shepherdjerred/tempora
 # install; complete them so the production tree reproduces.
 COPY ci/scripts/images/complete-bin-links.ts /tools/
 RUN bun /tools/complete-bin-links.ts node_modules/.bun
+COPY ci/scripts/images/harden-codex-launcher.ts /tools/
+RUN bun /tools/harden-codex-launcher.ts /app/packages/temporal /app/node_modules/.bun
 
 # Publish the source-compatible regex engine with its runtime. The SDK stays
 # in this build stage; workers execute the bounded protocol without compiling.
