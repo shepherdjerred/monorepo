@@ -54,6 +54,7 @@ export function NewIssue({
       setDescription("");
       setAttachments([]);
       setTeam(undefined);
+      setLabels([]);
       setState(undefined);
       announce(`Issue ${issue.identifier} created`);
       close();

@@ -71,6 +71,10 @@ export function usePeek(enabled: boolean) {
   const identifier = enabled ? (params.get("peek") ?? undefined) : undefined;
   const state: unknown = location.state;
   const pushed = PeekStateSchema.safeParse(state).success;
+  if (identifier === undefined) {
+    // Leaving the peek re-arms the guard, so Forward to the same entry can close again.
+    closing.current = undefined;
+  }
   function open(next: string) {
     const search = new URLSearchParams(params);
     search.set("peek", next);
