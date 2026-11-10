@@ -252,8 +252,45 @@ function firstChoice(event: JsonRecord): JsonRecord | null {
   return asRecord(asArray(event["choices"])?.[0]);
 }
 
+type ChatToolCall = { id: string | null; name: string; arguments: string };
+
+/**
+ * Folds one chunk's `delta.tool_calls` into the calls so far, by `index`: the
+ * id and name arrive once, the arguments as fragments to concatenate.
+ */
+function applyToolCallDeltas(calls: ChatToolCall[], deltas: unknown): void {
+  for (const entry of asArray(deltas) ?? []) {
+    const delta = asRecord(entry);
+    if (delta === null) continue;
+    const index = asCount(delta["index"]);
+    const call = calls[index] ?? { id: null, name: "", arguments: "" };
+    calls[index] = call;
+    const fn = asRecord(delta["function"]);
+    call.id = asString(delta["id"]) ?? call.id;
+    call.name = asString(fn?.["name"]) ?? call.name;
+    call.arguments += asString(fn?.["arguments"]) ?? "";
+  }
+}
+
+function assembledMessage(
+  text: string,
+  calls: readonly ChatToolCall[],
+): JsonRecord {
+  const toolCalls = calls.map((call) => ({
+    id: call.id,
+    type: "function",
+    function: { name: call.name, arguments: call.arguments },
+  }));
+  return {
+    role: "assistant",
+    content: text,
+    ...(toolCalls.length > 0 && { tool_calls: toolCalls }),
+  };
+}
+
 function chatResponse(events: readonly JsonRecord[]): ParsedResponse {
   let text = "";
+  const calls: ChatToolCall[] = [];
   let model: string | null = null;
   let id: string | null = null;
   let stopReason: string | null = null;
@@ -264,7 +301,9 @@ function chatResponse(events: readonly JsonRecord[]): ParsedResponse {
     id ??= asString(event["id"]);
     const choice = firstChoice(event);
     if (choice?.["message"] !== undefined) complete = event;
-    text += asString(asRecord(choice?.["delta"])?.["content"]) ?? "";
+    const delta = asRecord(choice?.["delta"]);
+    text += asString(delta?.["content"]) ?? "";
+    applyToolCallDeltas(calls, delta?.["tool_calls"]);
     stopReason = asString(choice?.["finish_reason"]) ?? stopReason;
     const eventUsage = asRecord(event["usage"]);
     if (eventUsage !== null) usage = chatUsage(eventUsage);
@@ -274,7 +313,7 @@ function chatResponse(events: readonly JsonRecord[]): ParsedResponse {
     model,
     choices: [
       {
-        message: { role: "assistant", content: text },
+        message: assembledMessage(text, calls),
         finish_reason: stopReason,
       },
     ],
