@@ -26,7 +26,7 @@ import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
  * and review the diff.
  */
 
-const SNAPSHOTS = new URL("first-party-snapshots/", import.meta.url);
+const SNAPSHOTS = new URL("fixtures/first-party-snapshots/", import.meta.url);
 
 type SnapshotTarget = {
   /** Snapshot file stem. */

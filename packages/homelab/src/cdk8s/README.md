@@ -111,7 +111,7 @@ prove that:
   `bun run check:dist-equivalence -- --allow syncthing.k8s.yaml`. Use
   `--base <ref>` to compare against something other than `origin/main`.
 - `src/testing/first-party-snapshots.test.ts` keeps committed YAML snapshots
-  (`src/testing/first-party-snapshots/`) of one representative service per
+  (`src/testing/fixtures/first-party-snapshots/`) of one representative service per
   shape and its Argo Application, so a shared-construct change shows its blast
   radius as a reviewable diff. Version-catalog pins are replaced by their
   catalog key so upstream bumps do not churn them. Regenerate with
