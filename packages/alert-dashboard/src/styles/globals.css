@@ -1586,3 +1586,187 @@ tbody tr:hover {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+/* ---- Command palette ---- */
+kbd {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.35rem;
+  padding: 0.05rem 0.3rem;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--code-bg);
+  color: var(--muted);
+  font:
+    600 0.68rem "Berkeley Mono",
+    ui-monospace,
+    monospace;
+}
+kbd svg {
+  width: 0.7rem;
+  height: 0.7rem;
+}
+.palette-trigger {
+  margin-left: auto;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 0.5rem;
+  height: 36px;
+  padding: 0 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--control-bg);
+  color: var(--muted);
+  cursor: pointer;
+}
+.palette-trigger:hover {
+  background: var(--control-hover);
+  color: var(--ink);
+}
+.palette-trigger:focus-visible,
+.theme-toggle:focus-visible {
+  outline: 3px solid var(--accent-ring);
+  outline-offset: 2px;
+}
+.palette-trigger + .theme-toggle {
+  margin-left: 8px;
+}
+.palette-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: rgba(10, 14, 12, 0.45);
+}
+.palette {
+  position: fixed;
+  top: 12vh;
+  left: 50%;
+  z-index: 21;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  width: min(640px, calc(100vw - 28px));
+  max-height: min(560px, 76vh);
+  transform: translateX(-50%);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.28);
+  overflow: hidden;
+}
+.palette:focus-visible {
+  outline: none;
+}
+.palette-search {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+}
+.palette-search svg {
+  flex: none;
+}
+.palette-search input {
+  flex: 1;
+  min-width: 0;
+  height: 52px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--ink);
+  font-size: 1rem;
+}
+.palette-search input::placeholder {
+  color: var(--muted);
+}
+.palette-results {
+  overflow-y: auto;
+  padding: 6px;
+}
+.palette-heading {
+  margin: 0;
+  padding: 10px 10px 4px;
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.palette-option {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  width: 100%;
+  min-height: 38px;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+.palette-option[aria-selected="true"] {
+  background: var(--control-hover);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+.palette-option svg {
+  flex: none;
+  color: var(--muted);
+}
+.palette-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.palette-detail {
+  flex: none;
+  max-width: 45%;
+  margin-left: auto;
+  overflow: hidden;
+  color: var(--muted);
+  font:
+    0.75rem "Berkeley Mono",
+    ui-monospace,
+    monospace;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.palette-status {
+  margin: 0;
+  padding: 8px 10px;
+  font-size: 0.85rem;
+}
+.palette-status:empty {
+  display: none;
+}
+.palette-footer {
+  display: flex;
+  gap: 1.1rem;
+  padding: 8px 16px;
+  border-top: 1px solid var(--line);
+  background: var(--panel-2);
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+@media (max-width: 600px) {
+  .palette-trigger span,
+  .palette-trigger kbd {
+    display: none;
+  }
+  .palette-trigger {
+    width: 36px;
+    padding: 0;
+    justify-content: center;
+  }
+  .palette {
+    top: 10px;
+    max-height: calc(100dvh - 20px);
+  }
+  .palette-footer {
+    display: none;
+  }
+}

@@ -1,42 +1,10 @@
-import { APP_HOSTS, TOOL_HOSTS } from "@shepherdjerred/ops-model/tool-links.ts";
-import {
-  BugIcon,
-  ChartLineIcon,
-  ExternalLinkIcon,
-  GitBranchIcon,
-  HammerIcon,
-  ListTodoIcon,
-  RefreshCwIcon,
-  RocketIcon,
-  WorkflowIcon,
-  type LucideIcon,
-} from "lucide-react";
+import { ExternalLinkIcon } from "lucide-react";
 import { Suspense } from "react";
 import { Link } from "react-router";
 
+import { APPS, TOOLS, type ExternalEntry } from "./external-links.ts";
 import { PageHeading } from "./ops/ops-ui.tsx";
 import { useRegistry } from "./platform/registry.tsx";
-
-type ExternalEntry = {
-  readonly label: string;
-  readonly icon: LucideIcon;
-  readonly url: string;
-};
-
-/** First-party apps that live on their own host. */
-const APPS: readonly ExternalEntry[] = [
-  { label: "Tracker", icon: ListTodoIcon, url: APP_HOSTS.tracker },
-  { label: "Delivery", icon: RocketIcon, url: APP_HOSTS.delivery },
-];
-
-const TOOLS: readonly ExternalEntry[] = [
-  { label: "Grafana", icon: ChartLineIcon, url: TOOL_HOSTS.grafana },
-  { label: "Argo CD", icon: RefreshCwIcon, url: TOOL_HOSTS.argocd },
-  { label: "Temporal", icon: WorkflowIcon, url: TOOL_HOSTS.temporal },
-  { label: "Woodpecker", icon: HammerIcon, url: TOOL_HOSTS.woodpecker },
-  { label: "Bugsink", icon: BugIcon, url: TOOL_HOSTS.bugsink },
-  { label: "GitHub", icon: GitBranchIcon, url: TOOL_HOSTS.github },
-];
 
 function ExternalGroup({
   title,
