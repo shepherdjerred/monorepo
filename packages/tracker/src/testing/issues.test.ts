@@ -456,6 +456,8 @@ it("caches hashed assets forever and revalidates the page that names them", asyn
       catalog: new Catalog(unit),
       writesEnabled: async () => true,
       attachmentMaxBytes: async () => 1000,
+      liveUpdatesEnabled: async () => false,
+      changes: createChangeHub(suite.url),
       clientRoot,
     });
     const asset = await app.request("/assets/index-abc123.js");

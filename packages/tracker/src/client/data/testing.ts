@@ -59,6 +59,7 @@ export const workspaceFixture: BootstrapData = {
   actors: [actor("human:jerred", "Jerred"), actor("agent:helper", "Helper")],
   views: [],
   writesEnabled: true,
+  liveUpdatesEnabled: true,
 };
 
 function found<T>(value: T | undefined): T {
