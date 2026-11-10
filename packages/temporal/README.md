@@ -184,8 +184,10 @@ Every stage Job runs in a persistent workspace claim on liskov's ZFS pool,
 one per install profile and Job namespace (`delivery-stage-workspace-full` and,
 for image provenance, `delivery-stage-workspace-production`;
 `DELIVERY_STAGE_WORKSPACE_CLAIMS`), never in an emptyDir on the OS disk. A Job
-locks the claim, discards the previous Job's scratch, fetches and force-checks
-out its exact revision over the previous checkout and removes everything
+locks the claim, discards the previous Job's scratch and Git repository (a
+depth-1 fetch downloads the whole tree anyway, so keeping old revisions'
+objects only fills the claim), fetches and force-checks out its exact
+revision over the previous checkout and removes everything
 untracked except `node_modules`, so the tree equals the revision and
 `bun install --frozen-lockfile` writes only what the lockfile changed. It
 re-links the CI image's mise toolchain instead of copying it, and copies only
