@@ -35,6 +35,26 @@ describe("managedFlagViolations", () => {
     }
   });
 
+  it("accepts an explicitly commissioned default-on gate", () => {
+    expect(
+      managedFlagViolations(
+        { flags: [{ ...flag, default: true }] },
+        () => java,
+        [{ ...gate, expectedDefault: true }],
+      ),
+    ).toEqual([]);
+  });
+
+  it("rejects a default-off inventory for a commissioned gate", () => {
+    expect(
+      managedFlagViolations({ flags: [flag] }, () => java, [
+        { ...gate, expectedDefault: true },
+      ]),
+    ).toEqual([
+      "Flipt the-storm-example identifiers differ from managed inventory",
+    ]);
+  });
+
   it("requires exactly one inventory flag", () => {
     expect(managedFlagViolations({ flags: [] }, () => java, [gate])).toEqual([
       "expected exactly one managed flag for the-storm-example",

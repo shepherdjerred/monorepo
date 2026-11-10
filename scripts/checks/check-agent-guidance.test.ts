@@ -80,11 +80,54 @@ async function runGit(repositoryRoot: string, args: readonly string[]) {
   expect(await process.exited).toBe(0);
 }
 
-describe("agent guidance guard", () => {
-  test("scans the repository layout", async () => {
-    await expect(checkAgentGuidance()).resolves.toBeUndefined();
-  });
+async function commitFixture(repositoryRoot: string): Promise<void> {
+  await runGit(repositoryRoot, [
+    "-c",
+    "user.name=Guidance Fixture",
+    "-c",
+    "user.email=guidance@example.invalid",
+    "commit",
+    "--quiet",
+    "--message",
+    "guidance fixture",
+  ]);
+}
 
+async function withGuidanceRepository(
+  run: (repositoryRoot: string, homeAgentPath: string) => Promise<void>,
+): Promise<void> {
+  const directory = await mkdtemp(
+    nodePath.join(tmpdir(), "agent-guidance-staged-"),
+  );
+  const repositoryRoot = nodePath.join(directory, "repository");
+  const homeAgentPath = nodePath.join(directory, "home", "AGENTS.md");
+  try {
+    await mkdir(repositoryRoot);
+    await mkdir(nodePath.dirname(homeAgentPath));
+    await runGit(repositoryRoot, ["init", "--quiet"]);
+    const entries = validFixture();
+    for (const entry of entries) {
+      const destination = nodePath.join(repositoryRoot, entry.path);
+      await mkdir(nodePath.dirname(destination), { recursive: true });
+      if (entry.kind === "symlink") {
+        await createSymlink(entry.contents, destination);
+      } else {
+        await writeFile(destination, entry.contents);
+      }
+    }
+    await runGit(repositoryRoot, [
+      "add",
+      "--",
+      ...entries.map((entry) => entry.path),
+    ]);
+    await commitFixture(repositoryRoot);
+    await run(repositoryRoot, homeAgentPath);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+}
+
+describe("agent guidance guard", () => {
   test("uses portable Git paths for nested Claude compatibility links", () => {
     expect(claudeCompatibilityPath("packages/app/AGENTS.md")).toBe(
       "packages/app/CLAUDE.md",
@@ -374,7 +417,7 @@ describe("agent guidance compatibility", () => {
       expect(violations).toContainEqual({
         rule: "personal-agent-drift",
         path: "packages/dotfiles/AGENTS.md",
-        message: `differs from live ${homeAgentPath}; run 'chezmoi apply' to sync`,
+        message: `differs from live ${homeAgentPath}; inspect the diff and choose the intended synchronization direction`,
       });
 
       // When contents match, no drift violation is reported
@@ -398,5 +441,111 @@ describe("agent guidance compatibility", () => {
     expect(
       validateAgentGuidance(entries, { homeAgentPath: nonExistentPath }),
     ).toEqual([]);
+  });
+});
+
+describe("staged agent guidance checks", () => {
+  test("scans the repository layout independently of local home guidance", async () => {
+    await withGuidanceRepository(async (_, homeAgentPath) => {
+      await expect(
+        checkAgentGuidance("worktree", { homeAgentPath }),
+      ).resolves.toBeUndefined();
+    });
+  });
+
+  test("skips unrelated commits despite divergent home and repository guidance", async () => {
+    await withGuidanceRepository(async (repositoryRoot, homeAgentPath) => {
+      await writeFile(homeAgentPath, "# Newer personal preferences\n");
+      await writeFile(
+        nodePath.join(repositoryRoot, "AGENTS.md"),
+        "x\n".repeat(201),
+      );
+      await runGit(repositoryRoot, ["add", "AGENTS.md"]);
+      await commitFixture(repositoryRoot);
+      await writeFile(
+        nodePath.join(repositoryRoot, "README.md"),
+        "Application change\n",
+      );
+      await runGit(repositoryRoot, ["add", "README.md"]);
+
+      await expect(
+        checkAgentGuidance("index", { repositoryRoot, homeAgentPath }),
+      ).resolves.toBeUndefined();
+      expect(await Bun.file(homeAgentPath).text()).toBe(
+        "# Newer personal preferences\n",
+      );
+    });
+  });
+
+  test("does not read home guidance when only repository guidance is staged", async () => {
+    await withGuidanceRepository(async (repositoryRoot, homeAgentPath) => {
+      // A directory would fail a file read, proving this staged path never reads it.
+      await mkdir(homeAgentPath);
+      await writeFile(
+        nodePath.join(repositoryRoot, "AGENTS.md"),
+        "# Updated repository\n",
+      );
+      await runGit(repositoryRoot, ["add", "AGENTS.md"]);
+
+      await expect(
+        checkAgentGuidance("index", { repositoryRoot, homeAgentPath }),
+      ).resolves.toBeUndefined();
+    });
+  });
+
+  test("still validates the layout when a guidance adapter is deleted", async () => {
+    await withGuidanceRepository(async (repositoryRoot, homeAgentPath) => {
+      await runGit(repositoryRoot, ["rm", "CLAUDE.md"]);
+
+      await expect(
+        checkAgentGuidance("index", { repositoryRoot, homeAgentPath }),
+      ).rejects.toThrow("repository-symlink");
+    });
+  });
+
+  test("compares staged personal guidance with home rather than the worktree", async () => {
+    await withGuidanceRepository(async (repositoryRoot, homeAgentPath) => {
+      const personalSource = nodePath.join(
+        repositoryRoot,
+        "packages/dotfiles/AGENTS.md",
+      );
+      await writeFile(personalSource, "# Staged personal instructions\n");
+      await runGit(repositoryRoot, ["add", "packages/dotfiles/AGENTS.md"]);
+      await writeFile(personalSource, "# Live personal instructions\n");
+      await writeFile(homeAgentPath, "# Live personal instructions\n");
+
+      await expect(
+        checkAgentGuidance("index", { repositoryRoot, homeAgentPath }),
+      ).rejects.toThrow("personal-agent-drift");
+
+      await writeFile(homeAgentPath, "# Staged personal instructions\n");
+      await expect(
+        checkAgentGuidance("index", { repositoryRoot, homeAgentPath }),
+      ).resolves.toBeUndefined();
+    });
+  });
+
+  test("allows staged personal guidance when CI has no home file", async () => {
+    await withGuidanceRepository(async (repositoryRoot, homeAgentPath) => {
+      await writeFile(
+        nodePath.join(repositoryRoot, "packages/dotfiles/AGENTS.md"),
+        "# Updated personal guidance\n",
+      );
+      await runGit(repositoryRoot, ["add", "packages/dotfiles/AGENTS.md"]);
+
+      await expect(
+        checkAgentGuidance("index", { repositoryRoot, homeAgentPath }),
+      ).resolves.toBeUndefined();
+    });
+  });
+
+  test("explicit full checks detect home drift without staged guidance", async () => {
+    await withGuidanceRepository(async (repositoryRoot, homeAgentPath) => {
+      await writeFile(homeAgentPath, "# Different personal guidance\n");
+
+      await expect(
+        checkAgentGuidance("worktree", { repositoryRoot, homeAgentPath }),
+      ).rejects.toThrow("personal-agent-drift");
+    });
   });
 });
