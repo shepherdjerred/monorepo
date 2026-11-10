@@ -34,6 +34,13 @@ export function parseTrackerArgs(args: string[]) {
       archive: boolean,
       unarchive: boolean,
       "expected-revision": string,
+      parent: string,
+      due: string,
+      "due-before": string,
+      "due-after": string,
+      overdue: boolean,
+      today: string,
+      icon: string,
       body: string,
       "body-file": string,
       note: string,
@@ -56,6 +63,18 @@ export function integer(value: string | undefined): number | undefined {
   return value === undefined
     ? undefined
     : z.coerce.number().int().nonnegative().parse(value);
+}
+/** `none` clears an optional reference; anything else is passed through. */
+export function clearable(
+  value: string | undefined,
+  none = "none",
+): string | null | undefined {
+  return value === none ? null : value;
+}
+/** The calendar day on this machine, for filters relative to "today". */
+export function localToday(now = new Date()): string {
+  const pad = (value: number) => String(value).padStart(2, "0");
+  return `${String(now.getFullYear())}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
 }
 export async function textInput(
   value: string | undefined,

@@ -9,7 +9,9 @@ import {
 import type { TrackerClient } from "#lib/tracker/client.ts";
 import { attachFiles } from "#lib/tracker/attachments.ts";
 import {
+  clearable,
   integer,
+  localToday,
   required,
   textInput,
   type TrackerOptions,
@@ -31,6 +33,13 @@ function listInput(options: TrackerOptions, search?: string) {
     creatorKey: options.creator,
     priority: integer(options.priority),
     includeArchived: options["include-archived"],
+    parentIdentifier: options.parent?.toUpperCase(),
+    dueBefore: options["due-before"],
+    dueAfter: options["due-after"],
+    // The server never guesses a time zone: overdue is relative to this day.
+    ...(options.overdue
+      ? { overdue: true, today: options.today ?? localToday() }
+      : {}),
     limit: options.limit === "all" ? "all" : integer(options.limit),
     cursor: options.cursor,
     sort: options.sort,
@@ -55,6 +64,8 @@ async function create(context: TrackerCommandContext, options: TrackerOptions) {
       priority: integer(options.priority),
       projectSlug: options.project,
       assigneeKey: options.assignee,
+      parentIdentifier: clearable(options.parent?.toUpperCase(), "NONE"),
+      dueDate: clearable(options.due),
       labels: options.label,
       ...(state === undefined
         ? {}
@@ -97,8 +108,10 @@ async function update(
         options["description-file"],
       ),
       priority: integer(options.priority),
-      projectSlug: options.project === "none" ? null : options.project,
-      assigneeKey: options.assignee === "none" ? null : options.assignee,
+      projectSlug: clearable(options.project),
+      assigneeKey: clearable(options.assignee),
+      parentIdentifier: clearable(options.parent?.toUpperCase(), "NONE"),
+      dueDate: clearable(options.due),
       addLabels: options["add-label"],
       removeLabels: options["remove-label"],
       stateName: selected?.name,

@@ -44,6 +44,7 @@ model Team {
   states WorkflowState[]
   labels Label[]
   issues Issue[]
+  views View[]
 }
 
 model WorkflowState {
@@ -96,6 +97,7 @@ model Actor {
   attachments Attachment[]
   votes Vote[]
   events Event[]
+  views View[]
 }
 
 model Issue {
@@ -125,6 +127,10 @@ model Issue {
   completedAt DateTime?
   canceledAt DateTime?
   archivedAt DateTime?
+  parentId String?
+  parent Issue? @relation("parent", fields: [parentId], references: [id], onDelete: SetNull)
+  children Issue[] @relation("parent")
+  dueDate DateTime? @db.Date
   searchVector Unsupported("tsvector")? @default(dbgenerated())
   labels IssueLabel[]
   comments Comment[]
@@ -137,6 +143,7 @@ model Issue {
   @@unique([id, teamId])
   @@index([updatedAt, id])
   @@index([stateId, boardOrder, id])
+  @@index([parentId])
 }
 
 model IssueLabel {
@@ -221,6 +228,20 @@ model Event {
   @@index([issueIdentifier, occurredAt, id])
   @@index([actorId, occurredAt, id])
   @@index([occurredAt, id])
+}
+
+model View {
+  id String @id @default(uuid())
+  name String
+  icon String
+  params Json
+  teamId String?
+  team Team? @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  position Int
+  createdById String
+  createdBy Actor @relation(fields: [createdById], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model ImportMapping {

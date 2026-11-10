@@ -2,7 +2,11 @@ import { Prisma } from "#generated/prisma/client.ts";
 import { z } from "zod";
 import { TrackerError } from "#domain/error.ts";
 import { parseIdentifier, searchTokens } from "#domain/issue.ts";
-import { StateTypeSchema, type IssueListInput } from "#shared/schema.ts";
+import {
+  DueDateSchema,
+  StateTypeSchema,
+  type IssueListInput,
+} from "#shared/schema.ts";
 import type { Database } from "./database.ts";
 
 /**
@@ -40,6 +44,11 @@ const keyKinds = {
     select: (column: Sql) => sql`${column}::boolean`,
     bind: (value: string | number | boolean) => sql`${value}::boolean`,
   },
+  date: {
+    schema: DueDateSchema,
+    select: (column: Sql) => sql`to_char(${column}, 'YYYY-MM-DD')`,
+    bind: (value: string | number | boolean) => sql`${value}::date`,
+  },
 } as const;
 type SortKey = { expr: Sql; desc: boolean; kind: keyof typeof keyKinds };
 
@@ -56,6 +65,15 @@ const issueSorts: Record<IssueListInput["sort"], SortKey[]> = {
   ],
   votes: [{ expr: sql`i."voteCount"`, desc: true, kind: "int" }],
   board: [{ expr: sql`i."boardOrder"`, desc: false, kind: "float" }],
+  // Soonest first; issues without a due date come last.
+  due: [
+    { expr: sql`(i."dueDate" IS NULL)`, desc: false, kind: "bool" },
+    {
+      expr: sql`COALESCE(i."dueDate", DATE '0001-01-01')`,
+      desc: false,
+      kind: "date",
+    },
+  ],
 };
 
 /** Best match first, then open issues, then the most recently updated. */
@@ -72,6 +90,47 @@ function rankedSort(tokens: string, text: string): SortKey[] {
       kind: "bool",
     },
     { expr: sql`i."updatedAt"`, desc: true, kind: "time" },
+  ];
+}
+
+function hierarchyFilters(input: IssueListInput): Sql[] {
+  const parent =
+    input.parentIdentifier === undefined
+      ? undefined
+      : parseIdentifier(input.parentIdentifier);
+  return [
+    ...(parent === undefined
+      ? []
+      : [
+          sql`i."parentId" = (SELECT p."id" FROM "Issue" p JOIN "Team" t ON t."id" = p."teamId" WHERE t."key" = ${parent.teamKey} AND p."number" = ${parent.number})`,
+        ]),
+    ...(input.hasParent === undefined
+      ? []
+      : [
+          input.hasParent
+            ? sql`i."parentId" IS NOT NULL`
+            : sql`i."parentId" IS NULL`,
+        ]),
+  ];
+}
+
+function dueFilters(input: IssueListInput): Sql[] {
+  if (input.overdue !== undefined && input.today === undefined)
+    throw new Error("The overdue filter was not given a date");
+  return [
+    ...(input.dueBefore === undefined
+      ? []
+      : [sql`i."dueDate" <= ${input.dueBefore}::date`]),
+    ...(input.dueAfter === undefined
+      ? []
+      : [sql`i."dueDate" >= ${input.dueAfter}::date`]),
+    ...(input.overdue === undefined
+      ? []
+      : [
+          input.overdue
+            ? sql`i."dueDate" < ${input.today}::date`
+            : sql`(i."dueDate" IS NULL OR i."dueDate" >= ${input.today}::date)`,
+        ]),
   ];
 }
 
@@ -109,6 +168,8 @@ function filters(input: IssueListInput): Sql[] {
       ? []
       : [sql`i."priority" = ${input.priority}`]),
     ...(input.includeArchived ? [] : [sql`i."archivedAt" IS NULL`]),
+    ...hierarchyFilters(input),
+    ...dueFilters(input),
     ...input.labels.map(
       (name) =>
         sql`EXISTS (SELECT 1 FROM "IssueLabel" il JOIN "Label" l ON l."id" = il."labelId" WHERE il."issueId" = i."id" AND l."name" = ${name})`,

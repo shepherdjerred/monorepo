@@ -16,6 +16,12 @@ export const issueInclude = {
   creator: true,
   assignee: true,
   labels: { include: { label: true } },
+  parent: { select: { number: true, title: true } },
+  // Archived sub-issues are not counted towards a parent's progress.
+  children: {
+    where: { archivedAt: null },
+    select: { state: { select: { type: true } } },
+  },
 } satisfies Prisma.IssueInclude;
 type IssueRecord = Prisma.IssueGetPayload<{ include: typeof issueInclude }>;
 export const presentActor = (actor: Actor) => ({
@@ -23,8 +29,24 @@ export const presentActor = (actor: Actor) => ({
   firstMetadata: actor.firstMetadata as unknown,
   metadata: actor.metadata as unknown,
 });
-export const presentIssue = (issue: IssueRecord) => ({
+/** A due date is a calendar day: it crosses the wire as `YYYY-MM-DD`. */
+export const dueDateColumn = (value: string | null) =>
+  value === null ? null : new Date(`${value}T00:00:00.000Z`);
+export const presentIssue = ({ parent, children, ...issue }: IssueRecord) => ({
   ...issue,
+  dueDate:
+    issue.dueDate === null ? null : issue.dueDate.toISOString().slice(0, 10),
+  parent:
+    parent === null
+      ? null
+      : {
+          identifier: identifier(issue.team.key, parent.number),
+          title: parent.title,
+        },
+  childCount: children.length,
+  completedChildCount: children.filter(
+    ({ state }) => state.type === "completed",
+  ).length,
   sourceMetadata: issue.sourceMetadata as unknown,
   creator: presentActor(issue.creator),
   assignee: issue.assignee === null ? null : presentActor(issue.assignee),
@@ -244,29 +266,46 @@ export class IssueQueries {
     db: Prisma.TransactionClient = this.database,
   ) {
     const issue = await findIssue(db, reference);
-    const [comments, attachments, votes, relations] = await Promise.all([
-      db.comment.findMany({
-        where: { issueId: issue.id },
-        include: { author: true },
-        orderBy: [{ createdAt: "asc" }, { id: "asc" }],
-      }),
-      db.attachment.findMany({
-        where: { issueId: issue.id, status: "committed" },
-      }),
-      db.vote.findMany({
-        where: { issueId: issue.id },
-        include: { actor: true },
-      }),
-      db.issueRelation.findMany({
-        where: { OR: [{ fromId: issue.id }, { toId: issue.id }] },
-        include: {
-          from: { include: issueInclude },
-          to: { include: issueInclude },
-        },
-      }),
-    ]);
+    const [children, comments, attachments, votes, relations] =
+      await Promise.all([
+        db.issue.findMany({
+          where: { parentId: issue.id, archivedAt: null },
+          include: { state: true, assignee: true },
+          orderBy: [
+            { state: { position: "asc" } },
+            { boardOrder: "asc" },
+            { number: "asc" },
+          ],
+        }),
+        db.comment.findMany({
+          where: { issueId: issue.id },
+          include: { author: true },
+          orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+        }),
+        db.attachment.findMany({
+          where: { issueId: issue.id, status: "committed" },
+        }),
+        db.vote.findMany({
+          where: { issueId: issue.id },
+          include: { actor: true },
+        }),
+        db.issueRelation.findMany({
+          where: { OR: [{ fromId: issue.id }, { toId: issue.id }] },
+          include: {
+            from: { include: issueInclude },
+            to: { include: issueInclude },
+          },
+        }),
+      ]);
     return {
       ...presentIssue(issue),
+      children: children.map((child) => ({
+        identifier: identifier(issue.team.key, child.number),
+        title: child.title,
+        state: child.state,
+        priority: child.priority,
+        assignee: child.assignee === null ? null : presentActor(child.assignee),
+      })),
       comments: comments.map((comment) => ({
         ...comment,
         author: presentActor(comment.author),

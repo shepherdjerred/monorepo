@@ -6,10 +6,17 @@ import type { CreateIssueInput, UpdateIssueInput } from "#shared/schema.ts";
 import type { ActorEnvelope } from "#shared/actor.ts";
 import type { Database } from "./database.ts";
 import {
+  assertParent,
+  findParentId,
+  lockHierarchy,
+  lockIssues,
+} from "./issue-hierarchy.ts";
+import {
   IssueQueries,
   addLabels,
   audit,
   commitAttachments,
+  dueDateColumn,
   findIssue,
   lockIssue,
   presentIssue,
@@ -17,6 +24,34 @@ import {
   resolveProject,
   resolveState,
 } from "./issue-repository.ts";
+
+/** The columns an update request names; every other column is kept. */
+function issuePatch(
+  input: UpdateIssueInput,
+  references: {
+    projectId: string | null | undefined;
+    assigneeId: string | null | undefined;
+    parentId: string | null | undefined;
+  },
+) {
+  const { projectId, assigneeId, parentId } = references;
+  return {
+    ...(input.title === undefined ? {} : { title: input.title }),
+    ...(input.description === undefined
+      ? {}
+      : { description: input.description }),
+    ...(input.priority === undefined ? {} : { priority: input.priority }),
+    ...(projectId === undefined ? {} : { projectId }),
+    ...(assigneeId === undefined ? {} : { assigneeId }),
+    ...(parentId === undefined ? {} : { parentId }),
+    ...(input.dueDate === undefined
+      ? {}
+      : { dueDate: dueDateColumn(input.dueDate) }),
+    ...(input.archived === undefined
+      ? {}
+      : { archivedAt: input.archived ? new Date() : null }),
+  };
+}
 
 export class Issues extends IssueQueries {
   constructor(
@@ -41,6 +76,12 @@ export class Issues extends IssueQueries {
           (input.stateName === undefined ? "triage" : undefined),
       });
       await db.$queryRaw`SELECT "id" FROM "WorkflowState" WHERE "id" = ${state.id} FOR UPDATE`;
+      // The counter update above holds the team row: the hierarchy lock.
+      const parentId = (await findParentId(db, input.parentIdentifier)) ?? null;
+      if (parentId !== null) {
+        await lockIssue(db, parentId);
+        await assertParent(db, { id: null, teamId: team.id }, parentId);
+      }
       const tail = await db.issue.aggregate({
         where: { stateId: state.id },
         _max: { boardOrder: true },
@@ -56,6 +97,8 @@ export class Issues extends IssueQueries {
           stateId: state.id,
           projectId: (await resolveProject(db, input.projectSlug)) ?? null,
           assigneeId: (await resolveAssignee(db, input.assigneeKey)) ?? null,
+          parentId,
+          dueDate: dueDateColumn(input.dueDate ?? null),
           boardOrder: (tail._max.boardOrder ?? 0) + 1024,
           ...transitionTimestamps(
             state.type,
@@ -85,12 +128,16 @@ export class Issues extends IssueQueries {
     return this.unit.run(input.actor, requestId, async (context) => {
       const { db } = context;
       const initial = await findIssue(db, input.identifier);
+      if (input.parentIdentifier !== undefined)
+        await lockHierarchy(db, initial.teamId);
+      const parentId = await findParentId(db, input.parentIdentifier);
       const state =
         input.stateName === undefined && input.stateType === undefined
           ? initial.state
           : await resolveState(db, initial.teamId, input);
       await db.$queryRaw`SELECT "id" FROM "WorkflowState" WHERE "id" IN (${Prisma.join([initial.stateId, state.id].sort())}) ORDER BY "id" FOR UPDATE`;
-      await lockIssue(db, initial.id);
+      const newParent = typeof parentId === "string" ? [parentId] : [];
+      await lockIssues(db, [initial.id, ...newParent]);
       const before = await findIssue(db, input.identifier);
       if (before.stateId !== initial.stateId)
         throw new TrackerError(
@@ -105,21 +152,17 @@ export class Issues extends IssueQueries {
           "CONFLICT",
           "This issue changed. Reload before saving.",
         );
-      const projectId = await resolveProject(db, input.projectSlug);
-      const assigneeId = await resolveAssignee(db, input.assigneeKey);
+      // Re-sending the current parent changes nothing and is not re-checked.
+      for (const id of newParent)
+        if (id !== before.parentId) await assertParent(db, before, id);
       await db.issue.update({
         where: { id: before.id },
         data: {
-          ...(input.title === undefined ? {} : { title: input.title }),
-          ...(input.description === undefined
-            ? {}
-            : { description: input.description }),
-          ...(input.priority === undefined ? {} : { priority: input.priority }),
-          ...(projectId === undefined ? {} : { projectId }),
-          ...(assigneeId === undefined ? {} : { assigneeId }),
-          ...(input.archived === undefined
-            ? {}
-            : { archivedAt: input.archived ? new Date() : null }),
+          ...issuePatch(input, {
+            projectId: await resolveProject(db, input.projectSlug),
+            assigneeId: await resolveAssignee(db, input.assigneeKey),
+            parentId,
+          }),
           stateId: state.id,
           revision: { increment: 1 },
           ...transitionTimestamps(state.type, before, new Date()),
@@ -266,9 +309,18 @@ export class Issues extends IssueQueries {
   ) {
     return this.unit.run(input.actor, requestId, async (context) => {
       const before = await findIssue(context.db, input.identifier);
+      await lockHierarchy(context.db, before.teamId);
       await context.db
         .$queryRaw`SELECT "id" FROM "WorkflowState" WHERE "id" = ${before.stateId} FOR UPDATE`;
-      await lockIssue(context.db, before.id);
+      // Deleting detaches the sub-issues, which rewrites their rows.
+      const children = await context.db.issue.findMany({
+        where: { parentId: before.id },
+        select: { id: true },
+      });
+      await lockIssues(context.db, [
+        before.id,
+        ...children.map(({ id }) => id),
+      ]);
       const current = await findIssue(context.db, input.identifier);
       if (current.stateId !== before.stateId)
         throw new TrackerError(

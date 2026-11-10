@@ -90,6 +90,38 @@ ordered and paged in PostgreSQL with the issue ID as the final tie-breaker.
 priority", last. A text search ignores `sort` and orders by rank, then open
 before closed, then most recently updated.
 
+An issue may have one parent in its own team (`parentIdentifier` on create and
+update; `null` detaches). A hierarchy is at most five levels deep, counting the
+top-level issue, and an issue can never be its own ancestor: a parent in
+another team, a cycle or a deeper nesting is a `BAD_REQUEST`. Creating,
+re-parenting and deleting an issue hold the team row before any state or issue
+lock, so concurrent changes cannot build a cycle or exceed the depth between
+them. An archived issue takes no new sub-issues but keeps the ones it has, and
+its sub-issues stay visible. Deleting a parent detaches its sub-issues, which
+become top-level; the deletion event keeps the list. List items carry `parent`
+(`{ identifier, title }` or `null`), `childCount` and `completedChildCount`;
+the detail adds `children` in board order (workflow position, board order,
+number). Counts and `children` leave out archived sub-issues, and "completed"
+means a state of type `completed`. `parentIdentifier` and `hasParent` filter
+lists.
+
+`dueDate` is a calendar day, `YYYY-MM-DD`, stored as a PostgreSQL `date` with no
+time or time zone; impossible dates are rejected. `dueBefore` and `dueAfter`
+are inclusive and never match an issue without a due date. `overdue` means
+strictly before `today`, a day the caller must supply because the server does
+not guess anyone's time zone; it ignores issue state, so combine it with
+`states` to leave out finished work. `sort: "due"` lists the soonest first and
+issues without a due date last.
+
+Saved views (`views.list/create/update/delete/reorder`, also in
+`meta.bootstrap`) store a name, a short icon string and the issue-list URL
+parameters as a JSON object of strings and string arrays. Its keys are limited
+to the `issues.list` input names, without `cursor`, `limit` and `today`, plus
+the display keys `group` and `view`; values are not interpreted by the server.
+A view is global or belongs to one team, and a team's list includes the global
+views. Views share one explicit order: `reorder` takes every view ID exactly
+once. Parent, due date and view changes are audited like every other field.
+
 `POST /api/attachments` accepts a multipart `file` and a base64 JSON actor in
 `X-Tracker-Actor`. Uploads are staged until a subsequent issue or comment
 mutation commits their IDs. Only their uploading actor can commit them.

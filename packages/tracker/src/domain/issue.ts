@@ -16,6 +16,12 @@ export function parseIdentifier(value: string): {
   return { teamKey: match[1], number };
 }
 
+/**
+ * Levels in an issue hierarchy, counting the top-level issue as the first.
+ * An issue on the last level cannot take sub-issues.
+ */
+export const MAX_ISSUE_DEPTH = 5;
+
 export function identifier(teamKey: string, number: number): string {
   return `${teamKey}-${String(number)}`;
 }

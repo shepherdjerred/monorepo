@@ -9,6 +9,10 @@ import {
   CreateIssueSchema as CreateIssue,
   UpdateIssueSchema as UpdateIssue,
   IssueListSchema as IssueList,
+  DueDateSchema as DueDate,
+  ViewParamsSchema as ViewParams,
+  CreateViewSchema as CreateView,
+  UpdateViewSchema as UpdateView,
 } from "./schema.ts";
 import type { z } from "zod";
 
@@ -21,3 +25,9 @@ export const IdentifierSchema = Identifier.clone();
 export const CreateIssueSchema = CreateIssue.clone();
 export const UpdateIssueSchema = UpdateIssue.clone();
 export const IssueListSchema = IssueList.clone();
+export const DueDateSchema = DueDate.clone();
+export const ViewParamsSchema = ViewParams.clone();
+export const CreateViewSchema = CreateView.clone();
+export const UpdateViewSchema = UpdateView.clone();
+export type DueDate = z.infer<typeof DueDate>;
+export type ViewParams = z.infer<typeof ViewParams>;

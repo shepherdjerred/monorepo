@@ -262,6 +262,12 @@ toolkit tracker issue list --team AI --project developer-experience --label Impr
 toolkit tracker issue create --team AI --title "Tool: failure" --description-file /tmp/issue.md
 toolkit tracker issue vote AI-26 --note "Blocked tracker UI verification"
 toolkit tracker issue update AI-26 --state started --expected-revision 3
+toolkit tracker issue create --team AI --title "Sub-task" --parent AI-26 --due 2026-12-01
+toolkit tracker issue update AI-27 --parent none --due none
+toolkit tracker issue list --team AI --parent AI-26 --sort due
+toolkit tracker issue list --team AI --overdue --due-after 2026-01-01
+toolkit tracker view create --name "My work" --icon inbox --input-json '{"states":["started"],"sort":"due"}'
+toolkit tracker view list --team AI
 toolkit tracker issue comment add AI-26 --body-file /tmp/comment.md
 toolkit tracker issue attach AI-26 /tmp/screenshot.png
 ```
@@ -285,6 +291,14 @@ Claude model detection reads only the transcript explicitly provided by that
 session's hook. Missing session identity fails with an actionable error.
 Install the compiled toolkit before activating these hooks; existing sessions
 need a restart or their explicit native session environment.
+
+`--parent` makes an issue a sub-issue of another issue in the same team, up to
+five levels deep; `issue view` shows the parent and the sub-issues. Due dates
+are calendar days (`YYYY-MM-DD`) with no time zone. `--overdue` matches issues
+due before `--today`, which defaults to this machine's local date, whatever
+their state; combine it with `--state` to exclude finished work. A saved view
+stores issue-list parameters as JSON keyed like the `issues.list` input, plus
+the display keys `group` and `view`.
 
 `tracker api <procedure> --input-json '<JSON>'` is the query escape hatch;
 `--mutation` adds the same validated actor. Additional catalog mutations use
