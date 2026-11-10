@@ -619,13 +619,12 @@ describe("selected lane contracts", () => {
   });
 
   test("every OpenTofu stack directory is validated, including the locally built provider's", () => {
-    // Every stack directory holds a lock file.
+    // A stack is hand-written HCL (providers.tf) or a synthesis (main.tf.json).
     const stacks = [
-      ...new Bun.Glob("*/.terraform.lock.hcl").scanSync({
+      ...new Bun.Glob("*/{providers.tf,main.tf.json}").scanSync({
         cwd: `${import.meta.dir}/../../homelab/src/tofu`,
-        dot: true,
       }),
-    ].map((lock) => lock.replace("/.terraform.lock.hcl", ""));
+    ].map((file) => file.replace(/\/[^/]+$/u, ""));
     expect(stacks.length).toBeGreaterThanOrEqual(18);
     expect([...VALIDATED_STACKS].toSorted()).toEqual(stacks.toSorted());
     const steps = buildPipelineSteps({ images: IMAGES, changedBase: "x" });

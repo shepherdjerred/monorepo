@@ -25,7 +25,9 @@ describe("provider pins", () => {
     const locks = await Array.fromAsync(
       new Bun.Glob("*/.terraform.lock.hcl").scan({ cwd: TOFU_ROOT, dot: true }),
     );
-    expect(locks.length).toBeGreaterThanOrEqual(18);
+    // asuswrt's lock holds only the local platform's hash of a provider built
+    // from this repository, so it is not committed.
+    expect(locks.length).toBeGreaterThanOrEqual(17);
     for (const lock of locks) {
       const locked = lockedProviders(
         await Bun.file(path.join(TOFU_ROOT, lock)).text(),
@@ -39,7 +41,10 @@ describe("provider pins", () => {
   test("a synthesized stack runs exactly the pinned versions its bindings were generated from", async () => {
     const pins = await loadProviderPins();
     for (const stack of SYNTHESIZED_STACKS) {
-      const lock = await lockOf(stack);
+      const file = Bun.file(path.join(TOFU_ROOT, stack, ".terraform.lock.hcl"));
+      // A stack whose only provider is built from this repository commits no lock.
+      if (!(await file.exists())) continue;
+      const lock = await file.text();
       // providers:refresh moves a lock to the pins; a difference here is a
       // provider bump that was only half applied.
       expect(staleLockEntries(lock, pins), stack).toEqual([]);

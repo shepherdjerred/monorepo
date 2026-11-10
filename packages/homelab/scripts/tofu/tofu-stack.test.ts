@@ -225,38 +225,6 @@ describe("OpenTofu credential contracts", () => {
     }
   });
 
-  test("builds the AsusWRT provider at the pinned version its stack has locked", async () => {
-    const pin = await asuswrtProviderPin();
-    const lock = await Bun.file(
-      new URL("../../src/tofu/asuswrt/.terraform.lock.hcl", import.meta.url),
-    ).text();
-    expect(lockedProviders(lock)).toEqual([
-      { address: providerAddress(pin), version: pin.version },
-    ]);
-  });
-
-  test("pins every provider once and reads what a lock file selected", async () => {
-    const pins = await loadProviderPins();
-    expect(requirePin(pins, "registry.terraform.io/alpaca744/discord")).toEqual(
-      {
-        registryUrl: "https://registry.terraform.io",
-        source: "alpaca744/discord",
-        version: "0.1.3",
-      },
-    );
-    expect(() => requirePin(pins, "registry.opentofu.org/x/unknown")).toThrow(
-      "has no pin",
-    );
-    expect(
-      lockedProviders(
-        'provider "registry.opentofu.org/a/b" {\n  version     = "1.2.3"\n  constraints = "~> 1.0"\n}\n\nprovider "registry.terraform.io/c/d" {\n  version = "0.1.0"\n}\n',
-      ),
-    ).toEqual([
-      { address: "registry.opentofu.org/a/b", version: "1.2.3" },
-      { address: "registry.terraform.io/c/d", version: "0.1.0" },
-    ]);
-  });
-
   test("requires the Cloudflare token registry for direct OpenTofu runs", async () => {
     const variables = await Bun.file(
       new URL("../../src/tofu/cloudflare-tokens/variables.tf", import.meta.url),
@@ -731,3 +699,55 @@ process.exit(action === "init" ? ${String(initExit)} : ${String(planExit)});
     }
   },
 );
+
+describe("provider pins", () => {
+  test("builds the AsusWRT provider at the pinned version its stack requires", async () => {
+    const pin = await asuswrtProviderPin();
+    expect(providerAddress(pin)).toBe(
+      "registry.opentofu.org/shepherdjerred/asuswrt",
+    );
+    // The stack's lock is not committed (it holds one platform's hash of a
+    // locally built provider), so the stack's own requirement is the check.
+    const declaration = Bun.file(
+      new URL("../../src/tofu/asuswrt/providers.tf", import.meta.url),
+    );
+    const synthesis = Bun.file(
+      new URL("../../src/tofu/asuswrt/main.tf.json", import.meta.url),
+    );
+    const hcl = await declaration.exists();
+    const configuration = await (hcl ? declaration : synthesis).text();
+    expect(configuration).toMatch(
+      hcl
+        ? new RegExp(
+            String.raw`source\s*=\s*"shepherdjerred/asuswrt"[\s\S]*?version\s*=\s*"${pin.version}"`,
+            "u",
+          )
+        : new RegExp(
+            String.raw`"source":\s*"shepherdjerred/asuswrt",\s*"version":\s*"${pin.version}"`,
+            "u",
+          ),
+    );
+  });
+
+  test("pins every provider once and reads what a lock file selected", async () => {
+    const pins = await loadProviderPins();
+    expect(requirePin(pins, "registry.terraform.io/alpaca744/discord")).toEqual(
+      {
+        registryUrl: "https://registry.terraform.io",
+        source: "alpaca744/discord",
+        version: "0.1.3",
+      },
+    );
+    expect(() => requirePin(pins, "registry.opentofu.org/x/unknown")).toThrow(
+      "has no pin",
+    );
+    expect(
+      lockedProviders(
+        'provider "registry.opentofu.org/a/b" {\n  version     = "1.2.3"\n  constraints = "~> 1.0"\n}\n\nprovider "registry.terraform.io/c/d" {\n  version = "0.1.0"\n}\n',
+      ),
+    ).toEqual([
+      { address: "registry.opentofu.org/a/b", version: "1.2.3" },
+      { address: "registry.terraform.io/c/d", version: "0.1.0" },
+    ]);
+  });
+});

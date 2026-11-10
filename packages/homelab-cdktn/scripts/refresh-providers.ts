@@ -200,8 +200,12 @@ async function main(): Promise<void> {
   const stale = new Map<string, LockChange[]>();
   for (const stack of stacks) {
     const lock = Bun.file(path.join(TOFU_ROOT, stack, ".terraform.lock.hcl"));
-    if (!(await lock.exists()))
-      throw new Error(`Stack ${stack} has no .terraform.lock.hcl`);
+    if (!(await lock.exists())) {
+      // asuswrt: its only provider is built from this repository, so its
+      // lock is one platform's hash and is not committed.
+      console.log(`${stack}: no committed lock file, nothing to refresh`);
+      continue;
+    }
     const changes = staleLockEntries(await lock.text(), pins);
     if (changes.length > 0) stale.set(stack, changes);
   }
