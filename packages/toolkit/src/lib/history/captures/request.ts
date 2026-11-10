@@ -117,12 +117,35 @@ export type ParsedRequest = {
   readonly warmup: boolean;
 };
 
-export function detectFormat(host: string, body: JsonRecord): CaptureFormat {
-  if (host === "api.anthropic.com" && Array.isArray(body["messages"])) {
-    return "anthropic-messages";
+/**
+ * Each protocol's endpoint, matched against the request path without its
+ * query. The endpoint, not the host, names the protocol: Kimi and Grok serve
+ * Anthropic Messages beside Chat Completions and Responses on one host.
+ */
+const ENDPOINT_FORMATS: readonly (readonly [
+  RegExp,
+  Exclude<CaptureFormat, "unknown">,
+])[] = [
+  [/\/messages$/, "anthropic-messages"],
+  [/\/chat\/completions$/, "openai-chat"],
+  [/\/responses$/, "openai-responses"],
+];
+
+/** The endpoint's protocol, when the body carries that protocol's input. */
+export function detectFormat(path: string, body: JsonRecord): CaptureFormat {
+  const endpoint = path.split("?", 1)[0] ?? path;
+  const format = ENDPOINT_FORMATS.find(([pattern]) =>
+    pattern.test(endpoint),
+  )?.[1];
+  switch (format) {
+    case "anthropic-messages":
+    case "openai-chat":
+      return Array.isArray(body["messages"]) ? format : "unknown";
+    case "openai-responses":
+      return "input" in body ? format : "unknown";
+    case undefined:
+      return "unknown";
   }
-  if ("input" in body) return "openai-responses";
-  return Array.isArray(body["messages"]) ? "openai-chat" : "unknown";
 }
 
 /** Codex sends Responses fields at the top level of `response.create`. */
@@ -145,8 +168,8 @@ function chainParent(body: JsonRecord): string | null {
   return asString(body["previous_response_id"]) ?? continued;
 }
 
-export function parseRequest(host: string, body: JsonRecord): ParsedRequest {
-  const format = detectFormat(host, body);
+export function parseRequest(path: string, body: JsonRecord): ParsedRequest {
+  const format = detectFormat(path, body);
   const model = asString(body["model"]);
   if (format === "unknown") {
     return {

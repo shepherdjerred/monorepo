@@ -12,6 +12,7 @@ import {
   ingestCaptureSpool,
   pruneCaptures,
 } from "#lib/history/captures/ingest.ts";
+import { listCaptures } from "#lib/history/captures/queries.ts";
 import { redactCaptures } from "#lib/history/captures/redact.ts";
 import { CaptureStore } from "#lib/history/captures/store.ts";
 import { HistoryIndex } from "#lib/history/index.ts";
@@ -641,6 +642,78 @@ describe("capture spool handling", () => {
     expect(flows()).toBe(1);
     pruneCaptures(context.store, 1, later);
     expect(flows()).toBe(0);
+  });
+});
+
+describe("capture protocol detection", () => {
+  test("parses Anthropic Messages on a non-Anthropic route by its endpoint", async () => {
+    const context = await fixture();
+    const kimi = {
+      ...claudeHttp({
+        id: "kimi-1",
+        at: "2026-11-10T03:24:00.000Z",
+        body: {
+          model: "kimi-k3",
+          system: "You are Kimi Code.",
+          messages: [{ role: "user", content: "say hi" }],
+          stream: true,
+        },
+        response: [
+          {
+            type: "message_start",
+            message: {
+              id: "msg_kimi",
+              model: "kimi-k3",
+              role: "assistant",
+              content: [],
+              usage: { input_tokens: 12, output_tokens: 1 },
+            },
+          },
+          {
+            type: "content_block_start",
+            index: 0,
+            content_block: { type: "text", text: "" },
+          },
+          {
+            type: "content_block_delta",
+            index: 0,
+            delta: { type: "text_delta", text: "hi" },
+          },
+          { type: "content_block_stop", index: 0 },
+          {
+            type: "message_delta",
+            delta: { stop_reason: "end_turn" },
+            usage: { output_tokens: 3 },
+          },
+          { type: "message_stop" },
+        ],
+        sessionHeader: null,
+      }),
+      cli: "kimi",
+      host: "api.kimi.com",
+      path: "/coding/v1/messages",
+    } satisfies CaptureRecord;
+    const report = await ingest(context, [kimi]);
+    expect(report.captures).toBe(1);
+    const [capture] = listCaptures(context.store, {
+      session: null,
+      limit: 1,
+      offset: 0,
+    }).captures;
+    expect(capture).toMatchObject({
+      cli: "kimi",
+      format: "anthropic-messages",
+      model: "kimi-k3",
+      usage: { inputTokens: 12, outputTokens: 3 },
+    });
+    const parsed = await detail(context, capture?.id ?? 0);
+    expect(parsed.response).toMatchObject({
+      text: "hi",
+      stopReason: "end_turn",
+    });
+    expect(parsed.request.messages.map((block) => block.role)).toEqual([
+      "user",
+    ]);
   });
 });
 

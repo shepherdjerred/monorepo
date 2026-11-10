@@ -75,7 +75,7 @@ function httpOutcome(
 
 function applyHttp(store: CaptureStore, record: CaptureHttpRecord): boolean {
   const json = parseJsonObject(bodyText(record.request.body));
-  const request = json === null ? null : parseRequest(record.host, json);
+  const request = json === null ? null : parseRequest(record.path, json);
   const format = request?.format ?? "unknown";
   const responseBody = record.response?.body ?? null;
   const responseText = bodyText(responseBody);
@@ -151,7 +151,7 @@ function applyWsRequest(
   message: JsonRecord,
 ): boolean {
   if (message["type"] !== "response.create") return false;
-  const request = parseRequest(ws.host, responsesRequestBody(message));
+  const request = parseRequest(ws.path, responsesRequestBody(message));
   const id = insertCapture(store, {
     flowId: record.id,
     seq: record.seq,
