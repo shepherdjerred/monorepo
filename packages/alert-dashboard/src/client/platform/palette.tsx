@@ -1,5 +1,5 @@
 import { Dialog } from "@base-ui/react/dialog";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { CornerDownLeftIcon, SearchIcon } from "lucide-react";
 import { useState, useSyncExternalStore } from "react";
 import { useNavigate } from "react-router";
@@ -80,11 +80,11 @@ function PaletteBody(): React.JSX.Element {
       );
     },
     enabled: term !== "" && searchers.length > 0,
-    placeholderData: keepPreviousData,
     retry: false,
   });
-  // Results belong to a query; an emptied input shows none, even while the
-  // previous ones are still cached.
+  // Only results for the term on screen are listed. Keeping the previous
+  // term's results visible would leave them first in the list, where Enter
+  // would open one instead of the page or command just typed.
   const searched = term === "" ? [] : (search.data ?? []);
   const sections = paletteSections(registry, query, searched);
   const items = sections.flatMap((section) => section.items);

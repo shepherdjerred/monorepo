@@ -94,6 +94,23 @@ test("a palette command switches the theme", async ({ page }) => {
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
 });
 
+test("results from a previous query cannot be opened by a newer one", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const palette = await openPalette(page);
+  const input = palette.getByRole("combobox");
+  await input.fill("scout");
+  await expect(
+    palette.getByRole("option", { name: /Scout for LoL/u }),
+  ).toBeVisible();
+  // Enter lands before the debounced search for the new query has run.
+  await input.fill("dark theme");
+  await page.keyboard.press("Enter");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await expect(page).toHaveURL(/\/$/u);
+});
+
 test("the palette fits a phone without horizontal scrolling", async ({
   page,
 }) => {
