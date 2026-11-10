@@ -10,6 +10,10 @@ import {
 } from "discord.js-selfbot-v13";
 import { createUserMessageUpdateWatcher } from "#lib/discord/deferred-reply.ts";
 import { DaemonError } from "#lib/discord/error.ts";
+import {
+  discordErrorResponse,
+  throwDiscordWriteError,
+} from "#lib/discord/cooldown.ts";
 import { userChannelInfo } from "#lib/discord/channel.ts";
 import { userApplicationCommands } from "#lib/discord/application-commands.ts";
 import { handleDeleteReply } from "#lib/discord/delete-reply.ts";
@@ -36,10 +40,6 @@ export type DaemonContext = {
   ttlSeconds: number;
   lastActivity: number;
 };
-
-function getErrorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
-}
 
 export function mapMessageMentions(
   userIds: Iterable<string>,
@@ -173,7 +173,11 @@ async function handleSend(ctx: DaemonContext, body: unknown): Promise<unknown> {
     throw new DaemonError(`Channel ${request.channelId} is not sendable`);
   }
   const channel = await requireUserChannel(ctx, request.channelId);
-  const sent = await channel.send(request.content);
+  const sent = await channel
+    .send(request.content)
+    .catch((error: unknown) =>
+      throwDiscordWriteError(error, `/channels/${request.channelId}/messages`),
+    );
   return { messageId: sent.id, as };
 }
 
@@ -279,11 +283,11 @@ async function handleSlash(
   }
   const watcher = createUserMessageUpdateWatcher(user, mapUserMessage);
   try {
-    const result = await channel.sendSlash(
-      request.botId,
-      request.command,
-      ...request.args,
-    );
+    const result = await channel
+      .sendSlash(request.botId, request.command, ...request.args)
+      .catch((error: unknown) =>
+        throwDiscordWriteError(error, "/interactions"),
+      );
     const reply = result instanceof UserMessage ? mapUserMessage(result) : null;
     if (reply === null || reply.content.length > 0 || reply.embeds.length > 0) {
       return { invoked: true, reply };
@@ -431,8 +435,7 @@ export async function routeRequest(
     ctx.lastActivity = Date.now();
     return Response.json(result);
   } catch (error) {
-    const status = error instanceof DaemonError ? error.status : 500;
-    return Response.json({ error: getErrorMessage(error) }, { status });
+    return discordErrorResponse(error);
   }
 }
 

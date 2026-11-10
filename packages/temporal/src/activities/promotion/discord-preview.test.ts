@@ -7,11 +7,159 @@ import { promotionTarget } from "./manifest.ts";
 import { memoryPromotionStore } from "./test-support.ts";
 import { readPromotionState, updatePromotionState } from "./store.ts";
 import { z } from "zod/v4";
-import type { PromotionTaskResult } from "./publication/task-contract.ts";
+import {
+  PromotionTaskResultSchema,
+  type PromotionTaskResult,
+} from "./publication/task-contract.ts";
 
 const servers: ReturnType<typeof Bun.serve>[] = [];
+
+function blockedResult(): PromotionTaskResult {
+  return {
+    status: "blocked",
+    summary: "Model omitted the cooldown",
+    performedAction: false,
+    nextEligibleAt: null,
+    preparedContent: "Approved The Storm copy",
+    evidence: [],
+    receipt: null,
+  };
+}
 afterEach(async () => {
   for (const server of servers.splice(0)) await server.stop(true);
+});
+
+describe("native write cooldown authority", () => {
+  it.each(["blocked", "verified"] as const)(
+    "persists a proven initial rejection despite model status %s without allowing another write",
+    async (status) => {
+      const nextEligibleAt = new Date(Date.now() + 60_000).toISOString();
+      const test = harness({
+        run: true,
+        failure: {
+          path: "/send",
+          status: 429,
+          body: {
+            code: "DISCORD_COOLDOWN",
+            effect: "not-sent",
+            error: "Discord rejected the action due to a cooldown",
+            retryAfterMs: 60_000,
+            nextEligibleAt,
+          },
+        },
+      });
+      await updatePromotionState(test.store, test.target.id, (state) => ({
+        ...state,
+        lock: { occurrenceId: "fixture", acquiredAt: new Date().toISOString() },
+      }));
+      expect(
+        await test.client.handle({
+          endpoint: "discord-send",
+          body: { content: "Approved The Storm copy" },
+        }),
+      ).toMatchObject({ posted: false, status: "cooldown", nextEligibleAt });
+      await expect(
+        test.client.handle({
+          endpoint: "discord-send",
+          body: { content: "Approved The Storm copy" },
+        }),
+      ).rejects.toThrow("One prepared");
+      const result = {
+        ...blockedResult(),
+        status,
+        performedAction: status === "verified",
+        summary: "Posted successfully",
+        evidence: Array.from({ length: 30 }, (_, index) => ({
+          url: test.target.url,
+          quote: `Model observation ${String(index)}`,
+        })),
+        receipt:
+          status === "verified"
+            ? {
+                status: "verified" as const,
+                url: `${test.target.url}/999`,
+                quote: "Model claimed success",
+                occurrenceId: null,
+              }
+            : null,
+      };
+      test.client.normalizeResult(result);
+      expect(() => PromotionTaskResultSchema.parse(result)).not.toThrow();
+      expect(result).toMatchObject({
+        status: "deferred",
+        performedAction: false,
+        receipt: null,
+        nextEligibleAt,
+        summary: `Discord rejected this action due to a cooldown until ${nextEligibleAt}`,
+      });
+      expect(result.evidence).toEqual([
+        {
+          url: test.target.url,
+          quote: `Discord rejected this action due to a cooldown until ${nextEligibleAt}`,
+        },
+      ]);
+      await test.journal.finish(result);
+      const state = await readPromotionState(test.store, test.target.id);
+      expect(state.attempts[0]?.status).toBe("no-action");
+      expect(Date.parse(state.nextEligibleAt ?? "")).toBeGreaterThanOrEqual(
+        Date.parse(nextEligibleAt),
+      );
+      expect(
+        test.requests.filter((request) => request.path === "/send"),
+      ).toHaveLength(1);
+    },
+  );
+
+  it.each([
+    {
+      path: "/read" as const,
+      status: 429,
+      body: {
+        code: "DISCORD_COOLDOWN",
+        effect: "not-sent",
+        error: "Read limit",
+        retryAfterMs: 60_000,
+        nextEligibleAt: "2030-01-01T00:00:00Z",
+      },
+    },
+    { path: "/send" as const, status: 500, body: { error: "Connection lost" } },
+    {
+      path: "/send" as const,
+      status: 429,
+      body: { error: "Unclassified rejection" },
+    },
+  ])(
+    "retains uncertainty for unproven or post-acceptance errors: %j",
+    async (failure) => {
+      const test = harness({ run: true, failure });
+      await updatePromotionState(test.store, test.target.id, (state) => ({
+        ...state,
+        lock: { occurrenceId: "fixture", acquiredAt: new Date().toISOString() },
+      }));
+      await expect(
+        test.client.handle({
+          endpoint: "discord-send",
+          body: { content: "Approved The Storm copy" },
+        }),
+      ).rejects.toThrow("HTTP");
+      const result = blockedResult();
+      test.client.normalizeResult(result);
+      expect(result.status).toBe("blocked");
+      expect(result.nextEligibleAt).toBeNull();
+      await test.journal.finish(result);
+      const state = await readPromotionState(test.store, test.target.id);
+      expect(state.attempts[0]?.status).toBe("uncertain");
+      await expect(
+        test.client.handle({
+          endpoint: "discord-send",
+          body: { content: "Approved The Storm copy" },
+        }),
+      ).rejects.toThrow("One prepared");
+      expect(
+        test.requests.filter((request) => request.path === "/send"),
+      ).toHaveLength(1);
+    },
+  );
 });
 function harness(
   options: {
@@ -26,6 +174,11 @@ function harness(
     canManageMessages?: boolean;
     moderationMfaLevel?: "NONE" | "ELEVATED";
     accountMfaEnabled?: boolean;
+    failure?: {
+      path: "/send" | "/slash" | "/read";
+      status: number;
+      body: unknown;
+    };
   } = {},
 ) {
   const target = {
@@ -58,6 +211,10 @@ function harness(
       const body: unknown =
         request.method === "POST" ? await request.json() : null;
       requests.push({ path: url.pathname, body });
+      if (options.failure?.path === url.pathname)
+        return Response.json(options.failure.body, {
+          status: options.failure.status,
+        });
       if (url.pathname === "/status")
         return Response.json({
           identities: {

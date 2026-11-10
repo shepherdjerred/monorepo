@@ -64,12 +64,16 @@ async function loginBot(token: string): Promise<BotClient> {
   return bot;
 }
 
-async function loginUser(token: string): Promise<UserClient> {
-  const user = new UserClient({
+export function createDiscordUserClient(): UserClient {
+  return new UserClient({
     retryLimit: 0,
     restRequestTimeout: 20_000,
     rejectOnRateLimit: () => true,
   });
+}
+
+async function loginUser(token: string): Promise<UserClient> {
+  const user = createDiscordUserClient();
   user.on("error", (error) => {
     logLine("user client error", { error: getErrorMessage(error) });
   });
@@ -94,11 +98,7 @@ async function loginUserWithPassword(): Promise<UserClient> {
     password === ""
   )
     throw new Error("Discord login credentials are missing");
-  const user = new UserClient({
-    retryLimit: 0,
-    restRequestTimeout: 20_000,
-    rejectOnRateLimit: () => true,
-  });
+  const user = createDiscordUserClient();
   try {
     const token = await discordPasswordToken(
       email,

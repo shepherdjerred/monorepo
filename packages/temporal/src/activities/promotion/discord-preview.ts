@@ -14,6 +14,11 @@ import {
   discordCommandPermission,
 } from "./access/discord-permissions.ts";
 
+import {
+  DiscordCooldownError,
+  throwDiscordCooldown,
+} from "./access/discord-cooldown.ts";
+
 export const PromotionDiscordToolSchema = z.discriminatedUnion("endpoint", [
   z.strictObject({ endpoint: z.literal("discord-status") }),
   z.strictObject({
@@ -91,6 +96,7 @@ export class PromotionDiscordPreview {
     operation: unknown;
   }[] = [];
   private calls = 0;
+  private knownCooldown: { nextEligibleAt: string; text: string } | undefined;
   private readonly observedMessages = new Map<
     string,
     z.infer<typeof Messages>["messages"][number]
@@ -139,6 +145,7 @@ export class PromotionDiscordPreview {
         "Outreach Discord daemon is unavailable. Run the service-account-backed start-discord.ts bootstrap; desktop 1Password is disabled.",
       );
     }
+    await throwDiscordCooldown(response, path);
     if (!response.ok)
       throw new Error(`Discord daemon ${path} HTTP ${String(response.status)}`);
     return await response.json();
@@ -309,6 +316,7 @@ export class PromotionDiscordPreview {
           : `/${tool.body.command}`,
     });
     await this.input.journal.beforeMutation();
+    let writeAccepted = false;
     try {
       const response =
         tool.endpoint === "discord-send"
@@ -321,6 +329,7 @@ export class PromotionDiscordPreview {
               channelId: context.channel.id,
               ...tool.body,
             });
+      writeAccepted = true;
       const parsed =
         tool.endpoint === "discord-send"
           ? z.object({ messageId: z.string() }).parse(response).messageId
@@ -363,9 +372,34 @@ export class PromotionDiscordPreview {
         evidence: { observationId: observation.reference, ref: "text" },
       };
     } catch (error) {
+      if (!writeAccepted && error instanceof DiscordCooldownError) {
+        const { nextEligibleAt, retryAfterMs } = error.cooldown;
+        const text = `Discord rejected this action due to a cooldown until ${nextEligibleAt}`;
+        this.knownCooldown = { nextEligibleAt, text };
+        this.input.journal.observeNativeCooldown();
+        return {
+          posted: false,
+          status: "cooldown",
+          retryAfterMs,
+          nextEligibleAt,
+          evidence: this.observe(text),
+        };
+      }
       this.input.journal.mutationFailed();
       throw error;
     }
+  }
+
+  normalizeResult(result: PromotionTaskResult): void {
+    const cooldown = this.knownCooldown;
+    if (cooldown === undefined) return;
+    result.status = "deferred";
+    result.performedAction = false;
+    result.receipt = null;
+    result.nextEligibleAt = cooldown.nextEligibleAt;
+    result.nativeCooldownObserved = true;
+    result.summary = cooldown.text;
+    result.evidence = [{ url: this.input.target.url, quote: cooldown.text }];
   }
 
   capture() {

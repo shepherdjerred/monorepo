@@ -262,7 +262,8 @@
     "@spectrum-ts/imessage@12.10.1": "patches/@spectrum-ts%2Fimessage@12.10.1.patch",
     "@spectrum-ts/core@12.10.1": "patches/@spectrum-ts%2Fcore@12.10.1.patch",
     "@astrojs/internal-helpers@0.12.0": "patches/@astrojs%2Finternal-helpers@0.12.0.patch",
-    "mineflayer@4.39.0": "patches/mineflayer@4.39.0.patch"
+    "mineflayer@4.39.0": "patches/mineflayer@4.39.0.patch",
+    "discord.js-selfbot-v13@3.7.1": "patches/discord.js-selfbot-v13@3.7.1.patch"
   },
   "packageManager": "bun@1.4.2"
 }

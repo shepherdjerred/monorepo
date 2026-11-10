@@ -2835,6 +2835,7 @@
     "@spectrum-ts/imessage@12.10.1": "patches/@spectrum-ts%2Fimessage@12.10.1.patch",
     "@spectrum-ts/core@12.10.1": "patches/@spectrum-ts%2Fcore@12.10.1.patch",
     "@react-native/metro-babel-transformer@0.87.1": "patches/@react-native%2Fmetro-babel-transformer@0.87.1.patch",
+    "discord.js-selfbot-v13@3.7.1": "patches/discord.js-selfbot-v13@3.7.1.patch",
     "mineflayer@4.39.0": "patches/mineflayer@4.39.0.patch",
     "markdown-it@14.3.0": "patches/markdown-it@14.3.0.patch",
     "markdown-it@10.0.0": "patches/markdown-it@10.0.0.patch",
