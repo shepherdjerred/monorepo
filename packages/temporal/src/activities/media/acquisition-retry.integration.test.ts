@@ -1,5 +1,6 @@
 import { TestWorkflowEnvironment } from "@temporalio/testing";
 import { Worker } from "@temporalio/worker";
+import { Context } from "@temporalio/activity";
 import { expect, test } from "vitest";
 import type { createMediaFileRuntime } from "@shepherdjerred/media/automation/network";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
@@ -11,6 +12,13 @@ type FileExecution = Parameters<
     ReturnType<typeof createMediaFileRuntime>
   >["acquisition"]["promoteMediaFiles"]
 >[1];
+type InvocationObservation = {
+  execution: FileExecution;
+  attempt: number;
+  entered: { wall: number; monotonic: number };
+  attemptDeadline: number;
+  scheduleDeadline: number;
+};
 const input = {
   operationId: "00000000-0000-4000-8000-000000000001",
   attemptId: "00000000-0000-4000-8000-000000000002",
@@ -21,7 +29,7 @@ test.each([false, true])(
   "native acquisition retries local expiry with a new original invocation and the unchanged three-attempt cap (exhausted=%s)",
   async (exhausted) => {
     const env = await TestWorkflowEnvironment.createTimeSkipping();
-    const observations: number[] = [];
+    const observations: InvocationObservation[] = [];
 
     const files = await Worker.create({
       connection: env.nativeConnection,
@@ -47,7 +55,17 @@ test.each([false, true])(
               execution: FileExecution,
             ) => {
               execution.assertActive();
-              observations.push(execution.observed.wall);
+              const info = Context.current().info;
+              observations.push({
+                execution,
+                attempt: info.attempt,
+                entered: { wall: Date.now(), monotonic: performance.now() },
+                attemptDeadline:
+                  info.currentAttemptScheduledTimestampMs +
+                  info.startToCloseTimeoutMs,
+                scheduleDeadline:
+                  info.scheduledTimestampMs + info.scheduleToCloseTimeoutMs,
+              });
               return Promise.resolve(
                 exhausted || observations.length === 1
                   ? {
@@ -101,7 +119,35 @@ test.each([false, true])(
           });
       });
       expect(observations).toHaveLength(exhausted ? 3 : 2);
-      expect(new Set(observations).size).toBe(observations.length);
+      expect(observations.map((observation) => observation.attempt)).toEqual(
+        exhausted ? [1, 2, 3] : [1, 2],
+      );
+      const executions = observations.map(
+        (observation) => observation.execution,
+      );
+      expect(new Set(executions).size).toBe(observations.length);
+      expect(
+        new Set(executions.map((execution) => execution.observed)).size,
+      ).toBe(observations.length);
+      for (const [index, observation] of observations.entries()) {
+        const { execution, entered } = observation;
+        expect(execution.observed.wall).toBeLessThanOrEqual(entered.wall);
+        expect(execution.observed.monotonic).toBeLessThanOrEqual(
+          entered.monotonic,
+        );
+        expect(entered.wall).toBeLessThan(execution.expiresAtMs);
+        expect(execution.expiresAtMs).toBeLessThanOrEqual(
+          observation.attemptDeadline,
+        );
+        expect(execution.expiresAtMs).toBeLessThanOrEqual(
+          observation.scheduleDeadline,
+        );
+        const previous = observations[index - 1];
+        if (previous !== undefined)
+          expect(execution.observed.monotonic).toBeGreaterThanOrEqual(
+            previous.entered.monotonic,
+          );
+      }
       const history = await handle.fetchHistory();
       const scheduled = history.events?.find(
         (event) =>
