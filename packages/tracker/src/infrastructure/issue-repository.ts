@@ -6,6 +6,7 @@ import { TrackerError } from "#domain/error.ts";
 import { diff } from "#domain/diff.ts";
 import { identifier, parseIdentifier, searchTokens } from "#domain/issue.ts";
 import { StateTypeSchema, type IssueListInput } from "#shared/schema.ts";
+import { issuePage } from "./issue-list.ts";
 import type { Database } from "./database.ts";
 
 export const issueInclude = {
@@ -184,68 +185,24 @@ export async function commitAttachments(
 
 export class IssueQueries {
   constructor(readonly database: Database) {}
-  async searchIds(value: string): Promise<string[]> {
-    if (/^[a-z][a-z0-9]*[- ][1-9]\d*$/iu.test(value.trim())) {
-      const ref = parseIdentifier(value);
-      const matches = await this.database.issue.findMany({
-        where: { team: { key: ref.teamKey }, number: ref.number },
-        select: { id: true },
-      });
-      return matches.map(({ id }) => id);
-    }
-    const tokens = searchTokens(value);
-    if (tokens === "") return [];
-    const rows = await this.database.$transaction(async (tx) => {
-      await tx.$executeRaw`SET LOCAL pg_trgm.similarity_threshold = 0.25`;
-      return tx.$queryRaw<{ id: string }[]>`
-        SELECT "id" FROM "Issue" WHERE "searchVector" @@ to_tsquery('english', ${tokens}) OR "title" % ${value}
-        ORDER BY GREATEST(ts_rank_cd("searchVector", to_tsquery('english', ${tokens})) * 2, similarity("title", ${value})) DESC,
-          ("completedAt" IS NULL AND "canceledAt" IS NULL) DESC, "updatedAt" DESC, "id" ASC`;
-    });
-    return rows.map(({ id }) => id);
-  }
-
   async list(input: IssueListInput) {
-    const ids =
-      input.search === undefined || input.search.trim() === ""
-        ? undefined
-        : await this.searchIds(input.search);
-    const where = listWhere(input, ids);
-    const sort = {
-      updated: "updatedAt",
-      created: "createdAt",
-      priority: "priority",
-      votes: "voteCount",
-      board: "boardOrder",
-    } as const;
-    const field = sort[input.sort];
-    const customOrder = ids !== undefined || input.sort === "priority";
-    const rows = await this.database.issue.findMany({
-      where,
-      include: issueInclude,
-      orderBy: [
-        {
-          [field]:
-            input.sort === "board" || input.sort === "priority"
-              ? "asc"
-              : "desc",
-        },
-        { id: "asc" },
-      ],
-      ...(customOrder || input.cursor === undefined
-        ? {}
-        : { cursor: { id: input.cursor }, skip: 1 }),
-      ...(customOrder || input.limit === "all"
-        ? {}
-        : { take: input.limit + 1 }),
-    });
-    const ordered = customOrder ? customPage(rows, input, ids) : rows;
-    const more = input.limit !== "all" && ordered.length > input.limit;
-    const page =
-      input.limit === "all" ? ordered : ordered.slice(0, input.limit);
+    const { ids, nextCursor, total } = await issuePage(this.database, input);
+    const rows = new Map<string, IssueRecord>();
+    // Bounded batches keep a `limit: "all"` read under the bind limit.
+    for (let start = 0; start < ids.length; start += 1000)
+      for (const row of await this.database.issue.findMany({
+        where: { id: { in: ids.slice(start, start + 1000) } },
+        include: issueInclude,
+      }))
+        rows.set(row.id, row);
     return {
-      items: page.map((row) => presentIssue(row)),
-      nextCursor: more ? (page.at(-1)?.id ?? null) : null,
+      // An issue deleted since the page was read is simply absent.
+      items: ids.flatMap((id) => {
+        const row = rows.get(id);
+        return row === undefined ? [] : [presentIssue(row)];
+      }),
+      nextCursor,
+      total,
     };
   }
 
@@ -327,65 +284,4 @@ export class IssueQueries {
       })),
     };
   }
-}
-
-function customPage(
-  rows: IssueRecord[],
-  input: IssueListInput,
-  searchIds: string[] | undefined,
-) {
-  const ranks = new Map(searchIds?.map((id, index) => [id, index]));
-  rows.sort((a, b) =>
-    searchIds === undefined
-      ? (a.priority === 0 ? 5 : a.priority) -
-          (b.priority === 0 ? 5 : b.priority) || a.id.localeCompare(b.id)
-      : (ranks.get(a.id) ?? Number.MAX_SAFE_INTEGER) -
-        (ranks.get(b.id) ?? Number.MAX_SAFE_INTEGER),
-  );
-  if (input.cursor === undefined) return rows;
-  const cursor = rows.findIndex((row) => row.id === input.cursor);
-  if (cursor === -1)
-    throw new TrackerError(
-      "BAD_REQUEST",
-      "Search cursor is no longer available",
-    );
-  return rows.slice(cursor + 1);
-}
-
-function listWhere(
-  input: IssueListInput,
-  ids: string[] | undefined,
-): Prisma.IssueWhereInput {
-  return {
-    ...(input.teamKey === undefined ? {} : { team: { key: input.teamKey } }),
-    ...(input.projectSlug === undefined
-      ? {}
-      : { project: { slug: input.projectSlug } }),
-    ...(input.assigneeKey === undefined
-      ? {}
-      : { assignee: { key: input.assigneeKey } }),
-    ...(input.creatorKey === undefined
-      ? {}
-      : { creator: { key: input.creatorKey } }),
-    ...(input.priority === undefined ? {} : { priority: input.priority }),
-    ...(input.includeArchived ? {} : { archivedAt: null }),
-    ...(ids === undefined ? {} : { id: { in: ids } }),
-    AND: [
-      ...input.labels.map((name) => ({
-        labels: { some: { label: { name } } },
-      })),
-      ...(input.states.length === 0
-        ? []
-        : [
-            {
-              OR: input.states.map((state) => {
-                const parsed = StateTypeSchema.safeParse(state);
-                return parsed.success
-                  ? { state: { type: parsed.data } }
-                  : { state: { name: state } };
-              }),
-            },
-          ]),
-    ],
-  };
 }

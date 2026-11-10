@@ -76,6 +76,20 @@ relations, votes, projects, labels, states, actors and global events. Search
 combines weighted PostgreSQL full-text prefix matching, title trigrams and an
 identifier fast path. List filters are combined, with labels using AND.
 
+`issues.list` returns `{ items, nextCursor, total }`. `total` counts every
+issue the filter matches, regardless of `cursor` and `limit`. `nextCursor` is
+an opaque keyset: it encodes the sort key and ID of the last issue served, and
+the next page is every issue that sorts strictly after it. Paging is therefore
+stable while issues change: nothing repeats, nothing is skipped, an issue
+edited into an already-served position does not reappear, and a cursor
+outlives the deletion of its issue. A cursor belongs to the ordering that
+issued it; a malformed cursor, or one replayed under another sort or a
+different search mode, is a `BAD_REQUEST`. Every sort and ranked search is
+ordered and paged in PostgreSQL with the issue ID as the final tie-breaker.
+`sort: "priority"` runs Urgent (1) to Low (4) and puts priority 0, "No
+priority", last. A text search ignores `sort` and orders by rank, then open
+before closed, then most recently updated.
+
 `POST /api/attachments` accepts a multipart `file` and a base64 JSON actor in
 `X-Tracker-Actor`. Uploads are staged until a subsequent issue or comment
 mutation commits their IDs. Only their uploading actor can commit them.
