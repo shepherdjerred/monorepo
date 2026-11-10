@@ -107,16 +107,40 @@ describe("root check input contract", () => {
 
   test("direct Turbo execution without the producer cannot cache a passing root check", async () => {
     const script = path.join(import.meta.dir, "run-shard-check.ts");
-    for (const key of [undefined, "bad", "a".repeat(64)]) {
-      const result = Bun.spawnSync(["bun", script, "large-files", "root"], {
-        env: {
-          ...Bun.env,
-          TURBO_HASH: "probe-task",
-          CI_ROOT_CHECK_INPUTS_SHA256: key,
-        },
+    const repository = await mkdtemp(path.join(tmpdir(), "root-input-cli-"));
+    // Keep the real CLI and Git fingerprint, without making its refusal depend
+    // on metadata traversal of an unrelated full checkout.
+    const environment = {
+      ...Bun.env,
+      GIT_DIR: path.join(repository, ".git"),
+      GIT_WORK_TREE: repository,
+      GIT_INDEX_FILE: undefined,
+    };
+    try {
+      const initialized = Bun.spawnSync(["git", "init", "--quiet"], {
+        cwd: repository,
+        env: environment,
       });
-      expect(result.exitCode).not.toBe(0);
-      expect(result.stderr.toString()).toContain("freshly fingerprinted");
+      expect(initialized.exitCode, initialized.stderr.toString()).toBe(0);
+      await Bun.write(path.join(repository, "source.ts"), "const value = 1;\n");
+      const staged = Bun.spawnSync(["git", "add", "source.ts"], {
+        cwd: repository,
+        env: environment,
+      });
+      expect(staged.exitCode, staged.stderr.toString()).toBe(0);
+      for (const key of [undefined, "bad", "a".repeat(64)]) {
+        const result = Bun.spawnSync(["bun", script, "large-files", "root"], {
+          env: {
+            ...environment,
+            TURBO_HASH: "probe-task",
+            CI_ROOT_CHECK_INPUTS_SHA256: key,
+          },
+        });
+        expect(result.exitCode).not.toBe(0);
+        expect(result.stderr.toString()).toContain("freshly fingerprinted");
+      }
+    } finally {
+      await rm(repository, { recursive: true, force: true });
     }
   });
 });
