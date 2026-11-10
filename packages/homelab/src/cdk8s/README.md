@@ -117,6 +117,25 @@ prove that:
   catalog key so upstream bumps do not churn them. Regenerate with
   `bun run test -- src/testing/first-party-snapshots.test.ts --update`.
 
+## Fleet policy tests
+
+`src/fleet-policy/` asserts rules over every synthesized workload instead of
+one service at a time:
+
+- every workload is selected by an Ingress and an Egress `NetworkPolicy`, and
+  every namespace an upstream chart deploys into has both;
+- every container that declares a port, and every workload behind a `Service`,
+  has a readiness or startup probe;
+- every container sets `allowPrivilegeEscalation: false` and runs under a
+  seccomp profile;
+- 1Password item paths are built with `vaultItemPath`;
+- an Argo Application's Helm values are typed as the chart it installs.
+
+`debt-allowlists.ts` lists today's exceptions to each rule. The tests fail on a
+violation that is not listed and on a listed entry that no longer violates, so
+the lists only shrink: fix the workload and delete its entry. Do not add an
+entry to make a new workload pass.
+
 ## Commands
 
 ```bash
