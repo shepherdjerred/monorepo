@@ -284,7 +284,7 @@ describe("PostgreSQL delivery invariants 1.2", () => {
     );
     expect(retry.status).toBe("queued");
   });
-  test("automatic reconciliation stops after failure and never calls acceptance green", async () => {
+  test("a settled failure blocks only its own revision and never calls acceptance green (D2)", async () => {
     const automatic = await context.delivery.reconcile(
       [context.fixture.environment.id],
       testExecutor,
@@ -310,6 +310,12 @@ describe("PostgreSQL delivery invariants 1.2", () => {
     const overview = await context.delivery.overview();
     expect(reconciled.deployments).toEqual([]);
     expect(overview.environments[0]?.acceptedVersionSetRevisionId).toBeNull();
+    await newerRevision();
+    const next = await context.delivery.reconcile(
+      [context.fixture.environment.id],
+      testExecutor,
+    );
+    expect(next.deployments).toHaveLength(1);
   });
 });
 /** The automatic request, failed after recording one settled stage. */
@@ -351,9 +357,9 @@ async function newerRevision() {
   await context.delivery.qualify(changed.buildId, "verified", testExecutor);
 }
 
-describe("automatic selection after a failure without effect (D2)", () => {
-  test.each(["worker-image-provenance", "step-apply-safety"])(
-    "a failure settled in %s changed nothing and blocks only its own revision (D2)",
+describe("automatic selection after a settled failure (D2)", () => {
+  test.each(["worker-image-provenance", "step-apply-safety", "reconcile"])(
+    "a failure settled in %s blocks only its own revision (D2)",
     async (key) => {
       await failedAutomatically({ key, status: "failed" });
       const same = await context.delivery.reconcile(
@@ -369,8 +375,24 @@ describe("automatic selection after a failure without effect (D2)", () => {
       expect(next.deployments).toHaveLength(1);
     },
   );
-  test("a failure in an effect stage still blocks every automatic successor (D2)", async () => {
-    await failedAutomatically({ key: "reconcile", status: "failed" });
+  test("a recovery-required failure holds the environment for every revision (D2, D5)", async () => {
+    const automatic = await context.delivery.reconcile(
+      [context.fixture.environment.id],
+      testExecutor,
+    );
+    const selected = automatic.deployments[0];
+    if (selected === undefined) throw new Error("Automatic request missing");
+    await context.delivery.claim(selected, testExecutor);
+    await context.delivery.finish(
+      selected,
+      {
+        status: "failed",
+        message: "External operation may still be active",
+        evidence: [],
+        recoveryRequired: true,
+      },
+      testExecutor,
+    );
     await newerRevision();
     const next = await context.delivery.reconcile(
       [context.fixture.environment.id],
