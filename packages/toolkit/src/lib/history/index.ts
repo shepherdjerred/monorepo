@@ -15,7 +15,8 @@ import {
 } from "./types.ts";
 import { ingestResults } from "./ingest.ts";
 import {
-  LOCAL_MACHINE,
+  addDocumentFilters,
+  type DocumentFilter,
   queryFacets,
   querySessions,
   querySessionsByIds,
@@ -41,12 +42,7 @@ import {
 
 const INDEX_SCHEMA_VERSION = 5;
 
-type HistoryQueryOptions = {
-  readonly since: string | null;
-  readonly source: HistorySourceName | null;
-  /** A mirrored machine id, or `LOCAL_MACHINE` for this machine. */
-  readonly machine?: string | null;
-  readonly workspace?: string | null;
+type HistoryQueryOptions = DocumentFilter & {
   readonly limit?: number;
   readonly offset?: number;
   readonly openingPromptHash?: string;
@@ -98,26 +94,7 @@ function filterClauses(options: HistoryQueryOptions): {
 } {
   const clauses: string[] = [];
   const values: (string | number)[] = [];
-  if (options.since !== null) {
-    clauses.push("d.updated_at >= ?");
-    values.push(options.since);
-  }
-  if (options.source !== null) {
-    clauses.push("d.source = ?");
-    values.push(options.source);
-  }
-  if (options.machine != null) {
-    if (options.machine === LOCAL_MACHINE) {
-      clauses.push("d.machine IS NULL");
-    } else {
-      clauses.push("d.machine = ?");
-      values.push(options.machine);
-    }
-  }
-  if (options.workspace != null) {
-    clauses.push("d.workspace = ?");
-    values.push(options.workspace);
-  }
+  addDocumentFilters(options, clauses, values);
   if (options.openingPromptHash !== undefined) {
     clauses.push("d.opening_prompt_hash = ?");
     values.push(options.openingPromptHash);

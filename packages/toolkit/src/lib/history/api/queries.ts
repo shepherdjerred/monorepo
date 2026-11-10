@@ -170,16 +170,38 @@ function hydrate(
   }));
 }
 
-function machineClause(
-  machine: string,
+/** The session filters shared by the read API and the CLI index queries. */
+export type DocumentFilter = {
+  readonly since: string | null;
+  readonly source: HistorySourceName | null;
+  /** A mirrored machine id, or `LOCAL_MACHINE` for this machine. */
+  readonly machine?: string | null;
+  readonly workspace?: string | null;
+};
+
+/** Appends `WHERE` clauses on `documents d` for each set filter. */
+export function addDocumentFilters(
+  filter: DocumentFilter,
   clauses: string[],
   values: (string | number)[],
 ): void {
-  if (machine === LOCAL_MACHINE) {
+  if (filter.since !== null) {
+    clauses.push("d.updated_at >= ?");
+    values.push(filter.since);
+  }
+  if (filter.source !== null) {
+    clauses.push("d.source = ?");
+    values.push(filter.source);
+  }
+  if (filter.machine === LOCAL_MACHINE) {
     clauses.push("d.machine IS NULL");
-  } else {
+  } else if (filter.machine != null) {
     clauses.push("d.machine = ?");
-    values.push(machine);
+    values.push(filter.machine);
+  }
+  if (filter.workspace != null) {
+    clauses.push("d.workspace = ?");
+    values.push(filter.workspace);
   }
 }
 
@@ -190,21 +212,7 @@ export function querySessions(
 ): { sessions: HistoryApiSession[]; hasMore: boolean } {
   const clauses: string[] = [];
   const values: (string | number)[] = [];
-  if (options.since !== null) {
-    clauses.push("d.updated_at >= ?");
-    values.push(options.since);
-  }
-  if (options.source !== null) {
-    clauses.push("d.source = ?");
-    values.push(options.source);
-  }
-  if (options.machine !== null) {
-    machineClause(options.machine, clauses, values);
-  }
-  if (options.workspace !== null) {
-    clauses.push("d.workspace = ?");
-    values.push(options.workspace);
-  }
+  addDocumentFilters(options, clauses, values);
   values.push(options.limit + 1, options.offset);
   const rows = database
     .prepare(
