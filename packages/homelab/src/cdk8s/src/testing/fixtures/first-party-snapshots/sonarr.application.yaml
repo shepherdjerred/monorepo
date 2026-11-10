@@ -1,0 +1,27 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: media
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=false
+    argocd.argoproj.io/sync-wave: "4"
+    ci.sjer.red/application-lifecycle: retain
+    delivery.shepherdjerred.com/environment: streambot/prod
+  labels:
+    ci.sjer.red/managed-application: "true"
+spec:
+  destination:
+    namespace: media
+    server: https://kubernetes.default.svc
+  project: workloads
+  revisionHistoryLimit: 5
+  source:
+    chart: media
+    repoURL: https://chartmuseum.tailnet-1a49.ts.net
+    targetRevision: ~2.0.0-0
+  syncPolicy:
+    automated:
+      enabled: false
+    syncOptions:
+      - ServerSideApply=true

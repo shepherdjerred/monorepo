@@ -1,0 +1,402 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: tracker
+  namespace: tracker
+spec: {}
+---
+apiVersion: acid.zalan.do/v1
+kind: postgresql
+metadata:
+  name: tracker-postgresql
+  namespace: tracker
+  annotations:
+    argocd.argoproj.io/sync-options: Delete=false
+  labels:
+    velero.io/backup: enabled
+    velero.io/exclude-from-backup: "false"
+spec:
+  databases:
+    tracker_db: tracker
+  enableShmVolume: true
+  numberOfInstances: 1
+  patroni:
+    initdb:
+      data-checksums: "true"
+      encoding: utf8
+      locale: en_US.utf8
+    pg_hba:
+      - local all postgres peer
+      - local all all peer
+      - hostssl all postgres all scram-sha-256
+      - hostssl tracker_db tracker all scram-sha-256
+      - hostssl replication standby all scram-sha-256
+      - host all postgres all scram-sha-256
+      - host tracker_db tracker all scram-sha-256
+      - host replication standby all scram-sha-256
+    slots: {}
+  postgresql:
+    parameters:
+      checkpoint_completion_target: "0.9"
+      checkpoint_timeout: 15min
+      default_statistics_target: "100"
+      effective_cache_size: 512MB
+      effective_io_concurrency: "200"
+      full_page_writes: off
+      log_min_duration_statement: "1000"
+      log_statement: none
+      maintenance_work_mem: 32MB
+      max_connections: "100"
+      max_wal_size: 4GB
+      min_wal_size: 128MB
+      password_encryption: scram-sha-256
+      random_page_cost: "1.1"
+      shared_buffers: 128MB
+      wal_buffers: 8MB
+      wal_init_zero: off
+      wal_recycle: off
+      work_mem: 4MB
+    version: "18"
+  resources:
+    limits:
+      cpu: 250m
+      memory: 512Mi
+    requests:
+      cpu: 50m
+      memory: 256Mi
+  teamId: homelab
+  users:
+    tracker:
+      - createdb
+  volume:
+    size: 32Gi
+    storageClass: zfs-ssd
+---
+apiVersion: onepassword.com/v1
+kind: OnePasswordItem
+metadata:
+  name: tracker-tracker-seaweedfs-1p
+  namespace: tracker
+spec:
+  itemPath: vaults/v64ocnykdqju4ui6j6pua56xw4/items/vet52jaeh75chsalu6lulugium
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tracker
+  namespace: tracker
+  labels:
+    app: tracker
+spec:
+  minReadySeconds: 0
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      cdk8s.io/metadata.addr: tracker-c81d823b
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: tracker
+        cdk8s.io/metadata.addr: tracker-c81d823b
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - command:
+            - bun
+            - src/server/index.ts
+          env:
+            - name: TZ
+              value: America/Los_Angeles
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  key: username
+                  name: tracker.tracker-postgresql.credentials.postgresql.acid.zalan.do
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: password
+                  name: tracker.tracker-postgresql.credentials.postgresql.acid.zalan.do
+            - name: DATABASE_URL
+              value: postgresql://$(DB_USER):$(DB_PASSWORD)@tracker-postgresql:5432/tracker_db
+            - name: HOME
+              value: /tmp
+            - name: HOST
+              value: 0.0.0.0
+            - name: PORT
+              value: "7351"
+            - name: ENVIRONMENT
+              value: production
+            - name: S3_ENDPOINT
+              value: http://seaweedfs-s3.seaweedfs.svc.cluster.local:8333
+            - name: S3_BUCKET
+              value: tracker-attachments
+            - name: S3_REGION
+              value: us-east-1
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  key: SEAWEEDFS_ACCESS_KEY_ID
+                  name: tracker-tracker-seaweedfs-1p
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: SEAWEEDFS_SECRET_ACCESS_KEY
+                  name: tracker-tracker-seaweedfs-1p
+            - name: FEATURE_FLAGS_MODE
+              value: flipt
+            - name: FLIPT_NAMESPACE
+              value: tracker
+            - name: FLIPT_ENVIRONMENT
+              value: prod
+            - name: FLIPT_URL
+              value: http://flipt-flipt-service.flipt.svc.cluster.local:8080
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: http://alloy-gateway.alloy-gateway.svc.cluster.local:4318
+          image: '{{ required `Delivery requires image:tracker` (get (get (.Values.delivery | default dict) "images" | default dict) "tracker") }}'
+          imagePullPolicy: Always
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /healthz
+              port: 7351
+              scheme: HTTP
+            periodSeconds: 30
+          name: tracker
+          ports:
+            - containerPort: 7351
+              name: http
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /readyz
+              port: 7351
+              scheme: HTTP
+            periodSeconds: 10
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 50m
+              memory: 128Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsGroup: 1000
+            runAsNonRoot: true
+            runAsUser: 1000
+            seccompProfile:
+              type: RuntimeDefault
+          startupProbe:
+            failureThreshold: 18
+            httpGet:
+              path: /healthz
+              port: 7351
+              scheme: HTTP
+            periodSeconds: 5
+          volumeMounts:
+            - mountPath: /tmp
+              name: tmp
+      dnsPolicy: ClusterFirst
+      hostNetwork: false
+      imagePullSecrets:
+        - name: dockerhub-pull-tracker
+      initContainers:
+        - command:
+            - bunx
+            - --no-install
+            - prisma
+            - migrate
+            - deploy
+          env:
+            - name: TZ
+              value: America/Los_Angeles
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  key: username
+                  name: tracker.tracker-postgresql.credentials.postgresql.acid.zalan.do
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: password
+                  name: tracker.tracker-postgresql.credentials.postgresql.acid.zalan.do
+            - name: DATABASE_URL
+              value: postgresql://$(DB_USER):$(DB_PASSWORD)@tracker-postgresql:5432/tracker_db
+            - name: HOME
+              value: /tmp
+          image: '{{ required `Delivery requires image:tracker` (get (get (.Values.delivery | default dict) "images" | default dict) "tracker") }}'
+          imagePullPolicy: Always
+          name: prisma-migrate
+          resources:
+            limits:
+              cpu: 250m
+              memory: 256Mi
+            requests:
+              cpu: 25m
+              memory: 64Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsGroup: 1000
+            runAsNonRoot: true
+            runAsUser: 1000
+            seccompProfile:
+              type: RuntimeDefault
+          volumeMounts:
+            - mountPath: /tmp
+              name: tmp
+      restartPolicy: Always
+      securityContext:
+        fsGroup: 1000
+        fsGroupChangePolicy: Always
+        runAsNonRoot: true
+      setHostnameAsFQDN: false
+      shareProcessNamespace: false
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - emptyDir: {}
+          name: tmp
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tracker
+  namespace: tracker
+  labels:
+    app: tracker
+spec:
+  externalIPs: []
+  ports:
+    - name: http
+      port: 7351
+  selector:
+    cdk8s.io/metadata.addr: tracker-c81d823b
+  type: ClusterIP
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: tracker-service-monitor
+  namespace: tracker
+  labels:
+    release: prometheus
+spec:
+  endpoints:
+    - interval: 30s
+      path: /metrics
+      port: http
+  selector:
+    matchLabels:
+      app: tracker
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: tracker-tracker-ingress-ingress
+  namespace: tracker
+spec:
+  defaultBackend:
+    service:
+      name: tracker
+      port:
+        number: 7351
+  ingressClassName: tailscale
+  tls:
+    - hosts:
+        - tracker
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: tracker-app-netpol
+  namespace: tracker
+spec:
+  egress:
+    - ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+      to:
+        - namespaceSelector: {}
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+    - ports:
+        - port: 5432
+          protocol: TCP
+      to:
+        - podSelector:
+            matchLabels:
+              cluster-name: tracker-postgresql
+    - ports:
+        - port: 8333
+          protocol: TCP
+      to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: seaweedfs
+    - ports:
+        - port: 8080
+          protocol: TCP
+      to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: flipt
+    - ports:
+        - port: 4318
+          protocol: TCP
+      to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: alloy-gateway
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: tailscale
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: prometheus
+      ports:
+        - port: 7351
+          protocol: TCP
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: temporal
+          podSelector:
+            matchLabels:
+              component: infra-worker
+      ports:
+        - port: 7351
+          protocol: TCP
+  podSelector:
+    matchLabels:
+      app: tracker
+  policyTypes:
+    - Ingress
+    - Egress
+---
+apiVersion: onepassword.com/v1
+kind: OnePasswordItem
+metadata:
+  name: dockerhub-pull-tracker
+  namespace: tracker
+spec:
+  itemPath: vaults/v64ocnykdqju4ui6j6pua56xw4/items/ngzmppq52zm7sii6ato2mv3sbi
+type: kubernetes.io/dockerconfigjson

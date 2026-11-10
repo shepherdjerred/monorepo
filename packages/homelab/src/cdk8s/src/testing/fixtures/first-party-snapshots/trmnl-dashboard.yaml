@@ -1,0 +1,266 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: trmnl-dashboard
+  namespace: trmnl-dashboard
+spec: {}
+---
+apiVersion: onepassword.com/v1
+kind: OnePasswordItem
+metadata:
+  name: trmnl-dashboard-trmnl-dashboard-1p
+  namespace: trmnl-dashboard
+spec:
+  itemPath: vaults/v64ocnykdqju4ui6j6pua56xw4/items/trmnl-dashboard-credentials
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: trmnl-dashboard
+  namespace: trmnl-dashboard
+spec:
+  minReadySeconds: 0
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 5
+  selector:
+    matchLabels:
+      cdk8s.io/metadata.addr: trmnl-dashboard-c81e1884
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: trmnl-dashboard
+        cdk8s.io/metadata.addr: trmnl-dashboard-c81e1884
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - env:
+            - name: TZ
+              value: America/Los_Angeles
+            - name: HOME
+              value: /tmp
+            - name: PORT
+              value: "3000"
+            - name: TRMNL_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: TRMNL_API_KEY
+                  name: trmnl-dashboard-trmnl-dashboard-1p
+            - name: HA_URL
+              value: https://homeassistant.tailnet-1a49.ts.net
+            - name: HA_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  key: HA_TOKEN
+                  name: trmnl-dashboard-trmnl-dashboard-1p
+            - name: DISPLAY_TIME_ZONE
+              value: America/Los_Angeles
+            - name: FEATURE_FLAGS_MODE
+              value: flipt
+            - name: FLIPT_NAMESPACE
+              value: trmnl-dashboard
+            - name: FLIPT_URL
+              value: http://flipt-flipt-service.flipt.svc.cluster.local:8080
+            - name: FLIPT_ENVIRONMENT
+              value: prod
+            - name: OPS_DASHBOARD_URL
+              value: http://alert-dashboard-alert-dashboard-service.alert-dashboard:7341
+            - name: BUGSINK_DSN
+              valueFrom:
+                secretKeyRef:
+                  key: BUGSINK_DSN
+                  name: trmnl-dashboard-trmnl-dashboard-1p
+            - name: ENVIRONMENT
+              value: production
+          image: '{{ required `Delivery requires image:trmnl-dashboard` (get (get (.Values.delivery | default dict) "images" | default dict) "trmnl-dashboard") }}'
+          imagePullPolicy: Always
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /livez
+              port: 3000
+              scheme: HTTP
+            periodSeconds: 30
+          name: trmnl-dashboard
+          ports:
+            - containerPort: 3000
+              name: http
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /healthz
+              port: 3000
+              scheme: HTTP
+            periodSeconds: 10
+          resources:
+            limits:
+              cpu: 250m
+              memory: 384Mi
+            requests:
+              cpu: 50m
+              memory: 64Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsGroup: 1000
+            runAsNonRoot: true
+            runAsUser: 1000
+          volumeMounts:
+            - mountPath: /tmp
+              name: tmp
+      dnsPolicy: ClusterFirst
+      hostNetwork: false
+      imagePullSecrets:
+        - name: dockerhub-pull-trmnl-dashboard
+      restartPolicy: Always
+      securityContext:
+        fsGroupChangePolicy: Always
+        runAsNonRoot: true
+      serviceAccountName: default
+      setHostnameAsFQDN: false
+      shareProcessNamespace: false
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - emptyDir: {}
+          name: tmp
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: trmnl-dashboard-trmnl-dashboard-service
+  namespace: trmnl-dashboard
+  labels:
+    app: trmnl-dashboard
+spec:
+  externalIPs: []
+  ports:
+    - name: http
+      port: 3000
+  selector:
+    cdk8s.io/metadata.addr: trmnl-dashboard-c81e1884
+  type: ClusterIP
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: trmnl-dashboard-service-monitor
+  namespace: trmnl-dashboard
+  labels:
+    release: prometheus
+spec:
+  endpoints:
+    - interval: 30s
+      path: /metrics
+      port: http
+  selector:
+    matchLabels:
+      app: trmnl-dashboard
+---
+apiVersion: networking.cfargotunnel.com/v1alpha1
+kind: TunnelBinding
+metadata:
+  name: trmnl-dashboard-trmnl-dashboard-cf-tunnel
+  namespace: trmnl-dashboard
+  finalizers:
+    - cfargotunnel.com/finalizer
+  labels:
+    cfargotunnel.com/kind: TunnelBinding
+    cfargotunnel.com/name: homelab-tunnel
+subjects:
+  - kind: Service
+    name: trmnl-dashboard-trmnl-dashboard-service
+    spec:
+      fqdn: trmnl.sjer.red
+      http2Origin: false
+      noTlsVerify: false
+      proxyAddress: 127.0.0.1
+      proxyPort: 0
+      proxyType: ""
+tunnelRef:
+  disableDNSUpdates: true
+  kind: ClusterTunnel
+  name: homelab-tunnel
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: trmnl-dashboard-ingress-netpol
+  namespace: trmnl-dashboard
+spec:
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: cloudflare-tunnel
+      ports:
+        - port: 3000
+          protocol: TCP
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: prometheus
+      ports:
+        - port: 3000
+          protocol: TCP
+  podSelector: {}
+  policyTypes:
+    - Ingress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: trmnl-dashboard-egress-netpol
+  namespace: trmnl-dashboard
+spec:
+  egress:
+    - ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+      to:
+        - namespaceSelector: {}
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+    - ports:
+        - port: 53
+          protocol: UDP
+        - port: 80
+          protocol: TCP
+        - port: 443
+          protocol: TCP
+        - port: 8080
+          protocol: TCP
+        - port: 8123
+          protocol: TCP
+        - port: 9093
+          protocol: TCP
+      to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+    - ports:
+        - port: 7341
+          protocol: TCP
+      to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: alert-dashboard
+  podSelector: {}
+  policyTypes:
+    - Egress
+---
+apiVersion: onepassword.com/v1
+kind: OnePasswordItem
+metadata:
+  name: dockerhub-pull-trmnl-dashboard
+  namespace: trmnl-dashboard
+spec:
+  itemPath: vaults/v64ocnykdqju4ui6j6pua56xw4/items/ngzmppq52zm7sii6ato2mv3sbi
+type: kubernetes.io/dockerconfigjson

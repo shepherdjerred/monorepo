@@ -99,6 +99,24 @@ bun run check:1password                       # offline lint (runs in bun run ve
 bun run scripts/snapshot-1password-vault.ts   # refresh snapshot after vault changes (needs op)
 ```
 
+## Rendered-output safety nets
+
+A refactor of shared constructs must not change what is rendered. Two checks
+prove that:
+
+- `bun run check:dist-equivalence` builds `dist/` at `origin/main` (in a
+  throwaway worktree) and at the current checkout and diffs the trees. It exits
+  non-zero on any difference. A deliberate behavior change names the files it
+  means to change, and every other file must still be identical:
+  `bun run check:dist-equivalence -- --allow syncthing.k8s.yaml`. Use
+  `--base <ref>` to compare against something other than `origin/main`.
+- `src/testing/first-party-snapshots.test.ts` keeps committed YAML snapshots
+  (`src/testing/fixtures/first-party-snapshots/`) of one representative service per
+  shape and its Argo Application, so a shared-construct change shows its blast
+  radius as a reviewable diff. Version-catalog pins are replaced by their
+  catalog key so upstream bumps do not churn them. Regenerate with
+  `bun run test -- src/testing/first-party-snapshots.test.ts --update`.
+
 ## Commands
 
 ```bash

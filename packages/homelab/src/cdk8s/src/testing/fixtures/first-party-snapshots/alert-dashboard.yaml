@@ -1,0 +1,391 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: alert-dashboard
+  namespace: alert-dashboard
+spec: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alert-dashboard
+  namespace: alert-dashboard
+  labels:
+    app: alert-dashboard
+spec:
+  minReadySeconds: 0
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      cdk8s.io/metadata.addr: alert-dashboard-c8398b06
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: alert-dashboard
+        cdk8s.io/metadata.addr: alert-dashboard-c8398b06
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - args:
+            - cd /app/packages/alert-dashboard && exec bun src/server/index.ts
+          command:
+            - /bin/sh
+            - -c
+          env:
+            - name: TZ
+              value: America/Los_Angeles
+            - name: DATABASE_URL
+              value: file:/data/alert-dashboard.db
+            - name: HOME
+              value: /tmp
+            - name: HOST
+              value: 0.0.0.0
+            - name: PORT
+              value: "7341"
+            - name: ALERTMANAGER_URL
+              value: http://prometheus-kube-prometheus-alertmanager.prometheus.svc.cluster.local:9093
+            - name: GRAFANA_URL
+              value: http://prometheus-grafana.prometheus.svc.cluster.local:80
+            - name: PROMETHEUS_URL
+              value: http://prometheus-kube-prometheus-prometheus.prometheus:9090
+            - name: FEATURE_FLAGS_MODE
+              value: flipt
+            - name: FLIPT_NAMESPACE
+              value: alert-dashboard
+            - name: FLIPT_URL
+              value: http://flipt-flipt-service.flipt.svc.cluster.local:8080
+            - name: FLIPT_ENVIRONMENT
+              value: prod
+            - name: POSTAL_HOST
+              value: http://postal-postal-web-service.postal.svc.cluster.local:5000
+            - name: ALERT_DASHBOARD_WEBHOOK_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  key: WEBHOOK_TOKEN
+                  name: alert-dashboard-alert-dashboard-1p
+            - name: OPS_INGEST_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  key: OPS_INGEST_TOKEN
+                  name: alert-dashboard-alert-dashboard-1p
+            - name: GRAFANA_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: GRAFANA_API_KEY
+                  name: alert-dashboard-alert-dashboard-1p
+            - name: POSTAL_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: POSTAL_API_KEY
+                  name: alert-dashboard-alert-dashboard-1p
+            - name: POSTAL_HOST_HEADER
+              value: postal.tailnet-1a49.ts.net
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: http://alloy-gateway.alloy-gateway.svc.cluster.local:4318
+            - name: OTEL_SERVICE_NAME
+              value: alert-dashboard
+            - name: TELEMETRY_ENABLED
+              value: "true"
+          image: '{{ required `Delivery requires image:alert-dashboard` (get (get (.Values.delivery | default dict) "images" | default dict) "alert-dashboard") }}'
+          imagePullPolicy: Always
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /healthz
+              port: 7341
+              scheme: HTTP
+            periodSeconds: 30
+          name: alert-dashboard
+          ports:
+            - containerPort: 7341
+              name: http
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /readyz
+              port: 7341
+              scheme: HTTP
+            periodSeconds: 10
+          resources:
+            limits:
+              cpu: 500m
+              memory: 1024Mi
+            requests:
+              cpu: 50m
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsGroup: 1000
+            runAsNonRoot: true
+            runAsUser: 1000
+            seccompProfile:
+              type: RuntimeDefault
+          startupProbe:
+            failureThreshold: 18
+            httpGet:
+              path: /healthz
+              port: 7341
+              scheme: HTTP
+            periodSeconds: 5
+          volumeMounts:
+            - mountPath: /data
+              name: pvc-alert-dashboard-data
+            - mountPath: /tmp
+              name: tmp
+      dnsPolicy: ClusterFirst
+      hostNetwork: false
+      imagePullSecrets:
+        - name: dockerhub-pull-alert-dashboard
+      initContainers:
+        - args:
+            - cd /app/packages/alert-dashboard && bunx --no-install prisma migrate deploy
+          command:
+            - /bin/sh
+            - -c
+          env:
+            - name: TZ
+              value: America/Los_Angeles
+            - name: DATABASE_URL
+              value: file:/data/alert-dashboard.db
+            - name: HOME
+              value: /tmp
+          image: '{{ required `Delivery requires image:alert-dashboard` (get (get (.Values.delivery | default dict) "images" | default dict) "alert-dashboard") }}'
+          imagePullPolicy: Always
+          name: prisma-migrate
+          resources:
+            limits:
+              cpu: 250m
+              memory: 256Mi
+            requests:
+              cpu: 25m
+              memory: 64Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsGroup: 1000
+            runAsNonRoot: true
+            runAsUser: 1000
+            seccompProfile:
+              type: RuntimeDefault
+          volumeMounts:
+            - mountPath: /data
+              name: pvc-alert-dashboard-data
+            - mountPath: /tmp
+              name: tmp
+      restartPolicy: Always
+      securityContext:
+        fsGroup: 1000
+        fsGroupChangePolicy: Always
+        runAsNonRoot: true
+      setHostnameAsFQDN: false
+      shareProcessNamespace: false
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - name: pvc-alert-dashboard-data
+          persistentVolumeClaim:
+            claimName: alert-dashboard-data
+            readOnly: false
+        - emptyDir: {}
+          name: tmp
+---
+apiVersion: onepassword.com/v1
+kind: OnePasswordItem
+metadata:
+  name: alert-dashboard-alert-dashboard-1p
+  namespace: alert-dashboard
+spec:
+  itemPath: vaults/v64ocnykdqju4ui6j6pua56xw4/items/alert-dashboard
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: alert-dashboard-data
+  namespace: alert-dashboard
+  labels:
+    velero.io/backup: enabled
+    velero.io/exclude-from-backup: "false"
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 64Gi
+  storageClassName: zfs-ssd
+  volumeMode: Filesystem
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: alert-dashboard-alert-dashboard-service
+  namespace: alert-dashboard
+  labels:
+    app: alert-dashboard
+spec:
+  externalIPs: []
+  ports:
+    - name: http
+      port: 7341
+  selector:
+    cdk8s.io/metadata.addr: alert-dashboard-c8398b06
+  type: ClusterIP
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: alert-dashboard-service-monitor
+  namespace: alert-dashboard
+  labels:
+    release: prometheus
+spec:
+  endpoints:
+    - interval: 30s
+      path: /metrics
+      port: http
+  selector:
+    matchLabels:
+      app: alert-dashboard
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: alert-dashboard-alert-dashboard-ingress-ingress
+  namespace: alert-dashboard
+spec:
+  defaultBackend:
+    service:
+      name: alert-dashboard-alert-dashboard-service
+      port:
+        number: 7341
+  ingressClassName: tailscale
+  tls:
+    - hosts:
+        - alerts
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: alert-dashboard-alert-dashboard-ops-ingress-ingress
+  namespace: alert-dashboard
+spec:
+  defaultBackend:
+    service:
+      name: alert-dashboard-alert-dashboard-service
+      port:
+        number: 7341
+  ingressClassName: tailscale
+  tls:
+    - hosts:
+        - ops
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: alert-dashboard-app-netpol
+  namespace: alert-dashboard
+spec:
+  egress:
+    - ports:
+        - port: 7343
+          protocol: TCP
+      to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: temporal
+          podSelector:
+            matchLabels:
+              component: promotion-worker
+    - ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+      to:
+        - namespaceSelector: {}
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+    - ports:
+        - port: grafana
+          protocol: TCP
+        - port: 9091
+          protocol: TCP
+        - port: 9094
+          protocol: TCP
+      to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: prometheus
+    - ports:
+        - port: 8080
+          protocol: TCP
+      to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: flipt
+    - ports:
+        - port: 5000
+          protocol: TCP
+      to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: postal
+    - ports:
+        - port: 4318
+          protocol: TCP
+      to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: alloy-gateway
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: tailscale
+      ports:
+        - port: 7341
+          protocol: TCP
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: prometheus
+      ports:
+        - port: 7341
+          protocol: TCP
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: temporal
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: trmnl-dashboard
+      ports:
+        - port: 7341
+          protocol: TCP
+  podSelector:
+    matchLabels:
+      app: alert-dashboard
+  policyTypes:
+    - Ingress
+    - Egress
+---
+apiVersion: onepassword.com/v1
+kind: OnePasswordItem
+metadata:
+  name: dockerhub-pull-alert-dashboard
+  namespace: alert-dashboard
+spec:
+  itemPath: vaults/v64ocnykdqju4ui6j6pua56xw4/items/ngzmppq52zm7sii6ato2mv3sbi
+type: kubernetes.io/dockerconfigjson
