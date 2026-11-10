@@ -1,6 +1,5 @@
-import { Duration, type Chart } from "cdk8s";
+import { type Chart } from "cdk8s";
 import {
-  Probe,
   Service,
   EnvValue,
   type Deployment,
@@ -8,6 +7,7 @@ import {
   type ContainerProps,
   type ISecret,
 } from "cdk8s-plus-31";
+import { httpProbes } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/kubelet-probes.ts";
 
 export const STREAMBOT_WEB_PUBLIC_ORIGIN = "https://streambot.sjer.red";
 
@@ -17,20 +17,10 @@ export function streambotWebProbes(): Pick<
   "liveness" | "readiness" | "startup"
 > {
   return {
-    liveness: Probe.fromHttpGet("/healthz", {
-      port: 8080,
-      periodSeconds: Duration.seconds(30),
-      failureThreshold: 3,
-    }),
-    readiness: Probe.fromHttpGet("/readyz", {
-      port: 8080,
-      periodSeconds: Duration.seconds(10),
-      failureThreshold: 3,
-    }),
-    startup: Probe.fromHttpGet("/readyz", {
-      port: 8080,
-      periodSeconds: Duration.seconds(5),
-      failureThreshold: 60,
+    ...httpProbes(8080, {
+      live: "/healthz",
+      ready: "/readyz",
+      startup: { failureThreshold: 60, path: "/readyz" },
     }),
   };
 }

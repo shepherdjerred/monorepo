@@ -3,8 +3,8 @@ import { Size } from "cdk8s";
 import { Deployment, DeploymentStrategy, Service, Volume } from "cdk8s-plus-31";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
 import {
-  LINUXSERVER_GID,
   withCommonLinuxServerProps,
+  linuxServerPod,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/linux-server.ts";
 import { setRevisionHistoryLimit } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
@@ -14,17 +14,7 @@ export function createSyncthingDeployment(chart: Chart) {
   const deployment = new Deployment(chart, "syncthing", {
     replicas: 1,
     strategy: DeploymentStrategy.recreate(),
-    securityContext: {
-      fsGroup: LINUXSERVER_GID,
-    },
-    metadata: {
-      annotations: {
-        "ignore-check.kube-linter.io/run-as-non-root":
-          "LinuxServer.io images run as root internally",
-        "ignore-check.kube-linter.io/no-read-only-root-fs":
-          "LinuxServer.io images require writable filesystem",
-      },
-    },
+    ...linuxServerPod({ fsGroup: true }),
   });
 
   const configLocalPathVolume = new ZfsNvmeVolume(chart, "syncthing-config", {

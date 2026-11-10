@@ -3,13 +3,12 @@ import {
   Deployment,
   DeploymentStrategy,
   EnvValue,
-  Probe,
   Secret,
   Service,
   Volume,
 } from "cdk8s-plus-31";
 import type { Chart } from "cdk8s";
-import { Duration, Size } from "cdk8s";
+import { Size } from "cdk8s";
 import { withCommonProps } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
@@ -20,6 +19,7 @@ import {
   fliptEnv,
   bugsinkEnv,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
+import { httpProbes } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/kubelet-probes.ts";
 
 export type Stage = "prod" | "beta";
 
@@ -91,20 +91,10 @@ export function createStarlightKarmaBotDeployment(chart: Chart, stage: Stage) {
       // five minutes, so ordinary discord.js reconnects never recycle the pod
       // but a wedged one does. The generous startup budget (24 x 5s = 120s)
       // covers `prisma migrate deploy` running before the Discord login.
-      startup: Probe.fromHttpGet("/live", {
-        port: 8000,
-        periodSeconds: Duration.seconds(5),
-        failureThreshold: 24,
-      }),
-      liveness: Probe.fromHttpGet("/live", {
-        port: 8000,
-        periodSeconds: Duration.seconds(30),
-        failureThreshold: 3,
-      }),
-      readiness: Probe.fromHttpGet("/ready", {
-        port: 8000,
-        periodSeconds: Duration.seconds(10),
-        failureThreshold: 3,
+      ...httpProbes(8000, {
+        live: "/live",
+        ready: "/ready",
+        startup: { failureThreshold: 24 },
       }),
       volumeMounts: [
         {

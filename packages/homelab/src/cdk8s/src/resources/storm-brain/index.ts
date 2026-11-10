@@ -1,14 +1,11 @@
 import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { Chart } from "cdk8s";
-import { Duration, Size } from "cdk8s";
+import { Size } from "cdk8s";
 import {
-  Capability,
   Cpu,
   Deployment,
   DeploymentStrategy,
   EnvValue,
-  Probe,
-  SeccompProfileType,
   Secret,
   Service,
   Volume,
@@ -17,11 +14,13 @@ import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports
 import {
   setRevisionHistoryLimit,
   withCommonProps,
+  restrictedContainer,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
 import { fliptEnv } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
+import { httpProbes } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/kubelet-probes.ts";
 
 export const BRAIN_PORT = 3000;
 export const BRAIN_METRICS_PORT = 9090;
@@ -79,16 +78,7 @@ export function createStormBrainDeployment(chart: Chart) {
           order: ["FLIPT_URL", "FLIPT_NAMESPACE", "FLIPT_ENVIRONMENT"],
         }),
       },
-      securityContext: {
-        user: 1000,
-        group: 1000,
-        ensureNonRoot: true,
-        readOnlyRootFilesystem: true,
-        allowPrivilegeEscalation: false,
-        privileged: false,
-        capabilities: { drop: [Capability.ALL] },
-        seccompProfile: { type: SeccompProfileType.RUNTIME_DEFAULT },
-      },
+      securityContext: restrictedContainer(1000),
       resources: {
         cpu: { request: Cpu.millis(50), limit: Cpu.millis(500) },
         memory: {
@@ -96,18 +86,10 @@ export function createStormBrainDeployment(chart: Chart) {
           limit: Size.mebibytes(512),
         },
       },
-      startup: Probe.fromHttpGet("/livez", {
-        port: BRAIN_PORT,
-        failureThreshold: 30,
-        periodSeconds: Duration.seconds(2),
-      }),
-      liveness: Probe.fromHttpGet("/livez", {
-        port: BRAIN_PORT,
-        periodSeconds: Duration.seconds(30),
-      }),
-      readiness: Probe.fromHttpGet("/readyz", {
-        port: BRAIN_PORT,
-        periodSeconds: Duration.seconds(10),
+      ...httpProbes(BRAIN_PORT, {
+        live: "/livez",
+        ready: "/readyz",
+        startup: { failureThreshold: 30, periodSeconds: 2 },
       }),
     }),
   );

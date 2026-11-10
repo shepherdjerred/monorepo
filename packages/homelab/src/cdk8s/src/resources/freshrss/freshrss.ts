@@ -1,14 +1,12 @@
 import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
 import {
-  Capability,
   ConfigMap,
   Cpu,
   Deployment,
   DeploymentStrategy,
   EnvValue,
   Secret,
-  SeccompProfileType,
   Service,
   Volume,
 } from "cdk8s-plus-31";
@@ -16,6 +14,7 @@ import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports
 import {
   setRevisionHistoryLimit,
   withCommonProps,
+  restrictedContainer,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
@@ -184,16 +183,7 @@ export async function createFreshRssDeployment(chart: Chart): Promise<void> {
           limit: Size.mebibytes(64),
         },
       },
-      securityContext: {
-        ensureNonRoot: true,
-        user: 33,
-        group: 33,
-        readOnlyRootFilesystem: true,
-        allowPrivilegeEscalation: false,
-        privileged: false,
-        capabilities: { drop: [Capability.ALL] },
-        seccompProfile: { type: SeccompProfileType.RUNTIME_DEFAULT },
-      },
+      securityContext: restrictedContainer(33),
       volumeMounts: [
         { path: "/var/www/FreshRSS/data", volume: dataVolume },
         {

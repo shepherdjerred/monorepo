@@ -1,15 +1,12 @@
 import type { Chart } from "cdk8s";
-import { Duration, Size } from "cdk8s";
+import { Size } from "cdk8s";
 import {
-  Capability,
   Cpu,
   Deployment,
   DeploymentStrategy,
   EnvValue,
   FsGroupChangePolicy,
-  Probe,
   Protocol,
-  SeccompProfileType,
   Service,
   Volume,
 } from "cdk8s-plus-31";
@@ -17,7 +14,11 @@ import { withCommonProps } from "@shepherdjerred/homelab/cdk8s/src/misc/common.t
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
-import { setRevisionHistoryLimit } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
+import {
+  setRevisionHistoryLimit,
+  restrictedContainer,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
+import { httpProbes } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/kubelet-probes.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 const SEERR_PORT = 5055;
@@ -47,13 +48,8 @@ export function createSeerrDeployment(chart: Chart) {
         LOG_LEVEL: EnvValue.fromValue("info"),
       },
       securityContext: {
-        user: 1000,
-        group: 1000,
-        ensureNonRoot: true,
+        ...restrictedContainer(1000),
         readOnlyRootFilesystem: false,
-        allowPrivilegeEscalation: false,
-        capabilities: { drop: [Capability.ALL] },
-        seccompProfile: { type: SeccompProfileType.RUNTIME_DEFAULT },
       },
       volumeMounts: [
         {
@@ -75,20 +71,10 @@ export function createSeerrDeployment(chart: Chart) {
           limit: Size.mebibytes(768),
         },
       },
-      startup: Probe.fromHttpGet("/api/v1/settings/public", {
-        port: SEERR_PORT,
-        periodSeconds: Duration.seconds(10),
-        failureThreshold: 30,
-      }),
-      liveness: Probe.fromHttpGet("/api/v1/settings/public", {
-        port: SEERR_PORT,
-        periodSeconds: Duration.seconds(30),
-        failureThreshold: 3,
-      }),
-      readiness: Probe.fromHttpGet("/api/v1/settings/public", {
-        port: SEERR_PORT,
-        periodSeconds: Duration.seconds(10),
-        failureThreshold: 3,
+      ...httpProbes(SEERR_PORT, {
+        live: "/api/v1/settings/public",
+        ready: "/api/v1/settings/public",
+        startup: { failureThreshold: 30, periodSeconds: 10 },
       }),
     }),
   );

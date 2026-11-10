@@ -1,11 +1,10 @@
 import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { Chart } from "cdk8s";
-import { Duration, Size } from "cdk8s";
+import { Size } from "cdk8s";
 import {
   Cpu,
   Deployment,
   EnvValue,
-  Probe,
   Secret,
   Service,
   ServiceAccount,
@@ -24,6 +23,7 @@ import {
   fliptEnv,
   bugsinkEnv,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
+import { httpProbes } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/kubelet-probes.ts";
 
 export const OPS_DASHBOARD_URL =
   "http://alert-dashboard-alert-dashboard-service.alert-dashboard:7341";
@@ -110,16 +110,7 @@ export function createTrmnlDashboardDeployment(chart: Chart) {
           limit: Size.mebibytes(384),
         },
       },
-      liveness: Probe.fromHttpGet("/livez", {
-        port: 3000,
-        periodSeconds: Duration.seconds(30),
-        failureThreshold: 3,
-      }),
-      readiness: Probe.fromHttpGet("/healthz", {
-        port: 3000,
-        periodSeconds: Duration.seconds(10),
-        failureThreshold: 3,
-      }),
+      ...httpProbes(3000, { live: "/livez", ready: "/healthz" }),
     }),
   );
 

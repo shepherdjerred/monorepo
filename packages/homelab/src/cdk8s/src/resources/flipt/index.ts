@@ -1,15 +1,12 @@
 import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { Chart } from "cdk8s";
-import { Duration, Size } from "cdk8s";
+import { Size } from "cdk8s";
 import {
-  Capability,
   ConfigMap,
   Cpu,
   Deployment,
   DeploymentStrategy,
   EnvValue,
-  Probe,
-  SeccompProfileType,
   Secret,
   Service,
   Volume,
@@ -18,6 +15,7 @@ import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports
 import {
   withCommonProps,
   setRevisionHistoryLimit,
+  restrictedContainer,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { authenticatedGatewayContainerDefaults } from "@shepherdjerred/homelab/cdk8s/src/misc/authenticated-gateway-container.ts";
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
@@ -30,6 +28,7 @@ import {
   managedFlagInventory,
   managedFlagNamespaces,
 } from "@shepherdjerred/feature-flags/managed-flag-inventory.ts";
+import { httpProbes } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/kubelet-probes.ts";
 
 export const FLIPT_PORT = 8080;
 const FLIPT_UPSTREAM_PORT = 8081;
@@ -38,20 +37,10 @@ function createFliptHealthProbes() {
   // Kubelet connects to the Pod IP; the private upstream only accepts
   // loopback. The gateway forwards this health route to that upstream.
   return {
-    startup: Probe.fromHttpGet("/health", {
-      port: FLIPT_PORT,
-      periodSeconds: Duration.seconds(5),
-      failureThreshold: 18,
-    }),
-    liveness: Probe.fromHttpGet("/health", {
-      port: FLIPT_PORT,
-      periodSeconds: Duration.seconds(30),
-      failureThreshold: 3,
-    }),
-    readiness: Probe.fromHttpGet("/health", {
-      port: FLIPT_PORT,
-      periodSeconds: Duration.seconds(10),
-      failureThreshold: 3,
+    ...httpProbes(FLIPT_PORT, {
+      live: "/health",
+      ready: "/health",
+      startup: { failureThreshold: 18 },
     }),
   };
 }
@@ -71,16 +60,7 @@ const FLIPT_COMMAND = [
 // as 1000 would fail to write the git repo.
 const FLIPT_UID = 100;
 const FLIPT_GID = 1000;
-const FLIPT_SECURITY_CONTEXT = {
-  user: FLIPT_UID,
-  group: FLIPT_GID,
-  ensureNonRoot: true,
-  readOnlyRootFilesystem: true,
-  allowPrivilegeEscalation: false,
-  privileged: false,
-  capabilities: { drop: [Capability.ALL] },
-  seccompProfile: { type: SeccompProfileType.RUNTIME_DEFAULT },
-};
+const FLIPT_SECURITY_CONTEXT = restrictedContainer(FLIPT_UID, FLIPT_GID);
 const FLIPT_INIT_RESOURCES = {
   cpu: { request: Cpu.millis(5), limit: Cpu.millis(50) },
   memory: { request: Size.mebibytes(8), limit: Size.mebibytes(32) },

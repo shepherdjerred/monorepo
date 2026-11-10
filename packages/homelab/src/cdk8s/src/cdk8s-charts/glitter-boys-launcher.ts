@@ -1,11 +1,10 @@
 import type { App } from "cdk8s";
-import { Chart, Duration, Size } from "cdk8s";
+import { Chart, Size } from "cdk8s";
 import {
   ConfigMap,
   Cpu,
   Deployment,
   Namespace,
-  Probe,
   Secret,
   Service,
 } from "cdk8s-plus-31";
@@ -35,6 +34,7 @@ import {
   LauncherReleaseSchema,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/glitter-boys-launcher/release.ts";
 import { bugsinkEnv } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
+import { httpProbes } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/kubelet-probes.ts";
 
 export function createGlitterBoysLauncherChart(
   app: App,
@@ -92,14 +92,7 @@ export function createGlitterBoysLauncherChart(
         cpu: { request: Cpu.millis(25), limit: Cpu.millis(250) },
         memory: { request: Size.mebibytes(32), limit: Size.mebibytes(128) },
       },
-      readiness: Probe.fromHttpGet("/healthz", {
-        port: 8080,
-        periodSeconds: Duration.seconds(10),
-      }),
-      liveness: Probe.fromHttpGet("/healthz", {
-        port: 8080,
-        periodSeconds: Duration.seconds(30),
-      }),
+      ...httpProbes(8080, { live: "/healthz", ready: "/healthz" }),
     }),
   );
   setRevisionHistoryLimit(deployment, 5);

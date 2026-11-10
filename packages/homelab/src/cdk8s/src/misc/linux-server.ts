@@ -35,6 +35,21 @@ const commonLinuxServerProps: Partial<ContainerProps> = {
 };
 
 /**
+ * Workload-level props every LinuxServer.io Deployment carries: the kube-linter
+ * exemptions for an image that starts as root with a writable filesystem and,
+ * with `fsGroup`, group ownership of mounted volumes for the unprivileged user
+ * the image drops to.
+ */
+export function linuxServerPod(props: { fsGroup?: boolean } = {}) {
+  return {
+    ...(props.fsGroup === true
+      ? { securityContext: { fsGroup: LINUXSERVER_GID } }
+      : {}),
+    metadata: { annotations: { ...LINUXSERVER_KUBE_LINTER_ANNOTATIONS } },
+  };
+}
+
+/**
  * Merge LinuxServer.io-specific container props with caller-supplied props.
  *
  * NOTE: This function name (`withCommonLinuxServerProps`) is registered in the

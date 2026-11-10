@@ -1,13 +1,10 @@
 import type { Chart } from "cdk8s";
-import { Duration, Size } from "cdk8s";
+import { Size } from "cdk8s";
 import {
-  Capability,
   Cpu,
   Deployment,
   DeploymentStrategy,
   EnvValue,
-  Probe,
-  SeccompProfileType,
   Secret,
   Service,
   Volume,
@@ -18,6 +15,7 @@ import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailsca
 import {
   setRevisionHistoryLimit,
   withCommonProps,
+  restrictedContainer,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import {
@@ -26,6 +24,7 @@ import {
   postgresEgress,
   dnsEgressRule,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
+import { httpProbes } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/kubelet-probes.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 export const PHOENIX_HTTP_PORT = 6006;
@@ -147,16 +146,7 @@ export function createPhoenixDeployment(chart: Chart) {
         // span content to a hosted sandbox provider.
         PHOENIX_ALLOWED_SANDBOX_PROVIDERS: EnvValue.fromValue("WASM"),
       },
-      securityContext: {
-        user: PHOENIX_UID,
-        group: PHOENIX_UID,
-        ensureNonRoot: true,
-        readOnlyRootFilesystem: true,
-        allowPrivilegeEscalation: false,
-        privileged: false,
-        capabilities: { drop: [Capability.ALL] },
-        seccompProfile: { type: SeccompProfileType.RUNTIME_DEFAULT },
-      },
+      securityContext: restrictedContainer(PHOENIX_UID),
       resources: {
         cpu: { request: Cpu.millis(100), limit: Cpu.millis(1000) },
         memory: {
@@ -165,18 +155,10 @@ export function createPhoenixDeployment(chart: Chart) {
         },
       },
       // Migrations run before the server listens.
-      startup: Probe.fromHttpGet("/healthz", {
-        port: PHOENIX_HTTP_PORT,
-        failureThreshold: 60,
-        periodSeconds: Duration.seconds(5),
-      }),
-      liveness: Probe.fromHttpGet("/healthz", {
-        port: PHOENIX_HTTP_PORT,
-        periodSeconds: Duration.seconds(30),
-      }),
-      readiness: Probe.fromHttpGet("/readyz", {
-        port: PHOENIX_HTTP_PORT,
-        periodSeconds: Duration.seconds(10),
+      ...httpProbes(PHOENIX_HTTP_PORT, {
+        live: "/healthz",
+        ready: "/readyz",
+        startup: { failureThreshold: 60 },
       }),
     }),
   );

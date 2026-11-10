@@ -1,6 +1,15 @@
 import { merge } from "lodash";
-import type { ContainerProps, DeploymentProps } from "cdk8s-plus-31";
-import { Deployment, EnvValue } from "cdk8s-plus-31";
+import type {
+  ContainerProps,
+  ContainerSecurityContextProps,
+  DeploymentProps,
+} from "cdk8s-plus-31";
+import {
+  Capability,
+  Deployment,
+  EnvValue,
+  SeccompProfileType,
+} from "cdk8s-plus-31";
 import { ApiObject, JsonPatch, type Chart } from "cdk8s";
 import { BURST_SERVICE_PRIORITY } from "./priority-classes.ts";
 
@@ -30,6 +39,31 @@ export const commonProps: Partial<ContainerProps> = {
  */
 export function withCommonProps(props: ContainerProps): ContainerProps {
   return merge({}, commonProps, props);
+}
+
+/**
+ * The least-privilege container security context: a fixed non-root user, a
+ * read-only root filesystem, no privilege escalation, every capability dropped
+ * and the runtime's default seccomp profile.
+ *
+ * A container that must write somewhere mounts a volume there; one that cannot
+ * run this way spreads the preset and overrides the single field it needs, so
+ * the exception is visible at the call site.
+ */
+export function restrictedContainer(
+  uid: number,
+  gid: number = uid,
+): ContainerSecurityContextProps {
+  return {
+    user: uid,
+    group: gid,
+    ensureNonRoot: true,
+    readOnlyRootFilesystem: true,
+    allowPrivilegeEscalation: false,
+    privileged: false,
+    capabilities: { drop: [Capability.ALL] },
+    seccompProfile: { type: SeccompProfileType.RUNTIME_DEFAULT },
+  };
 }
 
 export function setRevisionHistoryLimit(deployment: Deployment, limit = 3) {

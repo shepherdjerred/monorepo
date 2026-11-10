@@ -23,6 +23,7 @@ import {
   TEMPORAL_UI_GATEWAY_CONFIG,
   TEMPORAL_UI_UPSTREAM_PORT,
 } from "./external-auth.ts";
+import { httpProbes } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/kubelet-probes.ts";
 
 export type CreateTemporalUiDeploymentProps = {
   serverService: ServiceType;
@@ -104,14 +105,7 @@ export function createTemporalUiDeployment(
       },
       volumeMounts: [{ path: "/tmp", volume: tmpVolume }],
       ...authenticatedGatewayContainerDefaults(),
-      liveness: Probe.fromHttpGet("/health", {
-        port: 8080,
-        periodSeconds: Duration.seconds(30),
-      }),
-      readiness: Probe.fromHttpGet("/health", {
-        port: 8080,
-        periodSeconds: Duration.seconds(10),
-      }),
+      ...httpProbes(8080, { live: "/health", ready: "/health" }),
     }),
   );
 
