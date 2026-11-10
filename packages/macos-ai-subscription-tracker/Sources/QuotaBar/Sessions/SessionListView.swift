@@ -7,18 +7,7 @@ struct SessionListView: View {
   @Bindable var model: SessionsModel
 
   var body: some View {
-    VStack(spacing: 0) {
-      if let note = model.searchScopeNote {
-        Label(note, systemImage: "info.circle")
-          .font(.caption)
-          .foregroundStyle(.secondary)
-          .frame(maxWidth: .infinity, alignment: .leading)
-          .padding(.horizontal, 12)
-          .padding(.vertical, 6)
-        Divider()
-      }
-      content
-    }
+    content
   }
 
   @ViewBuilder private var content: some View {
@@ -96,7 +85,7 @@ private struct SessionRow: View {
           .font(.body.weight(.medium))
           .lineLimit(2)
         Spacer(minLength: 8)
-        Text(HistoryFormat.updated(session.updatedAt, date: session.updatedDate, relativeTo: now))
+        Text(HistoryFormat.updated(session.updatedAt, relativeTo: now))
           .font(.caption)
           .foregroundStyle(.secondary)
           .monospacedDigit()
@@ -107,10 +96,10 @@ private struct SessionRow: View {
           .lineLimit(1)
           .truncationMode(.middle)
         Spacer(minLength: 8)
-        Text("\(HistoryFormat.tokens(session.usage.totalTokens)) tok")
+        Text(HistoryFormat.tokens(of: session))
           .monospacedDigit()
           .fixedSize()
-        CostText(usage: session.usage).fixedSize()
+        SessionCostText(session: session).fixedSize()
       }
       .font(.caption)
       .foregroundStyle(.secondary)
@@ -119,13 +108,13 @@ private struct SessionRow: View {
     .help(session.workspace ?? session.title)
   }
 
-  /// Mirrored agents already name their machine ("Codex · jerred-desktop").
+  /// Mirrored agents already name their machine ("Claude Code · Jerreds-MacBook-Pro").
   private var metadata: String {
     let agent = session.agent ?? session.source.displayName
     let machine = HistoryFormat.machine(session.machine)
     return [
       agent,
-      agent.contains(machine) ? nil : machine,
+      agent.localizedCaseInsensitiveContains(machine) ? nil : machine,
       session.workspace.map(HistoryFormat.workspaceName),
       session.gitBranch,
     ]

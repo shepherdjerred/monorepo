@@ -55,18 +55,20 @@ for the current local month.
 for past agent sessions recorded by the toolkit history index:
 
 - The sidebar filters by machine (This Mac plus each `brim sync` mirror),
-  agent, and project, and opens Analytics. Its costs are all-time.
+  agent, and project, with each one's indexed session count, and opens
+  Analytics.
 - The session list shows the title, agent, machine, project, branch, last
-  update, tokens, and estimated cost. The search field runs a full-text search;
-  it narrows by agent and time range but not by machine or project.
-- A session's **Conversation** tab pages through its messages (200 at a time),
-  with tool calls collapsed under their tool name. **Usage** breaks its tokens
-  down by type.
+  update, tokens, and estimated cost. The search field runs a full-text search
+  within the sidebar selection and time range.
+- A session's **Conversation** tab pages through its messages (200 at a time).
+  Each tool call is collapsed under its tool name, with its **Output** rows
+  collapsed inside it. **Usage** breaks its tokens down by type.
 - **Analytics** charts daily cost and tokens, cost by model, agent, project,
   and machine, and the most-called tools for the selected time range.
 
 A cost marked `≥` is a lower bound: the session used a model the price catalog
-does not know. Every read goes through the history daemon's read-only `/v1` API
+does not know. A `—` instead of tokens and cost means the agent's transcripts
+record no usage at all, which is different from a session that cost nothing. Every read goes through the history daemon's read-only `/v1` API
 on `~/.toolkit/history/daemon.sock`; see the toolkit README's Read API section.
 Brim never reads the index or transcripts itself. If the daemon is not running,
 the window says so and shows `toolkit history daemon install`; a response that

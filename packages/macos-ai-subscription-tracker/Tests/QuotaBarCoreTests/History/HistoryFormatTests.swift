@@ -28,12 +28,51 @@ final class HistoryFormatTests: XCTestCase {
 
   func testUpdatedIsRelativeForAWeekThenADate() {
     let now = date("2026-11-09T12:00:00Z")
+    XCTAssertEqual(HistoryFormat.updated(date("2026-11-09T09:00:00Z"), relativeTo: now), "3h ago")
     XCTAssertEqual(
-      HistoryFormat.updated("x", date: date("2026-11-09T09:00:00Z"), relativeTo: now), "3h ago")
-    XCTAssertEqual(
-      HistoryFormat.updated("x", date: date("2026-10-01T12:00:00Z"), relativeTo: now),
+      HistoryFormat.updated(date("2026-10-01T12:00:00Z"), relativeTo: now),
       date("2026-10-01T12:00:00Z").formatted(.dateTime.year().month(.abbreviated).day()))
-    XCTAssertEqual(HistoryFormat.updated("someday", date: nil, relativeTo: now), "someday")
+  }
+
+  func testASessionWithoutUsageEventsShowsNoUsageRatherThanZero() throws {
+    let page: HistorySessionsPage = try HistoryClient.decode(
+      jsonResponse(try sharedHistoryFixture("sessions")), path: "/v1/sessions")
+    let measured = page.sessions[0]
+    XCTAssertEqual(HistoryFormat.cost(of: measured), "$14.52")
+    XCTAssertEqual(HistoryFormat.tokens(of: measured), "6.4M tok")
+    let text = utf8Text(try sharedHistoryFixture("sessions"))
+      .replacingOccurrences(of: #""usageEvents": 31"#, with: #""usageEvents": 0"#)
+    let unmeasured = try XCTUnwrap(
+      (try HistoryClient.decode(jsonResponse(text), path: "/v1/sessions") as HistorySessionsPage)
+        .sessions.last)
+    XCTAssertFalse(unmeasured.hasUsage)
+    XCTAssertEqual(HistoryFormat.cost(of: unmeasured), "—")
+    XCTAssertEqual(HistoryFormat.tokens(of: unmeasured), "—")
+  }
+
+  func testOutputsGroupUnderTheirInvocation() {
+    let entries = [
+      entry(0, role: .user), entry(1, role: .tool, toolName: nil),
+      entry(2, role: .tool, toolName: "Bash"), entry(3, role: .tool, toolName: nil),
+      entry(4, role: .tool, toolName: nil), entry(5, role: .assistant),
+      entry(6, role: .tool, toolName: "Edit"),
+    ]
+    XCTAssertEqual(
+      ConversationItem.group(entries),
+      [
+        .message(entries[0]), .output(entries[1]),
+        .tool(call: entries[2], outputs: [entries[3], entries[4]]), .message(entries[5]),
+        .tool(call: entries[6], outputs: []),
+      ])
+    XCTAssertEqual(ConversationItem.group(entries).map(\.id), [0, 1, 2, 5, 6])
+  }
+
+  private func entry(_ id: Int, role: HistoryMessageRole, toolName: String? = nil)
+    -> SessionConversationEntry
+  {
+    SessionConversationEntry(
+      id: id,
+      message: HistoryMessage(role: role, text: "m\(id)", createdAt: nil, toolName: toolName))
   }
 
   func testEveryErrorExplainsItselfAndTheDaemonOnesNameAFix() {

@@ -46,16 +46,6 @@ public final class SessionsModel {
     SessionsListQuery(selection: selection, range: range, search: activeSearch)
   }
 
-  /// The search endpoint filters by source and time only, so a machine or
-  /// project selection does not narrow a search.
-  public var searchScopeNote: String? {
-    guard activeSearch != nil else { return nil }
-    switch selection {
-    case .machine, .workspace: return "Search covers every machine and project."
-    case .all, .source, .analytics: return nil
-    }
-  }
-
   public func submitSearch() {
     let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
     activeSearch = query.isEmpty ? nil : query
@@ -66,14 +56,11 @@ public final class SessionsModel {
     activeSearch = nil
   }
 
-  /// Sidebar machines, agents, and projects from all-time usage.
+  /// Sidebar machines, agents, and projects with indexed sessions.
   public func loadFacets() async {
     facetsPhase = .loading
     do {
-      let machines = try await client.usage(groupBy: .machine, range: .all)
-      let sources = try await client.usage(groupBy: .source, range: .all)
-      let workspaces = try await client.usage(groupBy: .workspace, range: .all)
-      facets = SessionsFacets(machines: machines, sources: sources, workspaces: workspaces)
+      facets = SessionsFacets(try await client.facets())
       facetsPhase = .loaded
     } catch {
       facetsPhase = .failed(error)
@@ -169,7 +156,7 @@ public final class SessionsModel {
     let filter = query.selection.filter ?? HistorySessionFilter()
     if let search = query.search {
       return try await client.search(
-        search, source: filter.source, range: query.range, limit: Self.sessionPageSize,
+        search, filter: filter, range: query.range, limit: Self.sessionPageSize,
         offset: offset)
     }
     return try await client.sessions(

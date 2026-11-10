@@ -74,14 +74,24 @@ public struct HistorySessionFilter: Equatable, Hashable, Sendable {
   }
 }
 
+extension HistorySessionFilter {
+  fileprivate var queryItems: [(String, String?)] {
+    [
+      ("source", source?.rawValue), ("machine", machine?.parameter),
+      ("workspace", workspace),
+    ]
+  }
+}
+
 /// A `/v1` request target (path and query).
 enum HistoryEndpoint: Equatable, Sendable {
   case sessions(HistorySessionFilter, range: HistoryTimeRange, limit: Int, offset: Int)
   case search(
-    query: String, source: HistorySource?, range: HistoryTimeRange, limit: Int, offset: Int)
+    query: String, filter: HistorySessionFilter, range: HistoryTimeRange, limit: Int, offset: Int)
   case session(id: Int, offset: Int, limit: Int)
   case usage(HistoryUsageGroup, range: HistoryTimeRange, source: HistorySource?)
   case tools(range: HistoryTimeRange, limit: Int)
+  case facets
 
   var path: String {
     switch self {
@@ -90,6 +100,7 @@ enum HistoryEndpoint: Equatable, Sendable {
     case let .session(id, _, _): "/v1/sessions/\(id)"
     case .usage: "/v1/usage"
     case .tools: "/v1/tools"
+    case .facets: "/v1/facets"
     }
   }
 
@@ -103,22 +114,19 @@ enum HistoryEndpoint: Equatable, Sendable {
   private var queryItems: [(String, String?)] {
     switch self {
     case let .sessions(filter, range, limit, offset):
-      [
-        ("since", range.sinceParameter), ("source", filter.source?.rawValue),
-        ("machine", filter.machine?.parameter), ("workspace", filter.workspace),
-        ("limit", String(limit)), ("offset", String(offset)),
-      ]
-    case let .search(query, source, range, limit, offset):
-      [
-        ("q", query), ("since", range.sinceParameter), ("source", source?.rawValue),
-        ("limit", String(limit)), ("offset", String(offset)),
-      ]
+      [("since", range.sinceParameter)] + filter.queryItems
+        + [("limit", String(limit)), ("offset", String(offset))]
+    case let .search(query, filter, range, limit, offset):
+      [("q", query), ("since", range.sinceParameter)] + filter.queryItems
+        + [("limit", String(limit)), ("offset", String(offset))]
     case let .session(_, offset, limit):
       [("offset", String(offset)), ("limit", String(limit))]
     case let .usage(group, range, source):
       [("groupBy", group.rawValue), ("since", range.sinceParameter), ("source", source?.rawValue)]
     case let .tools(range, limit):
       [("since", range.sinceParameter), ("limit", String(limit))]
+    case .facets:
+      []
     }
   }
 

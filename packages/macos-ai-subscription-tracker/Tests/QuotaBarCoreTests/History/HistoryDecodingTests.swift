@@ -15,8 +15,10 @@ final class HistoryDecodingTests: XCTestCase {
     XCTAssertEqual(local.gitBranch, "fix-argocd-prune")
     XCTAssertEqual(local.usage.costUSD, 14.52)
     XCTAssertEqual(local.usage.totalTokens, 1_820 + 40_211 + 6_120_334 + 210_044)
-    XCTAssertEqual(local.updatedDate, date("2026-11-08T18:40:03Z"))
-    XCTAssertEqual(local.createdDate, date("2026-11-08T17:02:11Z"))
+    XCTAssertEqual(local.updatedAt, date("2026-11-08T18:40:03Z"))
+    XCTAssertEqual(local.createdAt, date("2026-11-08T17:02:11Z"))
+    XCTAssertEqual(local.usageEvents, 64)
+    XCTAssertTrue(local.hasUsage)
     let mirrored = page.sessions[1]
     XCTAssertEqual(mirrored.source, .codexMirror)
     XCTAssertEqual(mirrored.machine, "jerred-desktop")
@@ -33,14 +35,16 @@ final class HistoryDecodingTests: XCTestCase {
     XCTAssertEqual(detail.totalMessages, 3)
     XCTAssertEqual(detail.messages.map(\.role), [.user, .tool, .assistant])
     XCTAssertEqual(detail.messages[1].toolName, "Bash")
-    XCTAssertEqual(detail.messages[0].createdDate, date("2026-11-08T17:02:11Z"))
-    XCTAssertNil(detail.messages[2].createdDate)
+    XCTAssertEqual(detail.messages[0].createdAt, date("2026-11-08T17:02:11Z"))
+    XCTAssertNil(detail.messages[2].createdAt)
+    XCTAssertTrue(detail.messages[1].isToolCall)
+    XCTAssertFalse(detail.messages[1].isToolOutput)
   }
 
   func testDecodesTheSharedUsageFixture() throws {
     let report: HistoryUsageReport = try decode("usage", path: "/v1/usage")
     XCTAssertEqual(report.groupBy, .day)
-    XCTAssertEqual(report.since, "2026-11-02T00:00:00.000Z")
+    XCTAssertEqual(report.since, date("2026-11-02T00:00:00Z"))
     XCTAssertEqual(report.total.costUSD, 15.4)
     XCTAssertFalse(report.total.costComplete)
     XCTAssertEqual(report.rows.map(\.key), ["2026-11-07", "2026-11-08"])
@@ -56,6 +60,15 @@ final class HistoryDecodingTests: XCTestCase {
     XCTAssertEqual(report.rows.map(\.name), ["Bash", "Edit", "exec_command"])
     XCTAssertEqual(report.rows[0].calls, 412)
     XCTAssertEqual(report.rows[0].sessions, 38)
+  }
+
+  func testDecodesTheSharedFacetsFixture() throws {
+    let report: HistoryFacetsReport = try decode("facets", path: "/v1/facets")
+    XCTAssertEqual(report.machines.map(\.key), [nil, "jerreds-macbook-pro", "jerred-desktop"])
+    XCTAssertEqual(report.machines.first?.sessions, 1_204)
+    XCTAssertEqual(report.sources.map(\.key), [.codex, .claude, .claudeMirror, .codexMirror])
+    XCTAssertEqual(report.workspaces.map(\.key), ["/Users/jerred/git/monorepo", nil])
+    XCTAssertEqual(report.workspaces.last?.sessions, 96)
   }
 
   func testTheSharedErrorFixtureBecomesAServerError() throws {
@@ -108,9 +121,16 @@ final class HistoryDecodingTests: XCTestCase {
       .decoding(path: "/v1/tools", detail: "The given data was not valid JSON."))
   }
 
-  func testAcceptsTimestampsWithoutFractionalSecondsAndKeepsUnparsedOnes() {
+  func testTimestampsAreISO8601DateTimes() {
     XCTAssertEqual(HistoryTimestamp.parse("2026-11-08T18:40:03Z"), date("2026-11-08T18:40:03Z"))
+    XCTAssertEqual(
+      HistoryTimestamp.parse("2026-11-08T19:40:03.250+01:00"),
+      date("2026-11-08T18:40:03Z").addingTimeInterval(0.25))
     XCTAssertNil(HistoryTimestamp.parse("yesterday"))
+    assertError(
+      #"{"apiVersion":1,"since":"yesterday","rows":[]}"#,
+      .decoding(
+        path: "/v1/tools", detail: "yesterday is not an ISO 8601 date-time at since"))
   }
 
   func testEverySourceHasADisplayName() {
@@ -151,9 +171,17 @@ final class HistoryEndpointTests: XCTestCase {
       HistoryEndpoint.sessions(HistorySessionFilter(), range: .all, limit: 1, offset: 0).target,
       "/v1/sessions?limit=1&offset=0")
     XCTAssertEqual(
-      HistoryEndpoint.search(query: "c++ & é", source: nil, range: .day, limit: 5, offset: 0)
-        .target,
+      HistoryEndpoint.search(
+        query: "c++ & é", filter: HistorySessionFilter(), range: .day, limit: 5, offset: 0
+      ).target,
       "/v1/search?q=c%2B%2B%20%26%20%C3%A9&since=24h&limit=5&offset=0")
+    XCTAssertEqual(
+      HistoryEndpoint.search(
+        query: "x", filter: HistorySessionFilter(source: .codex, machine: .local, workspace: "/w"),
+        range: .all, limit: 5, offset: 10
+      ).target,
+      "/v1/search?q=x&source=codex&machine=local&workspace=%2Fw&limit=5&offset=10")
+    XCTAssertEqual(HistoryEndpoint.facets.target, "/v1/facets")
     XCTAssertEqual(
       HistoryEndpoint.session(id: 42, offset: 200, limit: 200).target,
       "/v1/sessions/42?offset=200&limit=200")

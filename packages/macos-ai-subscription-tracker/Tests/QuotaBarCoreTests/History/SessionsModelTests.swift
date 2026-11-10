@@ -49,7 +49,7 @@ final class SessionsModelTests: XCTestCase {
       ])
   }
 
-  func testSearchUsesTheSearchEndpointWithTheSourceOnly() async {
+  func testSearchPassesTheSidebarSelectionThrough() async {
     let transport = fixtureTransport()
     let model = SessionsModel(client: HistoryClient(transport: transport))
     model.searchText = "   "
@@ -61,21 +61,22 @@ final class SessionsModelTests: XCTestCase {
     XCTAssertEqual(model.activeSearch, "argocd prune")
     XCTAssertEqual(model.listQuery.search, "argocd prune")
     model.selection = .source(.claude)
-    XCTAssertNil(model.searchScopeNote)
+    await model.loadSessions()
+    model.selection = .machine(.mirrored("jerred-desktop"))
     await model.loadSessions()
     model.selection = .workspace("/w")
-    XCTAssertEqual(model.searchScopeNote, "Search covers every machine and project.")
     await model.loadSessions()
 
     model.clearSearch()
     XCTAssertEqual(model.searchText, "")
-    XCTAssertNil(model.searchScopeNote)
+    XCTAssertNil(model.activeSearch)
     let targets = await transport.log.targets
     XCTAssertEqual(
       targets,
       [
         "/v1/search?q=argocd%20prune&since=30d&source=claude&limit=50&offset=0",
-        "/v1/search?q=argocd%20prune&since=30d&limit=50&offset=0",
+        "/v1/search?q=argocd%20prune&since=30d&machine=jerred-desktop&limit=50&offset=0",
+        "/v1/search?q=argocd%20prune&since=30d&workspace=%2Fw&limit=50&offset=0",
       ])
   }
 
@@ -93,26 +94,43 @@ final class SessionsModelTests: XCTestCase {
     XCTAssertNil(HistoryLoadPhase.loaded.error)
   }
 
-  func testFacetsListThisMacMirroredMachinesEverySourceAndProjects() async {
+  func testFacetsComeFromTheFacetsEndpoint() async {
     let model = SessionsModel(client: HistoryClient(transport: fixtureTransport()))
-    XCTAssertEqual(model.facets.machines.map(\.title), ["This Mac"])
+    XCTAssertEqual(model.facets, SessionsFacets())
     await model.loadFacets()
     XCTAssertEqual(model.facetsPhase, .loaded)
     XCTAssertEqual(
-      model.facets.machines.map(\.item), [.machine(.local), .machine(.mirrored("jerred-desktop"))])
-    XCTAssertEqual(model.facets.machines[0].usage?.costUSD, 0.88)
-    XCTAssertEqual(model.facets.sources.count, HistorySource.allCases.count)
-    let claude = model.facets.sources.first { $0.item == .source(.claude) }
-    XCTAssertEqual(claude?.sessionCount, 1)
-    XCTAssertNil(model.facets.sources.first { $0.item == .source(.cursor) }?.usage)
+      model.facets.machines.map(\.item),
+      [
+        .machine(.local), .machine(.mirrored("jerreds-macbook-pro")),
+        .machine(.mirrored("jerred-desktop")),
+      ])
+    XCTAssertEqual(model.facets.machines.map(\.title).first, "This Mac")
+    XCTAssertEqual(model.facets.machines.map(\.sessionCount), [1_204, 612, 88])
+    XCTAssertEqual(
+      model.facets.sources.map(\.item),
+      [.source(.codex), .source(.claude), .source(.claudeMirror), .source(.codexMirror)])
+    XCTAssertEqual(model.facets.sources.first?.title, "Codex")
     XCTAssertEqual(model.facets.workspaces.map(\.title), ["monorepo"])
-    XCTAssertEqual(model.facets.workspaces.first?.detail, #"C:\Users\jerred\git\monorepo"#)
-    XCTAssertEqual(model.facets.workspaces.first?.id, .workspace(#"C:\Users\jerred\git\monorepo"#))
+    XCTAssertEqual(model.facets.workspaces.first?.detail, "/Users/jerred/git/monorepo")
+    XCTAssertEqual(model.facets.workspaces.first?.id, .workspace("/Users/jerred/git/monorepo"))
+    XCTAssertEqual(model.facets.sessionsWithoutWorkspace, 96)
+  }
+
+  func testThisMacIsListedFirst() throws {
+    let body = """
+      {"apiVersion":1,"machines":[{"key":"pc","sessions":9},{"key":null,"sessions":2}],\
+      "sources":[],"workspaces":[]}
+      """
+    let report: HistoryFacetsReport = try HistoryClient.decode(
+      jsonResponse(body), path: "/v1/facets")
+    XCTAssertEqual(SessionsFacets(report).machines.map(\.title), ["This Mac", "pc"])
+    XCTAssertEqual(SessionsFacets(report).sessionsWithoutWorkspace, 0)
   }
 
   func testAFacetFailureIsReported() async {
     let model = SessionsModel(
-      client: HistoryClient(transport: fixtureTransport(failing: "/v1/usage")))
+      client: HistoryClient(transport: fixtureTransport(failing: "/v1/facets")))
     await model.loadFacets()
     XCTAssertEqual(model.facetsPhase.error?.fixCommand, nil)
     XCTAssertNotNil(model.facetsPhase.error)
@@ -131,10 +149,18 @@ final class SessionsModelTests: XCTestCase {
     XCTAssertEqual(model.conversation?.entries.map(\.id), [0, 1])
     XCTAssertEqual(model.conversation?.hasMore, true)
 
+    XCTAssertEqual(model.conversation?.items.count, 2)
+
     await model.loadMoreMessages()
     XCTAssertEqual(model.conversation?.entries.map(\.id), [0, 1, 2])
-    XCTAssertEqual(model.conversation?.entries.last?.message.text, "Done.")
+    XCTAssertEqual(model.conversation?.entries.last?.message.isToolOutput, true)
     XCTAssertEqual(model.conversation?.hasMore, false)
+    guard case let .tool(call, outputs) = model.conversation?.items.last else {
+      XCTFail("Expected the output grouped under its call across pages")
+      return
+    }
+    XCTAssertEqual(call.message.toolName, "Bash")
+    XCTAssertEqual(outputs.map(\.id), [2])
     await model.loadMoreMessages()
 
     let targets = await transport.log.targets

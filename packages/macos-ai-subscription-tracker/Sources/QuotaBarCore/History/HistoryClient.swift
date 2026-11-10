@@ -23,13 +23,13 @@ public struct HistoryClient: Sendable {
   /// Full-text search over titles and messages, best match first.
   public func search(
     _ query: String,
-    source: HistorySource? = nil,
+    filter: HistorySessionFilter = HistorySessionFilter(),
     range: HistoryTimeRange,
     limit: Int,
     offset: Int = 0
   ) async throws(HistoryAPIError) -> HistorySessionsPage {
     try await fetch(
-      .search(query: query, source: source, range: range, limit: limit, offset: offset))
+      .search(query: query, filter: filter, range: range, limit: limit, offset: offset))
   }
 
   /// One session plus a page of its messages.
@@ -45,6 +45,11 @@ public struct HistoryClient: Sendable {
     source: HistorySource? = nil
   ) async throws(HistoryAPIError) -> HistoryUsageReport {
     try await fetch(.usage(group, range: range, source: source))
+  }
+
+  /// Every machine, source, and workspace with indexed sessions.
+  public func facets() async throws(HistoryAPIError) -> HistoryFacetsReport {
+    try await fetch(.facets)
   }
 
   public func tools(range: HistoryTimeRange, limit: Int = 50) async throws(HistoryAPIError)
@@ -85,7 +90,9 @@ public struct HistoryClient: Sendable {
     throws(HistoryAPIError) -> Value
   {
     do {
-      return try JSONDecoder().decode(Value.self, from: data)
+      let decoder = JSONDecoder()
+      decoder.dateDecodingStrategy = .custom(HistoryTimestamp.decode)
+      return try decoder.decode(Value.self, from: data)
     } catch let error as DecodingError {
       throw .decoding(path: path, detail: describe(error))
     } catch {

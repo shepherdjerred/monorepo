@@ -39,68 +39,51 @@ public struct SessionsListQuery: Hashable, Sendable {
   public let search: String?
 }
 
-/// A sidebar row with the all-time usage the daemon reports for it.
+/// A sidebar row and how many indexed sessions it has.
 public struct SessionsFacet: Identifiable, Equatable, Sendable {
   public let item: SessionsSidebarItem
   public let title: String
   /// The full value behind a shortened title, such as a workspace path.
   public let detail: String?
-  public let usage: HistoryUsage?
-  public let sessionCount: Int?
+  public let sessionCount: Int
 
   public var id: SessionsSidebarItem { item }
 }
 
-/// Machines, agents, and projects for the sidebar.
+/// Machines, agents, and projects for the sidebar, from `/v1/facets`.
 public struct SessionsFacets: Equatable, Sendable {
-  public var machines: [SessionsFacet]
-  public var sources: [SessionsFacet]
-  public var workspaces: [SessionsFacet]
+  public var machines: [SessionsFacet] = []
+  public var sources: [SessionsFacet] = []
+  public var workspaces: [SessionsFacet] = []
+  /// Sessions with no workspace; the list cannot filter to them.
+  public var sessionsWithoutWorkspace = 0
 
-  public init(
-    machines: [SessionsFacet] = [SessionsFacets.thisMac(nil)],
-    sources: [SessionsFacet] = SessionsFacets.allSources([]),
-    workspaces: [SessionsFacet] = []
-  ) {
-    self.machines = machines
-    self.sources = sources
-    self.workspaces = workspaces
+  public init() {
+    // Empty until the first `/v1/facets` response.
   }
 
-  /// Built from all-time usage grouped by machine, source, and workspace.
-  /// Usage only covers sessions whose transcripts carry token counts, so
-  /// every source is listed and This Mac is always present.
-  init(machines: HistoryUsageReport, sources: HistoryUsageReport, workspaces: HistoryUsageReport) {
-    let local = machines.rows.first { $0.key == nil }
-    let mirrored = machines.rows.compactMap { row -> SessionsFacet? in
-      guard let key = row.key else { return nil }
+  init(_ report: HistoryFacetsReport) {
+    // This Mac first, then mirrors in the daemon's order (most sessions).
+    let ordered =
+      report.machines.filter { $0.key == nil } + report.machines.filter { $0.key != nil }
+    machines = ordered.map { row in
+      let machine = HistoryMachine(key: row.key)
       return SessionsFacet(
-        item: .machine(.mirrored(key)), title: key, detail: nil, usage: row.usage,
-        sessionCount: row.sessionCount)
+        item: .machine(machine), title: machine.displayName, detail: nil,
+        sessionCount: row.sessions)
     }
-    self.machines = [Self.thisMac(local)] + mirrored
-    self.sources = Self.allSources(sources.rows)
-    self.workspaces = workspaces.rows.compactMap { row in
+    sources = report.sources.map { row in
+      SessionsFacet(
+        item: .source(row.key), title: row.key.displayName, detail: nil,
+        sessionCount: row.sessions)
+    }
+    workspaces = report.workspaces.compactMap { row in
       guard let path = row.key else { return nil }
       return SessionsFacet(
         item: .workspace(path), title: HistoryFormat.workspaceName(path), detail: path,
-        usage: row.usage, sessionCount: row.sessionCount)
+        sessionCount: row.sessions)
     }
-  }
-
-  public static func thisMac(_ row: HistoryUsageRow?) -> SessionsFacet {
-    SessionsFacet(
-      item: .machine(.local), title: HistoryMachine.local.displayName, detail: nil,
-      usage: row?.usage, sessionCount: row?.sessionCount)
-  }
-
-  public static func allSources(_ rows: [HistoryUsageRow]) -> [SessionsFacet] {
-    HistorySource.allCases.map { source in
-      let row = rows.first { $0.key == source.rawValue }
-      return SessionsFacet(
-        item: .source(source), title: source.displayName, detail: nil, usage: row?.usage,
-        sessionCount: row?.sessionCount)
-    }
+    sessionsWithoutWorkspace = report.workspaces.first { $0.key == nil }?.sessions ?? 0
   }
 }
 
@@ -110,15 +93,49 @@ public struct SessionConversationEntry: Identifiable, Equatable, Sendable {
   public let message: HistoryMessage
 }
 
+/// One row of a conversation: a message, or a tool invocation with the
+/// outputs that follow it.
+public enum ConversationItem: Identifiable, Equatable, Sendable {
+  case message(SessionConversationEntry)
+  case tool(call: SessionConversationEntry, outputs: [SessionConversationEntry])
+  /// Output whose invocation is not in the loaded messages.
+  case output(SessionConversationEntry)
+
+  public var id: Int {
+    switch self {
+    case let .message(entry), let .tool(entry, _), let .output(entry): entry.id
+    }
+  }
+
+  /// Each output belongs to the nearest preceding invocation.
+  static func group(_ entries: [SessionConversationEntry]) -> [Self] {
+    var items: [Self] = []
+    for entry in entries {
+      if entry.message.isToolOutput, case let .tool(call, outputs) = items.last {
+        items[items.count - 1] = .tool(call: call, outputs: outputs + [entry])
+      } else if entry.message.isToolOutput {
+        items.append(.output(entry))
+      } else if entry.message.isToolCall {
+        items.append(.tool(call: entry, outputs: []))
+      } else {
+        items.append(.message(entry))
+      }
+    }
+    return items
+  }
+}
+
 /// A session's messages, accumulated page by page.
 public struct SessionConversation: Equatable, Sendable {
   public private(set) var session: HistorySession
   public private(set) var entries: [SessionConversationEntry]
+  public private(set) var items: [ConversationItem]
   public private(set) var totalMessages: Int
 
   init(_ detail: HistorySessionDetail) {
     session = detail.session
     entries = Self.entries(detail)
+    items = ConversationItem.group(entries)
     totalMessages = detail.totalMessages
   }
 
@@ -127,6 +144,7 @@ public struct SessionConversation: Equatable, Sendable {
   mutating func append(_ detail: HistorySessionDetail) {
     session = detail.session
     entries += Self.entries(detail)
+    items = ConversationItem.group(entries)
     totalMessages = detail.totalMessages
   }
 

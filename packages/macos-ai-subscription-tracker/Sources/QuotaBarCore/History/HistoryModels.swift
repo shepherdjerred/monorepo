@@ -91,14 +91,17 @@ public struct HistorySession: Decodable, Equatable, Hashable, Identifiable, Send
   public let workspace: String?
   public let gitBranch: String?
   public let primaryModel: String?
-  public let createdAt: String
-  public let updatedAt: String
+  public let createdAt: Date
+  public let updatedAt: Date
   public let messageCount: Int
   public let toolCallCount: Int
+  /// How many usage records the source wrote for this session. Zero means
+  /// the source records no usage, not that the session cost nothing.
+  public let usageEvents: Int
   public let usage: HistoryUsage
 
-  public var createdDate: Date? { HistoryTimestamp.parse(createdAt) }
-  public var updatedDate: Date? { HistoryTimestamp.parse(updatedAt) }
+  /// Whether `usage` is a measurement rather than an absence of data.
+  public var hasUsage: Bool { usageEvents > 0 }
 }
 
 /// `/v1/sessions` and `/v1/search`.
@@ -120,10 +123,13 @@ public enum HistoryMessageRole: String, Decodable, Sendable {
 public struct HistoryMessage: Decodable, Equatable, Sendable {
   public let role: HistoryMessageRole
   public let text: String
-  public let createdAt: String?
+  public let createdAt: Date?
+  /// Set on a tool invocation; `nil` on a `tool` message that is the
+  /// output of the invocation before it.
   public let toolName: String?
 
-  public var createdDate: Date? { createdAt.flatMap(HistoryTimestamp.parse) }
+  public var isToolCall: Bool { role == .tool && toolName != nil }
+  public var isToolOutput: Bool { role == .tool && toolName == nil }
 }
 
 /// `/v1/sessions/<id>`: the session plus one page of its messages.
@@ -168,7 +174,7 @@ public struct HistoryUsageRow: Decodable, Equatable, Sendable {
 public struct HistoryUsageReport: HistoryVersionedResponse, Equatable, Sendable {
   public let apiVersion: Int
   public let groupBy: HistoryUsageGroup
-  public let since: String?
+  public let since: Date?
   public let total: HistoryUsage
   public let rows: [HistoryUsageRow]
 }
@@ -182,8 +188,28 @@ public struct HistoryToolRow: Decodable, Equatable, Sendable {
 /// `/v1/tools`.
 public struct HistoryToolsReport: HistoryVersionedResponse, Equatable, Sendable {
   public let apiVersion: Int
-  public let since: String?
+  public let since: Date?
   public let rows: [HistoryToolRow]
+}
+
+/// A machine or workspace and how many indexed sessions it has; `nil` is
+/// this Mac for machines and "no workspace" for workspaces.
+public struct HistoryFacetRow: Decodable, Equatable, Sendable {
+  public let key: String?
+  public let sessions: Int
+}
+
+public struct HistorySourceFacetRow: Decodable, Equatable, Sendable {
+  public let key: HistorySource
+  public let sessions: Int
+}
+
+/// `/v1/facets`: every machine, source, and workspace with indexed sessions.
+public struct HistoryFacetsReport: HistoryVersionedResponse, Equatable, Sendable {
+  public let apiVersion: Int
+  public let machines: [HistoryFacetRow]
+  public let sources: [HistorySourceFacetRow]
+  public let workspaces: [HistoryFacetRow]
 }
 
 /// The body of every non-2xx response.
@@ -200,12 +226,22 @@ struct HistoryVersionEnvelope: Decodable {
   let apiVersion: Int
 }
 
-/// The index stores timestamps as ISO-8601 strings, with or without
-/// fractional seconds depending on the source transcript.
+/// Every `/v1` timestamp is an ISO 8601 date-time, with or without
+/// fractional seconds and with `Z` or a numeric offset.
 enum HistoryTimestamp {
   static func parse(_ value: String) -> Date? {
     if let date = try? Date(value, strategy: fractional) { return date }
     return try? Date(value, strategy: whole)
+  }
+
+  static func decode(_ decoder: any Decoder) throws -> Date {
+    let container = try decoder.singleValueContainer()
+    let value = try container.decode(String.self)
+    guard let date = parse(value) else {
+      throw DecodingError.dataCorruptedError(
+        in: container, debugDescription: "\(value) is not an ISO 8601 date-time")
+    }
+    return date
   }
 
   private static let fractional = Date.ISO8601FormatStyle(includingFractionalSeconds: true)

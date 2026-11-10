@@ -40,7 +40,13 @@ struct SessionDetailView: View {
           case .conversation:
             ConversationView(model: model, conversation: conversation)
           case .usage:
-            SessionUsageView(usage: conversation.session.usage)
+            if conversation.session.hasUsage {
+              SessionUsageView(usage: conversation.session.usage)
+            } else {
+              ContentUnavailableView(
+                "No usage data", systemImage: "gauge.with.dots.needle.0percent",
+                description: Text(HistoryFormat.noUsageNote))
+            }
           }
         }
       } else if let error = model.detailPhase.error {
@@ -67,8 +73,8 @@ private struct SessionHeader: View {
         row("Project", session.workspace)
         row("Branch", session.gitBranch)
         row("Model", session.primaryModel)
-        row("Started", timestamp(session.createdAt, session.createdDate))
-        row("Updated", timestamp(session.updatedAt, session.updatedDate))
+        row("Started", session.createdAt.formatted(date: .abbreviated, time: .shortened))
+        row("Updated", session.updatedAt.formatted(date: .abbreviated, time: .shortened))
         row("Activity", "\(session.messageCount) messages · \(session.toolCallCount) tool calls")
       }
       .font(.caption)
@@ -85,10 +91,6 @@ private struct SessionHeader: View {
         Text(value).textSelection(.enabled).lineLimit(1).truncationMode(.middle)
       }
     }
-  }
-
-  private func timestamp(_ raw: String, _ date: Date?) -> String {
-    date?.formatted(date: .abbreviated, time: .shortened) ?? raw
   }
 }
 

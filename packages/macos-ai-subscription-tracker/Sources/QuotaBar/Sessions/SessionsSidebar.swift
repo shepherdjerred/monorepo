@@ -58,25 +58,13 @@ private struct FacetRow: View {
         .lineLimit(1)
         .truncationMode(.middle)
       Spacer(minLength: 4)
-      if let usage = facet.usage {
-        Text(HistoryFormat.cost(usage))
-          .font(.caption)
-          .monospacedDigit()
-          .foregroundStyle(.secondary)
-      }
+      Text(facet.sessionCount.formatted())
+        .font(.caption)
+        .monospacedDigit()
+        .foregroundStyle(.secondary)
     }
-    .help(help)
-  }
-
-  private var help: String {
-    var lines = [facet.detail ?? facet.title]
-    if let count = facet.sessionCount {
-      lines.append("\(count) session\(count == 1 ? "" : "s") with usage, all time")
-    }
-    if let usage = facet.usage {
-      lines.append(
-        "\(HistoryFormat.tokens(usage.totalTokens)) tokens · \(HistoryFormat.cost(usage))")
-    }
-    return lines.joined(separator: "\n")
+    .help(
+      "\(facet.detail ?? facet.title)\n\(facet.sessionCount) indexed "
+        + "session\(facet.sessionCount == 1 ? "" : "s")")
   }
 }

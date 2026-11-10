@@ -38,13 +38,26 @@ public enum HistoryFormat {
     HistoryMachine(key: machine).displayName
   }
 
-  /// `3h ago` within a week, then the date; a timestamp the index could
-  /// not parse is shown as stored.
-  public static func updated(_ raw: String, date: Date?, relativeTo now: Date) -> String {
-    guard let date else { return raw }
+  /// `3h ago` within a week, then the date.
+  public static func updated(_ date: Date, relativeTo now: Date) -> String {
     guard now.timeIntervalSince(date) >= 7 * 86_400 else {
       return QuotaTimeFormatter.refreshAge(since: date, at: now)
     }
     return date.formatted(.dateTime.year().month(.abbreviated).day())
+  }
+
+  /// Shown instead of a token count or cost for a session whose source
+  /// recorded no usage.
+  public static let noUsage = "—"
+  public static let noUsageNote = "This agent's transcripts record no token usage."
+
+  /// A session's cost, or `—` when its source recorded no usage.
+  public static func cost(of session: HistorySession) -> String {
+    session.hasUsage ? cost(session.usage) : noUsage
+  }
+
+  /// A session's tokens (`6.1M tok`), or `—` when its source recorded none.
+  public static func tokens(of session: HistorySession) -> String {
+    session.hasUsage ? "\(tokens(session.usage.totalTokens)) tok" : noUsage
   }
 }

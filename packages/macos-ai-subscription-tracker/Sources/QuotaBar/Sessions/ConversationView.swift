@@ -1,8 +1,8 @@
 import QuotaBarCore
 import SwiftUI
 
-/// A session's messages, paged from the daemon. Tool calls are collapsed
-/// and labelled with the tool's name.
+/// A session's messages, paged from the daemon. Each tool invocation is
+/// collapsed under its tool name, with its outputs collapsed inside it.
 struct ConversationView: View {
   let model: SessionsModel
   let conversation: SessionConversation
@@ -10,8 +10,15 @@ struct ConversationView: View {
   var body: some View {
     ScrollView {
       LazyVStack(alignment: .leading, spacing: 10) {
-        ForEach(conversation.entries) { entry in
-          MessageView(message: entry.message)
+        ForEach(conversation.items) { item in
+          switch item {
+          case let .message(entry):
+            MessageView(message: entry.message)
+          case let .tool(call, outputs):
+            ToolCallView(call: call.message, outputs: outputs)
+          case let .output(entry):
+            OutputView(message: entry.message).padding(.horizontal, 10)
+          }
         }
         footer
       }
@@ -48,48 +55,91 @@ struct ConversationView: View {
   }
 }
 
-private struct MessageView: View {
+private struct ToolCallView: View {
+  let call: HistoryMessage
+  let outputs: [SessionConversationEntry]
+  @State private var expanded = false
+
+  var body: some View {
+    DisclosureGroup(isExpanded: $expanded) {
+      VStack(alignment: .leading, spacing: 6) {
+        MonospacedBlock(text: call.text)
+        ForEach(outputs) { output in
+          OutputView(message: output.message)
+        }
+      }
+    } label: {
+      HStack(spacing: 6) {
+        Image(systemName: "wrench.and.screwdriver")
+        Text(call.toolName ?? "Tool").font(.caption.weight(.semibold))
+        Text(firstLine(call.text)).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+        if !outputs.isEmpty {
+          Spacer(minLength: 4)
+          Text(outputs.count == 1 ? "1 output" : "\(outputs.count) outputs")
+            .font(.caption2)
+            .foregroundStyle(.tertiary)
+            .fixedSize()
+        }
+      }
+    }
+    .padding(.horizontal, 10)
+  }
+}
+
+/// A tool invocation's output, collapsed by default.
+private struct OutputView: View {
   let message: HistoryMessage
   @State private var expanded = false
 
   var body: some View {
-    if message.role == .tool {
-      DisclosureGroup(isExpanded: $expanded) {
-        Text(message.text)
-          .font(.system(.caption, design: .monospaced))
-          .textSelection(.enabled)
-          .frame(maxWidth: .infinity, alignment: .leading)
-          .padding(8)
-          .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 6))
-      } label: {
-        HStack(spacing: 6) {
-          Image(systemName: "wrench.and.screwdriver")
-          Text(message.toolName ?? "Tool").font(.caption.weight(.semibold))
-          Text(firstLine).font(.caption).foregroundStyle(.secondary).lineLimit(1)
-        }
+    DisclosureGroup(isExpanded: $expanded) {
+      MonospacedBlock(text: message.text)
+    } label: {
+      HStack(spacing: 6) {
+        Image(systemName: "text.alignleft")
+        Text("Output").font(.caption.weight(.semibold))
+        Text(firstLine(message.text)).font(.caption).foregroundStyle(.secondary).lineLimit(1)
       }
-      .padding(.horizontal, 10)
-    } else {
-      VStack(alignment: .leading, spacing: 4) {
-        HStack(spacing: 6) {
-          Text(roleLabel).font(.caption.weight(.semibold)).foregroundStyle(roleColor)
-          if let date = message.createdDate {
-            Text(date.formatted(date: .omitted, time: .shortened))
-              .font(.caption2)
-              .foregroundStyle(.secondary)
-          }
-        }
-        Text(message.text)
-          .textSelection(.enabled)
-          .frame(maxWidth: .infinity, alignment: .leading)
-      }
-      .padding(10)
-      .background(background, in: RoundedRectangle(cornerRadius: 8))
     }
   }
+}
 
-  private var firstLine: String {
-    String(message.text.prefix { !$0.isNewline }.prefix(160))
+private struct MonospacedBlock: View {
+  let text: String
+
+  var body: some View {
+    Text(text)
+      .font(.system(.caption, design: .monospaced))
+      .textSelection(.enabled)
+      .frame(maxWidth: .infinity, alignment: .leading)
+      .padding(8)
+      .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 6))
+  }
+}
+
+private func firstLine(_ text: String) -> String {
+  String(text.prefix { !$0.isNewline }.prefix(160))
+}
+
+private struct MessageView: View {
+  let message: HistoryMessage
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 4) {
+      HStack(spacing: 6) {
+        Text(roleLabel).font(.caption.weight(.semibold)).foregroundStyle(roleColor)
+        if let date = message.createdAt {
+          Text(date.formatted(date: .omitted, time: .shortened))
+            .font(.caption2)
+            .foregroundStyle(.secondary)
+        }
+      }
+      Text(message.text)
+        .textSelection(.enabled)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+    .padding(10)
+    .background(background, in: RoundedRectangle(cornerRadius: 8))
   }
 
   private var roleLabel: String {

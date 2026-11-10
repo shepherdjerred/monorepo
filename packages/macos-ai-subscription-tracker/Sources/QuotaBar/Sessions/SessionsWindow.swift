@@ -134,6 +134,22 @@ private struct FixCommandView: View {
   }
 }
 
+/// A session's cost, or `—` when its agent recorded no usage.
+struct SessionCostText: View {
+  let session: HistorySession
+
+  var body: some View {
+    if session.hasUsage {
+      CostText(usage: session.usage)
+    } else {
+      Text(HistoryFormat.noUsage)
+        .foregroundStyle(.secondary)
+        .help(HistoryFormat.noUsageNote)
+        .accessibilityLabel("No usage data")
+    }
+  }
+}
+
 /// Cost text that marks a partial (lower-bound) amount.
 struct CostText: View {
   let usage: HistoryUsage

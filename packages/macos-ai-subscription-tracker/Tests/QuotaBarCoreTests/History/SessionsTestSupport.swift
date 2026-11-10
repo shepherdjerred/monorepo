@@ -63,6 +63,8 @@ func fixtureTransport(failing failingPath: String? = nil) -> FakeHistoryTranspor
       return jsonResponse(target.contains("groupBy=day") ? body : regroup(body, target: target))
     case "/v1/tools":
       return jsonResponse(try sharedHistoryFixture("tools"))
+    case "/v1/facets":
+      return jsonResponse(try sharedHistoryFixture("facets"))
     default:
       return jsonResponse(#"{"error":"Not found"}"#, status: 404)
     }
@@ -86,19 +88,20 @@ private func regroup(_ body: Data, target: String) -> Data {
   return Data(text.utf8)
 }
 
-/// A three-message session served as pages of two messages and one.
+/// A three-message session (a prompt, a Bash call, and its output) served
+/// as pages of two messages and one.
 private func conversationPage(offset: Int) -> String {
   let messages = [
     #"{"role":"user","text":"Prune it.","createdAt":"2026-11-08T17:02:11Z","toolName":null}"#,
     #"{"role":"tool","text":"Bash argocd app list","createdAt":null,"toolName":"Bash"}"#,
-    #"{"role":"assistant","text":"Done.","createdAt":null,"toolName":null}"#,
+    #"{"role":"tool","text":"app-a\napp-b","createdAt":null,"toolName":null}"#,
   ]
   let page = offset == 0 ? messages[0..<2] : messages[2...]
   let session = """
     {"id":42,"source":"claude","sourceId":"a.jsonl","title":"Prune","agent":"Claude Code",\
     "machine":null,"workspace":"/w","gitBranch":"main","primaryModel":"claude-opus-5-5",\
     "createdAt":"2026-11-08T17:02:11.000Z","updatedAt":"2026-11-08T18:40:03Z",\
-    "messageCount":3,"toolCallCount":1,"usage":{"inputTokens":1,"outputTokens":2,\
+    "messageCount":3,"toolCallCount":1,"usageEvents":2,"usage":{"inputTokens":1,"outputTokens":2,\
     "cacheReadTokens":3,"cacheCreationTokens":4,"cachedInputTokens":0,"reasoningTokens":0,\
     "costUsd":1.5,"costComplete":true}}
     """
