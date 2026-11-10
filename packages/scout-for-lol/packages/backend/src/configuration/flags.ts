@@ -215,7 +215,7 @@ function applicableOverrides(config: FlagConfig): FlagOverride[] {
  * Central registry for all boolean flags
  */
 const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
-  riot_account_linking_enabled: { default: false, overrides: [] },
+  riot_account_linking_enabled: { default: true, overrides: [] },
   hall_of_fame_enabled: {
     default: false,
     overrides: [

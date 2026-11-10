@@ -34,8 +34,8 @@ Provision the existing Riot Sign On client before enabling new account links.
    Run `bun run --filter=@homelab/cdk8s check:1password`. The bootstrap uses
    required secret references only in the application pod. Release through
    the normal homelab GitOps path and verify the new revision and runtime.
-5. Use the typed `riot_account_linking_enabled` rollout for new links. The
-   managed inventory targets beta; production defaults off. Disabling this
+5. Use the typed `riot_account_linking_enabled` rollout for new links. It
+   defaults on globally in beta and production. Disabling this
    flag preserves existing account toggles and notification enforcement.
 6. Sign in with Discord and open **Account → Privacy settings**. Link an account,
    finish Riot sign-in, and confirm that the correct Riot ID appears with

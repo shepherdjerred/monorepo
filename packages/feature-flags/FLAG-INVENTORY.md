@@ -32,6 +32,7 @@ Flipt copies preserve targeting for testing and do not represent beta services.
 | Scout     | `explore-guild-allowlist`, `llm-hourly-token-budget`, `llm-daily-token-budget`                                                                                                                                                                                  | String/Number; backend snapshot                             | `packages/backend/src/config/dynamic.ts`      |
 | Scout     | `scout-report-ai-model`, `scout-explore-model`                                                                                                                                                                                                                  | String; backend snapshot                                    | `packages/backend/src/config/dynamic.ts`      |
 | Scout     | `ai_reports_enabled`, `ai_reports_unlimited`, `dares_enabled`, `debug`, `scout-consumer-player-profiles-enabled`                                                                                                                                                | Boolean; guild/user/environment context on every evaluation | `packages/backend/src/configuration/flags.ts` |
+| Scout     | `riot_account_linking_enabled`                                                                                                                                                                                                                                  | Boolean; user/stage context; beta/prod default on           | `packages/backend/src/configuration/flags.ts` |
 | Karma     | existing admin/emoji flags                                                                                                                                                                                                                                      | String; guild context                                       | `packages/starlight-karma-bot/src/config.ts`  |
 | Birmel    | `birmel-daily-posts-enabled`, `birmel-persona-enabled`, `birmel-responder-enabled`, `birmel-birthdays-enabled`, `birmel-activity-tracking-enabled`, `birmel-elections-enabled`                                                                                  | Boolean; process snapshot                                   | `src/config/dynamic.ts`                       |
 | Birmel    | `birmel-llm-model`, `birmel-llm-classifier-model`, `birmel-llm-memory-model`, `birmel-llm-embedding-model`, `birmel-persona-style-model`, `birmel-llm-reasoning-effort`                                                                                         | String; process snapshot                                    | `src/config/dynamic.ts`                       |
@@ -76,9 +77,10 @@ Dynamic definitions are typed with Zod and resolve `flag → env → default`.
 Snapshot consumers are seeded from the existing production configuration, so a
 provider outage or first-read race follows the declared consumer default.
 Missing declared keys and malformed successful responses fail loudly.
-Per-guild and per-user Scout policy decisions pass explicit context and default
-closed. Guild command reconciliation visits every connected guild and sends an
-empty replacement payload when a policy is disabled, removing stale commands.
+Per-guild and per-user Scout policy decisions pass explicit context and use
+their declared defaults. Guild command reconciliation visits every connected
+guild and sends an empty replacement payload when a policy is disabled,
+removing stale commands.
 
 The inventory observer publishes one-hot live configuration state and scoped
 exception metadata. Consumer metrics separately report evaluations, readiness,
