@@ -248,6 +248,13 @@ test("v4 submits a named movie through the actual qBit client and records scoped
 
 test("wrong scope, coordinator and revoked intent cannot dispatch a v4 torrent add", async () => {
   const f = await fixture();
+  const originalRefresh = f.context.refreshRequesterAccess;
+  const renewal = vi.fn(() =>
+    Promise.reject(
+      new MediaError("plex_credentials_required", "Reconnect fixture", 409),
+    ),
+  );
+  f.context.refreshRequesterAccess = renewal;
   await expect(
     submitMovieTorrentV4(f.context, {
       ...f.input,
@@ -260,6 +267,8 @@ test("wrong scope, coordinator and revoked intent cannot dispatch a v4 torrent a
       operationId: crypto.randomUUID(),
     }),
   ).toEqual({ status: "obsolete", reason: "coordinator_changed" });
+  expect(renewal).not.toHaveBeenCalled();
+  f.context.refreshRequesterAccess = originalRefresh;
   await f.cancel();
   expect(await submitMovieTorrentV4(f.context, f.input)).toEqual({
     status: "obsolete",
@@ -685,11 +694,20 @@ test("original mapping expiry during the client's final observation prevents the
 
 test("feature gate, original profile version and recovery epoch block new transfer before any qBit request", async () => {
   const f = await fixture();
+  const originalRefresh = f.context.refreshRequesterAccess;
+  const renewal = vi.fn(() =>
+    Promise.reject(
+      new MediaError("plex_credentials_required", "Reconnect fixture", 409),
+    ),
+  );
+  f.context.refreshRequesterAccess = renewal;
   f.context.gates.acquisition = () => Promise.resolve(false);
   expect(await submitMovieTorrentV4(f.context, f.input)).toEqual({
     status: "blocked",
     reason: "acquisition_disabled",
   });
+  expect(renewal).not.toHaveBeenCalled();
+  f.context.refreshRequesterAccess = originalRefresh;
   f.context.gates.acquisition = () => Promise.resolve(true);
   const rules = QualityRulesSchema.parse(f.profile.rules);
   await f.db.qualityProfileVersion.create({
@@ -703,6 +721,7 @@ test("feature gate, original profile version and recovery epoch block new transf
     status: "obsolete",
     reason: "intent_changed",
   });
+  f.context.refreshRequesterAccess = renewal;
   await f.db.mediaRuntimeState.update({
     where: { id: "singleton" },
     data: { recoveryEpoch: 1 },
@@ -711,6 +730,7 @@ test("feature gate, original profile version and recovery epoch block new transf
     status: "blocked",
     reason: "recovery_epoch_changed",
   });
+  expect(renewal).not.toHaveBeenCalled();
   expect(f.wire.state.calls).toEqual([]);
   expect(f.wire.state.adds).toBe(0);
 });

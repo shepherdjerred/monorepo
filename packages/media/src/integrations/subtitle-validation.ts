@@ -13,7 +13,11 @@ const traditional = new Set(tables.traditionalOnly);
 const machineLabel =
   /\bAI\b|machine[- ]translated|machine translation|auto[- ]translated|机器翻译|機器翻譯|机翻|機翻|自动翻译|自動翻譯|AI翻译|AI翻譯/iu;
 const machineCredit =
-  /^(?:(?:subtitles?|captions?|translation|script)\s*(?:[:–—-]\s*)?(?:(?:translated|generated|created|produced)\s+)?(?:by|with|using)\s+(?:AI|artificial intelligence|machine translation)\b|(?:translated|generated|created|produced|powered)\s+(?:by|with|using)\s+(?:AI|artificial intelligence|machine translation)\b|(?:AI|machine|auto)[- ](?:translated|translation|generated)(?:\s+(?:subtitles?|captions?))?\s*[.!]?$|机器翻译|機器翻譯|机翻|機翻|自动翻译|自動翻譯|AI翻译|AI翻譯)/iu;
+  /^(?:(?:subtitles?|captions?|translation|script)\s*(?:[:–—-]\s*)?(?:(?:translated|generated|created|produced)\s+)?(?:by|with|using)\s+(?:AI|artificial intelligence|machine translation)|(?:translated|generated|created|produced|powered)\s+(?:by|with|using)\s+(?:AI|artificial intelligence|machine translation))\b/iu;
+const standaloneMachineCredit =
+  /^(?:(?:subtitles?|captions?|translation|script)\s*[:–—-]\s*)?(?:AI|machine|auto)[- ](?:translated|translation|generated)(?:\s+(?:subtitles?|captions?))?\b/iu;
+const chineseMachineCredit =
+  /^(?:机器翻译|機器翻譯|机翻|機翻|自动翻译|自動翻譯|AI翻译|AI翻譯)/iu;
 
 export function isMachineLabelled(text: string): boolean {
   return machineLabel.test(text);
@@ -25,19 +29,48 @@ function stripCreditClosingWrappers(text: string): string {
   return text.slice(0, end);
 }
 
+/** A credit may end here or identify its tool through an explicit qualifier delimiter. */
+function hasCreditBoundary(text: string): boolean {
+  const tail = text.trim();
+  return (
+    tail === "" ||
+    tail === "." ||
+    tail === "!" ||
+    [":", "-", "–", "—", "(", "["].some((delimiter) =>
+      tail.startsWith(delimiter),
+    )
+  );
+}
+
+function hasStandaloneMachineCredit(text: string): boolean {
+  const credit = standaloneMachineCredit.exec(text);
+  if (credit === null) return false;
+  const tail = text.slice(credit[0].length).trim();
+  if (hasCreditBoundary(tail)) return true;
+  const attribution = /^by\s+/iu.exec(tail);
+  return (
+    attribution !== null && tail.slice(attribution[0].length).trim() !== ""
+  );
+}
+
 /** Timed dialogue may discuss AI; only an explicit caption credit/header is provenance. */
 function hasMachineCredit(text: string, dialogue: string): boolean {
   return [text, dialogue].some((body) =>
-    body.split("\n").some((line) =>
-      machineCredit.test(
-        stripCreditClosingWrappers(
-          line
-            .replaceAll(/<[^<>\n]+>/gu, "")
-            .trim()
-            .replace(/^[;#([\s]+/u, ""),
-        ).replace(/^(?:NOTE|Title|Comment)\s*(?::\s*)?/iu, ""),
-      ),
-    ),
+    body.split("\n").some((line) => {
+      const normalized = stripCreditClosingWrappers(
+        line
+          .replaceAll(/<[^<>\n]+>/gu, "")
+          .trim()
+          .replace(/^[;#([\s]+/u, ""),
+      ).replace(/^(?:NOTE|Title|Comment)\s*(?::\s*)?/iu, "");
+      const credit = machineCredit.exec(normalized);
+      return (
+        chineseMachineCredit.test(normalized) ||
+        hasStandaloneMachineCredit(normalized) ||
+        (credit !== null &&
+          hasCreditBoundary(normalized.slice(credit[0].length)))
+      );
+    }),
   );
 }
 

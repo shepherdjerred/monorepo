@@ -120,6 +120,7 @@ async function submissionPrerequisiteV4(
   if (!recovering) {
     if (!(await context.gates.acquisition()))
       return { status: "blocked", reason: "acquisition_disabled" };
+    await refreshMovieAttemptRequesterAccessV4(context, input.scope, attempt);
     if (!(await validMovieAttemptV4(context, input)))
       return {
         status: attempt.filePlan === null ? "obsolete" : "blocked",
@@ -158,12 +159,6 @@ export async function submitMovieTorrentV4(
   );
   const recovering =
     attempt.state === "submitting" || attempt.state === "submission_unknown";
-  if (
-    !recovering &&
-    attempt.state !== "imported" &&
-    attempt.state !== "completed"
-  )
-    await refreshMovieAttemptRequesterAccessV4(context, input.scope, attempt);
   const prerequisite = await submissionPrerequisiteV4(context, attempt, input);
   if (prerequisite !== null) return prerequisite;
   if (attempt.release.encryptedSource === null)

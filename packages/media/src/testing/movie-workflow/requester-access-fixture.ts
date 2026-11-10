@@ -4,10 +4,13 @@ import { PlexPinAuthentication } from "#infrastructure/plex-auth.ts";
 import { requesterAccessRefresher } from "#infrastructure/requester-access/refresh.ts";
 import { createMovieNetworkFacetV4 } from "#automation/movie-editions/activities.ts";
 
-type AccessMode = "allowed" | "revoked" | "mismatch" | "restricted" | "expired";
+type AccessMode =
+  "allowed" | "revoked" | "mismatch" | "restricted" | "expired" | "unavailable";
 
 /** Real movie consent and registered-device resolver; only Plex's HTTP responses are synthetic. */
-export async function movieRequesterAccessFixture(bytes = new Uint8Array([1])) {
+export async function movieRequesterAccessFixture(
+  bytes: Uint8Array = new Uint8Array([1]),
+) {
   const accountId = "81001";
   const f = await createMovieWorkflowFixture("default", {
     bytes,
@@ -47,6 +50,8 @@ export async function movieRequesterAccessFixture(bytes = new Uint8Array([1])) {
     (input, init) => {
       const pathname = new URL(input).pathname;
       calls.push(pathname);
+      if (state.mode === "unavailable")
+        return Promise.resolve(new Response(null, { status: 503 }));
       const token = new Headers(init?.headers).get("X-Plex-Token");
       if (state.mode === "expired" && token === credential.token)
         return Promise.resolve(new Response(null, { status: 401 }));

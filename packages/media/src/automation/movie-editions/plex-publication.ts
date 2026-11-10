@@ -165,5 +165,6 @@ function moviePublicationFailure(error: MediaError): Result {
           : "waiting",
       reason: error.reason,
     };
+  if (error.code === "plex_unavailable") throw error;
   return { status: "blocked", reason: error.code };
 }

@@ -80,6 +80,8 @@ test("long unmatched cues finish through the actual parser inside an independent
         (format==="srt"||format==="vtt"?"<":"{").repeat(1024*1024),
         ")".repeat(1024*1024)+"x",
         "]".repeat(1024*1024)+"x",
+        "Translation by artificial intelligence"+" ".repeat(1024*1024)+"x",
+        "Subtitles"+" ".repeat(1024*1024)+"x",
       ]) {
       const content=format==="srt"?"1\n00:00:00,000 --> 00:00:01,000\n"+body:
         format==="vtt"?"WEBVTT\n\n00:00:00.000 --> 00:00:01.000\n"+body:
@@ -88,8 +90,8 @@ test("long unmatched cues finish through the actual parser inside an independent
       if(result.format!==format||result.text!==content) throw new Error("Long cue result changed");
       }
     }
-    process.stdout.write("parsed:12");`;
-  expect(await boundedParserChild(source)).toBe("parsed:12");
+    process.stdout.write("parsed:20");`;
+  expect(await boundedParserChild(source)).toBe("parsed:20");
 });
 
 function boundedParserChild(source: string): Promise<string> {

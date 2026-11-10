@@ -26,6 +26,8 @@ import { plexBindingFreshness } from "#infrastructure/plex-binding/freshness.ts"
 import { MediaError } from "#application/errors.ts";
 import { finalizeMovieAcquisitionV4 } from "./finalization.ts";
 import { readMoviePlexReceiptV2 } from "#infrastructure/movie-editions/plex/receipt.ts";
+import { readFile } from "node:fs/promises";
+import { workerFilePath } from "#automation/files/paths/locations.ts";
 
 async function reservedInput(
   f: Awaited<ReturnType<typeof movieRequesterAccessFixture>>,
@@ -44,8 +46,8 @@ async function reservedInput(
   };
 }
 
-async function submitted() {
-  const f = await movieRequesterAccessFixture();
+async function submitted(bytes?: Uint8Array) {
+  const f = await movieRequesterAccessFixture(bytes);
   try {
     const input = await reservedInput(f);
     expect(
@@ -60,6 +62,118 @@ async function submitted() {
     throw error;
   }
 }
+
+async function imported(bytes: Uint8Array) {
+  const f = await submitted(bytes);
+  try {
+    const input = f.attemptInput;
+    expect(
+      await f.movie.observeMovieAcquisitionV4(
+        input,
+        testPlexBindingExecution(),
+      ),
+    ).toEqual({ status: "ready", reason: null });
+    expect(
+      await f.fileMovie.inspectAndStageMovieV4(
+        input,
+        testPublicationExecution(),
+      ),
+    ).toMatchObject({ status: "staged" });
+    expect(
+      await f.fileMovie.promoteMovieFilesV4(input, testPublicationExecution()),
+    ).toMatchObject({ status: "published" });
+    return f;
+  } catch (error) {
+    await f.close();
+    throw error;
+  }
+}
+
+test.each(["legacy", "rollback"] as const)(
+  "%s publication retries a real Plex503 without rolling back its original attempt or video",
+  async (route) => {
+    const f = await imported(await movieVideoFixture());
+    try {
+      const input = f.attemptInput;
+      const publish = () =>
+        route === "legacy"
+          ? f.movie.publishMovieToPlexV4(input, testPlexBindingExecution())
+          : f.movie.publishMovieWithRollbackV4(
+              input,
+              testPlexBindingExecution(),
+              new PublicationAuthorityReadBudget(),
+            );
+      const attempt = await f.db.acquisitionAttempt.findUniqueOrThrow({
+        where: { id: input.attemptId },
+      });
+      expect(attempt.state).toBe("imported");
+      const assets = await f.db.libraryAsset.findMany({
+        orderBy: { id: "asc" },
+      });
+      const video = assets[0];
+      if (video === undefined)
+        throw new Error("Published movie fixture omitted its owned video");
+      const path = workerFilePath(f.source.files.context, video.path);
+      const bytes = await readFile(path);
+      await f.expire();
+      f.state.mode = "unavailable";
+      await expect(publish()).rejects.toMatchObject({
+        code: "plex_unavailable",
+      });
+      expect(f.calls).toContain("/api/v2/resources");
+      expect(
+        await f.db.acquisitionAttempt.findUniqueOrThrow({
+          where: { id: input.attemptId },
+        }),
+      ).toEqual(attempt);
+      expect(
+        await f.db.libraryAsset.findMany({ orderBy: { id: "asc" } }),
+      ).toEqual(assets);
+      expect(await readFile(path)).toEqual(bytes);
+      expect(
+        await readMoviePlexReceiptV2(
+          f.db,
+          input,
+          new PublicationAuthorityReadBudget(),
+        ),
+      ).toBeNull();
+      expect(
+        await f.db.applicationEvent.count({
+          where: { kind: "movie_plex_rejected_v1" },
+        }),
+      ).toBe(0);
+      f.state.mode = "allowed";
+      expect(await publish()).toEqual({ status: "available", reason: null });
+      await f.movie.finalizeMovieAcquisitionV4(
+        input,
+        testPlexBindingExecution(),
+      );
+      const completed = await f.db.acquisitionAttempt.findUniqueOrThrow({
+        where: { id: input.attemptId },
+      });
+      expect(completed).toMatchObject({
+        state: "completed",
+        operationId: attempt.operationId,
+        torrentId: attempt.torrentId,
+        identityEvidence: attempt.identityEvidence,
+      });
+      expect(await readFile(path)).toEqual(bytes);
+      expect(f.source.wire.additions()).toBe(1);
+      expect(
+        await f.db.applicationEvent.count({
+          where: { kind: "movie_plex_rejected_v1" },
+        }),
+      ).toBe(0);
+      await f.expire();
+      f.state.mode = "unavailable";
+      const calls = f.calls.length;
+      expect(await publish()).toEqual({ status: "available", reason: null });
+      expect(f.calls).toHaveLength(calls);
+    } finally {
+      await f.close();
+    }
+  },
+);
 
 test("unattended movie search, submission and observation renew five-minute access without replacing consent or transfer", async () => {
   const f = await movieRequesterAccessFixture(await movieVideoFixture());
@@ -438,32 +552,9 @@ test.each([
 ] as const)(
   "committed movie settlement survives $mode denial with independent requester=$independent while retry remains strict",
   async ({ mode, independent }) => {
-    const f = await movieRequesterAccessFixture(
-      await movieVideoFixture(1920, []),
-    );
+    const f = await imported(await movieVideoFixture(1920, []));
     try {
-      const input = await reservedInput(f);
-      expect(
-        await f.movie.submitMovieTorrentV4(input, testPlexBindingExecution()),
-      ).toEqual({ status: "submitted", reason: null });
-      expect(
-        await f.movie.observeMovieAcquisitionV4(
-          input,
-          testPlexBindingExecution(),
-        ),
-      ).toEqual({ status: "ready", reason: null });
-      expect(
-        await f.fileMovie.inspectAndStageMovieV4(
-          input,
-          testPublicationExecution(),
-        ),
-      ).toMatchObject({ status: "staged" });
-      expect(
-        await f.fileMovie.promoteMovieFilesV4(
-          input,
-          testPublicationExecution(),
-        ),
-      ).toMatchObject({ status: "published" });
+      const input = f.attemptInput;
       expect(
         await f.movie.publishMovieToPlexV4(input, testPlexBindingExecution()),
       ).toEqual({ status: "available", reason: null });
@@ -631,29 +722,8 @@ test.each(["revoked", "credentials"] as const)(
 );
 
 test("caption acquisition continues for its permitted requester when another scope requester loses credentials", async () => {
-  const f = await movieRequesterAccessFixture(
-    await movieVideoFixture(1920, []),
-  );
+  const f = await imported(await movieVideoFixture(1920, []));
   try {
-    const input = await reservedInput(f);
-    expect(
-      await f.movie.submitMovieTorrentV4(input, testPlexBindingExecution()),
-    ).toMatchObject({ status: "submitted" });
-    expect(
-      await f.movie.observeMovieAcquisitionV4(
-        input,
-        testPlexBindingExecution(),
-      ),
-    ).toMatchObject({ status: "ready" });
-    expect(
-      await f.fileMovie.inspectAndStageMovieV4(
-        input,
-        testPublicationExecution(),
-      ),
-    ).toMatchObject({ status: "staged" });
-    expect(
-      await f.fileMovie.promoteMovieFilesV4(input, testPublicationExecution()),
-    ).toMatchObject({ status: "published" });
     await secondRequester(f);
     await denyRequester(f, "credentials");
     const coverage = await f.db.assetCoverage.findFirstOrThrow({
