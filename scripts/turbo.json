@@ -36,7 +36,17 @@
         "$TURBO_ROOT$/packages/**/ci-tests.json",
         // renovate-config.test.ts extracts the OpenTofu provider pins.
         "$TURBO_ROOT$/renovate.json",
-        "$TURBO_ROOT$/packages/homelab/src/tofu/provider-versions.json"
+        "$TURBO_ROOT$/packages/homelab/src/tofu/provider-versions.json",
+        // checks/service-registration.test.ts reads every place a hosted
+        // service is registered.
+        "$TURBO_ROOT$/package.json",
+        "$TURBO_ROOT$/docker-bake.hcl",
+        "$TURBO_ROOT$/packages/**/Dockerfile",
+        "$TURBO_ROOT$/packages/ops-model/catalog-document.json",
+        "$TURBO_ROOT$/packages/version-catalog/src/image-registry.json",
+        "$TURBO_ROOT$/packages/homelab/src/delivery-target-policy.ts",
+        "$TURBO_ROOT$/packages/homelab/src/cdk8s/helm/*/Chart.yaml",
+        "$TURBO_ROOT$/packages/delivery/registrations/v2/**/recipe.json"
       ]
     },
     "test:ci": {
@@ -70,7 +80,16 @@
         "$TURBO_ROOT$/packages/feature-flags/src/managed-flag-drift.ts",
         "$TURBO_ROOT$/packages/feature-flags/src/flipt-resource-payloads.ts",
         "$TURBO_ROOT$/packages/feature-flags/src/flipt-boolean-rollouts.ts",
-        "$TURBO_ROOT$/packages/feature-flags/src/managed-flag-inventory.json"
+        "$TURBO_ROOT$/packages/feature-flags/src/managed-flag-inventory.json",
+        // checks/service-registration.test.ts reads every place a hosted
+        // service is registered.
+        "$TURBO_ROOT$/package.json",
+        "$TURBO_ROOT$/packages/**/Dockerfile",
+        "$TURBO_ROOT$/packages/ops-model/catalog-document.json",
+        "$TURBO_ROOT$/packages/version-catalog/src/image-registry.json",
+        "$TURBO_ROOT$/packages/homelab/src/delivery-target-policy.ts",
+        "$TURBO_ROOT$/packages/homelab/src/cdk8s/helm/*/Chart.yaml",
+        "$TURBO_ROOT$/packages/delivery/registrations/v2/**/recipe.json"
       ]
     }
   }
