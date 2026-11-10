@@ -4,7 +4,13 @@
   "steps": [
     {
       "runner": "vitest",
-      "args": ["test", "evals/test"]
+      "args": ["test", "evals/test", "--exclude", "**/*.integration.test.ts"]
+    },
+    {
+      "runner": "vitest",
+      "name": "capture-video",
+      "tier": "extended",
+      "args": ["test/capture/catalog/video.integration.test.ts"]
     }
   ]
 }

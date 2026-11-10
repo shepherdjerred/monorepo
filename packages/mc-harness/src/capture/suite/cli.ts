@@ -7,6 +7,9 @@ import { runSuite, replaySuite, renderSuite } from "./orchestrate.ts";
 import { recoverExport } from "./csi.ts";
 import { docsCoverage } from "./docs-coverage.ts";
 import type { CaptureSuite } from "./define.ts";
+import { MC_DIR } from "#protocol/paths.ts";
+import { auditCatalog } from "./catalog/audit.ts";
+import { reviewCatalog } from "./catalog/review.ts";
 
 function fixtureSelection(
   action: string | undefined,
@@ -55,13 +58,16 @@ export async function suiteMain(args: string[]): Promise<void> {
       fixture: { type: "string" },
       docs: { type: "string" },
       help: { type: "boolean" },
+      out: { type: "string" },
     },
   });
   const [action, identifier] = parsed.positionals;
+  if (action !== "review" && parsed.values.out !== undefined)
+    throw new Error("--out is supported only by suite review");
   const fixture = fixtureSelection(action, parsed.values.fixture);
   if (action === undefined || parsed.values.help === true) {
     process.stdout.write(
-      "toolkit mc capture suite check|list <suite.ts|tsmc> [--scenario ID|--shot ID]\ntoolkit mc capture suite check <suite.ts|tsmc> --docs ts-mc-docs\ntoolkit mc capture suite run <suite.ts|tsmc> --runtime worktree|saved:<run-id> [--fixture SHA256] [--scenario ID|--shot ID]\ntoolkit mc capture suite replay|render <run-id> [--scenario ID|--shot ID]\ntoolkit mc capture suite recover-export <export-id>\n",
+      "toolkit mc capture suite check|list <suite.ts|tsmc> [--scenario ID|--shot ID]\ntoolkit mc capture suite review|audit <suite.ts|tsmc> [--scenario ID|--shot ID] [--out DIR (review only)]\ntoolkit mc capture suite check <suite.ts|tsmc> --docs ts-mc-docs\ntoolkit mc capture suite run <suite.ts|tsmc> --runtime worktree|saved:<run-id> [--fixture SHA256] [--scenario ID|--shot ID]\ntoolkit mc capture suite replay|render <run-id> [--scenario ID|--shot ID]\ntoolkit mc capture suite recover-export <export-id>\n",
     );
     return;
   }
@@ -88,13 +94,14 @@ export async function suiteMain(args: string[]): Promise<void> {
   const imported: unknown = await import(pathToFileURL(file).href);
   const module = z.object({ default: SuiteSchema }).parse(imported);
   const suite = defineCaptureSuite(module.default);
+  if (action === "review" || action === "audit") {
+    return catalogCommand(action, suite, root, {
+      ...selection,
+      out: parsed.values.out,
+    });
+  }
   await checkDocs(action, parsed.values.docs, suite, root);
-  const selected = selectScenarios(suite, {
-    ...(parsed.values.scenario === undefined
-      ? {}
-      : { scenario: parsed.values.scenario }),
-    ...(parsed.values.shot === undefined ? {} : { shot: parsed.values.shot }),
-  });
+  const selected = selectScenarios(suite, selection);
   if (action === "check" || action === "list") {
     process.stdout.write(
       JSON.stringify(
@@ -120,10 +127,7 @@ export async function suiteMain(args: string[]): Promise<void> {
   const options = {
     repoRoot: root,
     suiteFile: file,
-    ...(parsed.values.scenario === undefined
-      ? {}
-      : { scenario: parsed.values.scenario }),
-    ...(parsed.values.shot === undefined ? {} : { shot: parsed.values.shot }),
+    ...selection,
   };
   if (action === "run") {
     const result = await runSuite({
@@ -135,4 +139,35 @@ export async function suiteMain(args: string[]): Promise<void> {
     return;
   }
   throw new Error(`Unknown suite action ${action}`);
+}
+
+async function catalogCommand(
+  action: string,
+  suite: CaptureSuite,
+  root: string,
+  selection: { scenario?: string; shot?: string; out: string | undefined },
+) {
+  const publicRoot = path.join(root, "packages/ts-mc-docs/public");
+  const catalog = await auditCatalog(
+    suite,
+    publicRoot,
+    selection,
+    path.join(root, "packages/ts-mc-docs/src/content/docs"),
+  );
+  const result =
+    action === "audit"
+      ? catalog
+      : await reviewCatalog(
+          catalog,
+          publicRoot,
+          path.resolve(
+            selection.out ?? path.join(MC_DIR, "reviews", crypto.randomUUID()),
+          ),
+        );
+  process.stdout.write(JSON.stringify(result) + "\n");
+  for (const issue of catalog.issues)
+    process.stderr.write(
+      `[capture] ${issue.scenario}/${issue.shot}: ${issue.file}: ${issue.message}\n`,
+    );
+  if (catalog.issues.length > 0) process.exitCode = 1;
 }

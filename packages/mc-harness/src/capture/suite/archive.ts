@@ -83,7 +83,7 @@ export async function archiveCapture(
       const receipt = DocsFramesSchema.parse(
         await Bun.file(capture.source).json(),
       );
-      for (const frame of receipt.frames)
+      for (const [index, frame] of receipt.frames.entries()) {
         files.push({
           path: `${capture.name}/${frame.file}`,
           sha256: await retainBlob(
@@ -95,6 +95,11 @@ export async function archiveCapture(
             ),
           ),
         });
+        if ((index + 1) % 30 === 0 || index + 1 === receipt.frames.length)
+          process.stderr.write(
+            `[capture] retain ${capture.name}: ${(index + 1).toString()}/${receipt.frames.length.toString()} frames\n`,
+          );
+      }
     }
   }
   // The proof retains provenance, without a copy of the player's inventory or checkpoint.

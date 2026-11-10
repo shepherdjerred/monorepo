@@ -109,6 +109,9 @@ async function run(state: Campaign) {
     state,
     persist,
     async (part, baseline) => {
+      console.error(
+        `[capture] batch ${(state.batches.findIndex((b) => b.ids.join(",") === part.ids.join(",")) + 1).toString()}/${state.batches.length.toString()}: ${part.ids.join(",")}`,
+      );
       const args =
         part.replayOf === null
           ? [
