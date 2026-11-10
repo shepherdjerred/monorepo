@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import path from "node:path";
 import { rm } from "node:fs/promises";
-import { afterEach, beforeAll, expect, test } from "vitest";
+import { afterEach, beforeAll, beforeEach, expect, test } from "vitest";
 import { z } from "zod";
 import { automationTestHarness } from "#testing/automation.ts";
 import { movieVideoFixture } from "#testing/movie-video.ts";
@@ -28,6 +28,7 @@ const h = automationTestHarness();
 const directories: string[] = [];
 let original: Uint8Array;
 let upgrade: Uint8Array;
+let published: Awaited<ReturnType<typeof imported>> | undefined;
 beforeAll(async () => {
   original = await movieVideoFixture(1280);
   upgrade = await movieVideoFixture(1920, undefined, { bitrateKbps: 160_000 });
@@ -95,8 +96,22 @@ async function imported() {
   );
 }
 
+// Keep genuine import/publication prerequisites under their own original 60s
+// setup bound. Each rollback assertion retains 60s and uses these exact rows,
+// files, authority timestamps and allowances without refreshing them.
+beforeEach(async () => {
+  published = undefined;
+  published = await imported();
+}, 60_000);
+
+function preparedPublication() {
+  if (published === undefined)
+    throw new Error("Genuine published-pack prerequisite did not complete");
+  return published;
+}
+
 test("actual failed Plex verification rolls twenty-four committed upgrades back and rebinds both genuine initial-library seasons", async () => {
-  const f = await imported();
+  const f = preparedPublication();
   const before = await f.f.db.mediaPublicationTransition.findUniqueOrThrow({
     where: { attemptId: f.input.attemptId },
   });
@@ -215,7 +230,7 @@ test("actual failed Plex verification rolls twenty-four committed upgrades back 
 }, 60_000);
 
 test("already served packs and exhausted original allowances cannot initiate the failed-Plex rollback path", async () => {
-  const f = await imported();
+  const f = preparedPublication();
   expect(
     await originalAllowance(() => f.f.publication.publishMediaToPlex(f.input)),
   ).toEqual({ status: "available", reason: null });
@@ -253,7 +268,7 @@ test("already served packs and exhausted original allowances cannot initiate the
 }, 60_000);
 
 test("generation revocation cannot be converted into fresh post-import repair consent", async () => {
-  const f = await imported();
+  const f = preparedPublication();
   const last = f.f.ids.at(-1);
   if (last === undefined)
     throw new Error("Actual original scope lost its final leaf");
@@ -284,7 +299,7 @@ test("generation revocation cannot be converted into fresh post-import repair co
 test.each(["predecessor", "successor"] as const)(
   "actual %s version drift protects every committed file before rollback effects",
   async (changed) => {
-    const f = await imported();
+    const f = preparedPublication();
     const entry = f.plan.at(-1);
     if (entry?.previousAssetId == null)
       throw new Error(
