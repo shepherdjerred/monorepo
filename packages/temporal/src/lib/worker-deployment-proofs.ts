@@ -113,18 +113,32 @@ export async function requireReplayCheckout(
   }
 }
 
-export async function runWorkerDeploymentPreflight(
+/**
+ * The candidate's Workflow unit tests and retained-history replay do not depend
+ * on the served namespace, so a rollout runs them once for every route.
+ */
+export async function runWorkerDeploymentReplayProofs(
   options: {
     buildId: string;
-    deploymentName: string;
-    namespace: string;
     replayCommands: readonly (readonly string[])[];
-    canaryCommand: readonly string[];
   },
   run: RolloutCommandRunner,
 ): Promise<void> {
   await requireReplayCheckout(options.buildId, run);
   for (const command of options.replayCommands) await run(command);
+}
+
+/** The pinned candidate canary runs in each served namespace. */
+export async function runWorkerDeploymentPinnedCanary(
+  options: {
+    buildId: string;
+    deploymentName: string;
+    namespace: string;
+    canaryCommand: readonly string[];
+  },
+  run: RolloutCommandRunner,
+): Promise<void> {
+  await requireReplayCheckout(options.buildId, run);
   await run([
     ...options.canaryCommand,
     "--deployment-name",

@@ -12,6 +12,7 @@ import {
   workerReplayRoute,
   workerReplayArguments,
 } from "#lib/delivery/workers/worker-replay-targets.ts";
+import { timedWorkerPhase } from "#lib/delivery/workers/worker-phase-timing.ts";
 
 type CandidateCommand = (
   argv: readonly string[],
@@ -134,81 +135,95 @@ export async function withWorkerCandidateCheckout<T>(
   const run: RolloutCommandRunner = (argv) => execute(argv, directory);
   const inExecutor: RolloutCommandRunner = (argv) =>
     execute(argv, executor.root);
-  const candidate: RolloutCommandRunner = async (argv) =>
-    execute(
-      argv[0] === "git"
-        ? argv
-        : [
-            "mise",
-            "exec",
-            "--",
-            ...argv,
-            ...(argv.includes("replay:candidate-histories")
-              ? await replayArguments(directory, target)
-              : []),
-          ],
-      path.join(directory, "packages/temporal"),
+  const cwd = path.join(directory, "packages/temporal");
+  const candidate: RolloutCommandRunner = async (argv) => {
+    if (argv[0] === "git") return await execute(argv, cwd);
+    const family = candidateCommandFamily(argv);
+    const flag = argv.indexOf("--namespace");
+    const namespace = flag === -1 ? undefined : argv[flag + 1];
+    const detail = namespace === undefined ? {} : { namespace };
+    const replay = argv.includes("replay:candidate-histories")
+      ? await timedWorkerPhase("history-replay-selection", {}, () =>
+          replayArguments(directory, target),
+        )
+      : [];
+    return await timedWorkerPhase(family, detail, () =>
+      execute(["mise", "exec", "--", ...argv, ...replay], cwd),
     );
-  let worktree = false;
+  };
+  const preparation = { reuse: String(reuse) };
+  const added = { worktree: false };
   try {
-    if (!reuse) {
-      for (const [key, value] of [
-        ["remote.origin.url", MONOREPO],
-        ["remote.origin.promisor", "true"],
-        ["remote.origin.partialclonefilter", "blob:none"],
-      ] as const)
-        await inExecutor(["git", "config", key, value]);
-      await inExecutor([
-        "git",
-        "fetch",
-        "--quiet",
-        "--no-tags",
-        "--depth=1",
-        "--filter=blob:none",
-        "origin",
-        source,
-      ]);
-      await inExecutor([
-        "git",
-        "worktree",
-        "add",
-        "--quiet",
-        "--detach",
-        directory,
-        source,
-      ]);
-      worktree = true;
-    }
-    await requireReplayCheckout(source, run);
-    if (!reuse) {
-      await run(["mise", "trust", ".mise.toml"]);
-      await run(["mise", "install", "--yes", "bun", "node"]);
-      await run(["mise", "exec", "--", "bun", "install", "--frozen-lockfile"]);
-      await run([
-        "mise",
-        "exec",
-        "--",
-        "bunx",
-        "turbo",
-        "run",
-        "generate",
-        "--filter=@shepherdjerred/temporal^...",
-      ]);
-    }
-    for (const packageName of [
-      "home-assistant",
-      "llm-models",
-      "glitter-context",
-    ])
-      await execute(
-        ["mise", "exec", "--", "bun", "run", "build"],
-        path.join(directory, "packages", packageName),
-      );
+    await timedWorkerPhase("candidate-checkout", preparation, async () => {
+      if (!reuse) {
+        for (const [key, value] of [
+          ["remote.origin.url", MONOREPO],
+          ["remote.origin.promisor", "true"],
+          ["remote.origin.partialclonefilter", "blob:none"],
+        ] as const)
+          await inExecutor(["git", "config", key, value]);
+        await inExecutor([
+          "git",
+          "fetch",
+          "--quiet",
+          "--no-tags",
+          "--depth=1",
+          "--filter=blob:none",
+          "origin",
+          source,
+        ]);
+        await inExecutor([
+          "git",
+          "worktree",
+          "add",
+          "--quiet",
+          "--detach",
+          directory,
+          source,
+        ]);
+        added.worktree = true;
+      }
+      await requireReplayCheckout(source, run);
+    });
+    if (!reuse)
+      await timedWorkerPhase("candidate-install", preparation, async () => {
+        await run(["mise", "trust", ".mise.toml"]);
+        await run(["mise", "install", "--yes", "bun", "node"]);
+        await run([
+          "mise",
+          "exec",
+          "--",
+          "bun",
+          "install",
+          "--frozen-lockfile",
+        ]);
+        await run([
+          "mise",
+          "exec",
+          "--",
+          "bunx",
+          "turbo",
+          "run",
+          "generate",
+          "--filter=@shepherdjerred/temporal^...",
+        ]);
+      });
+    await timedWorkerPhase("candidate-build", preparation, async () => {
+      for (const packageName of [
+        "home-assistant",
+        "llm-models",
+        "glitter-context",
+      ])
+        await execute(
+          ["mise", "exec", "--", "bun", "run", "build"],
+          path.join(directory, "packages", packageName),
+        );
+    });
     await requireReplayCheckout(source, candidate);
     return await use(candidate);
   } finally {
     if (!reuse) {
-      if (worktree)
+      if (added.worktree)
         await inExecutor(["git", "worktree", "remove", "--force", directory]);
       await rm(directory, { recursive: true, force: true });
     }

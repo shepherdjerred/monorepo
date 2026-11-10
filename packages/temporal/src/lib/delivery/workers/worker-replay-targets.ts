@@ -6,6 +6,9 @@ import { WorkerDeploymentRolloutTargetSchema } from "#lib/worker-deployment-targ
 
 type Target = z.infer<typeof WorkerDeploymentRolloutTargetSchema>;
 const name = z.string().regex(/^[A-Za-z_$][\w$-]*$/u);
+/** Visibility reads per registered type overlap; selection order stays the type order. */
+export const REPLAY_SELECTION_CONCURRENCY = 8;
+
 export function workerReplayRoute(target: Target) {
   WorkerDeploymentRolloutTargetSchema.parse(target);
   return {
@@ -37,18 +40,13 @@ export async function selectWorkerReplayTargets(
   z.array(name).min(1).parse(taskQueues);
   if (new Set(types).size !== types.length)
     throw new Error("Duplicate registered Workflow types");
-  const targets: { workflowId: string; runId: string }[] = [],
-    missingTypes: string[] = [];
   const queues = taskQueues.map((queue) => `'${queue}'`).join(", ");
-  for (const type of types) {
+  const select = async (type: string) => {
     const query = `TaskQueue IN (${queues}) AND WorkflowType = '${type}'`;
     const raw =
       (await first(`${query} AND ExecutionStatus = 'Running'`)) ??
       (await first(`${query} AND ExecutionStatus != 'Running'`));
-    if (raw === null) {
-      missingTypes.push(type);
-      continue;
-    }
+    if (raw === null) return { type, execution: null };
     const execution = z
       .object({
         workflowId: z.string().min(1),
@@ -59,8 +57,30 @@ export async function selectWorkerReplayTargets(
       .parse(raw);
     if (!taskQueues.includes(execution.taskQueue))
       throw new Error("Replay history belongs to another task queue");
-    targets.push({ workflowId: execution.workflowId, runId: execution.runId });
-  }
+    return {
+      type,
+      execution: { workflowId: execution.workflowId, runId: execution.runId },
+    };
+  };
+  // Fixed-size ordered batches keep at most the bound in flight.
+  const selected = [];
+  for (
+    let start = 0;
+    start < types.length;
+    start += REPLAY_SELECTION_CONCURRENCY
+  )
+    selected.push(
+      ...(await Promise.all(
+        types
+          .slice(start, start + REPLAY_SELECTION_CONCURRENCY)
+          .map((type) => select(type)),
+      )),
+    );
+  const targets: { workflowId: string; runId: string }[] = [],
+    missingTypes: string[] = [];
+  for (const { type, execution } of selected)
+    if (execution === null) missingTypes.push(type);
+    else targets.push(execution);
   if (targets.length === 0)
     throw new Error(
       `No retained histories for registered Workflow types: ${missingTypes.join(", ")}`,
@@ -78,6 +98,7 @@ export async function workerReplayArguments(directory: string, target: Target) {
   });
   try {
     const client = new Client({ connection, namespace: route.namespace });
+    const started = performance.now();
     const selection = await selectWorkerReplayTargets(
       types,
       route.taskQueues,
@@ -97,6 +118,7 @@ export async function workerReplayArguments(directory: string, target: Target) {
         namespace: route.namespace,
         selectedTypes: selection.targets.length,
         typesWithoutRetainedHistory: selection.missingTypes,
+        durationMs: Math.round(performance.now() - started),
       }),
     );
     return selection.targets.flatMap(({ workflowId, runId }) => [

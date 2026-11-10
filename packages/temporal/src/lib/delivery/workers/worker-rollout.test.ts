@@ -453,6 +453,68 @@ describe("PostgreSQL-owned routing effects", () => {
       prepareDeliveryWorkerRollout(detail(), connection, run),
     ).rejects.toThrow("does not match candidate");
   });
+});
+describe("once-per-rollout candidate proofs", () => {
+  test("runs Workflow unit tests and replay once for both central namespaces before either pinned canary", async () => {
+    const { run, commands } = fixture();
+    await prepareDeliveryWorkerRollout(detail(), connection, run);
+    const index = (match: (argv: string[]) => boolean) =>
+      commands.flatMap((argv, position) => (match(argv) ? [position] : []));
+    const unitTests = index((argv) => argv.includes("test:workflows"));
+    const replay = index((argv) => argv.includes("replay:candidate-histories"));
+    const canaries = index((argv) =>
+      argv.includes("scripts/rollout/worker-deployment-canary.ts"),
+    );
+    const candidatePollers = index((argv) => argv.includes("describe-version"));
+    expect(unitTests).toHaveLength(1);
+    expect(replay).toHaveLength(1);
+    expect(
+      canaries.map((position) => {
+        const argv = commands[position] ?? [];
+        return argv[argv.indexOf("--namespace") + 1];
+      }),
+    ).toEqual(["prod", "beta"]);
+    expect(candidatePollers).toHaveLength(2);
+    expect(index((argv) => argv[0] === "docker")).toHaveLength(1);
+    const [unitTest] = unitTests,
+      [replayed] = replay,
+      [firstCanary] = canaries;
+    if (
+      unitTest === undefined ||
+      replayed === undefined ||
+      firstCanary === undefined
+    )
+      throw new Error("Missing preflight command");
+    // Cheap controller proofs fail fast; the shared checks gate every canary.
+    expect(Math.max(...candidatePollers)).toBeLessThan(unitTest);
+    expect(unitTest).toBeLessThan(replayed);
+    expect(replayed).toBeLessThan(firstCanary);
+  });
+  test("a failed shared check stops the preflight before any canary or stable routing read", async () => {
+    const base = fixture();
+    const run: RolloutCommandRunner = async (argv) => {
+      if (argv.includes("replay:candidate-histories")) {
+        base.commands.push([...argv]);
+        throw new Error("replay diverged");
+      }
+      return await base.run(argv);
+    };
+    await expect(
+      prepareDeliveryWorkerRollout(detail(), connection, run),
+    ).rejects.toThrow("replay diverged");
+    expect(
+      base.commands.some((argv) =>
+        argv.includes("scripts/rollout/worker-deployment-canary.ts"),
+      ),
+    ).toBe(false);
+    expect(
+      base.commands.some(
+        (argv) => argv.includes("describe") && argv.includes("--name"),
+      ),
+    ).toBe(false);
+  });
+});
+describe("PostgreSQL-owned routing refusals", () => {
   test("foreign current, existing ramp and a forged plan cannot mutate routing", async () => {
     for (const overrides of [
       { current: "c".repeat(40) },

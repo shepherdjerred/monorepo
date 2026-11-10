@@ -5,7 +5,10 @@ import path from "node:path";
 import { withWorkerCandidateCheckout } from "#lib/delivery/workers/worker-candidate-checkout.ts";
 import { candidateSourceCommand } from "#lib/delivery/workers/worker-candidate-checkout.ts";
 import { workerCandidateEnvironment } from "#lib/delivery/workers/worker-candidate-checkout.ts";
+import { timedWorkerPhase } from "#lib/delivery/workers/worker-phase-timing.ts";
+import { z } from "zod";
 import {
+  REPLAY_SELECTION_CONCURRENCY,
   registeredWorkerWorkflowTypes,
   selectWorkerReplayTargets,
   workerReplayRoute,
@@ -443,6 +446,49 @@ describe("isolated immutable candidate source", () => {
       1,
     );
   });
+});
+
+describe("replay target selection and candidate failures", () => {
+  test("overlaps at most the bounded number of type lookups and keeps registration order", async () => {
+    const types = Array.from(
+      { length: 3 * REPLAY_SELECTION_CONCURRENCY },
+      (_, index) => `type${String(index).padStart(2, "0")}`,
+    );
+    const runs = new Map(types.map((type) => [type, crypto.randomUUID()]));
+    let inFlight = 0,
+      peak = 0;
+    const selection = await selectWorkerReplayTargets(
+      types,
+      ["monorepo-workflows"],
+      async (query) => {
+        inFlight++;
+        peak = Math.max(peak, inFlight);
+        const type = /WorkflowType = '(\w+)'/u.exec(query)?.[1] ?? "";
+        const index = types.indexOf(type);
+        // Later types answer first, so completion order differs from type order.
+        await Bun.sleep(types.length - index);
+        inFlight--;
+        if (index % 5 === 0) return null;
+        return {
+          workflowId: `central-${type}`,
+          runId: runs.get(type),
+          type,
+          taskQueue: "monorepo-workflows",
+        };
+      },
+    );
+    expect(peak).toBe(REPLAY_SELECTION_CONCURRENCY);
+    const missing = types.filter((_, index) => index % 5 === 0);
+    expect(selection).toEqual({
+      targets: types
+        .filter((type) => !missing.includes(type))
+        .map((type) => ({
+          workflowId: `central-${type}`,
+          runId: runs.get(type),
+        })),
+      missingTypes: missing,
+    });
+  });
   test.each([
     "empty",
     "foreign-type",
@@ -643,6 +689,81 @@ describe("candidate checkout reuse", () => {
       `${directory}/packages/temporal`,
     );
     await expect(stat(directory)).rejects.toMatchObject({ code: "ENOENT" });
+  });
+  test("logs each preparation and candidate command phase with its duration", async () => {
+    const lines: string[] = [];
+    const warn = vi.spyOn(console, "warn").mockImplementation((line) => {
+      lines.push(String(line));
+    });
+    try {
+      const source = "b".repeat(40);
+      await withWorkerCandidateCheckout(
+        { sourceRevision: source, target: "central", executor },
+        async (candidate) => {
+          await candidate(["bun", "run", "test:workflows"]);
+          await candidate(["bun", "run", "replay:candidate-histories"]);
+          await candidate([
+            "bun",
+            "run",
+            "scripts/rollout/worker-deployment-canary.ts",
+            "--namespace",
+            "beta",
+          ]);
+        },
+        {
+          execute: async (argv) => ok(source)(argv),
+          replayArguments: async () => [
+            "--run",
+            "central-retained",
+            crypto.randomUUID(),
+          ],
+        },
+      );
+    } finally {
+      warn.mockRestore();
+    }
+    const phases = lines.map((line) =>
+      z
+        .object({
+          kind: z.literal("worker-release-phase"),
+          phase: z.string(),
+          namespace: z.string().optional(),
+          outcome: z.literal("passed"),
+          durationMs: z.number().int().nonnegative(),
+        })
+        .parse(JSON.parse(line)),
+    );
+    expect(
+      phases.map(({ phase, namespace }) =>
+        namespace === undefined ? phase : `${phase}:${namespace}`,
+      ),
+    ).toEqual([
+      "candidate-checkout",
+      "candidate-install",
+      "candidate-build",
+      "workflow-unit-tests",
+      "history-replay-selection",
+      "history-replay",
+      "canary:beta",
+    ]);
+  });
+  test("a failed phase is logged as failed and rethrown unchanged", async () => {
+    const lines: string[] = [];
+    const failure = new Error("canary failed");
+    await expect(
+      timedWorkerPhase(
+        "canary",
+        { namespace: "prod" },
+        () => Promise.reject(failure),
+        (line) => lines.push(line),
+      ),
+    ).rejects.toBe(failure);
+    expect(JSON.parse(lines[0] ?? "")).toMatchObject({
+      kind: "worker-release-phase",
+      phase: "canary",
+      namespace: "prod",
+      outcome: "failed",
+    });
   });
   test("never auto-installs unrequested tools in candidate children", () => {
     expect(workerCandidateEnvironment("prod")).toMatchObject({
