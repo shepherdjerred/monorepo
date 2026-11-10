@@ -3,12 +3,33 @@ import { createHash } from "node:crypto";
 import { ReportRunIdSchema } from "@scout-for-lol/data";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { splitMessageIntoChunks } from "#src/discord/utils/message.ts";
+import {
+  ChannelSendError,
+  definiteChannelSendFailure,
+} from "#src/league/discord/channel.ts";
 import type { ScheduledReportDispatch } from "#src/reports/schedule/scheduler.ts";
 
 export class ReportDeliveryUnknownError extends Error {
   constructor(runId: number, chunkIndex: number) {
     super(
       `Report run ${runId.toString()} chunk ${chunkIndex.toString()} needs an operator to resolve its unknown Discord delivery`,
+    );
+  }
+}
+
+/**
+ * A chunk Discord definitely did not post: `send` handled a refusal (the bot
+ * lost access to the channel, or the channel is gone) before or around the
+ * request. The chunk goes back to `PENDING` with its unspent nonce — the same
+ * answer an operator gives for a send that did not land — and the dispatcher
+ * ends the run `FAILED`, like a notification intent parked in
+ * `permission-denied`: nothing re-sends it and no operator has to look,
+ * because `send` already told the guild owner.
+ */
+export class ReportDeliveryFailedError extends Error {
+  constructor(runId: number, chunkIndex: number, detail: string) {
+    super(
+      `Report run ${runId.toString()} chunk ${chunkIndex.toString()} was not delivered: ${detail}`,
     );
   }
 }
@@ -89,7 +110,9 @@ export async function freezeReportDelivery(
 }
 
 /** The callback may perform exactly one send. Its successful result is durable
- * before a later chunk starts. A crashed or ambiguous attempt is never retried. */
+ * before a later chunk starts. A crashed or ambiguous attempt is never retried.
+ * A refusal `send` handled is a definite non-send: the chunk returns to
+ * `PENDING` rather than asking an operator what happened. */
 export async function deliverReportChunk(
   chunk: Awaited<ReturnType<typeof freezeReportDelivery>>[number],
   send: () => Promise<{ id: string }>,
@@ -129,6 +152,22 @@ export async function deliverReportChunk(
         "Report delivery changed while its sender was checkpointing",
       );
   } catch (error) {
+    const unsent =
+      error instanceof ChannelSendError
+        ? definiteChannelSendFailure(error)
+        : undefined;
+    if (unsent !== undefined && error instanceof Error) {
+      const detail = `${unsent}: ${error.message}`;
+      await database.reportDeliveryChunk.updateMany({
+        where: { ...key, nonce: chunk.nonce, state: "SENDING" },
+        data: { state: "PENDING", sendStartedAt: null, lastError: detail },
+      });
+      throw new ReportDeliveryFailedError(
+        chunk.reportRunId,
+        chunk.chunkIndex,
+        detail,
+      );
+    }
     await database.reportDeliveryChunk.updateMany({
       where: { ...key, nonce: chunk.nonce, state: "SENDING" },
       data: {

@@ -1373,7 +1373,16 @@ after the outage is detected.
 A report delivery chunk whose send outcome is unknown stays `UNKNOWN` for the
 operations console, like an intent in `unknown-delivery`.
 `scout_report_delivery_unknown_chunks` counts them and
-`ScoutReportDeliveryUnknown` warns while any wait.
+`ScoutReportDeliveryUnknown` warns while any wait. A refusal `send` handled —
+Scout lost access to the channel, or the channel is gone — definitely did not
+post: the chunk returns to `PENDING` and its run becomes `FAILED`, like an
+intent in `permission-denied`, so reconciliation does not re-send it. `send`
+has already told the guild owner.
+
+A product announcement's channel is not a subscription. When Discord answers
+its channel lookup with Missing Access, delivery takes the guild from the
+frozen announcement, so `send` meets the refusal and the intent ends
+`permission-denied` instead of retrying a pre-send failure.
 
 ### An intent says what it announces and where it came from
 

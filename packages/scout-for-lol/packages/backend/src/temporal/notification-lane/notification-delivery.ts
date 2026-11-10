@@ -8,13 +8,10 @@ import { client } from "#src/discord/client.ts";
 import { deliveryGuildId } from "#src/temporal/notification/channel-guild.ts";
 import { DmKindSchema, type DmKind } from "#src/discord/utils/dm-contracts.ts";
 import { sendDM, type DmStatus } from "#src/discord/utils/dm.ts";
-import {
-  isMissingChannelError,
-  isPermissionError,
-} from "#src/discord/utils/permissions.ts";
 import { deliveryAttemptNonce } from "#src/durable/match/delivery-intents.ts";
 import {
   ChannelSendError,
+  definiteChannelSendFailure,
   isReplyPermissionError,
   send,
 } from "#src/league/discord/channel.ts";
@@ -112,19 +109,10 @@ const logger = createLogger("scout-v2-notification-delivery");
 export function classifyChannelSendFailure(
   error: ChannelSendError,
 ): ScoutNotificationDeliveryResult {
-  if (!error.permissionError) {
-    return { outcome: "unknown" };
-  }
-  const failure: NotificationFailure = isPermissionError(error.originalError)
-    ? { classification: "terminal", reason: "permission-denied" }
-    : isMissingChannelError(error.originalError)
-      ? { classification: "terminal", reason: "target-not-found" }
-      : // `send` raises this shape with no original error when it could not
-        // resolve the channel at all, or resolved one it cannot post in. The
-        // target is gone as far as this bot is concerned, and a retry sends
-        // nothing anywhere.
-        { classification: "terminal", reason: "target-not-found" };
-  return { outcome: "failed", failure };
+  const reason = definiteChannelSendFailure(error);
+  return reason === undefined
+    ? { outcome: "unknown" }
+    : { outcome: "failed", failure: { classification: "terminal", reason } };
 }
 
 /**
@@ -140,12 +128,21 @@ export function classifyChannelSendFailure(
  *
  * Missing Access throws from that fetch instead of returning a channel.
  * Leaving the throw as a retryable pre-send failure skips `send`, which is
- * the only place the owner is told. The subscription already names the
- * guild, so the send still receives it and can DM that owner.
+ * the only place the owner is told and the only place the refusal becomes a
+ * terminal `permission-denied`. The guild is then the one already recorded
+ * for this target: the product announcement's own guild, or the subscription
+ * row for a subscribed channel. A product channel has no subscription, so
+ * asking the subscription for it answers nothing and the delivery would
+ * retry a channel it can never reach.
  */
 async function resolveDeliveryGuild(
+  record: NotificationIntentRecord,
   channelId: DiscordChannelId,
 ): Promise<DiscordGuildId | undefined> {
+  if ("announcementId" in record) {
+    const recorded = productAnnouncementOf(record).guildId;
+    return await deliveryGuildId(channelId, () => Promise.resolve(recorded));
+  }
   return await deliveryGuildId(channelId);
 }
 
@@ -437,7 +434,7 @@ async function deliveryGuildOf(
 ): Promise<DiscordGuildId | undefined> {
   const target = record.intent.target;
   if (target.kind === "channel")
-    return await resolveDeliveryGuild(target.channelId);
+    return await resolveDeliveryGuild(record, target.channelId);
   if ("announcementId" in record) return productAnnouncementOf(record).guildId;
   return "dareId" in record
     ? dareStatusAnnouncementOf(record).guildId

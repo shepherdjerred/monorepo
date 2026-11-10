@@ -49,6 +49,31 @@ export class ChannelSendError extends Error {
   }
 }
 
+/**
+ * Why a failed send definitely did not post, or `undefined` when nobody can say.
+ *
+ * `permissionError` is set for every failure `send` HANDLED before or around
+ * the request — a channel it could not resolve, a channel it cannot post in, a
+ * permission Discord named — and each of those means the message did not go
+ * out. It is false only when the send itself threw, which is exactly when the
+ * request may have reached Discord first. A handled failure Discord did not
+ * label as a permission (a deleted channel, or one `send` could not resolve at
+ * all) leaves no target this bot can post in.
+ */
+export function definiteChannelSendFailure(
+  error: ChannelSendError,
+): "permission-denied" | "target-not-found" | undefined {
+  if (!error.permissionError) return undefined;
+  // The re-fetch that classified this ran AFTER the send threw an error nobody
+  // could label, so the request may have been accepted before access was lost.
+  if (diagnosedAfterSend.has(error)) return undefined;
+  return isPermissionError(error.originalError)
+    ? "permission-denied"
+    : "target-not-found";
+}
+
+const diagnosedAfterSend = new WeakSet<ChannelSendError>();
+
 const replyPermissionErrors = new WeakSet<ChannelSendError>();
 
 export function markReplyPermissionError(
@@ -322,6 +347,7 @@ export async function send(
     // or some other (likely transient) error.
     let kind: DeliveryFailureKind | "other";
     let permissionReason: string | undefined;
+    let diagnosed = false;
     if (isPermissionError(error)) {
       kind = "permission";
     } else if (isMissingChannelError(error)) {
@@ -330,6 +356,7 @@ export async function send(
       // Re-fetch to diagnose, then fall through to the shared logging /
       // escalation / throw below with the classified `kind`.
       const diagnosis = await diagnoseSendFailure(channelId);
+      diagnosed = true;
       kind = diagnosis.kind;
       permissionReason = diagnosis.permissionReason;
     }
@@ -366,11 +393,13 @@ export async function send(
 
     // permissionError=true marks "handled delivery problem" so callers don't
     // double-report it; false for genuinely-unexpected errors.
-    throw new ChannelSendError(
+    const sendError = new ChannelSendError(
       errorMessage,
       channelId,
       kind !== "other",
       error,
     );
+    if (diagnosed) diagnosedAfterSend.add(sendError);
+    throw sendError;
   }
 }

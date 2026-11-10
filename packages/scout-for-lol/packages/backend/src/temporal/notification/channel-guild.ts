@@ -43,13 +43,16 @@ export async function subscribedGuildId(
  * Guild to hand `send` so a permission refusal can DM that server's owner.
  *
  * A channel Discord returns is authoritative. Missing Access throws instead
- * of returning one; the subscription is then the guild we already know.
- * Any other fetch failure stays a failure, because a timeout is not a
- * permission refusal and must stay retryable.
+ * of returning one; `recordedGuildId` is then the guild we already know —
+ * the subscription by default, or the guild an intent itself names for a
+ * channel no subscription points at. Any other fetch failure stays a
+ * failure, because a timeout is not a permission refusal and must stay
+ * retryable.
  */
 export async function deliveryGuildId(
   channelId: DiscordChannelId,
-  database: ExtendedPrismaClient = prisma,
+  recordedGuildId: () => Promise<DiscordGuildId | undefined> = async () =>
+    await subscribedGuildId(channelId),
 ): Promise<DiscordGuildId | undefined> {
   try {
     const channel = await fetchChannelForDelivery(channelId);
@@ -59,6 +62,6 @@ export async function deliveryGuildId(
     return parsed.success ? parsed.data : undefined;
   } catch (error) {
     if (!isPermissionError(error)) throw error;
-    return await subscribedGuildId(channelId, database);
+    return await recordedGuildId();
   }
 }

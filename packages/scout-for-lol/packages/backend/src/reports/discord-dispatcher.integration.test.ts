@@ -5,6 +5,7 @@ import {
   testChannelId,
   testGuildId,
 } from "#src/testing/test-ids.ts";
+import { ChannelSendError } from "#src/league/discord/channel.ts";
 
 const mocks = vi.hoisted(() => ({
   send: vi.fn(),
@@ -35,6 +36,20 @@ beforeEach(async () => {
 afterAll(async () => {
   await prisma.$disconnect();
 });
+
+async function settleUndelivered(
+  dispatch: Awaited<ReturnType<typeof pendingRun>>["dispatch"],
+  runId: number,
+) {
+  expect(
+    await deliverReportDispatch(dispatch, "report_scheduled", "isolate", {
+      isInstalled: installed,
+      database: prisma,
+    }),
+  ).toBe(false);
+  expect(mocks.recordCoreOutputDelivered).not.toHaveBeenCalled();
+  return await prisma.reportRun.findUniqueOrThrow({ where: { id: runId } });
+}
 
 async function pendingRun() {
   const report = await prisma.report.create({
@@ -133,16 +148,34 @@ describe("report delivery analytics", () => {
       new Error("response lost after Discord accepted"),
     );
 
-    expect(
-      await deliverReportDispatch(dispatch, "report_scheduled", "isolate", {
-        isInstalled: installed,
-        database: prisma,
-      }),
-    ).toBe(false);
+    expect(await settleUndelivered(dispatch, run.id)).toMatchObject({
+      deliveryState: "UNKNOWN",
+    });
+  });
 
-    expect(mocks.recordCoreOutputDelivered).not.toHaveBeenCalled();
-    expect(
-      await prisma.reportRun.findUniqueOrThrow({ where: { id: run.id } }),
-    ).toMatchObject({ deliveryState: "UNKNOWN" });
+  test("a channel Scout lost access to fails the run without asking an operator", async () => {
+    const { dispatch, run } = await pendingRun();
+    mocks.send.mockRejectedValueOnce(
+      new ChannelSendError("Missing Access", dispatch.report.channelId, true, {
+        code: 50_001,
+        message: "Missing Access",
+      }),
+    );
+
+    expect(await settleUndelivered(dispatch, run.id)).toMatchObject({
+      deliveryState: "FAILED",
+      deliveryError: expect.stringContaining("permission-denied"),
+    });
+    // Reconciliation reads only PENDING runs, so nothing sends it again.
+    await deliverPendingReportDispatches(
+      {
+        reportId: dispatch.report.id,
+        trigger: "SCHEDULED",
+        failureMode: "isolate",
+        isInstalled: installed,
+      },
+      prisma,
+    );
+    expect(mocks.send).toHaveBeenCalledTimes(1);
   });
 });
