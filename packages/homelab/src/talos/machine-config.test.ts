@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { mkdtemp, mkdir, readdir, rm, symlink } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -111,7 +112,11 @@ describe("bounded full-config sandbox update", () => {
     });
     const result = await prepareTorvaldsSandboxUpdate(current, async () => "");
     expect(result.evidence.validated).toBe(true);
-    expect(assertOnlySandboxPolicyChanged(current, result.config)).toBeTruthy();
+    expect(assertOnlySandboxPolicyChanged(current, result.config)).toBe(
+      createHash("sha256")
+        .update('[{"machine":{"type":"controlplane"},"version":"v1alpha1"}]')
+        .digest("hex"),
+    );
   });
 
   test("rejects duplicate owned profiles before validation", async () => {

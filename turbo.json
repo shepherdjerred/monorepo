@@ -461,14 +461,12 @@
       ]
     },
     "//#knip": {
-      // Knip resolves `#generated/prisma/...` imports, so the Prisma clients
-      // must exist before it runs. Inside the verify graph these generate
-      // tasks are otherwise unordered against //#knip, and on a cold CI
-      // checkout knip won the race and reported 61 unresolved imports
-      // (build 11163). Declaring the dependency lets turbo order and dedupe
-      // them; a nested `turbo run generate` inside the gate would instead
-      // race the outer graph for each package's Prisma generate lock.
+      // Knip resolves generated Prisma clients and CDKTN provider bindings,
+      // including workspaces outside the affected selection. Their producers
+      // must finish first on cold checkouts. Order/dedupe them in this graph;
+      // nested generation inside Knip would race these same producers.
       "dependsOn": [
+        "@homelab/cdktn#generate",
         "@shepherdjerred/alert-dashboard#generate",
         "@shepherdjerred/delivery#generate",
         "@shepherdjerred/tracker#generate",
