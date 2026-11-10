@@ -156,7 +156,7 @@ describe("OpenTofu stack archives", () => {
     expect(anthropic).not.toContain(
       `${TOFU_STACK_ROOT}/anthropic/desired-state.json`,
     );
-    expect(anthropic).toContain(`${TOFU_STACK_ROOT}/anthropic/backend.tf`);
+    expect(anthropic).toContain(`${TOFU_STACK_ROOT}/anthropic/main.tf.json`);
   });
 
   test("a stack synthesized by cdktn archives its committed JSON and lock file", async () => {
