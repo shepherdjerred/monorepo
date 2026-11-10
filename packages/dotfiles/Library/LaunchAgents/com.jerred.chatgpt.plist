@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Assistant hosts only. A ChatGPT Dot can use this Mac only while the ChatGPT
+  app is open, so start it in the background at login and reopen it within a
+  minute whenever it is not running.
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.jerred.chatgpt</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/sh</string>
+        <string>-c</string>
+        <string>/usr/bin/pgrep -qx ChatGPT || /usr/bin/open -g -a /Applications/ChatGPT.app</string>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>StartInterval</key>
+    <integer>60</integer>
+</dict>
+</plist>

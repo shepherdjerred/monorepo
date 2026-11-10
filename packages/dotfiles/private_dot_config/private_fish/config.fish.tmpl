@@ -69,10 +69,11 @@ set -gx CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS "1"
 # Brokered secrets (Grafana/PostHog/ArgoCD/Discord/Bugsink/Cloudflare
 # tokens) resolve via `toolkit` at call time and are scrubbed from agent
 # environments (see ~/.local/share/agent-bin/agent-exec); nothing is exported
-# for them here. Agent hosts render no secrets into files at all: they take
-# the URL-only branch below and resolve credentials at call time through
-# toolkit or scripts/onepassword/with-service-account.sh.
-{{ $renderSecrets := and (lookPath "op") (ne .profile "agent-host") -}}
+# for them here. Only the workstation renders secrets into files: agent hosts
+# take the URL-only branch below and resolve credentials at call time through
+# toolkit or scripts/onepassword/with-service-account.sh, and assistant hosts
+# carry no homelab or provider credentials at all.
+{{ $renderSecrets := and (lookPath "op") (eq .profile "workstation") -}}
 {{ if $renderSecrets -}}
 set -gx GRAFANA_URL 'https://grafana.tailnet-1a49.ts.net'
 set -gx BUGSINK_URL 'https://bugsink.sjer.red'
@@ -100,7 +101,7 @@ if test -f ~/.config/turbo-cache/env.fish
 end
 {{ if not $renderSecrets -}}
 # Secrets not rendered: either 1Password CLI (op) is unavailable (install it
-# and run 'chezmoi apply') or this is an agent host
+# and run 'chezmoi apply') or this is an agent or assistant host
 set -gx GRAFANA_URL 'https://grafana.tailnet-1a49.ts.net'
 set -gx BUGSINK_URL 'https://bugsink.sjer.red'
 set -gx HASS_BASE_URL 'https://homeassistant.sjer.red'

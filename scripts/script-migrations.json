@@ -243,11 +243,6 @@
       ]
     },
     {
-      "source": "packages/dotfiles/bin/executable_sync-theme.sh",
-      "disposition": "retain",
-      "reason": "Chezmoi apply can run before Bun is installed"
-    },
-    {
       "source": "packages/dotfiles/bin/executable_write_brewfile.sh",
       "disposition": "retain",
       "reason": "Eleven-line command shim does not justify a runtime dependency"

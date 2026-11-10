@@ -22,10 +22,16 @@ reload_agent com.jerred.dark-notify dark-notify
 # Keeps the herdr-core daemon owned by launchd, not by an SSH login.
 # {{ include "Library/LaunchAgents/com.jerred.herdr-core.plist" | sha256sum }}
 reload_agent com.jerred.herdr-core "$HOME/.local/bin/herdr-core"
-{{- if ne .profile "agent-host" }}
+{{- if eq .profile "workstation" }}
 
 # The Taildrop receiver runs only on the workstation.
 # {{ include "Library/LaunchAgents/com.jerred.taildrop.plist" | sha256sum }}
 reload_agent com.jerred.taildrop /opt/homebrew/bin/tailscale
+{{- end }}
+{{- if eq .profile "assistant-host" }}
+
+# Keeps the ChatGPT app open so a Dot can use this Mac.
+# {{ include "Library/LaunchAgents/com.jerred.chatgpt.plist" | sha256sum }}
+reload_agent com.jerred.chatgpt /usr/bin/open
 {{- end }}
 {{ end -}}

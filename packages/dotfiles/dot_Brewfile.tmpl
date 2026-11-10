@@ -3,25 +3,31 @@
        - `uv "docling…"`: run_once_after_install-docling.sh installs Docling
          with a pinned Python; uv's default Python can lack binary wheels.
        - `go "cmd/…"`: the dump records Go's own standard-library tools, which
-         `go install` rejects; they ship with the go formula. Agent hosts
-       keep every non-cask entry, only the allowlisted casks, and no VS Code
-       extensions or comments. */ -}}
+         `go install` rejects; they ship with the go formula.
+       Agent hosts keep every non-cask entry, only the allowlisted casks, and
+       no VS Code extensions or comments. Assistant hosts keep only the
+       allowlisted taps, formulae, and casks. */ -}}
 {{- if eq .chezmoi.os "darwin" -}}
 {{-   $lines := list -}}
 {{-   range (include ".Brewfile_darwin" | splitList "\n") -}}
+{{-     $name := regexReplaceAll "^[a-z]+ \"([^\"]+)\".*$" . "${1}" -}}
 {{-     if or (hasPrefix "uv \"docling" .) (hasPrefix "go \"cmd/" .) -}}
-{{-     else if ne $.profile "agent-host" -}}
+{{-     else if eq $.profile "workstation" -}}
 {{-       $lines = append $lines . -}}
 {{-     else if or (hasPrefix "#" .) (hasPrefix "vscode " .) (eq . "") -}}
+{{-     else if eq $.profile "assistant-host" -}}
+{{-       if or (and (hasPrefix "tap " .) (has $name $.assistantHost.taps)) (and (hasPrefix "brew " .) (has $name $.assistantHost.brews)) (and (hasPrefix "cask " .) (has $name $.assistantHost.casks)) -}}
+{{-         $lines = append $lines . -}}
+{{-       end -}}
 {{-     else if hasPrefix "cask " . -}}
-{{-       if has (regexReplaceAll "^cask \"([^\"]+)\".*$" . "${1}") $.agentHost.casks -}}
+{{-       if has $name $.agentHost.casks -}}
 {{-         $lines = append $lines . -}}
 {{-       end -}}
 {{-     else -}}
 {{-       $lines = append $lines . -}}
 {{-     end -}}
 {{-   end -}}
-{{-   if eq .profile "agent-host" -}}
+{{-   if ne .profile "workstation" -}}
 {{-     $lines = append $lines "" -}}
 {{-   end -}}
 {{-   join "\n" $lines -}}
