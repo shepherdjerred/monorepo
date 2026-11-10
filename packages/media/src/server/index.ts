@@ -3,7 +3,7 @@ import {
   initFeatureFlags,
   shutdownFeatureFlags,
 } from "@shepherdjerred/feature-flags";
-import { MediaAuth } from "#application/auth.ts";
+import { MediaAuth } from "#application/media-auth.ts";
 import { CredentialCipher } from "#application/security.ts";
 import { PrismaAuthStore } from "#infrastructure/auth-store.ts";
 import { TmdbCatalogApplication } from "#infrastructure/catalog.ts";

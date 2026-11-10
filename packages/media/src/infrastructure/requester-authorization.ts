@@ -2,6 +2,8 @@ import { Prisma } from "#generated/prisma/client.ts";
 import type { MediaActor } from "#application/auth.ts";
 import { MediaError } from "#application/errors.ts";
 
+export const REQUESTER_ACCESS_MAX_AGE_MS = 300_000;
+
 /** Caller locks media, effective claims and runtime first; identities stay stable through commit. */
 export async function authorizeRequester(
   db: Prisma.TransactionClient,
@@ -38,7 +40,7 @@ export async function authorizeRequester(
     mapping.verifiedAt === null ||
     (targetUserId === actor.id && mapping.plexRestricted) ||
     mapping.verifiedAt.getTime() > Date.now() ||
-    Date.now() - mapping.verifiedAt.getTime() > 300_000 ||
+    Date.now() - mapping.verifiedAt.getTime() > REQUESTER_ACCESS_MAX_AGE_MS ||
     !mapping.permittedMediaKinds.includes(
       settings.kind === "movie" ? "movie" : "series",
     ) ||

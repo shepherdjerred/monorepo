@@ -17,6 +17,7 @@ import { capturePublicationExecution } from "./publication-proof/invocation.ts";
 import { z } from "zod";
 import { createDatabase } from "#infrastructure/database.ts";
 import { CredentialCipher } from "#application/security.ts";
+import { createRequesterAccessRefresh } from "./network/requester-access.ts";
 import { mediaBehaviorConfig } from "#infrastructure/config.ts";
 import { PlexClient } from "#integrations/plex.ts";
 import { QbittorrentClient } from "#integrations/qbittorrent.ts";
@@ -110,6 +111,11 @@ export async function createMediaNetworkContext(
   return {
     db,
     serverMachineId: config.PLEX_SERVER_MACHINE_ID,
+    refreshRequesterAccess: createRequesterAccessRefresh(db, cipher, behavior, {
+      serverUrl: config.PLEX_SERVER_URL,
+      serverMachineId: config.PLEX_SERVER_MACHINE_ID,
+      publicOrigin: config.PUBLIC_ORIGIN,
+    }),
     async plexAccess(sectionType) {
       const configured = await behavior.get(
         sectionType === "movie"

@@ -35,7 +35,7 @@ import type { AcquisitionAttempt } from "#generated/prisma/client.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
 import type { Database } from "#infrastructure/database.ts";
 import type { MediaActor } from "#application/auth.ts";
-import { MediaAuth } from "#application/auth.ts";
+import { MediaAuth } from "#application/media-auth.ts";
 import { PrismaAuthStore } from "#infrastructure/auth-store.ts";
 import { readMovieRetrySourceV4 } from "#infrastructure/movie-editions/lifecycle/retry/retry-source.ts";
 

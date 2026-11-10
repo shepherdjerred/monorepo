@@ -14,6 +14,10 @@ const retained = new URL(
   "acquisition-before-preparation.fixture.ts",
   import.meta.url,
 ).pathname;
+const beforeProgress = new URL(
+  "acquisition-before-provider-progress.fixture.ts",
+  import.meta.url,
+).pathname;
 
 function currentExecution() {
   const execution = Context.current().info.workflowExecution;
@@ -23,7 +27,7 @@ function currentExecution() {
 }
 
 async function run(
-  mode: "acquire" | "obsolete" | "empty",
+  mode: "acquire" | "obsolete" | "empty" | "staggered_empty",
   workflowsPath = current,
 ) {
   const environment = await TestWorkflowEnvironment.createTimeSkipping();
@@ -36,6 +40,10 @@ async function run(
     scope: { rootMediaId: mediaId, mediaId, edition: "default" },
   };
   const attemptId = crypto.randomUUID();
+  const progress = {
+    criteriaDigest: "a".repeat(64),
+    completedProviderIds: ["knaben"],
+  };
   const runIds = new Set<string>();
   const childExecutions: { workflowId: string; runId: string }[] = [];
   const finish: unknown[] = [];
@@ -46,7 +54,11 @@ async function run(
     taskQueue: TASK_QUEUES.MEDIA_NETWORK,
     activities: {
       reconcileMovieIntentV4: (raw: unknown) => {
-        expect(raw).toEqual(input);
+        expect(raw).toEqual(
+          searches === 0 || workflowsPath !== current
+            ? input
+            : { ...input, providerSearchProgress: progress },
+        );
         runIds.add(currentExecution().runId);
         searches++;
         if (mode !== "empty" && searches === 1)
@@ -55,6 +67,7 @@ async function run(
             attemptId: null,
             reason: "provider_deferred",
             retryAfterSeconds: 30,
+            providerSearchProgress: progress,
           });
         return Promise.resolve(
           mode === "acquire"
@@ -225,3 +238,30 @@ test.each([current, retained])(
   },
   60_000,
 );
+
+test("staggered empty providers carry bounded progress into the next run and terminate without another timer", async () => {
+  const result = await run("staggered_empty");
+  expect(result.result).toEqual({
+    status: "waiting",
+    reason: "no_acceptable_release",
+  });
+  expect(result.searches).toBe(2);
+  expect(result.submissions).toBe(0);
+  expect(result.histories).toHaveLength(2);
+  expect(
+    result.histories[1]?.events?.some(
+      (event) => event.timerStartedEventAttributes != null,
+    ),
+  ).toBe(false);
+}, 60_000);
+
+test("the pre-progress deferral history keeps its original Activity arguments and replays", async () => {
+  const result = await run("acquire", beforeProgress);
+  expect(result.searches).toBe(2);
+  expect(result.submissions).toBe(1);
+  expect(result.histories).toHaveLength(2);
+  expect(result.result).toEqual({
+    status: "blocked",
+    reason: "download_quota_exhausted",
+  });
+}, 60_000);

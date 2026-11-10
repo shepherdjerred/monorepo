@@ -26,7 +26,6 @@ import {
 } from "./reconciliation/movie-watch.ts";
 import {
   PERSONAL_MOVIE_DUE_CURSOR,
-  queuePersonalMovieDueV4,
   sweepPersonalMovieDueV4,
 } from "./reconciliation/personal-movie-due.ts";
 
@@ -196,13 +195,9 @@ async function queueDue(
       throw new Error("Default movie due work lost its original capability");
     invocation.budget.consume(demand === null ? 0 : 1);
     if (demand !== null) {
-      await queuePersonalMovieDueV4(context, {
-        rootMediaId: item.id,
-        mediaId: item.id,
-        edition: "default",
-      });
-      // A blocked chosen demand stays protected; it cannot fall through to
-      // a historical unscoped acquisition with different authority semantics.
+      // The personal tail processes one chosen target per Activity under its
+      // original shared budget. This discovery page cannot fall through to
+      // historical unscoped acquisition, including when the choice is blocked.
       return;
     }
   }

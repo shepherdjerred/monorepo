@@ -901,6 +901,14 @@ The response contains mode, version, recovery epoch, and ownership confirmation.
 Starting requires fresh trusted canonical storage observations from the workers;
 it does not require importing a migration bundle or stopping legacy controllers.
 Pausing stops Media automation while the existing stack continues operating.
+Personal TV Network Activities renew expired Plex access from the requester's
+existing encrypted account credential and registered device. Managed Home
+requests first revalidate their recorded owner, then use the exact stored profile
+token through the existing profile-access resolver. Fresh mappings avoid extra
+Plex calls. Renewal keeps the five-minute access check, original Activity deadline
+and shared record allowance; denied, restricted or mismatched access cannot
+authorize the transfer or publication. It preserves the original acquisition
+sponsor and torrent and requires no active browser session.
 Owner activation preserves an immutable approval of the exact canonical storage
 identity. After a restore, native recovery can use that approval to reprove
 Media-created files without requiring a legacy migration bundle. Recovery retains

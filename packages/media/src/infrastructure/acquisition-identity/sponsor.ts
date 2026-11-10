@@ -148,9 +148,10 @@ export async function captureSponsorAuthority(
   return authority;
 }
 
-async function managedSponsorActor(
+export async function managedSponsorActor(
   tx: Prisma.TransactionClient,
   request: { id: string; userId: string; sponsorRequestId: string | null },
+  budget?: PublicationAuthorityReadBudget,
 ): Promise<string | null> {
   const sources = await tx.requestCoverage.findMany({
     where: {
@@ -162,6 +163,7 @@ async function managedSponsorActor(
     select: { rootRequestId: true },
     take: 101,
   });
+  budget?.consume(sources.length);
   if (sources.length > 100)
     throw new MediaError(
       "acquisition_sponsor_unproven",
@@ -181,6 +183,7 @@ async function managedSponsorActor(
       ...effectiveRequestWhere,
     },
   });
+  budget?.consume(roots.length);
   if (roots.length === 0) return null;
   const operations = await tx.operation.findMany({
     where: {
@@ -196,6 +199,7 @@ async function managedSponsorActor(
     },
     take: 101,
   });
+  budget?.consume(operations.length);
   if (operations.length > 100)
     throw new MediaError(
       "acquisition_sponsor_unproven",

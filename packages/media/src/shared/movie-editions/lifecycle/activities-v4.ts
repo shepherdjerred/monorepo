@@ -2,6 +2,8 @@ import type {
   MovieOperationV4,
   MovieAttemptOperationV4,
   MovieDecisionOperationV4,
+  MovieReconcileOperationV4,
+  MovieProviderSearchProgressV4,
 } from "./automation-v4.ts";
 import type {
   MovieSubtitleOperationV4,
@@ -46,12 +48,13 @@ export type MovieNetworkActivitiesV4 = {
     subtitleId: string | null;
     reason: string | null;
   }>;
-  reconcileMovieIntentV4: (input: MovieOperationV4) => Promise<{
+  reconcileMovieIntentV4: (input: MovieReconcileOperationV4) => Promise<{
     status: "acquire" | "available" | "waiting" | "blocked" | "obsolete";
     attemptId: string | null;
     reason: string | null;
     /** Present only when a local provider lease/cooldown prevented searching. */
     retryAfterSeconds?: number;
+    providerSearchProgress?: MovieProviderSearchProgressV4;
   }>;
   submitMovieTorrentV4: (input: MovieAttemptOperationV4) => Promise<{
     status: "submitted" | "waiting" | "blocked" | "obsolete";

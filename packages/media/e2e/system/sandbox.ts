@@ -140,6 +140,7 @@ export async function createMediaSystemSandbox(
     const context: MediaAutomationContext = {
       db,
       cipher,
+      refreshRequesterAccess: () => Promise.resolve(),
       tmdb: external.tmdb,
       serverMachineId: external.serverMachineId,
       watchExecution: ports.watchExecution,

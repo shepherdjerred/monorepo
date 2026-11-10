@@ -21,7 +21,6 @@ import { MovieAcquisitionIdentityV2Schema } from "#shared/movie-editions/acquisi
 import { QualityRulesSchema } from "#shared/api.ts";
 import { LIBRARY_MOVIE_DUE_CURSOR } from "./library-movies.ts";
 import { PERSONAL_MOVIE_DUE_CURSOR } from "./personal-movie-due.ts";
-import { NativeArchiveScopeProtection } from "#infrastructure/native-archive/errors.ts";
 import { requestTestMovieV4 } from "#testing/movie-v4.ts";
 
 let bytes: Uint8Array;
@@ -119,6 +118,19 @@ async function fixture(edition: MovieEditionKey) {
   };
 }
 
+async function sweepDueToCompletion(h: Awaited<ReturnType<typeof fixture>>) {
+  let cursor: string | null = null;
+  let pages = 0;
+  do {
+    const budget = new PublicationAuthorityReadBudget();
+    const page = await h.sweep(cursor, budget);
+    expect(budget.take).toBeGreaterThan(0);
+    cursor = page.nextCursor;
+    expect(++pages).toBeLessThan(100);
+  } while (cursor !== null);
+  return pages;
+}
+
 test("default personal choice resumes through the scoped due coordinator after no results", async () => {
   const h = await fixture("default");
   const { f, db } = h;
@@ -133,8 +145,8 @@ test("default personal choice resumes through the scoped due coordinator after n
       reason: "no_acceptable_release",
     });
     const before = await h.source();
-    await h.sweep(null);
-    await h.sweep(null);
+    await sweepDueToCompletion(h);
+    await sweepDueToCompletion(h);
     const queued = await h.pending();
     expect(queued).toHaveLength(1);
     const operation = queued[0];
@@ -186,7 +198,7 @@ test.each(["restricted requester", "existing reservation"])(
         ).toMatchObject({ status: "acquire" });
       }
       const before = await h.source();
-      await h.sweep(null);
+      await sweepDueToCompletion(h);
       expect(await h.pending()).toEqual([]);
       expect(
         await db.operation.count({
@@ -226,6 +238,7 @@ test("default pre-choice legacy demand retains its existing due route", async ()
       data: { userId: legacy.id, mediaId: f.input.mediaId, edition: "default" },
     });
     await h.sweep(null);
+    await h.sweep(`${PERSONAL_MOVIE_DUE_CURSOR}start`);
     expect(await h.pending()).toEqual([]);
     expect(
       await db.operation.findFirstOrThrow({
@@ -242,9 +255,12 @@ test("default chosen due work cannot replace its original pre-spent shared budge
   try {
     const budget = new PublicationAuthorityReadBudget();
     budget.consume(99);
-    await expect(h.sweep(null, budget)).rejects.toThrow(
-      NativeArchiveScopeProtection,
-    );
+    await h.sweep(null, budget);
+    expect(await h.sweep(`${PERSONAL_MOVIE_DUE_CURSOR}start`, budget)).toEqual({
+      processed: 1,
+      nextCursor: null,
+    });
+    expect(budget.take).toBeLessThanOrEqual(0);
     expect(await h.pending()).toEqual([]);
     expect(
       await h.db.operation.count({
@@ -272,7 +288,7 @@ test("eight default movie choices progress within the unchanged shared due-page 
       });
       await requestTestMovieV4(h.db, h.f.source.user, media.id, "default");
     }
-    await h.sweep(null);
+    await sweepDueToCompletion(h);
     expect(await h.pending()).toHaveLength(8);
     expect(
       await h.db.operation.count({
@@ -283,6 +299,57 @@ test("eight default movie choices progress within the unchanged shared due-page 
     await h.f.close();
   }
 });
+
+test("fifty default choices cross discovery pages and complete bounded personal pages without starving TV", async () => {
+  const h = await fixture("default");
+  try {
+    for (let index = 1; index < 50; index++) {
+      const media = await h.db.mediaItem.create({
+        data: {
+          kind: "movie",
+          title: `Full default due page ${String(index)}`,
+          year: 2020,
+          tmdbId: 303_030 + index,
+          runtimeMinutes: 1,
+          originalLanguage: "en",
+        },
+      });
+      await requestTestMovieV4(h.db, h.f.source.user, media.id, "default");
+    }
+    const tv = await h.db.mediaItem.create({
+      data: {
+        kind: "series",
+        title: "TV following chosen default movies",
+        intents: { create: { generation: 1 } },
+      },
+    });
+    await h.db.mediaRequest.create({
+      data: { userId: h.f.source.user.id, mediaId: tv.id },
+    });
+    const pages = await sweepDueToCompletion(h);
+    expect(pages).toBe(2 + 1 + 50);
+    expect(await h.pending()).toHaveLength(50);
+    expect(
+      await h.db.operation.findFirstOrThrow({
+        where: { idempotencyKey: { startsWith: "due:" }, targetId: tv.id },
+      }),
+    ).toMatchObject({ kind: "refresh_catalog", targetId: tv.id });
+    expect(
+      await h.db.operation.count({
+        where: {
+          idempotencyKey: { startsWith: "due:" },
+          kind: "reconcile_media",
+        },
+      }),
+    ).toBe(0);
+    // Existing queued commands are charged again, but every cursor invocation
+    // keeps its own original 100-record allowance and remains idempotent.
+    expect(await sweepDueToCompletion(h)).toBe(pages);
+    expect(await h.pending()).toHaveLength(50);
+  } finally {
+    await h.f.close();
+  }
+}, 60_000);
 
 for (const edition of MovieEditionKeySchema.options.filter(
   (key) => key !== "default",

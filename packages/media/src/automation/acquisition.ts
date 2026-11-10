@@ -162,51 +162,51 @@ export function createAcquisitionActivities(
       }
     },
     async observeMediaAcquisition(input) {
-      const context = await acquisitionInvocation(initialContext, input);
-      const attempt = await context.db.acquisitionAttempt.findUniqueOrThrow({
-        where: { id: input.attemptId },
-        include: { torrent: true },
-      });
       try {
+        const context = await acquisitionInvocation(initialContext, input);
+        const attempt = await context.db.acquisitionAttempt.findUniqueOrThrow({
+          where: { id: input.attemptId },
+          include: { torrent: true },
+        });
         if (await acknowledgeManagedAcquisition(context, input, attempt))
           return { status: "ready", reason: "resume_committed_publication" };
         if (!(await validAttempt(context, attempt.id)))
           return { status: "obsolete", reason: "intent_changed" };
+        if (attempt.state === "imported")
+          return { status: "ready", reason: "resume_committed_publication" };
+        if (attempt.torrent === null)
+          return { status: "blocked", reason: "torrent_missing" };
+        await context.qbittorrent.login();
+        const torrent = await context.qbittorrent.observe(
+          attempt.torrent.infoHash,
+        );
+        if (torrent === null)
+          return { status: "blocked", reason: "torrent_missing" };
+        const files =
+          torrent.progress === 1
+            ? await context.qbittorrent.files(torrent.hash)
+            : [];
+        await context.db.torrent.update({
+          where: { id: attempt.torrent.id },
+          data: {
+            observation: { torrent, files },
+            observedAt: new Date(),
+            state: torrent.progress === 1 ? "seeding" : "downloading",
+          },
+        });
+        return {
+          status: torrent.progress === 1 ? "ready" : "downloading",
+          reason:
+            torrent.progress === 1 &&
+            seriesPackIdentityV1(attempt.identityEvidence) !== null
+              ? "series_pack_publication_v1"
+              : null,
+        };
       } catch (error) {
         if (error instanceof MediaError)
           return { status: "blocked", reason: error.code };
         throw error;
       }
-      if (attempt.state === "imported")
-        return { status: "ready", reason: "resume_committed_publication" };
-      if (attempt.torrent === null)
-        return { status: "blocked", reason: "torrent_missing" };
-      await context.qbittorrent.login();
-      const torrent = await context.qbittorrent.observe(
-        attempt.torrent.infoHash,
-      );
-      if (torrent === null)
-        return { status: "blocked", reason: "torrent_missing" };
-      const files =
-        torrent.progress === 1
-          ? await context.qbittorrent.files(torrent.hash)
-          : [];
-      await context.db.torrent.update({
-        where: { id: attempt.torrent.id },
-        data: {
-          observation: { torrent, files },
-          observedAt: new Date(),
-          state: torrent.progress === 1 ? "seeding" : "downloading",
-        },
-      });
-      return {
-        status: torrent.progress === 1 ? "ready" : "downloading",
-        reason:
-          torrent.progress === 1 &&
-          seriesPackIdentityV1(attempt.identityEvidence) !== null
-            ? "series_pack_publication_v1"
-            : null,
-      };
     },
   };
 }

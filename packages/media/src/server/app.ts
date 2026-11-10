@@ -49,7 +49,8 @@ import {
   type NumberingAdministration,
 } from "./numbering-routes.ts";
 import { z } from "zod";
-import type { MediaActor, MediaAuth } from "#application/auth.ts";
+import type { MediaActor } from "#application/auth.ts";
+import type { MediaAuth } from "#application/media-auth.ts";
 import { MediaError } from "#application/errors.ts";
 import { registerCapacityRoutes } from "./capacity-routes.ts";
 import {
