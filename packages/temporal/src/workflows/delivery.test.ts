@@ -8,6 +8,7 @@ import {
   replayFixture,
 } from "#workflows/testing/delivery-workers.ts";
 import { DELIVERY_WAIT_ROLLOVER_ITERATIONS } from "./delivery/admission.ts";
+import { DELIVERY_WORKER_RECOVERY_REFUSED } from "#shared/delivery-executor.ts";
 
 async function execute(failApply: boolean, waits = 0) {
   const environment = await TestWorkflowEnvironment.createTimeSkipping();
@@ -721,5 +722,117 @@ describe("Delivery preservation and quarantine", () => {
     } finally {
       await environment.teardown();
     }
+  }, 60_000);
+});
+
+/** One worker recovery inspection run, then replayed against the current Workflow. */
+async function recoverWorker(inspect: () => void) {
+  const environment = await TestWorkflowEnvironment.createTimeSkipping();
+  const calls: string[] = [];
+  const { workflows, activities } = await createDeliveryWorkers(environment, {
+    inspectDeliveryWorkerRecovery: () => {
+      calls.push("inspect");
+      inspect();
+    },
+    failDeliveryWorkerRecovery: () => {
+      calls.push("retain-lock");
+    },
+  });
+  const workflowId = `recover-retry-${crypto.randomUUID()}`;
+  try {
+    const outcome = await workflows
+      .runUntil(
+        activities.runUntil(
+          environment.client.workflow.execute(
+            "deliveryWorkerRecoveryWorkflow",
+            {
+              workflowId,
+              taskQueue: TASK_QUEUES.DELIVERY_WORKFLOWS,
+              args: [{ intentId: "auto-deployment-42" }],
+            },
+          ),
+        ),
+      )
+      .then(
+        () => "completed",
+        () => "failed",
+      );
+    const history = await environment.client.workflow
+      .getHandle(workflowId)
+      .fetchHistory();
+    await Worker.runReplayHistory(
+      { workflowsPath: new URL("delivery.ts", import.meta.url).pathname },
+      history,
+    );
+    return { outcome, calls };
+  } finally {
+    await environment.teardown();
+  }
+}
+
+describe("Delivery worker recovery retries", () => {
+  it("waits out an unreachable Kubernetes API and settles", async () => {
+    let failures = 4;
+    const { outcome, calls } = await recoverWorker(() => {
+      if (failures > 0) {
+        failures -= 1;
+        throw new Error(
+          "Unable to connect. Is the computer able to access the url?",
+        );
+      }
+    });
+    expect(outcome).toBe("completed");
+    expect(calls).toEqual(Array.from({ length: 5 }, () => "inspect"));
+  }, 60_000);
+
+  it("never retries a refusal the frozen record decides", async () => {
+    const { outcome, calls } = await recoverWorker(() => {
+      throw ApplicationFailure.nonRetryable(
+        "Worker recovery does not hold the exact failed deployment identity",
+        DELIVERY_WORKER_RECOVERY_REFUSED,
+      );
+    });
+    expect(outcome).toBe("failed");
+    expect(calls).toEqual(["inspect", "retain-lock"]);
+  }, 60_000);
+
+  it("replays an inspection recorded before the retry schedule", async () => {
+    const environment = await TestWorkflowEnvironment.createTimeSkipping();
+    let failures = 2;
+    try {
+      await replayFixture(environment, {
+        fixture: new URL(
+          "replay-fixtures/delivery-worker-recovery-before-retry.ts",
+          import.meta.url,
+        ),
+        workflowType: "deliveryWorkerRecoveryWorkflow",
+        workflowId: `recover-before-retry-${crypto.randomUUID()}`,
+        args: [{ intentId: "auto-deployment-42" }],
+        activities: {
+          inspectDeliveryWorkerRecovery: () => {
+            if (failures > 0) {
+              failures -= 1;
+              throw new Error("Unable to connect");
+            }
+          },
+          failDeliveryWorkerRecovery: () => Promise.resolve(),
+        },
+      });
+    } finally {
+      await environment.teardown();
+    }
+  }, 60_000);
+
+  it("fails the intent once a transient outage outlasts its attempts", async () => {
+    const { outcome, calls } = await recoverWorker(() => {
+      throw new Error(
+        "Unable to connect. Is the computer able to access the url?",
+      );
+    });
+    expect(outcome).toBe("failed");
+    expect(calls).toEqual([
+      ...Array.from({ length: 10 }, () => "inspect"),
+      "retain-lock",
+    ]);
   }, 60_000);
 });

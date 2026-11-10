@@ -1,5 +1,4 @@
 import {
-  applicationOf,
   applicationsOf,
   forumReleaseOf,
   siteReleaseOf,
@@ -40,16 +39,25 @@ const ArgoRecoverySchema = z.object({
   }),
 });
 
+/** One Application the deployment synced, and the stage that recorded its request (T3). */
+type SyncTarget = { application: string; stage: string };
+
+/**
+ * What a recovery inspection names: the external operation an operator
+ * read, or none when Delivery settles its own intent and takes each
+ * Application's identity from the readback.
+ */
+export type RecoveryInspection = { operationId?: string; reason: string };
+
 function requireSettled(
   current: z.infer<typeof ArgoRecoverySchema>,
   detail: DeploymentDetail,
-  input: z.infer<typeof RecoveryRequestSchema>,
+  target: SyncTarget,
   requestId: string,
 ) {
   const operation = current.status.operationState;
-  const application = applicationOf(detail.pipeline.definition)?.name ?? null;
   if (
-    current.metadata.name !== application ||
+    current.metadata.name !== target.application ||
     current.metadata.annotations["delivery.shepherdjerred.com/environment"] !==
       detail.environment.id ||
     (current.operation !== undefined && current.operation !== null) ||
@@ -58,7 +66,7 @@ function requireSettled(
   )
     throw new DeliveryError(
       "CONFLICT",
-      "Argo ownership differs or work is unsettled; keep target ownership",
+      `Argo ownership of ${target.application} differs or its work is unsettled; keep target ownership`,
     );
   const requests = operation.operation.info.filter(
     (entry) => entry.name === "ci.sjer.red/request-id",
@@ -66,15 +74,16 @@ function requireSettled(
   const identities = operation.operation.info.filter(
     (entry) => entry.name === "ci.sjer.red/operation-id",
   );
+  const identity = identities[0]?.value;
   if (
+    identity === undefined ||
     requests.length !== 1 ||
-    requests[0]?.value !== requestId ||
     identities.length !== 1 ||
-    identities[0]?.value !== input.operationId
+    requests[0]?.value !== requestId
   )
     throw new DeliveryError(
       "CONFLICT",
-      "Readback does not match the deployment's recorded request and supplied external operation identity",
+      `Readback of ${target.application} does not match the deployment's recorded request`,
     );
   if (
     current.status.resources.some(
@@ -85,7 +94,7 @@ function requireSettled(
       "CONFLICT",
       "Application includes an unsettled Job; inspect it through its specialized recovery procedure",
     );
-  return operation.finishedAt;
+  return { finishedAt: operation.finishedAt, identity };
 }
 
 /**
@@ -105,8 +114,39 @@ function syncStageKey(definition: StoredRecipeDefinition): string {
 }
 
 /**
+ * The Applications readback settles: the recipe's one Application, or each
+ * sub-recipe of a compound recipe made only of Applications, whose sync
+ * steps all record the deployment's one request (T3). Null when Application
+ * readback alone cannot prove the target.
+ */
+function syncTargets(definition: StoredRecipeDefinition): SyncTarget[] | null {
+  if (definition.kind === "compound") {
+    const sync = stepStageKey("step", "sync");
+    const applications = definition.subRecipes.flatMap((sub, index) =>
+      sub.definition.kind === "kubernetes-application"
+        ? [
+            {
+              application: sub.definition.application.name,
+              stage: subRecipeStageKey(index, sync),
+            },
+          ]
+        : [],
+    );
+    if (applications.length === definition.subRecipes.length)
+      return applications;
+  }
+  const applications = applicationsOf(definition);
+  const application = applications[0];
+  return application !== undefined && applications.length === 1
+    ? [{ application: application.name, stage: syncStageKey(definition) }]
+    : null;
+}
+
+/**
  * Independent of Temporal and of ArgoCD's API: inspect the recorded
- * operation on the Application object through the projected reader (D5).
+ * operation on each Application object through the projected reader (D5).
+ * A supplied operation identity must be one of the Applications'; every
+ * Application is still checked, and each yields its own evidence.
  */
 export function createRecoveryInspector(options: {
   readApplication: ApplicationReader;
@@ -114,14 +154,13 @@ export function createRecoveryInspector(options: {
 }) {
   return async (
     detail: DeploymentDetail,
-    input: z.infer<typeof RecoveryRequestSchema>,
+    input: RecoveryInspection,
   ): Promise<EvidenceInput[]> => {
     const definition = detail.pipeline.definition;
-    const application = applicationOf(definition);
+    const targets = syncTargets(definition);
     if (
-      application === null ||
+      targets === null ||
       definition.kind === "static-site" ||
-      applicationsOf(definition).length !== 1 ||
       workerRolloutOf(definition) !== undefined ||
       siteReleaseOf(definition) !== undefined ||
       forumReleaseOf(definition) !== undefined
@@ -136,37 +175,57 @@ export function createRecoveryInspector(options: {
         "PAUSED",
         "TRMNL recovery requires independent exact plugin-bundle readback; native Argo settlement alone is insufficient",
       );
-    const syncKey = syncStageKey(definition);
-    const recorded = detail.stages.find((entry) => entry.key === syncKey);
-    if (recorded === undefined)
+    const recorded = targets.map((target) => {
+      const stage = detail.stages.find((entry) => entry.key === target.stage);
+      // A sync that was never recorded may still have written its body.
+      if (stage === undefined)
+        throw new DeliveryError(
+          "CONFLICT",
+          `Deployment has no recorded reconciliation operation for ${target.application} to inspect`,
+        );
+      return { target, requestId: stage.operationId };
+    });
+    const settled = [];
+    for (const { target, requestId } of recorded) {
+      const raw = await options.readApplication(target.application);
+      if (raw === null)
+        throw new DeliveryError(
+          "CONFLICT",
+          `Application ${target.application} does not exist; keep target ownership`,
+        );
+      const parsed = ArgoRecoverySchema.safeParse(raw);
+      if (!parsed.success)
+        throw new DeliveryError(
+          "CONFLICT",
+          `Application ${target.application} records no finished operation to inspect; keep target ownership`,
+        );
+      const current = parsed.data;
+      settled.push({
+        current,
+        requestId,
+        ...requireSettled(current, detail, target, requestId),
+      });
+    }
+    if (
+      input.operationId !== undefined &&
+      !settled.some((entry) => entry.identity === input.operationId)
+    )
       throw new DeliveryError(
         "CONFLICT",
-        "Deployment has no recorded reconciliation operation to inspect",
+        "Readback does not match the supplied external operation identity",
       );
-    const raw = await options.readApplication(application.name);
-    if (raw === null)
-      throw new DeliveryError(
-        "CONFLICT",
-        `Application ${application.name} does not exist; keep target ownership`,
-      );
-    const current = ArgoRecoverySchema.parse(raw);
-    const operation = current.status.operationState;
-    const finishedAt = requireSettled(
-      current,
-      detail,
-      input,
-      recorded.operationId,
-    );
     const pluginEvidence =
       plugins !== undefined && options.inspectTrmnl !== undefined
         ? await options.inspectTrmnl(detail)
         : [];
     return [
-      {
-        kind: "reconciliation",
-        operationId: input.operationId,
-        summary: `Independent Application readback: ${current.metadata.name}, resourceVersion ${current.metadata.resourceVersion}, request ${recorded.operationId}, operation ${input.operationId}, phase ${operation.phase}, finished ${finishedAt}. ${input.reason}`,
-      },
+      ...settled.map(
+        ({ current, requestId, identity, finishedAt }): EvidenceInput => ({
+          kind: "reconciliation",
+          operationId: identity,
+          summary: `Independent Application readback: ${current.metadata.name}, resourceVersion ${current.metadata.resourceVersion}, request ${requestId}, operation ${identity}, phase ${current.status.operationState.phase}, finished ${finishedAt}. ${input.reason}`,
+        }),
+      ),
       ...pluginEvidence,
     ];
   };

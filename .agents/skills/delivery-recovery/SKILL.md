@@ -22,11 +22,15 @@ toolkit deploy recovery --pending --json
 - A self-hosted service (`delivery`, `delivery-control-plane`, `temporal`,
   `argocd`) that is `running` or `recoveryRequired` holds the global dispatch
   barrier: every other claim answers `BUSY`.
-- Each dispatch tick opens one intent itself for a recovery-required
-  deployment (`requestedBy: delivery/auto-recovery`) and settles `argo`
-  intents its reader proves. Wait one tick before acting. Act yourself when
-  the intent is `failed`, the deployment is content or compound, or no intent
-  appears after a tick (an older Delivery without auto-recovery).
+- Each dispatch tick opens an intent itself for a recovery-required
+  deployment with no pending one (`requestedBy: delivery/auto-recovery`) and
+  settles `argo` intents its reader proves, compound recipes made only of
+  Applications included. A failed intent is reopened as
+  `auto-<ID>-<N>` five minutes after it finished, up to five automatic
+  intents, so a transient failure such as a Kubernetes API restart clears
+  itself. Wait for that before acting. Act yourself when the fifth automatic
+  intent failed, the deployment is a content target, or an `argo` intent
+  stays pending across ticks (its reader refuses; section 2 says why).
 
 ## 2. Learn why it failed
 
@@ -66,7 +70,12 @@ target independently (model D5, I2).
 
 Read `<N>` from `environment.generation`. The Argo operation UUID is the
 `ci.sjer.red/operation-id` entry of the Application's
-`status.operationState.operation.info`.
+`status.operationState.operation.info`. For a compound recipe made only of
+Applications, pass any one of its Applications' UUIDs; the reader still
+proves every sub-recipe's recorded sync on its own Application. While an
+automatic `argo` intent is pending, a new manual intent conflicts with it:
+settle that intent instead by passing its request id,
+`--request-id auto-<ID>` (or `auto-<ID>-<N>`), to the same command.
 
 After settlement the environment stays blocked until a newer automatic
 release or an operator start: `toolkit deploy start <ENV> <VERSION_ID> --machine`.

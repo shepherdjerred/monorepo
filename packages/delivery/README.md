@@ -477,11 +477,17 @@ stop at a safe boundary, not an assertion that side effects were undone.
 
 An ambiguous effect, an expired lease or an unsettled sub-step ends the
 deployment `recovery-required`, keeping its result and its locks
-([4.15](docs/model.md#415-recovery-intent)). Each dispatch tick opens one intent itself for a recovery-required
-deployment that has none, as the `delivery/auto-recovery` actor, and settles a
-pending `argo` intent once the API's own Application reader proves the
-operation finished; content and compound targets are left to an operator, and
-a deployment is attempted once (`src/infrastructure/execution/auto-recovery.ts`).
+([4.15](docs/model.md#415-recovery-intent)). Each dispatch tick opens an intent itself for a recovery-required
+deployment that has no pending one, as the `delivery/auto-recovery` actor, and
+settles a pending `argo` intent once the API's own Application reader proves
+every operation finished; content targets are left to an operator. A failed
+intent, opened automatically or by an operator, is reopened as
+`auto-<DEPLOYMENT_ID>-<N>` at least five minutes after the last intent
+finished, up to five automatic intents per deployment, so a reader that met a
+Kubernetes API restart tries again and a refusal that persists still
+escalates (`src/infrastructure/execution/auto-recovery.ts`). A Kubernetes API
+that does not answer a settlement reader is `UNAVAILABLE` (HTTP 503), which
+callers retry; a refused or missing reader identity is `PAUSED`.
 An administrator creates a
 recovery intent with `POST /deployments/:id/recovery-intents`, supplying a
 request ID, reason, expected generation and, for a compound recipe, the
@@ -492,7 +498,12 @@ deployment: `argo`, `worker`, `platform`, `content` or `minecraft`; a
 An `argo` intent settles through `POST /recovery-intents/:id/settle` (admin)
 with the exact finished Argo operation UUID. The API reads the Application
 object through its own reader and verifies the recorded request, the
-environment ownership annotation, the finished operation and settled Jobs. It
+environment ownership annotation, the finished operation and settled Jobs. A
+compound recipe made only of Applications is read Application by
+Application: each sub-recipe's recorded sync request must match its
+Application, the supplied UUID may be any one of their operations, and each
+Application records its own evidence; a sub-recipe whose sync was never
+recorded keeps ownership. It
 rechecks the intent's binding generation and refuses an intent already
 settled. Every other kind is refused there and settled by its own reader.
 Settlement records what it found and releases ownership without accepting the

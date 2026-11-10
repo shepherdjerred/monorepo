@@ -41,10 +41,12 @@ async function errorEnvelope(response: Response) {
 
 /**
  * Delivery's own answers keep their meaning: it refuses with its error
- * envelope, a paused API with HTTP 503 `PAUSED` included. Only a 5xx without
+ * envelope, a paused API with HTTP 503 `PAUSED` included. A 5xx without
  * that envelope, from whatever stands in front of a pod that is not serving,
- * is the API being unavailable. Never interpolate upstream bodies:
- * configuration and credentials can be echoed.
+ * is the API being unavailable, as is Delivery's own `UNAVAILABLE`: a
+ * dependency it reads through, such as the Kubernetes API, did not answer.
+ * Never interpolate upstream bodies: configuration and credentials can be
+ * echoed.
  */
 async function failedResponse(path: string, response: Response) {
   const message = `Delivery API ${path} returned HTTP ${response.status.toString()}`;
@@ -54,6 +56,8 @@ async function failedResponse(path: string, response: Response) {
       ? new DeliveryApiUnavailableError(message)
       : new Error(message);
   const { code } = parsed.data.error;
+  if (code === "UNAVAILABLE")
+    return new DeliveryApiUnavailableError(`${message} (UNAVAILABLE)`);
   const refused =
     ["PAUSED", "BUSY"].includes(code) ||
     (response.status >= 400 && response.status < 500);

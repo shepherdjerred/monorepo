@@ -1,4 +1,6 @@
+import { ApplicationFailure } from "@temporalio/common";
 import { z } from "zod";
+import { DELIVERY_WORKER_RECOVERY_REFUSED } from "#shared/delivery-executor.ts";
 import {
   CompleteWorkerRecoverySchema,
   type CompleteWorkerRecovery,
@@ -29,6 +31,21 @@ import {
   requireUnsyncedModelSource,
   type ModelWorkerRecovery,
 } from "./worker-recovery-model.ts";
+
+/**
+ * A refusal the frozen deployment record itself decides: its identity,
+ * recorded stages or owned request cannot be proven, and a retry would read
+ * the same record. It is never retried. A live observation that does not
+ * match yet (sync, health, Pods, routes, a change during the proof) stays
+ * an ordinary error, which the inspect Activity retries while the target
+ * settles, as during a Kubernetes API restart.
+ */
+function refused(message: string) {
+  return ApplicationFailure.nonRetryable(
+    message,
+    DELIVERY_WORKER_RECOVERY_REFUSED,
+  );
+}
 
 export type WorkerRecoveryEffects = {
   workflowClosed: (deploymentId: string) => Promise<string>;
@@ -94,7 +111,7 @@ function ownedRecoveryArgo(
     request === undefined ||
     (request !== operationId && request !== bootstrapId)
   )
-    throw new Error(
+    throw refused(
       "Recovery Argo operation is not owned by this frozen deployment",
     );
   const expected = selection;
@@ -127,13 +144,13 @@ async function requireUnappliedWorkerHosts(
         !(allowBootstrapIntent && stage.key === "worker-host-bootstrap"),
     )
   )
-    throw new Error("Recovery cannot classify an unowned pre-effect stage");
+    throw refused("Recovery cannot classify an unowned pre-effect stage");
   const prior = detail.stages.find(
     (stage) =>
       stage.key === "worker-prior-source" && stage.status === "succeeded",
   );
   if (prior?.operationId !== workerSourceFingerprint(before))
-    throw new Error(
+    throw refused(
       "Recovery prior source or ownership changed, or was never captured",
     );
   await requireOriginalHosts(context, pool, effects, application);
@@ -389,7 +406,7 @@ export async function proveSettledWorkerRecovery(
     !detail.deployment.recoveryRequired ||
     detail.environment.activeDeploymentId !== detail.deployment.id
   )
-    throw new Error(
+    throw refused(
       "Worker recovery does not hold the exact failed deployment identity",
     );
   const workflowId = await effects.workflowClosed(detail.deployment.id);

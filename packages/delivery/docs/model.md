@@ -653,11 +653,19 @@ selection and that the recipe's oracle passed.
 **Definition.** An operator-authorised inspection of one `recovery-required`
 deployment, settled by an independent reader. Delivery authorises one itself:
 each dispatch tick opens an intent for a recovery-required deployment that has
-none (`src/infrastructure/execution/auto-recovery.ts`), except a content or
-compound target, which an operator opens. Opening releases nothing; the
+no pending one (`src/infrastructure/execution/auto-recovery.ts`), except a
+content target, which an operator opens. Opening releases nothing; the
 kind's independent reader still decides, and an `argo` intent settles only
 when the API's own Application reader proves the deployment's operation
-finished.
+finished: for a compound recipe made only of Applications, every
+sub-recipe's recorded sync on its own Application.
+
+A reader can fail for a reason that passes, such as a Kubernetes API restart,
+so a failed intent is reopened, bounded: at most five automatic intents per
+deployment, each opened at least five minutes after the previous intent
+finished. An operator's failed intent counts toward that wait but not toward
+the bound, since the reader repeats the same independent proof whoever opened
+it. A refusal that persists exhausts the attempts and escalates.
 
 **Identity.** Deployment id plus sequence.
 
@@ -669,8 +677,9 @@ compound target, inspection evidence, outcome.
 
 **Invariants.**
 
-- I1. Exactly one `pending` intent per `recovery-required` deployment. Only
-  its `succeeded` settlement releases the deployment's locks.
+- I1. At most one `pending` intent per `recovery-required` deployment at a
+  time; a later intent opens only after the previous one ended. Only a
+  `succeeded` settlement releases the deployment's locks.
 - I2. Settlement reads the target with a credential the executor does not
   hold (D5), rechecks the binding generation and fingerprints in one
   transaction, and records what it found as evidence. A missing record is

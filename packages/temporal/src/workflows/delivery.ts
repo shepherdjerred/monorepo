@@ -17,6 +17,7 @@ import {
   admissionRolloverDue,
 } from "./delivery/admission.ts";
 import { proposeDrainedRetirements } from "./delivery/retirement.ts";
+import { inspectWorkerRecovery } from "./delivery/worker-recovery.ts";
 
 const metadata = proxyActivities<DeliveryActivities>({
   taskQueue: TASK_QUEUES.DELIVERY,
@@ -553,14 +554,7 @@ export async function deliveryPlatformRecoveryWorkflow(input: {
 export async function deliveryWorkerRecoveryWorkflow(input: {
   intentId: string;
 }): Promise<void> {
-  try {
-    await observation.inspectDeliveryWorkerRecovery(input.intentId);
-  } catch (error) {
-    await CancellationScope.nonCancellable(async () => {
-      await metadata.failDeliveryWorkerRecovery(input.intentId);
-    });
-    throw error;
-  }
+  await inspectWorkerRecovery(input.intentId);
 }
 
 export async function deliveryMinecraftRecoveryWorkflow(input: {

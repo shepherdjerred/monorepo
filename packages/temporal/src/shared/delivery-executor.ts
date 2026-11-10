@@ -6,3 +6,11 @@
  * which reads back the recorded request instead of syncing twice.
  */
 export const DELIVERY_EXECUTOR_REPLACED = "DeliveryExecutorReplaced";
+
+/**
+ * The failure type of a worker recovery proof the frozen deployment record
+ * refuses: its identity, recorded stages or owned request cannot be proven.
+ * A retry would read the same record, so it is never retried; any other
+ * proof failure is retried while the target settles.
+ */
+export const DELIVERY_WORKER_RECOVERY_REFUSED = "DeliveryWorkerRecoveryRefused";

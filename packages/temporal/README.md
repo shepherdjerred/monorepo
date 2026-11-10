@@ -568,6 +568,10 @@ Application still holds the rendered body, no route serves the candidate, no
 execution references it, and every retained host runs its exact image. The
 candidate host may exist; the next deployment replaces it. Any other stage, or
 an unsettled step of another sub-recipe, fails closed.
+A refusal the frozen record decides (identity, stages, owned request) is a
+non-retryable `DeliveryWorkerRecoveryRefused`; any other failure, such as a
+Kubernetes or Delivery API that does not answer during a control-plane
+restart, is retried up to ten times within an hour before the intent fails.
 `scripts/rollout/worker-delivery-recovery.ts` runs the same verifier through
 brokered operator credentials when Activity workers are unavailable; it never
 resumes effects or accepts the failed release.
