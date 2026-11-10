@@ -74,6 +74,20 @@ export const VALIDATED_STACKS = [
   "tailscale",
 ] as const;
 
+/**
+ * Workspaces the validation step installs. A filtered production install
+ * gives only these and their production workspace dependencies a
+ * node_modules, so this must cover every workspace whose files
+ * tofu-stack.ts and the cdktn scripts load at runtime. @homelab/cdk8s is
+ * one: credential-handoff.ts imports its 1Password field map.
+ * test/lanes/tofu-install.test.ts derives that set from the import graph.
+ */
+export const TOFU_VALIDATION_INSTALL_FILTERS = [
+  "homelab",
+  "@homelab/cdktn",
+  "@homelab/cdk8s",
+] as const;
+
 /** CI validates configuration offline. Operational plans and applies run in Delivery. */
 export function tofuValidationSteps(images: CiImages): CiStep[] {
   return [
@@ -83,7 +97,7 @@ export function tofuValidationSteps(images: CiImages): CiStep[] {
       image: images.base,
       commands: [
         "MISE_TOOLCHAIN_SCOPE=tofu . ci/scripts/toolchain.sh",
-        "ci/scripts/bun-install.sh --frozen-lockfile --filter homelab --filter '@homelab/cdktn' --production",
+        `ci/scripts/bun-install.sh --frozen-lockfile ${TOFU_VALIDATION_INSTALL_FILTERS.map((name) => `--filter '${name}'`).join(" ")} --production`,
         // Synthesized stacks: regenerate the provider bindings, then fail when
         // a committed main.tf.json differs from a fresh synthesis. This runs
         // before the shared plugin cache is selected, which only the locked
