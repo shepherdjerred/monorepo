@@ -15,6 +15,8 @@ tap "siderolabs/tap"
 tap "xcodesorg/made", trusted: { formulae: ["xcodes"] }
 # Static checker for GitHub Actions workflow files
 brew "actionlint"
+# Asciicast to GIF converter
+brew "agg"
 # GitOps Continuous Delivery for Kubernetes
 brew "argocd"
 # Record and share terminal sessions

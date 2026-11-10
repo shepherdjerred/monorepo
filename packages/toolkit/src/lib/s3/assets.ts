@@ -56,6 +56,30 @@ export function isCastFile(filename: string): boolean {
   return path.extname(filename).toLowerCase() === ".cast";
 }
 
+/** Key of the generated player page paired with a `.cast` object key. */
+export function castPlayerKey(castKey: string): string {
+  return `${castKey}.html`;
+}
+
+/** Key of the generated GIF preview paired with a `.cast` object key. */
+export function castGifKey(castKey: string): string {
+  return `${castKey}.gif`;
+}
+
+/**
+ * Markdown for an asciinema recording: the GIF preview renders inline
+ * (GitHub cannot embed the interactive player) and clicks through to the
+ * full player page.
+ */
+export function markdownForCast(
+  filename: string,
+  gifUrl: string,
+  playerUrl: string,
+): string {
+  const name = path.basename(filename);
+  return `[![${name} (terminal recording)](${gifUrl})](${playerUrl})`;
+}
+
 /** S3 object key for a PR asset: `pr/assets/<number>/<basename>`. */
 export function assetKey(prNumber: number, filename: string): string {
   return `pr/assets/${String(prNumber)}/${path.basename(filename)}`;
@@ -99,8 +123,7 @@ export function assetPublicUrl(prNumber: number, filename: string): string {
  * - HTML → `[name (demo)](url)`, PDF → `[name (pdf)](url)`
  * - anything else → `[name](url)`
  *
- * `.cast` files are not handled here: the command links the generated player
- * page (an HTML asset) instead of the raw recording.
+ * `.cast` files are not handled here; see {@link markdownForCast}.
  */
 export function markdownForAsset(filename: string, url: string): string {
   const name = path.basename(filename);

@@ -1,6 +1,6 @@
 ---
 name: tracker-work-management
-description: Read or manage this repository's Tracker issues, projects, triage, and follow-up work through toolkit tracker, including developer-experience friction reports. Use when work must be found, recorded, updated, linked to a branch, or when broken tooling must be filed.
+description: Read or manage this repository's Tracker issues, projects, triage, and follow-up work through toolkit tracker, including developer-experience friction and improvement reports. Use when work must be found, recorded, updated, linked to a branch, or when broken tooling, inefficiency, automation candidates, poor architecture, or tech debt should be filed.
 ---
 
 # Tracker work management
@@ -66,3 +66,23 @@ toolkit tracker issue create --team AI --project developer-experience --label Im
 The body states the symptom, exact command and sanitized output, blocked work,
 frequency, suspected owning path, and available session link. Label unproven
 causes as suspicion. Do not include tokens or credential-bearing output.
+
+## Improvement reports
+
+File improvements proactively, not only when something blocks you:
+inefficient workflows, manual steps that could or should be automated, repeated
+friction, poor architecture, and tech debt observed while working. Record the
+problem and the evidence; a proposed direction is optional.
+
+Use the same search-first and vote procedure as developer-experience reports.
+Create one issue per distinct problem only when no match exists, without a
+project unless the task names one:
+
+```bash
+toolkit tracker issue create --team AI --label Improvement --title "<area>: <problem>" --description-file <path>
+```
+
+The body states what was observed, where (paths, commands, services), how often
+or how costly it is, why it matters, and the available session link. Filing
+never blocks or widens the task: deliver first, then file, and name every issue
+filed or upvoted in the final report.

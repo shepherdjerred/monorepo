@@ -2,11 +2,14 @@ import { describe, expect, test } from "vitest";
 import {
   assetKey,
   assetPublicUrl,
+  castGifKey,
+  castPlayerKey,
   contentTypeForFile,
   dirFileKey,
   firstDuplicateKey,
   isCastFile,
   markdownForAsset,
+  markdownForCast,
   PUBLIC_BUCKET,
   PUBLIC_HOST,
   publicUrlForKey,
@@ -19,6 +22,7 @@ describe("contentTypeForFile", () => {
     expect(contentTypeForFile("a.jpeg")).toBe("image/jpeg");
     expect(contentTypeForFile("diagram.svg")).toBe("image/svg+xml");
     expect(contentTypeForFile("anim.gif")).toBe("image/gif");
+    expect(contentTypeForFile("demo.cast.gif")).toBe("image/gif");
   });
 
   test("maps video, recording, and static-site extensions", () => {
@@ -69,6 +73,28 @@ describe("assetKey", () => {
   test("strips leading directories from the filename", () => {
     expect(assetKey(7, "/home/me/screens/before.png")).toBe(
       "pr/assets/7/before.png",
+    );
+  });
+});
+
+describe("cast companion keys", () => {
+  test("suffix the cast key with the player page and GIF extensions", () => {
+    const key = assetKey(5, "/tmp/demo.cast");
+    expect(castPlayerKey(key)).toBe("pr/assets/5/demo.cast.html");
+    expect(castGifKey(key)).toBe("pr/assets/5/demo.cast.gif");
+  });
+});
+
+describe("markdownForCast", () => {
+  test("renders the GIF inline and links it to the player page", () => {
+    expect(
+      markdownForCast(
+        "/tmp/demo.cast",
+        "https://public.sjer.red/pr/assets/5/demo.cast.gif",
+        "https://public.sjer.red/pr/assets/5/demo.cast.html",
+      ),
+    ).toBe(
+      "[![demo.cast (terminal recording)](https://public.sjer.red/pr/assets/5/demo.cast.gif)](https://public.sjer.red/pr/assets/5/demo.cast.html)",
     );
   });
 });

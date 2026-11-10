@@ -655,7 +655,13 @@ Omitting PR infers the current branch; `--all` includes resolved/outdated items.
 `resolve` and `harvest` retain the existing provider finding handles.
 `toolkit pr asset <PR> <file|dir...> [--markdown]` uploads
 the lightest useful review artifact to `public.sjer.red`; directories require
-a root `index.html`, and asciinema `.cast` files get a self-contained player.
+a root `index.html`. An asciinema `.cast` file also uploads a self-contained
+player page (`<name>.cast.html`, the printed URL) and a GIF preview
+(`<name>.cast.gif`) rendered locally with
+[`agg`](https://docs.asciinema.org/manual/agg/); `--markdown` emits the GIF
+inline, linked to the player, because GitHub cannot embed the player. `agg`
+is required (`brew install agg`): if it is missing or fails, the command exits
+1 before uploading anything.
 
 ### Deployment and browser acceptance
 
