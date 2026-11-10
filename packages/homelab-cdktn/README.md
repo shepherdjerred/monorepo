@@ -102,6 +102,17 @@ Never run `apply`, `import`, or any `state` subcommand as part of a port.
   OpenTofu as a literal. Refer to a variable through its token
   (`variable.stringValue`), and attach a validation after the variable
   exists with `variable.addValidation({ condition, errorMessage })`.
+- **Construct ids are unique per scope across resource types.** HCL may
+  name two resources of different types alike
+  (`b2_application_key.backup` and `onepassword_item.backup`); give the second
+  another construct id and restore its address with
+  `resource.overrideLogicalId("backup")`.
+- **Keys are written sorted, and in JSON syntax a `dynamic` block expands
+  where its key sits.** `dynamic` therefore precedes literal blocks of the
+  same type, which reorders a list block such as a 1Password item's fields.
+  When a block type mixes literal and `dynamic` instances, write every
+  instance as a `dynamic` block in one ordered list (a literal one iterates
+  `[true]`).
 - **`removed` blocks and the `encryption` block have no construct.** They are
   stack overrides (`addOverride`), written by `forget()`/`retire()` and
   `encryptStateAndPlans()`. In JSON syntax the encryption `method` reference

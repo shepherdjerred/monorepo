@@ -6,6 +6,7 @@ import { AnthropicFederationStack } from "#src/stacks/anthropic-federation.ts";
 import { AnthropicStack } from "#src/stacks/anthropic.ts";
 import { ArgocdStack } from "#src/stacks/argocd.ts";
 import { ArrStack } from "#src/stacks/arr.ts";
+import { BackblazeStack } from "#src/stacks/backblaze.ts";
 import { CloudflareTokensStack } from "#src/stacks/cloudflare-tokens.ts";
 import { DockerhubStack } from "#src/stacks/dockerhub.ts";
 import { GithubStack } from "#src/stacks/github.ts";
@@ -21,6 +22,7 @@ export const SYNTHESIZED_STACKS = [
   "anthropic-federation",
   "argocd",
   "arr",
+  "backblaze",
   "cloudflare-tokens",
   "dockerhub",
   "github",
@@ -35,6 +37,7 @@ const STACKS: Record<SynthesizedStack, new (scope: Construct) => HomelabStack> =
     "anthropic-federation": AnthropicFederationStack,
     argocd: ArgocdStack,
     arr: ArrStack,
+    backblaze: BackblazeStack,
     "cloudflare-tokens": CloudflareTokensStack,
     dockerhub: DockerhubStack,
     github: GithubStack,

@@ -19,8 +19,9 @@ objects to `seaweedfs-backups` with the `backblaze-seaweedfs-backups` item.
 `sjerred-postgres-wal` has no writer: WAL-G, which would have used it, was
 retired.
 
-A change to `keys.tf` needs an operator apply before a workload reads the
-changed item.
+The configuration is `main.tf.json`, synthesized from
+`packages/homelab-cdktn/src/stacks/backblaze.ts`. A change to the keys or items
+there needs an operator apply before a workload reads the changed item.
 
 ```sh
 bun packages/homelab/scripts/tofu/tofu-stack.ts backblaze validate

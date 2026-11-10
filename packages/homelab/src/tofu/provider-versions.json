@@ -20,7 +20,8 @@
     {
       "registryUrl": "https://registry.opentofu.org",
       "source": "backblaze/b2",
-      "version": "0.14.0"
+      "version": "0.14.0",
+      "bindings": true
     },
     {
       "registryUrl": "https://registry.opentofu.org",
