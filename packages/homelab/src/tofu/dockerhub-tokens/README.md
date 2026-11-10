@@ -5,6 +5,9 @@ and Renovate-read personal access tokens through Docker's official
 `docker_access_token` resource. It uses a separate encrypted state from the
 repository-management stack so CI never needs account authentication or access
 to every generated token.
+Its configuration is synthesized from
+`packages/homelab-cdktn/src/stacks/dockerhub-tokens.ts` into the committed
+`main.tf.json`; never edit that file by hand.
 
 The Docker provider needs account authentication as `shepherdjerred`: either
 an account password injected into `DOCKER_USERNAME` and `DOCKER_PASSWORD`

@@ -29,6 +29,8 @@ const ConfigurationSchema = z.looseObject({
   removed: z.array(z.looseObject({ from: z.string() })).optional(),
   moved: z.array(z.object({ from: z.string(), to: z.string() })).optional(),
   locals: z.record(z.string(), z.unknown()).optional(),
+  data: z.record(z.string(), z.record(z.string(), z.unknown())).optional(),
+  output: z.record(z.string(), z.unknown()).optional(),
 });
 
 async function configuration(stack: (typeof SYNTHESIZED_STACKS)[number]) {
@@ -292,6 +294,51 @@ describe("arr", () => {
       categories: [],
       password: '${local.arr_api_keys["qbittorrent"]}',
     });
+  });
+});
+
+describe("dockerhub-tokens", () => {
+  test("keeps one protected token per purpose, its account reads and the handoff output", async () => {
+    const tokens = await configuration("dockerhub-tokens");
+    expect(addresses(tokens.resource)).toEqual([
+      "docker_access_token.automation",
+    ]);
+    expect(
+      tokens.resource["docker_access_token"]?.["automation"],
+    ).toMatchObject({
+      for_each: {
+        management: { scopes: ["repo:read", "repo:write", "repo:admin"] },
+        publisher: { scopes: ["repo:read", "repo:write"] },
+        reader: { scopes: ["repo:read"] },
+        renovate: { scopes: ["repo:read"] },
+      },
+      token_label: "homelab-${each.key}",
+      scopes: "${each.value.scopes}",
+      lifecycle: { prevent_destroy: true },
+    });
+    expect(tokens.data).toEqual({
+      docker_access_tokens: { account: {} },
+      docker_login: {
+        operator: { depends_on: ["data.docker_access_tokens.account"] },
+      },
+    });
+    expect(tokens.output).toEqual({
+      credentials: {
+        description:
+          "In-memory handoff to separate 1Password items; never print or save the decrypted output.",
+        sensitive: true,
+        value:
+          "${{ for purpose, token in docker_access_token.automation : purpose => { username = data.docker_login.operator.username, token = token.token, uuid = token.uuid } }}",
+      },
+    });
+    expect(tokens.import).toBeUndefined();
+    expect(tokens.terraform.encryption).toMatchObject({
+      state: { method: "method.aes_gcm.encrypted", enforced: true },
+      plan: { method: "method.aes_gcm.encrypted", enforced: true },
+    });
+    expect(Object.keys(tokens.variable ?? {})).toEqual([
+      "tofu_state_encryption_passphrase",
+    ]);
   });
 });
 
