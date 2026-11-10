@@ -31,10 +31,25 @@ fish comes from MSYS2. Two settings make it behave like a native shell:
 PowerShell, cmd and other programs that search `PATH`. Herdr does not use it:
 herdr-core opens PowerShell for every terminal on Windows.
 
-noctty, Cursor and VS Code open fish by default. Both fish and the PowerShell 7
-profile wrap `claude` and `codex`: direct provider API keys are removed and the
-agents run without permission prompts or a sandbox. The fish credential
-exports are a copy of the shared fish config; update both when they change.
+noctty, Cursor and VS Code open fish by default. The fish credential exports
+are a copy of the shared fish config; update both when they change.
+
+## Agent wrappers
+
+The PowerShell 7 profile's `Invoke-AgentCli` is the Windows counterpart of the
+macOS `agent-exec` wrappers. Herdr starts its terminals in PowerShell with the
+profile loaded, so agents started from its menus behave like typed ones. Each
+of `claude`, `codex`, `agy`, `cursor-agent`, `grok`, `kimi` and `muse` becomes
+a wrapper when it is installed. The wrapper removes provider API keys and
+homelab tokens, adds the agent's approval and sandbox bypass flags (none with
+`AGENT_SAFE=1`), and points the editor at Git's `true.exe` with `cat` as the
+pager. `codex` also gets `--no-daemon` and a theme matching the Windows light or
+dark setting. `agent` is left alone because on this PC it is Grok's.
+`agent-safe <agent> [args]` runs one agent with `AGENT_SAFE=1`, because
+Herdr's argv cannot set a variable; the new-worktree dialog uses it for plan
+modes. fish
+defines the same wrappers with `__agent_exec`; change both together. The
+agent git and `gh` identity used on the Macs is not set up here.
 
 ## Software record
 
@@ -48,20 +63,28 @@ To find installed software that is not recorded yet, compare
 
 ## Herdr app
 
-`~/.config/herdr-app` carries the Catppuccin themes, the `settings.json` that
-selects them, and the `agents-filter` mod: a copy of the shipped `agents`
-sidebar mod with a funnel menu that hides agents by provider (the choice is
-saved in the app's shared state) and a Windows or laptop icon on each row for
-the machine it runs on. The `spaces-nobranch` mod is the shipped `spaces` mod
-without the branch and repo text on each row. The app does not take a new mod
-into an existing layout, so `layouts/main.json` is managed here too: it is the
-shipped `main` layout with the `agents` block on `agents-filter` and the
-`spaces` block on `spaces-nobranch`. The app can rewrite that file when the
-layout is edited in the window (resizing the sidebar is kept in
-`layouts/.state/`, which is not managed); after an app update or a layout
-change, compare it with `chezmoi diff` and bring changes back with
-`chezmoi re-add`. The macOS and Linux source carries the themes and mods but
-not the layout or `settings.json`.
+`~/.config/herdr-app` carries the same customizations as the Macs: the `mine`
+layout, the Catppuccin themes, and the `my-*`, `agents-filter` and
+`spaces-nobranch` mods. Select the layout once with
+`herdr-app do layout.switch '{"name":"mine"}'`. `settings.json` and `keys.json`
+are Windows-specific. The key bindings use Ctrl and Alt in place of Cmd, and
+add `ctrl-alt-x` to toggle exhausted agents and `ctrl-alt-left` and
+`ctrl-alt-right` for tab history.
+
+The shared files are real copies of
+[`../dotfiles/private_dot_config/herdr-app`](../dotfiles/private_dot_config/herdr-app),
+not symlinks, because Herdr on Windows loads a mod's script through a symlinked
+folder but not its SVG icons. Edit the macOS source, then copy each changed
+folder here. `packages/dotfiles/scripts/herdr-windows-copy.test.ts` fails when
+a copy differs. `herdr-app check` writes `gpui-kit.d.ts` and `jsconfig.json`
+into a mod folder; they are generated and never committed.
+
+The `my-worktree` dialog's New worktree runs the shared worker
+`~/bin/herdr-new-worktree.ts`, a symlink into
+`../dotfiles/bin/executable_herdr_new_worktree.ts` that needs `bun` on PATH.
+The first naming call asks 1Password to approve reading the OpenAI key; a
+failure posts a Windows toast. See
+[New worktree dialog](../dotfiles/README.md#new-worktree-dialog).
 
 ## Changing a managed file
 

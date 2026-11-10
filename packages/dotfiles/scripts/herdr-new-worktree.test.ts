@@ -20,6 +20,7 @@ const base: Request = {
   root: "/home/.herdr/worktrees/repo",
   agentArgs: [],
   safe: false,
+  launcher: "brim",
   argv: null,
   tab: null,
 };
@@ -82,6 +83,45 @@ test("requests are checked strictly", () => {
   expect(() => parseRequest(JSON.stringify({ ...base, safe: "no" }))).toThrow(
     "safe",
   );
+  expect(() =>
+    parseRequest(JSON.stringify({ ...base, launcher: undefined })),
+  ).toThrow("launcher");
+  expect(() =>
+    parseRequest(JSON.stringify({ ...base, launcher: "fish" })),
+  ).toThrow("launcher");
+});
+
+test("on Windows an agent starts as its profile wrapper, agent-safe for plan modes", () => {
+  const windows = { ...base, launcher: "profile" as const };
+  expect(launch(windows, named)).toEqual({
+    argv: ["codex", "--"],
+    task: "- fix the cache",
+    typed: false,
+  });
+  expect(
+    launch(
+      {
+        ...windows,
+        provider: "claude-code",
+        agentArgs: ["--permission-mode", "plan"],
+        safe: true,
+      },
+      named,
+    ).argv,
+  ).toEqual([
+    "agent-safe",
+    "claude",
+    "--permission-mode",
+    "plan",
+    "--name",
+    "Fix the cache",
+    "--",
+  ]);
+  expect(launch({ ...windows, provider: "cursor" }, named).argv).toEqual([
+    "cursor-agent",
+    "--",
+  ]);
+  expect(() => launch({ ...windows, provider: "nope" }, named)).toThrow("nope");
 });
 
 test("a caller's own program gets the message as its task, and keeps its tab", async () => {

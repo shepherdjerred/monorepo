@@ -28,8 +28,15 @@ import {
 } from "./herdr_new_worktree_core.ts";
 
 const home = homedir();
-const hcPath = path.join(home, ".local/bin/hc");
-const herdrAppPath = path.join(home, ".local/bin/herdr-app");
+const windows = process.platform === "win32";
+// Windows installs them on PATH (hc.exe under AppData\Local\Programs\herdr-core).
+const hcPath = windows ? "hc" : path.join(home, ".local/bin/hc");
+const herdrAppPath = windows
+  ? "herdr-app"
+  : path.join(home, ".local/bin/herdr-app");
+// On Windows the dialog passes the request in this variable: Start-Process
+// does not quote arguments, so JSON cannot go on the command line.
+const requestVariable = "HERDR_WORKTREE_REQUEST";
 // The mod's pure naming module, as installed: one copy of the prompt and schema.
 const namingPath = path.join(
   home,
@@ -109,7 +116,10 @@ function member(module: Map<string, unknown>, name: string): unknown {
   return value;
 }
 
-function callable(value: unknown, name: string): (...args: unknown[]) => unknown {
+function callable(
+  value: unknown,
+  name: string,
+): (...args: unknown[]) => unknown {
   if (typeof value !== "function")
     throw new TypeError(`naming.js ${name} is not a function.`);
   return (...args) => {
@@ -158,8 +168,12 @@ async function loadNaming(): Promise<Naming> {
   };
 }
 
-async function capture(argv: string[]): Promise<ExecResult> {
+async function capture(
+  argv: string[],
+  env?: Record<string, string>,
+): Promise<ExecResult> {
   const child = Bun.spawn(argv, {
+    ...(env === undefined ? {} : { env: { ...Bun.env, ...env } }),
     stdin: "ignore",
     stdout: "pipe",
     stderr: "pipe",
@@ -303,13 +317,42 @@ type Event = {
 };
 
 function summary(event: Event): string {
-  const where = `${event.provider ?? "shell"} on ${event.machine ?? "this Mac"}`;
+  const where = `${event.provider ?? "shell"} on ${event.machine ?? event.host}`;
   return event.ok
     ? `${logTag}: ok; ${where}; branch ${event.branch ?? "?"}; ${String(event.ms)} ms`
     : `${logTag}: FAILED at ${event.step}; ${where}; error: ${event.error ?? "unknown"}`;
 }
 
+// A Windows toast, sent as Windows PowerShell (pwsh has no WinRT projection).
+// Title and body travel as variables, so no text is parsed as script.
+const windowsToast = [
+  "[Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime] > $null",
+  "$xml = [Windows.UI.Notifications.ToastNotificationManager]::GetTemplateContent([Windows.UI.Notifications.ToastTemplateType]::ToastText02)",
+  "$text = $xml.GetElementsByTagName('text')",
+  "$text.Item(0).AppendChild($xml.CreateTextNode($env:TOAST_TITLE)) > $null",
+  "$text.Item(1).AppendChild($xml.CreateTextNode($env:TOAST_BODY)) > $null",
+  String.raw`[Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier('{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\WindowsPowerShell\v1.0\powershell.exe').Show([Windows.UI.Notifications.ToastNotification]::new($xml))`,
+].join("; ");
+
 async function report(event: Event): Promise<void> {
+  // The dialog is gone, so a failure needs a notification of its own.
+  if (windows) {
+    if (!event.ok)
+      await capture(
+        [
+          "powershell.exe",
+          "-NoProfile",
+          "-NonInteractive",
+          "-Command",
+          windowsToast,
+        ],
+        {
+          TOAST_TITLE: "New worktree failed",
+          TOAST_BODY: event.error ?? "unknown error",
+        },
+      );
+    return;
+  }
   // Mirror to the unified log (`logger -t` alone isn't searchable there).
   await capture([
     "/usr/bin/logger",
@@ -319,7 +362,6 @@ async function report(event: Event): Promise<void> {
     event.ok ? "user.notice" : "user.err",
     summary(event),
   ]);
-  // The dialog is gone, so a failure needs a notification of its own.
   if (!event.ok)
     await capture([
       "/usr/bin/osascript",
@@ -422,9 +464,19 @@ async function run(json: string): Promise<number> {
 async function main(argv: string[]): Promise<number> {
   const [first] = argv;
   if (first === "--status" && argv.length === 1) return status();
-  if (first === undefined || first === "--help" || argv.length !== 1) {
+  const fromVariable =
+    first === "--request-env" && argv.length === 1
+      ? Bun.env[requestVariable]
+      : undefined;
+  if (fromVariable !== undefined) return run(fromVariable);
+  if (
+    first === undefined ||
+    first === "--help" ||
+    first === "--request-env" ||
+    argv.length !== 1
+  ) {
     console.error(
-      `Usage: herdr-new-worktree '<request json>' | --status\nStarted by the Herdr new-worktree dialog; results go to ${eventsPath}`,
+      `Usage: herdr-new-worktree '<request json>' | --request-env | --status\nStarted by the Herdr new-worktree dialog (--request-env reads ${requestVariable}); results go to ${eventsPath}`,
     );
     return 2;
   }

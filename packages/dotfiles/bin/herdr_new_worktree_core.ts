@@ -19,10 +19,29 @@ export type Request = {
   readonly agentArgs: readonly string[];
   /** Skip the agent-bin bypass flags (plan-style modes). */
   readonly safe: boolean;
+  /**
+   * How the space's machine starts an agent: "brim" runs `brim --provider`,
+   * which uses the agent-bin wrappers (macOS and Linux); "profile" runs the
+   * agent's PowerShell profile wrapper by name (Windows, which has no Brim).
+   */
+  readonly launcher: Launcher;
   /** A caller's own program instead of a provider, given the message as task. */
   readonly argv: readonly string[] | null;
   /** A caller's own first-tab name instead of the generated title. */
   readonly tab: string | null;
+};
+
+export type Launcher = "brim" | "profile";
+
+/** Each provider's wrapper in the Windows PowerShell profile. */
+const PROFILE_COMMAND: Readonly<Record<string, string>> = {
+  "claude-code": "claude",
+  codex: "codex",
+  antigravity: "agy",
+  cursor: "cursor-agent",
+  grok: "grok",
+  kimi: "kimi",
+  muse: "muse",
 };
 
 export type Named = { readonly branch: string; readonly title: string };
@@ -141,6 +160,9 @@ export function parseRequest(json: string): Request {
   const safe = r.get("safe");
   if (typeof safe !== "boolean")
     throw new TypeError("Request safe must be a boolean.");
+  const launcher = r.get("launcher");
+  if (launcher !== "brim" && launcher !== "profile")
+    throw new TypeError('Request launcher must be "brim" or "profile".');
   return {
     message: text(r.get("message"), "message").trim(),
     provider: nullableText(r.get("provider"), "provider"),
@@ -150,15 +172,40 @@ export function parseRequest(json: string): Request {
     root: text(r.get("root"), "root"),
     agentArgs: strings(r.get("agentArgs"), "agentArgs"),
     safe,
+    launcher,
     argv: nullableStrings(r.get("argv"), "argv"),
-    tab:
-      r.get("tab") === undefined ? null : nullableText(r.get("tab"), "tab"),
+    tab: r.get("tab") === undefined ? null : nullableText(r.get("tab"), "tab"),
   };
 }
 
 /** Checkouts go to <root>/<branch, slashes as dashes>. */
 export function slug(branch: string): string {
   return branch.replaceAll(/[^\w.-]+/g, "-").replaceAll(/^-+|-+$/g, "");
+}
+
+/**
+ * The command that starts a provider's wrapper with `args`. Herdr's argv
+ * cannot set a variable on Windows, so a safe launch there goes through the
+ * profile's `agent-safe`, its counterpart of `env AGENT_SAFE=1`.
+ */
+function agentCommand(
+  request: Request,
+  provider: string,
+  args: string[],
+): string[] {
+  if (request.launcher === "brim")
+    return [
+      ...(request.safe ? ["env", "AGENT_SAFE=1"] : []),
+      "brim",
+      "--provider",
+      provider,
+      "--",
+      ...args,
+    ];
+  const command = PROFILE_COMMAND[provider];
+  if (command === undefined)
+    throw new Error(`No PowerShell wrapper for provider ${provider}.`);
+  return [...(request.safe ? ["agent-safe"] : []), command, ...args];
 }
 
 /**
@@ -181,15 +228,10 @@ export function launch(
   if (provider === "antigravity") extra.push("-i", message);
   const typed = provider === "kimi";
   const asTask = provider !== "antigravity" && !typed;
-  const argv = [
-    ...(request.safe ? ["env", "AGENT_SAFE=1"] : []),
-    "brim",
-    "--provider",
-    provider,
-    "--",
+  const argv = agentCommand(request, provider, [
     ...extra,
     ...(asTask ? ["--"] : []),
-  ];
+  ]);
   return { argv, task: asTask ? message : null, typed };
 }
 
