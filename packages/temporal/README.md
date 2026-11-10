@@ -997,6 +997,22 @@ and XDG configuration paths, an explicit empty Bun configuration and automatic
 environment-file loading disabled. The provider retains its assigned working
 directory and environment after the helper completes.
 
+Isolated Linux promotion runs explicitly select `linuxSandboxHelper: "bundled-codex"`
+in the in-process runner contract. The existing root-owned provider wrapper adds
+one protected `bwrap` alias before the complete original `PATH`. It selects the
+official helper shipped with the pinned Codex CLI without removing system tools
+or changing other workers. The launcher verifies the active CLI and platform
+package versions, architecture-specific helper digest, and protected installation
+and alias paths before dropping to the provider UID. A requested selection fails
+closed on a custom CLI override, missing isolation, unsupported runtime, or missing
+original `PATH`. The alias is removed with the existing per-run wrapper cleanup.
+The production dependency stage normalizes only the resolved Codex JavaScript
+entrypoint to root-owned `0755`; runtime verification rejects mutable files.
+The [helper pins](src/lib/agent-runner/codex-bubblewrap-pins.json) must be reviewed
+with Codex upgrades and the node seccomp profile. Node installation and hash
+readback precede the separate promotion chart opt-in; source and image checks do
+not replace an offline boundary probe in the deployed amd64 container.
+
 The image starts the worker under Tini to reap orphaned provider and tool
 processes. The UID cleanup checks require those processes to disappear before
 another turn starts; unreaped zombies otherwise block the queue. Claude's
@@ -1332,6 +1348,18 @@ a durable Workflow timer waits for a source's recorded cooldown within that
 window. Fast sources allow at most four attempted publications per Pacific day.
 These limits never shorten a native or subreddit-specific cooldown.
 The `promotion-core-hours-v1` patch preserves earlier dispatcher histories.
+
+For a manual report-delivery acceptance check, start the no-argument
+`reportStormPromotionAcceptance` Workflow. It uses the daily collector and
+delivery path with the distinct key `storm-promotion/acceptance/<run-id>`, leaving
+the scheduled daily delivery key available. This sends a report to the existing
+report recipient; inspect an uncertain outcome before starting another run.
+
+```bash
+toolkit temporal --namespace prod workflow start \
+  --workflow-id "storm-promotion-report-acceptance-$(date -u +%Y%m%dT%H%M%SZ)" \
+  --type reportStormPromotionAcceptance --task-queue monorepo-workflows
+```
 
 The promotion worker exposes authenticated, read-only status on port 7343.
 The Ops server proxies `/api/v1/promotion`, `/history`, and hash-addressed

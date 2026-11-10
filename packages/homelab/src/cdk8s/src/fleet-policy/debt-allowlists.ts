@@ -298,7 +298,6 @@ export const CONTAINERS_WITHOUT_SECCOMP: ReadonlySet<string> = new Set([
   "temporal/temporal-temporal-home-worker/temporal-home-worker",
   "temporal/temporal-temporal-infra-worker/temporal-infra-worker",
   "temporal/temporal-temporal-promotion-worker/install-provider-firewall",
-  "temporal/temporal-temporal-promotion-worker/temporal-promotion-worker",
   "temporal/temporal-temporal-repo-worker/temporal-repo-worker",
   "temporal/temporal-temporal-reports-worker/temporal-reports-worker",
   "temporal/temporal-temporal-scout-worker/temporal-scout-worker",

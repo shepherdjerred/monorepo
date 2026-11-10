@@ -30,6 +30,8 @@ describe("workflow bundle", () => {
       "httpAgentChatWorkflow",
       "deliveryDeploymentWorkflow",
       "deliveryDispatchWorkflow",
+      "reportStormPromotion",
+      "reportStormPromotionAcceptance",
     ]) {
       expect(typeof workflows[name]).toBe("function");
     }

@@ -11,6 +11,7 @@ import {
   type k8s,
   Pods,
   Service,
+  SeccompProfileType,
   type ServiceAccount,
   Volume,
 } from "cdk8s-plus-31";
@@ -30,6 +31,7 @@ type CreateTemporalAgentWorkerProps = {
   envVariables: Record<string, EnvValue>;
   name?: string;
   component?: string;
+  sandboxSeccompProfile?: string;
 };
 
 const AGENT_WORKER_UID = 1000;
@@ -140,6 +142,14 @@ ip6tables -L OUTPUT -n`,
         { number: 9465, name: "app-metrics" },
       ],
       securityContext: {
+        ...(props.sandboxSeccompProfile === undefined
+          ? {}
+          : {
+              seccompProfile: {
+                type: SeccompProfileType.LOCALHOST,
+                localhostProfile: props.sandboxSeccompProfile,
+              },
+            }),
         user: 0,
         group: AGENT_WORKER_UID,
         ensureNonRoot: false,

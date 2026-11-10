@@ -5,7 +5,10 @@ import { Context } from "@temporalio/activity";
 import { z } from "zod/v4";
 import { runAgentTurn } from "#lib/agent-runner/run.ts";
 import type { AgentTurnUsage } from "#lib/agent-runner/contract.ts";
-import { promotionProviderUid } from "./isolation.ts";
+import {
+  promotionProviderUid,
+  promotionLinuxSandboxHelper,
+} from "./isolation.ts";
 import {
   type PromotionRunInput,
   type PromotionState,
@@ -288,6 +291,7 @@ export async function runPromotionAgent(input: PromotionAgentInput) {
         ],
         unixSockets: [socket],
       },
+      ...promotionLinuxSandboxHelper(uid),
       outputSchema: z.toJSONSchema(
         input.mode === "preview"
           ? PromotionPreviewDraftSchema

@@ -243,6 +243,12 @@ describe("selectImageTargets", () => {
     ]);
   });
 
+  test("selects only Temporal when its Codex launcher permission producer changes", async () => {
+    expect(
+      await select(["ci/scripts/images/harden-codex-launcher.ts"]),
+    ).toEqual(["temporal-worker"]);
+  });
+
   test("selects only applications for shared application image inputs", async () => {
     for (const path of [
       "ci/application-image-smoke.Dockerfile",

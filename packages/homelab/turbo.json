@@ -4,7 +4,8 @@
   "tasks": {
     // homelab has no build script, so this is a transit task whose hash every
     // TypeScript consumer (temporal, cdk8s) inherits through ^build. They import
-    // scripts/**, top-level src modules and the Discord credential contract
+    // scripts/**, top-level src modules, the Discord credential contract and
+    // the neutral reviewed promotion policy consumed by CDK
     // (homelab-build-inputs.test.ts verifies that coverage), so unrelated Talos,
     // OpenTofu, Helm and image edits do not re-run their suites.
     "build": {
@@ -14,7 +15,8 @@
         "scripts/**",
         "src/*.ts",
         "src/*.json",
-        "src/tofu/discord/desired-state.json"
+        "src/tofu/discord/desired-state.json",
+        "src/talos/seccomp/promotion-policy.json"
       ]
     },
     // The pinned Talos installer in patches/image.yaml must match what the

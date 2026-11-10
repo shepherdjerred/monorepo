@@ -1,0 +1,19 @@
+{
+  "codexVersion": "0.162.1",
+  "platforms": {
+    "arm64": {
+      "package": "@openai/codex-linux-arm64",
+      "packageVersion": "0.162.1-linux-arm64",
+      "targetTriple": "aarch64-unknown-linux-musl",
+      "helperSha256": "c547cbdc762a70ed216789ffaa4c6c0e7d2beabe32245a498f8e365a9fc8dab4",
+      "packageIntegrity": "sha512-Ss7W/SrKtQFNaMtSojNoiykJgX+iDC8daM+YrcvgmJADtQPk0cd3w6Dna4CYH2CYvf9nQranj69fpcTzZ3sQIQ=="
+    },
+    "x64": {
+      "package": "@openai/codex-linux-x64",
+      "packageVersion": "0.162.1-linux-x64",
+      "targetTriple": "x86_64-unknown-linux-musl",
+      "helperSha256": "01fb705f067bd5365b63d8ad2323a61c8d007733ca5e649437e086f3fb9935d8",
+      "packageIntegrity": "sha512-cjK2mdHIfEepZ1lQ1MX3aTQC+8ncIsvnacl/6vI2dIIcfP8/MrhTQ2+qRlkXFNDzJSj1d36quIszP+3/4CUJWQ=="
+    }
+  }
+}

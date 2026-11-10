@@ -22,6 +22,7 @@ import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/ot
 import { llmArchiveEnvVars } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-archive-env.ts";
 import { codexApiKeyEnvVars } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-provider-credentials.ts";
 import { createTemporalAgentWorker } from "./agent-worker.ts";
+import promotionPolicy from "homelab/src/talos/seccomp/promotion-policy.json" with { type: "json" };
 
 export function createTemporalPromotionWorker(
   chart: Chart,
@@ -55,6 +56,8 @@ export function createTemporalPromotionWorker(
   const deployment = createTemporalAgentWorker(chart, {
     name: "temporal-promotion-worker",
     component: "promotion-worker",
+    // Install and verify the node prerequisite before releasing this opt-in.
+    sandboxSeccompProfile: `profiles/${promotionPolicy.profileName}`,
     serviceAccount,
     envVariables: {
       ...temporalFeatureFlagEnvironment(),
