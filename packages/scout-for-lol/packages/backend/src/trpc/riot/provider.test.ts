@@ -94,17 +94,21 @@ async function provider(
 }
 
 describe("Riot Sign On proof", () => {
-  test("uses code flow, minimal scope, nonce, and S256 PKCE", () => {
+  test("requests fresh sign-in with code flow, minimal scope, nonce, and S256 PKCE", () => {
     const flow = newRiotLinkFlow();
     const url = new URL(riotAuthorizeUrl(credentials, callbackUrl, flow));
     expect(url.origin).toBe("https://auth.riotgames.com");
-    expect(Object.fromEntries(url.searchParams)).toMatchObject({
+    expect(url.pathname).toBe("/authorize");
+    expect(Object.fromEntries(url.searchParams)).toEqual({
+      client_id: credentials.clientId,
+      redirect_uri: callbackUrl,
       scope: "openid",
       response_type: "code",
       state: flow.state,
       nonce: flow.nonce,
       code_challenge_method: "S256",
       code_challenge: pkceChallenge(flow.verifier),
+      prompt: "login",
     });
     expect(url.searchParams.has("client_secret")).toBe(false);
   });
