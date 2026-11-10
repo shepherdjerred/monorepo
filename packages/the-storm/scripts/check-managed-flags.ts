@@ -23,6 +23,8 @@ type ManagedFlagGate = {
   readonly keyConstant?: string;
   /** Java file declaring `NAMESPACE_KEY`; the key file unless shared. */
   readonly namespaceFile?: string;
+  /** Expected production inventory default; uncommissioned gates default off. */
+  readonly expectedDefault?: boolean;
 };
 
 const rwf = `${REMOTE}/rwf/src/main/java/com/shepherdjerred/thestorm/rwf/adapter/remote`;
@@ -35,6 +37,7 @@ export const MANAGED_FLAG_GATES: readonly ManagedFlagGate[] = [
     keyFile: `${REMOTE}/skytravel/src/main/java/com/shepherdjerred/thestorm/skytravel/adapter/paper/LaunchFlights.java`,
     namespaceFile:
       "plugin/core/src/main/java/com/shepherdjerred/thestorm/core/expansion/ManagedGameplay.java",
+    expectedDefault: true,
   },
   {
     flagSource: "the-storm-stargates",
@@ -137,7 +140,7 @@ export function managedFlagViolations(
     );
     if (
       flag.type !== "boolean" ||
-      flag.default !== false ||
+      flag.default !== (gate.expectedDefault ?? false) ||
       flag.key !== key ||
       flag.namespace !== namespace
     ) {
