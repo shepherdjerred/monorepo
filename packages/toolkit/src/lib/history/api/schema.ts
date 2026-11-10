@@ -15,6 +15,9 @@ export const HISTORY_API_VERSION = 1;
 
 const ApiVersionSchema = z.literal(HISTORY_API_VERSION);
 
+/** Every timestamp is ISO 8601; sources normalize before indexing. */
+const TimestampSchema = z.iso.datetime({ offset: true });
+
 export const HistoryApiUsageSchema = z
   .strictObject({
     inputTokens: z.number().int().nonnegative(),
@@ -43,10 +46,16 @@ export const HistoryApiSessionSchema = z
     workspace: z.string().nullable(),
     gitBranch: z.string().nullable(),
     primaryModel: z.string().nullable(),
-    createdAt: z.string(),
-    updatedAt: z.string(),
+    createdAt: TimestampSchema,
+    updatedAt: TimestampSchema,
     messageCount: z.number().int().nonnegative(),
     toolCallCount: z.number().int().nonnegative(),
+    /**
+     * Priced turns recorded for the session. Zero means the source carries no
+     * usage for it (Cursor, Conductor, Codex threads whose usage belongs to
+     * another document), not that it cost nothing.
+     */
+    usageEvents: z.number().int().nonnegative(),
     usage: HistoryApiUsageSchema,
   })
   .meta({ title: "HistoryApiSession" });
@@ -69,7 +78,11 @@ export const HistoryApiMessageSchema = z
   .strictObject({
     role: z.enum(["user", "assistant", "tool", "unknown"]),
     text: z.string(),
-    createdAt: z.string().nullable(),
+    createdAt: TimestampSchema.nullable(),
+    /**
+     * Set on a tool invocation. A `tool` message without a name is that
+     * invocation's output.
+     */
     toolName: z.string().nullable(),
   })
   .meta({ title: "HistoryApiMessage" });
@@ -108,7 +121,7 @@ export const HistoryApiUsageResponseSchema = z
   .strictObject({
     apiVersion: ApiVersionSchema,
     groupBy: HistoryApiUsageGroupSchema,
-    since: z.string().nullable(),
+    since: TimestampSchema.nullable(),
     total: HistoryApiUsageSchema,
     rows: z.array(HistoryApiUsageRowSchema),
   })
@@ -120,7 +133,7 @@ export type HistoryApiUsageResponse = z.infer<
 export const HistoryApiToolsResponseSchema = z
   .strictObject({
     apiVersion: ApiVersionSchema,
-    since: z.string().nullable(),
+    since: TimestampSchema.nullable(),
     rows: z.array(
       z
         .strictObject({
@@ -136,6 +149,33 @@ export type HistoryApiToolsResponse = z.infer<
   typeof HistoryApiToolsResponseSchema
 >;
 
+const FacetSchema = z
+  .strictObject({
+    /** `machine` null is this machine; `workspace` null is unknown. */
+    key: z.string().nullable(),
+    sessions: z.number().int().positive(),
+  })
+  .meta({ title: "HistoryApiFacet" });
+
+export const HistoryApiFacetsResponseSchema = z
+  .strictObject({
+    apiVersion: ApiVersionSchema,
+    machines: z.array(FacetSchema),
+    sources: z.array(
+      z
+        .strictObject({
+          key: HistorySourceNameSchema,
+          sessions: z.number().int().positive(),
+        })
+        .meta({ title: "HistoryApiSourceFacet" }),
+    ),
+    workspaces: z.array(FacetSchema),
+  })
+  .meta({ title: "HistoryApiFacetsResponse" });
+export type HistoryApiFacetsResponse = z.infer<
+  typeof HistoryApiFacetsResponseSchema
+>;
+
 export const HistoryApiErrorSchema = z
   .strictObject({ error: z.string() })
   .meta({ title: "HistoryApiError" });
@@ -146,5 +186,6 @@ export const HISTORY_API_CONTRACTS = {
   "history-api-session-detail": HistoryApiSessionDetailResponseSchema,
   "history-api-usage": HistoryApiUsageResponseSchema,
   "history-api-tools": HistoryApiToolsResponseSchema,
+  "history-api-facets": HistoryApiFacetsResponseSchema,
   "history-api-error": HistoryApiErrorSchema,
 } as const;

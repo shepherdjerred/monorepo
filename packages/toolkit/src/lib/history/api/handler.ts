@@ -11,6 +11,7 @@ import {
 import {
   HISTORY_API_VERSION,
   HistoryApiErrorSchema,
+  HistoryApiFacetsResponseSchema,
   HistoryApiSessionDetailResponseSchema,
   HistoryApiSessionsResponseSchema,
   HistoryApiToolsResponseSchema,
@@ -147,6 +148,8 @@ function searchSessions(
     const records = index.search(query, {
       since: sinceParam(params),
       source: sourceParam(params),
+      machine: params.get("machine"),
+      workspace: params.get("workspace"),
       limit: limit + 1,
       offset,
     });
@@ -249,6 +252,10 @@ function tools(index: HistoryIndex, params: URLSearchParams): Response {
   );
 }
 
+function facets(index: HistoryIndex): Response {
+  return Response.json(HistoryApiFacetsResponseSchema.parse(index.facets()));
+}
+
 const ROUTES = new Map<
   string,
   (index: HistoryIndex, params: URLSearchParams) => Response
@@ -257,6 +264,7 @@ const ROUTES = new Map<
   ["/v1/search", searchSessions],
   ["/v1/usage", usage],
   ["/v1/tools", tools],
+  ["/v1/facets", facets],
 ]);
 
 function errorResponse(message: string, status: number): Response {

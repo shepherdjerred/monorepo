@@ -1,0 +1,45 @@
+{
+  "apiVersion": 1,
+  "machines": [
+    {
+      "key": null,
+      "sessions": 1204
+    },
+    {
+      "key": "jerreds-macbook-pro",
+      "sessions": 612
+    },
+    {
+      "key": "jerred-desktop",
+      "sessions": 88
+    }
+  ],
+  "sources": [
+    {
+      "key": "codex",
+      "sessions": 901
+    },
+    {
+      "key": "claude",
+      "sessions": 303
+    },
+    {
+      "key": "claude-mirror",
+      "sessions": 420
+    },
+    {
+      "key": "codex-mirror",
+      "sessions": 280
+    }
+  ],
+  "workspaces": [
+    {
+      "key": "/Users/jerred/git/monorepo",
+      "sessions": 510
+    },
+    {
+      "key": null,
+      "sessions": 96
+    }
+  ]
+}

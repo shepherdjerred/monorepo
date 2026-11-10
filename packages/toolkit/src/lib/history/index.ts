@@ -15,6 +15,8 @@ import {
 } from "./types.ts";
 import { ingestResults } from "./ingest.ts";
 import {
+  LOCAL_MACHINE,
+  queryFacets,
   querySessions,
   querySessionsByIds,
   queryTools,
@@ -22,6 +24,7 @@ import {
   type SessionListOptions,
 } from "./api/queries.ts";
 import type {
+  HistoryApiFacetsResponse,
   HistoryApiSession,
   HistoryApiToolsResponse,
   HistoryApiUsageGroup,
@@ -41,6 +44,9 @@ const INDEX_SCHEMA_VERSION = 5;
 type HistoryQueryOptions = {
   readonly since: string | null;
   readonly source: HistorySourceName | null;
+  /** A mirrored machine id, or `LOCAL_MACHINE` for this machine. */
+  readonly machine?: string | null;
+  readonly workspace?: string | null;
   readonly limit?: number;
   readonly offset?: number;
   readonly openingPromptHash?: string;
@@ -99,6 +105,18 @@ function filterClauses(options: HistoryQueryOptions): {
   if (options.source !== null) {
     clauses.push("d.source = ?");
     values.push(options.source);
+  }
+  if (options.machine != null) {
+    if (options.machine === LOCAL_MACHINE) {
+      clauses.push("d.machine IS NULL");
+    } else {
+      clauses.push("d.machine = ?");
+      values.push(options.machine);
+    }
+  }
+  if (options.workspace != null) {
+    clauses.push("d.workspace = ?");
+    values.push(options.workspace);
   }
   if (options.openingPromptHash !== undefined) {
     clauses.push("d.opening_prompt_hash = ?");
@@ -417,6 +435,10 @@ export class HistoryIndex {
     hasMore: boolean;
   } {
     return querySessions(this.#database, options);
+  }
+
+  facets(): HistoryApiFacetsResponse {
+    return queryFacets(this.#database);
   }
 
   sessionsByIds(ids: readonly number[]): HistoryApiSession[] {

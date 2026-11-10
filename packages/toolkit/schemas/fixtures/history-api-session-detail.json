@@ -14,6 +14,7 @@
     "updatedAt": "2026-11-08T18:40:03.000Z",
     "messageCount": 128,
     "toolCallCount": 57,
+    "usageEvents": 64,
     "usage": {
       "inputTokens": 1820,
       "outputTokens": 40211,

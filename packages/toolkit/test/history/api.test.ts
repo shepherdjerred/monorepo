@@ -7,6 +7,7 @@ import { handleHistoryApiRequest } from "#lib/history/api/handler.ts";
 import {
   HISTORY_API_CONTRACTS,
   HistoryApiErrorSchema,
+  HistoryApiFacetsResponseSchema,
   HistoryApiSessionDetailResponseSchema,
   HistoryApiSessionsResponseSchema,
   HistoryApiToolsResponseSchema,
@@ -210,6 +211,7 @@ describe("history API", () => {
       primaryModel: "claude-opus-5-5",
       messageCount: 4,
       toolCallCount: 1,
+      usageEvents: 3,
     });
     expect(session?.usage.costUsd).toBeCloseTo(2.25);
     expect(session?.usage.costComplete).toBe(true);
@@ -241,6 +243,47 @@ describe("history API", () => {
     expect(parsed.sessions.map((entry) => entry.sourceId)).toEqual([
       "jerred-desktop/rollout",
     ]);
+    index.close();
+  });
+
+  test("narrows search by machine", async () => {
+    const index = await fixtureIndex();
+    const local = HistoryApiSessionsResponseSchema.parse(
+      await fetchBody(index, "/v1/search?q=windows&machine=local"),
+    );
+    expect(local.sessions).toEqual([]);
+    const remote = HistoryApiSessionsResponseSchema.parse(
+      await fetchBody(index, "/v1/search?q=windows&machine=jerred-desktop"),
+    );
+    expect(remote.sessions.map((entry) => entry.machine)).toEqual([
+      "jerred-desktop",
+    ]);
+    index.close();
+  });
+
+  test("lists facets from sessions, including ones without usage", async () => {
+    const index = await fixtureIndex();
+    await index.ingest([
+      result("cursor", [
+        document("cursor", "no-usage", {
+          dialogue: "cursor chat",
+          updatedAt: "2026-11-06T00:00:00.000Z",
+        }),
+      ]),
+    ]);
+    const parsed = HistoryApiFacetsResponseSchema.parse(
+      await fetchBody(index, "/v1/facets"),
+    );
+    expect(parsed.sources.map((facet) => facet.key).toSorted()).toEqual([
+      "claude",
+      "codex-mirror",
+      "cursor",
+    ]);
+    expect(parsed.machines).toContainEqual({ key: null, sessions: 2 });
+    const cursor = HistoryApiSessionsResponseSchema.parse(
+      await fetchBody(index, "/v1/sessions?source=cursor"),
+    ).sessions[0];
+    expect(cursor?.usageEvents).toBe(0);
     index.close();
   });
 

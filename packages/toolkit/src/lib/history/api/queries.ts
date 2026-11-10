@@ -5,6 +5,7 @@ import {
   type HistorySourceName,
 } from "#lib/history/types.ts";
 import type {
+  HistoryApiFacetsResponse,
   HistoryApiSession,
   HistoryApiToolsResponse,
   HistoryApiUsage,
@@ -53,7 +54,13 @@ const UsageColumnsSchema = z.object({
 
 const DocumentUsageRowSchema = UsageColumnsSchema.extend({
   document_id: z.number(),
+  events: z.number(),
 });
+
+type DocumentUsage = {
+  readonly events: number;
+  readonly usage: HistoryApiUsage;
+};
 
 const UsageGroupRowSchema = UsageColumnsSchema.extend({
   key: z.string().nullable(),
@@ -115,15 +122,15 @@ function addUsage(a: HistoryApiUsage, b: HistoryApiUsage): HistoryApiUsage {
 function usageByDocument(
   database: Database,
   ids: readonly number[],
-): Map<number, HistoryApiUsage> {
-  const result = new Map<number, HistoryApiUsage>();
+): Map<number, DocumentUsage> {
+  const result = new Map<number, DocumentUsage>();
   if (ids.length === 0) {
     return result;
   }
   const placeholders = ids.map(() => "?").join(", ");
   const rows = database
     .prepare(
-      `SELECT u.document_id, ${USAGE_SUMS}
+      `SELECT u.document_id, count(*) AS events, ${USAGE_SUMS}
          FROM usage_events u
         WHERE u.document_id IN (${placeholders})
         GROUP BY u.document_id`,
@@ -131,7 +138,7 @@ function usageByDocument(
     .all(...ids)
     .map((row: unknown) => DocumentUsageRowSchema.parse(row));
   for (const row of rows) {
-    result.set(row.document_id, toUsage(row));
+    result.set(row.document_id, { events: row.events, usage: toUsage(row) });
   }
   return result;
 }
@@ -158,7 +165,8 @@ function hydrate(
     updatedAt: row.updated_at,
     messageCount: row.message_count,
     toolCallCount: row.tool_call_count,
-    usage: usage.get(row.id) ?? EMPTY_API_USAGE,
+    usageEvents: usage.get(row.id)?.events ?? 0,
+    usage: usage.get(row.id)?.usage ?? EMPTY_API_USAGE,
   }));
 }
 
@@ -337,4 +345,40 @@ export function queryTools(
     .all(...values)
     .map((row: unknown) => ToolRowSchema.parse(row));
   return { apiVersion: 1, since: options.since, rows };
+}
+
+const FacetRowSchema = z.object({
+  key: z.string().nullable(),
+  sessions: z.number(),
+});
+
+function facetRows(
+  database: Database,
+  column: "machine" | "source" | "workspace",
+): z.infer<typeof FacetRowSchema>[] {
+  return database
+    .prepare(
+      `SELECT ${column} AS key, count(*) AS sessions
+         FROM documents
+        GROUP BY ${column}
+        ORDER BY sessions DESC, key ASC`,
+    )
+    .all()
+    .map((row: unknown) => FacetRowSchema.parse(row));
+}
+
+/**
+ * Every machine, source, and workspace with at least one indexed session,
+ * counted from documents so sessions without usage still appear.
+ */
+export function queryFacets(database: Database): HistoryApiFacetsResponse {
+  return {
+    apiVersion: 1,
+    machines: facetRows(database, "machine"),
+    sources: facetRows(database, "source").map((row) => ({
+      key: parseHistorySourceName(row.key ?? "", "in index"),
+      sessions: row.sessions,
+    })),
+    workspaces: facetRows(database, "workspace"),
+  };
 }
