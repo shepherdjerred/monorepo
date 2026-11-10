@@ -68,6 +68,9 @@ struct SessionsWindow: View {
     } else {
       await model.loadSessions()
       if model.selectedSessionID != nil { await model.loadConversation() }
+      if let session = model.selectedSessionID, model.captures.session == session {
+        await model.captures.reload()
+      }
     }
   }
 }

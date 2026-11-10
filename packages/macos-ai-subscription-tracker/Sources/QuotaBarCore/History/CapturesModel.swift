@@ -39,6 +39,18 @@ public final class CapturesModel {
     await loadPage(offset: 0)
   }
 
+  /// Refetches the loaded session's first page, so requests captured since
+  /// it loaded appear. The selection survives when that capture is still
+  /// listed, and its detail is fetched again.
+  public func reload() async {
+    guard let session else { return }
+    let selected = selectedCaptureID
+    await load(session: session, force: true)
+    guard let selected, captures.contains(where: { $0.id == selected }) else { return }
+    selectedCaptureID = selected
+    await loadSelectedDetail()
+  }
+
   public func loadMore() async {
     guard hasMore, listPhase != .loading else { return }
     await loadPage(offset: captures.count)

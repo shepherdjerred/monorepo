@@ -54,6 +54,36 @@ final class CapturesModelTests: XCTestCase {
     XCTAssertEqual(targets.filter { $0.hasPrefix("/v1/captures/") }, ["/v1/captures/5"])
   }
 
+  func testReloadRefetchesAndKeepsAListedSelection() async {
+    let transport = fixtureTransport()
+    let model = CapturesModel(client: HistoryClient(transport: transport))
+    await model.reload()
+    XCTAssertEqual(model.listPhase, .idle)
+
+    await model.load(session: 42)
+    model.selectedCaptureID = 5
+    await model.loadSelectedDetail()
+    await model.reload()
+    XCTAssertEqual(model.selectedCaptureID, 5)
+    XCTAssertEqual(model.detail?.capture.id, 5)
+
+    model.selectedCaptureID = 99
+    await model.reload()
+    XCTAssertNil(model.selectedCaptureID)
+    XCTAssertNil(model.detail)
+
+    let targets = await transport.log.targets
+    XCTAssertEqual(
+      targets,
+      [
+        "/v1/captures?session=42&limit=100&offset=0",
+        "/v1/captures/5",
+        "/v1/captures?session=42&limit=100&offset=0",
+        "/v1/captures/5",
+        "/v1/captures?session=42&limit=100&offset=0",
+      ])
+  }
+
   func testAnotherSessionResetsTheSelection() async {
     let model = CapturesModel(client: HistoryClient(transport: fixtureTransport()))
     await model.load(session: 42)
