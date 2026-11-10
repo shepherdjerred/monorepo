@@ -1,8 +1,7 @@
 import { afterEach, describe, expect, test } from "vitest";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { z } from "zod";
 import { handleHistoryApiRequest } from "#lib/history/api/handler.ts";
 import {
   HISTORY_API_CONTRACTS,
@@ -26,6 +25,7 @@ import type {
   HistorySourceResult,
   UsageEventEntry,
 } from "#lib/history/types.ts";
+import { describeSchemaContracts } from "#test/support/schema-contracts.ts";
 
 const roots: string[] = [];
 const stores = new Map<HistoryIndex, CaptureStore>();
@@ -387,23 +387,7 @@ describe("history API", () => {
   });
 });
 
-describe("history API contracts", () => {
-  const schemaDir = path.join(import.meta.dirname, "../../schemas");
-
-  test.each(Object.entries(HISTORY_API_CONTRACTS))(
-    "%s matches its checked-in JSON Schema and fixture",
-    async (name, schema) => {
-      const checkedIn: unknown = JSON.parse(
-        await readFile(path.join(schemaDir, `${name}.schema.json`), "utf8"),
-      );
-      expect(z.toJSONSchema(schema)).toEqual(checkedIn);
-      const fixture: unknown = JSON.parse(
-        await readFile(path.join(schemaDir, `fixtures/${name}.json`), "utf8"),
-      );
-      expect(() => schema.parse(fixture)).not.toThrow();
-    },
-  );
-});
+describeSchemaContracts("history API contracts", HISTORY_API_CONTRACTS);
 
 describe("Codex thread titles", () => {
   test("a subagent thread without a user turn takes its first reply", () => {

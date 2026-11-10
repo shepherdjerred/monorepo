@@ -18,14 +18,25 @@ const ApiVersionSchema = z.literal(HISTORY_API_VERSION);
 /** Every timestamp is ISO 8601; sources normalize before indexing. */
 const TimestampSchema = z.iso.datetime({ offset: true });
 
+const TokenCountSchema = z.number().int().nonnegative();
+
+/**
+ * Token counts shared by session and captured-request usage. Anthropic cache
+ * reads and writes are additive; OpenAI `cachedInputTokens` is the cached
+ * subset of `inputTokens`.
+ */
+const TOKEN_COUNT_FIELDS = {
+  inputTokens: TokenCountSchema,
+  outputTokens: TokenCountSchema,
+  cacheReadTokens: TokenCountSchema,
+  cacheCreationTokens: TokenCountSchema,
+  cachedInputTokens: TokenCountSchema,
+  reasoningTokens: TokenCountSchema,
+};
+
 export const HistoryApiUsageSchema = z
   .strictObject({
-    inputTokens: z.number().int().nonnegative(),
-    outputTokens: z.number().int().nonnegative(),
-    cacheReadTokens: z.number().int().nonnegative(),
-    cacheCreationTokens: z.number().int().nonnegative(),
-    cachedInputTokens: z.number().int().nonnegative(),
-    reasoningTokens: z.number().int().nonnegative(),
+    ...TOKEN_COUNT_FIELDS,
     /** A lower bound when `costComplete` is false. */
     costUsd: z.number().nonnegative(),
     costComplete: z.boolean(),
@@ -177,17 +188,7 @@ export type HistoryApiFacetsResponse = z.infer<
 >;
 
 export const HistoryApiCaptureUsageSchema = z
-  .strictObject({
-    inputTokens: z.number().int().nonnegative(),
-    outputTokens: z.number().int().nonnegative(),
-    /** Anthropic: additive cache reads. */
-    cacheReadTokens: z.number().int().nonnegative(),
-    /** Anthropic: additive cache writes. */
-    cacheCreationTokens: z.number().int().nonnegative(),
-    /** OpenAI: the cached subset of `inputTokens`. */
-    cachedInputTokens: z.number().int().nonnegative(),
-    reasoningTokens: z.number().int().nonnegative(),
-  })
+  .strictObject(TOKEN_COUNT_FIELDS)
   .meta({ title: "HistoryApiCaptureUsage" });
 export type HistoryApiCaptureUsage = z.infer<
   typeof HistoryApiCaptureUsageSchema

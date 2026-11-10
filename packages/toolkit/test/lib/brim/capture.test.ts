@@ -39,6 +39,7 @@ import type { BrimCaptureSettings } from "#lib/brim/capture/settings.ts";
 import { loadBrimCaptureSettings } from "#lib/brim/capture/settings.ts";
 import { renderLaunchAgentPlist } from "#lib/launchd.ts";
 import { tempDir } from "#test/support/brim-capture.ts";
+import { describeSchemaContracts } from "#test/support/schema-contracts.ts";
 
 const roots: string[] = [];
 
@@ -443,20 +444,4 @@ describe("brim capture arguments", () => {
   });
 });
 
-describe("capture record contract", () => {
-  const schemaDir = path.join(import.meta.dirname, "../../../schemas");
-
-  test.each(Object.entries(BRIM_CAPTURE_CONTRACTS))(
-    "%s matches its checked-in JSON Schema and fixture",
-    async (name, schema) => {
-      const checkedIn: unknown = JSON.parse(
-        await readFile(path.join(schemaDir, `${name}.schema.json`), "utf8"),
-      );
-      expect(z.toJSONSchema(schema)).toEqual(checkedIn);
-      const fixture: unknown = JSON.parse(
-        await readFile(path.join(schemaDir, `fixtures/${name}.json`), "utf8"),
-      );
-      expect(() => schema.parse(fixture)).not.toThrow();
-    },
-  );
-});
+describeSchemaContracts("capture record contract", BRIM_CAPTURE_CONTRACTS);
