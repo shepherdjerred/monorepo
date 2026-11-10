@@ -5,6 +5,7 @@ import type { MovieNetworkActivitiesV4 } from "#shared/movie-editions/lifecycle/
 import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { readMovieAttemptIdentityV4 } from "#infrastructure/movie-editions/lifecycle/attempt-identity.ts";
 import { validMovieAttemptV4 } from "#automation/movie-editions/submission.ts";
+import { refreshMovieAttemptRequesterAccessV4 } from "#automation/movie-editions/requester-access.ts";
 
 export async function resumeMovieAttempt(
   context: MediaAutomationContext,
@@ -32,6 +33,7 @@ export async function resumeMovieAttempt(
     };
   if (["cancelled", "failed"].includes(existing.state))
     return { status: "obsolete", attemptId: null, reason: "attempt_terminal" };
+  await refreshMovieAttemptRequesterAccessV4(context, input.scope, existing);
   if (
     ["submitting", "submission_unknown"].includes(existing.state) ||
     (await validMovieAttemptV4(context, {

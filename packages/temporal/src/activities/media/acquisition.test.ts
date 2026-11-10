@@ -261,3 +261,33 @@ test("cancellation cannot invoke acquisition or file facets during a cold runtim
   }
   expect(effect).not.toHaveBeenCalled();
 });
+
+test.each(["inspectAndStageMedia", "promoteMediaFiles"] as const)(
+  "%s retries only exact local publication invocation expiry",
+  async (method) => {
+    const at = Date.now();
+    for (const reason of [
+      "publication_authority_expired",
+      "publication_storage_authority_expired",
+      "plex_library_access_required",
+      "intent_obsolete",
+    ]) {
+      const result = { status: "blocked" as const, reason };
+      const activity = createAcquisitionFileWorkerActivities(() =>
+        Promise.resolve({
+          acquisition: {
+            ...fileRuntime(vi.fn()).acquisition,
+            [method]: () => Promise.resolve(result),
+          },
+        }),
+      )[method];
+      const pending = environment(at).run(activity, input);
+      if (reason === "publication_authority_expired")
+        await expect(pending).rejects.toMatchObject({
+          type: "CompensationActivityFailure",
+          nonRetryable: false,
+        });
+      else await expect(pending).resolves.toEqual(result);
+    }
+  },
+);

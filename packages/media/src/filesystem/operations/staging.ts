@@ -1,6 +1,8 @@
 import nodePath from "node:path";
 import { lstat, readFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
+import { z } from "zod";
+import { NativeFileIdentitySchema } from "#shared/native-subtitles.ts";
 import { ContentProof } from "#filesystem/content-proof.ts";
 import { contentIO } from "#filesystem/content-io.ts";
 import type { OperationJournal } from "./journal.ts";
@@ -30,8 +32,19 @@ import {
 
 /** Only the originating FileOperations instance can consume this handle. JSON cannot reconstruct it. */
 export type PreparedImport = Readonly<{ operationId: string }>;
+/** Only the prepared-copy reader consumes this ACK; ordinary manifests stay literal v1. */
+const PreparedImportJournalSchema = ManifestSchema.extend({
+  preparedPartial: z
+    .strictObject({
+      schemaVersion: z.literal(1),
+      sizeBytes: z.string().regex(/^\d+$/u),
+      identity: NativeFileIdentitySchema,
+    })
+    .optional(),
+});
+type PreparedImportJournal = z.infer<typeof PreparedImportJournalSchema>;
 type Prepared = {
-  manifest: FileOperationManifest;
+  manifest: PreparedImportJournal;
   journalPath: string;
   journalProof: VerifiedFileProof;
   journalContent: ContentProof;
@@ -43,6 +56,25 @@ type CopyIO = {
   requireDigest: (path: string, checksum: string) => Promise<void>;
   unlink: (path: string) => Promise<void>;
 };
+
+async function capturePreparedJournal(
+  path: string,
+  manifest: PreparedImportJournal,
+  checkpoint: () => Promise<void>,
+) {
+  const content = new ContentProof();
+  await content.capture(path, checkpoint);
+  content.seal();
+  const proof = await content.verifiedFile(path);
+  const raw = await readFile(path, "utf8");
+  if (
+    createHash("sha256").update(raw).digest("hex") !== proof.sha256 ||
+    raw !== JSON.stringify(manifest)
+  )
+    throw new FileOperationConflict("Prepared import journal changed");
+  await content.digest(path);
+  return { content, proof };
+}
 
 /** Shared original copy/hash/fsync preparation, always outside database authority locks. */
 export async function copyImportPartial(input: {
@@ -98,11 +130,28 @@ export class ImportStaging {
     });
     return locks.withLock(`operation:${input.operationId}`, async () => {
       this.context.beforeEffect();
-      const manifest = await journal.prepare(descriptor);
-      if (manifest.phase === "complete")
+      const original = await journal.prepare(descriptor);
+      if (original.phase === "complete")
         throw new FileOperationConflict(
           "Completed imports require committed readback",
         );
+      const journalPath = await this.context.controlPath(
+        `journal/${input.operationId}.json`,
+      );
+      let manifest = PreparedImportJournalSchema.parse(
+        JSON.parse(await readFile(journalPath, "utf8")),
+      );
+      if (
+        JSON.stringify(ManifestSchema.parse(manifest)) !==
+        JSON.stringify(original)
+      )
+        throw new FileOperationConflict("Prepared import journal changed");
+      // Retain the actual original journal before any long copy/hash awaits.
+      const originalJournal = await capturePreparedJournal(
+        journalPath,
+        manifest,
+        () => this.context.checkpoint("hashing"),
+      );
       const staged = await this.context.controlPath(
         `staging/${input.operationId}`,
       );
@@ -116,20 +165,22 @@ export class ImportStaging {
           descriptor.source,
           input.sha256,
         );
-        const source = await lstat(descriptor.source);
-        await requireCapacity(
-          partial,
-          source.size,
-          this.context.minimumFreeBytes,
-        );
-        await copyImportPartial({
-          source: descriptor.source,
-          partial,
-          checksum: input.sha256,
-          replaceExisting: false,
-          content: this.context.content,
-          checkpoint: () => this.context.checkpoint("copying"),
-        });
+        if (manifest.preparedPartial === undefined) {
+          const source = await lstat(descriptor.source);
+          await requireCapacity(
+            partial,
+            source.size,
+            this.context.minimumFreeBytes,
+          );
+          await copyImportPartial({
+            source: descriptor.source,
+            partial,
+            checksum: input.sha256,
+            replaceExisting: false,
+            content: this.context.content,
+            checkpoint: () => this.context.checkpoint("copying"),
+          });
+        }
       }
       const content = new ContentProof();
       for (const path of [partial, staged])
@@ -141,29 +192,47 @@ export class ImportStaging {
         )) !== input.sha256
       )
         throw new FileOperationConflict("Prepared import content changed");
-      const journalPath = await this.context.controlPath(
-        `journal/${input.operationId}.json`,
+      await originalJournal.content.digest(journalPath);
+      if (manifest.phase === "prepared") {
+        const identity = await content.reviewIdentity(partial);
+        const verified = await content.verifiedFile(partial);
+        const acknowledged = manifest.preparedPartial;
+        if (acknowledged === undefined) {
+          // Only this invocation's actual completed copy may create its receipt.
+          // Cold callers must never adopt a pre-existing unacknowledged partial.
+          this.context.beforeEffect();
+          manifest = {
+            ...manifest,
+            preparedPartial: {
+              schemaVersion: 1,
+              sizeBytes: verified.sizeBytes,
+              identity,
+            },
+          };
+          await journal.save(manifest, {
+            validateBeforeInstall: async () => {
+              await originalJournal.content.digest(journalPath);
+            },
+          });
+        } else if (
+          acknowledged.sizeBytes !== verified.sizeBytes ||
+          JSON.stringify(acknowledged.identity) !== JSON.stringify(identity)
+        )
+          throw new FileOperationConflict(
+            "Prepared import partial identity changed",
+          );
+      }
+      const acknowledgedJournal = await capturePreparedJournal(
+        journalPath,
+        manifest,
+        () => this.context.checkpoint("hashing"),
       );
-      const journalContent = new ContentProof();
-      await journalContent.capture(journalPath, () =>
-        this.context.checkpoint("hashing"),
-      );
-      journalContent.seal();
-      const journalProof = await journalContent.verifiedFile(journalPath);
-      const raw = await readFile(journalPath, "utf8");
-      if (
-        createHash("sha256").update(raw).digest("hex") !==
-          journalProof.sha256 ||
-        raw !== JSON.stringify(manifest)
-      )
-        throw new FileOperationConflict("Prepared import journal changed");
-      await requireFileIdentity(journalPath, journalProof);
       const handle = Object.freeze({ operationId: input.operationId });
       this.prepared.set(handle, {
         manifest,
         journalPath,
-        journalProof,
-        journalContent,
+        journalProof: acknowledgedJournal.proof,
+        journalContent: acknowledgedJournal.content,
         content,
         partial,
         staged,
@@ -222,6 +291,9 @@ export class ImportStaging {
         await requireFileIdentity(journalPath, journalProof);
         await journalContent.digest(journalPath);
         const result = { ...manifest, phase: "staged" as const };
+        // The acknowledgment names the old partial inode/ctime. Once accepted,
+        // ordinary staged/publication journals retain their original literal shape.
+        delete result.preparedPartial;
         await saveManifest(journalPath, result, {
           beforeInstall: beforeEffect,
         });

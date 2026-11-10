@@ -12,9 +12,27 @@ const simplified = new Set(tables.simplifiedOnly);
 const traditional = new Set(tables.traditionalOnly);
 const machineLabel =
   /\bAI\b|machine[- ]translated|machine translation|auto[- ]translated|机器翻译|機器翻譯|机翻|機翻|自动翻译|自動翻譯|AI翻译|AI翻譯/iu;
+const machineCredit =
+  /^(?:(?:subtitles?|captions?|translation|script)\s*(?:[:–—-]\s*)?(?:(?:translated|generated|created|produced)\s+)?(?:by|with|using)\s+(?:AI|artificial intelligence|machine translation)\b|(?:translated|generated|created|produced|powered)\s+(?:by|with|using)\s+(?:AI|artificial intelligence|machine translation)\b|(?:AI|machine|auto)[- ](?:translated|translation|generated)(?:\s+(?:subtitles?|captions?))?\s*[.!]?$|机器翻译|機器翻譯|机翻|機翻|自动翻译|自動翻譯|AI翻译|AI翻譯)/iu;
 
 export function isMachineLabelled(text: string): boolean {
   return machineLabel.test(text);
+}
+
+/** Timed dialogue may discuss AI; only an explicit caption credit/header is provenance. */
+function hasMachineCredit(text: string, dialogue: string): boolean {
+  return [text, dialogue].some((body) =>
+    body.split("\n").some((line) =>
+      machineCredit.test(
+        line
+          .replaceAll(/<[^>\n]+>/gu, "")
+          .trim()
+          .replace(/^[;#([\s]+/u, "")
+          .replace(/[)\]]+$/u, "")
+          .replace(/^(?:NOTE|Title|Comment)\s*(?::\s*)?/iu, ""),
+      ),
+    ),
+  );
 }
 
 /** Distinct script-exclusive characters provide evidence; shared Han characters provide none. */
@@ -82,7 +100,10 @@ export function validateSubtitle(input: {
   if (text.includes("\0") || /<!doctype|<html/iu.test(text))
     throw new Error("Subtitle contains invalid text");
   const dialogue = subtitleDialogue(text, format);
-  if (isMachineLabelled(input.provenanceText) || isMachineLabelled(text))
+  if (
+    isMachineLabelled(input.provenanceText) ||
+    hasMachineCredit(text, dialogue)
+  )
     throw new Error("Subtitle is labelled as machine translated");
   const evidence = chineseScriptEvidence(dialogue);
   if (

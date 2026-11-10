@@ -33,6 +33,7 @@ import { movieRetryTorrentV1 } from "./torrent.ts";
 import { submitMovieTorrentV4 } from "#automation/movie-editions/submission.ts";
 import { resumeMovieAttempt } from "./resume.ts";
 import { nativeJson } from "#infrastructure/native-recovery/snapshots.ts";
+import { refreshMovieAttemptRequesterAccessV4 } from "#automation/movie-editions/requester-access.ts";
 
 type Input = {
   command: MovieOperationV4;
@@ -87,6 +88,11 @@ export async function reconcileMovieRetryV4(
       invocation.budget,
     );
     assertRetryCapture(source, input.capture);
+    await refreshMovieAttemptRequesterAccessV4(
+      context,
+      input.command.scope,
+      source.attempt,
+    );
     const terminal = await movieRetryTerminalV1(
       context,
       {

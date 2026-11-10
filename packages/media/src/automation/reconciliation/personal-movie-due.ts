@@ -6,7 +6,8 @@ import { queueOperation, serializable } from "#automation/store.ts";
 import { lockRuntimeAuthority } from "#infrastructure/handoff/authority.ts";
 import { eligibleAcquisitionSponsors } from "#infrastructure/movie-editions/authority.ts";
 import { lockMovieCommand } from "#infrastructure/movie-editions/locks.ts";
-import { NativeArchiveScopeProtection } from "#infrastructure/native-archive/errors.ts";
+import { MediaError } from "#application/errors.ts";
+import { refreshMovieScopeRequestersV4 } from "#automation/movie-editions/requester-access.ts";
 import { movieTargetAfter } from "./movie-cursor.ts";
 import {
   bindPlexTransactionDeadline,
@@ -37,6 +38,7 @@ async function queuePersonalMovieDueV4(
     throw new Error(
       "Personal movie due target lost its configured movie access",
     );
+  await refreshMovieScopeRequestersV4(context, scope);
   await serializable(context.db, async (tx) => {
     const { target } = await lockMovieCommand(tx, scope);
     if (
@@ -151,7 +153,7 @@ export async function sweepPersonalMovieDueV4(
     try {
       await queuePersonalMovieDueV4(context, scope);
     } catch (error) {
-      if (!(error instanceof NativeArchiveScopeProtection)) throw error;
+      if (!(error instanceof MediaError)) throw error;
       invocation.execution.assertActive();
       const bucket = Math.floor(
         invocation.execution.observed.wall / 21_600_000,

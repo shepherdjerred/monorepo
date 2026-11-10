@@ -22,6 +22,8 @@ import type { PlexVerificationProtected } from "#shared/plex-binding/observation
 import type { MovieChoiceAccess } from "#infrastructure/movie-editions/access.ts";
 import type { PlexBindingFreshness } from "#shared/plex-binding/contract.ts";
 import { movieRollbackForwardFenceV1 } from "#infrastructure/movie-editions/rollback/dispatch.ts";
+import { MediaError } from "#application/errors.ts";
+import { refreshMovieAttemptRequesterAccessV4 } from "./requester-access.ts";
 
 type RejectionRecorder = (input: {
   expected: PlexBindingExpected;
@@ -47,6 +49,7 @@ export async function publishMoviePlexV4(
   const input = MovieAttemptOperationV4Schema.parse(raw);
   const budget =
     context.movieManagement?.budget ?? new PublicationAuthorityReadBudget();
+  context = { ...context, movieManagement: { execution, budget } };
   const prior = await readMoviePlexReceiptV2(context.db, input, budget);
   execution.assertActive();
   execution.signal.throwIfAborted();
@@ -61,6 +64,11 @@ export async function publishMoviePlexV4(
   try {
     if (!(await context.gates.acquisition()))
       return { status: "blocked", reason: "acquisition_disabled" };
+    await refreshMovieAttemptRequesterAccessV4(
+      context,
+      input.scope,
+      input.attemptId,
+    );
     const access = requireMovieChoiceAccess(
       (await networkMovieAccess(context, [input.scope.mediaId])) ?? {},
     );
@@ -136,24 +144,26 @@ export async function publishMoviePlexV4(
   } catch (error) {
     execution.assertActive();
     execution.signal.throwIfAborted();
-    if (
-      !(error instanceof PlexBindingProtection) &&
-      !(error instanceof MovieChoiceProtection)
-    )
-      throw error;
+    if (!(error instanceof MediaError)) throw error;
     const completed = await readMoviePlexReceiptV2(context.db, input, budget);
     execution.assertActive();
     execution.signal.throwIfAborted();
-    if (completed !== null) return { status: "available", reason: null };
+    return completed === null
+      ? moviePublicationFailure(error)
+      : { status: "available", reason: null };
+  }
+}
+
+function moviePublicationFailure(error: MediaError): Result {
+  if (error instanceof MovieChoiceProtection)
+    return { status: "obsolete", reason: error.code };
+  if (error instanceof PlexBindingProtection)
     return {
       status:
-        error instanceof MovieChoiceProtection ||
-        error.reason === "scope_changed" ||
-        error.reason === "ownership_changed"
+        error.reason === "scope_changed" || error.reason === "ownership_changed"
           ? "obsolete"
           : "waiting",
-      reason:
-        error instanceof MovieChoiceProtection ? error.code : error.reason,
+      reason: error.reason,
     };
-  }
+  return { status: "blocked", reason: error.code };
 }

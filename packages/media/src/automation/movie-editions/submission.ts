@@ -30,6 +30,7 @@ import type { MediaNetworkActivities } from "#shared/automation.ts";
 import { authorizedMovieSubmissionV4 } from "./submission-authority.ts";
 import { MediaError } from "#application/errors.ts";
 import { claimMovieTransferReuseV1 } from "./transfer-reuse/claim.ts";
+import { refreshMovieAttemptRequesterAccessV4 } from "./requester-access.ts";
 
 async function prepareMovieTorrent(
   context: MediaAutomationContext,
@@ -155,6 +156,8 @@ export async function submitMovieTorrentV4(
     input.scope,
     context.movieManagement.budget,
   );
+  if (attempt.state !== "imported" && attempt.state !== "completed")
+    await refreshMovieAttemptRequesterAccessV4(context, input.scope, attempt);
   const prerequisite = await submissionPrerequisiteV4(context, attempt, input);
   if (prerequisite !== null) return prerequisite;
   const recovering =

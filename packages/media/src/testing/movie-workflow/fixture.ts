@@ -25,7 +25,11 @@ import { ObserveMoviePlexHintV4Schema } from "#shared/plex-events/contract.ts";
 /** Full producer journey starts at real consent/outbox, before any attempt, torrent or file publication. */
 export async function createMovieWorkflowFixture(
   edition: MovieEditionKey,
-  options: { missingEnglish?: boolean; bytes?: Uint8Array } = {},
+  options: {
+    missingEnglish?: boolean;
+    bytes?: Uint8Array;
+    plexAccountId?: string;
+  } = {},
 ) {
   const cluster = await startMediaTestPostgres();
   const db = cluster.database;
@@ -45,7 +49,7 @@ export async function createMovieWorkflowFixture(
     });
     const user = await db.mediaUser.create({
       data: {
-        plexAccountId: crypto.randomUUID(),
+        plexAccountId: options.plexAccountId ?? crypto.randomUUID(),
         displayName: "Synthetic requester",
       },
     });
