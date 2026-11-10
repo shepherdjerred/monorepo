@@ -1,17 +1,34 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Outlet, ScrollRestoration, useNavigate } from "react-router";
+import {
+  Outlet,
+  ScrollRestoration,
+  useLocation,
+  useNavigate,
+  useSearchParams,
+} from "react-router";
 import { Plus, Search } from "lucide-react";
 import { api, type BootstrapData } from "#client/data/api.ts";
 import { ErrorNotice, Modal } from "#client/ui/ui.tsx";
-import { NewIssue } from "#client/issues/issue-form.tsx";
+import { NewIssue, type IssuePrefill } from "#client/issues/issue-form.tsx";
+import { ControlsLayer } from "#client/controls/bulk-bar.tsx";
+import { SearchPickerHost } from "#client/controls/search-picker.tsx";
+import { selectionScope } from "#client/controls/selection.ts";
+import { currentActor } from "#client/data/identity.ts";
+import { viewPrefill } from "#client/views/filters.ts";
 import { IssueDetail } from "#client/issues/issue-detail.tsx";
 import { Palette } from "./palette.tsx";
 import { Sidebar, BottomNavigation, MoreSheet } from "./navigation.tsx";
 import { useIssueList, usePeek } from "#client/issues/issue-list-query.ts";
 import { useIssue } from "#client/issues/issue-query.ts";
-import { shortcutHelp, useShortcuts } from "./shortcuts.ts";
-import { shellActions, type Overlay } from "./shell-actions.ts";
+import { useShortcuts } from "./shortcuts.ts";
+import { ShortcutSheet } from "./shortcut-sheet.tsx";
+import {
+  actionTargets,
+  shellActions,
+  type Overlay,
+  type Shell as ShellState,
+} from "./shell-actions.ts";
 import { useRoute, type RouteInfo } from "./route.ts";
 import { useTeamKey } from "./team.ts";
 import { Toaster } from "#client/ui/toast.tsx";
@@ -54,6 +71,8 @@ export function Shell() {
     queryFn: () => api.meta.bootstrap.query(),
   });
   const navigate = useNavigate();
+  const location = useLocation();
+  const [params] = useSearchParams();
   const route = useRoute();
   const data = bootstrap.data;
   const teamKey = useTeamKey(data);
@@ -63,7 +82,24 @@ export function Shell() {
   useLiveUpdates(data?.liveUpdatesEnabled === true);
   const [overlay, setOverlay] = useState<Overlay>();
   const [current, setCurrent] = useState<string>();
-  const actions = shellActions({
+  // Each New issue opens fresh, with the fields the caller filled in.
+  const [draft, setDraft] = useState<{ id: number; prefill: IssuePrefill }>({
+    id: 0,
+    prefill: {},
+  });
+  const scope = route.isList
+    ? selectionScope(location.pathname, location.search)
+    : "";
+  const prefill = viewPrefill(params, {
+    teamKey: teamKey ?? "",
+    projectSlug: route.projectSlug,
+    me: currentActor().key,
+  });
+  const create = (next: IssuePrefill = {}) => {
+    setDraft((known) => ({ id: known.id + 1, prefill: next }));
+    setOverlay("create");
+  };
+  const shellState: ShellState = {
     route,
     list: issues,
     peek,
@@ -71,7 +107,15 @@ export function Shell() {
     navigate,
     overlay,
     setOverlay,
-  });
+    selectionScope: scope,
+    create,
+    prefill,
+  };
+  const actions = shellActions(shellState);
+  const loaded = useMemo(
+    () => issues.items.map(({ identifier }) => identifier),
+    [issues.items],
+  );
   const onKeyDown = useShortcuts(
     (key) => actions[key]?.() ?? false,
     overlay !== undefined,
@@ -81,7 +125,7 @@ export function Shell() {
     setOverlay(undefined);
   };
   const newIssue = () => {
-    setOverlay("create");
+    create();
   };
   const context: ShellContext | undefined =
     data === undefined || teamKey === undefined
@@ -94,7 +138,8 @@ export function Shell() {
           current,
           setCurrent,
           openPeek: peek.open,
-          create: newIssue,
+          create,
+          selectionScope: scope,
         };
   return (
     <div className="app-shell" ref={onKeyDown}>
@@ -168,12 +213,16 @@ export function Shell() {
       {context !== undefined && (
         <>
           <NewIssue
+            key={draft.id}
             open={overlay === "create"}
             close={closeOverlay}
             bootstrap={context.bootstrap}
             teamKey={context.teamKey}
-            onCreated={(value) => {
-              void navigate(`/issues/${value}`);
+            prefill={draft.prefill}
+            onCreated={(value, view) => {
+              if (view) {
+                void navigate(`/issues/${value}`);
+              }
             }}
           />
           <Modal
@@ -181,7 +230,9 @@ export function Shell() {
             open={peek.identifier !== undefined}
             onClose={peek.close}
             className="peek"
+            pickerScope="peek"
           >
+            <SearchPickerHost bootstrap={context.bootstrap} scope="peek" />
             {peek.identifier !== undefined && (
               <IssueDetail
                 identifier={peek.identifier}
@@ -193,15 +244,17 @@ export function Shell() {
           </Modal>
         </>
       )}
-      {overlay === "palette" && (
+      {overlay === "palette" && context !== undefined && (
         <Palette
-          currentIssue={peek.identifier ?? route.identifier}
+          bootstrap={context.bootstrap}
+          targets={actionTargets(shellState)}
+          prefill={prefill}
           action={(key) => actions[key]?.()}
           close={closeOverlay}
           navigate={(to) => {
             void navigate(to);
           }}
-          create={newIssue}
+          create={create}
         />
       )}
       <Modal
@@ -209,16 +262,7 @@ export function Shell() {
         open={overlay === "help"}
         onClose={closeOverlay}
       >
-        <dl className="shortcut-list">
-          {shortcutHelp.map(([keys, description]) => (
-            <div key={keys}>
-              <dt>{description}</dt>
-              <dd>
-                <kbd>{keys}</kbd>
-              </dd>
-            </div>
-          ))}
-        </dl>
+        <ShortcutSheet />
       </Modal>
       <MoreSheet
         open={overlay === "more"}
@@ -233,6 +277,14 @@ export function Shell() {
         }}
         moreOpen={overlay === "more"}
       />
+      {context !== undefined && (
+        <ControlsLayer
+          bootstrap={context.bootstrap}
+          teamKey={context.teamKey}
+          scope={scope}
+          loaded={loaded}
+        />
+      )}
       <Toaster />
       <LiveAnnouncer />
       <ScrollRestoration />

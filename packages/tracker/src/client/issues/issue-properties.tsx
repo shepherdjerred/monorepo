@@ -1,123 +1,165 @@
-import { Trash2, ThumbsUp } from "lucide-react";
-import { ActorChip, Swatch } from "#client/ui/ui.tsx";
+import type { ReactNode } from "react";
+import { Folder, Tag, Trash2, ThumbsUp, UserRoundX } from "lucide-react";
+import { ActorChip, Avatar, Swatch } from "#client/ui/ui.tsx";
 import { AbsoluteTime } from "#client/ui/time.tsx";
 import type { BootstrapData, IssueDetailData } from "#client/data/api.ts";
-import { priorities, type IssueChange } from "#client/data/issue-changes.ts";
+import type { IssueChange } from "#client/data/issue-changes.ts";
 import { editIssue } from "#client/data/mutations.ts";
+import { EnumPicker } from "#client/controls/enum-picker.tsx";
+import { pickProperty } from "#client/controls/issue-actions.ts";
+import {
+  priorityOptions,
+  stateOptions,
+  teamStates,
+} from "#client/controls/property-options.tsx";
+
 type Props = {
   issue: IssueDetailData;
   bootstrap: BootstrapData;
   disabled: boolean;
   onDelete: () => void;
 };
+
+/** A property set through the searchable picker, shown as its value. */
+function PickerField({
+  id,
+  name,
+  disabled,
+  open,
+  children,
+}: {
+  id: string;
+  name: string;
+  disabled: boolean;
+  open: (anchor: HTMLElement) => void;
+  children: ReactNode;
+}) {
+  return (
+    <div className="property-field">
+      <span className="property-name" id={`${id}-name`}>
+        {name}
+      </span>
+      <button
+        type="button"
+        id={id}
+        className="property-value"
+        aria-haspopup="dialog"
+        aria-labelledby={`${id}-name ${id}`}
+        disabled={disabled}
+        onClick={(event) => {
+          open(event.currentTarget);
+        }}
+      >
+        {children}
+      </button>
+    </div>
+  );
+}
+
 export function IssueProperties({
   issue,
   bootstrap,
   disabled,
   onDelete,
 }: Props) {
-  const states = bootstrap.states.filter(
-    ({ teamId }) => teamId === issue.teamId,
-  );
   // Each edit shows at once and is saved in order; failures arrive as toasts.
   const update = (change: Exclude<IssueChange, { kind: "move" }>) => {
     void editIssue(issue.identifier, change);
   };
+  const targets = [issue.identifier];
   return (
     <aside className="properties">
       <h2>Properties</h2>
       <label>
         Status
-        <select
+        <EnumPicker
           id="property-state"
-          aria-label="Status"
+          label="Status"
           disabled={disabled}
           value={issue.state.name}
-          onChange={(e) => {
-            update({ kind: "state", stateName: e.target.value });
+          options={stateOptions(teamStates(bootstrap, issue.teamId))}
+          onChange={(stateName) => {
+            update({ kind: "state", stateName });
           }}
-        >
-          {states.map((s) => (
-            <option key={s.id}>{s.name}</option>
-          ))}
-        </select>
+        />
       </label>
       <label>
         Priority
-        <select
+        <EnumPicker
           id="property-priority"
+          label="Priority"
           disabled={disabled}
-          value={issue.priority}
-          onChange={(e) => {
-            update({ kind: "priority", priority: Number(e.target.value) });
+          value={String(issue.priority)}
+          options={priorityOptions}
+          onChange={(priority) => {
+            update({ kind: "priority", priority: Number(priority) });
           }}
-        >
-          {priorities.map((name, i) => (
-            <option key={name} value={i}>
-              {name}
-            </option>
-          ))}
-        </select>
+        />
       </label>
-      <label>
-        Assignee
-        <select
-          id="property-assignee"
-          disabled={disabled}
-          value={issue.assignee?.key ?? ""}
-          onChange={(e) => {
-            update({ kind: "assignee", assigneeKey: e.target.value || null });
-          }}
-        >
-          <option value="">Unassigned</option>
-          {bootstrap.actors.map((a) => (
-            <option key={a.id} value={a.key}>
-              {a.name} · {a.key}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label>
-        Project
-        <select
-          id="property-project"
-          disabled={disabled}
-          value={issue.project?.slug ?? ""}
-          onChange={(e) => {
-            update({ kind: "project", projectSlug: e.target.value || null });
-          }}
-        >
-          <option value="">No project</option>
-          {bootstrap.projects.map((p) => (
-            <option key={p.id} value={p.slug}>
-              {p.name}
-            </option>
-          ))}
-        </select>
-      </label>
-      <fieldset className="property-labels" id="property-labels">
-        <legend>Labels</legend>
-        {bootstrap.labels
-          .filter(({ teamId }) => teamId === issue.teamId)
-          .map((label) => (
-            <label key={label.id}>
-              <input
-                type="checkbox"
-                disabled={disabled}
-                checked={issue.labels.some(({ id }) => id === label.id)}
-                onChange={(e) => {
-                  update({
-                    kind: "label",
-                    name: label.name,
-                    add: e.target.checked,
-                  });
-                }}
-              />
-              <Swatch color={label.color} />
-              {label.name}
-            </label>
-          ))}
-      </fieldset>
+      <PickerField
+        id="property-assignee"
+        name="Assignee"
+        disabled={disabled}
+        open={(anchor) => {
+          pickProperty("assignee", targets, anchor);
+        }}
+      >
+        {issue.assignee === null ? (
+          <>
+            <UserRoundX size={15} aria-hidden="true" />
+            <span className="muted">Unassigned</span>
+          </>
+        ) : (
+          <>
+            <Avatar actor={issue.assignee} decorative />
+            <span>{issue.assignee.name}</span>
+          </>
+        )}
+      </PickerField>
+      <PickerField
+        id="property-project"
+        name="Project"
+        disabled={disabled}
+        open={(anchor) => {
+          pickProperty("project", targets, anchor);
+        }}
+      >
+        {issue.project === null ? (
+          <>
+            <Folder size={15} aria-hidden="true" />
+            <span className="muted">No project</span>
+          </>
+        ) : (
+          <>
+            <Swatch color={issue.project.color} />
+            <span>{issue.project.name}</span>
+          </>
+        )}
+      </PickerField>
+      <PickerField
+        id="property-labels"
+        name="Labels"
+        disabled={disabled}
+        open={(anchor) => {
+          pickProperty("labels", targets, anchor);
+        }}
+      >
+        {issue.labels.length === 0 ? (
+          <>
+            <Tag size={15} aria-hidden="true" />
+            <span className="muted">Add labels</span>
+          </>
+        ) : (
+          <span className="property-labels">
+            {issue.labels.map((label) => (
+              <span className="label" key={label.id}>
+                <Swatch color={label.color} />
+                {label.name}
+              </span>
+            ))}
+          </span>
+        )}
+      </PickerField>
       <button
         id="issue-vote"
         className={`vote-button ${issue.viewerVoted ? "voted" : ""}`}

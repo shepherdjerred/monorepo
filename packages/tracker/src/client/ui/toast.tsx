@@ -6,10 +6,30 @@ const manager = Toast.createToastManager();
 
 /**
  * Confirm an outcome. Toasts are the app's live region for outcomes; the
- * live-update announcer is the only other one.
+ * live-update announcer is the only other one. An `action` offers one
+ * follow-up, such as opening what was just created.
  */
-export function notify(title: string) {
-  return manager.add({ title, type: "info", timeout: 4000 });
+export function notify(
+  title: string,
+  action?: { label: string; run: () => void },
+) {
+  const id: string = manager.add({
+    title,
+    type: "info",
+    timeout: 4000,
+    ...(action === undefined
+      ? {}
+      : {
+          actionProps: {
+            children: action.label,
+            onClick: () => {
+              manager.close(id);
+              action.run();
+            },
+          },
+        }),
+  });
+  return id;
 }
 
 /** Report a failure; announced assertively and shown for longer. */

@@ -2,6 +2,7 @@ import { Dialog } from "@base-ui/react/dialog";
 import { X } from "lucide-react";
 import type { ReactNode } from "react";
 import { priorities } from "#client/data/issue-changes.ts";
+import { PriorityGlyph } from "./icons.tsx";
 
 export function Modal({
   title,
@@ -9,23 +10,37 @@ export function Modal({
   onClose,
   children,
   className = "",
+  pickerScope,
+  onEscape,
 }: {
   title: string;
   open: boolean;
   onClose: () => void;
   children: ReactNode;
   className?: string;
+  /** Pickers opened inside render in the host with this scope. */
+  pickerScope?: string;
+  /** Handle Escape first; returning true keeps the dialog open. */
+  onEscape?: () => boolean;
 }) {
   return (
     <Dialog.Root
       open={open}
-      onOpenChange={(value) => {
-        if (!value) onClose();
+      onOpenChange={(value, details) => {
+        if (value) return;
+        if (details.reason === "escape-key" && onEscape?.() === true) {
+          details.cancel();
+          return;
+        }
+        onClose();
       }}
     >
       <Dialog.Portal>
         <Dialog.Backdrop className="modal-backdrop" />
-        <Dialog.Popup className={`modal ${className}`}>
+        <Dialog.Popup
+          className={`modal ${className}`}
+          data-picker-scope={pickerScope}
+        >
           <div className="modal-heading">
             <Dialog.Title>{title}</Dialog.Title>
             <Dialog.Close className="icon-button" aria-label="Close">
@@ -91,7 +106,7 @@ export function Priority({ value }: { value: number }) {
       title={priorities[value]}
       aria-label={priorities[value]}
     >
-      {["—", "!", "▰", "▰", "▱"][value]}
+      <PriorityGlyph value={value} />
     </span>
   );
 }

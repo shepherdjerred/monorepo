@@ -75,6 +75,27 @@ or at once when the tab is hidden or unloaded, in a request that outlives the
 page. Unsent text is kept in `sessionStorage` per form and the browser asks
 before a tab holding any is closed.
 
+## Browser controls
+
+Status, priority, grouping and ordering use Chromium's customizable
+`<select>` (`appearance: base-select`) where the browser supports it and the
+same component renders a Base UI Select elsewhere. Assignee, labels and
+project use one Base UI Combobox, opened from the issue panel, list rows,
+board cards, the bulk bar or the New issue dialog; relation targets search
+`search.query`. A list's layout lives in its URL with the filter parameters
+it always had: `group` (`status` by default, or `priority`, `project`,
+`assignee`, `none`), repeated `collapsed` group keys, repeated `hide` row
+properties (`labels`, `project`, `date`, `assignee`) and `sort`. A grouped
+list loads up to ten pages at once so its groups fill in before you scroll.
+
+A selection belongs to one list address (its peek aside) and is not
+stored. A bulk action saves each issue's edit in parallel, as a single edit
+would, under one toast whose Undo reverts every edit that was not already
+rolled back; failures are reported once, by identifier. Every shortcut is
+declared once in `src/client/shell/shortcuts.ts`, which both the key handler
+and the help sheet read; only the chords listed there are taken from the
+browser.
+
 ## Contract and invariants
 
 Consumers import `@shepherdjerred/tracker/contract`: the `AppRouter` type and
@@ -282,8 +303,12 @@ attachment retention and deletion history. Browser checks cover desktop and
 mobile issue creation, comments, votes, attachments, search, themes, peeks and
 board input, plus history and link behavior (`?peek=`, Back, modified clicks,
 filter typing), keyboard navigation, document titles, and an axe scan of the
-list, board, issue, toasts, palette and settings in both color schemes that
-fails on any serious or critical violation. They also cover the client data
+list, board, issue, toasts, palette, settings and the open pickers, context
+menu, bulk bar and filter popover in both color schemes that fails on any
+serious or critical violation. The controls suites cover inline row edits,
+the searchable pickers, bulk edits with one Undo, the context menu and its
+long press, grouping and collapsing, filter chips, the palette's nested
+steps and the keyboard shortcuts. They also cover the client data
 layer: optimistic edits and Undo, the deferred delete, drafts, and a
 260-issue list that must stay windowed, page in on scroll and keep its scroll
 position across Back and a reload. The image smoke checks the non-root runtime, Prisma engine and

@@ -1,18 +1,30 @@
 type Reveal = (identifier: string) => boolean;
 let reveal: Reveal | undefined;
+let order: (() => readonly string[]) | undefined;
 
 /**
  * A windowed list renders only the rows near the viewport. It registers how
  * to bring any of its issues into the window so the keyboard can reach rows
- * that are not in the document yet.
+ * that are not in the document yet, and the order it shows them in, which
+ * grouping and collapsed groups make different from the order they loaded.
  */
-export function registerReveal(next: Reveal) {
+export function registerReveal(
+  next: Reveal,
+  visible?: () => readonly string[],
+) {
   reveal = next;
+  order = visible;
   return () => {
     if (reveal === next) {
       reveal = undefined;
+      order = undefined;
     }
   };
+}
+
+/** The identifiers the mounted list shows, in order, if a list is mounted. */
+export function visibleOrder() {
+  return order?.();
 }
 
 const rowOf = (identifier: string) =>

@@ -5,6 +5,7 @@ import { z } from "zod";
 import type { IssueDetailData } from "#client/data/api.ts";
 import { addRelation, removeRelation } from "#client/data/detail-mutations.ts";
 import { Modal } from "#client/ui/ui.tsx";
+import { IssueSearchCombobox } from "#client/controls/issue-search.tsx";
 
 const RelationTypeSchema = z.enum([
   "related",
@@ -12,6 +13,9 @@ const RelationTypeSchema = z.enum([
   "blocked-by",
   "duplicate",
 ]);
+
+// A relation needs a whole identifier; a search result fills one in.
+const identifierPattern = /^[A-Za-z][A-Za-z0-9]*-[1-9]\d*$/u;
 
 export function IssueRelations({
   issue,
@@ -30,7 +34,7 @@ export function IssueRelations({
     setSaving(true);
     const outcome = await addRelation(
       issue.identifier,
-      target.toUpperCase(),
+      target.trim().toUpperCase(),
       type,
     );
     setSaving(false);
@@ -110,19 +114,19 @@ export function IssueRelations({
             </select>
           </label>
           <label>
-            Issue identifier
-            <input
+            Issue
+            <IssueSearchCombobox
+              label="Issue"
               value={target}
-              onChange={(e) => {
-                setTarget(e.target.value);
-              }}
-              placeholder="AI-123"
-              required
-              pattern="[A-Za-z][A-Za-z0-9]*-[1-9][0-9]*"
+              onValueChange={setTarget}
+              exclude={[issue.identifier]}
             />
           </label>
           <div className="actions">
-            <button className="primary" disabled={saving}>
+            <button
+              className="primary"
+              disabled={saving || !identifierPattern.test(target.trim())}
+            >
               Add relation
             </button>
           </div>

@@ -3,8 +3,11 @@ import { NavLink, useSearchParams } from "react-router";
 import { LayoutGrid, List, Plus, Search } from "lucide-react";
 import type { BootstrapData } from "#client/data/api.ts";
 import { Empty, ErrorNotice } from "#client/ui/ui.tsx";
+import { EnumPicker } from "#client/controls/enum-picker.tsx";
+import { IssueContextMenu } from "#client/controls/issue-menu.tsx";
+import { DisplayMenu } from "#client/views/display-menu.tsx";
+import { FilterBar } from "#client/views/filter-bar.tsx";
 import { IssueList } from "./issue-list.tsx";
-import { FilterMenu } from "./filter-menu.tsx";
 import { useShell } from "#client/shell/shell-context.ts";
 import { rememberTeam } from "#client/shell/team.ts";
 
@@ -14,7 +17,7 @@ const Board = lazy(async () => {
 });
 
 export function IssueView() {
-  const { bootstrap, teamKey, view, list, create } = useShell();
+  const { bootstrap, teamKey, view, list, create, selectionScope } = useShell();
   const [params] = useSearchParams();
   const team = bootstrap.teams.find(({ key }) => key === teamKey);
   const shared = new URLSearchParams(params);
@@ -59,38 +62,56 @@ export function IssueView() {
           </NavLink>
         </div>
       </div>
-      <Filters bootstrap={bootstrap} teamKey={teamKey} />
+      <Toolbar
+        bootstrap={bootstrap}
+        teamKey={teamKey}
+        board={view === "board"}
+        projectRoute={view === "project"}
+      />
       {list.error !== null && <ErrorNotice error={list.error} />}
-      <div
+      <IssueContextMenu
+        bootstrap={bootstrap}
+        items={list.items}
+        scope={selectionScope}
         className="issue-results"
-        aria-busy={list.busy}
-        data-placeholder={list.placeholder}
       >
-        {list.loading ? (
-          <div className="loading">Loading issues…</div>
-        ) : view === "board" ? (
-          <Suspense fallback={<div className="loading">Loading board…</div>}>
-            <Board
-              items={list.items}
-              states={bootstrap.states.filter(
-                ({ teamId }) => teamId === team?.id,
-              )}
-            />
-          </Suspense>
-        ) : list.items.length === 0 ? (
-          <Empty title="A little room to think">
-            <p>
-              No issues match this view. Create an issue or adjust your filters.
-            </p>
-            <button onClick={create} disabled={!bootstrap.writesEnabled}>
-              <Plus size={14} />
-              Create issue
-            </button>
-          </Empty>
-        ) : (
-          <IssueList />
-        )}
-      </div>
+        <div
+          className="issue-results-body"
+          aria-busy={list.busy}
+          data-placeholder={list.placeholder}
+        >
+          {list.loading ? (
+            <div className="loading">Loading issues…</div>
+          ) : view === "board" ? (
+            <Suspense fallback={<div className="loading">Loading board…</div>}>
+              <Board
+                items={list.items}
+                states={bootstrap.states.filter(
+                  ({ teamId }) => teamId === team?.id,
+                )}
+              />
+            </Suspense>
+          ) : list.items.length === 0 ? (
+            <Empty title="A little room to think">
+              <p>
+                No issues match this view. Create an issue or adjust your
+                filters.
+              </p>
+              <button
+                onClick={() => {
+                  create();
+                }}
+                disabled={!bootstrap.writesEnabled}
+              >
+                <Plus size={14} />
+                Create issue
+              </button>
+            </Empty>
+          ) : (
+            <IssueList />
+          )}
+        </div>
+      </IssueContextMenu>
     </>
   );
 }
@@ -118,12 +139,12 @@ function SearchFilter() {
   );
   return (
     <div className="filter-search">
-      <Search size={14} />
+      <Search size={14} aria-hidden="true" />
       <input
         ref={cancelOnUnmount}
         id="issue-search"
         aria-label="Search issues"
-        placeholder="Filter issues…"
+        placeholder="Search…"
         value={text}
         onChange={(event) => {
           const value = event.target.value;
@@ -145,113 +166,49 @@ function SearchFilter() {
   );
 }
 
-function Filters({
+function Toolbar({
   bootstrap,
   teamKey,
+  board,
+  projectRoute,
 }: {
   bootstrap: BootstrapData;
   teamKey: string;
+  board: boolean;
+  projectRoute: boolean;
 }) {
   const [params, setParams] = useSearchParams();
-  const team = bootstrap.teams.find(({ key }) => key === teamKey);
-  function change(key: string, value: string) {
-    const next = new URLSearchParams(params);
-    if (value === "") {
-      next.delete(key);
-    } else {
-      next.set(key, value);
-    }
-    if (key === "team") {
-      next.delete("state");
-      next.delete("label");
-      rememberTeam(value);
-    }
-    setParams(next, { preventScrollReset: true });
-  }
   return (
     <div className="filters">
       <SearchFilter />
-      <select
-        aria-label="Filter team"
-        value={teamKey}
-        onChange={(e) => {
-          change("team", e.target.value);
-        }}
-      >
-        {bootstrap.teams.map((t) => (
-          <option value={t.key} key={t.id}>
-            {t.key}
-          </option>
-        ))}
-      </select>
-      <select
-        aria-label="Filter status"
-        value={params.get("state") ?? ""}
-        onChange={(e) => {
-          change("state", e.target.value);
-        }}
-      >
-        <option value="">All statuses</option>
-        {bootstrap.states
-          .filter((s) => s.teamId === team?.id)
-          .map((s) => (
-            <option key={s.id} value={s.name}>
-              {s.name}
-            </option>
-          ))}
-      </select>
-      <select
-        aria-label="Filter label"
-        value={params.get("label") ?? ""}
-        onChange={(e) => {
-          change("label", e.target.value);
-        }}
-      >
-        <option value="">All labels</option>
-        {bootstrap.labels
-          .filter((l) => l.teamId === team?.id)
-          .map((l) => (
-            <option key={l.id}>{l.name}</option>
-          ))}
-      </select>
-      <select
-        aria-label="Filter project"
-        value={params.get("project") ?? ""}
-        onChange={(e) => {
-          change("project", e.target.value);
-        }}
-      >
-        <option value="">All projects</option>
-        {bootstrap.projects.map((p) => (
-          <option key={p.id} value={p.slug}>
-            {p.name}
-          </option>
-        ))}
-      </select>
+      <FilterBar
+        bootstrap={bootstrap}
+        teamKey={teamKey}
+        projectRoute={projectRoute}
+      />
       <span className="spacer" />
-      <FilterMenu bootstrap={bootstrap} teamKey={teamKey} />
-      <select
-        aria-label="Sort issues"
-        value={params.get("sort") ?? "updated"}
-        onChange={(e) => {
-          change("sort", e.target.value);
+      <EnumPicker
+        id="team-picker"
+        label="Team"
+        variant="field"
+        value={teamKey}
+        options={bootstrap.teams.map((team) => ({
+          value: team.key,
+          label: team.name,
+          icon: <span className="team-icon">{team.key}</span>,
+        }))}
+        onChange={(value) => {
+          const next = new URLSearchParams(params);
+          next.set("team", value);
+          // Statuses and labels belong to a team.
+          next.delete("state");
+          next.delete("label");
+          next.delete("collapsed");
+          rememberTeam(value);
+          setParams(next, { preventScrollReset: true });
         }}
-      >
-        <option value="updated">Recently updated</option>
-        <option value="created">Recently created</option>
-        <option value="priority">Priority</option>
-        <option value="votes">Most votes</option>
-      </select>
-      <label className="archive-filter">
-        <input
-          type="checkbox"
-          checked={params.get("archived") === "true"}
-          onChange={(e) => {
-            change("archived", e.target.checked ? "true" : "");
-          }}
-        />
-        Archived
-      </label>
+      />
+      <DisplayMenu board={board} />
     </div>
   );
 }

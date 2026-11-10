@@ -43,10 +43,73 @@ const surfaces: { name: string; open: (page: Page) => Promise<void> }[] = [
       await page.goto("/issues");
       await expect(page.getByRole("list", { name: "Issues" })).toBeVisible();
       await page.keyboard.press("ControlOrMeta+k");
-      await page.getByRole("combobox").fill("worker");
+      await page
+        .getByRole("combobox", { name: "Search issues and commands" })
+        .fill("worker");
       await expect(
         page.getByRole("option", { name: /Investigate worker restart/u }),
       ).toBeVisible();
+    },
+  },
+  {
+    name: "an open status picker on a row",
+    open: async (page) => {
+      await page.goto("/issues");
+      await page.locator('[data-picker="state"]').first().click();
+      await expect(
+        page.getByRole("option", { name: "Backlog" }).first(),
+      ).toBeVisible();
+    },
+  },
+  {
+    name: "the assignee picker",
+    open: async (page) => {
+      await page.goto("/issues");
+      await page.locator('[data-picker="assignee"]').first().click();
+      await expect(
+        page.getByRole("option", { name: /Assign to me/u }),
+      ).toBeVisible();
+    },
+  },
+  {
+    name: "the issue context menu",
+    open: async (page) => {
+      await page.goto("/issues");
+      await page
+        .locator("a[data-issue-row]")
+        .first()
+        .click({ button: "right" });
+      // An open submenu is left out: Base UI owns its portal through a
+      // span[aria-owns] inside the menu, which axe reports as a child the
+      // menu role does not allow.
+      await expect(
+        page.getByRole("menuitem", { name: "Copy ID" }),
+      ).toBeVisible();
+    },
+  },
+  {
+    name: "the bulk bar",
+    open: async (page) => {
+      await page.goto("/issues");
+      for (const index of [0, 1]) {
+        await page
+          .locator("a[data-issue-row]")
+          .nth(index)
+          .click({ button: "right" });
+        await page.getByRole("menuitem", { name: "Select" }).click();
+      }
+      await expect(
+        page.getByRole("region", { name: "Selected issues" }),
+      ).toContainText("2 selected");
+    },
+  },
+  {
+    name: "the filter popover and chips",
+    open: async (page) => {
+      await page.goto("/issues?state=Todo&label=feature");
+      await page.getByRole("button", { name: /^Filter/u }).click();
+      await page.getByRole("option", { name: "Status" }).click();
+      await expect(page.getByRole("option", { name: "Todo" })).toBeVisible();
     },
   },
   {

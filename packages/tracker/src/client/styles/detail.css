@@ -172,7 +172,7 @@
   padding: 30px 22px;
   display: flex;
   flex-direction: column;
-  gap: 21px;
+  gap: 16px;
   background: var(--sidebar);
 }
 .properties h2 {

@@ -1,0 +1,824 @@
+/* Pickers: one look for the customizable select, the Base UI fallback, the
+   searchable picker, menus and the filter and display popovers. */
+@supports (appearance: base-select) {
+  select.picker,
+  select.picker::picker(select) {
+    appearance: base-select;
+  }
+}
+.picker {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 30px;
+  min-width: 0;
+  padding: 4px 9px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--panel);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 500;
+  text-align: left;
+}
+.picker:hover:not(:disabled) {
+  background: var(--hover);
+}
+.picker-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
+.picker-button selectedcontent,
+.picker-button > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+select.picker::picker-icon {
+  color: var(--muted);
+  margin-left: auto;
+}
+.picker .option-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.picker-chevron {
+  display: flex;
+  margin-left: auto;
+  color: var(--muted);
+}
+.option-icon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  color: var(--muted);
+}
+.option-icon .avatar {
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+}
+.state-icon {
+  display: block;
+  flex: none;
+}
+.priority svg {
+  display: block;
+}
+.priority {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 17px;
+}
+/* A field fills its label in forms and the properties panel. */
+.properties .picker-field,
+.form-selects .picker-field {
+  width: 100%;
+}
+/* On a row or card: only the icon, the row's own hover shows it is live. */
+.picker-icon {
+  min-height: 24px;
+  min-width: 24px;
+  padding: 3px;
+  border-color: transparent;
+  background: transparent;
+  justify-content: center;
+}
+select.picker-icon::picker-icon {
+  display: none;
+}
+/* The label stays for assistive technology; the icon is what shows. */
+.picker-icon selectedcontent .option-label,
+.picker-icon > .option-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.picker-icon .option-icon {
+  width: 16px;
+}
+/* The bulk bar's buttons: a fixed label, the value never sticks. */
+.picker-action {
+  background: transparent;
+  border-color: transparent;
+}
+select.picker-action::picker-icon {
+  display: none;
+}
+.bulk-clear-count {
+  display: none;
+}
+/* Without a keyboard, key hints are noise. */
+@media (pointer: coarse) {
+  .menu-item kbd,
+  .picker-number,
+  .palette-results kbd,
+  .toolbar-button kbd,
+  .modal-footer kbd {
+    display: none;
+  }
+}
+select.picker::picker(select),
+.picker-popup {
+  min-width: 200px;
+  max-width: min(340px, calc(100vw - 16px));
+  max-height: min(380px, var(--available-height, 380px));
+  overflow-y: auto;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: var(--shadow);
+}
+select.picker::picker(select) {
+  margin-block: 4px;
+}
+select.picker option,
+.picker-item,
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 32px;
+  padding: 5px 8px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 450;
+  text-align: left;
+  cursor: default;
+  outline: none;
+  width: 100%;
+  justify-content: flex-start;
+}
+select.picker option:hover,
+select.picker option:focus-visible,
+.picker-item[data-highlighted],
+.menu-item[data-highlighted],
+.menu-item[data-popup-open] {
+  background: var(--hover);
+}
+select.picker option:checked {
+  font-weight: 600;
+}
+select.picker option::checkmark {
+  order: 3;
+  margin-left: auto;
+  color: var(--accent);
+}
+select.picker option[hidden] {
+  display: none;
+}
+.picker-positioner {
+  z-index: 70;
+  outline: none;
+}
+.picker-popup:focus-visible,
+.menu-popup:focus-visible {
+  outline: none;
+}
+.picker-list {
+  outline: none;
+}
+.picker-item .option-label,
+.menu-item .option-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.picker-check,
+.menu-check {
+  display: flex;
+  color: var(--accent);
+}
+.picker-detail {
+  color: var(--muted);
+  font-size: 11px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  white-space: nowrap;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.picker-number,
+.menu-item kbd,
+.palette-results kbd {
+  margin-left: auto;
+  padding: 0 5px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 16px;
+}
+.picker-item .picker-detail + .picker-number,
+.picker-item .picker-check + .picker-number {
+  margin-left: 4px;
+}
+.picker-box {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 15px;
+  height: 15px;
+  border: 1px solid var(--muted);
+  border-radius: 4px;
+  color: #fff;
+}
+.picker-box[data-state="on"],
+.picker-box[data-state="mixed"] {
+  border-color: var(--accent);
+  background: #7c59d9;
+}
+.picker-search {
+  display: block;
+  width: 100%;
+  margin-bottom: 4px;
+  padding: 8px 9px;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  border-radius: 6px 6px 0 0;
+  background: transparent;
+  font-size: 13px;
+}
+.picker-search:focus-visible {
+  outline: none;
+}
+.picker-group + .picker-group {
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px solid var(--border);
+}
+.picker-group-label,
+.menu-heading {
+  padding: 6px 8px 3px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 500;
+}
+.menu-heading {
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.picker-empty {
+  padding: 12px 10px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.picker-empty:empty {
+  display: none;
+}
+.picker-item[data-kind="more"],
+.picker-item[data-kind="create"] {
+  color: var(--accent);
+}
+.search-picker {
+  width: 300px;
+}
+/* Menus */
+.menu-popup {
+  min-width: 220px;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: var(--shadow);
+  outline: none;
+  max-height: var(--available-height);
+  overflow-y: auto;
+}
+.menu-item.danger {
+  color: var(--danger);
+}
+.menu-item.danger .option-icon {
+  color: var(--danger);
+}
+.menu-chevron {
+  margin-left: auto;
+  color: var(--muted);
+}
+.menu-separator {
+  height: 1px;
+  margin: 4px 2px;
+  background: var(--border);
+}
+/* Rows and cards: their properties are buttons that open pickers. */
+.row-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 24px;
+  min-width: 24px;
+  padding: 2px 3px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--muted);
+  font-weight: 400;
+}
+.row-control:hover:not(:disabled),
+.picker-icon:hover:not(:disabled) {
+  background: var(--hover);
+}
+.row-control:disabled,
+.picker:disabled {
+  opacity: 1;
+  cursor: default;
+}
+.row-labels.is-empty {
+  opacity: 0;
+}
+.issue-row:hover .row-labels.is-empty,
+.board-card:hover .row-labels.is-empty,
+.row-labels.is-empty:focus-visible {
+  opacity: 1;
+}
+.unassigned {
+  display: inline-block;
+  flex: none;
+  width: 20px;
+  height: 20px;
+  border: 1px dashed var(--muted);
+  border-radius: 50%;
+}
+.row-check {
+  flex: none;
+  margin: 0;
+  width: 15px;
+  height: 15px;
+  opacity: 0;
+}
+.issue-row:hover .row-check,
+.row-check:checked,
+.issue-list-frame[data-selecting="true"] .row-check {
+  opacity: 1;
+}
+.issue-row[data-selected="true"],
+.issue-row[data-selected="true"]:hover {
+  background: var(--accent-soft);
+}
+.board-card[data-selected="true"] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.issue-row,
+.board-card {
+  -webkit-touch-callout: none;
+}
+/* Group headers are rows of the window; the sticky copy follows the top. */
+.issue-list-frame {
+  position: relative;
+}
+.group-row {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  border-bottom: 1px solid var(--border);
+  background: var(--sidebar);
+}
+.group-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  height: 0;
+}
+.group-sticky .group-heading {
+  background: var(--sidebar);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 1px 0 var(--border);
+}
+.group-heading {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 0 22px 0 12px;
+}
+.group-heading h3 {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+}
+.group-toggle {
+  display: inline-flex;
+  gap: 8px;
+  padding: 4px 6px;
+  border: 0;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 600;
+}
+.group-toggle:hover {
+  background: var(--hover);
+}
+.group-chevron {
+  color: var(--muted);
+  transform: rotate(90deg);
+}
+.group-heading[data-collapsed="true"] .group-chevron {
+  transform: none;
+}
+.group-heading[data-empty="true"] {
+  min-height: 30px;
+  opacity: 0.7;
+}
+.group-heading[data-empty="true"] .group-toggle {
+  font-weight: 500;
+}
+.group-create {
+  width: 26px;
+  height: 26px;
+}
+/* The bulk bar floats above the list, clear of the phone's navigation. */
+.bulk-bar {
+  position: fixed;
+  left: calc(232px + (100vw - 232px) / 2);
+  bottom: 20px;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  max-width: calc(100vw - 232px - 32px);
+  padding: 5px 6px 5px 14px;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+  transform: translateX(-50%);
+}
+.bulk-count {
+  margin-right: 8px;
+  white-space: nowrap;
+  font-size: 12px;
+  color: var(--muted);
+}
+.bulk-count strong {
+  color: var(--text);
+}
+.bulk-action,
+.toolbar-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 4px 9px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.bulk-danger {
+  color: var(--danger);
+}
+.bulk-action:hover,
+.toolbar-button:hover {
+  background: var(--hover);
+}
+body:has(.bulk-bar) .toast-viewport {
+  bottom: 76px;
+}
+/* The view toolbar: search, the one Filter control, its chips, display. */
+.toolbar-button {
+  border-color: var(--border);
+  color: var(--muted);
+}
+.toolbar-button kbd {
+  font-size: 10px;
+}
+.toolbar-button[data-popup-open] {
+  background: var(--hover);
+  color: var(--text);
+}
+.filter-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+.filter-chips {
+  display: contents;
+  list-style: none;
+}
+.filter-chip {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--subtle);
+  font-size: 12px;
+}
+.filter-chip-body {
+  gap: 5px;
+  min-height: 28px;
+  padding: 3px 8px;
+  border: 0;
+  border-radius: 6px 0 0 6px;
+  background: transparent;
+  font-weight: 400;
+}
+.chip-subject {
+  color: var(--muted);
+}
+.chip-verb {
+  color: var(--muted);
+}
+.chip-values {
+  font-weight: 500;
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.filter-chip-remove {
+  min-width: 26px;
+  padding: 0 6px;
+  border: 0;
+  border-left: 1px solid var(--border);
+  border-radius: 0 6px 6px 0;
+  background: transparent;
+  color: var(--muted);
+}
+.filter-chip-remove:hover,
+.filter-chip-body:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+.filter-popover {
+  width: 290px;
+  padding: 0;
+}
+.command-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  border-bottom: 1px solid var(--border);
+  color: var(--muted);
+}
+.command-search input {
+  flex: 1;
+  padding: 10px 0;
+  border: 0;
+  background: transparent;
+  font-size: 13px;
+}
+.command-search input:focus-visible {
+  outline: none;
+}
+.command-items {
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 4px;
+}
+.display-popover {
+  width: 290px;
+  padding: 12px;
+}
+.popover-title {
+  margin-bottom: 10px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.display-row {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+  color: var(--muted);
+}
+.display-row .picker {
+  width: 160px;
+}
+.display-properties legend {
+  margin: 6px 0 8px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.display-properties > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.toggle-chip {
+  min-height: 28px;
+  padding: 3px 10px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.toggle-chip[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+/* The issue's properties panel and the New issue dialog. */
+.properties label {
+  margin-bottom: 0;
+}
+.property-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.property-name {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 500;
+}
+.property-value {
+  justify-content: flex-start;
+  width: 100%;
+  min-height: 32px;
+  padding: 4px 9px;
+  background: transparent;
+  font-size: 12px;
+  text-align: left;
+}
+.property-value > span:not(.property-labels) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.property-labels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.property-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.property-chip {
+  max-width: 240px;
+  min-height: 28px;
+  padding: 3px 10px;
+  border-radius: 14px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.property-chip > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.form-selects .picker {
+  width: 100%;
+}
+/* The palette's nested steps. */
+.palette-steps {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px 0;
+  font-size: 12px;
+}
+.palette-back {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+}
+.palette-step-title {
+  font-weight: 600;
+}
+.palette-results .option-icon {
+  color: var(--muted);
+}
+.shortcut-sheet {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px 28px;
+}
+.shortcut-sheet h3 {
+  margin: 14px 0 4px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+@media (max-width: 767px) {
+  select.picker option,
+  .picker-item,
+  .menu-item {
+    min-height: 44px;
+    font-size: 14px;
+  }
+  .picker-popup,
+  .menu-popup,
+  select.picker::picker(select) {
+    max-width: calc(100vw - 16px);
+  }
+  .search-picker,
+  .filter-popover,
+  .display-popover {
+    width: calc(100vw - 16px);
+  }
+  .picker-search,
+  .command-search input {
+    font-size: 16px;
+  }
+  .picker {
+    min-height: 40px;
+  }
+  .picker-icon {
+    min-height: 36px;
+    min-width: 32px;
+  }
+  .row-control {
+    min-height: 36px;
+    min-width: 32px;
+  }
+  .bulk-bar {
+    left: 8px;
+    right: 8px;
+    bottom: calc(76px + env(safe-area-inset-bottom));
+    max-width: none;
+    overflow-x: auto;
+    transform: none;
+    padding: 4px 6px;
+  }
+  .bulk-action,
+  .bulk-bar .picker-action {
+    min-height: 44px;
+    min-width: 44px;
+    justify-content: center;
+  }
+  .bulk-count {
+    display: none;
+  }
+  .bulk-clear {
+    order: -1;
+    gap: 2px;
+    width: auto;
+    padding: 0 8px;
+  }
+  .bulk-clear-count {
+    display: inline;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .bulk-bar .option-label,
+  .bulk-action > span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  body:has(.bulk-bar) .toast-viewport {
+    bottom: calc(140px + env(safe-area-inset-bottom));
+  }
+  .toolbar-button,
+  #team-picker {
+    min-height: 40px;
+  }
+  .filter-chip-body,
+  .filter-chip-remove {
+    min-height: 36px;
+  }
+  .shortcut-sheet {
+    grid-template-columns: 1fr;
+  }
+  .group-heading {
+    padding: 0 12px 0 6px;
+  }
+}
+.issue-search-input {
+  width: 100%;
+}
+.issue-search-popup {
+  width: var(--anchor-width);
+  max-width: calc(100vw - 16px);
+}
+.issue-search-popup .identifier {
+  flex: none;
+}

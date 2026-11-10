@@ -56,19 +56,8 @@
   width: 100%;
   font-size: 11px;
 }
-.filters select {
-  border: 1px dashed var(--border);
-  background: transparent;
-  font-size: 11px;
-  padding: 5px 8px;
-  color: var(--muted);
-  max-width: 160px;
-}
-.archive-filter {
-  flex-direction: row;
-  align-items: center;
-  gap: 5px;
-  font-size: 11px;
+#team-picker {
+  min-height: 28px;
   color: var(--muted);
 }
 .issue-list {
@@ -86,8 +75,8 @@
   width: 100%;
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 0 30px;
+  gap: 8px;
+  padding: 0 22px 0 12px;
   min-height: 48px;
   border-bottom: 1px solid var(--border);
 }
@@ -100,7 +89,7 @@
   flex: 1;
   min-width: 0;
   display: flex;
-  gap: 15px;
+  gap: 12px;
   align-items: center;
   text-align: left;
   padding: 14px 0;
@@ -126,7 +115,7 @@
 .list-sentinel {
   height: 1px;
 }
-.issue-results[data-placeholder="true"] {
+.issue-results-body[data-placeholder="true"] {
   opacity: 0.6;
 }
 .issue-row-main .identifier {
@@ -139,9 +128,11 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.row-labels {
+.issue-row .row-labels {
   display: flex;
   gap: 4px;
+  max-width: 260px;
+  overflow: hidden;
 }
 .row-project {
   display: flex;
@@ -165,17 +156,8 @@
   color: var(--muted);
   font-size: 11px;
 }
-.unassigned {
-  display: grid;
-  place-items: center;
-  color: var(--muted);
-  border: 1px dashed var(--border);
-  border-radius: 50%;
-  width: 21px;
-  height: 21px;
-}
 @media (max-width: 1150px) {
-  .row-labels {
+  .issue-row .row-labels {
     display: none;
   }
   .filters {
@@ -211,36 +193,35 @@
   .filter-search input {
     font-size: 16px;
   }
-  .filters select {
-    min-height: 34px;
-    font-size: 11px;
-    max-width: 115px;
-  }
   .filters .spacer {
     display: none;
   }
-  .archive-filter {
-    font-size: 11px;
-  }
   .issue-row {
-    padding: 0 16px;
+    padding: 0 10px 0 6px;
     min-height: 64px;
-    gap: 8px;
+    gap: 2px;
+  }
+  .row-check {
+    display: none;
+  }
+  .issue-list-frame[data-selecting="true"] .row-check {
+    display: block;
+    margin: 0 6px;
   }
   .issue-row-main {
-    display: grid;
-    grid-template-columns: 17px 65px 16px 1fr;
-    gap: 7px;
-    padding: 12px 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 3px;
+    padding: 10px 0 10px 4px;
   }
   .issue-row-title {
-    grid-column: 2 / -1;
     white-space: normal;
     font-size: 13px;
     font-weight: 500;
   }
-  .issue-row-main .state-dot {
-    grid-column: 3;
+  .issue-row .row-labels {
+    display: none;
   }
   .row-project,
   .row-date,

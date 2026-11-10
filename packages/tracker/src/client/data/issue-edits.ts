@@ -115,6 +115,14 @@ function updateInput(change: IssueChange) {
   }
 }
 
+/** Why an edit failed, short enough to list beside several identifiers. */
+export function failureReason(error: unknown) {
+  if (isConflict(error)) {
+    return "changed by someone else";
+  }
+  return error instanceof Error ? error.message : "not saved";
+}
+
 function failure(identifier: string, error: unknown, action: string) {
   if (isConflict(error)) {
     return `${identifier} was changed by someone else, so ${action}. Review it and try again.`;
@@ -301,6 +309,7 @@ export function createIssueEdits(deps: {
     identifier: string,
     session: Session,
     change: IssueChange,
+    report: boolean,
   ): Promise<Outcome> {
     try {
       const server = await withRetry(identifier, session, {
@@ -313,10 +322,12 @@ export function createIssueEdits(deps: {
     } catch (error) {
       session.pending.splice(session.pending.indexOf(change), 1);
       write(identifier, session);
-      deps.onError(
-        failure(identifier, error, "your edit was not saved"),
-        error,
-      );
+      if (report) {
+        deps.onError(
+          failure(identifier, error, "your edit was not saved"),
+          error,
+        );
+      }
       return { ok: false, error };
     } finally {
       settle(identifier, session);
@@ -365,8 +376,16 @@ export function createIssueEdits(deps: {
   }
 
   return {
-    /** Apply an edit now and save it in order; resolves once it is settled. */
-    edit(identifier: string, change: IssueChange): Promise<Outcome> {
+    /**
+     * Apply an edit now and save it in order; resolves once it is settled.
+     * `report: false` leaves telling the user about a failure to the caller,
+     * which a bulk edit does once for all of its issues.
+     */
+    edit(
+      identifier: string,
+      change: IssueChange,
+      options: { report?: boolean } = {},
+    ): Promise<Outcome> {
       const session = open(identifier);
       void client.cancelQueries({ queryKey: issueKey(identifier) });
       void client.cancelQueries({ queryKey: listsKey });
@@ -379,7 +398,9 @@ export function createIssueEdits(deps: {
         session.pending.pop();
         throw error;
       }
-      return enqueue(session, () => runEdit(identifier, session, change));
+      return enqueue(session, () =>
+        runEdit(identifier, session, change, options.report ?? true),
+      );
     },
 
     /**

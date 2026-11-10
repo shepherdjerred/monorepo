@@ -15,7 +15,9 @@ test("a long list is windowed, pages in on scroll and keeps its place", async ({
   const total = await seedLongList(request);
   expect(total).toBeLessThan(300);
   const calls = recordCalls(page);
-  await page.goto(`/issues?team=${scratchTeam}&sort=created`);
+  // Grouped lists load every page at once so groups fill in; paging on
+  // scroll is what an ungrouped list does.
+  await page.goto(`/issues?team=${scratchTeam}&sort=created&group=none`);
   const list = page.getByRole("list", { name: "Issues" });
   const rows = list.getByRole("listitem");
   await expect(rows.first()).toBeVisible();
@@ -111,7 +113,7 @@ test("a long list is windowed, pages in on scroll and keeps its place", async ({
     return;
   }
   // J walks past the first page: the list scrolls to rows it had not rendered.
-  await page.goto(`/issues?team=${scratchTeam}&sort=created`);
+  await page.goto(`/issues?team=${scratchTeam}&sort=created&group=none`);
   await expect(rows.first()).toBeVisible();
   const focused = page.locator("a[data-issue-row]:focus");
   await page.keyboard.press("Tab");

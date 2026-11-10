@@ -1,17 +1,109 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useMutation } from "@tanstack/react-query";
+import { Folder, Tag, UserRound } from "lucide-react";
 import type { BootstrapData } from "#client/data/api.ts";
 import { useDraft } from "#client/data/drafts.ts";
-import { priorities } from "#client/data/issue-changes.ts";
 import { createIssue } from "#client/data/mutations.ts";
-import { ErrorNotice, Modal } from "#client/ui/ui.tsx";
+import { EnumPicker } from "#client/controls/enum-picker.tsx";
+import {
+  priorityOptions,
+  stateOptions,
+  teamStates,
+} from "#client/controls/property-options.tsx";
+import {
+  openSearchPicker,
+  SearchPickerHost,
+} from "#client/controls/search-picker.tsx";
+import type { SearchPickerKind } from "#client/controls/picker-items.tsx";
+import { ErrorNotice, Modal, Swatch } from "#client/ui/ui.tsx";
 import { MarkdownEditor } from "#client/ui/markdown.tsx";
+
+/** Fields a new issue starts with, taken from the view it is created in. */
+export type IssuePrefill = {
+  teamKey?: string;
+  stateName?: string;
+  priority?: number;
+  projectSlug?: string;
+  labels?: readonly string[];
+  assigneeKey?: string;
+};
+
+type Choices = {
+  stateName: string | undefined;
+  priority: number;
+  projectSlug: string | null;
+  labels: readonly string[];
+  assigneeKey: string | null;
+};
+
+const startingChoices = (prefill: IssuePrefill): Choices => ({
+  stateName: prefill.stateName,
+  priority: prefill.priority ?? 0,
+  projectSlug: prefill.projectSlug ?? null,
+  labels: prefill.labels ?? [],
+  assigneeKey: prefill.assigneeKey ?? null,
+});
+
+/** The values a searchable picker shows as chosen for this form. */
+function chosenValues(kind: SearchPickerKind, choices: Choices) {
+  if (kind === "labels") {
+    return choices.labels;
+  }
+  const value = kind === "assignee" ? choices.assigneeKey : choices.projectSlug;
+  return value === null ? [] : [value];
+}
+
+function withChoice(
+  known: Choices,
+  kind: SearchPickerKind,
+  value: string | null,
+  add: boolean,
+): Choices {
+  if (kind === "assignee") {
+    return { ...known, assigneeKey: value };
+  }
+  if (kind === "project") {
+    return { ...known, projectSlug: value };
+  }
+  const others = known.labels.filter((name) => name !== value);
+  return {
+    ...known,
+    labels: add && value !== null ? [...others, value] : others,
+  };
+}
+
+function PropertyButton({
+  kind,
+  label,
+  icon,
+  open,
+}: {
+  kind: SearchPickerKind;
+  label: string;
+  icon: ReactNode;
+  open: (kind: SearchPickerKind, anchor: HTMLElement) => void;
+}) {
+  return (
+    <button
+      type="button"
+      className="property-chip"
+      aria-haspopup="dialog"
+      onClick={(event) => {
+        open(kind, event.currentTarget);
+      }}
+    >
+      {icon}
+      <span>{label}</span>
+    </button>
+  );
+}
 
 export function NewIssue({
   open,
   close,
   bootstrap,
   teamKey: currentTeamKey,
+  prefill = {},
   onCreated,
 }: {
   open: boolean;
@@ -19,104 +111,140 @@ export function NewIssue({
   bootstrap: BootstrapData;
   /** The team in view; a new issue starts there unless the form picks another. */
   teamKey: string;
-  onCreated: (identifier: string) => void;
+  prefill?: IssuePrefill;
+  /** Called with the new issue; `view` asks for it to be opened. */
+  onCreated: (identifier: string, view: boolean) => void;
 }) {
-  const [chosenTeam, setTeam] = useState<string>();
+  const [chosenTeam, setTeam] = useState(prefill.teamKey);
   // Closing the dialog keeps what was typed; it is there on the next open.
   const title = useDraft("new-issue.title");
   const description = useDraft("new-issue.description");
-  const [chosenState, setState] = useState<string>();
-  const [priority, setPriority] = useState(0);
-  const [projectSlug, setProject] = useState("");
-  const [labels, setLabels] = useState<string[]>([]);
+  const [choices, setChoices] = useState(() => startingChoices(prefill));
+  const choose = (change: Partial<Choices>) => {
+    setChoices((known) => ({ ...known, ...change }));
+  };
   const teamKey = chosenTeam ?? currentTeamKey;
   const team = bootstrap.teams.find(({ key }) => key === teamKey);
-  const states = bootstrap.states.filter(({ teamId }) => teamId === team?.id);
+  const states = team === undefined ? [] : teamStates(bootstrap, team.id);
   // New work lands in the team's triage state unless the form says otherwise.
   const stateName =
-    chosenState ??
+    choices.stateName ??
     (states.find(({ type }) => type === "triage") ?? states[0])?.name;
+  const project = bootstrap.projects.find(
+    ({ slug }) => slug === choices.projectSlug,
+  );
+  const assignee = bootstrap.actors.find(
+    ({ key }) => key === choices.assigneeKey,
+  );
   const create = useMutation({
-    mutationFn: () =>
-      createIssue({
-        teamKey,
-        title: title.text,
-        description: description.text,
-        ...(stateName === undefined ? {} : { stateName }),
-        priority,
-        ...(projectSlug === "" ? {} : { projectSlug }),
-        labels,
-        attachmentIds: description.attachments,
-      }),
-    onSuccess: (issue) => {
+    mutationFn: (view: boolean) =>
+      createIssue(
+        {
+          teamKey,
+          title: title.text,
+          description: description.text,
+          ...(stateName === undefined ? {} : { stateName }),
+          priority: choices.priority,
+          ...(choices.projectSlug === null
+            ? {}
+            : { projectSlug: choices.projectSlug }),
+          ...(choices.assigneeKey === null
+            ? {}
+            : { assigneeKey: choices.assigneeKey }),
+          labels: [...choices.labels],
+          attachmentIds: description.attachments,
+        },
+        view
+          ? undefined
+          : (identifier) => {
+              onCreated(identifier, true);
+            },
+      ),
+    onSuccess: (issue, view) => {
       title.reset();
       description.reset();
       setTeam(undefined);
-      setLabels([]);
-      setState(undefined);
+      setChoices(startingChoices({}));
       close();
-      onCreated(issue.identifier);
+      onCreated(issue.identifier, view);
     },
   });
+  function pick(kind: SearchPickerKind, anchor: HTMLElement) {
+    if (team === undefined) {
+      return;
+    }
+    openSearchPicker({
+      kind,
+      anchor,
+      teamId: team.id,
+      teamKey: team.key,
+      title: `${{ assignee: "Assignee", labels: "Labels", project: "Project" }[kind]} of the new issue`,
+      selected: chosenValues(kind, choices),
+      pick: (value, add) => {
+        setChoices((known) => withChoice(known, kind, value, add));
+      },
+    });
+  }
   return (
-    <Modal title="New issue" open={open} onClose={close}>
+    <Modal
+      title="New issue"
+      open={open}
+      onClose={close}
+      pickerScope="new-issue"
+    >
+      <SearchPickerHost bootstrap={bootstrap} scope="new-issue" />
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          create.mutate();
+          create.mutate(false);
         }}
         onKeyDown={(e) => {
+          // ⌘ Enter creates; ⌘ Shift Enter creates and opens the issue.
           if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
             e.preventDefault();
-            e.currentTarget.requestSubmit();
+            if (e.currentTarget.reportValidity()) {
+              create.mutate(e.shiftKey);
+            }
           }
         }}
       >
         <div className="form-selects">
           <label>
             Team
-            <select
+            <EnumPicker
+              label="Team"
               value={teamKey}
-              onChange={(e) => {
-                setTeam(e.target.value);
-                setLabels([]);
-                setState(undefined);
+              options={bootstrap.teams.map((item) => ({
+                value: item.key,
+                label: item.key,
+              }))}
+              onChange={(value) => {
+                setTeam(value);
+                choose({ labels: [], stateName: undefined });
               }}
-            >
-              {bootstrap.teams.map((t) => (
-                <option key={t.id} value={t.key}>
-                  {t.key}
-                </option>
-              ))}
-            </select>
+            />
           </label>
           <label>
             Status
-            <select
-              value={stateName}
-              onChange={(e) => {
-                setState(e.target.value);
+            <EnumPicker
+              label="Status"
+              value={stateName ?? ""}
+              options={stateOptions(states)}
+              onChange={(value) => {
+                choose({ stateName: value });
               }}
-            >
-              {states.map((s) => (
-                <option key={s.id}>{s.name}</option>
-              ))}
-            </select>
+            />
           </label>
           <label>
             Priority
-            <select
-              value={priority}
-              onChange={(e) => {
-                setPriority(Number(e.target.value));
+            <EnumPicker
+              label="Priority"
+              value={String(choices.priority)}
+              options={priorityOptions}
+              onChange={(value) => {
+                choose({ priority: Number(value) });
               }}
-            >
-              {priorities.map((p, i) => (
-                <option key={p} value={i}>
-                  {p}
-                </option>
-              ))}
-            </select>
+            />
           </label>
         </div>
         <input
@@ -137,50 +265,39 @@ export function NewIssue({
           placeholder="Add a description…"
           label="Description"
         />
-        <div className="form-selects">
-          <label>
-            Project
-            <select
-              value={projectSlug}
-              onChange={(e) => {
-                setProject(e.target.value);
-              }}
-            >
-              <option value="">No project</option>
-              {bootstrap.projects
-                .filter((p) => p.archivedAt === null)
-                .map((p) => (
-                  <option key={p.id} value={p.slug}>
-                    {p.name}
-                  </option>
-                ))}
-            </select>
-          </label>
-          <fieldset className="label-options">
-            <legend>Labels</legend>
-            {bootstrap.labels
-              .filter(({ teamId }) => teamId === team?.id)
-              .map((label) => (
-                <label key={label.id}>
-                  <input
-                    type="checkbox"
-                    checked={labels.includes(label.name)}
-                    onChange={(e) => {
-                      setLabels((previous) =>
-                        e.target.checked
-                          ? [...previous, label.name]
-                          : previous.filter((name) => name !== label.name),
-                      );
-                    }}
-                  />
-                  {label.name}
-                </label>
-              ))}
-          </fieldset>
+        <div className="property-chips">
+          <PropertyButton
+            kind="assignee"
+            label={assignee?.name ?? "Assignee"}
+            icon={<UserRound size={14} aria-hidden="true" />}
+            open={pick}
+          />
+          <PropertyButton
+            kind="project"
+            label={project?.name ?? "Project"}
+            icon={
+              project === undefined ? (
+                <Folder size={14} aria-hidden="true" />
+              ) : (
+                <Swatch color={project.color} />
+              )
+            }
+            open={pick}
+          />
+          <PropertyButton
+            kind="labels"
+            label={
+              choices.labels.length === 0 ? "Labels" : choices.labels.join(", ")
+            }
+            icon={<Tag size={14} aria-hidden="true" />}
+            open={pick}
+          />
         </div>
         {create.error !== null && <ErrorNotice error={create.error} />}
         <div className="modal-footer">
-          <span className="muted">⌘ Enter to create</span>
+          <span className="muted">
+            <kbd>⌘ Enter</kbd> create · <kbd>⌘ ⇧ Enter</kbd> create and open
+          </span>
           <span className="spacer" />
           {(title.dirty || description.dirty) && (
             <button
