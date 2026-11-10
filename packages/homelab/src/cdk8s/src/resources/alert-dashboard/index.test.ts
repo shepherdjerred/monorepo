@@ -203,8 +203,12 @@ describe("Alert Dashboard deployment", () => {
     ).toBe(POSTAL_HOST);
   });
 
-  test("serves the ops overview on its own tailnet host and keeps alerts", () => {
-    expect(synthesizeTailnetHosts().toSorted()).toEqual(["alerts", "ops"]);
+  test("serves Hub on its own tailnet host and keeps ops and alerts", () => {
+    expect(synthesizeTailnetHosts().toSorted()).toEqual([
+      "alerts",
+      "hub",
+      "ops",
+    ]);
   });
 
   test("requires the ops ingest token and wires Prometheus and Flipt", () => {

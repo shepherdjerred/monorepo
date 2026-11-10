@@ -112,7 +112,7 @@ is never approved on its own.
    toolkit deploy status DEPLOYMENT_ID --json
    ```
 
-   The hub's deployment page shows the same plan beside its selection.
+   The Delivery web app's deployment page shows the same plan beside its selection.
 
 2. Approve that exact plan from a human session:
 
@@ -189,7 +189,7 @@ configurations.
    instead.
 
 3. When `created.carriedSelections` is not zero, read the reconcile on the
-   hub's activity page. Each carried environment kept its accepted bytes under
+   Delivery web app's activity page. Each carried environment kept its accepted bytes under
    the catalog's component names and owners
    ([section 7](packages/delivery/docs/model.md#7-fit-to-the-inventory)).
 
@@ -421,7 +421,7 @@ stops every self-hosted deployment, including `delivery-control-plane`.
    ```
 
    The overview lists the newest 100 deployments. For an older holder, open
-   the alert's environment in the Delivery hub, which lists its deployments.
+   the alert's environment in the Delivery web app, which lists its deployments.
 
 2. Recover each one with
    [Recover a deployment that requires recovery](#recover-a-deployment-that-requires-recovery).
@@ -636,5 +636,5 @@ release evidence.
 
 - [Why releases are shaped this way](/explanation/homelab/release-safety/)
 - [Delivery model reference](/reference/delivery-model/)
-- [How the Delivery hub follows a change](/explanation/homelab/delivery-hub/)
+- [How the Delivery web app follows a change](/explanation/homelab/delivery-hub/)
 - [Roll out a Temporal Worker Deployment](/how-to/roll-out-a-temporal-worker-deployment/)

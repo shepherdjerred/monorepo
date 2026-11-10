@@ -1364,9 +1364,9 @@ toolkit temporal --namespace prod workflow start \
 ```
 
 The promotion worker exposes authenticated, read-only status on port 7343.
-The Ops server proxies `/api/v1/promotion`, `/history`, and hash-addressed
+The Hub server proxies `/api/v1/promotion`, `/history`, and hash-addressed
 `/evidence/<id>` requests to the `promotion-status` Service using its existing
-parent-only `OPS_INGEST_TOKEN`. The normal Ops client renders `/promotion`.
+parent-only `OPS_INGEST_TOKEN`. The normal Hub client renders `/promotion`.
 Status reads do not initialize target state or release duplicate-prevention holds.
 Each scheduled sweep journals all selected and skipped sources; targeted
 previews and reconciliations retain their own scope and effective mode.
@@ -1467,8 +1467,8 @@ remain authoritative in the existing attempt journal; a dashboard or reporting
 failure never authorizes repeating a publication. Preview, real publishing,
 reconciliation and reply cleanup are displayed separately. Older reports retain
 unknown metadata where no mode or exact execution timestamp was saved.
-The dashboard is read-only and independent of the runner. See the Ops README
-for ports, storage options and access from another machine.
+The dashboard is read-only and independent of the runner. See the Hub README
+(`packages/alert-dashboard`) for ports, storage options and access from another machine.
 
 State defaults to `~/.local/state/the-storm/promotion`; `--state-dir` selects a
 different directory. SQLite conditional writes retain attempts, ownership,

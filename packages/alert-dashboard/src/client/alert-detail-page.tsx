@@ -100,7 +100,7 @@ function AlertDetailContent({
         const runbookUrl = value.annotations["runbook_url"];
         return (
           <main>
-            <title>{`${value.alertname} · Ops`}</title>
+            <title>{`${value.alertname} · Hub`}</title>
             <StaleNotice errors={meta.errors} />
             <Link className="back-link" to="/alerts">
               <ArrowLeftIcon /> Active alerts
@@ -291,7 +291,7 @@ export function AlertDetailPage(): React.JSX.Element {
   if (id.success) return <AlertDetailContent id={id.data} />;
   return (
     <main>
-      <title>Alert not found · Ops</title>
+      <title>Alert not found · Hub</title>
       <div className="error-state">Alert not found.</div>
     </main>
   );

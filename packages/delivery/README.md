@@ -49,12 +49,12 @@ at its approve step and archives for an operator-run stack and a channel
 `DELIVERY_HARNESS_MACHINE_CREDENTIALS` to a JSON array of disposable machine
 credentials lets a client drive the admin and execute routes; the proxy then
 passes their bearer tokens through. `src/testing/model-fixtures.ts` holds
-contract-validated route responses for unit tests of the hub views and the
+contract-validated route responses for unit tests of the web app views and the
 toolkit.
 
-## Browser hub
+## Browser app
 
-The React client is the homelab's CI/CD hub. Every page has a URL, so links,
+The React client is the Delivery web app, the homelab's CI/CD view. Every page has a URL, so links,
 history, new tabs and bookmarks behave like any website. Routes are code-based
 TanStack Router definitions in `src/client/router.tsx`:
 
@@ -111,8 +111,8 @@ injected transport and credentials. Responses are validated before consumption.
 
 `@shepherdjerred/delivery/model-contract` (`src/shared/model/`) carries the
 schemas for the Delivery model specification (`docs/model.md`). The record,
-the routes, the executor, the hub and the toolkit read them; `contract` keeps
-the shared build, artifact and evidence schemas. The hub and toolkit call the
+the routes, the executor, the web app and the toolkit read them; `contract` keeps
+the shared build, artifact and evidence schemas. The web app and toolkit call the
 model routes through `createDeliveryClient`, whose model methods
 (`src/shared/model/routes-client.ts`) validate each request body before
 sending and each response before use.
@@ -157,7 +157,7 @@ sending and each response before use.
   result and state, the record each catalog reconcile audits, service
   retirement. `MonitorStatusSchema` carries the declared monitor and the
   latest observation so evidence reads against its threshold. The selection
-  view names the declared recipe's kind, and the hub's environment detail
+  view names the declared recipe's kind, and the web app's environment detail
   names the release kind: that of the declared recipe a release freezes. An
   `operator-run` recipe is requested as one.
   `releaseKindOf` reads the stored kind as admission does, so a v1 `manual`
@@ -346,7 +346,7 @@ Environment variables are bootstrap and credentials: `DATABASE_URL`, `HOST`,
 `PORT`, `PUBLIC_ORIGIN`, `ENVIRONMENT`, `WOODPECKER_URL`, `WOODPECKER_REPO_ID`,
 `WOODPECKER_TOKEN`, `DELIVERY_MACHINE_CREDENTIALS`, `ARGOCD_SERVER_URL`,
 `ARGOCD_RECOVERY_TOKEN`, and the optional read-only `DELIVERY_GH_TOKEN`.
-`ARGOCD_RECOVERY_TOKEN` is a read-only ArgoCD credential for the hub's runtime
+`ARGOCD_RECOVERY_TOKEN` is a read-only ArgoCD credential for the web app's runtime
 panel only; no settlement reader uses it. The API holds no R2 credential.
 
 Recovery never reads ArgoCD through its server or with the executor's
@@ -422,7 +422,7 @@ ownership handover read the catalog lifecycle, never
 and query no external integration. The enrichment flag is a JSON list drawn
 from `woodpecker`, `github` and `argocd`. The GitHub token is the
 `githubReader` 1Password item in the homelab Delivery activation, mounted as
-`DELIVERY_GH_TOKEN`. It authenticates hub commit context and the independent
+`DELIVERY_GH_TOKEN`. It authenticates the web app's commit context and the independent
 GitHub tag and tarball reads of source acquisition, which anonymously share the
 egress IP's hourly quota with CI. It is currently CI's download token in
 `ci-github-credentials`; a fine-grained public-read token replaces it.

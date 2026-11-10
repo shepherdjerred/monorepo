@@ -128,7 +128,7 @@ kubectl delete validatingadmissionpolicybinding argocd-application-source.sjer.r
    self-heal on the Applications it owns at its next deployment of each.
 
 :::caution
-Record the break-glass in the Delivery hub as an operator-run deployment of the
+Record the break-glass in the Delivery web app as an operator-run deployment of the
 service you changed. Delivery cannot see a change made around it, so the record
 is the only evidence.
 :::

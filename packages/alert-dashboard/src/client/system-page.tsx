@@ -29,7 +29,7 @@ export function SystemPage(): React.JSX.Element {
     >
       {({ status: value }, meta) => (
         <main>
-          <title>System · Ops</title>
+          <title>System · Hub</title>
           <StaleNotice errors={meta.errors} />
           <div className="page-heading">
             <div>

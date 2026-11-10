@@ -47,7 +47,7 @@ export function Shell({
       <CommandPalette />
       <header className="app-header">
         <NavLink className="brand" to="/" end>
-          Ops
+          Hub
         </NavLink>
         <nav aria-label="Primary navigation">
           {nav.map((item) => (

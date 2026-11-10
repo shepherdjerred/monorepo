@@ -361,7 +361,7 @@ export function WithSnapshot({
 }): React.JSX.Element {
   return (
     <main>
-      <title>{`${title} · Ops`}</title>
+      <title>{`${title} · Hub`}</title>
       <SnapshotBlock title={title}>{children}</SnapshotBlock>
     </main>
   );

@@ -1,11 +1,11 @@
 ---
-title: How the Delivery hub follows a change
+title: How the Delivery web app follows a change
 description: Why the Delivery web app models a change as one execution from commit to runtime, and where each part of that picture comes from.
 sidebar:
   order: 3
 ---
 
-The Delivery hub shows one change as one execution, from the commit that
+The Delivery web app shows one change as one execution, from the commit that
 produced it to the runtime that accepted it.
 
 Woodpecker, Delivery, Temporal and ArgoCD each own a step of a release. Each
@@ -19,7 +19,7 @@ A Woodpecker push publishes a build: one source revision and its artifacts.
 Qualification turns a verified build into an automatic version set. Deployments
 then carry that version set through each environment, in promotion order.
 
-The hub follows those identities forward instead of inventing a new one. A
+The web app follows those identities forward instead of inventing a new one. A
 build, its version set, and the deployments of that version set form one
 [execution](https://github.com/shepherdjerred/monorepo/blob/6a9c4be858a1f28db96cd1aa9e608af85c4273fb/packages/delivery/src/infrastructure/hub/executions.ts).
 A hand-composed version set is its own execution, with no source or build stage.
@@ -40,7 +40,7 @@ trail. It does not copy CI steps, commit metadata or live ArgoCD state.
 
 Those details [come from their owners on
 request](https://github.com/shepherdjerred/monorepo/blob/6a9c4be858a1f28db96cd1aa9e608af85c4273fb/packages/delivery/src/infrastructure/enrichment/enrichment.ts).
-Per-workflow CI status comes from Woodpecker, and the hub splits it into Build
+Per-workflow CI status comes from Woodpecker, and the web app splits it into Build
 and Test stages. Commit author and pull request come from GitHub. Sync, health
 and running images come from ArgoCD. A finished pipeline or merged commit cannot
 change, so its answer is cached permanently. Live state is only cached for

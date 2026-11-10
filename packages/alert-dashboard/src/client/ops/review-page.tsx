@@ -165,7 +165,7 @@ export function ReviewPage(): React.JSX.Element {
   const report = Loaded.fromQuery(useQuery(reviewQuery(kind)));
   return (
     <main>
-      <title>Review · Ops</title>
+      <title>Review · Hub</title>
       <PageHeading eyebrow="How did it go" title="Review">
         <div className="segmented" role="radiogroup" aria-label="Period">
           {DigestKindSchema.options.map((option) => (
