@@ -1,4 +1,4 @@
-import { chmod, lstat, readFile, realpath } from "node:fs/promises";
+import fs, { constants, type FileHandle } from "node:fs/promises";
 import path from "node:path";
 
 function record(value: unknown): Record<string, unknown> {
@@ -14,7 +14,7 @@ async function assertOwnedAncestors(filename: string, owner: number) {
     ;
     ancestor = path.dirname(ancestor)
   ) {
-    const metadata = await lstat(ancestor);
+    const metadata = await fs.lstat(ancestor);
     const rootSticky = metadata.uid === 0 && (metadata.mode & 0o1000) !== 0;
     if (
       metadata.uid !== owner ||
@@ -42,7 +42,7 @@ function assertStoreContains(store: string, target: string) {
 async function assertDeclaredLauncher(target: string) {
   const manifest = record(
     JSON.parse(
-      await readFile(
+      await fs.readFile(
         path.join(path.dirname(path.dirname(target)), "package.json"),
         "utf8",
       ),
@@ -60,29 +60,17 @@ async function assertDeclaredLauncher(target: string) {
   }
 }
 
-/** Only the declared Codex CLI bin inside this install store may be hardened. */
-export async function hardenCodexLauncher(filename: string, store: string) {
-  if (!path.isAbsolute(filename) || !path.isAbsolute(store)) {
-    throw new TypeError("Codex launcher and install store must be absolute");
-  }
-  const canonicalStore = await realpath(store);
-  const target = await realpath(filename);
-  assertStoreContains(canonicalStore, target);
-  await assertDeclaredLauncher(target);
-  const metadata = await lstat(target);
-  const owner = process.getuid?.();
-  if (owner === undefined || !metadata.isFile() || metadata.uid !== owner) {
-    throw new Error("Codex CLI launcher is not a regular builder-owned file");
-  }
-  // The image entrypoint requires root. Portable unit fixtures use their owner.
-  // A user-writable bin is the one defect this producer repairs; its parents
-  // must already be protected. Stop at the caller-owned store for local tests.
+async function assertProtectedParents(
+  target: string,
+  store: string,
+  owner: number,
+) {
   for (
     let ancestor = path.dirname(target);
     ;
     ancestor = path.dirname(ancestor)
   ) {
-    const entry = await lstat(ancestor);
+    const entry = await fs.lstat(ancestor);
     if (
       !entry.isDirectory() ||
       entry.uid !== owner ||
@@ -90,20 +78,106 @@ export async function hardenCodexLauncher(filename: string, store: string) {
     ) {
       throw new Error("Codex launcher installation ancestor is mutable");
     }
-    if (ancestor === canonicalStore) break;
+    if (ancestor === store) break;
   }
   if (owner === 0) await assertOwnedAncestors(target, owner);
-  const contents = await readFile(target);
-  await chmod(target, 0o755);
-  const after = await lstat(target);
+}
+
+async function descriptorContents(handle: FileHandle) {
+  const metadata = await handle.stat();
+  const contents = Buffer.alloc(metadata.size);
+  let offset = 0;
+  while (offset < contents.length) {
+    const { bytesRead } = await handle.read(
+      contents,
+      offset,
+      contents.length - offset,
+      offset,
+    );
+    if (bytesRead === 0)
+      throw new Error("Codex launcher changed while reading");
+    offset += bytesRead;
+  }
+  const after = await handle.stat();
+  if (after.size !== contents.length) {
+    throw new Error("Codex launcher changed while reading");
+  }
+  return contents;
+}
+
+async function assertHardenedLauncher(
+  handle: FileHandle,
+  target: string,
+  baseline: {
+    metadata: Awaited<ReturnType<FileHandle["stat"]>>;
+    owner: number;
+    contents: Buffer;
+  },
+) {
+  const { metadata, owner, contents } = baseline;
+  const after = await handle.stat();
+  const current = await fs.lstat(target);
   if (
+    !after.isFile() ||
+    !current.isFile() ||
     after.uid !== owner ||
+    current.uid !== owner ||
     after.dev !== metadata.dev ||
     after.ino !== metadata.ino ||
+    current.dev !== after.dev ||
+    current.ino !== after.ino ||
     (after.mode & 0o7777) !== 0o755 ||
-    !contents.equals(await readFile(target))
+    (current.mode & 0o7777) !== 0o755 ||
+    !contents.equals(await descriptorContents(handle)) ||
+    !contents.equals(await fs.readFile(target))
   ) {
     throw new Error("Codex launcher permission hardening failed verification");
+  }
+}
+
+/** Only the declared Codex CLI bin inside this install store may be hardened. */
+export async function hardenCodexLauncher(filename: string, store: string) {
+  if (!path.isAbsolute(filename) || !path.isAbsolute(store)) {
+    throw new TypeError("Codex launcher and install store must be absolute");
+  }
+  const canonicalStore = await fs.realpath(store);
+  const target = await fs.realpath(filename);
+  assertStoreContains(canonicalStore, target);
+  await assertDeclaredLauncher(target);
+  const owner = process.getuid?.();
+  if (owner === undefined)
+    throw new Error("Codex launcher builder identity is unavailable");
+  await assertProtectedParents(target, canonicalStore, owner);
+  const entry = await fs.lstat(target);
+  if (!entry.isFile() || entry.uid !== owner) {
+    throw new Error("Codex CLI launcher is not a regular builder-owned file");
+  }
+
+  // Writable open performs overlay copy-up before taking the identity baseline.
+  // Chmod alone can replace a hard-linked lower-layer inode. Anchor all later
+  // operations to this descriptor; do not follow a replacement symlink.
+  const handle = await fs.open(target, constants.O_RDWR | constants.O_NOFOLLOW);
+  try {
+    const metadata = await handle.stat();
+    if (!metadata.isFile() || metadata.uid !== owner) {
+      throw new Error("Codex CLI launcher is not a regular builder-owned file");
+    }
+    const contents = await descriptorContents(handle);
+    await handle.chmod(0o755);
+    await assertHardenedLauncher(handle, target, { metadata, owner, contents });
+    if (
+      (await fs.realpath(filename)) !== target ||
+      (await fs.realpath(store)) !== canonicalStore
+    ) {
+      throw new Error(
+        "Codex launcher permission hardening failed verification",
+      );
+    }
+    assertStoreContains(canonicalStore, target);
+    await assertDeclaredLauncher(target);
+    await assertProtectedParents(target, canonicalStore, owner);
+  } finally {
+    await handle.close();
   }
 }
 
