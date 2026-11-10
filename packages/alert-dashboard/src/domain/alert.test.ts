@@ -9,6 +9,7 @@ import {
   openingEmail,
   severityFromLabels,
   suppressionFromSnapshot,
+  truncationEmail,
   type AlertOccurrenceRecord,
 } from "#domain/alert";
 import { AlertOccurrenceRecordSchema } from "#domain/alert";
@@ -56,7 +57,15 @@ describe("alert domain", () => {
     ]);
     expect(result.subject).toBe("[Alerts] 2 critical alerts opened");
     expect(result.htmlBody).toContain("Disk &lt;almost&gt; full");
-    expect(result.htmlBody).toContain("alerts.tailnet-1a49.ts.net");
+    expect(result.htmlBody).toContain(
+      '<a href="https://alerts.tailnet-1a49.ts.net/alerts">Open Alerts</a>',
+    );
+  });
+
+  test("truncation email links to the alerts page, not the app root", () => {
+    expect(truncationEmail(3).htmlBody).toContain(
+      '<a href="https://alerts.tailnet-1a49.ts.net/alerts">Open Alerts</a>',
+    );
   });
 
   test("opening email caps rows and reports local and upstream omissions", () => {

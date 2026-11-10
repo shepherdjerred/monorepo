@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  APP_HOSTS,
+  TOOL_HOSTS,
   argocdApplicationLink,
   chartmuseumChartLink,
   githubCommitLink,
@@ -10,6 +12,16 @@ import {
 import { LinkSchema } from "./snapshot.ts";
 
 describe("tool links", () => {
+  it("lists every host as an https origin a path can be appended to", () => {
+    for (const host of [
+      ...Object.values(TOOL_HOSTS),
+      ...Object.values(APP_HOSTS),
+    ]) {
+      expect(new URL(host).protocol).toBe("https:");
+      expect(host.endsWith("/")).toBe(false);
+    }
+  });
+
   it("builds Woodpecker pipeline and step URLs", () => {
     expect(woodpeckerPipelineLink(4210).url).toBe(
       "https://woodpecker.sjer.red/repos/1/pipeline/4210",

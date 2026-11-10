@@ -12,8 +12,10 @@ It has two halves in one process:
   [`@shepherdjerred/ops-model`](../ops-model/README.md) snapshot and change
   events every five minutes. The dashboard stores them in SQLite, applies the
   freshness policy at read time (a stale snapshot is never green), and renders
-  Overview, Services, Delivery, AI, Maintenance, and Review pages plus the
-  daily and weekly digest email. Trend charts read Prometheus through named
+  Home (`/`), Overview (`/overview`), Services, Flow (`/delivery`), AI,
+  Maintenance, and Review pages plus the daily and weekly digest email. Home
+  summarizes status, firing alerts, what waits on Jerred, and Tracker triage
+  from the snapshot, and links to Tracker, Delivery, and the tools. Trend charts read Prometheus through named
   presets only; the browser never sends PromQL.
 - **Alert ledger.** Alertmanager remains authoritative for evaluation,
   grouping, inhibition, routing, and silences; this service stores occurrence

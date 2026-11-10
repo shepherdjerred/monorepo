@@ -1,13 +1,10 @@
 import type { Service } from "@shepherdjerred/ops-model/catalog.ts";
 import type { Link } from "@shepherdjerred/ops-model/snapshot.ts";
-
-/**
- * Browser-facing hosts. These are tailnet product URLs, not deployment
- * settings: the in-cluster `GRAFANA_URL` the server calls is not reachable
- * from a browser, so deep links always use the public tailnet host.
- */
-export const GRAFANA_PUBLIC_URL = "https://grafana.tailnet-1a49.ts.net";
-export const ARGOCD_PUBLIC_URL = "https://argocd.tailnet-1a49.ts.net";
+import {
+  TOOL_HOSTS,
+  argocdApplicationLink,
+  grafanaDashboardLink,
+} from "@shepherdjerred/ops-model/tool-links.ts";
 
 export type GrafanaDatasourceUids = {
   prometheus: string;
@@ -36,7 +33,9 @@ function exploreUrl(
       range: DEFAULT_RANGE,
     },
   };
-  const url = new URL("/explore", GRAFANA_PUBLIC_URL);
+  // The browser-facing host, not the in-cluster `GRAFANA_URL` the server
+  // calls: that address is unreachable from a browser.
+  const url = new URL("/explore", TOOL_HOSTS.grafana);
   url.searchParams.set("schemaVersion", "1");
   url.searchParams.set("orgId", "1");
   url.searchParams.set("panes", JSON.stringify(panes));
@@ -98,23 +97,12 @@ export function serviceLinks(
   }
   for (const dashboard of service.grafanaDashboards) {
     links.push({
-      kind: "grafana",
+      ...grafanaDashboardLink(dashboard),
       label: `Dashboard ${dashboard}`,
-      url: new URL(
-        `/d/${encodeURIComponent(dashboard)}`,
-        GRAFANA_PUBLIC_URL,
-      ).toString(),
     });
   }
   for (const app of service.argoApps) {
-    links.push({
-      kind: "argocd",
-      label: `Argo CD ${app}`,
-      url: new URL(
-        `/applications/argocd/${encodeURIComponent(app)}`,
-        ARGOCD_PUBLIC_URL,
-      ).toString(),
-    });
+    links.push(argocdApplicationLink(app));
   }
   return links;
 }

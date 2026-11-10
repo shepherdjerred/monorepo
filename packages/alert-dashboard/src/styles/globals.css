@@ -1460,3 +1460,129 @@ tbody tr:hover {
     padding: 12px;
   }
 }
+
+/* ---- Home ---- */
+.stat-grid,
+.launcher-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+}
+.stat-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+.stat-card {
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--status-unknown);
+  border-radius: 10px;
+  background: var(--panel);
+}
+.stat-card.stat-ok {
+  border-top-color: var(--status-good);
+}
+.stat-card.stat-info {
+  border-top-color: var(--status-info);
+}
+.stat-card.stat-warning {
+  border-top-color: var(--status-warning);
+}
+.stat-card.stat-error {
+  border-top-color: var(--status-critical);
+}
+.stat-card a {
+  position: relative;
+  display: grid;
+  gap: 2px;
+  padding: 14px 16px;
+  border-radius: 0 0 9px 9px;
+  text-decoration: none;
+}
+.stat-card a:hover {
+  background: var(--row-hover);
+}
+.stat-label,
+.stat-hint {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+.stat-card strong {
+  font:
+    700 1.7rem "Berkeley Mono",
+    monospace;
+}
+.stat-external {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 0.8rem;
+  height: 0.8rem;
+  color: var(--muted);
+}
+.home-lists {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  align-items: start;
+}
+.panel-link {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--accent);
+  font-size: 0.82rem;
+  font-weight: 650;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.panel-link:hover {
+  text-decoration: underline;
+}
+.panel-link svg {
+  width: 0.8rem;
+  height: 0.8rem;
+}
+.launcher-grid {
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  gap: 10px;
+}
+.launcher-card {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+  padding: 11px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+  font-weight: 600;
+  text-decoration: none;
+}
+.launcher-card:hover {
+  border-color: var(--accent);
+}
+.launcher-card svg {
+  flex: none;
+  color: var(--muted);
+}
+.launcher-card .launcher-external {
+  margin-left: auto;
+  width: 0.8rem;
+  height: 0.8rem;
+}
+@media (max-width: 900px) {
+  .home-lists {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 600px) {
+  .stat-grid {
+    grid-template-columns: 1fr;
+  }
+  .launcher-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

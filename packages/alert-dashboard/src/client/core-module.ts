@@ -1,5 +1,6 @@
 import {
   ActivityIcon,
+  HouseIcon,
   BotIcon,
   BoxesIcon,
   CalendarRangeIcon,
@@ -19,6 +20,14 @@ const PromotionPage = lazy(async () => {
   const module = await import("./promotion/page.tsx");
   await import("./promotion/promotion.css");
   return { default: module.PromotionPage };
+});
+const HomePage = lazy(async () => {
+  const module = await import("./home-page.tsx");
+  return { default: module.HomePage };
+});
+const OpsHomeSummary = lazy(async () => {
+  const module = await import("./ops/home-summary.tsx");
+  return { default: module.OpsHomeSummary };
 });
 const OverviewPage = lazy(async () => {
   const module = await import("./ops/overview-page.tsx");
@@ -77,7 +86,8 @@ export const coreModule: ClientModule = {
   basePath: "",
   routes: [
     { path: "promotion", page: PromotionPage, chrome: "bare" },
-    { path: "", page: OverviewPage },
+    { path: "", page: HomePage },
+    { path: "overview", page: OverviewPage },
     { path: "services", page: ServicesPage },
     { path: "services/:id", page: ServicePage },
     { path: "delivery", page: DeliveryPage },
@@ -90,9 +100,11 @@ export const coreModule: ClientModule = {
     { path: "system", page: SystemPage },
   ],
   nav: [
-    { label: "Overview", icon: GaugeIcon, path: "" },
+    { label: "Home", icon: HouseIcon, path: "" },
+    { label: "Overview", icon: GaugeIcon, path: "overview" },
     { label: "Services", icon: BoxesIcon, path: "services" },
-    { label: "Delivery", icon: GitPullRequestIcon, path: "delivery" },
+    // "Flow", not "Delivery": Delivery is the separate release app.
+    { label: "Flow", icon: GitPullRequestIcon, path: "delivery" },
     { label: "AI", icon: BotIcon, path: "ai" },
     { label: "Promotion", icon: ActivityIcon, path: "promotion" },
     { label: "Maintenance", icon: WrenchIcon, path: "maintenance" },
@@ -101,4 +113,5 @@ export const coreModule: ClientModule = {
     { label: "History", icon: HistoryIcon, path: "history" },
     { label: "System", icon: ServerCogIcon, path: "system" },
   ],
+  homeCards: [{ id: "summary", card: OpsHomeSummary }],
 };

@@ -76,7 +76,10 @@ export type ModuleSearch = (
 export type ModuleHomeCard = {
   /** Unique within the module. */
   readonly id: string;
-  /** Renders one self-contained panel, including its own loading state. */
+  /**
+   * Renders one self-contained block on Home, including its own loading and
+   * error states. May be lazy; Home gives each card its own Suspense boundary.
+   */
   readonly card: ComponentType;
 };
 

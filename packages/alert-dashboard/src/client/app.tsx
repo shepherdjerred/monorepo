@@ -3,6 +3,7 @@ import { Route, Routes } from "react-router";
 
 import { registry } from "./modules.ts";
 import type { ResolvedRoute } from "./platform/module.ts";
+import { RegistryProvider } from "./platform/registry.tsx";
 import { Shell } from "./shell.tsx";
 
 function page(route: ResolvedRoute): React.JSX.Element {
@@ -30,23 +31,25 @@ function routeElement(route: ResolvedRoute): React.JSX.Element {
 
 export function App(): React.JSX.Element {
   return (
-    <Routes>
-      {registry.routes
-        .filter((route) => route.chrome === "bare")
-        .map((route) => routeElement(route))}
-      <Route element={<Shell nav={registry.nav} />}>
+    <RegistryProvider registry={registry}>
+      <Routes>
         {registry.routes
-          .filter((route) => route.chrome === "shell")
+          .filter((route) => route.chrome === "bare")
           .map((route) => routeElement(route))}
-        <Route
-          path="*"
-          element={
-            <main>
-              <div className="empty-state">Page not found.</div>
-            </main>
-          }
-        />
-      </Route>
-    </Routes>
+        <Route element={<Shell nav={registry.nav} />}>
+          {registry.routes
+            .filter((route) => route.chrome === "shell")
+            .map((route) => routeElement(route))}
+          <Route
+            path="*"
+            element={
+              <main>
+                <div className="empty-state">Page not found.</div>
+              </main>
+            }
+          />
+        </Route>
+      </Routes>
+    </RegistryProvider>
   );
 }

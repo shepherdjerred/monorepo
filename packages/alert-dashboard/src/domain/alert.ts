@@ -13,6 +13,7 @@ import {
   SuppressionStateSchema,
   type AlertmanagerSnapshotAlert,
 } from "#shared/schema";
+import { ALERTS_PUBLIC_URL } from "#domain/ops-changes";
 import { instantTextToEpochNanoseconds } from "#shared/time";
 
 export const AlertOccurrenceRecordSchema = z.object({
@@ -150,7 +151,7 @@ export function openingEmail(
       : `<p><strong>Omitted:</strong> ${omissionParts.join(" ")}</p>`;
   return {
     subject,
-    htmlBody: `<h1>Alerts opened</h1><ul>${rows}</ul>${omission}<p><a href="https://alerts.tailnet-1a49.ts.net/">Open Alerts</a></p>`,
+    htmlBody: `<h1>Alerts opened</h1><ul>${rows}</ul>${omission}<p><a href="${ALERTS_PUBLIC_URL}/alerts">Open Alerts</a></p>`,
   };
 }
 
@@ -160,7 +161,7 @@ export function truncationEmail(truncatedAlerts: number): {
 } {
   return {
     subject: "[Alerts] Alertmanager delivery truncated",
-    htmlBody: `<h1>Alertmanager delivery truncated</h1><p>Alertmanager omitted ${truncatedAlerts.toString()} additional alert${truncatedAlerts === 1 ? "" : "s"} from this webhook delivery.</p><p><a href="https://alerts.tailnet-1a49.ts.net/">Open Alerts</a></p>`,
+    htmlBody: `<h1>Alertmanager delivery truncated</h1><p>Alertmanager omitted ${truncatedAlerts.toString()} additional alert${truncatedAlerts === 1 ? "" : "s"} from this webhook delivery.</p><p><a href="${ALERTS_PUBLIC_URL}/alerts">Open Alerts</a></p>`,
   };
 }
 

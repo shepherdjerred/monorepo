@@ -15,6 +15,17 @@ export const TOOL_HOSTS = {
   chartmuseum: "https://chartmuseum.tailnet-1a49.ts.net",
 } as const;
 
+/**
+ * Browser-facing hosts of the first-party apps, for the same reason as
+ * `TOOL_HOSTS`. The hub is the Ops app; it is reached on the `ops` host until
+ * its own `hub` host is exposed.
+ */
+export const APP_HOSTS = {
+  hub: "https://ops.tailnet-1a49.ts.net",
+  tracker: "https://tracker.tailnet-1a49.ts.net",
+  delivery: "https://delivery.tailnet-1a49.ts.net",
+} as const;
+
 const WOODPECKER_REPOSITORY_ID = 1;
 const TEMPORAL_NAMESPACE = "prod";
 
