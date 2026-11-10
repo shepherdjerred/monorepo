@@ -2,6 +2,7 @@ import os from "node:os";
 import path from "node:path";
 import { z } from "zod";
 import { defineConfig } from "@shepherdjerred/config";
+import { APP_HOSTS } from "@shepherdjerred/ops-model/tool-links.ts";
 import { BRIM_SYNC_RECIPIENT } from "#lib/brim/sync/recipient.ts";
 import { DEFAULT_CACHE_TTL_SECONDS } from "#lib/credential-cache.ts";
 import { createObservabilityHooks } from "@shepherdjerred/config/observability.ts";
@@ -111,11 +112,11 @@ export const TOOLKIT_CONFIG_DEFINITION = {
     sources: ["env", "file", "default"],
     default: DEFAULT_CACHE_TTL_SECONDS,
   },
-  /** Base URL of the ops dashboard that serves the ops snapshot. */
+  /** Base URL of Hub, which serves the ops snapshot. */
   opsDashboardUrl: {
     schema: z.url({ protocol: /^https?$/ }),
     sources: ["env", "file", "default"],
-    default: "https://ops.tailnet-1a49.ts.net",
+    default: APP_HOSTS.hub,
   },
 } as const;
 

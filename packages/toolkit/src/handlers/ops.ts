@@ -18,7 +18,7 @@ Options:
                     errors, product, ai, maintenance, observability
 
 Configuration: OPS_DASHBOARD_URL or ops.dashboard.url in
-~/.toolkit/config.toml (defaults to https://ops.tailnet-1a49.ts.net)`;
+~/.toolkit/config.toml (defaults to https://hub.tailnet-1a49.ts.net)`;
 
 export async function handleOpsCommand(
   subcommand: string | undefined,

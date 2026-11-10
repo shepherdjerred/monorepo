@@ -1257,7 +1257,7 @@ value or unparseable file is an error, not a fallback.
 | ----------------------------------------------------------------- | ----------------------------------------------------- |
 | `HISTORY_METRICS_PUSH_ENABLED` / `history.metrics.push.enabled`   | `false`                                               |
 | `HISTORY_METRICS_PUSH_ENDPOINT` / `history.metrics.push.endpoint` | `https://otlp-metrics.tailnet-1a49.ts.net/v1/metrics` |
-| `OPS_DASHBOARD_URL` / `ops.dashboard.url`                         | `https://ops.tailnet-1a49.ts.net`                     |
+| `OPS_DASHBOARD_URL` / `ops.dashboard.url`                         | `https://hub.tailnet-1a49.ts.net`                     |
 | `BRIM_SYNC_MACHINE_ID` / `brim.sync.machine.id`                   | normalized hostname                                   |
 | `BRIM_SYNC_BUCKET` / `brim.sync.bucket`                           | `brim-sessions`                                       |
 | `BRIM_SYNC_PROFILE` / `brim.sync.profile`                         | `brim-sync` (AWS profile)                             |
