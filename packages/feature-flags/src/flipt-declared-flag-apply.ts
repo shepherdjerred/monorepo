@@ -12,15 +12,76 @@ import {
 import type { FliptFetcher } from "./managed-flag-drift.ts";
 import { validateDeclaredSegments } from "./flipt-declared-segment-preflight.ts";
 
-const PayloadSchema = z.looseObject({
+const payloadFields = {
   "@type": z.literal(FLIPT_FLAG_TYPE_URL),
   key: z.string().min(1),
-  type: z.literal("BOOLEAN_FLAG_TYPE"),
   enabled: z.boolean().default(false),
-  rules: z.array(z.unknown()).default([]),
-  rollouts: z.array(z.unknown()).default([]),
   metadata: z.record(z.string(), z.string()).default({}),
-});
+};
+const VariantPayloadSchema = z
+  .looseObject({
+    ...payloadFields,
+    type: z.literal("VARIANT_FLAG_TYPE"),
+    defaultVariant: z.string().min(1),
+    variants: z
+      .array(
+        z.looseObject({
+          key: z.string().min(1),
+          name: z.string().default(""),
+          description: z.string().default(""),
+          attachment: z.record(z.string(), z.unknown()).default({}),
+        }),
+      )
+      .min(1),
+    rules: z
+      .array(
+        z.looseObject({
+          rank: z.number().int().positive(),
+          segmentOperator: z.enum([
+            "OR_SEGMENT_OPERATOR",
+            "AND_SEGMENT_OPERATOR",
+          ]),
+          segments: z.array(z.string().min(1)),
+          distributions: z.array(
+            z.object({
+              variant: z.string().min(1),
+              rollout: z.number().min(0).max(100),
+            }),
+          ),
+        }),
+      )
+      .default([]),
+    rollouts: z.array(z.never()).default([]),
+  })
+  .refine((payload) => {
+    const keys = new Set(payload.variants.map((variant) => variant.key));
+    return (
+      keys.size === payload.variants.length &&
+      keys.has(payload.defaultVariant) &&
+      payload.rules.every((rule) =>
+        rule.distributions.every((distribution) =>
+          keys.has(distribution.variant),
+        ),
+      )
+    );
+  }, "Variant keys must be unique and cover every default and distribution")
+  .refine(
+    (payload) =>
+      payload.rules
+        .map((rule) => rule.rank)
+        .sort((a, b) => a - b)
+        .every((rank, index) => rank === index + 1),
+    "Variant rule ranks must be contiguous and one-based",
+  );
+const PayloadSchema = z.union([
+  z.looseObject({
+    ...payloadFields,
+    type: z.literal("BOOLEAN_FLAG_TYPE"),
+    rules: z.array(z.unknown()).default([]),
+    rollouts: z.array(z.unknown()).default([]),
+  }),
+  VariantPayloadSchema,
+]);
 const ResourceSchema = z.object({
   resource: z.object({
     key: z.string(),
@@ -60,9 +121,18 @@ export type DeclaredFlagApplyOptions = {
 
 function behavior(payload: Payload) {
   return {
+    type: payload.type,
     enabled: payload.enabled,
     rules: payload.rules,
     rollouts: payload.rollouts,
+    ...(payload.type === "VARIANT_FLAG_TYPE"
+      ? {
+          defaultVariant: payload.defaultVariant,
+          variants: [...payload.variants].sort((a, b) =>
+            a.key.localeCompare(b.key),
+          ),
+        }
+      : {}),
   };
 }
 
@@ -105,9 +175,9 @@ async function previewDeclaredManagedFlags(options: DeclaredFlagApplyOptions) {
   );
   const selected = options.flagKeys.map((key) => {
     const flag = declared.find((candidate) => candidate.key === key);
-    if (flag?.type !== "boolean")
+    if (flag === undefined)
       throw new Error(
-        `Selected key is not a declared boolean in ${options.environment}/${options.namespace}: ${key}`,
+        `Selected key is not declared in ${options.environment}/${options.namespace}: ${key}`,
       );
     return flag;
   });
@@ -129,12 +199,20 @@ async function previewDeclaredManagedFlags(options: DeclaredFlagApplyOptions) {
     revision = current.revision;
     const desired = toFliptFlagPayload(flag);
     const before = current.resource.payload;
-    const after: Payload = {
+    if (before.type !== desired.type)
+      throw new Error(`Declared flag type differs for ${flag.key}`);
+    const after = PayloadSchema.parse({
       ...before,
-      enabled: flag.default,
+      enabled: desired.enabled,
       rules: [...desired.rules],
       rollouts: [...desired.rollouts],
-    };
+      ...(desired.type === "VARIANT_FLAG_TYPE"
+        ? {
+            defaultVariant: desired.defaultVariant,
+            variants: desired.variants,
+          }
+        : {}),
+    });
     result.changes.push({
       key: flag.key,
       status: isDeepStrictEqual(behavior(before), behavior(after))

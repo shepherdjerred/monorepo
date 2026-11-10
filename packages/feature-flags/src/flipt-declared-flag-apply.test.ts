@@ -3,7 +3,10 @@ import { z } from "zod";
 import { applyDeclaredManagedFlags } from "./flipt-declared-flag-apply.ts";
 import { ManagedFlagInventorySchema } from "./managed-flag-inventory.ts";
 import type { FliptFetcher } from "./managed-flag-drift.ts";
-import { collectManagedSegmentPayloads } from "./flipt-resource-payloads.ts";
+import {
+  collectManagedSegmentPayloads,
+  toFliptFlagPayload,
+} from "./flipt-resource-payloads.ts";
 
 const inventory = ManagedFlagInventorySchema.parse({
   version: 3,
@@ -310,4 +313,246 @@ test("shared audience preflight still runs when selected flag payloads are uncha
     }),
   ).rejects.toThrow("Rollout segment behavior differs");
   expect(s.writes).toHaveLength(2);
+});
+
+const variantInventory = ManagedFlagInventorySchema.parse({
+  ...inventory,
+  flags: [
+    ...inventory.flags,
+    {
+      key: "settings",
+      owner: "test",
+      namespace: "test",
+      source: "test",
+      purpose: "test",
+      type: "variant",
+      default: '{"enabledTargets":["pmc"]}',
+      rollouts: [],
+      rules: [],
+      thresholdRollouts: [],
+    },
+  ],
+});
+function variantServer(options: Parameters<typeof server>[0] = {}) {
+  const s = server(options);
+  const flag = variantInventory.flags.find(
+    (candidate) => candidate.key === "settings",
+  );
+  if (flag?.type !== "variant") throw new Error("Missing variant fixture");
+  s.payloads.set("settings", {
+    ...toFliptFlagPayload({ ...flag, default: '{"enabledTargets":[]}' }),
+    name: "Operator title",
+    metadata: { incident: "retained" },
+  });
+  return s;
+}
+
+test("plans and applies complete variant settings with revision-guarded idempotence", async () => {
+  const s = variantServer();
+  const selected = {
+    ...scope,
+    inventory: variantInventory,
+    flagKeys: ["settings", "first"],
+  };
+  const plan = await applyDeclaredManagedFlags({
+    ...selected,
+    mode: "plan",
+    fetcher: s.fetcher,
+  });
+  expect(s.writes).toHaveLength(0);
+  expect(plan.changes[0]?.after).toMatchObject({
+    type: "VARIANT_FLAG_TYPE",
+    enabled: true,
+    defaultVariant: '{"enabledTargets":["pmc"]}',
+    variants: [{ key: '{"enabledTargets":["pmc"]}', attachment: {} }],
+    name: "Operator title",
+    metadata: { incident: "retained" },
+  });
+  const result = await applyDeclaredManagedFlags({
+    ...selected,
+    mode: "apply",
+    fetcher: s.fetcher,
+  });
+  expect(result.changes.map((change) => change.status)).toEqual([
+    "applied",
+    "applied",
+  ]);
+  expect(s.writes.map((write) => write.revision)).toEqual(["r0", "r1"]);
+  const again = await applyDeclaredManagedFlags({
+    ...selected,
+    mode: "apply",
+    fetcher: s.fetcher,
+  });
+  expect(again.changes.map((change) => change.status)).toEqual([
+    "unchanged",
+    "unchanged",
+  ]);
+  expect(s.writes).toHaveLength(2);
+});
+
+test("variant type mismatches and malformed payloads abort the whole selection before writing", async () => {
+  const rankedRule = {
+    rank: 1,
+    segmentOperator: "OR_SEGMENT_OPERATOR",
+    segments: [],
+    distributions: [{ variant: "same", rollout: 100 }],
+  };
+  for (const payload of [
+    { type: "BOOLEAN_FLAG_TYPE", enabled: false, rules: [], rollouts: [] },
+    { type: "UNKNOWN_FLAG_TYPE" },
+    {
+      type: "VARIANT_FLAG_TYPE",
+      defaultVariant: "missing",
+      variants: [{ key: "other" }],
+    },
+    {
+      type: "VARIANT_FLAG_TYPE",
+      defaultVariant: "same",
+      variants: [{ key: "same" }, { key: "same" }],
+    },
+    {
+      type: "VARIANT_FLAG_TYPE",
+      defaultVariant: "same",
+      variants: [{ key: "same", attachment: [] }],
+    },
+    {
+      type: "VARIANT_FLAG_TYPE",
+      defaultVariant: "same",
+      variants: [{ key: "same" }],
+      rules: [
+        {
+          rank: 1,
+          segmentOperator: "UNKNOWN",
+          segments: [],
+          distributions: [],
+        },
+      ],
+    },
+    ...[
+      [{ ...rankedRule, rank: 0 }],
+      [rankedRule, rankedRule],
+      [{ ...rankedRule, rank: 2 }],
+    ].map((rules) => ({
+      type: "VARIANT_FLAG_TYPE",
+      defaultVariant: "same",
+      variants: [{ key: "same" }],
+      rules,
+    })),
+  ]) {
+    const s = variantServer();
+    s.payloads.set("settings", {
+      "@type": "flipt.core.Flag",
+      key: "settings",
+      ...payload,
+    });
+    await expect(
+      applyDeclaredManagedFlags({
+        ...scope,
+        inventory: variantInventory,
+        flagKeys: ["first", "settings"],
+        mode: "apply",
+        fetcher: s.fetcher,
+      }),
+    ).rejects.toThrow();
+    expect(s.writes).toHaveLength(0);
+  }
+});
+
+test("a variant readback mismatch or conflict stops subsequent boolean writes", async () => {
+  for (const [options, status] of [
+    [{ lostWrite: true }, "failed"],
+    [{ readbackConflict: true }, "conflict"],
+    [{ conflictAt: 1 }, "conflict"],
+  ] as const) {
+    const s = variantServer(options);
+    const result = await applyDeclaredManagedFlags({
+      ...scope,
+      inventory: variantInventory,
+      flagKeys: ["settings", "first"],
+      mode: "apply",
+      fetcher: s.fetcher,
+    });
+    expect(result.changes.map((change) => change.status)).toEqual([
+      status,
+      "planned",
+    ]);
+    expect(s.writes).toHaveLength(1);
+  }
+});
+
+test("variant attachments and distribution rules require an aligned shared audience", async () => {
+  const audience = targetedInventory.flags.find((flag) => flag.key === "second")
+    ?.rollouts[0];
+  if (audience === undefined) throw new Error("Missing audience fixture");
+  const targeted = ManagedFlagInventorySchema.parse({
+    ...variantInventory,
+    flags: variantInventory.flags.map((flag) =>
+      flag.key === "settings"
+        ? {
+            ...flag,
+            rules: [
+              {
+                rank: 1,
+                segmentOperator: "OR_SEGMENT_OPERATOR",
+                segments: [
+                  {
+                    key: audience.segmentKey,
+                    matchType: audience.matchType,
+                    constraints: audience.constraints,
+                  },
+                ],
+                distributions: [
+                  {
+                    variantKey: "targeted",
+                    rollout: 100,
+                    variantAttachment:
+                      '{"enabledTargets":["pmc","reddit-mcservers"]}',
+                  },
+                ],
+              },
+            ],
+          }
+        : flag,
+    ),
+  });
+  const segment = collectManagedSegmentPayloads(targeted.flags)[0];
+  if (segment === undefined)
+    throw new Error("Missing variant audience fixture");
+  const s = variantServer();
+  s.payloads.set("audience", { ...segment, constraints: [] });
+  const selected = {
+    ...scope,
+    inventory: targeted,
+    flagKeys: ["first", "settings"],
+    mode: "apply" as const,
+    fetcher: s.fetcher,
+  };
+  await expect(applyDeclaredManagedFlags(selected)).rejects.toThrow(
+    "segment behavior differs",
+  );
+  expect(s.writes).toHaveLength(0);
+  s.payloads.set("audience", segment);
+  const result = await applyDeclaredManagedFlags(selected);
+  expect(result.changes.map((change) => change.status)).toEqual([
+    "applied",
+    "applied",
+  ]);
+  expect(result.changes[1]?.after).toMatchObject({
+    variants: expect.arrayContaining([
+      {
+        key: "targeted",
+        name: "targeted",
+        description: "",
+        attachment: { enabledTargets: ["pmc", "reddit-mcservers"] },
+      },
+    ]),
+    rules: [
+      {
+        rank: 1,
+        segments: ["audience"],
+        distributions: [{ variant: "targeted", rollout: 100 }],
+      },
+    ],
+    metadata: { incident: "retained" },
+  });
 });

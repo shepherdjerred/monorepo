@@ -987,6 +987,16 @@ provider-UID processes before that shared identity is reused.
 Provider subprocesses lose these capabilities when their UID changes, and
 `allowPrivilegeEscalation: false` prevents regaining them.
 
+The Codex SDK writes structured-output schemas before the provider process
+starts. Its launcher transfers only the SDK's privately owned temporary schema
+file and directory to the provider UID before dropping privileges. It rejects
+symlinks, hardlinks, extra files and paths outside the SDK temporary directory;
+other parent-owned files remain private. The privileged schema helper starts
+from its trusted source directory with an empty environment, private HOME
+and XDG configuration paths, an explicit empty Bun configuration and automatic
+environment-file loading disabled. The provider retains its assigned working
+directory and environment after the helper completes.
+
 The image starts the worker under Tini to reap orphaned provider and tool
 processes. The UID cleanup checks require those processes to disappear before
 another turn starts; unreaped zombies otherwise block the queue. Claude's

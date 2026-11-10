@@ -105,7 +105,7 @@ can report the unavailable check separately.
 
 ## 5. Apply a reviewed rollout
 
-Update the managed declaration before changing an existing boolean rollout.
+Update the managed declaration before changing an existing boolean or variant rollout.
 Keep each non-global boolean's `defaultOffExceptions` scoped to its environment,
 with a reason, AI issue, enablement criteria, and review date.
 
@@ -120,7 +120,8 @@ bun run check-flipt-flag-inventory -- --plan-declared \
 Inspect the before and after behavior and current revision. Replace
 `--plan-declared` with `--apply-declared` to apply that declaration.
 Both modes require an explicit environment, namespace, and nonempty flag list.
-They reject variant flags and never edit unselected flags or segments.
+Both modes accept boolean and variant flags and never edit unselected flags or segments.
+For variants, review the default, complete variant definitions, attachments and distribution rules together.
 Every referenced shared segment must already match its declared audience.
 A missing or different segment blocks the complete selection before any write,
 including when the selected flag payloads are unchanged.

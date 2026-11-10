@@ -35,15 +35,41 @@ async function materializeProviderWrapper(
     path.join(os.tmpdir(), "agent-codex-provider-"),
   );
   try {
+    const providerUid = providerSubprocessUid(environment);
+    if (providerUid === undefined)
+      throw new Error("Isolated Codex launcher requires a provider uid");
     await chmod(directory, 0o755);
     const executable = path.join(directory, "codex");
     const wrappedCommand = providerSubprocessCommand(command, environment)
       .map((part) => shellQuote(part))
       .join(" ");
-    await writeFile(executable, `#!/bin/sh\nexec ${wrappedCommand} "$@"\n`, {
-      encoding: "utf8",
-      mode: 0o755,
-    });
+    const schemaHelper = fileURLToPath(
+      new URL("codex-permissions/output-schema.ts", import.meta.url),
+    );
+    const prepareSchema = [
+      "/usr/bin/env",
+      "-i",
+      `HOME=${directory}`,
+      `XDG_CONFIG_HOME=${directory}`,
+      process.execPath,
+      "--no-env-file",
+      "--no-install",
+      "--no-macros",
+      "--config=/dev/null",
+      schemaHelper,
+      providerUid.toString(),
+      os.tmpdir(),
+    ]
+      .map((part) => shellQuote(part))
+      .join(" ");
+    await writeFile(
+      executable,
+      `#!/bin/sh\n(cd ${shellQuote(path.dirname(schemaHelper))} && exec ${prepareSchema} "$@") || exit $?\nexec ${wrappedCommand} "$@"\n`,
+      {
+        encoding: "utf8",
+        mode: 0o755,
+      },
+    );
     await chmod(executable, 0o755);
     return { directory, executable };
   } catch (error: unknown) {
@@ -53,7 +79,7 @@ async function materializeProviderWrapper(
 }
 
 export async function providerPathOverride(
-  input: RunCodexAgentTurnInput,
+  input: Pick<RunCodexAgentTurnInput, "codexPathOverride">,
 ): Promise<{
   pathOverride: Pick<CodexOptions, "codexPathOverride"> | undefined;
   wrapperDirectory: string | undefined;
