@@ -402,12 +402,24 @@ function readTailscale(stack: Stack): Pick<OpenTofuSide, "tailscaleTags"> {
   };
 }
 
+/**
+ * A reference attribute such as `var.x` or `each.value.y`: bare in HCL, and a
+ * `"${...}"` string in a synthesized stack's JSON.
+ */
+function unwrapInterpolation(
+  expression: string | undefined,
+): string | undefined {
+  return expression === undefined
+    ? undefined
+    : (/^"\$\{([^"]*)\}"$/.exec(expression)?.[1] ?? expression);
+}
+
 /** Titles a `for_each` item resource takes from its stack's own data. */
 function onePasswordTitles(stack: Stack, item: Resource): string[] {
   const literal = text(item, "title");
   if (literal !== undefined) return [literal];
-  const title = item.attributes.get("title");
-  const source = item.attributes.get("for_each");
+  const title = unwrapInterpolation(item.attributes.get("title"));
+  const source = unwrapInterpolation(item.attributes.get("for_each"));
   if (title === "each.value.title" && source?.startsWith("local.") === true) {
     const entries = blocksOf(stack.blocks, "locals")
       .map((locals) =>
@@ -460,7 +472,7 @@ async function readOnePasswordItems(
       throw new Error(`${stack.name}: ${resource} has no resolvable vault`);
     const titles = onePasswordTitles(stack, item);
     const variable = /^var\.(\w+)$/.exec(
-      item.attributes.get("for_each") ?? "",
+      unwrapInterpolation(item.attributes.get("for_each")) ?? "",
     )?.[1];
     if (variable !== undefined && titles.length === 0) {
       const desiredState: unknown = await Bun.file(

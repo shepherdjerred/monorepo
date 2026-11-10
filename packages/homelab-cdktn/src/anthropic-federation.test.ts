@@ -3,16 +3,16 @@ import { z } from "zod";
 import { synthesize } from "#scripts/synth.ts";
 
 const ConfigurationSchema = z.looseObject({
+  data: z.record(z.string(), z.record(z.string(), z.unknown())),
+  variable: z.record(z.string(), z.unknown()),
+  resource: z.record(z.string(), z.record(z.string(), z.unknown())),
   terraform: z.looseObject({
-    encryption: z.unknown(),
     required_providers: z.record(
       z.string(),
       z.object({ source: z.string(), version: z.string() }),
     ),
+    encryption: z.unknown(),
   }),
-  data: z.record(z.string(), z.record(z.string(), z.unknown())),
-  variable: z.record(z.string(), z.unknown()),
-  resource: z.record(z.string(), z.record(z.string(), z.unknown())),
 });
 
 async function federation() {
