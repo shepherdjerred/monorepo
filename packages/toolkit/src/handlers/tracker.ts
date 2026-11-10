@@ -35,6 +35,10 @@ issue create --team --title          --description or --description-file,
 issue update <ID>                    Patch fields, --add-label, --remove-label,
                                     --parent <ID|none>, --due <YYYY-MM-DD|none>,
                                     --archive|--unarchive, --expected-revision
+issue bulk-update <ID...>            One all-or-nothing patch: --state,
+                                    --priority, --project, --assignee,
+                                    --add-label, --remove-label, --parent,
+                                    --due, --archive|--unarchive
 issue delete <ID>                    Requires --expected-revision
 issue comment add|list <ID>          --body or --body-file
 issue comment update|delete <UUID>   Edit or remove a comment

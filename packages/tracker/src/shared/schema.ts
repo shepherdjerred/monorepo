@@ -54,6 +54,53 @@ export const UpdateIssueSchema = MutationSchema.extend({
   expectedRevision: z.number().int().positive().optional(),
   attachmentIds: z.array(z.string()).max(100).default([]),
 });
+/** One patch for many issues: no per-issue text and no attachments. */
+const BulkIssuePatchSchema = UpdateIssueSchema.pick({
+  stateName: true,
+  stateType: true,
+  priority: true,
+  assigneeKey: true,
+  projectSlug: true,
+  addLabels: true,
+  removeLabels: true,
+  archived: true,
+  parentIdentifier: true,
+  dueDate: true,
+})
+  .strict()
+  .refine(
+    (patch) =>
+      Object.values(patch).some((value) =>
+        Array.isArray(value) ? value.length > 0 : value !== undefined,
+      ),
+    "The patch changes nothing",
+  );
+export const BulkUpdateIssuesSchema = MutationSchema.extend({
+  identifiers: z
+    .array(IdentifierSchema)
+    .min(1)
+    .max(250)
+    .refine(
+      (identifiers) => new Set(identifiers).size === identifiers.length,
+      "Identifiers must be unique",
+    ),
+  /** Per-issue optimistic locks; issues it does not name are not checked. */
+  expectedRevisions: z
+    .record(IdentifierSchema, z.number().int().positive())
+    .default({}),
+  patch: BulkIssuePatchSchema,
+})
+  .strict()
+  .refine(
+    (input) =>
+      Object.keys(input.expectedRevisions).every((key) =>
+        input.identifiers.includes(key),
+      ),
+    {
+      path: ["expectedRevisions"],
+      message: "expectedRevisions may only name the listed identifiers",
+    },
+  );
 const issueListShape = {
   teamKey: TeamKeySchema.optional(),
   projectSlug: SlugSchema.optional(),
@@ -132,3 +179,4 @@ export type ReorderViewsInput = z.infer<typeof ReorderViewsSchema>;
 export type IssueListInput = z.infer<typeof IssueListSchema>;
 export type CreateIssueInput = z.infer<typeof CreateIssueSchema>;
 export type UpdateIssueInput = z.infer<typeof UpdateIssueSchema>;
+export type BulkUpdateIssuesInput = z.infer<typeof BulkUpdateIssuesSchema>;

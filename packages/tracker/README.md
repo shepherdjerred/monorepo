@@ -70,6 +70,19 @@ team counters allocate issue numbers atomically. State and label references
 cannot cross team boundaries. Votes have one row per issue and actor and their
 displayed count is recomputed while holding the issue lock.
 
+`issues.bulkUpdate` applies one `patch` (state, priority, assignee, project,
+labels, archive, parent, due date; never title, description or attachments) to
+1-250 unique `identifiers` in one transaction, all or nothing. It takes the
+same locks as a single update in the same order: team rows (only to re-parent),
+then workflow states, then issue rows by ascending ID. Each issue is updated by
+the single-issue path, so it gets its own revision increment and `updated`
+event, all sharing the request ID, and the sub-issue rules apply to each in
+input order. Unknown identifiers are a `NOT_FOUND` naming them; an entry in
+`expectedRevisions` that no longer matches is a `CONFLICT` naming the stale
+issues; a state or label missing from one issue's team is a `BAD_REQUEST`
+naming that issue. It returns `{ items }` in input order, shaped like
+`issues.list` items.
+
 Identifiers, state names/types, label names and project slugs are the public
 references. The API includes issue search/list/detail/history, comments,
 relations, votes, projects, labels, states, actors and global events. Search

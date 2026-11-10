@@ -1,5 +1,6 @@
 import { z } from "zod";
 import {
+  BulkUpdateIssuesSchema,
   CreateIssueSchema,
   IssueListSchema,
   UpdateIssueSchema,
@@ -50,8 +51,6 @@ function listInput(options: TrackerOptions, search?: string) {
 async function create(context: TrackerCommandContext, options: TrackerOptions) {
   if ((options.state?.length ?? 0) > 1)
     throw new Error("Create takes one --state");
-  const state = options.state?.[0];
-  const stateType = StateTypeSchema.safeParse(state);
   return context.client.issues.create.mutate(
     CreateIssueSchema.parse({
       actor: await context.actor(),
@@ -67,11 +66,7 @@ async function create(context: TrackerCommandContext, options: TrackerOptions) {
       parentIdentifier: clearable(options.parent?.toUpperCase(), "NONE"),
       dueDate: clearable(options.due),
       labels: options.label,
-      ...(state === undefined
-        ? {}
-        : stateType.success
-          ? { stateType: stateType.data }
-          : { stateName: state }),
+      ...stateReference(options.state?.[0]),
     }),
   );
 }
@@ -81,10 +76,7 @@ async function update(
   identifier: string,
   options: TrackerOptions,
 ) {
-  if (options.archive && options.unarchive)
-    throw new Error("Choose --archive or --unarchive");
-  if ((options.state?.length ?? 0) > 1)
-    throw new Error("Update takes one --state");
+  const fields = patchFields(options);
   const state = options.state?.[0];
   const states =
     state === undefined
@@ -107,18 +99,62 @@ async function update(
         options.description,
         options["description-file"],
       ),
-      priority: integer(options.priority),
-      projectSlug: clearable(options.project),
-      assigneeKey: clearable(options.assignee),
-      parentIdentifier: clearable(options.parent?.toUpperCase(), "NONE"),
-      dueDate: clearable(options.due),
-      addLabels: options["add-label"],
-      removeLabels: options["remove-label"],
+      ...fields,
       stateName: selected?.name,
-      ...(options.archive || options.unarchive
-        ? { archived: options.archive }
-        : {}),
       expectedRevision: integer(options["expected-revision"]),
+    }),
+  );
+}
+
+/** A state flag is a state type when it names one, otherwise a state name. */
+function stateReference(state: string | undefined) {
+  if (state === undefined) return {};
+  const stateType = StateTypeSchema.safeParse(state);
+  return stateType.success
+    ? { stateType: stateType.data }
+    : { stateName: state };
+}
+
+/** The flags `issue update` and `issue bulk-update` share. */
+function patchFields(options: TrackerOptions) {
+  if (options.archive && options.unarchive)
+    throw new Error("Choose --archive or --unarchive");
+  if ((options.state?.length ?? 0) > 1)
+    throw new Error("Update takes one --state");
+  return {
+    priority: integer(options.priority),
+    projectSlug: clearable(options.project),
+    assigneeKey: clearable(options.assignee),
+    parentIdentifier: clearable(options.parent?.toUpperCase(), "NONE"),
+    dueDate: clearable(options.due),
+    addLabels: options["add-label"],
+    removeLabels: options["remove-label"],
+    ...(options.archive || options.unarchive
+      ? { archived: options.archive }
+      : {}),
+  };
+}
+
+/** One patch for many issues, applied all-or-nothing by the server. */
+async function bulkUpdate(
+  context: TrackerCommandContext,
+  identifiers: string[],
+  options: TrackerOptions,
+) {
+  for (const flag of [
+    "title",
+    "description",
+    "description-file",
+    "expected-revision",
+  ] as const)
+    if (options[flag] !== undefined)
+      throw new Error(`bulk-update does not take --${flag}`);
+  return context.client.issues.bulkUpdate.mutate(
+    BulkUpdateIssuesSchema.parse({
+      actor: await context.actor(),
+      identifiers: identifiers.map((value) => value.toUpperCase()),
+      // Teams resolve the state themselves, so it is passed through as given.
+      patch: { ...patchFields(options), ...stateReference(options.state?.[0]) },
     }),
   );
 }
@@ -181,6 +217,8 @@ export async function issueCommand(
   }
   if (action === "create") return create(context, options);
   if (action === "comment") return comments(context, args.slice(1), options);
+  if (action === "bulk-update")
+    return bulkUpdate(context, args.slice(1), options);
   const identifier = required(args[1], "Issue identifier").toUpperCase();
   if (action === "view")
     return {
