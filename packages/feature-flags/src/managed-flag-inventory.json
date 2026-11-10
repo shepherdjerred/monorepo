@@ -960,6 +960,18 @@
       ]
     },
     {
+      "key": "tracker-live-updates-enabled",
+      "owner": "tracker",
+      "namespace": "tracker",
+      "source": "tracker",
+      "purpose": "Stream committed changes to browsers over server-sent events, evaluated per connection and heartbeat.",
+      "type": "boolean",
+      "default": true,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "tracker-attachment-max-bytes",
       "owner": "tracker",
       "namespace": "tracker",

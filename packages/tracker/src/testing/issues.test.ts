@@ -18,6 +18,7 @@ import { ActorSchema } from "#shared/actor.ts";
 import { appRouter } from "#server/router.ts";
 import { createApp } from "#server/app.ts";
 import { memoryObjectStore } from "#testing/memory-object-store.ts";
+import { createChangeHub } from "#infrastructure/change-hub.ts";
 
 const actor = ActorSchema.parse({
   key: "codex:test-session",
@@ -386,6 +387,7 @@ it("rejects actorless mutations, pauses writes, and round-trips safe attachments
     catalog: new Catalog(unit),
     requestId: "test",
     writesEnabled: async () => false,
+    liveUpdatesEnabled: async () => false,
   };
   const caller = appRouter.createCaller(context);
   await expect(
@@ -398,6 +400,7 @@ it("rejects actorless mutations, pauses writes, and round-trips safe attachments
     attachments,
     writesEnabled: async () => true,
     attachmentMaxBytes: async () => 1000,
+    changes: createChangeHub(suite.url),
   });
   const missing = await app.request("/trpc/issues.create", {
     method: "POST",

@@ -15,6 +15,10 @@ import {
   CreateViewSchema as CreateView,
   UpdateViewSchema as UpdateView,
 } from "./schema.ts";
+import {
+  LiveChangeSchema as LiveChange,
+  LiveMessageSchema as LiveMessageUnion,
+} from "./live-updates.ts";
 import type { z } from "zod";
 
 export type AppRouter = ServerRouter & { readonly __wireContract?: never };
@@ -33,3 +37,7 @@ export const CreateViewSchema = CreateView.clone();
 export const UpdateViewSchema = UpdateView.clone();
 export type DueDate = z.infer<typeof DueDate>;
 export type ViewParams = z.infer<typeof ViewParams>;
+export const LiveChangeSchema = LiveChange.clone();
+export const LiveMessageSchema = LiveMessageUnion.clone();
+export type LiveChange = z.infer<typeof LiveChange>;
+export type LiveMessage = z.infer<typeof LiveMessageUnion>;

@@ -39,6 +39,12 @@ export function behaviorConfig(stage: string) {
         ),
         names: { flag: "tracker-telemetry-enabled" },
       },
+      liveUpdatesEnabled: {
+        schema: z.boolean(),
+        sources: ["flag", "default"],
+        default: true,
+        names: { flag: "tracker-live-updates-enabled" },
+      },
       attachmentMaxBytes: {
         schema: z.coerce
           .number()
@@ -57,6 +63,7 @@ export function behaviorConfig(stage: string) {
         kinds: {
           writesEnabled: "boolean",
           telemetryEnabled: "boolean",
+          liveUpdatesEnabled: "boolean",
           attachmentMaxBytes: "string",
         },
       }),

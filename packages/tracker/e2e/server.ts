@@ -6,6 +6,7 @@ import { Issues } from "#infrastructure/issues.ts";
 import { Collaboration } from "#infrastructure/collaboration.ts";
 import { Catalog } from "#infrastructure/catalog.ts";
 import { Attachments } from "#infrastructure/attachments.ts";
+import { createChangeHub } from "#infrastructure/change-hub.ts";
 import { createApp } from "#server/app.ts";
 import { ActorSchema } from "#shared/actor.ts";
 import { CreateIssueSchema } from "#shared/schema.ts";
@@ -89,6 +90,8 @@ for (const [title, stateType, projectSlug, priority, label] of samples) {
     "seed",
   );
 }
+const changes = createChangeHub(suite.url);
+await changes.start();
 const app = createApp({
   issues,
   catalog,
@@ -96,6 +99,8 @@ const app = createApp({
   attachments: new Attachments(suite.database, unit, memoryObjectStore()),
   writesEnabled: () => Promise.resolve(true),
   attachmentMaxBytes: () => Promise.resolve(25 * 1024 * 1024),
+  liveUpdatesEnabled: () => Promise.resolve(true),
+  changes,
 });
 const server = Bun.serve({
   hostname: "127.0.0.1",
@@ -104,6 +109,7 @@ const server = Bun.serve({
 });
 console.warn(`Tracker acceptance server on ${String(server.port)}`);
 async function shutdown() {
+  await changes.stop();
   await server.stop(true);
   await suite.close();
   await cluster.stop();
