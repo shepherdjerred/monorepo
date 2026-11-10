@@ -190,15 +190,16 @@ export async function requireDispatchBarrier(
     where: { id: row.serviceId },
   });
   if (!service.selfHosted) return;
-  const owned = await tx.deployment.count({
-    where: {
-      id: { not: row.id },
-      OR: [{ status: "running" }, { recoveryRequired: true }],
-    },
+  // Queues drain first: running work finishes before the executor is
+  // replaced. A terminal recovery-required deployment of another service is
+  // not executor work; its reader settles it independently, so it never holds
+  // a self-hosted release (another self-hosted one does, above).
+  const running = await tx.deployment.count({
+    where: { id: { not: row.id }, status: "running" },
   });
-  if (owned > 0)
+  if (running > 0)
     throw new DeliveryError(
       "BUSY",
-      `${env.id} is self-hosted; waiting for every owned deployment to settle before taking the dispatch barrier (D8)`,
+      `${env.id} is self-hosted; waiting for every running deployment to finish before taking the dispatch barrier (D8)`,
     );
 }

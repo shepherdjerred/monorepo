@@ -793,6 +793,78 @@ describe("admission (Z1, D8)", () => {
   });
 });
 
+/** A deployment of another, ordinary service in the given state. */
+async function otherServiceDeployment(
+  status: "running" | "failed",
+  recoveryRequired: boolean,
+) {
+  const db = context.cluster.database;
+  await db.service.create({
+    data: { id: "other", lineage: "other", catalogRevision: "test" },
+  });
+  await db.environment.create({
+    data: {
+      id: "other/prod",
+      serviceId: "other",
+      name: "prod",
+      pipelineRevisionId: "arcade/1",
+      declaredConfigurationId: "config/1",
+    },
+  });
+  await db.deployment.create({
+    data: {
+      id: crypto.randomUUID(),
+      requestId: crypto.randomUUID(),
+      environmentId: "other/prod",
+      serviceId: "other",
+      versionSetRevisionId: context.fixture.versionSet.id,
+      pipelineRevisionId: "arcade/1",
+      configurationId: "config/1",
+      catalogRevision: "test",
+      expectedGeneration: 0,
+      kind: "deploy",
+      status,
+      recoveryRequired,
+      requestedBy: testOperator.id,
+    },
+  });
+}
+
+/** A queued deploy of arcade, made self-hosted. */
+async function selfHostedRequest(requestId: string) {
+  await context.cluster.database.service.update({
+    where: { id: "arcade" },
+    data: { selfHosted: true },
+  });
+  const env = await environmentRow();
+  return context.delivery.createDeployment(
+    {
+      requestId,
+      environmentId: env.id,
+      versionSetRevisionId: context.fixture.versionSet.id,
+      expectedGeneration: env.generation,
+      kind: "deploy",
+    },
+    testOperator,
+  );
+}
+
+describe("self-hosted dispatch barrier (D8)", () => {
+  test("a self-hosted claim waits for another service's running deployment", async () => {
+    await otherServiceDeployment("running", false);
+    const deployment = await selfHostedRequest("waits-for-running");
+    await expect(
+      context.delivery.claim(deployment.id, testExecutor),
+    ).rejects.toThrow(/waiting for every running deployment to finish/u);
+  });
+  test("another service's settled recovery-required failure never holds a self-hosted claim", async () => {
+    await otherServiceDeployment("failed", true);
+    const deployment = await selfHostedRequest("not-held-by-recovery");
+    const claimed = await context.delivery.claim(deployment.id, testExecutor);
+    expect(claimed.deployment.status).toBe("running");
+  });
+});
+
 /** A deployment of arcade claimed by its original executor run (D7). */
 async function ownedDeployment(requestId: string, selfHosted: boolean) {
   await context.cluster.database.service.update({
