@@ -38,14 +38,28 @@ export function Modal({
   );
 }
 
-export function Avatar({ actor }: { actor: { key: string; name: string } }) {
+/** `decorative` hides the image from assistive technology when the name is adjacent. */
+export function Avatar({
+  actor,
+  decorative = false,
+}: {
+  actor: { key: string; name: string };
+  decorative?: boolean;
+}) {
   return (
     <img
       className="avatar"
       src={`/avatars/${encodeURIComponent(actor.key)}.svg`}
-      alt={actor.name}
+      alt={decorative ? "" : actor.name}
       title={actor.name}
+      width={22}
+      height={22}
     />
+  );
+}
+export function Swatch({ color }: { color: string }) {
+  return (
+    <span className="swatch" style={{ background: color }} aria-hidden="true" />
   );
 }
 export function ActorChip({
@@ -55,7 +69,7 @@ export function ActorChip({
 }) {
   return (
     <span className="actor-chip">
-      <Avatar actor={actor} />
+      <Avatar actor={actor} decorative />
       <span>{actor.name}</span>
       <span className="kind">{actor.kind}</span>
     </span>
@@ -73,6 +87,7 @@ export function Priority({ value }: { value: number }) {
   return (
     <span
       className={`priority priority-${String(value)}`}
+      role="img"
       title={priorities[value]}
       aria-label={priorities[value]}
     >
@@ -96,15 +111,11 @@ export function Empty({
 }) {
   return (
     <div className="empty">
-      <span className="empty-icon">◇</span>
+      <span className="empty-icon" aria-hidden="true">
+        ◇
+      </span>
       <h2>{title}</h2>
       {children}
     </div>
   );
-}
-export function timeAgo(value: string) {
-  const days = Math.floor(
-    (Date.now() - new Date(value).getTime()) / 86_400_000,
-  );
-  return days < 1 ? "Today" : days === 1 ? "Yesterday" : `${String(days)}d ago`;
 }

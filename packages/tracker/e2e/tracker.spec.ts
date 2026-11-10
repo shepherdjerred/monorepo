@@ -117,6 +117,9 @@ test("creates an issue, comments, votes, attaches and retains edit history", asy
     .fill("## Expected behavior\nA reproducible acceptance case.");
   await page.keyboard.press("ControlOrMeta+Enter");
   await expect(page).toHaveURL(/\/issues\/AI-\d+$/u);
+  // The layout now outlives navigation, so the closing dialog and the new
+  // issue page can coexist for a frame; both label a field "Issue title".
+  await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(page.getByLabel("Issue title", { exact: true })).toHaveValue(
     title,
   );
@@ -206,8 +209,9 @@ test("palette searches typos, list peeks, themes and mobile layout work", async 
     fullPage: true,
   });
   await page
-    .getByRole("button", { name: /Polish the issue creation flow/u })
+    .getByRole("link", { name: /Polish the issue creation flow/u })
     .click();
+  await expect(page).toHaveURL(/\?peek=AI-1$/u);
   await expect(page.getByRole("dialog")).toContainText("AI-1");
   await page
     .getByRole("dialog")

@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Trash2 } from "lucide-react";
-import { api, refresh, type IssueDetailData } from "./api.ts";
-import { currentActor } from "./identity.ts";
-import { ActorChip, ErrorNotice, Modal } from "./ui.tsx";
-import { Markdown } from "./markdown.tsx";
+import { api, refresh, type IssueDetailData } from "#client/data/api.ts";
+import { currentActor } from "#client/data/identity.ts";
+import { ActorChip, ErrorNotice, Modal } from "#client/ui/ui.tsx";
+import { Markdown } from "#client/ui/markdown.tsx";
+import { RelativeTime } from "#client/ui/time.tsx";
+import { announce } from "#client/shell/announce.tsx";
 export function Comment({
   comment,
   disabled,
@@ -24,8 +26,9 @@ export function Comment({
             id: comment.id,
             body,
           }),
-    onSuccess: () => {
+    onSuccess: (_result, removed) => {
       setEditing(false);
+      announce(removed ? "Comment deleted" : "Comment updated");
       void refresh();
     },
   });
@@ -33,10 +36,10 @@ export function Comment({
     <article className="comment">
       <div className="comment-meta">
         <ActorChip actor={comment.author} />
-        <time>
-          {new Date(comment.createdAt).toLocaleDateString()}
+        <span className="comment-time">
+          <RelativeTime value={comment.createdAt} />
           {comment.editedAt === null ? "" : " · edited"}
-        </time>
+        </span>
         <span className="spacer" />
         <button
           className="text-button"

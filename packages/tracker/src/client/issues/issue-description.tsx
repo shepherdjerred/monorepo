@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { api, refresh, type IssueDetailData } from "./api.ts";
-import { currentActor } from "./identity.ts";
-import { ErrorNotice } from "./ui.tsx";
-import { Markdown, MarkdownEditor } from "./markdown.tsx";
+import { api, refresh, type IssueDetailData } from "#client/data/api.ts";
+import { currentActor } from "#client/data/identity.ts";
+import { ErrorNotice } from "#client/ui/ui.tsx";
+import { Markdown, MarkdownEditor } from "#client/ui/markdown.tsx";
+import { announce } from "#client/shell/announce.tsx";
 
 export function IssueDescription({
   issue,
@@ -27,6 +28,7 @@ export function IssueDescription({
     onSuccess: () => {
       setEditing(false);
       setAttachments([]);
+      announce("Description saved");
       void refresh();
     },
   });
@@ -68,6 +70,7 @@ export function IssueDescription({
           setAttachments((previous) => [...previous, ...ids]);
         }}
         placeholder="Add a description…"
+        label="Description"
       />
       <div className="actions">
         <button

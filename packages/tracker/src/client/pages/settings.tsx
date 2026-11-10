@@ -1,31 +1,49 @@
 import { useState } from "react";
+import { z } from "zod";
 import { useMutation } from "@tanstack/react-query";
-import { api, refresh, type BootstrapData } from "./api.ts";
+import { api, refresh, type BootstrapData } from "#client/data/api.ts";
 import { ActorSchema } from "#shared/actor.ts";
 import { StateTypeSchema } from "#shared/schema.ts";
-import { currentActor, saveActor } from "./identity.ts";
-import { ErrorNotice } from "./ui.tsx";
+import { currentActor, saveActor } from "#client/data/identity.ts";
+import { ErrorNotice, Swatch } from "#client/ui/ui.tsx";
+import { announce } from "#client/shell/announce.tsx";
 
-export type Theme = "system" | "light" | "dark";
-export function applyTheme(theme: Theme) {
+const ThemeSchema = z.enum(["system", "light", "dark"]);
+type Theme = z.infer<typeof ThemeSchema>;
+// The page background of each scheme; the browser tints its chrome with it.
+const themeColors = { light: "#ffffff", dark: "#1b1b1f" };
+
+/**
+ * The only writer of the saved theme. `index.html` reads the same key before
+ * first paint so an explicit choice never flashes the other scheme.
+ */
+function applyTheme(theme: Theme) {
   document.documentElement.dataset["theme"] = theme;
   localStorage.setItem("tracker.theme", theme);
+  for (const meta of document.querySelectorAll<HTMLMetaElement>(
+    'meta[name="theme-color"]',
+  )) {
+    const scheme = meta.media.includes("dark") ? "dark" : "light";
+    meta.content = themeColors[theme === "system" ? scheme : theme];
+  }
 }
 export function Settings({
   bootstrap,
-  theme,
-  setTheme,
+  teamKey: currentTeamKey,
 }: {
   bootstrap: BootstrapData;
-  theme: Theme;
-  setTheme: (theme: Theme) => void;
+  teamKey: string;
 }) {
+  const [theme, setTheme] = useState<Theme>(() => {
+    const saved = ThemeSchema.safeParse(localStorage.getItem("tracker.theme"));
+    return saved.success ? saved.data : "system";
+  });
   const actor = currentActor();
   const [key, setKey] = useState(actor.key);
   const [name, setName] = useState(actor.name);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState<unknown>();
-  const [teamKey, setTeam] = useState("AI");
+  const [teamKey, setTeam] = useState(currentTeamKey);
   const [labelName, setLabelName] = useState("");
   const [color, setColor] = useState("#8b5cf6");
   const [projectName, setProjectName] = useState("");
@@ -42,6 +60,7 @@ export function Settings({
       }),
     onSuccess: () => {
       setLabelName("");
+      announce("Label created");
       void refresh();
     },
   });
@@ -56,6 +75,7 @@ export function Settings({
     onSuccess: () => {
       setProjectName("");
       setSlug("");
+      announce("Project created");
       void refresh();
     },
   });
@@ -71,6 +91,7 @@ export function Settings({
       }),
     onSuccess: () => {
       setStateName("");
+      announce("State created");
       void refresh();
     },
   });
@@ -111,10 +132,13 @@ export function Settings({
                 setTheme(value);
               }}
             >
-              <div className={`theme-preview theme-${value}`}>
-                <i />
-                <i />
-                <i />
+              <div
+                className={`theme-preview theme-${value}`}
+                aria-hidden="true"
+              >
+                <span />
+                <span />
+                <span />
               </div>
               {value[0]?.toUpperCase()}
               {value.slice(1)}
@@ -135,6 +159,7 @@ export function Settings({
               saveActor(ActorSchema.parse({ key, name, kind: actor.kind }));
               setError(undefined);
               setNotice("Identity saved");
+              announce("Identity saved");
             } catch (error_) {
               setError(error_);
             }
@@ -161,7 +186,7 @@ export function Settings({
             />
           </label>
           <button className="primary">Save identity</button>
-          {notice !== "" && <p role="status">{notice}</p>}
+          {notice !== "" && <p>{notice}</p>}
           {error !== undefined && <ErrorNotice error={error} />}
         </form>
       </section>
@@ -204,7 +229,7 @@ export function Settings({
             .map((l) => (
               <div key={l.id}>
                 <span>
-                  <i style={{ background: l.color }} />
+                  <Swatch color={l.color} />
                   {l.name}
                 </span>
                 <button
@@ -249,7 +274,7 @@ export function Settings({
             .map((s) => (
               <div key={s.id}>
                 <span>
-                  <i style={{ background: s.color }} />
+                  <Swatch color={s.color} />
                   {s.name}
                 </span>
                 <span className="muted">{s.type}</span>
@@ -292,7 +317,7 @@ export function Settings({
           {bootstrap.projects.map((p) => (
             <div key={p.id}>
               <span>
-                <i style={{ background: p.color }} />
+                <Swatch color={p.color} />
                 {p.name}
                 {p.archivedAt === null ? "" : " · archived"}
               </span>

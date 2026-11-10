@@ -1,44 +1,28 @@
-import { useRef, useState } from "react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
+import { Suspense, lazy, useId, useRef, useState } from "react";
 import { Paperclip } from "lucide-react";
 import { z } from "zod";
-import { currentActor } from "./identity.ts";
-import { issueLinks } from "#shared/markdown-links.ts";
+import { currentActor } from "#client/data/identity.ts";
 
+const MarkdownRenderer = lazy(async () => {
+  const module = await import("./markdown-renderer.tsx");
+  return { default: module.MarkdownRenderer };
+});
+
+/** Rendered markdown; the source text stands in while the renderer loads. */
 export function Markdown({ body }: { body: string }) {
   return (
     <div className="markdown">
-      <ReactMarkdown
-        remarkPlugins={[remarkGfm, issueLinks]}
-        components={{
-          a: ({ href, children }) => (
-            <a
-              href={href}
-              rel="noreferrer"
-              target={href?.startsWith("/") === true ? undefined : "_blank"}
-            >
-              {children}
-            </a>
-          ),
-          img: ({ src, alt }) =>
-            src?.startsWith("/attachments/") === true ? (
-              <a href={src} target="_blank" rel="noreferrer">
-                <img src={src} alt={alt ?? "Attachment"} loading="lazy" />
-              </a>
-            ) : (
-              <a href={src} target="_blank" rel="noreferrer">
-                {alt ?? "External image"}
-              </a>
-            ),
-        }}
-      >
-        {body}
-      </ReactMarkdown>
+      <Suspense fallback={<p className="markdown-source">{body}</p>}>
+        <MarkdownRenderer body={body} />
+      </Suspense>
     </div>
   );
 }
 
+const tabs = [
+  { name: "write", other: "preview", label: "Write", preview: false },
+  { name: "preview", other: "write", label: "Preview", preview: true },
+] as const;
 const UploadedSchema = z.object({
   id: z.string(),
   url: z.string(),
@@ -50,6 +34,7 @@ export function MarkdownEditor({
   onChange,
   onAttachments,
   placeholder,
+  label,
   id,
   required = false,
 }: {
@@ -57,9 +42,12 @@ export function MarkdownEditor({
   onChange: (value: string) => void;
   onAttachments: (ids: string[]) => void;
   placeholder: string;
+  /** The accessible name of the text area. */
+  label: string;
   id?: string;
   required?: boolean;
 }) {
+  const base = useId();
   const [preview, setPreview] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string>();
@@ -104,24 +92,35 @@ export function MarkdownEditor({
   return (
     <div className="editor">
       <div className="editor-toolbar">
-        <button
-          type="button"
-          className={preview ? "" : "selected"}
-          onClick={() => {
-            setPreview(false);
-          }}
-        >
-          Write
-        </button>
-        <button
-          type="button"
-          className={preview ? "selected" : ""}
-          onClick={() => {
-            setPreview(true);
-          }}
-        >
-          Preview
-        </button>
+        <div role="tablist" aria-label="Editor mode">
+          {tabs.map((tab) => (
+            <button
+              key={tab.name}
+              type="button"
+              role="tab"
+              id={`${base}-${tab.name}`}
+              aria-selected={preview === tab.preview}
+              aria-controls={`${base}-panel`}
+              tabIndex={preview === tab.preview ? 0 : -1}
+              onClick={() => {
+                setPreview(tab.preview);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+                  e.preventDefault();
+                  setPreview(!tab.preview);
+                  document
+                    .querySelector<HTMLElement>(
+                      `#${CSS.escape(`${base}-${tab.other}`)}`,
+                    )
+                    ?.focus();
+                }
+              }}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
         <span className="spacer" />
         <button
           type="button"
@@ -132,36 +131,45 @@ export function MarkdownEditor({
           {uploading ? "Uploading…" : "Attach"}
         </button>
       </div>
-      {preview ? (
-        <Markdown body={value || "Nothing to preview yet."} />
-      ) : (
-        <textarea
-          ref={text}
-          id={id}
-          required={required}
-          value={value}
-          placeholder={placeholder}
-          onChange={(e) => {
-            onChange(e.target.value);
-          }}
-          onPaste={(e) => {
-            const files = [...e.clipboardData.files];
-            if (files.length > 0) {
-              e.preventDefault();
-              void upload(files);
-            }
-          }}
-          onDragOver={(e) => {
-            if (e.dataTransfer.types.includes("Files")) e.preventDefault();
-          }}
-          onDrop={(e) => {
-            if (e.dataTransfer.files.length > 0) {
-              e.preventDefault();
-              void upload([...e.dataTransfer.files]);
-            }
-          }}
-        />
-      )}
+      <div
+        role="tabpanel"
+        id={`${base}-panel`}
+        aria-labelledby={`${base}-${preview ? "preview" : "write"}`}
+      >
+        {preview ? (
+          <Markdown body={value || "Nothing to preview yet."} />
+        ) : (
+          <textarea
+            ref={text}
+            id={id}
+            required={required}
+            value={value}
+            placeholder={placeholder}
+            aria-label={label}
+            onChange={(e) => {
+              onChange(e.target.value);
+            }}
+            onPaste={(e) => {
+              const files = [...e.clipboardData.files];
+              if (files.length > 0) {
+                e.preventDefault();
+                void upload(files);
+              }
+            }}
+            onDragOver={(e) => {
+              if (e.dataTransfer.types.includes("Files")) {
+                e.preventDefault();
+              }
+            }}
+            onDrop={(e) => {
+              if (e.dataTransfer.files.length > 0) {
+                e.preventDefault();
+                void upload([...e.dataTransfer.files]);
+              }
+            }}
+          />
+        )}
+      </div>
       <input
         ref={input}
         type="file"

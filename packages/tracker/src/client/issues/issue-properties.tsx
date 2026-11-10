@@ -1,11 +1,14 @@
 import { Trash2, ThumbsUp } from "lucide-react";
-import { ActorChip, priorities } from "./ui.tsx";
-import type { BootstrapData, IssueDetailData } from "./api.ts";
+import { ActorChip, ErrorNotice, Swatch, priorities } from "#client/ui/ui.tsx";
+import { AbsoluteTime } from "#client/ui/time.tsx";
+import type { BootstrapData, IssueDetailData } from "#client/data/api.ts";
 type Props = {
   issue: IssueDetailData;
   bootstrap: BootstrapData;
   disabled: boolean;
   update: (patch: Record<string, unknown>) => void;
+  error: unknown;
+  voteError: unknown;
   vote: () => void;
   voting: boolean;
   onDelete: () => void;
@@ -15,6 +18,8 @@ export function IssueProperties({
   bootstrap,
   disabled,
   update,
+  error,
+  voteError,
   vote,
   voting,
   onDelete,
@@ -25,6 +30,7 @@ export function IssueProperties({
   return (
     <aside className="properties">
       <h2>Properties</h2>
+      {error !== null && <ErrorNotice error={error} />}
       <label>
         Status
         <select
@@ -112,7 +118,7 @@ export function IssueProperties({
                   );
                 }}
               />
-              <i style={{ background: label.color }} />
+              <Swatch color={label.color} />
               {label.name}
             </label>
           ))}
@@ -129,10 +135,11 @@ export function IssueProperties({
         <ThumbsUp size={15} />
         {issue.voteCount} {issue.voteCount === 1 ? "vote" : "votes"}
       </button>
+      {voteError !== null && <ErrorNotice error={voteError} />}
       <div className="created-by">
         <span className="muted">Created by</span>
         <ActorChip actor={issue.creator} />
-        <time>{new Date(issue.createdAt).toLocaleDateString()}</time>
+        <AbsoluteTime value={issue.createdAt} />
       </div>
       {issue.sourceMetadata !== null && (
         <details>

@@ -1,9 +1,10 @@
-import { Link, NavLink } from "react-router";
+import { Link, NavLink, useLocation } from "react-router";
 import {
   Activity,
-  ChevronDown,
   Command,
+  Ellipsis,
   Folder,
+  Keyboard,
   LayoutGrid,
   List,
   Plus,
@@ -11,7 +12,9 @@ import {
   Settings2,
   Users,
 } from "lucide-react";
-import type { BootstrapData } from "./api.ts";
+import type { BootstrapData } from "#client/data/api.ts";
+import { Modal, Swatch } from "#client/ui/ui.tsx";
+import { rememberTeam } from "./team.ts";
 
 const links = [
   { name: "Issues", path: "/issues", icon: List },
@@ -20,6 +23,8 @@ const links = [
   { name: "Actors", path: "/actors", icon: Users },
   { name: "Activity", path: "/activity", icon: Activity },
 ];
+// The phone's bottom bar has room for five; these live behind "More".
+const overflow = ["/actors", "/settings"];
 export function Sidebar({
   bootstrap,
   teamKey,
@@ -28,7 +33,7 @@ export function Sidebar({
   help,
 }: {
   bootstrap: BootstrapData | undefined;
-  teamKey: string;
+  teamKey: string | undefined;
   create: () => void;
   search: () => void;
   help: () => void;
@@ -36,9 +41,10 @@ export function Sidebar({
   return (
     <aside className="sidebar">
       <Link className="workspace-brand" to="/issues">
-        <span className="brand-mark">T</span>
+        <span className="brand-mark" aria-hidden="true">
+          T
+        </span>
         <strong>Tracker</strong>
-        <ChevronDown size={14} />
       </Link>
       <button className="search-command" onClick={search}>
         <Search size={15} />
@@ -69,8 +75,13 @@ export function Sidebar({
             key={team.id}
             to={`/issues?team=${team.key}`}
             className={teamKey === team.key ? "active-team" : ""}
+            onClick={() => {
+              rememberTeam(team.key);
+            }}
           >
-            <span className="team-icon">{team.key}</span>
+            <span className="team-icon" aria-hidden="true">
+              {team.key}
+            </span>
             <span>{team.name}</span>
           </Link>
         ))}
@@ -81,7 +92,7 @@ export function Sidebar({
           .filter(({ archivedAt }) => archivedAt === null)
           .map((project) => (
             <Link to={`/projects/${project.slug}`} key={project.id}>
-              <i style={{ background: project.color }} />
+              <Swatch color={project.color} />
               {project.name}
             </Link>
           ))}
@@ -102,17 +113,62 @@ export function Sidebar({
     </aside>
   );
 }
-export function BottomNavigation() {
+export function BottomNavigation({
+  more,
+  moreOpen,
+}: {
+  more: () => void;
+  moreOpen: boolean;
+}) {
+  const { pathname } = useLocation();
+  const inOverflow = overflow.some((path) => pathname.startsWith(path));
   return (
     <nav className="bottom-nav" aria-label="Mobile navigation">
       {links
-        .filter(({ name }) => name !== "Actors")
+        .filter(({ path }) => !overflow.includes(path))
         .map((link) => (
           <NavLink key={link.path} to={link.path}>
             <link.icon size={20} />
             <span>{link.name}</span>
           </NavLink>
         ))}
+      <button
+        className={inOverflow ? "active" : ""}
+        aria-haspopup="dialog"
+        aria-expanded={moreOpen}
+        onClick={more}
+      >
+        <Ellipsis size={20} />
+        <span>More</span>
+      </button>
     </nav>
+  );
+}
+export function MoreSheet({
+  open,
+  close,
+  help,
+}: {
+  open: boolean;
+  close: () => void;
+  help: () => void;
+}) {
+  return (
+    <Modal title="More" open={open} onClose={close} className="sheet">
+      <nav className="sheet-links" aria-label="More navigation">
+        <NavLink to="/actors" onClick={close}>
+          <Users size={18} />
+          Actors
+        </NavLink>
+        <NavLink to="/settings" onClick={close}>
+          <Settings2 size={18} />
+          Settings
+        </NavLink>
+        <button onClick={help}>
+          <Keyboard size={18} />
+          Keyboard shortcuts
+        </button>
+      </nav>
+    </Modal>
   );
 }

@@ -2,21 +2,24 @@ import { IssueAttachments } from "./issue-attachments.tsx";
 import { IssueDescription } from "./issue-description.tsx";
 import { IssueTimeline } from "./issue-timeline.tsx";
 import { IssueProperties } from "./issue-properties.tsx";
+import { IssueRelations } from "./issue-relations.tsx";
 import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Link } from "react-router";
-import { Archive, ArrowUpRight, History, Trash2 } from "lucide-react";
+import { Link, useNavigate } from "react-router";
+import { Archive, ArrowUpRight, History } from "lucide-react";
 import {
   api,
   refresh,
   type BootstrapData,
   type IssueDetailData,
-} from "./api.ts";
-import { currentActor } from "./identity.ts";
-import { ErrorNotice, Modal } from "./ui.tsx";
-import { MarkdownEditor } from "./markdown.tsx";
+} from "#client/data/api.ts";
+import { currentActor } from "#client/data/identity.ts";
+import { ErrorNotice, Modal } from "#client/ui/ui.tsx";
+import { MarkdownEditor } from "#client/ui/markdown.tsx";
 import { ActivityList } from "./activity.tsx";
 import { UpdateIssueSchema } from "#shared/schema.ts";
+import { useIssue } from "./issue-query.ts";
+import { announce } from "#client/shell/announce.tsx";
 
 export function IssueDetail({
   identifier,
@@ -29,17 +32,13 @@ export function IssueDetail({
   peek?: boolean;
   close?: () => void;
 }) {
-  const query = useQuery({
-    queryKey: ["issue", identifier],
-    queryFn: () =>
-      api.issues.byIdentifier.query({
-        identifier,
-        viewerActorKey: currentActor().key,
-      }),
-  });
-  if (query.error !== null) return <ErrorNotice error={query.error} />;
-  if (query.data === undefined)
+  const query = useIssue(identifier);
+  if (query.error !== null) {
+    return <ErrorNotice error={query.error} />;
+  }
+  if (query.data === undefined) {
     return <div className="loading">Loading issue…</div>;
+  }
   return (
     <IssueContent
       key={identifier}
@@ -50,6 +49,9 @@ export function IssueDetail({
     />
   );
 }
+
+/** Which control asked for an update, so its error appears beside it. */
+type UpdateSource = "title" | "archive" | "property";
 
 function IssueContent({
   issue,
@@ -62,30 +64,34 @@ function IssueContent({
   peek: boolean;
   close?: () => void;
 }) {
+  const navigate = useNavigate();
   const [title, setTitle] = useState(issue.title);
   const [comment, setComment] = useState("");
   const [commentAttachments, setCommentAttachments] = useState<string[]>([]);
   const [history, setHistory] = useState(false);
-  const [relating, setRelating] = useState(false);
-  const [relationTarget, setRelationTarget] = useState("");
-  const [relationType, setRelationType] = useState<
-    "blocks" | "blocked-by" | "duplicate" | "related"
-  >("related");
   const [deleting, setDeleting] = useState(false);
   const update = useMutation({
-    mutationFn: (patch: Record<string, unknown>) =>
+    mutationFn: (change: {
+      patch: Record<string, unknown>;
+      source: UpdateSource;
+    }) =>
       api.issues.update.mutate(
         UpdateIssueSchema.parse({
           actor: currentActor(),
           identifier: issue.identifier,
           expectedRevision: issue.revision,
-          ...patch,
+          ...change.patch,
         }),
       ),
     onSuccess: () => {
+      announce("Issue updated");
       void refresh();
     },
   });
+  const updateError = (source: UpdateSource) =>
+    update.error !== null && update.variables.source === source ? (
+      <ErrorNotice error={update.error} />
+    ) : null;
   const vote = useMutation({
     mutationFn: () =>
       issue.viewerVoted
@@ -98,6 +104,7 @@ function IssueContent({
             identifier: issue.identifier,
           }),
     onSuccess: () => {
+      announce(issue.viewerVoted ? "Vote removed" : "Vote added");
       void refresh();
     },
   });
@@ -112,27 +119,7 @@ function IssueContent({
     onSuccess: () => {
       setComment("");
       setCommentAttachments([]);
-      void refresh();
-    },
-  });
-  const relation = useMutation({
-    mutationFn: () =>
-      api.relations.create.mutate({
-        actor: currentActor(),
-        identifier: issue.identifier,
-        target: relationTarget.toUpperCase(),
-        type: relationType,
-      }),
-    onSuccess: () => {
-      setRelating(false);
-      setRelationTarget("");
-      void refresh();
-    },
-  });
-  const removeRelation = useMutation({
-    mutationFn: (id: string) =>
-      api.relations.delete.mutate({ actor: currentActor(), id }),
-    onSuccess: () => {
+      announce("Comment added");
       void refresh();
     },
   });
@@ -143,10 +130,14 @@ function IssueContent({
         identifier: issue.identifier,
         expectedRevision: issue.revision,
       }),
-    onSuccess: () => {
-      void refresh();
-      close?.();
-      if (!peek) location.assign("/issues");
+    onSuccess: async () => {
+      announce(`${issue.identifier} deleted`);
+      if (peek) {
+        close?.();
+      } else {
+        await navigate("/issues", { replace: true });
+      }
+      await refresh();
     },
   });
   const events = useQuery({
@@ -155,15 +146,7 @@ function IssueContent({
       api.issues.activity.query({ identifier: issue.identifier, limit: 100 }),
   });
   const disabled = !bootstrap.writesEnabled || update.isPending;
-  const errors = [
-    update.error,
-    vote.error,
-    addComment.error,
-    relation.error,
-    removeRelation.error,
-    removeIssue.error,
-    events.error,
-  ].filter((error) => error !== null);
+  const TitleHeading = peek ? "h2" : "h1";
   return (
     <article className={`issue-detail ${peek ? "is-peek" : ""}`}>
       <header className="detail-toolbar">
@@ -196,87 +179,54 @@ function IssueContent({
           }
           disabled={disabled}
           onClick={() => {
-            update.mutate({ archived: issue.archivedAt === null });
+            update.mutate({
+              patch: { archived: issue.archivedAt === null },
+              source: "archive",
+            });
           }}
         >
           <Archive size={17} />
         </button>
       </header>
+      {updateError("archive")}
       {issue.archivedAt !== null && (
         <div className="banner">This issue is archived.</div>
       )}
       <div className="detail-grid">
         <div className="detail-main">
-          <textarea
-            className="detail-title"
-            rows={1}
-            aria-label="Issue title"
-            value={title}
-            disabled={disabled}
-            onChange={(e) => {
-              setTitle(e.target.value);
-            }}
-            onBlur={() => {
-              if (title !== issue.title && title.trim() !== "")
-                update.mutate({ title });
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                e.currentTarget.blur();
-              }
-            }}
-          />
+          <TitleHeading className="detail-title-heading">
+            <textarea
+              className="detail-title"
+              rows={1}
+              aria-label="Issue title"
+              value={title}
+              disabled={disabled}
+              onChange={(e) => {
+                setTitle(e.target.value);
+              }}
+              onBlur={() => {
+                if (title !== issue.title && title.trim() !== "") {
+                  update.mutate({ patch: { title }, source: "title" });
+                }
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  e.currentTarget.blur();
+                }
+              }}
+            />
+          </TitleHeading>
+          {updateError("title")}
           <IssueDescription issue={issue} disabled={disabled} />
           <IssueAttachments files={issue.attachments} />
-          <section className="relations">
-            <div className="section-heading">
-              <h2>Relations</h2>
-              <button
-                className="text-button"
-                disabled={disabled}
-                onClick={() => {
-                  setRelating(true);
-                }}
-              >
-                + Add relation
-              </button>
-            </div>
-            {issue.relations.length === 0 && (
-              <p className="muted">No related issues</p>
-            )}
-            {issue.relations.map((r) => {
-              const target = r.fromId === issue.id ? r.to : r.from;
-              return (
-                <div className="relation" key={r.id}>
-                  <span className="muted">
-                    {r.type === "blocks" && r.toId === issue.id
-                      ? "blocked by"
-                      : r.type}
-                  </span>
-                  <Link to={`/issues/${target.identifier}`}>
-                    <span className="identifier">{target.identifier}</span>{" "}
-                    {target.title}
-                  </Link>
-                  <button
-                    className="icon-button"
-                    aria-label={`Remove relation to ${target.identifier}`}
-                    disabled={disabled}
-                    onClick={() => {
-                      removeRelation.mutate(r.id);
-                    }}
-                  >
-                    <Trash2 size={13} />
-                  </button>
-                </div>
-              );
-            })}
-          </section>
+          <IssueRelations issue={issue} disabled={disabled} />
           <section>
             <div className="section-heading">
               <h2>Activity</h2>
               <span className="muted">{issue.comments.length} comments</span>
             </div>
+            {events.error !== null && <ErrorNotice error={events.error} />}
             <IssueTimeline
               issue={issue}
               events={events.data ?? []}
@@ -301,6 +251,7 @@ function IssueContent({
                   setCommentAttachments((previous) => [...previous, ...ids]);
                 }}
                 placeholder="Leave a comment…"
+                label="Comment"
                 required
               />
               <div className="actions">
@@ -313,6 +264,9 @@ function IssueContent({
                   Comment
                 </button>
               </div>
+              {addComment.error !== null && (
+                <ErrorNotice error={addComment.error} />
+              )}
             </form>
           </section>
         </div>
@@ -321,8 +275,10 @@ function IssueContent({
           bootstrap={bootstrap}
           disabled={disabled}
           update={(patch) => {
-            update.mutate(patch);
+            update.mutate({ patch, source: "property" });
           }}
+          error={update.variables?.source === "property" ? update.error : null}
+          voteError={vote.error}
           vote={() => {
             vote.mutate();
           }}
@@ -332,9 +288,6 @@ function IssueContent({
           }}
         />
       </div>
-      {errors.map((error, index) => (
-        <ErrorNotice key={index} error={error} />
-      ))}
       <Modal
         title={`History · ${issue.identifier}`}
         open={history}
@@ -347,59 +300,6 @@ function IssueContent({
         )}
       </Modal>
       <Modal
-        title="Add relation"
-        open={relating}
-        onClose={() => {
-          setRelating(false);
-        }}
-      >
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            relation.mutate();
-          }}
-        >
-          <label>
-            Relationship
-            <select
-              value={relationType}
-              onChange={(e) => {
-                const value = e.target.value;
-                if (
-                  value === "blocks" ||
-                  value === "blocked-by" ||
-                  value === "duplicate" ||
-                  value === "related"
-                )
-                  setRelationType(value);
-              }}
-            >
-              <option value="related">Related to</option>
-              <option value="blocks">Blocks</option>
-              <option value="blocked-by">Blocked by</option>
-              <option value="duplicate">Duplicate of</option>
-            </select>
-          </label>
-          <label>
-            Issue identifier
-            <input
-              value={relationTarget}
-              onChange={(e) => {
-                setRelationTarget(e.target.value);
-              }}
-              placeholder="AI-123"
-              required
-              pattern="[A-Za-z][A-Za-z0-9]*-[1-9][0-9]*"
-            />
-          </label>
-          <div className="actions">
-            <button className="primary" disabled={relation.isPending}>
-              Add relation
-            </button>
-          </div>
-        </form>
-      </Modal>
-      <Modal
         title="Delete this issue?"
         open={deleting}
         onClose={() => {
@@ -410,6 +310,9 @@ function IssueContent({
           The issue and comments will be removed. Their audit history and
           attachments remain available.
         </p>
+        {removeIssue.error !== null && (
+          <ErrorNotice error={removeIssue.error} />
+        )}
         <div className="actions">
           <button
             onClick={() => {

@@ -1,4 +1,4 @@
-import type { EventData, IssueDetailData } from "./api.ts";
+import type { EventData, IssueDetailData } from "#client/data/api.ts";
 import { ActivityList } from "./activity.tsx";
 import { Comment } from "./comment.tsx";
 
