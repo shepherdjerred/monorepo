@@ -266,20 +266,10 @@ export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
     {
       name: "resource-security-monitoring",
       rules: [
-        {
-          alert: "UnusualProcessCount",
-          annotations: {
-            description: escapePrometheusTemplate(
-              "Node {{ $labels.instance }} has unusual process count: {{ $value }} processes (significant deviation from normal)",
-            ),
-            summary: "Unusual process count detected",
-          },
-          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "node_procs_running > 2 * avg_over_time(node_procs_running[7d])",
-          ),
-          for: "10m",
-          labels: { severity: "warning" },
-        },
+        // No runnable-process-count anomaly rule: node_procs_running on the
+        // bursty 32-thread CI node routinely doubles its seven-day mean, so a
+        // ratio against it carried no security signal. Load is covered by
+        // UnusualSystemLoad and CriticalSystemLoad below.
         {
           alert: "HighContextSwitches",
           annotations: {

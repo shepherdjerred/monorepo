@@ -7,6 +7,7 @@ import {
   registerPublicProbe,
   resetProbeRegistry,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/probe-registry.ts";
+import { createRedlibChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/media/redlib.ts";
 import { createServiceProbesChart } from "./service-probes-chart.ts";
 
 const ProbeSchema = z.object({
@@ -81,6 +82,24 @@ describe("createServiceProbesChart", () => {
     expect(probe?.spec.targets.staticConfig.static).toEqual([
       "postal-web-service.postal.svc.cluster.local:5000",
     ]);
+  });
+
+  test("redlib probe checks the local settings page, not the Reddit-proxied front page", () => {
+    const app = new App();
+    createRedlibChart(app);
+    createServiceProbesChart(app);
+    const probes = app.charts
+      .filter((chart) => chart.node.id === "service-probes")
+      .flatMap((chart) => chart.toJson())
+      .map((document) => ProbeSchema.parse(document));
+    const targets = probes.flatMap(
+      (probe) => probe.spec.targets.staticConfig.static,
+    );
+    const redlib = targets.filter((target) =>
+      target.includes(".redlib.svc.cluster.local:"),
+    );
+    expect(redlib).toHaveLength(1);
+    expect(redlib[0]).toMatch(/:8080\/settings$/u);
   });
 
   test("public HTTP probe URL includes the registered path", () => {

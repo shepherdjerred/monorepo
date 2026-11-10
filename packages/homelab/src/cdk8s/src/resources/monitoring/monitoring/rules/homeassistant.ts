@@ -130,7 +130,33 @@ function feederRules(
   ];
 }
 
+/**
+ * Every Home Assistant alert is a household matter (pets, cleaning, devices,
+ * home automations), not cluster operations. The `category` label lets the
+ * alert ledger and any future route tell them apart, like the `media`,
+ * `streaming` and `ci` categories on other rule files. Recording rules keep
+ * their series labels unchanged.
+ */
+export const HOME_ASSISTANT_ALERT_CATEGORY = "household";
+
 export function getHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
+  return getUncategorizedHomeAssistantRuleGroups().map((group) => ({
+    ...group,
+    rules: group.rules?.map((rule) =>
+      rule.alert === undefined
+        ? rule
+        : {
+            ...rule,
+            labels: {
+              ...rule.labels,
+              category: HOME_ASSISTANT_ALERT_CATEGORY,
+            },
+          },
+    ),
+  }));
+}
+
+function getUncategorizedHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
   return [
     {
       name: "homeassistant-petlibro-fountain",

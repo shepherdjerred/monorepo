@@ -580,6 +580,12 @@ describe("Helm Escaping - E2E Content Verification (dist/)", () => {
         "smtp_smarthost: postal-smtp-service.postal.svc.cluster.local:25",
       );
       expect(result.stdout).not.toContain("alert: KubeMemoryOvercommit");
+      expect(result.stdout).not.toContain("alert: KubeCPUOvercommit");
+      expect(result.stdout).not.toContain("alert: NodeMemoryMajorPagesFaults");
+      // A disabled rule needs no Alertmanager null route.
+      expect(result.stdout).not.toContain(
+        'alertname = "NodeMemoryMajorPagesFaults"',
+      );
       expect(result.stdout).toContain(
         "persistentvolumeclaims=[velero.io/backup]",
       );
