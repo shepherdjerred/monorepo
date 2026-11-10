@@ -66,6 +66,27 @@ async function canary() {
   });
 }
 
+/** An automatic canary promoted from prod whose releases need approval. */
+async function approvalCanary() {
+  await canary();
+  await context.cluster.database.environment.update({
+    where: { id: "arcade/canary" },
+    data: { automatic: true, approvalPolicy: "required" },
+  });
+}
+
+/** The single automatic request reconcile makes for the canary. */
+async function automaticCanaryRequest() {
+  const { deployments } = await context.delivery.reconcile(
+    ["arcade/canary"],
+    testExecutor,
+  );
+  const [requested] = deployments;
+  if (requested === undefined || deployments.length !== 1)
+    throw new Error("Expected exactly one automatic canary request");
+  return requested;
+}
+
 /** A second set revision of arcade holding the fixture's artifacts. */
 async function secondSet() {
   const db = context.cluster.database;
@@ -666,6 +687,50 @@ describe("admission against a concurrent monitor write (M2, W1)", () => {
       kind: "promote",
       versionSetRevisionId: second.id,
     });
+  });
+
+  test("an undecided automatic promotion is superseded by the source's newer settled acceptance (D3)", async () => {
+    const baseline = await acceptedBaseline();
+    await setMonitor(baseline.id, "settled");
+    await approvalCanary();
+    const first = await automaticCanaryRequest();
+    expect(await deploymentRow(first)).toMatchObject({
+      kind: "promote",
+      status: "awaiting_approval",
+      versionSetRevisionId: context.fixture.versionSet.id,
+    });
+    const second = await secondSet();
+    await acceptInSource(second.id, "settled");
+    const next = await automaticCanaryRequest();
+    expect(await deploymentRow(first)).toMatchObject({
+      status: "canceled",
+      message: `Superseded before execution by version set ${second.id}`,
+    });
+    expect(await deploymentRow(next)).toMatchObject({
+      kind: "promote",
+      status: "awaiting_approval",
+      versionSetRevisionId: second.id,
+    });
+  });
+
+  test("a granted promotion is never superseded (D3)", async () => {
+    const baseline = await acceptedBaseline();
+    await setMonitor(baseline.id, "settled");
+    await approvalCanary();
+    const first = await automaticCanaryRequest();
+    await context.delivery.approve(
+      first,
+      { decision: "approve", reason: "promote it" },
+      testOperator,
+    );
+    const second = await secondSet();
+    await acceptInSource(second.id, "settled");
+    const { deployments } = await context.delivery.reconcile(
+      ["arcade/canary"],
+      testExecutor,
+    );
+    expect(deployments).toEqual([]);
+    expect(await deploymentRow(first)).toMatchObject({ status: "queued" });
   });
 
   test("admission waits for the source monitor's lock and reads its state after it", async () => {

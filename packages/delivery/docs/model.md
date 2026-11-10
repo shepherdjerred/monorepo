@@ -536,8 +536,10 @@ which releases them (D11).
   set revision, as a cancellation does, so a newer one is selected
   automatically. Automation fixes forward; it never retries a set revision
   that already failed.
-- D3. Automatic selection coalesces only queued, unapproved automatic
-  requests. Cancellation, rejection, or an alarm (W2) suppresses that
+- D3. Automatic selection coalesces only automatic requests that are queued
+  or awaiting an undecided approval: a newer eligible selection supersedes
+  them and asks for approval again. A granted approval is never superseded.
+  Cancellation, rejection, or an alarm (W2) suppresses that
   selection until a newer eligible set revision exists or an operator asks
   explicitly. Automatic request identity keys on the environment's last
   terminal deployment, not on the binding generation.
@@ -752,7 +754,8 @@ no counted alarm; `alarmed` when a counted alarm fired while watching.
 
 - W1. Acceptance starts the monitor. A selection is settled only when its
   monitor settles. An environment with no monitor declared settles on
-  acceptance and is recorded as unmonitored.
+  acceptance and is recorded as unmonitored. A `retire-host` changes no
+  selection, so it carries the monitor state of the deployment it follows.
 - W2. An alarm while `watching` records the alarm as evidence, suppresses
   automatic selection of the alarmed set revision (D3) and, under
   `automatic` policy, creates an automatic `rollback` deployment to the last

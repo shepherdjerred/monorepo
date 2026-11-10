@@ -33,7 +33,7 @@ import { validateSpecializedSuccess } from "#infrastructure/specialized-success.
 import { validatePlatformSuccess } from "#infrastructure/platform/lifecycle.ts";
 import { validateControlPlaneSuccess } from "#infrastructure/control-plane/lifecycle.ts";
 import { recomposeTracking } from "#infrastructure/composition/automatic.ts";
-import { startMonitor } from "#infrastructure/monitor/monitor.ts";
+import { acceptanceMonitor } from "#infrastructure/monitor/monitor.ts";
 import { releaseTerminalOwnership } from "#infrastructure/terminal-ownership.ts";
 import {
   advancesAcceptance,
@@ -296,7 +296,10 @@ export async function finish(
         finishedAt: now,
         // Acceptance starts the monitor; without a declared monitor the
         // selection settles on acceptance and is recorded as unmonitored (W1).
-        ...(accepted ? await startMonitor(tx, row, now) : {}),
+        // A host retirement keeps the watch it follows.
+        ...(accepted
+          ? await acceptanceMonitor(tx, row, env.acceptedDeploymentId, now)
+          : {}),
       },
     });
     const suppressed = await manualSelectionBaseline.call(

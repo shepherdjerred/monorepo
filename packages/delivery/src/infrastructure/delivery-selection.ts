@@ -58,10 +58,11 @@ async function reconcileEnvironment(
   // D2: a recovery-required failure holds the environment until its reader
   // settles it (D5). A settled failure of any kind suppresses only its own set
   // revision, as a cancellation does (automaticSelectionBlocked), so a newer
-  // revision still deploys.
+  // revision still deploys. A request awaiting approval is superseded only
+  // when it is automatic and undecided (D3).
   if (
     last !== null &&
-    (["awaiting_approval", "running"].includes(last.status) ||
+    (last.status === "running" ||
       (last.status === "failed" && last.recoveryRequired))
   )
     return null;
@@ -273,6 +274,7 @@ export async function automaticSelectionBlocked(
     case "failed":
       return last.versionSetRevisionId === targetId;
     case "queued":
+    case "awaiting_approval":
       return (
         last.versionSetRevisionId === targetId ||
         !(await supersedeQueuedAutomatic.call(this, last.id, targetId, actor))
@@ -300,9 +302,10 @@ export async function supersedeQueuedAutomatic(
     );
     await lock(tx, `environment:${row.environmentId}`);
     const env = await environment(tx, row.environmentId);
-    // Only queued, unapproved automatic requests coalesce (model D3).
+    // Only automatic requests that are queued or awaiting an undecided
+    // approval coalesce (model D3); a granted approval is never superseded.
     if (
-      row.status !== "queued" ||
+      !["queued", "awaiting_approval"].includes(row.status) ||
       !row.automatic ||
       (row.approval !== null && row.approval.status !== "pending") ||
       env.activeDeploymentId !== null
@@ -318,6 +321,10 @@ export async function supersedeQueuedAutomatic(
       },
     });
     await tx.outbox.deleteMany({ where: { deploymentId } });
+    await tx.approval.updateMany({
+      where: { deploymentId, status: "pending" },
+      data: { status: "expired", decidedAt: new Date() },
+    });
     await releaseTerminalOwnership(tx, deploymentId);
     await audit(tx, actor, {
       action: "deployment.superseded",

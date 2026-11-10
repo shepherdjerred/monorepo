@@ -48,7 +48,7 @@ async function recipeMonitor(tx: Transaction | Database, recipeId: string) {
  * W1: acceptance starts the monitor the frozen recipe declares; without one
  * the selection settles on acceptance and is recorded as unmonitored.
  */
-export async function startMonitor(
+async function startMonitor(
   tx: Transaction,
   row: { pipelineRevisionId: string },
   now: Date,
@@ -56,6 +56,31 @@ export async function startMonitor(
   return (await recipeMonitor(tx, row.pipelineRevisionId)) === null
     ? { monitorState: "unmonitored", monitorSettledAt: now }
     : { monitorState: "watching", monitorSettledAt: null };
+}
+
+/**
+ * W1: a host retirement changes no selection, so it carries the monitor of the
+ * deployment it follows instead of starting a new watch (AI-497). A promotion
+ * out of the environment (W3, M2) sees the same settled state it saw before.
+ */
+export async function acceptanceMonitor(
+  tx: Transaction,
+  row: { kind: string; pipelineRevisionId: string },
+  previousAcceptedId: string | null,
+  now: Date,
+) {
+  if (previousAcceptedId !== null && row.kind === "retire-host") {
+    const previous = await tx.deployment.findUniqueOrThrow({
+      where: { id: previousAcceptedId },
+      select: {
+        monitorState: true,
+        monitorSettledAt: true,
+        monitorAlarmedAt: true,
+      },
+    });
+    if (previous.monitorState !== null) return previous;
+  }
+  return startMonitor(tx, row, now);
 }
 
 /**
