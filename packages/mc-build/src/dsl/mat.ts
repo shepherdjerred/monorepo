@@ -183,7 +183,7 @@ export type Theme = {
   lantern: string;
 };
 
-/** Material helpers bound to the 26.2 registry and the build seed. */
+/** Material helpers bound to the 26.3 registry and the build seed. */
 export function createMat(registry: BlockRegistry, seed: number) {
   const exists = (id: string) => registry.has(namespaced(id));
 

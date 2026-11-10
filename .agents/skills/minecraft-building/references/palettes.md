@@ -74,4 +74,4 @@ Thatch never mixes two materials and needs ≥45°; stand-ins are
 WesterosCraft Gradients and Exteriors; Conquest Reforged, Gradienting your
 Builds; Grian, One trick to change the way you build; BdoubleO100, Build
 Texture Breakdown; Raeyzeus' Top 5 Building Tips; Lux's Medieval Building
-Tips; Minecraft Wiki block pages (ids checked against the 26.2 registry).
+Tips; Minecraft Wiki block pages (ids checked against the 26.3 registry).

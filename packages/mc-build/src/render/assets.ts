@@ -10,7 +10,7 @@ import { assetCacheReady, installAssetFiles } from "./asset-cache.ts";
  * use through piston-meta and sha1-verified. They are cached under
  * ~/.cache/toolkit/mc/assets/<version> and never committed to the repo.
  */
-export const ASSETS_VERSION = "26.2";
+export const ASSETS_VERSION = "26.3";
 const MANIFEST_URL =
   "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json";
 const EXTRACT = [

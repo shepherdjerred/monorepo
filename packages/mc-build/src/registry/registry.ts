@@ -4,7 +4,7 @@ import { formatBlockState, parseBlockState } from "#src/core/block-state.ts";
 import { BlockLightingSchema, type LightingValue } from "./lighting.ts";
 
 /**
- * The committed 26.2 block registry, generated from a live MCBridge
+ * The committed 26.3 block registry, generated from a live MCBridge
  * `/v1/registry` by mc-harness scripts/gen-registry.ts. It is the offline source of truth
  * for which block ids and property values exist.
  */
@@ -25,7 +25,7 @@ export type RegistryFile = z.infer<typeof RegistryFileSchema>;
 export const REGISTRY_PATH = path.join(
   import.meta.dirname,
   "generated",
-  "blocks-26.2.json",
+  "blocks-26.3.json",
 );
 
 export class BlockRegistryError extends Error {
@@ -169,7 +169,7 @@ export function suggest(id: string, ids: readonly string[]): string[] {
 
 let cached: BlockRegistry | undefined;
 
-/** Loads (once) the committed 26.2 registry. */
+/** Loads (once) the committed 26.3 registry. */
 export async function loadRegistry(): Promise<BlockRegistry> {
   cached ??= new BlockRegistry(
     RegistryFileSchema.parse(await Bun.file(REGISTRY_PATH).json()),
