@@ -104,6 +104,26 @@ export function extractText(
   return chunks.join("\n").slice(0, maxCharacters);
 }
 
+/**
+ * A tool call's string arguments as `key: value` lines. Used when the input
+ * holds no indexed text key: Claude's Read and Edit calls carry only
+ * `file_path`, `old_string`, and `new_string`. Sensitive keys are skipped.
+ */
+export function extractToolArguments(
+  value: unknown,
+  maxCharacters: number,
+): string {
+  const input = parseRecord(parseRecord(value)?.["input"]);
+  return Object.entries(input ?? {})
+    .flatMap(([key, child]) =>
+      typeof child === "string" && child !== "" && !SENSITIVE_KEYS.has(key)
+        ? [`${key}: ${child}`]
+        : [],
+    )
+    .join("\n")
+    .slice(0, maxCharacters);
+}
+
 export function cleanText(value: string): string {
   return value.replaceAll(/\s+/gu, " ").trim();
 }

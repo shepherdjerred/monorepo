@@ -1,4 +1,10 @@
-import { cleanText, extractText, parseRecord, stringValue } from "./text.ts";
+import {
+  cleanText,
+  extractText,
+  extractToolArguments,
+  parseRecord,
+  stringValue,
+} from "./text.ts";
 import type {
   HistoryDocument,
   HistoryDocumentDetails,
@@ -104,6 +110,19 @@ function named(
     : { ...parsed, toolName };
 }
 
+/**
+ * The text of a tool call whose input has no indexed text: its string
+ * arguments, or its name when it has none. The call itself is never dropped.
+ */
+function toolCallText(
+  block: unknown,
+  toolName: string,
+  maxCharacters: number,
+): string {
+  const text = cleanText(extractToolArguments(block, maxCharacters));
+  return text === "" ? toolName : text;
+}
+
 function blockToolName(
   blockType: string | null,
   record: Record<string, unknown> | null,
@@ -136,9 +155,17 @@ function messagesFromContent(
     }
     const blockRole =
       blockType !== null && TOOL_BLOCK_TYPES.has(blockType) ? "tool" : role;
+    const toolName = blockToolName(blockType, record);
     const parsed = named(
-      message(blockRole, block, createdAt, maxCharacters),
-      blockToolName(blockType, record),
+      message(blockRole, block, createdAt, maxCharacters) ??
+        (toolName === null
+          ? null
+          : {
+              role: blockRole,
+              text: toolCallText(block, toolName, maxCharacters),
+              createdAt,
+            }),
+      toolName,
     );
     if (parsed !== null) {
       messageEnvelopes.set(parsed, envelope);

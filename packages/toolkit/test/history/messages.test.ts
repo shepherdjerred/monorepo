@@ -41,3 +41,47 @@ describe("history opening prompts", () => {
     );
   });
 });
+
+describe("history tool calls", () => {
+  test("keeps calls whose input has no indexed text key", () => {
+    const messages = parseConversationEnvelope(
+      {
+        type: "assistant",
+        message: {
+          role: "assistant",
+          content: [
+            {
+              type: "tool_use",
+              name: "Read",
+              input: { file_path: "/repo/app.ts" },
+            },
+            {
+              type: "tool_use",
+              name: "Edit",
+              input: {
+                file_path: "/repo/app.ts",
+                old_string: "a",
+                new_string: "b",
+                token: "never-indexed",
+              },
+            },
+            { type: "tool_use", name: "TodoRead", input: {} },
+          ],
+        },
+      },
+      "unknown",
+      "2026-08-18T00:00:00.000Z",
+    );
+    expect(
+      messages.map(({ role, text, toolName }) => ({ role, text, toolName })),
+    ).toEqual([
+      { role: "tool", text: "file_path: /repo/app.ts", toolName: "Read" },
+      {
+        role: "tool",
+        text: "file_path: /repo/app.ts old_string: a new_string: b",
+        toolName: "Edit",
+      },
+      { role: "tool", text: "TodoRead", toolName: "TodoRead" },
+    ]);
+  });
+});
