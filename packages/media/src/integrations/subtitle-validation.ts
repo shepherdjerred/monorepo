@@ -25,7 +25,7 @@ function hasMachineCredit(text: string, dialogue: string): boolean {
     body.split("\n").some((line) =>
       machineCredit.test(
         line
-          .replaceAll(/<[^>\n]+>/gu, "")
+          .replaceAll(/<[^<>\n]+>/gu, "")
           .trim()
           .replace(/^[;#([\s]+/u, "")
           .replace(/[)\]]+$/u, "")
