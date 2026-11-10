@@ -191,6 +191,33 @@ describe("Dare flag", () => {
   });
 });
 
+describe("Riot account linking flag", () => {
+  test.each(["beta", "prod"])(
+    "defaults on for every user in %s and honors a provider disable",
+    async (environment) => {
+      Bun.env["ENVIRONMENT"] = environment;
+      resetConfigurationForTests();
+      const attributes = {
+        stage: environment,
+        user: SOMEONE,
+        server: OTHER_GUILD,
+      };
+      expect(getFlag("riot_account_linking_enabled", attributes)).toBe(true);
+      await initFeatureFlags({
+        environment: { FEATURE_FLAGS_MODE: "disabled" },
+        provider: new StaticProvider({ riot_account_linking_enabled: false }),
+      });
+      try {
+        await expect(
+          isPolicyEnabled("riot_account_linking_enabled", attributes),
+        ).resolves.toBe(false);
+      } finally {
+        await shutdownFeatureFlags();
+      }
+    },
+  );
+});
+
 describe("initial history import flag", () => {
   test("is default-off and can target one guild in production", () => {
     Bun.env["ENVIRONMENT"] = "prod";

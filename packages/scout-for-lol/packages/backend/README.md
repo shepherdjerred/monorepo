@@ -58,8 +58,8 @@ consume it under the original Strict Discord session. OAuth state and session
 identifiers are hashed. Expired attempts are removed on the next link start;
 the dev database pull excludes all `RiotOAuthLinkAttempt` rows.
 
-`riot_account_linking_enabled` gates new links only. It defaults off, with
-managed beta targeting. Existing account controls and enforcement are always
+`riot_account_linking_enabled` gates new links only. It defaults on globally in
+beta and production. Existing account controls and enforcement are always
 available. `RIOT_RSO_CLIENT_ID` and `RIOT_RSO_CLIENT_SECRET` are credential
 bootstrap, separate from the Discord application ID and Riot API key. See
 [provision Riot account linking](../../../docs/wiki/src/content/docs/how-to/provision-scout-riot-account-linking.md).

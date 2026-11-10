@@ -4,8 +4,10 @@ import {
   ManagedFlagInventorySchema,
   managedFlagInventory,
   managedFlagNamespaces,
+  managedBooleanDefault,
   materializeManagedNamespaceEnvironment,
 } from "@shepherdjerred/feature-flags/managed-flag-inventory.ts";
+import { classifyManagedBoolean } from "./rollout-state.ts";
 
 test.each(["beta", "prod"])(
   "retires every economy control in %s while retaining standalone Dares",
@@ -121,6 +123,25 @@ function verifyRwfEnabledEnvironments(key: string): void {
 }
 
 describe("ManagedFlagInventorySchema", () => {
+  test.each(["beta", "prod"])(
+    "enables Riot account linking globally in %s with an enabled outage default",
+    (environment) => {
+      const flag = scoutPolicyFlag(environment, "riot_account_linking_enabled");
+      if (flag.type !== "boolean") throw new Error("Expected a boolean flag");
+      expect(flag).toMatchObject({
+        default: true,
+        rollouts: [],
+        rules: [],
+        thresholdRollouts: [],
+      });
+      expect(classifyManagedBoolean(flag)).toBe("on");
+      expect(
+        managedBooleanDefault("riot_account_linking_enabled", environment),
+      ).toBe(true);
+      expect(flag.defaultOffExceptions ?? []).toEqual([]);
+    },
+  );
+
   test(
     "limits Streambot sports rollout to named guilds",
     verifySportsGuildRollout,
