@@ -1,12 +1,19 @@
 import { useState } from "react";
 import { z } from "zod";
 import { useMutation } from "@tanstack/react-query";
-import { api, refresh, type BootstrapData } from "#client/data/api.ts";
+import type { BootstrapData } from "#client/data/api.ts";
+import {
+  archiveProject,
+  createLabel,
+  createProject,
+  createState,
+  deleteLabel,
+} from "#client/data/catalog-mutations.ts";
 import { ActorSchema } from "#shared/actor.ts";
 import { StateTypeSchema } from "#shared/schema.ts";
 import { currentActor, saveActor } from "#client/data/identity.ts";
 import { ErrorNotice, Swatch } from "#client/ui/ui.tsx";
-import { announce } from "#client/shell/announce.tsx";
+import { notify } from "#client/ui/toast.tsx";
 
 const ThemeSchema = z.enum(["system", "light", "dark"]);
 type Theme = z.infer<typeof ThemeSchema>;
@@ -41,7 +48,6 @@ export function Settings({
   const actor = currentActor();
   const [key, setKey] = useState(actor.key);
   const [name, setName] = useState(actor.name);
-  const [notice, setNotice] = useState("");
   const [error, setError] = useState<unknown>();
   const [teamKey, setTeam] = useState(currentTeamKey);
   const [labelName, setLabelName] = useState("");
@@ -50,70 +56,38 @@ export function Settings({
   const [slug, setSlug] = useState("");
   const [stateName, setStateName] = useState("");
   const [stateType, setStateType] = useState("unstarted");
+  // Each change shows in the catalog at once; a refused one is taken back,
+  // reported as a toast, and leaves the form filled in to try again.
   const label = useMutation({
-    mutationFn: () =>
-      api.labels.create.mutate({
-        actor: currentActor(),
-        teamKey,
-        name: labelName,
-        color,
-      }),
-    onSuccess: () => {
-      setLabelName("");
-      announce("Label created");
-      void refresh();
+    mutationFn: () => createLabel({ teamKey, name: labelName, color }),
+    onSuccess: (outcome) => {
+      if (outcome.ok) {
+        setLabelName("");
+      }
     },
   });
   const project = useMutation({
-    mutationFn: () =>
-      api.projects.create.mutate({
-        actor: currentActor(),
-        slug,
-        name: projectName,
-        color,
-      }),
-    onSuccess: () => {
-      setProjectName("");
-      setSlug("");
-      announce("Project created");
-      void refresh();
+    mutationFn: () => createProject({ slug, name: projectName, color }),
+    onSuccess: (outcome) => {
+      if (outcome.ok) {
+        setProjectName("");
+        setSlug("");
+      }
     },
   });
   const state = useMutation({
     mutationFn: () =>
-      api.states.create.mutate({
-        actor: currentActor(),
+      createState({
         teamKey,
         name: stateName,
         color,
         type: StateTypeSchema.parse(stateType),
         position: bootstrap.states.length,
       }),
-    onSuccess: () => {
-      setStateName("");
-      announce("State created");
-      void refresh();
-    },
-  });
-  const deleteLabel = useMutation({
-    mutationFn: (labelToDelete: string) =>
-      api.labels.delete.mutate({
-        actor: currentActor(),
-        teamKey,
-        name: labelToDelete,
-      }),
-    onSuccess: () => {
-      void refresh();
-    },
-  });
-  const archiveProject = useMutation({
-    mutationFn: (projectToArchive: string) =>
-      api.projects.archive.mutate({
-        actor: currentActor(),
-        slug: projectToArchive,
-      }),
-    onSuccess: () => {
-      void refresh();
+    onSuccess: (outcome) => {
+      if (outcome.ok) {
+        setStateName("");
+      }
     },
   });
   return (
@@ -158,8 +132,7 @@ export function Settings({
             try {
               saveActor(ActorSchema.parse({ key, name, kind: actor.kind }));
               setError(undefined);
-              setNotice("Identity saved");
-              announce("Identity saved");
+              notify("Identity saved");
             } catch (error_) {
               setError(error_);
             }
@@ -186,7 +159,6 @@ export function Settings({
             />
           </label>
           <button className="primary">Save identity</button>
-          {notice !== "" && <p>{notice}</p>}
           {error !== undefined && <ErrorNotice error={error} />}
         </form>
       </section>
@@ -236,7 +208,7 @@ export function Settings({
                   disabled={!bootstrap.writesEnabled}
                   className="text-button danger"
                   onClick={() => {
-                    deleteLabel.mutate(l.name);
+                    void deleteLabel(teamKey, l);
                   }}
                 >
                   Delete
@@ -326,7 +298,7 @@ export function Settings({
                   disabled={!bootstrap.writesEnabled}
                   className="text-button"
                   onClick={() => {
-                    archiveProject.mutate(p.slug);
+                    void archiveProject(p);
                   }}
                 >
                   Archive
@@ -365,17 +337,6 @@ export function Settings({
             Create project
           </button>
         </form>
-        {[
-          label.error,
-          project.error,
-          state.error,
-          deleteLabel.error,
-          archiveProject.error,
-        ]
-          .filter((e) => e !== null)
-          .map((e, i) => (
-            <ErrorNotice error={e} key={i} />
-          ))}
       </section>
     </div>
   );

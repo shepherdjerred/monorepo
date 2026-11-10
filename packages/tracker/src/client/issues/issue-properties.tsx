@@ -1,36 +1,31 @@
 import { Trash2, ThumbsUp } from "lucide-react";
-import { ActorChip, ErrorNotice, Swatch, priorities } from "#client/ui/ui.tsx";
+import { ActorChip, Swatch } from "#client/ui/ui.tsx";
 import { AbsoluteTime } from "#client/ui/time.tsx";
 import type { BootstrapData, IssueDetailData } from "#client/data/api.ts";
+import { priorities, type IssueChange } from "#client/data/issue-changes.ts";
+import { editIssue } from "#client/data/mutations.ts";
 type Props = {
   issue: IssueDetailData;
   bootstrap: BootstrapData;
   disabled: boolean;
-  update: (patch: Record<string, unknown>) => void;
-  error: unknown;
-  voteError: unknown;
-  vote: () => void;
-  voting: boolean;
   onDelete: () => void;
 };
 export function IssueProperties({
   issue,
   bootstrap,
   disabled,
-  update,
-  error,
-  voteError,
-  vote,
-  voting,
   onDelete,
 }: Props) {
   const states = bootstrap.states.filter(
     ({ teamId }) => teamId === issue.teamId,
   );
+  // Each edit shows at once and is saved in order; failures arrive as toasts.
+  const update = (change: Exclude<IssueChange, { kind: "move" }>) => {
+    void editIssue(issue.identifier, change);
+  };
   return (
     <aside className="properties">
       <h2>Properties</h2>
-      {error !== null && <ErrorNotice error={error} />}
       <label>
         Status
         <select
@@ -39,7 +34,7 @@ export function IssueProperties({
           disabled={disabled}
           value={issue.state.name}
           onChange={(e) => {
-            update({ stateName: e.target.value });
+            update({ kind: "state", stateName: e.target.value });
           }}
         >
           {states.map((s) => (
@@ -54,7 +49,7 @@ export function IssueProperties({
           disabled={disabled}
           value={issue.priority}
           onChange={(e) => {
-            update({ priority: Number(e.target.value) });
+            update({ kind: "priority", priority: Number(e.target.value) });
           }}
         >
           {priorities.map((name, i) => (
@@ -71,7 +66,7 @@ export function IssueProperties({
           disabled={disabled}
           value={issue.assignee?.key ?? ""}
           onChange={(e) => {
-            update({ assigneeKey: e.target.value || null });
+            update({ kind: "assignee", assigneeKey: e.target.value || null });
           }}
         >
           <option value="">Unassigned</option>
@@ -89,7 +84,7 @@ export function IssueProperties({
           disabled={disabled}
           value={issue.project?.slug ?? ""}
           onChange={(e) => {
-            update({ projectSlug: e.target.value || null });
+            update({ kind: "project", projectSlug: e.target.value || null });
           }}
         >
           <option value="">No project</option>
@@ -111,11 +106,11 @@ export function IssueProperties({
                 disabled={disabled}
                 checked={issue.labels.some(({ id }) => id === label.id)}
                 onChange={(e) => {
-                  update(
-                    e.target.checked
-                      ? { addLabels: [label.name] }
-                      : { removeLabels: [label.name] },
-                  );
+                  update({
+                    kind: "label",
+                    name: label.name,
+                    add: e.target.checked,
+                  });
                 }}
               />
               <Swatch color={label.color} />
@@ -127,15 +122,14 @@ export function IssueProperties({
         id="issue-vote"
         className={`vote-button ${issue.viewerVoted ? "voted" : ""}`}
         aria-pressed={issue.viewerVoted}
-        disabled={disabled || voting}
+        disabled={disabled}
         onClick={() => {
-          vote();
+          update({ kind: "vote", voted: !issue.viewerVoted });
         }}
       >
         <ThumbsUp size={15} />
         {issue.voteCount} {issue.voteCount === 1 ? "vote" : "votes"}
       </button>
-      {voteError !== null && <ErrorNotice error={voteError} />}
       <div className="created-by">
         <span className="muted">Created by</span>
         <ActorChip actor={issue.creator} />

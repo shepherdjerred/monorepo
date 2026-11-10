@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   DndContext,
   KeyboardSensor,
@@ -19,23 +18,11 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { useMutation } from "@tanstack/react-query";
 import { Link } from "react-router";
 import { GripVertical, MessageSquare, ThumbsUp } from "lucide-react";
-import {
-  api,
-  refresh,
-  type BootstrapData,
-  type Issue,
-} from "#client/data/api.ts";
-import { currentActor } from "#client/data/identity.ts";
-import {
-  Avatar,
-  ErrorNotice,
-  Priority,
-  StateDot,
-  Swatch,
-} from "#client/ui/ui.tsx";
+import type { BootstrapData, Issue } from "#client/data/api.ts";
+import { moveIssue } from "#client/data/mutations.ts";
+import { Avatar, Priority, StateDot, Swatch } from "#client/ui/ui.tsx";
 import { useShell } from "#client/shell/shell-context.ts";
 import { isPlainClick } from "#client/shell/route.ts";
 
@@ -198,7 +185,6 @@ export function Board({
   items: Issue[];
   states: BootstrapData["states"];
 }) {
-  const [optimistic, setOptimistic] = useState<Issue[]>();
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
     useSensor(TouchSensor, {
@@ -208,18 +194,11 @@ export function Board({
       coordinateGetter: boardKeyboardCoordinates,
     }),
   );
-  const move = useMutation({
-    mutationFn: (input: Parameters<typeof api.issues.move.mutate>[0]) =>
-      api.issues.move.mutate(input),
-    onSettled: async () => {
-      await refresh();
-      setOptimistic(undefined);
-    },
-  });
-  const visible = optimistic ?? items;
+  // A drop moves the card in the cache at once; moves of one card are saved
+  // in order, so the board never has to wait for the previous one.
   function dropped(event: DragEndEvent) {
     const { active, over } = event;
-    if (over === null || active.id === over.id || move.isPending) return;
+    if (over === null || active.id === over.id) return;
     const issue = items.find(({ id }) => id === active.id);
     const target = items.find(({ id }) => id === over.id);
     const state = states.find(({ id }) => id === (target?.state.id ?? over.id));
@@ -233,35 +212,20 @@ export function Board({
         : column.findIndex(({ id }) => id === target.id);
     const before = column[index - 1];
     const after = column[index];
-    setOptimistic(
-      items.map((item) =>
-        item.id === issue.id
-          ? {
-              ...item,
-              state,
-              stateId: state.id,
-              boardOrder:
-                before === undefined
-                  ? (after?.boardOrder ?? 2048) - 1024
-                  : after === undefined
-                    ? before.boardOrder + 1024
-                    : (before.boardOrder + after.boardOrder) / 2,
-            }
-          : item,
-      ),
-    );
-    move.mutate({
-      actor: currentActor(),
-      identifier: issue.identifier,
+    void moveIssue(issue.identifier, {
       stateId: state.id,
-      expectedRevision: issue.revision,
+      boardOrder:
+        before === undefined
+          ? (after?.boardOrder ?? 2048) - 1024
+          : after === undefined
+            ? before.boardOrder + 1024
+            : (before.boardOrder + after.boardOrder) / 2,
       ...(before === undefined ? {} : { beforeId: before.id }),
       ...(after === undefined ? {} : { afterId: after.id }),
     });
   }
   return (
     <>
-      {move.error !== null && <ErrorNotice error={move.error} />}
       <DndContext
         sensors={sensors}
         accessibility={{
@@ -285,7 +249,7 @@ export function Board({
             <Column
               key={state.id}
               state={state}
-              items={visible
+              items={items
                 .filter((item) => item.state.id === state.id)
                 .sort(
                   (a, b) =>

@@ -1,37 +1,37 @@
 import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
 import { Trash2 } from "lucide-react";
-import { api, refresh, type IssueDetailData } from "#client/data/api.ts";
-import { currentActor } from "#client/data/identity.ts";
-import { ActorChip, ErrorNotice, Modal } from "#client/ui/ui.tsx";
+import type { IssueDetailData } from "#client/data/api.ts";
+import { deleteComment, editComment } from "#client/data/detail-mutations.ts";
+import { useDraft } from "#client/data/drafts.ts";
+import { ActorChip, Modal } from "#client/ui/ui.tsx";
 import { Markdown } from "#client/ui/markdown.tsx";
 import { RelativeTime } from "#client/ui/time.tsx";
-import { announce } from "#client/shell/announce.tsx";
 export function Comment({
+  identifier,
   comment,
   disabled,
 }: {
+  /** The issue the comment belongs to. */
+  identifier: string;
   comment: IssueDetailData["comments"][number];
   disabled: boolean;
 }) {
-  const [editing, setEditing] = useState(false);
-  const [body, setBody] = useState(comment.body);
+  const draft = useDraft(`comment-edit:${comment.id}`, comment.body);
+  // An edit left unfinished is still open when the issue is opened again.
+  const [editing, setEditing] = useState(draft.dirty);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const change = useMutation({
-    mutationFn: (remove: boolean) =>
-      remove
-        ? api.comments.delete.mutate({ actor: currentActor(), id: comment.id })
-        : api.comments.update.mutate({
-            actor: currentActor(),
-            id: comment.id,
-            body,
-          }),
-    onSuccess: (_result, removed) => {
-      setEditing(false);
-      announce(removed ? "Comment deleted" : "Comment updated");
-      void refresh();
-    },
-  });
+  // A comment still being posted has no server id to edit or delete yet.
+  const locked = disabled || comment.id.startsWith("optimistic-");
+  async function save() {
+    // The draft outlives the request, so a refused save reopens the editor.
+    setEditing(false);
+    const outcome = await editComment(identifier, comment, draft.text);
+    if (outcome.ok) {
+      draft.reset(draft.text);
+    } else {
+      setEditing(true);
+    }
+  }
   return (
     <article className="comment">
       <div className="comment-meta">
@@ -43,8 +43,9 @@ export function Comment({
         <span className="spacer" />
         <button
           className="text-button"
-          disabled={disabled}
+          disabled={locked}
           onClick={() => {
+            draft.reset(comment.body);
             setEditing(true);
           }}
         >
@@ -52,7 +53,7 @@ export function Comment({
         </button>
         <button
           className="icon-button"
-          disabled={disabled}
+          disabled={locked}
           aria-label="Delete comment"
           onClick={() => {
             setConfirmDelete(true);
@@ -65,35 +66,33 @@ export function Comment({
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            change.mutate(false);
+            void save();
           }}
         >
           <textarea
             aria-label="Edit comment"
             required
-            value={body}
+            value={draft.text}
             onChange={(e) => {
-              setBody(e.target.value);
+              draft.setText(e.target.value);
             }}
           />
           <div className="actions">
             <button
               type="button"
               onClick={() => {
+                draft.reset(comment.body);
                 setEditing(false);
               }}
             >
               Cancel
             </button>
-            <button disabled={change.isPending} className="primary">
-              Save comment
-            </button>
+            <button className="primary">Save comment</button>
           </div>
         </form>
       ) : (
         <Markdown body={comment.body} />
       )}
-      {change.error !== null && <ErrorNotice error={change.error} />}
       <Modal
         title="Delete comment?"
         open={confirmDelete}
@@ -113,7 +112,8 @@ export function Comment({
           <button
             className="danger"
             onClick={() => {
-              change.mutate(true);
+              setConfirmDelete(false);
+              void deleteComment(identifier, comment);
             }}
           >
             Delete comment

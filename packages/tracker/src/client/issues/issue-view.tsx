@@ -25,7 +25,16 @@ export function IssueView() {
         <div>
           <h2>
             {params.get("mine") === "true" ? "My issues" : "All issues"}
-            <span className="count">{list.items.length}</span>
+            <span className="count">
+              {list.items.length}
+              {/* The server reports no total; "+" says more pages exist. */}
+              {list.hasMore && (
+                <>
+                  <span aria-hidden="true">+</span>
+                  <span className="sr-only"> or more</span>
+                </>
+              )}
+            </span>
           </h2>
           <p>Keep the next step in sight.</p>
         </div>
@@ -52,7 +61,11 @@ export function IssueView() {
       </div>
       <Filters bootstrap={bootstrap} teamKey={teamKey} />
       {list.error !== null && <ErrorNotice error={list.error} />}
-      <div className="issue-results" aria-busy={list.busy}>
+      <div
+        className="issue-results"
+        aria-busy={list.busy}
+        data-placeholder={list.placeholder}
+      >
         {list.loading ? (
           <div className="loading">Loading issues…</div>
         ) : view === "board" ? (

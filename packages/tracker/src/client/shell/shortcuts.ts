@@ -7,6 +7,7 @@ export const shortcutHelp = [
   ["J / K", "Next / previous issue"],
   ["Enter", "Open selected issue"],
   ["Esc", "Close overlay / back"],
+  ["⌘ Z", "Undo the last change"],
   ["S", "Set status"],
   ["P", "Set priority"],
   ["A", "Set assignee"],
@@ -39,13 +40,24 @@ const isPaletteChord = (event: KeyboardEvent) =>
   !event.altKey &&
   !event.shiftKey;
 
+const isUndoChord = (event: KeyboardEvent) =>
+  event.key.toLowerCase() === "z" &&
+  (event.metaKey || event.ctrlKey) &&
+  !event.altKey &&
+  !event.shiftKey;
+/** A text field keeps its own undo history. */
+const targetOf = (event: KeyboardEvent) =>
+  event.target instanceof Element ? event.target : null;
+const inField = (event: KeyboardEvent) =>
+  targetOf(event)?.closest(editable) != null;
+
 /** The key to act on, or undefined when it belongs to the browser or a field. */
 function plainKey(event: KeyboardEvent) {
   // Leave every other chord (copy, select all, browser back…) alone.
   if (event.metaKey || event.ctrlKey || event.altKey) {
     return;
   }
-  const target = event.target instanceof Element ? event.target : null;
+  const target = targetOf(event);
   if (
     target?.closest(editable) != null ||
     document.querySelector('[role="dialog"]:not(.peek)') !== null
@@ -78,6 +90,12 @@ export function useShortcuts(
       if (isPaletteChord(event)) {
         event.preventDefault();
         handle("palette");
+        return;
+      }
+      if (isUndoChord(event)) {
+        if (!inField(event) && handle("undo")) {
+          event.preventDefault();
+        }
         return;
       }
       const key = blocked ? undefined : plainKey(event);

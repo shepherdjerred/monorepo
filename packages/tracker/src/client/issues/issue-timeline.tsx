@@ -42,7 +42,12 @@ export function IssueTimeline({
     <div className="comments">
       {entries.map((entry) =>
         entry.kind === "comment" ? (
-          <Comment key={entry.id} comment={entry.value} disabled={disabled} />
+          <Comment
+            key={entry.id}
+            identifier={issue.identifier}
+            comment={entry.value}
+            disabled={disabled}
+          />
         ) : (
           <ActivityList key={entry.id} events={[entry.value]} />
         ),

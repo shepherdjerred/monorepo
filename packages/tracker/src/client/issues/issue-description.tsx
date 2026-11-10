@@ -1,10 +1,8 @@
 import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
-import { api, refresh, type IssueDetailData } from "#client/data/api.ts";
-import { currentActor } from "#client/data/identity.ts";
-import { ErrorNotice } from "#client/ui/ui.tsx";
+import type { IssueDetailData } from "#client/data/api.ts";
+import { useDraft } from "#client/data/drafts.ts";
+import { editIssue } from "#client/data/mutations.ts";
 import { Markdown, MarkdownEditor } from "#client/ui/markdown.tsx";
-import { announce } from "#client/shell/announce.tsx";
 
 export function IssueDescription({
   issue,
@@ -13,25 +11,24 @@ export function IssueDescription({
   issue: IssueDetailData;
   disabled: boolean;
 }) {
-  const [editing, setEditing] = useState(false);
-  const [body, setBody] = useState(issue.description);
-  const [attachmentIds, setAttachments] = useState<string[]>([]);
-  const save = useMutation({
-    mutationFn: () =>
-      api.issues.update.mutate({
-        actor: currentActor(),
-        identifier: issue.identifier,
-        expectedRevision: issue.revision,
-        description: body,
-        attachmentIds,
-      }),
-    onSuccess: () => {
-      setEditing(false);
-      setAttachments([]);
-      announce("Description saved");
-      void refresh();
-    },
-  });
+  const draft = useDraft(`description:${issue.identifier}`, issue.description);
+  // An edit left unfinished is still open when the issue is opened again.
+  const [editing, setEditing] = useState(draft.dirty);
+  async function save() {
+    // The new text shows at once. The draft outlives the request, so a
+    // refused save reopens the editor with nothing lost.
+    setEditing(false);
+    const outcome = await editIssue(issue.identifier, {
+      kind: "description",
+      description: draft.text,
+      attachmentIds: draft.attachments,
+    });
+    if (outcome.ok) {
+      draft.reset(draft.text);
+    } else {
+      setEditing(true);
+    }
+  }
   if (!editing)
     return (
       <div className="description-block">
@@ -41,7 +38,7 @@ export function IssueDescription({
           className="text-button"
           disabled={disabled}
           onClick={() => {
-            setBody(issue.description);
+            draft.reset(issue.description);
             setEditing(true);
           }}
         >
@@ -53,7 +50,7 @@ export function IssueDescription({
     <form
       onSubmit={(e) => {
         e.preventDefault();
-        save.mutate();
+        void save();
       }}
       onKeyDown={(e) => {
         if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
@@ -64,11 +61,9 @@ export function IssueDescription({
     >
       <MarkdownEditor
         id="description-editor"
-        value={body}
-        onChange={setBody}
-        onAttachments={(ids) => {
-          setAttachments((previous) => [...previous, ...ids]);
-        }}
+        value={draft.text}
+        onChange={draft.setText}
+        onAttachments={draft.addAttachments}
         placeholder="Add a description…"
         label="Description"
       />
@@ -76,16 +71,16 @@ export function IssueDescription({
         <button
           type="button"
           onClick={() => {
+            draft.reset(issue.description);
             setEditing(false);
           }}
         >
           Cancel
         </button>
-        <button className="primary" disabled={disabled || save.isPending}>
+        <button className="primary" disabled={disabled}>
           Save description
         </button>
       </div>
-      {save.error !== null && <ErrorNotice error={save.error} />}
     </form>
   );
 }

@@ -1,12 +1,14 @@
 import type { NavigateFunction } from "react-router";
-import type { Issue } from "#client/data/api.ts";
+import { undoStack } from "#client/data/undo.ts";
+import type { IssuePages } from "#client/issues/issue-list-query.ts";
+import { focusIssueRow } from "./list-navigation.ts";
 import { hasAppHistory, type RouteInfo } from "./route.ts";
 
 export type Overlay = "create" | "palette" | "help" | "more";
 
 type Shell = {
   route: RouteInfo;
-  items: Issue[];
+  list: IssuePages;
   peek: {
     identifier: string | undefined;
     open: (identifier: string) => void;
@@ -28,22 +30,34 @@ function focusProperty(property: string) {
   }
 }
 
-/** Move keyboard focus to the neighbouring issue row, keeping it in view. */
-function focusRow(delta: number, current: string | undefined) {
-  const rows = [
-    ...document.querySelectorAll<HTMLAnchorElement>("a[data-issue-row]"),
+function neighbour<T>(items: T[], index: number, delta: number) {
+  return items[
+    index === -1 ? 0 : Math.max(0, Math.min(items.length - 1, index + delta))
   ];
-  const index = rows.findIndex((row) => row.dataset["issueRow"] === current);
-  const next =
-    rows[
-      index === -1 ? 0 : Math.max(0, Math.min(rows.length - 1, index + delta))
+}
+
+/**
+ * Move keyboard focus to the neighbouring issue, keeping it in view. The
+ * list follows its data, since most of its rows are not in the document;
+ * the board follows the cards as they are laid out in columns.
+ */
+function focusRow(delta: number, shell: Shell) {
+  if (shell.route.view === "board") {
+    const cards = [
+      ...document.querySelectorAll<HTMLAnchorElement>("a[data-issue-row]"),
     ];
-  if (next === undefined) {
-    return false;
+    const index = cards.findIndex(
+      (card) => card.dataset["issueRow"] === shell.current,
+    );
+    const next = neighbour(cards, index, delta);
+    next?.focus({ preventScroll: true });
+    next?.scrollIntoView({ block: "nearest" });
+    return next !== undefined;
   }
-  next.focus({ preventScroll: true });
-  next.scrollIntoView({ block: "nearest" });
-  return true;
+  const { items } = shell.list;
+  const index = items.findIndex((item) => item.identifier === shell.current);
+  const next = neighbour(items, index, delta);
+  return next !== undefined && focusIssueRow(next.identifier);
 }
 
 /**
@@ -51,7 +65,8 @@ function focusRow(delta: number, current: string | undefined) {
  * that does nothing here stays with the browser.
  */
 export function shellActions(shell: Shell): Record<string, () => boolean> {
-  const { route, items, peek, navigate } = shell;
+  const { route, peek, navigate } = shell;
+  const { items } = shell.list;
   const openIssue = peek.identifier ?? route.identifier;
   const listFocused = route.isList && peek.identifier === undefined;
   const go = (to: string) => () => {
@@ -78,6 +93,10 @@ export function shellActions(shell: Shell): Record<string, () => boolean> {
       const index = items.findIndex((item) => item.identifier === openIssue);
       const next = items[index + delta];
       if (next === undefined) {
+        // Past the last loaded issue: page the next ones in for another press.
+        if (delta > 0 && shell.list.hasMore && !shell.list.loadingMore) {
+          shell.list.loadMore();
+        }
         return;
       }
       if (peek.identifier === undefined) {
@@ -98,8 +117,9 @@ export function shellActions(shell: Shell): Record<string, () => boolean> {
       search?.focus();
       return search !== null;
     },
-    j: () => listFocused && focusRow(1, shell.current),
-    k: () => listFocused && focusRow(-1, shell.current),
+    undo: () => undoStack.runNewest(),
+    j: () => listFocused && focusRow(1, shell),
+    k: () => listFocused && focusRow(-1, shell),
     Enter: () => {
       const target = items.some(
         ({ identifier }) => identifier === shell.current,

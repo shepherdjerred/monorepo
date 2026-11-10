@@ -14,7 +14,7 @@ import { shortcutHelp, useShortcuts } from "./shortcuts.ts";
 import { shellActions, type Overlay } from "./shell-actions.ts";
 import { useRoute, type RouteInfo } from "./route.ts";
 import { useTeamKey } from "./team.ts";
-import { LiveRegion } from "./announce.tsx";
+import { Toaster } from "#client/ui/toast.tsx";
 import type { ShellContext } from "./shell-context.ts";
 
 const headings = {
@@ -60,10 +60,9 @@ export function Shell() {
   const pageIssue = useIssue(route.identifier);
   const [overlay, setOverlay] = useState<Overlay>();
   const [current, setCurrent] = useState<string>();
-  const items = issues.data?.items ?? [];
   const actions = shellActions({
     route,
-    items,
+    list: issues,
     peek,
     current,
     navigate,
@@ -88,12 +87,7 @@ export function Shell() {
           bootstrap: data,
           teamKey,
           view: route.view,
-          list: {
-            items,
-            loading: issues.isPending,
-            busy: issues.isPlaceholderData,
-            error: issues.error,
-          },
+          list: issues,
           current,
           setCurrent,
           openPeek: peek.open,
@@ -235,7 +229,7 @@ export function Shell() {
         }}
         moreOpen={overlay === "more"}
       />
-      <LiveRegion />
+      <Toaster />
       <ScrollRestoration />
     </div>
   );

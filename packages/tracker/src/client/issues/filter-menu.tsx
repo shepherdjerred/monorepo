@@ -2,7 +2,8 @@ import { useState } from "react";
 import { useSearchParams } from "react-router";
 import { SlidersHorizontal } from "lucide-react";
 import type { BootstrapData } from "#client/data/api.ts";
-import { Modal, priorities } from "#client/ui/ui.tsx";
+import { Modal } from "#client/ui/ui.tsx";
+import { priorities } from "#client/data/issue-changes.ts";
 
 export function FilterMenu({
   bootstrap,

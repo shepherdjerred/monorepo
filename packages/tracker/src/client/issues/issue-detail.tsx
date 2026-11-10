@@ -4,22 +4,22 @@ import { IssueTimeline } from "./issue-timeline.tsx";
 import { IssueProperties } from "./issue-properties.tsx";
 import { IssueRelations } from "./issue-relations.tsx";
 import { useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router";
 import { Archive, ArrowUpRight, History } from "lucide-react";
 import {
   api,
-  refresh,
   type BootstrapData,
   type IssueDetailData,
 } from "#client/data/api.ts";
-import { currentActor } from "#client/data/identity.ts";
+import { eventsKey } from "#client/data/cache.ts";
+import { addComment } from "#client/data/detail-mutations.ts";
+import { useDraft } from "#client/data/drafts.ts";
+import { deleteIssue, editIssue } from "#client/data/mutations.ts";
 import { ErrorNotice, Modal } from "#client/ui/ui.tsx";
 import { MarkdownEditor } from "#client/ui/markdown.tsx";
 import { ActivityList } from "./activity.tsx";
-import { UpdateIssueSchema } from "#shared/schema.ts";
 import { useIssue } from "./issue-query.ts";
-import { announce } from "#client/shell/announce.tsx";
 
 export function IssueDetail({
   identifier,
@@ -50,9 +50,6 @@ export function IssueDetail({
   );
 }
 
-/** Which control asked for an update, so its error appears beside it. */
-type UpdateSource = "title" | "archive" | "property";
-
 function IssueContent({
   issue,
   bootstrap,
@@ -65,87 +62,41 @@ function IssueContent({
   close?: () => void;
 }) {
   const navigate = useNavigate();
+  const { identifier } = issue;
   const [title, setTitle] = useState(issue.title);
-  const [comment, setComment] = useState("");
-  const [commentAttachments, setCommentAttachments] = useState<string[]>([]);
+  const [savedTitle, setSavedTitle] = useState(issue.title);
+  // An undo, a conflict or another tab can change the title underneath.
+  if (issue.title !== savedTitle) {
+    setSavedTitle(issue.title);
+    setTitle(issue.title);
+  }
+  const comment = useDraft(`comment:${identifier}`);
   const [history, setHistory] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const update = useMutation({
-    mutationFn: (change: {
-      patch: Record<string, unknown>;
-      source: UpdateSource;
-    }) =>
-      api.issues.update.mutate(
-        UpdateIssueSchema.parse({
-          actor: currentActor(),
-          identifier: issue.identifier,
-          expectedRevision: issue.revision,
-          ...change.patch,
-        }),
-      ),
-    onSuccess: () => {
-      announce("Issue updated");
-      void refresh();
-    },
-  });
-  const updateError = (source: UpdateSource) =>
-    update.error !== null && update.variables.source === source ? (
-      <ErrorNotice error={update.error} />
-    ) : null;
-  const vote = useMutation({
-    mutationFn: () =>
-      issue.viewerVoted
-        ? api.votes.remove.mutate({
-            actor: currentActor(),
-            identifier: issue.identifier,
-          })
-        : api.votes.cast.mutate({
-            actor: currentActor(),
-            identifier: issue.identifier,
-          }),
-    onSuccess: () => {
-      announce(issue.viewerVoted ? "Vote removed" : "Vote added");
-      void refresh();
-    },
-  });
-  const addComment = useMutation({
-    mutationFn: () =>
-      api.comments.create.mutate({
-        actor: currentActor(),
-        identifier: issue.identifier,
-        body: comment,
-        attachmentIds: commentAttachments,
-      }),
-    onSuccess: () => {
-      setComment("");
-      setCommentAttachments([]);
-      announce("Comment added");
-      void refresh();
-    },
-  });
-  const removeIssue = useMutation({
-    mutationFn: () =>
-      api.issues.delete.mutate({
-        actor: currentActor(),
-        identifier: issue.identifier,
-        expectedRevision: issue.revision,
-      }),
-    onSuccess: async () => {
-      announce(`${issue.identifier} deleted`);
-      if (peek) {
-        close?.();
-      } else {
-        await navigate("/issues", { replace: true });
-      }
-      await refresh();
-    },
-  });
+  async function postComment() {
+    const { text, attachments } = comment;
+    // The comment joins the timeline at once; a failure hands the text back.
+    comment.reset();
+    const outcome = await addComment(identifier, text, attachments);
+    if (!outcome.ok) {
+      comment.restore({ text, attachments });
+    }
+  }
+  function confirmDelete() {
+    setDeleting(false);
+    deleteIssue(identifier);
+    if (peek) {
+      close?.();
+    } else {
+      void navigate("/issues", { replace: true });
+    }
+  }
   const events = useQuery({
-    queryKey: ["events", issue.identifier],
+    queryKey: eventsKey(identifier),
     queryFn: () =>
       api.issues.activity.query({ identifier: issue.identifier, limit: 100 }),
   });
-  const disabled = !bootstrap.writesEnabled || update.isPending;
+  const disabled = !bootstrap.writesEnabled;
   const TitleHeading = peek ? "h2" : "h1";
   return (
     <article className={`issue-detail ${peek ? "is-peek" : ""}`}>
@@ -179,16 +130,15 @@ function IssueContent({
           }
           disabled={disabled}
           onClick={() => {
-            update.mutate({
-              patch: { archived: issue.archivedAt === null },
-              source: "archive",
+            void editIssue(identifier, {
+              kind: "archive",
+              archived: issue.archivedAt === null,
             });
           }}
         >
           <Archive size={17} />
         </button>
       </header>
-      {updateError("archive")}
       {issue.archivedAt !== null && (
         <div className="banner">This issue is archived.</div>
       )}
@@ -205,8 +155,10 @@ function IssueContent({
                 setTitle(e.target.value);
               }}
               onBlur={() => {
-                if (title !== issue.title && title.trim() !== "") {
-                  update.mutate({ patch: { title }, source: "title" });
+                if (title.trim() === "") {
+                  setTitle(issue.title);
+                } else if (title !== issue.title) {
+                  void editIssue(identifier, { kind: "title", title });
                 }
               }}
               onKeyDown={(e) => {
@@ -214,10 +166,15 @@ function IssueContent({
                   e.preventDefault();
                   e.currentTarget.blur();
                 }
+                // Escape takes back an unsaved title before it closes anything.
+                if (e.key === "Escape" && title !== issue.title) {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setTitle(issue.title);
+                }
               }}
             />
           </TitleHeading>
-          {updateError("title")}
           <IssueDescription issue={issue} disabled={disabled} />
           <IssueAttachments files={issue.attachments} />
           <IssueRelations issue={issue} disabled={disabled} />
@@ -235,7 +192,7 @@ function IssueContent({
             <form
               onSubmit={(e) => {
                 e.preventDefault();
-                addComment.mutate();
+                void postComment();
               }}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
@@ -245,11 +202,9 @@ function IssueContent({
               }}
             >
               <MarkdownEditor
-                value={comment}
-                onChange={setComment}
-                onAttachments={(ids) => {
-                  setCommentAttachments((previous) => [...previous, ...ids]);
-                }}
+                value={comment.text}
+                onChange={comment.setText}
+                onAttachments={comment.addAttachments}
                 placeholder="Leave a comment…"
                 label="Comment"
                 required
@@ -257,16 +212,11 @@ function IssueContent({
               <div className="actions">
                 <button
                   className="primary"
-                  disabled={
-                    disabled || addComment.isPending || comment.trim() === ""
-                  }
+                  disabled={disabled || comment.text.trim() === ""}
                 >
                   Comment
                 </button>
               </div>
-              {addComment.error !== null && (
-                <ErrorNotice error={addComment.error} />
-              )}
             </form>
           </section>
         </div>
@@ -274,15 +224,6 @@ function IssueContent({
           issue={issue}
           bootstrap={bootstrap}
           disabled={disabled}
-          update={(patch) => {
-            update.mutate({ patch, source: "property" });
-          }}
-          error={update.variables?.source === "property" ? update.error : null}
-          voteError={vote.error}
-          vote={() => {
-            vote.mutate();
-          }}
-          voting={vote.isPending}
           onDelete={() => {
             setDeleting(true);
           }}
@@ -310,9 +251,6 @@ function IssueContent({
           The issue and comments will be removed. Their audit history and
           attachments remain available.
         </p>
-        {removeIssue.error !== null && (
-          <ErrorNotice error={removeIssue.error} />
-        )}
         <div className="actions">
           <button
             onClick={() => {
@@ -321,13 +259,7 @@ function IssueContent({
           >
             Cancel
           </button>
-          <button
-            className="danger"
-            disabled={removeIssue.isPending}
-            onClick={() => {
-              removeIssue.mutate();
-            }}
-          >
+          <button className="danger" onClick={confirmDelete}>
             Delete {issue.identifier}
           </button>
         </div>

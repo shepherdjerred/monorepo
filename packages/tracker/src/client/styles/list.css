@@ -72,9 +72,18 @@
   color: var(--muted);
 }
 .issue-list {
+  position: relative;
   border-top: 1px solid var(--border);
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
+/* Rows are windowed: each is placed by the virtualizer's transform. */
 .issue-row {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
   display: flex;
   align-items: center;
   gap: 16px;
@@ -105,7 +114,19 @@
 .issue-row-main:focus-visible {
   outline-offset: -2px;
 }
-.issue-results[aria-busy="true"] {
+.list-more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 48px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.list-sentinel {
+  height: 1px;
+}
+.issue-results[data-placeholder="true"] {
   opacity: 0.6;
 }
 .issue-row-main .identifier {

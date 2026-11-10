@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { api, refresh, type BootstrapData } from "#client/data/api.ts";
-import { currentActor } from "#client/data/identity.ts";
-import { ErrorNotice, Modal, priorities } from "#client/ui/ui.tsx";
+import type { BootstrapData } from "#client/data/api.ts";
+import { useDraft } from "#client/data/drafts.ts";
+import { priorities } from "#client/data/issue-changes.ts";
+import { createIssue } from "#client/data/mutations.ts";
+import { ErrorNotice, Modal } from "#client/ui/ui.tsx";
 import { MarkdownEditor } from "#client/ui/markdown.tsx";
-import { announce } from "#client/shell/announce.tsx";
 
 export function NewIssue({
   open,
@@ -21,13 +22,13 @@ export function NewIssue({
   onCreated: (identifier: string) => void;
 }) {
   const [chosenTeam, setTeam] = useState<string>();
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
+  // Closing the dialog keeps what was typed; it is there on the next open.
+  const title = useDraft("new-issue.title");
+  const description = useDraft("new-issue.description");
   const [chosenState, setState] = useState<string>();
   const [priority, setPriority] = useState(0);
   const [projectSlug, setProject] = useState("");
   const [labels, setLabels] = useState<string[]>([]);
-  const [attachmentIds, setAttachments] = useState<string[]>([]);
   const teamKey = chosenTeam ?? currentTeamKey;
   const team = bootstrap.teams.find(({ key }) => key === teamKey);
   const states = bootstrap.states.filter(({ teamId }) => teamId === team?.id);
@@ -37,26 +38,22 @@ export function NewIssue({
     (states.find(({ type }) => type === "triage") ?? states[0])?.name;
   const create = useMutation({
     mutationFn: () =>
-      api.issues.create.mutate({
-        actor: currentActor(),
+      createIssue({
         teamKey,
-        title,
-        description,
+        title: title.text,
+        description: description.text,
         ...(stateName === undefined ? {} : { stateName }),
         priority,
         ...(projectSlug === "" ? {} : { projectSlug }),
         labels,
-        attachmentIds,
+        attachmentIds: description.attachments,
       }),
     onSuccess: (issue) => {
-      void refresh();
-      setTitle("");
-      setDescription("");
-      setAttachments([]);
+      title.reset();
+      description.reset();
       setTeam(undefined);
       setLabels([]);
       setState(undefined);
-      announce(`Issue ${issue.identifier} created`);
       close();
       onCreated(issue.identifier);
     },
@@ -126,19 +123,17 @@ export function NewIssue({
           className="title-input"
           aria-label="Issue title"
           placeholder="Issue title"
-          value={title}
+          value={title.text}
           required
           maxLength={500}
           onChange={(e) => {
-            setTitle(e.target.value);
+            title.setText(e.target.value);
           }}
         />
         <MarkdownEditor
-          value={description}
-          onChange={setDescription}
-          onAttachments={(ids) => {
-            setAttachments((previous) => [...previous, ...ids]);
-          }}
+          value={description.text}
+          onChange={description.setText}
+          onAttachments={description.addAttachments}
           placeholder="Add a description…"
           label="Description"
         />
@@ -186,6 +181,20 @@ export function NewIssue({
         {create.error !== null && <ErrorNotice error={create.error} />}
         <div className="modal-footer">
           <span className="muted">⌘ Enter to create</span>
+          <span className="spacer" />
+          {(title.dirty || description.dirty) && (
+            <button
+              type="button"
+              className="text-button"
+              onClick={() => {
+                title.reset();
+                description.reset();
+                create.reset();
+              }}
+            >
+              Discard draft
+            </button>
+          )}
           <button
             type="submit"
             className="primary"

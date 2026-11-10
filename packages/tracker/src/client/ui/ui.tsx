@@ -1,6 +1,7 @@
 import { Dialog } from "@base-ui/react/dialog";
 import { X } from "lucide-react";
 import type { ReactNode } from "react";
+import { priorities } from "#client/data/issue-changes.ts";
 
 export function Modal({
   title,
@@ -82,7 +83,6 @@ export function StateDot({ color }: { color: string }) {
     </span>
   );
 }
-export const priorities = ["No priority", "Urgent", "High", "Medium", "Low"];
 export function Priority({ value }: { value: number }) {
   return (
     <span

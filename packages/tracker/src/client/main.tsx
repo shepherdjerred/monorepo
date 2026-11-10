@@ -10,6 +10,8 @@ import {
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Shell } from "#client/shell/app.tsx";
 import { queryClient } from "#client/data/api.ts";
+import { drafts } from "#client/data/drafts.ts";
+import { listRestore } from "#client/data/list-restore.ts";
 import { IssueView } from "#client/issues/issue-view.tsx";
 import { IssueDetail } from "#client/issues/issue-detail.tsx";
 import { Actors } from "#client/pages/actors.tsx";
@@ -98,6 +100,28 @@ const router = createBrowserRouter([
     ],
   },
 ]);
+
+// The router calls a tab's first history entry "default" every time a
+// document loads. Arriving by an address or a link is a new visit to it, not
+// a return, so a list must not resume where an earlier visit left off.
+if (
+  performance
+    .getEntriesByType("navigation")
+    .some(
+      (entry) =>
+        entry instanceof PerformanceNavigationTiming &&
+        entry.type === "navigate",
+    )
+) {
+  listRestore.forget("default");
+}
+
+// Closing the tab would lose unsent text, so the browser asks first.
+globalThis.addEventListener("beforeunload", (event) => {
+  if (drafts.dirty()) {
+    event.preventDefault();
+  }
+});
 
 const root = document.querySelector("#root");
 if (root === null) {
