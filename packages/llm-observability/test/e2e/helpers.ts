@@ -14,6 +14,7 @@ import { type ArchiveConfig } from "#src/archive-uploader.ts";
 import {
   E2E_MINIO_HOST_VARIABLE,
   E2E_TEMPO_HOST_VARIABLE,
+  TEMPO_TRACE_POLL_TIMEOUT_MS,
 } from "./run-core.ts";
 
 function requireHost(variable: string): string {
@@ -117,7 +118,7 @@ export async function pollTempoTrace(
   traceId: string,
   options: { timeoutMs?: number; pollIntervalMs?: number } = {},
 ): Promise<TempoTraceResult> {
-  const timeoutMs = options.timeoutMs ?? 15_000;
+  const timeoutMs = options.timeoutMs ?? TEMPO_TRACE_POLL_TIMEOUT_MS;
   const pollIntervalMs = options.pollIntervalMs ?? 250;
   await fetch(`${TEMPO_QUERY_URL}/flush`, { method: "POST" });
 
