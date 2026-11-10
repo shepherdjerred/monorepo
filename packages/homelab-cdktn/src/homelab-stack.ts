@@ -1,5 +1,6 @@
 import type { Construct } from "constructs";
 import { S3Backend, TerraformStack } from "cdktn";
+import { forget } from "#src/state-migrations.ts";
 
 /** OpenTofu releases the app, and the bindings generated for it, target. */
 export const OPENTOFU_TARGET_VERSION = ">=1.11.0";
@@ -64,16 +65,11 @@ export class HomelabStack extends TerraformStack {
   }
 
   /**
-   * Forgets a resource without destroying it. cdktn has no construct for
-   * `removed` blocks, so they are appended as a top-level override.
+   * Forgets a resource without destroying it. Kept on the stack for the
+   * stacks already written against it; it shares one list with `moved()` and
+   * `retire()` in `state-migrations.ts`.
    */
   protected removeFromState(address: string): void {
-    this.removed.push({ from: address, lifecycle: { destroy: false } });
-    this.addOverride("removed", this.removed);
+    forget(this, address);
   }
-
-  private readonly removed: {
-    from: string;
-    lifecycle: { destroy: false };
-  }[] = [];
 }
