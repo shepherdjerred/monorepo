@@ -20,7 +20,9 @@ Provision the existing Riot Sign On client before enabling new account links.
    Register local HTTP only if Riot permits it for this client. Otherwise use
    an approved HTTPS development origin and register its exact callback.
    Set the client's privacy and terms URLs to Scout's published pages.
-   Scout does not use Riot logout redirects or request offline access.
+   Set the required **Post Logout Redirect URIs** field to
+   `https://scout-for-lol.com/`. Scout does not initiate Riot logout or request
+   offline access.
 
 3. Add semantic fields `RIOT_RSO_CLIENT_ID` and `RIOT_RSO_CLIENT_SECRET` to
    each enabled stage's existing Scout 1Password item. Use the existing

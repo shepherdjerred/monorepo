@@ -59,6 +59,7 @@ describe("Riot credential bootstrap", () => {
     createScoutDeployment(
       new Chart(app, "scout-beta", { namespace: "scout-beta" }),
       "beta",
+      { riotSignOnProvisioned: false },
     );
     expect(app.synthYaml()).not.toContain("RIOT_RSO_CLIENT");
   });
