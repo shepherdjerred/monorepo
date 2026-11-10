@@ -74,7 +74,8 @@ export async function tofuStackArchiveFiles(
       );
     files.push(staticArchivePath(`${prefix}/${relative}`));
   }
-  if (!files.some((file) => file.endsWith(".tf")))
+  // Hand-written HCL, or the committed cdktn synthesis (`main.tf.json`).
+  if (!files.some((file) => file.endsWith(".tf") || file.endsWith(".tf.json")))
     throw new Error(`OpenTofu stack ${name} has no configuration to archive`);
   const { externalFiles } = STACK_MANIFEST[name];
   await verifyStackExternalFiles({

@@ -1,0 +1,10 @@
+{
+  "extends": "../homelab/tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["bun"]
+  },
+  // Generated bindings enter the program only through the stacks that import
+  // them, so an unused provider resource costs no typecheck time.
+  "include": ["src", "scripts"],
+  "exclude": ["node_modules", "cdktf.out", "generated", "eslint.config.ts"]
+}

@@ -1,0 +1,140 @@
+{
+  "import": [
+    {
+      "id": "monorepo:11098884",
+      "to": "github_repository_ruleset.monorepo_main"
+    },
+    { "id": "monorepo/616025071", "to": "github_repository_webhook.pr_bot" }
+  ],
+  "provider": {
+    "github": [{ "owner": "shepherdjerred", "token": "${var.github_token}" }]
+  },
+  "removed": [
+    {
+      "from": "github_repository_webhook.buildkite",
+      "lifecycle": { "destroy": false }
+    }
+  ],
+  "resource": {
+    "github_repository": {
+      "monorepo": {
+        "allow_auto_merge": true,
+        "allow_merge_commit": false,
+        "allow_rebase_merge": false,
+        "allow_squash_merge": true,
+        "allow_update_branch": true,
+        "delete_branch_on_merge": true,
+        "description": "Monorepo for all of my projects",
+        "has_issues": true,
+        "has_projects": false,
+        "has_wiki": false,
+        "name": "monorepo",
+        "squash_merge_commit_message": "COMMIT_MESSAGES",
+        "squash_merge_commit_title": "PR_TITLE",
+        "visibility": "public"
+      },
+      "shepherdjerred": {
+        "allow_auto_merge": true,
+        "allow_merge_commit": true,
+        "allow_rebase_merge": true,
+        "allow_squash_merge": false,
+        "allow_update_branch": true,
+        "delete_branch_on_merge": true,
+        "description": "My profile README",
+        "has_issues": true,
+        "has_projects": false,
+        "has_wiki": false,
+        "name": "shepherdjerred",
+        "visibility": "public"
+      }
+    },
+    "github_repository_ruleset": {
+      "monorepo_main": {
+        "bypass_actors": [
+          {
+            "actor_id": 5,
+            "actor_type": "RepositoryRole",
+            "bypass_mode": "pull_request"
+          }
+        ],
+        "conditions": {
+          "ref_name": { "exclude": [], "include": ["~DEFAULT_BRANCH"] }
+        },
+        "enforcement": "active",
+        "name": "main",
+        "repository": "${github_repository.monorepo.name}",
+        "rules": {
+          "deletion": true,
+          "non_fast_forward": true,
+          "required_linear_history": true,
+          "required_status_checks": {
+            "required_check": [
+              { "context": "ci/merge-conflict" },
+              { "context": "${var.required_ci_status_context}" }
+            ],
+            "strict_required_status_checks_policy": false
+          }
+        },
+        "target": "branch"
+      }
+    },
+    "github_repository_webhook": {
+      "pr_bot": {
+        "active": true,
+        "configuration": {
+          "content_type": "json",
+          "insecure_ssl": false,
+          "url": "https://pr-bot.sjer.red/webhook"
+        },
+        "events": ["pull_request", "push"],
+        "lifecycle": { "ignore_changes": "all" },
+        "repository": "${github_repository.monorepo.name}"
+      }
+    }
+  },
+  "terraform": {
+    "backend": {
+      "s3": {
+        "bucket": "homelab-tofu-state",
+        "endpoints": { "s3": "https://seaweedfs-s3.tailnet-1a49.ts.net" },
+        "key": "github/terraform.tfstate",
+        "region": "auto",
+        "skip_credentials_validation": true,
+        "skip_metadata_api_check": true,
+        "skip_region_validation": true,
+        "skip_requesting_account_id": true,
+        "skip_s3_checksum": true,
+        "use_lockfile": true,
+        "use_path_style": true
+      }
+    },
+    "required_providers": {
+      "github": { "source": "integrations/github", "version": "~> 6.12" }
+    },
+    "required_version": ">= 1.6.0"
+  },
+  "variable": {
+    "github_token": {
+      "description": "GitHub token used by the GitHub provider for repository and ruleset management",
+      "sensitive": true,
+      "type": "string",
+      "validation": [
+        {
+          "condition": "${anytrue([startswith(var.github_token, \"github_pat_\"), startswith(var.github_token, \"ghp_\"), startswith(var.github_token, \"ghs_\"), startswith(var.github_token, \"ghu_\")])}",
+          "error_message": "github_token must be a GitHub fine-grained PAT (github_pat_), classic PAT (ghp_), GitHub App installation token (ghs_), or GitHub App user token (ghu_)."
+        }
+      ]
+    },
+    "required_ci_status_context": {
+      "default": "ci/woodpecker/pr/ci-complete",
+      "description": "Required Woodpecker PR CI completion context",
+      "type": "string",
+      "validation": [
+        {
+          "condition": "${(var.required_ci_status_context == \"ci/woodpecker/pr/ci-complete\")}",
+          "error_message": "required_ci_status_context must be the Woodpecker CI completion context."
+        }
+      ]
+    }
+  }
+}

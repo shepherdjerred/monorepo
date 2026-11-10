@@ -31,6 +31,7 @@ import {
 } from "./platform-plan-handoff.ts";
 import { assertApplicationSecretAction } from "./application-secrets.ts";
 import { adoptApplicationSecrets } from "./adopt-application-secrets.ts";
+import { stackConfigurationFormat } from "./tofu-external-files.ts";
 import {
   assertStackExecutionContext,
   runDockerTokenStack,
@@ -437,9 +438,7 @@ async function main(): Promise<void> {
   assertStackActionSupported(stack, action);
   const root = homelabRoot();
   const stackDir = `${root}/${STACKS_REL}/${stack}`;
-  if (!(await Bun.file(`${stackDir}/providers.tf`).exists())) {
-    throw new Error(`Stack ${stack} has no providers.tf`);
-  }
+  await stackConfigurationFormat(stack, stackDir);
   if (args.includes("--dry-run")) {
     console.log(`DRYRUN: would run tofu ${action} for ${stack}`);
     return;

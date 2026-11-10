@@ -216,6 +216,12 @@
       // Prometheus's rule evaluator is pinned in the root mise toolchain.
       "ignoreBinaries": ["promtool"]
     },
+    "packages/homelab-cdktn": {
+      "entry": ["src/app.ts", "src/**/*.test.ts", "scripts/*.ts"],
+      "project": ["src/**/*.ts", "scripts/**/*.ts"],
+      // scripts/generate-bindings.ts runs the CLI by path under Node.
+      "ignoreDependencies": ["cdktn-cli"]
+    },
     "packages/homelab/src/helm-types": {
       "entry": [
         "src/index.ts",

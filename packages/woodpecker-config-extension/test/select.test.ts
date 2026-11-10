@@ -597,6 +597,27 @@ describe("selected lane contracts", () => {
     ).not.toContain("tofu-validate");
   });
 
+  test("the CDK Terrain app selects validation, which checks the synthesis is current", () => {
+    expect(keysFor(["packages/homelab-cdktn/src/stacks/github.ts"])).toContain(
+      "tofu-validate",
+    );
+    const steps = buildPipelineSteps({ images: IMAGES, changedBase: "x" });
+    const commands =
+      steps.find((s) => s.key === "tofu-validate")?.commands ?? [];
+    const generate = commands.indexOf(
+      "bun --no-install run --cwd packages/homelab-cdktn generate",
+    );
+    const check = commands.indexOf(
+      "bun --no-install run --cwd packages/homelab-cdktn build",
+    );
+    expect(generate).toBeGreaterThan(-1);
+    expect(check).toBeGreaterThan(generate);
+    // Binding generation must not write the flock-guarded plugin cache.
+    expect(check).toBeLessThan(
+      commands.findIndex((command) => command.includes("TF_PLUGIN_CACHE_DIR")),
+    );
+  });
+
   test("configuration validation receives no provider or remote-state authority", () => {
     const steps = buildPipelineSteps({ images: IMAGES, changedBase: "x" });
     const envs = (key: string) =>

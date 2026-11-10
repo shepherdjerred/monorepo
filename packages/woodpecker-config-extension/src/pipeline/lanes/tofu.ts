@@ -72,7 +72,13 @@ export function tofuValidationSteps(images: CiImages): CiStep[] {
       image: images.base,
       commands: [
         "MISE_TOOLCHAIN_SCOPE=tofu . ci/scripts/toolchain.sh",
-        "ci/scripts/bun-install.sh --frozen-lockfile --filter homelab --production",
+        "ci/scripts/bun-install.sh --frozen-lockfile --filter homelab --filter '@homelab/cdktn' --production",
+        // Synthesized stacks: regenerate the provider bindings, then fail when
+        // a committed main.tf.json differs from a fresh synthesis. This runs
+        // before the shared plugin cache is selected, which only the locked
+        // validations below may write.
+        "bun --no-install run --cwd packages/homelab-cdktn generate",
+        "bun --no-install run --cwd packages/homelab-cdktn build",
         `export TF_PLUGIN_CACHE_DIR=${TOFU_PLUGIN_CACHE.path}`,
         `for stack in ${VALIDATED_STACKS.join(" ")}; do`,
         `  flock -x ${TOFU_PLUGIN_CACHE.path}/.lock bun --no-install packages/homelab/scripts/tofu/tofu-stack.ts "$stack" validate`,
@@ -84,6 +90,7 @@ export function tofuValidationSteps(images: CiImages): CiStep[] {
       changed: {
         include: [
           ...GLOBAL_SELECTOR_INPUTS,
+          "packages/homelab-cdktn/**",
           "packages/homelab/scripts/tofu/**",
           "packages/homelab/src/tofu/**",
         ],

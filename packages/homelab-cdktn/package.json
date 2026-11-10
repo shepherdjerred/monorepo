@@ -1,0 +1,34 @@
+{
+  "name": "@homelab/cdktn",
+  "type": "module",
+  "private": true,
+  "imports": {
+    "#src/*": "./src/*",
+    "#scripts/*": "./scripts/*",
+    "#generated/*": "./generated/*"
+  },
+  "scripts": {
+    "generate": "bun run scripts/generate-bindings.ts",
+    "synth": "bun run scripts/synth.ts",
+    "build": "bun run scripts/synth.ts --check",
+    "lint": "bunx --no-install eslint .",
+    "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
+    "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run",
+    "test:ci": "bun ../../scripts/ci/run-ci-test.ts"
+  },
+  "dependencies": {
+    "cdktn": "0.25.0",
+    "cdktn-cli": "0.25.0",
+    "constructs": "10.8.1",
+    "prettier": "^3.9.9"
+  },
+  "devDependencies": {
+    "@shepherdjerred/eslint-config": "workspace:*",
+    "@types/bun": "1.4.2",
+    "@typescript/native": "npm:typescript@7.0.2",
+    "eslint": "^10.7.0",
+    "jiti": "^2.7.0",
+    "vitest": "5.0.3",
+    "zod": "^4.4.3"
+  }
+}

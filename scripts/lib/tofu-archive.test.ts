@@ -159,6 +159,31 @@ describe("OpenTofu stack archives", () => {
     expect(anthropic).toContain(`${TOFU_STACK_ROOT}/anthropic/backend.tf`);
   });
 
+  test("a stack synthesized by cdktn archives its committed JSON and lock file", async () => {
+    const github = await tofuStackArchiveFiles("github", repository);
+    expect(github).toEqual([
+      TOFU_ARCHIVE_LAYOUT,
+      `${TOFU_STACK_ROOT}/github/.terraform.lock.hcl`,
+      `${TOFU_STACK_ROOT}/github/main.tf.json`,
+    ]);
+  });
+
+  test("a stack directory without configuration is not archived", async () => {
+    const { repoRoot, stack } = await fixture();
+    await rm(path.join(stack, "backend.tf"));
+    await rm(path.join(stack, "main.tf"));
+    await rm(path.join(stack, "modules"), { recursive: true });
+    await expect(tofuStackArchiveFiles("cloudflare", repoRoot)).rejects.toThrow(
+      "has no configuration to archive",
+    );
+    // Synthesized JSON counts as configuration: the stack now gets as far as
+    // the external-file check, which no longer finds the declared read.
+    await Bun.write(path.join(stack, "main.tf.json"), "{}\n");
+    await expect(tofuStackArchiveFiles("cloudflare", repoRoot)).rejects.toThrow(
+      "declares external files it does not read",
+    );
+  });
+
   test("archive identities are content-addressed per stack", () => {
     expect(tofuArchiveServiceId("github")).toBe("tofu-github");
     expect(tofuArchiveComponent("github")).toBe("archive:tofu-github");
