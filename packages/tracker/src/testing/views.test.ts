@@ -116,6 +116,7 @@ it("creates, lists, updates, reorders and deletes views with an audit trail", as
     [other.id, mine.id, mine.id],
     [other.id, mine.id, "missing"],
     [other.id, mine.id, team.id, "missing"],
+    [other.id, mine.id, team.id, team.id],
   ])
     await failure(api.views.reorder({ actor, ids: bad }), "BAD_REQUEST");
   expect(await ids()).toEqual([other.id, mine.id, team.id]);

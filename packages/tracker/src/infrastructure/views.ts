@@ -146,6 +146,7 @@ export class Views {
     return this.unit.run(input.actor, requestId, async (context) => {
       const views = await lockViews(context.db);
       if (
+        input.ids.length !== views.length ||
         new Set(input.ids).size !== views.length ||
         views.some(({ id }) => !input.ids.includes(id))
       )
