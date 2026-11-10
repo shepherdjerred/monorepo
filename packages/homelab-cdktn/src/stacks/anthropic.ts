@@ -10,7 +10,7 @@ import { ApiKey } from "#generated/providers/anthropic/api-key/index.ts";
 import { Workspace } from "#generated/providers/anthropic/workspace/index.ts";
 import { WorkspaceMember } from "#generated/providers/anthropic/workspace-member/index.ts";
 import { HomelabStack } from "#src/homelab-stack.ts";
-import { encryptState } from "#src/state-encryption.ts";
+import { encryptStateAndPlans } from "#src/encryption.ts";
 import { retire } from "#src/state-migrations.ts";
 
 /**
@@ -25,7 +25,12 @@ export class AnthropicStack extends HomelabStack {
       requiredVersion: ">= 1.9.0",
       providerConstraints: { anthropic: "1.60.0" },
     });
-    encryptState(this);
+    encryptStateAndPlans(this, {
+      description:
+        "OpenTofu state and plan encryption passphrase from 1Password",
+      errorMessage:
+        "The OpenTofu state encryption passphrase must be at least 16 characters.",
+    });
 
     const workspaces = new TerraformVariable(this, "anthropic_workspaces", {
       description: "Anthropic workspaces to create and manage",
