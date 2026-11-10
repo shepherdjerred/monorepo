@@ -25,6 +25,8 @@ import { PrometheusSeries } from "#infrastructure/prometheus-series";
 import { createApp } from "#server/app";
 import { ChangeBus } from "#server/change-bus";
 import { Metrics } from "#server/metrics";
+import { serverModules } from "#server/modules";
+import { closeModules } from "#server/platform/module";
 import { reconcileAndPublish } from "#server/reconciliation";
 import { serializedWorker } from "#server/serialized-worker";
 import { systemClock } from "#shared/time";
@@ -159,6 +161,7 @@ const app = createApp({
   digests,
   opsIngestToken: config.OPS_INGEST_TOKEN,
   promotionStatusUrl: config.PROMOTION_STATUS_URL,
+  modules: serverModules,
 });
 const server = Bun.serve({
   hostname: config.HOST,
@@ -261,6 +264,7 @@ async function shutdown(): Promise<void> {
   clearInterval(emailTimer);
   clearInterval(retentionTimer);
   await server.stop();
+  await closeModules(serverModules);
   await service.disconnect();
   await featureFlags.shutdown();
   await shutdownTracing();

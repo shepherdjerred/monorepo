@@ -1,20 +1,8 @@
-import {
-  ActivityIcon,
-  BotIcon,
-  BoxesIcon,
-  CalendarRangeIcon,
-  GaugeIcon,
-  GitPullRequestIcon,
-  HistoryIcon,
-  MonitorIcon,
-  MoonIcon,
-  ServerCogIcon,
-  SunIcon,
-  WrenchIcon,
-} from "lucide-react";
+import { MonitorIcon, MoonIcon, SunIcon } from "lucide-react";
 import { NavLink, Outlet } from "react-router";
 
 import { Changes } from "./changes.tsx";
+import type { ResolvedNavItem } from "./platform/module.ts";
 import {
   setThemePreference,
   useThemePreference,
@@ -47,7 +35,11 @@ function ThemeToggle(): React.JSX.Element {
   );
 }
 
-export function Shell(): React.JSX.Element {
+export function Shell({
+  nav,
+}: {
+  readonly nav: readonly ResolvedNavItem[];
+}): React.JSX.Element {
   return (
     <>
       <Changes />
@@ -56,36 +48,11 @@ export function Shell(): React.JSX.Element {
           Ops
         </NavLink>
         <nav aria-label="Primary navigation">
-          <NavLink to="/" end>
-            <GaugeIcon aria-hidden="true" /> Overview
-          </NavLink>
-          <NavLink to="/services">
-            <BoxesIcon aria-hidden="true" /> Services
-          </NavLink>
-          <NavLink to="/delivery">
-            <GitPullRequestIcon aria-hidden="true" /> Delivery
-          </NavLink>
-          <NavLink to="/ai">
-            <BotIcon aria-hidden="true" /> AI
-          </NavLink>
-          <NavLink to="/promotion">
-            <ActivityIcon aria-hidden="true" /> Promotion
-          </NavLink>
-          <NavLink to="/maintenance">
-            <WrenchIcon aria-hidden="true" /> Maintenance
-          </NavLink>
-          <NavLink to="/review">
-            <CalendarRangeIcon aria-hidden="true" /> Review
-          </NavLink>
-          <NavLink to="/alerts">
-            <ActivityIcon aria-hidden="true" /> Alerts
-          </NavLink>
-          <NavLink to="/history">
-            <HistoryIcon aria-hidden="true" /> History
-          </NavLink>
-          <NavLink to="/system">
-            <ServerCogIcon aria-hidden="true" /> System
-          </NavLink>
+          {nav.map((item) => (
+            <NavLink key={item.to} to={item.to} end={item.to === "/"}>
+              <item.icon aria-hidden="true" /> {item.label}
+            </NavLink>
+          ))}
         </nav>
         <ThemeToggle />
       </header>
