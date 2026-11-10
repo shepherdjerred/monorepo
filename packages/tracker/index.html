@@ -6,12 +6,35 @@
       name="viewport"
       content="width=device-width, initial-scale=1, viewport-fit=cover"
     />
-    <meta name="theme-color" content="#17171a" />
+    <meta
+      name="theme-color"
+      media="(prefers-color-scheme: light)"
+      content="#ffffff"
+    />
+    <meta
+      name="theme-color"
+      media="(prefers-color-scheme: dark)"
+      content="#1b1b1f"
+    />
     <title>Tracker</title>
     <link
       rel="icon"
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%238b5cf6'/%3E%3Cpath d='M8 9h16v4h-6v12h-4V13H8z' fill='white'/%3E%3C/svg%3E"
     />
+    <script>
+      // Apply the saved theme before first paint. settings.tsx is its only writer.
+      (() => {
+        const saved = localStorage.getItem("tracker.theme");
+        const theme = saved === "light" || saved === "dark" ? saved : "system";
+        document.documentElement.dataset.theme = theme;
+        if (theme === "system") return;
+        const color = theme === "dark" ? "#1b1b1f" : "#ffffff";
+        for (const meta of document.querySelectorAll(
+          'meta[name="theme-color"]',
+        ))
+          meta.content = color;
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

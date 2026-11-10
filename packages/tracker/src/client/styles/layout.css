@@ -1,0 +1,226 @@
+.app-shell {
+  display: flex;
+  min-height: 100dvh;
+}
+.sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: 232px;
+  padding: 22px 14px 14px;
+  display: flex;
+  flex-direction: column;
+  background: var(--sidebar);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+}
+.workspace-brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 9px;
+  margin-bottom: 22px;
+}
+.workspace-brand strong {
+  flex: 1;
+  font-size: 14px;
+  letter-spacing: -0.2px;
+}
+.brand-mark {
+  display: grid;
+  place-items: center;
+  background: #7c59d9;
+  color: #fff;
+  width: 25px;
+  height: 25px;
+  border-radius: 7px;
+  font-size: 16px;
+  font-weight: 700;
+  box-shadow: inset 0 1px #ffffff30;
+}
+.search-command {
+  background: transparent;
+  border: 0;
+  color: var(--muted);
+  padding: 7px 9px;
+  justify-content: flex-start;
+  margin-bottom: 12px;
+  font-size: 12px;
+}
+.search-command > span {
+  flex: 1;
+  text-align: left;
+}
+.search-command kbd {
+  background: var(--hover);
+  border-radius: 3px;
+  padding: 1px 4px;
+}
+.new-issue {
+  justify-content: flex-start;
+  margin: 0 4px 22px;
+  font-size: 12px;
+  box-shadow: 0 1px 2px #00000005;
+}
+.new-issue > kbd {
+  margin-left: auto;
+}
+.nav-heading {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  padding: 0 10px;
+  margin: 8px 0 8px;
+}
+.sidebar nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 21px;
+}
+.sidebar nav a {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 10px;
+  color: var(--muted);
+  border-radius: 6px;
+  font-size: 12px;
+}
+.sidebar nav a.active {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+}
+.sidebar nav a:hover,
+.team-nav a:hover,
+.project-nav a:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+.team-nav,
+.project-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 20px;
+}
+.team-nav a,
+.project-nav a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.team-icon {
+  font:
+    11px ui-monospace,
+    monospace;
+  display: grid;
+  place-items: center;
+  min-width: 22px;
+  height: 20px;
+  padding: 0 3px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--panel);
+}
+.active-team {
+  color: var(--text) !important;
+}
+.project-nav .swatch {
+  margin: 0 5px;
+}
+.sidebar-footer {
+  display: flex;
+  align-items: center;
+  margin-top: auto;
+  padding: 8px;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+}
+.sidebar-footer a {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 12px;
+}
+.main-content {
+  margin-left: 232px;
+  min-width: 0;
+  flex: 1;
+}
+.page-header {
+  height: 62px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 30px;
+  border-bottom: 1px solid var(--border);
+}
+.page-title {
+  font-size: 12px;
+  font-weight: 500;
+}
+.page-header .primary {
+  font-size: 11px;
+  padding: 6px 10px;
+}
+.mobile-search,
+.bottom-nav {
+  display: none;
+}
+@media (max-width: 767px) {
+  .sidebar {
+    display: none;
+  }
+  .main-content {
+    margin-left: 0;
+    padding-bottom: calc(70px + env(safe-area-inset-bottom));
+  }
+  .page-header {
+    height: 62px;
+    padding: 0 16px;
+  }
+  .page-title {
+    font-size: 14px;
+  }
+  .page-header .primary {
+    min-height: 36px;
+  }
+  .mobile-search {
+    display: flex;
+  }
+  .bottom-nav {
+    position: fixed;
+    inset: auto 0 0;
+    padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
+    background: var(--sidebar);
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-around;
+    z-index: 20;
+  }
+  .bottom-nav a,
+  .bottom-nav button {
+    display: flex;
+    gap: 3px;
+    align-items: center;
+    flex-direction: column;
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 400;
+    padding: 3px 12px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+  .bottom-nav a.active,
+  .bottom-nav button.active {
+    color: var(--accent);
+  }
+}

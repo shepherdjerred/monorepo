@@ -1,3 +1,6 @@
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { z } from "zod";
 import { cloneTestDatabase } from "#testing/postgres.ts";
@@ -433,4 +436,42 @@ it("rejects actorless mutations, pauses writes, and round-trips safe attachments
   expect(
     await attachments.cleanupStaged(new Date("2100-01-01"), actor, "cleanup"),
   ).toBe(0);
+});
+
+it("caches hashed assets forever and revalidates the page that names them", async () => {
+  const clientRoot = await mkdtemp(path.join(tmpdir(), "tracker-client-"));
+  try {
+    await Bun.write(path.join(clientRoot, "index.html"), "<!doctype html>");
+    await Bun.write(
+      path.join(clientRoot, "assets/index-abc123.js"),
+      "export {};",
+    );
+    const app = createApp({
+      issues,
+      attachments: new Attachments(suite.database, unit, memoryObjectStore()),
+      collaboration: new Collaboration(suite.database, unit),
+      catalog: new Catalog(unit),
+      writesEnabled: async () => true,
+      attachmentMaxBytes: async () => 1000,
+      clientRoot,
+    });
+    const asset = await app.request("/assets/index-abc123.js");
+    expect(asset.status).toBe(200);
+    expect(await asset.text()).toBe("export {};");
+    expect(asset.headers.get("cache-control")).toBe(
+      "public, max-age=31536000, immutable",
+    );
+    for (const route of ["/", "/issues/AI-1", "/board?peek=AI-1"]) {
+      const page = await app.request(route);
+      expect(page.status).toBe(200);
+      expect(await page.text()).toBe("<!doctype html>");
+      expect(page.headers.get("cache-control")).toBe("no-cache");
+    }
+    // A stale chunk name must fail as a missing file, not as the HTML page.
+    const stale = await app.request("/assets/index-000000.js");
+    expect(stale.status).toBe(404);
+    expect(stale.headers.get("cache-control")).toBeNull();
+  } finally {
+    await rm(clientRoot, { recursive: true, force: true });
+  }
 });

@@ -14,8 +14,10 @@ import { traceRequest, reportError } from "#infrastructure/observability.ts";
 type AppOptions = Omit<RouterContext, "requestId"> & {
   attachments: Attachments;
   attachmentMaxBytes: () => Promise<number>;
+  /** The built browser client; defaults to this package's `dist/client`. */
+  clientRoot?: string;
 };
-const clientRoot = `${import.meta.dir}/../../dist/client`;
+const builtClientRoot = `${import.meta.dir}/../../dist/client`;
 
 export function createApp(options: AppOptions) {
   const app = new Hono();
@@ -154,8 +156,29 @@ export function createApp(options: AppOptions) {
     }),
   );
   app.all("/api/*", (c) => c.json({ error: "Not found" }, 404));
-  app.use("/assets/*", serveStatic({ root: clientRoot }));
-  app.get("*", serveStatic({ root: clientRoot, path: "index.html" }));
+  const clientRoot = options.clientRoot ?? builtClientRoot;
+  // Vite names every asset after its content hash, so a URL never changes
+  // meaning; the page that references them must be revalidated instead.
+  app.use(
+    "/assets/*",
+    serveStatic({
+      root: clientRoot,
+      onFound: (_path, c) => {
+        c.header("Cache-Control", "public, max-age=31536000, immutable");
+      },
+    }),
+  );
+  app.all("/assets/*", (c) => c.notFound());
+  app.get(
+    "*",
+    serveStatic({
+      root: clientRoot,
+      path: "index.html",
+      onFound: (_path, c) => {
+        c.header("Cache-Control", "no-cache");
+      },
+    }),
+  );
   app.onError((error, c) => {
     if (error instanceof z.ZodError)
       return c.json(

@@ -1,0 +1,233 @@
+.view-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30px 32px 25px;
+}
+.view-heading h2 {
+  display: flex;
+  gap: 10px;
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+  align-items: center;
+}
+.view-heading p {
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.view-toggle {
+  display: flex;
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  gap: 2px;
+}
+.view-toggle a {
+  display: grid;
+  place-items: center;
+  padding: 5px 8px;
+  color: var(--muted);
+  border-radius: 4px;
+}
+.view-toggle a.active {
+  background: var(--hover);
+  color: var(--text);
+}
+.filters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 30px 16px;
+  flex-wrap: wrap;
+}
+.filter-search {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--muted);
+  width: 165px;
+}
+.filter-search input {
+  border: 0;
+  background: transparent;
+  padding: 6px 0;
+  width: 100%;
+  font-size: 11px;
+}
+.filters select {
+  border: 1px dashed var(--border);
+  background: transparent;
+  font-size: 11px;
+  padding: 5px 8px;
+  color: var(--muted);
+  max-width: 160px;
+}
+.archive-filter {
+  flex-direction: row;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.issue-list {
+  border-top: 1px solid var(--border);
+}
+.issue-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 30px;
+  min-height: 48px;
+  border-bottom: 1px solid var(--border);
+}
+.issue-row:has([aria-current="true"]),
+.issue-row:hover {
+  background: var(--subtle);
+}
+.issue-row-main {
+  justify-content: flex-start;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  text-align: left;
+  padding: 14px 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+.issue-row-main:hover {
+  background: transparent;
+}
+.issue-row-main:focus-visible {
+  outline-offset: -2px;
+}
+.issue-results[aria-busy="true"] {
+  opacity: 0.6;
+}
+.issue-row-main .identifier {
+  width: 62px;
+}
+.issue-row-title {
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.row-labels {
+  display: flex;
+  gap: 4px;
+}
+.row-project {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 11px;
+  width: 104px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.row-date {
+  width: 60px;
+  color: var(--muted);
+  font-size: 11px;
+  text-align: right;
+  white-space: nowrap;
+}
+.row-votes {
+  color: var(--muted);
+  font-size: 11px;
+}
+.unassigned {
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  border: 1px dashed var(--border);
+  border-radius: 50%;
+  width: 21px;
+  height: 21px;
+}
+@media (max-width: 1150px) {
+  .row-labels {
+    display: none;
+  }
+  .filters {
+    gap: 6px;
+  }
+  .filter-search {
+    width: 140px;
+  }
+  .row-project {
+    width: 85px;
+  }
+}
+@media (max-width: 767px) {
+  .view-heading {
+    padding: 24px 17px 20px;
+  }
+  .view-heading h2 {
+    font-size: 21px;
+  }
+  .view-toggle a {
+    padding: 10px;
+  }
+  .filters {
+    padding: 0 16px 16px;
+    gap: 8px;
+  }
+  .filter-search {
+    width: 100%;
+    height: 40px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 3px;
+  }
+  .filter-search input {
+    font-size: 16px;
+  }
+  .filters select {
+    min-height: 34px;
+    font-size: 11px;
+    max-width: 115px;
+  }
+  .filters .spacer {
+    display: none;
+  }
+  .archive-filter {
+    font-size: 11px;
+  }
+  .issue-row {
+    padding: 0 16px;
+    min-height: 64px;
+    gap: 8px;
+  }
+  .issue-row-main {
+    display: grid;
+    grid-template-columns: 17px 65px 16px 1fr;
+    gap: 7px;
+    padding: 12px 0;
+  }
+  .issue-row-title {
+    grid-column: 2 / -1;
+    white-space: normal;
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .issue-row-main .state-dot {
+    grid-column: 3;
+  }
+  .row-project,
+  .row-date,
+  .row-votes {
+    display: none;
+  }
+  .issue-row .avatar {
+    width: 25px;
+    height: 25px;
+  }
+}

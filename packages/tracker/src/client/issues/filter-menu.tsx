@@ -1,29 +1,26 @@
 import { useState } from "react";
 import { useSearchParams } from "react-router";
 import { SlidersHorizontal } from "lucide-react";
-import type { BootstrapData } from "./api.ts";
-import { Modal, priorities } from "./ui.tsx";
+import type { BootstrapData } from "#client/data/api.ts";
+import { Modal, priorities } from "#client/ui/ui.tsx";
 
 export function FilterMenu({
   bootstrap,
-  changed,
+  teamKey,
 }: {
   bootstrap: BootstrapData;
-  changed: () => void;
+  teamKey: string;
 }) {
   const [open, setOpen] = useState(false);
   const [params, setParams] = useSearchParams();
-  const team = bootstrap.teams.find(
-    (item) => item.key === (params.get("team") ?? "AI"),
-  );
+  const team = bootstrap.teams.find((item) => item.key === teamKey);
   function change(key: string, values: string[]) {
-    setParams((previous) => {
-      const next = new URLSearchParams(previous);
-      next.delete(key);
-      for (const value of values) next.append(key, value);
-      return next;
-    });
-    changed();
+    const next = new URLSearchParams(params);
+    next.delete(key);
+    for (const value of values) {
+      next.append(key, value);
+    }
+    setParams(next, { preventScrollReset: true });
   }
   const groups = [
     {
@@ -131,8 +128,9 @@ export function FilterMenu({
         <div className="actions">
           <button
             onClick={() => {
-              setParams(new URLSearchParams({ team: team?.key ?? "AI" }));
-              changed();
+              setParams(new URLSearchParams({ team: teamKey }), {
+                preventScrollReset: true,
+              });
             }}
           >
             Clear filters

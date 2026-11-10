@@ -1,6 +1,7 @@
 import { Link } from "react-router";
-import { ActorChip, Empty } from "./ui.tsx";
-import type { EventData } from "./api.ts";
+import { ActorChip, Empty } from "#client/ui/ui.tsx";
+import type { EventData } from "#client/data/api.ts";
+import { RelativeTime } from "#client/ui/time.tsx";
 
 export function ActivityList({
   events,
@@ -30,15 +31,7 @@ export function ActivityList({
                 </Link>
               )}
             </span>
-            <time
-              dateTime={event.occurredAt}
-              title={new Date(event.occurredAt).toLocaleString()}
-            >
-              {new Date(event.occurredAt).toLocaleDateString(undefined, {
-                month: "short",
-                day: "numeric",
-              })}
-            </time>
+            <RelativeTime value={event.occurredAt} />
           </div>
           {detailed && (
             <details>

@@ -39,7 +39,10 @@ bun run --cwd packages/tracker dev
 ```
 
 Vite serves the development UI on port 7352 and proxies API requests to 7351.
-The production server serves `dist/client` itself. Migrations run with
+The production server serves `dist/client` itself: content-hashed `/assets/*`
+are immutable for a year, a missing asset is a 404, and every other path
+returns `index.html` with `no-cache` so a deploy is picked up on the next
+navigation. Migrations run with
 `prisma migrate deploy`; never use `db push` against a deployed database.
 
 Operational behavior comes from the typed configuration package and the
@@ -120,5 +123,8 @@ Database checks cover concurrent numbering/votes, rollback, stale revisions,
 search, board persistence, team constraints, actor requirements, write gates,
 attachment retention and deletion history. Browser checks cover desktop and
 mobile issue creation, comments, votes, attachments, search, themes, peeks and
-board input. The image smoke checks the non-root runtime, Prisma engine and
+board input, plus history and link behavior (`?peek=`, Back, modified clicks,
+filter typing), keyboard navigation, document titles, and an axe scan of the
+list, board, issue, palette and settings in both color schemes that fails on
+any serious or critical violation. The image smoke checks the non-root runtime, Prisma engine and
 served SPA/assets; PostgreSQL and S3 live acceptance are separate checks.

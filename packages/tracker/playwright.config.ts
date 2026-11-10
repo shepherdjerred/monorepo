@@ -34,6 +34,7 @@ export default defineConfig({
     {
       name: "mobile",
       use: { ...devices["iPhone 13"], defaultBrowserType: "chromium" },
+      testIgnore: /\.desktop\.spec\.ts$/u,
     },
   ],
   webServer: {
@@ -42,5 +43,8 @@ export default defineConfig({
     timeout: 60_000,
     // The selected port is free or already belongs to this checkout.
     reuseExistingServer: !ci,
+    // The server stops its private PostgreSQL cluster on SIGTERM; the default
+    // SIGKILL would orphan one cluster per run.
+    gracefulShutdown: { signal: "SIGTERM", timeout: 15_000 },
   },
 });

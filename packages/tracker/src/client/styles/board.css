@@ -1,0 +1,117 @@
+.board {
+  display: flex;
+  gap: 16px;
+  padding: 6px 30px 30px;
+  overflow-x: auto;
+  min-height: calc(100dvh - 230px);
+  scroll-snap-type: x proximity;
+  align-items: stretch;
+}
+.board-column {
+  flex: 0 0 275px;
+  min-width: 275px;
+  padding: 10px;
+  background: var(--sidebar);
+  border-radius: 8px;
+  scroll-snap-align: start;
+  border: 1px solid transparent;
+}
+.board-column.over {
+  border-color: var(--accent);
+}
+.board-column h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 3px 15px;
+  font-size: 12px;
+}
+.board-column h2 .count {
+  margin-left: auto;
+}
+.board-card {
+  padding: 11px 13px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  box-shadow: 0 2px 4px #00000003;
+  border-radius: 7px;
+  margin-bottom: 8px;
+}
+.board-card.dragging {
+  opacity: 0.6;
+  z-index: 10;
+  box-shadow: var(--shadow);
+}
+.card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 5px;
+}
+.drag-handle {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  touch-action: none;
+  cursor: grab;
+}
+.card-title {
+  display: block;
+  font-size: 12px;
+  line-height: 1.6;
+  font-weight: 500;
+}
+.card-title:hover {
+  color: var(--accent);
+}
+.board-card:has([aria-current="true"]) {
+  border-color: var(--accent);
+}
+.card-labels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 10px 0;
+}
+.card-bottom {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 23px;
+}
+.card-bottom .muted {
+  font-size: 11px;
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+.column-empty {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 8px;
+  color: var(--muted);
+  padding: 40px 0;
+  font-size: 11px;
+}
+@media (max-width: 767px) {
+  .board {
+    padding: 0 16px 25px;
+    gap: 12px;
+  }
+  .board-column {
+    flex-basis: 290px;
+  }
+  .drag-handle {
+    min-width: 44px;
+    min-height: 44px;
+    margin: -8px -10px;
+  }
+  .board-card {
+    padding: 13px;
+  }
+  .card-title {
+    font-size: 13px;
+  }
+}

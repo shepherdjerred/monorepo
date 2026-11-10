@@ -1,31 +1,40 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { api, refresh, type BootstrapData } from "./api.ts";
-import { currentActor } from "./identity.ts";
-import { ErrorNotice, Modal, priorities } from "./ui.tsx";
-import { MarkdownEditor } from "./markdown.tsx";
+import { api, refresh, type BootstrapData } from "#client/data/api.ts";
+import { currentActor } from "#client/data/identity.ts";
+import { ErrorNotice, Modal, priorities } from "#client/ui/ui.tsx";
+import { MarkdownEditor } from "#client/ui/markdown.tsx";
+import { announce } from "#client/shell/announce.tsx";
 
 export function NewIssue({
   open,
   close,
   bootstrap,
+  teamKey: currentTeamKey,
   onCreated,
 }: {
   open: boolean;
   close: () => void;
   bootstrap: BootstrapData;
+  /** The team in view; a new issue starts there unless the form picks another. */
+  teamKey: string;
   onCreated: (identifier: string) => void;
 }) {
-  const [teamKey, setTeam] = useState("AI");
+  const [chosenTeam, setTeam] = useState<string>();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [stateName, setState] = useState("Triage");
+  const [chosenState, setState] = useState<string>();
   const [priority, setPriority] = useState(0);
   const [projectSlug, setProject] = useState("");
   const [labels, setLabels] = useState<string[]>([]);
   const [attachmentIds, setAttachments] = useState<string[]>([]);
+  const teamKey = chosenTeam ?? currentTeamKey;
   const team = bootstrap.teams.find(({ key }) => key === teamKey);
   const states = bootstrap.states.filter(({ teamId }) => teamId === team?.id);
+  // New work lands in the team's triage state unless the form says otherwise.
+  const stateName =
+    chosenState ??
+    (states.find(({ type }) => type === "triage") ?? states[0])?.name;
   const create = useMutation({
     mutationFn: () =>
       api.issues.create.mutate({
@@ -33,7 +42,7 @@ export function NewIssue({
         teamKey,
         title,
         description,
-        stateName,
+        ...(stateName === undefined ? {} : { stateName }),
         priority,
         ...(projectSlug === "" ? {} : { projectSlug }),
         labels,
@@ -44,6 +53,10 @@ export function NewIssue({
       setTitle("");
       setDescription("");
       setAttachments([]);
+      setTeam(undefined);
+      setLabels([]);
+      setState(undefined);
+      announce(`Issue ${issue.identifier} created`);
       close();
       onCreated(issue.identifier);
     },
@@ -70,7 +83,7 @@ export function NewIssue({
               onChange={(e) => {
                 setTeam(e.target.value);
                 setLabels([]);
-                setState("Triage");
+                setState(undefined);
               }}
             >
               {bootstrap.teams.map((t) => (
@@ -127,6 +140,7 @@ export function NewIssue({
             setAttachments((previous) => [...previous, ...ids]);
           }}
           placeholder="Add a description…"
+          label="Description"
         />
         <div className="form-selects">
           <label>

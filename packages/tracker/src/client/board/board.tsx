@@ -22,9 +22,22 @@ import {
 import { useMutation } from "@tanstack/react-query";
 import { Link } from "react-router";
 import { GripVertical, MessageSquare, ThumbsUp } from "lucide-react";
-import { api, refresh, type BootstrapData, type Issue } from "./api.ts";
-import { currentActor } from "./identity.ts";
-import { Avatar, ErrorNotice, Priority, StateDot } from "./ui.tsx";
+import {
+  api,
+  refresh,
+  type BootstrapData,
+  type Issue,
+} from "#client/data/api.ts";
+import { currentActor } from "#client/data/identity.ts";
+import {
+  Avatar,
+  ErrorNotice,
+  Priority,
+  StateDot,
+  Swatch,
+} from "#client/ui/ui.tsx";
+import { useShell } from "#client/shell/shell-context.ts";
+import { isPlainClick } from "#client/shell/route.ts";
 
 const boardCollision: CollisionDetection = (args) => {
   const hits = pointerWithin({
@@ -71,6 +84,7 @@ function Card({ issue }: { issue: Issue }) {
     transition,
     isDragging,
   } = useSortable({ id: issue.id, data: { stateId: issue.state.id } });
+  const { current, setCurrent, openPeek } = useShell();
   return (
     <article
       ref={setNodeRef}
@@ -94,13 +108,27 @@ function Card({ issue }: { issue: Issue }) {
           <GripVertical size={16} />
         </button>
       </div>
-      <Link className="card-title" to={`/issues/${issue.identifier}`}>
+      <Link
+        className="card-title"
+        to={`/issues/${issue.identifier}`}
+        data-issue-row={issue.identifier}
+        aria-current={current === issue.identifier ? "true" : undefined}
+        onFocus={() => {
+          setCurrent(issue.identifier);
+        }}
+        onClick={(event) => {
+          if (isPlainClick(event)) {
+            event.preventDefault();
+            openPeek(issue.identifier);
+          }
+        }}
+      >
         {issue.title}
       </Link>
       <div className="card-labels">
         {issue.labels.map((l) => (
           <span className="label" key={l.id}>
-            <i style={{ background: l.color }} />
+            <Swatch color={l.color} />
             {l.name}
           </span>
         ))}
