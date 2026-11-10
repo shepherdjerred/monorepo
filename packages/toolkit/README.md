@@ -846,6 +846,8 @@ toolkit mc capture doctor --target live
 toolkit mc capture site find --target live --reason "Scout docs terrain"
 toolkit mc capture run <scene.ts> --site <site.json> --target live --reason "Capture instructions"
 toolkit mc capture status|stop|render|review <run-id>
+toolkit mc capture suite audit tsmc [--scenario ID|--shot ID]
+toolkit mc capture suite review tsmc [--scenario ID|--shot ID] [--out DIR]
 toolkit mc capture recover <run-id> --target live --reason "Restore capture"
 toolkit mc capture export <run-id> --docs ts-mc-docs
 ```

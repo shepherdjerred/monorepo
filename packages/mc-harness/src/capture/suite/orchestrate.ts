@@ -39,6 +39,7 @@ import { SuiteRunSchema } from "./archive.ts";
 import { awsStore } from "./aws-store.ts";
 import { publishLegacy } from "./legacy.ts";
 import { runScenarioSessions } from "./sessions.ts";
+import { phase } from "./progress.ts";
 
 export async function loadSuite(file: string): Promise<CaptureSuite> {
   const imported: unknown = await import(pathToFileURL(file).href);
@@ -119,7 +120,9 @@ export async function runSuite(options: SuiteOptions) {
     await verifyRuntimeInputs(options.repoRoot, options.suiteFile);
   if (options.fixture === undefined) await verifyLiveFixtureClass();
   const store = awsStore("the-storm-capture-fixtures");
-  const runtime = await runtimeRoot({ ...options, store }, directory, cache);
+  const runtime = await phase("build/restore runtime", () =>
+    runtimeRoot({ ...options, store }, directory, cache),
+  );
   const recordedSuite = await loadSuite(
     path.join(
       runtime.sourceDirectory,
@@ -174,6 +177,7 @@ async function dispatchCapture(options: CaptureOptions) {
     undefined,
     {
       cwd: options.runtime.sourceDirectory,
+      progress: true,
       env: { TOOLKIT_MC_DIRECTORY: path.join(options.directory, "harness") },
     },
   );
@@ -203,11 +207,8 @@ export async function captureSuite(options: CaptureOptions) {
   const first = selected[0];
   if (first === undefined) throw new Error("Empty suite");
   const mapDirectory = path.join(options.directory, "world");
-  await restoreFixture(
-    options.store,
-    options.cache,
-    options.fixture,
-    mapDirectory,
+  await phase("restore terrain", () =>
+    restoreFixture(options.store, options.cache, options.fixture, mapDirectory),
   );
   const helpers = [
     ...new Set(
@@ -217,39 +218,47 @@ export async function captureSuite(options: CaptureOptions) {
   const rollout = await startRollout(options, suite);
   const docsPublic = path.join(options.repoRoot, "packages/ts-mc-docs/public");
   const startSession = (scenario: SuiteScenario) =>
-    localSession({
-      mapDirectory,
-      sourceDirectory: options.runtime.sourceDirectory,
-      spawn: suite.bootstrap,
-      helpers: scenario.isolation === "fresh" ? scenario.helpers : helpers,
-      features: [
-        ...new Set([...(suite.features ?? []), ...(scenario.features ?? [])]),
-      ],
-      ...(rollout === undefined ? {} : { rollout: rollout.bootstrap }),
-    });
+    phase(`start server for ${scenario.id}`, () =>
+      localSession({
+        mapDirectory,
+        sourceDirectory: options.runtime.sourceDirectory,
+        spawn: suite.bootstrap,
+        helpers: scenario.isolation === "fresh" ? scenario.helpers : helpers,
+        features: [
+          ...new Set([...(suite.features ?? []), ...(scenario.features ?? [])]),
+        ],
+        ...(rollout === undefined ? {} : { rollout: rollout.bootstrap }),
+      }),
+    );
   try {
     const results = await runScenarioSessions(
       selected,
       startSession,
       (scenario, session) =>
-        executeScenario({
-          scenario,
-          suiteFile,
-          target: session.target,
-          account: "XiguaJerred",
-          docsPublic,
-          publish: false,
-          ...(scenario.isolation === "fresh"
-            ? { ownedFreshTarget: session.target }
-            : {}),
-          ...(options.shot === undefined ? {} : { shot: options.shot }),
-        }),
+        phase(
+          `scenario ${(selected.indexOf(scenario) + 1).toString()}/${selected.length.toString()}: ${scenario.id}`,
+          () =>
+            executeScenario({
+              scenario,
+              suiteFile,
+              target: session.target,
+              account: "XiguaJerred",
+              docsPublic,
+              publish: false,
+              ...(scenario.isolation === "fresh"
+                ? { ownedFreshTarget: session.target }
+                : {}),
+              ...(options.shot === undefined ? {} : { shot: options.shot }),
+            }),
+        ),
     );
     const scenarios = [];
     for (const result of results)
       scenarios.push({
         id: result.scenario,
-        archive: await archiveCapture(options.store, result.run),
+        archive: await phase(`retain ${result.scenario}`, () =>
+          archiveCapture(options.store, result.run),
+        ),
       });
     const rolloutHash = rollout === undefined ? null : await rollout.retain();
     const selection = {
@@ -269,7 +278,9 @@ export async function captureSuite(options: CaptureOptions) {
     };
     await retainSuiteRun(options.store, run);
     for (const result of results)
-      await exportMedia(result.run, result.rendered, docsPublic);
+      await phase(`publish ${result.scenario}`, () =>
+        exportMedia(result.run, result.rendered, docsPublic),
+      );
     await publishLegacy(
       suite.legacyOutputs ?? [],
       results.flatMap((result) => result.shots),

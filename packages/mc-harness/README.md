@@ -264,6 +264,48 @@ attack actions refuse to predict an interaction before that handshake completes.
 
 ## Documentation capture
 
+### Review the current docs catalog
+
+```bash
+toolkit mc capture suite audit tsmc
+toolkit mc capture suite review tsmc
+toolkit mc capture suite review tsmc --scenario cooking --out /tmp/cooking-review
+toolkit mc capture suite audit tsmc --shot cooking-pot
+```
+
+These commands read the current `ts-mc-docs` public assets without starting
+Minecraft or accessing S3. Both print JSON to stdout and return a nonzero status
+for audit failures. Review prints its output directory and `index.html` path;
+open that file to inspect the portable gallery, captions, alt text, original and
+annotated media, and playable videos. PNG contact sheets and `inventory.json`
+cover every selected still and video samples at the first, middle, last, and
+annotation midpoint frames. Duplicate sample frames are omitted.
+
+The default report directory is private under `$TOOLKIT_MC_DIRECTORY/reviews`
+(normally `~/.toolkit/mc/reviews`). `--out` must name a new or empty directory.
+Reports copy only public media and generated previews. Review reports include
+audit issues and omit shots that fail validation; they must not be mistaken for
+a complete successful catalog when the command exits nonzero.
+
+Audit checks declared outputs, public manifests, authored captions/alt text and
+annotation geometry, dimensions, clip timing, legacy alias bytes, and full-catalog
+documentation coverage. Native frame completeness and step-marker alignment are
+verified by the existing capture/render pipeline. Composition, annotation
+placement, and usefulness still require visual inspection.
+
+For a gameplay change, edit its scene and presentation, then run the existing
+`suite run tsmc --runtime worktree --fixture <sha256> --shot <name>` command.
+For captions or annotations alone, edit the presentation and use
+`suite render <run-id> --shot <name>` to reuse saved frames. Both continue to
+update docs assets automatically. Finish with `suite review tsmc --shot <name>`
+and `suite audit tsmc --shot <name>`, inspect the repository diff, and use the
+full-catalog audit before committing.
+
+Capture progress goes to stderr, with phase timings, scenario counts, and video
+retention frame counts. The JSON result on stdout and campaign checkpoints keep
+their existing contracts. Use the resumable driver below for full regeneration;
+resume a failed campaign rather than restarting its completed batches.
+
 ### Reproducible suites
 
 The checked-in [TSMC suite](../the-storm/tools/captures/suite.ts) composes typed

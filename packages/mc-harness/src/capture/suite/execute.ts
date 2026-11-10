@@ -8,6 +8,7 @@ import { renderMedia, sha256 } from "#src/capture/media.ts";
 import { exportMedia } from "#src/capture/export.ts";
 import { presentScene, type SuiteScenario } from "./define.ts";
 import { captureServerList } from "./client-ui.ts";
+import { phase } from "./progress.ts";
 
 export async function executeScenario(input: {
   scenario: SuiteScenario;
@@ -99,10 +100,12 @@ export async function executeScenario(input: {
   const rendered = path.join(directory, "suite-render");
   await mkdir(rendered);
   for (const capture of run.captures)
-    await renderMedia(
-      capture.source,
-      capture.presentation,
-      path.join(rendered, capture.name),
+    await phase(`render ${capture.name}`, () =>
+      renderMedia(
+        capture.source,
+        capture.presentation,
+        path.join(rendered, capture.name),
+      ),
     );
   const snippets =
     input.publish === false
