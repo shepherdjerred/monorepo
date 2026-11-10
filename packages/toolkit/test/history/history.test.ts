@@ -314,6 +314,37 @@ describe("history source adapters", () => {
     );
   });
 
+  test("keeps tool names from oversized Conductor envelopes", async () => {
+    const conductor = createHistorySources().find(
+      (source) => source.name === "conductor",
+    );
+    if (conductor === undefined) {
+      throw new Error("Conductor source is missing");
+    }
+    const scanned = await conductor.scan(paths);
+    const session = scanned.documents.find(
+      (document) => document.sourceId === "s1",
+    );
+    if (session === undefined) {
+      throw new Error("Conductor fixture session is missing");
+    }
+    const detail = await conductor.read(paths, [
+      recordFromDocument(session, 1),
+    ]);
+
+    expect(session.toolCalls.map((call) => call.name)).toEqual([
+      "shell",
+      "Bash",
+    ]);
+    expect(
+      detail.messages
+        .get("s1")
+        ?.flatMap((entry) =>
+          entry.toolName === undefined ? [] : [entry.toolName],
+        ),
+    ).toEqual(["shell", "Bash"]);
+  });
+
   test("returns indexed Codex catalog metadata from targeted reads", async () => {
     const codexSource = createHistorySources().find(
       (source) => source.name === "codex",

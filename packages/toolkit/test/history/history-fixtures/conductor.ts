@@ -74,6 +74,11 @@ export function writeConductorFixture(conductorDir: string): string {
               content: [
                 { type: "text", text: "x".repeat(40_000) },
                 { type: "text", text: "later-content-block-marker" },
+                {
+                  type: "tool_use",
+                  name: "Bash",
+                  input: { command: "kubectl describe ingress" },
+                },
               ],
             },
           },
