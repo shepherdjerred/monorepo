@@ -6,6 +6,11 @@ import {
   type OpItem,
 } from "homelab/src/cdk8s/scripts/onepassword-lib.ts";
 import { jsonCredential } from "homelab/scripts/tofu/application-secrets.ts";
+import {
+  literalAttribute,
+  parseSynthesizedConfiguration,
+  synthesizedResources,
+} from "homelab/scripts/tofu/synthesized-configuration.ts";
 import { buildFieldMapping, resolveAuditItem } from "./field-map.ts";
 
 export type AuditReference = {
@@ -170,6 +175,38 @@ export function sourceAuditReferences(
 }
 
 /** Consume evaluated grants, including constants and ordered containers. */
+/**
+ * 1Password items an OpenTofu stack writes with a literal title, from either
+ * hand-written HCL or the committed cdktn synthesis (`main.tf.json`).
+ * Dynamic titles are protected separately; live state remains a gap.
+ */
+export function managedItemReferences(
+  text: string,
+  source: string,
+): AuditReference[] {
+  if (!source.startsWith("packages/homelab/src/tofu/")) return [];
+  const managed = (item: string): AuditReference => ({
+    item,
+    source,
+    managed: true,
+    wholeItem: true,
+  });
+  if (source.endsWith("/main.tf.json")) {
+    return synthesizedResources(
+      parseSynthesizedConfiguration(text),
+      "onepassword_item",
+    ).flatMap((resource) => {
+      const title = literalAttribute(resource.attributes, "title");
+      return title === undefined ? [] : [managed(title)];
+    });
+  }
+  return source.endsWith(".tf") && /resource\s+"onepassword_item"/u.test(text)
+    ? [...text.matchAll(/title\s*=\s*"([^"$]+)"/gu)].flatMap((match) =>
+        match[1] === undefined ? [] : [managed(match[1])],
+      )
+    : [];
+}
+
 export function pipelineGrantManifests(
   raw: unknown,
   source: string,

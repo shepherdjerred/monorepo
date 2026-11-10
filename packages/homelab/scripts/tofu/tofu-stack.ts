@@ -32,6 +32,7 @@ import {
 import { assertApplicationSecretAction } from "./application-secrets.ts";
 import { adoptApplicationSecrets } from "./adopt-application-secrets.ts";
 import { stackConfigurationFormat } from "./tofu-external-files.ts";
+import { prepareAsuswrtProvider } from "./asuswrt-provider.ts";
 import {
   assertStackExecutionContext,
   runDockerTokenStack,
@@ -202,59 +203,6 @@ async function validationEnvironment(definition: StackDefinition): Promise<{
   return { env, dataRoot };
 }
 
-async function commandOutput(
-  command: string[],
-  options: RunOptions,
-): Promise<string> {
-  const result = await run(command, {
-    ...options,
-    capture: true,
-    echoCapturedStdout: false,
-  });
-  return result.stdout.trim();
-}
-
-async function prepareAsuswrtProvider(
-  root: string,
-  env: Record<string, string>,
-): Promise<string> {
-  const declaration = await Bun.file(
-    `${root}/${STACKS_REL}/asuswrt/providers.tf`,
-  ).text();
-  const version =
-    /source\s*=\s*"shepherdjerred\/asuswrt"[\s\S]*?version\s*=\s*"([^"]+)"/u.exec(
-      declaration,
-    )?.[1];
-  if (version === undefined) {
-    throw new Error("The AsusWRT provider declaration has no tracked version");
-  }
-  const temporaryRoot = await temporaryDirectory("asuswrt-provider", env);
-  const options = isolatedOptions(env, root);
-  const goos = await commandOutput(["go", "env", "GOOS"], options);
-  const goarch = await commandOutput(["go", "env", "GOARCH"], options);
-  const mirror = `${temporaryRoot}/mirror/registry.opentofu.org/shepherdjerred/asuswrt/${version}/${goos}_${goarch}`;
-  await run(["mkdir", "-p", mirror], options);
-  await run(
-    [
-      "go",
-      "build",
-      "-trimpath",
-      "-buildvcs=false",
-      "-o",
-      `${mirror}/terraform-provider-asuswrt_v${version}`,
-      ".",
-    ],
-    isolatedOptions(env, `${root}/../terraform-provider-asuswrt`),
-  );
-  const cliConfig = `${temporaryRoot}/tofu.tfrc`;
-  await Bun.write(
-    cliConfig,
-    `provider_installation {\n  filesystem_mirror {\n    path = "${temporaryRoot}/mirror"\n    include = ["registry.opentofu.org/shepherdjerred/asuswrt"]\n  }\n  direct {}\n}\n`,
-  );
-  env["TF_CLI_CONFIG_FILE"] = cliConfig;
-  return temporaryRoot;
-}
-
 async function removeTemporaryDirectory(path: string): Promise<void> {
   await run(["rm", "-rf", "--", path], isolatedOptions(ambientEnvironment()));
 }
@@ -287,7 +235,7 @@ async function validateStack(
   let localProviderRoot: string | null = null;
   try {
     if (definition.localProvider === "asuswrt") {
-      localProviderRoot = await prepareAsuswrtProvider(root, env);
+      localProviderRoot = await prepareAsuswrtProvider(env);
     }
     const options = isolatedOptions(env, root);
     await run(validationInitArguments(stack), options);

@@ -26,6 +26,17 @@
   "customManagers": [
     {
       "customType": "regex",
+      "description": "OpenTofu provider pins for the CDK Terrain stacks. A bump here is half of an upgrade: Mend-hosted Renovate cannot run post-upgrade commands, so someone runs bun run --cwd packages/homelab-cdktn providers:refresh on the branch to move the lock files, bindings and synthesized JSON. CI fails until that is done.",
+      "managerFilePatterns": [
+        "packages/homelab/src/tofu/provider-versions.json"
+      ],
+      "matchStrings": [
+        "\"registryUrl\":\\s*\"(?<registryUrl>[^\"]+)\",\\s*\"source\":\\s*\"(?<depName>[^\"]+)\",\\s*\"version\":\\s*\"(?<currentValue>[^\"]+)\""
+      ],
+      "datasourceTemplate": "terraform-provider"
+    },
+    {
+      "customType": "regex",
       "description": "Update the structured homelab version catalog",
       "managerFilePatterns": ["packages/version-catalog/src/catalog.json"],
       "matchStrings": [

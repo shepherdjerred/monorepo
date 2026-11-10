@@ -52,9 +52,32 @@ are the construct ids in `packages/homelab-cdktn/src/stacks/<stack>.ts`, so rena
 state change. A synthesized stack is accepted only on a plan against live state
 that reports no changes.
 
-Bindings are generated from the provider versions pinned in
-`packages/homelab-cdktn/cdktf.json`, which must equal the versions in each synthesized stack's
-lock file.
+### Provider versions
+
+`provider-versions.json` in this directory is the one place a provider version
+is pinned. Bindings are generated for the entries marked `"bindings": true`, at
+exactly the pinned version, and a synthesized stack's lock file must select
+that same version; the `@homelab/cdktn` tests fail otherwise. The stack runner
+also builds the repository-owned AsusWRT provider at the version pinned there.
+
+Renovate bumps a pin through a regex manager. Renovate here is Mend-hosted and
+cannot run commands after an upgrade, so a pin bump is finished by hand on its
+branch:
+
+```bash
+bun run --cwd packages/homelab-cdktn providers:refresh            # every synthesized stack
+bun run --cwd packages/homelab-cdktn providers:refresh -- argocd  # named stacks, either format
+bun run --cwd packages/homelab-cdktn providers:refresh -- --check # report only
+```
+
+It moves each stack's `.terraform.lock.hcl` to the pins, regenerates the
+bindings and re-synthesizes. It reads provider registries and never
+initializes a backend. A lock moved to a new version is a provider upgrade:
+accept it on a plan against live state like any other stack change.
+
+A hand-written HCL stack keeps its own `required_providers` constraints and
+its lock is still maintained by Renovate's terraform manager, so it may differ
+from the pin until the stack is ported.
 
 ## Prerequisites
 

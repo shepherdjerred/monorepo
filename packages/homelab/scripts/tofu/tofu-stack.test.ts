@@ -13,6 +13,13 @@ import {
   dockerTokenPlanSummary,
 } from "./dockerhub-tokens.ts";
 import { STACK_MANIFEST, parseTofuStack } from "./tofu-stack-manifest.ts";
+import { asuswrtProviderPin } from "./asuswrt-provider.ts";
+import {
+  loadProviderPins,
+  lockedProviders,
+  providerAddress,
+  requirePin,
+} from "./provider-versions.ts";
 import type { TofuStack } from "@shepherdjerred/ops-model/platform-policy.ts";
 import {
   collectOnePasswordTargets,
@@ -218,13 +225,36 @@ describe("OpenTofu credential contracts", () => {
     }
   });
 
-  test("derives the AsusWRT provider version from the tracked declaration", async () => {
-    const provider = await Bun.file(
-      new URL("../../src/tofu/asuswrt/providers.tf", import.meta.url),
+  test("builds the AsusWRT provider at the pinned version its stack has locked", async () => {
+    const pin = await asuswrtProviderPin();
+    const lock = await Bun.file(
+      new URL("../../src/tofu/asuswrt/.terraform.lock.hcl", import.meta.url),
     ).text();
-    expect(provider).toMatch(
-      /source\s*=\s*"shepherdjerred\/asuswrt"[\s\S]*?version\s*=\s*"0\.1\.0"/u,
+    expect(lockedProviders(lock)).toEqual([
+      { address: providerAddress(pin), version: pin.version },
+    ]);
+  });
+
+  test("pins every provider once and reads what a lock file selected", async () => {
+    const pins = await loadProviderPins();
+    expect(requirePin(pins, "registry.terraform.io/alpaca744/discord")).toEqual(
+      {
+        registryUrl: "https://registry.terraform.io",
+        source: "alpaca744/discord",
+        version: "0.1.3",
+      },
     );
+    expect(() => requirePin(pins, "registry.opentofu.org/x/unknown")).toThrow(
+      "has no pin",
+    );
+    expect(
+      lockedProviders(
+        'provider "registry.opentofu.org/a/b" {\n  version     = "1.2.3"\n  constraints = "~> 1.0"\n}\n\nprovider "registry.terraform.io/c/d" {\n  version = "0.1.0"\n}\n',
+      ),
+    ).toEqual([
+      { address: "registry.opentofu.org/a/b", version: "1.2.3" },
+      { address: "registry.terraform.io/c/d", version: "0.1.0" },
+    ]);
   });
 
   test("requires the Cloudflare token registry for direct OpenTofu runs", async () => {

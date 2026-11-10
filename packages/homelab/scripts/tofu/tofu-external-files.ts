@@ -36,8 +36,12 @@ const FILE_CALL = new RegExp(
 );
 const PATH_EXPRESSION =
   /\$\{path\.(?<base>module|root|cwd)\}(?<rest>[^"\s$]*)/gu;
-/** Configuration files tofu loads: every `.tf` outside the data directory and the test tree. */
-const CONFIGURATION_FILES = "**/*.tf";
+/**
+ * Configuration files tofu loads: every `.tf` and `.tf.json` outside the data
+ * directory and the test tree. A synthesized root may still call a local HCL
+ * module, so one stack can hold both kinds.
+ */
+const CONFIGURATION_FILES = "**/*.{tf,tf.json}";
 const SKIPPED_DIRECTORIES = new Set([".terraform", "tests"]);
 
 export type StackConfigurationFormat = "hcl" | "synthesized";
@@ -87,6 +91,27 @@ function stripFullLineComments(content: string): string {
     .join("\n");
 }
 
+/** Every string of a JSON configuration, one per line: its expressions, unescaped. */
+function jsonExpressions(value: unknown): string[] {
+  if (typeof value === "string") return [value];
+  if (Array.isArray(value))
+    return value.flatMap((item: unknown) => jsonExpressions(item));
+  return typeof value === "object" && value !== null
+    ? Object.values(value).flatMap((item: unknown) => jsonExpressions(item))
+    : [];
+}
+
+/**
+ * The text file references are searched in. JSON syntax escapes the quotes of
+ * `file("...")` inside its string values, so those are decoded first; HCL is
+ * searched as written, without its comment lines.
+ */
+function searchableConfiguration(file: string, content: string): string {
+  return file.endsWith(".tf.json")
+    ? jsonExpressions(JSON.parse(content)).join("\n")
+    : stripFullLineComments(content);
+}
+
 function resolveReference(
   repoRoot: string,
   source: string,
@@ -110,7 +135,7 @@ export function fileReferences(input: {
 }): StackFileReference[] {
   const source = path.relative(input.repoRoot, input.file);
   const moduleDirectory = path.dirname(input.file);
-  const content = stripFullLineComments(input.content);
+  const content = searchableConfiguration(input.file, input.content);
   const references: StackFileReference[] = [];
   for (const match of content.matchAll(PATH_EXPRESSION)) {
     const base = match.groups?.["base"];

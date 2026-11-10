@@ -10,6 +10,7 @@
   "scripts": {
     "generate": "bun run scripts/generate-bindings.ts",
     "synth": "bun run scripts/synth.ts",
+    "providers:refresh": "bun run scripts/refresh-providers.ts",
     "build": "bun run scripts/synth.ts --check",
     "lint": "bunx --no-install eslint .",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
@@ -20,6 +21,7 @@
     "cdktn": "0.25.0",
     "cdktn-cli": "0.25.0",
     "constructs": "10.8.1",
+    "homelab": "workspace:*",
     "prettier": "^3.9.9"
   },
   "devDependencies": {

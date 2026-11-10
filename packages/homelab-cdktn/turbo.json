@@ -3,11 +3,23 @@
   "extends": ["//"],
   "tasks": {
     // Provider bindings (`cdktn get`): never committed, restored from the
-    // cache unless a pinned provider version (cdktf.json), the cdktn release
-    // (package.json) or the generator changes. A miss needs `tofu`, Node and
-    // the provider registry; .mise.toml is already a global dependency.
+    // cache unless a provider pin (src/tofu/provider-versions.json), the cdktn
+    // release (package.json) or the generator changes. A miss needs `tofu`,
+    // Node and the provider registry; .mise.toml is already a global
+    // dependency. The AsusWRT provider is built from this repository, so its
+    // source is part of the bindings generated from it.
     "generate": {
-      "inputs": ["cdktf.json", "package.json", "scripts/generate-bindings.ts"],
+      "inputs": [
+        "package.json",
+        "scripts/generate-bindings.ts",
+        "src/homelab-stack.ts",
+        "$TURBO_ROOT$/packages/homelab/src/tofu/provider-versions.json",
+        "$TURBO_ROOT$/packages/homelab/scripts/tofu/provider-versions.ts",
+        "$TURBO_ROOT$/packages/homelab/scripts/tofu/asuswrt-provider.ts",
+        "$TURBO_ROOT$/packages/terraform-provider-asuswrt/**/*.go",
+        "$TURBO_ROOT$/packages/terraform-provider-asuswrt/go.mod",
+        "$TURBO_ROOT$/packages/terraform-provider-asuswrt/go.sum"
+      ],
       "outputs": ["generated/**"]
     },
     // "Synth is current": synthesizes every stack and fails when a committed
@@ -27,7 +39,9 @@
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/vitest.config.ts",
         "$TURBO_ROOT$/packages/homelab/src/tofu/*/main.tf.json",
-        "$TURBO_ROOT$/packages/homelab/src/tofu/*/.terraform.lock.hcl"
+        "$TURBO_ROOT$/packages/homelab/src/tofu/*/.terraform.lock.hcl",
+        "$TURBO_ROOT$/packages/homelab/src/tofu/provider-versions.json",
+        "$TURBO_ROOT$/packages/homelab/scripts/tofu/provider-versions.ts"
       ]
     },
     "test:ci": {
@@ -40,7 +54,9 @@
         "$TURBO_ROOT$/scripts/ci/run-ci-test.ts",
         "$TURBO_ROOT$/vitest.config.ts",
         "$TURBO_ROOT$/packages/homelab/src/tofu/*/main.tf.json",
-        "$TURBO_ROOT$/packages/homelab/src/tofu/*/.terraform.lock.hcl"
+        "$TURBO_ROOT$/packages/homelab/src/tofu/*/.terraform.lock.hcl",
+        "$TURBO_ROOT$/packages/homelab/src/tofu/provider-versions.json",
+        "$TURBO_ROOT$/packages/homelab/scripts/tofu/provider-versions.ts"
       ]
     }
   }

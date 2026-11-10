@@ -779,8 +779,14 @@
     "//#tunnel-dns-coverage": {
       "inputs": [
         "scripts/checks/ci/check-tunnel-dns-coverage.ts",
+        "scripts/checks/ci/tunnel-dns-synthesized.ts",
         "packages/homelab/src/cdk8s/src/**/*.ts",
-        "packages/homelab/src/tofu/cloudflare/*.tf"
+        "packages/homelab/scripts/tofu/synthesized-configuration.ts",
+        "packages/homelab/src/domain-registry.json",
+        "packages/homelab/src/domain-registry.ts",
+        "packages/homelab/src/tofu/cloudflare/*.tf",
+        "packages/homelab/src/tofu/cloudflare/*.tf.json",
+        "packages/homelab/src/tofu/cloudflare/modules/domain-baseline/*.tf"
       ]
     }
   }

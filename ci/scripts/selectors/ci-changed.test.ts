@@ -209,6 +209,24 @@ test("the CDK Terrain app selects the OpenTofu lane", () => {
   expect(selectorPathsForLane("tofu")).toContain("packages/homelab-cdktn");
 });
 
+test("the CDK Terrain app and provider pins select every OpenTofu lane", () => {
+  for (const lane of ["tofu", "tofu-platforms", "tofu-posthog"]) {
+    const paths = selectorPathsForLane(lane);
+    expect(paths, lane).toContain("packages/homelab-cdktn");
+    expect(paths, lane).toContain(
+      "packages/homelab/src/tofu/provider-versions.json",
+    );
+  }
+});
+
+test("a synthesized zone or bucket still selects the site that depends on it", () => {
+  const paths = selectorPathsForLane("site-statically-typed");
+  for (const stack of ["cloudflare", "seaweedfs"]) {
+    expect(paths).toContain(`packages/homelab/src/tofu/${stack}/main.tf.json`);
+    expect(paths).toContain(`packages/homelab-cdktn/src/stacks/${stack}.ts`);
+  }
+});
+
 test("domain registry changes select the OpenTofu lane", () => {
   expect(selectorPathsForLane("tofu")).toContain(
     "packages/homelab/src/domain-registry.json",

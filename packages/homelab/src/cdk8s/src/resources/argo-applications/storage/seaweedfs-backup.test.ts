@@ -5,6 +5,13 @@ import { parseAllDocuments } from "yaml";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import {
+  literalAttribute,
+  parseSynthesizedConfiguration,
+  readSynthesizedConfiguration,
+  synthesizedResources,
+  type SynthesizedConfiguration,
+} from "homelab/scripts/tofu/synthesized-configuration.ts";
+import {
   BACKBLAZE_SEAWEEDFS_BACKUPS_ITEM_ID,
   createSeaweedfsBackup,
   SEAWEEDFS_BACKUP_EXCLUDED_BUCKETS,
@@ -55,8 +62,20 @@ function synthesize() {
   );
 }
 
-/** Every bucket the seaweedfs OpenTofu stack declares. */
+/** Every literal `bucket` a synthesized stack's resources name. */
+function synthesizedBuckets(configuration: SynthesizedConfiguration) {
+  return new Set(
+    synthesizedResources(configuration).flatMap((resource) => {
+      const bucket = literalAttribute(resource.attributes, "bucket");
+      return bucket === undefined ? [] : [bucket];
+    }),
+  );
+}
+
+/** Every bucket the seaweedfs OpenTofu stack declares, in either configuration format. */
 async function declaredBuckets(): Promise<Set<string>> {
+  const synthesized = await readSynthesizedConfiguration(SEAWEEDFS_TOFU_STACK);
+  if (synthesized !== undefined) return synthesizedBuckets(synthesized);
   const names = new Set<string>();
   for (const file of await readdir(SEAWEEDFS_TOFU_STACK)) {
     if (!file.endsWith(".tf")) continue;
@@ -69,6 +88,26 @@ async function declaredBuckets(): Promise<Set<string>> {
 }
 
 describe("SeaweedFS backup to Backblaze", () => {
+  test("reads declared buckets from a synthesized stack as it does from HCL", () => {
+    expect(
+      synthesizedBuckets(
+        parseSynthesizedConfiguration(
+          JSON.stringify({
+            resource: {
+              aws_s3_bucket: {
+                scout_prod: { bucket: "scout-prod" },
+                each: { bucket: "${each.key}" },
+              },
+              aws_s3_bucket_versioning: {
+                scout_prod: { bucket: "${aws_s3_bucket.scout_prod.id}" },
+              },
+            },
+          }),
+        ),
+      ),
+    ).toEqual(new Set(["scout-prod"]));
+  });
+
   test("every excluded bucket is a declared SeaweedFS bucket", async () => {
     const declared = await declaredBuckets();
     for (const bucket of Object.keys(SEAWEEDFS_BACKUP_EXCLUDED_BUCKETS)) {

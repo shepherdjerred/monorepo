@@ -4,6 +4,7 @@ import { createHash } from "node:crypto";
 import { z } from "zod";
 import {
   buildVaultAudit,
+  managedItemReferences,
   manifestAuditReferences,
   sourceAuditReferences,
   pipelineGrantManifests,
@@ -53,30 +54,6 @@ async function sourceIdentity() {
   };
 }
 
-function literalManagedReferences(
-  text: string,
-  source: string,
-): AuditReference[] {
-  if (
-    !source.startsWith("packages/homelab/src/tofu/") ||
-    !source.endsWith(".tf") ||
-    !/resource\s+"onepassword_item"/u.test(text)
-  )
-    return [];
-  const references: AuditReference[] = [];
-  // Dynamic titles are protected separately; live state remains a gap.
-  for (const match of text.matchAll(/title\s*=\s*"([^"$]+)"/gu)) {
-    if (match[1] !== undefined)
-      references.push({
-        item: match[1],
-        source,
-        managed: true,
-        wholeItem: true,
-      });
-  }
-  return references;
-}
-
 async function trackedReferences(coverage: AuditCoverage) {
   const fileOutput = await capturedRead(
     ["git", "ls-files", "-z"],
@@ -100,7 +77,7 @@ async function trackedReferences(coverage: AuditCoverage) {
     const text = await source.text();
     references.push(
       ...sourceAuditReferences(text, file),
-      ...literalManagedReferences(text, file),
+      ...managedItemReferences(text, file),
     );
   }
   return references;

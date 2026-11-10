@@ -9,9 +9,6 @@ import {
   withoutGeneratorMetadata,
 } from "#scripts/synth.ts";
 
-const BindingsSchema = z.object({
-  terraformProviders: z.array(z.string()),
-});
 const PackageSchema = z.object({
   dependencies: z.object({ cdktn: z.string() }),
 });
@@ -43,48 +40,20 @@ function addresses(resource: Record<string, Record<string, unknown>>) {
     .toSorted();
 }
 
-/** Provider versions recorded by `tofu init` for one stack, by registry address. */
-async function lockedVersions(stack: string): Promise<Map<string, string>> {
-  const lock = await Bun.file(
-    path.join(
-      path.dirname(synthesizedConfigurationPath("github")),
-      "..",
-      stack,
-      ".terraform.lock.hcl",
-    ),
-  ).text();
-  const versions = new Map<string, string>();
-  for (const match of lock.matchAll(
-    /provider "registry\.opentofu\.org\/(?<source>[^"]+)" \{\s*version\s*=\s*"(?<version>[^"]+)"/gu,
-  )) {
-    const { source, version } = match.groups ?? {};
-    if (source !== undefined && version !== undefined)
-      versions.set(source, version);
-  }
-  return versions;
-}
-
 describe("synthesized OpenTofu configuration", () => {
   test("every committed main.tf.json equals a fresh synthesis", async () => {
     expect(await staleStacks()).toEqual([]);
   });
 
-  test("bindings are generated from the versions the stacks have locked", async () => {
-    const { terraformProviders } = BindingsSchema.parse(
-      await Bun.file(path.join(import.meta.dir, "../cdktf.json")).json(),
-    );
-    const pinned = new Map(
-      terraformProviders.map((entry) => {
-        const [source, version] = entry.split("@");
-        return [source, version] as const;
+  test("every directory holding a main.tf.json is a stack of this app", async () => {
+    const committed = await Array.fromAsync(
+      new Bun.Glob("*/main.tf.json").scan({
+        cwd: path.dirname(path.dirname(synthesizedConfigurationPath("github"))),
       }),
     );
-    for (const stack of SYNTHESIZED_STACKS) {
-      const locked = await lockedVersions(stack);
-      expect(locked.size).toBeGreaterThan(0);
-      for (const [source, version] of locked)
-        expect(pinned.get(source), `${stack}: ${source}`).toBe(version);
-    }
+    expect(committed.map((file) => path.dirname(file)).toSorted()).toEqual(
+      SYNTHESIZED_STACKS.toSorted(),
+    );
   });
 
   test("github keeps the addresses, imports and forgotten webhook of its state", async () => {
