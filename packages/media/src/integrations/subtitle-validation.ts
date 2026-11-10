@@ -19,17 +19,23 @@ export function isMachineLabelled(text: string): boolean {
   return machineLabel.test(text);
 }
 
+function stripCreditClosingWrappers(text: string): string {
+  let end = text.length;
+  while (end > 0 && (text[end - 1] === ")" || text[end - 1] === "]")) end--;
+  return text.slice(0, end);
+}
+
 /** Timed dialogue may discuss AI; only an explicit caption credit/header is provenance. */
 function hasMachineCredit(text: string, dialogue: string): boolean {
   return [text, dialogue].some((body) =>
     body.split("\n").some((line) =>
       machineCredit.test(
-        line
-          .replaceAll(/<[^<>\n]+>/gu, "")
-          .trim()
-          .replace(/^[;#([\s]+/u, "")
-          .replace(/[)\]]+$/u, "")
-          .replace(/^(?:NOTE|Title|Comment)\s*(?::\s*)?/iu, ""),
+        stripCreditClosingWrappers(
+          line
+            .replaceAll(/<[^<>\n]+>/gu, "")
+            .trim()
+            .replace(/^[;#([\s]+/u, ""),
+        ).replace(/^(?:NOTE|Title|Comment)\s*(?::\s*)?/iu, ""),
       ),
     ),
   );
