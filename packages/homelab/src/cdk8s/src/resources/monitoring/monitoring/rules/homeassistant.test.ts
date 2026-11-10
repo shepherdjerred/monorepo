@@ -303,6 +303,38 @@ describe("Home Assistant rules — environment and automation dependencies", () 
   });
 });
 
+describe("Home Assistant alert category", () => {
+  test("labels every alert household and leaves recording rules unlabelled", () => {
+    const rules = getHomeAssistantRuleGroups().flatMap(
+      (group) => group.rules ?? [],
+    );
+    const alerts = rules.filter((rule) => rule.alert !== undefined);
+    expect(alerts.length).toBeGreaterThan(0);
+    for (const rule of alerts) {
+      expect(rule.labels?.["category"], rule.alert).toBe("household");
+      expect(rule.labels?.["severity"], rule.alert).toBeDefined();
+    }
+    // The per-entity availability alerts keep their entity label too.
+    expect(
+      alerts.find((rule) => rule.alert === "PetCareEntityUnavailable")?.labels,
+    ).toMatchObject({ severity: "warning", category: "household" });
+    for (const name of [
+      "LitterRobotFilterOverdue",
+      "HomeAssistantBatteryLow",
+      "RoborockConsumableDue",
+      "PetLibroFeederLivingRoomDesiccantDue",
+    ]) {
+      expect(
+        alerts.some((rule) => rule.alert === name),
+        name,
+      ).toBe(true);
+    }
+    for (const record of rules.filter((rule) => rule.record !== undefined)) {
+      expect(record.labels?.["category"], record.record).toBeUndefined();
+    }
+  });
+});
+
 describe("Home Assistant prometheus exporter", () => {
   test("excludes stateless domains from availability inventory", async () => {
     const configuration = await Bun.file(

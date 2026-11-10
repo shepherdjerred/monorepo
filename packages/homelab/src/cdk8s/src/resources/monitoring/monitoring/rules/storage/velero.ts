@@ -3,6 +3,20 @@ import { PrometheusRuleSpecGroupsRulesExpr } from "@shepherdjerred/homelab/cdk8s
 import { escapePrometheusTemplate } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/rules/shared.ts";
 import { VELERO_SCHEDULES } from "@shepherdjerred/homelab/cdk8s/src/resources/velero/velero-schedules.ts";
 
+/**
+ * Requested storage of the claims the Velero schedules actually select. Every
+ * schedule's labelSelector is `velero.io/backup=enabled`
+ * (resources/argo-applications/storage/velero.ts), and kube-state-metrics
+ * exports that label (persistentvolumeclaims=[velero.io/backup] in
+ * grafana-values.ts). Disposable caches and unlabelled claims are never backed
+ * up, so their size says nothing about backup cost. `max by` collapses the
+ * duplicate label series a second kube-state-metrics replica exports during a
+ * rollout.
+ */
+const BACKED_UP_PVC_REQUEST_BYTES = `kube_persistentvolumeclaim_resource_requests_storage_bytes
+* on (namespace, persistentvolumeclaim) group_left()
+max by (namespace, persistentvolumeclaim) (kube_persistentvolumeclaim_labels{label_velero_io_backup="enabled"})`;
+
 export function getVeleroRuleGroups(): PrometheusRuleSpecGroups[] {
   return [
     // Velero backup size monitoring
@@ -12,25 +26,25 @@ export function getVeleroRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           record: "velero:pvc_volume_size_bytes",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            `sum(kube_persistentvolumeclaim_resource_requests_storage_bytes) by (namespace)`,
+            `sum by (namespace) (${BACKED_UP_PVC_REQUEST_BYTES})`,
           ),
         },
         {
           record: "velero:pvc_total_size_bytes",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            `sum(kube_persistentvolumeclaim_resource_requests_storage_bytes)`,
+            `sum(${BACKED_UP_PVC_REQUEST_BYTES})`,
           ),
         },
         {
           alert: "VeleroTotalPVCSizeExcessive",
           annotations: {
-            summary: "Total PVC size is very large",
+            summary: "Total Velero-backed PVC size is very large",
             message: escapePrometheusTemplate(
-              "Total requested PVC storage is {{ $value | humanize1024 }}B. Large volumes can make Velero backups expensive or slow; review backup exclusions.",
+              "Velero-backed PVCs request {{ $value | humanize1024 }}B in total. Large volumes can make Velero backups expensive or slow; review backup exclusions.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            `sum(kube_persistentvolumeclaim_resource_requests_storage_bytes) > 2 * 1024 * 1024 * 1024 * 1024`,
+            `sum(${BACKED_UP_PVC_REQUEST_BYTES}) > 2 * 1024 * 1024 * 1024 * 1024`,
           ),
           for: "15m",
           labels: {
@@ -40,13 +54,13 @@ export function getVeleroRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "VeleroNamespacePVCSizeExcessive",
           annotations: {
-            summary: "Namespace has large PVC volume size",
+            summary: "Namespace has large Velero-backed PVC volume size",
             message: escapePrometheusTemplate(
-              "Namespace {{ $labels.namespace }} has {{ $value | humanize1024 }}B of requested PVC storage. Review backup policy and exclusions for this namespace.",
+              "Namespace {{ $labels.namespace }} has {{ $value | humanize1024 }}B of requested storage in Velero-backed PVCs. Review backup policy and exclusions for this namespace.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            `sum(kube_persistentvolumeclaim_resource_requests_storage_bytes) by (namespace) > 500 * 1024 * 1024 * 1024`,
+            `sum by (namespace) (${BACKED_UP_PVC_REQUEST_BYTES}) > 500 * 1024 * 1024 * 1024`,
           ),
           for: "15m",
           labels: {

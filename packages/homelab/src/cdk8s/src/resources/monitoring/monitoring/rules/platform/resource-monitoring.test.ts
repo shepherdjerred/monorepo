@@ -151,6 +151,18 @@ function securityRules() {
   return group.rules;
 }
 
+describe("process-count anomaly alert", () => {
+  it("is not defined, because CI bursts make a 7-day-mean ratio meaningless", () => {
+    const rules = getResourceMonitoringRuleGroups().flatMap(
+      (group) => group.rules ?? [],
+    );
+    expect(
+      rules.find((rule) => rule.alert === "UnusualProcessCount"),
+    ).toBeUndefined();
+    expect(JSON.stringify(rules)).not.toContain("node_procs_running");
+  });
+});
+
 describe("crypto-mining alerts", () => {
   it("keeps the CI node out of the generic PotentialCryptoMining rule", () => {
     const alert = securityRules().find(

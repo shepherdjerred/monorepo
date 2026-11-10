@@ -137,7 +137,19 @@ export async function createPrometheusApp(chart: Chart) {
         // Replaced by the local firing-only rule. The chart default also
         // considers pending info alerts, which makes this control signal noisy.
         InfoInhibitor: true,
+        // Both overcommit rules sum requests of every non-terminal pod,
+        // including Kueue SchedulingGated woodpecker-ci pods that hold no
+        // node capacity, so a queued CI burst reads as overcommit while the
+        // requests of running pods sit far below allocatable. The
+        // production wake-capacity and Kueue backlog rules cover the real
+        // failure modes.
+        KubeCPUOvercommit: true,
         KubeMemoryOvercommit: true,
+        // A fixed 500/s major-fault threshold is below liskov's normal CI
+        // rate (~3,500/s) and fired 109 times in 14 days while memory PSI
+        // stayed under 0.13%. HighMemoryPressure, LowMemoryAvailable and the
+        // per-node memory rules measure actual memory shortage instead.
+        NodeMemoryMajorPagesFaults: true,
       },
     },
     kubeProxy: {
@@ -341,12 +353,6 @@ export async function createPrometheusApp(chart: Chart) {
               // Route info-level alerts to null receiver (don't page for informational alerts)
               receiver: "null",
               matchers: ['severity = "info"'],
-            },
-            {
-              // Silence NodeMemoryMajorPagesFaults - noisy kube-prometheus-stack default
-              // Custom memory alerts (HighMemoryPressure, LowMemoryAvailable, MemoryLeakSuspected) provide better coverage
-              receiver: "null",
-              matchers: ['alertname = "NodeMemoryMajorPagesFaults"'],
             },
             {
               // Silence PDB alerts for postgres-operator critical-op PDBs
