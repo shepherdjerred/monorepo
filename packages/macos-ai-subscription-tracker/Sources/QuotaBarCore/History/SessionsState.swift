@@ -107,17 +107,29 @@ public enum ConversationItem: Identifiable, Equatable, Sendable {
     }
   }
 
-  /// Each output belongs to the nearest preceding invocation.
+  /// An output nests under the invocation just before it only when that
+  /// invocation stands alone. The API carries no call ids, so the outputs of
+  /// consecutive invocations (a parallel batch) stay standalone rather than
+  /// all landing under the last call.
   static func group(_ entries: [SessionConversationEntry]) -> [Self] {
     var items: [Self] = []
+    var batchSize = 0
     for entry in entries {
-      if entry.message.isToolOutput, case let .tool(call, outputs) = items.last {
-        items[items.count - 1] = .tool(call: call, outputs: outputs + [entry])
-      } else if entry.message.isToolOutput {
-        items.append(.output(entry))
+      if entry.message.isToolOutput {
+        if batchSize == 1, case let .tool(call, outputs) = items.last {
+          items[items.count - 1] = .tool(call: call, outputs: outputs + [entry])
+        } else {
+          items.append(.output(entry))
+        }
       } else if entry.message.isToolCall {
+        if case let .tool(_, outputs) = items.last, outputs.isEmpty {
+          batchSize += 1
+        } else {
+          batchSize = 1
+        }
         items.append(.tool(call: entry, outputs: []))
       } else {
+        batchSize = 0
         items.append(.message(entry))
       }
     }
@@ -125,7 +137,6 @@ public enum ConversationItem: Identifiable, Equatable, Sendable {
   }
 }
 
-/// A session's messages, accumulated page by page.
 public struct SessionConversation: Equatable, Sendable {
   public private(set) var session: HistorySession
   public private(set) var entries: [SessionConversationEntry]

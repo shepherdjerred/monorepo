@@ -71,15 +71,17 @@ private struct AnalyticsContent: View {
           }
           breakdown("Cost by machine", analytics.byMachine) { HistoryFormat.machine($0) }
         }
-        ChartCard(title: "Top tools") {
-          BreakdownChart(
-            bars: analytics.tools.enumerated().map { index, row in
-              BreakdownBar(
-                id: index, label: row.name, value: Double(row.calls),
-                valueText: "\(row.calls) calls · \(row.sessions) sessions")
-            },
-            emptyText: "No tool calls")
-        }
+      }
+      // Tool calls are indexed apart from usage, so agents that record no
+      // usage (Conductor) still show here.
+      ChartCard(title: "Top tools") {
+        BreakdownChart(
+          bars: analytics.tools.enumerated().map { index, row in
+            BreakdownBar(
+              id: index, label: row.name, value: Double(row.calls),
+              valueText: "\(row.calls) calls · \(row.sessions) sessions")
+          },
+          emptyText: "No tool calls")
       }
     }
   }

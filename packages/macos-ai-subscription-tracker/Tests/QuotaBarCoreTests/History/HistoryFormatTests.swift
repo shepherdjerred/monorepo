@@ -67,6 +67,21 @@ final class HistoryFormatTests: XCTestCase {
     XCTAssertEqual(ConversationItem.group(entries).map(\.id), [0, 1, 2, 5, 6])
   }
 
+  func testOutputsOfABatchOfInvocationsStayStandalone() {
+    let entries = [
+      entry(0, role: .tool, toolName: "Read"), entry(1, role: .tool, toolName: "Edit"),
+      entry(2, role: .tool, toolName: nil), entry(3, role: .tool, toolName: nil),
+      entry(4, role: .tool, toolName: "Bash"), entry(5, role: .tool, toolName: nil),
+    ]
+    XCTAssertEqual(
+      ConversationItem.group(entries),
+      [
+        .tool(call: entries[0], outputs: []), .tool(call: entries[1], outputs: []),
+        .output(entries[2]), .output(entries[3]),
+        .tool(call: entries[4], outputs: [entries[5]]),
+      ])
+  }
+
   private func entry(_ id: Int, role: HistoryMessageRole, toolName: String? = nil)
     -> SessionConversationEntry
   {
