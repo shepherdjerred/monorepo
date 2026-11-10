@@ -76,13 +76,28 @@
     },
     // Tests read the synth output; the inline `bun run build &&` was dropped
     // from the script so turbo orders (and caches) the synth instead.
+    //
+    // src/platform-model/ reads the OpenTofu stacks to hold the platform model
+    // against both renderings, so a stack edit must re-run the suite.
     "test": {
       "dependsOn": ["build", "^build", "generate"],
-      "env": ["NODE_ENV"]
+      "env": ["NODE_ENV"],
+      "inputs": [
+        "$TURBO_EXTENDS$",
+        "$TURBO_ROOT$/packages/homelab/src/tofu/**/*.tf",
+        "$TURBO_ROOT$/packages/homelab/src/tofu/*/main.tf.json",
+        "$TURBO_ROOT$/packages/homelab/src/tofu/*/desired-state.json"
+      ]
     },
     "test:ci": {
       "dependsOn": ["build", "^build", "generate"],
-      "env": ["NODE_ENV"]
+      "env": ["NODE_ENV"],
+      "inputs": [
+        "$TURBO_EXTENDS$",
+        "$TURBO_ROOT$/packages/homelab/src/tofu/**/*.tf",
+        "$TURBO_ROOT$/packages/homelab/src/tofu/*/main.tf.json",
+        "$TURBO_ROOT$/packages/homelab/src/tofu/*/desired-state.json"
+      ]
     }
   }
 }

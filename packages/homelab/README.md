@@ -66,6 +66,33 @@ authorize replacing or rebinding the dataset.
 | `images`         | Custom Docker images (caddy-s3proxy, obsidian-headless, redlib)                                               |
 | `scripts`        | Release/automation scripts: helm push, ArgoCD reconcile, tofu stack wrapper, Velero                           |
 
+## Platform model
+
+Some facts are rendered twice: a public hostname is a `TunnelBinding` in
+`src/cdk8s` and a Cloudflare CNAME in `src/tofu`, and a static site is a Caddy
+host and a SeaweedFS bucket. [`src/platform-model.json`](src/platform-model.json)
+declares each of those facts once, and
+[`src/platform-model.ts`](src/platform-model.ts) validates it and derives the
+rest from the registries that already own it (`domain-registry.json`, the
+`google` and `anthropic-federation` desired state).
+
+| Definition         | Kubernetes rendering                 | OpenTofu rendering                           |
+| ------------------ | ------------------------------------ | -------------------------------------------- |
+| `PublicHostname`   | `TunnelBinding` to a Service         | proxied CNAME to the tunnel                  |
+| `StaticSite`       | Caddy host serving a bucket          | SeaweedFS bucket, expiry and zone cache rule |
+| `TailnetService`   | Tailscale ingress, Service or device | tag owners in the tailnet policy             |
+| `ScopedCredential` | `OnePasswordItem` naming the title   | the `onepassword_item` that writes it        |
+| `BucketConsumer`   | bucket name in a workload's env      | the SeaweedFS bucket                         |
+
+Neither synthesizer reads the model yet. Until they do,
+[`src/cdk8s/src/platform-model`](src/cdk8s/src/platform-model) holds every
+definition against both renderings: it reads the synthesized manifests and the
+OpenTofu stacks, and fails on a fact that is declared but not rendered, or
+rendered but not declared. Today's disagreements are listed in its
+`debt-allowlists.ts`, which may only shrink. To add a hostname, site, tailnet
+service or credential, declare it in `platform-model.json` and render it on
+both sides.
+
 ## Details
 
 I've spent a _lot_ of time making this project pleasant to work with. Here are

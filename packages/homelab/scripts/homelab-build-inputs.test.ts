@@ -9,14 +9,21 @@ const nestedWorkspace = "src/cdk8s/";
 
 /**
  * homelab's transit build task hashes only scripts/** and top-level src
- * modules plus the Discord credential contract and reviewed promotion policy
- * (turbo.json). Its dependents
- * inherit that hash through ^build, so any additional input needs coverage.
+ * modules plus the Discord credential contract, the desired state the
+ * platform model reads and the reviewed promotion policy (turbo.json). Its
+ * dependents inherit that hash through ^build, so any additional input needs
+ * coverage.
  */
+const DESIRED_STATE_INPUTS = new Set([
+  "src/tofu/discord/desired-state.json",
+  "src/tofu/anthropic-federation/desired-state.json",
+  "src/tofu/google/desired-state.json",
+]);
+
 function insideBuildInputs(relativePath: string): boolean {
   return (
     relativePath.startsWith("scripts/") ||
-    relativePath === "src/tofu/discord/desired-state.json" ||
+    DESIRED_STATE_INPUTS.has(relativePath) ||
     relativePath === "src/talos/seccomp/promotion-policy.json" ||
     (relativePath.startsWith("src/") &&
       !relativePath.slice("src/".length).includes("/"))

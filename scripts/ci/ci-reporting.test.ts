@@ -627,7 +627,7 @@ describe("CI reporting manifest", () => {
       path.join(repositoryRoot, "packages/homelab/src/cdk8s/turbo.json"),
     ).text();
     expect(cdk8sTurbo).toContain(
-      '"test:ci": {\n      "dependsOn": ["build", "^build", "generate"],\n      "env": ["NODE_ENV"]\n    }',
+      '"test:ci": {\n      "dependsOn": ["build", "^build", "generate"],\n      "env": ["NODE_ENV"],\n      "inputs": [',
     );
   });
 
