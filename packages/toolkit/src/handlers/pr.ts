@@ -204,7 +204,8 @@ Subcommands:
   asset <PR> <FILE|DIR...>   Upload PR media (images, video, asciinema .cast,
                              static demo-site dirs) to public.sjer.red and
                              print URLs. Dirs need a root index.html; .cast
-                             files get a generated HTML player page.
+                             files get a generated HTML player page and an
+                             agg-rendered GIF preview (requires agg).
 
   review list [PR]    Current feedback from every reviewer, including author,
                        priority, contents, source handles, and raw API command
@@ -220,8 +221,9 @@ Options:
   --timeout <duration>  (land) Optional deadline (e.g. 2h); default: unlimited
   --allow-red-main      (land) Merge while main is red instead of waiting
   --markdown            (asset) Emit type-appropriate markdown (inline image
-                        tags for images, labeled links for video/demo/player
-                        pages) instead of bare URLs
+                        tags for images, an inline GIF linked to the player
+                        for .cast files, labeled links for video/demo pages)
+                        instead of bare URLs
   --profile <name>      (asset) AWS profile to use (overrides AWS_PROFILE)
   --finding <key>       (review resolve) Finding key or exact title
   --evidence <text>     (review resolve) Why it is resolved; required

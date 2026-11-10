@@ -19,8 +19,11 @@ rebase, or create a feature PR with `gh pr create`.
    `bunx turbo run test:extended --filter='...[origin/main]' --continue`.
 4. For a browser-visible change, render it with PinchTab and capture the proof
    now, not after review: `pinchtab screenshot -o <file>` for a state,
-   `pinchtab record` for a flow. Other user-visible surfaces use their own tool
-   — a rendered asset, a Discord acceptance message, terminal output.
+   `pinchtab record` for a flow. A terminal, CLI, or TUI change records an
+   asciinema cast:
+   `asciinema rec --headless --window-size 120x32 --idle-time-limit 2 --return --command '<cmd>' demo.cast`.
+   Other user-visible surfaces use their own tool — a rendered asset or a
+   Discord acceptance message.
 5. Stage exact paths and run `bunx lefthook run pre-commit`.
 6. Commit as `type(scope): outcome`. The primary commit body has `Why`, `What`,
    and `Verification`.
@@ -87,10 +90,13 @@ branch, not the latest commit.
   PR green.
 
 Attach the proof captured in step 4 with
-`toolkit pr asset <PR> <path> --profile seaweedfs --markdown`. A change with a
-visual or interactive surface reaches review with that artifact; "the diff is
-small" is not a reason to omit it. Pure logic and internal refactors give exact
-commands instead. State unperformed live or production checks in the PR body.
+`toolkit pr asset <PR> <path> --profile seaweedfs --markdown` and embed the
+printed markdown in the PR body's `Verification` section before marking the PR
+ready. A `.cast` renders as an inline GIF linked to the full player. A change
+with a visual or interactive surface reaches review with that artifact; "the
+diff is small" is not a reason to omit it. Pure logic and internal refactors
+give exact commands instead. State unperformed live or production checks in
+the PR body.
 
 Complex work may use several commits inside this one branch. Use multiple
 stacked PRs only when each branch is independently landable and the requested
@@ -101,3 +107,18 @@ scope permits more than one PR.
 Do not merge a PR unless the task authorizes it. For an authorized merge, use
 `toolkit pr land <PR> --json`. It waits for exact-head readiness, then runs
 `toolkit git-spice branch merge --method squash` for you.
+
+## Close out
+
+Before answering "are we done?" or ending the task, confirm each item and
+finish any that remain in scope rather than listing it:
+
+- every planned change is delivered, and nothing in the plan was deferred;
+- authorized PRs are merged; others are named with their state;
+- the PR body embeds the visual proof, and the final report links it;
+- a new feature's flag is on in the intended live environment;
+- Tracker issues for friction, inefficiency, automation candidates, and tech
+  debt found along the way are filed or upvoted, and named.
+
+Deployment still moving through the normal release path does not hold the
+session open; report which acceptance layers were verified and which remain.

@@ -33,8 +33,10 @@ and file a new issue only when there is no match. File systemic
 problems the next agent will hit again, not one-off mistakes, unverified
 guesses, or causes you can fix inside the current scope. Filing never blocks or
 widens the task: fix small in-scope causes inline, file the rest after
-delivering, and name any issue you filed or upvoted in the final report. Load
-the `tracker-work-management` skill for the search-first procedure, vote shape,
+delivering, and name any issue you filed or upvoted in the final report. File
+inefficiency, automation candidates, poor architecture, and tech debt you
+notice the same way, in `AI` with the `Improvement` label. Load the
+`tracker-work-management` skill for the search-first procedure, vote shape,
 and issue shape.
 
 ## Workspace and runtime
@@ -81,7 +83,8 @@ Every newly added or rewritten URL must return HTTP 200 before commit.
 For first-party applications, environment variables are for credentials and
 bootstrap only. Product and operational behavior uses the typed configuration
 and feature-flag packages. Load the `feature-flags` skill before changing that
-boundary.
+boundary. For a working feature, its Flipt flag on in the intended live
+environment is part of done unless that skill's default-off exception applies.
 
 Never print, paste, or persist secrets. Use existing 1Password-backed commands.
 Use toolkit for its supported platform commands; it resolves registered
@@ -169,7 +172,8 @@ on the complete branch diff.
 
 Attach the lightest useful visual proof when behavior is visual or interactive;
 pure logic and internal refactors need exact commands instead. Use
-`toolkit pr asset` for externally hosted PR media.
+`toolkit pr asset --markdown` and embed its output in the PR body; terminal,
+CLI, and TUI changes record an asciinema cast, shown as an inline GIF.
 
 Automated review focuses on P0-P2 correctness, architecture, process, and secret
 hygiene. Mechanical formatting and type errors are covered elsewhere. Before
