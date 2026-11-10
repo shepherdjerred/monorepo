@@ -2,6 +2,7 @@ import { Suspense, lazy, useId, useRef, useState } from "react";
 import { Paperclip } from "lucide-react";
 import { z } from "zod";
 import { currentActor } from "#client/data/identity.ts";
+import { requestIdHeader } from "#client/live/request-ids.ts";
 
 const MarkdownRenderer = lazy(async () => {
   const module = await import("./markdown-renderer.tsx");
@@ -69,6 +70,7 @@ export function MarkdownEditor({
           method: "POST",
           headers: {
             "X-Tracker-Actor": btoa(String.fromCodePoint(...encoded)),
+            ...requestIdHeader(),
           },
           body: form,
         });

@@ -1,0 +1,65 @@
+/* Live updates: the stream's presence, remote edits and new rows. */
+.live-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 11px;
+  white-space: nowrap;
+}
+.live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--success);
+}
+.live-indicator[data-status="reconnecting"] .live-dot {
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--warning);
+}
+.sidebar-live {
+  padding: 0 8px;
+}
+.mobile-live {
+  display: none;
+}
+@media (max-width: 767px) {
+  .mobile-live {
+    display: inline-flex;
+  }
+}
+
+.remote-edit {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--accent);
+  font-size: 11px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  animation: remote-edit-fade 5s ease-in forwards;
+}
+@keyframes remote-edit-fade {
+  0%,
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@media (max-width: 767px) {
+  .remote-edit-when {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .remote-edit {
+    animation: none;
+  }
+}
+
+/* A row another session just created; a later change may animate it. */
+.issue-row[data-fresh],
+.board-card[data-fresh] {
+  background: var(--accent-soft);
+}

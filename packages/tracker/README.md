@@ -211,6 +211,43 @@ default 10 seconds and the server does not raise that limit.
 404, the server opens no `LISTEN` connection, and open streams end within one
 heartbeat. `meta.bootstrap` reports the value as `liveUpdatesEnabled`.
 
+### In the browser
+
+The shell holds one stream open while `liveUpdatesEnabled` is true
+(`src/client/live/`). Every tRPC request and attachment upload sends a fresh
+`X-Tracker-Request-Id`; the tab remembers its last 500 IDs for five minutes
+and skips changes they caused, because the mutation already refetched what it
+touched. A frame that fails `LiveMessageSchema` is logged, reported once in a
+toast, and handled as a resync.
+
+Changes gather for 150 ms and are deduplicated per issue, then:
+
+- a change to a cached issue (detail or any list row) fetches
+  `issues.byIdentifier` once and writes it to every cached copy, and
+  refetches that issue's history if it is shown;
+- an issue created elsewhere refetches the shown lists once per batch, and
+  its row carries `data-fresh` for two seconds;
+- a deleted issue is dropped from the cache; a change with no
+  `issueIdentifier` (labels, states, projects, teams) refetches
+  `meta.bootstrap`, as does a change by an actor the workspace does not list;
+- shown activity, actor and vote queries refetch once per batch.
+
+A resync refetches shown queries whose data predates a cutoff. The resync
+that opens a connection uses the moment it opened, since only older data can
+have missed a change; on the page's first connection it also leaves data that
+arrived in the two seconds before, or is still arriving, because the same page
+load fetched it. Any later resync refetches everything shown.
+
+The browser retries a dropped stream after the server's `retry`. A refused
+stream (404 while the flag is off) is not retried: bootstrap is refetched, and
+showing the tab again tries once more. A tab hidden for 60 s closes its
+stream and reconnects when shown. The sidebar footer and the phone header show
+"Live" or "Reconnecting…"; a polite status region announces only a lost or
+restored stream. An issue changed elsewhere while open shows "Updated by
+<actor> just now" in its header for five seconds. Text being typed in the
+title, the description editor or a comment is never replaced; the new copy
+lands underneath it.
+
 `/healthz` reports process health; `/readyz` requires PostgreSQL; `/metrics`
 exports bounded request counters, issue/actor gauges, connected event-stream
 clients and delivered change messages. Structured errors

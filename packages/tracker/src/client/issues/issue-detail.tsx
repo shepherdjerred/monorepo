@@ -20,6 +20,7 @@ import { ErrorNotice, Modal } from "#client/ui/ui.tsx";
 import { MarkdownEditor } from "#client/ui/markdown.tsx";
 import { ActivityList } from "./activity.tsx";
 import { useIssue } from "./issue-query.ts";
+import { RemoteEditNotice } from "#client/live/presence.tsx";
 
 export function IssueDetail({
   identifier,
@@ -65,10 +66,14 @@ function IssueContent({
   const { identifier } = issue;
   const [title, setTitle] = useState(issue.title);
   const [savedTitle, setSavedTitle] = useState(issue.title);
-  // An undo, a conflict or another tab can change the title underneath.
+  const [typingTitle, setTypingTitle] = useState(false);
+  // An undo, a conflict or another session can change the title underneath.
+  // Text being typed stays; the new title lands under it.
   if (issue.title !== savedTitle) {
     setSavedTitle(issue.title);
-    setTitle(issue.title);
+    if (!typingTitle || title === savedTitle) {
+      setTitle(issue.title);
+    }
   }
   const comment = useDraft(`comment:${identifier}`);
   const [history, setHistory] = useState(false);
@@ -104,6 +109,7 @@ function IssueContent({
         <span>{issue.team.name}</span>
         <span className="muted">/</span>
         <span className="identifier">{issue.identifier}</span>
+        <RemoteEditNotice identifier={identifier} actors={bootstrap.actors} />
         <span className="spacer" />
         {peek && (
           <Link
@@ -154,7 +160,11 @@ function IssueContent({
               onChange={(e) => {
                 setTitle(e.target.value);
               }}
+              onFocus={() => {
+                setTypingTitle(true);
+              }}
               onBlur={() => {
+                setTypingTitle(false);
                 if (title.trim() === "") {
                   setTitle(issue.title);
                 } else if (title !== issue.title) {

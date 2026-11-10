@@ -11,7 +11,15 @@
   flex-direction: column;
   background: var(--sidebar);
   border-right: 1px solid var(--border);
+}
+/* The sections scroll; the brand, actions and footer stay in view. */
+.sidebar-scroll {
+  flex: 1;
+  min-height: 0;
+  margin: 0 -14px;
+  padding: 0 14px;
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 .workspace-brand {
   display: flex;
