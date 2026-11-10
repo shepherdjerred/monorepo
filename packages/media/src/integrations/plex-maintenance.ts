@@ -101,7 +101,10 @@ export class PlexMaintenanceClient {
       throw new IntegrationError("plex", "invalid-response");
     return (value.Activity ?? []).map((activity) => activity.uuid);
   }
-  /** Caller persists a sending journal before this mutation. A lost reply must be reconciled. */
+  /**
+   * Caller persists a sending journal; a lost reply must be reconciled.
+   * Section-wide completion advances the watermark used by exclusion proof.
+   */
   async scanRoot(
     section: PlexSectionSnapshot,
     libraryRoot: string,
@@ -114,7 +117,6 @@ export class PlexMaintenanceClient {
       this.config.baseUrl,
       `library/sections/${section.sectionId}/refresh`,
     );
-    url.searchParams.set("path", libraryRoot);
     const response = await request(this.transport, "plex", url, {
       method: "POST",
       mutation: true,

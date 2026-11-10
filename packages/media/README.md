@@ -1018,8 +1018,9 @@ until it is `prepared`. Review the exact server/section identity, scanner,
 library/control roots, existing and proposed marker contents, synthetic probe
 paths, and cleanup policy before submitting its digest/version to `execute`.
 Execution preserves existing `.plexignore` lines, adds the reviewed exclusion,
-writes two identical valid synthetic videos, and requests a root-scoped scan.
-It never scans the hidden control subtree directly.
+writes two identical valid synthetic videos, and requests a scan of the reviewed
+section without a path restriction so Plex advances its section scan watermark.
+It never scans other sections or the hidden control subtree directly.
 
 Scan issuance waits until the whole second after staging or cleanup finishes;
 proof rejects any watermark from that completion second or earlier. Proof
