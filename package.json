@@ -73,6 +73,7 @@
     "check-ci-env": "bun scripts/checks/ci/check-ci-env.ts",
     "check-ci-admission-budget": "bun scripts/checks/ci/check-ci-admission-budget.ts",
     "check-script-migrations": "bun scripts/checks/check-script-migrations.ts",
+    "check-service-registration": "bun scripts/checks/service-registration.ts",
     "check-test-standardization": "bun scripts/checks/check-test-standardization.ts",
     "script-coverage": "bun scripts/checks/check-script-coverage.ts"
   },
