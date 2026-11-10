@@ -106,7 +106,7 @@ func generate() error {
 	}
 	fmt.Println("# Generated from seccomp/promotion-policy.json and the pinned upstream Go module.")
 	fmt.Println("# Install/read back this node prerequisite BEFORE promotion workload opt-in.")
-	fmt.Printf("# Reviewed Talos %s, containerd %s, Codex %s, Bubblewrap %s; Linux/%s.\n", p.TalosVersion, p.ContainerdVersion, p.CodexVersion, p.BubblewrapVersion, p.Architecture)
+	fmt.Printf("# Reviewed Talos %s, containerd %s, Codex %s, installed system Bubblewrap %s; Linux/%s.\n", p.TalosVersion, p.ContainerdVersion, p.CodexVersion, p.BubblewrapVersion, p.Architecture)
 	fmt.Printf("machine:\n  seccompProfiles:\n    - name: %s\n      value:\n", p.ProfileName)
 	for _, line := range strings.Split(string(encoded), "\n") {
 		fmt.Println("        " + line)

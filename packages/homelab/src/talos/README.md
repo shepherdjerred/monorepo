@@ -170,14 +170,22 @@ runtime versions; the current reviewed invocation is:
 ```
 
 Talos/containerd values come from node readback. The generator also invokes the
-installed Bubblewrap and Codex CLI, verifies its compiled containerd dependency
-and architecture, and checks the complete baseline hash before adding the delta.
+installed system Bubblewrap and Codex CLI, verifies its compiled containerd
+dependency and architecture, and checks the complete baseline hash before
+adding the delta.
 That hash binds the reviewed capability set and kernel-conditioned rules;
 the current baseline includes containerd's Linux ≥4.8 rules. A mismatch requires
 review, rather than updating the checksum merely to make generation pass.
 `catalog-pins.test.ts` checks the source Talos/Codex versions, actual worker
 capabilities, exact baseline, delta, and quota. Emulated execution proves
 generation only; runtime acceptance uses the actual production architecture.
+
+The system Bubblewrap probe records installed software; it does not establish
+sandbox startup. The native ARM64 Codex sandbox proof used Codex's official
+bundled platform helper, not the system Bubblewrap executable. Promotion's
+follow-on workload change selects the official Codex 0.162.1 platform helper.
+Accept that selected helper and its isolation boundaries on the production
+architecture before resuming promotion work.
 
 Capture stdout as YAML, then format it with repository Prettier using
 `--stdin-filepath packages/homelab/src/talos/torvalds/patches/promotion-seccomp.yaml`.

@@ -1,6 +1,6 @@
 # Generated from seccomp/promotion-policy.json and the pinned upstream Go module.
 # Install/read back this node prerequisite BEFORE promotion workload opt-in.
-# Reviewed Talos 1.14.2, containerd 2.3.6, Codex 0.162.1, Bubblewrap 0.12.0; Linux/amd64.
+# Reviewed Talos 1.14.2, containerd 2.3.6, Codex 0.162.1, installed system Bubblewrap 0.12.0; Linux/amd64.
 machine:
   seccompProfiles:
     - name: promotion-codex-01621-containerd-236-v1.json
