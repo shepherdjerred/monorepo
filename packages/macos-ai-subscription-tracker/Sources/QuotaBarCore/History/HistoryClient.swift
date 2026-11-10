@@ -52,6 +52,18 @@ public struct HistoryClient: Sendable {
     try await fetch(.facets)
   }
 
+  /// A page of one history session's captured requests, oldest first.
+  public func captures(session: Int, limit: Int, offset: Int = 0) async throws(HistoryAPIError)
+    -> HistoryCapturesPage
+  {
+    try await fetch(.captures(session: session, limit: limit, offset: offset))
+  }
+
+  /// One captured request, rebuilt, with what it added.
+  public func capture(id: Int) async throws(HistoryAPIError) -> HistoryCaptureDetail {
+    try await fetch(.capture(id: id))
+  }
+
   public func tools(range: HistoryTimeRange, limit: Int = 50) async throws(HistoryAPIError)
     -> HistoryToolsReport
   {

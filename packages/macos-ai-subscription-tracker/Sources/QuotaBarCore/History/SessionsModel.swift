@@ -30,6 +30,9 @@ public final class SessionsModel {
   public private(set) var analytics: SessionsAnalytics?
   public private(set) var analyticsPhase: HistoryLoadPhase = .idle
 
+  /// The selected session's captured requests (the Requests tab).
+  public let captures: CapturesModel
+
   private let client: HistoryClient
   private let calendar: Calendar
   private var listGeneration = 0
@@ -39,6 +42,7 @@ public final class SessionsModel {
   public init(client: HistoryClient = HistoryClient(), calendar: Calendar = .current) {
     self.client = client
     self.calendar = calendar
+    captures = CapturesModel(client: client)
   }
 
   /// Changes whenever the session list must be reloaded from the first page.

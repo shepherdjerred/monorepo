@@ -110,7 +110,7 @@ struct HistoryErrorView: View {
   }
 }
 
-private struct FixCommandView: View {
+struct FixCommandView: View {
   let command: String
 
   var body: some View {

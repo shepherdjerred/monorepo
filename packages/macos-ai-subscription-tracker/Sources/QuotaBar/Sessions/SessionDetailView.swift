@@ -2,12 +2,12 @@ import Charts
 import QuotaBarCore
 import SwiftUI
 
-/// The detail column's tabs. A future Requests tab (raw captured API
-/// requests for the session) is added here as another case with its view
-/// in `body`'s switch; nothing else in the window changes.
+/// The detail column's tabs.
 enum SessionDetailTab: String, CaseIterable, Identifiable {
   case conversation = "Conversation"
   case usage = "Usage"
+  /// Raw API requests captured by `brim capture`.
+  case requests = "Requests"
 
   var id: Self { self }
 }
@@ -47,6 +47,8 @@ struct SessionDetailView: View {
                 "No usage data", systemImage: "gauge.with.dots.needle.0percent",
                 description: Text(HistoryFormat.noUsageNote))
             }
+          case .requests:
+            RequestsView(model: model.captures, sessionID: conversation.session.id)
           }
         }
       } else if let error = model.detailPhase.error {
