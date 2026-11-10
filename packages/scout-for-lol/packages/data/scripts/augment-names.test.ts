@@ -78,6 +78,61 @@ describe("augment-name generation", () => {
     ).toThrow();
   });
 
+  test("names the snapshot version when upstream metadata is malformed", () => {
+    expect(() =>
+      buildAugmentNameCatalog([
+        { version: "16.21", data: [{ ...current, nameTRA: "   " }] },
+      ]),
+    ).toThrow(/Invalid CommunityDragon augment names for 16\.21:.*nameTRA/s);
+  });
+
+  test("excludes the pinned unnamed client placeholder", () => {
+    const placeholder = {
+      id: 3176,
+      augmentNameId: "GoH_PentakillAug_Generic",
+      nameTRA: "   ",
+      simpleNameTRA: "",
+    };
+    const sibling = {
+      id: 3170,
+      augmentNameId: "GoH_PentakillAug_Q",
+      nameTRA: "HEAVY",
+    };
+    const catalog = buildAugmentNameCatalog([
+      { version: "16.21", data: [sibling, placeholder] },
+    ]);
+    expect(catalog.augments).toEqual({
+      "3170": { apiName: "GoH_PentakillAug_Q", name: "HEAVY" },
+    });
+  });
+
+  test("includes the pinned ID once upstream names it", () => {
+    const catalog = buildAugmentNameCatalog([
+      {
+        version: "16.21",
+        data: [
+          {
+            id: 3176,
+            augmentNameId: "GoH_PentakillAug_Generic",
+            nameTRA: "PENTAKILL",
+          },
+        ],
+      },
+    ]);
+    expect(catalog.augments["3176"]?.name).toBe("PENTAKILL");
+  });
+
+  test("still rejects a blank identity for the pinned ID", () => {
+    expect(() =>
+      buildAugmentNameCatalog([
+        {
+          version: "16.21",
+          data: [current, { id: 3176, augmentNameId: " ", nameTRA: "   " }],
+        },
+      ]),
+    ).toThrow("Invalid CommunityDragon augment names for 16.21");
+  });
+
   test("rejects empty catalogs and invalid version provenance", () => {
     expect(() => buildAugmentNameCatalog([])).toThrow();
     expect(() =>
