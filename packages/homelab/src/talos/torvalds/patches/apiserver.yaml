@@ -5,9 +5,9 @@
 # candidate under node memory pressure, and this one is the control plane.
 # The CPU request keeps the Talos default; both keys are set explicitly so the
 # override does not depend on Talos merging partial requests with defaults.
-cluster:
-  apiServer:
-    resources:
-      requests:
-        cpu: 200m
-        memory: 2816Mi
+apiVersion: v1alpha1
+kind: KubeAPIServerConfig
+resources:
+  requests:
+    cpu: 200m
+    memory: 2816Mi

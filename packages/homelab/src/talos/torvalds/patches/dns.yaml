@@ -1,7 +1,8 @@
-machine:
-  network:
-    nameservers:
-      - 100.100.100.100
-      - 192.168.1.1
-    searchDomains:
-      - tailnet-1a49.ts.net
+apiVersion: v1alpha1
+kind: ResolverConfig
+nameservers:
+  - address: 100.100.100.100
+  - address: 192.168.1.1
+searchDomains:
+  domains:
+    - tailnet-1a49.ts.net

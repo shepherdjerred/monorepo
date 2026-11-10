@@ -41,9 +41,12 @@ Patches are applied to the base Talos machine configuration to customize the clu
 
 **Purpose**: Size the kube-apiserver static pod's requests to its measured footprint.
 
-**Current settings**: `cluster.apiServer.resources.requests` is `200m` CPU (the Talos default) and `2816Mi` memory. The 512Mi Talos default was a fifth of the measured RSS (p95 2.59Gi, max 2.76Gi over 14 days), which made the control plane the kubelet's first eviction candidate under memory pressure. Static pods are mirror pods, so admission-time request scaling never applies to it.
+**Current settings**: `KubeAPIServerConfig.resources.requests` is `200m` CPU (the Talos default) and `2816Mi` memory. The 512Mi Talos default was a fifth of the measured RSS (p95 2.59Gi, max 2.76Gi over 14 days), which made the control plane the kubelet's first eviction candidate under memory pressure. Static pods are mirror pods, so admission-time request scaling never applies to it.
 
-**Apply**: `talosctl patch machineconfig --patch @torvalds/patches/apiserver.yaml --mode=no-reboot`. The patch touches only map fields.
+Resource changes require a separately reviewed full-configuration update that
+retains the live format, identities, and unrelated settings. Keep the modern
+`KubeAPIServerConfig` patch separate from existing legacy API server fields.
+The bounded promotion operator below preserves API server resources.
 
 **Caution**: on a single control-plane node, a change to the kube-apiserver static pod can stall it. Talos re-renders the pod and the kubelet stops the old one, but never starts the new one: each sync ends with its volumes mounted and `context deadline exceeded`, and no sandbox is created. The kubelet's volume manager stays blocked while the API it would query is down, so the outage lasts until someone intervenes. Watch `talosctl containers -k` for a new `kube-apiserver` container. If none appears within a minute, run `talosctl service kubelet restart`. The kubelet restart briefly unregisters the ZFS CSI driver, so `FailedMount` events and crashloops in API-dependent controllers follow for a few minutes before they clear on their own.
 
@@ -104,19 +107,84 @@ See the original investigation for the full investigation and why hung-task-pani
 - `image.yaml` - Custom system extensions and image configuration
 - `tailscale.example.yaml` - Example Tailscale configuration
 
-## Applying Patches
-
-Patches are typically applied during cluster initialization or updates. For an
-existing node, regenerate the complete machine configuration from the same
-secrets bundle and patches, then apply that full configuration. This avoids the
-list-appending behavior of `talosctl patch machineconfig`.
+## Source validation and bounded updates
 
 ```bash
-# Validate the regenerated file before applying it. This example targets the
-# canonical Tailscale management endpoint and does not reboot the node.
-talosctl validate --config controlplane.yaml --mode metal
-talosctl apply-config --nodes torvalds.tailnet-1a49.ts.net \
-  --file controlplane.yaml --mode=no-reboot
+bun run --cwd packages/homelab talos:config validate-source
+bun run --cwd packages/homelab talos:promotion-sandbox
 ```
 
-`watchdog.yaml` contains a `WatchdogTimerConfig` document alongside the `machine.kernel.modules` patch (separated by `---`) — apply and verify it separately and carefully (see the watchdog.yaml section above) rather than folding it into a bulk `--patch` invocation, since an armed-but-unpetted watchdog reboots immediately.
+`machine-config.ts` owns the complete public Torvalds patch inventory. Its source
+validator generates synthetic identities in memory, substitutes a synthetic
+Tailscale extension credential, and passes the complete merged configuration to
+native `talosctl validate` through stdin. It reads neither the real private
+Tailscale patch nor a production secrets bundle. `--talosctl <path>` selects a
+specific validator binary for contributor checks.
+
+The Torvalds installer uses `UnattendedInstallConfig`; `ResolverConfig`,
+`KubeNodeConfig`, `KubeletConfig`, `KubeAPIServerConfig`, and `KubeProxyConfig`
+carry the corresponding operational settings. The installer image remains the
+catalog-pinned SecureBoot image, and its CEL disk selector preserves the exact
+OS-disk serial. The scheduling patch clears the generated control-plane taint
+without removing its node identity labels.
+
+The exported `prepareTorvaldsSandboxUpdate(currentYaml, runner)` accepts an
+existing complete configuration and returns `{ config, evidence }` in memory.
+It changes only the declared namespace quota and immutable named seccomp profile,
+preserves all other documents and fields, and validates the full result through
+stdin. An unexpected current quota, duplicate profile, differing value under the
+same versioned profile name, malformed YAML, or unrelated semantic change fails.
+The lower-level `plan-update` CLI reads the current configuration from stdin and
+prints only evidence, never the returned configuration.
+
+Human operations, ordering, live read/version guards, acceptance, and rollback
+belong in [Install promotion sandbox prerequisites](../../../docs/wiki/src/content/docs/how-to/install-promotion-sandbox-prerequisites.md).
+The operator command captures authenticated reads, validation and no-reboot
+full-config apply without writing credential-bearing files. A fresh read/version
+guard detects a competing change; it is not a server-side conditional write.
+
+## Regenerating the promotion seccomp profile
+
+[`seccomp/promotion-policy.json`](seccomp/promotion-policy.json) is the canonical
+profile name, reviewed versions, capabilities, baseline checksum, and syscall
+delta. The adjacent Go generator uses the upstream containerd implementation
+pinned by `go.mod` and `go.sum`. Build from the repository root:
+
+```bash
+GOOS=linux GOARCH=amd64 CGO_ENABLED=0 \
+  go -C packages/homelab/src/talos/seccomp build -mod=readonly -trimpath \
+  -o /tmp/promotion-seccomp-generator .
+```
+
+Run that binary inside the inspected Linux amd64 worker image, with networking
+disabled, no capabilities, and no new privileges. Supply all four observed
+runtime versions; the current reviewed invocation is:
+
+```bash
+/tmp/promotion-seccomp-generator \
+  --talos-version 1.14.2 \
+  --containerd-version 2.3.6 \
+  --codex-version 0.162.1 \
+  --bubblewrap-version 0.12.0 \
+  --codex-cli /app/node_modules/.bun/@openai+codex@0.162.1/node_modules/@openai/codex/bin/codex.js
+```
+
+Talos/containerd values come from node readback. The generator also invokes the
+installed Bubblewrap and Codex CLI, verifies its compiled containerd dependency
+and architecture, and checks the complete baseline hash before adding the delta.
+That hash binds the reviewed capability set and kernel-conditioned rules;
+the current baseline includes containerd's Linux ≥4.8 rules. A mismatch requires
+review, rather than updating the checksum merely to make generation pass.
+`catalog-pins.test.ts` checks the source Talos/Codex versions, actual worker
+capabilities, exact baseline, delta, and quota. Emulated execution proves
+generation only; runtime acceptance uses the actual production architecture.
+
+Capture stdout as YAML, then format it with repository Prettier using
+`--stdin-filepath packages/homelab/src/talos/torvalds/patches/promotion-seccomp.yaml`.
+The formatted output must exactly match
+`torvalds/patches/promotion-seccomp.yaml` when reproducing an unchanged policy.
+For a reviewed content change, choose a new versioned profile name and update
+its consumers together. Install and verify the node profile before releasing
+the chart that selects it; retire the old profile after no desired or running
+pod references it. Live installation and rollback remain in the linked operator
+how-to.
