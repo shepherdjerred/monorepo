@@ -15,7 +15,7 @@ type RecordedCommand = {
 };
 
 describe("installScoutWorkspace", () => {
-  test("owns install, backend generation, and both Scout producers", async () => {
+  test("owns install, backend generation, and Scout's llm-models producer", async () => {
     const calls: RecordedCommand[] = [];
     const commandRunner: BotCloneCommandRunner = (command, options) => {
       calls.push({ command, options });
@@ -43,13 +43,6 @@ describe("installScoutWorkspace", () => {
         command: ["bun", "run", "build"],
         options: {
           cwd: `${REPO_DIR}/packages/llm-models`,
-          env: { BUN_INSTALL_CACHE_DIR: CACHE_DIR },
-        },
-      },
-      {
-        command: ["bun", "run", "build"],
-        options: {
-          cwd: `${REPO_DIR}/packages/glitter-context`,
           env: { BUN_INSTALL_CACHE_DIR: CACHE_DIR },
         },
       },
