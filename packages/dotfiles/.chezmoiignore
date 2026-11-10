@@ -9,8 +9,9 @@ AppData_*
 
 {{- if ne .chezmoi.os "darwin" }}
 Library/
-# Wraps Homebrew mermaid-cli, which only the macOS Brewfile installs.
-.local/bin/mmdc
+# Points Homebrew mermaid-cli (macOS Brewfile only) at Chrome Canary: the
+# formula ships without the chrome-headless-shell its Puppeteer expects.
+.config/mermaid
 {{- end }}
 
 scripts
