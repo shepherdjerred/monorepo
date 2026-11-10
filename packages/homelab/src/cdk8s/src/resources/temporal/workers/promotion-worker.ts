@@ -57,6 +57,7 @@ export function createTemporalPromotionWorker(
     component: "promotion-worker",
     // Install and verify the node prerequisite before releasing this opt-in.
     sandboxSeccompProfile: `profiles/${promotionPolicy.profileName}`,
+    initializeStickyTmpDirectory: true,
     serviceAccount,
     envVariables: {
       ...temporalFeatureFlagEnvironment(),

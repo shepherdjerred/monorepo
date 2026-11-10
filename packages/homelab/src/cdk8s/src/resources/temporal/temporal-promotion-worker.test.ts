@@ -61,6 +61,9 @@ const DeploymentSchema = z.object({
             name: z.string(),
             args: z.array(z.string()),
             securityContext: SecurityContextSchema,
+            volumeMounts: z.array(
+              z.object({ name: z.string(), mountPath: z.string() }),
+            ),
           }),
         ),
       }),
@@ -156,6 +159,35 @@ describe("promotion worker sandbox isolation", () => {
         },
       });
       const rules = firewall.args.join("\n");
+      expect(main.volumeMounts).toContainEqual({
+        name: "agent-tmp",
+        mountPath: "/tmp",
+      });
+      expect(
+        pod.volumes.filter((volume) => volume.name === "agent-tmp"),
+      ).toEqual([{ name: "agent-tmp", emptyDir: {} }]);
+      expect(firewall.volumeMounts).toEqual(
+        role === "promotion"
+          ? [
+              { name: "firewall-run", mountPath: "/run" },
+              { name: "agent-tmp", mountPath: "/tmp" },
+            ]
+          : [{ name: "firewall-run", mountPath: "/run" }],
+      );
+      if (role === "promotion") {
+        expect(rules).toContain("[ ! -d /tmp ] || [ -L /tmp ]");
+        expect(rules).toContain("\"$(stat -c '%u' /tmp)\" != 0");
+        expect(rules).toContain("chmod 1777 /tmp");
+        expect(rules).toContain("\"$(stat -c '%u:%a' /tmp)\" != 0:1777");
+        expect(rules.indexOf("chmod 1777 /tmp")).toBeLessThan(
+          rules.indexOf("for firewall in iptables ip6tables"),
+        );
+        expect(rules).not.toContain("chown");
+      } else {
+        expect(rules).toMatch(/^set -eu\nfor firewall in iptables ip6tables/u);
+        expect(rules).not.toContain("chmod");
+        expect(rules).not.toContain("stat -c");
+      }
       for (const rule of [
         "--uid-owner 1001",
         "for firewall in iptables ip6tables",

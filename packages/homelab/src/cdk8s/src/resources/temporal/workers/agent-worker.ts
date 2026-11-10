@@ -32,6 +32,7 @@ type CreateTemporalAgentWorkerProps = {
   name?: string;
   component?: string;
   sandboxSeccompProfile?: string;
+  initializeStickyTmpDirectory?: boolean;
 };
 
 const AGENT_WORKER_UID = 1000;
@@ -90,6 +91,20 @@ export function createTemporalAgentWorker(
     `${name}-firewall-run`,
     "firewall-run",
   );
+  const tmpVolume = Volume.fromEmptyDir(chart, `${name}-tmp`, "agent-tmp");
+  const stickyTmpBootstrap =
+    props.initializeStickyTmpDirectory === true
+      ? `if [ ! -d /tmp ] || [ -L /tmp ] || [ "$(stat -c '%u' /tmp)" != 0 ]; then
+  echo "provider temporary directory must be a root-owned directory" >&2
+  exit 1
+fi
+chmod 1777 /tmp
+if [ ! -d /tmp ] || [ -L /tmp ] || [ "$(stat -c '%u:%a' /tmp)" != 0:1777 ]; then
+  echo "provider temporary directory sticky permissions failed verification" >&2
+  exit 1
+fi
+`
+      : "";
   deployment.addInitContainer(
     withCommonProps({
       name: "install-provider-firewall",
@@ -97,7 +112,7 @@ export function createTemporalAgentWorker(
       command: ["/bin/sh", "-c"],
       args: [
         `set -eu
-for firewall in iptables ip6tables; do
+${stickyTmpBootstrap}for firewall in iptables ip6tables; do
   for port in 7233 8080; do
     if "$firewall" -C OUTPUT -p tcp -m owner --uid-owner ${AGENT_PROVIDER_UID.toString()} --dport "$port" -j REJECT --reject-with tcp-reset; then
       echo "provider firewall already rejects tcp/$port via $firewall"
@@ -128,7 +143,12 @@ iptables -L OUTPUT -n
 ip6tables -L OUTPUT -n`,
       ],
       securityContext: netAdminFirewallSecurityContext(true),
-      volumeMounts: [{ path: "/run", volume: firewallRunVolume }],
+      volumeMounts: [
+        { path: "/run", volume: firewallRunVolume },
+        ...(props.initializeStickyTmpDirectory === true
+          ? [{ path: "/tmp", volume: tmpVolume }]
+          : []),
+      ],
       resources: NET_ADMIN_FIREWALL_RESOURCES,
     }),
   );
@@ -252,7 +272,6 @@ ip6tables -L OUTPUT -n`,
     }),
   );
 
-  const tmpVolume = Volume.fromEmptyDir(chart, `${name}-tmp`, "agent-tmp");
   container.mount("/tmp", tmpVolume);
 
   const agentSelector = Pods.select(chart, `${name}-selector`, {
