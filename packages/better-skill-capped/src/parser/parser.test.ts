@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { ManifestSchema, type Manifest } from "./manifest.ts";
 import {
+  getCourseImageUrl,
   getImageUrl,
   parseDate,
   parseGameTime,
@@ -254,17 +255,54 @@ describe("getImageUrl", () => {
   test("derives the thumbnail URL when no screenshot is set", () => {
     const video = must(manifest.videos[0]);
     expect(getImageUrl(video)).toBe(
-      "https://ik.imagekit.io/skillcapped/thumbnails/4lt153z6bl/thumbnails/thumbnail_1.jpg",
+      "https://sc-video.skill-capped.com/videos/4lt153z6bl/thumbnails/thumb_large.0000001.jpg",
     );
   });
 
-  test("rewrites cloudfront screenshots to imagekit", () => {
+  test("rewrites cloudfront screenshots to skill-capped customss", () => {
     const video = must(
       manifest.videos.find((candidate) => candidate.uuid === "54q44khlyf"),
     );
     expect(getImageUrl(video)).toBe(
-      "https://ik.imagekit.io/skillcapped/customss/jpg-images/wavectrl01.jpg",
+      "https://www.skill-capped.com/customss/jpg-images/wavectrl01.jpg",
     );
+  });
+});
+
+describe("getCourseImageUrl", () => {
+  test("uses courseImage2 when present and not on imagekit", () => {
+    const course = must(manifest.courses[0]);
+    expect(getCourseImageUrl(course)).toBe(course.courseImage2);
+  });
+
+  test("falls back to courseImage3 when courseImage2 is empty or points to imagekit", () => {
+    const baseCourse = must(manifest.courses[0]);
+    expect(
+      getCourseImageUrl({
+        ...baseCourse,
+        courseImage2: "",
+        courseImage3: "https://example.com/c3.png",
+      }),
+    ).toBe("https://example.com/c3.png");
+    expect(
+      getCourseImageUrl({
+        ...baseCourse,
+        courseImage2: "https://ik.imagekit.io/skillcapped/example.png",
+        courseImage3: "https://example.com/c3.png",
+      }),
+    ).toBe("https://example.com/c3.png");
+  });
+
+  test("falls back to courseImage when courseImage2 and courseImage3 are unavailable", () => {
+    const baseCourse = must(manifest.courses[0]);
+    expect(
+      getCourseImageUrl({
+        ...baseCourse,
+        courseImage2: "",
+        courseImage3: "",
+        courseImage: "https://example.com/c1.png",
+      }),
+    ).toBe("https://example.com/c1.png");
   });
 });
 

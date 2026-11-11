@@ -8,6 +8,7 @@ import type {
 import type {
   Manifest,
   ManifestCommentary,
+  ManifestCourse,
   ManifestCourseChapters,
   ManifestVideo,
 } from "./manifest.ts";
@@ -110,11 +111,24 @@ export function parseGameTime(input: string): number | undefined {
 
 export function getImageUrl(input: ManifestVideo | ManifestCommentary): string {
   return input.tSS === ""
-    ? `https://ik.imagekit.io/skillcapped/thumbnails/${input.uuid}/thumbnails/thumbnail_${String(input.tId)}.jpg`
+    ? `https://sc-video.skill-capped.com/videos/${input.uuid}/thumbnails/thumb_large.${String(input.tId).padStart(7, "0")}.jpg`
     : input.tSS.replace(
         "https://d20k8dfo6rtj2t.cloudfront.net/jpg-images/",
-        "https://ik.imagekit.io/skillcapped/customss/jpg-images/",
+        "https://www.skill-capped.com/customss/jpg-images/",
       );
+}
+
+export function getCourseImageUrl(course: ManifestCourse): string {
+  if (
+    course.courseImage2 !== "" &&
+    !course.courseImage2.includes("ik.imagekit.io")
+  ) {
+    return course.courseImage2;
+  }
+  return course.courseImage3 !== "" &&
+    !course.courseImage3.includes("ik.imagekit.io")
+    ? course.courseImage3
+    : course.courseImage;
 }
 
 function parseVideo(video: ManifestVideo): Video {
@@ -167,7 +181,7 @@ function parseCourses(
         ...(course.desc === "" ? {} : { description: course.desc }),
         releaseDate: parseDate(course.rDate),
         role: parseRole(course.role),
-        image: course.courseImage2,
+        image: getCourseImageUrl(course),
         videos: courseVideos,
         tags: course.tags,
         recommended: course.recommended,
