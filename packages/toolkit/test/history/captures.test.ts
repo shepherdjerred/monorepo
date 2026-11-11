@@ -27,6 +27,8 @@ import {
   claudeHttp,
   claudeToolTurn,
   CODEX_EXEC_PARAMETERS,
+  chatChunk,
+  chatHttp,
   codexToolTurn,
   tempDir,
   writeSegment,
@@ -930,6 +932,62 @@ describe("capture redaction boundaries", () => {
       .split("\n")
       .map((line): unknown => JSON.parse(line));
     expect(lines.slice(0, records.length)).toEqual(records);
+  });
+});
+
+describe("Chat Completions errors", () => {
+  const error = {
+    message: "Rate limit reached for gpt-fixture",
+    type: "rate_limit_exceeded",
+    code: "rate_limit_exceeded",
+  };
+
+  test("keeps a JSON error body and fails the capture", async () => {
+    const context = await fixture();
+    await ingest(context, [
+      chatHttp({
+        id: "chat-429",
+        at: "2026-11-10T03:23:00.000Z",
+        status: 429,
+        contentType: "application/json",
+        body: JSON.stringify({ error }),
+      }),
+    ]);
+    const [capture] = HistoryApiCapturesResponseSchema.parse(
+      await fetchJson(context, "/v1/captures"),
+    ).captures;
+    expect(capture).toMatchObject({
+      format: "openai-chat",
+      status: "error",
+      httpStatus: 429,
+      error: error.message,
+    });
+    const parsed = await detail(context, capture?.id ?? 0);
+    expect(parsed.rawResponse).toEqual({ error });
+  });
+
+  test("fails a 200 stream that ends in an error event", async () => {
+    const context = await fixture();
+    await ingest(context, [
+      chatHttp({
+        id: "chat-stream-error",
+        at: "2026-11-10T03:23:00.000Z",
+        status: 200,
+        contentType: "text/event-stream",
+        body: `${chatChunk({ role: "assistant", content: "Partial" })}data: ${JSON.stringify({ error })}\n\n`,
+      }),
+    ]);
+    const [capture] = HistoryApiCapturesResponseSchema.parse(
+      await fetchJson(context, "/v1/captures"),
+    ).captures;
+    expect(capture).toMatchObject({
+      status: "error",
+      httpStatus: 200,
+      error: error.message,
+    });
+    const parsed = await detail(context, capture?.id ?? 0);
+    expect(parsed.response?.text).toBe("Partial");
+    expect(parsed.rawResponse).toMatchObject({ error });
   });
 });
 

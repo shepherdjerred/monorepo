@@ -288,6 +288,12 @@ function assembledMessage(
   };
 }
 
+/**
+ * Assembles a Chat Completions response. An event carrying `error` instead of
+ * `choices` (an HTTP error body, or an error event inside a 200 stream)
+ * fails the capture: it is kept whole when nothing was answered, and as the
+ * assembled message's `error` otherwise.
+ */
 function chatResponse(events: readonly JsonRecord[]): ParsedResponse {
   let text = "";
   const calls: ChatToolCall[] = [];
@@ -296,10 +302,18 @@ function chatResponse(events: readonly JsonRecord[]): ParsedResponse {
   let stopReason: string | null = null;
   let usage: CaptureUsage | null = null;
   let complete: JsonRecord | null = null;
+  let answered = false;
+  let failure: { event: JsonRecord; error: JsonRecord } | null = null;
   for (const event of events) {
+    const error = asRecord(event["error"]);
+    if (error !== null) {
+      failure = { event, error };
+      continue;
+    }
     model ??= asString(event["model"]);
     id ??= asString(event["id"]);
     const choice = firstChoice(event);
+    if (choice !== null) answered = true;
     if (choice?.["message"] !== undefined) complete = event;
     const delta = asRecord(choice?.["delta"]);
     text += asString(delta?.["content"]) ?? "";
@@ -308,7 +322,7 @@ function chatResponse(events: readonly JsonRecord[]): ParsedResponse {
     const eventUsage = asRecord(event["usage"]);
     if (eventUsage !== null) usage = chatUsage(eventUsage);
   }
-  const value = complete ?? {
+  const assembled = complete ?? {
     id,
     model,
     choices: [
@@ -318,14 +332,18 @@ function chatResponse(events: readonly JsonRecord[]): ParsedResponse {
       },
     ],
   };
+  let value = assembled;
+  if (failure !== null) {
+    value = answered ? { ...assembled, error: failure.error } : failure.event;
+  }
   return {
     value,
     model,
     responseId: id,
     usage,
     stopReason,
-    failed: false,
-    error: null,
+    failed: failure !== null,
+    error: errorText(failure?.error ?? null),
   };
 }
 

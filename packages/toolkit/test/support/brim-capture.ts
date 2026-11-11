@@ -26,6 +26,51 @@ function sse(events: readonly Record<string, unknown>[]): string {
     .join("");
 }
 
+/** One streamed Chat Completions chunk, as an SSE event. */
+export function chatChunk(
+  delta: Record<string, unknown>,
+  finish: string | null = null,
+): string {
+  const event = {
+    id: "chatcmpl_1",
+    model: "gpt-fixture",
+    choices: [{ index: 0, delta, finish_reason: finish }],
+  };
+  return `data: ${JSON.stringify(event)}\n\n`;
+}
+
+/** A Chat Completions request answered with `body`. */
+export function chatHttp(options: {
+  readonly id: string;
+  readonly at: string;
+  readonly status: number;
+  readonly contentType: string;
+  readonly body: string;
+}): CaptureHttpRecord {
+  return {
+    ...claudeHttp({
+      id: options.id,
+      at: options.at,
+      body: {
+        model: "gpt-fixture",
+        messages: [{ role: "user", content: "hi" }],
+        stream: true,
+      },
+      response: [],
+      sessionHeader: null,
+    }),
+    cli: "opencode",
+    host: "api.openai.com",
+    path: "/v1/chat/completions",
+    response: {
+      status: options.status,
+      headers: [["Content-Type", options.contentType]],
+      body: { text: options.body },
+      streamed: options.contentType === "text/event-stream",
+    },
+  };
+}
+
 const CLAUDE_SYSTEM = [
   {
     type: "text",

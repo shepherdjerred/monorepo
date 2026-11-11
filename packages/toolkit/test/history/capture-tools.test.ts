@@ -4,6 +4,7 @@ import {
   summarizeResponse,
 } from "#lib/history/captures/render.ts";
 import { parseHttpResponse } from "#lib/history/captures/response.ts";
+import { chatChunk } from "#test/support/brim-capture.ts";
 
 describe("captured tool definitions", () => {
   test("expand Gemini declarations and keep OpenAI function parameters", () => {
@@ -76,18 +77,6 @@ describe("captured tool definitions", () => {
   });
 });
 
-function chunk(
-  delta: Record<string, unknown>,
-  finish: string | null = null,
-): string {
-  const event = {
-    id: "chatcmpl_1",
-    model: "gpt-fixture",
-    choices: [{ index: 0, delta, finish_reason: finish }],
-  };
-  return `data: ${JSON.stringify(event)}\n\n`;
-}
-
 function call(index: number, fields: Record<string, unknown>) {
   return { tool_calls: [{ index, ...fields }] };
 }
@@ -95,25 +84,25 @@ function call(index: number, fields: Record<string, unknown>) {
 describe("streamed Chat Completions responses", () => {
   test("assemble tool calls from delta fragments by index", () => {
     const body = [
-      chunk({ role: "assistant", content: "Checking." }),
-      chunk(
+      chatChunk({ role: "assistant", content: "Checking." }),
+      chatChunk(
         call(0, {
           id: "call_a",
           type: "function",
           function: { name: "exec", arguments: "" },
         }),
       ),
-      chunk(call(0, { function: { arguments: '{"cmd":' } })),
-      chunk(
+      chatChunk(call(0, { function: { arguments: '{"cmd":' } })),
+      chatChunk(
         call(1, {
           id: "call_b",
           type: "function",
           function: { name: "read", arguments: '{"path"' },
         }),
       ),
-      chunk(call(0, { function: { arguments: '"ls"}' } })),
-      chunk(call(1, { function: { arguments: ':"a.txt"}' } })),
-      chunk({}, "tool_calls"),
+      chatChunk(call(0, { function: { arguments: '"ls"}' } })),
+      chatChunk(call(1, { function: { arguments: ':"a.txt"}' } })),
+      chatChunk({}, "tool_calls"),
       "data: [DONE]\n\n",
     ].join("");
     const parsed = parseHttpResponse("openai-chat", body, "text/event-stream");
