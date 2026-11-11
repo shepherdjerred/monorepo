@@ -2,7 +2,11 @@ import { Prisma } from "#generated/prisma/client.ts";
 import type { UnitOfWork } from "#application/unit-of-work.ts";
 import { TrackerError } from "#domain/error.ts";
 import { identifier, midpoint, transitionTimestamps } from "#domain/issue.ts";
-import type { CreateIssueInput, UpdateIssueInput } from "#shared/schema.ts";
+import type {
+  BulkUpdateIssuesInput,
+  CreateIssueInput,
+  UpdateIssueInput,
+} from "#shared/schema.ts";
 import type { ActorEnvelope } from "#shared/actor.ts";
 import type { Database } from "./database.ts";
 import {
@@ -11,6 +15,7 @@ import {
   lockHierarchy,
   lockIssues,
 } from "./issue-hierarchy.ts";
+import { updateIssues } from "./issue-update.ts";
 import {
   IssueQueries,
   addLabels,
@@ -24,34 +29,6 @@ import {
   resolveProject,
   resolveState,
 } from "./issue-repository.ts";
-
-/** The columns an update request names; every other column is kept. */
-function issuePatch(
-  input: UpdateIssueInput,
-  references: {
-    projectId: string | null | undefined;
-    assigneeId: string | null | undefined;
-    parentId: string | null | undefined;
-  },
-) {
-  const { projectId, assigneeId, parentId } = references;
-  return {
-    ...(input.title === undefined ? {} : { title: input.title }),
-    ...(input.description === undefined
-      ? {}
-      : { description: input.description }),
-    ...(input.priority === undefined ? {} : { priority: input.priority }),
-    ...(projectId === undefined ? {} : { projectId }),
-    ...(assigneeId === undefined ? {} : { assigneeId }),
-    ...(parentId === undefined ? {} : { parentId }),
-    ...(input.dueDate === undefined
-      ? {}
-      : { dueDate: dueDateColumn(input.dueDate) }),
-    ...(input.archived === undefined
-      ? {}
-      : { archivedAt: input.archived ? new Date() : null }),
-  };
-}
 
 export class Issues extends IssueQueries {
   constructor(
@@ -126,68 +103,29 @@ export class Issues extends IssueQueries {
 
   update(input: UpdateIssueInput, requestId: string) {
     return this.unit.run(input.actor, requestId, async (context) => {
-      const { db } = context;
-      const initial = await findIssue(db, input.identifier);
-      if (input.parentIdentifier !== undefined)
-        await lockHierarchy(db, initial.teamId);
-      const parentId = await findParentId(db, input.parentIdentifier);
-      const state =
-        input.stateName === undefined && input.stateType === undefined
-          ? initial.state
-          : await resolveState(db, initial.teamId, input);
-      await db.$queryRaw`SELECT "id" FROM "WorkflowState" WHERE "id" IN (${Prisma.join([initial.stateId, state.id].sort())}) ORDER BY "id" FOR UPDATE`;
-      const newParent = typeof parentId === "string" ? [parentId] : [];
-      await lockIssues(db, [initial.id, ...newParent]);
-      const before = await findIssue(db, input.identifier);
-      if (before.stateId !== initial.stateId)
-        throw new TrackerError(
-          "CONFLICT",
-          "The issue moved. Reload before saving.",
-        );
-      if (
-        input.expectedRevision !== undefined &&
-        input.expectedRevision !== before.revision
-      )
-        throw new TrackerError(
-          "CONFLICT",
-          "This issue changed. Reload before saving.",
-        );
-      // Re-sending the current parent changes nothing and is not re-checked.
-      for (const id of newParent)
-        if (id !== before.parentId) await assertParent(db, before, id);
-      await db.issue.update({
-        where: { id: before.id },
-        data: {
-          ...issuePatch(input, {
-            projectId: await resolveProject(db, input.projectSlug),
-            assigneeId: await resolveAssignee(db, input.assigneeKey),
-            parentId,
-          }),
-          stateId: state.id,
-          revision: { increment: 1 },
-          ...transitionTimestamps(state.type, before, new Date()),
-        },
-      });
-      await db.issueLabel.deleteMany({
-        where: {
-          issueId: before.id,
-          label: { name: { in: input.removeLabels } },
-        },
-      });
-      await addLabels(db, before.id, before.teamId, input.addLabels);
-      await commitAttachments(context, input.attachmentIds, before.id);
-      const result = presentIssue(await findIssue(db, input.identifier));
-      await audit(context, {
-        entityType: "issue",
-        entityId: before.id,
-        issueId: before.id,
-        issueIdentifier: input.identifier,
-        action: "updated",
-        before: presentIssue(before),
-        after: result,
-      });
+      const [result] = await updateIssues(
+        context,
+        [input.identifier],
+        input,
+        input.expectedRevision === undefined
+          ? {}
+          : { [input.identifier]: input.expectedRevision },
+      );
+      if (result === undefined) throw new Error("The update returned no issue");
       return result;
     });
+  }
+
+  /** One patch for many issues, all-or-nothing; items keep the input order. */
+  bulkUpdate(input: BulkUpdateIssuesInput, requestId: string) {
+    return this.unit.run(input.actor, requestId, async (context) => ({
+      items: await updateIssues(
+        context,
+        input.identifiers,
+        { ...input.patch, attachmentIds: [] },
+        input.expectedRevisions,
+      ),
+    }));
   }
 
   move(

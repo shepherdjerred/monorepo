@@ -264,6 +264,7 @@ toolkit tracker issue vote AI-26 --note "Blocked tracker UI verification"
 toolkit tracker issue update AI-26 --state started --expected-revision 3
 toolkit tracker issue create --team AI --title "Sub-task" --parent AI-26 --due 2026-12-01
 toolkit tracker issue update AI-27 --parent none --due none
+toolkit tracker issue bulk-update AI-27 AI-28 SJ-4 --state started --add-label agent
 toolkit tracker issue list --team AI --parent AI-26 --sort due
 toolkit tracker issue list --team AI --overdue --due-after 2026-01-01
 toolkit tracker view create --name "My work" --icon inbox --input-json '{"states":["started"],"sort":"due"}'
@@ -299,6 +300,11 @@ due before `--today`, which defaults to this machine's local date, whatever
 their state; combine it with `--state` to exclude finished work. A saved view
 stores issue-list parameters as JSON keyed like the `issues.list` input, plus
 the display keys `group` and `view`.
+
+`issue bulk-update <ID...>` applies one patch to up to 250 issues in one
+transaction: every issue changes or none does. It takes the `issue update`
+patch flags except `--title`, `--description` and `--expected-revision`, and
+passes `--state` through so each issue's team resolves its own state.
 
 `tracker api <procedure> --input-json '<JSON>'` is the query escape hatch;
 `--mutation` adds the same validated actor. Additional catalog mutations use

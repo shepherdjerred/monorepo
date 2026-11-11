@@ -8,6 +8,7 @@ import type { Catalog } from "#infrastructure/catalog.ts";
 import type { Attachments } from "#infrastructure/attachments.ts";
 import { presentActor } from "#infrastructure/issue-repository.ts";
 import {
+  BulkUpdateIssuesSchema,
   ColorSchema,
   CreateIssueSchema,
   CreateViewSchema,
@@ -317,6 +318,11 @@ export const appRouter = t.router({
     update: mutation
       .input(UpdateIssueSchema)
       .mutation(({ ctx, input }) => ctx.issues.update(input, ctx.requestId)),
+    bulkUpdate: mutation
+      .input(BulkUpdateIssuesSchema)
+      .mutation(({ ctx, input }) =>
+        ctx.issues.bulkUpdate(input, ctx.requestId),
+      ),
     move: mutation
       .input(
         IssueReferenceSchema.extend({

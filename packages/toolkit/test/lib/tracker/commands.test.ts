@@ -131,6 +131,72 @@ test("updates resolve state types and preserve explicit zero, revision and label
   });
   expect(actor).toHaveBeenCalledTimes(1);
 });
+test("bulk updates pass the shared patch flags and reject per-issue fields", async () => {
+  const { context, requests } = fixture();
+  await issueCommand(
+    context,
+    ["bulk-update", "ai-1", "sj-2"],
+    parseTrackerArgs([
+      "--state",
+      "started",
+      "--priority",
+      "0",
+      "--assignee",
+      "none",
+      "--add-label",
+      "one",
+      "--parent",
+      "none",
+      "--due",
+      "2026-12-01",
+      "--archive",
+    ]).values,
+  );
+  expect(requests).toHaveLength(1);
+  expect(requests[0]).toMatchObject({
+    procedure: "issues.bulkUpdate",
+    method: "POST",
+    input: {
+      actor: { key: "codex:session" },
+      identifiers: ["AI-1", "SJ-2"],
+      expectedRevisions: {},
+      patch: {
+        stateType: "started",
+        priority: 0,
+        assigneeKey: null,
+        addLabels: ["one"],
+        removeLabels: [],
+        parentIdentifier: null,
+        dueDate: "2026-12-01",
+        archived: true,
+      },
+    },
+  });
+  await issueCommand(
+    context,
+    ["bulk-update", "AI-1"],
+    parseTrackerArgs(["--state", "Code review"]).values,
+  );
+  expect(requests[1]?.input).toMatchObject({
+    patch: { stateName: "Code review" },
+  });
+  for (const flags of [["--title", "Same"], ["--expected-revision", "3"], []])
+    await expect(
+      issueCommand(
+        context,
+        ["bulk-update", "AI-1"],
+        parseTrackerArgs(flags).values,
+      ),
+    ).rejects.toThrow();
+  await expect(
+    issueCommand(
+      context,
+      ["bulk-update"],
+      parseTrackerArgs(["--priority", "1"]).values,
+    ),
+  ).rejects.toThrow();
+  expect(requests).toHaveLength(2);
+});
 test("catalog reads and malformed options fail before writes", async () => {
   const { context, actor } = fixture();
   const { values } = parseTrackerArgs([]);

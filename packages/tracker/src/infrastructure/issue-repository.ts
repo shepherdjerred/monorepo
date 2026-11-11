@@ -23,7 +23,9 @@ export const issueInclude = {
     select: { state: { select: { type: true } } },
   },
 } satisfies Prisma.IssueInclude;
-type IssueRecord = Prisma.IssueGetPayload<{ include: typeof issueInclude }>;
+export type IssueRecord = Prisma.IssueGetPayload<{
+  include: typeof issueInclude;
+}>;
 export const presentActor = (actor: Actor) => ({
   ...actor,
   firstMetadata: actor.firstMetadata as unknown,
