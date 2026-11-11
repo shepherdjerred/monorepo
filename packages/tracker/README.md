@@ -52,6 +52,29 @@ Operational behavior comes from the typed configuration package and the
 `OTEL_EXPORTER_OTLP_ENDPOINT`. `BUGSINK_DSN` is an optional credential. Telemetry
 does not send request bodies, actor metadata or issue descriptions.
 
+## Browser data layer
+
+The UI never asks for `limit: "all"`. Lists page through `issues.list` 100 at
+a time and render only the rows near the viewport; the board reads its team in
+250-issue pages until the cursor ends, because a drag needs every neighbouring
+card. `issues.list` returns no total, so a list shows its loaded count with a
+`+` while more pages exist.
+
+Every mutation goes through `src/client/data`. An issue edit shows at once on
+each cached copy of the issue, is sent behind that issue's earlier edits with
+the revision the server last returned, and on failure is taken back and
+reported as a toast. A `CONFLICT` reloads the issue and retries once, except
+for a description, which is never resent over someone else's text. A settled
+mutation refetches only that issue, its history and the issue lists; only
+catalog changes refetch `meta.bootstrap`.
+
+Toasts are the one live region. Reversible edits offer Undo for as long as
+their toast shows, also on Cmd/Ctrl+Z. The server cannot restore a deleted
+issue, so a delete only hides it until its toast goes away and is sent then,
+or at once when the tab is hidden or unloaded, in a request that outlives the
+page. Unsent text is kept in `sessionStorage` per form and the browser asks
+before a tab holding any is closed.
+
 ## Contract and invariants
 
 Consumers import `@shepherdjerred/tracker/contract`: the `AppRouter` type and
@@ -171,6 +194,9 @@ attachment retention and deletion history. Browser checks cover desktop and
 mobile issue creation, comments, votes, attachments, search, themes, peeks and
 board input, plus history and link behavior (`?peek=`, Back, modified clicks,
 filter typing), keyboard navigation, document titles, and an axe scan of the
-list, board, issue, palette and settings in both color schemes that fails on
-any serious or critical violation. The image smoke checks the non-root runtime, Prisma engine and
+list, board, issue, toasts, palette and settings in both color schemes that
+fails on any serious or critical violation. They also cover the client data
+layer: optimistic edits and Undo, the deferred delete, drafts, and a
+260-issue list that must stay windowed, page in on scroll and keep its scroll
+position across Back and a reload. The image smoke checks the non-root runtime, Prisma engine and
 served SPA/assets; PostgreSQL and S3 live acceptance are separate checks.

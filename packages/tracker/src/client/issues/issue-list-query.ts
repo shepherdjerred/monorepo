@@ -1,11 +1,107 @@
-import { useRef, useState } from "react";
-import { keepPreviousData, skipToken, useQuery } from "@tanstack/react-query";
+import { useMemo, useRef, useState, useSyncExternalStore } from "react";
+import {
+  keepPreviousData,
+  skipToken,
+  useInfiniteQuery,
+} from "@tanstack/react-query";
 import { useLocation, useNavigate, useSearchParams } from "react-router";
 import { z } from "zod";
 import { api } from "#client/data/api.ts";
+import type { IssuePage } from "#client/data/cache.ts";
+import { hiddenIssues } from "#client/data/mutations.ts";
 import { IssueListSchema, type IssueListInput } from "#shared/schema.ts";
 import { currentActor } from "#client/data/identity.ts";
 import type { RouteInfo } from "#client/shell/route.ts";
+
+export const listPageSize = 100;
+const boardPageSize = 250;
+
+/**
+ * A board column has no window to scroll pages into, and a drag needs every
+ * neighbouring card, so the board reads the whole team as one cached page.
+ */
+async function everyIssue(input: IssueListInput): Promise<IssuePage> {
+  const items: IssuePage["items"] = [];
+  let cursor: string | undefined;
+  do {
+    const page = await api.issues.list.query({
+      ...input,
+      ...(cursor === undefined ? {} : { cursor }),
+    });
+    items.push(...page.items);
+    cursor = page.nextCursor ?? undefined;
+  } while (cursor !== undefined);
+  return { items, nextCursor: null };
+}
+
+/** The first page has no cursor; later ones carry the previous `nextCursor`. */
+const firstCursor = (): string | undefined => undefined;
+
+/**
+ * One `issues.list` query, a page at a time. Issues whose delete is waiting
+ * to be undone are left out, as is an issue archived a moment ago in a list
+ * that excludes archived ones.
+ */
+export function useIssuePages(input: IssueListInput | undefined) {
+  const whole = input?.sort === "board";
+  const query = useInfiniteQuery({
+    queryKey: ["issues", input],
+    queryFn:
+      input === undefined
+        ? skipToken
+        : ({ pageParam }) =>
+            whole
+              ? everyIssue(input)
+              : api.issues.list.query({
+                  ...input,
+                  ...(pageParam === undefined ? {} : { cursor: pageParam }),
+                }),
+    initialPageParam: firstCursor(),
+    getNextPageParam: (last) => last.nextCursor ?? undefined,
+    placeholderData: keepPreviousData,
+  });
+  const hidden = useSyncExternalStore(hiddenIssues.subscribe, hiddenIssues.get);
+  const pages = query.data?.pages;
+  const includeArchived = input?.includeArchived === true;
+  const items = useMemo(() => {
+    // Rows can shift between pages while they load; show each issue once.
+    const seen = new Set<string>();
+    return (pages ?? [])
+      .flatMap((page) => page.items)
+      .filter((issue) => {
+        if (
+          seen.has(issue.id) ||
+          hidden.has(issue.identifier) ||
+          (!includeArchived && issue.archivedAt !== null)
+        ) {
+          return false;
+        }
+        seen.add(issue.id);
+        return true;
+      });
+  }, [pages, hidden, includeArchived]);
+  const moreFailed = query.isFetchNextPageError;
+  return {
+    items,
+    /** Pages fetched so far; a restored list fetches this many again. */
+    pageCount: pages?.length ?? 0,
+    loading: query.isPending,
+    /** Another filter's rows are standing in while this one loads. */
+    placeholder: query.isPlaceholderData,
+    /** Rows are shown and being revalidated or replaced. */
+    busy:
+      query.isPlaceholderData ||
+      (query.isFetching && !query.isFetchingNextPage),
+    error: moreFailed ? null : query.error,
+    hasMore: query.hasNextPage,
+    loadingMore: query.isFetchingNextPage,
+    moreError: moreFailed ? query.error : null,
+    loadMore: () => {
+      void query.fetchNextPage({ cancelRefetch: false });
+    },
+  };
+}
+export type IssuePages = ReturnType<typeof useIssuePages>;
 
 /**
  * The issues behind the list, board and project views. An issue page keeps
@@ -35,7 +131,7 @@ export function useIssueList(route: RouteInfo, teamKey: string | undefined) {
             route.view === "board"
               ? "board"
               : (params.get("sort") ?? "updated"),
-          limit: "all",
+          limit: route.view === "board" ? boardPageSize : listPageSize,
         })
       : undefined;
   if (
@@ -46,15 +142,9 @@ export function useIssueList(route: RouteInfo, teamKey: string | undefined) {
   }
   const fallback =
     teamKey !== undefined && route.view === "issue"
-      ? (remembered ?? IssueListSchema.parse({ teamKey, limit: "all" }))
+      ? (remembered ?? IssueListSchema.parse({ teamKey, limit: listPageSize }))
       : undefined;
-  const input = fromUrl ?? fallback;
-  return useQuery({
-    queryKey: ["issues", input],
-    queryFn:
-      input === undefined ? skipToken : () => api.issues.list.query(input),
-    placeholderData: keepPreviousData,
-  });
+  return useIssuePages(fromUrl ?? fallback);
 }
 
 const PeekStateSchema = z.object({ peek: z.literal("pushed") });

@@ -27,6 +27,17 @@ const surfaces: { name: string; open: (page: Page) => Promise<void> }[] = [
     },
   },
   {
+    name: "issue detail with a toast",
+    open: async (page) => {
+      await page.goto("/issues/AI-1");
+      await page.locator("#property-priority").selectOption("Low");
+      await expect(page.locator(".toast")).toContainText("priority set to Low");
+      await expect(
+        page.getByRole("heading", { name: "Acceptance", exact: true }),
+      ).toBeVisible();
+    },
+  },
+  {
     name: "command palette",
     open: async (page) => {
       await page.goto("/issues");

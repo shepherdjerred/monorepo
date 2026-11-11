@@ -1,5 +1,6 @@
 import { useOutletContext } from "react-router";
-import type { BootstrapData, Issue } from "#client/data/api.ts";
+import type { BootstrapData } from "#client/data/api.ts";
+import type { IssuePages } from "#client/issues/issue-list-query.ts";
 import type { View } from "./route.ts";
 
 /** What the persistent layout shares with the routed page beneath it. */
@@ -7,7 +8,8 @@ export type ShellContext = {
   bootstrap: BootstrapData;
   teamKey: string;
   view: View;
-  list: { items: Issue[]; loading: boolean; busy: boolean; error: unknown };
+  /** The issues of the view, as far as they have been paged in. */
+  list: IssuePages;
   /** The issue the keyboard selection rests on, if any. */
   current: string | undefined;
   setCurrent: (identifier: string) => void;

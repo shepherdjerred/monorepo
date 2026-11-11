@@ -1,6 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "react-router";
 import { api } from "#client/data/api.ts";
+import {
+  listPageSize,
+  useIssuePages,
+} from "#client/issues/issue-list-query.ts";
+import { IssueListSchema } from "#shared/schema.ts";
 import { Avatar, ErrorNotice } from "#client/ui/ui.tsx";
 import { ActivityList } from "#client/issues/activity.tsx";
 import { AbsoluteTime, RelativeTime } from "#client/ui/time.tsx";
@@ -17,16 +22,16 @@ export function Actors() {
     enabled: key !== undefined,
   });
   const actor = actors.data?.find((a) => a.key === key);
-  const created = useQuery({
-    queryKey: ["actor-created", key],
-    queryFn: () =>
-      api.issues.list.query({
-        creatorKey: key,
-        includeArchived: true,
-        limit: "all",
-      }),
-    enabled: key !== undefined,
-  });
+  // Paged like every other issue list, so edits reach these rows too.
+  const created = useIssuePages(
+    key === undefined
+      ? undefined
+      : IssueListSchema.parse({
+          creatorKey: key,
+          includeArchived: true,
+          limit: listPageSize,
+        }),
+  );
   const votes = useQuery({
     queryKey: ["actor-votes", key],
     queryFn: () => api.actors.votes.query({ key: key ?? "" }),
@@ -79,13 +84,21 @@ export function Actors() {
           <section>
             <h3>Created issues</h3>
             {created.error !== null && <ErrorNotice error={created.error} />}
-            {created.data?.items.map((issue) => (
+            {created.items.map((issue) => (
               <p key={issue.id}>
                 <Link to={`/issues/${issue.identifier}`}>
                   {issue.identifier} · {issue.title}
                 </Link>
               </p>
             ))}
+            {created.moreError !== null && (
+              <ErrorNotice error={created.moreError} />
+            )}
+            {created.hasMore && (
+              <button disabled={created.loadingMore} onClick={created.loadMore}>
+                {created.loadingMore ? "Loading…" : "Load more issues"}
+              </button>
+            )}
           </section>
           <section>
             <h3>Votes</h3>

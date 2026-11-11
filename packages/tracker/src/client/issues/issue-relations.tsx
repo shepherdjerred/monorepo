@@ -1,12 +1,10 @@
 import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
 import { Link } from "react-router";
 import { Trash2 } from "lucide-react";
 import { z } from "zod";
-import { api, refresh, type IssueDetailData } from "#client/data/api.ts";
-import { currentActor } from "#client/data/identity.ts";
-import { ErrorNotice, Modal } from "#client/ui/ui.tsx";
-import { announce } from "#client/shell/announce.tsx";
+import type { IssueDetailData } from "#client/data/api.ts";
+import { addRelation, removeRelation } from "#client/data/detail-mutations.ts";
+import { Modal } from "#client/ui/ui.tsx";
 
 const RelationTypeSchema = z.enum([
   "related",
@@ -26,29 +24,21 @@ export function IssueRelations({
   const [target, setTarget] = useState("");
   const [type, setType] =
     useState<z.infer<typeof RelationTypeSchema>>("related");
-  const add = useMutation({
-    mutationFn: () =>
-      api.relations.create.mutate({
-        actor: currentActor(),
-        identifier: issue.identifier,
-        target: target.toUpperCase(),
-        type,
-      }),
-    onSuccess: () => {
+  const [saving, setSaving] = useState(false);
+  async function add() {
+    // A mistyped identifier is common, so the dialog stays until it is saved.
+    setSaving(true);
+    const outcome = await addRelation(
+      issue.identifier,
+      target.toUpperCase(),
+      type,
+    );
+    setSaving(false);
+    if (outcome.ok) {
       setAdding(false);
       setTarget("");
-      announce("Relation added");
-      void refresh();
-    },
-  });
-  const remove = useMutation({
-    mutationFn: (id: string) =>
-      api.relations.delete.mutate({ actor: currentActor(), id }),
-    onSuccess: () => {
-      announce("Relation removed");
-      void refresh();
-    },
-  });
+    }
+  }
   return (
     <section className="relations">
       <div className="section-heading">
@@ -57,7 +47,6 @@ export function IssueRelations({
           className="text-button"
           disabled={disabled}
           onClick={() => {
-            add.reset();
             setAdding(true);
           }}
         >
@@ -83,9 +72,9 @@ export function IssueRelations({
             <button
               className="icon-button"
               aria-label={`Remove relation to ${other.identifier}`}
-              disabled={disabled}
+              disabled={disabled || r.id.startsWith("optimistic-")}
               onClick={() => {
-                remove.mutate(r.id);
+                void removeRelation(r);
               }}
             >
               <Trash2 size={13} />
@@ -93,7 +82,6 @@ export function IssueRelations({
           </div>
         );
       })}
-      {remove.error !== null && <ErrorNotice error={remove.error} />}
       <Modal
         title="Add relation"
         open={adding}
@@ -104,7 +92,7 @@ export function IssueRelations({
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            add.mutate();
+            void add();
           }}
         >
           <label>
@@ -133,9 +121,8 @@ export function IssueRelations({
               pattern="[A-Za-z][A-Za-z0-9]*-[1-9][0-9]*"
             />
           </label>
-          {add.error !== null && <ErrorNotice error={add.error} />}
           <div className="actions">
-            <button className="primary" disabled={add.isPending}>
+            <button className="primary" disabled={saving}>
               Add relation
             </button>
           </div>

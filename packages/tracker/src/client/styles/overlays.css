@@ -273,3 +273,75 @@
     padding-bottom: calc(14px + env(safe-area-inset-bottom));
   }
 }
+/* Toasts stack above everything, newest nearest the edge of the screen. */
+.toast-viewport {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 60;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 8px;
+  width: min(380px, calc(100vw - 32px));
+}
+.toast-viewport:focus-visible {
+  outline-offset: 6px;
+}
+.toast {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  box-shadow: var(--shadow);
+  transform: translate(
+    var(--toast-swipe-movement-x, 0),
+    var(--toast-swipe-movement-y, 0)
+  );
+}
+.toast[data-limited],
+.toast[data-ending-style] {
+  display: none;
+}
+.toast[data-type="error"] {
+  border-color: var(--danger);
+}
+.toast[data-type="error"] .toast-title {
+  color: var(--danger);
+}
+.toast-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 10px 10px 14px;
+}
+.toast-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+.toast-action {
+  flex: none;
+  padding: 5px 10px;
+  font-size: 12px;
+  color: var(--accent);
+}
+.toast-close {
+  flex: none;
+}
+@media (max-width: 767px) {
+  .toast-viewport {
+    right: 16px;
+    left: 16px;
+    /* Clear of the bottom navigation bar and the home indicator. */
+    bottom: calc(78px + env(safe-area-inset-bottom));
+    width: auto;
+  }
+  .toast-title {
+    font-size: 13px;
+  }
+  .toast-action {
+    min-height: 40px;
+    padding: 0 14px;
+  }
+}
