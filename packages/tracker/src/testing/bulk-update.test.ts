@@ -223,6 +223,7 @@ it("validates the request shape at the API boundary", async () => {
     ),
     requestId: "bulk-shape",
     writesEnabled: () => Promise.resolve(true),
+    liveUpdatesEnabled: () => Promise.resolve(false),
   });
   const [issue] = await created(1, "Bulk shape");
   if (issue === undefined) throw new Error("Bulk shape fixture is missing");
