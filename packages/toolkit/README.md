@@ -1195,7 +1195,9 @@ inherited by the agent's children.
 
 Each daemon scan parses closed spool segments, redacts each string in each
 record separately with the `brim sync` patterns (so no match spans two
-records or values), applies them in one transaction, and deletes them. Requests are split into
+records or values), applies them in one transaction, and deletes them. A
+streamed response is redacted again once its deltas are assembled, since a
+credential split across them is whole only then. Requests are split into
 blocks (system parts, tool definitions, `messages[]` or Responses `input[]`
 items) stored once each by SHA-256 and zstd-compressed; unknown and protobuf
 bodies are kept whole. A request that continues a server-side response (Codex

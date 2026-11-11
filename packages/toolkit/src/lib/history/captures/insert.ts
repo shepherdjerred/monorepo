@@ -8,6 +8,7 @@ import {
   type BlockRef,
 } from "./blocks.ts";
 import { asRecord } from "./json.ts";
+import { redactJsonValues } from "./redact.ts";
 import {
   CAPTURE_FORMATS,
   chainedOutput,
@@ -61,13 +62,17 @@ export function usageJson(
   return usage == null ? null : JSON.stringify(usage);
 }
 
+/**
+ * Stores the assembled response, redacted again: a streamed credential split
+ * across deltas is whole only once they are joined.
+ */
 export function storeResponse(
   store: CaptureStore,
   response: ParsedResponse | null,
 ): string | null {
   return response === null
     ? null
-    : store.putBlob(JSON.stringify(response.value));
+    : store.putBlob(JSON.stringify(redactJsonValues(response.value).value));
 }
 
 const CwdRowSchema = z.object({ cwd: z.string().nullable() });

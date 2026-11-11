@@ -153,6 +153,18 @@ async function detail(context: Fixture, id: number) {
 
 const Count = z.object({ count: z.number() });
 
+/** Every stored blob, decoded, joined. */
+function storedBlobs(context: Fixture): string {
+  return context.store
+    .all("SELECT hash FROM blobs")
+    .map((row) =>
+      new TextDecoder().decode(
+        context.store.blob(z.object({ hash: z.string() }).parse(row).hash),
+      ),
+    )
+    .join("");
+}
+
 function requestBody(record: CaptureRecord | undefined): unknown {
   if (
     record?.kind !== "http" ||
@@ -558,14 +570,7 @@ describe("capture spool handling", () => {
       const body = JSON.stringify(await detail(context, capture.id));
       expect(body).not.toContain(key);
     }
-    const stored = context.store
-      .all("SELECT hash FROM blobs")
-      .map((row) =>
-        new TextDecoder().decode(
-          context.store.blob(z.object({ hash: z.string() }).parse(row).hash),
-        ),
-      )
-      .join("");
+    const stored = storedBlobs(context);
     expect(stored).not.toContain(key);
     expect(stored).toContain("REDACTED-openai-key");
   });
@@ -932,6 +937,76 @@ describe("capture redaction boundaries", () => {
       .split("\n")
       .map((line): unknown => JSON.parse(line));
     expect(lines.slice(0, records.length)).toEqual(records);
+  });
+});
+
+describe("assembled response redaction", () => {
+  test("redacts a key split across streamed deltas before it is stored", async () => {
+    const context = await fixture();
+    // Fabricated, low-entropy stand-ins; not real credentials.
+    const openai = `sk-proj-${"c".repeat(60)}`;
+    const github = `ghp_${"d".repeat(36)}`;
+    const anthropic = `sk-ant-api03-${"e".repeat(60)}`;
+    const chat = chatHttp({
+      id: "chat-split",
+      at: "2026-11-10T03:23:00.000Z",
+      status: 200,
+      contentType: "text/event-stream",
+      body: [
+        chatChunk({ role: "assistant", content: `key ${openai.slice(0, 20)}` }),
+        chatChunk({ content: `${openai.slice(20)} done` }),
+        chatChunk({
+          tool_calls: [
+            {
+              index: 0,
+              id: "call_a",
+              function: {
+                name: "exec",
+                arguments: `{"t":"${github.slice(0, 9)}`,
+              },
+            },
+          ],
+        }),
+        chatChunk({
+          tool_calls: [
+            { index: 0, function: { arguments: `${github.slice(9)}"}` } },
+          ],
+        }),
+        chatChunk({}, "tool_calls"),
+      ].join(""),
+    });
+    const claude = claudeHttp({
+      id: "claude-split",
+      at: "2026-11-10T03:24:00.000Z",
+      body: { model: "m", messages: [{ role: "user", content: "hi" }] },
+      response: [
+        {
+          type: "content_block_start",
+          index: 0,
+          content_block: { type: "text", text: "" },
+        },
+        ...[anthropic.slice(0, 25), anthropic.slice(25)].map((text) => ({
+          type: "content_block_delta",
+          index: 0,
+          delta: { type: "text_delta", text },
+        })),
+      ],
+    });
+    await ingest(context, [chat, claude]);
+    const { captures } = HistoryApiCapturesResponseSchema.parse(
+      await fetchJson(context, "/v1/captures"),
+    );
+    expect(captures).toHaveLength(2);
+    const details = await Promise.all(
+      captures.map(async (capture) => detail(context, capture.id)),
+    );
+    const exposed = `${JSON.stringify(details)}${storedBlobs(context)}`;
+    for (const key of [openai, github, anthropic]) {
+      expect(exposed).not.toContain(key);
+    }
+    for (const kind of ["openai-key", "github-token", "anthropic-key"]) {
+      expect(exposed).toContain(`REDACTED-${kind}`);
+    }
   });
 });
 
