@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.20.1",
+  "version": "16.22.1",
   "data": {
     "Kaisa": {
       "id": "Kaisa",
@@ -554,6 +554,68 @@
           "name": "Heavenscale Kai'Sa (Beacon)",
           "chromas": false,
           "parentSkin": 59
+        },
+        {
+          "id": "145083",
+          "num": 83,
+          "name": "K/DA FIRESTARTER Kai'Sa",
+          "chromas": false
+        },
+        {
+          "id": "145084",
+          "num": 84,
+          "name": "K/DA FIRESTARTER Kai'Sa (Ruby)",
+          "chromas": false,
+          "parentSkin": 83
+        },
+        {
+          "id": "145085",
+          "num": 85,
+          "name": "K/DA FIRESTARTER Kai'Sa (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 83
+        },
+        {
+          "id": "145086",
+          "num": 86,
+          "name": "K/DA FIRESTARTER Kai'Sa (Sapphire)",
+          "chromas": false,
+          "parentSkin": 83
+        },
+        {
+          "id": "145087",
+          "num": 87,
+          "name": "K/DA FIRESTARTER Kai'Sa (Emerald)",
+          "chromas": true,
+          "parentSkin": 83
+        },
+        {
+          "id": "145088",
+          "num": 88,
+          "name": "K/DA FIRESTARTER Kai'Sa (Citrine)",
+          "chromas": false,
+          "parentSkin": 83
+        },
+        {
+          "id": "145089",
+          "num": 89,
+          "name": "K/DA FIRESTARTER Kai'Sa (Turquoise)",
+          "chromas": false,
+          "parentSkin": 83
+        },
+        {
+          "id": "145090",
+          "num": 90,
+          "name": "K/DA FIRESTARTER Kai'Sa (Pearl)",
+          "chromas": false,
+          "parentSkin": 83
+        },
+        {
+          "id": "145091",
+          "num": 91,
+          "name": "K/DA FIRESTARTER Kai'Sa (Obsidian)",
+          "chromas": false,
+          "parentSkin": 83
         }
       ],
       "lore": "Claimed by the Void when she was only a child, Kai'Sa managed to survive through sheer tenacity and strength of will. Her experiences have made her a deadly hunter and, to some, the harbinger of a future they would rather not live to see. Having entered into an uneasy symbiosis with a living Void carapace, the time will soon come when she must decide whether to forgive those mortals who would call her a monster, and defeat the coming darkness together… or simply to forget, as the Void consumes the world that left her behind.",

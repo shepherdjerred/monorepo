@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.20.1",
+  "version": "16.22.1",
   "data": {
     "MonkeyKing": {
       "id": "MonkeyKing",
@@ -290,7 +290,7 @@
         "spellblock": 28,
         "spellblockperlevel": 2.05,
         "attackrange": 175,
-        "hpregen": 3.5,
+        "hpregen": 5.5,
         "hpregenperlevel": 0.65,
         "mpregen": 8,
         "mpregenperlevel": 0.8,

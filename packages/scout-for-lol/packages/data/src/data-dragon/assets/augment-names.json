@@ -1,5 +1,5 @@
 {
-  "sourceVersions": ["16.19"],
+  "sourceVersions": ["16.19", "16.22"],
   "augments": {
     "1": {
       "apiName": "AcceleratingSorcery",
@@ -2152,6 +2152,170 @@
     "2157": {
       "apiName": "Upgrade_DeathDance",
       "name": "Upgrade Death's Dance"
+    },
+    "3004": {
+      "apiName": "GetJinxed",
+      "name": "Get Jinxed"
+    },
+    "3016": {
+      "apiName": "ThirdTimesTheHarm",
+      "name": "Third Times the Harm"
+    },
+    "3018": {
+      "apiName": "BigShot",
+      "name": "Big Shot"
+    },
+    "3025": {
+      "apiName": "Sound_Barrier",
+      "name": "Sound Barrier"
+    },
+    "3036": {
+      "apiName": "DoubleTime",
+      "name": "Double Time"
+    },
+    "3039": {
+      "apiName": "Salvation",
+      "name": "Salvation"
+    },
+    "3048": {
+      "apiName": "BouncingBees",
+      "name": "Bouncing Bees"
+    },
+    "3049": {
+      "apiName": "ArmoredImpact",
+      "name": "Armored Impact"
+    },
+    "3051": {
+      "apiName": "BlueBarrier",
+      "name": "Blue Barrier"
+    },
+    "3052": {
+      "apiName": "HandsOffTheTalent",
+      "name": "Hands off the Talent"
+    },
+    "3053": {
+      "apiName": "MoshMonster",
+      "name": "Mosh Monster"
+    },
+    "3055": {
+      "apiName": "UltimateRecursion",
+      "name": "Ultimate Recursion"
+    },
+    "3058": {
+      "apiName": "TickleMonster",
+      "name": "Tickle Monster"
+    },
+    "3059": {
+      "apiName": "NoManaNoProblem",
+      "name": "No Mana, No Problem"
+    },
+    "3060": {
+      "apiName": "OneHitWonder",
+      "name": "One Hit Wonder"
+    },
+    "3063": {
+      "apiName": "GiftoftheDrowned",
+      "name": "Gift of the Drowned"
+    },
+    "3071": {
+      "apiName": "BrassBlast",
+      "name": "Brass Blast"
+    },
+    "3075": {
+      "apiName": "Recoil",
+      "name": "Recoil"
+    },
+    "3078": {
+      "apiName": "TheBoomAndTheBass",
+      "name": "The Boom and the Bass"
+    },
+    "3079": {
+      "apiName": "Totentanz",
+      "name": "Totentanz"
+    },
+    "3081": {
+      "apiName": "WeaponOfDestiny",
+      "name": "Weapon of Destiny"
+    },
+    "3085": {
+      "apiName": "FlowOfSpirit",
+      "name": "Flow of Spirit"
+    },
+    "3086": {
+      "apiName": "BEES",
+      "name": "BEES!!!"
+    },
+    "3088": {
+      "apiName": "CrimsonCobalt",
+      "name": "CRIMSON COBALT"
+    },
+    "3094": {
+      "apiName": "LichBrain",
+      "name": "Lich Brain"
+    },
+    "3116": {
+      "apiName": "TakeemDownDownDown",
+      "name": "Take'em Down Down Down"
+    },
+    "3118": {
+      "apiName": "ArcaneAxiom",
+      "name": "Arcane Axiom"
+    },
+    "3121": {
+      "apiName": "Fruitify",
+      "name": "Fruitify"
+    },
+    "3123": {
+      "apiName": "JeweledBracelet",
+      "name": "Jeweled Bracelet"
+    },
+    "3129": {
+      "apiName": "SapMagic",
+      "name": "Sap Magic"
+    },
+    "3131": {
+      "apiName": "StillHere",
+      "name": "Still Here"
+    },
+    "3132": {
+      "apiName": "HeavyIsTheCrown",
+      "name": "Heavy Is The Crown"
+    },
+    "3134": {
+      "apiName": "LonelyWarrior",
+      "name": "Lonely Warrior"
+    },
+    "3149": {
+      "apiName": "GroupHug",
+      "name": "Group Hug"
+    },
+    "3150": {
+      "apiName": "Upgrade_Stormsurge",
+      "name": "Upgrade Stormsurge"
+    },
+    "3159": {
+      "apiName": "RISE",
+      "name": "RISE"
+    },
+    "3163": {
+      "apiName": "EnchantingButterflies",
+      "name": "Enchanting Butterflies"
+    },
+    "3170": {
+      "apiName": "GoH_PentakillAug_Q",
+      "name": "HEAVY"
+    },
+    "3171": {
+      "apiName": "GoH_PentakillAug_W",
+      "name": "POWER"
+    },
+    "3172": {
+      "apiName": "GoH_PentakillAug_E",
+      "name": "THRASH"
+    },
+    "3173": {
+      "apiName": "GoH_PentakillAug_R",
+      "name": "DOOM"
     },
     "7001": {
       "apiName": "Upgrade_ZzRotPortal",

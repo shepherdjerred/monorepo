@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.20.1",
+  "version": "16.22.1",
   "data": {
     "Sion": {
       "id": "Sion",
@@ -441,7 +441,7 @@
       },
       "stats": {
         "hp": 655,
-        "hpperlevel": 87,
+        "hpperlevel": 95,
         "mp": 400,
         "mpperlevel": 52,
         "movespeed": 345,

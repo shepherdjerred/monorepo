@@ -85,12 +85,12 @@
         "ThreshRWallThickness": [30, 30, 30],
         "ThreshRWallLength": [470.228, 470.228, 470.228],
         "APRatio": [1, 1, 1],
-        "Damage": [250, 400, 550],
+        "Damage": [200, 350, 500],
         "SlowDuration": [2, 2, 2],
         "SlowAmount": [99, 99, 99],
         "WallDuration": [4, 4, 4]
       },
-      "resolvedDescription": "Thresh creates a prison of spectral walls, Slowing champions by 99% for 2 seconds and dealing 250/400/550 (+100% AP) magic damage. Walls break after one collision, and after one is broken, the rest deal no damage and Slow for half duration.",
+      "resolvedDescription": "Thresh creates a prison of spectral walls, Slowing champions by 99% for 2 seconds and dealing 200/350/500 (+100% AP) magic damage. Walls break after one collision, and after one is broken, the rest deal no damage and Slow for half duration.",
       "unresolved": []
     }
   }

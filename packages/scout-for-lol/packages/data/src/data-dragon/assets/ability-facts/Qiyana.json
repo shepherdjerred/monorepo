@@ -32,8 +32,8 @@
       "costType": "Mana",
       "rangeByRank": [525, 525, 525, 525, 525],
       "dataValues": {
-        "VanillaBase": [80, 110, 140, 170, 200],
-        "BaseDamage": [80, 110, 140, 170, 200],
+        "VanillaBase": [70, 100, 130, 160, 190],
+        "BaseDamage": [70, 100, 130, 160, 190],
         "StealthDuration": [3, 3, 3, 3, 3],
         "TremorBonus": [0.4, 0.4, 0.4, 0.4, 0.4],
         "Haste": [0.2, 0.2, 0.2, 0.2, 0.2],
@@ -45,7 +45,7 @@
         "FalloffMod": [0.75, 0.75, 0.75, 0.75, 0.75],
         "JungleDamageAmp": [1.6, 1.6, 1.6, 1.6, 1.6]
       },
-      "resolvedDescription": "If Qiyana does not have an Enchantment, she slashes, dealing 80/110/140/170/200 (+90% bonus AD) physical damage to enemies in a small area. If she does, this Ability gains extra range and an additional effect based on the type of Enchantment:Ice Enchantment: Briefly Roots, then Slows by 20% for 1 second.Rock Enchantment: Deals an additional {{ tremordamage }} physical damage to units below 50% Health.Wild Enchantment: Leaves a trail that turns Qiyana Invisible and grants 20% Move Speed.",
+      "resolvedDescription": "If Qiyana does not have an Enchantment, she slashes, dealing 70/100/130/160/190 (+90% bonus AD) physical damage to enemies in a small area. If she does, this Ability gains extra range and an additional effect based on the type of Enchantment:Ice Enchantment: Briefly Roots, then Slows by 20% for 1 second.Rock Enchantment: Deals an additional {{ tremordamage }} physical damage to units below 50% Health.Wild Enchantment: Leaves a trail that turns Qiyana Invisible and grants 20% Move Speed.",
       "unresolved": ["tremordamage"]
     },
     "W": {

@@ -88,14 +88,13 @@
         "ExitBaseDamage": [50, 100, 150],
         "ExitSlowPercent": [-0.5, -0.5, -0.5],
         "AreaDuration": [3, 3.5, 4],
-        "RBuffDuration": [3.5, 4.25, 5],
         "AoESize": [700, 700, 700],
         "StunDuration": [1.5, 1.75, 2],
         "MSMultiplier": [2, 2, 2],
         "JumpMaxDistance": [250, 250, 250],
         "JumpMinDistance": [25, 25, 25]
       },
-      "resolvedDescription": "Leap in a direction. Upon landing, Aurora converges the realms, sending out a pulse of spirit energy that deals 175/275/375 (+70% AP) magic damage and Slows enemies hit by 30% for 2 seconds. The area of convergence stays active for 3/3.5/4 seconds, granting Aurora Realm Hopper for 3.5/4.25/5 seconds, allowing her to jump from one edge of the area to another. Enemies attempting to enter or leave the area are Slowed by 50% for 1.5/1.75/2 seconds. Aurora can Recast this Ability to end the effect early.",
+      "resolvedDescription": "Leap in a direction. Upon landing, Aurora converges the realms, sending out a pulse of spirit energy that deals 175/275/375 (+70% AP) magic damage and Slows enemies hit by 30% for 2 seconds. The area of convergence stays active for 3/3.5/4 seconds, granting Aurora Realm Hopper for 3/3.5/4 seconds, allowing her to jump from one edge of the area to another. Enemies attempting to enter or leave the area are Slowed by 50% for 1.5/1.75/2 seconds. Aurora can Recast this Ability to end the effect early.",
       "unresolved": []
     }
   }

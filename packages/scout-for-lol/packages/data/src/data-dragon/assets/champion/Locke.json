@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.20.1",
+  "version": "16.22.1",
   "data": {
     "Locke": {
       "id": "Locke",
@@ -103,7 +103,7 @@
         "hp": 620,
         "hpperlevel": 109,
         "mp": 280,
-        "mpperlevel": 70,
+        "mpperlevel": 60,
         "movespeed": 340,
         "armor": 32,
         "armorperlevel": 4.2,
@@ -203,8 +203,8 @@
           "maxrank": 5,
           "cooldown": [18, 17, 16, 15, 14],
           "cooldownBurn": "18/17/16/15/14",
-          "cost": [50, 55, 60, 65, 70],
-          "costBurn": "50/55/60/65/70",
+          "cost": [60, 65, 70, 75, 80],
+          "costBurn": "60/65/70/75/80",
           "datavalues": {},
           "effect": [
             null,

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.20.1",
+  "version": "16.22.1",
   "data": {
     "Jinx": {
       "id": "Jinx",
@@ -535,7 +535,7 @@
         "difficulty": 6
       },
       "stats": {
-        "hp": 630,
+        "hp": 610,
         "hpperlevel": 105,
         "mp": 260,
         "mpperlevel": 50,

@@ -66,7 +66,7 @@
       "dataValues": {
         "BaseDamage": [60, 70, 80, 90, 100],
         "HitADRatio": [0.6, 0.6, 0.6, 0.6, 0.6],
-        "ExplosionBaseDamage": [10, 35, 60, 85, 110],
+        "ExplosionBaseDamage": [25, 50, 75, 100, 125],
         "ExplosionRadius": [385, 385, 385, 385, 385],
         "SlowAmount": [0.35, 0.35, 0.35, 0.35, 0.35],
         "SlowDuration": [1.5, 1.5, 1.5, 1.5, 1.5],
@@ -74,7 +74,7 @@
         "ExplosionDamageMultihitPenalty": [0.75, 0.75, 0.75, 0.75, 0.75],
         "MinionMod": [1, 1, 1, 1, 1]
       },
-      "resolvedDescription": "Smolder lets out an adorable flaming sneeze, dealing 60/70/80/90/100 (+60% bonus AD) physical damage and Slowing by 35% for 1.5 seconds. Hitting champions causes an explosion, dealing 10/35/60/85/110 (+50% bonus AD) (+80% AP) physical + {{ spell.smolderp:passive_wdamageincrease }} magic damage.",
+      "resolvedDescription": "Smolder lets out an adorable flaming sneeze, dealing 60/70/80/90/100 (+60% bonus AD) physical damage and Slowing by 35% for 1.5 seconds. Hitting champions causes an explosion, dealing 25/50/75/100/125 (+50% bonus AD) (+80% AP) physical + {{ spell.smolderp:passive_wdamageincrease }} magic damage.",
       "unresolved": ["spell.smolderp:passive_wdamageincrease"]
     },
     "E": {

@@ -852,10 +852,10 @@
     },
     "1086": {
       "name": "Doran's Bow",
-      "description": "<mainText><stats><attention>8</attention> Attack Damage<br><attention>15%</attention> Attack Speed<br><attention>1.5%</attention> Omnivamp</stats><br><br></mainText>",
+      "description": "<mainText><stats><attention>7</attention> Attack Damage<br><attention>15%</attention> Attack Speed<br><attention>1.5%</attention> Omnivamp</stats><br><br></mainText>",
       "plaintext": "",
       "stats": {
-        "FlatPhysicalDamageMod": 8,
+        "FlatPhysicalDamageMod": 7,
         "PercentAttackSpeedMod": 0.15
       },
       "gold": {
@@ -2807,11 +2807,11 @@
     },
     "2501": {
       "name": "Overlord's Bloodmail",
-      "description": "<mainText><stats><attention>30</attention> Attack Damage<br><attention>550</attention> Health</stats><br><br><passive>Tyranny</passive><br>Gain 2.5% of your <healing>bonus Health</healing> as <scaleAD>Attack Damage</scaleAD>. <br><br><passive>Retribution</passive><br>Gain up to 12% increased <scaleAD>Attack Damage</scaleAD> based on your percent missing Health. </mainText>",
+      "description": "<mainText><stats><attention>40</attention> Attack Damage<br><attention>550</attention> Health</stats><br><br><passive>Tyranny</passive><br>Gain 2.5% of your <healing>bonus Health</healing> as <scaleAD>Attack Damage</scaleAD>. <br><br><passive>Retribution</passive><br>Gain up to 10% increased <scaleAD>Attack Damage</scaleAD> based on your percent missing Health. </mainText>",
       "plaintext": "",
       "stats": {
         "FlatHPPoolMod": 550,
-        "FlatPhysicalDamageMod": 30
+        "FlatPhysicalDamageMod": 40
       },
       "gold": {
         "base": 1000,
@@ -3005,7 +3005,7 @@
     },
     "2520": {
       "name": "Bastionbreaker",
-      "description": "<mainText><stats><attention>55</attention> Attack Damage<br><attention>22</attention> Lethality<br><attention>15</attention> Ability Haste</stats><br><br><passive>Shaped Charge</passive> (0s)<br>Dealing Ability damage to a Champion or Epic Monster deals an additional <trueDamage> true damage</trueDamage>.<br><br><passive>Sabotage</passive><br>Taking down a champion within 3 seconds of damaging them grants Sabotage for 90 seconds. While you have Sabotage, your next Attack against an Epic Monster or Turret deals an additional <trueDamage> true damage</trueDamage> over 3 seconds. </mainText>",
+      "description": "<mainText><stats><attention>55</attention> Attack Damage<br><attention>18</attention> Lethality<br><attention>15</attention> Ability Haste</stats><br><br><passive>Shaped Charge</passive> (0s)<br>Dealing Ability damage to a Champion or Epic Monster deals an additional <trueDamage> true damage</trueDamage>.<br><br><passive>Sabotage</passive><br>Taking down a champion within 3 seconds of damaging them grants Sabotage for 25000 seconds. While you have Sabotage, your next Attack against an Epic Monster or Turret deals an additional <trueDamage> true damage</trueDamage> over 3 seconds. </mainText>",
       "plaintext": "",
       "stats": {
         "FlatPhysicalDamageMod": 55
@@ -3331,10 +3331,10 @@
         "FlatMovementSpeedMod": 45
       },
       "gold": {
-        "base": 700,
+        "base": 800,
         "purchasable": true,
-        "total": 1000,
-        "sell": 700
+        "total": 1100,
+        "sell": 770
       },
       "from": ["1001"],
       "into": ["3168"],
@@ -5677,8 +5677,8 @@
       "gold": {
         "base": 0,
         "purchasable": true,
-        "total": 1000,
-        "sell": 700
+        "total": 1100,
+        "sell": 770
       },
       "from": ["3008"],
       "maps": {
@@ -7789,11 +7789,11 @@
         "sell": 140
       },
       "maps": {
-        "11": true,
+        "11": false,
         "12": false,
         "22": false,
         "30": false,
-        "453": true
+        "453": false
       },
       "tags": [
         "Health",
@@ -8194,7 +8194,7 @@
     },
     "6621": {
       "name": "Dawncore",
-      "description": "<mainText><stats><attention>45</attention> Ability Power<br><attention>16%</attention> Heal and Shield Power<br><attention>100%</attention> Base Mana Regen</stats><br><br><passive>First Light</passive><br>Gain <healing>2% Heal and Shield Power</healing> and <scaleAP>10 Ability Power</scaleAP> per 100% Base Mana Regen.</mainText>",
+      "description": "<mainText><stats><attention>45</attention> Ability Power<br><attention>16%</attention> Heal and Shield Power<br><attention>100%</attention> Base Mana Regen</stats><br><br><passive>First Light</passive><br>Gain <healing>2% Heal and Shield Power</healing> and <scaleAP>15 Ability Power</scaleAP> per 100% Base Mana Regen.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatMagicDamageMod": 45
@@ -8914,7 +8914,7 @@
     },
     "6697": {
       "name": "Hubris",
-      "description": "<mainText><stats><attention>55</attention> Attack Damage<br><attention>18</attention> Lethality<br><attention>10</attention> Ability Haste</stats><br><br><passive>Eminence</passive><br>When a champion that you damaged within 3 seconds dies, gain <physicalDamage>12 Attack Damage plus 3 per champion killed</physicalDamage> for 90 seconds.</mainText>",
+      "description": "<mainText><stats><attention>55</attention> Attack Damage<br><attention>18</attention> Lethality<br><attention>10</attention> Ability Haste</stats><br><br><passive>Eminence</passive><br>When a champion that you damaged within 3 seconds dies, gain <physicalDamage> Attack Damage plus  per champion killed</physicalDamage> for 90 seconds.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatPhysicalDamageMod": 55
@@ -10720,7 +10720,7 @@
     },
     "220013": {
       "name": "Poro-Snax",
-      "description": "<mainText><stats></stats><br><br><active>Active - Consume:</active> Serves a scrumptious scoop to a nearby Poro, causing it to grow in size.<br><br><flavorText>This savory blend of Avarosan hen and Freljordian herbs—now finished with a touch of refined Demacian sugarcraft—contains the essential nutrients necessary to keep your Poro positively radiant.<br><br>All proceeds will be donated towards the Cloudfield Youth Choir. Help a Demacian child afford an etwahl, today!</flavorText></mainText>",
+      "description": "<mainText><stats></stats><br><br><active>Active - Consume:</active> Serves a scrumptious scoop to a nearby Poro, causing it to grow in size.<br><br><flavorText>This dazzling confection, coated in sugar crystals, contains all the essential ingredients to keep a Poro sparkling from every angle. Best served under a spotlight. Side effects may include spontaneous dancing, irresistible stage presence, and a fever for the dance floor!</flavorText></mainText>",
       "plaintext": "",
       "stats": {},
       "gold": {
@@ -13748,7 +13748,7 @@
     },
     "226621": {
       "name": "Dawncore",
-      "description": "<mainText><stats><attention>45</attention> Ability Power<br><attention>12%</attention> Heal and Shield Power<br><attention>200%</attention> Base Mana Regen</stats><br><br><passive>First Light</passive><br>Gain <healing>3% Heal and Shield Power</healing> and <scaleAP>10 Ability Power</scaleAP> per <scaleMana>100% Base Mana Regen</scaleMana>.</mainText>",
+      "description": "<mainText><stats><attention>45</attention> Ability Power<br><attention>12%</attention> Heal and Shield Power<br><attention>200%</attention> Base Mana Regen</stats><br><br><passive>First Light</passive><br>Gain <healing>3% Heal and Shield Power</healing> and <scaleAP>15 Ability Power</scaleAP> per <scaleMana>100% Base Mana Regen</scaleMana>.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatMagicDamageMod": 45
@@ -14383,7 +14383,7 @@
     },
     "226697": {
       "name": "Hubris",
-      "description": "<mainText><stats><attention>50</attention> Attack Damage<br><attention>18</attention> Lethality<br><attention>10</attention> Ability Haste</stats><br><br><passive>Eminence</passive><br>When a champion that you have damaged with the last 3 seconds dies, gain <physicalDamage>15 Attack Damage</physicalDamage> <buffedStat>for the rest of the round</buffedStat>, or until slain. Eminence's <physicalDamage>Attack Damage is permanently increased by 2</physicalDamage> each time this triggers.</mainText>",
+      "description": "<mainText><stats><attention>50</attention> Attack Damage<br><attention>18</attention> Lethality<br><attention>10</attention> Ability Haste</stats><br><br><passive>Eminence</passive><br>When a champion that you have damaged with the last 3 seconds dies, gain <physicalDamage> Attack Damage</physicalDamage> <buffedStat>for the rest of the round</buffedStat>, or until slain. Eminence's <physicalDamage>Attack Damage is permanently increased by </physicalDamage> each time this triggers.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatPhysicalDamageMod": 50
@@ -15325,7 +15325,7 @@
     },
     "326621": {
       "name": "Dawncore",
-      "description": "<mainText><stats><attention>50</attention> Ability Power<br><attention>20%</attention> Heal and Shield Power<br><attention>150%</attention> Base Mana Regen</stats><br><br><passive>First Light</passive><br>Gain <healing>2% Heal and Shield Power</healing> and <scaleAP>10 Ability Power</scaleAP> per 100% Base Mana Regen.</mainText>",
+      "description": "<mainText><stats><attention>50</attention> Ability Power<br><attention>20%</attention> Heal and Shield Power<br><attention>150%</attention> Base Mana Regen</stats><br><br><passive>First Light</passive><br>Gain <healing>2% Heal and Shield Power</healing> and <scaleAP>15 Ability Power</scaleAP> per 100% Base Mana Regen.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatMagicDamageMod": 50
@@ -15679,7 +15679,7 @@
     },
     "443079": {
       "name": "Turbo Chemtank",
-      "description": "<mainText><stats><attention>600</attention> Health<br><attention>80</attention> Adaptive Force</stats><br><br>Ignore the next time you are <status>Immobilized</status>, instead dropping a chemical cannister nearby (s Cooldown). Picking up the cannister reduces the Cooldown by 15 seconds and restores <scaleHealth>4% max Health</scaleHealth>. Enemies stepping on the cannister destroy it.</mainText>",
+      "description": "<mainText><stats><attention>600</attention> Health<br><attention>80</attention> Adaptive Force</stats><br><br>Ignore the next time you are <status>Immobilized</status>, instead dropping a chemical cannister nearby (s Cooldown). Picking up the cannister reduces the Cooldown by 15 seconds and restores <scaleHealth>20% max Health</scaleHealth>. Enemies stepping on the cannister destroy it.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatHPPoolMod": 600
@@ -15835,7 +15835,7 @@
     },
     "444636": {
       "name": "Night Harvester",
-      "description": "<mainText><stats><attention>90</attention> Ability Power<br><attention>300</attention> Health<br><attention>25</attention> Ability Haste</stats><br><br><passive>Soulrend</passive> (0s) per champion<br>Damaging a champion with Attacks or Abilities deals an additional <magicDamage> magic damage</magicDamage> and grants you <speed>40% Move Speed</speed> for 1.5 seconds.<br><br><rules>Damaging a new champion will extend the duration of the Move Speed bonus.</rules></mainText>",
+      "description": "<mainText><stats><attention>90</attention> Ability Power<br><attention>300</attention> Health<br><attention>25</attention> Ability Haste</stats><br><br><passive>Soulrend</passive> (0s) per champion<br>Damaging a champion with Attacks or Abilities deals an additional <magicDamage> magic damage</magicDamage> and grants you <speed>60% Move Speed</speed> for 1 seconds.<br><br><rules>Damaging a new champion will extend the duration of the Move Speed bonus.</rules></mainText>",
       "plaintext": "",
       "stats": {
         "FlatHPPoolMod": 300,
@@ -16092,7 +16092,7 @@
     },
     "447100": {
       "name": "Mirage Blade",
-      "description": "<mainText><stats><attention>65</attention> Adaptive Force<br><attention>60%</attention> Attack Speed<br><attention>6%</attention> Move Speed</stats><br><br><passive>Blur</passive><br><OnHit>On-Hit</OnHit> reduce the remaining cooldowns of your Dash and Blink Abilities by 20% (reduced to 5% for Ultimates).</mainText>",
+      "description": "<mainText><stats><attention>65</attention> Adaptive Force<br><attention>60%</attention> Attack Speed<br><attention>6%</attention> Move Speed</stats><br><br><passive>Blur</passive><br><OnHit>On-Hit</OnHit> reduce the remaining cooldowns of your Dash and Blink Abilities by 15% (reduced to 5% for Ultimates).</mainText>",
       "plaintext": "",
       "stats": {
         "PercentAttackSpeedMod": 0.6,
@@ -16333,7 +16333,7 @@
     },
     "447110": {
       "name": "Moonflair Spellblade",
-      "description": "<mainText><stats><attention>85</attention> Ability Power<br><attention>400</attention> Health<br><attention>30%</attention> Tenacity</stats><br><br><passive>Relentless</passive><br>When you use an Ability, reset your auto attack timer and gain <attackSpeed>90% Attack Speed</attackSpeed> for your next 2 Attacks.<br><br>When you Attack, reduce your non-Dash and Blink Abilities Ability Cooldowns by 0.5 seconds.</mainText>",
+      "description": "<mainText><stats><attention>85</attention> Ability Power<br><attention>400</attention> Health<br><attention>30%</attention> Tenacity</stats><br><br><passive>Relentless</passive><br>When you use an Ability, reset your auto attack timer and gain <attackSpeed>90% Attack Speed</attackSpeed> for your next 3 Attacks.<br><br>When you Attack, reduce your non-Dash and Blink Abilities Ability Cooldowns by 0.3 seconds.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatHPPoolMod": 400,
@@ -16633,377 +16633,6 @@
         "453": false
       },
       "tags": ["SpellDamage", "ManaRegen", "AbilityHaste"]
-    },
-    "550001": {
-      "name": "Healthbar Splash: Blue",
-      "description": "",
-      "plaintext": "",
-      "stats": {},
-      "gold": {
-        "base": 0,
-        "purchasable": true,
-        "total": 0,
-        "sell": 0
-      },
-      "maps": {
-        "11": false,
-        "12": false,
-        "22": false,
-        "30": false,
-        "453": false
-      },
-      "tags": [
-        "Health",
-        "SpellBlock",
-        "HealthRegen",
-        "Armor",
-        "Damage",
-        "CriticalStrike",
-        "AttackSpeed",
-        "LifeSteal",
-        "SpellDamage",
-        "Mana",
-        "ManaRegen",
-        "Consumable",
-        "Aura",
-        "Vision",
-        "Trinket",
-        "Stealth",
-        "Active",
-        "GoldPer",
-        "CooldownReduction",
-        "Slow",
-        "SpellVamp",
-        "OnHit",
-        "Boots",
-        "NonbootsMovement",
-        "Tenacity",
-        "MagicPenetration",
-        "ArmorPenetration",
-        "Lane",
-        "Jungle",
-        "Bilgewater",
-        "MagicResist",
-        "AbilityHaste"
-      ]
-    },
-    "550002": {
-      "name": "Healthbar Splash: Orange",
-      "description": "",
-      "plaintext": "",
-      "stats": {},
-      "gold": {
-        "base": 0,
-        "purchasable": true,
-        "total": 0,
-        "sell": 0
-      },
-      "maps": {
-        "11": false,
-        "12": false,
-        "22": false,
-        "30": false,
-        "453": false
-      },
-      "tags": [
-        "Health",
-        "SpellBlock",
-        "HealthRegen",
-        "Armor",
-        "Damage",
-        "CriticalStrike",
-        "AttackSpeed",
-        "LifeSteal",
-        "SpellDamage",
-        "Mana",
-        "ManaRegen",
-        "Consumable",
-        "Aura",
-        "Vision",
-        "Trinket",
-        "Stealth",
-        "Active",
-        "GoldPer",
-        "CooldownReduction",
-        "Slow",
-        "SpellVamp",
-        "OnHit",
-        "Boots",
-        "NonbootsMovement",
-        "Tenacity",
-        "MagicPenetration",
-        "ArmorPenetration",
-        "Lane",
-        "Jungle",
-        "Bilgewater",
-        "MagicResist",
-        "AbilityHaste"
-      ]
-    },
-    "550003": {
-      "name": "Healthbar Splash: Green",
-      "description": "",
-      "plaintext": "",
-      "stats": {},
-      "gold": {
-        "base": 0,
-        "purchasable": true,
-        "total": 0,
-        "sell": 0
-      },
-      "maps": {
-        "11": false,
-        "12": false,
-        "22": false,
-        "30": false,
-        "453": false
-      },
-      "tags": [
-        "Health",
-        "SpellBlock",
-        "HealthRegen",
-        "Armor",
-        "Damage",
-        "CriticalStrike",
-        "AttackSpeed",
-        "LifeSteal",
-        "SpellDamage",
-        "Mana",
-        "ManaRegen",
-        "Consumable",
-        "Aura",
-        "Vision",
-        "Trinket",
-        "Stealth",
-        "Active",
-        "GoldPer",
-        "CooldownReduction",
-        "Slow",
-        "SpellVamp",
-        "OnHit",
-        "Boots",
-        "NonbootsMovement",
-        "Tenacity",
-        "MagicPenetration",
-        "ArmorPenetration",
-        "Lane",
-        "Jungle",
-        "Bilgewater",
-        "MagicResist",
-        "AbilityHaste"
-      ]
-    },
-    "550004": {
-      "name": "Healthbar Splash: Pink",
-      "description": "",
-      "plaintext": "",
-      "stats": {},
-      "gold": {
-        "base": 0,
-        "purchasable": true,
-        "total": 0,
-        "sell": 0
-      },
-      "maps": {
-        "11": false,
-        "12": false,
-        "22": false,
-        "30": false,
-        "453": false
-      },
-      "tags": [
-        "Health",
-        "SpellBlock",
-        "HealthRegen",
-        "Armor",
-        "Damage",
-        "CriticalStrike",
-        "AttackSpeed",
-        "LifeSteal",
-        "SpellDamage",
-        "Mana",
-        "ManaRegen",
-        "Consumable",
-        "Aura",
-        "Vision",
-        "Trinket",
-        "Stealth",
-        "Active",
-        "GoldPer",
-        "CooldownReduction",
-        "Slow",
-        "SpellVamp",
-        "OnHit",
-        "Boots",
-        "NonbootsMovement",
-        "Tenacity",
-        "MagicPenetration",
-        "ArmorPenetration",
-        "Lane",
-        "Jungle",
-        "Bilgewater",
-        "MagicResist",
-        "AbilityHaste"
-      ]
-    },
-    "550005": {
-      "name": "Healthbar Cleanup: Reset Color",
-      "description": "",
-      "plaintext": "",
-      "stats": {},
-      "gold": {
-        "base": 0,
-        "purchasable": true,
-        "total": 0,
-        "sell": 0
-      },
-      "maps": {
-        "11": false,
-        "12": false,
-        "22": false,
-        "30": false,
-        "453": false
-      },
-      "tags": [
-        "Health",
-        "SpellBlock",
-        "HealthRegen",
-        "Armor",
-        "Damage",
-        "CriticalStrike",
-        "AttackSpeed",
-        "LifeSteal",
-        "SpellDamage",
-        "Mana",
-        "ManaRegen",
-        "Consumable",
-        "Aura",
-        "Vision",
-        "Trinket",
-        "Stealth",
-        "Active",
-        "GoldPer",
-        "CooldownReduction",
-        "Slow",
-        "SpellVamp",
-        "OnHit",
-        "Boots",
-        "NonbootsMovement",
-        "Tenacity",
-        "MagicPenetration",
-        "ArmorPenetration",
-        "Lane",
-        "Jungle",
-        "Bilgewater",
-        "MagicResist",
-        "AbilityHaste"
-      ]
-    },
-    "550006": {
-      "name": "Healthbar Splash: Rainbow",
-      "description": "",
-      "plaintext": "",
-      "stats": {},
-      "gold": {
-        "base": 0,
-        "purchasable": true,
-        "total": 0,
-        "sell": 0
-      },
-      "maps": {
-        "11": false,
-        "12": false,
-        "22": false,
-        "30": false,
-        "453": false
-      },
-      "tags": [
-        "Health",
-        "SpellBlock",
-        "HealthRegen",
-        "Armor",
-        "Damage",
-        "CriticalStrike",
-        "AttackSpeed",
-        "LifeSteal",
-        "SpellDamage",
-        "Mana",
-        "ManaRegen",
-        "Consumable",
-        "Aura",
-        "Vision",
-        "Trinket",
-        "Stealth",
-        "Active",
-        "GoldPer",
-        "CooldownReduction",
-        "Slow",
-        "SpellVamp",
-        "OnHit",
-        "Boots",
-        "NonbootsMovement",
-        "Tenacity",
-        "MagicPenetration",
-        "ArmorPenetration",
-        "Lane",
-        "Jungle",
-        "Bilgewater",
-        "MagicResist",
-        "AbilityHaste"
-      ]
-    },
-    "550007": {
-      "name": "Party Favor",
-      "description": "",
-      "plaintext": "",
-      "stats": {},
-      "gold": {
-        "base": 10,
-        "purchasable": true,
-        "total": 10,
-        "sell": 0
-      },
-      "maps": {
-        "11": false,
-        "12": false,
-        "22": false,
-        "30": false,
-        "453": false
-      },
-      "tags": [
-        "Health",
-        "SpellBlock",
-        "HealthRegen",
-        "Armor",
-        "Damage",
-        "CriticalStrike",
-        "AttackSpeed",
-        "LifeSteal",
-        "SpellDamage",
-        "Mana",
-        "ManaRegen",
-        "Consumable",
-        "Aura",
-        "Vision",
-        "Trinket",
-        "Stealth",
-        "Active",
-        "GoldPer",
-        "CooldownReduction",
-        "Slow",
-        "SpellVamp",
-        "OnHit",
-        "Boots",
-        "NonbootsMovement",
-        "Tenacity",
-        "MagicPenetration",
-        "ArmorPenetration",
-        "Lane",
-        "Jungle",
-        "Bilgewater",
-        "MagicResist",
-        "AbilityHaste"
-      ]
     },
     "663039": {
       "name": "Atma's Reckoning",
@@ -18589,11 +18218,11 @@
     },
     "773005": {
       "name": "Atma's Impaler",
-      "description": "<mainText><stats><attention>45</attention> Armor<br><attention>15%</attention> Critical Strike Chance</stats><br><br><jadeUnique>Impact:</jadeUnique> Grants bonus <physicalDamage>Attack Damage</physicalDamage> equal to <physicalDamage>1.5%</physicalDamage> of <scaleHealth>Maximum Health</scaleHealth>.</mainText>",
+      "description": "<mainText><stats><attention>45</attention> Armor<br><attention>18%</attention> Critical Strike Chance</stats><br><br><jadeUnique>Impact:</jadeUnique> Grants bonus <physicalDamage>Attack Damage</physicalDamage> equal to <physicalDamage>2%</physicalDamage> of <scaleHealth>Maximum Health</scaleHealth>.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatArmorMod": 45,
-        "FlatCritChanceMod": 0.15
+        "FlatCritChanceMod": 0.18
       },
       "gold": {
         "base": 780,

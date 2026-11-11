@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.20.1",
+  "version": "16.22.1",
   "data": {
     "Yasuo": {
       "id": "Yasuo",
@@ -677,6 +677,47 @@
           "name": "Petals of Spring Yasuo (Emerald)",
           "chromas": false,
           "parentSkin": 88
+        },
+        {
+          "id": "157097",
+          "num": 97,
+          "name": "True Damage Know My Name Yasuo",
+          "chromas": true
+        },
+        {
+          "id": "157098",
+          "num": 98,
+          "name": "True Damage Know My Name Yasuo (Unlocked)",
+          "chromas": false,
+          "parentSkin": 97
+        },
+        {
+          "id": "157099",
+          "num": 99,
+          "name": "True Damage Know My Name Yasuo (Momentous)",
+          "chromas": false,
+          "parentSkin": 97
+        },
+        {
+          "id": "157100",
+          "num": 100,
+          "name": "True Damage Know My Name Yasuo (Ruby)",
+          "chromas": false,
+          "parentSkin": 97
+        },
+        {
+          "id": "157101",
+          "num": 101,
+          "name": "True Damage Know My Name Yasuo (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 97
+        },
+        {
+          "id": "157102",
+          "num": 102,
+          "name": "True Damage Know My Name Yasuo (Obsidian)",
+          "chromas": false,
+          "parentSkin": 97
         }
       ],
       "lore": "An Ionian of deep resolve, Yasuo is an agile swordsman who wields the air itself against his enemies. As a proud young man, he was falsely accused of murdering his master—unable to prove his innocence, he was forced to slay his own brother in self defense. Even after his master's true killer was revealed, Yasuo still could not forgive himself for all he had done, and now wanders his homeland with only the wind to guide his blade.",

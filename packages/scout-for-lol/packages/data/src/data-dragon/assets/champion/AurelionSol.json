@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.20.1",
+  "version": "16.22.1",
   "data": {
     "AurelionSol": {
       "id": "AurelionSol",
@@ -451,9 +451,10 @@
           "description": "Aurelion Sol summons a black hole, damaging enemies and slowly pulling them toward its center. This ability grants Stardust each time an enemy dies within the black hole and for each second an enemy champion is caught inside it. The center of the black hole executes enemies who are below a certain percentage of their maximum health. Stardust increases Singularity's area as well as the execution threshold.",
           "tooltip": "Aurelion Sol summons a black hole, dealing <magicDamage>{{ damagepersecond }} magic damage</magicDamage> per second and <status>Dragging</status> enemies towards the center for {{ duration }} seconds. Enemies in the center below <scaleHealth>{{ currentexecutionthreshold }}% max Health</scaleHealth> die instantly.<br /><br />The black hole absorbs <span class=\"color3458eb\">Stardust</span> when enemies die within it and each second an enemy champion is inside.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage Per Second"],
+            "label": ["Damage Per Second", "Total AP Ratio"],
             "effect": [
-              "{{ basedamagepersecond }} -> {{ basedamagepersecondNL }}"
+              "{{ basedamagepersecond }} -> {{ basedamagepersecondNL }}",
+              "{{ damageapratiott*100.000000 }}% -> {{ damageapratiottnl*100.000000 }}%"
             ]
           },
           "maxrank": 5,

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.20.1",
+  "version": "16.22.1",
   "data": {
     "Orianna": {
       "id": "Orianna",
@@ -352,7 +352,7 @@
           "id": "OrianaIzunaCommand",
           "name": "Command: Attack",
           "description": "Orianna commands her Ball to fire toward a target location, dealing magic damage to targets along the way (deals less damage to subsequent targets). Her Ball remains at the target location after.",
-          "tooltip": "Orianna commands her <keywordMajor>Ball</keywordMajor> to move to an area, dealing <magicDamage>{{ totaldamagetooltip }} magic damage</magicDamage> to surrounding enemies and to enemies it passes through. Deals {{ reduceddamagepercent }}% less damage to all enemies after the first.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Orianna commands her <keywordMajor>Ball</keywordMajor> to move to an area, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to enemies it passes through and nearby enemies at the destination.<br /><br />Damage is reduced to <magicDamage>{{ reduceddamage }} magic damage</magicDamage> for enemies after the first hit.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Cooldown"],
             "effect": [
@@ -368,9 +368,9 @@
           "datavalues": {},
           "effect": [
             null,
-            [60, 90, 120, 150, 180],
-            [30, 30, 30, 30, 30],
-            [70, 70, 70, 70, 70],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0],
@@ -381,9 +381,9 @@
           ],
           "effectBurn": [
             null,
-            "60/90/120/150/180",
-            "30",
-            "70",
+            "0",
+            "0",
+            "0",
             "0",
             "0",
             "0",

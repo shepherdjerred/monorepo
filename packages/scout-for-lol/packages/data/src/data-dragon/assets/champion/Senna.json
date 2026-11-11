@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.20.1",
+  "version": "16.22.1",
   "data": {
     "Senna": {
       "id": "Senna",
@@ -565,6 +565,68 @@
           "name": "Warhound Senna (Fearless Fang)",
           "chromas": false,
           "parentSkin": 72
+        },
+        {
+          "id": "235081",
+          "num": 81,
+          "name": "True Damage Know My Name Senna",
+          "chromas": false
+        },
+        {
+          "id": "235082",
+          "num": 82,
+          "name": "True Damage Know My Name Senna (Ruby)",
+          "chromas": true,
+          "parentSkin": 81
+        },
+        {
+          "id": "235083",
+          "num": 83,
+          "name": "True Damage Know My Name Senna (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 81
+        },
+        {
+          "id": "235084",
+          "num": 84,
+          "name": "True Damage Know My Name Senna (Sapphire)",
+          "chromas": false,
+          "parentSkin": 81
+        },
+        {
+          "id": "235085",
+          "num": 85,
+          "name": "True Damage Know My Name Senna (Catseye)",
+          "chromas": false,
+          "parentSkin": 81
+        },
+        {
+          "id": "235086",
+          "num": 86,
+          "name": "True Damage Know My Name Senna (Turquoise)",
+          "chromas": false,
+          "parentSkin": 81
+        },
+        {
+          "id": "235087",
+          "num": 87,
+          "name": "True Damage Know My Name Senna (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 81
+        },
+        {
+          "id": "235088",
+          "num": 88,
+          "name": "True Damage Know My Name Senna (Pearl)",
+          "chromas": false,
+          "parentSkin": 81
+        },
+        {
+          "id": "235089",
+          "num": 89,
+          "name": "True Damage Know My Name Senna (Obsidian)",
+          "chromas": false,
+          "parentSkin": 81
         }
       ],
       "lore": "Cursed from childhood to be haunted by the supernatural Black Mist, Senna joined a sacred order known as the Sentinels of Light, and fiercely fought back—only to be killed, her soul imprisoned in a lantern by the cruel specter Thresh. But refusing to lose hope, within the lantern Senna learned to use the Mist, and reemerged to new life, forever changed. Now wielding darkness along with light, Senna seeks to end the Black Mist by turning it against itself—with every blast of her relic weapon, redeeming the souls lost within.",

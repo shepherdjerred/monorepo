@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.20.1",
+  "version": "16.22.1",
   "data": {
     "Ahri": {
       "id": "Ahri",
@@ -667,6 +667,68 @@
           "name": "Coven Ahri (Pristine)",
           "chromas": false,
           "parentSkin": 42
+        },
+        {
+          "id": "103097",
+          "num": 97,
+          "name": "K/DA FIRESTARTER Ahri",
+          "chromas": false
+        },
+        {
+          "id": "103098",
+          "num": 98,
+          "name": "K/DA FIRESTARTER Ahri (Ruby)",
+          "chromas": true,
+          "parentSkin": 97
+        },
+        {
+          "id": "103099",
+          "num": 99,
+          "name": "K/DA FIRESTARTER Ahri (Sapphire)",
+          "chromas": false,
+          "parentSkin": 97
+        },
+        {
+          "id": "103100",
+          "num": 100,
+          "name": "K/DA FIRESTARTER Ahri (Emerald)",
+          "chromas": false,
+          "parentSkin": 97
+        },
+        {
+          "id": "103101",
+          "num": 101,
+          "name": "K/DA FIRESTARTER Ahri (Turquoise)",
+          "chromas": false,
+          "parentSkin": 97
+        },
+        {
+          "id": "103102",
+          "num": 102,
+          "name": "K/DA FIRESTARTER Ahri (Catseye)",
+          "chromas": false,
+          "parentSkin": 97
+        },
+        {
+          "id": "103103",
+          "num": 103,
+          "name": "K/DA FIRESTARTER Ahri (Amethyst)",
+          "chromas": false,
+          "parentSkin": 97
+        },
+        {
+          "id": "103104",
+          "num": 104,
+          "name": "K/DA FIRESTARTER Ahri (Pearl)",
+          "chromas": false,
+          "parentSkin": 97
+        },
+        {
+          "id": "103105",
+          "num": 105,
+          "name": "K/DA FIRESTARTER Ahri (Obsidian)",
+          "chromas": false,
+          "parentSkin": 97
         }
       ],
       "lore": "Innately connected to the magic of the spirit realm, Ahri is a fox-like vastaya who can manipulate her prey's emotions and consume their essence—receiving flashes of their memory and insight from each soul she consumes. Once a powerful yet wayward predator, Ahri is now traveling the world in search of remnants of her ancestors while also trying to replace her stolen memories with ones of her own making.",
