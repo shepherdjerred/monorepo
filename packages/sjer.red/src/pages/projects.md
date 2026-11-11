@@ -118,23 +118,23 @@ This page documents some of the things I've worked on over the years.
 
 ## Featured
 
-### [Astro Open Graph Images](https://github.com/shepherdjerred/monorepo/tree/main/packages/astro-opengraph-images)
+### [Astro Open Graph Images](https://www.npmjs.com/package/astro-opengraph-images)
 
 An Astro integration for generating customizable Open Graph images for static pages and content collections.
 
-### [Scout for LoL](https://github.com/shepherdjerred/monorepo/tree/main/packages/scout-for-lol)
+### [Scout for LoL](https://scout-for-lol.com)
 
 A Discord bot and dashboard that tracks League of Legends matches, sends game notifications, and produces detailed post-match reports, competitions, and leaderboards.
 
-### [webring](https://github.com/shepherdjerred/monorepo/tree/main/packages/webring)
+### [webring](https://www.npmjs.com/package/webring)
 
 A small TypeScript library that fetches, sanitizes, caches, and truncates updates from RSS and Atom feeds.
 
-### [Cooklang](https://github.com/shepherdjerred/cooklang-for-obsidian)
+### [Cooklang](https://cook.sjer.red)
 
 An Obsidian plugin that renders Cooklang recipes with rich previews, ingredients, directions, timers, nutrition, and metadata.
 
-### [Better Skill Capped](https://github.com/shepherdjerred/monorepo/tree/main/packages/better-skill-capped)
+### [Better Skill Capped](https://better-skill-capped.com)
 
 A better interface for Skill Capped.
 
@@ -156,15 +156,15 @@ k3s Kubernetes cluster for self-hosted services like Plex, file syncing, and hom
 
 Compiler for the Tiger language for [graduate compilers](https://omscs.gatech.edu/cs-8803-o08-compilers-theory-and-practice) at Georgia Tech.
 
-### [Astro Open Graph Images](https://github.com/shepherdjerred/monorepo/tree/main/packages/astro-opengraph-images)
+### [Astro Open Graph Images](https://www.npmjs.com/package/astro-opengraph-images)
 
 Generate Open Graph images using React/Tailwind.
 
-### [webring](https://github.com/shepherdjerred/monorepo/tree/main/packages/webring)
+### [webring](https://www.npmjs.com/package/webring)
 
 Fetch updates from lists of RSS feeds.
 
-### [Scout for LoL](https://github.com/shepherdjerred/monorepo/tree/main/packages/scout-for-lol)
+### [Scout for LoL](https://scout-for-lol.com)
 
 A Discord bot that tracks your friends' League of Legends matches. I've learnt a lot about developing with AI effectively while building this project.
 
@@ -193,7 +193,7 @@ Start/stop an EC2 instance. I created this to host game servers on EC2 while all
 
 ## 2020
 
-### [Better Skill Capped](https://better-skill-capped.com/)
+### [Better Skill Capped](https://better-skill-capped.com)
 
 A better interface for [Skill Capped](https://www.skill-capped.com/).
 
