@@ -6,6 +6,29 @@ starred: true
 isDraft: false
 ---
 
+<style>{`
+  .added,
+  .prose .added,
+  .prose .added a,
+  .prose a.added,
+  .prose .added code,
+  .prose .added th,
+  .prose .added td {
+    color: #dc2626 !important;
+  }
+  @media (prefers-color-scheme: dark) {
+    .added,
+    .prose .added,
+    .prose .added a,
+    .prose a.added,
+    .prose .added code,
+    .prose .added th,
+    .prose .added td {
+      color: #f87171 !important;
+    }
+  }
+`}</style>
+
 Like many I've been using coding agents quite a lot. Ideas can become code very quickly. Unfortunately code has a cost. Not even some metaphysical "all code is expensive" argument that you may/may not buy into.
 
 Every bit of code you write has to exist somewhere, probably in a Git repository. A Git repository where you have to deal with merge conflicts, file/worktree size, etc.
@@ -19,9 +42,9 @@ Your code also has to be built. If you're building code you are likely also doin
 
 Every bit of code you write pays this cost. Some languages don't have much of this. Others, like Rust, are quite compute intensive and benefit from caching.
 
-And it is not only lines. Agents add projects. A project pays this tax even when it is small: it has to live somewhere, be built, tested, and released.
+<p class="added">And it is not only lines. Agents add projects. A project pays this tax even when it is small: it has to live somewhere, be built, tested, and released.</p>
 
-So, now your code has to live somewhere. It has to be statically analyzed and built and turned into artifacts.
+So<span class="added">,</span> now your code has to live somewhere. It has to be statically analyzed and built and turned into artifacts.
 
 ---
 
@@ -32,7 +55,7 @@ High fidelity tests (end-to-end and integration tests) have always been expensiv
 <figure>
   ![The usual testing pyramid, and a sketch of cost to write versus cost to run](./i-cant-scale-my-ci/testing-costs.svg)
 
-  <figcaption>
+  <figcaption class="added">
     The pyramid is the usual one. The bars are a sketch, not a benchmark. Writing got cheaper. Running did not.
   </figcaption>
 </figure>
@@ -51,17 +74,17 @@ Again -- every bit of code has this cost. Every side project, every small servic
 
 ---
 
-Of course, you also have to actually release and maintain each individual project, but that is not really the focus of this article. I do generally want to pore over release notes, public-facing documentation, and so on. Some things should not be AI generated without review.
+Of course, you also have to actually release and maintain each individual project, but that is not really the focus of this article. <span class="added">I do generally want to pore over release notes, public-facing documentation, and so on. Some things should not be AI generated without review.</span>
 
 ---
 
-Now, maybe I brought this upon myself. I don't use GitHub Actions anymore. I moved all of my projects into a monorepo so that agents could make cross-cutting changes more easily and with less release coordination.
+Now, maybe I brought this upon myself. I don't use GitHub Actions <span class="added">anymore</span>. I moved all of my projects into a monorepo so that agents could make cross-cutting changes more easily and with less release coordination.
 
 At the beginning of this year I had a single-node Kubernetes cluster running Talos. BuildKite connected to GitHub and ran CI via Dagger which ran on my cluster.
 
-Constant pain! A single Dagger engine pod running CI for 20+ agents at a time. Naturally this was unbearably slow and ate through my SSD lifetime.
+Constant pain! A single Dagger <span class="added">engine</span> pod running CI for 20+ agents at a time. Naturally this was unbearably slow and ate through my SSD lifetime.
 
-<details class="border border-black dark:border-white p-2">
+<details class="added border border-black dark:border-white p-2">
   <summary>Why it was one pod</summary>
 
 In February this was one root Dagger target, `ci`, and it did everything for the monorepo. BuildKite ran one `dagger call ci`. The engine was one pod with one cache disk, and that disk could only be mounted by one pod. A second engine could not share the cache.
@@ -70,7 +93,7 @@ In February this was one root Dagger target, `ci`, and it did everything for the
 
 My next thought was: why not do this all in Bazel? I had never used Bazel before but it reminded me of Brazil and Never Build Twice from Amazon which I have very fond memories of.
 
-<details class="border border-black dark:border-white p-2">
+<details class="added border border-black dark:border-white p-2">
   <summary>Brazil, briefly</summary>
 
 [Brazil](https://gist.github.com/terabyte/15a2d3d407285b8b5a0a7964dd6283b0) built a package into a version set, a set of versions known to work together, and kept the build reproducible. Apollo, a different system, deployed that set. Never Build Twice is the idea I liked inside that. The writeup is a gist, and the comments under it are spam, so the short version is here.
@@ -91,18 +114,38 @@ And it does actually work quite well but unfortunately I am just still doing _to
 
 I did what anyone would do. I did the math, saw that any cloud compute provider would be hellishly expensive, and bought a second CI node. An investment, I told myself. I spend $XXX on AI subscriptions each month; what's the point if I can't build my software? I make $YYY per year from my work, this is a sound investment in my learning (and, well, my favorite hobby which apparently is software engineering)
 
-The server was about $2,500. Spread over three years, that is about $70 a month.
+<p class="added">The server was about $2,500. Spread over three years, that is about $70 a month.</p>
 
-| | per month |
-| --- | --- |
-| The server, over 3 years | ~$70 |
-| Hetzner, same kind of box | ~$300 |
-| AWS, 128 GB, 16 vCPU, always on | ~$770 |
-| AWS, 128 GB, 32 vCPU, always on | ~$1,180 |
+<table class="added">
+  <thead>
+    <tr>
+      <th></th>
+      <th>per month</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>The server, over 3 years</td>
+      <td>~$70</td>
+    </tr>
+    <tr>
+      <td>Hetzner, same kind of box</td>
+      <td>~$300</td>
+    </tr>
+    <tr>
+      <td>AWS, 128 GB, 16 vCPU, always on</td>
+      <td>~$770</td>
+    </tr>
+    <tr>
+      <td>AWS, 128 GB, 32 vCPU, always on</td>
+      <td>~$1,180</td>
+    </tr>
+  </tbody>
+</table>
 
-The AWS rows are compute only. You only tie the purchase at something like 40-70 hours a month, and that is not this workload. You could prove me wrong.
+<p class="added">The AWS rows are compute only. You only tie the purchase at something like 40-70 hours a month, and that is not this workload. You could prove me wrong.</p>
 
-Before I tuned the writes, CI was putting terabytes a day onto the SSDs. That does not flip the rental comparison. It does mean the purchase is not only $70 a month if I have to replace the disks.
+<p class="added">Before I tuned the writes, CI was putting terabytes a day onto the SSDs. That does not flip the rental comparison. It does mean the purchase is not only $70 a month if I have to replace the disks.</p>
 
 I [priced the server](https://pcpartpicker.com/user/RiotShielder/saved/xnrjNG), knowing that I would be gouged on the SSD and memory. I bought used RAM on ebay for the first time and spent hours in MemTest86 to validate it.
 
@@ -113,7 +156,7 @@ Unfortunately, I got better at using agents, so I have more PRs at a given time.
 <figure>
   ![Landed commits by month, and sampled project counts](./i-cant-scale-my-ci/monorepo-growth.svg)
 
-  <figcaption>
+  <figcaption class="added">
     Landed commits on main, from December 2025. February is 204 of them, and 5 are mine. November is left off because the month is not finished. The dots are samples, on the 1st of January, March, July, and November, not a continuous count. This is not a chart of CI minutes.
   </figcaption>
 </figure>
