@@ -44,6 +44,8 @@ paths = [
   '''packages/.*/patches/satori@.*\.patch$''',
   # Skill/reference docs — example curl commands and API key placeholders
   '''packages/dotfiles/dot_agents/skills/tailscale-helper/references/''',
+  # Vendored MWG guide: WebCrypto algorithm name in example code flags as generic-api-key
+  '''packages/dotfiles(-windows)?/dot_agents/skills/modern-web-guidance/guides/security/client-side-encryption\.md''',
   '''packages/dotfiles/dot_agents/skills/grafana-helper/SKILL\.md''',
   # Cloudflare operator Helm chart URL contains "apikey" substring
   '''packages/homelab/src/cdk8s/src/resources/argo-applications/networking/cloudflare-operator\.ts''',

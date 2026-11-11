@@ -52,5 +52,18 @@ in [`public-sources.json`](public-sources.json).
   authentic Node support from the repository's Bun exception, and adds an
   explicit live-operation authorization boundary.
 
+## Google Chrome modern-web-guidance
+
+- Source: <https://github.com/GoogleChrome/modern-web-guidance/tree/4dd968349e54ca45a05dd5c818fb035c9054b022>
+- License: Apache-2.0; the applicable license text is retained at
+  `third-party-licenses/googlechrome-modern-web-guidance.Apache-2.0`.
+- Integrated content: vendored `skills/modern-web-guidance` (`SKILL.md` and
+  `guides/`) at v1.0.0, with one added actionable verb in the `SKILL.md`
+  description to satisfy the local skill frontmatter test. The
+  `modern-web.mjs` CLI is not vendored; it
+  is fetched via `npx` as the skill instructs. The local Browser Support
+  policy in `~/AGENTS.md` (Baseline Widely Available only by default)
+  overrides upstream's fallback-permissive default and remains authoritative.
+
 The Swift community skill repository was intentionally not copied because its
 PolyForm Perimeter license is not suitable for this public skill SOT.
