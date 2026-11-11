@@ -6,7 +6,7 @@ import { z } from "zod";
  * change discards the persisted manifest cache and refetches instead of
  * crashing on a strict parse of stale cached data.
  */
-export const MANIFEST_SCHEMA_VERSION = "manifest-v2";
+export const MANIFEST_SCHEMA_VERSION = "manifest-v3";
 
 const RoleSchema = z.enum(["all", "mid", "adc", "jungle", "top", "support"]);
 
@@ -159,6 +159,7 @@ export const ManifestSchema = z.object({
 export type Manifest = z.infer<typeof ManifestSchema>;
 export type ManifestVideo = z.infer<typeof ManifestVideoSchema>;
 export type ManifestCommentary = z.infer<typeof ManifestCommentarySchema>;
+export type ManifestCourse = z.infer<typeof ManifestCourseSchema>;
 export type ManifestCourseChapters = z.infer<
   typeof ManifestCourseChaptersSchema
 >;
