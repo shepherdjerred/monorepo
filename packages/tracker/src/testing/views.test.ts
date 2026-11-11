@@ -20,6 +20,7 @@ const caller = (writesEnabled = true) =>
     ),
     requestId: "views",
     writesEnabled: () => Promise.resolve(writesEnabled),
+    liveUpdatesEnabled: () => Promise.resolve(false),
   });
 async function failure(work: Promise<unknown>, code: string) {
   const thrown: unknown = await work.catch((error: unknown) => error);

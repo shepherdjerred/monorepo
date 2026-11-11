@@ -32,6 +32,7 @@ export type RouterContext = {
   attachments: Attachments;
   requestId: string;
   writesEnabled: () => Promise<boolean>;
+  liveUpdatesEnabled: () => Promise<boolean>;
 };
 const t = initTRPC.context<RouterContext>().create();
 const procedure = t.procedure.use(async ({ next }) => {
@@ -165,17 +166,25 @@ export const appRouter = t.router({
   meta: t.router({
     bootstrap: procedure.query(async ({ ctx }) => {
       const db = ctx.issues.database;
-      const [teams, states, labels, projects, actors, writesEnabled] =
-        await Promise.all([
-          db.team.findMany({ orderBy: { key: "asc" } }),
-          db.workflowState.findMany({
-            orderBy: [{ position: "asc" }, { id: "asc" }],
-          }),
-          db.label.findMany({ orderBy: { name: "asc" } }),
-          db.project.findMany({ orderBy: { name: "asc" } }),
-          db.actor.findMany({ orderBy: { name: "asc" } }),
-          ctx.writesEnabled(),
-        ]);
+      const [
+        teams,
+        states,
+        labels,
+        projects,
+        actors,
+        writesEnabled,
+        liveUpdatesEnabled,
+      ] = await Promise.all([
+        db.team.findMany({ orderBy: { key: "asc" } }),
+        db.workflowState.findMany({
+          orderBy: [{ position: "asc" }, { id: "asc" }],
+        }),
+        db.label.findMany({ orderBy: { name: "asc" } }),
+        db.project.findMany({ orderBy: { name: "asc" } }),
+        db.actor.findMany({ orderBy: { name: "asc" } }),
+        ctx.writesEnabled(),
+        ctx.liveUpdatesEnabled(),
+      ]);
       return {
         teams,
         states,
@@ -184,6 +193,7 @@ export const appRouter = t.router({
         actors: actors.map((actor) => presentActor(actor)),
         views: await ctx.catalog.views.list(db),
         writesEnabled,
+        liveUpdatesEnabled,
       };
     }),
   }),

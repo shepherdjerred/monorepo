@@ -10,6 +10,7 @@ import { Collaboration } from "#infrastructure/collaboration.ts";
 import { Catalog } from "#infrastructure/catalog.ts";
 import { Attachments } from "#infrastructure/attachments.ts";
 import { createObjectStore } from "#infrastructure/object-store.ts";
+import { createChangeHub } from "#infrastructure/change-hub.ts";
 import {
   initializeObservability,
   shutdownObservability,
@@ -27,6 +28,11 @@ initializeObservability(config, await behavior.value("telemetryEnabled"));
 const database = createDatabase(config.DATABASE_URL);
 const unit = new PrismaUnitOfWork(database);
 const store = createObjectStore(config);
+const changes = createChangeHub(config.DATABASE_URL);
+// With the flag off no LISTEN connection opens; the stream route opens it
+// on first use if the flag is turned on later. A database outage is retried
+// in the background and never delays startup.
+if (await behavior.value("liveUpdatesEnabled")) void changes.start();
 const app = createApp({
   issues: new Issues(database, unit),
   collaboration: new Collaboration(database, unit),
@@ -34,6 +40,8 @@ const app = createApp({
   attachments: new Attachments(database, unit, store),
   writesEnabled: () => behavior.value("writesEnabled"),
   attachmentMaxBytes: () => behavior.value("attachmentMaxBytes"),
+  liveUpdatesEnabled: () => behavior.value("liveUpdatesEnabled"),
+  changes,
 });
 const server = Bun.serve({
   // Matches the attachment upload route, which accepts 100 MiB files plus
@@ -45,6 +53,8 @@ const server = Bun.serve({
 });
 console.warn(`Tracker listening on ${String(server.port)}`);
 async function shutdown() {
+  // Ends open event streams, which would otherwise hold the graceful stop.
+  await changes.stop();
   await server.stop();
   await database.$disconnect();
   await shutdownFeatureFlags();

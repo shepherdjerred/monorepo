@@ -5,27 +5,47 @@ import { bodyLimit } from "hono/body-limit";
 import { secureHeaders } from "hono/secure-headers";
 import { z } from "zod";
 import { appRouter, type RouterContext } from "./router.ts";
+import {
+  registerEventsRoute,
+  type EventsRouteOptions,
+} from "./events-route.ts";
 import type { Attachments } from "#infrastructure/attachments.ts";
 import { TrackerError } from "#domain/error.ts";
 import { ActorSchema } from "#shared/actor.ts";
 import { avatarSvg } from "#shared/avatar.ts";
+import { CLIENT_REQUEST_ID_HEADER } from "#shared/live-updates.ts";
 import { traceRequest, reportError } from "#infrastructure/observability.ts";
 
-type AppOptions = Omit<RouterContext, "requestId"> & {
-  attachments: Attachments;
-  attachmentMaxBytes: () => Promise<number>;
-  /** The built browser client; defaults to this package's `dist/client`. */
-  clientRoot?: string;
-};
+type AppOptions = Omit<RouterContext, "requestId"> &
+  EventsRouteOptions & {
+    attachments: Attachments;
+    attachmentMaxBytes: () => Promise<number>;
+    /** The built browser client; defaults to this package's `dist/client`. */
+    clientRoot?: string;
+  };
 const builtClientRoot = `${import.meta.dir}/../../dist/client`;
 
 export function createApp(options: AppOptions) {
   const app = new Hono();
   const requests = new Map<string, number>();
   app.use(secureHeaders());
+  // A browser names its own mutations so it can recognise their change
+  // notifications, which can arrive before the mutation response does.
   app.use(async (context, next) => {
-    const requestId = crypto.randomUUID();
+    const supplied = context.req.header(CLIENT_REQUEST_ID_HEADER);
+    return supplied === undefined || z.uuid().safeParse(supplied).success
+      ? next()
+      : context.json(
+          { error: `${CLIENT_REQUEST_ID_HEADER} must be a UUID` },
+          400,
+        );
+  });
+  app.use(async (context, next) => {
+    const requestId =
+      context.req.header(CLIENT_REQUEST_ID_HEADER) ?? crypto.randomUUID();
     context.header("x-request-id", requestId);
+    // A stream's handler returns its Response as soon as it connects, so
+    // this records the connection and never waits for the stream to end.
     await traceRequest(
       context.req.raw,
       context.req.path.startsWith("/trpc") ? "trpc" : "http",
@@ -37,7 +57,9 @@ export function createApp(options: AppOptions) {
         ? "attachment"
         : context.req.path === "/api/attachments"
           ? "upload"
-          : "other";
+          : context.req.path === "/api/events/stream"
+            ? "events"
+            : "other";
     const key = `route="${route}",status="${String(context.res.status)}"`;
     requests.set(key, (requests.get(key) ?? 0) + 1);
   });
@@ -88,6 +110,10 @@ export function createApp(options: AppOptions) {
           requests,
           ([key, count]) => `tracker_requests_total{${key}} ${String(count)}`,
         ),
+        "# TYPE tracker_event_stream_clients gauge",
+        `tracker_event_stream_clients ${String(events.clients())}`,
+        "# TYPE tracker_event_stream_changes_total counter",
+        `tracker_event_stream_changes_total ${String(events.delivered())}`,
         "",
       ].join("\n"),
       200,
@@ -155,6 +181,7 @@ export function createApp(options: AppOptions) {
       }),
     }),
   );
+  const events = registerEventsRoute(app, options);
   app.all("/api/*", (c) => c.json({ error: "Not found" }, 404));
   const clientRoot = options.clientRoot ?? builtClientRoot;
   // Vite names every asset after its content hash, so a URL never changes

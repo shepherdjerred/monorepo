@@ -174,8 +174,46 @@ their issue or comment so historical links remain useful. Downloads stream
 through `/attachments/:id/:filename`; active formats download as files and all
 responses use `nosniff`. Images can be previewed in the UI.
 
+## Live updates
+
+`GET /api/events/stream` is a Server-Sent Events stream of committed changes.
+An `AFTER INSERT` trigger on `Event` publishes each audit row on the
+`tracker_events` PostgreSQL channel. NOTIFY is delivered only when the writing
+transaction commits, and in commit order, so a message never precedes the data
+it names and a rolled-back mutation publishes nothing. The server holds one
+dedicated `LISTEN` connection and fans messages out to connected browsers.
+
+Each SSE message has an `event` of `change` or `resync` and a JSON `data` body
+matching `LiveMessageSchema` from `@shepherdjerred/tracker/contract`:
+
+- `change` carries `eventId`, `entityType`, `entityId`, `issueIdentifier`
+  (null for catalog changes), `action`, `actorId`, `requestId` and
+  `occurredAt`. Its SSE `id` is the `eventId`. It names what changed and omits
+  the content; clients refetch what they show.
+- `resync` means changes may have been missed and everything shown should be
+  refetched. It is the first message on every connection, and is sent again
+  after the `LISTEN` connection is replaced, after a notification that fails
+  validation, and to a client more than 1000 messages behind. There is no
+  replay and `Last-Event-ID` is ignored.
+
+`requestId` equals the `x-request-id` response header of the mutation that
+caused the change. The change can arrive before that response does, so a client
+that needs to recognise its own changes sends a UUID of its choosing in the
+`X-Tracker-Request-Id` request header (`CLIENT_REQUEST_ID_HEADER` in the
+contract); the server uses it as the request ID and rejects a value that is not
+a UUID with 400. Without the header the server generates the ID.
+
+The first message sets `retry: 3000`. An idle stream sends a `: heartbeat`
+comment every 8 seconds, because `Bun.serve` closes connections idle for its
+default 10 seconds and the server does not raise that limit.
+
+`tracker-live-updates-enabled` defaults on. While it is off the route returns
+404, the server opens no `LISTEN` connection, and open streams end within one
+heartbeat. `meta.bootstrap` reports the value as `liveUpdatesEnabled`.
+
 `/healthz` reports process health; `/readyz` requires PostgreSQL; `/metrics`
-exports bounded request counters and issue/actor gauges. Structured errors
+exports bounded request counters, issue/actor gauges, connected event-stream
+clients and delivered change messages. Structured errors
 include a request ID, without logging request bodies or credentials.
 
 ## Imported history
