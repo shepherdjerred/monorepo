@@ -148,6 +148,7 @@ public record RwfMatch(
             yield Optional.empty();
           }
           case MatchEvent.BombClicked click -> Bombs.click(draft, click);
+          case MatchEvent.BombHeld held -> Bombs.hold(draft, held);
           case MatchEvent.LookedAround looked -> {
             Standings.lookedAround(draft, looked.id());
             yield Optional.empty();

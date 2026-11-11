@@ -22,6 +22,8 @@ import com.shepherdjerred.thestorm.rwfbots.domain.chat.SpeechControl;
 import com.shepherdjerred.thestorm.rwfbots.domain.chat.Utterance;
 import com.shepherdjerred.thestorm.rwfbots.domain.personality.Personality;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Callout;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantView;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.MatchPhase;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.WorldSnapshot;
 import java.time.Duration;
 import java.time.Instant;
@@ -74,6 +76,11 @@ public final class BotChat implements Consumer<MatchNotification>, BodyActivity 
   /** The countdown's last seconds a bot may remark on. */
   static final Duration COUNTDOWN_CALL = Duration.ofSeconds(10);
 
+  /** An enemy this close, or a hit this recent, means the bot is not safe to type. */
+  static final double SPEAK_CLEARANCE = 6;
+
+  static final int SPEAK_HURT_TICKS = 15;
+
   private final Parts parts;
   private final Map<String, String> teamsByName = new HashMap<>();
   private final Map<UUID, Speech> speeches = new HashMap<>();
@@ -103,6 +110,7 @@ public final class BotChat implements Consumer<MatchNotification>, BodyActivity 
   private MatchEvents.@Nullable Subscription subscription;
   private @Nullable Cancellable clock;
   private @Nullable MatchState previous;
+  private Optional<WorldSnapshot> seen = Optional.empty();
   private @Nullable ChatDirector director;
   private @Nullable UUID directorMatch;
   private boolean countdownCalled;
@@ -219,6 +227,7 @@ public final class BotChat implements Consumer<MatchNotification>, BodyActivity 
 
   /** Every body tick, before commands: danger/fuse work cancel typing and reports age out. */
   public void tick(Optional<WorldSnapshot> snapshot) {
+    seen = snapshot;
     var now = parts.time().instant();
     thinking.ifPresent(loop -> loop.composedCommunication(enabled));
     if (!enabled || closed) {
@@ -396,21 +405,40 @@ public final class BotChat implements Consumer<MatchNotification>, BodyActivity 
             .isPresent()) return true;
     // An urgent call is a few words a player types even mid-fight: a sighting is not.
     if (speech.urgent()) return false;
-    if (me.lastHurtTick() >= 0 && world.tick() - me.lastHurtTick() <= 15) return true;
-    var danger =
-        thinking
-            .flatMap(loop -> loop.board().of(me.id()))
-            .map(thought -> thought.percept().visible())
-            .orElseGet(List::of)
-            .stream()
-            .anyMatch(other -> other.alive() && other.pos().distance(me.pos()) < 6);
-    return danger
+    return threatened(me, world)
         || speech
             .report()
             .filter(report ->
                 world.tick() - report.sighting().seenTick() > 120
                     || !report.team().equals(me.team()))
             .isPresent();
+  }
+
+  /**
+   * Whether {@code speaker} may start a round line. With no snapshot yet, or outside the live
+   * round, the line is allowed; the director still drops the last living member of a team.
+   */
+  private boolean safeToSpeak(UUID speaker) {
+    var snapshot = seen;
+    if (snapshot.isEmpty()) return true;
+    var world = snapshot.orElseThrow();
+    if (world.matchPhase() != MatchPhase.LIVE) return true;
+    var session = parts.roster().session();
+    if (session.isEmpty()) return true;
+    var self = session.orElseThrow().ids().known(speaker).flatMap(world::combatant);
+    if (self.isEmpty()) return true;
+    return !threatened(self.orElseThrow(), world);
+  }
+
+  /** An enemy inside {@link #SPEAK_CLEARANCE}, or a hit within {@link #SPEAK_HURT_TICKS}. */
+  private boolean threatened(CombatantView me, WorldSnapshot world) {
+    if (me.lastHurtTick() >= 0 && world.tick() - me.lastHurtTick() <= SPEAK_HURT_TICKS) return true;
+    return thinking
+        .flatMap(loop -> loop.board().of(me.id()))
+        .map(thought -> thought.percept().visible())
+        .orElseGet(List::of)
+        .stream()
+        .anyMatch(other -> other.alive() && other.pos().distance(me.pos()) < SPEAK_CLEARANCE);
   }
 
   private void report(TeamReport report, WorldSnapshot snapshot, Instant now) {
@@ -497,7 +525,8 @@ public final class BotChat implements Consumer<MatchNotification>, BodyActivity 
     var now = parts.time().instant();
     var lines = new ArrayList<Utterance>();
     for (var moment : ChatMoments.of(before, transition)) {
-      lines.addAll(director(after, now).on(moment, scene(after), now));
+      lines.addAll(
+          director(after, now).on(moment, scene(after), now, uuid -> true, this::safeToSpeak));
     }
     if (after.phase() == MatchState.Phase.RESETTING) {
       clearSpeech();
@@ -577,7 +606,7 @@ public final class BotChat implements Consumer<MatchNotification>, BodyActivity 
       return;
     }
     current
-        .on(new ChatMoment.Idle(), scene(state), now, this::idleSpeaker)
+        .on(new ChatMoment.Idle(), scene(state), now, this::idleSpeaker, this::safeToSpeak)
         .forEach(line -> say(line, now));
   }
 

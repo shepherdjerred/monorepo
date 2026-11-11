@@ -141,6 +141,17 @@ final class MeleePressureTest {
     assertThat(calmed.aim().look().differenceTo(toThreat)).isGreaterThan(135);
   }
 
+  @Test
+  void circlingBotsAreCutAcrossInsteadOfFollowed() {
+    var self = combatant(1, RED, HERE).withVel(new Vec3(0, 0, 0.15));
+    var target = combatant(2, BLUE, HERE.plus(2.7, 0, 0)).withVel(new Vec3(0, 0, -0.15));
+
+    assertThat(MeleePressure.orbiting(self, target)).isTrue();
+    assertThat(MeleePressure.cutAcross(self, target)).isEqualTo(1);
+    assertThat(MeleePressure.orbiting(self, target.withVel(self.vel()))).isFalse();
+    assertThat(MeleePressure.orbiting(self, target.withVel(new Vec3(-0.2, 0, 0)))).isFalse();
+  }
+
   private static Percept felt(Vec3 at, long tick) {
     var memory =
         new Memory(Map.of(new CombatantId(9), new Sighting(at, Vec3.ZERO, tick, 0.9, false, true)));

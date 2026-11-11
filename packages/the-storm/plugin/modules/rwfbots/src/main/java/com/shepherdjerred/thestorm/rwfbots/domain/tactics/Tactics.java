@@ -39,6 +39,9 @@ public final class Tactics {
   /** A plan younger than this is kept against anything but an urgent option, in ticks (1.5 s). */
   public static final long MIN_COMMIT_TICKS = 30;
 
+  /** The last living bot keeps its goal this long, in ticks (5 s), unless a bomb is armable. */
+  public static final long LAST_ALIVE_COMMIT_TICKS = 100;
+
   /** Plans older than this are dropped and rethought. */
   public static final long PLAN_TTL_TICKS = 300;
 
@@ -84,6 +87,8 @@ public final class Tactics {
     var objective = ObjectivePolicy.direct(state.memory(), situation, context);
     var trip = Resupply.trip(situation, features, context, objective.memory());
     trip.ifPresent(arrows -> scores.put(Option.RESUPPLY, arrows.worth()));
+    var crate = CratePlay.trip(situation, features, context, objective.memory());
+    crate.ifPresent(found -> scores.put(Option.CRATE, found.worth()));
     var current = currentPlan(state, situation, context);
     current
         .filter(Tactics::earnsCommitment)
@@ -109,10 +114,10 @@ public final class Tactics {
         current
             .filter(existing -> existing.option() == chosen)
             .map(existing ->
-                refresh(existing)
+                refresh(existing) && !situation.isLastAlive()
                     ? Planner.expand(chosen, situation, context).since(existing.startedTick())
                     : existing)
-            .orElseGet(() -> fresh(chosen, situation, context, trip));
+            .orElseGet(() -> fresh(chosen, situation, context, trip, crate));
     if (chosen == Option.ARM && objective.memory().detour().isPresent()) {
       plan = Planner.detourPlan(situation, context, objective.memory().detour().orElseThrow());
     }
@@ -155,11 +160,18 @@ public final class Tactics {
     };
   }
 
-  /** A new plan for {@code chosen}; a resupply trip walks to the arrow it was scored for. */
+  /** A new plan for {@code chosen}; a resupply or crate trip walks to the cell it was scored for. */
   private static Plan fresh(
-      Option chosen, Situation situation, TacticsContext context, Optional<Resupply.Trip> trip) {
+      Option chosen,
+      Situation situation,
+      TacticsContext context,
+      Optional<Resupply.Trip> trip,
+      Optional<CratePlay.Trip> crate) {
     if (chosen == Option.RESUPPLY && trip.isPresent()) {
       return Resupply.plan(situation.now(), trip.orElseThrow().pickup());
+    }
+    if (chosen == Option.CRATE && crate.isPresent()) {
+      return CratePlay.plan(situation.now(), crate.orElseThrow());
     }
     return Planner.expand(chosen, situation, context);
   }
@@ -272,8 +284,16 @@ public final class Tactics {
         return recover(planning, situation, context, new Setback(memory, Optional.empty()));
     }
     var decision = Planner.decide(plan, situation, context, planning.lifeEpoch());
-    if (decision.routeFailure().isEmpty())
+    if (decision.routeFailure().isEmpty()) {
+      if (situation.isLastAlive()) {
+        var dropped = loneRoute(decision.waypoints(), memory, situation.now());
+        if (dropped.drop()) {
+          return recover(planning, situation, context, new Setback(dropped.memory(), Optional.empty()));
+        }
+        memory = dropped.memory();
+      }
       return new Routed(plan, decision, memory, Optional.empty(), DecisionTrace.Recovery.NONE);
+    }
     var failure = decision.routeFailure().orElseThrow();
     return recover(
         planning,
@@ -392,7 +412,27 @@ public final class Tactics {
             > scores.getOrDefault(plan.option(), Utilities.FLOOR) + PREEMPT_MARGIN) {
       return picked;
     }
-    return now - plan.startedTick() < MIN_COMMIT_TICKS ? plan.option() : picked;
+    if (situation.isLastAlive() && picked == Option.ARM) return picked;
+    var commit = situation.isLastAlive() ? LAST_ALIVE_COMMIT_TICKS : MIN_COMMIT_TICKS;
+    return now - plan.startedTick() < commit ? plan.option() : picked;
+  }
+
+  /**
+   * A lone bot drops a route that comes back on itself, or whose direction has reversed twice, and
+   * remembers a route that still leads somewhere.
+   */
+  private static TacticalMemory.Course loneRoute(
+      List<com.shepherdjerred.thestorm.rwfbots.domain.world.Waypoint> points,
+      TacticalMemory memory,
+      long now) {
+    if (RouteLoops.loops(points)) {
+      return new TacticalMemory.Course(
+          memory.blocked(points.getLast().pos(), now).clearTrail(), true);
+    }
+    var course = memory.follow(RouteLoops.opening(points));
+    if (!course.drop() || points.isEmpty()) return course;
+    return new TacticalMemory.Course(
+        course.memory().blocked(points.getLast().pos(), now).clearTrail(), true);
   }
 
   /**

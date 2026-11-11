@@ -34,6 +34,27 @@ public final class Lanes {
   /** How many physically adjacent graph steps around a lane its corridor reaches. */
   static final int CORRIDOR_STEPS = 2;
 
+  /** Cost added to a main-lane interior node so a side route is preferred when one exists. */
+  private static final double AVOID = 1000;
+
+  /** Extra cost on a node that is not clearly below the main lane, for the low-route search. */
+  private static final double LOW_STEP = 50;
+
+  /** A detour longer than this times the main route is just a wander. */
+  private static final double LENGTH_RATIO = 1.5;
+
+  /** Interior nodes shared with the main lane, as a fraction of the detour's own interior. */
+  private static final double SHARE_FRACTION = 0.2;
+
+  /** Or fewer than this many shared interior nodes, whichever is the looser test. */
+  private static final int SHARE_NODES = 4;
+
+  /** How far below the main lane a low route's mean feet must sit, in blocks. */
+  private static final double LOW_DROP = 3;
+
+  /** A node this far below the main mean is the low route, and is not taxed. */
+  private static final double BELOW = 2;
+
   private static final int SNAP_RADIUS = 6;
 
   private Lanes() {}
@@ -60,7 +81,8 @@ public final class Lanes {
     }
     var side = new Vec3(-axis.normalized().z(), 0, axis.normalized().x());
     var candidates = new ArrayList<List<Integer>>();
-    graph.path(from.getAsInt(), to.getAsInt()).ifPresent(path -> candidates.add(path.nodes()));
+    var main = graph.path(from.getAsInt(), to.getAsInt());
+    main.ifPresent(path -> candidates.add(path.nodes()));
     for (var offset : new double[] {-SPREAD, SPREAD}) {
       var out = side.scale(offset);
       via(
@@ -75,13 +97,98 @@ public final class Lanes {
     }
     var lanes = new ArrayList<Lane>();
     for (var nodes : candidates) {
-      var lane = lane(graph, nodes, home, side);
+      var lane = lane(graph, nodes, home, side, false);
       if (lanes.stream().allMatch(kept -> Math.abs(kept.lateral() - lane.lateral()) >= MIN_GAP)) {
         lanes.add(lane);
       }
     }
     lanes.sort(Comparator.comparingDouble(Lane::lateral));
+    // A side hall closer than MIN_GAP, or a tunnel under the main lane, is appended after the
+    // sort so it cannot become the leftmost or rightmost lane.
+    if (main.isPresent()) {
+      for (var nodes : detours(graph, from.getAsInt(), to.getAsInt(), main.orElseThrow().nodes())) {
+        lanes.add(lane(graph, nodes, home, side, true));
+      }
+    }
     return List.copyOf(lanes);
+  }
+
+  /**
+   * Routes that share little of the main lane and are not much longer: first any such route, then
+   * a route that also runs clearly lower, when that is a different path.
+   */
+  private static List<List<Integer>> detours(NavGraph graph, int from, int to, List<Integer> main) {
+    var interior = new HashSet<Integer>();
+    if (main.size() > 2) {
+      interior.addAll(main.subList(1, main.size() - 1));
+    }
+    var mainMean = meanY(graph, main);
+    var out = new ArrayList<List<Integer>>();
+    graph
+        .path(from, to, node -> interior.contains(node) ? AVOID : 0)
+        .filter(path -> keep(graph, path.nodes(), main, interior, false, mainMean))
+        .ifPresent(path -> out.add(path.nodes()));
+    graph
+        .path(from, to, node -> lowPenalty(graph, node, interior, mainMean))
+        .filter(path -> keep(graph, path.nodes(), main, interior, true, mainMean))
+        .filter(path -> out.stream().noneMatch(kept -> kept.equals(path.nodes())))
+        .ifPresent(path -> out.add(path.nodes()));
+    return out;
+  }
+
+  private static double lowPenalty(
+      NavGraph graph, int node, Set<Integer> interior, double mainMean) {
+    var penalty = interior.contains(node) ? AVOID : 0.0;
+    if (graph.feet(node).y() > mainMean - BELOW) {
+      penalty += LOW_STEP;
+    }
+    return penalty;
+  }
+
+  private static boolean keep(
+      NavGraph graph,
+      List<Integer> nodes,
+      List<Integer> main,
+      Set<Integer> interior,
+      boolean low,
+      double mainMean) {
+    if (nodes.equals(main)) {
+      return false;
+    }
+    var mainLength = length(graph, main);
+    var pathLength = length(graph, nodes);
+    if (mainLength < 1 || pathLength > LENGTH_RATIO * mainLength) {
+      return false;
+    }
+    var shared = 0;
+    var count = 0;
+    for (var i = 1; i < nodes.size() - 1; i++) {
+      count++;
+      if (interior.contains(nodes.get(i))) {
+        shared++;
+      }
+    }
+    var few = shared < SHARE_NODES || count == 0 || (double) shared / count < SHARE_FRACTION;
+    if (!few) {
+      return false;
+    }
+    return !low || mainMean - meanY(graph, nodes) >= LOW_DROP;
+  }
+
+  private static double length(NavGraph graph, List<Integer> nodes) {
+    var total = 0.0;
+    for (var i = 1; i < nodes.size(); i++) {
+      total += graph.feet(nodes.get(i - 1)).distance(graph.feet(nodes.get(i)));
+    }
+    return total;
+  }
+
+  private static double meanY(NavGraph graph, List<Integer> nodes) {
+    var sum = 0.0;
+    for (var node : nodes) {
+      sum += graph.feet(node).y();
+    }
+    return sum / nodes.size();
   }
 
   /** The path from {@code from} to {@code to} through the nodes nearest each of {@code through}. */
@@ -109,7 +216,8 @@ public final class Lanes {
     return Optional.of(nodes);
   }
 
-  private static Lane lane(NavGraph graph, List<Integer> nodes, Vec3 home, Vec3 side) {
+  private static Lane lane(
+      NavGraph graph, List<Integer> nodes, Vec3 home, Vec3 side, boolean cut) {
     var points = new ArrayList<Vec3>(nodes.size());
     var lateral = 0.0;
     for (var node : nodes) {
@@ -120,7 +228,7 @@ public final class Lanes {
         lateral = offset;
       }
     }
-    return new Lane(nodes, points, corridor(graph, nodes), lateral);
+    return new Lane(nodes, points, corridor(graph, nodes), lateral, cut);
   }
 
   /** The nodes within {@link #CORRIDOR_STEPS} graph steps of {@code nodes}. */
@@ -148,16 +256,22 @@ public final class Lanes {
     return Math.abs(delta.x()) <= 1 && Math.abs(delta.z()) <= 1 && Math.abs(delta.y()) <= 1.5;
   }
 
-  /** The lane that best matches {@code which}: the leftmost, the middle or the rightmost. */
+  /**
+   * The lane that best matches {@code which}: the leftmost, the middle or the rightmost of the main
+   * lanes. A side passage is never picked here.
+   */
   public static int pick(List<Lane> lanes, Which which) {
-    if (lanes.isEmpty()) {
+    var primary = lanes.stream().filter(lane -> !lane.cut()).toList();
+    if (primary.isEmpty()) {
       return -1;
     }
-    return switch (which) {
-      case LEFT -> 0;
-      case MIDDLE -> lanes.size() / 2;
-      case RIGHT -> lanes.size() - 1;
-    };
+    var chosen =
+        switch (which) {
+          case LEFT -> primary.getFirst();
+          case MIDDLE -> primary.get(primary.size() / 2);
+          case RIGHT -> primary.getLast();
+        };
+    return lanes.indexOf(chosen);
   }
 
   /** A lane picked by its side of the straight line. */

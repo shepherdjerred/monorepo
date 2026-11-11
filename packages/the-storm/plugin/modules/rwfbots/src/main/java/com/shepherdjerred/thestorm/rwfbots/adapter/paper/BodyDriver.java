@@ -8,6 +8,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.geom.Facing;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.GridBounds;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.ActiveJump;
+import com.shepherdjerred.thestorm.rwfbots.domain.tactics.CratePlay;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.MotionRecovery;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BodyCommand;
@@ -95,7 +96,7 @@ public final class BodyDriver {
   public record Navigation(IdMap ids, long tick, Optional<GridBounds> bounds) {}
 
   public void apply(BotBody bot, List<BodyCommand> commands, Navigation navigation) {
-    var fuse = commands.stream().anyMatch(command -> command instanceof BodyCommand.ClickBomb);
+    var fuse = fusing(bot, commands);
     if (fuse || bot.shieldUntil() > navigation.tick() || casting.stationary(bot.uuid())) {
       chat.ifPresent(talk -> talk.cancel(bot.uuid()));
     }
@@ -157,6 +158,32 @@ public final class BodyDriver {
     }
     apply(bot, command, frame);
     return steeringAccepted;
+  }
+
+  /**
+   * A fuse click, or a use that starts with the fuse selected. A bow draw that switches off the
+   * fuse in the same tick is not one.
+   */
+  private boolean fusing(BotBody bot, List<BodyCommand> commands) {
+    if (commands.stream().anyMatch(command -> command instanceof BodyCommand.ClickBomb)) {
+      return true;
+    }
+    if (commands.stream().noneMatch(command -> command instanceof BodyCommand.StartUse)) {
+      return false;
+    }
+    var fuseSlot = bot.loadout().fuseSlot();
+    var selected =
+        commands.stream()
+            .filter(command -> command instanceof BodyCommand.SelectSlot)
+            .map(command -> ((BodyCommand.SelectSlot) command).slot())
+            .findFirst();
+    if (selected.isPresent()) {
+      return selected.orElseThrow() == fuseSlot;
+    }
+    return bodies
+        .entity(bot.uuid())
+        .map(player -> player.getInventory().getHeldItemSlot() == fuseSlot)
+        .orElse(false);
   }
 
   private boolean typing(BotBody bot) {
@@ -230,9 +257,31 @@ public final class BodyDriver {
           frame.ids().bombName(bomb).ifPresent(name -> record(bot, actions.clickBomb(id, name)));
       case BodyCommand.UseAbility(var name) -> ability(bot, name);
       case BodyCommand.UseKit use -> useKit(bot, use, frame);
-      case BodyCommand.UseStreak _ -> record(bot, actions.useStreak(id));
+      case BodyCommand.UseStreak _ -> useStreak(bot, frame);
       case BodyCommand.Consume(var slot) -> record(bot, actions.consume(id, slot));
     }
+  }
+
+  /**
+   * Calls in the carried streak. A supply crate that was accepted is watched from where the bot
+   * stood, so the next ticks can wait for it. A refusal does not start that wait.
+   */
+  private void useStreak(BotBody bot, Frame frame) {
+    var supply = bodies.entity(bot.uuid()).map(CrateGear::nextIsCrate).orElse(false);
+    var where =
+        bodies
+            .entity(bot.uuid())
+            .map(player -> new Vec3(player.getX(), player.getY(), player.getZ()));
+    var refusal = actions.useStreak(bot.uuid());
+    record(bot, refusal);
+    if (supply && refusal.isEmpty() && where.isPresent()) {
+      bot.watchCrate(where.orElseThrow(), frame.tick() + CratePlay.WATCH_TICKS);
+    }
+  }
+
+  /** Right-click the supply crate at {@code at}. */
+  void loot(BotBody bot, Vec3 at) {
+    record(bot, actions.lootCrate(bot.uuid(), new Point(at.x(), at.y(), at.z())));
   }
 
   private int emptyHandSlot(BotBody bot, int requested) {

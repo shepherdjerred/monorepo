@@ -6,6 +6,7 @@ import com.shepherdjerred.thestorm.rwfbots.app.Director;
 import com.shepherdjerred.thestorm.rwfbots.app.Loadouts;
 import com.shepherdjerred.thestorm.rwfbots.app.PersonalityStats;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Facing;
+import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.Loadout;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.MotionRecovery;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.ReflexState;
@@ -48,6 +49,9 @@ public final class BotBody {
   private long lastStuckTick = -1;
   private long nextStreak;
   private long shieldUntil;
+  private Optional<Vec3> crateWatch = Optional.empty();
+  private long crateWatchUntil;
+  private Optional<Vec3> crateSeen = Optional.empty();
 
   long shieldUntil() {
     return shieldUntil;
@@ -124,6 +128,35 @@ public final class BotBody {
     nextStreak = tick;
   }
 
+  /** Where a supply crate was called in, until it is looted or the watch expires. */
+  Optional<Vec3> crateWatch() {
+    return crateWatch;
+  }
+
+  long crateWatchUntil() {
+    return crateWatchUntil;
+  }
+
+  /** The crate once it has appeared in a snapshot, so a fight can return to it. */
+  Optional<Vec3> crateSeen() {
+    return crateSeen;
+  }
+
+  void watchCrate(Vec3 at, long until) {
+    crateWatch = Optional.of(at);
+    crateWatchUntil = until;
+    crateSeen = Optional.empty();
+  }
+
+  void seeCrate(Vec3 at) {
+    crateSeen = Optional.of(at);
+  }
+
+  void clearCrateWatch() {
+    crateWatch = Optional.empty();
+    crateSeen = Optional.empty();
+  }
+
   /** The match profile, once the bot has a team and the match is live. */
   public Optional<BotProfile> profile() {
     return Optional.ofNullable(profile);
@@ -140,12 +173,14 @@ public final class BotBody {
     drawStart = -1;
     shieldUntil = 0;
     brace = Optional.empty();
+    clearCrateWatch();
   }
 
   void leaveMatch() {
     profile = null;
     shieldUntil = 0;
     brace = Optional.empty();
+    clearCrateWatch();
   }
 
   ReflexState reflex() {

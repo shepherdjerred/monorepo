@@ -6,6 +6,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.map.NavArtifact;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BodyCommand;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Hop;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.Option;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Waypoint;
 import java.util.List;
 import java.util.Optional;
@@ -48,6 +49,18 @@ public final class RunHop {
 
   /** A path point higher or lower than the body by more than this ends the run: a step or slab. */
   static final double LEVEL = 0.01;
+
+  /**
+   * An opening rush may hop a single step or a slope of one block. A deeper drop is not a hop, and
+   * the body still sprints.
+   */
+  static final double OPENING_STEP = 1;
+
+  /** How far a gentle opening turn may leave the straight line, in blocks. */
+  static final double OPENING_SLACK = 2;
+
+  /** A body turning gently onto its line still launches: about 35 degrees. */
+  static final double OPENING_ALIGNED = Math.cos(Math.toRadians(35));
 
   /** How much further than a hop's run the path is searched for a leap's run-up, in blocks. */
   static final double LEAP_CLEAR = 8;
@@ -149,17 +162,37 @@ public final class RunHop {
         || run.state().activeJump().isPresent()
         // A fight's target, seen or remembered, is the footwork's business, not the run's.
         || run.input().decision().target().isPresent()
-        || CombatFootwork.reeling(self, run.now())
-        || !(context.habits().bunnyHops() || context.levers().technique() >= MIN_TECHNIQUE)
-        || enemyNear(run.input(), context.habits().bunnyHops() ? BUNNY_ENEMY_CLEAR : ENEMY_CLEAR))
+        || CombatFootwork.reeling(self, run.now()))
       return Optional.empty();
+    var opening = openingRush(context, run);
+    if (!(opening || context.habits().bunnyHops() || context.levers().technique() >= MIN_TECHNIQUE))
+      return Optional.empty();
+    var clear =
+        opening
+            ? Reflex.MELEE_ALERT
+            : context.habits().bunnyHops() ? BUNNY_ENEMY_CLEAR : ENEMY_CLEAR;
+    if (enemyNear(run.input(), clear)) return Optional.empty();
     var nav = context.nav().orElseThrow();
     if (!openFooting(nav, self.pos())) return Optional.empty();
     var travel = self.vel().horizontal();
     if (travel.length() < RUNNING) return Optional.empty();
-    return straight(run, context.habits().bunnyHops() ? BUNNY_RUN : STRAIGHT_RUN)
-        .filter(direction -> travel.normalized().dot(direction) >= ALIGNED)
+    var needed = context.habits().bunnyHops() ? BUNNY_RUN : STRAIGHT_RUN;
+    var level = opening ? OPENING_STEP : LEVEL;
+    var slack = opening ? OPENING_SLACK : LINE_SLACK;
+    return straight(run, needed, level, slack)
+        .filter(direction ->
+            travel.normalized().dot(direction) >= (opening ? OPENING_ALIGNED : ALIGNED))
         .filter(direction -> CombatFootwork.safeHop(nav, self, direction, run.now()));
+  }
+
+  /**
+   * A melee bot sprinting an attack route before anyone is in reach. The hop does not wait on
+   * technique, and an enemy merely in sight is not contact.
+   */
+  private static boolean openingRush(ReflexContext context, Run run) {
+    if (context.loadout().hasBow()) return false;
+    var option = run.input().decision().option();
+    return option == Option.ARM || option == Option.TAKE_SLOT || option == Option.HUNT;
   }
 
   private static boolean enemyNear(ReflexInput input, double clear) {
@@ -215,6 +248,11 @@ public final class RunHop {
    * needed} blocks before the final waypoints, a step, a drop or a leap's run-up.
    */
   static Optional<Vec3> straight(Run run, double needed) {
+    return straight(run, needed, LEVEL, LINE_SLACK);
+  }
+
+  /** As {@link #straight(Run, double)}, allowing {@code level} of rise or fall and {@code slack} off the line. */
+  static Optional<Vec3> straight(Run run, double needed, double level, double slack) {
     var origin = run.self().pos();
     var points = run.waypoints();
     var last = Math.min(points.size() - 1 - Reflex.FINAL_STRAIGHT, run.index() + LOOK_AHEAD);
@@ -222,23 +260,23 @@ public final class RunHop {
     Optional<Vec3> best = Optional.empty();
     for (var end = run.index(); end <= last; end++) {
       var point = points.get(end);
-      if (point.hop() != Hop.WALK || Math.abs(point.pos().y() - origin.y()) > LEVEL) break;
+      if (point.hop() != Hop.WALK || Math.abs(point.pos().y() - origin.y()) > level) break;
       var span = point.pos().minus(origin).horizontal();
       if (span.isZero()) continue;
       var direction = span.normalized();
-      if (!onLine(points.subList(run.index(), end + 1), origin, direction)) break;
+      if (!onLine(points.subList(run.index(), end + 1), origin, direction, slack)) break;
       if (span.length() >= needed) best = Optional.of(direction);
     }
     return best;
   }
 
-  private static boolean onLine(List<Waypoint> points, Vec3 origin, Vec3 direction) {
+  private static boolean onLine(List<Waypoint> points, Vec3 origin, Vec3 direction, double slack) {
     var along = 0.0;
     for (var point : points) {
       var offset = point.pos().minus(origin).horizontal();
       var forward = offset.dot(direction);
       var across = Math.abs(offset.x() * direction.z() - offset.z() * direction.x());
-      if (across > LINE_SLACK || forward < along - LINE_SLACK) return false;
+      if (across > slack || forward < along - slack) return false;
       along = Math.max(along, forward);
     }
     return true;

@@ -52,6 +52,13 @@ public interface BotActions {
   /** Call in the first killstreak reward carried that falls from the sky, at the feet. */
   Optional<ActionRefusal> useStreak(UUID bot);
 
+  /**
+   * Right-click the supply crate at {@code at}. The default refuses; {@link #over} performs it.
+   */
+  default Optional<ActionRefusal> lootCrate(UUID bot, Point at) {
+    return Optional.of(ActionRefusal.OUT_OF_REACH);
+  }
+
   /** The actions over {@code actions}, resolving UUIDs through {@code view}. */
   static BotActions over(CombatantActions actions, MatchView view) {
     return new BotActions() {
@@ -117,6 +124,12 @@ public interface BotActions {
       @Override
       public Optional<ActionRefusal> useStreak(UUID bot) {
         return as(bot, actions::useStreak);
+      }
+
+      @Override
+      public Optional<ActionRefusal> lootCrate(UUID bot, Point at) {
+        var there = new Vec3(at.x(), at.y(), at.z());
+        return as(bot, id -> actions.lootCrate(id, there));
       }
 
       @Override

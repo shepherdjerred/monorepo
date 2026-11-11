@@ -18,6 +18,8 @@ import java.util.Optional;
  * @param looseArrows arrows lying in the ground near a combatant whose shots spend arrows, which
  *     anyone walking over may pick up; capped by the capture, nearest such combatant first
  * @param summons the killstreak creatures alive
+ * @param crates supply crates that have landed
+ * @param supplyCarriers combatants whose next dropped killstreak is a supply crate
  */
 public record WorldSnapshot(
     long tick,
@@ -28,7 +30,34 @@ public record WorldSnapshot(
     String mapId,
     List<Stimulus> stimuli,
     List<Vec3> looseArrows,
-    List<SummonView> summons) {
+    List<SummonView> summons,
+    List<CrateView> crates,
+    List<CombatantId> supplyCarriers) {
+
+  /** A snapshot with no landed crates and no one carrying a supply crate. */
+  public WorldSnapshot(
+      long tick,
+      MatchPhase matchPhase,
+      List<CombatantView> combatants,
+      List<BombView> bombs,
+      PoisonView poison,
+      String mapId,
+      List<Stimulus> stimuli,
+      List<Vec3> looseArrows,
+      List<SummonView> summons) {
+    this(
+        tick,
+        matchPhase,
+        combatants,
+        bombs,
+        poison,
+        mapId,
+        stimuli,
+        looseArrows,
+        summons,
+        List.of(),
+        List.of());
+  }
 
   public WorldSnapshot {
     if (tick < 0) {
@@ -42,6 +71,8 @@ public record WorldSnapshot(
     stimuli = List.copyOf(stimuli);
     looseArrows = List.copyOf(looseArrows);
     summons = List.copyOf(summons);
+    crates = List.copyOf(crates);
+    supplyCarriers = List.copyOf(supplyCarriers);
     for (var index = 1; index < stimuli.size(); index++) {
       if (stimuli.get(index).sequence() < stimuli.get(index - 1).sequence())
         throw new IllegalArgumentException("sound history must be ordered by sequence");

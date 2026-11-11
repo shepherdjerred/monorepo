@@ -103,6 +103,16 @@ public final class Playbook {
   static final double ANCHOR_MIN = 10;
 
   /**
+   * A passage mouth at least this far, in blocks, from every main lane is its own approach. A cut
+   * that still shares the main lane there is the same door, and an anchor on it would stand in the
+   * screen instead of beside it.
+   */
+  private static final double MOUTH_OFF = 3;
+
+  /** A passage mouth at least this far below the nearest main lane is a tunnel entrance. */
+  private static final double MOUTH_DROP = 3;
+
+  /**
    * A teammate this close to the own bomb answers a lit fuse at once. In prod (tsmc, Oct 18-23) six
    * teams had one this close less than 40% of the time: their anchors held 13 to 25 blocks out, on
    * cover above or beside the bomb, and a fuse lit there burned while they walked back.
@@ -532,7 +542,7 @@ public final class Playbook {
         case PLANT -> plant(key, want);
         case ESCORT -> escort(key, want);
         case LANE -> lane(key, want, index);
-        case FLANK -> flank(key, want);
+        case FLANK -> flank(key, want, index);
         case OVERWATCH -> overwatch(key, want);
         case ANCHOR -> anchor(key, want, index);
         case SWEEP -> sweep(key, want, index);
@@ -606,7 +616,86 @@ public final class Playbook {
           0);
     }
 
-    private Slot flank(String key, Want want) {
+    /** The first side passage, or -1 when the routes are all main lanes. */
+    private int cutLane() {
+      var lanes = setup.lanes();
+      for (var i = 0; i < lanes.size(); i++) {
+        if (lanes.get(i).cut()) {
+          return i;
+        }
+      }
+      return -1;
+    }
+
+    /**
+     * The home mouth of a side passage: the first point walking out from home that sits outside the
+     * bomb's base and off the main lanes. A passage that only brushes the bomb, or that still
+     * shares a main lane there, is not its own post. The screen already watches that door.
+     */
+    private Optional<Vec3> cutMouth(Lane tunnel, Vec3 guard) {
+      var length = tunnel.length();
+      if (length < 1) {
+        return Optional.empty();
+      }
+      var steps = (int) Math.ceil(length);
+      var entered = false;
+      for (var step = 0; step <= steps; step++) {
+        var at = tunnel.at(step / length);
+        var distance = at.horizontalDistance(guard);
+        if (distance > ANCHOR_MAX) {
+          if (entered) {
+            break;
+          }
+          continue;
+        }
+        if (distance < ANCHOR_MIN) {
+          continue;
+        }
+        entered = true;
+        if (separateApproach(at)) {
+          return Optional.of(at);
+        }
+      }
+      return Optional.empty();
+    }
+
+    /** Whether {@code mouth} is a tunnel entrance or stands clear of every main lane. */
+    private boolean separateApproach(Vec3 mouth) {
+      var nearest = Double.POSITIVE_INFINITY;
+      var beside = mouth.y();
+      for (var lane : setup.lanes()) {
+        if (lane.cut()) {
+          continue;
+        }
+        for (var point : lane.points()) {
+          var distance = point.horizontalDistance(mouth);
+          if (distance < nearest) {
+            nearest = distance;
+            beside = point.y();
+          }
+        }
+      }
+      return Double.isFinite(nearest)
+          && (beside - mouth.y() >= MOUTH_DROP || nearest >= MOUTH_OFF);
+    }
+
+    private Slot flank(String key, Want want, int index) {
+      var cut = cutLane();
+      if (index == 0 && cut >= 0) {
+        var tunnel = setup.lanes().get(cut);
+        var along = Math.clamp(push + FLANK_AHEAD, LANE_NEAREST, MAX_PUSH + FLANK_AHEAD);
+        var at = place(tunnel.at(along));
+        return new Slot(
+            key,
+            SlotKind.FLANK,
+            want.role(),
+            at,
+            setup.objective().map(BombView::pos).orElseGet(() -> tunnel.at(1)),
+            cut,
+            want.pair(),
+            Optional.empty(),
+            0);
+      }
       var lane = laneIndex(want.which());
       var chosen = setup.lanes().get(lane);
       var progress = Math.clamp(push + FLANK_AHEAD, LANE_NEAREST, MAX_PUSH + FLANK_AHEAD);
@@ -703,6 +792,34 @@ public final class Playbook {
     }
 
     private Slot anchor(String key, Want want, int index) {
+      var cut = cutLane();
+      if (index == 0 && cut >= 0) {
+        var tunnel = setup.lanes().get(cut);
+        var mouth = cutMouth(tunnel, setup.guard());
+        if (mouth.isPresent()) {
+          var snapped = snap(mouth.orElseThrow());
+          if (snapped.horizontalDistance(setup.guard()) >= ANCHOR_MIN
+              && separateApproach(snapped)) {
+            var at = place(snapped);
+            if (at.horizontalDistance(setup.guard()) >= ANCHOR_MIN) {
+              var direction = at.minus(setup.guard()).horizontal();
+              var out = direction.isZero() ? axis : direction.normalized();
+              anchorDirections.add(out);
+              var watch = tunnel.at(Math.clamp(tunnel.progressOf(at) + 0.28, 0.4, 1));
+              return new Slot(
+                  key,
+                  SlotKind.ANCHOR,
+                  want.role(),
+                  at,
+                  watch,
+                  cut,
+                  want.pair(),
+                  Optional.empty(),
+                  0);
+            }
+          }
+        }
+      }
       var guard = setup.guard();
       var threat = setup.sightings().stream().findFirst().orElseGet(setup::enemyHome);
       var toEnemy = threat.minus(guard).horizontal();

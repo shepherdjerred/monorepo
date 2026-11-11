@@ -242,6 +242,7 @@ public final class RwfBotsHarness implements AutoCloseable {
         new com.shepherdjerred.thestorm.rwf.app.BattleSoundLog(clock));
     services.provide(com.shepherdjerred.thestorm.rwf.app.TacticalCasting.class, id -> false);
     services.provide(com.shepherdjerred.thestorm.rwf.app.MatchSummons.class, java.util.List::of);
+    services.provide(com.shepherdjerred.thestorm.rwf.app.MatchCrates.class, java.util.List::of);
     // The harness's scripted fights and chat checks predate name-tag sightings: every tag is
     // hidden, so bots know the humans only by sight and sound. Perception tests cover the tags.
     services.provide(com.shepherdjerred.thestorm.rwf.app.NameTags.class, player -> true);

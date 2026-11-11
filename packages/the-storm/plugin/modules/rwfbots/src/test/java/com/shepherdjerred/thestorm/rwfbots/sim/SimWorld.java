@@ -267,8 +267,33 @@ final class SimWorld {
       }
     }
     flyArrows();
+    holdFuses();
     tickBombs();
     poison();
+  }
+
+  /** A raised fuse in reach keeps the sim bomb's clock alive, the way a held click does on the server. */
+  private void holdFuses() {
+    for (var body : bodies.values()) {
+      if (!body.alive || !body.usingItem || body.reflexContext == null) {
+        continue;
+      }
+      if (body.heldSlot != body.reflexContext.loadout().fuseSlot()) {
+        continue;
+      }
+      var eye = body.pos.plus(0, CombatantView.EYE_HEIGHT, 0);
+      for (var bomb : bombs.values()) {
+        if (bomb.pos.distance(eye) <= 3.5) {
+          bomb.click(body.id, body.team, tick, lastAlive(body));
+          break;
+        }
+      }
+    }
+  }
+
+  private boolean lastAlive(SimBody body) {
+    return bodies.values().stream()
+        .noneMatch(other -> other.alive && other.team.equals(body.team) && other != body);
   }
 
   private void tickBombs() {

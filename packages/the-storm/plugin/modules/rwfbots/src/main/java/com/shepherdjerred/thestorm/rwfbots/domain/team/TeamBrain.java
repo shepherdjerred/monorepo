@@ -229,7 +229,9 @@ public final class TeamBrain {
               pending.assignment().finish(distances, random),
               plan.dealtTick(),
               plan.groups(),
-              plan.pushedTick());
+              plan.pushedTick(),
+              plan.posture(),
+              plan.reckless());
       return board.withPlan(completed, tick);
     }
   }
@@ -302,7 +304,12 @@ public final class TeamBrain {
     var assignment =
         new RoleAssignment(
             new Dealing(
-                board.plan(), situation, alive, nuke, pinned(board, alive, snapshot.tick())),
+                board.plan(),
+                situation,
+                alive,
+                nuke,
+                pinned(board, alive, snapshot.tick()),
+                lanes),
             slots);
     return new Deal(
         new TeamPlan(
@@ -317,7 +324,9 @@ public final class TeamBrain {
             Squads.deal(board.plan().groups(), alive, situation.members()),
             push == board.plan().push() && board.plan().pushedTick() >= 0
                 ? board.plan().pushedTick()
-                : snapshot.tick()),
+                : snapshot.tick(),
+            board.plan().posture(),
+            board.plan().reckless()),
         assignment);
   }
 
@@ -326,7 +335,8 @@ public final class TeamBrain {
     var slots = RetakeFormation.slots(situation.nav(), bomb, alive, board.plan());
     var pinned = pinned(board, alive, situation.snapshot().tick());
     var assignment =
-        new RoleAssignment(new Dealing(board.plan(), situation, alive, false, pinned), slots);
+        new RoleAssignment(
+            new Dealing(board.plan(), situation, alive, false, pinned, List.of()), slots);
     return new Deal(
         new TeamPlan(
             Optional.of(board.strategy()),
@@ -338,7 +348,9 @@ public final class TeamBrain {
             Map.of(),
             situation.snapshot().tick(),
             Squads.deal(board.plan().groups(), alive, situation.members()),
-            board.plan().pushedTick()),
+            board.plan().pushedTick(),
+            board.plan().posture(),
+            board.plan().reckless()),
         assignment);
   }
 
@@ -612,10 +624,12 @@ public final class TeamBrain {
       TeamSituation situation,
       List<CombatantView> alive,
       boolean nuke,
-      Set<CombatantId> pinned) {
+      Set<CombatantId> pinned,
+      List<Lane> lanes) {
 
     Dealing {
       pinned = Set.copyOf(pinned);
+      lanes = List.copyOf(lanes);
     }
   }
 
@@ -629,7 +643,45 @@ public final class TeamBrain {
             * (slot.role() == Role.RETAKE || slot.key().equals(Playbook.HOLD) ? 4 : 1)
         + (held ? STICKY : 0)
         - HumanSupport.cost(slot, bot, dealing.situation().snapshot())
-        - (slot.role() == Role.RETAKE && dealing.pinned().contains(bot.id()) ? HANDOFF : 0);
+        - (slot.role() == Role.RETAKE && dealing.pinned().contains(bot.id()) ? HANDOFF : 0)
+        - cutDrift(dealing, bot, slot);
+  }
+
+  /**
+   * A bot already on a main lane stays there when someone else is already off it, so a second bot
+   * is not pulled into the same side passage.
+   */
+  private static double cutDrift(Dealing dealing, CombatantView bot, Slot slot) {
+    if (slot.lane() < 0 || slot.lane() >= dealing.lanes().size()) {
+      return 0;
+    }
+    var lane = dealing.lanes().get(slot.lane());
+    if (!lane.cut()) {
+      return 0;
+    }
+    var graph = dealing.situation().nav().graph();
+    var here = graph.nearestNodeWithin(bot.pos(), 2);
+    if (here.isEmpty()) {
+      return 0;
+    }
+    var mains = dealing.lanes().stream().filter(candidate -> !candidate.cut()).toList();
+    if (mains.isEmpty()) {
+      return 0;
+    }
+    var onMain =
+        mains.stream().anyMatch(main -> main.corridor().contains(here.getAsInt()));
+    if (!onMain) {
+      return 0;
+    }
+    var company =
+        dealing.alive().stream()
+            .filter(mate -> !mate.id().equals(bot.id()))
+            .anyMatch(mate -> {
+              var node = graph.nearestNodeWithin(mate.pos(), 2);
+              return node.isEmpty()
+                  || mains.stream().noneMatch(main -> main.corridor().contains(node.getAsInt()));
+            });
+    return company ? 4 : 0;
   }
 
   /**

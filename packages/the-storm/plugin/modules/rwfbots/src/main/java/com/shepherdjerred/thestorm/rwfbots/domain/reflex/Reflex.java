@@ -78,13 +78,7 @@ public final class Reflex {
   /** Right-clicks with steaks and kit items are at least this many ticks apart: one hand. */
   public static final int STEAK_GAP_TICKS = 4;
 
-  /** Fuse clicks target this gap, in ticks (300 ms). */
-  public static final int FUSE_BASE_GAP = 6;
-
-  /** A fuse gap longer than this resets arming progress (750 ms). */
-  public static final int FUSE_RESET_GAP = 15;
-
-  /** How close the bot must stand to click a bomb. */
+  /** How close the bot must stand to work a bomb. */
   public static final double BOMB_REACH = 3.0;
 
   /** Teammates closer than this push each other apart while fighting. */
@@ -109,7 +103,6 @@ public final class Reflex {
 
   private static final double CLICK_GAP_LOG_MEAN = 0.1;
   private static final double CLICK_GAP_LOG_SIGMA = 0.25;
-  private static final double FUSE_SLIP_SCALE = 6;
   private static final long CROUCH_BURST_TICKS = 30;
   private static final long CROUCH_TAP_TICKS = 3;
 
@@ -174,15 +167,6 @@ public final class Reflex {
     return grid.raycast(eye, hit, VoxelGrid.Layer.MOVEMENT).isEmpty();
   }
 
-  /**
-   * The gap until the next fuse click: the base plus an exponential slip that shrinks with skill.
-   */
-  public static int fuseGap(Levers levers, RandomGenerator random) {
-    var meanSlip = (1 - levers.technique()) * FUSE_SLIP_SCALE;
-    var slip = meanSlip <= 0 ? 0 : -StrictMath.log(1 - random.nextDouble()) * meanSlip;
-    return Math.min(FUSE_RESET_GAP - 3, FUSE_BASE_GAP + (int) Math.round(slip));
-  }
-
   /** The gap until the next melee click: never under the CPS floor, log-normally above it. */
   public static double clickGap(Levers levers, RandomGenerator random) {
     var factor = StrictMath.exp(CLICK_GAP_LOG_MEAN + CLICK_GAP_LOG_SIGMA * random.nextGaussian());
@@ -228,11 +212,13 @@ public final class Reflex {
 
     void execute() {
       if (!self.alive() || !input.snapshot().isLive()) {
+        releaseFuse();
         commands.add(new BodyCommand.Stop());
         return;
       }
       if (input.decision().routeFailure().isPresent()) {
         stopShooting();
+        releaseFuse();
         commands.add(new BodyCommand.Stop());
         return;
       }
@@ -275,19 +261,25 @@ public final class Reflex {
 
     private void act(Optional<BombView> bomb, Optional<CombatantView> target) {
       if (state.isEating() || shouldStartEating(target)) {
+        releaseFuse();
         eat(target);
       } else if (bomb.isPresent() && !inReach(target)) {
         fuse(bomb.get());
       } else if (target.isPresent() && !avoiding() && wantsBow(target.get())) {
+        releaseFuse();
         bow(target.get());
       } else if (target.isPresent() && !avoiding()) {
+        releaseFuse();
         melee(target.get());
       } else if (target.isPresent()) {
+        releaseFuse();
         retreat(target.orElseThrow());
       } else if (ReadyDraw.holds(state, input, context.loadout())) {
+        releaseFuse();
         ready();
       } else {
         stopShooting();
+        releaseFuse();
         walk(Optional.empty());
       }
     }
@@ -348,7 +340,6 @@ public final class Reflex {
       var threatened =
           com.shepherdjerred.thestorm.rwfbots.domain.tactics.ObjectivePolicy.immediateThreat(
               self, target, context.grid(), now);
-      if (threatened) state = state.withNextFuseClick(now + 15);
       return !threatened;
     }
 
@@ -436,6 +427,7 @@ public final class Reflex {
       walk(Optional.of(false));
     }
 
+    /** Holds the fuse on {@code bomb}. A fight releases it; the match tick earns the clock. */
     private void fuse(BombView bomb) {
       stopShooting();
       commands.add(new BodyCommand.Stop());
@@ -445,9 +437,15 @@ public final class Reflex {
       state =
           state.withAim(
               AimController.steer(state.aim(), Facing.looking(self.eye(), bomb.pos()), levers()));
-      if (now >= state.nextFuseClick()) {
-        commands.add(new BodyCommand.ClickBomb(bomb.id()));
-        state = state.withNextFuseClick(now + fuseGap(levers(), random));
+      if (!self.usingItem() || self.heldSlot() != context.loadout().fuseSlot()) {
+        commands.add(new BodyCommand.StartUse());
+      }
+    }
+
+    /** Drops a fuse the bot is no longer working, so the hold does not keep arming. */
+    private void releaseFuse() {
+      if (self.usingItem() && self.heldSlot() == context.loadout().fuseSlot()) {
+        commands.add(new BodyCommand.CancelUse());
       }
     }
 
@@ -599,7 +597,10 @@ public final class Reflex {
               new AttackRay(self, state.aim().look(), target),
               context.loadout().melee());
       // Save the next swing for contact rather than spending its cooldown during pursuit.
-      if (!landed && distance > context.loadout().melee().maxReach() + 0.3) {
+      // A miss while the two are circling spends the swing on air. Hold it and step in.
+      if (!landed
+          && (distance > context.loadout().melee().maxReach() + 0.3
+              || MeleePressure.orbiting(self, target))) {
         return;
       }
       commands.add(landed ? new BodyCommand.Attack(target.id()) : new BodyCommand.Swing());
@@ -630,13 +631,16 @@ public final class Reflex {
       // EdgeFooting}); a weave's legs already keep off drops.
       var edge = weave ? EdgeFooting.NONE : EdgeFooting.read(context.grid(), self, target, radial);
       if (edge.side() != 0) state = state.withStrafe(edge.side(), state.nextStrafeFlip());
+      var orbiting = edge.side() == 0 && MeleePressure.orbiting(self, target);
+      if (orbiting) state = state.withStrafe(MeleePressure.cutAcross(self, target), now + 8);
       var side = new Vec3(-radial.z(), 0, radial.x()).scale(state.strafeDir());
       // Combat movement needs the same reaction-window personal space as formation movement.
       var apart = walkingApart();
-      var closing =
-          edge.closing(
-              MeleePressure.closing(
-                  distance, apart.length() > CROWDED, MeleePressure.yields(input), edge.ledged()));
+      var lean =
+          MeleePressure.closing(
+              distance, apart.length() > CROWDED, MeleePressure.yields(input), edge.ledged());
+      if (orbiting) lean = Math.max(lean, 1.0);
+      var closing = edge.closing(lean);
       // Outside contact range, pursue rather than spending most acceleration circling.
       var charging = context.loadout().body() == Kit.Body.CHARGE && distance > REACH + 0.5;
       // An Inertia runs straight in: a strafe turns it and its momentum is lost.

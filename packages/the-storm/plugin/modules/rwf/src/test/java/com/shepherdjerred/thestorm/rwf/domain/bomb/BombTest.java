@@ -53,25 +53,28 @@ final class BombTest {
         error -> error);
   }
 
+  /** A hold sampled this often still earns the clock one second per second. */
+  private static final long HOLD_STEP_MS = 50;
+
   /**
-   * The clickers click every half second until {@code seconds} have passed or a click arms or
-   * defuses the bomb (leaving {@code now} at that click), then one tick.
+   * The workers hold right-click, sampled every {@link #HOLD_STEP_MS}, until {@code seconds} have
+   * passed or the bomb arms or defuses (leaving {@code now} at that sample), then one tick.
    */
-  private Bomb spam(Bomb bomb, List<BombClick> clickers, double seconds) {
+  private Bomb hold(Bomb bomb, List<BombClick> workers, double seconds) {
     var current = bomb;
     var wasArmed = current.armed();
     var end = now.plusMillis((long) (seconds * 1000));
     while (!now.isAfter(end)) {
-      for (var template : clickers) {
+      for (var template : workers) {
         current =
-            ok(current.click(
+            ok(current.hold(
                     new BombClick(template.clicker(), template.team(), template.fuse(), now)))
                 .bomb();
       }
       if (current.armed() != wasArmed) {
         return current;
       }
-      now = now.plusMillis(500);
+      now = now.plusMillis(HOLD_STEP_MS);
     }
     return current.tick(now).bomb();
   }
@@ -80,14 +83,41 @@ final class BombTest {
   final class Arming {
 
     @Test
-    void oneClickerNeedsNineSeconds() {
+    void oneHolderNeedsNineSeconds() {
+      var bomb = ok(redBomb.hold(click(ALICE, TeamColor.BLUE, now))).bomb();
+
+      var attempt = onlyAttempt(bomb);
+      assertThat(attempt.secondsToFuse()).isEqualTo(9);
+      assertThat(attempt.holding()).isTrue();
+      assertThat(attempt.credit()).isZero();
+      assertThat(attempt.finishesAt()).isEqualTo(now.plusSeconds(9));
+      assertThat(attempt.clickers()).containsExactly(ALICE);
+      assertThat(bomb.armed()).isFalse();
+    }
+
+    @Test
+    void aTapEarnsAFifthOfASecond() {
       var bomb = ok(redBomb.click(click(ALICE, TeamColor.BLUE, now))).bomb();
 
       var attempt = onlyAttempt(bomb);
       assertThat(attempt.secondsToFuse()).isEqualTo(9);
-      assertThat(attempt.finishesAt()).isEqualTo(now.plusSeconds(9));
-      assertThat(attempt.clickers()).containsExactly(ALICE);
+      assertThat(attempt.holding()).isFalse();
+      assertThat(attempt.credit()).isEqualTo(ArmAttempt.TAP_CREDIT.toMillis() / 1000D);
+      assertThat(attempt.finished(now)).isFalse();
+      assertThat(attempt.finishesAt()).isAfter(now.plusSeconds(9));
+    }
+
+    @Test
+    void tappingForNineAndAHalfSecondsDoesNotArm() {
+      var end = now.plusMillis(9_500);
+      var bomb = redBomb;
+      while (!now.isAfter(end)) {
+        bomb = ok(bomb.click(click(ALICE, TeamColor.BLUE, now))).bomb();
+        now = now.plusMillis(500);
+      }
+
       assertThat(bomb.armed()).isFalse();
+      assertThat(onlyAttempt(bomb).credit()).isLessThan(9);
     }
 
     @Test
@@ -131,11 +161,11 @@ final class BombTest {
 
     @Test
     void aPauseLongerThanTheClickGapStartsOver() {
-      var bomb = ok(redBomb.click(click(ALICE, TeamColor.BLUE, now))).bomb();
-      bomb = ok(bomb.click(click(ALICE, TeamColor.BLUE, now.plusMillis(750)))).bomb();
+      var bomb = ok(redBomb.hold(click(ALICE, TeamColor.BLUE, now))).bomb();
+      bomb = ok(bomb.hold(click(ALICE, TeamColor.BLUE, now.plusMillis(750)))).bomb();
       assertThat(onlyAttempt(bomb).startedAt()).isEqualTo(now);
 
-      bomb = ok(bomb.click(click(ALICE, TeamColor.BLUE, now.plusMillis(1501)))).bomb();
+      bomb = ok(bomb.hold(click(ALICE, TeamColor.BLUE, now.plusMillis(1501)))).bomb();
 
       assertThat(onlyAttempt(bomb).startedAt()).isEqualTo(now.plusMillis(1501));
       assertThat(onlyAttempt(bomb).finishesAt()).isEqualTo(now.plusMillis(1501).plusSeconds(9));
@@ -151,7 +181,7 @@ final class BombTest {
 
     @Test
     void keepingTheFuseOnArmsTheBomb() {
-      var bomb = spam(redBomb, List.of(click(ALICE, TeamColor.BLUE, now)), 9.5);
+      var bomb = hold(redBomb, List.of(click(ALICE, TeamColor.BLUE, now)), 9.5);
 
       assertThat(bomb.armed()).isTrue();
       assertThat(bomb.team()).contains(TeamColor.RED);
@@ -168,14 +198,14 @@ final class BombTest {
               click(BOB, TeamColor.GREEN, late),
               click(CAROL, TeamColor.GREEN, late),
               click(DAVE, TeamColor.GREEN, late));
-      bomb = spam(bomb, List.of(blue), 0.5);
+      bomb = hold(bomb, List.of(blue), 0.5);
       var outcomes = new ArrayList<BombOutcome>();
       while (!bomb.armed()) {
         for (var template : List.of(blue, greens.get(0), greens.get(1), greens.get(2))) {
           if (bomb.armed()) {
             break;
           }
-          var step = ok(bomb.click(new BombClick(template.clicker(), template.team(), PLAIN, now)));
+          var step = ok(bomb.hold(new BombClick(template.clicker(), template.team(), PLAIN, now)));
           bomb = step.bomb();
           outcomes.addAll(step.outcomes());
         }
@@ -196,7 +226,7 @@ final class BombTest {
       assertThat(refused(redBomb.click(click(ALICE, TeamColor.RED, now))))
           .isEqualTo(BombError.CANNOT_ARM_OWN_BOMB);
 
-      var armed = spam(redBomb, List.of(click(ALICE, TeamColor.BLUE, now)), 9.5);
+      var armed = hold(redBomb, List.of(click(ALICE, TeamColor.BLUE, now)), 9.5);
 
       assertThat(refused(armed.click(click(ALICE, TeamColor.BLUE, now))))
           .isEqualTo(BombError.CANNOT_DEFUSE_ENEMY_BOMB);
@@ -206,7 +236,7 @@ final class BombTest {
     @Test
     void aNukeIsAnyonesUntilArmedAndThenNotItsArmers() {
       ok(nuke.click(click(ALICE, TeamColor.RED, now)));
-      var armed = spam(nuke, List.of(click(ALICE, TeamColor.RED, now)), 9.5);
+      var armed = hold(nuke, List.of(click(ALICE, TeamColor.RED, now)), 9.5);
 
       assertThat(armed.team()).contains(TeamColor.RED);
       assertThat(refused(armed.click(click(BOB, TeamColor.RED, now))))
@@ -227,7 +257,7 @@ final class BombTest {
 
     @Test
     void theFuseBurnsASecondAtATimeAndAnnouncesTheEnd() {
-      var bomb = spam(redBomb, List.of(click(ALICE, TeamColor.BLUE, now)), 9.5);
+      var bomb = hold(redBomb, List.of(click(ALICE, TeamColor.BLUE, now)), 9.5);
       var fusedAt = now;
       var outcomes = new ArrayList<BombOutcome>();
       for (var k = 1; k <= 60; k++) {
@@ -251,7 +281,7 @@ final class BombTest {
 
     @Test
     void theFirstSecondBurnsOnTheFirstTickAfterArming() {
-      var bomb = spam(redBomb, List.of(click(ALICE, TeamColor.BLUE, now)), 9.5);
+      var bomb = hold(redBomb, List.of(click(ALICE, TeamColor.BLUE, now)), 9.5);
 
       var step = bomb.tick(now.plusMillis(1));
 
@@ -262,15 +292,15 @@ final class BombTest {
 
     @Test
     void defusingRestoresTheBlockAndResetsTheFuse() {
-      var bomb = spam(redBomb, List.of(click(ALICE, TeamColor.BLUE, now)), 9.5);
+      var bomb = hold(redBomb, List.of(click(ALICE, TeamColor.BLUE, now)), 9.5);
       bomb = bomb.tick(now.plusSeconds(10)).bomb();
       now = now.plusSeconds(10);
       assertThat(((Armed) bomb.state()).remaining()).isEqualTo(50);
 
       var start = now;
       var outcomes = new ArrayList<BombOutcome>();
-      while (!now.isAfter(start.plusMillis(9500))) {
-        var step = ok(bomb.click(click(BOB, TeamColor.RED, now)));
+      while (bomb.armed() && !now.isAfter(start.plusMillis(9500))) {
+        var step = ok(bomb.hold(click(BOB, TeamColor.RED, now)));
         bomb = step.bomb();
         outcomes.addAll(step.outcomes());
         now = now.plusMillis(500);
@@ -278,20 +308,20 @@ final class BombTest {
 
       assertThat(outcomes).containsExactly(new BombOutcome.Defused(TeamColor.RED, List.of(BOB)));
       assertThat(bomb.state()).isEqualTo(Idle.EMPTY);
-      var rearmed = spam(bomb, List.of(click(ALICE, TeamColor.BLUE, now)), 9.5);
+      var rearmed = hold(bomb, List.of(click(ALICE, TeamColor.BLUE, now)), 9.5);
       assertThat(((Armed) rearmed.state()).remaining()).isEqualTo(60);
     }
 
     @Test
     void aDefuseSurvivesTheFuseBurningBetweenClicks() {
-      var bomb = spam(redBomb, List.of(click(ALICE, TeamColor.BLUE, now)), 9.5);
+      var bomb = hold(redBomb, List.of(click(ALICE, TeamColor.BLUE, now)), 9.5);
       now = now.plusSeconds(10);
       bomb = bomb.tick(now).bomb();
 
       var start = now;
       var outcomes = new ArrayList<BombOutcome>();
       while (bomb.armed() && !now.isAfter(start.plusMillis(9500))) {
-        var clicked = ok(bomb.click(click(BOB, TeamColor.RED, now)));
+        var clicked = ok(bomb.hold(click(BOB, TeamColor.RED, now)));
         outcomes.addAll(clicked.outcomes());
         now = now.plusMillis(500);
         var ticked = clicked.bomb().tick(now);
@@ -305,7 +335,7 @@ final class BombTest {
 
     @Test
     void restoringANukeForgetsItsTeam() {
-      var armed = spam(nuke, List.of(click(ALICE, TeamColor.RED, now)), 9.5);
+      var armed = hold(nuke, List.of(click(ALICE, TeamColor.RED, now)), 9.5);
 
       assertThat(armed.restore().team()).isEmpty();
       assertThat(nuke.restore()).isEqualTo(nuke);

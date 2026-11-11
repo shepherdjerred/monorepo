@@ -20,6 +20,20 @@ public final class StreakPlay {
    * @param next the earliest tick it may call one in
    */
   public static boolean now(int carried, ReflexInput input, long next) {
+    return now(carried, input, next, false, true);
+  }
+
+  /**
+   * Whether to call in a reward now. A supply crate waits for {@code safe}: no enemy nearby and
+   * not on a bomb column. Other rewards keep the old rule.
+   *
+   * @param supply whether the next reward is a supply crate
+   * @param safe whether the cell under the bot is a safe place to call a supply crate in
+   */
+  public static boolean now(int carried, ReflexInput input, long next, boolean supply, boolean safe) {
+    if (supply && !safe) {
+      return false;
+    }
     return carried > 0
         && input.decision().option()
             != com.shepherdjerred.thestorm.rwfbots.domain.world.Option.DEFUSE

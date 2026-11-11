@@ -119,6 +119,17 @@ final class TacticsCommitmentTest {
   }
 
   @Test
+  void theLastSurvivorKeepsAYoungGoalUnlessABombCanBeArmed() {
+    var scene = sweep(20, 11, -1, false);
+    var young =
+        Optional.of(
+            Plan.of(
+                Option.TAKE_SLOT, 80, new PlanStep.Route(SELF.plus(6, 0, 0), Stance.STEALTH)));
+    assertThat(Tactics.choose(Option.HUNT, young, scene, Map.of())).isEqualTo(Option.TAKE_SLOT);
+    assertThat(Tactics.choose(Option.ARM, young, scene, Map.of())).isEqualTo(Option.ARM);
+  }
+
+  @Test
   void anUncoveredBoundKeepsItsDestinationAtTheNextThinkWhileOrdinarySlotRoutesRefresh() {
     var situation = situation(Role.ROTATE, 20, -1);
     var context =

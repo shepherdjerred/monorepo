@@ -292,6 +292,11 @@ public final class RwfPaper {
     module
         .services()
         .provide(
+            com.shepherdjerred.thestorm.rwf.app.MatchCrates.class,
+            runner.powers().streaks().crates());
+    module
+        .services()
+        .provide(
             com.shepherdjerred.thestorm.rwf.app.VisualOcclusion.class, runner.powers().tactical());
     module
         .services()

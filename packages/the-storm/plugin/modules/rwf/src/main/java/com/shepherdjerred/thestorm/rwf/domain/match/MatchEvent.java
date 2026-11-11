@@ -269,6 +269,16 @@ public sealed interface MatchEvent {
   record BombClicked(CombatantId id, String bombId, Instant now) implements MatchEvent {}
 
   /**
+   * A combatant is holding right-click on a bomb with the Bomb Fuse. Each sample continues the
+   * attempt's clock at full speed. A press that never becomes a hold is a {@link BombClicked} tap.
+   *
+   * @param id who
+   * @param bombId which bomb
+   * @param now when
+   */
+  record BombHeld(CombatantId id, String bombId, Instant now) implements MatchEvent {}
+
+  /**
    * A combatant turned their head: their whole-degree yaw or pitch changed. Clears Red Warfare's
    * AFK mark on a living combatant in a live match.
    *

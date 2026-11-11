@@ -69,6 +69,7 @@ public final class KitPlay {
       case COVER -> SmokeCover.choose(item, input, means.timing());
       case RALLY -> RallyHorn.choose(item, input, means.timing());
       case BLINK -> PearlThrow.choose(item, input, waypointIndex, means);
+      case CRATE_PEARL -> CratePearl.choose(item, input, waypointIndex, means);
       case GUST -> WindCharge.choose(item, input, waypointIndex, means);
       default -> simple(item, input, waypointIndex);
     };

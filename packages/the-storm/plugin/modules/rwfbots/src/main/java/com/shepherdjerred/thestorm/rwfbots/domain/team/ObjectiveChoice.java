@@ -5,6 +5,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.map.NavArtifact;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BombOwner;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BombView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantView;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.WorldSnapshot;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
@@ -31,7 +32,7 @@ final class ObjectiveChoice {
             .map(bomb ->
                 new Candidate(
                     bomb,
-                    priority(board.strategy(), bomb),
+                    priority(board, situation.snapshot(), board.strategy(), bomb),
                     median(field(situation.nav(), bomb), sources)))
             .filter(candidate -> Double.isFinite(candidate.cost()))
             .sorted(
@@ -54,7 +55,14 @@ final class ObjectiveChoice {
             .bomb());
   }
 
-  private static int priority(Strategy strategy, BombView bomb) {
+  private static int priority(
+      Blackboard board, WorldSnapshot snapshot, Strategy strategy, BombView bomb) {
+    if (board.plan().posture().orElse(Posture.PRESS) == Posture.HUNT_WEAKEST) {
+      var weak = TeamPosture.weakest(snapshot, board.team());
+      if (weak.isPresent()) {
+        return bomb.belongsTo(weak.orElseThrow()) ? 0 : 1;
+      }
+    }
     var seeksNuke = strategy == Strategy.HUNT || strategy == Strategy.TURTLE;
     return seeksNuke == (bomb.owner() instanceof BombOwner.Nuke) ? 0 : 1;
   }

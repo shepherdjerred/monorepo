@@ -20,6 +20,11 @@ public enum Option {
   /** Walk over arrows lying nearby to pick them up, on a kit whose shots spend arrows. */
   RESUPPLY,
   /**
+   * Call in a carried supply crate from a safe cell, or walk over to loot one that has landed.
+   * Never instead of a fuse.
+   */
+  CRATE,
+  /**
    * Step off a goal the bot cannot route to. Never scored or drawn: tactics substitutes it when a
    * route fails, and it yields to any real pick once its short commitment ends.
    */

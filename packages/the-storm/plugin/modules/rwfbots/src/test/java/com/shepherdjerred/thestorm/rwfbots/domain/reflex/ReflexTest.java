@@ -532,30 +532,7 @@ final class ReflexTest {
   }
 
   @Test
-  void fuseClickGapsRemainReliableAtEverySkillWhilePreservingSmallTimingVariation() {
-    var skilled = gaps(levers(1), 2000);
-    var clumsy = gaps(levers(0).with(Lever.TECHNIQUE, 0.2), 2000);
-    assertThat(skilled).allMatch(gap -> gap < Reflex.FUSE_RESET_GAP);
-    assertThat(skilled).allMatch(gap -> gap == Reflex.FUSE_BASE_GAP);
-    assertThat(clumsy).allMatch(gap -> gap <= Reflex.FUSE_RESET_GAP - 3);
-    for (var skill = 0; skill <= 10; skill++) {
-      assertThat(gaps(levers(skill / 10.0), 2000)).allMatch(gap -> gap + 1 < Reflex.FUSE_RESET_GAP);
-    }
-    assertThat(clumsy.stream().mapToInt(Integer::intValue).average().orElseThrow())
-        .isGreaterThan(skilled.stream().mapToInt(Integer::intValue).average().orElseThrow());
-  }
-
-  private static List<Integer> gaps(Levers levers, int samples) {
-    var random = new SplittableRandom(9);
-    var out = new ArrayList<Integer>();
-    for (var i = 0; i < samples; i++) {
-      out.add(Reflex.fuseGap(levers, random));
-    }
-    return out;
-  }
-
-  @Test
-  void clicksTheBombWhenStandingNextToIt() {
+  void holdsTheFuseWhenStandingNextToTheBomb() {
     var random = new SplittableRandom(2);
     var self = combatant(1, RED, SyntheticMap.BLUE_BOMB.offset(1, 0, 0).feet());
     var bomb =
@@ -592,14 +569,13 @@ final class ReflexTest {
               Optional.empty());
       var step = Reflex.tick(state, input, context(levers(1)), random);
       state = step.state();
-      if (step.commands().stream().anyMatch(c -> c.equals(new BodyCommand.ClickBomb(bomb.id())))) {
+      if (step.commands().contains(new BodyCommand.StartUse())) {
         clicks.add((long) tick);
       }
+      assertThat(step.commands()).noneMatch(BodyCommand.ClickBomb.class::isInstance);
     }
-    assertThat(clicks).hasSizeGreaterThan(10);
-    for (var i = 1; i < clicks.size(); i++) {
-      assertThat(clicks.get(i) - clicks.get(i - 1)).isLessThan(Reflex.FUSE_RESET_GAP);
-    }
+    // The view never reports the hand as raised, so the hold is asked for every tick.
+    assertThat(clicks).hasSize(100);
   }
 
   @Test

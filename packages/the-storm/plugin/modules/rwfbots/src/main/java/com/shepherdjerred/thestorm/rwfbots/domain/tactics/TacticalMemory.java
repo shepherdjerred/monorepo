@@ -16,9 +16,15 @@ public record TacticalMemory(
     Optional<BombId> detour,
     long safeSince,
     Map<Vec3, Long> blockedUntil,
-    long engagedSince) {
+    long engagedSince,
+    Optional<Vec3> heading,
+    int reversals) {
   public static final TacticalMemory EMPTY =
-      new TacticalMemory(Optional.empty(), Optional.empty(), -1, Map.of(), -1);
+      new TacticalMemory(
+          Optional.empty(), Optional.empty(), -1, Map.of(), -1, Optional.empty(), 0);
+
+  /** A route direction and whether it has reversed often enough to drop the goal. */
+  public record Course(TacticalMemory memory, boolean drop) {}
   public static final long BLOCK_TICKS = 100;
   public static final long RESUME_TICKS = 15;
 
@@ -42,7 +48,36 @@ public record TacticalMemory(
               .orElseThrow();
       copy.remove(oldest.getKey());
     }
-    return new TacticalMemory(defusing, detour, safeSince, copy, engagedSince);
+    return new TacticalMemory(defusing, detour, safeSince, copy, engagedSince, heading, reversals);
+  }
+
+  /** Forgets the route direction after a goal is dropped. */
+  public TacticalMemory clearTrail() {
+    return new TacticalMemory(
+        defusing, detour, safeSince, blockedUntil, engagedSince, Optional.empty(), 0);
+  }
+
+  /**
+   * Remembers {@code next}, the direction the route set off in. A second reversal drops the goal.
+   * A turn that is not a reversal leaves the count alone.
+   */
+  public Course follow(Optional<Vec3> next) {
+    if (next.isEmpty()) return new Course(this, false);
+    var dir = next.orElseThrow().horizontal();
+    if (dir.isZero()) return new Course(this, false);
+    dir = dir.normalized();
+    if (heading.isEmpty()) return new Course(withTrail(Optional.of(dir), 0), false);
+    var dot = heading.orElseThrow().dot(dir);
+    if (dot > 0.2) return new Course(withTrail(Optional.of(dir), 0), false);
+    if (dot > -0.5) return new Course(this, false);
+    var turns = reversals + 1;
+    if (turns >= 2)
+      return new Course(withTrail(Optional.empty(), 0), true);
+    return new Course(withTrail(Optional.of(dir), turns), false);
+  }
+
+  private TacticalMemory withTrail(Optional<Vec3> next, int turns) {
+    return new TacticalMemory(defusing, detour, safeSince, blockedUntil, engagedSince, next, turns);
   }
 
   public boolean excludes(Vec3 goal, long tick) {
@@ -51,7 +86,7 @@ public record TacticalMemory(
   }
 
   public TacticalMemory objective(Optional<BombId> task, Optional<BombId> diversion, long safe) {
-    return new TacticalMemory(task, diversion, safe, blockedUntil, engagedSince);
+    return new TacticalMemory(task, diversion, safe, blockedUntil, engagedSince, heading, reversals);
   }
 
   /** Memory after a think at {@code now} that did or did not leave the bot fighting. */
@@ -59,6 +94,6 @@ public record TacticalMemory(
     var since = fighting ? (engagedSince >= 0 ? engagedSince : now) : -1;
     return since == engagedSince
         ? this
-        : new TacticalMemory(defusing, detour, safeSince, blockedUntil, since);
+        : new TacticalMemory(defusing, detour, safeSince, blockedUntil, since, heading, reversals);
   }
 }

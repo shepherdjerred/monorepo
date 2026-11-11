@@ -18,11 +18,13 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 
 /**
@@ -224,12 +226,17 @@ final class PlayerListener implements Listener {
       var site = bombs.siteAt(Places.pos(block));
       if (site.isPresent() && keys.isFuse(item)) {
         event.setUseInteractedBlock(Event.Result.DENY);
-        event.setUseItemInHand(Event.Result.DENY);
+        // Allow the item use so the client raises the fuse. A short press is the tap; while the
+        // hand stays up, the match tick samples a hold.
+        event.setUseItemInHand(Event.Result.ALLOW);
         actions
             .clickBomb(member.orElseThrow().id(), site.orElseThrow().id())
             .ifPresent(refusal -> refuseBomb(player, refusal));
         return;
       }
+    }
+    if (item != null && keys.isFuse(item) && rightClick(event)) {
+      event.setUseItemInHand(Event.Result.DENY);
     }
     // As the original: any click with the clock in that hand, unless something already denied its
     // use; outside a live fight it does nothing and says nothing.
@@ -326,9 +333,19 @@ final class PlayerListener implements Listener {
     event.setCancelled(true);
     var bomb = bombs.bombOf(event.getRightClicked());
     if (bomb.isPresent() && keys.isFuse(player.getInventory().getItemInMainHand())) {
-      actions
-          .clickBomb(member.orElseThrow().id(), bomb.orElseThrow())
-          .ifPresent(refusal -> refuseBomb(player, refusal));
+      var refusal = actions.clickBomb(member.orElseThrow().id(), bomb.orElseThrow());
+      if (refusal.isEmpty() && event.getHand() == EquipmentSlot.HAND) {
+        player.startUsingItem(EquipmentSlot.HAND);
+      }
+      refusal.ifPresent(reason -> refuseBomb(player, reason));
+    }
+  }
+
+  /** A held fuse must never be eaten when its use duration finally elapses. */
+  @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
+  void onFuseConsume(PlayerItemConsumeEvent event) {
+    if (inWorld(event.getPlayer()) && keys.isFuse(event.getItem())) {
+      event.setCancelled(true);
     }
   }
 

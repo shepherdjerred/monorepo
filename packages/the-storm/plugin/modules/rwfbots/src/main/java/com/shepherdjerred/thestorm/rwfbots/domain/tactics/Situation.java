@@ -6,8 +6,11 @@ import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
 import com.shepherdjerred.thestorm.rwfbots.domain.perception.Percept;
 import com.shepherdjerred.thestorm.rwfbots.domain.perception.Perception;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Blackboard;
+import com.shepherdjerred.thestorm.rwfbots.domain.team.Passages;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Playbook;
+import com.shepherdjerred.thestorm.rwfbots.domain.team.Posture;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Role;
+import com.shepherdjerred.thestorm.rwfbots.domain.team.TeamPosture;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Slot;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.SlotKind;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BombState;
@@ -221,7 +224,8 @@ public record Situation(
    * #MAX_CHASERS} teammates already chase, those nearly dead, and any at point-blank range.
    */
   public List<KnownEnemy> chaseableEnemies() {
-    return knownEnemies().stream()
+    var known = knownEnemies();
+    return known.stream()
         .sorted(
             comparingDouble(enemy ->
                 enemy.pos().distance(self.pos())
@@ -234,7 +238,53 @@ public record Situation(
                         .combatant(enemy.id())
                         .map(view -> view.effectiveHealth() <= LOW_ENEMY_HEALTH)
                         .orElse(false)))
+        .filter(enemy -> follows(enemy, known))
         .toList();
+  }
+
+  /**
+   * Whether {@code enemy} is fair game for the team's posture. Press, a reckless bot, and anyone at
+   * point-blank range chase as usual. A team hunting the weakest ignores every other team. A team
+   * waiting out a fight leaves the two sides of it alone and may take whoever is left.
+   */
+  private boolean follows(KnownEnemy enemy, List<KnownEnemy> known) {
+    var posture = board.plan().posture().orElse(Posture.PRESS);
+    if (posture == Posture.PRESS || board.plan().reckless().contains(self.id())) {
+      return true;
+    }
+    if (enemy.pos().distance(self.pos()) <= POINT_BLANK) {
+      return true;
+    }
+    if (posture == Posture.HUNT_WEAKEST) {
+      var weak = TeamPosture.weakest(snapshot, self.team());
+      if (weak.isEmpty()) {
+        return false;
+      }
+      return snapshot
+          .combatant(enemy.id())
+          .map(CombatantView::team)
+          .filter(weak.orElseThrow()::equals)
+          .isPresent();
+    }
+    return !fighting(enemy, known);
+  }
+
+  /** Whether {@code enemy} is within {@link Passages#FIGHT} of a known enemy from another team. */
+  private boolean fighting(KnownEnemy enemy, List<KnownEnemy> known) {
+    var team = snapshot.combatant(enemy.id()).map(CombatantView::team);
+    if (team.isEmpty()) {
+      return false;
+    }
+    return known.stream()
+        .anyMatch(other -> {
+          if (other.id().equals(enemy.id())) {
+            return false;
+          }
+          var otherTeam = snapshot.combatant(other.id()).map(CombatantView::team);
+          return otherTeam.isPresent()
+              && !otherTeam.orElseThrow().equals(team.orElseThrow())
+              && other.pos().distance(enemy.pos()) <= Passages.FIGHT;
+        });
   }
 
   /** The teammate holding {@link Role#PLANT}, if alive. */

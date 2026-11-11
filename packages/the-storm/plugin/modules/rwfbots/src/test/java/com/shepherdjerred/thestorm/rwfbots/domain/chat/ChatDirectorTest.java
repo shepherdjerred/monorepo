@@ -217,7 +217,7 @@ final class ChatDirectorTest {
   @Test
   void eachBotWaitsOutItsCooldown() {
     var director = director(settings(1), 3);
-    var scene = new ChatScene(List.of(KILLER, dead(ALICE_BLUE), dead(BOB_BLUE)));
+    var scene = new ChatScene(List.of(KILLER, KILLER2, dead(ALICE_BLUE), dead(BOB_BLUE)));
 
     assertThat(director.on(new ChatMoment.Died(ALICE, Optional.of(REDBOT)), scene, T0)).hasSize(1);
     assertThat(
@@ -232,7 +232,7 @@ final class ChatDirectorTest {
   @Test
   void aBotNeverRepeatsALineWithinAMatch() {
     var director = director(settings(1), 4);
-    var scene = new ChatScene(List.of(KILLER, dead(ALICE_BLUE)));
+    var scene = new ChatScene(List.of(KILLER, KILLER2, dead(ALICE_BLUE)));
     var said = new ArrayList<String>();
     for (var i = 0; i < 5; i++) {
       for (var line :
@@ -302,7 +302,7 @@ final class ChatDirectorTest {
   }
 
   @Test
-  void theLastBotStandingOnATeamSpeaksOnce() {
+  void theLastLivingMemberOfATeamStaysQuietUntilTheRoundEnds() {
     var director = director(settings(1), 9);
     var start = new ChatScene(List.of(KILLER, KILLER2, ALICE_BLUE, BOB_BLUE));
     director.on(new ChatMoment.Started(), start, T0);
@@ -311,13 +311,48 @@ final class ChatDirectorTest {
     var lines =
         director.on(new ChatMoment.Died(REDBOT, Optional.of(ALICE)), after, T0.plusSeconds(30));
 
-    assertThat(lines)
-        .filteredOn(line -> line.moment() == Moment.ON_LAST_ALIVE)
-        .singleElement()
-        .satisfies(line -> assertThat(line.speaker()).isEqualTo(REDBOT2));
-    assertThat(director.on(new ChatMoment.Idle(), after, T0.plusSeconds(31)))
-        .filteredOn(line -> line.moment() == Moment.ON_LAST_ALIVE)
+    assertThat(lines).extracting(Utterance::speaker).doesNotContain(REDBOT2);
+    assertThat(lines).extracting(Utterance::moment).doesNotContain(Moment.ON_LAST_ALIVE);
+    assertThat(director.on(new ChatMoment.Idle(), after, T0.plusSeconds(60)))
+        .as("a taunt while alone is dropped")
         .isEmpty();
+    assertThat(director.on(new ChatMoment.Ended(Optional.of(RED)), after, T0.plusSeconds(90)))
+        .anySatisfy(line -> {
+          assertThat(line.speaker()).isEqualTo(REDBOT2);
+          assertThat(line.moment()).isEqualTo(Moment.ON_WIN);
+        });
+  }
+
+  @Test
+  void anUnsafeRoundLineIsDroppedAndNotSaidLater() {
+    var director = director(settings(1), 1);
+    var scene = new ChatScene(List.of(KILLER, KILLER2, dead(ALICE_BLUE), BOB_BLUE));
+
+    assertThat(
+            director.on(
+                new ChatMoment.Died(ALICE, Optional.of(REDBOT)),
+                scene,
+                T0,
+                uuid -> true,
+                uuid -> false))
+        .isEmpty();
+    var later = new ChatScene(List.of(KILLER, KILLER2, dead(ALICE_BLUE), dead(BOB_BLUE)));
+    assertThat(
+            director.on(
+                new ChatMoment.Died(BOB, Optional.of(REDBOT)),
+                later,
+                T0.plusSeconds(30),
+                uuid -> true,
+                REDBOT::equals))
+        .singleElement()
+        .satisfies(line -> {
+          assertThat(line.speaker()).isEqualTo(REDBOT);
+          assertThat(line.moment()).isEqualTo(Moment.ON_KILL);
+        });
+    assertThat(director.on(new ChatMoment.Idle(), later, T0.plusSeconds(60)))
+        .as("the dropped kill is not waiting")
+        .extracting(Utterance::moment)
+        .doesNotContain(Moment.ON_KILL);
   }
 
   @Test
@@ -385,12 +420,8 @@ final class ChatDirectorTest {
         .satisfies(line -> assertThat(line.speaker()).isEqualTo(REDBOT));
     var afterDeath = new ChatScene(List.of(dead(KILLER), KILLER2, VICTIM_BOT, ALICE_BLUE));
     assertThat(director.on(new ChatMoment.Idle(), afterDeath, T0.plusSeconds(100), uuid -> false))
-        .as("team calls use the real complete team, independent of casual admission")
-        .singleElement()
-        .satisfies(line -> {
-          assertThat(line.speaker()).isEqualTo(REDBOT2);
-          assertThat(line.moment()).isEqualTo(Moment.ON_LAST_ALIVE);
-        });
+        .as("the last living teammate stays quiet, and a blocked idle draws nothing")
+        .isEmpty();
   }
 
   @Test

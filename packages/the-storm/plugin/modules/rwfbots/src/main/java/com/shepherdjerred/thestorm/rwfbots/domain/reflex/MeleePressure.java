@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.rwfbots.domain.reflex;
 
+import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantView;
 
 /**
@@ -27,6 +28,12 @@ final class MeleePressure {
   /** Enemies and teammates within this many blocks count towards being outnumbered. */
   static final double NEAR = 6;
 
+  /**
+   * Relative speed, in blocks per tick, above which motion along the circle counts as an orbit
+   * rather than a step in or out.
+   */
+  static final double ORBIT_TANGENT = 0.05;
+
   private MeleePressure() {}
 
   /**
@@ -42,6 +49,32 @@ final class MeleePressure {
     if (distance > Reflex.SPACING_FAR) return 1.0;
     if (yields || ledged) return distance < Reflex.SPACING_NEAR ? BACK_OFF : 0.0;
     return distance < Reflex.SPACING_NEAR ? CLOSE_LEAN : BAND_LEAN;
+  }
+
+  /**
+   * Whether {@code self} and {@code target} are circling: their relative motion is mostly along the
+   * tangent, so the same strafe keeps them missing.
+   */
+  static boolean orbiting(CombatantView self, CombatantView target) {
+    var radial = target.pos().minus(self.pos()).horizontal();
+    if (radial.length() < 0.5) return false;
+    var axis = new Vec3(-radial.z(), 0, radial.x());
+    if (axis.isZero()) return false;
+    var rel = target.vel().minus(self.vel()).horizontal();
+    var tangential = Math.abs(rel.dot(axis.normalized()));
+    var along = Math.abs(rel.dot(radial.normalized()));
+    return tangential >= ORBIT_TANGENT && tangential > along;
+  }
+
+  /**
+   * Strafe sign that steps across {@code target}'s tangent. Positive strafe moves along
+   * {@code (-z, 0, x)} of the direction toward the target.
+   */
+  static int cutAcross(CombatantView self, CombatantView target) {
+    var radial = target.pos().minus(self.pos()).horizontal();
+    var axis = new Vec3(-radial.z(), 0, radial.x()).normalized();
+    var tangent = target.vel().horizontal().dot(axis);
+    return tangent >= 0 ? -1 : 1;
   }
 
   /** Whether the bot may give ground: badly hurt, or more enemies than teammates around it. */
