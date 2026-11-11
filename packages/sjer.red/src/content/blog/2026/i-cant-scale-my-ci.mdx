@@ -13,8 +13,15 @@ isDraft: false
   .prose a.added,
   .prose .added code,
   .prose .added th,
-  .prose .added td {
+  .prose .added td,
+  .prose .added caption {
     color: #dc2626 !important;
+  }
+  .prose .added caption {
+    caption-side: top;
+    text-align: left;
+    font-style: normal;
+    margin-bottom: 0.75rem;
   }
   @media (prefers-color-scheme: dark) {
     .added,
@@ -23,7 +30,8 @@ isDraft: false
     .prose a.added,
     .prose .added code,
     .prose .added th,
-    .prose .added td {
+    .prose .added td,
+    .prose .added caption {
       color: #f87171 !important;
     }
   }
@@ -93,6 +101,7 @@ And it does actually work quite well but unfortunately I am just still doing _to
 I did what anyone would do. I did the math, saw that any cloud compute provider would be hellishly expensive, and bought a second CI node. An investment, I told myself. I spend $XXX on AI subscriptions each month; what's the point if I can't build my software? I make $YYY per year from my work, this is a sound investment in my learning (and, well, my favorite hobby which apparently is software engineering)
 
 <table class="added">
+  <caption>hardware comparison</caption>
   <thead>
     <tr>
       <th></th>
@@ -109,7 +118,7 @@ I did what anyone would do. I did the math, saw that any cloud compute provider 
       <td>~$300 a month</td>
     </tr>
     <tr>
-      <td>AWS, one 8-core instance per CI run, October</td>
+      <td>AWS m7i.2xlarge (8 vCPU, 32 GB) per CI run, October</td>
       <td>~$580</td>
     </tr>
   </tbody>
@@ -121,7 +130,7 @@ This helped a lot! It was essentially the same specs as my primary Kubernetes no
 
 Unfortunately, I got better at using agents, so I have more PRs at a given time. I also came up with more projects which meant more software to build.
 
-![Landed commits by month](./i-cant-scale-my-ci/monorepo-growth.svg)
+![commits per month](./i-cant-scale-my-ci/monorepo-growth.svg)
 
 ---
 
