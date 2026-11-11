@@ -61,13 +61,30 @@ resource "cloudflare_dns_record" "ts_mc_net_cname_public" {
   proxied = true
 }
 
-resource "cloudflare_dns_record" "ts_mc_net_cname_join" {
+# The join.ts-mc.net hostname 301-redirects to The Storm landing page at the
+# edge (see the dynamic redirect ruleset below). Proxied placeholder records
+# (RFC 6666 100::/64 and RFC 5737 192.0.2.1) allow Cloudflare's edge to answer
+# HTTP/HTTPS requests and run the redirect before any origin fetch.
+resource "cloudflare_dns_record" "ts_mc_net_aaaa_join" {
   zone_id = cloudflare_zone.ts_mc_net.id
   ttl     = 1
   name    = "join"
-  type    = "CNAME"
-  content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
+  type    = "AAAA"
+  content = "100::"
   proxied = true
+
+  depends_on = [cloudflare_ruleset.ts_mc_net_redirects]
+}
+
+resource "cloudflare_dns_record" "ts_mc_net_a_join" {
+  zone_id = cloudflare_zone.ts_mc_net.id
+  ttl     = 1
+  name    = "join"
+  type    = "A"
+  content = "192.0.2.1"
+  proxied = true
+
+  depends_on = [cloudflare_ruleset.ts_mc_net_redirects]
 }
 
 # ── Dynamic Redirects ───────────────────────────────────────────────────────
