@@ -24,7 +24,7 @@ import {
   type HistorySourceReadResult,
   type UsageEventEntry,
 } from "@shepherdjerred/toolkit/lib/history/types.ts";
-import { scanCodexCatalog } from "./codex-catalog.ts";
+import { codexCatalogMessages, scanCodexCatalog } from "./codex-catalog.ts";
 import { readCodexHistoryJsonl } from "./codex-history.ts";
 
 type CodexItem = {
@@ -296,17 +296,6 @@ export async function readCodex(
       const catalogBySourceId = new Map(
         catalogDocuments.map((document) => [document.sourceId, document]),
       );
-      const catalogMessages = (
-        document: HistoryDocument | undefined,
-      ): readonly HistoryMessage[] => {
-        if (document === undefined) {
-          return [];
-        }
-        const text = [document.title, document.toolOutputText]
-          .filter((part) => part.length > 0)
-          .join("\n");
-        return [{ role: "tool", text, createdAt: document.updatedAt }];
-      };
       const byPath = Map.groupBy(records, (record) => record.path);
       for (const [filePath, fileRecords] of byPath) {
         if (/thread_history_.*\.sqlite$/u.test(filePath)) {
@@ -322,7 +311,7 @@ export async function readCodex(
             }
             result.set(record.sourceId, [
               ...threadMessages,
-              ...catalogMessages(catalogByThread.get(threadId)),
+              ...codexCatalogMessages(catalogByThread.get(threadId)),
             ]);
           }
         } else if (filePath === paths.codexHistoryJsonl) {
@@ -340,7 +329,7 @@ export async function readCodex(
           for (const record of fileRecords) {
             const document = catalogBySourceId.get(record.sourceId);
             if (document !== undefined) {
-              result.set(record.sourceId, catalogMessages(document));
+              result.set(record.sourceId, codexCatalogMessages(document));
             }
           }
         }

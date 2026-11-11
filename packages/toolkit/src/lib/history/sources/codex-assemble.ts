@@ -1,7 +1,9 @@
+import { documentDetails } from "@shepherdjerred/toolkit/lib/history/query/messages.ts";
 import type {
   HistoryDocument,
   UsageEventEntry,
 } from "@shepherdjerred/toolkit/lib/history/types.ts";
+import { codexCatalogMessages } from "./codex-catalog.ts";
 import {
   buildCodexThreadDocument,
   usageOnlyCodexDocument,
@@ -103,9 +105,13 @@ function overlayCatalog(
   }
   return {
     ...document,
+    // Counts follow the detail reader, which appends the catalog message.
+    ...documentDetails(
+      [...build.messages, ...codexCatalogMessages(catalog)],
+      catalog.gitBranch ?? document.gitBranch,
+    ),
     title: catalog.title,
     workspace: catalog.workspace,
-    gitBranch: catalog.gitBranch ?? document.gitBranch,
     agent: catalog.agent,
     toolOutputText: [document.toolOutputText, catalog.toolOutputText]
       .filter((text) => text.length > 0)

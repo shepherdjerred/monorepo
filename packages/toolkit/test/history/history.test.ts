@@ -929,6 +929,42 @@ describe("rejects usage records with unreliable timestamps or identity", () => {
 });
 
 describe("history source adapter reads", () => {
+  test("counts Codex catalog sessions the way session detail reads them", async () => {
+    const codexSource = createHistorySources().find(
+      (source) => source.name === "codex",
+    );
+    if (codexSource === undefined) {
+      throw new Error("Codex source is missing");
+    }
+    const scanned = await codexSource.scan(paths);
+    const documents = ["t1", "t2"].map((threadId) => {
+      const document = scanned.documents.find(
+        (entry) => entry.runtimeId === threadId,
+      );
+      if (document === undefined) {
+        throw new Error(`Codex fixture thread ${threadId} is missing`);
+      }
+      return document;
+    });
+    const detail = await codexSource.read(
+      paths,
+      documents.map((document, index) =>
+        recordFromDocument(document, index + 1),
+      ),
+    );
+
+    // t1 has thread history plus its catalog entry; t2 is catalog-only.
+    expect(
+      documents.map((document) => [
+        document.messageCount,
+        detail.messages.get(document.sourceId)?.length,
+      ]),
+    ).toEqual([
+      [3, 3],
+      [1, 1],
+    ]);
+  });
+
   test("performs batched reads only for selected indexed records", async () => {
     const sources = createHistorySources();
     for (const source of sources) {
