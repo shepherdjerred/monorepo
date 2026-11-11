@@ -5,11 +5,11 @@
     .fill { fill: #171717; }
     .line { fill: none; stroke: #171717; stroke-width: 1.5; }
     .hair { fill: none; stroke: #171717; stroke-width: 1; }
-    text { fill: #dc2626; font-family: ui-sans-serif, system-ui, sans-serif; }
+    text { fill: #171717; font-family: ui-sans-serif, system-ui, sans-serif; }
     @media (prefers-color-scheme: dark) {
       .fill { fill: #f4f4f5; }
       .line, .hair { stroke: #f4f4f5; }
-      text { fill: #f87171; }
+      text { fill: #f4f4f5; }
     }
   </style>
 
