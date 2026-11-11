@@ -33,6 +33,17 @@ function withFirstCommentaryOverride(
   };
 }
 
+function withFirstCourseOverride(overrides: Record<string, unknown>): unknown {
+  const clone = structuredClone(fixture);
+  return {
+    ...clone,
+    courses: [
+      { ...must(clone.courses[0]), ...overrides },
+      ...clone.courses.slice(1),
+    ],
+  };
+}
+
 describe("ManifestSchema", () => {
   test("parses real manifest fixture", () => {
     const result = ManifestSchema.parse(fixture);
@@ -151,9 +162,49 @@ describe("ManifestSchema", () => {
     expect(result.thisWeekData).toHaveLength(0);
   });
 
-  test("rejects unknown fields (strict mode)", () => {
-    const bad = { ...fixture, unknownField: "oops" };
-    expect(() => ManifestSchema.parse(bad)).toThrow();
+  test("tolerates unknown fields from upstream", () => {
+    const withExtra = { ...fixture, unknownField: "oops" };
+    const result = ManifestSchema.parse(withExtra);
+    expect(result.timeStamp).toBe(1_771_681_507_372);
+  });
+
+  test("normalizes numeric and string item IDs to string", () => {
+    const dataNum = withFirstCommentaryOverride({ item1: 3152 });
+    expect(must(ManifestSchema.parse(dataNum).commentaries[0]).item1).toBe(
+      "3152",
+    );
+
+    const dataStr = withFirstCommentaryOverride({ item1: "4646" });
+    expect(must(ManifestSchema.parse(dataStr).commentaries[0]).item1).toBe(
+      "4646",
+    );
+  });
+
+  test("accepts empty string courseImage and courseImage2", () => {
+    const data = withFirstCourseOverride({
+      courseImage: "",
+      courseImage2: "",
+    });
+    const result = ManifestSchema.parse(data);
+    expect(must(result.courses[0]).courseImage).toBe("");
+    expect(must(result.courses[0]).courseImage2).toBe("");
+  });
+
+  test("accepts course with missing override and overlay", () => {
+    const data = withFirstCourseOverride({
+      override: undefined,
+      overlay: undefined,
+    });
+    const result = ManifestSchema.parse(data);
+    expect(must(result.courses[0]).override).toBeUndefined();
+    expect(must(result.courses[0]).overlay).toBeUndefined();
+  });
+
+  test("accepts course with empty chapters array", () => {
+    const clone = structuredClone(fixture);
+    clone.videosToCourses["Meta Updates {all}"] = { chapters: [] };
+    const result = ManifestSchema.parse(clone);
+    expect(result.videosToCourses["Meta Updates {all}"]?.chapters).toEqual([]);
   });
 
   test("rejects invalid role", () => {

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { ManifestSchema } from "./manifest.ts";
+import { ManifestSchema, type Manifest } from "./manifest.ts";
 import {
   getImageUrl,
   parseDate,
@@ -185,6 +185,45 @@ describe("parseManifest", () => {
     expect(() => parseManifest(ManifestSchema.parse(clone))).toThrow(
       /references unknown video/,
     );
+  });
+
+  test("handles course with empty chapters array without throwing", () => {
+    const clone = structuredClone(fixture);
+    clone.videosToCourses["Meta Updates {all}"] = { chapters: [] };
+    const content = parseManifest(ManifestSchema.parse(clone));
+    const metaCourse = must(
+      content.courses.find((course) => course.title.trim() === "Meta Updates"),
+    );
+    expect(metaCourse.videos).toEqual([]);
+  });
+
+  test("handles course with multiple chapters", () => {
+    const withChapters: Manifest = {
+      ...manifest,
+      videosToCourses: {
+        ...manifest.videosToCourses,
+        "Meta Updates {all}": {
+          chapters: [
+            {
+              title: "Chapter 1",
+              vids: [{ uuid: "4lt153z6bl" }],
+            },
+            {
+              title: "Chapter 2",
+              vids: [{ uuid: "54q44khlyf", altTitle: "Part 2" }],
+            },
+          ],
+        },
+      },
+    };
+    const content = parseManifest(withChapters);
+    const metaCourse = must(
+      content.courses.find((course) => course.title.trim() === "Meta Updates"),
+    );
+    expect(metaCourse.videos).toHaveLength(2);
+    expect(metaCourse.videos[0]?.video.uuid).toBe("4lt153z6bl");
+    expect(metaCourse.videos[1]?.video.uuid).toBe("54q44khlyf");
+    expect(metaCourse.videos[1]?.alternateTitle).toBe("Part 2");
   });
 });
 

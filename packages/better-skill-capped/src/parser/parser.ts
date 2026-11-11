@@ -70,9 +70,11 @@ function buildVideoUuidToCourseTitle(
     if (entry === undefined) {
       continue;
     }
-    for (const video of entry.chapters[0].vids) {
-      if (!map.has(video.uuid)) {
-        map.set(video.uuid, courseTitle);
+    for (const chapter of entry.chapters) {
+      for (const video of chapter.vids) {
+        if (!map.has(video.uuid)) {
+          map.set(video.uuid, courseTitle);
+        }
       }
     }
   }
@@ -139,21 +141,22 @@ function parseCourses(
       return [];
     }
 
-    const courseVideos: CourseVideo[] = chapterEntry.chapters[0].vids.map(
-      (video): CourseVideo => {
-        const videoInfo = videoByUuid.get(video.uuid);
-        if (videoInfo === undefined) {
-          throw new Error(
-            `Course "${course.title}" references unknown video ${JSON.stringify(video)}`,
-          );
-        }
-        return {
-          video: videoInfo,
-          ...(video.altTitle === undefined
-            ? {}
-            : { alternateTitle: rawTitleToDisplayTitle(video.altTitle) }),
-        };
-      },
+    const courseVideos: CourseVideo[] = chapterEntry.chapters.flatMap(
+      (chapter) =>
+        chapter.vids.map((video): CourseVideo => {
+          const videoInfo = videoByUuid.get(video.uuid);
+          if (videoInfo === undefined) {
+            throw new Error(
+              `Course "${course.title}" references unknown video ${JSON.stringify(video)}`,
+            );
+          }
+          return {
+            video: videoInfo,
+            ...(video.altTitle === undefined
+              ? {}
+              : { alternateTitle: rawTitleToDisplayTitle(video.altTitle) }),
+          };
+        }),
     );
 
     return [
