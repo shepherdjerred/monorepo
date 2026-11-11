@@ -511,11 +511,14 @@ describe("replay target selection and candidate failures", () => {
     ).rejects.toThrow();
   });
   test("candidate failure reports only a fixed family and exit metadata", async () => {
+    const logged: string[] = [];
+    const log = (text: string) => logged.push(text);
     await expect(
       candidateSourceCommand(
         ["bun", "-e", "console.error('must-not-be-reported');process.exit(3)"],
         import.meta.dir,
         { PATH: Bun.env["PATH"] },
+        log,
       ),
     ).rejects.toThrow("preparation; exit 3; signal null");
     try {
@@ -523,10 +526,93 @@ describe("replay target selection and candidate failures", () => {
         ["bun", "-e", "console.error('must-not-be-reported');process.exit(3)"],
         import.meta.dir,
         { PATH: Bun.env["PATH"] },
+        log,
       );
     } catch (error) {
       expect(String(error)).not.toContain("must-not-be-reported");
     }
+    expect(logged).toHaveLength(2);
+  });
+  test("candidate failure writes its stdout and stderr tail to the Job log", async () => {
+    const logged: string[] = [];
+    await expect(
+      candidateSourceCommand(
+        [
+          "bun",
+          "-e",
+          "console.log('step one passed');console.error('expected 2 to be 3');process.exit(1)",
+          "test:workflows",
+        ],
+        import.meta.dir,
+        { PATH: Bun.env["PATH"] },
+        (text) => logged.push(text),
+      ),
+    ).rejects.toThrow(
+      "Exact candidate source preparation/replay/canary failed (workflow-unit-tests; exit 1; signal null)",
+    );
+    expect(logged).toHaveLength(1);
+    const [text = ""] = logged;
+    expect(
+      text.startsWith(
+        "----- candidate workflow-unit-tests failed (exit 1; signal null); full output of stdout+stderr -----\n",
+      ),
+    ).toBe(true);
+    expect(text).toContain("step one passed\n");
+    expect(text).toContain("expected 2 to be 3\n");
+    expect(
+      text.endsWith("----- end candidate workflow-unit-tests output -----\n"),
+    ).toBe(true);
+  });
+  test("candidate failure log keeps only the bounded tail", async () => {
+    const logged: string[] = [];
+    await expect(
+      candidateSourceCommand(
+        [
+          "bun",
+          "-e",
+          String.raw`process.stdout.write('HEAD'+'x'.repeat(200*1024));process.stderr.write('TAIL-MARKER\n');setTimeout(()=>process.exit(2),50)`,
+        ],
+        import.meta.dir,
+        { PATH: Bun.env["PATH"] },
+        (text) => logged.push(text),
+      ),
+    ).rejects.toThrow("preparation; exit 2; signal null");
+    const [text = ""] = logged;
+    expect(text).toContain(
+      `last ${String(64 * 1024)} of ${String(200 * 1024 + 4 + 12)} bytes`,
+    );
+    expect(text).toContain("TAIL-MARKER\n");
+    expect(text).not.toContain("HEAD");
+    expect(text.length).toBeLessThan(64 * 1024 + 512);
+  });
+  test("candidate output shares one bound across stdout and stderr", async () => {
+    const logged: string[] = [];
+    await expect(
+      candidateSourceCommand(
+        [
+          "bun",
+          "-e",
+          "process.stdout.write('o'.repeat(3*1024*1024));process.stderr.write('e'.repeat(2*1024*1024));setTimeout(()=>{},10000)",
+        ],
+        import.meta.dir,
+        { PATH: Bun.env["PATH"] },
+        (text) => logged.push(text),
+      ),
+    ).rejects.toThrow("Candidate proof output exceeded its bound");
+    expect(logged).toHaveLength(1);
+    expect(logged[0]).toContain("(output exceeded its bound)");
+    expect(logged[0]?.length).toBeLessThan(64 * 1024 + 512);
+  });
+  test("candidate success logs nothing and returns stdout alone", async () => {
+    const logged: string[] = [];
+    const result = await candidateSourceCommand(
+      ["bun", "-e", "console.log('ok');console.error('noise')"],
+      import.meta.dir,
+      { PATH: Bun.env["PATH"] },
+      (text) => logged.push(text),
+    );
+    expect(result).toEqual({ stdout: "ok\n", stderr: "" });
+    expect(logged).toEqual([]);
   });
 });
 

@@ -26,38 +26,101 @@ function candidateCommandFamily(argv: readonly string[]) {
   return argv[0] === "git" ? "checkout" : "preparation";
 }
 
+const CANDIDATE_OUTPUT_BOUND = 4 * 1024 * 1024;
+const CANDIDATE_FAILURE_TAIL = 64 * 1024;
+
+/** Receives a failed candidate's output tail; the default is the Job log. */
+export type CandidateFailureLog = (text: string) => void;
+
+const stderrText: CandidateFailureLog = (text) => {
+  process.stderr.write(text);
+};
+
+class CandidateOutputBoundError extends Error {
+  constructor() {
+    super("Candidate proof output exceeded its bound");
+  }
+}
+
+/**
+ * Write the last bytes of a failed child's combined output to the Job log, so
+ * an operator reading `kubectl logs` sees which test or step failed. Callers
+ * give children a reduced environment (see workerCandidateEnvironment), so
+ * their output holds no credentials.
+ */
+function logCandidateFailure(
+  family: string,
+  outcome: string,
+  combined: readonly Uint8Array[],
+  log: CandidateFailureLog,
+) {
+  const output = Buffer.concat(combined);
+  const tail = output.subarray(
+    Math.max(0, output.byteLength - CANDIDATE_FAILURE_TAIL),
+  );
+  const scope =
+    tail.byteLength === output.byteLength
+      ? "full output"
+      : `last ${String(tail.byteLength)} of ${String(output.byteLength)} bytes`;
+  const text = tail.toString("utf8");
+  const separator = text.length === 0 || text.endsWith("\n") ? "" : "\n";
+  log(
+    `----- candidate ${family} failed (${outcome}); ${scope} of stdout+stderr -----\n` +
+      `${text}${separator}----- end candidate ${family} output -----\n`,
+  );
+}
+
 /** Bounded, credential-scoped subprocess path shared with control-plane replay. */
 export async function candidateSourceCommand(
   argv: readonly string[],
   cwd: string,
   environment: Record<string, string | undefined>,
+  log: CandidateFailureLog = stderrText,
 ) {
   const child = Bun.spawn([...argv], {
     cwd,
     env: environment,
     stdin: "ignore",
     stdout: "pipe",
-    stderr: "ignore",
+    stderr: "pipe",
   });
-  const chunks: Uint8Array[] = [];
+  const stdout: Uint8Array[] = [];
+  // Both streams in arrival order, under one shared bound, for a failure tail.
+  const combined: Uint8Array[] = [];
   let bytes = 0;
-  for await (const chunk of child.stdout) {
-    bytes += chunk.byteLength;
-    if (bytes > 4 * 1024 * 1024) {
-      child.kill("SIGKILL");
-      await child.exited;
-      throw new Error("Candidate proof output exceeded its bound");
+  const drain = async (
+    stream: ReadableStream<Uint8Array>,
+    keep: Uint8Array[] | undefined,
+  ) => {
+    for await (const chunk of stream) {
+      bytes += chunk.byteLength;
+      if (bytes > CANDIDATE_OUTPUT_BOUND) throw new CandidateOutputBoundError();
+      combined.push(chunk);
+      keep?.push(chunk);
     }
-    chunks.push(chunk);
+  };
+  const family = candidateCommandFamily(argv);
+  try {
+    await Promise.all([
+      drain(child.stdout, stdout),
+      drain(child.stderr, undefined),
+    ]);
+  } catch (error) {
+    if (!(error instanceof CandidateOutputBoundError)) throw error;
+    child.kill("SIGKILL");
+    await child.exited;
+    logCandidateFailure(family, "output exceeded its bound", combined, log);
+    throw error;
   }
   const exitCode = await child.exited;
   if (exitCode !== 0) {
-    const family = candidateCommandFamily(argv);
+    const outcome = `exit ${String(exitCode)}; signal ${String(child.signalCode)}`;
+    logCandidateFailure(family, outcome, combined, log);
     throw new Error(
-      `Exact candidate source preparation/replay/canary failed (${family}; exit ${String(exitCode)}; signal ${String(child.signalCode)})`,
+      `Exact candidate source preparation/replay/canary failed (${family}; ${outcome})`,
     );
   }
-  return { stdout: Buffer.concat(chunks).toString("utf8"), stderr: "" };
+  return { stdout: Buffer.concat(stdout).toString("utf8"), stderr: "" };
 }
 
 /** Candidate children receive only tool locations, a fixed identity and the internal connection. */
