@@ -766,16 +766,20 @@ no counted alarm; `alarmed` when a counted alarm fired while watching.
 - W1. Acceptance starts the monitor. A selection is settled only when its
   monitor settles. An environment with no monitor declared settles on
   acceptance and is recorded as unmonitored. A `retire-host` changes no
-  selection, so it carries the monitor state of the deployment it follows.
+  selection, so it carries the watch of the deployment it follows: its
+  state and its clock. Through any chain of retirements, alarms count from
+  the claim (W2), and evidence accrues from the acceptance, of the
+  deployment that introduced the selection.
 - W2. An alarm while `watching` records the alarm as evidence, suppresses
   automatic selection of the alarmed set revision (D3) and, under
   `automatic` policy, creates an automatic `rollback` deployment to the last
   settled selection if D9 permits one. That rollback is authorised by a
   `restoration` approval (H5), not by a new decision. With no permitted
   candidate the environment is held (D2) for an operator with the reason.
-  An alarm counts only when it became active at or after the deployment's
-  claim; one already active before the claim is recorded as pre-existing
-  evidence and neither rolls back nor blocks settlement.
+  An alarm counts only when it became active at or after the claim of the
+  deployment that started the watch (W1); one already active before the
+  claim is recorded as pre-existing evidence and neither rolls back nor
+  blocks settlement.
 - W3. `promote` out of an environment requires its current selection to be
   `settled`.
 - W4. Thresholds are evidence counts. Where a service has no traffic signal,

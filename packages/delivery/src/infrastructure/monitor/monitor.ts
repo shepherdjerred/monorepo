@@ -1,3 +1,4 @@
+import type { Deployment } from "#generated/prisma/client.ts";
 import { DeliveryError } from "#domain/error.ts";
 import {
   PipelineRevisionSchema,
@@ -84,6 +85,41 @@ export async function acceptanceMonitor(
 }
 
 /**
+ * The deployment whose acceptance started the watch `row` carries. A host
+ * retirement changes no selection and carries the watch it follows (W1), so a
+ * chain of them walks back to the deployment that introduced the selection.
+ * Its claim is the instant alarms count from (W2) and its acceptance starts
+ * the evidence window (W4).
+ */
+export async function watchAnchor(
+  tx: Transaction | Database,
+  row: Deployment,
+): Promise<Deployment> {
+  let anchor = row;
+  while (anchor.kind === "retire-host") {
+    const previous = await tx.deployment.findUniqueOrThrow({
+      where: {
+        id: required(
+          anchor.previousAcceptedDeploymentId,
+          "Retired host's accepted deployment",
+        ),
+      },
+    });
+    // `acceptanceMonitor` started a new watch at this retirement.
+    if (previous.monitorState === null) return anchor;
+    if (
+      previous.environmentId !== anchor.environmentId ||
+      previous.versionSetRevisionId !== anchor.versionSetRevisionId
+    )
+      throw new Error(
+        `Host retirement ${anchor.id} follows ${previous.id} of another selection`,
+      );
+    anchor = previous;
+  }
+  return anchor;
+}
+
+/**
  * Least recently observed first, a never-observed deployment before any
  * observed one, ties in acceptance order. The executor observes a bounded
  * number per tick, so this order rotates through every watching
@@ -118,6 +154,7 @@ export async function watchingMonitors(
   });
   const watching: WatchingMonitor[] = [];
   for (const row of observationTurns(rows)) {
+    const anchor = await watchAnchor(this.database, row);
     const monitor = required(
       await recipeMonitor(this.database, row.pipelineRevisionId),
       "Declared monitor",
@@ -132,7 +169,11 @@ export async function watchingMonitors(
         deploymentId: row.id,
         environmentId: row.environmentId,
         serviceId: row.serviceId,
-        acceptedAt: required(row.finishedAt, "Acceptance time").toISOString(),
+        // The evidence `$window` spans the watch since the anchor's acceptance.
+        acceptedAt: required(
+          anchor.finishedAt,
+          "Acceptance time",
+        ).toISOString(),
         monitor,
         artifact: {
           component: monitor.component,
@@ -282,9 +323,10 @@ export async function observeMonitor(
       await recipeMonitor(tx, row.pipelineRevisionId),
       "Declared monitor",
     );
+    const anchor = await watchAnchor(tx, row);
     const { counted, preExisting } = partitionAlarms(
       input.alarms,
-      required(row.startedAt, "Claim time"),
+      required(anchor.startedAt, "Claim time"),
     );
     const outcome = monitorOutcome(monitor, { ...input, alarms: counted });
     const sequence =
@@ -341,6 +383,8 @@ export async function monitorStatus(this: Delivery, environmentId: string) {
     where: { id: env.acceptedDeploymentId },
   });
   const monitor = await recipeMonitor(this.database, row.pipelineRevisionId);
+  const anchor = await watchAnchor(this.database, row);
+  // Observations are the accepted deployment's own evidence (V3).
   const [observations, latest] = await Promise.all([
     this.database.monitorObservation.count({
       where: { deploymentId: row.id },
@@ -352,8 +396,9 @@ export async function monitorStatus(this: Delivery, environmentId: string) {
   ]);
   return MonitorStatusSchema.parse({
     deploymentId: row.id,
-    // The instant `partitionAlarms` counts alarms from (W2).
-    claimedAt: required(row.startedAt, "Claim time").toISOString(),
+    // The instant `partitionAlarms` counts alarms from: the claim of the
+    // deployment that started the watch (W1, W2).
+    claimedAt: required(anchor.startedAt, "Claim time").toISOString(),
     state: row.monitorState ?? "unmonitored",
     policy: monitor?.policy ?? null,
     settledAt: row.monitorSettledAt?.toISOString() ?? null,
