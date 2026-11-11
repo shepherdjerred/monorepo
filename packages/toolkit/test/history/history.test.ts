@@ -541,6 +541,42 @@ describe("history source usage and redaction", () => {
     );
   });
 
+  test("counts each Grok tool_call once by its machine name", async () => {
+    const grokSource = createHistorySources().find(
+      (source) => source.name === "grok",
+    );
+    if (grokSource === undefined) {
+      throw new Error("Grok source is missing");
+    }
+    const scanned = await grokSource.scan(paths);
+    const session = scanned.documents.find(
+      (document) => document.runtimeId === "grok-session-1",
+    );
+    if (session === undefined) {
+      throw new Error("Grok fixture session is missing");
+    }
+    const detail = await grokSource.read(paths, [
+      recordFromDocument(session, 1),
+    ]);
+
+    // The first call has no `_meta`, so its title names it; the second is
+    // named by `_meta["x.ai/tool"].name`, and its two updates add no calls.
+    expect(session.toolCalls.map((call) => call.name)).toEqual([
+      "run shell command",
+      "read_file",
+    ]);
+    expect(
+      detail.messages
+        .get(session.sourceId)
+        ?.flatMap((entry) =>
+          entry.toolName === undefined ? [] : [entry.toolName],
+        ),
+    ).toEqual(["run shell command", "read_file"]);
+    expect(session.messageCount).toBe(
+      detail.messages.get(session.sourceId)?.length,
+    );
+  });
+
   test("bills Antigravity reasoning tokens as part of output, not dropped", async () => {
     const results = await Promise.all(
       createHistorySources().map((source) => source.scan(paths)),

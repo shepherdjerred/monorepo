@@ -167,6 +167,43 @@ function grokToolText(update: Record<string, unknown>): string {
   return [title, status].filter((part) => part.length > 0).join(" ");
 }
 
+/**
+ * A `tool_call` opens one invocation. Grok records the tool's machine name
+ * in `_meta["x.ai/tool"].name` (e.g. "run_terminal_command"); the ACP
+ * `title` is the fallback when that metadata is absent.
+ */
+function grokToolName(update: Record<string, unknown>): string | null {
+  const meta = parseRecord(update["_meta"]);
+  const tool = meta === null ? null : parseRecord(meta["x.ai/tool"]);
+  return (
+    (tool === null ? null : stringValue(tool["name"])) ??
+    stringValue(update["title"])
+  );
+}
+
+/**
+ * Only the `tool_call` that opens an invocation is named. Its
+ * `tool_call_update`s report the same call's progress and output (sharing
+ * its `toolCallId`), so they stay unnamed and never count as another call.
+ */
+function grokToolMessage(
+  update: Record<string, unknown>,
+  invocation: boolean,
+  createdAt: string | null,
+): HistoryMessage | null {
+  const text = grokToolText(update);
+  const toolName = invocation ? grokToolName(update) : null;
+  if (toolName === null) {
+    return text.length === 0 ? null : { role: "tool", text, createdAt };
+  }
+  return {
+    role: "tool",
+    text: text.length === 0 ? toolName : text,
+    createdAt,
+    toolName,
+  };
+}
+
 function grokMessage(
   update: Record<string, unknown>,
   createdAt: string | null,
@@ -185,8 +222,7 @@ function grokMessage(
       : { role: "assistant", text, createdAt };
   }
   if (type === "tool_call" || type === "tool_call_update") {
-    const text = grokToolText(update);
-    return text.length === 0 ? null : { role: "tool", text, createdAt };
+    return grokToolMessage(update, type === "tool_call", createdAt);
   }
   if (type === "session_recap") {
     const summary = stringValue(update["summary"]);
