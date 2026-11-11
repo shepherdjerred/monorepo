@@ -84,7 +84,7 @@ So, [back to Dagger](https://github.com/shepherdjerred/monorepo/commit/5ed022430
 
 I thought running Dagger via a single pod isn't really viable, but I also didn't really want to split my CI workload arbitrarily to reduce cache size and shard.
 
-So, I thought why not rely more on native tooling and [embrace Turbo](https://github.com/shepherdjerred/monorepo/commit/4f08817bebb8d0e0d12a428647e03cf58a77ea9e). I mostly write TypeScript so it's a good fit!
+So, I thought why not rely more on native tooling and [embrace Turbo](https://github.com/shepherdjerred/monorepo/pull/1518). I mostly write TypeScript so it's a good fit!
 
 And it does actually work quite well but unfortunately I am just still doing _too_ much work. So many projects. Some in TypeScript, some in Java, some in Rust. Turbo helped but it didn't fix the core issue: I was trying to build too much with too little.
 
@@ -127,7 +127,7 @@ Unfortunately, I got better at using agents, so I have more PRs at a given time.
 
 In the end it helped quite a bit but it didn't solve the problem. I am still plagued by slow CI. I am still having to make compromises about what I am building and when.
 
-More recently I have entirely [gutted out all deployment related steps from CI](https://github.com/shepherdjerred/monorepo/commit/e560525ac9475ccfc9325a07640830881c2546e8). So, now CI is responsible for creating Docker images, S3 archives of static sites, etc. and a separate custom application (modeled after Pipelines, Brazil, Version Sets, etc. at Amazon) handles the deployment aspect. This separation of responsibilities was quite helpful and in hindsight obvious.
+More recently I have entirely [gutted out all deployment related steps from CI](https://github.com/shepherdjerred/monorepo/pull/3872). So, now CI is responsible for creating Docker images, S3 archives of static sites, etc. and a separate custom application (modeled after Pipelines, Brazil, Version Sets, etc. at Amazon) handles the deployment aspect. This separation of responsibilities was quite helpful and in hindsight obvious.
 
 My immediate next thought is that I need to remove 'heavy' tests from CI entirely. No more CI for e2e and integration tests past some particular time/compute threshold. Tell agents to run the relevant checks locally, and maybe also run them on a nightly schedule on main.
 
