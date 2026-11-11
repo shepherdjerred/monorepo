@@ -19,13 +19,23 @@ Your code also has to be built. If you're building code you are likely also doin
 
 Every bit of code you write pays this cost. Some languages don't have much of this. Others, like Rust, are quite compute intensive and benefit from caching.
 
-So now your code has to live somewhere. It has to be statically analyzed and built and turned into artifacts.
+And it is not only lines. Agents add projects. A project pays this tax even when it is small: it has to live somewhere, be built, tested, and released.
+
+So, now your code has to live somewhere. It has to be statically analyzed and built and turned into artifacts.
 
 ---
 
 It's common knowledge that agents work best when they have effective loops. Loops being something like calling real APIs, being able to view their work in a real browser, and writing high fidelity tests.
 
 High fidelity tests (end-to-end and integration tests) have always been expensive. There's a reason that they're at the top of the testing pyramid. They are very useful but also not easy to run or write (though, the writing cost is not important these days).
+
+<figure>
+  ![The usual testing pyramid, and a sketch of cost to write versus cost to run](./i-cant-scale-my-ci/testing-costs.svg)
+
+  <figcaption>
+    The pyramid is the usual one. The bars are a sketch, not a benchmark. Writing got cheaper. Running did not.
+  </figcaption>
+</figure>
 
 Similar to static analysis, you want these tests to run in many places. Typically I would want this to be:
 
@@ -41,25 +51,39 @@ Again -- every bit of code has this cost. Every side project, every small servic
 
 ---
 
-Of course, you also have to actually release and maintain each individual project, but that is not really the focus of this article.
+Of course, you also have to actually release and maintain each individual project, but that is not really the focus of this article. I do generally want to pore over release notes, public-facing documentation, and so on. Some things should not be AI generated without review.
 
 ---
 
-Now, maybe I brought this upon myself. I don't use GitHub Actions and I don't really want to. I moved all of my projects into a monorepo so that agents could make cross-cutting changes more easily and with less release coordination.
+Now, maybe I brought this upon myself. I don't use GitHub Actions anymore. I moved all of my projects into a monorepo so that agents could make cross-cutting changes more easily and with less release coordination.
 
 At the beginning of this year I had a single-node Kubernetes cluster running Talos. BuildKite connected to GitHub and ran CI via Dagger which ran on my cluster.
 
-Constant pain! A single Dagger pod running CI for 20+ agents at a time. Naturally this was unbearably slow and ate through my SSD lifetime.
+Constant pain! A single Dagger engine pod running CI for 20+ agents at a time. Naturally this was unbearably slow and ate through my SSD lifetime.
+
+<details class="border border-black dark:border-white p-2">
+  <summary>Why it was one pod</summary>
+
+In February this was one root Dagger target, `ci`, and it did everything for the monorepo. BuildKite ran one `dagger call ci`. The engine was one pod with one cache disk, and that disk could only be mounted by one pod. A second engine could not share the cache.
+
+</details>
 
 My next thought was: why not do this all in Bazel? I had never used Bazel before but it reminded me of Brazil and Never Build Twice from Amazon which I have very fond memories of.
 
-I threw Opus at the problem but unfortunately the result was not really usable -- for many reasons, the biggest being my heavy usage of Bun and Bazel not really having rules for Bun.
+<details class="border border-black dark:border-white p-2">
+  <summary>Brazil, briefly</summary>
 
-So, back to Dagger. I was able to tune things for a while but it eventually became untenable. The cache filled up too quickly and the engine was too unstable.
+[Brazil](https://gist.github.com/terabyte/15a2d3d407285b8b5a0a7964dd6283b0) built a package into a version set, a set of versions known to work together, and kept the build reproducible. Apollo, a different system, deployed that set. Never Build Twice is the idea I liked inside that. The writeup is a gist, and the comments under it are spam, so the short version is here.
+
+</details>
+
+I [threw Opus at the problem](https://github.com/shepherdjerred/monorepo/commit/69e388bbd479d5b124ab1ca1f99f01b07bfa936d) but unfortunately the result was not really usable -- for many reasons, the biggest being my heavy usage of Bun and Bazel not really having [rules for Bun](https://github.com/shepherdjerred/monorepo/commit/a074297de071b01ee976d6f129adecd6e0cd2ce5).
+
+So, [back to Dagger](https://github.com/shepherdjerred/monorepo/commit/5ed022430d8f4e9782b54c807d0c4fe484e31646). I was able to tune things for a while but it eventually became untenable. The cache filled up too quickly and the engine was too unstable.
 
 I thought running Dagger via a single pod isn't really viable, but I also didn't really want to split my CI workload arbitrarily to reduce cache size and shard.
 
-So, I thought why not rely more on native tooling and embrace Turbo. I mostly write TypeScript so it's a good fit!
+So, I thought why not rely more on native tooling and [embrace Turbo](https://github.com/shepherdjerred/monorepo/commit/4f08817bebb8d0e0d12a428647e03cf58a77ea9e). I mostly write TypeScript so it's a good fit!
 
 And it does actually work quite well but unfortunately I am just still doing _too_ much work. So many projects. Some in TypeScript, some in Java, some in Rust. Turbo helped but it didn't fix the core issue: I was trying to build too much with too little.
 
@@ -67,17 +91,38 @@ And it does actually work quite well but unfortunately I am just still doing _to
 
 I did what anyone would do. I did the math, saw that any cloud compute provider would be hellishly expensive, and bought a second CI node. An investment, I told myself. I spend $XXX on AI subscriptions each month; what's the point if I can't build my software? I make $YYY per year from my work, this is a sound investment in my learning (and, well, my favorite hobby which apparently is software engineering)
 
+The server was about $2,500. Spread over three years, that is about $70 a month.
+
+| | per month |
+| --- | --- |
+| The server, over 3 years | ~$70 |
+| Hetzner, same kind of box | ~$300 |
+| AWS, 128 GB, 16 vCPU, always on | ~$770 |
+| AWS, 128 GB, 32 vCPU, always on | ~$1,180 |
+
+The AWS rows are compute only. You only tie the purchase at something like 40-70 hours a month, and that is not this workload. You could prove me wrong.
+
+Before I tuned the writes, CI was putting terabytes a day onto the SSDs. That does not flip the rental comparison. It does mean the purchase is not only $70 a month if I have to replace the disks.
+
 I [priced the server](https://pcpartpicker.com/user/RiotShielder/saved/xnrjNG), knowing that I would be gouged on the SSD and memory. I bought used RAM on ebay for the first time and spent hours in MemTest86 to validate it.
 
 This helped a lot! It was essentially the same specs as my primary Kubernetes node (but with less storage). It gave me a lot of headroom.
 
 Unfortunately, I got better at using agents, so I have more PRs at a given time. I also came up with more projects which meant more software to build.
 
+<figure>
+  ![Landed commits by month, and sampled project counts](./i-cant-scale-my-ci/monorepo-growth.svg)
+
+  <figcaption>
+    Landed commits on main, from December 2025. February is 204 of them, and 5 are mine. November is left off because the month is not finished. The dots are samples, on the 1st of January, March, July, and November, not a continuous count. This is not a chart of CI minutes.
+  </figcaption>
+</figure>
+
 ---
 
 In the end it helped quite a bit but it didn't solve the problem. I am still plagued by slow CI. I am still having to make compromises about what I am building and when.
 
-More recently I have entirely gutted out all deployment related steps from CI. So, now CI is responsible for creating Docker images, S3 archives of static sites, installers, etc. and a separate custom application (modeled after Pipelines, Brazil, Version Sets, etc. at Amazon) handles the deployment aspect. This separation of responsibilities was quite helpful and in hindsight obvious.
+More recently I have entirely [gutted out all deployment related steps from CI](https://github.com/shepherdjerred/monorepo/commit/e560525ac9475ccfc9325a07640830881c2546e8). So, now CI is responsible for creating Docker images, S3 archives of static sites, etc. and a separate custom application (modeled after Pipelines, Brazil, Version Sets, etc. at Amazon) handles the deployment aspect. This separation of responsibilities was quite helpful and in hindsight obvious.
 
 My immediate next thought is that I need to remove 'heavy' tests from CI entirely. No more CI for e2e and integration tests past some particular time/compute threshold. Tell agents to run the relevant checks locally, and maybe also run them on a nightly schedule on main.
 
