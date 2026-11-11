@@ -170,6 +170,30 @@ async function preparedTurn() {
   return { started, history: transcript.messages, ticket };
 }
 
+async function runWithRunRow(executeAgent: typeof failingAgent) {
+  const prepared = await preparedTurn();
+  await prisma.scoutInteractiveRun.create({
+    data: {
+      id: prepared.ticket.runId,
+      kind: "explore",
+      ownerId: userId,
+      conversationId: prepared.started.conversationId,
+      payload: "{}",
+    },
+  });
+  const terminal = await runPersistedExploreTurn(
+    {
+      ...prepared,
+      identity: { userId },
+      guildIds: [],
+      surface: "web",
+      emit: () => Promise.resolve(),
+    },
+    { client: prisma, executeAgent, now: Date.now, timeoutMs: 10_000 },
+  );
+  return { prepared, terminal };
+}
+
 describe("shared persisted Explore turn", () => {
   test("persists a successful answer, title, trace, and charged quota", async () => {
     const prepared = await preparedTurn();
@@ -289,32 +313,7 @@ describe("persisted Explore failure handling", () => {
     );
   });
   test("salvages streamed prose after an agent failure and releases the slot", async () => {
-    const prepared = await preparedTurn();
-    await prisma.scoutInteractiveRun.create({
-      data: {
-        id: prepared.ticket.runId,
-        kind: "explore",
-        ownerId: userId,
-        conversationId: prepared.started.conversationId,
-        payload: "{}",
-      },
-    });
-
-    const terminal = await runPersistedExploreTurn(
-      {
-        ...prepared,
-        identity: { userId },
-        guildIds: [],
-        surface: "web",
-        emit: () => Promise.resolve(),
-      },
-      {
-        client: prisma,
-        executeAgent: failingAgent,
-        now: Date.now,
-        timeoutMs: 10_000,
-      },
-    );
+    const { prepared, terminal } = await runWithRunRow(failingAgent);
 
     expect(terminal.type).toBe("final");
     expect(terminal.outcome).toBe("failed");
@@ -535,32 +534,7 @@ describe("Explore visualization attachment", () => {
 
 describe("invalid Explore card selections", () => {
   test("an invalid model card selection is rejected and counted, not reported", async () => {
-    const prepared = await preparedTurn();
-    await prisma.scoutInteractiveRun.create({
-      data: {
-        id: prepared.ticket.runId,
-        kind: "explore",
-        ownerId: userId,
-        conversationId: prepared.started.conversationId,
-        payload: "{}",
-      },
-    });
-
-    const terminal = await runPersistedExploreTurn(
-      {
-        ...prepared,
-        identity: { userId },
-        guildIds: [],
-        surface: "web",
-        emit: () => Promise.resolve(),
-      },
-      {
-        client: prisma,
-        executeAgent: invalidCardAgent,
-        now: Date.now,
-        timeoutMs: 10_000,
-      },
-    );
+    const { prepared, terminal } = await runWithRunRow(invalidCardAgent);
 
     expect(terminal.outcome).toBe("failed");
     const run = await prisma.scoutInteractiveRun.findUniqueOrThrow({
