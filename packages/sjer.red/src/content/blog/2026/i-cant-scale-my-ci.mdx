@@ -42,9 +42,7 @@ Your code also has to be built. If you're building code you are likely also doin
 
 Every bit of code you write pays this cost. Some languages don't have much of this. Others, like Rust, are quite compute intensive and benefit from caching.
 
-<p class="added">And it is not only lines. Agents add projects. A project pays this tax even when it is small: it has to live somewhere, be built, tested, and released.</p>
-
-So<span class="added">,</span> now your code has to live somewhere. It has to be statically analyzed and built and turned into artifacts.
+So, now your code has to live somewhere. It has to be statically analyzed and built and turned into artifacts.
 
 ---
 
@@ -52,13 +50,7 @@ It's common knowledge that agents work best when they have effective loops. Loop
 
 High fidelity tests (end-to-end and integration tests) have always been expensive. There's a reason that they're at the top of the testing pyramid. They are very useful but also not easy to run or write (though, the writing cost is not important these days).
 
-<figure>
-  ![The usual testing pyramid, and a sketch of cost to write versus cost to run](./i-cant-scale-my-ci/testing-costs.svg)
-
-  <figcaption class="added">
-    The pyramid is the usual one. The bars are a sketch, not a benchmark. Writing got cheaper. Running did not.
-  </figcaption>
-</figure>
+![The usual testing pyramid, and a sketch of cost to write versus cost to run](./i-cant-scale-my-ci/testing-costs.svg)
 
 Similar to static analysis, you want these tests to run in many places. Typically I would want this to be:
 
@@ -74,31 +66,17 @@ Again -- every bit of code has this cost. Every side project, every small servic
 
 ---
 
-Of course, you also have to actually release and maintain each individual project, but that is not really the focus of this article. <span class="added">I do generally want to pore over release notes, public-facing documentation, and so on. Some things should not be AI generated without review.</span>
+Of course, you also have to actually release and maintain each individual project, but that is not really the focus of this article.
 
 ---
 
-Now, maybe I brought this upon myself. I don't use GitHub Actions <span class="added">anymore</span>. I moved all of my projects into a monorepo so that agents could make cross-cutting changes more easily and with less release coordination.
+Now, maybe I brought this upon myself. I don't use GitHub Actions anymore. I moved all of my projects into a monorepo so that agents could make cross-cutting changes more easily and with less release coordination.
 
 At the beginning of this year I had a single-node Kubernetes cluster running Talos. BuildKite connected to GitHub and ran CI via Dagger which ran on my cluster.
 
-Constant pain! A single Dagger <span class="added">engine</span> pod running CI for 20+ agents at a time. Naturally this was unbearably slow and ate through my SSD lifetime.
-
-<details class="added border border-black dark:border-white p-2">
-  <summary>Why it was one pod</summary>
-
-In February this was one root Dagger target, `ci`, and it did everything for the monorepo. BuildKite ran one `dagger call ci`. The engine was one pod with one cache disk, and that disk could only be mounted by one pod. A second engine could not share the cache.
-
-</details>
+Constant pain! A single Dagger engine pod running CI for 20+ agents at a time. Naturally this was unbearably slow and ate through my SSD lifetime.
 
 My next thought was: why not do this all in Bazel? I had never used Bazel before but it reminded me of Brazil and Never Build Twice from Amazon which I have very fond memories of.
-
-<details class="added border border-black dark:border-white p-2">
-  <summary>Brazil, briefly</summary>
-
-[Brazil](https://gist.github.com/terabyte/15a2d3d407285b8b5a0a7964dd6283b0) built a package into a version set, a set of versions known to work together, and kept the build reproducible. Apollo, a different system, deployed that set. Never Build Twice is the idea I liked inside that. The writeup is a gist, and the comments under it are spam, so the short version is here.
-
-</details>
 
 I [threw Opus at the problem](https://github.com/shepherdjerred/monorepo/commit/69e388bbd479d5b124ab1ca1f99f01b07bfa936d) but unfortunately the result was not really usable -- for many reasons, the biggest being my heavy usage of Bun and Bazel not really having [rules for Bun](https://github.com/shepherdjerred/monorepo/commit/a074297de071b01ee976d6f129adecd6e0cd2ce5).
 
@@ -114,38 +92,32 @@ And it does actually work quite well but unfortunately I am just still doing _to
 
 I did what anyone would do. I did the math, saw that any cloud compute provider would be hellishly expensive, and bought a second CI node. An investment, I told myself. I spend $XXX on AI subscriptions each month; what's the point if I can't build my software? I make $YYY per year from my work, this is a sound investment in my learning (and, well, my favorite hobby which apparently is software engineering)
 
-<p class="added">The server was about $2,500. Spread over three years, that is about $70 a month.</p>
-
 <table class="added">
   <thead>
     <tr>
       <th></th>
-      <th>per month</th>
+      <th>cost</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td>The server, over 3 years</td>
-      <td>~$70</td>
+      <td>~$70 a month</td>
     </tr>
     <tr>
       <td>Hetzner, same kind of box</td>
-      <td>~$300</td>
+      <td>~$300 a month</td>
     </tr>
     <tr>
-      <td>AWS, 128 GB, 16 vCPU, always on</td>
-      <td>~$770</td>
+      <td>AWS, one 8-core instance per CI run, October</td>
+      <td>~$580</td>
     </tr>
     <tr>
-      <td>AWS, 128 GB, 32 vCPU, always on</td>
-      <td>~$1,180</td>
+      <td>AWS, same thing, Nov 1–11</td>
+      <td>~$100 so far</td>
     </tr>
   </tbody>
 </table>
-
-<p class="added">The AWS rows are compute only. You only tie the purchase at something like 40-70 hours a month, and that is not this workload. You could prove me wrong.</p>
-
-<p class="added">Before I tuned the writes, CI was putting terabytes a day onto the SSDs. That does not flip the rental comparison. It does mean the purchase is not only $70 a month if I have to replace the disks.</p>
 
 I [priced the server](https://pcpartpicker.com/user/RiotShielder/saved/xnrjNG), knowing that I would be gouged on the SSD and memory. I bought used RAM on ebay for the first time and spent hours in MemTest86 to validate it.
 
@@ -153,13 +125,7 @@ This helped a lot! It was essentially the same specs as my primary Kubernetes no
 
 Unfortunately, I got better at using agents, so I have more PRs at a given time. I also came up with more projects which meant more software to build.
 
-<figure>
-  ![Landed commits by month, and sampled project counts](./i-cant-scale-my-ci/monorepo-growth.svg)
-
-  <figcaption class="added">
-    Landed commits on main, from December 2025. February is 204 of them, and 5 are mine. November is left off because the month is not finished. The dots are samples, on the 1st of January, March, July, and November, not a continuous count. This is not a chart of CI minutes.
-  </figcaption>
-</figure>
+![Landed commits by month](./i-cant-scale-my-ci/monorepo-growth.svg)
 
 ---
 

@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 680" role="img">
-  <title>Landed commits on main by month, and sampled counts of buildable projects.</title>
-  <desc>First-parent commits on main, counted by the month they landed, from December 2025 through October 2026. November is left off. February is 204 commits. Project counts are samples, not a line: 8 on January 1, 39 on March 1, 45 on July 1, and 103 on November 1. Bazel is marked in February, Turbo in July, and deployment leaving CI in October.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 360" role="img">
+  <title>Landed commits on main by month.</title>
+  <desc>First-parent commits on main, counted by the month they landed, from December 2025 through October 2026. November is left off. February is 204 commits. Bazel is marked in February, Turbo in July, and deployment leaving CI in October.</desc>
   <style>
     .fill { fill: #171717; }
     .line { fill: none; stroke: #171717; stroke-width: 1.5; }
@@ -56,27 +56,4 @@
 <rect class="fill" x="575.5" y="86.0" width="24" height="214.0"/>
 <text x="587.5" y="81.0" text-anchor="middle" font-size="10">931</text>
 <text x="638.5" y="318" text-anchor="middle" font-size="12">Nov</text>
-<text x="52" y="372" font-size="15">Projects I could build</text>
-<text x="52" y="394" font-size="12">Counted on four mornings. Not a continuous measurement.</text>
-<line class="hair" x1="52" y1="600" x2="664" y2="600"/>
-<text x="77.5" y="618" text-anchor="middle" font-size="12">Dec</text>
-<text x="128.5" y="618" text-anchor="middle" font-size="12">Jan</text>
-<circle class="fill" cx="128.5" cy="586.8" r="4.5"/>
-<text x="128.5" y="576.8" text-anchor="middle" font-size="12">8</text>
-<text x="179.5" y="618" text-anchor="middle" font-size="12">Feb</text>
-<text x="230.5" y="618" text-anchor="middle" font-size="12">Mar</text>
-<circle class="fill" cx="230.5" cy="535.6" r="4.5"/>
-<text x="230.5" y="525.6" text-anchor="middle" font-size="12">39</text>
-<text x="281.5" y="618" text-anchor="middle" font-size="12">Apr</text>
-<text x="332.5" y="618" text-anchor="middle" font-size="12">May</text>
-<text x="383.5" y="618" text-anchor="middle" font-size="12">Jun</text>
-<text x="434.5" y="618" text-anchor="middle" font-size="12">Jul</text>
-<circle class="fill" cx="434.5" cy="525.7" r="4.5"/>
-<text x="434.5" y="515.7" text-anchor="middle" font-size="12">45</text>
-<text x="485.5" y="618" text-anchor="middle" font-size="12">Aug</text>
-<text x="536.5" y="618" text-anchor="middle" font-size="12">Sep</text>
-<text x="587.5" y="618" text-anchor="middle" font-size="12">Oct</text>
-<text x="638.5" y="618" text-anchor="middle" font-size="12">Nov</text>
-<circle class="fill" cx="638.5" cy="430.0" r="4.5"/>
-<text x="638.5" y="420.0" text-anchor="middle" font-size="12">103</text>
 </svg>
