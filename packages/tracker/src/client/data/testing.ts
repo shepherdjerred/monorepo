@@ -57,6 +57,7 @@ export const workspaceFixture: BootstrapData = {
     },
   ],
   actors: [actor("human:jerred", "Jerred"), actor("agent:helper", "Helper")],
+  views: [],
   writesEnabled: true,
 };
 
@@ -103,6 +104,11 @@ export function issueFixture(
     canceledAt: null,
     archivedAt: null,
     labels: [],
+    parentId: null,
+    dueDate: null,
+    parent: null,
+    childCount: 0,
+    completedChildCount: 0,
     ...overrides,
   };
 }
@@ -115,6 +121,7 @@ export function detailFixture(issue: Issue): IssueDetailData {
     votes: [],
     viewerVoted: false,
     relations: [],
+    children: [],
   };
 }
 
