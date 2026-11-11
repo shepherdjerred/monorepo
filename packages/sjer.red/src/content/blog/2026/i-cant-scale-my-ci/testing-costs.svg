@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 292" role="img">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 250" role="img">
   <title>A testing pyramid, and a sketch of what it costs to write tests versus what it costs to run them.</title>
-  <desc>The pyramid is unchanged: unit at the base, integration in the middle, end to end at the top. Beside it, cost to write is much lower now, and cost to run is the same as before. Running unit tests stays cheap, integration stays in the middle, and end to end stays expensive. Lengths are a sketch, not a measurement.</desc>
+  <desc>The pyramid is unchanged: unit at the base, integration in the middle, end to end at the top. Each measurement is one bar. The outline is the cost before agents, and the solid bar on top of it is the cost now. Writing got cheaper. Running did not.</desc>
   <style>
     .fill { fill: #171717; }
     .line { fill: none; stroke: #171717; stroke-width: 1.5; }
@@ -21,32 +21,27 @@
 <text x="108" y="112.0" text-anchor="middle" font-size="13">integration</text>
 <text x="108" y="157.3" text-anchor="middle" font-size="13">unit</text>
 <text x="236" y="24" font-size="14">cost to write</text>
-<text x="236" y="46" font-size="12">before</text>
-<text x="348" y="46" font-size="12">now</text>
-<text x="470" y="24" font-size="14">cost to run</text>
-<text x="470" y="46" font-size="12">before</text>
-<text x="582" y="46" font-size="12">now</text>
-<text x="236" y="70" font-size="13">e2e</text>
-<rect class="line" x="236.0" y="78.0" width="100.0" height="10"/>
-<rect class="fill" x="348.0" y="78.0" width="20.0" height="10"/>
-<text x="470" y="70" font-size="13">e2e</text>
-<rect class="line" x="470.0" y="78.0" width="100.0" height="10"/>
-<rect class="fill" x="582.0" y="78.0" width="100.0" height="10"/>
-<text x="236" y="128" font-size="13">integration</text>
-<rect class="line" x="236.0" y="136.0" width="70.0" height="10"/>
-<rect class="fill" x="348.0" y="136.0" width="20.0" height="10"/>
-<text x="470" y="128" font-size="13">integration</text>
-<rect class="line" x="470.0" y="136.0" width="50.0" height="10"/>
-<rect class="fill" x="582.0" y="136.0" width="50.0" height="10"/>
-<text x="236" y="186" font-size="13">unit</text>
-<rect class="line" x="236.0" y="194.0" width="40.0" height="10"/>
-<rect class="fill" x="348.0" y="194.0" width="10.0" height="10"/>
-<text x="470" y="186" font-size="13">unit</text>
-<rect class="line" x="470.0" y="194.0" width="20.0" height="10"/>
-<rect class="fill" x="582.0" y="194.0" width="20.0" height="10"/>
-<rect class="line" x="236" y="258" width="22" height="10"/>
-<text x="264" y="268" font-size="12">before</text>
-<rect class="fill" x="330" y="258" width="22" height="10"/>
-<text x="358" y="268" font-size="12">now</text>
-<text x="430" y="268" font-size="12">a sketch, not a measurement</text>
+<text x="400" y="24" font-size="14">cost to run</text>
+<text x="236" y="52" font-size="13">e2e</text>
+<rect class="line" x="236" y="60" width="100" height="12"/>
+<rect class="fill" x="236" y="60" width="20" height="12"/>
+<text x="400" y="52" font-size="13">e2e</text>
+<rect class="line" x="400" y="60" width="100" height="12"/>
+<rect class="fill" x="400" y="60" width="100" height="12"/>
+<text x="236" y="104" font-size="13">integration</text>
+<rect class="line" x="236" y="112" width="70" height="12"/>
+<rect class="fill" x="236" y="112" width="20" height="12"/>
+<text x="400" y="104" font-size="13">integration</text>
+<rect class="line" x="400" y="112" width="50" height="12"/>
+<rect class="fill" x="400" y="112" width="50" height="12"/>
+<text x="236" y="156" font-size="13">unit</text>
+<rect class="line" x="236" y="164" width="40" height="12"/>
+<rect class="fill" x="236" y="164" width="10" height="12"/>
+<text x="400" y="156" font-size="13">unit</text>
+<rect class="line" x="400" y="164" width="20" height="12"/>
+<rect class="fill" x="400" y="164" width="20" height="12"/>
+<rect class="line" x="236" y="214" width="22" height="12"/>
+<text x="264" y="225" font-size="12">before agents</text>
+<rect class="fill" x="380" y="214" width="22" height="12"/>
+<text x="408" y="225" font-size="12">now</text>
 </svg>

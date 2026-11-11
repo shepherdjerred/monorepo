@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 360" role="img">
-  <title>Landed commits on main by month.</title>
-  <desc>First-parent commits on main, counted by the month they landed, from December 2025 through October 2026. November is left off. February is 204 commits. Bazel is marked in February, Turbo in July, and deployment leaving CI in October.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 290" role="img">
+  <title>Landed commits on main by month, December 2025 through October 2026.</title>
+  <desc>First-parent commits on main, counted by the month they landed. December 208, January 394, February 204, March 267, April 296, May 506, June 455, July 500, August 729, September 689, October 931.</desc>
   <style>
     .fill { fill: #171717; }
     .line { fill: none; stroke: #171717; stroke-width: 1.5; }
@@ -13,47 +13,40 @@
       text { fill: #f87171; }
     }
   </style>
-  <text x="52" y="24" font-size="15">Landed commits on main</text>
-  <text x="52" y="46" font-size="12">December 2025 through October. November is unfinished, so it is left off.</text>
-
-<line class="faint" x1="52" y1="185.1" x2="664" y2="185.1"/>
-<text x="52" y="181.1" font-size="10">500</text>
-<line class="hair" x1="52" y1="300" x2="664" y2="300"/>
-<text x="77.5" y="318" text-anchor="middle" font-size="12">Dec</text>
-<rect class="fill" x="65.5" y="252.2" width="24" height="47.8"/>
-<text x="77.5" y="247.2" text-anchor="middle" font-size="10">208</text>
-<text x="128.5" y="318" text-anchor="middle" font-size="12">Jan</text>
-<rect class="fill" x="116.5" y="209.4" width="24" height="90.6"/>
-<text x="128.5" y="204.4" text-anchor="middle" font-size="10">394</text>
-<text x="179.5" y="318" text-anchor="middle" font-size="12">Feb</text>
-<text x="179.5" y="334" text-anchor="middle" font-size="11">Bazel</text>
-<rect class="fill" x="167.5" y="253.1" width="24" height="46.9"/>
-<text x="179.5" y="248.1" text-anchor="middle" font-size="10">204</text>
-<text x="230.5" y="318" text-anchor="middle" font-size="12">Mar</text>
-<rect class="fill" x="218.5" y="238.6" width="24" height="61.4"/>
-<text x="230.5" y="233.6" text-anchor="middle" font-size="10">267</text>
-<text x="281.5" y="318" text-anchor="middle" font-size="12">Apr</text>
-<rect class="fill" x="269.5" y="232.0" width="24" height="68.0"/>
-<text x="281.5" y="227.0" text-anchor="middle" font-size="10">296</text>
-<text x="332.5" y="318" text-anchor="middle" font-size="12">May</text>
-<rect class="fill" x="320.5" y="183.7" width="24" height="116.3"/>
-<text x="332.5" y="178.7" text-anchor="middle" font-size="10">506</text>
-<text x="383.5" y="318" text-anchor="middle" font-size="12">Jun</text>
-<rect class="fill" x="371.5" y="195.4" width="24" height="104.6"/>
-<text x="383.5" y="190.4" text-anchor="middle" font-size="10">455</text>
-<text x="434.5" y="318" text-anchor="middle" font-size="12">Jul</text>
-<text x="434.5" y="334" text-anchor="middle" font-size="11">Turbo</text>
-<rect class="fill" x="422.5" y="185.1" width="24" height="114.9"/>
-<text x="434.5" y="180.1" text-anchor="middle" font-size="10">500</text>
-<text x="485.5" y="318" text-anchor="middle" font-size="12">Aug</text>
-<rect class="fill" x="473.5" y="132.4" width="24" height="167.6"/>
-<text x="485.5" y="127.4" text-anchor="middle" font-size="10">729</text>
-<text x="536.5" y="318" text-anchor="middle" font-size="12">Sep</text>
-<rect class="fill" x="524.5" y="141.6" width="24" height="158.4"/>
-<text x="536.5" y="136.6" text-anchor="middle" font-size="10">689</text>
-<text x="587.5" y="318" text-anchor="middle" font-size="12">Oct</text>
-<text x="587.5" y="334" text-anchor="middle" font-size="11">Delivery</text>
-<rect class="fill" x="575.5" y="86.0" width="24" height="214.0"/>
-<text x="587.5" y="81.0" text-anchor="middle" font-size="10">931</text>
-<text x="638.5" y="318" text-anchor="middle" font-size="12">Nov</text>
+  <line class="faint" x1="52" y1="133.1" x2="616" y2="133.1"/>
+  <text x="52" y="129.1" font-size="10">500</text>
+  <line class="hair" x1="52" y1="248" x2="616" y2="248"/>
+  <text x="77.5" y="266" text-anchor="middle" font-size="12">Dec</text>
+  <rect class="fill" x="65.5" y="200.2" width="24" height="47.8"/>
+  <text x="77.5" y="195.2" text-anchor="middle" font-size="10">208</text>
+  <text x="128.5" y="266" text-anchor="middle" font-size="12">Jan</text>
+  <rect class="fill" x="116.5" y="157.4" width="24" height="90.6"/>
+  <text x="128.5" y="152.4" text-anchor="middle" font-size="10">394</text>
+  <text x="179.5" y="266" text-anchor="middle" font-size="12">Feb</text>
+  <rect class="fill" x="167.5" y="201.1" width="24" height="46.9"/>
+  <text x="179.5" y="196.1" text-anchor="middle" font-size="10">204</text>
+  <text x="230.5" y="266" text-anchor="middle" font-size="12">Mar</text>
+  <rect class="fill" x="218.5" y="186.6" width="24" height="61.4"/>
+  <text x="230.5" y="181.6" text-anchor="middle" font-size="10">267</text>
+  <text x="281.5" y="266" text-anchor="middle" font-size="12">Apr</text>
+  <rect class="fill" x="269.5" y="180.0" width="24" height="68.0"/>
+  <text x="281.5" y="175.0" text-anchor="middle" font-size="10">296</text>
+  <text x="332.5" y="266" text-anchor="middle" font-size="12">May</text>
+  <rect class="fill" x="320.5" y="131.7" width="24" height="116.3"/>
+  <text x="332.5" y="126.7" text-anchor="middle" font-size="10">506</text>
+  <text x="383.5" y="266" text-anchor="middle" font-size="12">Jun</text>
+  <rect class="fill" x="371.5" y="143.4" width="24" height="104.6"/>
+  <text x="383.5" y="138.4" text-anchor="middle" font-size="10">455</text>
+  <text x="434.5" y="266" text-anchor="middle" font-size="12">Jul</text>
+  <rect class="fill" x="422.5" y="133.1" width="24" height="114.9"/>
+  <text x="434.5" y="128.1" text-anchor="middle" font-size="10">500</text>
+  <text x="485.5" y="266" text-anchor="middle" font-size="12">Aug</text>
+  <rect class="fill" x="473.5" y="80.4" width="24" height="167.6"/>
+  <text x="485.5" y="75.4" text-anchor="middle" font-size="10">729</text>
+  <text x="536.5" y="266" text-anchor="middle" font-size="12">Sep</text>
+  <rect class="fill" x="524.5" y="89.6" width="24" height="158.4"/>
+  <text x="536.5" y="84.6" text-anchor="middle" font-size="10">689</text>
+  <text x="587.5" y="266" text-anchor="middle" font-size="12">Oct</text>
+  <rect class="fill" x="575.5" y="34.0" width="24" height="214.0"/>
+  <text x="587.5" y="29.0" text-anchor="middle" font-size="10">931</text>
 </svg>
