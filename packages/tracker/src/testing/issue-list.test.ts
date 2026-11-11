@@ -178,6 +178,7 @@ it("rejects malformed and mismatched cursors as a bad request", async () => {
     ),
     requestId: "cursors",
     writesEnabled: () => Promise.resolve(true),
+    liveUpdatesEnabled: () => Promise.resolve(false),
   });
   for (const cursor of [
     "not a cursor",
