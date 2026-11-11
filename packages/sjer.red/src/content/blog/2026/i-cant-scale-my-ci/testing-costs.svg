@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 250" role="img">
+  <title>A testing pyramid, and a sketch of what it costs to write tests versus what it costs to run them.</title>
+  <desc>The pyramid is unchanged: unit at the base, integration in the middle, end to end at the top. Each measurement is one bar. The outline is the cost before agents, and the solid bar on top of it is the cost now. Writing got cheaper. Running did not.</desc>
+  <style>
+    .fill { fill: #171717; }
+    .line { fill: none; stroke: #171717; stroke-width: 1.5; }
+    .hair { fill: none; stroke: #171717; stroke-width: 1; }
+    text { fill: #171717; font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .fill { fill: #f4f4f5; }
+      .line, .hair { stroke: #f4f4f5; }
+      text { fill: #f4f4f5; }
+    }
+  </style>
+
+<text x="108" y="24" text-anchor="middle" font-size="13">the usual pyramid</text>
+<polygon class="line" points="108,40 12,176 204,176"/>
+<line class="hair" x1="76.0" y1="85.3" x2="140.0" y2="85.3"/>
+<line class="hair" x1="44.0" y1="130.7" x2="172.0" y2="130.7"/>
+<text x="108" y="66.7" text-anchor="middle" font-size="13">e2e</text>
+<text x="108" y="112.0" text-anchor="middle" font-size="13">integration</text>
+<text x="108" y="157.3" text-anchor="middle" font-size="13">unit</text>
+<text x="236" y="24" font-size="14">cost to write</text>
+<text x="400" y="24" font-size="14">cost to run</text>
+<text x="236" y="52" font-size="13">e2e</text>
+<rect class="line" x="236" y="60" width="100" height="12"/>
+<rect class="fill" x="236" y="60" width="20" height="12"/>
+<text x="400" y="52" font-size="13">e2e</text>
+<rect class="line" x="400" y="60" width="100" height="12"/>
+<rect class="fill" x="400" y="60" width="100" height="12"/>
+<text x="236" y="104" font-size="13">integration</text>
+<rect class="line" x="236" y="112" width="70" height="12"/>
+<rect class="fill" x="236" y="112" width="20" height="12"/>
+<text x="400" y="104" font-size="13">integration</text>
+<rect class="line" x="400" y="112" width="50" height="12"/>
+<rect class="fill" x="400" y="112" width="50" height="12"/>
+<text x="236" y="156" font-size="13">unit</text>
+<rect class="line" x="236" y="164" width="40" height="12"/>
+<rect class="fill" x="236" y="164" width="10" height="12"/>
+<text x="400" y="156" font-size="13">unit</text>
+<rect class="line" x="400" y="164" width="20" height="12"/>
+<rect class="fill" x="400" y="164" width="20" height="12"/>
+<rect class="line" x="236" y="214" width="22" height="12"/>
+<text x="264" y="225" font-size="12">before agents</text>
+<rect class="fill" x="380" y="214" width="22" height="12"/>
+<text x="408" y="225" font-size="12">now</text>
+</svg>

@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 328" role="img">
+  <title>commits per month</title>
+  <desc>First-parent commits on main, counted by the month they landed. December 208, January 394, February 204, March 267, April 296, May 506, June 455, July 500, August 729, September 689, October 931.</desc>
+  <style>
+    .fill { fill: #171717; }
+    .line { fill: none; stroke: #171717; stroke-width: 1.5; }
+    .hair { fill: none; stroke: #171717; stroke-width: 1; }
+    .faint { fill: none; stroke: #171717; stroke-opacity: 0.28; stroke-width: 1; }
+    text { fill: #171717; font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .fill { fill: #f4f4f5; }
+      .line, .hair, .faint { stroke: #f4f4f5; }
+      text { fill: #f4f4f5; }
+    }
+  </style>
+  <text x="52" y="22" font-size="15">commits per month</text>
+  <line class="faint" x1="52" y1="165.1" x2="616" y2="165.1"/>
+  <text x="52" y="161.1" font-size="10">500</text>
+  <line class="hair" x1="52" y1="280" x2="616" y2="280"/>
+  <text x="77.5" y="298" text-anchor="middle" font-size="12">Dec</text>
+  <rect class="fill" x="65.5" y="232.2" width="24" height="47.8"/>
+  <text x="77.5" y="227.2" text-anchor="middle" font-size="10">208</text>
+  <text x="128.5" y="298" text-anchor="middle" font-size="12">Jan</text>
+  <rect class="fill" x="116.5" y="189.4" width="24" height="90.6"/>
+  <text x="128.5" y="184.4" text-anchor="middle" font-size="10">394</text>
+  <text x="179.5" y="298" text-anchor="middle" font-size="12">Feb</text>
+  <rect class="fill" x="167.5" y="233.1" width="24" height="46.9"/>
+  <text x="179.5" y="228.1" text-anchor="middle" font-size="10">204</text>
+  <text x="230.5" y="298" text-anchor="middle" font-size="12">Mar</text>
+  <rect class="fill" x="218.5" y="218.6" width="24" height="61.4"/>
+  <text x="230.5" y="213.6" text-anchor="middle" font-size="10">267</text>
+  <text x="281.5" y="298" text-anchor="middle" font-size="12">Apr</text>
+  <rect class="fill" x="269.5" y="212.0" width="24" height="68.0"/>
+  <text x="281.5" y="207.0" text-anchor="middle" font-size="10">296</text>
+  <text x="332.5" y="298" text-anchor="middle" font-size="12">May</text>
+  <rect class="fill" x="320.5" y="163.7" width="24" height="116.3"/>
+  <text x="332.5" y="158.7" text-anchor="middle" font-size="10">506</text>
+  <text x="383.5" y="298" text-anchor="middle" font-size="12">Jun</text>
+  <rect class="fill" x="371.5" y="175.4" width="24" height="104.6"/>
+  <text x="383.5" y="170.4" text-anchor="middle" font-size="10">455</text>
+  <text x="434.5" y="298" text-anchor="middle" font-size="12">Jul</text>
+  <rect class="fill" x="422.5" y="165.1" width="24" height="114.9"/>
+  <text x="434.5" y="160.1" text-anchor="middle" font-size="10">500</text>
+  <text x="485.5" y="298" text-anchor="middle" font-size="12">Aug</text>
+  <rect class="fill" x="473.5" y="112.4" width="24" height="167.6"/>
+  <text x="485.5" y="107.4" text-anchor="middle" font-size="10">729</text>
+  <text x="536.5" y="298" text-anchor="middle" font-size="12">Sep</text>
+  <rect class="fill" x="524.5" y="121.6" width="24" height="158.4"/>
+  <text x="536.5" y="116.6" text-anchor="middle" font-size="10">689</text>
+  <text x="587.5" y="298" text-anchor="middle" font-size="12">Oct</text>
+  <rect class="fill" x="575.5" y="66.0" width="24" height="214.0"/>
+  <text x="587.5" y="61.0" text-anchor="middle" font-size="10">931</text>
+</svg>
