@@ -61,6 +61,57 @@ resource "cloudflare_dns_record" "ts_mc_net_cname_public" {
   proxied = true
 }
 
+# The join.ts-mc.net hostname 301-redirects to The Storm landing page at the
+# edge (see the dynamic redirect ruleset below). Proxied placeholder records
+# (RFC 6666 100::/64 and RFC 5737 192.0.2.1) allow Cloudflare's edge to answer
+# HTTP/HTTPS requests and run the redirect before any origin fetch.
+resource "cloudflare_dns_record" "ts_mc_net_aaaa_join" {
+  zone_id = cloudflare_zone.ts_mc_net.id
+  ttl     = 1
+  name    = "join"
+  type    = "AAAA"
+  content = "100::"
+  proxied = true
+
+  depends_on = [cloudflare_ruleset.ts_mc_net_redirects]
+}
+
+resource "cloudflare_dns_record" "ts_mc_net_a_join" {
+  zone_id = cloudflare_zone.ts_mc_net.id
+  ttl     = 1
+  name    = "join"
+  type    = "A"
+  content = "192.0.2.1"
+  proxied = true
+
+  depends_on = [cloudflare_ruleset.ts_mc_net_redirects]
+}
+
+# ── Dynamic Redirects ───────────────────────────────────────────────────────
+
+resource "cloudflare_ruleset" "ts_mc_net_redirects" {
+  zone_id = cloudflare_zone.ts_mc_net.id
+  name    = "ts-mc.net dynamic redirects"
+  kind    = "zone"
+  phase   = "http_request_dynamic_redirect"
+
+  rules = [{
+    ref         = "join_to_the_storm"
+    description = "Redirect join.ts-mc.net to The Storm landing page"
+    expression  = "(http.host eq \"join.ts-mc.net\")"
+    action      = "redirect"
+    action_parameters = {
+      from_value = {
+        status_code           = 301
+        preserve_query_string = true
+        target_url = {
+          value = "https://public.ts-mc.net/the-storm/"
+        }
+      }
+    }
+  }]
+}
+
 # The storage.ts-mc.net record belongs to cloudflare_r2_custom_domain.ts_mc.
 
 # ── SRV ─────────────────────────────────────────────────────────────────────
@@ -69,6 +120,20 @@ resource "cloudflare_dns_record" "ts_mc_net_srv_minecraft" {
   zone_id  = cloudflare_zone.ts_mc_net.id
   ttl      = 1
   name     = "_minecraft._tcp"
+  type     = "SRV"
+  priority = 0
+  data = {
+    priority = 0
+    weight   = 5
+    port     = 30000
+    target   = "mc.ts-mc.net"
+  }
+}
+
+resource "cloudflare_dns_record" "ts_mc_net_srv_minecraft_join" {
+  zone_id  = cloudflare_zone.ts_mc_net.id
+  ttl      = 1
+  name     = "_minecraft._tcp.join"
   type     = "SRV"
   priority = 0
   data = {
