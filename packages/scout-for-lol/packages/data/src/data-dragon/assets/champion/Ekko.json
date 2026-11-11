@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.20.1",
+  "version": "16.22.1",
   "data": {
     "Ekko": {
       "id": "Ekko",
@@ -417,6 +417,19 @@
           "name": "Arcane Last Stand Ekko (Paragon)",
           "chromas": false,
           "parentSkin": 57
+        },
+        {
+          "id": "245059",
+          "num": 59,
+          "name": "Prestige True Damage Know My Name Ekko",
+          "chromas": true
+        },
+        {
+          "id": "245060",
+          "num": 60,
+          "name": "Prestige True Damage Know My Name Ekko (Vivid)",
+          "chromas": false,
+          "parentSkin": 59
         }
       ],
       "lore": "A prodigy from the rough streets of Zaun, Ekko is able to manipulate time to twist any situation to his advantage. He uses his own invention, the Z-Drive, to explore the branching possibilities of reality, crafting the perfect moment to seemingly achieve the impossible the first time, every time. Though Ekko revels in this freedom, when there's a threat to those he cares about, he and the Firelights will do anything to defend them.",

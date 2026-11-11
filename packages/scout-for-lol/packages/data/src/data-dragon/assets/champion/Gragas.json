@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.20.1",
+  "version": "16.22.1",
   "data": {
     "Gragas": {
       "id": "Gragas",
@@ -336,6 +336,13 @@
           "id": "79047",
           "num": 47,
           "name": "Music Fan Gragas (Pearl)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "79049",
+          "num": 49,
+          "name": "Music Fan Gragas (FIRESTARTER)",
           "chromas": false,
           "parentSkin": 39
         }

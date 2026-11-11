@@ -33,9 +33,9 @@
         "SpinWidth": [260, 260, 260, 260, 260],
         "GatheringStormDuration": [6, 6, 6, 6, 6],
         "KnockUpDurationTOOLTIPONLY": [1, 1, 1, 1, 1],
-        "ADRatio": [1.05, 1.05, 1.05, 1.05, 1.05]
+        "ADRatio": [1, 1, 1, 1, 1]
       },
-      "resolvedDescription": "Yasuo thrusts, dealing 20/45/70/95/120 (+105% AD) physical damage. If he hits, he gains a stack for 6 seconds. While he has 2 stacks, his next use of this Ability fires a whirlwind from range, dealing the same damage and Knocking Up for 1 second. If used while dashing, this Ability strikes in a circle rather than a stab.",
+      "resolvedDescription": "Yasuo thrusts, dealing 20/45/70/95/120 (+100% AD) physical damage. If he hits, he gains a stack for 6 seconds. While he has 2 stacks, his next use of this Ability fires a whirlwind from range, dealing the same damage and Knocking Up for 1 second. If used while dashing, this Ability strikes in a circle rather than a stab.",
       "unresolved": []
     },
     "W": {

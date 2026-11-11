@@ -1326,6 +1326,48 @@
       "key": "60133",
       "name": "Quinn",
       "modernKey": "133"
+    },
+    "Jade_Elise": {
+      "id": "Jade_Elise",
+      "key": "60060",
+      "name": "Elise",
+      "modernKey": "60"
+    },
+    "Jade_Hecarim": {
+      "id": "Jade_Hecarim",
+      "key": "60120",
+      "name": "Hecarim",
+      "modernKey": "120"
+    },
+    "Jade_Lucian": {
+      "id": "Jade_Lucian",
+      "key": "60236",
+      "name": "Lucian",
+      "modernKey": "236"
+    },
+    "Jade_Mordekaiser": {
+      "id": "Jade_Mordekaiser",
+      "key": "60082",
+      "name": "Mordekaiser",
+      "modernKey": "82"
+    },
+    "Jade_Swain": {
+      "id": "Jade_Swain",
+      "key": "60050",
+      "name": "Swain",
+      "modernKey": "50"
+    },
+    "Jade_Volibear": {
+      "id": "Jade_Volibear",
+      "key": "60106",
+      "name": "Volibear",
+      "modernKey": "106"
+    },
+    "Jade_Yorick": {
+      "id": "Jade_Yorick",
+      "key": "60083",
+      "name": "Yorick",
+      "modernKey": "83"
     }
   }
 }

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.20.1",
+  "version": "16.22.1",
   "data": {
     "Qiyana": {
       "id": "Qiyana",
@@ -364,6 +364,68 @@
           "num": 50,
           "name": "Prestige Battle Academia Qiyana",
           "chromas": false
+        },
+        {
+          "id": "246051",
+          "num": 51,
+          "name": "True Damage Know My Name Qiyana",
+          "chromas": true
+        },
+        {
+          "id": "246052",
+          "num": 52,
+          "name": "True Damage Know My Name Qiyana (Ruby)",
+          "chromas": false,
+          "parentSkin": 51
+        },
+        {
+          "id": "246053",
+          "num": 53,
+          "name": "True Damage Know My Name Qiyana (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 51
+        },
+        {
+          "id": "246054",
+          "num": 54,
+          "name": "True Damage Know My Name Qiyana (Pearl)",
+          "chromas": false,
+          "parentSkin": 51
+        },
+        {
+          "id": "246055",
+          "num": 55,
+          "name": "True Damage Know My Name Qiyana (Catseye)",
+          "chromas": false,
+          "parentSkin": 51
+        },
+        {
+          "id": "246056",
+          "num": 56,
+          "name": "True Damage Know My Name Qiyana (Turquoise)",
+          "chromas": false,
+          "parentSkin": 51
+        },
+        {
+          "id": "246057",
+          "num": 57,
+          "name": "True Damage Know My Name Qiyana (Obsidian)",
+          "chromas": false,
+          "parentSkin": 51
+        },
+        {
+          "id": "246058",
+          "num": 58,
+          "name": "True Damage Know My Name Qiyana (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 51
+        },
+        {
+          "id": "246059",
+          "num": 59,
+          "name": "True Damage Know My Name Qiyana (Sapphire)",
+          "chromas": false,
+          "parentSkin": 51
         }
       ],
       "lore": "In the jungle city of Ixaocan, Qiyana plots her own ruthless path to the high seat of the Yun Tal. Last in line to succeed her parents, she faces those who stand in her way with brash confidence and unprecedented mastery over elemental magic. With the land itself obeying her every command, Qiyana sees herself as the greatest elementalist in the history of Ixaocan—and by that right, deserving of not only a city, but an empire.",

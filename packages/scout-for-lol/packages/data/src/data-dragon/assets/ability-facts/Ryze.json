@@ -26,12 +26,12 @@
       "dataValues": {
         "BaseDamage": [75, 95, 115, 135, 155],
         "DamageAmp": [40, 50, 60, 70, 80],
-        "MovementSpeedAmount": [28, 32, 36, 40, 44],
+        "MovementSpeedAmount": [30, 35, 40, 45, 50],
         "MovementSpeedDuration": [2, 2, 2, 2, 2],
         "MaximumRunes": [2, 2, 2, 2, 2],
         "RuneDuration": [4, 4, 4, 4, 4]
       },
-      "resolvedDescription": "Passive: Rune Prison and Spell Flux refresh this Ability's Cooldown and charge a rune for 4 seconds (max 2 runes). Active: Ryze unleashes a blast, dealing {{ qdamagecalc }} magic damage to the first enemy hit. If the target has Flux on it, it is consumed, causing this Ability to deal 40/65/90% increased damage and bounces to nearby enemies with Flux. Ryze also discharges all runes, granting Ryze 28/32/36/40/44% Move Speed for 2 seconds if 2 runes were charged.",
+      "resolvedDescription": "Passive: Rune Prison and Spell Flux refresh this Ability's Cooldown and charge a rune for 4 seconds (max 2 runes). Active: Ryze unleashes a blast, dealing {{ qdamagecalc }} magic damage to the first enemy hit. If the target has Flux on it, it is consumed, causing this Ability to deal 40/70/100% increased damage and bounces to nearby enemies with Flux. Ryze also discharges all runes, granting Ryze 30/35/40/45/50% Move Speed for 2 seconds if 2 runes were charged.",
       "unresolved": ["qdamagecalc"]
     },
     "W": {
@@ -80,12 +80,12 @@
         "TeleportTime": [0.65, 0.65, 0.65],
         "AllyIndicatorBuffDuration": [0.75, 0.75, 0.75],
         "ChargeTimeTooltip": [2, 2, 2],
-        "OverloadDamageBonus": [40, 65, 90],
+        "OverloadDamageBonus": [40, 70, 100],
         "OverloadHealPercent": [20, 25, 30],
         "HealPercentMinionMod": [0.33, 0.33, 0.33],
         "MinimumCastRange": [1000, 1000, 1000]
       },
-      "resolvedDescription": "Passive: Overload damage bonus against targets with Flux increased to 40/65/90%. Active: Ryze opens a portal to another location. After 2 seconds, all allies near the portal are teleported to that location.",
+      "resolvedDescription": "Passive: Overload damage bonus against targets with Flux increased to 40/70/100%. Active: Ryze opens a portal to another location. After 2 seconds, all allies near the portal are teleported to that location.",
       "unresolved": []
     }
   }

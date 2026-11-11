@@ -28,7 +28,7 @@
     "Q": {
       "name": "The Darkin Glaive",
       "maxRank": 5,
-      "cooldownByRank": [10, 9, 8, 7, 6],
+      "cooldownByRank": [8, 7.5, 7, 6.5, 6],
       "costByRank": [25, 25, 25, 25, 25],
       "costType": "Mana",
       "rangeByRank": [25000, 25000, 25000, 25000, 25000],

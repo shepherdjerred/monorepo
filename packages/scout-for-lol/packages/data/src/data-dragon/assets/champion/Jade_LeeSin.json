@@ -686,8 +686,8 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [7, 7, 7, 7, 7],
-          "cooldownBurn": "7",
+          "cooldown": [8, 8, 8, 8, 8],
+          "cooldownBurn": "8",
           "cost": [50, 50, 50, 50, 50],
           "costBurn": "50",
           "datavalues": {},

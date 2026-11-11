@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.20.1",
+  "version": "16.22.1",
   "data": {
     "Thresh": {
       "id": "Thresh",
@@ -515,7 +515,7 @@
         "mpregenperlevel": 0.8,
         "crit": 0,
         "critperlevel": 0,
-        "attackdamage": 56,
+        "attackdamage": 54,
         "attackdamageperlevel": 0,
         "attackspeedperlevel": 3.5,
         "attackspeed": 0.625
@@ -735,7 +735,7 @@
           "datavalues": {},
           "effect": [
             null,
-            [250, 400, 550],
+            [0, 0, 0],
             [2, 2, 2],
             [99, 99, 99],
             [4, 4, 4],
@@ -748,7 +748,7 @@
           ],
           "effectBurn": [
             null,
-            "250/400/550",
+            "0",
             "2",
             "99",
             "4",

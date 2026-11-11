@@ -27,7 +27,7 @@
       "rangeByRank": [450, 450, 450, 450, 450],
       "dataValues": {
         "BaseDamage": [25, 50, 75, 100, 125],
-        "ADRatio": [1.1, 1.1, 1.1, 1.1, 1.1],
+        "ADRatio": [1.05, 1.05, 1.05, 1.05, 1.05],
         "Width": [80, 80, 80, 80, 80],
         "BuffDuration": [6, 6, 6, 6, 6],
         "Q3MaxDistance": [450, 450, 450, 450, 450],
@@ -44,7 +44,7 @@
         "Q3KnockupHeight": [0.5, 0.5, 0.5, 0.5, 0.5],
         "Q3KnockupDuration": [0.75, 0.75, 0.75, 0.75, 0.75]
       },
-      "resolvedDescription": "Yone thrusts forward, dealing 25/50/75/100/125 (+110% AD) physical damage. On hit, grants a stack for 6 seconds. At 2 stacks, this ability causes Yone to dash forward with a wave of wind that Knocks Up for 0.75 seconds and deals 25/50/75/100/125 (+110% AD) physical damage.",
+      "resolvedDescription": "Yone thrusts forward, dealing 25/50/75/100/125 (+105% AD) physical damage. On hit, grants a stack for 6 seconds. At 2 stacks, this ability causes Yone to dash forward with a wave of wind that Knocks Up for 0.75 seconds and deals 25/50/75/100/125 (+105% AD) physical damage.",
       "unresolved": []
     },
     "W": {

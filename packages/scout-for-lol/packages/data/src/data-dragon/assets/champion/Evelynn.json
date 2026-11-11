@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.20.1",
+  "version": "16.22.1",
   "data": {
     "Evelynn": {
       "id": "Evelynn",
@@ -455,6 +455,60 @@
           "num": 64,
           "name": "Nightbringer Evelynn",
           "chromas": false
+        },
+        {
+          "id": "28065",
+          "num": 65,
+          "name": "K/DA FIRESTARTER Evelynn",
+          "chromas": true
+        },
+        {
+          "id": "28066",
+          "num": 66,
+          "name": "K/DA Hitmaker Evelynn",
+          "chromas": false
+        },
+        {
+          "id": "28067",
+          "num": 67,
+          "name": "K/DA FIRESTARTER Evelynn (Obsidian)",
+          "chromas": false,
+          "parentSkin": 65
+        },
+        {
+          "id": "28068",
+          "num": 68,
+          "name": "K/DA FIRESTARTER Evelynn (Ruby)",
+          "chromas": false,
+          "parentSkin": 65
+        },
+        {
+          "id": "28069",
+          "num": 69,
+          "name": "K/DA FIRESTARTER Evelynn (Catseye)",
+          "chromas": false,
+          "parentSkin": 65
+        },
+        {
+          "id": "28070",
+          "num": 70,
+          "name": "K/DA FIRESTARTER Evelynn (Sapphire)",
+          "chromas": false,
+          "parentSkin": 65
+        },
+        {
+          "id": "28071",
+          "num": 71,
+          "name": "K/DA FIRESTARTER Evelynn (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 65
+        },
+        {
+          "id": "28072",
+          "num": 72,
+          "name": "K/DA FIRESTARTER Evelynn (Pearl)",
+          "chromas": false,
+          "parentSkin": 65
         }
       ],
       "lore": "Within the dark seams of Runeterra, the demon Evelynn searches for her next victim. She lures in prey with the voluptuous façade of a human female, but once a person succumbs to her charms, Evelynn's true form is unleashed. She then subjects her victim to unspeakable torment, gratifying herself with their pain. To the demon, these liaisons are innocent flings. To the rest of Runeterra, they are ghoulish tales of lust gone awry and horrific reminders of the cost of wanton desire.",

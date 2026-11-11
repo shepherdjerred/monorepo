@@ -1,5 +1,5 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`arena real data renders image for 1.json 1`] = `"a9384f1cb1c7de0a83bbf4aa588698e02912e721a126642f6ead1cc8814d9fea"`;
+exports[`arena real data renders image for 1.json 1`] = `"e5b05e368373a55907ebaae89ebe09c9ae8791e7772fc2943dda2a1d711d5096"`;
 
-exports[`arena real data renders image for 2.json 1`] = `"b0f14fa7918656928d99452280363b53463f63026e6f430793058f7afb054072"`;
+exports[`arena real data renders image for 2.json 1`] = `"b6a1d016c9b9cdb30238cfe9a4a1413346412254c199af95bbc7a459c09fc234"`;
