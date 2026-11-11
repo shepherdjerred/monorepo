@@ -210,6 +210,13 @@ private struct ToolDefinitionView: View {
   var body: some View {
     DisclosureGroup {
       VStack(alignment: .leading, spacing: 4) {
+        if let description = tool.description, !description.isEmpty {
+          Text(description)
+            .font(.caption)
+            .textSelection(.enabled)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
         if tool.parameters == .null {
           Text("Declares no parameters.").font(.caption).foregroundStyle(.secondary)
         } else {
