@@ -9,6 +9,7 @@ import {
   type SecretKind,
   type SecretMatch,
 } from "#lib/brim/sync/redact.ts";
+import { asRecord } from "./json.ts";
 import type { CaptureStore } from "./store.ts";
 
 /**
@@ -17,6 +18,10 @@ import type { CaptureStore } from "./store.ts";
  * appending is unaffected) and in every stored blob. Ingest already redacts,
  * so this matters after a pattern is added. A redacted blob gets a new
  * content hash and every reference moves to it.
+ *
+ * A spool segment is JSONL, and a PEM key's armor may span lines, so it is
+ * scanned one JSON string at a time: a match never crosses into another
+ * value or record, which would overwrite the JSON between them.
  */
 
 export type CaptureRedactReport = {
@@ -28,11 +33,83 @@ export type CaptureRedactReport = {
   readonly dryRun: boolean;
 };
 
+export type Redacted<T> = { readonly value: T; readonly secrets: number };
+
+/** A string with every secret overwritten. */
+export function redactText(text: string): Redacted<string> {
+  const { bytes, matches } = redactBytes(new TextEncoder().encode(text));
+  return matches.length === 0
+    ? { value: text, secrets: 0 }
+    : { value: new TextDecoder().decode(bytes), secrets: matches.length };
+}
+
+/**
+ * Redacts every string inside a parsed JSON value separately, so no match
+ * spans two values. `visit` may take over an object, such as a base64 body
+ * that must be decoded first.
+ */
+export function redactJsonValues(
+  value: unknown,
+  visit?: (record: Record<string, unknown>) => Redacted<unknown> | null,
+): Redacted<unknown> {
+  if (typeof value === "string") return redactText(value);
+  let secrets = 0;
+  const walk = (item: unknown): unknown => {
+    const redacted = redactJsonValues(item, visit);
+    secrets += redacted.secrets;
+    return redacted.value;
+  };
+  if (Array.isArray(value)) {
+    const items = value.map((item: unknown) => walk(item));
+    return { value: items, secrets };
+  }
+  const record = asRecord(value);
+  if (record === null) return { value, secrets: 0 };
+  const visited = visit?.(record) ?? null;
+  if (visited !== null) return visited;
+  const entries = Object.entries(record).map(
+    ([key, item]) => [key, walk(item)] as const,
+  );
+  return { value: Object.fromEntries(entries), secrets };
+}
+
+const QUOTE = 0x22;
+const BACKSLASH = 0x5c;
+const NEWLINE = 0x0a;
+
+/**
+ * Secrets in each JSON string literal of a spool file, by file offset. A
+ * string ends at its closing quote or, in a torn line, at the newline, so a
+ * match stays inside one value of one record.
+ */
+function spoolSecrets(bytes: Uint8Array): SecretMatch[] {
+  const matches: SecretMatch[] = [];
+  const scan = (start: number, end: number) => {
+    for (const match of findSecrets(bytes.subarray(start, end))) {
+      matches.push({ ...match, offset: match.offset + start });
+    }
+  };
+  let start: number | null = null;
+  for (let index = 0; index < bytes.length; index += 1) {
+    const byte = bytes[index];
+    if (start === null) {
+      if (byte === QUOTE) start = index + 1;
+    } else if (byte === BACKSLASH && bytes[index + 1] !== NEWLINE) {
+      index += 1;
+    } else if (byte === QUOTE || byte === NEWLINE) {
+      scan(start, index);
+      start = null;
+    }
+  }
+  if (start !== null) scan(start, bytes.length);
+  return matches;
+}
+
 async function redactSpoolFile(
   file: string,
   dryRun: boolean,
 ): Promise<SecretMatch[]> {
-  const matches = findSecrets(await Bun.file(file).bytes());
+  const matches = spoolSecrets(await Bun.file(file).bytes());
   if (dryRun || matches.length === 0) return matches;
   const handle = await open(file, "r+");
   try {

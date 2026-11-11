@@ -1193,8 +1193,9 @@ added to a keychain: each CLI trusts it through `NODE_EXTRA_CA_CERTS`,
 roots plus the CA, because `SSL_CERT_FILE` replaces a runtime's roots and is
 inherited by the agent's children.
 
-Each daemon scan redacts closed spool segments with the `brim sync` patterns,
-applies them in one transaction, and deletes them. Requests are split into
+Each daemon scan parses closed spool segments, redacts each string in each
+record separately with the `brim sync` patterns (so no match spans two
+records or values), applies them in one transaction, and deletes them. Requests are split into
 blocks (system parts, tool definitions, `messages[]` or Responses `input[]`
 items) stored once each by SHA-256 and zstd-compressed; unknown and protobuf
 bodies are kept whole. A request that continues a server-side response (Codex

@@ -4,22 +4,24 @@ import { z } from "zod";
 import {
   bodyBytes,
   CaptureRecordSchema,
-  type CaptureBody,
   type CaptureRecord,
 } from "#lib/brim/capture/record.ts";
 import { redactBytes } from "#lib/brim/sync/redact.ts";
 import { applyRecord } from "./apply.ts";
+import { redactJsonValues, type Redacted } from "./redact.ts";
 import type { CaptureStore } from "./store.ts";
 
 /**
  * Consumes closed spool segments into `captures.sqlite`.
  *
- * Each segment is redacted with the `brim sync` patterns before it is parsed,
- * and every body again once decoded (a base64 body hides its text from the
- * outer pass), then applied in one transaction together with its `spool_segments` row, and then
- * deleted, so a crash between commit and delete never applies it twice. A
- * record that does not match the contract stops ingestion with its segment
- * and line: the producer is broken, and guessing would corrupt the store.
+ * Each record is parsed, then every string in it is redacted on its own with
+ * the `brim sync` patterns (a base64 body is decoded first, which hides its
+ * text from a pass over the encoded form), so no match can span two records
+ * or values. The records are applied in one transaction together with their
+ * `spool_segments` row, and then the segment is deleted, so a crash between
+ * commit and delete never applies it twice. A record that does not match the
+ * contract stops ingestion with its segment and line: the producer is
+ * broken, and guessing would corrupt the store.
  */
 
 const SEGMENT_SUFFIX = ".jsonl";
@@ -35,13 +37,34 @@ export type CaptureIngestReport = {
   readonly prunedCaptures: number;
 };
 
-/** Parses a redacted segment; a torn final line is counted, not parsed. */
+/** A `{ base64 }` body, redacted as its decoded bytes. */
+function redactBase64Body(
+  record: Record<string, unknown>,
+): Redacted<unknown> | null {
+  const { base64 } = record;
+  if (typeof base64 !== "string" || Object.keys(record).length !== 1) {
+    return null;
+  }
+  const { bytes, matches } = redactBytes(bodyBytes({ base64 }));
+  return matches.length === 0
+    ? { value: record, secrets: 0 }
+    : {
+        value: { base64: Buffer.from(bytes).toString("base64") },
+        secrets: matches.length,
+      };
+}
+
+/**
+ * Parses and redacts a segment, one record at a time; a torn final line is
+ * counted, not parsed.
+ */
 export function parseSegment(
   name: string,
   bytes: Uint8Array,
-): { records: CaptureRecord[]; torn: boolean } {
+): { records: CaptureRecord[]; secrets: number; torn: boolean } {
   const text = new TextDecoder().decode(bytes);
   const end = text.lastIndexOf("\n") + 1;
+  let secrets = 0;
   const records = text
     .slice(0, end)
     .split("\n")
@@ -54,61 +77,17 @@ export function parseSegment(
       } catch (error: unknown) {
         throw new Error(`${where} is not JSON`, { cause: error });
       }
-      const parsed = CaptureRecordSchema.safeParse(json);
+      const redacted = redactJsonValues(json, redactBase64Body);
+      const parsed = CaptureRecordSchema.safeParse(redacted.value);
       if (!parsed.success) {
         throw new Error(
           `${where} is not a capture record: ${parsed.error.message}`,
         );
       }
+      secrets += redacted.secrets;
       return [parsed.data];
     });
-  return { records, torn: end < text.length };
-}
-
-type Redacted<T> = { readonly value: T; readonly secrets: number };
-
-function redactBody(body: CaptureBody): Redacted<CaptureBody> {
-  const { bytes, matches } = redactBytes(bodyBytes(body));
-  if (matches.length === 0) return { value: body, secrets: 0 };
-  const value =
-    "text" in body
-      ? { text: new TextDecoder().decode(bytes) }
-      : { base64: Buffer.from(bytes).toString("base64") };
-  return { value, secrets: matches.length };
-}
-
-function redactNullableBody(
-  body: CaptureBody | null,
-): Redacted<CaptureBody | null> {
-  return body === null ? { value: null, secrets: 0 } : redactBody(body);
-}
-
-/** Redacts the decoded bodies of a record parsed from redacted bytes. */
-function redactRecord(record: CaptureRecord): Redacted<CaptureRecord> {
-  switch (record.kind) {
-    case "http": {
-      const request = redactNullableBody(record.request.body);
-      const response = redactNullableBody(record.response?.body ?? null);
-      return {
-        value: {
-          ...record,
-          request: { ...record.request, body: request.value },
-          response:
-            record.response === null
-              ? null
-              : { ...record.response, body: response.value },
-        },
-        secrets: request.secrets + response.secrets,
-      };
-    }
-    case "ws-message": {
-      const body = redactBody(record.body);
-      return { value: { ...record, body: body.value }, secrets: body.secrets };
-    }
-    case "ws-open":
-    case "ws-close":
-      return { value: record, secrets: 0 };
-  }
+  return { records, secrets, torn: end < text.length };
 }
 
 function isMissing(error: unknown): boolean {
@@ -207,20 +186,11 @@ export async function ingestCaptureSpool(options: {
   const names = await spoolSegments(options.spoolDir);
   for (const name of names) {
     const segmentPath = path.join(options.spoolDir, name);
-    const bytes = await Bun.file(segmentPath).bytes();
-    const redacted = redactBytes(bytes);
-    const parsed = parseSegment(name, redacted.bytes);
-    const bodies = parsed.records.map((record) => redactRecord(record));
-    captures += applySegment(
-      store,
-      name,
-      bodies.map((body) => body.value),
-      now,
-    );
+    const parsed = parseSegment(name, await Bun.file(segmentPath).bytes());
+    captures += applySegment(store, name, parsed.records, now);
     await rm(segmentPath);
     records += parsed.records.length;
-    redactedSecrets += redacted.matches.length;
-    for (const body of bodies) redactedSecrets += body.secrets;
+    redactedSecrets += parsed.secrets;
     if (parsed.torn) tornLines += 1;
   }
   const prunedCaptures = pruneCaptures(store, options.retentionDays, now);

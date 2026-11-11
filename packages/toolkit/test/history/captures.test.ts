@@ -856,6 +856,83 @@ describe("capture correlation and storage", () => {
   });
 });
 
+// Assembled at runtime so secret scanners do not flag the fixture.
+const PEM_LABEL = ["PRIVATE", "KEY"].join(" ");
+
+/** A Claude request whose one user message is `text`. */
+function claudeSays(id: string, at: string, text: string): CaptureRecord {
+  return claudeHttp({
+    id,
+    at,
+    body: { model: "m", messages: [{ role: "user", content: text }] },
+    response: [],
+  });
+}
+
+describe("capture redaction boundaries", () => {
+  test("never redacts across records, at ingest or in `brim capture redact`", async () => {
+    const context = await fixture();
+    // PEM armor split over two flows, with another flow's ws-open between
+    // them: a match spanning records would swallow the ws-open.
+    const [open, ...messages] = codexToolTurn();
+    if (open?.kind !== "ws-open") throw new Error("expected a ws-open first");
+    const records = [
+      claudeSays(
+        "pem-begin",
+        "2026-11-10T03:23:00.000Z",
+        `-----BEGIN ${PEM_LABEL}-----`,
+      ),
+      open,
+      claudeSays(
+        "pem-end",
+        "2026-11-10T03:24:00.000Z",
+        `-----END ${PEM_LABEL}-----`,
+      ),
+      ...messages,
+    ];
+    const report = await ingest(context, records);
+    expect(report).toMatchObject({
+      records: records.length,
+      redactedSecrets: 0,
+    });
+    const { captures } = HistoryApiCapturesResponseSchema.parse(
+      await fetchJson(context, "/v1/captures"),
+    );
+    expect(captures.map((capture) => capture.transport).toSorted()).toEqual([
+      "http",
+      "http",
+      "websocket",
+      "websocket",
+      "websocket",
+    ]);
+
+    // A segment still being written: the same records plus a real match.
+    // Fabricated, low-entropy stand-in; not a real credential.
+    const key = `ghp_${"b".repeat(36)}`;
+    const partial = await writeSegment(
+      context.spoolDir,
+      "0002-1-000001.jsonl.part",
+      [
+        ...records,
+        claudeSays("key", "2026-11-10T03:25:00.000Z", `token ${key}`),
+      ],
+    );
+    const scanned = await redactCaptures({
+      store: null,
+      spoolDir: context.spoolDir,
+      dryRun: false,
+    });
+    expect(scanned.totals).toEqual({ "github-token": 1 });
+    const text = await Bun.file(partial).text();
+    expect(text).not.toContain(key);
+    const lines = text
+      .trimEnd()
+      .split("\n")
+      .map((line): unknown => JSON.parse(line));
+    expect(lines.slice(0, records.length)).toEqual(records);
+  });
+});
+
 /** A store ingested at v2, then rewound to the v1 shape. */
 async function v1Store(records: readonly CaptureRecord[]) {
   const context = await fixture();
