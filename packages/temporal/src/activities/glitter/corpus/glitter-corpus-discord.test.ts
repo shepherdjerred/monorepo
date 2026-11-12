@@ -16,7 +16,7 @@ import { requireMessageContentIntent } from "./glitter-corpus-discord-client.ts"
 const VIEW_AND_HISTORY = String((1n << 10n) | (1n << 16n));
 
 function channel(input?: {
-  type?: 0 | 11 | 12 | 15;
+  type?: 0 | 11 | 12 | 15 | 20;
   overwrites?: {
     id: string;
     type: 0 | 1;
@@ -104,6 +104,36 @@ describe("Glitter Discord inventory permissions", () => {
       permissionChannel: channel(),
     });
     expect(entry.scopeDecision).toBe("exclude-private-thread");
+  });
+
+  test("undocumented channel type 20 parses and is a non-message channel", () => {
+    const type20 = channel({ type: 20 });
+    expect(type20.type).toBe(20);
+    expect(
+      scopeEntry({
+        guildId: "123",
+        botUserId: "999",
+        memberRoleIds: [],
+        guildRoles: [{ id: "123", permissions: VIEW_AND_HISTORY }],
+        denylist: new Set<string>(),
+        discoveredAt: "2026-07-26T00:00:00.000Z",
+        channel: type20,
+        permissionChannel: type20,
+      }).scopeDecision,
+    ).toBe("exclude-non-message-channel");
+  });
+
+  test("unrecognized channel types still fail loudly", () => {
+    expect(() =>
+      DiscordApiChannelSchema.parse({
+        id: "456",
+        guild_id: "123",
+        parent_id: null,
+        name: "public",
+        type: 21,
+        permission_overwrites: [],
+      }),
+    ).toThrow();
   });
 
   test("forum parents are inventory-only while their public threads are included", () => {

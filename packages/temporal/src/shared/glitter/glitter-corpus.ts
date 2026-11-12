@@ -76,6 +76,9 @@ export const DiscordChannelTypeSchema = z.union([
   z.literal(14),
   z.literal(15),
   z.literal(16),
+  // Undocumented: observed on channel 1569557632472055915 (created 2026-11-10)
+  // in the live guild. Not in Discord's channel-type docs; non-message channel.
+  z.literal(20),
 ]);
 export const CorpusScopeDecisionSchema = z.enum([
   "include",
