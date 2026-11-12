@@ -15,6 +15,8 @@ import { shellActions, type Overlay } from "./shell-actions.ts";
 import { useRoute, type RouteInfo } from "./route.ts";
 import { useTeamKey } from "./team.ts";
 import { Toaster } from "#client/ui/toast.tsx";
+import { useLiveUpdates } from "#client/live/connection.ts";
+import { LiveAnnouncer, LiveIndicator } from "#client/live/presence.tsx";
 import type { ShellContext } from "./shell-context.ts";
 
 const headings = {
@@ -58,6 +60,7 @@ export function Shell() {
   const issues = useIssueList(route, teamKey);
   const peek = usePeek(route.isList);
   const pageIssue = useIssue(route.identifier);
+  useLiveUpdates(data?.liveUpdatesEnabled === true);
   const [overlay, setOverlay] = useState<Overlay>();
   const [current, setCurrent] = useState<string>();
   const actions = shellActions({
@@ -127,6 +130,7 @@ export function Shell() {
             <h1 className="page-title">{heading}</h1>
           )}
           <span className="spacer" />
+          <LiveIndicator className="mobile-live" />
           <button
             className="mobile-search icon-button"
             aria-label="Search"
@@ -230,6 +234,7 @@ export function Shell() {
         moreOpen={overlay === "more"}
       />
       <Toaster />
+      <LiveAnnouncer />
       <ScrollRestoration />
     </div>
   );

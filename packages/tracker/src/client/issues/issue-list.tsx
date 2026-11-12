@@ -11,6 +11,7 @@ import { RelativeTime } from "#client/ui/time.tsx";
 import { useShell } from "#client/shell/shell-context.ts";
 import { isPlainClick } from "#client/shell/route.ts";
 import { registerReveal } from "#client/shell/list-navigation.ts";
+import { useFreshRows } from "#client/live/remote-activity.ts";
 
 const phone = "(max-width: 767px)";
 /** A row's usual height under `list.css`, used until it has been measured. */
@@ -99,7 +100,7 @@ function MoreRows({ restoring }: { restoring: boolean }) {
   }
   if (list.loadingMore) {
     return (
-      // The list is `aria-busy` meanwhile; toasts are the only live region.
+      // The list is `aria-busy` meanwhile; no live region announces it.
       <div className="list-more">Loading more issues…</div>
     );
   }
@@ -125,6 +126,7 @@ export function IssueList() {
   const historyKey = location.key;
   const url = location.pathname + location.search;
   const { items } = list;
+  const fresh = useFreshRows();
   // One row is in the tab order; J/K and the arrow keys move between rows.
   const currentIndex = items.findIndex(
     ({ identifier }) => identifier === current,
@@ -243,6 +245,8 @@ export function IssueList() {
               key={issue.id}
               ref={virtualizer.measureElement}
               data-index={row.index}
+              // Another session created it a moment ago.
+              data-fresh={fresh.has(issue.identifier) ? "" : undefined}
               aria-posinset={row.index + 1}
               // More pages may follow, so the full size is not known yet.
               aria-setsize={list.hasMore ? -1 : items.length}

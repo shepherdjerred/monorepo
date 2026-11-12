@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import type { BootstrapData } from "#client/data/api.ts";
 import { Modal, Swatch } from "#client/ui/ui.tsx";
+import { LiveIndicator } from "#client/live/presence.tsx";
 import { rememberTeam } from "./team.ts";
 
 const links = [
@@ -59,49 +60,52 @@ export function Sidebar({
         <Plus size={16} />
         New issue<kbd>C</kbd>
       </button>
-      <p className="nav-heading">Workspace</p>
-      <nav aria-label="Main navigation">
-        {links.map((link) => (
-          <NavLink key={link.path} to={link.path}>
-            <link.icon size={16} />
-            <span>{link.name}</span>
-          </NavLink>
-        ))}
-      </nav>
-      <p className="nav-heading">Teams</p>
-      <div className="team-nav">
-        {bootstrap?.teams.map((team) => (
-          <Link
-            key={team.id}
-            to={`/issues?team=${team.key}`}
-            className={teamKey === team.key ? "active-team" : ""}
-            onClick={() => {
-              rememberTeam(team.key);
-            }}
-          >
-            <span className="team-icon" aria-hidden="true">
-              {team.key}
-            </span>
-            <span>{team.name}</span>
-          </Link>
-        ))}
-      </div>
-      <p className="nav-heading">Projects</p>
-      <div className="project-nav">
-        {bootstrap?.projects
-          .filter(({ archivedAt }) => archivedAt === null)
-          .map((project) => (
-            <Link to={`/projects/${project.slug}`} key={project.id}>
-              <Swatch color={project.color} />
-              {project.name}
+      <div className="sidebar-scroll">
+        <p className="nav-heading">Workspace</p>
+        <nav aria-label="Main navigation">
+          {links.map((link) => (
+            <NavLink key={link.path} to={link.path}>
+              <link.icon size={16} />
+              <span>{link.name}</span>
+            </NavLink>
+          ))}
+        </nav>
+        <p className="nav-heading">Teams</p>
+        <div className="team-nav">
+          {bootstrap?.teams.map((team) => (
+            <Link
+              key={team.id}
+              to={`/issues?team=${team.key}`}
+              className={teamKey === team.key ? "active-team" : ""}
+              onClick={() => {
+                rememberTeam(team.key);
+              }}
+            >
+              <span className="team-icon" aria-hidden="true">
+                {team.key}
+              </span>
+              <span>{team.name}</span>
             </Link>
           ))}
+        </div>
+        <p className="nav-heading">Projects</p>
+        <div className="project-nav">
+          {bootstrap?.projects
+            .filter(({ archivedAt }) => archivedAt === null)
+            .map((project) => (
+              <Link to={`/projects/${project.slug}`} key={project.id}>
+                <Swatch color={project.color} />
+                {project.name}
+              </Link>
+            ))}
+        </div>
       </div>
       <div className="sidebar-footer">
         <NavLink to="/settings">
           <Settings2 size={16} />
           Settings
         </NavLink>
+        <LiveIndicator className="sidebar-live" />
         <button
           className="icon-button"
           onClick={help}
@@ -164,6 +168,7 @@ export function MoreSheet({
           <Settings2 size={18} />
           Settings
         </NavLink>
+        <LiveIndicator className="sidebar-live" />
         <button onClick={help}>
           <Keyboard size={18} />
           Keyboard shortcuts

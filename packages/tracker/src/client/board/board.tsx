@@ -25,6 +25,7 @@ import { moveIssue } from "#client/data/mutations.ts";
 import { Avatar, Priority, StateDot, Swatch } from "#client/ui/ui.tsx";
 import { useShell } from "#client/shell/shell-context.ts";
 import { isPlainClick } from "#client/shell/route.ts";
+import { useFreshRows } from "#client/live/remote-activity.ts";
 
 const boardCollision: CollisionDetection = (args) => {
   const hits = pointerWithin({
@@ -72,10 +73,12 @@ function Card({ issue }: { issue: Issue }) {
     isDragging,
   } = useSortable({ id: issue.id, data: { stateId: issue.state.id } });
   const { current, setCurrent, openPeek } = useShell();
+  const fresh = useFreshRows().has(issue.identifier);
   return (
     <article
       ref={setNodeRef}
       className={`board-card ${isDragging ? "dragging" : ""}`}
+      data-fresh={fresh ? "" : undefined}
       style={{
         transform:
           transform === null

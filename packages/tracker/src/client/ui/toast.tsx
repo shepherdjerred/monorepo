@@ -4,7 +4,10 @@ import { undoStack } from "#client/data/undo.ts";
 
 const manager = Toast.createToastManager();
 
-/** Confirm an outcome. Toasts are also the app's only live region. */
+/**
+ * Confirm an outcome. Toasts are the app's live region for outcomes; the
+ * live-update announcer is the only other one.
+ */
 export function notify(title: string) {
   return manager.add({ title, type: "info", timeout: 4000 });
 }
