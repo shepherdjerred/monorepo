@@ -18,7 +18,7 @@ const DISABLED = { FEATURE_FLAGS_MODE: "disabled" } as const;
 const SEED: DynamicConfigSeed = {
   exploreGuildAllowlist: ["seeded-guild"],
   exploreQuotaLimits: DEFAULT_EXPLORE_QUOTA_LIMITS,
-  exploreModel: "gpt-5.6-luna",
+  exploreModel: "gpt-6-luna",
   llmHourlyTokenBudget: 2_000_000,
   llmDailyTokenBudget: 20_000_000,
   temporalCallGraphTracing: false,
@@ -87,7 +87,7 @@ describe("scout dynamic config", () => {
       seed: SEED,
       startPolling: false,
     });
-    expect(exploreModel()).toBe("gpt-5.6-luna");
+    expect(exploreModel()).toBe("gpt-6-luna");
     await shutdownDynamicConfig();
 
     await initializeDynamicConfig({

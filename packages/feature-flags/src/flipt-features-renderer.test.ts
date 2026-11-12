@@ -140,8 +140,8 @@ describe("renderFliptFeatures", () => {
         variants: [
           {
             default: true,
-            key: "gpt-5.6-luna",
-            name: "gpt-5.6-luna",
+            key: "gpt-6-luna",
+            name: "gpt-6-luna",
             attachment: {},
           },
         ],

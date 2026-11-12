@@ -40,7 +40,7 @@ export const DEFAULT_STATIC_FLAG_OVERRIDES: Record<
   // packages/backend/src/config/dynamic.ts, which already falls back to them
   // gracefully on a refresh failure — listing them here just stops the noisy
   // "no static override" warning on every poll.
-  "scout-explore-model": "gpt-5.6-luna",
+  "scout-explore-model": "gpt-6-luna",
   "scout-explore-analysis-enabled": true,
   "scout-explore-model-picker-enabled": true,
   "scout-explore-spend-policy":

@@ -299,7 +299,7 @@ function computeConfiguration() {
     inferenceConfigured: providerCredentialsFromEnv().openai !== undefined,
     reportAiModel: getOptionalEnvVar("REPORT_AI_MODEL", "gpt-5.6-sol"),
     // expose that route.
-    exploreModel: env.get("EXPLORE_MODEL").default("gpt-5.6-luna").asString(),
+    exploreModel: env.get("EXPLORE_MODEL").default("gpt-6-luna").asString(),
     // Beta Explore access is an explicit Discord server allowlist. Production
     // authorizes against the bot's live connected-guild set instead. Unset
     // still means nobody in beta.
