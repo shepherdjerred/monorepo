@@ -244,6 +244,39 @@ describe("FirstPartyWebService workload", () => {
     ]);
   });
 
+  test("a metrics port is exposed beside http and scraped instead of it", () => {
+    const { deployment, of } = render({ metricsPort: 9090 });
+    expect(deployment.spec.template.spec.containers[0]?.ports).toEqual([
+      { name: "http", containerPort: 8080 },
+      { name: "metrics", containerPort: 9090 },
+    ]);
+    expect(of("Service")[0]).toMatchObject({
+      spec: {
+        ports: [
+          { name: "http", port: 8080 },
+          { name: "metrics", port: 9090 },
+        ],
+      },
+    });
+    expect(of("ServiceMonitor")[0]).toMatchObject({
+      spec: {
+        endpoints: [{ port: "metrics" }],
+        selector: { matchLabels: { app: "widget" } },
+      },
+    });
+  });
+
+  test("a data claim may be listed after /tmp", () => {
+    const { deployment } = render(
+      { data: { ...data, afterTmp: true } },
+      DATA_NAMESPACE,
+    );
+    expect(deployment.spec.template.spec.containers[0]?.volumeMounts).toEqual([
+      { name: "tmp", mountPath: "/tmp" },
+      { name: "pvc-alert-dashboard-data", mountPath: "/data" },
+    ]);
+  });
+
   test("stated pod metadata replaces the app label, which the Service keeps", () => {
     const { deployment, of } = render({
       deployment: {

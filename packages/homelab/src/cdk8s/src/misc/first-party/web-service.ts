@@ -59,6 +59,11 @@ export type FirstPartyWebServiceProps = {
   name: string;
   /** The port the server listens on, exposed as `http`. */
   port: number;
+  /**
+   * A second port Prometheus scrapes, exposed as `metrics` on the server
+   * container and the Service. Without it the ServiceMonitor scrapes `http`.
+   */
+  metricsPort?: number;
   /** Health endpoints for the kubelet probes; see `httpProbes`. */
   probes: Parameters<typeof httpProbes>[1];
   /**
@@ -82,10 +87,11 @@ export type FirstPartyWebServiceProps = {
   /** ReplicaSets kept for rollback. Defaults to three. */
   revisionHistoryLimit?: number;
   /**
-   * A claim on the NVMe pool mounted into every container at `path`, ahead of
-   * `/tmp`. `id` is the claim's name.
+   * A claim on the NVMe pool mounted into every container at `path`. `id` is
+   * the claim's name. The mount is listed ahead of `/tmp` unless `afterTmp`
+   * is set, which keeps the order of a pod that predates this construct.
    */
-  data?: { id: string; storage: Size; path: string };
+  data?: { id: string; storage: Size; path: string; afterTmp?: true };
   /**
    * `false` leaves out the emptyDir at `/tmp`, for a service whose root
    * filesystem is writable.
@@ -110,14 +116,62 @@ export type FirstPartyWebServiceProps = {
   policies: FirstPartyNetworkPolicy[];
 };
 
+/** The mounts every container shares: the data claim and `/tmp`. */
+function sharedMounts(
+  scope: Construct,
+  props: FirstPartyWebServiceProps,
+  dataVolume: ZfsNvmeVolume | undefined,
+): VolumeMount[] {
+  const mounts: VolumeMount[] = [];
+  if (dataVolume !== undefined && props.data !== undefined)
+    mounts.push({
+      path: props.data.path,
+      volume: Volume.fromPersistentVolumeClaim(
+        scope,
+        `${props.data.id}-volume`,
+        dataVolume.claim,
+      ),
+    });
+  if (props.tmp === false) return mounts;
+  const tmp = {
+    path: "/tmp",
+    volume: Volume.fromEmptyDir(scope, `${props.name}-tmp`, "tmp"),
+  };
+  return props.data?.afterTmp === true ? [tmp, ...mounts] : [...mounts, tmp];
+}
+
+/** The hosts the Service is reached on, Tailscale first. */
+function exposeService(
+  scope: Construct,
+  service: Service,
+  props: FirstPartyWebServiceProps,
+): void {
+  for (const { id, host } of props.tailscale?.hosts ?? []) {
+    new TailscaleIngress(scope, id, {
+      service,
+      host,
+      probePath: props.tailscale?.probePath,
+    });
+  }
+  if (props.cloudflare !== undefined) {
+    createCloudflareTunnelBinding(scope, props.cloudflare.id, {
+      serviceName: service.name,
+      fqdn: props.cloudflare.fqdn,
+      port: props.port,
+      probePath: props.cloudflare.probePath,
+      publicProbePath: props.cloudflare.probePath,
+    });
+  }
+}
+
 /**
  * A first-party HTTP service: one Deployment with a single replica, its
  * Service and ServiceMonitor, the hosts it is reached on, and the
  * NetworkPolicies around it.
  *
  * Every container gets a writable emptyDir at `/tmp` unless `tmp` is `false`,
- * since the root filesystem is read-only. Leave out `tailscale` and `cloudflare` for a
- * service only other workloads call.
+ * since the root filesystem is read-only. Leave out `tailscale` and
+ * `cloudflare` for a service only other workloads call.
  *
  * Resources are created in the given scope, not under this construct, so their
  * names do not carry its id: `id` only has to be unique in the chart.
@@ -147,25 +201,15 @@ export class FirstPartyWebService extends Construct {
 
     const containers = props.containers();
 
-    const volumeMounts: VolumeMount[] = [];
-    if (props.data !== undefined) {
+    if (props.data !== undefined)
       this.dataVolume = new ZfsNvmeVolume(scope, props.data.id, {
         storage: props.data.storage,
       });
-      volumeMounts.push({
-        path: props.data.path,
-        volume: Volume.fromPersistentVolumeClaim(
-          scope,
-          `${props.data.id}-volume`,
-          this.dataVolume.claim,
-        ),
-      });
-    }
-    if (props.tmp !== false)
-      volumeMounts.push({
-        path: "/tmp",
-        volume: Volume.fromEmptyDir(scope, `${name}-tmp`, "tmp"),
-      });
+    const volumeMounts = sharedMounts(scope, props, this.dataVolume);
+    const metrics =
+      props.metricsPort === undefined
+        ? []
+        : [{ name: "metrics", number: props.metricsPort }];
 
     for (const init of containers.init ?? []) {
       this.deployment.addInitContainer(
@@ -177,7 +221,7 @@ export class FirstPartyWebService extends Construct {
         ...containers.server,
         resources: containers.server.resources,
         name: containers.server.name ?? name,
-        ports: [{ name: "http", number: port }],
+        ports: [{ name: "http", number: port }, ...metrics],
         ...httpProbes(port, props.probes),
         volumeMounts,
       }),
@@ -199,31 +243,22 @@ export class FirstPartyWebService extends Construct {
         labels,
       },
       selector: this.deployment,
-      ports: [{ name: "http", port }],
+      ports: [
+        { name: "http", port },
+        ...metrics.map((metric) => ({
+          name: metric.name,
+          port: metric.number,
+        })),
+      ],
     });
     this.serviceMonitor = createServiceMonitor(chart, {
       name,
       namespace,
-      port: "http",
+      port: props.metricsPort === undefined ? "http" : "metrics",
       matchLabels: labels,
     });
 
-    for (const { id: ingressId, host } of props.tailscale?.hosts ?? []) {
-      new TailscaleIngress(scope, ingressId, {
-        service: this.service,
-        host,
-        probePath: props.tailscale?.probePath,
-      });
-    }
-    if (props.cloudflare !== undefined) {
-      createCloudflareTunnelBinding(scope, props.cloudflare.id, {
-        serviceName: this.service.name,
-        fqdn: props.cloudflare.fqdn,
-        port,
-        probePath: props.cloudflare.probePath,
-        publicProbePath: props.cloudflare.probePath,
-      });
-    }
+    exposeService(scope, this.service, props);
 
     const { podMetadata } = props.deployment ?? {};
     const podsCarryApp =
