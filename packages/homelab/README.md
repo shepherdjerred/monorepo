@@ -56,15 +56,15 @@ authorize replacing or rebinding the dataset.
 
 ## Layout
 
-| Directory        | Contents                                                                                                      |
-| ---------------- | ------------------------------------------------------------------------------------------------------------- |
-| `src/cdk8s`      | All Kubernetes manifests as TypeScript ([cdk8s](https://cdk8s.io/)) — see its [README](src/cdk8s/README.md)   |
-| `src/talos`      | Talos machine config patches per node plus static pods — see its [README](src/talos/README.md)                |
-| `src/tofu`       | OpenTofu stacks (Cloudflare, GitHub, Tailscale, ArgoCD, SeaweedFS, …) — see its [README](src/tofu/README.md)  |
-| `src/helm-types` | Generator for type-safe Helm chart value interfaces                                                           |
-| `mac-ci`         | Bootstrap for the macOS Woodpecker agent (native lanes currently paused) — see its [README](mac-ci/README.md) |
-| `images`         | Custom Docker images (caddy-s3proxy, obsidian-headless, redlib)                                               |
-| `scripts`        | Release/automation scripts: helm push, ArgoCD reconcile, tofu stack wrapper, Velero                           |
+| Directory        | Contents                                                                                                             |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `src/cdk8s`      | All Kubernetes manifests as TypeScript ([cdk8s](https://cdk8s.io/)) — see its [README](src/cdk8s/README.md)          |
+| `src/talos`      | Talos machine config patches per node plus static pods — see its [README](src/talos/README.md)                       |
+| `src/tofu`       | OpenTofu stacks, most synthesized from [`../homelab-cdktn`](../homelab-cdktn) — see its [README](src/tofu/README.md) |
+| `src/helm-types` | Generator for type-safe Helm chart value interfaces                                                                  |
+| `mac-ci`         | Bootstrap for the macOS Woodpecker agent (native lanes currently paused) — see its [README](mac-ci/README.md)        |
+| `images`         | Custom Docker images (caddy-s3proxy, obsidian-headless, redlib)                                                      |
+| `scripts`        | Release/automation scripts: helm push, ArgoCD reconcile, tofu stack wrapper, Velero                                  |
 
 ## Platform model
 
@@ -90,14 +90,19 @@ string, looked up with `publicHostname`, `publicHostnameOfService`,
 declare throws at synthesis. See
 [Rendering from the platform model](src/cdk8s/README.md#rendering-from-the-platform-model).
 
-The OpenTofu stacks do not read the model yet. Until they do,
-[`src/cdk8s/src/platform-model`](src/cdk8s/src/platform-model) holds every
-definition against both renderings: it reads the synthesized manifests and the
-OpenTofu stacks, and fails on a fact that is declared but not rendered, or
-rendered but not declared. Today's disagreements are listed in its
+On the OpenTofu side, the `cloudflare` stack renders its tunnel CNAMEs and
+static-asset cache rules from the model
+([`platform.ts`](../homelab-cdktn/src/stacks/cloudflare/platform.ts)); the
+other stacks do not read it yet.
+[`src/cdk8s/src/platform-model`](src/cdk8s/src/platform-model) therefore holds
+every definition against both renderings: it reads the synthesized manifests
+and the OpenTofu stacks, and fails on a fact that is declared but not rendered,
+or rendered but not declared. Today's disagreements are listed in its
 `debt-allowlists.ts`, which may only shrink. To add a hostname, site, tailnet
 service or credential, declare it in `platform-model.json` and render it on
-both sides.
+both sides; after a model change, run
+`bun run --cwd packages/homelab-cdktn synth` and commit the regenerated
+`src/tofu/cloudflare/main.tf.json`.
 
 ## Details
 

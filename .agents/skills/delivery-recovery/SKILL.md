@@ -56,6 +56,13 @@ toolkit deploy recovery --pending --json
 Fix a defective check or chart in source first (a false positive must not be
 worked around), then settle the deployment.
 
+When a platform recovery inspection keeps failing for a reason already fixed
+on main, the running worker still builds its Jobs from the old source
+(AI-598). Pause `delivery-dispatch`, then run the operator script in
+`packages/temporal/README.md` (`platform-delivery-recovery.ts --action
+inspect`) from a checkout that has the fix. On macOS its Kubernetes client
+may reject the cluster certificate chain (AI-320).
+
 ## 3. Settle it with its own reader
 
 Never release a lock because a stage looks read-only: each reader proves its

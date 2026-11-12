@@ -117,7 +117,10 @@ that quietly does not do what you meant. Pushing that into a type error moves th
 discovery from "weeks later" to "before merge".
 
 OpenTofu covers what is not in the cluster: ArgoCD bootstrap, Cloudflare,
-GitHub, SeaweedFS, Tailscale, and the media stack's external config.
+GitHub, SeaweedFS, Tailscale, and the media stack's external config. Its
+stacks are TypeScript too, synthesized to committed JSON by CDK Terrain.
+[One platform model, two synthesizers](/explanation/homelab/one-platform-model-two-synthesizers/)
+explains how the two halves stay in agreement.
 
 ## Delivery is GitOps, with an unusual amount of care
 

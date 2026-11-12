@@ -602,7 +602,7 @@ lane for the replacement PR, and the ordinary merge gate cannot pass. The
 [`images` lane](packages/woodpecker-config-extension/src/pipeline/lanes/artifacts.ts)
 runs only on `main`, so nothing can publish the new extension before merge.
 The
-[PR-only administrator bypass](packages/homelab/src/tofu/github/rulesets.tf)
+[PR-only administrator bypass](packages/homelab-cdktn/src/stacks/github.ts)
 is the narrow landing path.
 
 Use this path only when the new graph removes or replaces the blocking

@@ -48,11 +48,11 @@ Every workload and environment gets its own credential and its own provider
 project or workspace, so one runaway feature exhausts its own cap and nothing
 else. The three providers allow three different authentication models:
 
-| Provider  | Production credential                       | Hard cap                              | Managed by                                          |
-| --------- | ------------------------------------------- | ------------------------------------- | --------------------------------------------------- |
-| OpenAI    | Per-project service-account key             | Project spend limit, model allowlist  | OpenTofu (`openai`), CI-applied                     |
-| Anthropic | Workload identity federation, no stored key | Workspace spend limit (Console)       | OpenTofu (`anthropic-federation`), operator-applied |
-| Google    | Service-account-bound Gemini API key        | AI Studio project spend cap (Console) | OpenTofu (`google`), operator-applied               |
+| Provider  | Production credential                       | Hard cap                              | Managed by                                                  |
+| --------- | ------------------------------------------- | ------------------------------------- | ----------------------------------------------------------- |
+| OpenAI    | Per-project service-account key             | Project spend limit, model allowlist  | OpenTofu (`openai`), applied by Delivery on a reviewed plan |
+| Anthropic | Workload identity federation, no stored key | Workspace spend limit (Console)       | OpenTofu (`anthropic-federation`), operator-applied         |
+| Google    | Service-account-bound Gemini API key        | AI Studio project spend cap (Console) | OpenTofu (`google`), operator-applied                       |
 
 OpenAI has no federation, so production holds a static key there; OpenTofu
 mints it and an operator hands it to 1Password. The operator-applied Google

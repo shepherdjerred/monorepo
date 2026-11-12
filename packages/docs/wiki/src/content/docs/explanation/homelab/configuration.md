@@ -176,7 +176,7 @@ The allowed browser origins come from the shared
 [analytics registry](https://github.com/shepherdjerred/monorepo/blob/main/config/analytics-sites.json),
 not from a hand-maintained PostHog list. This keeps the project URL policy and
 session-replay policy aligned with the sites that actually emit analytics. The
-unproxied [`j.sjer.red` CNAME](https://github.com/shepherdjerred/monorepo/tree/main/packages/homelab/src/tofu/cloudflare)
+unproxied [`j.sjer.red` CNAME](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab-cdktn/src/stacks/cloudflare/sjer-red.ts)
 is part of the same boundary: Cloudflare routes the hostname, while PostHog owns
 the ProxyHog target behind it.
 

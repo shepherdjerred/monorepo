@@ -23,9 +23,9 @@ Keep the old canonical origin active during this release.
 For an existing listener, complete the [namespace migration](/how-to/migrate-game-bots-to-arcade/#move-the-web-edge-between-namespaces)
 before transferring its public ports.
 
-In the [Cloudflare stack](https://github.com/shepherdjerred/monorepo/tree/main/packages/homelab/src/tofu/cloudflare),
+In the [Cloudflare stack's `sjer.red` records](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab-cdktn/src/stacks/cloudflare/sjer-red.ts),
 point `sjer_red_cname_arcade` at the [IPv4-only dynamic target](/reference/dynamic-dns/)
-with `proxied = false`. Verify that the target resolves without an AAAA record.
+with `proxied: false`, then [re-synthesize the stack](/how-to/change-an-opentofu-stack/). Verify that the target resolves without an AAAA record.
 Retain the existing HTTP and HTTPS [router forwards](/how-to/apply-the-asuswrt-stack/)
 and certificate storage; this hostname change does not require replacing them.
 
@@ -65,7 +65,7 @@ GitOps while retaining Arcade's canonical hostname and certificate.
 Keep all game storage claims and the shared edge's certificate claim.
 
 For a direct-route failure, restore the Arcade DNS resource's tunnel target
-and `proxied = true` through OpenTofu.
+and `proxied: true` through OpenTofu.
 The retained Arcade tunnel binding serves the canonical hostname through the
 bootstrap listener without depending on Caddy's public certificate.
 Keep health and HTTP-01 challenge paths reachable on that listener.

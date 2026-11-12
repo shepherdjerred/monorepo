@@ -258,23 +258,16 @@ remain unchanged.
   than a service. This lane is the only one needing a whole trace pipeline,
   where a failure means the exporter/collector/object-store path broke rather
   than a query.
-- **OpenTofu** groups selected PR checks into one workflow with a shared
-  checkout and dependency install. Ordered containers each receive only their
-  own credentials, resource limits and timeout. Main applies remain separate
-  for SeaweedFS, Tailscale, ARR, GitHub and Cloudflare. Their dependency chain
-  preserves release ordering and provider boundaries. OpenAI, Anthropic, Discord,
-  and Cloudflare token management add a second serialized group: PRs
-  validate them without credentials or a backend, while main gives each
-  no-retry job only its platform credential and unique state passphrase.
-  Ordinary main builds preview only and select each stack by its own changed
-  paths. Explicit operator review separates those previews from credential
-  mutations. The reviewed plan travels encrypted between planning and apply,
-  so provider drift cannot silently change the approved operation. The
-  [release guide](/how-to/cut-a-homelab-release/) gives the trigger procedure.
-  Every main build also publishes each stack's exact source as an immutable
-  archive (`tofu-archives`) that Delivery plans and applies from; the stack
-  manifest declares the repository files a stack reads outside its directory,
-  and the homelab lint fails on an undeclared read.
+- **OpenTofu** is validated on pull requests and never planned or applied by
+  CI. One credential-free step regenerates the provider bindings, fails when a
+  committed `main.tf.json` differs from a fresh synthesis, and validates every
+  stack offline. Every main build publishes each stack's exact source as an
+  immutable archive (`tofu-archives`) that Delivery plans and applies from, so
+  provider and remote-state credentials stay out of CI. The stack manifest
+  declares the repository files a stack reads outside its directory, and the
+  homelab lint fails on an undeclared read.
+  [Change an OpenTofu stack](/how-to/change-an-opentofu-stack/) gives the
+  procedure.
 - **npm channel packages** (webring) are frozen as tarballs on every main
   build under the v2 catalog (`npm-package-archives`). A published version
   keeps the bytes npm serves; an unpublished version is the package's

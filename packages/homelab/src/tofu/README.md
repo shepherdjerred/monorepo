@@ -12,6 +12,7 @@ and handoff previews support review without CI vault-write access.
 
 ```text
 tofu/
+├── application-secrets/ # Application credential adoption (validate-only)
 ├── argocd/              # Scoped ArgoCD account tokens, stored in 1Password
 ├── arr/                 # Radarr/Sonarr/Prowlarr config, imported from the live instances
 ├── asuswrt/             # Asus routers & APs (custom provider, local-run only)
@@ -19,6 +20,8 @@ tofu/
 ├── cloudflare/          # DNS zones, records, redirects, R2 buckets and the mail/TLS baseline
 ├── cloudflare-tokens/   # Scoped API tokens, isolated from the DNS stack
 ├── discord/             # Imported Discord bot application settings
+├── dockerhub/           # Docker Hub repositories
+├── dockerhub-tokens/    # Docker Hub access tokens (operator-applied)
 ├── github/              # Repository settings and branch rulesets
 ├── openai/              # OpenAI projects, users, roles, alerts, and service accounts
 ├── anthropic/           # Anthropic workspaces, members, and imported API-key metadata
@@ -29,7 +32,11 @@ tofu/
 └── tailscale/           # Tailnet ACL policy (deny-by-default access control)
 ```
 
-Each subdirectory is an independent root module with its own `backend.tf` (S3 state on SeaweedFS), `providers.tf`, and `variables.tf`.
+Each subdirectory is an independent root module with its own S3 state on
+SeaweedFS, provider configuration and variables. A synthesized stack declares
+all three in its TypeScript source and holds them in `main.tf.json`; the
+hand-written `google` and `asuswrt` stacks keep `backend.tf`, `providers.tf`
+and `variables.tf`.
 
 ### Stacks synthesized from TypeScript
 
@@ -197,7 +204,7 @@ declares; `.terraform/`, state, saved plans, `tests/` and `desired-state.json`
 are left out. A configuration that reads a file outside its directory must
 declare it there: `bun run lint:tofu` and the homelab test suite fail on an
 undeclared read, an unread declaration, or a declared file that does not
-exist. Every `backend.tf` sets `use_lockfile = true`, so concurrent runs
+exist. Every stack's S3 backend sets `use_lockfile = true`, so concurrent runs
 serialize on the state bucket's lock object rather than on a shared checkout.
 
 Delivery owns operational plans and applies for registered stacks. Applies
@@ -280,7 +287,7 @@ Fastmail account onboarding precedes MX cutover: add each domain, preserve
 existing addresses, add `root@domain`, and direct its catch-all to the existing
 inbox. Keep `dmarc@sjer.red` able to receive aggregate DMARC and TLS reports.
 Set `fastmailReady` only after confirming the domain in Fastmail. Until then,
-the module preserves deny-all SPF and provisions no inbound MX. Prepared DKIM
+the baseline preserves deny-all SPF and provisions no inbound MX. Prepared DKIM
 selectors and policy hosts can deploy before account-side mail activation.
 
 `mtaStsPublished` starts false while Caddy policy hosts and DNS deploy. Set it
@@ -473,12 +480,15 @@ inlined at synthesis: after changing the registry, run
 
 ### GitHub
 
-Repository settings for `shepherdjerred/monorepo` and the `shepherdjerred` profile-README repo (`repos.tf`):
+The stack's source is
+[`packages/homelab-cdktn/src/stacks/github.ts`](../../../homelab-cdktn/src/stacks/github.ts).
+
+Repository settings for `shepherdjerred/monorepo` and the `shepherdjerred` profile-README repo:
 public visibility, auto-delete branches on merge, auto-merge enabled. The `monorepo` repo is **squash-only**
 (`allow_squash_merge = true`, merge commits and rebase disabled), with the squashed commit's title taken from
 the PR title and its body from the list of squashed commits.
 
-The `monorepo` default-branch ruleset (`rulesets.tf`) enforces linear history, blocks deletion and
+The `monorepo` default-branch ruleset enforces linear history, blocks deletion and
 non-fast-forward pushes, and requires the `ci/merge-conflict` and aggregate
 `ci/woodpecker/pr/ci-complete` status checks. The code-review gate feeds the Woodpecker aggregate
 status rather than being its own required check. Repository admins have a PR-only bypass for

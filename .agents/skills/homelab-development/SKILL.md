@@ -25,6 +25,13 @@ before editing. Preserve these boundaries:
   literals, token files, or ambient credentials in CI steps.
 - OpenTofu owns external control-plane resources and state. Do not reproduce a
   Tofu-owned setting in an application dashboard.
+- Most stacks are TypeScript in `packages/homelab-cdktn`, synthesized to a
+  committed `src/tofu/<stack>/main.tf.json`. Never edit that file; follow the
+  wiki how-to "Change an OpenTofu stack". A stack that still holds `.tf` files
+  is hand-written HCL.
+- A hostname, static site, tailnet service, bucket consumer or scoped
+  credential is declared once in `src/platform-model.json` and rendered on
+  both sides.
 
 For a new service, scaffold it with `bun scripts/misc/new-service.ts` and
 follow `packages/docs/wiki/src/content/docs/how-to/add-a-hosted-service.md`;
@@ -39,6 +46,8 @@ Run focused checks from the repository root. Typical coverage includes:
 bunx turbo run build typecheck test lint --filter=homelab
 bun run --cwd packages/homelab/src/cdk8s check:1password
 bun run --cwd packages/homelab lint:tofu
+bun run --cwd packages/homelab-cdktn synth
+bunx turbo run build typecheck test lint --filter=@homelab/cdktn
 ```
 
 Use the exact package scripts present in `package.json`; some validation needs
