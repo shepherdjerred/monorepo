@@ -43,11 +43,16 @@ describe("peerSelects", () => {
     expect(peerSelects(podPeer("grafana"), "media", pods)).toBe(false);
   });
 
-  test("an ipBlock peer selects no pods", () => {
-    expect(
-      peerSelects({ ipBlock: { cidr: "0.0.0.0/0" } }, "prometheus", pods),
-    ).toBe(false);
-  });
+  test.each([
+    [{ cidr: "0.0.0.0/0" }, true],
+    [{ cidr: "0.0.0.0/0", except: ["10.0.0.0/8"] }, false],
+    [{ cidr: "192.168.1.0/24" }, false],
+  ])(
+    "an ipBlock selects pods only when it covers every address: %j",
+    (ipBlock, expected) => {
+      expect(peerSelects({ ipBlock }, "prometheus", pods)).toBe(expected);
+    },
+  );
 });
 
 describe("namespaceNamedBy", () => {

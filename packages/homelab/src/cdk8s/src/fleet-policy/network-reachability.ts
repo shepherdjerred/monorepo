@@ -29,6 +29,7 @@ export type Pods = {
   namedPorts: ReadonlyMap<string, number>;
 };
 
+const EVERY_ADDRESS: ReadonlySet<string> = new Set(["0.0.0.0/0", "::/0"]);
 const NO_NAMED_PORTS: ReadonlyMap<string, number> = new Map();
 
 export function podsOf(workload: FleetWorkload): Pods {
@@ -62,14 +63,19 @@ export function namespaceNamedBy(peer: NetworkPolicyPeer): string | undefined {
  * Whether a rule peer selects the pods. A peer without a namespaceSelector
  * means the policy's own namespace. Namespaces are known here only by name,
  * which is the one namespace label the fleet's policies select on. An ipBlock
- * peer is never counted: it names addresses, and synthesis knows no pod's.
+ * names addresses, and synthesis knows no pod's, so it selects pods only when
+ * it covers every address.
  */
 export function peerSelects(
   peer: NetworkPolicyPeer,
   policyNamespace: string,
   pods: Pods,
 ): boolean {
-  if (peer.ipBlock !== undefined) return false;
+  if (peer.ipBlock !== undefined)
+    return (
+      EVERY_ADDRESS.has(peer.ipBlock.cidr) &&
+      (peer.ipBlock.except ?? []).length === 0
+    );
   const namespaceMatches =
     peer.namespaceSelector === undefined
       ? pods.namespace === policyNamespace

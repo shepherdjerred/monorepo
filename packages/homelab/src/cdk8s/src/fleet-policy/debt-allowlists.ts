@@ -348,3 +348,23 @@ export const PROBE_PORTS_NOT_ADMITTED: ReadonlySet<string> = new Set([
   "temporal/temporal-worker-sleep-webhook:9469 from prometheus",
   "temporal/temporal-worker-xcode-cloud-webhook:9468 from prometheus",
 ]);
+
+/**
+ * Egress rules naming another namespace whose Ingress policy does not admit
+ * the rule's pods on the port (`<namespace>/<policy> -> <peer>:<port>`).
+ */
+export const UNRECIPROCATED_EGRESS_RULES: ReadonlySet<string> = new Set([
+  // `minecraft-tsmc-query` admits the forum's web pods, not its release pods.
+  "storm-forum/storm-forum-release-network -> minecraft-tsmc{app.kubernetes.io/instance=minecraft-tsmc,app.kubernetes.io/name=minecraft}:25565/UDP",
+  // `flipt-ingress-netpol` does not list the tracker namespace.
+  "tracker/tracker-app-netpol -> flipt:8080",
+]);
+
+/**
+ * Ingress rules naming another namespace whose Egress policy does not let it
+ * reach the rule's pods on the port (`<namespace>/<policy> <- <peer>:<port>`).
+ */
+export const UNRECIPROCATED_INGRESS_RULES: ReadonlySet<string> = new Set([
+  // `birmel-egress-netpol` has no rule towards postal.
+  "postal/postal-smtp-netpol <- birmel:25",
+]);

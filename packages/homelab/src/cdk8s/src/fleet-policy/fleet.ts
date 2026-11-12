@@ -82,7 +82,9 @@ export type LabelSelector = z.infer<typeof LabelSelectorSchema>;
 const NetworkPolicyPeerSchema = z.looseObject({
   podSelector: LabelSelectorSchema.optional(),
   namespaceSelector: LabelSelectorSchema.optional(),
-  ipBlock: z.looseObject({ cidr: z.string() }).optional(),
+  ipBlock: z
+    .looseObject({ cidr: z.string(), except: z.array(z.string()).optional() })
+    .optional(),
 });
 export type NetworkPolicyPeer = z.infer<typeof NetworkPolicyPeerSchema>;
 
