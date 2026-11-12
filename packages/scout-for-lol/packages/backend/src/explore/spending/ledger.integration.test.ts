@@ -142,12 +142,15 @@ test("zero disables calls and invalid or expanded policies fail validation", asy
       },
       db.prisma,
     ),
-  ).rejects.toBeInstanceOf(ExploreBudgetError);
+  ).rejects.toMatchObject({ reason: "allowance" });
   await expect(
     reserveExploreCall(
       { ...base, inputBound: EXPLORE_MAX_PROVIDER_INPUT_BOUND + 1 },
       db.prisma,
     ),
-  ).rejects.toBeInstanceOf(ExploreBudgetError);
+  ).rejects.toMatchObject({
+    name: "ExploreBudgetError",
+    reason: "input_limit",
+  });
   expect(await db.prisma.exploreSpend.count()).toBe(0);
 });

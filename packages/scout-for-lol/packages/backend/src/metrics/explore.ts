@@ -36,6 +36,19 @@ export const scoutExploreInvalidCardSelectionsTotal = new Counter({
   registers: [registry],
 });
 
+/**
+ * Turns refused because they would exceed Explore's spend allowance or its
+ * provider input bound. The user sees the limit message; this is an expected
+ * product limit, so it is counted here rather than reported to Bugsink, and
+ * the turn still fails with `explore:budget_exceeded`.
+ */
+export const scoutExploreBudgetRejectionsTotal = new Counter({
+  name: "scout_explore_budget_rejections_total",
+  help: "Explore turns refused by the spend allowance or input bound, by reason.",
+  labelNames: ["reason"] as const,
+  registers: [registry],
+});
+
 export const scoutExploreSkillLoadsTotal = new Counter({
   name: "scout_explore_skill_loads_total",
   help: "Explore load_skill calls by skill name and status.",
