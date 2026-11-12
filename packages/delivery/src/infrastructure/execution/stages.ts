@@ -302,11 +302,11 @@ export async function finish(
           : {}),
       },
     });
-    const suppressed = await manualSelectionBaseline.call(
-      this,
+    const suppressed = await manualSelectionBaseline(
       tx,
       row,
       input.status,
+      env.automaticSuppressedThroughRevision,
     );
     await tx.environment.update({
       where: { id: env.id },
@@ -333,11 +333,26 @@ export async function finish(
   });
 }
 
+/**
+ * The suppression a succeeded manual selection leaves behind (D3): every
+ * automatic set revision of the service that exists when the operator's
+ * choice is accepted, whichever origin composed it — a qualified build (R2)
+ * or a tracking recomposition (R7) — so automatic selection does not revert
+ * the choice, and only a newer one deploys. Revisions are monotonic per
+ * service across lineages, so the newest automatic revision bounds every
+ * set `automaticTarget` can return, a promotion source's included. It never
+ * lowers an existing threshold, such as an alarm's (W2).
+ *
+ * The qualification lock orders this read after any qualification composing
+ * a set; the set-revision lock every automatic composition takes orders it
+ * after any other composer. Tracking recomposition runs only while accepting
+ * a deployment, under the `delivery:claim` lock this transaction holds.
+ */
 export async function manualSelectionBaseline(
-  this: Delivery,
   tx: Transaction,
   row: { automatic: boolean; serviceId: string; kind: string },
   status: string,
+  current: number,
 ) {
   if (
     status !== "succeeded" ||
@@ -353,9 +368,10 @@ export async function manualSelectionBaseline(
   )
     return null;
   await lock(tx, `qualification:${row.serviceId}`);
-  const latest = await tx.versionSet.findFirst({
-    where: { serviceId: row.serviceId, qualifiedBuildId: { not: null } },
-    orderBy: { revision: "desc" },
+  await lock(tx, `versionSet:${row.serviceId}`);
+  const latest = await tx.versionSet.aggregate({
+    where: { serviceId: row.serviceId, automatic: true },
+    _max: { revision: true },
   });
-  return latest?.revision ?? 0;
+  return Math.max(current, latest._max.revision ?? 0);
 }
