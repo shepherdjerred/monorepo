@@ -131,7 +131,9 @@ export async function externalLibraryFixture(
       token: "fixture",
       clientIdentifier: "external-fixture",
     },
-    (url) => {
+    (url, init) => {
+      if (init.method !== undefined && init.method !== "GET")
+        throw new Error(`Unexpected Plex fixture mutation: ${init.method}`);
       if (url.pathname === "/identity")
         return Promise.resolve(
           Response.json({

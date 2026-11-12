@@ -221,6 +221,87 @@ test("canonical, owner, inventory and actual Plex identity changes fail before r
   ).toBe(0);
 });
 
+test.each(["missing", "conflicting", "mixed", "missing_canonical"])(
+  "%s episode TMDB identity refuses preview despite matching coordinates, root and inventory",
+  async (identity) => {
+    const db = h.database();
+    const f = await externalLibraryFixture(db, "episode");
+    const selected = f.plexItems.get(f.input.ratingKey);
+    const part = selected?.Media?.[0]?.Part[0];
+    if (selected === undefined || part === undefined)
+      throw new Error("Fixture lost episode Part");
+    const otherGuid = `tmdb://${String(z.number().parse(f.media.tmdbId) + 1)}`;
+    let guids = selected.Guid ?? [];
+    switch (identity) {
+      case "missing":
+        guids = [{ id: "imdb://tt0583442" }, { id: "tvdb://303957" }];
+        break;
+      case "conflicting":
+        guids = [{ id: otherGuid }];
+        break;
+      case "mixed":
+        guids = [...guids, { id: otherGuid }];
+        break;
+    }
+    f.plexItems.set(f.input.ratingKey, {
+      ...selected,
+      title: "Different content at the same Plex coordinate",
+      Guid: guids,
+    });
+    await db.plexInventoryObservation.update({
+      where: {
+        sectionId_ratingKey_path: {
+          sectionId: f.access.sectionId,
+          ratingKey: f.input.ratingKey,
+          path: part.file,
+        },
+      },
+      data: { guids },
+    });
+    if (identity === "missing_canonical")
+      await db.mediaItem.update({
+        where: { id: f.media.id },
+        data: { tmdbId: null },
+      });
+    const state = async () => ({
+      media: await db.mediaItem.findMany({
+        where: { OR: [{ id: f.root.id }, { id: f.media.id }] },
+        orderBy: { id: "asc" },
+      }),
+      inventory: await db.plexInventoryObservation.findMany({
+        where: { scanId: f.sourceScan.id },
+      }),
+      mapping: await db.plexIdentityMapping.findUniqueOrThrow({
+        where: { userId: f.owner.id },
+      }),
+      assets: await db.libraryAsset.count(),
+      coverage: await db.assetCoverage.count(),
+      targets: await db.mediaIntent.count(),
+      requests: await db.mediaRequest.count(),
+      events: await db.applicationEvent.count(),
+      operations: await db.operation.count(),
+      idempotency: await db.idempotencyRecord.count(),
+      outbox: await db.outboxCommand.count(),
+      attempts: await db.acquisitionAttempt.count(),
+      bindings: await db.plexBindingCurrent.count(),
+      runtime: await db.mediaRuntimeState.findMany(),
+      leases: await db.legacyWriterLease.findMany(),
+      storage: await db.mediaStorageAuthority.findMany(),
+    });
+    const before = await state();
+    const plexBefore = [...f.plexItems.entries()];
+    await expect(
+      f.service.preview(f.owner, crypto.randomUUID(), f.input),
+    ).rejects.toMatchObject({
+      code: "external_library_identity_changed",
+      message:
+        "Plex must expose a matching TMDB episode GUID for its exact canonical coordinate",
+    });
+    expect(await state()).toEqual(before);
+    expect([...f.plexItems.entries()]).toEqual(plexBefore);
+  },
+);
+
 test("changed physical Part and incomplete latest source inventory refuse a reviewed apply", async () => {
   const f = await reviewedMovie();
   const { db, applyInput: input } = f;

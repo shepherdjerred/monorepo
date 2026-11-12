@@ -2,6 +2,7 @@ import { expect, test } from "vitest";
 import { z } from "zod";
 import { automationTestHarness } from "#testing/automation.ts";
 import { externalLibraryFixture } from "#testing/external-library-fixture.ts";
+import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
 import { ExternalLibraryRegistrationSchema } from "#shared/external-library/contract.ts";
 import { visiblePlayback } from "#infrastructure/visibility/playback.ts";
 import {
@@ -291,5 +292,109 @@ test.each(["movie", "episode"] as const)(
         where: { mediaIds: { has: f.media.id } },
       }),
     ).toBe(0);
+  },
+);
+
+test.each(["missing", "conflicting", "mixed", "missing_canonical"])(
+  "historical %s episode TMDB identity projects no presence and preserves registration and acquisition protection",
+  async (identity) => {
+    const db = h.database();
+    const f = await externalLibraryFixture(db, "episode");
+    const { result } = await f.register();
+    const assetId = z.uuid().parse(result.assetId);
+    const available = () =>
+      readExternalLibraryAvailability(db, assetId, f.access);
+    expect(await available()).toEqual([f.media.id]);
+    const asset = await db.libraryAsset.findUniqueOrThrow({
+      where: { id: assetId },
+    });
+    const properties = JsonObject.parse(asset.properties);
+    const registration = ExternalLibraryRegistrationSchema.parse(
+      properties["externalLibrary"],
+    );
+    const member = registration.members[0];
+    if (member === undefined) throw new Error("Fixture lost registered member");
+    const otherGuid = `tmdb://${String(z.number().parse(f.media.tmdbId) + 1)}`;
+    switch (identity) {
+      case "missing":
+        member.guids = ["imdb://tt0583442", "tvdb://303957"];
+        break;
+      case "conflicting":
+        member.guids = [otherGuid];
+        break;
+      case "mixed":
+        member.guids.push(otherGuid);
+        break;
+      case "missing_canonical":
+        await db.mediaItem.update({
+          where: { id: f.media.id },
+          data: { tmdbId: null },
+        });
+        break;
+    }
+    // Seed a historical registration whose event and fresh inventory agree;
+    // coordinate equality alone must not prove the canonical episode's identity.
+    await db.libraryAsset.update({
+      where: { id: assetId },
+      data: { properties: { ...properties, externalLibrary: registration } },
+    });
+    await db.applicationEvent.update({
+      where: { id: registration.registrationEventId },
+      data: {
+        payload: { registration, registrationHash: identityHash(registration) },
+      },
+    });
+    await db.plexInventoryObservation.update({
+      where: {
+        sectionId_ratingKey_path: {
+          sectionId: f.access.sectionId,
+          ratingKey: member.ratingKey,
+          path: asset.path,
+        },
+      },
+      data: { guids: member.guids.map((id) => ({ id })) },
+    });
+    const passiveTarget = await db.mediaIntent.findUniqueOrThrow({
+      where: { mediaId_edition: { mediaId: f.media.id, edition: "default" } },
+    });
+    const request = await db.mediaRequest.create({
+      data: { mediaId: f.media.id, userId: f.owner.id },
+    });
+    const state = async () => ({
+      asset: await db.libraryAsset.findUniqueOrThrow({
+        where: { id: assetId },
+        include: { coverage: true },
+      }),
+      event: await db.applicationEvent.findUniqueOrThrow({
+        where: { id: registration.registrationEventId },
+      }),
+      inventory: await db.plexInventoryObservation.findMany({
+        where: { scanId: f.sourceScan.id },
+      }),
+      mapping: await db.plexIdentityMapping.findUniqueOrThrow({
+        where: { userId: f.owner.id },
+      }),
+      operations: await db.operation.count(),
+      outbox: await db.outboxCommand.count(),
+      attempts: await db.acquisitionAttempt.count(),
+      bindings: await db.plexBindingCurrent.count(),
+    });
+    const before = await state();
+    const plexBefore = [...f.plexItems.entries()];
+    expect(await available()).toBeNull();
+    expect(await externalLibraryProtected(db, [f.media.id])).toBe(true);
+    expect(await visiblePlayback(db, [f.media], f.access)).toEqual({
+      playable: [],
+      externalAvailableItems: 0,
+      association: { legacyUnverifiedItems: 0, reconciliationRequiredItems: 1 },
+    });
+    await expectReadProjection(
+      f,
+      request.id,
+      passiveTarget,
+      f.media.availability,
+    );
+    expect(await state()).toEqual(before);
+    expect([...f.plexItems.entries()]).toEqual(plexBefore);
   },
 );

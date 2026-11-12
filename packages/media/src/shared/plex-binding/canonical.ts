@@ -26,7 +26,7 @@ export type PlexCanonicalTarget = z.infer<typeof PlexCanonicalTargetSchema>;
 /** A matching provider cannot excuse a conflicting identifier from another known provider. */
 export function matchesReferences(
   guids: readonly string[],
-  references: readonly CatalogReference[],
+  references: readonly Pick<CatalogReference, "namespace" | "value">[],
 ): boolean {
   let matched = false;
   for (const reference of references) {
