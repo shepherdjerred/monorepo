@@ -37,7 +37,7 @@ export async function backfillLastMatchTime(
 
   try {
     // Fetch most recent match ID
-    const recentMatchIds = await getRecentMatchIds(player, 1);
+    const recentMatchIds = await getRecentMatchIds(player, 1, "backfill");
 
     if (!recentMatchIds || recentMatchIds.length === 0) {
       logger.info(
@@ -61,7 +61,9 @@ export async function backfillLastMatchTime(
     // Fetch match details to get game creation time
     const regionalRoute = platformToRegionalRoute(playerRegion);
     const rawMatch = await withTimeout(
-      riotClient.match.get(mostRecentMatchId, regionalRoute),
+      riotClient.match.get(mostRecentMatchId, regionalRoute, {
+        priority: "backfill",
+      }),
     );
     const matchData = z
       .object({

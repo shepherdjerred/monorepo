@@ -170,6 +170,7 @@ export async function resolveCurrentLaneOpponent(input: {
       spectator: await getActiveGame(
         LeaguePuuidSchema.parse(account.puuid),
         account.region,
+        "interactive",
       ),
     })),
   );

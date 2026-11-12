@@ -84,12 +84,17 @@ export async function fetchMatchIdsForTimeRange(
         context: { puuid, region, offset },
       },
       () =>
-        riotClient.match.list(parsedPuuid, regionalRoute, {
-          startTime: startTimeEpochSeconds,
-          endTime: endTimeEpochSeconds,
-          count: MAX_MATCHES_PER_REQUEST,
-          start: offset,
-        }),
+        riotClient.match.list(
+          parsedPuuid,
+          regionalRoute,
+          {
+            startTime: startTimeEpochSeconds,
+            endTime: endTimeEpochSeconds,
+            count: MAX_MATCHES_PER_REQUEST,
+            start: offset,
+          },
+          { priority: "backfill" },
+        ),
     );
 
     if (matchIds === undefined) {
@@ -219,7 +224,12 @@ export async function backfillMatchesToS3(
       }
 
       const region = accountForRegion.config.league.leagueAccount.region;
-      const matchData = await fetchMatchData(matchId, region);
+      const matchData = await fetchMatchData(
+        matchId,
+        region,
+        "return_undefined",
+        { priority: "backfill" },
+      );
 
       if (!matchData) {
         logger.warn(`Could not fetch match data for ${matchId}, skipping`);

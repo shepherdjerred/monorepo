@@ -315,7 +315,7 @@ test("history recovery learns whether Riot's timeline absence is definitive", as
     match.metadata.matchId,
     expect.any(String),
     "return_undefined_on_404",
-    [403],
+    { expectedAbsenceStatuses: [403] },
   );
   io.riot.mockResolvedValueOnce(undefined);
   expect(await resolveMatchTimeline(history)).toMatchObject({

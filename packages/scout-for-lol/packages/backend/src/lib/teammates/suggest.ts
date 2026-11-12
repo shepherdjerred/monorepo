@@ -304,6 +304,7 @@ async function collectMatchRounds(
           },
         },
         idsPerAccount,
+        "interactive",
       ),
     ),
   );
@@ -337,7 +338,12 @@ async function fetchRoundMatches(
       batch.map(async (round) => ({
         matchId: round.matchId,
         region: round.region,
-        match: await fetchMatchData(round.matchId, round.region),
+        match: await fetchMatchData(
+          round.matchId,
+          round.region,
+          "return_undefined",
+          { priority: "interactive" },
+        ),
       })),
     );
     for (const result of results) {

@@ -240,10 +240,12 @@ export async function lookUpRiotId(
     // TODO(#4513): tag this call with `priority: "backfill"` once the request
     // options carry a priority, so queued lookups never starve live traffic.
     const account = await withTimeout(
+      // Resolves players in a live client observation: the realtime path.
       riotClient.account.getByRiotId(
         identity.gameName,
         identity.tagLine,
         route,
+        { priority: "realtime" },
       ),
     );
     return { kind: "found", puuid: LeaguePuuidSchema.parse(account.puuid) };

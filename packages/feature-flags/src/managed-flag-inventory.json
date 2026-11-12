@@ -2756,6 +2756,18 @@
       ]
     },
     {
+      "key": "scout-riot-budget-mode",
+      "owner": "scout",
+      "namespace": "scout",
+      "source": "scout-dynamic",
+      "purpose": "Choose whether the Scout Riot rate limiter only records budget-ledger decisions (observe) or holds refused requests (enforce).",
+      "type": "variant",
+      "default": "observe",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "scout-temporal-call-graph-tracing",
       "owner": "scout",
       "namespace": "scout",

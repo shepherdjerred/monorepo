@@ -166,7 +166,11 @@ export async function fetchSnapshotData(options: {
             const platform = regionToPlatformRoute(account.region);
             const parsedPuuid = LeaguePuuidSchema.parse(account.puuid);
             const rawEntries = await withTimeout(
-              riotClient.league.byPuuid(parsedPuuid, platform),
+              // Tracked players' competition standings: realtime, as
+              // before this was tagged.
+              riotClient.league.byPuuid(parsedPuuid, platform, {
+                priority: "realtime",
+              }),
             );
 
             // Validate response with Zod schema to ensure proper types

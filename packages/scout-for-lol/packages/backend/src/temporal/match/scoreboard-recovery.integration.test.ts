@@ -239,7 +239,7 @@ test("a forbidden Riot read cannot block the real resolver from recovering a cli
     matchId,
     "NA1",
     "return_undefined_on_404",
-    [403],
+    { expectedAbsenceStatuses: [403] },
   );
   await expect(io.completeMatch.mock.results[0]?.value).resolves.toMatchObject({
     kind: "unavailable",

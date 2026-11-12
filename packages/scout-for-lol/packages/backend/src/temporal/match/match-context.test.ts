@@ -126,7 +126,7 @@ test("uses local evidence only after Riot definitively lacks the match", async (
     "NA1",
     "return_undefined_on_404",
     // Beta evidence readers tell the Riot caller a 403 is an expected answer.
-    [403],
+    { expectedAbsenceStatuses: [403] },
   );
   expect(mocks.selectLocalCanonicalMatch).toHaveBeenCalledWith(riotMatchId, [
     localCandidate,

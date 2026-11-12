@@ -1,11 +1,14 @@
-import { describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import {
   riotApi429Total,
   riotApiAppRateLimitCount,
   riotApiAppRateLimitLimit,
+  riotApiLimiterDecisionsTotal,
+  riotApiLimiterWaitSeconds,
   riotApiMethodRateLimitCount,
 } from "#src/metrics/riot-rate-limit.ts";
 import { RiotHttpError, RiotTransportError } from "./errors.ts";
+import type { RiotBudgetMode, RiotPriority } from "./rate-budget.ts";
 import { RateLimiter } from "./rate-limiter.ts";
 
 type Waiter = {
@@ -503,5 +506,431 @@ describe("RateLimiter per-route metrics", () => {
         (v) => v.labels.route === "europe" && v.labels.limit_type === "method",
       )?.value,
     ).toBe(1);
+  });
+});
+
+/** A task that holds its limiter slot until `release` is called. */
+function heldTask(started: string[], name: string) {
+  let release = (): void => {
+    throw new Error(`${name} has not started`);
+  };
+  const task = (): Promise<void> =>
+    new Promise<void>((resolve) => {
+      started.push(name);
+      release = resolve;
+    });
+  return { task, release: () => release() };
+}
+
+const AMERICAS_MATCH =
+  "https://americas.api.riotgames.com/lol/match/v5/matches/NA1_1";
+const AMERICAS_LIST =
+  "https://americas.api.riotgames.com/lol/match/v5/matches/by-puuid/p/ids";
+const EUROPE_MATCH =
+  "https://europe.api.riotgames.com/lol/match/v5/matches/EUW1_1";
+
+function rateLimited(type: string, retryAfter = "1"): Response {
+  return new Response("limited", {
+    status: 429,
+    headers: { "X-Rate-Limit-Type": type, "Retry-After": retryAfter },
+  });
+}
+
+describe("RateLimiter priority classes", () => {
+  test("a freed slot goes to the highest waiting class, FIFO within a class", async () => {
+    const limiter = new RateLimiter({
+      concurrency: 2,
+      reservedRealtimeSlots: 0,
+    });
+    const started: string[] = [];
+    const tasks = new Map<string, ReturnType<typeof heldTask>>();
+    const runs: Promise<void>[] = [];
+    const enqueue = (name: string, priority: RiotPriority): void => {
+      const held = heldTask(started, name);
+      tasks.set(name, held);
+      runs.push(limiter.schedule(held.task, priority));
+    };
+    const release = async (name: string, next: string): Promise<void> => {
+      tasks.get(name)?.release();
+      await vi.waitFor(() => expect(started.at(-1)).toBe(next));
+    };
+
+    enqueue("hold-1", "realtime");
+    enqueue("hold-2", "realtime");
+    await vi.waitFor(() => expect(started).toHaveLength(2));
+    enqueue("crawl", "crawl");
+    enqueue("backfill-1", "backfill");
+    enqueue("interactive", "interactive");
+    enqueue("backfill-2", "backfill");
+    enqueue("realtime", "realtime");
+    await Promise.resolve();
+    expect(started).toEqual(["hold-1", "hold-2"]);
+
+    await release("hold-1", "realtime");
+    await release("hold-2", "interactive");
+    await release("realtime", "backfill-1");
+    await release("interactive", "backfill-2");
+    await release("backfill-1", "crawl");
+    tasks.get("backfill-2")?.release();
+    tasks.get("crawl")?.release();
+    await Promise.all(runs);
+
+    expect(started).toEqual([
+      "hold-1",
+      "hold-2",
+      "realtime",
+      "interactive",
+      "backfill-1",
+      "backfill-2",
+      "crawl",
+    ]);
+  });
+
+  test("keeps one slot for realtime however much lower-class work waits", async () => {
+    const limiter = new RateLimiter({ concurrency: 3 });
+    const started: string[] = [];
+    const backfill = ["b1", "b2", "b3", "b4"].map((name) =>
+      heldTask(started, name),
+    );
+    const backfillRuns = backfill.map((held) =>
+      limiter.schedule(held.task, "backfill"),
+    );
+    await vi.waitFor(() => expect(started).toEqual(["b1", "b2"]));
+
+    const realtime = heldTask(started, "r1");
+    const realtimeRun = limiter.schedule(realtime.task, "realtime");
+    await vi.waitFor(() => expect(started).toEqual(["b1", "b2", "r1"]));
+
+    // A second realtime request waits for a slot, but ahead of backfill.
+    const second = heldTask(started, "r2");
+    const secondRun = limiter.schedule(second.task);
+    backfill[0]?.release();
+    await vi.waitFor(() => expect(started).toEqual(["b1", "b2", "r1", "r2"]));
+
+    // Two realtime requests in flight: the one free slot is the reserved one.
+    backfill[1]?.release();
+    await backfillRuns[1];
+    await new Promise((resolve) => setImmediate(resolve));
+    expect(started).toEqual(["b1", "b2", "r1", "r2"]);
+
+    realtime.release();
+    await vi.waitFor(() =>
+      expect(started).toEqual(["b1", "b2", "r1", "r2", "b3"]),
+    );
+    await new Promise((resolve) => setImmediate(resolve));
+    expect(started).not.toContain("b4");
+
+    second.release();
+    await vi.waitFor(() => expect(started).toContain("b4"));
+    backfill[2]?.release();
+    backfill[3]?.release();
+    await Promise.all([...backfillRuns, realtimeRun, secondRun]);
+  });
+
+  test("rejects a reservation that would leave lower classes no slot", () => {
+    expect(
+      () => new RateLimiter({ concurrency: 2, reservedRealtimeSlots: 2 }),
+    ).toThrow(/reservedRealtimeSlots/);
+    expect(() => new RateLimiter({ concurrency: 1 })).not.toThrow();
+  });
+
+  test("labels limiter metrics with the request's priority, defaulting to realtime", async () => {
+    riotApiLimiterDecisionsTotal.reset();
+    riotApiLimiterWaitSeconds.reset();
+    const { runtime } = createAdvancingRuntime();
+    const limiter = new RateLimiter({ maxRetries: 0 }, runtime);
+
+    await limiter.execute(EUROPE_MATCH, async () => new Response("ok"), {
+      priority: "backfill",
+    });
+    await limiter.execute(EUROPE_MATCH, async () => new Response("ok"));
+
+    const decisions = await riotApiLimiterDecisionsTotal.get();
+    const admitted = (priority: string) =>
+      decisions.values.find(
+        (v) =>
+          v.labels.route === "europe" &&
+          v.labels.priority === priority &&
+          v.labels.outcome === "admitted",
+      )?.value;
+    expect(admitted("backfill")).toBe(1);
+    expect(admitted("realtime")).toBe(1);
+    const waits = await riotApiLimiterWaitSeconds.get();
+    expect(
+      waits.values.some(
+        (v) =>
+          v.labels.priority === "backfill" &&
+          v.metricName === "riot_api_limiter_wait_seconds_count",
+      ),
+    ).toBe(true);
+  });
+});
+
+describe("RateLimiter scoped cooldowns", () => {
+  test("an application 429 cools down its route only", async () => {
+    const clock = createManualRuntime();
+    const limiter = new RateLimiter(
+      { concurrency: 3, maxRetries: 1 },
+      clock.runtime,
+    );
+    let limitedCalls = 0;
+    const calls: string[] = [];
+
+    const first = limiter.execute(AMERICAS_MATCH, async () => {
+      limitedCalls += 1;
+      return limitedCalls === 1
+        ? rateLimited("application")
+        : new Response("ok");
+    });
+    await vi.waitFor(() => expect(clock.pendingSleeps()).toBe(1));
+
+    const sameRoute = limiter.execute(AMERICAS_LIST, async () => {
+      calls.push("americas-list");
+      return new Response("ok");
+    });
+    const otherRoute = limiter.execute(EUROPE_MATCH, async () => {
+      calls.push("europe");
+      return new Response("ok");
+    });
+    await otherRoute;
+    expect(calls).toEqual(["europe"]);
+
+    clock.advanceTo(1000);
+    await Promise.all([first, sameRoute]);
+    expect(calls).toEqual(["europe", "americas-list"]);
+  });
+
+  test("a method 429 cools down that route and method only", async () => {
+    const clock = createManualRuntime();
+    const limiter = new RateLimiter(
+      { concurrency: 3, maxRetries: 1 },
+      clock.runtime,
+    );
+    let limitedCalls = 0;
+    const calls: string[] = [];
+
+    const first = limiter.execute(AMERICAS_MATCH, async () => {
+      limitedCalls += 1;
+      return limitedCalls === 1
+        ? rateLimited("method", "2")
+        : new Response("ok");
+    });
+    await vi.waitFor(() => expect(clock.pendingSleeps()).toBe(1));
+
+    const sameMethod = limiter.execute(
+      "https://americas.api.riotgames.com/lol/match/v5/matches/NA1_2",
+      async () => {
+        calls.push("americas-match");
+        return new Response("ok");
+      },
+    );
+    const otherMethod = limiter.execute(AMERICAS_LIST, async () => {
+      calls.push("americas-list");
+      return new Response("ok");
+    });
+    await otherMethod;
+    expect(calls).toEqual(["americas-list"]);
+
+    clock.advanceTo(2000);
+    await Promise.all([first, sameMethod]);
+    expect(calls).toEqual(["americas-list", "americas-match"]);
+  });
+
+  test("a service 429 backs off exponentially without cooling anything down", async () => {
+    const clock = createManualRuntime();
+    const limiter = new RateLimiter(
+      { concurrency: 2, maxRetries: 3 },
+      clock.runtime,
+    );
+    let serviceCalls = 0;
+    let neighbourCalls = 0;
+
+    const shed = limiter.execute(AMERICAS_MATCH, async () => {
+      serviceCalls += 1;
+      return serviceCalls <= 2
+        ? new Response("busy", {
+            status: 429,
+            headers: { "X-Rate-Limit-Type": "service" },
+          })
+        : new Response("ok");
+    });
+    await vi.waitFor(() => expect(clock.pendingSleeps()).toBe(1));
+    expect(clock.sleeps).toEqual([1000]);
+
+    // Same route and method: not blocked by the service 429.
+    await limiter.execute(AMERICAS_MATCH, async () => {
+      neighbourCalls += 1;
+      return new Response("ok");
+    });
+    expect(neighbourCalls).toBe(1);
+
+    clock.advanceTo(1000);
+    await vi.waitFor(() => expect(clock.sleeps).toEqual([1000, 2000]));
+    clock.advanceTo(3000);
+    await shed;
+    expect(serviceCalls).toBe(3);
+
+    const total = await riotApi429Total.get();
+    expect(
+      total.values.find(
+        (v) =>
+          v.labels.route === "americas" &&
+          v.labels.limit_type === "service" &&
+          v.labels.priority === "realtime",
+      )?.value,
+    ).toBeGreaterThanOrEqual(2);
+  });
+
+  test("a service 429 honours a Retry-After longer than its backoff", async () => {
+    const { runtime, sleeps } = createAdvancingRuntime();
+    const limiter = new RateLimiter({ maxRetries: 1 }, runtime);
+    let calls = 0;
+
+    await limiter.execute(AMERICAS_MATCH, async () => {
+      calls += 1;
+      return calls === 1 ? rateLimited("service", "5") : new Response("ok");
+    });
+
+    expect(sleeps).toEqual([5000]);
+  });
+});
+
+async function decisionCount(outcome: string): Promise<number> {
+  const metric = await riotApiLimiterDecisionsTotal.get();
+  return metric.values
+    .filter((v) => v.labels.outcome === outcome)
+    .reduce((sum, v) => sum + v.value, 0);
+}
+
+/** Five concurrent requests on a route the ledger has never seen. */
+async function burst(mode: RiotBudgetMode) {
+  const clock = createManualRuntime();
+  const limiter = new RateLimiter(
+    { concurrency: 5, maxRetries: 0, budgetMode: () => mode },
+    clock.runtime,
+  );
+  const responses: ((response: Response) => void)[] = [];
+  const runs = Array.from({ length: 5 }, () =>
+    limiter.execute(
+      EUROPE_MATCH,
+      () =>
+        new Promise<Response>((resolve) => {
+          responses.push(resolve);
+        }),
+    ),
+  );
+  await vi.waitFor(() => expect(responses.length).toBeGreaterThan(0));
+  await new Promise((resolve) => setImmediate(resolve));
+  return { clock, responses, runs };
+}
+
+// 200 of 500 is over crawl's 25% ceiling.
+function overCrawlCeiling(): Promise<Response> {
+  return Promise.resolve(
+    new Response("ok", {
+      headers: {
+        "X-App-Rate-Limit": "500:10",
+        "X-App-Rate-Limit-Count": "200:10",
+      },
+    }),
+  );
+}
+
+describe("RateLimiter budget modes", () => {
+  beforeEach(() => {
+    riotApiLimiterDecisionsTotal.reset();
+  });
+
+  test("observe records the ledger's refusals and admits exactly as before", async () => {
+    // Slow start lets one probe through; the ledger refuses the other four.
+    const { responses, runs } = await burst("observe");
+
+    expect(responses).toHaveLength(5);
+    expect(await decisionCount("admitted")).toBe(1);
+    expect(await decisionCount("would_defer")).toBe(4);
+    expect(await decisionCount("deferred")).toBe(0);
+
+    for (const respond of responses) {
+      respond(new Response("ok"));
+    }
+    await Promise.all(runs);
+  });
+
+  test("observe sends a request the ledger says is over its ceiling", async () => {
+    const { runtime } = createAdvancingRuntime();
+    const limiter = new RateLimiter({ maxRetries: 0 }, runtime);
+    let calls = 0;
+    const nearlyFull = () => {
+      calls += 1;
+      return Promise.resolve(
+        new Response("ok", {
+          headers: {
+            "X-App-Rate-Limit": "500:10",
+            "X-App-Rate-Limit-Count": "499:10",
+          },
+        }),
+      );
+    };
+
+    await limiter.execute(EUROPE_MATCH, nearlyFull, { priority: "crawl" });
+    await limiter.execute(EUROPE_MATCH, nearlyFull, { priority: "crawl" });
+
+    expect(calls).toBe(2);
+    const metric = await riotApiLimiterDecisionsTotal.get();
+    expect(
+      metric.values.find(
+        (v) =>
+          v.labels.outcome === "would_defer" && v.labels.priority === "crawl",
+      )?.labels.reason,
+    ).toBe("app-window");
+  });
+
+  test("enforce holds refused requests until the ledger admits them", async () => {
+    const { clock, responses, runs } = await burst("enforce");
+
+    expect(responses).toHaveLength(1);
+    expect(await decisionCount("deferred")).toBe(4);
+
+    responses[0]?.(
+      new Response("ok", {
+        headers: {
+          "X-App-Rate-Limit": "500:10",
+          "X-App-Rate-Limit-Count": "1:10",
+        },
+      }),
+    );
+    await new Promise((resolve) => setImmediate(resolve));
+    clock.advanceTo(100);
+    await vi.waitFor(() => expect(responses).toHaveLength(5));
+    for (const respond of responses.slice(1)) {
+      respond(new Response("ok"));
+    }
+    await Promise.all(runs);
+    expect(await decisionCount("would_defer")).toBe(0);
+  });
+
+  test("reads the mode on every attempt", async () => {
+    let mode: RiotBudgetMode = "enforce";
+    const { runtime, sleeps } = createAdvancingRuntime();
+    const limiter = new RateLimiter(
+      { maxRetries: 0, budgetMode: () => mode },
+      runtime,
+    );
+    await limiter.execute(EUROPE_MATCH, overCrawlCeiling, {
+      priority: "crawl",
+    });
+    await limiter.execute(EUROPE_MATCH, overCrawlCeiling, {
+      priority: "crawl",
+    });
+    expect(await decisionCount("deferred")).toBe(1);
+    expect(sleeps).toEqual([10_000]);
+
+    mode = "observe";
+    await limiter.execute(EUROPE_MATCH, overCrawlCeiling, {
+      priority: "crawl",
+    });
+    expect(await decisionCount("deferred")).toBe(1);
+    expect(await decisionCount("would_defer")).toBe(1);
+    expect(sleeps).toEqual([10_000]);
   });
 });

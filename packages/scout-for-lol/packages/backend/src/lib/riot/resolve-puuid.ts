@@ -43,6 +43,7 @@ export async function resolveRiotIdToPuuid(
         riotId.game_name,
         riotId.tag_line,
         regionalRoute,
+        { priority: "interactive" },
       ),
     );
     const lookupTime = Date.now() - apiStartTime;

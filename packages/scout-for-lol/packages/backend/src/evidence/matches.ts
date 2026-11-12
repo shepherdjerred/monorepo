@@ -55,7 +55,7 @@ export async function resolveCompleteMatch(
         matchId,
         platformRouteOf(matchId),
         "return_undefined_on_404",
-        expectedRiotAbsenceStatuses(),
+        { expectedAbsenceStatuses: expectedRiotAbsenceStatuses() },
       ),
     ),
     optionalSourceRead("SCOUT_CLIENT", () =>

@@ -22,6 +22,7 @@ import {
 import { createFlagConfigSource } from "@shepherdjerred/feature-flags/config-source.ts";
 import { managedBooleanDefault } from "@shepherdjerred/feature-flags/managed-flag-inventory.ts";
 import { z } from "zod";
+import type { RiotBudgetMode } from "#src/league/api/client/rate-budget.ts";
 
 const logger = createLogger("config-dynamic");
 
@@ -208,6 +209,18 @@ const DEFINITION = {
     default: false,
     names: { flag: EVIDENCE_RECOVERY_FLAG },
   },
+  /**
+   * Whether the Riot rate limiter only records the budget ledger's decisions
+   * (`observe`) or holds requests the ledger refuses (`enforce`). Read per
+   * request attempt. `enforce` waits on zero realtime `would_defer` across
+   * 50k realtime requests.
+   */
+  riotBudgetMode: {
+    schema: z.enum(["observe", "enforce"]),
+    sources: ["flag", "default"],
+    default: "observe",
+    names: { flag: "scout-riot-budget-mode" },
+  },
 } as const;
 
 /**
@@ -274,6 +287,7 @@ function buildSnapshot(
                 exploreAnalysisEnabled: "boolean",
                 exploreModelPickerEnabled: "boolean",
                 evidenceRecoveryEnabled: "boolean",
+                riotBudgetMode: "string",
               },
             }),
           }
@@ -294,6 +308,7 @@ function buildSnapshot(
       exploreAnalysisEnabled: false,
       exploreModelPickerEnabled: false,
       evidenceRecoveryEnabled: evidenceRecoveryDefault(environment),
+      riotBudgetMode: "observe",
       ...seed,
     },
     onRefreshError: (key, message) => {
@@ -470,6 +485,11 @@ export function temporalCallGraphTracing(): boolean {
  */
 export function evidenceRecoveryBootDecision(): boolean | undefined {
   return evidenceRecoveryAtBoot;
+}
+
+/** Per-attempt read by the Riot rate limiter; `observe` until refreshed. */
+export function riotBudgetMode(): RiotBudgetMode {
+  return snapshot?.get("riotBudgetMode") ?? "observe";
 }
 
 export async function shutdownDynamicConfig(): Promise<void> {
