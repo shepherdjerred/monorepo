@@ -538,10 +538,52 @@ Normal `ci wait` readiness and its closed-PR behavior remain unchanged.
 Long queues and builds are normal. Keep awaiting the same foreground process;
 do not restart polls or diagnose an outage from elapsed time alone. A sparse
 heartbeat appears every five minutes. Disconnects reconnect with backoff and a
-fresh snapshot. When GitHub refuses a read because a rate limit is exhausted,
-the wait prints the limit and reset time to stderr, sleeps until the reset
-(plus a few seconds of jitter), and resumes polling; a reset past `--timeout`
-ends with the timeout outcome. `load` reports each unavailable telemetry source explicitly.
+fresh snapshot. When GitHub refuses a read because a rate limit is exhausted
+(including a GraphQL `RATE_LIMIT` or `RATE_LIMITED` error returned with HTTP
+200, and any `retry-after`), the wait prints the limit and reset time to
+stderr, sleeps until the reset plus a random share of a two-minute window, and
+resumes polling; a reset past `--timeout` ends with the timeout outcome. `load`
+reports each unavailable telemetry source explicitly.
+
+#### GitHub budget
+
+Every GitHub token on one account (gh, git-spice, the CI PAT) draws on one
+account bucket per hour: 5,000 GraphQL points and 5,000 REST requests. Waits
+are designed so 20–30 concurrent `ci wait` and `pr land` processes on one
+account use at most half of the GraphQL bucket, leaving the rest for
+everything else:
+
+- A snapshot has a Woodpecker half and a GitHub half (PR metadata, statuses,
+  check runs, reviews, rules, and the review decision). Woodpecker events and
+  the 30-second timer refresh the Woodpecker half. The GitHub half is read when
+  the PR's pipeline appears or changes attempt or status, when an event names a
+  commit the last read did not show, and otherwise at most once a minute.
+- Every reported verdict rests on a forced GitHub read: a ready candidate is
+  re-read and must be unchanged, and any other terminal verdict is judged
+  again on a forced read. Reused state can delay a verdict by at most one
+  read interval, never decide one.
+- A PR wait wakes for main only when a main pipeline finishes; main's step
+  events wake only `ci wait --main`. Event bursts coalesce into one snapshot
+  every five seconds.
+- The review decision costs one GraphQL point. It is asked again only when the
+  PR, its reviews, or the base rules changed, after ten minutes, or on a
+  forced read. Base-branch rules are reused for five minutes; without legacy
+  protection their 404 carries no ETag and is charged every time.
+- Processes on one host share `$XDG_CACHE_HOME/toolkit/github` (default
+  `~/.cache/toolkit/github`): ETagged bodies (a 304 is free), memoized rules
+  and decisions, and the newest `x-ratelimit-*` observation per token and
+  resource. Files are replaced by atomic rename; entries untouched for two days
+  are pruned. Periodic reads accept another process's body up to 15 seconds
+  old; event-driven and forced reads always ask GitHub.
+- Below half of either bucket, periodic GitHub reads stretch in proportion.
+  Below 20%, they stop until the bucket resets, and each process resumes at
+  its own offset within two minutes of the reset. Event-driven and forced
+  reads continue, so readiness is still reported.
+
+A simulated hour of 30 waiters fed 66 Woodpecker events a minute (14 from
+main) spends about 290 GraphQL points and 1,440 charged REST requests, against
+about 28,400 points and 4,300 charged requests for the per-event snapshots this
+replaced (`test/lib/ci/github-budget.load.test.ts`).
 
 `explain` and wait reports include pipeline elapsed time, workflow start delays,
 time without any active workflow, and per-step API phase timings in JSON. The
@@ -613,8 +655,12 @@ and 143. The command does not merge or mutate the PR.
 merges, so run it only when the task authorizes merging. It runs the same
 pinned wait as `ci wait`, but treats a red main as a reason to keep waiting
 rather than a result. `--allow-red-main` merges while main is red. When the PR
-is ready, it rechecks the head and runs
+is ready, it rechecks the head and the shared GraphQL budget, then runs
 `git-spice branch merge --method squash --ready-timeout 0 --branch <head>`.
+When fewer than 200 GraphQL points remain, it waits for the reset and proves
+readiness again before merging. A merge that fails while the bucket is
+exhausted is retried once after the reset, again after a fresh readiness
+proof.
 git-spice output goes to stderr, so `--json` keeps stdout for one report. The
 report includes `mergeCommitSha` and a `ci wait --main --head` command for the
 merge commit.

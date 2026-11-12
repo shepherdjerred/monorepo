@@ -1,5 +1,6 @@
-import { setTimeout as delay } from "node:timers/promises";
 import { GitHubRateLimitError } from "@shepherdjerred/code-review/github-request";
+import { RESUME_SPREAD_MS } from "#lib/ci/github/budget.ts";
+import { sleep } from "#lib/ci/wait/sleep.ts";
 import {
   evaluateReadiness,
   type MainPolicy,
@@ -32,6 +33,11 @@ export type WaitLoopOptions = {
   signal?: AbortSignal;
   pollMs?: number;
   heartbeatMs?: number;
+  /**
+   * Event bursts coalesce: a wake within this long of the previous
+   * event-driven snapshot waits out the rest of the gap. Default 5s.
+   */
+  eventGapMs?: number;
 };
 export type LoopResult<S> = {
   snapshot: S | null;
@@ -65,9 +71,6 @@ export function timeoutResult<S>(
   };
 }
 
-/** Spread concurrent waiters so they do not all retry at the same reset. */
-const RATE_LIMIT_JITTER_MS = 5000;
-
 const TRANSIENT_NETWORK =
   /unable to connect|failed to fetch|socket connection was closed|ECONNRESET|ECONNREFUSED|ETIMEDOUT|ENETUNREACH|EAI_AGAIN|network connection/iu;
 
@@ -87,8 +90,10 @@ export function isRetriableSnapshotError(error: unknown): boolean {
 }
 
 /**
- * Sleep until GitHub's quota resets. Woodpecker events are ignored meanwhile:
- * every snapshot needs GitHub, so waking early would only be refused again.
+ * Sleep until GitHub's quota resets, plus a random share of the resume window
+ * so twenty or thirty waiters refused together do not all retry in the same
+ * second. Woodpecker events are ignored meanwhile: every refused read needs
+ * GitHub, so waking early would only be refused again.
  */
 export async function sleepUntilRateLimitReset(
   error: GitHubRateLimitError,
@@ -96,9 +101,9 @@ export async function sleepUntilRateLimitReset(
   onWait?: (error: GitHubRateLimitError, resumeAt: number) => void,
 ): Promise<void> {
   const resumeAt =
-    error.resumeAt + Math.floor(Math.random() * RATE_LIMIT_JITTER_MS);
+    error.resumeAt + Math.floor(Math.random() * RESUME_SPREAD_MS);
   onWait?.(error, resumeAt);
-  await delay(Math.max(0, resumeAt - Date.now()), undefined, { signal });
+  await sleep(Math.max(0, resumeAt - Date.now()), signal);
 }
 
 /**
@@ -124,33 +129,39 @@ export async function readThroughQuota<T>(
   }
 }
 
-function notifier() {
-  let dirty = false;
+function notifier(eventGapMs: number) {
+  const state = { dirty: false };
   let notify: (() => void) | null = null;
+  // When the last event-driven wait returned; timer wakes do not count.
+  let lastEventAt = Number.NEGATIVE_INFINITY;
+  /** An event ended this wait; a burst behind the last one waits out the gap. */
+  const coalesce = async (signal: AbortSignal) => {
+    const remaining = lastEventAt + eventGapMs - Date.now();
+    if (remaining > 0) await sleep(remaining, signal);
+    lastEventAt = Date.now();
+  };
   return {
     wake: () => {
-      dirty = true;
+      state.dirty = true;
       notify?.();
     },
     wait: async (ms: number, signal: AbortSignal) => {
       signal.throwIfAborted();
-      if (dirty) {
-        dirty = false;
-        return;
-      }
-      await new Promise<void>((resolve) => {
-        const finish = () => {
-          clearTimeout(timer);
-          signal.removeEventListener("abort", finish);
-          notify = null;
-          resolve();
-        };
-        const timer = setTimeout(finish, ms);
-        notify = finish;
-        signal.addEventListener("abort", finish, { once: true });
-      });
-      dirty = false;
+      if (!state.dirty)
+        await new Promise<void>((resolve) => {
+          const finish = () => {
+            clearTimeout(timer);
+            signal.removeEventListener("abort", finish);
+            notify = null;
+            resolve();
+          };
+          const timer = setTimeout(finish, ms);
+          notify = finish;
+          signal.addEventListener("abort", finish, { once: true });
+        });
       signal.throwIfAborted();
+      if (state.dirty) await coalesce(signal);
+      state.dirty = false;
     },
   };
 }
@@ -169,7 +180,11 @@ function assertStream<S>(context: WaitContext<S>): void {
   if (context.streamError !== null) throw context.streamError;
 }
 
-/** A ready PR candidate is accepted only after a forced, unchanged re-read. */
+/**
+ * A ready PR candidate is accepted only after a forced, unchanged re-read. Any
+ * other terminal verdict not judged on a forced read is judged again on one,
+ * so no reported verdict rests on reused GitHub state.
+ */
 async function candidate(
   options: WaitOptions,
   reread: WaitDependencies["snapshot"],
@@ -182,7 +197,20 @@ async function candidate(
     options.until,
     options.mainPolicy,
   );
-  if (verdict.outcome !== "ready") return { snapshot, verdict };
+  if (verdict.outcome === "waiting") return { snapshot, verdict };
+  if (verdict.outcome !== "ready") {
+    if (snapshot.githubFresh === true) return { snapshot, verdict };
+    const fresh = await reread(signal, true);
+    return {
+      snapshot: fresh,
+      verdict: evaluateReadiness(
+        fresh,
+        options.head,
+        options.until,
+        options.mainPolicy,
+      ),
+    };
+  }
   const final = await reread(signal, true);
   const checked = evaluateReadiness(
     final,
@@ -297,7 +325,7 @@ export async function waitFor<S>(
     options,
     dependencies,
     signal,
-    updates: notifier(),
+    updates: notifier(options.eventGapMs ?? 5000),
     started: Date.now(),
     snapshot: null,
     streamError: null,

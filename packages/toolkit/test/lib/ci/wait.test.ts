@@ -85,6 +85,19 @@ describe("foreground CI wait", () => {
   test("returns an early failure without waiting for sibling workflows", async () => {
     const snapshot = pendingCi();
     snapshot.pipeline?.workflows.push({ name: "lint", state: "failure" });
+    const read = vi.fn<WaitDependencies["snapshot"]>(async () => snapshot);
+    const result = await waitForCi(
+      { head: CI_HEAD, until: "first-failure" },
+      dependencies(read),
+    );
+    expect(result.verdict.outcome).toBe("failure");
+    // The failure is confirmed on one forced read, not after siblings finish.
+    expect(read.mock.calls.map(([, force]) => force)).toEqual([false, true]);
+  });
+  test("a terminal verdict from a forced read is reported without another read", async () => {
+    const snapshot = pendingCi();
+    snapshot.pipeline?.workflows.push({ name: "lint", state: "failure" });
+    snapshot.githubFresh = true;
     const read = vi.fn(async () => snapshot);
     const result = await waitForCi(
       { head: CI_HEAD, until: "first-failure" },
@@ -92,6 +105,56 @@ describe("foreground CI wait", () => {
     );
     expect(result.verdict.outcome).toBe("failure");
     expect(read).toHaveBeenCalledTimes(1);
+  });
+  test("a failure seen with reused GitHub state yields to what a forced read shows", async () => {
+    // Woodpecker reports the old head's pipeline killed, but the reused
+    // GitHub half predates the push; the forced read reports the new head.
+    const killed = pendingCi();
+    killed.githubFresh = false;
+    if (killed.pipeline !== null) killed.pipeline.status = "killed";
+    const pushed = pendingCi();
+    pushed.githubFresh = true;
+    pushed.pr.head.sha = "c".repeat(40);
+    const read = vi
+      .fn<WaitDependencies["snapshot"]>()
+      .mockResolvedValueOnce(killed)
+      .mockResolvedValue(pushed);
+    const result = await waitForCi(
+      { head: CI_HEAD, until: "first-failure" },
+      dependencies(read),
+    );
+    expect(result.verdict.outcome).toBe("head_changed");
+    expect(read.mock.calls.map(([, force]) => force)).toEqual([false, true]);
+  });
+  test("an event burst coalesces into one snapshot per gap", async () => {
+    let wake: (() => void) | undefined;
+    let calls = 0;
+    const deps = dependencies(async () => {
+      calls++;
+      if (calls === 1)
+        queueMicrotask(() => {
+          for (let index = 0; index < 20; index++) wake?.();
+        });
+      if (calls === 2)
+        queueMicrotask(() => {
+          for (let index = 0; index < 20; index++) wake?.();
+        });
+      return calls < 3 ? pendingCi() : ciFixture();
+    });
+    deps.subscribe = (signal, notify, connected) => {
+      wake = notify;
+      return subscription(signal, connected);
+    };
+    const started = Date.now();
+    const result = await waitForCi(
+      { head: CI_HEAD, until: "first-failure", eventGapMs: 50 },
+      deps,
+    );
+    expect(result.verdict.outcome).toBe("ready");
+    // Initial read, one per burst, then the forced final read.
+    expect(calls).toBe(4);
+    // The second burst waited out the gap after the first.
+    expect(Date.now() - started).toBeGreaterThanOrEqual(45);
   });
   test("requested deadline reports timeout rather than CI failure", async () => {
     const deps = dependencies(async () => pendingCi());
@@ -327,7 +390,8 @@ describe("snapshot timeouts during a wait", () => {
       deps,
     );
     expect(result.verdict.outcome).toBe("main_red");
-    expect(calls).toBe(2);
+    // Pending, then a ready-but-red candidate confirmed on a forced read.
+    expect(calls).toBe(3);
   });
 
   test("the generic loop accepts any snapshot and verdict", async () => {

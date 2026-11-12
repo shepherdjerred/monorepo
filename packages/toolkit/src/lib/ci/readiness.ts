@@ -3,7 +3,7 @@ import type {
   CiRules,
   CommitCheck,
   CiReview,
-} from "./github.ts";
+} from "./github/schemas.ts";
 import { isHumanReview } from "./github.ts";
 import type { WoodpeckerPipeline } from "#lib/woodpecker/ci.ts";
 import type { MainStatus } from "./main.ts";
@@ -51,6 +51,12 @@ export type Snapshot = {
   reviewDecision: "APPROVED" | "CHANGES_REQUESTED" | "REVIEW_REQUIRED" | null;
   consistent?: boolean;
   pipelineUrl?: string | null;
+  /**
+   * Every GitHub input was read for this snapshot with no reuse (a forced
+   * read). A terminal verdict from any other snapshot is judged again on a
+   * forced read before it is reported.
+   */
+  githubFresh?: boolean;
 };
 export type Verdict = {
   outcome: Outcome;

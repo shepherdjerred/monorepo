@@ -107,15 +107,17 @@ async function selectMainRuns(
   return { latest, lastVerdict };
 }
 
-/** Main's current tip commit. */
+/** Main's current tip commit; `maxAgeMs` accepts a shared read that recent. */
 export async function readMainTip(
   github: GitHubClient,
   signal?: AbortSignal,
+  maxAgeMs = 0,
 ): Promise<string> {
   const branch = await github.read(
     `/repos/${github.repo}/branches/main`,
     z.object({ commit: z.object({ sha: z.string() }) }),
     signal,
+    maxAgeMs,
   );
   return branch.commit.sha;
 }
@@ -141,9 +143,10 @@ export async function getMainStatus(
   github: GitHubClient,
   config: WoodpeckerConfig,
   signal?: AbortSignal,
+  maxAgeMs = 0,
 ): Promise<MainStatus> {
   const [tip, listed] = await Promise.all([
-    readMainTip(github, signal),
+    readMainTip(github, signal, maxAgeMs),
     listPipelines(
       config,
       {

@@ -1,153 +1,120 @@
+import { createHash } from "node:crypto";
 import { z } from "zod";
 import { isProviderAuthor, PROVIDERS } from "@shepherdjerred/code-review";
 import {
-  ConditionalCache,
   githubGet,
   graphqlRateLimitError,
   throwIfRateLimited,
 } from "@shepherdjerred/code-review/github-request";
+import {
+  bucketFromHeaders,
+  DiskStore,
+  githubStateDirectory,
+  MemoryStore,
+  RateLimitLedger,
+  StoreResponseCache,
+  type KeyValueStore,
+  type RateLimitBucket,
+} from "./github/budget.ts";
+import {
+  PrSchema,
+  ReviewSchema,
+  RuleSchema,
+  RequiredStatusParameters,
+  RequiredReviewParameters,
+  StatusSchema,
+  CheckRunSchema,
+  DecisionSchema,
+  MemoSchema,
+  RulesMemoSchema,
+  RateLimitQuerySchema,
+  type CiPullRequest,
+  type CiReview,
+  type CiRules,
+  type CommitCheck,
+  type PrDecision,
+  addLegacyProtection,
+  checkRunState,
+} from "./github/schemas.ts";
 import { captureJson } from "./process.ts";
 import { PullRequestSchema } from "#lib/github/schemas.ts";
 
 export const REPOSITORY = "shepherdjerred/monorepo";
 const API = "https://api.github.com";
-const UserSchema = z.object({ login: z.string(), type: z.string() }).nullable();
-export const PrSchema = z.object({
-  number: z.number(),
-  html_url: z.url(),
-  state: z.enum(["open", "closed"]),
-  merged: z.boolean(),
-  merge_commit_sha: z
-    .string()
-    .regex(/^[a-f0-9]{40}$/u)
-    .nullish(),
-  draft: z.boolean(),
-  mergeable: z.boolean().nullable(),
-  mergeable_state: z.enum([
-    "clean",
-    "unstable",
-    "dirty",
-    "unknown",
-    "blocked",
-    "draft",
-    "behind",
-    "has_hooks",
-  ]),
-  head: z.object({ sha: z.string() }),
-  base: z.object({ sha: z.string(), ref: z.string() }),
-});
-export type CiPullRequest = z.infer<typeof PrSchema>;
-export const ReviewSchema = z.object({
-  id: z.number(),
-  node_id: z.string(),
-  user: UserSchema,
-  body: z.string().nullable(),
-  html_url: z.url(),
-  state: z.enum([
-    "APPROVED",
-    "CHANGES_REQUESTED",
-    "COMMENTED",
-    "PENDING",
-    "DISMISSED",
-  ]),
-  submitted_at: z.string().nullable(),
-  commit_id: z.string(),
-});
-export type CiReview = z.infer<typeof ReviewSchema>;
-const RuleSchema = z.object({
-  type: z.string(),
-  parameters: z
-    .object({
-      required_status_checks: z
-        .array(
-          z.object({
-            context: z.string(),
-            integration_id: z.number().optional(),
-          }),
-        )
-        .optional(),
-      strict_required_status_checks_policy: z.boolean().optional(),
-      required_approving_review_count: z.number().optional(),
-    })
-    .optional(),
-});
-export type RequiredCheck = { name: string; appId: number | null };
-const RequiredStatusParameters = z.object({
-  required_status_checks: z.array(
-    z.object({ context: z.string(), integration_id: z.number().optional() }),
-  ),
-  strict_required_status_checks_policy: z.boolean(),
-});
-const RequiredReviewParameters = z.object({
-  required_approving_review_count: z.number().int().nonnegative(),
-});
-export type CiRules = {
-  checks: RequiredCheck[];
-  strict: boolean;
-  approvals: number;
+export type GitHubClientOptions = {
+  /** Where ETagged bodies, decisions, and rate-limit observations live. */
+  store?: KeyValueStore;
+  now?: () => number;
 };
-export type CommitCheck = {
-  name: string;
-  state: "pass" | "fail" | "pending" | "human_action";
-  url: string | null;
-  appId: number | null;
-};
-const StatusSchema = z.object({
-  context: z.string(),
-  state: z.enum(["success", "failure", "error", "pending"]),
-  target_url: z.string().nullable(),
-});
-const CheckRunSchema = z.object({
-  name: z.string(),
-  head_sha: z.string(),
-  status: z.enum([
-    "queued",
-    "in_progress",
-    "completed",
-    "waiting",
-    "requested",
-    "pending",
-  ]),
-  conclusion: z
-    .enum([
-      "success",
-      "failure",
-      "neutral",
-      "cancelled",
-      "skipped",
-      "timed_out",
-      "action_required",
-      "startup_failure",
-      "stale",
-    ])
-    .nullable(),
-  html_url: z.string().nullable(),
-  app: z.object({ id: z.number() }).nullable(),
-});
+
+function timeout(signal?: AbortSignal): AbortSignal {
+  return signal === undefined
+    ? AbortSignal.timeout(30_000)
+    : AbortSignal.any([signal, AbortSignal.timeout(30_000)]);
+}
 
 export class GitHubClient {
   /**
-   * ETags for this process's reads. `ci wait` re-reads the same PR, checks,
-   * and reviews every poll; a revalidated 304 is not charged to the shared
-   * REST quota.
+   * ETags for reads. `ci wait` re-reads the same PR, checks, and reviews; a
+   * revalidated 304 is not charged to the shared REST quota. With a shared
+   * store, every toolkit process on the host revalidates the same entries.
    */
-  readonly cache = new ConditionalCache();
+  readonly cache: StoreResponseCache;
+  readonly ledger: RateLimitLedger;
+  readonly store: KeyValueStore;
+  /** Names this token in shared state without storing the token. */
+  readonly identity: string;
+  readonly now: () => number;
 
   constructor(
     readonly token: string,
     readonly repo: string = REPOSITORY,
-  ) {}
+    options: GitHubClientOptions = {},
+  ) {
+    this.now = options.now ?? Date.now;
+    this.store = options.store ?? new MemoryStore();
+    this.cache = new StoreResponseCache(this.store);
+    this.ledger = new RateLimitLedger(this.store, this.now);
+    this.identity = createHash("sha256").update(token).digest("hex");
+  }
 
-  /** GET a REST path; throws `GitHubRateLimitError` when GitHub refuses on quota. */
-  response(path: string, signal?: AbortSignal): Promise<Response> {
+  /** A client whose cache and budget are shared by every toolkit process on this host. */
+  static shared(token: string, repo: string = REPOSITORY): GitHubClient {
+    return new GitHubClient(token, repo, {
+      store: new DiskStore(githubStateDirectory()),
+    });
+  }
+
+  /** The newest observation of one bucket in its current window. */
+  bucket(resource: "core" | "graphql"): Promise<RateLimitBucket | null> {
+    return this.ledger.bucket(this.identity, resource);
+  }
+
+  #observe(headers: Headers, resource: string | null = null): Promise<void> {
+    return this.ledger.record(
+      this.identity,
+      bucketFromHeaders(headers, this.now(), resource),
+    );
+  }
+
+  /**
+   * GET a REST path; throws `GitHubRateLimitError` when GitHub refuses on
+   * quota. `maxAgeMs` lets a non-final read reuse a body any process stored
+   * that recently without asking GitHub at all.
+   */
+  response(
+    path: string,
+    signal?: AbortSignal,
+    maxAgeMs = 0,
+  ): Promise<Response> {
     return githubGet(new URL(path, API), {
       token: this.token,
       cache: this.cache,
       redirect: "error",
-      signal:
-        signal === undefined
-          ? AbortSignal.timeout(30_000)
-          : AbortSignal.any([signal, AbortSignal.timeout(30_000)]),
+      maxAgeMs,
+      now: this.now,
+      observe: (response) => this.#observe(response.headers),
+      signal: timeout(signal),
     });
   }
 
@@ -155,6 +122,7 @@ export class GitHubClient {
     path: string,
     schema: z.ZodType<T>,
     signal?: AbortSignal,
+    maxAgeMs = 0,
   ): Promise<T> {
     for (let attempt = 0; attempt < 3; attempt++) {
       if (attempt > 0) {
@@ -162,7 +130,7 @@ export class GitHubClient {
           Bun.env.NODE_ENV === "test" ? 5 : 1000 * 2 ** (attempt - 1),
         );
       }
-      const response = await this.response(path, signal);
+      const response = await this.response(path, signal, maxAgeMs);
       if (response.ok) {
         return schema.parse(await response.json());
       }
@@ -180,6 +148,7 @@ export class GitHubClient {
     path: string,
     schema: z.ZodType<T[]>,
     signal?: AbortSignal,
+    maxAgeMs = 0,
   ): Promise<T[]> {
     const output: T[] = [];
     for (let page = 1; ; page++) {
@@ -188,22 +157,33 @@ export class GitHubClient {
         `${path}${separator}per_page=100&page=${String(page)}`,
         schema,
         signal,
+        maxAgeMs,
       );
       output.push(...batch);
       if (batch.length < 100) return output;
     }
   }
 
-  pr(number: number, signal?: AbortSignal): Promise<CiPullRequest> {
+  pr(
+    number: number,
+    signal?: AbortSignal,
+    maxAgeMs = 0,
+  ): Promise<CiPullRequest> {
     return this.read(
       `/repos/${this.repo}/pulls/${String(number)}`,
       PrSchema,
       signal,
+      maxAgeMs,
     );
   }
 
-  async decision(number: number, signal?: AbortSignal) {
-    const [owner, name] = this.repo.split("/");
+  /** One GraphQL query; quota refusals, including HTTP 200 ones, throw `GitHubRateLimitError`. */
+  async graphql<T>(
+    query: string,
+    variables: Record<string, unknown>,
+    schema: z.ZodType<T>,
+    signal?: AbortSignal,
+  ): Promise<T> {
     const response = await fetch(`${API}/graphql`, {
       method: "POST",
       headers: {
@@ -211,16 +191,10 @@ export class GitHubClient {
         "Content-Type": "application/json",
       },
       redirect: "error",
-      signal:
-        signal === undefined
-          ? AbortSignal.timeout(30_000)
-          : AbortSignal.any([signal, AbortSignal.timeout(30_000)]),
-      body: JSON.stringify({
-        query:
-          "query($owner:String!,$name:String!,$number:Int!){repository(owner:$owner,name:$name){pullRequest(number:$number){headRefOid baseRefOid reviewDecision}}}",
-        variables: { owner, name, number },
-      }),
+      signal: timeout(signal),
+      body: JSON.stringify({ query, variables }),
     });
+    await this.#observe(response.headers, "graphql");
     if (!response.ok) {
       throwIfRateLimited(response, await response.text(), "/graphql");
       throw new Error(`GitHub GraphQL failed (${String(response.status)})`);
@@ -240,45 +214,127 @@ export class GitHubClient {
     const result = z
       .object({
         errors: z.array(z.unknown()).optional(),
-        data: z
-          .object({
-            repository: z.object({
-              pullRequest: z.object({
-                headRefOid: z.string(),
-                baseRefOid: z.string(),
-                reviewDecision: z
-                  .enum(["APPROVED", "CHANGES_REQUESTED", "REVIEW_REQUIRED"])
-                  .nullable(),
-              }),
-            }),
-          })
-          .optional(),
+        data: schema.optional(),
       })
       .parse(payload);
     if (result.errors !== undefined || result.data === undefined)
-      throw new Error("GitHub GraphQL did not return a PR decision");
-    return result.data.repository.pullRequest;
+      throw new Error("GitHub GraphQL returned errors instead of data");
+    return result.data;
   }
 
-  reviews(number: number, signal?: AbortSignal): Promise<CiReview[]> {
+  async decision(number: number, signal?: AbortSignal): Promise<PrDecision> {
+    const [owner, name] = this.repo.split("/");
+    const data = await this.graphql(
+      "query($owner:String!,$name:String!,$number:Int!){repository(owner:$owner,name:$name){pullRequest(number:$number){headRefOid baseRefOid reviewDecision}}}",
+      { owner, name, number },
+      z.object({
+        repository: z.object({ pullRequest: DecisionSchema }),
+      }),
+      signal,
+    );
+    return data.repository.pullRequest;
+  }
+
+  /**
+   * The review decision for one PR state. GitHub derives reviewDecision from
+   * the reviews, the base rules, and the head; when none of those inputs
+   * changed (`inputs` fingerprints them) a decision any process read within
+   * `maxAgeMs` is reused instead of spending a GraphQL point. `maxAgeMs` 0
+   * always asks GitHub.
+   */
+  async memoizedDecision(
+    number: number,
+    inputs: string,
+    signal: AbortSignal | undefined,
+    maxAgeMs: number,
+  ): Promise<PrDecision> {
+    const key = `decision\n${this.identity}\n${this.repo}#${String(number)}\n${inputs}`;
+    const memo =
+      maxAgeMs > 0 ? await this.store.read(key, MemoSchema) : undefined;
+    if (memo !== undefined && this.now() - memo.readAt < maxAgeMs)
+      return memo.decision;
+    const decision = await this.decision(number, signal);
+    await this.store.write(key, { readAt: this.now(), decision });
+    return decision;
+  }
+
+  /**
+   * GraphQL points left this window. Uses an observation newer than
+   * `maxAgeMs` when one exists; otherwise asks GitHub (one point).
+   */
+  async graphqlBudget(
+    signal?: AbortSignal,
+    maxAgeMs = 30_000,
+  ): Promise<RateLimitBucket> {
+    const known = await this.bucket("graphql");
+    if (known !== null && this.now() - known.observedAt < maxAgeMs)
+      return known;
+    const data = await this.graphql(
+      "query{rateLimit{limit remaining used resetAt}}",
+      {},
+      RateLimitQuerySchema,
+      signal,
+    );
+    return {
+      resource: "graphql",
+      limit: data.rateLimit.limit,
+      remaining: data.rateLimit.remaining,
+      used: data.rateLimit.used,
+      resetAt: Date.parse(data.rateLimit.resetAt),
+      observedAt: this.now(),
+    };
+  }
+
+  reviews(
+    number: number,
+    signal?: AbortSignal,
+    maxAgeMs = 0,
+  ): Promise<CiReview[]> {
     return this.pages(
       `/repos/${this.repo}/pulls/${String(number)}/reviews`,
       z.array(ReviewSchema),
       signal,
+      maxAgeMs,
     );
   }
 
-  async rules(branch: string, signal?: AbortSignal): Promise<CiRules> {
+  /**
+   * The base branch's merge rules, reused machine-wide for `maxAgeMs`. Rules
+   * change rarely, and a repository without legacy protection answers that
+   * read with an un-ETagged 404 that GitHub charges every time.
+   */
+  async memoizedRules(
+    branch: string,
+    signal: AbortSignal | undefined,
+    maxAgeMs: number,
+  ): Promise<CiRules> {
+    const key = `rules:${this.identity}:${this.repo}:${branch}`;
+    const memo =
+      maxAgeMs > 0 ? await this.store.read(key, RulesMemoSchema) : undefined;
+    if (memo !== undefined && this.now() - memo.readAt < maxAgeMs)
+      return memo.rules;
+    const rules = await this.rules(branch, signal);
+    await this.store.write(key, { readAt: this.now(), rules });
+    return rules;
+  }
+
+  async rules(
+    branch: string,
+    signal?: AbortSignal,
+    maxAgeMs = 0,
+  ): Promise<CiRules> {
     const prefix = `/repos/${this.repo}`;
     const [rules, protection] = await Promise.all([
       this.pages(
         `${prefix}/rules/branches/${encodeURIComponent(branch)}`,
         z.array(RuleSchema),
         signal,
+        maxAgeMs,
       ),
       this.response(
         `${prefix}/branches/${encodeURIComponent(branch)}/protection`,
         signal,
+        maxAgeMs,
       ),
     ]);
     const result: CiRules = { checks: [], strict: false, approvals: 0 };
@@ -307,16 +363,21 @@ export class GitHubClient {
     return result;
   }
 
-  async checks(sha: string, signal?: AbortSignal): Promise<CommitCheck[]> {
+  async checks(
+    sha: string,
+    signal?: AbortSignal,
+    maxAgeMs = 0,
+  ): Promise<CommitCheck[]> {
     const prefix = `/repos/${this.repo}/commits/${sha}`;
     const [statuses, runs] = await Promise.all([
-      this.pages(`${prefix}/statuses`, z.array(StatusSchema), signal),
+      this.pages(`${prefix}/statuses`, z.array(StatusSchema), signal, maxAgeMs),
       this.pages(
         `${prefix}/check-runs?filter=latest`,
         z
           .object({ check_runs: z.array(CheckRunSchema) })
           .transform((value) => value.check_runs),
         signal,
+        maxAgeMs,
       ),
     ]);
     const latest = new Map<string, CommitCheck>();
@@ -346,57 +407,6 @@ export class GitHubClient {
         })),
     ];
   }
-}
-
-async function addLegacyProtection(
-  response: Response,
-  result: CiRules,
-): Promise<void> {
-  if (response.status === 404) return;
-  if (!response.ok)
-    throw new Error(
-      `GitHub branch protection read failed (${String(response.status)})`,
-    );
-  const value = z
-    .object({
-      required_status_checks: z
-        .object({
-          strict: z.boolean(),
-          checks: z.array(
-            z.object({ context: z.string(), app_id: z.number().nullable() }),
-          ),
-        })
-        .nullable()
-        .optional(),
-      required_pull_request_reviews: z
-        .object({ required_approving_review_count: z.number() })
-        .nullable()
-        .optional(),
-    })
-    .parse(await response.json());
-  result.strict ||= value.required_status_checks?.strict === true;
-  result.approvals = Math.max(
-    result.approvals,
-    value.required_pull_request_reviews?.required_approving_review_count ?? 0,
-  );
-  for (const check of value.required_status_checks?.checks ?? [])
-    result.checks.push({
-      name: check.context,
-      appId: check.app_id === null || check.app_id < 0 ? null : check.app_id,
-    });
-}
-
-function checkRunState(
-  status: string,
-  conclusion: string | null,
-): CommitCheck["state"] {
-  if (status !== "completed") return "pending";
-  if (conclusion === "action_required") return "human_action";
-  if (["success", "neutral", "skipped"].includes(conclusion ?? ""))
-    return "pass";
-  if (conclusion === null)
-    throw new Error("Completed GitHub check has no conclusion");
-  return "fail";
 }
 
 export function isHumanReview(review: CiReview): boolean {

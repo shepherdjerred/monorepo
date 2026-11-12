@@ -174,6 +174,9 @@ export async function waitForPr(
           connected,
           fatal,
           prNumber: number,
+          prCommit: (commit) => {
+            observer.notePrCommit(number, commit);
+          },
         }),
       rateLimited: reportRateLimit,
       heartbeat: (snapshot) => {
@@ -439,7 +442,7 @@ export async function ciCommand(
     await execute(
       action,
       pr,
-      new CiObserver(new GitHubClient(token), config),
+      new CiObserver(GitHubClient.shared(token), config),
       options,
     );
   } catch (error) {
