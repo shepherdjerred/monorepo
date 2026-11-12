@@ -1,29 +1,22 @@
 import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
-import {
-  Cpu,
-  Deployment,
-  EnvValue,
-  Secret,
-  Service,
-  ServiceAccount,
-  Volume,
-} from "cdk8s-plus-31";
+import { Cpu, EnvValue, Secret, ServiceAccount } from "cdk8s-plus-31";
 import { IntOrString } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
-import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
-import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
-import {
-  setRevisionHistoryLimit,
-  withCommonProps,
-} from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import {
   fliptEnv,
   bugsinkEnv,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
-import { httpProbes } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/kubelet-probes.ts";
+import { FirstPartyWebService } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/web-service.ts";
+import {
+  dnsEgressRule,
+  nsPeer,
+  tcp,
+  cloudflareTunnelIngressRule,
+  blackboxProbeIngressRule,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 
 export const OPS_DASHBOARD_URL =
   "http://alert-dashboard-alert-dashboard-service.alert-dashboard:7341";
@@ -40,117 +33,117 @@ export function createTrmnlDashboardDeployment(chart: Chart) {
     onePasswordItem.name,
   );
 
-  const deployment = new Deployment(chart, "trmnl-dashboard", {
-    replicas: 1,
-    podMetadata: {
-      labels: { app: "trmnl-dashboard" },
-    },
-    // The pod no longer reads the Kubernetes API (#3093), so it runs as the
-    // namespace default account. Naming it explicitly matters: omitting the
-    // field leaves the API server's deprecated `serviceAccount` mirror in
-    // place, which restores the retired trmnl-dashboard account on apply.
-    serviceAccount: ServiceAccount.fromServiceAccountName(
-      chart,
-      "trmnl-dashboard-default-sa",
-      "default",
-    ),
-  });
-
-  const container = deployment.addContainer(
-    withCommonProps({
-      name: "trmnl-dashboard",
-      image: firstPartyImageRecipe("trmnl-dashboard"),
-      ports: [{ number: 3000, name: "http" }],
-      envVariables: {
-        HOME: EnvValue.fromValue("/tmp"),
-        PORT: EnvValue.fromValue("3000"),
-        TRMNL_API_KEY: EnvValue.fromSecretValue({
-          secret,
-          key: "TRMNL_API_KEY",
-        }),
-        HA_URL: EnvValue.fromValue("https://homeassistant.tailnet-1a49.ts.net"),
-        HA_TOKEN: EnvValue.fromSecretValue({
-          secret,
-          key: "HA_TOKEN",
-        }),
-        DISPLAY_TIME_ZONE: EnvValue.fromValue("America/Los_Angeles"),
-        ...fliptEnv({
-          namespace: "trmnl-dashboard",
-          environment: "prod",
-          order: ["FLIPT_NAMESPACE", "FLIPT_URL", "FLIPT_ENVIRONMENT"],
-        }),
-        // The homelab screen renders from the ops snapshot the ops dashboard
-        // (deployed as alert-dashboard) serves.
-        OPS_DASHBOARD_URL: EnvValue.fromValue(OPS_DASHBOARD_URL),
-        // Bugsink error reporting → project 15 (TRMNL Dashboard). This is the
-        // dashboard's OWN error tracking. Required (fail-fast): the item must
-        // carry BUGSINK_DSN. VERSION is baked into the image; it and ENVIRONMENT
-        // become the Bugsink release and environment.
-        ...bugsinkEnv(secret),
-        ENVIRONMENT: EnvValue.fromValue("production"),
-      },
-      // The image ends with `USER bun` (non-numeric). The cdk8s-plus default
-      // securityContext is runAsNonRoot with no runAsUser, which the kubelet
-      // cannot verify against a named user → CreateContainerConfigError. Pin
-      // the numeric uid/gid (bun = 1000, same pattern as streambot).
-      securityContext: {
-        user: 1000,
-        group: 1000,
-        ensureNonRoot: true,
-        readOnlyRootFilesystem: true,
-        allowPrivilegeEscalation: false,
-      },
-      resources: {
-        cpu: {
-          request: Cpu.millis(50),
-          limit: Cpu.millis(250),
-        },
-        memory: {
-          request: Size.mebibytes(64),
-          limit: Size.mebibytes(384),
-        },
-      },
-      ...httpProbes(3000, { live: "/livez", ready: "/healthz" }),
-    }),
-  );
-
-  // Bun writes runtime state under $HOME while starting TypeScript directly.
-  // Keep the root filesystem read-only by pointing HOME at a writable emptyDir.
-  const tmpVolume = Volume.fromEmptyDir(chart, "trmnl-dashboard-tmp", "tmp");
-  container.mount("/tmp", tmpVolume);
-
-  setRevisionHistoryLimit(deployment, 5);
-
-  const service = new Service(chart, "trmnl-dashboard-service", {
-    metadata: { labels: { app: "trmnl-dashboard" } },
-    selector: deployment,
-    ports: [{ port: 3000, name: "http" }],
-  });
-
-  createServiceMonitor(chart, {
+  return new FirstPartyWebService(chart, "trmnl-dashboard-web-service", {
     name: "trmnl-dashboard",
-    namespace: "trmnl-dashboard",
-    port: "http",
-    interval: "30s",
-    matchLabels: { app: "trmnl-dashboard" },
-  });
-
-  createCloudflareTunnelBinding(chart, "trmnl-dashboard-cf-tunnel", {
-    serviceName: service.name,
-    fqdn: "trmnl.sjer.red",
     port: 3000,
-    // "/" is auth-gated (401); /livez is the unauthenticated liveness
-    // endpoint (same one the container's k8s liveness probe uses).
-    probePath: "/livez",
-    publicProbePath: "/livez",
+    probes: { live: "/livez", ready: "/healthz" },
+    deployment: {
+      // The pod no longer reads the Kubernetes API (#3093), so it runs as the
+      // namespace default account. Naming it explicitly matters: omitting the
+      // field leaves the API server's deprecated `serviceAccount` mirror in
+      // place, which restores the retired trmnl-dashboard account on apply.
+      serviceAccount: ServiceAccount.fromServiceAccountName(
+        chart,
+        "trmnl-dashboard-default-sa",
+        "default",
+      ),
+    },
+    revisionHistoryLimit: 5,
+    containers: () => ({
+      server: {
+        image: firstPartyImageRecipe("trmnl-dashboard"),
+        envVariables: {
+          // Bun writes runtime state under $HOME while starting TypeScript
+          // directly. The root filesystem is read-only, so HOME points at the
+          // writable emptyDir.
+          HOME: EnvValue.fromValue("/tmp"),
+          PORT: EnvValue.fromValue("3000"),
+          TRMNL_API_KEY: EnvValue.fromSecretValue({
+            secret,
+            key: "TRMNL_API_KEY",
+          }),
+          HA_URL: EnvValue.fromValue(
+            "https://homeassistant.tailnet-1a49.ts.net",
+          ),
+          HA_TOKEN: EnvValue.fromSecretValue({
+            secret,
+            key: "HA_TOKEN",
+          }),
+          DISPLAY_TIME_ZONE: EnvValue.fromValue("America/Los_Angeles"),
+          ...fliptEnv({
+            namespace: "trmnl-dashboard",
+            environment: "prod",
+            order: ["FLIPT_NAMESPACE", "FLIPT_URL", "FLIPT_ENVIRONMENT"],
+          }),
+          // The homelab screen renders from the ops snapshot the ops dashboard
+          // (deployed as alert-dashboard) serves.
+          OPS_DASHBOARD_URL: EnvValue.fromValue(OPS_DASHBOARD_URL),
+          // Bugsink error reporting → project 15 (TRMNL Dashboard). This is the
+          // dashboard's OWN error tracking. Required (fail-fast): the item must
+          // carry BUGSINK_DSN. VERSION is baked into the image; it and ENVIRONMENT
+          // become the Bugsink release and environment.
+          ...bugsinkEnv(secret),
+          ENVIRONMENT: EnvValue.fromValue("production"),
+        },
+        // The image ends with `USER bun` (non-numeric). The cdk8s-plus default
+        // securityContext is runAsNonRoot with no runAsUser, which the kubelet
+        // cannot verify against a named user → CreateContainerConfigError. Pin
+        // the numeric uid/gid (bun = 1000, same pattern as streambot).
+        securityContext: {
+          user: 1000,
+          group: 1000,
+          ensureNonRoot: true,
+          readOnlyRootFilesystem: true,
+          allowPrivilegeEscalation: false,
+        },
+        resources: {
+          cpu: {
+            request: Cpu.millis(50),
+            limit: Cpu.millis(250),
+          },
+          memory: {
+            request: Size.mebibytes(64),
+            limit: Size.mebibytes(384),
+          },
+        },
+      },
+    }),
+    cloudflare: {
+      id: "trmnl-dashboard-cf-tunnel",
+      fqdn: "trmnl.sjer.red",
+      // "/" is auth-gated (401); /livez is the unauthenticated liveness
+      // endpoint (same one the container's k8s liveness probe uses).
+      probePath: "/livez",
+    },
+    policies: [
+      {
+        name: "trmnl-dashboard-ingress-netpol",
+        selects: "namespace",
+        ingress: [
+          cloudflareTunnelIngressRule([3000]),
+          // Allow blackbox-exporter's in-cluster health probe
+          blackboxProbeIngressRule(3000),
+        ],
+      },
+      {
+        name: "trmnl-dashboard-egress-netpol",
+        selects: "namespace",
+        egress: [
+          dnsEgressRule(),
+          {
+            to: [{ ipBlock: { cidr: "0.0.0.0/0" } }],
+            ports: [53, 80, 443, 8080, 8123, 9093].map((port) => ({
+              port: IntOrString.fromNumber(port),
+              protocol: port === 53 ? "UDP" : "TCP",
+            })),
+          },
+          {
+            // The ops snapshot behind /api/homelab.
+            to: [nsPeer("alert-dashboard")],
+            ports: [tcp(7341)],
+          },
+        ],
+      },
+    ],
   });
-
-  return { deployment, service };
 }
-
-export const trmnlDashboardPorts = [53, 80, 443, 8080, 8123, 9093].map(
-  (port) => ({
-    port: IntOrString.fromNumber(port),
-    protocol: port === 53 ? "UDP" : "TCP",
-  }),
-);

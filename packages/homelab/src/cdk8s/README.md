@@ -99,6 +99,19 @@ bun run check:1password                       # offline lint (runs in bun run ve
 bun run scripts/snapshot-1password-vault.ts   # refresh snapshot after vault changes (needs op)
 ```
 
+## First-party web services
+
+`FirstPartyWebService` (`src/misc/first-party/web-service.ts`) renders a
+first-party HTTP service from one description: a single-replica Deployment
+with a writable `/tmp`, its `http` Service and ServiceMonitor, kubelet probes,
+an optional NVMe data claim, the Tailscale hosts or Cloudflare hostname it is
+reached on, and the namespace's NetworkPolicies. A service with neither kind
+of host is internal-only. Names derive from the `name` and the ids it is
+given, so moving an existing service onto it renames nothing, and
+`.deployment`, `.service`, `.serviceMonitor`, `.policies` and `.dataVolume`
+remain reachable for anything it does not model. `trmnl-dashboard`, `tracker`
+and `alert-dashboard` use it.
+
 ## Rendered-output safety nets
 
 A refactor of shared constructs must not change what is rendered. Two checks
