@@ -1,0 +1,53 @@
+# Scout for League of Legends
+
+> Scout is an automated Discord bot and companion web platform for League of Legends servers. It tracks players from queue pop through post-game, delivering real-time pre-match lobby notifications, high-resolution post-match scoreboard recap images, 18-player Arena mode rankings, and server-wide competitions.
+
+## Overview & Architecture
+
+Scout combines automated Discord notifications with a web-first management dashboard (`scout-for-lol.com/app/`) and an embedded DuckDB analytics engine (ScoutQL).
+
+* **Pre-match**: Automatically detects when tracked players start a match via Riot's Spectator-V5 API, rendering and posting a custom loading screen card with team compositions, summoner spells, and player ranks.
+* **Post-match**: Within minutes of match completion, Scout fetches scoreboard data and renders a high-resolution recap card displaying team KDAs, gold, damage, CS, items, and LP gains/losses.
+* **Web Dashboard**: Server managers configure channels, players, accounts, queue filters, competitions, and permissions on the web rather than through cumbersome slash command trees.
+
+## Supported Game Modes & Queues
+
+Scout supports all major League of Legends queues and game modes across all Riot platform regions:
+
+* **Ranked Solo/Duo & Ranked Flex**: Full pre-match and post-match tracking with LP delta calculations and division promotion alerts.
+* **Arena Mode (Cherry)**: Complete 18-player (6 teams of 3) scoreboard support, placement tracking (1st through 6th), and in-game augment selection history.
+* **ARAM & ARAM Clash**: Automated post-match recaps with damage share and team builds.
+* **League Classic (`JADE`)**: Native support for League Classic Rift, mapping JADE champion IDs to versioned Classic art, loading screens, and scoreboard layouts.
+* **Rotating Game Modes**: URF, ARURF, Brawl, and Doom Bots.
+* **Custom Games & Ingestion**: Supported via the optional Scout Desktop Client for custom scrims, bot rosters, and tournament games.
+
+### Data Ingestion: Riot API vs. Scout Desktop Client
+
+Scout automatically ingests all standard matchmade queues via Riot's official Spectator-V5 and Match-V5 APIs without requiring any desktop software.
+
+For game modes where Riot's Match-V5 API withholds post-match results:
+* **Modes requiring Scout Desktop Client for post-match reports**: League Classic (`JADE`), ARAM Mayhem, ARAM Clash, and Custom games.
+* The paired Scout Desktop Client (`scout-client-app` for macOS/Windows) extracts local End-of-Game (LCU) statistics and timelines, allowing Scout to generate full post-match scoreboards and lake analytics for these otherwise unrecorded modes.
+
+## Discord Commands
+
+Production Scout uses a focused set of slash commands, deferring detailed configuration to the web dashboard:
+
+* `/track <riot-id> <region> [alias]` - Quickly track a player in the current Discord channel.
+* `/list` - List all tracked players in the server.
+* `/setup` - Open the web-first setup and onboarding wizard.
+* `/help` - Show workflow guidance and command documentation.
+* `/status` - Verify Scout bot connectivity and service status.
+* `/invite` - Generate an invite link to add Scout to another Discord server.
+* `/docs` - Open the official documentation site.
+* `/scout ask <question>` - Ask a natural-language question about server match history and player stats via Explore; optionally publish the chart and answer to the channel.
+
+## Key Documentation
+
+* [How Scout Works](https://scout-for-lol.com/docs/explanation/how-scout-works/): Detailed explanation of Scout's dual polling loops and Riot API integration.
+* [Discord Commands Reference](https://scout-for-lol.com/docs/reference/discord-commands/): Full syntax and behavior of Discord slash commands.
+* [Queues & Regions](https://scout-for-lol.com/docs/reference/queues-and-regions/): Comprehensive list of recognized queue IDs and regional routing.
+* [Routing Notifications](https://scout-for-lol.com/docs/how-to/route-notifications/): How to route specific queues (e.g. Ranked vs. ARAM) to different Discord channels.
+* [Track Arena Matches & Placements](https://scout-for-lol.com/docs/how-to/track-arena-matches/): How to configure Arena notifications, 18-player scoreboard cards, and augment tracking.
+* [Competitions & Leaderboards](https://scout-for-lol.com/docs/how-to/run-competitions/): Guide to configuring server-wide climb, win rate, and champion competitions.
+* [ScoutQL Query Engine](https://scout-for-lol.com/docs/reference/scoutql/): Reference for querying the DuckDB report lake.

@@ -51,7 +51,16 @@ const structuredData = {
   description: appDescription,
   url: Astro.site?.toString(),
   applicationCategory: "GameApplication",
-  operatingSystem: "Discord",
+  applicationSubCategory: "Discord Bot",
+  operatingSystem: "Discord, Web Browser",
+  featureList: [
+    "Automatic pre-match lobby notifications with champion and rank cards",
+    "High-resolution post-match scoreboard recaps (KDA, gold, damage, items, LP deltas)",
+    "Full 18-player Arena mode tracking with augments and placements",
+    "League Classic mode support with JADE champion IDs and Classic art",
+    "Automated Discord server competitions and ranked climb leaderboards",
+    "Natural language match exploration and DuckDB-powered ScoutQL analytics",
+  ],
   offers: {
     "@type": "Offer",
     price: "0",

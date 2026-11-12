@@ -4,11 +4,12 @@ Technical documentation for Scout for LoL, a Discord bot that monitors League of
 
 ## Documentation Index
 
-| Document                                   | Description                                               |
-| ------------------------------------------ | --------------------------------------------------------- |
-| [Architecture Overview](./architecture.md) | High-level system architecture and component interactions |
-| [Backend Service](./backend.md)            | Discord bot, cron jobs, and API integrations              |
-| [Database Schema](./database.md)           | Prisma models and data relationships                      |
+| Document                                          | Description                                               |
+| ------------------------------------------------- | --------------------------------------------------------- |
+| [Architecture Overview](./architecture.md)        | High-level system architecture and component interactions |
+| [Backend Service](./backend.md)                   | Discord bot, cron jobs, and API integrations              |
+| [Database Schema](./database.md)                  | Prisma models and data relationships                      |
+| [Queue Support Matrix](./queue-support-matrix.md) | Riot API vs Scout Client coverage for all queues          |
 
 ## Quick Architecture Overview
 
