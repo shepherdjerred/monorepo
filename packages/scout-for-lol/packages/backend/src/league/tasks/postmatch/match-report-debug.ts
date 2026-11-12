@@ -2,7 +2,7 @@ import { z } from "zod";
 import type {
   PlayerConfigEntry,
   RiotMatchId,
-  RawMatch,
+  CanonicalMatch,
 } from "@scout-for-lol/data/index.ts";
 import { createLogger } from "#src/logger.ts";
 
@@ -14,7 +14,7 @@ const logger = createLogger("postmatch-match-report-debug");
 export function logErrorDetails(
   error: unknown,
   matchId: RiotMatchId,
-  matchData: RawMatch,
+  matchData: CanonicalMatch,
   trackedPlayers: PlayerConfigEntry[],
 ): void {
   // Extract error details using Zod validation

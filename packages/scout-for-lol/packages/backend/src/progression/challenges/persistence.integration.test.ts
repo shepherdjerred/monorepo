@@ -22,6 +22,7 @@ import {
   getChallengeRun,
   startChallengeRun,
 } from "#src/progression/challenges/run-store.ts";
+import { classicEndOfGameMatch } from "#src/testing/scout-client/end-of-game-fixtures.ts";
 import {
   createTestDatabase,
   dropTestDatabase,
@@ -456,6 +457,60 @@ describe("challenge timeline durability", () => {
         where: { runId_revision: { runId: run.runId, revision: 2 } },
       }),
     ).resolves.toMatchObject({ revisionState: "queued" });
+  });
+
+  test("a game known only from its end-of-game block skips a timeline rule and runs the rest", async () => {
+    const { first } = await createOwnedAccounts();
+    const record = await classicEndOfGameMatch();
+    const match = {
+      ...record,
+      metadata: { ...record.metadata, participants: [first.puuid] },
+    };
+    async function startRun(title: string, timeline: boolean) {
+      const draft = await createDraft(OWNER_ID, title);
+      const template = await publishChallengeDraft(db, {
+        ownerDiscordId: OWNER_ID,
+        draftId: draft.id,
+      });
+      const run = await startChallengeRun(db, {
+        ownerDiscordId: OWNER_ID,
+        templateId: template.templateId,
+        templateVersionId: template.id,
+        accountIds: [first.id],
+        mode: { kind: "clean_slate" },
+        stage: "beta",
+      });
+      if (timeline) {
+        await db.challengeRun.update({
+          where: { id: run.runId },
+          data: {
+            frozenContractJson: JSON.stringify(
+              ChallengeContractV1Schema.parse({
+                ...challengeContract(title),
+                matchPredicate: {
+                  kind: "timeline_event_count",
+                  eventType: "CHAMPION_KILL",
+                  role: "killer",
+                  operator: "gte",
+                  threshold: 1,
+                },
+              }),
+            ),
+          },
+        });
+      }
+      return run.runId;
+    }
+    const timelineRun = await startRun("Needs a timeline", true);
+    const statsRun = await startRun("Wins only", false);
+
+    const prepared = await prepareChallengeRunsForMatch(match, "beta", db);
+
+    expect(prepared.map((revision) => revision.runId)).toEqual([statsRun]);
+    expect(prepared.every((revision) => !revision.timelineRequired)).toBe(true);
+    await expect(
+      db.challengeRunMatchTrigger.count({ where: { runId: timelineRun } }),
+    ).resolves.toBe(0);
   });
 
   test("seeds four built-in challenge templates and removes legacy template", async () => {

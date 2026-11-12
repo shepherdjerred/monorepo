@@ -1,5 +1,7 @@
 import {
   CanonicalMatchRecordSchema,
+  END_OF_GAME_NULLABLE_LAKE_COLUMNS,
+  completeMatchOf,
   EndOfGameMatchSchema,
   MatchLakeRowSchema,
 } from "@scout-for-lol/data";
@@ -143,5 +145,43 @@ describe("the end-of-game record in storage and the lake", () => {
 
   test("unstated bans write no ban rows", () => {
     expect(flattenMatchTeamBans(endOfGame)).toEqual([]);
+  });
+
+  test("the columns a Dare cannot read on this game are exactly the ones its rows leave NULL", () => {
+    function nullColumns(rows: readonly Record<string, unknown>[]) {
+      const first = rows[0] ?? {};
+      return Object.keys(first).filter((column) =>
+        rows.every((row) => row[column] === null),
+      );
+    }
+    const eog = [
+      ...nullColumns(flattenMatch(endOfGame)),
+      ...nullColumns(flattenMatchTeams(endOfGame)),
+    ];
+    const bundle = new Set([
+      ...nullColumns(flattenMatch(complete)),
+      ...nullColumns(flattenMatchTeams(complete)),
+    ]);
+    // Everything the block leaves NULL that the history states is listed...
+    const newlyNull = eog.filter(
+      (column) => !bundle.has(column) && column !== "game_creation_at",
+    );
+    for (const column of newlyNull) {
+      expect(END_OF_GAME_NULLABLE_LAKE_COLUMNS).toContain(column);
+    }
+    expect(END_OF_GAME_NULLABLE_LAKE_COLUMNS).toContain("game_creation_at");
+    // ...and the list names real columns of the two relations.
+    const known = new Set([
+      ...Object.keys(flattenMatch(endOfGame)[0] ?? {}),
+      ...Object.keys(flattenMatchTeams(endOfGame)[0] ?? {}),
+    ]);
+    for (const column of END_OF_GAME_NULLABLE_LAKE_COLUMNS) {
+      expect(known.has(column)).toBe(true);
+    }
+  });
+
+  test("completeMatchOf narrows a Match-V5 document and refuses the record", () => {
+    expect(completeMatchOf(complete)).toEqual(complete);
+    expect(completeMatchOf(endOfGame)).toBeNull();
   });
 });

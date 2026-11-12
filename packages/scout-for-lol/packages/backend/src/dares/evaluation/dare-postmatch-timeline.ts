@@ -10,9 +10,10 @@ import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { getRankByPuuid } from "#src/league/model/rank.ts";
 import { fetchTimelineForDare } from "#src/league/tasks/postmatch/match-report-standard.ts";
 import {
+  completeMatchOf,
   type Player,
   type PlayerConfigEntry,
-  type RawMatch,
+  type CanonicalMatch,
   type RawTimeline,
 } from "@scout-for-lol/data";
 import type { MatchDataSource } from "@scout-for-lol/domain/match-processing/states.ts";
@@ -35,7 +36,7 @@ const DEFAULT_DEPENDENCIES: DarePostmatchTimelineDependencies = {
 /** Keep required timeline capture ahead of immutable Dare evidence. */
 export async function settleDaresWithTimeline(
   input: {
-    matchData: RawMatch;
+    matchData: CanonicalMatch;
     matchDataSource: MatchDataSource;
     trackedPlayers: PlayerConfigEntry[];
     prismaClient?: ExtendedPrismaClient | undefined;
@@ -50,18 +51,23 @@ export async function settleDaresWithTimeline(
   prefetchedRankChanges: PostmatchRankChanges | undefined;
 }> {
   const prismaClient = input.prismaClient ?? prisma;
-  const timelineRequired = await dependencies.needsTimeline(
-    input.matchData,
-    prismaClient,
-  );
+  // An end-of-game record has no timeline to wait for: the contracts that
+  // need one are ineligible for the game, so nothing is fetched or awaited.
+  const completeMatch = completeMatchOf(input.matchData);
+  const timelineMatch =
+    completeMatch !== null &&
+    (await dependencies.needsTimeline(completeMatch, prismaClient))
+      ? completeMatch
+      : null;
+  const timelineRequired = timelineMatch !== null;
   // Dare SQL reads the timeline from the report lake, so a contract that needs
   // one has it fetched (and staged) before its evidence is evaluated. The
   // shared resolver acquires timelines independently of result provenance.
   // Beta preparation waits until the persisted deadline, then pins missing
   // coverage; this read cannot silently reopen that processing decision.
-  const timeline = timelineRequired
+  const timeline = timelineMatch
     ? await dependencies.fetchTimeline(
-        input.matchData,
+        timelineMatch,
         input.matchData.metadata.matchId,
         input.trackedPlayers,
       )

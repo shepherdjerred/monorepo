@@ -3,7 +3,8 @@ import {
   DuelTimelineInputSchema,
   evaluateDuelGame,
   type DuelResultEvidence,
-  type RawMatch,
+  type CanonicalMatch,
+  matchCoverageOf,
   type RawTimeline,
 } from "@scout-for-lol/data";
 import type { ScoutStage } from "@scout-for-lol/temporal";
@@ -32,7 +33,7 @@ const duelGameInclude = {
 } as const;
 
 /** The Duel game an accepted observation bound to this exact match. */
-async function findObservedDuelGame(match: RawMatch) {
+async function findObservedDuelGame(match: CanonicalMatch) {
   const matchId = match.metadata.matchId;
   return await prisma.duelGame.findFirst({
     where: { matchId },
@@ -41,12 +42,12 @@ async function findObservedDuelGame(match: RawMatch) {
 }
 
 export async function duelMatchNeedsTimeline(
-  match: RawMatch,
+  match: CanonicalMatch,
 ): Promise<boolean> {
   return (await findObservedDuelGame(match)) !== null;
 }
 
-function timelineInput(match: RawMatch, timeline: RawTimeline) {
+function timelineInput(match: CanonicalMatch, timeline: RawTimeline) {
   const puuidByParticipant = new Map(
     timeline.info.participants.map((participant) => [
       participant.participantId,
@@ -122,7 +123,7 @@ function timelineInput(match: RawMatch, timeline: RawTimeline) {
  * can never match it; that is reviewed, never a parse throw.
  */
 export function duelGameJudgement(
-  match: RawMatch,
+  match: CanonicalMatch,
   timeline: RawTimeline | null | undefined,
 ) {
   const review = (reason: string) => ({
@@ -138,6 +139,12 @@ export function duelGameJudgement(
       timelineComplete: timeline !== null && timeline !== undefined,
     },
   });
+  // A game known only from the end-of-game block has no timeline, and a duel's
+  // objectives are read from one.
+  if (matchCoverageOf(match.metadata) === "end_of_game")
+    return review(
+      "The game was recorded from the end-of-game screen, which has no timeline to judge a duel objective",
+    );
   if (match.info.participants.some((participant) => participant.puuid === null))
     return review("The completed game includes a bot or an unresolved player");
   return timeline === null || timeline === undefined
@@ -286,7 +293,7 @@ async function recordVerifiedResult(
 }
 
 export async function processDuelResult(
-  match: RawMatch,
+  match: CanonicalMatch,
   timeline: RawTimeline | null | undefined,
   stage: ScoutStage,
 ): Promise<void> {

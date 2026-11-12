@@ -1,5 +1,8 @@
 import { z } from "zod";
-import { SCOUT_CLIENT_END_OF_GAME_DATA_VERSION } from "./data-source.ts";
+import {
+  SCOUT_CLIENT_END_OF_GAME_DATA_VERSION,
+  matchCoverageOf,
+} from "./data-source.ts";
 import { checkStoredIdentities } from "./participant-identity.ts";
 import {
   RawMetadataSchema,
@@ -166,3 +169,43 @@ export function canonicalMatchTournamentCode(
 ): string | undefined {
   return "tournamentCode" in match.info ? match.info.tournamentCode : undefined;
 }
+
+/**
+ * The whole Match-V5 document behind a canonical match, or `null` for an
+ * end-of-game record. For the effects that need what only Riot's document
+ * states (a timeline, participant numbers): `null` means the game is
+ * ineligible for them, never failed. The coverage rides in the document's own
+ * `dataVersion`, so the narrowing re-parses a document already validated.
+ */
+export function completeMatchOf(match: CanonicalMatch): RawMatch | null {
+  return matchCoverageOf(match.metadata) === "complete"
+    ? RawMatchSchema.parse(match)
+    : null;
+}
+
+/**
+ * Lake columns an end-of-game record leaves NULL: the ones it never states,
+ * and the "first" flags it states only when the stated counts and player flags
+ * decide them. A Dare reading one cannot be judged on such a game.
+ */
+export const END_OF_GAME_NULLABLE_LAKE_COLUMNS: readonly string[] = [
+  "participant_id",
+  "lane",
+  "role",
+  "game_creation_at",
+  "game_version",
+  "rift_herald_kills",
+  "first_rift_herald",
+  "void_grub_kills",
+  "first_void_grub",
+  "atakhan_kills",
+  "first_atakhan",
+  "epic_monster_feat_state",
+  "first_blood_feat_state",
+  "first_turret_feat_state",
+  "first_baron",
+  "first_champion_kill",
+  "first_dragon",
+  "first_inhibitor",
+  "first_tower",
+];

@@ -1,7 +1,7 @@
 import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
 import { filter, first, map, pipe } from "remeda";
 import { match } from "ts-pattern";
-import type { RawParticipant } from "#src/league/raw-participant.schema.ts";
+import type { CanonicalParticipant } from "#src/league/end-of-game-match.schema.ts";
 import type { Champion, Rune } from "#src/model/riot/champion.ts";
 import { normalizeChampionName } from "#src/model/riot/champion-registry.ts";
 import { getRuneInfo } from "#src/data-dragon/runes.ts";
@@ -33,8 +33,8 @@ export function computeKda(stats: {
  */
 export function findParticipant(
   puuid: LeaguePuuid,
-  participants: RawParticipant[],
-): RawParticipant | undefined {
+  participants: CanonicalParticipant[],
+): CanonicalParticipant | undefined {
   return pipe(
     participants,
     filter((participant) => participant.puuid === puuid),
@@ -46,7 +46,7 @@ export function findParticipant(
  * Determines the outcome of a match for a participant
  */
 export function getOutcome(
-  participant: RawParticipant,
+  participant: CanonicalParticipant,
 ): "Victory" | "Surrender" | "Defeat" {
   return match(participant)
     .returnType<"Victory" | "Surrender" | "Defeat">()
@@ -60,7 +60,7 @@ export function getOutcome(
  * Helper to extract runes from a single rune style
  */
 function extractRunesFromStyle(
-  style: RawParticipant["perks"]["styles"][number] | undefined,
+  style: CanonicalParticipant["perks"]["styles"][number] | undefined,
 ): Rune[] {
   const runes: Rune[] = [];
   if (!style) {
@@ -82,7 +82,7 @@ function extractRunesFromStyle(
 /**
  * Helper to extract rune details from participant perks
  */
-export function extractRunes(participant: RawParticipant): Rune[] {
+export function extractRunes(participant: CanonicalParticipant): Rune[] {
   const runes: Rune[] = [];
 
   // Extract primary rune selections
@@ -99,7 +99,9 @@ export function extractRunes(participant: RawParticipant): Rune[] {
 /**
  * Converts a raw participant to a Champion object with full details including runes.
  */
-export function participantToChampion(participant: RawParticipant): Champion {
+export function participantToChampion(
+  participant: CanonicalParticipant,
+): Champion {
   return {
     riotIdGameName:
       participant.riotIdGameName !== undefined &&
@@ -145,9 +147,9 @@ export function participantToChampion(participant: RawParticipant): Champion {
  * payload we cannot classify fails loudly at `CompletedMatchSchema.parse`
  * instead of producing a half-empty report.
  */
-export function getTeams<T>(
-  participants: RawParticipant[],
-  championConverter: (p: RawParticipant) => T,
+export function getTeams<P extends CanonicalParticipant, T>(
+  participants: P[],
+  championConverter: (p: P) => T,
 ) {
   const forTeam = (team: Team) =>
     pipe(

@@ -1,4 +1,4 @@
-import type { RawMatch } from "@scout-for-lol/data";
+import type { CanonicalMatch } from "@scout-for-lol/data";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import { writeMatchStagingFile } from "#src/report-lake/staging.ts";
 
@@ -6,7 +6,7 @@ import { writeMatchStagingFile } from "#src/report-lake/staging.ts";
 export async function writeEligibleMatchStagingFile(
   db: ExtendedPrismaClient,
   lakeDir: string,
-  match: RawMatch,
+  match: CanonicalMatch,
 ): Promise<boolean> {
   await db.matchEvidenceAdmission.upsert({
     where: { riotMatchId: match.metadata.matchId },

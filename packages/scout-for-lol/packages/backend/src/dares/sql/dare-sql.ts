@@ -9,6 +9,7 @@ import {
   createDareSqlLakeRelations,
   dareSqlComparesOpponentTeams,
 } from "#src/dares/sql/dare-sql-lake.ts";
+import { dareEndOfGameEligibility } from "#src/dares/evaluation/dare-coverage-eligibility.ts";
 import { dareSqlCteTargetDependencies } from "#src/dares/sql/dare-sql-lineage.ts";
 import { resolveLakeDir } from "#src/report-lake/paths.ts";
 import {
@@ -311,6 +312,8 @@ export async function executeDareSql(input: {
           excludeMultiTeamGames: dareSqlComparesOpponentTeams(
             compilation.immutableAst,
           ),
+          excludeEndOfGameGames:
+            dareEndOfGameEligibility(compilation).kind === "ineligible",
           matchOrder: input.matchOrder ?? "oldest",
         });
         const resultRows = await session.run(canonicalSql);

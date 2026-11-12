@@ -65,6 +65,8 @@ vi.mock("#src/progression/progression-lake-reads.ts", () => ({
 
 const { evaluateHallMatch } =
   await import("#src/progression/hall/evaluate-match.ts");
+const { classicEndOfGameMatch } =
+  await import("#src/testing/scout-client/end-of-game-fixtures.ts");
 const { updateHallSettings } =
   await import("#src/progression/hall/settings.ts");
 const { observeMatch } =
@@ -126,6 +128,15 @@ function rawMatch(matchId: RiotMatchId): RawMatch {
   return {
     ...FIXTURE,
     metadata: { ...FIXTURE.metadata, matchId, participants: [PUUID] },
+  };
+}
+
+/** The Classic game known only from its end-of-game block, naming the tracked player. */
+async function endOfGameMatch(matchId: RiotMatchId) {
+  const record = await classicEndOfGameMatch();
+  return {
+    ...record,
+    metadata: { ...record.metadata, matchId, participants: [PUUID] },
   };
 }
 
@@ -240,6 +251,20 @@ describe("evaluateHallMatch's announcement", () => {
     // nothing breaks again and no second intent appears.
     await evaluateHallMatch(rawMatch(RiotMatchIdSchema.parse(matchId)));
 
+    expect(await prisma.matchNotificationIntent.count()).toBe(1);
+  });
+
+  test("evaluates a game known only from its end-of-game block", async () => {
+    const matchId = await observedMatch("live");
+
+    // Records are participant stats, which the block states; the lake row
+    // (stubbed above) carries them, so no timeline is read.
+    await evaluateHallMatch(
+      await endOfGameMatch(RiotMatchIdSchema.parse(matchId)),
+    );
+
+    const cells = await prisma.hallRecordCell.findMany();
+    expect(cells.map((cell) => cell.currentValue)).toEqual([30]);
     expect(await prisma.matchNotificationIntent.count()).toBe(1);
   });
 });

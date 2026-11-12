@@ -664,7 +664,7 @@ describe("queryMatchesByDateRange - data verification", () => {
 });
 
 describe("queryMatchesByDateRange - end-of-game records", () => {
-  test("reads an end-of-game record and passes over it by name", async () => {
+  test("reads an end-of-game record like any other game", async () => {
     const endOfGame = await classicEndOfGameMatch();
     const date = new Date(endOfGame.info.gameStartTimestamp);
     const [puuid] = endOfGame.metadata.participants;
@@ -683,7 +683,13 @@ describe("queryMatchesByDateRange - end-of-game records", () => {
       .on(GetObjectCommand, { Key: completeKey })
       .callsFake(() => createMockGetObjectResponse(JSON.stringify(complete)));
 
-    // Competitions read complete matches until they opt in.
-    await expectRangeMatchIds(date, date, [puuid], ["NA1_9100000240"]);
+    // Competition criteria read participant stats, queue and win, which the
+    // end-of-game record states, so both games are returned.
+    await expectRangeMatchIds(
+      date,
+      date,
+      [puuid],
+      [endOfGame.metadata.matchId, "NA1_9100000240"],
+    );
   });
 });

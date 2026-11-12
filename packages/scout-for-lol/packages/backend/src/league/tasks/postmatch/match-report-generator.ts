@@ -27,11 +27,14 @@ import {
   queueTypeToDisplayString,
   type Rank,
   rankForQueue,
-  type RawMatch,
   classifyGame,
+  canonicalMatchCreatedAt,
+  completeMatchOf,
+  type CanonicalMatch,
   resolveQueueTypeFromGame,
   type GameClassification,
   type RiotMatchId,
+  canonicalMatchTournamentCode,
 } from "@scout-for-lol/data/index.ts";
 import { setItemMissHandler } from "@scout-for-lol/report";
 import {
@@ -92,7 +95,7 @@ export function formatGameCompletionMessage(
 }
 
 async function processClassicMatch(
-  matchData: RawMatch,
+  matchData: CanonicalMatch,
   matchId: RiotMatchId,
   playersInMatch: PlayerConfigEntry[],
   prerenderedImage: Uint8Array | undefined,
@@ -144,7 +147,7 @@ async function processClassicMatch(
  */
 type ArenaMatchContext = {
   players: Awaited<ReturnType<typeof getPlayer>>[];
-  matchData: RawMatch;
+  matchData: CanonicalMatch;
   matchId: RiotMatchId;
   playersInMatch: PlayerConfigEntry[];
   prerenderedImage: Uint8Array | undefined;
@@ -190,7 +193,7 @@ async function processArenaMatch(
 
 type StandardMatchContext = {
   players: Awaited<ReturnType<typeof getPlayer>>[];
-  matchData: RawMatch;
+  matchData: CanonicalMatch;
   matchId: RiotMatchId;
   playersInMatch: PlayerConfigEntry[];
   /** Guild IDs that will receive this match report - used for feature flag checks */
@@ -249,7 +252,7 @@ async function processStandardMatch(
     queueId: matchData.info.queueId,
     gameMode: matchData.info.gameMode,
     gameType: matchData.info.gameType,
-    tournamentCode: matchData.info.tournamentCode,
+    tournamentCode: canonicalMatchTournamentCode(matchData),
   });
   if (classification.kind === "unknown") {
     return unsupportedQueueMessage(matchId, playersInMatch, classification);
@@ -286,7 +289,7 @@ async function processStandardMatch(
           queueType: queue,
           rankBefore: previousRank,
           rankAfter: currentRank,
-          matchGameCreationTimestamp: matchData.info.gameCreation,
+          matchGameCreationTimestamp: canonicalMatchCreatedAt(matchData),
           matchGameEndTimestamp: matchData.info.gameEndTimestamp,
         });
 
@@ -331,18 +334,22 @@ async function processStandardMatch(
     embeds: [matchReportEmbed],
     content: `${completionMessage}\n\n${inlineMatchLink(matchId)}`,
   };
+  // The MVP roster is ordered by Riot's participant numbers, which an
+  // end-of-game record does not state, so such a game carries no MVP vote.
+  const mvpMatch = completeMatchOf(matchData);
   if (
+    mvpMatch !== null &&
     ctx.omitMvpVotes !== true &&
     (await shouldAttachMvpVotes({
       queueType: completedMatch.queueType,
       targetGuildIds,
-      participants: matchData.info.participants,
+      participants: mvpMatch.info.participants,
       trackedPuuids: playersInMatch.map(
         (player) => player.league.leagueAccount.puuid,
       ),
     }))
   ) {
-    await ensureMatchMvpContest(matchData);
+    await ensureMatchMvpContest(mvpMatch);
     return withMvpVoteFurniture(message, matchId);
   }
   return message;
@@ -393,7 +400,7 @@ const defaultGenerateMatchReportDependencies: GenerateMatchReportDependencies =
  * @returns MessageCreateOptions ready to send to Discord, or undefined if no tracked players found
  */
 export async function generateMatchReport(
-  matchData: RawMatch,
+  matchData: CanonicalMatch,
   trackedPlayers: PlayerConfigEntry[],
   options: GenerateMatchReportOptions,
   dependencies: GenerateMatchReportDependencies = defaultGenerateMatchReportDependencies,
@@ -431,7 +438,7 @@ export async function generateMatchReport(
       matchData.info.queueId,
       matchData.info.gameMode,
       matchData.info.gameType,
-      matchData.info.tournamentCode,
+      canonicalMatchTournamentCode(matchData),
     );
     if (
       isClassicQueueType(queueType) &&
@@ -493,7 +500,7 @@ export async function generateMatchReport(
         matchData.info.queueId,
         matchData.info.gameMode,
         matchData.info.gameType,
-        matchData.info.tournamentCode,
+        canonicalMatchTournamentCode(matchData),
       ) ?? "unknown";
     reportsGeneratedTotal.inc({ queue_type: generatedQueueType });
 
@@ -504,7 +511,7 @@ export async function generateMatchReport(
         matchData.info.queueId,
         matchData.info.gameMode,
         matchData.info.gameType,
-        matchData.info.tournamentCode,
+        canonicalMatchTournamentCode(matchData),
       ) ?? "unknown";
     reportsFailedTotal.inc({ queue_type: queueType });
     logErrorDetails(error, matchId, matchData, trackedPlayers);

@@ -2,11 +2,12 @@ import { isRemakeMatch } from "#src/dares/evaluation/remake.ts";
 import {
   resolveQueueTypeFromGame,
   type DareContract,
-  type RawMatch,
+  type CanonicalMatch,
+  canonicalMatchTournamentCode,
 } from "@scout-for-lol/data";
 
 export function matchTouchesRelationalDare(
-  matchData: RawMatch,
+  matchData: CanonicalMatch,
   contract: DareContract,
 ): boolean {
   const puuids = new Set(
@@ -17,13 +18,13 @@ export function matchTouchesRelationalDare(
   );
 }
 
-export function relationalDareMatchContext(matchData: RawMatch) {
+export function relationalDareMatchContext(matchData: CanonicalMatch) {
   if (isRemakeMatch(matchData)) return null;
   const queue = resolveQueueTypeFromGame(
     matchData.info.queueId,
     matchData.info.gameMode,
     matchData.info.gameType,
-    matchData.info.tournamentCode,
+    canonicalMatchTournamentCode(matchData),
   );
   if (queue === undefined) return null;
   return {

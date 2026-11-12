@@ -12,7 +12,6 @@ import {
   canonicalMatchCreatedAt,
   type CanonicalMatch,
   type CanonicalMatchRecord,
-  type RawMatch,
 } from "@scout-for-lol/data/index.ts";
 import { eachDayOfInterval, format, startOfDay, endOfDay } from "date-fns";
 import { createLogger } from "#src/logger.ts";
@@ -114,9 +113,8 @@ function matchIsWithinDateRange(
 /**
  * Process match download results and filter by participant PUUIDs.
  *
- * Competition processors read complete matches only until they opt in to the
- * end-of-game record, so one is passed over here by name, not by a failed
- * parse.
+ * Competition processors read participant stats, queue and win, which an
+ * end-of-game record states, so both coverages are returned.
  */
 function processMatchResults(
   results: PromiseSettledResult<{
@@ -126,8 +124,8 @@ function processMatchResults(
   puuids: string[],
   startDate: Date,
   endDate: Date,
-): RawMatch[] {
-  const matches: RawMatch[] = [];
+): CanonicalMatch[] {
+  const matches: CanonicalMatch[] = [];
   for (const result of results) {
     if (result.status !== "fulfilled" || result.value.record === null) {
       continue;
@@ -146,14 +144,7 @@ function processMatchResults(
       continue;
     }
 
-    if (record.coverage === "end_of_game") {
-      logger.debug(
-        `[S3Query] Skipping ${match.metadata.matchId}: an end-of-game record, which competitions do not read yet`,
-      );
-      continue;
-    }
-
-    matches.push(record.match);
+    matches.push(match);
   }
   return matches;
 }
@@ -349,7 +340,7 @@ export async function queryMatchesByDateRange(
   startDate: Date,
   endDate: Date,
   puuids: string[],
-): Promise<RawMatch[]> {
+): Promise<CanonicalMatch[]> {
   const bucket = configuration.s3BucketName;
 
   if (bucket === undefined) {
@@ -373,7 +364,7 @@ export async function queryMatchesByDateRange(
 
   const client = createS3Client();
   const dayPrefixes = generateDatePrefixes(startDate, endDate);
-  const matches: RawMatch[] = [];
+  const matches: CanonicalMatch[] = [];
   let totalObjects = 0;
   let matchedObjects = 0;
 

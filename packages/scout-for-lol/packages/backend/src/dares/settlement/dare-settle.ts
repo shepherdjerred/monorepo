@@ -20,7 +20,7 @@ import {
 import { voidDare } from "#src/dares/settlement/dare-void.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
-import type { DareContract, RawMatch } from "@scout-for-lol/data";
+import type { DareContract, CanonicalMatch } from "@scout-for-lol/data";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import * as Sentry from "@sentry/bun";
 
@@ -81,7 +81,7 @@ async function inspectStoredContract(
 }
 
 export async function settleDaresForMatch(
-  matchData: RawMatch,
+  matchData: CanonicalMatch,
   prismaClient: ExtendedPrismaClient = prisma,
   options: {
     now?: Date | undefined;

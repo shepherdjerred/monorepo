@@ -1002,6 +1002,24 @@ rebuild, Explore review, showcase, scripts) parse `CanonicalMatchSchema`, and
 the lake writes the record's rows with `coverage = 'end_of_game'`. Nothing in
 the match pipeline produces the record yet.
 
+Effect consumers either work on the record or refuse it with a typed outcome,
+never a failure:
+
+- Competition criteria, Hall of Fame records, and the Classic, standard and
+  ARAM report builders read participant stats, queue and win, so they run. The
+  reports render without timeline charts; rank history dates the game by
+  `canonicalMatchCreatedAt`.
+- A challenge rule flagged `timelineRequired` skips the game when its revision
+  is prepared; the other rules run.
+- A Dare is judged on the game only if its contract reads no column the record
+  leaves `NULL` (`END_OF_GAME_NULLABLE_LAKE_COLUMNS`) and no timeline or ban
+  relation (`dareEndOfGameEligibility`). Otherwise the game is ineligible: no
+  evidence is captured for it, and the lake relations leave it out.
+- A duel game bound to the record goes to review ("no timeline to judge a duel
+  objective"). The MVP vote is omitted, since its roster orders by participant
+  number. Effects that need Riot's whole document take `completeMatchOf`, which
+  is `null` for the record.
+
 Timeline selection is independent of result selection. Riot supplies its
 timeline when available; accepted client timeline observations can fill a
 missing timeline even for a Riot result. Participant IDs must identify the

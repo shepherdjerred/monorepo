@@ -9,7 +9,8 @@ import {
   createTestDatabase,
   testDatabaseModule,
 } from "#src/testing/test-database.ts";
-import type { RawMatch } from "@scout-for-lol/data";
+import type { CanonicalMatch, EndOfGameMatch } from "@scout-for-lol/data";
+import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
 import { DiscordAccountIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -20,11 +21,50 @@ const { prisma } = createTestDatabase("dare-sql-admitted-matches");
 vi.mock("#src/database/index.ts", async () => await testDatabaseModule(prisma));
 const { compileDareSql, decisiveTargetDependencies, executeDareSql } =
   await import("#src/dares/sql/dare-sql.ts");
+const { classicEndOfGameMatch } =
+  await import("#src/testing/scout-client/end-of-game-fixtures.ts");
 afterAll(async () => {
   await prisma.$disconnect();
 });
-async function writeMatchStagingFile(lakeDir: string, match: RawMatch) {
+async function writeMatchStagingFile(lakeDir: string, match: CanonicalMatch) {
   return await writeEligibleMatchStagingFile(prisma, lakeDir, match);
+}
+
+/** Run `queryText` over a lake holding only the end-of-game record. */
+async function runOnEndOfGameRecord(record: EndOfGameMatch, queryText: string) {
+  const lakeDir = await mkdtemp(path.join(tmpdir(), "dare-sql-eog-"));
+  try {
+    expect(await writeMatchStagingFile(lakeDir, record)).toBe(true);
+    const participant = record.info.participants.find((p) => p.win);
+    if (participant === undefined) throw new Error("fixture winner");
+    return await executeDareSql({
+      compilation: await compileDareSql({
+        queryText,
+        targetKeys: ["T1"],
+      }),
+      targets: [
+        {
+          key: "T1",
+          discordId: DiscordAccountIdSchema.parse("100000000000000001"),
+          playerId: 1,
+          alias: "Target",
+          accounts: [
+            {
+              puuid: LeaguePuuidSchema.parse(participant.puuid),
+              trackingStartedAt: new Date(
+                record.info.gameStartTimestamp - 1000,
+              ).toISOString(),
+            },
+          ],
+        },
+      ],
+      start: new Date(record.info.gameStartTimestamp - 1000),
+      end: new Date(record.info.gameEndTimestamp + 1000),
+      lakeDir,
+    });
+  } finally {
+    await rm(lakeDir, { recursive: true, force: true });
+  }
 }
 
 const KILL_PARTICIPATION_SQL = `WITH games AS (
@@ -295,5 +335,31 @@ describe("Dare SQL compilation", () => {
     await expect(
       compileDareSql({ queryText, targetKeys: ["T1"] }),
     ).rejects.toThrow(expected);
+  });
+
+  describe("a game known only from its end-of-game block", () => {
+    test("counts for a contract that reads only what the block states", async () => {
+      const record = await classicEndOfGameMatch();
+
+      const evidence = await runOnEndOfGameRecord(
+        record,
+        "SELECT EXISTS (SELECT 1 FROM T1 WHERE win) AS achieved",
+      );
+
+      expect(evidence.sourceMatchIds).toEqual([record.metadata.matchId]);
+      expect(evidence.achieved).toBe(true);
+    });
+
+    test("is ineligible, not failed, for a contract that reads a null column", async () => {
+      const record = await classicEndOfGameMatch();
+
+      const evidence = await runOnEndOfGameRecord(
+        record,
+        "SELECT EXISTS (SELECT 1 FROM T1 WHERE win AND participant_id >= 1) AS achieved",
+      );
+
+      expect(evidence.sourceMatchIds).toEqual([]);
+      expect(evidence.achieved).toBe(false);
+    });
   });
 });

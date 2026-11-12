@@ -1,13 +1,15 @@
 import {
   type ArenaChampion,
   type Augment,
-  type RawParticipant,
+  type CanonicalParticipant,
 } from "@scout-for-lol/data";
 import { participantToChampion } from "@scout-for-lol/data/model/matches/match-helpers.ts";
 import { mapAugmentIdsToUnion } from "#src/league/arena/augment.ts";
 
 // Arena champion conversion with arena-specific fields
-export function participantToArenaChampion(dto: RawParticipant): ArenaChampion {
+export function participantToArenaChampion(
+  dto: CanonicalParticipant,
+): ArenaChampion {
   const baseChampion = participantToChampion(dto);
 
   const augments = extractAugments(dto);
@@ -23,7 +25,7 @@ export function participantToArenaChampion(dto: RawParticipant): ArenaChampion {
 }
 
 // Helpers for arena-specific fields
-function extractAugments(dto: RawParticipant): Augment[] {
+function extractAugments(dto: CanonicalParticipant): Augment[] {
   const ids: number[] = [];
   const augmentFields = [
     dto.playerAugment1,
@@ -41,7 +43,7 @@ function extractAugments(dto: RawParticipant): Augment[] {
   return ids.length === 0 ? [] : mapAugmentIdsToUnion(ids);
 }
 
-function extractArenaMetrics(dto: RawParticipant) {
+function extractArenaMetrics(dto: CanonicalParticipant) {
   return {
     playerScore0: dto.playerScore0 ?? dto.PlayerScore0 ?? 0,
     playerScore1: dto.playerScore1 ?? dto.PlayerScore1 ?? 0,
@@ -55,7 +57,7 @@ function extractArenaMetrics(dto: RawParticipant) {
   };
 }
 
-function extractTeamSupport(dto: RawParticipant) {
+function extractTeamSupport(dto: CanonicalParticipant) {
   return {
     damageShieldedOnTeammate: dto.totalDamageShieldedOnTeammates,
     healsOnTeammate: dto.totalHealsOnTeammates,

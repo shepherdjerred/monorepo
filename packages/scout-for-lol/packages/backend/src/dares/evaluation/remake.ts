@@ -1,5 +1,5 @@
-import type { RawMatch } from "@scout-for-lol/data";
-export function isRemakeMatch(matchData: RawMatch): boolean {
+import type { CanonicalMatch } from "@scout-for-lol/data";
+export function isRemakeMatch(matchData: CanonicalMatch): boolean {
   return (
     matchData.info.endOfGameResult !== "GameComplete" ||
     matchData.info.participants.some(

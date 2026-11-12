@@ -14,8 +14,8 @@ import {
   type Player,
   type Rank,
   type ArenaMatch,
-  type RawMatch,
-  type RawParticipant,
+  type CanonicalMatch,
+  type CanonicalParticipant,
   findParticipant,
   getOutcome,
   getTeams,
@@ -26,6 +26,7 @@ import {
   QueueTypeSchema,
   RankedQueueTypeSchema,
   rankForQueue,
+  canonicalMatchTournamentCode,
 } from "@scout-for-lol/data/index.ts";
 import { strict as assert } from "node:assert";
 import { participantToArenaChampion } from "#src/league/model/champion.ts";
@@ -42,7 +43,7 @@ const CompletedQueueTypeSchema = QueueTypeSchema.exclude([
 
 export function toMatch(
   players: Player[],
-  rawMatch: RawMatch,
+  rawMatch: CanonicalMatch,
   playerRanks: Map<
     string,
     { before: Rank | undefined; after: Rank | undefined }
@@ -52,7 +53,7 @@ export function toMatch(
     rawMatch.info.queueId,
     rawMatch.info.gameMode,
     rawMatch.info.gameType,
-    rawMatch.info.tournamentCode,
+    canonicalMatchTournamentCode(rawMatch),
   );
 
   if (queueType === "arena") {
@@ -124,7 +125,7 @@ export function toMatch(
       }
 
       // TypeScript needs explicit narrowing after the undefined check
-      const participant: RawParticipant = participantRaw;
+      const participant: CanonicalParticipant = participantRaw;
 
       const champion = participantToChampion(participant);
       const team = parseTeam(participant.teamId);
@@ -176,7 +177,9 @@ export function toMatch(
   return validated;
 }
 
-function validateArenaSubteamId(participant: RawParticipant): ArenaTeamId {
+function validateArenaSubteamId(
+  participant: CanonicalParticipant,
+): ArenaTeamId {
   return ArenaTeamIdSchema.parse(participant.playerSubteamId);
 }
 
@@ -185,11 +188,11 @@ const ArenaParticipantFieldsSchema = z.object({
   placement: z.number().int().min(1).max(8),
 });
 
-type ArenaParticipantValidatedMin = RawParticipant & {
+type ArenaParticipantValidatedMin = CanonicalParticipant & {
   playerSubteamId: ArenaTeamId;
 };
 
-export function groupArenaTeams(participants: RawParticipant[]) {
+export function groupArenaTeams(participants: CanonicalParticipant[]) {
   const validated: ArenaParticipantValidatedMin[] = participants.map((p) => {
     const playerSubteamId = validateArenaSubteamId(p);
     return { ...p, playerSubteamId };
@@ -226,11 +229,11 @@ export function groupArenaTeams(participants: RawParticipant[]) {
 }
 
 export function getArenaTeammates(
-  participant: RawParticipant,
-  participants: RawParticipant[],
+  participant: CanonicalParticipant,
+  participants: CanonicalParticipant[],
 ) {
   const sub = validateArenaSubteamId(participant);
-  const teammates: RawParticipant[] = [];
+  const teammates: CanonicalParticipant[] = [];
   for (const p of participants) {
     if (p === participant) {
       continue;
@@ -243,7 +246,9 @@ export function getArenaTeammates(
   return teammates;
 }
 
-export function toArenaSubteams(participants: RawParticipant[]): ArenaTeam[] {
+export function toArenaSubteams(
+  participants: CanonicalParticipant[],
+): ArenaTeam[] {
   const grouped = groupArenaTeams(participants);
   const result: ArenaTeam[] = [];
   for (const { subteamId, players } of grouped) {
@@ -269,13 +274,13 @@ export function toArenaSubteams(participants: RawParticipant[]): ArenaTeam[] {
   return result;
 }
 
-export function getArenaPlacement(participant: RawParticipant) {
+export function getArenaPlacement(participant: CanonicalParticipant) {
   return ArenaParticipantFieldsSchema.parse(participant).placement;
 }
 
 export function toArenaMatch(
   players: Player[],
-  rawMatch: RawMatch,
+  rawMatch: CanonicalMatch,
 ): ArenaMatch | undefined {
   const subteams = toArenaSubteams(rawMatch.info.participants);
 

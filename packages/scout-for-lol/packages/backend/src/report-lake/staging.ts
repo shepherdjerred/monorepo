@@ -11,7 +11,7 @@ import { rawDocumentRow } from "#src/report-lake/staging/raw-documents.ts";
 import type {
   CachedLeaderboard,
   RawCurrentGameInfo,
-  RawMatch,
+  CanonicalMatch,
   RawTimeline,
 } from "@scout-for-lol/data";
 import { createLogger } from "#src/logger.ts";
@@ -126,7 +126,7 @@ function toNdjson(rows: object[]): string {
 
 export async function writeMatchStagingFile(
   lakeDir: string,
-  match: RawMatch,
+  match: CanonicalMatch,
 ): Promise<boolean> {
   const staged = await stageMatchGeneration(lakeDir, match);
   return staged.success;
@@ -134,7 +134,7 @@ export async function writeMatchStagingFile(
 
 export async function stageMatchGeneration(
   lakeDir: string,
-  match: RawMatch,
+  match: CanonicalMatch,
   options: StagingWriteOptions = {},
 ): Promise<StagingWriteResult> {
   try {

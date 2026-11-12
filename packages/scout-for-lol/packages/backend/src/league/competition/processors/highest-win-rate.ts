@@ -1,7 +1,7 @@
 import type {
   CompetitionGameVariant,
   HighestWinRateCriteria,
-  RawMatch,
+  CanonicalMatch,
 } from "@scout-for-lol/data";
 import type {
   LeaderboardEntry,
@@ -15,7 +15,7 @@ import { createWinBasedProcessor } from "#src/league/competition/processors/proc
  * Only includes players who meet the minimum games threshold
  */
 export function processHighestWinRate(
-  matches: RawMatch[],
+  matches: CanonicalMatch[],
   participants: PlayerWithAccounts[],
   criteria: HighestWinRateCriteria,
   gameVariant: CompetitionGameVariant,
