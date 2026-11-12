@@ -198,10 +198,11 @@ export class OpenaiStack extends HomelabStack {
         "The OpenTofu state encryption passphrase must be at least 16 characters.",
     });
 
-    // The official provider reads OPENAI_API_KEY; the wrapper maps that name
-    // from the dedicated OPENAI_ADMIN_KEY 1Password field.
+    // The official provider reads its standard API-key variable; the stack
+    // manifest maps that name from the dedicated OPENAI_ADMIN_KEY 1Password
+    // field (see packages/homelab/scripts/tofu/tofu-stack-manifest.ts).
     new OpenaiProvider(this, "openai");
-    // The companion provider also reads OPENAI_API_KEY and is used only for
+    // The companion provider reads the same variable and is used only for
     // the service-account API key returned by its service-account resource;
     // organization controls remain on the official provider above.
     const keys = new OpenaikeysProvider(this, "openaikeys");
