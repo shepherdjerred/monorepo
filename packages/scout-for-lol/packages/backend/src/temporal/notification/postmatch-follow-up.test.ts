@@ -43,6 +43,10 @@ function identity(record: MatchProcessingReceiptRecord): string {
 const stubs = vi.hoisted(() => ({
   subscriptionGuildOfChannel: vi.fn(),
   recordCoreOutputsDelivered: vi.fn(),
+  readNotificationArtifact: vi.fn(),
+}));
+vi.mock("#src/temporal/notification-lane/notification-receipts.ts", () => ({
+  readNotificationArtifact: stubs.readNotificationArtifact,
 }));
 vi.mock("#src/database/index.ts", () => ({ prisma: {} }));
 vi.mock("#src/database/durable/receipt-repository.ts", () => ({
@@ -109,6 +113,10 @@ beforeEach(() => {
   receipts.rows.clear();
   stubs.subscriptionGuildOfChannel.mockResolvedValue(GUILD_ID);
   stubs.recordCoreOutputsDelivered.mockResolvedValue(undefined);
+  stubs.readNotificationArtifact.mockResolvedValue({
+    artifact: "report",
+    riotMatchId: MATCH_ID,
+  });
 });
 
 describe("the post-match follow-up", () => {
@@ -157,6 +165,18 @@ describe("the post-match follow-up", () => {
 
     expect(stubs.recordCoreOutputsDelivered).toHaveBeenCalledTimes(2);
     expect(receipts.rows.size).toBe(2);
+  });
+
+  test("counts nothing for an unsupported-queue notice, which is not a report", async () => {
+    stubs.readNotificationArtifact.mockResolvedValue({
+      artifact: "unsupported-queue",
+      riotMatchId: MATCH_ID,
+    });
+
+    await afterPostmatchDelivered(postmatchRecord(DELIVERED));
+
+    expect(receipts.record).not.toHaveBeenCalled();
+    expect(stubs.recordCoreOutputsDelivered).not.toHaveBeenCalled();
   });
 
   test("counts nothing for a channel no subscription names any more", async () => {

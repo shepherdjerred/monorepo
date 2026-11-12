@@ -23,6 +23,7 @@ import {
 import { durableCommit } from "#src/temporal/match/match-commits.ts";
 import {
   renderPostmatchNotification,
+  resolveUnsupportedPostmatchGame,
   type ScoutPostmatchRenderMode,
 } from "#src/temporal/notification/postmatch-notification.ts";
 import { renderPrematchNotification } from "#src/temporal/notification/prematch-notification.ts";
@@ -203,6 +204,19 @@ async function renderPostmatchArtifact(
   fence: ScoutEffectFence,
   mode: ScoutPostmatchRenderMode,
 ): Promise<ScoutNotificationRenderEvidence> {
+  // A queue Scout cannot classify has no report to render; its intent attests
+  // the typed notice instead, so the render never fails for it.
+  const unsupported = await resolveUnsupportedPostmatchGame(riotMatchId);
+  if (unsupported !== null) {
+    return {
+      artifact: "unsupported-queue",
+      riotMatchId,
+      queueId: unsupported.queueId,
+      gameMode: unsupported.gameMode,
+      gameType: unsupported.gameType,
+      players: [...unsupported.players],
+    };
+  }
   const rendered = await renderPostmatchNotification(riotMatchId, mode);
   const metadata = { queueId: String(rendered.queueId) };
   // A live render files its objects under the day it rendered, which is the

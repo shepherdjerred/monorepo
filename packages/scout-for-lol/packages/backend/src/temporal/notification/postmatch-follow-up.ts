@@ -13,6 +13,7 @@ import { toIsoInstant } from "#src/durable/match/match-identity.ts";
 import { buildMatchReceipt } from "#src/durable/match/receipt-evidence.ts";
 import { createLogger } from "#src/logger.ts";
 import { recordGameEndToDelivered } from "#src/scout-client/telemetry/capture-metrics.ts";
+import { readNotificationArtifact } from "#src/temporal/notification-lane/notification-receipts.ts";
 import { subscriptionGuildOfChannel } from "#src/temporal/notification/subscription-guild.ts";
 
 const logger = createLogger("scout-v2-postmatch-follow-up");
@@ -71,6 +72,9 @@ export async function afterPostmatchDelivered(
     );
     return;
   }
+  // An unsupported-queue notice is not a report, so it is not core output.
+  const attested = await readNotificationArtifact(record.matchId, "postmatch");
+  if (attested?.artifact === "unsupported-queue") return;
   const counted = await recordPostmatchCoreOutputReceipt(record, guildId);
   if (counted.outcome === "conflict") {
     throw new Error(

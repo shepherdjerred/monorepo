@@ -37,16 +37,17 @@ import {
   canonicalMatchTournamentCode,
 } from "@scout-for-lol/data/index.ts";
 import { setItemMissHandler } from "@scout-for-lol/report";
-import {
-  type AttachmentBuilder,
+import type {
+  AttachmentBuilder,
   EmbedBuilder,
-  type MessageCreateOptions,
+  MessageCreateOptions,
 } from "discord.js";
 import { z } from "zod";
 import { buildClassicMatch } from "./match-report-classic.ts";
 import { inlineMatchLink } from "./match-report-components.ts";
 import { logErrorDetails } from "./match-report-debug.ts";
 import { createMatchImage } from "./match-report-image.ts";
+import { buildUnsupportedQueueMessage } from "./unsupported-queue-notice.ts";
 
 const logger = createLogger("postmatch-match-report-generator");
 
@@ -213,15 +214,11 @@ function unsupportedQueueMessage(
   logger.warn(
     `[generateMatchReport] Unsupported queue for ${matchId}: queueId=${classification.queueId.toString()} gameMode=${classification.gameMode} gameType=${classification.gameType ?? "unknown"}`,
   );
-  const aliases = playersInMatch.map((player) => player.alias).join(", ");
-  const embed = new EmbedBuilder()
-    .setTitle("Game type not supported yet")
-    .setDescription(
-      `${aliases} finished a game in a mode Scout does not recognise ` +
-        `(queue ${classification.queueId.toString()}, ${classification.gameMode}), ` +
-        `so no report was generated.`,
-    );
-  return { embeds: [embed] };
+  return buildUnsupportedQueueMessage({
+    aliases: playersInMatch.map((player) => player.alias),
+    queueId: classification.queueId,
+    gameMode: classification.gameMode,
+  });
 }
 
 /**

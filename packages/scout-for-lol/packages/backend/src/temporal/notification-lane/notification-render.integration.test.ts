@@ -72,6 +72,8 @@ const world = vi.hoisted(() => ({
   clashGuilds: new Set<string>(),
   renderedClash: new Array<boolean | undefined>(),
   renderDelayMs: 0,
+  /** When set, the observed match is in this queue instead of solo. */
+  unsupportedQueue: false,
   /** Each render produces different bytes, so a second PUT is observable. */
   nextImage: (): Uint8Array => new Uint8Array([137, 80, 78, 71, world.renders]),
 }));
@@ -83,9 +85,13 @@ vi.mock("#src/temporal/match/match-context.ts", () => ({
       riotMatchId,
       matchData: {
         metadata: { matchId: riotMatchId },
-        info: { queueId: 420, gameMode: "CLASSIC", gameType: "MATCHED_GAME" },
+        info: world.unsupportedQueue
+          ? { queueId: 9999, gameMode: "NEWMODE", gameType: "MATCHED_GAME" }
+          : { queueId: 420, gameMode: "CLASSIC", gameType: "MATCHED_GAME" },
       },
-      trackedPlayers: [],
+      trackedPlayers: world.unsupportedQueue
+        ? [{ alias: "jerred", league: { leagueAccount: { puuid: "p" } } }]
+        : [],
     }),
 }));
 vi.mock("#src/league/tasks/postmatch/match-report-generator.ts", () => ({
@@ -192,6 +198,7 @@ beforeEach(async () => {
   world.puts.length = 0;
   world.renders = 0;
   world.renderDelayMs = 0;
+  world.unsupportedQueue = false;
   world.guilds.clear();
   world.clashGuilds.clear();
   world.renderedClash.length = 0;
@@ -364,6 +371,27 @@ describe("render receipts are keyed by kind", () => {
       await renderNotificationArtifact({ stage: STAGE, intentKey: prematch }),
     ).toEqual({ outcome: "rendered" });
     expect(world.renders).toBe(2);
+  });
+
+  test("an unsupported queue attests the typed notice and renders no image", async () => {
+    world.unsupportedQueue = true;
+    const matchId = RiotMatchIdSchema.parse(nextMatch());
+    const intent = await seedIntent(matchId, "postmatch", "9407");
+
+    expect(
+      await renderNotificationArtifact({ stage: STAGE, intentKey: intent }),
+    ).toEqual({ outcome: "rendered" });
+
+    expect(world.renders).toBe(0);
+    expect(world.puts).toHaveLength(0);
+    expect(await readNotificationArtifact(matchId, "postmatch")).toEqual({
+      artifact: "unsupported-queue",
+      riotMatchId: matchId,
+      queueId: 9999,
+      gameMode: "NEWMODE",
+      gameType: "MATCHED_GAME",
+      players: ["jerred"],
+    });
   });
 
   test("a second child of the same kind reuses the standing artifact", async () => {

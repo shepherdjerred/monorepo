@@ -195,20 +195,20 @@ export async function mintPostmatchIntents(
   },
 ): Promise<MatchIntentsSummary> {
   const summary = emptySummary();
-  // The attested report artifact is an image report; a game Scout cannot
-  // classify has no report to attest, so no intent stands for it and nothing
-  // retries a render that cannot succeed.
+  // A game Scout cannot classify has no report to render, but it is not
+  // silent: its intents attest a typed unsupported-queue notice. The queue
+  // filter sees no queue type, and the intent keys are the report's own.
   const classification = classifyGame(args.queue);
   if (classification.kind === "unknown") {
     unsupportedQueueReportsTotal.inc();
     logger.warn(
-      `⚠️  No post-match intent for ${args.matchId}: unsupported queue ${args.queue.queueId.toString()} (${args.queue.gameMode})`,
+      `⚠️  Unsupported queue ${args.queue.queueId.toString()} (${args.queue.gameMode}) for ${args.matchId}; minting the unsupported-queue notice`,
     );
-    return summary;
   }
   const { deliverable } = await resolvePostmatchDeliveryChannels({
     puuids: [...args.puuids],
-    queueType: classification.queue,
+    queueType:
+      classification.kind === "queue" ? classification.queue : undefined,
   });
   const freshnessDeadline = postmatchReportFreshnessDeadline(args.gameCreation);
   for (const channel of deliverable) {

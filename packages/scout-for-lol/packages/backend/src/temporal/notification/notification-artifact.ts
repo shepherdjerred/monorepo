@@ -120,6 +120,18 @@ function describeEvidence(evidence: ScoutNotificationRenderEvidence): string {
     : `a ${evidence.artifact}`;
 }
 
+/** The text-only notice a post-match intent delivers for an unsupported queue. */
+export type ScoutAttestedUnsupportedQueueNotice = {
+  readonly evidence: Extract<
+    ScoutNotificationRenderEvidence,
+    { artifact: "unsupported-queue" }
+  >;
+};
+
+/** A post-match intent delivers a report, or the notice for an unsupported queue. */
+export type ScoutAttestedPostmatchArtifact =
+  ScoutAttestedReportArtifact | ScoutAttestedUnsupportedQueueNotice;
+
 /** The post-match report the render attested, bytes verified. */
 export type ScoutAttestedReportArtifact = {
   readonly image: Uint8Array;
@@ -203,17 +215,20 @@ async function readAttestedObject(
   return bytes;
 }
 
-export async function readAttestedReportArtifact(
+export async function readAttestedPostmatchArtifact(
   riotMatchId: RiotMatchId,
   abortSignal: AbortSignal,
-): Promise<ScoutAttestedReportArtifact> {
+): Promise<ScoutAttestedPostmatchArtifact> {
   const evidence = await requireRenderEvidence(riotMatchId, "postmatch");
+  if (evidence.artifact === "unsupported-queue") {
+    return { evidence };
+  }
   if (evidence.artifact !== "report") {
     throw new MalformedRenderReceiptError({
       riotMatchId,
       kind: "postmatch",
       evidence,
-      expected: "a report",
+      expected: "a report, or the notice for an unsupported queue",
     });
   }
   const image = await readAttestedObject(

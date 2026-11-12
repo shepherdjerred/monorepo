@@ -1,6 +1,7 @@
 import type * as DatabaseModule from "#src/database/index.ts";
 import {
   deliveryIntentKey,
+  postmatchDeliveryKeyPrefix,
   prematchDeliveryKeyPrefix,
 } from "#src/durable/match/delivery-intents.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
@@ -77,11 +78,26 @@ async function observe(
   });
 }
 
-function mint(matchId: RiotMatchId) {
+const UNKNOWN_QUEUE = {
+  queueId: 9999,
+  gameMode: "NEWMODE",
+  gameType: "MATCHED_GAME",
+};
+
+const SOLO_QUEUE = {
+  queueId: 420,
+  gameMode: "CLASSIC",
+  gameType: "MATCHED_GAME",
+};
+
+function mint(
+  matchId: RiotMatchId,
+  queue: { queueId: number; gameMode: string; gameType: string } = SOLO_QUEUE,
+) {
   return mintPostmatchIntents(prisma, {
     matchId: matchId,
     puuids: [],
-    queue: { queueId: 420, gameMode: "CLASSIC", gameType: "MATCHED_GAME" },
+    queue,
     gameCreation: GAME_CREATED_AT,
     createdAt: new Date("2026-09-19T09:35:00.000Z"),
   });
@@ -97,10 +113,16 @@ afterAll(async () => {
 });
 
 describe("what a post-match match mints", () => {
-  test("mints the report for a live match", async () => {
+  test.each([
+    { name: "the report for a live match", queue: SOLO_QUEUE },
+    {
+      name: "one intent per channel for an unsupported queue",
+      queue: UNKNOWN_QUEUE,
+    },
+  ])("mints $name, under the report's own key", async ({ queue }) => {
     await observe(MATCH, "live");
 
-    expect(await mint(MATCH)).toEqual({
+    expect(await mint(MATCH, queue)).toEqual({
       minted: 1,
       existing: 0,
       conflicts: 0,
@@ -112,6 +134,17 @@ describe("what a post-match match mints", () => {
     expect(intents[0]?.intent.kind).toBe("postmatch");
     expect(intents[0]?.intent.origin).toEqual({ kind: "live" });
     expect(intents[0]?.intent.state).toEqual({ kind: "pending" });
+    expect(intents[0]?.intent.key).toBe(
+      deliveryIntentKey(
+        postmatchDeliveryKeyPrefix(MATCH),
+        DiscordChannelIdSchema.parse(CHANNEL),
+      ),
+    );
+    // Idempotent: a retry finds the standing row.
+    expect(await mint(MATCH, queue)).toMatchObject({ minted: 0, existing: 1 });
+    expect(await listIntentsForMatch(prisma, { matchId: MATCH })).toHaveLength(
+      1,
+    );
   });
 
   test("mints NOTHING for a silent-backfill match", async () => {
