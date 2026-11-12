@@ -260,16 +260,6 @@ export class RateLimiter {
     );
   }
 
-  private async waitForCooldown(route: string, method: string): Promise<void> {
-    let remainingMilliseconds =
-      this.cooldownDeadline(route, method) - this.runtime.now();
-    while (remainingMilliseconds > 0) {
-      await this.runtime.sleep(remainingMilliseconds);
-      remainingMilliseconds =
-        this.cooldownDeadline(route, method) - this.runtime.now();
-    }
-  }
-
   private extendCooldown(key: string, response: Response): void {
     const delayMilliseconds =
       retryAfterMilliseconds(response) + this.runtime.random() * 200;
@@ -283,7 +273,7 @@ export class RateLimiter {
   }
 
   /**
-   * Waits out cooldowns, then asks the ledger, and returns holding a slot. In
+   * Releases the slot while a cooldown runs, then asks the ledger, and returns holding a slot. In
    * `observe` mode a refusal is only recorded; in `enforce` mode it releases
    * the slot for the ledger's wait and queues again.
    */
@@ -293,7 +283,15 @@ export class RateLimiter {
     priority: RiotPriority,
   ): Promise<void> {
     for (;;) {
-      await this.waitForCooldown(route, method);
+      const cooldownMilliseconds =
+        this.cooldownDeadline(route, method) - this.runtime.now();
+      if (cooldownMilliseconds > 0) {
+        // Never sleep holding a slot: a cooling scope would starve others.
+        this.release();
+        await this.runtime.sleep(cooldownMilliseconds);
+        await this.acquire(priority);
+        continue;
+      }
       const decision = this.ledger.admit({ route, method, priority });
       if (decision.ok) {
         riotApiLimiterDecisionsTotal.inc({

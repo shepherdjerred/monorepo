@@ -186,7 +186,7 @@ describe("RateLimiter retries", () => {
       return new Response("ok");
     });
 
-    await vi.waitFor(() => expect(clock.pendingSleeps()).toBe(1));
+    await vi.waitFor(() => expect(clock.pendingSleeps()).toBe(2));
     expect(queuedCalls).toBe(0);
     clock.advanceTo(1000);
     await Promise.all([first, queued]);
@@ -734,6 +734,39 @@ describe("RateLimiter scoped cooldowns", () => {
     clock.advanceTo(2000);
     await Promise.all([first, sameMethod]);
     expect(calls).toEqual(["americas-list", "americas-match"]);
+  });
+
+  test("requests waiting on a cooldown do not hold slots other scopes need", async () => {
+    const clock = createManualRuntime();
+    const limiter = new RateLimiter(
+      { concurrency: 2, maxRetries: 1 },
+      clock.runtime,
+    );
+    let limitedCalls = 0;
+    const first = limiter.execute(AMERICAS_MATCH, async () => {
+      limitedCalls += 1;
+      return limitedCalls === 1
+        ? rateLimited("method", "5")
+        : new Response("ok");
+    });
+    await vi.waitFor(() => expect(clock.pendingSleeps()).toBe(1));
+
+    const blocked = [1, 2, 3].map((id) =>
+      limiter.execute(
+        `https://americas.api.riotgames.com/lol/match/v5/matches/NA1_${id.toString()}`,
+        () => Promise.resolve(new Response("ok")),
+      ),
+    );
+    let unrelatedRan = false;
+    const unrelated = limiter.execute(AMERICAS_LIST, () => {
+      unrelatedRan = true;
+      return Promise.resolve(new Response("ok"));
+    });
+    await unrelated;
+    expect(unrelatedRan).toBe(true);
+
+    clock.advanceTo(6000);
+    await Promise.all([first, ...blocked]);
   });
 
   test("a service 429 backs off exponentially without cooling anything down", async () => {
