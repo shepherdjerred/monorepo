@@ -28,6 +28,45 @@ The workspace has three crates:
 - `scout-client-app`: the `egui` shell, tray, and `scout-client` binary, which
   drive the runtime through `ClientRuntime`.
 
+### Runtime layout
+
+`ClientRuntime` (`scout-client-runtime/src/runtime.rs`) owns the collector
+thread and the command channel. The collector is split by concern under
+`runtime/`:
+
+- `collector`: the two-second tick loop and its `ObservationTickContext`.
+- `pairing`: `handle_command`, `poll_pairing`, and `disconnect`.
+- `upload`: `upload_pending` and `apply_observation_receipt`.
+- `gameflow`: one gameflow pass (`collect_once`, `collect_match_state`) and the
+  lobby binding it carries.
+- `profile`, `history`, `clash`, `collection`: the independent, budgeted
+  workers and the schedule that drives them.
+- `replay`: replay scanning, offers, and upload.
+- `observe`: `ObservationSlot` and the `enqueue_*` functions that turn endpoint
+  reads into outbox entries.
+- `state`: `RuntimeState`, `GameflowPhase`, and the helpers that publish them.
+- `paths`: the data directory, outbox file names, and log directory.
+
+Tests live beside the code they cover.
+
+### Published state
+
+The collector publishes through `tokio::sync::watch` channels, not a lock the UI
+polls. `ClientRuntime::state()` returns a `watch::Receiver<RuntimeState>` holding
+the latest snapshot; `egui` reads it with `borrow()` each frame.
+`ClientRuntime::gameflow_phase()` returns a `watch::Receiver<GameflowPhase>`
+that wakes only when the phase changes, for a future overlay or coach. A League
+label this build does not know arrives as `GameflowPhase::Unrecognized`, and
+`Disconnected` means no signed-in League client.
+
+### Single instance
+
+`InstanceLock::acquire` takes an exclusive lock on `scout-client.lock` in the
+per-user data directory (the one holding the outbox) before the collector
+starts. A second launch prints that Scout Client is already running and exits
+with status 2. The operating system drops the lock when its holder exits, so a
+crash never leaves a stale lock. The crash relaunch releases it first.
+
 Preview packages target `https://beta.scout-for-lol.com`, where the ingestion
 flag is rolled out. Use `--server=http://127.0.0.1:<port>` for a local backend;
 an explicit server is also retained in start-at-login registration. Remote
