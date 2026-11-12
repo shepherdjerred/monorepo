@@ -31,14 +31,18 @@ type ContainerSpec = FirstPartyContainerSpec<"volumeMounts">;
 /** A container that runs to completion before the server starts. */
 export type FirstPartyInitContainer = ContainerSpec & { name: string };
 
+/** A container that runs beside the server and states its own probes. */
+export type FirstPartySidecarContainer = ContainerSpec & { name: string };
+
 /**
- * The server container. Its name, `http` port and kubelet probes come from the
- * service's `name`, `port` and `probes`.
+ * The server container. Its `http` port and kubelet probes come from the
+ * service's `port` and `probes`, and its name is the service's `name` unless
+ * it states another.
  */
 export type FirstPartyServerContainer = Omit<
   ContainerSpec,
   "name" | "ports" | "startup" | "liveness" | "readiness"
->;
+> & { name?: string };
 
 /**
  * A tailnet hostname. `id` is the `TailscaleIngress` construct id, which seeds
@@ -49,8 +53,8 @@ export type FirstPartyTailscaleHost = { id: string; host: string };
 export type FirstPartyWebServiceProps = {
   /**
    * The application name: the Deployment's construct id, the server
-   * container's name, the `app` pod and Service label, and the ServiceMonitor's
-   * name.
+   * container's default name, the `app` pod and Service label, and the
+   * ServiceMonitor's name.
    */
   name: string;
   /** The port the server listens on, exposed as `http`. */
@@ -65,12 +69,16 @@ export type FirstPartyWebServiceProps = {
   containers: () => {
     init?: FirstPartyInitContainer[];
     server: FirstPartyServerContainer;
+    /** Containers after the server, in order. */
+    sidecars?: FirstPartySidecarContainer[];
   };
   /**
-   * Deployment settings beyond the single replica and the `app` pod label:
-   * metadata labels, strategy, pod security context, service account.
+   * Deployment settings beyond the single replica: metadata labels, strategy,
+   * pod security context, service account. `podMetadata` replaces the `app`
+   * pod label, for a service whose pods carry more labels or, from before
+   * this construct, none; without that label no policy can select the app.
    */
-  deployment?: Omit<DeploymentProps, "replicas" | "podMetadata" | "containers">;
+  deployment?: Omit<DeploymentProps, "replicas" | "containers">;
   /** ReplicaSets kept for rollback. Defaults to three. */
   revisionHistoryLimit?: number;
   /**
@@ -78,6 +86,11 @@ export type FirstPartyWebServiceProps = {
    * `/tmp`. `id` is the claim's name.
    */
   data?: { id: string; storage: Size; path: string };
+  /**
+   * `false` leaves out the emptyDir at `/tmp`, for a service whose root
+   * filesystem is writable.
+   */
+  tmp?: false;
   /** An explicit Service name; without it cdk8s derives `<chart>-<name>-service`. */
   serviceName?: string;
   /**
@@ -102,8 +115,8 @@ export type FirstPartyWebServiceProps = {
  * Service and ServiceMonitor, the hosts it is reached on, and the
  * NetworkPolicies around it.
  *
- * Every container gets a writable emptyDir at `/tmp`, since the root
- * filesystem is read-only. Leave out `tailscale` and `cloudflare` for a
+ * Every container gets a writable emptyDir at `/tmp` unless `tmp` is `false`,
+ * since the root filesystem is read-only. Leave out `tailscale` and `cloudflare` for a
  * service only other workloads call.
  *
  * Resources are created in the given scope, not under this construct, so their
@@ -127,9 +140,9 @@ export class FirstPartyWebService extends Construct {
     const labels = { app: name };
 
     this.deployment = new Deployment(scope, name, {
+      podMetadata: { labels },
       ...props.deployment,
       replicas: 1,
-      podMetadata: { labels },
     });
 
     const containers = props.containers();
@@ -148,10 +161,11 @@ export class FirstPartyWebService extends Construct {
         ),
       });
     }
-    volumeMounts.push({
-      path: "/tmp",
-      volume: Volume.fromEmptyDir(scope, `${name}-tmp`, "tmp"),
-    });
+    if (props.tmp !== false)
+      volumeMounts.push({
+        path: "/tmp",
+        volume: Volume.fromEmptyDir(scope, `${name}-tmp`, "tmp"),
+      });
 
     for (const init of containers.init ?? []) {
       this.deployment.addInitContainer(
@@ -162,12 +176,21 @@ export class FirstPartyWebService extends Construct {
       withCommonProps({
         ...containers.server,
         resources: containers.server.resources,
-        name,
+        name: containers.server.name ?? name,
         ports: [{ name: "http", number: port }],
         ...httpProbes(port, props.probes),
         volumeMounts,
       }),
     );
+    for (const sidecar of containers.sidecars ?? []) {
+      this.deployment.addContainer(
+        withCommonProps({
+          ...sidecar,
+          resources: sidecar.resources,
+          volumeMounts,
+        }),
+      );
+    }
     setRevisionHistoryLimit(this.deployment, props.revisionHistoryLimit);
 
     this.service = new Service(scope, `${name}-service`, {
@@ -202,10 +225,13 @@ export class FirstPartyWebService extends Construct {
       });
     }
 
+    const { podMetadata } = props.deployment ?? {};
+    const podsCarryApp =
+      podMetadata === undefined || podMetadata.labels?.["app"] === name;
     this.policies = createFirstPartyNetworkPolicies(
       scope,
       props.policies,
-      labels,
+      podsCarryApp ? labels : undefined,
     );
   }
 }
