@@ -53,6 +53,14 @@ Group by `core_items` for the most common completed builds, with games and win r
 
 Group by `spells`. One pair usually dominates; give it with its share of games.
 
+### Against a specific opponent
+
+When the user names a matchup ("build for Warwick into Vayne"), is in a live lobby, or asks what to build against a team, condition on it instead of giving the generic page:
+
+- Scout's build queries cannot split by the enemy champion in a game, so do not present a generic build as matchup-tested, and do not claim a win rate "into" a champion. Give the overall build, then adapt it to the named opponent with the situational swaps below.
+- Where item choice turns on the enemy — anti-heal into healing, armor or magic resist into a one-damage-type team, tenacity into heavy crowd control — name the situational swap and what triggers it, from lookup_item facts, after the core build. One or two swaps, not a second build.
+- In a live game, use the current-opponent tools for the actual enemy before recommending; a recommendation for a game already being played is about that game, not the average one.
+
 ### Presenting it
 
-Lead with the recommended page and core items, then the evidence in one sentence: patches, games, win rate. Offer the runner-up only when it is close or has a higher win rate on a real sample. Never present a final inventory as a build path; say the order is not recorded unless a loadout card or timeline shows it.
+Lead with the recommended page and core items, then the evidence in one sentence: patches, games, win rate. Scout's games are the servers it tracks and their opponents, not the whole ladder: when the sample behind a recommendation is small (under roughly 50 games), say plainly that this is what Scout's players build on few games and may differ from the wider meta, rather than letting a thin sample read as settled best practice. Offer the runner-up only when it is close or has a higher win rate on a real sample. Never present a final inventory as a build path; say the order is not recorded unless a loadout card or timeline shows it.
