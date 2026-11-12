@@ -125,11 +125,13 @@ function recordTurnFailure(error: unknown): void {
     scoutExploreInvalidCardSelectionsTotal.inc({ card_type: error.cardType });
     return;
   }
-  if (error instanceof ExploreBudgetError) {
-    // A configured spend or input limit refused the turn; the user is shown
-    // the limit message. An expected product limit, not a Scout fault.
-    logger.warn("Explore turn refused by a budget limit", error.reason);
-    scoutExploreBudgetRejectionsTotal.inc({ reason: error.reason });
+  const budget = budgetErrorOf(error);
+  if (budget !== null) {
+    // A configured spend or input limit refused the turn (possibly wrapped by
+    // the SDK); the user is shown the limit message. An expected product
+    // limit, not a Scout fault.
+    logger.warn("Explore turn refused by a budget limit", budget.reason);
+    scoutExploreBudgetRejectionsTotal.inc({ reason: budget.reason });
     return;
   }
   logger.error("Explore turn failed mid-stream", errorMessage(error));
