@@ -1,0 +1,89 @@
+{
+  "locals": {
+    "r2_s3_credential_fields": {
+      "s3-access-key-id": "CLOUDFLARE_R2_ACCESS_KEY_ID",
+      "s3-secret-access-key": "CLOUDFLARE_R2_SECRET_ACCESS_KEY"
+    },
+    "r2_s3_credential_handoffs": "${merge([for name, token in cloudflare_api_token.managed : { for unit, field in local.r2_s3_credential_fields : \"${name}.${unit}\" => { value = unit == \"s3-access-key-id\" ? token.id : sha256(token.value), supersedes_id = null, vault_item_id = var.cloudflare_api_tokens[name].vault_item_id, vault_field = field, vault_json_path = null } } if var.cloudflare_api_tokens[name].s3_credential]...)}"
+  },
+  "moved": [
+    {
+      "from": "cloudflare_api_token.managed[\"buildkite\"]",
+      "to": "cloudflare_api_token.managed[\"woodpecker\"]"
+    }
+  ],
+  "output": {
+    "cloudflare_api_token_handoffs": {
+      "description": "Generated Cloudflare tokens and their existing 1Password rotation units",
+      "sensitive": true,
+      "value": "${merge({ for name, token in cloudflare_api_token.managed : name => { api_token = token.value, supersedes_id = var.cloudflare_api_tokens[name].supersedes_id, vault_item_id = var.cloudflare_api_tokens[name].vault_item_id, vault_field = var.cloudflare_api_tokens[name].vault_field, vault_json_path = try(var.cloudflare_api_tokens[name].vault_json_path, null) } }, local.r2_s3_credential_handoffs)}"
+    }
+  },
+  "provider": { "cloudflare": [{}] },
+  "resource": {
+    "cloudflare_api_token": {
+      "managed": {
+        "condition": "${try(each.value.condition, null)}",
+        "expires_on": "${try(each.value.expires_on, null)}",
+        "for_each": "${{ for name, token in var.cloudflare_api_tokens : name => token if token.managed }}",
+        "name": "${each.value.name}",
+        "not_before": "${try(each.value.not_before, null)}",
+        "policies": "${[for policy in each.value.policies : { effect = policy.effect, permission_groups = [for permission_group in policy.permission_groups : { id = permission_group.id }], resources = jsonencode(policy.resources) }]}",
+        "status": "${try(each.value.status, null)}"
+      }
+    }
+  },
+  "terraform": {
+    "backend": {
+      "s3": {
+        "bucket": "homelab-tofu-state",
+        "endpoints": { "s3": "https://seaweedfs-s3.tailnet-1a49.ts.net" },
+        "key": "cloudflare-tokens/terraform.tfstate",
+        "region": "auto",
+        "skip_credentials_validation": true,
+        "skip_metadata_api_check": true,
+        "skip_region_validation": true,
+        "skip_requesting_account_id": true,
+        "skip_s3_checksum": true,
+        "use_lockfile": true,
+        "use_path_style": true
+      }
+    },
+    "encryption": {
+      "key_provider": {
+        "pbkdf2": {
+          "state": { "passphrase": "${var.tofu_state_encryption_passphrase}" }
+        }
+      },
+      "method": {
+        "aes_gcm": { "encrypted": { "keys": "${key_provider.pbkdf2.state}" } }
+      },
+      "plan": { "enforced": true, "method": "method.aes_gcm.encrypted" },
+      "state": { "enforced": true, "method": "method.aes_gcm.encrypted" }
+    },
+    "required_providers": {
+      "cloudflare": {
+        "source": "cloudflare/cloudflare",
+        "version": "~> 5.27.0"
+      }
+    },
+    "required_version": ">= 1.11.0"
+  },
+  "variable": {
+    "cloudflare_api_tokens": {
+      "description": "Scoped Cloudflare child tokens and their existing rotation units",
+      "type": "map(object({ managed = optional(bool, true), supersedes_id = optional(string), name = string, policies = list(object({ effect = string, permission_groups = list(object({ id = string, name = string })), resources = map(string) })), condition = optional(object({ request_ip = optional(object({ in = optional(list(string)), not_in = optional(list(string)) })) })), expires_on = optional(string), not_before = optional(string), status = optional(string), vault_item_id = string, vault_field = string, vault_json_path = optional(string), s3_credential = optional(bool, false) }))"
+    },
+    "tofu_state_encryption_passphrase": {
+      "description": "OpenTofu state and plan encryption passphrase from 1Password",
+      "sensitive": true,
+      "type": "string",
+      "validation": [
+        {
+          "condition": "${(length(var.tofu_state_encryption_passphrase) >= 16)}",
+          "error_message": "The OpenTofu state encryption passphrase must be at least 16 characters."
+        }
+      ]
+    }
+  }
+}
