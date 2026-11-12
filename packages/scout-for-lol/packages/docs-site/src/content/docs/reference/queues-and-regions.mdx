@@ -48,6 +48,10 @@ from normal `CLASSIC` matches, so ordinary Summoner's Rift games continue to
 use normal champion IDs and assets. Classic ARAM Mayhem uses `KIWI_JADE` when
 that limited-time queue is active.
 
+:::note[Scout Desktop Client requirement]
+Pre-match notifications work automatically via Riot's Spectator API for all modes. However, because Riot's Match-V5 API does not publish post-game data for League Classic (`JADE`), ARAM Mayhem, or Custom games, post-match scoreboard recaps for these modes require at least one player in the game to run the paired **Scout Desktop Client** (`scout-client-app`).
+:::
+
 :::caution
 A match whose queue Scout does not yet recognize does **not** pass a queue
 filter. When Riot adds a new queue, filtered subscriptions skip it until Scout
