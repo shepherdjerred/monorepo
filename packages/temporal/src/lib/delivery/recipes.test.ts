@@ -112,4 +112,22 @@ describe("reviewed isolated deployment Job recipes", () => {
       'DELIVERY_ARCHIVE_READER_SECRET_ACCESS_KEY="',
     );
   });
+  test("the bootstrap discards the previous Job's extracted stack before extracting", () => {
+    // The stage claim is persistent. A stack whose files were renamed or
+    // removed (HCL replaced by a synthesized main.tf.json) must not inherit
+    // the earlier archive's members, or OpenTofu loads both configurations.
+    const discard = DELIVERY_JOB_BOOTSTRAP.split("\n").find(
+      (line) =>
+        line.startsWith("rm -rf ") &&
+        line.split(" ").includes("/workspace/stack"),
+    );
+    if (discard === undefined)
+      throw new Error("The bootstrap keeps the previous stack archive");
+    expect(DELIVERY_JOB_BOOTSTRAP.indexOf(discard)).toBeLessThan(
+      DELIVERY_JOB_BOOTSTRAP.indexOf(
+        "tar -xf /workspace/tmp/stack-archive.tar -C /workspace/stack",
+      ),
+    );
+    expect(DELIVERY_JOB_BOOTSTRAP).toContain("mkdir -p /workspace/stack");
+  });
 });

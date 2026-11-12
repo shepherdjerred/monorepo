@@ -369,9 +369,11 @@ describe("persistent stage workspace", () => {
     // repository goes before the fetch, so the claim keeps one revision's
     // objects. The checkout is forced over the previous tree, then everything
     // untracked except node_modules is removed before the revision check.
-    expect(at("rm -rf /workspace/tmp /workspace/bin /workspace/buildx")).toBe(
-      at("flock 9") + 1,
-    );
+    expect(
+      at(
+        "rm -rf /workspace/tmp /workspace/bin /workspace/buildx /workspace/stack",
+      ),
+    ).toBe(at("flock 9") + 1);
     expect(at("git init -q /workspace/source")).toBe(
       at("rm -rf /workspace/source/.git") + 1,
     );
@@ -445,8 +447,9 @@ describe("persistent stage workspace", () => {
   it("adopts a Job created with a previous reviewed bootstrap and nothing else", () => {
     // The exact bootstraps that created Jobs before: the fresh emptyDir
     // workspace, then linked toolchains with no test or stack-archive step,
-    // then the copied toolchain. A changed digest means a retained Job could
-    // no longer be adopted.
+    // then the copied toolchain, then the repository that kept every fetched
+    // revision, then the stack archive extracted over the previous one. A
+    // changed digest means a retained Job could no longer be adopted.
     expect(
       PREVIOUS_DELIVERY_JOB_BOOTSTRAPS.map((script) =>
         createHash("sha256").update(script).digest("hex"),
@@ -456,6 +459,7 @@ describe("persistent stage workspace", () => {
       "011b625607e3c62d719e77b388dd7f80414dac3f609f317c8c7285738b9ff9a2",
       "a5c909be28ebe8674710740bf59914338db047cb7831571023c3be7ddb9c7c15",
       "3fd9e4b9b8d049d2c56fabbf38f78eff2f10eeebfccd8419e97f98bcd85cb40a",
+      "99e8cdfb302e6f2eb709ae86fd55b1bfd396008f6bb54186de14ae7b4f9920cd",
     ]);
     for (const recipe of [
       "worker-images",
