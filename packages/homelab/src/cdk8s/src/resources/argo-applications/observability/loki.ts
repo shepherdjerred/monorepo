@@ -1,13 +1,12 @@
 import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
-import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
 import { CI_NODE_TOLERATION } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
 import { ConfigMap } from "cdk8s-plus-31";
-import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
+import { helmApplication } from "@shepherdjerred/homelab/cdk8s/src/misc/argo/application.ts";
 
 // Loki alerting rules for Kubernetes events
 // Note: Go template syntax escaped for Helm compatibility ({{ "{{" }} ... {{ "}}" }})
@@ -450,47 +449,34 @@ export function createLokiApp(chart: Chart) {
     },
   };
 
-  return new Application(chart, "loki-app", {
-    metadata: {
-      name: "loki",
-    },
-    spec: {
-      revisionHistoryLimit: 5,
-      project: applicationProject("loki"),
-      source: {
-        // https://github.com/grafana/loki/tree/main/production/helm/loki
-        repoUrl: "https://grafana.github.io/helm-charts",
-        targetRevision: versions.loki,
-        chart: "loki",
-        helm: {
-          valuesObject: lokiValues,
-        },
-      },
-      destination: {
-        server: "https://kubernetes.default.svc",
+  return helmApplication(chart, {
+    name: "loki",
+    namespace: "loki",
+    chart: "loki",
+    // https://github.com/grafana/loki/tree/main/production/helm/loki
+    repoUrl: "https://grafana.github.io/helm-charts",
+    targetRevision: versions.loki,
+    valuesObject: lokiValues,
+    // StatefulSet volume-claim templates are immutable after creation, and
+    // Kubernetes defaults fields inside the live template. PVC backup labels
+    // are enforced on the created claims by the cluster-wide admission
+    // policy. Keep ArgoCD from comparing or patching this immutable field.
+    ignoreDifferences: [
+      {
+        group: "apps",
+        kind: "StatefulSet",
+        name: "loki",
         namespace: "loki",
+        jsonPointers: ["/spec/volumeClaimTemplates"],
       },
-      // StatefulSet volume-claim templates are immutable after creation, and
-      // Kubernetes defaults fields inside the live template. PVC backup labels
-      // are enforced on the created claims by the cluster-wide admission
-      // policy. Keep ArgoCD from comparing or patching this immutable field.
-      ignoreDifferences: [
-        {
-          group: "apps",
-          kind: "StatefulSet",
-          name: "loki",
-          namespace: "loki",
-          jsonPointers: ["/spec/volumeClaimTemplates"],
-        },
+    ],
+    syncPolicy: {
+      automated: { enabled: true },
+      syncOptions: [
+        "CreateNamespace=true",
+        "ServerSideApply=true",
+        "RespectIgnoreDifferences=true",
       ],
-      syncPolicy: {
-        automated: { enabled: true },
-        syncOptions: [
-          "CreateNamespace=true",
-          "ServerSideApply=true",
-          "RespectIgnoreDifferences=true",
-        ],
-      },
     },
   });
 }

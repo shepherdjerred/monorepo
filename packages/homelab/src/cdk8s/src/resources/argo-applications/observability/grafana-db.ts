@@ -1,27 +1,12 @@
 import type { Chart } from "cdk8s";
-import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
-import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
+import { createFirstPartyApplication } from "@shepherdjerred/homelab/cdk8s/src/misc/argo/application.ts";
 
 export function createGrafanaDbApp(chart: Chart) {
-  return new Application(chart, "grafana-db-app", {
-    metadata: {
-      name: "grafana-db",
-    },
-    spec: {
-      revisionHistoryLimit: 5,
-      project: applicationProject("grafana-db"),
-      source: {
-        repoUrl: "https://chartmuseum.tailnet-1a49.ts.net",
-        targetRevision: "~2.0.0-0",
-        chart: "grafana-db",
-      },
-      destination: {
-        server: "https://kubernetes.default.svc",
-        namespace: "prometheus",
-      },
-      syncPolicy: {
-        automated: { enabled: true },
-      },
+  return createFirstPartyApplication(chart, {
+    name: "grafana-db",
+    namespace: "prometheus",
+    syncPolicy: {
+      automated: { enabled: true },
     },
   });
 }

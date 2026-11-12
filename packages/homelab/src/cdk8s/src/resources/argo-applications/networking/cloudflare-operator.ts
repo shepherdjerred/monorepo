@@ -1,10 +1,9 @@
 import type { Chart } from "cdk8s";
-import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { CLOUDFLARE_TUNNEL_SECRET_NAME } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
-import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
+import { argoApplication } from "@shepherdjerred/homelab/cdk8s/src/misc/argo/application.ts";
 
 // 1Password item path for Cloudflare API token
 const CLOUDFLARE_TUNNEL_1PASSWORD_ITEM_PATH = vaultItemPath(
@@ -32,26 +31,17 @@ export function createCloudflareOperatorResources(chart: Chart): void {
 export function createCloudflareOperatorApp(chart: Chart) {
   createCloudflareOperatorResources(chart);
 
-  return new Application(chart, "cloudflare-operator-app", {
-    metadata: {
-      name: "cloudflare-operator",
+  return argoApplication(chart, {
+    name: "cloudflare-operator",
+    namespace: "cloudflare-operator-system",
+    source: {
+      // https://github.com/adyanth/cloudflare-operator
+      repoUrl: "https://github.com/adyanth/cloudflare-operator.git",
+      targetRevision: versions["adyanth/cloudflare-operator"],
+      path: "config/default",
     },
-    spec: {
-      revisionHistoryLimit: 5,
-      project: applicationProject("cloudflare-operator"),
-      source: {
-        // https://github.com/adyanth/cloudflare-operator
-        repoUrl: "https://github.com/adyanth/cloudflare-operator.git",
-        targetRevision: versions["adyanth/cloudflare-operator"],
-        path: "config/default",
-      },
-      destination: {
-        server: "https://kubernetes.default.svc",
-        namespace: "cloudflare-operator-system",
-      },
-      syncPolicy: {
-        automated: { enabled: true },
-      },
+    syncPolicy: {
+      automated: { enabled: true },
     },
   });
 }

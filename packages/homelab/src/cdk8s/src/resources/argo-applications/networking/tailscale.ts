@@ -1,10 +1,9 @@
 import { ApiObject, type Chart } from "cdk8s";
-import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
 import type { TailscaleProxyClass } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
-import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
 import { onePasswordSecret } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
+import { helmApplication } from "@shepherdjerred/homelab/cdk8s/src/misc/argo/application.ts";
 
 // Memory requests follow each class's measured p95 proxy working set (7d,
 // 2026-10-31): standard 25-48Mi (most ~28Mi), medium 25-51Mi, heavy 70-123Mi.
@@ -64,27 +63,16 @@ export function createTailscaleApp(chart: Chart) {
     proxyConfig: { defaultProxyClass: "standard" },
   };
 
-  return new Application(chart, "tailscale-app", {
-    metadata: {
-      name: "tailscale",
-    },
-    spec: {
-      revisionHistoryLimit: 5,
-      project: applicationProject("tailscale"),
-      source: {
-        repoUrl: "https://pkgs.tailscale.com/helmcharts",
-        chart: "tailscale-operator",
-        targetRevision: versions["tailscale-operator"],
-        helm: { valuesObject: tailscaleValues },
-      },
-      destination: {
-        server: "https://kubernetes.default.svc",
-        namespace: "tailscale",
-      },
-      syncPolicy: {
-        automated: { enabled: true },
-        syncOptions: ["CreateNamespace=true"],
-      },
+  return helmApplication(chart, {
+    name: "tailscale",
+    namespace: "tailscale",
+    chart: "tailscale-operator",
+    repoUrl: "https://pkgs.tailscale.com/helmcharts",
+    targetRevision: versions["tailscale-operator"],
+    valuesObject: tailscaleValues,
+    syncPolicy: {
+      automated: { enabled: true },
+      syncOptions: ["CreateNamespace=true"],
     },
   });
 }

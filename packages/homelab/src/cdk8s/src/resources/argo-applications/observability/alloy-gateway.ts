@@ -1,12 +1,11 @@
 import type { Chart } from "cdk8s";
-import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { Namespace } from "cdk8s-plus-31";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
-import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
+import { helmApplication } from "@shepherdjerred/homelab/cdk8s/src/misc/argo/application.ts";
 
 // Phoenix ingests whole LLM traces per project; the project is selected by
 // the x-project-name header on the exporter, and projects are created
@@ -424,32 +423,19 @@ export function createAlloyGatewayApp(chart: Chart) {
     },
   };
 
-  return new Application(chart, "alloy-gateway-app", {
-    metadata: {
-      name: "alloy-gateway",
-    },
-    spec: {
-      revisionHistoryLimit: 5,
-      project: applicationProject("alloy-gateway"),
-      source: {
-        // https://github.com/grafana/alloy/tree/main/operations/helm/charts/alloy
-        repoUrl: "https://grafana.github.io/helm-charts",
-        targetRevision: versions.alloy,
-        chart: "alloy",
-        helm: {
-          valuesObject: alloyGatewayValues,
-        },
-      },
-      destination: {
-        server: "https://kubernetes.default.svc",
-        namespace: "alloy-gateway",
-      },
-      syncPolicy: {
-        // selfHeal per the tempo.ts precedent: renderer/Helm-version drift
-        // under a fixed chart revision must re-converge without operator action.
-        automated: { enabled: true, selfHeal: true },
-        syncOptions: ["CreateNamespace=true", "ServerSideApply=true"],
-      },
+  return helmApplication(chart, {
+    name: "alloy-gateway",
+    namespace: "alloy-gateway",
+    chart: "alloy",
+    // https://github.com/grafana/alloy/tree/main/operations/helm/charts/alloy
+    repoUrl: "https://grafana.github.io/helm-charts",
+    targetRevision: versions.alloy,
+    valuesObject: alloyGatewayValues,
+    syncPolicy: {
+      // selfHeal per the tempo.ts precedent: renderer/Helm-version drift
+      // under a fixed chart revision must re-converge without operator action.
+      automated: { enabled: true, selfHeal: true },
+      syncOptions: ["CreateNamespace=true", "ServerSideApply=true"],
     },
   });
 }

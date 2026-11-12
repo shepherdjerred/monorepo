@@ -1,7 +1,6 @@
 import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
-import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { Schedule } from "@shepherdjerred/homelab/cdk8s/generated/imports/velero.io.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
@@ -10,7 +9,7 @@ import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { VELERO_SCHEDULES } from "@shepherdjerred/homelab/cdk8s/src/resources/velero/velero-schedules.ts";
 import { backupMonitoringAnnotations } from "@shepherdjerred/ops-model/backup-policy.ts";
-import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
+import { helmApplication } from "@shepherdjerred/homelab/cdk8s/src/misc/argo/application.ts";
 
 /**
  * The `backblaze-velero` item (OpenTofu `backblaze` stack): a key scoped to
@@ -247,35 +246,24 @@ export function createVeleroApp(chart: Chart) {
     ],
   };
 
-  return new Application(chart, "velero-app", {
-    metadata: {
-      name: "velero",
+  return helmApplication(chart, {
+    name: "velero",
+    namespace: "velero",
+    chart: "velero",
+    // https://vmware-tanzu.github.io/helm-charts/
+    repoUrl: "https://vmware-tanzu.github.io/helm-charts",
+    targetRevision: versions.velero,
+    valuesObject: veleroValues,
+    helm: {
+      releaseName: "velero",
     },
-    spec: {
-      revisionHistoryLimit: 5,
-      project: applicationProject("velero"),
-      source: {
-        // https://vmware-tanzu.github.io/helm-charts/
-        repoUrl: "https://vmware-tanzu.github.io/helm-charts",
-        chart: "velero",
-        targetRevision: versions.velero,
-        helm: {
-          releaseName: "velero",
-          valuesObject: veleroValues,
-        },
+    syncPolicy: {
+      automated: {
+        enabled: true,
+        prune: true,
+        selfHeal: true,
       },
-      destination: {
-        server: "https://kubernetes.default.svc",
-        namespace: "velero",
-      },
-      syncPolicy: {
-        automated: {
-          enabled: true,
-          prune: true,
-          selfHeal: true,
-        },
-        syncOptions: ["CreateNamespace=true"],
-      },
+      syncOptions: ["CreateNamespace=true"],
     },
   });
 }

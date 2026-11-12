@@ -1,9 +1,8 @@
 import type { Chart } from "cdk8s";
 import { Namespace } from "cdk8s-plus-31";
-import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
-import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
+import { helmApplication } from "@shepherdjerred/homelab/cdk8s/src/misc/argo/application.ts";
 
 // NodePort for mc-router to accept all Minecraft connections
 const MC_ROUTER_NODE_PORT = 30_000;
@@ -63,29 +62,16 @@ export function createMcRouterApp(chart: Chart) {
   // DNS records (SRV, CNAME) are managed by OpenTofu (src/tofu/cloudflare/)
   // DDNS-related records (mc.sjer.red, shuxin.sjer.red, mc.ts-mc.net) are excluded from tofu
 
-  return new Application(chart, "mc-router-app", {
-    metadata: {
-      name: "mc-router",
-    },
-    spec: {
-      revisionHistoryLimit: 5,
-      project: applicationProject("mc-router"),
-      source: {
-        repoUrl: "https://itzg.github.io/minecraft-server-charts/",
-        targetRevision: versions["mc-router"],
-        chart: "mc-router",
-        helm: {
-          valuesObject: mcRouterValues,
-        },
-      },
-      destination: {
-        server: "https://kubernetes.default.svc",
-        namespace: "mc-router",
-      },
-      syncPolicy: {
-        automated: { enabled: true },
-        syncOptions: ["CreateNamespace=true"],
-      },
+  return helmApplication(chart, {
+    name: "mc-router",
+    namespace: "mc-router",
+    chart: "mc-router",
+    repoUrl: "https://itzg.github.io/minecraft-server-charts/",
+    targetRevision: versions["mc-router"],
+    valuesObject: mcRouterValues,
+    syncPolicy: {
+      automated: { enabled: true },
+      syncOptions: ["CreateNamespace=true"],
     },
   });
 }

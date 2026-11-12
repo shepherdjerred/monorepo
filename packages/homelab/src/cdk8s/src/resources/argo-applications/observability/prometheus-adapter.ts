@@ -1,8 +1,7 @@
 import type { Chart } from "cdk8s";
-import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
-import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
+import { helmApplication } from "@shepherdjerred/homelab/cdk8s/src/misc/argo/application.ts";
 
 export function createPrometheusAdapterApp(chart: Chart) {
   const prometheusAdapterValues: HelmValuesForChart<"prometheus-adapter"> = {
@@ -60,29 +59,16 @@ export function createPrometheusAdapterApp(chart: Chart) {
     },
   };
 
-  return new Application(chart, "prometheus-adapter-app", {
-    metadata: {
-      name: "prometheus-adapter",
-    },
-    spec: {
-      revisionHistoryLimit: 5,
-      project: applicationProject("prometheus-adapter"),
-      source: {
-        repoUrl: "https://prometheus-community.github.io/helm-charts",
-        targetRevision: versions["prometheus-adapter"],
-        chart: "prometheus-adapter",
-        helm: {
-          valuesObject: prometheusAdapterValues,
-        },
-      },
-      destination: {
-        server: "https://kubernetes.default.svc",
-        namespace: "prometheus",
-      },
-      syncPolicy: {
-        automated: { enabled: true },
-        syncOptions: ["CreateNamespace=true"],
-      },
+  return helmApplication(chart, {
+    name: "prometheus-adapter",
+    namespace: "prometheus",
+    chart: "prometheus-adapter",
+    repoUrl: "https://prometheus-community.github.io/helm-charts",
+    targetRevision: versions["prometheus-adapter"],
+    valuesObject: prometheusAdapterValues,
+    syncPolicy: {
+      automated: { enabled: true },
+      syncOptions: ["CreateNamespace=true"],
     },
   });
 }

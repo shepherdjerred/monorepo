@@ -1,9 +1,8 @@
 import type { Chart } from "cdk8s";
-import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
 import { BLACKBOX_MODULES } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/blackbox-modules.ts";
-import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
+import { helmApplication } from "@shepherdjerred/homelab/cdk8s/src/misc/argo/application.ts";
 
 export function createBlackboxExporterApp(chart: Chart) {
   const values: HelmValuesForChart<"prometheus-blackbox-exporter"> = {
@@ -13,28 +12,19 @@ export function createBlackboxExporterApp(chart: Chart) {
     },
   };
 
-  return new Application(chart, "blackbox-exporter-app", {
-    metadata: { name: "blackbox-exporter" },
-    spec: {
-      revisionHistoryLimit: 5,
-      project: applicationProject("blackbox-exporter"),
-      source: {
-        repoUrl: "https://prometheus-community.github.io/helm-charts",
-        chart: "prometheus-blackbox-exporter",
-        targetRevision: versions["prometheus-blackbox-exporter"],
-        helm: {
-          releaseName: "prometheus-prometheus-blackbox-exporter",
-          valuesObject: values,
-        },
-      },
-      destination: {
-        server: "https://kubernetes.default.svc",
-        namespace: "prometheus",
-      },
-      syncPolicy: {
-        automated: { enabled: true },
-        syncOptions: ["CreateNamespace=true"],
-      },
+  return helmApplication(chart, {
+    name: "blackbox-exporter",
+    namespace: "prometheus",
+    chart: "prometheus-blackbox-exporter",
+    repoUrl: "https://prometheus-community.github.io/helm-charts",
+    targetRevision: versions["prometheus-blackbox-exporter"],
+    valuesObject: values,
+    helm: {
+      releaseName: "prometheus-prometheus-blackbox-exporter",
+    },
+    syncPolicy: {
+      automated: { enabled: true },
+      syncOptions: ["CreateNamespace=true"],
     },
   });
 }
