@@ -7,6 +7,11 @@ try {
   if (args[0] === "sync") {
     const { handleSyncCommand } = await import("#commands/brim/sync.ts");
     process.exitCode = await handleSyncCommand(args.slice(1));
+  } else if (args[0] === "capture") {
+    // Agent wrappers run `brim capture env` on every launch: keep it off the
+    // picker's import graph.
+    const { handleCaptureCommand } = await import("#commands/brim/capture.ts");
+    process.exitCode = await handleCaptureCommand(args.slice(1));
   } else {
     const { handleBrimCommand } = await import("#commands/brim/brim.ts");
     await handleBrimCommand(args);

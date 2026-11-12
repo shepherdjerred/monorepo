@@ -3,6 +3,7 @@ import path from "node:path";
 import { z } from "zod";
 import { defineConfig } from "@shepherdjerred/config";
 import { APP_HOSTS } from "@shepherdjerred/ops-model/tool-links.ts";
+import { CAPTURE_CLI_NAMES } from "#lib/brim/capture/clis.ts";
 import { BRIM_SYNC_RECIPIENT } from "#lib/brim/sync/recipient.ts";
 import { DEFAULT_CACHE_TTL_SECONDS } from "#lib/credential-cache.ts";
 import { createObservabilityHooks } from "@shepherdjerred/config/observability.ts";
@@ -102,6 +103,48 @@ export const TOOLKIT_CONFIG_DEFINITION = {
     schema: z.coerce.number().int().positive(),
     sources: ["env", "file", "default"],
     default: 30,
+  },
+  /**
+   * Route the wrapped agent CLIs through the local capture proxy. Off by
+   * default; when on, an agent wrapper refuses to start if the proxy is down.
+   */
+  brimCaptureEnabled: {
+    schema: BooleanSettingSchema,
+    sources: ["env", "file", "default"],
+    default: false,
+  },
+  /** Loopback port the capture proxy listens on. */
+  brimCapturePort: {
+    schema: z.coerce.number().int().min(1024).max(65_535),
+    sources: ["env", "file", "default"],
+    default: 47_821,
+  },
+  /** How many days of captured requests the history daemon keeps. */
+  brimCaptureRetentionDays: {
+    schema: z.coerce.number().int().positive(),
+    sources: ["env", "file", "default"],
+    default: 30,
+  },
+  /**
+   * Which agent wrappers route through the proxy: a TOML array, or a
+   * comma-separated list in the environment. Defaults to the CLIs whose
+   * capture is verified.
+   */
+  brimCaptureClis: {
+    schema: z.union([
+      z.array(z.enum(CAPTURE_CLI_NAMES)),
+      z
+        .string()
+        .transform((value) =>
+          value
+            .split(",")
+            .map((entry) => entry.trim())
+            .filter((entry) => entry.length > 0),
+        )
+        .pipe(z.array(z.enum(CAPTURE_CLI_NAMES))),
+    ]),
+    sources: ["env", "file", "default"],
+    default: ["claude", "codex"],
   },
   /**
    * How long the installed toolkit binary serves a 1Password service-account

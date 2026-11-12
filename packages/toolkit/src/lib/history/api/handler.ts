@@ -1,3 +1,5 @@
+import { captureDetail, listCaptures } from "#lib/history/captures/queries.ts";
+import type { CaptureStore } from "#lib/history/captures/store.ts";
 import type { HistoryIndex } from "#lib/history/index.ts";
 import { ftsQuery, parseSince } from "#lib/history/query/query.ts";
 import { publicRecord } from "#lib/history/query/results.ts";
@@ -10,6 +12,8 @@ import {
 } from "#lib/history/types.ts";
 import {
   HISTORY_API_VERSION,
+  HistoryApiCaptureDetailResponseSchema,
+  HistoryApiCapturesResponseSchema,
   HistoryApiErrorSchema,
   HistoryApiFacetsResponseSchema,
   HistoryApiSessionDetailResponseSchema,
@@ -21,6 +25,8 @@ import {
 
 export type HistoryApiDependencies = {
   readonly index: HistoryIndex;
+  /** Captured agent requests (`captures.sqlite`). */
+  readonly captures: CaptureStore;
   /** Re-reads full transcripts; `targetedMessages` in production. */
   readonly readMessages: (records: readonly HistoryRecord[]) => Promise<{
     readonly messages: ReadonlyMap<string, readonly HistoryMessage[]>;
@@ -256,6 +262,71 @@ function facets(index: HistoryIndex): Response {
   return Response.json(HistoryApiFacetsResponseSchema.parse(index.facets()));
 }
 
+function captures(
+  dependencies: HistoryApiDependencies,
+  params: URLSearchParams,
+): Response {
+  const limit = intParam(params, {
+    name: "limit",
+    fallback: DEFAULT_PAGE,
+    max: MAX_PAGE,
+    min: 1,
+  });
+  const offset = intParam(params, {
+    name: "offset",
+    fallback: 0,
+    max: Number.MAX_SAFE_INTEGER,
+  });
+  const rawSession = params.get("session");
+  let session: number | null = null;
+  if (rawSession !== null) {
+    if (!/^[1-9]\d*$/u.test(rawSession)) {
+      throw new BadRequest("session must be a positive session id");
+    }
+    session = Number(rawSession);
+  }
+  const record = session === null ? null : dependencies.index.record(session);
+  if (session !== null && record === null) {
+    throw new NotFound(
+      `History record ${String(session)} no longer exists; local ids change after a rebuild.`,
+    );
+  }
+  const page = listCaptures(dependencies.captures, {
+    session:
+      record === null
+        ? null
+        : {
+            source: record.source,
+            runtimeId: record.runtimeId,
+            workspace: record.workspace,
+            createdAt: record.createdAt,
+            updatedAt: record.updatedAt,
+          },
+    limit,
+    offset,
+  });
+  return Response.json(
+    HistoryApiCapturesResponseSchema.parse({
+      apiVersion: HISTORY_API_VERSION,
+      session,
+      ...page,
+    }),
+  );
+}
+
+function capture(dependencies: HistoryApiDependencies, id: number): Response {
+  const detail = captureDetail(dependencies.captures, id);
+  if (detail === null) {
+    throw new NotFound(`Capture ${String(id)} does not exist or was pruned.`);
+  }
+  return Response.json(
+    HistoryApiCaptureDetailResponseSchema.parse({
+      apiVersion: HISTORY_API_VERSION,
+      ...detail,
+    }),
+  );
+}
+
 const ROUTES = new Map<
   string,
   (index: HistoryIndex, params: URLSearchParams) => Response
@@ -294,6 +365,13 @@ export async function handleHistoryApiRequest(
     const route = ROUTES.get(url.pathname);
     if (route !== undefined) {
       return route(dependencies.index, params);
+    }
+    if (url.pathname === "/v1/captures") {
+      return captures(dependencies, params);
+    }
+    const captureId = /^\/v1\/captures\/([1-9]\d*)$/u.exec(url.pathname);
+    if (captureId !== null) {
+      return capture(dependencies, Number(captureId[1]));
     }
     const detail = /^\/v1\/sessions\/([1-9]\d*)$/u.exec(url.pathname);
     return detail === null

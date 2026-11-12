@@ -6,6 +6,11 @@
  * except `=`. That keeps substrings of base64 blobs, such as Codex
  * `encrypted_content`, from matching, while still catching `NAME=<secret>`:
  * base64 only uses `=` as trailing padding, so it never precedes more data.
+ * The check is escape-aware: in JSON a secret after a newline follows `\n`,
+ * so a JSON escape (`\b`, `\f`, `\n`, `\r`, `\t`, or a `\uXXXX` that is not
+ * a token character) also counts as a boundary. It matches however deeply the
+ * backslash is itself escaped, since a request body is a JSON string inside a
+ * JSON spool record; base64 has no `\`, so blobs stay unmatched.
  *
  * Replacement is same-length (`REDACTED-<kind>` padded with `x`), so file
  * sizes and segment offsets never move and a CLI still appending to the file
@@ -16,6 +21,7 @@
 export const SECRET_KINDS = [
   "anthropic-key",
   "openai-key",
+  "openai-session",
   "linear-key",
   "jwt",
   "onepassword-service-account",
@@ -33,6 +39,7 @@ export type SecretMatch = {
 
 const TOKEN_CHAR = /[\w+/=-]/;
 const TOKEN_CHAR_BEFORE = /[\w+/-]/;
+const ESCAPE_BEFORE = /\\(?:[bfnrt]|u([\dA-Fa-f]{4}))$/;
 
 const PATTERNS: readonly { kind: SecretKind; pattern: RegExp }[] = [
   {
@@ -40,6 +47,8 @@ const PATTERNS: readonly { kind: SecretKind; pattern: RegExp }[] = [
     pattern: /sk-ant-(?:api|admin)\d\d-[\w-]{40,}/g,
   },
   { kind: "openai-key", pattern: /sk-proj-[\w-]{40,240}/g },
+  // OpenAI/ChatGPT session keys (`sess-` plus 40 alphanumerics).
+  { kind: "openai-session", pattern: /sess-[A-Za-z0-9]{40}/g },
   { kind: "linear-key", pattern: /lin_api_[A-Za-z0-9]{40}/g },
   {
     kind: "jwt",
@@ -64,10 +73,22 @@ const PATTERNS: readonly { kind: SecretKind; pattern: RegExp }[] = [
   },
 ];
 
+function boundaryBefore(text: string, start: number): boolean {
+  if (start === 0 || !TOKEN_CHAR_BEFORE.test(text.charAt(start - 1))) {
+    return true;
+  }
+  const escape = ESCAPE_BEFORE.exec(text.slice(Math.max(0, start - 6), start));
+  if (escape === null) return false;
+  const hex = escape[1];
+  return (
+    hex === undefined ||
+    !TOKEN_CHAR_BEFORE.test(String.fromCodePoint(Number.parseInt(hex, 16)))
+  );
+}
+
 function standalone(text: string, start: number, end: number): boolean {
-  const before = start === 0 ? "" : text.charAt(start - 1);
   const after = end >= text.length ? "" : text.charAt(end);
-  return !TOKEN_CHAR_BEFORE.test(before) && !TOKEN_CHAR.test(after);
+  return boundaryBefore(text, start) && !TOKEN_CHAR.test(after);
 }
 
 function decodesToObject(segment: string): boolean {

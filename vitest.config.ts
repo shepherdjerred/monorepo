@@ -189,6 +189,8 @@ export default {
       async load(id) {
         if (
           !id.endsWith(".txt") &&
+          // Toolkit embeds its mitmproxy addon with a Bun text import.
+          !id.endsWith("/toolkit/capture/brim_capture.py") &&
           !id.includes("/asciinema-player/dist/bundle/asciinema-player.")
         ) {
           return;

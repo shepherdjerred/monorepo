@@ -9,6 +9,8 @@
 #   the environment is still scrubbed.
 # - Agents commit and push as the agent identity (~/.config/agent/gitconfig,
 #   ~/.config/gh-agent) and never wait on an editor or pager.
+# - When Brim request capture is on for the agent, it runs through the local
+#   capture proxy (`brim capture env`).
 #
 # This directory is first on PATH in every shell, so Herdr, Brim and scripts get
 # the same behavior as typing the command. The real binary is the next one on
@@ -64,6 +66,18 @@ EDITOR=true VISUAL=true GIT_EDITOR=true PAGER=cat GIT_PAGER=cat
 GIT_CONFIG_GLOBAL="$HOME/.config/agent/gitconfig"
 GH_CONFIG_DIR="$HOME/.config/gh-agent"
 export EDITOR VISUAL GIT_EDITOR PAGER GIT_PAGER GIT_CONFIG_GLOBAL GH_CONFIG_DIR
+
+# Brim request capture: when brim.capture.enabled is on and brim.capture.clis
+# lists this CLI, route it through the local capture proxy. `brim capture env`
+# prints nothing when capture is off and fails when it is on but the proxy is
+# down, so an agent never silently runs uncaptured. AGENT_SAFE=1 runs are
+# captured too. The directory exists only once a brim that knows `capture` has
+# run `brim capture install`; an older brim would treat the words as picker
+# arguments.
+if [ -d "$HOME/.toolkit/brim-capture" ] && command -v brim >/dev/null 2>&1; then
+  capture_env=$(brim capture env "$name") || exit $?
+  eval "$capture_env"
+fi
 
 if [ "${AGENT_SAFE:-}" = 1 ]; then
   exec "$real" "$@"

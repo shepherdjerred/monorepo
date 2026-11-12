@@ -1,8 +1,7 @@
 import { afterEach, describe, expect, test } from "vitest";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { z } from "zod";
 import { handleHistoryApiRequest } from "#lib/history/api/handler.ts";
 import {
   HISTORY_API_CONTRACTS,
@@ -13,6 +12,7 @@ import {
   HistoryApiToolsResponseSchema,
   HistoryApiUsageResponseSchema,
 } from "#lib/history/api/schema.ts";
+import { CaptureStore } from "#lib/history/captures/store.ts";
 import { HistoryIndex } from "#lib/history/index.ts";
 import { defaultHistoryRuntimePaths } from "#lib/history/paths.ts";
 import { documentDetails } from "#lib/history/query/messages.ts";
@@ -25,10 +25,20 @@ import type {
   HistorySourceResult,
   UsageEventEntry,
 } from "#lib/history/types.ts";
+import { describeSchemaContracts } from "#test/support/schema-contracts.ts";
 
 const roots: string[] = [];
+const stores = new Map<HistoryIndex, CaptureStore>();
+
+function storeFor(index: HistoryIndex): CaptureStore {
+  const store = stores.get(index);
+  if (store === undefined) throw new Error("fixture index has no store");
+  return store;
+}
 
 afterEach(async () => {
+  for (const store of stores.values()) store.close();
+  stores.clear();
   await Promise.all(
     roots.splice(0).map((root) => rm(root, { recursive: true, force: true })),
   );
@@ -148,6 +158,10 @@ async function fixtureIndex(): Promise<HistoryIndex> {
       }),
     ]),
   ]);
+  stores.set(
+    index,
+    await CaptureStore.open(defaultHistoryRuntimePaths(root).capturesDb),
+  );
   return index;
 }
 
@@ -169,7 +183,7 @@ async function get(
   method = "GET",
 ): Promise<{ status: number; body: unknown }> {
   const response = await handleHistoryApiRequest(
-    { index, readMessages },
+    { index, captures: storeFor(index), readMessages },
     new Request(`http://history${pathAndQuery}`, { method }),
   );
   if (response === null) {
@@ -365,7 +379,7 @@ describe("history API", () => {
     const index = await fixtureIndex();
     expect(await fetchStatus(index, "/v1/sessions", "POST")).toBe(405);
     const control = await handleHistoryApiRequest(
-      { index, readMessages },
+      { index, captures: storeFor(index), readMessages },
       new Request("http://history/status"),
     );
     expect(control).toBeNull();
@@ -373,23 +387,7 @@ describe("history API", () => {
   });
 });
 
-describe("history API contracts", () => {
-  const schemaDir = path.join(import.meta.dirname, "../../schemas");
-
-  test.each(Object.entries(HISTORY_API_CONTRACTS))(
-    "%s matches its checked-in JSON Schema and fixture",
-    async (name, schema) => {
-      const checkedIn: unknown = JSON.parse(
-        await readFile(path.join(schemaDir, `${name}.schema.json`), "utf8"),
-      );
-      expect(z.toJSONSchema(schema)).toEqual(checkedIn);
-      const fixture: unknown = JSON.parse(
-        await readFile(path.join(schemaDir, `fixtures/${name}.json`), "utf8"),
-      );
-      expect(() => schema.parse(fixture)).not.toThrow();
-    },
-  );
-});
+describeSchemaContracts("history API contracts", HISTORY_API_CONTRACTS);
 
 describe("Codex thread titles", () => {
   test("a subagent thread without a user turn takes its first reply", () => {

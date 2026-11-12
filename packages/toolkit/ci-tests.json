@@ -17,6 +17,23 @@
         "scripts",
         "test-integration/catalog.integration.test.ts"
       ]
+    },
+    {
+      "runner": "command",
+      "name": "capture-addon",
+      "command": [
+        "uvx",
+        "--python",
+        "3.13",
+        "--with",
+        "mitmproxy==12.2.1",
+        "--with",
+        "jsonschema==4.25.1",
+        "pytest==8.4.2",
+        "capture",
+        "-p",
+        "no:cacheprovider"
+      ]
     }
   ],
   "excludedSuites": [

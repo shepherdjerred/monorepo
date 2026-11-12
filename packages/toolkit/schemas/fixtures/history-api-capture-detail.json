@@ -1,0 +1,298 @@
+{
+  "apiVersion": 1,
+  "capture": {
+    "id": 5,
+    "cli": "codex",
+    "transport": "websocket",
+    "format": "openai-responses",
+    "host": "chatgpt.com",
+    "path": "/backend-api/codex/responses",
+    "sessionId": "01a1c37b-1894-7231-a7ae-e3d2da985034",
+    "cwd": "/Users/me/repo",
+    "startedAt": "2026-11-10T03:30:08.000Z",
+    "endedAt": "2026-11-10T03:30:10.000Z",
+    "durationMs": 2000,
+    "model": "gpt-6.1-sol",
+    "status": "ok",
+    "httpStatus": null,
+    "error": null,
+    "usage": {
+      "inputTokens": 26310,
+      "outputTokens": 7,
+      "cacheReadTokens": 0,
+      "cacheCreationTokens": 0,
+      "cachedInputTokens": 26112,
+      "reasoningTokens": 0
+    },
+    "context": {
+      "systemBytes": 95,
+      "toolsBytes": 567,
+      "historyBytes": 231,
+      "newBytes": 251
+    },
+    "blockCount": 7,
+    "newBlockCount": 3,
+    "contextComplete": true,
+    "previousCaptureId": 4,
+    "warmup": false
+  },
+  "request": {
+    "system": [],
+    "tools": [],
+    "messages": [
+      {
+        "hash": "1fb515004e06edab9d6c253fc4928500551ded5f27d974a865245601e647cd4b",
+        "section": "messages",
+        "category": "tools",
+        "index": 0,
+        "sentIndex": null,
+        "role": "developer",
+        "bytes": 567,
+        "inherited": true,
+        "isNew": false,
+        "parts": [
+          {
+            "type": "tool_definition",
+            "name": "exec",
+            "namespace": "functions",
+            "description": "Run a command",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "cmd": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          {
+            "type": "tool_definition",
+            "name": "apply_patch",
+            "namespace": "functions",
+            "description": "Apply a patch",
+            "parameters": {
+              "type": "grammar",
+              "syntax": "lark",
+              "definition": "start: x"
+            }
+          },
+          {
+            "type": "tool_definition",
+            "name": "sleep",
+            "namespace": "clock",
+            "description": "Pause",
+            "parameters": null
+          }
+        ]
+      },
+      {
+        "hash": "7f616fbd6befa47e113ac3f7bef4d3edbb8d855138798dd191154cb5555a4797",
+        "section": "messages",
+        "category": "system",
+        "index": 1,
+        "sentIndex": null,
+        "role": "developer",
+        "bytes": 95,
+        "inherited": true,
+        "isNew": false,
+        "parts": [
+          {
+            "type": "text",
+            "content": "You are Codex."
+          }
+        ]
+      },
+      {
+        "hash": "3e8af7db2d71b962ace530486d0eee7a4ead20578f0995a0fb79587382b9d0e6",
+        "section": "messages",
+        "category": "conversation",
+        "index": 2,
+        "sentIndex": null,
+        "role": "user",
+        "bytes": 144,
+        "inherited": true,
+        "isNew": false,
+        "parts": [
+          {
+            "type": "text",
+            "content": "<environment_context><cwd>/Users/me/repo</cwd></environment_context>"
+          }
+        ]
+      },
+      {
+        "hash": "691525953ec9829c07c160d6ff63d9f56fde741c6121e8205f9bff8dde88d8fe",
+        "section": "messages",
+        "category": "conversation",
+        "index": 3,
+        "sentIndex": null,
+        "role": "user",
+        "bytes": 87,
+        "inherited": true,
+        "isNew": false,
+        "parts": [
+          {
+            "type": "text",
+            "content": "run echo hi"
+          }
+        ]
+      },
+      {
+        "hash": "ca5cd881968873ff45c80df3e5ca346c55acd53a7bb80d22f7abc616a1c50a65",
+        "section": "messages",
+        "category": "conversation",
+        "index": 4,
+        "sentIndex": null,
+        "role": "assistant",
+        "bytes": 94,
+        "inherited": true,
+        "isNew": true,
+        "parts": [
+          {
+            "type": "text",
+            "content": "I'll run it."
+          }
+        ]
+      },
+      {
+        "hash": "7a156f405d515a491d5277dc2d363bd6f994e2e1c6b1b72e3375774511bdee6b",
+        "section": "messages",
+        "category": "conversation",
+        "index": 5,
+        "sentIndex": null,
+        "role": "assistant",
+        "bytes": 93,
+        "inherited": true,
+        "isNew": true,
+        "parts": [
+          {
+            "type": "tool_call",
+            "id": "call_1",
+            "name": "exec",
+            "arguments": {
+              "cmd": "echo hi"
+            }
+          }
+        ]
+      },
+      {
+        "hash": "58909b0192f10a9306d1f4d077caa1bd5b828b4e553de4c50219aed1dfbfdc0e",
+        "section": "messages",
+        "category": "conversation",
+        "index": 6,
+        "sentIndex": 0,
+        "role": "tool",
+        "bytes": 64,
+        "inherited": false,
+        "isNew": true,
+        "parts": [
+          {
+            "type": "tool_call_response",
+            "id": "call_1",
+            "response": "hi"
+          }
+        ]
+      }
+    ]
+  },
+  "response": {
+    "text": "hi",
+    "reasoning": "",
+    "toolCalls": [],
+    "stopReason": "completed"
+  },
+  "newBlocks": [
+    {
+      "hash": "ca5cd881968873ff45c80df3e5ca346c55acd53a7bb80d22f7abc616a1c50a65",
+      "section": "messages",
+      "category": "conversation",
+      "index": 4,
+      "sentIndex": null,
+      "role": "assistant",
+      "bytes": 94,
+      "inherited": true,
+      "isNew": true,
+      "parts": [
+        {
+          "type": "text",
+          "content": "I'll run it."
+        }
+      ]
+    },
+    {
+      "hash": "7a156f405d515a491d5277dc2d363bd6f994e2e1c6b1b72e3375774511bdee6b",
+      "section": "messages",
+      "category": "conversation",
+      "index": 5,
+      "sentIndex": null,
+      "role": "assistant",
+      "bytes": 93,
+      "inherited": true,
+      "isNew": true,
+      "parts": [
+        {
+          "type": "tool_call",
+          "id": "call_1",
+          "name": "exec",
+          "arguments": {
+            "cmd": "echo hi"
+          }
+        }
+      ]
+    },
+    {
+      "hash": "58909b0192f10a9306d1f4d077caa1bd5b828b4e553de4c50219aed1dfbfdc0e",
+      "section": "messages",
+      "category": "conversation",
+      "index": 6,
+      "sentIndex": 0,
+      "role": "tool",
+      "bytes": 64,
+      "inherited": false,
+      "isNew": true,
+      "parts": [
+        {
+          "type": "tool_call_response",
+          "id": "call_1",
+          "response": "hi"
+        }
+      ]
+    }
+  ],
+  "rawRequest": {
+    "type": "response.create",
+    "model": "gpt-6.1-sol",
+    "previous_response_id": "resp_1",
+    "input": [
+      {
+        "type": "function_call_output",
+        "call_id": "call_1",
+        "output": "hi"
+      }
+    ]
+  },
+  "rawResponse": {
+    "id": "resp_2",
+    "model": "gpt-6.1-sol",
+    "status": "completed",
+    "output": [
+      {
+        "type": "message",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "output_text",
+            "text": "hi"
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "input_tokens": 26310,
+      "input_tokens_details": {
+        "cached_tokens": 26112
+      },
+      "output_tokens": 7
+    }
+  },
+  "fields": null
+}

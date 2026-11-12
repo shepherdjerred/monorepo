@@ -1,5 +1,11 @@
 import { parseArgs } from "node:util";
+import {
+  formatRedactReport,
+  runCaptureRedact,
+} from "#commands/brim/capture.ts";
+import { defaultBrimCapturePaths } from "#lib/brim/capture/paths.ts";
 import { createSealer } from "#lib/brim/sync/crypto.ts";
+import { defaultHistoryRuntimePaths } from "#lib/history/paths.ts";
 import {
   HOMEBREW_JOB_PATH,
   assertDarwin,
@@ -41,7 +47,8 @@ brim sync — encrypted cross-machine archive of Claude Code and Codex transcrip
   brim sync status [--json]        Local archive, mirror and agent state
   brim sync redact [--dry-run] [--json]
                                    Overwrite leaked credentials in this machine's
-                                   transcripts and re-archive the affected files
+                                   transcripts and re-archive the affected files;
+                                   also redacts brim capture's spool and store
   brim sync install | uninstall    Manage the 5-minute macOS LaunchAgent
 
 push uploads every transcript, whatever its age; the archive never expires.
@@ -355,8 +362,18 @@ async function dispatch(
           paths,
           dryRun: parsed.values["dry-run"],
         });
-        if (json) console.log(JSON.stringify(report, null, 2));
-        else printRedact(report);
+        // Captured requests hold the same prompts and tool output, so they
+        // are redacted with the same patterns.
+        const captures = await runCaptureRedact(
+          defaultBrimCapturePaths(paths.home),
+          defaultHistoryRuntimePaths(paths.home).capturesDb,
+          parsed.values["dry-run"],
+        );
+        if (json) console.log(JSON.stringify({ ...report, captures }, null, 2));
+        else {
+          printRedact(report);
+          console.log(formatRedactReport(captures));
+        }
         return report.files.every((file) => file.skipped === 0);
       });
     case "status":
