@@ -56,3 +56,58 @@ test("Escape on an issue opened directly returns to the issue list", async ({
   await page.keyboard.press("Escape");
   await expect(page).toHaveURL(/\/issues$/u);
 });
+
+// An IME's confirming Enter (Japanese, Chinese, Korean) must not act. Safari
+// clears `isComposing` before that keydown, so a keydown right after
+// `compositionend` counts as composing too.
+test("Enter that confirms an IME conversion neither saves a title nor picks a palette result", async ({
+  page,
+}) => {
+  await page.goto("/issues/AI-1");
+  const title = page.getByLabel("Issue title", { exact: true });
+  await title.click();
+  await title.press("End");
+  const imeEnter = (selector: string, safariOrder: boolean) =>
+    page.evaluate(
+      ([target, safari]) => {
+        const element = globalThis.document.querySelector(target);
+        if (element === null) throw new Error(`Missing ${target}`);
+        if (safari) {
+          element.dispatchEvent(
+            new globalThis.CompositionEvent("compositionend", {
+              bubbles: true,
+            }),
+          );
+        }
+        element.dispatchEvent(
+          new globalThis.KeyboardEvent("keydown", {
+            key: "Enter",
+            bubbles: true,
+            cancelable: true,
+            isComposing: !safari,
+          }),
+        );
+      },
+      [selector, safariOrder] as const,
+    );
+  for (const safari of [false, true]) {
+    await imeEnter('[aria-label="Issue title"]', safari);
+    await expect(title).toBeFocused();
+  }
+  // A real Enter comes after the 50 ms window that follows compositionend.
+  await page.waitForTimeout(100);
+  await title.press("Enter");
+  await expect(title).not.toBeFocused();
+
+  await page.keyboard.press("ControlOrMeta+k");
+  const search = page.getByLabel("Search issues and commands");
+  await search.fill("Go to board");
+  for (const safari of [false, true]) {
+    await imeEnter('[aria-label="Search issues and commands"]', safari);
+    await expect(page.getByRole("dialog")).toBeVisible();
+    await expect(page).toHaveURL(/\/issues\/AI-1$/u);
+  }
+  await page.waitForTimeout(100);
+  await search.press("Enter");
+  await expect(page).toHaveURL(/\/board/u);
+});

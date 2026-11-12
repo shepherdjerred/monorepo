@@ -136,7 +136,6 @@
 .detail-title {
   field-sizing: content;
   resize: none;
-  overflow: hidden;
   min-height: 1lh;
   padding: 0;
   border: 0;
@@ -146,6 +145,12 @@
   font-weight: 600;
   width: 100%;
   display: block;
+}
+/* Growing to fit is Baseline 2026; elsewhere the title scrolls, never clips. */
+@supports (field-sizing: content) {
+  .detail-title {
+    overflow: hidden;
+  }
 }
 .detail-title-heading {
   margin-bottom: 24px;

@@ -21,6 +21,7 @@ import { MarkdownEditor } from "#client/ui/markdown.tsx";
 import { ActivityList } from "./activity.tsx";
 import { useIssue } from "./issue-query.ts";
 import { RemoteEditNotice } from "#client/live/presence.tsx";
+import { isComposing } from "#client/ui/ime.ts";
 import { recentIssues } from "#client/shell/recent-issues.ts";
 
 export function IssueDetail({
@@ -186,7 +187,8 @@ function IssueContent({
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   e.preventDefault();
-                  e.currentTarget.blur();
+                  // That Enter may be confirming an IME conversion instead.
+                  if (!isComposing(e.nativeEvent)) e.currentTarget.blur();
                 }
                 // Escape takes back an unsaved title before it closes anything.
                 if (e.key === "Escape" && title !== issue.title) {

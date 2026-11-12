@@ -1,5 +1,6 @@
 import { useId, useState, type ReactNode, type Ref } from "react";
 import { Check, Search } from "lucide-react";
+import { isComposing } from "#client/ui/ime.ts";
 
 export type CommandItem = {
   id: string;
@@ -69,6 +70,8 @@ export function CommandList({
             setSelected(0);
           }}
           onKeyDown={(event) => {
+            // An IME uses these keys to pick and confirm its candidates.
+            if (isComposing(event.nativeEvent)) return;
             if (event.key === "ArrowDown" || event.key === "ArrowUp") {
               event.preventDefault();
               move(event.key === "ArrowDown" ? 1 : -1);

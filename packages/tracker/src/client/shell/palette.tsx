@@ -17,6 +17,7 @@ import type { PaletteEntry, PaletteStep } from "./palette-steps.tsx";
 import { recentIssues } from "./recent-issues.ts";
 import { isPlainClick } from "./route.ts";
 import type { Targets } from "./shell-actions.ts";
+import { isComposing } from "#client/ui/ime.ts";
 
 const listId = "palette-results";
 const optionId = (index: number) => `palette-option-${String(index)}`;
@@ -244,6 +245,8 @@ export function Palette({
             setSelected(0);
           }}
           onKeyDown={(e) => {
+            // An IME uses these keys to pick and confirm its candidates.
+            if (isComposing(e.nativeEvent)) return;
             if (e.key === "ArrowDown" || e.key === "ArrowUp") {
               e.preventDefault();
               move(e.key === "ArrowDown" ? 1 : -1);
