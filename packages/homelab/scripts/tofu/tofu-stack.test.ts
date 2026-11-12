@@ -715,24 +715,14 @@ describe("provider pins", () => {
     );
     // The stack's lock is not committed (it holds one platform's hash of a
     // locally built provider), so the stack's own requirement is the check.
-    const declaration = Bun.file(
-      new URL("../../src/tofu/asuswrt/providers.tf", import.meta.url),
-    );
-    const synthesis = Bun.file(
+    const configuration = await Bun.file(
       new URL("../../src/tofu/asuswrt/main.tf.json", import.meta.url),
-    );
-    const hcl = await declaration.exists();
-    const configuration = await (hcl ? declaration : synthesis).text();
+    ).text();
     expect(configuration).toMatch(
-      hcl
-        ? new RegExp(
-            String.raw`source\s*=\s*"shepherdjerred/asuswrt"[\s\S]*?version\s*=\s*"${pin.version}"`,
-            "u",
-          )
-        : new RegExp(
-            String.raw`"source":\s*"shepherdjerred/asuswrt",\s*"version":\s*"${pin.version}"`,
-            "u",
-          ),
+      new RegExp(
+        String.raw`"source":\s*"shepherdjerred/asuswrt",\s*"version":\s*"${pin.version}"`,
+        "u",
+      ),
     );
   });
 

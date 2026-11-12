@@ -49,7 +49,7 @@ any other configuration; nothing synthesizes at plan or apply time. Never edit
 `main.tf.json` by hand:
 
 ```bash
-bunx turbo run generate --filter=@homelab/cdktn   # provider bindings (cdktn get, needs tofu and Node)
+bunx turbo run generate --filter=@homelab/cdktn   # provider bindings (cdktn get, needs tofu, Node and Go)
 bun run --cwd packages/homelab-cdktn synth    # rewrite src/tofu/<stack>/main.tf.json
 bunx turbo run build test --filter=@homelab/cdktn # fails when a committed file is stale
 ```

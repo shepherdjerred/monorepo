@@ -24,7 +24,8 @@ CHDIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$CHDIR/.."
 
 # address <TAB> import-id. IDs: system=singleton, lease=MAC, port-forward=name,
-# wireless=band index.
+# wireless=band index. The addresses are the construct ids in
+# packages/homelab-cdktn/src/stacks/asuswrt.ts, which synthesizes main.tf.json.
 IMPORTS=$(
   cat <<'EOF'
 asuswrt_system.router	system

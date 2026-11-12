@@ -7,6 +7,7 @@ import { AnthropicStack } from "#src/stacks/anthropic.ts";
 import { ApplicationSecretsStack } from "#src/stacks/application-secrets.ts";
 import { ArgocdStack } from "#src/stacks/argocd.ts";
 import { ArrStack } from "#src/stacks/arr.ts";
+import { AsuswrtStack } from "#src/stacks/asuswrt.ts";
 import { BackblazeStack } from "#src/stacks/backblaze.ts";
 import { CloudflareTokensStack } from "#src/stacks/cloudflare-tokens.ts";
 import { CloudflareStack } from "#src/stacks/cloudflare/index.ts";
@@ -31,6 +32,7 @@ export const SYNTHESIZED_STACKS = [
   "application-secrets",
   "argocd",
   "arr",
+  "asuswrt",
   "backblaze",
   "cloudflare",
   "cloudflare-tokens",
@@ -54,6 +56,7 @@ const STACKS: Record<SynthesizedStack, new (scope: Construct) => HomelabStack> =
     "application-secrets": ApplicationSecretsStack,
     argocd: ArgocdStack,
     arr: ArrStack,
+    asuswrt: AsuswrtStack,
     backblaze: BackblazeStack,
     cloudflare: CloudflareStack,
     "cloudflare-tokens": CloudflareTokensStack,
