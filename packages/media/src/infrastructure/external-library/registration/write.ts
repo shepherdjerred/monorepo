@@ -88,23 +88,12 @@ export async function writeExternalRegistration(
         coverage: {
           create: ids.map((mediaId) => ({
             mediaId,
-            edition: "default",
             current: true,
           })),
         },
       },
     });
     assetId = asset.id;
-    // Generic title presence is separate from a target's verified edition availability.
-    // Collections retain their ordinary descendant-count semantics.
-    await tx.mediaItem.updateMany({
-      where: {
-        id: { in: ids },
-        kind: { in: ["movie", "episode"] },
-        availability: { not: "available" },
-      },
-      data: { availability: "available", version: { increment: 1 } },
-    });
   }
   const result = ExternalLibraryApplyResultSchema.parse({
     operationId,

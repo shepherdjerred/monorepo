@@ -137,7 +137,8 @@ export async function observeExternalLibrary(
     serverMachineId: machine,
     sectionId,
     sectionType: input.sectionType,
-    ...selectedPart,
+    canonicalPath: selectedPart.canonicalPath,
+    sizeBytes: selectedPart.sizeBytes,
     observedEditionTitle:
       kind === "movie" ? (selected.editionTitle ?? null) : null,
     root: {

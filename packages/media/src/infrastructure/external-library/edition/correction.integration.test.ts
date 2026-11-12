@@ -185,7 +185,7 @@ test("real metadata intent survives lost PUT/readback, cold resumes once, and re
       editionRootId: other.root.id,
       properties: {},
       coverage: {
-        create: { mediaId: other.media.id, edition: "default", current: true },
+        create: { mediaId: other.media.id, current: true },
       },
     },
   });

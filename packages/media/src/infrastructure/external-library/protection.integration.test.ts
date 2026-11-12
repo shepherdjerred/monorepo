@@ -9,6 +9,8 @@ import { grantTestRequesterAccess } from "#testing/authority.ts";
 import { reconcileMovieIntentV4 } from "#automation/movie-editions/reconcile.ts";
 import type { Database } from "#infrastructure/database.ts";
 import type { LibraryAsset } from "#generated/prisma/client.ts";
+import { lockDefaultScopes } from "#infrastructure/editions/locks.ts";
+import { defaultScope } from "#shared/editions/scope.ts";
 
 const h = automationTestHarness();
 
@@ -111,6 +113,15 @@ test("a TV candidate cannot reserve an externally managed sibling that was not t
       episodeNumber: 2,
     },
   });
+  await db.$transaction((tx) =>
+    lockDefaultScopes(tx, [defaultScope(sibling.id)], { createMissing: true }),
+  );
+  const targetWhere = {
+    mediaId_edition: { mediaId: sibling.id, edition: "default" },
+  };
+  const passiveTarget = await db.mediaIntent.findUniqueOrThrow({
+    where: targetWhere,
+  });
   await unverifiedExternalAsset(db, sibling.id);
   await db.releaseCandidate.update({
     where: { id: f.release.id },
@@ -130,7 +141,7 @@ test("a TV candidate cannot reserve an externally managed sibling that was not t
       where: { mediaId: { in: [f.media.id, sibling.id] } },
     }),
   ).toBe(0);
-  expect(await db.mediaIntent.count({ where: { mediaId: sibling.id } })).toBe(
-    0,
-  );
+  expect(
+    await db.mediaIntent.findUniqueOrThrow({ where: targetWhere }),
+  ).toEqual(passiveTarget);
 });

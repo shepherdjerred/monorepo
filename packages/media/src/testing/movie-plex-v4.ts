@@ -15,7 +15,7 @@ export async function moviePlexV4Fixture(
   db: Database,
   network: MediaAutomationContext,
   base: Parameters<typeof movieFilesV4Fixture>[2],
-  options: { bytes: Uint8Array; edition: MovieEditionKey },
+  options: { bytes: Uint8Array; edition: MovieEditionKey; tmdbId?: number },
 ) {
   const f = await movieFilesV4Fixture(db, network, base, options);
   try {

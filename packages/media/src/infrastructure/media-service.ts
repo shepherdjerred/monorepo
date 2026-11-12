@@ -23,10 +23,12 @@ import {
 import { ReleaseListSchema } from "#shared/api.ts";
 import {
   captureVisibilityPlexAccess,
+  visibilityAncestry,
   type VisibilityPlexAccess,
   type VisibilitySections,
 } from "./visibility/access.ts";
 import { readMediaDetail } from "./visibility/media-detail.ts";
+import { projectExternalRequests } from "./external-library/availability.ts";
 import { effectiveRequestWhere } from "./request-claims.ts";
 import { OwnerHealthSchema } from "#shared/notification-authority.ts";
 import { readDefaultCommandContext } from "./editions/command-context.ts";
@@ -154,14 +156,58 @@ export class PrismaMediaApplication
   }
 
   async listRequests(actor: MediaActor) {
-    return RequestListSchema.parse(
-      await this.db.mediaRequest.findMany({
+    const selected = await this.db.mediaRequest.findMany({
+      where: actor.role === "owner" ? {} : { userId: actor.id },
+      select: { mediaId: true },
+      orderBy: { updatedAt: "desc" },
+      take: 200,
+    });
+    const candidates = await this.db.assetCoverage.findMany({
+      where: {
+        current: true,
+        edition: "default",
+        mediaId: { in: selected.map((request) => request.mediaId) },
+        asset: {
+          owned: false,
+          properties: { path: ["externalLibrary", "schemaVersion"], equals: 1 },
+        },
+      },
+      select: { mediaId: true, media: { select: { kind: true } } },
+    });
+    const kinds = [
+      ...new Set(
+        candidates.map((row) =>
+          row.media.kind === "movie" ? "movie" : "episode",
+        ),
+      ),
+    ];
+    const access = await Promise.all(
+      kinds.map((kind) =>
+        captureVisibilityPlexAccess(
+          {
+            serverMachineId: this.settings.serverMachineId,
+            movieSectionId: this.settings.movieSectionId,
+            sections: this.visibilitySections ?? this.settings.sections,
+            plexAccess: this.visibilityPlexAccess,
+          },
+          kind,
+        ),
+      ),
+    );
+    return repeatableRead(this.db, async (tx) => {
+      const requests = await tx.mediaRequest.findMany({
         where: actor.role === "owner" ? {} : { userId: actor.id },
-        include: { media: true },
+        include: { media: { include: visibilityAncestry } },
         orderBy: { updatedAt: "desc" },
         take: 200,
-      }),
-    );
+      });
+      return RequestListSchema.parse(
+        await projectExternalRequests(tx, actor, requests, {
+          access,
+          serverMachineId: this.settings.serverMachineId,
+        }),
+      );
+    });
   }
 
   async getMedia(actor: MediaActor, mediaId: string) {

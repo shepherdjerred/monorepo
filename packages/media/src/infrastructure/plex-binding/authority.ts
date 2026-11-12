@@ -38,6 +38,12 @@ import { PlexBindingProtection } from "./errors.ts";
 import { bindPlexTransactionDeadline } from "./freshness.ts";
 import { assertPlexPublicationParents } from "./parents.ts";
 import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import {
+  movieInventoryParent,
+  movieInventoryLockScope,
+  lockMovieInventoryScope,
+  assertMovieInventoryExpected,
+} from "#infrastructure/movie-editions/plex/inventory/expected.ts";
 
 export async function capturePlexBindingExpected(
   tx: Prisma.TransactionClient,
@@ -131,6 +137,8 @@ export async function preparePlexBindingLockScope(
   rawExpected: PlexBindingExpected,
 ): Promise<PlexBindingLockScope> {
   const expected = PlexBindingExpectedSchema.parse(rawExpected);
+  const movie = movieInventoryParent(expected);
+  if (movie !== null) return movieInventoryLockScope(expected, movie);
   const server = expected.access[0];
   if (server === undefined) throw new Error("Plex expected access missing");
   const union = await readPlexGroupUnion(
@@ -240,6 +248,10 @@ export async function lockPlexBindingScope(
     budget = new PublicationAuthorityReadBudget(),
     compensationPhase,
   } = options;
+  if (movieInventoryParent(scope.expected) !== null) {
+    assertStandaloneMovieInventory(purpose, compensationPhase);
+    return lockMovieInventoryScope(tx, scope, freshness, budget);
+  }
   freshness.assertActive();
   if (compensationPhase === undefined)
     await assertCompensationLockClosure(tx, scope, purpose, budget);
@@ -315,6 +327,14 @@ export async function lockPlexBindingScope(
   });
 }
 
+function assertStandaloneMovieInventory(
+  purpose: PlexCompensationPurposeLock | undefined,
+  phase: CompensationPublicationPhase | undefined,
+) {
+  if (purpose !== undefined || phase !== undefined)
+    throw new PlexBindingProtection("scope_changed");
+}
+
 export async function assertPlexBindingExpected(
   tx: Prisma.TransactionClient,
   expected: PlexBindingExpected,
@@ -333,6 +353,11 @@ export async function assertPlexBindingExpected(
   freshness.assertActive();
   if (identityHash(access) !== identityHash(expected.access))
     throw new PlexBindingProtection("wrong_section");
+  if (movieInventoryParent(expected) !== null) {
+    if (compensationPhase !== undefined)
+      throw new PlexBindingProtection("scope_changed");
+    return assertMovieInventoryExpected(tx, expected, freshness, budget);
+  }
   const current = await capturePlexBindingExpected(tx, {
     mediaIds: expected.targets.map((row) => row.scope.mediaId),
     parents: expected.parents,

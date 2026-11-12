@@ -121,9 +121,11 @@ async function reconcileInventory(
     include: { coverage: { where: { current: true } } },
   });
   for (const asset of assets) {
+    const queued = await queueExistingPlexBinding(context, asset.id);
     if (
-      asset.edition !== "default" ||
-      asset.coverage.some((coverage) => coverage.edition !== "default")
+      queued.status === "protected" &&
+      (asset.edition !== "default" ||
+        asset.coverage.some((coverage) => coverage.edition !== "default"))
     ) {
       // Keep unexpected physical inventory visible without attributing it to a
       // legacy default title or granting it publication/cleanup authority.
@@ -138,7 +140,6 @@ async function reconcileInventory(
       });
       continue;
     }
-    await queueExistingPlexBinding(context, asset.id);
     const observation = await context.db.plexInventoryObservation.findFirst({
       where: { scanId, path: asset.path },
     });

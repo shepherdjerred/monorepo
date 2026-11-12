@@ -140,7 +140,10 @@ export async function readPlexIdentityCohort(
     where: {
       id: {
         in: parents.flatMap((parent) =>
-          parent.kind === "existing_asset" ? [] : [parent.operationId],
+          parent.kind === "existing_asset" ||
+          parent.kind === "existing_movie_asset_v2"
+            ? []
+            : [parent.operationId],
         ),
       },
     },

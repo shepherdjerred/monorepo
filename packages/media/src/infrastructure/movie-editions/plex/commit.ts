@@ -19,6 +19,7 @@ import { replacePlexClaims } from "#infrastructure/plex-binding/claims.ts";
 import { writePlexBindingPointers } from "#infrastructure/plex-binding/commit.ts";
 import { PlexBindingProtection } from "#infrastructure/plex-binding/errors.ts";
 import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
+import { invalidateMoviePlexConsequences } from "./consequences.ts";
 import { captureMoviePlexExpectedV2 } from "./expected.ts";
 import { recordVerifiedPublication } from "#automation/reconciliation/upgrade-cleanup.ts";
 import {
@@ -134,15 +135,7 @@ export async function commitMoviePlexV2(
     guarded,
   );
   if (prior.evidence?.associationHash !== hash) {
-    await tx.plexWatchProjection.deleteMany({ where: association.scope });
-    await tx.watchState.deleteMany({ where: association.scope });
-    await tx.retentionDecision.updateMany({
-      where: {
-        ...association.scope,
-        state: { in: ["eligible", "warning_pending", "grace_period"] },
-      },
-      data: { state: "cancelled", version: { increment: 1 } },
-    });
+    await invalidateMoviePlexConsequences(tx, association.scope, guarded);
   }
   const timestamp = new Date();
   await tx.libraryAsset.updateMany({

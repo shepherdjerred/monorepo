@@ -575,9 +575,13 @@ writer-lease and exclusion deadlines; awaited work cannot restart that window.
 Deferred SQL checks enforce the same minimum at commit, including work performed
 after the last JavaScript guard.
 
-The existing inventory reconciliation can queue default-only cold verification
-for already owned assets. It neither creates requests nor refreshes consent or
-old publication receipts. The `@shepherdjerred/media/plex-binding` export defines
+Inventory reconciliation queues ordinary default-only cold verification for
+already owned assets. Owned movies with a current schema2 association use their
+explicit immutable movie physical parent to renew either the default or a named
+cut through the same reverification workflow. Renewal changes the scoped binding
+and invalidates only that cut's derived watch and retention projections. It
+neither creates requests nor refreshes consent or old publication receipts.
+The `@shepherdjerred/media/plex-binding` export defines
 `reverifyPlexBinding`: its strict input contains schema version, operation ID,
 recovery epoch and up to 100 sorted unique asset IDs. Complete coverage remains
 in PostgreSQL. Its result is verified with a binding count, superseded, or
@@ -717,9 +721,10 @@ preserved and reported rather than overwritten.
 Registration creates only passive default targets when missing, unowned
 published assets and their current coverage. It creates no request, monitoring,
 profile binding, torrent, filesystem ownership or automation grant, and leaves
-existing targets unchanged. Registered movie and episode rows record generic
-available presence; target availability and collection state retain their
-existing semantics. Generic externally managed Plex availability is
+existing targets unchanged. Movie and episode reads project generic available
+presence only while the registered inventory evidence is fresh; registration
+does not change their stored lifecycle, target availability or collection state.
+Generic externally managed Plex availability is
 separate from owned playable bindings. Movie labels are retained as observed;
 an unmarked or unverified cut never implies Theatrical or fulfills a canonical
 edition request. Availability requires the latest normal inventory source

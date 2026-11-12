@@ -5,6 +5,7 @@ import { externalLibraryFixture } from "#testing/external-library-fixture.ts";
 import { ExternalLibraryRegistrationSchema } from "#shared/external-library/contract.ts";
 import { lockDefaultScopes } from "#infrastructure/editions/locks.ts";
 import { defaultScope } from "#shared/editions/scope.ts";
+import { readExternalLibraryAvailability } from "#infrastructure/external-library/availability.ts";
 
 const h = automationTestHarness();
 const object = z.record(z.string(), z.json());
@@ -188,7 +189,7 @@ test("canonical, owner, inventory and actual Plex identity changes fail before r
   });
   await expect(
     f.service.apply(f.owner, crypto.randomUUID(), input),
-  ).rejects.toMatchObject({ code: "external_library_preview_changed" });
+  ).rejects.toMatchObject({ code: "external_library_identity_changed" });
   f.plexItems.set(f.input.ratingKey, selected);
   f.plexItems.set(f.input.ratingKey, { ...selected, year: 2023 });
   await expect(
@@ -271,7 +272,7 @@ test("existing owned path and scope are reported protected and remain byte-for-b
       properties: {},
       editionRootId: f.root.id,
       coverage: {
-        create: { mediaId: f.media.id, edition: "default", current: true },
+        create: { mediaId: f.media.id, current: true },
       },
     },
   });
@@ -392,4 +393,30 @@ test("shared physical TV episodes retain individual Part identities and exact ca
     ["1000", 1],
     ["1001", 2],
   ]);
+  // A complete shared-file proof cannot project a new status onto a sibling
+  // outside the request reader's current library access.
+  const visibleRequest = await db.mediaRequest.create({
+    data: { mediaId: f.media.id, userId: f.owner.id },
+  });
+  await db.mediaItem.update({
+    where: { id: episode2.id },
+    data: { externalIds: { plexSectionId: "1" } },
+  });
+  await db.plexIdentityMapping.update({
+    where: { userId: f.owner.id },
+    data: { permittedSectionIds: ["2"] },
+  });
+  const mixed = await f.application.listRequests(f.owner);
+  expect(
+    mixed.find((row) => row.id === visibleRequest.id)?.media.availability,
+  ).toBe("available");
+  expect(mixed.find((row) => row.id === request.id)?.media.availability).toBe(
+    episode2.availability,
+  );
+  await expect(
+    f.application.getMedia(f.owner, episode2.id),
+  ).rejects.toMatchObject({ code: "plex_library_access_required" });
+  expect(await readExternalLibraryAvailability(db, asset.id, f.access)).toEqual(
+    [f.media.id, episode2.id],
+  );
 });

@@ -16,6 +16,11 @@ import {
 import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
 import { CatalogIdentitySchema } from "#shared/acquisition/catalog.ts";
 import { canonicalRootId } from "#infrastructure/editions/locks.ts";
+import type { MediaActor } from "#application/auth.ts";
+import {
+  assessVisibilityAccess,
+  type visibilityAncestry,
+} from "#infrastructure/visibility/access.ts";
 
 // Normal inventory runs every 24 hours and has a one-hour execution bound.
 export const EXTERNAL_INVENTORY_FRESHNESS_MS = 25 * 60 * 60 * 1000;
@@ -180,6 +185,113 @@ function rootMatches(
   );
 }
 
+function registeredAssets(
+  assets: readonly ExternalAsset[],
+  access: readonly PlexAccess[],
+  now: Date,
+) {
+  return assets.flatMap((asset) => {
+    for (const configured of access) {
+      const registration = registrationForAsset(asset, configured, now);
+      if (registration !== null && membersMatch(asset, registration))
+        return [{ asset, registration }];
+    }
+    return [];
+  });
+}
+
+/** One shared inventory/event/catalog read for a bounded page of unique physical groups. */
+async function availableAssets(
+  tx: Prisma.TransactionClient,
+  assets: readonly ExternalAsset[],
+  access: readonly PlexAccess[],
+  now: Date,
+): Promise<Map<string, readonly string[]>> {
+  const selected = registeredAssets(assets, access, now);
+  const available = new Map<string, readonly string[]>();
+  if (selected.length === 0) return available;
+  const latest = await tx.reconciliationScan.findFirst({
+    where: { kind: "inventory", progress: { path: ["section"], gte: 2 } },
+    orderBy: [{ startedAt: "desc" }, { id: "desc" }],
+  });
+  if (latest === null) return available;
+  const events = await tx.applicationEvent.findMany({
+    where: {
+      id: {
+        in: selected.map(
+          ({ registration }) => registration.registrationEventId,
+        ),
+      },
+    },
+  });
+  const roots = await tx.mediaItem.findMany({
+    where: {
+      id: {
+        in: [
+          ...new Set(
+            selected.map(({ registration }) => registration.rootMediaId),
+          ),
+        ],
+      },
+    },
+  });
+  const coverage = await tx.assetCoverage.findMany({
+    where: {
+      current: true,
+      mediaId: {
+        in: [
+          ...new Set(
+            selected.flatMap(({ registration }) =>
+              registration.members.map((member) => member.mediaId),
+            ),
+          ),
+        ],
+      },
+    },
+    select: { mediaId: true, assetId: true },
+  });
+  const observations = await tx.plexInventoryObservation.findMany({
+    where: {
+      scanId: latest.id,
+      OR: selected.map(({ registration }) => ({
+        sectionId: registration.sectionId,
+        path: registration.canonicalPath,
+      })),
+    },
+    take: selected.length * 26 + 1,
+    orderBy: [{ sectionId: "asc" }, { path: "asc" }, { ratingKey: "asc" }],
+  });
+  // An overflowing page cannot prove a complete physical cohort.
+  if (observations.length > selected.length * 26) return available;
+  const eventById = new Map(events.map((event) => [event.id, event]));
+  const rootById = new Map(roots.map((root) => [root.id, root]));
+  for (const { asset, registration } of selected) {
+    const ids = registration.members.map((member) => member.mediaId);
+    if (
+      !registrationEventMatches(
+        eventById.get(registration.registrationEventId) ?? null,
+        registration,
+      ) ||
+      !rootMatches(
+        rootById.get(registration.rootMediaId) ?? null,
+        registration,
+      ) ||
+      coverage.some(
+        (row) => ids.includes(row.mediaId) && row.assetId !== asset.id,
+      )
+    )
+      continue;
+    const cohort = observations.filter(
+      (row) =>
+        row.sectionId === registration.sectionId &&
+        row.path === registration.canonicalPath,
+    );
+    if (externalInventoryMatches(registration, cohort, [latest], now))
+      available.set(asset.id, ids);
+  }
+  return available;
+}
+
 /** Generic Plex presence only. This grants no edition fulfillment or file authority. */
 export async function readExternalLibraryAvailability(
   tx: Prisma.TransactionClient,
@@ -192,35 +304,84 @@ export async function readExternalLibraryAvailability(
     include: assetInclude,
   });
   if (asset === null) return null;
-  const registration = registrationForAsset(asset, access, now);
-  if (registration === null || !membersMatch(asset, registration)) return null;
-  const event = await tx.applicationEvent.findUnique({
-    where: { id: registration.registrationEventId },
-  });
-  if (!registrationEventMatches(event, registration)) return null;
-  const competing = await tx.assetCoverage.count({
+  const available = await availableAssets(tx, [asset], [access], now);
+  return available.get(asset.id) ?? null;
+}
+
+/** Read overlay only: lifecycle and intent rows remain exactly as recorded. */
+export async function externalAvailableMediaIds(
+  tx: Prisma.TransactionClient,
+  mediaIds: readonly string[],
+  access: readonly PlexAccess[],
+): Promise<ReadonlySet<string>> {
+  if (mediaIds.length === 0 || access.length === 0) return new Set();
+  const assets = await tx.libraryAsset.findMany({
     where: {
-      current: true,
-      mediaId: { in: registration.members.map((member) => member.mediaId) },
-      assetId: { not: asset.id },
+      owned: false,
+      coverage: {
+        some: {
+          current: true,
+          edition: "default",
+          mediaId: { in: [...mediaIds] },
+        },
+      },
     },
+    include: assetInclude,
   });
-  if (competing > 0) return null;
-  const root = await tx.mediaItem.findUnique({
-    where: { id: registration.rootMediaId },
+  const available = await availableAssets(tx, assets, access, new Date());
+  const requested = new Set(mediaIds);
+  return new Set(
+    [...available.values()].flat().filter((id) => requested.has(id)),
+  );
+}
+
+type ExternalRequest = Prisma.MediaRequestGetPayload<{
+  include: { media: { include: typeof visibilityAncestry } };
+}>;
+
+/** Request cards retain their existing read scope; only new presence claims need current access. */
+export async function projectExternalRequests(
+  tx: Prisma.TransactionClient,
+  actor: MediaActor,
+  requests: ExternalRequest[],
+  options: {
+    access: readonly PlexAccess[];
+    serverMachineId: string | undefined;
+  },
+): Promise<ExternalRequest[]> {
+  const { access, serverMachineId } = options;
+  if (access.length === 0) return requests;
+  const sections: { movie?: string; series?: string } = {};
+  for (const library of access)
+    sections[library.sectionType === "movie" ? "movie" : "series"] =
+      library.sectionId;
+  const { reader, user } = await assessVisibilityAccess(tx, actor, {
+    serverMachineId,
+    sections,
   });
-  if (!rootMatches(root, registration)) return null;
-  const latest = await tx.reconciliationScan.findFirst({
-    where: { kind: "inventory", progress: { path: ["section"], gte: 2 } },
-    orderBy: [{ startedAt: "desc" }, { id: "desc" }],
-  });
-  if (latest === null) return null;
-  const observations = await tx.plexInventoryObservation.findMany({
-    where: { sectionId: access.sectionId, path: asset.path, scanId: latest.id },
-    take: 26,
-    orderBy: { ratingKey: "asc" },
-  });
-  return externalInventoryMatches(registration, observations, [latest], now)
-    ? registration.members.map((member) => member.mediaId)
-    : null;
+  if (reader === null) return requests;
+  const permitted = access.filter(
+    (library) =>
+      user.plexIdentity?.permittedSectionIds.includes(library.sectionId) ===
+        true &&
+      user.plexIdentity.permittedMediaKinds.includes(
+        library.sectionType === "movie" ? "movie" : "series",
+      ),
+  );
+  const external = await externalAvailableMediaIds(
+    tx,
+    requests
+      .filter((request) => reader.visible(request.media))
+      .map((request) => request.mediaId),
+    permitted,
+  );
+  return requests.map((request) => ({
+    ...request,
+    media: {
+      ...request.media,
+      availability: external.has(request.mediaId)
+        ? "available"
+        : request.media.availability,
+    },
+  }));
 }
