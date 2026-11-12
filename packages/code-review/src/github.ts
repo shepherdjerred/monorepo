@@ -30,6 +30,7 @@ import {
   assembleProviderThreads,
   fetchReviewListing,
 } from "./github-review-snapshot.ts";
+import type { ReviewListingCache } from "./github-review-listing-cache.ts";
 import type { CompletionSignal } from "./signal.ts";
 import type {
   PullRequestAuthor,
@@ -95,8 +96,13 @@ export async function fetchReviewThreads(input: {
    * so this function fetches it; `null` means "fetched, none found".
    */
   issueComment?: ReviewIssueComment | null | undefined;
+  /** Reuse an unchanged listing across polls (see ReviewListingCache). */
+  listings?: ReviewListingCache | undefined;
 }): Promise<{ threads: ReviewThread[]; headRefOid: string | null }> {
-  const listing = await fetchReviewListing(input);
+  const listing =
+    input.listings === undefined
+      ? await fetchReviewListing(input)
+      : await input.listings.get(input);
   const { completion } = input.provider;
   const comment =
     completion.kind === "issue-comment" && input.issueComment === undefined

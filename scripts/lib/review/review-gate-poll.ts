@@ -29,6 +29,7 @@ import {
   GitHubRateLimitError,
   restCache,
 } from "@shepherdjerred/code-review/github-request";
+import type { ReviewListingCache } from "@shepherdjerred/code-review/github-review-listing-cache";
 import { buildSignalEvent } from "./review-gate-signal.ts";
 import { warnIfFirstReviewIsOversized } from "./review-gate-policy.ts";
 import {
@@ -454,10 +455,15 @@ function noteTransientPollError(state: PollLoopState, error: unknown): void {
 }
 
 /** Log how many REST reads were charged versus revalidated for free. */
-export function logRestUsage(): void {
+export function logRestUsage(listings?: ReviewListingCache): void {
   console.log(
     `GitHub REST reads: ${String(restCache.fetched)} charged, ${String(restCache.notModified)} not modified (uncharged 304)`,
   );
+  if (listings !== undefined) {
+    console.log(
+      `GitHub review listings: ${String(listings.fetched)} fetched over GraphQL, ${String(listings.reused)} reused unchanged`,
+    );
+  }
 }
 
 /** Jitter added after a rate-limit reset so concurrent gates do not stampede. */
@@ -500,6 +506,7 @@ export async function pollOnce(
 ): Promise<boolean> {
   let observed: ProviderObservation[];
   let token: string;
+  poll.listings.beginTick();
   try {
     token = await config.readToken();
     const tick = await observeTick({ ...config, token }, poll, startedAt);
@@ -517,7 +524,25 @@ export async function pollOnce(
   }
   state.lastPollError = null;
   state.resumeAt = null;
-  const passed = concludeTick(config, poll, observed, startedAt);
+  let passed: boolean;
+  try {
+    passed = concludeTick(config, poll, observed, startedAt);
+  } catch (error) {
+    // Reusing a listing may delay what the gate sees, never fail it: a
+    // failure decided on a listing from an earlier tick is decided again on
+    // a fresh one, so a thread resolved since then cannot fail the gate.
+    if (
+      !(error instanceof ReviewGateFailure) ||
+      !poll.listings.reusedEarlierTick
+    ) {
+      throw error;
+    }
+    poll.listings.invalidate();
+    console.log(
+      "Re-reading the review listing before failing on one reused from an earlier poll.",
+    );
+    return pollOnce(config, poll, startedAt, state);
+  }
   const confirmation = confirmPass(passed, state.passStreak);
   state.passStreak = confirmation.streak;
   if (!confirmation.accepted) {

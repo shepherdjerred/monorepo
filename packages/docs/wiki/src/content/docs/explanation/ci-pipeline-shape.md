@@ -373,6 +373,24 @@ not from an App bot. A gate that cannot mint fails rather than falling back to
 the personal token, because falling back would silently restore the shared
 bucket.
 
+Moving the gate to the installation only helps if the gate also fits in the
+installation's bucket. Re-reading the review threads and reviews over GraphQL
+on every 30-second poll cost about eight points a minute per pull request,
+and with thirty agents' pull requests open at once that is about 14,400 points
+an hour against a 5,000-point bucket. GraphQL has no conditional requests, but
+the REST views of the same records do, and an unchanged page is an uncharged
+`304`. So the gate re-reads the listing only when the pull request's reviews
+or newest review comment change, and otherwise every five minutes
+([`github-review-listing-cache.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/code-review/src/github-review-listing-cache.ts)).
+The five-minute re-read exists for the one change no REST view records: a
+thread being resolved or unresolved. Thirty idle gates now spend about 720
+points an hour.
+
+Reuse may delay what the gate sees, but it never decides the outcome. A pass
+is re-read fresh before it is accepted, and a failure decided on a reused
+listing is decided again on a fresh one, so a thread resolved in the meantime
+cannot fail the gate.
+
 ## Handoffs go through object storage
 
 Steps pass values to later steps through a build-scoped SeaweedFS prefix,

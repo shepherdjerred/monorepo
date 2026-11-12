@@ -24,6 +24,7 @@ import {
   REVIEW_GATE_FAILURE_EXIT_CODE,
   type ReviewProvider,
 } from "@shepherdjerred/code-review";
+import { ReviewListingCache } from "@shepherdjerred/code-review/github-review-listing-cache";
 import type { GatePollState } from "../lib/review/review-gate-observe.ts";
 import { reviewGateCredentials } from "../lib/review/review-gate-credentials.ts";
 import {
@@ -268,6 +269,7 @@ async function pollReviewGate(config: GateConfig): Promise<void> {
     // an attempt has actually been posted, so a poll that decides it is too
     // early re-decides on the next one.
     attempts: new Map(providers.map((provider) => [provider.id, 1])),
+    listings: new ReviewListingCache(),
     lastObservations: new Map(),
     warnedMismatch: false,
     warnedOversized: new Set(),
@@ -294,7 +296,7 @@ async function pollReviewGate(config: GateConfig): Promise<void> {
     // error live in failAtDeadline; this function never returns.
     failAtDeadline(config, poll, startedAt, state.lastPollError);
   } finally {
-    logRestUsage();
+    logRestUsage(poll.listings);
   }
 }
 

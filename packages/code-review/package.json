@@ -18,6 +18,10 @@
       "types": "./src/github-review-snapshot.ts",
       "default": "./src/github-review-snapshot.ts"
     },
+    "./github-review-listing-cache": {
+      "types": "./src/github-review-listing-cache.ts",
+      "default": "./src/github-review-listing-cache.ts"
+    },
     "./github-request": {
       "types": "./src/github-request.ts",
       "default": "./src/github-request.ts"

@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
 import { codexProvider } from "@shepherdjerred/code-review";
 import { GitHubRateLimitError } from "@shepherdjerred/code-review/github-request";
+import { ReviewListingCache } from "@shepherdjerred/code-review/github-review-listing-cache";
 import type { GatePollState } from "./review-gate-observe.ts";
 import {
   nextPollDelayMs,
@@ -37,6 +38,7 @@ function freshPoll(): GatePollState {
     headPushedAt: null,
     pullRequestAuthor: null,
     attempts: new Map([[codexProvider.id, 1]]),
+    listings: new ReviewListingCache(),
     lastObservations: new Map(),
     warnedMismatch: false,
     warnedOversized: new Set(),
