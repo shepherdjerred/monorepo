@@ -14,9 +14,10 @@ import {
   inverseChange,
   type IssueChange,
 } from "./issue-changes.ts";
-import { createIssueEdits, failureReason } from "./issue-edits.ts";
+import { createIssueEdits } from "./issue-edits.ts";
 import {
   bulkSummary,
+  groupEdits,
   planBulk,
   type BulkChange,
   type IssueEdit,
@@ -39,6 +40,8 @@ const edits = createIssueEdits({
       voted
         ? api.votes.cast.mutate({ actor: currentActor(), identifier })
         : api.votes.remove.mutate({ actor: currentActor(), identifier }),
+    bulkUpdate: (input) =>
+      api.issues.bulkUpdate.mutate({ actor: currentActor(), ...input }),
     detail: (identifier) =>
       api.issues.byIdentifier.query({
         identifier,
@@ -135,95 +138,71 @@ export function editIssue(
       );
 }
 
-/** Name the issues an action failed for, once, with the first reason. */
-function reportFailures(
-  outcomes: readonly (readonly [string, Outcome])[],
-  what: string,
-) {
-  const failed = outcomes.flatMap(([identifier, outcome]) =>
-    outcome.ok ? [] : [{ identifier, error: outcome.error }],
-  );
-  const [first] = failed;
-  if (first !== undefined) {
-    notifyError(
-      `${what}: ${failed.map(({ identifier }) => identifier).join(", ")} (${failureReason(first.error)})`,
-    );
-  }
-  return failed.length;
-}
+const reason = (error: unknown) =>
+  error instanceof Error ? error.message : "Something went wrong";
 
 /**
- * Edit many issues at once. Each edit is saved like a single one, in
- * parallel, without its own toast: one toast confirms them all, one Undo
- * takes back every edit that was not already rolled back, and one error
- * names the issues that could not be saved.
+ * Take back a bulk edit. The issues can have had different values before
+ * it, so the inverse edits are grouped by identical change and each group is
+ * one `issues.bulkUpdate`: the undo is atomic within a group, not across
+ * groups, and a group that fails is reported on its own.
  */
-export async function editIssues(
-  changes: readonly IssueEdit[],
-  summary: string,
-): Promise<Outcome[]> {
-  const inverses = changes.map(([identifier, change]) => {
-    const inverse = inverseChange(loadedIssue(identifier), change);
-    if (inverse === undefined) {
-      throw new Error(`A ${change.kind} change cannot be undone`);
-    }
-    return [identifier, inverse] as const;
-  });
-  const failed = new Set<string>();
-  const saving = Promise.all(
-    changes.map(async ([identifier, change]) => {
-      const outcome = await edits.edit(identifier, change, { report: false });
-      if (!outcome.ok) {
-        failed.add(identifier);
-      }
-      return [identifier, outcome] as const;
-    }),
+async function undoBulk(inverses: readonly IssueEdit[], summary: string) {
+  const outcomes = await Promise.all(
+    groupEdits(inverses).map(({ change, identifiers }) =>
+      edits.bulk(identifiers, change),
+    ),
   );
-  const toast = notifyUndo(summary, {
-    undo: () => {
-      void (async () => {
-        const undone = await Promise.all(
-          inverses
-            .filter(([identifier]) => !failed.has(identifier))
-            .map(
-              async ([identifier, inverse]) =>
-                [
-                  identifier,
-                  await edits.edit(identifier, inverse, { report: false }),
-                ] as const,
-            ),
-        );
-        if (reportFailures(undone, "Not undone") === 0) {
-          notify(`Undone: ${summary}`);
-        }
-      })();
-    },
-  });
-  const outcomes = await saving;
-  const failures = reportFailures(outcomes, "Not saved");
-  if (failures === outcomes.length) {
-    dismissToast(toast);
+  const failures = outcomes.flatMap((outcome) =>
+    outcome.ok ? [] : [reason(outcome.error)],
+  );
+  if (failures.length === 0) {
+    notify(`Undone: ${summary}`);
   } else {
-    noteActor();
+    notifyError(`Not undone: ${failures.join(" ")}`);
   }
-  return outcomes.map(([, outcome]) => outcome);
 }
 
 /**
- * Apply one change to several issues: those it would not alter are skipped,
- * and the toast counts every issue the action was asked about.
+ * Apply one change to several issues in one atomic request: every issue
+ * changes at once on screen, the server saves all of them or none, and one
+ * toast confirms them with one Undo. Issues the change would not alter are
+ * left out; the toast counts every issue the action was asked about.
  */
-export function bulkEdit(identifiers: readonly string[], change: BulkChange) {
+export async function bulkEdit(
+  identifiers: readonly string[],
+  change: BulkChange,
+): Promise<Outcome> {
   const summary = bulkSummary(change, identifiers.length, workspace());
-  const { changes } = planBulk(
+  const { changes, inverses } = planBulk(
     identifiers.map((identifier) => loadedIssue(identifier)),
     change,
   );
   if (changes.length === 0) {
     notify(summary);
-    return Promise.resolve([]);
+    return { ok: true, value: undefined };
   }
-  return editIssues(changes, summary);
+  let failed = false;
+  const toast = notifyUndo(summary, {
+    undo: () => {
+      if (!failed) {
+        void undoBulk(inverses, summary);
+      }
+    },
+  });
+  const outcome = await edits.bulk(
+    changes.map(([identifier]) => identifier),
+    change,
+  );
+  if (outcome.ok) {
+    noteActor();
+  } else {
+    failed = true;
+    dismissToast(toast);
+    // The server's message names the issues that stopped the edit.
+    notifyError(`Not saved: ${reason(outcome.error)}`);
+  }
+  return outcome;
 }
 
 /**

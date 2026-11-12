@@ -1,5 +1,10 @@
 import { describe, expect, test } from "vitest";
-import { bulkLabelChange, bulkSummary, planBulk } from "./bulk-changes.ts";
+import {
+  bulkLabelChange,
+  bulkSummary,
+  groupEdits,
+  planBulk,
+} from "./bulk-changes.ts";
 import { issueFixture, workspaceFixture } from "./testing.ts";
 
 const label = (name: string) => {
@@ -83,5 +88,23 @@ describe("bulk edits", () => {
     expect(
       bulkSummary({ kind: "archive", archived: true }, 1, workspaceFixture),
     ).toBe("Archived 1 issue");
+  });
+
+  test("an undo sends one request per distinct previous value", () => {
+    const { inverses } = planBulk(
+      [
+        issueFixture(1, { priority: 0 }),
+        issueFixture(2, { priority: 3 }),
+        issueFixture(3, { priority: 0 }),
+      ],
+      { kind: "priority", priority: 1 },
+    );
+    expect(groupEdits(inverses)).toEqual([
+      {
+        change: { kind: "priority", priority: 0 },
+        identifiers: ["AI-1", "AI-3"],
+      },
+      { change: { kind: "priority", priority: 3 }, identifiers: ["AI-2"] },
+    ]);
   });
 });

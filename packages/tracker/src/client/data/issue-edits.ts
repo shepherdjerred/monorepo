@@ -17,8 +17,10 @@ import {
   changePatch,
   changeSlice,
   retriesConflict,
+  updateInput,
   type IssueChange,
 } from "./issue-changes.ts";
+import { bulkPatch, type BulkChange, type BulkPatch } from "./bulk-changes.ts";
 
 /** The server calls an issue edit can make. The browser binds them to tRPC. */
 export type IssueApi = {
@@ -47,6 +49,12 @@ export type IssueApi = {
     identifier: string,
     voted: boolean,
   ) => Promise<{ voteCount: number; viewerVoted: boolean }>;
+  /** One atomic edit of several issues; all of them change or none does. */
+  bulkUpdate: (input: {
+    identifiers: string[];
+    expectedRevisions: Record<string, number>;
+    patch: BulkPatch;
+  }) => Promise<{ items: Issue[] }>;
   detail: (identifier: string) => Promise<IssueDetailData>;
   /** `keepalive` lets the request outlive the page that sent it. */
   remove: (
@@ -77,51 +85,11 @@ const IssueQueryKeySchema = z
 export const isConflict = (error: unknown) =>
   ConflictSchema.safeParse(error).success;
 
-function updateInput(change: IssueChange) {
-  switch (change.kind) {
-    case "state": {
-      return { stateName: change.stateName };
-    }
-    case "priority": {
-      return { priority: change.priority };
-    }
-    case "assignee": {
-      return { assigneeKey: change.assigneeKey };
-    }
-    case "project": {
-      return { projectSlug: change.projectSlug };
-    }
-    case "label": {
-      return change.add
-        ? { addLabels: [change.name] }
-        : { removeLabels: [change.name] };
-    }
-    case "title": {
-      return { title: change.title };
-    }
-    case "archive": {
-      return { archived: change.archived };
-    }
-    case "description": {
-      return {
-        description: change.description,
-        attachmentIds: change.attachmentIds,
-      };
-    }
-    case "move":
-    case "vote": {
-      throw new Error(`A ${change.kind} is not an issue update`);
-    }
-  }
-}
-
-/** Why an edit failed, short enough to list beside several identifiers. */
-export function failureReason(error: unknown) {
-  if (isConflict(error)) {
-    return "changed by someone else";
-  }
-  return error instanceof Error ? error.message : "not saved";
-}
+/** The identifiers a server message names, such as "AI-1, AI-2 changed." */
+const namedIssues = (error: unknown) =>
+  error instanceof Error
+    ? (error.message.match(/\b[A-Z][A-Z0-9]*-[1-9]\d*\b/gu) ?? [])
+    : [];
 
 function failure(identifier: string, error: unknown, action: string) {
   if (isConflict(error)) {
@@ -309,7 +277,6 @@ export function createIssueEdits(deps: {
     identifier: string,
     session: Session,
     change: IssueChange,
-    report: boolean,
   ): Promise<Outcome> {
     try {
       const server = await withRetry(identifier, session, {
@@ -322,15 +289,74 @@ export function createIssueEdits(deps: {
     } catch (error) {
       session.pending.splice(session.pending.indexOf(change), 1);
       write(identifier, session);
-      if (report) {
-        deps.onError(
-          failure(identifier, error, "your edit was not saved"),
-          error,
-        );
-      }
+      deps.onError(
+        failure(identifier, error, "your edit was not saved"),
+        error,
+      );
       return { ok: false, error };
     } finally {
       settle(identifier, session);
+    }
+  }
+
+  /** Send one bulk edit; on a stale revision reload what it names, once. */
+  async function sendBulk(
+    opened: readonly (readonly [string, Session])[],
+    patch: BulkPatch,
+  ) {
+    const request = () =>
+      api.bulkUpdate({
+        identifiers: opened.map(([identifier]) => identifier),
+        expectedRevisions: Object.fromEntries(
+          opened.map(([identifier, session]) => [
+            identifier,
+            session.base.revision,
+          ]),
+        ),
+        patch,
+      });
+    try {
+      return await request();
+    } catch (error) {
+      if (!isConflict(error)) {
+        throw error;
+      }
+      const named = new Set(namedIssues(error));
+      await Promise.all(
+        opened
+          .filter(([identifier]) => named.size === 0 || named.has(identifier))
+          .map(([identifier, session]) => refresh(identifier, session)),
+      );
+      return request();
+    }
+  }
+
+  async function runBulk(
+    opened: readonly (readonly [string, Session])[],
+    change: BulkChange,
+  ): Promise<Outcome> {
+    const done = (identifier: string, session: Session, server?: Issue) => {
+      session.pending.splice(session.pending.indexOf(change), 1);
+      write(identifier, session, server);
+    };
+    try {
+      const { items } = await sendBulk(opened, bulkPatch(change));
+      const returned = new Map(items.map((item) => [item.identifier, item]));
+      for (const [identifier, session] of opened) {
+        const server = returned.get(identifier);
+        session.base = { ...session.base, ...server };
+        done(identifier, session, server);
+      }
+      return { ok: true, value: undefined };
+    } catch (error) {
+      for (const [identifier, session] of opened) {
+        done(identifier, session);
+      }
+      return { ok: false, error };
+    } finally {
+      for (const [identifier, session] of opened) {
+        settle(identifier, session);
+      }
     }
   }
 
@@ -376,16 +402,8 @@ export function createIssueEdits(deps: {
   }
 
   return {
-    /**
-     * Apply an edit now and save it in order; resolves once it is settled.
-     * `report: false` leaves telling the user about a failure to the caller,
-     * which a bulk edit does once for all of its issues.
-     */
-    edit(
-      identifier: string,
-      change: IssueChange,
-      options: { report?: boolean } = {},
-    ): Promise<Outcome> {
+    /** Apply an edit now and save it in order; resolves once it is settled. */
+    edit(identifier: string, change: IssueChange): Promise<Outcome> {
       const session = open(identifier);
       void client.cancelQueries({ queryKey: issueKey(identifier) });
       void client.cancelQueries({ queryKey: listsKey });
@@ -398,9 +416,38 @@ export function createIssueEdits(deps: {
         session.pending.pop();
         throw error;
       }
-      return enqueue(session, () =>
-        runEdit(identifier, session, change, options.report ?? true),
+      return enqueue(session, () => runEdit(identifier, session, change));
+    },
+
+    /**
+     * Apply one change to several issues now and save it in one atomic
+     * `issues.bulkUpdate`, behind each issue's earlier edits. A failure takes
+     * the change back on every issue; reporting it is the caller's, once.
+     */
+    bulk(identifiers: readonly string[], change: BulkChange): Promise<Outcome> {
+      const opened = identifiers.map(
+        (identifier) => [identifier, open(identifier)] as const,
       );
+      void client.cancelQueries({ queryKey: ["issue"] });
+      void client.cancelQueries({ queryKey: listsKey });
+      for (const [identifier, session] of opened) {
+        session.touched.push(change);
+        session.pending.push(change);
+        write(identifier, session);
+      }
+      const earlier = opened.map(([, session]) => session.tail);
+      for (const [, session] of opened) {
+        session.queued += 1;
+      }
+      // Each issue's queue waits for this one request, which waits for all.
+      const run = (async () => {
+        await Promise.all(earlier);
+        return runBulk(opened, change);
+      })();
+      for (const [, session] of opened) {
+        session.tail = run;
+      }
+      return run;
     },
 
     /**

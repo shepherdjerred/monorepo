@@ -89,9 +89,12 @@ properties (`labels`, `project`, `date`, `assignee`) and `sort`. A grouped
 list loads up to ten pages at once so its groups fill in before you scroll.
 
 A selection belongs to one list address (its peek aside) and is not
-stored. A bulk action saves each issue's edit in parallel, as a single edit
-would, under one toast whose Undo reverts every edit that was not already
-rolled back; failures are reported once, by identifier. Every shortcut is
+stored. A bulk action is one `issues.bulkUpdate` carrying each issue's
+revision: every issue changes on screen at once, the server saves all of them
+or none, a refusal takes the change back everywhere with one error naming the
+issues, and a stale revision reloads the named issues and retries once. Its
+one Undo sends one bulk request per distinct previous value, so it is atomic
+per group rather than across them. Deletes stay per issue. Every shortcut is
 declared once in `src/client/shell/shortcuts.ts`, which both the key handler
 and the help sheet read; only the chords listed there are taken from the
 browser.

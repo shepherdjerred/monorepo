@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { z } from "zod";
 import {
   createIssue,
+  recordCalls,
   removeIssue,
   scratchTeam,
   toastSaying,
@@ -154,7 +155,7 @@ test("labels toggle in the picker without closing it", async ({ page }) => {
   await removeIssue(page.request, identifier);
 });
 
-test("three selected issues change priority together and one Undo reverts all", async ({
+test("three selected issues change priority in one atomic request and one Undo reverts all", async ({
   page,
 }, info) => {
   const mobile = info.project.name === "mobile";
@@ -170,6 +171,11 @@ test("three selected issues change priority together and one Undo reverts all", 
   }
   const bar = page.getByRole("region", { name: "Selected issues" });
   await expect(bar).toContainText("3 selected");
+  const calls = recordCalls(page);
+  const sent = (procedure: string) =>
+    calls.filter((call) =>
+      (call.split("?")[0] ?? "").split(",").includes(procedure),
+    );
   await bar.locator("#bulk-priority").selectOption("Urgent");
   await expect(toastSaying(page, "Set 3 issues to Urgent")).toBeVisible();
   for (const identifier of identifiers) {
@@ -180,6 +186,9 @@ test("three selected issues change priority together and one Undo reverts all", 
   for (const identifier of identifiers) {
     await expect.poll(() => serverPriority(page, identifier)).toBe(1);
   }
+  // All three in one bulk request; never an update per issue.
+  expect(sent("issues.bulkUpdate")).toHaveLength(1);
+  expect(sent("issues.update")).toEqual([]);
   await undo(page).click();
   for (const identifier of identifiers) {
     await expect(picker(page, "priority", identifier)).toHaveValue("0");
@@ -187,6 +196,9 @@ test("three selected issues change priority together and one Undo reverts all", 
   for (const identifier of identifiers) {
     await expect.poll(() => serverPriority(page, identifier)).toBe(0);
   }
+  // They all had the same priority before, so the undo is one request too.
+  expect(sent("issues.bulkUpdate")).toHaveLength(2);
+  expect(sent("issues.update")).toEqual([]);
   await page.reload();
   for (const identifier of identifiers) {
     await expect(picker(page, "priority", identifier)).toHaveValue("0");

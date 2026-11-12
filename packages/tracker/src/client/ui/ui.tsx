@@ -91,13 +91,6 @@ export function ActorChip({
     </span>
   );
 }
-export function StateDot({ color }: { color: string }) {
-  return (
-    <span className="state-dot" style={{ color }} aria-hidden="true">
-      ◉
-    </span>
-  );
-}
 export function Priority({ value }: { value: number }) {
   return (
     <span

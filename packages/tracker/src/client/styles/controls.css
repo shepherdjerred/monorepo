@@ -134,7 +134,9 @@ select.picker-action::picker-icon {
     display: none;
   }
 }
-select.picker::picker(select),
+/* Selectors a browser does not know drop their whole rule, so the
+   customizable select's pseudo-elements never share a rule with the
+   Base UI fallback's classes. */
 .picker-popup {
   min-width: 200px;
   max-width: min(340px, calc(100vw - 16px));
@@ -148,6 +150,16 @@ select.picker::picker(select),
   box-shadow: var(--shadow);
 }
 select.picker::picker(select) {
+  min-width: 200px;
+  max-width: min(340px, calc(100vw - 16px));
+  max-height: min(380px, var(--available-height, 380px));
+  overflow-y: auto;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: var(--shadow);
   margin-block: 4px;
 }
 select.picker option,
@@ -385,10 +397,6 @@ select.picker option[hidden] {
   border-color: var(--accent);
   background: var(--accent-soft);
 }
-.issue-row,
-.board-card {
-  -webkit-touch-callout: none;
-}
 /* Group headers are rows of the window; the sticky copy follows the top. */
 .issue-list-frame {
   position: relative;
@@ -525,7 +533,11 @@ body:has(.bulk-bar) .toast-viewport {
   min-width: 0;
 }
 .filter-chips {
-  display: contents;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
   list-style: none;
 }
 .filter-chip {
@@ -732,7 +744,9 @@ body:has(.bulk-bar) .toast-viewport {
     font-size: 14px;
   }
   .picker-popup,
-  .menu-popup,
+  .menu-popup {
+    max-width: calc(100vw - 16px);
+  }
   select.picker::picker(select) {
     max-width: calc(100vw - 16px);
   }

@@ -1,6 +1,7 @@
 import type { CachedIssue } from "./cache.ts";
 import {
   inverseChange,
+  updateInput,
   priorities,
   type Catalog,
   type IssueChange,
@@ -80,6 +81,24 @@ function bulkInverse(issue: CachedIssue, change: BulkChange): BulkChange {
   }
 }
 
+/**
+ * Edits grouped by identical change, in first-seen order, so each group can
+ * be sent as one bulk request.
+ */
+export function groupEdits(edits: readonly IssueEdit[]) {
+  const groups = new Map<
+    string,
+    { change: BulkChange; identifiers: string[] }
+  >();
+  for (const [identifier, change] of edits) {
+    const key = JSON.stringify(change);
+    const group = groups.get(key) ?? { change, identifiers: [] };
+    group.identifiers.push(identifier);
+    groups.set(key, group);
+  }
+  return [...groups.values()];
+}
+
 /** A label toggled on many issues: added unless every one has it already. */
 export function bulkLabelChange(
   issues: readonly CachedIssue[],
@@ -131,6 +150,31 @@ export function bulkSummary(
     }
     case "archive": {
       return `${change.archived ? "Archived" : "Unarchived"} ${issues}`;
+    }
+  }
+}
+
+/** The fields one `issues.bulkUpdate` sets on every issue it names. */
+export type BulkPatch = {
+  stateName?: string;
+  priority?: number;
+  assigneeKey?: string | null;
+  projectSlug?: string | null;
+  addLabels?: string[];
+  removeLabels?: string[];
+  archived?: boolean;
+};
+
+/** A bulk change as the fields `issues.bulkUpdate` sets on every issue. */
+export function bulkPatch(change: BulkChange): BulkPatch {
+  switch (change.kind) {
+    case "state":
+    case "priority":
+    case "assignee":
+    case "project":
+    case "label":
+    case "archive": {
+      return updateInput(change);
     }
   }
 }
