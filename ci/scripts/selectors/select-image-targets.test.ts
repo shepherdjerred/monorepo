@@ -163,7 +163,7 @@ describe("selectImageTargets", () => {
       "temporal-worker",
     ]);
     expect(
-      await select(["packages/homelab/src/tofu/cloudflare/domain-baseline.tf"]),
+      await select(["packages/homelab/src/tofu/cloudflare/main.tf.json"]),
     ).toEqual([]);
   });
 

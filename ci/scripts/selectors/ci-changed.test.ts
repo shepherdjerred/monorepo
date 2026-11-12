@@ -221,10 +221,14 @@ test("the CDK Terrain app and provider pins select every OpenTofu lane", () => {
 
 test("a synthesized zone or bucket still selects the site that depends on it", () => {
   const paths = selectorPathsForLane("site-statically-typed");
-  for (const stack of ["cloudflare", "seaweedfs"]) {
+  for (const stack of ["cloudflare", "seaweedfs"])
     expect(paths).toContain(`packages/homelab/src/tofu/${stack}/main.tf.json`);
-    expect(paths).toContain(`packages/homelab-cdktn/src/stacks/${stack}.ts`);
-  }
+  // The cloudflare stack is a directory of sources; seaweedfs is one file.
+  expect(paths).toContain("packages/homelab-cdktn/src/stacks/cloudflare");
+  expect(paths).toContain("packages/homelab-cdktn/src/stacks/seaweedfs.ts");
+  expect(paths).not.toContain(
+    "packages/homelab/src/tofu/cloudflare/statically-typed-com.tf",
+  );
 });
 
 test("domain registry changes select the OpenTofu lane", () => {

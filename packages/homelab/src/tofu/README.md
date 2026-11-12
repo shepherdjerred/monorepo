@@ -16,7 +16,7 @@ tofu/
 ├── arr/                 # Radarr/Sonarr/Prowlarr config, imported from the live instances
 ├── asuswrt/             # Asus routers & APs (custom provider, local-run only)
 ├── backblaze/           # Backup buckets and scoped keys; Velero writes to sjerred-velero (operator-applied)
-├── cloudflare/          # DNS zones, bot management, email security (one .tf per domain)
+├── cloudflare/          # DNS zones, records, redirects, R2 buckets and the mail/TLS baseline
 ├── cloudflare-tokens/   # Scoped API tokens, isolated from the DNS stack
 ├── discord/             # Imported Discord bot application settings
 ├── github/              # Repository settings and branch rulesets
@@ -33,7 +33,7 @@ Each subdirectory is an independent root module with its own `backend.tf` (S3 st
 
 ### Stacks synthesized from TypeScript
 
-`anthropic`, `anthropic-federation`, `argocd`, `arr`, `backblaze`, `cloudflare-tokens`, `dockerhub`, `github` and `tailscale` have no `.tf` files.
+`anthropic`, `anthropic-federation`, `argocd`, `arr`, `backblaze`, `cloudflare`, `cloudflare-tokens`, `dockerhub`, `github` and `tailscale` have no root `.tf` files.
 Their configuration is
 `main.tf.json`, synthesized by the [CDK Terrain](https://cdktn.io/docs) app in
 [`packages/homelab-cdktn`](../../../homelab-cdktn) and committed next to the stack's `.terraform.lock.hcl`.
@@ -53,6 +53,12 @@ are the construct ids in `packages/homelab-cdktn/src/stacks/<stack>.ts`, so rena
 state change. A synthesized stack is accepted only on a plan against live state
 that reports no changes. `tofu validate -backend=false` does not evaluate the
 `encryption` block, so validation alone does not prove an encrypted stack.
+
+The `cloudflare` root still calls its two local modules,
+`cloudflare/modules/domain-baseline` and `cloudflare/modules/static-cache`,
+which stay hand-written HCL next to `main.tf.json` and are archived with it.
+Their resources keep their `module.<name>…` addresses; flattening them into
+TypeScript is a separate change with explicit `moved` blocks.
 
 ### Provider versions
 
@@ -209,9 +215,15 @@ requires connectivity to both the LAN and tailnet; see
 
 ### Cloudflare
 
-`cloudflare/jerred-archives.tf` owns the private R2 archive bucket, and
-`cloudflare/pinterest-archives.tf` owns its private counterpart for Pinterest
-work archives. Each bucket declaration prevents destruction; each lifecycle rule
+The stack's source is
+[`packages/homelab-cdktn/src/stacks/cloudflare`](../../../homelab-cdktn/src/stacks/cloudflare):
+`zones.ts` declares the zones, `sjer-red.ts`, `ts-mc-net.ts` and `domains.ts`
+their application records, `baseline.ts` the shared baseline and `buckets.ts`
+the R2 buckets.
+
+`buckets.ts` owns the private R2 archive bucket `jerred-archives` and its
+private counterpart for Pinterest work archives, `pinterest-archives`. Each
+bucket declaration prevents destruction; each lifecycle rule
 removes only abandoned multipart uploads after seven days and never expires
 completed archives. The `personal-archives-r2` entry in `cloudflare-tokens`
 grants object read and write on only these two buckets. Retain
@@ -222,8 +234,8 @@ scheduled backups are the only backup. They are written to the Backblaze
 bucket that held backups taken before that move is no longer managed and is
 retired out-of-band, as is the unused `glitter-discord-corpus` bucket.
 
-`cloudflare/ts-mc-bucket.tf` and `cloudflare/sjerred-bucket.tf` own the public
-download buckets behind `storage.ts-mc.net` and `files.sjer.red`. Both prevent
+`buckets.ts` also owns the public download buckets `ts-mc` and `sjerred`
+behind `storage.ts-mc.net` and `files.sjer.red`. Both prevent
 destruction, keep `r2.dev` disabled, and only abort abandoned multipart uploads.
 They also own the two custom domains, which create those DNS records. The
 provider cannot import an existing `cloudflare_r2_custom_domain` and fails to
@@ -234,11 +246,13 @@ and confirm a full plan shows no changes before pushing that state. Write the
 pulled state to a file inside the `op run` child, because `op run` masks
 secret values, including the account ID, in the child's standard output.
 
-Each domain's `.tf` file owns its existing zone and application-specific records.
+`zones.ts` owns each existing zone and the per-zone files its
+application-specific records.
 The shared `cloudflare/modules/domain-baseline` module owns DNSSEC, Fastmail MX,
 DKIM, SPF, DMARC, TLS reporting, CAA, HTTPS/TLS/HSTS settings, and certificate
-transparency monitoring. `baseline-migrations.tf` preserves existing state
-addresses; `baseline-imports.tf` adopts previously implicit control-plane settings.
+transparency monitoring. In `baseline.ts`, `baselineMoves` preserves existing
+state addresses and `baselineImports` adopts previously implicit control-plane
+settings.
 
 [`domain-registry.json`](../domain-registry.json) is the domain inventory and
 MTA-STS policy source for both OpenTofu and Caddy. Every managed zone needs a
@@ -471,10 +485,16 @@ The RT-AX88U Pro router and the RT-AX88U / RT-BE86U access points — system set
 
 ## Adding a New Domain
 
-1. Create `cloudflare/{domain-with-dashes}.tf`
-2. Copy the pattern from an existing file (e.g. `scout-for-lol-com.tf`)
-3. Update the zone name, resource names, and DMARC `rua` email
-4. Run `tofu -chdir=cloudflare plan` to verify, then `apply`
+1. Add the domain to [`domain-registry.json`](../domain-registry.json).
+2. In `packages/homelab-cdktn/src/stacks/cloudflare`, add its zone to
+   `ZONE_RESOURCES` and `zones()` in `zones.ts`, and its application records
+   to `domains.ts`, following an existing zone such as `scoutForLol`. The
+   baseline module instance and its `baseline_zone_ids` binding follow from
+   those two.
+3. Run `bun run --cwd packages/homelab-cdktn synth` and commit the regenerated
+   `cloudflare/main.tf.json`.
+4. Run `bun packages/homelab/scripts/tofu/tofu-stack.ts cloudflare plan` to
+   verify the plan creates only the new domain's resources.
 
 To import existing Cloudflare records into state, use [`cf-terraforming`](https://github.com/cloudflare/cf-terraforming).
 

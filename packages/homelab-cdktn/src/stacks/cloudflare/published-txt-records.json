@@ -1,0 +1,8 @@
+{
+  "sjer_red_dkim_postal_aoolxx": "v=DKIM1; t=s; h=sha256; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDFfuKrHpylh2b4GmkgNWYNOkD5LypiaG8T4rDFR/3erk8ZE2fT7Z5ycQcyt+WdVlaN4VhT4phGNLr1rdXNRpUMFZV6uvOFqy2vzvHLaYSiNaYGONdhBe8L1af67XXMsxUbNO8kbyVkSkvpPS9hnz7/qZBfd0glRoGdNI64NQyHlwIDAQAB;",
+  "sjer_red_dkim_postal_isna7c": "v=DKIM1; t=s; h=sha256; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC55pcuuiIJO3bp3vDbFn2Hjr0z/W+1hJ0QOzsFm2elKfTujgIj1ExZ7B2nTCsNzv+OLZr8jNhk6dy6az0hafC7JV+Cm0z+N7P99Fj7+R6hfkVuOuXlhG3XsL16/RXdowAxjmXi9mDPHy3l0hqlMyfUmcrtdhydbLR4E2X4FdKQHwIDAQAB;",
+  "sjer_red_acme_influxdb": "I0A35eU62OobpAKrT9PFPBg1TYnOatgNusx0lgBmuLw",
+  "sjer_red_acme_syncthing": "FR8t1KHtHXWGKfERJqTZVcPitpVKmAKENo6auaz9OV0",
+  "storm_forum_postal_verification": "postal-verification HKCOMItuyiZSPNzqI7kWzJ1JIpBZobWX",
+  "storm_forum_postal_dkim": "v=DKIM1; t=s; h=sha256; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDP3gYfobFff0FOxghUPTZ+k6J8IUhHcRa2PKQEFA+/zEo0Qeon8v5F0rjPXUdqenBEPgA/F/NPx8D6pZuVB8YAbUmFLCTfzrInT7M4jpOKLgV1bo2V0quSXuxs1vydu/UFmmRezH35GFt9aXcsUqWu+YlUVz9KLbfIv/P0aSCYmQIDAQAB;"
+}

@@ -785,7 +785,6 @@
         "packages/homelab/scripts/tofu/synthesized-configuration.ts",
         "packages/homelab/src/domain-registry.json",
         "packages/homelab/src/domain-registry.ts",
-        "packages/homelab/src/tofu/cloudflare/*.tf",
         "packages/homelab/src/tofu/cloudflare/*.tf.json",
         "packages/homelab/src/tofu/cloudflare/modules/domain-baseline/*.tf"
       ]
