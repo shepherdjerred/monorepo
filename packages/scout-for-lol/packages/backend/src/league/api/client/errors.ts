@@ -91,3 +91,57 @@ export function extractHttpStatus(error: unknown): number | undefined {
 export function isExpectedUpstreamError(status: number | undefined): boolean {
   return status !== undefined && EXPECTED_UPSTREAM_STATUS_CODES.has(status);
 }
+
+/**
+ * Riot's definitive answer that it will not serve a resource: 403 for a
+ * match it withholds (for example a client-only custom) and 404 for one it
+ * does not have. Unlike an outage or timeout, retrying cannot change it.
+ */
+export type RiotSourceAbsence = "forbidden" | "not_found";
+
+export function riotSourceAbsence(
+  error: unknown,
+): RiotSourceAbsence | undefined {
+  const status = extractHttpStatus(error);
+  if (status === 403) return "forbidden";
+  return status === 404 ? "not_found" : undefined;
+}
+
+/**
+ * Route segments that are identifiers rather than part of the endpoint's
+ * shape, keyed by the segment that precedes them. Riot's match ids carry a
+ * platform prefix (`NA1_123`), so the template must not leave them in place.
+ */
+const IDENTIFIER_AFTER_SEGMENT: ReadonlyMap<string, string> = new Map([
+  ["matches", "{matchId}"],
+  ["by-puuid", "{puuid}"],
+  ["by-summoner", "{puuid}"],
+  ["teams", "{teamId}"],
+]);
+
+/**
+ * Stable Bugsink grouping key for a Riot request URL: host and route with
+ * identifiers replaced and the query string dropped, so one endpoint failing
+ * for many matches or players is one issue rather than one per id.
+ */
+export function endpointTemplate(url: string): string {
+  if (!URL.canParse(url)) {
+    // Only test doubles construct errors with bare labels; there is no route
+    // to normalize. This runs inside Bugsink's beforeSend, which must not
+    // throw and lose the event it is grouping.
+    return url.split("?", 1)[0] ?? url;
+  }
+  const parsed = new URL(url);
+  const segments = parsed.pathname.split("/");
+  const templated = segments.map((segment, index) => {
+    if (segment === "by-riot-id" || IDENTIFIER_AFTER_SEGMENT.has(segment))
+      return segment;
+    if (segments[index - 1] === "by-riot-id") return "{gameName}";
+    if (segments[index - 2] === "by-riot-id") return "{tagLine}";
+    const previous = segments[index - 1];
+    return previous === undefined
+      ? segment
+      : (IDENTIFIER_AFTER_SEGMENT.get(previous) ?? segment);
+  });
+  return `${parsed.host}${templated.join("/")}`;
+}

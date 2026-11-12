@@ -17,6 +17,7 @@ test("server options pass every SDK-resolved setting explicitly", () => {
     environment: "production",
     release: "2.0.0-1",
     debug: false,
+    attachStacktrace: false,
     dataCollection: bugsinkDataCollection(),
   });
   expect(options).not.toHaveProperty("tracesSampleRate");

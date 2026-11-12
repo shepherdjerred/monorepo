@@ -75,6 +75,13 @@ export type CallRiotConfig<T> = {
    * they're expected operational signals, not bugs to investigate.
    */
   bugsink?: boolean;
+  /**
+   * Statuses this caller treats as Riot's definitive answer for the resource
+   * (for example 403 for a match Riot withholds) rather than a bug. They are
+   * logged and counted like other HTTP errors and still returned as one, but
+   * never captured to Bugsink.
+   */
+  expectedAbsenceStatuses?: readonly number[];
 };
 
 type CallResult<T> =
@@ -99,6 +106,49 @@ function contextAsTags(
   );
 }
 
+/** Log, count, and (for unexpected statuses) report one HTTP failure. */
+function httpFailure<T>(
+  config: CallRiotConfig<T>,
+  status: number,
+  error: unknown,
+): Extract<CallResult<T>, { kind: "http-404" | "http-error" }> {
+  const {
+    source,
+    context,
+    bugsink = false,
+    expectedAbsenceStatuses = [],
+  } = config;
+  const contextSuffix = formatContext(context);
+  if (status === 404) {
+    logger.info(`[${source}] ℹ️  404 not found${contextSuffix}`);
+    return { kind: "http-404", error };
+  }
+  riotApiErrorsTotal.inc({ source, http_status: status.toString() });
+  if (isExpectedUpstreamError(status)) {
+    logger.warn(
+      `[${source}] Riot API returned ${status.toString()}${contextSuffix} (expected upstream error)`,
+    );
+    return { kind: "http-error", status, error };
+  }
+  if (expectedAbsenceStatuses.includes(status)) {
+    logger.info(
+      `[${source}] ℹ️  ${status.toString()} expected absence${contextSuffix}`,
+    );
+    return { kind: "http-error", status, error };
+  }
+  logger.error(`[${source}] ❌ HTTP ${status.toString()}${contextSuffix}`);
+  if (bugsink) {
+    Sentry.captureException(error, {
+      tags: {
+        source,
+        httpStatus: status.toString(),
+        ...contextAsTags(context),
+      },
+    });
+  }
+  return { kind: "http-error", status, error };
+}
+
 /**
  * Internal core: request → metric → parse → audit → policy dispatch.
  * Returns a discriminated result so the public variants can selectively
@@ -116,7 +166,6 @@ async function runRiotCall<T>(
     context,
     schemaLabel = source,
     onValidationFailure,
-    bugsink = false,
   } = config;
   const contextSuffix = formatContext(context);
 
@@ -167,29 +216,7 @@ async function runRiotCall<T>(
         riotApiErrorsTotal.inc({ source, http_status: "unknown" });
         return { kind: "transport-error", error };
       }
-      if (status === 404) {
-        logger.info(`[${source}] ℹ️  404 not found${contextSuffix}`);
-        return { kind: "http-404", error };
-      }
-      if (isExpectedUpstreamError(status)) {
-        logger.warn(
-          `[${source}] Riot API returned ${status.toString()}${contextSuffix} (expected upstream error)`,
-        );
-        riotApiErrorsTotal.inc({ source, http_status: status.toString() });
-        return { kind: "http-error", status, error };
-      }
-      logger.error(`[${source}] ❌ HTTP ${status.toString()}${contextSuffix}`);
-      riotApiErrorsTotal.inc({ source, http_status: status.toString() });
-      if (bugsink) {
-        Sentry.captureException(error, {
-          tags: {
-            source,
-            httpStatus: status.toString(),
-            ...contextAsTags(context),
-          },
-        });
-      }
-      return { kind: "http-error", status, error };
+      return httpFailure(config, status, error);
     }
   }
 

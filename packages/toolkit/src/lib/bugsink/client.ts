@@ -46,11 +46,16 @@ export async function bugsinkRequest<T>(
   return client().get(endpoint, { schema, query: params });
 }
 
-export type BugsinkPaginatedOptions = {
+export type BugsinkPaginatedOptions<T = unknown> = {
   /** Max total items to return. Stops fetching once reached. */
   limit?: number | undefined;
   /** Safety cap on pages fetched. Defaults to 100. */
   maxPages?: number | undefined;
+  /**
+   * Client-side filter applied before `limit` counts an item, for list
+   * filters the canonical API does not offer server-side.
+   */
+  include?: ((item: T) => boolean) | undefined;
 };
 
 /** Page-cap option shared by list readers without a result limit. */
@@ -74,6 +79,16 @@ function validateBugsinkMaxPages(maxPages: number | undefined): string | null {
   return !Number.isInteger(maxPages) || maxPages < 1
     ? `Invalid maxPages: ${String(maxPages)}. Expected a positive integer.`
     : null;
+}
+
+/** The validation error for `limit`/`maxPages`, or null when both are valid. */
+export function bugsinkPaginationOptionsError(
+  options: Pick<BugsinkPaginatedOptions, "limit" | "maxPages">,
+): string | null {
+  return (
+    validateBugsinkLimit(options.limit) ??
+    validateBugsinkMaxPages(options.maxPages)
+  );
 }
 
 function paginationOriginError(nextUrl: string): string | null {
@@ -128,12 +143,15 @@ function collectPageResults<T>(
   all: T[],
   results: readonly T[],
   limit: number | undefined,
+  include: ((item: T) => boolean) | undefined,
 ): boolean {
   for (const item of results) {
     if (limit != null && all.length >= limit) {
       break;
     }
-    all.push(item);
+    if (include === undefined || include(item)) {
+      all.push(item);
+    }
   }
   return limit != null && all.length >= limit;
 }
@@ -146,17 +164,13 @@ export async function bugsinkRequestPaginated<T>(
   endpoint: string,
   itemSchema: z.ZodType<T>,
   params?: Record<string, string>,
-  options: BugsinkPaginatedOptions = {},
+  options: BugsinkPaginatedOptions<T> = {},
 ): Promise<BugsinkClientResult<T[]>> {
-  const limitError = validateBugsinkLimit(options.limit);
-  if (limitError != null) {
-    return { success: false, error: limitError };
+  const optionsError = bugsinkPaginationOptionsError(options);
+  if (optionsError != null) {
+    return { success: false, error: optionsError };
   }
-  const maxPagesError = validateBugsinkMaxPages(options.maxPages);
-  if (maxPagesError != null) {
-    return { success: false, error: maxPagesError };
-  }
-  const { limit, maxPages = 100 } = options;
+  const { limit, maxPages = 100, include } = options;
   if (limit === 0) {
     return { success: true, data: [] };
   }
@@ -183,7 +197,7 @@ export async function bugsinkRequestPaginated<T>(
         error: `${page.error ?? "Failed to fetch page"}${suffix}`,
       };
     }
-    if (collectPageResults(all, page.data.results, limit)) {
+    if (collectPageResults(all, page.data.results, limit, include)) {
       return { success: true, data: all.slice(0, limit) };
     }
     nextUrl = normalizeNextUrl(page.data.next);
@@ -203,13 +217,6 @@ export async function bugsinkRequestRaw(
   params?: Record<string, string>,
 ): Promise<BugsinkRawResult> {
   return client().raw(endpoint, { query: params });
-}
-
-export async function bugsinkRequestPostRaw(
-  endpoint: string,
-  body: unknown,
-): Promise<BugsinkRawResult> {
-  return client().postRaw(endpoint, { body });
 }
 
 export function buildBugsinkApiUrl(baseUrl: string, endpoint: string): URL {

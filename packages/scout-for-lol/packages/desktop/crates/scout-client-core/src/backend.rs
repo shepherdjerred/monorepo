@@ -435,6 +435,23 @@ impl BackendError {
         }
     }
 
+    /// Whether the server answered with its designed "retry later" rather than
+    /// a failure: a late lobby binding is waiting for the match Workflow to
+    /// commit its stages. The outbox resends the batch either way; this only
+    /// decides that the attempt is not worth reporting as an error.
+    #[must_use]
+    pub fn is_designed_retry(&self) -> bool {
+        match self {
+            Self::Rejected { status, message }
+                if *status == StatusCode::SERVICE_UNAVAILABLE.as_u16() =>
+            {
+                serde_json::from_str::<RejectionBody>(message)
+                    .is_ok_and(|body| body.error == BINDING_RECONCILIATION_PENDING)
+            }
+            _ => false,
+        }
+    }
+
     /// Whether this replay should be deferred while the scan continues.
     #[must_use]
     pub fn replay_should_be_deferred(&self) -> bool {
@@ -456,6 +473,15 @@ impl BackendError {
         )
         .then(|| status.as_u16())
     }
+}
+
+/// The `error` code of the server's 503 while a late binding is pending.
+const BINDING_RECONCILIATION_PENDING: &str = "binding_reconciliation_pending";
+
+/// The machine-readable part of a JSON rejection body.
+#[derive(Deserialize)]
+struct RejectionBody {
+    error: String,
 }
 
 fn replay_status_should_be_deferred(status: StatusCode) -> bool {
@@ -489,6 +515,19 @@ mod tests {
             status,
             message: message.to_owned(),
         }
+    }
+
+    #[test]
+    fn only_a_pending_binding_503_is_a_designed_retry() {
+        let pending = r#"{"error":"binding_reconciliation_pending","message":"Match pipeline NA1_1 is still applying binding-dependent stages; retry reconciliation"}"#;
+        assert!(rejection(503, pending).is_designed_retry());
+        // The same code on another status, another 503 body, or a body the
+        // client truncated stays an ordinary failure.
+        assert!(!rejection(500, pending).is_designed_retry());
+        assert!(!rejection(503, r#"{"error":"scout_client_disabled"}"#).is_designed_retry());
+        assert!(!rejection(503, "Service Unavailable").is_designed_retry());
+        assert!(!rejection(503, &pending[..40]).is_designed_retry());
+        assert!(!BackendError::ReplayReceipt.is_designed_retry());
     }
 
     #[test]

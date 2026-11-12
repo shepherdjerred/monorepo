@@ -1,5 +1,4 @@
 import { matchDataSourceOf, type RawMatch } from "@scout-for-lol/data";
-import type { ArtifactResolution } from "@scout-for-lol/domain/artifacts/resolution.ts";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { prisma } from "#src/database/index.ts";
 import { platformRouteOf } from "#src/durable/match/match-identity.ts";
@@ -12,14 +11,20 @@ import {
   selectLocalCanonicalMatch,
   localCanonicalMatchesAgree,
 } from "#src/scout-client/canonical-match.ts";
-import { optionalSourceRead } from "./source-read.ts";
+import {
+  expectedRiotAbsenceStatuses,
+  optionalSourceRead,
+  readSource,
+  riotAbsenceOf,
+  type EvidenceResolution,
+} from "./source-read.ts";
 import { enrichCompleteMatch } from "./complete-match-policy.ts";
 
 function available(
   match: RawMatch,
   sourceId: string,
   frozen: boolean,
-): ArtifactResolution<RawMatch> {
+): EvidenceResolution<RawMatch> {
   return {
     kind: "available",
     value: match,
@@ -32,7 +37,7 @@ function available(
 /** The only complete-match selection boundary. Consumers never fetch a source. */
 export async function resolveCompleteMatch(
   matchId: RiotMatchId,
-): Promise<ArtifactResolution<RawMatch>> {
+): Promise<EvidenceResolution<RawMatch>> {
   const archive = await storedRawArchiveDescriptor(prisma, matchId, "match");
   if (archive !== null)
     return available(
@@ -44,18 +49,20 @@ export async function resolveCompleteMatch(
   // input was already promised to processing and must not change on deploy.
   const selected = await readSelectedLocalCanonicalMatch(matchId);
   if (selected !== null) return available(selected, matchId, true);
-  const [riot, local] = await Promise.all([
-    optionalSourceRead("RIOT", () =>
+  const [riotRead, local] = await Promise.all([
+    readSource("RIOT", () =>
       fetchMatchData(
         matchId,
         platformRouteOf(matchId),
         "return_undefined_on_404",
+        expectedRiotAbsenceStatuses(),
       ),
     ),
     optionalSourceRead("SCOUT_CLIENT", () =>
       readLocalCanonicalCandidates(matchId),
     ),
   ]);
+  const riot = riotRead.kind === "read" ? riotRead.value : undefined;
   if (riot !== undefined) {
     const resolved = available(
       enrichCompleteMatch(
@@ -82,6 +89,9 @@ export async function resolveCompleteMatch(
     return {
       kind: "unavailable",
       reason: "No complete compatible match evidence",
+      // A failed client read leaves the answer open even when Riot refused.
+      definitiveAbsence:
+        local === undefined ? undefined : riotAbsenceOf(riotRead),
     };
   const ready = local.filter(
     (entry) => entry.eligibleAt.getTime() <= Date.now(),

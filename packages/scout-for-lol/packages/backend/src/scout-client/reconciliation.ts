@@ -10,10 +10,13 @@ import { prisma } from "#src/database/index.ts";
 import { projectClientGameResult } from "./game-results.ts";
 import { projectClashEntity } from "./clash-entities.ts";
 import { startAcceptedClientMatches } from "./ingress.ts";
+import { ClientBindingReconciliationPending } from "./late-binding.ts";
+import { createLogger } from "#src/logger.ts";
 import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
 
 const RECOVERY_VERSION = 3;
+const logger = createLogger("scout-client-reconciliation");
 
 /** One bounded page, driven by the existing Temporal reconciliation activity. */
 export async function reconcileAcceptedClientEvidence(
@@ -53,6 +56,14 @@ export async function reconcileAcceptedClientEvidence(
     try {
       await recoverRow(row, now);
     } catch (error) {
+      if (error instanceof ClientBindingReconciliationPending) {
+        // The checkpoint above leaves the row incomplete, so a later page
+        // retries it once the match Workflow commits its binding stages.
+        logger.info(
+          `Deferring client evidence ${row.observationId}: ${error.message}`,
+        );
+        continue;
+      }
       failures.push(error);
     }
   }

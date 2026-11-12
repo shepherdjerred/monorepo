@@ -7,6 +7,8 @@ import { formatJson } from "#lib/output/formatter.ts";
 
 export type EventsOptions = {
   json?: boolean | undefined;
+  limit?: number | undefined;
+  maxPages?: number | undefined;
 };
 
 export type EventOptions = {
@@ -79,7 +81,10 @@ export async function eventsCommand(
   options: EventsOptions = {},
 ): Promise<void> {
   try {
-    const events = await getEvents(issueUuid);
+    const events = await getEvents(issueUuid, {
+      limit: options.limit,
+      maxPages: options.maxPages,
+    });
 
     if (options.json === true) {
       console.log(formatJson(events));

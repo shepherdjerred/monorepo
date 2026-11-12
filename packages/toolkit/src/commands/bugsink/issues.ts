@@ -1,4 +1,4 @@
-import { getIssues } from "#lib/bugsink/issues.ts";
+import { getIssues, isOpenIssue } from "#lib/bugsink/issues.ts";
 import type { BugsinkIssue } from "#lib/bugsink/types.ts";
 import { getIssueStatusLabel } from "#lib/bugsink/format.ts";
 import { formatJson } from "#lib/output/formatter.ts";
@@ -8,6 +8,7 @@ export type IssuesOptions = {
   project?: string | undefined;
   limit?: number | undefined;
   maxPages?: number | undefined;
+  all?: boolean | undefined;
 };
 
 function formatIssue(issue: BugsinkIssue): string {
@@ -16,6 +17,7 @@ function formatIssue(issue: BugsinkIssue): string {
 
   lines.push(`- **${issue.calculated_type}**: ${issue.calculated_value}`);
   lines.push(`  - ID: ${issue.id}`);
+  lines.push(`  - Project: ${String(issue.project)}`);
   lines.push(`  - Status: ${status}`);
   lines.push(
     `  - Events: ${String(issue.digested_event_count)} digested, ${String(issue.stored_event_count)} stored`,
@@ -25,18 +27,23 @@ function formatIssue(issue: BugsinkIssue): string {
   return lines.join("\n");
 }
 
-function formatIssuesMarkdown(issues: BugsinkIssue[]): string {
+function formatIssuesMarkdown(
+  issues: BugsinkIssue[],
+  options: IssuesOptions,
+): string {
   const lines: string[] = [];
 
   lines.push("## Bugsink Issues");
   lines.push("");
 
   if (issues.length === 0) {
-    lines.push("No issues found.");
+    lines.push(
+      options.all === true ? "No issues found." : "No unresolved issues found.",
+    );
     return lines.join("\n");
   }
 
-  const unresolved = issues.filter((i) => !i.is_resolved && !i.is_muted);
+  const unresolved = issues.filter((i) => isOpenIssue(i));
   const resolved = issues.filter((i) => i.is_resolved);
   const muted = issues.filter((i) => i.is_muted);
 
@@ -85,12 +92,13 @@ export async function issuesCommand(
       project: options.project,
       limit: options.limit,
       maxPages: options.maxPages,
+      all: options.all,
     });
 
     if (options.json === true) {
       console.log(formatJson(issues));
     } else {
-      console.log(formatIssuesMarkdown(issues));
+      console.log(formatIssuesMarkdown(issues, options));
     }
   } catch (error) {
     const message =

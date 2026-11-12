@@ -41,9 +41,27 @@ export function clientBindingStagesAreComplete(
 }
 
 /**
+ * The match Workflow has not yet committed the stages a late binding depends
+ * on. This is the designed retry signal, not a failure: callers answer it with
+ * a retryable outcome and never report it as an error.
+ */
+export class ClientBindingReconciliationPending extends Error {
+  override readonly name = "ClientBindingReconciliationPending";
+
+  constructor(readonly riotMatchId: RiotMatchId) {
+    super(
+      `Match pipeline ${riotMatchId} is still applying binding-dependent stages; retry reconciliation`,
+    );
+  }
+}
+
+/**
  * Reconcile match stages whose answer changes when local evidence binds a game
  * after the ordinary per-match Workflow has already committed its observation.
  * The client outbox retries this whole call, and both projectors are idempotent.
+ *
+ * @throws {ClientBindingReconciliationPending} while the match Workflow is
+ * still applying binding-dependent stages.
  */
 export async function reconcileProcessedClientBinding(
   riotMatchId: RiotMatchId,
@@ -70,9 +88,7 @@ export async function reconcileProcessedClientBinding(
     stagesComplete = legacyCompletion.completed;
   }
   if (!stagesComplete) {
-    throw new Error(
-      `Match pipeline ${riotMatchId} is still applying binding-dependent stages; retry reconciliation`,
-    );
+    throw new ClientBindingReconciliationPending(riotMatchId);
   }
 
   const context = await resolveScoutMatchContext(riotMatchId);

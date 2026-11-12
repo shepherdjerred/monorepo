@@ -10,7 +10,7 @@ import { LoadingBlockDefaults } from "@shepherdjerred/loaded/react.tsx";
 import { RouterProvider } from "react-router";
 import { QueryClientProvider } from "@tanstack/react-query";
 import * as Sentry from "@sentry/react";
-import { bugsinkDataCollection } from "@shepherdjerred/bugsink-config";
+import { bugsinkBrowserOptions } from "@shepherdjerred/bugsink-config";
 import { TRPCProvider, trpcClient } from "#src/lib/query/trpc.ts";
 import { filterScoutAppBugsinkEvent } from "#src/lib/bugsink-filters.ts";
 import { queryClient } from "#src/lib/query/query-client.ts";
@@ -21,17 +21,13 @@ import "#src/styles/global.css";
 // VITE_BUGSINK_RELEASE is the content-addressed site archive
 // (`scout-site@sha256:…`). The human-facing 2.0.0-<build> and commit come
 // from the deployed backend's GET /api/version, never from the bytes.
-// Guard the untyped env access so `release` stays `string | undefined`.
-const bugsinkRelease =
-  typeof import.meta.env.VITE_BUGSINK_RELEASE === "string"
-    ? import.meta.env.VITE_BUGSINK_RELEASE
-    : undefined;
-
+// bugsinkBrowserOptions narrows the untyped env value to `string | undefined`.
 Sentry.init({
-  dataCollection: bugsinkDataCollection(),
-  dsn: "https://337945d2208840dca4a573be311a1bbb@bugsink.sjer.red/1",
-  release: bugsinkRelease,
-  environment: import.meta.env.MODE,
+  ...bugsinkBrowserOptions({
+    dsn: "https://337945d2208840dca4a573be311a1bbb@bugsink.sjer.red/1",
+    environment: import.meta.env.MODE,
+    release: import.meta.env.VITE_BUGSINK_RELEASE,
+  }),
   // Local dev shares this DSN with production; never report from `vite dev`.
   enabled: import.meta.env.PROD,
   beforeSend: filterScoutAppBugsinkEvent,

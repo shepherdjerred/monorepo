@@ -837,9 +837,23 @@ rechecked; a standing sibling result cannot skip the new projection pass.
 
 Ingestion reconciliation resolves report-ready evidence through the same
 Riot-priority result policy. With beta evidence recovery enabled, a Riot 403
-is reported as an unavailable source and does not block independent client
-evidence. Contract failures still throw; production retains its existing
-forbidden-read behavior. API-supported games retain the same two-minute
+for a match or timeline is Riot's definitive answer, not a bug: the evidence
+readers tell the Riot caller to expect it, so it is logged and counted in
+`riotApiErrorsTotal` but never sent to Bugsink, and it does not block
+independent client evidence. Contract failures still throw; production retains
+its existing forbidden-read reporting. When Riot answers 403, every client
+source read empty, and the admission is older than the two-minute timeline
+recovery window, history recovery stamps `recoveryAbandonedAt` and
+`recoveryAbandonedReason` and stops selecting the row. A 404 can mean Match-V5
+has not published the game yet, so it retries, unreported, and is abandoned the
+same way only seven days after admission. A timeline is abandoned only once it
+is the row's sole open work. Outages, timeouts and skipped reads carry no
+definitive answer and stay retryable. An accepted post-game
+observation for that match received or revalidated after the decision makes
+the row due again; an attempt that still cannot complete it abandons it again
+past that evidence, and one that resolves clears the stamp. Bugsink groups
+every kept `RiotHttpError` by status and endpoint template rather than by
+match or player id. API-supported games retain the same two-minute
 source grace as complete client matches, measured from original discovery;
 games known to withhold results do not wait. Freshly resolved full evidence
 participates immediately, before its independent archive projection completes.

@@ -72,6 +72,7 @@ beforeEach(async () => {
   io.completeMatch.mockResolvedValue({
     kind: "unavailable",
     reason: "No full match coverage",
+    definitiveAbsence: undefined,
   });
   await prisma.$transaction([
     prisma.matchNotificationIntent.deleteMany(),
@@ -228,9 +229,18 @@ test("a forbidden Riot read cannot block the real resolver from recovering a cli
   );
   await reconcileMatchHistory();
   expect(io.fetchMatch).toHaveBeenCalledTimes(1);
+  // The evidence reader marks 403 as expected so the Riot caller never
+  // reports it, and the resolver states that Riot's answer was definitive.
+  expect(io.fetchMatch).toHaveBeenCalledWith(
+    matchId,
+    "NA1",
+    "return_undefined_on_404",
+    [403],
+  );
   await expect(io.completeMatch.mock.results[0]?.value).resolves.toMatchObject({
     kind: "unavailable",
     reason: "No complete compatible match evidence",
+    definitiveAbsence: "forbidden",
   });
   const snapshot = await readReportScoreboard(matchId);
   expect(snapshot?.result.participants).toHaveLength(10);

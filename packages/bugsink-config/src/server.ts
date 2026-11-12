@@ -24,6 +24,10 @@ export function assertNoSentryEnvironment(
  * Explicit Sentry SDK options for Bun Bugsink clients. Tracing stays
  * unset: any `tracesSampleRate`, including 0, enables SDK span recording, and
  * traces belong to the repository's OpenTelemetry pipeline.
+ *
+ * `attachStacktrace` is false, the SDK v10 default: SDK v11 defaults it to
+ * true, which turns every `captureMessage` into a synthetic exception that
+ * Bugsink titles by its top frame instead of the message.
  */
 export function bugsinkServerOptions({
   dsn,
@@ -40,6 +44,7 @@ export function bugsinkServerOptions({
   environment: string;
   release: string | undefined;
   debug: false;
+  attachStacktrace: false;
   dataCollection: DataCollection;
 } {
   assertNoSentryEnvironment(env);
@@ -48,6 +53,7 @@ export function bugsinkServerOptions({
     environment,
     release,
     debug: false,
+    attachStacktrace: false,
     dataCollection: bugsinkDataCollection(),
   };
 }

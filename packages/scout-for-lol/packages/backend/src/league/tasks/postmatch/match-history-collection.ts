@@ -18,6 +18,7 @@ import {
   matchHistoryReadCount,
 } from "#src/league/tasks/postmatch/match-discovery-selection.ts";
 import { calculatePollingInterval } from "#src/utils/polling-intervals.ts";
+import { scoutMatchHistoryUnavailableTotal } from "#src/metrics/match-history.ts";
 
 const logger = createLogger("postmatch-match-history-collection");
 
@@ -27,11 +28,19 @@ export type PlayerWithMatchIds = {
   backfillMatchIds: RiotMatchId[];
 };
 
+/**
+ * `unavailable` means Riot gave no answer for this player. The Riot call has
+ * already recorded why; the player stays unchecked for the next poll.
+ */
+type PlayerCollection =
+  | { kind: "unavailable" }
+  | { kind: "checked"; matches: PlayerWithMatchIds | undefined };
+
 async function collectNewMatchesForPlayer(
   account: MatchPollAccount,
   currentTime: Date,
   requiredForActiveDare: boolean,
-): Promise<PlayerWithMatchIds | undefined> {
+): Promise<PlayerCollection> {
   const { config: player, lastMatchTime, lastCheckedAt } = account;
   const puuid = player.league.leagueAccount.puuid;
   const interval = calculatePollingInterval(lastMatchTime, currentTime);
@@ -47,15 +56,11 @@ async function collectNewMatchesForPlayer(
     player,
     matchHistoryReadCount(requiredForActiveDare),
   );
-  if (recentMatchIds === undefined) {
-    // No PUUID in the message: Bugsink groups issues on it, and the catch
-    // below already tags the event with puuid and playerAlias.
-    throw new Error("Match history is unavailable");
-  }
+  if (recentMatchIds === undefined) return { kind: "unavailable" };
   await updateLastCheckedAt(puuid, currentTime);
   if (recentMatchIds.length === 0) {
     logger.info(`[${player.alias}] ℹ️  No recent matches found`);
-    return;
+    return { kind: "checked", matches: undefined };
   }
 
   const { matchIds: newMatchIds, gapDetected } = filterNewMatches(
@@ -64,7 +69,7 @@ async function collectNewMatchesForPlayer(
   );
   if (newMatchIds.length === 0) {
     logger.info(`[${player.alias}] ✅ No new matches to process`);
-    return;
+    return { kind: "checked", matches: undefined };
   }
 
   const recovered = gapDetected
@@ -80,10 +85,54 @@ async function collectNewMatchesForPlayer(
     `[${player.alias}] 🆕 Found ${recovered.discordMatchIds.length.toString()} new match(es) for Discord: ${recovered.discordMatchIds.join(", ")}`,
   );
   return {
-    player,
-    matchIds: recovered.discordMatchIds,
-    backfillMatchIds: recovered.backfillMatchIds,
+    kind: "checked",
+    matches: {
+      player,
+      matchIds: recovered.discordMatchIds,
+      backfillMatchIds: recovered.backfillMatchIds,
+    },
   };
+}
+
+/**
+ * Check one player. `answered: false` means this poll learned nothing for
+ * them: expected unavailability is counted, anything else is reported.
+ */
+async function checkPlayer(
+  account: MatchPollAccount,
+  currentTime: Date,
+  requiredForActiveDare: boolean,
+): Promise<
+  | { answered: false }
+  | { answered: true; matches: PlayerWithMatchIds | undefined }
+> {
+  const player = account.config;
+  try {
+    const collection = await collectNewMatchesForPlayer(
+      account,
+      currentTime,
+      requiredForActiveDare,
+    );
+    if (collection.kind === "checked") {
+      return { answered: true, matches: collection.matches };
+    }
+    logger.warn(
+      `[${player.alias}] ⏭️  Match history is unavailable; leaving the player unchecked for the next poll`,
+    );
+    scoutMatchHistoryUnavailableTotal.inc({
+      dare_required: requiredForActiveDare ? "true" : "false",
+    });
+  } catch (error) {
+    logger.error(`[${player.alias}] ❌ Error checking match history:`, error);
+    Sentry.captureException(error, {
+      tags: {
+        source: "match-history-check",
+        playerAlias: player.alias,
+        puuid: player.league.leagueAccount.puuid,
+      },
+    });
+  }
+  return { answered: false };
 }
 
 export async function collectNewMatches(input: {
@@ -97,28 +146,22 @@ export async function collectNewMatches(input: {
   const playersWithMatches: PlayerWithMatchIds[] = [];
 
   for (const account of input.playersToCheck) {
-    const player = account.config;
-    const puuid = player.league.leagueAccount.puuid;
-    try {
-      const matches = await collectNewMatchesForPlayer(
-        account,
-        input.currentTime,
-        input.requiredDarePuuids.has(puuid),
-      );
-      if (matches !== undefined) playersWithMatches.push(matches);
-    } catch (error) {
-      logger.error(`[${player.alias}] ❌ Error checking match history:`, error);
-      Sentry.captureException(error, {
-        tags: {
-          source: "match-history-check",
-          playerAlias: player.alias,
-          puuid,
-        },
-      });
-      if (input.requiredDarePuuids.has(puuid)) {
+    const requiredForActiveDare = input.requiredDarePuuids.has(
+      account.config.league.leagueAccount.puuid,
+    );
+    const check = await checkPlayer(
+      account,
+      input.currentTime,
+      requiredForActiveDare,
+    );
+    if (!check.answered) {
+      // An active Dare's evidence bound cannot be judged without this player.
+      if (requiredForActiveDare) {
         return { complete: false, playersWithMatches: [] };
       }
+      continue;
     }
+    if (check.matches !== undefined) playersWithMatches.push(check.matches);
   }
 
   return { complete: true, playersWithMatches };

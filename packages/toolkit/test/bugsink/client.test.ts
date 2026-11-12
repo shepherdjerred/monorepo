@@ -1,7 +1,8 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { buildBugsinkApiUrl } from "#lib/bugsink/client.ts";
 import { getIssues } from "#lib/bugsink/issues.ts";
-import { getReleases } from "#lib/bugsink/queries.ts";
+import { getEvents, getReleases } from "#lib/bugsink/queries.ts";
+import { handleBugsinkCommand } from "#handlers/bugsink.ts";
 
 const ORIGINAL_FETCH = globalThis.fetch;
 const ORIGINAL_URL = Bun.env["BUGSINK_URL"];
@@ -27,6 +28,7 @@ function fetchInputToUrl(input: FetchInput): string {
 }
 
 afterEach(() => {
+  vi.restoreAllMocks();
   globalThis.fetch = ORIGINAL_FETCH;
   if (ORIGINAL_URL === undefined) {
     Reflect.deleteProperty(Bun.env, "BUGSINK_URL");
@@ -52,7 +54,14 @@ function bugsinkPage(
   });
 }
 
-function issue(id: string) {
+function issue(
+  id: string,
+  overrides: {
+    project?: number;
+    is_resolved?: boolean;
+    is_muted?: boolean;
+  } = {},
+) {
   return {
     id,
     project: 42,
@@ -67,6 +76,21 @@ function issue(id: string) {
     is_resolved: false,
     is_resolved_by_next_release: false,
     is_muted: false,
+    ...overrides,
+  };
+}
+
+function event(id: string) {
+  return {
+    id,
+    ingested_at: "2026-09-20T00:00:00Z",
+    digested_at: "2026-09-20T00:00:00Z",
+    issue: "issue-1",
+    grouping: 1,
+    event_id: `event-${id}`,
+    project: 42,
+    timestamp: "2026-09-20T00:00:00Z",
+    digest_order: 1,
   };
 }
 
@@ -79,12 +103,12 @@ function release(id: string, version: string) {
   };
 }
 
-function project() {
+function project(id = 42, slug = "scout-for-lol") {
   return {
-    id: 42,
+    id,
     team: null,
     name: "Scout",
-    slug: "scout-for-lol",
+    slug,
     dsn: "https://dsn.example.test/42",
     digested_event_count: 10,
     stored_event_count: 2,
@@ -354,5 +378,117 @@ describe("Bugsink pagination", () => {
     await expect(getReleases(42, { maxPages: 1 })).rejects.toThrow(
       "higher maxPages",
     );
+  });
+});
+
+function installIssuesByProject(
+  issuesByProject: Record<string, readonly unknown[]>,
+): string[] {
+  const requestedUrls: string[] = [];
+  installFetchMock(async (input) => {
+    const url = fetchInputToUrl(input);
+    requestedUrls.push(url);
+    if (url.endsWith("/projects/")) {
+      return bugsinkPage([project(42, "scout"), project(7, "temporal")]);
+    }
+    const projectId = new URL(url).searchParams.get("project") ?? "";
+    return bugsinkPage(issuesByProject[projectId] ?? []);
+  });
+  Bun.env["BUGSINK_URL"] = "https://bugsink.sjer.red";
+  Bun.env["BUGSINK_TOKEN"] = "token";
+  return requestedUrls;
+}
+
+describe("Bugsink issue listing", () => {
+  const issuesByProject = {
+    "42": [
+      issue("open-42"),
+      issue("resolved-42", { is_resolved: true }),
+      issue("muted-42", { is_muted: true }),
+    ],
+    "7": [issue("open-7", { project: 7 })],
+  };
+
+  it("lists every project's open issues when no project is given", async () => {
+    const requestedUrls = installIssuesByProject(issuesByProject);
+
+    const issues = await getIssues();
+
+    expect(issues.map((item) => item.id)).toEqual(["open-42", "open-7"]);
+    expect(requestedUrls).toEqual([
+      "https://bugsink.sjer.red/api/canonical/0/projects/",
+      "https://bugsink.sjer.red/api/canonical/0/issues/?project=42",
+      "https://bugsink.sjer.red/api/canonical/0/issues/?project=7",
+    ]);
+  });
+
+  it("includes resolved and muted issues with all", async () => {
+    installIssuesByProject(issuesByProject);
+
+    const issues = await getIssues({ all: true });
+
+    expect(issues.map((item) => item.id)).toEqual([
+      "open-42",
+      "resolved-42",
+      "muted-42",
+      "open-7",
+    ]);
+  });
+
+  it("counts only open issues toward the limit and stops at it", async () => {
+    const requestedUrls = installIssuesByProject(issuesByProject);
+
+    const issues = await getIssues({ limit: 1 });
+
+    expect(issues.map((item) => item.id)).toEqual(["open-42"]);
+    expect(requestedUrls).toEqual([
+      "https://bugsink.sjer.red/api/canonical/0/projects/",
+      "https://bugsink.sjer.red/api/canonical/0/issues/?project=42",
+    ]);
+  });
+
+  it("filters a single project's resolved issues by default", async () => {
+    installIssuesByProject(issuesByProject);
+
+    const issues = await getIssues({ project: "42" });
+
+    expect(issues.map((item) => item.id)).toEqual(["open-42"]);
+  });
+});
+
+describe("Bugsink event listing", () => {
+  it("caps events with limit and stops paginating", async () => {
+    const requestedUrls: string[] = [];
+    const page2 =
+      "https://bugsink.sjer.red/api/canonical/0/events/?cursor=page2&issue=issue-1";
+    installFetchMock(async (input) => {
+      const url = fetchInputToUrl(input);
+      requestedUrls.push(url);
+      return bugsinkPage([event("e1"), event("e2")], page2);
+    });
+    Bun.env["BUGSINK_URL"] = "https://bugsink.sjer.red";
+    Bun.env["BUGSINK_TOKEN"] = "token";
+
+    const events = await getEvents("issue-1", { limit: 1 });
+
+    expect(events.map((item) => item.id)).toEqual(["e1"]);
+    expect(requestedUrls).toEqual([
+      "https://bugsink.sjer.red/api/canonical/0/events/?issue=issue-1",
+    ]);
+  });
+
+  it("accepts --limit on the events subcommand", async () => {
+    installFetchMock(async () => bugsinkPage([event("e1"), event("e2")]));
+    Bun.env["BUGSINK_URL"] = "https://bugsink.sjer.red";
+    Bun.env["BUGSINK_TOKEN"] = "token";
+    const output: string[] = [];
+    vi.spyOn(console, "log").mockImplementation((line: unknown) => {
+      output.push(String(line));
+    });
+
+    await handleBugsinkCommand("events", ["issue-1", "--limit", "1", "--json"]);
+
+    const printed: unknown = JSON.parse(output.join("\n"));
+    expect(printed).toEqual([event("e1")]);
   });
 });

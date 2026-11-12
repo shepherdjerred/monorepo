@@ -29,7 +29,10 @@ import { markOnboardingComplete } from "#src/lib/onboarding/onboarding-storage.t
 import { OnboardingInstallStep } from "#src/components/onboarding/onboarding-install-step.tsx";
 import { OnboardingPickGuildStep } from "#src/components/onboarding/onboarding-pick-guild-step.tsx";
 import { OnboardingConceptsStep } from "#src/components/onboarding/onboarding-concepts-step.tsx";
-import { OnboardingSubscribeStep } from "#src/components/onboarding/onboarding-subscribe-step.tsx";
+import {
+  OnboardingSubscribeStep,
+  type OnboardingSelfSubscription,
+} from "#src/components/onboarding/onboarding-subscribe-step.tsx";
 import { OnboardingDoneStep } from "#src/components/onboarding/onboarding-done-step.tsx";
 import { OnboardingChooseExtraStep } from "#src/components/onboarding/onboarding-extras-choice-step.tsx";
 import { OnboardingReportStep } from "#src/components/onboarding/onboarding-report-step.tsx";
@@ -94,8 +97,9 @@ export function OnboardingWizard() {
   const subs = subsQuery.data?.items ?? [];
   // Alias and channel successfully tracked in subscribe-self. Anchors
   // teammate suggestions on the subscription the current user just added —
-  // never on another guild member's row in the paginated list.
-  const [self, setSelf] = useState({ alias: "", channelId: "" });
+  // never on another guild member's row in the paginated list. Null until the
+  // self step adds a subscription; skipping it leaves no suggestion anchor.
+  const [self, setSelf] = useState<OnboardingSelfSubscription | null>(null);
 
   function complete(outcome: OnboardingOutcome): void {
     const user = meQuery.data?.user ?? null;
@@ -202,8 +206,7 @@ export function OnboardingWizard() {
           username={meQuery.data?.user?.username ?? ""}
           discordId={meQuery.data?.user?.discordId ?? ""}
           existingSubs={[]}
-          selfAlias=""
-          selfChannelId=""
+          self={null}
           onSelfAdded={setSelf}
           onAdded={() => {
             void queryClient.invalidateQueries({
@@ -233,8 +236,7 @@ export function OnboardingWizard() {
             alias: s.player.alias,
             channelId: s.channelId,
           }))}
-          selfAlias={self.alias}
-          selfChannelId={self.channelId}
+          self={self}
           onAdded={() => {
             void queryClient.invalidateQueries({
               queryKey: trpc.subscription.list.pathKey(),

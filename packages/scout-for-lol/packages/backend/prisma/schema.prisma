@@ -2212,6 +2212,11 @@ model MatchEvidenceAdmission {
   recoveryNextAttemptAt    DateTime  @default(now())
   recoveryClaimId          String?
   recoveryError            String?
+  /// Terminal for history recovery: Riot refused the artifact (403 after two
+  /// minutes, 404 after seven days) and no client evidence could supply it.
+  /// Newer client evidence reopens it.
+  recoveryAbandonedAt      DateTime?
+  recoveryAbandonedReason  String? // riot_match_forbidden | riot_match_not_found | riot_timeline_forbidden | riot_timeline_not_found
   legacyPolicy             String?
   legacyPromotedAt         DateTime?
   createdAt                DateTime  @default(now())

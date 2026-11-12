@@ -724,7 +724,10 @@ PinchTab credentials or config.
   their first link. A non-200 response, unreachable dashboard, or snapshot that
   breaks the `@shepherdjerred/ops-model` contract exits nonzero.
 - `toolkit bugsink ...` queries teams, projects, issues, events, stacktraces,
-  and releases in self-hosted Bugsink.
+  and releases in self-hosted Bugsink. `issues` lists unresolved, unmuted
+  issues across every project unless `--project` narrows it; `--all` includes
+  resolved and muted issues. `issues` and `events` accept `--limit` and
+  `--max-pages`. The canonical API is read-only.
 - `toolkit discord ...` operates the private local Discord session daemon.
   `TOOLKIT_DISCORD_DIR` selects an isolated daemon directory and socket.
   `discord daemon start --password-login` uses parent-injected

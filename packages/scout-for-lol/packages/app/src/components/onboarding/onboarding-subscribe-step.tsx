@@ -1,4 +1,3 @@
-import type { z } from "zod";
 import {
   type DiscordGuildId,
   type DiscordChannelId,
@@ -42,6 +41,12 @@ import {
 
 type Mode = "self" | "more";
 
+/** The subscription the current user added for themselves in subscribe-self. */
+export type OnboardingSelfSubscription = {
+  alias: string;
+  channelId: DiscordChannelId;
+};
+
 export function OnboardingSubscribeStep(props: {
   mode: Mode;
   guildId: DiscordGuildId;
@@ -49,16 +54,14 @@ export function OnboardingSubscribeStep(props: {
   username: string;
   discordId: string;
   existingSubs: { alias: string; channelId: DiscordChannelId }[];
-  /** Alias tracked in subscribe-self; feeds teammate suggestions. Empty when skipped. */
-  selfAlias: string;
-  /** Destination channel of the self subscription; suggestion adds land here. */
-  selfChannelId: string;
+  /**
+   * The subscription tracked in subscribe-self: its alias feeds teammate
+   * suggestions and its channel is where suggestion adds land. Null when the
+   * self step was skipped, which hides the suggestions.
+   */
+  self: OnboardingSelfSubscription | null;
   /** Reports the alias and channel successfully tracked in subscribe-self. */
-  /** The form's own channel pick, raw until something reads it as a channel. */
-  onSelfAdded?: (self: {
-    alias: string;
-    channelId: z.input<typeof DiscordChannelIdSchema>;
-  }) => void;
+  onSelfAdded?: (self: OnboardingSelfSubscription) => void;
   onAdded: () => void;
   onContinue: () => void;
   onBack: () => void;
@@ -71,7 +74,7 @@ export function OnboardingSubscribeStep(props: {
   // The alias and channel the user actually submitted. Reported via
   // onSelfAdded so the wizard anchors suggestions on the just-added
   // subscription rather than guessing from the guild's paginated list.
-  const submittedSelf = useRef({ alias: "", channelId: "" });
+  const submittedSelf = useRef<OnboardingSelfSubscription | null>(null);
   const initialValue =
     props.mode === "self"
       ? {
@@ -86,7 +89,13 @@ export function OnboardingSubscribeStep(props: {
     onAdded: () => {
       props.onAdded();
       if (props.mode === "self") {
-        props.onSelfAdded?.(submittedSelf.current);
+        const self = submittedSelf.current;
+        if (self === null) {
+          throw new Error(
+            "subscribe-self reported an add without a submitted subscription",
+          );
+        }
+        props.onSelfAdded?.(self);
         form.reset();
         props.onContinue();
       } else {
@@ -107,9 +116,11 @@ export function OnboardingSubscribeStep(props: {
     validationLogic: submitThenChangeValidation,
     validators: { onDynamic: SubscriptionFormSchema },
     onSubmit: ({ value }) => {
+      // onSubmit only runs after SubscriptionFormSchema accepted the value, so
+      // a channel that fails to parse here is a broken form contract.
       submittedSelf.current = {
         alias: value.alias,
-        channelId: value.channelId,
+        channelId: DiscordChannelIdSchema.parse(value.channelId),
       };
       submit(value);
     },
@@ -163,11 +174,11 @@ export function OnboardingSubscribeStep(props: {
       }}
     >
       <div className="space-y-4">
-        {props.mode === "more" && (
+        {props.mode === "more" && props.self !== null && (
           <TeammateSuggestions
             guildId={props.guildId}
-            channelId={DiscordChannelIdSchema.parse(props.selfChannelId)}
-            selfAlias={props.selfAlias}
+            channelId={props.self.channelId}
+            selfAlias={props.self.alias}
             onAdded={props.onAdded}
           />
         )}

@@ -18,7 +18,14 @@ import {
   type ExploreStreamEvent,
   type ReportAiPreviewSummary,
 } from "@scout-for-lol/data";
-import { afterAll, beforeEach, describe, expect, test } from "vitest";
+import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
+import * as Sentry from "@sentry/bun";
+import { scoutExploreInvalidCardSelectionsTotal } from "#src/metrics/explore.ts";
+
+vi.mock("@sentry/bun", async (importOriginal) => ({
+  ...(await importOriginal<typeof Sentry>()),
+  captureException: vi.fn(),
+}));
 
 const { prisma } = createTestDatabase("explore-run-turn-test");
 const userId = testAccountId("73");
@@ -114,7 +121,17 @@ const failingAgent = async (params: ExploreAgentParams) => {
   throw new Error("provider failed");
 };
 
+const invalidCardAgent = async (params: ExploreAgentParams) => {
+  await params.emit({ type: "answer_delta", text: "Your best game was" });
+  throw new ExploreCardSelectionError(
+    "match",
+    "Explore match card NA1_1 was not returned as card-supported by the latest query",
+  );
+};
+
 beforeEach(async () => {
+  vi.mocked(Sentry.captureException).mockClear();
+  scoutExploreInvalidCardSelectionsTotal.reset();
   resetExploreRateLimitStateForTests();
   await prisma.scoutInteractiveRun.deleteMany();
   await prisma.exploreMessage.deleteMany();
@@ -151,6 +168,30 @@ async function preparedTurn() {
     throw new Error("Expected a rate-limit ticket.");
   }
   return { started, history: transcript.messages, ticket };
+}
+
+async function runWithRunRow(executeAgent: typeof failingAgent) {
+  const prepared = await preparedTurn();
+  await prisma.scoutInteractiveRun.create({
+    data: {
+      id: prepared.ticket.runId,
+      kind: "explore",
+      ownerId: userId,
+      conversationId: prepared.started.conversationId,
+      payload: "{}",
+    },
+  });
+  const terminal = await runPersistedExploreTurn(
+    {
+      ...prepared,
+      identity: { userId },
+      guildIds: [],
+      surface: "web",
+      emit: () => Promise.resolve(),
+    },
+    { client: prisma, executeAgent, now: Date.now, timeoutMs: 10_000 },
+  );
+  return { prepared, terminal };
 }
 
 describe("shared persisted Explore turn", () => {
@@ -272,32 +313,7 @@ describe("persisted Explore failure handling", () => {
     );
   });
   test("salvages streamed prose after an agent failure and releases the slot", async () => {
-    const prepared = await preparedTurn();
-    await prisma.scoutInteractiveRun.create({
-      data: {
-        id: prepared.ticket.runId,
-        kind: "explore",
-        ownerId: userId,
-        conversationId: prepared.started.conversationId,
-        payload: "{}",
-      },
-    });
-
-    const terminal = await runPersistedExploreTurn(
-      {
-        ...prepared,
-        identity: { userId },
-        guildIds: [],
-        surface: "web",
-        emit: () => Promise.resolve(),
-      },
-      {
-        client: prisma,
-        executeAgent: failingAgent,
-        now: Date.now,
-        timeoutMs: 10_000,
-      },
-    );
+    const { prepared, terminal } = await runWithRunRow(failingAgent);
 
     expect(terminal.type).toBe("final");
     expect(terminal.outcome).toBe("failed");
@@ -305,6 +321,7 @@ describe("persisted Explore failure handling", () => {
       where: { id: prepared.ticket.runId },
     });
     expect(run.lastError).toBe("explore:execution_failed");
+    expect(Sentry.captureException).toHaveBeenCalledOnce();
     if (terminal.type === "final") {
       expect(terminal.message.content).toBe("Partial evidence.");
       expect(terminal.message.caveats).toContain(
@@ -512,5 +529,24 @@ describe("Explore visualization attachment", () => {
       userId,
     );
     expect(transcript?.messages[1]?.preview).toEqual(QUERY_PREVIEW);
+  });
+});
+
+describe("invalid Explore card selections", () => {
+  test("an invalid model card selection is rejected and counted, not reported", async () => {
+    const { prepared, terminal } = await runWithRunRow(invalidCardAgent);
+
+    expect(terminal.outcome).toBe("failed");
+    const run = await prisma.scoutInteractiveRun.findUniqueOrThrow({
+      where: { id: prepared.ticket.runId },
+    });
+    expect(run.lastError).toBe("explore:invalid_match_card");
+    expect(Sentry.captureException).not.toHaveBeenCalled();
+    const emitted = await scoutExploreInvalidCardSelectionsTotal.get();
+    expect(
+      emitted.values.find((series) => series.labels.card_type === "match")
+        ?.value,
+    ).toBe(1);
+    expect(getExploreQuotaStatus({ userId }).activeRun).toBe(false);
   });
 });

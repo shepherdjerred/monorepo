@@ -2722,7 +2722,7 @@
     },
     "packages/temporal/src/activities/homelab/homelab-audit.test.ts|packages/toolkit/test/bugsink/client.test.ts": {
       "clones": 1,
-      "tokens": 122
+      "tokens": 116
     },
     "packages/temporal/src/activities/maintenance/check-pr-merge-conflicts-git.ts|packages/temporal/src/activities/scout/scout-season-refresh-git.ts": {
       "clones": 1,

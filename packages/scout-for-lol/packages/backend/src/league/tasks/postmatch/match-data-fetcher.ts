@@ -44,6 +44,9 @@ export async function fetchMatchData(
   route: PlatformRoute | Region,
   failureMode:
     "return_undefined" | "return_undefined_on_404" = "return_undefined",
+  // Statuses the caller treats as Riot's definitive answer: counted and
+  // rethrown, never reported to Bugsink.
+  expectedAbsenceStatuses: readonly number[] = [],
 ): Promise<RawMatch | undefined> {
   const regionalRoute = platformToRegionalRoute(route);
   const config: CallRiotConfig<RawMatch> = {
@@ -57,6 +60,7 @@ export async function fetchMatchData(
       id: matchId,
     },
     bugsink: true,
+    expectedAbsenceStatuses,
   };
   const fetch = () => riotClient.match.get(matchId, regionalRoute);
   const match =
@@ -129,6 +133,9 @@ export async function fetchMatchTimeline(
     | "return_undefined"
     | "return_undefined_on_404"
     | "throw" = "return_undefined",
+  // Statuses the caller treats as Riot's definitive answer: counted and
+  // rethrown, never reported to Bugsink.
+  expectedAbsenceStatuses: readonly number[] = [],
 ): Promise<RawTimeline | undefined> {
   const regionalRoute = platformToRegionalRoute(playerRegion);
   const config: CallRiotConfig<RawTimeline> = {
@@ -142,6 +149,7 @@ export async function fetchMatchTimeline(
       id: matchId,
     },
     bugsink: true,
+    expectedAbsenceStatuses,
   };
   const fetch = () => riotClient.match.timeline(matchId, regionalRoute);
   switch (failureMode) {

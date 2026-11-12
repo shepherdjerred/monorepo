@@ -1,4 +1,4 @@
-import { S3Client } from "@aws-sdk/client-s3";
+import { S3Client, type S3ClientConfig } from "@aws-sdk/client-s3";
 
 /**
  * Creates a configured S3Client for use with S3-compatible storage (like SeaweedFS).
@@ -9,9 +9,15 @@ import { S3Client } from "@aws-sdk/client-s3";
  * Example:
  * - Path-style: http://endpoint/bucket/key (what we use)
  * - Virtual-hosted-style: http://bucket.endpoint/key (AWS default, doesn't work with SeaweedFS)
+ *
+ * `connection` is for tests that point the production client at a local
+ * endpoint; it cannot change the timeouts or checksum behavior.
  */
-export function createS3Client(): S3Client {
+export function createS3Client(
+  connection: Pick<S3ClientConfig, "endpoint" | "region" | "credentials"> = {},
+): S3Client {
   return new S3Client({
+    ...connection,
     forcePathStyle: true,
     // Bound every S3 call. Without these, a blackholed endpoint (or the
     // SDK's IMDS credential probe under bun) hangs the await forever —
@@ -23,8 +29,9 @@ export function createS3Client(): S3Client {
     },
     // Checksum only when an operation requires one. By default the SDK
     // checksums every request body, which it cannot do for a streamed file:
-    // a replay PUT (`Body: Bun.file(...)`) failed with "Unable to calculate
-    // hash for flowing readable stream". SeaweedFS also doesn't understand
+    // a replay PUT streams a Node read stream (see
+    // `scout-client/replay/object-store.ts`) and failed with "Unable to
+    // calculate hash for flowing readable stream". SeaweedFS also doesn't understand
     // the default checksum headers (see `scripts/lib/seaweedfs.ts`). Callers
     // that need integrity verify it themselves — a replay's SHA-256 is
     // checked before it is stored.

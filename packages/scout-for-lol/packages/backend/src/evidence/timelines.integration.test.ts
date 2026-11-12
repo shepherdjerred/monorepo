@@ -4,7 +4,10 @@ import {
   createTestDatabase,
   testDatabaseModule,
 } from "#src/testing/test-database.ts";
-import { RiotTransportError } from "#src/league/api/client/errors.ts";
+import {
+  RiotHttpError,
+  RiotTransportError,
+} from "#src/league/api/client/errors.ts";
 
 const { prisma } = createTestDatabase("artifact-timeline-resolution");
 const io = vi.hoisted(() => {
@@ -289,4 +292,45 @@ test("participant drift and internal failures are never optional outages", async
   await expect(resolveMatchTimeline(request)).rejects.toThrow(
     "Corrupt persisted contract",
   );
+});
+
+test("history recovery learns whether Riot's timeline absence is definitive", async () => {
+  const history = { ...request, purpose: "history" as const };
+  io.riot.mockRejectedValueOnce(
+    new RiotHttpError({
+      status: 403,
+      statusText: "Forbidden",
+      body: null,
+      url: "fixture-timeline",
+      headers: new Headers(),
+    }),
+  );
+  expect(await resolveMatchTimeline(history)).toEqual({
+    kind: "unavailable",
+    reason: "No compatible timeline evidence",
+    definitiveAbsence: "forbidden",
+  });
+  // The evidence reader tells the Riot caller that 403 is an expected answer.
+  expect(io.riot).toHaveBeenLastCalledWith(
+    match.metadata.matchId,
+    expect.any(String),
+    "return_undefined_on_404",
+    [403],
+  );
+  io.riot.mockResolvedValueOnce(undefined);
+  expect(await resolveMatchTimeline(history)).toMatchObject({
+    definitiveAbsence: "not_found",
+  });
+  io.riot.mockRejectedValueOnce(
+    new RiotTransportError("fixture-timeline", new Error("network")),
+  );
+  expect(await resolveMatchTimeline(history)).toMatchObject({
+    kind: "unavailable",
+    definitiveAbsence: undefined,
+  });
+  // A best-effort read folds every failure into undefined; it proves nothing.
+  io.riot.mockResolvedValueOnce(undefined);
+  expect(
+    await resolveMatchTimeline({ ...history, persistence: "best_effort" }),
+  ).toMatchObject({ kind: "unavailable", definitiveAbsence: undefined });
 });

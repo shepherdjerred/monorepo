@@ -3,6 +3,7 @@ import {
   bugsinkRequestPaginated,
   bugsinkRequestRaw,
   type BugsinkListOptions,
+  type BugsinkPaginatedOptions,
 } from "./client.ts";
 import {
   BugsinkTeamSchema,
@@ -95,7 +96,7 @@ export async function getProject(
 
 export async function getEvents(
   issueUuid: string,
-  options: BugsinkListOptions = {},
+  options: Pick<BugsinkPaginatedOptions, "limit" | "maxPages"> = {},
 ): Promise<BugsinkEventListItem[]> {
   const result = await bugsinkRequestPaginated(
     "/events/",

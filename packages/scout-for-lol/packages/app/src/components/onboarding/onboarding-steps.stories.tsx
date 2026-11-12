@@ -42,6 +42,8 @@ const GUILDS = [
   },
 ];
 
+const SELF_SUBSCRIPTION = { alias: "sjerred", channelId: REPORTS_CHANNEL };
+
 const EXISTING_SUBS = [
   { alias: "sjerred", channelId: REPORTS_CHANNEL },
   { alias: "nightblue", channelId: REPORTS_CHANNEL },
@@ -139,8 +141,7 @@ export const SubscribeSelfStep: Story = {
       username="sjerred"
       discordId="444"
       existingSubs={[]}
-      selfAlias=""
-      selfChannelId=""
+      self={null}
       onAdded={noop}
       onContinue={noop}
       onBack={noop}
@@ -159,8 +160,27 @@ export const SubscribeMoreStep: Story = {
       username="sjerred"
       discordId="444"
       existingSubs={EXISTING_SUBS}
-      selfAlias="sjerred"
-      selfChannelId={REPORTS_CHANNEL}
+      self={SELF_SUBSCRIPTION}
+      onAdded={noop}
+      onContinue={noop}
+      onBack={noop}
+      onSkip={noop}
+    />
+  ),
+};
+
+/** Self step skipped: no suggestion anchor, so only the manual form shows. */
+export const SubscribeMoreAfterSkippedSelf: Story = {
+  args: stepArgs,
+  render: () => (
+    <OnboardingSubscribeStep
+      mode="more"
+      guildId={GUILD_ID}
+      channels={CHANNELS}
+      username=""
+      discordId=""
+      existingSubs={[]}
+      self={null}
       onAdded={noop}
       onContinue={noop}
       onBack={noop}
@@ -218,8 +238,7 @@ export const SubscribeMoreWithSuggestions: Story = {
       username="sjerred"
       discordId="444"
       existingSubs={EXISTING_SUBS}
-      selfAlias="sjerred"
-      selfChannelId={REPORTS_CHANNEL}
+      self={SELF_SUBSCRIPTION}
       onAdded={noop}
       onContinue={noop}
       onBack={noop}

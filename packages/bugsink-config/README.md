@@ -17,6 +17,11 @@ Browser applications can use `bugsinkBrowserOptions({ dsn, environment, release 
 to include the same policy and validate an untyped build-time release value.
 The application still supplies its own DSN and environment.
 
+Both option factories set `attachStacktrace: false`, the SDK 10 default. SDK 11
+defaults it to true, which turns every `captureMessage` into a synthetic
+exception that Bugsink titles by its top stack frame with an empty message.
+Errors passed to `captureException` keep their own stack traces.
+
 Sentry SDK 11 collects additional data by default. The factory explicitly
 retains the previous policy: no automatic user information, cookies, HTTP
 bodies, GenAI input/output, database query data, queue data, or GraphQL

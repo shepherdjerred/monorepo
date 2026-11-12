@@ -15,8 +15,87 @@ import { renderMatchNotificationArtifact } from "#src/temporal/notification-lane
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { reconcileScoreboardReport } from "./scoreboard-recovery.ts";
 import type { ArtifactResolution } from "@scout-for-lol/domain/artifacts/resolution.ts";
-import type { RawMatch } from "@scout-for-lol/data";
+import { TIMELINE_RECOVERY_WINDOW_MS } from "@scout-for-lol/domain/match-processing/eligibility.ts";
+import type { RawMatch, RawTimeline } from "@scout-for-lol/data";
+import type { EvidenceResolution } from "#src/evidence/source-read.ts";
 import { gameResultFromMatch } from "#src/scout-client/canonical/riot-result.ts";
+import type { RiotSourceAbsence } from "#src/league/api/client/errors.ts";
+
+/** Give-up bound separating Riot's "not yet published" 404 from "never published". */
+export const RIOT_NOT_FOUND_ABANDON_AFTER_MS = 7 * 24 * 60 * 60 * 1000;
+
+type AttemptClock = {
+  now: Date;
+  evidenceReadAt: Date;
+};
+
+const NOT_ABANDONED = {
+  recoveryAbandonedAt: null,
+  recoveryAbandonedReason: null,
+} as const;
+
+/**
+ * Stop recovering an artifact Riot definitively refuses once every other
+ * source has been read empty. A 403 (withheld game) is terminal after the
+ * same window processing gives any source before it pins a missing timeline.
+ * A 404 can mean Match-V5 has not published the game yet, so it retries until
+ * `RIOT_NOT_FOUND_ABANDON_AFTER_MS`. Both windows start at admission
+ * (`createdAt`): the row Scout began acting on, unlike a legacy
+ * `firstDiscoveredAt` or a `completedAt` a refused match never gets from Riot.
+ * Outages and timeouts carry no absence and stay retryable. Each attempt
+ * restates the decision, so a reopened row that now resolves clears it.
+ */
+function abandonment(
+  admission: { createdAt: Date },
+  artifact: "match" | "timeline",
+  absence: RiotSourceAbsence | undefined,
+  { now, evidenceReadAt }: AttemptClock,
+): {
+  recoveryAbandonedAt: Date | null;
+  recoveryAbandonedReason: string | null;
+} {
+  if (absence === undefined) return NOT_ABANDONED;
+  const window =
+    absence === "forbidden"
+      ? TIMELINE_RECOVERY_WINDOW_MS
+      : RIOT_NOT_FOUND_ABANDON_AFTER_MS;
+  if (now.getTime() - admission.createdAt.getTime() < window)
+    return NOT_ABANDONED;
+  return {
+    // Wall-clock watermark taken before this attempt read any evidence, not
+    // `now`: client evidence received during the attempt compares newer and
+    // reopens the row instead of being skipped unexamined.
+    recoveryAbandonedAt: evidenceReadAt,
+    recoveryAbandonedReason: `riot_${artifact}_${absence}`,
+  };
+}
+
+/** Riot refused the match itself, so no later stage can run. */
+function matchAbandonment(
+  admission: { createdAt: Date },
+  match: EvidenceResolution<RawMatch>,
+  clock: AttemptClock,
+) {
+  return match.kind === "unavailable"
+    ? abandonment(admission, "match", match.definitiveAbsence, clock)
+    : NOT_ABANDONED;
+}
+
+/**
+ * The timeline must be the only open work: a FULL row's report belongs to
+ * live processing, a HISTORY_ONLY row's to this loop.
+ */
+function timelineAbandonment(
+  admission: { createdAt: Date; policy: string },
+  timeline: EvidenceResolution<RawTimeline>,
+  reportComplete: boolean,
+  clock: AttemptClock,
+) {
+  return (reportComplete || admission.policy === "FULL") &&
+    timeline.kind === "unavailable"
+    ? abandonment(admission, "timeline", timeline.definitiveAbsence, clock)
+    : NOT_ABANDONED;
+}
 
 async function ensureHistoryReport(
   matchId: RiotMatchId,
@@ -68,9 +147,19 @@ export async function reconcileMatchHistory(now = new Date()): Promise<number> {
       discoveredAt: row.observedAt,
       historical: true,
     });
+  // An abandoned row is due again only when client evidence for its match
+  // arrived or was accepted after the decision; re-abandoning moves the
+  // timestamp past that evidence, so an unusable upload is evaluated once.
   const rows = await prisma.$queryRaw<{ riotMatchId: RiotMatchId }[]>`
     SELECT a."riotMatchId" FROM "MatchEvidenceAdmission" a
     WHERE a."recoveryNextAttemptAt" <= ${now} AND (
+      a."recoveryAbandonedAt" IS NULL OR EXISTS (
+        SELECT 1 FROM "ScoutClientObservation" c
+        LEFT JOIN "ScoutClientObservationRevalidation" r USING ("observationId")
+        WHERE c.kind = 'post_game' AND c.disposition = 'ACCEPTED'
+          AND c."gameId" = substr(a."riotMatchId", strpos(a."riotMatchId", '_') + 1)
+          AND lower(c."platformId") = lower(split_part(a."riotMatchId", '_', 1))
+          AND GREATEST(c."receivedAt", r."validatedAt") > a."recoveryAbandonedAt")) AND (
       (a.policy = 'HISTORY_ONLY' AND (NOT a."historyReportComplete" OR NOT a."historyTimelineRecovered")) OR
       (a.policy = 'FULL' AND a."timelineMissing" AND NOT a."historyTimelineRecovered") OR
       (NOT a."historyReportComplete" AND
@@ -92,6 +181,8 @@ export async function reconcileMatchHistory(now = new Date()): Promise<number> {
       },
     });
     if (claimed.count === 0) continue;
+    // Taken before any evidence read so uploads arriving mid-attempt reopen.
+    const clock = { now, evidenceReadAt: new Date() };
     try {
       const matchId = RiotMatchIdSchema.parse(item.riotMatchId);
       const admission = await prisma.matchEvidenceAdmission.findUniqueOrThrow({
@@ -115,6 +206,7 @@ export async function reconcileMatchHistory(now = new Date()): Promise<number> {
             recoveryClaimId: null,
             historyReportComplete: reportComplete,
             recoveryError: null,
+            ...matchAbandonment(admission, match, clock),
           },
         });
         continue;
@@ -156,6 +248,7 @@ export async function reconcileMatchHistory(now = new Date()): Promise<number> {
           historyTimelineRecovered: timeline.kind === "available",
           recoveryClaimId: null,
           recoveryError: null,
+          ...timelineAbandonment(admission, timeline, reportComplete, clock),
         },
       });
     } catch (error) {
