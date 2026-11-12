@@ -28,19 +28,30 @@ afterEach(() => {
   globalThis.fetch = originalFetch;
 });
 
+function authorizationOf(init: FetchInit): string | null {
+  return new Headers(init?.headers).get("authorization");
+}
+
 /** Record every request, answering comment reads with `comments`. */
 function stubGitHub(comments: readonly { body: string }[]) {
-  const posted: { url: string; body: unknown }[] = [];
+  const posted: { url: string; body: unknown; authorization: string | null }[] =
+    [];
+  const readAuthorizations: (string | null)[] = [];
   globalThis.fetch = fakeFetch(async (input, init) => {
     const url = input instanceof Request ? input.url : String(input);
     if (init?.method === "POST") {
       const raw = typeof init.body === "string" ? init.body : "";
-      posted.push({ url, body: JSON.parse(raw) });
+      posted.push({
+        url,
+        body: JSON.parse(raw),
+        authorization: authorizationOf(init),
+      });
       return Response.json({ id: 1 });
     }
+    readAuthorizations.push(authorizationOf(init));
     return Response.json(comments);
   });
-  return posted;
+  return Object.assign(posted, { readAuthorizations });
 }
 
 describe("buildReviewRequestMarker", () => {
@@ -58,7 +69,22 @@ describe("buildReviewRequestMarker", () => {
 });
 
 describe("requestReviewAtHead", () => {
-  const request = { repo: "o/r", number: 2095, head: HEAD, token: "t" };
+  const request = {
+    repo: "o/r",
+    number: 2095,
+    head: HEAD,
+    token: "read",
+    requestToken: "request",
+  };
+
+  test("reads with the read identity and posts with the request identity", async () => {
+    const posted = stubGitHub([]);
+    await requestReviewAtHead({ ...request, provider: codexProvider });
+    expect(posted.readAuthorizations).toEqual(["Bearer read"]);
+    expect(posted.map((post) => post.authorization)).toEqual([
+      "Bearer request",
+    ]);
+  });
 
   test("asks a provider that reviews only when asked", async () => {
     const posted = stubGitHub([]);

@@ -12,6 +12,14 @@ test("trusted policy image removes checkout, install, and persistent review auth
   expect(review?.skipClone).toBe(true);
   expect(review?.commands).toEqual(["cd /app", "bun /app/review-gate.js"]);
   expect(review?.volumes).toEqual([]);
+  // Reads mint an App installation token; the owner's token only posts
+  // review requests; no toolchain bootstrap needs mise's download token.
+  expect(review?.secrets?.map((grant) => grant.env)).toEqual([
+    "GITHUB_REVIEW_TOKEN",
+    "GITHUB_APP_ID",
+    "GITHUB_APP_INSTALLATION_ID",
+    "GITHUB_APP_PRIVATE_KEY",
+  ]);
   expect(review?.environment?.["REVIEW_PROVIDERS"]).toBe("codex,coderabbit");
   if (review === undefined) throw new Error("missing review");
   const complete = completionStep([review], image, "/app");

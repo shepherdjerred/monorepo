@@ -70,8 +70,10 @@ fi
 # Woodpecker step succeeds; every other non-zero status (findings, unresolved
 # threads, timeouts, errors) still fails the pipeline.
 QUOTA_EXIT_STATUS=42
-if GH_TOKEN="$GITHUB_REVIEW_TOKEN" \
-  REVIEW_GATE_PARSER_COMMIT="$GATE_SHA" \
+# The gate reads GitHub as the GitHub App installation (GITHUB_APP_*) and
+# posts review requests with GITHUB_REVIEW_TOKEN; it mints and refreshes the
+# installation token itself, so no token is exported here.
+if REVIEW_GATE_PARSER_COMMIT="$GATE_SHA" \
   bun --no-install "$WAIT_SCRIPT"; then
   exit 0
 else

@@ -97,7 +97,15 @@ type RequestInput = {
   repo: string;
   number: number;
   head: string;
+  /** Reads the pull request's comments to find an earlier request. */
   token: string;
+  /**
+   * Posts the request comment. Separate from `token` because a provider honors
+   * its trigger command only from an account it serves — Codex answers
+   * `@codex review` from a Codex-linked user, not from a GitHub App bot — while
+   * every read can come from a different, cheaper identity.
+   */
+  requestToken: string;
   provider: ReviewProvider;
   /** 1-based attempt; defaults to the first. */
   attempt?: number;
@@ -112,7 +120,7 @@ type RequestInput = {
  * still escalates on schedule instead of restarting the clock.
  */
 export async function findReviewRequest(
-  input: RequestInput,
+  input: Omit<RequestInput, "requestToken">,
 ): Promise<{ createdAt: string | null } | null> {
   const marker = buildReviewRequestMarker(
     input.provider.id,
@@ -172,7 +180,7 @@ export async function requestReviewAtHead(
         ),
       }),
     },
-    input.token,
+    input.requestToken,
   );
   return "requested";
 }

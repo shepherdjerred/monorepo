@@ -62,6 +62,7 @@ export async function observeProviderOnce(input: {
   number: number;
   head: string;
   token: string;
+  requestToken: string;
   provider: ReviewProvider;
   pullRequestAuthor: PullRequestAuthor;
   headPushedAt: string | null;
@@ -76,6 +77,7 @@ export async function observeProviderOnce(input: {
     number,
     head,
     token,
+    requestToken,
     provider,
     pullRequestAuthor,
     policy,
@@ -145,6 +147,7 @@ export async function observeProviderOnce(input: {
     number,
     head,
     token,
+    requestToken,
     provider,
     attempt,
     graceSeconds: requestGraceSecondsForProvider(
@@ -221,7 +224,9 @@ export async function observeTick(
     repo: string;
     number: number;
     head: string;
+    /** This tick's read token (see `PollLoopConfig.readToken`). */
     token: string;
+    requestToken: string;
     policy: BlockingPolicy;
     configuredGraceSeconds: number;
     retryAfterSeconds: number;
@@ -235,6 +240,7 @@ export async function observeTick(
     number,
     head,
     token,
+    requestToken,
     policy,
     configuredGraceSeconds,
     retryAfterSeconds,
@@ -255,6 +261,7 @@ export async function observeTick(
       number,
       head,
       token,
+      requestToken,
       provider,
       pullRequestAuthor: author,
       headPushedAt: poll.headPushedAt,

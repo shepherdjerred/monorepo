@@ -10,6 +10,9 @@ function environment(): Record<string, string | undefined> {
     CI_COMMIT_PULL_REQUEST: "123",
     CI_COMMIT_SHA: "a".repeat(40),
     GIT_SHA: "b".repeat(40),
+    GITHUB_APP_ID: "1",
+    GITHUB_APP_INSTALLATION_ID: "2",
+    GITHUB_APP_PRIVATE_KEY: "test-key",
     GITHUB_REVIEW_TOKEN: "test-token",
   };
 }
@@ -51,6 +54,9 @@ test("missing candidate, policy, or credential inputs cannot skip the gate", asy
     "CI_COMMIT_PULL_REQUEST",
     "CI_COMMIT_SHA",
     "GIT_SHA",
+    "GITHUB_APP_ID",
+    "GITHUB_APP_INSTALLATION_ID",
+    "GITHUB_APP_PRIVATE_KEY",
     "GITHUB_REVIEW_TOKEN",
   ]) {
     const env = environment();

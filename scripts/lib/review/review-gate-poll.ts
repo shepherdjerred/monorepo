@@ -43,7 +43,15 @@ export type PollLoopConfig = {
   repo: string;
   number: number;
   head: string;
-  token: string;
+  /**
+   * The token every GitHub read uses, resolved once per tick: the gate outlives
+   * a GitHub App installation token, so the source refreshes it as it nears
+   * expiry. Resolving inside the tick puts a failed refresh behind the same
+   * transient-error handling as any other read.
+   */
+  readToken: () => Promise<string>;
+  /** Posts review-request comments only (see `requestReviewAtHead`). */
+  requestToken: string;
   policy: BlockingPolicy;
   configuredGraceSeconds: number;
   retryAfterSeconds: number;
@@ -491,8 +499,10 @@ export async function pollOnce(
   state: PollLoopState,
 ): Promise<boolean> {
   let observed: ProviderObservation[];
+  let token: string;
   try {
-    const tick = await observeTick(config, poll, startedAt);
+    token = await config.readToken();
+    const tick = await observeTick({ ...config, token }, poll, startedAt);
     // Unanimous skip passes, but through the same confirmation as any
     // other pass: a skipped provider's stale P0 is still a snapshot taken
     // mid-tick and must survive a second observation to be trusted absent.
@@ -527,7 +537,7 @@ export async function pollOnce(
         repo: config.repo,
         number: config.number,
         head: config.head,
-        token: config.token,
+        token,
         policy: config.policy,
         observed,
       })

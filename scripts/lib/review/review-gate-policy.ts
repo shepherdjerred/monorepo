@@ -197,6 +197,8 @@ export async function ensureReviewRequested(input: {
   number: number;
   head: string;
   token: string;
+  /** Posts the request comment; every read uses `token`. */
+  requestToken: string;
   provider: ReviewProvider;
   attempt: number;
   graceSeconds: number;

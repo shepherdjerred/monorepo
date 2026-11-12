@@ -60,7 +60,10 @@ A `ReviewProvider` (see `src/types.ts`) declares everything consumers need:
 - **`requestReview: ReviewRequestStrategy | null`** — how to ask for a
   (re-)review of the head, with an idempotency marker so a consumer never
   posts a duplicate trigger comment; `null` for providers that review
-  automatically.
+  automatically. `requestReviewAtHead` takes two tokens: `token` reads the
+  comments that hold earlier markers and `requestToken` posts the trigger,
+  because a provider honors its command only from an account it serves
+  (Codex ignores a GitHub App bot) while reads can use any identity.
 - **`botAuthoredPullRequestPolicy`** — whether bot-authored PRs still require
   this provider's review (`review`) or are explicitly skipped (`skip`).
 - **`botAuthorAllowlist`** — with policy `review`, the exact GitHub App logins

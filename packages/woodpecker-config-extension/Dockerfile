@@ -32,7 +32,8 @@ RUN bun /tools/complete-bin-links.ts node_modules/.bun
 
 FROM prod-deps AS review-build
 RUN bun install --frozen-lockfile --production --filter '@shepherdjerred/root-scripts'
-COPY --parents scripts/lib/ scripts/review/ packages/code-review/ ./
+COPY --parents scripts/lib/ scripts/review/ packages/code-review/ \
+  packages/temporal/src/lib/github-app-token.ts ./
 RUN bun build scripts/review/bundled-review-gate.ts --target bun --outfile /review-gate.js
 
 FROM base AS runtime
