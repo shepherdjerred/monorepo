@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => ({
   update: vi.fn(),
   revalidate: vi.fn(),
   start: vi.fn(),
+  project: vi.fn(),
 }));
 vi.mock("#src/database/index.ts", () => ({
   prisma: {
@@ -21,7 +22,7 @@ vi.mock("./revalidation.ts", () => ({
   revalidateClientObservation: mocks.revalidate,
 }));
 vi.mock("./game-results.ts", () => ({
-  projectClientGameResult: vi.fn(() => Promise.resolve()),
+  projectClientGameResult: mocks.project,
 }));
 vi.mock("./clash-entities.ts", () => ({
   projectClashEntity: vi.fn(() => Promise.resolve()),
@@ -48,6 +49,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   mocks.findMany.mockResolvedValue([row("pending"), row("broken")]);
   mocks.update.mockResolvedValue({});
+  mocks.project.mockResolvedValue("projected");
   mocks.revalidate.mockImplementation((candidate: { observationId: string }) =>
     Promise.resolve({
       observationId: candidate.observationId,
@@ -84,5 +86,18 @@ test("an unexpected row failure still fails the page", async () => {
   await expect(page).rejects.toBeInstanceOf(AggregateError);
   await expect(page).rejects.toMatchObject({
     errors: [new Error("Temporal is unavailable")],
+  });
+});
+
+test("an Arena post-game row completes as unsupported_mode and is not retried", async () => {
+  mocks.findMany.mockResolvedValue([row("arena")]);
+  mocks.project.mockResolvedValue("unsupported_mode");
+
+  await expect(reconcileAcceptedClientEvidence(now)).resolves.toBe(1);
+
+  expect(mocks.start).not.toHaveBeenCalled();
+  expect(mocks.update).toHaveBeenLastCalledWith({
+    where: { observationId: "arena" },
+    data: expect.objectContaining({ recoveryComplete: true }),
   });
 });

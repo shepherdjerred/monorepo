@@ -43,3 +43,15 @@ export const scoutClientGamesWithoutPrematch = new Gauge({
   labelNames: ["custom"] as const,
   registers: [registry],
 });
+
+/**
+ * Terminal outcomes of recovering client post-game observations. Only
+ * `unsupported_mode` (Arena, whose results come from Riot) is counted so far;
+ * a general outcome metric belongs to the client metrics work.
+ */
+export const scoutClientProjectionOutcomesTotal = new Counter({
+  name: "scout_client_projection_outcomes_total",
+  help: "Terminal outcomes of recovering Scout Client post-game observations",
+  labelNames: ["outcome"] as const,
+  registers: [registry],
+});

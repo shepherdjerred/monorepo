@@ -11,6 +11,7 @@ import { projectClientGameResult } from "./game-results.ts";
 import { projectClashEntity } from "./clash-entities.ts";
 import { startAcceptedClientMatches } from "./ingress.ts";
 import { ClientBindingReconciliationPending } from "./late-binding.ts";
+import { scoutClientProjectionOutcomesTotal } from "#src/metrics/scout-client.ts";
 import { createLogger } from "#src/logger.ts";
 import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
@@ -95,7 +96,20 @@ async function recoverRow(
     });
   }
   await projectClashEntity(observation);
-  await projectClientGameResult(observation);
+  const projection = await projectClientGameResult(observation);
+  if (projection === "unsupported_mode") {
+    // Terminal: Riot supplies this mode's results, so retrying cannot help.
+    scoutClientProjectionOutcomesTotal.inc({ outcome: projection });
+    await prisma.scoutClientObservation.update({
+      where: { observationId: row.observationId },
+      data: {
+        recoveryVersion: RECOVERY_VERSION,
+        recoveryAttemptAt: now,
+        recoveryComplete: true,
+      },
+    });
+    return;
+  }
   await startAcceptedClientMatches({ observations: [observation] }, [
     { observationId: row.observationId, outcome: "already_accepted" },
   ]);
