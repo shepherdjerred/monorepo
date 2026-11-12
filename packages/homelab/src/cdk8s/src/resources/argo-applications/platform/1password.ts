@@ -1,8 +1,7 @@
 import type { Chart } from "cdk8s";
-import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
-import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
+import { helmApplication } from "@shepherdjerred/homelab/cdk8s/src/misc/argo/application.ts";
 export function createOnePasswordApp(chart: Chart) {
   // TODO: create the 1password secrets here
 
@@ -39,30 +38,17 @@ export function createOnePasswordApp(chart: Chart) {
     },
   };
 
-  return new Application(chart, "1password-app", {
-    metadata: {
-      name: "1password",
-    },
-    spec: {
-      revisionHistoryLimit: 5,
-      project: applicationProject("1password"),
-      source: {
-        // https://github.com/1Password/connect-helm-charts
-        repoUrl: "https://1password.github.io/connect-helm-charts/",
-        targetRevision: versions.connect,
-        chart: "connect",
-        helm: {
-          valuesObject: onePasswordValues,
-        },
-      },
-      destination: {
-        server: "https://kubernetes.default.svc",
-        namespace: "1password",
-      },
-      syncPolicy: {
-        automated: { enabled: true },
-        syncOptions: ["CreateNamespace=true"],
-      },
+  return helmApplication(chart, {
+    name: "1password",
+    namespace: "1password",
+    chart: "connect",
+    // https://github.com/1Password/connect-helm-charts
+    repoUrl: "https://1password.github.io/connect-helm-charts/",
+    targetRevision: versions.connect,
+    valuesObject: onePasswordValues,
+    syncPolicy: {
+      automated: { enabled: true },
+      syncOptions: ["CreateNamespace=true"],
     },
   });
 }

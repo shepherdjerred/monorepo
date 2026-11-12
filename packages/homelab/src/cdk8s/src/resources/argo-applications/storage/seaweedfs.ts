@@ -1,7 +1,6 @@
 import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
-import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import {
   IntOrString,
   KubeNetworkPolicy,
@@ -18,7 +17,6 @@ import {
   getPvcBackupPolicy,
 } from "@shepherdjerred/homelab/cdk8s/src/backup-policy/pvc-backup-policy.ts";
 import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
-import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
 import { createSeaweedfsBackup } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/storage/seaweedfs-backup.ts";
 import {
   nsPeer,
@@ -26,6 +24,7 @@ import {
   prometheusIngressRule,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import { onePasswordSecret } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
+import { helmApplication } from "@shepherdjerred/homelab/cdk8s/src/misc/argo/application.ts";
 
 const FILER_UPSTREAM_PORT = 8888;
 const FILER_GATEWAY_PORT = 8889;
@@ -385,34 +384,23 @@ export function createSeaweedfsApp(chart: Chart) {
     },
   };
 
-  return new Application(chart, "seaweedfs-app", {
-    metadata: {
-      name: "seaweedfs",
+  return helmApplication(chart, {
+    name: "seaweedfs",
+    namespace: "seaweedfs",
+    chart: "seaweedfs",
+    repoUrl: "https://seaweedfs.github.io/seaweedfs/helm",
+    targetRevision: versions.seaweedfs,
+    valuesObject: seaweedfsValues,
+    helm: {
+      releaseName: "seaweedfs",
     },
-    spec: {
-      revisionHistoryLimit: 5,
-      project: applicationProject("seaweedfs"),
-      source: {
-        repoUrl: "https://seaweedfs.github.io/seaweedfs/helm",
-        chart: "seaweedfs",
-        targetRevision: versions.seaweedfs,
-        helm: {
-          releaseName: "seaweedfs",
-          valuesObject: seaweedfsValues,
-        },
+    syncPolicy: {
+      automated: {
+        enabled: true,
+        prune: true,
+        selfHeal: true,
       },
-      destination: {
-        server: "https://kubernetes.default.svc",
-        namespace: "seaweedfs",
-      },
-      syncPolicy: {
-        automated: {
-          enabled: true,
-          prune: true,
-          selfHeal: true,
-        },
-        syncOptions: ["CreateNamespace=true"],
-      },
+      syncOptions: ["CreateNamespace=true"],
     },
   });
 }

@@ -1,9 +1,8 @@
 import type { Chart } from "cdk8s";
-import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { Namespace } from "cdk8s-plus-31";
-import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
+import { argoApplication } from "@shepherdjerred/homelab/cdk8s/src/misc/argo/application.ts";
 
 export function createGrafanaApp(chart: Chart) {
   new Namespace(chart, "prometheus-namespcae", {
@@ -22,26 +21,17 @@ export function createGrafanaApp(chart: Chart) {
     hosts: ["grafana"],
   });
 
-  return new Application(chart, "grafana-app", {
-    metadata: {
-      name: "grafana",
+  return argoApplication(chart, {
+    name: "grafana",
+    namespace: "prometheus",
+    source: {
+      repoUrl: "https://github.com/dotdc/grafana-dashboards-kubernetes",
+      path: ".",
+      targetRevision: versions["dotdc/grafana-dashboards-kubernetes"],
     },
-    spec: {
-      revisionHistoryLimit: 5,
-      project: applicationProject("grafana"),
-      source: {
-        repoUrl: "https://github.com/dotdc/grafana-dashboards-kubernetes",
-        path: ".",
-        targetRevision: versions["dotdc/grafana-dashboards-kubernetes"],
-      },
-      destination: {
-        server: "https://kubernetes.default.svc",
-        namespace: "prometheus",
-      },
-      syncPolicy: {
-        automated: { enabled: true },
-        syncOptions: ["CreateNamespace=true"],
-      },
+    syncPolicy: {
+      automated: { enabled: true },
+      syncOptions: ["CreateNamespace=true"],
     },
   });
 }

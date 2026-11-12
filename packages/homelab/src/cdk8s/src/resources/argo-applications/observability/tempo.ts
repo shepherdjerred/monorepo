@@ -1,13 +1,12 @@
 import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
-import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
 import { escapeHelmGoTemplate } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/rules/shared.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
-import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
+import { helmApplication } from "@shepherdjerred/homelab/cdk8s/src/misc/argo/application.ts";
 
 const MAX_TRACE_BYTES = 50_000_000;
 
@@ -180,59 +179,46 @@ metrics_generator:
     ],
   };
 
-  return new Application(chart, "tempo-app", {
-    metadata: {
-      name: "tempo",
-    },
-    spec: {
-      revisionHistoryLimit: 5,
-      project: applicationProject("tempo"),
-      source: {
-        // https://github.com/grafana/helm-charts/tree/main/charts/tempo
-        repoUrl: "https://grafana.github.io/helm-charts",
-        targetRevision: versions.tempo,
-        chart: "tempo",
-        helm: {
-          valuesObject: tempoValues,
-        },
-      },
-      destination: {
-        server: "https://kubernetes.default.svc",
+  return helmApplication(chart, {
+    name: "tempo",
+    namespace: "tempo",
+    chart: "tempo",
+    // https://github.com/grafana/helm-charts/tree/main/charts/tempo
+    repoUrl: "https://grafana.github.io/helm-charts",
+    targetRevision: versions.tempo,
+    valuesObject: tempoValues,
+    // StatefulSet volume-claim templates are immutable after creation.
+    // Kubernetes copies API-defaulted fields (volumeMode, status) into the
+    // live template, and the chart's PVC labels never land on that field.
+    // Changing Tempo's pod resources (main 16061) re-rendered the
+    // Application and the apply-safety preflight refused the sync even
+    // though size, storage class, and access modes were unchanged. Ignore
+    // the whole field like Loki and Pyroscope. PVC backup labels on created
+    // claims are enforced by cluster admission, not this comparison.
+    ignoreDifferences: [
+      {
+        group: "apps",
+        kind: "StatefulSet",
+        name: "tempo",
         namespace: "tempo",
+        jsonPointers: ["/spec/volumeClaimTemplates"],
       },
-      // StatefulSet volume-claim templates are immutable after creation.
-      // Kubernetes copies API-defaulted fields (volumeMode, status) into the
-      // live template, and the chart's PVC labels never land on that field.
-      // Changing Tempo's pod resources (main 16061) re-rendered the
-      // Application and the apply-safety preflight refused the sync even
-      // though size, storage class, and access modes were unchanged. Ignore
-      // the whole field like Loki and Pyroscope. PVC backup labels on created
-      // claims are enforced by cluster admission, not this comparison.
-      ignoreDifferences: [
-        {
-          group: "apps",
-          kind: "StatefulSet",
-          name: "tempo",
-          namespace: "tempo",
-          jsonPointers: ["/spec/volumeClaimTemplates"],
-        },
+    ],
+    syncPolicy: {
+      // selfHeal (velero/seaweedfs precedent): without it, automated sync
+      // runs once per revision, so a renderer change under a fixed chart
+      // revision strands the app OutOfSync forever. Exactly that happened
+      // 2026-08-23: the ArgoCD 10.4.0 bump swapped bundled Helm 3→4, Helm 4
+      // drops null-valued default keys during coalesce, and tempo's chart
+      // declares `opencensus:` (null) in its default receivers — the desired
+      // ConfigMap render changed under 1.24.4 and nothing ever re-converged
+      // it, pinning the root app at Progressing.
+      automated: { enabled: true, selfHeal: true },
+      syncOptions: [
+        "CreateNamespace=true",
+        "ServerSideApply=true",
+        "RespectIgnoreDifferences=true",
       ],
-      syncPolicy: {
-        // selfHeal (velero/seaweedfs precedent): without it, automated sync
-        // runs once per revision, so a renderer change under a fixed chart
-        // revision strands the app OutOfSync forever. Exactly that happened
-        // 2026-08-23: the ArgoCD 10.4.0 bump swapped bundled Helm 3→4, Helm 4
-        // drops null-valued default keys during coalesce, and tempo's chart
-        // declares `opencensus:` (null) in its default receivers — the desired
-        // ConfigMap render changed under 1.24.4 and nothing ever re-converged
-        // it, pinning the root app at Progressing.
-        automated: { enabled: true, selfHeal: true },
-        syncOptions: [
-          "CreateNamespace=true",
-          "ServerSideApply=true",
-          "RespectIgnoreDifferences=true",
-        ],
-      },
     },
   });
 }

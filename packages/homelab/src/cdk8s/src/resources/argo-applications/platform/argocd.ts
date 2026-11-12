@@ -4,16 +4,15 @@ import {
   deliveryArgoAccounts,
   DELIVERY_ARGO_SERVER_SETTINGS,
 } from "./delivery-rbac.ts";
-import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
-import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
 import {
   humanArgoCdPolicyRows,
   humanArgoCdSettings,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/argocd-human-access.ts";
+import { helmApplication } from "@shepherdjerred/homelab/cdk8s/src/misc/argo/application.ts";
 
 export const PROMETHEUS_HEALTH_LUA = `local hs = {
   status = "Progressing",
@@ -430,30 +429,17 @@ return hs`,
     },
   };
 
-  return new Application(chart, "argocd-app", {
-    metadata: {
-      name: "argocd",
-    },
-    spec: {
-      revisionHistoryLimit: 5,
-      project: applicationProject("argocd"),
-      source: {
-        // https://argoproj.github.io/argo-helm/
-        repoUrl: "https://argoproj.github.io/argo-helm/",
-        targetRevision: versions["argo-cd"],
-        chart: "argo-cd",
-        helm: {
-          valuesObject: argoCdValues,
-        },
-      },
-      destination: {
-        server: "https://kubernetes.default.svc",
-        namespace: "argocd",
-      },
-      syncPolicy: {
-        automated: { enabled: true },
-        syncOptions: ["CreateNamespace=true"],
-      },
+  return helmApplication(chart, {
+    name: "argocd",
+    namespace: "argocd",
+    chart: "argo-cd",
+    // https://argoproj.github.io/argo-helm/
+    repoUrl: "https://argoproj.github.io/argo-helm/",
+    targetRevision: versions["argo-cd"],
+    valuesObject: argoCdValues,
+    syncPolicy: {
+      automated: { enabled: true },
+      syncOptions: ["CreateNamespace=true"],
     },
   });
 }

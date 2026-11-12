@@ -1,5 +1,4 @@
 import type { Chart } from "cdk8s";
-import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import {
   ServiceMonitor,
   ServiceMonitorSpecEndpointsScheme,
@@ -7,7 +6,7 @@ import {
 import { Namespace } from "cdk8s-plus-31";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
-import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
+import { helmApplication } from "@shepherdjerred/homelab/cdk8s/src/misc/argo/application.ts";
 
 // The Kueue Helm chart uses a single YAML string for the entire controller config.
 // Individual top-level values don't work — must override the full controllerManagerConfigYaml.
@@ -146,29 +145,16 @@ export function createKueueApp(chart: Chart) {
 
   createKueueMetricsServiceMonitor(chart);
 
-  return new Application(chart, "kueue-app", {
-    metadata: {
-      name: "kueue",
-    },
-    spec: {
-      revisionHistoryLimit: 5,
-      project: applicationProject("kueue"),
-      source: {
-        repoUrl: "registry.k8s.io/kueue/charts",
-        chart: "kueue",
-        targetRevision: versions.kueue.split("@")[0] ?? versions.kueue,
-        helm: {
-          valuesObject: kueueValues,
-        },
-      },
-      destination: {
-        server: "https://kubernetes.default.svc",
-        namespace: "kueue-system",
-      },
-      syncPolicy: {
-        automated: { enabled: true },
-        syncOptions: ["CreateNamespace=true", "ServerSideApply=true"],
-      },
+  return helmApplication(chart, {
+    name: "kueue",
+    namespace: "kueue-system",
+    chart: "kueue",
+    repoUrl: "registry.k8s.io/kueue/charts",
+    targetRevision: versions.kueue.split("@")[0] ?? versions.kueue,
+    valuesObject: kueueValues,
+    syncPolicy: {
+      automated: { enabled: true },
+      syncOptions: ["CreateNamespace=true", "ServerSideApply=true"],
     },
   });
 }

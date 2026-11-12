@@ -1,0 +1,55 @@
+// Auto-generated map from Helm chart name to its values type
+
+import type { ConnectHelmValues } from "./connect.types.ts";
+import type { ArgocdHelmValues } from "./argo-cd.types.ts";
+import type { CertmanagerHelmValues } from "./cert-manager.types.ts";
+import type { InteldevicepluginsoperatorHelmValues } from "./intel-device-plugins-operator.types.ts";
+import type { InteldevicepluginsgpuHelmValues } from "./intel-device-plugins-gpu.types.ts";
+import type { NodefeaturediscoveryHelmValues } from "./node-feature-discovery.types.ts";
+import type { KubeprometheusstackHelmValues } from "./kube-prometheus-stack.types.ts";
+import type { PrometheusadapterHelmValues } from "./prometheus-adapter.types.ts";
+import type { PrometheusblackboxexporterHelmValues } from "./prometheus-blackbox-exporter.types.ts";
+import type { TailscaleoperatorHelmValues } from "./tailscale-operator.types.ts";
+import type { ChartmuseumHelmValues } from "./chartmuseum.types.ts";
+import type { MinecraftHelmValues } from "./minecraft.types.ts";
+import type { McrouterHelmValues } from "./mc-router.types.ts";
+import type { LokiHelmValues } from "./loki.types.ts";
+import type { PromtailHelmValues } from "./promtail.types.ts";
+import type { TempoHelmValues } from "./tempo.types.ts";
+import type { PyroscopeHelmValues } from "./pyroscope.types.ts";
+import type { AlloyHelmValues } from "./alloy.types.ts";
+import type { OpenebsHelmValues } from "./openebs.types.ts";
+import type { KueueHelmValues } from "./kueue.types.ts";
+import type { VeleroHelmValues } from "./velero.types.ts";
+import type { PostgresoperatorHelmValues } from "./postgres-operator.types.ts";
+import type { RedisHelmValues } from "./redis.types.ts";
+import type { SeaweedfsHelmValues } from "./seaweedfs.types.ts";
+import type { MariadbHelmValues } from "./mariadb.types.ts";
+
+export type HelmChartValuesMap = {
+  connect: ConnectHelmValues;
+  "argo-cd": ArgocdHelmValues;
+  "cert-manager": CertmanagerHelmValues;
+  "intel-device-plugins-operator": InteldevicepluginsoperatorHelmValues;
+  "intel-device-plugins-gpu": InteldevicepluginsgpuHelmValues;
+  "node-feature-discovery": NodefeaturediscoveryHelmValues;
+  "kube-prometheus-stack": KubeprometheusstackHelmValues;
+  "prometheus-adapter": PrometheusadapterHelmValues;
+  "prometheus-blackbox-exporter": PrometheusblackboxexporterHelmValues;
+  "tailscale-operator": TailscaleoperatorHelmValues;
+  chartmuseum: ChartmuseumHelmValues;
+  minecraft: MinecraftHelmValues;
+  "mc-router": McrouterHelmValues;
+  loki: LokiHelmValues;
+  promtail: PromtailHelmValues;
+  tempo: TempoHelmValues;
+  pyroscope: PyroscopeHelmValues;
+  alloy: AlloyHelmValues;
+  openebs: OpenebsHelmValues;
+  kueue: KueueHelmValues;
+  velero: VeleroHelmValues;
+  "postgres-operator": PostgresoperatorHelmValues;
+  redis: RedisHelmValues;
+  seaweedfs: SeaweedfsHelmValues;
+  mariadb: MariadbHelmValues;
+};

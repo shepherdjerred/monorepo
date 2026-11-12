@@ -1,9 +1,8 @@
 import type { Chart } from "cdk8s";
-import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import { Namespace } from "cdk8s-plus-31";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
-import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
+import { helmApplication } from "@shepherdjerred/homelab/cdk8s/src/misc/argo/application.ts";
 
 // Grafana Alloy River config: eBPF-sample every pod on the local node kernel-side
 // and push profiles to Pyroscope. No application instrumentation — works for the
@@ -143,30 +142,17 @@ export function createAlloyApp(chart: Chart) {
     },
   };
 
-  return new Application(chart, "alloy-app", {
-    metadata: {
-      name: "alloy",
-    },
-    spec: {
-      revisionHistoryLimit: 5,
-      project: applicationProject("alloy"),
-      source: {
-        // https://github.com/grafana/alloy/tree/main/operations/helm/charts/alloy
-        repoUrl: "https://grafana.github.io/helm-charts",
-        targetRevision: versions.alloy,
-        chart: "alloy",
-        helm: {
-          valuesObject: alloyValues,
-        },
-      },
-      destination: {
-        server: "https://kubernetes.default.svc",
-        namespace: "alloy",
-      },
-      syncPolicy: {
-        automated: { enabled: true },
-        syncOptions: ["CreateNamespace=true", "ServerSideApply=true"],
-      },
+  return helmApplication(chart, {
+    name: "alloy",
+    namespace: "alloy",
+    chart: "alloy",
+    // https://github.com/grafana/alloy/tree/main/operations/helm/charts/alloy
+    repoUrl: "https://grafana.github.io/helm-charts",
+    targetRevision: versions.alloy,
+    valuesObject: alloyValues,
+    syncPolicy: {
+      automated: { enabled: true },
+      syncOptions: ["CreateNamespace=true", "ServerSideApply=true"],
     },
   });
 }

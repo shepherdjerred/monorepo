@@ -186,6 +186,12 @@ async function generateHelmTypes(outputDir: string) {
   }
   if (indexFiles.length > 0) {
     await generateIndexFile(indexFiles, outputDir);
+    await Bun.write(
+      `${outputDir}/${CHART_VALUES_MAP_FILE}`,
+      chartValuesMapSource(
+        indexFiles.map((file) => file.replace(".types.ts", "")),
+      ),
+    );
     console.log(
       `\n✅ Generated index.ts with ${indexFiles.length.toString()} exports`,
     );
@@ -392,7 +398,7 @@ export type ${capitalizeFirst(chart.name).replaceAll("-", "")}HelmParameters = {
   }
 
   console.log(`  🏗️  Converting to TypeScript interfaces...`);
-  const interfaceName = `${capitalizeFirst(chart.name).replaceAll("-", "")}HelmValues`;
+  const interfaceName = helmValuesTypeName(chart.name);
   const tsInterface: TypeScriptInterface = convertToTypeScriptInterface({
     values: helmValues,
     interfaceName,
@@ -404,6 +410,31 @@ export type ${capitalizeFirst(chart.name).replaceAll("-", "")}HelmParameters = {
 
   const filePath = `${outputDir}/${chart.name}.types.ts`;
   await Bun.write(filePath, code);
+}
+
+/** The name of the values type generated for a chart. */
+function helmValuesTypeName(chartName: string): string {
+  return `${capitalizeFirst(chartName).replaceAll("-", "")}HelmValues`;
+}
+
+const CHART_VALUES_MAP_FILE = "chart-values-map.ts";
+
+/**
+ * Source of the map from chart name to its generated values type, which
+ * `HelmValuesForChart` indexes. Generated beside the types so a chart added
+ * to the catalog is typed without a hand-maintained registration.
+ */
+export function chartValuesMapSource(chartNames: readonly string[]): string {
+  const imports = chartNames
+    .map(
+      (name) =>
+        `import type { ${helmValuesTypeName(name)} } from "./${name}.types.ts";\n`,
+    )
+    .join("");
+  const members = chartNames
+    .map((name) => `  ${JSON.stringify(name)}: ${helmValuesTypeName(name)};\n`)
+    .join("");
+  return `// Auto-generated map from Helm chart name to its values type\n\n${imports}\nexport type HelmChartValuesMap = {\n${members}};\n`;
 }
 
 function capitalizeFirst(str: string): string {

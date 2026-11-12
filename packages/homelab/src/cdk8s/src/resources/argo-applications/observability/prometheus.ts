@@ -1,6 +1,5 @@
 import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
-import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
 import {
@@ -24,7 +23,7 @@ import {
   createMonitoringAuthGateways,
   PROMETHEUS_GATEWAY_PORT,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/monitoring-auth-gateways.ts";
-import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
+import { helmApplication } from "@shepherdjerred/homelab/cdk8s/src/misc/argo/application.ts";
 
 const ALERT_DASHBOARD_SERVICE_URL =
   "http://alert-dashboard-alert-dashboard-service.alert-dashboard.svc.cluster.local:7341";
@@ -483,50 +482,37 @@ export async function createPrometheusApp(chart: Chart) {
     },
   };
 
-  return new Application(chart, "prometheus-app", {
-    metadata: {
-      name: "prometheus",
-    },
-    spec: {
-      revisionHistoryLimit: 5,
-      project: applicationProject("prometheus"),
-      source: {
-        // https://github.com/prometheus-community/helm-charts/
-        repoUrl: "https://prometheus-community.github.io/helm-charts",
-        chart: "kube-prometheus-stack",
-        targetRevision: versions["kube-prometheus-stack"],
-        helm: {
-          valuesObject: prometheusValues,
-        },
-      },
-      destination: {
-        server: "https://kubernetes.default.svc",
+  return helmApplication(chart, {
+    name: "prometheus",
+    namespace: "prometheus",
+    chart: "kube-prometheus-stack",
+    // https://github.com/prometheus-community/helm-charts/
+    repoUrl: "https://prometheus-community.github.io/helm-charts",
+    targetRevision: versions["kube-prometheus-stack"],
+    // Checked as PrometheusValuesWithBlackbox, which widens the generated
+    // type where it is incomplete, so it is not assignable to the chart's own.
+    uncheckedValuesObject: prometheusValues,
+    ignoreDifferences: [
+      {
+        group: "",
+        kind: "Secret",
+        name: "prometheus-grafana",
         namespace: "prometheus",
+        jsonPointers: ["/data/admin-password"],
       },
-      syncPolicy: {
-        // Prune chart-owned resources retired by changes such as switching the
-        // renderer from its generated Secret to the shared 1Password Secret.
-        automated: { enabled: true, prune: true },
-        syncOptions: ["CreateNamespace=true", "ServerSideApply=true"],
+      {
+        group: "apps",
+        kind: "StatefulSet",
+        name: "prometheus-grafana",
+        namespace: "prometheus",
+        jsonPointers: ["/spec/template/metadata/annotations/checksum~1secret"],
       },
-      ignoreDifferences: [
-        {
-          group: "",
-          kind: "Secret",
-          name: "prometheus-grafana",
-          namespace: "prometheus",
-          jsonPointers: ["/data/admin-password"],
-        },
-        {
-          group: "apps",
-          kind: "StatefulSet",
-          name: "prometheus-grafana",
-          namespace: "prometheus",
-          jsonPointers: [
-            "/spec/template/metadata/annotations/checksum~1secret",
-          ],
-        },
-      ],
+    ],
+    syncPolicy: {
+      // Prune chart-owned resources retired by changes such as switching the
+      // renderer from its generated Secret to the shared 1Password Secret.
+      automated: { enabled: true, prune: true },
+      syncOptions: ["CreateNamespace=true", "ServerSideApply=true"],
     },
   });
 }

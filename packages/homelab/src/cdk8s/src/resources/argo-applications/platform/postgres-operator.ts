@@ -1,10 +1,9 @@
 import type { Chart } from "cdk8s";
-import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import { Namespace } from "cdk8s-plus-31";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
 import { POSTGRES_CLUSTER_NAME_LABEL } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/cluster-label.ts";
-import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
+import { helmApplication } from "@shepherdjerred/homelab/cdk8s/src/misc/argo/application.ts";
 
 export function createPostgresOperatorNamespace(chart: Chart): void {
   new Namespace(chart, "postgres-operator-namespace", {
@@ -65,62 +64,46 @@ export function createPostgresOperatorApp(chart: Chart) {
     },
   };
 
-  return new Application(chart, "postgres-operator-app", {
-    metadata: {
-      name: "postgres-operator",
+  return helmApplication(chart, {
+    name: "postgres-operator",
+    namespace: "postgres-operator",
+    chart: "postgres-operator",
+    // https://github.com/zalando/postgres-operator
+    repoUrl:
+      "https://opensource.zalando.com/postgres-operator/charts/postgres-operator",
+    targetRevision: versions["postgres-operator"],
+    // `inherited_labels` is a valid postgres-operator config key, but the chart
+    // ships it commented-out in values.yaml, so the generated
+    // HelmValuesForChart<"postgres-operator"> type omits it. Merge it in at the
+    // untyped ArgoCD valuesObject boundary (no type assertion). The operator then
+    // copies the backup label pair from each Postgresql CR's
+    // metadata.labels onto its pgdata PVC.
+    uncheckedValuesObject: {
+      ...postgresOperatorValues,
+      configKubernetes: {
+        ...postgresOperatorValues.configKubernetes,
+        inherited_labels: ["velero.io/backup", "velero.io/exclude-from-backup"],
+      },
     },
-    spec: {
-      revisionHistoryLimit: 5,
-      project: applicationProject("postgres-operator"),
-      source: {
-        // https://github.com/zalando/postgres-operator
-        repoUrl:
-          "https://opensource.zalando.com/postgres-operator/charts/postgres-operator",
-        chart: "postgres-operator",
-        targetRevision: versions["postgres-operator"],
-        helm: {
-          // `inherited_labels` is a valid postgres-operator config key, but the chart
-          // ships it commented-out in values.yaml, so the generated
-          // HelmValuesForChart<"postgres-operator"> type omits it. Merge it in at the
-          // untyped ArgoCD valuesObject boundary (no type assertion). The operator then
-          // copies the backup label pair from each Postgresql CR's
-          // metadata.labels onto its pgdata PVC.
-          valuesObject: {
-            ...postgresOperatorValues,
-            configKubernetes: {
-              ...postgresOperatorValues.configKubernetes,
-              inherited_labels: [
-                "velero.io/backup",
-                "velero.io/exclude-from-backup",
-              ],
-            },
-          },
-        },
+    ignoreDifferences: [
+      {
+        group: "apiextensions.k8s.io",
+        kind: "CustomResourceDefinition",
+        jsonPointers: ["/status", "/spec/versions/0/schema/openAPIV3Schema"],
       },
-      destination: {
-        server: "https://kubernetes.default.svc",
-        namespace: "postgres-operator",
+      {
+        group: "acid.zalan.do",
+        kind: "OperatorConfiguration",
+        jsonPointers: [
+          "/status",
+          // The operator adds this field at runtime by copying from kubernetes.enable_cross_namespace_secret
+          "/configuration/enable_cross_namespace_secret",
+        ],
       },
-      syncPolicy: {
-        automated: { enabled: true },
-        syncOptions: ["CreateNamespace=true"],
-      },
-      ignoreDifferences: [
-        {
-          group: "apiextensions.k8s.io",
-          kind: "CustomResourceDefinition",
-          jsonPointers: ["/status", "/spec/versions/0/schema/openAPIV3Schema"],
-        },
-        {
-          group: "acid.zalan.do",
-          kind: "OperatorConfiguration",
-          jsonPointers: [
-            "/status",
-            // The operator adds this field at runtime by copying from kubernetes.enable_cross_namespace_secret
-            "/configuration/enable_cross_namespace_secret",
-          ],
-        },
-      ],
+    ],
+    syncPolicy: {
+      automated: { enabled: true },
+      syncOptions: ["CreateNamespace=true"],
     },
   });
 }

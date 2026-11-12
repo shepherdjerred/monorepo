@@ -1,7 +1,6 @@
 import type { Chart } from "cdk8s";
 import { createMinecraftProxyTrust } from "@shepherdjerred/homelab/cdk8s/src/misc/minecraft/proxy-trust.ts";
 import { Size } from "cdk8s";
-import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
@@ -19,7 +18,7 @@ import {
   getMinecraftPluginNames,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/minecraft/minecraft-config.ts";
 import { getMinecraftConfigDriftCheckInitContainer } from "@shepherdjerred/homelab/cdk8s/src/misc/minecraft/minecraft-drift-check.ts";
-import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
+import { helmApplication } from "@shepherdjerred/homelab/cdk8s/src/misc/argo/application.ts";
 
 const NAMESPACE = "minecraft-shuxin";
 const RCON_SECRET_NAME = "minecraft-shuxin-rcon";
@@ -212,64 +211,52 @@ export function createMinecraftShuxinApp(chart: Chart) {
 
   // DNS records are now managed by mc-router
 
-  return new Application(chart, "minecraft-shuxin-app", {
-    metadata: {
-      name: "minecraft-shuxin",
-    },
-    spec: {
-      revisionHistoryLimit: 2,
-      project: applicationProject("minecraft-shuxin"),
-      source: {
-        repoUrl: "https://itzg.github.io/minecraft-server-charts/",
-        targetRevision: versions.minecraft,
-        chart: "minecraft",
-        helm: {
-          valuesObject: minecraftValues,
-        },
-      },
-      destination: {
-        server: "https://kubernetes.default.svc",
-        namespace: "minecraft-shuxin",
-      },
-      // Allow mc-router to manage replicas for hibernation
-      // Ignore Service fields that Kubernetes fills with defaults (chart templates null/empty values)
-      ignoreDifferences: [
-        {
-          group: "apps",
-          kind: "StatefulSet",
-          jsonPointers: [
-            "/spec/replicas",
-            "/spec/podManagementPolicy",
-            "/spec/revisionHistoryLimit",
-            "/spec/persistentVolumeClaimRetentionPolicy",
-            "/spec/volumeClaimTemplates",
-          ],
-        },
-        {
-          // No `group` — Service is in the core API group. ArgoCD's Application Go
-          // types mark `group` as omitempty, so any write through the ArgoCD API
-          // drops an explicit "" from the live CR, leaving the apps app-of-apps
-          // perpetually OutOfSync against a manifest that includes it.
-          kind: "Service",
-          jsonPointers: [
-            "/spec/clusterIP",
-            "/spec/clusterIPs",
-            "/spec/ipFamilies",
-            "/spec/ipFamilyPolicy",
-            "/spec/internalTrafficPolicy",
-            "/spec/sessionAffinity",
-          ],
-        },
-      ],
-      syncPolicy: {
-        automated: { enabled: true },
-        syncOptions: [
-          "CreateNamespace=true",
-          "ServerSideApply=true",
-          "RespectIgnoreDifferences=true",
-          "ApplyOutOfSyncOnly=true",
+  return helmApplication(chart, {
+    name: "minecraft-shuxin",
+    namespace: "minecraft-shuxin",
+    chart: "minecraft",
+    repoUrl: "https://itzg.github.io/minecraft-server-charts/",
+    targetRevision: versions.minecraft,
+    valuesObject: minecraftValues,
+    revisionHistoryLimit: 2,
+    // Allow mc-router to manage replicas for hibernation
+    // Ignore Service fields that Kubernetes fills with defaults (chart templates null/empty values)
+    ignoreDifferences: [
+      {
+        group: "apps",
+        kind: "StatefulSet",
+        jsonPointers: [
+          "/spec/replicas",
+          "/spec/podManagementPolicy",
+          "/spec/revisionHistoryLimit",
+          "/spec/persistentVolumeClaimRetentionPolicy",
+          "/spec/volumeClaimTemplates",
         ],
       },
+      {
+        // No `group` — Service is in the core API group. ArgoCD's Application Go
+        // types mark `group` as omitempty, so any write through the ArgoCD API
+        // drops an explicit "" from the live CR, leaving the apps app-of-apps
+        // perpetually OutOfSync against a manifest that includes it.
+        kind: "Service",
+        jsonPointers: [
+          "/spec/clusterIP",
+          "/spec/clusterIPs",
+          "/spec/ipFamilies",
+          "/spec/ipFamilyPolicy",
+          "/spec/internalTrafficPolicy",
+          "/spec/sessionAffinity",
+        ],
+      },
+    ],
+    syncPolicy: {
+      automated: { enabled: true },
+      syncOptions: [
+        "CreateNamespace=true",
+        "ServerSideApply=true",
+        "RespectIgnoreDifferences=true",
+        "ApplyOutOfSyncOnly=true",
+      ],
     },
   });
 }

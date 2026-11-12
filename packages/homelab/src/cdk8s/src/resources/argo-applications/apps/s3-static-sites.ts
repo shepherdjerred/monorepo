@@ -1,28 +1,13 @@
 import type { Chart } from "cdk8s";
-import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
-import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
+import { createFirstPartyApplication } from "@shepherdjerred/homelab/cdk8s/src/misc/argo/application.ts";
 
 export function createS3StaticSitesApp(chart: Chart) {
-  return new Application(chart, "s3-static-sites-app", {
-    metadata: {
-      name: "s3-static-sites",
-    },
-    spec: {
-      revisionHistoryLimit: 5,
-      project: applicationProject("s3-static-sites"),
-      source: {
-        repoUrl: "https://chartmuseum.tailnet-1a49.ts.net",
-        targetRevision: "~2.0.0-0",
-        chart: "s3-static-sites",
-      },
-      destination: {
-        server: "https://kubernetes.default.svc",
-        namespace: "s3-static-sites",
-      },
-      syncPolicy: {
-        automated: { enabled: true },
-        syncOptions: ["CreateNamespace=true"],
-      },
+  return createFirstPartyApplication(chart, {
+    name: "s3-static-sites",
+    namespace: "s3-static-sites",
+    syncPolicy: {
+      automated: { enabled: true },
+      syncOptions: ["CreateNamespace=true"],
     },
   });
 }

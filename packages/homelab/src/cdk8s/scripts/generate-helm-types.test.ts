@@ -1,5 +1,27 @@
 import { describe, expect, test } from "vitest";
-import { helmFetchRetryDelayMs } from "./generate-helm-types.ts";
+import {
+  chartValuesMapSource,
+  helmFetchRetryDelayMs,
+} from "./generate-helm-types.ts";
+
+describe("chartValuesMapSource", () => {
+  test("maps each chart name to the values type generated for it", () => {
+    expect(chartValuesMapSource(["loki", "argo-cd"])).toBe(
+      [
+        "// Auto-generated map from Helm chart name to its values type",
+        "",
+        'import type { LokiHelmValues } from "./loki.types.ts";',
+        'import type { ArgocdHelmValues } from "./argo-cd.types.ts";',
+        "",
+        "export type HelmChartValuesMap = {",
+        '  "loki": LokiHelmValues;',
+        '  "argo-cd": ArgocdHelmValues;',
+        "};",
+        "",
+      ].join("\n"),
+    );
+  });
+});
 
 describe("helmFetchRetryDelayMs", () => {
   test("backs off exponentially from the base delay", () => {
