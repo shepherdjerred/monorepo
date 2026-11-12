@@ -432,6 +432,14 @@ pub(super) fn witness_game_end(
         payloads.insert(IN_PROGRESS_GAME_KEY.to_owned(), game_id.into_bytes());
         return Ok(());
     }
+    // A dropped client reports `Reconnect` while the match is still running;
+    // keep the marker so only the real exit from the match records the end.
+    if session
+        .as_ref()
+        .is_some_and(|session| find_string(session, &["phase"]).as_deref() == Some("Reconnect"))
+    {
+        return Ok(());
+    }
     let Some(previous) = payloads.remove(IN_PROGRESS_GAME_KEY) else {
         return Ok(());
     };
@@ -636,6 +644,37 @@ mod tests {
                 .pending_game_timing("puuid", "5653248720")?
                 .map(|timing| timing.ended_at_millis),
             Some(8_000)
+        );
+        let _ = std::fs::remove_file(&path);
+        Ok(())
+    }
+
+    #[test]
+    fn reconnecting_does_not_witness_an_end() -> Result<(), Box<dyn std::error::Error>> {
+        let path = std::env::temp_dir().join(format!("scout-runtime-{}.db", Uuid::new_v4()));
+        let outbox = ObservationOutbox::open(&path)?;
+        let mut payloads = HashMap::new();
+        payloads.insert("gameflow_session".to_owned(), in_progress_session()?);
+        witness_game_end(&outbox, &mut payloads, "puuid", 1_000)?;
+        outbox.remember_game_start("puuid", "5653248720", 500)?;
+
+        payloads.insert(
+            "gameflow_session".to_owned(),
+            serde_json::to_vec(&json!({ "phase": "Reconnect" }))?,
+        );
+        witness_game_end(&outbox, &mut payloads, "puuid", 9_000)?;
+        assert_eq!(outbox.pending_game_timing("puuid", "5653248720")?, None);
+
+        payloads.insert(
+            "gameflow_session".to_owned(),
+            serde_json::to_vec(&json!({ "phase": "WaitingForStats" }))?,
+        );
+        witness_game_end(&outbox, &mut payloads, "puuid", 30_000)?;
+        assert_eq!(
+            outbox
+                .pending_game_timing("puuid", "5653248720")?
+                .map(|timing| timing.ended_at_millis),
+            Some(30_000)
         );
         let _ = std::fs::remove_file(&path);
         Ok(())
