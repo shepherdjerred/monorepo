@@ -666,23 +666,39 @@ describe("RateLimiter priority classes", () => {
   });
 });
 
+/** A limiter whose first request to `url` is a 429 of `limitType`, left cooling. */
+async function startCooling(
+  url: string,
+  limitType: string,
+  retryAfter: string,
+  concurrency = 3,
+) {
+  const clock = createManualRuntime();
+  const limiter = new RateLimiter(
+    { concurrency, maxRetries: 1 },
+    clock.runtime,
+  );
+  let limitedCalls = 0;
+  const first = limiter.execute(url, () => {
+    limitedCalls += 1;
+    return Promise.resolve(
+      limitedCalls === 1
+        ? rateLimited(limitType, retryAfter)
+        : new Response("ok"),
+    );
+  });
+  await vi.waitFor(() => expect(clock.pendingSleeps()).toBe(1));
+  return { clock, limiter, first };
+}
+
 describe("RateLimiter scoped cooldowns", () => {
   test("an application 429 cools down its route only", async () => {
-    const clock = createManualRuntime();
-    const limiter = new RateLimiter(
-      { concurrency: 3, maxRetries: 1 },
-      clock.runtime,
+    const { clock, limiter, first } = await startCooling(
+      AMERICAS_MATCH,
+      "application",
+      "1",
     );
-    let limitedCalls = 0;
     const calls: string[] = [];
-
-    const first = limiter.execute(AMERICAS_MATCH, async () => {
-      limitedCalls += 1;
-      return limitedCalls === 1
-        ? rateLimited("application")
-        : new Response("ok");
-    });
-    await vi.waitFor(() => expect(clock.pendingSleeps()).toBe(1));
 
     const sameRoute = limiter.execute(AMERICAS_LIST, async () => {
       calls.push("americas-list");
@@ -701,21 +717,12 @@ describe("RateLimiter scoped cooldowns", () => {
   });
 
   test("a method 429 cools down that route and method only", async () => {
-    const clock = createManualRuntime();
-    const limiter = new RateLimiter(
-      { concurrency: 3, maxRetries: 1 },
-      clock.runtime,
+    const { clock, limiter, first } = await startCooling(
+      AMERICAS_MATCH,
+      "method",
+      "2",
     );
-    let limitedCalls = 0;
     const calls: string[] = [];
-
-    const first = limiter.execute(AMERICAS_MATCH, async () => {
-      limitedCalls += 1;
-      return limitedCalls === 1
-        ? rateLimited("method", "2")
-        : new Response("ok");
-    });
-    await vi.waitFor(() => expect(clock.pendingSleeps()).toBe(1));
 
     const sameMethod = limiter.execute(
       "https://americas.api.riotgames.com/lol/match/v5/matches/NA1_2",
@@ -737,19 +744,12 @@ describe("RateLimiter scoped cooldowns", () => {
   });
 
   test("requests waiting on a cooldown do not hold slots other scopes need", async () => {
-    const clock = createManualRuntime();
-    const limiter = new RateLimiter(
-      { concurrency: 2, maxRetries: 1 },
-      clock.runtime,
+    const { clock, limiter, first } = await startCooling(
+      AMERICAS_MATCH,
+      "method",
+      "5",
+      2,
     );
-    let limitedCalls = 0;
-    const first = limiter.execute(AMERICAS_MATCH, async () => {
-      limitedCalls += 1;
-      return limitedCalls === 1
-        ? rateLimited("method", "5")
-        : new Response("ok");
-    });
-    await vi.waitFor(() => expect(clock.pendingSleeps()).toBe(1));
 
     const blocked = [1, 2, 3].map((id) =>
       limiter.execute(
