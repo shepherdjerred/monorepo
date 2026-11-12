@@ -13,10 +13,11 @@ import {
 import { createHistorySources } from "#lib/history/sources.ts";
 import { scanHistorySources } from "#lib/history/serve.ts";
 import { readCursorDatabase } from "#lib/history/sources-shared.ts";
-import type {
-  HistoryDocument,
-  HistoryRecord,
-  UsageEventEntry,
+import {
+  EMPTY_DOCUMENT_DETAILS,
+  type HistoryDocument,
+  type HistoryRecord,
+  type UsageEventEntry,
 } from "#lib/history/types.ts";
 import {
   writeAntigravityFixture,
@@ -270,6 +271,28 @@ describe("history source adapters", () => {
     expect(cursor?.dialogueText).toContain("cursor-tail-search-marker");
   });
 
+  test("counts a long Cursor conversation the way its detail reads it", async () => {
+    const cursorSource = createHistorySources().find(
+      (source) => source.name === "cursor",
+    );
+    if (cursorSource === undefined) {
+      throw new Error("Cursor source is missing");
+    }
+    const scanned = await cursorSource.scan(paths);
+    const conversation = scanned.documents.find(
+      (document) => document.runtimeId === "c1",
+    );
+    if (conversation === undefined) {
+      throw new Error("Cursor fixture conversation is missing");
+    }
+    const detail = await cursorSource.read(paths, [
+      recordFromDocument(conversation, 1),
+    ]);
+
+    expect(detail.messages.get(conversation.sourceId)).toHaveLength(1);
+    expect(conversation.messageCount).toBe(1);
+  });
+
   test("indexes middle messages and later oversized Conductor blocks", async () => {
     const conductor = createHistorySources().find(
       (source) => source.name === "conductor",
@@ -289,6 +312,37 @@ describe("history source adapters", () => {
     expect(oversizedBlocks?.dialogueText).toContain(
       "later-content-block-marker",
     );
+  });
+
+  test("keeps tool names from oversized Conductor envelopes", async () => {
+    const conductor = createHistorySources().find(
+      (source) => source.name === "conductor",
+    );
+    if (conductor === undefined) {
+      throw new Error("Conductor source is missing");
+    }
+    const scanned = await conductor.scan(paths);
+    const session = scanned.documents.find(
+      (document) => document.sourceId === "s1",
+    );
+    if (session === undefined) {
+      throw new Error("Conductor fixture session is missing");
+    }
+    const detail = await conductor.read(paths, [
+      recordFromDocument(session, 1),
+    ]);
+
+    expect(session.toolCalls.map((call) => call.name)).toEqual([
+      "shell",
+      "Bash",
+    ]);
+    expect(
+      detail.messages
+        .get("s1")
+        ?.flatMap((entry) =>
+          entry.toolName === undefined ? [] : [entry.toolName],
+        ),
+    ).toEqual(["shell", "Bash"]);
   });
 
   test("returns indexed Codex catalog metadata from targeted reads", async () => {
@@ -484,6 +538,42 @@ describe("history source usage and redaction", () => {
     expect(grok?.toolOutputText).not.toContain("sk-should-not-appear-in-index");
     expect(grok?.toolOutputText).not.toContain(
       "test-bearer-token-fixture-marker",
+    );
+  });
+
+  test("counts each Grok tool_call once by its machine name", async () => {
+    const grokSource = createHistorySources().find(
+      (source) => source.name === "grok",
+    );
+    if (grokSource === undefined) {
+      throw new Error("Grok source is missing");
+    }
+    const scanned = await grokSource.scan(paths);
+    const session = scanned.documents.find(
+      (document) => document.runtimeId === "grok-session-1",
+    );
+    if (session === undefined) {
+      throw new Error("Grok fixture session is missing");
+    }
+    const detail = await grokSource.read(paths, [
+      recordFromDocument(session, 1),
+    ]);
+
+    // The first call has no `_meta`, so its title names it; the second is
+    // named by `_meta["x.ai/tool"].name`, and its two updates add no calls.
+    expect(session.toolCalls.map((call) => call.name)).toEqual([
+      "run shell command",
+      "read_file",
+    ]);
+    expect(
+      detail.messages
+        .get(session.sourceId)
+        ?.flatMap((entry) =>
+          entry.toolName === undefined ? [] : [entry.toolName],
+        ),
+    ).toEqual(["run shell command", "read_file"]);
+    expect(session.messageCount).toBe(
+      detail.messages.get(session.sourceId)?.length,
     );
   });
 
@@ -839,6 +929,42 @@ describe("rejects usage records with unreliable timestamps or identity", () => {
 });
 
 describe("history source adapter reads", () => {
+  test("counts Codex catalog sessions the way session detail reads them", async () => {
+    const codexSource = createHistorySources().find(
+      (source) => source.name === "codex",
+    );
+    if (codexSource === undefined) {
+      throw new Error("Codex source is missing");
+    }
+    const scanned = await codexSource.scan(paths);
+    const documents = ["t1", "t2"].map((threadId) => {
+      const document = scanned.documents.find(
+        (entry) => entry.runtimeId === threadId,
+      );
+      if (document === undefined) {
+        throw new Error(`Codex fixture thread ${threadId} is missing`);
+      }
+      return document;
+    });
+    const detail = await codexSource.read(
+      paths,
+      documents.map((document, index) =>
+        recordFromDocument(document, index + 1),
+      ),
+    );
+
+    // t1 has thread history plus its catalog entry; t2 is catalog-only.
+    expect(
+      documents.map((document) => [
+        document.messageCount,
+        detail.messages.get(document.sourceId)?.length,
+      ]),
+    ).toEqual([
+      [3, 3],
+      [1, 1],
+    ]);
+  });
+
   test("performs batched reads only for selected indexed records", async () => {
     const sources = createHistorySources();
     for (const source of sources) {
@@ -1092,6 +1218,7 @@ describe("history index", () => {
       dialogueText: "priced",
       toolOutputText: "",
       usageEvents: [pricedEvent],
+      ...EMPTY_DOCUMENT_DETAILS,
     };
     const unpricedEvent: UsageEventEntry = {
       occurredAt: "2026-08-10T00:00:00.000Z",
@@ -1185,6 +1312,7 @@ describe("history index", () => {
       dialogueText: "long-lived",
       toolOutputText: "",
       usageEvents: [oldEvent, recentEvent],
+      ...EMPTY_DOCUMENT_DETAILS,
     };
     await index.ingest([
       {

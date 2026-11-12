@@ -1,5 +1,6 @@
 import {
   dialogueText,
+  documentDetails,
   INDEXED_MESSAGE_PARSE_LIMIT,
   openingPrompt,
   openingPromptHash,
@@ -119,6 +120,9 @@ async function cursorDocuments(
           dialogueText: dialogueText(messages),
           toolOutputText: toolOutputText(messages),
           usageEvents: [],
+          // Counts follow the detail reader's shape (the whole body as one
+          // message), not the sampled indexing windows above.
+          ...documentDetails(cursorBodyMessages(body, updatedAt, Infinity)),
         } satisfies HistoryDocument,
       ];
     });

@@ -976,6 +976,35 @@ Antigravity's local conversation databases carry no reconstructible transcript
 text (only usage telemetry), so its indexed dialogue is minimal by design —
 its value here is the token/cost data, not search.
 
+##### Read API
+
+The daemon also serves a read-only JSON API over its socket for Brim's
+Sessions window. Every endpoint is `GET`. `since` takes the CLI's `--since`
+grammar, and omitting it means no lower bound.
+
+| Endpoint                                                                | Returns                                                                      |
+| ----------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `/v1/sessions?since&source&machine&workspace&limit&offset`              | Sessions, newest first, with branch, model, counts, and usage                |
+| `/v1/search?q&since&source&machine&workspace&limit&offset`              | The same session shape, ranked by BM25                                       |
+| `/v1/sessions/<id>?offset&limit`                                        | One session plus a page of full messages, with tool names                    |
+| `/v1/usage?groupBy=day\|source\|model\|workspace\|machine&since&source` | Usage totals per group (`day` is the local calendar day)                     |
+| `/v1/tools?since&limit`                                                 | Tool calls and the number of sessions that made them, per tool               |
+| `/v1/facets`                                                            | Every machine, source, and workspace with indexed sessions, and their counts |
+
+`machine=local` selects this machine's own sessions; mirrored sessions carry
+their `brim sync` machine id. A session's `usageEvents` of zero means its
+source recorded no usage, not that it cost nothing. A `tool` message with a
+`toolName` is an invocation, and one without is that invocation's output.
+Bad parameters return 400 and a missing session 404, both as `{ error }`. The
+contracts are the
+`schemas/history-api-*.schema.json` files, with shared fixtures under
+`schemas/fixtures/`; a test keeps them identical to the zod schemas in
+`src/lib/history/api/schema.ts`.
+
+```bash
+curl --unix-socket ~/.toolkit/history/daemon.sock 'http://history/v1/usage?groupBy=model&since=7d'
+```
+
 ##### Token and cost tracking
 
 `history usage` reports token counts and an estimated USD cost per source,

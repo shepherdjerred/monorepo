@@ -1,0 +1,9 @@
+{
+  "apiVersion": 1,
+  "since": null,
+  "rows": [
+    { "name": "Bash", "calls": 412, "sessions": 38 },
+    { "name": "Edit", "calls": 160, "sessions": 22 },
+    { "name": "exec_command", "calls": 95, "sessions": 9 }
+  ]
+}

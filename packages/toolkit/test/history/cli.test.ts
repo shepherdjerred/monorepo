@@ -10,7 +10,10 @@ import {
   defaultHistoryRuntimePaths,
 } from "#lib/history/paths.ts";
 import { createHistorySources } from "#lib/history/sources.ts";
-import type { HistorySourceResult } from "#lib/history/types.ts";
+import {
+  EMPTY_DOCUMENT_DETAILS,
+  type HistorySourceResult,
+} from "#lib/history/types.ts";
 
 let fixtureHome = "";
 let recordId = 0;
@@ -104,6 +107,7 @@ beforeAll(async () => {
           dialogueText: "Unique collisionterm dialogue",
           toolOutputText: "",
           usageEvents: [],
+          ...EMPTY_DOCUMENT_DETAILS,
         },
       ],
       fingerprint: "codex-collision-fixture",

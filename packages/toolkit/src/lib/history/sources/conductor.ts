@@ -81,6 +81,9 @@ function conductorMessages(
                                 'type', CASE WHEN block.type = 'object'
                                              THEN json_extract(block.value, '$.type')
                                              ELSE NULL END,
+                                'name', CASE WHEN block.type = 'object'
+                                             THEN substr(json_extract(block.value, '$.name'), 1, ?)
+                                             ELSE NULL END,
                                 'text', substr(
                                   CASE WHEN block.type = 'object'
                                        THEN COALESCE(
@@ -129,7 +132,12 @@ function conductorMessages(
         Number.isFinite(maxCharacters) && contentLength > maxCharacters * 4;
       const row = RowSchema.parse(
         bounded
-          ? readBoundedMessage.get(messageId, maxCharacters, maxCharacters)
+          ? readBoundedMessage.get(
+              messageId,
+              maxCharacters,
+              maxCharacters,
+              maxCharacters,
+            )
           : readMessage.get(messageId),
       );
       const raw =

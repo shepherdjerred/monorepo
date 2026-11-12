@@ -52,7 +52,31 @@ export type UsageEventEntry = {
   readonly costComplete: boolean;
 };
 
-export type HistoryDocument = {
+/** One tool invocation the agent made, named as the transcript names it. */
+export type HistoryToolCall = {
+  readonly name: string;
+  readonly occurredAt: string | null;
+};
+
+/**
+ * Per-session details derived while parsing. `machine` is null for this
+ * machine's own sessions; mirror sources set the remote machine id.
+ */
+export type HistoryDocumentDetails = {
+  readonly gitBranch: string | null;
+  readonly machine: string | null;
+  readonly messageCount: number;
+  readonly toolCalls: readonly HistoryToolCall[];
+};
+
+export const EMPTY_DOCUMENT_DETAILS: HistoryDocumentDetails = {
+  gitBranch: null,
+  machine: null,
+  messageCount: 0,
+  toolCalls: [],
+};
+
+export type HistoryDocument = HistoryDocumentDetails & {
   readonly source: HistorySourceName;
   readonly sourceId: string;
   readonly title: string;
@@ -74,6 +98,8 @@ export type HistoryMessage = {
   readonly role: HistoryMessageRole;
   readonly text: string;
   readonly createdAt: string | null;
+  /** Set on tool invocations (not results) when the transcript names the tool. */
+  readonly toolName?: string;
 };
 
 export type HistorySourceResult = {

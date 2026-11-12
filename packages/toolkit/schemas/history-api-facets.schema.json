@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "apiVersion": {
+      "type": "number",
+      "const": 1
+    },
+    "machines": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": ["string", "null"]
+          },
+          "sessions": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": ["key", "sessions"],
+        "additionalProperties": false,
+        "title": "HistoryApiFacet"
+      }
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "enum": [
+              "conductor",
+              "claude",
+              "codex",
+              "cursor",
+              "antigravity",
+              "grok",
+              "claude-mirror",
+              "codex-mirror"
+            ]
+          },
+          "sessions": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": ["key", "sessions"],
+        "additionalProperties": false,
+        "title": "HistoryApiSourceFacet"
+      }
+    },
+    "workspaces": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": ["string", "null"]
+          },
+          "sessions": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": ["key", "sessions"],
+        "additionalProperties": false,
+        "title": "HistoryApiFacet"
+      }
+    }
+  },
+  "required": ["apiVersion", "machines", "sources", "workspaces"],
+  "additionalProperties": false,
+  "title": "HistoryApiFacetsResponse"
+}

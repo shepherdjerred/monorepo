@@ -20,7 +20,7 @@ export async function writeClaudeFixture(claudeDir: string): Promise<void> {
   };
   await Bun.write(
     claudeFile,
-    `${JSON.stringify({ type: "user", sessionId: "claude-session", timestamp: "2026-08-12T00:00:00Z", message: { role: "user", content: "Investigate database migration" } })}\n${JSON.stringify(
+    `${JSON.stringify({ type: "user", sessionId: "claude-session", cwd: "/Users/me/repo", gitBranch: "main", timestamp: "2026-08-12T00:00:00Z", message: { role: "user", content: "Investigate database migration" } })}\n${JSON.stringify(
       {
         type: "assistant",
         sessionId: "claude-session",
@@ -59,6 +59,6 @@ export async function writeClaudeFixture(claudeDir: string): Promise<void> {
           ],
         },
       },
-    )}\n${JSON.stringify({ type: "system", timestamp: "2026-08-12T00:02:00Z", content: "omit-claude-system" })}\n`,
+    )}\n${JSON.stringify({ type: "system", timestamp: "2026-08-12T00:02:00Z", content: "omit-claude-system" })}\n${JSON.stringify({ type: "api-request-blob", sessionId: "claude-session", hash: "fixture", message: { role: "user", content: [{ type: "text", text: "omit-claude-bookkeeping" }] } })}\n`,
   );
 }

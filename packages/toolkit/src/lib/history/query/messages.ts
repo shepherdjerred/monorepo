@@ -1,8 +1,16 @@
-import { cleanText, extractText, parseRecord, stringValue } from "./text.ts";
+import {
+  cleanText,
+  extractText,
+  extractToolArguments,
+  parseRecord,
+  stringValue,
+} from "./text.ts";
 import type {
   HistoryDocument,
+  HistoryDocumentDetails,
   HistoryMessage,
   HistoryMessageRole,
+  HistoryToolCall,
 } from "#lib/history/types.ts";
 
 const OMITTED_BLOCK_TYPES = new Set([
@@ -33,6 +41,28 @@ const INDEXED_DIALOGUE_MESSAGE_LIMIT = 4000;
 const INDEXED_DIALOGUE_DOCUMENT_LIMIT = 64_000;
 const INDEXED_TOOL_MESSAGE_LIMIT = 160;
 const INDEXED_TOOL_DOCUMENT_LIMIT = 2000;
+
+/** Tool blocks that are invocations (results carry no tool name). */
+const TOOL_CALL_BLOCK_TYPES = new Set([
+  "command_execution",
+  "file_change",
+  "function",
+  "function_call",
+  "image_view",
+  "mcp_tool_call",
+  "tool_use",
+  "web_search",
+]);
+
+/** Codex app-server items that are tool invocations (activity is not). */
+const CODEX_TOOL_CALL_ITEM_TYPES = new Set([
+  "collabAgentToolCall",
+  "commandExecution",
+  "fileChange",
+  "imageView",
+  "mcpToolCall",
+  "webSearch",
+]);
 
 export const INDEXED_MESSAGE_PARSE_LIMIT = 8000;
 
@@ -81,6 +111,59 @@ function message(
     : { role, text, createdAt };
 }
 
+function named(
+  parsed: HistoryMessage | null,
+  toolName: string | null,
+): HistoryMessage | null {
+  return parsed === null || toolName === null
+    ? parsed
+    : { ...parsed, toolName };
+}
+
+/**
+ * The text of a tool call whose input has no indexed text: its string
+ * arguments, or its name when it has none.
+ */
+function toolCallText(
+  block: unknown,
+  toolName: string,
+  maxCharacters: number,
+): string {
+  const text = cleanText(extractToolArguments(block, maxCharacters));
+  return text === "" ? toolName : text;
+}
+
+/**
+ * A tool call's message, named. The call itself is never dropped when its
+ * payload has no indexed text, so it still counts toward the session's tools.
+ */
+function toolCallMessage(
+  call: Omit<HistoryMessage, "text"> & { readonly toolName: string },
+  value: unknown,
+  maxCharacters: number,
+): HistoryMessage {
+  const { role, createdAt, toolName } = call;
+  return {
+    ...(message(role, value, createdAt, maxCharacters) ?? {
+      role,
+      text: toolCallText(value, toolName, maxCharacters),
+      createdAt,
+    }),
+    toolName,
+  };
+}
+
+function blockToolName(
+  blockType: string | null,
+  record: Record<string, unknown> | null,
+): string | null {
+  return blockType === null || !TOOL_CALL_BLOCK_TYPES.has(blockType)
+    ? null
+    : (stringValue(record?.["name"]) ??
+        stringValue(record?.["tool"]) ??
+        blockType);
+}
+
 function messagesFromContent(
   value: unknown,
   role: HistoryMessageRole,
@@ -102,7 +185,15 @@ function messagesFromContent(
     }
     const blockRole =
       blockType !== null && TOOL_BLOCK_TYPES.has(blockType) ? "tool" : role;
-    const parsed = message(blockRole, block, createdAt, maxCharacters);
+    const toolName = blockToolName(blockType, record);
+    const parsed =
+      toolName === null
+        ? message(blockRole, block, createdAt, maxCharacters)
+        : toolCallMessage(
+            { role: blockRole, createdAt, toolName },
+            block,
+            maxCharacters,
+          );
     if (parsed !== null) {
       messageEnvelopes.set(parsed, envelope);
       result.push(parsed);
@@ -193,8 +284,19 @@ export function parseCodexItem(
     default:
       return [];
   }
-  const parsed = message(role, value, createdAt, maxCharacters);
+  const toolName = role === "tool" ? codexItemToolName(itemType, value) : null;
+  const parsed =
+    toolName !== null && CODEX_TOOL_CALL_ITEM_TYPES.has(itemType)
+      ? toolCallMessage({ role, createdAt, toolName }, value, maxCharacters)
+      : named(message(role, value, createdAt, maxCharacters), toolName);
   return parsed === null ? [] : [parsed];
+}
+
+function codexItemToolName(itemType: string, value: unknown): string {
+  const record = parseRecord(value);
+  return (
+    stringValue(record?.["tool"]) ?? stringValue(record?.["name"]) ?? itemType
+  );
 }
 
 function boundedIndexedText(
@@ -295,15 +397,38 @@ export function openingPromptHash(value: string | null): string | null {
   return hasher.digest("hex");
 }
 
+export function documentDetails(
+  messages: readonly HistoryMessage[],
+  gitBranch: string | null = null,
+): HistoryDocumentDetails {
+  const toolCalls: HistoryToolCall[] = [];
+  for (const entry of messages) {
+    if (entry.toolName !== undefined) {
+      toolCalls.push({ name: entry.toolName, occurredAt: entry.createdAt });
+    }
+  }
+  return {
+    gitBranch,
+    machine: null,
+    messageCount: messages.length,
+    toolCalls,
+  };
+}
+
 export function makeHistoryDocument(
   metadata: Omit<
     HistoryDocument,
-    "dialogueText" | "toolOutputText" | "openingPromptHash"
-  >,
+    | "dialogueText"
+    | "toolOutputText"
+    | "openingPromptHash"
+    | keyof HistoryDocumentDetails
+  > & { readonly gitBranch?: string | null },
   messages: readonly HistoryMessage[],
 ): HistoryDocument {
+  const { gitBranch = null, ...rest } = metadata;
   return {
-    ...metadata,
+    ...rest,
+    ...documentDetails(messages, gitBranch),
     openingPromptHash: openingPromptHash(openingPrompt(messages)),
     dialogueText: dialogueText(messages),
     toolOutputText: toolOutputText(messages),

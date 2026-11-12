@@ -16,14 +16,15 @@ import {
   sourceReadResult,
 } from "@shepherdjerred/toolkit/lib/history/sources-shared.ts";
 import { parseJsonLine } from "@shepherdjerred/toolkit/lib/history/query/text.ts";
-import type {
-  HistoryDocument,
-  HistoryMessage,
-  HistoryRecord,
-  HistorySourceReadResult,
-  UsageEventEntry,
+import {
+  EMPTY_DOCUMENT_DETAILS,
+  type HistoryDocument,
+  type HistoryMessage,
+  type HistoryRecord,
+  type HistorySourceReadResult,
+  type UsageEventEntry,
 } from "@shepherdjerred/toolkit/lib/history/types.ts";
-import { scanCodexCatalog } from "./codex-catalog.ts";
+import { codexCatalogMessages, scanCodexCatalog } from "./codex-catalog.ts";
 import { readCodexHistoryJsonl } from "./codex-history.ts";
 
 type CodexItem = {
@@ -141,8 +142,11 @@ export function buildCodexThreadDocument(
     {
       source: "codex",
       sourceId: `${filePath}:${item.threadId}`,
+      // Subagent threads have no user turn; their first reply names the task.
       title: firstText(
-        openingPrompt(threadMessages) ?? item.threadId,
+        openingPrompt(threadMessages) ??
+          threadMessages.find((entry) => entry.role === "assistant")?.text ??
+          item.threadId,
         item.threadId,
       ),
       path: filePath,
@@ -266,6 +270,7 @@ export function usageOnlyCodexDocument(
     dialogueText: "",
     toolOutputText: "",
     usageEvents: events,
+    ...EMPTY_DOCUMENT_DETAILS,
   } satisfies HistoryDocument;
 }
 
@@ -291,17 +296,6 @@ export async function readCodex(
       const catalogBySourceId = new Map(
         catalogDocuments.map((document) => [document.sourceId, document]),
       );
-      const catalogMessages = (
-        document: HistoryDocument | undefined,
-      ): readonly HistoryMessage[] => {
-        if (document === undefined) {
-          return [];
-        }
-        const text = [document.title, document.toolOutputText]
-          .filter((part) => part.length > 0)
-          .join("\n");
-        return [{ role: "tool", text, createdAt: document.updatedAt }];
-      };
       const byPath = Map.groupBy(records, (record) => record.path);
       for (const [filePath, fileRecords] of byPath) {
         if (/thread_history_.*\.sqlite$/u.test(filePath)) {
@@ -317,7 +311,7 @@ export async function readCodex(
             }
             result.set(record.sourceId, [
               ...threadMessages,
-              ...catalogMessages(catalogByThread.get(threadId)),
+              ...codexCatalogMessages(catalogByThread.get(threadId)),
             ]);
           }
         } else if (filePath === paths.codexHistoryJsonl) {
@@ -335,7 +329,7 @@ export async function readCodex(
           for (const record of fileRecords) {
             const document = catalogBySourceId.get(record.sourceId);
             if (document !== undefined) {
-              result.set(record.sourceId, catalogMessages(document));
+              result.set(record.sourceId, codexCatalogMessages(document));
             }
           }
         }

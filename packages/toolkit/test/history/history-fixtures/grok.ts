@@ -54,6 +54,63 @@ export async function writeGrokFixture(grokHome: string): Promise<void> {
       },
     },
     {
+      timestamp: 1_788_721_642,
+      params: {
+        sessionId: "grok-session-1",
+        update: {
+          sessionUpdate: "tool_call",
+          toolCallId: "call-read-1",
+          title: "Read file",
+          _meta: {
+            "x.ai/tool": {
+              version: 1,
+              name: "read_file",
+              kind: "read",
+              namespace: "grok_build",
+              label: "Read",
+              read_only: true,
+            },
+          },
+          rawInput: { path: "/test/project/flaky.test.ts" },
+        },
+      },
+    },
+    {
+      timestamp: 1_788_721_643,
+      params: {
+        sessionId: "grok-session-1",
+        update: {
+          // An update repeats the call's metadata but is not another call.
+          sessionUpdate: "tool_call_update",
+          toolCallId: "call-read-1",
+          title: "Read `/test/project/flaky.test.ts`",
+          kind: "read",
+          _meta: {
+            "x.ai/tool": {
+              version: 1,
+              name: "read_file",
+              kind: "read",
+              namespace: "grok_build",
+              label: "Read",
+              read_only: true,
+            },
+          },
+        },
+      },
+    },
+    {
+      timestamp: 1_788_721_644,
+      params: {
+        sessionId: "grok-session-1",
+        update: {
+          sessionUpdate: "tool_call_update",
+          toolCallId: "call-read-1",
+          status: "completed",
+          rawOutput: { content: "file body" },
+        },
+      },
+    },
+    {
       timestamp: 1_788_721_656,
       params: {
         sessionId: "grok-session-1",

@@ -23,7 +23,11 @@ export async function writeMirrorFixture(mirrorDir: string): Promise<string> {
       {
         timestamp: "2026-11-02T10:00:00.000Z",
         type: "session_meta",
-        payload: { id: "chat-thread", cwd: "/Users/me/repo" },
+        payload: {
+          id: "chat-thread",
+          cwd: "/Users/me/repo",
+          git: { branch: "mirror-plan" },
+        },
       },
       {
         timestamp: "2026-11-02T10:00:01.000Z",
@@ -41,6 +45,15 @@ export async function writeMirrorFixture(mirrorDir: string): Promise<string> {
           type: "message",
           role: "user",
           content: [{ type: "input_text", text: "Plan the mirror rollout" }],
+        },
+      },
+      {
+        timestamp: "2026-11-02T10:00:02.500Z",
+        type: "response_item",
+        payload: {
+          type: "function_call",
+          name: "exec_command",
+          arguments: '{"cmd":"ls mirror"}',
         },
       },
       {

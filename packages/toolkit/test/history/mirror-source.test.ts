@@ -50,6 +50,14 @@ describe("mirrored history sources", () => {
     expect(document?.source).toBe("claude-mirror");
     expect(document?.sourceId).toBe("studio/-Users-me-repo/session.jsonl");
     expect(document?.agent).toBe("Claude Code · Studio.local");
+    expect(document?.machine).toBe("studio");
+    expect(document?.messageCount).toBe(3);
+    expect(document?.dialogueText).not.toContain("omit-claude-bookkeeping");
+    expect(document?.workspace).toBe("/Users/me/repo");
+    expect(document?.gitBranch).toBe("main");
+    expect(document?.toolCalls).toEqual([
+      { name: "shell", occurredAt: "2026-08-12T00:01:00.000Z" },
+    ]);
     expect(document?.usageEvents.length).toBeGreaterThan(0);
 
     if (document === undefined) return;
@@ -92,6 +100,9 @@ describe("mirrored history sources", () => {
     expect(chat?.title).toBe("Plan the mirror rollout");
     expect(chat?.workspace).toBe("/Users/me/repo");
     expect(chat?.runtimeId).toBe("chat-thread");
+    expect(chat?.machine).toBe("studio");
+    expect(chat?.gitBranch).toBe("mirror-plan");
+    expect(chat?.toolCalls.map((call) => call.name)).toEqual(["exec_command"]);
     expect(chat?.dialogueText).toContain("Rollout planned");
     expect(chat?.dialogueText).not.toContain("environment_context");
     expect(chat?.toolOutputText).toContain("listed the mirror files");

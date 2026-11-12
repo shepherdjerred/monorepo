@@ -104,6 +104,52 @@ export function extractText(
   return chunks.join("\n").slice(0, maxCharacters);
 }
 
+/** Keys that identify a tool call rather than describe what it did. */
+const TOOL_CALL_IDENTITY_KEYS = new Set([
+  "id",
+  "name",
+  "status",
+  "tool",
+  "type",
+]);
+
+function changedPaths(value: unknown): string {
+  return (Array.isArray(value) ? value : [])
+    .flatMap((change) => {
+      const path = stringValue(parseRecord(change)?.["path"]);
+      return path === null ? [] : [path];
+    })
+    .join(", ");
+}
+
+/**
+ * A tool call's string arguments as `key: value` lines. Used when the call
+ * holds no indexed text key: Claude's Read and Edit calls carry only
+ * `file_path`, `old_string`, and `new_string` in `input`, and Codex items
+ * carry theirs at the top level, such as a `webSearch` `query` or a
+ * `fileChange`'s `changes`, which become their paths. Sensitive keys are
+ * skipped.
+ */
+export function extractToolArguments(
+  value: unknown,
+  maxCharacters: number,
+): string {
+  const call = parseRecord(value);
+  const input = parseRecord(call?.["input"]);
+  const entries = Object.entries(input ?? call ?? {}).filter(
+    ([key]) =>
+      !SENSITIVE_KEYS.has(key) &&
+      (input !== null || !TOOL_CALL_IDENTITY_KEYS.has(key)),
+  );
+  return entries
+    .flatMap(([key, child]) => {
+      const text = key === "changes" ? changedPaths(child) : child;
+      return typeof text === "string" && text !== "" ? [`${key}: ${text}`] : [];
+    })
+    .join("\n")
+    .slice(0, maxCharacters);
+}
+
 export function cleanText(value: string): string {
   return value.replaceAll(/\s+/gu, " ").trim();
 }

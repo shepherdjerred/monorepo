@@ -6,8 +6,28 @@ import {
   rows,
   RowSchema,
 } from "#lib/history/sources-shared.ts";
+import { documentDetails } from "#lib/history/query/messages.ts";
 import { parseTimestamp, stringValue } from "#lib/history/query/text.ts";
-import type { HistoryDocument } from "#lib/history/types.ts";
+import type { HistoryDocument, HistoryMessage } from "#lib/history/types.ts";
+
+/**
+ * Session detail shows a catalog entry's metadata (title, workspace,
+ * branch) as one tool message after the thread's own messages, so search
+ * excerpts can quote it. Indexed message counts are derived from this same
+ * message so `/v1/sessions` agrees with the detail reader.
+ */
+export function codexCatalogMessages(
+  document:
+    Pick<HistoryDocument, "title" | "toolOutputText" | "updatedAt"> | undefined,
+): readonly HistoryMessage[] {
+  if (document === undefined) {
+    return [];
+  }
+  const text = [document.title, document.toolOutputText]
+    .filter((part) => part.length > 0)
+    .join("\n");
+  return [{ role: "tool", text, createdAt: document.updatedAt }];
+}
 
 export async function scanCodexCatalog(
   filePath: string,
@@ -29,8 +49,8 @@ export async function scanCodexCatalog(
       const workspace = stringValue(rowValue(row, "cwd"));
       const branch = stringValue(rowValue(row, "git_branch"));
       const threadId = String(rowValue(row, "thread_id"));
-      return {
-        source: "codex",
+      const metadata = {
+        source: "codex" as const,
         sourceId: `${filePath}:${String(rowValue(row, "host_id"))}:${threadId}`,
         title: firstText(title, "Codex thread"),
         path: filePath,
@@ -51,6 +71,10 @@ export async function scanCodexCatalog(
           .filter((value) => value !== null)
           .join("\n"),
         usageEvents: [],
+      };
+      return {
+        ...metadata,
+        ...documentDetails(codexCatalogMessages(metadata), branch),
       } satisfies HistoryDocument;
     });
   } finally {

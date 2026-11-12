@@ -8,7 +8,9 @@ import {
   startUsageMetricsExport,
   type UsageMetricsExport,
 } from "./usage-metrics.ts";
+import { handleHistoryApiRequest } from "./api/handler.ts";
 import { createHistorySources } from "./sources.ts";
+import { targetedMessages } from "./targeted.ts";
 import { HistoryIndex } from "./index.ts";
 import { defaultHistoryPaths, defaultHistoryRuntimePaths } from "./paths.ts";
 import {
@@ -263,7 +265,25 @@ export async function runHistoryDaemon(): Promise<void> {
 
   server = Bun.serve({
     unix: runtimePaths.socket,
-    fetch: (request): Response => {
+    fetch: async (request): Promise<Response> => {
+      try {
+        const api = await handleHistoryApiRequest(
+          { index, readMessages: targetedMessages },
+          request,
+        );
+        if (api !== null) {
+          return api;
+        }
+      } catch (error: unknown) {
+        await logLine(runtimePaths, "history api request failed", {
+          path: new URL(request.url).pathname,
+          error: getErrorMessage(error),
+        });
+        return Response.json(
+          { error: getErrorMessage(error) },
+          { status: 500 },
+        );
+      }
       const url = new URL(request.url);
       if (url.pathname === "/status") {
         const status = {

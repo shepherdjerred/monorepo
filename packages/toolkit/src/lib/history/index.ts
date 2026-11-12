@@ -15,6 +15,23 @@ import {
 } from "./types.ts";
 import { ingestResults } from "./ingest.ts";
 import {
+  addDocumentFilters,
+  type DocumentFilter,
+  queryFacets,
+  querySessions,
+  querySessionsByIds,
+  queryTools,
+  queryUsageGroups,
+  type SessionListOptions,
+} from "./api/queries.ts";
+import type {
+  HistoryApiFacetsResponse,
+  HistoryApiSession,
+  HistoryApiToolsResponse,
+  HistoryApiUsageGroup,
+  HistoryApiUsageResponse,
+} from "./api/schema.ts";
+import {
   queryUsage,
   queryUsageEventsForDocument,
   queryUsageFingerprints,
@@ -23,11 +40,9 @@ import {
   type UsageQueryOptions,
 } from "./usage-query.ts";
 
-const INDEX_SCHEMA_VERSION = 4;
+const INDEX_SCHEMA_VERSION = 5;
 
-type HistoryQueryOptions = {
-  readonly since: string | null;
-  readonly source: HistorySourceName | null;
+type HistoryQueryOptions = DocumentFilter & {
   readonly limit?: number;
   readonly offset?: number;
   readonly openingPromptHash?: string;
@@ -79,14 +94,7 @@ function filterClauses(options: HistoryQueryOptions): {
 } {
   const clauses: string[] = [];
   const values: (string | number)[] = [];
-  if (options.since !== null) {
-    clauses.push("d.updated_at >= ?");
-    values.push(options.since);
-  }
-  if (options.source !== null) {
-    clauses.push("d.source = ?");
-    values.push(options.source);
-  }
+  addDocumentFilters(options, clauses, values);
   if (options.openingPromptHash !== undefined) {
     clauses.push("d.opening_prompt_hash = ?");
     values.push(options.openingPromptHash);
@@ -144,6 +152,7 @@ const REQUIRED_TABLES = [
   "documents",
   "history_fts",
   "source_state",
+  "tool_calls",
   "usage_events",
 ] as const;
 
@@ -184,8 +193,14 @@ function createSchema(database: Database): void {
       runtime_id TEXT,
       opening_prompt_hash TEXT,
       content_hash TEXT NOT NULL,
+      machine TEXT,
+      git_branch TEXT,
+      primary_model TEXT,
+      message_count INTEGER NOT NULL DEFAULT 0,
+      tool_call_count INTEGER NOT NULL DEFAULT 0,
       UNIQUE(source, source_id)
     );
+    CREATE INDEX documents_updated_at_idx ON documents(updated_at);
     CREATE VIRTUAL TABLE history_fts USING fts5(
       title,
       dialogue,
@@ -216,6 +231,12 @@ function createSchema(database: Database): void {
       cost_usd REAL,
       cost_complete INTEGER NOT NULL DEFAULT 1
     );
+    CREATE TABLE tool_calls (
+      document_id INTEGER NOT NULL REFERENCES documents(id),
+      occurred_at TEXT,
+      name TEXT NOT NULL
+    );
+    CREATE INDEX tool_calls_document_id_idx ON tool_calls(document_id);
     CREATE INDEX usage_events_document_id_idx ON usage_events(document_id);
     CREATE INDEX usage_events_occurred_at_idx ON usage_events(occurred_at);
     PRAGMA user_version = ${String(INDEX_SCHEMA_VERSION)};
@@ -226,6 +247,7 @@ function rebuildSchemaCore(database: Database): void {
   database.run(`
     DROP TABLE IF EXISTS history_fts;
     DROP TABLE IF EXISTS usage_events;
+    DROP TABLE IF EXISTS tool_calls;
     DROP TABLE IF EXISTS documents;
     DROP TABLE IF EXISTS source_state;
   `);
@@ -383,6 +405,36 @@ export class HistoryIndex {
 
   usage(options: UsageQueryOptions): UsageReport {
     return queryUsage(this.#database, options);
+  }
+
+  sessions(options: SessionListOptions): {
+    sessions: HistoryApiSession[];
+    hasMore: boolean;
+  } {
+    return querySessions(this.#database, options);
+  }
+
+  facets(): HistoryApiFacetsResponse {
+    return queryFacets(this.#database);
+  }
+
+  sessionsByIds(ids: readonly number[]): HistoryApiSession[] {
+    return querySessionsByIds(this.#database, ids);
+  }
+
+  usageGroups(options: {
+    readonly groupBy: HistoryApiUsageGroup;
+    readonly since: string | null;
+    readonly source: HistorySourceName | null;
+  }): HistoryApiUsageResponse {
+    return queryUsageGroups(this.#database, options);
+  }
+
+  tools(options: {
+    readonly since: string | null;
+    readonly limit: number;
+  }): HistoryApiToolsResponse {
+    return queryTools(this.#database, options);
   }
 
   usageFingerprints(): UsageDocumentFingerprint[] {
