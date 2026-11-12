@@ -11,19 +11,21 @@ describe("Streambot web credential bootstrap", () => {
     const app = new App();
     const chart = new Chart(app, "streambot-web-test", { namespace: "media" });
     const deployment = new Deployment(chart, "streambot", { replicas: 1 });
-    const container = deployment.addContainer({
-      name: "streambot",
-      image: "streambot:fixture",
-      ...streambotWebProbes(),
-    });
     const secret = Secret.fromSecretName(
       chart,
       "secret",
       "media-streambot-config",
     );
-    createStreambotWeb(chart, deployment, container, {
+    const web = createStreambotWeb(chart, deployment, {
       secret,
       publicOrigin: "https://streambot.sjer.red",
+    });
+    deployment.addContainer({
+      name: "streambot",
+      image: "streambot:fixture",
+      ...streambotWebProbes(),
+      envVariables: web.envVariables,
+      ports: web.ports,
     });
     const yaml = app.synthYaml();
     expect(yaml).toContain("streambot.sjer.red");
