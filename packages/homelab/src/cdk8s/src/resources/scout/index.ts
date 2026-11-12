@@ -1,3 +1,4 @@
+import { temporalAddressEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/address.ts";
 import {
   Cpu,
   Deployment,
@@ -246,9 +247,7 @@ export function createScoutDeployment(
     // OpenTelemetry → Tempo. The scout-backend tracing.ts bootstrap gates on
     // TELEMETRY_ENABLED.
     ...telemetryEnv({ serviceName: "scout-backend", serviceNameFirst: true }),
-    TEMPORAL_ADDRESS: EnvValue.fromValue(
-      "temporal-temporal-server-service.temporal.svc.cluster.local:7233",
-    ),
+    ...temporalAddressEnv(),
     ...llmArchiveEnvVars(),
     DISCORD_TOKEN: EnvValue.fromSecretValue({
       secret: Secret.fromSecretName(

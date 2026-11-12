@@ -1,3 +1,4 @@
+import { temporalAddressEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/address.ts";
 import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
 import {
@@ -172,7 +173,7 @@ export function createTemporalOperationsWorkers(
     memoryRequest: Size.mebibytes(256),
     memoryLimit: Size.mebibytes(512),
     envVariables: {
-      TEMPORAL_ADDRESS: EnvValue.fromValue(`${props.serverServiceName}:7233`),
+      ...temporalAddressEnv(props.serverServiceName),
       TEMPORAL_NAMESPACE: EnvValue.fromValue("prod"),
       TEMPORAL_METRICS_ADDRESS: EnvValue.fromValue("0.0.0.0:9464"),
       TEMPORAL_WORKER_ROLE: EnvValue.fromValue("billing"),

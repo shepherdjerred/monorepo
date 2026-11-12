@@ -1,3 +1,4 @@
+import { temporalAddressEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/address.ts";
 import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { Chart } from "cdk8s";
 import { Duration } from "cdk8s";
@@ -63,9 +64,7 @@ export function createTemporalUiDeployment(
       image: `temporalio/ui:${versions["temporalio/ui"]}`,
       ports: [{ name: "upstream", number: TEMPORAL_UI_UPSTREAM_PORT }],
       envVariables: {
-        TEMPORAL_ADDRESS: EnvValue.fromValue(
-          `${props.serverService.name}:7233`,
-        ),
+        ...temporalAddressEnv(props.serverService.name),
         TEMPORAL_UI_PORT: EnvValue.fromValue(
           TEMPORAL_UI_UPSTREAM_PORT.toString(),
         ),

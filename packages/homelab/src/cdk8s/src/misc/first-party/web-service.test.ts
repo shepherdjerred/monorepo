@@ -39,7 +39,7 @@ const DeploymentManifest = z.looseObject({
     template: z.object({
       metadata: z.object({ labels: z.record(z.string(), z.string()) }),
       spec: z.looseObject({
-        containers: z.array(Container).length(1),
+        containers: z.array(Container).min(1),
         initContainers: z.array(Container).optional(),
         volumes: z.array(z.looseObject({ name: z.string() })),
       }),
@@ -213,6 +213,98 @@ describe("FirstPartyWebService workload", () => {
       "PersistentVolumeClaim/alert-dashboard-data",
       "Service/widgets-widget-service",
     ]);
+  });
+
+  test("a server may state its own name, and sidecars follow it with the same mounts", () => {
+    const { deployment } = render(
+      {
+        data,
+        tmp: false,
+        containers: () => ({
+          server: { ...server, name: "widget-server" },
+          sidecars: [{ ...server, name: "sync" }],
+        }),
+      },
+      DATA_NAMESPACE,
+    );
+    const mounts = [{ name: "pvc-alert-dashboard-data", mountPath: "/data" }];
+    const pod = deployment.spec.template.spec;
+    expect(pod.containers).toMatchObject([
+      {
+        name: "widget-server",
+        ports: [{ name: "http", containerPort: 8080 }],
+        volumeMounts: mounts,
+      },
+      { name: "sync", volumeMounts: mounts },
+    ]);
+    expect(pod.containers[1]?.ports).toBeUndefined();
+    expect(pod.containers[1]?.livenessProbe).toBeUndefined();
+    expect(pod.volumes.map((volume) => volume.name)).toEqual([
+      "pvc-alert-dashboard-data",
+    ]);
+  });
+
+  test("a metrics port is exposed beside http and scraped instead of it", () => {
+    const { deployment, of } = render({ metricsPort: 9090 });
+    expect(deployment.spec.template.spec.containers[0]?.ports).toEqual([
+      { name: "http", containerPort: 8080 },
+      { name: "metrics", containerPort: 9090 },
+    ]);
+    expect(of("Service")[0]).toMatchObject({
+      spec: {
+        ports: [
+          { name: "http", port: 8080 },
+          { name: "metrics", port: 9090 },
+        ],
+      },
+    });
+    expect(of("ServiceMonitor")[0]).toMatchObject({
+      spec: {
+        endpoints: [{ port: "metrics" }],
+        selector: { matchLabels: { app: "widget" } },
+      },
+    });
+  });
+
+  test("a data claim may be listed after /tmp", () => {
+    const { deployment } = render(
+      { data: { ...data, afterTmp: true } },
+      DATA_NAMESPACE,
+    );
+    expect(deployment.spec.template.spec.containers[0]?.volumeMounts).toEqual([
+      { name: "tmp", mountPath: "/tmp" },
+      { name: "pvc-alert-dashboard-data", mountPath: "/data" },
+    ]);
+  });
+
+  test("stated pod metadata replaces the app label, which the Service keeps", () => {
+    const { deployment, of } = render({
+      deployment: {
+        podMetadata: { labels: { app: "widget", tier: "edge" } },
+      },
+      policies: [{ name: "widget-app-netpol", selects: "app", ingress: [] }],
+    });
+    expect(deployment.spec.template.metadata.labels).toMatchObject({
+      app: "widget",
+      tier: "edge",
+    });
+    expect(of("Service")[0]).toMatchObject({
+      metadata: { labels: { app: "widget" } },
+    });
+    expect(of("NetworkPolicy")[0]).toMatchObject({
+      spec: { podSelector: { matchLabels: { app: "widget" } } },
+    });
+  });
+
+  test("pods without the app label cannot have an app policy", () => {
+    const policies: FirstPartyWebServiceProps["policies"] = [
+      { name: "widget-app-netpol", selects: "app", ingress: [] },
+    ];
+    expect(() => render({ deployment: { podMetadata: {} }, policies })).toThrow(
+      "selects the app, which has no pod labels",
+    );
+    const { deployment } = render({ deployment: { podMetadata: {} } });
+    expect(deployment.spec.template.metadata.labels).not.toHaveProperty("app");
   });
 });
 

@@ -1,3 +1,4 @@
+import { temporalAddressEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/address.ts";
 import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
 import {
@@ -38,9 +39,7 @@ export function createMediaActivityWorkers(
   const shared = {
     ...mediaDatabaseEnvironment(props.database),
     ...mediaFeatureFlagEnvironment(),
-    TEMPORAL_ADDRESS: EnvValue.fromValue(
-      "temporal-temporal-server-service.temporal.svc.cluster.local:7233",
-    ),
+    ...temporalAddressEnv(),
     TEMPORAL_NAMESPACE: EnvValue.fromValue("prod"),
     TEMPORAL_METRICS_ADDRESS: EnvValue.fromValue("0.0.0.0:9464"),
     ENVIRONMENT: EnvValue.fromValue("production"),

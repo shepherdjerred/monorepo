@@ -1,3 +1,4 @@
+import { temporalAddressEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/address.ts";
 import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
 import { Cpu, type Deployment, EnvValue } from "cdk8s-plus-31";
@@ -33,7 +34,7 @@ function createWorkflowWorker(
     // temporal-call-graph-tracing itself or the PR's namesake feature never
     // turns on for a single real workflow execution.
     envVariables: {
-      TEMPORAL_ADDRESS: EnvValue.fromValue(`${props.serverServiceName}:7233`),
+      ...temporalAddressEnv(props.serverServiceName),
       TEMPORAL_NAMESPACE: EnvValue.fromValue("prod"),
       TEMPORAL_METRICS_ADDRESS: EnvValue.fromValue("0.0.0.0:9464"),
       TEMPORAL_WORKER_ROLE: EnvValue.fromValue("workflows"),

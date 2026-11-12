@@ -1,3 +1,4 @@
+import { temporalAddressEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/address.ts";
 import { Size, type Chart } from "cdk8s";
 import { Cpu, EnvValue } from "cdk8s-plus-31";
 import { KubeNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
@@ -25,7 +26,7 @@ export function createStreambotWorker(chart: Chart, serverServiceName: string) {
     memoryRequest: Size.mebibytes(256),
     memoryLimit: Size.mebibytes(512),
     envVariables: {
-      TEMPORAL_ADDRESS: EnvValue.fromValue(`${serverServiceName}:7233`),
+      ...temporalAddressEnv(serverServiceName),
       TEMPORAL_NAMESPACE: EnvValue.fromValue("prod"),
       TEMPORAL_WORKER_ROLE: EnvValue.fromValue("streambot"),
       TEMPORAL_METRICS_ADDRESS: EnvValue.fromValue("0.0.0.0:9464"),

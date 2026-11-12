@@ -18,6 +18,7 @@ import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailsca
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
 import { createHomelabIssuedCertificate } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/cert-manager.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { TEMPORAL_CLUSTER_ADDRESS } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/address.ts";
 import { createForumDatabase } from "./database.ts";
 import { createForumNetwork } from "./network.ts";
 import { createForumStorage } from "./storage.ts";
@@ -293,8 +294,7 @@ export function createStormForumChart(
                 },
                 {
                   name: "TEMPORAL_ADDRESS",
-                  value:
-                    "temporal-temporal-server-service.temporal.svc.cluster.local:7233",
+                  value: TEMPORAL_CLUSTER_ADDRESS,
                 },
                 { name: "TEMPORAL_NAMESPACE", value: "prod" },
                 { name: "FEATURE_FLAGS_MODE", value: "flipt" },

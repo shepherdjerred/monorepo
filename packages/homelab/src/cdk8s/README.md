@@ -134,8 +134,13 @@ reached on, and the namespace's NetworkPolicies. A service with neither kind
 of host is internal-only. Names derive from the `name` and the ids it is
 given, so moving an existing service onto it renames nothing, and
 `.deployment`, `.service`, `.serviceMonitor`, `.policies` and `.dataVolume`
-remain reachable for anything it does not model. `trmnl-dashboard`, `tracker`
-and `alert-dashboard` use it.
+remain reachable for anything it does not model. A service may also state
+sidecar containers, a separate `metrics` port for Prometheus, its own pod
+metadata, and `tmp: false` when its root filesystem is writable.
+`trmnl-dashboard`, `tracker`, `alert-dashboard`, `tasknotes`, `media-api` and
+`storm-brain` use it. `glitter-boys-launcher` does not: its Deployment,
+Services and NetworkPolicy carry chart-derived names the construct does not
+produce, and it scrapes a second, separately labelled metrics Service.
 
 ## First-party workers
 

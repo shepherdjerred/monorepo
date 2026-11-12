@@ -1,3 +1,4 @@
+import { temporalAddressEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/address.ts";
 import { createHash } from "node:crypto";
 import { ApiObject, JsonPatch, Size, type Chart } from "cdk8s";
 import {
@@ -364,9 +365,7 @@ export function createWoodpeckerMaintenanceWorker(chart: Chart): void {
         // before anything else; without FEATURE_FLAGS_MODE that throws
         // immediately, crash-looping this worker.
         ...temporalFeatureFlagEnvironment(),
-        TEMPORAL_ADDRESS: EnvValue.fromValue(
-          "temporal-temporal-server-service.temporal.svc.cluster.local:7233",
-        ),
+        ...temporalAddressEnv(),
         TEMPORAL_NAMESPACE: EnvValue.fromValue("prod"),
         TEMPORAL_METRICS_ADDRESS: EnvValue.fromValue("0.0.0.0:9464"),
         TEMPORAL_WORKER_ROLE: EnvValue.fromValue("maintenance"),
