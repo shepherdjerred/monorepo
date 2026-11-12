@@ -159,7 +159,7 @@ The reviewed world-restoration policy retains all three analytics tables:
 world replacement does not erase first-seen dates or queued event identities.
 
 OpenTofu owns the private **The Storm — Product Metrics** dashboard in
-`packages/homelab/src/tofu/posthog/storm-product-metrics.tf`. It filters production
+`packages/homelab-cdktn/src/stacks/posthog/storm-product-metrics.ts`. It filters production
 Minecraft events and deduplicates stable `event_id` values before summing time
 or counting interactions. It includes unique players over 1/7/30 days, daily
 new/returning players, connected/active hours, mode totals, average completed

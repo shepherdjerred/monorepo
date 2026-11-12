@@ -7,6 +7,7 @@ import { AnthropicStack } from "#src/stacks/anthropic.ts";
 import { ArrStack } from "#src/stacks/arr.ts";
 import { DockerhubStack } from "#src/stacks/dockerhub.ts";
 import { GithubStack } from "#src/stacks/github.ts";
+import { PosthogStack } from "#src/stacks/posthog.ts";
 import { TailscaleStack } from "#src/stacks/tailscale.ts";
 
 /**
@@ -20,6 +21,7 @@ export const SYNTHESIZED_STACKS = [
   "arr",
   "dockerhub",
   "github",
+  "posthog",
   "tailscale",
 ] as const;
 
@@ -32,6 +34,7 @@ const STACKS: Record<SynthesizedStack, new (scope: Construct) => HomelabStack> =
     arr: ArrStack,
     dockerhub: DockerhubStack,
     github: GithubStack,
+    posthog: PosthogStack,
     tailscale: TailscaleStack,
   };
 

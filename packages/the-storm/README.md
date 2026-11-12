@@ -4116,7 +4116,7 @@ HTTP; network failure cannot block gameplay, and shutdown leaves unsent events
 durable for the next enabled boot.
 
 The private dashboard is declared in
-`packages/homelab/src/tofu/posthog/storm-product-metrics.tf`. Interval events
+`packages/homelab-cdktn/src/stacks/posthog/storm-product-metrics.ts`. Interval events
 are the source for time sums; session-end totals only measure completed session
 length. All aggregates deduplicate stable event IDs and exclude beta captures.
 See the wiki's PostHog explanation for accounting semantics and live acceptance.

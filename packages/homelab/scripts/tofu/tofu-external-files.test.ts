@@ -65,9 +65,8 @@ describe("stack external file declarations", () => {
     expect(cloudflare.map((reference) => reference.target)).toContain(
       "packages/homelab/src/domain-registry.json",
     );
-    expect(STACK_MANIFEST.posthog.externalFiles).toEqual([
-      "config/analytics-sites.json",
-    ]);
+    // The synthesized posthog stack carries the analytics registry inline.
+    expect(STACK_MANIFEST.posthog.externalFiles).toEqual([]);
   });
 
   test("resolves module-relative, root-relative and bare paths against the right directory", async () => {

@@ -248,7 +248,7 @@ export const STACK_MANIFEST: Readonly<Record<TofuStack, StackDefinition>> = {
     ],
   },
   posthog: {
-    externalFiles: ["config/analytics-sites.json"],
+    externalFiles: [],
     validationPassphraseVariable: "state_passphrase",
     credentials: [
       { source: "POSTHOG_CLI_API_KEY", target: "POSTHOG_API_KEY" },

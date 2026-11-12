@@ -33,7 +33,7 @@ Each subdirectory is an independent root module with its own `backend.tf` (S3 st
 
 ### Stacks synthesized from TypeScript
 
-`anthropic`, `anthropic-federation`, `dockerhub`, `github` and `tailscale` have no `.tf` files.
+`anthropic`, `anthropic-federation`, `arr`, `dockerhub`, `github`, `posthog` and `tailscale` have no `.tf` files.
 Their configuration is
 `main.tf.json`, synthesized by the [CDK Terrain](https://cdktn.io/docs) app in
 [`packages/homelab-cdktn`](../../../homelab-cdktn) and committed next to the stack's `.terraform.lock.hcl`.
@@ -102,6 +102,7 @@ To port a stack, follow `packages/homelab-cdktn/README.md`.
   - `anthropic-federation` — `ANTHROPIC_ADMIN_API_KEY`, an `org:admin` OAuth token as `ANTHROPIC_AUTH_TOKEN`, `OP_ACCOUNT` for the 1Password provider's desktop-app auth, and `TOFU_STATE_ENCRYPTION_PASSPHRASE`
   - `google` — the operator's Application Default Credentials, `OP_ACCOUNT` for the 1Password provider's desktop-app auth, and `TOFU_STATE_ENCRYPTION_PASSPHRASE`
   - `cloudflare-tokens` — a bootstrap `CLOUDFLARE_API_TOKEN` and `TOFU_STATE_ENCRYPTION_PASSPHRASE`
+  - `posthog` — a PostHog API key as `POSTHOG_CLI_API_KEY` and the stack's own `POSTHOG_TOFU_STATE_PASSPHRASE`
 
 Non-secret platform desired state is committed in each platform stack's
 `desired-state.json` and checked against `platform-desired-state.schema.json`.
@@ -400,6 +401,34 @@ operator's Application Default Credentials. `google_billing_account_id` and
 
 See [Rotate LLM provider credentials](https://github.com/shepherdjerred/monorepo/blob/main/packages/docs/wiki/src/content/docs/how-to/rotate-provider-credentials.md)
 for the operator steps, spend caps, and JWKS refresh.
+
+### PostHog
+
+The `posthog` stack owns the `monorepo` project and its capture settings, the
+owner's organization membership, the `j.sjer.red` reverse-proxy record, the
+Pinterest Ads source, the GeoIP transformation, and every dashboard, tile
+layout and insight. The project, membership, proxy record and source have
+`prevent_destroy`.
+
+Its source is
+[`packages/homelab-cdktn/src/stacks/posthog.ts`](../../../homelab-cdktn/src/stacks/posthog.ts)
+and the modules under `posthog/` beside it:
+
+- `adopted.json` holds the objects that existed before the stack and were
+  imported: dashboards, layouts, insights and the GeoIP function. Each key is
+  the object's Terraform resource name and `importId` its PostHog id. To adopt
+  another object, add an entry; the stack writes its `import` block.
+- `feature-usage.ts` and `storm-product-metrics.ts` declare the dashboards this
+  repository designed. Add a dashboard the same way, as a module the stack
+  reads.
+
+Queries and layouts are JSON documents. They reach OpenTofu as local values
+and are encoded there with `jsonencode`, which sorts keys, so key order in the
+source does not change the applied value. `app_urls` and `recording_domains`
+come from [`config/analytics-sites.json`](../../../../config/analytics-sites.json),
+inlined at synthesis: after changing the registry, run
+`bun run --cwd packages/homelab-cdktn synth` and commit the regenerated
+`posthog/main.tf.json`.
 
 ### GitHub
 

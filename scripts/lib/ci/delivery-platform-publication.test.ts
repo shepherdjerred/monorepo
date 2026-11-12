@@ -64,7 +64,7 @@ function fullRootPublication() {
 test("ordinary changes do not invent platform deploys; direct stacks retain their policy", () => {
   expect(changedPlatformStacks(["packages/arcade/src/app.ts"])).toEqual([]);
   expect(
-    changedPlatformStacks(["packages/homelab/src/tofu/posthog/main.tf"]),
+    changedPlatformStacks(["packages/homelab/src/tofu/posthog/main.tf.json"]),
   ).toEqual(["posthog"]);
   expect(
     changedPlatformStacks(["packages/homelab/src/tofu/openai/main.tf"]),
@@ -85,14 +85,16 @@ test("a stack's declared external inputs select it like its own directory", () =
   expect(
     changedPlatformStacks(["packages/homelab/src/domain-registry.json"]),
   ).toEqual(["cloudflare"]);
-  expect(changedPlatformStacks(["config/analytics-sites.json"])).toEqual([
-    "posthog",
-  ]);
-  // The synthesized dockerhub stack carries the image registry inline, so
-  // its own main.tf.json, not the registry, selects it.
+  // The synthesized dockerhub and posthog stacks carry the image and
+  // analytics registries inline, so each one's own main.tf.json, not the
+  // registry, selects it.
   expect(
     changedPlatformStacks(["packages/homelab/src/tofu/dockerhub/main.tf.json"]),
   ).toEqual(["dockerhub"]);
+  expect(changedPlatformStacks(["config/analytics-sites.json"])).toEqual([]);
+  expect(
+    changedPlatformStacks(["packages/homelab/src/tofu/posthog/main.tf.json"]),
+  ).toEqual(["posthog"]);
 });
 
 test("root and DNS releases freeze the complete ordered dependency closure", () => {
