@@ -384,6 +384,8 @@ final class CombatControlsTest {
             "test",
             List.of(),
             List.of(),
+            List.of(),
+            List.of(),
             List.of());
     return new ReflexInput(
         self,

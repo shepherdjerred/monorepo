@@ -100,7 +100,9 @@ final class TacticsCommitmentTest {
                   Map.of(self.id(), slot.key()),
                   0,
                   Map.of(),
-                  -1),
+                  -1,
+                  Optional.empty(),
+                  Set.of()),
               0);
     }
     var snapshot =
@@ -111,6 +113,8 @@ final class TacticsCommitmentTest {
             List.of(),
             PoisonView.NONE,
             "synthetic",
+            List.of(),
+            List.of(),
             List.of(),
             List.of(),
             List.of());
@@ -306,6 +310,8 @@ final class TacticsCommitmentTest {
             NAV.mapId(),
             List.of(),
             List.of(),
+            List.of(),
+            List.of(),
             List.of()),
         new Percept(
             new PerceptionState(memory, PerceptionState.EMPTY.suspicion()),
@@ -497,6 +503,8 @@ final class TacticsCommitmentTest {
             NAV.mapId(),
             List.of(),
             List.of(),
+            List.of(),
+            List.of(),
             List.of());
     return new Situation(
         self,
@@ -519,6 +527,8 @@ final class TacticsCommitmentTest {
             List.of(bomb),
             PoisonView.NONE,
             NAV.mapId(),
+            List.of(),
+            List.of(),
             List.of(),
             List.of(),
             List.of());
@@ -608,6 +618,8 @@ final class TacticsCommitmentTest {
             original.poison(),
             original.mapId(),
             original.stimuli(),
+            List.of(),
+            List.of(),
             List.of(),
             List.of());
     var occupied =

@@ -146,6 +146,8 @@ final class MatchLearningTest {
             "test",
             List.of(),
             List.of(),
+            List.of(),
+            List.of(),
             List.of());
     var input =
         new ReflexInput(
@@ -308,6 +310,8 @@ final class MatchLearningTest {
             before.poison(),
             before.mapId(),
             before.stimuli(),
+            List.of(),
+            List.of(),
             List.of(),
             List.of());
     var input =

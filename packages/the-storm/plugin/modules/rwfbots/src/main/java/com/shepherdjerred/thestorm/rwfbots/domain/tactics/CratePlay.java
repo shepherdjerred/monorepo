@@ -126,21 +126,30 @@ public final class CratePlay {
   }
 
   /**
-   * What a bot waiting on its own crate does. {@code seen} is whether the crate has appeared.
-   * {@code present} is whether that crate is still in the world. A fight keeps the watch.
+   * A bot waiting on its own crate.
+   *
+   * @param now the tick
+   * @param until the tick the watch expires
+   * @param threatened whether a fight is on
+   * @param seen whether the crate has appeared
+   * @param present whether that crate is still in the world
+   * @param inReach whether the crate is within {@link #REACH}
    */
-  public static Attention attention(
-      long now, long until, boolean threatened, boolean seen, boolean present, boolean inReach) {
-    if (now > until || (seen && !present)) {
+  public record Waiting(
+      long now, long until, boolean threatened, boolean seen, boolean present, boolean inReach) {}
+
+  /** What a bot waiting on its own crate does. A fight keeps the watch. */
+  public static Attention attention(Waiting waiting) {
+    if (waiting.now() > waiting.until() || (waiting.seen() && !waiting.present())) {
       return Attention.CLEAR;
     }
-    if (threatened) {
+    if (waiting.threatened()) {
       return Attention.FIGHT;
     }
-    if (present && inReach) {
+    if (waiting.present() && waiting.inReach()) {
       return Attention.LOOT;
     }
-    if (present) {
+    if (waiting.present()) {
       return Attention.APPROACH;
     }
     return Attention.HOLD;

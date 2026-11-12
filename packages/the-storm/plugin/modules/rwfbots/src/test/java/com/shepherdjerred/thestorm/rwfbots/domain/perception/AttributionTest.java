@@ -43,6 +43,8 @@ final class AttributionTest {
         "synthetic",
         sounds,
         List.of(),
+        List.of(),
+        List.of(),
         List.of());
   }
 

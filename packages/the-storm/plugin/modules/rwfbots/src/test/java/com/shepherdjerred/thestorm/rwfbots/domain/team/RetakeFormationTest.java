@@ -56,6 +56,8 @@ final class RetakeFormationTest {
             NAV.mapId(),
             List.of(),
             List.of(),
+            List.of(),
+            List.of(),
             List.of());
     var members =
         bots.stream()
@@ -157,7 +159,9 @@ final class RetakeFormationTest {
             Map.of(bots.get(1).id(), held.key()),
             0,
             java.util.Map.of(),
-            -1);
+            -1,
+            Optional.empty(),
+            Set.of());
     var airborne = List.of(bots.get(0), bots.get(1).withPos(bots.get(1).pos().plus(0, 20, 0)));
     assertThat(RetakeFormation.slots(tight, bomb(true), airborne, previous).get(1).pos())
         .isEqualTo(held.pos());

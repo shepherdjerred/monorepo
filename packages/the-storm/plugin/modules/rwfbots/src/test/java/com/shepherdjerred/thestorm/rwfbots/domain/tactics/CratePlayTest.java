@@ -57,16 +57,16 @@ final class CratePlayTest {
 
   @Test
   void theOwnerLootsImmediatelyAndATeammateWaitsOutTheGrace() {
-    assertThat(loot(RED, 1, RED, 1, 0)).isPresent();
-    assertThat(loot(RED, 1, RED, 9, 0)).isEmpty();
-    assertThat(loot(RED, 1, RED, 9, 580)).isEmpty();
-    assertThat(loot(RED, 1, RED, 9, 600)).isPresent();
+    assertThat(loot(new Who(RED, 1), new Who(RED, 1), 0)).isPresent();
+    assertThat(loot(new Who(RED, 1), new Who(RED, 9), 0)).isEmpty();
+    assertThat(loot(new Who(RED, 1), new Who(RED, 9), 580)).isEmpty();
+    assertThat(loot(new Who(RED, 1), new Who(RED, 9), 600)).isPresent();
   }
 
   @Test
   void anEnemyWaitsTheFullMinuteThenAnyoneMaySteal() {
-    assertThat(loot(BLUE, 1, RED, 9, 1_180)).isEmpty();
-    var stolen = loot(BLUE, 1, RED, 9, 1_200).orElseThrow();
+    assertThat(loot(new Who(BLUE, 1), new Who(RED, 9), 1_180)).isEmpty();
+    var stolen = loot(new Who(BLUE, 1), new Who(RED, 9), 1_200).orElseThrow();
     assertThat(stolen.kind()).isEqualTo(CratePlay.Kind.LOOT);
   }
 
@@ -75,7 +75,9 @@ final class CratePlayTest {
     var self = combatant(1, RED, AT.plus(4, 0, 0));
     var own = crate(AT, self.id(), RED, NOW);
     var steal = crate(AT.plus(3, 0, 0), new CombatantId(9), BLUE, NOW - 1_200);
-    var trip = trip(self, List.of(self), List.of(own, steal), List.of(), List.of()).orElseThrow();
+    var trip =
+        trip(self, new Field(List.of(self), List.of(own, steal), List.of(), List.of(), List.of()))
+            .orElseThrow();
     assertThat(trip.kind()).isEqualTo(CratePlay.Kind.LOOT);
     assertThat(trip.cell().distance(own.pos())).isLessThan(trip.cell().distance(steal.pos()));
   }
@@ -87,8 +89,10 @@ final class CratePlayTest {
     var owner = combatant(9, RED, AT.plus(0, 0, 40));
     var crate = crate(AT, owner.id(), RED, NOW - 600);
     var mates = List.of(near, far, owner);
-    assertThat(trip(near, mates, List.of(crate), List.of(), List.of())).isPresent();
-    assertThat(trip(far, mates, List.of(crate), List.of(), List.of())).isEmpty();
+    assertThat(trip(near, new Field(mates, List.of(crate), List.of(), List.of(), List.of())))
+        .isPresent();
+    assertThat(trip(far, new Field(mates, List.of(crate), List.of(), List.of(), List.of())))
+        .isEmpty();
   }
 
   @Test
@@ -96,7 +100,10 @@ final class CratePlayTest {
     var self = combatant(1, RED, AT);
     var enemy = combatant(2, BLUE, AT.plus(5, 0, 0));
     var trip =
-        trip(self, List.of(self, enemy), List.of(), List.of(self.id()), List.of(enemy))
+        trip(
+                self,
+                new Field(
+                    List.of(self, enemy), List.of(), List.of(self.id()), List.of(enemy), List.of()))
             .orElseThrow();
     assertThat(trip.kind()).isEqualTo(CratePlay.Kind.CALL);
     assertThat(trip.cell().distance(self.pos())).isLessThanOrEqualTo(CratePlay.SEARCH);
@@ -106,7 +113,11 @@ final class CratePlayTest {
   @Test
   void aCarrierAlreadyInTheClearDoesNotDetour() {
     var self = combatant(1, RED, AT);
-    assertThat(trip(self, List.of(self), List.of(), List.of(self.id()), List.of())).isEmpty();
+    assertThat(
+            trip(
+                self,
+                new Field(List.of(self), List.of(), List.of(self.id()), List.of(), List.of())))
+        .isEmpty();
   }
 
   @Test
@@ -127,7 +138,10 @@ final class CratePlayTest {
         new BombView(
             new BombId(0), new BombOwner.Team(RED), AT.plus(6, 0, 0), new BombState.Armed(200));
     var crate = crate(AT, self.id(), RED, NOW);
-    assertThat(trip(self, List.of(self), List.of(crate), List.of(), List.of(), List.of(bomb)))
+    assertThat(
+            trip(
+                self,
+                new Field(List.of(self), List.of(crate), List.of(), List.of(), List.of(bomb))))
         .isEmpty();
   }
 
@@ -136,7 +150,11 @@ final class CratePlayTest {
     var self = combatant(1, RED, AT.plus(2, 0, 0));
     var enemy = combatant(2, BLUE, AT);
     var crate = crate(AT, self.id(), RED, NOW);
-    assertThat(trip(self, List.of(self, enemy), List.of(crate), List.of(), List.of(enemy)))
+    assertThat(
+            trip(
+                self,
+                new Field(
+                    List.of(self, enemy), List.of(crate), List.of(), List.of(enemy), List.of())))
         .isEmpty();
   }
 
@@ -144,9 +162,10 @@ final class CratePlayTest {
   void aSupplyCrateWaitsForSafetyAndOtherStreaksDoNot() {
     var self = combatant(1, RED, AT);
     var input = input(self, world(List.of(self), List.of(), List.of(), List.of()), List.of());
-    assertThat(StreakPlay.now(1, input, 0, true, false)).isFalse();
-    assertThat(StreakPlay.now(1, input, 0, true, true)).isTrue();
-    assertThat(StreakPlay.now(1, input, 0, false, false)).isTrue();
+    assertThat(StreakPlay.now(1, input, 0)).isTrue();
+    assertThat(StreakPlay.placeable(true, false)).isFalse();
+    assertThat(StreakPlay.placeable(true, true)).isTrue();
+    assertThat(StreakPlay.placeable(false, false)).isTrue();
   }
 
   @Test
@@ -158,23 +177,23 @@ final class CratePlayTest {
 
   @Test
   void waitingOnACrateFightsThenLootsAndDropsACrateThatVanished() {
-    assertThat(CratePlay.attention(10, 5, false, false, false, false))
+    assertThat(CratePlay.attention(new CratePlay.Waiting(10, 5, false, false, false, false)))
         .isEqualTo(CratePlay.Attention.CLEAR);
-    assertThat(CratePlay.attention(3, 10, false, true, false, false))
+    assertThat(CratePlay.attention(new CratePlay.Waiting(3, 10, false, true, false, false)))
         .isEqualTo(CratePlay.Attention.CLEAR);
-    assertThat(CratePlay.attention(3, 10, true, true, true, true))
+    assertThat(CratePlay.attention(new CratePlay.Waiting(3, 10, true, true, true, true)))
         .isEqualTo(CratePlay.Attention.FIGHT);
-    assertThat(CratePlay.attention(3, 10, false, true, true, true))
+    assertThat(CratePlay.attention(new CratePlay.Waiting(3, 10, false, true, true, true)))
         .isEqualTo(CratePlay.Attention.LOOT);
-    assertThat(CratePlay.attention(3, 10, false, true, true, false))
+    assertThat(CratePlay.attention(new CratePlay.Waiting(3, 10, false, true, true, false)))
         .isEqualTo(CratePlay.Attention.APPROACH);
-    assertThat(CratePlay.attention(3, 10, false, false, false, false))
+    assertThat(CratePlay.attention(new CratePlay.Waiting(3, 10, false, false, false, false)))
         .isEqualTo(CratePlay.Attention.HOLD);
   }
 
   @Test
   void theTripIsACautiousRouteRatherThanAPickup() {
-    var trip = loot(RED, 1, RED, 1, 0).orElseThrow();
+    var trip = loot(new Who(RED, 1), new Who(RED, 1), 0).orElseThrow();
     var plan = CratePlay.plan(NOW, trip);
     assertThat(plan.option()).isEqualTo(Option.CRATE);
     assertThat(plan.current()).isInstanceOf(PlanStep.Route.class);
@@ -185,36 +204,32 @@ final class CratePlayTest {
     return new CrateView(pos, owner, team, landedTick, landedTick + 600, landedTick + 1_200);
   }
 
-  private static Optional<CratePlay.Trip> loot(
-      TeamId selfTeam, int selfId, TeamId ownerTeam, int ownerId, long age) {
-    var self = combatant(selfId, selfTeam, AT.plus(2, 0, 0));
-    var owner = selfId == ownerId ? self : combatant(ownerId, ownerTeam, AT.plus(0, 0, 40));
-    var views = new ArrayList<CombatantView>();
-    views.add(self);
-    if (!owner.id().equals(self.id())) {
-      views.add(owner);
-    }
-    var crate = crate(AT, new CombatantId(ownerId), ownerTeam, NOW - age);
-    return trip(self, views, List.of(crate), List.of(), List.of());
-  }
+  /** A combatant by team and id. */
+  private record Who(TeamId team, int id) {}
 
-  private static Optional<CratePlay.Trip> trip(
-      CombatantView self,
-      List<CombatantView> mates,
-      List<CrateView> crates,
-      List<CombatantId> carriers,
-      List<CombatantView> visible) {
-    return trip(self, mates, crates, carriers, visible, List.of());
-  }
-
-  private static Optional<CratePlay.Trip> trip(
-      CombatantView self,
+  /** What a crate trip sees: teammates, landed crates, supply carriers, sightings, bombs. */
+  private record Field(
       List<CombatantView> mates,
       List<CrateView> crates,
       List<CombatantId> carriers,
       List<CombatantView> visible,
-      List<BombView> bombs) {
-    var situation = situation(self, mates, crates, carriers, visible, bombs);
+      List<BombView> bombs) {}
+
+  private static Optional<CratePlay.Trip> loot(Who looter, Who owner, long age) {
+    var self = combatant(looter.id(), looter.team(), AT.plus(2, 0, 0));
+    var ownerView =
+        looter.id() == owner.id() ? self : combatant(owner.id(), owner.team(), AT.plus(0, 0, 40));
+    var views = new ArrayList<CombatantView>();
+    views.add(self);
+    if (!ownerView.id().equals(self.id())) {
+      views.add(ownerView);
+    }
+    var crate = crate(AT, new CombatantId(owner.id()), owner.team(), NOW - age);
+    return trip(self, new Field(views, List.of(crate), List.of(), List.of(), List.of()));
+  }
+
+  private static Optional<CratePlay.Trip> trip(CombatantView self, Field field) {
+    var situation = situation(self, field);
     return CratePlay.trip(
         situation,
         Features.of(situation, CONTEXT, Optional.empty(), false),
@@ -222,17 +237,11 @@ final class CratePlayTest {
         TacticalMemory.EMPTY);
   }
 
-  private static Situation situation(
-      CombatantView self,
-      List<CombatantView> mates,
-      List<CrateView> crates,
-      List<CombatantId> carriers,
-      List<CombatantView> visible,
-      List<BombView> bombs) {
+  private static Situation situation(CombatantView self, Field field) {
     return new Situation(
         self,
-        world(mates, crates, carriers, bombs),
-        new Percept(PerceptionState.EMPTY, visible, NOW),
+        world(field.mates(), field.crates(), field.carriers(), field.bombs()),
+        new Percept(PerceptionState.EMPTY, field.visible(), NOW),
         Blackboard.open(self.team(), Strategy.TURTLE),
         Role.ROTATE);
   }

@@ -13,10 +13,8 @@ import com.shepherdjerred.thestorm.rwfbots.domain.reflex.CombatFootwork;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.Reflex;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Lane;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Passages;
-import com.shepherdjerred.thestorm.rwfbots.domain.team.Playbook;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Role;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Slot;
-import com.shepherdjerred.thestorm.rwfbots.domain.team.SlotKind;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BombId;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BombState;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BombView;
@@ -236,7 +234,7 @@ public final class Planner {
                     now,
                     new PlanStep.Route(
                         around(situation, context, enemy.pos(), HUNT_RING),
-                        huntStance(situation, context))))
+                        SlotRoutes.huntStance(situation, context))))
             .orElseGet(() ->
                 situation
                     .sensorPosition()
@@ -246,7 +244,7 @@ public final class Planner {
                             now,
                             new PlanStep.Route(
                                 around(situation, context, position, HUNT_RING),
-                                huntStance(situation, context))))
+                                SlotRoutes.huntStance(situation, context))))
                     .orElseGet(() -> holdHere(option, situation, context)));
       }
       case ESCAPE_POISON ->
@@ -291,43 +289,10 @@ public final class Planner {
     return bystander.map(Situation.KnownEnemy::id).or(() -> Optional.of(pull.attacker()));
   }
 
-  private static Stance stanceFor(Situation situation, TacticsContext context) {
-    if (situation.isLastAlive()) {
-      return Stance.STEALTH;
-    }
-    return context.style().aggression() > 0.6 ? Stance.AGGRESSIVE : Stance.CAUTIOUS;
-  }
-
-  /**
-   * A melee planter sprints the opening. A helper walks, a bow keeps its own pace, and the last
-   * living bot sneaks.
-   */
-  private static Stance bombStance(Option option, Situation situation, TacticsContext context) {
-    if (option == Option.HELP_ARM) return Stance.CAUTIOUS;
-    if (situation.isLastAlive()) return Stance.STEALTH;
-    if (!context.keep().ranged()) return Stance.AGGRESSIVE;
-    return stanceFor(situation, context);
-  }
-
-  /** A melee hunter sprints to the search. A bow keeps the pace it would fight at. */
-  private static Stance huntStance(Situation situation, TacticsContext context) {
-    if (situation.isLastAlive()) return Stance.STEALTH;
-    if (!context.keep().ranged()) return Stance.AGGRESSIVE;
-    return stanceFor(situation, context);
-  }
-
-  /** Plant, escort, lane, flank, and sweep rush. An anchor, an overwatch, or a bow walks. */
-  private static boolean openingSlot(SlotKind kind) {
-    return switch (kind) {
-      case PLANT, ESCORT, LANE, FLANK, SWEEP -> true;
-      case OVERWATCH, ANCHOR -> false;
-    };
-  }
-
   /** Route to the bomb and arm it; helpers walk carefully, planters at their own pace. */
   private static Plan bombPlan(
       Option option, Situation situation, TacticsContext context, BombView bomb) {
-    var stance = bombStance(option, situation, context);
+    var stance = SlotRoutes.bombStance(option, situation, context);
     return Plan.of(
         option,
         situation.now(),
@@ -423,41 +388,7 @@ public final class Planner {
    * slot stays where it was dealt.
    */
   public static Optional<Vec3> slotPoint(Situation situation, TacticsContext context) {
-    return situation.slot().map(slot -> slotPoint(situation, context, slot));
-  }
-
-  private static Vec3 slotPoint(Situation situation, TacticsContext context, Slot slot) {
-    if (poisonDanger(situation, slot.pos(), POISON_MARGIN)) {
-      return poisonExit(situation, context);
-    }
-    if (slot.kind() != SlotKind.ESCORT) {
-      return slot.pos();
-    }
-    if (slot.buddy().isPresent()) {
-      return Accompany.point(situation, context, slot);
-    }
-    var planter = situation.planter();
-    if (planter.isEmpty()) {
-      return slot.pos();
-    }
-    var from = planter.orElseThrow().pos();
-    var heading =
-        situation
-            .board()
-            .plan()
-            .objective()
-            .flatMap(situation.snapshot()::bomb)
-            .map(BombView::pos)
-            .orElseGet(slot::watch)
-            .minus(from)
-            .horizontal();
-    if (heading.isZero()) {
-      return slot.pos();
-    }
-    var point = Playbook.escortPoint(from, heading.normalized(), slot.side());
-    var graph = context.nav().graph();
-    var node = graph.nearestNodeWithin(point, SNAP);
-    return node.isPresent() ? graph.feet(node.getAsInt()) : point;
+    return situation.slot().map(slot -> SlotRoutes.slotPoint(situation, context, slot));
   }
 
   private static Plan takeSlot(Situation situation, TacticsContext context) {
@@ -468,51 +399,19 @@ public final class Planner {
     var chosen = slot.orElseThrow();
     var threat = contact(situation);
     if (threat.isPresent()) {
-      return bound(situation, context, slotPoint(situation, context, chosen), threat.orElseThrow());
+      return bound(
+          situation,
+          context,
+          SlotRoutes.slotPoint(situation, context, chosen),
+          threat.orElseThrow());
     }
-    var goal = goalOf(situation, context, chosen);
-    var lane = situation.board().plan().laneOf(chosen);
-    var waiting =
-        lane.filter(Lane::cut)
-            .filter(cut ->
-                chosen.kind() != SlotKind.ANCHOR && Passages.waiting(situation, context, cut))
-            .isPresent();
-    var attack = !waiting && openingSlot(chosen.kind()) && !context.keep().ranged();
-    var stance =
-        situation.isLastAlive() ? Stance.STEALTH : attack ? Stance.AGGRESSIVE : Stance.CAUTIOUS;
+    var goal = SlotRoutes.goal(situation, context, chosen);
+    var stance = SlotRoutes.slotStance(situation, context, chosen);
     return Plan.of(
         Option.TAKE_SLOT,
         situation.now(),
         new PlanStep.Route(goal, stance),
         new PlanStep.Hold(goal, chosen.watch(), Stance.CAUTIOUS));
-  }
-
-  /**
-   * Where a slot is walked to. A cut pair stages at the mouth until the main push is seen. A quiet
-   * cut anchor returns to the home bomb. A team waiting out another fight stands off that fight.
-   */
-  private static Vec3 goalOf(Situation situation, TacticsContext context, Slot slot) {
-    var posted = situation.board().plan().laneOf(slot);
-    if (posted.isPresent() && posted.orElseThrow().cut()) {
-      var lane = posted.orElseThrow();
-      if (slot.kind() == SlotKind.ANCHOR && Passages.quiet(situation, lane)) {
-        var home = Passages.homeBomb(situation);
-        if (home.isPresent()) {
-          return home.orElseThrow();
-        }
-      } else if (slot.kind() != SlotKind.ANCHOR && Passages.waiting(situation, context, lane)) {
-        return lane.at(Passages.MOUTH);
-      }
-    }
-    if (slot.kind() != SlotKind.ANCHOR
-        && slot.kind() != SlotKind.OVERWATCH
-        && slot.kind() != SlotKind.PLANT) {
-      var edge = Passages.edge(situation);
-      if (edge.isPresent()) {
-        return edge.orElseThrow();
-      }
-    }
-    return slotPoint(situation, context, slot);
   }
 
   private static Plan holdSlot(Situation situation, TacticsContext context) {
@@ -524,8 +423,8 @@ public final class Planner {
     var threat = contact(situation);
     var goal =
         threat.isPresent()
-            ? slotPoint(situation, context, chosen)
-            : goalOf(situation, context, chosen);
+            ? SlotRoutes.slotPoint(situation, context, chosen)
+            : SlotRoutes.goal(situation, context, chosen);
     var now = situation.now();
     if (threat.isEmpty()) {
       var stance = situation.isLastAlive() ? Stance.STEALTH : Stance.CAUTIOUS;
@@ -889,7 +788,7 @@ public final class Planner {
   }
 
   /** Away from the own bomb: towards the nearest armable bomb, else the enemy spawn. */
-  private static Vec3 poisonExit(Situation situation, TacticsContext context) {
+  static Vec3 poisonExit(Situation situation, TacticsContext context) {
     var self = situation.self();
     var radius = situation.snapshot().poison().bombRadius() + POISON_MARGIN;
     var goal =

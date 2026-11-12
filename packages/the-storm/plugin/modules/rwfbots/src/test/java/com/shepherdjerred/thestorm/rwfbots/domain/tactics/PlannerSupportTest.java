@@ -68,7 +68,9 @@ final class PlannerSupportTest {
             Map.of(self.id(), slot.key()),
             tick,
             java.util.Map.of(),
-            -1);
+            -1,
+            Optional.empty(),
+            Set.of());
     var board = Blackboard.open(RED, Strategy.SPLIT).withPlan(plan, tick);
     var snapshot =
         new WorldSnapshot(
@@ -78,6 +80,8 @@ final class PlannerSupportTest {
             List.of(),
             PoisonView.NONE,
             NAV.mapId(),
+            List.of(),
+            List.of(),
             List.of(),
             List.of(),
             List.of());
@@ -226,7 +230,9 @@ final class PlannerSupportTest {
             Map.of(self.id(), slot.key()),
             10,
             Map.of(),
-            -1);
+            -1,
+            Optional.empty(),
+            Set.of());
     var board = Blackboard.open(RED, Strategy.SPLIT).withPlan(plan, 10);
     var memory =
         Memory.EMPTY.remember(enemy.id(), new Sighting(ENEMY, Vec3.ZERO, 10, 1, true, true));
@@ -241,6 +247,8 @@ final class PlannerSupportTest {
             List.of(),
             PoisonView.NONE,
             NAV.mapId(),
+            List.of(),
+            List.of(),
             List.of(),
             List.of(),
             List.of());

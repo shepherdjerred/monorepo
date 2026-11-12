@@ -46,6 +46,8 @@ final class CratePearlTest {
             "yard",
             List.of(),
             List.of(),
+            List.of(),
+            List.of(),
             List.of());
     var decision = Decision.idle(self.id(), 100, 0).withWaypoints(List.of(ahead));
     return ReflexInput.of(

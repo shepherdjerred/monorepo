@@ -40,15 +40,21 @@ public final class TeamPosture {
   public record Fighter(CombatantId id, double aggression) {}
 
   /**
+   * A team's mean temper.
+   *
+   * @param aggression 0..1
+   * @param patience 0..1
+   */
+  public record Temper(double aggression, double patience) {}
+
+  /**
    * The posture for {@code team}. {@code others} fewer than two, or poison already hurting, is
    * {@link Posture#PRESS}.
    */
   public static Posture roll(
-      WorldSnapshot snapshot,
-      TeamId team,
-      double aggression,
-      double patience,
-      RandomGenerator random) {
+      WorldSnapshot snapshot, TeamId team, Temper temper, RandomGenerator random) {
+    var aggression = temper.aggression();
+    var patience = temper.patience();
     var counts = counts(snapshot);
     var us = counts.getOrDefault(team, 0);
     var others =

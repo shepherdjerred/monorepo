@@ -729,65 +729,75 @@ public final class ThinkLoop {
         return;
       }
       var open = teams.values().stream().anyMatch(team -> team.board.plan().posture().isEmpty());
-      if (snapshot.poison().active() && !open) {
-        for (var team : teams.values()) {
-          var plan = team.board.plan();
-          if (plan.posture().orElse(Posture.PRESS) != Posture.PRESS) {
-            team.board =
-                team.board.withPlan(
-                    plan.withStance(Posture.PRESS, plan.reckless()), snapshot.tick());
-          }
-        }
-        return;
-      }
       if (!open) {
+        if (snapshot.poison().active()) {
+          pressAll(snapshot);
+        }
         return;
       }
       var choices = new ArrayList<TeamPosture.Choice>();
       for (var team : teams.values()) {
-        var id = team.board.team();
-        var members = profiles().stream().filter(profile -> profile.team().equals(id)).toList();
-        var aggression =
-            members.stream().mapToDouble(profile -> profile.style().aggression()).average();
-        var patience =
-            members.stream().mapToDouble(profile -> profile.style().patience()).average();
-        choices.add(
-            new TeamPosture.Choice(
-                id,
-                TeamPosture.roll(
-                    snapshot,
-                    id,
-                    aggression.orElse(0.5),
-                    patience.orElse(0.5),
-                    new SplittableRandom(current.seed() ^ id.value().hashCode())),
-                aggression.orElse(0.5)));
+        choices.add(roll(current, snapshot, team.board.team()));
       }
       for (var choice : TeamPosture.settle(choices)) {
-        var team = teams.get(choice.team());
-        if (team == null) {
-          continue;
-        }
-        var fighters = new ArrayList<TeamPosture.Fighter>();
-        for (var profile : profiles()) {
-          if (!profile.team().equals(choice.team())) {
-            continue;
-          }
-          var view = snapshot.combatant(profile.id());
-          if (view.isPresent() && view.orElseThrow().alive()) {
-            fighters.add(new TeamPosture.Fighter(profile.id(), profile.style().aggression()));
-          }
-        }
-        var reckless =
-            TeamPosture.slackers(fighters, current.seed() ^ choice.team().value().hashCode());
+        stick(current, snapshot, choice);
+      }
+    }
+
+    /** Poison ends every wait and every hunt: each team that was not pressing presses. */
+    private void pressAll(WorldSnapshot snapshot) {
+      for (var team : teams.values()) {
         var plan = team.board.plan();
-        var same =
-            plan.posture().filter(choice.posture()::equals).isPresent()
-                && plan.reckless().equals(reckless);
-        if (!same) {
+        if (plan.posture().orElse(Posture.PRESS) != Posture.PRESS) {
           team.board =
-              team.board.withPlan(plan.withStance(choice.posture(), reckless), snapshot.tick());
+              team.board.withPlan(plan.withStance(Posture.PRESS, plan.reckless()), snapshot.tick());
         }
       }
+    }
+
+    /** {@code id}'s roll from its bots' mean temper, seeded by the match. */
+    private TeamPosture.Choice roll(Match current, WorldSnapshot snapshot, TeamId id) {
+      var members = profiles().stream().filter(profile -> profile.team().equals(id)).toList();
+      var aggression =
+          members.stream().mapToDouble(profile -> profile.style().aggression()).average();
+      var patience = members.stream().mapToDouble(profile -> profile.style().patience()).average();
+      var temper = new TeamPosture.Temper(aggression.orElse(0.5), patience.orElse(0.5));
+      return new TeamPosture.Choice(
+          id,
+          TeamPosture.roll(
+              snapshot, id, temper, new SplittableRandom(current.seed() ^ id.value().hashCode())),
+          temper.aggression());
+    }
+
+    /** Keeps {@code choice} on its team's plan, with the bots that break from it. */
+    private void stick(Match current, WorldSnapshot snapshot, TeamPosture.Choice choice) {
+      var team = teams.get(choice.team());
+      if (team == null) {
+        return;
+      }
+      var reckless =
+          TeamPosture.slackers(
+              fighters(snapshot, choice.team()), current.seed() ^ choice.team().value().hashCode());
+      var plan = team.board.plan();
+      var same =
+          plan.posture().filter(choice.posture()::equals).isPresent()
+              && plan.reckless().equals(reckless);
+      if (!same) {
+        team.board =
+            team.board.withPlan(plan.withStance(choice.posture(), reckless), snapshot.tick());
+      }
+    }
+
+    /** {@code team}'s registered bots alive in the snapshot. */
+    private List<TeamPosture.Fighter> fighters(WorldSnapshot snapshot, TeamId team) {
+      var fighters = new ArrayList<TeamPosture.Fighter>();
+      for (var profile : profiles()) {
+        var alive = snapshot.combatant(profile.id()).filter(CombatantView::alive).isPresent();
+        if (profile.team().equals(team) && alive) {
+          fighters.add(new TeamPosture.Fighter(profile.id(), profile.style().aggression()));
+        }
+      }
+      return fighters;
     }
 
     /** The registered bots alive in the snapshot, in slot order, with their minds up to date. */

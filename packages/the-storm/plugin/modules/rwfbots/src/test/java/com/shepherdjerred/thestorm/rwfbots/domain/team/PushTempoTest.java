@@ -9,6 +9,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantView;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 /** How the push moves when a team is in contact, winning, or closing out the round. */
@@ -32,7 +33,9 @@ final class PushTempoTest {
         Map.of(new CombatantId(1), "lane-0"),
         pushedTick,
         Map.of(),
-        pushedTick);
+        pushedTick,
+        Optional.empty(),
+        Set.of());
   }
 
   @Test

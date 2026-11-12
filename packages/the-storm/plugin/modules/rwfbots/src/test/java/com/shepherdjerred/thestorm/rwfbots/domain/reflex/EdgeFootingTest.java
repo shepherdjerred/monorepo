@@ -195,6 +195,8 @@ final class EdgeFootingTest {
             "deck",
             List.of(),
             List.of(),
+            List.of(),
+            List.of(),
             List.of());
     var input =
         new ReflexInput(

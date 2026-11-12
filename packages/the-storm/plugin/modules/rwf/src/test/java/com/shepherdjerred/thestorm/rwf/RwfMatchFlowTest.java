@@ -60,10 +60,14 @@ import org.mockbukkit.mockbukkit.entity.PlayerMock;
 final class RwfMatchFlowTest {
 
   /**
-   * Taps half a second apart, enough to finish a one-person, nine-second arm or defuse at the tap
-   * credit. A tap earns a slice of the clock; holding is the fast path the domain tests cover.
+   * Taps one server tick apart, enough to finish a one-person, nine-second arm or defuse at the tap
+   * credit. A tap earns a slice of the clock however fast it comes, so mashing keeps these flows
+   * short. Holding is the fast path; MockBukkit cannot ray-trace a held aim, so the domain tests
+   * cover it.
    */
   private static final int TAPS_TO_FUSE = 60;
+
+  private static final Duration TAP_GAP = Duration.ofMillis(50);
 
   @TempDir Path directory;
   private @Nullable RwfHarness running;
@@ -142,7 +146,7 @@ final class RwfMatchFlowTest {
           .callEvent(
               new PlayerInteractEvent(
                   alice, Action.RIGHT_CLICK_BLOCK, fuse, block.getBlock(), BlockFace.UP));
-      harness.tick(Duration.ofMillis(500));
+      harness.tick(TAP_GAP);
     }
 
     assertThat(armed(bombId)).isTrue();
@@ -158,7 +162,7 @@ final class RwfMatchFlowTest {
     defuser.entity().teleport(block.clone().add(-1.5, 0, 0.5));
     for (var i = 0; i < TAPS_TO_FUSE && armed(bombId); i++) {
       assertThat(harness.actions().clickBomb(defuser.id(), bombId)).isEmpty();
-      harness.tick(Duration.ofMillis(500));
+      harness.tick(TAP_GAP);
     }
 
     assertThat(armed(bombId)).isFalse();
@@ -326,7 +330,7 @@ final class RwfMatchFlowTest {
           .callEvent(
               new PlayerInteractEvent(
                   alice, Action.RIGHT_CLICK_BLOCK, fuse, block.getBlock(), BlockFace.UP));
-      harness.tick(Duration.ofMillis(500));
+      harness.tick(TAP_GAP);
     }
     assertThat(armed(bombId)).isTrue();
 
@@ -603,7 +607,7 @@ final class RwfMatchFlowTest {
     armer.entity().teleport(block.clone().add(1.5, 0, 0.5));
     for (var i = 0; i < TAPS_TO_FUSE && !armed(bombId); i++) {
       assertThat(harness.actions().clickBomb(armer.id(), bombId)).isEmpty();
-      harness.tick(Duration.ofMillis(500));
+      harness.tick(TAP_GAP);
     }
     assertThat(armed(bombId)).isTrue();
 

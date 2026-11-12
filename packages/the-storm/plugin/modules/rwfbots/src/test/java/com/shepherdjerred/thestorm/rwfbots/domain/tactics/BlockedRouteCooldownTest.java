@@ -71,7 +71,9 @@ final class BlockedRouteCooldownTest {
                     Map.of(self.id(), slot.key()),
                     0,
                     Map.of(),
-                    -1),
+                    -1,
+                    Optional.empty(),
+                    Set.of()),
                 0);
     var snapshot =
         new WorldSnapshot(
@@ -81,6 +83,8 @@ final class BlockedRouteCooldownTest {
             bombs,
             PoisonView.NONE,
             CONTEXT.nav().mapId(),
+            List.of(),
+            List.of(),
             List.of(),
             List.of(),
             List.of());
@@ -155,6 +159,8 @@ final class BlockedRouteCooldownTest {
             snapshot.mapId(),
             snapshot.stimuli(),
             List.of(),
+            List.of(),
+            List.of(),
             List.of());
     var scene =
         new Situation(
@@ -191,6 +197,8 @@ final class BlockedRouteCooldownTest {
               List.of(),
               PoisonView.NONE,
               CONTEXT.nav().mapId(),
+              List.of(),
+              List.of(),
               List.of(),
               List.of(),
               List.of());

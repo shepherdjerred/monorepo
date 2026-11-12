@@ -526,7 +526,12 @@ public final class BotChat implements Consumer<MatchNotification>, BodyActivity 
     var lines = new ArrayList<Utterance>();
     for (var moment : ChatMoments.of(before, transition)) {
       lines.addAll(
-          director(after, now).on(moment, scene(after), now, uuid -> true, this::safeToSpeak));
+          director(after, now)
+              .on(
+                  moment,
+                  scene(after),
+                  now,
+                  new ChatDirector.Speakers(uuid -> true, this::safeToSpeak)));
     }
     if (after.phase() == MatchState.Phase.RESETTING) {
       clearSpeech();
@@ -606,7 +611,11 @@ public final class BotChat implements Consumer<MatchNotification>, BodyActivity 
       return;
     }
     current
-        .on(new ChatMoment.Idle(), scene(state), now, this::idleSpeaker, this::safeToSpeak)
+        .on(
+            new ChatMoment.Idle(),
+            scene(state),
+            now,
+            new ChatDirector.Speakers(this::idleSpeaker, this::safeToSpeak))
         .forEach(line -> say(line, now));
   }
 

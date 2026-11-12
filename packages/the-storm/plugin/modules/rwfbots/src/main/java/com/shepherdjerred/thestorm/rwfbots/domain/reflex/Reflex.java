@@ -437,14 +437,14 @@ public final class Reflex {
       state =
           state.withAim(
               AimController.steer(state.aim(), Facing.looking(self.eye(), bomb.pos()), levers()));
-      if (!self.usingItem() || self.heldSlot() != context.loadout().fuseSlot()) {
+      if (!FuseHand.raised(self, context.loadout())) {
         commands.add(new BodyCommand.StartUse());
       }
     }
 
     /** Drops a fuse the bot is no longer working, so the hold does not keep arming. */
     private void releaseFuse() {
-      if (self.usingItem() && self.heldSlot() == context.loadout().fuseSlot()) {
+      if (FuseHand.raised(self, context.loadout())) {
         commands.add(new BodyCommand.CancelUse());
       }
     }
@@ -599,8 +599,8 @@ public final class Reflex {
       // Save the next swing for contact rather than spending its cooldown during pursuit.
       // A miss while the two are circling spends the swing on air. Hold it and step in.
       if (!landed
-          && (distance > context.loadout().melee().maxReach() + 0.3
-              || MeleePressure.orbiting(self, target))) {
+          && MeleePressure.swingsAir(
+              self, target, distance, context.loadout().melee().maxReach())) {
         return;
       }
       commands.add(landed ? new BodyCommand.Attack(target.id()) : new BodyCommand.Swing());
@@ -639,8 +639,7 @@ public final class Reflex {
       var lean =
           MeleePressure.closing(
               distance, apart.length() > CROWDED, MeleePressure.yields(input), edge.ledged());
-      if (orbiting) lean = Math.max(lean, 1.0);
-      var closing = edge.closing(lean);
+      var closing = edge.closing(MeleePressure.press(lean, orbiting));
       // Outside contact range, pursue rather than spending most acceleration circling.
       var charging = context.loadout().body() == Kit.Body.CHARGE && distance > REACH + 0.5;
       // An Inertia runs straight in: a strafe turns it and its momentum is lost.

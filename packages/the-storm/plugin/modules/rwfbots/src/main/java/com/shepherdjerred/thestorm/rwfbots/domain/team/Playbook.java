@@ -790,33 +790,41 @@ public final class Playbook {
           0);
     }
 
-    private Slot anchor(String key, Want want, int index) {
+    /**
+     * The first anchor watches the home mouth of a cut lane, when that mouth stands clear of the
+     * bomb and off the main approaches.
+     */
+    private Optional<Slot> cutAnchor(String key, Want want) {
       var cut = cutLane();
-      if (index == 0 && cut >= 0) {
-        var tunnel = setup.lanes().get(cut);
-        var mouth = cutMouth(tunnel, setup.guard());
+      if (cut < 0) {
+        return Optional.empty();
+      }
+      var tunnel = setup.lanes().get(cut);
+      var mouth = cutMouth(tunnel, setup.guard());
+      if (mouth.isEmpty()) {
+        return Optional.empty();
+      }
+      var snapped = snap(mouth.orElseThrow());
+      if (snapped.horizontalDistance(setup.guard()) < ANCHOR_MIN || !separateApproach(snapped)) {
+        return Optional.empty();
+      }
+      var at = place(snapped);
+      if (at.horizontalDistance(setup.guard()) < ANCHOR_MIN) {
+        return Optional.empty();
+      }
+      var direction = at.minus(setup.guard()).horizontal();
+      anchorDirections.add(direction.isZero() ? axis : direction.normalized());
+      var watch = tunnel.at(Math.clamp(tunnel.progressOf(at) + 0.28, 0.4, 1));
+      return Optional.of(
+          new Slot(
+              key, SlotKind.ANCHOR, want.role(), at, watch, cut, want.pair(), Optional.empty(), 0));
+    }
+
+    private Slot anchor(String key, Want want, int index) {
+      if (index == 0) {
+        var mouth = cutAnchor(key, want);
         if (mouth.isPresent()) {
-          var snapped = snap(mouth.orElseThrow());
-          if (snapped.horizontalDistance(setup.guard()) >= ANCHOR_MIN
-              && separateApproach(snapped)) {
-            var at = place(snapped);
-            if (at.horizontalDistance(setup.guard()) >= ANCHOR_MIN) {
-              var direction = at.minus(setup.guard()).horizontal();
-              var out = direction.isZero() ? axis : direction.normalized();
-              anchorDirections.add(out);
-              var watch = tunnel.at(Math.clamp(tunnel.progressOf(at) + 0.28, 0.4, 1));
-              return new Slot(
-                  key,
-                  SlotKind.ANCHOR,
-                  want.role(),
-                  at,
-                  watch,
-                  cut,
-                  want.pair(),
-                  Optional.empty(),
-                  0);
-            }
-          }
+          return mouth.orElseThrow();
         }
       }
       var guard = setup.guard();

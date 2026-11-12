@@ -54,7 +54,6 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
 import java.util.function.Consumer;
-import org.bukkit.FluidCollisionMode;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -1244,7 +1243,8 @@ final class MatchRunner implements MatchView, MatchEvents {
         if (field.fellIntoVoid(member.id(), player, border)) {
           continue;
         }
-        sampleFuseHold(member.id(), player);
+        FuseHolds.aimed(player, parts.keys(), parts.bombs())
+            .ifPresent(bombId -> holdBomb(member.id(), bombId));
         if (ticks % Battlefield.BORDER_EVERY_TICKS == 0) {
           field.hurtOutside(member.id(), player, border, now);
         }
@@ -1327,43 +1327,6 @@ final class MatchRunner implements MatchView, MatchEvents {
   /** A member is still holding right-click on the bomb. Holding earns the clock in full. */
   private void holdBomb(CombatantId id, String bombId) {
     handle(new MatchEvent.BombHeld(id, bombId, now()));
-  }
-
-  /**
-   * While the fuse is raised and the look ray meets a bomb, that contact is a hold. A press that
-   * ends before the hand is raised stays the tap {@link #clickBomb} already sent.
-   */
-  private void sampleFuseHold(CombatantId id, Player player) {
-    if (!player.isHandRaised()) {
-      return;
-    }
-    var held = player.getInventory().getItemInMainHand();
-    if (!parts.keys().isFuse(held)) {
-      return;
-    }
-    aimedBomb(player).ifPresent(bombId -> holdBomb(id, bombId));
-  }
-
-  /** The bomb under the player's crosshair, within interact reach, if the ray meets one. */
-  private Optional<String> aimedBomb(Player player) {
-    var eye = player.getEyeLocation();
-    var reach = PaperCombatantActions.REACH;
-    var entity =
-        player
-            .getWorld()
-            .rayTraceEntities(
-                eye,
-                eye.getDirection(),
-                reach,
-                candidate -> parts.bombs().bombOf(candidate).isPresent());
-    if (entity != null && entity.getHitEntity() != null) {
-      return parts.bombs().bombOf(entity.getHitEntity());
-    }
-    var block = player.getTargetBlockExact((int) reach, FluidCollisionMode.NEVER);
-    if (block == null) {
-      return Optional.empty();
-    }
-    return parts.bombs().siteAt(Places.pos(block)).map(site -> site.id());
   }
 
   /**

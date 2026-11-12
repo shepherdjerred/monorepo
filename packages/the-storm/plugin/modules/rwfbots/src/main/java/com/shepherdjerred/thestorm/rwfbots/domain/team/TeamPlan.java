@@ -41,33 +41,6 @@ public record TeamPlan(
     Optional<Posture> posture,
     Set<CombatantId> reckless) {
 
-  /** A plan with no posture yet: press, and nobody breaking from it. */
-  public TeamPlan(
-      Optional<Strategy> strategy,
-      Optional<Vec3> home,
-      Optional<BombId> objective,
-      List<Lane> lanes,
-      double push,
-      List<Slot> slots,
-      Map<CombatantId, String> assignment,
-      long dealtTick,
-      Map<CombatantId, Integer> groups,
-      long pushedTick) {
-    this(
-        strategy,
-        home,
-        objective,
-        lanes,
-        push,
-        slots,
-        assignment,
-        dealtTick,
-        groups,
-        pushedTick,
-        Optional.empty(),
-        Set.of());
-  }
-
   public static final TeamPlan NONE =
       new TeamPlan(
           Optional.empty(),
@@ -79,7 +52,9 @@ public record TeamPlan(
           Map.of(),
           -1,
           Map.of(),
-          -1);
+          -1,
+          Optional.empty(),
+          Set.of());
 
   public TeamPlan {
     lanes = List.copyOf(lanes);

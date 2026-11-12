@@ -40,6 +40,8 @@ final class FrozenWatchTest {
         "test",
         List.of(),
         List.of(),
+        List.of(),
+        List.of(),
         List.of());
   }
 

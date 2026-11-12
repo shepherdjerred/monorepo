@@ -26,16 +26,22 @@ final class Bombs {
   private Bombs() {}
 
   static Optional<MatchError> click(Draft draft, MatchEvent.BombClicked click) {
-    return input(draft, click.id(), click.bombId(), click.now(), false);
+    return input(draft, new Input(click.id(), click.bombId(), click.now(), false));
   }
 
   /** A held right-click. Continuation samples do not hiss again. */
   static Optional<MatchError> hold(Draft draft, MatchEvent.BombHeld held) {
-    return input(draft, held.id(), held.bombId(), held.now(), true);
+    return input(draft, new Input(held.id(), held.bombId(), held.now(), true));
   }
 
-  private static Optional<MatchError> input(
-      Draft draft, CombatantId id, String bombId, Instant now, boolean holding) {
+  /** A tap or a hold sample from {@code id} on {@code bombId}. */
+  private record Input(CombatantId id, String bombId, Instant now, boolean holding) {}
+
+  private static Optional<MatchError> input(Draft draft, Input input) {
+    var id = input.id();
+    var bombId = input.bombId();
+    var now = input.now();
+    var holding = input.holding();
     if (!(draft.phase instanceof Phase.Live)) {
       return Optional.of(MatchError.NOT_LIVE);
     }

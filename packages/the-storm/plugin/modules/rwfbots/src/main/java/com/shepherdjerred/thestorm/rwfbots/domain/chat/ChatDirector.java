@@ -80,26 +80,35 @@ public final class ChatDirector {
 
   /** What the bots say about {@code moment}, given the match {@code scene} after it, in order. */
   public List<Utterance> on(ChatMoment moment, ChatScene scene, Instant now) {
-    return on(moment, scene, now, uuid -> true, uuid -> true);
+    return on(moment, scene, now, Speakers.ANYONE);
   }
 
   /** Idle proposals wait for an available speaker; team/event context still uses the full scene. */
   public List<Utterance> on(
       ChatMoment moment, ChatScene scene, Instant now, Predicate<UUID> idleSpeaker) {
-    return on(moment, scene, now, idleSpeaker, uuid -> true);
+    return on(moment, scene, now, new Speakers(idleSpeaker, uuid -> true));
   }
 
   /**
-   * As {@link #on(ChatMoment, ChatScene, Instant, Predicate)}, and {@code safeSpeaker} admits a
+   * Who may speak now.
+   *
+   * @param idle whether a bot is free to propose an idle line
+   * @param safe whether a bot is safe to start a round line; one that is not has that line dropped
+   */
+  public record Speakers(Predicate<UUID> idle, Predicate<UUID> safe) {
+
+    /** Everyone may speak. */
+    public static final Speakers ANYONE = new Speakers(uuid -> true, uuid -> true);
+  }
+
+  /**
+   * As {@link #on(ChatMoment, ChatScene, Instant, Predicate)}, and {@code speakers.safe()} admits a
    * round line. A bot that fails it has that line dropped. The last living member of a team stays
    * quiet until the round ends; an opening greet, lobby chat, and win or loss lines still happen.
    */
-  public List<Utterance> on(
-      ChatMoment moment,
-      ChatScene scene,
-      Instant now,
-      Predicate<UUID> idleSpeaker,
-      Predicate<UUID> safeSpeaker) {
+  public List<Utterance> on(ChatMoment moment, ChatScene scene, Instant now, Speakers speakers) {
+    var idleSpeaker = speakers.idle();
+    var safeSpeaker = speakers.safe();
     if (ended) {
       return List.of();
     }

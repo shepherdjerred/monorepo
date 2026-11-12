@@ -9,6 +9,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantView;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 final class SquadCohesionTest {
@@ -28,7 +29,9 @@ final class SquadCohesionTest {
             new CombatantId(1), "left", new CombatantId(2), "middle", new CombatantId(3), "right"),
         0,
         Map.of(),
-        -1);
+        -1,
+        Optional.empty(),
+        Set.of());
   }
 
   private static Slot slot(String key) {

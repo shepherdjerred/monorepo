@@ -191,6 +191,8 @@ final class MeleePressureTest {
         "synthetic",
         List.of(),
         List.of(),
+        List.of(),
+        List.of(),
         List.of());
   }
 }

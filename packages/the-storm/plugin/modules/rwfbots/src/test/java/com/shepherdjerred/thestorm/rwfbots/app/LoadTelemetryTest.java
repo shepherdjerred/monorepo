@@ -44,6 +44,8 @@ final class LoadTelemetryTest {
         "test-map",
         List.of(),
         List.of(),
+        List.of(),
+        List.of(),
         List.of());
   }
 

@@ -60,6 +60,8 @@ final class DefuseAssignmentTest {
             nav.mapId(),
             List.of(),
             List.of(),
+            List.of(),
+            List.of(),
             List.of());
     var context =
         new TacticsContext(
@@ -125,7 +127,9 @@ final class DefuseAssignmentTest {
             assignments,
             0,
             java.util.Map.of(),
-            -1);
+            -1,
+            Optional.empty(),
+            Set.of());
     return Blackboard.open(Fixtures.RED, Strategy.RUSH).withPlan(plan, 0);
   }
 
@@ -175,7 +179,9 @@ final class DefuseAssignmentTest {
               Map.of(self.id(), slot.key()),
               0,
               java.util.Map.of(),
-              -1);
+              -1,
+              Optional.empty(),
+              Set.of());
       var board = Blackboard.open(Fixtures.RED, Strategy.RUSH).withPlan(plan, 0);
       var world =
           new WorldSnapshot(
@@ -185,6 +191,8 @@ final class DefuseAssignmentTest {
               List.of(bomb),
               PoisonView.NONE,
               nav.mapId(),
+              List.of(),
+              List.of(),
               List.of(),
               List.of(),
               List.of());
@@ -221,6 +229,8 @@ final class DefuseAssignmentTest {
             "synthetic",
             List.of(),
             List.of(),
+            List.of(),
+            List.of(),
             List.of());
     var percept = new Percept(PerceptionState.EMPTY, List.of(), 1);
     var open = Blackboard.open(Fixtures.RED, Strategy.RUSH);
@@ -237,7 +247,9 @@ final class DefuseAssignmentTest {
             Map.of(),
             0,
             java.util.Map.of(),
-            -1);
+            -1,
+            Optional.empty(),
+            Set.of());
     var assigned = open.withPlan(plan, 0);
     assertThat(new Situation(self, world, percept, assigned, Role.RETAKE).litOwnBomb())
         .contains(slow);
@@ -260,6 +272,8 @@ final class DefuseAssignmentTest {
             "synthetic",
             List.of(),
             List.of(),
+            List.of(),
+            List.of(),
             List.of());
     var percept = new Percept(PerceptionState.EMPTY, List.of(), 1);
     assertThat(Tactics.assignedDefuser(new Situation(self, world, percept, board, Role.DEFEND)))
@@ -274,6 +288,8 @@ final class DefuseAssignmentTest {
             List.of(),
             PoisonView.NONE,
             "synthetic",
+            List.of(),
+            List.of(),
             List.of(),
             List.of(),
             List.of());

@@ -97,7 +97,7 @@ public final class Lanes {
     }
     var lanes = new ArrayList<Lane>();
     for (var nodes : candidates) {
-      var lane = lane(graph, nodes, home, side, false);
+      var lane = lane(graph, nodes, new Frame(home, side), false);
       if (lanes.stream().allMatch(kept -> Math.abs(kept.lateral() - lane.lateral()) >= MIN_GAP)) {
         lanes.add(lane);
       }
@@ -107,7 +107,7 @@ public final class Lanes {
     // sort so it cannot become the leftmost or rightmost lane.
     if (main.isPresent()) {
       for (var nodes : detours(graph, from.getAsInt(), to.getAsInt(), main.orElseThrow().nodes())) {
-        lanes.add(lane(graph, nodes, home, side, true));
+        lanes.add(lane(graph, nodes, new Frame(home, side), true));
       }
     }
     return List.copyOf(lanes);
@@ -123,14 +123,15 @@ public final class Lanes {
       interior.addAll(main.subList(1, main.size() - 1));
     }
     var mainMean = meanY(graph, main);
+    var mainLane = new MainLane(main, interior, mainMean);
     var out = new ArrayList<List<Integer>>();
     graph
         .path(from, to, node -> interior.contains(node) ? AVOID : 0)
-        .filter(path -> keep(graph, path.nodes(), main, interior, false, mainMean))
+        .filter(path -> keep(graph, path.nodes(), mainLane, false))
         .ifPresent(path -> out.add(path.nodes()));
     graph
         .path(from, to, node -> lowPenalty(graph, node, interior, mainMean))
-        .filter(path -> keep(graph, path.nodes(), main, interior, true, mainMean))
+        .filter(path -> keep(graph, path.nodes(), mainLane, true))
         .filter(path -> out.stream().noneMatch(kept -> kept.equals(path.nodes())))
         .ifPresent(path -> out.add(path.nodes()));
     return out;
@@ -145,13 +146,16 @@ public final class Lanes {
     return penalty;
   }
 
-  private static boolean keep(
-      NavGraph graph,
-      List<Integer> nodes,
-      List<Integer> main,
-      Set<Integer> interior,
-      boolean low,
-      double mainMean) {
+  /** The main lane a detour is measured against: its nodes, their interior, and its mean height. */
+  private record MainLane(List<Integer> nodes, Set<Integer> interior, double meanY) {}
+
+  /** Where lanes are measured from: the team's home and the sideways unit across the axis. */
+  private record Frame(Vec3 home, Vec3 side) {}
+
+  private static boolean keep(NavGraph graph, List<Integer> nodes, MainLane mainLane, boolean low) {
+    var main = mainLane.nodes();
+    var interior = mainLane.interior();
+    var mainMean = mainLane.meanY();
     if (nodes.equals(main)) {
       return false;
     }
@@ -216,7 +220,9 @@ public final class Lanes {
     return Optional.of(nodes);
   }
 
-  private static Lane lane(NavGraph graph, List<Integer> nodes, Vec3 home, Vec3 side, boolean cut) {
+  private static Lane lane(NavGraph graph, List<Integer> nodes, Frame frame, boolean cut) {
+    var home = frame.home();
+    var side = frame.side();
     var points = new ArrayList<Vec3>(nodes.size());
     var lateral = 0.0;
     for (var node : nodes) {

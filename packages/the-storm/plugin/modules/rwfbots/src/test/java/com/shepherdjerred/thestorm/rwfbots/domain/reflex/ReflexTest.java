@@ -51,6 +51,8 @@ final class ReflexTest {
         "synthetic",
         List.of(),
         List.of(),
+        List.of(),
+        List.of(),
         List.of());
   }
 

@@ -125,6 +125,8 @@ final class RunHopTest {
             "lanes",
             List.of(),
             List.of(),
+            List.of(),
+            List.of(),
             List.of());
     return Reflex.tick(
             ReflexState.initial(Facing.SOUTH).withPath(0, NOW),

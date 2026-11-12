@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -52,6 +53,8 @@ final class TeamCalloutsTest {
             new BombView(BLUE_BOMB, new BombOwner.Team(BLUE), BLUE_FUSE, blue)),
         PoisonView.NONE,
         NAV.mapId(),
+        List.of(),
+        List.of(),
         List.of(),
         List.of(),
         List.of());
@@ -229,7 +232,9 @@ final class TeamCalloutsTest {
             Map.of(bot.id(), slot.key()),
             0,
             Map.of(),
-            0);
+            0,
+            Optional.empty(),
+            Set.of());
     var board = Blackboard.open(RED, Strategy.RUSH).withPlan(plan, 0);
     var everyone = List.of(bot, human);
     var arming = world(20, everyone, new BombState.Idle(), new BombState.Arming(RED, 0.2, 1));

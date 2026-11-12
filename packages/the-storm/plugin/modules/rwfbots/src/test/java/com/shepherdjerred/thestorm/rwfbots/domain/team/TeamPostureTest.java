@@ -30,20 +30,22 @@ final class TeamPostureTest {
     assertThat(TeamPosture.weakest(snapshot, BLUE)).contains(RED);
     assertThat(TeamPosture.weakest(snapshot, RED)).isEmpty();
     for (var seed = 0; seed < 40; seed++) {
-      assertThat(roll(snapshot, RED, 0, 0, seed)).isNotEqualTo(Posture.HUNT_WEAKEST);
+      assertThat(roll(snapshot, RED, new TeamPosture.Temper(0, 0), seed))
+          .isNotEqualTo(Posture.HUNT_WEAKEST);
     }
-    assertThat(rolls(snapshot, BLUE, 0, 0, 40)).contains(Posture.HUNT_WEAKEST);
+    assertThat(rolls(snapshot, BLUE, new TeamPosture.Temper(0, 0), 40))
+        .contains(Posture.HUNT_WEAKEST);
   }
 
   @Test
   void tiedLargeTeamsOftenWaitAndPoisonOrTwoTeamsPress() {
     var even = world(false, List.of(squad(RED, 0, 4), squad(BLUE, 10, 4), squad(GREEN, 20, 4)));
     assertThat(TeamPosture.weakest(even, RED)).isEmpty();
-    assertThat(rolls(even, RED, 0, 1, 40)).contains(Posture.WAIT);
+    assertThat(rolls(even, RED, new TeamPosture.Temper(0, 1), 40)).contains(Posture.WAIT);
     var poisoned = world(true, List.of(squad(RED, 0, 4), squad(BLUE, 10, 4), squad(GREEN, 20, 4)));
-    assertThat(roll(poisoned, RED, 0, 1, 1)).isEqualTo(Posture.PRESS);
+    assertThat(roll(poisoned, RED, new TeamPosture.Temper(0, 1), 1)).isEqualTo(Posture.PRESS);
     var duel = world(false, List.of(squad(RED, 0, 4), squad(BLUE, 10, 4)));
-    assertThat(roll(duel, RED, 1, 0, 1)).isEqualTo(Posture.PRESS);
+    assertThat(roll(duel, RED, new TeamPosture.Temper(1, 0), 1)).isEqualTo(Posture.PRESS);
   }
 
   @Test
@@ -102,15 +104,15 @@ final class TeamPostureTest {
   }
 
   private static Posture roll(
-      WorldSnapshot snapshot, TeamId team, double aggression, double patience, long seed) {
-    return TeamPosture.roll(snapshot, team, aggression, patience, new SplittableRandom(seed));
+      WorldSnapshot snapshot, TeamId team, TeamPosture.Temper temper, long seed) {
+    return TeamPosture.roll(snapshot, team, temper, new SplittableRandom(seed));
   }
 
   private static List<Posture> rolls(
-      WorldSnapshot snapshot, TeamId team, double aggression, double patience, int seeds) {
+      WorldSnapshot snapshot, TeamId team, TeamPosture.Temper temper, int seeds) {
     var drawn = new ArrayList<Posture>();
     for (var seed = 0; seed < seeds; seed++) {
-      drawn.add(roll(snapshot, team, aggression, patience, seed));
+      drawn.add(roll(snapshot, team, temper, seed));
     }
     return drawn;
   }
@@ -127,6 +129,8 @@ final class TeamPostureTest {
         List.of(),
         poison ? PoisonView.startedAt(1, 1) : PoisonView.NONE,
         "yard",
+        List.of(),
+        List.of(),
         List.of(),
         List.of(),
         List.of());

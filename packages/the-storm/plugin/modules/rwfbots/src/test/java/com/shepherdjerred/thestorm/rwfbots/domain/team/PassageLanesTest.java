@@ -84,20 +84,7 @@ final class PassageLanesTest {
         cells[21 + x] = bounds.index(x, y, z);
       }
     }
-    var adjacent = new ArrayList<List<Integer>>();
-    for (var node = 0; node < nodes; node++) {
-      adjacent.add(new ArrayList<>());
-    }
-    for (var x = 0; x < 20; x++) {
-      join(adjacent, x, x + 1);
-      if (parallel) {
-        join(adjacent, 21 + x, 22 + x);
-      }
-    }
-    if (parallel) {
-      join(adjacent, 0, 21);
-      join(adjacent, 20, 41);
-    }
+    var adjacent = adjacency(nodes, parallel);
     var edgeTo = new ArrayList<Integer>();
     var edgeStart = new int[nodes + 1];
     for (var node = 0; node < nodes; node++) {
@@ -112,6 +99,25 @@ final class PassageLanesTest {
     Arrays.fill(cost, 1f);
     return new NavGraph(
         bounds, cells, new NavGraph.Topology(edgeStart, targets), new NavGraph.EdgeData(hop, cost));
+  }
+
+  /** The main hall's links, and the parallel hall's joined to it at both ends. */
+  private static List<List<Integer>> adjacency(int nodes, boolean parallel) {
+    var adjacent = new ArrayList<List<Integer>>();
+    for (var node = 0; node < nodes; node++) {
+      adjacent.add(new ArrayList<>());
+    }
+    for (var x = 0; x < 20; x++) {
+      join(adjacent, x, x + 1);
+      if (parallel) {
+        join(adjacent, 21 + x, 22 + x);
+      }
+    }
+    if (parallel) {
+      join(adjacent, 0, 21);
+      join(adjacent, 20, 41);
+    }
+    return adjacent;
   }
 
   private static void join(List<List<Integer>> adjacent, int left, int right) {

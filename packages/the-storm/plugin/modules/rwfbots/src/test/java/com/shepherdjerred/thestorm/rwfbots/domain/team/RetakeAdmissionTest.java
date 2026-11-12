@@ -99,6 +99,8 @@ final class RetakeAdmissionTest {
         nav.mapId(),
         List.of(),
         List.of(),
+        List.of(),
+        List.of(),
         List.of());
   }
 
@@ -134,7 +136,9 @@ final class RetakeAdmissionTest {
                 assigned,
                 0,
                 java.util.Map.of(),
-                -1),
+                -1,
+                Optional.empty(),
+                Set.of()),
             0);
   }
 
@@ -298,7 +302,9 @@ final class RetakeAdmissionTest {
                     plan.assignment(),
                     plan.dealtTick(),
                     plan.groups(),
-                    -1),
+                    -1,
+                    Optional.empty(),
+                    Set.of()),
                 0);
     var pending =
         new RetakeAdmission.Result(
@@ -383,7 +389,9 @@ final class RetakeAdmissionTest {
                   plan.assignment(),
                   step * 40L,
                   plan.groups(),
-                  -1),
+                  -1,
+                  Optional.empty(),
+                  Set.of()),
               step * 40L);
       result =
           RetakeAdmission.verify(

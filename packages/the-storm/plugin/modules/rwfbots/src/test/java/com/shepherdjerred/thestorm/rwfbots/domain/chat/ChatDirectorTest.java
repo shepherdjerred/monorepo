@@ -333,8 +333,7 @@ final class ChatDirectorTest {
                 new ChatMoment.Died(ALICE, Optional.of(REDBOT)),
                 scene,
                 T0,
-                uuid -> true,
-                uuid -> false))
+                new ChatDirector.Speakers(uuid -> true, uuid -> false)))
         .isEmpty();
     var later = new ChatScene(List.of(KILLER, KILLER2, dead(ALICE_BLUE), dead(BOB_BLUE)));
     assertThat(
@@ -342,8 +341,7 @@ final class ChatDirectorTest {
                 new ChatMoment.Died(BOB, Optional.of(REDBOT)),
                 later,
                 T0.plusSeconds(30),
-                uuid -> true,
-                REDBOT::equals))
+                new ChatDirector.Speakers(uuid -> true, REDBOT::equals)))
         .singleElement()
         .satisfies(line -> {
           assertThat(line.speaker()).isEqualTo(REDBOT);

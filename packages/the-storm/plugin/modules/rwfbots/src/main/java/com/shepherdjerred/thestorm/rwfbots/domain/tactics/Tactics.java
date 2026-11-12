@@ -113,11 +113,8 @@ public final class Tactics {
     var plan =
         current
             .filter(existing -> existing.option() == chosen)
-            .map(existing ->
-                refresh(existing) && !situation.isLastAlive()
-                    ? Planner.expand(chosen, situation, context).since(existing.startedTick())
-                    : existing)
-            .orElseGet(() -> fresh(chosen, situation, context, trip, crate));
+            .map(existing -> kept(existing, situation, context))
+            .orElseGet(() -> fresh(chosen, situation, context, new Trips(trip, crate)));
     if (chosen == Option.ARM && objective.memory().detour().isPresent()) {
       plan = Planner.detourPlan(situation, context, objective.memory().detour().orElseThrow());
     }
@@ -160,20 +157,30 @@ public final class Tactics {
     };
   }
 
+  /** The detours this think scored: arrows to pick up and a supply crate to loot or call in. */
+  private record Trips(Optional<Resupply.Trip> arrows, Optional<CratePlay.Trip> crate) {}
+
+  /**
+   * The current plan, kept for another think. A refreshed slot plan keeps its age; the last living
+   * bot keeps its route as it is.
+   */
+  private static Plan kept(Plan existing, Situation situation, TacticsContext context) {
+    if (!refresh(existing) || situation.isLastAlive()) {
+      return existing;
+    }
+    return Planner.expand(existing.option(), situation, context).since(existing.startedTick());
+  }
+
   /**
    * A new plan for {@code chosen}; a resupply or crate trip walks to the cell it was scored for.
    */
   private static Plan fresh(
-      Option chosen,
-      Situation situation,
-      TacticsContext context,
-      Optional<Resupply.Trip> trip,
-      Optional<CratePlay.Trip> crate) {
-    if (chosen == Option.RESUPPLY && trip.isPresent()) {
-      return Resupply.plan(situation.now(), trip.orElseThrow().pickup());
+      Option chosen, Situation situation, TacticsContext context, Trips trips) {
+    if (chosen == Option.RESUPPLY && trips.arrows().isPresent()) {
+      return Resupply.plan(situation.now(), trips.arrows().orElseThrow().pickup());
     }
-    if (chosen == Option.CRATE && crate.isPresent()) {
-      return CratePlay.plan(situation.now(), crate.orElseThrow());
+    if (chosen == Option.CRATE && trips.crate().isPresent()) {
+      return CratePlay.plan(situation.now(), trips.crate().orElseThrow());
     }
     return Planner.expand(chosen, situation, context);
   }
@@ -406,18 +413,27 @@ public final class Tactics {
       return picked;
     }
     var plan = current.orElseThrow();
-    var combatSwitch = combatOption(picked) && combatOption(plan.option());
-    if (URGENT.contains(picked) && !combatSwitch) {
-      return picked;
-    }
-    if (URGENT.contains(picked)
-        && scores.getOrDefault(picked, Utilities.FLOOR)
-            > scores.getOrDefault(plan.option(), Utilities.FLOOR) + PREEMPT_MARGIN) {
+    if (preempts(picked, plan, scores)) {
       return picked;
     }
     if (situation.isLastAlive() && picked == Option.ARM) return picked;
     var commit = situation.isLastAlive() ? LAST_ALIVE_COMMIT_TICKS : MIN_COMMIT_TICKS;
     return now - plan.startedTick() < commit ? plan.option() : picked;
+  }
+
+  /**
+   * Whether an urgent pick cuts in on {@code plan}: at once, unless both are fights, and then only
+   * when it scores clearly higher.
+   */
+  private static boolean preempts(Option picked, Plan plan, Map<Option, Double> scores) {
+    if (!URGENT.contains(picked)) {
+      return false;
+    }
+    if (!(combatOption(picked) && combatOption(plan.option()))) {
+      return true;
+    }
+    return scores.getOrDefault(picked, Utilities.FLOOR)
+        > scores.getOrDefault(plan.option(), Utilities.FLOOR) + PREEMPT_MARGIN;
   }
 
   /**

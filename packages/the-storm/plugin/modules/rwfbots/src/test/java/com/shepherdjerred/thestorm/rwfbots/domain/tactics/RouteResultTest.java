@@ -56,6 +56,8 @@ final class RouteResultTest {
             nav.mapId(),
             List.of(),
             List.of(),
+            List.of(),
+            List.of(),
             List.of());
     var situation =
         new Situation(

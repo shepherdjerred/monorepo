@@ -52,6 +52,20 @@ final class MeleePressure {
   }
 
   /**
+   * Whether a swing that would not land should be held instead: the target is out of {@code reach}
+   * with slack, or the two are circling and the swing would only spend itself on air.
+   */
+  static boolean swingsAir(
+      CombatantView self, CombatantView target, double distance, double reach) {
+    return distance > reach + 0.3 || orbiting(self, target);
+  }
+
+  /** While orbiting, close at least at full weight so the circle breaks. */
+  static double press(double lean, boolean orbiting) {
+    return orbiting ? Math.max(lean, 1.0) : lean;
+  }
+
+  /**
    * Whether {@code self} and {@code target} are circling: their relative motion is mostly along the
    * tangent, so the same strafe keeps them missing.
    */

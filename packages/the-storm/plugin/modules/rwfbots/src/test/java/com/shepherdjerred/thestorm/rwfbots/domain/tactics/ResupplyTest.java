@@ -67,6 +67,8 @@ final class ResupplyTest {
             NAV.mapId(),
             List.of(),
             arrows,
+            List.of(),
+            List.of(),
             List.of());
     return new Situation(
         self,

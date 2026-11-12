@@ -84,6 +84,8 @@ final class NukeHoldTest {
         NAV.mapId(),
         List.of(),
         List.of(),
+        List.of(),
+        List.of(),
         List.of());
   }
 

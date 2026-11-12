@@ -352,11 +352,7 @@ public final class BotTicker {
             ? roster.harness().commands(controls)
             : learning.commands(controls);
     watchFrozen(bot, profile, input, commands);
-    var supply = roster.bodies().entity(bot.uuid()).map(CrateGear::nextIsCrate).orElse(false);
-    var safe =
-        CratePlay.safeToCall(
-            input.self(), input.perceived(), input.target(), input.snapshot().bombs());
-    if (StreakPlay.now(streaks(bot), input, bot.nextStreak(), supply, safe)) {
+    if (callsStreak(bot, input)) {
       commands =
           java.util.stream.Stream.concat(
                   commands.stream(), java.util.stream.Stream.of(new BodyCommand.UseStreak()))
@@ -530,6 +526,18 @@ public final class BotTicker {
     return bot.profile().isPresent();
   }
 
+  /** Whether {@code bot} calls in its carried streak now: a supply crate only where it is safe. */
+  private boolean callsStreak(BotBody bot, ReflexInput input) {
+    if (!StreakPlay.now(streaks(bot), input, bot.nextStreak())) {
+      return false;
+    }
+    var supply = roster.bodies().entity(bot.uuid()).map(CrateGear::nextIsCrate).orElse(false);
+    var safe =
+        CratePlay.safeToCall(
+            input.self(), input.perceived(), input.target(), input.snapshot().bombs());
+    return StreakPlay.placeable(supply, safe);
+  }
+
   /**
    * Steers a bot that just called in a supply crate: hold at the call until it lands, walk to it,
    * loot it in reach, and fight without forgetting it. The watch is set on the use tick, so this
@@ -552,12 +560,13 @@ public final class BotTicker {
         own.filter(crate -> crate.pos().distance(self.pos()) <= CratePlay.REACH).isPresent();
     var attention =
         CratePlay.attention(
-            input.snapshot().tick(),
-            bot.crateWatchUntil(),
-            input.target().isPresent() || hurt,
-            bot.crateSeen().isPresent(),
-            own.isPresent(),
-            inReach);
+            new CratePlay.Waiting(
+                input.snapshot().tick(),
+                bot.crateWatchUntil(),
+                input.target().isPresent() || hurt,
+                bot.crateSeen().isPresent(),
+                own.isPresent(),
+                inReach));
     return switch (attention) {
       case CLEAR -> {
         bot.clearCrateWatch();

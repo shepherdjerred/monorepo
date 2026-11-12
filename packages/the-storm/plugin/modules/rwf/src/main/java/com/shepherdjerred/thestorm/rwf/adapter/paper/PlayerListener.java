@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.rwf.adapter.paper;
 import com.shepherdjerred.thestorm.rwf.app.ActionRefusal;
 import com.shepherdjerred.thestorm.rwf.domain.combat.AttackType;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.CombatantId;
+import com.shepherdjerred.thestorm.rwf.domain.map.BombSite;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchEvent;
 import java.time.Duration;
 import java.util.HashMap;
@@ -221,22 +222,8 @@ final class PlayerListener implements Listener {
     if (podium(event, player)) {
       return;
     }
-    var block = event.getClickedBlock();
-    if (event.getAction() == Action.RIGHT_CLICK_BLOCK && block != null && item != null) {
-      var site = bombs.siteAt(Places.pos(block));
-      if (site.isPresent() && keys.isFuse(item)) {
-        event.setUseInteractedBlock(Event.Result.DENY);
-        // Allow the item use so the client raises the fuse. A short press is the tap; while the
-        // hand stays up, the match tick samples a hold.
-        event.setUseItemInHand(Event.Result.ALLOW);
-        actions
-            .clickBomb(member.orElseThrow().id(), site.orElseThrow().id())
-            .ifPresent(refusal -> refuseBomb(player, refusal));
-        return;
-      }
-    }
-    if (item != null && keys.isFuse(item) && rightClick(event)) {
-      event.setUseItemInHand(Event.Result.DENY);
+    if (item != null && keys.isFuse(item) && fuse(event, player, member.orElseThrow().id())) {
+      return;
     }
     // As the original: any click with the clock in that hand, unless something already denied its
     // use; outside a live fight it does nothing and says nothing.
@@ -254,6 +241,32 @@ final class PlayerListener implements Listener {
               refusal != ActionRefusal.COOLING_DOWN && refusal != ActionRefusal.NO_LANDING)
           .ifPresent(refusal -> Texts.error(player, refusal));
     }
+  }
+
+  /**
+   * A click with the fuse in hand. On a bomb block it is a tap, and the item use is allowed so the
+   * client raises the fuse; while the hand stays up, the match tick samples a hold. Elsewhere a
+   * right-click is denied so the fuse is never used on anything else. Whether the click was on a
+   * bomb.
+   */
+  private boolean fuse(PlayerInteractEvent event, Player player, CombatantId id) {
+    var block = event.getClickedBlock();
+    var site =
+        event.getAction() == Action.RIGHT_CLICK_BLOCK && block != null
+            ? bombs.siteAt(Places.pos(block))
+            : Optional.<BombSite>empty();
+    if (site.isPresent()) {
+      event.setUseInteractedBlock(Event.Result.DENY);
+      event.setUseItemInHand(Event.Result.ALLOW);
+      actions
+          .clickBomb(id, site.orElseThrow().id())
+          .ifPresent(refusal -> refuseBomb(player, refusal));
+      return true;
+    }
+    if (rightClick(event)) {
+      event.setUseItemInHand(Event.Result.DENY);
+    }
+    return false;
   }
 
   /** A right-click on a vote podium's lodestone votes for its map; whether it was one. */

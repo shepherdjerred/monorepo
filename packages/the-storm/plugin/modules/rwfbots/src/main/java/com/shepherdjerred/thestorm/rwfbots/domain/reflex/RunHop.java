@@ -154,23 +154,11 @@ public final class RunHop {
    */
   static Optional<Vec3> line(ReflexContext context, Run run) {
     var self = run.self();
-    if (context.nav().isEmpty()
-        || !run.sprint()
-        || !self.traversal().maySprint()
-        || !self.onGround()
-        || self.traversal().fallDistance() > 0
-        || run.state().activeJump().isPresent()
-        // A fight's target, seen or remembered, is the footwork's business, not the run's.
-        || run.input().decision().target().isPresent()
-        || CombatFootwork.reeling(self, run.now())) return Optional.empty();
+    if (context.nav().isEmpty() || !running(run)) return Optional.empty();
     var opening = openingRush(context, run);
     if (!(opening || context.habits().bunnyHops() || context.levers().technique() >= MIN_TECHNIQUE))
       return Optional.empty();
-    var clear =
-        opening
-            ? Reflex.MELEE_ALERT
-            : context.habits().bunnyHops() ? BUNNY_ENEMY_CLEAR : ENEMY_CLEAR;
-    if (enemyNear(run.input(), clear)) return Optional.empty();
+    if (enemyNear(run.input(), enemyClear(context, opening))) return Optional.empty();
     var nav = context.nav().orElseThrow();
     if (!openFooting(nav, self.pos())) return Optional.empty();
     var travel = self.vel().horizontal();
@@ -185,6 +173,21 @@ public final class RunHop {
   }
 
   /**
+   * A body sprinting on the ground, not already falling or jumping, not reeling from a hit, and
+   * with no fight's target, seen or remembered: that is the footwork's business, not the run's.
+   */
+  private static boolean running(Run run) {
+    var self = run.self();
+    return run.sprint()
+        && self.traversal().maySprint()
+        && self.onGround()
+        && self.traversal().fallDistance() <= 0
+        && run.state().activeJump().isEmpty()
+        && run.input().decision().target().isEmpty()
+        && !CombatFootwork.reeling(self, run.now());
+  }
+
+  /**
    * A melee bot sprinting an attack route before anyone is in reach. The hop does not wait on
    * technique, and an enemy merely in sight is not contact.
    */
@@ -192,6 +195,15 @@ public final class RunHop {
     if (context.loadout().hasBow()) return false;
     var option = run.input().decision().option();
     return option == Option.ARM || option == Option.TAKE_SLOT || option == Option.HUNT;
+  }
+
+  /**
+   * How far the nearest enemy must be for a hop. The opening rush hops until contact; otherwise a
+   * bunny-hopper hops closer to an enemy than a careful runner does.
+   */
+  private static double enemyClear(ReflexContext context, boolean opening) {
+    if (opening) return Reflex.MELEE_ALERT;
+    return context.habits().bunnyHops() ? BUNNY_ENEMY_CLEAR : ENEMY_CLEAR;
   }
 
   private static boolean enemyNear(ReflexInput input, double clear) {

@@ -34,31 +34,6 @@ public record WorldSnapshot(
     List<CrateView> crates,
     List<CombatantId> supplyCarriers) {
 
-  /** A snapshot with no landed crates and no one carrying a supply crate. */
-  public WorldSnapshot(
-      long tick,
-      MatchPhase matchPhase,
-      List<CombatantView> combatants,
-      List<BombView> bombs,
-      PoisonView poison,
-      String mapId,
-      List<Stimulus> stimuli,
-      List<Vec3> looseArrows,
-      List<SummonView> summons) {
-    this(
-        tick,
-        matchPhase,
-        combatants,
-        bombs,
-        poison,
-        mapId,
-        stimuli,
-        looseArrows,
-        summons,
-        List.of(),
-        List.of());
-  }
-
   public WorldSnapshot {
     if (tick < 0) {
       throw new IllegalArgumentException("tick must not be negative");

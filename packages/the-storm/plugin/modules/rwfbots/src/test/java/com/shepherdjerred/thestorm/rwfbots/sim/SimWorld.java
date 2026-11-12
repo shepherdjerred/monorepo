@@ -331,6 +331,8 @@ final class SimWorld {
         nav.mapId(),
         stimuli,
         List.of(),
+        List.of(),
+        List.of(),
         List.of());
   }
 

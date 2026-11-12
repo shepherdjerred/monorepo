@@ -113,6 +113,8 @@ final class ReflexJumpCommitmentTest {
             "jump-test",
             List.of(),
             List.of(),
+            List.of(),
+            List.of(),
             List.of());
     var step =
         Reflex.tick(
@@ -143,6 +145,8 @@ final class ReflexJumpCommitmentTest {
             List.of(),
             PoisonView.NONE,
             "jump-test",
+            List.of(),
+            List.of(),
             List.of(),
             List.of(),
             List.of());
@@ -304,6 +308,8 @@ final class ReflexJumpCommitmentTest {
             "first-contact-test",
             List.of(),
             List.of(),
+            List.of(),
+            List.of(),
             List.of());
     for (var target : List.of(Optional.<CombatantView>empty(), Optional.of(enemy))) {
       var step =
@@ -402,6 +408,8 @@ final class ReflexJumpCommitmentTest {
             List.of(),
             PoisonView.NONE,
             "jump-test",
+            List.of(),
+            List.of(),
             List.of(),
             List.of(),
             List.of());
