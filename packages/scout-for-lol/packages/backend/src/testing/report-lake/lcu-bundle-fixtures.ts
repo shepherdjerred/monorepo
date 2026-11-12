@@ -64,7 +64,7 @@ const BotEditableSchema = z.looseObject({
 
 export async function rawLcuFixture(name: string): Promise<unknown> {
   return Bun.file(
-    new URL(`../../../../testdata/lcu/${name}.json`, import.meta.url),
+    new URL(`../../../../../testdata/lcu/${name}.json`, import.meta.url),
   ).json();
 }
 

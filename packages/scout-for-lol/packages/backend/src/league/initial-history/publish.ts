@@ -31,12 +31,11 @@ export async function publishReadyImports(
 
   const ready = jobs.filter((job) => trackedPuuids.has(job.puuid));
   if (ready.length === 0) return;
-  // The imported rows are already readable from staging. During the schema
-  // migration the scheduled fold publishes them with its rebuild, which an
-  // import must not wait on (see reportLakeMigrationPending).
-  if (!(await reportLakeMigrationPending())) {
-    await runReportLakeFold({ prisma: db });
-  }
+  // While the schema migration is pending only the scheduled rebuild
+  // publishes the accounts snapshot that guild queries join, so these jobs stay
+  // in the publish phase until it has run (see reportLakeMigrationPending).
+  if (await reportLakeMigrationPending()) return;
+  await runReportLakeFold({ prisma: db });
 
   const completions = await Promise.all(
     ready.map(
