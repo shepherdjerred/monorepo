@@ -1,5 +1,6 @@
 /**
- * Debt allowlists for the fleet policy tests in this directory.
+ * Debt allowlists for the fleet policy tests in this directory and for the
+ * upstream-chart backstop in `argocd-helm-render.test.ts`.
  *
  * Each set is the exceptions to one rule as of the day the rule was written:
  * work that is known, deferred, and tracked by being listed here. The tests
@@ -368,3 +369,29 @@ export const UNRECIPROCATED_INGRESS_RULES: ReadonlySet<string> = new Set([
   // `birmel-egress-netpol` has no rule towards postal.
   "postal/postal-smtp-netpol <- birmel:25",
 ]);
+
+/**
+ * Containers of upstream Helm charts, rendered with our values, that declare
+ * no CPU or no memory request (`<application>/<workload>/<container>`).
+ * Enforced by `argocd-helm-render.test.ts`, which renders the charts as
+ * ArgoCD does.
+ */
+export const UPSTREAM_CONTAINERS_WITHOUT_REQUESTS: ReadonlySet<string> =
+  new Set([
+    // Existing: the chart renders these without requests and our values set
+    // none for them.
+    "1password/onepassword-connect-operator/onepassword-connect",
+    "argocd/argocd-redis-secret-init/secret-init",
+    "argocd/argocd-redis/metrics",
+    "blackbox-exporter/prometheus-prometheus-blackbox-exporter/blackbox-exporter",
+    "cert-manager/cert-manager-startupapicheck/cert-manager-startupapicheck",
+    "velero/velero-upgrade-crds/velero",
+    // Init containers our own values add without resources
+    // (`misc/minecraft/minecraft-config.ts`, `minecraft-drift-check.ts`).
+    "minecraft-shuxin/minecraft-shuxin/check-config-drift",
+    "minecraft-shuxin/minecraft-shuxin/copy-plugin-configs",
+    // Plugin init containers our own values add without resources
+    // (`resources/argo-applications/storage/velero.ts`).
+    "velero/velero/velero-plugin-for-aws",
+    "velero/velero/velero-plugin-openebs",
+  ]);

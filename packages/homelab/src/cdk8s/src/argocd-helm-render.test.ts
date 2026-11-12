@@ -5,6 +5,9 @@ import { parseAllDocuments } from "yaml";
 import { z } from "zod";
 import path from "node:path";
 import { imageRegistry } from "@shepherdjerred/version-catalog/image-registry";
+import { againstDebt } from "@shepherdjerred/homelab/cdk8s/src/fleet-policy/fleet.ts";
+import { UPSTREAM_CONTAINERS_WITHOUT_REQUESTS } from "@shepherdjerred/homelab/cdk8s/src/fleet-policy/debt-allowlists.ts";
+import { workloadContainers } from "@shepherdjerred/homelab/cdk8s/src/testing/workload-containers.ts";
 
 /**
  * ArgoCD Helm Render Tests
@@ -22,6 +25,7 @@ import { imageRegistry } from "@shepherdjerred/version-catalog/image-registry";
  * - Template rendering failures with our specific config
  * - Incompatible value types
  * - Missing Minecraft volumes referenced by sidecars or init containers
+ * - Upstream containers rendered without CPU and memory requests
  *
  * CI-only: This test requires network access (~40s) and is skipped in
  * pre-commit hooks. Run explicitly with:
@@ -373,6 +377,40 @@ async function renderAllCharts(
   return outcomes;
 }
 
+/**
+ * Containers of the rendered charts that declare no CPU or no memory request,
+ * as `<application>/<workload>/<container>`, split against the debt
+ * allowlist. A chart skipped for a transient upstream error rendered nothing,
+ * so its allowlist entries are neither confirmed nor stale.
+ */
+function upstreamRequestDebt(outcomes: readonly RenderOutcome[]): {
+  containers: number;
+  unexpected: string[];
+  stale: string[];
+} {
+  const rendered = outcomes.filter(({ result }) => result.exitCode === 0);
+  const containers = rendered.flatMap(({ chart, result }) =>
+    parseAllDocuments(result.stdout)
+      .flatMap((document) => workloadContainers(document.toJSON()))
+      .map((found) => ({
+        key: `${chart.appName}/${found.workload}/${found.container}`,
+        hasRequests: found.hasRequests,
+      })),
+  );
+  const renderedApps = new Set(rendered.map(({ chart }) => chart.appName));
+  return {
+    containers: containers.length,
+    ...againstDebt(
+      containers.filter((found) => !found.hasRequests).map(({ key }) => key),
+      new Set(
+        [...UPSTREAM_CONTAINERS_WITHOUT_REQUESTS].filter((key) =>
+          renderedApps.has(key.slice(0, key.indexOf("/"))),
+        ),
+      ),
+    ),
+  };
+}
+
 const describeFn = shouldRun ? describe : describe.skip;
 
 describeFn("ArgoCD Helm Render - External Charts", () => {
@@ -484,6 +522,20 @@ describeFn("ArgoCD Helm Render - External Charts", () => {
         ).toContain(`dockerhub-pull-${name}`);
       }
     }
+  });
+
+  describe("every upstream container declares CPU and memory requests", () => {
+    it("finds the rendered containers (sanity check)", () => {
+      expect(upstreamRequestDebt(outcomes).containers).toBeGreaterThan(30);
+    });
+
+    it("holds outside the debt allowlist", () => {
+      expect(upstreamRequestDebt(outcomes).unexpected).toEqual([]);
+    });
+
+    it("has no stale debt allowlist entry", () => {
+      expect(upstreamRequestDebt(outcomes).stale).toEqual([]);
+    });
   });
 
   it("renders the PostgreSQL operator v2 defaults in OperatorConfiguration", () => {
