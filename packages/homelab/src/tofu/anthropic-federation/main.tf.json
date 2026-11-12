@@ -1,0 +1,162 @@
+{
+  "data": { "anthropic_organization": { "current": {} } },
+  "provider": { "anthropic": [{}], "onepassword": [{}] },
+  "resource": {
+    "anthropic_federation_issuer": {
+      "cluster": {
+        "check_jti": true,
+        "issuer_url": "${var.anthropic_federation_issuer.issuer_url}",
+        "jwks": {
+          "keys": "${var.anthropic_federation_issuer.jwks_keys_json}",
+          "type": "inline"
+        },
+        "max_jwt_lifetime_seconds": "${var.anthropic_federation_issuer.max_jwt_lifetime_seconds}",
+        "name": "${var.anthropic_federation_issuer.name}"
+      }
+    },
+    "anthropic_federation_rule": {
+      "workload": {
+        "depends_on": ["anthropic_service_account_workspace.workload"],
+        "description": "Pods in ${each.value.namespace} that mount a projected token for Anthropic",
+        "for_each": "${var.anthropic_federation_workloads}",
+        "issuer_id": "${anthropic_federation_issuer.cluster.id}",
+        "match": {
+          "subject_prefix": "system:serviceaccount:${each.value.namespace}:*"
+        },
+        "name": "${each.key}",
+        "oauth_scope": "workspace:inference",
+        "target": {
+          "service_account_id": "${anthropic_service_account.workload[each.key].id}"
+        },
+        "token_lifetime_seconds": "${each.value.token_lifetime_seconds}",
+        "workspace_id": "${anthropic_workspace.managed[each.value.workspace_key].id}"
+      }
+    },
+    "anthropic_service_account": {
+      "workload": {
+        "description": "Federated identity for ${each.key}; tokens minted from the ${each.value.namespace} namespace's projected service-account tokens",
+        "for_each": "${var.anthropic_federation_workloads}",
+        "name": "${each.key}"
+      }
+    },
+    "anthropic_service_account_workspace": {
+      "workload": {
+        "for_each": "${var.anthropic_federation_workloads}",
+        "service_account_id": "${anthropic_service_account.workload[each.key].id}",
+        "workspace_id": "${anthropic_workspace.managed[each.value.workspace_key].id}",
+        "workspace_role": "workspace_developer"
+      }
+    },
+    "anthropic_workspace": {
+      "managed": {
+        "for_each": "${var.anthropic_federation_workspaces}",
+        "name": "${each.value.name}"
+      }
+    },
+    "onepassword_item": {
+      "workload_identity": {
+        "category": "secure_note",
+        "for_each": "${var.anthropic_federation_workloads}",
+        "section": [
+          {
+            "field": [
+              {
+                "label": "ANTHROPIC_ORGANIZATION_ID",
+                "type": "STRING",
+                "value": "${data.anthropic_organization.current.id}"
+              },
+              {
+                "label": "ANTHROPIC_FEDERATION_RULE_ID",
+                "type": "STRING",
+                "value": "${anthropic_federation_rule.workload[each.key].id}"
+              },
+              {
+                "label": "ANTHROPIC_SERVICE_ACCOUNT_ID",
+                "type": "STRING",
+                "value": "${anthropic_service_account.workload[each.key].id}"
+              },
+              {
+                "label": "ANTHROPIC_WORKSPACE_ID",
+                "type": "STRING",
+                "value": "${anthropic_workspace.managed[each.value.workspace_key].id}"
+              }
+            ],
+            "label": "federation"
+          }
+        ],
+        "title": "${each.value.onepassword_item_title}",
+        "vault": "v64ocnykdqju4ui6j6pua56xw4"
+      }
+    }
+  },
+  "terraform": {
+    "backend": {
+      "s3": {
+        "bucket": "homelab-tofu-state",
+        "endpoints": { "s3": "https://seaweedfs-s3.tailnet-1a49.ts.net" },
+        "key": "anthropic-federation/terraform.tfstate",
+        "region": "auto",
+        "skip_credentials_validation": true,
+        "skip_metadata_api_check": true,
+        "skip_region_validation": true,
+        "skip_requesting_account_id": true,
+        "skip_s3_checksum": true,
+        "use_lockfile": true,
+        "use_path_style": true
+      }
+    },
+    "encryption": {
+      "key_provider": {
+        "pbkdf2": {
+          "state": { "passphrase": "${var.tofu_state_encryption_passphrase}" }
+        }
+      },
+      "method": {
+        "aes_gcm": { "encrypted": { "keys": "${key_provider.pbkdf2.state}" } }
+      },
+      "plan": { "enforced": true, "method": "method.aes_gcm.encrypted" },
+      "state": { "enforced": true, "method": "method.aes_gcm.encrypted" }
+    },
+    "required_providers": {
+      "anthropic": {
+        "source": "registry.terraform.io/ippontech/anthropic",
+        "version": "1.60.0"
+      },
+      "onepassword": { "source": "1password/onepassword", "version": "~> 3.0" }
+    },
+    "required_version": ">= 1.9.0"
+  },
+  "variable": {
+    "anthropic_federation_issuer": {
+      "description": "The cluster's service-account token issuer, trusted by inline JWKS because it is not publicly reachable",
+      "type": "object({ name = string, issuer_url = string, jwks_keys_json = string, max_jwt_lifetime_seconds = number })"
+    },
+    "anthropic_federation_workloads": {
+      "default": {},
+      "description": "One service account and federation rule per app and environment, keyed app-env",
+      "type": "map(object({ workspace_key = string, namespace = string, token_lifetime_seconds = number, onepassword_item_title = string }))",
+      "validation": [
+        {
+          "condition": "${alltrue([for workload in values(var.anthropic_federation_workloads) : workload.token_lifetime_seconds >= 60 && workload.token_lifetime_seconds <= 1200])}",
+          "error_message": "token_lifetime_seconds must be between 60 and 1200 to stay inside the projected token's rotation."
+        }
+      ]
+    },
+    "anthropic_federation_workspaces": {
+      "default": {},
+      "description": "One workspace per environment, so usage, cost, and rate limits attribute per environment",
+      "type": "map(object({ name = string }))"
+    },
+    "tofu_state_encryption_passphrase": {
+      "description": "OpenTofu state and plan encryption passphrase from 1Password",
+      "sensitive": true,
+      "type": "string",
+      "validation": [
+        {
+          "condition": "${(length(var.tofu_state_encryption_passphrase) >= 16)}",
+          "error_message": "The OpenTofu state encryption passphrase must be at least 16 characters."
+        }
+      ]
+    }
+  }
+}
