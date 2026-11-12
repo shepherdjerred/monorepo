@@ -5,7 +5,10 @@ import {
   type MonitorPolicySchema,
 } from "#shared/model/monitor-contract.ts";
 import { deliveryMetrics } from "#server/metrics.ts";
-import { useDeliveryFixture } from "#testing/delivery-fixture.ts";
+import {
+  acceptedDeployment,
+  useDeliveryFixture,
+} from "#testing/delivery-fixture.ts";
 import { createTestApp } from "#testing/http-app.ts";
 import {
   arcadePipeline,
@@ -96,40 +99,8 @@ async function publish(number: number) {
   return newest.id;
 }
 
-async function deployAndAccept(versionSetId: string, approve = false) {
-  const env = await environmentRow();
-  const deployment = await context.delivery.createDeployment(
-    {
-      requestId: crypto.randomUUID(),
-      environmentId: env.id,
-      versionSetRevisionId: versionSetId,
-      expectedGeneration: env.generation,
-      kind: "deploy",
-    },
-    testOperator,
-  );
-  if (approve)
-    await context.delivery.approve(
-      deployment.id,
-      { decision: "approve", reason: "reviewed the release" },
-      testOperator,
-    );
-  await context.delivery.claim(deployment.id, testExecutor);
-  await context.delivery.finish(
-    deployment.id,
-    {
-      status: "succeeded",
-      message: "Accepted",
-      observedRevisionId: versionSetId,
-      recoveryRequired: false,
-      evidence: [
-        { kind: "reconciliation", summary: "exact operation completed" },
-        { kind: "acceptance", summary: "acceptance checks passed" },
-      ],
-    },
-    testExecutor,
-  );
-  return deployment;
+function deployAndAccept(versionSetId: string, approve = false) {
+  return acceptedDeployment(context, versionSetId, approve);
 }
 
 function firing(activeAt: string) {

@@ -124,3 +124,49 @@ export async function claimedSelfHostedDeployment(
   await context.delivery.claim(deployment.id, testExecutor, undefined, owner);
   return { deployment, owner };
 }
+
+/**
+ * An operator's deploy of one set revision, claimed and accepted by the
+ * executor with reconciliation and acceptance evidence.
+ */
+export async function acceptedDeployment(
+  context: ReturnType<typeof useDeliveryFixture>,
+  versionSetId: string,
+  approve = false,
+) {
+  const env = await context.cluster.database.environment.findUniqueOrThrow({
+    where: { id: context.fixture.environment.id },
+  });
+  const deployment = await context.delivery.createDeployment(
+    {
+      requestId: crypto.randomUUID(),
+      environmentId: env.id,
+      versionSetRevisionId: versionSetId,
+      expectedGeneration: env.generation,
+      kind: "deploy",
+    },
+    testOperator,
+  );
+  if (approve)
+    await context.delivery.approve(
+      deployment.id,
+      { decision: "approve", reason: "reviewed the release" },
+      testOperator,
+    );
+  await context.delivery.claim(deployment.id, testExecutor);
+  await context.delivery.finish(
+    deployment.id,
+    {
+      status: "succeeded",
+      message: "Accepted",
+      observedRevisionId: versionSetId,
+      recoveryRequired: false,
+      evidence: [
+        { kind: "reconciliation", summary: "exact operation completed" },
+        { kind: "acceptance", summary: "acceptance checks passed" },
+      ],
+    },
+    testExecutor,
+  );
+  return deployment;
+}
