@@ -10,6 +10,10 @@ import {
   ExploreCardSelectionSchema,
   repairExploreCardSelection,
 } from "#src/explore/card-selection/repair.ts";
+import {
+  reviewEligibility,
+  withReviewCards,
+} from "#src/explore/card-selection/review-cards.ts";
 import { resolveCreationCapability } from "#src/explore/creation/capability.ts";
 import {
   creationIntentReplayContext,
@@ -103,6 +107,7 @@ async function streamExploreAgentInternal(
     lastMatchIds: new Set(),
     lastQueryMatchIds: new Set(),
     lastQueryLoadoutPairs: new Set(),
+    reviewedMatch: null,
     loadedSkills: new Set(),
   };
 
@@ -231,13 +236,21 @@ async function streamExploreAgentInternal(
     throw new Error("Voice Explore answers require spokenAnswer");
   }
   const steps = await stream.steps;
+  // A reviewed game is card-eligible even when no query returned it: the
+  // review read its stored documents directly.
+  const reviewed = state.reviewedMatch ?? null;
+  const { eligibleMatchIds, eligibleLoadoutPairs } = reviewEligibility({
+    lastMatchIds: state.lastMatchIds,
+    lastQueryLoadoutPairs: state.lastQueryLoadoutPairs,
+    reviewed,
+  });
   const cards = await repairExploreCardSelection({
     selection: {
       matchCards: answer.matchCards,
       loadoutCards: answer.loadoutCards,
     },
-    eligibleMatchIds: state.lastMatchIds,
-    eligibleLoadoutPairs: state.lastQueryLoadoutPairs,
+    eligibleMatchIds,
+    eligibleLoadoutPairs,
     stepsUsed: steps.length,
     outputTokensUsed: usage.outputTokens ?? EXPLORE_MAX_OUTPUT_TOKENS,
     abortSignal: params.abortSignal,
@@ -264,8 +277,8 @@ async function streamExploreAgentInternal(
             "Correct only the requested cards using the latest query's eligible choices. Keep valid requests. Never invent an id or reuse an earlier query. If no eligible choice supports a requested card, explicitly return no such card. No tools are available.",
           failure: failure.message,
           selection,
-          eligibleMatchIds: [...state.lastMatchIds],
-          eligibleLoadoutPairs: [...state.lastQueryLoadoutPairs],
+          eligibleMatchIds: [...eligibleMatchIds],
+          eligibleLoadoutPairs: [...eligibleLoadoutPairs],
         }),
         ...runtime.callOptions({
           workload: "scout.explore",
@@ -277,16 +290,19 @@ async function streamExploreAgentInternal(
       return ExploreCardSelectionSchema.parse(correction.output);
     },
   });
-  answer = { ...answer, ...cards };
+  answer = {
+    ...answer,
+    ...withReviewCards({ selection: cards, reviewed }),
+  };
   // Every surface selects and hydrates the same cards; Discord renders them
   // as embeds and voice keeps them in the saved conversation.
   const matchCards = await hydrateExploreMatchCards({
     requests: answer.matchCards,
-    eligibleMatchIds: state.lastMatchIds,
+    eligibleMatchIds,
   });
   const loadoutCards = await hydrateExploreLoadoutCards({
     requests: answer.loadoutCards,
-    eligiblePairs: state.lastQueryLoadoutPairs,
+    eligiblePairs: eligibleLoadoutPairs,
     abortSignal: params.abortSignal,
   });
 
