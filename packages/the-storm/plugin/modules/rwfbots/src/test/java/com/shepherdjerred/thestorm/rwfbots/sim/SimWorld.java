@@ -272,7 +272,10 @@ final class SimWorld {
     poison();
   }
 
-  /** A raised fuse in reach keeps the sim bomb's clock alive, the way a held click does on the server. */
+  /**
+   * A raised fuse in reach keeps the sim bomb's clock alive, the way a held click does on the
+   * server.
+   */
   private void holdFuses() {
     for (var body : bodies.values()) {
       if (!body.alive || !body.usingItem || body.reflexContext == null) {

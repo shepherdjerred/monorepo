@@ -304,12 +304,7 @@ public final class TeamBrain {
     var assignment =
         new RoleAssignment(
             new Dealing(
-                board.plan(),
-                situation,
-                alive,
-                nuke,
-                pinned(board, alive, snapshot.tick()),
-                lanes),
+                board.plan(), situation, alive, nuke, pinned(board, alive, snapshot.tick()), lanes),
             slots);
     return new Deal(
         new TeamPlan(
@@ -668,8 +663,7 @@ public final class TeamBrain {
     if (mains.isEmpty()) {
       return 0;
     }
-    var onMain =
-        mains.stream().anyMatch(main -> main.corridor().contains(here.getAsInt()));
+    var onMain = mains.stream().anyMatch(main -> main.corridor().contains(here.getAsInt()));
     if (!onMain) {
       return 0;
     }

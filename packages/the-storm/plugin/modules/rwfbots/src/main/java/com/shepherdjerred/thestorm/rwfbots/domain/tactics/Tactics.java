@@ -160,7 +160,9 @@ public final class Tactics {
     };
   }
 
-  /** A new plan for {@code chosen}; a resupply or crate trip walks to the cell it was scored for. */
+  /**
+   * A new plan for {@code chosen}; a resupply or crate trip walks to the cell it was scored for.
+   */
   private static Plan fresh(
       Option chosen,
       Situation situation,
@@ -288,7 +290,8 @@ public final class Tactics {
       if (situation.isLastAlive()) {
         var dropped = loneRoute(decision.waypoints(), memory, situation.now());
         if (dropped.drop()) {
-          return recover(planning, situation, context, new Setback(dropped.memory(), Optional.empty()));
+          return recover(
+              planning, situation, context, new Setback(dropped.memory(), Optional.empty()));
         }
         memory = dropped.memory();
       }

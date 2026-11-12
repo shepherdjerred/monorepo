@@ -24,13 +24,14 @@ public final class StreakPlay {
   }
 
   /**
-   * Whether to call in a reward now. A supply crate waits for {@code safe}: no enemy nearby and
-   * not on a bomb column. Other rewards keep the old rule.
+   * Whether to call in a reward now. A supply crate waits for {@code safe}: no enemy nearby and not
+   * on a bomb column. Other rewards keep the old rule.
    *
    * @param supply whether the next reward is a supply crate
    * @param safe whether the cell under the bot is a safe place to call a supply crate in
    */
-  public static boolean now(int carried, ReflexInput input, long next, boolean supply, boolean safe) {
+  public static boolean now(
+      int carried, ReflexInput input, long next, boolean supply, boolean safe) {
     if (supply && !safe) {
       return false;
     }

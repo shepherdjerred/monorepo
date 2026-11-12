@@ -412,7 +412,9 @@ final class PaperCombatantActions implements CombatantActions {
                   player
                       .getWorld()
                       .getBlockAt(
-                          (int) Math.floor(at.x()), (int) Math.floor(at.y()), (int) Math.floor(at.z()));
+                          (int) Math.floor(at.x()),
+                          (int) Math.floor(at.y()),
+                          (int) Math.floor(at.z()));
               intent(id, "crate", "loot");
               return runner.powers().streaks().loot(player, block)
                   ? Optional.empty()

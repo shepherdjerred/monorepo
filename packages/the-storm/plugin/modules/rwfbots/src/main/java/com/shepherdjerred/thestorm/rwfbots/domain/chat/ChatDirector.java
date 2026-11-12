@@ -107,10 +107,15 @@ public final class ChatDirector {
     this.speaking = scene;
     this.gateRound =
         switch (moment) {
-          case ChatMoment.Started _, ChatMoment.Died _, ChatMoment.Planted _,
-              ChatMoment.Defused _, ChatMoment.Idle _ ->
+          case ChatMoment.Started _,
+              ChatMoment.Died _,
+              ChatMoment.Planted _,
+              ChatMoment.Defused _,
+              ChatMoment.Idle _ ->
               !scene.teams().isEmpty();
-          case ChatMoment.Ended _, ChatMoment.Arrived _, ChatMoment.HumanSaid _,
+          case ChatMoment.Ended _,
+              ChatMoment.Arrived _,
+              ChatMoment.HumanSaid _,
               ChatMoment.CountdownCall _ ->
               false;
         };

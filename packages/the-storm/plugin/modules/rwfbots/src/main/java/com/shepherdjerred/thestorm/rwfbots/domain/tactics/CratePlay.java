@@ -1,6 +1,5 @@
 package com.shepherdjerred.thestorm.rwfbots.domain.tactics;
 
-import com.shepherdjerred.thestorm.rwf.domain.killstreak.Delivery;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavGraph;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BombView;
@@ -8,7 +7,6 @@ import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CrateView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Option;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Stance;
-import java.time.Duration;
 import java.util.ArrayDeque;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -40,9 +38,6 @@ public final class CratePlay {
 
   /** How long to wait for a called crate to land and be looted, in ticks (15 s). */
   public static final int WATCH_TICKS = 300;
-
-  /** Minecraft ticks in one second, for {@link Delivery#mayLoot}. */
-  static final int TICKS_PER_SECOND = 20;
 
   /**
    * How many nav nodes a safe-cell search may visit. An open floor within {@link #SEARCH} is a few
@@ -169,12 +164,15 @@ public final class CratePlay {
       Situation situation, TacticsContext context, TacticalMemory memory) {
     var self = situation.self();
     var graph = context.nav().graph();
-    var crates = situation.snapshot().crates().stream().filter(crate -> canLoot(situation, self, crate)).toList();
-    var own =
-        crates.stream().filter(crate -> crate.owner().equals(self.id())).toList();
+    var crates =
+        situation.snapshot().crates().stream()
+            .filter(crate -> canLoot(situation, self, crate))
+            .toList();
+    var own = crates.stream().filter(crate -> crate.owner().equals(self.id())).toList();
     var pool = own.isEmpty() ? crates : own;
     return pool.stream()
-        .filter(crate -> claimant(situation, crate).map(mate -> mate.id().equals(self.id())).orElse(false))
+        .filter(crate ->
+            claimant(situation, crate).map(mate -> mate.id().equals(self.id())).orElse(false))
         .filter(crate -> !contested(situation, crate.pos()))
         .map(crate -> cell(situation, graph, memory, crate))
         .flatMap(Optional::stream)
@@ -206,14 +204,7 @@ public final class CratePlay {
   }
 
   private static boolean canLoot(Situation situation, CombatantView mate, CrateView crate) {
-    var owner = crate.owner().equals(mate.id());
-    var teammate = crate.team().equals(mate.team());
-    return Delivery.mayLoot(owner, teammate, since(situation.now(), crate.landedTick()));
-  }
-
-  static Duration since(long now, long landedTick) {
-    var ticks = Math.max(0, now - landedTick);
-    return Duration.ofMillis(ticks * (1000L / TICKS_PER_SECOND));
+    return crate.mayLoot(mate.id(), mate.team(), situation.now());
   }
 
   private static boolean contested(Situation situation, Vec3 pos) {
@@ -238,8 +229,7 @@ public final class CratePlay {
     }
     return situation.knownEnemies().stream()
         .noneMatch(enemy ->
-            (enemy.visible() || enemy.confidence() >= 0.5)
-                && enemy.pos().distance(feet) <= NEARBY);
+            (enemy.visible() || enemy.confidence() >= 0.5) && enemy.pos().distance(feet) <= NEARBY);
   }
 
   private static boolean onBomb(Situation situation, Vec3 feet) {

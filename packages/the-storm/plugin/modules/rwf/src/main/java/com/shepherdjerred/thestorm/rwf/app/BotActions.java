@@ -52,9 +52,7 @@ public interface BotActions {
   /** Call in the first killstreak reward carried that falls from the sky, at the feet. */
   Optional<ActionRefusal> useStreak(UUID bot);
 
-  /**
-   * Right-click the supply crate at {@code at}. The default refuses; {@link #over} performs it.
-   */
+  /** Right-click the supply crate at {@code at}. The default refuses; {@link #over} performs it. */
   default Optional<ActionRefusal> lootCrate(UUID bot, Point at) {
     return Optional.of(ActionRefusal.OUT_OF_REACH);
   }

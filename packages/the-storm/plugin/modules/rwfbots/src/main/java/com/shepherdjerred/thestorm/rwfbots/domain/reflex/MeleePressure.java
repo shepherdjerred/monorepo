@@ -67,8 +67,8 @@ final class MeleePressure {
   }
 
   /**
-   * Strafe sign that steps across {@code target}'s tangent. Positive strafe moves along
-   * {@code (-z, 0, x)} of the direction toward the target.
+   * Strafe sign that steps across {@code target}'s tangent. Positive strafe moves along {@code (-z,
+   * 0, x)} of the direction toward the target.
    */
   static int cutAcross(CombatantView self, CombatantView target) {
     var radial = target.pos().minus(self.pos()).horizontal();

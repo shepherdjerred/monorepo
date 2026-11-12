@@ -78,7 +78,8 @@ public final class TeamPosture {
    * lowest team id.
    */
   public static List<Choice> settle(List<Choice> choices) {
-    if (choices.isEmpty() || choices.stream().anyMatch(choice -> choice.posture() != Posture.WAIT)) {
+    if (choices.isEmpty()
+        || choices.stream().anyMatch(choice -> choice.posture() != Posture.WAIT)) {
       return List.copyOf(choices);
     }
     var press =
@@ -104,8 +105,7 @@ public final class TeamPosture {
   public static Optional<TeamId> weakest(WorldSnapshot snapshot, TeamId us) {
     var counts = counts(snapshot);
     var ours = counts.getOrDefault(us, 0);
-    var others =
-        counts.entrySet().stream().filter(entry -> !entry.getKey().equals(us)).toList();
+    var others = counts.entrySet().stream().filter(entry -> !entry.getKey().equals(us)).toList();
     if (others.isEmpty()) {
       return Optional.empty();
     }
@@ -120,8 +120,8 @@ public final class TeamPosture {
 
   /**
    * Who ignores wait and hunt-weakest and chases whoever is nearest. A team of one follows the
-   * posture. Otherwise at least one and never everyone, about a quarter, aggressive bots first.
-   * The same seed and ids always pick the same bots.
+   * posture. Otherwise at least one and never everyone, about a quarter, aggressive bots first. The
+   * same seed and ids always pick the same bots.
    */
   public static Set<CombatantId> slackers(List<Fighter> living, long seed) {
     if (living.size() < 2) {
@@ -130,7 +130,8 @@ public final class TeamPosture {
     var want = (int) Math.min(living.size() - 1, Math.max(1, Math.round(living.size() * 0.25)));
     return living.stream()
         .sorted(
-            Comparator.comparingDouble((Fighter fighter) -> hash01(seed, fighter.id()) - chance(fighter))
+            Comparator.comparingDouble(
+                    (Fighter fighter) -> hash01(seed, fighter.id()) - chance(fighter))
                 .thenComparing(Fighter::id))
         .limit(want)
         .map(Fighter::id)

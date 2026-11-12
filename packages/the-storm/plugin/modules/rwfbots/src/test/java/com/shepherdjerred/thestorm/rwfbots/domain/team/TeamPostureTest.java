@@ -17,7 +17,9 @@ import java.util.List;
 import java.util.SplittableRandom;
 import org.junit.jupiter.api.Test;
 
-/** Three or more living teams wait, hunt the one smaller team, or press, and one bot may ignore it. */
+/**
+ * Three or more living teams wait, hunt the one smaller team, or press, and one bot may ignore it.
+ */
 final class TeamPostureTest {
   private static final TeamId GREEN = new TeamId("green");
   private static final Vec3 AT = new Vec3(9.5, 1, 24.5);

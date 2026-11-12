@@ -193,8 +193,7 @@ public final class PearlThrow {
    * pearl then comes down safely beside it; the pearl is followed both as thrown and as carrying
    * the bot's own run.
    */
-  static Optional<Vec3> aimAt(
-      VoxelGrid grid, CombatantView self, Vec3 spot, KitTiming timing) {
+  static Optional<Vec3> aimAt(VoxelGrid grid, CombatantView self, Vec3 spot, KitTiming timing) {
     var eye = self.eye();
     var aim = PearlFlight.aim(eye, spot);
     if (aim.isEmpty()) {

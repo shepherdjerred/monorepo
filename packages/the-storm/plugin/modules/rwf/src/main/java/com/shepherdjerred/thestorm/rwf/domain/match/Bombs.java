@@ -70,7 +70,9 @@ final class Bombs {
         error -> Optional.of(translate(error)));
   }
 
-  /** Whether {@code team} already has a live hold on {@code bomb}, so this sample is not a new one. */
+  /**
+   * Whether {@code team} already has a live hold on {@code bomb}, so this sample is not a new one.
+   */
   private static boolean continuingHold(Bomb bomb, TeamColor team, Instant now) {
     return bomb.state().attempts().stream()
         .anyMatch(attempt -> attempt.team() == team && attempt.holding() && attempt.valid(now));

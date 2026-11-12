@@ -675,8 +675,7 @@ public final class Playbook {
           }
         }
       }
-      return Double.isFinite(nearest)
-          && (beside - mouth.y() >= MOUTH_DROP || nearest >= MOUTH_OFF);
+      return Double.isFinite(nearest) && (beside - mouth.y() >= MOUTH_DROP || nearest >= MOUTH_OFF);
     }
 
     private Slot flank(String key, Want want, int index) {

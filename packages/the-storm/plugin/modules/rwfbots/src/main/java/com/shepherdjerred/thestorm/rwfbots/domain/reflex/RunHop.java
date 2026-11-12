@@ -162,8 +162,7 @@ public final class RunHop {
         || run.state().activeJump().isPresent()
         // A fight's target, seen or remembered, is the footwork's business, not the run's.
         || run.input().decision().target().isPresent()
-        || CombatFootwork.reeling(self, run.now()))
-      return Optional.empty();
+        || CombatFootwork.reeling(self, run.now())) return Optional.empty();
     var opening = openingRush(context, run);
     if (!(opening || context.habits().bunnyHops() || context.levers().technique() >= MIN_TECHNIQUE))
       return Optional.empty();
@@ -251,7 +250,10 @@ public final class RunHop {
     return straight(run, needed, LEVEL, LINE_SLACK);
   }
 
-  /** As {@link #straight(Run, double)}, allowing {@code level} of rise or fall and {@code slack} off the line. */
+  /**
+   * As {@link #straight(Run, double)}, allowing {@code level} of rise or fall and {@code slack} off
+   * the line.
+   */
   static Optional<Vec3> straight(Run run, double needed, double level, double slack) {
     var origin = run.self().pos();
     var points = run.waypoints();

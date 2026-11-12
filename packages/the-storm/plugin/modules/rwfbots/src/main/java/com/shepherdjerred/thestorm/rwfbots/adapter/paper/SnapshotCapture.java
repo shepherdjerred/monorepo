@@ -5,7 +5,6 @@ import com.shepherdjerred.thestorm.rwf.app.MatchSummons;
 import com.shepherdjerred.thestorm.rwf.app.NameTags;
 import com.shepherdjerred.thestorm.rwf.app.view.MatchState;
 import com.shepherdjerred.thestorm.rwf.app.view.StreakItems;
-import com.shepherdjerred.thestorm.rwf.domain.killstreak.Killstreak;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
 import com.shepherdjerred.thestorm.rwfbots.domain.tactics.Resupply;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BombOwner;
@@ -22,6 +21,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.world.SummonView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.TraversalState;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.WorldSnapshot;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -185,16 +185,28 @@ public final class SnapshotCapture {
       if (owner.isEmpty()) {
         continue;
       }
-      var age = Math.max(0, Duration.between(landed.landed(), now).toMillis() / 50);
       var at = landed.position();
+      var landedTick = Math.min(tick, tickOf(landed.landed(), now, tick));
+      var teamTick = Math.max(landedTick, tickOf(landed.teamLoots(), now, tick));
       views.add(
           new CrateView(
               new Vec3(at.x(), at.y(), at.z()),
               owner.orElseThrow(),
               IdMap.team(landed.team()),
-              Math.clamp(tick - age, 0, tick)));
+              landedTick,
+              teamTick,
+              Math.max(teamTick, tickOf(landed.anyoneLoots(), now, tick))));
     }
     return views;
+  }
+
+  /**
+   * The match tick of {@code at}, counted from {@code tick} at {@code now}. A future moment rounds
+   * up, so a bot never reaches for a crate before the match lets it.
+   */
+  private static long tickOf(Instant at, Instant now, long tick) {
+    var millis = Duration.between(now, at).toMillis();
+    return Math.max(0, tick + Math.ceilDiv(millis, 50L));
   }
 
   /** Combatants whose next dropped killstreak is a supply crate. */
@@ -220,7 +232,7 @@ public final class SnapshotCapture {
       if (!StreakItems.DROPPED.contains(material)) {
         continue;
       }
-      return material.equals(Killstreak.SUPPLY_CRATE.item());
+      return material.equals(StreakItems.SUPPLY_CRATE);
     }
     return false;
   }

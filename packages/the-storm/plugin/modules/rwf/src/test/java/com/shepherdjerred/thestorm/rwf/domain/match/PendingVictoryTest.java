@@ -24,7 +24,7 @@ class PendingVictoryTest {
 
   private static void defuse(Play play, CombatantId player, String bomb) {
     for (var tick = 0; tick < 21 && play.match.phase() instanceof Phase.Live; tick++) {
-      play.click(player, bomb);
+      play.hold(player, bomb);
       play.tickMillis(500);
     }
   }

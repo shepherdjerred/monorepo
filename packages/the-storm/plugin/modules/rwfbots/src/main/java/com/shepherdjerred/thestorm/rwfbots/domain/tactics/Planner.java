@@ -226,8 +226,7 @@ public final class Planner {
       case HUNT -> {
         var edge = Passages.edge(situation);
         if (edge.isPresent()) {
-          yield Plan.of(
-              option, now, new PlanStep.Route(edge.orElseThrow(), Stance.CAUTIOUS));
+          yield Plan.of(option, now, new PlanStep.Route(edge.orElseThrow(), Stance.CAUTIOUS));
         }
         yield situation
             .nearestEnemy()
@@ -469,14 +468,14 @@ public final class Planner {
     var chosen = slot.orElseThrow();
     var threat = contact(situation);
     if (threat.isPresent()) {
-      return bound(
-          situation, context, slotPoint(situation, context, chosen), threat.orElseThrow());
+      return bound(situation, context, slotPoint(situation, context, chosen), threat.orElseThrow());
     }
     var goal = goalOf(situation, context, chosen);
     var lane = situation.board().plan().laneOf(chosen);
     var waiting =
         lane.filter(Lane::cut)
-            .filter(cut -> chosen.kind() != SlotKind.ANCHOR && Passages.waiting(situation, context, cut))
+            .filter(cut ->
+                chosen.kind() != SlotKind.ANCHOR && Passages.waiting(situation, context, cut))
             .isPresent();
     var attack = !waiting && openingSlot(chosen.kind()) && !context.keep().ranged();
     var stance =
@@ -530,8 +529,7 @@ public final class Planner {
     var now = situation.now();
     if (threat.isEmpty()) {
       var stance = situation.isLastAlive() ? Stance.STEALTH : Stance.CAUTIOUS;
-      return Plan.of(
-          Option.HOLD_SLOT, now, new PlanStep.Hold(goal, chosen.watch(), stance));
+      return Plan.of(Option.HOLD_SLOT, now, new PlanStep.Hold(goal, chosen.watch(), stance));
     }
     var cover =
         heldCover(situation, context, goal, threat.orElseThrow())

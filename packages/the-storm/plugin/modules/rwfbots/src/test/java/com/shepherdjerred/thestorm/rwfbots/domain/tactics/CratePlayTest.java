@@ -37,7 +37,9 @@ import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
-/** A carried supply crate is called from safety, and a landed one is looted when the rights allow. */
+/**
+ * A carried supply crate is called from safety, and a landed one is looted when the rights allow.
+ */
 final class CratePlayTest {
   private static final NavArtifact NAV = SyntheticMap.bake();
   private static final TacticsContext CONTEXT =
@@ -71,8 +73,8 @@ final class CratePlayTest {
   @Test
   void anOwnCrateComesBeforeACloserSteal() {
     var self = combatant(1, RED, AT.plus(4, 0, 0));
-    var own = new CrateView(AT, self.id(), RED, NOW);
-    var steal = new CrateView(AT.plus(3, 0, 0), new CombatantId(9), BLUE, NOW - 1_200);
+    var own = crate(AT, self.id(), RED, NOW);
+    var steal = crate(AT.plus(3, 0, 0), new CombatantId(9), BLUE, NOW - 1_200);
     var trip = trip(self, List.of(self), List.of(own, steal), List.of(), List.of()).orElseThrow();
     assertThat(trip.kind()).isEqualTo(CratePlay.Kind.LOOT);
     assertThat(trip.cell().distance(own.pos())).isLessThan(trip.cell().distance(steal.pos()));
@@ -83,7 +85,7 @@ final class CratePlayTest {
     var near = combatant(1, RED, AT.plus(1, 0, 0));
     var far = combatant(2, RED, AT.plus(10, 0, 0));
     var owner = combatant(9, RED, AT.plus(0, 0, 40));
-    var crate = new CrateView(AT, owner.id(), RED, NOW - 600);
+    var crate = crate(AT, owner.id(), RED, NOW - 600);
     var mates = List.of(near, far, owner);
     assertThat(trip(near, mates, List.of(crate), List.of(), List.of())).isPresent();
     assertThat(trip(far, mates, List.of(crate), List.of(), List.of())).isEmpty();
@@ -113,8 +115,7 @@ final class CratePlayTest {
     var bomb = new BombView(new BombId(0), new BombOwner.Team(BLUE), AT, new BombState.Idle());
     var snapshot = world(List.of(self), List.of(), List.of(), List.of(bomb));
     var input = input(self, snapshot, List.of());
-    assertThat(CratePlay.safeToCall(self, List.of(), Optional.empty(), snapshot.bombs()))
-        .isFalse();
+    assertThat(CratePlay.safeToCall(self, List.of(), Optional.empty(), snapshot.bombs())).isFalse();
     assertThat(CratePlay.safeToCall(self, List.of(), Optional.empty(), List.of())).isTrue();
     assertThat(input.self().onGround()).isTrue();
   }
@@ -123,8 +124,9 @@ final class CratePlayTest {
   void aLitFuseOutranksACrate() {
     var self = combatant(1, RED, AT);
     var bomb =
-        new BombView(new BombId(0), new BombOwner.Team(RED), AT.plus(6, 0, 0), new BombState.Armed(200));
-    var crate = new CrateView(AT, self.id(), RED, NOW);
+        new BombView(
+            new BombId(0), new BombOwner.Team(RED), AT.plus(6, 0, 0), new BombState.Armed(200));
+    var crate = crate(AT, self.id(), RED, NOW);
     assertThat(trip(self, List.of(self), List.of(crate), List.of(), List.of(), List.of(bomb)))
         .isEmpty();
   }
@@ -133,7 +135,7 @@ final class CratePlayTest {
   void anEnemyStandingOnTheCrateKeepsTheBotOffIt() {
     var self = combatant(1, RED, AT.plus(2, 0, 0));
     var enemy = combatant(2, BLUE, AT);
-    var crate = new CrateView(AT, self.id(), RED, NOW);
+    var crate = crate(AT, self.id(), RED, NOW);
     assertThat(trip(self, List.of(self, enemy), List.of(crate), List.of(), List.of(enemy)))
         .isEmpty();
   }
@@ -178,6 +180,11 @@ final class CratePlayTest {
     assertThat(plan.current()).isInstanceOf(PlanStep.Route.class);
   }
 
+  /** A crate under the match's rule: the team after 30 seconds, anyone after a minute. */
+  private static CrateView crate(Vec3 pos, CombatantId owner, TeamId team, long landedTick) {
+    return new CrateView(pos, owner, team, landedTick, landedTick + 600, landedTick + 1_200);
+  }
+
   private static Optional<CratePlay.Trip> loot(
       TeamId selfTeam, int selfId, TeamId ownerTeam, int ownerId, long age) {
     var self = combatant(selfId, selfTeam, AT.plus(2, 0, 0));
@@ -187,7 +194,7 @@ final class CratePlayTest {
     if (!owner.id().equals(self.id())) {
       views.add(owner);
     }
-    var crate = new CrateView(AT, new CombatantId(ownerId), ownerTeam, NOW - age);
+    var crate = crate(AT, new CombatantId(ownerId), ownerTeam, NOW - age);
     return trip(self, views, List.of(crate), List.of(), List.of());
   }
 
@@ -209,7 +216,10 @@ final class CratePlayTest {
       List<BombView> bombs) {
     var situation = situation(self, mates, crates, carriers, visible, bombs);
     return CratePlay.trip(
-        situation, Features.of(situation, CONTEXT, Optional.empty(), false), CONTEXT, TacticalMemory.EMPTY);
+        situation,
+        Features.of(situation, CONTEXT, Optional.empty(), false),
+        CONTEXT,
+        TacticalMemory.EMPTY);
   }
 
   private static Situation situation(

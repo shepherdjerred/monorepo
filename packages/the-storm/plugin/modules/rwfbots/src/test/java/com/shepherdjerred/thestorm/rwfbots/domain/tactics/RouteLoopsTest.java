@@ -6,7 +6,6 @@ import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Hop;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Waypoint;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
@@ -43,5 +42,4 @@ final class RouteLoopsTest {
     var again = back.memory().follow(Optional.of(new Vec3(0, 0, 1)));
     assertThat(again.drop()).isTrue();
   }
-
 }

@@ -24,7 +24,8 @@ import java.util.Optional;
  * @param secondsToFuse how long a hold takes, which may be zero or negative (instant)
  * @param clickers everyone on the team who has tapped or held, in order
  * @param credit seconds of the clock already earned, not counting a hold still in progress
- * @param holding whether the latest input was a hold, so time since {@code lastInputAt} still counts
+ * @param holding whether the latest input was a hold, so time since {@code lastInputAt} still
+ *     counts
  */
 public record ArmAttempt(
     TeamColor team,
@@ -52,7 +53,9 @@ public record ArmAttempt(
     }
   }
 
-  /** A fresh attempt by {@code team}; the first input is applied with {@link #tap} or {@link #hold}. */
+  /**
+   * A fresh attempt by {@code team}; the first input is applied with {@link #tap} or {@link #hold}.
+   */
   static ArmAttempt begin(TeamColor team, BombAction action, Instant now) {
     return new ArmAttempt(team, action, now, now, BASE_SECONDS, List.of(), 0, false);
   }

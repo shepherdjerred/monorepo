@@ -1352,7 +1352,10 @@ final class MatchRunner implements MatchView, MatchEvents {
         player
             .getWorld()
             .rayTraceEntities(
-                eye, eye.getDirection(), reach, candidate -> parts.bombs().bombOf(candidate).isPresent());
+                eye,
+                eye.getDirection(),
+                reach,
+                candidate -> parts.bombs().bombOf(candidate).isPresent());
     if (entity != null && entity.getHitEntity() != null) {
       return parts.bombs().bombOf(entity.getHitEntity());
     }

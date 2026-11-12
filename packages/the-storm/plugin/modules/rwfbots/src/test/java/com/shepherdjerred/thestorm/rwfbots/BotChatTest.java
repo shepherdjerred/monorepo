@@ -142,6 +142,14 @@ final class BotChatTest {
     return live(alice, 5);
   }
 
+  /**
+   * As {@link #live(PlayerMock)} with a second red bot, so the red killer is not the last of its
+   * team: the last living member of a team stays quiet until the round ends.
+   */
+  private List<CombatantId.Bot> liveWithRedMate(PlayerMock alice) {
+    return live(alice, 5, 3, () -> {});
+  }
+
   private List<CombatantId.Bot> live(PlayerMock alice, int settle) {
     return live(alice, settle, 2, () -> {});
   }
@@ -664,7 +672,7 @@ final class BotChatTest {
     harness.server.addWorld(elsewhere);
     var bob = harness.player("Bob");
     bob.teleport(new Location(elsewhere, 0, 5, 0));
-    var bots = live(alice);
+    var bots = liveWithRedMate(alice);
     assertThat(harness.paper().chat().orElseThrow().enabled()).isTrue();
     heard(alice);
     heard(watcher);
@@ -713,7 +721,7 @@ final class BotChatTest {
   void theLineIsFramedWithTheMarkerAndTheTeamColour() {
     var harness = start(h -> {});
     var alice = harness.player("Alice");
-    var bots = live(alice);
+    var bots = liveWithRedMate(alice);
     heard(alice);
 
     killAlice(alice, bots.getFirst());
@@ -730,7 +738,7 @@ final class BotChatTest {
     var alice = harness.player("Alice");
     var carol = harness.player("Carol");
     carol.teleport(new Location(harness.world, 16.5, 4, 16.5));
-    var bots = live(alice);
+    var bots = liveWithRedMate(alice);
     var killer = bots.getFirst();
     requireNonNull(harness.chatService)
         .ignore(
@@ -893,7 +901,7 @@ final class BotChatTest {
   void deathCancelsAnUnfinishedLineAndRemovesItsTypingIndicator() {
     var harness = start(h -> {});
     var alice = harness.player("Alice");
-    var killer = live(alice).getFirst();
+    var killer = liveWithRedMate(alice).getFirst();
     heard(alice);
     harness.match.kill(alice.getUniqueId());
     harness.match.fire(

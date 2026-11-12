@@ -114,8 +114,8 @@ public final class Lanes {
   }
 
   /**
-   * Routes that share little of the main lane and are not much longer: first any such route, then
-   * a route that also runs clearly lower, when that is a different path.
+   * Routes that share little of the main lane and are not much longer: first any such route, then a
+   * route that also runs clearly lower, when that is a different path.
    */
   private static List<List<Integer>> detours(NavGraph graph, int from, int to, List<Integer> main) {
     var interior = new HashSet<Integer>();
@@ -216,8 +216,7 @@ public final class Lanes {
     return Optional.of(nodes);
   }
 
-  private static Lane lane(
-      NavGraph graph, List<Integer> nodes, Vec3 home, Vec3 side, boolean cut) {
+  private static Lane lane(NavGraph graph, List<Integer> nodes, Vec3 home, Vec3 side, boolean cut) {
     var points = new ArrayList<Vec3>(nodes.size());
     var lateral = 0.0;
     for (var node : nodes) {

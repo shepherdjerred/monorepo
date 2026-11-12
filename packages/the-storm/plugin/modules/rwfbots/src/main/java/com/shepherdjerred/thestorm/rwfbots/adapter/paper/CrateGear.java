@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.rwfbots.adapter.paper;
 
+import com.shepherdjerred.thestorm.rwf.app.view.StreakItems;
 import com.shepherdjerred.thestorm.rwfbots.domain.tactics.CratePlay;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -22,11 +23,10 @@ final class CrateGear {
         continue;
       }
       var material = stack.getType().name();
-      if (!com.shepherdjerred.thestorm.rwf.app.view.StreakItems.DROPPED.contains(material)) {
+      if (!StreakItems.DROPPED.contains(material)) {
         continue;
       }
-      return material.equals(
-          com.shepherdjerred.thestorm.rwf.domain.killstreak.Killstreak.SUPPLY_CRATE.item());
+      return material.equals(StreakItems.SUPPLY_CRATE);
     }
     return false;
   }

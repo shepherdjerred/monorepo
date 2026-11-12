@@ -6,9 +6,9 @@ import com.shepherdjerred.thestorm.rwfbots.domain.world.Waypoint;
 import java.util.Optional;
 
 /**
- * An ender pearl from a supply crate. Escape and a close that is actually shorter go through
- * {@link PearlThrow}. Otherwise it is saved for a gap in the route: a ground waypoint ahead, with
- * no enemy in sword range.
+ * An ender pearl from a supply crate. Escape and a close that is actually shorter go through {@link
+ * PearlThrow}. Otherwise it is saved for a gap in the route: a ground waypoint ahead, with no enemy
+ * in sword range.
  */
 public final class CratePearl {
 

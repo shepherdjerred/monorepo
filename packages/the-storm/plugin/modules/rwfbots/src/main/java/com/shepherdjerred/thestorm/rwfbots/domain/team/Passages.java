@@ -12,9 +12,9 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * How a pair uses a side passage, and where a waiting team stands while two other teams fight.
- * One aggressive bot, the lowest living id, may take the cut at once. Everyone else lets the main
- * push be seen for {@link #CUT_WAIT} ticks. A quiet cut is watched from home.
+ * How a pair uses a side passage, and where a waiting team stands while two other teams fight. One
+ * aggressive bot, the lowest living id, may take the cut at once. Everyone else lets the main push
+ * be seen for {@link #CUT_WAIT} ticks. A quiet cut is watched from home.
  */
 public final class Passages {
 

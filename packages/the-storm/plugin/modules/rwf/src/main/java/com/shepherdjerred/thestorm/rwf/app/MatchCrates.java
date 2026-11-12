@@ -19,8 +19,16 @@ public interface MatchCrates {
    *     names it
    * @param position the block center of the chest
    * @param landed when it landed
+   * @param teamLoots when the owner's team may loot it
+   * @param anyoneLoots when anyone may loot it
    */
-  record Landed(UUID owner, String team, Point position, Instant landed) {}
+  record Landed(
+      UUID owner,
+      String team,
+      Point position,
+      Instant landed,
+      Instant teamLoots,
+      Instant anyoneLoots) {}
 
   /** The crates on the ground now, in a stable order. */
   List<Landed> landed();

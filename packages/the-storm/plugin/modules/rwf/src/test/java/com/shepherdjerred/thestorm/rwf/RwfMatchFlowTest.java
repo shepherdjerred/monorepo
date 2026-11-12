@@ -59,6 +59,12 @@ import org.mockbukkit.mockbukkit.entity.PlayerMock;
  */
 final class RwfMatchFlowTest {
 
+  /**
+   * Taps half a second apart, enough to finish a one-person, nine-second arm or defuse at the tap
+   * credit. A tap earns a slice of the clock; holding is the fast path the domain tests cover.
+   */
+  private static final int TAPS_TO_FUSE = 60;
+
   @TempDir Path directory;
   private @Nullable RwfHarness running;
 
@@ -129,7 +135,7 @@ final class RwfMatchFlowTest {
     var fuse = requireNonNull(alice.getInventory().getItem(0));
 
     // Arming alone takes nine seconds of clicks no more than 750 ms apart.
-    for (var i = 0; i < 24 && !armed(bombId); i++) {
+    for (var i = 0; i < TAPS_TO_FUSE && !armed(bombId); i++) {
       harness
           .server
           .getPluginManager()
@@ -150,7 +156,7 @@ final class RwfMatchFlowTest {
     // The owners defuse it: a bot on that team, through the actions port, within reach.
     var defuser = botOn(enemy);
     defuser.entity().teleport(block.clone().add(-1.5, 0, 0.5));
-    for (var i = 0; i < 24 && armed(bombId); i++) {
+    for (var i = 0; i < TAPS_TO_FUSE && armed(bombId); i++) {
       assertThat(harness.actions().clickBomb(defuser.id(), bombId)).isEmpty();
       harness.tick(Duration.ofMillis(500));
     }
@@ -313,7 +319,7 @@ final class RwfMatchFlowTest {
     alice.teleport(block.clone().add(1.5, 0, 0.5));
     alice.getInventory().setHeldItemSlot(0);
     var fuse = requireNonNull(alice.getInventory().getItem(0));
-    for (var i = 0; i < 24 && !armed(bombId); i++) {
+    for (var i = 0; i < TAPS_TO_FUSE && !armed(bombId); i++) {
       harness
           .server
           .getPluginManager()
@@ -595,7 +601,7 @@ final class RwfMatchFlowTest {
     var block = bombBlock(bombId);
     var armer = botOn(enemyOf(own));
     armer.entity().teleport(block.clone().add(1.5, 0, 0.5));
-    for (var i = 0; i < 24 && !armed(bombId); i++) {
+    for (var i = 0; i < TAPS_TO_FUSE && !armed(bombId); i++) {
       assertThat(harness.actions().clickBomb(armer.id(), bombId)).isEmpty();
       harness.tick(Duration.ofMillis(500));
     }

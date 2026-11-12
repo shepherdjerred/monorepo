@@ -31,7 +31,8 @@ final class CratePearlTest {
     assertThat(CratePearl.gapOpen(input(self, List.of(enemy), ahead), 0)).isFalse();
   }
 
-  private static ReflexInput input(CombatantView self, List<CombatantView> visible, Waypoint ahead) {
+  private static ReflexInput input(
+      CombatantView self, List<CombatantView> visible, Waypoint ahead) {
     var views = new java.util.ArrayList<CombatantView>();
     views.add(self);
     views.addAll(visible);
@@ -47,6 +48,7 @@ final class CratePearlTest {
             List.of(),
             List.of());
     var decision = Decision.idle(self.id(), 100, 0).withWaypoints(List.of(ahead));
-    return ReflexInput.of(self, snapshot, decision, new Percept(PerceptionState.EMPTY, visible, 100));
+    return ReflexInput.of(
+        self, snapshot, decision, new Percept(PerceptionState.EMPTY, visible, 100));
   }
 }

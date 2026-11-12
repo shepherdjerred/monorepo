@@ -6,7 +6,6 @@ import static com.shepherdjerred.thestorm.rwfbots.domain.Fixtures.combatant;
 import static com.shepherdjerred.thestorm.rwfbots.domain.Fixtures.levers;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.shepherdjerred.thestorm.rwfbots.domain.difficulty.Lever;
 import com.shepherdjerred.thestorm.rwfbots.domain.difficulty.Levers;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Facing;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;

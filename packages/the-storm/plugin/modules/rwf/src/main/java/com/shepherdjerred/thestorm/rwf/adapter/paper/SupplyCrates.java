@@ -86,7 +86,9 @@ final class SupplyCrates implements MatchCrates {
               crate.owner().uuid(),
               MatchState.teamName(crate.team()),
               new Point(at.x() + 0.5, at.y(), at.z() + 0.5),
-              crate.landed());
+              crate.landed(),
+              crate.landed().plus(Delivery.TEAM_LOOTS_AFTER),
+              crate.landed().plus(Delivery.ANYONE_LOOTS_AFTER));
         })
         .toList();
   }

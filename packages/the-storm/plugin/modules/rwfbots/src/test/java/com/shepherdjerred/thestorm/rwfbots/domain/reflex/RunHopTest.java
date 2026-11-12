@@ -254,7 +254,9 @@ final class RunHopTest {
     assertThat(hops(tick(self, decision, context(ReflexContext.Habits.NONE, 0.2), List.of())))
         .as("the opening does not wait on technique")
         .isTrue();
-    var bow = new ReflexContext(NAV, levers(0.2), Loadout.standard(Kit.LONGBOW), ReflexContext.Habits.NONE);
+    var bow =
+        new ReflexContext(
+            NAV, levers(0.2), Loadout.standard(Kit.LONGBOW), ReflexContext.Habits.NONE);
     assertThat(hops(tick(self, decision, bow, List.of()))).as("a bow keeps its feet").isFalse();
     assertThat(
             hops(
@@ -277,9 +279,10 @@ final class RunHopTest {
     var rushed =
         tick(runner(OPEN, 4.5), attacker, context(ReflexContext.Habits.NONE, 0.2), List.of(seen));
     assertThat(hops(rushed)).as("slope, gentle drift, enemy in sight: %s", rushed).isTrue();
-    assertThat(rushed).anySatisfy(command -> {
-      if (command instanceof BodyCommand.MoveToward move) assertThat(move.sprint()).isTrue();
-    });
+    assertThat(rushed)
+        .anySatisfy(command -> {
+          if (command instanceof BodyCommand.MoveToward move) assertThat(move.sprint()).isTrue();
+        });
 
     var anchor = route(sloped, Stance.CAUTIOUS);
     var walked = tick(runner(OPEN, 4.5), anchor, RUNNER, List.of());
