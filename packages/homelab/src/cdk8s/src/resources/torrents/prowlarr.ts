@@ -1,55 +1,25 @@
 import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
-import { Deployment, DeploymentStrategy, Service, Volume } from "cdk8s-plus-31";
-import {
-  withCommonLinuxServerProps,
-  linuxServerPod,
-} from "@shepherdjerred/homelab/cdk8s/src/misc/linux-server.ts";
-import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
-import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
-import { setRevisionHistoryLimit } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
+import { LinuxServerApp } from "@shepherdjerred/homelab/cdk8s/src/misc/third-party/linuxserver-app.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 export function createProwlarrDeployment(chart: Chart) {
-  const deployment = new Deployment(chart, "prowlarr", {
-    replicas: 1,
-    strategy: DeploymentStrategy.recreate(),
-    ...linuxServerPod(),
-  });
-
-  const localPathVolume = new ZfsNvmeVolume(chart, "prowlarr-pvc", {
-    storage: Size.gibibytes(8),
-  });
-
-  deployment.addContainer(
-    withCommonLinuxServerProps({
-      // Deliberately BestEffort (no requests/limits) — negligible or
-      // non-critical usage; see the 2026-06-12 right-sizing plan.
-      resources: {},
-      image: `ghcr.io/linuxserver/prowlarr:${versions["linuxserver/prowlarr"]}`,
-      portNumber: 9696,
-      volumeMounts: [
-        {
-          path: "/config",
-          volume: Volume.fromPersistentVolumeClaim(
-            chart,
-            "prowlarr-volume",
-            localPathVolume.claim,
-          ),
-        },
-      ],
-    }),
-  );
-
-  setRevisionHistoryLimit(deployment);
-
-  const service = new Service(chart, "prowlarr-service", {
-    selector: deployment,
-    ports: [{ port: 9696 }],
-  });
-
-  new TailscaleIngress(chart, "prowlarr-tailscale-ingress", {
-    service,
-    host: "prowlarr",
+  new LinuxServerApp(chart, "prowlarr-app", {
+    name: "prowlarr",
+    image: `ghcr.io/linuxserver/prowlarr:${versions["linuxserver/prowlarr"]}`,
+    port: 9696,
+    fsGroup: false,
+    claims: [
+      {
+        claim: "prowlarr-pvc",
+        volumeId: "prowlarr-volume",
+        storage: Size.gibibytes(8),
+        path: "/config",
+      },
+    ],
+    // Deliberately BestEffort (no requests/limits) — negligible or
+    // non-critical usage; see the 2026-06-12 right-sizing plan.
+    resources: {},
+    tailscale: { host: "prowlarr" },
   });
 }
