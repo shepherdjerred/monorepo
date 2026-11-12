@@ -258,6 +258,24 @@ async fn quick_crashes_stop_relaunching_after_the_limit() -> TestResult {
 
 #[cfg(unix)]
 #[tokio::test]
+async fn quick_crashes_without_a_tray_exit_instead_of_waiting() -> TestResult {
+    // With no tray nothing could reopen the window or quit, and the instance
+    // lock would keep a second launch out.
+    let harness = start(sh("exit 3", &[]), false, true)?;
+    let (exit, calls, diagnostics, directory) = harness.finish().await?;
+    assert_eq!(exit, SupervisorExit::WindowClosedWithoutTray);
+    assert_eq!(calls, ["stop"]);
+    assert!(
+        crash_details(&diagnostics)
+            .iter()
+            .any(|crash| crash.contains("not relaunching after 3 quick crashes"))
+    );
+    std::fs::remove_dir_all(directory)?;
+    Ok(())
+}
+
+#[cfg(unix)]
+#[tokio::test]
 async fn quit_from_the_window_stops_everything() -> TestResult {
     let script = window_script(
         r#"printf '{"type":"pair"}\n'

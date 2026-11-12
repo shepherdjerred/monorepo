@@ -373,6 +373,16 @@ impl<C: Collector> Supervisor<C> {
         Handled::Continue
     }
 
+    /// With no tray nothing can reopen the window or quit Scout, so a
+    /// supervisor that has stopped relaunching must exit instead of waiting.
+    fn wait_or_quit(&self) -> AfterExit {
+        if self.tray_available {
+            AfterExit::Wait
+        } else {
+            AfterExit::Quit
+        }
+    }
+
     fn after_exit(&self, ended: &Window, status: ExitStatus, quick_crashes: &mut u32) -> AfterExit {
         if status.success() {
             return if self.tray_available {
@@ -386,7 +396,7 @@ impl<C: Collector> Supervisor<C> {
                 DiagnosticOutcome::Failed,
                 format!("the window exited ({status}); not relaunching"),
             ));
-            return AfterExit::Wait;
+            return self.wait_or_quit();
         }
         *quick_crashes = quick_crashes_now(*quick_crashes, ended.started.elapsed());
         if *quick_crashes >= MAX_QUICK_CRASHES {
@@ -397,7 +407,7 @@ impl<C: Collector> Supervisor<C> {
                 ),
             ));
             self.status.send_modify(|status| status.given_up = true);
-            return AfterExit::Wait;
+            return self.wait_or_quit();
         }
         self.record(window_crash_event(
             DiagnosticOutcome::Deferred,
