@@ -1,7 +1,8 @@
 # @homelab/cdktn
 
 The CDK Terrain (cdktn) application that synthesizes OpenTofu stacks. Each
-ported stack is a TypeScript class in `src/stacks/<stack>.ts`; `bun run synth`
+ported stack is a TypeScript class in `src/stacks/<stack>.ts`, or in
+`src/stacks/<stack>/index.ts` when it is split across files; `bun run synth`
 writes its configuration to `packages/homelab/src/tofu/<stack>/main.tf.json`,
 which is committed next to the stack's lock file.
 
@@ -58,7 +59,9 @@ caused a plan diff.
 3. Add the stack to `SYNTHESIZED_STACKS` and `STACKS` in `src/app.ts`.
 4. Run `synth`, then delete every root `.tf` file of the stack in the same
    commit. A directory holding both `main.tf.json` and root `.tf` files is
-   refused. A local module the root still calls (`modules/**`) stays HCL.
+   refused. A local module the root still calls (`modules/**`) stays HCL:
+   call it with `TerraformHclModule` under its HCL name, so its resources
+   keep their `module.<name>…` addresses. Flattening a module is pass two.
 5. Add a synth test asserting the stack's resource addresses, imports,
    `moved` and `removed` blocks.
 6. Drop any `externalFiles` entry in `tofu-stack-manifest.ts` for a file the
@@ -84,7 +87,13 @@ Never run `apply`, `import`, or any `state` subcommand as part of a port.
   resource's `forEach`; instance keys must equal the HCL keys.
 - An `import` block is `resource.importFrom(id)`. `adopt(resource, id)` in
   `src/state-migrations.ts` adds `prevent_destroy` with it. An `import` block
-  addressing one `for_each` instance is `importInstance(stack, to, id)`.
+  addressing one `for_each` instance is `importInstance(stack, to, id)`; one
+  addressing a resource inside a module call, or carrying its own `for_each`,
+  is `importAddress(stack, { to, id, forEach })`.
+- Constructs of one scope share one id namespace, while OpenTofu names are
+  per resource type. When two types share an HCL name (a bucket and its
+  lifecycle), give one a distinct construct id and
+  `overrideLogicalId("<hcl name>")`.
 - Keep every existing `moved` and `removed` block until state no longer holds
   the old address. `moved()`, `forget()` and `retire()` in
   `src/state-migrations.ts` write them; use those for every stack-level block
@@ -152,6 +161,14 @@ Never run `apply`, `import`, or any `state` subcommand as part of a port.
   modifiers; their types still flow into the stacks that import them.
 - **`cdktn get` runs under Node**, not Bun. Synthesis runs under Bun and
   never calls the CLI or OpenTofu.
+- **A local module is copied into the synthesis and its `source` rewritten.**
+  Pass `skipAssetCreationFromLocalModules: true` to `TerraformHclModule` so
+  `source` stays the committed `./modules/<name>` path.
+- **An output's `precondition` is dropped from JSON synthesis.** Add it with
+  `output.addOverride("precondition", { condition, error_message })`.
+- **A dynamically typed attribute is bound as a map.**
+  `cloudflare_zone_setting.value` accepts a string or an object, but its
+  binding is `{ [key: string]: any }`; pass a scalar as `Token.asAny("on")`.
 
 ## Helpers
 
@@ -162,6 +179,7 @@ Never run `apply`, `import`, or any `state` subcommand as part of a port.
 | `adopt`, `protect`          | `src/state-migrations.ts` | `import` with `prevent_destroy`; `prevent_destroy` alone     |
 | `moved`, `forget`, `retire` | `src/state-migrations.ts` | Stack-level `moved` and `removed` blocks                     |
 | `importInstance`            | `src/state-migrations.ts` | An `import` block for one `for_each` instance                |
+| `importAddress`             | `src/state-migrations.ts` | An `import` block into a module call, or with its `for_each` |
 | `encryptStateAndPlans`      | `src/encryption.ts`       | Passphrase variable and enforced state and plan encryption   |
 
 Each helper creates resources in the scope it is given with the id it is

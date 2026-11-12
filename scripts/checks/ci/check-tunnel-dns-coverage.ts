@@ -31,14 +31,14 @@ export type DnsName = {
   file: string;
   line: number;
   resourceName: string;
-  /** The literal `name = "..."` value */
+  /** The record's literal `name` */
   name: string;
-  /** Zone resource name (e.g. `cloudflare_zone.sjer_red.id`), if discoverable */
+  /** Zone resource name (`sjer_red` for `cloudflare_zone.sjer_red.id`), if discoverable */
   zoneRef: string | undefined;
 };
 
 export type Zone = {
-  /** The HCL resource label, e.g. `sjer_red` */
+  /** The `cloudflare_zone` resource name, e.g. `sjer_red` */
   ref: string;
   /** The FQDN of the zone, e.g. `sjer.red` */
   name: string;
@@ -60,11 +60,6 @@ const HOSTNAMES_FROM_DIRECTIVE =
 const MAIL_DOMAINS_FROM_DIRECTIVE =
   /\/\/\s*@tunnel-dns-coverage:mail-domains-from\s+(\S+)/;
 const HOSTNAME_LITERAL_REGEX = /\bhostname\s*:\s*["'`]([^"'`]+)["'`]/g;
-
-const ZONE_REGEX =
-  /resource\s+"cloudflare_zone"\s+"([^"]+)"\s*\{[\s\S]*?name\s*=\s*"([^"]+)"/g;
-const DNS_NAME_FIELD = /^\s*name\s*=\s*"([^"]+)"/m;
-const DNS_ZONE_ID_FIELD = /zone_id\s*=\s*cloudflare_zone\.(\w+)\.id/;
 
 function computeLineStarts(text: string): number[] {
   const lineStarts: number[] = [0];
@@ -177,27 +172,25 @@ export async function collectTunnelBindings(
   return bindings;
 }
 
+/**
+ * The cloudflare stack is synthesized by cdktn: its root is the committed
+ * `main.tf.json`, and only the modules it calls are HCL.
+ */
+async function synthesizedStack(
+  tofuCloudflare: string,
+): Promise<SynthesizedConfiguration> {
+  const synthesized = await readSynthesizedConfiguration(tofuCloudflare);
+  if (synthesized === undefined)
+    throw new Error(
+      `${tofuCloudflare} has no main.tf.json: the cloudflare stack is synthesized by packages/homelab-cdktn`,
+    );
+  return synthesized;
+}
+
 export async function collectZones(
   tofuCloudflare = TOFU_CLOUDFLARE,
 ): Promise<Map<string, Zone>> {
-  const synthesized = await readSynthesizedConfiguration(tofuCloudflare);
-  if (synthesized !== undefined) return synthesizedZones(synthesized);
-  const zones = new Map<string, Zone>();
-  const glob = new Glob("*.tf");
-  for await (const rel of glob.scan({
-    cwd: tofuCloudflare,
-    onlyFiles: true,
-  })) {
-    const abs = path.join(tofuCloudflare, rel);
-    const text = await Bun.file(abs).text();
-    for (const match of text.matchAll(ZONE_REGEX)) {
-      const ref = match[1];
-      const name = match[2];
-      if (ref === undefined || name === undefined) continue;
-      zones.set(ref, { ref, name });
-    }
-  }
-  return zones;
+  return synthesizedZones(await synthesizedStack(tofuCloudflare));
 }
 
 async function baselineInputs(tofuCloudflare: string) {
@@ -213,11 +206,14 @@ async function baselineInputs(tofuCloudflare: string) {
   return { moduleText, registry, zones };
 }
 
-/** DNS records of a stack synthesized by cdktn (`main.tf.json`). */
-async function collectSynthesizedDnsNames(
-  tofuCloudflare: string,
-  configuration: SynthesizedConfiguration,
+/**
+ * Every DNS record of the stack: the root's own, and the policy host the HCL
+ * baseline module provisions for each registry domain.
+ */
+export async function collectDnsNames(
+  tofuCloudflare = TOFU_CLOUDFLARE,
 ): Promise<DnsName[]> {
+  const configuration = await synthesizedStack(tofuCloudflare);
   const file = path.join(tofuCloudflare, "main.tf.json");
   const names: DnsName[] = synthesizedDnsRecords(configuration).map(
     (record) => ({ ...record, file, line: 1 }),
@@ -234,49 +230,6 @@ async function collectSynthesizedDnsNames(
         zones,
         file,
         line: 1,
-      }),
-    );
-  }
-  return names;
-}
-
-export async function collectDnsNames(
-  tofuCloudflare = TOFU_CLOUDFLARE,
-): Promise<DnsName[]> {
-  const synthesized = await readSynthesizedConfiguration(tofuCloudflare);
-  if (synthesized !== undefined)
-    return collectSynthesizedDnsNames(tofuCloudflare, synthesized);
-  const names: DnsName[] = [];
-  const glob = new Glob("*.tf");
-  for await (const rel of glob.scan({
-    cwd: tofuCloudflare,
-    onlyFiles: true,
-  })) {
-    const abs = path.join(tofuCloudflare, rel);
-    const text = await Bun.file(abs).text();
-    for (const block of extractDnsRecordBlocks(text)) {
-      const nameMatch = DNS_NAME_FIELD.exec(block.body);
-      const zoneMatch = DNS_ZONE_ID_FIELD.exec(block.body);
-      if (nameMatch === null) continue;
-      names.push({
-        file: abs,
-        line: lineOf(text, block.offset),
-        resourceName: block.resourceName,
-        name: nameMatch[1] ?? "",
-        zoneRef: zoneMatch?.[1],
-      });
-    }
-  }
-  const baselineFile = path.join(tofuCloudflare, "domain-baseline.tf");
-  if (await Bun.file(baselineFile).exists()) {
-    const [rootText, { moduleText, registry, zones }] = await Promise.all([
-      Bun.file(baselineFile).text(),
-      baselineInputs(tofuCloudflare),
-    ]);
-    names.push(
-      ...baselineDnsNames(rootText, moduleText, registry, {
-        zones,
-        file: baselineFile,
       }),
     );
   }
@@ -404,52 +357,6 @@ function baselineRecords(input: {
   }));
 }
 
-/** Resolve only the repo-owned baseline contract, validating its real DNS resource. */
-export function baselineDnsNames(
-  rootText: string,
-  moduleText: string,
-  registryValue: unknown,
-  context: { zones: Map<string, Zone>; file: string },
-): DnsName[] {
-  const { zones, file } = context;
-  const registry = DomainRegistrySchema.parse(registryValue);
-  const module = /module\s+"domain_baseline"\s*\{([^}]+)\}/.exec(rootText)?.[1];
-  if (
-    module === undefined ||
-    ![
-      /^\s*source\s*=\s*"\.\/modules\/domain-baseline"\s*$/m,
-      /^\s*for_each\s*=\s*local\.domain_registry\.domains\s*$/m,
-      /^\s*zone_id\s*=\s*local\.baseline_zone_ids\[each\.key\]\s*$/m,
-      /^\s*domain\s*=\s*each\.key\s*$/m,
-    ].every((field) => field.test(module)) ||
-    /\bcount\s*=/.test(module) ||
-    !/domain_registry\s*=\s*jsondecode\(file\("\$\{path.module\}\/\.\.\/\.\.\/domain-registry.json"\)\)/.test(
-      rootText,
-    )
-  ) {
-    throw new Error(
-      "Unsupported domain_baseline wiring: DNS coverage cannot be proven",
-    );
-  }
-  assertBaselineModuleHost(moduleText);
-  const zoneMap =
-    /baseline_zone_ids\s*=\s*\{([^}]+)\}/.exec(rootText)?.[1] ?? "";
-  const refs = new Map<string, string>();
-  for (const match of zoneMap.matchAll(
-    /"([^"]+)"\s*=\s*cloudflare_zone\.(\w+)\.id/g,
-  )) {
-    if (match[1] !== undefined && match[2] !== undefined)
-      refs.set(match[1], match[2]);
-  }
-  return baselineRecords({
-    refs,
-    domains: Object.keys(registry.domains),
-    zones,
-    file,
-    line: lineOf(rootText, rootText.indexOf('module "domain_baseline"')),
-  });
-}
-
 export function expandCoveredFqdns(
   records: DnsName[],
   zones: Map<string, Zone>,
@@ -522,7 +429,7 @@ async function main(): Promise<void> {
     );
   }
   console.error(
-    "\nAdd a proxied CNAME to 3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com for each in the cloudflare stack: packages/homelab/src/tofu/cloudflare/<zone>.tf, or its cdktn source once ported.",
+    "\nAdd a proxied CNAME to 3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com for each in the cloudflare stack (packages/homelab-cdktn/src/stacks/cloudflare), then re-synthesize.",
   );
   process.exit(1);
 }

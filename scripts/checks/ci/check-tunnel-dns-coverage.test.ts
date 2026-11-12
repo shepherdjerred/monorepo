@@ -6,7 +6,6 @@ import { afterEach, describe, expect, test } from "vitest";
 import { DomainRegistrySchema } from "../../../packages/homelab/src/domain-registry.ts";
 
 import {
-  baselineDnsNames,
   collectDnsNames,
   collectZones,
   evaluateTunnelDnsCoverage,
@@ -21,18 +20,6 @@ const cloudflare = fileURLToPath(
   new URL("../../../packages/homelab/src/tofu/cloudflare/", import.meta.url),
 );
 
-async function baselineFixture() {
-  const [root, module, registry, zones] = await Promise.all([
-    Bun.file(`${cloudflare}/domain-baseline.tf`).text(),
-    Bun.file(`${cloudflare}/modules/domain-baseline/main.tf`).text(),
-    Bun.file(`${cloudflare}/../../domain-registry.json`)
-      .json()
-      .then((value: unknown) => value),
-    collectZones(cloudflare),
-  ]);
-  return { root, module, registry, zones };
-}
-
 describe("tunnel DNS coverage", () => {
   test("resolves the production mail policy bindings against actual module DNS", async () => {
     const result = await evaluateTunnelDnsCoverage();
@@ -40,49 +27,22 @@ describe("tunnel DNS coverage", () => {
     const mail = result.bindings.filter((binding) =>
       binding.fqdn.startsWith("mta-sts."),
     );
-    const { zones } = await baselineFixture();
+    const zones = await collectZones(cloudflare);
     expect(mail.map((binding) => binding.fqdn).sort()).toEqual(
       [...zones.values()].map((zone) => `mta-sts.${zone.name}`).sort(),
     );
   });
 
-  test("fails when the module stops provisioning the policy CNAME", async () => {
-    const f = await baselineFixture();
-    for (const module of [
-      f.module.replace('"mta_sts_host"', '"deleted_host"'),
-      f.module.replace('name    = "mta-sts"', 'name    = "wrong-host"'),
-      f.module.replace(
-        'resource "cloudflare_dns_record" "mta_sts_host" {',
-        'resource "cloudflare_dns_record" "mta_sts_host" {\n  count = 0',
-      ),
-    ]) {
-      expect(() =>
-        baselineDnsNames(f.root, module, f.registry, {
-          zones: f.zones,
-          file: "fixture.tf",
-        }),
-      ).toThrow("unconditional proxied mta-sts");
+  test("a stack without a synthesized root is refused rather than read as empty", async () => {
+    const empty = await mkdtemp(path.join(tmpdir(), "tunnel-dns-empty-"));
+    try {
+      await expect(collectZones(empty)).rejects.toThrow("has no main.tf.json");
+      await expect(collectDnsNames(empty)).rejects.toThrow(
+        "has no main.tf.json",
+      );
+    } finally {
+      await rm(empty, { recursive: true });
     }
-  });
-
-  test("fails when a managed zone lacks an inventory entry or binding", async () => {
-    const f = await baselineFixture();
-    const zones = new Map(f.zones);
-    zones.set("forgotten_com", { ref: "forgotten_com", name: "forgotten.com" });
-    expect(() =>
-      baselineDnsNames(f.root, f.module, f.registry, {
-        zones,
-        file: "fixture.tf",
-      }),
-    ).toThrow("Every managed Cloudflare zone");
-    expect(() =>
-      baselineDnsNames(
-        f.root.replace(/\s*"sjer.red"\s*=\s*cloudflare_zone.sjer_red.id/, ""),
-        f.module,
-        f.registry,
-        { zones: f.zones, file: "fixture.tf" },
-      ),
-    ).toThrow("Every managed Cloudflare zone");
   });
 
   test("ignores test fixtures while retaining production TypeScript sources", () => {
@@ -120,8 +80,8 @@ describe("tunnel DNS coverage", () => {
     ]);
     const records: DnsName[] = [
       {
-        file: "/repo/packages/homelab/src/tofu/cloudflare/sjer-red.tf",
-        line: 8,
+        file: "/repo/packages/homelab/src/tofu/cloudflare/main.tf.json",
+        line: 1,
         resourceName: "app",
         name: "app",
         zoneRef: "sjer_red",
@@ -131,22 +91,28 @@ describe("tunnel DNS coverage", () => {
   });
 });
 
+type FixtureConfiguration = {
+  locals: Record<string, unknown>;
+  module: Record<string, Record<string, unknown>>;
+  resource: Record<string, Record<string, Record<string, unknown>>>;
+};
+
 /**
- * The cloudflare stack as cdktn would synthesize it address-identically:
- * the same zones, records and baseline module call, in JSON syntax.
+ * A copy of the committed cloudflare stack reduced to what coverage reads:
+ * its zones, records and baseline module call, and the HCL baseline module.
  */
 async function synthesizedFixture(
-  edit?: (configuration: {
-    locals: Record<string, unknown>;
-    module: Record<string, Record<string, unknown>>;
-  }) => void,
+  edit?: (configuration: FixtureConfiguration) => void,
+  editModule: (module: string) => string = (module) => module,
 ) {
   const root = await mkdtemp(path.join(tmpdir(), "tunnel-dns-json-"));
   const stack = path.join(root, "src/tofu/cloudflare");
   await mkdir(path.join(stack, "modules/domain-baseline"), { recursive: true });
-  await cp(
-    `${cloudflare}/modules/domain-baseline/main.tf`,
+  await Bun.write(
     path.join(stack, "modules/domain-baseline/main.tf"),
+    editModule(
+      await Bun.file(`${cloudflare}/modules/domain-baseline/main.tf`).text(),
+    ),
   );
   await cp(
     `${cloudflare}/../../domain-registry.json`,
@@ -163,7 +129,7 @@ async function synthesizedFixture(
     zone_id: "${local.baseline_zone_ids[each.key]}",
     domain: "${each.key}",
   };
-  const configuration = {
+  const configuration: FixtureConfiguration = {
     locals: {
       domain_registry:
         '${jsondecode(file("${path.module}/../../domain-registry.json"))}',
@@ -205,10 +171,8 @@ async function synthesizedFixture(
   return { root, stack };
 }
 
-// An interpolated HCL record name covers no hostname; the JSON reader skips it.
 const coverage = (records: DnsName[]) =>
   records
-    .filter((record) => !record.name.includes("${"))
     .map(
       (record) =>
         `${record.resourceName} ${record.name} ${record.zoneRef ?? "-"}`,
@@ -222,7 +186,7 @@ describe("tunnel DNS coverage of a synthesized cloudflare stack", () => {
       scratch.splice(0).map((directory) => rm(directory, { recursive: true })),
     );
   });
-  test("reads the same zones, records and baseline hosts from main.tf.json as from HCL", async () => {
+  test("reads zones, root records and the baseline module's policy hosts from main.tf.json", async () => {
     const { root, stack } = await synthesizedFixture();
     scratch.push(root);
     expect(await collectZones(stack)).toEqual(await collectZones(cloudflare));
@@ -231,10 +195,52 @@ describe("tunnel DNS coverage of a synthesized cloudflare stack", () => {
     expect(coverage(fromJson)).toEqual(
       coverage(await collectDnsNames(cloudflare)),
     );
+    expect(coverage(fromJson)).toEqual(
+      expect.arrayContaining([
+        "sjer_red_cname_argocd argocd sjer_red",
+        'module.domain_baseline["sjer.red"].cloudflare_dns_record.mta_sts_host mta-sts sjer_red',
+        'module.domain_baseline["ts-mc.net"].cloudflare_dns_record.mta_sts_host mta-sts ts_mc_net',
+      ]),
+    );
+    // A for_each record's name is an expression: it covers no hostname.
+    expect(
+      fromJson.some((record) => record.resourceName === "dmarc_report"),
+    ).toBe(false);
     const evaluated = await evaluateTunnelDnsCoverage({
       tofuCloudflare: stack,
     });
     expect(evaluated.missing).toEqual([]);
+  });
+
+  test("fails when the module stops provisioning the policy CNAME", async () => {
+    for (const editModule of [
+      (module: string) => module.replace('"mta_sts_host"', '"deleted_host"'),
+      (module: string) =>
+        module.replace('name    = "mta-sts"', 'name    = "wrong-host"'),
+      (module: string) =>
+        module.replace(
+          'resource "cloudflare_dns_record" "mta_sts_host" {',
+          'resource "cloudflare_dns_record" "mta_sts_host" {\n  count = 0',
+        ),
+    ]) {
+      const { root, stack } = await synthesizedFixture(undefined, editModule);
+      scratch.push(root);
+      await expect(collectDnsNames(stack)).rejects.toThrow(
+        "unconditional proxied mta-sts",
+      );
+    }
+  });
+
+  test("fails when a managed zone lacks an inventory entry", async () => {
+    const { root, stack } = await synthesizedFixture((configuration) => {
+      const zones = configuration.resource["cloudflare_zone"];
+      if (zones !== undefined)
+        zones["forgotten_com"] = { name: "forgotten.com" };
+    });
+    scratch.push(root);
+    await expect(collectDnsNames(stack)).rejects.toThrow(
+      "Every managed Cloudflare zone",
+    );
   });
 
   test("accepts baseline instances the TypeScript stack imported as a literal map", async () => {
@@ -254,11 +260,11 @@ describe("tunnel DNS coverage of a synthesized cloudflare stack", () => {
 
   test("fails when the synthesized baseline wiring cannot be proven", async () => {
     for (const edit of [
-      (configuration: { module: Record<string, Record<string, unknown>> }) => {
+      (configuration: FixtureConfiguration) => {
         const module = configuration.module["domain_baseline"];
         if (module !== undefined) module["count"] = 1;
       },
-      (configuration: { module: Record<string, Record<string, unknown>> }) => {
+      (configuration: FixtureConfiguration) => {
         const module = configuration.module["domain_baseline"];
         if (module !== undefined) module["for_each"] = { "sjer.red": {} };
       },

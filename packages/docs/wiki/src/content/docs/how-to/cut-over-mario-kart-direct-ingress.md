@@ -23,7 +23,7 @@ Keep the old canonical origin active during this release.
 For an existing listener, complete the [namespace migration](/how-to/migrate-game-bots-to-arcade/#move-the-web-edge-between-namespaces)
 before transferring its public ports.
 
-In the [Cloudflare stack](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/tofu/cloudflare/sjer-red.tf),
+In the [Cloudflare stack](https://github.com/shepherdjerred/monorepo/tree/main/packages/homelab/src/tofu/cloudflare),
 point `sjer_red_cname_arcade` at the [IPv4-only dynamic target](/reference/dynamic-dns/)
 with `proxied = false`. Verify that the target resolves without an AAAA record.
 Retain the existing HTTP and HTTPS [router forwards](/how-to/apply-the-asuswrt-stack/)
