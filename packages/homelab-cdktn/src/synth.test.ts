@@ -210,6 +210,91 @@ describe("tailscale", () => {
   });
 });
 
+describe("arr", () => {
+  test("keeps every *arr address, the ignored indexer fields and sensitive inputs", async () => {
+    const arr = await configuration("arr");
+    expect(addresses(arr.resource)).toEqual([
+      "prowlarr_application.radarr",
+      "prowlarr_application.sonarr",
+      "prowlarr_download_client.qbittorrent",
+      "prowlarr_indexer.animez",
+      "prowlarr_indexer.avistaz",
+      "prowlarr_indexer.knaben",
+      "prowlarr_indexer.magnetdownload",
+      "prowlarr_indexer.privatehd",
+      "prowlarr_indexer.the_pirate_bay",
+      "radarr_download_client.qbittorrent",
+      "radarr_root_folder.movies",
+      "sonarr_download_client.qbittorrent",
+      "sonarr_root_folder.tv",
+    ]);
+    expect(arr.import).toBeUndefined();
+    expect(arr.moved).toBeUndefined();
+    expect(arr.removed).toBeUndefined();
+    expect(arr.terraform.encryption).toBeUndefined();
+    expect(arr.terraform.required_providers).toEqual({
+      prowlarr: { source: "devopsarr/prowlarr", version: "~> 3.0" },
+      radarr: { source: "devopsarr/radarr", version: "~> 2.0" },
+      sonarr: { source: "devopsarr/sonarr", version: "~> 3.0" },
+    });
+
+    // Every input is sensitive, and the local the resources index is built
+    // only from those inputs, so each value read through it stays sensitive.
+    const variables = z
+      .record(z.string(), z.looseObject({ sensitive: z.literal(true) }))
+      .parse(arr.variable);
+    expect(Object.keys(variables)).toHaveLength(10);
+    expect(arr.locals?.["arr_api_keys"]).toEqual({
+      radarr: "${var.radarr_api_key}",
+      sonarr: "${var.sonarr_api_key}",
+      prowlarr: "${var.prowlarr_api_key}",
+      qbittorrent: "${var.qbittorrent_password}",
+      privatehd_password: "${var.privatehd_password}",
+      privatehd_pid: "${var.privatehd_pid}",
+      avistaz_password: "${var.avistaz_password}",
+      avistaz_pid: "${var.avistaz_pid}",
+      animez_password: "${var.animez_password}",
+      animez_pid: "${var.animez_pid}",
+    });
+
+    const indexers = arr.resource["prowlarr_indexer"] ?? {};
+    // Prowlarr owns the public indexers' fields; the credentialed ones are
+    // managed, with their secrets in `sensitive_value` in declared order.
+    for (const name of ["knaben", "magnetdownload", "the_pirate_bay"]) {
+      expect(indexers[name], name).toMatchObject({
+        lifecycle: { ignore_changes: ["fields"] },
+      });
+    }
+    for (const name of ["privatehd", "avistaz", "animez"]) {
+      expect(indexers[name], name).not.toHaveProperty("lifecycle");
+      expect(indexers[name], name).toMatchObject({
+        fields: [
+          { name: "freeleechOnly", bool_value: false },
+          { name: "torrentBaseSettings.preferMagnetUrl", bool_value: false },
+          { name: "baseSettings.limitsUnit", number_value: 0 },
+          { name: "baseUrl" },
+          {
+            name: "password",
+            sensitive_value: `\${local.arr_api_keys["${name}_password"]}`,
+          },
+          {
+            name: "pid",
+            sensitive_value: `\${local.arr_api_keys["${name}_pid"]}`,
+          },
+          { name: "torrentBaseSettings.seedRatio", number_value: 3 },
+          { name: "username" },
+        ],
+      });
+    }
+    expect(
+      arr.resource["prowlarr_download_client"]?.["qbittorrent"],
+    ).toMatchObject({
+      categories: [],
+      password: '${local.arr_api_keys["qbittorrent"]}',
+    });
+  });
+});
+
 describe("generator metadata", () => {
   test("drops cdktn's comment keys at every depth and nothing else", () => {
     expect(

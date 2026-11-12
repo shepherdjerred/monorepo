@@ -93,7 +93,7 @@ To port a stack, follow `packages/homelab-cdktn/README.md`.
   - `tailscale` — `TAILSCALE_OAUTH_CLIENT_ID` / `TAILSCALE_OAUTH_CLIENT_SECRET` (scope `acl`)
   - `argocd` — the `tofu-argocd` account's token as `TOFU_ARGOCD_AUTH_TOKEN` (`argocd.env`) plus `OP_SERVICE_ACCOUNT_TOKEN` for 1Password item writes
   - `dockerhub` — `DOCKERHUB_USERNAME`, the repository-management PAT `DOCKERHUB_MANAGEMENT_TOKEN`, and `TOFU_STATE_ENCRYPTION_PASSPHRASE`
-  - `arr` — Radarr/Sonarr/Prowlarr API credentials (see `arr/providers.tf`)
+  - `arr` — Radarr/Sonarr/Prowlarr API credentials (see `packages/homelab-cdktn/src/stacks/arr.ts`)
   - `asuswrt` — `TF_VAR_asuswrt_username` / `TF_VAR_asuswrt_password`, the shared router/AP admin login
   - `backblaze` — master `B2_APPLICATION_KEY_ID` / `B2_APPLICATION_KEY` for an account in `us-west-004`, `OP_ACCOUNT` for the 1Password provider's desktop-app auth, and `TOFU_STATE_ENCRYPTION_PASSPHRASE`
   - `discord` — one bot token per imported application plus `TOFU_STATE_ENCRYPTION_PASSPHRASE`

@@ -29,17 +29,20 @@
     {
       "registryUrl": "https://registry.opentofu.org",
       "source": "devopsarr/prowlarr",
-      "version": "3.2.2"
+      "version": "3.2.2",
+      "bindings": true
     },
     {
       "registryUrl": "https://registry.opentofu.org",
       "source": "devopsarr/radarr",
-      "version": "2.5.0"
+      "version": "2.5.0",
+      "bindings": true
     },
     {
       "registryUrl": "https://registry.opentofu.org",
       "source": "devopsarr/sonarr",
-      "version": "3.5.0"
+      "version": "3.5.0",
+      "bindings": true
     },
     {
       "registryUrl": "https://registry.opentofu.org",
