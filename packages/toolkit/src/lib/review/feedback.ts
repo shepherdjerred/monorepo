@@ -6,7 +6,8 @@ import {
   type ReviewProvider,
 } from "@shepherdjerred/code-review";
 import { listFindings, type Finding } from "./findings.ts";
-import { GitHubClient, type CiReview } from "#lib/ci/github.ts";
+import { GitHubClient } from "#lib/ci/github.ts";
+import type { CiReview } from "#lib/ci/github/schemas.ts";
 import {
   CommentSchema,
   threadsFor,

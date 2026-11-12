@@ -5,9 +5,14 @@ const frame = (
   repo: number,
   event: string,
   ref: string,
-  metadata: { branch: string; event_reason?: readonly string[] },
+  metadata: {
+    branch: string;
+    event_reason?: readonly string[];
+    status?: string;
+    commit?: string;
+  },
 ) =>
-  `data: ${JSON.stringify({ repo: { id: repo }, pipeline: { number: 7, commit: "head", event, ref, ...metadata } })}\n\n`;
+  `data: ${JSON.stringify({ repo: { id: repo }, pipeline: { number: 7, commit: "head", event, ref, status: "running", ...metadata } })}\n\n`;
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -27,9 +32,10 @@ test("SSE frames preserve partial UTF-8, CRLF and multiline data while ignoring 
   ).toThrow("size limit");
 });
 
-test("stream wakes only the target PR and main in the configured repository", async () => {
+test("stream wakes only the target PR and finished main runs in the configured repository", async () => {
   const controller = new AbortController();
   let wakes = 0;
+  const commits: string[] = [];
   const fetchMock = vi.fn(
     async () =>
       new Response(
@@ -37,10 +43,25 @@ test("stream wakes only the target PR and main in the configured repository", as
           frame(1, "pull_request", "refs/pull/100/head", {
             branch: "feature",
           }) +
-          frame(1, "pull_request", "refs/pull/99/head", { branch: "feature" }) +
+          frame(1, "pull_request", "refs/pull/99/head", {
+            branch: "feature",
+            commit: "pushed",
+          }) +
+          // A running main pipeline's step events do not wake a PR wait.
           frame(1, "push", "refs/heads/main", { branch: "main" }) +
-          frame(1, "manual", "refs/heads/feature", { branch: "main" }) +
-          frame(1, "manual", "refs/heads/main", { branch: "main" }),
+          frame(1, "manual", "refs/heads/main", { branch: "main" }) +
+          frame(1, "manual", "refs/heads/feature", {
+            branch: "main",
+            status: "success",
+          }) +
+          frame(1, "manual", "refs/heads/main", {
+            branch: "main",
+            status: "failure",
+          }) +
+          frame(1, "push", "refs/heads/main", {
+            branch: "main",
+            status: "success",
+          }),
         { headers: { "content-type": "text/event-stream" } },
       ),
   );
@@ -52,13 +73,48 @@ test("stream wakes only the target PR and main in the configured repository", as
       prNumber: 99,
       connected: vi.fn(),
       fatal: vi.fn(),
+      prCommit: (commit) => commits.push(commit),
       wake: () => {
         wakes++;
         if (wakes === 4) controller.abort();
       },
     },
   );
+  expect(commits).toEqual(["pushed"]);
   expect(wakes).toBe(5); // initial snapshot + three relevant events + disconnected refresh
+});
+
+test("a main wait wakes for every main event, including running steps", async () => {
+  const controller = new AbortController();
+  let wakes = 0;
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(
+      async () =>
+        new Response(
+          frame(1, "push", "refs/heads/main", { branch: "main" }) +
+            frame(1, "pull_request", "refs/pull/99/head", {
+              branch: "feature",
+            }) +
+            frame(1, "push", "refs/heads/main", { branch: "main" }),
+          { headers: { "content-type": "text/event-stream" } },
+        ),
+    ),
+  );
+  await watchEvents(
+    { baseUrl: "https://woodpecker.sjer.red", token: "test", repoId: 1 },
+    {
+      signal: controller.signal,
+      prNumber: null,
+      connected: vi.fn(),
+      fatal: vi.fn(),
+      wake: () => {
+        wakes++;
+        if (wakes === 3) controller.abort();
+      },
+    },
+  );
+  expect(wakes).toBe(4); // initial snapshot + two main events + disconnected refresh
 });
 
 test("authentication and malformed frames are terminal rather than endless retries", async () => {

@@ -123,13 +123,32 @@ export function rateLimitError(
   });
 }
 
+/**
+ * GitHub's GraphQL error types for a refused quota. The documented type is
+ * `RATE_LIMITED`; an exhausted user bucket also answers HTTP 200 with
+ * `RATE_LIMIT` ("API rate limit already exceeded for user ID ...").
+ */
+const GRAPHQL_RATE_LIMIT_TYPES = new Set(["RATE_LIMITED", "RATE_LIMIT"]);
+
 const GraphqlErrorsSchema = z
-  .array(z.object({ type: z.string() }).loose())
-  .refine((errors) => errors.some((error) => error.type === "RATE_LIMITED"));
+  .array(
+    z
+      .object({ type: z.string().optional(), message: z.string().optional() })
+      .loose(),
+  )
+  .refine((errors) =>
+    errors.some(
+      (error) =>
+        (error.type !== undefined &&
+          GRAPHQL_RATE_LIMIT_TYPES.has(error.type)) ||
+        (error.type === undefined && /rate limit/iu.test(error.message ?? "")),
+    ),
+  );
 
 /**
  * GraphQL reports an exhausted bucket as HTTP 200 with `remaining: 0` or a
- * `RATE_LIMITED` error in the payload; recognise that shape too.
+ * `RATE_LIMITED`/`RATE_LIMIT` error in the payload; recognise that shape too.
+ * A `retry-after` header on the response takes precedence over the reset.
  */
 export function graphqlRateLimitError(
   response: Response,
@@ -152,10 +171,25 @@ export function graphqlRateLimitError(
   });
 }
 
-type CachedResponse = {
+export type CachedResponse = {
   etag: string;
   body: string;
   headers: [string, string][];
+  /** Epoch milliseconds when GitHub last returned or revalidated this body. */
+  storedAt?: number | undefined;
+};
+
+/**
+ * Where ETagged bodies live. {@link ConditionalCache} keeps them in process;
+ * a caller may supply a store shared between processes on one host.
+ */
+export type ResponseCache = {
+  get: (
+    key: string,
+  ) => CachedResponse | undefined | Promise<CachedResponse | undefined>;
+  set: (key: string, entry: CachedResponse) => void | Promise<void>;
+  notModified: number;
+  fetched: number;
 };
 
 /**
@@ -163,7 +197,7 @@ type CachedResponse = {
  * keyed by a token fingerprint plus the full URL (query included), so two
  * identities never share a body and the token itself is never retained.
  */
-export class ConditionalCache {
+export class ConditionalCache implements ResponseCache {
   readonly #entries = new Map<string, CachedResponse>();
   /** Requests answered by `304 Not Modified` (not charged to the bucket). */
   notModified = 0;
@@ -205,16 +239,25 @@ export const restCache = new ConditionalCache();
 /** Response headers worth replaying from a cached body. */
 const REPLAYED_HEADERS = ["content-type", "link", "etag"];
 
-function cacheKey(token: string, url: string): string {
+/** The cache key for one identity and URL; the token itself is never kept. */
+export function responseCacheKey(token: string, url: string): string {
   const fingerprint = createHash("sha256").update(token).digest("hex");
   return `${fingerprint}\n${url}`;
 }
 
 export type GitHubGetOptions = {
   token: string;
-  cache?: ConditionalCache;
+  cache?: ResponseCache;
   signal?: AbortSignal;
   redirect?: "error" | "follow" | "manual";
+  /**
+   * Answer from the cache without a request when its body was stored or
+   * revalidated this recently. Only for reads that tolerate that staleness.
+   */
+  maxAgeMs?: number;
+  /** Sees every real GitHub response, including 304s and refusals. */
+  observe?: (response: Response) => void | Promise<void>;
+  now?: () => number;
 };
 
 /** Re-wrap a consumed body so the caller can still read it. */
@@ -226,12 +269,19 @@ function rewrap(response: Response, body: string): Response {
   });
 }
 
+/** Where one GET's cached copy lives: its cache, key, and current entry. */
+type CacheSlot = {
+  cache: ResponseCache;
+  key: string;
+  entry: CachedResponse | undefined;
+};
+
 /** Store an ETagged success and hand back a readable copy of its body. */
 async function storeEtagged(
   response: Response,
   etag: string,
-  key: string,
-  cache: ConditionalCache,
+  slot: CacheSlot,
+  storedAt: number,
 ): Promise<Response> {
   const body = await response.text();
   const replayed: [string, string][] = [];
@@ -241,8 +291,46 @@ async function storeEtagged(
       replayed.push([name, value]);
     }
   }
-  cache.set(key, { etag, body, headers: replayed });
+  await slot.cache.set(slot.key, { etag, body, headers: replayed, storedAt });
   return rewrap(response, body);
+}
+
+async function cacheSlot(
+  cache: ResponseCache | undefined,
+  token: string,
+  href: string,
+): Promise<CacheSlot | null> {
+  if (cache === undefined) return null;
+  const key = responseCacheKey(token, href);
+  return { cache, key, entry: await cache.get(key) };
+}
+
+/** A stored body recent enough to answer without asking GitHub. */
+function isFresh(
+  entry: CachedResponse,
+  maxAgeMs: number,
+  now: number,
+): boolean {
+  return (
+    entry.storedAt !== undefined &&
+    maxAgeMs > 0 &&
+    now - entry.storedAt < maxAgeMs
+  );
+}
+
+function replay(entry: CachedResponse): Response {
+  return new Response(entry.body, { status: 200, headers: entry.headers });
+}
+
+/** Answer a 304 from the cache and mark the entry revalidated now. */
+async function revalidated(
+  slot: CacheSlot,
+  entry: CachedResponse,
+  now: number,
+): Promise<Response> {
+  slot.cache.notModified++;
+  await slot.cache.set(slot.key, { ...entry, storedAt: now });
+  return replay(entry);
 }
 
 /**
@@ -257,10 +345,14 @@ export async function githubGet(
   url: string | URL,
   options: GitHubGetOptions,
 ): Promise<Response> {
-  const { cache, token, signal, redirect } = options;
+  const { token, signal, redirect } = options;
+  const now = options.now ?? Date.now;
   const href = url.toString();
-  const key = cache === undefined ? null : cacheKey(token, href);
-  const cached = key === null ? undefined : cache?.get(key);
+  const slot = await cacheSlot(options.cache, token, href);
+  const cached = slot?.entry;
+  if (cached !== undefined && isFresh(cached, options.maxAgeMs ?? 0, now())) {
+    return replay(cached);
+  }
   const headers = githubHeaders(token);
   if (cached !== undefined) {
     headers["If-None-Match"] = cached.etag;
@@ -270,14 +362,12 @@ export async function githubGet(
     ...(redirect === undefined ? {} : { redirect }),
     ...(signal === undefined ? {} : { signal }),
   });
-  if (cached !== undefined && response.status === 304) {
-    if (cache !== undefined) {
-      cache.notModified++;
-    }
-    return new Response(cached.body, { status: 200, headers: cached.headers });
+  await options.observe?.(response);
+  if (slot !== null && cached !== undefined && response.status === 304) {
+    return revalidated(slot, cached, now());
   }
-  if (cache !== undefined) {
-    cache.fetched++;
+  if (slot !== null) {
+    slot.cache.fetched++;
   }
   if (response.status === 403 || response.status === 429) {
     const body = await response.text();
@@ -285,9 +375,9 @@ export async function githubGet(
     return rewrap(response, body);
   }
   const etag = response.headers.get("etag");
-  return cache === undefined || key === null || etag === null || !response.ok
+  return slot === null || etag === null || !response.ok
     ? response
-    : storeEtagged(response, etag, key, cache);
+    : storeEtagged(response, etag, slot, now());
 }
 
 /**

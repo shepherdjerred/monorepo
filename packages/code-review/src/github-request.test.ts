@@ -3,6 +3,7 @@ import {
   ConditionalCache,
   GitHubRateLimitError,
   githubGet,
+  graphqlRateLimitError,
   rateLimitError,
 } from "./github-request.ts";
 import { getJsonWithLink, graphqlRequest } from "./github-http.ts";
@@ -37,6 +38,58 @@ function etagged(body: unknown, etag: string, link?: string): Response {
 }
 
 describe("githubGet", () => {
+  test("a body stored within maxAgeMs answers without a request", async () => {
+    let now = 1_000_000;
+    const calls = stubFetch([
+      () => etagged([{ id: 1 }], '"one"'),
+      () => new Response(null, { status: 304 }),
+    ]);
+    const cache = new ConditionalCache();
+    const options = { token: "t", cache, now: () => now, maxAgeMs: 15_000 };
+
+    await githubGet(URL_A, options);
+    now += 10_000;
+    const shared = await githubGet(URL_A, options);
+    expect(await shared.json()).toEqual([{ id: 1 }]);
+    expect(calls).toHaveLength(1);
+
+    now += 10_000;
+    await githubGet(URL_A, options);
+    expect(calls.map((call) => call.ifNoneMatch)).toEqual([null, '"one"']);
+    // The 304 revalidated the entry, so it is fresh again.
+    now += 10_000;
+    await githubGet(URL_A, options);
+    expect(calls).toHaveLength(2);
+    // Without maxAgeMs every read still asks GitHub.
+    stubFetch([() => new Response(null, { status: 304 })]);
+    await githubGet(URL_A, { token: "t", cache, now: () => now });
+    expect(cache.notModified).toBe(2);
+  });
+
+  test("observe sees each real response, including a 304", async () => {
+    stubFetch([
+      () => etagged([{ id: 1 }], '"one"'),
+      () =>
+        new Response(null, {
+          status: 304,
+          headers: { "x-ratelimit-remaining": "4999" },
+        }),
+    ]);
+    const seen: (string | null)[] = [];
+    const options = {
+      token: "t",
+      cache: new ConditionalCache(),
+      observe: (response: Response) => {
+        seen.push(
+          `${String(response.status)}:${response.headers.get("x-ratelimit-remaining") ?? "-"}`,
+        );
+      },
+    };
+    await githubGet(URL_A, options);
+    await githubGet(URL_A, options);
+    expect(seen).toEqual(["200:-", "304:4999"]);
+  });
+
   test("revalidates a stored ETag and replays the cached body on 304", async () => {
     const calls = stubFetch([
       () => etagged([{ id: 1 }], 'W/"one"'),
@@ -219,6 +272,63 @@ describe("getJsonWithLink", () => {
     const replayed = await getJsonWithLink(url, "link-token");
 
     expect(replayed).toEqual({ payload: [{ id: 1 }], linkNext: next });
+  });
+});
+
+function limitResponse(extra: Record<string, string> = {}): Response {
+  return new Response("{}", {
+    headers: {
+      "x-ratelimit-remaining": "0",
+      "x-ratelimit-reset": "4102444800",
+      ...extra,
+    },
+  });
+}
+
+describe("graphqlRateLimitError", () => {
+  test("classifies the RATE_LIMIT type an exhausted user bucket returns", () => {
+    const error = graphqlRateLimitError(
+      limitResponse(),
+      [
+        {
+          type: "RATE_LIMIT",
+          code: "graphql_rate_limit",
+          message: "API rate limit already exceeded for user ID 3904778.",
+        },
+      ],
+      "/graphql",
+    );
+    expect(error).toBeInstanceOf(GitHubRateLimitError);
+    expect(error?.resumeAt).toBe(4_102_444_800_000);
+  });
+
+  test("honours retry-after on a GraphQL refusal", () => {
+    const now = Date.now();
+    const error = graphqlRateLimitError(
+      limitResponse({ "x-ratelimit-remaining": "120", "retry-after": "30" }),
+      [{ type: "RATE_LIMITED", message: "secondary" }],
+      "/graphql",
+    );
+    expect(error?.resumeAt).toBeGreaterThanOrEqual(now + 30_000);
+    expect(error?.resumeAt).toBeLessThan(now + 31_000);
+  });
+
+  test("an untyped rate-limit message is a refusal; other errors are not", () => {
+    const remaining = limitResponse({ "x-ratelimit-remaining": "100" });
+    expect(
+      graphqlRateLimitError(
+        remaining,
+        [{ message: "You have exceeded a secondary rate limit." }],
+        "/graphql",
+      ),
+    ).toBeInstanceOf(GitHubRateLimitError);
+    expect(
+      graphqlRateLimitError(
+        remaining,
+        [{ type: "NOT_FOUND", message: "rate limit of nothing" }],
+        "/graphql",
+      ),
+    ).toBeNull();
   });
 });
 

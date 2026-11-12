@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { setTimeout as delay } from "node:timers/promises";
+import { sleep } from "./wait/sleep.ts";
+import { workflowStatus } from "./status.ts";
 import {
   WoodpeckerHttpError,
   isPrVerificationPipeline,
@@ -12,6 +13,7 @@ const EventSchema = z.object({
     number: z.number(),
     commit: z.string(),
     event: z.string(),
+    status: z.string(),
     event_reason: z.array(z.string()).nullish(),
     pr_draft: z.boolean().optional(),
     ref: z.string(),
@@ -78,8 +80,15 @@ export type EventWatch = {
   wake: () => void;
   connected: () => void;
   fatal: (error: unknown) => void;
-  /** The PR whose pipelines wake the wait; null watches main only. */
+  /**
+   * The PR whose pipelines wake the wait; null watches main only. A PR wait
+   * wakes for main only when a main pipeline finishes: main's verdict matters
+   * to a PR only once it settles, and its step events would otherwise wake
+   * every PR waiter several times a minute.
+   */
   prNumber: number | null;
+  /** Called with the commit of each event for the watched PR. */
+  prCommit?: (commit: string) => void;
 };
 
 function isCancelled(signal: AbortSignal): boolean {
@@ -119,10 +128,15 @@ async function consumeEvents(
       watch.prNumber !== null &&
       isPrVerificationPipeline(event.pipeline) &&
       event.pipeline.ref.startsWith(`refs/pull/${String(watch.prNumber)}/`);
-    const relevantMain =
+    const mainEvent =
       (event.pipeline.event === "push" || event.pipeline.event === "manual") &&
       event.pipeline.branch === "main" &&
       event.pipeline.ref === "refs/heads/main";
+    const relevantMain =
+      mainEvent &&
+      (watch.prNumber === null ||
+        workflowStatus(event.pipeline.status) !== "PENDING");
+    if (relevantPr) watch.prCommit?.(event.pipeline.commit);
     if (relevantPr || relevantMain) watch.wake();
   }
 }
@@ -146,7 +160,7 @@ export async function watchEvents(
     }
     watch.wake();
     try {
-      await delay(backoff, undefined, { signal: watch.signal });
+      await sleep(backoff, watch.signal);
     } catch (error) {
       if (isCancelled(watch.signal)) return;
       throw error;

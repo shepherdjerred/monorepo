@@ -28,7 +28,7 @@ export async function healthCommand(
   ]);
   if (pr === null) throw new Error(`PR #${String(number)} could not be read`);
   const snapshot = await new CiObserver(
-    new GitHubClient(token),
+    GitHubClient.shared(token),
     config,
   ).snapshot(number, undefined, true);
   const merge = await checkMergeConflicts(

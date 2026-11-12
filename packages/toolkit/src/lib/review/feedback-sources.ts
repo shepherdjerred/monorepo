@@ -5,7 +5,7 @@ import {
   resolveProvider,
 } from "@shepherdjerred/code-review";
 import type { GitHubClient } from "#lib/ci/github.ts";
-import { type CiReview } from "#lib/ci/github.ts";
+import type { CiReview } from "#lib/ci/github/schemas.ts";
 
 export const CommentSchema = z.object({
   id: z.number(),
