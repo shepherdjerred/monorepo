@@ -46,6 +46,30 @@ rename without a `moved` block is a destroy and a create.
 Never combine the two. A port that also restructures cannot show which change
 caused a plan diff.
 
+### Flattening a local module
+
+A local HCL module the root calls is replaced in pass two by a construct
+extending `FlattenedModule` (`src/flattened-module.ts`). Create each resource
+through `place(resource, name, nameInModule)`: it gives the resource its root
+name and records the `module.<call>[…].<type>.<name>[…]` address it had, so
+`moveIntoRoot(stack)` writes one `moved` block per resource from the same
+calls that create them. A `for_each` or `count` instance becomes its own
+resource, and the module's conditions are decided at synthesis.
+
+- A root name must not be a `from` of an existing `moved` block, which would
+  be a cycle; `DomainBaseline` names its resources `<zone>_baseline_<name>`.
+- Keep the `moved` blocks that point into the module. OpenTofu follows the
+  chain, and accepts a `moved` target inside a module call that no longer
+  exists.
+- An `import` block cannot target an address the configuration does not
+  declare: re-target each one at the root resource.
+- A data source is read again at its new address and takes no `moved` block.
+- Delete `modules/` and any `tests/*.tftest.hcl` in the same commit, and move
+  the test's cases to assertions on a fixture stack (`synthesizeStack`).
+- Accept it on a plan whose only lines are `has moved to` and whose summary
+  is `Plan: 0 to add, 0 to change, 0 to destroy.`, and on the live state's
+  address set, mapped through the `moved` blocks, equalling the configuration's.
+
 ### Steps
 
 1. In `packages/homelab/src/tofu/provider-versions.json`, set
@@ -61,7 +85,8 @@ caused a plan diff.
    commit. A directory holding both `main.tf.json` and root `.tf` files is
    refused. A local module the root still calls (`modules/**`) stays HCL:
    call it with `TerraformHclModule` under its HCL name, so its resources
-   keep their `module.<name>…` addresses. Flattening a module is pass two.
+   keep their `module.<name>…` addresses. Flattening a module is pass two;
+   see "Flattening a local module".
 5. Add a synth test asserting the stack's resource addresses, imports,
    `moved` and `removed` blocks.
 6. Drop any `externalFiles` entry in `tofu-stack-manifest.ts` for a file the
@@ -169,6 +194,11 @@ Never run `apply`, `import`, or any `state` subcommand as part of a port.
 - **A dynamically typed attribute is bound as a map.**
   `cloudflare_zone_setting.value` accepts a string or an object, but its
   binding is `{ [key: string]: any }`; pass a scalar as `Token.asAny("on")`.
+- **`replaceTriggeredBy` must be an address string.** A resource object is
+  written as `"${terraform_data.x}"`, which OpenTofu rejects in JSON syntax;
+  pass `"terraform_data.x"`.
+- **A resource used without its provider construct fails synthesis.** A stack
+  that only reads `data.http` still declares `new HttpProvider(this, "http")`.
 
 ## Helpers
 
@@ -181,6 +211,7 @@ Never run `apply`, `import`, or any `state` subcommand as part of a port.
 | `importInstance`            | `src/state-migrations.ts` | An `import` block for one `for_each` instance                |
 | `importAddress`             | `src/state-migrations.ts` | An `import` block into a module call, or with its `for_each` |
 | `encryptStateAndPlans`      | `src/encryption.ts`       | Passphrase variable and enforced state and plan encryption   |
+| `FlattenedModule`           | `src/flattened-module.ts` | Base of a construct replacing a local module, with its moves |
 
-Each helper creates resources in the scope it is given with the id it is
-given, so it is safe in pass one.
+Each helper but `FlattenedModule` creates resources in the scope it is given
+with the id it is given, so it is safe in pass one.

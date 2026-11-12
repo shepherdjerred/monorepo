@@ -71,10 +71,7 @@ export function blocksOf(
   );
 }
 
-export function hclResources(
-  stack: string,
-  blocks: readonly HclBlock[],
-): Resource[] {
+function hclResources(stack: string, blocks: readonly HclBlock[]): Resource[] {
   return blocksOf(blocks, "resource").map((block) => ({
     stack,
     type: block.labels[0] ?? "",
@@ -109,7 +106,7 @@ function withoutHclComments(source: string): string {
     .join("\n");
 }
 
-export async function readHclFiles(directory: string): Promise<string[]> {
+async function readHclFiles(directory: string): Promise<string[]> {
   const files: string[] = [];
   for await (const file of new Bun.Glob("*.tf").scan({ cwd: directory }))
     files.push(file);

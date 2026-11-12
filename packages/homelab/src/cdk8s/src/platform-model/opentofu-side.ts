@@ -1,16 +1,12 @@
 import path from "node:path";
 import { z } from "zod";
-import { domainRegistry } from "homelab/src/domain-registry.ts";
-import { literalString, objectEntries, parseHcl } from "./hcl.ts";
+import { literalString, objectEntries } from "./hcl.ts";
 import {
   TOFU_ROOT,
   blocksOf,
-  hclResources,
-  readHclFiles,
   readStack,
   stackNames,
   text,
-  type ModuleCall,
   type Resource,
   type Stack,
 } from "./opentofu-stack.ts";
@@ -127,100 +123,65 @@ function zoneResolver(
   };
 }
 
-const REGISTRY_FILE = 'file("${path.module}/../../domain-registry.json")';
+const CacheRulesSchema = z.array(z.looseObject({ expression: z.string() }));
+const CACHED_PREFIX = /^starts_with\(http\.request\.uri\.path, "([^"]+)"\)$/;
 
 /**
- * Tunnel records a child module declares, one set per module instance. The
- * modules are still HCL. Only the domain baseline declares any: an instance
- * per registered domain, each in that domain's own zone.
+ * The path prefixes a zone's static-asset cache ruleset matches: its one
+ * rule is `starts_with(http.request.uri.path, "<prefix>")` joined by `or`.
  */
-async function moduleTunnelRecords(
-  stack: Stack,
-  call: ModuleCall,
-  zoneOf: (expression: string | undefined) => string,
-): Promise<TunnelRecord[]> {
-  const label = `module.${call.name}`;
-  const source = call.arguments["source"];
-  if (typeof source !== "string")
-    throw new TypeError(`${label} has no literal source`);
-  const sources = await readHclFiles(path.join(TOFU_ROOT, stack.name, source));
-  const records = hclResources(
-    stack.name,
-    sources.flatMap((moduleSource) => parseHcl(moduleSource)),
-  ).filter((resource) => pointsAtTunnel(resource));
-  if (records.length === 0) return [];
-  const registry = stack.locals["domain_registry"];
-  const zoneIds = z
-    .record(z.string(), z.string())
-    .safeParse(stack.locals["baseline_zone_ids"]);
-  if (
-    typeof registry !== "string" ||
-    !zoneIds.success ||
-    call.arguments["for_each"] !== "${local.domain_registry.domains}" ||
-    !registry.includes(REGISTRY_FILE) ||
-    call.arguments["zone_id"] !== "${local.baseline_zone_ids[each.key]}" ||
-    records.some((record) => record.attributes.get("zone_id") !== "var.zone_id")
-  )
-    throw new Error(
-      `${label} declares tunnel records with wiring this reader does not know`,
-    );
-  return Object.keys(domainRegistry.domains).flatMap((domain) =>
-    records.map((record) =>
-      tunnelRecord(
-        record,
-        `${label}["${domain}"].cloudflare_dns_record.${record.name}`,
-        zoneOf(JSON.stringify(zoneIds.data[domain])),
-      ),
-    ),
+function cachedPrefixes(ruleset: Resource): string[] {
+  const address = `cloudflare_ruleset.${ruleset.name}`;
+  const rules = CacheRulesSchema.safeParse(
+    JSON.parse(ruleset.attributes.get("rules") ?? "null"),
   );
+  const [rule] = rules.success ? rules.data : [];
+  if (rule === undefined || rules.data?.length !== 1)
+    throw new Error(`${address} is not a single cache rule`);
+  return rule.expression
+    .split(" or ")
+    .map((clause) => {
+      const prefix = CACHED_PREFIX.exec(clause)?.[1];
+      if (prefix === undefined)
+        throw new Error(`${address} matches something other than a prefix`);
+      return prefix;
+    })
+    .toSorted();
 }
 
 /**
- * The cloudflare stack is synthesized: its records and module calls are read
- * from `main.tf.json`, and the two modules it calls from their HCL.
+ * The cloudflare stack is synthesized and holds no module: every record and
+ * cache ruleset is a root resource of `main.tf.json`.
  */
-async function readCloudflare(
+function readCloudflare(
   stack: Stack,
-): Promise<
-  Pick<OpenTofuSide, "tunnelRecords" | "immutablePathPrefixesByZone">
-> {
-  if (stack.blocks.length > 0)
+): Pick<OpenTofuSide, "tunnelRecords" | "immutablePathPrefixesByZone"> {
+  if (stack.blocks.length > 0 || stack.modules.length > 0)
     throw new Error(
-      "cloudflare: expected the synthesized main.tf.json; update readCloudflare",
+      "cloudflare: expected a synthesized main.tf.json without module calls; update readCloudflare",
     );
   const zoneOf = zoneResolver(stack);
-  const fromModules = await Promise.all(
-    stack.modules.map((call) => moduleTunnelRecords(stack, call, zoneOf)),
-  );
   return {
-    tunnelRecords: [
-      ...stack.resources
-        .filter((resource) => pointsAtTunnel(resource))
-        .map((record) =>
-          tunnelRecord(
-            record,
-            `cloudflare_dns_record.${record.name}`,
-            zoneOf(record.attributes.get("zone_id")),
-          ),
+    tunnelRecords: stack.resources
+      .filter((resource) => pointsAtTunnel(resource))
+      .map((record) =>
+        tunnelRecord(
+          record,
+          `cloudflare_dns_record.${record.name}`,
+          zoneOf(record.attributes.get("zone_id")),
         ),
-      ...fromModules.flat(),
-    ],
+      ),
     immutablePathPrefixesByZone: new Map(
-      stack.modules
-        .filter((call) => call.arguments["source"] === "./modules/static-cache")
-        .map((call) => {
-          const prefixes = z
-            .array(z.string())
-            .safeParse(call.arguments["asset_prefixes"]);
-          if (!prefixes.success)
-            throw new Error(
-              `module.${call.name} has no literal asset_prefixes`,
-            );
-          return [
-            zoneOf(JSON.stringify(call.arguments["zone_id"])),
-            prefixes.data.toSorted(),
-          ];
-        }),
+      stack.resources
+        .filter(
+          (resource) =>
+            resource.type === "cloudflare_ruleset" &&
+            text(resource, "phase") === "http_request_cache_settings",
+        )
+        .map((ruleset) => [
+          zoneOf(ruleset.attributes.get("zone_id")),
+          cachedPrefixes(ruleset),
+        ]),
     ),
   };
 }
@@ -380,7 +341,7 @@ export async function readOpenTofuSide(): Promise<OpenTofuSide> {
   const itemsByStack = await Promise.all(
     stacks.map((candidate) => readOnePasswordItems(candidate)),
   );
-  const cloudflare = await readCloudflare(stack("cloudflare"));
+  const cloudflare = readCloudflare(stack("cloudflare"));
   return {
     ...cloudflare,
     ...readSeaweedfs(stack("seaweedfs")),

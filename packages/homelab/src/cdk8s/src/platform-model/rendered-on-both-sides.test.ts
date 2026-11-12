@@ -12,8 +12,10 @@ import { RULES, type Sides } from "./rules.ts";
  * TunnelBinding and no DNS record fails here, and so does the reverse.
  *
  * cdk8s reads the model, so its half of each rule is "every definition is
- * rendered"; the OpenTofu stacks do not read it yet, and are compared value by
- * value.
+ * rendered". The cloudflare stack reads it too, for tunnel CNAMEs and cache
+ * rules; the other OpenTofu stacks do not yet. Every stack is compared value
+ * by value from the JSON OpenTofu runs, so a record written outside the model
+ * is caught either way.
  *
  * Each rule holds except for the entries in `debt-allowlists.ts`, asserted in
  * both directions: nothing outside the allowlist may break the rule, and

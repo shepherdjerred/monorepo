@@ -62,6 +62,7 @@ export function enforcedEncryption({
 
 const SynthesizedSchema = z.looseObject({
   resource: ResourcesSchema.optional(),
+  data: ResourcesSchema.optional(),
   import: z.array(z.record(z.string(), z.unknown())).optional(),
   moved: z.array(z.record(z.string(), z.unknown())).optional(),
   removed: z.array(z.record(z.string(), z.unknown())).optional(),

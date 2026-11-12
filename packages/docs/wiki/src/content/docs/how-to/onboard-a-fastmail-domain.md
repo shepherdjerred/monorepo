@@ -18,7 +18,8 @@ Use the [OpenTofu infrastructure contract](https://github.com/shepherdjerred/mon
 
 3. Add the domain to `packages/homelab/src/domain-registry.json` with `mtaStsPublished: false`.
    Set `fastmailReady: true` after confirming account-side domain onboarding; keep it false until then.
-   Add the existing Cloudflare zone resource, its declarative import, and the `baseline_zone_ids` binding.
+   Add the existing Cloudflare zone and its declarative import to the stack's `zones.ts`; its baseline follows from the registry entry.
+   Re-synthesize the stack and commit `cloudflare/main.tf.json`.
    Preserve website records, redirects, existing subdomain mail routing, and Postal selectors.
    Enable wildcard inbound MX only when using Fastmail subdomain addressing.
 

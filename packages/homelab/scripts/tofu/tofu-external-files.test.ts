@@ -62,10 +62,11 @@ describe("stack external file declarations", () => {
       repoRoot: repository,
       stackDirectory: path.join(repository, TOFU_STACK_ROOT, "cloudflare"),
     });
-    expect(cloudflare.map((reference) => reference.target)).toContain(
-      "packages/homelab/src/domain-registry.json",
-    );
-    // The synthesized posthog stack carries the analytics registry inline.
+    // The synthesized cloudflare stack carries the domain registry and the
+    // platform model inline, and posthog the analytics registry: neither
+    // reads a file at plan time.
+    expect(cloudflare).toEqual([]);
+    expect(STACK_MANIFEST.cloudflare.externalFiles).toEqual([]);
     expect(STACK_MANIFEST.posthog.externalFiles).toEqual([]);
   });
 

@@ -2,10 +2,14 @@ import path from "node:path";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import { domainRegistry } from "homelab/src/domain-registry.ts";
+import {
+  immutablePathPrefixesByZone,
+  publicHostnames,
+  tunnelCnameTarget,
+} from "homelab/src/platform-model.ts";
 import { synthesize } from "#scripts/synth.ts";
 import { TUNNEL } from "#src/stacks/cloudflare/records.ts";
 
-const BASELINE = "module.domain_baseline";
 const STACK_DIRECTORY = path.resolve(
   import.meta.dir,
   "../../homelab/src/tofu/cloudflare",
@@ -23,16 +27,12 @@ const ConfigurationSchema = z.looseObject({
   }),
   provider: z.record(z.string(), z.array(BlockSchema)),
   variable: z.record(z.string(), BlockSchema),
-  locals: BlockSchema,
-  module: z.record(z.string(), BlockSchema),
+  // The stack holds no HCL: no module call, and no local read with file().
+  locals: z.undefined().optional(),
+  module: z.undefined().optional(),
+  data: z.record(z.string(), z.record(z.string(), BlockSchema)),
   resource: z.record(z.string(), z.record(z.string(), BlockSchema)),
-  import: z.array(
-    z.object({
-      to: z.string(),
-      id: z.string(),
-      for_each: z.string().optional(),
-    }),
-  ),
+  import: z.array(z.strictObject({ to: z.string(), id: z.string() })),
   moved: z.array(z.object({ from: z.string(), to: z.string() })),
   removed: z.array(BlockSchema),
   output: z.record(z.string(), BlockSchema),
@@ -62,15 +62,21 @@ describe("cloudflare stack", () => {
         ]),
       ),
     ).toEqual({
-      cloudflare_dns_record: 92,
+      cloudflare_ct_alerting: 10,
+      // 92 application records and 208 of the ten baselines.
+      cloudflare_dns_record: 300,
       cloudflare_r2_bucket: 4,
       cloudflare_r2_bucket_lifecycle: 4,
       cloudflare_r2_custom_domain: 2,
       cloudflare_r2_managed_domain: 4,
-      cloudflare_ruleset: 5,
+      cloudflare_ruleset: 8,
+      cloudflare_tiered_cache: 3,
       cloudflare_turnstile_widget: 1,
       cloudflare_zone: 10,
-      cloudflare_zone_setting: 2,
+      cloudflare_zone_dnssec: 10,
+      cloudflare_zone_setting: 52,
+      // Every zone but the one that keeps its existing alert recipient.
+      terraform_data: 9,
     });
     expect(Object.keys(resource["cloudflare_zone"] ?? {}).toSorted()).toEqual(
       DOMAINS.map((domain) => zoneResource(domain)).toSorted(),
@@ -78,10 +84,13 @@ describe("cloudflare stack", () => {
     expect(
       Object.keys(resource["cloudflare_ruleset"] ?? {}).toSorted(),
     ).toEqual([
+      "better_skill_capped_com_static_cache",
       "bulk_redirects",
       "clauderon_com_redirect",
       "discord_plays_pokemon_com_redirect",
+      "scout_for_lol_com_static_cache",
       "sjer_red_redirects",
+      "sjer_red_static_cache",
       "ts_mc_net_redirects",
     ]);
     // A bucket and the resources declared for it share its HCL name.
@@ -109,7 +118,7 @@ describe("cloudflare stack", () => {
     });
     // One of the established plaintext states: no encryption block.
     expect(terraform.encryption).toBeUndefined();
-    expect(provider).toEqual({ cloudflare: [{}] });
+    expect(provider).toEqual({ cloudflare: [{}], http: [{}] });
     expect(variable).toEqual({
       cloudflare_account_id: {
         description: "Cloudflare account ID",
@@ -119,55 +128,61 @@ describe("cloudflare stack", () => {
     });
   });
 
-  test("every managed zone is bound to its registry entry and one baseline instance", async () => {
-    const { locals, module, output, resource } = await cloudflare();
-    for (const domain of DOMAINS)
+  test("every managed zone has its registry entry's baseline, rendered at synthesis", async () => {
+    const { data, output, resource } = await cloudflare();
+    const records = resource["cloudflare_dns_record"] ?? {};
+    for (const [domain, entry] of Object.entries(domainRegistry.domains)) {
+      const zone = zoneResource(domain);
+      expect(resource["cloudflare_zone"]?.[zone]?.["name"]).toBe(domain);
       expect(
-        resource["cloudflare_zone"]?.[zoneResource(domain)]?.["name"],
-      ).toBe(domain);
-    // OpenTofu reads the registry at plan time; the archive freezes it.
-    expect(locals["domain_registry"]).toBe(
-      '${jsondecode(file("${path.module}/../../domain-registry.json"))}',
-    );
-    expect(locals["baseline_zone_ids"]).toEqual(
-      Object.fromEntries(DOMAINS.map((domain) => [domain, zoneId(domain)])),
-    );
-    // The local HCL module, called under its HCL name with its HCL inputs,
-    // so every `module.domain_baseline["<domain>"].…` address is unchanged.
-    expect(module["domain_baseline"]).toEqual({
-      source: "./modules/domain-baseline",
-      for_each: "${local.domain_registry.domains}",
-      zone_id: "${local.baseline_zone_ids[each.key]}",
-      domain: "${each.key}",
-      fastmail_ready: "${each.value.fastmailReady}",
-      wildcard_mail: "${each.value.wildcardMail}",
-      tls_1_3: "${each.value.tls13}",
-      mta_sts_published: "${each.value.mtaStsPublished}",
-      // An explicit null keeps the recipient that zone already had.
-      ct_alert_recipient:
-        '${each.key == "better-skill-capped.com" ? null : "root@sjer.red"}',
-      mail_policy: "${local.domain_registry.mailPolicy}",
-    });
+        resource["cloudflare_zone_setting"]?.[`${zone}_baseline_tls_1_3`],
+        domain,
+      ).toEqual({
+        zone_id: zoneId(domain),
+        setting_id: "tls_1_3",
+        value: entry.tls13,
+      });
+      expect(
+        `${zone}_baseline_wildcard_mx_primary` in records,
+        `${domain} wildcard mail`,
+      ).toBe(entry.fastmailReady && entry.wildcardMail);
+      expect(
+        `${zone}_baseline_mta_sts` in records,
+        `${domain} MTA-STS discovery`,
+      ).toBe(entry.mtaStsPublished);
+      expect(
+        data["http"]?.[`${zone}_baseline_mail_policy`] !== undefined,
+        `${domain} served policy`,
+      ).toBe(entry.mtaStsPublished);
+      // One zone keeps the alert recipient it already had.
+      expect(
+        Object.keys(resource["cloudflare_ct_alerting"] ?? {}).filter((name) =>
+          name.startsWith(`${zone}_baseline_`),
+        ),
+        domain,
+      ).toEqual([
+        domain === "better-skill-capped.com"
+          ? `${zone}_baseline_ct_existing`
+          : `${zone}_baseline_ct`,
+      ]);
+    }
+    // The registry is read at synthesis: nothing is left for file() to read,
+    // so the stack directory holds no HCL and no module.
     expect(
-      await Bun.file(
-        path.join(STACK_DIRECTORY, "modules/domain-baseline/main.tf"),
-      ).exists(),
-    ).toBe(true);
-    // A zone without a registry entry, or the reverse, fails the plan.
+      await Array.fromAsync(
+        new Bun.Glob("**/*.{tf,tftest.hcl}").scan({ cwd: STACK_DIRECTORY }),
+      ),
+    ).toEqual([]);
     expect(output["managed_domains"]).toEqual({
       description: "Domains covered by the shared security and mail baseline.",
-      value: "${keys(local.domain_registry.domains)}",
-      precondition: {
-        condition:
-          "${toset(keys(local.domain_registry.domains)) == toset(keys(local.baseline_zone_ids))}",
-        error_message:
-          "Every Cloudflare zone must have exactly one domain registry entry and baseline binding.",
-      },
+      value: DOMAINS.toSorted(),
     });
     // Aggregate DMARC reports are authorized for every domain but sjer.red.
     expect(resource["cloudflare_dns_record"]?.["dmarc_report"]).toEqual({
-      for_each:
-        '${{ for domain, config in local.domain_registry.domains : domain => config if domain != "sjer.red" }}',
+      for_each: `\${toset([${DOMAINS.toSorted()
+        .filter((domain) => domain !== "sjer.red")
+        .map((domain) => `"${domain}"`)
+        .join(", ")}])}`,
       zone_id: zoneId("sjer.red"),
       ttl: 1,
       name: "${each.key}._report._dmarc",
@@ -176,40 +191,94 @@ describe("cloudflare stack", () => {
     });
   });
 
-  test("static-asset caching stays the HCL module, one call per cached zone", async () => {
-    const { module } = await cloudflare();
-    expect(Object.keys(module).toSorted()).toEqual([
-      "better_skill_capped_com_static_cache",
-      "domain_baseline",
-      "scout_for_lol_com_static_cache",
-      "sjer_red_static_cache",
+  test("static-asset caching follows the platform model's immutable prefixes", async () => {
+    const { resource } = await cloudflare();
+    const model = immutablePathPrefixesByZone();
+    // Zones whose sites have immutable prefixes and no cache rule yet.
+    const uncached = new Set(["glitter-boys.com", "ts-mc.net"]);
+    const cached = [...model.keys()].filter((zone) => !uncached.has(zone));
+    expect(cached.toSorted()).toEqual([
+      "better-skill-capped.com",
+      "scout-for-lol.com",
+      "sjer.red",
     ]);
-    expect(module["better_skill_capped_com_static_cache"]).toEqual({
-      source: "./modules/static-cache",
-      zone_id: zoneId("better-skill-capped.com"),
-      asset_prefixes: ["/assets/"],
-    });
-    expect(module["scout_for_lol_com_static_cache"]).toEqual({
-      source: "./modules/static-cache",
-      zone_id: zoneId("scout-for-lol.com"),
-      asset_prefixes: ["/_astro/", "/app/assets/"],
-    });
-    expect(module["sjer_red_static_cache"]).toEqual({
-      source: "./modules/static-cache",
-      zone_id: zoneId("sjer.red"),
-      asset_prefixes: ["/_astro/"],
-    });
+    expect(
+      Object.keys(resource["cloudflare_tiered_cache"] ?? {}).toSorted(),
+    ).toEqual(
+      cached.map((zone) => `${zoneResource(zone)}_static_cache`).toSorted(),
+    );
+    const expression = (zone: string) =>
+      z
+        .object({ rules: z.array(z.looseObject({ expression: z.string() })) })
+        .parse(
+          resource["cloudflare_ruleset"]?.[
+            `${zoneResource(zone)}_static_cache`
+          ],
+        ).rules[0]?.expression;
+    for (const zone of cached)
+      expect(expression(zone), zone).toBe(
+        (model.get(zone) ?? [])
+          .map((prefix) => `starts_with(http.request.uri.path, "${prefix}")`)
+          .join(" or "),
+      );
+    expect(expression("scout-for-lol.com")).toBe(
+      'starts_with(http.request.uri.path, "/_astro/") or starts_with(http.request.uri.path, "/app/assets/")',
+    );
+    expect(expression("better-skill-capped.com")).toBe(
+      'starts_with(http.request.uri.path, "/assets/")',
+    );
   });
 });
 
 describe("cloudflare records and redirects", () => {
+  test("every public hostname of the platform model is a proxied tunnel CNAME", async () => {
+    const { resource } = await cloudflare();
+    const zones = Object.entries(resource["cloudflare_zone"] ?? {});
+    const fqdns = Object.values(resource["cloudflare_dns_record"] ?? {})
+      .filter(
+        (record) =>
+          record["content"] === tunnelCnameTarget() &&
+          record["type"] === "CNAME" &&
+          record["proxied"] === true,
+      )
+      .map((record) => {
+        const zone = zones.find(
+          ([name]) => record["zone_id"] === `\${cloudflare_zone.${name}.id}`,
+        )?.[1]["name"];
+        return record["name"] === zone
+          ? String(zone)
+          : `${String(record["name"])}.${String(zone)}`;
+      });
+    // Declared hostnames whose record is deliberately something else.
+    const notTunnelRecords = new Set(["arcade.sjer.red", "clauderon.com"]);
+    const declared = publicHostnames()
+      .map((route) => route.hostname)
+      .filter((hostname) => !notTunnelRecords.has(hostname));
+    expect(declared.filter((hostname) => !fqdns.includes(hostname))).toEqual(
+      [],
+    );
+    // Tunnel records no workload is routed from, kept from before the model.
+    expect(fqdns.filter((fqdn) => !declared.includes(fqdn)).toSorted()).toEqual(
+      [
+        "better-skill-capped.com.sjer.red",
+        "bluemap.ts-mc.net.sjer.red",
+        "bugsink.shepherdjerred.com.sjer.red",
+        "discord-plays-pokemon.com.sjer.red",
+        "overseerr.sjer.red",
+        "peertube.sjer.red",
+        "ts-mc.net.sjer.red",
+      ],
+    );
+  });
+
   test("a tunnel hostname is a proxied CNAME, and no record but the DMARC reports iterates", async () => {
     const { resource } = await cloudflare();
     const records = resource["cloudflare_dns_record"];
     const tunnel = Object.entries(records ?? {}).filter(
       ([, record]) => record["content"] === TUNNEL,
     );
-    expect(tunnel).toHaveLength(45);
+    // 45 application hostnames and each zone's MTA-STS policy host.
+    expect(tunnel).toHaveLength(55);
     for (const [name, record] of tunnel)
       expect(record, name).toMatchObject({
         type: "CNAME",
@@ -407,7 +476,14 @@ describe("cloudflare buckets, settings and widgets", () => {
 
   test("zone settings and the Turnstile widget keep their values and sensitive outputs", async () => {
     const { resource, output } = await cloudflare();
-    expect(resource["cloudflare_zone_setting"]).toEqual({
+    // The settings outside the shared baseline.
+    expect(
+      Object.fromEntries(
+        Object.entries(resource["cloudflare_zone_setting"] ?? {}).filter(
+          ([name]) => !name.includes("_baseline_"),
+        ),
+      ),
+    ).toEqual({
       sjer_red_websockets: {
         zone_id: zoneId("sjer.red"),
         setting_id: "websockets",
@@ -440,134 +516,5 @@ describe("cloudflare buckets, settings and widgets", () => {
       value: "${cloudflare_turnstile_widget.storm_forum.secret}",
       sensitive: true,
     });
-  });
-});
-
-describe("cloudflare state migrations", () => {
-  test("adopts every object the stack imports, at its address", async () => {
-    const { import: imports } = await cloudflare();
-    const perZone = "${local.baseline_zone_ids}";
-    expect(imports).toEqual([
-      {
-        to: "cloudflare_zone.statically_typed_com",
-        id: "d4036b55fca60ca5f998866309e951d8",
-      },
-      {
-        to: "cloudflare_dns_record.sjer_red_cname_posthog",
-        id: "879487f81194d63121d0b8dddd16f08f/cf96abd1cc751274baa8e16df54e2b45",
-      },
-      {
-        to: "cloudflare_r2_bucket.sjerred",
-        id: "${nonsensitive(var.cloudflare_account_id)}/sjerred/default",
-      },
-      {
-        to: "cloudflare_r2_bucket.ts_mc",
-        id: "${nonsensitive(var.cloudflare_account_id)}/ts-mc/default",
-      },
-      {
-        to: "cloudflare_ruleset.bulk_redirects",
-        id: "accounts/48948ed6cd40d73e34d27f0cc10e595f/ea1ab5d0737441118d227236662533ac",
-      },
-      {
-        for_each: perZone,
-        to: `${BASELINE}[each.key].cloudflare_zone_setting.ssl`,
-        id: "${each.value}/ssl",
-      },
-      {
-        for_each: perZone,
-        to: `${BASELINE}[each.key].cloudflare_zone_setting.https`,
-        id: "${each.value}/always_use_https",
-      },
-      {
-        for_each: perZone,
-        to: `${BASELINE}[each.key].cloudflare_zone_setting.tls_1_3`,
-        id: "${each.value}/tls_1_3",
-      },
-      {
-        for_each:
-          '${{ for domain, zone_id in local.baseline_zone_ids : domain => zone_id if domain != "better-skill-capped.com" }}',
-        to: `${BASELINE}[each.key].cloudflare_ct_alerting.ct[0]`,
-        id: "${each.value}",
-      },
-      {
-        to: `${BASELINE}["better-skill-capped.com"].cloudflare_ct_alerting.ct_existing[0]`,
-        id: '${local.baseline_zone_ids["better-skill-capped.com"]}',
-      },
-      {
-        to: `${BASELINE}["statically-typed.com"].cloudflare_zone_setting.min_tls_version`,
-        id: "d4036b55fca60ca5f998866309e951d8/min_tls_version",
-      },
-      {
-        to: `${BASELINE}["statically-typed.com"].cloudflare_zone_setting.security_header`,
-        id: "d4036b55fca60ca5f998866309e951d8/security_header",
-      },
-      {
-        to: `${BASELINE}["statically-typed.com"].cloudflare_zone_dnssec.dnssec`,
-        id: "d4036b55fca60ca5f998866309e951d8",
-      },
-    ]);
-  });
-
-  test("keeps every applied move into the baseline module and none out of it", async () => {
-    const { moved } = await cloudflare();
-    expect(moved).toHaveLength(139);
-    expect(new Set(moved.map(({ from }) => from)).size).toBe(139);
-    expect(new Set(moved.map(({ to }) => to)).size).toBe(139);
-    const byFrom = new Map(moved.map(({ from, to }) => [from, to]));
-    expect(byFrom.get("cloudflare_dns_record.clauderon_com_cname_apex")).toBe(
-      "cloudflare_dns_record.clauderon_com_apex",
-    );
-    expect(byFrom.get("cloudflare_zone_dnssec.sjer_red")).toBe(
-      `${BASELINE}["sjer.red"].cloudflare_zone_dnssec.dnssec`,
-    );
-    expect(
-      byFrom.get("cloudflare_dns_record.ts_mc_net_caa_issuewild_none"),
-    ).toBe(
-      `${BASELINE}["ts-mc.net"].cloudflare_dns_record.caa_issuewild["letsencrypt"]`,
-    );
-    expect(
-      byFrom.get("cloudflare_dns_record.shepherdjerred_com_mx_wildcard2"),
-    ).toBe(
-      `${BASELINE}["shepherdjerred.com"].cloudflare_dns_record.wildcard_mx["secondary"]`,
-    );
-    expect(
-      byFrom.get(
-        "cloudflare_dns_record.sjer_red_dmarc_report_glitter_boys_com",
-      ),
-    ).toBe('cloudflare_dns_record.dmarc_report["glitter-boys.com"]');
-    // Certificate alerting became a counted resource in every zone; the one
-    // zone with an existing recipient moved to the resource that keeps it.
-    for (const domain of DOMAINS) {
-      const alerting = `${BASELINE}["${domain}"].cloudflare_ct_alerting`;
-      expect(byFrom.get(`${alerting}.ct`), domain).toBe(
-        domain === "better-skill-capped.com"
-          ? `${alerting}.ct_existing[0]`
-          : `${alerting}.ct[0]`,
-      );
-    }
-    // statically-typed.com was adopted straight into the module.
-    const moves = (prefix: string) =>
-      moved.filter(({ from }) => from.includes(`.${prefix}`)).length;
-    expect(moves("statically_typed_com")).toBe(0);
-    expect(moves("better_skill_capped_com")).toBe(11);
-    expect(moves("shepherdjerred_com")).toBe(19);
-    expect(moves("sjer_red")).toBe(17 + 7);
-    expect(moves("ts_mc_net")).toBe(19);
-  });
-
-  test("forgets the retired buckets without destroying them", async () => {
-    const { removed } = await cloudflare();
-    expect(removed).toEqual(
-      [
-        "cloudflare_r2_bucket.glitter_discord_corpus",
-        "cloudflare_r2_bucket.seaweedfs_backups",
-        "cloudflare_r2_bucket_lock.seaweedfs_backups",
-        "cloudflare_r2_bucket_lifecycle.seaweedfs_backups",
-        "cloudflare_r2_bucket.postgres_wal",
-        "cloudflare_r2_bucket_lifecycle.postgres_wal",
-        "cloudflare_r2_bucket.homelab",
-        "cloudflare_r2_bucket_lifecycle.homelab",
-      ].map((from) => ({ from, lifecycle: { destroy: false } })),
-    );
   });
 });

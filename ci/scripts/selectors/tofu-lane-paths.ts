@@ -3,7 +3,12 @@ export const legacyTofuPaths = [
   // the provider pins its bindings and every lock file follow.
   "packages/homelab-cdktn",
   "packages/homelab/src/tofu/provider-versions.json",
+  // The registries the cloudflare stack is synthesized from: a change to one
+  // must re-run the "synth is current" check and the stack's validation.
   "packages/homelab/src/domain-registry.json",
+  "packages/homelab/src/domain-registry.ts",
+  "packages/homelab/src/platform-model.json",
+  "packages/homelab/src/platform-model.ts",
   "packages/homelab/scripts/tofu/tofu-stack-manifest.ts",
   "packages/homelab/src/tofu/argocd",
   "packages/homelab/src/tofu/arr",

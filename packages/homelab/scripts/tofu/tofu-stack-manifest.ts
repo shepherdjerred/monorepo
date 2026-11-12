@@ -140,7 +140,9 @@ export const STACK_MANIFEST: Readonly<Record<TofuStack, StackDefinition>> = {
     ],
   },
   cloudflare: {
-    externalFiles: ["packages/homelab/src/domain-registry.json"],
+    // The synthesized stack carries the domain registry and the platform
+    // model inline.
+    externalFiles: [],
     credentials: [
       {
         source: "CLOUDFLARE_ACCOUNT_ID",

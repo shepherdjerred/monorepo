@@ -26,6 +26,13 @@ afterEach(async () => {
   );
 });
 
+/**
+ * The file the fixture stack reads outside its directory. Every live stack is
+ * synthesized with its registries inline and declares none, so the fixture
+ * passes its own declaration.
+ */
+const DECLARED = ["packages/homelab/src/domain-registry.json"];
+
 /** A throwaway repository holding one stack with every kind of member and local clutter. */
 async function fixture(options: { declaredRead?: boolean } = {}) {
   const repoRoot = await mkdtemp(path.join(tmpdir(), "tofu-archive-"));
@@ -67,7 +74,9 @@ async function fixture(options: { declaredRead?: boolean } = {}) {
 describe("OpenTofu stack archives", () => {
   test("hold the stack source, lock file, local modules and declared inputs under repository paths", async () => {
     const { repoRoot } = await fixture();
-    expect(await tofuStackArchiveFiles("cloudflare", repoRoot)).toEqual([
+    expect(
+      await tofuStackArchiveFiles("cloudflare", repoRoot, DECLARED),
+    ).toEqual([
       "packages/homelab/src/domain-registry.json",
       TOFU_ARCHIVE_LAYOUT,
       `${TOFU_STACK_ROOT}/cloudflare/.terraform.lock.hcl`,
@@ -83,6 +92,7 @@ describe("OpenTofu stack archives", () => {
       "cloudflare",
       repoRoot,
       path.join(repoRoot, "first.tar"),
+      DECLARED,
     );
     const past = new Date("2001-01-01T00:00:00Z");
     for (const file of first.files)
@@ -91,6 +101,7 @@ describe("OpenTofu stack archives", () => {
       "cloudflare",
       repoRoot,
       path.join(repoRoot, "second.tar"),
+      DECLARED,
     );
     expect(second.digest).toBe(first.digest);
     expect(second.files).toEqual(first.files);
@@ -116,6 +127,7 @@ describe("OpenTofu stack archives", () => {
       "cloudflare",
       repoRoot,
       path.join(repoRoot, "third.tar"),
+      DECLARED,
     );
     expect(changedInput.digest).not.toBe(first.digest);
     await Bun.write(path.join(stack, "desired-state.json"), '{"ignored":1}\n');
@@ -123,6 +135,7 @@ describe("OpenTofu stack archives", () => {
       "cloudflare",
       repoRoot,
       path.join(repoRoot, "fourth.tar"),
+      DECLARED,
     );
     expect(changedExcluded.digest).toBe(changedInput.digest);
   });
@@ -142,16 +155,14 @@ describe("OpenTofu stack archives", () => {
   });
 
   test("the live cloudflare and anthropic stacks archive their reviewed source only", async () => {
-    const cloudflare = await tofuStackArchiveFiles("cloudflare", repository);
-    expect(cloudflare).toContain("packages/homelab/src/domain-registry.json");
-    expect(cloudflare).toContain(
+    // The synthesized cloudflare stack carries the domain registry and the
+    // platform model inline: no module, no test and no external file.
+    expect(await tofuStackArchiveFiles("cloudflare", repository)).toEqual([
+      TOFU_ARCHIVE_LAYOUT,
       `${TOFU_STACK_ROOT}/cloudflare/.terraform.lock.hcl`,
-    );
-    expect(cloudflare).toContain(
-      `${TOFU_STACK_ROOT}/cloudflare/modules/domain-baseline/main.tf`,
-    );
-    expect(cloudflare).toContain(TOFU_ARCHIVE_LAYOUT);
-    expect(cloudflare.some((file) => file.includes("/tests/"))).toBe(false);
+      `${TOFU_STACK_ROOT}/cloudflare/dns-audit-2026-02-04.md`,
+      `${TOFU_STACK_ROOT}/cloudflare/main.tf.json`,
+    ]);
     const anthropic = await tofuStackArchiveFiles("anthropic", repository);
     expect(anthropic).not.toContain(
       `${TOFU_STACK_ROOT}/anthropic/desired-state.json`,
@@ -173,15 +184,15 @@ describe("OpenTofu stack archives", () => {
     await rm(path.join(stack, "backend.tf"));
     await rm(path.join(stack, "main.tf"));
     await rm(path.join(stack, "modules"), { recursive: true });
-    await expect(tofuStackArchiveFiles("cloudflare", repoRoot)).rejects.toThrow(
-      "has no configuration to archive",
-    );
+    await expect(
+      tofuStackArchiveFiles("cloudflare", repoRoot, DECLARED),
+    ).rejects.toThrow("has no configuration to archive");
     // Synthesized JSON counts as configuration: the stack now gets as far as
     // the external-file check, which no longer finds the declared read.
     await Bun.write(path.join(stack, "main.tf.json"), "{}\n");
-    await expect(tofuStackArchiveFiles("cloudflare", repoRoot)).rejects.toThrow(
-      "declares external files it does not read",
-    );
+    await expect(
+      tofuStackArchiveFiles("cloudflare", repoRoot, DECLARED),
+    ).rejects.toThrow("declares external files it does not read");
   });
 
   test("archive identities are content-addressed per stack", () => {

@@ -1,4 +1,48 @@
 {
+  "data": {
+    "http": {
+      "better_skill_capped_com_baseline_mail_policy": {
+        "request_timeout_ms": 10000,
+        "url": "https://mta-sts.better-skill-capped.com/.well-known/mta-sts.txt"
+      },
+      "clauderon_com_baseline_mail_policy": {
+        "request_timeout_ms": 10000,
+        "url": "https://mta-sts.clauderon.com/.well-known/mta-sts.txt"
+      },
+      "discord_plays_pokemon_com_baseline_mail_policy": {
+        "request_timeout_ms": 10000,
+        "url": "https://mta-sts.discord-plays-pokemon.com/.well-known/mta-sts.txt"
+      },
+      "glitter_boys_com_baseline_mail_policy": {
+        "request_timeout_ms": 10000,
+        "url": "https://mta-sts.glitter-boys.com/.well-known/mta-sts.txt"
+      },
+      "jerredshepherd_com_baseline_mail_policy": {
+        "request_timeout_ms": 10000,
+        "url": "https://mta-sts.jerredshepherd.com/.well-known/mta-sts.txt"
+      },
+      "scout_for_lol_com_baseline_mail_policy": {
+        "request_timeout_ms": 10000,
+        "url": "https://mta-sts.scout-for-lol.com/.well-known/mta-sts.txt"
+      },
+      "shepherdjerred_com_baseline_mail_policy": {
+        "request_timeout_ms": 10000,
+        "url": "https://mta-sts.shepherdjerred.com/.well-known/mta-sts.txt"
+      },
+      "sjer_red_baseline_mail_policy": {
+        "request_timeout_ms": 10000,
+        "url": "https://mta-sts.sjer.red/.well-known/mta-sts.txt"
+      },
+      "statically_typed_com_baseline_mail_policy": {
+        "request_timeout_ms": 10000,
+        "url": "https://mta-sts.statically-typed.com/.well-known/mta-sts.txt"
+      },
+      "ts_mc_net_baseline_mail_policy": {
+        "request_timeout_ms": 10000,
+        "url": "https://mta-sts.ts-mc.net/.well-known/mta-sts.txt"
+      }
+    }
+  },
   "import": [
     {
       "id": "d4036b55fca60ca5f998866309e951d8",
@@ -7,6 +51,178 @@
     {
       "id": "879487f81194d63121d0b8dddd16f08f/cf96abd1cc751274baa8e16df54e2b45",
       "to": "cloudflare_dns_record.sjer_red_cname_posthog"
+    },
+    {
+      "id": "${cloudflare_zone.better_skill_capped_com.id}/always_use_https",
+      "to": "cloudflare_zone_setting.better_skill_capped_com_baseline_https"
+    },
+    {
+      "id": "${cloudflare_zone.better_skill_capped_com.id}/ssl",
+      "to": "cloudflare_zone_setting.better_skill_capped_com_baseline_ssl"
+    },
+    {
+      "id": "${cloudflare_zone.better_skill_capped_com.id}/tls_1_3",
+      "to": "cloudflare_zone_setting.better_skill_capped_com_baseline_tls_1_3"
+    },
+    {
+      "id": "${cloudflare_zone.better_skill_capped_com.id}",
+      "to": "cloudflare_ct_alerting.better_skill_capped_com_baseline_ct_existing"
+    },
+    {
+      "id": "${cloudflare_zone.clauderon_com.id}/always_use_https",
+      "to": "cloudflare_zone_setting.clauderon_com_baseline_https"
+    },
+    {
+      "id": "${cloudflare_zone.clauderon_com.id}/ssl",
+      "to": "cloudflare_zone_setting.clauderon_com_baseline_ssl"
+    },
+    {
+      "id": "${cloudflare_zone.clauderon_com.id}/tls_1_3",
+      "to": "cloudflare_zone_setting.clauderon_com_baseline_tls_1_3"
+    },
+    {
+      "id": "${cloudflare_zone.clauderon_com.id}",
+      "to": "cloudflare_ct_alerting.clauderon_com_baseline_ct"
+    },
+    {
+      "id": "${cloudflare_zone.discord_plays_pokemon_com.id}/always_use_https",
+      "to": "cloudflare_zone_setting.discord_plays_pokemon_com_baseline_https"
+    },
+    {
+      "id": "${cloudflare_zone.discord_plays_pokemon_com.id}/ssl",
+      "to": "cloudflare_zone_setting.discord_plays_pokemon_com_baseline_ssl"
+    },
+    {
+      "id": "${cloudflare_zone.discord_plays_pokemon_com.id}/tls_1_3",
+      "to": "cloudflare_zone_setting.discord_plays_pokemon_com_baseline_tls_1_3"
+    },
+    {
+      "id": "${cloudflare_zone.discord_plays_pokemon_com.id}",
+      "to": "cloudflare_ct_alerting.discord_plays_pokemon_com_baseline_ct"
+    },
+    {
+      "id": "${cloudflare_zone.glitter_boys_com.id}/always_use_https",
+      "to": "cloudflare_zone_setting.glitter_boys_com_baseline_https"
+    },
+    {
+      "id": "${cloudflare_zone.glitter_boys_com.id}/ssl",
+      "to": "cloudflare_zone_setting.glitter_boys_com_baseline_ssl"
+    },
+    {
+      "id": "${cloudflare_zone.glitter_boys_com.id}/tls_1_3",
+      "to": "cloudflare_zone_setting.glitter_boys_com_baseline_tls_1_3"
+    },
+    {
+      "id": "${cloudflare_zone.glitter_boys_com.id}",
+      "to": "cloudflare_ct_alerting.glitter_boys_com_baseline_ct"
+    },
+    {
+      "id": "${cloudflare_zone.jerredshepherd_com.id}/always_use_https",
+      "to": "cloudflare_zone_setting.jerredshepherd_com_baseline_https"
+    },
+    {
+      "id": "${cloudflare_zone.jerredshepherd_com.id}/ssl",
+      "to": "cloudflare_zone_setting.jerredshepherd_com_baseline_ssl"
+    },
+    {
+      "id": "${cloudflare_zone.jerredshepherd_com.id}/tls_1_3",
+      "to": "cloudflare_zone_setting.jerredshepherd_com_baseline_tls_1_3"
+    },
+    {
+      "id": "${cloudflare_zone.jerredshepherd_com.id}",
+      "to": "cloudflare_ct_alerting.jerredshepherd_com_baseline_ct"
+    },
+    {
+      "id": "${cloudflare_zone.scout_for_lol_com.id}/always_use_https",
+      "to": "cloudflare_zone_setting.scout_for_lol_com_baseline_https"
+    },
+    {
+      "id": "${cloudflare_zone.scout_for_lol_com.id}/ssl",
+      "to": "cloudflare_zone_setting.scout_for_lol_com_baseline_ssl"
+    },
+    {
+      "id": "${cloudflare_zone.scout_for_lol_com.id}/tls_1_3",
+      "to": "cloudflare_zone_setting.scout_for_lol_com_baseline_tls_1_3"
+    },
+    {
+      "id": "${cloudflare_zone.scout_for_lol_com.id}",
+      "to": "cloudflare_ct_alerting.scout_for_lol_com_baseline_ct"
+    },
+    {
+      "id": "${cloudflare_zone.shepherdjerred_com.id}/always_use_https",
+      "to": "cloudflare_zone_setting.shepherdjerred_com_baseline_https"
+    },
+    {
+      "id": "${cloudflare_zone.shepherdjerred_com.id}/ssl",
+      "to": "cloudflare_zone_setting.shepherdjerred_com_baseline_ssl"
+    },
+    {
+      "id": "${cloudflare_zone.shepherdjerred_com.id}/tls_1_3",
+      "to": "cloudflare_zone_setting.shepherdjerred_com_baseline_tls_1_3"
+    },
+    {
+      "id": "${cloudflare_zone.shepherdjerred_com.id}",
+      "to": "cloudflare_ct_alerting.shepherdjerred_com_baseline_ct"
+    },
+    {
+      "id": "${cloudflare_zone.sjer_red.id}/always_use_https",
+      "to": "cloudflare_zone_setting.sjer_red_baseline_https"
+    },
+    {
+      "id": "${cloudflare_zone.sjer_red.id}/ssl",
+      "to": "cloudflare_zone_setting.sjer_red_baseline_ssl"
+    },
+    {
+      "id": "${cloudflare_zone.sjer_red.id}/tls_1_3",
+      "to": "cloudflare_zone_setting.sjer_red_baseline_tls_1_3"
+    },
+    {
+      "id": "${cloudflare_zone.sjer_red.id}",
+      "to": "cloudflare_ct_alerting.sjer_red_baseline_ct"
+    },
+    {
+      "id": "d4036b55fca60ca5f998866309e951d8",
+      "to": "cloudflare_zone_dnssec.statically_typed_com_baseline_dnssec"
+    },
+    {
+      "id": "${cloudflare_zone.statically_typed_com.id}/always_use_https",
+      "to": "cloudflare_zone_setting.statically_typed_com_baseline_https"
+    },
+    {
+      "id": "${cloudflare_zone.statically_typed_com.id}/ssl",
+      "to": "cloudflare_zone_setting.statically_typed_com_baseline_ssl"
+    },
+    {
+      "id": "d4036b55fca60ca5f998866309e951d8/min_tls_version",
+      "to": "cloudflare_zone_setting.statically_typed_com_baseline_min_tls_version"
+    },
+    {
+      "id": "${cloudflare_zone.statically_typed_com.id}/tls_1_3",
+      "to": "cloudflare_zone_setting.statically_typed_com_baseline_tls_1_3"
+    },
+    {
+      "id": "d4036b55fca60ca5f998866309e951d8/security_header",
+      "to": "cloudflare_zone_setting.statically_typed_com_baseline_security_header"
+    },
+    {
+      "id": "${cloudflare_zone.statically_typed_com.id}",
+      "to": "cloudflare_ct_alerting.statically_typed_com_baseline_ct"
+    },
+    {
+      "id": "${cloudflare_zone.ts_mc_net.id}/always_use_https",
+      "to": "cloudflare_zone_setting.ts_mc_net_baseline_https"
+    },
+    {
+      "id": "${cloudflare_zone.ts_mc_net.id}/ssl",
+      "to": "cloudflare_zone_setting.ts_mc_net_baseline_ssl"
+    },
+    {
+      "id": "${cloudflare_zone.ts_mc_net.id}/tls_1_3",
+      "to": "cloudflare_zone_setting.ts_mc_net_baseline_tls_1_3"
+    },
+    {
+      "id": "${cloudflare_zone.ts_mc_net.id}",
+      "to": "cloudflare_ct_alerting.ts_mc_net_baseline_ct"
     },
     {
       "id": "${nonsensitive(var.cloudflare_account_id)}/sjerred/default",
@@ -19,89 +235,33 @@
     {
       "id": "accounts/48948ed6cd40d73e34d27f0cc10e595f/ea1ab5d0737441118d227236662533ac",
       "to": "cloudflare_ruleset.bulk_redirects"
-    },
-    {
-      "for_each": "${local.baseline_zone_ids}",
-      "id": "${each.value}/ssl",
-      "to": "module.domain_baseline[each.key].cloudflare_zone_setting.ssl"
-    },
-    {
-      "for_each": "${local.baseline_zone_ids}",
-      "id": "${each.value}/always_use_https",
-      "to": "module.domain_baseline[each.key].cloudflare_zone_setting.https"
-    },
-    {
-      "for_each": "${local.baseline_zone_ids}",
-      "id": "${each.value}/tls_1_3",
-      "to": "module.domain_baseline[each.key].cloudflare_zone_setting.tls_1_3"
-    },
-    {
-      "for_each": "${{ for domain, zone_id in local.baseline_zone_ids : domain => zone_id if domain != \"better-skill-capped.com\" }}",
-      "id": "${each.value}",
-      "to": "module.domain_baseline[each.key].cloudflare_ct_alerting.ct[0]"
-    },
-    {
-      "id": "${local.baseline_zone_ids[\"better-skill-capped.com\"]}",
-      "to": "module.domain_baseline[\"better-skill-capped.com\"].cloudflare_ct_alerting.ct_existing[0]"
-    },
-    {
-      "id": "d4036b55fca60ca5f998866309e951d8/min_tls_version",
-      "to": "module.domain_baseline[\"statically-typed.com\"].cloudflare_zone_setting.min_tls_version"
-    },
-    {
-      "id": "d4036b55fca60ca5f998866309e951d8/security_header",
-      "to": "module.domain_baseline[\"statically-typed.com\"].cloudflare_zone_setting.security_header"
-    },
-    {
-      "id": "d4036b55fca60ca5f998866309e951d8",
-      "to": "module.domain_baseline[\"statically-typed.com\"].cloudflare_zone_dnssec.dnssec"
     }
   ],
-  "locals": {
-    "baseline_zone_ids": {
-      "better-skill-capped.com": "${cloudflare_zone.better_skill_capped_com.id}",
-      "clauderon.com": "${cloudflare_zone.clauderon_com.id}",
-      "discord-plays-pokemon.com": "${cloudflare_zone.discord_plays_pokemon_com.id}",
-      "glitter-boys.com": "${cloudflare_zone.glitter_boys_com.id}",
-      "jerredshepherd.com": "${cloudflare_zone.jerredshepherd_com.id}",
-      "scout-for-lol.com": "${cloudflare_zone.scout_for_lol_com.id}",
-      "shepherdjerred.com": "${cloudflare_zone.shepherdjerred_com.id}",
-      "sjer.red": "${cloudflare_zone.sjer_red.id}",
-      "statically-typed.com": "${cloudflare_zone.statically_typed_com.id}",
-      "ts-mc.net": "${cloudflare_zone.ts_mc_net.id}"
-    },
-    "domain_registry": "${jsondecode(file(\"${path.module}/../../domain-registry.json\"))}"
-  },
-  "module": {
-    "better_skill_capped_com_static_cache": {
-      "asset_prefixes": ["/assets/"],
-      "source": "./modules/static-cache",
-      "zone_id": "${cloudflare_zone.better_skill_capped_com.id}"
-    },
-    "domain_baseline": {
-      "ct_alert_recipient": "${each.key == \"better-skill-capped.com\" ? null : \"root@sjer.red\"}",
-      "domain": "${each.key}",
-      "fastmail_ready": "${each.value.fastmailReady}",
-      "for_each": "${local.domain_registry.domains}",
-      "mail_policy": "${local.domain_registry.mailPolicy}",
-      "mta_sts_published": "${each.value.mtaStsPublished}",
-      "source": "./modules/domain-baseline",
-      "tls_1_3": "${each.value.tls13}",
-      "wildcard_mail": "${each.value.wildcardMail}",
-      "zone_id": "${local.baseline_zone_ids[each.key]}"
-    },
-    "scout_for_lol_com_static_cache": {
-      "asset_prefixes": ["/_astro/", "/app/assets/"],
-      "source": "./modules/static-cache",
-      "zone_id": "${cloudflare_zone.scout_for_lol_com.id}"
-    },
-    "sjer_red_static_cache": {
-      "asset_prefixes": ["/_astro/"],
-      "source": "./modules/static-cache",
-      "zone_id": "${cloudflare_zone.sjer_red.id}"
-    }
-  },
   "moved": [
+    {
+      "from": "module.sjer_red_static_cache.cloudflare_ruleset.static_asset_cache",
+      "to": "cloudflare_ruleset.sjer_red_static_cache"
+    },
+    {
+      "from": "module.sjer_red_static_cache.cloudflare_tiered_cache.smart",
+      "to": "cloudflare_tiered_cache.sjer_red_static_cache"
+    },
+    {
+      "from": "module.scout_for_lol_com_static_cache.cloudflare_ruleset.static_asset_cache",
+      "to": "cloudflare_ruleset.scout_for_lol_com_static_cache"
+    },
+    {
+      "from": "module.scout_for_lol_com_static_cache.cloudflare_tiered_cache.smart",
+      "to": "cloudflare_tiered_cache.scout_for_lol_com_static_cache"
+    },
+    {
+      "from": "module.better_skill_capped_com_static_cache.cloudflare_ruleset.static_asset_cache",
+      "to": "cloudflare_ruleset.better_skill_capped_com_static_cache"
+    },
+    {
+      "from": "module.better_skill_capped_com_static_cache.cloudflare_tiered_cache.smart",
+      "to": "cloudflare_tiered_cache.better_skill_capped_com_static_cache"
+    },
     {
       "from": "cloudflare_dns_record.clauderon_com_cname_apex",
       "to": "cloudflare_dns_record.clauderon_com_apex"
@@ -651,22 +811,1177 @@
       "to": "module.domain_baseline[\"sjer.red\"].cloudflare_ct_alerting.ct[0]"
     },
     {
+      "from": "module.domain_baseline[\"statically-typed.com\"].cloudflare_ct_alerting.ct",
+      "to": "module.domain_baseline[\"statically-typed.com\"].cloudflare_ct_alerting.ct[0]"
+    },
+    {
       "from": "module.domain_baseline[\"ts-mc.net\"].cloudflare_ct_alerting.ct",
       "to": "module.domain_baseline[\"ts-mc.net\"].cloudflare_ct_alerting.ct[0]"
     },
     {
-      "from": "module.domain_baseline[\"statically-typed.com\"].cloudflare_ct_alerting.ct",
-      "to": "module.domain_baseline[\"statically-typed.com\"].cloudflare_ct_alerting.ct[0]"
+      "from": "module.domain_baseline[\"better-skill-capped.com\"].cloudflare_zone_dnssec.dnssec",
+      "to": "cloudflare_zone_dnssec.better_skill_capped_com_baseline_dnssec"
+    },
+    {
+      "from": "module.domain_baseline[\"better-skill-capped.com\"].cloudflare_dns_record.mx[\"primary\"]",
+      "to": "cloudflare_dns_record.better_skill_capped_com_baseline_mx_primary"
+    },
+    {
+      "from": "module.domain_baseline[\"better-skill-capped.com\"].cloudflare_dns_record.mx[\"secondary\"]",
+      "to": "cloudflare_dns_record.better_skill_capped_com_baseline_mx_secondary"
+    },
+    {
+      "from": "module.domain_baseline[\"better-skill-capped.com\"].cloudflare_dns_record.wildcard_mx[\"primary\"]",
+      "to": "cloudflare_dns_record.better_skill_capped_com_baseline_wildcard_mx_primary"
+    },
+    {
+      "from": "module.domain_baseline[\"better-skill-capped.com\"].cloudflare_dns_record.wildcard_mx[\"secondary\"]",
+      "to": "cloudflare_dns_record.better_skill_capped_com_baseline_wildcard_mx_secondary"
+    },
+    {
+      "from": "module.domain_baseline[\"better-skill-capped.com\"].cloudflare_dns_record.dkim[\"fm1\"]",
+      "to": "cloudflare_dns_record.better_skill_capped_com_baseline_dkim_fm1"
+    },
+    {
+      "from": "module.domain_baseline[\"better-skill-capped.com\"].cloudflare_dns_record.dkim[\"fm2\"]",
+      "to": "cloudflare_dns_record.better_skill_capped_com_baseline_dkim_fm2"
+    },
+    {
+      "from": "module.domain_baseline[\"better-skill-capped.com\"].cloudflare_dns_record.dkim[\"fm3\"]",
+      "to": "cloudflare_dns_record.better_skill_capped_com_baseline_dkim_fm3"
+    },
+    {
+      "from": "module.domain_baseline[\"better-skill-capped.com\"].cloudflare_dns_record.spf",
+      "to": "cloudflare_dns_record.better_skill_capped_com_baseline_spf"
+    },
+    {
+      "from": "module.domain_baseline[\"better-skill-capped.com\"].cloudflare_dns_record.dmarc",
+      "to": "cloudflare_dns_record.better_skill_capped_com_baseline_dmarc"
+    },
+    {
+      "from": "module.domain_baseline[\"better-skill-capped.com\"].cloudflare_dns_record.tlsrpt",
+      "to": "cloudflare_dns_record.better_skill_capped_com_baseline_tlsrpt"
+    },
+    {
+      "from": "module.domain_baseline[\"better-skill-capped.com\"].cloudflare_dns_record.mta_sts_host",
+      "to": "cloudflare_dns_record.better_skill_capped_com_baseline_mta_sts_host"
+    },
+    {
+      "from": "module.domain_baseline[\"better-skill-capped.com\"].cloudflare_dns_record.mta_sts[0]",
+      "to": "cloudflare_dns_record.better_skill_capped_com_baseline_mta_sts"
+    },
+    {
+      "from": "module.domain_baseline[\"better-skill-capped.com\"].cloudflare_dns_record.caa_issue[\"letsencrypt\"]",
+      "to": "cloudflare_dns_record.better_skill_capped_com_baseline_caa_issue_letsencrypt"
+    },
+    {
+      "from": "module.domain_baseline[\"better-skill-capped.com\"].cloudflare_dns_record.caa_issue[\"google_trust_services\"]",
+      "to": "cloudflare_dns_record.better_skill_capped_com_baseline_caa_issue_google_trust_services"
+    },
+    {
+      "from": "module.domain_baseline[\"better-skill-capped.com\"].cloudflare_dns_record.caa_issue[\"sectigo\"]",
+      "to": "cloudflare_dns_record.better_skill_capped_com_baseline_caa_issue_sectigo"
+    },
+    {
+      "from": "module.domain_baseline[\"better-skill-capped.com\"].cloudflare_dns_record.caa_issue[\"ssl_com\"]",
+      "to": "cloudflare_dns_record.better_skill_capped_com_baseline_caa_issue_ssl_com"
+    },
+    {
+      "from": "module.domain_baseline[\"better-skill-capped.com\"].cloudflare_dns_record.caa_issuewild[\"letsencrypt\"]",
+      "to": "cloudflare_dns_record.better_skill_capped_com_baseline_caa_issuewild_letsencrypt"
+    },
+    {
+      "from": "module.domain_baseline[\"better-skill-capped.com\"].cloudflare_dns_record.caa_issuewild[\"google_trust_services\"]",
+      "to": "cloudflare_dns_record.better_skill_capped_com_baseline_caa_issuewild_google_trust_services"
+    },
+    {
+      "from": "module.domain_baseline[\"better-skill-capped.com\"].cloudflare_dns_record.caa_issuewild[\"sectigo\"]",
+      "to": "cloudflare_dns_record.better_skill_capped_com_baseline_caa_issuewild_sectigo"
+    },
+    {
+      "from": "module.domain_baseline[\"better-skill-capped.com\"].cloudflare_dns_record.caa_issuewild[\"ssl_com\"]",
+      "to": "cloudflare_dns_record.better_skill_capped_com_baseline_caa_issuewild_ssl_com"
+    },
+    {
+      "from": "module.domain_baseline[\"better-skill-capped.com\"].cloudflare_dns_record.caa_iodef",
+      "to": "cloudflare_dns_record.better_skill_capped_com_baseline_caa_iodef"
+    },
+    {
+      "from": "module.domain_baseline[\"better-skill-capped.com\"].cloudflare_zone_setting.https",
+      "to": "cloudflare_zone_setting.better_skill_capped_com_baseline_https"
+    },
+    {
+      "from": "module.domain_baseline[\"better-skill-capped.com\"].cloudflare_zone_setting.ssl",
+      "to": "cloudflare_zone_setting.better_skill_capped_com_baseline_ssl"
+    },
+    {
+      "from": "module.domain_baseline[\"better-skill-capped.com\"].cloudflare_zone_setting.min_tls_version",
+      "to": "cloudflare_zone_setting.better_skill_capped_com_baseline_min_tls_version"
+    },
+    {
+      "from": "module.domain_baseline[\"better-skill-capped.com\"].cloudflare_zone_setting.tls_1_3",
+      "to": "cloudflare_zone_setting.better_skill_capped_com_baseline_tls_1_3"
+    },
+    {
+      "from": "module.domain_baseline[\"better-skill-capped.com\"].cloudflare_zone_setting.security_header",
+      "to": "cloudflare_zone_setting.better_skill_capped_com_baseline_security_header"
+    },
+    {
+      "from": "module.domain_baseline[\"better-skill-capped.com\"].cloudflare_ct_alerting.ct_existing[0]",
+      "to": "cloudflare_ct_alerting.better_skill_capped_com_baseline_ct_existing"
+    },
+    {
+      "from": "module.domain_baseline[\"clauderon.com\"].cloudflare_zone_dnssec.dnssec",
+      "to": "cloudflare_zone_dnssec.clauderon_com_baseline_dnssec"
+    },
+    {
+      "from": "module.domain_baseline[\"clauderon.com\"].cloudflare_dns_record.mx[\"primary\"]",
+      "to": "cloudflare_dns_record.clauderon_com_baseline_mx_primary"
+    },
+    {
+      "from": "module.domain_baseline[\"clauderon.com\"].cloudflare_dns_record.mx[\"secondary\"]",
+      "to": "cloudflare_dns_record.clauderon_com_baseline_mx_secondary"
+    },
+    {
+      "from": "module.domain_baseline[\"clauderon.com\"].cloudflare_dns_record.wildcard_mx[\"primary\"]",
+      "to": "cloudflare_dns_record.clauderon_com_baseline_wildcard_mx_primary"
+    },
+    {
+      "from": "module.domain_baseline[\"clauderon.com\"].cloudflare_dns_record.wildcard_mx[\"secondary\"]",
+      "to": "cloudflare_dns_record.clauderon_com_baseline_wildcard_mx_secondary"
+    },
+    {
+      "from": "module.domain_baseline[\"clauderon.com\"].cloudflare_dns_record.dkim[\"fm1\"]",
+      "to": "cloudflare_dns_record.clauderon_com_baseline_dkim_fm1"
+    },
+    {
+      "from": "module.domain_baseline[\"clauderon.com\"].cloudflare_dns_record.dkim[\"fm2\"]",
+      "to": "cloudflare_dns_record.clauderon_com_baseline_dkim_fm2"
+    },
+    {
+      "from": "module.domain_baseline[\"clauderon.com\"].cloudflare_dns_record.dkim[\"fm3\"]",
+      "to": "cloudflare_dns_record.clauderon_com_baseline_dkim_fm3"
+    },
+    {
+      "from": "module.domain_baseline[\"clauderon.com\"].cloudflare_dns_record.spf",
+      "to": "cloudflare_dns_record.clauderon_com_baseline_spf"
+    },
+    {
+      "from": "module.domain_baseline[\"clauderon.com\"].cloudflare_dns_record.dmarc",
+      "to": "cloudflare_dns_record.clauderon_com_baseline_dmarc"
+    },
+    {
+      "from": "module.domain_baseline[\"clauderon.com\"].cloudflare_dns_record.tlsrpt",
+      "to": "cloudflare_dns_record.clauderon_com_baseline_tlsrpt"
+    },
+    {
+      "from": "module.domain_baseline[\"clauderon.com\"].cloudflare_dns_record.mta_sts_host",
+      "to": "cloudflare_dns_record.clauderon_com_baseline_mta_sts_host"
+    },
+    {
+      "from": "module.domain_baseline[\"clauderon.com\"].cloudflare_dns_record.mta_sts[0]",
+      "to": "cloudflare_dns_record.clauderon_com_baseline_mta_sts"
+    },
+    {
+      "from": "module.domain_baseline[\"clauderon.com\"].cloudflare_dns_record.caa_issue[\"letsencrypt\"]",
+      "to": "cloudflare_dns_record.clauderon_com_baseline_caa_issue_letsencrypt"
+    },
+    {
+      "from": "module.domain_baseline[\"clauderon.com\"].cloudflare_dns_record.caa_issue[\"google_trust_services\"]",
+      "to": "cloudflare_dns_record.clauderon_com_baseline_caa_issue_google_trust_services"
+    },
+    {
+      "from": "module.domain_baseline[\"clauderon.com\"].cloudflare_dns_record.caa_issue[\"sectigo\"]",
+      "to": "cloudflare_dns_record.clauderon_com_baseline_caa_issue_sectigo"
+    },
+    {
+      "from": "module.domain_baseline[\"clauderon.com\"].cloudflare_dns_record.caa_issue[\"ssl_com\"]",
+      "to": "cloudflare_dns_record.clauderon_com_baseline_caa_issue_ssl_com"
+    },
+    {
+      "from": "module.domain_baseline[\"clauderon.com\"].cloudflare_dns_record.caa_issuewild[\"letsencrypt\"]",
+      "to": "cloudflare_dns_record.clauderon_com_baseline_caa_issuewild_letsencrypt"
+    },
+    {
+      "from": "module.domain_baseline[\"clauderon.com\"].cloudflare_dns_record.caa_issuewild[\"google_trust_services\"]",
+      "to": "cloudflare_dns_record.clauderon_com_baseline_caa_issuewild_google_trust_services"
+    },
+    {
+      "from": "module.domain_baseline[\"clauderon.com\"].cloudflare_dns_record.caa_issuewild[\"sectigo\"]",
+      "to": "cloudflare_dns_record.clauderon_com_baseline_caa_issuewild_sectigo"
+    },
+    {
+      "from": "module.domain_baseline[\"clauderon.com\"].cloudflare_dns_record.caa_issuewild[\"ssl_com\"]",
+      "to": "cloudflare_dns_record.clauderon_com_baseline_caa_issuewild_ssl_com"
+    },
+    {
+      "from": "module.domain_baseline[\"clauderon.com\"].cloudflare_dns_record.caa_iodef",
+      "to": "cloudflare_dns_record.clauderon_com_baseline_caa_iodef"
+    },
+    {
+      "from": "module.domain_baseline[\"clauderon.com\"].cloudflare_zone_setting.https",
+      "to": "cloudflare_zone_setting.clauderon_com_baseline_https"
+    },
+    {
+      "from": "module.domain_baseline[\"clauderon.com\"].cloudflare_zone_setting.ssl",
+      "to": "cloudflare_zone_setting.clauderon_com_baseline_ssl"
+    },
+    {
+      "from": "module.domain_baseline[\"clauderon.com\"].cloudflare_zone_setting.min_tls_version",
+      "to": "cloudflare_zone_setting.clauderon_com_baseline_min_tls_version"
+    },
+    {
+      "from": "module.domain_baseline[\"clauderon.com\"].cloudflare_zone_setting.tls_1_3",
+      "to": "cloudflare_zone_setting.clauderon_com_baseline_tls_1_3"
+    },
+    {
+      "from": "module.domain_baseline[\"clauderon.com\"].cloudflare_zone_setting.security_header",
+      "to": "cloudflare_zone_setting.clauderon_com_baseline_security_header"
+    },
+    {
+      "from": "module.domain_baseline[\"clauderon.com\"].terraform_data.ct_recipient[0]",
+      "to": "terraform_data.clauderon_com_baseline_ct_recipient"
+    },
+    {
+      "from": "module.domain_baseline[\"clauderon.com\"].cloudflare_ct_alerting.ct[0]",
+      "to": "cloudflare_ct_alerting.clauderon_com_baseline_ct"
+    },
+    {
+      "from": "module.domain_baseline[\"discord-plays-pokemon.com\"].cloudflare_zone_dnssec.dnssec",
+      "to": "cloudflare_zone_dnssec.discord_plays_pokemon_com_baseline_dnssec"
+    },
+    {
+      "from": "module.domain_baseline[\"discord-plays-pokemon.com\"].cloudflare_dns_record.mx[\"primary\"]",
+      "to": "cloudflare_dns_record.discord_plays_pokemon_com_baseline_mx_primary"
+    },
+    {
+      "from": "module.domain_baseline[\"discord-plays-pokemon.com\"].cloudflare_dns_record.mx[\"secondary\"]",
+      "to": "cloudflare_dns_record.discord_plays_pokemon_com_baseline_mx_secondary"
+    },
+    {
+      "from": "module.domain_baseline[\"discord-plays-pokemon.com\"].cloudflare_dns_record.wildcard_mx[\"primary\"]",
+      "to": "cloudflare_dns_record.discord_plays_pokemon_com_baseline_wildcard_mx_primary"
+    },
+    {
+      "from": "module.domain_baseline[\"discord-plays-pokemon.com\"].cloudflare_dns_record.wildcard_mx[\"secondary\"]",
+      "to": "cloudflare_dns_record.discord_plays_pokemon_com_baseline_wildcard_mx_secondary"
+    },
+    {
+      "from": "module.domain_baseline[\"discord-plays-pokemon.com\"].cloudflare_dns_record.dkim[\"fm1\"]",
+      "to": "cloudflare_dns_record.discord_plays_pokemon_com_baseline_dkim_fm1"
+    },
+    {
+      "from": "module.domain_baseline[\"discord-plays-pokemon.com\"].cloudflare_dns_record.dkim[\"fm2\"]",
+      "to": "cloudflare_dns_record.discord_plays_pokemon_com_baseline_dkim_fm2"
+    },
+    {
+      "from": "module.domain_baseline[\"discord-plays-pokemon.com\"].cloudflare_dns_record.dkim[\"fm3\"]",
+      "to": "cloudflare_dns_record.discord_plays_pokemon_com_baseline_dkim_fm3"
+    },
+    {
+      "from": "module.domain_baseline[\"discord-plays-pokemon.com\"].cloudflare_dns_record.spf",
+      "to": "cloudflare_dns_record.discord_plays_pokemon_com_baseline_spf"
+    },
+    {
+      "from": "module.domain_baseline[\"discord-plays-pokemon.com\"].cloudflare_dns_record.dmarc",
+      "to": "cloudflare_dns_record.discord_plays_pokemon_com_baseline_dmarc"
+    },
+    {
+      "from": "module.domain_baseline[\"discord-plays-pokemon.com\"].cloudflare_dns_record.tlsrpt",
+      "to": "cloudflare_dns_record.discord_plays_pokemon_com_baseline_tlsrpt"
+    },
+    {
+      "from": "module.domain_baseline[\"discord-plays-pokemon.com\"].cloudflare_dns_record.mta_sts_host",
+      "to": "cloudflare_dns_record.discord_plays_pokemon_com_baseline_mta_sts_host"
+    },
+    {
+      "from": "module.domain_baseline[\"discord-plays-pokemon.com\"].cloudflare_dns_record.mta_sts[0]",
+      "to": "cloudflare_dns_record.discord_plays_pokemon_com_baseline_mta_sts"
+    },
+    {
+      "from": "module.domain_baseline[\"discord-plays-pokemon.com\"].cloudflare_dns_record.caa_issue[\"letsencrypt\"]",
+      "to": "cloudflare_dns_record.discord_plays_pokemon_com_baseline_caa_issue_letsencrypt"
+    },
+    {
+      "from": "module.domain_baseline[\"discord-plays-pokemon.com\"].cloudflare_dns_record.caa_issue[\"google_trust_services\"]",
+      "to": "cloudflare_dns_record.discord_plays_pokemon_com_baseline_caa_issue_google_trust_services"
+    },
+    {
+      "from": "module.domain_baseline[\"discord-plays-pokemon.com\"].cloudflare_dns_record.caa_issue[\"sectigo\"]",
+      "to": "cloudflare_dns_record.discord_plays_pokemon_com_baseline_caa_issue_sectigo"
+    },
+    {
+      "from": "module.domain_baseline[\"discord-plays-pokemon.com\"].cloudflare_dns_record.caa_issue[\"ssl_com\"]",
+      "to": "cloudflare_dns_record.discord_plays_pokemon_com_baseline_caa_issue_ssl_com"
+    },
+    {
+      "from": "module.domain_baseline[\"discord-plays-pokemon.com\"].cloudflare_dns_record.caa_issuewild[\"letsencrypt\"]",
+      "to": "cloudflare_dns_record.discord_plays_pokemon_com_baseline_caa_issuewild_letsencrypt"
+    },
+    {
+      "from": "module.domain_baseline[\"discord-plays-pokemon.com\"].cloudflare_dns_record.caa_issuewild[\"google_trust_services\"]",
+      "to": "cloudflare_dns_record.discord_plays_pokemon_com_baseline_caa_issuewild_google_trust_services"
+    },
+    {
+      "from": "module.domain_baseline[\"discord-plays-pokemon.com\"].cloudflare_dns_record.caa_issuewild[\"sectigo\"]",
+      "to": "cloudflare_dns_record.discord_plays_pokemon_com_baseline_caa_issuewild_sectigo"
+    },
+    {
+      "from": "module.domain_baseline[\"discord-plays-pokemon.com\"].cloudflare_dns_record.caa_issuewild[\"ssl_com\"]",
+      "to": "cloudflare_dns_record.discord_plays_pokemon_com_baseline_caa_issuewild_ssl_com"
+    },
+    {
+      "from": "module.domain_baseline[\"discord-plays-pokemon.com\"].cloudflare_dns_record.caa_iodef",
+      "to": "cloudflare_dns_record.discord_plays_pokemon_com_baseline_caa_iodef"
+    },
+    {
+      "from": "module.domain_baseline[\"discord-plays-pokemon.com\"].cloudflare_zone_setting.https",
+      "to": "cloudflare_zone_setting.discord_plays_pokemon_com_baseline_https"
+    },
+    {
+      "from": "module.domain_baseline[\"discord-plays-pokemon.com\"].cloudflare_zone_setting.ssl",
+      "to": "cloudflare_zone_setting.discord_plays_pokemon_com_baseline_ssl"
+    },
+    {
+      "from": "module.domain_baseline[\"discord-plays-pokemon.com\"].cloudflare_zone_setting.min_tls_version",
+      "to": "cloudflare_zone_setting.discord_plays_pokemon_com_baseline_min_tls_version"
+    },
+    {
+      "from": "module.domain_baseline[\"discord-plays-pokemon.com\"].cloudflare_zone_setting.tls_1_3",
+      "to": "cloudflare_zone_setting.discord_plays_pokemon_com_baseline_tls_1_3"
+    },
+    {
+      "from": "module.domain_baseline[\"discord-plays-pokemon.com\"].cloudflare_zone_setting.security_header",
+      "to": "cloudflare_zone_setting.discord_plays_pokemon_com_baseline_security_header"
+    },
+    {
+      "from": "module.domain_baseline[\"discord-plays-pokemon.com\"].terraform_data.ct_recipient[0]",
+      "to": "terraform_data.discord_plays_pokemon_com_baseline_ct_recipient"
+    },
+    {
+      "from": "module.domain_baseline[\"discord-plays-pokemon.com\"].cloudflare_ct_alerting.ct[0]",
+      "to": "cloudflare_ct_alerting.discord_plays_pokemon_com_baseline_ct"
+    },
+    {
+      "from": "module.domain_baseline[\"glitter-boys.com\"].cloudflare_zone_dnssec.dnssec",
+      "to": "cloudflare_zone_dnssec.glitter_boys_com_baseline_dnssec"
+    },
+    {
+      "from": "module.domain_baseline[\"glitter-boys.com\"].cloudflare_dns_record.mx[\"primary\"]",
+      "to": "cloudflare_dns_record.glitter_boys_com_baseline_mx_primary"
+    },
+    {
+      "from": "module.domain_baseline[\"glitter-boys.com\"].cloudflare_dns_record.mx[\"secondary\"]",
+      "to": "cloudflare_dns_record.glitter_boys_com_baseline_mx_secondary"
+    },
+    {
+      "from": "module.domain_baseline[\"glitter-boys.com\"].cloudflare_dns_record.wildcard_mx[\"primary\"]",
+      "to": "cloudflare_dns_record.glitter_boys_com_baseline_wildcard_mx_primary"
+    },
+    {
+      "from": "module.domain_baseline[\"glitter-boys.com\"].cloudflare_dns_record.wildcard_mx[\"secondary\"]",
+      "to": "cloudflare_dns_record.glitter_boys_com_baseline_wildcard_mx_secondary"
+    },
+    {
+      "from": "module.domain_baseline[\"glitter-boys.com\"].cloudflare_dns_record.dkim[\"fm1\"]",
+      "to": "cloudflare_dns_record.glitter_boys_com_baseline_dkim_fm1"
+    },
+    {
+      "from": "module.domain_baseline[\"glitter-boys.com\"].cloudflare_dns_record.dkim[\"fm2\"]",
+      "to": "cloudflare_dns_record.glitter_boys_com_baseline_dkim_fm2"
+    },
+    {
+      "from": "module.domain_baseline[\"glitter-boys.com\"].cloudflare_dns_record.dkim[\"fm3\"]",
+      "to": "cloudflare_dns_record.glitter_boys_com_baseline_dkim_fm3"
+    },
+    {
+      "from": "module.domain_baseline[\"glitter-boys.com\"].cloudflare_dns_record.spf",
+      "to": "cloudflare_dns_record.glitter_boys_com_baseline_spf"
+    },
+    {
+      "from": "module.domain_baseline[\"glitter-boys.com\"].cloudflare_dns_record.dmarc",
+      "to": "cloudflare_dns_record.glitter_boys_com_baseline_dmarc"
+    },
+    {
+      "from": "module.domain_baseline[\"glitter-boys.com\"].cloudflare_dns_record.tlsrpt",
+      "to": "cloudflare_dns_record.glitter_boys_com_baseline_tlsrpt"
+    },
+    {
+      "from": "module.domain_baseline[\"glitter-boys.com\"].cloudflare_dns_record.mta_sts_host",
+      "to": "cloudflare_dns_record.glitter_boys_com_baseline_mta_sts_host"
+    },
+    {
+      "from": "module.domain_baseline[\"glitter-boys.com\"].cloudflare_dns_record.mta_sts[0]",
+      "to": "cloudflare_dns_record.glitter_boys_com_baseline_mta_sts"
+    },
+    {
+      "from": "module.domain_baseline[\"glitter-boys.com\"].cloudflare_dns_record.caa_issue[\"letsencrypt\"]",
+      "to": "cloudflare_dns_record.glitter_boys_com_baseline_caa_issue_letsencrypt"
+    },
+    {
+      "from": "module.domain_baseline[\"glitter-boys.com\"].cloudflare_dns_record.caa_issue[\"google_trust_services\"]",
+      "to": "cloudflare_dns_record.glitter_boys_com_baseline_caa_issue_google_trust_services"
+    },
+    {
+      "from": "module.domain_baseline[\"glitter-boys.com\"].cloudflare_dns_record.caa_issue[\"sectigo\"]",
+      "to": "cloudflare_dns_record.glitter_boys_com_baseline_caa_issue_sectigo"
+    },
+    {
+      "from": "module.domain_baseline[\"glitter-boys.com\"].cloudflare_dns_record.caa_issue[\"ssl_com\"]",
+      "to": "cloudflare_dns_record.glitter_boys_com_baseline_caa_issue_ssl_com"
+    },
+    {
+      "from": "module.domain_baseline[\"glitter-boys.com\"].cloudflare_dns_record.caa_issuewild[\"letsencrypt\"]",
+      "to": "cloudflare_dns_record.glitter_boys_com_baseline_caa_issuewild_letsencrypt"
+    },
+    {
+      "from": "module.domain_baseline[\"glitter-boys.com\"].cloudflare_dns_record.caa_issuewild[\"google_trust_services\"]",
+      "to": "cloudflare_dns_record.glitter_boys_com_baseline_caa_issuewild_google_trust_services"
+    },
+    {
+      "from": "module.domain_baseline[\"glitter-boys.com\"].cloudflare_dns_record.caa_issuewild[\"sectigo\"]",
+      "to": "cloudflare_dns_record.glitter_boys_com_baseline_caa_issuewild_sectigo"
+    },
+    {
+      "from": "module.domain_baseline[\"glitter-boys.com\"].cloudflare_dns_record.caa_issuewild[\"ssl_com\"]",
+      "to": "cloudflare_dns_record.glitter_boys_com_baseline_caa_issuewild_ssl_com"
+    },
+    {
+      "from": "module.domain_baseline[\"glitter-boys.com\"].cloudflare_dns_record.caa_iodef",
+      "to": "cloudflare_dns_record.glitter_boys_com_baseline_caa_iodef"
+    },
+    {
+      "from": "module.domain_baseline[\"glitter-boys.com\"].cloudflare_zone_setting.https",
+      "to": "cloudflare_zone_setting.glitter_boys_com_baseline_https"
+    },
+    {
+      "from": "module.domain_baseline[\"glitter-boys.com\"].cloudflare_zone_setting.ssl",
+      "to": "cloudflare_zone_setting.glitter_boys_com_baseline_ssl"
+    },
+    {
+      "from": "module.domain_baseline[\"glitter-boys.com\"].cloudflare_zone_setting.min_tls_version",
+      "to": "cloudflare_zone_setting.glitter_boys_com_baseline_min_tls_version"
+    },
+    {
+      "from": "module.domain_baseline[\"glitter-boys.com\"].cloudflare_zone_setting.tls_1_3",
+      "to": "cloudflare_zone_setting.glitter_boys_com_baseline_tls_1_3"
+    },
+    {
+      "from": "module.domain_baseline[\"glitter-boys.com\"].cloudflare_zone_setting.security_header",
+      "to": "cloudflare_zone_setting.glitter_boys_com_baseline_security_header"
+    },
+    {
+      "from": "module.domain_baseline[\"glitter-boys.com\"].terraform_data.ct_recipient[0]",
+      "to": "terraform_data.glitter_boys_com_baseline_ct_recipient"
+    },
+    {
+      "from": "module.domain_baseline[\"glitter-boys.com\"].cloudflare_ct_alerting.ct[0]",
+      "to": "cloudflare_ct_alerting.glitter_boys_com_baseline_ct"
+    },
+    {
+      "from": "module.domain_baseline[\"jerredshepherd.com\"].cloudflare_zone_dnssec.dnssec",
+      "to": "cloudflare_zone_dnssec.jerredshepherd_com_baseline_dnssec"
+    },
+    {
+      "from": "module.domain_baseline[\"jerredshepherd.com\"].cloudflare_dns_record.mx[\"primary\"]",
+      "to": "cloudflare_dns_record.jerredshepherd_com_baseline_mx_primary"
+    },
+    {
+      "from": "module.domain_baseline[\"jerredshepherd.com\"].cloudflare_dns_record.mx[\"secondary\"]",
+      "to": "cloudflare_dns_record.jerredshepherd_com_baseline_mx_secondary"
+    },
+    {
+      "from": "module.domain_baseline[\"jerredshepherd.com\"].cloudflare_dns_record.wildcard_mx[\"primary\"]",
+      "to": "cloudflare_dns_record.jerredshepherd_com_baseline_wildcard_mx_primary"
+    },
+    {
+      "from": "module.domain_baseline[\"jerredshepherd.com\"].cloudflare_dns_record.wildcard_mx[\"secondary\"]",
+      "to": "cloudflare_dns_record.jerredshepherd_com_baseline_wildcard_mx_secondary"
+    },
+    {
+      "from": "module.domain_baseline[\"jerredshepherd.com\"].cloudflare_dns_record.dkim[\"fm1\"]",
+      "to": "cloudflare_dns_record.jerredshepherd_com_baseline_dkim_fm1"
+    },
+    {
+      "from": "module.domain_baseline[\"jerredshepherd.com\"].cloudflare_dns_record.dkim[\"fm2\"]",
+      "to": "cloudflare_dns_record.jerredshepherd_com_baseline_dkim_fm2"
+    },
+    {
+      "from": "module.domain_baseline[\"jerredshepherd.com\"].cloudflare_dns_record.dkim[\"fm3\"]",
+      "to": "cloudflare_dns_record.jerredshepherd_com_baseline_dkim_fm3"
+    },
+    {
+      "from": "module.domain_baseline[\"jerredshepherd.com\"].cloudflare_dns_record.spf",
+      "to": "cloudflare_dns_record.jerredshepherd_com_baseline_spf"
+    },
+    {
+      "from": "module.domain_baseline[\"jerredshepherd.com\"].cloudflare_dns_record.dmarc",
+      "to": "cloudflare_dns_record.jerredshepherd_com_baseline_dmarc"
+    },
+    {
+      "from": "module.domain_baseline[\"jerredshepherd.com\"].cloudflare_dns_record.tlsrpt",
+      "to": "cloudflare_dns_record.jerredshepherd_com_baseline_tlsrpt"
+    },
+    {
+      "from": "module.domain_baseline[\"jerredshepherd.com\"].cloudflare_dns_record.mta_sts_host",
+      "to": "cloudflare_dns_record.jerredshepherd_com_baseline_mta_sts_host"
+    },
+    {
+      "from": "module.domain_baseline[\"jerredshepherd.com\"].cloudflare_dns_record.mta_sts[0]",
+      "to": "cloudflare_dns_record.jerredshepherd_com_baseline_mta_sts"
+    },
+    {
+      "from": "module.domain_baseline[\"jerredshepherd.com\"].cloudflare_dns_record.caa_issue[\"letsencrypt\"]",
+      "to": "cloudflare_dns_record.jerredshepherd_com_baseline_caa_issue_letsencrypt"
+    },
+    {
+      "from": "module.domain_baseline[\"jerredshepherd.com\"].cloudflare_dns_record.caa_issue[\"google_trust_services\"]",
+      "to": "cloudflare_dns_record.jerredshepherd_com_baseline_caa_issue_google_trust_services"
+    },
+    {
+      "from": "module.domain_baseline[\"jerredshepherd.com\"].cloudflare_dns_record.caa_issue[\"sectigo\"]",
+      "to": "cloudflare_dns_record.jerredshepherd_com_baseline_caa_issue_sectigo"
+    },
+    {
+      "from": "module.domain_baseline[\"jerredshepherd.com\"].cloudflare_dns_record.caa_issue[\"ssl_com\"]",
+      "to": "cloudflare_dns_record.jerredshepherd_com_baseline_caa_issue_ssl_com"
+    },
+    {
+      "from": "module.domain_baseline[\"jerredshepherd.com\"].cloudflare_dns_record.caa_issuewild[\"letsencrypt\"]",
+      "to": "cloudflare_dns_record.jerredshepherd_com_baseline_caa_issuewild_letsencrypt"
+    },
+    {
+      "from": "module.domain_baseline[\"jerredshepherd.com\"].cloudflare_dns_record.caa_issuewild[\"google_trust_services\"]",
+      "to": "cloudflare_dns_record.jerredshepherd_com_baseline_caa_issuewild_google_trust_services"
+    },
+    {
+      "from": "module.domain_baseline[\"jerredshepherd.com\"].cloudflare_dns_record.caa_issuewild[\"sectigo\"]",
+      "to": "cloudflare_dns_record.jerredshepherd_com_baseline_caa_issuewild_sectigo"
+    },
+    {
+      "from": "module.domain_baseline[\"jerredshepherd.com\"].cloudflare_dns_record.caa_issuewild[\"ssl_com\"]",
+      "to": "cloudflare_dns_record.jerredshepherd_com_baseline_caa_issuewild_ssl_com"
+    },
+    {
+      "from": "module.domain_baseline[\"jerredshepherd.com\"].cloudflare_dns_record.caa_iodef",
+      "to": "cloudflare_dns_record.jerredshepherd_com_baseline_caa_iodef"
+    },
+    {
+      "from": "module.domain_baseline[\"jerredshepherd.com\"].cloudflare_zone_setting.https",
+      "to": "cloudflare_zone_setting.jerredshepherd_com_baseline_https"
+    },
+    {
+      "from": "module.domain_baseline[\"jerredshepherd.com\"].cloudflare_zone_setting.ssl",
+      "to": "cloudflare_zone_setting.jerredshepherd_com_baseline_ssl"
+    },
+    {
+      "from": "module.domain_baseline[\"jerredshepherd.com\"].cloudflare_zone_setting.min_tls_version",
+      "to": "cloudflare_zone_setting.jerredshepherd_com_baseline_min_tls_version"
+    },
+    {
+      "from": "module.domain_baseline[\"jerredshepherd.com\"].cloudflare_zone_setting.tls_1_3",
+      "to": "cloudflare_zone_setting.jerredshepherd_com_baseline_tls_1_3"
+    },
+    {
+      "from": "module.domain_baseline[\"jerredshepherd.com\"].cloudflare_zone_setting.security_header",
+      "to": "cloudflare_zone_setting.jerredshepherd_com_baseline_security_header"
+    },
+    {
+      "from": "module.domain_baseline[\"jerredshepherd.com\"].terraform_data.ct_recipient[0]",
+      "to": "terraform_data.jerredshepherd_com_baseline_ct_recipient"
+    },
+    {
+      "from": "module.domain_baseline[\"jerredshepherd.com\"].cloudflare_ct_alerting.ct[0]",
+      "to": "cloudflare_ct_alerting.jerredshepherd_com_baseline_ct"
+    },
+    {
+      "from": "module.domain_baseline[\"scout-for-lol.com\"].cloudflare_zone_dnssec.dnssec",
+      "to": "cloudflare_zone_dnssec.scout_for_lol_com_baseline_dnssec"
+    },
+    {
+      "from": "module.domain_baseline[\"scout-for-lol.com\"].cloudflare_dns_record.mx[\"primary\"]",
+      "to": "cloudflare_dns_record.scout_for_lol_com_baseline_mx_primary"
+    },
+    {
+      "from": "module.domain_baseline[\"scout-for-lol.com\"].cloudflare_dns_record.mx[\"secondary\"]",
+      "to": "cloudflare_dns_record.scout_for_lol_com_baseline_mx_secondary"
+    },
+    {
+      "from": "module.domain_baseline[\"scout-for-lol.com\"].cloudflare_dns_record.wildcard_mx[\"primary\"]",
+      "to": "cloudflare_dns_record.scout_for_lol_com_baseline_wildcard_mx_primary"
+    },
+    {
+      "from": "module.domain_baseline[\"scout-for-lol.com\"].cloudflare_dns_record.wildcard_mx[\"secondary\"]",
+      "to": "cloudflare_dns_record.scout_for_lol_com_baseline_wildcard_mx_secondary"
+    },
+    {
+      "from": "module.domain_baseline[\"scout-for-lol.com\"].cloudflare_dns_record.dkim[\"fm1\"]",
+      "to": "cloudflare_dns_record.scout_for_lol_com_baseline_dkim_fm1"
+    },
+    {
+      "from": "module.domain_baseline[\"scout-for-lol.com\"].cloudflare_dns_record.dkim[\"fm2\"]",
+      "to": "cloudflare_dns_record.scout_for_lol_com_baseline_dkim_fm2"
+    },
+    {
+      "from": "module.domain_baseline[\"scout-for-lol.com\"].cloudflare_dns_record.dkim[\"fm3\"]",
+      "to": "cloudflare_dns_record.scout_for_lol_com_baseline_dkim_fm3"
+    },
+    {
+      "from": "module.domain_baseline[\"scout-for-lol.com\"].cloudflare_dns_record.spf",
+      "to": "cloudflare_dns_record.scout_for_lol_com_baseline_spf"
+    },
+    {
+      "from": "module.domain_baseline[\"scout-for-lol.com\"].cloudflare_dns_record.dmarc",
+      "to": "cloudflare_dns_record.scout_for_lol_com_baseline_dmarc"
+    },
+    {
+      "from": "module.domain_baseline[\"scout-for-lol.com\"].cloudflare_dns_record.tlsrpt",
+      "to": "cloudflare_dns_record.scout_for_lol_com_baseline_tlsrpt"
+    },
+    {
+      "from": "module.domain_baseline[\"scout-for-lol.com\"].cloudflare_dns_record.mta_sts_host",
+      "to": "cloudflare_dns_record.scout_for_lol_com_baseline_mta_sts_host"
+    },
+    {
+      "from": "module.domain_baseline[\"scout-for-lol.com\"].cloudflare_dns_record.mta_sts[0]",
+      "to": "cloudflare_dns_record.scout_for_lol_com_baseline_mta_sts"
+    },
+    {
+      "from": "module.domain_baseline[\"scout-for-lol.com\"].cloudflare_dns_record.caa_issue[\"letsencrypt\"]",
+      "to": "cloudflare_dns_record.scout_for_lol_com_baseline_caa_issue_letsencrypt"
+    },
+    {
+      "from": "module.domain_baseline[\"scout-for-lol.com\"].cloudflare_dns_record.caa_issue[\"google_trust_services\"]",
+      "to": "cloudflare_dns_record.scout_for_lol_com_baseline_caa_issue_google_trust_services"
+    },
+    {
+      "from": "module.domain_baseline[\"scout-for-lol.com\"].cloudflare_dns_record.caa_issue[\"sectigo\"]",
+      "to": "cloudflare_dns_record.scout_for_lol_com_baseline_caa_issue_sectigo"
+    },
+    {
+      "from": "module.domain_baseline[\"scout-for-lol.com\"].cloudflare_dns_record.caa_issue[\"ssl_com\"]",
+      "to": "cloudflare_dns_record.scout_for_lol_com_baseline_caa_issue_ssl_com"
+    },
+    {
+      "from": "module.domain_baseline[\"scout-for-lol.com\"].cloudflare_dns_record.caa_issuewild[\"letsencrypt\"]",
+      "to": "cloudflare_dns_record.scout_for_lol_com_baseline_caa_issuewild_letsencrypt"
+    },
+    {
+      "from": "module.domain_baseline[\"scout-for-lol.com\"].cloudflare_dns_record.caa_issuewild[\"google_trust_services\"]",
+      "to": "cloudflare_dns_record.scout_for_lol_com_baseline_caa_issuewild_google_trust_services"
+    },
+    {
+      "from": "module.domain_baseline[\"scout-for-lol.com\"].cloudflare_dns_record.caa_issuewild[\"sectigo\"]",
+      "to": "cloudflare_dns_record.scout_for_lol_com_baseline_caa_issuewild_sectigo"
+    },
+    {
+      "from": "module.domain_baseline[\"scout-for-lol.com\"].cloudflare_dns_record.caa_issuewild[\"ssl_com\"]",
+      "to": "cloudflare_dns_record.scout_for_lol_com_baseline_caa_issuewild_ssl_com"
+    },
+    {
+      "from": "module.domain_baseline[\"scout-for-lol.com\"].cloudflare_dns_record.caa_iodef",
+      "to": "cloudflare_dns_record.scout_for_lol_com_baseline_caa_iodef"
+    },
+    {
+      "from": "module.domain_baseline[\"scout-for-lol.com\"].cloudflare_zone_setting.https",
+      "to": "cloudflare_zone_setting.scout_for_lol_com_baseline_https"
+    },
+    {
+      "from": "module.domain_baseline[\"scout-for-lol.com\"].cloudflare_zone_setting.ssl",
+      "to": "cloudflare_zone_setting.scout_for_lol_com_baseline_ssl"
+    },
+    {
+      "from": "module.domain_baseline[\"scout-for-lol.com\"].cloudflare_zone_setting.min_tls_version",
+      "to": "cloudflare_zone_setting.scout_for_lol_com_baseline_min_tls_version"
+    },
+    {
+      "from": "module.domain_baseline[\"scout-for-lol.com\"].cloudflare_zone_setting.tls_1_3",
+      "to": "cloudflare_zone_setting.scout_for_lol_com_baseline_tls_1_3"
+    },
+    {
+      "from": "module.domain_baseline[\"scout-for-lol.com\"].cloudflare_zone_setting.security_header",
+      "to": "cloudflare_zone_setting.scout_for_lol_com_baseline_security_header"
+    },
+    {
+      "from": "module.domain_baseline[\"scout-for-lol.com\"].terraform_data.ct_recipient[0]",
+      "to": "terraform_data.scout_for_lol_com_baseline_ct_recipient"
+    },
+    {
+      "from": "module.domain_baseline[\"scout-for-lol.com\"].cloudflare_ct_alerting.ct[0]",
+      "to": "cloudflare_ct_alerting.scout_for_lol_com_baseline_ct"
+    },
+    {
+      "from": "module.domain_baseline[\"shepherdjerred.com\"].cloudflare_zone_dnssec.dnssec",
+      "to": "cloudflare_zone_dnssec.shepherdjerred_com_baseline_dnssec"
+    },
+    {
+      "from": "module.domain_baseline[\"shepherdjerred.com\"].cloudflare_dns_record.mx[\"primary\"]",
+      "to": "cloudflare_dns_record.shepherdjerred_com_baseline_mx_primary"
+    },
+    {
+      "from": "module.domain_baseline[\"shepherdjerred.com\"].cloudflare_dns_record.mx[\"secondary\"]",
+      "to": "cloudflare_dns_record.shepherdjerred_com_baseline_mx_secondary"
+    },
+    {
+      "from": "module.domain_baseline[\"shepherdjerred.com\"].cloudflare_dns_record.wildcard_mx[\"primary\"]",
+      "to": "cloudflare_dns_record.shepherdjerred_com_baseline_wildcard_mx_primary"
+    },
+    {
+      "from": "module.domain_baseline[\"shepherdjerred.com\"].cloudflare_dns_record.wildcard_mx[\"secondary\"]",
+      "to": "cloudflare_dns_record.shepherdjerred_com_baseline_wildcard_mx_secondary"
+    },
+    {
+      "from": "module.domain_baseline[\"shepherdjerred.com\"].cloudflare_dns_record.dkim[\"fm1\"]",
+      "to": "cloudflare_dns_record.shepherdjerred_com_baseline_dkim_fm1"
+    },
+    {
+      "from": "module.domain_baseline[\"shepherdjerred.com\"].cloudflare_dns_record.dkim[\"fm2\"]",
+      "to": "cloudflare_dns_record.shepherdjerred_com_baseline_dkim_fm2"
+    },
+    {
+      "from": "module.domain_baseline[\"shepherdjerred.com\"].cloudflare_dns_record.dkim[\"fm3\"]",
+      "to": "cloudflare_dns_record.shepherdjerred_com_baseline_dkim_fm3"
+    },
+    {
+      "from": "module.domain_baseline[\"shepherdjerred.com\"].cloudflare_dns_record.spf",
+      "to": "cloudflare_dns_record.shepherdjerred_com_baseline_spf"
+    },
+    {
+      "from": "module.domain_baseline[\"shepherdjerred.com\"].cloudflare_dns_record.dmarc",
+      "to": "cloudflare_dns_record.shepherdjerred_com_baseline_dmarc"
+    },
+    {
+      "from": "module.domain_baseline[\"shepherdjerred.com\"].cloudflare_dns_record.tlsrpt",
+      "to": "cloudflare_dns_record.shepherdjerred_com_baseline_tlsrpt"
+    },
+    {
+      "from": "module.domain_baseline[\"shepherdjerred.com\"].cloudflare_dns_record.mta_sts_host",
+      "to": "cloudflare_dns_record.shepherdjerred_com_baseline_mta_sts_host"
+    },
+    {
+      "from": "module.domain_baseline[\"shepherdjerred.com\"].cloudflare_dns_record.mta_sts[0]",
+      "to": "cloudflare_dns_record.shepherdjerred_com_baseline_mta_sts"
+    },
+    {
+      "from": "module.domain_baseline[\"shepherdjerred.com\"].cloudflare_dns_record.caa_issue[\"letsencrypt\"]",
+      "to": "cloudflare_dns_record.shepherdjerred_com_baseline_caa_issue_letsencrypt"
+    },
+    {
+      "from": "module.domain_baseline[\"shepherdjerred.com\"].cloudflare_dns_record.caa_issue[\"google_trust_services\"]",
+      "to": "cloudflare_dns_record.shepherdjerred_com_baseline_caa_issue_google_trust_services"
+    },
+    {
+      "from": "module.domain_baseline[\"shepherdjerred.com\"].cloudflare_dns_record.caa_issue[\"sectigo\"]",
+      "to": "cloudflare_dns_record.shepherdjerred_com_baseline_caa_issue_sectigo"
+    },
+    {
+      "from": "module.domain_baseline[\"shepherdjerred.com\"].cloudflare_dns_record.caa_issue[\"ssl_com\"]",
+      "to": "cloudflare_dns_record.shepherdjerred_com_baseline_caa_issue_ssl_com"
+    },
+    {
+      "from": "module.domain_baseline[\"shepherdjerred.com\"].cloudflare_dns_record.caa_issuewild[\"letsencrypt\"]",
+      "to": "cloudflare_dns_record.shepherdjerred_com_baseline_caa_issuewild_letsencrypt"
+    },
+    {
+      "from": "module.domain_baseline[\"shepherdjerred.com\"].cloudflare_dns_record.caa_issuewild[\"google_trust_services\"]",
+      "to": "cloudflare_dns_record.shepherdjerred_com_baseline_caa_issuewild_google_trust_services"
+    },
+    {
+      "from": "module.domain_baseline[\"shepherdjerred.com\"].cloudflare_dns_record.caa_issuewild[\"sectigo\"]",
+      "to": "cloudflare_dns_record.shepherdjerred_com_baseline_caa_issuewild_sectigo"
+    },
+    {
+      "from": "module.domain_baseline[\"shepherdjerred.com\"].cloudflare_dns_record.caa_issuewild[\"ssl_com\"]",
+      "to": "cloudflare_dns_record.shepherdjerred_com_baseline_caa_issuewild_ssl_com"
+    },
+    {
+      "from": "module.domain_baseline[\"shepherdjerred.com\"].cloudflare_dns_record.caa_iodef",
+      "to": "cloudflare_dns_record.shepherdjerred_com_baseline_caa_iodef"
+    },
+    {
+      "from": "module.domain_baseline[\"shepherdjerred.com\"].cloudflare_zone_setting.https",
+      "to": "cloudflare_zone_setting.shepherdjerred_com_baseline_https"
+    },
+    {
+      "from": "module.domain_baseline[\"shepherdjerred.com\"].cloudflare_zone_setting.ssl",
+      "to": "cloudflare_zone_setting.shepherdjerred_com_baseline_ssl"
+    },
+    {
+      "from": "module.domain_baseline[\"shepherdjerred.com\"].cloudflare_zone_setting.min_tls_version",
+      "to": "cloudflare_zone_setting.shepherdjerred_com_baseline_min_tls_version"
+    },
+    {
+      "from": "module.domain_baseline[\"shepherdjerred.com\"].cloudflare_zone_setting.tls_1_3",
+      "to": "cloudflare_zone_setting.shepherdjerred_com_baseline_tls_1_3"
+    },
+    {
+      "from": "module.domain_baseline[\"shepherdjerred.com\"].cloudflare_zone_setting.security_header",
+      "to": "cloudflare_zone_setting.shepherdjerred_com_baseline_security_header"
+    },
+    {
+      "from": "module.domain_baseline[\"shepherdjerred.com\"].terraform_data.ct_recipient[0]",
+      "to": "terraform_data.shepherdjerred_com_baseline_ct_recipient"
+    },
+    {
+      "from": "module.domain_baseline[\"shepherdjerred.com\"].cloudflare_ct_alerting.ct[0]",
+      "to": "cloudflare_ct_alerting.shepherdjerred_com_baseline_ct"
+    },
+    {
+      "from": "module.domain_baseline[\"sjer.red\"].cloudflare_zone_dnssec.dnssec",
+      "to": "cloudflare_zone_dnssec.sjer_red_baseline_dnssec"
+    },
+    {
+      "from": "module.domain_baseline[\"sjer.red\"].cloudflare_dns_record.mx[\"primary\"]",
+      "to": "cloudflare_dns_record.sjer_red_baseline_mx_primary"
+    },
+    {
+      "from": "module.domain_baseline[\"sjer.red\"].cloudflare_dns_record.mx[\"secondary\"]",
+      "to": "cloudflare_dns_record.sjer_red_baseline_mx_secondary"
+    },
+    {
+      "from": "module.domain_baseline[\"sjer.red\"].cloudflare_dns_record.dkim[\"fm1\"]",
+      "to": "cloudflare_dns_record.sjer_red_baseline_dkim_fm1"
+    },
+    {
+      "from": "module.domain_baseline[\"sjer.red\"].cloudflare_dns_record.dkim[\"fm2\"]",
+      "to": "cloudflare_dns_record.sjer_red_baseline_dkim_fm2"
+    },
+    {
+      "from": "module.domain_baseline[\"sjer.red\"].cloudflare_dns_record.dkim[\"fm3\"]",
+      "to": "cloudflare_dns_record.sjer_red_baseline_dkim_fm3"
+    },
+    {
+      "from": "module.domain_baseline[\"sjer.red\"].cloudflare_dns_record.spf",
+      "to": "cloudflare_dns_record.sjer_red_baseline_spf"
+    },
+    {
+      "from": "module.domain_baseline[\"sjer.red\"].cloudflare_dns_record.dmarc",
+      "to": "cloudflare_dns_record.sjer_red_baseline_dmarc"
+    },
+    {
+      "from": "module.domain_baseline[\"sjer.red\"].cloudflare_dns_record.tlsrpt",
+      "to": "cloudflare_dns_record.sjer_red_baseline_tlsrpt"
+    },
+    {
+      "from": "module.domain_baseline[\"sjer.red\"].cloudflare_dns_record.mta_sts_host",
+      "to": "cloudflare_dns_record.sjer_red_baseline_mta_sts_host"
+    },
+    {
+      "from": "module.domain_baseline[\"sjer.red\"].cloudflare_dns_record.mta_sts[0]",
+      "to": "cloudflare_dns_record.sjer_red_baseline_mta_sts"
+    },
+    {
+      "from": "module.domain_baseline[\"sjer.red\"].cloudflare_dns_record.caa_issue[\"letsencrypt\"]",
+      "to": "cloudflare_dns_record.sjer_red_baseline_caa_issue_letsencrypt"
+    },
+    {
+      "from": "module.domain_baseline[\"sjer.red\"].cloudflare_dns_record.caa_issue[\"google_trust_services\"]",
+      "to": "cloudflare_dns_record.sjer_red_baseline_caa_issue_google_trust_services"
+    },
+    {
+      "from": "module.domain_baseline[\"sjer.red\"].cloudflare_dns_record.caa_issue[\"sectigo\"]",
+      "to": "cloudflare_dns_record.sjer_red_baseline_caa_issue_sectigo"
+    },
+    {
+      "from": "module.domain_baseline[\"sjer.red\"].cloudflare_dns_record.caa_issue[\"ssl_com\"]",
+      "to": "cloudflare_dns_record.sjer_red_baseline_caa_issue_ssl_com"
+    },
+    {
+      "from": "module.domain_baseline[\"sjer.red\"].cloudflare_dns_record.caa_issuewild[\"letsencrypt\"]",
+      "to": "cloudflare_dns_record.sjer_red_baseline_caa_issuewild_letsencrypt"
+    },
+    {
+      "from": "module.domain_baseline[\"sjer.red\"].cloudflare_dns_record.caa_issuewild[\"google_trust_services\"]",
+      "to": "cloudflare_dns_record.sjer_red_baseline_caa_issuewild_google_trust_services"
+    },
+    {
+      "from": "module.domain_baseline[\"sjer.red\"].cloudflare_dns_record.caa_issuewild[\"sectigo\"]",
+      "to": "cloudflare_dns_record.sjer_red_baseline_caa_issuewild_sectigo"
+    },
+    {
+      "from": "module.domain_baseline[\"sjer.red\"].cloudflare_dns_record.caa_issuewild[\"ssl_com\"]",
+      "to": "cloudflare_dns_record.sjer_red_baseline_caa_issuewild_ssl_com"
+    },
+    {
+      "from": "module.domain_baseline[\"sjer.red\"].cloudflare_dns_record.caa_iodef",
+      "to": "cloudflare_dns_record.sjer_red_baseline_caa_iodef"
+    },
+    {
+      "from": "module.domain_baseline[\"sjer.red\"].cloudflare_zone_setting.https",
+      "to": "cloudflare_zone_setting.sjer_red_baseline_https"
+    },
+    {
+      "from": "module.domain_baseline[\"sjer.red\"].cloudflare_zone_setting.ssl",
+      "to": "cloudflare_zone_setting.sjer_red_baseline_ssl"
+    },
+    {
+      "from": "module.domain_baseline[\"sjer.red\"].cloudflare_zone_setting.min_tls_version",
+      "to": "cloudflare_zone_setting.sjer_red_baseline_min_tls_version"
+    },
+    {
+      "from": "module.domain_baseline[\"sjer.red\"].cloudflare_zone_setting.tls_1_3",
+      "to": "cloudflare_zone_setting.sjer_red_baseline_tls_1_3"
+    },
+    {
+      "from": "module.domain_baseline[\"sjer.red\"].cloudflare_zone_setting.security_header",
+      "to": "cloudflare_zone_setting.sjer_red_baseline_security_header"
+    },
+    {
+      "from": "module.domain_baseline[\"sjer.red\"].terraform_data.ct_recipient[0]",
+      "to": "terraform_data.sjer_red_baseline_ct_recipient"
+    },
+    {
+      "from": "module.domain_baseline[\"sjer.red\"].cloudflare_ct_alerting.ct[0]",
+      "to": "cloudflare_ct_alerting.sjer_red_baseline_ct"
+    },
+    {
+      "from": "module.domain_baseline[\"statically-typed.com\"].cloudflare_zone_dnssec.dnssec",
+      "to": "cloudflare_zone_dnssec.statically_typed_com_baseline_dnssec"
+    },
+    {
+      "from": "module.domain_baseline[\"statically-typed.com\"].cloudflare_dns_record.mx[\"primary\"]",
+      "to": "cloudflare_dns_record.statically_typed_com_baseline_mx_primary"
+    },
+    {
+      "from": "module.domain_baseline[\"statically-typed.com\"].cloudflare_dns_record.mx[\"secondary\"]",
+      "to": "cloudflare_dns_record.statically_typed_com_baseline_mx_secondary"
+    },
+    {
+      "from": "module.domain_baseline[\"statically-typed.com\"].cloudflare_dns_record.wildcard_mx[\"primary\"]",
+      "to": "cloudflare_dns_record.statically_typed_com_baseline_wildcard_mx_primary"
+    },
+    {
+      "from": "module.domain_baseline[\"statically-typed.com\"].cloudflare_dns_record.wildcard_mx[\"secondary\"]",
+      "to": "cloudflare_dns_record.statically_typed_com_baseline_wildcard_mx_secondary"
+    },
+    {
+      "from": "module.domain_baseline[\"statically-typed.com\"].cloudflare_dns_record.dkim[\"fm1\"]",
+      "to": "cloudflare_dns_record.statically_typed_com_baseline_dkim_fm1"
+    },
+    {
+      "from": "module.domain_baseline[\"statically-typed.com\"].cloudflare_dns_record.dkim[\"fm2\"]",
+      "to": "cloudflare_dns_record.statically_typed_com_baseline_dkim_fm2"
+    },
+    {
+      "from": "module.domain_baseline[\"statically-typed.com\"].cloudflare_dns_record.dkim[\"fm3\"]",
+      "to": "cloudflare_dns_record.statically_typed_com_baseline_dkim_fm3"
+    },
+    {
+      "from": "module.domain_baseline[\"statically-typed.com\"].cloudflare_dns_record.spf",
+      "to": "cloudflare_dns_record.statically_typed_com_baseline_spf"
+    },
+    {
+      "from": "module.domain_baseline[\"statically-typed.com\"].cloudflare_dns_record.dmarc",
+      "to": "cloudflare_dns_record.statically_typed_com_baseline_dmarc"
+    },
+    {
+      "from": "module.domain_baseline[\"statically-typed.com\"].cloudflare_dns_record.tlsrpt",
+      "to": "cloudflare_dns_record.statically_typed_com_baseline_tlsrpt"
+    },
+    {
+      "from": "module.domain_baseline[\"statically-typed.com\"].cloudflare_dns_record.mta_sts_host",
+      "to": "cloudflare_dns_record.statically_typed_com_baseline_mta_sts_host"
+    },
+    {
+      "from": "module.domain_baseline[\"statically-typed.com\"].cloudflare_dns_record.mta_sts[0]",
+      "to": "cloudflare_dns_record.statically_typed_com_baseline_mta_sts"
+    },
+    {
+      "from": "module.domain_baseline[\"statically-typed.com\"].cloudflare_dns_record.caa_issue[\"letsencrypt\"]",
+      "to": "cloudflare_dns_record.statically_typed_com_baseline_caa_issue_letsencrypt"
+    },
+    {
+      "from": "module.domain_baseline[\"statically-typed.com\"].cloudflare_dns_record.caa_issue[\"google_trust_services\"]",
+      "to": "cloudflare_dns_record.statically_typed_com_baseline_caa_issue_google_trust_services"
+    },
+    {
+      "from": "module.domain_baseline[\"statically-typed.com\"].cloudflare_dns_record.caa_issue[\"sectigo\"]",
+      "to": "cloudflare_dns_record.statically_typed_com_baseline_caa_issue_sectigo"
+    },
+    {
+      "from": "module.domain_baseline[\"statically-typed.com\"].cloudflare_dns_record.caa_issue[\"ssl_com\"]",
+      "to": "cloudflare_dns_record.statically_typed_com_baseline_caa_issue_ssl_com"
+    },
+    {
+      "from": "module.domain_baseline[\"statically-typed.com\"].cloudflare_dns_record.caa_issuewild[\"letsencrypt\"]",
+      "to": "cloudflare_dns_record.statically_typed_com_baseline_caa_issuewild_letsencrypt"
+    },
+    {
+      "from": "module.domain_baseline[\"statically-typed.com\"].cloudflare_dns_record.caa_issuewild[\"google_trust_services\"]",
+      "to": "cloudflare_dns_record.statically_typed_com_baseline_caa_issuewild_google_trust_services"
+    },
+    {
+      "from": "module.domain_baseline[\"statically-typed.com\"].cloudflare_dns_record.caa_issuewild[\"sectigo\"]",
+      "to": "cloudflare_dns_record.statically_typed_com_baseline_caa_issuewild_sectigo"
+    },
+    {
+      "from": "module.domain_baseline[\"statically-typed.com\"].cloudflare_dns_record.caa_issuewild[\"ssl_com\"]",
+      "to": "cloudflare_dns_record.statically_typed_com_baseline_caa_issuewild_ssl_com"
+    },
+    {
+      "from": "module.domain_baseline[\"statically-typed.com\"].cloudflare_dns_record.caa_iodef",
+      "to": "cloudflare_dns_record.statically_typed_com_baseline_caa_iodef"
+    },
+    {
+      "from": "module.domain_baseline[\"statically-typed.com\"].cloudflare_zone_setting.https",
+      "to": "cloudflare_zone_setting.statically_typed_com_baseline_https"
+    },
+    {
+      "from": "module.domain_baseline[\"statically-typed.com\"].cloudflare_zone_setting.ssl",
+      "to": "cloudflare_zone_setting.statically_typed_com_baseline_ssl"
+    },
+    {
+      "from": "module.domain_baseline[\"statically-typed.com\"].cloudflare_zone_setting.min_tls_version",
+      "to": "cloudflare_zone_setting.statically_typed_com_baseline_min_tls_version"
+    },
+    {
+      "from": "module.domain_baseline[\"statically-typed.com\"].cloudflare_zone_setting.tls_1_3",
+      "to": "cloudflare_zone_setting.statically_typed_com_baseline_tls_1_3"
+    },
+    {
+      "from": "module.domain_baseline[\"statically-typed.com\"].cloudflare_zone_setting.security_header",
+      "to": "cloudflare_zone_setting.statically_typed_com_baseline_security_header"
+    },
+    {
+      "from": "module.domain_baseline[\"statically-typed.com\"].terraform_data.ct_recipient[0]",
+      "to": "terraform_data.statically_typed_com_baseline_ct_recipient"
+    },
+    {
+      "from": "module.domain_baseline[\"statically-typed.com\"].cloudflare_ct_alerting.ct[0]",
+      "to": "cloudflare_ct_alerting.statically_typed_com_baseline_ct"
+    },
+    {
+      "from": "module.domain_baseline[\"ts-mc.net\"].cloudflare_zone_dnssec.dnssec",
+      "to": "cloudflare_zone_dnssec.ts_mc_net_baseline_dnssec"
+    },
+    {
+      "from": "module.domain_baseline[\"ts-mc.net\"].cloudflare_dns_record.mx[\"primary\"]",
+      "to": "cloudflare_dns_record.ts_mc_net_baseline_mx_primary"
+    },
+    {
+      "from": "module.domain_baseline[\"ts-mc.net\"].cloudflare_dns_record.mx[\"secondary\"]",
+      "to": "cloudflare_dns_record.ts_mc_net_baseline_mx_secondary"
+    },
+    {
+      "from": "module.domain_baseline[\"ts-mc.net\"].cloudflare_dns_record.wildcard_mx[\"primary\"]",
+      "to": "cloudflare_dns_record.ts_mc_net_baseline_wildcard_mx_primary"
+    },
+    {
+      "from": "module.domain_baseline[\"ts-mc.net\"].cloudflare_dns_record.wildcard_mx[\"secondary\"]",
+      "to": "cloudflare_dns_record.ts_mc_net_baseline_wildcard_mx_secondary"
+    },
+    {
+      "from": "module.domain_baseline[\"ts-mc.net\"].cloudflare_dns_record.dkim[\"fm1\"]",
+      "to": "cloudflare_dns_record.ts_mc_net_baseline_dkim_fm1"
+    },
+    {
+      "from": "module.domain_baseline[\"ts-mc.net\"].cloudflare_dns_record.dkim[\"fm2\"]",
+      "to": "cloudflare_dns_record.ts_mc_net_baseline_dkim_fm2"
+    },
+    {
+      "from": "module.domain_baseline[\"ts-mc.net\"].cloudflare_dns_record.dkim[\"fm3\"]",
+      "to": "cloudflare_dns_record.ts_mc_net_baseline_dkim_fm3"
+    },
+    {
+      "from": "module.domain_baseline[\"ts-mc.net\"].cloudflare_dns_record.spf",
+      "to": "cloudflare_dns_record.ts_mc_net_baseline_spf"
+    },
+    {
+      "from": "module.domain_baseline[\"ts-mc.net\"].cloudflare_dns_record.dmarc",
+      "to": "cloudflare_dns_record.ts_mc_net_baseline_dmarc"
+    },
+    {
+      "from": "module.domain_baseline[\"ts-mc.net\"].cloudflare_dns_record.tlsrpt",
+      "to": "cloudflare_dns_record.ts_mc_net_baseline_tlsrpt"
+    },
+    {
+      "from": "module.domain_baseline[\"ts-mc.net\"].cloudflare_dns_record.mta_sts_host",
+      "to": "cloudflare_dns_record.ts_mc_net_baseline_mta_sts_host"
+    },
+    {
+      "from": "module.domain_baseline[\"ts-mc.net\"].cloudflare_dns_record.mta_sts[0]",
+      "to": "cloudflare_dns_record.ts_mc_net_baseline_mta_sts"
+    },
+    {
+      "from": "module.domain_baseline[\"ts-mc.net\"].cloudflare_dns_record.caa_issue[\"letsencrypt\"]",
+      "to": "cloudflare_dns_record.ts_mc_net_baseline_caa_issue_letsencrypt"
+    },
+    {
+      "from": "module.domain_baseline[\"ts-mc.net\"].cloudflare_dns_record.caa_issue[\"google_trust_services\"]",
+      "to": "cloudflare_dns_record.ts_mc_net_baseline_caa_issue_google_trust_services"
+    },
+    {
+      "from": "module.domain_baseline[\"ts-mc.net\"].cloudflare_dns_record.caa_issue[\"sectigo\"]",
+      "to": "cloudflare_dns_record.ts_mc_net_baseline_caa_issue_sectigo"
+    },
+    {
+      "from": "module.domain_baseline[\"ts-mc.net\"].cloudflare_dns_record.caa_issue[\"ssl_com\"]",
+      "to": "cloudflare_dns_record.ts_mc_net_baseline_caa_issue_ssl_com"
+    },
+    {
+      "from": "module.domain_baseline[\"ts-mc.net\"].cloudflare_dns_record.caa_issuewild[\"letsencrypt\"]",
+      "to": "cloudflare_dns_record.ts_mc_net_baseline_caa_issuewild_letsencrypt"
+    },
+    {
+      "from": "module.domain_baseline[\"ts-mc.net\"].cloudflare_dns_record.caa_issuewild[\"google_trust_services\"]",
+      "to": "cloudflare_dns_record.ts_mc_net_baseline_caa_issuewild_google_trust_services"
+    },
+    {
+      "from": "module.domain_baseline[\"ts-mc.net\"].cloudflare_dns_record.caa_issuewild[\"sectigo\"]",
+      "to": "cloudflare_dns_record.ts_mc_net_baseline_caa_issuewild_sectigo"
+    },
+    {
+      "from": "module.domain_baseline[\"ts-mc.net\"].cloudflare_dns_record.caa_issuewild[\"ssl_com\"]",
+      "to": "cloudflare_dns_record.ts_mc_net_baseline_caa_issuewild_ssl_com"
+    },
+    {
+      "from": "module.domain_baseline[\"ts-mc.net\"].cloudflare_dns_record.caa_iodef",
+      "to": "cloudflare_dns_record.ts_mc_net_baseline_caa_iodef"
+    },
+    {
+      "from": "module.domain_baseline[\"ts-mc.net\"].cloudflare_zone_setting.https",
+      "to": "cloudflare_zone_setting.ts_mc_net_baseline_https"
+    },
+    {
+      "from": "module.domain_baseline[\"ts-mc.net\"].cloudflare_zone_setting.ssl",
+      "to": "cloudflare_zone_setting.ts_mc_net_baseline_ssl"
+    },
+    {
+      "from": "module.domain_baseline[\"ts-mc.net\"].cloudflare_zone_setting.min_tls_version",
+      "to": "cloudflare_zone_setting.ts_mc_net_baseline_min_tls_version"
+    },
+    {
+      "from": "module.domain_baseline[\"ts-mc.net\"].cloudflare_zone_setting.tls_1_3",
+      "to": "cloudflare_zone_setting.ts_mc_net_baseline_tls_1_3"
+    },
+    {
+      "from": "module.domain_baseline[\"ts-mc.net\"].cloudflare_zone_setting.security_header",
+      "to": "cloudflare_zone_setting.ts_mc_net_baseline_security_header"
+    },
+    {
+      "from": "module.domain_baseline[\"ts-mc.net\"].terraform_data.ct_recipient[0]",
+      "to": "terraform_data.ts_mc_net_baseline_ct_recipient"
+    },
+    {
+      "from": "module.domain_baseline[\"ts-mc.net\"].cloudflare_ct_alerting.ct[0]",
+      "to": "cloudflare_ct_alerting.ts_mc_net_baseline_ct"
     }
   ],
   "output": {
     "managed_domains": {
       "description": "Domains covered by the shared security and mail baseline.",
-      "precondition": {
-        "condition": "${toset(keys(local.domain_registry.domains)) == toset(keys(local.baseline_zone_ids))}",
-        "error_message": "Every Cloudflare zone must have exactly one domain registry entry and baseline binding."
-      },
-      "value": "${keys(local.domain_registry.domains)}"
+      "value": [
+        "better-skill-capped.com",
+        "clauderon.com",
+        "discord-plays-pokemon.com",
+        "glitter-boys.com",
+        "jerredshepherd.com",
+        "scout-for-lol.com",
+        "shepherdjerred.com",
+        "sjer.red",
+        "statically-typed.com",
+        "ts-mc.net"
+      ]
     },
     "storm_forum_turnstile_secret_key": {
       "sensitive": true,
@@ -677,7 +1992,7 @@
       "value": "${cloudflare_turnstile_widget.storm_forum.sitekey}"
     }
   },
-  "provider": { "cloudflare": [{}] },
+  "provider": { "cloudflare": [{}], "http": [{}] },
   "removed": [
     {
       "from": "cloudflare_r2_bucket.glitter_discord_corpus",
@@ -713,7 +2028,288 @@
     }
   ],
   "resource": {
+    "cloudflare_ct_alerting": {
+      "better_skill_capped_com_baseline_ct_existing": {
+        "enabled": true,
+        "lifecycle": { "ignore_changes": ["emails"] },
+        "zone_id": "${cloudflare_zone.better_skill_capped_com.id}"
+      },
+      "clauderon_com_baseline_ct": {
+        "emails": ["root@sjer.red"],
+        "enabled": true,
+        "lifecycle": {
+          "create_before_destroy": true,
+          "replace_triggered_by": [
+            "terraform_data.clauderon_com_baseline_ct_recipient"
+          ]
+        },
+        "zone_id": "${cloudflare_zone.clauderon_com.id}"
+      },
+      "discord_plays_pokemon_com_baseline_ct": {
+        "emails": ["root@sjer.red"],
+        "enabled": true,
+        "lifecycle": {
+          "create_before_destroy": true,
+          "replace_triggered_by": [
+            "terraform_data.discord_plays_pokemon_com_baseline_ct_recipient"
+          ]
+        },
+        "zone_id": "${cloudflare_zone.discord_plays_pokemon_com.id}"
+      },
+      "glitter_boys_com_baseline_ct": {
+        "emails": ["root@sjer.red"],
+        "enabled": true,
+        "lifecycle": {
+          "create_before_destroy": true,
+          "replace_triggered_by": [
+            "terraform_data.glitter_boys_com_baseline_ct_recipient"
+          ]
+        },
+        "zone_id": "${cloudflare_zone.glitter_boys_com.id}"
+      },
+      "jerredshepherd_com_baseline_ct": {
+        "emails": ["root@sjer.red"],
+        "enabled": true,
+        "lifecycle": {
+          "create_before_destroy": true,
+          "replace_triggered_by": [
+            "terraform_data.jerredshepherd_com_baseline_ct_recipient"
+          ]
+        },
+        "zone_id": "${cloudflare_zone.jerredshepherd_com.id}"
+      },
+      "scout_for_lol_com_baseline_ct": {
+        "emails": ["root@sjer.red"],
+        "enabled": true,
+        "lifecycle": {
+          "create_before_destroy": true,
+          "replace_triggered_by": [
+            "terraform_data.scout_for_lol_com_baseline_ct_recipient"
+          ]
+        },
+        "zone_id": "${cloudflare_zone.scout_for_lol_com.id}"
+      },
+      "shepherdjerred_com_baseline_ct": {
+        "emails": ["root@sjer.red"],
+        "enabled": true,
+        "lifecycle": {
+          "create_before_destroy": true,
+          "replace_triggered_by": [
+            "terraform_data.shepherdjerred_com_baseline_ct_recipient"
+          ]
+        },
+        "zone_id": "${cloudflare_zone.shepherdjerred_com.id}"
+      },
+      "sjer_red_baseline_ct": {
+        "emails": ["root@sjer.red"],
+        "enabled": true,
+        "lifecycle": {
+          "create_before_destroy": true,
+          "replace_triggered_by": [
+            "terraform_data.sjer_red_baseline_ct_recipient"
+          ]
+        },
+        "zone_id": "${cloudflare_zone.sjer_red.id}"
+      },
+      "statically_typed_com_baseline_ct": {
+        "emails": ["root@sjer.red"],
+        "enabled": true,
+        "lifecycle": {
+          "create_before_destroy": true,
+          "replace_triggered_by": [
+            "terraform_data.statically_typed_com_baseline_ct_recipient"
+          ]
+        },
+        "zone_id": "${cloudflare_zone.statically_typed_com.id}"
+      },
+      "ts_mc_net_baseline_ct": {
+        "emails": ["root@sjer.red"],
+        "enabled": true,
+        "lifecycle": {
+          "create_before_destroy": true,
+          "replace_triggered_by": [
+            "terraform_data.ts_mc_net_baseline_ct_recipient"
+          ]
+        },
+        "zone_id": "${cloudflare_zone.ts_mc_net.id}"
+      }
+    },
     "cloudflare_dns_record": {
+      "better_skill_capped_com_baseline_caa_iodef": {
+        "data": {
+          "flags": 0,
+          "tag": "iodef",
+          "value": "mailto:dmarc@sjer.red"
+        },
+        "name": "better-skill-capped.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.better_skill_capped_com.id}"
+      },
+      "better_skill_capped_com_baseline_caa_issue_google_trust_services": {
+        "data": {
+          "flags": 0,
+          "tag": "issue",
+          "value": "pki.goog; cansignhttpexchanges=yes"
+        },
+        "name": "better-skill-capped.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.better_skill_capped_com.id}"
+      },
+      "better_skill_capped_com_baseline_caa_issue_letsencrypt": {
+        "data": { "flags": 0, "tag": "issue", "value": "letsencrypt.org" },
+        "name": "better-skill-capped.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.better_skill_capped_com.id}"
+      },
+      "better_skill_capped_com_baseline_caa_issue_sectigo": {
+        "data": { "flags": 0, "tag": "issue", "value": "sectigo.com" },
+        "name": "better-skill-capped.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.better_skill_capped_com.id}"
+      },
+      "better_skill_capped_com_baseline_caa_issue_ssl_com": {
+        "data": { "flags": 0, "tag": "issue", "value": "ssl.com" },
+        "name": "better-skill-capped.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.better_skill_capped_com.id}"
+      },
+      "better_skill_capped_com_baseline_caa_issuewild_google_trust_services": {
+        "data": {
+          "flags": 0,
+          "tag": "issuewild",
+          "value": "pki.goog; cansignhttpexchanges=yes"
+        },
+        "name": "better-skill-capped.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.better_skill_capped_com.id}"
+      },
+      "better_skill_capped_com_baseline_caa_issuewild_letsencrypt": {
+        "data": { "flags": 0, "tag": "issuewild", "value": "letsencrypt.org" },
+        "name": "better-skill-capped.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.better_skill_capped_com.id}"
+      },
+      "better_skill_capped_com_baseline_caa_issuewild_sectigo": {
+        "data": { "flags": 0, "tag": "issuewild", "value": "sectigo.com" },
+        "name": "better-skill-capped.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.better_skill_capped_com.id}"
+      },
+      "better_skill_capped_com_baseline_caa_issuewild_ssl_com": {
+        "data": { "flags": 0, "tag": "issuewild", "value": "ssl.com" },
+        "name": "better-skill-capped.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.better_skill_capped_com.id}"
+      },
+      "better_skill_capped_com_baseline_dkim_fm1": {
+        "content": "fm1.better-skill-capped.com.dkim.fmhosted.com",
+        "name": "fm1._domainkey",
+        "proxied": false,
+        "ttl": 1,
+        "type": "CNAME",
+        "zone_id": "${cloudflare_zone.better_skill_capped_com.id}"
+      },
+      "better_skill_capped_com_baseline_dkim_fm2": {
+        "content": "fm2.better-skill-capped.com.dkim.fmhosted.com",
+        "name": "fm2._domainkey",
+        "proxied": false,
+        "ttl": 1,
+        "type": "CNAME",
+        "zone_id": "${cloudflare_zone.better_skill_capped_com.id}"
+      },
+      "better_skill_capped_com_baseline_dkim_fm3": {
+        "content": "fm3.better-skill-capped.com.dkim.fmhosted.com",
+        "name": "fm3._domainkey",
+        "proxied": false,
+        "ttl": 1,
+        "type": "CNAME",
+        "zone_id": "${cloudflare_zone.better_skill_capped_com.id}"
+      },
+      "better_skill_capped_com_baseline_dmarc": {
+        "content": "v=DMARC1; p=reject; sp=reject; adkim=r; aspf=r; rua=mailto:dmarc@sjer.red",
+        "name": "_dmarc",
+        "ttl": 1,
+        "type": "TXT",
+        "zone_id": "${cloudflare_zone.better_skill_capped_com.id}"
+      },
+      "better_skill_capped_com_baseline_mta_sts": {
+        "content": "v=STSv1; id=9bd0313a5a6f9de4",
+        "lifecycle": {
+          "precondition": [
+            {
+              "condition": "${data.http.better_skill_capped_com_baseline_mail_policy.status_code == 200 && data.http.better_skill_capped_com_baseline_mail_policy.response_body == \"version: STSv1\\nmode: enforce\\nmx: in1-smtp.messagingengine.com\\nmx: in2-smtp.messagingengine.com\\nmax_age: 86400\\n\" && startswith(lookup(data.http.better_skill_capped_com_baseline_mail_policy.response_headers, \"Content-Type\", \"\"), \"text/plain\")}",
+              "error_message": "Serve the exact HTTPS Fastmail policy as plain text before publishing MTA-STS discovery."
+            }
+          ]
+        },
+        "name": "_mta-sts",
+        "ttl": 1,
+        "type": "TXT",
+        "zone_id": "${cloudflare_zone.better_skill_capped_com.id}"
+      },
+      "better_skill_capped_com_baseline_mta_sts_host": {
+        "content": "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com",
+        "name": "mta-sts",
+        "proxied": true,
+        "ttl": 1,
+        "type": "CNAME",
+        "zone_id": "${cloudflare_zone.better_skill_capped_com.id}"
+      },
+      "better_skill_capped_com_baseline_mx_primary": {
+        "content": "in1-smtp.messagingengine.com",
+        "name": "better-skill-capped.com",
+        "priority": 10,
+        "ttl": 1,
+        "type": "MX",
+        "zone_id": "${cloudflare_zone.better_skill_capped_com.id}"
+      },
+      "better_skill_capped_com_baseline_mx_secondary": {
+        "content": "in2-smtp.messagingengine.com",
+        "name": "better-skill-capped.com",
+        "priority": 20,
+        "ttl": 1,
+        "type": "MX",
+        "zone_id": "${cloudflare_zone.better_skill_capped_com.id}"
+      },
+      "better_skill_capped_com_baseline_spf": {
+        "content": "v=spf1 include:spf.messagingengine.com -all",
+        "name": "better-skill-capped.com",
+        "ttl": 1,
+        "type": "TXT",
+        "zone_id": "${cloudflare_zone.better_skill_capped_com.id}"
+      },
+      "better_skill_capped_com_baseline_tlsrpt": {
+        "content": "v=TLSRPTv1; rua=mailto:dmarc@sjer.red",
+        "name": "_smtp._tls",
+        "ttl": 1,
+        "type": "TXT",
+        "zone_id": "${cloudflare_zone.better_skill_capped_com.id}"
+      },
+      "better_skill_capped_com_baseline_wildcard_mx_primary": {
+        "content": "in1-smtp.messagingengine.com",
+        "name": "*",
+        "priority": 10,
+        "ttl": 1,
+        "type": "MX",
+        "zone_id": "${cloudflare_zone.better_skill_capped_com.id}"
+      },
+      "better_skill_capped_com_baseline_wildcard_mx_secondary": {
+        "content": "in2-smtp.messagingengine.com",
+        "name": "*",
+        "priority": 20,
+        "ttl": 1,
+        "type": "MX",
+        "zone_id": "${cloudflare_zone.better_skill_capped_com.id}"
+      },
       "better_skill_capped_com_cname_apex": {
         "content": "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com",
         "name": "better-skill-capped.com",
@@ -743,6 +2339,181 @@
         "type": "A",
         "zone_id": "${cloudflare_zone.clauderon_com.id}"
       },
+      "clauderon_com_baseline_caa_iodef": {
+        "data": {
+          "flags": 0,
+          "tag": "iodef",
+          "value": "mailto:dmarc@sjer.red"
+        },
+        "name": "clauderon.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.clauderon_com.id}"
+      },
+      "clauderon_com_baseline_caa_issue_google_trust_services": {
+        "data": {
+          "flags": 0,
+          "tag": "issue",
+          "value": "pki.goog; cansignhttpexchanges=yes"
+        },
+        "name": "clauderon.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.clauderon_com.id}"
+      },
+      "clauderon_com_baseline_caa_issue_letsencrypt": {
+        "data": { "flags": 0, "tag": "issue", "value": "letsencrypt.org" },
+        "name": "clauderon.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.clauderon_com.id}"
+      },
+      "clauderon_com_baseline_caa_issue_sectigo": {
+        "data": { "flags": 0, "tag": "issue", "value": "sectigo.com" },
+        "name": "clauderon.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.clauderon_com.id}"
+      },
+      "clauderon_com_baseline_caa_issue_ssl_com": {
+        "data": { "flags": 0, "tag": "issue", "value": "ssl.com" },
+        "name": "clauderon.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.clauderon_com.id}"
+      },
+      "clauderon_com_baseline_caa_issuewild_google_trust_services": {
+        "data": {
+          "flags": 0,
+          "tag": "issuewild",
+          "value": "pki.goog; cansignhttpexchanges=yes"
+        },
+        "name": "clauderon.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.clauderon_com.id}"
+      },
+      "clauderon_com_baseline_caa_issuewild_letsencrypt": {
+        "data": { "flags": 0, "tag": "issuewild", "value": "letsencrypt.org" },
+        "name": "clauderon.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.clauderon_com.id}"
+      },
+      "clauderon_com_baseline_caa_issuewild_sectigo": {
+        "data": { "flags": 0, "tag": "issuewild", "value": "sectigo.com" },
+        "name": "clauderon.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.clauderon_com.id}"
+      },
+      "clauderon_com_baseline_caa_issuewild_ssl_com": {
+        "data": { "flags": 0, "tag": "issuewild", "value": "ssl.com" },
+        "name": "clauderon.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.clauderon_com.id}"
+      },
+      "clauderon_com_baseline_dkim_fm1": {
+        "content": "fm1.clauderon.com.dkim.fmhosted.com",
+        "name": "fm1._domainkey",
+        "proxied": false,
+        "ttl": 1,
+        "type": "CNAME",
+        "zone_id": "${cloudflare_zone.clauderon_com.id}"
+      },
+      "clauderon_com_baseline_dkim_fm2": {
+        "content": "fm2.clauderon.com.dkim.fmhosted.com",
+        "name": "fm2._domainkey",
+        "proxied": false,
+        "ttl": 1,
+        "type": "CNAME",
+        "zone_id": "${cloudflare_zone.clauderon_com.id}"
+      },
+      "clauderon_com_baseline_dkim_fm3": {
+        "content": "fm3.clauderon.com.dkim.fmhosted.com",
+        "name": "fm3._domainkey",
+        "proxied": false,
+        "ttl": 1,
+        "type": "CNAME",
+        "zone_id": "${cloudflare_zone.clauderon_com.id}"
+      },
+      "clauderon_com_baseline_dmarc": {
+        "content": "v=DMARC1; p=reject; sp=reject; adkim=r; aspf=r; rua=mailto:dmarc@sjer.red",
+        "name": "_dmarc",
+        "ttl": 1,
+        "type": "TXT",
+        "zone_id": "${cloudflare_zone.clauderon_com.id}"
+      },
+      "clauderon_com_baseline_mta_sts": {
+        "content": "v=STSv1; id=9bd0313a5a6f9de4",
+        "lifecycle": {
+          "precondition": [
+            {
+              "condition": "${data.http.clauderon_com_baseline_mail_policy.status_code == 200 && data.http.clauderon_com_baseline_mail_policy.response_body == \"version: STSv1\\nmode: enforce\\nmx: in1-smtp.messagingengine.com\\nmx: in2-smtp.messagingengine.com\\nmax_age: 86400\\n\" && startswith(lookup(data.http.clauderon_com_baseline_mail_policy.response_headers, \"Content-Type\", \"\"), \"text/plain\")}",
+              "error_message": "Serve the exact HTTPS Fastmail policy as plain text before publishing MTA-STS discovery."
+            }
+          ]
+        },
+        "name": "_mta-sts",
+        "ttl": 1,
+        "type": "TXT",
+        "zone_id": "${cloudflare_zone.clauderon_com.id}"
+      },
+      "clauderon_com_baseline_mta_sts_host": {
+        "content": "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com",
+        "name": "mta-sts",
+        "proxied": true,
+        "ttl": 1,
+        "type": "CNAME",
+        "zone_id": "${cloudflare_zone.clauderon_com.id}"
+      },
+      "clauderon_com_baseline_mx_primary": {
+        "content": "in1-smtp.messagingengine.com",
+        "name": "clauderon.com",
+        "priority": 10,
+        "ttl": 1,
+        "type": "MX",
+        "zone_id": "${cloudflare_zone.clauderon_com.id}"
+      },
+      "clauderon_com_baseline_mx_secondary": {
+        "content": "in2-smtp.messagingengine.com",
+        "name": "clauderon.com",
+        "priority": 20,
+        "ttl": 1,
+        "type": "MX",
+        "zone_id": "${cloudflare_zone.clauderon_com.id}"
+      },
+      "clauderon_com_baseline_spf": {
+        "content": "v=spf1 include:spf.messagingengine.com -all",
+        "name": "clauderon.com",
+        "ttl": 1,
+        "type": "TXT",
+        "zone_id": "${cloudflare_zone.clauderon_com.id}"
+      },
+      "clauderon_com_baseline_tlsrpt": {
+        "content": "v=TLSRPTv1; rua=mailto:dmarc@sjer.red",
+        "name": "_smtp._tls",
+        "ttl": 1,
+        "type": "TXT",
+        "zone_id": "${cloudflare_zone.clauderon_com.id}"
+      },
+      "clauderon_com_baseline_wildcard_mx_primary": {
+        "content": "in1-smtp.messagingengine.com",
+        "name": "*",
+        "priority": 10,
+        "ttl": 1,
+        "type": "MX",
+        "zone_id": "${cloudflare_zone.clauderon_com.id}"
+      },
+      "clauderon_com_baseline_wildcard_mx_secondary": {
+        "content": "in2-smtp.messagingengine.com",
+        "name": "*",
+        "priority": 20,
+        "ttl": 1,
+        "type": "MX",
+        "zone_id": "${cloudflare_zone.clauderon_com.id}"
+      },
       "clauderon_com_www": {
         "content": "100::",
         "depends_on": ["cloudflare_ruleset.clauderon_com_redirect"],
@@ -769,13 +2540,363 @@
         "type": "AAAA",
         "zone_id": "${cloudflare_zone.discord_plays_pokemon_com.id}"
       },
+      "discord_plays_pokemon_com_baseline_caa_iodef": {
+        "data": {
+          "flags": 0,
+          "tag": "iodef",
+          "value": "mailto:dmarc@sjer.red"
+        },
+        "name": "discord-plays-pokemon.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.discord_plays_pokemon_com.id}"
+      },
+      "discord_plays_pokemon_com_baseline_caa_issue_google_trust_services": {
+        "data": {
+          "flags": 0,
+          "tag": "issue",
+          "value": "pki.goog; cansignhttpexchanges=yes"
+        },
+        "name": "discord-plays-pokemon.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.discord_plays_pokemon_com.id}"
+      },
+      "discord_plays_pokemon_com_baseline_caa_issue_letsencrypt": {
+        "data": { "flags": 0, "tag": "issue", "value": "letsencrypt.org" },
+        "name": "discord-plays-pokemon.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.discord_plays_pokemon_com.id}"
+      },
+      "discord_plays_pokemon_com_baseline_caa_issue_sectigo": {
+        "data": { "flags": 0, "tag": "issue", "value": "sectigo.com" },
+        "name": "discord-plays-pokemon.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.discord_plays_pokemon_com.id}"
+      },
+      "discord_plays_pokemon_com_baseline_caa_issue_ssl_com": {
+        "data": { "flags": 0, "tag": "issue", "value": "ssl.com" },
+        "name": "discord-plays-pokemon.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.discord_plays_pokemon_com.id}"
+      },
+      "discord_plays_pokemon_com_baseline_caa_issuewild_google_trust_services": {
+        "data": {
+          "flags": 0,
+          "tag": "issuewild",
+          "value": "pki.goog; cansignhttpexchanges=yes"
+        },
+        "name": "discord-plays-pokemon.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.discord_plays_pokemon_com.id}"
+      },
+      "discord_plays_pokemon_com_baseline_caa_issuewild_letsencrypt": {
+        "data": { "flags": 0, "tag": "issuewild", "value": "letsencrypt.org" },
+        "name": "discord-plays-pokemon.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.discord_plays_pokemon_com.id}"
+      },
+      "discord_plays_pokemon_com_baseline_caa_issuewild_sectigo": {
+        "data": { "flags": 0, "tag": "issuewild", "value": "sectigo.com" },
+        "name": "discord-plays-pokemon.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.discord_plays_pokemon_com.id}"
+      },
+      "discord_plays_pokemon_com_baseline_caa_issuewild_ssl_com": {
+        "data": { "flags": 0, "tag": "issuewild", "value": "ssl.com" },
+        "name": "discord-plays-pokemon.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.discord_plays_pokemon_com.id}"
+      },
+      "discord_plays_pokemon_com_baseline_dkim_fm1": {
+        "content": "fm1.discord-plays-pokemon.com.dkim.fmhosted.com",
+        "name": "fm1._domainkey",
+        "proxied": false,
+        "ttl": 1,
+        "type": "CNAME",
+        "zone_id": "${cloudflare_zone.discord_plays_pokemon_com.id}"
+      },
+      "discord_plays_pokemon_com_baseline_dkim_fm2": {
+        "content": "fm2.discord-plays-pokemon.com.dkim.fmhosted.com",
+        "name": "fm2._domainkey",
+        "proxied": false,
+        "ttl": 1,
+        "type": "CNAME",
+        "zone_id": "${cloudflare_zone.discord_plays_pokemon_com.id}"
+      },
+      "discord_plays_pokemon_com_baseline_dkim_fm3": {
+        "content": "fm3.discord-plays-pokemon.com.dkim.fmhosted.com",
+        "name": "fm3._domainkey",
+        "proxied": false,
+        "ttl": 1,
+        "type": "CNAME",
+        "zone_id": "${cloudflare_zone.discord_plays_pokemon_com.id}"
+      },
+      "discord_plays_pokemon_com_baseline_dmarc": {
+        "content": "v=DMARC1; p=reject; sp=reject; adkim=r; aspf=r; rua=mailto:dmarc@sjer.red",
+        "name": "_dmarc",
+        "ttl": 1,
+        "type": "TXT",
+        "zone_id": "${cloudflare_zone.discord_plays_pokemon_com.id}"
+      },
+      "discord_plays_pokemon_com_baseline_mta_sts": {
+        "content": "v=STSv1; id=9bd0313a5a6f9de4",
+        "lifecycle": {
+          "precondition": [
+            {
+              "condition": "${data.http.discord_plays_pokemon_com_baseline_mail_policy.status_code == 200 && data.http.discord_plays_pokemon_com_baseline_mail_policy.response_body == \"version: STSv1\\nmode: enforce\\nmx: in1-smtp.messagingengine.com\\nmx: in2-smtp.messagingengine.com\\nmax_age: 86400\\n\" && startswith(lookup(data.http.discord_plays_pokemon_com_baseline_mail_policy.response_headers, \"Content-Type\", \"\"), \"text/plain\")}",
+              "error_message": "Serve the exact HTTPS Fastmail policy as plain text before publishing MTA-STS discovery."
+            }
+          ]
+        },
+        "name": "_mta-sts",
+        "ttl": 1,
+        "type": "TXT",
+        "zone_id": "${cloudflare_zone.discord_plays_pokemon_com.id}"
+      },
+      "discord_plays_pokemon_com_baseline_mta_sts_host": {
+        "content": "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com",
+        "name": "mta-sts",
+        "proxied": true,
+        "ttl": 1,
+        "type": "CNAME",
+        "zone_id": "${cloudflare_zone.discord_plays_pokemon_com.id}"
+      },
+      "discord_plays_pokemon_com_baseline_mx_primary": {
+        "content": "in1-smtp.messagingengine.com",
+        "name": "discord-plays-pokemon.com",
+        "priority": 10,
+        "ttl": 1,
+        "type": "MX",
+        "zone_id": "${cloudflare_zone.discord_plays_pokemon_com.id}"
+      },
+      "discord_plays_pokemon_com_baseline_mx_secondary": {
+        "content": "in2-smtp.messagingengine.com",
+        "name": "discord-plays-pokemon.com",
+        "priority": 20,
+        "ttl": 1,
+        "type": "MX",
+        "zone_id": "${cloudflare_zone.discord_plays_pokemon_com.id}"
+      },
+      "discord_plays_pokemon_com_baseline_spf": {
+        "content": "v=spf1 include:spf.messagingengine.com -all",
+        "name": "discord-plays-pokemon.com",
+        "ttl": 1,
+        "type": "TXT",
+        "zone_id": "${cloudflare_zone.discord_plays_pokemon_com.id}"
+      },
+      "discord_plays_pokemon_com_baseline_tlsrpt": {
+        "content": "v=TLSRPTv1; rua=mailto:dmarc@sjer.red",
+        "name": "_smtp._tls",
+        "ttl": 1,
+        "type": "TXT",
+        "zone_id": "${cloudflare_zone.discord_plays_pokemon_com.id}"
+      },
+      "discord_plays_pokemon_com_baseline_wildcard_mx_primary": {
+        "content": "in1-smtp.messagingengine.com",
+        "name": "*",
+        "priority": 10,
+        "ttl": 1,
+        "type": "MX",
+        "zone_id": "${cloudflare_zone.discord_plays_pokemon_com.id}"
+      },
+      "discord_plays_pokemon_com_baseline_wildcard_mx_secondary": {
+        "content": "in2-smtp.messagingengine.com",
+        "name": "*",
+        "priority": 20,
+        "ttl": 1,
+        "type": "MX",
+        "zone_id": "${cloudflare_zone.discord_plays_pokemon_com.id}"
+      },
       "dmarc_report": {
         "content": "v=DMARC1",
-        "for_each": "${{ for domain, config in local.domain_registry.domains : domain => config if domain != \"sjer.red\" }}",
+        "for_each": "${toset([\"better-skill-capped.com\", \"clauderon.com\", \"discord-plays-pokemon.com\", \"glitter-boys.com\", \"jerredshepherd.com\", \"scout-for-lol.com\", \"shepherdjerred.com\", \"statically-typed.com\", \"ts-mc.net\"])}",
         "name": "${each.key}._report._dmarc",
         "ttl": 1,
         "type": "TXT",
         "zone_id": "${cloudflare_zone.sjer_red.id}"
+      },
+      "glitter_boys_com_baseline_caa_iodef": {
+        "data": {
+          "flags": 0,
+          "tag": "iodef",
+          "value": "mailto:dmarc@sjer.red"
+        },
+        "name": "glitter-boys.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.glitter_boys_com.id}"
+      },
+      "glitter_boys_com_baseline_caa_issue_google_trust_services": {
+        "data": {
+          "flags": 0,
+          "tag": "issue",
+          "value": "pki.goog; cansignhttpexchanges=yes"
+        },
+        "name": "glitter-boys.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.glitter_boys_com.id}"
+      },
+      "glitter_boys_com_baseline_caa_issue_letsencrypt": {
+        "data": { "flags": 0, "tag": "issue", "value": "letsencrypt.org" },
+        "name": "glitter-boys.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.glitter_boys_com.id}"
+      },
+      "glitter_boys_com_baseline_caa_issue_sectigo": {
+        "data": { "flags": 0, "tag": "issue", "value": "sectigo.com" },
+        "name": "glitter-boys.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.glitter_boys_com.id}"
+      },
+      "glitter_boys_com_baseline_caa_issue_ssl_com": {
+        "data": { "flags": 0, "tag": "issue", "value": "ssl.com" },
+        "name": "glitter-boys.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.glitter_boys_com.id}"
+      },
+      "glitter_boys_com_baseline_caa_issuewild_google_trust_services": {
+        "data": {
+          "flags": 0,
+          "tag": "issuewild",
+          "value": "pki.goog; cansignhttpexchanges=yes"
+        },
+        "name": "glitter-boys.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.glitter_boys_com.id}"
+      },
+      "glitter_boys_com_baseline_caa_issuewild_letsencrypt": {
+        "data": { "flags": 0, "tag": "issuewild", "value": "letsencrypt.org" },
+        "name": "glitter-boys.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.glitter_boys_com.id}"
+      },
+      "glitter_boys_com_baseline_caa_issuewild_sectigo": {
+        "data": { "flags": 0, "tag": "issuewild", "value": "sectigo.com" },
+        "name": "glitter-boys.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.glitter_boys_com.id}"
+      },
+      "glitter_boys_com_baseline_caa_issuewild_ssl_com": {
+        "data": { "flags": 0, "tag": "issuewild", "value": "ssl.com" },
+        "name": "glitter-boys.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.glitter_boys_com.id}"
+      },
+      "glitter_boys_com_baseline_dkim_fm1": {
+        "content": "fm1.glitter-boys.com.dkim.fmhosted.com",
+        "name": "fm1._domainkey",
+        "proxied": false,
+        "ttl": 1,
+        "type": "CNAME",
+        "zone_id": "${cloudflare_zone.glitter_boys_com.id}"
+      },
+      "glitter_boys_com_baseline_dkim_fm2": {
+        "content": "fm2.glitter-boys.com.dkim.fmhosted.com",
+        "name": "fm2._domainkey",
+        "proxied": false,
+        "ttl": 1,
+        "type": "CNAME",
+        "zone_id": "${cloudflare_zone.glitter_boys_com.id}"
+      },
+      "glitter_boys_com_baseline_dkim_fm3": {
+        "content": "fm3.glitter-boys.com.dkim.fmhosted.com",
+        "name": "fm3._domainkey",
+        "proxied": false,
+        "ttl": 1,
+        "type": "CNAME",
+        "zone_id": "${cloudflare_zone.glitter_boys_com.id}"
+      },
+      "glitter_boys_com_baseline_dmarc": {
+        "content": "v=DMARC1; p=reject; sp=reject; adkim=r; aspf=r; rua=mailto:dmarc@sjer.red",
+        "name": "_dmarc",
+        "ttl": 1,
+        "type": "TXT",
+        "zone_id": "${cloudflare_zone.glitter_boys_com.id}"
+      },
+      "glitter_boys_com_baseline_mta_sts": {
+        "content": "v=STSv1; id=9bd0313a5a6f9de4",
+        "lifecycle": {
+          "precondition": [
+            {
+              "condition": "${data.http.glitter_boys_com_baseline_mail_policy.status_code == 200 && data.http.glitter_boys_com_baseline_mail_policy.response_body == \"version: STSv1\\nmode: enforce\\nmx: in1-smtp.messagingengine.com\\nmx: in2-smtp.messagingengine.com\\nmax_age: 86400\\n\" && startswith(lookup(data.http.glitter_boys_com_baseline_mail_policy.response_headers, \"Content-Type\", \"\"), \"text/plain\")}",
+              "error_message": "Serve the exact HTTPS Fastmail policy as plain text before publishing MTA-STS discovery."
+            }
+          ]
+        },
+        "name": "_mta-sts",
+        "ttl": 1,
+        "type": "TXT",
+        "zone_id": "${cloudflare_zone.glitter_boys_com.id}"
+      },
+      "glitter_boys_com_baseline_mta_sts_host": {
+        "content": "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com",
+        "name": "mta-sts",
+        "proxied": true,
+        "ttl": 1,
+        "type": "CNAME",
+        "zone_id": "${cloudflare_zone.glitter_boys_com.id}"
+      },
+      "glitter_boys_com_baseline_mx_primary": {
+        "content": "in1-smtp.messagingengine.com",
+        "name": "glitter-boys.com",
+        "priority": 10,
+        "ttl": 1,
+        "type": "MX",
+        "zone_id": "${cloudflare_zone.glitter_boys_com.id}"
+      },
+      "glitter_boys_com_baseline_mx_secondary": {
+        "content": "in2-smtp.messagingengine.com",
+        "name": "glitter-boys.com",
+        "priority": 20,
+        "ttl": 1,
+        "type": "MX",
+        "zone_id": "${cloudflare_zone.glitter_boys_com.id}"
+      },
+      "glitter_boys_com_baseline_spf": {
+        "content": "v=spf1 include:spf.messagingengine.com -all",
+        "name": "glitter-boys.com",
+        "ttl": 1,
+        "type": "TXT",
+        "zone_id": "${cloudflare_zone.glitter_boys_com.id}"
+      },
+      "glitter_boys_com_baseline_tlsrpt": {
+        "content": "v=TLSRPTv1; rua=mailto:dmarc@sjer.red",
+        "name": "_smtp._tls",
+        "ttl": 1,
+        "type": "TXT",
+        "zone_id": "${cloudflare_zone.glitter_boys_com.id}"
+      },
+      "glitter_boys_com_baseline_wildcard_mx_primary": {
+        "content": "in1-smtp.messagingengine.com",
+        "name": "*",
+        "priority": 10,
+        "ttl": 1,
+        "type": "MX",
+        "zone_id": "${cloudflare_zone.glitter_boys_com.id}"
+      },
+      "glitter_boys_com_baseline_wildcard_mx_secondary": {
+        "content": "in2-smtp.messagingengine.com",
+        "name": "*",
+        "priority": 20,
+        "ttl": 1,
+        "type": "MX",
+        "zone_id": "${cloudflare_zone.glitter_boys_com.id}"
       },
       "glitter_boys_com_cname_apex": {
         "content": "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com",
@@ -801,6 +2922,181 @@
         "type": "CNAME",
         "zone_id": "${cloudflare_zone.glitter_boys_com.id}"
       },
+      "jerredshepherd_com_baseline_caa_iodef": {
+        "data": {
+          "flags": 0,
+          "tag": "iodef",
+          "value": "mailto:dmarc@sjer.red"
+        },
+        "name": "jerredshepherd.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.jerredshepherd_com.id}"
+      },
+      "jerredshepherd_com_baseline_caa_issue_google_trust_services": {
+        "data": {
+          "flags": 0,
+          "tag": "issue",
+          "value": "pki.goog; cansignhttpexchanges=yes"
+        },
+        "name": "jerredshepherd.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.jerredshepherd_com.id}"
+      },
+      "jerredshepherd_com_baseline_caa_issue_letsencrypt": {
+        "data": { "flags": 0, "tag": "issue", "value": "letsencrypt.org" },
+        "name": "jerredshepherd.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.jerredshepherd_com.id}"
+      },
+      "jerredshepherd_com_baseline_caa_issue_sectigo": {
+        "data": { "flags": 0, "tag": "issue", "value": "sectigo.com" },
+        "name": "jerredshepherd.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.jerredshepherd_com.id}"
+      },
+      "jerredshepherd_com_baseline_caa_issue_ssl_com": {
+        "data": { "flags": 0, "tag": "issue", "value": "ssl.com" },
+        "name": "jerredshepherd.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.jerredshepherd_com.id}"
+      },
+      "jerredshepherd_com_baseline_caa_issuewild_google_trust_services": {
+        "data": {
+          "flags": 0,
+          "tag": "issuewild",
+          "value": "pki.goog; cansignhttpexchanges=yes"
+        },
+        "name": "jerredshepherd.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.jerredshepherd_com.id}"
+      },
+      "jerredshepherd_com_baseline_caa_issuewild_letsencrypt": {
+        "data": { "flags": 0, "tag": "issuewild", "value": "letsencrypt.org" },
+        "name": "jerredshepherd.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.jerredshepherd_com.id}"
+      },
+      "jerredshepherd_com_baseline_caa_issuewild_sectigo": {
+        "data": { "flags": 0, "tag": "issuewild", "value": "sectigo.com" },
+        "name": "jerredshepherd.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.jerredshepherd_com.id}"
+      },
+      "jerredshepherd_com_baseline_caa_issuewild_ssl_com": {
+        "data": { "flags": 0, "tag": "issuewild", "value": "ssl.com" },
+        "name": "jerredshepherd.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.jerredshepherd_com.id}"
+      },
+      "jerredshepherd_com_baseline_dkim_fm1": {
+        "content": "fm1.jerredshepherd.com.dkim.fmhosted.com",
+        "name": "fm1._domainkey",
+        "proxied": false,
+        "ttl": 1,
+        "type": "CNAME",
+        "zone_id": "${cloudflare_zone.jerredshepherd_com.id}"
+      },
+      "jerredshepherd_com_baseline_dkim_fm2": {
+        "content": "fm2.jerredshepherd.com.dkim.fmhosted.com",
+        "name": "fm2._domainkey",
+        "proxied": false,
+        "ttl": 1,
+        "type": "CNAME",
+        "zone_id": "${cloudflare_zone.jerredshepherd_com.id}"
+      },
+      "jerredshepherd_com_baseline_dkim_fm3": {
+        "content": "fm3.jerredshepherd.com.dkim.fmhosted.com",
+        "name": "fm3._domainkey",
+        "proxied": false,
+        "ttl": 1,
+        "type": "CNAME",
+        "zone_id": "${cloudflare_zone.jerredshepherd_com.id}"
+      },
+      "jerredshepherd_com_baseline_dmarc": {
+        "content": "v=DMARC1; p=reject; sp=reject; adkim=r; aspf=r; rua=mailto:dmarc@sjer.red",
+        "name": "_dmarc",
+        "ttl": 1,
+        "type": "TXT",
+        "zone_id": "${cloudflare_zone.jerredshepherd_com.id}"
+      },
+      "jerredshepherd_com_baseline_mta_sts": {
+        "content": "v=STSv1; id=9bd0313a5a6f9de4",
+        "lifecycle": {
+          "precondition": [
+            {
+              "condition": "${data.http.jerredshepherd_com_baseline_mail_policy.status_code == 200 && data.http.jerredshepherd_com_baseline_mail_policy.response_body == \"version: STSv1\\nmode: enforce\\nmx: in1-smtp.messagingengine.com\\nmx: in2-smtp.messagingengine.com\\nmax_age: 86400\\n\" && startswith(lookup(data.http.jerredshepherd_com_baseline_mail_policy.response_headers, \"Content-Type\", \"\"), \"text/plain\")}",
+              "error_message": "Serve the exact HTTPS Fastmail policy as plain text before publishing MTA-STS discovery."
+            }
+          ]
+        },
+        "name": "_mta-sts",
+        "ttl": 1,
+        "type": "TXT",
+        "zone_id": "${cloudflare_zone.jerredshepherd_com.id}"
+      },
+      "jerredshepherd_com_baseline_mta_sts_host": {
+        "content": "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com",
+        "name": "mta-sts",
+        "proxied": true,
+        "ttl": 1,
+        "type": "CNAME",
+        "zone_id": "${cloudflare_zone.jerredshepherd_com.id}"
+      },
+      "jerredshepherd_com_baseline_mx_primary": {
+        "content": "in1-smtp.messagingengine.com",
+        "name": "jerredshepherd.com",
+        "priority": 10,
+        "ttl": 1,
+        "type": "MX",
+        "zone_id": "${cloudflare_zone.jerredshepherd_com.id}"
+      },
+      "jerredshepherd_com_baseline_mx_secondary": {
+        "content": "in2-smtp.messagingengine.com",
+        "name": "jerredshepherd.com",
+        "priority": 20,
+        "ttl": 1,
+        "type": "MX",
+        "zone_id": "${cloudflare_zone.jerredshepherd_com.id}"
+      },
+      "jerredshepherd_com_baseline_spf": {
+        "content": "v=spf1 include:spf.messagingengine.com -all",
+        "name": "jerredshepherd.com",
+        "ttl": 1,
+        "type": "TXT",
+        "zone_id": "${cloudflare_zone.jerredshepherd_com.id}"
+      },
+      "jerredshepherd_com_baseline_tlsrpt": {
+        "content": "v=TLSRPTv1; rua=mailto:dmarc@sjer.red",
+        "name": "_smtp._tls",
+        "ttl": 1,
+        "type": "TXT",
+        "zone_id": "${cloudflare_zone.jerredshepherd_com.id}"
+      },
+      "jerredshepherd_com_baseline_wildcard_mx_primary": {
+        "content": "in1-smtp.messagingengine.com",
+        "name": "*",
+        "priority": 10,
+        "ttl": 1,
+        "type": "MX",
+        "zone_id": "${cloudflare_zone.jerredshepherd_com.id}"
+      },
+      "jerredshepherd_com_baseline_wildcard_mx_secondary": {
+        "content": "in2-smtp.messagingengine.com",
+        "name": "*",
+        "priority": 20,
+        "ttl": 1,
+        "type": "MX",
+        "zone_id": "${cloudflare_zone.jerredshepherd_com.id}"
+      },
       "jerredshepherd_com_cname_apex": {
         "content": "sjer.red",
         "name": "jerredshepherd.com",
@@ -816,6 +3112,181 @@
         "ttl": 1,
         "type": "CNAME",
         "zone_id": "${cloudflare_zone.jerredshepherd_com.id}"
+      },
+      "scout_for_lol_com_baseline_caa_iodef": {
+        "data": {
+          "flags": 0,
+          "tag": "iodef",
+          "value": "mailto:dmarc@sjer.red"
+        },
+        "name": "scout-for-lol.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.scout_for_lol_com.id}"
+      },
+      "scout_for_lol_com_baseline_caa_issue_google_trust_services": {
+        "data": {
+          "flags": 0,
+          "tag": "issue",
+          "value": "pki.goog; cansignhttpexchanges=yes"
+        },
+        "name": "scout-for-lol.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.scout_for_lol_com.id}"
+      },
+      "scout_for_lol_com_baseline_caa_issue_letsencrypt": {
+        "data": { "flags": 0, "tag": "issue", "value": "letsencrypt.org" },
+        "name": "scout-for-lol.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.scout_for_lol_com.id}"
+      },
+      "scout_for_lol_com_baseline_caa_issue_sectigo": {
+        "data": { "flags": 0, "tag": "issue", "value": "sectigo.com" },
+        "name": "scout-for-lol.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.scout_for_lol_com.id}"
+      },
+      "scout_for_lol_com_baseline_caa_issue_ssl_com": {
+        "data": { "flags": 0, "tag": "issue", "value": "ssl.com" },
+        "name": "scout-for-lol.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.scout_for_lol_com.id}"
+      },
+      "scout_for_lol_com_baseline_caa_issuewild_google_trust_services": {
+        "data": {
+          "flags": 0,
+          "tag": "issuewild",
+          "value": "pki.goog; cansignhttpexchanges=yes"
+        },
+        "name": "scout-for-lol.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.scout_for_lol_com.id}"
+      },
+      "scout_for_lol_com_baseline_caa_issuewild_letsencrypt": {
+        "data": { "flags": 0, "tag": "issuewild", "value": "letsencrypt.org" },
+        "name": "scout-for-lol.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.scout_for_lol_com.id}"
+      },
+      "scout_for_lol_com_baseline_caa_issuewild_sectigo": {
+        "data": { "flags": 0, "tag": "issuewild", "value": "sectigo.com" },
+        "name": "scout-for-lol.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.scout_for_lol_com.id}"
+      },
+      "scout_for_lol_com_baseline_caa_issuewild_ssl_com": {
+        "data": { "flags": 0, "tag": "issuewild", "value": "ssl.com" },
+        "name": "scout-for-lol.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.scout_for_lol_com.id}"
+      },
+      "scout_for_lol_com_baseline_dkim_fm1": {
+        "content": "fm1.scout-for-lol.com.dkim.fmhosted.com",
+        "name": "fm1._domainkey",
+        "proxied": false,
+        "ttl": 1,
+        "type": "CNAME",
+        "zone_id": "${cloudflare_zone.scout_for_lol_com.id}"
+      },
+      "scout_for_lol_com_baseline_dkim_fm2": {
+        "content": "fm2.scout-for-lol.com.dkim.fmhosted.com",
+        "name": "fm2._domainkey",
+        "proxied": false,
+        "ttl": 1,
+        "type": "CNAME",
+        "zone_id": "${cloudflare_zone.scout_for_lol_com.id}"
+      },
+      "scout_for_lol_com_baseline_dkim_fm3": {
+        "content": "fm3.scout-for-lol.com.dkim.fmhosted.com",
+        "name": "fm3._domainkey",
+        "proxied": false,
+        "ttl": 1,
+        "type": "CNAME",
+        "zone_id": "${cloudflare_zone.scout_for_lol_com.id}"
+      },
+      "scout_for_lol_com_baseline_dmarc": {
+        "content": "v=DMARC1; p=reject; sp=reject; adkim=r; aspf=r; rua=mailto:dmarc@sjer.red",
+        "name": "_dmarc",
+        "ttl": 1,
+        "type": "TXT",
+        "zone_id": "${cloudflare_zone.scout_for_lol_com.id}"
+      },
+      "scout_for_lol_com_baseline_mta_sts": {
+        "content": "v=STSv1; id=9bd0313a5a6f9de4",
+        "lifecycle": {
+          "precondition": [
+            {
+              "condition": "${data.http.scout_for_lol_com_baseline_mail_policy.status_code == 200 && data.http.scout_for_lol_com_baseline_mail_policy.response_body == \"version: STSv1\\nmode: enforce\\nmx: in1-smtp.messagingengine.com\\nmx: in2-smtp.messagingengine.com\\nmax_age: 86400\\n\" && startswith(lookup(data.http.scout_for_lol_com_baseline_mail_policy.response_headers, \"Content-Type\", \"\"), \"text/plain\")}",
+              "error_message": "Serve the exact HTTPS Fastmail policy as plain text before publishing MTA-STS discovery."
+            }
+          ]
+        },
+        "name": "_mta-sts",
+        "ttl": 1,
+        "type": "TXT",
+        "zone_id": "${cloudflare_zone.scout_for_lol_com.id}"
+      },
+      "scout_for_lol_com_baseline_mta_sts_host": {
+        "content": "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com",
+        "name": "mta-sts",
+        "proxied": true,
+        "ttl": 1,
+        "type": "CNAME",
+        "zone_id": "${cloudflare_zone.scout_for_lol_com.id}"
+      },
+      "scout_for_lol_com_baseline_mx_primary": {
+        "content": "in1-smtp.messagingengine.com",
+        "name": "scout-for-lol.com",
+        "priority": 10,
+        "ttl": 1,
+        "type": "MX",
+        "zone_id": "${cloudflare_zone.scout_for_lol_com.id}"
+      },
+      "scout_for_lol_com_baseline_mx_secondary": {
+        "content": "in2-smtp.messagingengine.com",
+        "name": "scout-for-lol.com",
+        "priority": 20,
+        "ttl": 1,
+        "type": "MX",
+        "zone_id": "${cloudflare_zone.scout_for_lol_com.id}"
+      },
+      "scout_for_lol_com_baseline_spf": {
+        "content": "v=spf1 include:spf.messagingengine.com -all",
+        "name": "scout-for-lol.com",
+        "ttl": 1,
+        "type": "TXT",
+        "zone_id": "${cloudflare_zone.scout_for_lol_com.id}"
+      },
+      "scout_for_lol_com_baseline_tlsrpt": {
+        "content": "v=TLSRPTv1; rua=mailto:dmarc@sjer.red",
+        "name": "_smtp._tls",
+        "ttl": 1,
+        "type": "TXT",
+        "zone_id": "${cloudflare_zone.scout_for_lol_com.id}"
+      },
+      "scout_for_lol_com_baseline_wildcard_mx_primary": {
+        "content": "in1-smtp.messagingengine.com",
+        "name": "*",
+        "priority": 10,
+        "ttl": 1,
+        "type": "MX",
+        "zone_id": "${cloudflare_zone.scout_for_lol_com.id}"
+      },
+      "scout_for_lol_com_baseline_wildcard_mx_secondary": {
+        "content": "in2-smtp.messagingengine.com",
+        "name": "*",
+        "priority": 20,
+        "ttl": 1,
+        "type": "MX",
+        "zone_id": "${cloudflare_zone.scout_for_lol_com.id}"
       },
       "scout_for_lol_com_cname_apex": {
         "content": "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com",
@@ -840,6 +3311,181 @@
         "ttl": 1,
         "type": "CNAME",
         "zone_id": "${cloudflare_zone.scout_for_lol_com.id}"
+      },
+      "shepherdjerred_com_baseline_caa_iodef": {
+        "data": {
+          "flags": 0,
+          "tag": "iodef",
+          "value": "mailto:dmarc@sjer.red"
+        },
+        "name": "shepherdjerred.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.shepherdjerred_com.id}"
+      },
+      "shepherdjerred_com_baseline_caa_issue_google_trust_services": {
+        "data": {
+          "flags": 0,
+          "tag": "issue",
+          "value": "pki.goog; cansignhttpexchanges=yes"
+        },
+        "name": "shepherdjerred.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.shepherdjerred_com.id}"
+      },
+      "shepherdjerred_com_baseline_caa_issue_letsencrypt": {
+        "data": { "flags": 0, "tag": "issue", "value": "letsencrypt.org" },
+        "name": "shepherdjerred.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.shepherdjerred_com.id}"
+      },
+      "shepherdjerred_com_baseline_caa_issue_sectigo": {
+        "data": { "flags": 0, "tag": "issue", "value": "sectigo.com" },
+        "name": "shepherdjerred.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.shepherdjerred_com.id}"
+      },
+      "shepherdjerred_com_baseline_caa_issue_ssl_com": {
+        "data": { "flags": 0, "tag": "issue", "value": "ssl.com" },
+        "name": "shepherdjerred.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.shepherdjerred_com.id}"
+      },
+      "shepherdjerred_com_baseline_caa_issuewild_google_trust_services": {
+        "data": {
+          "flags": 0,
+          "tag": "issuewild",
+          "value": "pki.goog; cansignhttpexchanges=yes"
+        },
+        "name": "shepherdjerred.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.shepherdjerred_com.id}"
+      },
+      "shepherdjerred_com_baseline_caa_issuewild_letsencrypt": {
+        "data": { "flags": 0, "tag": "issuewild", "value": "letsencrypt.org" },
+        "name": "shepherdjerred.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.shepherdjerred_com.id}"
+      },
+      "shepherdjerred_com_baseline_caa_issuewild_sectigo": {
+        "data": { "flags": 0, "tag": "issuewild", "value": "sectigo.com" },
+        "name": "shepherdjerred.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.shepherdjerred_com.id}"
+      },
+      "shepherdjerred_com_baseline_caa_issuewild_ssl_com": {
+        "data": { "flags": 0, "tag": "issuewild", "value": "ssl.com" },
+        "name": "shepherdjerred.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.shepherdjerred_com.id}"
+      },
+      "shepherdjerred_com_baseline_dkim_fm1": {
+        "content": "fm1.shepherdjerred.com.dkim.fmhosted.com",
+        "name": "fm1._domainkey",
+        "proxied": false,
+        "ttl": 1,
+        "type": "CNAME",
+        "zone_id": "${cloudflare_zone.shepherdjerred_com.id}"
+      },
+      "shepherdjerred_com_baseline_dkim_fm2": {
+        "content": "fm2.shepherdjerred.com.dkim.fmhosted.com",
+        "name": "fm2._domainkey",
+        "proxied": false,
+        "ttl": 1,
+        "type": "CNAME",
+        "zone_id": "${cloudflare_zone.shepherdjerred_com.id}"
+      },
+      "shepherdjerred_com_baseline_dkim_fm3": {
+        "content": "fm3.shepherdjerred.com.dkim.fmhosted.com",
+        "name": "fm3._domainkey",
+        "proxied": false,
+        "ttl": 1,
+        "type": "CNAME",
+        "zone_id": "${cloudflare_zone.shepherdjerred_com.id}"
+      },
+      "shepherdjerred_com_baseline_dmarc": {
+        "content": "v=DMARC1; p=reject; sp=reject; adkim=r; aspf=r; rua=mailto:dmarc@sjer.red",
+        "name": "_dmarc",
+        "ttl": 1,
+        "type": "TXT",
+        "zone_id": "${cloudflare_zone.shepherdjerred_com.id}"
+      },
+      "shepherdjerred_com_baseline_mta_sts": {
+        "content": "v=STSv1; id=9bd0313a5a6f9de4",
+        "lifecycle": {
+          "precondition": [
+            {
+              "condition": "${data.http.shepherdjerred_com_baseline_mail_policy.status_code == 200 && data.http.shepherdjerred_com_baseline_mail_policy.response_body == \"version: STSv1\\nmode: enforce\\nmx: in1-smtp.messagingengine.com\\nmx: in2-smtp.messagingengine.com\\nmax_age: 86400\\n\" && startswith(lookup(data.http.shepherdjerred_com_baseline_mail_policy.response_headers, \"Content-Type\", \"\"), \"text/plain\")}",
+              "error_message": "Serve the exact HTTPS Fastmail policy as plain text before publishing MTA-STS discovery."
+            }
+          ]
+        },
+        "name": "_mta-sts",
+        "ttl": 1,
+        "type": "TXT",
+        "zone_id": "${cloudflare_zone.shepherdjerred_com.id}"
+      },
+      "shepherdjerred_com_baseline_mta_sts_host": {
+        "content": "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com",
+        "name": "mta-sts",
+        "proxied": true,
+        "ttl": 1,
+        "type": "CNAME",
+        "zone_id": "${cloudflare_zone.shepherdjerred_com.id}"
+      },
+      "shepherdjerred_com_baseline_mx_primary": {
+        "content": "in1-smtp.messagingengine.com",
+        "name": "shepherdjerred.com",
+        "priority": 10,
+        "ttl": 1,
+        "type": "MX",
+        "zone_id": "${cloudflare_zone.shepherdjerred_com.id}"
+      },
+      "shepherdjerred_com_baseline_mx_secondary": {
+        "content": "in2-smtp.messagingengine.com",
+        "name": "shepherdjerred.com",
+        "priority": 20,
+        "ttl": 1,
+        "type": "MX",
+        "zone_id": "${cloudflare_zone.shepherdjerred_com.id}"
+      },
+      "shepherdjerred_com_baseline_spf": {
+        "content": "v=spf1 include:spf.messagingengine.com -all",
+        "name": "shepherdjerred.com",
+        "ttl": 1,
+        "type": "TXT",
+        "zone_id": "${cloudflare_zone.shepherdjerred_com.id}"
+      },
+      "shepherdjerred_com_baseline_tlsrpt": {
+        "content": "v=TLSRPTv1; rua=mailto:dmarc@sjer.red",
+        "name": "_smtp._tls",
+        "ttl": 1,
+        "type": "TXT",
+        "zone_id": "${cloudflare_zone.shepherdjerred_com.id}"
+      },
+      "shepherdjerred_com_baseline_wildcard_mx_primary": {
+        "content": "in1-smtp.messagingengine.com",
+        "name": "*",
+        "priority": 10,
+        "ttl": 1,
+        "type": "MX",
+        "zone_id": "${cloudflare_zone.shepherdjerred_com.id}"
+      },
+      "shepherdjerred_com_baseline_wildcard_mx_secondary": {
+        "content": "in2-smtp.messagingengine.com",
+        "name": "*",
+        "priority": 20,
+        "ttl": 1,
+        "type": "MX",
+        "zone_id": "${cloudflare_zone.shepherdjerred_com.id}"
       },
       "shepherdjerred_com_cname_apex": {
         "content": "sjer.red",
@@ -964,6 +3610,165 @@
       "sjer_red_acme_syncthing": {
         "content": "FR8t1KHtHXWGKfERJqTZVcPitpVKmAKENo6auaz9OV0",
         "name": "_acme-challenge.syncthing.ts.zeus",
+        "ttl": 1,
+        "type": "TXT",
+        "zone_id": "${cloudflare_zone.sjer_red.id}"
+      },
+      "sjer_red_baseline_caa_iodef": {
+        "data": {
+          "flags": 0,
+          "tag": "iodef",
+          "value": "mailto:dmarc@sjer.red"
+        },
+        "name": "sjer.red",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.sjer_red.id}"
+      },
+      "sjer_red_baseline_caa_issue_google_trust_services": {
+        "data": {
+          "flags": 0,
+          "tag": "issue",
+          "value": "pki.goog; cansignhttpexchanges=yes"
+        },
+        "name": "sjer.red",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.sjer_red.id}"
+      },
+      "sjer_red_baseline_caa_issue_letsencrypt": {
+        "data": { "flags": 0, "tag": "issue", "value": "letsencrypt.org" },
+        "name": "sjer.red",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.sjer_red.id}"
+      },
+      "sjer_red_baseline_caa_issue_sectigo": {
+        "data": { "flags": 0, "tag": "issue", "value": "sectigo.com" },
+        "name": "sjer.red",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.sjer_red.id}"
+      },
+      "sjer_red_baseline_caa_issue_ssl_com": {
+        "data": { "flags": 0, "tag": "issue", "value": "ssl.com" },
+        "name": "sjer.red",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.sjer_red.id}"
+      },
+      "sjer_red_baseline_caa_issuewild_google_trust_services": {
+        "data": {
+          "flags": 0,
+          "tag": "issuewild",
+          "value": "pki.goog; cansignhttpexchanges=yes"
+        },
+        "name": "sjer.red",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.sjer_red.id}"
+      },
+      "sjer_red_baseline_caa_issuewild_letsencrypt": {
+        "data": { "flags": 0, "tag": "issuewild", "value": "letsencrypt.org" },
+        "name": "sjer.red",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.sjer_red.id}"
+      },
+      "sjer_red_baseline_caa_issuewild_sectigo": {
+        "data": { "flags": 0, "tag": "issuewild", "value": "sectigo.com" },
+        "name": "sjer.red",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.sjer_red.id}"
+      },
+      "sjer_red_baseline_caa_issuewild_ssl_com": {
+        "data": { "flags": 0, "tag": "issuewild", "value": "ssl.com" },
+        "name": "sjer.red",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.sjer_red.id}"
+      },
+      "sjer_red_baseline_dkim_fm1": {
+        "content": "fm1.sjer.red.dkim.fmhosted.com",
+        "name": "fm1._domainkey",
+        "proxied": false,
+        "ttl": 1,
+        "type": "CNAME",
+        "zone_id": "${cloudflare_zone.sjer_red.id}"
+      },
+      "sjer_red_baseline_dkim_fm2": {
+        "content": "fm2.sjer.red.dkim.fmhosted.com",
+        "name": "fm2._domainkey",
+        "proxied": false,
+        "ttl": 1,
+        "type": "CNAME",
+        "zone_id": "${cloudflare_zone.sjer_red.id}"
+      },
+      "sjer_red_baseline_dkim_fm3": {
+        "content": "fm3.sjer.red.dkim.fmhosted.com",
+        "name": "fm3._domainkey",
+        "proxied": false,
+        "ttl": 1,
+        "type": "CNAME",
+        "zone_id": "${cloudflare_zone.sjer_red.id}"
+      },
+      "sjer_red_baseline_dmarc": {
+        "content": "v=DMARC1; p=reject; sp=reject; adkim=r; aspf=r; rua=mailto:dmarc@sjer.red",
+        "name": "_dmarc",
+        "ttl": 1,
+        "type": "TXT",
+        "zone_id": "${cloudflare_zone.sjer_red.id}"
+      },
+      "sjer_red_baseline_mta_sts": {
+        "content": "v=STSv1; id=9bd0313a5a6f9de4",
+        "lifecycle": {
+          "precondition": [
+            {
+              "condition": "${data.http.sjer_red_baseline_mail_policy.status_code == 200 && data.http.sjer_red_baseline_mail_policy.response_body == \"version: STSv1\\nmode: enforce\\nmx: in1-smtp.messagingengine.com\\nmx: in2-smtp.messagingengine.com\\nmax_age: 86400\\n\" && startswith(lookup(data.http.sjer_red_baseline_mail_policy.response_headers, \"Content-Type\", \"\"), \"text/plain\")}",
+              "error_message": "Serve the exact HTTPS Fastmail policy as plain text before publishing MTA-STS discovery."
+            }
+          ]
+        },
+        "name": "_mta-sts",
+        "ttl": 1,
+        "type": "TXT",
+        "zone_id": "${cloudflare_zone.sjer_red.id}"
+      },
+      "sjer_red_baseline_mta_sts_host": {
+        "content": "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com",
+        "name": "mta-sts",
+        "proxied": true,
+        "ttl": 1,
+        "type": "CNAME",
+        "zone_id": "${cloudflare_zone.sjer_red.id}"
+      },
+      "sjer_red_baseline_mx_primary": {
+        "content": "in1-smtp.messagingengine.com",
+        "name": "sjer.red",
+        "priority": 10,
+        "ttl": 1,
+        "type": "MX",
+        "zone_id": "${cloudflare_zone.sjer_red.id}"
+      },
+      "sjer_red_baseline_mx_secondary": {
+        "content": "in2-smtp.messagingengine.com",
+        "name": "sjer.red",
+        "priority": 20,
+        "ttl": 1,
+        "type": "MX",
+        "zone_id": "${cloudflare_zone.sjer_red.id}"
+      },
+      "sjer_red_baseline_spf": {
+        "content": "v=spf1 include:spf.messagingengine.com -all",
+        "name": "sjer.red",
+        "ttl": 1,
+        "type": "TXT",
+        "zone_id": "${cloudflare_zone.sjer_red.id}"
+      },
+      "sjer_red_baseline_tlsrpt": {
+        "content": "v=TLSRPTv1; rua=mailto:dmarc@sjer.red",
+        "name": "_smtp._tls",
         "ttl": 1,
         "type": "TXT",
         "zone_id": "${cloudflare_zone.sjer_red.id}"
@@ -1401,6 +4206,181 @@
         "type": "SRV",
         "zone_id": "${cloudflare_zone.sjer_red.id}"
       },
+      "statically_typed_com_baseline_caa_iodef": {
+        "data": {
+          "flags": 0,
+          "tag": "iodef",
+          "value": "mailto:dmarc@sjer.red"
+        },
+        "name": "statically-typed.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.statically_typed_com.id}"
+      },
+      "statically_typed_com_baseline_caa_issue_google_trust_services": {
+        "data": {
+          "flags": 0,
+          "tag": "issue",
+          "value": "pki.goog; cansignhttpexchanges=yes"
+        },
+        "name": "statically-typed.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.statically_typed_com.id}"
+      },
+      "statically_typed_com_baseline_caa_issue_letsencrypt": {
+        "data": { "flags": 0, "tag": "issue", "value": "letsencrypt.org" },
+        "name": "statically-typed.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.statically_typed_com.id}"
+      },
+      "statically_typed_com_baseline_caa_issue_sectigo": {
+        "data": { "flags": 0, "tag": "issue", "value": "sectigo.com" },
+        "name": "statically-typed.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.statically_typed_com.id}"
+      },
+      "statically_typed_com_baseline_caa_issue_ssl_com": {
+        "data": { "flags": 0, "tag": "issue", "value": "ssl.com" },
+        "name": "statically-typed.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.statically_typed_com.id}"
+      },
+      "statically_typed_com_baseline_caa_issuewild_google_trust_services": {
+        "data": {
+          "flags": 0,
+          "tag": "issuewild",
+          "value": "pki.goog; cansignhttpexchanges=yes"
+        },
+        "name": "statically-typed.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.statically_typed_com.id}"
+      },
+      "statically_typed_com_baseline_caa_issuewild_letsencrypt": {
+        "data": { "flags": 0, "tag": "issuewild", "value": "letsencrypt.org" },
+        "name": "statically-typed.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.statically_typed_com.id}"
+      },
+      "statically_typed_com_baseline_caa_issuewild_sectigo": {
+        "data": { "flags": 0, "tag": "issuewild", "value": "sectigo.com" },
+        "name": "statically-typed.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.statically_typed_com.id}"
+      },
+      "statically_typed_com_baseline_caa_issuewild_ssl_com": {
+        "data": { "flags": 0, "tag": "issuewild", "value": "ssl.com" },
+        "name": "statically-typed.com",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.statically_typed_com.id}"
+      },
+      "statically_typed_com_baseline_dkim_fm1": {
+        "content": "fm1.statically-typed.com.dkim.fmhosted.com",
+        "name": "fm1._domainkey",
+        "proxied": false,
+        "ttl": 1,
+        "type": "CNAME",
+        "zone_id": "${cloudflare_zone.statically_typed_com.id}"
+      },
+      "statically_typed_com_baseline_dkim_fm2": {
+        "content": "fm2.statically-typed.com.dkim.fmhosted.com",
+        "name": "fm2._domainkey",
+        "proxied": false,
+        "ttl": 1,
+        "type": "CNAME",
+        "zone_id": "${cloudflare_zone.statically_typed_com.id}"
+      },
+      "statically_typed_com_baseline_dkim_fm3": {
+        "content": "fm3.statically-typed.com.dkim.fmhosted.com",
+        "name": "fm3._domainkey",
+        "proxied": false,
+        "ttl": 1,
+        "type": "CNAME",
+        "zone_id": "${cloudflare_zone.statically_typed_com.id}"
+      },
+      "statically_typed_com_baseline_dmarc": {
+        "content": "v=DMARC1; p=reject; sp=reject; adkim=r; aspf=r; rua=mailto:dmarc@sjer.red",
+        "name": "_dmarc",
+        "ttl": 1,
+        "type": "TXT",
+        "zone_id": "${cloudflare_zone.statically_typed_com.id}"
+      },
+      "statically_typed_com_baseline_mta_sts": {
+        "content": "v=STSv1; id=9bd0313a5a6f9de4",
+        "lifecycle": {
+          "precondition": [
+            {
+              "condition": "${data.http.statically_typed_com_baseline_mail_policy.status_code == 200 && data.http.statically_typed_com_baseline_mail_policy.response_body == \"version: STSv1\\nmode: enforce\\nmx: in1-smtp.messagingengine.com\\nmx: in2-smtp.messagingengine.com\\nmax_age: 86400\\n\" && startswith(lookup(data.http.statically_typed_com_baseline_mail_policy.response_headers, \"Content-Type\", \"\"), \"text/plain\")}",
+              "error_message": "Serve the exact HTTPS Fastmail policy as plain text before publishing MTA-STS discovery."
+            }
+          ]
+        },
+        "name": "_mta-sts",
+        "ttl": 1,
+        "type": "TXT",
+        "zone_id": "${cloudflare_zone.statically_typed_com.id}"
+      },
+      "statically_typed_com_baseline_mta_sts_host": {
+        "content": "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com",
+        "name": "mta-sts",
+        "proxied": true,
+        "ttl": 1,
+        "type": "CNAME",
+        "zone_id": "${cloudflare_zone.statically_typed_com.id}"
+      },
+      "statically_typed_com_baseline_mx_primary": {
+        "content": "in1-smtp.messagingengine.com",
+        "name": "statically-typed.com",
+        "priority": 10,
+        "ttl": 1,
+        "type": "MX",
+        "zone_id": "${cloudflare_zone.statically_typed_com.id}"
+      },
+      "statically_typed_com_baseline_mx_secondary": {
+        "content": "in2-smtp.messagingengine.com",
+        "name": "statically-typed.com",
+        "priority": 20,
+        "ttl": 1,
+        "type": "MX",
+        "zone_id": "${cloudflare_zone.statically_typed_com.id}"
+      },
+      "statically_typed_com_baseline_spf": {
+        "content": "v=spf1 include:spf.messagingengine.com -all",
+        "name": "statically-typed.com",
+        "ttl": 1,
+        "type": "TXT",
+        "zone_id": "${cloudflare_zone.statically_typed_com.id}"
+      },
+      "statically_typed_com_baseline_tlsrpt": {
+        "content": "v=TLSRPTv1; rua=mailto:dmarc@sjer.red",
+        "name": "_smtp._tls",
+        "ttl": 1,
+        "type": "TXT",
+        "zone_id": "${cloudflare_zone.statically_typed_com.id}"
+      },
+      "statically_typed_com_baseline_wildcard_mx_primary": {
+        "content": "in1-smtp.messagingengine.com",
+        "name": "*",
+        "priority": 10,
+        "ttl": 1,
+        "type": "MX",
+        "zone_id": "${cloudflare_zone.statically_typed_com.id}"
+      },
+      "statically_typed_com_baseline_wildcard_mx_secondary": {
+        "content": "in2-smtp.messagingengine.com",
+        "name": "*",
+        "priority": 20,
+        "ttl": 1,
+        "type": "MX",
+        "zone_id": "${cloudflare_zone.statically_typed_com.id}"
+      },
       "statically_typed_com_cname_apex": {
         "content": "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com",
         "name": "statically-typed.com",
@@ -1447,6 +4427,181 @@
         "proxied": true,
         "ttl": 1,
         "type": "AAAA",
+        "zone_id": "${cloudflare_zone.ts_mc_net.id}"
+      },
+      "ts_mc_net_baseline_caa_iodef": {
+        "data": {
+          "flags": 0,
+          "tag": "iodef",
+          "value": "mailto:dmarc@sjer.red"
+        },
+        "name": "ts-mc.net",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.ts_mc_net.id}"
+      },
+      "ts_mc_net_baseline_caa_issue_google_trust_services": {
+        "data": {
+          "flags": 0,
+          "tag": "issue",
+          "value": "pki.goog; cansignhttpexchanges=yes"
+        },
+        "name": "ts-mc.net",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.ts_mc_net.id}"
+      },
+      "ts_mc_net_baseline_caa_issue_letsencrypt": {
+        "data": { "flags": 0, "tag": "issue", "value": "letsencrypt.org" },
+        "name": "ts-mc.net",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.ts_mc_net.id}"
+      },
+      "ts_mc_net_baseline_caa_issue_sectigo": {
+        "data": { "flags": 0, "tag": "issue", "value": "sectigo.com" },
+        "name": "ts-mc.net",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.ts_mc_net.id}"
+      },
+      "ts_mc_net_baseline_caa_issue_ssl_com": {
+        "data": { "flags": 0, "tag": "issue", "value": "ssl.com" },
+        "name": "ts-mc.net",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.ts_mc_net.id}"
+      },
+      "ts_mc_net_baseline_caa_issuewild_google_trust_services": {
+        "data": {
+          "flags": 0,
+          "tag": "issuewild",
+          "value": "pki.goog; cansignhttpexchanges=yes"
+        },
+        "name": "ts-mc.net",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.ts_mc_net.id}"
+      },
+      "ts_mc_net_baseline_caa_issuewild_letsencrypt": {
+        "data": { "flags": 0, "tag": "issuewild", "value": "letsencrypt.org" },
+        "name": "ts-mc.net",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.ts_mc_net.id}"
+      },
+      "ts_mc_net_baseline_caa_issuewild_sectigo": {
+        "data": { "flags": 0, "tag": "issuewild", "value": "sectigo.com" },
+        "name": "ts-mc.net",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.ts_mc_net.id}"
+      },
+      "ts_mc_net_baseline_caa_issuewild_ssl_com": {
+        "data": { "flags": 0, "tag": "issuewild", "value": "ssl.com" },
+        "name": "ts-mc.net",
+        "ttl": 1,
+        "type": "CAA",
+        "zone_id": "${cloudflare_zone.ts_mc_net.id}"
+      },
+      "ts_mc_net_baseline_dkim_fm1": {
+        "content": "fm1.ts-mc.net.dkim.fmhosted.com",
+        "name": "fm1._domainkey",
+        "proxied": false,
+        "ttl": 1,
+        "type": "CNAME",
+        "zone_id": "${cloudflare_zone.ts_mc_net.id}"
+      },
+      "ts_mc_net_baseline_dkim_fm2": {
+        "content": "fm2.ts-mc.net.dkim.fmhosted.com",
+        "name": "fm2._domainkey",
+        "proxied": false,
+        "ttl": 1,
+        "type": "CNAME",
+        "zone_id": "${cloudflare_zone.ts_mc_net.id}"
+      },
+      "ts_mc_net_baseline_dkim_fm3": {
+        "content": "fm3.ts-mc.net.dkim.fmhosted.com",
+        "name": "fm3._domainkey",
+        "proxied": false,
+        "ttl": 1,
+        "type": "CNAME",
+        "zone_id": "${cloudflare_zone.ts_mc_net.id}"
+      },
+      "ts_mc_net_baseline_dmarc": {
+        "content": "v=DMARC1; p=reject; sp=reject; adkim=r; aspf=r; rua=mailto:dmarc@sjer.red",
+        "name": "_dmarc",
+        "ttl": 1,
+        "type": "TXT",
+        "zone_id": "${cloudflare_zone.ts_mc_net.id}"
+      },
+      "ts_mc_net_baseline_mta_sts": {
+        "content": "v=STSv1; id=9bd0313a5a6f9de4",
+        "lifecycle": {
+          "precondition": [
+            {
+              "condition": "${data.http.ts_mc_net_baseline_mail_policy.status_code == 200 && data.http.ts_mc_net_baseline_mail_policy.response_body == \"version: STSv1\\nmode: enforce\\nmx: in1-smtp.messagingengine.com\\nmx: in2-smtp.messagingengine.com\\nmax_age: 86400\\n\" && startswith(lookup(data.http.ts_mc_net_baseline_mail_policy.response_headers, \"Content-Type\", \"\"), \"text/plain\")}",
+              "error_message": "Serve the exact HTTPS Fastmail policy as plain text before publishing MTA-STS discovery."
+            }
+          ]
+        },
+        "name": "_mta-sts",
+        "ttl": 1,
+        "type": "TXT",
+        "zone_id": "${cloudflare_zone.ts_mc_net.id}"
+      },
+      "ts_mc_net_baseline_mta_sts_host": {
+        "content": "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com",
+        "name": "mta-sts",
+        "proxied": true,
+        "ttl": 1,
+        "type": "CNAME",
+        "zone_id": "${cloudflare_zone.ts_mc_net.id}"
+      },
+      "ts_mc_net_baseline_mx_primary": {
+        "content": "in1-smtp.messagingengine.com",
+        "name": "ts-mc.net",
+        "priority": 10,
+        "ttl": 1,
+        "type": "MX",
+        "zone_id": "${cloudflare_zone.ts_mc_net.id}"
+      },
+      "ts_mc_net_baseline_mx_secondary": {
+        "content": "in2-smtp.messagingengine.com",
+        "name": "ts-mc.net",
+        "priority": 20,
+        "ttl": 1,
+        "type": "MX",
+        "zone_id": "${cloudflare_zone.ts_mc_net.id}"
+      },
+      "ts_mc_net_baseline_spf": {
+        "content": "v=spf1 include:spf.messagingengine.com -all",
+        "name": "ts-mc.net",
+        "ttl": 1,
+        "type": "TXT",
+        "zone_id": "${cloudflare_zone.ts_mc_net.id}"
+      },
+      "ts_mc_net_baseline_tlsrpt": {
+        "content": "v=TLSRPTv1; rua=mailto:dmarc@sjer.red",
+        "name": "_smtp._tls",
+        "ttl": 1,
+        "type": "TXT",
+        "zone_id": "${cloudflare_zone.ts_mc_net.id}"
+      },
+      "ts_mc_net_baseline_wildcard_mx_primary": {
+        "content": "in1-smtp.messagingengine.com",
+        "name": "*",
+        "priority": 10,
+        "ttl": 1,
+        "type": "MX",
+        "zone_id": "${cloudflare_zone.ts_mc_net.id}"
+      },
+      "ts_mc_net_baseline_wildcard_mx_secondary": {
+        "content": "in2-smtp.messagingengine.com",
+        "name": "*",
+        "priority": 20,
+        "ttl": 1,
+        "type": "MX",
         "zone_id": "${cloudflare_zone.ts_mc_net.id}"
       },
       "ts_mc_net_cname_apex": {
@@ -1653,6 +4808,26 @@
       }
     },
     "cloudflare_ruleset": {
+      "better_skill_capped_com_static_cache": {
+        "kind": "zone",
+        "name": "static-asset-cache",
+        "phase": "http_request_cache_settings",
+        "rules": [
+          {
+            "action": "set_cache_settings",
+            "action_parameters": {
+              "browser_ttl": { "mode": "respect_origin" },
+              "cache": true,
+              "edge_ttl": { "mode": "respect_origin" },
+              "serve_stale": { "disable_stale_while_updating": false }
+            },
+            "description": "Respect origin Cache-Control for content-hashed assets",
+            "expression": "starts_with(http.request.uri.path, \"/assets/\")",
+            "ref": "immutable_hashed_assets"
+          }
+        ],
+        "zone_id": "${cloudflare_zone.better_skill_capped_com.id}"
+      },
       "bulk_redirects": {
         "account_id": "${var.cloudflare_account_id}",
         "description": "",
@@ -1729,6 +4904,26 @@
         ],
         "zone_id": "${cloudflare_zone.discord_plays_pokemon_com.id}"
       },
+      "scout_for_lol_com_static_cache": {
+        "kind": "zone",
+        "name": "static-asset-cache",
+        "phase": "http_request_cache_settings",
+        "rules": [
+          {
+            "action": "set_cache_settings",
+            "action_parameters": {
+              "browser_ttl": { "mode": "respect_origin" },
+              "cache": true,
+              "edge_ttl": { "mode": "respect_origin" },
+              "serve_stale": { "disable_stale_while_updating": false }
+            },
+            "description": "Respect origin Cache-Control for content-hashed assets",
+            "expression": "starts_with(http.request.uri.path, \"/_astro/\") or starts_with(http.request.uri.path, \"/app/assets/\")",
+            "ref": "immutable_hashed_assets"
+          }
+        ],
+        "zone_id": "${cloudflare_zone.scout_for_lol_com.id}"
+      },
       "sjer_red_redirects": {
         "kind": "zone",
         "name": "sjer.red dynamic redirects",
@@ -1748,6 +4943,26 @@
             "description": "Redirect overseerr.sjer.red to seerr.sjer.red (Overseerr retired)",
             "expression": "(http.host eq \"overseerr.sjer.red\")",
             "ref": "overseerr_to_seerr"
+          }
+        ],
+        "zone_id": "${cloudflare_zone.sjer_red.id}"
+      },
+      "sjer_red_static_cache": {
+        "kind": "zone",
+        "name": "static-asset-cache",
+        "phase": "http_request_cache_settings",
+        "rules": [
+          {
+            "action": "set_cache_settings",
+            "action_parameters": {
+              "browser_ttl": { "mode": "respect_origin" },
+              "cache": true,
+              "edge_ttl": { "mode": "respect_origin" },
+              "serve_stale": { "disable_stale_while_updating": false }
+            },
+            "description": "Respect origin Cache-Control for content-hashed assets",
+            "expression": "starts_with(http.request.uri.path, \"/_astro/\")",
+            "ref": "immutable_hashed_assets"
           }
         ],
         "zone_id": "${cloudflare_zone.sjer_red.id}"
@@ -1772,6 +4987,20 @@
           }
         ],
         "zone_id": "${cloudflare_zone.ts_mc_net.id}"
+      }
+    },
+    "cloudflare_tiered_cache": {
+      "better_skill_capped_com_static_cache": {
+        "value": "on",
+        "zone_id": "${cloudflare_zone.better_skill_capped_com.id}"
+      },
+      "scout_for_lol_com_static_cache": {
+        "value": "on",
+        "zone_id": "${cloudflare_zone.scout_for_lol_com.id}"
+      },
+      "sjer_red_static_cache": {
+        "value": "on",
+        "zone_id": "${cloudflare_zone.sjer_red.id}"
       }
     },
     "cloudflare_turnstile_widget": {
@@ -1826,7 +5055,313 @@
         "name": "ts-mc.net"
       }
     },
+    "cloudflare_zone_dnssec": {
+      "better_skill_capped_com_baseline_dnssec": {
+        "status": "active",
+        "zone_id": "${cloudflare_zone.better_skill_capped_com.id}"
+      },
+      "clauderon_com_baseline_dnssec": {
+        "status": "active",
+        "zone_id": "${cloudflare_zone.clauderon_com.id}"
+      },
+      "discord_plays_pokemon_com_baseline_dnssec": {
+        "status": "active",
+        "zone_id": "${cloudflare_zone.discord_plays_pokemon_com.id}"
+      },
+      "glitter_boys_com_baseline_dnssec": {
+        "status": "active",
+        "zone_id": "${cloudflare_zone.glitter_boys_com.id}"
+      },
+      "jerredshepherd_com_baseline_dnssec": {
+        "status": "active",
+        "zone_id": "${cloudflare_zone.jerredshepherd_com.id}"
+      },
+      "scout_for_lol_com_baseline_dnssec": {
+        "status": "active",
+        "zone_id": "${cloudflare_zone.scout_for_lol_com.id}"
+      },
+      "shepherdjerred_com_baseline_dnssec": {
+        "status": "active",
+        "zone_id": "${cloudflare_zone.shepherdjerred_com.id}"
+      },
+      "sjer_red_baseline_dnssec": {
+        "status": "active",
+        "zone_id": "${cloudflare_zone.sjer_red.id}"
+      },
+      "statically_typed_com_baseline_dnssec": {
+        "status": "active",
+        "zone_id": "${cloudflare_zone.statically_typed_com.id}"
+      },
+      "ts_mc_net_baseline_dnssec": {
+        "status": "active",
+        "zone_id": "${cloudflare_zone.ts_mc_net.id}"
+      }
+    },
     "cloudflare_zone_setting": {
+      "better_skill_capped_com_baseline_https": {
+        "setting_id": "always_use_https",
+        "value": "on",
+        "zone_id": "${cloudflare_zone.better_skill_capped_com.id}"
+      },
+      "better_skill_capped_com_baseline_min_tls_version": {
+        "setting_id": "min_tls_version",
+        "value": "1.2",
+        "zone_id": "${cloudflare_zone.better_skill_capped_com.id}"
+      },
+      "better_skill_capped_com_baseline_security_header": {
+        "setting_id": "security_header",
+        "value": {
+          "strict_transport_security": {
+            "enabled": true,
+            "include_subdomains": true,
+            "max_age": 86400,
+            "nosniff": true,
+            "preload": false
+          }
+        },
+        "zone_id": "${cloudflare_zone.better_skill_capped_com.id}"
+      },
+      "better_skill_capped_com_baseline_ssl": {
+        "setting_id": "ssl",
+        "value": "strict",
+        "zone_id": "${cloudflare_zone.better_skill_capped_com.id}"
+      },
+      "better_skill_capped_com_baseline_tls_1_3": {
+        "setting_id": "tls_1_3",
+        "value": "on",
+        "zone_id": "${cloudflare_zone.better_skill_capped_com.id}"
+      },
+      "clauderon_com_baseline_https": {
+        "setting_id": "always_use_https",
+        "value": "on",
+        "zone_id": "${cloudflare_zone.clauderon_com.id}"
+      },
+      "clauderon_com_baseline_min_tls_version": {
+        "setting_id": "min_tls_version",
+        "value": "1.2",
+        "zone_id": "${cloudflare_zone.clauderon_com.id}"
+      },
+      "clauderon_com_baseline_security_header": {
+        "setting_id": "security_header",
+        "value": {
+          "strict_transport_security": {
+            "enabled": true,
+            "include_subdomains": true,
+            "max_age": 86400,
+            "nosniff": true,
+            "preload": false
+          }
+        },
+        "zone_id": "${cloudflare_zone.clauderon_com.id}"
+      },
+      "clauderon_com_baseline_ssl": {
+        "setting_id": "ssl",
+        "value": "strict",
+        "zone_id": "${cloudflare_zone.clauderon_com.id}"
+      },
+      "clauderon_com_baseline_tls_1_3": {
+        "setting_id": "tls_1_3",
+        "value": "on",
+        "zone_id": "${cloudflare_zone.clauderon_com.id}"
+      },
+      "discord_plays_pokemon_com_baseline_https": {
+        "setting_id": "always_use_https",
+        "value": "on",
+        "zone_id": "${cloudflare_zone.discord_plays_pokemon_com.id}"
+      },
+      "discord_plays_pokemon_com_baseline_min_tls_version": {
+        "setting_id": "min_tls_version",
+        "value": "1.2",
+        "zone_id": "${cloudflare_zone.discord_plays_pokemon_com.id}"
+      },
+      "discord_plays_pokemon_com_baseline_security_header": {
+        "setting_id": "security_header",
+        "value": {
+          "strict_transport_security": {
+            "enabled": true,
+            "include_subdomains": true,
+            "max_age": 86400,
+            "nosniff": true,
+            "preload": false
+          }
+        },
+        "zone_id": "${cloudflare_zone.discord_plays_pokemon_com.id}"
+      },
+      "discord_plays_pokemon_com_baseline_ssl": {
+        "setting_id": "ssl",
+        "value": "strict",
+        "zone_id": "${cloudflare_zone.discord_plays_pokemon_com.id}"
+      },
+      "discord_plays_pokemon_com_baseline_tls_1_3": {
+        "setting_id": "tls_1_3",
+        "value": "on",
+        "zone_id": "${cloudflare_zone.discord_plays_pokemon_com.id}"
+      },
+      "glitter_boys_com_baseline_https": {
+        "setting_id": "always_use_https",
+        "value": "on",
+        "zone_id": "${cloudflare_zone.glitter_boys_com.id}"
+      },
+      "glitter_boys_com_baseline_min_tls_version": {
+        "setting_id": "min_tls_version",
+        "value": "1.2",
+        "zone_id": "${cloudflare_zone.glitter_boys_com.id}"
+      },
+      "glitter_boys_com_baseline_security_header": {
+        "setting_id": "security_header",
+        "value": {
+          "strict_transport_security": {
+            "enabled": true,
+            "include_subdomains": true,
+            "max_age": 86400,
+            "nosniff": true,
+            "preload": false
+          }
+        },
+        "zone_id": "${cloudflare_zone.glitter_boys_com.id}"
+      },
+      "glitter_boys_com_baseline_ssl": {
+        "setting_id": "ssl",
+        "value": "strict",
+        "zone_id": "${cloudflare_zone.glitter_boys_com.id}"
+      },
+      "glitter_boys_com_baseline_tls_1_3": {
+        "setting_id": "tls_1_3",
+        "value": "on",
+        "zone_id": "${cloudflare_zone.glitter_boys_com.id}"
+      },
+      "jerredshepherd_com_baseline_https": {
+        "setting_id": "always_use_https",
+        "value": "on",
+        "zone_id": "${cloudflare_zone.jerredshepherd_com.id}"
+      },
+      "jerredshepherd_com_baseline_min_tls_version": {
+        "setting_id": "min_tls_version",
+        "value": "1.2",
+        "zone_id": "${cloudflare_zone.jerredshepherd_com.id}"
+      },
+      "jerredshepherd_com_baseline_security_header": {
+        "setting_id": "security_header",
+        "value": {
+          "strict_transport_security": {
+            "enabled": true,
+            "include_subdomains": true,
+            "max_age": 86400,
+            "nosniff": true,
+            "preload": false
+          }
+        },
+        "zone_id": "${cloudflare_zone.jerredshepherd_com.id}"
+      },
+      "jerredshepherd_com_baseline_ssl": {
+        "setting_id": "ssl",
+        "value": "strict",
+        "zone_id": "${cloudflare_zone.jerredshepherd_com.id}"
+      },
+      "jerredshepherd_com_baseline_tls_1_3": {
+        "setting_id": "tls_1_3",
+        "value": "on",
+        "zone_id": "${cloudflare_zone.jerredshepherd_com.id}"
+      },
+      "scout_for_lol_com_baseline_https": {
+        "setting_id": "always_use_https",
+        "value": "on",
+        "zone_id": "${cloudflare_zone.scout_for_lol_com.id}"
+      },
+      "scout_for_lol_com_baseline_min_tls_version": {
+        "setting_id": "min_tls_version",
+        "value": "1.2",
+        "zone_id": "${cloudflare_zone.scout_for_lol_com.id}"
+      },
+      "scout_for_lol_com_baseline_security_header": {
+        "setting_id": "security_header",
+        "value": {
+          "strict_transport_security": {
+            "enabled": true,
+            "include_subdomains": true,
+            "max_age": 86400,
+            "nosniff": true,
+            "preload": false
+          }
+        },
+        "zone_id": "${cloudflare_zone.scout_for_lol_com.id}"
+      },
+      "scout_for_lol_com_baseline_ssl": {
+        "setting_id": "ssl",
+        "value": "strict",
+        "zone_id": "${cloudflare_zone.scout_for_lol_com.id}"
+      },
+      "scout_for_lol_com_baseline_tls_1_3": {
+        "setting_id": "tls_1_3",
+        "value": "on",
+        "zone_id": "${cloudflare_zone.scout_for_lol_com.id}"
+      },
+      "shepherdjerred_com_baseline_https": {
+        "setting_id": "always_use_https",
+        "value": "on",
+        "zone_id": "${cloudflare_zone.shepherdjerred_com.id}"
+      },
+      "shepherdjerred_com_baseline_min_tls_version": {
+        "setting_id": "min_tls_version",
+        "value": "1.2",
+        "zone_id": "${cloudflare_zone.shepherdjerred_com.id}"
+      },
+      "shepherdjerred_com_baseline_security_header": {
+        "setting_id": "security_header",
+        "value": {
+          "strict_transport_security": {
+            "enabled": true,
+            "include_subdomains": true,
+            "max_age": 86400,
+            "nosniff": true,
+            "preload": false
+          }
+        },
+        "zone_id": "${cloudflare_zone.shepherdjerred_com.id}"
+      },
+      "shepherdjerred_com_baseline_ssl": {
+        "setting_id": "ssl",
+        "value": "strict",
+        "zone_id": "${cloudflare_zone.shepherdjerred_com.id}"
+      },
+      "shepherdjerred_com_baseline_tls_1_3": {
+        "setting_id": "tls_1_3",
+        "value": "on",
+        "zone_id": "${cloudflare_zone.shepherdjerred_com.id}"
+      },
+      "sjer_red_baseline_https": {
+        "setting_id": "always_use_https",
+        "value": "on",
+        "zone_id": "${cloudflare_zone.sjer_red.id}"
+      },
+      "sjer_red_baseline_min_tls_version": {
+        "setting_id": "min_tls_version",
+        "value": "1.2",
+        "zone_id": "${cloudflare_zone.sjer_red.id}"
+      },
+      "sjer_red_baseline_security_header": {
+        "setting_id": "security_header",
+        "value": {
+          "strict_transport_security": {
+            "enabled": true,
+            "include_subdomains": true,
+            "max_age": 86400,
+            "nosniff": true,
+            "preload": false
+          }
+        },
+        "zone_id": "${cloudflare_zone.sjer_red.id}"
+      },
+      "sjer_red_baseline_ssl": {
+        "setting_id": "ssl",
+        "value": "strict",
+        "zone_id": "${cloudflare_zone.sjer_red.id}"
+      },
+      "sjer_red_baseline_tls_1_3": {
+        "setting_id": "tls_1_3",
+        "value": "zrt",
+        "zone_id": "${cloudflare_zone.sjer_red.id}"
+      },
       "sjer_red_fonts": {
         "setting_id": "fonts",
         "value": "off",
@@ -1836,7 +5371,98 @@
         "setting_id": "websockets",
         "value": "on",
         "zone_id": "${cloudflare_zone.sjer_red.id}"
+      },
+      "statically_typed_com_baseline_https": {
+        "setting_id": "always_use_https",
+        "value": "on",
+        "zone_id": "${cloudflare_zone.statically_typed_com.id}"
+      },
+      "statically_typed_com_baseline_min_tls_version": {
+        "setting_id": "min_tls_version",
+        "value": "1.2",
+        "zone_id": "${cloudflare_zone.statically_typed_com.id}"
+      },
+      "statically_typed_com_baseline_security_header": {
+        "setting_id": "security_header",
+        "value": {
+          "strict_transport_security": {
+            "enabled": true,
+            "include_subdomains": true,
+            "max_age": 86400,
+            "nosniff": true,
+            "preload": false
+          }
+        },
+        "zone_id": "${cloudflare_zone.statically_typed_com.id}"
+      },
+      "statically_typed_com_baseline_ssl": {
+        "setting_id": "ssl",
+        "value": "strict",
+        "zone_id": "${cloudflare_zone.statically_typed_com.id}"
+      },
+      "statically_typed_com_baseline_tls_1_3": {
+        "setting_id": "tls_1_3",
+        "value": "on",
+        "zone_id": "${cloudflare_zone.statically_typed_com.id}"
+      },
+      "ts_mc_net_baseline_https": {
+        "setting_id": "always_use_https",
+        "value": "on",
+        "zone_id": "${cloudflare_zone.ts_mc_net.id}"
+      },
+      "ts_mc_net_baseline_min_tls_version": {
+        "setting_id": "min_tls_version",
+        "value": "1.2",
+        "zone_id": "${cloudflare_zone.ts_mc_net.id}"
+      },
+      "ts_mc_net_baseline_security_header": {
+        "setting_id": "security_header",
+        "value": {
+          "strict_transport_security": {
+            "enabled": true,
+            "include_subdomains": true,
+            "max_age": 86400,
+            "nosniff": true,
+            "preload": false
+          }
+        },
+        "zone_id": "${cloudflare_zone.ts_mc_net.id}"
+      },
+      "ts_mc_net_baseline_ssl": {
+        "setting_id": "ssl",
+        "value": "strict",
+        "zone_id": "${cloudflare_zone.ts_mc_net.id}"
+      },
+      "ts_mc_net_baseline_tls_1_3": {
+        "setting_id": "tls_1_3",
+        "value": "zrt",
+        "zone_id": "${cloudflare_zone.ts_mc_net.id}"
       }
+    },
+    "terraform_data": {
+      "clauderon_com_baseline_ct_recipient": {
+        "triggers_replace": "root@sjer.red"
+      },
+      "discord_plays_pokemon_com_baseline_ct_recipient": {
+        "triggers_replace": "root@sjer.red"
+      },
+      "glitter_boys_com_baseline_ct_recipient": {
+        "triggers_replace": "root@sjer.red"
+      },
+      "jerredshepherd_com_baseline_ct_recipient": {
+        "triggers_replace": "root@sjer.red"
+      },
+      "scout_for_lol_com_baseline_ct_recipient": {
+        "triggers_replace": "root@sjer.red"
+      },
+      "shepherdjerred_com_baseline_ct_recipient": {
+        "triggers_replace": "root@sjer.red"
+      },
+      "sjer_red_baseline_ct_recipient": { "triggers_replace": "root@sjer.red" },
+      "statically_typed_com_baseline_ct_recipient": {
+        "triggers_replace": "root@sjer.red"
+      },
+      "ts_mc_net_baseline_ct_recipient": { "triggers_replace": "root@sjer.red" }
     }
   },
   "terraform": {

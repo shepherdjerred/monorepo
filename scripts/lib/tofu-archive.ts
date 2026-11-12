@@ -49,11 +49,14 @@ function excludedFromArchive(relative: string): boolean {
  *
  * The external files come from the manifest after the stack's own references
  * were checked against it, so an undeclared read fails here instead of
- * producing an archive that cannot plan.
+ * producing an archive that cannot plan. `externalFiles` replaces the
+ * manifest's declaration; no stack declares any today, so the tests pass one
+ * to keep the mechanism covered.
  */
 export async function tofuStackArchiveFiles(
   stack: TofuStack,
   repoRoot: string,
+  externalFiles: readonly string[] = STACK_MANIFEST[stack].externalFiles,
 ): Promise<string[]> {
   const name = TofuStackSchema.parse(stack);
   const prefix = `${TOFU_STACK_ROOT}/${name}`;
@@ -77,7 +80,6 @@ export async function tofuStackArchiveFiles(
   // Hand-written HCL, or the committed cdktn synthesis (`main.tf.json`).
   if (!files.some((file) => file.endsWith(".tf") || file.endsWith(".tf.json")))
     throw new Error(`OpenTofu stack ${name} has no configuration to archive`);
-  const { externalFiles } = STACK_MANIFEST[name];
   await verifyStackExternalFiles({
     repoRoot,
     stackDirectory: directory,
@@ -93,7 +95,8 @@ export async function createTofuStackArchive(
   stack: TofuStack,
   repoRoot: string,
   output: string,
+  externalFiles?: readonly string[],
 ): Promise<{ digest: string; files: string[] }> {
-  const files = await tofuStackArchiveFiles(stack, repoRoot);
+  const files = await tofuStackArchiveFiles(stack, repoRoot, externalFiles);
   return createStaticArchive(repoRoot, output, files);
 }

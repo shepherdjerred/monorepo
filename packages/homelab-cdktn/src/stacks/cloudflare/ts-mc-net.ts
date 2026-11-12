@@ -7,14 +7,14 @@ import {
   cname,
   edgePlaceholder,
   srvRecords,
-  tunnelCnames,
   txt,
 } from "#src/stacks/cloudflare/records.ts";
 import { edgeRedirect } from "#src/stacks/cloudflare/zones.ts";
 
 /**
- * Application records of ts-mc.net. `storage.ts-mc.net` is absent: that
- * record belongs to `cloudflare_r2_custom_domain.ts_mc`.
+ * Records of ts-mc.net the platform model does not declare; its tunnel
+ * hostnames are rendered by `platform.ts`. `storage.ts-mc.net` is absent:
+ * that record belongs to `cloudflare_r2_custom_domain.ts_mc`.
  */
 export function tsMcNet(stack: TerraformStack, zone: Zone): void {
   cname(stack, "ts_mc_net_cname_minecraft", zone, {
@@ -22,14 +22,6 @@ export function tsMcNet(stack: TerraformStack, zone: Zone): void {
     content: "ddns.sjer.red",
     proxied: false,
   });
-  tunnelCnames(stack, zone, {
-    ts_mc_net_cname_apex: "ts-mc.net",
-    ts_mc_net_cname_bluemap: "bluemap",
-    ts_mc_net_cname_livemap: "livemap",
-    ts_mc_net_cname_docs: "docs",
-    ts_mc_net_cname_public: "public",
-  });
-
   // join.ts-mc.net 301-redirects to The Storm landing page at the edge. The
   // proxied placeholder records let Cloudflare's edge answer HTTP/HTTPS
   // requests and run the redirect before any origin fetch.
