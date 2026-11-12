@@ -348,6 +348,20 @@ accounts and model allowlist from desired state and apply that change;
 otherwise every later plan fails until each unreadable resource is removed from
 state.
 
+Projects archived in the dashboard, which the stack forgets instead of
+destroying:
+
+| Desired-state key           | Project id                      |
+| --------------------------- | ------------------------------- |
+| `scout-beta`                | `proj_W3LLi8mKyuKdJkxou38TpHIR` |
+| `scout-active-2026-09`      | `proj_3I9qDcL4Qvc82676p2g59DjA` |
+| `scout-prod-active-2026-09` | `proj_CRibw9zX9kDaFnQzynYbKdIm` |
+
+The stack is synthesized from `packages/homelab-cdktn/src/stacks/openai.ts`.
+Both providers serve resource types that start with `openai_`: the official
+one is the default for that prefix, and the companion keeps the local name
+`openaikeys`, which only `openai_project_service_account` selects.
+
 Spend controls denominate their thresholds inconsistently upstream, and the
 committed values rely on it: `openai_project_spend_limit` /
 `openai_organization_spend_limit` take **cents** (the provider documents
