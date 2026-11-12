@@ -3,22 +3,18 @@ import type { Chart } from "cdk8s";
 import {
   ConfigMap,
   Cpu,
-  DeploymentStrategy,
   EmptyDirMedium,
   EnvValue,
   Job,
   Probe,
   Secret,
-  Service,
   Volume,
 } from "cdk8s-plus-31";
-import {
-  createBurstDeployment,
-  setRevisionHistoryLimit,
-  withCommonProps,
-} from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
+import { withCommonProps } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
+import { BURST_SERVICE_PRIORITY } from "@shepherdjerred/homelab/cdk8s/src/misc/priority-classes.ts";
+import { FirstPartyWorker } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/worker.ts";
+import type { FirstPartyContainerSpec } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/workload-parts.ts";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
-import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { llmArchiveEnvVars } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-archive-env.ts";
@@ -38,19 +34,50 @@ export function createArcadeDeployment(
   { controllerActive = true }: { controllerActive?: boolean } = {},
 ) {
   // Arcade owns the command bot and both streaming accounts after migration.
-  const deployment = createBurstDeployment(chart, "arcade", {
-    replicas: controllerActive ? 1 : 0,
-    strategy: DeploymentStrategy.recreate(),
-    // Emerald's goal worker and save retries use the same budget as its legacy pod.
-    terminationGracePeriod: Duration.seconds(120),
-    securityContext: { fsGroup: 1000 },
-    metadata: {
-      annotations: {
-        "ignore-check.kube-linter.io/no-read-only-root-fs":
-          "Chromium profiles and runtime scratch require writable storage",
+  const worker = new FirstPartyWorker(chart, "arcade-worker", {
+    name: "arcade",
+    deployment: {
+      replicas: controllerActive ? 1 : 0,
+      // Emerald's goal worker and save retries use the same budget as its legacy pod.
+      terminationGracePeriod: Duration.seconds(120),
+      securityContext: { fsGroup: 1000 },
+      metadata: {
+        annotations: {
+          "ignore-check.kube-linter.io/no-read-only-root-fs":
+            "Chromium profiles and runtime scratch require writable storage",
+        },
       },
     },
+    priorityClassName: BURST_SERVICE_PRIORITY,
+    containers: () => ({ main: arcadeContainer(chart, controllerActive) }),
+    // The UI port serves `/metrics` too, and arcade-edge proxies to this Service.
+    metrics: {
+      serviceId: "arcade-ui",
+      app: "arcade",
+      port: 8081,
+      portName: "ui",
+      monitorName: "arcade",
+    },
+    // arcade-edge is the namespace's only ingress; it has no policies yet.
+    policies: [],
   });
+  ApiObject.of(worker.deployment).addJsonPatch(
+    JsonPatch.add("/spec/template/spec/nodeSelector", ARCADE_NODE_SELECTOR),
+    JsonPatch.add(
+      "/spec/template/spec/containers/0/resources/limits/gpu.intel.com~1i915",
+      1,
+    ),
+  );
+}
+
+/**
+ * The controller container, with the claims, configuration and credentials it
+ * mounts.
+ */
+function arcadeContainer(
+  chart: Chart,
+  controllerActive: boolean,
+): FirstPartyContainerSpec {
   const assets = new ZfsNvmeVolume(chart, "arcade-assets", {
     storage: Size.gibibytes(64),
   });
@@ -174,140 +201,118 @@ model = "gpt-5.6-sol"
     "arcade-archive-secret",
     archiveItem.name,
   );
-  deployment.addContainer(
-    withCommonProps({
-      image:
-        '{{ required `Delivery requires image` (get (.Values.delivery | default dict) "image") }}',
-      envVariables: {
-        ARCADE_CONFIG_PATH: EnvValue.fromValue("/config/arcade.toml"),
-        NODE_ENV: EnvValue.fromValue("production"),
-        FEATURE_FLAGS_MODE: EnvValue.fromValue("flipt"),
-        FLIPT_NAMESPACE: EnvValue.fromValue("arcade"),
-        FLIPT_ENVIRONMENT: EnvValue.fromValue("prod"),
-        DEPLOYMENT_ENVIRONMENT: EnvValue.fromValue("prod"),
-        FLIPT_URL: EnvValue.fromValue(FLIPT_URL),
-        PEER_USERBOT_IDS: EnvValue.fromValue(peerUserbotIds("arcade1")),
-        // Shared origin for Discord links, OAuth, and browser controller traffic.
-        WEB_PUBLIC_ORIGIN: EnvValue.fromValue("https://arcade.sjer.red"),
-        DISCORD_BOT_TOKEN: EnvValue.fromSecretValue({
-          secret: credentialSecret,
-          key: "DISCORD_BOT_TOKEN",
-        }),
-        DISCORD_APPLICATION_ID: EnvValue.fromSecretValue({
-          secret: credentialSecret,
-          key: "DISCORD_APPLICATION_ID",
-        }),
-        DISCORD_STREAMING_TOKENS: EnvValue.fromSecretValue({
-          secret: credentialSecret,
-          key: "DISCORD_STREAMING_TOKENS",
-        }),
-        DISCORD_CLIENT_SECRET: EnvValue.fromSecretValue({
-          secret: credentialSecret,
-          key: "DISCORD_CLIENT_SECRET",
-        }),
-        CODEX_AUTH_JSON_B64: EnvValue.fromSecretValue({
-          secret: credentialSecret,
-          key: "CODEX_AUTH_JSON_B64",
-        }),
-        CODEX_HOME: EnvValue.fromValue("/data/goal-auth/codex"),
-        LIBVA_DRIVER_NAME: EnvValue.fromValue("iHD"),
-        ...telemetryEnv({ serviceName: "arcade", serviceNameFirst: true }),
-        ...seaweedfsS3.credentialsEnv(archiveSecret),
-        AWS_ENDPOINT_URL: EnvValue.fromValue(seaweedfsS3.endpoint),
-        S3_ENDPOINT: EnvValue.fromValue(seaweedfsS3.endpoint),
-        S3_FORCE_PATH_STYLE: EnvValue.fromValue("true"),
-        AWS_REGION: EnvValue.fromValue("us-east-1"),
-        ...llmArchiveEnvVars(),
-        LLM_ARCHIVE_S3_PREFIX: EnvValue.fromValue("goals/arcade"),
-      },
-      securityContext: {
-        ensureNonRoot: true,
-        user: 1000,
-        group: 1000,
-        readOnlyRootFilesystem: false,
-        allowPrivilegeEscalation: false,
-      },
-      resources: {
-        cpu: { request: Cpu.units(2), limit: Cpu.units(12) },
-        // Working set peaked at 2.8 GiB (p95 1.2 GiB) over its first four
-        // days, then settled: 7d p95 230 MiB, 14d max 1.7 GiB (2026-10-31).
-        // Request the steady state; the limit keeps room for bursts.
-        memory: { request: Size.mebibytes(256), limit: Size.gibibytes(16) },
-      },
-      ports: [{ name: "ui", number: 8081 }],
-      startup: Probe.fromHttpGet("/health", {
-        port: 8081,
-        failureThreshold: 60,
+  return {
+    image:
+      '{{ required `Delivery requires image` (get (.Values.delivery | default dict) "image") }}',
+    envVariables: {
+      ARCADE_CONFIG_PATH: EnvValue.fromValue("/config/arcade.toml"),
+      NODE_ENV: EnvValue.fromValue("production"),
+      FEATURE_FLAGS_MODE: EnvValue.fromValue("flipt"),
+      FLIPT_NAMESPACE: EnvValue.fromValue("arcade"),
+      FLIPT_ENVIRONMENT: EnvValue.fromValue("prod"),
+      DEPLOYMENT_ENVIRONMENT: EnvValue.fromValue("prod"),
+      FLIPT_URL: EnvValue.fromValue(FLIPT_URL),
+      PEER_USERBOT_IDS: EnvValue.fromValue(peerUserbotIds("arcade1")),
+      // Shared origin for Discord links, OAuth, and browser controller traffic.
+      WEB_PUBLIC_ORIGIN: EnvValue.fromValue("https://arcade.sjer.red"),
+      DISCORD_BOT_TOKEN: EnvValue.fromSecretValue({
+        secret: credentialSecret,
+        key: "DISCORD_BOT_TOKEN",
       }),
-      readiness: Probe.fromHttpGet("/health", { port: 8081 }),
-      liveness: Probe.fromHttpGet("/health", { port: 8081 }),
-      volumeMounts: [
-        {
-          path: "/data/goal-auth",
-          volume: Volume.fromPersistentVolumeClaim(
-            chart,
-            "arcade-goal-auth-mount",
-            goalAuth.claim,
-          ),
-        },
-        {
-          path: "/data/assets",
-          volume: Volume.fromPersistentVolumeClaim(
-            chart,
-            "arcade-assets-mount",
-            assets.claim,
-          ),
-          readOnly: true,
-        },
-        {
-          path: "/data/saves",
-          volume: Volume.fromPersistentVolumeClaim(
-            chart,
-            "arcade-saves-mount",
-            saves.claim,
-          ),
-        },
-        {
-          path: "/data/db",
-          volume: Volume.fromPersistentVolumeClaim(
-            chart,
-            "arcade-db-pvc",
-            database.claim,
-          ),
-        },
-        {
-          path: "/dev/shm",
-          volume: Volume.fromEmptyDir(chart, "arcade-shm", "arcade-shm", {
-            medium: EmptyDirMedium.MEMORY,
-            sizeLimit: Size.gibibytes(1),
-          }),
-        },
-        {
-          path: "/config/arcade.toml",
-          subPath: "arcade.toml",
-          volume: Volume.fromConfigMap(chart, "arcade-config-volume", config),
-        },
-      ],
+      DISCORD_APPLICATION_ID: EnvValue.fromSecretValue({
+        secret: credentialSecret,
+        key: "DISCORD_APPLICATION_ID",
+      }),
+      DISCORD_STREAMING_TOKENS: EnvValue.fromSecretValue({
+        secret: credentialSecret,
+        key: "DISCORD_STREAMING_TOKENS",
+      }),
+      DISCORD_CLIENT_SECRET: EnvValue.fromSecretValue({
+        secret: credentialSecret,
+        key: "DISCORD_CLIENT_SECRET",
+      }),
+      CODEX_AUTH_JSON_B64: EnvValue.fromSecretValue({
+        secret: credentialSecret,
+        key: "CODEX_AUTH_JSON_B64",
+      }),
+      CODEX_HOME: EnvValue.fromValue("/data/goal-auth/codex"),
+      LIBVA_DRIVER_NAME: EnvValue.fromValue("iHD"),
+      ...telemetryEnv({ serviceName: "arcade", serviceNameFirst: true }),
+      ...seaweedfsS3.credentialsEnv(archiveSecret),
+      AWS_ENDPOINT_URL: EnvValue.fromValue(seaweedfsS3.endpoint),
+      S3_ENDPOINT: EnvValue.fromValue(seaweedfsS3.endpoint),
+      S3_FORCE_PATH_STYLE: EnvValue.fromValue("true"),
+      AWS_REGION: EnvValue.fromValue("us-east-1"),
+      ...llmArchiveEnvVars(),
+      LLM_ARCHIVE_S3_PREFIX: EnvValue.fromValue("goals/arcade"),
+    },
+    securityContext: {
+      ensureNonRoot: true,
+      user: 1000,
+      group: 1000,
+      readOnlyRootFilesystem: false,
+      allowPrivilegeEscalation: false,
+    },
+    resources: {
+      cpu: { request: Cpu.units(2), limit: Cpu.units(12) },
+      // Working set peaked at 2.8 GiB (p95 1.2 GiB) over its first four
+      // days, then settled: 7d p95 230 MiB, 14d max 1.7 GiB (2026-10-31).
+      // Request the steady state; the limit keeps room for bursts.
+      memory: { request: Size.mebibytes(256), limit: Size.gibibytes(16) },
+    },
+    ports: [{ name: "ui", number: 8081 }],
+    startup: Probe.fromHttpGet("/health", {
+      port: 8081,
+      failureThreshold: 60,
     }),
-  );
-  setRevisionHistoryLimit(deployment);
-  ApiObject.of(deployment).addJsonPatch(
-    JsonPatch.add("/spec/template/spec/nodeSelector", ARCADE_NODE_SELECTOR),
-    JsonPatch.add(
-      "/spec/template/spec/containers/0/resources/limits/gpu.intel.com~1i915",
-      1,
-    ),
-  );
-  new Service(chart, "arcade-ui", {
-    metadata: { labels: { app: "arcade" } },
-    selector: deployment,
-    ports: [{ name: "ui", port: 8081 }],
-  });
-  createServiceMonitor(chart, {
-    name: "arcade",
-    namespace: "arcade",
-    port: "ui",
-    path: "/metrics",
-    matchLabels: { app: "arcade" },
-  });
+    readiness: Probe.fromHttpGet("/health", { port: 8081 }),
+    liveness: Probe.fromHttpGet("/health", { port: 8081 }),
+    volumeMounts: [
+      {
+        path: "/data/goal-auth",
+        volume: Volume.fromPersistentVolumeClaim(
+          chart,
+          "arcade-goal-auth-mount",
+          goalAuth.claim,
+        ),
+      },
+      {
+        path: "/data/assets",
+        volume: Volume.fromPersistentVolumeClaim(
+          chart,
+          "arcade-assets-mount",
+          assets.claim,
+        ),
+        readOnly: true,
+      },
+      {
+        path: "/data/saves",
+        volume: Volume.fromPersistentVolumeClaim(
+          chart,
+          "arcade-saves-mount",
+          saves.claim,
+        ),
+      },
+      {
+        path: "/data/db",
+        volume: Volume.fromPersistentVolumeClaim(
+          chart,
+          "arcade-db-pvc",
+          database.claim,
+        ),
+      },
+      {
+        path: "/dev/shm",
+        volume: Volume.fromEmptyDir(chart, "arcade-shm", "arcade-shm", {
+          medium: EmptyDirMedium.MEMORY,
+          sizeLimit: Size.gibibytes(1),
+        }),
+      },
+      {
+        path: "/config/arcade.toml",
+        subPath: "arcade.toml",
+        volume: Volume.fromConfigMap(chart, "arcade-config-volume", config),
+      },
+    ],
+  };
 }

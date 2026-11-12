@@ -3,7 +3,7 @@ import {
   EnvValue,
   Secret,
   Service,
-  type Container,
+  type ContainerPort,
   type Deployment,
 } from "cdk8s-plus-31";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
@@ -22,17 +22,15 @@ export function streambotSchedulerSecret(chart: Chart) {
   return Secret.fromSecretName(chart, "streambot-scheduler-secret", item.name);
 }
 
+/**
+ * Creates the scheduler Service and its ingress policy; returns what the
+ * streambot container adds for it.
+ */
 export function createStreambotScheduling(
   chart: Chart,
   deployment: Deployment,
-  container: Container,
-) {
+): { envVariables: Record<string, EnvValue>; ports: ContainerPort[] } {
   const secret = streambotSchedulerSecret(chart);
-  container.env.addVariable(
-    "STREAMBOT_SCHEDULER_TOKEN",
-    EnvValue.fromSecretValue({ secret, key: "password" }),
-  );
-  container.addPort({ number: 8081, name: "scheduler" });
   new Service(chart, "streambot-scheduler-service", {
     metadata: { name: "streambot-scheduler" },
     selector: deployment,
@@ -56,4 +54,13 @@ export function createStreambotScheduling(
       ],
     },
   });
+  return {
+    envVariables: {
+      STREAMBOT_SCHEDULER_TOKEN: EnvValue.fromSecretValue({
+        secret,
+        key: "password",
+      }),
+    },
+    ports: [{ number: 8081, name: "scheduler" }],
+  };
 }

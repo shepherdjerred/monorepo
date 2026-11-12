@@ -4,21 +4,15 @@ import type { Chart } from "cdk8s";
 import { ApiObject, JsonPatch, Size } from "cdk8s";
 import {
   Cpu,
-  Deployment,
-  DeploymentStrategy,
   EnvValue,
   type ISecret,
   type PersistentVolumeClaim,
   Secret,
-  Service,
+  type Service,
   Volume,
 } from "cdk8s-plus-31";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
-import {
-  setRevisionHistoryLimit,
-  withCommonProps,
-} from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
-import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
+import { FirstPartyWorker } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/worker.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
 import { peerUserbotIds } from "@shepherdjerred/homelab/cdk8s/src/resources/userbot-ids.ts";
@@ -136,221 +130,234 @@ export function createStreambotDeployment(
     storage: Size.gibibytes(2),
   });
 
-  const deployment = new Deployment(chart, "streambot", {
-    replicas: 1,
-    strategy: DeploymentStrategy.recreate(),
-    podMetadata: { labels: { app: "streambot" } },
-    securityContext: {
-      fsGroup: STREAMBOT_GID,
-    },
-    metadata: {
-      annotations: {
-        "ignore-check.kube-linter.io/no-read-only-root-fs":
-          "Bun writes its install cache and ffmpeg writes temp files at runtime.",
-      },
-    },
-  });
-
-  const container = deployment.addContainer(
-    withCommonProps({
-      name: "streambot",
-      image: firstPartyImageRecipe("streambot"),
-      envVariables: {
-        ...(web?.plex === undefined
-          ? {}
-          : {
-              PLEX_BASE_URL: EnvValue.fromValue(
-                `http://${web.plex.service.name}.media.svc.cluster.local:32400`,
-              ),
-              PLEX_TOKEN: EnvValue.fromSecretValue({
-                secret: web.plex.tokenSecret,
-                key: "password",
-              }),
-            }),
-        BOT_TOKEN: fromSecret("BOT_TOKEN"),
-        // Pool of userbot tokens (comma-separated, one per Discord account). The bot acquires a free
-        // member-userbot per (guild, voice channel); guild/channel are now dynamic (the issuer's VC),
-        // so GUILD_ID/VIDEO_CHANNEL_ID/COMMAND_CHANNEL_ID are no longer needed.
-        USER_TOKENS: fromSecret("USER_TOKENS"),
-        // This grants bot administration and stays under Git review.
-        ADMIN_IDS: EnvValue.fromValue("160509172704739328"),
-        // Peer userbot Discord user IDs (Pokébot + Glitter Kart) so the alone-channel
-        // detector excludes them from the "real viewers" count and leaves once the
-        // last human exits. Sourced from the canonical map in resources/userbot-ids.ts.
-        // Bootstrap for the flag client — cannot come from a flag.
-        ...fliptEnv({
-          namespace: "streambot",
-          environment: "prod",
-          order: ["FLIPT_ENVIRONMENT", "FLIPT_NAMESPACE", "FLIPT_URL"],
-        }),
-        PINCHTAB_BASE_URL: EnvValue.fromValue(
-          "http://pinchtab.pinchtab.svc.cluster.local:9867",
-        ),
-        PINCHTAB_TOKEN: EnvValue.fromSecretValue({
-          secret: pinchtabSecret,
-          key: "PINCHTAB_TOKEN",
-        }),
-        PEER_USERBOT_IDS: EnvValue.fromValue(peerUserbotIds("streambot")),
-        // Enables movie/TV poster art on the now-playing embed for local files. Sourced from the
-        // dedicated streambot-tmdb item. Required — the item must carry TMDB_API_KEY or the pod
-        // fails to start (fail-fast; no silently-missing secrets).
-        TMDB_API_KEY: EnvValue.fromSecretValue({
-          secret: tmdbSecret,
-          key: "TMDB_API_KEY",
-        }),
-        // Global kill switch and the only rollback control: flip to "false" via GitOps to turn
-        // voice off. Cloud exposure is bounded by the per-session rate limiter and the spend
-        // ceiling on the OpenAI project key.
-        VOICE_ASSISTANT_ENABLED: EnvValue.fromValue("true"),
-        OPENAI_API_KEY: EnvValue.fromSecretValue({
-          secret: openAiSecret,
-          key: "OPENAI_API_KEY",
-        }),
-        VOICE_ASSETS_DIR: EnvValue.fromValue("/opt/streambot/voice"),
-        VOICE_KWS_RUNTIME: EnvValue.fromValue("auto"),
-        VOICE_CAPTURE_ENABLED: EnvValue.fromValue("true"),
-        VOICE_CAPTURE_BUCKET: EnvValue.fromValue("streambot-voice-captures"),
-        S3_ENDPOINT: EnvValue.fromValue(seaweedfsS3.endpoint),
-        S3_FORCE_PATH_STYLE: EnvValue.fromValue("true"),
-        AWS_REGION: EnvValue.fromValue("us-east-1"),
-        ...seaweedfsS3.credentialsEnv(seaweedfsSecret),
-        ...telemetryEnv({ serviceName: "streambot", serviceNameFirst: true }),
-        LOKI_OTLP_ENDPOINT: EnvValue.fromValue(
-          "http://loki-gateway.loki/otlp/v1/logs",
-        ),
-        VIDEOS_DIR: EnvValue.fromValue("/data/videos"),
-        MEDIA_DIRS: EnvValue.fromValue("/media/movies,/media/tv"),
-        // Resume state and durable media history live on the persistent volume mounted at /state.
-        STATE_DIR: EnvValue.fromValue("/state"),
-        // Extracted embedded subtitles are cached on the persistent volume mounted at /subs-cache.
-        SUBS_CACHE_DIR: EnvValue.fromValue("/subs-cache"),
-        STREAM_WIDTH: EnvValue.fromValue("1920"),
-        STREAM_HEIGHT: EnvValue.fromValue("1080"),
-        STREAM_FPS: EnvValue.fromValue("30"),
-        STREAM_BITRATE_KBPS: EnvValue.fromValue("4000"),
-        STREAM_HARDWARE_ACCELERATION: EnvValue.fromValue("true"),
-        VAAPI_DEVICE: EnvValue.fromValue("/dev/dri/renderD128"),
-        // Intel iHD VAAPI driver for QuickSync hardware encoding.
-        LIBVA_DRIVER_NAME: EnvValue.fromValue("iHD"),
-        // Prometheus /metrics endpoint (scraped by the ServiceMonitor below).
-        METRICS_PORT: EnvValue.fromValue("9466"),
-        // Bugsink error reporting → project 14 (Streambot). Required
-        // (fail-fast): the streambot-config item must carry BUGSINK_DSN. VERSION
-        // is baked into the image; it and ENVIRONMENT become the Bugsink release
-        // and environment.
-        BUGSINK_DSN: fromSecret("BUGSINK_DSN"),
-        ENVIRONMENT: EnvValue.fromValue("production"),
-      },
-      ports: [{ number: 9466, name: "metrics" }],
-      ...(web === undefined ? {} : streambotWebProbes()),
+  // The items and claims above predate the Deployment in the rendered chart,
+  // so they stay outside the worker; the web and scheduler Services render
+  // between the Deployment and the metrics Service, so they are created while
+  // the containers are built.
+  const worker = new FirstPartyWorker(chart, "streambot-worker", {
+    name: "streambot",
+    deployment: {
+      podMetadata: { labels: { app: "streambot" } },
       securityContext: {
-        user: STREAMBOT_UID,
-        group: STREAMBOT_GID,
-        ensureNonRoot: true,
-        readOnlyRootFilesystem: false,
-        allowPrivilegeEscalation: false,
+        fsGroup: STREAMBOT_GID,
       },
-      resources: {
-        // 4K remuxes (e.g. 2160p Blu-ray) are demanding even with VAAPI: bursty CPU for demux +
-        // decode orchestration + Opus/voice work would peg the old 2-core limit, and CFS throttling
-        // stalled the event loop → late frames → stream stutter. Memory likewise blew past 2Gi and
-        // OOMKilled the pod into a crash loop. Limits raised with generous headroom; the node
-        // (torvalds) has 32 cores / 128Gi, so this is comfortably within capacity.
-        cpu: {
-          request: Cpu.millis(2000),
-          limit: Cpu.millis(12_000),
-        },
-        // Request the measured p95 working set (454Mi over 7d, 2026-10-31);
-        // 4K remux bursts (1.8Gi in that window) use the limit.
-        memory: {
-          request: Size.mebibytes(512),
-          limit: Size.gibibytes(12),
+      metadata: {
+        annotations: {
+          "ignore-check.kube-linter.io/no-read-only-root-fs":
+            "Bun writes its install cache and ffmpeg writes temp files at runtime.",
         },
       },
-      volumeMounts: [
-        {
-          // Writable scan dir for ad-hoc uploads (the library proper is the RO mounts below).
-          path: "/data/videos",
-          volume: Volume.fromEmptyDir(
-            chart,
-            "streambot-videos-volume",
-            "streambot-videos",
-          ),
+    },
+    containers: (deployment) => {
+      // Enable in the owning media chart only after the OAuth secret and redirect are provisioned.
+      // A required secretKeyRef is used when enabled; an incomplete bootstrap must fail startup.
+      const webServer =
+        web === undefined
+          ? undefined
+          : createStreambotWeb(chart, deployment, {
+              secret,
+              publicOrigin: web.publicOrigin,
+            });
+      const scheduling = createStreambotScheduling(chart, deployment);
+      return {
+        main: {
+          name: "streambot",
+          image: firstPartyImageRecipe("streambot"),
+          envVariables: {
+            ...(web?.plex === undefined
+              ? {}
+              : {
+                  PLEX_BASE_URL: EnvValue.fromValue(
+                    `http://${web.plex.service.name}.media.svc.cluster.local:32400`,
+                  ),
+                  PLEX_TOKEN: EnvValue.fromSecretValue({
+                    secret: web.plex.tokenSecret,
+                    key: "password",
+                  }),
+                }),
+            BOT_TOKEN: fromSecret("BOT_TOKEN"),
+            // Pool of userbot tokens (comma-separated, one per Discord account). The bot acquires a free
+            // member-userbot per (guild, voice channel); guild/channel are now dynamic (the issuer's VC),
+            // so GUILD_ID/VIDEO_CHANNEL_ID/COMMAND_CHANNEL_ID are no longer needed.
+            USER_TOKENS: fromSecret("USER_TOKENS"),
+            // This grants bot administration and stays under Git review.
+            ADMIN_IDS: EnvValue.fromValue("160509172704739328"),
+            // Peer userbot Discord user IDs (Pokébot + Glitter Kart) so the alone-channel
+            // detector excludes them from the "real viewers" count and leaves once the
+            // last human exits. Sourced from the canonical map in resources/userbot-ids.ts.
+            // Bootstrap for the flag client — cannot come from a flag.
+            ...fliptEnv({
+              namespace: "streambot",
+              environment: "prod",
+              order: ["FLIPT_ENVIRONMENT", "FLIPT_NAMESPACE", "FLIPT_URL"],
+            }),
+            PINCHTAB_BASE_URL: EnvValue.fromValue(
+              "http://pinchtab.pinchtab.svc.cluster.local:9867",
+            ),
+            PINCHTAB_TOKEN: EnvValue.fromSecretValue({
+              secret: pinchtabSecret,
+              key: "PINCHTAB_TOKEN",
+            }),
+            PEER_USERBOT_IDS: EnvValue.fromValue(peerUserbotIds("streambot")),
+            // Enables movie/TV poster art on the now-playing embed for local files. Sourced from the
+            // dedicated streambot-tmdb item. Required — the item must carry TMDB_API_KEY or the pod
+            // fails to start (fail-fast; no silently-missing secrets).
+            TMDB_API_KEY: EnvValue.fromSecretValue({
+              secret: tmdbSecret,
+              key: "TMDB_API_KEY",
+            }),
+            // Global kill switch and the only rollback control: flip to "false" via GitOps to turn
+            // voice off. Cloud exposure is bounded by the per-session rate limiter and the spend
+            // ceiling on the OpenAI project key.
+            VOICE_ASSISTANT_ENABLED: EnvValue.fromValue("true"),
+            OPENAI_API_KEY: EnvValue.fromSecretValue({
+              secret: openAiSecret,
+              key: "OPENAI_API_KEY",
+            }),
+            VOICE_ASSETS_DIR: EnvValue.fromValue("/opt/streambot/voice"),
+            VOICE_KWS_RUNTIME: EnvValue.fromValue("auto"),
+            VOICE_CAPTURE_ENABLED: EnvValue.fromValue("true"),
+            VOICE_CAPTURE_BUCKET: EnvValue.fromValue(
+              "streambot-voice-captures",
+            ),
+            S3_ENDPOINT: EnvValue.fromValue(seaweedfsS3.endpoint),
+            S3_FORCE_PATH_STYLE: EnvValue.fromValue("true"),
+            AWS_REGION: EnvValue.fromValue("us-east-1"),
+            ...seaweedfsS3.credentialsEnv(seaweedfsSecret),
+            ...telemetryEnv({
+              serviceName: "streambot",
+              serviceNameFirst: true,
+            }),
+            LOKI_OTLP_ENDPOINT: EnvValue.fromValue(
+              "http://loki-gateway.loki/otlp/v1/logs",
+            ),
+            VIDEOS_DIR: EnvValue.fromValue("/data/videos"),
+            MEDIA_DIRS: EnvValue.fromValue("/media/movies,/media/tv"),
+            // Resume state and durable media history live on the persistent volume mounted at /state.
+            STATE_DIR: EnvValue.fromValue("/state"),
+            // Extracted embedded subtitles are cached on the persistent volume mounted at /subs-cache.
+            SUBS_CACHE_DIR: EnvValue.fromValue("/subs-cache"),
+            STREAM_WIDTH: EnvValue.fromValue("1920"),
+            STREAM_HEIGHT: EnvValue.fromValue("1080"),
+            STREAM_FPS: EnvValue.fromValue("30"),
+            STREAM_BITRATE_KBPS: EnvValue.fromValue("4000"),
+            STREAM_HARDWARE_ACCELERATION: EnvValue.fromValue("true"),
+            VAAPI_DEVICE: EnvValue.fromValue("/dev/dri/renderD128"),
+            // Intel iHD VAAPI driver for QuickSync hardware encoding.
+            LIBVA_DRIVER_NAME: EnvValue.fromValue("iHD"),
+            // Prometheus /metrics endpoint (scraped by the ServiceMonitor below).
+            METRICS_PORT: EnvValue.fromValue("9466"),
+            // Bugsink error reporting → project 14 (Streambot). Required
+            // (fail-fast): the streambot-config item must carry BUGSINK_DSN. VERSION
+            // is baked into the image; it and ENVIRONMENT become the Bugsink release
+            // and environment.
+            BUGSINK_DSN: fromSecret("BUGSINK_DSN"),
+            ENVIRONMENT: EnvValue.fromValue("production"),
+            ...webServer?.envVariables,
+            ...scheduling.envVariables,
+          },
+          ports: [
+            { number: 9466, name: "metrics" },
+            ...(webServer?.ports ?? []),
+            ...scheduling.ports,
+          ],
+          ...(web === undefined ? {} : streambotWebProbes()),
+          securityContext: {
+            user: STREAMBOT_UID,
+            group: STREAMBOT_GID,
+            ensureNonRoot: true,
+            readOnlyRootFilesystem: false,
+            allowPrivilegeEscalation: false,
+          },
+          resources: {
+            // 4K remuxes (e.g. 2160p Blu-ray) are demanding even with VAAPI: bursty CPU for demux +
+            // decode orchestration + Opus/voice work would peg the old 2-core limit, and CFS throttling
+            // stalled the event loop → late frames → stream stutter. Memory likewise blew past 2Gi and
+            // OOMKilled the pod into a crash loop. Limits raised with generous headroom; the node
+            // (torvalds) has 32 cores / 128Gi, so this is comfortably within capacity.
+            cpu: {
+              request: Cpu.millis(2000),
+              limit: Cpu.millis(12_000),
+            },
+            // Request the measured p95 working set (454Mi over 7d, 2026-10-31);
+            // 4K remux bursts (1.8Gi in that window) use the limit.
+            memory: {
+              request: Size.mebibytes(512),
+              limit: Size.gibibytes(12),
+            },
+          },
+          volumeMounts: [
+            {
+              // Writable scan dir for ad-hoc uploads (the library proper is the RO mounts below).
+              path: "/data/videos",
+              volume: Volume.fromEmptyDir(
+                chart,
+                "streambot-videos-volume",
+                "streambot-videos",
+              ),
+            },
+            {
+              // Writable resume-state volume (current item + position + queue), persisted across restarts.
+              path: "/state",
+              volume: Volume.fromPersistentVolumeClaim(
+                chart,
+                "streambot-state-volume",
+                stateVolume.claim,
+              ),
+            },
+            {
+              // Persistent cache of extracted embedded subtitle .srt files, reused across plays/restarts.
+              path: "/subs-cache",
+              volume: Volume.fromPersistentVolumeClaim(
+                chart,
+                "streambot-subs-cache-volume",
+                subsCacheVolume.claim,
+              ),
+            },
+            {
+              path: "/media/movies",
+              volume: Volume.fromPersistentVolumeClaim(
+                chart,
+                "streambot-movies-volume",
+                claims.movies,
+              ),
+              readOnly: true,
+            },
+            {
+              path: "/media/tv",
+              volume: Volume.fromPersistentVolumeClaim(
+                chart,
+                "streambot-tv-volume",
+                claims.tv,
+              ),
+              readOnly: true,
+            },
+          ],
         },
-        {
-          // Writable resume-state volume (current item + position + queue), persisted across restarts.
-          path: "/state",
-          volume: Volume.fromPersistentVolumeClaim(
-            chart,
-            "streambot-state-volume",
-            stateVolume.claim,
-          ),
-        },
-        {
-          // Persistent cache of extracted embedded subtitle .srt files, reused across plays/restarts.
-          path: "/subs-cache",
-          volume: Volume.fromPersistentVolumeClaim(
-            chart,
-            "streambot-subs-cache-volume",
-            subsCacheVolume.claim,
-          ),
-        },
-        {
-          path: "/media/movies",
-          volume: Volume.fromPersistentVolumeClaim(
-            chart,
-            "streambot-movies-volume",
-            claims.movies,
-          ),
-          readOnly: true,
-        },
-        {
-          path: "/media/tv",
-          volume: Volume.fromPersistentVolumeClaim(
-            chart,
-            "streambot-tv-volume",
-            claims.tv,
-          ),
-          readOnly: true,
-        },
-      ],
-    }),
-  );
-
-  // Enable in the owning media chart only after the OAuth secret and redirect are provisioned.
-  // A required secretKeyRef is used when enabled; an incomplete bootstrap must fail startup.
-  if (web !== undefined)
-    createStreambotWeb(chart, deployment, container, {
-      secret,
-      publicOrigin: web.publicOrigin,
-    });
-
-  createStreambotScheduling(chart, deployment, container);
-  setRevisionHistoryLimit(deployment);
+      };
+    },
+    // Internal-only metrics Service + ServiceMonitor so Prometheus scrapes the streambot `/metrics`
+    // endpoint on :9466. The separate web Service never exposes this port.
+    metrics: {
+      serviceId: "streambot-metrics-service",
+      serviceName: "streambot-metrics",
+      app: "streambot-metrics",
+      port: 9466,
+      targetPort: 9466,
+      monitorName: "streambot-metrics",
+    },
+    // The media chart owns the namespace's policies; the scheduler's ingress
+    // policy renders with its Service.
+    policies: [],
+  });
 
   // Request the Intel iGPU so ffmpeg can VAAPI hardware-encode. The intel-device-plugin mounts
   // /dev/dri into the pod; non-root UID 1000 works. The GPU resource patch
   // (scripts/patch.ts) leaves an explicit `1` untouched.
-  ApiObject.of(deployment).addJsonPatch(
+  ApiObject.of(worker.deployment).addJsonPatch(
     JsonPatch.add(
       "/spec/template/spec/containers/0/resources/limits/gpu.intel.com~1i915",
       1,
     ),
   );
-
-  // Internal-only metrics Service + ServiceMonitor so Prometheus scrapes the streambot `/metrics`
-  // endpoint on :9466. The separate web Service never exposes this port.
-  new Service(chart, "streambot-metrics-service", {
-    selector: deployment,
-    metadata: {
-      name: "streambot-metrics",
-      labels: { app: "streambot-metrics" },
-    },
-    ports: [{ name: "metrics", port: 9466, targetPort: 9466 }],
-  });
-
-  createServiceMonitor(chart, {
-    name: "streambot-metrics",
-    matchLabels: { app: "streambot-metrics" },
-  });
 }

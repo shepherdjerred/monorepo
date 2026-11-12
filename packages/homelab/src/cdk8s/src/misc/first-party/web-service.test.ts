@@ -2,6 +2,7 @@ import { App, Chart, Size, Testing } from "cdk8s";
 import { Cpu, DeploymentStrategy } from "cdk8s-plus-31";
 import { beforeEach, describe, expect, test } from "vitest";
 import { z } from "zod";
+import { synthManifests } from "@shepherdjerred/homelab/cdk8s/src/testing/synth-manifests.ts";
 import { restrictedContainer } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import {
   dnsEgressRule,
@@ -17,10 +18,6 @@ import {
   type FirstPartyWebServiceProps,
 } from "./web-service.ts";
 
-const Manifest = z.looseObject({
-  kind: z.string(),
-  metadata: z.looseObject({ name: z.string() }),
-});
 const Container = z.looseObject({
   name: z.string(),
   ports: z
@@ -91,18 +88,11 @@ function render(
     ...base,
     ...(typeof props === "function" ? props(chart) : props),
   });
-  const manifests = z.array(Manifest).parse(Testing.synth(chart));
+  const rendered = synthManifests(chart);
   return {
     web,
-    manifests,
-    identities: manifests.map(
-      (manifest) => `${manifest.kind}/${manifest.metadata.name}`,
-    ),
-    of: (kind: string) =>
-      manifests.filter((manifest) => manifest.kind === kind),
-    deployment: DeploymentManifest.parse(
-      manifests.find((manifest) => manifest.kind === "Deployment"),
-    ),
+    ...rendered,
+    deployment: DeploymentManifest.parse(rendered.of("Deployment")[0]),
   };
 }
 

@@ -3,7 +3,7 @@ import {
   Service,
   EnvValue,
   type Deployment,
-  type Container,
+  type ContainerPort,
   type ContainerProps,
   type ISecret,
 } from "cdk8s-plus-31";
@@ -25,30 +25,31 @@ export function streambotWebProbes(): Pick<
   };
 }
 
+/** Creates the web Service; returns what the streambot container adds for it. */
 export function createStreambotWeb(
   chart: Chart,
   deployment: Deployment,
-  container: Container,
   bootstrap: { secret: ISecret; publicOrigin: string },
-) {
+): { envVariables: Record<string, EnvValue>; ports: ContainerPort[] } {
   const { secret, publicOrigin } = bootstrap;
   if (publicOrigin !== STREAMBOT_WEB_PUBLIC_ORIGIN)
     throw new Error(
       "Streambot web bootstrap must use its declared public origin",
     );
-  container.env.addVariable(
-    "WEB_PUBLIC_ORIGIN",
-    EnvValue.fromValue(publicOrigin),
-  );
-  container.env.addVariable("WEB_PORT", EnvValue.fromValue("8080"));
-  container.env.addVariable(
-    "DISCORD_CLIENT_SECRET",
-    EnvValue.fromSecretValue({ secret, key: "DISCORD_CLIENT_SECRET" }),
-  );
-  container.addPort({ number: 8080, name: "web" });
   new Service(chart, "streambot-web-service", {
     selector: deployment,
     metadata: { name: "streambot-web" },
     ports: [{ name: "web", port: 8080, targetPort: 8080 }],
   });
+  return {
+    envVariables: {
+      WEB_PUBLIC_ORIGIN: EnvValue.fromValue(publicOrigin),
+      WEB_PORT: EnvValue.fromValue("8080"),
+      DISCORD_CLIENT_SECRET: EnvValue.fromSecretValue({
+        secret,
+        key: "DISCORD_CLIENT_SECRET",
+      }),
+    },
+    ports: [{ number: 8080, name: "web" }],
+  };
 }

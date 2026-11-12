@@ -112,6 +112,22 @@ given, so moving an existing service onto it renames nothing, and
 remain reachable for anything it does not model. `trmnl-dashboard`, `tracker`
 and `alert-dashboard` use it.
 
+## First-party workers
+
+`FirstPartyWorker` (`src/misc/first-party/worker.ts`) is the same idea for a
+workload nothing routes to, a bot or a background worker: one Deployment
+replaced with `Recreate`, an optional NVMe data claim mounted into its main
+container, an optional Service and ServiceMonitor for Prometheus, and the
+namespace's NetworkPolicies. Containers state their own names, ports, probes
+and mounts, because workers differ in all of them. The `containers` callback
+receives the Deployment and runs before the data claim, so 1Password items,
+extra claims and Services created inside it keep their place in the rendered
+chart; `.deployment`, `.container`, `.service`, `.serviceMonitor`, `.policies`
+and `.dataVolume` remain reachable for JSON patches and anything else it does
+not model. `birmel`, both `starlight-karma-bot` stages, `streambot` and
+`arcade` use it. The two constructs share their container and NetworkPolicy
+types through `src/misc/first-party/workload-parts.ts`.
+
 ## LinuxServer apps
 
 `LinuxServerApp` (`src/misc/third-party/linuxserver-app.ts`) renders a

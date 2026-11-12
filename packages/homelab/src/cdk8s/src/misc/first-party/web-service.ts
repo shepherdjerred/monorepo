@@ -1,19 +1,13 @@
-import { Chart, type Size } from "cdk8s";
+import type { Size } from "cdk8s";
 import {
   Deployment,
   Service,
   Volume,
-  type ContainerProps,
-  type ContainerResources,
   type DeploymentProps,
   type VolumeMount,
 } from "cdk8s-plus-31";
 import { Construct } from "constructs";
-import {
-  KubeNetworkPolicy,
-  type NetworkPolicyEgressRule,
-  type NetworkPolicyIngressRule,
-} from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import type { KubeNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import type { ServiceMonitor } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com.ts";
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
 import {
@@ -24,14 +18,15 @@ import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/pro
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { httpProbes } from "./kubelet-probes.ts";
+import {
+  createFirstPartyNetworkPolicies,
+  namespacedChart,
+  type FirstPartyContainerSpec,
+  type FirstPartyNetworkPolicy,
+} from "./workload-parts.ts";
 
-/** What the construct supplies for every container: its mounts. */
-type OwnedContainerProps = "volumeMounts" | "resources";
-
-/** A container whose resources are stated; BestEffort is never the default. */
-type ContainerSpec = Omit<ContainerProps, OwnedContainerProps> & {
-  resources: ContainerResources;
-};
+/** A container; the construct supplies every container's mounts. */
+type ContainerSpec = FirstPartyContainerSpec<"volumeMounts">;
 
 /** A container that runs to completion before the server starts. */
 export type FirstPartyInitContainer = ContainerSpec & { name: string };
@@ -50,19 +45,6 @@ export type FirstPartyServerContainer = Omit<
  * the Ingress name.
  */
 export type FirstPartyTailscaleHost = { id: string; host: string };
-
-/**
- * A NetworkPolicy of the service's namespace. `name` is both the construct id
- * and the resource name. The policy types are the directions it gives rules
- * for.
- */
-export type FirstPartyNetworkPolicy = {
-  name: string;
-  /** `app` selects the service's pods; `namespace` selects every pod. */
-  selects: "app" | "namespace";
-  ingress?: NetworkPolicyIngressRule[];
-  egress?: NetworkPolicyEgressRule[];
-};
 
 export type FirstPartyWebServiceProps = {
   /**
@@ -138,9 +120,10 @@ export class FirstPartyWebService extends Construct {
   constructor(scope: Construct, id: string, props: FirstPartyWebServiceProps) {
     super(scope, id);
     const { name, port } = props;
-    const chart = Chart.of(scope);
-    if (chart.namespace === undefined)
-      throw new Error(`FirstPartyWebService(${id}) needs a namespaced chart`);
+    const { chart, namespace } = namespacedChart(
+      scope,
+      `FirstPartyWebService(${id})`,
+    );
     const labels = { app: name };
 
     this.deployment = new Deployment(scope, name, {
@@ -197,7 +180,7 @@ export class FirstPartyWebService extends Construct {
     });
     this.serviceMonitor = createServiceMonitor(chart, {
       name,
-      namespace: chart.namespace,
+      namespace,
       port: "http",
       matchLabels: labels,
     });
@@ -219,21 +202,10 @@ export class FirstPartyWebService extends Construct {
       });
     }
 
-    this.policies = props.policies.map(
-      (policy) =>
-        new KubeNetworkPolicy(scope, policy.name, {
-          metadata: { name: policy.name },
-          spec: {
-            podSelector:
-              policy.selects === "app" ? { matchLabels: { ...labels } } : {},
-            policyTypes: [
-              ...(policy.ingress === undefined ? [] : ["Ingress"]),
-              ...(policy.egress === undefined ? [] : ["Egress"]),
-            ],
-            ingress: policy.ingress,
-            egress: policy.egress,
-          },
-        }),
+    this.policies = createFirstPartyNetworkPolicies(
+      scope,
+      props.policies,
+      labels,
     );
   }
 }
