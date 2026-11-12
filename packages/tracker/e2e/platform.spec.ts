@@ -5,15 +5,20 @@ const firstIssue = /Polish the issue creation flow/u;
 test("a peek lives in the URL: Back closes it and a reload reopens it", async ({
   page,
 }) => {
-  await page.goto("/issues?sort=created");
+  // Specs keep adding issues and the list renders only the rows near the
+  // viewport. No spec assigns a project, so a project keeps this list to
+  // the seeded issues.
+  await page.goto("/issues?sort=created&project=toolkit");
   const row = page.getByRole("link", { name: firstIssue });
   await expect(row).toHaveAttribute("href", "/issues/AI-1");
   await row.click();
-  await expect(page).toHaveURL(/\/issues\?sort=created&peek=AI-1$/u);
+  await expect(page).toHaveURL(
+    /\/issues\?sort=created&project=toolkit&peek=AI-1$/u,
+  );
   await expect(page.getByRole("dialog")).toContainText("AI-1");
   await page.goBack();
   await expect(page.getByRole("dialog")).toHaveCount(0);
-  await expect(page).toHaveURL(/\/issues\?sort=created$/u);
+  await expect(page).toHaveURL(/\/issues\?sort=created&project=toolkit$/u);
   await page.goForward();
   await expect(page.getByRole("dialog")).toContainText("AI-1");
 
@@ -25,7 +30,7 @@ test("a peek lives in the URL: Back closes it and a reload reopens it", async ({
     .first()
     .click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
-  await expect(page).toHaveURL(/\/issues\?sort=created$/u);
+  await expect(page).toHaveURL(/\/issues\?sort=created&project=toolkit$/u);
 });
 
 test("a shared peek link opens on the list and the board, and closes in place", async ({
@@ -47,7 +52,10 @@ test("modified clicks and browser chords stay with the browser", async ({
   page,
   context,
 }, info) => {
-  await page.goto("/issues");
+  // Specs keep adding issues and the list renders only the rows near the
+  // viewport. No spec assigns a project, so a project keeps this list to
+  // the seeded issues.
+  await page.goto("/issues?project=toolkit");
   const row = page.getByRole("link", { name: firstIssue });
   await expect(row).toBeVisible();
 
@@ -68,7 +76,7 @@ test("modified clicks and browser chords stay with the browser", async ({
     await row.click({ modifiers: ["ControlOrMeta"] });
     const tab = await opened;
     await expect(tab).toHaveURL(/\/issues\/AI-1$/u);
-    await expect(page).toHaveURL(/\/issues$/u);
+    await expect(page).toHaveURL(/\/issues\?project=toolkit$/u);
     await expect(page.getByRole("dialog")).toHaveCount(0);
   }
 });
@@ -77,18 +85,24 @@ test("typing a filter narrows the list without adding history entries", async ({
   page,
 }) => {
   await page.goto("/board");
-  await page.goto("/issues");
-  await expect(page.getByRole("link", { name: firstIssue })).toBeVisible();
+  // Specs keep adding issues and the list renders only the rows near the
+  // viewport. No spec assigns a project, so a project keeps this list to
+  // the seeded issues.
+  await page.goto("/issues?project=homelab");
+  const other = page.getByRole("link", {
+    name: /Make attachment uploads resumable/u,
+  });
+  await expect(other).toBeVisible();
   const before = await page.evaluate(() => globalThis.history.length);
   await page
     .getByLabel("Search issues", { exact: true })
     .pressSequentially("reconciliation", { delay: 30 });
-  await expect(page).toHaveURL(/\/issues\?q=reconciliation$/u);
+  await expect(page).toHaveURL(/\/issues\?project=homelab&q=reconciliation$/u);
   await expect(page.getByRole("list", { name: "Issues" })).toHaveAttribute(
     "aria-label",
     "Issues",
   );
-  await expect(page.getByRole("link", { name: firstIssue })).toHaveCount(0);
+  await expect(other).toHaveCount(0);
   await expect(
     page.getByRole("link", { name: /Investigate worker restart/u }),
   ).toBeVisible();

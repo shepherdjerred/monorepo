@@ -224,7 +224,10 @@ test("palette searches typos, list peeks, themes and mobile layout work", async 
   await page.goto("/settings");
   await page.getByRole("button", { name: "Dark", exact: true }).click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
-  await page.goto("/issues");
+  // Specs keep adding issues and the list renders only the rows near the
+  // viewport. No spec assigns a project, so a project keeps this list to
+  // the seeded issues.
+  await page.goto("/issues?project=toolkit");
   await page.screenshot({
     path: test.info().outputPath(`list-dark-${info.project.name}.png`),
     fullPage: true,
@@ -232,7 +235,7 @@ test("palette searches typos, list peeks, themes and mobile layout work", async 
   await page
     .getByRole("link", { name: /Polish the issue creation flow/u })
     .click();
-  await expect(page).toHaveURL(/\?peek=AI-1$/u);
+  await expect(page).toHaveURL(/\?project=toolkit&peek=AI-1$/u);
   await expect(page.getByRole("dialog")).toContainText("AI-1");
   await page
     .getByRole("dialog")
