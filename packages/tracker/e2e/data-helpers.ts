@@ -98,7 +98,11 @@ export async function seedLongList(request: APIRequestContext) {
   for (let index = seeded; index < longCount; index += 1) {
     await createIssue(request, {
       teamKey: scratchTeam,
-      title: `Seeded backlog item ${String(index + 1)}`,
+      // Some titles wrap on a phone, so rows differ in height.
+      title:
+        index % 7 === 0
+          ? `Seeded backlog item ${String(index + 1)} with a title long enough to wrap onto a second line`
+          : `Seeded backlog item ${String(index + 1)}`,
     });
   }
   return Math.max(seeded, longCount);

@@ -36,6 +36,84 @@ const headerHeight = 38;
 /** A grouped list loads this many pages at once so groups fill in early. */
 const eagerPages = 10;
 
+type Anchor = NonNullable<
+  NonNullable<ReturnType<typeof listRestore.read>>["anchor"]
+>;
+
+/** The first row on screen and how far below the viewport's top it starts. */
+function visibleAnchor(list: HTMLUListElement): Anchor | undefined {
+  for (const row of list.children) {
+    const { top, bottom } = row.getBoundingClientRect();
+    const identifier =
+      row.querySelector<HTMLElement>("[data-issue-row]")?.dataset["issueRow"];
+    if (identifier !== undefined && bottom > 0) {
+      return { identifier, top };
+    }
+  }
+  return undefined;
+}
+
+/**
+ * Put a row back where it sat in the viewport. Row heights are only known
+ * once rendered and pages arrive one by one, so the scroll is corrected each
+ * frame until the row has held its place, or the reader takes over.
+ */
+function holdAnchor(
+  list: HTMLUListElement,
+  anchor: Anchor,
+  steps: { reveal: () => void; waiting: () => boolean; done: () => void },
+) {
+  let frame = 0;
+  let frames = 0;
+  let steady = 0;
+  const cancel = () => {
+    cancelAnimationFrame(frame);
+    for (const gesture of gestures) {
+      globalThis.removeEventListener(gesture, stop);
+    }
+  };
+  function stop() {
+    cancel();
+    steps.done();
+  }
+  const tick = () => {
+    frames += 1;
+    const row = list
+      .querySelector(`[data-issue-row="${CSS.escape(anchor.identifier)}"]`)
+      ?.closest("li");
+    if (row == null) {
+      steady = 0;
+      // Not rendered: scroll its index into the window, then let that land.
+      if (frames % revealEvery === 1) {
+        steps.reveal();
+      }
+    } else {
+      const drift = row.getBoundingClientRect().top - anchor.top;
+      const before = globalThis.scrollY;
+      if (Math.abs(drift) >= 0.5) {
+        globalThis.scrollBy(0, drift);
+      }
+      // At the end of the page the row can go no further; that is settled too.
+      steady = globalThis.scrollY === before ? steady + 1 : 0;
+    }
+    // A row that never appears was deleted meanwhile; stop looking for it.
+    if ((steady >= settledFrames && !steps.waiting()) || frames > frameBudget) {
+      stop();
+      return;
+    }
+    frame = requestAnimationFrame(tick);
+  };
+  for (const gesture of gestures) {
+    globalThis.addEventListener(gesture, stop, { passive: true });
+  }
+  frame = requestAnimationFrame(tick);
+  return cancel;
+}
+const gestures = ["wheel", "touchstart", "pointerdown", "keydown"] as const;
+const settledFrames = 12;
+const revealEvery = 10;
+const frameBudget = 900;
+
 /** What follows the rows: the next page arriving, failing, or being asked for. */
 function MoreRows({ eager }: { eager: boolean }) {
   const { list } = useShell();
@@ -202,6 +280,7 @@ export function IssueList() {
   // was, so the saved scroll position is somewhere the page can scroll to.
   const restoring =
     restore?.url === url && list.hasMore && list.pageCount < restore.pages;
+  const resumed = useRef(false);
   const latest = useRef({ rows, order, virtualizer, restoring, list });
   latest.current = { rows, order, virtualizer, restoring, list };
   const attach = useCallback(
@@ -216,23 +295,54 @@ export function IssueList() {
       };
       const resized = new ResizeObserver(measure);
       resized.observe(document.body);
+      // A restore is used once: coming back to this entry later, say after
+      // closing a peek, must not drag the list to where it was restored to.
+      if (restore?.url !== url) {
+        resumed.current = true;
+      }
+      const resume = resumed.current ? undefined : restore;
       // The virtualizer is about to scroll to a restored offset.
-      let offset = restore?.url === url ? restore.offset : globalThis.scrollY;
+      let offset = resume?.offset ?? globalThis.scrollY;
       const scrolled = () => {
         offset = globalThis.scrollY;
       };
       globalThis.addEventListener("scroll", scrolled, { passive: true });
+      // That offset is a first guess; the anchor row then settles it exactly.
+      let settling = resume?.anchor !== undefined;
+      const release =
+        resume?.anchor === undefined
+          ? undefined
+          : holdAnchor(element, resume.anchor, {
+              reveal: () => {
+                const state = latest.current;
+                // Only issue rows anchor; group headings are never looked up.
+                const index = state.rows.findIndex(
+                  (row) =>
+                    row.kind === "issue" &&
+                    row.issue.identifier === resume.anchor?.identifier,
+                );
+                if (index !== -1) {
+                  state.virtualizer.scrollToIndex(index, { align: "start" });
+                }
+              },
+              waiting: () => latest.current.restoring,
+              done: () => {
+                settling = false;
+                resumed.current = true;
+              },
+            });
       const save = () => {
         const state = latest.current;
         // Leaving in the middle of a restore keeps what is being restored,
         // not the part of it that has arrived so far.
         listRestore.save(
           historyKey,
-          restore !== undefined && state.restoring
-            ? { ...restore, offset }
+          resume !== undefined && (settling || state.restoring)
+            ? resume
             : {
                 url,
                 offset,
+                anchor: visibleAnchor(element),
                 pages: state.list.pageCount,
                 size: state.virtualizer.getTotalSize(),
                 sizes: state.virtualizer.measurementsCache.map(
@@ -259,6 +369,7 @@ export function IssueList() {
       );
       return () => {
         save();
+        release?.();
         forget();
         globalThis.removeEventListener("pagehide", save);
         globalThis.removeEventListener("scroll", scrolled);

@@ -13,7 +13,8 @@ test("a long list is windowed, pages in on scroll and keeps its place", async ({
 }, info) => {
   test.setTimeout(120_000);
   const total = await seedLongList(request);
-  expect(total).toBeLessThan(300);
+  // Other specs add issues to this team, so the page count is worked out.
+  const pages = Math.ceil(total / 100);
   const calls = recordCalls(page);
   // Grouped lists load every page at once so groups fill in; paging on
   // scroll is what an ungrouped list does.
@@ -43,17 +44,20 @@ test("a long list is windowed, pages in on scroll and keeps its place", async ({
   await expect(rows.last()).toHaveAttribute("aria-posinset", String(total));
   await expect(rows.last()).toHaveAttribute("aria-setsize", String(total));
   const listCalls = calls.filter((call) => call.includes("issues.list"));
-  expect(listCalls.length).toBeGreaterThanOrEqual(3);
+  expect(listCalls.length).toBeGreaterThanOrEqual(pages);
   expect(listCalls.every((call) => call.includes('"limit":100'))).toBe(true);
-  expect(listCalls.filter((call) => call.includes('"cursor"'))).toHaveLength(2);
+  expect(listCalls.filter((call) => call.includes('"cursor"'))).toHaveLength(
+    pages - 1,
+  );
 
   // Back from a full issue page returns to the same place in the list.
+  // Not a multiple of any row height, so rows sit part-way into the viewport.
   await page.evaluate(() => {
-    globalThis.scrollTo(0, 150 * 48);
+    globalThis.scrollTo(0, 150 * 48 + 17);
   });
   await expect
     .poll(() => page.evaluate(() => globalThis.scrollY))
-    .toBe(150 * 48);
+    .toBe(150 * 48 + 17);
   // A row well inside the viewport, so clicking it does not scroll the page.
   const rowInView = () =>
     page.evaluate(
@@ -74,7 +78,33 @@ test("a long list is windowed, pages in on scroll and keeps its place", async ({
   if (position === null) throw new Error("No row is inside the viewport");
   expect(Number(position)).toBeGreaterThan(100);
   const target = list.locator(`li[aria-posinset="${position}"]`);
-  const before = await page.evaluate(() => globalThis.scrollY);
+  /** Where the row's top edge sits in the viewport, or null while unrendered. */
+  const rowTop = () =>
+    page.evaluate(
+      (posinset) =>
+        globalThis.document
+          .querySelector(
+            `ul[aria-label="Issues"] > li[aria-posinset="${posinset}"]`,
+          )
+          ?.getBoundingClientRect().top ?? null,
+      position,
+    );
+  const before = await rowTop();
+  if (before === null) throw new Error("The row is not rendered");
+  /** The row is back within two pixels of where it was, and stays there. */
+  const expectRestored = async () => {
+    await expect
+      .poll(async () => Math.abs(((await rowTop()) ?? Infinity) - before))
+      .toBeLessThanOrEqual(2);
+    await expect(async () => {
+      const first = await rowTop();
+      await page.waitForTimeout(250);
+      expect(await rowTop()).toBe(first);
+    }).toPass();
+    expect(
+      Math.abs(((await rowTop()) ?? Infinity) - before),
+    ).toBeLessThanOrEqual(2);
+  };
   await target.getByRole("link").first().click();
   await page
     .getByRole("dialog")
@@ -85,15 +115,8 @@ test("a long list is windowed, pages in on scroll and keeps its place", async ({
   await expect(page.getByRole("dialog")).toBeVisible();
   await page.goBack();
   await expect(page.getByRole("dialog")).toHaveCount(0);
-  await expect(
-    list.locator(`li[aria-posinset="${position}"]`),
-  ).toBeInViewport();
-  await expect
-    .poll(() => page.evaluate(() => globalThis.scrollY))
-    .toBeGreaterThan(before - 4);
-  expect(await page.evaluate(() => globalThis.scrollY)).toBeLessThan(
-    before + 4,
-  );
+  await expect(target).toBeInViewport();
+  await expectRestored();
 
   // A hard reload fetches as many pages again and lands on the same rows.
   await page.reload();
@@ -101,13 +124,9 @@ test("a long list is windowed, pages in on scroll and keeps its place", async ({
   // not settle for however far the first reload had got.
   await expect(rows.first()).toBeVisible();
   await page.reload();
-  await expect(
-    list.locator(`li[aria-posinset="${position}"]`),
-  ).toBeInViewport();
+  await expect(target).toBeInViewport();
   await expect(heading).toContainText(String(total));
-  await expect
-    .poll(() => page.evaluate(() => globalThis.scrollY))
-    .toBeGreaterThan(before - 4);
+  await expectRestored();
 
   if (info.project.name === "mobile") {
     return;

@@ -9,12 +9,15 @@ import { Link, useNavigate } from "react-router";
 import { Archive, ArrowUpRight, History } from "lucide-react";
 import {
   api,
+  queryClient,
   type BootstrapData,
   type IssueDetailData,
 } from "#client/data/api.ts";
-import { eventsKey } from "#client/data/cache.ts";
+import { eventsKey, issueKey } from "#client/data/cache.ts";
 import { addComment } from "#client/data/detail-mutations.ts";
-import { useDraft } from "#client/data/drafts.ts";
+import { currentActor } from "#client/data/identity.ts";
+import { commentWasSaved } from "#client/data/pending-drafts.ts";
+import { useDraft } from "#client/data/use-draft.ts";
 import { deleteIssue, editIssue } from "#client/data/mutations.ts";
 import { ErrorNotice, Modal } from "#client/ui/ui.tsx";
 import { MarkdownEditor } from "#client/ui/markdown.tsx";
@@ -78,18 +81,38 @@ function IssueContent({
       setTitle(issue.title);
     }
   }
-  const comment = useDraft(`comment:${identifier}`);
-  const [history, setHistory] = useState(false);
+  const events = useQuery({
+    queryKey: eventsKey(identifier),
+    queryFn: () =>
+      api.issues.activity.query({ identifier: issue.identifier, limit: 100 }),
+  });
+  const history = events.data;
+  const comment = useDraft(`comment:${identifier}`, "", {
+    kind: "comment",
+    subject: identifier,
+    saved:
+      history === undefined
+        ? undefined
+        : (pending) =>
+            commentWasSaved(pending, {
+              actorKey: currentActor().key,
+              comments: issue.comments,
+              events: history,
+            }),
+    recheck: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: issueKey(identifier) }),
+        queryClient.invalidateQueries({ queryKey: eventsKey(identifier) }),
+      ]),
+    notice: "Restored your unsent comment",
+  });
+  const [showHistory, setHistory] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  async function postComment() {
-    const { text, attachments } = comment;
-    // The comment joins the timeline at once; a failure hands the text back.
-    comment.reset();
-    const outcome = await addComment(identifier, text, attachments);
-    if (!outcome.ok) {
-      comment.restore({ text, attachments });
-    }
-  }
+  // The comment joins the timeline at once; a refusal hands the text back.
+  const postComment = () =>
+    comment.send(({ text, attachments }) =>
+      addComment(identifier, text, attachments),
+    );
   function confirmDelete() {
     setDeleting(false);
     deleteIssue(identifier);
@@ -99,11 +122,6 @@ function IssueContent({
       void navigate("/issues", { replace: true });
     }
   }
-  const events = useQuery({
-    queryKey: eventsKey(identifier),
-    queryFn: () =>
-      api.issues.activity.query({ identifier: issue.identifier, limit: 100 }),
-  });
   const disabled = !bootstrap.writesEnabled;
   const TitleHeading = peek ? "h2" : "h1";
   // Opening an issue puts it first among the palette's recent issues.
@@ -277,7 +295,7 @@ function IssueContent({
       </div>
       <Modal
         title={`History · ${issue.identifier}`}
-        open={history}
+        open={showHistory}
         onClose={() => {
           setHistory(false);
         }}

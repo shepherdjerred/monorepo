@@ -169,6 +169,15 @@ test("leaving the page sends a waiting delete instead of losing it", async ({
   ).toHaveCount(0);
 });
 
+/** The keys of every draft and unanswered send this tab is holding. */
+const storedText = (page: Page) =>
+  page.evaluate(() =>
+    Object.keys(globalThis.sessionStorage).filter(
+      (key) =>
+        key.startsWith("tracker.draft.") || key.startsWith("tracker.pending."),
+    ),
+  );
+
 test("unsent text survives navigation and a reload, and is cleared once sent", async ({
   page,
   request,
@@ -200,9 +209,31 @@ test("unsent text survives navigation and a reload, and is cleared once sent", a
   await expect(box).toHaveValue(draft);
   expect(asked).toBe(1);
 
+  // Sent text stops being a draft at once, before the server has answered:
+  // a reload while the request is in flight must not offer it again.
+  const held = Promise.withResolvers<undefined>();
+  await page.route(/\/trpc\/comments\.create/u, async (route) => {
+    await held.promise;
+    await route.continue();
+  });
+  const posted = page.waitForResponse(
+    (response) =>
+      response.url().includes("comments.create") && response.status() === 200,
+  );
   await page.getByRole("button", { name: "Comment", exact: true }).click();
   await expect(page.locator(".comment")).toContainText(draft);
   await expect(box).toHaveValue("");
+  expect(
+    await page.evaluate(() =>
+      Object.keys(globalThis.sessionStorage).filter((key) =>
+        key.startsWith("tracker.draft."),
+      ),
+    ),
+  ).toEqual([]);
+  held.resolve(undefined);
+  await posted;
+  await page.unroute(/\/trpc\/comments\.create/u);
+  await expect.poll(() => storedText(page)).toEqual([]);
   await page.reload();
   await expect(page.locator(".comment")).toContainText(draft);
   await expect(box).toHaveValue("");
@@ -228,4 +259,66 @@ test("unsent text survives navigation and a reload, and is cleared once sent", a
     .getByRole("button", { name: "Discard draft", exact: true })
     .click();
   await expect(title).toHaveValue("");
+});
+
+test("a comment the server saved as the page unloaded is not offered again", async ({
+  page,
+  request,
+}, info) => {
+  const identifier = await createIssue(request, {
+    teamKey: scratchTeam,
+    title: `Saved on unload ${info.project.name} ${String(Date.now())}`,
+  });
+  const text = "Sent just before the reload";
+  await page.goto(`/issues/${identifier}`);
+  const box = page.getByPlaceholder("Leave a comment…");
+  await box.fill(text);
+  // The server commits the comment, but its answer never reaches the page.
+  const committed = Promise.withResolvers<undefined>();
+  await page.route(/\/trpc\/comments\.create/u, async (route) => {
+    await route.fetch();
+    committed.resolve(undefined);
+  });
+  await page.getByRole("button", { name: "Comment", exact: true }).click();
+  await committed.promise;
+  await page.reload();
+  await expect(page.locator(".comment")).toHaveCount(1);
+  await expect(page.locator(".comment")).toContainText(text);
+  // The text is recognised as saved: not put back, and nothing said about it.
+  await expect.poll(() => storedText(page)).toEqual([]);
+  await expect(box).toHaveValue("");
+  await expect(toastSaying(page, "Restored")).toHaveCount(0);
+  await page.unrouteAll({ behavior: "ignoreErrors" });
+});
+
+test("a comment that never reached the server comes back after a reload", async ({
+  page,
+  request,
+}, info) => {
+  const identifier = await createIssue(request, {
+    teamKey: scratchTeam,
+    title: `Lost on unload ${info.project.name} ${String(Date.now())}`,
+  });
+  const text = "Typed, sent, and cut off";
+  await page.goto(`/issues/${identifier}`);
+  const box = page.getByPlaceholder("Leave a comment…");
+  await box.fill(text);
+  // The request is held in the browser and dies with the page.
+  const never = Promise.withResolvers<undefined>();
+  await page.route(/\/trpc\/comments\.create/u, () => never.promise);
+  await page.getByRole("button", { name: "Comment", exact: true }).click();
+  await expect(page.locator(".comment")).toContainText(text);
+  await expect(box).toHaveValue("");
+  await page.reload();
+  // Nothing was saved, so the text returns to the box, and says so. The
+  // page first gives a send this recent a few seconds to land.
+  await expect(box).toHaveValue(text, { timeout: 15_000 });
+  await expect(toastSaying(page, "Restored your unsent comment")).toBeVisible();
+  await expect(page.locator(".comment")).toHaveCount(0);
+  // It is a draft again, never sent by itself.
+  expect(await storedText(page)).toEqual([
+    `tracker.draft.comment:${identifier}`,
+  ]);
+  await box.fill("");
+  await page.unrouteAll({ behavior: "ignoreErrors" });
 });

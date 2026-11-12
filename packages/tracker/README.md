@@ -73,7 +73,21 @@ their toast shows, also on Cmd/Ctrl+Z. The server cannot restore a deleted
 issue, so a delete only hides it until its toast goes away and is sent then,
 or at once when the tab is hidden or unloaded, in a request that outlives the
 page. Unsent text is kept in `sessionStorage` per form and the browser asks
-before a tab holding any is closed.
+before a tab holding any is closed. Text stops being a draft the moment it is
+sent, so a reload during the request cannot offer it again, and is held as
+pending with its kind, subject, send time and request ID. A refusal from the
+server makes it a draft again. A send that got no answer, because the page
+unloaded or the connection dropped, stays pending until its editor next
+knows what the server holds: text that was saved is dropped silently, text
+that was not is put back with a notice, and nothing is ever sent again by
+itself. A comment counts as saved when the issue's history names its request
+or this actor has a comment with the same body from the send time on, an
+edit when the server holds exactly that text, and a new issue when this
+actor has one with the same title from the send time on.
+
+A windowed list is restored by its first visible row, not by a pixel offset:
+row heights are measured as rows render, so the saved row is scrolled back to
+where its top edge sat in the viewport.
 
 ## Browser controls
 

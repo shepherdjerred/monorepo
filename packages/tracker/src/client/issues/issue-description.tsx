@@ -1,6 +1,9 @@
 import { useState } from "react";
 import type { IssueDetailData } from "#client/data/api.ts";
-import { useDraft } from "#client/data/drafts.ts";
+import { queryClient } from "#client/data/api.ts";
+import { issueKey } from "#client/data/cache.ts";
+import { textWasSaved } from "#client/data/pending-drafts.ts";
+import { useDraft } from "#client/data/use-draft.ts";
 import { editIssue } from "#client/data/mutations.ts";
 import { Markdown, MarkdownEditor } from "#client/ui/markdown.tsx";
 
@@ -11,21 +14,31 @@ export function IssueDescription({
   issue: IssueDetailData;
   disabled: boolean;
 }) {
-  const draft = useDraft(`description:${issue.identifier}`, issue.description);
+  const draft = useDraft(`description:${issue.identifier}`, issue.description, {
+    kind: "description",
+    subject: issue.identifier,
+    saved: (pending) => textWasSaved(pending, issue.description),
+    recheck: () =>
+      queryClient.invalidateQueries({ queryKey: issueKey(issue.identifier) }),
+    notice: "Restored your unsent description",
+  });
   // An edit left unfinished is still open when the issue is opened again.
-  const [editing, setEditing] = useState(draft.dirty);
+  const [wasEditing, setEditing] = useState(draft.dirty);
+  const editing = wasEditing || draft.restored;
   async function save() {
-    // The new text shows at once. The draft outlives the request, so a
-    // refused save reopens the editor with nothing lost.
+    // The new text shows at once and stops being a draft. A refused save
+    // brings the draft back and reopens the editor with nothing lost.
     setEditing(false);
-    const outcome = await editIssue(issue.identifier, {
-      kind: "description",
-      description: draft.text,
-      attachmentIds: draft.attachments,
-    });
-    if (outcome.ok) {
-      draft.reset(draft.text);
-    } else {
+    const outcome = await draft.send(
+      ({ text, attachments }) =>
+        editIssue(issue.identifier, {
+          kind: "description",
+          description: text,
+          attachmentIds: attachments,
+        }),
+      draft.text,
+    );
+    if (!outcome.ok) {
       setEditing(true);
     }
   }
