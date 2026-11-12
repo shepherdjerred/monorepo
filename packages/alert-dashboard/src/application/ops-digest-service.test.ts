@@ -40,7 +40,7 @@ describe("digest runs", () => {
     const [message] = ops.postal.sent;
     expect(message?.messageId).toBe("<ops-digest-daily-2026-09-28@sjer.red>");
     expect(message?.subject).toBe(
-      "[Ops] Daily digest 2026-09-28: 4 waiting on you",
+      "[Hub] Daily digest 2026-09-28: 4 waiting on you",
     );
     expect(message?.plainBody).toContain("Waiting on you:");
     expect(message?.tag).toBe("ops-digest-daily");

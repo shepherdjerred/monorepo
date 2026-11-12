@@ -2,7 +2,7 @@
 
 Fetch-based upstream clients for the ops overview, validated with Zod. Each
 client takes an injected `fetch` and its credentials, so it runs the same in
-the Temporal collector, the ops dashboard, and tests.
+the Temporal collector, Hub, and tests.
 
 `http.ts` owns the shared contract. `fetchJson` rejects non-2xx responses and
 schema mismatches with an `UpstreamError`. The error message is bounded and

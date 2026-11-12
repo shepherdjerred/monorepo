@@ -38,7 +38,7 @@ const DELIVERY_MONITOR_ALARMED = {
   annotations: {
     summary: "A Delivery monitor saw its accepted deployment alarm",
     message: escapePrometheusTemplate(
-      "Delivery's monitor for {{ $labels.environment }} recorded a firing alarm against the accepted deployment. Under the automatic policy a rollback to the last settled selection is queued; under hold, decide in the Delivery hub.",
+      "Delivery's monitor for {{ $labels.environment }} recorded a firing alarm against the accepted deployment. Under the automatic policy a rollback to the last settled selection is queued; under hold, decide in the Delivery web app.",
     ),
   },
 };

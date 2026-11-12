@@ -7,7 +7,7 @@ hold only scoped invariants that agents must keep in context.
 
 | Package                                                         | Description                                                                                               |
 | --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| [alert-dashboard](alert-dashboard/)                             | Ops dashboard — snapshot overview, alert ledger, digest email, Grafana previews                           |
+| [alert-dashboard](alert-dashboard/)                             | Hub — snapshot overview, alert ledger, digest email, Grafana previews                                     |
 | [arcade](arcade/)                                               | Multi-game Discord arcade with dedicated streaming accounts, browser controllers, and per-game statistics |
 | [tracker](tracker/)                                             | Issue tracker — teams, projects, board, session actors, votes, attachments and audit history              |
 | [delivery](delivery/)                                           | Deployment catalog, immutable version sets, approvals, and durable release execution                      |

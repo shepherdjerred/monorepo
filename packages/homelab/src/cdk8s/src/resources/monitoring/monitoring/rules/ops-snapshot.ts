@@ -29,7 +29,7 @@ export function getOpsSnapshotRuleGroups(): PrometheusRuleSpecGroups[] {
           annotations: {
             summary: "Ops snapshot is stale",
             description: escapePrometheusTemplate(
-              `No ops snapshot has been published to the ops dashboard for more than ${String(OPS_SNAPSHOT_STALE_SECONDS / 60)} minutes, or the publish gauge is missing. The ops overview, TRMNL homelab screen, and digests are rendering unknown. Check the Temporal ops-snapshot schedule, the infra worker, and the dashboard ingest endpoint.`,
+              `No ops snapshot has been published to Hub for more than ${String(OPS_SNAPSHOT_STALE_SECONDS / 60)} minutes, or the publish gauge is missing. The ops overview, TRMNL homelab screen, and digests are rendering unknown. Check the Temporal ops-snapshot schedule, the infra worker, and the dashboard ingest endpoint.`,
             ),
           },
           // `absent` covers a collector that never published since the worker

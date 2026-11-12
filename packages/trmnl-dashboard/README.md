@@ -22,7 +22,7 @@ and `pet-care` for the home and pet screens, `alerts` for pet-care alerts, and
 `ops` for the homelab screen.
 
 `/api/homelab` renders from the ops snapshot
-(`GET /api/v1/ops/snapshot` on the ops dashboard). The snapshot
+(`GET /api/v1/ops/snapshot` on Hub). The snapshot
 is validated with `@shepherdjerred/ops-model` and aged with its freshness
 policy, so a stale snapshot or a failed source renders `unknown`, never green.
 The Temporal `ops-snapshot` workflow owns collection from Prometheus,
@@ -63,7 +63,7 @@ ServiceMonitor.
   `UNAVAILABLE_IGNORED_ENTITY_GLOBS` in source. Named presence/security/climate
   tiles still warn if those entities are unavailable. The home unavailable
   list only includes unexpected gaps.
-- Ops dashboard: `OPS_DASHBOARD_URL`, the in-cluster ops dashboard Service
+- Hub: `OPS_DASHBOARD_URL`, the in-cluster Hub Service
   that serves the snapshot and open alerts
 
 ## Commands

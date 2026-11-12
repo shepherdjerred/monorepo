@@ -48,11 +48,11 @@ history without exporting it, so usage before enablement never appears.
 
 ## Settings
 
-| Setting                         | Environment variable            | `config.toml` key               | Default                                               |
-| ------------------------------- | ------------------------------- | ------------------------------- | ----------------------------------------------------- |
-| Push enabled                    | `HISTORY_METRICS_PUSH_ENABLED`  | `history.metrics.push.enabled`  | `false`                                               |
-| Push endpoint                   | `HISTORY_METRICS_PUSH_ENDPOINT` | `history.metrics.push.endpoint` | `https://otlp-metrics.tailnet-1a49.ts.net/v1/metrics` |
-| Ops dashboard for `toolkit ops` | `OPS_DASHBOARD_URL`             | `ops.dashboard.url`             | `https://hub.tailnet-1a49.ts.net`                     |
+| Setting               | Environment variable            | `config.toml` key               | Default                                               |
+| --------------------- | ------------------------------- | ------------------------------- | ----------------------------------------------------- |
+| Push enabled          | `HISTORY_METRICS_PUSH_ENABLED`  | `history.metrics.push.enabled`  | `false`                                               |
+| Push endpoint         | `HISTORY_METRICS_PUSH_ENDPOINT` | `history.metrics.push.endpoint` | `https://otlp-metrics.tailnet-1a49.ts.net/v1/metrics` |
+| Hub for `toolkit ops` | `OPS_DASHBOARD_URL`             | `ops.dashboard.url`             | `https://hub.tailnet-1a49.ts.net`                     |
 
 Environment variables override the file, and the file overrides the default.
 An invalid value is an error, not a fallback.

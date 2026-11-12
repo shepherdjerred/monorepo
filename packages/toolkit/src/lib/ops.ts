@@ -31,22 +31,21 @@ export async function fetchOpsSnapshot(
     });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error);
-    throw new OpsSnapshotError(
-      `Could not reach the ops dashboard at ${url}: ${message}`,
-      { cause: error },
-    );
+    throw new OpsSnapshotError(`Could not reach Hub at ${url}: ${message}`, {
+      cause: error,
+    });
   }
   const body = await response.text();
   if (response.status !== 200) {
     throw new OpsSnapshotError(
-      `Ops dashboard returned HTTP ${String(response.status)} for ${url}: ${body.slice(0, MAX_ERROR_BODY_CHARS)}`,
+      `Hub returned HTTP ${String(response.status)} for ${url}: ${body.slice(0, MAX_ERROR_BODY_CHARS)}`,
     );
   }
   let json: unknown;
   try {
     json = JSON.parse(body);
   } catch (error: unknown) {
-    throw new OpsSnapshotError(`Ops dashboard returned non-JSON from ${url}`, {
+    throw new OpsSnapshotError(`Hub returned non-JSON from ${url}`, {
       cause: error,
     });
   }

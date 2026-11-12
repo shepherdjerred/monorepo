@@ -124,7 +124,7 @@ function subject(report: DigestReport): string {
     needs === 0
       ? SEVERITY_LABEL[report.status.severity]
       : `${String(needs)} waiting on you`;
-  return `[Ops] ${label} digest ${report.periodKey}: ${suffix}`;
+  return `[Hub] ${label} digest ${report.periodKey}: ${suffix}`;
 }
 
 function htmlBody(report: DigestReport): string {
@@ -155,7 +155,7 @@ function htmlBody(report: DigestReport): string {
     ),
     changeRows(report.changes),
   ].join("");
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><title>${escapeHtml(title)}</title></head><body style="margin:0;background:#f9f9f7;font-family:${FONT};color:#0b0b0b"><div style="max-width:640px;margin:0 auto;padding:24px 16px"><div style="background:#fcfcfb;border:1px solid #e1e0d9;border-radius:12px;padding:24px"><p style="margin:0;color:#176b4d;font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase">Ops · ${escapeHtml(report.periodKey)}</p><h1 style="margin:6px 0 12px;font-size:24px">${escapeHtml(title)}</h1><p style="margin:0">${pill(report.status.severity)} <span style="margin-left:6px">${escapeHtml(report.status.summary)}</span></p>${stale}${sections}<p style="margin:28px 0 0"><a href="${ALERTS_PUBLIC_URL}/" style="display:inline-block;padding:10px 14px;border-radius:7px;background:#176b4d;color:#ffffff;text-decoration:none;font-weight:700">Open Hub</a></p></div></div></body></html>`;
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><title>${escapeHtml(title)}</title></head><body style="margin:0;background:#f9f9f7;font-family:${FONT};color:#0b0b0b"><div style="max-width:640px;margin:0 auto;padding:24px 16px"><div style="background:#fcfcfb;border:1px solid #e1e0d9;border-radius:12px;padding:24px"><p style="margin:0;color:#176b4d;font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase">Hub · ${escapeHtml(report.periodKey)}</p><h1 style="margin:6px 0 12px;font-size:24px">${escapeHtml(title)}</h1><p style="margin:0">${pill(report.status.severity)} <span style="margin-left:6px">${escapeHtml(report.status.summary)}</span></p>${stale}${sections}<p style="margin:28px 0 0"><a href="${ALERTS_PUBLIC_URL}/" style="display:inline-block;padding:10px 14px;border-radius:7px;background:#176b4d;color:#ffffff;text-decoration:none;font-weight:700">Open Hub</a></p></div></div></body></html>`;
 }
 
 function textSignals(signals: readonly Signal[], empty: string): string {

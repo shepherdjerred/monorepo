@@ -1,7 +1,7 @@
 # @shepherdjerred/ops-model
 
 The contract behind the ops overview. The Temporal `ops-snapshot` collector
-produces an `OpsIngest` payload. The ops dashboard (`packages/alert-dashboard`)
+produces an `OpsIngest` payload. Hub (`packages/alert-dashboard`)
 stores it. The web UI, the TRMNL screen, the email digest, and
 `toolkit ops summary` all render it.
 
