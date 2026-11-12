@@ -17,11 +17,19 @@ export async function runBundledReviewGate(
   if (revision === undefined || !/^[a-f\d]{40}$/u.test(revision)) {
     throw new Error("Bundled review requires its image policy revision");
   }
-  const token = environment["GITHUB_REVIEW_TOKEN"];
-  if (token === undefined || token.length === 0) {
-    throw new Error("Bundled review requires GITHUB_REVIEW_TOKEN");
+  // Reads use the GitHub App installation; the review token only posts
+  // review requests. `waitForReview` mints and refreshes the read token.
+  for (const name of [
+    "GITHUB_APP_ID",
+    "GITHUB_APP_INSTALLATION_ID",
+    "GITHUB_APP_PRIVATE_KEY",
+    "GITHUB_REVIEW_TOKEN",
+  ]) {
+    const value = environment[name];
+    if (value === undefined || value.length === 0) {
+      throw new Error(`Bundled review requires ${name}`);
+    }
   }
-  environment["GH_TOKEN"] = token;
   environment["REVIEW_GATE_PARSER_COMMIT"] = revision;
   console.log(`Review gate policy revision: ${revision}`);
   try {

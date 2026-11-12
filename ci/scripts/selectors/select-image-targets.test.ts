@@ -69,6 +69,7 @@ test("rebuilds the bundled review policy when its source or library changes", as
     "scripts/review/bundled-review-gate.ts",
     "scripts/lib/review/review-gate-poll.ts",
     "packages/code-review/src/gate.ts",
+    "packages/temporal/src/lib/github-app-token.ts",
   ]) {
     expect(await select([path])).toContain("woodpecker-config-extension");
   }

@@ -114,8 +114,14 @@ export function prGateSteps(
         trustedGateImage === undefined
           ? [{ claim: "woodpecker-codex-auth", path: "/woodpecker/codex-auth" }]
           : [],
+      // Every GitHub read uses an installation token the gate mints from the
+      // App credentials, which has its own rate-limit bucket.
+      // GITHUB_REVIEW_TOKEN, the owner's token, only posts review-request
+      // comments, since Codex does not answer a GitHub App bot. The bundled
+      // gate runs no toolchain bootstrap, so only the checkout path needs
+      // mise's download token.
       secrets: [
-        GITHUB_DOWNLOAD,
+        ...(trustedGateImage === undefined ? [GITHUB_DOWNLOAD] : []),
         grant("ci-github-credentials", "GITHUB_REVIEW_TOKEN"),
         grant("ci-github-credentials", "GITHUB_APP_ID"),
         grant("ci-github-credentials", "GITHUB_APP_INSTALLATION_ID"),

@@ -359,6 +359,20 @@ Binding to the head commit is the whole point. A review comment from an earlier
 push is evidence about code that is no longer proposed, and accepting it would
 make the gate approve unreviewed changes.
 
+The gate reads GitHub as the GitHub App installation, not as Jerred. It polls
+every open pull request for up to an hour, several GraphQL and REST reads per
+tick, and on his personal token that polling shared one GraphQL bucket with
+every agent session and `gh` call on his account, so each could exhaust it
+for the other. An installation has its own buckets, so the gate mints an
+installation token from the step's `GITHUB_APP_*` grant and refreshes it
+before its one-hour expiry
+([`review-gate-credentials.ts`](https://github.com/shepherdjerred/monorepo/blob/main/scripts/lib/review/review-gate-credentials.ts)).
+The only write, the `@codex review`-style request comment, stays on
+`GITHUB_REVIEW_TOKEN`: Codex answers that command from a Codex-linked user,
+not from an App bot. A gate that cannot mint fails rather than falling back to
+the personal token, because falling back would silently restore the shared
+bucket.
+
 ## Handoffs go through object storage
 
 Steps pass values to later steps through a build-scoped SeaweedFS prefix,

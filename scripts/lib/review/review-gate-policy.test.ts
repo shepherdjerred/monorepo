@@ -16,6 +16,7 @@ describe("ensureReviewRequested", () => {
         number: 1,
         head: "abc123",
         token: "token",
+        requestToken: "request-token",
         provider: codexProvider,
         attempt: 1,
         graceSeconds: 0,

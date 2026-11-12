@@ -19,7 +19,8 @@ const config: PollLoopConfig = {
   repo: "shepherdjerred/monorepo",
   number: 3700,
   head: "a".repeat(40),
-  token: "token",
+  readToken: async () => "token",
+  requestToken: "request-token",
   policy: {
     alwaysBlockingPriority: 1,
     maxBlockingPriority: 3,
@@ -113,5 +114,73 @@ describe("pollOnce rate limits", () => {
       pollOnce(config, freshPoll(), Date.now(), state),
     ).rejects.toThrow(/403/u);
     expect(state.resumeAt ?? null).toBeNull();
+  });
+});
+
+describe("pollOnce read token", () => {
+  test("resolves the read token each tick and reads with it", async () => {
+    const authorizations: (string | null)[] = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (_input: unknown, init?: RequestInit) => {
+        authorizations.push(new Headers(init?.headers).get("authorization"));
+        return new Response("nope", { status: 404 });
+      }),
+    );
+    const readToken = vi
+      .fn<() => Promise<string>>()
+      .mockResolvedValueOnce("first")
+      .mockResolvedValueOnce("second");
+    const state: PollLoopState = { passStreak: 0, lastPollError: null };
+
+    for (let tick = 0; tick < 2; tick++) {
+      await expect(
+        pollOnce({ ...config, readToken }, freshPoll(), Date.now(), state),
+      ).rejects.toThrow(/404/u);
+    }
+
+    expect(readToken).toHaveBeenCalledTimes(2);
+    expect(authorizations).toEqual(["Bearer first", "Bearer second"]);
+  });
+
+  test("retries a transient mint failure instead of failing the gate", async () => {
+    vi.spyOn(console, "warn").mockImplementation(vi.fn());
+    const state: PollLoopState = { passStreak: 1, lastPollError: null };
+
+    await expect(
+      pollOnce(
+        {
+          ...config,
+          readToken: async () => {
+            throw new Error(
+              "GitHub App installation token request failed with 503 Service Unavailable: busy",
+            );
+          },
+        },
+        freshPoll(),
+        Date.now(),
+        state,
+      ),
+    ).resolves.toBe(false);
+    expect(state.passStreak).toBe(0);
+    expect(state.lastPollError?.message).toContain("503");
+  });
+
+  test("fails fast when the App cannot mint at all", async () => {
+    await expect(
+      pollOnce(
+        {
+          ...config,
+          readToken: async () => {
+            throw new Error(
+              "GitHub App installation token request failed with 401 Unauthorized: bad credentials",
+            );
+          },
+        },
+        freshPoll(),
+        Date.now(),
+        { passStreak: 0, lastPollError: null },
+      ),
+    ).rejects.toThrow(/401/u);
   });
 });

@@ -25,6 +25,7 @@ import {
   type ReviewProvider,
 } from "@shepherdjerred/code-review";
 import type { GatePollState } from "../lib/review/review-gate-observe.ts";
+import { reviewGateCredentials } from "../lib/review/review-gate-credentials.ts";
 import {
   failAtDeadline,
   logRestUsage,
@@ -176,10 +177,7 @@ export async function waitForReview(): Promise<void> {
     return;
   }
 
-  const token = Bun.env["GH_TOKEN"];
-  if (token === undefined || token.trim() === "") {
-    throw new Error("GH_TOKEN is required to query GitHub review threads");
-  }
+  const { readToken, requestToken } = reviewGateCredentials();
 
   const commit = Bun.env["CI_COMMIT_SHA"];
   if (commit === undefined || commit.trim() === "") {
@@ -229,7 +227,8 @@ export async function waitForReview(): Promise<void> {
     repo,
     number,
     head,
-    token,
+    readToken,
+    requestToken,
     policy,
     configuredGraceSeconds,
     retryAfterSeconds,
@@ -243,7 +242,8 @@ type GateConfig = {
   repo: string;
   number: number;
   head: string;
-  token: string;
+  readToken: () => Promise<string>;
+  requestToken: string;
   policy: BlockingPolicy;
   configuredGraceSeconds: number;
   retryAfterSeconds: number;
