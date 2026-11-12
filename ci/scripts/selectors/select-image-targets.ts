@@ -90,6 +90,9 @@ export const TARGET_PATH_PREFIXES: Readonly<Record<string, readonly string[]>> =
       "packages/homelab/src/cdk8s/src/misc/common.ts",
       "packages/homelab/src/cdk8s/src/misc/s3-static-site.ts",
       "packages/homelab/src/cdk8s/src/resources/s3-static-sites/sites.ts",
+      // The site table's hostnames and buckets.
+      "packages/homelab/src/platform-model.json",
+      "packages/homelab/src/platform-model.ts",
       // the-storm-server's context is packages/the-storm, but its Dockerfile
       // reads only these two trees: the plugin sources (TheStorm.jar) and
       // server/ (Dockerfile, pinned jar manifest, config bundle).

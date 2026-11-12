@@ -147,6 +147,8 @@ describe("selectImageTargets", () => {
       "packages/homelab/src/cdk8s/src/misc/common.ts",
       "packages/homelab/src/cdk8s/src/misc/s3-static-site.ts",
       "packages/homelab/src/cdk8s/src/resources/s3-static-sites/sites.ts",
+      "packages/homelab/src/platform-model.json",
+      "packages/homelab/src/platform-model.ts",
     ]) {
       expect(await select([path])).toEqual(["infra"]);
     }

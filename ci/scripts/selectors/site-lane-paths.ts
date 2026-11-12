@@ -21,6 +21,8 @@ export const sitePaths = {
     ...workspacePaths,
     "packages/statically-typed",
     "packages/homelab/src/cdk8s/src/resources/s3-static-sites/sites.ts",
+    // The hostname and bucket the site table takes from the platform model.
+    "packages/homelab/src/platform-model.json",
     // The zone and the bucket: the committed JSON OpenTofu runs, and the CDK
     // Terrain source it comes from.
     "packages/homelab/src/tofu/cloudflare/main.tf.json",
