@@ -1,11 +1,8 @@
 import {
   Cpu,
   ConfigMap,
-  Deployment,
-  DeploymentStrategy,
   EnvValue,
   type PersistentVolumeClaim,
-  Service,
   Secret,
   Volume,
 } from "cdk8s-plus-31";
@@ -14,12 +11,8 @@ import { Size } from "cdk8s";
 import {
   LINUXSERVER_UID,
   LINUXSERVER_GID,
-  withCommonLinuxServerProps,
-  linuxServerPod,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/linux-server.ts";
-import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
-import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
-import { setRevisionHistoryLimit } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
+import { LinuxServerApp } from "@shepherdjerred/homelab/cdk8s/src/misc/third-party/linuxserver-app.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
@@ -47,6 +40,16 @@ const providerRevision = new Bun.CryptoHasher("sha256")
   .update(assrtSource)
   .digest("hex");
 
+const PROVIDER_DIRECTORY =
+  "/app/bazarr/bin/custom_libs/subliminal_patch/providers";
+// Mounted file by file, so the image's built-in providers stay visible.
+const MOUNTED_PROVIDERS = [
+  "zimuku.py",
+  "subhd.py",
+  "chinese_script.py",
+  "assrt.py",
+];
+
 export function createBazarrDeployment(
   chart: Chart,
   claims: {
@@ -54,157 +57,119 @@ export function createBazarrDeployment(
     movies: PersistentVolumeClaim;
   },
 ) {
-  const deployment = new Deployment(chart, "bazarr", {
-    replicas: 1,
-    strategy: DeploymentStrategy.recreate(),
+  const image = `ghcr.io/linuxserver/bazarr:${versions["linuxserver/bazarr"]}`;
+
+  new LinuxServerApp(chart, "bazarr-app", {
+    name: "bazarr",
+    image,
+    port: 6767,
+    fsGroup: false,
     podMetadata: {
       labels: { app: "bazarr" },
       annotations: { "checksum/subtitle-providers": providerRevision },
     },
-    ...linuxServerPod(),
-  });
-
-  const localPathVolume = new ZfsNvmeVolume(chart, "bazarr-pvc", {
-    storage: Size.gibibytes(8),
-  });
-  const providerConfig = new ConfigMap(chart, "bazarr-providers", {
-    data: {
-      "subhd.py": providerSource,
-      "configure.py": policySource,
-      "zimuku.py": zimukuSource,
-      "chinese_script.py": chineseScriptSource,
-      "assrt.py": assrtSource,
-    },
-  });
-  const providerVolume = Volume.fromConfigMap(
-    chart,
-    "bazarr-providers-volume",
-    providerConfig,
-  );
-  const configVolume = Volume.fromPersistentVolumeClaim(
-    chart,
-    "bazarr-volume",
-    localPathVolume.claim,
-  );
-  const tokenItem = new OnePasswordItem(chart, "bazarr-pinchtab-1p", {
-    metadata: { name: "bazarr-pinchtab-token" },
-    spec: { itemPath: vaultItemPath("t2dgtdx47yd2gegad6zeelzylu") },
-  });
-  deployment.addInitContainer({
-    name: "configure-subtitle-providers",
-    image: `ghcr.io/linuxserver/bazarr:${versions["linuxserver/bazarr"]}`,
-    command: ["python3", "/providers/configure.py"],
-    envVariables: {
-      PYTHONPATH: EnvValue.fromValue("/app/bazarr/bin/libs"),
-      PUID: EnvValue.fromValue(String(LINUXSERVER_UID)),
-      PGID: EnvValue.fromValue(String(LINUXSERVER_GID)),
-    },
-    securityContext: {
-      ensureNonRoot: false,
-      readOnlyRootFilesystem: true,
-      allowPrivilegeEscalation: false,
-    },
-    resources: {
-      cpu: { request: Cpu.millis(10), limit: Cpu.millis(100) },
-      memory: { request: Size.mebibytes(32), limit: Size.mebibytes(128) },
-    },
-    volumeMounts: [
-      { path: "/providers", volume: providerVolume },
-      { path: "/config", volume: configVolume },
+    claims: [
+      {
+        claim: "bazarr-pvc",
+        volumeId: "bazarr-volume",
+        storage: Size.gibibytes(8),
+        path: "/config",
+      },
     ],
-  });
-
-  deployment.addContainer(
-    withCommonLinuxServerProps({
-      image: `ghcr.io/linuxserver/bazarr:${versions["linuxserver/bazarr"]}`,
-      portNumber: 6767,
-      envVariables: {
-        TZ: EnvValue.fromValue(""),
-        SUBHD_PINCHTAB_URL: EnvValue.fromValue(
-          "http://pinchtab.pinchtab.svc.cluster.local:9867",
-        ),
-        SUBHD_PINCHTAB_PROFILE: EnvValue.fromValue("subhd"),
-        SUBHD_PINCHTAB_TOKEN: EnvValue.fromSecretValue({
-          secret: Secret.fromSecretName(
-            chart,
-            "bazarr-pinchtab-secret",
-            tokenItem.name,
+    extend: ([configVolume]) => {
+      if (configVolume === undefined)
+        throw new Error("bazarr: the config volume is missing");
+      const providerConfig = new ConfigMap(chart, "bazarr-providers", {
+        data: {
+          "subhd.py": providerSource,
+          "configure.py": policySource,
+          "zimuku.py": zimukuSource,
+          "chinese_script.py": chineseScriptSource,
+          "assrt.py": assrtSource,
+        },
+      });
+      const providerVolume = Volume.fromConfigMap(
+        chart,
+        "bazarr-providers-volume",
+        providerConfig,
+      );
+      const tokenItem = new OnePasswordItem(chart, "bazarr-pinchtab-1p", {
+        metadata: { name: "bazarr-pinchtab-token" },
+        spec: { itemPath: vaultItemPath("t2dgtdx47yd2gegad6zeelzylu") },
+      });
+      return {
+        init: [
+          {
+            name: "configure-subtitle-providers",
+            image,
+            command: ["python3", "/providers/configure.py"],
+            envVariables: {
+              PYTHONPATH: EnvValue.fromValue("/app/bazarr/bin/libs"),
+              PUID: EnvValue.fromValue(String(LINUXSERVER_UID)),
+              PGID: EnvValue.fromValue(String(LINUXSERVER_GID)),
+            },
+            securityContext: {
+              ensureNonRoot: false,
+              readOnlyRootFilesystem: true,
+              allowPrivilegeEscalation: false,
+            },
+            resources: {
+              cpu: { request: Cpu.millis(10), limit: Cpu.millis(100) },
+              memory: {
+                request: Size.mebibytes(32),
+                limit: Size.mebibytes(128),
+              },
+            },
+            volumeMounts: [
+              { path: "/providers", volume: providerVolume },
+              { path: "/config", volume: configVolume },
+            ],
+          },
+        ],
+        envVariables: {
+          TZ: EnvValue.fromValue(""),
+          SUBHD_PINCHTAB_URL: EnvValue.fromValue(
+            "http://pinchtab.pinchtab.svc.cluster.local:9867",
           ),
-          key: "PINCHTAB_TOKEN",
-        }),
+          SUBHD_PINCHTAB_PROFILE: EnvValue.fromValue("subhd"),
+          SUBHD_PINCHTAB_TOKEN: EnvValue.fromSecretValue({
+            secret: Secret.fromSecretName(
+              chart,
+              "bazarr-pinchtab-secret",
+              tokenItem.name,
+            ),
+            key: "PINCHTAB_TOKEN",
+          }),
+        },
+        volumeMounts: MOUNTED_PROVIDERS.map((provider) => ({
+          path: `${PROVIDER_DIRECTORY}/${provider}`,
+          subPath: provider,
+          volume: providerVolume,
+          readOnly: true,
+        })),
+      };
+    },
+    sharedMounts: [
+      {
+        volumeId: "bazarr-movies-hdd-volume",
+        claim: claims.movies,
+        path: "/movies",
       },
-      volumeMounts: [
-        {
-          path: "/config",
-          volume: configVolume,
-        },
-        {
-          path: "/app/bazarr/bin/custom_libs/subliminal_patch/providers/zimuku.py",
-          subPath: "zimuku.py",
-          volume: providerVolume,
-          readOnly: true,
-        },
-        {
-          path: "/app/bazarr/bin/custom_libs/subliminal_patch/providers/subhd.py",
-          subPath: "subhd.py",
-          volume: providerVolume,
-          readOnly: true,
-        },
-        {
-          path: "/app/bazarr/bin/custom_libs/subliminal_patch/providers/chinese_script.py",
-          subPath: "chinese_script.py",
-          volume: providerVolume,
-          readOnly: true,
-        },
-        {
-          path: "/app/bazarr/bin/custom_libs/subliminal_patch/providers/assrt.py",
-          subPath: "assrt.py",
-          volume: providerVolume,
-          readOnly: true,
-        },
-        {
-          volume: Volume.fromPersistentVolumeClaim(
-            chart,
-            "bazarr-movies-hdd-volume",
-            claims.movies,
-          ),
-          path: "/movies",
-        },
-        {
-          volume: Volume.fromPersistentVolumeClaim(
-            chart,
-            "bazarr-tv-hdd-volume",
-            claims.tv,
-          ),
-          path: "/tv",
-        },
-      ],
-      resources: {
-        cpu: {
-          request: Cpu.millis(50),
-          limit: Cpu.millis(1000),
-        },
-        memory: {
-          // Measured p95 working set (7d, 2026-10-31) is 524Mi.
-          request: Size.mebibytes(640),
-          // Bumped 2 → 3 GiB after the 2026-05-07 OOMKilled at the 2 GiB limit
-          // (subtitle queue under load). 2 GiB was tight for steady-state.
-          limit: Size.gibibytes(3),
-        },
+      { volumeId: "bazarr-tv-hdd-volume", claim: claims.tv, path: "/tv" },
+    ],
+    resources: {
+      cpu: {
+        request: Cpu.millis(50),
+        limit: Cpu.millis(1000),
       },
-    }),
-  );
-
-  setRevisionHistoryLimit(deployment);
-
-  const service = new Service(chart, "bazarr-service", {
-    selector: deployment,
-    ports: [{ port: 6767 }],
-  });
-
-  new TailscaleIngress(chart, "bazarr-tailscale-ingress", {
-    service,
-    host: "bazarr",
-    proxyClass: "medium",
+      memory: {
+        // Measured p95 working set (7d, 2026-10-31) is 524Mi.
+        request: Size.mebibytes(640),
+        // Bumped 2 → 3 GiB after the 2026-05-07 OOMKilled at the 2 GiB limit
+        // (subtitle queue under load). 2 GiB was tight for steady-state.
+        limit: Size.gibibytes(3),
+      },
+    },
+    tailscale: { host: "bazarr", proxyClass: "medium" },
   });
 }

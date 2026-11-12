@@ -1,55 +1,25 @@
 import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
-import { Deployment, DeploymentStrategy, Service, Volume } from "cdk8s-plus-31";
-import {
-  withCommonLinuxServerProps,
-  linuxServerPod,
-} from "@shepherdjerred/homelab/cdk8s/src/misc/linux-server.ts";
-import { setRevisionHistoryLimit } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
-import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
-import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
+import { LinuxServerApp } from "@shepherdjerred/homelab/cdk8s/src/misc/third-party/linuxserver-app.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 export function createTautulliDeployment(chart: Chart) {
-  const deployment = new Deployment(chart, "tautulli", {
-    replicas: 1,
-    strategy: DeploymentStrategy.recreate(),
-    ...linuxServerPod(),
-  });
-
-  const localPathVolume = new ZfsNvmeVolume(chart, "tautulli-pvc", {
-    storage: Size.gibibytes(8),
-  });
-
-  deployment.addContainer(
-    withCommonLinuxServerProps({
-      // Deliberately BestEffort (no requests/limits) — negligible or
-      // non-critical usage; see the 2026-06-12 right-sizing plan.
-      resources: {},
-      image: `ghcr.io/linuxserver/tautulli:${versions["linuxserver/tautulli"]}`,
-      portNumber: 8181,
-      volumeMounts: [
-        {
-          path: "/config",
-          volume: Volume.fromPersistentVolumeClaim(
-            chart,
-            "tautulli-volume",
-            localPathVolume.claim,
-          ),
-        },
-      ],
-    }),
-  );
-
-  setRevisionHistoryLimit(deployment);
-
-  const service = new Service(chart, "tautulli-service", {
-    selector: deployment,
-    ports: [{ port: 8181 }],
-  });
-
-  new TailscaleIngress(chart, "tautulli-tailscale-ingress", {
-    service,
-    host: "tautulli",
+  new LinuxServerApp(chart, "tautulli-app", {
+    name: "tautulli",
+    image: `ghcr.io/linuxserver/tautulli:${versions["linuxserver/tautulli"]}`,
+    port: 8181,
+    fsGroup: false,
+    claims: [
+      {
+        claim: "tautulli-pvc",
+        volumeId: "tautulli-volume",
+        storage: Size.gibibytes(8),
+        path: "/config",
+      },
+    ],
+    // Deliberately BestEffort (no requests/limits) — negligible or
+    // non-critical usage; see the 2026-06-12 right-sizing plan.
+    resources: {},
+    tailscale: { host: "tautulli" },
   });
 }

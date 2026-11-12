@@ -112,6 +112,21 @@ given, so moving an existing service onto it renames nothing, and
 remain reachable for anything it does not model. `trmnl-dashboard`, `tracker`
 and `alert-dashboard` use it.
 
+## LinuxServer apps
+
+`LinuxServerApp` (`src/misc/third-party/linuxserver-app.ts`) renders a
+LinuxServer.io image from one description: a single-replica Deployment that is
+recreated on rollout, the NVMe claims it owns, mounts of claims owned
+elsewhere, its Service, and an optional tailnet host and namespace
+NetworkPolicies. Names derive from the `name` and the claim ids it is given,
+so moving a service onto it renames nothing. What differs between the apps
+today is a parameter, not a default: `fsGroup`, `resources`, `probes`, pod
+metadata and the proxy class are stated per app, and `extend` carries anything
+beyond the common shape (Bazarr's init container, provider mounts and
+environment). `.deployment`, `.service`, `.claims` and `.policies` remain
+reachable. Sonarr, Radarr, Prowlarr, Tautulli, Bazarr, Syncthing and
+Maintainerr use it.
+
 ## Rendered-output safety nets
 
 A refactor of shared constructs must not change what is rendered. Two checks

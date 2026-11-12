@@ -468,10 +468,6 @@
       "clones": 1,
       "tokens": 82
     },
-    "packages/homelab/src/cdk8s/src/resources/torrents/radarr.ts|packages/homelab/src/cdk8s/src/resources/torrents/sonarr.ts": {
-      "clones": 2,
-      "tokens": 146
-    },
     "packages/homelab/src/cdk8s/src/resources/woodpecker/ci-namespace.test.ts|packages/homelab/src/cdk8s/src/resources/woodpecker/ci-namespace.test.ts": {
       "clones": 1,
       "tokens": 78

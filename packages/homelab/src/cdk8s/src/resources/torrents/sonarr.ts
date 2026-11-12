@@ -1,20 +1,7 @@
-import {
-  Cpu,
-  Deployment,
-  DeploymentStrategy,
-  type PersistentVolumeClaim,
-  Service,
-  Volume,
-} from "cdk8s-plus-31";
+import { Cpu, type PersistentVolumeClaim } from "cdk8s-plus-31";
 import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
-import {
-  withCommonLinuxServerProps,
-  linuxServerPod,
-} from "@shepherdjerred/homelab/cdk8s/src/misc/linux-server.ts";
-import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
-import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
-import { setRevisionHistoryLimit } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
+import { LinuxServerApp } from "@shepherdjerred/homelab/cdk8s/src/misc/third-party/linuxserver-app.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 export function createSonarrDeployment(
@@ -24,69 +11,37 @@ export function createSonarrDeployment(
     downloads: PersistentVolumeClaim;
   },
 ) {
-  const deployment = new Deployment(chart, "sonarr", {
-    replicas: 1,
-    strategy: DeploymentStrategy.recreate(),
-    ...linuxServerPod({ fsGroup: true }),
-  });
-
-  const localPathVolume = new ZfsNvmeVolume(chart, "sonarr-pvc", {
-    storage: Size.gibibytes(8),
-  });
-
-  deployment.addContainer(
-    withCommonLinuxServerProps({
-      image: `ghcr.io/linuxserver/sonarr:${versions["linuxserver/sonarr"]}`,
-      portNumber: 8989,
-      volumeMounts: [
-        {
-          path: "/config",
-          volume: Volume.fromPersistentVolumeClaim(
-            chart,
-            "sonarr-volume",
-            localPathVolume.claim,
-          ),
-        },
-        {
-          volume: Volume.fromPersistentVolumeClaim(
-            chart,
-            "sonarr-torrents-hdd-volume",
-            claims.downloads,
-          ),
-          path: "/downloads",
-        },
-        {
-          volume: Volume.fromPersistentVolumeClaim(
-            chart,
-            "sonarr-tv-hdd-volume",
-            claims.tv,
-          ),
-          path: "/tv",
-        },
-      ],
-      resources: {
-        cpu: {
-          request: Cpu.millis(50),
-          limit: Cpu.millis(1000),
-        },
-        memory: {
-          request: Size.mebibytes(256),
-          limit: Size.mebibytes(768),
-        },
+  new LinuxServerApp(chart, "sonarr-app", {
+    name: "sonarr",
+    image: `ghcr.io/linuxserver/sonarr:${versions["linuxserver/sonarr"]}`,
+    port: 8989,
+    fsGroup: true,
+    claims: [
+      {
+        claim: "sonarr-pvc",
+        volumeId: "sonarr-volume",
+        storage: Size.gibibytes(8),
+        path: "/config",
       },
-    }),
-  );
-
-  setRevisionHistoryLimit(deployment);
-
-  const service = new Service(chart, "sonarr-service", {
-    selector: deployment,
-    ports: [{ port: 8989 }],
-  });
-
-  new TailscaleIngress(chart, "sonarr-tailscale-ingress", {
-    service,
-    host: "sonarr",
-    proxyClass: "medium",
+    ],
+    sharedMounts: [
+      {
+        volumeId: "sonarr-torrents-hdd-volume",
+        claim: claims.downloads,
+        path: "/downloads",
+      },
+      { volumeId: "sonarr-tv-hdd-volume", claim: claims.tv, path: "/tv" },
+    ],
+    resources: {
+      cpu: {
+        request: Cpu.millis(50),
+        limit: Cpu.millis(1000),
+      },
+      memory: {
+        request: Size.mebibytes(256),
+        limit: Size.mebibytes(768),
+      },
+    },
+    tailscale: { host: "sonarr", proxyClass: "medium" },
   });
 }
