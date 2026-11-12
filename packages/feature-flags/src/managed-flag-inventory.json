@@ -4003,13 +4003,6 @@
       "thresholdRollouts": [],
       "defaultOffExceptions": [
         {
-          "environment": "prod",
-          "reason": "Publishing waits for the dedicated worker, preserved local history and per-source production acceptance.",
-          "issue": "AI-365",
-          "enableWhen": "Deploy with publishing off, import the ledger without clearing holds, pass previews and eligible canaries, then activate accepted sources and schedules.",
-          "reviewBy": "2026-11-15"
-        },
-        {
           "environment": "beta",
           "reason": "Promotion uses production outreach identities; no separate beta publishing consumer is authorized.",
           "issue": "AI-365",
@@ -4814,6 +4807,22 @@
     {
       "key": "prod",
       "overrides": [
+        {
+          "key": "the-storm-promotion-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "the-storm-promotion-settings",
+          "type": "variant",
+          "default": "{\"model\":\"gpt-5.6-luna\",\"maxSteps\":80,\"timeoutMinutes\":15,\"monthlySolverUsd\":10,\"dailySpendUsd\":5,\"enabledTargets\":[\"pmc\",\"minecraftserver-buzz\",\"reddit-mcservers\",\"disboard-native-bump\",\"discord-mcadverts\",\"discord-lfg-fast\",\"discord-lfg-find-forum\",\"discord-lfg-6-hour\",\"discord-lfg-2-hour\",\"discord-lfg-1-hour\",\"discord-lfg-bedrock\",\"discord-lfg-java\",\"discord-lfg-smp\",\"discord-lfg-5-minute\",\"discord-lfg-15-minute\",\"discord-lfg-30-minute\"]}",
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
         {
           "key": "the-storm-stargates-enabled",
           "type": "boolean",

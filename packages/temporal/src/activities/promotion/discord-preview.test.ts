@@ -418,6 +418,47 @@ describe("DISBOARD reply cleanup", () => {
     expect(test.requests).toEqual([]);
   });
 });
+describe("approved copy preflight", () => {
+  it("allows exact approved copy to prepare once after a rejected local payload", async () => {
+    const test = harness();
+    const content = "Approved The Storm copy";
+    await expect(
+      test.client.handle({
+        endpoint: "discord-send",
+        body: { content: `${content}\n` },
+      }),
+    ).rejects.toMatchObject({
+      code: "unapproved_payload",
+      dispatchState: "not_started",
+      retryable: true,
+      ref: "approved-messages.json",
+      message: expect.stringContaining("JSON.parse"),
+    });
+    expect(test.client.preparedActions).toHaveLength(0);
+    expect(
+      test.requests.some((request) =>
+        ["/send", "/slash", "/delete-reply"].includes(request.path),
+      ),
+    ).toBe(false);
+
+    await expect(
+      test.client.handle({ endpoint: "discord-send", body: { content } }),
+    ).resolves.toMatchObject({
+      mode: "preview",
+      posted: false,
+      prepared: { operation: { kind: "message", content } },
+    });
+    expect(test.client.preparedActions).toHaveLength(1);
+    await expect(
+      test.client.handle({ endpoint: "discord-send", body: { content } }),
+    ).rejects.toThrow("One prepared");
+    expect(
+      test.requests.some((request) =>
+        ["/send", "/slash", "/delete-reply"].includes(request.path),
+      ),
+    ).toBe(false);
+  });
+});
 describe("scoped Discord executions", () => {
   it("journals a real-mode fixture send once and independently rereads its receipt", async () => {
     const test = harness({ run: true });

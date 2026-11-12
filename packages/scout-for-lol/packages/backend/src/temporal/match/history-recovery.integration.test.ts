@@ -326,37 +326,49 @@ test("a timeline Riot forbids is abandoned once the history report is done", asy
 });
 
 test("client evidence arriving after abandonment reopens recovery once", async () => {
-  io.absence.mockReturnValue("forbidden");
-  await aged();
-  await reconcileMatchHistory();
-  const { recoveryAbandonedAt } = await admission();
-  if (recoveryAbandonedAt === null) throw new Error("Expected abandonment");
-  // Evidence that existed when recovery gave up does not reopen it.
-  await clientObservation(new Date(recoveryAbandonedAt.getTime() - 1));
-  await due();
-  expect(await reconcileMatchHistory()).toBe(0);
+  const t0 = Date.now();
+  // Order evidence and attempt watermarks while keeping database timers real.
+  vi.useFakeTimers({ toFake: ["Date"] });
+  try {
+    vi.setSystemTime(t0);
+    io.absence.mockReturnValue("forbidden");
+    await aged();
+    await reconcileMatchHistory();
+    const { recoveryAbandonedAt } = await admission();
+    if (recoveryAbandonedAt === null) throw new Error("Expected abandonment");
+    // Evidence that existed when recovery gave up does not reopen it.
+    await clientObservation(new Date(recoveryAbandonedAt.getTime() - 1));
+    await due();
+    expect(await reconcileMatchHistory()).toBe(0);
 
-  const late = await clientObservation(new Date(Date.now() + 1));
-  await due();
-  expect(await reconcileMatchHistory()).toBe(1);
-  // Still unusable: the decision moves past this upload instead of looping.
-  const reabandoned = await admission();
-  expect(reabandoned.recoveryAbandonedAt?.getTime()).toBeGreaterThan(
-    late.receivedAt.getTime(),
-  );
-  await due();
-  expect(await reconcileMatchHistory()).toBe(0);
+    vi.setSystemTime(t0 + 1);
+    const late = await clientObservation(new Date(t0 + 1));
+    vi.setSystemTime(t0 + 2);
+    await due();
+    expect(await reconcileMatchHistory()).toBe(1);
+    // Still unusable: the decision moves past this upload instead of looping.
+    const reabandoned = await admission();
+    expect(reabandoned.recoveryAbandonedAt?.getTime()).toBeGreaterThan(
+      late.receivedAt.getTime(),
+    );
+    await due();
+    expect(await reconcileMatchHistory()).toBe(0);
 
-  // A reopened attempt that resolves clears the decision.
-  await clientObservation(new Date(Date.now() + 1));
-  io.available = true;
-  await due();
-  expect(await reconcileMatchHistory()).toBe(1);
-  expect(await admission()).toMatchObject({
-    recoveryAbandonedAt: null,
-    recoveryAbandonedReason: null,
-    historyReportComplete: true,
-  });
+    // A reopened attempt that resolves clears the decision.
+    vi.setSystemTime(t0 + 3);
+    await clientObservation(new Date(t0 + 3));
+    io.available = true;
+    vi.setSystemTime(t0 + 4);
+    await due();
+    expect(await reconcileMatchHistory()).toBe(1);
+    expect(await admission()).toMatchObject({
+      recoveryAbandonedAt: null,
+      recoveryAbandonedReason: null,
+      historyReportComplete: true,
+    });
+  } finally {
+    vi.useRealTimers();
+  }
 });
 
 test("a quarantined upload accepted after abandonment reopens recovery", async () => {
