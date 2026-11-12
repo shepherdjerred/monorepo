@@ -501,10 +501,17 @@ Includes static site buckets, application storage (scout), and the tofu state ba
 
 The `homelab-tofu-state` bucket has `prevent_destroy = true` since it stores state for all tofu modules.
 
-The buckets are declared in
+The stack's source is
 [`packages/homelab-cdktn/src/stacks/seaweedfs.ts`](../../../homelab-cdktn/src/stacks/seaweedfs.ts).
-Edit them there, run `bun run --cwd packages/homelab-cdktn synth`, and commit
-the regenerated `seaweedfs/main.tf.json`. The landing and 404 pages seeded into
+It creates a bucket for every static site and bucket consumer in
+[`platform-model.json`](../platform-model.json), named from there, and expires
+each site's `immutablePrefixes`. Declaring a site or consumer in the model is
+enough; a bucket has a line in the stack only for what the stack adds to it
+(`prevent_destroy`, an `import`, a lifecycle). Buckets with no site or consumer
+in the model (the state bucket, CI handoff, Delivery artifacts, workstation
+archives) are declared in the stack alone. After changing either, run
+`bun run --cwd packages/homelab-cdktn synth` and commit the regenerated
+`seaweedfs/main.tf.json`. The landing and 404 pages seeded into
 `public-sjer-red` stay in `seaweedfs/public/`, which the stack reads with
 `filemd5` and uploads.
 

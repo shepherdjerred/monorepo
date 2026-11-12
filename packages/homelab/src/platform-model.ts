@@ -14,9 +14,11 @@
  * cdk8s renders from the model through the lookups at the end of this module;
  * an id the model does not declare throws at synthesis. The `cloudflare`
  * stack renders its tunnel CNAMEs and static-asset cache rules from the same
- * accessors (`packages/homelab-cdktn/src/stacks/cloudflare/platform.ts`); the
- * other OpenTofu stacks do not read the model yet, so
- * `cdk8s/src/platform-model/rendered-on-both-sides.test.ts` still holds every
+ * accessors (`packages/homelab-cdktn/src/stacks/cloudflare/platform.ts`), the
+ * `seaweedfs` stack its buckets and their expiring prefixes. A stack can
+ * still write a value the model
+ * does not declare, so
+ * `cdk8s/src/platform-model/rendered-on-both-sides.test.ts` holds every
  * definition against both renderings.
  */
 import { z } from "zod";
@@ -296,6 +298,32 @@ export function immutablePathPrefixesByZone(
   return new Map(
     [...byZone].map(([zone, prefixes]) => [zone, [...prefixes].toSorted()]),
   );
+}
+
+/**
+ * The bucket key prefixes each static-site bucket expires old objects under:
+ * the immutable prefixes of the site it serves. A site without any is absent.
+ */
+export function immutablePrefixesByBucket(
+  model: PlatformModel = platformModel,
+): Map<string, string[]> {
+  return new Map(
+    model.staticSites
+      .filter((site) => site.immutablePrefixes.length > 0)
+      .map((site) => [site.bucket, site.immutablePrefixes]),
+  );
+}
+
+/** Every SeaweedFS bucket the model declares: a static site's or a consumer's. */
+export function declaredBuckets(
+  model: PlatformModel = platformModel,
+): string[] {
+  return [
+    ...new Set([
+      ...model.staticSites.map((site) => site.bucket),
+      ...model.bucketConsumers.map((consumer) => consumer.bucket),
+    ]),
+  ].toSorted();
 }
 
 /**

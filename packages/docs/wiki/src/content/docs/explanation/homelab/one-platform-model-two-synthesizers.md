@@ -97,12 +97,16 @@ entry where they once took a string, and a lookup for an undeclared id throws
 during synthesis. A value taken from a lookup cannot disagree with its
 definition.
 
-On the OpenTofu side, the `cloudflare` stack reads the model through the same
-accessors. Its
+On the OpenTofu side, two stacks read the model through the same accessors.
+The `cloudflare` stack's
 [`platform.ts`](packages/homelab-cdktn/src/stacks/cloudflare/platform.ts)
 turns every public hostname into a tunnel CNAME and every zone's immutable
-prefixes into a cache rule. The other stacks do not read the model. Their
-buckets, tags and 1Password items are still written by hand.
+prefixes into a cache rule. The `seaweedfs` stack creates a bucket for every
+static site and bucket consumer, and expires each site's immutable prefixes.
+
+A stack still declares what the model has no definition for. The `seaweedfs`
+stack names the buckets no site or workload consumes, such as the one holding
+OpenTofu state. The stacks that write 1Password items do not read the model.
 
 That asymmetry is why the model alone is not enough.
 

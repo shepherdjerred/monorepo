@@ -1,8 +1,27 @@
 import path from "node:path";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
-import { STATIC_SITE_IMMUTABLE_PREFIXES } from "#src/stacks/seaweedfs.ts";
 import { synthesize, synthesizedConfigurationPath } from "#scripts/synth.ts";
+
+/**
+ * The `for_each` of the asset lifecycle: a key added or dropped is a
+ * lifecycle rule created or abandoned. The stack takes these from the
+ * platform model's static sites, so a model edit that moves one shows here.
+ */
+const STATIC_SITE_IMMUTABLE_PREFIXES = {
+  "better-skill-capped": ["assets/"],
+  cook: ["_astro/"],
+  "cross-compilers": ["_astro/"],
+  "glitter-boys": ["_astro/"],
+  "landing-pages": ["_astro/"],
+  "scout-frontend": ["app/assets/", "_astro/"],
+  "scout-frontend-beta": ["app/assets/", "_astro/"],
+  "sjer-red": ["_astro/"],
+  "stocks-sjer-red": ["_astro/"],
+  "ts-mc": ["_astro/"],
+  "ts-mc-docs": ["_astro/"],
+  "wiki-sjer-red": ["_astro/"],
+};
 
 const ConfigurationSchema = z.looseObject({
   terraform: z.looseObject({

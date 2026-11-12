@@ -24,9 +24,9 @@
     },
     // "Synth is current": synthesizes every stack and fails when a committed
     // src/tofu/<stack>/main.tf.json differs. It writes nothing. The posthog
-    // stack inlines the analytics site registry, and the cloudflare stack the
-    // domain registry and the platform model (which reads two stacks'
-    // desired state).
+    // stack inlines the analytics site registry, the cloudflare stack the
+    // domain registry, and the cloudflare and seaweedfs stacks the
+    // platform model (which reads two stacks' desired state).
     "build": {
       "dependsOn": ["^build", "generate"],
       "inputs": [

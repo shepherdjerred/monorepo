@@ -4,7 +4,9 @@ import modelJson from "homelab/src/platform-model.json" with { type: "json" };
 import {
   PlatformModelSchema,
   consumedBucket,
+  declaredBuckets,
   immutablePathPrefixesByZone,
+  immutablePrefixesByBucket,
   platformModel,
   publicHostname,
   publicHostnameOfService,
@@ -50,6 +52,23 @@ describe("platform model", () => {
     ]);
     expect(byZone.get("better-skill-capped.com")).toEqual(["/assets/"]);
     expect(byZone.has("statically-typed.com")).toBe(false);
+  });
+
+  test("a bucket expires the immutable prefixes of the site it serves", () => {
+    const byBucket = immutablePrefixesByBucket();
+    expect(byBucket.get("scout-frontend")).toEqual(["app/assets/", "_astro/"]);
+    expect(byBucket.has("statically-typed")).toBe(false);
+  });
+
+  test("declared buckets are every static site's and consumer's, once", () => {
+    const buckets = declaredBuckets();
+    // A static site, a consumer, and a bucket that is both.
+    expect(buckets).toContain("resume");
+    expect(buckets).toContain("llm-archive");
+    expect(
+      buckets.filter((bucket) => bucket === "better-skill-capped"),
+    ).toHaveLength(1);
+    expect(buckets).toEqual(buckets.toSorted());
   });
 
   test("scoped credentials include the desired-state workloads", () => {

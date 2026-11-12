@@ -14,6 +14,12 @@ import {
   STATE_BUCKET,
   STATE_ENDPOINT,
 } from "#src/homelab-stack.ts";
+import {
+  consumedBucket,
+  declaredBuckets,
+  immutablePrefixesByBucket,
+  staticSite,
+} from "homelab/src/platform-model.ts";
 import { forget, protect } from "#src/state-migrations.ts";
 
 /**
@@ -23,28 +29,31 @@ import { forget, protect } from "#src/state-migrations.ts";
  * hashed chunk that a still-open browser tab references. Any future manual
  * deploy should follow the same convention: re-upload the current build's
  * hashed files (fresh mtime resets their age) so only prior builds' hashes
- * age out. Only buckets whose hashed prefixes deploy without `--delete` are
- * listed; non-hashed sites (resume, webring, glitter) and buckets never
- * deployed to are intentionally omitted.
+ * age out.
  *
- * `scout-design-system` is deliberately absent: Storybook's hashed chunks
- * share the `assets/` prefix with the unhashed Scout game art, fonts, and
- * theme bootstrap that scoutAssetsPlugin copies in, so an immutable rule
- * there would pin those forever.
+ * The prefixes are each static site's `immutablePrefixes` in the platform
+ * model (`packages/homelab/src/platform-model.json`), which the `cloudflare`
+ * stack caches as immutable. A site with none there has no rule here:
+ * non-hashed sites (resume, webring), and `scout-design-system`, whose
+ * Storybook chunks share the `assets/` prefix with the unhashed Scout game
+ * art, fonts, and theme bootstrap that scoutAssetsPlugin copies in, so an
+ * immutable rule there would pin those forever.
  */
-export const STATIC_SITE_IMMUTABLE_PREFIXES = {
-  "scout-frontend": ["app/assets/", "_astro/"],
-  "scout-frontend-beta": ["app/assets/", "_astro/"],
-  "sjer-red": ["_astro/"],
-  cook: ["_astro/"],
-  "cross-compilers": ["_astro/"],
-  "stocks-sjer-red": ["_astro/"],
-  "landing-pages": ["_astro/"],
-  "wiki-sjer-red": ["_astro/"],
-  "better-skill-capped": ["assets/"],
+function staticSiteImmutablePrefixes(): Record<string, readonly string[]> {
+  return {
+    ...Object.fromEntries(immutablePrefixesByBucket()),
+    ...RETAINED_IMMUTABLE_PREFIXES,
+  };
+}
+
+/**
+ * Expiry rules of buckets no static site serves, so the model has no site to
+ * declare them on. The both-sides test lists each as debt
+ * (`cdk8s/src/platform-model/debt-allowlists.ts`).
+ */
+const RETAINED_IMMUTABLE_PREFIXES = {
+  // Retained assets from the retired Astro portal; no active site deploys here.
   "ts-mc": ["_astro/"],
-  "ts-mc-docs": ["_astro/"],
-  "glitter-boys": ["_astro/"],
 } as const;
 
 /** The lifecycle call every expiry provisioner opens with. */
@@ -97,6 +106,9 @@ export class SeaweedfsStack extends HomelabStack {
    */
   private readonly deployEnvironment: Record<string, string>;
 
+  /** Every bucket of the stack by its name, in the order it was declared. */
+  private readonly buckets = new Map<string, S3Bucket>();
+
   constructor(scope: Construct) {
     super(scope, "seaweedfs", {
       requiredVersion: ">= 1.6.0",
@@ -130,11 +142,12 @@ export class SeaweedfsStack extends HomelabStack {
       endpoints: [{ s3: STATE_ENDPOINT }],
     });
 
+    const immutablePrefixes = staticSiteImmutablePrefixes();
     new TerraformLocal(
       this,
       "static_site_immutable_prefixes",
       // Bucket names are data: a plain object would have its keys snake_cased.
-      Token.asAny(STATIC_SITE_IMMUTABLE_PREFIXES),
+      Token.asAny(immutablePrefixes),
     );
     this.deployEnvironment = new TerraformLocal(
       this,
@@ -145,52 +158,16 @@ export class SeaweedfsStack extends HomelabStack {
       }),
     ).asStringMap;
 
-    // Static site buckets (served via Caddy s3proxy). Private buckets are
-    // intentionally absent from the Caddy public bucket inventory.
-    this.bucket("the_storm_capture_fixtures", "the-storm-capture-fixtures", {
-      protected: true,
-    });
-    this.bucket("storm_forum_releases", "storm-forum-releases", {
-      protected: true,
-    });
-    this.bucket("storm_forum_backups", "storm-forum-backups", {
-      protected: true,
-    });
-    this.bucket("tracker_attachments", "tracker-attachments", {
-      protected: true,
-    });
-    this.bucket("statically_typed", "statically-typed");
-    const betterSkillCapped = this.bucket(
-      "better_skill_capped",
-      "better-skill-capped",
-    );
-
-    // The archived Clauderon site is retired (see cloudflare/clauderon-com.tf),
-    // but the bucket still holds its objects. Removing this resource in the
-    // same PR that first sets force_destroy would plan a destroy against state
-    // that has never actually had force_destroy applied: the removal and the
-    // force_destroy change can only land together, and a squash-merged PR is a
-    // single tofu apply, so the destroy would still fail on a non-empty
-    // bucket. Land force_destroy here, let it apply to prod, THEN remove this
-    // resource in a follow-up PR once that apply has completed.
-    this.bucket("clauderon", "clauderon", { forceDestroy: true });
-
-    this.bucket("resume", "resume");
-    const scoutFrontend = this.bucket("scout_frontend", "scout-frontend");
-    const scoutFrontendBeta = this.bucket(
-      "scout_frontend_beta",
-      "scout-frontend-beta",
-    );
-    const sjerRed = this.bucket("sjer_red", "sjer-red");
-    // Retained assets from the retired Astro portal; no active site deploys here.
-    const tsMc = this.bucket("ts_mc", "ts-mc");
-    const tsMcDocs = this.bucket("ts_mc_docs", "ts-mc-docs");
-    // public.ts-mc.net: shared landing and campaign pages (packages/landing-pages).
-    const landingPages = this.bucket("landing_pages", "landing-pages");
-    this.bucket("webring", "webring");
-    const cook = this.bucket("cook", "cook");
-    // cross-compilers.sjer.red: the macOS + Windows cross-compiler marketing site.
-    const crossCompilers = this.bucket("cross_compilers", "cross-compilers");
+    // A bucket the platform model declares takes its name from there: a
+    // static site's by its hostname, a consumer's by the environment variable
+    // its workloads name it in. A bucket is declared below when the stack has
+    // something to add to it (protection, an adoption, a lifecycle); the rest
+    // of the model's buckets are created after them, so a site or consumer
+    // added to the model needs no line here.
+    //
+    // `import` blocks and the `depends_on` of the asset lifecycle are written
+    // in declaration order. Neither order means anything to OpenTofu, but the
+    // statements keep theirs so the synthesized configuration does not move.
 
     // Private. The Apple SDK tarballs the published macos-cross-compiler
     // images are built from (packages/macos-cross-compiler/scripts/stage-xcode.sh),
@@ -202,44 +179,64 @@ export class SeaweedfsStack extends HomelabStack {
     // created the bucket before this resource reached main (SeaweedFS creates
     // a bucket on its first PutObject), so adopt it instead of calling
     // CreateBucket.
-    this.bucket("apple_sdks", "apple-sdks", { adopt: true, protected: true });
+    this.bucket("apple-sdks", { adopt: true, protected: true });
 
-    // stocks.sjer.red. This bucket predates its IaC declaration: when stocks
-    // was wired into the deploy (commit 6d0aa524b) it was added to CI + Caddy
-    // + the Astro app but never to this stack, and SeaweedFS's S3 gateway
-    // auto-created it on the first deploy sync (it auto-creates a bucket on
-    // first PutObject, unlike AWS S3). The `import` block adopts the existing
-    // bucket rather than letting Tofu try to CreateBucket over it. It is a
-    // no-op once the bucket is in state.
-    const stocksSjerRed = this.bucket("stocks_sjer_red", "stocks-sjer-red", {
-      adopt: true,
-    });
-    const wikiSjerRed = this.bucket("wiki_sjer_red", "wiki-sjer-red");
+    // Static sites with content-hashed assets (served via Caddy s3proxy).
+    this.site("scout-for-lol.com");
+    this.site("beta.scout-for-lol.com");
+    this.site("sjer.red");
+    this.site("cook.sjer.red");
+    // The macOS + Windows cross-compiler marketing site.
+    this.site("cross-compilers.sjer.red");
+    // This bucket predates its IaC declaration: when stocks was wired into
+    // the deploy (commit 6d0aa524b) it was added to CI + Caddy + the Astro
+    // app but never to this stack, and SeaweedFS's S3 gateway auto-created it
+    // on the first deploy sync (it auto-creates a bucket on first PutObject,
+    // unlike AWS S3). The `import` block adopts the existing bucket rather
+    // than letting Tofu try to CreateBucket over it. It is a no-op once the
+    // bucket is in state.
+    this.site("stocks.sjer.red", { adopt: true });
+    // Shared landing and campaign pages (packages/landing-pages).
+    this.site("public.ts-mc.net");
+    this.site("wiki.sjer.red");
+    this.site("better-skill-capped.com");
+    // See RETAINED_IMMUTABLE_PREFIXES.
+    this.bucket("ts-mc");
+    this.site("docs.ts-mc.net");
+    this.site("glitter-boys.com");
 
-    // Scout's Storybook catalogs: the design system at the root, the
-    // management app's components under /app/. See
-    // STATIC_SITE_IMMUTABLE_PREFIXES for why it has no immutable prefix.
-    this.bucket("scout_design_system", "scout-design-system");
+    // The archived Clauderon site is retired (see cloudflare/clauderon-com.tf),
+    // but the bucket still holds its objects. Removing this resource in the
+    // same PR that first sets force_destroy would plan a destroy against state
+    // that has never actually had force_destroy applied: the removal and the
+    // force_destroy change can only land together, and a squash-merged PR is a
+    // single tofu apply, so the destroy would still fail on a non-empty
+    // bucket. Land force_destroy here, let it apply to prod, THEN remove this
+    // resource in a follow-up PR once that apply has completed.
+    this.site("clauderon.com", { forceDestroy: true });
 
-    const glitterBoys = this.bucket("glitter_boys", "glitter-boys");
-    this.bucket("glitter_boys_ppl", "glitter-boys-ppl");
+    // Private buckets are intentionally absent from the Caddy public bucket
+    // inventory.
+    this.bucket("the-storm-capture-fixtures", { protected: true });
+    this.consumed({ env: "BUNDLE_BUCKET" }, { protected: true });
+    this.bucket("storm-forum-backups", { protected: true });
+    this.consumed(
+      { env: "S3_BUCKET", namespace: "tracker" },
+      { protected: true },
+    );
 
     // Private, loss-intolerant raw Discord corpus. Immutable response pages,
     // manifests, and projections are mirrored to R2 before a snapshot pointer
     // is advanced. No expiry: Discord history and captured deletions are not
     // reliably reconstructible.
-    this.bucket("glitter_discord_corpus", "glitter-discord-corpus", {
-      protected: true,
-    });
+    this.consumed({ env: "GLITTER_CORPUS_S3_BUCKET" }, { protected: true });
 
     // Private. Archived Red Warfare match recordings (pseudonymous, for
     // review and bot training). The Temporal archive confirms each copy here
     // before marking the recording archived, after which The Storm's
     // retention may delete the server's copy, so this bucket becomes the only
     // copy. No expiry.
-    this.bucket("the_storm_rwf_recordings", "the-storm-rwf-recordings", {
-      protected: true,
-    });
+    this.consumed({ env: "RWF_ARCHIVE_S3_BUCKET" }, { protected: true });
 
     // Document CRDT state + attachments for the self-hosted Relay Server
     // (Obsidian real-time collaboration). See
@@ -248,48 +245,13 @@ export class SeaweedfsStack extends HomelabStack {
     // relay-docs was created before this resource reached main, then manually
     // recreated after a cross-checkout tofu apply deleted it. Adopt the
     // existing bucket into state instead of trying CreateBucket over it.
-    this.bucket("relay_docs", "relay-docs", { adopt: true, protected: true });
-
-    const site = TerraformIterator.fromMap(
-      Token.asAnyMap("${local.static_site_immutable_prefixes}"),
-    );
-    new DataResource(this, "static_site_asset_lifecycle", {
-      forEach: site,
-      // Ensure the bucket exists before configuring its lifecycle.
-      dependsOn: [
-        scoutFrontend,
-        scoutFrontendBeta,
-        sjerRed,
-        cook,
-        crossCompilers,
-        stocksSjerRed,
-        landingPages,
-        wikiSjerRed,
-        betterSkillCapped,
-        tsMc,
-        tsMcDocs,
-        glitterBoys,
-      ],
-      input: {
-        bucket: site.key,
-        endpoint_url: STATE_ENDPOINT,
-        // Re-runs the provisioner whenever the prefix set or TTL changes.
-        rules:
-          '${jsonencode({ Rules = [for idx, prefix in each.value : { ID = "expire-old-hashed-${idx}", Status = "Enabled", Filter = { Prefix = prefix }, Expiration = { Days = 90 } }] })}',
-      },
-      provisioners: [
-        this.deploy([
-          ...PUT_LIFECYCLE,
-          "  --lifecycle-configuration '${self.input.rules}'",
-        ]),
-      ],
-    });
+    this.bucket("relay-docs", { adopt: true, protected: true });
 
     // Public artifact bucket, served at https://public.sjer.red via Caddy
     // s3proxy. PR screenshots live under the `pr/assets/<number>/` prefix
     // (365-day TTL, below); the bucket root is seeded with a landing + 404
     // page so the static-site root probe stays green.
-    const publicSjerRed = this.bucket("public_sjer_red", "public-sjer-red");
+    const publicSjerRed = this.site("public.sjer.red");
 
     // Expire PR-asset objects after 365 days. Scoped to the `pr/assets/`
     // prefix so any other public artifacts dropped in this bucket are
@@ -323,13 +285,9 @@ export class SeaweedfsStack extends HomelabStack {
       ],
     });
 
-    // Scout application storage
-    this.bucket("scout_beta", "scout-beta");
-    this.bucket("scout_prod", "scout-prod");
-
     // Private user screenshots, never included in a static/public asset route.
-    this.bucket("scout_support_beta", "scout-support-beta");
-    this.bucket("scout_support_prod", "scout-support-prod");
+    this.consumed({ env: "SUPPORT_BUCKET_NAME", namespace: "scout-beta" });
+    this.consumed({ env: "SUPPORT_BUCKET_NAME", namespace: "scout-prod" });
 
     // The Scout League Classic renderer now ships Gill Sans committed in the
     // repo under the owner's universal redistribution license, so the private
@@ -345,13 +303,13 @@ export class SeaweedfsStack extends HomelabStack {
     // `llm/<service>/<provider>/YYYY/MM/DD/<traceId>-<spanId>.json.gz`.
     // 1-year retention to support cost analysis and prompt regression
     // debugging.
-    const llmArchive = this.bucket("llm_archive", "llm-archive");
+    const llmArchive = this.consumed({ env: "LLM_ARCHIVE_S3_BUCKET" });
 
     // Durable provider resume state for Temporal agent chats. Unlike the
     // request archive, these objects have no age-based lifecycle: an idle
     // chat must remain resumable until its catalog record is explicitly
     // retired.
-    this.bucket("agent_chat_sessions", "agent-chat-sessions");
+    this.bucket("agent-chat-sessions");
 
     // Encrypted Claude Code and Codex transcript archive written by
     // `brim sync push` on each workstation
@@ -359,7 +317,7 @@ export class SeaweedfsStack extends HomelabStack {
     // client-side; keys are opaque. No age-based lifecycle: the archive is
     // the permanent backup of every machine's agent history. Access is the
     // scoped `brim-sync` gateway identity only.
-    this.bucket("brim_sessions", "brim-sessions", { protected: true });
+    this.bucket("brim-sessions", { protected: true });
 
     this.expiry("llm_archive_lifecycle", {
       bucket: llmArchive,
@@ -372,10 +330,9 @@ export class SeaweedfsStack extends HomelabStack {
     // ephemeral and are not mirrored or backed up: their purpose is
     // short-lived voice-path diagnosis, and they may contain user speech,
     // Discord IDs, and transcripts.
-    const streambotVoiceCaptures = this.bucket(
-      "streambot_voice_captures",
-      "streambot-voice-captures",
-    );
+    const streambotVoiceCaptures = this.consumed({
+      env: "VOICE_CAPTURE_BUCKET",
+    });
     this.expiry("streambot_voice_captures_lifecycle", {
       bucket: streambotVoiceCaptures,
       days: 90,
@@ -404,7 +361,7 @@ export class SeaweedfsStack extends HomelabStack {
     // PutObject, and every subsequent apply would fail with
     // BucketAlreadyExists. Creating it up front removes the ordering question
     // entirely.
-    const ciHandoff = this.bucket("ci_handoff", "ci-handoff", { adopt: true });
+    const ciHandoff = this.bucket("ci-handoff", { adopt: true });
 
     // Every handoff value and artifact tree is build-scoped: steps read only
     // their own pipeline's keys, and the one cross-pipeline read, a reviewed
@@ -425,27 +382,80 @@ export class SeaweedfsStack extends HomelabStack {
     // revisions own retention. Provision this bucket before enabling archive
     // publication; never rely on S3's implicit bucket creation from the first
     // PutObject.
-    this.bucket("delivery_artifacts", "delivery-artifacts", {
-      protected: true,
-    });
+    this.bucket("delivery-artifacts", { protected: true });
 
     // OpenTofu state backend for all modules.
-    this.bucket("homelab_tofu_state", STATE_BUCKET, { protected: true });
+    this.bucket(STATE_BUCKET, { protected: true });
+
+    // Every other bucket the model declares: static sites without hashed
+    // assets, and application storage with nothing to add here.
+    for (const name of declaredBuckets())
+      if (!this.buckets.has(name)) this.bucket(name);
+
+    const site = TerraformIterator.fromMap(
+      Token.asAnyMap("${local.static_site_immutable_prefixes}"),
+    );
+    new DataResource(this, "static_site_asset_lifecycle", {
+      forEach: site,
+      // Ensure the bucket exists before configuring its lifecycle.
+      dependsOn: this.bucketsNamed(Object.keys(immutablePrefixes)),
+      input: {
+        bucket: site.key,
+        endpoint_url: STATE_ENDPOINT,
+        // Re-runs the provisioner whenever the prefix set or TTL changes.
+        rules:
+          '${jsonencode({ Rules = [for idx, prefix in each.value : { ID = "expire-old-hashed-${idx}", Status = "Enabled", Filter = { Prefix = prefix }, Expiration = { Days = 90 } }] })}',
+      },
+      provisioners: [
+        this.deploy([
+          ...PUT_LIFECYCLE,
+          "  --lifecycle-configuration '${self.input.rules}'",
+        ]),
+      ],
+    });
   }
 
-  /** `aws_s3_bucket.<id>`, directly in the stack scope. */
-  private bucket(
-    id: string,
-    name: string,
-    options: BucketOptions = {},
-  ): S3Bucket {
-    const bucket = new S3Bucket(this, id, {
+  /**
+   * `aws_s3_bucket.<name with underscores>`, directly in the stack scope.
+   * The address is derived from the name, as every bucket's always was.
+   */
+  private bucket(name: string, options: BucketOptions = {}): S3Bucket {
+    const bucket = new S3Bucket(this, name.replaceAll("-", "_"), {
       bucket: name,
       ...(options.forceDestroy === true ? { forceDestroy: true } : {}),
     });
     if (options.adopt === true) bucket.importFrom(name);
     if (options.protected === true) protect(bucket);
+    this.buckets.set(name, bucket);
     return bucket;
+  }
+
+  /** The bucket the model's static site at `hostname` is served from. */
+  private site(hostname: string, options: BucketOptions = {}): S3Bucket {
+    return this.bucket(staticSite(hostname).bucket, options);
+  }
+
+  /** The bucket a namespace's workloads name through `env` in the model. */
+  private consumed(
+    consumer: Parameters<typeof consumedBucket>[0],
+    options: BucketOptions = {},
+  ): S3Bucket {
+    return this.bucket(consumedBucket(consumer), options);
+  }
+
+  /**
+   * The stack's buckets with these names, in declaration order. A name with
+   * no bucket is a lifecycle rule for a bucket nothing creates.
+   */
+  private bucketsNamed(names: readonly string[]): S3Bucket[] {
+    const missing = names.filter((name) => !this.buckets.has(name));
+    if (missing.length > 0)
+      throw new Error(
+        `The seaweedfs stack declares no bucket named ${missing.join(", ")}`,
+      );
+    return [...this.buckets]
+      .filter(([name]) => names.includes(name))
+      .map(([, bucket]) => bucket);
   }
 
   /** A `local-exec` provisioner running `lines` as the deployment identity. */
