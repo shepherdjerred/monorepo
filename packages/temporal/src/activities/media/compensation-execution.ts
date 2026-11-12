@@ -1,5 +1,6 @@
 import { ApplicationFailure, Context } from "@temporalio/activity";
 import { CancelledFailure } from "@temporalio/common";
+import { compensationDiagnostic } from "./compensation-diagnostics.ts";
 
 /** Cached runtimes retain only this factory; each call obtains the current Activity. */
 export function compensationExecution(context = Context.current()) {
@@ -54,10 +55,12 @@ export async function compensationCall<T>(
   } catch (error) {
     if (error instanceof CancelledFailure)
       throw new CancelledFailure("Compensation Activity cancelled");
+    const diagnostic = compensationDiagnostic(error);
     throw ApplicationFailure.create({
       message:
         "Compensation Activity failed; review protected operation status",
       type: "CompensationActivityFailure",
+      ...(diagnostic === undefined ? {} : { details: [diagnostic] }),
     });
   }
 }

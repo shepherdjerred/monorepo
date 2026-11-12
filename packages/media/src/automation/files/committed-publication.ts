@@ -1,9 +1,6 @@
 import { assertDefaultPhysicalAsset } from "#infrastructure/handoff/default-edition.ts";
 import { storedFilePath } from "./paths/locations.ts";
 import { z } from "zod";
-import { defaultScope } from "#shared/editions/scope.ts";
-import { targetWhere } from "#infrastructure/editions/targets.ts";
-import { Prisma } from "#generated/prisma/client.ts";
 import { evaluateRelease } from "#domain/quality.ts";
 import { QualityRulesSchema } from "#shared/api.ts";
 import { FileOperationConflict } from "#filesystem/operations-types.ts";
@@ -16,7 +13,10 @@ import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
 import { requirePublicationExecution } from "#automation/publication-proof/invocation.ts";
 import { lockAcquisitionMedia } from "#infrastructure/acquisition-identity/locks.ts";
 import { fileOperations } from "./file-operations.ts";
-import { storedMeasuredRelease } from "./quality-guard.ts";
+import {
+  loadLockedDefaultProfile,
+  storedMeasuredRelease,
+} from "./quality-guard.ts";
 import {
   FileGuardError,
   FilePlanSchema,
@@ -191,16 +191,7 @@ async function assertCurrentProfiles(
 ): Promise<void> {
   const measured = storedMeasuredRelease(entry.properties);
   for (const mediaId of entry.mediaIds) {
-    const intent = await tx.mediaIntent.findUniqueOrThrow({
-      where: targetWhere(defaultScope(mediaId)),
-    });
-    if (intent.profileId === null) throw new FileGuardError("profile_missing");
-    await tx.$queryRaw(
-      Prisma.sql`SELECT id FROM "QualityProfile" WHERE id = ${intent.profileId} FOR SHARE`,
-    );
-    const profile = await tx.qualityProfile.findUniqueOrThrow({
-      where: { id: intent.profileId },
-    });
+    const { profile } = await loadLockedDefaultProfile(tx, mediaId);
     const evaluation = evaluateRelease(
       measured,
       {

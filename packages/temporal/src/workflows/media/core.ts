@@ -22,6 +22,7 @@ import * as cleanup from "./cleanup.ts";
 import * as notifications from "./notifications.ts";
 import * as retention from "./retention.ts";
 import { stageSeriesPackMembers } from "./series-pack/staging.ts";
+import { stageOrdinaryMedia } from "./ordinary-staging.ts";
 import { publishAcquisitionFiles } from "./series-pack/publication-flow.ts";
 import { rollbackPublishedSeriesPack } from "./series-pack/bounded-publication.ts";
 
@@ -183,7 +184,9 @@ async function publishAcquisition(
   const boundedSeriesPack = seriesPack && patched("series-pack-staging-v1");
   const staged = boundedSeriesPack
     ? await stageSeriesPackMembers(input)
-    : await files.inspectAndStageMedia(input);
+    : seriesPack || !patched("ordinary-media-staging-batches-v1")
+      ? await files.inspectAndStageMedia(input)
+      : await stageOrdinaryMedia(input, files.inspectAndStageMedia);
   if (staged.status !== "staged")
     return finish(input.operationId, {
       status: "blocked",

@@ -8,6 +8,7 @@ import { MovieChoiceProtection } from "#infrastructure/movie-editions/errors.ts"
 import type { MediaFileActivities } from "#shared/automation.ts";
 import { FileGuardError, type FileContext } from "./types.ts";
 import { inspectAndStage } from "./inspection.ts";
+import { inspectAndStageBatch } from "./editions/ordinary-staging.ts";
 import { promote } from "./publication.ts";
 import { prepareSeriesPackPublicationV1 } from "./series-pack/publication.ts";
 import { createSeriesPackStagingFileFacetV1 } from "./series-pack/staging/facet.ts";
@@ -122,8 +123,11 @@ export function createMediaFileActivities(
         throw error;
       }
     },
-    inspectAndStageMedia: async ({ attemptId }) => {
+    inspectAndStageMedia: async (input) => {
+      const { attemptId } = input;
       try {
+        if (input.stagingBatch !== undefined)
+          return await inspectAndStageBatch(context, input);
         await inspectAndStage(context, attemptId);
         return { status: "staged" };
       } catch (error_) {

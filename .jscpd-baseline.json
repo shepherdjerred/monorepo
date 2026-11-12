@@ -708,10 +708,6 @@
       "clones": 1,
       "tokens": 76
     },
-    "packages/media/src/automation/files/committed-publication.ts|packages/media/src/automation/files/publication.ts": {
-      "clones": 1,
-      "tokens": 95
-    },
     "packages/media/src/automation/files/editions/cuts.integration.test.ts|packages/media/src/infrastructure/recovery/legacy-claims/lifecycle.integration.test.ts": {
       "clones": 1,
       "tokens": 81

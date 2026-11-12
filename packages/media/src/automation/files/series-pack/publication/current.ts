@@ -2,12 +2,10 @@ import type { AcquisitionAttempt, Prisma } from "#generated/prisma/client.ts";
 import type { FilePlanEntry } from "#automation/files/types.ts";
 import { FileGuardError } from "#automation/files/types.ts";
 import { assertAcquisition } from "#automation/files/guards.ts";
-import {
-  assertProfile,
-  assertPrevious,
-} from "#automation/files/publication.ts";
+import { assertPrevious } from "#automation/files/publication.ts";
 import {
   assertMeasuredUpgrade,
+  assertProfile,
   storedMeasuredRelease,
 } from "#automation/files/quality-guard.ts";
 import {

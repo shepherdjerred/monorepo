@@ -8,8 +8,6 @@ import {
   MovieEditionScopeSchema,
   type MovieEditionScope,
 } from "#shared/movie-editions/registry.ts";
-import { defaultScope } from "#shared/editions/scope.ts";
-import { targetWhere } from "#infrastructure/editions/targets.ts";
 import { mirrorDefaultAvailability } from "#infrastructure/editions/availability.ts";
 import {
   defaultPhysicalRoot,
@@ -45,6 +43,7 @@ import { assertPlanEdition } from "./editions/acquisition.ts";
 import { libraryFileInvocation } from "#automation/acquisition-management/files.ts";
 import {
   assertMeasuredUpgrade,
+  assertProfile,
   storedMeasuredRelease,
 } from "./quality-guard.ts";
 import {
@@ -179,35 +178,6 @@ export async function promote(
       { timeout: 30_000, maxWait: 30_000 },
     );
     throw error;
-  }
-}
-
-export async function assertProfile(
-  tx: Transaction,
-  entry: FilePlanEntry,
-  // Ordinary publication already validated this transaction's current attempt,
-  // reservations and intent generations; owner Retry retains its original plan.
-  generations: Readonly<Record<string, number>> = entry.generations,
-): Promise<void> {
-  const properties = z
-    .object({ profileVersions: z.record(z.string(), z.number().int()) })
-    .parse(entry.properties);
-  for (const mediaId of entry.mediaIds) {
-    const intent = await tx.mediaIntent.findUniqueOrThrow({
-      where: targetWhere(defaultScope(mediaId)),
-    });
-    if (intent.profileId === null) throw new FileGuardError("profile_missing");
-    await tx.$queryRaw(
-      Prisma.sql`SELECT id FROM "QualityProfile" WHERE id = ${intent.profileId} FOR SHARE`,
-    );
-    const profile = await tx.qualityProfile.findUniqueOrThrow({
-      where: { id: intent.profileId },
-    });
-    if (
-      profile.version !== properties.profileVersions[mediaId] ||
-      intent.generation !== generations[mediaId]
-    )
-      throw new FileGuardError("profile_obsolete");
   }
 }
 

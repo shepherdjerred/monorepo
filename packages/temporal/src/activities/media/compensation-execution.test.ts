@@ -1,4 +1,6 @@
 import { MockActivityEnvironment } from "@temporalio/testing";
+import { ApplicationFailure } from "@temporalio/activity";
+import { FileOperationConflict } from "@shepherdjerred/media/filesystem/operations-types";
 import { expect, test, vi } from "vitest";
 import {
   compensationCall,
@@ -121,3 +123,120 @@ test("cancelled or private failures never publish a successful acknowledgement o
     details: undefined,
   });
 });
+
+test.each([
+  {
+    name: "unproven partial",
+    error: () =>
+      new FileOperationConflict("Unproven import partial requires recovery"),
+    diagnostic: { schemaVersion: 1, code: "staging_partial_unproven" },
+  },
+  {
+    name: "native identity",
+    error: () =>
+      new FileOperationConflict(
+        "Media file identity changed after verification",
+      ),
+    diagnostic: { schemaVersion: 1, code: "native_file_identity_changed" },
+  },
+  {
+    name: "unknown private conflict",
+    error: () =>
+      new FileOperationConflict(
+        "CAPABILITY_CANARY /private/token-bearing-path",
+      ),
+    diagnostic: { schemaVersion: 1, code: "file_operation_conflict" },
+  },
+  {
+    name: "filesystem errno",
+    error: () =>
+      Object.assign(new Error("CAPABILITY_CANARY /private/path"), {
+        code: "ENOSPC",
+        path: "/private/token",
+        cause: new Error("PRIVATE_CAUSE"),
+      }),
+    diagnostic: { schemaVersion: 1, code: "filesystem_error", errno: "ENOSPC" },
+  },
+  {
+    name: "allowed guard",
+    error: () =>
+      Object.assign(new Error("CAPABILITY_CANARY"), {
+        name: "FileGuardError",
+        reason: "reservation_obsolete",
+      }),
+    diagnostic: {
+      schemaVersion: 1,
+      code: "file_guard_rejected",
+      reason: "reservation_obsolete",
+    },
+  },
+  {
+    name: "original local invocation expiry",
+    error: () =>
+      ApplicationFailure.create({
+        message: "CAPABILITY_CANARY",
+        type: "MediaPublicationInvocationExpired",
+        nonRetryable: true,
+        details: ["PRIVATE_DETAIL"],
+      }),
+    diagnostic: { schemaVersion: 1, code: "publication_invocation_expired" },
+  },
+  {
+    name: "original SDK deadline",
+    error: () =>
+      ApplicationFailure.create({
+        message: "CAPABILITY_CANARY",
+        type: "CompensationDeadlineExceeded",
+      }),
+    diagnostic: { schemaVersion: 1, code: "sdk_deadline_exceeded" },
+  },
+])(
+  "$name emits only finite diagnostic facts without changing failure/retry semantics",
+  async ({ error, diagnostic }) => {
+    await expect(
+      environment().run(() => compensationCall(() => Promise.reject(error()))),
+    ).rejects.toMatchObject({
+      message:
+        "Compensation Activity failed; review protected operation status",
+      type: "CompensationActivityFailure",
+      nonRetryable: false,
+      cause: undefined,
+      details: [diagnostic],
+    });
+    try {
+      await environment().run(() =>
+        compensationCall(() => Promise.reject(error())),
+      );
+    } catch (error_) {
+      expect(JSON.stringify(error_)).not.toMatch(
+        /CAPABILITY_CANARY|PRIVATE_CAUSE|PRIVATE_DETAIL|token-bearing-path|\/private\/path/u,
+      );
+    }
+  },
+);
+
+test.each([
+  Object.assign(new Error("CAPABILITY_CANARY"), {
+    name: "FileGuardError",
+    reason: "CAPABILITY_CANARY",
+  }),
+  Object.assign(new Error("CAPABILITY_CANARY"), {
+    code: "ENOSPC_CAPABILITY_CANARY",
+  }),
+  ApplicationFailure.create({
+    message: "CAPABILITY_CANARY",
+    type: "UnapprovedFailure",
+    details: ["PRIVATE_DETAIL"],
+  }),
+])(
+  "unknown failure metadata stays absent from protected history",
+  async (error) => {
+    await expect(
+      environment().run(() => compensationCall(() => Promise.reject(error))),
+    ).rejects.toMatchObject({
+      type: "CompensationActivityFailure",
+      cause: undefined,
+      details: undefined,
+    });
+  },
+);

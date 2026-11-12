@@ -1,4 +1,18 @@
 import type { MatchFeedSourceV1 } from "./feeds/contract.ts";
+import type { OrdinaryStagingBatch } from "./acquisition/ordinary-staging.ts";
+export type MediaStagingInput = {
+  operationId: string;
+  attemptId: string;
+  stagingBatch?: OrdinaryStagingBatch;
+};
+export type MediaStagingResult =
+  | { status: "staged" | "blocked"; reason?: string }
+  | {
+      status: "staging";
+      nextBatchIndex: number;
+      filePlanHash: string;
+      reason?: never;
+    };
 import type {
   SeriesPackStagingInputV1,
   SeriesPackStagingBatchResultV1,
@@ -237,8 +251,8 @@ export type MediaFileActivities = {
     reason?: string;
   }>;
   inspectAndStageMedia: (
-    input: MediaAttemptOperation,
-  ) => Promise<{ status: "staged" | "blocked"; reason?: string }>;
+    input: MediaStagingInput,
+  ) => Promise<MediaStagingResult>;
   promoteMediaFiles: (input: MediaAttemptOperation) => Promise<{
     status: "published" | "blocked" | "obsolete";
     reason?: string;

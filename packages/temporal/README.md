@@ -855,6 +855,19 @@ minimum through configuration, network, and filesystem work. Changing a Workflow
 declaration does not rewrite an Activity already recorded in history; an older
 unbounded Activity remains protected and needs reconciliation through fresh work.
 
+Ordinary acquisition histories with `ordinary-media-staging-batches-v1` use the
+existing `inspectAndStageMedia` Activity with an explicit optional batching hint.
+One inspection-only call retains the immutable whole plan, followed by at most
+25 contiguous calls preparing and committing up to four files each. Progress and
+later hints pin the same full-plan hash; a changed commitment cannot advance to
+publication. Every call reacquires full current authority within its original
+deadline; final publication still verifies the complete plan. Calls without the hint retain the original
+whole-plan behavior, and new Workflows accept older Files workers' actual
+`staged` or `blocked` replies. Histories without the patch marker replay their
+original Activity inputs. Protected Files exceptions retain their existing
+failure type and retry semantics while exposing only finite diagnostic codes,
+allowlisted reasons or filesystem errno names, never private error text.
+
 `reverifyPlexBindingWorkflow` runs cold verification on `media-network` through
 the existing inventory outbox. Its arguments contain operation/epoch/asset IDs;
 complete expected coverage and immutable evidence remain in Media PostgreSQL.
