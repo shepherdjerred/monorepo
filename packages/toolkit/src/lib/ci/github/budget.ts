@@ -14,6 +14,7 @@ import {
   mkdir,
   readdir,
   rename,
+  rm,
   stat,
   unlink,
   writeFile,
@@ -49,11 +50,50 @@ const PRUNE_EVERY_WRITES = 500;
 export type KeyValueStore = {
   read: <T>(key: string, schema: z.ZodType<T>) => Promise<T | undefined>;
   write: (key: string, value: unknown) => Promise<void>;
+  /**
+   * Read-modify-write one key with no interleaved update from any writer of
+   * this store. `change` returns the new value, or undefined to keep the
+   * current one.
+   */
+  update: <T>(
+    key: string,
+    schema: z.ZodType<T>,
+    change: (current: T | undefined) => T | undefined,
+  ) => Promise<void>;
 };
+
+/** Run updates of one key strictly one after another within this process. */
+class KeyQueue {
+  readonly #tails = new Map<string, Promise<void>>();
+  run(key: string, task: () => Promise<void>): Promise<void> {
+    const previous = this.#tails.get(key);
+    const next = (async () => {
+      if (previous !== undefined) await settle(previous);
+      await task();
+    })();
+    this.#tails.set(key, next);
+    void this.#forget(key, next);
+    return next;
+  }
+  async #forget(key: string, tail: Promise<void>): Promise<void> {
+    await settle(tail);
+    if (this.#tails.get(key) === tail) this.#tails.delete(key);
+  }
+}
+
+/** Wait for a queued update whether it succeeded or failed; its caller sees the error. */
+async function settle(promise: Promise<void>): Promise<void> {
+  try {
+    await promise;
+  } catch {
+    // Reported to the update that failed; the next one still runs.
+  }
+}
 
 /** A bounded in-process store; the default when no shared directory is wanted. */
 export class MemoryStore implements KeyValueStore {
   readonly #entries = new Map<string, unknown>();
+  readonly #queue = new KeyQueue();
   constructor(readonly maxEntries = 1000) {}
   read<T>(key: string, schema: z.ZodType<T>): Promise<T | undefined> {
     if (!this.#entries.has(key)) return Promise.resolve(undefined);
@@ -71,7 +111,22 @@ export class MemoryStore implements KeyValueStore {
     }
     return Promise.resolve();
   }
+  update<T>(
+    key: string,
+    schema: z.ZodType<T>,
+    change: (current: T | undefined) => T | undefined,
+  ): Promise<void> {
+    return this.#queue.run(key, async () => {
+      const next = change(await this.read(key, schema));
+      if (next !== undefined) await this.write(key, next);
+    });
+  }
 }
+
+/** A lock older than this was left by a process that died holding it. */
+const STALE_LOCK_MS = 10_000;
+/** How long an update waits for another process's lock before failing. */
+const LOCK_WAIT_MS = 5000;
 
 const StoredSchema = z.object({ key: z.string(), value: z.unknown() });
 
@@ -83,6 +138,7 @@ const StoredSchema = z.object({ key: z.string(), value: z.unknown() });
 export class DiskStore implements KeyValueStore {
   #writes = 0;
   #created = false;
+  readonly #queue = new KeyQueue();
   constructor(
     readonly directory: string,
     readonly now: () => number = Date.now,
@@ -121,6 +177,52 @@ export class DiskStore implements KeyValueStore {
     if (++this.#writes % PRUNE_EVERY_WRITES === 0) await this.prune();
   }
 
+  /**
+   * Serialized across processes by an exclusive lock directory beside the
+   * entry (`mkdir` is atomic), and within this process by a queue. A lock left
+   * by a crashed process is broken after ten seconds; a live one that is not
+   * released within five seconds fails the update loudly.
+   */
+  update<T>(
+    key: string,
+    schema: z.ZodType<T>,
+    change: (current: T | undefined) => T | undefined,
+  ): Promise<void> {
+    return this.#queue.run(key, async () => {
+      const lock = `${this.#file(key)}.lock`;
+      await this.#acquire(lock);
+      try {
+        const next = change(await this.read(key, schema));
+        if (next !== undefined) await this.write(key, next);
+      } finally {
+        await rm(lock, { recursive: true, force: true });
+      }
+    });
+  }
+
+  async #acquire(lock: string): Promise<void> {
+    if (!this.#created) {
+      await mkdir(this.directory, { recursive: true, mode: 0o700 });
+      this.#created = true;
+    }
+    const deadline = Date.now() + LOCK_WAIT_MS;
+    for (;;) {
+      try {
+        await mkdir(lock);
+        return;
+      } catch (error) {
+        if (!isExisting(error)) throw error;
+      }
+      if (await isStale(lock, this.now())) {
+        await rm(lock, { recursive: true, force: true });
+        continue;
+      }
+      if (Date.now() >= deadline)
+        throw new Error(`Timed out waiting for the GitHub budget lock ${lock}`);
+      await Bun.sleep(5);
+    }
+  }
+
   /** Remove entries and stray temporaries nobody has touched for two days. */
   async prune(): Promise<void> {
     const cutoff = this.now() - STORE_TTL_MS;
@@ -140,6 +242,21 @@ export class DiskStore implements KeyValueStore {
 const MissingFileSchema = z.object({ code: z.literal("ENOENT") });
 function isMissing(error: unknown): boolean {
   return MissingFileSchema.safeParse(error).success;
+}
+const ExistingFileSchema = z.object({ code: z.literal("EEXIST") });
+function isExisting(error: unknown): boolean {
+  return ExistingFileSchema.safeParse(error).success;
+}
+
+async function isStale(lock: string, now: number): Promise<boolean> {
+  try {
+    const { mtimeMs } = await stat(lock);
+    return now - mtimeMs > STALE_LOCK_MS;
+  } catch (error) {
+    // Released between our mkdir and stat: not stale, just retry.
+    if (isMissing(error)) return false;
+    throw error;
+  }
 }
 
 /** `$XDG_CACHE_HOME/toolkit/github`, shared by every toolkit process. */
@@ -243,25 +360,26 @@ export class RateLimitLedger {
     bucket: RateLimitBucket | null,
   ): Promise<void> {
     if (bucket === null) return;
-    const ledger =
-      (await this.store.read(RateLimitLedger.KEY, LedgerSchema)) ?? {};
     const key = `${identity}:${bucket.resource}`;
-    const current = ledger[key];
-    const replace =
-      current === undefined ||
-      bucket.resetAt > current.resetAt ||
-      (bucket.resetAt === current.resetAt &&
-        bucket.remaining < current.remaining);
-    if (!replace) return;
     const expired = this.now() - 60 * 60_000;
-    await this.store.write(
-      RateLimitLedger.KEY,
-      Object.fromEntries(
-        [...Object.entries(ledger), [key, bucket] as const].filter(
-          ([, entry]) => entry.resetAt >= expired,
-        ),
-      ),
-    );
+    // One serialized read-modify-write, so concurrent responses never erase
+    // another resource's observation or raise a drained bucket.
+    await this.store.update(RateLimitLedger.KEY, LedgerSchema, (stored) => {
+      const ledger = stored ?? {};
+      const current = ledger[key];
+      const replace =
+        current === undefined ||
+        bucket.resetAt > current.resetAt ||
+        (bucket.resetAt === current.resetAt &&
+          bucket.remaining < current.remaining);
+      return replace
+        ? Object.fromEntries(
+            [...Object.entries(ledger), [key, bucket] as const].filter(
+              ([, entry]) => entry.resetAt >= expired,
+            ),
+          )
+        : undefined;
+    });
   }
 
   /** The current window's observation, or null once that window has reset. */

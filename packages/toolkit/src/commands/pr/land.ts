@@ -90,7 +90,11 @@ export type LandDependencies = {
    */
   quota?: (signal: AbortSignal, fresh: boolean) => Promise<number | null>;
   /** Waits until `resumeAt`; reports why on stderr. */
-  pause?: (resumeAt: number, signal: AbortSignal) => Promise<void>;
+  pause?: (
+    resumeAt: number,
+    signal: AbortSignal,
+    deadline: number | null,
+  ) => Promise<void>;
 };
 
 export type LandRequest = {
@@ -114,11 +118,14 @@ export async function mergeQuota(
   }
 }
 
+/** Sleep until the reset plus jitter, but never past the land deadline. */
 async function pauseForQuota(
   resumeAt: number,
   signal: AbortSignal,
+  deadline: number | null,
 ): Promise<void> {
-  const at = resumeAt + Math.floor(Math.random() * RESUME_SPREAD_MS);
+  const spread = resumeAt + Math.floor(Math.random() * RESUME_SPREAD_MS);
+  const at = deadline === null ? spread : Math.min(spread, deadline);
   console.error(
     `GitHub GraphQL budget cannot cover a merge; resuming at ${new Date(at).toISOString()} and re-checking readiness. This does not mean CI failed.`,
   );
@@ -288,11 +295,30 @@ export async function landPr(
     head = ready.pr.head.sha;
     const attempt = await attemptMerge(context, result, ready, retried);
     if ("done" in attempt) return attempt.done;
-    if (deadline !== null && attempt.retryAt > deadline)
-      return attempt.otherwise;
     if (attempt.kind === "refused") retried = true;
-    await pause(attempt.retryAt, signal);
+    if (!(await pauseWithin(attempt.retryAt, deadline, signal, pause)))
+      return attempt.otherwise;
   }
+}
+
+/**
+ * Pause for a retry. False when the retry cannot start before the deadline,
+ * either because the reset is later or because the deadline passed while
+ * paused.
+ */
+async function pauseWithin(
+  retryAt: number,
+  deadline: number | null,
+  signal: AbortSignal,
+  pause: NonNullable<LandDependencies["pause"]>,
+): Promise<boolean> {
+  if (deadline === null) {
+    await pause(retryAt, signal, null);
+    return true;
+  }
+  if (retryAt > deadline) return false;
+  await pause(retryAt, signal, deadline);
+  return Date.now() < deadline;
 }
 
 export async function landCommand(

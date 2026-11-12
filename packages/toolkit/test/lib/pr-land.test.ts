@@ -202,7 +202,7 @@ test("a bucket too low for a merge waits for the reset and proves readiness agai
     { wait, merge, quota, pause },
   );
   expect(result.verdict.outcome).toBe("merged");
-  expect(pause).toHaveBeenCalledWith(1000, expect.any(AbortSignal));
+  expect(pause).toHaveBeenCalledWith(1000, expect.any(AbortSignal), null);
   expect(wait).toHaveBeenCalledTimes(2);
   // The second wait stays pinned to the head proven ready the first time.
   expect(wait.mock.calls[1]?.[2]).toMatchObject({ head: CI_HEAD });
@@ -231,7 +231,7 @@ test("a merge refused on quota is retried once after the reset", async () => {
   );
   expect(result.verdict.outcome).toBe("merged");
   expect(merge).toHaveBeenCalledTimes(2);
-  expect(pause).toHaveBeenCalledWith(2000, expect.any(AbortSignal));
+  expect(pause).toHaveBeenCalledWith(2000, expect.any(AbortSignal), null);
 });
 
 test("a second quota-refused merge reports merge_failed instead of retrying again", async () => {
@@ -268,6 +268,35 @@ test("a quota wait past the deadline reports timeout without merging", async () 
     },
   );
   expect(result.verdict.outcome).toBe("timeout");
+  expect(merge).not.toHaveBeenCalled();
+});
+
+test("the quota pause is bounded by the land deadline", async () => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  stubPr({ value: false });
+  const merge = vi.fn();
+  const wait = vi.fn<typeof waitForPr>(async () => ready());
+  const pause = vi.fn(
+    async (
+      _resumeAt: number,
+      _signal: AbortSignal,
+      deadline: number | null,
+    ) => {
+      // The deadline arrives while paused; land must not wait for the jitter.
+      expect(deadline).not.toBeNull();
+      vi.setSystemTime((deadline ?? 0) + 1);
+      await Promise.resolve();
+    },
+  );
+  const { result } = await landPr(
+    { number: 99, observer: observer(), signal: new AbortController().signal },
+    { ...options, timeoutMs: 60_000 },
+    { wait, merge, quota: async () => Date.now() + 30_000, pause },
+  );
+  vi.useRealTimers();
+  expect(result.verdict.outcome).toBe("timeout");
+  expect(pause).toHaveBeenCalledTimes(1);
+  expect(wait).toHaveBeenCalledTimes(1);
   expect(merge).not.toHaveBeenCalled();
 });
 

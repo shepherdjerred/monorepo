@@ -572,8 +572,9 @@ everything else:
 - Processes on one host share `$XDG_CACHE_HOME/toolkit/github` (default
   `~/.cache/toolkit/github`): ETagged bodies (a 304 is free), memoized rules
   and decisions, and the newest `x-ratelimit-*` observation per token and
-  resource. Files are replaced by atomic rename; entries untouched for two days
-  are pruned. Periodic reads accept another process's body up to 15 seconds
+  resource. Files are replaced by atomic rename, the rate-limit ledger is
+  updated under an exclusive lock, and entries untouched for two days are
+  pruned. Periodic reads accept another process's body up to 15 seconds
   old; event-driven and forced reads always ask GitHub.
 - Below half of either bucket, periodic GitHub reads stretch in proportion.
   Below 20%, they stop until the bucket resets, and each process resumes at

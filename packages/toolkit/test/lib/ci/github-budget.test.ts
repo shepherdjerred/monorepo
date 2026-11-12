@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { mkdtemp, readdir, rm, utimes } from "node:fs/promises";
+import { mkdir, mkdtemp, readdir, rm, utimes } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
@@ -39,6 +39,10 @@ const bucket = (
   observedAt,
 });
 
+function increment(current: number | undefined): number {
+  return current === undefined ? 1 : current + 1;
+}
+
 describe("shared store", () => {
   test("separate processes see each other's writes and leave no temporaries", async () => {
     const first = new DiskStore(directory);
@@ -56,6 +60,36 @@ describe("shared store", () => {
     expect(await first.read("pr:2", z.unknown())).toBeUndefined();
     const names = await readdir(directory);
     expect(names.some((name) => name.endsWith(".tmp"))).toBe(false);
+  });
+
+  test("updates from two processes and parallel requests never lose a write", async () => {
+    const first = new DiskStore(directory);
+    const second = new DiskStore(directory);
+    await Promise.all(
+      Array.from({ length: 40 }, (_, index) =>
+        (index % 2 === 0 ? first : second).update(
+          "count",
+          z.number(),
+          increment,
+        ),
+      ),
+    );
+    expect(await first.read("count", z.number())).toBe(40);
+    const names = await readdir(directory);
+    expect(names.some((name) => name.endsWith(".lock"))).toBe(false);
+  });
+
+  test("a lock left by a crashed process is broken", async () => {
+    const store = new DiskStore(directory);
+    await store.write("count", 1);
+    const [file] = await readdir(directory);
+    if (file === undefined) throw new Error("the entry was not written");
+    const lock = path.join(directory, `${file}.lock`);
+    await mkdir(lock);
+    const stale = (Date.now() - 60_000) / 1000;
+    await utimes(lock, stale, stale);
+    await store.update("count", z.number(), increment);
+    expect(await store.read("count", z.number())).toBe(2);
   });
 
   test("pruning removes only entries untouched for two days", async () => {
@@ -80,6 +114,20 @@ describe("shared store", () => {
 });
 
 describe("rate-limit ledger", () => {
+  test("concurrent observations of two resources both survive", async () => {
+    const ledger = new RateLimitLedger(new DiskStore(directory));
+    const later = Date.now() + 600_000;
+    await Promise.all([
+      ledger.record("me", { ...bucket(4000, later), resource: "core" }),
+      ledger.record("me", bucket(3000, later)),
+      ledger.record("me", bucket(3500, later)),
+    ]);
+    const core = await ledger.bucket("me", "core");
+    const graphql = await ledger.bucket("me", "graphql");
+    expect(core?.remaining).toBe(4000);
+    expect(graphql?.remaining).toBe(3000);
+  });
+
   test("keeps the lowest remaining within a window and replaces it after a reset", async () => {
     let now = 1000;
     const ledger = new RateLimitLedger(new DiskStore(directory), () => now);
