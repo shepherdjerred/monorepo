@@ -1,4 +1,5 @@
 import { VersioningBehavior } from "@temporalio/common";
+import { PROMOTION_ACTIVITY_DRAIN_MS } from "@shepherdjerred/ops-model/promotion/drain-policy.ts";
 import { Worker } from "@temporalio/worker";
 import type { NativeConnection } from "@temporalio/worker";
 import type { createTemporalWorkerTracing } from "@shepherdjerred/temporal-observability/interceptors";
@@ -74,6 +75,9 @@ export async function createQueueWorker(
     connection,
     namespace,
     activities: definition.activities,
+    ...(definition.role === "promotion"
+      ? { shutdownGraceTime: PROMOTION_ACTIVITY_DRAIN_MS }
+      : {}),
     taskQueue: definition.taskQueue,
     ...(temporalTracing === undefined
       ? {}

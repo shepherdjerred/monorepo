@@ -20,6 +20,10 @@ import {
 } from "#activities/promotion/store.ts";
 import { promotionSpendDay, dailyPromotionSolverCharges } from "./budget.ts";
 import { z } from "zod/v4";
+import {
+  PromotionAiLedgerSchema,
+  promotionAiAccounting,
+} from "@shepherdjerred/ops-model/promotion/ai-allocation.ts";
 
 type Batch = z.infer<typeof PromotionBatchSchema>;
 function entryStatus(batch: Batch, entry: Batch["entries"][number]) {
@@ -193,7 +197,7 @@ export async function readProductionPromotionStatus(
       };
     },
   );
-  const spend = await readSpend(store);
+  const spend = await readPromotionSpend(store);
   const presentation = batches.map((batch) => ({
     ...batch,
     interrupted: batch.interrupted ?? false,
@@ -210,18 +214,19 @@ export async function readProductionPromotionStatus(
   return { overview, history, evidence };
 }
 
-async function readSpend(store: PromotionStore) {
+export async function readPromotionSpend(
+  store: PromotionStore = promotionStore(),
+) {
   const day = promotionSpendDay();
   const ledger = await store.read(
     `ai/daily/${day}.json`,
-    z.record(z.string(), z.object({ chargedUsd: z.number().nullable() })),
+    PromotionAiLedgerSchema,
   );
   const charges = Object.values(ledger?.value ?? {});
   const solverCharges = await dailyPromotionSolverCharges(store);
   return {
     day,
-    aiUsd: charges.reduce((n, c) => n + (c.chargedUsd ?? 0), 0),
-    unknownAi: charges.filter((c) => c.chargedUsd === null).length,
+    ...promotionAiAccounting(charges),
     captchaUsd:
       solverCharges.reduce((n, c) => n + (c.chargedMicrousd ?? 0), 0) / 1e6,
     pendingCaptchaUsd:

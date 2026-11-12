@@ -826,6 +826,18 @@ PinchTab credentials or config.
   `--dry-run` prints the native invocation without starting a Workflow. See the
   [promotion task reference](../temporal/README.md#the-storm-promotion-task) for
   target inventory, ownership, credentials and activation requirements.
+- `toolkit promotion resolve-absence TARGET --evidence-file FILE --evidence-sha256 SHA --resolution-id UUID [--expected-state-etag ETAG] [--apply] [--json] [--dry-run]`
+  plans an independently reviewed absence decision for one uncertain native bump.
+  Apply requires the reviewed state ETag, records `no-action`, and leaves the target paused.
+  Evidence uses stdin rather than process arguments. See the
+  [promotion task reference](../temporal/README.md#the-storm-promotion-task)
+  for its evidence contract and committed-resolution readback.
+- `toolkit promotion allocate-ai --file FILE [--apply] [--json] [--dry-run]`
+  plans a conservative budget allocation for one closed execution with unknown
+  exact AI usage. The native plan checks the reviewed provider window and returns
+  the ledger version, row digest and computed audit identity required for apply. Allocation preserves
+  unknown exact usage; it is separate from recorded charges. Input travels through
+  stdin. `--dry-run` prints the invocation without starting the control Workflow.
 - `toolkit history ...` searches the private, rebuildable local agent-history
   index. It never treats prior conversation as current deployment truth.
 

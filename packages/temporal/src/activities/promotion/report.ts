@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { Context } from "@temporalio/activity";
 import { ReportEnvelopeV1Schema } from "#shared/reports/report.ts";
 import type { PromotionState } from "#shared/promotion/model.ts";
+import type { promotionAiAccounting } from "@shepherdjerred/ops-model/promotion/ai-allocation.ts";
 
 export function promotionAlertFingerprint(
   state: PromotionState,
@@ -19,6 +20,7 @@ export function promotionReport(
   states: readonly PromotionState[],
   solverMicrousd: number,
   alertFingerprint?: string,
+  ai?: ReturnType<typeof promotionAiAccounting>,
 ) {
   const now = new Date().toISOString();
   const info = Context.current().info;
@@ -47,7 +49,7 @@ export function promotionReport(
         : uninspected.length > 0
           ? "inconclusive"
           : "clear",
-    headline: `${String(states.length)} destinations tracked; ${String(blocked.length)} blocked. Solver spending or reservations this month: $${(solverMicrousd / 1_000_000).toFixed(2)}.`,
+    headline: `${String(states.length)} destinations tracked; ${String(blocked.length)} blocked. Solver spending or reservations this month: $${(solverMicrousd / 1_000_000).toFixed(2)}.${ai === undefined ? "" : ` AI today: $${ai.aiUsd.toFixed(5)} recorded + $${ai.allocatedAiUsd.toFixed(5)} reviewed budget allocation; ${String(ai.unknownAi)} exact costs unknown (${String(ai.unallocatedUnknownAi)} unallocated).`}`,
     checks: states.map((state) => ({
       id: state.targetId,
       label: state.targetId,

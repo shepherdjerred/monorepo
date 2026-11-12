@@ -5,7 +5,8 @@ import { setThemePreference, useThemePreference } from "#client/theme.ts";
 import { RunPanel } from "./run-panel.tsx";
 import { SourceGroups } from "./source-groups.tsx";
 import { HistoryPanel } from "./history-panel.tsx";
-import { time, money } from "./ui.tsx";
+import { time } from "./ui.tsx";
+import { PromotionSpendSummary } from "./spend-summary.tsx";
 
 export function PromotionPage() {
   const initialSource =
@@ -102,11 +103,7 @@ export function PromotionPage() {
                 {data.scheduling === "manual"
                   ? "Runs start manually."
                   : "Scheduled sweeps: 8am, noon, 4pm and 8pm Pacific. Daily sources: 4–8pm."}{" "}
-                Recorded spend today: {money(data.spend.aiUsd)} AI
-                {" + "}
-                {money(data.spend.captchaUsd)} CAPTCHA.
-                {data.spend.unknownAi > 0 &&
-                  ` ${String(data.spend.unknownAi)} usage records have unknown cost.`}
+                <PromotionSpendSummary spend={data.spend} />
               </p>
             </details>
           </>

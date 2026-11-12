@@ -8,6 +8,8 @@ import {
   workflowInfo,
 } from "@temporalio/workflow";
 import type { PromotionActivities } from "#activities/promotion/index.ts";
+import * as absenceResolution from "./absence-resolution.ts";
+import * as aiAllocation from "./ai-allocation.ts";
 import type { ReportDeliveryActivities } from "#activities/reports/report-delivery.ts";
 import type { PromotionRunInput } from "#shared/promotion/model.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
@@ -122,6 +124,10 @@ export async function manageStormPromotion(
 ) {
   return await reads.managePromotion(input);
 }
+
+export const resolveStormPromotionAbsence =
+  absenceResolution.resolveStormPromotionAbsence;
+export const allocateStormPromotionAi = aiAllocation.allocateStormPromotionAi;
 
 export async function reportStormPromotion() {
   return await reports.deliverReport(await reads.collectPromotionDailyReport());

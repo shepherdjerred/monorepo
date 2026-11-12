@@ -16,7 +16,8 @@
     "#db/*": "./src/db/*",
     "#scripts/*": "./scripts/*",
     "#schedules/*": "./src/schedules/*",
-    "#worker-config": "./src/worker-config.ts"
+    "#worker-config": "./src/worker-config.ts",
+    "#worker-factory": "./src/worker-factory.ts"
   },
   "scripts": {
     "start": "bun run src/worker.ts",

@@ -1,17 +1,15 @@
 import { costForTextUsage } from "@shepherdjerred/llm-models";
-import { z } from "zod/v4";
+import type { z } from "zod/v4";
 import type { PromotionStore } from "#activities/promotion/store.ts";
 import type { AgentTurnUsage } from "#lib/agent-runner/contract.ts";
 import { SolverBudgetSchema } from "#activities/promotion/store.ts";
+import {
+  PromotionAiLedgerSchema,
+  promotionAiAccounting,
+} from "@shepherdjerred/ops-model/promotion/ai-allocation.ts";
 export class PromotionBudgetStop extends Error {}
 
-const Ledger = z.record(
-  z.string(),
-  z.object({
-    reservedUsd: z.number().nonnegative(),
-    chargedUsd: z.number().nonnegative().nullable(),
-  }),
-);
+const Ledger = PromotionAiLedgerSchema;
 
 export function promotionSpendDay(date = new Date()) {
   return new Intl.DateTimeFormat("en-CA", {
@@ -76,11 +74,9 @@ export async function reservePromotionAi(
       0,
     ) / 1_000_000;
   await change((ledger) => {
-    const spent = Object.values(ledger).reduce(
-      (sum, row) => sum + (row.chargedUsd ?? 0),
-      solverUsd,
-    );
-    if (Object.values(ledger).some((row) => row.chargedUsd === null))
+    const accounting = promotionAiAccounting(Object.values(ledger));
+    const spent = accounting.aiUsd + accounting.allocatedAiUsd + solverUsd;
+    if (accounting.unallocatedUnknownAi > 0)
       throw new PromotionBudgetStop(
         "Previous AI usage is unknown; stop until accounted for",
       );
@@ -90,15 +86,29 @@ export async function reservePromotionAi(
       );
     if (ledger[occurrenceId] !== undefined)
       throw new Error("AI occurrence already recorded");
-    return { ...ledger, [occurrenceId]: { reservedUsd: 0, chargedUsd: null } };
+    return {
+      ...ledger,
+      [occurrenceId]: {
+        reservedUsd: 0,
+        chargedUsd: null,
+        model: settings.model,
+      },
+    };
   });
   return async (usage: AgentTurnUsage) => {
     const chargedUsd = costForTextUsage(settings.model, usage);
     if (chargedUsd === undefined)
       throw new Error("Cannot price AI usage; cost remains unknown");
-    await change((ledger) => ({
-      ...ledger,
-      [occurrenceId]: { reservedUsd: 0, chargedUsd },
-    }));
+    await change((ledger) => {
+      if (
+        ledger[occurrenceId] === undefined ||
+        ledger[occurrenceId].budgetAllocation !== undefined
+      )
+        throw new Error("AI reservation disappeared or was already allocated");
+      return {
+        ...ledger,
+        [occurrenceId]: { reservedUsd: 0, chargedUsd, model: settings.model },
+      };
+    });
   };
 }
