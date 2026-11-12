@@ -70,6 +70,12 @@ export class PrismaPlexAdministration extends MediaCommandBase {
     );
   }
 
+  /** Owner-only registered client for explicit library metadata commands. */
+  async libraryClient(actor: MediaActor) {
+    const clients = await this.ownerClients(actor);
+    return clients.server;
+  }
+
   async profiles(actor: MediaActor) {
     const clients = await this.ownerClients(actor);
     const [homeUsers, serverAccounts, mappings] = await Promise.all([

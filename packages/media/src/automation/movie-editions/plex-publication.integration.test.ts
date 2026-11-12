@@ -21,6 +21,10 @@ import { visibleMovieRequests } from "#infrastructure/visibility/movie-requests.
 import { publishMoviePlexV4 } from "./plex-publication.ts";
 import { finalizeMovieAcquisitionV4 } from "./finalization.ts";
 import { grantTestManagedStorage } from "#testing/managed-storage.ts";
+import { captureExistingPlexBindingExpected } from "#infrastructure/plex-binding/cold.ts";
+import { readPlexGroupUnion } from "#infrastructure/plex-binding/groups.ts";
+import { parsePlexRecord } from "#infrastructure/plex-binding/records.ts";
+import { PlexAssociationSchema } from "#shared/plex-binding/contract.ts";
 
 const h = automationTestHarness();
 const directories: string[] = [];
@@ -57,6 +61,64 @@ test("Media-owned movie publishes and finalizes with canonical storage while no 
     testPlexBindingExecution(),
   );
   expect(await h.database().legacyWriterLease.count()).toBe(0);
+});
+
+test("normal inventory reads a real v4 movie's schema2 current association and its exact cold parent", async () => {
+  const f = await fixture("default");
+  await expect(
+    publishMoviePlexV4(f.network, f.input, testPlexBindingExecution()),
+  ).resolves.toEqual({ status: "available", reason: null });
+  await finalizeMovieAcquisitionV4(
+    f.network,
+    f.input,
+    testPlexBindingExecution(),
+  );
+  const before = await h.database().plexBindingCurrent.findUniqueOrThrow({
+    where: { mediaId_edition: { mediaId: f.media.id, edition: "default" } },
+    include: { evidence: true },
+  });
+  const union = await readPlexGroupUnion(h.database(), [f.media.id]);
+  expect(union.oldGroups).toMatchObject([
+    { assetId: f.asset.id, checksum: f.asset.checksum },
+  ]);
+  expect(union.newGroups).toEqual(union.oldGroups);
+  const literal = z
+    .record(z.string(), z.json())
+    .parse(before.evidence?.evidence);
+  for (const invalid of [
+    { ...literal, schemaVersion: 99 },
+    { ...literal, item: null },
+  ])
+    expect(() =>
+      parsePlexRecord(PlexAssociationSchema, invalid, identityHash(invalid)),
+    ).toThrow();
+  expect(() =>
+    parsePlexRecord(PlexAssociationSchema, literal, "0".repeat(64)),
+  ).toThrow("Plex immutable evidence hash changed");
+  const expected = await captureExistingPlexBindingExpected(
+    h.database(),
+    {
+      assetIds: [f.asset.id],
+      access: [
+        {
+          serverMachineId: "fixture-server",
+          sectionId: "1",
+          sectionType: "movie",
+        },
+      ],
+    },
+    new PublicationAuthorityReadBudget(),
+  );
+  expect(expected.newGroups).toEqual(union.newGroups);
+  expect(expected.targets).toMatchObject([
+    { scope: { mediaId: f.media.id, edition: "default" } },
+  ]);
+  expect(
+    await h.database().plexBindingCurrent.findUniqueOrThrow({
+      where: { mediaId_edition: { mediaId: f.media.id, edition: "default" } },
+      include: { evidence: true },
+    }),
+  ).toEqual(before);
 });
 
 test.each(MovieEditionKeySchema.options)(

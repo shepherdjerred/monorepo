@@ -24,6 +24,9 @@ export function playbackMessage(playback: MediaVisibility["playback"]): string {
   if (playback.scope === "collection")
     return [
       `${String(playback.playableItems)} of ${String(playback.visibleItems)} visible episodes are ready to watch.`,
+      (playback.externalAvailableItems ?? 0) > 0
+        ? `${String(playback.externalAvailableItems)} visible ${playback.externalAvailableItems === 1 ? "episode is" : "episodes are"} available in Plex; managed by the existing stack.`
+        : "",
       collectionAssociationMessage(playback.association),
       playback.playable && playback.upgradeInProgress
         ? "Upgrades can continue while these versions remain playable."
@@ -35,6 +38,8 @@ export function playbackMessage(playback: MediaVisibility["playback"]): string {
     return playback.upgradeInProgress
       ? "Your current version is ready to watch while an upgrade is in progress."
       : "Your current version is ready to watch in Plex.";
+  if ((playback.externalAvailableItems ?? 0) > 0)
+    return "Available in Plex; managed by the existing stack.";
   if (playback.association.reconciliationRequiredItems > 0)
     return "This copy needs reconciliation before playback can be verified.";
   return playback.association.legacyUnverifiedItems > 0
@@ -44,6 +49,7 @@ export function playbackMessage(playback: MediaVisibility["playback"]): string {
 
 export function playbackHeading(playback: MediaVisibility["playback"]): string {
   if (!playback.playable) {
+    if ((playback.externalAvailableItems ?? 0) > 0) return "Available in Plex";
     if (playback.association.reconciliationRequiredItems > 0)
       return "Playback needs reconciliation";
     return playback.association.legacyUnverifiedItems > 0

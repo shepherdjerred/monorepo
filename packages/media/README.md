@@ -696,6 +696,47 @@ neither reserve space nor grant ownership, cleanup or write permission. Existing
 immediate copy-time capacity checks remain authoritative; collection never
 changes acknowledgement of an existing file operation.
 
+## External library registration API
+
+Existing Plex libraries can be registered separately through the owner-only
+external-library API while Radarr and Sonarr continue running. First adopt each
+canonical movie or series through `catalog.adopt` and finish its catalog refresh.
+`GET /api/v1/admin/external-library/items?sectionType=movie&offset=0` (or `show`)
+lists bounded Plex items and their actual GUIDs and Parts. `POST
+/api/v1/admin/external-library/preview` takes `{sectionType,ratingKey}` and an
+`Idempotency-Key`; inspect the returned canonical mapping, physical cohort and
+protected conflicts. `POST /api/v1/admin/external-library/apply` takes
+`{previewOperationId,previewHash}` and its own stable `Idempotency-Key` within the
+60-second review lifetime. It rechecks the current owner, PMS server/section,
+GUID hierarchy, exact Part/path/size, canonical versions and complete normal
+inventory cohort before recording the explicit command and registration event.
+Missing catalog identities, stale reviews and changed proofs require a new
+preview. Owned paths, any owned coverage history and active reservations are
+preserved and reported rather than overwritten.
+
+Registration creates only passive default targets when missing, unowned
+published assets and their current coverage. It creates no request, monitoring,
+profile binding, torrent, filesystem ownership or automation grant, and leaves
+existing targets unchanged. Registered movie and episode rows record generic
+available presence; target availability and collection state retain their
+existing semantics. Generic externally managed Plex availability is
+separate from owned playable bindings. Movie labels are retained as observed;
+an unmarked or unverified cut never implies Theatrical or fulfills a canonical
+edition request. Availability requires the latest normal inventory source
+collection (phase `section >= 2`, independently of later owned cleanup) within
+25 hours: the 24-hour cadence plus its one-hour execution bound. Current
+unowned coverage continues protecting against duplicate acquisition and
+upgrades when that observation becomes stale. Inventory itself remains
+observation-only; registration requires the explicit owner command.
+
+Edition correction is a separate owner-reviewed metadata-only command
+(`edition-preview`, `edition-apply`). It verifies the configured server/section,
+canonical GUID and filename cut, single Part/path/size and watch facts, then
+records durable intent before changing only `editionTitle`. It grants no
+filesystem ownership or automation authority and leaves exclusive v3 handoff
+unchanged. Unmarked files never imply Theatrical; ambiguous markers remain
+protected. An uncertain intent permits readback only, never another PUT.
+
 ## Ownership handoff API contract
 
 The owner-only handoff API accepts stored immutable migration bundle reviews.

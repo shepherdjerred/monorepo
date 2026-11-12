@@ -1,6 +1,6 @@
 import type { Prisma } from "#generated/prisma/client.ts";
 import {
-  PlexAssociationV1Schema,
+  PlexAssociationSchema,
   type PlexPhysicalGroup,
 } from "#shared/plex-binding/contract.ts";
 import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
@@ -35,7 +35,7 @@ async function readPreviousGroups(
     if (pointer.evidence === null || pointer.associationHash === null)
       throw new Error("Current Plex evidence disappeared");
     const association = parsePlexRecord(
-      PlexAssociationV1Schema,
+      PlexAssociationSchema,
       pointer.evidence.evidence,
       pointer.associationHash,
     );

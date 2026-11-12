@@ -26,6 +26,8 @@ export const MediaVisibilitySchema = z.strictObject({
       playable: z.boolean(),
       playableItems: z.int().nonnegative(),
       visibleItems: z.int().nonnegative(),
+      // Actual Plex presence, without Media-owned playback or edition fulfillment.
+      externalAvailableItems: z.int().nonnegative().optional(),
       association: z.strictObject({
         legacyUnverifiedItems: z.int().nonnegative(),
         reconciliationRequiredItems: z.int().nonnegative(),
@@ -38,7 +40,9 @@ export const MediaVisibilitySchema = z.strictObject({
       (playback) =>
         playback.association.legacyUnverifiedItems +
           playback.association.reconciliationRequiredItems <=
-        playback.visibleItems,
+          playback.visibleItems &&
+        (playback.externalAvailableItems ?? 0) + playback.playableItems <=
+          playback.visibleItems,
       "Association counts exceed visible items",
     ),
   attempts: z

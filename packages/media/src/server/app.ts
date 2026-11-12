@@ -1,4 +1,8 @@
 import { Hono } from "hono";
+import {
+  registerExternalLibraryRoutes,
+  type ExternalLibraryAdministration,
+} from "./external-library-routes.ts";
 import { registerAcquisitionRoutes } from "./media/acquisition-routes.ts";
 import { registerMediaEditionRoutes } from "./media/movie-edition-routes.ts";
 import { registerMovieLifecycleRoutesV4 } from "./media/movie-lifecycle-routes-v4.ts";
@@ -78,6 +82,7 @@ export type MediaAppDependencies = {
   >;
   media: MediaApplication;
   movieLifecycle?: MovieLifecycleApplicationV4;
+  externalLibrary?: ExternalLibraryAdministration;
   movieHistory?: MovieHistoryAdministration;
   movieSubtitleReplacements?: MovieSubtitleReplacementAdministrationV2;
   movieRollback?: MovieRollbackAdministrationV1;
@@ -470,6 +475,7 @@ export function createMediaApp(dependencies: MediaAppDependencies) {
   registerAdminRoutes(app, dependencies.admin);
   registerNotificationActions(app, dependencies.notifications);
   registerPlexRoutes(app, dependencies.plexAdmin);
+  registerExternalLibraryRoutes(app, dependencies.externalLibrary);
   registerNumberingRoutes(app, dependencies.numberingAdmin);
   registerMigrationRoutes(app, dependencies.migrationAdmin);
   registerHandoffRoutes(app, dependencies.handoffAdmin);
