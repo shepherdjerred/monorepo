@@ -720,10 +720,6 @@
       "clones": 1,
       "tokens": 84
     },
-    "packages/media/src/automation/files/editions/freshness.integration.test.ts|packages/media/src/filesystem/operations/staging.test.ts": {
-      "clones": 1,
-      "tokens": 122
-    },
     "packages/media/src/automation/files/editions/freshness.integration.test.ts|packages/media/src/filesystem/publication-proof/before-effect.test.ts": {
       "clones": 1,
       "tokens": 83

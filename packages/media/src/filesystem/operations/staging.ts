@@ -9,6 +9,7 @@ import type { OperationJournal } from "./journal.ts";
 import type { OperationLocks } from "#filesystem/operation-locks.ts";
 import {
   requireFileIdentity,
+  copyVerifiedExclusive,
   type VerifiedFileProof,
 } from "#filesystem/verification.ts";
 import {
@@ -106,6 +107,7 @@ export class ImportStaging {
       journal: OperationJournal;
       controlPath: (relative: string) => Promise<string>;
       content: CopyIO;
+      contentProof: ContentProof | undefined;
       checkpoint: (phase: string) => Promise<void>;
       minimumFreeBytes: number | undefined;
       beforeEffect: () => void;
@@ -156,36 +158,13 @@ export class ImportStaging {
         `staging/${input.operationId}`,
       );
       const partial = `${staged}.partial`;
-      if (manifest.phase === "prepared") {
-        if (await exists(staged))
-          throw new FileOperationConflict(
-            "Unacknowledged staged artifact requires recovery",
-          );
-        await this.context.content.requireDigest(
-          descriptor.source,
-          input.sha256,
-        );
-        if (manifest.preparedPartial === undefined) {
-          const source = await lstat(descriptor.source);
-          await requireCapacity(
-            partial,
-            source.size,
-            this.context.minimumFreeBytes,
-          );
-          await copyImportPartial({
-            source: descriptor.source,
-            partial,
-            checksum: input.sha256,
-            replaceExisting: false,
-            content: this.context.content,
-            checkpoint: () => this.context.checkpoint("copying"),
-          });
-        }
-      }
+      const assertCopied = await this.preparePartial(manifest, partial, staged);
       const content = new ContentProof();
+      await assertCopied?.();
       for (const path of [partial, staged])
         await content.capture(path, () => this.context.checkpoint("hashing"));
       content.seal();
+      await assertCopied?.();
       if (
         (await content.digest(
           manifest.phase === "staged" ? staged : partial,
@@ -211,6 +190,7 @@ export class ImportStaging {
           };
           await journal.save(manifest, {
             validateBeforeInstall: async () => {
+              await assertCopied?.();
               await originalJournal.content.digest(journalPath);
             },
           });
@@ -239,6 +219,48 @@ export class ImportStaging {
       });
       return handle;
     });
+  }
+
+  private async preparePartial(
+    manifest: PreparedImportJournal,
+    partial: string,
+    staged: string,
+  ) {
+    if (manifest.phase !== "prepared") return null;
+    if (await exists(staged))
+      throw new FileOperationConflict(
+        "Unacknowledged staged artifact requires recovery",
+      );
+    if (
+      manifest.preparedPartial !== undefined ||
+      this.context.contentProof !== undefined
+    )
+      await this.context.content.requireDigest(
+        manifest.source,
+        manifest.sha256,
+      );
+    if (manifest.preparedPartial !== undefined) return null;
+    const source = await lstat(manifest.source);
+    await requireCapacity(partial, source.size, this.context.minimumFreeBytes);
+    if (await exists(partial))
+      throw new FileOperationConflict(
+        "Unproven import partial requires recovery",
+      );
+    if (this.context.contentProof === undefined)
+      return copyVerifiedExclusive(manifest.source, partial, {
+        checksum: manifest.sha256,
+        checkpoint: () => this.context.checkpoint("copying"),
+        beforeEffect: this.context.beforeEffect,
+      });
+    await copyImportPartial({
+      source: manifest.source,
+      partial,
+      checksum: manifest.sha256,
+      replaceExisting: false,
+      content: this.context.content,
+      checkpoint: () => this.context.checkpoint("copying"),
+    });
+    return null;
   }
 
   async commit(

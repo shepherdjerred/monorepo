@@ -84,6 +84,7 @@ export class FileOperations {
       journal: this.journal,
       controlPath: (relative) => this.controlPath(relative),
       content: this.content,
+      contentProof: options.contentProof,
       checkpoint: (phase) => this.checkpoint(phase),
       minimumFreeBytes: options.minimumFreeBytes,
       beforeEffect: () => {
