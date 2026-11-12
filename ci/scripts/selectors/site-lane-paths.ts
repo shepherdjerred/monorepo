@@ -22,8 +22,7 @@ export const sitePaths = {
     "packages/statically-typed",
     "packages/homelab/src/cdk8s/src/resources/s3-static-sites/sites.ts",
     "packages/homelab/src/tofu/cloudflare/statically-typed-com.tf",
-    "packages/homelab/src/tofu/seaweedfs/buckets.tf",
-    // The same zone and bucket once those stacks are synthesized: the
+    // The bucket's stack is synthesized, and the zone's will be: the
     // committed JSON OpenTofu runs, and the CDK Terrain source it comes from.
     "packages/homelab/src/tofu/cloudflare/main.tf.json",
     "packages/homelab/src/tofu/seaweedfs/main.tf.json",

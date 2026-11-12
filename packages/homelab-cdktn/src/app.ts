@@ -9,6 +9,7 @@ import { ArrStack } from "#src/stacks/arr.ts";
 import { CloudflareTokensStack } from "#src/stacks/cloudflare-tokens.ts";
 import { DockerhubStack } from "#src/stacks/dockerhub.ts";
 import { GithubStack } from "#src/stacks/github.ts";
+import { SeaweedfsStack } from "#src/stacks/seaweedfs.ts";
 import { TailscaleStack } from "#src/stacks/tailscale.ts";
 
 /**
@@ -24,6 +25,7 @@ export const SYNTHESIZED_STACKS = [
   "cloudflare-tokens",
   "dockerhub",
   "github",
+  "seaweedfs",
   "tailscale",
 ] as const;
 
@@ -38,6 +40,7 @@ const STACKS: Record<SynthesizedStack, new (scope: Construct) => HomelabStack> =
     "cloudflare-tokens": CloudflareTokensStack,
     dockerhub: DockerhubStack,
     github: GithubStack,
+    seaweedfs: SeaweedfsStack,
     tailscale: TailscaleStack,
   };
 

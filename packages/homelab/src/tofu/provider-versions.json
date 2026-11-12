@@ -55,7 +55,8 @@
     {
       "registryUrl": "https://registry.opentofu.org",
       "source": "hashicorp/aws",
-      "version": "6.68.0"
+      "version": "6.68.0",
+      "bindings": true
     },
     {
       "registryUrl": "https://registry.opentofu.org",

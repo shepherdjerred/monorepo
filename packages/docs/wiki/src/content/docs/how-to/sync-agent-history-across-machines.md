@@ -16,7 +16,7 @@ These exist once and are shared by every machine.
 
 | Piece                  | Where                                                                                       |
 | ---------------------- | ------------------------------------------------------------------------------------------- |
-| `brim-sessions` bucket | [SeaweedFS buckets](packages/homelab/src/tofu/seaweedfs/buckets.tf), applied by CI          |
+| `brim-sessions` bucket | [SeaweedFS buckets](packages/homelab-cdktn/src/stacks/seaweedfs.ts), applied by CI          |
 | Scoped `brim-sync` key | `brim-sync` identity in `seaweedfs-s3-credentials`; keys in the `brim-sync-seaweedfs` item  |
 | age identity (secret)  | `brim-sync-age-identity` item in the homelab vault                                          |
 | age recipient (public) | `brimSyncRecipient` default in [toolkit config](packages/toolkit/src/lib/toolkit-config.ts) |

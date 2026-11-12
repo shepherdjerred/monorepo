@@ -399,7 +399,7 @@ Citizens, does not start.
 The Jenkins URL is a single point of failure for image rebuilds. If it is
 pruned before a newer build is accepted, the jar should be mirrored the way
 `packages/macos-cross-compiler` mirrors its SDK tarballs: a private SeaweedFS
-bucket declared in `packages/homelab/src/tofu/seaweedfs/buckets.tf` (for
+bucket declared in `packages/homelab-cdktn/src/stacks/seaweedfs.ts` (for
 example `the-storm-artifacts`, `prevent_destroy`), the object uploaded once
 with the existing S3 client in `packages/toolkit` (`toolkit pr asset` writes
 under `pr/assets/`, which expires after 365 days; a retained jar uses a stable

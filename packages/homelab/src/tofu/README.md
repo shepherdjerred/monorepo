@@ -33,7 +33,7 @@ Each subdirectory is an independent root module with its own `backend.tf` (S3 st
 
 ### Stacks synthesized from TypeScript
 
-`anthropic`, `anthropic-federation`, `argocd`, `arr`, `cloudflare-tokens`, `dockerhub`, `github` and `tailscale` have no `.tf` files.
+`anthropic`, `anthropic-federation`, `argocd`, `arr`, `cloudflare-tokens`, `dockerhub`, `github`, `seaweedfs` and `tailscale` have no `.tf` files.
 Their configuration is
 `main.tf.json`, synthesized by the [CDK Terrain](https://cdktn.io/docs) app in
 [`packages/homelab-cdktn`](../../../homelab-cdktn) and committed next to the stack's `.terraform.lock.hcl`.
@@ -420,6 +420,18 @@ All S3 buckets on the self-hosted SeaweedFS instance, managed via the AWS provid
 Includes static site buckets, application storage (scout), and the tofu state backend bucket itself.
 
 The `homelab-tofu-state` bucket has `prevent_destroy = true` since it stores state for all tofu modules.
+
+The buckets are declared in
+[`packages/homelab-cdktn/src/stacks/seaweedfs.ts`](../../../homelab-cdktn/src/stacks/seaweedfs.ts).
+Edit them there, run `bun run --cwd packages/homelab-cdktn synth`, and commit
+the regenerated `seaweedfs/main.tf.json`. The landing and 404 pages seeded into
+`public-sjer-red` stay in `seaweedfs/public/`, which the stack reads with
+`filemd5` and uploads.
+
+SeaweedFS lifecycle rules and the seed pages are `terraform_data` resources
+whose `local-exec` provisioners call the AWS CLI with the deployment identity.
+A plan never shows a provisioner's script, so a zero-change plan does not
+cover one: `packages/homelab-cdktn/src/seaweedfs.test.ts` pins each script.
 
 ### Tailscale
 
