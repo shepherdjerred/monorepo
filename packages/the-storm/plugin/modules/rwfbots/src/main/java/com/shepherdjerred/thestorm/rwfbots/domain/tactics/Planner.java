@@ -234,7 +234,7 @@ public final class Planner {
                     now,
                     new PlanStep.Route(
                         around(situation, context, enemy.pos(), HUNT_RING),
-                        SlotRoutes.huntStance(situation, context))))
+                        SlotRoutes.stanceFor(situation, context))))
             .orElseGet(() ->
                 situation
                     .sensorPosition()
@@ -243,8 +243,7 @@ public final class Planner {
                             option,
                             now,
                             new PlanStep.Route(
-                                around(situation, context, position, HUNT_RING),
-                                SlotRoutes.huntStance(situation, context))))
+                                around(situation, context, position, HUNT_RING), Stance.CAUTIOUS)))
                     .orElseGet(() -> holdHere(option, situation, context)));
       }
       case ESCAPE_POISON ->

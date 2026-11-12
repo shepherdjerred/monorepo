@@ -106,7 +106,7 @@ final class RunHopTest {
         Optional.empty(),
         "run",
         NOW,
-        1,
+        0,
         Optional.empty());
   }
 
@@ -268,6 +268,35 @@ final class RunHopTest {
                     context(new ReflexContext.Habits(false, Reflex.EAT_BELOW, true), 0.2),
                     List.of())))
         .isTrue();
+  }
+
+  @Test
+  void theOpeningEndsAtFirstContactAndInALaterLife() {
+    var decision = route(lane(OPEN, 4.5, 16), Stance.AGGRESSIVE);
+    var clumsy = context(ReflexContext.Habits.NONE, 0.2);
+    assertThat(hops(tick(runner(OPEN, 4.5), decision, clumsy, List.of()))).isTrue();
+
+    var hurt = runner(OPEN, 4.5).withLastHurtTick(NOW - 40);
+    assertThat(hops(tick(hurt, decision, clumsy, List.of())))
+        .as("a bot already in contact uses its own footwork")
+        .isFalse();
+    var respawned =
+        new Decision(
+            decision.bot(),
+            decision.option(),
+            decision.target(),
+            decision.waypoints(),
+            decision.stance(),
+            decision.bomb(),
+            decision.watch(),
+            decision.ability(),
+            decision.planLabel(),
+            decision.snapshotTick(),
+            1,
+            decision.routeFailure());
+    assertThat(hops(tick(runner(OPEN, 4.5), respawned, clumsy, List.of())))
+        .as("a later life is not the opening")
+        .isFalse();
   }
 
   @Test

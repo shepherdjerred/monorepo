@@ -142,14 +142,32 @@ final class MeleePressureTest {
   }
 
   @Test
-  void circlingBotsAreCutAcrossInsteadOfFollowed() {
+  void circlingBotsRunAlongsideInsteadOfFollowing() {
     var self = combatant(1, RED, HERE).withVel(new Vec3(0, 0, 0.15));
     var target = combatant(2, BLUE, HERE.plus(2.7, 0, 0)).withVel(new Vec3(0, 0, -0.15));
 
     assertThat(MeleePressure.orbiting(self, target)).isTrue();
-    assertThat(MeleePressure.cutAcross(self, target)).isEqualTo(1);
+    // The target circles towards -z; strafing the same way runs alongside it and ends the orbit.
+    assertThat(MeleePressure.cutAcross(self, target)).isEqualTo(-1);
     assertThat(MeleePressure.orbiting(self, target.withVel(self.vel()))).isFalse();
     assertThat(MeleePressure.orbiting(self, target.withVel(new Vec3(-0.2, 0, 0)))).isFalse();
+  }
+
+  @Test
+  void onlyCirclingThatLastsBreaksTheOrbit() {
+    var self = combatant(1, RED, HERE).withVel(new Vec3(0, 0, 0.15));
+    var target = combatant(2, BLUE, HERE.plus(2.7, 0, 0)).withVel(new Vec3(0, 0, -0.15));
+    var state = ReflexState.initial(self.facing());
+
+    var started = MeleePressure.circle(state, true, 100);
+    assertThat(MeleePressure.sustained(started, 100 + MeleePressure.ORBIT_SUSTAIN - 1)).isFalse();
+    var held = MeleePressure.circle(started, true, 100 + MeleePressure.ORBIT_SUSTAIN);
+    assertThat(MeleePressure.sustained(held, 100 + MeleePressure.ORBIT_SUSTAIN)).isTrue();
+    assertThat(
+            MeleePressure.alongside(held, self, target, 100 + MeleePressure.ORBIT_SUSTAIN)
+                .strafeDir())
+        .isEqualTo(-1);
+    assertThat(MeleePressure.sustained(MeleePressure.circle(held, false, 120), 120)).isFalse();
   }
 
   private static Percept felt(Vec3 at, long tick) {

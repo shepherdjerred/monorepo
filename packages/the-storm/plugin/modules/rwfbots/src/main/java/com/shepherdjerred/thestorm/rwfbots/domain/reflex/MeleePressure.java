@@ -52,20 +52,6 @@ final class MeleePressure {
   }
 
   /**
-   * Whether a swing that would not land should be held instead: the target is out of {@code reach}
-   * with slack, or the two are circling and the swing would only spend itself on air.
-   */
-  static boolean swingsAir(
-      CombatantView self, CombatantView target, double distance, double reach) {
-    return distance > reach + 0.3 || orbiting(self, target);
-  }
-
-  /** While orbiting, close at least at full weight so the circle breaks. */
-  static double press(double lean, boolean orbiting) {
-    return orbiting ? Math.max(lean, 1.0) : lean;
-  }
-
-  /**
    * Whether {@code self} and {@code target} are circling: their relative motion is mostly along the
    * tangent, so the same strafe keeps them missing.
    */
@@ -80,15 +66,43 @@ final class MeleePressure {
     return tangential >= ORBIT_TANGENT && tangential > along;
   }
 
+  /** How long two bots must circle, in ticks, before the bot breaks the orbit (half a second). */
+  static final int ORBIT_SUSTAIN = 10;
+
   /**
-   * Strafe sign that steps across {@code target}'s tangent. Positive strafe moves along {@code (-z,
-   * 0, x)} of the direction toward the target.
+   * The state with the circling clock run: started on the first tick of circling, kept while it
+   * lasts, cleared once it stops.
+   */
+  static ReflexState circle(ReflexState state, boolean circling, long now) {
+    if (!circling) return state.orbitSince() < 0 ? state : state.withOrbitSince(-1);
+    return state.orbitSince() >= 0 ? state : state.withOrbitSince(now);
+  }
+
+  /** Whether the bot has circled long enough that its usual strafe will not land a hit. */
+  static boolean sustained(ReflexState state, long now) {
+    return state.orbitSince() >= 0 && now - state.orbitSince() >= ORBIT_SUSTAIN;
+  }
+
+  /** Once the circling has lasted, strafe alongside the target for a few ticks. */
+  static ReflexState alongside(
+      ReflexState state, CombatantView self, CombatantView target, long now) {
+    return sustained(state, now) ? state.withStrafe(cutAcross(self, target), now + 8) : state;
+  }
+
+  /** Closing weight while breaking an orbit: at least a full lean in. */
+  static double breaking(double lean, boolean orbiting) {
+    return orbiting ? Math.max(lean, 1.0) : lean;
+  }
+
+  /**
+   * Strafe sign that runs alongside {@code target}'s tangential motion, so the two stop circling
+   * each other. Positive strafe moves along {@code (-z, 0, x)} of the direction toward the target.
    */
   static int cutAcross(CombatantView self, CombatantView target) {
     var radial = target.pos().minus(self.pos()).horizontal();
     var axis = new Vec3(-radial.z(), 0, radial.x()).normalized();
     var tangent = target.vel().horizontal().dot(axis);
-    return tangent >= 0 ? -1 : 1;
+    return tangent >= 0 ? 1 : -1;
   }
 
   /** Whether the bot may give ground: badly hurt, or more enemies than teammates around it. */

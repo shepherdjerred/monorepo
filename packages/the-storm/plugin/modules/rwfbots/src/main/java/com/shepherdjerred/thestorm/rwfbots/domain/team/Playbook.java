@@ -507,6 +507,10 @@ public final class Playbook {
     private final NavGraph graph;
     private final List<Vec3> placed = new ArrayList<>();
     private final List<Vec3> anchorDirections = new ArrayList<>();
+
+    /** Whether an anchor already watches the cut lane's home mouth. */
+    private boolean cutWatched;
+
     private final java.util.EnumMap<SlotKind, Integer> counts =
         new java.util.EnumMap<>(SlotKind.class);
     private final Vec3 axis;
@@ -791,10 +795,10 @@ public final class Playbook {
     }
 
     /**
-     * The first anchor watches the home mouth of a cut lane, when that mouth stands clear of the
-     * bomb and off the main approaches.
+     * An anchor watches the home mouth of a cut lane, when that mouth stands clear of the bomb, off
+     * the main approaches, and within {@code maxRange} of it.
      */
-    private Optional<Slot> cutAnchor(String key, Want want) {
+    private Optional<Slot> cutAnchor(String key, Want want, double maxRange) {
       var cut = cutLane();
       if (cut < 0) {
         return Optional.empty();
@@ -809,9 +813,12 @@ public final class Playbook {
         return Optional.empty();
       }
       var at = place(snapped);
-      if (at.horizontalDistance(setup.guard()) < ANCHOR_MIN) {
+      // A tunnel mouth may sit well below the bomb, so its reach from home is the true distance.
+      if (at.horizontalDistance(setup.guard()) < ANCHOR_MIN
+          || at.distance(setup.guard()) > maxRange) {
         return Optional.empty();
       }
+      cutWatched = true;
       var direction = at.minus(setup.guard()).horizontal();
       anchorDirections.add(direction.isZero() ? axis : direction.normalized());
       var watch = tunnel.at(Math.clamp(tunnel.progressOf(at) + 0.28, 0.4, 1));
@@ -821,8 +828,10 @@ public final class Playbook {
     }
 
     private Slot anchor(String key, Want want, int index) {
-      if (index == 0) {
-        var mouth = cutAnchor(key, want);
+      // The first anchor takes the mouth only where it still stands within range of home; otherwise
+      // it holds home and the second anchor watches the mouth.
+      if (index == 0 || (index == 1 && !cutWatched)) {
+        var mouth = cutAnchor(key, want, index == 0 ? HOME_RANGE : Double.POSITIVE_INFINITY);
         if (mouth.isPresent()) {
           return mouth.orElseThrow();
         }

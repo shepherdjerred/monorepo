@@ -48,7 +48,7 @@ export default [
     name: "rwf-defuse-demo",
     alt: "The Blue Team player repeatedly right-clicks with a genuine fuse until the actual armed bomb is defused.",
     caption:
-      "Keep using your fuse on your team's armed bomb until the defuse finishes.",
+      "Hold right-click with your fuse on your team's armed bomb until the defuse finishes.",
     annotations: [
       {
         kind: "label",

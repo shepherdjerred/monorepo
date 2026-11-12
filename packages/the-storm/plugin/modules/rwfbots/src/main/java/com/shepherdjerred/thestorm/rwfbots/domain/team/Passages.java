@@ -51,7 +51,8 @@ public final class Passages {
 
   /** Whether {@code lane} is a cut the bot should still be staging at, not pushing. */
   public static boolean waiting(Situation situation, TacticsContext context, Lane lane) {
-    if (!lane.cut()) {
+    // The wait lets the main push be what the other team sees; a turtling team has no push.
+    if (!lane.cut() || situation.board().strategy() == Strategy.TURTLE) {
       return false;
     }
     var dealt = situation.board().plan().dealtTick();

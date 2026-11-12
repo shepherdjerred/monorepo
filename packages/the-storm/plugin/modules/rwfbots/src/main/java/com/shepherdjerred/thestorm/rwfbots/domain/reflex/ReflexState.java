@@ -16,7 +16,7 @@ import java.util.Optional;
  * @param drawStart when the bow draw started, or -1
  * @param eatingSince when eating started, or -1
  * @param healing whether the bot keeps eating until the upper health threshold
- * @param nextFuseClick the earliest tick of the next fuse click
+ * @param orbitSince the tick the bot began circling its melee target, or -1 when it is not
  * @param waypointIndex the waypoint being walked to in the current decision
  * @param decisionTick the snapshot tick of the decision the waypoint index belongs to
  * @param lastJumpTick when the bot last jumped
@@ -26,7 +26,7 @@ import java.util.Optional;
  *     hand, one click at a time
  * @param activeJump the jump being prepared or flown, if any
  * @param bowSight where the drawn bow last had a target, so a draw survives the target ducking out
- *     of sight
+ * @param openingUntil the tick this life's opening rush ends, or -1 before its first tick of sight
  */
 public record ReflexState(
     AimState aim,
@@ -37,7 +37,7 @@ public record ReflexState(
     long drawStart,
     long eatingSince,
     boolean healing,
-    long nextFuseClick,
+    long orbitSince,
     int waypointIndex,
     long decisionTick,
     long lastJumpTick,
@@ -45,7 +45,8 @@ public record ReflexState(
     long nextKitUse,
     long nextRightClick,
     Optional<ActiveJump> activeJump,
-    Optional<ReflexState.BowSight> bowSight) {
+    Optional<ReflexState.BowSight> bowSight,
+    long openingUntil) {
 
   public ReflexState {
     if (strafeDir != 1 && strafeDir != -1) {
@@ -67,7 +68,7 @@ public record ReflexState(
         -1,
         -1,
         false,
-        0,
+        -1,
         0,
         -1,
         -1,
@@ -75,7 +76,30 @@ public record ReflexState(
         0,
         0,
         Optional.empty(),
-        Optional.empty());
+        Optional.empty(),
+        -1);
+  }
+
+  public ReflexState withOpeningUntil(long tick) {
+    return new ReflexState(
+        aim,
+        nextClickAt,
+        wTapUntil,
+        strafeDir,
+        nextStrafeFlip,
+        drawStart,
+        eatingSince,
+        healing,
+        orbitSince,
+        waypointIndex,
+        decisionTick,
+        lastJumpTick,
+        abilityUsedFor,
+        nextKitUse,
+        nextRightClick,
+        activeJump,
+        bowSight,
+        tick);
   }
 
   public boolean isDrawing() {
@@ -104,7 +128,7 @@ public record ReflexState(
         drawStart,
         eatingSince,
         healing,
-        nextFuseClick,
+        orbitSince,
         waypointIndex,
         decisionTick,
         lastJumpTick,
@@ -112,7 +136,8 @@ public record ReflexState(
         nextKitUse,
         nextRightClick,
         activeJump,
-        bowSight);
+        bowSight,
+        openingUntil);
   }
 
   public ReflexState withClick(double newNextClickAt, long newWTapUntil) {
@@ -125,7 +150,7 @@ public record ReflexState(
         drawStart,
         eatingSince,
         healing,
-        nextFuseClick,
+        orbitSince,
         waypointIndex,
         decisionTick,
         lastJumpTick,
@@ -133,7 +158,8 @@ public record ReflexState(
         nextKitUse,
         nextRightClick,
         activeJump,
-        bowSight);
+        bowSight,
+        openingUntil);
   }
 
   public ReflexState withStrafe(int newDir, long newFlip) {
@@ -146,7 +172,7 @@ public record ReflexState(
         drawStart,
         eatingSince,
         healing,
-        nextFuseClick,
+        orbitSince,
         waypointIndex,
         decisionTick,
         lastJumpTick,
@@ -154,7 +180,8 @@ public record ReflexState(
         nextKitUse,
         nextRightClick,
         activeJump,
-        bowSight);
+        bowSight,
+        openingUntil);
   }
 
   public ReflexState withDrawStart(long tick) {
@@ -167,7 +194,7 @@ public record ReflexState(
         tick,
         eatingSince,
         healing,
-        nextFuseClick,
+        orbitSince,
         waypointIndex,
         decisionTick,
         lastJumpTick,
@@ -175,7 +202,8 @@ public record ReflexState(
         nextKitUse,
         nextRightClick,
         activeJump,
-        bowSight);
+        bowSight,
+        openingUntil);
   }
 
   public ReflexState withEating(long since, boolean nowHealing) {
@@ -188,7 +216,7 @@ public record ReflexState(
         drawStart,
         since,
         nowHealing,
-        nextFuseClick,
+        orbitSince,
         waypointIndex,
         decisionTick,
         lastJumpTick,
@@ -196,10 +224,11 @@ public record ReflexState(
         nextKitUse,
         nextRightClick,
         activeJump,
-        bowSight);
+        bowSight,
+        openingUntil);
   }
 
-  public ReflexState withNextFuseClick(long tick) {
+  public ReflexState withOrbitSince(long tick) {
     return new ReflexState(
         aim,
         nextClickAt,
@@ -217,7 +246,8 @@ public record ReflexState(
         nextKitUse,
         nextRightClick,
         activeJump,
-        bowSight);
+        bowSight,
+        openingUntil);
   }
 
   public ReflexState withPath(int index, long forDecisionTick) {
@@ -230,7 +260,7 @@ public record ReflexState(
         drawStart,
         eatingSince,
         healing,
-        nextFuseClick,
+        orbitSince,
         index,
         forDecisionTick,
         lastJumpTick,
@@ -238,7 +268,8 @@ public record ReflexState(
         nextKitUse,
         nextRightClick,
         activeJump,
-        bowSight);
+        bowSight,
+        openingUntil);
   }
 
   public ReflexState withLastJump(long tick) {
@@ -251,7 +282,7 @@ public record ReflexState(
         drawStart,
         eatingSince,
         healing,
-        nextFuseClick,
+        orbitSince,
         waypointIndex,
         decisionTick,
         tick,
@@ -259,7 +290,8 @@ public record ReflexState(
         nextKitUse,
         nextRightClick,
         activeJump,
-        bowSight);
+        bowSight,
+        openingUntil);
   }
 
   public ReflexState withAbilityUsedFor(long tick) {
@@ -272,7 +304,7 @@ public record ReflexState(
         drawStart,
         eatingSince,
         healing,
-        nextFuseClick,
+        orbitSince,
         waypointIndex,
         decisionTick,
         lastJumpTick,
@@ -280,7 +312,8 @@ public record ReflexState(
         nextKitUse,
         nextRightClick,
         activeJump,
-        bowSight);
+        bowSight,
+        openingUntil);
   }
 
   public ReflexState withNextKitUse(long tick) {
@@ -293,7 +326,7 @@ public record ReflexState(
         drawStart,
         eatingSince,
         healing,
-        nextFuseClick,
+        orbitSince,
         waypointIndex,
         decisionTick,
         lastJumpTick,
@@ -301,7 +334,8 @@ public record ReflexState(
         tick,
         nextRightClick,
         activeJump,
-        bowSight);
+        bowSight,
+        openingUntil);
   }
 
   public ReflexState withNextRightClick(long tick) {
@@ -314,7 +348,7 @@ public record ReflexState(
         drawStart,
         eatingSince,
         healing,
-        nextFuseClick,
+        orbitSince,
         waypointIndex,
         decisionTick,
         lastJumpTick,
@@ -322,7 +356,8 @@ public record ReflexState(
         nextKitUse,
         tick,
         activeJump,
-        bowSight);
+        bowSight,
+        openingUntil);
   }
 
   public ReflexState withActiveJump(Optional<ActiveJump> jump) {
@@ -335,7 +370,7 @@ public record ReflexState(
         drawStart,
         eatingSince,
         healing,
-        nextFuseClick,
+        orbitSince,
         waypointIndex,
         decisionTick,
         lastJumpTick,
@@ -343,7 +378,8 @@ public record ReflexState(
         nextKitUse,
         nextRightClick,
         jump,
-        bowSight);
+        bowSight,
+        openingUntil);
   }
 
   public ReflexState withBowSight(Optional<BowSight> sight) {
@@ -356,7 +392,7 @@ public record ReflexState(
         drawStart,
         eatingSince,
         healing,
-        nextFuseClick,
+        orbitSince,
         waypointIndex,
         decisionTick,
         lastJumpTick,
@@ -364,7 +400,8 @@ public record ReflexState(
         nextKitUse,
         nextRightClick,
         activeJump,
-        sight);
+        sight,
+        openingUntil);
   }
 
   /**

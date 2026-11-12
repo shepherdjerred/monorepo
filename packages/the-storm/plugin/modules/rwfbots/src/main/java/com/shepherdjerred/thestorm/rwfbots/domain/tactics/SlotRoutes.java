@@ -19,8 +19,8 @@ final class SlotRoutes {
   private SlotRoutes() {}
 
   /**
-   * The pace to a slot. A melee attacker rushes the opening, unless its pair is waiting on a cut
-   * lane. An anchor, an overwatch, or a bow walks, and the last living bot sneaks.
+   * The pace to a slot: a run, except that a cut-lane pair waiting at its mouth walks so the main
+   * push is what the other team sees first, and the last living bot sneaks.
    */
   static Stance slotStance(Situation situation, TacticsContext context, Slot slot) {
     if (situation.isLastAlive()) {
@@ -35,8 +35,7 @@ final class SlotRoutes {
             .filter(
                 cut -> slot.kind() != SlotKind.ANCHOR && Passages.waiting(situation, context, cut))
             .isPresent();
-    var attack = !waiting && openingSlot(slot.kind()) && !context.keep().ranged();
-    return attack ? Stance.AGGRESSIVE : Stance.CAUTIOUS;
+    return waiting ? Stance.CAUTIOUS : Stance.AGGRESSIVE;
   }
 
   static Stance stanceFor(Situation situation, TacticsContext context) {
@@ -46,30 +45,9 @@ final class SlotRoutes {
     return context.style().aggression() > 0.6 ? Stance.AGGRESSIVE : Stance.CAUTIOUS;
   }
 
-  /**
-   * A melee planter sprints the opening. A helper walks, a bow keeps its own pace, and the last
-   * living bot sneaks.
-   */
+  /** A helper walks to the bomb; anyone else goes at the pace of their temper. */
   static Stance bombStance(Option option, Situation situation, TacticsContext context) {
-    if (option == Option.HELP_ARM) return Stance.CAUTIOUS;
-    if (situation.isLastAlive()) return Stance.STEALTH;
-    if (!context.keep().ranged()) return Stance.AGGRESSIVE;
-    return stanceFor(situation, context);
-  }
-
-  /** A melee hunter sprints to the search. A bow keeps the pace it would fight at. */
-  static Stance huntStance(Situation situation, TacticsContext context) {
-    if (situation.isLastAlive()) return Stance.STEALTH;
-    if (!context.keep().ranged()) return Stance.AGGRESSIVE;
-    return stanceFor(situation, context);
-  }
-
-  /** Plant, escort, lane, flank, and sweep rush. An anchor, an overwatch, or a bow walks. */
-  private static boolean openingSlot(SlotKind kind) {
-    return switch (kind) {
-      case PLANT, ESCORT, LANE, FLANK, SWEEP -> true;
-      case OVERWATCH, ANCHOR -> false;
-    };
+    return option == Option.HELP_ARM ? Stance.CAUTIOUS : stanceFor(situation, context);
   }
 
   static Vec3 slotPoint(Situation situation, TacticsContext context, Slot slot) {

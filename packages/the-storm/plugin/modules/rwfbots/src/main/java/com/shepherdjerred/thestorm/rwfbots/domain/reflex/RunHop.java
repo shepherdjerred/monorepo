@@ -188,13 +188,31 @@ public final class RunHop {
   }
 
   /**
-   * A melee bot sprinting an attack route before anyone is in reach. The hop does not wait on
-   * technique, and an enemy merely in sight is not contact.
+   * A melee bot sprinting an attack route in the opening, before anyone is in reach. The hop does
+   * not wait on technique, and an enemy merely in sight is not contact.
    */
   private static boolean openingRush(ReflexContext context, Run run) {
-    if (context.loadout().hasBow()) return false;
+    if (context.loadout().hasBow() || !opening(run)) return false;
     var option = run.input().decision().option();
     return option == Option.ARM || option == Option.TAKE_SLOT || option == Option.HUNT;
+  }
+
+  /** How long the opening rush lasts at most, in ticks (fifteen seconds). */
+  static final long OPENING_TICKS = 300;
+
+  /** Stamps when this life's opening ends, on its first tick. */
+  static ReflexState stamp(ReflexState state, long now) {
+    return state.openingUntil() >= 0 ? state : state.withOpeningUntil(now + OPENING_TICKS);
+  }
+
+  /**
+   * Whether the bot is still in the opening: its first life of the match, not hurt yet, and within
+   * {@link #OPENING_TICKS} of its first tick. After first contact the usual footwork takes over.
+   */
+  private static boolean opening(Run run) {
+    return run.input().decision().lifeEpoch() == 0
+        && run.self().lastHurtTick() < 0
+        && run.now() < run.state().openingUntil();
   }
 
   /**

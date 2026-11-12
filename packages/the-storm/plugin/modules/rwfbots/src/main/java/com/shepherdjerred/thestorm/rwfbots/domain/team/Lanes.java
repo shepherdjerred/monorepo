@@ -49,6 +49,13 @@ public final class Lanes {
   /** Or fewer than this many shared interior nodes, whichever is the looser test. */
   private static final int SHARE_NODES = 4;
 
+  /**
+   * How far a level detour's median node must stand from the main lane, in blocks. On open ground
+   * the cheapest route around the main lane's nodes runs one block beside it; a side hall stands
+   * behind a wall.
+   */
+  private static final double HALL_APART = 3;
+
   /** How far below the main lane a low route's mean feet must sit, in blocks. */
   private static final double LOW_DROP = 3;
 
@@ -176,7 +183,28 @@ public final class Lanes {
     if (!few) {
       return false;
     }
-    return !low || mainMean - meanY(graph, nodes) >= LOW_DROP;
+    if (low) {
+      return mainMean - meanY(graph, nodes) >= LOW_DROP;
+    }
+    return medianApart(graph, nodes, main) >= HALL_APART;
+  }
+
+  /** The median, over a detour's interior nodes, of each one's distance from the main lane. */
+  private static double medianApart(NavGraph graph, List<Integer> nodes, List<Integer> main) {
+    var apart = new ArrayList<Double>();
+    for (var i = 1; i < nodes.size() - 1; i++) {
+      var feet = graph.feet(nodes.get(i));
+      var nearest = Double.POSITIVE_INFINITY;
+      for (var node : main) {
+        nearest = Math.min(nearest, graph.feet(node).horizontalDistance(feet));
+      }
+      apart.add(nearest);
+    }
+    if (apart.isEmpty()) {
+      return 0;
+    }
+    apart.sort(Double::compare);
+    return apart.get(apart.size() / 2);
   }
 
   private static double length(NavGraph graph, List<Integer> nodes) {

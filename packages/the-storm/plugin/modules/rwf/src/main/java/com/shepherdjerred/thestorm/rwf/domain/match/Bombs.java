@@ -29,7 +29,12 @@ final class Bombs {
     return input(draft, new Input(click.id(), click.bombId(), click.now(), false));
   }
 
-  /** A held right-click. Continuation samples do not hiss again. */
+  /**
+   * A held right-click. A hold only continues an attempt its team already has under way: the press
+   * that starts it is a tap. So a fuse still held when its attempt finishes does nothing more, and
+   * a defuser does not roll straight into arming the nuke it just saved. Continuation samples do
+   * not hiss again.
+   */
   static Optional<MatchError> hold(Draft draft, MatchEvent.BombHeld held) {
     return input(draft, new Input(held.id(), held.bombId(), held.now(), true));
   }
@@ -59,6 +64,9 @@ final class Bombs {
     }
     var before = bomb.orElseThrow();
     var team = clicker.team().orElseThrow();
+    if (holding && !underWay(before, team, now)) {
+      return Optional.empty();
+    }
     var sample = new BombClick(clicker.id(), team, clicker.fuse(), now);
     var continuing = holding && continuingHold(before, team, now);
     var result = holding ? before.hold(sample) : before.click(sample);
@@ -74,6 +82,12 @@ final class Bombs {
           return Optional.empty();
         },
         error -> Optional.of(translate(error)));
+  }
+
+  /** Whether {@code team} has a live attempt on {@code bomb}, tapped or held. */
+  private static boolean underWay(Bomb bomb, TeamColor team, Instant now) {
+    return bomb.state().attempts().stream()
+        .anyMatch(attempt -> attempt.team() == team && attempt.valid(now));
   }
 
   /**

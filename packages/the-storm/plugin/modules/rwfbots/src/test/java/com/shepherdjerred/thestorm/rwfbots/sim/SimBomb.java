@@ -63,11 +63,7 @@ final class SimBomb {
 
   /** A fuse click by {@code clicker} of {@code team}; {@code lastAlive} is the instant-arm rule. */
   void click(CombatantId clicker, TeamId team, long tick, boolean lastAlive) {
-    var defending =
-        owner.isTeam(team)
-            || (owner instanceof BombOwner.Nuke
-                && armedBy.filter(armed -> !armed.equals(team)).isPresent());
-    var accepted = defending ? acceptDefuseClick() : acceptArmClick(team);
+    var accepted = defends(team) ? acceptDefuseClick() : acceptArmClick(team);
     if (!accepted) {
       return;
     }
@@ -82,6 +78,22 @@ final class SimBomb {
     if (phase == Phase.ARMING && lastAlive) {
       complete(tick);
     }
+  }
+
+  /** Whether {@code team} would be defusing this bomb rather than arming it. */
+  private boolean defends(TeamId team) {
+    return owner.isTeam(team)
+        || (owner instanceof BombOwner.Nuke
+            && armedBy.filter(armed -> !armed.equals(team)).isPresent());
+  }
+
+  /** Whether {@code team} has an attempt under way that a held fuse continues. */
+  boolean underWayFor(TeamId team) {
+    return switch (phase) {
+      case ARMING -> armingTeam.filter(team::equals).isPresent();
+      case DEFUSING -> defends(team);
+      case IDLE, ARMED, DESTROYED -> false;
+    };
   }
 
   /** An owner's click counts only against a lit fuse; the first one starts the defuse. */

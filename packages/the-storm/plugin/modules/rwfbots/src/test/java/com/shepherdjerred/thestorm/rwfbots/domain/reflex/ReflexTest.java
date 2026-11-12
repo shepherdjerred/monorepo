@@ -572,11 +572,55 @@ final class ReflexTest {
       state = step.state();
       if (step.commands().contains(new BodyCommand.StartUse())) {
         clicks.add((long) tick);
+        // The press that raises the fuse is the tap that starts the attempt.
+        assertThat(step.commands()).contains(new BodyCommand.ClickBomb(bomb.id()));
       }
-      assertThat(step.commands()).noneMatch(BodyCommand.ClickBomb.class::isInstance);
     }
     // The view never reports the hand as raised, so the hold is asked for every tick.
     assertThat(clicks).hasSize(100);
+  }
+
+  @Test
+  void aRaisedFuseOnAnAttemptUnderWayOnlyHolds() {
+    var random = new SplittableRandom(2);
+    var standing = combatant(1, RED, SyntheticMap.BLUE_BOMB.offset(1, 0, 0).feet());
+    var self = standing.withHands(Loadout.standard(Kit.TROOPER).fuseSlot(), true);
+    var arming =
+        new BombView(
+            new BombId(1),
+            new BombOwner.Team(BLUE),
+            SyntheticMap.BLUE_BOMB.center(),
+            new BombState.Arming(RED, 0.3, 1));
+    var decision =
+        new Decision(
+            self.id(),
+            Option.ARM,
+            Optional.empty(),
+            List.of(),
+            Stance.CAUTIOUS,
+            Optional.of(arming.id()),
+            Optional.empty(),
+            Optional.empty(),
+            "arm:arm",
+            1,
+            0,
+            java.util.Optional.empty());
+    var input =
+        new ReflexInput(
+            self,
+            world(1, List.of(self), List.of(arming)),
+            decision,
+            Optional.empty(),
+            3,
+            List.of(),
+            Optional.empty());
+
+    var step = Reflex.tick(ReflexState.initial(self.facing()), input, context(levers(1)), random);
+
+    assertThat(step.commands())
+        .noneMatch(BodyCommand.ClickBomb.class::isInstance)
+        .noneMatch(BodyCommand.StartUse.class::isInstance)
+        .noneMatch(BodyCommand.CancelUse.class::isInstance);
   }
 
   @Test

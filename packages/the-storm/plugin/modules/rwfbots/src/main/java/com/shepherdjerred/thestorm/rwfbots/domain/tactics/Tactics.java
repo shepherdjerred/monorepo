@@ -160,12 +160,9 @@ public final class Tactics {
   /** The detours this think scored: arrows to pick up and a supply crate to loot or call in. */
   private record Trips(Optional<Resupply.Trip> arrows, Optional<CratePlay.Trip> crate) {}
 
-  /**
-   * The current plan, kept for another think. A refreshed slot plan keeps its age; the last living
-   * bot keeps its route as it is.
-   */
+  /** The current plan, kept for another think. A refreshed slot plan keeps its age. */
   private static Plan kept(Plan existing, Situation situation, TacticsContext context) {
-    if (!refresh(existing) || situation.isLastAlive()) {
+    if (!refresh(existing)) {
       return existing;
     }
     return Planner.expand(existing.option(), situation, context).since(existing.startedTick());

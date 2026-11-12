@@ -483,8 +483,9 @@ final class RwfMatchTest {
   @Nested
   final class Bombing {
 
-    /** Holds right-click on {@code bomb} for up to {@code seconds}, letting go once it is armed. */
+    /** Presses right-click on {@code bomb}, holds it up to {@code seconds}, lets go once armed. */
     private void holdFor(CombatantId who, String bomb, double seconds) {
+      play.click(who, bomb);
       for (var i = 0; i < seconds * 2 && !play.match.bomb(bomb).orElseThrow().armed(); i++) {
         play.hold(who, bomb);
         play.tickMillis(500);
@@ -507,11 +508,13 @@ final class RwfMatchTest {
       play.start(Samples.twoTeams(), ALICE, BOB, CAROL, DAVE);
       var blue = play.anyOn(TeamColor.BLUE);
 
-      play.hold(blue.id(), "red-1");
+      assertThat(play.hold(blue.id(), "red-1")).as("a hold alone starts nothing").isEmpty();
+      assertThat(play.match.bomb("red-1").orElseThrow().state().attempts()).isEmpty();
+      play.click(blue.id(), "red-1");
       var snapshot = MatchSnapshot.of(play.match, play.now);
       assertThat(snapshot.bomb("red-1").orElseThrow().state())
           .isEqualTo(
-              new MatchSnapshot.BombView.State.Arming(TeamColor.BLUE, 0, List.of(blue.id())));
+              new MatchSnapshot.BombView.State.Arming(TeamColor.BLUE, 0.2 / 9, List.of(blue.id())));
 
       holdFor(blue.id(), "red-1", 9.5);
 

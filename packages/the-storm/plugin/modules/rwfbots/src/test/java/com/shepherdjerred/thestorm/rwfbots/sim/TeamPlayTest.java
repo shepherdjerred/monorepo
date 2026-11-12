@@ -155,7 +155,9 @@ final class TeamPlayTest {
   // Bots sprint-jump along straight runs, and route to a melee target their first step cannot take.
   // Archers shoot as they back off a sword; bots press in the band and face an enemy in contact.
   // A team that defuses or lights the nuke keeps a guard beside it.
-  private static final String PINNED_YARD_HASH = "7d433171191f7310";
+  // Circling melee bots run alongside and lean in; melee attackers hop the opening until contact;
+  // a held fuse only continues an attempt a tap started; a side passage becomes its own lane.
+  private static final String PINNED_YARD_HASH = "82c77433ba9ee34f";
 
   @Test
   void aTrainingYardMatchReplaysToItsPinnedHash() {

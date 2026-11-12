@@ -216,6 +216,7 @@ public final class Reflex {
         commands.add(new BodyCommand.Stop());
         return;
       }
+      state = RunHop.stamp(state, now);
       if (input.decision().routeFailure().isPresent()) {
         stopShooting();
         releaseFuse();
@@ -427,7 +428,10 @@ public final class Reflex {
       walk(Optional.of(false));
     }
 
-    /** Holds the fuse on {@code bomb}. A fight releases it; the match tick earns the clock. */
+    /**
+     * Presses and holds the fuse on {@code bomb}. A fight releases it; while it is held, the match
+     * tick earns the clock.
+     */
     private void fuse(BombView bomb) {
       stopShooting();
       commands.add(new BodyCommand.Stop());
@@ -437,7 +441,11 @@ public final class Reflex {
       state =
           state.withAim(
               AimController.steer(state.aim(), Facing.looking(self.eye(), bomb.pos()), levers()));
-      if (!FuseHand.raised(self, context.loadout())) {
+      var raised = FuseHand.raised(self, context.loadout());
+      if (FuseHand.taps(raised, self, bomb, input.decision().option())) {
+        commands.add(new BodyCommand.ClickBomb(bomb.id()));
+      }
+      if (!raised) {
         commands.add(new BodyCommand.StartUse());
       }
     }
@@ -597,10 +605,7 @@ public final class Reflex {
               new AttackRay(self, state.aim().look(), target),
               context.loadout().melee());
       // Save the next swing for contact rather than spending its cooldown during pursuit.
-      // A miss while the two are circling spends the swing on air. Hold it and step in.
-      if (!landed
-          && MeleePressure.swingsAir(
-              self, target, distance, context.loadout().melee().maxReach())) {
+      if (!landed && distance > context.loadout().melee().maxReach() + 0.3) {
         return;
       }
       commands.add(landed ? new BodyCommand.Attack(target.id()) : new BodyCommand.Swing());
@@ -631,15 +636,23 @@ public final class Reflex {
       // EdgeFooting}); a weave's legs already keep off drops.
       var edge = weave ? EdgeFooting.NONE : EdgeFooting.read(context.grid(), self, target, radial);
       if (edge.side() != 0) state = state.withStrafe(edge.side(), state.nextStrafeFlip());
-      var orbiting = edge.side() == 0 && MeleePressure.orbiting(self, target);
-      if (orbiting) state = state.withStrafe(MeleePressure.cutAcross(self, target), now + 8);
+      // Two bots strafing the same way around each other keep missing: once that has lasted, run
+      // alongside the target instead and lean in.
+      state =
+          MeleePressure.alongside(
+              MeleePressure.circle(
+                  state, edge.side() == 0 && MeleePressure.orbiting(self, target), now),
+              self,
+              target,
+              now);
+      var orbiting = MeleePressure.sustained(state, now);
       var side = new Vec3(-radial.z(), 0, radial.x()).scale(state.strafeDir());
       // Combat movement needs the same reaction-window personal space as formation movement.
       var apart = walkingApart();
       var lean =
           MeleePressure.closing(
               distance, apart.length() > CROWDED, MeleePressure.yields(input), edge.ledged());
-      var closing = edge.closing(MeleePressure.press(lean, orbiting));
+      var closing = edge.closing(MeleePressure.breaking(lean, orbiting));
       // Outside contact range, pursue rather than spending most acceleration circling.
       var charging = context.loadout().body() == Kit.Body.CHARGE && distance > REACH + 0.5;
       // An Inertia runs straight in: a strafe turns it and its momentum is lost.

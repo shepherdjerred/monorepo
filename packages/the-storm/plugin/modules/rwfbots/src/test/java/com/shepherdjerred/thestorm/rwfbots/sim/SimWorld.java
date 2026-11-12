@@ -274,7 +274,7 @@ final class SimWorld {
 
   /**
    * A raised fuse in reach keeps the sim bomb's clock alive, the way a held click does on the
-   * server.
+   * server. Like the server, a hold only continues an attempt its side already started with a tap.
    */
   private void holdFuses() {
     for (var body : bodies.values()) {
@@ -285,12 +285,11 @@ final class SimWorld {
         continue;
       }
       var eye = body.pos.plus(0, CombatantView.EYE_HEIGHT, 0);
-      for (var bomb : bombs.values()) {
-        if (bomb.pos.distance(eye) <= 3.5) {
-          bomb.click(body.id, body.team, tick, lastAlive(body));
-          break;
-        }
-      }
+      bombs.values().stream()
+          .filter(bomb -> bomb.pos.distance(eye) <= 3.5)
+          .findFirst()
+          .filter(bomb -> bomb.underWayFor(body.team))
+          .ifPresent(bomb -> bomb.click(body.id, body.team, tick, lastAlive(body)));
     }
   }
 
