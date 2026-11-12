@@ -6,6 +6,7 @@ struct MenuBarView: View {
   @Bindable var model: QuotaBarModel
   @Bindable var apiModel: APIPlatformModel
   let startupError: String?
+  @Environment(\.openWindow) private var openWindow
   @State private var selectedSegment: DashboardSegment = .subscriptions
   // MenuBarExtra centers short window-style content vertically. Keep both
   // segments in the same top-anchored menu-bar surface.
@@ -247,6 +248,13 @@ struct MenuBarView: View {
   private var footer: some View {
     HStack {
       SettingsLink { Label("Settings…", systemImage: "gear") }
+      Button {
+        openWindow(id: SessionsWindow.id)
+        NSApp.activate()
+      } label: {
+        Label("Browse sessions", systemImage: "text.bubble")
+      }
+      .help("Browse agent sessions from the toolkit history daemon")
       Spacer()
       Button("Quit") { NSApplication.shared.terminate(nil) }
     }

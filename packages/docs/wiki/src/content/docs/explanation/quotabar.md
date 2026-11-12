@@ -289,6 +289,48 @@ JSONL itself: Codex keeps message text in a local database that is not synced.
 Brim's `All machines` caption counts mirrored logs for this Mac's calendar day
 with the same parsers as the local caption.
 
+## Sessions
+
+The Sessions window browses past agent sessions: their conversations, token
+usage, and estimated cost by day, model, agent, project, and machine. It is a
+reader for the toolkit history index, not a second index. Every request goes
+to the history daemon's read-only
+[`/v1` API](packages/toolkit/src/lib/history/api/handler.ts) over
+`~/.toolkit/history/daemon.sock`, which the
+[daemon serves](packages/toolkit/src/lib/history/serve.ts). Brim never opens
+`index.sqlite` or a transcript itself.
+
+The index is toolkit's private storage. Its tables, its rebuild policy, and
+how each source's transcripts are parsed change with toolkit, and a second
+reader of the SQLite file would have to track all of it. The API is the
+contract instead: a versioned JSON shape defined by
+[zod schemas](packages/toolkit/src/lib/history/api/schema.ts) and checked in
+as JSON Schemas such as
+[`history-api-sessions.schema.json`](packages/toolkit/schemas/history-api-sessions.schema.json).
+Their shared fixtures test both the toolkit server and Brim's
+[Swift decoders](packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/History/HistoryModels.swift).
+A response with another `apiVersion`, an unknown source, or a missing field
+is a visible
+[contract error](packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/History/HistoryAPIError.swift),
+never an approximate read. The daemon also re-reads full transcripts for a
+conversation, so Brim inherits toolkit's parsers for every agent, mirrored
+machines included.
+
+That choice makes the daemon a dependency. When it is not running, the window
+says so and shows the fix, `toolkit history daemon install`. It never falls
+back to the files. The socket is the one `toolkit history` already uses and
+only its owner can open it, so the window needs no credentials.
+
+Costs come from the same index ledger as `toolkit history usage`, through
+[the API's usage queries](packages/toolkit/src/lib/history/api/queries.ts). A
+session that used an unpriced model
+[shows its cost as a lower bound](packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/History/HistoryFormat.swift),
+never as a complete figure. URLSession cannot reach a Unix socket, so the
+[history client](packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/History/UnixSocketHistoryTransport.swift)
+speaks a [small HTTP/1.1 subset](packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/History/HistoryHTTP.swift)
+over a POSIX socket. It accepts one JSON response with a `Content-Length` body
+per connection and rejects anything else.
+
 ## Release boundary
 
 The root Linux verification graph runs strict SwiftLint. Native build, test,

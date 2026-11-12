@@ -7,6 +7,7 @@ struct QuotaBarApp: App {
   @State private var model: QuotaBarModel
   @State private var apiModel: APIPlatformModel
   @State private var launchAtLogin: LaunchAtLoginController
+  @State private var sessionsModel = SessionsModel()
   private let manualCredentials: ManualCredentialStore
   private let apiCredentials: APIPlatformCredentialStore
   private let startupError: String?
@@ -56,6 +57,14 @@ struct QuotaBarApp: App {
       BrimMenuBarLabel(status: model.overallStatus)
     }
     .menuBarExtraStyle(.window)
+
+    Window("Sessions", id: SessionsWindow.id) {
+      SessionsWindow(model: sessionsModel)
+    }
+    .defaultSize(width: 1_240, height: 780)
+    // A login-item menu-bar app opens this window only from "Browse sessions".
+    .defaultLaunchBehavior(.suppressed)
+    .restorationBehavior(.disabled)
 
     Settings {
       SettingsView(
