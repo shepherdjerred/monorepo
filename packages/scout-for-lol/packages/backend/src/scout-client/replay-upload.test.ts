@@ -59,7 +59,7 @@ vi.mock("#src/report-lake/durable-receipts.ts", () => ({
 }));
 
 vi.mock("#src/report-lake/receipted-archive.ts", () => ({
-  readArchivedMatchPayload: mocks.archivedMatch,
+  readArchivedCanonicalMatch: mocks.archivedMatch,
 }));
 
 vi.mock("./canonical-match.ts", () => ({
@@ -283,10 +283,14 @@ test("keeps a replay retryable until its post-game observation arrives", async (
 
 /**
  * The handful of fields `replayProvenanceFromMatch` reads off a canonical
- * match. The archive reader is mocked, so the rest of `RawMatch` never has to
- * exist for this path.
+ * match, as the archive reader returns it. The reader is mocked, so the rest
+ * of `RawMatch` never has to exist for this path.
  */
 function archivedMatchFor(puuid: LeaguePuuid) {
+  return { coverage: "complete", match: archivedMatchDocument(puuid) };
+}
+
+function archivedMatchDocument(puuid: LeaguePuuid) {
   return {
     metadata: { dataVersion: "2", matchId: "NA1_123", participants: [puuid] },
     info: {

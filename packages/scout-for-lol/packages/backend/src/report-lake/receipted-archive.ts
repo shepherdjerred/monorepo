@@ -1,9 +1,11 @@
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 import {
+  CanonicalMatchRecordSchema,
   RawCurrentGameInfoSchema,
   RawMatchSchema,
   RawTimelineSchema,
+  type CanonicalMatchRecord,
   type RawCurrentGameInfo,
   type RawMatch,
   type RawTimeline,
@@ -307,17 +309,20 @@ export async function readArchivedTimelinePayload(
   });
 }
 
-/** Read a receipted canonical match back from raw storage. */
-export async function readArchivedMatchPayload(
+/**
+ * Read a receipted canonical match back from raw storage: a Match-V5
+ * document, or an end-of-game record, as its own `dataVersion` says.
+ */
+export async function readArchivedCanonicalMatch(
   descriptor: ArtifactDescriptor,
   matchId: RiotMatchId,
-): Promise<RawMatch> {
+): Promise<CanonicalMatchRecord> {
   return await readArchivedPayload({
     descriptor,
     matchId,
     abortSignal: AbortSignal.timeout(ARCHIVE_FENCE_BUDGET.externalDeadlineMs),
-    parse: (value) => RawMatchSchema.safeParse(value),
-    expected: "a Match-V5 payload",
+    parse: (value) => CanonicalMatchRecordSchema.safeParse(value),
+    expected: "a canonical match",
   });
 }
 

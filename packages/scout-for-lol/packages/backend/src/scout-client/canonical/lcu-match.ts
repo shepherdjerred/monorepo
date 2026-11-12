@@ -1,6 +1,7 @@
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   RawMatchSchema,
+  RawParticipantSchema,
   SCOUT_CLIENT_DATA_VERSION,
   type RawMatch,
 } from "@scout-for-lol/data";
@@ -9,8 +10,9 @@ import {
   isArenaClientPayload,
   type UnsupportedClientMode,
 } from "./unsupported-mode.ts";
+import type { ParticipantIdentity } from "@scout-for-lol/domain/artifacts/game-result.ts";
 import { lcuParticipantIdentity } from "./lcu-identity.ts";
-import { convertParticipant } from "./lcu-participant.ts";
+import { lcuParticipantFields } from "./lcu-participant.ts";
 import { firstObjectiveTeam } from "./lcu-team.ts";
 import {
   LocalMatchBundleSchema,
@@ -113,6 +115,43 @@ function matchSource(
   return source === undefined || candidates.length !== 1
     ? null
     : { source, named };
+}
+
+/**
+ * One Match-V5 participant from a history row and its statistics source.
+ * `named` is who the row names, already decided by the bundle converter.
+ */
+export function convertParticipant(
+  participant: LegacyParticipant,
+  identity: LegacyIdentity,
+  source: SourcePlayer,
+  named: ParticipantIdentity,
+) {
+  const converted = RawParticipantSchema.safeParse(
+    lcuParticipantFields(
+      {
+        records: [source.stats, participant.stats],
+        participantId: participant.participantId,
+        teamId: participant.teamId,
+        championId: participant.championId,
+        championName: participant.championName,
+        skinName: source.skinName,
+        spell1Id: participant.spell1Id,
+        spell2Id: participant.spell2Id,
+        timeline: participant.timeline,
+        profileIcon: source.profileIconId ?? identity.player.profileIcon,
+        riotIdGameName: source.riotIdGameName ?? identity.player.gameName,
+        riotIdName: identity.player.summonerName,
+        riotIdTagLine: source.riotIdTagLine,
+        identityTagLine: identity.player.tagLine,
+        summonerId: source.summonerId ?? identity.player.summonerId,
+        summonerLevel: source.level,
+        summonerName: source.summonerName ?? identity.player.summonerName,
+      },
+      named,
+    ),
+  );
+  return converted.success ? converted.data : null;
 }
 
 /**

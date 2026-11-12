@@ -3,13 +3,18 @@ import {
   type GameResult,
 } from "@scout-for-lol/domain/artifacts/game-result.ts";
 import {
-  SCOUT_CLIENT_DATA_VERSION,
+  matchDataSourceOf,
   participantIdentityOf,
+  type CanonicalMatch,
   type RawMatch,
 } from "@scout-for-lol/data";
 
-/** Adapter from pinned raw bytes to the same result vocabulary used by LCU. */
-export function gameResultFromMatch(match: RawMatch): GameResult {
+/**
+ * Adapter from pinned raw bytes to the same result vocabulary used by LCU.
+ * An end-of-game record maps as directly: a result states no participant
+ * numbers or creation time either.
+ */
+export function gameResultFromMatch(match: CanonicalMatch): GameResult {
   return GameResultSchema.parse(gameResultDocument(match));
 }
 
@@ -26,13 +31,10 @@ export function parseResultFromMatch(
   return parsed.success ? parsed.data : null;
 }
 
-function gameResultDocument(match: RawMatch) {
+function gameResultDocument(match: CanonicalMatch) {
   return {
     matchId: match.metadata.matchId,
-    source:
-      match.metadata.dataVersion === SCOUT_CLIENT_DATA_VERSION
-        ? "SCOUT_CLIENT"
-        : "RIOT",
+    source: matchDataSourceOf(match.metadata),
     sourceId: `canonical:${match.metadata.matchId}`,
     queueId: match.info.queueId,
     gameMode: match.info.gameMode,

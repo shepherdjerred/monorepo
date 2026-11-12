@@ -7,7 +7,13 @@ import {
 import { createS3Client } from "#src/storage/s3-client.ts";
 import configuration from "#src/configuration.ts";
 import { getErrorMessage } from "#src/utils/errors.ts";
-import { RawMatchSchema, type RawMatch } from "@scout-for-lol/data/index.ts";
+import {
+  CanonicalMatchRecordSchema,
+  canonicalMatchCreatedAt,
+  type CanonicalMatch,
+  type CanonicalMatchRecord,
+  type RawMatch,
+} from "@scout-for-lol/data/index.ts";
 import { eachDayOfInterval, format, startOfDay, endOfDay } from "date-fns";
 import { createLogger } from "#src/logger.ts";
 import { generateS3Key } from "#src/storage/s3-helpers.ts";
@@ -89,49 +95,65 @@ function generateMatchDates(startDate: Date, endDate: Date): Date[] {
 /**
  * Check if a match includes any of the specified participant PUUIDs
  */
-function matchIncludesParticipant(match: RawMatch, puuids: string[]): boolean {
+function matchIncludesParticipant(
+  match: CanonicalMatch,
+  puuids: string[],
+): boolean {
   return match.metadata.participants.some((puuid) => puuids.includes(puuid));
 }
 
 function matchIsWithinDateRange(
-  match: RawMatch,
+  match: CanonicalMatch,
   startDate: Date,
   endDate: Date,
 ): boolean {
-  const gameCreation = match.info.gameCreation;
-  return (
-    gameCreation >= startDate.getTime() && gameCreation <= endDate.getTime()
-  );
+  const createdAt = canonicalMatchCreatedAt(match);
+  return createdAt >= startDate.getTime() && createdAt <= endDate.getTime();
 }
 
 /**
- * Process match download results and filter by participant PUUIDs
+ * Process match download results and filter by participant PUUIDs.
+ *
+ * Competition processors read complete matches only until they opt in to the
+ * end-of-game record, so one is passed over here by name, not by a failed
+ * parse.
  */
 function processMatchResults(
-  results: PromiseSettledResult<{ key: string; match: RawMatch | null }>[],
+  results: PromiseSettledResult<{
+    key: string;
+    record: CanonicalMatchRecord | null;
+  }>[],
   puuids: string[],
   startDate: Date,
   endDate: Date,
 ): RawMatch[] {
   const matches: RawMatch[] = [];
   for (const result of results) {
-    if (result.status !== "fulfilled" || !result.value.match) {
+    if (result.status !== "fulfilled" || result.value.record === null) {
       continue;
     }
 
-    const { match } = result.value;
+    const { record } = result.value;
+    const { match } = record;
     if (!matchIncludesParticipant(match, puuids)) {
       continue;
     }
 
     if (!matchIsWithinDateRange(match, startDate, endDate)) {
       logger.debug(
-        `[S3Query] Skipping ${match.metadata.matchId}: gameCreation ${new Date(match.info.gameCreation).toISOString()} outside requested range`,
+        `[S3Query] Skipping ${match.metadata.matchId}: created ${new Date(canonicalMatchCreatedAt(match)).toISOString()} outside requested range`,
       );
       continue;
     }
 
-    matches.push(match);
+    if (record.coverage === "end_of_game") {
+      logger.debug(
+        `[S3Query] Skipping ${match.metadata.matchId}: an end-of-game record, which competitions do not read yet`,
+      );
+      continue;
+    }
+
+    matches.push(record.match);
   }
   return matches;
 }
@@ -159,7 +181,7 @@ async function getMatchFromS3(
   client: S3Client,
   bucket: string,
   key: string,
-): Promise<RawMatch | null> {
+): Promise<CanonicalMatchRecord | null> {
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     const abortController = new AbortController();
     const timeoutId = setTimeout(() => {
@@ -210,9 +232,9 @@ async function getMatchFromS3(
 
       // Canonical captures already use the application's current identity domain.
       const matchData: unknown = JSON.parse(bodyString);
-      const match = RawMatchSchema.parse(matchData);
+      const record = CanonicalMatchRecordSchema.parse(matchData);
 
-      return match;
+      return record;
     } catch (error) {
       clearTimeout(timeoutId);
 
@@ -289,7 +311,7 @@ async function listMatchJsonKeysForPrefix(
 export async function queryMatchById(
   matchId: RiotMatchId,
   matchCreatedAt: Date,
-): Promise<RawMatch | undefined> {
+): Promise<CanonicalMatch | undefined> {
   const bucket = configuration.s3BucketName;
   if (bucket === undefined) {
     logger.warn(
@@ -306,9 +328,9 @@ export async function queryMatchById(
 
   for (const date of generateMatchDates(startDate, endDate)) {
     const key = generateS3Key(parsedMatchId, "match", "json", date);
-    const match = await getMatchFromS3(client, bucket, key);
-    if (match?.metadata.matchId === matchId) {
-      return match;
+    const record = await getMatchFromS3(client, bucket, key);
+    if (record?.match.metadata.matchId === matchId) {
+      return record.match;
     }
   }
 
@@ -399,13 +421,13 @@ export async function queryMatchesByDateRange(
 
           const matchPromises = keyBatch.map(async (key) => {
             try {
-              const match = await getMatchFromS3(client, bucket, key);
-              return { key, match };
+              const record = await getMatchFromS3(client, bucket, key);
+              return { key, record };
             } catch (error) {
               logger.warn(
                 `[S3Query] Failed to fetch match ${key}: ${getErrorMessage(error)}`,
               );
-              return { key, match: null };
+              return { key, record: null };
             }
           });
 

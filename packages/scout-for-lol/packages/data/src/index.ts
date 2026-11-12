@@ -7,6 +7,7 @@ export * from "./seasons.ts";
 export * from "./league/data-source.ts";
 export * from "./league/participant-identity.ts";
 export * from "./league/raw-match.schema.ts";
+export * from "./league/end-of-game-match.schema.ts";
 export * from "./league/raw-clash.schema.ts";
 export * from "./league/raw-participant.schema.ts";
 export * from "./league/raw-team.schema.ts";

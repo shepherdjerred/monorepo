@@ -34,14 +34,17 @@ const PlayerSchema = z.looseObject({
     champLevel: StatSchema,
   }),
 });
-export const EndOfGameResultSchema = z.looseObject({
+/** The game-level facts of an end-of-game block, for each reading of it. */
+export const EndOfGameBlockGameSchema = z.looseObject({
   invalid: z.literal(false).optional(),
-  gameId: IdSchema,
   gameMode: z.string().min(1),
   gameType: z.string().min(1),
   queueType: z.string().min(1),
   gameLength: z.number().positive().max(86_400),
   endOfGameTimestamp: z.number().int().positive(),
+});
+export const EndOfGameResultSchema = EndOfGameBlockGameSchema.extend({
+  gameId: IdSchema,
   teams: z
     .array(
       z.looseObject({

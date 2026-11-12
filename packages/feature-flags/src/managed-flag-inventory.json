@@ -2711,6 +2711,18 @@
       "thresholdRollouts": []
     },
     {
+      "key": "scout-client-end-of-game-deadline-seconds",
+      "owner": "scout",
+      "namespace": "scout",
+      "source": "scout-dynamic",
+      "purpose": "Seconds an end-of-game record waits for the game's history bundle and aliases before Scout freezes it as the canonical match.",
+      "type": "variant",
+      "default": "360",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "scout-feature-tip-percent",
       "owner": "scout",
       "namespace": "scout",

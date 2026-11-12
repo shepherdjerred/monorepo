@@ -1,17 +1,11 @@
 import {
-  RawParticipantSchema,
   RawPerksSchema,
   getChampionKeyById,
   storedParticipantIdentity,
 } from "@scout-for-lol/data";
 import type { ParticipantIdentity } from "@scout-for-lol/domain/artifacts/game-result.ts";
 import { z } from "zod";
-import type {
-  LegacyIdentity,
-  LegacyParticipant,
-  SourcePlayer,
-  ValueRecord,
-} from "./lcu-schema.ts";
+import type { LcuParticipantFacts, ValueRecord } from "./lcu-schema.ts";
 
 const NumericValueSchema = z.union([
   z.number(),
@@ -91,7 +85,7 @@ function normalizedRole(value: string | undefined) {
 
 function positionFrom(
   records: readonly ValueRecord[],
-  participant: LegacyParticipant,
+  timeline: LcuParticipantFacts["timeline"],
 ) {
   const explicit = stringFrom(
     records,
@@ -102,8 +96,8 @@ function positionFrom(
   );
   const parsed = PositionSchema.safeParse(explicit);
   if (parsed.success) return parsed.data;
-  const lane = normalizedLane(participant.timeline?.lane);
-  const role = normalizedRole(participant.timeline?.role);
+  const lane = normalizedLane(timeline?.lane);
+  const role = normalizedRole(timeline?.role);
   const candidate =
     lane === "BOTTOM" && (role === "SUPPORT" || role === "DUO_SUPPORT")
       ? "UTILITY"
@@ -154,34 +148,33 @@ function perksFrom(records: readonly ValueRecord[]) {
 }
 
 /**
- * One Match-V5 participant. `named` is who the row names, already decided by
- * the bundle converter; only a player's row carries a PUUID.
+ * The Match-V5 participant fields a source states, before validation. `named`
+ * is who the row names, already decided by the converter; only a player's
+ * row carries a PUUID. Each converter validates against its own schema.
  */
-export function convertParticipant(
-  participant: LegacyParticipant,
-  identity: LegacyIdentity,
-  source: SourcePlayer,
+export function lcuParticipantFields(
+  facts: LcuParticipantFacts,
   named: ParticipantIdentity,
-) {
-  const records = [source.stats, participant.stats];
-  const position = positionFrom(records, participant);
-  const lane = normalizedLane(participant.timeline?.lane);
-  const role = normalizedRole(participant.timeline?.role);
-  const converted = RawParticipantSchema.safeParse({
+): Record<string, unknown> {
+  const { records } = facts;
+  const position = positionFrom(records, facts.timeline);
+  const lane = normalizedLane(facts.timeline?.lane);
+  const role = normalizedRole(facts.timeline?.role);
+  return {
     assists: numberFrom(records, "assists", "ASSISTS"),
     baronKills: numberFrom(records, "baronKills", "BARON_KILLS"),
     basicPings: numberFrom(records, "basicPings", "BASIC_PINGS"),
     champExperience: numberFrom(records, "champExperience", "EXP"),
     champLevel: numberFrom(records, "champLevel", "LEVEL"),
-    championId: participant.championId,
+    championId: facts.championId,
     // Match-V5 names a champion by its key ("MonkeyKing"); the end-of-game
     // block's `championName` is the display name ("Wukong"). The key for the
     // stated champion ID comes first.
     championName:
-      getChampionKeyById(participant.championId) ??
-      source.skinName ??
+      getChampionKeyById(facts.championId) ??
+      facts.skinName ??
       stringFrom(records, "SKIN") ??
-      participant.championName,
+      facts.championName,
     championTransform: numberFrom(
       records,
       "championTransform",
@@ -345,7 +338,7 @@ export function convertParticipant(
       "OBJECTIVES_STOLEN_ASSISTS",
     ),
     onMyWayPings: numberFrom(records, "onMyWayPings", "ON_MY_WAY_PINGS"),
-    participantId: participant.participantId,
+    participantId: facts.participantId,
     pentaKills: numberFrom(records, "pentaKills", "PENTA_KILLS"),
     perks: perksFrom(records),
     physicalDamageDealt: numberFrom(
@@ -363,16 +356,16 @@ export function convertParticipant(
       "physicalDamageTaken",
       "PHYSICAL_DAMAGE_TAKEN",
     ),
-    profileIcon: source.profileIconId ?? identity.player.profileIcon,
+    profileIcon: facts.profileIcon,
     ...storedParticipantIdentity(named),
     pushPings: numberFrom(records, "pushPings", "PUSH_PINGS"),
     quadraKills: numberFrom(records, "quadraKills", "QUADRA_KILLS"),
-    riotIdGameName: source.riotIdGameName ?? identity.player.gameName,
-    riotIdName: identity.player.summonerName,
+    riotIdGameName: facts.riotIdGameName,
+    riotIdName: facts.riotIdName,
     riotIdTagline:
-      source.riotIdTagLine ??
+      facts.riotIdTagLine ??
       stringFrom(records, "riotIdTagline", "RIOT_ID_TAG_LINE") ??
-      identity.player.tagLine,
+      facts.identityTagLine,
     role,
     sightWardsBoughtInGame: numberFrom(
       records,
@@ -384,19 +377,20 @@ export function convertParticipant(
     spell3Casts: numberFrom(records, "spell3Casts", "SPELL3_CAST"),
     spell4Casts: numberFrom(records, "spell4Casts", "SPELL4_CAST"),
     summoner1Casts: numberFrom(records, "summoner1Casts", "SUMMON_SPELL1_CAST"),
-    summoner1Id: participant.spell1Id,
+    summoner1Id: facts.spell1Id,
     summoner2Casts: numberFrom(records, "summoner2Casts", "SUMMON_SPELL2_CAST"),
-    summoner2Id: participant.spell2Id,
-    summonerId: source.summonerId ?? identity.player.summonerId,
+    summoner2Id: facts.spell2Id,
+    summonerId: facts.summonerId,
     summonerLevel:
-      source.level ?? numberFrom(records, "summonerLevel", "SUMMONER_LEVEL"),
-    summonerName: source.summonerName ?? identity.player.summonerName,
+      facts.summonerLevel ??
+      numberFrom(records, "summonerLevel", "SUMMONER_LEVEL"),
+    summonerName: facts.summonerName,
     teamEarlySurrendered: booleanFrom(
       records,
       "teamEarlySurrendered",
       "TEAM_EARLY_SURRENDERED",
     ),
-    teamId: participant.teamId,
+    teamId: facts.teamId,
     teamPosition: position,
     timeCCingOthers: numberFrom(
       records,
@@ -489,6 +483,5 @@ export function convertParticipant(
     wardsKilled: numberFrom(records, "wardsKilled", "WARD_KILLED"),
     wardsPlaced: numberFrom(records, "wardsPlaced", "WARD_PLACED"),
     win: booleanFrom(records, "win", "WIN"),
-  });
-  return converted.success ? converted.data : null;
+  };
 }

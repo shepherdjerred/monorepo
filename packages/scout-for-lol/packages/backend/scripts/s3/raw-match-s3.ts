@@ -3,7 +3,11 @@ import {
   ListObjectsV2Command,
   S3Client,
 } from "@aws-sdk/client-s3";
-import { RawMatchSchema, type RawMatch } from "@scout-for-lol/data/index.ts";
+import {
+  CanonicalMatchRecordSchema,
+  type CanonicalMatch,
+  type CanonicalMatchRecord,
+} from "@scout-for-lol/data/index.ts";
 import { z } from "zod";
 
 const DateOnlySchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
@@ -104,7 +108,7 @@ async function fetchMatch(
   client: S3Client,
   bucket: string,
   key: string,
-): Promise<RawMatch> {
+): Promise<CanonicalMatchRecord> {
   const response = await client.send(
     new GetObjectCommand({ Bucket: bucket, Key: key }),
   );
@@ -112,7 +116,7 @@ async function fetchMatch(
     throw new Error(`S3 object ${key} has no body`);
   }
   const raw: unknown = JSON.parse(await response.Body.transformToString());
-  return RawMatchSchema.parse(raw);
+  return CanonicalMatchRecordSchema.parse(raw);
 }
 
 export function createRawMatchS3Source(rawConfig: RawMatchS3Config) {
@@ -129,17 +133,18 @@ export function createRawMatchS3Source(rawConfig: RawMatchS3Config) {
     return keys;
   }
 
-  async function fetchRawMatch(key: string): Promise<RawMatch> {
+  async function fetchRawMatch(key: string): Promise<CanonicalMatchRecord> {
     return fetchMatch(client, config.bucket, key);
   }
 
   async function visitMatches(
-    visitor: (match: RawMatch) => Promise<void> | void,
+    visitor: (match: CanonicalMatch) => Promise<void> | void,
   ): Promise<void> {
     for (const prefix of datePrefixes(config.startDate, config.endDate)) {
       const keys = await listMatchKeysForPrefix(client, config.bucket, prefix);
       for (const key of keys) {
-        await visitor(await fetchRawMatch(key));
+        const record = await fetchRawMatch(key);
+        await visitor(record.match);
       }
     }
   }

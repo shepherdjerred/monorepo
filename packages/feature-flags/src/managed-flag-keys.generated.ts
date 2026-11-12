@@ -206,6 +206,7 @@ export const SCOUT_VARIANT_FLAG_KEYS = [
   "scout-explore-quota-limits",
   "scout-explore-spend-policy",
   "scout-feature-tip-cooldown-hours",
+  "scout-client-end-of-game-deadline-seconds",
   "scout-feature-tip-percent",
   "scout-report-ai-model",
   "scout-riot-budget-mode",

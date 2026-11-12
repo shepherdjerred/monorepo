@@ -8,6 +8,7 @@ import {
   isDynamicConfigReady,
   llmHourlyTokenBudget,
   riotBudgetMode,
+  scoutClientEndOfGameDeadlineSeconds,
   shutdownDynamicConfig,
   temporalCallGraphTracing,
   type DynamicConfigSeed,
@@ -126,6 +127,42 @@ describe("scout dynamic config", () => {
       startPolling: false,
     });
     expect(temporalCallGraphTracing()).toBe(false);
+  });
+
+  test("the end-of-game deadline resolves to its measured default before and after init", async () => {
+    // Readiness reads it on every resolution, including in a worker whose
+    // dynamic config never started; an unseeded key would throw there.
+    expect(scoutClientEndOfGameDeadlineSeconds()).toBe(360);
+    await initializeDynamicConfig({
+      environment: DISABLED,
+      seed: SEED,
+      startPolling: false,
+    });
+    expect(scoutClientEndOfGameDeadlineSeconds()).toBe(360);
+  });
+
+  test("the end-of-game deadline follows its flag", async () => {
+    await initializeDynamicConfig({
+      environment: DISABLED,
+      seed: SEED,
+      startPolling: false,
+      provider: new StaticProvider({
+        "scout-client-end-of-game-deadline-seconds": 600,
+      }),
+    });
+    expect(scoutClientEndOfGameDeadlineSeconds()).toBe(600);
+  });
+
+  test("an invalid end-of-game deadline keeps the last good value", async () => {
+    await initializeDynamicConfig({
+      environment: DISABLED,
+      seed: SEED,
+      startPolling: false,
+      provider: new StaticProvider({
+        "scout-client-end-of-game-deadline-seconds": 0,
+      }),
+    });
+    expect(scoutClientEndOfGameDeadlineSeconds()).toBe(360);
   });
 
   test("readiness flips with initialize and shutdown", async () => {

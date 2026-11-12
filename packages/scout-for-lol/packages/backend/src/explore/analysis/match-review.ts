@@ -1,6 +1,6 @@
 import { z } from "zod";
 import {
-  RawMatchSchema,
+  CanonicalMatchRecordSchema,
   participantKindOf,
   type RawMatch,
   RawTimelineSchema,
@@ -32,6 +32,25 @@ const DocumentsSchema = z.object({
     }),
   ),
 });
+
+/**
+ * Review keys on participant numbers and reads the timeline, and an
+ * end-of-game record has neither. It is refused by name, as a stored game
+ * that cannot be reviewed, rather than failing to parse.
+ */
+const END_OF_GAME_REVIEW_REFUSAL = {
+  ok: false as const,
+  message:
+    "Scout recorded this game from the League client's end-of-game screen, without participant numbers or a timeline, so it cannot be reviewed.",
+};
+
+/** A stored match document of either coverage; `null` for an end-of-game record. */
+function reviewableMatch(document: unknown, matchId: RiotMatchId) {
+  const record = CanonicalMatchRecordSchema.parse(document);
+  if (record.match.metadata.matchId !== matchId)
+    throw new Error("Raw match identity differs from the selected game.");
+  return record.coverage === "complete" ? record.match : null;
+}
 
 function roster(match: RawMatch) {
   return match.info.participants.map((p) => ({
@@ -244,9 +263,8 @@ export function recordedMatchRoster(data: unknown, matchId: RiotMatchId) {
       ok: false as const,
       message: "Scout has no stored match document for this game.",
     };
-  const match = RawMatchSchema.parse(rawMatch.document);
-  if (match.metadata.matchId !== matchId)
-    throw new Error("Raw match identity differs from the selected game.");
+  const match = reviewableMatch(rawMatch.document, matchId);
+  if (match === null) return END_OF_GAME_REVIEW_REFUSAL;
   return {
     ok: true as const,
     participants: roster(match),
@@ -271,9 +289,8 @@ export function summarizeRecordedMatch(
       ok: false as const,
       message: "This dataset has no raw match document for the selected game.",
     };
-  const match = RawMatchSchema.parse(rawMatch.document);
-  if (match.metadata.matchId !== matchId)
-    throw new Error("Raw match identity differs from the selected game.");
+  const match = reviewableMatch(rawMatch.document, matchId);
+  if (match === null) return END_OF_GAME_REVIEW_REFUSAL;
   if (
     new Set(match.info.participants.map((p) => p.participantId)).size !==
     match.info.participants.length
