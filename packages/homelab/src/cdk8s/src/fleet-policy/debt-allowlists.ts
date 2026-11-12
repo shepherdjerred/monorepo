@@ -1,5 +1,6 @@
 /**
- * Debt allowlists for the fleet policy tests in this directory.
+ * Debt allowlists for the fleet policy tests in this directory and for the
+ * upstream-chart backstop in `argocd-helm-render.test.ts`.
  *
  * Each set is the exceptions to one rule as of the day the rule was written:
  * work that is known, deferred, and tracked by being listed here. The tests
@@ -317,3 +318,80 @@ export const CONTAINERS_WITHOUT_SECCOMP: ReadonlySet<string> = new Set([
   "woodpecker/woodpecker-woodpecker-config-extension/woodpecker-config-extension",
   "woodpecker/woodpecker-woodpecker-server/woodpecker-server",
 ]);
+
+/**
+ * Registered probe ports a NetworkPolicy closes to one of the peers that
+ * connect to them (`<namespace>/<service>:<port> from <source namespace>`):
+ * blackbox-exporter in `prometheus`, the Tailscale proxy in `tailscale`, or
+ * cloudflared in `cloudflare-tunnel`.
+ */
+export const PROBE_PORTS_NOT_ADMITTED: ReadonlySet<string> = new Set([
+  // The policy admits the `cloudflare-tunnel` namespace
+  // (`cloudflareTunnelIngressRule`), where no cloudflared pod runs.
+  "bugsink/bugsink-bugsink-service:8000 from cloudflare-operator-system",
+  "freshrss/freshrss-service:80 from cloudflare-operator-system",
+  "glitter-boys-launcher/glitter-boys-launcher-http:8080 from cloudflare-operator-system",
+  "home/home-homeassistant-service:8123 from cloudflare-operator-system",
+  "media/media-plex-service:32400 from cloudflare-operator-system",
+  "media/media-seerr-service:5055 from cloudflare-operator-system",
+  "media/streambot-web:8080 from cloudflare-operator-system",
+  "relay/relay-relay-service:8080 from cloudflare-operator-system",
+  "temporal/temporal-worker-agent-tasks:9467 from cloudflare-operator-system",
+  "temporal/temporal-worker-gh-webhook:9466 from cloudflare-operator-system",
+  "temporal/temporal-worker-sleep-webhook:9469 from cloudflare-operator-system",
+  "temporal/temporal-worker-xcode-cloud-webhook:9468 from cloudflare-operator-system",
+  "trmnl-dashboard/trmnl-dashboard-trmnl-dashboard-service:3000 from cloudflare-operator-system",
+  "woodpecker/woodpecker-server:8000 from cloudflare-operator-system",
+  // The gateway's webhook ports are opened to the tunnel only
+  // (`temporal-gateway-ingress-netpol`), not to blackbox-exporter.
+  "temporal/temporal-worker-agent-tasks:9467 from prometheus",
+  "temporal/temporal-worker-gh-webhook:9466 from prometheus",
+  "temporal/temporal-worker-sleep-webhook:9469 from prometheus",
+  "temporal/temporal-worker-xcode-cloud-webhook:9468 from prometheus",
+]);
+
+/**
+ * Egress rules naming another namespace whose Ingress policy does not admit
+ * the rule's pods on the port (`<namespace>/<policy> -> <peer>:<port>`).
+ */
+export const UNRECIPROCATED_EGRESS_RULES: ReadonlySet<string> = new Set([
+  // `minecraft-tsmc-query` admits the forum's web pods, not its release pods.
+  "storm-forum/storm-forum-release-network -> minecraft-tsmc{app.kubernetes.io/instance=minecraft-tsmc,app.kubernetes.io/name=minecraft}:25565/UDP",
+  // `flipt-ingress-netpol` does not list the tracker namespace.
+  "tracker/tracker-app-netpol -> flipt:8080",
+]);
+
+/**
+ * Ingress rules naming another namespace whose Egress policy does not let it
+ * reach the rule's pods on the port (`<namespace>/<policy> <- <peer>:<port>`).
+ */
+export const UNRECIPROCATED_INGRESS_RULES: ReadonlySet<string> = new Set([
+  // `birmel-egress-netpol` has no rule towards postal.
+  "postal/postal-smtp-netpol <- birmel:25",
+]);
+
+/**
+ * Containers of upstream Helm charts, rendered with our values, that declare
+ * no CPU or no memory request (`<application>/<workload>/<container>`).
+ * Enforced by `argocd-helm-render.test.ts`, which renders the charts as
+ * ArgoCD does.
+ */
+export const UPSTREAM_CONTAINERS_WITHOUT_REQUESTS: ReadonlySet<string> =
+  new Set([
+    // Existing: the chart renders these without requests and our values set
+    // none for them.
+    "1password/onepassword-connect-operator/onepassword-connect",
+    "argocd/argocd-redis-secret-init/secret-init",
+    "argocd/argocd-redis/metrics",
+    "blackbox-exporter/prometheus-prometheus-blackbox-exporter/blackbox-exporter",
+    "cert-manager/cert-manager-startupapicheck/cert-manager-startupapicheck",
+    "velero/velero-upgrade-crds/velero",
+    // Init containers our own values add without resources
+    // (`misc/minecraft/minecraft-config.ts`, `minecraft-drift-check.ts`).
+    "minecraft-shuxin/minecraft-shuxin/check-config-drift",
+    "minecraft-shuxin/minecraft-shuxin/copy-plugin-configs",
+    // Plugin init containers our own values add without resources
+    // (`resources/argo-applications/storage/velero.ts`).
+    "velero/velero/velero-plugin-for-aws",
+    "velero/velero/velero-plugin-openebs",
+  ]);

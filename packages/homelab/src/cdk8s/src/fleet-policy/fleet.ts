@@ -1,5 +1,9 @@
 import { z } from "zod";
 import {
+  getRegisteredBackendProbes,
+  type BackendProbeDescriptor,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/probes/probe-registry.ts";
+import {
   objectIdentity,
   synthesizedCharts,
   type SynthesizedObject,
@@ -19,7 +23,14 @@ const ProbeSchema = z.looseObject({});
 
 const ContainerSchema = z.looseObject({
   name: z.string(),
-  ports: z.array(z.looseObject({ containerPort: z.number() })).optional(),
+  ports: z
+    .array(
+      z.looseObject({
+        containerPort: z.number(),
+        name: z.string().optional(),
+      }),
+    )
+    .optional(),
   readinessProbe: ProbeSchema.optional(),
   startupProbe: ProbeSchema.optional(),
   restartPolicy: z.string().optional(),
@@ -68,16 +79,57 @@ const LabelSelectorSchema = z.looseObject({
 });
 export type LabelSelector = z.infer<typeof LabelSelectorSchema>;
 
+const NetworkPolicyPeerSchema = z.looseObject({
+  podSelector: LabelSelectorSchema.optional(),
+  namespaceSelector: LabelSelectorSchema.optional(),
+  ipBlock: z
+    .looseObject({ cidr: z.string(), except: z.array(z.string()).optional() })
+    .optional(),
+});
+export type NetworkPolicyPeer = z.infer<typeof NetworkPolicyPeerSchema>;
+
+const NetworkPolicyPortSchema = z.looseObject({
+  port: z.union([z.number(), z.string()]).optional(),
+  endPort: z.number().optional(),
+  protocol: z.string().optional(),
+});
+
+const NetworkPolicyPortsSchema = z.array(NetworkPolicyPortSchema).optional();
+
 const NetworkPolicySpecSchema = z.object({
   spec: z.looseObject({
     podSelector: LabelSelectorSchema,
     policyTypes: z.array(z.enum(["Ingress", "Egress"])),
+    ingress: z
+      .array(
+        z.looseObject({
+          from: z.array(NetworkPolicyPeerSchema).optional(),
+          ports: NetworkPolicyPortsSchema,
+        }),
+      )
+      .optional(),
+    egress: z
+      .array(
+        z.looseObject({
+          to: z.array(NetworkPolicyPeerSchema).optional(),
+          ports: NetworkPolicyPortsSchema,
+        }),
+      )
+      .optional(),
   }),
 });
 
 const ServiceSpecSchema = z.object({
   spec: z.looseObject({
     selector: z.record(z.string(), z.string()).optional(),
+    ports: z
+      .array(
+        z.looseObject({
+          port: z.number(),
+          targetPort: z.union([z.number(), z.string()]).optional(),
+        }),
+      )
+      .optional(),
   }),
 });
 
@@ -112,17 +164,46 @@ export type FleetContainer = {
   spec: FleetContainerSpec;
 };
 
+export type PolicyType = "Ingress" | "Egress";
+
+/** One `ports` entry of a NetworkPolicy rule; the protocol defaults to TCP. */
+export type FleetPolicyPort = {
+  protocol: string;
+  /** A number, or a container port name. Absent means every port. */
+  port: number | string | undefined;
+  endPort: number | undefined;
+};
+
+/** One ingress or egress rule, whichever side its policy type names. */
+export type FleetPolicyRule = {
+  /** The `from` or `to` peers. Absent means every peer. */
+  peers: readonly NetworkPolicyPeer[] | undefined;
+  /** Absent means every port. */
+  ports: readonly FleetPolicyPort[] | undefined;
+};
+
 export type FleetNetworkPolicy = {
   namespace: string;
   name: string;
   podSelector: LabelSelector;
-  policyTypes: readonly ("Ingress" | "Egress")[];
+  policyTypes: readonly PolicyType[];
+  ingress: readonly FleetPolicyRule[];
+  egress: readonly FleetPolicyRule[];
+};
+
+export type FleetService = {
+  namespace: string;
+  name: string;
+  /** Absent on a Service whose endpoints are managed elsewhere. */
+  selector: Readonly<Record<string, string>> | undefined;
+  ports: readonly { port: number; targetPort: number | string | undefined }[];
 };
 
 export type Fleet = {
   objects: readonly SynthesizedObject[];
   workloads: readonly FleetWorkload[];
   networkPolicies: readonly FleetNetworkPolicy[];
+  services: readonly FleetService[];
   /** Service selectors by namespace. */
   serviceSelectors: readonly {
     namespace: string;
@@ -130,6 +211,8 @@ export type Fleet = {
   }[];
   /** Destination namespace of every Argo Application. */
   applicationNamespaces: ReadonlySet<string>;
+  /** Every in-cluster blackbox probe the charts registered while rendering. */
+  backendProbes: readonly BackendProbeDescriptor[];
 };
 
 function namespaceOf(object: SynthesizedObject): string {
@@ -165,6 +248,47 @@ function toWorkload(object: SynthesizedObject): FleetWorkload {
         toContainer(spec, true),
       ),
     ],
+  };
+}
+
+/** Kubernetes treats an absent and an empty peer or port list alike: no limit. */
+function toPolicyRule(
+  peers: readonly NetworkPolicyPeer[] | undefined,
+  ports: z.infer<typeof NetworkPolicyPortsSchema>,
+): FleetPolicyRule {
+  return {
+    peers: peers === undefined || peers.length === 0 ? undefined : peers,
+    ports:
+      ports === undefined || ports.length === 0
+        ? undefined
+        : ports.map(({ protocol = "TCP", port, endPort }) => ({
+            protocol,
+            port,
+            endPort,
+          })),
+  };
+}
+
+function toNetworkPolicy(object: SynthesizedObject): FleetNetworkPolicy {
+  const { podSelector, policyTypes, ingress, egress } =
+    NetworkPolicySpecSchema.parse(object).spec;
+  return {
+    namespace: namespaceOf(object),
+    name: object.metadata.name,
+    podSelector,
+    policyTypes,
+    ingress: (ingress ?? []).map((rule) => toPolicyRule(rule.from, rule.ports)),
+    egress: (egress ?? []).map((rule) => toPolicyRule(rule.to, rule.ports)),
+  };
+}
+
+function toService(object: SynthesizedObject): FleetService {
+  const { selector, ports } = ServiceSpecSchema.parse(object).spec;
+  return {
+    namespace: namespaceOf(object),
+    name: object.metadata.name,
+    selector,
+    ports: (ports ?? []).map(({ port, targetPort }) => ({ port, targetPort })),
   };
 }
 
@@ -213,6 +337,9 @@ export async function loadFleet(): Promise<Fleet> {
     for (const object of objects)
       byIdentity.set(objectIdentity(object), object);
   const objects = [...byIdentity.values()];
+  const services = objects
+    .filter((object) => object.kind === "Service")
+    .map((object) => toService(object));
 
   return {
     objects,
@@ -225,19 +352,11 @@ export async function loadFleet(): Promise<Fleet> {
           object.kind === "NetworkPolicy" &&
           object.apiVersion === "networking.k8s.io/v1",
       )
-      .map((object) => ({
-        namespace: namespaceOf(object),
-        name: object.metadata.name,
-        ...NetworkPolicySpecSchema.parse(object).spec,
-      })),
-    serviceSelectors: objects
-      .filter((object) => object.kind === "Service")
-      .flatMap((object) => {
-        const { selector } = ServiceSpecSchema.parse(object).spec;
-        return selector === undefined
-          ? []
-          : [{ namespace: namespaceOf(object), selector }];
-      }),
+      .map((object) => toNetworkPolicy(object)),
+    services,
+    serviceSelectors: services.flatMap(({ namespace, selector }) =>
+      selector === undefined ? [] : [{ namespace, selector }],
+    ),
     applicationNamespaces: new Set(
       objects
         .filter((object) => object.kind === "Application")
@@ -246,5 +365,7 @@ export async function loadFleet(): Promise<Fleet> {
             ApplicationSpecSchema.parse(object).spec.destination.namespace,
         ),
     ),
+    // The registry is filled while the charts above are constructed.
+    backendProbes: getRegisteredBackendProbes(),
   };
 }

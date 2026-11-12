@@ -11,6 +11,11 @@ import {
   SERVICE_PRIORITY,
 } from "./priority-classes.ts";
 import {
+  workloadContainers,
+  type ContainerResources,
+  type FoundContainer,
+} from "@shepherdjerred/homelab/cdk8s/src/testing/workload-containers.ts";
+import {
   BEST_EFFORT_CONTAINER_ALLOWLIST,
   PARTIAL_REQUEST_CONTAINER_ALLOWLIST,
 } from "./container-resource-allowlist.ts";
@@ -33,52 +38,6 @@ const LEGACY_DISCORD_MOD_CLEANUP = expect.arrayContaining([
  * while this test also covers raw ApiObject manifests and catches allowlist
  * drift in the final synthesized YAML.
  */
-
-const ContainerSchema = z.object({
-  name: z.string().optional(),
-  resources: z
-    .object({
-      requests: z
-        .object({
-          cpu: z.union([z.string(), z.number()]).optional(),
-          memory: z.union([z.string(), z.number()]).optional(),
-        })
-        .optional(),
-      limits: z
-        .object({
-          cpu: z.union([z.string(), z.number()]).optional(),
-          memory: z.union([z.string(), z.number()]).optional(),
-        })
-        .optional(),
-    })
-    .loose()
-    .optional(),
-});
-
-const PodSpecSchema = z.object({
-  priorityClassName: z.string().optional(),
-  containers: z.array(ContainerSchema).optional(),
-  initContainers: z.array(ContainerSchema).optional(),
-});
-
-const WorkloadSchema = z.object({
-  kind: z.string(),
-  metadata: z.object({ name: z.string().optional() }).optional(),
-  spec: z
-    .object({
-      template: z.object({ spec: PodSpecSchema.optional() }).optional(),
-      jobTemplate: z
-        .object({
-          spec: z
-            .object({
-              template: z.object({ spec: PodSpecSchema.optional() }).optional(),
-            })
-            .optional(),
-        })
-        .optional(),
-    })
-    .optional(),
-});
 
 const MinecraftApplicationSchema = z.object({
   kind: z.literal("Application"),
@@ -130,76 +89,18 @@ function expectSjerredPostCutoverCleanup(
   );
 }
 
-const WORKLOAD_KINDS = new Set([
-  "Deployment",
-  "StatefulSet",
-  "DaemonSet",
-  "Job",
-]);
-
-type FoundContainer = {
-  workload: string;
-  container: string;
-  kind: string;
-  init: boolean;
-  hasRequests: boolean;
-  resources: z.infer<typeof ContainerSchema>["resources"];
-  priorityClassName: string | undefined;
-};
-
 async function synthesizeApp(): Promise<string> {
   const app = new App({ outdir: SYNTH_OUTDIR });
   await setupCharts(app);
   return app.synthYaml();
 }
 
-function parseWorkload(
-  doc: string,
-): z.infer<typeof WorkloadSchema> | undefined {
-  let parsed: unknown;
+function parseDocument(doc: string): unknown {
   try {
-    parsed = parseYaml(doc);
+    return parseYaml(doc);
   } catch {
     return undefined; // non-resource documents (e.g. Helm-templated strings)
   }
-  const result = WorkloadSchema.safeParse(parsed);
-  return !result.success || !WORKLOAD_KINDS.has(result.data.kind)
-    ? undefined
-    : result.data;
-}
-
-function hasRequests(container: z.infer<typeof ContainerSchema>): boolean {
-  const requests = container.resources?.requests;
-  return requests?.cpu != null && requests.memory != null;
-}
-
-/** Flatten a workload's main + init containers into FoundContainer records. */
-function containersOf(
-  workload: z.infer<typeof WorkloadSchema>,
-): FoundContainer[] {
-  const podSpec =
-    workload.spec?.template?.spec ??
-    workload.spec?.jobTemplate?.spec?.template?.spec;
-  if (!podSpec) {
-    return [];
-  }
-  const name = workload.metadata?.name ?? "<unnamed>";
-  const toFound = (
-    container: z.infer<typeof ContainerSchema>,
-    init: boolean,
-  ): FoundContainer => ({
-    workload: name,
-    container: container.name ?? "<unnamed>",
-    kind: workload.kind,
-    init,
-    hasRequests: hasRequests(container),
-    resources: container.resources,
-    priorityClassName: podSpec.priorityClassName,
-  });
-  return [
-    ...(podSpec.containers ?? []).map((c) => toFound(c, false)),
-    ...(podSpec.initContainers ?? []).map((c) => toFound(c, true)),
-  ];
 }
 
 function collectContainers(yamlContent: string): {
@@ -210,10 +111,7 @@ function collectContainers(yamlContent: string): {
     .split(/^---$/m)
     .map((doc) => doc.trim())
     .filter((doc) => doc.length > 0)
-    .flatMap((doc) => {
-      const workload = parseWorkload(doc);
-      return workload ? containersOf(workload) : [];
-    });
+    .flatMap((doc) => workloadContainers(parseDocument(doc)));
 
   return { all, missing: all.filter((c) => !c.hasRequests) };
 }
@@ -239,10 +137,7 @@ afterAll(async () => {
 // Declared requests. Live production pods on torvalds run with these scaled
 // at admission by the request overcommit policy
 // (src/resources/cluster-baseline/request-overcommit.ts).
-const AUDITED_PERSISTENT_RESERVATIONS = new Map<
-  string,
-  z.infer<typeof ContainerSchema>["resources"]
->([
+const AUDITED_PERSISTENT_RESERVATIONS = new Map<string, ContainerResources>([
   [
     "birmel/main",
     {
