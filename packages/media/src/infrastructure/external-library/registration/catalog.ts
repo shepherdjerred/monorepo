@@ -49,15 +49,14 @@ async function memberFor(
   const external = z.record(z.string(), z.json()).parse(media.externalIds);
   if (
     media.kind === "episode" &&
-    media.tmdbId !== null &&
-    member.guids.some(
-      (guid) =>
-        guid.startsWith("tmdb://") && guid !== `tmdb://${String(media.tmdbId)}`,
-    )
+    (media.tmdbId === null ||
+      !matchesReferences(member.guids, [
+        { namespace: "tmdb", value: String(media.tmdbId) },
+      ]))
   )
     throw new MediaError(
       "external_library_identity_changed",
-      "Plex episode GUID conflicts with its exact canonical coordinate",
+      "Plex must expose a matching TMDB episode GUID for its exact canonical coordinate",
       409,
     );
   return {

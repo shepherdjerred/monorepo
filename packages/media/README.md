@@ -720,6 +720,10 @@ protected conflicts. `POST /api/v1/admin/external-library/apply` takes
 60-second review lifetime. It rechecks the current owner, PMS server/section,
 GUID hierarchy, exact Part/path/size, canonical versions and complete normal
 inventory cohort before recording the explicit command and registration event.
+Each episode must expose its exact canonical TMDB episode GUID; matching season
+and episode numbers or IMDb/TVDB GUIDs alone do not prove that identity. The same
+check gates availability from historical registrations against the current
+canonical episode and inventory, without rewriting their stored records.
 Missing catalog identities, stale reviews and changed proofs require a new
 preview. Owned paths, any owned coverage history and active reservations are
 preserved and reported rather than overwritten.

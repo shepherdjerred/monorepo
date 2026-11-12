@@ -15,6 +15,7 @@ import {
 } from "#shared/external-library/contract.ts";
 import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
 import { CatalogIdentitySchema } from "#shared/acquisition/catalog.ts";
+import { matchesReferences } from "#shared/plex-binding/canonical.ts";
 import { canonicalRootId } from "#infrastructure/editions/locks.ts";
 import type { MediaActor } from "#application/auth.ts";
 import {
@@ -154,7 +155,15 @@ function membersMatch(
       member?.mediaId === row.mediaId &&
       canonicalRootId(row.media) === registration.rootMediaId &&
       row.media.seasonNumber === member.seasonNumber &&
-      row.media.episodeNumber === member.episodeNumber
+      row.media.episodeNumber === member.episodeNumber &&
+      (row.media.kind !== "episode" ||
+        (row.media.tmdbId !== null &&
+          matchesReferences(member.guids, [
+            {
+              namespace: "tmdb",
+              value: String(row.media.tmdbId),
+            },
+          ])))
     );
   });
 }
