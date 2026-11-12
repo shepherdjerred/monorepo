@@ -345,10 +345,13 @@ const commands: Record<
       "toolkit woodpecker --version",
       "gcx --version",
       "set +e",
-      'output="$(timeout 60s bun src/worker.ts 2>&1)"',
+      // With no server the worker waits out the outage with the startup
+      // backoff instead of exiting, so the smoke stops it with `timeout` (124)
+      // once the first refused attempt has been logged as a retry.
+      'output="$(timeout 45s bun src/worker.ts 2>&1)"',
       "status=$?",
       String.raw`printf '%s\n' "$output"`,
-      String.raw`[ "$status" -ne 124 ] && printf "%s\n" "$output" | grep -F "Connecting to Temporal server" && printf "%s\n" "$output" | grep -iE "connection refused|connect|econnrefused|transport error|failed to connect|tcp connect error|deadline"`,
+      String.raw`[ "$status" -eq 124 ] && printf "%s\n" "$output" | grep -F "Connecting to Temporal server" && printf "%s\n" "$output" | grep -F "Temporal server unreachable at startup; retrying" && printf "%s\n" "$output" | grep -iE "connection refused|tcp connect error"`,
     ].join("\n"),
     env: {
       TEMPORAL_ADDRESS: "127.0.0.1:7233",
