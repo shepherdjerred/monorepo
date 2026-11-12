@@ -299,6 +299,8 @@ public final class PursuitFixtures implements BasicCommand, AutoCloseable {
             artifact.mapId(),
             List.of(),
             List.of(),
+            List.of(),
+            List.of(),
             List.of());
     var situation =
         new Situation(self, snapshot, percept, Blackboard.open(RED, Strategy.HUNT), Role.HUNT);
