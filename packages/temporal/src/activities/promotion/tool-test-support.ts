@@ -45,6 +45,9 @@ export async function harness(
     enabled: true,
     onScreen: true,
   });
+  const preparePointer = vi
+    .spyOn(browser, "preparePointer")
+    .mockResolvedValue(undefined);
   const action = vi
     .spyOn(browser, "action")
     .mockResolvedValue({ success: true });
@@ -115,6 +118,7 @@ export async function harness(
     control,
     currentUrl,
     controlState,
+    preparePointer,
     requiresCaptchaResponse,
     browser,
   };

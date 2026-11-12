@@ -264,7 +264,6 @@ export class PromotionBrowser {
     }
     return result;
   }
-
   async controlState(ref: string) {
     await this.accessibleControl(ref);
     const query = new URLSearchParams({ selector: ref });
@@ -280,7 +279,12 @@ export class PromotionBrowser {
       enabled: enabled.enabled,
     };
   }
-
+  /** Native hover may scroll/expose menus; it validates pointer access without forcing a click. */
+  async preparePointer(ref: string): Promise<void> {
+    await this.accessibleControl(ref);
+    await this.action({ kind: "hover", ref });
+    await this.accessibleControl(ref);
+  }
   async followLink(
     body: Record<string, unknown>,
     address: string,
