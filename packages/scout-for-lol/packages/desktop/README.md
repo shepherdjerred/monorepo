@@ -2,7 +2,7 @@
 
 Pure-Rust `egui` desktop observer for League of Legends. The application is a
 background tray process with a small native status, pairing, settings, and
-diagnostics window. It reads only the local gameplay endpoints declared in
+diagnostics window, which runs as a separate child process. It reads only the local gameplay endpoints declared in
 `scout-client-core::lcu::LcuEndpoint` and persists outbound observations in a
 SQLite outbox before delivery. Custom and duel games are recognized from an
 exact observed roster; League gameflow then advances the bound game without
@@ -19,14 +19,69 @@ bun run test
 bun run lint
 ```
 
-The workspace has three crates:
+The workspace has four crates:
 
 - `scout-client-core`: LCU access, protocol, outbox, credentials, and
   diagnostics.
 - `scout-client-runtime`: the UI-independent collection runtime (pairing,
   observation, upload, history, Clash, and start-at-login registration).
-- `scout-client-app`: the `egui` shell, tray, and `scout-client` binary, which
-  drive the runtime through `ClientRuntime`.
+- `scout-desktop-ipc`: the JSON-lines messages between the supervisor and the
+  window process.
+- `scout-client-app`: the `scout-client` binary: the supervisor, its tray, and
+  the `egui` window.
+
+### Process model
+
+`scout-client` is one executable that runs as two processes:
+
+- The **supervisor** is what a user or start-at-login launches. It holds the
+  single-instance lock, owns `ClientRuntime`, and runs the tray. It never opens
+  a window or a graphics context.
+- The **window** is the same executable started by the supervisor with
+  `--window`. It renders the `egui` UI from what the supervisor sends and holds
+  no collector, outbox, or lock.
+
+Graphics devices get lost on Windows (sleep/resume, a driver reset, a
+hybrid-GPU switch), and that can abort a process outright instead of
+unwinding. Keeping collection out of the process that renders means a dead
+window loses nothing.
+
+The two talk over the child's stdio, one JSON object per line, tagged by
+`type` (`scout-desktop-ipc`). The supervisor sends a `hello` with the protocol
+version and whether a tray exists, then `state` snapshots (the runtime state
+plus diagnostics counters and recent events), `phase` changes, the diagnostics
+bundle on request, `show`, and `close`. The window sends its own `hello`, then
+`pair`, `disconnect`, `open_url` (http and https only), `open_log_folder`,
+`request_diagnostics`, `set_start_at_login`, and `quit`. Decoding is strict: an
+unknown type is a broken contract, and the supervisor treats it as a window
+crash. Logging goes to stderr in both processes, because the window's stdout
+carries the protocol.
+
+The supervisor reacts to how the window ends:
+
+- **A crash** (non-zero exit, a signal, an unreadable message, or a window
+  that stops reading for five seconds) records a `window_crash` diagnostic and
+  relaunches the window. After three crashes, each within ten minutes of its
+  start, it stops relaunching but keeps collecting; opening the window from
+  the tray starts the count over. A protocol-version mismatch (the executable
+  was replaced under a running supervisor) is not relaunched.
+- **Closing the window** exits the window process cleanly. Collection
+  continues, and the tray's "Open Scout" starts a new window. With no tray,
+  closing the window quits Scout, since nothing could reopen it.
+- **Quit**, from the tray or the Settings page, closes the window, stops the
+  collector, and ends the supervisor.
+
+If the supervisor dies, the window sees its stdin close and exits.
+
+`--background` starts the supervisor without a window. Without a working tray
+the window opens anyway.
+
+`tray-icon` needs a running platform event loop: a message loop on the
+creating thread on Windows, and the main thread's run loop on macOS. Neither
+needs a window, so the supervisor runs a windowless `winit` event loop on its
+main thread for the tray (as an accessory app on macOS, so it has no Dock icon)
+and supervises on another thread. On Linux the KSNI backend runs its own D-Bus
+thread.
 
 ### Runtime layout
 
@@ -65,7 +120,8 @@ label this build does not know arrives as `GameflowPhase::Unrecognized`, and
 per-user data directory (the one holding the outbox) before the collector
 starts. A second launch prints that Scout Client is already running and exits
 with status 2. The operating system drops the lock when its holder exits, so a
-crash never leaves a stale lock. The crash relaunch releases it first.
+crash never leaves a stale lock. The supervisor holds it; the window process
+never takes it, so relaunching a window never contends for it.
 
 Preview packages target `https://beta.scout-for-lol.com`, where the ingestion
 flag is rolled out. Use `--server=http://127.0.0.1:<port>` for a local backend;
@@ -224,12 +280,8 @@ The window renders with glow. On Windows both of egui's renderers panic when
 the GPU context is lost: glow when sleep/resume, a driver reset or a display
 change invalidates it, and wgpu when it can no longer write a buffer, which
 happened within a minute on a hybrid-GPU machine. So the window is not trusted
-to stay up. `main` owns the collector and catches a window panic. It then stops
-the collector and waits for it, so only one client ever reads the outbox, and
-relaunches the client with the same arguments. Nothing is lost, because the
-outbox is on disk. A `window_crash` diagnostic records each crash. After three
-crashes, each within ten minutes of its start, the client stops relaunching
-(`--quick-crashes` carries the count).
+to stay up, and it runs in its own process (see "Process model"). Diagnostics
+live in the supervisor, which records each window crash as `window_crash`.
 
 Errors and crashes are also reported to Bugsink once a DSN is configured in
 `scout_client_core::reporting`; until then the reporter is not installed and

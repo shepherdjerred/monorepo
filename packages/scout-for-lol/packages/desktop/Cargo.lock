@@ -3789,9 +3789,14 @@ dependencies = [
  "open",
  "scout-client-core",
  "scout-client-runtime",
+ "scout-desktop-ipc",
+ "tokio",
  "tracing",
  "tracing-subscriber",
  "tray-icon",
+ "url",
+ "uuid",
+ "winit",
 ]
 
 [[package]]
@@ -3830,6 +3835,15 @@ dependencies = [
  "tokio",
  "tracing",
  "uuid",
+]
+
+[[package]]
+name = "scout-desktop-ipc"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "thiserror 2.0.21",
 ]
 
 [[package]]
@@ -4442,6 +4456,7 @@ dependencies = [
  "libc",
  "mio",
  "pin-project-lite",
+ "signal-hook-registry",
  "socket2",
  "tokio-macros",
  "windows-sys 0.61.2",

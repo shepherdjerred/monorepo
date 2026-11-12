@@ -23,9 +23,20 @@ egui.workspace = true
 open.workspace = true
 scout-client-core = { path = "../scout-client-core" }
 scout-client-runtime = { path = "../scout-client-runtime" }
+scout-desktop-ipc = { path = "../scout-desktop-ipc" }
+tokio = { workspace = true, features = ["process"] }
 tracing.workspace = true
 tracing-subscriber.workspace = true
 tray-icon.workspace = true
+url.workspace = true
+
+# The supervisor's tray needs a platform event loop on Windows and macOS; a
+# windowless winit loop provides one without a graphics context.
+[target.'cfg(any(target_os = "windows", target_os = "macos"))'.dependencies]
+winit = { version = "0.30.13", default-features = false }
+
+[dev-dependencies]
+uuid.workspace = true
 
 [lints]
 workspace = true
