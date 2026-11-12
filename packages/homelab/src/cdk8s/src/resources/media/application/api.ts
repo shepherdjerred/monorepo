@@ -1,3 +1,4 @@
+import { temporalAddressEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/address.ts";
 import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
 import { Cpu, DeploymentStrategy, EnvValue, type ISecret } from "cdk8s-plus-31";
@@ -84,9 +85,7 @@ export function createMediaApi(
             `http://${props.plexServiceName}:32400`,
           ),
           HOME: EnvValue.fromValue("/tmp"),
-          TEMPORAL_ADDRESS: EnvValue.fromValue(
-            "temporal-temporal-server-service.temporal.svc.cluster.local:7233",
-          ),
+          ...temporalAddressEnv(),
           TEMPORAL_NAMESPACE: EnvValue.fromValue("prod"),
         },
         resources: {

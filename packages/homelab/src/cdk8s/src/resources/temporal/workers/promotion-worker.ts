@@ -1,3 +1,4 @@
+import { temporalAddressEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/address.ts";
 import type { Chart } from "cdk8s";
 import {
   EnvValue,
@@ -65,7 +66,7 @@ export function createTemporalPromotionWorker(
     envVariables: {
       ...temporalFeatureFlagEnvironment(),
       ...llmArchiveEnvVars(),
-      TEMPORAL_ADDRESS: EnvValue.fromValue(`${props.serverServiceName}:7233`),
+      ...temporalAddressEnv(props.serverServiceName),
       TEMPORAL_NAMESPACE: EnvValue.fromValue("prod"),
       TEMPORAL_WORKER_ROLE: EnvValue.fromValue("promotion"),
       PROMOTION_DISCORD_SOCKET: EnvValue.fromValue(

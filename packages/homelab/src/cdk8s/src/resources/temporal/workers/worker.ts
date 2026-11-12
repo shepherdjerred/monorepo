@@ -1,3 +1,4 @@
+import { temporalAddressEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/address.ts";
 import type { Chart } from "cdk8s";
 import { codexApiKeyEnvVars } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-provider-credentials.ts";
 import {
@@ -209,7 +210,7 @@ export function createTemporalWorkerDeployment(
     serviceAccount: agentServiceAccount,
     envVariables: {
       ...temporalFeatureFlagEnvironment(),
-      TEMPORAL_ADDRESS: EnvValue.fromValue(`${props.serverServiceName}:7233`),
+      ...temporalAddressEnv(props.serverServiceName),
       TEMPORAL_NAMESPACE: EnvValue.fromValue("prod"),
       TEMPORAL_METRICS_ADDRESS: EnvValue.fromValue("0.0.0.0:9464"),
       TEMPORAL_WORKER_ROLE: EnvValue.fromValue("agent"),
@@ -262,7 +263,7 @@ export function createTemporalWorkerDeployment(
 
   const glitterCommonEnv = {
     ...temporalFeatureFlagEnvironment(),
-    TEMPORAL_ADDRESS: EnvValue.fromValue(`${props.serverServiceName}:7233`),
+    ...temporalAddressEnv(props.serverServiceName),
     TEMPORAL_NAMESPACE: EnvValue.fromValue("prod"),
     TEMPORAL_METRICS_ADDRESS: EnvValue.fromValue("0.0.0.0:9464"),
     ENVIRONMENT: EnvValue.fromValue("production"),

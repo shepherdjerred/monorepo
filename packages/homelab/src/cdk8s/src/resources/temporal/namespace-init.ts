@@ -3,6 +3,7 @@ import type { Service } from "cdk8s-plus-31";
 import { Job } from "cdk8s-plus-31";
 import { withCommonProps } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { temporalAddress } from "./address.ts";
 import { temporalUtilityContainerDefaults } from "./container-defaults.ts";
 
 export type CreateTemporalNamespaceInitJobProps = {
@@ -69,10 +70,10 @@ export function createTemporalNamespaceInitJob(
       ],
       envVariables: {
         TEMPORAL_ADDRESS: {
-          value: `${props.serverService.name}:7233`,
+          value: temporalAddress(props.serverService.name),
         },
         TEMPORAL_CLI_ADDRESS: {
-          value: `${props.serverService.name}:7233`,
+          value: temporalAddress(props.serverService.name),
         },
       },
       ...temporalUtilityContainerDefaults(),

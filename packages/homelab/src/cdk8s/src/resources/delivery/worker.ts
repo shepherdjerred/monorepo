@@ -1,3 +1,4 @@
+import { temporalAddressEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/address.ts";
 import { Size, type Chart } from "cdk8s";
 import { Cpu, EnvValue, Secret } from "cdk8s-plus-31";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
@@ -164,7 +165,7 @@ export function createDeliveryWorker(
               "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt",
             ),
           }),
-      TEMPORAL_ADDRESS: EnvValue.fromValue(`${serverServiceName}:7233`),
+      ...temporalAddressEnv(serverServiceName),
       TEMPORAL_NAMESPACE: EnvValue.fromValue("prod"),
       TEMPORAL_WORKER_ROLE: EnvValue.fromValue("delivery"),
       TEMPORAL_METRICS_ADDRESS: EnvValue.fromValue("0.0.0.0:9464"),
