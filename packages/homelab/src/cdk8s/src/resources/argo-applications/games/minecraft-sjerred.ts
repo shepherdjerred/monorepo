@@ -92,7 +92,6 @@ export function createMinecraftSjerredResources(chart: Chart): void {
 
   createCloudflareTunnelBinding(chart, "minecraft-sjerred-dynmap-cf-tunnel", {
     serviceName: "minecraft-sjerred-dynmap",
-    subdomain: "dynmap",
     namespace: NAMESPACE,
     port: 8123,
     // Hibernates at 0 replicas (see above).

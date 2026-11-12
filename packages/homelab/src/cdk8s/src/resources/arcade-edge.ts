@@ -109,7 +109,6 @@ export function createArcadeEdge(chart: Chart) {
   // OpenTofu retains public DNS ownership; this binding provides tunnel recovery.
   createCloudflareTunnelBinding(chart, "arcade-cf-tunnel", {
     serviceName: bootstrap.name,
-    subdomain: "arcade",
     port: 8082,
     probePath: "/healthz",
     publicProbePath: "/health",

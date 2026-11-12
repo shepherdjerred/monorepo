@@ -195,7 +195,6 @@ export function createArgoCdTunnel(chart: Chart): void {
   // this flag.
   createCloudflareTunnelBinding(chart, "argocd-cf-tunnel", {
     serviceName: "argocd-server",
-    subdomain: "argocd",
     namespace: "argocd",
     protocol: "https",
     noTlsVerify: true,

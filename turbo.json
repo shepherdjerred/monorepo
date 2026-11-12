@@ -781,10 +781,13 @@
       "inputs": [
         "scripts/checks/ci/check-tunnel-dns-coverage.ts",
         "scripts/checks/ci/tunnel-dns-synthesized.ts",
-        "packages/homelab/src/cdk8s/src/**/*.ts",
         "packages/homelab/scripts/tofu/synthesized-configuration.ts",
         "packages/homelab/src/domain-registry.json",
         "packages/homelab/src/domain-registry.ts",
+        "packages/homelab/src/platform-model.json",
+        "packages/homelab/src/platform-model.ts",
+        "packages/homelab/src/tofu/anthropic-federation/desired-state.json",
+        "packages/homelab/src/tofu/google/desired-state.json",
         "packages/homelab/src/tofu/cloudflare/*.tf.json",
         "packages/homelab/src/tofu/cloudflare/modules/domain-baseline/*.tf"
       ]

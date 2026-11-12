@@ -2,6 +2,10 @@ import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/version
 import { Chart, JsonPatch } from "cdk8s";
 import { Construct } from "constructs";
 import {
+  platformModel,
+  type PublicHostname,
+} from "homelab/src/platform-model.ts";
+import {
   Capability,
   ConfigMap,
   Deployment,
@@ -168,6 +172,11 @@ export type CaddyfileGeneratorProps = {
 };
 
 const STATIC_SITE_HTTP_PORT = 8080;
+
+/** The tunnel route of a host this origin serves: the model's static-site origin. */
+function originRoute(hostname: string): PublicHostname {
+  return { hostname, ...platformModel.staticSiteOrigin };
+}
 
 /**
  * Generates a Caddyfile for S3 static sites.
@@ -451,14 +460,13 @@ export class S3StaticSites extends Construct {
     for (const host of props.mailPolicies ?? []) {
       // Each policy has a body-aware public Probe below; the backend health is
       // already covered by the static-site fleet served by this same Caddy.
-      // @tunnel-dns-coverage:mail-domains-from ../../../domain-registry.json
       createCloudflareTunnelBinding(
         this,
         `tunnel-${hostnameSlug(host.hostname)}`,
         {
           serviceName: this.service.name,
           namespace,
-          fqdn: host.hostname,
+          hostname: originRoute(host.hostname),
           disableDnsUpdates: true,
           disableProbe: true,
           port: 80,
@@ -494,14 +502,13 @@ export class S3StaticSites extends Construct {
 
     for (const site of props.sites) {
       // DNS is managed by OpenTofu — operator must not touch DNS records.
-      // @tunnel-dns-coverage:hostnames-from ../resources/s3-static-sites/sites.ts
       createCloudflareTunnelBinding(
         this,
         `tunnel-${hostnameSlug(site.hostname)}`,
         {
           serviceName: this.service.name,
           namespace,
-          fqdn: site.hostname,
+          hostname: originRoute(site.hostname),
           disableDnsUpdates: true,
           port: 80,
           // Static sites already get bespoke Probe coverage below (per-site,

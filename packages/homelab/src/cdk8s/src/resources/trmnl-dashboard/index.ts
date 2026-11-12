@@ -110,7 +110,6 @@ export function createTrmnlDashboardDeployment(chart: Chart) {
     }),
     cloudflare: {
       id: "trmnl-dashboard-cf-tunnel",
-      fqdn: "trmnl.sjer.red",
       // "/" is auth-gated (401); /livez is the unauthenticated liveness
       // endpoint (same one the container's k8s liveness probe uses).
       probePath: "/livez",

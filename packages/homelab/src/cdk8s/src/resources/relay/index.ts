@@ -230,7 +230,6 @@ export function createRelayDeployment(chart: Chart) {
   // (Tailscale declined). DNS record is managed in src/tofu/cloudflare/.
   createCloudflareTunnelBinding(chart, "relay-cf-tunnel", {
     serviceName: service.name,
-    fqdn: "relay.sjer.red",
     port: 8080,
     // "/" has no route (404); /ready is y-sweet's unauthenticated readiness
     // endpoint (verified live 2026-07-24, in-cluster and through Cloudflare).

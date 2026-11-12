@@ -20,7 +20,6 @@ export function createChartMuseumResources(chart: Chart): OnePasswordItem {
 
   createCloudflareTunnelBinding(chart, "chartmuseum-cf-tunnel", {
     serviceName: "chartmuseum",
-    subdomain: "chartmuseum",
     namespace: "chartmuseum",
     port: 8080,
   });

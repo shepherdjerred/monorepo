@@ -314,7 +314,6 @@ export function createWoodpeckerServer(chart: Chart) {
   // admin allowlist, not network reachability.
   createCloudflareTunnelBinding(chart, "woodpecker-cf-tunnel", {
     serviceName: service.name,
-    fqdn: "woodpecker.sjer.red",
     port: WOODPECKER_HTTP_PORT,
   });
 

@@ -337,7 +337,6 @@ export function createStormForumChart(
     });
   } else {
     createCloudflareTunnelBinding(chart, "public-forum", {
-      fqdn: "ts-mc.net",
       serviceName: service.name,
       port: 8080,
       probePath: "/readyz",

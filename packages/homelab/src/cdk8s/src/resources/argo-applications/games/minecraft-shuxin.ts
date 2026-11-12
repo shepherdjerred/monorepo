@@ -48,11 +48,10 @@ export function createMinecraftShuxinResources(chart: Chart): void {
 
   createCloudflareTunnelBinding(chart, "minecraft-shuxin-bluemap-cf-tunnel", {
     serviceName: "minecraft-shuxin-bluemap",
-    // First-level subdomain: Cloudflare Universal SSL covers only *.sjer.red,
+    // The hostname is a first-level subdomain: Cloudflare Universal SSL covers only *.sjer.red,
     // so the former shuxin.bluemap.sjer.red could never complete a TLS
     // handshake. Must match the tofu DNS record in
     // packages/homelab-cdktn/src/stacks/cloudflare/sjer-red.ts.
-    subdomain: "shuxin-bluemap",
     namespace: "minecraft-shuxin",
     port: 8100,
     // Hibernates at 0 replicas (see above).

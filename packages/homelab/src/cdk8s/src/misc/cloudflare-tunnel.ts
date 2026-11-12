@@ -4,6 +4,11 @@ import {
   TunnelBinding,
   TunnelBindingTunnelRefKind,
 } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-types/cfargotunnel.ts";
+import {
+  platformModel,
+  publicHostnameOfService,
+  type PublicHostname,
+} from "homelab/src/platform-model.ts";
 import type { ProbeModule } from "./probes/blackbox-modules.ts";
 import {
   registerBackendProbe,
@@ -15,11 +20,22 @@ import {
 // This is created in cloudflare-operator.ts
 export const CLOUDFLARE_TUNNEL_SECRET_NAME = "cloudflare-tunnel-config";
 
+/**
+ * Route a public hostname through the Cloudflare tunnel to a Service.
+ *
+ * The hostname is not stated here: it is the one `platform-model.json` routes
+ * to `serviceName`, and a Service the model does not name fails synthesis.
+ */
 export function createCloudflareTunnelBinding(
   scope: Construct,
   id: string,
   props: {
     serviceName: string;
+    /**
+     * The model's route, from `publicHostname(...)`. Needed only for a Service
+     * that serves several hostnames; otherwise it is looked up by Service.
+     */
+    hostname?: PublicHostname;
     namespace?: string;
     annotations?: Record<string, string>;
     disableDnsUpdates?: boolean;
@@ -58,9 +74,20 @@ export function createCloudflareTunnelBinding(
      * carry a comment at the call site explaining why.
      */
     disableProbe?: boolean;
-  } & ({ subdomain: string } | { fqdn: string }),
+  },
 ) {
-  const fqdn = "fqdn" in props ? props.fqdn : `${props.subdomain}.sjer.red`;
+  const route = props.hostname ?? publicHostnameOfService(props.serviceName);
+  const routedNamespace = props.namespace ?? Chart.of(scope).namespace;
+  if (
+    route.service !== props.serviceName ||
+    (routedNamespace != null && route.namespace !== routedNamespace)
+  ) {
+    throw new Error(
+      `createCloudflareTunnelBinding(${id}): platform-model.json routes ${route.hostname} to ${route.namespace}/${route.service}, not ${routedNamespace ?? "<no namespace>"}/${props.serviceName}`,
+    );
+  }
+  const fqdn = route.hostname;
+  const tunnel = platformModel.cloudflareTunnel;
 
   const binding = new TunnelBinding(scope, id, {
     metadata: {
@@ -71,7 +98,7 @@ export function createCloudflareTunnelBinding(
       // Labels and finalizer added by cloudflare-operator controller - include to prevent ArgoCD drift
       labels: {
         "cfargotunnel.com/kind": "TunnelBinding",
-        "cfargotunnel.com/name": "homelab-tunnel",
+        "cfargotunnel.com/name": tunnel.name,
       },
       finalizers: ["cfargotunnel.com/finalizer"],
     },
@@ -94,7 +121,7 @@ export function createCloudflareTunnelBinding(
     ],
     tunnelRef: {
       kind: TunnelBindingTunnelRefKind.CLUSTER_TUNNEL,
-      name: "homelab-tunnel",
+      name: tunnel.name,
       disableDNSUpdates: props.disableDnsUpdates ?? true,
     },
   });

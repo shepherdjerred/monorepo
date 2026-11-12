@@ -215,7 +215,6 @@ export async function createFreshRssDeployment(chart: Chart): Promise<void> {
 
   createCloudflareTunnelBinding(chart, "freshrss-cf-tunnel", {
     serviceName: service.name,
-    subdomain: "freshrss",
     port: 80,
   });
 }

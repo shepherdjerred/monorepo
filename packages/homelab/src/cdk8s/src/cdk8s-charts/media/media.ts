@@ -86,7 +86,6 @@ export async function createMediaChart(app: App, applicationImage?: string) {
   );
   createCloudflareTunnelBinding(chart, "streambot-web-cf-tunnel", {
     serviceName: "streambot-web",
-    subdomain: "streambot",
     port: 8080,
     probePath: "/readyz",
     publicProbePath: "/readyz",

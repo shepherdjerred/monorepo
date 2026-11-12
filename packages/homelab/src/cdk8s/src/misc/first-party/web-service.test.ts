@@ -343,7 +343,11 @@ describe("FirstPartyWebService exposure", () => {
     const { of } = render({
       cloudflare: {
         id: "widget-cf-tunnel",
-        fqdn: "widget.example.com",
+        hostname: {
+          hostname: "widget.example.com",
+          namespace: "widgets",
+          service: "widgets-widget-service",
+        },
         probePath: "/livez",
       },
     });

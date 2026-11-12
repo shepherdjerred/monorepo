@@ -11,8 +11,10 @@
  * come from `domain-registry.json`, and workload credentials from the
  * `google` and `anthropic-federation` desired state.
  *
- * Neither synthesizer reads the model yet. Until they do,
- * `cdk8s/src/platform-model/rendered-on-both-sides.test.ts` holds every
+ * cdk8s renders from the model through the lookups at the end of this module;
+ * an id the model does not declare throws at synthesis. The OpenTofu stacks
+ * do not read it yet, so
+ * `cdk8s/src/platform-model/rendered-on-both-sides.test.ts` still holds every
  * definition against both renderings.
  */
 import { z } from "zod";
@@ -353,4 +355,103 @@ export function platformDefinitions(
     scopedCredentials: scopedCredentials(model),
     immutablePathPrefixesByZone: immutablePathPrefixesByZone(model),
   };
+}
+
+/** The one entry that matches. None, or several, is an undeclared id. */
+function declared<ITEM>(
+  items: readonly ITEM[],
+  matches: (item: ITEM) => boolean,
+  description: string,
+): ITEM {
+  const found = items.filter((item) => matches(item));
+  const [item] = found;
+  if (item === undefined || found.length !== 1)
+    throw new Error(
+      `platform-model.json declares ${String(found.length)} entries for ${description}; expected exactly one`,
+    );
+  return item;
+}
+
+/** The tunnel route of a hostname: declared, a static site, or a mail-policy host. */
+export function publicHostname(
+  hostname: string,
+  model: PlatformModel = platformModel,
+): PublicHostname {
+  return declared(
+    publicHostnames(model),
+    (entry) => entry.hostname === hostname,
+    `public hostname ${hostname}`,
+  );
+}
+
+/**
+ * The one hostname routed to a Service. A Service that serves several is
+ * looked up by hostname instead.
+ */
+export function publicHostnameOfService(
+  service: string,
+  model: PlatformModel = platformModel,
+): PublicHostname {
+  return declared(
+    publicHostnames(model),
+    (entry) => entry.service === service,
+    `a public hostname of Service ${service}`,
+  );
+}
+
+export function staticSite(
+  hostname: string,
+  model: PlatformModel = platformModel,
+): StaticSite {
+  return declared(
+    model.staticSites,
+    (site) => site.hostname === hostname,
+    `static site ${hostname}`,
+  );
+}
+
+/** A tailnet service with the names it is reached on. */
+export type ResolvedTailnetService = TailnetService & {
+  /** `<host>.<tailnet domain>` */
+  fqdn: string;
+  /** `https://<fqdn>` */
+  origin: string;
+};
+
+export function tailnetService(
+  host: string,
+  model: PlatformModel = platformModel,
+): ResolvedTailnetService {
+  const service = declared(
+    model.tailnetServices,
+    (entry) => entry.host === host,
+    `tailnet service ${host}`,
+  );
+  const fqdn = tailnetFqdn(host, model);
+  return { ...service, fqdn, origin: `https://${fqdn}` };
+}
+
+/**
+ * The bucket a namespace's workloads name through `env`. Without a namespace,
+ * the bucket every consumer of `env` shares.
+ */
+export function consumedBucket(
+  consumer: { env: string; namespace?: string },
+  model: PlatformModel = platformModel,
+): string {
+  const buckets = new Set(
+    model.bucketConsumers
+      .filter(
+        (entry) =>
+          entry.env === consumer.env &&
+          (consumer.namespace === undefined ||
+            entry.namespace === consumer.namespace),
+      )
+      .map((entry) => entry.bucket),
+  );
+  return declared(
+    [...buckets],
+    () => true,
+    `the bucket ${consumer.namespace ?? "every namespace"} names in ${consumer.env}`,
+  );
 }

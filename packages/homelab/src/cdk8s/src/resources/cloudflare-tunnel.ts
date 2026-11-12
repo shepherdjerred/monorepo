@@ -1,4 +1,5 @@
 import type { Chart } from "cdk8s";
+import { platformModel } from "homelab/src/platform-model.ts";
 import { ClusterTunnel } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-types/cfargotunnel.ts";
 import { CLOUDFLARE_TUNNEL_SECRET_NAME } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
 
@@ -13,7 +14,7 @@ export function createCloudflareTunnelCRD(chart: Chart) {
   // The secret is created by cloudflare-operator.ts via 1Password.
   new ClusterTunnel(chart, "cloudflare-tunnel-crd", {
     metadata: {
-      name: "homelab-tunnel",
+      name: platformModel.cloudflareTunnel.name,
     },
     spec: {
       cloudflare: {

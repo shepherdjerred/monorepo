@@ -392,7 +392,6 @@ export function createBugsinkDeployment(chart: Chart) {
   // Cloudflare Tunnel for public access
   createCloudflareTunnelBinding(chart, "bugsink-cf-tunnel", {
     serviceName: service.name,
-    fqdn: "bugsink.sjer.red",
     port: 8000,
   });
 

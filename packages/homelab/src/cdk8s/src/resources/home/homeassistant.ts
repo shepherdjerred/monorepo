@@ -173,7 +173,6 @@ export async function createHomeAssistantDeployment(chart: Chart) {
 
   createCloudflareTunnelBinding(chart, "homeassistant-cf-tunnel", {
     serviceName: service.name,
-    subdomain: "homeassistant",
     port: 8123,
   });
 }

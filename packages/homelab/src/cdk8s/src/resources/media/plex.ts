@@ -259,7 +259,6 @@ export function createPlexDeployment(
 
   createCloudflareTunnelBinding(chart, "plex-cf-tunnel", {
     serviceName: service.name,
-    subdomain: "plex",
     port: 32_400,
     probePath: "/identity",
     publicProbePath: "/identity",
