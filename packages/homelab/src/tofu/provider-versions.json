@@ -76,7 +76,8 @@
     {
       "registryUrl": "https://registry.terraform.io",
       "source": "ippontech/anthropic",
-      "version": "1.60.0"
+      "version": "1.60.0",
+      "bindings": true
     },
     {
       "registryUrl": "https://registry.opentofu.org",

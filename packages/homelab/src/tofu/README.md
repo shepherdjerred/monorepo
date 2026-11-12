@@ -33,7 +33,7 @@ Each subdirectory is an independent root module with its own `backend.tf` (S3 st
 
 ### Stacks synthesized from TypeScript
 
-`dockerhub` and `github` have no `.tf` files. Their configuration is
+`anthropic`, `dockerhub` and `github` have no `.tf` files. Their configuration is
 `main.tf.json`, synthesized by the [CDK Terrain](https://cdktn.io/docs) app in
 [`packages/homelab-cdktn`](../../../homelab-cdktn) and committed next to the stack's `.terraform.lock.hcl`.
 OpenTofu, `tofu-stack.ts`, the stack archive and Delivery read that file like
@@ -364,8 +364,9 @@ manual bootstrap steps. The committed key metadata records the existing
 manually created replacement. Archived keys retain their ID, name, and status
 without a vault rotation target. Destruction protection keeps this metadata
 managed even after the credential has been retired. To stop managing a key,
-remove it from desired state and forget it with a `moved` plus `removed` block
-in `migrations.tf`; destroying it is blocked.
+remove it from desired state and forget it with `retire()` in the stack's
+cdktn source (`packages/homelab-cdktn/src/stacks/anthropic.ts`), which writes
+the `moved` plus `removed` pair; destroying it is blocked.
 
 ### Anthropic workload identity federation
 

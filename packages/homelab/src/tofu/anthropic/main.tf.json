@@ -1,0 +1,131 @@
+{
+  "import": [
+    {
+      "for_each": "${{ for name, workspace in var.anthropic_workspaces : name => workspace if try(workspace.workspace_id, null) != null }}",
+      "id": "${each.value.workspace_id}",
+      "to": "anthropic_workspace.managed[each.key]"
+    },
+    {
+      "for_each": "${var.anthropic_api_keys}",
+      "id": "${each.value.api_key_id}",
+      "to": "anthropic_api_key.managed[each.key]"
+    }
+  ],
+  "moved": [
+    {
+      "from": "anthropic_api_key.managed[\"openrouter\"]",
+      "to": "anthropic_api_key.retired_openrouter"
+    }
+  ],
+  "output": {
+    "anthropic_api_key_rotation_units": {
+      "description": "Imported Anthropic API key IDs and their existing 1Password rotation units",
+      "value": "${{ for name, key in anthropic_api_key.managed : name => { api_key_id = key.id, vault_item_id = var.anthropic_api_keys[name].vault_item_id, vault_field = var.anthropic_api_keys[name].vault_field, vault_json_path = try(var.anthropic_api_keys[name].vault_json_path, null) } if var.anthropic_api_keys[name].status != \"archived\" }}"
+    },
+    "anthropic_workspace_ids": {
+      "description": "Anthropic workspace IDs",
+      "value": "${{ for name, workspace in anthropic_workspace.managed : name => workspace.id }}"
+    }
+  },
+  "provider": { "anthropic": [{}] },
+  "removed": [
+    {
+      "from": "anthropic_api_key.retired_openrouter",
+      "lifecycle": { "destroy": false }
+    }
+  ],
+  "resource": {
+    "anthropic_api_key": {
+      "managed": {
+        "for_each": "${var.anthropic_api_keys}",
+        "lifecycle": { "prevent_destroy": true },
+        "name": "${each.value.name}",
+        "status": "${each.value.status}"
+      }
+    },
+    "anthropic_workspace": {
+      "managed": {
+        "for_each": "${var.anthropic_workspaces}",
+        "name": "${each.value.name}"
+      }
+    },
+    "anthropic_workspace_member": {
+      "managed": {
+        "for_each": "${var.anthropic_workspace_members}",
+        "user_id": "${each.value.user_id}",
+        "workspace_id": "${anthropic_workspace.managed[each.value.workspace_key].id}",
+        "workspace_role": "${each.value.workspace_role}"
+      }
+    }
+  },
+  "terraform": {
+    "backend": {
+      "s3": {
+        "bucket": "homelab-tofu-state",
+        "endpoints": { "s3": "https://seaweedfs-s3.tailnet-1a49.ts.net" },
+        "key": "anthropic/terraform.tfstate",
+        "region": "auto",
+        "skip_credentials_validation": true,
+        "skip_metadata_api_check": true,
+        "skip_region_validation": true,
+        "skip_requesting_account_id": true,
+        "skip_s3_checksum": true,
+        "use_lockfile": true,
+        "use_path_style": true
+      }
+    },
+    "encryption": {
+      "key_provider": {
+        "pbkdf2": {
+          "state": { "passphrase": "${var.tofu_state_encryption_passphrase}" }
+        }
+      },
+      "method": {
+        "aes_gcm": { "encrypted": { "keys": "${key_provider.pbkdf2.state}" } }
+      },
+      "plan": { "enforced": true, "method": "method.aes_gcm.encrypted" },
+      "state": { "enforced": true, "method": "method.aes_gcm.encrypted" }
+    },
+    "required_providers": {
+      "anthropic": {
+        "source": "registry.terraform.io/ippontech/anthropic",
+        "version": "1.60.0"
+      }
+    },
+    "required_version": ">= 1.9.0"
+  },
+  "variable": {
+    "anthropic_api_keys": {
+      "default": {},
+      "description": "Anthropic organization or workspace API keys",
+      "type": "map(object({ api_key_id = string, name = string, status = string, vault_item_id = optional(string), vault_field = optional(string), vault_json_path = optional(string) }))",
+      "validation": [
+        {
+          "condition": "${alltrue([for key in values(var.anthropic_api_keys) : contains([\"active\", \"inactive\", \"archived\"], key.status) && (key.status == \"archived\" ? key.vault_item_id == null && key.vault_field == null && key.vault_json_path == null : try(length(key.vault_item_id), 0) > 0 && try(length(key.vault_field), 0) > 0)])}",
+          "error_message": "Active and inactive keys require a vault rotation target; archived keys must retain only nonsecret metadata."
+        }
+      ]
+    },
+    "anthropic_workspace_members": {
+      "default": {},
+      "description": "Anthropic workspace membership and roles",
+      "type": "map(object({ workspace_key = string, user_id = string, workspace_role = string }))"
+    },
+    "anthropic_workspaces": {
+      "default": {},
+      "description": "Anthropic workspaces to create and manage",
+      "type": "map(object({ name = string, workspace_id = optional(string) }))"
+    },
+    "tofu_state_encryption_passphrase": {
+      "description": "OpenTofu state and plan encryption passphrase from 1Password",
+      "sensitive": true,
+      "type": "string",
+      "validation": [
+        {
+          "condition": "${(length(var.tofu_state_encryption_passphrase) >= 16)}",
+          "error_message": "The OpenTofu state encryption passphrase must be at least 16 characters."
+        }
+      ]
+    }
+  }
+}
