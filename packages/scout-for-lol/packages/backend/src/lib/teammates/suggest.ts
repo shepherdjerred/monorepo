@@ -96,22 +96,27 @@ type Tally = {
   lastMatchId: RiotMatchId;
 };
 
-function isSuggestible(
+/** The teammate's PUUID when the row may be suggested, otherwise `null`. */
+function suggestiblePuuid(
   participant: RawMatch["info"]["participants"][number],
   selfTeamIds: ReadonlySet<number>,
   selfPuuids: ReadonlySet<string>,
   trackedPuuids: ReadonlySet<string>,
-): boolean {
-  if (!selfTeamIds.has(participant.teamId)) return false;
-  if (!LeaguePuuidSchema.safeParse(participant.puuid).success) return false;
-  if (selfPuuids.has(participant.puuid)) return false;
-  if (trackedPuuids.has(participant.puuid)) return false;
-  if (participant.riotIdGameName === undefined) return false;
+): string | null {
+  // Only a player row carries a PUUID: bots and unresolved players are skipped.
+  const puuid = participant.puuid;
+  if (puuid === null) return null;
+  if (!selfTeamIds.has(participant.teamId)) return null;
+  if (selfPuuids.has(puuid)) return null;
+  if (trackedPuuids.has(puuid)) return null;
+  if (participant.riotIdGameName === undefined) return null;
   // The Add flow parses this exact text with RiotIdTextSchema (a RiotIdSchema
   // refinement), so an unusable identity must never reach the suggestion list.
   return RiotIdSchema.safeParse(
     `${participant.riotIdGameName}#${participant.riotIdTagline}`,
-  ).success;
+  ).success
+    ? puuid
+    : null;
 }
 
 type TallyState = {
@@ -122,15 +127,16 @@ type TallyState = {
 function recordTeammate(
   state: TallyState,
   participant: RawMatch["info"]["participants"][number],
+  puuid: string,
   round: Round,
 ): void {
-  if (state.seenInMatch.has(participant.puuid)) return;
-  state.seenInMatch.add(participant.puuid);
-  // isSuggestible guarantees a valid Riot ID, so gameName is present.
+  if (state.seenInMatch.has(puuid)) return;
+  state.seenInMatch.add(puuid);
+  // suggestiblePuuid guarantees a valid Riot ID, so gameName is present.
   const gameName = participant.riotIdGameName ?? "";
-  const existing = state.perPuuid.get(participant.puuid);
+  const existing = state.perPuuid.get(puuid);
   if (existing === undefined) {
-    state.perPuuid.set(participant.puuid, {
+    state.perPuuid.set(puuid, {
       gameName,
       tagLine: participant.riotIdTagline,
       region: round.region,
@@ -175,24 +181,25 @@ export function aggregateTeammates(input: {
     if (isCustomMatchPayload(match)) continue;
     const selfTeamIds = new Set(
       match.info.participants
-        .filter((participant) => input.selfPuuids.has(participant.puuid))
+        .filter(
+          (participant) =>
+            participant.puuid !== null &&
+            input.selfPuuids.has(participant.puuid),
+        )
         .map((participant) => participant.teamId),
     );
     if (selfTeamIds.size === 0) continue;
 
     const state: TallyState = { perPuuid, seenInMatch: new Set<string>() };
     for (const participant of match.info.participants) {
-      if (
-        !isSuggestible(
-          participant,
-          selfTeamIds,
-          input.selfPuuids,
-          input.trackedPuuids,
-        )
-      ) {
-        continue;
-      }
-      recordTeammate(state, participant, round);
+      const puuid = suggestiblePuuid(
+        participant,
+        selfTeamIds,
+        input.selfPuuids,
+        input.trackedPuuids,
+      );
+      if (puuid === null) continue;
+      recordTeammate(state, participant, puuid, round);
     }
   }
 

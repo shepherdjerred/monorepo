@@ -1,5 +1,9 @@
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
-import { DiscordGuildIdSchema, LeaguePuuidSchema } from "@scout-for-lol/data";
+import {
+  DiscordGuildIdSchema,
+  LeaguePuuidSchema,
+  type RawParticipant,
+} from "@scout-for-lol/data";
 import { resetConfigurationForTests } from "#src/configuration.ts";
 import {
   MY_SERVER,
@@ -20,8 +24,12 @@ function puuid(index: number) {
   );
 }
 
-function tenParticipants() {
+function tenParticipants(): Pick<
+  RawParticipant,
+  "participantId" | "puuid" | "teamId"
+>[] {
   return Array.from({ length: 10 }, (_, index) => ({
+    participantId: index + 1,
     puuid: puuid(index),
     teamId: index < 5 ? 100 : 200,
   }));
@@ -149,6 +157,23 @@ describe("shouldAttachMvpVotes", () => {
         targetGuildIds: [MY_SERVER],
         participants: tenParticipants(),
         trackedPuuids: [puuid(0), puuid(1)],
+      }),
+    ).resolves.toBe(false);
+  });
+
+  test("a game with a bot or unresolved player never attaches furniture", async () => {
+    addFlagOverride("mvp_votes_enabled", true, { server: MY_SERVER });
+    const participants = tenParticipants().map((participant) =>
+      participant.participantId === 10
+        ? { ...participant, puuid: null }
+        : participant,
+    );
+    await expect(
+      shouldAttachMvpVotes({
+        queueType: "flex",
+        targetGuildIds: [MY_SERVER],
+        participants,
+        trackedPuuids: threeBlueTracked(),
       }),
     ).resolves.toBe(false);
   });

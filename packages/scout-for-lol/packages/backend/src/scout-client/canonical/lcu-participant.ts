@@ -2,7 +2,9 @@ import {
   RawParticipantSchema,
   RawPerksSchema,
   getChampionKeyById,
+  storedParticipantIdentity,
 } from "@scout-for-lol/data";
+import type { ParticipantIdentity } from "@scout-for-lol/domain/artifacts/game-result.ts";
 import { z } from "zod";
 import type {
   LegacyIdentity,
@@ -151,10 +153,15 @@ function perksFrom(records: readonly ValueRecord[]) {
   };
 }
 
+/**
+ * One Match-V5 participant. `named` is who the row names, already decided by
+ * the bundle converter; only a player's row carries a PUUID.
+ */
 export function convertParticipant(
   participant: LegacyParticipant,
   identity: LegacyIdentity,
   source: SourcePlayer,
+  named: ParticipantIdentity,
 ) {
   const records = [source.stats, participant.stats];
   const position = positionFrom(records, participant);
@@ -357,7 +364,7 @@ export function convertParticipant(
       "PHYSICAL_DAMAGE_TAKEN",
     ),
     profileIcon: source.profileIconId ?? identity.player.profileIcon,
-    puuid: identity.player.puuid,
+    ...storedParticipantIdentity(named),
     pushPings: numberFrom(records, "pushPings", "PUSH_PINGS"),
     quadraKills: numberFrom(records, "quadraKills", "QUADRA_KILLS"),
     riotIdGameName: source.riotIdGameName ?? identity.player.gameName,

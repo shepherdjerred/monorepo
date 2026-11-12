@@ -10,6 +10,7 @@ import {
   RawCurrentGameInfoSchema,
   RawMatchSchema,
   RawTimelineSchema,
+  type RawParticipant,
 } from "@scout-for-lol/data";
 import { createLogger } from "#src/logger.ts";
 import { reportLakeCompactionSkippedTotal } from "#src/metrics/reports/report-lake.ts";
@@ -20,6 +21,7 @@ import {
   flattenPrematch,
 } from "#src/report-lake/flatten.ts";
 import { flattenTimeline } from "#src/report-lake/flatten-timeline.ts";
+import { lakeNonPlayerParticipantIds } from "#src/report-lake/non-player.ts";
 import type { NdjsonFileWriter } from "#src/report-lake/ndjson-writer.ts";
 import {
   stagingIdForMatch,
@@ -91,6 +93,22 @@ type MatchRebuildSourceOptions = RebuildSourceOptions & {
   teamBanWriter: NdjsonFileWriter;
 };
 
+/**
+ * Whether the lake can hold this document's participants. One naming a bot or
+ * an unresolved player is skipped and counted, like an invalid document, so a
+ * rebuild still completes; staging refuses the same document by throwing.
+ */
+function lakeStoresParticipants(
+  key: string,
+  participants: readonly Pick<RawParticipant, "participantId" | "puuid">[],
+): boolean {
+  const refused = lakeNonPlayerParticipantIds(participants);
+  if (refused.length === 0) return true;
+  logger.warn(`Skipping S3 object ${key}: the lake stores players only`, {
+    nonPlayerParticipantIds: refused,
+  });
+  return false;
+}
 export async function populateMatchesFromS3(
   options: MatchRebuildSourceOptions,
 ): Promise<number> {
@@ -110,6 +128,9 @@ export async function populateMatchesFromS3(
           logger.warn(`Skipping S3 match ${key}: rawJson failed validation`, {
             issue: parsed.error.issues[0],
           });
+          return null;
+        }
+        if (!lakeStoresParticipants(key, parsed.data.info.participants)) {
           return null;
         }
         return {
@@ -323,6 +344,9 @@ export async function populateTimelinesFromS3(options: {
             `Skipping S3 timeline ${item.key}: rawJson failed validation`,
             { issue: parsed.error.issues[0] },
           );
+          return null;
+        }
+        if (!lakeStoresParticipants(item.key, parsed.data.info.participants)) {
           return null;
         }
         return {

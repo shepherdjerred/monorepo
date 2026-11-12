@@ -2,7 +2,11 @@ import {
   GameResultSchema,
   type GameResult,
 } from "@scout-for-lol/domain/artifacts/game-result.ts";
-import { SCOUT_CLIENT_DATA_VERSION, type RawMatch } from "@scout-for-lol/data";
+import {
+  SCOUT_CLIENT_DATA_VERSION,
+  participantIdentityOf,
+  type RawMatch,
+} from "@scout-for-lol/data";
 
 /** Adapter from pinned raw bytes to the same result vocabulary used by LCU. */
 export function gameResultFromMatch(match: RawMatch): GameResult {
@@ -39,10 +43,7 @@ function gameResultDocument(match: RawMatch) {
     participants: match.info.participants.map((player) => ({
       participantId: player.participantId,
       teamId: player.teamId,
-      identity:
-        player.puuid.length === 78
-          ? { kind: "riot", puuid: player.puuid }
-          : { kind: "unresolved" },
+      identity: participantIdentityOf(player),
       championId: player.championId,
       name:
         player.riotIdGameName === undefined

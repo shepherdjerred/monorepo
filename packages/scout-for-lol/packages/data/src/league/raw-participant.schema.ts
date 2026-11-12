@@ -3,6 +3,7 @@ import { PositionSchema, RoleSchema, LaneSchema } from "./enums.ts";
 import { RawChallengesSchema } from "./raw-challenges.schema.ts";
 import { RawMissionsSchema } from "./raw-missions.schema.ts";
 import { RawPerksSchema } from "./raw-perks.schema.ts";
+import { ParticipantKindSchema } from "./participant-identity.ts";
 
 /**
  * Raw Participant - Contains all data for a single participant in a match from Riot API
@@ -90,7 +91,15 @@ export const RawParticipantSchema = z
     physicalDamageTaken: z.number(),
     profileIcon: z.number(),
     pushPings: z.number(),
-    puuid: z.string(),
+    /**
+     * Riot's PUUID, non-null exactly when the row names a player. Bots and
+     * unresolved players are `null`; see `participantKind`.
+     */
+    puuid: z.string().nullable(),
+    /** Stated by Scout-built documents only; Riot's name players only. */
+    participantKind: ParticipantKindSchema.optional(),
+    /** An unresolved player's League-client UUID, kept for a later alias. */
+    leagueClientUuid: z.uuid().optional(),
     quadraKills: z.number(),
     riotIdName: z.string().optional(),
     riotIdGameName: z.string().optional(),

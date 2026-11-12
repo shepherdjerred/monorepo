@@ -135,6 +135,17 @@ async function projectParticipantResults(
   matchId: RiotMatchId,
 ) {
   requireCompleteRoster(game.participants.length, game.id);
+  const nonMembers = match.info.participants.flatMap((participant) =>
+    participant.puuid === null ? [participant.participantId] : [],
+  );
+  if (nonMembers.length > 0) {
+    // Every roster member is a tracked account, so a bot or a player the
+    // client could not resolve is provably not one of them.
+    throw ApplicationFailure.nonRetryable(
+      `Match ${matchId} participants ${nonMembers.join(", ")} are not roster members of Custom game ${game.id}`,
+      "ManagedCustomNotRosterMember",
+    );
+  }
   const winningTeams = new Set<string>();
   for (const participant of game.participants) {
     const riotParticipant = match.info.participants.find(

@@ -79,6 +79,9 @@ const LegacyMatchSchema = z
 export const SourcePlayerSchema = z
   .object({
     puuid: z.string().optional(),
+    /** Stated by the end-of-game block; bots share one UUID, so it matters. */
+    botPlayer: z.boolean().optional(),
+    teamId: z.number().optional(),
     profileIconId: z.number().optional(),
     level: z.number().optional(),
     championId: z.number().optional(),

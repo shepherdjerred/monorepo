@@ -1,6 +1,7 @@
 import { z } from "zod";
 import {
   RawMatchSchema,
+  participantKindOf,
   type RawMatch,
   RawTimelineSchema,
   type RawTimeline,
@@ -35,6 +36,8 @@ const DocumentsSchema = z.object({
 function roster(match: RawMatch) {
   return match.info.participants.map((p) => ({
     participantId: p.participantId,
+    // A bot or unresolved player is reviewable, but never named as a player.
+    kind: participantKindOf(p),
     champion: p.championName,
     teamId: p.teamId,
     riotIdGameName: p.riotIdGameName ?? null,

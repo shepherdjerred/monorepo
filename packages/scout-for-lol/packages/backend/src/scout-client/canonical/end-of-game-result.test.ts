@@ -66,6 +66,44 @@ describe("terminal scoreboard evidence", () => {
       expect(parse(payload, gameflow)).toBeNull();
     },
   );
+  test.each(["00000000-0000-0000-0000-000000000000", ""])(
+    "accepts several bots sharing the bot puuid %j",
+    (botPuuid) => {
+      // A Co-op vs AI or bot custom fields up to nine bots, all one identity.
+      const payload = structuredClone(fixture);
+      const enemies = payload.data.teams.find((team) => team.teamId === 100);
+      if (enemies === undefined) throw new Error("Fixture requires team 100");
+      for (const player of enemies.players) {
+        player.puuid = botPuuid;
+        player.botPlayer = true;
+      }
+      const result = parse(payload);
+
+      expect(result?.participants).toHaveLength(10);
+      expect(
+        result?.participants.filter((player) => player.identity.kind === "bot"),
+      ).toHaveLength(5);
+      expect(
+        result?.participants.find((player) => player.identity.kind === "riot")
+          ?.identity,
+      ).toEqual({ kind: "riot", puuid: observer });
+    },
+  );
+  test("still refuses two players sharing one identity", () => {
+    const payload = structuredClone(fixture);
+    const [first, second] = payload.data.teams[1]?.players ?? [];
+    if (first === undefined || second === undefined)
+      throw new Error("Fixture requires two players on a team");
+    second.puuid = first.puuid;
+    expect(parse(payload)).toBeNull();
+  });
+  test("an unaliased player is named by League-client UUID, never as Riot", () => {
+    const result = parse();
+    const local = result?.participants.filter(
+      (player) => player.identity.kind === "local",
+    );
+    expect(local).toHaveLength(9);
+  });
   test("rejects a scoreboard that does not contain the authenticated observer", () => {
     const payload = structuredClone(fixture);
     const player = payload.data.teams

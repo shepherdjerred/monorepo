@@ -340,12 +340,14 @@ function TeamTable({
         trackedTeam={trackedTeam}
         trackedOutcome={trackedOutcome}
       />
-      {champions.map((champion) => (
+      {champions.map((champion, index) => (
         <PlayerRow
-          key={champion.puuid}
+          key={champion.puuid ?? `${team}-${index.toString()}`}
           champion={champion}
           team={team}
-          isTracked={trackedPuuids.has(champion.puuid)}
+          isTracked={
+            champion.puuid !== null && trackedPuuids.has(champion.puuid)
+          }
         />
       ))}
     </div>
@@ -358,7 +360,9 @@ export function ClassicMatchReport({ match }: { match: ClassicMatch }) {
     throw new Error("Classic match requires at least one tracked player");
   }
   const trackedPuuids = new Set(
-    match.players.map((player) => player.champion.puuid),
+    match.players.flatMap((player) =>
+      player.champion.puuid === null ? [] : [player.champion.puuid],
+    ),
   );
   const outcomeColor =
     hero.outcome === "Victory"

@@ -2,17 +2,17 @@ import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   RawTimelineSchema,
   SCOUT_CLIENT_DATA_VERSION,
+  storedParticipantIdentity,
   type RawTimeline,
   type RawTimelineEvent,
 } from "@scout-for-lol/data";
 import { z } from "zod";
+import { lcuParticipantIdentity } from "./lcu-identity.ts";
 
 /** Match-V5 frames a timeline once a minute; so does the League client. */
 const FRAME_INTERVAL_MS = 60_000;
 /** How far the client's second frame may sit from a whole minute. */
 const FRAME_INTERVAL_TOLERANCE_MS = 5000;
-/** A Riot API PUUID: the only identity a converted timeline may carry. */
-const RIOT_PUUID_LENGTH = 78;
 
 const PositionSchema = z.object({ x: z.number(), y: z.number() });
 
@@ -143,7 +143,7 @@ function convertEvent(
  * A Match-V5 timeline from the League client's own match history.
  *
  * `game` and `timeline` are the raw LCU payloads for one game, with player
- * identities already translated to Riot PUUIDs. The result is tagged
+ * identities already translated through their aliases. The result is tagged
  * `local-1`, and carries every per-minute fact the League client reports for
  * every participant: gold, experience, level, minion and jungle CS, and map
  * position, plus kills, buildings, and elite monsters. Match-V5 fields the
@@ -151,9 +151,12 @@ function convertEvent(
  * per-frame champion and damage stats, gold per second, and crowd-control
  * time — rather than appearing as zeroes.
  *
+ * Each participant states its kind: a player by Riot PUUID, a bot, or a
+ * player whose League-client UUID has no alias yet, kept out of `puuid`.
+ *
  * Returns `null` for anything that cannot be converted faithfully: an
- * identity still in League-client form, a roster that doesn't match the
- * frames, or frames that aren't a minute apart.
+ * identity that is none of those, a roster that doesn't match the frames, or
+ * frames that aren't a minute apart.
  */
 export function convertLcuTimeline(
   riotMatchId: RiotMatchId,
@@ -163,15 +166,21 @@ export function convertLcuTimeline(
   const game = LcuGameRosterSchema.safeParse(gamePayload);
   const timeline = LcuTimelineSchema.safeParse(timelinePayload);
   if (!game.success || !timeline.success) return null;
-  const identities = [...game.data.participantIdentities].sort(
+  const sorted = [...game.data.participantIdentities].sort(
     (left, right) => left.participantId - right.participantId,
   );
-  if (
-    identities.length === 0 ||
-    identities.some(
-      (identity) => identity.player.puuid.length !== RIOT_PUUID_LENGTH,
-    )
-  ) {
+  const identities = sorted.flatMap((identity) => {
+    const named = lcuParticipantIdentity(identity.player.puuid, undefined);
+    return named === null
+      ? []
+      : [
+          {
+            participantId: identity.participantId,
+            ...storedParticipantIdentity(named),
+          },
+        ];
+  });
+  if (identities.length === 0 || identities.length !== sorted.length) {
     return null;
   }
   const participantIds = new Set(
@@ -205,7 +214,9 @@ export function convertLcuTimeline(
     metadata: {
       dataVersion: SCOUT_CLIENT_DATA_VERSION,
       matchId: riotMatchId,
-      participants: identities.map((identity) => identity.player.puuid),
+      participants: identities.flatMap((identity) =>
+        identity.puuid === null ? [] : [identity.puuid],
+      ),
     },
     info: {
       ...(game.data.endOfGameResult === undefined
@@ -213,10 +224,7 @@ export function convertLcuTimeline(
         : { endOfGameResult: game.data.endOfGameResult }),
       frameInterval: FRAME_INTERVAL_MS,
       gameId: game.data.gameId,
-      participants: identities.map((identity) => ({
-        participantId: identity.participantId,
-        puuid: identity.player.puuid,
-      })),
+      participants: identities,
       frames: frames.map((frame) => ({
         timestamp: frame.timestamp,
         participantFrames: Object.fromEntries(

@@ -1,4 +1,8 @@
-import { RawMatchSchema, type RawMatch } from "@scout-for-lol/data";
+import {
+  RawMatchSchema,
+  sameStoredIdentity,
+  type RawMatch,
+} from "@scout-for-lol/data";
 
 const ENRICHABLE_PLAYER_FIELDS = [
   "riotIdGameName",
@@ -25,7 +29,7 @@ export function enrichCompleteMatch(
         match.info.participants.some(
           (other) =>
             other.participantId === player.participantId &&
-            other.puuid === player.puuid &&
+            sameStoredIdentity(other, player) &&
             other.teamId === player.teamId &&
             other.championId === player.championId &&
             other.win === player.win,

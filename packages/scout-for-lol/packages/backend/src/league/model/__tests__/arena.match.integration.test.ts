@@ -62,7 +62,9 @@ function makeArenaMatchDto({
     metadata: {
       dataVersion: "",
       matchId: RiotMatchIdSchema.parse("NA1_1"),
-      participants: participants.map((p) => p.puuid),
+      participants: participants.flatMap((p) =>
+        p.puuid === null ? [] : [p.puuid],
+      ),
     },
     info: {
       gameCreation: Date.now(),

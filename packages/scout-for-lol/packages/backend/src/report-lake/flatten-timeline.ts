@@ -8,6 +8,7 @@ import type {
   TimelineEventParticipantLakeRow,
   TimelineParticipantFrameLakeRow,
 } from "@scout-for-lol/data";
+import { requireLakePlayers } from "#src/report-lake/non-player.ts";
 import { lakeMonth, lakeTimestamp } from "#src/report-lake/schema.ts";
 
 export type FlattenedTimeline = {
@@ -221,10 +222,9 @@ export function flattenTimeline(
   const observedAtText = lakeTimestamp(observedAt.getTime());
   const month = lakeMonth(observedAt.getTime());
   const puuidByParticipant = new Map(
-    timeline.info.participants.map((participant) => [
-      participant.participantId,
-      participant.puuid,
-    ]),
+    requireLakePlayers(matchId, timeline.info.participants).map(
+      (participant) => [participant.participantId, participant.puuid],
+    ),
   );
   const events: TimelineEventLakeRow[] = [];
   const eventParticipants: TimelineEventParticipantLakeRow[] = [];

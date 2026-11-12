@@ -57,10 +57,46 @@ function displayRiotId(participant: {
   return summoner.length > 0 ? summoner : participant.championName;
 }
 
+const RosterIdentitySchema = z.looseObject({
+  participantId: z.number().int(),
+  puuid: z.string().nullable(),
+});
+
+/**
+ * Why a match cannot hold an MVP vote, or `null` when it can. A vote names
+ * every nominee by Riot PUUID, so a game with a bot or an unresolved player
+ * has no complete roster to freeze.
+ */
+export type MatchMvpRosterRefusal = {
+  readonly reason: "non_player_participant";
+  readonly participantIds: readonly number[];
+};
+
+export function matchMvpRosterRefusal(
+  participants: readonly unknown[],
+): MatchMvpRosterRefusal | null {
+  const nonPlayers = z
+    .array(RosterIdentitySchema)
+    .parse(participants)
+    .flatMap((participant) =>
+      participant.puuid === null ? [participant.participantId] : [],
+    );
+  return nonPlayers.length === 0
+    ? null
+    : { reason: "non_player_participant", participantIds: nonPlayers };
+}
+
 export function freezeMatchMvpRosterFromParticipants(
   matchId: RiotMatchId,
   participants: unknown[],
 ): MatchMvpRoster {
+  // Eligibility refuses these games first; reaching here is a broken contract.
+  const refusal = matchMvpRosterRefusal(participants);
+  if (refusal !== null) {
+    throw new Error(
+      `MVP roster for ${matchId} names non-player participants ${refusal.participantIds.join(", ")}`,
+    );
+  }
   if (participants.length !== 10) {
     throw new Error(
       `MVP roster for ${matchId} has ${String(participants.length)} participants, not 10`,

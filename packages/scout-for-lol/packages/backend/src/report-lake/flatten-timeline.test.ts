@@ -2,19 +2,24 @@ import { describe, expect, test } from "vitest";
 import { RawTimelineSchema } from "@scout-for-lol/data";
 import { flattenTimeline } from "#src/report-lake/flatten-timeline.ts";
 
+/** A Riot timeline names players by 78-character PUUID. */
+const PUUID_ONE = "puuid-one".padEnd(78, "x");
+const PUUID_TWO = "puuid-two".padEnd(78, "x");
+const PUUID_THREE = "puuid-three".padEnd(78, "x");
+
 const TIMELINE = RawTimelineSchema.parse({
   metadata: {
     dataVersion: "2",
     matchId: "NA1_42",
-    participants: ["puuid-one", "puuid-two", "puuid-three"],
+    participants: [PUUID_ONE, PUUID_TWO, PUUID_THREE],
   },
   info: {
     frameInterval: 60_000,
     gameId: 42,
     participants: [
-      { participantId: 1, puuid: "puuid-one" },
-      { participantId: 2, puuid: "puuid-two" },
-      { participantId: 3, puuid: "puuid-three" },
+      { participantId: 1, puuid: PUUID_ONE },
+      { participantId: 2, puuid: PUUID_TWO },
+      { participantId: 3, puuid: PUUID_THREE },
     ],
     frames: [
       {
@@ -77,7 +82,7 @@ describe("flattenTimeline", () => {
         month: "2026-08",
         observed_at: "2026-08-31 20:00:00.000",
         participant_id: 1,
-        puuid: "puuid-one",
+        puuid: PUUID_ONE,
         role: "killer",
         role_index: 0,
       },
@@ -87,7 +92,7 @@ describe("flattenTimeline", () => {
         month: "2026-08",
         observed_at: "2026-08-31 20:00:00.000",
         participant_id: 2,
-        puuid: "puuid-two",
+        puuid: PUUID_TWO,
         role: "victim",
         role_index: 0,
       },
@@ -97,7 +102,7 @@ describe("flattenTimeline", () => {
         month: "2026-08",
         observed_at: "2026-08-31 20:00:00.000",
         participant_id: 3,
-        puuid: "puuid-three",
+        puuid: PUUID_THREE,
         role: "assist",
         role_index: 0,
       },
@@ -115,7 +120,7 @@ describe("flattenTimeline", () => {
         match_id: "NA1_42",
         frame_index: 0,
         participant_id: 1,
-        puuid: "puuid-one",
+        puuid: PUUID_ONE,
         current_gold: 500,
         total_gold: 1000,
         ability_power: 35,

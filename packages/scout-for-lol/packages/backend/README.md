@@ -826,8 +826,27 @@ every alias a batch can teach before checking it, then:
 Every later reader of a stored payload translates its own copy the same way
 (`withRiotIdentities`): canonical match selection, replay provenance and the
 replay container check, and local mastery. A UUID with no alias is left as it
-is, so an unresolved player fails to join rather than joining wrongly, and a
-canonical match that still names anyone by UUID is refused.
+is, so an unresolved player fails to join rather than joining wrongly.
+
+A canonical match or timeline the client built states who each participant
+row names (`participantKind`, `data/src/league/participant-identity.ts`):
+
+- `player`: a Riot PUUID in `puuid`, the only kind that carries one;
+- `bot`: `puuid` is `null`. Every bot shares the zero UUID, so the bundle
+  converter pairs a bot with its end-of-game row by team and champion, and
+  refuses a game where that is ambiguous;
+- `unresolved`: a player whose UUID has no alias yet. `puuid` is `null` and the
+  UUID is kept in `leagueClientUuid`, so a rebuild after the alias lands
+  resolves the player.
+
+`metadata.participants` lists the players' PUUIDs only, so competitions,
+Dares, Hall of Fame and challenges skip the rest without change. Riot
+documents never state a kind, and a Riot participant without a 78-character
+PUUID fails validation as a broken contract: Scout does not guess how
+Match-V5 encodes a bot. The observer must still be a resolved player. The
+report lake has no column for a participant's kind yet, so it refuses a
+document naming a bot or an unresolved player (`report-lake/non-player.ts`):
+staging reports the failure and a rebuild skips and counts the document.
 
 A client can claim any Riot ID for a UUID; ownership is still checked against
 the device owner's accounts. An alias whose PUUID is the reporting owner's

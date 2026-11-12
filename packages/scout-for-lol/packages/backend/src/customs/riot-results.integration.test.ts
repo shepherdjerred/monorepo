@@ -7,6 +7,7 @@ import {
   LeaguePuuidSchema,
   PlayerIdSchema,
   RawMatchSchema,
+  SCOUT_CLIENT_DATA_VERSION,
 } from "@scout-for-lol/data";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import { finalizeManagedCustomResult } from "#src/customs/riot-results.ts";
@@ -71,9 +72,9 @@ async function seedPendingResult(
         discordId: DiscordAccountIdSchema.parse(
           (160_509_172_704_739_400n + BigInt(index)).toString(),
         ),
-        displayName: participant.riotIdGameName ?? participant.puuid,
+        displayName: participant.riotIdGameName ?? `Player ${index.toString()}`,
         playerId: PlayerIdSchema.parse(index + 1),
-        playerAlias: participant.riotIdGameName ?? participant.puuid,
+        playerAlias: participant.riotIdGameName ?? `Player ${index.toString()}`,
         accountId: AccountIdSchema.parse(index + 1),
         puuid: LeaguePuuidSchema.parse(participant.puuid),
         riotGameName: participant.riotIdGameName ?? null,
@@ -256,6 +257,35 @@ describe("managed Customs results", () => {
     ).rejects.toMatchObject({
       nonRetryable: true,
       type: "ManagedCustomResultIncomplete",
+    });
+    await expect(
+      testPrisma.customGame.findUniqueOrThrow({ where: { id: seeded.gameId } }),
+    ).resolves.toMatchObject({ state: "RESULT_PENDING" });
+  });
+
+  test("a bot in the game is a typed non-roster member, not a schema throw", async () => {
+    const seeded = await seedPendingResult();
+    const participants = fixture.info.participants.map((participant, index) =>
+      index === 0
+        ? { ...participant, puuid: null, participantKind: "bot" as const }
+        : { ...participant, participantKind: "player" as const },
+    );
+    const withBot = RawMatchSchema.parse({
+      metadata: {
+        ...fixture.metadata,
+        dataVersion: SCOUT_CLIENT_DATA_VERSION,
+        participants: participants.flatMap((participant) =>
+          participant.puuid === null ? [] : [participant.puuid],
+        ),
+      },
+      info: { ...fixture.info, participants },
+    });
+
+    await expect(
+      finalizeManagedCustomResult(testPrisma, withBot, "SCOUT_CLIENT"),
+    ).rejects.toMatchObject({
+      nonRetryable: true,
+      type: "ManagedCustomNotRosterMember",
     });
     await expect(
       testPrisma.customGame.findUniqueOrThrow({ where: { id: seeded.gameId } }),
