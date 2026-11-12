@@ -32,6 +32,8 @@ import {
 } from "./issue-actions.ts";
 import { selectionStore, toggleSelected, useSelection } from "./selection.ts";
 import { Item, PropertyMenus, ReleaseContext } from "./menu-items.tsx";
+import { feedback } from "#client/feedback/index.ts";
+import { leavingPopup } from "#client/ui/leaving.tsx";
 
 /**
  * Lifting the finger after a long press clicks the menu that opened under
@@ -149,6 +151,7 @@ function MenuItems({
           label={selected ? "Deselect" : "Select"}
           shortcut="x"
           onClick={() => {
+            feedback("select");
             selectionStore.update(scope, (value) =>
               toggleSelected(value, only.identifier),
             );
@@ -252,11 +255,14 @@ export function IssueContextMenu({
         }
         // The menu offers "Pick a date…"; its picker loads meanwhile.
         duePanel.prefetch();
-        touchedAt.current =
-          details.event.type === "touchstart" ? pressedAt.current : undefined;
+        const byTouch = details.event.type === "touchstart";
+        touchedAt.current = byTouch ? pressedAt.current : undefined;
         const row = pressed.current;
         if (row === undefined) {
           return;
+        }
+        if (byTouch) {
+          feedback("longPress");
         }
         setTargets(
           selection.ids.has(row)
@@ -295,6 +301,7 @@ export function IssueContextMenu({
         <ContextMenu.Portal>
           <ContextMenu.Positioner className="picker-positioner">
             <ContextMenu.Popup
+              render={leavingPopup}
               className="menu-popup"
               aria-label={
                 issues.length === 1

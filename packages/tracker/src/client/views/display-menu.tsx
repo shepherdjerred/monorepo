@@ -15,6 +15,7 @@ import {
   type DisplayOptions,
   type RowProperty,
 } from "./display-options.ts";
+import { leavingPopup } from "#client/ui/leaving.tsx";
 
 const propertyNames: Record<RowProperty, string> = {
   labels: "Labels",
@@ -48,7 +49,10 @@ export function DisplayMenu({ board }: { board: boolean }) {
           sideOffset={6}
           collisionPadding={8}
         >
-          <Popover.Popup className="picker-popup display-popover">
+          <Popover.Popup
+            className="picker-popup display-popover"
+            render={leavingPopup}
+          >
             <Popover.Title className="popover-title">Display</Popover.Title>
             {!board && (
               <>

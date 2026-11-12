@@ -11,6 +11,7 @@ import {
   type SearchPickerKind,
 } from "./picker-items.tsx";
 import { createPopupStore, pageScope, type PopupEntry } from "./popup-store.ts";
+import { leavingPopup } from "#client/ui/leaving.tsx";
 
 /**
  * What a searchable picker edits. Callers bind `pick` to one issue, a
@@ -229,6 +230,7 @@ function SearchPicker({
       >
         <Combobox.Popup
           className="picker-popup search-picker"
+          render={leavingPopup}
           aria-label={request.title}
           initialFocus={input}
           finalFocus={() =>

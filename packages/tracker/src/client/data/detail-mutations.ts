@@ -14,6 +14,7 @@ import {
   notifyError,
   notifyUndo,
 } from "#client/ui/toast.tsx";
+import { feedback } from "#client/feedback/index.ts";
 
 type Comment = IssueDetailData["comments"][number];
 type Relation = IssueDetailData["relations"][number];
@@ -79,6 +80,8 @@ export async function addComment(
   attachmentIds: string[],
 ) {
   const writer = author();
+  // Sent the moment it joins the timeline; a failure buzzes as its toast shows.
+  feedback("comment");
   const draft: Comment = {
     id: `optimistic-${crypto.randomUUID()}`,
     issueId: loadedIssue(identifier).id,

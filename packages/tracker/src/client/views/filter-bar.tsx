@@ -36,6 +36,7 @@ import {
   toggleFilterValue,
   type FilterField,
 } from "./filters.ts";
+import { leavingPopup } from "#client/ui/leaving.tsx";
 
 const fieldIcons: Record<FilterField, ReactNode> = {
   state: <CircleDashed size={15} />,
@@ -222,6 +223,7 @@ export function FilterBar({
           >
             <Popover.Popup
               className="picker-popup filter-popover"
+              render={leavingPopup}
               initialFocus={input}
               aria-label="Filter issues"
             >

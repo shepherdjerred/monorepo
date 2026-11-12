@@ -148,6 +148,40 @@ Sub-issues, due dates and saved views add to the same address and keys:
   are separate chunks, fetched when their control is hovered or focused and
   awaited before they open, so the first load does not carry them.
 
+## Motion, sound and haptics
+
+Motion is decorative: an edit, a navigation or a focus move happens first
+and is never delayed by its animation. Surfaces enter and leave through Base
+UI's `data-starting-style`/`data-ending-style` with CSS transitions, so a
+quick close reverses from wherever it is; while one leaves it is hidden from
+assistive technology and takes no clicks. Tokens live in `styles/tokens.css`
+and only `transform`, `opacity` and cheap paints animate. Loading states are
+skeletons built from the real layout's classes, so nothing moves when data
+lands. Opening an issue page from a peek or the palette is a same-document
+view transition (the identifier and title move); a peek has its own motion
+and never uses one. `prefers-reduced-motion: reduce` turns all of it off,
+including script-driven motion in `src/client/feedback/motion.ts`, without
+removing information: a row another session created keeps its static
+highlight, and every change still shows its end state. Browser APIs newer
+than Baseline Widely Available (view transitions, `@starting-style`,
+`@property` for the progress ring) are feature-detected or degrade to an
+instant change.
+
+`feedback(event)` from `src/client/feedback` acknowledges an outcome of this
+session's own actions with a synthesized Web Audio cue (no audio files, at
+most 120 ms and 0.08 gain) and a `navigator.vibrate` pattern. It is called
+where the outcome happens — the mutation helpers, the toast layer and event
+handlers — never while rendering and never for changes that arrive from
+another session, and once per action however many issues a bulk edit
+touches; a sub-issue or a saved view sounds like a created issue and a due
+date like a status. Failures this person did not cause, such as a broken
+live-update frame, pass `notifyError(..., { quiet: true })` and stay silent.
+Nothing plays before the page's first user gesture, while the tab
+is hidden, or under reduced motion, and cues are kept 40 ms apart. Settings
+→ Feedback holds two per-device switches, both on by default, stored in
+`localStorage` as `tracker.feedback.sound` and `tracker.feedback.haptics`.
+iOS Safari has no Vibration API, so haptics only work in Android browsers.
+
 ## Contract and invariants
 
 Consumers import `@shepherdjerred/tracker/contract`: the `AppRouter` type and

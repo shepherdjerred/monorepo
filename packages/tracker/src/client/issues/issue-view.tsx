@@ -3,6 +3,12 @@ import { NavLink, useParams, useSearchParams } from "react-router";
 import { LayoutGrid, List, Plus, Search } from "lucide-react";
 import type { BootstrapData } from "#client/data/api.ts";
 import { Empty, ErrorNotice } from "#client/ui/ui.tsx";
+import {
+  BoardSkeleton,
+  ListSkeleton,
+  ToolbarSkeleton,
+} from "#client/ui/skeleton.tsx";
+import { readDisplay } from "#client/views/display-options.ts";
 import { EnumPicker } from "#client/controls/enum-picker.tsx";
 import { IssueContextMenu } from "#client/controls/issue-menu.tsx";
 import { DisplayMenu } from "#client/views/display-menu.tsx";
@@ -19,62 +25,111 @@ const Board = lazy(async () => {
   return { default: module.Board };
 });
 
-export function IssueView() {
-  const { bootstrap, teamKey, view, list, create, selectionScope } = useShell();
+/**
+ * The view's title and list/board switch. It needs no data beyond its count,
+ * so the loading skeleton shows the same heading in the same place.
+ */
+export function ViewHeading({
+  count,
+  views = [],
+}: {
+  count?: { loaded: number; more: boolean } | undefined;
+  /** The saved views, once the workspace has loaded, to name one opened. */
+  views?: BootstrapData["views"];
+}) {
   const [params] = useSearchParams();
-  const { slug } = useParams();
-  const team = bootstrap.teams.find(({ key }) => key === teamKey);
+
   const shared = new URLSearchParams(params);
   shared.delete("peek");
-  const source = bootstrap.views.find(
-    (item) => item.id === params.get(savedViewParam),
-  );
+  const source = views.find((item) => item.id === params.get(savedViewParam));
   return (
-    <>
-      <div className="view-heading">
-        <div>
-          <h2>
-            {source !== undefined && (
-              <span className="heading-icon">
-                <ViewIcon name={source.icon} size={16} />
-              </span>
-            )}
-            {source?.name ??
-              (params.get("mine") === "true" ? "My issues" : "All issues")}
+    <div className="view-heading">
+      <div>
+        <h2>
+          {source !== undefined && (
+            <span className="heading-icon">
+              <ViewIcon name={source.icon} size={16} />
+            </span>
+          )}
+          {source?.name ??
+            (params.get("mine") === "true" ? "My issues" : "All issues")}
+          {count !== undefined && (
             <span className="count">
-              {list.items.length}
+              {count.loaded}
               {/* The server reports no total; "+" says more pages exist. */}
-              {list.hasMore && (
+              {count.more && (
                 <>
                   <span aria-hidden="true">+</span>
                   <span className="sr-only"> or more</span>
                 </>
               )}
             </span>
-          </h2>
-          <p>Keep the next step in sight.</p>
-        </div>
-        <div className="view-toggle">
-          <NavLink
-            to={`/issues?${shared.toString()}`}
-            onClick={() => {
-              localStorage.setItem("tracker.view", "list");
-            }}
-            aria-label="List view"
-          >
-            <List size={16} />
-          </NavLink>
-          <NavLink
-            to={`/board?${shared.toString()}`}
-            onClick={() => {
-              localStorage.setItem("tracker.view", "board");
-            }}
-            aria-label="Board view"
-          >
-            <LayoutGrid size={16} />
-          </NavLink>
+          )}
+        </h2>
+        <p>Keep the next step in sight.</p>
+      </div>
+      <div className="view-toggle">
+        <NavLink
+          to={`/issues?${shared.toString()}`}
+          onClick={() => {
+            localStorage.setItem("tracker.view", "list");
+          }}
+          aria-label="List view"
+        >
+          <List size={16} />
+        </NavLink>
+        <NavLink
+          to={`/board?${shared.toString()}`}
+          onClick={() => {
+            localStorage.setItem("tracker.view", "board");
+          }}
+          aria-label="Board view"
+        >
+          <LayoutGrid size={16} />
+        </NavLink>
+      </div>
+    </div>
+  );
+}
+
+function ResultsSkeleton({ board }: { board: boolean }) {
+  const [params] = useSearchParams();
+  return board ? (
+    <BoardSkeleton />
+  ) : (
+    <ListSkeleton grouped={readDisplay(params).groupBy !== "none"} />
+  );
+}
+
+/** A list or board view while the workspace itself is still loading. */
+export function ViewSkeleton({ board }: { board: boolean }) {
+  return (
+    <>
+      <ViewHeading />
+      <ToolbarSkeleton />
+      <div className="issue-results">
+        <div className="issue-results-body">
+          <ResultsSkeleton board={board} />
         </div>
       </div>
+    </>
+  );
+}
+
+export function IssueView() {
+  const { bootstrap, teamKey, view, list, create, selectionScope } = useShell();
+  const { slug } = useParams();
+  const team = bootstrap.teams.find(({ key }) => key === teamKey);
+  return (
+    <>
+      <ViewHeading
+        views={bootstrap.views}
+        count={
+          list.loading
+            ? undefined
+            : { loaded: list.items.length, more: list.hasMore }
+        }
+      />
       <Toolbar
         bootstrap={bootstrap}
         teamKey={teamKey}
@@ -95,9 +150,9 @@ export function IssueView() {
           data-placeholder={list.placeholder}
         >
           {list.loading ? (
-            <div className="loading">Loading issues…</div>
+            <ResultsSkeleton board={view === "board"} />
           ) : view === "board" ? (
-            <Suspense fallback={<div className="loading">Loading board…</div>}>
+            <Suspense fallback={<BoardSkeleton />}>
               <Board
                 items={list.items}
                 states={bootstrap.states.filter(

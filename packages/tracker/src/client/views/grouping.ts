@@ -193,3 +193,20 @@ export function buildRows(
   }
   return { rows, issues };
 }
+
+/** Each issue row's place in its group, counted from the group's heading. */
+export function groupPlaces(rows: readonly ListRow[]) {
+  const places = new Map<number, { group: string; place: number }>();
+  let group: string | undefined;
+  let place = 0;
+  rows.forEach((row, index) => {
+    if (row.kind === "group") {
+      group = row.key;
+      place = 0;
+    } else if (group !== undefined) {
+      place += 1;
+      places.set(index, { group, place });
+    }
+  });
+  return places;
+}

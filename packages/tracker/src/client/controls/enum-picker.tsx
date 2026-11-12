@@ -1,6 +1,7 @@
 import { createElement, type ReactNode } from "react";
 import { Select } from "@base-ui/react/select";
 import { Check, ChevronDown } from "lucide-react";
+import { leavingPopup } from "#client/ui/leaving.tsx";
 
 /** One choice of a short enumeration: a status, a priority, a sort order. */
 export type EnumOption = { value: string; label: string; icon?: ReactNode };
@@ -141,7 +142,7 @@ export function FallbackEnumPicker(props: EnumPickerProps) {
           align="start"
           alignItemWithTrigger={false}
         >
-          <Select.Popup className="picker-popup">
+          <Select.Popup className="picker-popup" render={leavingPopup}>
             <Select.List className="picker-list">
               {props.options.map((option) => (
                 <Select.Item

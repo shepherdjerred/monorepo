@@ -83,6 +83,14 @@ export function MonthCalendar({
   // Focus follows the keyboard, not a render caused by anything else.
   const moving = useRef(false);
   const weeks = monthWeeks(focused);
+  // A new month slides in from the side it came from; the first one does not.
+  const month = firstOfMonth(focused);
+  const [shownMonth, setShownMonth] = useState(month);
+  const [shift, setShift] = useState<"next" | "previous">();
+  if (month !== shownMonth) {
+    setShift(month > shownMonth ? "next" : "previous");
+    setShownMonth(month);
+  }
   const header = weeks[0] ?? [];
   const move = (next: CalendarDay) => {
     moving.current = true;
@@ -146,7 +154,7 @@ export function MonthCalendar({
             ))}
           </tr>
         </thead>
-        <tbody>
+        <tbody key={month} data-shift={shift}>
           {weeks.map((week) => (
             <tr key={week[0]}>
               {week.map((day) => (

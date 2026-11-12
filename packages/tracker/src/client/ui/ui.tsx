@@ -3,6 +3,7 @@ import { X } from "lucide-react";
 import type { ReactNode } from "react";
 import { priorities } from "#client/data/issue-changes.ts";
 import { PriorityGlyph } from "./icons.tsx";
+import { leavingPopup } from "./leaving.tsx";
 
 export function Modal({
   title,
@@ -38,6 +39,7 @@ export function Modal({
       <Dialog.Portal>
         <Dialog.Backdrop className="modal-backdrop" />
         <Dialog.Popup
+          render={leavingPopup}
           className={`modal ${className}`}
           data-picker-scope={pickerScope}
         >

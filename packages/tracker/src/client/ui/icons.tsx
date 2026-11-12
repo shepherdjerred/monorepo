@@ -60,6 +60,9 @@ function StateShape({ type }: { type: StateType }) {
           <circle cx={7} cy={7} r={6.25} fill="currentColor" />
           <path
             d="m4.4 7.2 1.8 1.8 3.5-3.7"
+            data-check=""
+            pathLength={1}
+            strokeDasharray={1}
             stroke="var(--panel)"
             strokeWidth={1.5}
             fill="none"

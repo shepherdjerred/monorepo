@@ -1,6 +1,7 @@
 import { Toast } from "@base-ui/react/toast";
 import { X } from "lucide-react";
 import { undoStack } from "#client/data/undo.ts";
+import { feedback } from "#client/feedback/index.ts";
 
 const manager = Toast.createToastManager();
 
@@ -32,8 +33,15 @@ export function notify(
   return id;
 }
 
-/** Report a failure; announced assertively and shown for longer. */
-export function notifyError(title: string) {
+/**
+ * Report a failure; announced assertively and shown for longer. It buzzes
+ * as the outcome of something this person did; `quiet` keeps it silent for
+ * failures they did not cause, such as a broken live update.
+ */
+export function notifyError(title: string, options: { quiet?: boolean } = {}) {
+  if (options.quiet !== true) {
+    feedback("error");
+  }
   return manager.add({
     title,
     type: "error",
@@ -53,6 +61,7 @@ export function notifyUndo(
   let undone = false;
   const offer = undoStack.offer(() => {
     undone = true;
+    feedback("undo");
     manager.close(id);
     actions.undo();
   });

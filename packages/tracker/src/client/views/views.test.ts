@@ -12,7 +12,7 @@ import {
   toggleFilterValue,
   viewPrefill,
 } from "./filters.ts";
-import { buildRows, type ListRow } from "./grouping.ts";
+import { buildRows, groupPlaces, type ListRow } from "./grouping.ts";
 
 const [todo, started, done] = workspaceFixture.states;
 if (todo === undefined || started === undefined || done === undefined) {
@@ -53,6 +53,22 @@ describe("grouping", () => {
       "AI-4",
       "AI-1",
       "AI-3",
+    ]);
+  });
+
+  test("each row knows its place in its group, so an opened group can stagger", () => {
+    const { rows } = buildRows(items, {
+      groupBy: "status",
+      collapsed: new Set(),
+      states: [done, started, todo],
+      today: "2026-11-11",
+    });
+    const places = groupPlaces(rows);
+    expect([...places.entries()]).toEqual([
+      [1, { group: rows[0]?.kind === "group" ? rows[0].key : "", place: 1 }],
+      [2, { group: rows[0]?.kind === "group" ? rows[0].key : "", place: 2 }],
+      [4, { group: rows[3]?.kind === "group" ? rows[3].key : "", place: 1 }],
+      [5, { group: rows[3]?.kind === "group" ? rows[3].key : "", place: 2 }],
     ]);
   });
 

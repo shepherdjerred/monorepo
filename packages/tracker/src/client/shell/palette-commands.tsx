@@ -41,6 +41,7 @@ import {
 } from "#client/controls/issue-actions.ts";
 import type { IssuePrefill } from "#client/issues/issue-form.tsx";
 import { applyTheme, savedTheme, type Theme } from "#client/ui/theme.ts";
+import { revealTheme } from "#client/feedback/motion.ts";
 import type { Targets } from "./shell-actions.ts";
 import { shortcutKeys } from "./shortcuts.ts";
 import { rememberTeam } from "./team.ts";
@@ -377,7 +378,13 @@ function workspaceEntries(context: PaletteContext): PaletteEntry[] {
             section: "Theme",
             checked: savedTheme() === theme.value,
             run: () => {
-              applyTheme(theme.value);
+              // Chosen from the keyboard: the theme spreads from the top.
+              revealTheme(
+                () => {
+                  applyTheme(theme.value);
+                },
+                { x: globalThis.innerWidth / 2, y: 0 },
+              );
             },
           })),
       },

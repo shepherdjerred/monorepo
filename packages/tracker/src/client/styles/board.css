@@ -30,7 +30,11 @@
 .board-column h2 .count {
   margin-left: auto;
 }
-.board-card {
+/* Skeleton and carried cards look like cards without being one, so
+   nothing that finds cards on the page finds them. */
+.board-card,
+.skeleton-card,
+.lifted-card {
   padding: 11px 13px;
   background: var(--panel);
   border: 1px solid var(--border);
@@ -38,10 +42,9 @@
   border-radius: 7px;
   margin-bottom: 8px;
 }
+/* The slot a lifted card left (motion.css draws it as a dashed outline). */
 .board-card.dragging {
-  opacity: 0.6;
   z-index: 10;
-  box-shadow: var(--shadow);
 }
 .card-top {
   display: flex;
@@ -116,7 +119,9 @@
     min-height: 44px;
     margin: -8px -10px;
   }
-  .board-card {
+  .board-card,
+  .skeleton-card,
+  .lifted-card {
     padding: 13px;
   }
   .card-title {

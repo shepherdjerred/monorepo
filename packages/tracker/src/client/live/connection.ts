@@ -32,7 +32,10 @@ const sync = createLiveSync({
     console.error(`Live update frame broke the contract: ${reason}`);
     if (!reportedBroken) {
       reportedBroken = true;
-      notifyError("Live updates received something unexpected; refreshing.");
+      // Not this person's action, so it makes no sound or vibration.
+      notifyError("Live updates received something unexpected; refreshing.", {
+        quiet: true,
+      });
     }
   },
   onRemoteIssue: noteRemoteEdit,

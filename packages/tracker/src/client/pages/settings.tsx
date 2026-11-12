@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { flushSync } from "react-dom";
 import { useMutation } from "@tanstack/react-query";
 import type { BootstrapData } from "#client/data/api.ts";
 import {
@@ -14,6 +15,8 @@ import { currentActor, saveActor } from "#client/data/identity.ts";
 import { ErrorNotice, Swatch } from "#client/ui/ui.tsx";
 import { notify } from "#client/ui/toast.tsx";
 import { applyTheme, savedTheme, type Theme } from "#client/ui/theme.ts";
+import { FeedbackSettings } from "#client/feedback/feedback-settings.tsx";
+import { originOf, revealTheme } from "#client/feedback/motion.ts";
 
 export function Settings({
   bootstrap,
@@ -79,9 +82,14 @@ export function Settings({
               key={value}
               aria-pressed={theme === value}
               className={theme === value ? "selected" : ""}
-              onClick={() => {
-                applyTheme(value);
-                setTheme(value);
+              onClick={(event) => {
+                // The new theme spreads from the button that chose it.
+                revealTheme(() => {
+                  applyTheme(value);
+                  flushSync(() => {
+                    setTheme(value);
+                  });
+                }, originOf(event));
               }}
             >
               <div
@@ -98,6 +106,7 @@ export function Settings({
           ))}
         </div>
       </section>
+      <FeedbackSettings />
       <section>
         <h2>Your identity</h2>
         <p className="muted">

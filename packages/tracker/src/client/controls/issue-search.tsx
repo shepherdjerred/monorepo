@@ -3,6 +3,7 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { Combobox } from "@base-ui/react/combobox";
 import { api } from "#client/data/api.ts";
 import { StateIcon } from "#client/ui/icons.tsx";
+import { leavingPopup } from "#client/ui/leaving.tsx";
 
 type Found = {
   identifier: string;
@@ -91,7 +92,10 @@ export function IssueSearchCombobox({
           align="start"
           collisionPadding={8}
         >
-          <Combobox.Popup className="picker-popup issue-search-popup">
+          <Combobox.Popup
+            className="picker-popup issue-search-popup"
+            render={leavingPopup}
+          >
             <Combobox.Empty className="picker-empty">
               {query === ""
                 ? "Type an identifier or words from a title"

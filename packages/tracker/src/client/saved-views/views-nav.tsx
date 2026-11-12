@@ -19,6 +19,8 @@ import {
   visibleViews,
   type SavedView,
 } from "./view-params.ts";
+import { leavingPopup } from "#client/ui/leaving.tsx";
+import { flipItems } from "#client/feedback/motion.ts";
 
 const dragType = "application/x-tracker-view";
 
@@ -70,7 +72,7 @@ function ViewActions({
       </Menu.Trigger>
       <Menu.Portal>
         <Menu.Positioner className="picker-positioner" align="start">
-          <Menu.Popup className="menu-popup">
+          <Menu.Popup className="menu-popup" render={leavingPopup}>
             <Menu.Item className="menu-item" onClick={edit}>
               <span className="option-icon">
                 <Pencil size={15} />
@@ -148,6 +150,8 @@ export function ViewsNav({
     if (ids === undefined || !settled) {
       return;
     }
+    // The views glide to their new places instead of jumping.
+    flipItems(".view-nav", "a[data-view]", "view");
     void reorderViews(ids);
     if (focus !== undefined) {
       // Moving the link in the document takes focus from it.

@@ -1,5 +1,5 @@
 import type { CSSProperties, Ref } from "react";
-import { Link } from "react-router";
+import { Link, useViewTransitionState } from "react-router";
 import { CalendarClock, ChevronRight, Plus } from "lucide-react";
 import type { Issue } from "#client/data/api.ts";
 import type { EnumOption } from "#client/controls/enum-picker.tsx";
@@ -30,7 +30,24 @@ type Placement = {
   index: number;
   measure: Ref<HTMLLIElement>;
   style: CSSProperties;
+  /** Its place among the rows of a group that is opening, if it is one. */
+  entering?: number | undefined;
 };
+
+/** Rows of an opening group arrive in turn; `--enter-index` staggers them. */
+function enteringStyle(
+  style: CSSProperties,
+  entering: number | undefined,
+): CSSProperties {
+  if (entering === undefined) {
+    return style;
+  }
+  const staggered: CSSProperties & { "--enter-index": number } = {
+    ...style,
+    "--enter-index": Math.min(entering, 12),
+  };
+  return staggered;
+}
 
 export function IssueRowItem({
   issue,
@@ -61,6 +78,9 @@ export function IssueRowItem({
   };
 }) {
   const { hidden } = options;
+  // The row's identifier and title morph into the issue page and back.
+  const morph = useViewTransitionState(`/issues/${issue.identifier}`);
+  const { entering } = placement;
   return (
     <li
       className="issue-row"
@@ -69,9 +89,11 @@ export function IssueRowItem({
       data-row-issue={issue.identifier}
       data-selected={state.selected}
       data-fresh={state.fresh ? "" : undefined}
+      data-vt-subject={morph ? "" : undefined}
+      data-entering={entering === undefined ? undefined : ""}
       aria-posinset={position}
       aria-setsize={setSize}
-      style={placement.style}
+      style={enteringStyle(placement.style, entering)}
     >
       <input
         type="checkbox"

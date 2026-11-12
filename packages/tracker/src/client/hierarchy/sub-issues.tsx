@@ -38,7 +38,11 @@ function ChildRow({
 }) {
   const saving = pending(child);
   return (
-    <li className="sub-issue" data-pending={saving ? "" : undefined}>
+    <li
+      className="sub-issue"
+      data-pending={saving ? "" : undefined}
+      data-sub-issue={saving ? undefined : child.identifier}
+    >
       <EnumPicker
         variant="icon"
         label={`Status of ${saving ? child.title : child.identifier}`}
