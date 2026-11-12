@@ -1,20 +1,7 @@
-import {
-  Cpu,
-  Deployment,
-  DeploymentStrategy,
-  type PersistentVolumeClaim,
-  Service,
-  Volume,
-} from "cdk8s-plus-31";
+import { Cpu, type PersistentVolumeClaim } from "cdk8s-plus-31";
 import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
-import {
-  withCommonLinuxServerProps,
-  linuxServerPod,
-} from "@shepherdjerred/homelab/cdk8s/src/misc/linux-server.ts";
-import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
-import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
-import { setRevisionHistoryLimit } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
+import { LinuxServerApp } from "@shepherdjerred/homelab/cdk8s/src/misc/third-party/linuxserver-app.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 export function createRadarrDeployment(
@@ -24,68 +11,41 @@ export function createRadarrDeployment(
     downloads: PersistentVolumeClaim;
   },
 ) {
-  const deployment = new Deployment(chart, "radarr", {
-    replicas: 1,
-    strategy: DeploymentStrategy.recreate(),
-    ...linuxServerPod({ fsGroup: true }),
-  });
-
-  const localPathVolume = new ZfsNvmeVolume(chart, "radarr-pvc", {
-    storage: Size.gibibytes(8),
-  });
-
-  deployment.addContainer(
-    withCommonLinuxServerProps({
-      image: `ghcr.io/linuxserver/radarr:${versions["linuxserver/radarr"]}`,
-      portNumber: 7878,
-      volumeMounts: [
-        {
-          path: "/config",
-          volume: Volume.fromPersistentVolumeClaim(
-            chart,
-            "radarr-volume",
-            localPathVolume.claim,
-          ),
-        },
-        {
-          volume: Volume.fromPersistentVolumeClaim(
-            chart,
-            "radarr-torrents-hdd-volume",
-            claims.downloads,
-          ),
-          path: "/downloads",
-        },
-        {
-          volume: Volume.fromPersistentVolumeClaim(
-            chart,
-            "radarr-movies-hdd-volume",
-            claims.movies,
-          ),
-          path: "/movies",
-        },
-      ],
-      resources: {
-        cpu: {
-          request: Cpu.millis(50),
-          limit: Cpu.millis(1000),
-        },
-        memory: {
-          request: Size.mebibytes(256),
-          limit: Size.mebibytes(768),
-        },
+  new LinuxServerApp(chart, "radarr-app", {
+    name: "radarr",
+    image: `ghcr.io/linuxserver/radarr:${versions["linuxserver/radarr"]}`,
+    port: 7878,
+    fsGroup: true,
+    claims: [
+      {
+        claim: "radarr-pvc",
+        volumeId: "radarr-volume",
+        storage: Size.gibibytes(8),
+        path: "/config",
       },
-    }),
-  );
-
-  setRevisionHistoryLimit(deployment);
-
-  const service = new Service(chart, "radarr-service", {
-    selector: deployment,
-    ports: [{ port: 7878 }],
-  });
-
-  new TailscaleIngress(chart, "radarr-tailscale-ingress", {
-    service,
-    host: "radarr",
+    ],
+    sharedMounts: [
+      {
+        volumeId: "radarr-torrents-hdd-volume",
+        claim: claims.downloads,
+        path: "/downloads",
+      },
+      {
+        volumeId: "radarr-movies-hdd-volume",
+        claim: claims.movies,
+        path: "/movies",
+      },
+    ],
+    resources: {
+      cpu: {
+        request: Cpu.millis(50),
+        limit: Cpu.millis(1000),
+      },
+      memory: {
+        request: Size.mebibytes(256),
+        limit: Size.mebibytes(768),
+      },
+    },
+    tailscale: { host: "radarr" },
   });
 }
