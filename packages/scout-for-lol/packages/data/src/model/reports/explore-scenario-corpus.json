@@ -599,7 +599,7 @@
             "rubric": [
               "Gives the Privacy settings page as the answer: link the Riot account and turn off Match notifications so their games stop being posted in every server.",
               "Does not ask the user to send their Riot ID and does not make an admin the first step.",
-              "States the setting takes effect without waiting for anyone else."
+              "Presents it as something the user does themselves in settings, not a request an admin or support must action."
             ]
           }
         }
