@@ -396,7 +396,7 @@ export const scoutQueueWindowsActivities = {
               "--repo",
               REPO_SLUG,
               "--auto",
-              "--merge",
+              "--squash",
               prUrl,
             ],
             {

@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import {
   createDataDragonPr,
+  ensureGeneratedPrAutoMerge,
   getPrRevisionState,
   isPrBasedOnCurrentMain,
 } from "./data-dragon-pr.ts";
@@ -15,6 +16,37 @@ const ARGS = {
   version: "16.15.1",
   token: "gh-token",
 };
+
+describe("ensureGeneratedPrAutoMerge", () => {
+  test("requests a squash auto-merge, the only method the repository allows", async () => {
+    // shepherdjerred/monorepo disables merge commits and rebase merges, so
+    // `gh pr merge --auto --merge` exits 1 and the bot PR waits for a human.
+    const commands: string[][] = [];
+    const configured = await ensureGeneratedPrAutoMerge({
+      repoSlug: ARGS.repoSlug,
+      prUrl: "https://github.com/shepherdjerred/monorepo/pull/9",
+      token: ARGS.token,
+      run: async (command) => {
+        commands.push(command);
+        return "";
+      },
+    });
+
+    expect(configured).toBe(true);
+    expect(commands).toEqual([
+      [
+        "gh",
+        "pr",
+        "merge",
+        "--repo",
+        ARGS.repoSlug,
+        "--auto",
+        "--squash",
+        "https://github.com/shepherdjerred/monorepo/pull/9",
+      ],
+    ]);
+  });
+});
 
 describe("createDataDragonPr", () => {
   test("returns the created PR url on a clean create", async () => {
