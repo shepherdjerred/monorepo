@@ -10,6 +10,16 @@ import { readExternalLibraryAvailability } from "#infrastructure/external-librar
 const h = automationTestHarness();
 const object = z.record(z.string(), z.json());
 
+async function episodePart() {
+  const db = h.database();
+  const f = await externalLibraryFixture(db, "episode");
+  const selected = f.plexItems.get(f.input.ratingKey);
+  const part = selected?.Media?.[0]?.Part[0];
+  if (selected === undefined || part === undefined)
+    throw new Error("Fixture lost episode Part");
+  return { db, f, selected, part };
+}
+
 async function reviewedMovie() {
   const f = await externalLibraryFixture(h.database());
   const preview = await f.service.preview(
@@ -224,12 +234,7 @@ test("canonical, owner, inventory and actual Plex identity changes fail before r
 test.each(["missing", "conflicting", "mixed", "missing_canonical"])(
   "%s episode TMDB identity refuses preview despite matching coordinates, root and inventory",
   async (identity) => {
-    const db = h.database();
-    const f = await externalLibraryFixture(db, "episode");
-    const selected = f.plexItems.get(f.input.ratingKey);
-    const part = selected?.Media?.[0]?.Part[0];
-    if (selected === undefined || part === undefined)
-      throw new Error("Fixture lost episode Part");
+    const { db, f, selected, part } = await episodePart();
     const otherGuid = `tmdb://${String(z.number().parse(f.media.tmdbId) + 1)}`;
     let guids = selected.Guid ?? [];
     switch (identity) {
@@ -379,12 +384,7 @@ test("existing owned path and scope are reported protected and remain byte-for-b
 });
 
 test("shared physical TV episodes retain individual Part identities and exact canonical coordinates", async () => {
-  const db = h.database();
-  const f = await externalLibraryFixture(db, "episode");
-  const selected = f.plexItems.get(f.input.ratingKey);
-  const part = selected?.Media?.[0]?.Part[0];
-  if (selected === undefined || part === undefined)
-    throw new Error("Fixture lost episode Part");
+  const { db, f, selected, part } = await episodePart();
   const episode2 = await db.mediaItem.create({
     data: {
       kind: "episode",

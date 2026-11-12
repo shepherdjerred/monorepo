@@ -16,6 +16,16 @@ const h = automationTestHarness();
 const JsonObject = z.record(z.string(), z.json());
 type ExternalFixture = Awaited<ReturnType<typeof externalLibraryFixture>>;
 
+async function projectionTarget(f: ExternalFixture) {
+  const passiveTarget = await f.db.mediaIntent.findUniqueOrThrow({
+    where: { mediaId_edition: { mediaId: f.media.id, edition: "default" } },
+  });
+  const request = await f.db.mediaRequest.create({
+    data: { mediaId: f.media.id, userId: f.owner.id },
+  });
+  return { passiveTarget, request };
+}
+
 async function expectReadProjection(
   f: ExternalFixture,
   requestId: string,
@@ -116,12 +126,7 @@ test.each(["movie", "episode"] as const)(
     expect(
       await db.mediaItem.findUniqueOrThrow({ where: { id: f.media.id } }),
     ).toEqual(f.media);
-    const passiveTarget = await db.mediaIntent.findUniqueOrThrow({
-      where: { mediaId_edition: { mediaId: f.media.id, edition: "default" } },
-    });
-    const request = await db.mediaRequest.create({
-      data: { mediaId: f.media.id, userId: f.owner.id },
-    });
+    const { passiveTarget, request } = await projectionTarget(f);
     const projectedAvailability = (expected: MediaIntent["availability"]) =>
       expectReadProjection(f, request.id, passiveTarget, expected);
     await projectedAvailability("available");
@@ -354,12 +359,7 @@ test.each(["missing", "conflicting", "mixed", "missing_canonical"])(
       },
       data: { guids: member.guids.map((id) => ({ id })) },
     });
-    const passiveTarget = await db.mediaIntent.findUniqueOrThrow({
-      where: { mediaId_edition: { mediaId: f.media.id, edition: "default" } },
-    });
-    const request = await db.mediaRequest.create({
-      data: { mediaId: f.media.id, userId: f.owner.id },
-    });
+    const { passiveTarget, request } = await projectionTarget(f);
     const state = async () => ({
       asset: await db.libraryAsset.findUniqueOrThrow({
         where: { id: assetId },
