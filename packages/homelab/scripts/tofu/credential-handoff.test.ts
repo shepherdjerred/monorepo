@@ -131,6 +131,50 @@ describe("R2 S3 credential handoffs", () => {
     });
   });
 
+  test("the stack derives the units from the same fields", async () => {
+    const configuration: unknown = await Bun.file(
+      new URL("../../src/tofu/cloudflare-tokens/main.tf.json", import.meta.url),
+    ).json();
+    const { locals } = z
+      .looseObject({
+        locals: z.looseObject({ r2_s3_credential_fields: z.unknown() }),
+      })
+      .parse(configuration);
+    expect(locals.r2_s3_credential_fields).toEqual(R2_S3_CREDENTIAL_FIELDS);
+  });
+
+  test("the committed registry publishes its managed tokens and the archive token's R2 keys", async () => {
+    const desired: unknown = await Bun.file(
+      new URL(
+        "../../src/tofu/cloudflare-tokens/desired-state.json",
+        import.meta.url,
+      ),
+    ).json();
+    const { cloudflare_api_tokens: units } = z
+      .looseObject({
+        cloudflare_api_tokens: z.record(
+          z.string(),
+          z.looseObject({ vault_item_id: z.string(), vault_field: z.string() }),
+        ),
+      })
+      .parse(handoffDesiredState(desired, "cloudflare-tokens"));
+    expect(Object.keys(units).toSorted()).toEqual([
+      "delivery-static-cache",
+      "personal-archives-r2",
+      "personal-archives-r2.s3-access-key-id",
+      "personal-archives-r2.s3-secret-access-key",
+      "woodpecker",
+    ]);
+    expect(units["personal-archives-r2.s3-access-key-id"]).toEqual({
+      vault_item_id: "du6dxzjfiml7f7qnj2peyff3ba",
+      vault_field: "CLOUDFLARE_R2_ACCESS_KEY_ID",
+    });
+    expect(units["personal-archives-r2.s3-secret-access-key"]).toEqual({
+      vault_item_id: "du6dxzjfiml7f7qnj2peyff3ba",
+      vault_field: "CLOUDFLARE_R2_SECRET_ACCESS_KEY",
+    });
+  });
+
   test("an unmanaged token publishes no derived S3 units", () => {
     expect(
       handoffDesiredState(

@@ -226,10 +226,17 @@ describe("OpenTofu credential contracts", () => {
   });
 
   test("requires the Cloudflare token registry for direct OpenTofu runs", async () => {
-    const variables = await Bun.file(
-      new URL("../../src/tofu/cloudflare-tokens/variables.tf", import.meta.url),
-    ).text();
-    expect(variables).not.toContain("default = {}");
+    const configuration: unknown = await Bun.file(
+      new URL("../../src/tofu/cloudflare-tokens/main.tf.json", import.meta.url),
+    ).json();
+    const { variable } = z
+      .looseObject({
+        variable: z.looseObject({
+          cloudflare_api_tokens: z.record(z.string(), z.unknown()),
+        }),
+      })
+      .parse(configuration);
+    expect(variable.cloudflare_api_tokens).not.toHaveProperty("default");
   });
 
   test("keeps validation lockfiles read-only without requiring an AsusWRT lockfile", () => {

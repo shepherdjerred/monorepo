@@ -24,7 +24,8 @@
     {
       "registryUrl": "https://registry.opentofu.org",
       "source": "cloudflare/cloudflare",
-      "version": "5.27.0"
+      "version": "5.27.0",
+      "bindings": true
     },
     {
       "registryUrl": "https://registry.opentofu.org",

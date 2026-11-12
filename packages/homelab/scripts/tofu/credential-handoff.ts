@@ -272,7 +272,7 @@ function targetOwners(desired: unknown, stack: string): Map<string, string> {
   return owners;
 }
 
-/** The 1Password fields of an R2 S3 credential, by handoff unit suffix (cloudflare-tokens/api-tokens.tf). */
+/** The 1Password fields of an R2 S3 credential, by handoff unit suffix (the cloudflare-tokens stack's `r2_s3_credential_fields`). */
 export const R2_S3_CREDENTIAL_FIELDS = {
   "s3-access-key-id": "CLOUDFLARE_R2_ACCESS_KEY_ID",
   "s3-secret-access-key": "CLOUDFLARE_R2_SECRET_ACCESS_KEY",
@@ -288,7 +288,7 @@ export function handoffDesiredState(desired: unknown, stack: string): unknown {
     .looseObject({
       cloudflare_api_tokens: z.record(
         z.string(),
-        // Match cloudflare-tokens/variables.tf: omitted managed means true
+        // Match the cloudflare-tokens variable: omitted managed means true
         // and omitted s3_credential means false.
         z.looseObject({
           managed: z.boolean().default(true),
