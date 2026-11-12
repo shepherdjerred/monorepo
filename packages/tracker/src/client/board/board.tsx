@@ -1,6 +1,5 @@
 import {
   DndContext,
-  KeyboardSensor,
   MouseSensor,
   TouchSensor,
   closestCorners,
@@ -26,6 +25,7 @@ import { Avatar, Priority, StateDot, Swatch } from "#client/ui/ui.tsx";
 import { useShell } from "#client/shell/shell-context.ts";
 import { isPlainClick } from "#client/shell/route.ts";
 import { useFreshRows } from "#client/live/remote-activity.ts";
+import { BoardKeyboardSensor } from "#client/board/keyboard-sensor.ts";
 
 const boardCollision: CollisionDetection = (args) => {
   const hits = pointerWithin({
@@ -193,7 +193,7 @@ export function Board({
     useSensor(TouchSensor, {
       activationConstraint: { delay: 250, tolerance: 8 },
     }),
-    useSensor(KeyboardSensor, {
+    useSensor(BoardKeyboardSensor, {
       coordinateGetter: boardKeyboardCoordinates,
     }),
   );
