@@ -280,7 +280,11 @@ export class PromotionBrowser {
       enabled: enabled.enabled,
     };
   }
-
+  /** Native hover may scroll/expose menus; it validates pointer access without forcing a click. */
+  async preparePointer(ref: string): Promise<void> {
+    await this.accessibleControl(ref);
+    await this.action({ kind: "hover", ref });
+  }
   async followLink(
     body: Record<string, unknown>,
     address: string,

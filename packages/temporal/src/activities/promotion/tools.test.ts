@@ -1,6 +1,47 @@
 import { describe, expect, it, vi } from "vitest";
 import { harness } from "./tool-test-support.ts";
 
+describe("native pointer preflight", () => {
+  it("checks the same pointer target before the effect checkpoint and allows repositioning", async () => {
+    const test = await harness(false);
+    const beforeMutation = vi.spyOn(test.journal, "beforeMutation");
+    test.preparePointer.mockRejectedValueOnce(new Error("element is occluded"));
+    const click = { endpoint: "action", body: { kind: "click", ref: "e4" } };
+    await expect(test.handle(click)).rejects.toMatchObject({
+      code: "pointer_preflight_failed",
+      dispatchState: "not_started",
+      retryable: true,
+      ref: "e4",
+    });
+    expect(test.preparePointer).toHaveBeenLastCalledWith("e4");
+    expect(beforeMutation).not.toHaveBeenCalled();
+    expect(test.action).not.toHaveBeenCalled();
+
+    await test.handle(click);
+    expect(test.preparePointer).toHaveBeenLastCalledWith("e4");
+    expect(beforeMutation).toHaveBeenCalledOnce();
+    expect(test.action).toHaveBeenCalledExactlyOnceWith(click.body);
+    expect(test.preparePointer.mock.invocationCallOrder[1]).toBeLessThan(
+      beforeMutation.mock.invocationCallOrder[0] ?? 0,
+    );
+    expect(beforeMutation.mock.invocationCallOrder[0]).toBeLessThan(
+      test.action.mock.invocationCallOrder[0] ?? 0,
+    );
+  });
+  it("retains uncertainty when the actual click fails after pointer preflight", async () => {
+    const test = await harness(false);
+    const failure = new Error("Connection closed after dispatch");
+    test.action.mockRejectedValueOnce(failure);
+    const failed = vi.spyOn(test.journal, "mutationFailed");
+    await expect(
+      test.handle({ endpoint: "action", body: { kind: "click", ref: "e4" } }),
+    ).rejects.toBe(failure);
+    expect(test.preparePointer).toHaveBeenCalledExactlyOnceWith("e4");
+    expect(failed).toHaveBeenCalledOnce();
+    expect(failure).not.toHaveProperty("dispatchState");
+  });
+});
+
 describe("native browser connection", () => {
   it("requires solving a CAPTCHA before consuming the single login submission", async () => {
     const test = await harness();

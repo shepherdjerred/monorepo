@@ -11,6 +11,7 @@ describe("native PinchTab transport", () => {
     const paths: string[] = [],
       actions: unknown[] = [];
     let failSnapshot = false;
+    let failPointer = false;
     const server = Bun.serve({
       hostname: "127.0.0.1",
       port: 0,
@@ -56,14 +57,19 @@ describe("native PinchTab transport", () => {
           return Response.json({ value: "password" });
         if (url.pathname.endsWith("/action")) {
           const body = z
-            .strictObject({
-              kind: z.literal("fill"),
-              ref: z.string(),
-              text: z.string(),
-            })
+            .union([
+              z.strictObject({
+                kind: z.literal("fill"),
+                ref: z.string(),
+                text: z.string(),
+              }),
+              z.strictObject({ kind: z.literal("hover"), ref: z.string() }),
+            ])
             .parse(await request.json());
           actions.push(body);
-          return Response.json({ success: true });
+          return failPointer && body.kind === "hover"
+            ? new Response("element is occluded", { status: 500 })
+            : Response.json({ success: true });
         }
         return new Response("Unknown test route", { status: 404 });
       },
@@ -98,6 +104,20 @@ describe("native PinchTab transport", () => {
       expect(actions).toEqual([
         { kind: "fill", ref: "e41", text: "fixture-password" },
       ]);
+      failPointer = true;
+      await expect(browser.preparePointer("e41")).rejects.toThrow(
+        "element is occluded",
+      );
+      failPointer = false;
+      await browser.preparePointer("e41");
+      expect(actions.slice(1)).toEqual([
+        { kind: "hover", ref: "e41" },
+        { kind: "hover", ref: "e41" },
+      ]);
+      await expect(browser.preparePointer("unobserved")).rejects.toThrow(
+        "Refresh",
+      );
+      expect(actions).toHaveLength(3);
       expect(paths).toContain("/tabs/page/attr?selector=e41&name=type");
       await browser.snapshot({ selector: "main", depth: 3 });
       expect(paths).toContain(

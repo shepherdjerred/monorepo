@@ -205,6 +205,9 @@ export function createPromotionToolHandler(input: {
       }
       throw new PromotionControlError(ref);
     }
+    await input.browser.preparePointer(ref).catch(() => {
+      throw new PromotionControlError(ref, "pointer_preflight_failed");
+    });
   }
 
   async function action(body: z.infer<typeof ActionSchema>) {
