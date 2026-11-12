@@ -41,7 +41,7 @@ describe("toolkit config", () => {
       "https://otlp-metrics.tailnet-1a49.ts.net/v1/metrics",
     );
     await expect(config.value("opsDashboardUrl")).resolves.toBe(
-      "https://ops.tailnet-1a49.ts.net",
+      "https://hub.tailnet-1a49.ts.net",
     );
     await expect(config.value("trackerUrl")).resolves.toBe(
       "https://tracker.tailnet-1a49.ts.net",
