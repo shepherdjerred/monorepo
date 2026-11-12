@@ -63,7 +63,8 @@
     {
       "registryUrl": "https://registry.opentofu.org",
       "source": "hashicorp/google",
-      "version": "8.6.0"
+      "version": "8.6.0",
+      "bindings": true
     },
     {
       "registryUrl": "https://registry.opentofu.org",

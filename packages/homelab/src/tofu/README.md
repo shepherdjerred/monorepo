@@ -35,12 +35,12 @@ tofu/
 Each subdirectory is an independent root module with its own S3 state on
 SeaweedFS, provider configuration and variables. A synthesized stack declares
 all three in its TypeScript source and holds them in `main.tf.json`; the
-hand-written `google` and `asuswrt` stacks keep `backend.tf`, `providers.tf`
-and `variables.tf`.
+hand-written `asuswrt` stack keeps `backend.tf`, `providers.tf` and
+`variables.tf`.
 
 ### Stacks synthesized from TypeScript
 
-`anthropic`, `anthropic-federation`, `application-secrets`, `argocd`, `arr`, `backblaze`, `cloudflare`, `cloudflare-tokens`, `discord`, `dockerhub`, `dockerhub-tokens`, `github`, `openai`, `posthog`, `seaweedfs` and `tailscale` have no root `.tf` files.
+`anthropic`, `anthropic-federation`, `application-secrets`, `argocd`, `arr`, `backblaze`, `cloudflare`, `cloudflare-tokens`, `discord`, `dockerhub`, `dockerhub-tokens`, `github`, `google`, `openai`, `posthog`, `seaweedfs` and `tailscale` have no root `.tf` files.
 Their configuration is
 `main.tf.json`, synthesized by the [CDK Terrain](https://cdktn.io/docs) app in
 [`packages/homelab-cdktn`](../../../homelab-cdktn) and committed next to the stack's `.terraform.lock.hcl`.
