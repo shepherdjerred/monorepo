@@ -666,7 +666,8 @@
         ".mise.toml",
         "global.json",
         "packages/macos-cross-compiler/Dockerfile",
-        "packages/windows-cross-compiler/Dockerfile"
+        "packages/windows-cross-compiler/Dockerfile",
+        "packages/temporal/Dockerfile"
       ]
     },
     "//#large-files-scout": {

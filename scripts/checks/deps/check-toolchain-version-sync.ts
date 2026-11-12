@@ -11,6 +11,10 @@
  * nothing keeps the Dockerfile copies in sync, and nothing previously failed
  * CI when they drifted. This check makes that drift fail loudly instead of
  * silently building a cross-compiler image against a stale toolchain.
+ *
+ * The Temporal worker image pins its own OpenTofu release the same way, and
+ * Delivery plans and applies stacks with that binary. It drifted a minor
+ * release behind `.mise.toml` unnoticed, so it is held equal here too.
  */
 
 import { z } from "zod";
@@ -20,6 +24,7 @@ const MiseToolsSchema = z.object({
   tools: z.object({
     rust: z.string(),
     dotnet: z.string(),
+    opentofu: z.string(),
   }),
 });
 
@@ -38,6 +43,9 @@ const MISE_TOML_PATH = ".mise.toml";
 const GLOBAL_JSON_PATH = "global.json";
 const MACOS_DOCKERFILE = "packages/macos-cross-compiler/Dockerfile";
 const WINDOWS_DOCKERFILE = "packages/windows-cross-compiler/Dockerfile";
+// The worker image is where Delivery plans and applies OpenTofu stacks, so
+// its binary must be the release CI validates and operators plan with.
+const TEMPORAL_DOCKERFILE = "packages/temporal/Dockerfile";
 
 function extractArg(source: string, argName: string): string | undefined {
   const match = new RegExp(
@@ -101,6 +109,17 @@ async function main(): Promise<void> {
     });
   }
 
+  const temporalTofu = extractArg(
+    await Bun.file(TEMPORAL_DOCKERFILE).text(),
+    "TOFU_VERSION",
+  );
+  if (temporalTofu !== tools.opentofu) {
+    violations.push({
+      file: TEMPORAL_DOCKERFILE,
+      message: `ARG TOFU_VERSION=${temporalTofu ?? "<missing>"} does not match ${MISE_TOML_PATH}'s opentofu = "${tools.opentofu}"`,
+    });
+  }
+
   if (globalJsonDotnet !== miseDotnet) {
     violations.push({
       file: GLOBAL_JSON_PATH,
@@ -119,7 +138,7 @@ async function main(): Promise<void> {
   }
 
   console.log(
-    `Toolchain versions in sync: rust=${miseRust}, dotnet=${miseDotnet}.`,
+    `Toolchain versions in sync: rust=${miseRust}, dotnet=${miseDotnet}, opentofu=${tools.opentofu}.`,
   );
 }
 
