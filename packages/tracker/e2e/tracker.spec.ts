@@ -75,15 +75,35 @@ test("board also supports desktop keyboard and mobile long-press touch", async (
         return rect !== null && rect.x >= 0;
       })
       .toBe(true);
-    const destination = await target.boundingBox();
-    if (destination === null)
-      throw new Error("Touch destination is not visible");
-    await cdp.send("Input.dispatchTouchEvent", {
-      type: "touchMove",
-      touchPoints: [
-        { x: destination.x + 140, y: Math.max(70, destination.y + 80) },
-      ],
-    });
+    const touchTarget = async () => {
+      const destination = await target.boundingBox();
+      if (destination === null)
+        throw new Error("Touch destination is not visible");
+      await cdp.send("Input.dispatchTouchEvent", {
+        type: "touchMove",
+        touchPoints: [
+          { x: destination.x + 140, y: Math.max(70, destination.y + 80) },
+        ],
+      });
+    };
+    // Edge autoscroll keeps moving the board until the touch leaves the edge,
+    // so the first aim can land short. Re-aim once the board is still.
+    await touchTarget();
+    await page.locator(".board").evaluate(
+      (board) =>
+        new Promise<void>((resolve) => {
+          let last = board.scrollLeft;
+          let still = 0;
+          const frame = () => {
+            still = board.scrollLeft === last ? still + 1 : 0;
+            last = board.scrollLeft;
+            if (still === 2) resolve();
+            else requestAnimationFrame(frame);
+          };
+          requestAnimationFrame(frame);
+        }),
+    );
+    await touchTarget();
     await expect(page.locator('[id^="DndLiveRegion"]')).toContainText(
       "over Todo",
     );
