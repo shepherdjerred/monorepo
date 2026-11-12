@@ -4,7 +4,12 @@ import {
   QualityRulesSchema,
 } from "#shared/api.ts";
 import type { ReleaseAttributes } from "#shared/contract.ts";
-import { FileGuardError, type Transaction } from "./types.ts";
+import {
+  FileGuardError,
+  type Transaction,
+  type FilePlanEntry,
+} from "./types.ts";
+import { Prisma } from "#generated/prisma/client.ts";
 import { z } from "zod";
 import { defaultScope } from "#shared/editions/scope.ts";
 import { targetWhere } from "#infrastructure/editions/targets.ts";
@@ -15,6 +20,43 @@ const StoredReleaseSchema = PublicReleaseAttributesSchema.extend({
   providerId: z.string(),
   title: z.string(),
 });
+
+/** Preserve intent lookup → shared profile lock → current profile lookup order. */
+export async function loadLockedDefaultProfile(
+  tx: Transaction,
+  mediaId: string,
+) {
+  const intent = await tx.mediaIntent.findUniqueOrThrow({
+    where: targetWhere(defaultScope(mediaId)),
+  });
+  if (intent.profileId === null) throw new FileGuardError("profile_missing");
+  await tx.$queryRaw(
+    Prisma.sql`SELECT id FROM "QualityProfile" WHERE id = ${intent.profileId} FOR SHARE`,
+  );
+  const profile = await tx.qualityProfile.findUniqueOrThrow({
+    where: { id: intent.profileId },
+  });
+  return { intent, profile };
+}
+
+/** Live generations may advance through owner Retry while the immutable plan retains its birth. */
+export async function assertProfile(
+  tx: Transaction,
+  entry: FilePlanEntry,
+  generations: Readonly<Record<string, number>> = entry.generations,
+): Promise<void> {
+  const properties = z
+    .object({ profileVersions: z.record(z.string(), z.number().int()) })
+    .parse(entry.properties);
+  for (const mediaId of entry.mediaIds) {
+    const { intent, profile } = await loadLockedDefaultProfile(tx, mediaId);
+    if (
+      profile.version !== properties.profileVersions[mediaId] ||
+      intent.generation !== generations[mediaId]
+    )
+      throw new FileGuardError("profile_obsolete");
+  }
+}
 
 export async function assertMeasuredUpgrade(
   db: Pick<Transaction, "mediaIntent" | "assetCoverage">,

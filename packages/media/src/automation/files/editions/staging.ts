@@ -6,8 +6,14 @@ import { lockAcquisitionMedia } from "#infrastructure/acquisition-identity/locks
 import type { MovieChoiceAccess } from "#infrastructure/movie-editions/access.ts";
 import { assertAcquisition } from "#automation/files/guards.ts";
 import { assertPlanEdition } from "./acquisition.ts";
+import { assertProfile } from "#automation/files/quality-guard.ts";
+import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
+import { ORDINARY_STAGING_BATCH_SIZE } from "#shared/acquisition/ordinary-staging.ts";
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import {
   FileGuardError,
+  GenerationsSchema,
+  FilePlanSchema,
   type FilePlanEntry,
   type Transaction,
 } from "#automation/files/types.ts";
@@ -40,6 +46,12 @@ export async function stageAuthorizedPlan(
     plan: FilePlanEntry[];
     movieAccess: MovieChoiceAccess | undefined;
     seriesPackBatch?: SeriesPackStagingSettlementV1;
+    ordinaryBatch?: {
+      operationId: string;
+      batchIndex: number;
+      filePlanHash: string;
+      budget: PublicationAuthorityReadBudget;
+    };
   },
 ) {
   const authorize = async (tx: Transaction) => {
@@ -54,6 +66,21 @@ export async function stageAuthorizedPlan(
     const current = await tx.acquisitionAttempt.findUniqueOrThrow({
       where: { id: input.attemptId },
     });
+    if (input.ordinaryBatch !== undefined) {
+      input.ordinaryBatch.budget.consume(1);
+      if (
+        (current.coordinatorOperationId ?? current.operationId) !==
+          input.ordinaryBatch.operationId ||
+        identityHash(current.filePlan) !== input.ordinaryBatch.filePlanHash ||
+        identityHash(FilePlanSchema.parse(current.filePlan)) !==
+          identityHash(input.plan)
+      )
+        throw new FileGuardError("staging_plan_changed");
+      const generations = GenerationsSchema.parse(current.generations);
+      for (const entry of input.plan) {
+        await assertProfile(tx, entry, generations);
+      }
+    }
     await assertPlanEdition(tx, current, input.plan);
     await input.seriesPackBatch?.assertCurrent(tx, current);
     const guards = new Map<"movies" | "tv", () => void>();
@@ -81,7 +108,14 @@ export async function stageAuthorizedPlan(
     operations: FileOperations;
     prepared: PreparedImport;
   }[] = [];
-  for (const entry of input.plan) {
+  const entries =
+    input.ordinaryBatch === undefined
+      ? input.plan
+      : input.plan.slice(
+          input.ordinaryBatch.batchIndex * ORDINARY_STAGING_BATCH_SIZE,
+          (input.ordinaryBatch.batchIndex + 1) * ORDINARY_STAGING_BATCH_SIZE,
+        );
+  for (const entry of entries) {
     const operations = new FileOperations(context.roots[entry.libraryKind], {
       authorize: () =>
         Promise.reject(new Error("Prepared import cannot publish")),

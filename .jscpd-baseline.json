@@ -704,10 +704,6 @@
       "clones": 1,
       "tokens": 76
     },
-    "packages/media/src/automation/files/committed-publication.ts|packages/media/src/automation/files/publication.ts": {
-      "clones": 1,
-      "tokens": 95
-    },
     "packages/media/src/automation/files/editions/cuts.integration.test.ts|packages/media/src/infrastructure/recovery/legacy-claims/lifecycle.integration.test.ts": {
       "clones": 1,
       "tokens": 81
@@ -2802,7 +2798,7 @@
     },
     "packages/temporal/src/activities/media/native-archive.test.ts|packages/temporal/src/activities/media/native-compensation.test.ts": {
       "clones": 8,
-      "tokens": 1135
+      "tokens": 1127
     },
     "packages/temporal/src/activities/media/series-pack/rollback-role.integration.test.ts|packages/temporal/src/activities/media/series-pack/workflow.integration.test.ts": {
       "clones": 2,

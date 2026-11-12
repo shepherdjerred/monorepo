@@ -61,6 +61,12 @@ Plex access has a process-local expiry guard checked after final awaited work,
 alongside the existing storage and execution deadlines. Previously committed
 receipts and exact recorded compensation retain their separate recovery paths.
 
+Opted-in ordinary staging partitions the original immutable plan into private
+batches. Each batch rechecks the whole plan, current coordinator and complete
+acquisition authority; final publication still verifies every file's bytes.
+Torn or unacknowledged partials and changed acknowledgment identities remain
+protected and require owner recovery.
+
 Personal movie Network activities renew stale Plex access through the existing
 registered account or managed-profile credential before checking current choice
 authority. Renewal retains the immutable birth actor/subject pair, the shared

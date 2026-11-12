@@ -110,7 +110,7 @@ test.each(names)(
         message:
           "Compensation Activity failed; review protected operation status",
         cause: undefined,
-        details: undefined,
+        details: [{ schemaVersion: 1, code: "sdk_deadline_exceeded" }],
       },
     );
     expect(load).toHaveBeenCalledTimes(1);

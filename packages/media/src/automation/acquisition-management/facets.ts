@@ -55,7 +55,7 @@ export function createAcquisitionFileFacet(context: FileContext) {
       execution: PublicationExecution,
     ) => invocation(execution).cleanupSupersededMediaFile(input),
     inspectAndStageMedia: (
-      input: MediaAttemptOperation,
+      input: Parameters<MediaFileActivities["inspectAndStageMedia"]>[0],
       execution: PublicationExecution,
     ) => invocation(execution).inspectAndStageMedia(input),
     promoteMediaFiles: (

@@ -42,7 +42,12 @@ import {
 import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { libraryFileInvocation } from "#automation/acquisition-management/files.ts";
 import { seriesPackMeasurementV1 } from "./series-pack/measurement.ts";
-import { inspectionIdentity } from "./acquisition-identity/inspection.ts";
+import {
+  inspectionIdentity,
+  assertInspectionCoordinator,
+  assertInspectionCandidateCount,
+  assertInspectionPlanPresent,
+} from "./acquisition-identity/inspection.ts";
 
 const ObservationSchema = z.object({
   torrent: z.object({ progress: z.literal(1), save_path: z.string() }),
@@ -159,9 +164,30 @@ export async function inspectAndStage(
   initialContext: FileContext,
   attemptId: string,
 ): Promise<void> {
+  const prepared = await prepareInspectionPlan(initialContext, attemptId);
+  if (prepared === null) return;
+  await stageAuthorizedPlan(prepared.context, {
+    attemptId,
+    mediaIds: prepared.attempt.mediaIds,
+    plan: prepared.plan,
+    movieAccess: prepared.movieAccess,
+  });
+}
+
+/** Preparing a literal plan does not require spending the remaining invocation copying it. */
+export async function prepareInspectionPlan(
+  initialContext: FileContext,
+  attemptId: string,
+  options: {
+    requireExisting?: boolean;
+    budget?: PublicationAuthorityReadBudget;
+    operationId?: string;
+  } = {},
+) {
   const execution = initialContext.publicationExecution?.();
   execution?.assertActive();
   const budget =
+    options.budget ??
     initialContext.libraryManagement?.budget ??
     new PublicationAuthorityReadBudget();
   if (
@@ -173,13 +199,14 @@ export async function inspectAndStage(
       ...(execution === undefined ? {} : { execution }),
     })
   )
-    return;
+    return null;
   if (!(await initialContext.enabled.acquisition()))
     throw new FileGuardError("acquisition_disabled");
   const attempt = await initialContext.db.acquisitionAttempt.findUniqueOrThrow({
     where: { id: attemptId },
     include: { release: true, torrent: true },
   });
+  assertInspectionCoordinator(attempt, options.operationId);
   if (
     await resumeCommittedPublication({
       context: initialContext,
@@ -188,7 +215,7 @@ export async function inspectAndStage(
       ...(execution === undefined ? {} : { execution }),
     })
   )
-    return;
+    return null;
   const context = await libraryFileInvocation(
     publicationInvocation(
       initialContext,
@@ -202,9 +229,10 @@ export async function inspectAndStage(
     mediaIds: attempt.mediaIds,
     movieAccess,
   });
-  if (alreadyCommitted) return;
-  let plan =
-    attempt.filePlan === null ? null : FilePlanSchema.parse(attempt.filePlan);
+  if (alreadyCommitted) return null;
+  let rawFilePlan = attempt.filePlan;
+  let plan = rawFilePlan === null ? null : FilePlanSchema.parse(rawFilePlan);
+  assertInspectionPlanPresent(plan, options.requireExisting);
   if (plan === null) {
     if (attempt.torrent?.owned !== true)
       throw new FileGuardError("torrent_unowned");
@@ -220,7 +248,7 @@ export async function inspectAndStage(
           file.name,
         ),
     );
-    assertCandidateCount(media, candidates.length);
+    assertInspectionCandidateCount(media, candidates.length);
     await assertObservedEdition(context.db, attempt, candidates);
     plan = [];
     for (const file of candidates)
@@ -241,7 +269,7 @@ export async function inspectAndStage(
     )
       throw new FileGuardError("file_coverage_incomplete");
     const committed = plan;
-    plan = await context.db.$transaction(async (tx) => {
+    rawFilePlan = await context.db.$transaction(async (tx) => {
       await lockAcquisitionMedia(tx, attempt.mediaIds);
       await assertAcquisition(tx, attemptId, {
         serverMachineId: context.serverMachineId,
@@ -251,37 +279,25 @@ export async function inspectAndStage(
       const current = await tx.acquisitionAttempt.findUniqueOrThrow({
         where: { id: attemptId },
       });
+      assertInspectionCoordinator(current, options.operationId);
       await assertPlanEdition(tx, current, committed);
-      if (current.filePlan !== null)
-        return FilePlanSchema.parse(current.filePlan);
-      await tx.acquisitionAttempt.update({
+      if (current.filePlan !== null) return current.filePlan;
+      const persisted = await tx.acquisitionAttempt.update({
         where: { id: attemptId },
         data: { filePlan: committed, state: "validating" },
+        select: { filePlan: true },
       });
-      return committed;
+      return persisted.filePlan;
     });
+    plan = FilePlanSchema.parse(rawFilePlan);
   }
   await assertPlanEdition(context.db, attempt, plan);
-  await stageAuthorizedPlan(context, {
-    attemptId,
-    mediaIds: attempt.mediaIds,
-    plan,
-    movieAccess,
-  });
+  return { context, attempt, plan, rawFilePlan, movieAccess };
 }
 
 type AttemptWithRelease = Prisma.AcquisitionAttemptGetPayload<{
   include: { release: true; torrent: true };
 }>;
-
-function assertCandidateCount(
-  media: readonly MediaFileItem[],
-  count: number,
-): void {
-  if (count === 0) throw new FileGuardError("video_missing");
-  if (count !== 1 && media.some((item) => item.kind === "movie"))
-    throw new FileGuardError("movie_files_ambiguous");
-}
 
 export async function authorizeInspection(
   context: Awaited<ReturnType<typeof libraryFileInvocation>>,
