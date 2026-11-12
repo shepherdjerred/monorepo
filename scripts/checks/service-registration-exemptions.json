@@ -1,0 +1,15 @@
+{
+  "imagesBuiltOutsideBake": {
+    "ci-base": "CI toolchain image, built and pinned by the CI-image pipeline",
+    "ci-playwright": "CI browser image, built and pinned by the CI-image pipeline",
+    "macos-cross-compiler": "public toolchain image, built by the CI-image pipeline",
+    "windows-cross-compiler": "public toolchain image, built by the CI-image pipeline",
+    "windows-cross-compiler-winui": "public toolchain image, built by the CI-image pipeline"
+  },
+  "chartsWithoutRecipe": {
+    "storm-forum-beta": "inactive chart: the catalog has no storm-forum/beta environment yet, so no recipe exists"
+  },
+  "policyOnlyDelegations": {
+    "storm-forum-beta": "inactive chart: policy declares storm-forum/beta ahead of the catalog environment and delegation"
+  }
+}

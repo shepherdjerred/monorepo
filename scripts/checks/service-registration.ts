@@ -19,15 +19,22 @@
  * - the owning package is a root workspace.
  *
  * On failure it prints the missing items as a checklist. Real, reviewed gaps
- * are named in the exemption tables below, each with its reason; an exemption
- * that no longer applies fails the check.
+ * are named in `service-registration-exemptions.json`, each with its reason;
+ * an exemption that no longer applies fails the check:
+ *
+ * - `imagesBuiltOutsideBake`: first-party images built by the CI-image
+ *   pipeline (`ci/scripts/images/build-ci-image.ts`), not by the application
+ *   bake. They are registered in `image-registry.json` only.
+ * - `chartsWithoutRecipe`: first-party charts no Delivery recipe deploys, such
+ *   as a prepared service's inactive chart.
+ * - `policyOnlyDelegations`: Applications the reviewed Delivery policy names
+ *   that the catalog's `legacy.deliveryDelegations` does not.
+ *
+ * Every input is read from the given root except the Delivery policy and the
+ * environment renames, which are this checkout's modules.
  */
 import path from "node:path";
 import { z } from "zod";
-import {
-  IMAGE_TARGET_REGISTRY,
-  INFRASTRUCTURE_IMAGE_TARGETS,
-} from "../../ci/scripts/images/image-targets.ts";
 import { catalogEnvironmentOf } from "@shepherdjerred/ops-model/delivery-catalog/migration.ts";
 import {
   ORDINARY_DELIVERY_ENVIRONMENTS,
@@ -44,41 +51,18 @@ const SMOKE_COMMANDS = "ci/scripts/images/smoke-app-in-image.ts";
 const HELM_ROOT = "packages/homelab/src/cdk8s/helm";
 const RECIPE_ROOT = "packages/delivery/registrations/v2";
 const DELIVERY_POLICY = "packages/homelab/src/delivery-target-policy.ts";
+export const EXEMPTIONS = "scripts/checks/service-registration-exemptions.json";
 
-/**
- * First-party images built by the CI-image pipeline
- * (`ci/scripts/images/build-ci-image.ts`), not by the application bake. They
- * are registered in `image-registry.json` only.
- */
-export const IMAGES_BUILT_OUTSIDE_BAKE: Readonly<Record<string, string>> = {
-  "ci-base": "CI toolchain image, built and pinned by the CI-image pipeline",
-  "ci-playwright":
-    "CI browser image, built and pinned by the CI-image pipeline",
-  "macos-cross-compiler":
-    "public toolchain image, built by the CI-image pipeline",
-  "windows-cross-compiler":
-    "public toolchain image, built by the CI-image pipeline",
-  "windows-cross-compiler-winui":
-    "public toolchain image, built by the CI-image pipeline",
-};
+const ExemptionsSchema = z.strictObject({
+  imagesBuiltOutsideBake: z.record(z.string(), z.string()),
+  chartsWithoutRecipe: z.record(z.string(), z.string()),
+  policyOnlyDelegations: z.record(z.string(), z.string()),
+});
 
-/**
- * First-party charts no Delivery recipe deploys. A chart added here needs the
- * reason it has no recipe.
- */
-export const CHARTS_WITHOUT_RECIPE: Readonly<Record<string, string>> = {
-  "storm-forum-beta":
-    "inactive chart: the catalog has no storm-forum/beta environment yet, so no recipe exists",
-};
-
-/**
- * Applications the reviewed Delivery policy names that the catalog's
- * `legacy.deliveryDelegations` does not.
- */
-export const POLICY_ONLY_DELEGATIONS: Readonly<Record<string, string>> = {
-  "storm-forum-beta":
-    "inactive chart: policy declares storm-forum/beta ahead of the catalog environment and delegation",
-};
+const ImageTargetsSchema = z.looseObject({
+  IMAGE_TARGET_REGISTRY: z.record(z.string(), z.unknown()),
+  INFRASTRUCTURE_IMAGE_TARGETS: z.array(z.string()),
+});
 
 const CatalogSchema = z.looseObject({
   services: z.array(
@@ -279,7 +263,7 @@ function staleExemptionFindings(inputs: RegistrationInputs): Finding[] {
   const stale = (table: string, key: string, why: string) => {
     findings.push({
       subject: "exemptions",
-      item: `${table}["${key}"]: ${why}; delete the exemption`,
+      item: `${table}["${key}"]: ${why}; delete the exemption from ${EXEMPTIONS}`,
     });
   };
   const images = new Set(inputs.services.flatMap((service) => service.images));
@@ -288,30 +272,26 @@ function staleExemptionFindings(inputs: RegistrationInputs): Finding[] {
 
   for (const image of Object.keys(exemptions.imagesBuiltOutsideBake)) {
     if (!images.has(image))
-      stale(
-        "IMAGES_BUILT_OUTSIDE_BAKE",
-        image,
-        "not a first-party catalog image",
-      );
+      stale("imagesBuiltOutsideBake", image, "not a first-party catalog image");
     else if (inputs.bakeTargets.has(image))
-      stale("IMAGES_BUILT_OUTSIDE_BAKE", image, "it has a bake target now");
+      stale("imagesBuiltOutsideBake", image, "it has a bake target now");
   }
   for (const chart of Object.keys(exemptions.chartsWithoutRecipe)) {
     if (!charts.has(chart))
-      stale("CHARTS_WITHOUT_RECIPE", chart, "not a first-party catalog chart");
+      stale("chartsWithoutRecipe", chart, "not a first-party catalog chart");
     else if (inputs.recipeCharts.has(chart))
-      stale("CHARTS_WITHOUT_RECIPE", chart, "a recipe deploys it now");
+      stale("chartsWithoutRecipe", chart, "a recipe deploys it now");
   }
   for (const application of Object.keys(exemptions.policyOnlyDelegations)) {
     if (inputs.policyDelegations[application] === undefined)
       stale(
-        "POLICY_ONLY_DELEGATIONS",
+        "policyOnlyDelegations",
         application,
         "the Delivery policy no longer names it",
       );
     else if (inputs.deliveryDelegations[application] !== undefined)
       stale(
-        "POLICY_ONLY_DELEGATIONS",
+        "policyOnlyDelegations",
         application,
         "the catalog delegates it now",
       );
@@ -432,6 +412,11 @@ export async function loadRegistrationInputs(
   const rootPackage = RootPackageSchema.parse(
     await readJson(root, "package.json"),
   );
+  const exemptions = ExemptionsSchema.parse(await readJson(root, EXEMPTIONS));
+  // The build-target tables are code; load the given root's copy of them.
+  const imageTargets = ImageTargetsSchema.parse(
+    await import(path.join(root, IMAGE_TARGETS)),
+  );
 
   const bakeTargets = new Map<string, BakeTarget>();
   for (const [name, { dockerfile }] of parseBakeTargets(
@@ -471,8 +456,10 @@ export async function loadRegistrationInputs(
     deliveryDelegations: catalog.legacy.deliveryDelegations,
     catalogEnvironmentOf,
     registryImages: new Set(registry.images.map((image) => image.name)),
-    applicationTargets: new Set(Object.keys(IMAGE_TARGET_REGISTRY)),
-    infrastructureTargets: new Set(INFRASTRUCTURE_IMAGE_TARGETS),
+    applicationTargets: new Set(
+      Object.keys(imageTargets.IMAGE_TARGET_REGISTRY),
+    ),
+    infrastructureTargets: new Set(imageTargets.INFRASTRUCTURE_IMAGE_TARGETS),
     bakeTargets,
     smokeCommands: parseSmokeCommands(await readText(root, SMOKE_COMMANDS)),
     helmCharts: new Set(helmCharts.map((file) => path.dirname(file))),
@@ -488,11 +475,7 @@ export async function loadRegistrationInputs(
       ...SPECIALIZED_DELIVERY_ENVIRONMENTS,
     },
     workspaces: new Set(rootPackage.workspaces),
-    exemptions: {
-      imagesBuiltOutsideBake: IMAGES_BUILT_OUTSIDE_BAKE,
-      chartsWithoutRecipe: CHARTS_WITHOUT_RECIPE,
-      policyOnlyDelegations: POLICY_ONLY_DELEGATIONS,
-    },
+    exemptions,
   };
 }
 

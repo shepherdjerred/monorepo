@@ -12,6 +12,10 @@ homelab repository skill before changing or operating it.
 - Every hosted first-party workload uses a repo-owned namespace/chart and
   ArgoCD Application. Reuse the established deployment, ingress, storage,
   observability, and LinuxServer helpers.
+- Start a new hosted service with `bun scripts/misc/new-service.ts`; it
+  scaffolds a prepared service that deploys nothing. Activation is a separate
+  change. `bun run check-service-registration` lists what a registration lacks.
+  The wiki how-to "Add a hosted service" has both procedures.
 - Recurring work belongs in Temporal. Kubernetes CronJobs are prohibited.
 - Upstream and toolchain versions come from the language-neutral catalog.
   First-party workload selections and retained worker pools come from Delivery
