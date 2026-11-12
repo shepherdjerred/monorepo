@@ -35,6 +35,9 @@ export const DEFAULT_STATIC_FLAG_OVERRIDES: Record<
   scout_support_conversations_enabled: false,
   "scout-consumer-player-profiles-enabled": true,
   "scout-temporal-call-graph-tracing": false,
+  // Local runs keep the beta evidence-recovery contract, as before the gate
+  // had its own key.
+  "scout-evidence-recovery-enabled": true,
   voice_assistant_enabled: false,
   // Variant flags: same defaults as the `DEFINITION` snapshot in
   // packages/backend/src/config/dynamic.ts, which already falls back to them

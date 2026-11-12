@@ -159,3 +159,11 @@ test("production keeps the Riot prematch path available", async () => {
   expect(mocks.spectator).toHaveBeenCalledWith(puuid, "AMERICA_NORTH");
   expect(mocks.databaseAccess).not.toHaveBeenCalled();
 });
+
+test("production keeps evidence recovery off while the client flags answer true", async () => {
+  // Evidence recovery has its own gate. The client provider answers above are
+  // affirmative, and production still resolves the Riot evidence contract off.
+  const { evidenceRecoveryEnabled } =
+    await import("#src/evidence/recovery-gate.ts");
+  expect(evidenceRecoveryEnabled()).toBe(false);
+});

@@ -5,7 +5,7 @@ import configuration from "#src/configuration.ts";
 import { createS3Client } from "#src/storage/s3-client.ts";
 import { computeSha256Digest } from "#src/storage/object-integrity.ts";
 import { putImmutableRawJson } from "#src/storage/raw-json.ts";
-import { evidenceRecoveryEnabled } from "./admission.ts";
+import { evidenceRecoveryEnabled } from "./recovery-gate.ts";
 import { RawMatchSchema } from "@scout-for-lol/data";
 import { parseResultFromMatch } from "#src/scout-client/canonical/riot-result.ts";
 import { projectResultEvidence } from "./result-projection.ts";

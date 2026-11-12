@@ -1,6 +1,7 @@
 import { filterScoutBugsinkEvent } from "#src/bugsink-filters.ts";
 import { temporalCallGraphTracing } from "#src/config/dynamic.ts";
 import configuration from "#src/configuration.ts";
+import { evidenceRecoveryEnabled } from "#src/evidence/recovery-gate.ts";
 import { createLogger } from "#src/logger.ts";
 import { featureFlagMetrics } from "#src/metrics/platform/feature-flags.ts";
 import { initializeTracing } from "#src/observability/tracing.ts";
@@ -95,6 +96,9 @@ initializeTracing({
 });
 logger.info("Temporal call-graph tracing boot decision resolved", {
   enabled: temporalCallGraphTracing(),
+});
+logger.info("Evidence recovery boot decision resolved", {
+  enabled: evidenceRecoveryEnabled(),
 });
 
 const { runtimeRole } = configuration;

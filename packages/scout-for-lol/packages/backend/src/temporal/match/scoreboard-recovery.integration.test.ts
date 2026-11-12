@@ -30,6 +30,10 @@ vi.mock("#src/configuration/flags.ts", async (original) => ({
   ...(await original()),
   isFeatureHardDisabled: io.hardDisabled,
 }));
+// Production is both client hard-disabled and evidence-recovery off.
+vi.mock("#src/evidence/recovery-gate.ts", () => ({
+  evidenceRecoveryEnabled: () => !io.hardDisabled(),
+}));
 vi.mock("#src/evidence/matches.ts", () => ({
   resolveCompleteMatch: io.completeMatch,
 }));

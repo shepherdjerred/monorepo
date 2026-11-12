@@ -2735,6 +2735,27 @@
       "thresholdRollouts": []
     },
     {
+      "key": "scout-evidence-recovery-enabled",
+      "owner": "scout",
+      "namespace": "scout",
+      "source": "scout-dynamic",
+      "purpose": "Run Scout's evidence-recovery contract for Riot match processing (admission, history recovery, timelines, raw Riot capture, source reads, lake eligibility, report scoreboards); resolved once at backend boot.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "prod",
+          "reason": "Promotion gated on replay and admission evidence: production keeps its existing Riot processing contract until workflow replay is clean and every new match gets an admission row with live intents unchanged.",
+          "issue": "AI-553",
+          "enableWhen": "Workflow replay against production histories is clean, and after promotion every new match gets an admission row with live intents per match unchanged.",
+          "reviewBy": "2026-12-11"
+        }
+      ]
+    },
+    {
       "key": "scout-temporal-call-graph-tracing",
       "owner": "scout",
       "namespace": "scout",
@@ -4500,6 +4521,14 @@
           "thresholdRollouts": []
         },
         {
+          "key": "scout-evidence-recovery-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
           "key": "scout_client_result_recovery",
           "type": "boolean",
           "default": true,
@@ -5117,6 +5146,14 @@
         },
         {
           "key": "scout_client_ingestion",
+          "type": "boolean",
+          "default": false,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "scout-evidence-recovery-enabled",
           "type": "boolean",
           "default": false,
           "rollouts": [],

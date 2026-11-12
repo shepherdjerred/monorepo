@@ -29,6 +29,9 @@ vi.mock("#src/configuration/flags.ts", async (original) => ({
   isFeatureHardDisabled: () => io.production,
   isPolicyEnabled: async () => !io.production,
 }));
+vi.mock("#src/evidence/recovery-gate.ts", () => ({
+  evidenceRecoveryEnabled: () => !io.production,
+}));
 vi.mock("#src/configuration.ts", async (original) => {
   const actual = await original<{ default: typeof configuration }>();
   return {

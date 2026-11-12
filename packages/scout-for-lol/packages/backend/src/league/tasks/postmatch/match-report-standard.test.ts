@@ -19,7 +19,7 @@ vi.mock("#src/scout-client/canonical-match.ts", () => ({
   readFrozenTimeline: () => Promise.resolve(null),
   timelineMatchesResult: () => true,
 }));
-vi.mock("#src/evidence/admission.ts", () => ({
+vi.mock("#src/evidence/recovery-gate.ts", () => ({
   evidenceRecoveryEnabled: () => false,
 }));
 vi.mock("#src/report-store/live-ingest.ts", () => ({

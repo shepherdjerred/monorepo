@@ -27,6 +27,9 @@ vi.mock("#src/configuration/flags.ts", async (original) => ({
   ...(await original()),
   isFeatureHardDisabled: () => io.production,
 }));
+vi.mock("#src/evidence/recovery-gate.ts", () => ({
+  evidenceRecoveryEnabled: () => !io.production,
+}));
 vi.mock("#src/evidence/matches.ts", () => ({
   resolveCompleteMatch: async () =>
     io.available

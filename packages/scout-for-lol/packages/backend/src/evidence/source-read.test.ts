@@ -5,7 +5,9 @@ const io = vi.hoisted(() => ({
   recovery: vi.fn(() => true),
   capture: vi.fn(),
 }));
-vi.mock("./admission.ts", () => ({ evidenceRecoveryEnabled: io.recovery }));
+vi.mock("./recovery-gate.ts", () => ({
+  evidenceRecoveryEnabled: io.recovery,
+}));
 vi.mock("@sentry/bun", () => ({ captureException: io.capture }));
 const {
   expectedRiotAbsenceStatuses,

@@ -16,7 +16,7 @@ import {
 } from "#src/scout-client/canonical-match.ts";
 import { recordTimelineForReportStore } from "#src/report-store/live-ingest.ts";
 import { platformRouteOf } from "#src/durable/match/match-identity.ts";
-import { evidenceRecoveryEnabled } from "./admission.ts";
+import { evidenceRecoveryEnabled } from "./recovery-gate.ts";
 import {
   expectedRiotAbsenceStatuses,
   isExpectedSourceReadError,

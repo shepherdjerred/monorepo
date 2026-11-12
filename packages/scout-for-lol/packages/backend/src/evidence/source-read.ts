@@ -10,7 +10,7 @@ import {
   type RiotSourceAbsence,
 } from "#src/league/api/client/errors.ts";
 import { withTimeout } from "#src/utils/timeout.ts";
-import { evidenceRecoveryEnabled } from "./admission.ts";
+import { evidenceRecoveryEnabled } from "./recovery-gate.ts";
 
 const OperationalErrorSchema = z.object({
   code: z.enum([
