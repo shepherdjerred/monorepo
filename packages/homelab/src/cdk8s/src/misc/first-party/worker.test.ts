@@ -2,6 +2,7 @@ import { App, Chart, Size, Testing } from "cdk8s";
 import { Cpu, DeploymentStrategy, Volume } from "cdk8s-plus-31";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
+import { synthManifests } from "@shepherdjerred/homelab/cdk8s/src/testing/synth-manifests.ts";
 import { restrictedContainer } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import {
   dnsEgressRule,
@@ -11,10 +12,6 @@ import { onePasswordSecret } from "@shepherdjerred/homelab/cdk8s/src/misc/onepas
 import { BURST_SERVICE_PRIORITY } from "@shepherdjerred/homelab/cdk8s/src/misc/priority-classes.ts";
 import { FirstPartyWorker, type FirstPartyWorkerProps } from "./worker.ts";
 
-const Manifest = z.looseObject({
-  kind: z.string(),
-  metadata: z.looseObject({ name: z.string() }),
-});
 const Container = z.looseObject({
   name: z.string(),
   volumeMounts: z
@@ -81,18 +78,11 @@ function render(
     ...base,
     ...(typeof props === "function" ? props(chart) : props),
   });
-  const manifests = z.array(Manifest).parse(Testing.synth(chart));
+  const rendered = synthManifests(chart);
   return {
     worker,
-    manifests,
-    identities: manifests.map(
-      (manifest) => `${manifest.kind}/${manifest.metadata.name}`,
-    ),
-    of: (kind: string) =>
-      manifests.filter((manifest) => manifest.kind === kind),
-    deployment: DeploymentManifest.parse(
-      manifests.find((manifest) => manifest.kind === "Deployment"),
-    ),
+    ...rendered,
+    deployment: DeploymentManifest.parse(rendered.of("Deployment")[0]),
   };
 }
 
