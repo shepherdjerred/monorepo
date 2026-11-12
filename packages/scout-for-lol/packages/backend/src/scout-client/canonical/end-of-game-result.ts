@@ -55,6 +55,16 @@ export const EndOfGameResultSchema = EndOfGameBlockGameSchema.extend({
     )
     .min(2),
 });
+/** What a bundle that is not a full Match-V5 match still conveys. */
+export function unconvertedConversion(
+  payload: unknown,
+): "end_of_game_only" | "unsupported" {
+  const scoreboard = z
+    .object({ resource: z.literal("post_game"), data: EndOfGameResultSchema })
+    .safeParse(payload);
+  return scoreboard.success ? "end_of_game_only" : "unsupported";
+}
+
 const QueueContextSchema = z.object({
   gameData: z.object({
     gameId: IdSchema,

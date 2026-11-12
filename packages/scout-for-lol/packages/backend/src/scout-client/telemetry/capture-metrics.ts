@@ -4,10 +4,15 @@ import type {
   ScoutClientObservationQuarantineReason,
   ScoutClientPostGameOutcome,
 } from "@scout-for-lol/data";
-import { classifyGame, type QueueType } from "@scout-for-lol/data";
+import {
+  classifyGame,
+  DiscordAccountIdSchema,
+  type QueueType,
+} from "@scout-for-lol/data";
 import { isLcuUuid } from "#src/scout-client/identity-alias.ts";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { prisma, type Db } from "#src/database/index.ts";
+import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import { createLogger } from "#src/logger.ts";
 import {
   scoutClientActiveDevices,
@@ -30,6 +35,7 @@ const RECONCILIATION_SETTLE_MS = 5 * 60 * 1000;
 
 const CountSchema = z.coerce.number().int().nonnegative();
 const BacklogRowSchema = z.object({
+  owner: z.string(),
   backlog: CountSchema,
   oldest: z.date().nullable(),
 });
@@ -76,28 +82,45 @@ export async function readCaptureBacklog(
     `,
     db.$queryRaw`
       SELECT
+        device."ownerId" AS owner,
         COUNT(*) AS backlog,
         MIN(observation."receivedAt") AS oldest
       FROM "ScoutClientObservation" observation
+      JOIN "ScoutClientDevice" device ON device.id = observation."deviceId"
       WHERE observation.disposition = 'ACCEPTED'
         AND observation.kind IN ('post_game', 'clash')
         AND observation."recoveryComplete" = false
         AND observation."receivedAt" < ${settledBefore}
+      GROUP BY device."ownerId"
     `,
   ]);
   const aliasRow = z
     .array(z.object({ backlog: CountSchema }))
     .length(1)
     .parse(aliases);
-  const reconciliationRow = z
-    .array(BacklogRowSchema)
-    .length(1)
-    .parse(reconciliation);
-  const oldest = reconciliationRow[0]?.oldest ?? null;
+  // Rows the recovery policy skips (globally or per owner) are not stuck, so
+  // they stay out of the backlog the stale-reconciliation alert watches.
+  const eligible = [];
+  for (const row of z.array(BacklogRowSchema).parse(reconciliation)) {
+    if (
+      await isPolicyEnabled("scout_client_result_recovery", {
+        user: DiscordAccountIdSchema.parse(row.owner),
+      })
+    )
+      eligible.push(row);
+  }
+  const backlogCount = eligible.reduce((sum, row) => sum + row.backlog, 0);
+  const oldest = eligible.reduce<Date | null>(
+    (min, row) =>
+      row.oldest !== null && (min === null || row.oldest < min)
+        ? row.oldest
+        : min,
+    null,
+  );
   return {
     activeDevices: devices,
     aliasBacklog: aliasRow[0]?.backlog ?? 0,
-    reconciliationBacklog: reconciliationRow[0]?.backlog ?? 0,
+    reconciliationBacklog: backlogCount,
     reconciliationOldestAgeSeconds:
       oldest === null
         ? 0

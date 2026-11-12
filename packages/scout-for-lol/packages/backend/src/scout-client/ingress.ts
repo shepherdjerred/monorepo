@@ -51,6 +51,7 @@ import { reconcileProcessedClientBinding } from "./late-binding.ts";
 import { withObserverPlatform } from "./platform-context.ts";
 import { projectClashEntity } from "./clash-entities.ts";
 import { projectClientGameResult } from "./game-results.ts";
+import { unconvertedConversion } from "./canonical/end-of-game-result.ts";
 import {
   acceptedObservationPlatforms,
   acceptedClientBindingMatchIds,
@@ -403,7 +404,7 @@ function evaluateClientPostGames(
         observationId: observation.observationId,
         outcome: projectPostGameOutcome({
           identityResolved: true,
-          conversion: "unsupported",
+          conversion: unconvertedConversion(raw.payload),
           deliveryMode: null,
         }),
         gameKind: "unknown",
