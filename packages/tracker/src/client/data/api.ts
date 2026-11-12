@@ -2,13 +2,28 @@ import { createTRPCClient, httpBatchLink, httpLink } from "@trpc/client";
 import { QueryClient } from "@tanstack/react-query";
 import type { inferRouterOutputs } from "@trpc/server";
 import type { AppRouter } from "#shared/contract.ts";
-import { requestIdHeader } from "#client/live/request-ids.ts";
+import { CLIENT_REQUEST_ID_HEADER } from "#shared/contract.ts";
+import { ownRequests } from "#client/live/request-ids.ts";
+import { drafts } from "./drafts.ts";
+
+type Call = { path: string; input: unknown };
+/**
+ * Name one outgoing request as this tab's. A draft being sent in it records
+ * the ID, so it can be recognised should the page unload before the answer.
+ */
+function requestHeaders(calls: Call[]) {
+  const requestId = ownRequests.next();
+  drafts.stamp(calls, requestId);
+  return { [CLIENT_REQUEST_ID_HEADER]: requestId };
+}
 
 const url = `${location.origin}/trpc`;
 export const api = createTRPCClient<AppRouter>({
   // Each HTTP request, batched or not, names itself so the live stream can
   // tell this tab's own changes apart.
-  links: [httpBatchLink({ url, headers: requestIdHeader })],
+  links: [
+    httpBatchLink({ url, headers: ({ opList }) => requestHeaders(opList) }),
+  ],
 });
 /**
  * Sends each call at once and lets it outlive the page, for work that must
@@ -19,7 +34,7 @@ export const keepaliveApi = createTRPCClient<AppRouter>({
   links: [
     httpLink({
       url,
-      headers: requestIdHeader,
+      headers: ({ op }) => requestHeaders([op]),
       fetch: (input, init) =>
         fetch(input, {
           ...init,

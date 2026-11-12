@@ -6,8 +6,16 @@ const kept = 30;
 const ListRestoreSchema = z.object({
   /** The address the list was at; the first entry of a tab reuses its key. */
   url: z.string(),
-  /** How far the window was scrolled. */
+  /**
+   * How far the window was scrolled. Only a first guess: rows are measured
+   * as they render, so the same pixels can show different rows.
+   */
   offset: z.number().nonnegative(),
+  /**
+   * The first row on screen and where its top edge sat in the viewport. The
+   * list is restored by putting that row back there.
+   */
+  anchor: z.object({ identifier: z.string(), top: z.number() }).optional(),
   /** How many pages were loaded, so a reload fetches as far again. */
   pages: z.number().int().nonnegative(),
   /** The height of the whole list, reserved until those pages arrive. */

@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   CalendarClock,
   Folder,
@@ -15,8 +15,11 @@ import {
   duePanel,
   openDuePicker,
 } from "#client/due/due-picker.tsx";
-import type { BootstrapData } from "#client/data/api.ts";
-import { useDraft } from "#client/data/drafts.ts";
+import { api, queryClient, type BootstrapData } from "#client/data/api.ts";
+import { drafts } from "#client/data/drafts.ts";
+import { currentActor } from "#client/data/identity.ts";
+import { issueWasCreated, type Pending } from "#client/data/pending-drafts.ts";
+import { useDraft } from "#client/data/use-draft.ts";
 import { createIssue } from "#client/data/mutations.ts";
 import { EnumPicker } from "#client/controls/enum-picker.tsx";
 import {
@@ -175,6 +178,66 @@ function PlanningChips({
   );
 }
 
+const titleKey = "new-issue.title";
+const descriptionKey = "new-issue.description";
+
+async function attempt(
+  input: Parameters<typeof createIssue>[0],
+  view: Parameters<typeof createIssue>[1],
+) {
+  try {
+    return { ok: true, issue: await createIssue(input, view) } as const;
+  } catch (error) {
+    return { ok: false, error } as const;
+  }
+}
+
+/** The title and description drafts of the new-issue form. */
+function useNewIssueDrafts(currentTeamKey: string) {
+  // An issue sent just before the page unloaded may or may not exist. The
+  // actor's newest issues say which, so it is neither offered twice nor lost.
+  const [unanswered] = useState(
+    () =>
+      drafts.pending(titleKey) !== undefined ||
+      drafts.pending(descriptionKey) !== undefined,
+  );
+  const actorKey = currentActor().key;
+  const recentKey = ["recent-created", actorKey];
+  const recent = useQuery({
+    queryKey: recentKey,
+    queryFn: () =>
+      api.issues.list.query({
+        creatorKey: actorKey,
+        includeArchived: true,
+        sort: "created",
+        limit: 20,
+      }),
+    enabled: unanswered,
+    staleTime: Infinity,
+  });
+  const issues = recent.data?.items;
+  const created =
+    issues === undefined
+      ? undefined
+      : (pending: Pending) => issueWasCreated(pending, { actorKey, issues });
+  const recheck = () => queryClient.invalidateQueries({ queryKey: recentKey });
+  const title = useDraft(titleKey, "", {
+    kind: "new-issue-title",
+    subject: currentTeamKey,
+    saved: created,
+    recheck,
+    notice: "Restored your unsent issue",
+  });
+  const description = useDraft(descriptionKey, "", {
+    kind: "new-issue-description",
+    // The description belongs to whichever issue carries this title.
+    subject: title.text,
+    saved: created,
+    recheck,
+  });
+  return { title, description };
+}
+
 export function NewIssue({
   open,
   close,
@@ -194,8 +257,7 @@ export function NewIssue({
 }) {
   const [chosenTeam, setTeam] = useState(prefill.teamKey);
   // Closing the dialog keeps what was typed; it is there on the next open.
-  const title = useDraft("new-issue.title");
-  const description = useDraft("new-issue.description");
+  const { title, description } = useNewIssueDrafts(currentTeamKey);
   const [choices, setChoices] = useState(() => startingChoices(prefill));
   const choose = (change: Partial<Choices>) => {
     setChoices((known) => ({ ...known, ...change }));
@@ -214,33 +276,50 @@ export function NewIssue({
     ({ key }) => key === choices.assigneeKey,
   );
   const create = useMutation({
-    mutationFn: (view: boolean) =>
-      createIssue(
-        {
-          teamKey,
-          title: title.text,
-          description: description.text,
-          ...(stateName === undefined ? {} : { stateName }),
-          priority: choices.priority,
-          ...(choices.projectSlug === null
-            ? {}
-            : { projectSlug: choices.projectSlug }),
-          ...(choices.assigneeKey === null
-            ? {}
-            : { assigneeKey: choices.assigneeKey }),
-          labels: [...choices.labels],
-          attachmentIds: description.attachments,
-          ...(choices.parentIdentifier === null
-            ? {}
-            : { parentIdentifier: choices.parentIdentifier }),
-          ...(choices.dueDate === null ? {} : { dueDate: choices.dueDate }),
-        },
-        view
-          ? undefined
-          : (identifier) => {
-              onCreated(identifier, true);
-            },
-      ),
+    // What was typed stops being a draft while it is sent, so a reload during
+    // the request cannot offer an issue that already exists a second time.
+    mutationFn: async (view: boolean) => {
+      const outcome = await title.send(
+        (sentTitle) =>
+          description.send(
+            (sentDescription) =>
+              attempt(
+                {
+                  teamKey,
+                  title: sentTitle.text,
+                  description: sentDescription.text,
+                  ...(stateName === undefined ? {} : { stateName }),
+                  priority: choices.priority,
+                  ...(choices.projectSlug === null
+                    ? {}
+                    : { projectSlug: choices.projectSlug }),
+                  ...(choices.assigneeKey === null
+                    ? {}
+                    : { assigneeKey: choices.assigneeKey }),
+                  labels: [...choices.labels],
+                  attachmentIds: sentDescription.attachments,
+                  ...(choices.parentIdentifier === null
+                    ? {}
+                    : { parentIdentifier: choices.parentIdentifier }),
+                  ...(choices.dueDate === null
+                    ? {}
+                    : { dueDate: choices.dueDate }),
+                },
+                view
+                  ? undefined
+                  : (identifier) => {
+                      onCreated(identifier, true);
+                    },
+              ),
+            description.text,
+          ),
+        title.text,
+      );
+      if (!outcome.ok) {
+        throw outcome.error;
+      }
+      return outcome.issue;
+    },
     onSuccess: (issue, view) => {
       title.reset();
       description.reset();
