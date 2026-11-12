@@ -30,6 +30,7 @@ export function competitionQueueTypeToString(
     .with("normal doom bots", () => "Normal Doom Bots")
     .with("hard doom bots", () => "Hard Doom Bots")
     .with("custom", () => "Custom")
+    .with("tournament", () => "Tournament")
     .with("classic", () => "League Classic")
     .with("classic aram mayhem", () => "Classic ARAM Mayhem")
     .exhaustive();

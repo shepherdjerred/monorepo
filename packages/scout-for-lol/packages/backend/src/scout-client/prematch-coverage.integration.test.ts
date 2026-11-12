@@ -41,7 +41,16 @@ async function observeInProgress(
         resource: "gameflow_session",
         data: {
           phase: "InProgress",
-          gameData: { gameId: Number(gameId), isCustomGame: options.custom },
+          gameData: {
+            gameId: Number(gameId),
+            isCustomGame: options.custom,
+            gameMode: "CLASSIC",
+            queue: {
+              id: options.custom ? 0 : 420,
+              gameMode: "CLASSIC",
+              gameType: options.custom ? "CUSTOM_GAME" : "MATCHED_GAME",
+            },
+          },
         },
       },
       bodyDigest: crypto.randomUUID(),
@@ -92,16 +101,17 @@ describe("readPrematchCoverage", () => {
       receivedAt: new Date("2026-10-08T12:30:00.000Z"),
     });
 
-    await expect(readPrematchCoverage(prisma, WINDOW)).resolves.toEqual({
-      custom: { observed: 1, missing: 1 },
-      matchmade: { observed: 1, missing: 0 },
-    });
+    await expect(readPrematchCoverage(prisma, WINDOW)).resolves.toEqual(
+      new Map([
+        ["custom", { observed: 1, missing: 1 }],
+        ["solo", { observed: 1, missing: 0 }],
+      ]),
+    );
   });
 
-  test("reads zero rather than nothing when no client saw a game", async () => {
-    await expect(readPrematchCoverage(prisma, WINDOW)).resolves.toEqual({
-      custom: { observed: 0, missing: 0 },
-      matchmade: { observed: 0, missing: 0 },
-    });
+  test("reads an empty map when no client saw a game", async () => {
+    await expect(readPrematchCoverage(prisma, WINDOW)).resolves.toEqual(
+      new Map(),
+    );
   });
 });

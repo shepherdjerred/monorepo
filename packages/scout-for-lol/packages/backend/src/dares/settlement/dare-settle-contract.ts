@@ -265,6 +265,7 @@ export async function captureDareSqlForMatch(input: {
     matchData.info.queueId,
     matchData.info.gameMode,
     matchData.info.gameType,
+    matchData.info.tournamentCode,
   );
   if (queue === undefined) return undefined;
   const evidence = await evaluateContract(

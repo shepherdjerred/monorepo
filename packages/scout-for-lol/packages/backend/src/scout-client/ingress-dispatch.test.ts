@@ -95,7 +95,7 @@ describe("native match dispatch selection", () => {
   test("makes a custom ready at once instead of waiting for Riot", () => {
     const custom = RawMatchSchema.parse({
       ...fixture,
-      info: { ...fixture.info, gameType: "CUSTOM_GAME" },
+      info: { ...fixture.info, queueId: 0, gameType: "CUSTOM_GAME" },
     });
     const completed = observation({
       observationId: "00000000-0000-4000-8000-000000000009",

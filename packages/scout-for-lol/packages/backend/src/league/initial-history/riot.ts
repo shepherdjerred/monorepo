@@ -10,7 +10,7 @@ import {
   type RawMatch,
   type Region,
   type Ranks,
-  isCustomMatchPayload,
+  hasRiotCustomGameType,
   missingExpectedMatchFields,
   platformToRegionalRoute,
   regionToPlatformRoute,
@@ -80,7 +80,7 @@ export async function fetchInitialMatch(input: {
   }
 
   const missing = missingExpectedMatchFields(match);
-  if (missing.length === 0 || isCustomMatchPayload(match)) return match;
+  if (missing.length === 0 || hasRiotCustomGameType(match)) return match;
 
   await saveFailedPayloadToS3({
     matchId: input.matchId,

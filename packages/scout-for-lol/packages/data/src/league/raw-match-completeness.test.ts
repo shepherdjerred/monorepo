@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import {
   RawMatchSchema,
-  isCustomMatchPayload,
+  hasRiotCustomGameType,
   missingExpectedMatchFields,
 } from "#src/league/raw-match.schema.ts";
 import {
@@ -26,16 +26,16 @@ async function riftMatch() {
   return RawMatchSchema.parse(raw);
 }
 
-describe("isCustomMatchPayload", () => {
+describe("hasRiotCustomGameType", () => {
   test("is false for a matchmade game", async () => {
     const rift = await riftMatch();
     expect(rift.info.gameType).toBe("MATCHED_GAME");
-    expect(isCustomMatchPayload(rift)).toBe(false);
+    expect(hasRiotCustomGameType(rift)).toBe(false);
   });
 
   test("is true for CUSTOM_GAME", async () => {
     const custom = toCustomLobby(await riftMatch(), 3, 3);
-    expect(isCustomMatchPayload(custom)).toBe(true);
+    expect(hasRiotCustomGameType(custom)).toBe(true);
   });
 });
 

@@ -80,6 +80,7 @@ export function flattenMatch(match: RawMatch): MatchLakeRow[] {
       match.info.queueId,
       match.info.gameMode,
       match.info.gameType,
+      match.info.tournamentCode,
     ) ?? null;
   const matchId = match.metadata.matchId;
 
@@ -195,6 +196,7 @@ export function flattenMatchTeams(match: RawMatch): MatchTeamLakeRow[] {
     match.info.queueId,
     match.info.gameMode,
     match.info.gameType,
+    match.info.tournamentCode,
   );
   // Arena's raw `teams` are keyed by the two sides (100 and 0), while
   // participants are keyed by eight player subteams (1 through 8). There is
@@ -236,6 +238,7 @@ export function flattenMatchTeamBans(match: RawMatch): MatchTeamBanLakeRow[] {
     match.info.queueId,
     match.info.gameMode,
     match.info.gameType,
+    match.info.tournamentCode,
   );
   if (queue === "arena") return [];
   const matchId = match.metadata.matchId;

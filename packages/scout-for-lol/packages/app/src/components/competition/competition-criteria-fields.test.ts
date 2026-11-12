@@ -6,14 +6,14 @@ import {
 } from "#src/components/competition/competition-criteria-fields.tsx";
 
 describe("competition queue selector", () => {
-  test("partitions every one of the 21 canonical queues by game variant", () => {
+  test("partitions every one of the 22 canonical queues by game variant", () => {
     const modern = queueOptionsForVariant("MODERN");
     const classic = queueOptionsForVariant("CLASSIC");
     const concrete = [...modern.slice(1), ...classic.slice(1)];
 
     expect(modern[0]).toBe("ALL");
     expect(classic[0]).toBe("ALL");
-    expect(concrete).toHaveLength(21);
+    expect(concrete).toHaveLength(22);
     expect(new Set(concrete)).toEqual(new Set(QueueTypeSchema.options));
     expect(classic).toEqual(["ALL", "classic", "classic aram mayhem"]);
     expect(modern).not.toContain("classic");

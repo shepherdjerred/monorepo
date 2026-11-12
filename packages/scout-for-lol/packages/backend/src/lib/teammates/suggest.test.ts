@@ -52,7 +52,11 @@ function roster(
     }
     return participant;
   });
-  if (opts?.gameType !== undefined) clone.info.gameType = opts.gameType;
+  if (opts?.gameType !== undefined) {
+    clone.info.gameType = opts.gameType;
+    // A user lobby carries Riot's ad-hoc queue id 0, not a matchmade queue.
+    if (opts.gameType === "CUSTOM_GAME") clone.info.queueId = 0;
+  }
   if (opts?.end !== undefined) clone.info.gameEndTimestamp = opts.end;
   return {
     region: REGION,

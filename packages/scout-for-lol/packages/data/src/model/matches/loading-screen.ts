@@ -32,11 +32,22 @@ export const LoadingScreenLayoutSchema = z.enum([
   "classic",
 ]);
 
+const HOWLING_ABYSS_MAP_ID = 12;
+
+/**
+ * Layout for a queue. A custom lobby or tournament game can be played on any
+ * map, so its layout follows the map: Howling Abyss gets the ARAM layout.
+ * Every other queue is tied to one map and decides on its own.
+ */
 export function loadingScreenLayoutForQueueType(
   queueType: QueueType,
+  mapId: number,
 ): LoadingScreenLayout {
   return match(queueType)
     .returnType<LoadingScreenLayout>()
+    .with("custom", "tournament", () =>
+      mapId === HOWLING_ABYSS_MAP_ID ? "aram" : "standard",
+    )
     .with("aram", "aram clash", "aram mayhem", () => "aram")
     .with("arena", () => "arena")
     .with("classic", "classic aram mayhem", () => "classic")
@@ -55,7 +66,6 @@ export function loadingScreenLayoutForQueueType(
       "easy doom bots",
       "normal doom bots",
       "hard doom bots",
-      "custom",
       () => "standard",
     )
     .exhaustive();

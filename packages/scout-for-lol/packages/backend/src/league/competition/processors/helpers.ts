@@ -33,6 +33,7 @@ export function matchesQueues(
     match.info.queueId,
     match.info.gameMode,
     match.info.gameType,
+    match.info.tournamentCode,
   );
 
   if (queueType === undefined) {

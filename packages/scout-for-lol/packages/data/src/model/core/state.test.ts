@@ -1,5 +1,6 @@
 import { describe, test, expect } from "vitest";
 import {
+  classifyGame,
   isArenaQueueOrMode,
   isClassicQueueType,
   parseQueueType,
@@ -13,7 +14,6 @@ describe("parseQueueType", () => {
   // https://static.developer.riotgames.com/docs/lol/queues.json
   // — keep this table in sync when adding rotating modes.
   const cases: readonly (readonly [number, QueueType])[] = [
-    [0, "custom"],
     [400, "draft pick"],
     [420, "solo"],
     [440, "flex"],
@@ -38,8 +38,6 @@ describe("parseQueueType", () => {
     [3220, "aram mayhem"],
     [3270, "aram mayhem"],
     [3280, "classic aram mayhem"],
-    [3100, "custom"],
-    [3130, "custom"],
     [4250, "easy doom bots"],
     [4240, "normal doom bots"],
     [4220, "hard doom bots"],
@@ -53,6 +51,13 @@ describe("parseQueueType", () => {
   test("returns undefined for unknown queue id", () => {
     expect(parseQueueType(99_999)).toBeUndefined();
   });
+
+  test.each([0, 3100, 3130])(
+    "queue id %i names no queue by itself",
+    (queueId) => {
+      expect(parseQueueType(queueId)).toBeUndefined();
+    },
+  );
 });
 
 describe("Arena queue resolution", () => {
@@ -63,7 +68,10 @@ describe("Arena queue resolution", () => {
 
   test("keeps ordinary custom games as custom", () => {
     expect(isArenaQueueOrMode(0, "CLASSIC")).toBe(false);
-    expect(resolveQueueTypeFromGame(0, "CLASSIC")).toBe("custom");
+    expect(resolveQueueTypeFromGame(0, "CLASSIC", "CUSTOM_GAME")).toBe(
+      "custom",
+    );
+    expect(resolveQueueTypeFromGame(0, "CLASSIC")).toBeUndefined();
   });
 
   test("treats queue 1700 as arena even with a different mode string", () => {
@@ -133,6 +141,18 @@ describe("League Classic queue resolution", () => {
       "custom",
     );
     expect(resolveQueueTypeFromGame(3110, "CLASSIC", "CUSTOM")).toBe("custom");
+  });
+
+  test("never labels queue ids 0, 3100 or 3130 custom without the custom game type", () => {
+    for (const queueId of [0, 3100, 3130]) {
+      expect(
+        resolveQueueTypeFromGame(queueId, "CLASSIC", "MATCHED_GAME"),
+      ).toBeUndefined();
+      expect(resolveQueueTypeFromGame(queueId, "CLASSIC")).toBeUndefined();
+      expect(resolveQueueTypeFromGame(queueId, "CLASSIC", "CUSTOM_GAME")).toBe(
+        "custom",
+      );
+    }
   });
 
   test("keeps Clash on its queue id when Spectator reports gameType CUSTOM", () => {
@@ -205,9 +225,121 @@ describe("queueTypeToDisplayString", () => {
     ["normal doom bots", "Normal Doom Bots"],
     ["hard doom bots", "Hard Doom Bots"],
     ["custom", "custom"],
+    ["tournament", "tournament"],
   ];
 
   test.each(cases)("%s renders as %s", (queueType, expected) => {
     expect(queueTypeToDisplayString(queueType)).toBe(expected);
+  });
+});
+
+const unknown = (
+  queueId: number,
+  gameMode: string,
+  gameType: string | undefined,
+) => ({ kind: "unknown", queueId, gameMode, gameType });
+const queue = (value: QueueType) => ({ kind: "queue", queue: value });
+
+describe("classifyGame", () => {
+  test("a user-created lobby is custom", () => {
+    expect(
+      classifyGame({
+        queueId: 0,
+        gameMode: "CLASSIC",
+        gameType: "CUSTOM_GAME",
+      }),
+    ).toEqual(queue("custom"));
+    expect(
+      classifyGame({ queueId: 3110, gameMode: "CLASSIC", gameType: "CUSTOM" }),
+    ).toEqual(queue("custom"));
+    expect(
+      classifyGame({
+        queueId: 0,
+        gameMode: "CLASSIC",
+        gameType: "CUSTOM_GAME",
+        tournamentCode: "",
+      }),
+    ).toEqual(queue("custom"));
+  });
+
+  test("a tournament code makes the game a tournament game", () => {
+    expect(
+      classifyGame({
+        queueId: 0,
+        gameMode: "CLASSIC",
+        gameType: "CUSTOM_GAME",
+        tournamentCode: "NA0a1b2-tournament",
+      }),
+    ).toEqual(queue("tournament"));
+  });
+
+  test("Clash stays Clash on a custom game type, even with a tournament code", () => {
+    expect(
+      classifyGame({
+        queueId: 700,
+        gameMode: "CLASSIC",
+        gameType: "CUSTOM_GAME",
+        tournamentCode: "x",
+      }),
+    ).toEqual(queue("clash"));
+  });
+
+  test("ARAM Clash stays ARAM Clash on a custom game type", () => {
+    expect(
+      classifyGame({ queueId: 720, gameMode: "ARAM", gameType: "CUSTOM" }),
+    ).toEqual(queue("aram clash"));
+  });
+
+  test("Practice Tool is unknown, not custom", () => {
+    expect(
+      classifyGame({
+        queueId: 0,
+        gameMode: "PRACTICETOOL",
+        gameType: "CUSTOM_GAME",
+      }),
+    ).toEqual(unknown(0, "PRACTICETOOL", "CUSTOM_GAME"));
+  });
+
+  test("an unmapped queue on a matchmade game is unknown", () => {
+    expect(
+      classifyGame({
+        queueId: 99_999,
+        gameMode: "CLASSIC",
+        gameType: "MATCHED_GAME",
+      }),
+    ).toEqual(unknown(99_999, "CLASSIC", "MATCHED_GAME"));
+  });
+
+  test.each([0, 3100, 3130])(
+    "queue id %i is custom only with the custom game type",
+    (queueId) => {
+      expect(
+        classifyGame({
+          queueId,
+          gameMode: "CLASSIC",
+          gameType: "CUSTOM_GAME",
+        }),
+      ).toEqual(queue("custom"));
+      expect(
+        classifyGame({
+          queueId,
+          gameMode: "CLASSIC",
+          gameType: "MATCHED_GAME",
+        }),
+      ).toEqual(unknown(queueId, "CLASSIC", "MATCHED_GAME"));
+      expect(classifyGame({ queueId, gameMode: "CLASSIC" })).toEqual(
+        unknown(queueId, "CLASSIC", undefined),
+      );
+    },
+  );
+
+  test("ordinary queues keep their mapping", () => {
+    expect(
+      classifyGame({
+        queueId: 420,
+        gameMode: "CLASSIC",
+        gameType: "MATCHED_GAME",
+      }),
+    ).toEqual(queue("solo"));
   });
 });

@@ -96,7 +96,8 @@ const EXPECTED_PARTICIPANT_FIELDS = [
   "summonerName",
 ] as const;
 
-export function isCustomMatchPayload(match: RawMatch): boolean {
+/** Whether Riot's game type is custom. Clash, tournament and Practice Tool games match too; use `classifyGame` to ask for a user-created lobby. */
+export function hasRiotCustomGameType(match: RawMatch): boolean {
   return match.info.gameType.toUpperCase().startsWith("CUSTOM");
 }
 

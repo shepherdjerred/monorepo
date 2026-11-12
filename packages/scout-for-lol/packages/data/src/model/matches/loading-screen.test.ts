@@ -40,6 +40,7 @@ describe("LoadingScreenLayoutSchema", () => {
   const queueLayoutCases: {
     queueType: QueueType;
     layout: LoadingScreenLayout;
+    mapId?: number;
   }[] = [
     { queueType: "aram", layout: "aram" },
     { queueType: "aram clash", layout: "aram" },
@@ -49,13 +50,16 @@ describe("LoadingScreenLayoutSchema", () => {
     { queueType: "classic aram mayhem", layout: "classic" },
     { queueType: "solo", layout: "standard" },
     { queueType: "clash", layout: "standard" },
-    { queueType: "custom", layout: "standard" },
+    { queueType: "custom", layout: "standard", mapId: 11 },
+    { queueType: "custom", layout: "aram", mapId: 12 },
+    { queueType: "tournament", layout: "standard", mapId: 11 },
+    { queueType: "tournament", layout: "aram", mapId: 12 },
   ];
 
   test.each(queueLayoutCases)(
-    "maps $queueType to the $layout layout",
-    ({ queueType, layout }) => {
-      expect(loadingScreenLayoutForQueueType(queueType)).toBe(layout);
+    "maps $queueType on map $mapId to the $layout layout",
+    ({ queueType, layout, mapId = 11 }) => {
+      expect(loadingScreenLayoutForQueueType(queueType, mapId)).toBe(layout);
     },
   );
 });

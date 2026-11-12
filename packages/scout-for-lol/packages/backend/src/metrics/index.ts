@@ -657,6 +657,17 @@ export const riotApiUnknownKeysTotal = new Counter({
 });
 
 /**
+ * Finished matches whose queue Scout cannot classify. The report is replaced by
+ * a plain notice instead of being labelled as another game type; a non-zero
+ * rate means a new queue needs mapping in `classifyGame`.
+ */
+export const unsupportedQueueReportsTotal = new Counter({
+  name: "scout_unsupported_queue_reports_total",
+  help: "Finished matches reported as an unsupported queue instead of a report",
+  registers: [registry],
+});
+
+/**
  * Expected-but-absent match fields on a payload that declared itself a custom
  * game. Those fields are optional on the schema so tournament-code lobbies
  * parse at all; this counts how often that tolerance is actually exercised, per

@@ -67,6 +67,7 @@ export function includeMatchForReportGraph(
     match.info.queueId,
     match.info.gameMode,
     match.info.gameType,
+    match.info.tournamentCode,
   );
   return queue !== undefined && queueFilter.includes(queue);
 }

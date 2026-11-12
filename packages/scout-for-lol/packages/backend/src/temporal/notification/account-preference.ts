@@ -51,6 +51,7 @@ async function readSubjects(
       context.matchData.info.queueId,
       context.matchData.info.gameMode,
       context.matchData.info.gameType,
+      context.matchData.info.tournamentCode,
     ),
   };
 }

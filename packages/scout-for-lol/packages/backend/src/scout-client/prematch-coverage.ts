@@ -1,3 +1,4 @@
+import { classifyGame, type QueueType } from "@scout-for-lol/data";
 import { z } from "zod";
 import { prisma, type Db } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
@@ -10,6 +11,9 @@ import { rawArchiveReceiptKind } from "#src/report-lake/durable-receipts.ts";
 
 const logger = createLogger("scout-client-prematch-coverage");
 
+/** The one `game_kind` series both gauges publish (as -1) when the sweep fails. */
+const SWEEP_FAILED = "sweep_failed";
+
 /** How far back a client-observed game counts. */
 export const PREMATCH_COVERAGE_LOOKBACK_MS = 24 * 60 * 60 * 1000;
 
@@ -19,10 +23,22 @@ export const PREMATCH_COVERAGE_LOOKBACK_MS = 24 * 60 * 60 * 1000;
  */
 export const PREMATCH_COVERAGE_GRACE_MS = 15 * 60 * 1000;
 
-const CoverageRowSchema = z.object({
-  custom: z.boolean(),
-  observed: z.coerce.number().int().nonnegative(),
-  missing: z.coerce.number().int().nonnegative(),
+const GameRowSchema = z.object({
+  gameData: z
+    .object({
+      gameMode: z.string().optional(),
+      gameType: z.string().optional(),
+      isCustomGame: z.boolean().optional(),
+      queue: z
+        .object({
+          id: z.number().int().nonnegative(),
+          gameMode: z.string().optional(),
+          gameType: z.string().optional(),
+        })
+        .optional(),
+    })
+    .nullable(),
+  missing: z.boolean(),
 });
 
 export type PrematchCoverage = {
@@ -30,26 +46,45 @@ export type PrematchCoverage = {
   readonly missing: number;
 };
 
+/** A queue type, or `unknown` when the classifier cannot name the game. */
+export type GameKind = QueueType | "unknown";
+
+function gameKindOf(
+  gameData: z.infer<typeof GameRowSchema>["gameData"],
+): GameKind {
+  const queue = gameData?.queue;
+  if (gameData === null || queue === undefined) return "unknown";
+  const classification = classifyGame({
+    queueId: queue.id,
+    gameMode: gameData.gameMode ?? queue.gameMode ?? "",
+    gameType:
+      gameData.isCustomGame === true
+        ? "CUSTOM_GAME"
+        : (gameData.gameType ?? queue.gameType),
+  });
+  return classification.kind === "queue" ? classification.queue : "unknown";
+}
+
 /**
  * Games a Scout Client saw in progress in `[observedSince, observedBefore]`,
- * per custom/matchmade, and how many have no archived prematch.
+ * per game kind, and how many have no archived prematch.
  *
  * A game is one platform-qualified id, however many sessions or devices
  * reported it; its prematch is the `raw-archive-prematch` receipt Scout
- * records when Spectator supplied one.
+ * records when Spectator supplied one. The kind is the shared classifier's
+ * answer from the client's latest session for the game.
  */
 export async function readPrematchCoverage(
   db: Db,
   window: { readonly observedSince: Date; readonly observedBefore: Date },
-): Promise<{ custom: PrematchCoverage; matchmade: PrematchCoverage }> {
-  const rows = z.array(CoverageRowSchema).parse(
+): Promise<ReadonlyMap<GameKind, PrematchCoverage>> {
+  const rows = z.array(GameRowSchema).parse(
     await db.$queryRaw`
       WITH games AS (
         SELECT
           upper("platformId") || '_' || "gameId" AS riot_match_id,
-          bool_or(
-            coalesce((payload->'data'->'gameData'->>'isCustomGame')::boolean, false)
-          ) AS custom
+          (array_agg(payload->'data'->'gameData' ORDER BY "receivedAt" DESC))[1]
+            AS "gameData"
         FROM "ScoutClientObservation"
         WHERE kind = 'gameflow'
           AND disposition = 'ACCEPTED'
@@ -62,22 +97,25 @@ export async function readPrematchCoverage(
         GROUP BY 1
       )
       SELECT
-        games.custom AS custom,
-        count(*) AS observed,
-        count(*) FILTER (WHERE NOT EXISTS (
+        games."gameData" AS "gameData",
+        NOT EXISTS (
           SELECT 1 FROM "MatchProcessingReceipt" receipt
           WHERE receipt."riotMatchId" = games.riot_match_id
             AND receipt.kind = ${rawArchiveReceiptKind("prematch")}
-        )) AS missing
+        ) AS missing
       FROM games
-      GROUP BY games.custom
     `,
   );
-  const coverageOf = (custom: boolean): PrematchCoverage => {
-    const row = rows.find((candidate) => candidate.custom === custom);
-    return { observed: row?.observed ?? 0, missing: row?.missing ?? 0 };
-  };
-  return { custom: coverageOf(true), matchmade: coverageOf(false) };
+  const coverage = new Map<GameKind, PrematchCoverage>();
+  for (const row of rows) {
+    const kind = gameKindOf(row.gameData);
+    const current = coverage.get(kind) ?? { observed: 0, missing: 0 };
+    coverage.set(kind, {
+      observed: current.observed + 1,
+      missing: current.missing + (row.missing ? 1 : 0),
+    });
+  }
+  return coverage;
 }
 
 /**
@@ -94,18 +132,20 @@ export async function collectPrematchCoverageMetrics(db: Db): Promise<void> {
       observedSince: new Date(now - PREMATCH_COVERAGE_LOOKBACK_MS),
       observedBefore: new Date(now - PREMATCH_COVERAGE_GRACE_MS),
     });
-    for (const [custom, counts] of [
-      ["true", coverage.custom],
-      ["false", coverage.matchmade],
-    ] as const) {
-      scoutClientObservedGames.set({ custom }, counts.observed);
-      scoutClientGamesWithoutPrematch.set({ custom }, counts.missing);
+    scoutClientObservedGames.reset();
+    scoutClientGamesWithoutPrematch.reset();
+    for (const [gameKind, counts] of coverage) {
+      scoutClientObservedGames.set({ game_kind: gameKind }, counts.observed);
+      scoutClientGamesWithoutPrematch.set(
+        { game_kind: gameKind },
+        counts.missing,
+      );
     }
   } catch (error) {
-    for (const custom of ["true", "false"]) {
-      scoutClientObservedGames.set({ custom }, -1);
-      scoutClientGamesWithoutPrematch.set({ custom }, -1);
-    }
+    scoutClientObservedGames.reset();
+    scoutClientGamesWithoutPrematch.reset();
+    scoutClientObservedGames.set({ game_kind: SWEEP_FAILED }, -1);
+    scoutClientGamesWithoutPrematch.set({ game_kind: SWEEP_FAILED }, -1);
     logger.error("Failed to update the client prematch coverage metrics", {
       error,
     });

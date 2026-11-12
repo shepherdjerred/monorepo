@@ -50,7 +50,7 @@ describe("QUEUE_POST_MATCH_DATA", () => {
 });
 
 describe("riotWithholdsMatchResult", () => {
-  test("a custom of any size, including live Clash, isn't waited for", () => {
+  test("a user-created custom lobby isn't waited for", () => {
     expect(
       riotWithholdsMatchResult({
         queueId: 0,
@@ -58,14 +58,35 @@ describe("riotWithholdsMatchResult", () => {
         gameType: "CUSTOM_GAME",
       }),
     ).toBe(true);
-    // Live Clash arrives as a custom on queue 700.
+  });
+
+  test("live Clash and tournament games are not lumped in with lobbies", () => {
+    // Live Clash arrives as a custom game type on queue 700; Riot publishes it.
     expect(
       riotWithholdsMatchResult({
         queueId: 700,
         gameMode: "CLASSIC",
         gameType: "CUSTOM",
       }),
-    ).toBe(true);
+    ).toBe(false);
+    expect(
+      riotWithholdsMatchResult({
+        queueId: 0,
+        gameMode: "CLASSIC",
+        gameType: "CUSTOM_GAME",
+        tournamentCode: "NA0a1b2-tournament",
+      }),
+    ).toBe(false);
+  });
+
+  test("an unclassifiable game is not assumed to be withheld", () => {
+    expect(
+      riotWithholdsMatchResult({
+        queueId: 99_999,
+        gameMode: "CLASSIC",
+        gameType: "MATCHED_GAME",
+      }),
+    ).toBe(false);
   });
 
   test("a queue Riot never publishes isn't waited for", () => {

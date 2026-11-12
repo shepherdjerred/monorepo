@@ -2,6 +2,7 @@ import {
   isArenaQueueOrMode,
   type RawCurrentGameInfo,
   resolveQueueTypeFromGame,
+  mayHavePartialRoster,
 } from "@scout-for-lol/data";
 
 /**
@@ -66,7 +67,7 @@ export function isStartedCustomRosterFinal(
     gameInfo.gameMode,
     gameInfo.gameType,
   );
-  if (queueType !== "custom") return false;
+  if (!mayHavePartialRoster(queueType)) return false;
   const teams = new Set(
     gameInfo.participants.map((participant) => participant.teamId),
   );

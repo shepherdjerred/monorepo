@@ -596,6 +596,7 @@ describe("buildLoadingScreenData standard and custom layouts", () => {
       ...baseGameInfo,
       gameQueueConfigId: 3100,
       gameMode: "CLASSIC",
+      gameType: "CUSTOM",
     });
 
     const result = await buildLoadingScreenData(
@@ -627,6 +628,7 @@ describe("buildLoadingScreenData custom rank integration", () => {
       ...baseGameInfo,
       gameQueueConfigId: 3100,
       gameMode: "CLASSIC",
+      gameType: "CUSTOM",
       bannedChampions: [],
       participants,
     });
@@ -696,6 +698,7 @@ describe("buildLoadingScreenData custom rank integration", () => {
       ...baseGameInfo,
       gameQueueConfigId: 0,
       gameMode: "CLASSIC",
+      gameType: "CUSTOM",
     });
 
     const result = await buildLoadingScreenData(
