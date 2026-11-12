@@ -219,6 +219,8 @@ export async function learnAliasesFromRiotMatch(
   const observations = await prisma.scoutClientObservation.findMany({
     where: {
       kind: "post_game",
+      // Quarantined evidence is unattributed; it must not mint global aliases.
+      disposition: "ACCEPTED",
       gameId: matchId.slice(matchId.indexOf("_") + 1),
       platformId: { equals: platformRouteOf(matchId), mode: "insensitive" },
     },

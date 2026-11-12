@@ -178,10 +178,11 @@ async function amendAttempt(
   const merged = [
     ...new Set([...row.observationIds, ...named.map((n) => n.observationId)]),
   ].slice(-MAX_OBSERVATION_IDS);
-  // A settled attempt reopens only when the client now reports a different
-  // Riot ID; the same one would answer the same way.
+  // A non-resolved attempt restarts only when the client now reports a
+  // different Riot ID; the same one would answer the same way. A pending
+  // attempt takes the new credentials too, so the drain never queries a stale
+  // name that may since belong to someone else.
   const reopen =
-    row.state !== "pending" &&
     row.state !== "resolved" &&
     !isBlankRiotId(latest) &&
     !sameRiotId(row, latest);
@@ -319,15 +320,15 @@ export async function drainAliasAttempts(
         ownedPuuids: await ownedPuuids(attempt.learnedFromDeviceId),
         observerUuids: new Set(),
       });
+      // Requeue before the terminal write: a failure between them leaves the
+      // attempt pending, so the next drain repeats both idempotent steps.
+      await requeueObservationsFor(attempt.observationIds);
     }
     await prisma.leagueIdentityAliasAttempt.update({
       where: { lcuUuid: attempt.lcuUuid },
       data: next,
     });
-    if (outcome.kind === "found") {
-      await requeueObservationsFor(attempt.observationIds);
-      continue;
-    }
+    if (outcome.kind === "found") continue;
     if (outcome.kind === "error") {
       scoutClientIdentityAliasesTotal.inc({ outcome: "retry_scheduled" });
       if (outcome.errorClass === "rate_limited") {
