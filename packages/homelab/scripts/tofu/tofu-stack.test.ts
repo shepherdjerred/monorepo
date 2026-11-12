@@ -743,6 +743,7 @@ describe("provider pins", () => {
         registryUrl: "https://registry.terraform.io",
         source: "alpaca744/discord",
         version: "0.1.3",
+        bindings: true,
       },
     );
     expect(() => requirePin(pins, "registry.opentofu.org/x/unknown")).toThrow(

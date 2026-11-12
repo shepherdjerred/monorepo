@@ -320,7 +320,8 @@ deletion, so inspect the exact plan before changing that field.
 
 `discord/desired-state.json` is the checked-in allowlist of true bot
 applications, expected application IDs, 1Password item references, and managed
-settings. `discord/applications.tf` is import-only. Each bot has its own
+settings. The stack (`packages/homelab-cdktn/src/stacks/discord.ts`) is
+import-only. Each bot has its own
 provider configuration and manages descriptions, install URLs, interaction
 endpoints, role-connection URLs, and tags. Every application has
 `prevent_destroy`; applications are never created or deleted by this stack.

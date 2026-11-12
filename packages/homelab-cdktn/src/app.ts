@@ -8,6 +8,7 @@ import { ArgocdStack } from "#src/stacks/argocd.ts";
 import { ArrStack } from "#src/stacks/arr.ts";
 import { BackblazeStack } from "#src/stacks/backblaze.ts";
 import { CloudflareTokensStack } from "#src/stacks/cloudflare-tokens.ts";
+import { DiscordStack } from "#src/stacks/discord.ts";
 import { DockerhubStack } from "#src/stacks/dockerhub.ts";
 import { DockerhubTokensStack } from "#src/stacks/dockerhub-tokens.ts";
 import { GithubStack } from "#src/stacks/github.ts";
@@ -25,6 +26,7 @@ export const SYNTHESIZED_STACKS = [
   "arr",
   "backblaze",
   "cloudflare-tokens",
+  "discord",
   "dockerhub",
   "dockerhub-tokens",
   "github",
@@ -41,6 +43,7 @@ const STACKS: Record<SynthesizedStack, new (scope: Construct) => HomelabStack> =
     arr: ArrStack,
     backblaze: BackblazeStack,
     "cloudflare-tokens": CloudflareTokensStack,
+    discord: DiscordStack,
     dockerhub: DockerhubStack,
     "dockerhub-tokens": DockerhubTokensStack,
     github: GithubStack,
