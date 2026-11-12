@@ -49,19 +49,20 @@ export function packageFiles(name: string): Readonly<Record<string, string>> {
         private: true,
         scripts: {
           build: "bun build src/index.ts --outdir dist",
-          test: "bun --no-install --bun vitest --config ../../vitest.config.ts run",
+          test: "bun --no-install --bun vitest --config ../../vitest.config.ts run src",
+          "test:ci": "bun ../../scripts/ci/run-ci-test.ts",
           typecheck:
             "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
           lint: "eslint .",
         },
         devDependencies: {
           "@shepherdjerred/eslint-config": "workspace:*",
-          "@types/bun": "1.4.0",
+          "@types/bun": "1.4.2",
           "@typescript/native": "npm:typescript@7.0.2",
-          "@vitest/coverage-istanbul": "5.0.1",
+          "@vitest/coverage-istanbul": "5.0.3",
           eslint: "^10.7.0",
           typescript: "^6.0.3",
-          vitest: "5.0.1",
+          vitest: "5.0.3",
         },
       },
       undefined,
@@ -71,8 +72,17 @@ export function packageFiles(name: string): Readonly<Record<string, string>> {
     "tsconfig.json": `${JSON.stringify(
       {
         extends: "../../tsconfig.base.json",
-        compilerOptions: { outDir: "dist", rootDir: "src", noEmit: true },
-        include: ["src", "*.test.ts"],
+        compilerOptions: { types: ["bun"], noEmit: true },
+        include: ["src", "eslint.config.ts"],
+      },
+      undefined,
+      2,
+    )}\n`,
+    "ci-tests.json": `${JSON.stringify(
+      {
+        $schema: "../../scripts/ci-tests.schema.json",
+        package: `@shepherdjerred/${name}`,
+        steps: [{ runner: "vitest", args: ["src"] }],
       },
       undefined,
       2,

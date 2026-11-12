@@ -2,6 +2,7 @@ import { afterEach, describe, expect, test } from "vitest";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { z } from "zod";
 import {
   packageFiles,
   validatePackageName,
@@ -31,7 +32,25 @@ describe("new-package", () => {
       '"@typescript/native": "npm:typescript@7.0.2"',
     );
     expect(files["eslint.config.ts"]).toContain("recommended");
+    expect(files["tsconfig.json"]).toContain('"eslint.config.ts"');
+    expect(files["ci-tests.json"]).toContain('"runner": "vitest"');
+    expect(files["package.json"]).toContain('"test:ci"');
     expect(files["src/index.test.ts"]).toContain('from "vitest"');
+  });
+
+  test("pins the toolchain versions the scripts workspace runs", async () => {
+    const Manifest = z.looseObject({
+      devDependencies: z.record(z.string(), z.string()),
+    });
+    const scripts = Manifest.parse(
+      await Bun.file(path.join(import.meta.dirname, "../package.json")).json(),
+    ).devDependencies;
+    const scaffold = Manifest.parse(
+      JSON.parse(packageFiles("example-package")["package.json"] ?? ""),
+    ).devDependencies;
+    // A stale pin resolves a second, unpatched copy of a patched dependency.
+    for (const [dependency, version] of Object.entries(scaffold))
+      expect(version, dependency).toBe(scripts[dependency]);
   });
 
   test("creates package and nested source directories", async () => {

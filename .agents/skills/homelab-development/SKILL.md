@@ -26,10 +26,12 @@ before editing. Preserve these boundaries:
 - OpenTofu owns external control-plane resources and state. Do not reproduce a
   Tofu-owned setting in an application dashboard.
 
-For a new service, identify its namespace, chart, image ownership, resources,
-health probes, ingress, secrets, persistence, observability, backup class, and
-ArgoCD parent before coding. Match neighboring resources instead of starting a
-new abstraction without repeated need.
+For a new service, scaffold it with `bun scripts/misc/new-service.ts` and
+follow `packages/docs/wiki/src/content/docs/how-to/add-a-hosted-service.md`;
+never hand-assemble the registrations. Then decide its resources, health
+probes, ingress, secrets, persistence, observability, and backup class. Match
+neighboring resources instead of starting a new abstraction without repeated
+need.
 
 Run focused checks from the repository root. Typical coverage includes:
 

@@ -213,12 +213,12 @@ describe("registrationFindings", () => {
           },
         }),
       ).toEqual([
-        'exemptions: IMAGES_BUILT_OUTSIDE_BAKE["notes"]: it has a bake target now; delete the exemption',
-        'exemptions: IMAGES_BUILT_OUTSIDE_BAKE["gone"]: not a first-party catalog image; delete the exemption',
-        'exemptions: CHARTS_WITHOUT_RECIPE["notes"]: a recipe deploys it now; delete the exemption',
-        'exemptions: CHARTS_WITHOUT_RECIPE["gone"]: not a first-party catalog chart; delete the exemption',
-        'exemptions: POLICY_ONLY_DELEGATIONS["notes"]: the catalog delegates it now; delete the exemption',
-        'exemptions: POLICY_ONLY_DELEGATIONS["gone"]: the Delivery policy no longer names it; delete the exemption',
+        'exemptions: imagesBuiltOutsideBake["notes"]: it has a bake target now; delete the exemption from scripts/checks/service-registration-exemptions.json',
+        'exemptions: imagesBuiltOutsideBake["gone"]: not a first-party catalog image; delete the exemption from scripts/checks/service-registration-exemptions.json',
+        'exemptions: chartsWithoutRecipe["notes"]: a recipe deploys it now; delete the exemption from scripts/checks/service-registration-exemptions.json',
+        'exemptions: chartsWithoutRecipe["gone"]: not a first-party catalog chart; delete the exemption from scripts/checks/service-registration-exemptions.json',
+        'exemptions: policyOnlyDelegations["notes"]: the catalog delegates it now; delete the exemption from scripts/checks/service-registration-exemptions.json',
+        'exemptions: policyOnlyDelegations["gone"]: the Delivery policy no longer names it; delete the exemption from scripts/checks/service-registration-exemptions.json',
       ]);
     });
   });
