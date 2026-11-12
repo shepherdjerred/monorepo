@@ -14,7 +14,8 @@
     {
       "registryUrl": "https://registry.opentofu.org",
       "source": "argoproj-labs/argocd",
-      "version": "7.17.1"
+      "version": "7.17.1",
+      "bindings": true
     },
     {
       "registryUrl": "https://registry.opentofu.org",

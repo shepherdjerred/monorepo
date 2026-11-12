@@ -13,12 +13,12 @@ its source.
 
 ## Before you start
 
-| Piece                        | Where                                                                                         |
-| ---------------------------- | --------------------------------------------------------------------------------------------- |
-| Homelab service account      | Keychain item enrolled by `swift scripts/onepassword/enroll-service-account.swift`            |
-| Apple Developer account      | Signed in under Xcode → Settings → Apple Accounts; current Program License Agreement accepted |
-| ArgoCD `workstation` token   | `argocd-workstation-token`, minted by [`token.tf`](packages/homelab/src/tofu/argocd/token.tf) |
-| chezmoi `agent-host` profile | [`MACOS_FRESH_INSTALL.md`](packages/dotfiles/MACOS_FRESH_INSTALL.md)                          |
+| Piece                        | Where                                                                                                   |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Homelab service account      | Keychain item enrolled by `swift scripts/onepassword/enroll-service-account.swift`                      |
+| Apple Developer account      | Signed in under Xcode → Settings → Apple Accounts; current Program License Agreement accepted           |
+| ArgoCD `workstation` token   | `argocd-workstation-token`, minted by the [`argocd` stack](packages/homelab-cdktn/src/stacks/argocd.ts) |
+| chezmoi `agent-host` profile | [`MACOS_FRESH_INSTALL.md`](packages/dotfiles/MACOS_FRESH_INSTALL.md)                                    |
 
 ## Steps
 

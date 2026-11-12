@@ -134,7 +134,7 @@ export const CREDENTIAL_REGISTRY: Record<string, CredentialSpec> = {
   },
   ARGOCD_AUTH_TOKEN: {
     description:
-      "ArgoCD read-only workstation API token (minted by tofu/argocd/token.tf)",
+      "ArgoCD read-only workstation API token (minted by the argocd OpenTofu stack)",
     source: {
       kind: "op",
       ref: `${HOMELAB_VAULT_REF}/argocd-workstation-token/tokens/ARGOCD_AUTH_TOKEN`,

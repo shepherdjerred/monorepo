@@ -4,6 +4,7 @@ import { OPENTOFU_TARGET_VERSION } from "#src/homelab-stack.ts";
 import type { HomelabStack } from "#src/homelab-stack.ts";
 import { AnthropicFederationStack } from "#src/stacks/anthropic-federation.ts";
 import { AnthropicStack } from "#src/stacks/anthropic.ts";
+import { ArgocdStack } from "#src/stacks/argocd.ts";
 import { ArrStack } from "#src/stacks/arr.ts";
 import { CloudflareTokensStack } from "#src/stacks/cloudflare-tokens.ts";
 import { DockerhubStack } from "#src/stacks/dockerhub.ts";
@@ -18,6 +19,7 @@ import { TailscaleStack } from "#src/stacks/tailscale.ts";
 export const SYNTHESIZED_STACKS = [
   "anthropic",
   "anthropic-federation",
+  "argocd",
   "arr",
   "cloudflare-tokens",
   "dockerhub",
@@ -31,6 +33,7 @@ const STACKS: Record<SynthesizedStack, new (scope: Construct) => HomelabStack> =
   {
     anthropic: AnthropicStack,
     "anthropic-federation": AnthropicFederationStack,
+    argocd: ArgocdStack,
     arr: ArrStack,
     "cloudflare-tokens": CloudflareTokensStack,
     dockerhub: DockerhubStack,

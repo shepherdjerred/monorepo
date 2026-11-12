@@ -17,7 +17,8 @@ ArgoCD logins are read-only after the lock-down. The operator tool's
 [`delivery-rbac.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/argo-applications/platform/delivery-rbac.ts).
 OpenTofu issues its token into the 1Password item
 `delivery-argocd-operator-run-token`, which only operators read
-([`tofu/argocd/token.tf`](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/tofu/argocd/token.tf)).
+(the `argocd` stack in
+[`homelab-cdktn/src/stacks`](https://github.com/shepherdjerred/monorepo/tree/main/packages/homelab-cdktn/src/stacks)).
 The [source policy](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/argocd-application-admission.ts)
 refuses Application source writes from anyone but ArgoCD itself, so every
 change below goes through the ArgoCD API.
