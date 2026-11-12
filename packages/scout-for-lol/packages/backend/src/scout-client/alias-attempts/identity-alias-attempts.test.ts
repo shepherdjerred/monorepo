@@ -42,8 +42,12 @@ vi.mock("#src/league/api/api.ts", () => ({
   riotClient: { account: { getByRiotId: mocks.byRiotId } },
 }));
 
-const { aliasBackoffMs, drainAliasAttempts, nextAttemptState } =
-  await import("./identity-alias-attempts.ts");
+const {
+  aliasBackoffMs,
+  drainAliasAttempts,
+  enqueueAliasAttempts,
+  nextAttemptState,
+} = await import("./identity-alias-attempts.ts");
 const { learnBatchIdentities } =
   await import("#src/scout-client/observation-identity.ts");
 const { RiotHttpError } = await import("#src/league/api/client/errors.ts");
@@ -157,6 +161,22 @@ describe("draining due attempts", () => {
     });
   });
 
+  test("a failure between the requeue and the terminal write leaves the attempt pending and repeatable", async () => {
+    mocks.attemptFindMany.mockResolvedValue([pendingAttempt()]);
+    mocks.byRiotId.mockResolvedValue({ puuid: FRIEND_PUUID });
+    mocks.observationUpdateMany.mockRejectedValueOnce(new Error("db down"));
+
+    await expect(drainAliasAttempts(NOW)).rejects.toThrow("db down");
+    expect(mocks.attemptUpdate).not.toHaveBeenCalled();
+
+    expect(await drainAliasAttempts(NOW)).toBe(1);
+    expect(mocks.observationUpdateMany).toHaveBeenCalledTimes(2);
+    expect(mocks.attemptUpdate).toHaveBeenCalledWith({
+      where: { lcuUuid: FRIEND_UUID },
+      data: expect.objectContaining({ state: "resolved" }),
+    });
+  });
+
   test("schedules a retry after a 5xx and re-queues nothing", async () => {
     mocks.attemptFindMany.mockResolvedValue([pendingAttempt({ attempts: 1 })]);
     mocks.byRiotId.mockRejectedValue(httpError(503));
@@ -208,6 +228,42 @@ describe("draining due attempts", () => {
         take: 7,
       }),
     );
+  });
+});
+
+describe("amending an existing attempt", () => {
+  test("a pending attempt restarts with the new Riot ID", async () => {
+    mocks.attemptFindMany.mockResolvedValue([
+      pendingAttempt({ attempts: 3, lastErrorClass: "server_error" }),
+    ]);
+
+    await enqueueAliasAttempts(
+      [
+        {
+          lcuUuid: FRIEND_UUID,
+          gameName: "Renamed",
+          tagLine: "EUW",
+          platformId: "EUW1",
+          observationId: "obs-3",
+        },
+      ],
+      "device-1",
+      NOW,
+    );
+
+    expect(mocks.attemptUpdate).toHaveBeenCalledWith({
+      where: { lcuUuid: FRIEND_UUID },
+      data: expect.objectContaining({
+        state: "pending",
+        gameName: "Renamed",
+        tagLine: "EUW",
+        platformId: "EUW1",
+        attempts: 0,
+        nextAttemptAt: NOW,
+        lastErrorClass: null,
+        observationIds: ["obs-1", "obs-2", "obs-3"],
+      }),
+    });
   });
 });
 
