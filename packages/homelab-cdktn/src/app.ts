@@ -4,6 +4,7 @@ import { OPENTOFU_TARGET_VERSION } from "#src/homelab-stack.ts";
 import type { HomelabStack } from "#src/homelab-stack.ts";
 import { AnthropicFederationStack } from "#src/stacks/anthropic-federation.ts";
 import { AnthropicStack } from "#src/stacks/anthropic.ts";
+import { ApplicationSecretsStack } from "#src/stacks/application-secrets.ts";
 import { ArgocdStack } from "#src/stacks/argocd.ts";
 import { ArrStack } from "#src/stacks/arr.ts";
 import { BackblazeStack } from "#src/stacks/backblaze.ts";
@@ -22,6 +23,7 @@ import { TailscaleStack } from "#src/stacks/tailscale.ts";
 export const SYNTHESIZED_STACKS = [
   "anthropic",
   "anthropic-federation",
+  "application-secrets",
   "argocd",
   "arr",
   "backblaze",
@@ -39,6 +41,7 @@ const STACKS: Record<SynthesizedStack, new (scope: Construct) => HomelabStack> =
   {
     anthropic: AnthropicStack,
     "anthropic-federation": AnthropicFederationStack,
+    "application-secrets": ApplicationSecretsStack,
     argocd: ArgocdStack,
     arr: ArrStack,
     backblaze: BackblazeStack,
