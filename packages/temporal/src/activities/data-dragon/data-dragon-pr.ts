@@ -270,7 +270,7 @@ export async function ensureGeneratedPrAutoMerge(input: {
         "--repo",
         input.repoSlug,
         "--auto",
-        "--merge",
+        "--squash",
         input.prUrl,
       ],
       { cwd: "/tmp", env: { GH_TOKEN: input.token }, redactOutput: true },
