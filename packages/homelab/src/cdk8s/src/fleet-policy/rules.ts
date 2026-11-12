@@ -3,14 +3,13 @@ import {
   type Fleet,
   type FleetContainer,
   type FleetWorkload,
+  type PolicyType,
 } from "./fleet.ts";
 
 /**
  * The fleet rules, each returning the allowlist keys that break it today.
  * Kept apart from the tests so a rule reads as one definition.
  */
-
-type PolicyType = "Ingress" | "Egress";
 
 /**
  * Workloads no NetworkPolicy of the given type selects, as `<namespace>/<name>`.

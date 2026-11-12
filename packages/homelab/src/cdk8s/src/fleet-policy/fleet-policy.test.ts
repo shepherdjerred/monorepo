@@ -13,10 +13,12 @@ import {
   upstreamNamespacesWithoutPolicy,
   workloadsWithoutPolicy,
 } from "./rules.ts";
+import { probePortsNotAdmitted } from "./probe-admission.ts";
 import {
   CONTAINERS_ALLOWING_PRIVILEGE_ESCALATION,
   CONTAINERS_WITHOUT_SECCOMP,
   PORT_CONTAINERS_WITHOUT_PROBE,
+  PROBE_PORTS_NOT_ADMITTED,
   SERVED_WORKLOADS_WITHOUT_PROBE,
   UPSTREAM_NAMESPACES_WITHOUT_EGRESS_POLICY,
   UPSTREAM_NAMESPACES_WITHOUT_INGRESS_POLICY,
@@ -65,6 +67,11 @@ const RULES: readonly {
     allowlist: UPSTREAM_NAMESPACES_WITHOUT_EGRESS_POLICY,
   },
   {
+    name: "every registered probe port admits blackbox-exporter and its ingress source",
+    violations: probePortsNotAdmitted,
+    allowlist: PROBE_PORTS_NOT_ADMITTED,
+  },
+  {
     name: "every container that declares a port has a readiness or startup probe",
     violations: portContainersWithoutProbe,
     allowlist: PORT_CONTAINERS_WITHOUT_PROBE,
@@ -92,6 +99,7 @@ describe("fleet policy", () => {
     expect(fleet.networkPolicies.length).toBeGreaterThan(50);
     expect(fleet.applicationNamespaces.size).toBeGreaterThan(50);
     expect(fleet.serviceSelectors.length).toBeGreaterThan(50);
+    expect(fleet.backendProbes.length).toBeGreaterThan(40);
   });
 
   describe.each(RULES)("$name", ({ violations, allowlist }) => {
