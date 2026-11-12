@@ -364,8 +364,17 @@ export function convertEndOfGameMatch(input: {
       participants.push(participant);
     }
   }
-  const teams = convertTeams(block, gameflow);
-  if (teams === null) return null;
+  const convertedTeams = convertTeams(block, gameflow);
+  if (convertedTeams === null) return null;
+  // Every client lists its own team first; a stable order lets equivalent
+  // blocks from opposing sides agree instead of conflicting.
+  const teams = convertedTeams.toSorted((a, b) => a.teamId - b.teamId);
+  participants.sort(
+    (a, b) =>
+      a.teamId - b.teamId ||
+      (a.puuid ?? "").localeCompare(b.puuid ?? "") ||
+      a.championId - b.championId,
+  );
   const durationMs = Math.round(block.gameLength * 1000);
   const parsed = EndOfGameMatchSchema.safeParse({
     metadata: {

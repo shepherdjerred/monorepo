@@ -233,3 +233,28 @@ describe("convertEndOfGameMatch", () => {
     ).toBeNull();
   });
 });
+
+describe("convertEndOfGameMatch ordering", () => {
+  test("produces the same record whichever team the uploading client lists first", async () => {
+    const block = await classicBlock();
+    const reversed = {
+      ...block,
+      teams: block.teams.toReversed().map((team) => ({
+        ...team,
+        players: team.players.toReversed(),
+      })),
+    };
+    const forward = convertEndOfGameMatch({
+      matchId,
+      endOfGame: block,
+      gameflow: gameflowFor(block),
+    });
+    const backward = convertEndOfGameMatch({
+      matchId,
+      endOfGame: reversed,
+      gameflow: gameflowFor(reversed),
+    });
+    expect(forward).not.toBeNull();
+    expect(backward).toEqual(forward);
+  });
+});
