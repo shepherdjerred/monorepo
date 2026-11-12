@@ -10,6 +10,11 @@ import {
   RiotMatchIdSchema,
   type RiotMatchId,
 } from "@scout-for-lol/domain/identity/brands.ts";
+import {
+  LeaguePuuidSchema,
+  type LeaguePuuid,
+} from "@scout-for-lol/domain/identity/league-account.ts";
+import { isExploreMatchSnapshotSupported } from "#src/explore-match/match-view.ts";
 import { ANALYSIS_OUTPUT_BYTES } from "./model-output.ts";
 
 function gameTime(timestampMs: number) {
@@ -191,6 +196,38 @@ function timelineCoverage(
     reason: complete
       ? null
       : "Stored frames, participant coverage or observed deaths do not cover the complete postmatch record.",
+  };
+}
+
+/**
+ * Card facts for a reviewed game, kept out of the model-visible result: the
+ * participant's puuid (for a loadout card) and whether the match supports a
+ * scoreboard card. Null puuid for a roster-only review or an unknown id.
+ */
+export function reviewedMatchFacts(
+  data: unknown,
+  matchId: RiotMatchId,
+  participantId: number | null,
+): { puuid: LeaguePuuid | null; cardSupported: boolean } {
+  const rawMatch = DocumentsSchema.parse(data).documents.find(
+    (d) => d.matchId === matchId && d.kind === "match",
+  );
+  if (rawMatch === undefined) return { puuid: null, cardSupported: false };
+  const match = RawMatchSchema.parse(rawMatch.document);
+  const target =
+    participantId === null
+      ? undefined
+      : match.info.participants.find((p) => p.participantId === participantId);
+  const puuid =
+    target === undefined
+      ? null
+      : (LeaguePuuidSchema.safeParse(target.puuid).data ?? null);
+  return {
+    puuid,
+    cardSupported: isExploreMatchSnapshotSupported(
+      match.info.queueId,
+      match.info.gameMode,
+    ),
   };
 }
 

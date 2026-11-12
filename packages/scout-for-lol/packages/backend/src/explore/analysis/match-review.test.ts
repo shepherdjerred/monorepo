@@ -1,6 +1,10 @@
 import { expect, test } from "vitest";
 import { RawMatchSchema, RawTimelineSchema } from "@scout-for-lol/data";
-import { recordedMatchRoster, summarizeRecordedMatch } from "./match-review.ts";
+import {
+  recordedMatchRoster,
+  reviewedMatchFacts,
+  summarizeRecordedMatch,
+} from "./match-review.ts";
 
 async function fixture() {
   const match = RawMatchSchema.parse(
@@ -232,6 +236,24 @@ test("the roster names every participant to choose from", async () => {
       champion: "Ezreal",
     }),
   );
+});
+
+test("reviewed facts expose the participant puuid and card support, roster-only exposes none", async () => {
+  const { match, target, data } = await fixture();
+  expect(
+    reviewedMatchFacts(data, match.metadata.matchId, target.participantId),
+  ).toEqual({ puuid: target.puuid, cardSupported: true });
+  expect(reviewedMatchFacts(data, match.metadata.matchId, null)).toEqual({
+    puuid: null,
+    cardSupported: true,
+  });
+  expect(reviewedMatchFacts(data, match.metadata.matchId, 999)).toEqual({
+    puuid: null,
+    cardSupported: true,
+  });
+  expect(
+    reviewedMatchFacts({ documents: [] }, match.metadata.matchId, 1),
+  ).toEqual({ puuid: null, cardSupported: false });
 });
 
 test("the roster says when Scout has no stored match", async () => {

@@ -6,7 +6,10 @@ import {
   matchIdsInPreview,
 } from "#src/explore-match/match-view.ts";
 import type { ExploreAgentParams } from "#src/explore/analysis/agent-types.ts";
-import { createMatchReviewTools } from "#src/explore/analysis/review-tool.ts";
+import {
+  createMatchReviewTools,
+  type ReviewedMatch,
+} from "#src/explore/analysis/review-tool.ts";
 import { createAnalysisTools } from "#src/explore/analysis/tools.ts";
 import type { CreationCapability } from "#src/explore/creation/capability.ts";
 import { emptyResultReason } from "#src/explore/empty-result-reason.ts";
@@ -79,6 +82,8 @@ export type RunState = {
   lastQueryMatchIds: Set<RiotMatchId>;
   /** Exact participant pairs returned by the most recent participant query. */
   lastQueryLoadoutPairs: Set<string>;
+  /** Last successful `review_match` this turn, for automatic card attachment. */
+  reviewedMatch?: ReviewedMatch | null | undefined;
   /** Skills loaded this turn, so result messages can stop nudging. */
   loadedSkills: Set<string>;
 };
@@ -343,7 +348,9 @@ export function createExploreTools(options: ExploreToolsOptions) {
   // The system prompt carries the full language reference, so the
   // `get_report_language` reference tool is not registered here.
   return registerExploreToolContracts({
-    ...createMatchReviewTools(params, track),
+    ...createMatchReviewTools(params, track, (review) => {
+      state.reviewedMatch = review;
+    }),
     ...(exploreAnalysisEnabled() ? createAnalysisTools(params, track) : {}),
     load_skill: createLoadSkillTool({
       skills: enabledExploreSkills(skillOptions),

@@ -4,9 +4,11 @@ import {
 } from "@scout-for-lol/domain/identity/brands.ts";
 import { tool } from "ai";
 import { z } from "zod";
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
 import type { ExploreAgentParams } from "#src/explore/analysis/agent-types.ts";
 import {
   recordedMatchRoster,
+  reviewedMatchFacts,
   summarizeRecordedMatch,
 } from "#src/explore/analysis/match-review.ts";
 import { readRawDocuments } from "#src/explore/analysis/raw-lake-read.ts";
@@ -27,9 +29,18 @@ type StoredDocuments = {
   readonly documents: Awaited<ReturnType<typeof readRawDocuments>>["documents"];
 };
 
+/** A successful review in this turn, recorded for automatic card attachment. */
+export type ReviewedMatch = {
+  readonly matchId: RiotMatchId;
+  readonly participantId: number | null;
+  readonly puuid: LeaguePuuid | null;
+  readonly cardSupported: boolean;
+};
+
 export function createMatchReviewTools(
   params: Pick<ExploreAgentParams, "abortSignal">,
   track: ToolTracker,
+  onReviewed?: (review: ReviewedMatch) => void,
 ) {
   // Paging through one game's events re-reads the same documents. A game
   // without a timeline is not cached: acquire_match_timelines may fetch it
@@ -64,18 +75,29 @@ export function createMatchReviewTools(
       execute: (input) =>
         track("review_match", async () => {
           const data = await documentsFor(input.matchId);
-          return z
-            .json()
-            .parse(
-              input.participantId === null
-                ? recordedMatchRoster(data, input.matchId)
-                : summarizeRecordedMatch(
-                    data,
-                    input.matchId,
-                    input.participantId,
-                    input.offset,
-                  ),
+          const result =
+            input.participantId === null
+              ? recordedMatchRoster(data, input.matchId)
+              : summarizeRecordedMatch(
+                  data,
+                  input.matchId,
+                  input.participantId,
+                  input.offset,
+                );
+          if (onReviewed !== undefined && result.ok) {
+            const facts = reviewedMatchFacts(
+              data,
+              input.matchId,
+              input.participantId,
             );
+            onReviewed({
+              matchId: input.matchId,
+              participantId: input.participantId,
+              puuid: facts.puuid,
+              cardSupported: facts.cardSupported,
+            });
+          }
+          return z.json().parse(result);
         }),
     }),
   };
