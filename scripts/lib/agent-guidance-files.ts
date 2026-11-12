@@ -31,10 +31,17 @@ function hasPathPrefix(entryPath: string, prefix: string): boolean {
   );
 }
 
+// Byte-identical Windows mirror of the vendored skill; the canonical copy
+// under packages/dotfiles is validated here and the mirror is kept identical
+// by packages/dotfiles/scripts/modern-web-guidance-windows-copy.test.ts.
+const WINDOWS_SKILL_MIRROR_PREFIX =
+  "packages/dotfiles-windows/dot_agents/skills/modern-web-guidance/";
+
 function isGuidancePath(
   entryPath: string,
   extraTrackedPaths: ReadonlySet<string>,
 ): boolean {
+  if (entryPath.startsWith(WINDOWS_SKILL_MIRROR_PREFIX)) return false;
   const cursorRule = [
     ".cursor/rules",
     "dot_cursor/rules",

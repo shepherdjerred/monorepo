@@ -18,6 +18,17 @@ fish into MSYS2, turns on Developer Mode (one admin prompt; chezmoi needs it to
 create symlinks), applies this source, installs the Fisher plugins, and installs
 the Ubuntu WSL distro. Re-running it is safe.
 
+## Agent skills
+
+`dot_agents/skills/modern-web-guidance` is the first personal skill delivered
+to this PC: a real copy of
+[`../dotfiles/dot_agents/skills/modern-web-guidance`](../dotfiles/dot_agents/skills/modern-web-guidance),
+kept in sync by `packages/dotfiles/scripts/modern-web-guidance-windows-copy.test.ts`.
+Edit the macOS source, then copy the changed files here. The shared
+`AGENTS.md` Browser Support policy (Baseline Widely Available only by
+default) applies here too. Other personal skills are not yet delivered to
+Windows.
+
 ## Shell
 
 fish comes from MSYS2. Two settings make it behave like a native shell:

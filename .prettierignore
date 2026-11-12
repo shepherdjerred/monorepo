@@ -79,6 +79,7 @@ packages/discord-video-stream/
 
 # Agent skills contain vendored/reference material whose source formatting is preserved.
 packages/dotfiles/dot_agents/skills/**
+packages/dotfiles-windows/dot_agents/skills/**
 
 # Vendored Data Dragon snapshot (League of Legends static data)
 packages/scout-for-lol/packages/data/src/data-dragon/assets/

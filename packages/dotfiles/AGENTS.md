@@ -160,6 +160,18 @@ itself, open it locally. Load `tailscale-helper` for anything beyond this.
 - Keep commit and PR narratives about outcomes and verification, not agent
   activity.
 
+## Browser support
+
+- **Browser Support:** Baseline Widely Available only by default. Newly
+  Available features only with feature detection and graceful degradation,
+  a fallback of at most 20 lines, no new dependencies, and no polyfills.
+  Limited Availability features (Chrome/Edge-only, such as the Built-in AI
+  APIs, `fetchLater`, and Interest Invokers) only when Jerred explicitly
+  asks for that feature. When the `modern-web-guidance` skill suggests a
+  non-Widely-Available API, state its Baseline status and fallback before
+  using it. A project `AGENTS.md` may override this policy for its own
+  audience; this is the personal default.
+
 ## Guidance architecture
 
 - `~/AGENTS.md` is the personal source consumed by compatible agents.
