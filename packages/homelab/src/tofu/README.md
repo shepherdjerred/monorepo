@@ -33,7 +33,7 @@ Each subdirectory is an independent root module with its own `backend.tf` (S3 st
 
 ### Stacks synthesized from TypeScript
 
-`anthropic`, `anthropic-federation`, `dockerhub` and `github` have no `.tf` files.
+`anthropic`, `anthropic-federation`, `dockerhub`, `github` and `tailscale` have no `.tf` files.
 Their configuration is
 `main.tf.json`, synthesized by the [CDK Terrain](https://cdktn.io/docs) app in
 [`packages/homelab-cdktn`](../../../homelab-cdktn) and committed next to the stack's `.terraform.lock.hcl`.
@@ -424,6 +424,12 @@ The `homelab-tofu-state` bucket has `prevent_destroy = true` since it stores sta
 ### Tailscale
 
 The tailnet ACL policy (`tailscale_acl`): `tagOwners`, access rules, Tailscale SSH, and policy `tests`. Moves the tailnet from implicit allow-all (every device trusted) to deny-by-default — the account owner keeps full access, non-admin humans get only the published `*.ts.net` apps, and tagged/untrusted devices are denied by default.
+
+The policy is the `TAILNET_POLICY` object in
+[`packages/homelab-cdktn/src/stacks/tailscale-policy.ts`](../../../homelab-cdktn/src/stacks/tailscale-policy.ts).
+Edit it there, run `bun run --cwd packages/homelab-cdktn synth`, and commit the
+regenerated `tailscale/main.tf.json`. OpenTofu's `jsonencode` writes object keys
+sorted, so key order in the object does not change the applied policy.
 
 Delivery uses the existing Kubernetes operator's Ingress proxy with
 `tailscale.com/tags: tag:delivery`. The tag owners include `tag:k8s-operator`
