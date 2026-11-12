@@ -1,10 +1,9 @@
 import type { Chart } from "cdk8s";
-import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { Namespace } from "cdk8s-plus-31";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
 import { CI_NODE_TOLERATION } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
-import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
+import { helmApplication } from "@shepherdjerred/homelab/cdk8s/src/misc/argo/application.ts";
 
 export function createNfdNamespace(chart: Chart): void {
   new Namespace(chart, `nfd-namespace`, {
@@ -28,30 +27,16 @@ export function createNfdApp(chart: Chart) {
     },
   };
 
-  new Application(chart, "nfd-app", {
-    metadata: {
-      name: "nfd",
-    },
-    spec: {
-      revisionHistoryLimit: 5,
-      project: applicationProject("nfd"),
-      source: {
-        repoUrl:
-          "https://kubernetes-sigs.github.io/node-feature-discovery/charts",
-        chart: "node-feature-discovery",
-        targetRevision: versions["node-feature-discovery"],
-        helm: {
-          valuesObject: nfdValues,
-        },
-      },
-      destination: {
-        server: "https://kubernetes.default.svc",
-        namespace: "node-feature-discovery",
-      },
-      syncPolicy: {
-        automated: { enabled: true },
-        syncOptions: ["CreateNamespace=true"],
-      },
+  helmApplication(chart, {
+    name: "nfd",
+    namespace: "node-feature-discovery",
+    chart: "node-feature-discovery",
+    repoUrl: "https://kubernetes-sigs.github.io/node-feature-discovery/charts",
+    targetRevision: versions["node-feature-discovery"],
+    valuesObject: nfdValues,
+    syncPolicy: {
+      automated: { enabled: true },
+      syncOptions: ["CreateNamespace=true"],
     },
   });
 }

@@ -70,6 +70,31 @@ bun run generate-helm-types
 
 The Woodpecker Helm types drift check fails any PR that changes a generator input without regenerating.
 
+The generator also writes `generated/helm/chart-values-map.ts`, the map from
+chart name to values type that `HelmValuesForChart<"chart">` indexes, so a
+chart added to the catalog needs no hand-written registration.
+
+## Argo Applications
+
+Every `Application` is built by a factory in `src/misc/argo/application.ts`,
+which supplies what is the same everywhere: the in-cluster destination server,
+the AppProject looked up from the Application's name, a revision history limit
+of 5 and a construct id of `<name>-app`.
+
+- `helmApplication` installs an upstream chart. Its `chart` selects the type
+  `valuesObject` is checked as, so values written for another chart do not
+  compile. `uncheckedValuesObject` carries values the generated type cannot
+  express; spread the typed values into it so only the extra key escapes.
+- `createFirstPartyApplication` installs a wrapper chart from ChartMuseum at
+  the floating first-party revision.
+- `argoApplication` is the base both use, for a source that is not a Helm
+  chart, and takes a `spec` escape hatch merged over the derived fields.
+
+`syncPolicy` is required and has no default. The fleet's policies differ
+(`automated: {}` against `{ enabled: true }`, `prune`, `selfHeal`, a missing
+`CreateNamespace`) and an Application body is a Delivery recipe revision, so
+each call site states the policy it renders; `undefined` renders none.
+
 ## Home Assistant pet-care alerts
 
 `config/homeassistant/configuration.yaml` owns the qualified pet-care problem

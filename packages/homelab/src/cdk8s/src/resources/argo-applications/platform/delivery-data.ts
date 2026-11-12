@@ -1,6 +1,5 @@
 import type { Chart } from "cdk8s";
-import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
-import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
+import { createFirstPartyApplication } from "@shepherdjerred/homelab/cdk8s/src/misc/argo/application.ts";
 
 /**
  * Operator-run owner of Delivery's Namespace and PostgreSQL cluster. It is
@@ -8,25 +7,12 @@ import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/
  * by ArgoCD automation or a Delivery deployment of the `delivery` chart.
  */
 export function createDeliveryDataApp(chart: Chart) {
-  return new Application(chart, "delivery-data-app", {
-    metadata: {
-      name: "delivery-data",
-    },
-    spec: {
-      revisionHistoryLimit: 5,
-      project: applicationProject("delivery-data"),
-      source: {
-        repoUrl: "https://chartmuseum.tailnet-1a49.ts.net",
-        targetRevision: "~2.0.0-0",
-        chart: "delivery-data",
-      },
-      destination: {
-        server: "https://kubernetes.default.svc",
-        namespace: "delivery",
-      },
-      // No automated sync: restoring the database from a Velero backup
-      // deletes its `postgresql` object, and an automated sync would
-      // recreate an empty cluster over the volume being restored.
-    },
+  return createFirstPartyApplication(chart, {
+    name: "delivery-data",
+    namespace: "delivery",
+    // No automated sync: restoring the database from a Velero backup
+    // deletes its `postgresql` object, and an automated sync would
+    // recreate an empty cluster over the volume being restored.
+    syncPolicy: undefined,
   });
 }

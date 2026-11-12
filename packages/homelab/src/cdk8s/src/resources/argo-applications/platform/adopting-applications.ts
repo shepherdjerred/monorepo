@@ -1,7 +1,7 @@
 import type { Chart } from "cdk8s";
-import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
-import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
+import type { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import { TUNNEL_BINDING_IGNORE_DIFFERENCES } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/apps.ts";
+import { createFirstPartyApplication } from "@shepherdjerred/homelab/cdk8s/src/misc/argo/application.ts";
 
 /**
  * An Application the root never renders: Delivery creates it at the window's
@@ -17,29 +17,17 @@ export function createAdoptingApplication(
   name: string,
   namespace: string,
 ): Application {
-  return new Application(chart, `${name}-app`, {
-    metadata: { name },
-    spec: {
-      revisionHistoryLimit: 5,
-      project: applicationProject(name),
-      source: {
-        repoUrl: "https://chartmuseum.tailnet-1a49.ts.net",
-        targetRevision: "~2.0.0-0",
-        chart: name,
-      },
-      destination: {
-        server: "https://kubernetes.default.svc",
-        namespace,
-      },
-      ignoreDifferences: [TUNNEL_BINDING_IGNORE_DIFFERENCES],
-      syncPolicy: {
-        automated: { enabled: true },
-        syncOptions: [
-          "CreateNamespace=true",
-          "ServerSideApply=true",
-          "RespectIgnoreDifferences=true",
-        ],
-      },
+  return createFirstPartyApplication(chart, {
+    name,
+    namespace,
+    ignoreDifferences: [TUNNEL_BINDING_IGNORE_DIFFERENCES],
+    syncPolicy: {
+      automated: { enabled: true },
+      syncOptions: [
+        "CreateNamespace=true",
+        "ServerSideApply=true",
+        "RespectIgnoreDifferences=true",
+      ],
     },
   });
 }

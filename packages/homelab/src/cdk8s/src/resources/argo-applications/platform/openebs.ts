@@ -1,12 +1,11 @@
 import type { Chart } from "cdk8s";
-import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { Namespace } from "cdk8s-plus-31";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
 import { CI_NODE_TOLERATION } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
 import { firstPartyImageRepository } from "@shepherdjerred/version-catalog/image-registry";
 import { dockerHubPullSecretName } from "@shepherdjerred/homelab/cdk8s/src/dockerhub-pull-secrets.ts";
-import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
+import { helmApplication } from "@shepherdjerred/homelab/cdk8s/src/misc/argo/application.ts";
 
 export function createOpenEBSNamespace(chart: Chart): void {
   new Namespace(chart, `openebs-namespace`, {
@@ -79,29 +78,16 @@ export function createOpenEBSApp(chart: Chart) {
     },
   };
 
-  return new Application(chart, "openebs-app", {
-    metadata: {
-      name: "openebs",
-    },
-    spec: {
-      revisionHistoryLimit: 5,
-      project: applicationProject("openebs"),
-      source: {
-        repoUrl: "https://openebs.github.io/openebs",
-        targetRevision: versions.openebs,
-        chart: "openebs",
-        helm: {
-          valuesObject: openEBSValues,
-        },
-      },
-      destination: {
-        server: "https://kubernetes.default.svc",
-        namespace: "openebs",
-      },
-      syncPolicy: {
-        automated: { enabled: true },
-        syncOptions: ["CreateNamespace=true"],
-      },
+  return helmApplication(chart, {
+    name: "openebs",
+    namespace: "openebs",
+    chart: "openebs",
+    repoUrl: "https://openebs.github.io/openebs",
+    targetRevision: versions.openebs,
+    valuesObject: openEBSValues,
+    syncPolicy: {
+      automated: { enabled: true },
+      syncOptions: ["CreateNamespace=true"],
     },
   });
 }
