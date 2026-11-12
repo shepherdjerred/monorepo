@@ -33,7 +33,7 @@ Each subdirectory is an independent root module with its own `backend.tf` (S3 st
 
 ### Stacks synthesized from TypeScript
 
-`anthropic`, `anthropic-federation`, `dockerhub`, `github` and `tailscale` have no `.tf` files.
+`anthropic`, `anthropic-federation`, `dockerhub`, `github`, `openai` and `tailscale` have no `.tf` files.
 Their configuration is
 `main.tf.json`, synthesized by the [CDK Terrain](https://cdktn.io/docs) app in
 [`packages/homelab-cdktn`](../../../homelab-cdktn) and committed next to the stack's `.terraform.lock.hcl`.
@@ -346,6 +346,20 @@ forgets. Before archiving a project in the dashboard, remove its service
 accounts and model allowlist from desired state and apply that change;
 otherwise every later plan fails until each unreadable resource is removed from
 state.
+
+Projects archived in the dashboard, which the stack forgets instead of
+destroying:
+
+| Desired-state key           | Project id                      |
+| --------------------------- | ------------------------------- |
+| `scout-beta`                | `proj_W3LLi8mKyuKdJkxou38TpHIR` |
+| `scout-active-2026-09`      | `proj_3I9qDcL4Qvc82676p2g59DjA` |
+| `scout-prod-active-2026-09` | `proj_CRibw9zX9kDaFnQzynYbKdIm` |
+
+The stack is synthesized from `packages/homelab-cdktn/src/stacks/openai.ts`.
+Both providers serve resource types that start with `openai_`: the official
+one is the default for that prefix, and the companion keeps the local name
+`openaikeys`, which only `openai_project_service_account` selects.
 
 Spend controls denominate their thresholds inconsistently upstream, and the
 committed values rely on it: `openai_project_spend_limit` /
