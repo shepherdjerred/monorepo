@@ -141,6 +141,12 @@ Never run `apply`, `import`, or any `state` subcommand as part of a port.
   default registry synthesizes its bare `namespace/type` in lower case
   (`1password/onepassword`); OpenTofu treats that as the address the lock
   file already records.
+- **`terraform_data` is `DataResource` from `cdktn`**, with no provider or
+  bindings. Its `input` keys are written as given.
+- **A plan never shows a provisioner.** A resource's `provisioners` list
+  replaces the HCL block, and a `<<-EOT` heredoc becomes its dedented lines,
+  each ended by `\n`. A changed script plans as no change, so the stack's
+  test pins every script in full (`src/seaweedfs.test.ts`).
 - **Generated bindings are not typechecked.** `generate` prepends TypeScript's
   no-check pragma to each one because the generator omits `override`
   modifiers; their types still flow into the stacks that import them.

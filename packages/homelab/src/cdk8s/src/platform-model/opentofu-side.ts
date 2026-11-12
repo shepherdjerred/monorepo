@@ -355,10 +355,14 @@ async function readCloudflare(
   };
 }
 
+/**
+ * The seaweedfs stack is synthesized: its hashed-asset lifecycle rules iterate
+ * `local.static_site_immutable_prefixes`. Anything else fails here, so the
+ * prefixes are never read from a local the rules do not apply.
+ */
 function readSeaweedfs(
   stack: Stack,
 ): Pick<OpenTofuSide, "seaweedfsBuckets" | "expiringPrefixesByBucket"> {
-  const blocks = hclOnly(stack, "buckets and lifecycle prefixes");
   const seaweedfsBuckets = new Set(
     stack.resources
       .filter((resource) => resource.type === "aws_s3_bucket")
@@ -369,25 +373,24 @@ function readSeaweedfs(
         return name;
       }),
   );
-  const prefixes = blocksOf(blocks, "locals")
-    .map((locals) =>
-      objectEntries(locals.attributes.get("static_site_immutable_prefixes")),
-    )
-    .find((entries) => entries !== undefined);
-  if (prefixes === undefined)
+  const lifecycle = stack.resources.find(
+    (resource) =>
+      resource.type === "terraform_data" &&
+      resource.name === "static_site_asset_lifecycle",
+  );
+  if (
+    unwrapInterpolation(lifecycle?.attributes.get("for_each")) !==
+    "local.static_site_immutable_prefixes"
+  )
     throw new Error(
-      "seaweedfs: local.static_site_immutable_prefixes not found",
+      "seaweedfs: static_site_asset_lifecycle does not iterate local.static_site_immutable_prefixes; update readSeaweedfs",
     );
+  const prefixes = z
+    .record(z.string(), z.array(z.string()))
+    .parse(stack.locals["static_site_immutable_prefixes"]);
   return {
     seaweedfsBuckets,
-    expiringPrefixesByBucket: new Map(
-      [...prefixes].map(([bucket, expression]) => {
-        const values = literalStrings(expression);
-        if (values === undefined)
-          throw new Error(`seaweedfs: prefixes of ${bucket} are not literals`);
-        return [bucket, values];
-      }),
-    ),
+    expiringPrefixesByBucket: new Map(Object.entries(prefixes)),
   };
 }
 

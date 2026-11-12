@@ -465,6 +465,18 @@ Includes static site buckets, application storage (scout), and the tofu state ba
 
 The `homelab-tofu-state` bucket has `prevent_destroy = true` since it stores state for all tofu modules.
 
+The buckets are declared in
+[`packages/homelab-cdktn/src/stacks/seaweedfs.ts`](../../../homelab-cdktn/src/stacks/seaweedfs.ts).
+Edit them there, run `bun run --cwd packages/homelab-cdktn synth`, and commit
+the regenerated `seaweedfs/main.tf.json`. The landing and 404 pages seeded into
+`public-sjer-red` stay in `seaweedfs/public/`, which the stack reads with
+`filemd5` and uploads.
+
+SeaweedFS lifecycle rules and the seed pages are `terraform_data` resources
+whose `local-exec` provisioners call the AWS CLI with the deployment identity.
+A plan never shows a provisioner's script, so a zero-change plan does not
+cover one: `packages/homelab-cdktn/src/seaweedfs.test.ts` pins each script.
+
 ### Tailscale
 
 The tailnet ACL policy (`tailscale_acl`): `tagOwners`, access rules, Tailscale SSH, and policy `tests`. Moves the tailnet from implicit allow-all (every device trusted) to deny-by-default — the account owner keeps full access, non-admin humans get only the published `*.ts.net` apps, and tagged/untrusted devices are denied by default.

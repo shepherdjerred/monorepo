@@ -1,0 +1,264 @@
+{
+  "import": [
+    { "id": "apple-sdks", "to": "aws_s3_bucket.apple_sdks" },
+    { "id": "stocks-sjer-red", "to": "aws_s3_bucket.stocks_sjer_red" },
+    { "id": "relay-docs", "to": "aws_s3_bucket.relay_docs" },
+    { "id": "ci-handoff", "to": "aws_s3_bucket.ci_handoff" }
+  ],
+  "locals": {
+    "seaweedfs_deploy_environment": {
+      "AWS_ACCESS_KEY_ID": "${var.seaweedfs_access_key_id}",
+      "AWS_SECRET_ACCESS_KEY": "${var.seaweedfs_secret_access_key}"
+    },
+    "static_site_immutable_prefixes": {
+      "better-skill-capped": ["assets/"],
+      "cook": ["_astro/"],
+      "cross-compilers": ["_astro/"],
+      "glitter-boys": ["_astro/"],
+      "landing-pages": ["_astro/"],
+      "scout-frontend": ["app/assets/", "_astro/"],
+      "scout-frontend-beta": ["app/assets/", "_astro/"],
+      "sjer-red": ["_astro/"],
+      "stocks-sjer-red": ["_astro/"],
+      "ts-mc": ["_astro/"],
+      "ts-mc-docs": ["_astro/"],
+      "wiki-sjer-red": ["_astro/"]
+    }
+  },
+  "provider": {
+    "aws": [
+      {
+        "access_key": "${var.seaweedfs_access_key_id}",
+        "endpoints": [{ "s3": "https://seaweedfs-s3.tailnet-1a49.ts.net" }],
+        "region": "us-east-1",
+        "s3_use_path_style": true,
+        "secret_key": "${var.seaweedfs_secret_access_key}",
+        "skip_credentials_validation": true,
+        "skip_metadata_api_check": "true",
+        "skip_requesting_account_id": true
+      }
+    ]
+  },
+  "removed": [
+    {
+      "from": "aws_s3_bucket.scout_classic_fonts",
+      "lifecycle": { "destroy": false }
+    }
+  ],
+  "resource": {
+    "aws_s3_bucket": {
+      "agent_chat_sessions": { "bucket": "agent-chat-sessions" },
+      "apple_sdks": {
+        "bucket": "apple-sdks",
+        "lifecycle": { "prevent_destroy": true }
+      },
+      "better_skill_capped": { "bucket": "better-skill-capped" },
+      "brim_sessions": {
+        "bucket": "brim-sessions",
+        "lifecycle": { "prevent_destroy": true }
+      },
+      "ci_handoff": { "bucket": "ci-handoff" },
+      "clauderon": { "bucket": "clauderon", "force_destroy": true },
+      "cook": { "bucket": "cook" },
+      "cross_compilers": { "bucket": "cross-compilers" },
+      "delivery_artifacts": {
+        "bucket": "delivery-artifacts",
+        "lifecycle": { "prevent_destroy": true }
+      },
+      "glitter_boys": { "bucket": "glitter-boys" },
+      "glitter_boys_ppl": { "bucket": "glitter-boys-ppl" },
+      "glitter_discord_corpus": {
+        "bucket": "glitter-discord-corpus",
+        "lifecycle": { "prevent_destroy": true }
+      },
+      "homelab_tofu_state": {
+        "bucket": "homelab-tofu-state",
+        "lifecycle": { "prevent_destroy": true }
+      },
+      "landing_pages": { "bucket": "landing-pages" },
+      "llm_archive": { "bucket": "llm-archive" },
+      "public_sjer_red": { "bucket": "public-sjer-red" },
+      "relay_docs": {
+        "bucket": "relay-docs",
+        "lifecycle": { "prevent_destroy": true }
+      },
+      "resume": { "bucket": "resume" },
+      "scout_beta": { "bucket": "scout-beta" },
+      "scout_design_system": { "bucket": "scout-design-system" },
+      "scout_frontend": { "bucket": "scout-frontend" },
+      "scout_frontend_beta": { "bucket": "scout-frontend-beta" },
+      "scout_prod": { "bucket": "scout-prod" },
+      "scout_support_beta": { "bucket": "scout-support-beta" },
+      "scout_support_prod": { "bucket": "scout-support-prod" },
+      "sjer_red": { "bucket": "sjer-red" },
+      "statically_typed": { "bucket": "statically-typed" },
+      "stocks_sjer_red": { "bucket": "stocks-sjer-red" },
+      "storm_forum_backups": {
+        "bucket": "storm-forum-backups",
+        "lifecycle": { "prevent_destroy": true }
+      },
+      "storm_forum_releases": {
+        "bucket": "storm-forum-releases",
+        "lifecycle": { "prevent_destroy": true }
+      },
+      "streambot_voice_captures": { "bucket": "streambot-voice-captures" },
+      "the_storm_capture_fixtures": {
+        "bucket": "the-storm-capture-fixtures",
+        "lifecycle": { "prevent_destroy": true }
+      },
+      "the_storm_rwf_recordings": {
+        "bucket": "the-storm-rwf-recordings",
+        "lifecycle": { "prevent_destroy": true }
+      },
+      "tracker_attachments": {
+        "bucket": "tracker-attachments",
+        "lifecycle": { "prevent_destroy": true }
+      },
+      "ts_mc": { "bucket": "ts-mc" },
+      "ts_mc_docs": { "bucket": "ts-mc-docs" },
+      "webring": { "bucket": "webring" },
+      "wiki_sjer_red": { "bucket": "wiki-sjer-red" }
+    },
+    "terraform_data": {
+      "ci_handoff_lifecycle": {
+        "input": {
+          "bucket": "${aws_s3_bucket.ci_handoff.id}",
+          "endpoint_url": "https://seaweedfs-s3.tailnet-1a49.ts.net",
+          "expire_days": 30
+        },
+        "provisioner": [
+          {
+            "local-exec": {
+              "command": "aws s3api put-bucket-lifecycle-configuration \\\n  --bucket \"${self.input.bucket}\" \\\n  --endpoint-url \"${self.input.endpoint_url}\" \\\n  --lifecycle-configuration '{\n    \"Rules\": [{\n      \"ID\": \"expire-ci-handoff\",\n      \"Status\": \"Enabled\",\n      \"Filter\": {\"Prefix\": \"\"},\n      \"Expiration\": {\"Days\": ${self.input.expire_days}}\n    }]\n  }'\n",
+              "environment": "${local.seaweedfs_deploy_environment}"
+            }
+          }
+        ]
+      },
+      "llm_archive_lifecycle": {
+        "input": {
+          "bucket": "${aws_s3_bucket.llm_archive.id}",
+          "endpoint_url": "https://seaweedfs-s3.tailnet-1a49.ts.net",
+          "expire_days": 365
+        },
+        "provisioner": [
+          {
+            "local-exec": {
+              "command": "aws s3api put-bucket-lifecycle-configuration \\\n  --bucket \"${self.input.bucket}\" \\\n  --endpoint-url \"${self.input.endpoint_url}\" \\\n  --lifecycle-configuration '{\n    \"Rules\": [{\n      \"ID\": \"expire-llm-archives\",\n      \"Status\": \"Enabled\",\n      \"Filter\": {\"Prefix\": \"\"},\n      \"Expiration\": {\"Days\": ${self.input.expire_days}}\n    }]\n  }'\n",
+              "environment": "${local.seaweedfs_deploy_environment}"
+            }
+          }
+        ]
+      },
+      "public_sjer_red_lifecycle": {
+        "input": {
+          "bucket": "${aws_s3_bucket.public_sjer_red.id}",
+          "endpoint_url": "https://seaweedfs-s3.tailnet-1a49.ts.net",
+          "expire_days": 365
+        },
+        "provisioner": [
+          {
+            "local-exec": {
+              "command": "aws s3api put-bucket-lifecycle-configuration \\\n  --bucket \"${self.input.bucket}\" \\\n  --endpoint-url \"${self.input.endpoint_url}\" \\\n  --lifecycle-configuration '{\n    \"Rules\": [{\n      \"ID\": \"expire-pr-assets\",\n      \"Status\": \"Enabled\",\n      \"Filter\": {\"Prefix\": \"pr/assets/\"},\n      \"Expiration\": {\"Days\": ${self.input.expire_days}}\n    }]\n  }'\n",
+              "environment": "${local.seaweedfs_deploy_environment}"
+            }
+          }
+        ]
+      },
+      "public_sjer_red_seed": {
+        "input": {
+          "bucket": "${aws_s3_bucket.public_sjer_red.id}",
+          "endpoint_url": "https://seaweedfs-s3.tailnet-1a49.ts.net",
+          "index_md5": "${filemd5(\"${path.module}/public/index.html\")}",
+          "not_found_md5": "${filemd5(\"${path.module}/public/404.html\")}"
+        },
+        "provisioner": [
+          {
+            "local-exec": {
+              "command": "aws s3 cp \"${path.module}/public/index.html\" \"s3://${self.input.bucket}/index.html\" \\\n  --endpoint-url \"${self.input.endpoint_url}\" \\\n  --content-type \"text/html; charset=utf-8\"\naws s3 cp \"${path.module}/public/404.html\" \"s3://${self.input.bucket}/404.html\" \\\n  --endpoint-url \"${self.input.endpoint_url}\" \\\n  --content-type \"text/html; charset=utf-8\"\n",
+              "environment": "${local.seaweedfs_deploy_environment}"
+            }
+          }
+        ]
+      },
+      "static_site_asset_lifecycle": {
+        "depends_on": [
+          "aws_s3_bucket.scout_frontend",
+          "aws_s3_bucket.scout_frontend_beta",
+          "aws_s3_bucket.sjer_red",
+          "aws_s3_bucket.cook",
+          "aws_s3_bucket.cross_compilers",
+          "aws_s3_bucket.stocks_sjer_red",
+          "aws_s3_bucket.landing_pages",
+          "aws_s3_bucket.wiki_sjer_red",
+          "aws_s3_bucket.better_skill_capped",
+          "aws_s3_bucket.ts_mc",
+          "aws_s3_bucket.ts_mc_docs",
+          "aws_s3_bucket.glitter_boys"
+        ],
+        "for_each": "${local.static_site_immutable_prefixes}",
+        "input": {
+          "bucket": "${each.key}",
+          "endpoint_url": "https://seaweedfs-s3.tailnet-1a49.ts.net",
+          "rules": "${jsonencode({ Rules = [for idx, prefix in each.value : { ID = \"expire-old-hashed-${idx}\", Status = \"Enabled\", Filter = { Prefix = prefix }, Expiration = { Days = 90 } }] })}"
+        },
+        "provisioner": [
+          {
+            "local-exec": {
+              "command": "aws s3api put-bucket-lifecycle-configuration \\\n  --bucket \"${self.input.bucket}\" \\\n  --endpoint-url \"${self.input.endpoint_url}\" \\\n  --lifecycle-configuration '${self.input.rules}'\n",
+              "environment": "${local.seaweedfs_deploy_environment}"
+            }
+          }
+        ]
+      },
+      "streambot_voice_captures_lifecycle": {
+        "input": {
+          "bucket": "${aws_s3_bucket.streambot_voice_captures.id}",
+          "endpoint_url": "https://seaweedfs-s3.tailnet-1a49.ts.net",
+          "expire_days": 90
+        },
+        "provisioner": [
+          {
+            "local-exec": {
+              "command": "aws s3api put-bucket-lifecycle-configuration \\\n  --bucket \"${self.input.bucket}\" \\\n  --endpoint-url \"${self.input.endpoint_url}\" \\\n  --lifecycle-configuration '{\n    \"Rules\": [{\n      \"ID\": \"expire-streambot-voice-captures\",\n      \"Status\": \"Enabled\",\n      \"Filter\": {\"Prefix\": \"voice-captures/\"},\n      \"Expiration\": {\"Days\": ${self.input.expire_days}}\n    }]\n  }'\n",
+              "environment": "${local.seaweedfs_deploy_environment}"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "terraform": {
+    "backend": {
+      "s3": {
+        "bucket": "homelab-tofu-state",
+        "endpoints": { "s3": "https://seaweedfs-s3.tailnet-1a49.ts.net" },
+        "key": "seaweedfs/terraform.tfstate",
+        "region": "auto",
+        "skip_credentials_validation": true,
+        "skip_metadata_api_check": true,
+        "skip_region_validation": true,
+        "skip_requesting_account_id": true,
+        "skip_s3_checksum": true,
+        "use_lockfile": true,
+        "use_path_style": true
+      }
+    },
+    "required_providers": {
+      "aws": { "source": "hashicorp/aws", "version": "~> 6.55" }
+    },
+    "required_version": ">= 1.6.0"
+  },
+  "variable": {
+    "seaweedfs_access_key_id": {
+      "description": "SeaweedFS S3 deployment identity access key",
+      "sensitive": true,
+      "type": "string"
+    },
+    "seaweedfs_secret_access_key": {
+      "description": "SeaweedFS S3 deployment identity secret key",
+      "sensitive": true,
+      "type": "string"
+    }
+  }
+}

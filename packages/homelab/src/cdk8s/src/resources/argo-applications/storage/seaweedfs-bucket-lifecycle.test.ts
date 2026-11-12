@@ -1,21 +1,26 @@
 import path from "node:path";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
+import {
+  readSynthesizedConfiguration,
+  synthesizedResources,
+} from "homelab/scripts/tofu/synthesized-configuration.ts";
 
-const BUCKETS_TF = path.join(
+const SEAWEEDFS_TOFU_STACK = path.join(
   import.meta.dirname,
-  "../../../../../tofu/seaweedfs/buckets.tf",
+  "../../../../../tofu/seaweedfs",
 );
 
-/** The body of one top-level `resource "<type>" "<name>" { ... }` block. */
-function resourceBlock(source: string, type: string, name: string): string {
-  const header = `resource "${type}" "${name}" {`;
-  const start = source.indexOf(header);
-  if (start === -1) throw new Error(`missing ${type}.${name}`);
-  const end = source.indexOf("\n}\n", start);
-  if (end === -1) throw new Error(`unterminated ${type}.${name}`);
-  return source.slice(start, end);
-}
+const LifecycleResourceSchema = z.looseObject({
+  input: z.record(z.string(), z.unknown()),
+  provisioner: z
+    .array(
+      z.strictObject({
+        "local-exec": z.looseObject({ command: z.string() }),
+      }),
+    )
+    .length(1),
+});
 
 const LifecycleConfigurationSchema = z.strictObject({
   Rules: z.array(
@@ -28,9 +33,22 @@ const LifecycleConfigurationSchema = z.strictObject({
   ),
 });
 
-/** The lifecycle JSON the block's provisioner sends, before interpolation. */
-function lifecycleConfiguration(block: string) {
-  const json = /--lifecycle-configuration '(?<json>[\s\S]*?)'/u.exec(block)
+/** One `terraform_data` resource of the synthesized seaweedfs stack. */
+async function lifecycleResource(name: string) {
+  const configuration =
+    await readSynthesizedConfiguration(SEAWEEDFS_TOFU_STACK);
+  if (configuration === undefined)
+    throw new Error("the seaweedfs stack has no synthesized main.tf.json");
+  const resource = synthesizedResources(configuration, "terraform_data").find(
+    (candidate) => candidate.name === name,
+  );
+  if (resource === undefined) throw new Error(`missing terraform_data.${name}`);
+  return LifecycleResourceSchema.parse(resource.attributes);
+}
+
+/** The lifecycle JSON the provisioner sends, before interpolation. */
+function lifecycleConfiguration(command: string) {
+  const json = /--lifecycle-configuration '(?<json>[\s\S]*?)'/u.exec(command)
     ?.groups?.["json"];
   if (json === undefined) throw new Error("missing lifecycle configuration");
   // Quote the one interpolation so the template parses as JSON.
@@ -41,18 +59,17 @@ function lifecycleConfiguration(block: string) {
 
 describe("SeaweedFS ci-handoff bucket", () => {
   test("expires every object after 30 days", async () => {
-    const source = await Bun.file(BUCKETS_TF).text();
-    const block = resourceBlock(
-      source,
-      "terraform_data",
-      "ci_handoff_lifecycle",
-    );
+    const resource = await lifecycleResource("ci_handoff_lifecycle");
 
-    expect(block).toContain("bucket       = aws_s3_bucket.ci_handoff.id");
+    expect(resource.input["bucket"]).toBe("${aws_s3_bucket.ci_handoff.id}");
     // The longest a reader needs an earlier pipeline's handoff is the 24-hour
     // reviewed-plan window (scripts/tofu/platform-plan-handoff.ts).
-    expect(block).toMatch(/expire_days\s*=\s*30\n/u);
-    expect(lifecycleConfiguration(block).Rules).toEqual([
+    expect(resource.input["expire_days"]).toBe(30);
+    expect(
+      lifecycleConfiguration(
+        resource.provisioner[0]?.["local-exec"].command ?? "",
+      ).Rules,
+    ).toEqual([
       {
         ID: "expire-ci-handoff",
         Status: "Enabled",
