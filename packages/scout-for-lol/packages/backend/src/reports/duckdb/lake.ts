@@ -257,6 +257,10 @@ function compactedFirstSource(
   };
 }
 
+/** A participant row's natural key. See the `matches` dedupe below. */
+const MATCH_DEDUPE_KEY =
+  "match_id, puuid, participant_id, team_id, champion_id";
+
 /**
  * Build the deduped parquet ∪ staging source for one lake table. Returns
  * undefined when there are no files at all (caller short-circuits).
@@ -293,14 +297,19 @@ export function buildUnionSource(
   }
   const partition = (() => {
     switch (input.dedupe) {
+      // A bot or an unresolved player has a NULL puuid, and PARTITION BY
+      // groups NULLs together, so the key also names the slot, team and
+      // champion. For a player the PUUID alone already decides the row.
       case "matches":
-        return "match_id, puuid";
+        return MATCH_DEDUPE_KEY;
       case "match-teams":
         return "match_id, team_id";
       case "match-team-bans":
         return "match_id, team_id, pick_turn";
+      // A bot's prematch row has a NULL puuid, so team and champion tell bots
+      // apart.
       case "prematch":
-        return "dedupe_key, puuid";
+        return "dedupe_key, puuid, team_id, champion_id";
       case "timeline-events":
         return "event_id";
       case "timeline-event-participants":
@@ -361,11 +370,14 @@ export function buildPrematchSource(
  * look them up from the participant table. Reading them through
  * `buildMatchesSource` would project all ninety-odd participant columns and
  * defeat parquet's column pruning on every objective query; this narrow map
- * reads six. `puuid` earns its place by being half the dedupe key.
+ * reads the few it needs plus the dedupe key's columns.
  */
 const MATCH_DIMENSION_LAKE_COLUMNS = {
   match_id: MATCH_LAKE_COLUMNS.match_id,
   puuid: MATCH_LAKE_COLUMNS.puuid,
+  participant_id: MATCH_LAKE_COLUMNS.participant_id,
+  team_id: MATCH_LAKE_COLUMNS.team_id,
+  champion_id: MATCH_LAKE_COLUMNS.champion_id,
   game_creation_at: MATCH_LAKE_COLUMNS.game_creation_at,
   queue: MATCH_LAKE_COLUMNS.queue,
   game_version: MATCH_LAKE_COLUMNS.game_version,
@@ -390,15 +402,12 @@ export function buildMatchDimensionSource(
  *
  * A frame or event names a participant by puuid or slot but carries no
  * champion, position, team, result or match time. Those are read from the
- * participant row — one per (match, puuid), which the `matches` dedupe
+ * participant row — one per (match, slot), which the `matches` dedupe
  * already guarantees — through this narrow projection rather than all
  * ninety-odd participant columns.
  */
 const PARTICIPANT_DIMENSION_LAKE_COLUMNS = {
   ...MATCH_DIMENSION_LAKE_COLUMNS,
-  participant_id: MATCH_LAKE_COLUMNS.participant_id,
-  team_id: MATCH_LAKE_COLUMNS.team_id,
-  champion_id: MATCH_LAKE_COLUMNS.champion_id,
   champion_name: MATCH_LAKE_COLUMNS.champion_name,
   team_position: MATCH_LAKE_COLUMNS.team_position,
   win: MATCH_LAKE_COLUMNS.win,

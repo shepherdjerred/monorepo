@@ -1,65 +1,19 @@
 import { RawMatchSchema } from "@scout-for-lol/data";
-import {
-  RiotMatchIdSchema,
-  type RiotMatchId,
-} from "@scout-for-lol/domain/identity/brands.ts";
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import { timelineMatchesResult } from "#src/scout-client/canonical-match.ts";
+import { lcuUuidsIn } from "#src/scout-client/identity-alias.ts";
 import {
-  LCU_BOT_UUID,
-  lcuUuidsIn,
-  translatePayloadIdentities,
-} from "#src/scout-client/identity-alias.ts";
+  aliasedLcuBundle as aliasedBundle,
+  LcuBundleFixtureSchema as FixtureSchema,
+  lcuBotBundle as botBundle,
+  lcuBundleMatchId as matchIdOf,
+  rawLcuFixture as rawFixture,
+  withLcuTiming as withTiming,
+} from "#src/testing/lcu-bundle-fixtures.ts";
 import { convertLcuMatchBundle } from "./lcu-match.ts";
 import { convertLcuTimeline } from "./lcu-timeline.ts";
-
-const FixtureSchema = z
-  .object({
-    matchHistory: z
-      .object({
-        gameDuration: z.number(),
-        gameId: z.number(),
-        platformId: z.string(),
-      })
-      .loose(),
-    endOfGame: z.unknown(),
-    timeline: z.unknown(),
-  })
-  .strict();
-type Fixture = z.infer<typeof FixtureSchema>;
-
-/** The parts of a bundle a bot rewrite touches; everything else passes through. */
-const BotEditableSchema = z.looseObject({
-  matchHistory: z.looseObject({
-    participantIdentities: z.array(
-      z.looseObject({
-        participantId: z.number(),
-        player: z.looseObject({ puuid: z.string() }),
-      }),
-    ),
-    participants: z.array(
-      z.looseObject({
-        participantId: z.number(),
-        teamId: z.number(),
-        championId: z.number(),
-      }),
-    ),
-  }),
-  endOfGame: z.looseObject({
-    teams: z.array(
-      z.looseObject({
-        players: z.array(
-          z.looseObject({
-            puuid: z.string(),
-            botPlayer: z.boolean(),
-            championId: z.number(),
-          }),
-        ),
-      }),
-    ),
-  }),
-});
 
 const EndOfGameGoldSchema = z.looseObject({
   endOfGame: z.looseObject({
@@ -76,103 +30,6 @@ const EndOfGameGoldSchema = z.looseObject({
     ),
   }),
 });
-
-/**
- * A real game as the Scout Client bundles it — `games/{id}`, the end-of-game
- * block, and `game-timelines/{id}` — redacted: every player UUID is a stable
- * fake, every name a placeholder, and the chat credentials the League client
- * includes are gone.
- */
-async function rawFixture(name: string): Promise<unknown> {
-  return Bun.file(
-    new URL(`../../../../../testdata/lcu/${name}.json`, import.meta.url),
-  ).json();
-}
-
-/** Stand-ins for the alias table: each fake UUID to a 78-character PUUID. */
-function aliasesFor(raw: unknown): ReadonlyMap<string, string> {
-  return new Map(
-    [...lcuUuidsIn(raw)].map((uuid) => [uuid, `${uuid}-${"p".repeat(41)}`]),
-  );
-}
-
-function withTiming(bundle: Fixture) {
-  const start = 1_790_000_000_000;
-  return {
-    ...bundle,
-    timing: {
-      gameStartTimestamp: start,
-      gameEndTimestamp: start + bundle.matchHistory.gameDuration * 1000,
-    },
-  };
-}
-
-function matchIdOf(bundle: Fixture): RiotMatchId {
-  return RiotMatchIdSchema.parse(
-    `${bundle.matchHistory.platformId}_${bundle.matchHistory.gameId.toString()}`,
-  );
-}
-
-async function aliasedBundle(name: string) {
-  const raw = await rawFixture(name);
-  return withTiming(
-    FixtureSchema.parse(translatePayloadIdentities(raw, aliasesFor(raw))),
-  );
-}
-
-/**
- * The fixture with the given participants turned into bots, as the League
- * client reports one: the zero UUID in history and end-of-game alike, and the
- * end-of-game block's own bot flag. `champion` overrides a bot's champion.
- */
-function asBots(
-  raw: unknown,
-  participantIds: readonly number[],
-  champion?: number,
-): unknown {
-  const game = BotEditableSchema.parse(structuredClone(raw));
-  for (const participantId of participantIds) {
-    const identity = game.matchHistory.participantIdentities.find(
-      (candidate) => candidate.participantId === participantId,
-    );
-    const participant = game.matchHistory.participants.find(
-      (candidate) => candidate.participantId === participantId,
-    );
-    if (identity === undefined || participant === undefined) {
-      throw new Error(`Fixture has no participant ${participantId.toString()}`);
-    }
-    const player = game.endOfGame.teams
-      .flatMap((team) => team.players)
-      .find((candidate) => candidate.puuid === identity.player.puuid);
-    if (player === undefined) {
-      throw new Error(
-        `Fixture has no end-of-game row for ${identity.player.puuid}`,
-      );
-    }
-    identity.player.puuid = LCU_BOT_UUID;
-    player.puuid = LCU_BOT_UUID;
-    player.botPlayer = true;
-    if (champion !== undefined) {
-      participant.championId = champion;
-      player.championId = champion;
-    }
-  }
-  return game;
-}
-
-async function botBundle(
-  participantIds: readonly number[],
-  champion?: number,
-): Promise<ReturnType<typeof withTiming>> {
-  const raw = asBots(
-    await rawFixture("lcu-postgame-classic"),
-    participantIds,
-    champion,
-  );
-  return withTiming(
-    FixtureSchema.parse(translatePayloadIdentities(raw, aliasesFor(raw))),
-  );
-}
 
 describe("convertLcuMatchBundle", () => {
   test("converts a real ranked game with every participant", async () => {

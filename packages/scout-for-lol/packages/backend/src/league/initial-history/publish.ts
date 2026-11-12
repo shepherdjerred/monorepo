@@ -1,6 +1,9 @@
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import { initialHistoryImportPhasesTotal } from "#src/metrics/initial-history-import.ts";
-import { runReportLakeFold } from "#src/report-lake/compactor.ts";
+import {
+  reportLakeMigrationPending,
+  runReportLakeFold,
+} from "#src/report-lake/compactor.ts";
 
 export async function publishReadyImports(
   db: ExtendedPrismaClient,
@@ -28,7 +31,12 @@ export async function publishReadyImports(
 
   const ready = jobs.filter((job) => trackedPuuids.has(job.puuid));
   if (ready.length === 0) return;
-  await runReportLakeFold({ prisma: db });
+  // The imported rows are already readable from staging. During the schema
+  // migration the scheduled fold publishes them with its rebuild, which an
+  // import must not wait on (see reportLakeMigrationPending).
+  if (!(await reportLakeMigrationPending())) {
+    await runReportLakeFold({ prisma: db });
+  }
 
   const completions = await Promise.all(
     ready.map(

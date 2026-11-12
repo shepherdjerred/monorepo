@@ -8,7 +8,6 @@ import type {
   TimelineEventParticipantLakeRow,
   TimelineParticipantFrameLakeRow,
 } from "@scout-for-lol/data";
-import { requireLakePlayers } from "#src/report-lake/non-player.ts";
 import { lakeMonth, lakeTimestamp } from "#src/report-lake/schema.ts";
 
 export type FlattenedTimeline = {
@@ -221,9 +220,14 @@ export function flattenTimeline(
   const matchId = timeline.metadata.matchId;
   const observedAtText = lakeTimestamp(observedAt.getTime());
   const month = lakeMonth(observedAt.getTime());
+  // Only a player has a PUUID. A bot's or an unresolved player's frames and
+  // events keep their slot with a NULL puuid; the slot joins them to their
+  // match row, which states the kind.
   const puuidByParticipant = new Map(
-    requireLakePlayers(matchId, timeline.info.participants).map(
-      (participant) => [participant.participantId, participant.puuid],
+    timeline.info.participants.flatMap((participant) =>
+      participant.puuid === null
+        ? []
+        : [[participant.participantId, participant.puuid] as const],
     ),
   );
   const events: TimelineEventLakeRow[] = [];

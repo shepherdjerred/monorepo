@@ -1,6 +1,10 @@
 import { z } from "zod";
 import { MatchDataSourceSchema } from "@scout-for-lol/domain/match-processing/states.ts";
-import { MATCH_REBUILD_GATED_COLUMNS } from "#src/model/reports/match-rebuild-gated-columns.ts";
+import { ParticipantKindSchema } from "#src/league/participant-identity.ts";
+import {
+  MATCH_MIGRATION_GATED_COLUMNS,
+  MATCH_REBUILD_GATED_COLUMNS,
+} from "#src/model/reports/match-rebuild-gated-columns.ts";
 import {
   RUNE_SPELL_COLUMNS,
   SCOUTQL_LOADOUT_LAKE_COLUMNS,
@@ -33,14 +37,24 @@ import {
  */
 const ItemSlotSchema = z.number().nullable().default(null);
 
+/**
+ * How complete a match record is: `complete` for a Match-V5 document, Riot's
+ * or one the Scout Client assembled from the full history bundle, and
+ * `end_of_game` for a game known only from the League client's end-of-game
+ * block, which states no timeline, bans or participant slots.
+ */
+export const MatchCoverageSchema = z.enum(["complete", "end_of_game"]);
+export type MatchCoverage = z.infer<typeof MatchCoverageSchema>;
+
 export const MatchLakeRowSchema = z.object({
   // Match keys
   match_id: z.string(),
   game_id: z.string(),
   platform_id: z.string(),
   month: z.string(),
-  // Match times
-  game_creation_at: z.string(),
+  // Match times. Unknowns are NULL, never zero: an end-of-game record states
+  // no lobby creation time and no game version.
+  game_creation_at: z.string().nullable(),
   game_start_at: z.string(),
   game_end_at: z.string(),
   game_duration_seconds: z.number(),
@@ -49,18 +63,26 @@ export const MatchLakeRowSchema = z.object({
   queue: z.string().nullable(),
   game_mode: z.string(),
   game_type: z.string(),
-  game_version: z.string(),
+  game_version: z.string().nullable(),
   // Where the match payload came from: Riot, or the Scout Client for a game
   // Riot never published (`matchDataSourceOf`, from `dataVersion`).
   data_source: MatchDataSourceSchema,
+  // Defaulted, like participant_kind, for a row staged before the column
+  // existed: the lake stored only complete records then.
+  coverage: MatchCoverageSchema.default("complete"),
   // Settlement voids a match whose result is not GameComplete. History has to
   // apply the same predicate, or prices are conditioned on games that could
   // never have settled either way.
   end_of_game_result: z.string().nullable(),
   map_id: z.number(),
-  // Participant identity (global — attribution happens at query time)
-  puuid: z.string(),
-  participant_id: z.number(),
+  // Participant identity (global — attribution happens at query time).
+  // `puuid` is non-null exactly when the row names a player; a bot or an
+  // unresolved player has none, and a League-client UUID never reaches the
+  // lake. The kind is defaulted for a row staged before the column existed:
+  // the lake refused every non-player row then.
+  puuid: z.string().nullable(),
+  participant_kind: ParticipantKindSchema.default("player"),
+  participant_id: z.number().nullable(),
   team_id: z.number(),
   riot_id_game_name: z.string().nullable(),
   riot_id_tagline: z.string(),
@@ -195,7 +217,8 @@ export const PrematchLakeRowSchema = z.object({
   game_mode: z.string(),
   game_type: z.string(),
   map_id: z.number(),
-  puuid: z.string(),
+  // NULL for a bot (`bot` is true). A hidden player has no row at all.
+  puuid: z.string().nullable(),
   team_id: z.number(),
   player_subteam_id: z.number().nullable(),
   champion_id: z.number(),
@@ -253,9 +276,11 @@ export const MATCH_LAKE_COLUMNS: Record<keyof MatchLakeRow, DuckDbColumnType> =
     game_type: "VARCHAR",
     game_version: "VARCHAR",
     data_source: "VARCHAR",
+    coverage: "VARCHAR",
     end_of_game_result: "VARCHAR",
     map_id: "INTEGER",
     puuid: "VARCHAR",
+    participant_kind: "VARCHAR",
     participant_id: "INTEGER",
     team_id: "INTEGER",
     riot_id_game_name: "VARCHAR",
@@ -371,9 +396,11 @@ export const ITEM_SLOT_COLUMNS = [
   "item6",
 ] as const;
 
+const MIGRATION_GATED_COLUMNS = new Set<string>(MATCH_MIGRATION_GATED_COLUMNS);
 const REBUILD_GATED_COLUMNS = new Set<string>([
   ...ITEM_SLOT_COLUMNS,
   ...MATCH_REBUILD_GATED_COLUMNS,
+  ...MIGRATION_GATED_COLUMNS,
 ]);
 const UI_REBUILD_GATED_COLUMNS = new Set<string>(MATCH_REBUILD_GATED_COLUMNS);
 /**
@@ -404,7 +431,10 @@ export const MATCH_READ_COLUMNS: Record<string, DuckDbColumnType> =
     ),
   );
 
-/** MATCH_READ_COLUMNS plus explicitly named loadout or UI rebuild columns. */
+/**
+ * MATCH_READ_COLUMNS plus explicitly named loadout or UI rebuild columns.
+ * A migration-gated column is never read, even when named.
+ */
 export function matchReadColumns(
   loadout: readonly string[],
 ): Record<string, DuckDbColumnType> {
@@ -412,8 +442,9 @@ export function matchReadColumns(
   return Object.fromEntries(
     Object.entries(MATCH_LAKE_COLUMNS).filter(
       ([name]) =>
-        (!UI_REBUILD_GATED_COLUMNS.has(name) && !LOADOUT.has(name)) ||
-        selected.has(name),
+        !MIGRATION_GATED_COLUMNS.has(name) &&
+        ((!UI_REBUILD_GATED_COLUMNS.has(name) && !LOADOUT.has(name)) ||
+          selected.has(name)),
     ),
   );
 }

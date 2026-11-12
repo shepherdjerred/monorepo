@@ -70,16 +70,14 @@ function byPlayer(left: Relation, right: Relation) {
 function addRelation(options: {
   target: Map<string, Relation>;
   playerId: number;
+  /** Who the other participant is: a guild player, or a Riot PUUID. */
+  key: string;
   other: GuildMatchRow;
   otherPlayer: CommunityPlayer | undefined;
   win: boolean;
   match: Match;
 }) {
-  const { target, playerId, other, otherPlayer, win, match } = options;
-  const key =
-    otherPlayer === undefined
-      ? `puuid:${other.puuid}`
-      : `player:${otherPlayer.id.toString()}`;
+  const { target, playerId, key, other, otherPlayer, win, match } = options;
   const mapKey = `${playerId.toString()}:${key}`;
   const current = target.get(mapKey);
   if (current === undefined) {
@@ -224,6 +222,8 @@ function addRelationships(
   const seenTogether = new Set<string>();
   const seenRivals = new Set<string>();
   for (const other of match.rows) {
+    // A bot or an unresolved player is nobody to be teammates or rivals with.
+    if (other.puuid === null) continue;
     const otherPlayer = playerByPuuid.get(other.puuid);
     if (other.puuid === owned.row.puuid || otherPlayer?.id === owned.player.id)
       continue;
@@ -236,6 +236,7 @@ function addRelationships(
       addRelation({
         target: state.together,
         playerId: owned.player.id,
+        key,
         other,
         otherPlayer,
         win: owned.row.win,
@@ -246,6 +247,7 @@ function addRelationships(
       addRelation({
         target: state.rivals,
         playerId: owned.player.id,
+        key,
         other,
         otherPlayer,
         win: owned.row.win,
@@ -262,7 +264,8 @@ function processMatch(
   playerByPuuid: Map<string, CommunityPlayer>,
 ) {
   const guildRows = match.rows.flatMap((row) => {
-    const player = playerByPuuid.get(row.puuid);
+    const player =
+      row.puuid === null ? undefined : playerByPuuid.get(row.puuid);
     return player === undefined ? [] : [{ row, player }];
   });
   const uniqueGuildRows = [
@@ -277,9 +280,11 @@ function processMatch(
     addRelationships(state, owned, match, playerByPuuid);
   }
   for (const owned of guildRows) {
-    const entries = state.rowsByPuuid.get(owned.row.puuid) ?? [];
+    const puuid = owned.row.puuid;
+    if (puuid === null) continue;
+    const entries = state.rowsByPuuid.get(puuid) ?? [];
     entries.push(owned.row);
-    state.rowsByPuuid.set(owned.row.puuid, entries);
+    state.rowsByPuuid.set(puuid, entries);
     addCoverage(state, owned, standard);
   }
 }
@@ -416,7 +421,8 @@ export function squadChemistry(options: {
     .flatMap((match) => {
       const teamByPlayer = new Map<number, GuildMatchRow>();
       for (const row of match.rows) {
-        const owner = ownerByPuuid.get(row.puuid);
+        const owner =
+          row.puuid === null ? undefined : ownerByPuuid.get(row.puuid);
         if (owner !== undefined && selected.has(owner))
           teamByPlayer.set(owner, row);
       }

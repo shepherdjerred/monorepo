@@ -272,3 +272,91 @@ describe("timeline_frames end-to-end", () => {
     expect(rows).toHaveLength(0);
   });
 });
+
+/**
+ * A bot game: Mira and a bot on blue, Otto on red, one frame each at ten
+ * minutes. The bot's row and frames have a NULL puuid and are joined by slot.
+ */
+describe("timeline_frames with a bot", () => {
+  const matchId = RiotMatchIdSchema.parse("NA1_600");
+  let botFiles: LakeFiles;
+
+  beforeAll(async () => {
+    const base = {
+      matchId,
+      queue: "solo",
+      surrendered: false,
+      kills: 0,
+      deaths: 0,
+      assists: 0,
+      gameCreationAt: GAME,
+      teamPosition: "MIDDLE",
+    };
+    const frame = (
+      puuid: typeof MIRA | null,
+      participantId: number,
+      totalGold: number,
+    ) =>
+      testFrameRow({
+        matchId,
+        gameCreationAt: GAME,
+        puuid,
+        participantId,
+        minute: 10,
+        totalGold,
+        minions: 50,
+        jungle: 0,
+      });
+    botFiles = await writeTempTestLake("scoutql-frames-bot-", {
+      serverId: SERVER_ID,
+      matchFacts: [
+        { ...base, playerId: 1, playerAlias: "Mira", puuid: MIRA, win: true },
+      ],
+      untrackedMatchFacts: [
+        {
+          ...base,
+          playerId: 2,
+          playerAlias: "Annie Bot",
+          puuid: testPuuid("frames-bot"),
+          participantKind: "bot",
+          win: true,
+          teamPosition: "BOTTOM",
+        },
+        {
+          ...base,
+          playerId: 6,
+          playerAlias: "Otto",
+          puuid: OTTO,
+          win: false,
+          teamId: 200,
+        },
+      ],
+      timelineFrames: [
+        frame(MIRA, 1, 3000),
+        frame(null, 2, 2000),
+        frame(OTTO, 6, 4000),
+      ],
+    });
+  });
+
+  test("a bot's gold counts toward its team's total", async () => {
+    const { rows } = await runPlan(
+      sourceInput(botFiles, {
+        source: "timeline_frames",
+        outputs: [avgOf(col("team_gold_diff"))],
+        where: and(eq("minute", 10), eq("puuid", MIRA)),
+      }),
+    );
+    expect(number_(rows[0]?.["expr_0"])).toBe(3000 + 2000 - 4000);
+  });
+
+  test("global frame aggregates leave the bot out", async () => {
+    const { rows } = await runPlan(
+      sourceInput(botFiles, {
+        source: "timeline_frames",
+        where: eq("minute", 10),
+      }),
+    );
+    expect(number_(rows[0]?.["expr_0"])).toBe(2);
+  });
+});

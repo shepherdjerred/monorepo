@@ -8,7 +8,10 @@ import {
   MATCH_TEAM_BAN_LAKE_COLUMNS,
   MATCH_TEAM_LAKE_COLUMNS,
 } from "#src/model/reports/match-team-lake-columns.ts";
-import { MATCH_REBUILD_GATED_COLUMNS } from "#src/model/reports/match-rebuild-gated-columns.ts";
+import {
+  MATCH_MIGRATION_GATED_COLUMNS,
+  MATCH_REBUILD_GATED_COLUMNS,
+} from "#src/model/reports/match-rebuild-gated-columns.ts";
 import { rawDisplayKind } from "#src/model/scoutql/catalog/catalog-display.ts";
 import {
   ALL_CONTEXTS,
@@ -72,13 +75,16 @@ const LAKE_TYPE: Record<DuckDbColumnType, ScoutQlColumnType> = {
 };
 
 /**
- * Excluded from every catalog: partitioning/dedupe plumbing and UI fields
- * whose reads are gated on a completed lake rebuild.
+ * Excluded from every catalog: partitioning/dedupe plumbing, UI fields whose
+ * reads are gated on a completed lake rebuild, and the migration's new
+ * columns until both stages have published it (their descriptions and
+ * player_groups placement below are already in place for that).
  */
 const INTERNAL_COLUMNS = new Set<string>([
   "month",
   "dedupe_key",
   ...MATCH_REBUILD_GATED_COLUMNS,
+  ...MATCH_MIGRATION_GATED_COLUMNS,
 ]);
 
 /** Loadout ids are identifiers, so they display as text, never as counts. */
@@ -155,6 +161,7 @@ const GROUP_GAME_LEVEL = new Set([
   "game_type",
   "game_version",
   "end_of_game_result",
+  "coverage",
   "map_id",
 ]);
 const GROUP_TIME_FILTER_ONLY = new Set([
@@ -167,6 +174,7 @@ const GROUP_EXCLUDED = new Set([
   "game_id",
   "platform_id",
   "puuid",
+  "participant_kind",
   "participant_id",
   "team_id",
   "riot_id_game_name",

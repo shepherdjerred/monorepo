@@ -76,7 +76,10 @@ vi.doMock("#src/league/initial-history/riot.ts", () => ({
 vi.doMock("#src/report-store/live-ingest.ts", () => ({
   recordMatchForReportStore,
 }));
-vi.doMock("#src/report-lake/compactor.ts", () => ({ runReportLakeFold }));
+vi.doMock("#src/report-lake/compactor.ts", () => ({
+  reportLakeMigrationPending: () => Promise.resolve(false),
+  runReportLakeFold,
+}));
 
 const { getPuuidsBlockedFromLivePolling } =
   await import("#src/league/initial-history/live-polling.ts");

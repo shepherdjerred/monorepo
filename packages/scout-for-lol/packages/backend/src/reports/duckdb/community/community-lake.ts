@@ -20,7 +20,8 @@ const GuildMatchRowSchema = z.object({
   queue_id: LakeInt,
   game_mode: z.string(),
   map_id: LakeInt,
-  puuid: z.string(),
+  // NULL for a bot or an unresolved player.
+  puuid: z.string().nullable(),
   team_id: LakeInt,
   player_subteam_id: LakeInt.nullable(),
   participant_id: LakeInt,

@@ -72,12 +72,14 @@ async function authorizeMatch(
   const playerPuuids = new Set<string>(
     player.accounts.map((account) => account.puuid),
   );
-  if (!rows.some((row) => playerPuuids.has(row.puuid))) {
+  if (!rows.some((row) => isPlayerRow(row, playerPuuids))) {
     throw new TRPCError({ code: "NOT_FOUND", message: "Match was not found" });
   }
   const trackedAccounts = await prisma.account.findMany({
     where: {
-      puuid: { in: rows.map((row) => row.puuid) },
+      puuid: {
+        in: rows.flatMap((row) => (row.puuid === null ? [] : [row.puuid])),
+      },
       player: { serverId: { in: guildIds } },
     },
     select: {
@@ -112,6 +114,14 @@ async function authorizeMatch(
   };
 }
 
+/** Whether a roster row is one of these accounts; a non-player row never is. */
+function isPlayerRow(
+  row: Pick<LakeMatchParticipantRow, "puuid">,
+  puuids: ReadonlySet<string>,
+): boolean {
+  return row.puuid !== null && puuids.has(row.puuid);
+}
+
 function teamTotals(rows: LakeMatchParticipantRow[]) {
   const totals = new Map<number, { kills: number; damage: number }>();
   for (const row of rows) {
@@ -144,7 +154,7 @@ function matchView(match: AuthorizedMatch) {
       subteamId: row.player_subteam_id,
       placement: row.subteam_placement ?? row.placement,
       augments: arenaAugmentsFromLakeRow(row),
-      selectedPlayer: match.player.puuids.has(row.puuid),
+      selectedPlayer: isPlayerRow(row, match.player.puuids),
       riotId: {
         gameName: row.riot_id_game_name,
         tagLine: row.riot_id_tagline,
@@ -169,7 +179,8 @@ function matchView(match: AuthorizedMatch) {
         dragons: row.dragon_kills,
       },
       loadout: matchLoadoutFromLakeRow(row),
-      scoutAliases: match.aliasesByPuuid.get(row.puuid) ?? [],
+      scoutAliases:
+        row.puuid === null ? [] : (match.aliasesByPuuid.get(row.puuid) ?? []),
     };
   });
   const arenaSubteamIds = isArenaQueueOrMode(first.queue_id, first.game_mode)
@@ -300,7 +311,7 @@ export const consumerMatchRouter = router({
       );
       const selectedParticipants = new Set(
         authorized.rows
-          .filter((row) => authorized.player.puuids.has(row.puuid))
+          .filter((row) => isPlayerRow(row, authorized.player.puuids))
           .map((row) => row.participant_id),
       );
       const points = new Map<

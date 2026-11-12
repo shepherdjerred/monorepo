@@ -20,3 +20,16 @@ export const MATCH_REBUILD_GATED_COLUMNS = [
   "augment_5_id",
   "augment_6_id",
 ] as const;
+
+/**
+ * Columns the participant-kind migration added. Builds published before it
+ * have no such columns, and a read that names a column its build lacks fails
+ * outright, so no read names these until Beta and Prod have both published a
+ * rebuild at the current schema fingerprint. The follow-up that removes the
+ * predecessor-fingerprint allowance (backend `report-lake/schema.ts`) deletes
+ * this list, which makes both columns ordinary reads and ScoutQL columns.
+ */
+export const MATCH_MIGRATION_GATED_COLUMNS = [
+  "participant_kind",
+  "coverage",
+] as const;
