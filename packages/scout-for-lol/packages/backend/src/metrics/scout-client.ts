@@ -15,7 +15,13 @@ export const scoutClientIdentityAliasesTotal = new Counter({
   // player's own client replaced an alias someone else's had taught),
   // "conflict" (a different PUUID resolved for a UUID that already has one;
   // the stored one stands), "not_found" (Riot has no account for the reported
-  // Riot ID) and "error" (the lookup failed; a later observation retries it)
+  // Riot ID) and "error" (the lookup failed; the durable attempt retries it
+  // with backoff), plus the durable-attempt outcomes "queued" (a non-observer
+  // UUID was enqueued for the drain), "no_riot_id" (the client reported no
+  // Riot ID, so it can't be looked up), "retry_scheduled" (a failed lookup got
+  // a later attempt), "riot_match" (an alias was learned from a game Riot also
+  // published, at no API cost) and "riot_match_ambiguous" (the mapping was
+  // refused because two participants shared a team and champion)
   labelNames: ["outcome"] as const,
   registers: [registry],
 });

@@ -81,6 +81,36 @@ export function lcuIdentitiesIn(payload: unknown): readonly LcuIdentity[] {
   return [...found.values()];
 }
 
+const UnnamedIdentitySchema = z.object({
+  puuid: z.string(),
+  gameName: z.string().optional(),
+  tagLine: z.string().optional(),
+});
+
+/**
+ * Real-account UUIDs a payload reports with a blank Riot ID (an empty game name
+ * or tag line, as a player who never set one appears). Such a player cannot be
+ * looked up, but is recorded as `no_riot_id` rather than dropped without trace.
+ */
+export function lcuUnnamedIdentitiesIn(
+  payload: unknown,
+): readonly LcuIdentity[] {
+  const found = new Map<string, LcuIdentity>();
+  visit(payload, (object) => {
+    const record = UnnamedIdentitySchema.safeParse(object);
+    if (!record.success || !isLcuUuid(record.data.puuid)) return;
+    const { gameName, tagLine } = record.data;
+    if (gameName === undefined && tagLine === undefined) return;
+    if ((gameName ?? "") !== "" && (tagLine ?? "") !== "") return;
+    found.set(record.data.puuid, {
+      lcuUuid: record.data.puuid,
+      gameName: gameName ?? "",
+      tagLine: tagLine ?? "",
+    });
+  });
+  return [...found.values()];
+}
+
 /** Every League-client UUID a payload mentions under an identity key. */
 export function lcuUuidsIn(payload: unknown): ReadonlySet<string> {
   const found = new Set<string>();
@@ -183,11 +213,32 @@ export type LearnOptions = {
   readonly observerUuids: ReadonlySet<string>;
 };
 
-async function lookUp(
-  identity: LcuIdentity,
+/** Why an account-v1 lookup could not answer; drives retry bookkeeping. */
+export type LookupErrorClass =
+  "rate_limited" | "server_error" | "timeout" | "unknown";
+
+export type LookupResult =
+  | { readonly kind: "found"; readonly puuid: LeaguePuuid }
+  | { readonly kind: "not_found" }
+  | { readonly kind: "error"; readonly errorClass: LookupErrorClass };
+
+function classifyLookupError(error: unknown): LookupErrorClass {
+  const status = extractHttpStatus(error);
+  if (status === 429) return "rate_limited";
+  if (status !== undefined && status >= 500) return "server_error";
+  return error instanceof Error && error.message.includes("timed out")
+    ? "timeout"
+    : "unknown";
+}
+
+/** One account-v1 lookup by Riot ID, classified rather than thrown. */
+export async function lookUpRiotId(
+  identity: Pick<LcuIdentity, "gameName" | "tagLine">,
   route: AccountRegionalRoute,
-): Promise<LeaguePuuid | null> {
+): Promise<LookupResult> {
   try {
+    // TODO(#4513): tag this call with `priority: "backfill"` once the request
+    // options carry a priority, so queued lookups never starve live traffic.
     const account = await withTimeout(
       riotClient.account.getByRiotId(
         identity.gameName,
@@ -195,21 +246,27 @@ async function lookUp(
         route,
       ),
     );
-    return LeaguePuuidSchema.parse(account.puuid);
+    return { kind: "found", puuid: LeaguePuuidSchema.parse(account.puuid) };
   } catch (error) {
     if (extractHttpStatus(error) === 404) {
       scoutClientIdentityAliasesTotal.inc({ outcome: "not_found" });
-      return null;
+      return { kind: "not_found" };
     }
-    // Not fatal to the observation that carried it: the next one naming this
-    // player retries, and until then the player just doesn't join.
     scoutClientIdentityAliasesTotal.inc({ outcome: "error" });
     logger.warn("League-client identity lookup failed", error);
-    return null;
+    return { kind: "error", errorClass: classifyLookupError(error) };
   }
 }
 
-async function storeAlias(
+async function lookUp(
+  identity: LcuIdentity,
+  route: AccountRegionalRoute,
+): Promise<LeaguePuuid | null> {
+  const result = await lookUpRiotId(identity, route);
+  return result.kind === "found" ? result.puuid : null;
+}
+
+export async function storeAlias(
   identity: LcuIdentity,
   puuid: LeaguePuuid,
   options: LearnOptions,

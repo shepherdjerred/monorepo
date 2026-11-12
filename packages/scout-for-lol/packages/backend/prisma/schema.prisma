@@ -886,6 +886,30 @@ model LeagueIdentityAlias {
   @@index([puuid])
 }
 
+/// A durable attempt to translate one League-client UUID to a Riot PUUID. Ingress
+/// enqueues every non-observer participant here instead of calling account-v1
+/// inline; the ingestion-reconciliation activity drains due rows with capped
+/// exponential backoff. `pending` is the only state still owed work;
+/// `not_found` and `no_riot_id` wait for a changed Riot ID, and `resolved`
+/// means a `LeagueIdentityAlias` exists. `observationIds` names the client
+/// observations to re-queue for recovery once the UUID resolves.
+model LeagueIdentityAliasAttempt {
+  lcuUuid             String   @id
+  state               String   @default("pending")
+  gameName            String?
+  tagLine             String?
+  platformId          String?
+  learnedFromDeviceId String?
+  attempts            Int      @default(0)
+  nextAttemptAt       DateTime @default(now())
+  lastErrorClass      String?
+  observationIds      String[]
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([state, nextAttemptAt])
+}
+
 /// The immutable local Match-V5-compatible observation selected only after
 /// Riot has returned no authoritative payload for two minutes. Recording the
 /// selection prevents later Activity retries from silently changing sources

@@ -12,6 +12,7 @@ import { createLogger } from "#src/logger.ts";
 import { downtimeDetectedTotal } from "#src/metrics/index.ts";
 import { ingestionReconciliationSkipsTotal } from "#src/metrics/recovery.ts";
 import * as Sentry from "@sentry/bun";
+import { drainAliasAttempts } from "#src/scout-client/alias-attempts/identity-alias-attempts.ts";
 import { reconcileAcceptedClientEvidence } from "#src/scout-client/reconciliation.ts";
 import { reconcileRawClientObservations } from "#src/scout-client/archive/reconciliation.ts";
 import { reconcileMatchHistory } from "#src/temporal/match/history-recovery.ts";
@@ -126,6 +127,9 @@ async function reconcileIngestion(): Promise<void> {
   for (const [phase, reconcile] of [
     ["raw-client-archive", reconcileRawClientObservations],
     ["raw-riot-archive", reconcileRawRiotPayloads],
+    // Before client-evidence, so observations a resolved alias just re-queued
+    // are recovered in this same run.
+    ["identity-aliases", drainAliasAttempts],
     ["client-evidence", reconcileAcceptedClientEvidence],
     ["match-history", reconcileMatchHistory],
   ] as const) {
