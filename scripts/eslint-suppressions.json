@@ -9,11 +9,6 @@
       "count": 1
     }
   },
-  "checks/ci/check-tunnel-dns-coverage.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
   "checks/compliance-check.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 3

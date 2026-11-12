@@ -231,10 +231,11 @@ test("a synthesized zone or bucket still selects the site that depends on it", (
   );
 });
 
-test("domain registry changes select the OpenTofu lane", () => {
-  expect(selectorPathsForLane("tofu")).toContain(
-    "packages/homelab/src/domain-registry.json",
-  );
+test("the registries the cloudflare stack is synthesized from select the OpenTofu lane", () => {
+  const paths = selectorPathsForLane("tofu");
+  for (const registry of ["domain-registry", "platform-model"])
+    for (const extension of ["json", "ts"])
+      expect(paths).toContain(`packages/homelab/src/${registry}.${extension}`);
 });
 
 test("accepts only one exact main-only platform apply request", () => {

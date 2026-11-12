@@ -3,37 +3,22 @@ import {
   cname,
   edgePlaceholder,
   fastmailAutodiscovery,
-  tunnelCnames,
 } from "#src/stacks/cloudflare/records.ts";
-import { edgeRedirect, staticCache } from "#src/stacks/cloudflare/zones.ts";
+import { edgeRedirect } from "#src/stacks/cloudflare/zones.ts";
 import type { Zones } from "#src/stacks/cloudflare/zones.ts";
 import { moved } from "#src/state-migrations.ts";
 
 /**
- * Application records of the smaller zones. `sjer-red.ts` and `ts-mc-net.ts`
- * hold the two large ones; the shared mail and TLS baseline of every zone is
- * `baseline.ts`.
+ * Records of the smaller zones that the platform model does not declare:
+ * redirects, placeholders and the personal domains. `sjer-red.ts` and
+ * `ts-mc-net.ts` hold the two large zones, `platform.ts` every tunnel
+ * hostname and cache rule, and `baseline.ts` the shared mail and TLS
+ * baseline.
  */
 export function smallerZones(stack: TerraformStack, zones: Zones): void {
-  betterSkillCapped(stack, zones);
   clauderon(stack, zones);
   discordPlaysPokemon(stack, zones);
-  glitterBoys(stack, zones);
-  scoutForLol(stack, zones);
   personalDomains(stack, zones);
-  tunnelCnames(stack, zones["statically-typed.com"], {
-    statically_typed_com_cname_apex: "statically-typed.com",
-  });
-}
-
-function betterSkillCapped(stack: TerraformStack, zones: Zones): void {
-  const zone = zones["better-skill-capped.com"];
-  tunnelCnames(stack, zone, {
-    better_skill_capped_com_cname_apex: "better-skill-capped.com",
-  });
-  staticCache(stack, "better_skill_capped_com_static_cache", zone.id, [
-    "/assets/",
-  ]);
 }
 
 /**
@@ -110,30 +95,6 @@ function discordPlaysPokemon(stack: TerraformStack, zones: Zones): void {
         "https://github.com/shepherdjerred/monorepo/tree/main/packages/discord-plays-pokemon",
     },
   });
-}
-
-function glitterBoys(stack: TerraformStack, zones: Zones): void {
-  tunnelCnames(stack, zones["glitter-boys.com"], {
-    // Homelab static site: tunnel, s3-static-sites Caddy, glitter-boys-ppl bucket.
-    glitter_boys_com_cname_ppl: "ppl",
-    // Main-domain Astro/Starlight site, served by the static-site service.
-    glitter_boys_com_cname_apex: "glitter-boys.com",
-    // Desktop telemetry ingress, owned by the launcher homelab chart.
-    glitter_boys_com_cname_launcher: "launcher",
-  });
-}
-
-function scoutForLol(stack: TerraformStack, zones: Zones): void {
-  const zone = zones["scout-for-lol.com"];
-  tunnelCnames(stack, zone, {
-    scout_for_lol_com_cname_apex: "scout-for-lol.com",
-    scout_for_lol_com_cname_beta: "beta",
-    scout_for_lol_com_cname_design: "design",
-  });
-  staticCache(stack, "scout_for_lol_com_static_cache", zone.id, [
-    "/_astro/",
-    "/app/assets/",
-  ]);
 }
 
 function toSjerRed(name: string) {

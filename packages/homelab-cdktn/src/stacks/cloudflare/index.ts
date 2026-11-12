@@ -3,10 +3,15 @@ import { TerraformVariable } from "cdktn";
 import type { TerraformStack } from "cdktn";
 import { CloudflareProvider } from "#generated/providers/cloudflare/provider/index.ts";
 import { Ruleset } from "#generated/providers/cloudflare/ruleset/index.ts";
+import { HttpProvider } from "#generated/providers/http/provider/index.ts";
 import { HomelabStack } from "#src/homelab-stack.ts";
 import { domainBaseline } from "#src/stacks/cloudflare/baseline.ts";
 import { buckets } from "#src/stacks/cloudflare/buckets.ts";
 import { smallerZones } from "#src/stacks/cloudflare/domains.ts";
+import {
+  modelTunnelCnames,
+  staticCaches,
+} from "#src/stacks/cloudflare/platform.ts";
 import { sjerRed } from "#src/stacks/cloudflare/sjer-red.ts";
 import {
   stormForumMail,
@@ -20,22 +25,17 @@ import { adopt } from "#src/state-migrations.ts";
  * DNS zones and records, zone settings, redirect rulesets, R2 buckets and the
  * shared mail and TLS baseline. See `packages/homelab/src/tofu/README.md`.
  *
- * This is the address-identical port: every resource is created directly in
- * the stack with its HCL name, and the two local modules
- * (`modules/domain-baseline`, `modules/static-cache`) stay HCL so their
- * `module.<name>…` addresses do not move.
+ * The stack holds no HCL. Application records are created directly in the
+ * stack; the per-zone baseline and static-asset caching are the constructs
+ * `DomainBaseline` and `StaticCache`, which replaced two local modules and
+ * move every resource out of its `module.<name>…` address. Public hostnames
+ * and cached prefixes come from the platform model (`platform.ts`).
  */
 export class CloudflareStack extends HomelabStack {
   constructor(scope: Construct) {
     super(scope, "cloudflare", {
       requiredVersion: ">= 1.10.0",
-      providerConstraints: { cloudflare: "~> 5.27.0" },
-    });
-    // The domain-baseline module reads the served MTA-STS policy through the
-    // http provider. The root declares it without configuring it.
-    this.addOverride("terraform.required_providers.http", {
-      source: "hashicorp/http",
-      version: "~> 3.5",
+      providerConstraints: { cloudflare: "~> 5.27.0", http: "~> 3.5" },
     });
 
     const accountId = new TerraformVariable(this, "cloudflare_account_id", {
@@ -46,8 +46,12 @@ export class CloudflareStack extends HomelabStack {
 
     // Authenticated via the CLOUDFLARE_API_TOKEN environment variable.
     new CloudflareProvider(this, "cloudflare");
+    // Each baseline reads its served MTA-STS policy before publishing it.
+    new HttpProvider(this, "http");
 
     const managed = zones(this, accountId);
+    modelTunnelCnames(this, managed);
+    for (const cache of staticCaches(this, managed)) cache.moveIntoRoot(this);
     smallerZones(this, managed);
     sjerRed(this, managed["sjer.red"]);
     tsMcNet(this, managed["ts-mc.net"]);

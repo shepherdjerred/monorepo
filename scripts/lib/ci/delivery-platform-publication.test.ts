@@ -81,13 +81,22 @@ test("ordinary changes do not invent platform deploys; direct stacks retain thei
   expect(changedPlatformStacks(undefined)).toHaveLength(11);
 });
 
-test("a stack's declared external inputs select it like its own directory", () => {
+test("a synthesized stack is selected by its own main.tf.json, not by a registry it inlines", () => {
+  // The synthesized cloudflare, dockerhub and posthog stacks carry the
+  // domain, image and analytics registries inline. A registry change that
+  // matters regenerates main.tf.json, and the "synth is current" build fails
+  // a change that forgets to.
   expect(
     changedPlatformStacks(["packages/homelab/src/domain-registry.json"]),
+  ).toEqual([]);
+  expect(
+    changedPlatformStacks(["packages/homelab/src/platform-model.json"]),
+  ).toEqual([]);
+  expect(
+    changedPlatformStacks([
+      "packages/homelab/src/tofu/cloudflare/main.tf.json",
+    ]),
   ).toEqual(["cloudflare"]);
-  // The synthesized dockerhub and posthog stacks carry the image and
-  // analytics registries inline, so each one's own main.tf.json, not the
-  // registry, selects it.
   expect(
     changedPlatformStacks(["packages/homelab/src/tofu/dockerhub/main.tf.json"]),
   ).toEqual(["dockerhub"]);

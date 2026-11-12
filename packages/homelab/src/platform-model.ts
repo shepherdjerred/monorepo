@@ -12,8 +12,10 @@
  * `google` and `anthropic-federation` desired state.
  *
  * cdk8s renders from the model through the lookups at the end of this module;
- * an id the model does not declare throws at synthesis. The OpenTofu stacks
- * do not read it yet, so
+ * an id the model does not declare throws at synthesis. The `cloudflare`
+ * stack renders its tunnel CNAMEs and static-asset cache rules from the same
+ * accessors (`packages/homelab-cdktn/src/stacks/cloudflare/platform.ts`); the
+ * other OpenTofu stacks do not read the model yet, so
  * `cdk8s/src/platform-model/rendered-on-both-sides.test.ts` still holds every
  * definition against both renderings.
  */

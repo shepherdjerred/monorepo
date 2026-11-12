@@ -54,11 +54,10 @@ state change. A synthesized stack is accepted only on a plan against live state
 that reports no changes. `tofu validate -backend=false` does not evaluate the
 `encryption` block, so validation alone does not prove an encrypted stack.
 
-The `cloudflare` root still calls its two local modules,
-`cloudflare/modules/domain-baseline` and `cloudflare/modules/static-cache`,
-which stay hand-written HCL next to `main.tf.json` and are archived with it.
-Their resources keep their `module.<name>…` addresses; flattening them into
-TypeScript is a separate change with explicit `moved` blocks.
+A synthesized stack holds no HCL at all. The two local modules the
+`cloudflare` root used to call are TypeScript constructs; each of their
+resources is a root resource with a `moved` block from its old
+`module.<name>…` address, kept until state no longer holds it.
 
 ### Provider versions
 
@@ -192,7 +191,7 @@ Every default-branch build also freezes each stack as an immutable,
 content-addressed archive (`s3://delivery-artifacts/tofu/<stack>/<digest>.tar`)
 and registers it with Delivery under the `tofu-<stack>` service. An archive
 holds the stack directory under its repository path, including
-`.terraform.lock.hcl` and local `modules/`, plus the repository files the
+`.terraform.lock.hcl` and any local `modules/`, plus the repository files the
 stack's `externalFiles` entry in `scripts/tofu/tofu-stack-manifest.ts`
 declares; `.terraform/`, state, saved plans, `tests/` and `desired-state.json`
 are left out. A configuration that reads a file outside its directory must
@@ -218,9 +217,21 @@ requires connectivity to both the LAN and tailnet; see
 
 The stack's source is
 [`packages/homelab-cdktn/src/stacks/cloudflare`](../../../homelab-cdktn/src/stacks/cloudflare):
-`zones.ts` declares the zones, `sjer-red.ts`, `ts-mc-net.ts` and `domains.ts`
-their application records, `baseline.ts` the shared baseline and `buckets.ts`
-the R2 buckets.
+`zones.ts` declares the zones, `platform.ts` the tunnel hostnames and cache
+rules it takes from the platform model, `sjer-red.ts`, `ts-mc-net.ts` and
+`domains.ts` the remaining application records, `baseline.ts` the shared
+baseline and `buckets.ts` the R2 buckets.
+
+A public hostname is declared once, in
+[`platform-model.json`](../platform-model.json): cdk8s renders its
+TunnelBinding and this stack its proxied CNAME to the tunnel, named
+`<zone>_cname_<label>`. A static site's `immutablePrefixes` likewise become
+its zone's static-asset cache rule (`StaticCache` in `static-cache.ts`). The
+few declared hostnames and zones this stack deliberately renders differently
+are listed in `platform.ts`, mirroring the debt allowlist of the both-sides
+test. After changing the model or the domain registry, run
+`bun run --cwd packages/homelab-cdktn synth` and commit the regenerated
+`cloudflare/main.tf.json`; the stack reads neither file at plan time.
 
 `buckets.ts` owns the private R2 archive bucket `jerred-archives` and its
 private counterpart for Pinterest work archives, `pinterest-archives`. Each
@@ -249,18 +260,21 @@ secret values, including the account ID, in the child's standard output.
 
 `zones.ts` owns each existing zone and the per-zone files its
 application-specific records.
-The shared `cloudflare/modules/domain-baseline` module owns DNSSEC, Fastmail MX,
-DKIM, SPF, DMARC, TLS reporting, CAA, HTTPS/TLS/HSTS settings, and certificate
-transparency monitoring. In `baseline.ts`, `baselineMoves` preserves existing
-state addresses and `baselineImports` adopts previously implicit control-plane
-settings.
+The `DomainBaseline` construct (`domain-baseline.ts`), one per zone, owns
+DNSSEC, Fastmail MX, DKIM, SPF, DMARC, TLS reporting, CAA, HTTPS/TLS/HSTS
+settings, and certificate transparency monitoring, as root resources named
+`<zone>_baseline_<name>`. It adopts previously implicit control-plane settings
+with `import` blocks. In `baseline.ts`, `baselineMoves` preserves the state
+addresses from before the baseline, and each construct's `moveIntoRoot` those
+from the HCL module it replaced.
 
 [`domain-registry.json`](../domain-registry.json) is the domain inventory and
-MTA-STS policy source for both OpenTofu and Caddy. Every managed zone needs a
-registry entry and a `baseline_zone_ids` binding. The Tunnel DNS coverage guard
-checks the actual module CNAME and fails if either inventory or binding is missing.
+MTA-STS policy source for both OpenTofu and Caddy, read at synthesis. Every
+managed zone needs a registry entry: synthesis fails when the zones and the
+registry differ. The Tunnel DNS coverage guard checks every zone's `mta-sts`
+CNAME in the synthesized configuration.
 Keep existing application records, Postal selectors, and `rp` routing outside
-the module. Wildcard inbound MX does not authorize arbitrary subdomain senders.
+the baseline. Wildcard inbound MX does not authorize arbitrary subdomain senders.
 
 Fastmail account onboarding precedes MX cutover: add each domain, preserve
 existing addresses, add `root@domain`, and direct its catch-all to the existing
@@ -297,12 +311,10 @@ provider; do not replace the imported private-recipient resource. Registrar
 auto-renew, transfer lock, privacy, and account MFA
 remain operator checks because this stack does not own those settings.
 
-Credential-free publication gate tests:
+Credential-free publication gate tests, on the synthesized configuration:
 
 ```bash
-domain_test_data=$(mktemp -d /tmp/domain-baseline-tests.XXXXXX)
-TF_DATA_DIR="$domain_test_data" tofu -chdir=packages/homelab/src/tofu/cloudflare init -backend=false
-TF_DATA_DIR="$domain_test_data" tofu -chdir=packages/homelab/src/tofu/cloudflare test -filter=tests/domain-baseline.tftest.hcl
+bun run --cwd packages/homelab-cdktn test src/cloudflare-baseline.test.ts
 ```
 
 Scoped `cloudflare_api_token` resources live in the isolated
@@ -543,13 +555,15 @@ The RT-AX88U Pro router and the RT-AX88U / RT-BE86U access points — system set
 
 1. Add the domain to [`domain-registry.json`](../domain-registry.json).
 2. In `packages/homelab-cdktn/src/stacks/cloudflare`, add its zone to
-   `ZONE_RESOURCES` and `zones()` in `zones.ts`, and its application records
-   to `domains.ts`, following an existing zone such as `scoutForLol`. The
-   baseline module instance and its `baseline_zone_ids` binding follow from
-   those two.
-3. Run `bun run --cwd packages/homelab-cdktn synth` and commit the regenerated
+   `ManagedDomainSchema` and `zones()` in `zones.ts`. Its baseline follows
+   from those two.
+3. Declare its public hostnames and static sites in
+   [`platform-model.json`](../platform-model.json); their tunnel CNAMEs and
+   cache rule follow. Records the model does not describe go in `domains.ts`,
+   following an existing zone such as `clauderon`.
+4. Run `bun run --cwd packages/homelab-cdktn synth` and commit the regenerated
    `cloudflare/main.tf.json`.
-4. Run `bun packages/homelab/scripts/tofu/tofu-stack.ts cloudflare plan` to
+5. Run `bun packages/homelab/scripts/tofu/tofu-stack.ts cloudflare plan` to
    verify the plan creates only the new domain's resources.
 
 To import existing Cloudflare records into state, use [`cf-terraforming`](https://github.com/cloudflare/cf-terraforming).

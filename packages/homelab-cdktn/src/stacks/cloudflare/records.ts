@@ -1,9 +1,13 @@
 import type { ITerraformDependable, TerraformStack } from "cdktn";
 import { DnsRecord } from "#generated/providers/cloudflare/dns-record/index.ts";
+import { tunnelCnameTarget } from "homelab/src/platform-model.ts";
 import type { Zone } from "#generated/providers/cloudflare/zone/index.ts";
 
-/** The homelab Cloudflare Tunnel every public hostname is routed through. */
-export const TUNNEL = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com";
+/**
+ * The homelab Cloudflare Tunnel every public hostname is routed through, as
+ * the platform model names it for the TunnelBindings cdk8s renders.
+ */
+export const TUNNEL = tunnelCnameTarget();
 
 /**
  * Record helpers for the cloudflare stack. Each creates one

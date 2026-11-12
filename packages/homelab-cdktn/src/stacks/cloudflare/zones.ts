@@ -1,24 +1,40 @@
-import { TerraformHclModule } from "cdktn";
 import type { TerraformStack, TerraformVariable } from "cdktn";
+import { z } from "zod";
 import { Ruleset } from "#generated/providers/cloudflare/ruleset/index.ts";
 import { Zone } from "#generated/providers/cloudflare/zone/index.ts";
 
-/** Resource name of each managed zone's `cloudflare_zone`, by domain. */
-const ZONE_RESOURCES = {
-  "better-skill-capped.com": "better_skill_capped_com",
-  "clauderon.com": "clauderon_com",
-  "discord-plays-pokemon.com": "discord_plays_pokemon_com",
-  "glitter-boys.com": "glitter_boys_com",
-  "jerredshepherd.com": "jerredshepherd_com",
-  "scout-for-lol.com": "scout_for_lol_com",
-  "shepherdjerred.com": "shepherdjerred_com",
-  "sjer.red": "sjer_red",
-  "statically-typed.com": "statically_typed_com",
-  "ts-mc.net": "ts_mc_net",
-} as const;
+const ManagedDomainSchema = z.enum([
+  "better-skill-capped.com",
+  "clauderon.com",
+  "discord-plays-pokemon.com",
+  "glitter-boys.com",
+  "jerredshepherd.com",
+  "scout-for-lol.com",
+  "shepherdjerred.com",
+  "sjer.red",
+  "statically-typed.com",
+  "ts-mc.net",
+]);
 
-export type ManagedDomain = keyof typeof ZONE_RESOURCES;
+export type ManagedDomain = z.infer<typeof ManagedDomainSchema>;
 export type Zones = Readonly<Record<ManagedDomain, Zone>>;
+
+/** Every zone of this stack. */
+export const MANAGED_DOMAINS: readonly ManagedDomain[] =
+  ManagedDomainSchema.options;
+
+/** `domain` as a zone of this stack; throws for any other name. */
+export function managedDomain(domain: string): ManagedDomain {
+  return ManagedDomainSchema.parse(domain);
+}
+
+/**
+ * Resource name of a zone's `cloudflare_zone` (`sjer.red` is `sjer_red`). It
+ * is also the prefix of every resource name declared for the zone.
+ */
+export function zoneResource(domain: ManagedDomain): string {
+  return domain.replaceAll(/[.-]/gu, "_");
+}
 
 /** The Cloudflare Registrar zone adopted through the normal CI apply. */
 const STATICALLY_TYPED_ZONE_ID = "d4036b55fca60ca5f998866309e951d8";
@@ -28,7 +44,7 @@ function zone(
   accountId: TerraformVariable,
   domain: ManagedDomain,
 ): Zone {
-  return new Zone(stack, ZONE_RESOURCES[domain], {
+  return new Zone(stack, zoneResource(domain), {
     account: { id: accountId.stringValue },
     name: domain,
     ...(domain === "statically-typed.com"
@@ -42,50 +58,21 @@ export function zones(
   stack: TerraformStack,
   accountId: TerraformVariable,
 ): Zones {
+  const declare = (domain: ManagedDomain) => zone(stack, accountId, domain);
   const managed: Zones = {
-    "better-skill-capped.com": zone(
-      stack,
-      accountId,
-      "better-skill-capped.com",
-    ),
-    "clauderon.com": zone(stack, accountId, "clauderon.com"),
-    "discord-plays-pokemon.com": zone(
-      stack,
-      accountId,
-      "discord-plays-pokemon.com",
-    ),
-    "glitter-boys.com": zone(stack, accountId, "glitter-boys.com"),
-    "jerredshepherd.com": zone(stack, accountId, "jerredshepherd.com"),
-    "scout-for-lol.com": zone(stack, accountId, "scout-for-lol.com"),
-    "shepherdjerred.com": zone(stack, accountId, "shepherdjerred.com"),
-    "sjer.red": zone(stack, accountId, "sjer.red"),
-    "statically-typed.com": zone(stack, accountId, "statically-typed.com"),
-    "ts-mc.net": zone(stack, accountId, "ts-mc.net"),
+    "better-skill-capped.com": declare("better-skill-capped.com"),
+    "clauderon.com": declare("clauderon.com"),
+    "discord-plays-pokemon.com": declare("discord-plays-pokemon.com"),
+    "glitter-boys.com": declare("glitter-boys.com"),
+    "jerredshepherd.com": declare("jerredshepherd.com"),
+    "scout-for-lol.com": declare("scout-for-lol.com"),
+    "shepherdjerred.com": declare("shepherdjerred.com"),
+    "sjer.red": declare("sjer.red"),
+    "statically-typed.com": declare("statically-typed.com"),
+    "ts-mc.net": declare("ts-mc.net"),
   };
   managed["statically-typed.com"].importFrom(STATICALLY_TYPED_ZONE_ID);
   return managed;
-}
-
-/**
- * Static-asset caching for a zone: respect the immutable Cache-Control the
- * deploy sets on content-hashed assets under `assetPrefixes`, plus Smart
- * Tiered Cache (origin shielding). The module stays HCL
- * (`modules/static-cache`), so its resources keep their
- * `module.<id>.…` addresses.
- */
-export function staticCache(
-  stack: TerraformStack,
-  id: string,
-  zoneId: string,
-  assetPrefixes: string[],
-): TerraformHclModule {
-  return new TerraformHclModule(stack, id, {
-    source: "./modules/static-cache",
-    // The module directory is committed next to main.tf.json; cdktn would
-    // otherwise copy it into the synthesis as an asset and rewrite `source`.
-    skipAssetCreationFromLocalModules: true,
-    variables: { zone_id: zoneId, asset_prefixes: assetPrefixes },
-  });
 }
 
 /**
