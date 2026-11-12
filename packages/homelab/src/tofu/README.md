@@ -501,10 +501,17 @@ Includes static site buckets, application storage (scout), and the tofu state ba
 
 The `homelab-tofu-state` bucket has `prevent_destroy = true` since it stores state for all tofu modules.
 
-The buckets are declared in
+The stack's source is
 [`packages/homelab-cdktn/src/stacks/seaweedfs.ts`](../../../homelab-cdktn/src/stacks/seaweedfs.ts).
-Edit them there, run `bun run --cwd packages/homelab-cdktn synth`, and commit
-the regenerated `seaweedfs/main.tf.json`. The landing and 404 pages seeded into
+It creates a bucket for every static site and bucket consumer in
+[`platform-model.json`](../platform-model.json), named from there, and expires
+each site's `immutablePrefixes`. Declaring a site or consumer in the model is
+enough; a bucket has a line in the stack only for what the stack adds to it
+(`prevent_destroy`, an `import`, a lifecycle). Buckets with no site or consumer
+in the model (the state bucket, CI handoff, Delivery artifacts, workstation
+archives) are declared in the stack alone. After changing either, run
+`bun run --cwd packages/homelab-cdktn synth` and commit the regenerated
+`seaweedfs/main.tf.json`. The landing and 404 pages seeded into
 `public-sjer-red` stay in `seaweedfs/public/`, which the stack reads with
 `filemd5` and uploads.
 
@@ -522,6 +529,13 @@ The policy is the `TAILNET_POLICY` object in
 Edit it there, run `bun run --cwd packages/homelab-cdktn synth`, and commit the
 regenerated `tailscale/main.tf.json`. OpenTofu's `jsonencode` writes object keys
 sorted, so key order in the object does not change the applied policy.
+
+`tagOwners` is not written there. It has one entry per tag in
+[`platform-model.json`](../platform-model.json) (`tailnet.tags`), owned by what
+carries the tag: the operator alone for the default proxy tags, the operator
+and admins for a tag an `ingress` or `loadBalancer` tailnet service declares,
+and admins for every other. To add a tag, declare it in the model; a rule that
+names an undeclared tag fails synthesis.
 
 Delivery uses the existing Kubernetes operator's Ingress proxy with
 `tailscale.com/tags: tag:delivery`. The tag owners include `tag:k8s-operator`

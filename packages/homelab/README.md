@@ -92,8 +92,11 @@ declare throws at synthesis. See
 
 On the OpenTofu side, the `cloudflare` stack renders its tunnel CNAMEs and
 static-asset cache rules from the model
-([`platform.ts`](../homelab-cdktn/src/stacks/cloudflare/platform.ts)); the
-other stacks do not read it yet.
+([`platform.ts`](../homelab-cdktn/src/stacks/cloudflare/platform.ts)), the
+`seaweedfs` stack its static-site and consumer buckets and their expiring
+prefixes (`declaredBuckets`, `immutablePrefixesByBucket`), and the `tailscale`
+stack the policy's tag owners (`tailnetTagOwners`). A stack also declares what
+the model does not, and the stacks that write 1Password items do not read it.
 [`src/cdk8s/src/platform-model`](src/cdk8s/src/platform-model) therefore holds
 every definition against both renderings: it reads the synthesized manifests
 and the OpenTofu stacks, and fails on a fact that is declared but not rendered,
@@ -101,8 +104,8 @@ or rendered but not declared. Today's disagreements are listed in its
 `debt-allowlists.ts`, which may only shrink. To add a hostname, site, tailnet
 service or credential, declare it in `platform-model.json` and render it on
 both sides; after a model change, run
-`bun run --cwd packages/homelab-cdktn synth` and commit the regenerated
-`src/tofu/cloudflare/main.tf.json`.
+`bun run --cwd packages/homelab-cdktn synth` and commit each regenerated
+`src/tofu/<stack>/main.tf.json`.
 
 ## Details
 

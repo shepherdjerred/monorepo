@@ -4,13 +4,16 @@ import modelJson from "homelab/src/platform-model.json" with { type: "json" };
 import {
   PlatformModelSchema,
   consumedBucket,
+  declaredBuckets,
   immutablePathPrefixesByZone,
+  immutablePrefixesByBucket,
   platformModel,
   publicHostname,
   publicHostnameOfService,
   publicHostnames,
   staticSite,
   tailnetService,
+  tailnetTagOwners,
   scopedCredentials,
   seaweedfsTailnetS3Endpoint,
   tunnelCnameTarget,
@@ -50,6 +53,36 @@ describe("platform model", () => {
     ]);
     expect(byZone.get("better-skill-capped.com")).toEqual(["/assets/"]);
     expect(byZone.has("statically-typed.com")).toBe(false);
+  });
+
+  test("a bucket expires the immutable prefixes of the site it serves", () => {
+    const byBucket = immutablePrefixesByBucket();
+    expect(byBucket.get("scout-frontend")).toEqual(["app/assets/", "_astro/"]);
+    expect(byBucket.has("statically-typed")).toBe(false);
+  });
+
+  test("declared buckets are every static site's and consumer's, once", () => {
+    const buckets = declaredBuckets();
+    // A static site, a consumer, and a bucket that is both.
+    expect(buckets).toContain("resume");
+    expect(buckets).toContain("llm-archive");
+    expect(
+      buckets.filter((bucket) => bucket === "better-skill-capped"),
+    ).toHaveLength(1);
+    expect(buckets).toEqual(buckets.toSorted());
+  });
+
+  test("a tag is owned by what carries it", () => {
+    const owners = tailnetTagOwners({ admins: "admins", operator: "operator" });
+    expect(Object.keys(owners).toSorted()).toEqual(
+      platformModel.tailnet.tags.toSorted(),
+    );
+    // The operator's default proxy tag, an ingress's own tag, a tsnet
+    // workload's tag, and a tag no service carries.
+    expect(owners["tag:k8s"]).toEqual(["operator"]);
+    expect(owners["tag:delivery"]).toEqual(["admins", "operator"]);
+    expect(owners["tag:k8s-operator"]).toEqual(["admins"]);
+    expect(owners["tag:server"]).toEqual(["admins"]);
   });
 
   test("scoped credentials include the desired-state workloads", () => {

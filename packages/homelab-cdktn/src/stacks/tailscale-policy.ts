@@ -1,3 +1,15 @@
+import { platformModel, tailnetTagOwners } from "homelab/src/platform-model.ts";
+
+/** The account owner and any other tailnet admin. */
+const ADMINS = "autogroup:admin";
+
+/**
+ * The tag of the Kubernetes operator's OAuth client. The platform model
+ * declares the tags the operator's proxies and the cluster's workloads carry,
+ * not which of them is the operator's own identity.
+ */
+const OPERATOR = "tag:k8s-operator";
+
 /**
  * The tailnet policy (ACLs) the `tailscale` stack applies.
  *
@@ -19,17 +31,12 @@ export const TAILNET_POLICY = {
   // required for a solo tailnet. Add trusted humans here if the tailnet is shared.
   groups: {},
 
-  // Who may assign each tag. The K8s operator's OAuth client must be able to
-  // own tag:k8s (it tags the ingress/proxy devices it creates).
-  tagOwners: {
-    "tag:k8s-operator": ["autogroup:admin"],
-    "tag:k8s": ["tag:k8s-operator"],
-    "tag:server": ["autogroup:admin"],
-    "tag:ci": ["autogroup:admin"],
-    "tag:monitoring": ["autogroup:admin"],
-    "tag:iot": ["autogroup:admin"],
-    "tag:delivery": ["autogroup:admin", "tag:k8s-operator"],
-  },
+  // Who may assign each tag: one entry per tag of the platform model
+  // (`tailnet.tags`). The K8s operator's OAuth client must be able to own
+  // tag:k8s (it tags the ingress/proxy devices it creates) and shares every
+  // tag an ingress declares for itself, such as Delivery's tag:delivery;
+  // admins assign the rest.
+  tagOwners: tailnetTagOwners({ admins: ADMINS, operator: OPERATOR }),
 
   acls: [
     // Owner / tailnet admins: full access. Prevents lockout.
@@ -207,3 +214,15 @@ export const TAILNET_POLICY = {
     },
   ],
 } as const;
+
+/**
+ * A rule may name only a tag that has an owner. Tailscale refuses a policy
+ * that does not, but at apply; this refuses it at synthesis.
+ */
+const ownerless = [
+  ...new Set(JSON.stringify(TAILNET_POLICY).match(/tag:[a-z0-9-]+/gu)),
+].filter((tag) => !platformModel.tailnet.tags.includes(tag));
+if (ownerless.length > 0)
+  throw new Error(
+    `The tailnet policy names tags platform-model.json does not declare: ${ownerless.join(", ")}`,
+  );
