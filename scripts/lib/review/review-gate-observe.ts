@@ -25,6 +25,7 @@ import {
   type ReviewStateResult,
 } from "@shepherdjerred/code-review/github";
 import { fetchHeadPushedAt } from "@shepherdjerred/code-review/head-pushed-at";
+import type { ReviewListingCache } from "@shepherdjerred/code-review/github-review-listing-cache";
 import {
   ensureReviewRequested,
   requestGraceSecondsForProvider,
@@ -66,6 +67,7 @@ export async function observeProviderOnce(input: {
   provider: ReviewProvider;
   pullRequestAuthor: PullRequestAuthor;
   headPushedAt: string | null;
+  listings: ReviewListingCache;
   policy: BlockingPolicy;
   configuredGraceSeconds: number;
   retryAfterSeconds: number;
@@ -80,6 +82,7 @@ export async function observeProviderOnce(input: {
     requestToken,
     provider,
     pullRequestAuthor,
+    listings,
     policy,
     configuredGraceSeconds,
     retryAfterSeconds,
@@ -137,6 +140,9 @@ export async function observeProviderOnce(input: {
     // Reuse the comment resolveReviewState just fetched: both decisions
     // describe the identical snapshot without paginating twice per poll.
     issueComment: state.issueComment,
+    // Read after this provider's completion, so a review that completed is
+    // already reflected in the change signal the cache compares.
+    listings,
   });
 
   // Ask for the review this loop is waiting on, once the provider has not
@@ -209,6 +215,8 @@ export type GatePollState = {
   pullRequestAuthor: PullRequestAuthor | null;
   /** Per-provider next request attempt, 1-based (see observeProviderOnce). */
   attempts: Map<string, number>;
+  /** The run's review listing, reused while GitHub reports no change. */
+  listings: ReviewListingCache;
   lastObservations: Map<string, ProviderObservation>;
   warnedMismatch: boolean;
   warnedOversized: Set<string>;
@@ -265,6 +273,7 @@ export async function observeTick(
       provider,
       pullRequestAuthor: author,
       headPushedAt: poll.headPushedAt,
+      listings: poll.listings,
       policy,
       configuredGraceSeconds,
       retryAfterSeconds,
