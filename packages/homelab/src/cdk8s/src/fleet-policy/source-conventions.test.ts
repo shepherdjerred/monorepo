@@ -15,7 +15,8 @@ const HELM_TYPES_ROOT = fileURLToPath(
 /** The one place a vault path may be spelled out. */
 const VAULT_PATH_BUILDER = "misc/onepassword-vault.ts";
 const PACKAGE_SOURCE_PREFIX = "@shepherdjerred/homelab/cdk8s/src/";
-const HELM_VALUES_MAP = "misc/typed-helm-parameters.ts";
+/** Generated beside the types; `HelmValuesForChart` indexes it. */
+const HELM_VALUES_MAP = "chart-values-map.ts";
 
 let sources: ReadonlyMap<string, string>;
 let generatedCharts: readonly string[];
@@ -81,13 +82,15 @@ describe("1Password item paths", () => {
 });
 
 describe("Argo Application Helm values", () => {
-  test("every generated chart values type is registered", () => {
-    const map = sources.get(HELM_VALUES_MAP);
-    expect(map).toBeDefined();
+  test("every generated chart values type is registered", async () => {
+    const map = await Bun.file(`${HELM_TYPES_ROOT}${HELM_VALUES_MAP}`).text();
     const unregistered = generatedCharts.filter(
-      (chart) => map?.includes(`generated/helm/${chart}.types"`) !== true,
+      (chart) => !map.includes(`from "./${chart}.types.ts"`),
     );
     expect(unregistered).toEqual([]);
+    expect(sources.get("misc/typed-helm-parameters.ts")).toContain(
+      `generated/helm/${HELM_VALUES_MAP}"`,
+    );
   });
 
   test("values are typed as the chart the Application installs", () => {

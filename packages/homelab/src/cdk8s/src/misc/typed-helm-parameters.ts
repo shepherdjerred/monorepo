@@ -70,59 +70,10 @@ export function createTypedParameters(
   return valuesToParameters(values);
 }
 
-import type { ArgocdHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/argo-cd.types";
-import type { CertmanagerHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/cert-manager.types";
-import type { ChartmuseumHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/chartmuseum.types";
-import type { ConnectHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/connect.types";
-import type { InteldevicepluginsgpuHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/intel-device-plugins-gpu.types";
-import type { InteldevicepluginsoperatorHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/intel-device-plugins-operator.types";
-import type { KubeprometheusstackHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/kube-prometheus-stack.types";
-import type { PrometheusadapterHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/prometheus-adapter.types";
-import type { LokiHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/loki.types";
-import type { MinecraftHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/minecraft.types";
-import type { NodefeaturediscoveryHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/node-feature-discovery.types";
-import type { OpenebsHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/openebs.types";
-import type { PostgresoperatorHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/postgres-operator.types";
-import type { PromtailHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/promtail.types";
-import type { TailscaleoperatorHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/tailscale-operator.types";
-import type { VeleroHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/velero.types";
-import type { RedisHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/redis.types";
-import type { SeaweedfsHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/seaweedfs.types";
-import type { PrometheusblackboxexporterHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/prometheus-blackbox-exporter.types";
-import type { McrouterHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/mc-router.types";
-import type { AlloyHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/alloy.types";
-import type { PyroscopeHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/pyroscope.types";
-import type { TempoHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/tempo.types";
-import type { MariadbHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/mariadb.types";
-import type { KueueHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/kueue.types";
+import type { HelmChartValuesMap } from "@shepherdjerred/homelab/cdk8s/generated/helm/chart-values-map.ts";
 
-type HelmChartValuesMap = {
-  "argo-cd": ArgocdHelmValues;
-  "cert-manager": CertmanagerHelmValues;
-  chartmuseum: ChartmuseumHelmValues;
-  connect: ConnectHelmValues;
-  "intel-device-plugins-gpu": InteldevicepluginsgpuHelmValues;
-  "intel-device-plugins-operator": InteldevicepluginsoperatorHelmValues;
-  "kube-prometheus-stack": KubeprometheusstackHelmValues;
-  "prometheus-adapter": PrometheusadapterHelmValues;
-  loki: LokiHelmValues;
-  minecraft: MinecraftHelmValues;
-  "node-feature-discovery": NodefeaturediscoveryHelmValues;
-  openebs: OpenebsHelmValues;
-  "postgres-operator": PostgresoperatorHelmValues;
-  promtail: PromtailHelmValues;
-  "tailscale-operator": TailscaleoperatorHelmValues;
-  velero: VeleroHelmValues;
-  redis: RedisHelmValues;
-  seaweedfs: SeaweedfsHelmValues;
-  "prometheus-blackbox-exporter": PrometheusblackboxexporterHelmValues;
-  "mc-router": McrouterHelmValues;
-  alloy: AlloyHelmValues;
-  pyroscope: PyroscopeHelmValues;
-  tempo: TempoHelmValues;
-  mariadb: MariadbHelmValues;
-  kueue: KueueHelmValues;
-};
+/** A chart with committed, generated values types. */
+export type HelmChartName = keyof HelmChartValuesMap;
 
-export type HelmValuesForChart<TChart extends keyof HelmChartValuesMap> =
+export type HelmValuesForChart<TChart extends HelmChartName> =
   HelmChartValuesMap[TChart];
