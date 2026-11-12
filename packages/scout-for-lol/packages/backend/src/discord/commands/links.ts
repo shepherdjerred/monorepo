@@ -18,6 +18,10 @@ export function getDocsUrl(): string {
   return `${getOrigin()}/docs/`;
 }
 
+export function getPrivacySettingsUrl(): string {
+  return `${getOrigin()}/app/settings`;
+}
+
 export function getExploreConversationUrl(conversationId: string): string {
   return `${getOrigin()}/app/explore/${conversationId}`;
 }

@@ -5,6 +5,7 @@ import {
   getExploreConversationUrl,
   getExploreMatchUrl,
   getHallOfFameUrl,
+  getPrivacySettingsUrl,
 } from "#src/discord/commands/links.ts";
 import { exploreActionRow } from "#src/discord/scout/messages.ts";
 import { buildDiscordInstallUrl } from "#src/lib/discord/install-url.ts";
@@ -45,6 +46,9 @@ describe("stage-aware Discord links", () => {
     expect(
       getHallOfFameUrl(DiscordGuildIdSchema.parse("100000000000000001")),
     ).toBe("https://beta.scout-for-lol.com/app/halls/100000000000000001");
+    expect(getPrivacySettingsUrl()).toBe(
+      "https://beta.scout-for-lol.com/app/settings",
+    );
   });
 
   test("keeps Scout conversation buttons slashless", () => {
