@@ -1,11 +1,10 @@
 import { Chart, type App } from "cdk8s";
 import { z } from "zod";
 import { KubeConfigMap } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
-import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import inventory from "./releases.json";
 import { createStormForumChart } from "./index.ts";
 import { ForumStageSchema } from "./release-schema.ts";
-import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
+import { createFirstPartyApplication } from "@shepherdjerred/homelab/cdk8s/src/misc/argo/application.ts";
 
 const InventorySchema = z
   .object({
@@ -41,37 +40,22 @@ export function createStormForumCharts(app: App): void {
 export function createStormForumApplications(chart: Chart): void {
   for (const release of forumReleases) {
     const name = release.stage === "beta" ? "storm-forum-beta" : "storm-forum";
-    new Application(chart, `${name}-app`, {
-      metadata: { name },
-      spec: {
-        project: applicationProject(name),
-        revisionHistoryLimit: 5,
-        source: {
-          repoUrl: "https://chartmuseum.tailnet-1a49.ts.net",
-          chart: name,
-          targetRevision: "~2.0.0-0",
-        },
-        destination: {
-          server: "https://kubernetes.default.svc",
+    createFirstPartyApplication(chart, {
+      name,
+      namespace: name,
+      // A release ID owns one immutable Job execution. Registry and chart
+      // updates must preserve it; an explicit new ID creates the next Job.
+      ignoreDifferences: [
+        {
+          group: "batch",
+          kind: "Job",
           namespace: name,
+          jsonPointers: ["/spec/template"],
         },
-        // A release ID owns one immutable Job execution. Registry and chart
-        // updates must preserve it; an explicit new ID creates the next Job.
-        ignoreDifferences: [
-          {
-            group: "batch",
-            kind: "Job",
-            namespace: name,
-            jsonPointers: ["/spec/template"],
-          },
-        ],
-        syncPolicy: {
-          automated: { enabled: false },
-          syncOptions: [
-            "CreateNamespace=true",
-            "RespectIgnoreDifferences=true",
-          ],
-        },
+      ],
+      syncPolicy: {
+        automated: { enabled: false },
+        syncOptions: ["CreateNamespace=true", "RespectIgnoreDifferences=true"],
       },
     });
   }

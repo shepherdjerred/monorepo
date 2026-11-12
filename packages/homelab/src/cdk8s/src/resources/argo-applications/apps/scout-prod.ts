@@ -1,28 +1,13 @@
 import type { Chart } from "cdk8s";
-import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
-import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
+import { createFirstPartyApplication } from "@shepherdjerred/homelab/cdk8s/src/misc/argo/application.ts";
 
 export function createScoutProdApp(chart: Chart) {
-  return new Application(chart, "scout-prod-app", {
-    metadata: {
-      name: "scout-prod",
-    },
-    spec: {
-      revisionHistoryLimit: 5,
-      project: applicationProject("scout-prod"),
-      source: {
-        repoUrl: "https://chartmuseum.tailnet-1a49.ts.net",
-        targetRevision: "~2.0.0-0",
-        chart: "scout-prod",
-      },
-      destination: {
-        server: "https://kubernetes.default.svc",
-        namespace: "scout-prod",
-      },
-      syncPolicy: {
-        automated: { enabled: true },
-        syncOptions: ["CreateNamespace=true"],
-      },
+  return createFirstPartyApplication(chart, {
+    name: "scout-prod",
+    namespace: "scout-prod",
+    syncPolicy: {
+      automated: { enabled: true },
+      syncOptions: ["CreateNamespace=true"],
     },
   });
 }

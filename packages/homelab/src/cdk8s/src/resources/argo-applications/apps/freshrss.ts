@@ -1,27 +1,12 @@
 import type { Chart } from "cdk8s";
-import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
-import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
+import { createFirstPartyApplication } from "@shepherdjerred/homelab/cdk8s/src/misc/argo/application.ts";
 
 export function createFreshrssApp(chart: Chart) {
-  return new Application(chart, "freshrss-app", {
-    metadata: {
-      name: "freshrss",
-    },
-    spec: {
-      revisionHistoryLimit: 5,
-      project: applicationProject("freshrss"),
-      source: {
-        repoUrl: "https://chartmuseum.tailnet-1a49.ts.net",
-        targetRevision: "~2.0.0-0",
-        chart: "freshrss",
-      },
-      destination: {
-        server: "https://kubernetes.default.svc",
-        namespace: "freshrss",
-      },
-      syncPolicy: {
-        automated: { enabled: true },
-      },
+  return createFirstPartyApplication(chart, {
+    name: "freshrss",
+    namespace: "freshrss",
+    syncPolicy: {
+      automated: { enabled: true },
     },
   });
 }

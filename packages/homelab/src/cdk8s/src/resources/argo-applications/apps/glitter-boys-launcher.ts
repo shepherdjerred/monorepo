@@ -1,36 +1,21 @@
 import type { Chart } from "cdk8s";
-import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import {
   launcherRelease,
   LauncherReleaseSchema,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/glitter-boys-launcher/release.ts";
-import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
+import { createFirstPartyApplication } from "@shepherdjerred/homelab/cdk8s/src/misc/argo/application.ts";
 
 export function createGlitterBoysLauncherApp(
   chart: Chart,
   releaseState: unknown = launcherRelease,
 ) {
   if (LauncherReleaseSchema.parse(releaseState).stage === "prepared") return;
-  return new Application(chart, "glitter-boys-launcher-app", {
-    metadata: {
-      name: "glitter-boys-launcher",
-    },
-    spec: {
-      revisionHistoryLimit: 5,
-      project: applicationProject("glitter-boys-launcher"),
-      source: {
-        repoUrl: "https://chartmuseum.tailnet-1a49.ts.net",
-        targetRevision: "~2.0.0-0",
-        chart: "glitter-boys-launcher",
-      },
-      destination: {
-        server: "https://kubernetes.default.svc",
-        namespace: "glitter-boys-launcher",
-      },
-      syncPolicy: {
-        automated: { enabled: true },
-        syncOptions: ["CreateNamespace=true"],
-      },
+  return createFirstPartyApplication(chart, {
+    name: "glitter-boys-launcher",
+    namespace: "glitter-boys-launcher",
+    syncPolicy: {
+      automated: { enabled: true },
+      syncOptions: ["CreateNamespace=true"],
     },
   });
 }

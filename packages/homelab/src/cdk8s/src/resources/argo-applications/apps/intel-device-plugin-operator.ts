@@ -1,8 +1,7 @@
 import type { Chart } from "cdk8s";
-import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { Namespace } from "cdk8s-plus-31";
-import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
+import { helmApplication } from "@shepherdjerred/homelab/cdk8s/src/misc/argo/application.ts";
 
 export function createIntelDevicePluginOperatorNamespace(chart: Chart): void {
   new Namespace(chart, "intel-plugin-namespcae", {
@@ -18,27 +17,17 @@ export function createIntelDevicePluginOperatorNamespace(chart: Chart): void {
 export function createIntelDevicePluginOperatorApp(chart: Chart) {
   createIntelDevicePluginOperatorNamespace(chart);
 
-  new Application(chart, "intel-plugins-app", {
-    metadata: {
-      name: "intel-device-plugin-operator",
-    },
-    spec: {
-      revisionHistoryLimit: 5,
-      project: applicationProject("intel-device-plugin-operator"),
-      source: {
-        // https://github.com/intel/helm-charts/tree/main/charts/device-plugin-operator
-        repoUrl: "https://intel.github.io/helm-charts/",
-        chart: "intel-device-plugins-operator",
-        targetRevision: versions["intel-device-plugins-operator"],
-      },
-      destination: {
-        server: "https://kubernetes.default.svc",
-        namespace: "intel-device-plugin-operator",
-      },
-      syncPolicy: {
-        automated: { enabled: true },
-        syncOptions: ["CreateNamespace=true"],
-      },
+  helmApplication(chart, {
+    name: "intel-device-plugin-operator",
+    id: "intel-plugins-app",
+    namespace: "intel-device-plugin-operator",
+    chart: "intel-device-plugins-operator",
+    // https://github.com/intel/helm-charts/tree/main/charts/device-plugin-operator
+    repoUrl: "https://intel.github.io/helm-charts/",
+    targetRevision: versions["intel-device-plugins-operator"],
+    syncPolicy: {
+      automated: { enabled: true },
+      syncOptions: ["CreateNamespace=true"],
     },
   });
 }

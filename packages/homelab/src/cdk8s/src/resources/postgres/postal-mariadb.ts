@@ -1,10 +1,10 @@
 import { Construct } from "constructs";
-import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
+import type { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
-import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
+import { helmApplication } from "@shepherdjerred/homelab/cdk8s/src/misc/argo/application.ts";
 
 /** `tag@sha256:<64 hex>` — the only shape that pins an image immutably. */
 const PINNED_IMAGE_PATTERN = /^(?<tag>[^@\s]+)@(?<digest>sha256:[\da-f]{64})$/;
@@ -194,30 +194,23 @@ export class PostalMariaDB extends Construct {
       },
     };
 
-    this.application = new Application(scope, `${id}-app`, {
+    this.application = helmApplication(scope, {
+      name: id,
+      namespace: props.namespace,
+      chart: "mariadb",
+      repoUrl: "https://charts.bitnami.com/bitnami",
+      targetRevision: versions.mariadb,
+      valuesObject: mariadbValues,
+      helm: {
+        releaseName,
+      },
       metadata: {
-        name: id,
         namespace: "argocd",
       },
-      spec: {
-        project: applicationProject(id),
-        source: {
-          repoUrl: "https://charts.bitnami.com/bitnami",
-          targetRevision: versions.mariadb,
-          chart: "mariadb",
-          helm: {
-            releaseName: releaseName,
-            valuesObject: mariadbValues,
-          },
-        },
-        destination: {
-          server: "https://kubernetes.default.svc",
-          namespace: props.namespace,
-        },
-        syncPolicy: {
-          automated: { enabled: true },
-          syncOptions: ["CreateNamespace=true"],
-        },
+      revisionHistoryLimit: null,
+      syncPolicy: {
+        automated: { enabled: true },
+        syncOptions: ["CreateNamespace=true"],
       },
     });
   }

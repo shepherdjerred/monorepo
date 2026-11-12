@@ -1,8 +1,8 @@
 import { Construct } from "constructs";
-import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
+import type { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
-import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
+import { helmApplication } from "@shepherdjerred/homelab/cdk8s/src/misc/argo/application.ts";
 
 export type RedisProps = {
   /**
@@ -42,29 +42,22 @@ export class Redis extends Construct {
       },
     };
 
-    this.application = new Application(scope, `${id}-app`, {
+    this.application = helmApplication(scope, {
+      name: id,
+      namespace: props.namespace,
+      chart: "redis",
+      repoUrl: "https://charts.bitnami.com/bitnami",
+      targetRevision: versions.redis,
+      valuesObject: redisValues,
+      helm: {
+        releaseName,
+      },
       metadata: {
-        name: id,
         namespace: "argocd",
       },
-      spec: {
-        project: applicationProject(id),
-        source: {
-          repoUrl: "https://charts.bitnami.com/bitnami",
-          targetRevision: versions.redis,
-          chart: "redis",
-          helm: {
-            releaseName: releaseName,
-            valuesObject: redisValues,
-          },
-        },
-        destination: {
-          server: "https://kubernetes.default.svc",
-          namespace: props.namespace,
-        },
-        syncPolicy: {
-          automated: { enabled: true },
-        },
+      revisionHistoryLimit: null,
+      syncPolicy: {
+        automated: { enabled: true },
       },
     });
   }

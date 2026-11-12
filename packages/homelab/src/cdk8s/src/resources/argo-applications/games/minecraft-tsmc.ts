@@ -4,7 +4,6 @@ import { siteAnalyticsConfiguration } from "@shepherdjerred/homelab/cdk8s/src/mi
 import { createMinecraftProxyTrust } from "@shepherdjerred/homelab/cdk8s/src/misc/minecraft/proxy-trust.ts";
 import { createMinecraftPublicStatus } from "@shepherdjerred/homelab/cdk8s/src/misc/minecraft/public-status.ts";
 import { Size } from "cdk8s";
-import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import {
   vaultItemPath,
@@ -17,13 +16,13 @@ import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
 import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
-import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
 import {
   blueMapStorageInit,
   blueMapStorageResources,
   blueMapStorageVolumes,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/minecraft/bluemap-storage.ts";
 import { FLIPT_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
+import { helmApplication } from "@shepherdjerred/homelab/cdk8s/src/misc/argo/application.ts";
 
 const NAMESPACE = "minecraft-tsmc";
 const analytics = siteAnalyticsConfiguration("ts-mc");
@@ -321,64 +320,52 @@ export function createMinecraftTsmcApp(chart: Chart) {
 
   // DNS records are now managed by mc-router
 
-  return new Application(chart, "minecraft-tsmc-app", {
-    metadata: {
-      name: "minecraft-tsmc",
-    },
-    spec: {
-      revisionHistoryLimit: 2,
-      project: applicationProject("minecraft-tsmc"),
-      source: {
-        repoUrl: minecraftChartRepository(),
-        targetRevision: versions.minecraft,
-        chart: "minecraft",
-        helm: {
-          valuesObject: minecraftValues,
-        },
-      },
-      destination: {
-        server: "https://kubernetes.default.svc",
-        namespace: "minecraft-tsmc",
-      },
-      // Ignore Service fields that Kubernetes fills with defaults (chart templates null/empty values)
-      ignoreDifferences: [
-        {
-          group: "apps",
-          kind: "StatefulSet",
-          jsonPointers: [
-            "/spec/podManagementPolicy",
-            "/spec/revisionHistoryLimit",
-            "/spec/persistentVolumeClaimRetentionPolicy",
-            "/spec/volumeClaimTemplates",
-          ],
-        },
-        {
-          // No `group` — Service is in the core API group. ArgoCD's Application Go
-          // types mark `group` as omitempty, so any write through the ArgoCD API
-          // drops an explicit "" from the live CR, leaving the apps app-of-apps
-          // perpetually OutOfSync against a manifest that includes it.
-          kind: "Service",
-          jsonPointers: [
-            "/metadata/annotations/mc-router.itzg.me~1autoScaleUp",
-            "/spec/clusterIP",
-            "/spec/clusterIPs",
-            "/spec/ipFamilies",
-            "/spec/ipFamilyPolicy",
-            "/spec/internalTrafficPolicy",
-            "/spec/sessionAffinity",
-          ],
-        },
-      ],
-      syncPolicy: {
-        automated: { enabled: true },
-        // ServerSideApply needed to avoid "annotation exceeds 262KB limit" error
-        syncOptions: [
-          "CreateNamespace=true",
-          "ServerSideApply=true",
-          "RespectIgnoreDifferences=true",
-          "ApplyOutOfSyncOnly=true",
+  return helmApplication(chart, {
+    name: "minecraft-tsmc",
+    namespace: "minecraft-tsmc",
+    chart: "minecraft",
+    repoUrl: minecraftChartRepository(),
+    targetRevision: versions.minecraft,
+    valuesObject: minecraftValues,
+    revisionHistoryLimit: 2,
+    // Ignore Service fields that Kubernetes fills with defaults (chart templates null/empty values)
+    ignoreDifferences: [
+      {
+        group: "apps",
+        kind: "StatefulSet",
+        jsonPointers: [
+          "/spec/podManagementPolicy",
+          "/spec/revisionHistoryLimit",
+          "/spec/persistentVolumeClaimRetentionPolicy",
+          "/spec/volumeClaimTemplates",
         ],
       },
+      {
+        // No `group` — Service is in the core API group. ArgoCD's Application Go
+        // types mark `group` as omitempty, so any write through the ArgoCD API
+        // drops an explicit "" from the live CR, leaving the apps app-of-apps
+        // perpetually OutOfSync against a manifest that includes it.
+        kind: "Service",
+        jsonPointers: [
+          "/metadata/annotations/mc-router.itzg.me~1autoScaleUp",
+          "/spec/clusterIP",
+          "/spec/clusterIPs",
+          "/spec/ipFamilies",
+          "/spec/ipFamilyPolicy",
+          "/spec/internalTrafficPolicy",
+          "/spec/sessionAffinity",
+        ],
+      },
+    ],
+    syncPolicy: {
+      automated: { enabled: true },
+      // ServerSideApply needed to avoid "annotation exceeds 262KB limit" error
+      syncOptions: [
+        "CreateNamespace=true",
+        "ServerSideApply=true",
+        "RespectIgnoreDifferences=true",
+        "ApplyOutOfSyncOnly=true",
+      ],
     },
   });
 }
