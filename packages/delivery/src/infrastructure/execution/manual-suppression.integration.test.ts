@@ -1,6 +1,9 @@
 import { describe, expect, test } from "vitest";
-import { useDeliveryFixture } from "#testing/delivery-fixture.ts";
-import { testExecutor, testOperator } from "#testing/seed.ts";
+import {
+  acceptedDeployment,
+  useDeliveryFixture,
+} from "#testing/delivery-fixture.ts";
+import { testExecutor } from "#testing/seed.ts";
 
 const context = useDeliveryFixture();
 
@@ -10,35 +13,8 @@ async function environmentRow() {
   });
 }
 
-/** An operator's deploy of one set revision, accepted by the executor. */
-async function acceptManual(versionSetId: string) {
-  const env = await environmentRow();
-  const deployment = await context.delivery.createDeployment(
-    {
-      requestId: crypto.randomUUID(),
-      environmentId: env.id,
-      versionSetRevisionId: versionSetId,
-      expectedGeneration: env.generation,
-      kind: "deploy",
-    },
-    testOperator,
-  );
-  await context.delivery.claim(deployment.id, testExecutor);
-  await context.delivery.finish(
-    deployment.id,
-    {
-      status: "succeeded",
-      message: "Accepted",
-      observedRevisionId: versionSetId,
-      recoveryRequired: false,
-      evidence: [
-        { kind: "reconciliation", summary: "exact operation completed" },
-        { kind: "acceptance", summary: "acceptance checks passed" },
-      ],
-    },
-    testExecutor,
-  );
-  return deployment;
+function acceptManual(versionSetId: string) {
+  return acceptedDeployment(context, versionSetId);
 }
 
 /**
