@@ -64,7 +64,7 @@ pub(super) async fn run_collector(
     let mut checked_in_device: Option<Uuid> = None;
     let mut replay_upload_task: Option<ReplayUploadTask> = None;
     let mut collection_workers = collection::CollectionWorkers::default();
-    let mut ticker = tokio::time::interval(Duration::from_secs(2));
+    let mut ticker = collection_interval();
 
     loop {
         tokio::select! {
@@ -135,6 +135,15 @@ pub(super) async fn run_collector(
             }
         }
     }
+}
+
+/// The collection tick. `Delay` keeps ticks evenly spaced after a sleep/resume
+/// or a slow pass; the default `Burst` would fire every missed tick back to
+/// back, hammering League's client and the backend.
+pub(super) fn collection_interval() -> tokio::time::Interval {
+    let mut ticker = tokio::time::interval(Duration::from_secs(2));
+    ticker.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
+    ticker
 }
 
 pub(super) struct ObservationTickContext<'a> {
@@ -290,5 +299,24 @@ pub(super) fn create_live_client(state: &StateHub) -> Option<LiveClient> {
             set_error(state, error.to_string());
             None
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::collection_interval;
+    use std::time::Duration;
+
+    #[tokio::test(start_paused = true)]
+    async fn a_long_stall_yields_one_tick_not_a_burst() {
+        let mut ticker = collection_interval();
+        ticker.tick().await;
+        // Simulate sleep/resume: the clock jumps far past many ticks.
+        tokio::time::advance(Duration::from_secs(600)).await;
+        ticker.tick().await;
+        let started = tokio::time::Instant::now();
+        // With Burst the next tick would be immediate; with Delay it waits a full period.
+        ticker.tick().await;
+        assert_eq!(started.elapsed(), Duration::from_secs(2));
     }
 }

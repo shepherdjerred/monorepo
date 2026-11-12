@@ -23,8 +23,24 @@ pub(super) const SCHEMA: &str = "
     observer TEXT NOT NULL, game_id TEXT NOT NULL,
     resolved INTEGER NOT NULL DEFAULT 0,
     next_attempt_millis INTEGER NOT NULL DEFAULT 0,
+    attempts INTEGER NOT NULL DEFAULT 0,
     PRIMARY KEY (observer, game_id)
   );";
+
+/// Escalating retry delay shared by game recovery and game hints: 5 seconds per
+/// attempt, capped at 5 minutes. `attempts` is the count before this attempt.
+const BACKOFF_SQL: &str = "MIN(300000, 5000 * (attempts + 1))";
+
+/// Backfill columns that an earlier build's `game_hint` table lacks.
+pub(super) fn migrate(connection: &rusqlite::Connection) -> Result<(), OutboxError> {
+    if !super::has_column(connection, "game_hint", "attempts")? {
+        connection.execute(
+            "ALTER TABLE game_hint ADD COLUMN attempts INTEGER NOT NULL DEFAULT 0",
+            [],
+        )?;
+    }
+    Ok(())
+}
 
 /// A discovered game whose result or timeline still needs collecting.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -80,7 +96,14 @@ impl ObservationOutbox {
         resolved: bool,
         now: i64,
     ) -> Result<(), OutboxError> {
-        self.connection()?.execute("UPDATE game_hint SET resolved = ?3, next_attempt_millis = ?4 + 300000 WHERE observer = ?1 AND game_id = ?2", params![observer, game_id, resolved, now])?;
+        self.connection()?.execute(
+            &format!(
+                "UPDATE game_hint SET resolved = ?3, attempts = attempts + 1,
+                   next_attempt_millis = ?4 + {BACKOFF_SQL}
+                 WHERE observer = ?1 AND game_id = ?2"
+            ),
+            params![observer, game_id, resolved, now],
+        )?;
         Ok(())
     }
 
@@ -136,6 +159,27 @@ impl ObservationOutbox {
             .map_err(OutboxError::Sqlite)
     }
 
+    /// Whether this game's result is already durable in the outbox.
+    ///
+    /// # Errors
+    /// Returns a SQLite error when recovery state cannot be read.
+    pub fn game_result_queued(
+        &self,
+        observer: &str,
+        platform: &str,
+        game_id: &str,
+    ) -> Result<bool, OutboxError> {
+        Ok(self
+            .connection()?
+            .query_row(
+                "SELECT result_queued FROM game_recovery WHERE observer = ?1 AND platform = ?2 AND game_id = ?3",
+                params![observer, platform, game_id],
+                |row| row.get(0),
+            )
+            .optional()?
+            .unwrap_or(false))
+    }
+
     /// Cache a qualified full-game response before attempting outbox writes.
     ///
     /// # Errors
@@ -168,11 +212,13 @@ impl ObservationOutbox {
         now_millis: i64,
     ) -> Result<(), OutboxError> {
         self.connection()?.execute(
-            "UPDATE game_recovery SET full_game = COALESCE(?4, full_game),
+            &format!(
+                "UPDATE game_recovery SET full_game = COALESCE(?4, full_game),
                result_queued = MAX(result_queued, ?5), timeline_queued = MAX(timeline_queued, ?6),
                attempts = attempts + 1,
-               next_attempt_millis = ?7 + MIN(300000, 5000 * (attempts + 1))
-             WHERE observer = ?1 AND platform = ?2 AND game_id = ?3",
+               next_attempt_millis = ?7 + {BACKOFF_SQL}
+             WHERE observer = ?1 AND platform = ?2 AND game_id = ?3"
+            ),
             params![
                 observer,
                 game.platform,
@@ -245,14 +291,65 @@ mod tests {
         outbox.remember_game_hint("other", "456")?;
         outbox.checkpoint_game_hint("owner", "123", false, 0)?;
         let reopened = ObservationOutbox::open(&path)?;
-        assert_eq!(reopened.game_hints("owner", 299_999)?, Vec::<String>::new());
-        assert_eq!(reopened.game_hints("owner", 300_000)?, vec!["123"]);
+        assert_eq!(reopened.game_hints("owner", 4_999)?, Vec::<String>::new());
+        assert_eq!(reopened.game_hints("owner", 5_000)?, vec!["123"]);
         reopened.discover_game("owner", "NA1", "123", false)?;
-        reopened.checkpoint_game_hint("owner", "123", true, 300_000)?;
+        reopened.checkpoint_game_hint("owner", "123", true, 5_000)?;
         reopened.remember_game_hint("owner", "123")?;
         assert_eq!(reopened.game_hints("owner", 900_000)?, Vec::<String>::new());
         assert_eq!(reopened.recovery_games("owner", 0, 4)?.len(), 1);
         assert_eq!(reopened.game_hints("other", 0)?, vec!["456"]);
+        std::fs::remove_file(path)?;
+        Ok(())
+    }
+
+    #[test]
+    fn unresolved_hints_back_off_like_game_recovery() -> Result<(), Box<dyn std::error::Error>> {
+        let path = std::env::temp_dir().join(format!(
+            "scout-hint-backoff-{}.sqlite",
+            uuid::Uuid::new_v4()
+        ));
+        let outbox = ObservationOutbox::open(&path)?;
+        outbox.remember_game_hint("owner", "123")?;
+        let mut now = 1_000_000_i64;
+        let mut delays = Vec::new();
+        for _ in 0..62 {
+            outbox.checkpoint_game_hint("owner", "123", false, now)?;
+            assert_eq!(outbox.game_hints("owner", now)?, Vec::<String>::new());
+            let mut due = now;
+            while outbox.game_hints("owner", due)?.is_empty() {
+                due += 5_000;
+            }
+            delays.push(due - now);
+            now = due;
+        }
+        assert_eq!(&delays[..4], &[5_000, 10_000, 15_000, 20_000]);
+        assert_eq!(delays[59], 300_000);
+        assert!(delays[59..].iter().all(|delay| *delay == 300_000));
+        std::fs::remove_file(path)?;
+        Ok(())
+    }
+
+    #[test]
+    fn hint_table_from_an_older_build_gains_its_attempt_counter()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let path = std::env::temp_dir().join(format!(
+            "scout-hint-migrate-{}.sqlite",
+            uuid::Uuid::new_v4()
+        ));
+        {
+            let connection = rusqlite::Connection::open(&path)?;
+            connection.execute_batch(
+                "CREATE TABLE game_hint (observer TEXT NOT NULL, game_id TEXT NOT NULL,
+                   resolved INTEGER NOT NULL DEFAULT 0, next_attempt_millis INTEGER NOT NULL DEFAULT 0,
+                   PRIMARY KEY (observer, game_id));
+                 INSERT INTO game_hint (observer, game_id) VALUES ('owner', '9');",
+            )?;
+        }
+        let outbox = ObservationOutbox::open(&path)?;
+        assert_eq!(outbox.game_hints("owner", 0)?, vec!["9"]);
+        outbox.checkpoint_game_hint("owner", "9", false, 0)?;
+        assert_eq!(outbox.game_hints("owner", 4_999)?, Vec::<String>::new());
         std::fs::remove_file(path)?;
         Ok(())
     }
