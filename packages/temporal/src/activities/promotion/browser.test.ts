@@ -12,6 +12,26 @@ describe("native PinchTab transport", () => {
       actions: unknown[] = [];
     let failSnapshot = false;
     let failPointer = false;
+    let navigateOnHover = false;
+    let pageUrl = target.url;
+    async function nativeAction(request: Request) {
+      const body = z
+        .union([
+          z.strictObject({
+            kind: z.literal("fill"),
+            ref: z.string(),
+            text: z.string(),
+          }),
+          z.strictObject({ kind: z.literal("hover"), ref: z.string() }),
+        ])
+        .parse(await request.json());
+      actions.push(body);
+      if (navigateOnHover && body.kind === "hover")
+        pageUrl = new URL("/account/", target.url).href;
+      return failPointer && body.kind === "hover"
+        ? new Response("element is occluded", { status: 500 })
+        : Response.json({ success: true });
+    }
     const server = Bun.serve({
       hostname: "127.0.0.1",
       port: 0,
@@ -32,7 +52,7 @@ describe("native PinchTab transport", () => {
             .object({ expression: z.string() })
             .parse(await request.json());
           return Response.json({
-            result: expression === "location.href" ? target.url : [],
+            result: expression === "location.href" ? pageUrl : [],
           });
         }
         if (url.pathname.endsWith("/snapshot")) {
@@ -55,23 +75,9 @@ describe("native PinchTab transport", () => {
         }
         if (url.pathname.endsWith("/attr"))
           return Response.json({ value: "password" });
-        if (url.pathname.endsWith("/action")) {
-          const body = z
-            .union([
-              z.strictObject({
-                kind: z.literal("fill"),
-                ref: z.string(),
-                text: z.string(),
-              }),
-              z.strictObject({ kind: z.literal("hover"), ref: z.string() }),
-            ])
-            .parse(await request.json());
-          actions.push(body);
-          return failPointer && body.kind === "hover"
-            ? new Response("element is occluded", { status: 500 })
-            : Response.json({ success: true });
-        }
-        return new Response("Unknown test route", { status: 404 });
+        return url.pathname.endsWith("/action")
+          ? await nativeAction(request)
+          : new Response("Unknown test route", { status: 404 });
       },
     });
     try {
@@ -131,6 +137,10 @@ describe("native PinchTab transport", () => {
       expect(paths.at(-2)).toBe(
         "/tabs/page/snapshot?format=json&selector=main&depth=3",
       );
+      navigateOnHover = true;
+      await expect(browser.preparePointer("e41")).rejects.toThrow("Refresh");
+      expect(actions.at(-1)).toEqual({ kind: "hover", ref: "e41" });
+      await expect(browser.accessibleControl("e41")).rejects.toThrow("Refresh");
       await expect(browser.open("https://outside.invalid/")).rejects.toThrow(
         "scope",
       );

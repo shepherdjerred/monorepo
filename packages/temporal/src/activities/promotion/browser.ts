@@ -264,7 +264,6 @@ export class PromotionBrowser {
     }
     return result;
   }
-
   async controlState(ref: string) {
     await this.accessibleControl(ref);
     const query = new URLSearchParams({ selector: ref });
@@ -284,6 +283,7 @@ export class PromotionBrowser {
   async preparePointer(ref: string): Promise<void> {
     await this.accessibleControl(ref);
     await this.action({ kind: "hover", ref });
+    await this.accessibleControl(ref);
   }
   async followLink(
     body: Record<string, unknown>,
