@@ -33,7 +33,7 @@ Each subdirectory is an independent root module with its own `backend.tf` (S3 st
 
 ### Stacks synthesized from TypeScript
 
-`anthropic`, `dockerhub` and `github` have no `.tf` files. Their configuration is
+`anthropic`, `discord`, `dockerhub` and `github` have no `.tf` files. Their configuration is
 `main.tf.json`, synthesized by the [CDK Terrain](https://cdktn.io/docs) app in
 [`packages/homelab-cdktn`](../../../homelab-cdktn) and committed next to the stack's `.terraform.lock.hcl`.
 OpenTofu, `tofu-stack.ts`, the stack archive and Delivery read that file like
@@ -319,7 +319,8 @@ deletion, so inspect the exact plan before changing that field.
 
 `discord/desired-state.json` is the checked-in allowlist of true bot
 applications, expected application IDs, 1Password item references, and managed
-settings. `discord/applications.tf` is import-only. Each bot has its own
+settings. The stack (`packages/homelab-cdktn/src/stacks/discord.ts`) is
+import-only. Each bot has its own
 provider configuration and manages descriptions, install URLs, interaction
 endpoints, role-connection URLs, and tags. Every application has
 `prevent_destroy`; applications are never created or deleted by this stack.
