@@ -23,11 +23,13 @@
       "outputs": ["generated/**"]
     },
     // "Synth is current": synthesizes every stack and fails when a committed
-    // src/tofu/<stack>/main.tf.json differs. It writes nothing.
+    // src/tofu/<stack>/main.tf.json differs. It writes nothing. The posthog
+    // stack inlines the analytics site registry.
     "build": {
       "dependsOn": ["^build", "generate"],
       "inputs": [
         "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/config/analytics-sites.json",
         "$TURBO_ROOT$/packages/homelab/src/tofu/*/main.tf.json"
       ],
       "outputs": []
@@ -38,6 +40,7 @@
       "inputs": [
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/vitest.config.ts",
+        "$TURBO_ROOT$/config/analytics-sites.json",
         "$TURBO_ROOT$/packages/homelab/src/tofu/*/main.tf.json",
         "$TURBO_ROOT$/packages/homelab/src/tofu/*/.terraform.lock.hcl",
         "$TURBO_ROOT$/packages/homelab/src/tofu/provider-versions.json",
@@ -53,6 +56,7 @@
         "$TURBO_ROOT$/scripts/ci/gradle-junit.ts",
         "$TURBO_ROOT$/scripts/ci/run-ci-test.ts",
         "$TURBO_ROOT$/vitest.config.ts",
+        "$TURBO_ROOT$/config/analytics-sites.json",
         "$TURBO_ROOT$/packages/homelab/src/tofu/*/main.tf.json",
         "$TURBO_ROOT$/packages/homelab/src/tofu/*/.terraform.lock.hcl",
         "$TURBO_ROOT$/packages/homelab/src/tofu/provider-versions.json",

@@ -1,0 +1,137 @@
+/**
+ * Minecraft server events are separate from the ts-mc website's browser
+ * identity. Keep this dashboard private and production-only; use an ad-hoc
+ * beta query for acceptance.
+ */
+export const STORM_DASHBOARD = {
+  id: "storm_product_metrics",
+  name: "The Storm — Product Metrics",
+  description:
+    "Private Minecraft product metrics for The Storm. Production human players only. Named Minecraft identities; no chat, commands, IP addresses or replay.",
+} as const;
+
+/** Each line ends in a newline, the last one included. */
+function lines(...text: string[]): string {
+  return text.map((line) => `${line}\n`).join("");
+}
+
+/**
+ * The deduplicated production event set every metric reads. PostHog replaces
+ * `{filters}` with the insight's date range.
+ */
+const STORM_EVENTS = lines(
+  "SELECT DISTINCT properties.event_id AS event_id, distinct_id, timestamp, event,",
+  "  properties.session_id AS session_id,",
+  "  properties.mode AS mode, properties.feature AS feature, properties.action AS action,",
+  "  toFloat(properties.connected_ms) AS connected_ms,",
+  "  toFloat(properties.active_ms) AS active_ms,",
+  "  toDateTime(toString(properties.first_seen_at)) AS first_seen_at",
+  "FROM events",
+  "WHERE event IN ('storm_session_started', 'storm_playtime_recorded', 'storm_feature_interacted', 'storm_session_ended')",
+  "  AND properties.source = 'minecraft' AND properties.site_key = 'ts-mc'",
+  "  AND properties.stage = 'prod' AND properties.schema_version = 1",
+  "  AND properties.event_id IS NOT NULL AND {filters}",
+);
+
+type StormMetric = {
+  readonly name: string;
+  readonly description: string;
+  readonly display: "ActionsTable" | "ActionsLineGraph";
+  /** HogQL over {@link STORM_EVENTS}. */
+  readonly query: string;
+};
+
+/**
+ * One insight per key on the product-metrics dashboard. The keys are the
+ * `for_each` instance keys of `posthog_insight.storm_product_metrics`, so
+ * renaming one is a state change.
+ */
+export const STORM_METRICS: Readonly<Record<string, StormMetric>> = {
+  active_players: {
+    name: "Unique players: daily, weekly, monthly",
+    description:
+      "Players seen in the last 1, 7 and 30 days, including connections spanning midnight.",
+    display: "ActionsTable",
+    query: `SELECT uniqIf(distinct_id, timestamp >= now() - INTERVAL 1 DAY) AS daily_players, uniqIf(distinct_id, timestamp >= now() - INTERVAL 7 DAY) AS weekly_players, uniqIf(distinct_id, timestamp >= now() - INTERVAL 30 DAY) AS monthly_players FROM (${STORM_EVENTS})`,
+  },
+  new_returning: {
+    name: "Daily new and returning players",
+    description:
+      "New means first seen by this collector; historical server visits are not backfilled. Pacific calendar days.",
+    display: "ActionsLineGraph",
+    query: `SELECT toDate(toTimeZone(timestamp, 'America/Los_Angeles')) AS day, uniqIf(distinct_id, toDate(toTimeZone(first_seen_at, 'America/Los_Angeles')) = day) AS new_players, uniqIf(distinct_id, toDate(toTimeZone(first_seen_at, 'America/Los_Angeles')) < day) AS returning_players FROM (${STORM_EVENTS}) GROUP BY day ORDER BY day`,
+  },
+  playtime: {
+    name: "Daily connected and active hours",
+    description:
+      "Active time excludes Essentials AFK. Intervals are split at Pacific midnight; session summaries are excluded from sums.",
+    display: "ActionsLineGraph",
+    query: `SELECT toDate(toTimeZone(timestamp, 'America/Los_Angeles')) AS day, sum(connected_ms) / 3600000 AS connected_hours, sum(active_ms) / 3600000 AS active_hours FROM (${STORM_EVENTS}) WHERE event = 'storm_playtime_recorded' GROUP BY day ORDER BY day`,
+  },
+  modes: {
+    name: "Playtime by mode",
+    description:
+      "Survival, arenas and Search and Destroy, including accepted lobby and spectator membership.",
+    display: "ActionsTable",
+    query: `SELECT mode, sum(connected_ms) / 3600000 AS connected_hours, sum(active_ms) / 3600000 AS active_hours, uniq(distinct_id) AS unique_players FROM (${STORM_EVENTS}) WHERE event = 'storm_playtime_recorded' GROUP BY mode ORDER BY connected_hours DESC`,
+  },
+  sessions: {
+    name: "Completed sessions",
+    description:
+      "Mean connected and active minutes, including shutdown and crash recovery only through the last durable checkpoint. Open sessions are excluded.",
+    display: "ActionsTable",
+    query: `SELECT count() AS sessions, avg(connected_ms) / 60000 AS mean_connected_minutes, avg(active_ms) / 60000 AS mean_active_minutes FROM (${STORM_EVENTS}) WHERE event = 'storm_session_ended'`,
+  },
+  first_sessions: {
+    name: "New players: first-session engagement",
+    description:
+      "Completed first sessions observed by this collector, excluding historical visits. Active minutes exclude AFK. Ten active minutes is an engagement signal, not a tutorial requirement.",
+    display: "ActionsTable",
+    query: lines(
+      `WITH measured AS (${STORM_EVENTS}), first_sessions AS (`,
+      "  SELECT distinct_id, argMin(session_id, timestamp) AS first_session_id",
+      "  FROM measured",
+      "  WHERE event = 'storm_session_started'",
+      "    AND toDate(toTimeZone(timestamp, 'America/Los_Angeles')) = toDate(toTimeZone(first_seen_at, 'America/Los_Angeles'))",
+      "  GROUP BY distinct_id",
+      ")",
+      "SELECT count() AS completed_first_sessions,",
+      "  avg(active_ms) / 60000 AS mean_active_minutes,",
+      "  countIf(active_ms >= 600000) AS reached_ten_active_minutes",
+      "FROM measured INNER JOIN first_sessions ON measured.distinct_id = first_sessions.distinct_id",
+      "  AND measured.session_id = first_sessions.first_session_id",
+      "WHERE event = 'storm_session_ended'",
+    ),
+  },
+  features: {
+    name: "Features: interactions and unique players",
+    description:
+      "Successful feature interactions by bounded action. Arena/match completion includes forced stops. No command arguments or chat content.",
+    display: "ActionsTable",
+    query: `SELECT feature, action, count() AS interactions, uniq(distinct_id) AS unique_players FROM (${STORM_EVENTS}) WHERE event = 'storm_feature_interacted' GROUP BY feature, action ORDER BY unique_players DESC, interactions DESC`,
+  },
+  retention: {
+    name: "New player retention: following week",
+    description:
+      "Pacific Monday cohorts of players first seen by analytics. Shows only cohorts whose entire following week has elapsed.",
+    display: "ActionsTable",
+    query: lines(
+      `WITH measured AS (${STORM_EVENTS}),`,
+      "cohorts AS (",
+      "  SELECT distinct_id, min(toStartOfWeek(toTimeZone(first_seen_at, 'America/Los_Angeles'), 1)) AS cohort",
+      "  FROM measured",
+      "  WHERE event = 'storm_session_started'",
+      "    AND toDate(toTimeZone(timestamp, 'America/Los_Angeles')) = toDate(toTimeZone(first_seen_at, 'America/Los_Angeles'))",
+      "  GROUP BY distinct_id",
+      "), weeks AS (",
+      "  SELECT DISTINCT distinct_id, toStartOfWeek(toTimeZone(timestamp, 'America/Los_Angeles'), 1) AS week FROM measured",
+      ")",
+      "SELECT cohorts.cohort AS cohort_week, uniq(cohorts.distinct_id) AS new_players,",
+      "  uniqIf(cohorts.distinct_id, weeks.week = cohorts.cohort + INTERVAL 7 DAY) AS returned_next_week,",
+      "  100.0 * returned_next_week / new_players AS retention_percent",
+      "FROM cohorts LEFT JOIN weeks ON cohorts.distinct_id = weeks.distinct_id",
+      "WHERE cohorts.cohort < toStartOfWeek(toTimeZone(now(), 'America/Los_Angeles'), 1) - INTERVAL 7 DAY",
+      "GROUP BY cohort_week ORDER BY cohort_week",
+    ),
+  },
+};

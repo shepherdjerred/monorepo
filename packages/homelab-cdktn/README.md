@@ -91,6 +91,9 @@ Never run `apply`, `import`, or any `state` subcommand as part of a port.
   rather than mixing them with a resource's own `moveFromId` in one stack.
 - Local values that feed `jsonencode` keep their key order: build the object
   in the order the HCL declares it and pass it to `Fn.jsonencode`.
+- A JSON document whose strings are data (a query, a description, SQL) is a
+  local value encoded by reference, not an object passed to `Fn.jsonencode`;
+  see the next section.
 
 ### Known cdktn behavior
 
@@ -98,6 +101,14 @@ Never run `apply`, `import`, or any `state` subcommand as part of a port.
   object has its keys rewritten (`fooBar` becomes `foo_bar`). Wrap the map in
   `Token.asAny({...})` when the keys are data, such as labels, tags or
   header names.
+- **`Fn.jsonencode` does not escape the strings inside an object.** It
+  renders the object as an HCL expression and copies each string between
+  quotes as-is, so a `"`, a backslash or `%{` in a value produces a broken or
+  different expression. Pass such a document as a local value
+  (`new TerraformLocal(this, "queries", Token.asAny(document))`) and encode
+  `Fn.jsonencode(ref('local.queries["key"]'))`. A local is written as JSON,
+  where every string is still a template: escape `${` as `$${` and `%{` as
+  `%%{`, as `literal()` in `src/stacks/posthog.ts` does.
 - **A raw `"${var.x}"` string passed to `Fn.*` is escaped** and reaches
   OpenTofu as a literal. Refer to a variable through its token
   (`variable.stringValue`), and attach a validation after the variable

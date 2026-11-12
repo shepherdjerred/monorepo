@@ -14,6 +14,7 @@ import { DockerhubStack } from "#src/stacks/dockerhub.ts";
 import { DockerhubTokensStack } from "#src/stacks/dockerhub-tokens.ts";
 import { GithubStack } from "#src/stacks/github.ts";
 import { OpenaiStack } from "#src/stacks/openai.ts";
+import { PosthogStack } from "#src/stacks/posthog.ts";
 import { TailscaleStack } from "#src/stacks/tailscale.ts";
 
 /**
@@ -34,6 +35,7 @@ export const SYNTHESIZED_STACKS = [
   "dockerhub-tokens",
   "github",
   "openai",
+  "posthog",
   "tailscale",
 ] as const;
 
@@ -53,6 +55,7 @@ const STACKS: Record<SynthesizedStack, new (scope: Construct) => HomelabStack> =
     "dockerhub-tokens": DockerhubTokensStack,
     github: GithubStack,
     openai: OpenaiStack,
+    posthog: PosthogStack,
     tailscale: TailscaleStack,
   };
 

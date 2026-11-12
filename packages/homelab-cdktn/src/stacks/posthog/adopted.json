@@ -1,0 +1,3167 @@
+{
+  "dashboards": {
+    "dashboard_1977280": {
+      "importId": "549883/1977280",
+      "name": "Website Metrics",
+      "description": "Understand how many users are visiting your website, the most popular pages, and in which countries is your website being visited from.",
+      "pinned": false
+    },
+    "dashboard_1977268": {
+      "importId": "549883/1977268",
+      "name": "Landing Pages Report",
+      "description": "Analyze trends on landing pages, including where users come from, browser, and device type.",
+      "pinned": false
+    },
+    "dashboard_1975723": {
+      "importId": "549883/1975723",
+      "name": "Your starter dashboard",
+      "description": "How people use your app at a glance: traffic, retention, where visitors come from, and whether they take action. Built from automatically captured events, so it works on day one. Swap in your own events to make it yours.",
+      "pinned": true
+    },
+    "dashboard_2022116": {
+      "importId": "549883/2022116",
+      "name": "Scout Growth & Retention",
+      "description": "Install funnel, active guilds, output mix, churn, and channel attribution for Scout for LoL. Created 2026-08-22; attribution + Explore + command tiles extend it once PRs #2337/#2338 deploy.",
+      "pinned": true
+    },
+    "dashboard_1977279": {
+      "importId": "549883/1977279",
+      "name": "Product Analytics",
+      "description": "High-level overview of your product including daily active users, weekly active users, retention, and growth accounting.",
+      "pinned": false
+    },
+    "dashboard_1977278": {
+      "importId": "549883/1977278",
+      "name": "User Research",
+      "description": "Understand who your users are, how they interact with your product and what browsers or devices they use. Additionally, you can use the 'Which users are highly engaged?' insight to find identified power users, so you can approach them for customer interviews or view their session recordings.",
+      "pinned": false
+    }
+  },
+  "layouts": {
+    "dashboard_1977280": {
+      "importId": "549883/1977280",
+      "dashboardId": 1977280,
+      "tiles": [
+        {
+          "color": "blue",
+          "insightId": 10892230,
+          "layouts": {
+            "sm": {
+              "h": 5,
+              "i": "21",
+              "minH": 5,
+              "minW": 3,
+              "w": 6,
+              "x": 0,
+              "y": 0
+            },
+            "xs": {
+              "h": 5,
+              "i": "21",
+              "minH": 5,
+              "minW": 1,
+              "w": 1,
+              "x": 0,
+              "y": 0
+            }
+          }
+        },
+        {
+          "color": "green",
+          "insightId": 10892231,
+          "layouts": {
+            "sm": {
+              "h": 5,
+              "i": "22",
+              "minH": 5,
+              "minW": 3,
+              "w": 6,
+              "x": 6,
+              "y": 0
+            },
+            "xs": {
+              "h": 5,
+              "i": "22",
+              "minH": 5,
+              "minW": 1,
+              "w": 1,
+              "x": 0,
+              "y": 5
+            }
+          }
+        },
+        {
+          "color": "blue",
+          "insightId": 10892232,
+          "layouts": {
+            "sm": {
+              "h": 5,
+              "i": "23",
+              "minH": 5,
+              "minW": 3,
+              "w": 6,
+              "x": 0,
+              "y": 5
+            },
+            "xs": {
+              "h": 5,
+              "i": "23",
+              "minH": 5,
+              "minW": 1,
+              "w": 1,
+              "x": 0,
+              "y": 10
+            }
+          }
+        },
+        {
+          "color": "green",
+          "insightId": 10892233,
+          "layouts": {
+            "sm": {
+              "h": 5,
+              "i": "24",
+              "minH": 5,
+              "minW": 3,
+              "w": 6,
+              "x": 6,
+              "y": 5
+            },
+            "xs": {
+              "h": 5,
+              "i": "24",
+              "minH": 5,
+              "minW": 1,
+              "w": 1,
+              "x": 0,
+              "y": 15
+            }
+          }
+        },
+        {
+          "insightId": 10892234,
+          "layouts": {
+            "sm": {
+              "h": 5,
+              "i": "25",
+              "minH": 5,
+              "minW": 3,
+              "w": 6,
+              "x": 0,
+              "y": 10
+            },
+            "xs": {
+              "h": 5,
+              "i": "25",
+              "minH": 5,
+              "minW": 1,
+              "w": 1,
+              "x": 0,
+              "y": 20
+            }
+          }
+        },
+        {
+          "insightId": 10892235,
+          "layouts": {
+            "sm": {
+              "h": 5,
+              "i": "26",
+              "minH": 5,
+              "minW": 3,
+              "w": 6,
+              "x": 6,
+              "y": 10
+            },
+            "xs": {
+              "h": 5,
+              "i": "26",
+              "minH": 5,
+              "minW": 1,
+              "w": 1,
+              "x": 0,
+              "y": 25
+            }
+          }
+        },
+        {
+          "color": "black",
+          "insightId": 10892236,
+          "layouts": {
+            "sm": {
+              "h": 8,
+              "i": "27",
+              "minH": 5,
+              "minW": 3,
+              "w": 6,
+              "x": 0,
+              "y": 15
+            },
+            "xs": {
+              "h": 5,
+              "i": "27",
+              "minH": 5,
+              "minW": 1,
+              "w": 1,
+              "x": 0,
+              "y": 30
+            }
+          }
+        },
+        {
+          "color": "black",
+          "insightId": 10892237,
+          "layouts": {
+            "sm": {
+              "h": 8,
+              "i": "28",
+              "minH": 5,
+              "minW": 3,
+              "w": 6,
+              "x": 6,
+              "y": 15
+            },
+            "xs": {
+              "h": 5,
+              "i": "28",
+              "minH": 5,
+              "minW": 1,
+              "w": 1,
+              "x": 0,
+              "y": 35
+            }
+          }
+        },
+        {
+          "insightId": 10892238,
+          "layouts": {
+            "sm": {
+              "h": 8,
+              "i": "29",
+              "minH": 5,
+              "minW": 3,
+              "w": 12,
+              "x": 0,
+              "y": 23
+            },
+            "xs": {
+              "h": 5,
+              "i": "29",
+              "minH": 5,
+              "minW": 1,
+              "w": 1,
+              "x": 0,
+              "y": 40
+            }
+          }
+        }
+      ]
+    },
+    "dashboard_1975723": {
+      "importId": "549883/1975723",
+      "dashboardId": 1975723,
+      "tiles": [
+        {
+          "textBody": "# 👋 Start here\n\nEverything below is captured automatically (pageviews, clicks, sessions, and location), so this dashboard fills in from day one with no extra setup. The headline numbers will feel familiar; the retention and funnel tiles are where you point PostHog at your own events. Edit any tile, or duplicate the dashboard to make it your own.",
+          "layouts": {
+            "sm": {
+              "h": 2,
+              "minH": 1,
+              "minW": 3,
+              "w": 12,
+              "x": 0,
+              "y": 0
+            },
+            "xs": {
+              "h": 3,
+              "minH": 1,
+              "minW": 1,
+              "w": 1,
+              "x": 0,
+              "y": 0
+            }
+          }
+        },
+        {
+          "color": "blue",
+          "insightId": 10881550,
+          "layouts": {
+            "sm": {
+              "h": 3,
+              "minH": 3,
+              "minW": 3,
+              "w": 4,
+              "x": 0,
+              "y": 2
+            },
+            "xs": {
+              "h": 3,
+              "minH": 3,
+              "minW": 1,
+              "w": 1,
+              "x": 0,
+              "y": 3
+            }
+          }
+        },
+        {
+          "color": "blue",
+          "insightId": 10881551,
+          "layouts": {
+            "sm": {
+              "h": 3,
+              "minH": 3,
+              "minW": 3,
+              "w": 4,
+              "x": 4,
+              "y": 2
+            },
+            "xs": {
+              "h": 3,
+              "minH": 3,
+              "minW": 1,
+              "w": 1,
+              "x": 0,
+              "y": 6
+            }
+          }
+        },
+        {
+          "color": "blue",
+          "insightId": 10881552,
+          "layouts": {
+            "sm": {
+              "h": 3,
+              "minH": 3,
+              "minW": 3,
+              "w": 4,
+              "x": 8,
+              "y": 2
+            },
+            "xs": {
+              "h": 3,
+              "minH": 3,
+              "minW": 1,
+              "w": 1,
+              "x": 0,
+              "y": 9
+            }
+          }
+        },
+        {
+          "textBody": "## Are people coming back?\n\nActive users show your trend; retention shows how many return after their first visit. The clearest sign your product is sticky.",
+          "layouts": {
+            "sm": {
+              "h": 2,
+              "minH": 1,
+              "minW": 3,
+              "w": 12,
+              "x": 0,
+              "y": 5
+            },
+            "xs": {
+              "h": 3,
+              "minH": 1,
+              "minW": 1,
+              "w": 1,
+              "x": 0,
+              "y": 12
+            }
+          }
+        },
+        {
+          "color": "blue",
+          "insightId": 10881553,
+          "layouts": {
+            "sm": {
+              "h": 5,
+              "minH": 5,
+              "minW": 3,
+              "w": 6,
+              "x": 0,
+              "y": 7
+            },
+            "xs": {
+              "h": 5,
+              "minH": 5,
+              "minW": 1,
+              "w": 1,
+              "x": 0,
+              "y": 15
+            }
+          }
+        },
+        {
+          "color": "green",
+          "insightId": 10881554,
+          "layouts": {
+            "sm": {
+              "h": 5,
+              "minH": 5,
+              "minW": 3,
+              "w": 6,
+              "x": 6,
+              "y": 7
+            },
+            "xs": {
+              "h": 5,
+              "minH": 5,
+              "minW": 1,
+              "w": 1,
+              "x": 0,
+              "y": 20
+            }
+          }
+        },
+        {
+          "color": "blue",
+          "insightId": 10881555,
+          "layouts": {
+            "sm": {
+              "h": 5,
+              "minH": 5,
+              "minW": 3,
+              "w": 12,
+              "x": 0,
+              "y": 12
+            },
+            "xs": {
+              "h": 5,
+              "minH": 5,
+              "minW": 1,
+              "w": 1,
+              "x": 0,
+              "y": 25
+            }
+          }
+        },
+        {
+          "textBody": "## Where your visitors come from\n\nThe sites and channels sending people to your app.",
+          "layouts": {
+            "sm": {
+              "h": 2,
+              "minH": 1,
+              "minW": 3,
+              "w": 12,
+              "x": 0,
+              "y": 17
+            },
+            "xs": {
+              "h": 3,
+              "minH": 1,
+              "minW": 1,
+              "w": 1,
+              "x": 0,
+              "y": 30
+            }
+          }
+        },
+        {
+          "color": "purple",
+          "insightId": 10881556,
+          "layouts": {
+            "sm": {
+              "h": 5,
+              "minH": 5,
+              "minW": 3,
+              "w": 12,
+              "x": 0,
+              "y": 19
+            },
+            "xs": {
+              "h": 5,
+              "minH": 5,
+              "minW": 1,
+              "w": 1,
+              "x": 0,
+              "y": 33
+            }
+          }
+        },
+        {
+          "textBody": "## Turning visits into actions\n\nA funnel from page view to click. Swap in your own events (signup, purchase, upgrade) to measure real conversion.",
+          "layouts": {
+            "sm": {
+              "h": 2,
+              "minH": 1,
+              "minW": 3,
+              "w": 12,
+              "x": 0,
+              "y": 24
+            },
+            "xs": {
+              "h": 3,
+              "minH": 1,
+              "minW": 1,
+              "w": 1,
+              "x": 0,
+              "y": 38
+            }
+          }
+        },
+        {
+          "color": "black",
+          "insightId": 10881557,
+          "layouts": {
+            "sm": {
+              "h": 5,
+              "minH": 5,
+              "minW": 3,
+              "w": 12,
+              "x": 0,
+              "y": 26
+            },
+            "xs": {
+              "h": 5,
+              "minH": 5,
+              "minW": 1,
+              "w": 1,
+              "x": 0,
+              "y": 41
+            }
+          }
+        },
+        {
+          "textBody": "## What to do next\n\nYou've got the numbers. Watch how people actually behave, explore raw events, or dig into traffic and acquisition.",
+          "layouts": {
+            "sm": {
+              "h": 2,
+              "minH": 1,
+              "minW": 3,
+              "w": 12,
+              "x": 0,
+              "y": 31
+            },
+            "xs": {
+              "h": 3,
+              "minH": 1,
+              "minW": 1,
+              "w": 1,
+              "x": 0,
+              "y": 46
+            }
+          }
+        }
+      ]
+    },
+    "dashboard_1977268": {
+      "importId": "549883/1977268",
+      "dashboardId": 1977268,
+      "tiles": [
+        {
+          "textBody": "### How to use this dashboard\n\nThis dashboard enables you to analyze trends on your website landing pages. Including:\n\n1. Unique session trends\n2. The most popular landing pages\n3. Referring domains\n4. Pages per session\n5. Average session duration\n6. Where users are from\n7. Device and browser type\n\nTo view data for a specific page, or group of pages, click on 'Add filter' and search for 'Current URL' to filter by URL parameters.",
+          "layouts": {
+            "sm": {
+              "h": 4,
+              "i": "257126",
+              "minH": 2,
+              "minW": 3,
+              "moved": false,
+              "static": false,
+              "w": 12,
+              "x": 0,
+              "y": 0
+            },
+            "xs": {
+              "h": 6,
+              "i": "257126",
+              "minH": 2,
+              "minW": 1,
+              "w": 1,
+              "x": 0,
+              "y": 50
+            }
+          }
+        },
+        {
+          "insightId": 10892178,
+          "layouts": {
+            "sm": {
+              "h": 7,
+              "i": "256443",
+              "minH": 5,
+              "minW": 3,
+              "moved": false,
+              "static": false,
+              "w": 12,
+              "x": 0,
+              "y": 4
+            },
+            "xs": {
+              "h": 5,
+              "i": "256443",
+              "minH": 5,
+              "minW": 1,
+              "w": 1,
+              "x": 0,
+              "y": 20
+            }
+          }
+        },
+        {
+          "insightId": 10892183,
+          "layouts": {
+            "sm": {
+              "h": 4,
+              "i": "256417",
+              "minH": 4,
+              "minW": 3,
+              "moved": false,
+              "static": false,
+              "w": 6,
+              "x": 0,
+              "y": 11
+            },
+            "xs": {
+              "h": 5,
+              "i": "256417",
+              "minH": 4,
+              "minW": 1,
+              "w": 1,
+              "x": 0,
+              "y": 5
+            }
+          }
+        },
+        {
+          "insightId": 10892186,
+          "layouts": {
+            "sm": {
+              "h": 4,
+              "i": "256484",
+              "minH": 4,
+              "minW": 3,
+              "moved": false,
+              "static": false,
+              "w": 6,
+              "x": 6,
+              "y": 11
+            },
+            "xs": {
+              "h": 5,
+              "i": "256484",
+              "minH": 4,
+              "minW": 1,
+              "w": 1,
+              "x": 0,
+              "y": 25
+            }
+          }
+        },
+        {
+          "insightId": 10892179,
+          "layouts": {
+            "sm": {
+              "h": 8,
+              "i": "256402",
+              "minH": 5,
+              "minW": 3,
+              "moved": false,
+              "static": false,
+              "w": 6,
+              "x": 0,
+              "y": 15
+            },
+            "xs": {
+              "h": 5,
+              "i": "256402",
+              "minH": 5,
+              "minW": 1,
+              "w": 1,
+              "x": 0,
+              "y": 0
+            }
+          }
+        },
+        {
+          "insightId": 10892180,
+          "layouts": {
+            "sm": {
+              "h": 8,
+              "i": "256415",
+              "minH": 5,
+              "minW": 3,
+              "moved": false,
+              "static": false,
+              "w": 6,
+              "x": 6,
+              "y": 15
+            },
+            "xs": {
+              "h": 5,
+              "i": "256415",
+              "minH": 5,
+              "minW": 1,
+              "w": 1,
+              "x": 0,
+              "y": 10
+            }
+          }
+        },
+        {
+          "insightId": 10892185,
+          "layouts": {
+            "sm": {
+              "h": 6,
+              "i": "256485",
+              "minH": 5,
+              "minW": 3,
+              "moved": false,
+              "static": false,
+              "w": 6,
+              "x": 0,
+              "y": 23
+            },
+            "xs": {
+              "h": 5,
+              "i": "256485",
+              "minH": 5,
+              "minW": 1,
+              "w": 1,
+              "x": 0,
+              "y": 30
+            }
+          }
+        },
+        {
+          "insightId": 10892181,
+          "layouts": {
+            "sm": {
+              "h": 6,
+              "i": "257111",
+              "minH": 5,
+              "minW": 3,
+              "moved": false,
+              "static": false,
+              "w": 6,
+              "x": 6,
+              "y": 23
+            },
+            "xs": {
+              "h": 5,
+              "i": "257111",
+              "minH": 5,
+              "minW": 1,
+              "w": 1,
+              "x": 0,
+              "y": 35
+            }
+          }
+        },
+        {
+          "insightId": 10892177,
+          "layouts": {
+            "sm": {
+              "h": 5,
+              "i": "256430",
+              "minH": 5,
+              "minW": 3,
+              "moved": false,
+              "static": false,
+              "w": 4,
+              "x": 0,
+              "y": 29
+            },
+            "xs": {
+              "h": 5,
+              "i": "256430",
+              "minH": 5,
+              "minW": 1,
+              "w": 1,
+              "x": 0,
+              "y": 15
+            }
+          }
+        },
+        {
+          "insightId": 10892176,
+          "layouts": {
+            "sm": {
+              "h": 5,
+              "i": "257119",
+              "minH": 5,
+              "minW": 3,
+              "moved": false,
+              "static": false,
+              "w": 4,
+              "x": 4,
+              "y": 29
+            },
+            "xs": {
+              "h": 5,
+              "i": "257119",
+              "minH": 5,
+              "minW": 1,
+              "w": 1,
+              "x": 0,
+              "y": 40
+            }
+          }
+        },
+        {
+          "insightId": 10892182,
+          "layouts": {
+            "sm": {
+              "h": 5,
+              "i": "257118",
+              "minH": 5,
+              "minW": 3,
+              "moved": false,
+              "static": false,
+              "w": 4,
+              "x": 8,
+              "y": 29
+            },
+            "xs": {
+              "h": 5,
+              "i": "257118",
+              "minH": 5,
+              "minW": 1,
+              "w": 1,
+              "x": 0,
+              "y": 45
+            }
+          }
+        }
+      ]
+    },
+    "dashboard_2022116": {
+      "importId": "549883/2022116",
+      "dashboardId": 2022116,
+      "tiles": [
+        {
+          "insightId": 11251185
+        },
+        {
+          "insightId": 11251184
+        },
+        {
+          "insightId": 11251183
+        },
+        {
+          "insightId": 11251182
+        },
+        {
+          "insightId": 11251174
+        },
+        {
+          "insightId": 11251173
+        }
+      ]
+    },
+    "dashboard_1977278": {
+      "importId": "549883/1977278",
+      "dashboardId": 1977278,
+      "tiles": [
+        {
+          "insightId": 10892220
+        },
+        {
+          "insightId": 10892219
+        },
+        {
+          "insightId": 10892218
+        },
+        {
+          "insightId": 10892217
+        },
+        {
+          "insightId": 10892216
+        },
+        {
+          "insightId": 10892215
+        },
+        {
+          "insightId": 10892214
+        },
+        {
+          "insightId": 10892213
+        },
+        {
+          "insightId": 10892212
+        }
+      ]
+    },
+    "dashboard_1977279": {
+      "importId": "549883/1977279",
+      "dashboardId": 1977279,
+      "tiles": [
+        {
+          "color": "blue",
+          "insightId": 10892223,
+          "layouts": {
+            "sm": {
+              "h": 5,
+              "minH": 5,
+              "minW": 3,
+              "w": 6,
+              "x": 0,
+              "y": 0
+            },
+            "xs": {
+              "h": 5,
+              "minH": 5,
+              "minW": 3,
+              "w": 1,
+              "x": 0,
+              "y": 0
+            }
+          }
+        },
+        {
+          "color": "green",
+          "insightId": 10892224,
+          "layouts": {
+            "sm": {
+              "h": 5,
+              "minH": 5,
+              "minW": 3,
+              "w": 6,
+              "x": 6,
+              "y": 0
+            },
+            "xs": {
+              "h": 5,
+              "minH": 5,
+              "minW": 3,
+              "w": 1,
+              "x": 0,
+              "y": 5
+            }
+          }
+        },
+        {
+          "color": "purple",
+          "insightId": 10892226,
+          "layouts": {
+            "sm": {
+              "h": 5,
+              "minH": 5,
+              "minW": 3,
+              "w": 6,
+              "x": 0,
+              "y": 5
+            },
+            "xs": {
+              "h": 5,
+              "minH": 5,
+              "minW": 3,
+              "w": 1,
+              "x": 0,
+              "y": 15
+            }
+          }
+        },
+        {
+          "color": "blue",
+          "insightId": 10892225,
+          "layouts": {
+            "sm": {
+              "h": 5,
+              "minH": 5,
+              "minW": 3,
+              "w": 6,
+              "x": 6,
+              "y": 5
+            },
+            "xs": {
+              "h": 5,
+              "minH": 5,
+              "minW": 3,
+              "w": 1,
+              "x": 0,
+              "y": 10
+            }
+          }
+        },
+        {
+          "color": "black",
+          "insightId": 10892227,
+          "layouts": {
+            "sm": {
+              "h": 5,
+              "minH": 5,
+              "minW": 3,
+              "w": 6,
+              "x": 0,
+              "y": 10
+            },
+            "xs": {
+              "h": 5,
+              "minH": 5,
+              "minW": 3,
+              "w": 1,
+              "x": 0,
+              "y": 20
+            }
+          }
+        },
+        {
+          "color": "green",
+          "insightId": 10892228,
+          "layouts": {
+            "sm": {
+              "h": 5,
+              "minH": 5,
+              "minW": 3,
+              "w": 6,
+              "x": 6,
+              "y": 10
+            },
+            "xs": {
+              "h": 5,
+              "minH": 5,
+              "minW": 3,
+              "w": 1,
+              "x": 0,
+              "y": 25
+            }
+          }
+        }
+      ]
+    }
+  },
+  "insights": {
+    "insight_10881555": {
+      "importId": "549883/10881555",
+      "name": "Retention",
+      "description": "How many people come back week after week after their first visit. The clearest signal of whether your product is sticky.",
+      "dashboardIds": [1975723],
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "dateRange": {
+            "date_from": "-7d",
+            "explicitDate": false
+          },
+          "filterTestAccounts": false,
+          "kind": "RetentionQuery",
+          "properties": [],
+          "retentionFilter": {
+            "period": "Week",
+            "retentionType": "retention_first_time",
+            "returningEntity": {
+              "id": "$pageview",
+              "type": "events"
+            },
+            "targetEntity": {
+              "id": "$pageview",
+              "type": "events"
+            },
+            "totalIntervals": 11
+          }
+        }
+      }
+    },
+    "insight_10892235": {
+      "importId": "549883/10892235",
+      "name": "Pages Per User",
+      "dashboardIds": [1977280],
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "breakdownFilter": {
+            "breakdown_type": "event"
+          },
+          "dateRange": {
+            "date_from": "-30d",
+            "explicitDate": false
+          },
+          "filterTestAccounts": false,
+          "interval": "week",
+          "kind": "TrendsQuery",
+          "properties": [],
+          "series": [
+            {
+              "event": "$pageview",
+              "kind": "EventsNode",
+              "math": "total",
+              "name": "$pageview"
+            },
+            {
+              "event": "$pageview",
+              "kind": "EventsNode",
+              "math": "dau",
+              "name": "$pageview"
+            }
+          ],
+          "trendsFilter": {
+            "aggregationAxisFormat": "numeric",
+            "display": "ActionsLineGraph",
+            "formula": "A/B",
+            "showAlertThresholdLines": false,
+            "showLegend": false,
+            "showPercentStackView": false,
+            "showValuesOnSeries": false,
+            "smoothingIntervals": 1,
+            "yAxisScaleType": "linear"
+          }
+        }
+      }
+    },
+    "insight_10881550": {
+      "importId": "549883/10881550",
+      "name": "Active users (last 30 days)",
+      "description": "Unique people who used your app in the last 30 days. A quick pulse on your overall reach.",
+      "dashboardIds": [1975723],
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "breakdownFilter": {
+            "breakdown_type": "event"
+          },
+          "dateRange": {
+            "date_from": "-30d",
+            "explicitDate": false
+          },
+          "filterTestAccounts": false,
+          "interval": "day",
+          "kind": "TrendsQuery",
+          "properties": [],
+          "series": [
+            {
+              "kind": "GroupNode",
+              "math": "dau",
+              "name": "Pageview or screen",
+              "nodes": [
+                {
+                  "event": "$pageview",
+                  "kind": "EventsNode",
+                  "name": "$pageview"
+                },
+                {
+                  "event": "$screen",
+                  "kind": "EventsNode",
+                  "name": "$screen"
+                }
+              ],
+              "operator": "OR"
+            }
+          ],
+          "trendsFilter": {
+            "aggregationAxisFormat": "numeric",
+            "display": "BoldNumber",
+            "showAlertThresholdLines": false,
+            "showLegend": false,
+            "showPercentStackView": false,
+            "showValuesOnSeries": false,
+            "smoothingIntervals": 1,
+            "yAxisScaleType": "linear"
+          }
+        }
+      }
+    },
+    "insight_10881554": {
+      "importId": "549883/10881554",
+      "name": "Weekly active users (WAUs)",
+      "description": "Unique people who use your app each week. Smooths out daily noise to show the underlying trend.",
+      "dashboardIds": [1975723],
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "breakdownFilter": {
+            "breakdown_type": "event"
+          },
+          "dateRange": {
+            "date_from": "-90d",
+            "explicitDate": false
+          },
+          "filterTestAccounts": false,
+          "interval": "week",
+          "kind": "TrendsQuery",
+          "properties": [],
+          "series": [
+            {
+              "kind": "GroupNode",
+              "math": "dau",
+              "name": "Pageview or screen",
+              "nodes": [
+                {
+                  "event": "$pageview",
+                  "kind": "EventsNode",
+                  "name": "$pageview"
+                },
+                {
+                  "event": "$screen",
+                  "kind": "EventsNode",
+                  "name": "$screen"
+                }
+              ],
+              "operator": "OR"
+            }
+          ],
+          "trendsFilter": {
+            "aggregationAxisFormat": "numeric",
+            "display": "ActionsLineGraph",
+            "showAlertThresholdLines": false,
+            "showLegend": false,
+            "showPercentStackView": false,
+            "showValuesOnSeries": false,
+            "smoothingIntervals": 1,
+            "yAxisScaleType": "linear"
+          }
+        }
+      }
+    },
+    "insight_10881557": {
+      "importId": "549883/10881557",
+      "name": "Visit to interaction funnel",
+      "description": "Of people who land on a page, how many go on to interact. Replace these steps with your own events to track real conversions.",
+      "dashboardIds": [1975723],
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "breakdownFilter": {
+            "breakdown_type": "event"
+          },
+          "dateRange": {
+            "date_from": "-7d",
+            "explicitDate": false
+          },
+          "filterTestAccounts": false,
+          "funnelsFilter": {
+            "breakdownAttributionType": "first_touch",
+            "exclusions": [],
+            "funnelOrderType": "ordered",
+            "funnelStepReference": "total",
+            "funnelVizType": "steps",
+            "funnelWindowInterval": 14,
+            "funnelWindowIntervalUnit": "day",
+            "layout": "horizontal"
+          },
+          "interval": "day",
+          "kind": "FunnelsQuery",
+          "properties": [],
+          "series": [
+            {
+              "custom_name": "Viewed a page",
+              "event": "$pageview",
+              "kind": "EventsNode",
+              "name": "$pageview"
+            },
+            {
+              "custom_name": "Clicked something",
+              "event": "$autocapture",
+              "kind": "EventsNode",
+              "name": "$autocapture"
+            }
+          ]
+        }
+      }
+    },
+    "insight_10892226": {
+      "importId": "549883/10892226",
+      "name": "Growth accounting",
+      "description": "How many of your users are new, returning, resurrecting, or dormant each week.",
+      "dashboardIds": [1977279],
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "dateRange": {
+            "date_from": "-30d",
+            "explicitDate": false
+          },
+          "filterTestAccounts": false,
+          "interval": "week",
+          "kind": "LifecycleQuery",
+          "lifecycleFilter": {
+            "showLegend": false
+          },
+          "properties": [],
+          "series": [
+            {
+              "event": "$pageview",
+              "kind": "EventsNode",
+              "name": "$pageview"
+            }
+          ]
+        }
+      }
+    },
+    "insight_10892238": {
+      "importId": "549883/10892238",
+      "name": "Website Users by Location",
+      "dashboardIds": [1977280],
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "breakdownFilter": {
+            "breakdown": "$geoip_country_code",
+            "breakdown_type": "person"
+          },
+          "dateRange": {
+            "date_from": "-30d",
+            "explicitDate": false
+          },
+          "filterTestAccounts": false,
+          "interval": "day",
+          "kind": "TrendsQuery",
+          "properties": [],
+          "series": [
+            {
+              "event": "$pageview",
+              "kind": "EventsNode",
+              "math": "dau",
+              "name": "$pageview"
+            }
+          ],
+          "trendsFilter": {
+            "aggregationAxisFormat": "numeric",
+            "display": "WorldMap",
+            "showAlertThresholdLines": false,
+            "showLegend": false,
+            "showPercentStackView": false,
+            "showValuesOnSeries": false,
+            "smoothingIntervals": 1,
+            "yAxisScaleType": "linear"
+          }
+        }
+      }
+    },
+    "insight_11251182": {
+      "importId": "549883/11251182",
+      "name": "Core output mix by kind (weekly)",
+      "description": "What servers actually consume: prematch/postmatch vs reports, competitions, pairing.",
+      "dashboardIds": [2022116],
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "breakdownFilter": {
+            "breakdown": "output_kind",
+            "breakdown_type": "event"
+          },
+          "dateRange": {
+            "date_from": "-90d",
+            "excludeIncompletePeriods": false,
+            "explicitDate": false
+          },
+          "filterTestAccounts": false,
+          "interval": "week",
+          "kind": "TrendsQuery",
+          "properties": [],
+          "series": [
+            {
+              "event": "core_output_delivered",
+              "kind": "EventsNode",
+              "name": "core_output_delivered"
+            }
+          ],
+          "trendsFilter": {
+            "aggregationAxisFormat": "numeric",
+            "display": "ActionsStackedBar",
+            "excludeBoxPlotOutliers": true,
+            "hideWeekends": false,
+            "legendPosition": "bottom",
+            "metricColorByDirection": false,
+            "metricShowChange": true,
+            "metricSummary": "total",
+            "resultCustomizationBy": "value",
+            "showAlertThresholdLines": false,
+            "showAnnotations": true,
+            "showLegend": false,
+            "showMultipleYAxes": false,
+            "showPercentStackView": false,
+            "showValuesOnSeries": false,
+            "smoothingIntervals": 1,
+            "stackBreakdownValues": false,
+            "yAxisScaleType": "linear",
+            "yAxisStartAtZero": true
+          }
+        }
+      }
+    },
+    "insight_10892236": {
+      "importId": "549883/10892236",
+      "name": "Top Website Pages (Overall)",
+      "dashboardIds": [1977280],
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "breakdownFilter": {
+            "breakdown": "$current_url",
+            "breakdown_type": "event"
+          },
+          "dateRange": {
+            "date_from": "-30d",
+            "explicitDate": false
+          },
+          "filterTestAccounts": false,
+          "interval": "day",
+          "kind": "TrendsQuery",
+          "properties": {
+            "type": "AND",
+            "values": [
+              {
+                "type": "AND",
+                "values": [
+                  {
+                    "key": "$current_url",
+                    "operator": "not_icontains",
+                    "type": "event",
+                    "value": "?"
+                  }
+                ]
+              }
+            ]
+          },
+          "series": [
+            {
+              "event": "$pageview",
+              "kind": "EventsNode",
+              "math": "unique_session",
+              "name": "$pageview"
+            }
+          ],
+          "trendsFilter": {
+            "aggregationAxisFormat": "numeric",
+            "display": "ActionsBarValue",
+            "showAlertThresholdLines": false,
+            "showLegend": false,
+            "showPercentStackView": false,
+            "showValuesOnSeries": false,
+            "smoothingIntervals": 1,
+            "yAxisScaleType": "linear"
+          }
+        }
+      }
+    },
+    "insight_10892181": {
+      "importId": "549883/10892181",
+      "name": "New & Returning Users",
+      "description": "Unique users broken down by new and returning",
+      "dashboardIds": [1977268],
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "dateRange": {
+            "date_from": "-30d",
+            "explicitDate": false
+          },
+          "filterTestAccounts": true,
+          "interval": "week",
+          "kind": "LifecycleQuery",
+          "lifecycleFilter": {
+            "showLegend": false,
+            "showValuesOnSeries": true,
+            "toggledLifecycles": ["new", "returning"]
+          },
+          "properties": [],
+          "series": [
+            {
+              "event": "$pageview",
+              "kind": "EventsNode",
+              "name": "$pageview"
+            }
+          ]
+        }
+      }
+    },
+    "insight_10892223": {
+      "importId": "549883/10892223",
+      "name": "Daily active users (DAUs)",
+      "description": "Shows the number of unique users that use your app every day.",
+      "dashboardIds": [1977279],
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "breakdownFilter": {
+            "breakdown_type": "event"
+          },
+          "dateRange": {
+            "date_from": "-30d",
+            "explicitDate": false
+          },
+          "filterTestAccounts": false,
+          "interval": "day",
+          "kind": "TrendsQuery",
+          "properties": [],
+          "series": [
+            {
+              "event": "$pageview",
+              "kind": "EventsNode",
+              "math": "dau",
+              "name": "$pageview"
+            }
+          ],
+          "trendsFilter": {
+            "aggregationAxisFormat": "numeric",
+            "display": "ActionsLineGraph",
+            "showAlertThresholdLines": false,
+            "showLegend": false,
+            "showPercentStackView": false,
+            "showValuesOnSeries": false,
+            "smoothingIntervals": 1,
+            "yAxisScaleType": "linear"
+          }
+        }
+      }
+    },
+    "insight_10892217": {
+      "importId": "549883/10892217",
+      "name": "What devices do users access my product with?",
+      "description": "This chart shows which devices your unique users have been using over the past 30 days, so you can ensure you are designing your products and website for the right primary devices. You can get more detailed information by changing the 'Breakdown by' to 'Device ID'.",
+      "dashboardIds": [1977278],
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "breakdownFilter": {
+            "breakdown": "$device_type",
+            "breakdown_type": "event"
+          },
+          "compareFilter": {
+            "compare": false
+          },
+          "dateRange": {
+            "date_from": "-30d",
+            "explicitDate": false
+          },
+          "filterTestAccounts": true,
+          "interval": "day",
+          "kind": "TrendsQuery",
+          "properties": [],
+          "series": [
+            {
+              "event": "$pageview",
+              "kind": "EventsNode",
+              "math": "dau",
+              "name": "$pageview"
+            }
+          ],
+          "trendsFilter": {
+            "aggregationAxisFormat": "numeric",
+            "display": "ActionsBarValue",
+            "showAlertThresholdLines": false,
+            "showLegend": false,
+            "showPercentStackView": false,
+            "showValuesOnSeries": false,
+            "smoothingIntervals": 1,
+            "yAxisScaleType": "linear"
+          }
+        }
+      }
+    },
+    "insight_10892212": {
+      "importId": "549883/10892212",
+      "name": "How do most users access my product?",
+      "description": "This path shows the most 7 common paths taken by users over the last 30 days, starting at their initial pageview and proceeding for 5 steps. The size of a path reflects how common it is, while red areas reflect early drop-off. This can be especially useful for seeing where users get lost and understanding the most popular destinations.",
+      "dashboardIds": [1977278],
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "dateRange": {
+            "date_from": "-30d",
+            "explicitDate": false
+          },
+          "filterTestAccounts": true,
+          "kind": "PathsQuery",
+          "pathsFilter": {
+            "edgeLimit": 7,
+            "excludeEvents": [],
+            "includeEventTypes": ["$pageview"],
+            "localPathCleaningFilters": [],
+            "pathGroupings": [],
+            "stepLimit": 5
+          },
+          "properties": []
+        }
+      }
+    },
+    "insight_10892183": {
+      "importId": "549883/10892183",
+      "name": "Unique Users on Landing Page(s)",
+      "description": "The number of unique users who visited a landing page compared to the previous period",
+      "dashboardIds": [1977268],
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "breakdownFilter": {
+            "breakdown_type": "event"
+          },
+          "compareFilter": {
+            "compare": true
+          },
+          "dateRange": {
+            "date_from": "-30d",
+            "explicitDate": false
+          },
+          "filterTestAccounts": true,
+          "interval": "day",
+          "kind": "TrendsQuery",
+          "properties": [],
+          "series": [
+            {
+              "event": "$pageview",
+              "kind": "EventsNode",
+              "math": "dau",
+              "name": "$pageview"
+            }
+          ],
+          "trendsFilter": {
+            "aggregationAxisFormat": "numeric",
+            "display": "BoldNumber",
+            "showAlertThresholdLines": false,
+            "showLegend": false,
+            "showPercentStackView": false,
+            "showValuesOnSeries": false,
+            "smoothingIntervals": 1,
+            "yAxisScaleType": "linear"
+          }
+        }
+      }
+    },
+    "insight_10892232": {
+      "importId": "549883/10892232",
+      "name": "Website Unique Users (Breakdown)",
+      "dashboardIds": [1977280],
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "breakdownFilter": {
+            "breakdown_type": "event"
+          },
+          "dateRange": {
+            "date_from": "-30d",
+            "explicitDate": false
+          },
+          "filterTestAccounts": false,
+          "interval": "week",
+          "kind": "TrendsQuery",
+          "properties": [],
+          "series": [
+            {
+              "event": "$pageview",
+              "kind": "EventsNode",
+              "math": "dau",
+              "name": "$pageview"
+            }
+          ],
+          "trendsFilter": {
+            "aggregationAxisFormat": "numeric",
+            "display": "ActionsBar",
+            "showAlertThresholdLines": false,
+            "showLegend": false,
+            "showPercentStackView": false,
+            "showValuesOnSeries": false,
+            "smoothingIntervals": 1,
+            "yAxisScaleType": "linear"
+          }
+        }
+      }
+    },
+    "insight_11251173": {
+      "importId": "549883/11251173",
+      "name": "Install funnel: installed → first subscription → first output",
+      "description": "Per installation identity, 14-day conversion window, last 30 days. Activation is decided in minutes — watch step 2.",
+      "dashboardIds": [2022116],
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "dateRange": {
+            "date_from": "-30d",
+            "excludeIncompletePeriods": false,
+            "explicitDate": false
+          },
+          "filterTestAccounts": false,
+          "funnelsFilter": {
+            "breakdownAttributionType": "first_touch",
+            "exclusions": [],
+            "funnelOrderType": "ordered",
+            "funnelStepReference": "total",
+            "funnelVizType": "steps",
+            "funnelWindowInterval": 14,
+            "funnelWindowIntervalUnit": "day",
+            "hideIncompleteConversionWindowPeriods": false,
+            "layout": "vertical",
+            "legendPosition": "bottom",
+            "showAnnotations": true,
+            "showLegend": false,
+            "showValuesOnSeries": false
+          },
+          "kind": "FunnelsQuery",
+          "properties": [],
+          "series": [
+            {
+              "event": "guild_installed",
+              "kind": "EventsNode",
+              "name": "guild_installed"
+            },
+            {
+              "event": "first_subscription_created",
+              "kind": "EventsNode",
+              "name": "first_subscription_created"
+            },
+            {
+              "event": "first_core_output_delivered",
+              "kind": "EventsNode",
+              "name": "first_core_output_delivered"
+            }
+          ]
+        }
+      }
+    },
+    "insight_11251184": {
+      "importId": "549883/11251184",
+      "name": "Removals by activation state",
+      "description": "Was a lost guild ever activated? installed_only churn points at first-5-minutes friction.",
+      "dashboardIds": [2022116],
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "breakdownFilter": {
+            "breakdown": "activation_state",
+            "breakdown_type": "event"
+          },
+          "dateRange": {
+            "date_from": "-90d",
+            "excludeIncompletePeriods": false,
+            "explicitDate": false
+          },
+          "filterTestAccounts": false,
+          "interval": "week",
+          "kind": "TrendsQuery",
+          "properties": [],
+          "series": [
+            {
+              "event": "guild_removed",
+              "kind": "EventsNode",
+              "name": "guild_removed"
+            }
+          ],
+          "trendsFilter": {
+            "aggregationAxisFormat": "numeric",
+            "display": "ActionsStackedBar",
+            "excludeBoxPlotOutliers": true,
+            "hideWeekends": false,
+            "legendPosition": "bottom",
+            "metricColorByDirection": false,
+            "metricShowChange": true,
+            "metricSummary": "total",
+            "resultCustomizationBy": "value",
+            "showAlertThresholdLines": false,
+            "showAnnotations": true,
+            "showLegend": false,
+            "showMultipleYAxes": false,
+            "showPercentStackView": false,
+            "showValuesOnSeries": false,
+            "smoothingIntervals": 1,
+            "stackBreakdownValues": false,
+            "yAxisScaleType": "linear",
+            "yAxisStartAtZero": true
+          }
+        }
+      }
+    },
+    "insight_10892237": {
+      "importId": "549883/10892237",
+      "name": "Top Website Pages (via Google)",
+      "dashboardIds": [1977280],
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "breakdownFilter": {
+            "breakdown": "$current_url",
+            "breakdown_type": "event"
+          },
+          "dateRange": {
+            "date_from": "-30d",
+            "explicitDate": false
+          },
+          "filterTestAccounts": false,
+          "interval": "day",
+          "kind": "TrendsQuery",
+          "properties": {
+            "type": "AND",
+            "values": [
+              {
+                "type": "AND",
+                "values": [
+                  {
+                    "key": "$current_url",
+                    "operator": "not_icontains",
+                    "type": "event",
+                    "value": "?"
+                  },
+                  {
+                    "key": "$referring_domain",
+                    "operator": "icontains",
+                    "type": "event",
+                    "value": "google"
+                  }
+                ]
+              }
+            ]
+          },
+          "series": [
+            {
+              "event": "$pageview",
+              "kind": "EventsNode",
+              "math": "unique_session",
+              "name": "$pageview"
+            }
+          ],
+          "trendsFilter": {
+            "aggregationAxisFormat": "numeric",
+            "display": "ActionsBarValue",
+            "showAlertThresholdLines": false,
+            "showLegend": false,
+            "showPercentStackView": false,
+            "showValuesOnSeries": false,
+            "smoothingIntervals": 1,
+            "yAxisScaleType": "linear"
+          }
+        }
+      }
+    },
+    "insight_11251183": {
+      "importId": "549883/11251183",
+      "name": "Installs vs removals (weekly)",
+      "description": "Net guild growth. Removals carry activation_state and tenure_bucket for drill-down.",
+      "dashboardIds": [2022116],
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "dateRange": {
+            "date_from": "-90d",
+            "excludeIncompletePeriods": false,
+            "explicitDate": false
+          },
+          "filterTestAccounts": false,
+          "interval": "week",
+          "kind": "TrendsQuery",
+          "properties": [],
+          "series": [
+            {
+              "event": "guild_installed",
+              "kind": "EventsNode",
+              "name": "guild_installed"
+            },
+            {
+              "event": "guild_removed",
+              "kind": "EventsNode",
+              "name": "guild_removed"
+            }
+          ],
+          "trendsFilter": {
+            "aggregationAxisFormat": "numeric",
+            "display": "ActionsBar",
+            "excludeBoxPlotOutliers": true,
+            "hideWeekends": false,
+            "legendPosition": "bottom",
+            "metricColorByDirection": false,
+            "metricShowChange": true,
+            "metricSummary": "total",
+            "resultCustomizationBy": "value",
+            "showAlertThresholdLines": false,
+            "showAnnotations": true,
+            "showLegend": false,
+            "showMultipleYAxes": false,
+            "showPercentStackView": false,
+            "showValuesOnSeries": false,
+            "smoothingIntervals": 1,
+            "stackBreakdownValues": false,
+            "yAxisScaleType": "linear",
+            "yAxisStartAtZero": true
+          }
+        }
+      }
+    },
+    "insight_10892225": {
+      "importId": "549883/10892225",
+      "name": "Retention",
+      "description": "Weekly retention of your users.",
+      "dashboardIds": [1977279],
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "dateRange": {
+            "date_from": "-7d",
+            "explicitDate": false
+          },
+          "filterTestAccounts": false,
+          "kind": "RetentionQuery",
+          "properties": [],
+          "retentionFilter": {
+            "period": "Week",
+            "retentionType": "retention_first_time",
+            "returningEntity": {
+              "id": "$pageview",
+              "name": "$pageview",
+              "type": "events"
+            },
+            "targetEntity": {
+              "id": "$pageview",
+              "name": "$pageview",
+              "type": "events"
+            },
+            "totalIntervals": 11
+          }
+        }
+      }
+    },
+    "insight_10892179": {
+      "importId": "549883/10892179",
+      "name": "Most Popular Landing Pages",
+      "description": "Breakdown of most popular landing pages by unique sessions",
+      "dashboardIds": [1977268],
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "breakdownFilter": {
+            "breakdown": "$current_url",
+            "breakdown_normalize_url": true,
+            "breakdown_type": "event"
+          },
+          "compareFilter": {
+            "compare": false
+          },
+          "dateRange": {
+            "date_from": "-30d",
+            "explicitDate": false
+          },
+          "filterTestAccounts": true,
+          "interval": "day",
+          "kind": "TrendsQuery",
+          "properties": [],
+          "series": [
+            {
+              "event": "$pageview",
+              "kind": "EventsNode",
+              "math": "unique_session",
+              "name": "$pageview"
+            }
+          ],
+          "trendsFilter": {
+            "aggregationAxisFormat": "numeric",
+            "display": "ActionsTable",
+            "showAlertThresholdLines": false,
+            "showLegend": false,
+            "showPercentStackView": false,
+            "showValuesOnSeries": false,
+            "smoothingIntervals": 1,
+            "yAxisScaleType": "linear"
+          }
+        }
+      }
+    },
+    "insight_10892216": {
+      "importId": "549883/10892216",
+      "name": "Where are my users experiencing frustration?",
+      "description": "This chart shows on which pages users have rageclicked the most in the last 30 days. This can be helpful for finding areas of your product where users experience significant frustration.",
+      "dashboardIds": [1977278],
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "breakdownFilter": {
+            "breakdown": "$current_url",
+            "breakdown_type": "event"
+          },
+          "dateRange": {
+            "date_from": "-30d",
+            "explicitDate": false
+          },
+          "filterTestAccounts": true,
+          "interval": "day",
+          "kind": "TrendsQuery",
+          "properties": [],
+          "series": [
+            {
+              "event": "$rageclick",
+              "kind": "EventsNode",
+              "math": "dau",
+              "name": "$rageclick"
+            }
+          ],
+          "trendsFilter": {
+            "aggregationAxisFormat": "numeric",
+            "display": "ActionsBarValue",
+            "showAlertThresholdLines": false,
+            "showLegend": false,
+            "showPercentStackView": false,
+            "showValuesOnSeries": false,
+            "smoothingIntervals": 1,
+            "yAxisScaleType": "linear"
+          }
+        }
+      }
+    },
+    "insight_10881553": {
+      "importId": "549883/10881553",
+      "name": "Daily active users (DAUs)",
+      "description": "Unique people who use your app each day. Watch for steady growth or sudden drops.",
+      "dashboardIds": [1975723],
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "breakdownFilter": {
+            "breakdown_type": "event"
+          },
+          "dateRange": {
+            "date_from": "-30d",
+            "explicitDate": false
+          },
+          "filterTestAccounts": false,
+          "interval": "day",
+          "kind": "TrendsQuery",
+          "properties": [],
+          "series": [
+            {
+              "kind": "GroupNode",
+              "math": "dau",
+              "name": "Pageview or screen",
+              "nodes": [
+                {
+                  "event": "$pageview",
+                  "kind": "EventsNode",
+                  "name": "$pageview"
+                },
+                {
+                  "event": "$screen",
+                  "kind": "EventsNode",
+                  "name": "$screen"
+                }
+              ],
+              "operator": "OR"
+            }
+          ],
+          "trendsFilter": {
+            "aggregationAxisFormat": "numeric",
+            "display": "ActionsLineGraph",
+            "showAlertThresholdLines": false,
+            "showLegend": false,
+            "showPercentStackView": false,
+            "showValuesOnSeries": false,
+            "smoothingIntervals": 1,
+            "yAxisScaleType": "linear"
+          }
+        }
+      }
+    },
+    "insight_10892224": {
+      "importId": "549883/10892224",
+      "name": "Weekly active users (WAUs)",
+      "description": "Shows the number of unique users that use your app every week.",
+      "dashboardIds": [1977279],
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "breakdownFilter": {
+            "breakdown_type": "event"
+          },
+          "dateRange": {
+            "date_from": "-90d",
+            "explicitDate": false
+          },
+          "filterTestAccounts": false,
+          "interval": "week",
+          "kind": "TrendsQuery",
+          "properties": [],
+          "series": [
+            {
+              "event": "$pageview",
+              "kind": "EventsNode",
+              "math": "weekly_active",
+              "name": "$pageview"
+            }
+          ],
+          "trendsFilter": {
+            "aggregationAxisFormat": "numeric",
+            "display": "ActionsLineGraph",
+            "showAlertThresholdLines": false,
+            "showLegend": false,
+            "showPercentStackView": false,
+            "showValuesOnSeries": false,
+            "smoothingIntervals": 1,
+            "yAxisScaleType": "linear"
+          }
+        }
+      }
+    },
+    "insight_10892178": {
+      "importId": "549883/10892178",
+      "name": "Unique Sessions Trend",
+      "description": "Unique sessions on landing page(s)",
+      "dashboardIds": [1977268],
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "breakdownFilter": {
+            "breakdown_type": "event"
+          },
+          "dateRange": {
+            "date_from": "-30d",
+            "explicitDate": false
+          },
+          "filterTestAccounts": true,
+          "interval": "day",
+          "kind": "TrendsQuery",
+          "properties": [],
+          "series": [
+            {
+              "custom_name": "Unique Sessions",
+              "event": "$pageview",
+              "kind": "EventsNode",
+              "math": "unique_session",
+              "name": "$pageview"
+            }
+          ],
+          "trendsFilter": {
+            "aggregationAxisFormat": "numeric",
+            "display": "ActionsAreaGraph",
+            "showAlertThresholdLines": false,
+            "showLegend": false,
+            "showPercentStackView": false,
+            "showValuesOnSeries": true,
+            "smoothingIntervals": 1,
+            "yAxisScaleType": "linear"
+          }
+        }
+      }
+    },
+    "insight_10892177": {
+      "importId": "549883/10892177",
+      "name": "Which country are users from?",
+      "description": "Users broken down by country",
+      "dashboardIds": [1977268],
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "breakdownFilter": {
+            "breakdown": "$geoip_country_name",
+            "breakdown_type": "event"
+          },
+          "dateRange": {
+            "date_from": "-30d",
+            "explicitDate": false
+          },
+          "filterTestAccounts": true,
+          "interval": "day",
+          "kind": "TrendsQuery",
+          "properties": [],
+          "series": [
+            {
+              "custom_name": "Country",
+              "event": "$pageview",
+              "kind": "EventsNode",
+              "math": "dau",
+              "name": "$pageview"
+            }
+          ],
+          "trendsFilter": {
+            "aggregationAxisFormat": "numeric",
+            "display": "ActionsBarValue",
+            "showAlertThresholdLines": false,
+            "showLegend": false,
+            "showPercentStackView": false,
+            "showValuesOnSeries": false,
+            "smoothingIntervals": 1,
+            "yAxisScaleType": "linear"
+          }
+        }
+      }
+    },
+    "insight_10892231": {
+      "importId": "549883/10892231",
+      "name": "Organic SEO Unique Users (Total)",
+      "dashboardIds": [1977280],
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "breakdownFilter": {
+            "breakdown_type": "event"
+          },
+          "compareFilter": {
+            "compare": true
+          },
+          "dateRange": {
+            "date_from": "-30d",
+            "explicitDate": false
+          },
+          "filterTestAccounts": false,
+          "interval": "day",
+          "kind": "TrendsQuery",
+          "properties": {
+            "type": "AND",
+            "values": [
+              {
+                "type": "AND",
+                "values": [
+                  {
+                    "key": "$referring_domain",
+                    "operator": "icontains",
+                    "type": "event",
+                    "value": "google"
+                  },
+                  {
+                    "key": "utm_source",
+                    "operator": "is_not_set",
+                    "type": "event",
+                    "value": "is_not_set"
+                  }
+                ]
+              }
+            ]
+          },
+          "series": [
+            {
+              "event": "$pageview",
+              "kind": "EventsNode",
+              "math": "dau",
+              "name": "$pageview"
+            }
+          ],
+          "trendsFilter": {
+            "aggregationAxisFormat": "numeric",
+            "display": "BoldNumber",
+            "showAlertThresholdLines": false,
+            "showLegend": false,
+            "showPercentStackView": false,
+            "showValuesOnSeries": false,
+            "smoothingIntervals": 1,
+            "yAxisScaleType": "linear"
+          }
+        }
+      }
+    },
+    "insight_10892234": {
+      "importId": "549883/10892234",
+      "name": "Sessions Per User",
+      "dashboardIds": [1977280],
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "breakdownFilter": {
+            "breakdown_type": "event"
+          },
+          "dateRange": {
+            "date_from": "-30d",
+            "explicitDate": false
+          },
+          "filterTestAccounts": false,
+          "interval": "week",
+          "kind": "TrendsQuery",
+          "properties": [],
+          "series": [
+            {
+              "event": "$pageview",
+              "kind": "EventsNode",
+              "math": "dau",
+              "name": "$pageview"
+            },
+            {
+              "event": "$pageview",
+              "kind": "EventsNode",
+              "math": "unique_session",
+              "name": "$pageview"
+            }
+          ],
+          "trendsFilter": {
+            "aggregationAxisFormat": "numeric",
+            "display": "ActionsLineGraph",
+            "formula": "B/A",
+            "showAlertThresholdLines": false,
+            "showLegend": false,
+            "showPercentStackView": false,
+            "showValuesOnSeries": false,
+            "smoothingIntervals": 1,
+            "yAxisScaleType": "linear"
+          }
+        }
+      }
+    },
+    "insight_10892180": {
+      "importId": "549883/10892180",
+      "name": "Referring Domains",
+      "description": "How users arrived on your landing pages broken down by referring domain",
+      "dashboardIds": [1977268],
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "breakdownFilter": {
+            "breakdown": "$referring_domain",
+            "breakdown_type": "event"
+          },
+          "dateRange": {
+            "date_from": "-30d",
+            "explicitDate": false
+          },
+          "filterTestAccounts": true,
+          "interval": "day",
+          "kind": "TrendsQuery",
+          "properties": [],
+          "series": [
+            {
+              "event": "$pageview",
+              "kind": "EventsNode",
+              "math": "unique_session",
+              "name": "$pageview"
+            }
+          ],
+          "trendsFilter": {
+            "aggregationAxisFormat": "numeric",
+            "display": "ActionsTable",
+            "showAlertThresholdLines": false,
+            "showLegend": false,
+            "showPercentStackView": false,
+            "showValuesOnSeries": false,
+            "smoothingIntervals": 1,
+            "yAxisScaleType": "linear"
+          }
+        }
+      }
+    },
+    "insight_10892220": {
+      "importId": "549883/10892220",
+      "name": "Where are my users located?",
+      "description": "This chart shows where all pageviews for unique users originated from over the last 30 days.",
+      "dashboardIds": [1977278],
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "breakdownFilter": {
+            "breakdown": "$geoip_country_code",
+            "breakdown_type": "person"
+          },
+          "dateRange": {
+            "date_from": "-30d",
+            "explicitDate": false
+          },
+          "filterTestAccounts": true,
+          "interval": "day",
+          "kind": "TrendsQuery",
+          "properties": [],
+          "series": [
+            {
+              "event": "$pageview",
+              "kind": "EventsNode",
+              "math": "dau",
+              "name": "$pageview"
+            }
+          ],
+          "trendsFilter": {
+            "aggregationAxisFormat": "numeric",
+            "display": "WorldMap",
+            "showAlertThresholdLines": false,
+            "showLegend": false,
+            "showPercentStackView": false,
+            "showValuesOnSeries": false,
+            "smoothingIntervals": 1,
+            "yAxisScaleType": "linear"
+          }
+        }
+      }
+    },
+    "insight_10892185": {
+      "importId": "549883/10892185",
+      "name": "Pages Per Session",
+      "description": "How many pages users visit in each unique session.",
+      "dashboardIds": [1977268],
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "breakdownFilter": {
+            "breakdown_type": "event"
+          },
+          "compareFilter": {
+            "compare": false
+          },
+          "dateRange": {
+            "date_from": "-30d",
+            "explicitDate": false
+          },
+          "filterTestAccounts": true,
+          "interval": "day",
+          "kind": "TrendsQuery",
+          "properties": [],
+          "series": [
+            {
+              "event": "$pageview",
+              "kind": "EventsNode",
+              "math": "total",
+              "name": "$pageview"
+            },
+            {
+              "event": "$pageview",
+              "kind": "EventsNode",
+              "math": "unique_session",
+              "name": "$pageview"
+            }
+          ],
+          "trendsFilter": {
+            "aggregationAxisFormat": "numeric",
+            "display": "ActionsAreaGraph",
+            "formula": "A/B",
+            "showAlertThresholdLines": false,
+            "showLegend": false,
+            "showPercentStackView": false,
+            "showValuesOnSeries": true,
+            "smoothingIntervals": 1,
+            "yAxisScaleType": "linear"
+          }
+        }
+      }
+    },
+    "insight_10892182": {
+      "importId": "549883/10892182",
+      "name": "Unique Users by Device Type",
+      "dashboardIds": [1977268],
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "breakdownFilter": {
+            "breakdown": "$device_type",
+            "breakdown_type": "event"
+          },
+          "dateRange": {
+            "date_from": "-30d",
+            "explicitDate": false
+          },
+          "filterTestAccounts": true,
+          "interval": "day",
+          "kind": "TrendsQuery",
+          "properties": [],
+          "series": [
+            {
+              "event": "$pageview",
+              "kind": "EventsNode",
+              "math": "dau",
+              "name": "$pageview"
+            }
+          ],
+          "trendsFilter": {
+            "aggregationAxisFormat": "numeric",
+            "display": "ActionsPie",
+            "showAlertThresholdLines": false,
+            "showLegend": false,
+            "showPercentStackView": false,
+            "showValuesOnSeries": true,
+            "smoothingIntervals": 1,
+            "yAxisScaleType": "linear"
+          }
+        }
+      }
+    },
+    "insight_10892218": {
+      "importId": "549883/10892218",
+      "name": "How do users find my product?",
+      "description": "This chart shows the referring domain for all pageviews by unique users in the last 30 days. This can be especially helpful for understanding how users find your product.",
+      "dashboardIds": [1977278],
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "breakdownFilter": {
+            "breakdown": "$referring_domain",
+            "breakdown_type": "event"
+          },
+          "dateRange": {
+            "date_from": "-30d",
+            "explicitDate": false
+          },
+          "filterTestAccounts": true,
+          "interval": "day",
+          "kind": "TrendsQuery",
+          "properties": [],
+          "series": [
+            {
+              "event": "$pageview",
+              "kind": "EventsNode",
+              "math": "dau",
+              "name": "$pageview"
+            }
+          ],
+          "trendsFilter": {
+            "aggregationAxisFormat": "numeric",
+            "display": "ActionsBarValue",
+            "showAlertThresholdLines": false,
+            "showLegend": false,
+            "showPercentStackView": false,
+            "showValuesOnSeries": false,
+            "smoothingIntervals": 1,
+            "yAxisScaleType": "linear"
+          }
+        }
+      }
+    },
+    "insight_10881552": {
+      "importId": "549883/10881552",
+      "name": "Pageviews (last 7 days)",
+      "description": "Total pages viewed in the last 7 days, repeat views included. The classic traffic-volume number.",
+      "dashboardIds": [1975723],
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "breakdownFilter": {
+            "breakdown_type": "event"
+          },
+          "dateRange": {
+            "date_from": "-7d",
+            "explicitDate": false
+          },
+          "filterTestAccounts": false,
+          "interval": "day",
+          "kind": "TrendsQuery",
+          "properties": [],
+          "series": [
+            {
+              "event": "$pageview",
+              "kind": "EventsNode",
+              "math": "total",
+              "name": "$pageview"
+            }
+          ],
+          "trendsFilter": {
+            "aggregationAxisFormat": "numeric",
+            "display": "BoldNumber",
+            "showAlertThresholdLines": false,
+            "showLegend": false,
+            "showPercentStackView": false,
+            "showValuesOnSeries": false,
+            "smoothingIntervals": 1,
+            "yAxisScaleType": "linear"
+          }
+        }
+      }
+    },
+    "insight_10881556": {
+      "importId": "549883/10881556",
+      "name": "Top referrers",
+      "description": "Which sites send you the most visitors, like search, social, and direct. Your acquisition channels at a glance.",
+      "dashboardIds": [1975723],
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "breakdownFilter": {
+            "breakdown": "$referring_domain",
+            "breakdown_type": "event"
+          },
+          "dateRange": {
+            "date_from": "-7d",
+            "explicitDate": false
+          },
+          "filterTestAccounts": false,
+          "interval": "day",
+          "kind": "TrendsQuery",
+          "properties": [],
+          "series": [
+            {
+              "event": "$pageview",
+              "kind": "EventsNode",
+              "math": "dau",
+              "name": "$pageview"
+            }
+          ],
+          "trendsFilter": {
+            "aggregationAxisFormat": "numeric",
+            "display": "ActionsBarValue",
+            "showAlertThresholdLines": false,
+            "showLegend": false,
+            "showPercentStackView": false,
+            "showValuesOnSeries": false,
+            "smoothingIntervals": 1,
+            "yAxisScaleType": "linear"
+          }
+        }
+      }
+    },
+    "insight_10892213": {
+      "importId": "549883/10892213",
+      "name": "What screen size do users have?",
+      "description": "This chart shows what the most popular screen height is for unique users over the past 30 days. You can correlate this with screen width by changing the 'Breakdown by' option to specify 'Screen Width'.",
+      "dashboardIds": [1977278],
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "breakdownFilter": {
+            "breakdown": "$screen_height",
+            "breakdown_type": "event"
+          },
+          "dateRange": {
+            "date_from": "-30d",
+            "explicitDate": false
+          },
+          "filterTestAccounts": true,
+          "interval": "day",
+          "kind": "TrendsQuery",
+          "properties": [],
+          "series": [
+            {
+              "event": "$pageview",
+              "kind": "EventsNode",
+              "math": "dau",
+              "name": "$pageview"
+            }
+          ],
+          "trendsFilter": {
+            "aggregationAxisFormat": "numeric",
+            "display": "ActionsBarValue",
+            "showAlertThresholdLines": false,
+            "showLegend": true,
+            "showPercentStackView": false,
+            "showValuesOnSeries": false,
+            "smoothingIntervals": 1,
+            "yAxisScaleType": "linear"
+          }
+        }
+      }
+    },
+    "insight_10892215": {
+      "importId": "549883/10892215",
+      "name": "Which users are highly engaged?",
+      "description": "The GREEN section of this lifecycle chart shows identified users who completed a pageview in the last 30 days and in the previous 30 days, indicated strong engagement. By clicking through on each bar you can see a full list of the identified users, which is useful for arranging customer interviews or examining their sessions.",
+      "dashboardIds": [1977278],
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "dateRange": {
+            "date_from": "-30d",
+            "explicitDate": false
+          },
+          "filterTestAccounts": true,
+          "interval": "week",
+          "kind": "LifecycleQuery",
+          "lifecycleFilter": {
+            "showLegend": false
+          },
+          "properties": [],
+          "series": [
+            {
+              "event": "$pageview",
+              "kind": "EventsNode",
+              "name": "$pageview",
+              "properties": [
+                {
+                  "key": "email",
+                  "operator": "is_set",
+                  "type": "person",
+                  "value": "is_set"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "insight_10881551": {
+      "importId": "549883/10881551",
+      "name": "Sessions (last 7 days)",
+      "description": "Distinct visits in the last 7 days. A session groups everything one person does in a single sitting.",
+      "dashboardIds": [1975723],
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "breakdownFilter": {
+            "breakdown_type": "event"
+          },
+          "dateRange": {
+            "date_from": "-7d",
+            "explicitDate": false
+          },
+          "filterTestAccounts": false,
+          "interval": "day",
+          "kind": "TrendsQuery",
+          "properties": [],
+          "series": [
+            {
+              "event": "$pageview",
+              "kind": "EventsNode",
+              "math": "unique_session",
+              "name": "$pageview"
+            }
+          ],
+          "trendsFilter": {
+            "aggregationAxisFormat": "numeric",
+            "display": "BoldNumber",
+            "showAlertThresholdLines": false,
+            "showLegend": false,
+            "showPercentStackView": false,
+            "showValuesOnSeries": false,
+            "smoothingIntervals": 1,
+            "yAxisScaleType": "linear"
+          }
+        }
+      }
+    },
+    "insight_10892214": {
+      "importId": "549883/10892214",
+      "name": "What languages do users prefer?",
+      "description": "This chart looks at the most popular languages among users over the last 30 days, identified by the language they've chosen for their browser. This can help you identify if you need to consider translating your product, or marketing to specific geographies.",
+      "dashboardIds": [1977278],
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "breakdownFilter": {
+            "breakdown": "$browser_language",
+            "breakdown_type": "event"
+          },
+          "compareFilter": {
+            "compare": false
+          },
+          "dateRange": {
+            "date_from": "-7d",
+            "explicitDate": false
+          },
+          "filterTestAccounts": true,
+          "interval": "day",
+          "kind": "TrendsQuery",
+          "properties": [],
+          "series": [
+            {
+              "event": "$pageview",
+              "kind": "EventsNode",
+              "math": "dau",
+              "name": "$pageview"
+            }
+          ],
+          "trendsFilter": {
+            "aggregationAxisFormat": "numeric",
+            "display": "ActionsBarValue",
+            "resultCustomizationBy": "position",
+            "resultCustomizations": {
+              "1": {
+                "assignmentBy": "position",
+                "hidden": true
+              }
+            },
+            "showAlertThresholdLines": false,
+            "showLegend": true,
+            "showPercentStackView": false,
+            "showValuesOnSeries": false,
+            "smoothingIntervals": 1,
+            "yAxisScaleType": "linear"
+          }
+        }
+      }
+    },
+    "insight_10892186": {
+      "importId": "549883/10892186",
+      "name": "Average Session Duration",
+      "dashboardIds": [1977268],
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "breakdownFilter": {
+            "breakdown_type": "event"
+          },
+          "compareFilter": {
+            "compare": true
+          },
+          "dateRange": {
+            "date_from": "-30d",
+            "explicitDate": false
+          },
+          "filterTestAccounts": true,
+          "interval": "day",
+          "kind": "TrendsQuery",
+          "properties": [],
+          "series": [
+            {
+              "event": "$pageview",
+              "kind": "EventsNode",
+              "math": "avg",
+              "math_property": "$session_duration",
+              "name": "$pageview"
+            }
+          ],
+          "trendsFilter": {
+            "aggregationAxisFormat": "duration",
+            "display": "BoldNumber",
+            "showAlertThresholdLines": false,
+            "showLegend": false,
+            "showPercentStackView": false,
+            "showValuesOnSeries": false,
+            "smoothingIntervals": 1,
+            "yAxisScaleType": "linear"
+          }
+        }
+      }
+    },
+    "insight_10892230": {
+      "importId": "549883/10892230",
+      "name": "Website Unique Users (Total)",
+      "description": "Shows the number of unique users over the last 30 days.",
+      "dashboardIds": [1977280],
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "breakdownFilter": {
+            "breakdown_type": "event"
+          },
+          "compareFilter": {
+            "compare": true
+          },
+          "dateRange": {
+            "date_from": "-30d",
+            "explicitDate": false
+          },
+          "filterTestAccounts": false,
+          "interval": "day",
+          "kind": "TrendsQuery",
+          "properties": [],
+          "series": [
+            {
+              "event": "$pageview",
+              "kind": "EventsNode",
+              "math": "dau",
+              "name": "$pageview"
+            }
+          ],
+          "trendsFilter": {
+            "aggregationAxisFormat": "numeric",
+            "display": "BoldNumber",
+            "showAlertThresholdLines": false,
+            "showLegend": false,
+            "showPercentStackView": false,
+            "showValuesOnSeries": false,
+            "smoothingIntervals": 1,
+            "yAxisScaleType": "linear"
+          }
+        }
+      }
+    },
+    "insight_10892176": {
+      "importId": "549883/10892176",
+      "name": "Unique Users by Browser",
+      "dashboardIds": [1977268],
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "breakdownFilter": {
+            "breakdown": "$browser",
+            "breakdown_type": "event"
+          },
+          "dateRange": {
+            "date_from": "-30d",
+            "explicitDate": false
+          },
+          "filterTestAccounts": true,
+          "interval": "day",
+          "kind": "TrendsQuery",
+          "properties": [],
+          "series": [
+            {
+              "event": "$pageview",
+              "kind": "EventsNode",
+              "math": "dau",
+              "name": "$pageview"
+            }
+          ],
+          "trendsFilter": {
+            "aggregationAxisFormat": "numeric",
+            "display": "ActionsPie",
+            "showAlertThresholdLines": false,
+            "showLegend": false,
+            "showPercentStackView": false,
+            "showValuesOnSeries": true,
+            "smoothingIntervals": 1,
+            "yAxisScaleType": "linear"
+          }
+        }
+      }
+    },
+    "insight_10892228": {
+      "importId": "549883/10892228",
+      "name": "Pageview funnel, by browser",
+      "description": "This example funnel shows how many of your users have completed 3 page views, broken down by browser.",
+      "dashboardIds": [1977279],
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "breakdownFilter": {
+            "breakdown": "$browser",
+            "breakdown_type": "event"
+          },
+          "dateRange": {
+            "date_from": "-7d",
+            "explicitDate": false
+          },
+          "filterTestAccounts": false,
+          "funnelsFilter": {
+            "breakdownAttributionType": "first_touch",
+            "exclusions": [],
+            "funnelOrderType": "ordered",
+            "funnelStepReference": "total",
+            "funnelVizType": "steps",
+            "funnelWindowInterval": 14,
+            "funnelWindowIntervalUnit": "day",
+            "layout": "horizontal"
+          },
+          "interval": "day",
+          "kind": "FunnelsQuery",
+          "properties": [],
+          "series": [
+            {
+              "custom_name": "First page view",
+              "event": "$pageview",
+              "kind": "EventsNode",
+              "name": "$pageview"
+            },
+            {
+              "custom_name": "Second page view",
+              "event": "$pageview",
+              "kind": "EventsNode",
+              "name": "$pageview"
+            },
+            {
+              "custom_name": "Third page view",
+              "event": "$pageview",
+              "kind": "EventsNode",
+              "name": "$pageview"
+            }
+          ]
+        }
+      }
+    },
+    "insight_11251185": {
+      "importId": "549883/11251185",
+      "name": "Get Started CTA clicks by first-touch source (install proxy)",
+      "description": "CTA clicks broken down by first-touch utm_source. This is an install-intent proxy, not completed installs; a null source means no first-touch source was captured. Replace it after production emits guild_install_attributed and bot_install_completed.",
+      "dashboardIds": [2022116],
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "breakdownFilter": {
+            "breakdown": "$initial_utm_source",
+            "breakdown_type": "person"
+          },
+          "dateRange": {
+            "date_from": "-90d",
+            "excludeIncompletePeriods": false,
+            "explicitDate": false
+          },
+          "filterTestAccounts": false,
+          "interval": "week",
+          "kind": "TrendsQuery",
+          "properties": [],
+          "series": [
+            {
+              "event": "get_started_click",
+              "kind": "EventsNode",
+              "name": "get_started_click"
+            }
+          ],
+          "trendsFilter": {
+            "aggregationAxisFormat": "numeric",
+            "display": "ActionsStackedBar",
+            "excludeBoxPlotOutliers": true,
+            "hideWeekends": false,
+            "legendPosition": "bottom",
+            "metricColorByDirection": false,
+            "metricShowChange": true,
+            "metricSummary": "total",
+            "resultCustomizationBy": "value",
+            "showAlertThresholdLines": false,
+            "showAnnotations": true,
+            "showLegend": false,
+            "showMultipleYAxes": false,
+            "showPercentStackView": false,
+            "showValuesOnSeries": false,
+            "smoothingIntervals": 1,
+            "stackBreakdownValues": false,
+            "yAxisScaleType": "linear",
+            "yAxisStartAtZero": true
+          }
+        }
+      }
+    },
+    "insight_10892219": {
+      "importId": "549883/10892219",
+      "name": "What browsers do users prefer?",
+      "description": "This chart tracks which browsers your unique users have been using over the last 30 days. It can be useful to correlate this with which devices users have been using, so you can ensure compatibility. Hover over a section to reveal what proportion of your users each browser represents.",
+      "dashboardIds": [1977278],
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "breakdownFilter": {
+            "breakdown": "$browser",
+            "breakdown_type": "event"
+          },
+          "dateRange": {
+            "date_from": "-30d",
+            "explicitDate": false
+          },
+          "filterTestAccounts": true,
+          "interval": "day",
+          "kind": "TrendsQuery",
+          "properties": [],
+          "series": [
+            {
+              "event": "$pageview",
+              "kind": "EventsNode",
+              "math": "dau",
+              "name": "$pageview"
+            }
+          ],
+          "trendsFilter": {
+            "aggregationAxisFormat": "numeric",
+            "display": "ActionsPie",
+            "showAlertThresholdLines": false,
+            "showLegend": false,
+            "showPercentStackView": false,
+            "showValuesOnSeries": false,
+            "smoothingIntervals": 1,
+            "yAxisScaleType": "linear"
+          }
+        }
+      }
+    },
+    "insight_10892233": {
+      "importId": "549883/10892233",
+      "name": "Organic SEO Unique Users (Breakdown)",
+      "dashboardIds": [1977280],
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "breakdownFilter": {
+            "breakdown_type": "event"
+          },
+          "dateRange": {
+            "date_from": "-30d",
+            "explicitDate": false
+          },
+          "filterTestAccounts": false,
+          "interval": "week",
+          "kind": "TrendsQuery",
+          "properties": [],
+          "series": [
+            {
+              "event": "$pageview",
+              "kind": "EventsNode",
+              "math": "dau",
+              "name": "$pageview",
+              "properties": [
+                {
+                  "key": "$referring_domain",
+                  "operator": "icontains",
+                  "type": "event",
+                  "value": "google"
+                },
+                {
+                  "key": "utm_source",
+                  "operator": "is_not_set",
+                  "type": "event",
+                  "value": "is_not_set"
+                }
+              ]
+            }
+          ],
+          "trendsFilter": {
+            "aggregationAxisFormat": "numeric",
+            "display": "ActionsBar",
+            "showAlertThresholdLines": false,
+            "showLegend": false,
+            "showPercentStackView": false,
+            "showValuesOnSeries": false,
+            "smoothingIntervals": 1,
+            "yAxisScaleType": "linear"
+          }
+        }
+      }
+    },
+    "insight_10892227": {
+      "importId": "549883/10892227",
+      "name": "Referring domain (last 14 days)",
+      "description": "Shows the most common referring domains for your users over the past 14 days.",
+      "dashboardIds": [1977279],
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "breakdownFilter": {
+            "breakdown": "$referring_domain",
+            "breakdown_type": "event"
+          },
+          "dateRange": {
+            "date_from": "-14d",
+            "explicitDate": false
+          },
+          "filterTestAccounts": false,
+          "interval": "day",
+          "kind": "TrendsQuery",
+          "properties": [],
+          "series": [
+            {
+              "event": "$pageview",
+              "kind": "EventsNode",
+              "math": "dau",
+              "name": "$pageview"
+            }
+          ],
+          "trendsFilter": {
+            "aggregationAxisFormat": "numeric",
+            "display": "ActionsBarValue",
+            "showAlertThresholdLines": false,
+            "showLegend": false,
+            "showPercentStackView": false,
+            "showValuesOnSeries": false,
+            "smoothingIntervals": 1,
+            "yAxisScaleType": "linear"
+          }
+        }
+      }
+    },
+    "insight_11251174": {
+      "importId": "549883/11251174",
+      "name": "Daily active guilds",
+      "description": "Unique guild_id receiving any core output (prematch, postmatch, reports, competitions) per day.",
+      "dashboardIds": [2022116],
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "dateRange": {
+            "date_from": "-30d",
+            "excludeIncompletePeriods": false,
+            "explicitDate": false
+          },
+          "filterTestAccounts": false,
+          "interval": "day",
+          "kind": "TrendsQuery",
+          "properties": [],
+          "series": [
+            {
+              "event": "core_output_delivered",
+              "kind": "EventsNode",
+              "math": "hogql",
+              "math_hogql": "count(DISTINCT properties.guild_id)",
+              "name": "Active guilds"
+            }
+          ],
+          "trendsFilter": {
+            "aggregationAxisFormat": "numeric",
+            "display": "ActionsLineGraph",
+            "excludeBoxPlotOutliers": true,
+            "hideWeekends": false,
+            "legendPosition": "bottom",
+            "metricColorByDirection": false,
+            "metricShowChange": true,
+            "metricSummary": "total",
+            "resultCustomizationBy": "value",
+            "showAlertThresholdLines": false,
+            "showAnnotations": true,
+            "showLegend": false,
+            "showMultipleYAxes": false,
+            "showPercentStackView": false,
+            "showValuesOnSeries": false,
+            "smoothingIntervals": 1,
+            "stackBreakdownValues": false,
+            "yAxisScaleType": "linear",
+            "yAxisStartAtZero": true
+          }
+        }
+      }
+    }
+  },
+  "hogFunctions": {
+    "geoip": {
+      "importId": "549883/019fe7f8-ee1c-0000-8f3e-476e8dac0c40",
+      "name": "GeoIP",
+      "description": "Adds geoip data to the event",
+      "type": "transformation",
+      "templateId": "template-geoip",
+      "iconUrl": "/static/transformations/geoip.png",
+      "enabled": true,
+      "executionOrder": 1,
+      "filters": {
+        "source": "events"
+      },
+      "hog": "// Define the properties to be added to the event\nlet geoipProperties := {\n    'city_name': null,\n    'city_confidence': null,\n    'subdivision_2_name': null,\n    'subdivision_2_code': null,\n    'subdivision_1_name': null,\n    'subdivision_1_code': null,\n    'country_name': null,\n    'country_code': null,\n    'continent_name': null,\n    'continent_code': null,\n    'postal_code': null,\n    'latitude': null,\n    'longitude': null,\n    'accuracy_radius': null,\n    'time_zone': null\n}\n// Check if the event has an IP address\nif (event.properties?.$geoip_disable or empty(event.properties?.$ip)) {\n    print('geoip disabled or no ip.')\n    return event\n}\nlet ip := event.properties.$ip\n// Check for localhost and common private network IPs\nif (ip == '127.0.0.1' or substring(ip, 1, 8) == '192.168.') {\n    print('spoofing ip for local development', ip)\n    ip := '89.160.20.129'\n}\nlet response := geoipLookup(ip)\nif (not response) {\n    print('geoip lookup failed for ip', ip)\n    return event\n}\nlet location := {}\nif (response.city) {\n    location['city_name'] := response.city.names?.en\n}\nif (response.country) {\n    location['country_name'] := response.country.names?.en\n    location['country_code'] := response.country.isoCode\n}\nif (response.continent) {\n    location['continent_name'] := response.continent.names?.en\n    location['continent_code'] := response.continent.code\n}\nif (response.postal) {\n    location['postal_code'] := response.postal.code\n}\nif (response.location) {\n    location['latitude'] := response.location?.latitude\n    location['longitude'] := response.location?.longitude\n    location['accuracy_radius'] := response.location?.accuracyRadius\n    location['time_zone'] := response.location?.timeZone\n}\nif (response.subdivisions) {\n    for (let index, subdivision in response.subdivisions) {\n        location[f'subdivision_{index + 1}_code'] := subdivision.isoCode\n        location[f'subdivision_{index + 1}_name'] := subdivision.names?.en\n    }\n}\nprint('geoip location data for ip:', location) \nlet returnEvent := event\nreturnEvent.properties := returnEvent.properties ?? {}\nreturnEvent.properties.$set := returnEvent.properties.$set ?? {}\nreturnEvent.properties.$set_once := returnEvent.properties.$set_once ?? {}\nfor (let key, value in geoipProperties) {\n    if (value != null) {\n        returnEvent.properties.$set[f'$geoip_{key}'] := value\n        returnEvent.properties.$set_once[f'$initial_geoip_{key}'] := value\n    }\n    returnEvent.properties.$set[f'$geoip_{key}'] := value\n    returnEvent.properties.$set_once[f'$initial_geoip_{key}'] := value\n}\nfor (let key, value in location) {\n    returnEvent.properties[f'$geoip_{key}'] := value\n    returnEvent.properties.$set[f'$geoip_{key}'] := value\n    returnEvent.properties.$set_once[f'$initial_geoip_{key}'] := value\n}\nreturn returnEvent"
+    }
+  }
+}

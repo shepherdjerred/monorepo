@@ -103,7 +103,8 @@
     {
       "registryUrl": "https://registry.opentofu.org",
       "source": "posthog/posthog",
-      "version": "1.0.17"
+      "version": "1.0.17",
+      "bindings": true
     },
     {
       "registryUrl": "https://registry.opentofu.org",
