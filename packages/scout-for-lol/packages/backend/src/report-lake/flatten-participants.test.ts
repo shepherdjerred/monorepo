@@ -25,7 +25,7 @@ import {
   lcuBundleMatchId,
   rawLcuFixture,
   withLcuTiming,
-} from "#src/testing/lcu-bundle-fixtures.ts";
+} from "#src/testing/report-lake/lcu-bundle-fixtures.ts";
 
 const LCU_UUID = "1b2c3d4e-5f60-4718-8a9b-0c1d2e3f4a5b";
 

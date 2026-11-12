@@ -11,7 +11,7 @@ import {
   lcuBundleMatchId as matchIdOf,
   rawLcuFixture as rawFixture,
   withLcuTiming as withTiming,
-} from "#src/testing/lcu-bundle-fixtures.ts";
+} from "#src/testing/report-lake/lcu-bundle-fixtures.ts";
 import { convertLcuMatchBundle } from "./lcu-match.ts";
 import { convertLcuTimeline } from "./lcu-timeline.ts";
 
