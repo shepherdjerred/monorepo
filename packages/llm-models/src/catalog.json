@@ -316,6 +316,54 @@
       }
     }
   },
+  "claude-opus-5-5": {
+    "id": "claude-opus-5-5",
+    "provider": "anthropic",
+    "displayName": "Claude Opus 5.5",
+    "description": "Current Opus-tier model for complex agentic coding and enterprise work; thinking always on.",
+    "pricing": {
+      "modality": "text",
+      "input": 4,
+      "output": 20,
+      "cacheRead": 0.2,
+      "cacheWrite": 5,
+      "cacheWriteByTtl": {
+        "5m": 5,
+        "1h": 8
+      },
+      "serviceTierMultipliers": {
+        "batch": 0.5
+      },
+      "serverToolPricing": {
+        "webSearchPerRequest": 0.01
+      }
+    },
+    "contextWindow": 1000000,
+    "pinnedContextWindow": true,
+    "capabilities": {
+      "inputModalities": ["text", "image"],
+      "outputModalities": ["text"],
+      "tools": true,
+      "structuredOutputs": true,
+      "webSearch": true,
+      "reasoning": true,
+      "supportsTemperature": false,
+      "supportsTopP": false,
+      "adaptiveThinking": true,
+      "effortTiers": ["low", "medium", "high", "xhigh", "max"]
+    },
+    "status": "current",
+    "routes": {
+      "native": {
+        "provider": "anthropic",
+        "modelId": "claude-opus-5-5",
+        "endpoint": "language"
+      },
+      "claudeAgentSdk": {
+        "modelId": "claude-opus-5-5"
+      }
+    }
+  },
   "claude-opus-5": {
     "id": "claude-opus-5",
     "provider": "anthropic",
@@ -364,6 +412,54 @@
       }
     }
   },
+  "claude-sonnet-5-5": {
+    "id": "claude-sonnet-5-5",
+    "provider": "anthropic",
+    "displayName": "Claude Sonnet 5.5",
+    "description": "Current Sonnet-tier model for everyday coding, agent, and enterprise work.",
+    "pricing": {
+      "modality": "text",
+      "input": 2,
+      "output": 10,
+      "cacheRead": 0.1,
+      "cacheWrite": 2.5,
+      "cacheWriteByTtl": {
+        "5m": 2.5,
+        "1h": 4
+      },
+      "serviceTierMultipliers": {
+        "batch": 0.5
+      },
+      "serverToolPricing": {
+        "webSearchPerRequest": 0.01
+      }
+    },
+    "contextWindow": 1000000,
+    "pinnedContextWindow": true,
+    "capabilities": {
+      "inputModalities": ["text", "image"],
+      "outputModalities": ["text"],
+      "tools": true,
+      "structuredOutputs": true,
+      "webSearch": true,
+      "reasoning": true,
+      "supportsTemperature": false,
+      "supportsTopP": false,
+      "adaptiveThinking": true,
+      "effortTiers": ["low", "medium", "high", "xhigh", "max"]
+    },
+    "status": "current",
+    "routes": {
+      "native": {
+        "provider": "anthropic",
+        "modelId": "claude-sonnet-5-5",
+        "endpoint": "language"
+      },
+      "claudeAgentSdk": {
+        "modelId": "claude-sonnet-5-5"
+      }
+    }
+  },
   "claude-sonnet-5": {
     "id": "claude-sonnet-5",
     "provider": "anthropic",
@@ -409,6 +505,102 @@
       },
       "claudeAgentSdk": {
         "modelId": "claude-sonnet-5"
+      }
+    }
+  },
+  "claude-fable-5-2": {
+    "id": "claude-fable-5-2",
+    "provider": "anthropic",
+    "displayName": "Claude Fable 5.2",
+    "description": "Most capable widely released Claude model for demanding reasoning and long-horizon agentic work; thinking always on.",
+    "pricing": {
+      "modality": "text",
+      "input": 8,
+      "output": 40,
+      "cacheRead": 0.2,
+      "cacheWrite": 10,
+      "cacheWriteByTtl": {
+        "5m": 10,
+        "1h": 16
+      },
+      "serviceTierMultipliers": {
+        "batch": 0.5
+      },
+      "serverToolPricing": {
+        "webSearchPerRequest": 0.01
+      }
+    },
+    "contextWindow": 1000000,
+    "pinnedContextWindow": true,
+    "capabilities": {
+      "inputModalities": ["text", "image"],
+      "outputModalities": ["text"],
+      "tools": true,
+      "structuredOutputs": true,
+      "webSearch": true,
+      "reasoning": true,
+      "supportsTemperature": false,
+      "supportsTopP": false,
+      "adaptiveThinking": true,
+      "effortTiers": ["low", "medium", "high", "xhigh", "max"]
+    },
+    "status": "current",
+    "routes": {
+      "native": {
+        "provider": "anthropic",
+        "modelId": "claude-fable-5-2",
+        "endpoint": "language"
+      },
+      "claudeAgentSdk": {
+        "modelId": "claude-fable-5-2"
+      }
+    }
+  },
+  "claude-fable-5-1": {
+    "id": "claude-fable-5-1",
+    "provider": "anthropic",
+    "displayName": "Claude Fable 5.1",
+    "description": "Previous Fable-tier model for demanding reasoning and long-horizon agentic work; thinking always on.",
+    "pricing": {
+      "modality": "text",
+      "input": 10,
+      "output": 50,
+      "cacheRead": 0.25,
+      "cacheWrite": 12.5,
+      "cacheWriteByTtl": {
+        "5m": 12.5,
+        "1h": 20
+      },
+      "serviceTierMultipliers": {
+        "batch": 0.5
+      },
+      "serverToolPricing": {
+        "webSearchPerRequest": 0.01
+      }
+    },
+    "contextWindow": 1000000,
+    "pinnedContextWindow": true,
+    "capabilities": {
+      "inputModalities": ["text", "image"],
+      "outputModalities": ["text"],
+      "tools": true,
+      "structuredOutputs": true,
+      "webSearch": true,
+      "reasoning": true,
+      "supportsTemperature": false,
+      "supportsTopP": false,
+      "adaptiveThinking": true,
+      "effortTiers": ["low", "medium", "high", "xhigh", "max"]
+    },
+    "status": "current",
+    "routes": {
+      "native": {
+        "provider": "anthropic",
+        "modelId": "claude-fable-5-1",
+        "endpoint": "language"
+      },
+      "claudeAgentSdk": {
+        "modelId": "claude-fable-5-1"
       }
     }
   },
@@ -552,6 +744,59 @@
       },
       "claudeAgentSdk": {
         "modelId": "claude-sonnet-4-6"
+      }
+    }
+  },
+  "claude-haiku-5-5": {
+    "id": "claude-haiku-5-5",
+    "provider": "anthropic",
+    "displayName": "Claude Haiku 5.5",
+    "description": "Current Haiku-tier model for fast, low-cost work; adaptive thinking on by default.",
+    "pricing": {
+      "modality": "text",
+      "input": 0.1,
+      "output": 0.5,
+      "cacheRead": 0.01,
+      "cacheWrite": 0.125,
+      "cacheWriteByTtl": {
+        "5m": 0.125,
+        "1h": 0.2
+      },
+      "serviceTierMultipliers": {
+        "batch": 0.5
+      },
+      "serverToolPricing": {
+        "webSearchPerRequest": 0.01
+      },
+      "longContextSurcharge": {
+        "thresholdInputTokens": 100000,
+        "inputMultiplier": 5,
+        "outputMultiplier": 5
+      }
+    },
+    "contextWindow": 1000000,
+    "pinnedContextWindow": true,
+    "capabilities": {
+      "inputModalities": ["text", "image"],
+      "outputModalities": ["text"],
+      "tools": true,
+      "structuredOutputs": true,
+      "webSearch": true,
+      "reasoning": true,
+      "supportsTemperature": false,
+      "supportsTopP": false,
+      "adaptiveThinking": true,
+      "effortTiers": ["low", "medium", "high", "xhigh", "max"]
+    },
+    "status": "current",
+    "routes": {
+      "native": {
+        "provider": "anthropic",
+        "modelId": "claude-haiku-5-5",
+        "endpoint": "language"
+      },
+      "claudeAgentSdk": {
+        "modelId": "claude-haiku-5-5"
       }
     }
   },
