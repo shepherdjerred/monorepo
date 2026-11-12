@@ -169,6 +169,17 @@ describe("tailscale", () => {
     // Policy fields and tags are data: `tagOwners` must not become
     // `tag_owners`, and no rule may be dropped or reordered.
     expect(tailscale.locals).toEqual({ policy: TAILNET_POLICY });
+    // Derived from the platform model's tags and tailnet services: a model
+    // edit that changes who may assign a tag shows here.
+    expect(TAILNET_POLICY.tagOwners).toEqual({
+      "tag:ci": ["autogroup:admin"],
+      "tag:delivery": ["autogroup:admin", "tag:k8s-operator"],
+      "tag:iot": ["autogroup:admin"],
+      "tag:k8s": ["tag:k8s-operator"],
+      "tag:k8s-operator": ["autogroup:admin"],
+      "tag:monitoring": ["autogroup:admin"],
+      "tag:server": ["autogroup:admin"],
+    });
     expect(Object.keys(TAILNET_POLICY).toSorted()).toEqual([
       "acls",
       "autoApprovers",

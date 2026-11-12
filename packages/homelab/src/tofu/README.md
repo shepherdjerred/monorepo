@@ -530,6 +530,13 @@ Edit it there, run `bun run --cwd packages/homelab-cdktn synth`, and commit the
 regenerated `tailscale/main.tf.json`. OpenTofu's `jsonencode` writes object keys
 sorted, so key order in the object does not change the applied policy.
 
+`tagOwners` is not written there. It has one entry per tag in
+[`platform-model.json`](../platform-model.json) (`tailnet.tags`), owned by what
+carries the tag: the operator alone for the default proxy tags, the operator
+and admins for a tag an `ingress` or `loadBalancer` tailnet service declares,
+and admins for every other. To add a tag, declare it in the model; a rule that
+names an undeclared tag fails synthesis.
+
 Delivery uses the existing Kubernetes operator's Ingress proxy with
 `tailscale.com/tags: tag:delivery`. The tag owners include `tag:k8s-operator`
 so the existing operator can register that proxy. Tailnet access remains

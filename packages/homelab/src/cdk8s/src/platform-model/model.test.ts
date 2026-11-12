@@ -13,6 +13,7 @@ import {
   publicHostnames,
   staticSite,
   tailnetService,
+  tailnetTagOwners,
   scopedCredentials,
   seaweedfsTailnetS3Endpoint,
   tunnelCnameTarget,
@@ -69,6 +70,19 @@ describe("platform model", () => {
       buckets.filter((bucket) => bucket === "better-skill-capped"),
     ).toHaveLength(1);
     expect(buckets).toEqual(buckets.toSorted());
+  });
+
+  test("a tag is owned by what carries it", () => {
+    const owners = tailnetTagOwners({ admins: "admins", operator: "operator" });
+    expect(Object.keys(owners).toSorted()).toEqual(
+      platformModel.tailnet.tags.toSorted(),
+    );
+    // The operator's default proxy tag, an ingress's own tag, a tsnet
+    // workload's tag, and a tag no service carries.
+    expect(owners["tag:k8s"]).toEqual(["operator"]);
+    expect(owners["tag:delivery"]).toEqual(["admins", "operator"]);
+    expect(owners["tag:k8s-operator"]).toEqual(["admins"]);
+    expect(owners["tag:server"]).toEqual(["admins"]);
   });
 
   test("scoped credentials include the desired-state workloads", () => {

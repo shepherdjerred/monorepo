@@ -92,11 +92,11 @@ declare throws at synthesis. See
 
 On the OpenTofu side, the `cloudflare` stack renders its tunnel CNAMEs and
 static-asset cache rules from the model
-([`platform.ts`](../homelab-cdktn/src/stacks/cloudflare/platform.ts)), and the
+([`platform.ts`](../homelab-cdktn/src/stacks/cloudflare/platform.ts)), the
 `seaweedfs` stack its static-site and consumer buckets and their expiring
-prefixes (`declaredBuckets`, `immutablePrefixesByBucket`). A stack also
-declares what the model does not, and the stacks that write 1Password items
-do not read it.
+prefixes (`declaredBuckets`, `immutablePrefixesByBucket`), and the `tailscale`
+stack the policy's tag owners (`tailnetTagOwners`). A stack also declares what
+the model does not, and the stacks that write 1Password items do not read it.
 [`src/cdk8s/src/platform-model`](src/cdk8s/src/platform-model) therefore holds
 every definition against both renderings: it reads the synthesized manifests
 and the OpenTofu stacks, and fails on a fact that is declared but not rendered,

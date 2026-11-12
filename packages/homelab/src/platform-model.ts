@@ -15,8 +15,8 @@
  * an id the model does not declare throws at synthesis. The `cloudflare`
  * stack renders its tunnel CNAMEs and static-asset cache rules from the same
  * accessors (`packages/homelab-cdktn/src/stacks/cloudflare/platform.ts`), the
- * `seaweedfs` stack its buckets and their expiring prefixes. A stack can
- * still write a value the model
+ * `seaweedfs` stack its buckets and their expiring prefixes, and the
+ * `tailscale` stack its tag owners. A stack can still write a value the model
  * does not declare, so
  * `cdk8s/src/platform-model/rendered-on-both-sides.test.ts` holds every
  * definition against both renderings.
@@ -324,6 +324,33 @@ export function declaredBuckets(
       ...model.bucketConsumers.map((consumer) => consumer.bucket),
     ]),
   ].toSorted();
+}
+
+/**
+ * Who may assign each tag of the tailnet, by what carries it. The operator
+ * tags the proxies it creates, so it alone owns the default proxy tags and
+ * shares with `admins` every tag an `ingress` or `loadBalancer` service
+ * declares. Every other tag, a `tsnet` workload's included, is assigned by
+ * `admins` alone.
+ */
+export function tailnetTagOwners(
+  owners: { admins: string; operator: string },
+  model: PlatformModel = platformModel,
+): Record<string, string[]> {
+  const proxied = new Set(
+    model.tailnetServices
+      .filter((service) => service.exposure !== "tsnet")
+      .flatMap((service) => service.tags ?? []),
+  );
+  const ownersOf = (tag: string): string[] => {
+    if (model.tailnet.defaultProxyTags.includes(tag)) return [owners.operator];
+    return proxied.has(tag)
+      ? [owners.admins, owners.operator]
+      : [owners.admins];
+  };
+  return Object.fromEntries(
+    model.tailnet.tags.map((tag) => [tag, ownersOf(tag)]),
+  );
 }
 
 /**
