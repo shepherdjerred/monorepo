@@ -21,7 +21,7 @@ export async function resolvePrematch(
   if (riot.kind === "in-game")
     return {
       kind: "in-game",
-      game: enrichPrematch(riot.game, client?.identities ?? null),
+      game: enrichPrematch(riot.game, client?.identities ?? null, puuid),
     };
   if (client?.game != null) return { kind: "in-game", game: client.game };
   if (riot.kind === "unavailable") return riot;

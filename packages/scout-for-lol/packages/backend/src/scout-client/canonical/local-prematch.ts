@@ -251,10 +251,18 @@ export function parseLocalPrematch(
   return result.success ? result.data : null;
 }
 
-/** Only unambiguous, matching slots can unmask a privacy-scrubbed identity. */
+/**
+ * Riot's policy: products cannot identify or analyze players the game
+ * deliberately hides. A null-PUUID Spectator slot is therefore filled with an
+ * identity only when it is provably the paired observer's own account; every
+ * other hidden slot stays hidden even if the client roster names that player.
+ * Bots are not hidden players, so their display data still comes from the
+ * client. Only unambiguous, matching slots are ever joined.
+ */
 export function enrichPrematch(
   riot: RawCurrentGameInfo,
   client: PrematchIdentityEvidence | null,
+  observer: string,
 ): RawCurrentGameInfo {
   if (
     client?.platformId !== riot.platformId ||
@@ -279,18 +287,19 @@ export function enrichPrematch(
         samePrematchSlot(player, other),
       );
       const candidate = candidates[0];
-      return candidate !== undefined &&
-        candidate.puuid !== null &&
+      if (
+        candidate === undefined ||
+        candidates.length !== 1 ||
         riot.participants.filter((other) => samePrematchSlot(other, candidate))
-          .length === 1 &&
-        candidates.length === 1 &&
-        !riot.participants.some((other) => other.puuid === candidate.puuid)
-        ? {
-            ...player,
-            puuid: candidate.puuid,
-            riotId:
-              candidate.riotId.length === 0 ? player.riotId : candidate.riotId,
-          }
+          .length !== 1
+      )
+        return player;
+      const riotId =
+        candidate.riotId.length === 0 ? player.riotId : candidate.riotId;
+      if (player.bot) return { ...player, riotId };
+      return candidate.puuid === observer &&
+        !riot.participants.some((other) => other.puuid === observer)
+        ? { ...player, puuid: observer, riotId }
         : player;
     }),
   };

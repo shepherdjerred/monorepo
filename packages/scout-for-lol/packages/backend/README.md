@@ -1015,8 +1015,11 @@ unrecognised payload projects to nothing rather than failing.
 
 `evidence/prematch.ts` reads Riot Spectator and fresh accepted gameflow
 evidence independently. Riot owns its reported game facts. A unique matching
-team/champion/spell slot can gain a hidden identity from the client, and a
-complete started client roster can supply a game Spectator did not return.
+team/champion/spell slot of a bot can gain its display data from the client.
+A null-PUUID slot is never unmasked, except the paired observer's own account:
+Riot forbids identifying players the game deliberately hides, so every other
+hidden slot stays anonymous even when the client roster names it. A complete
+started client roster can still supply a game Spectator did not return.
 The adapter joins separate champion selections to roster players only by a
 unique internal name and matching champion; stated roster fields take precedence.
 Missing required display fields, stale observations, terminal sessions and
