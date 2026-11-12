@@ -25,6 +25,7 @@ export const QueueTypeSchema = z.enum([
   "hard doom bots",
   "custom",
   "tournament",
+  "co-op vs ai",
 ]);
 
 const ARENA_QUEUE_ID = 1700;
@@ -67,8 +68,10 @@ export function parseQueueType(input: number): QueueType | undefined {
       .with(1740, () => "arena")
       .with(1750, () => "arena")
       .with(2300, () => "brawl")
-      .with(3260, () => "classic")
-      .with(3262, () => "classic")
+      // Queues 3260/3262 report `gameMode: "CLASSIC"`: ordinary Summoner's
+      // Rift, not League Classic. The real Classic is 4310 with mode JADE.
+      .with(3260, () => "normal")
+      .with(3262, () => "normal")
       .with(4310, () => "classic")
       .with(2400, () => "aram mayhem")
       .with(2450, () => "classic aram mayhem")
@@ -81,6 +84,11 @@ export function parseQueueType(input: number): QueueType | undefined {
       // themselves; `classifyGame` requires the custom game type.
       .with(0, 3100, 3130, (): QueueType | undefined => undefined)
       .with(1900, () => "urf")
+      // Co-op vs. AI on Summoner's Rift (Intro / Beginner / Intermediate), per
+      // Riot's queues.json. 800-850 are deprecated (Twisted Treeline, removed
+      // in patch 9.23, and the pre-March-2024 Summoner's Rift ids) and stay
+      // unmapped.
+      .with(870, 880, 890, () => "co-op vs ai")
       // Doom Bots ids per the game-client queue catalog (CommunityDragon):
       // 4250/4251/4252 = "Veigar's Evil!" (Trial 1, the introductory tier),
       // 4240/4241/4242 = "Veigar's Curse!" (Trial 2), 4220 = "Doom Bots -
@@ -174,11 +182,7 @@ function classifyQueue(game: GameClassificationInput): QueueType | undefined {
     return "tournament";
   }
   const mapped = parseQueueType(queueId);
-  if (mapped !== undefined) {
-    return mapped === "classic" && !isClassicAssetMode(queueId, gameMode)
-      ? "normal"
-      : mapped;
-  }
+  if (mapped !== undefined) return mapped;
   return isRiotCustomGameType(gameType) ? "custom" : undefined;
 }
 
@@ -247,6 +251,7 @@ export function queueTypeToDisplayString(queueType: QueueType): string {
     .with("hard doom bots", () => "Hard Doom Bots")
     .with("custom", () => "custom")
     .with("tournament", () => "tournament")
+    .with("co-op vs ai", () => "Co-op vs AI")
     .with("draft pick", () => "draft pick")
     .with("quickplay", () => "quickplay")
     .with("swiftplay", () => "swiftplay")

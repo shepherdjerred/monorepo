@@ -66,6 +66,7 @@ export function loadingScreenLayoutForQueueType(
       "easy doom bots",
       "normal doom bots",
       "hard doom bots",
+      "co-op vs ai",
       () => "standard",
     )
     .exhaustive();

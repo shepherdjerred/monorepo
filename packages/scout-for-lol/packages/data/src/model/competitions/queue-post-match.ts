@@ -113,6 +113,13 @@ export const QUEUE_POST_MATCH_DATA: Record<QueueType, QueuePostMatchData> = {
   custom: "available",
   /** Tournament-code games are Riot-hosted; Match-V5 publishes some of them. */
   tournament: "available",
+  /**
+   * Co-op vs AI (870/880/890). Riot's Match-V5 is expected to publish these,
+   * but this is not measured: the beta lake holds 0 finished matches and 0
+   * pre-match observations for any 800-890 id. Re-measure once one is played;
+   * the client's copy is used regardless of this entry.
+   */
+  "co-op vs ai": "available",
 };
 
 export function queueHasPostMatchData(queue: QueueType): boolean {

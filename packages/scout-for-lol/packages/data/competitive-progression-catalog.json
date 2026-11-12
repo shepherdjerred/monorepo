@@ -85,6 +85,12 @@
         "label": "Doom Bots — Hard",
         "defaultEnabled": false,
         "queues": ["hard doom bots"]
+      },
+      {
+        "id": "co_op_vs_ai",
+        "label": "Co-op vs AI",
+        "defaultEnabled": false,
+        "queues": ["co-op vs ai"]
       }
     ],
     "records": [

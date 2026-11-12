@@ -61,7 +61,12 @@ export const PLAYER_PROFILE_QUEUE_GROUPS = [
   },
   {
     label: "PvE",
-    queues: ["easy doom bots", "normal doom bots", "hard doom bots"],
+    queues: [
+      "easy doom bots",
+      "normal doom bots",
+      "hard doom bots",
+      "co-op vs ai",
+    ],
   },
 ] satisfies readonly { label: string; queues: readonly QueueType[] }[];
 

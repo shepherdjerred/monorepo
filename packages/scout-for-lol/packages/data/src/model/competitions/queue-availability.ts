@@ -81,6 +81,8 @@ export const QUEUE_AVAILABILITY: Record<QueueType, QueueAvailability> = {
   "hard doom bots": limitedFromJson("hard doom bots"),
   custom: PERMANENT,
   tournament: PERMANENT,
+  // Co-op vs AI (870/880/890) is a standing queue, not a limited-time mode.
+  "co-op vs ai": PERMANENT,
 };
 
 // Fail fast if the JSON carries a key that is not a known QueueType, or window

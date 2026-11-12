@@ -17,6 +17,7 @@ export const HallQueueFamilyIdSchema = z.enum([
   "doom_bots_easy",
   "doom_bots_normal",
   "doom_bots_hard",
+  "co_op_vs_ai",
 ]);
 export type HallQueueFamilyId = z.infer<typeof HallQueueFamilyIdSchema>;
 
