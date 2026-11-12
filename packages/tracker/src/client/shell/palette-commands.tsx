@@ -2,16 +2,19 @@ import type { ReactNode } from "react";
 import {
   Activity,
   Archive,
+  CalendarClock,
   CircleDashed,
   Copy,
   Folder,
   FolderInput,
   GitBranch,
+  GitFork,
   Keyboard,
   LayoutGrid,
   Link2,
   List,
   ListFilter,
+  ListPlus,
   Monitor,
   Moon,
   Palette as PaletteIcon,
@@ -23,6 +26,7 @@ import {
   Sun,
   Tag,
   ThumbsUp,
+  Unlink,
   UserRound,
   UserRoundCheck,
   Users,
@@ -41,6 +45,16 @@ import type { Targets } from "./shell-actions.ts";
 import { shortcutKeys } from "./shortcuts.ts";
 import { rememberTeam } from "./team.ts";
 import type { PaletteEntry } from "./palette-steps.tsx";
+import { dueStep } from "#client/due/due-step.tsx";
+import { parentStep } from "#client/hierarchy/parent-step.tsx";
+import { currentActor } from "#client/data/identity.ts";
+import { loadedIssue } from "#client/data/mutations.ts";
+import {
+  removeParent,
+  requestSubIssue,
+} from "#client/hierarchy/hierarchy-actions.ts";
+import { ViewIcon } from "#client/saved-views/view-icons.tsx";
+import { viewUrl, type SavedView } from "#client/saved-views/view-params.ts";
 import {
   assigneeStep,
   labelStep,
@@ -56,7 +70,78 @@ export type PaletteContext = {
   navigate: (to: string) => void;
   create: (prefill?: IssuePrefill) => void;
   prefill: IssuePrefill;
+  views: readonly SavedView[];
+  teamKey: string;
 };
+
+/** Due date and hierarchy commands for the issues an action applies to. */
+function planningEntries(
+  identifiers: string[],
+  section: string,
+): PaletteEntry[] {
+  const [only] = identifiers;
+  return [
+    {
+      id: "due",
+      label: "Set due date…",
+      icon: <CalendarClock size={15} />,
+      hint: shortcutKeys("D"),
+      section,
+      step: dueStep(identifiers),
+    },
+    {
+      id: "parent",
+      label: "Set parent…",
+      icon: <GitFork size={15} />,
+      section,
+      step: parentStep(identifiers),
+    },
+    ...(only !== undefined && identifiers.length === 1
+      ? [
+          {
+            id: "sub-issue",
+            label: "Add sub-issue",
+            icon: <ListPlus size={15} />,
+            hint: shortcutKeys("O"),
+            section,
+            run: () => {
+              requestSubIssue(only);
+            },
+          },
+        ]
+      : []),
+    ...(identifiers.some(
+      (identifier) => loadedIssue(identifier).parent !== null,
+    )
+      ? [
+          {
+            id: "remove-parent",
+            label: "Remove parent",
+            icon: <Unlink size={15} />,
+            section,
+            run: () => {
+              removeParent(identifiers);
+            },
+          },
+        ]
+      : []),
+  ];
+}
+
+/** "Go to view …" for each saved view, with its G n shortcut. */
+function viewEntries(context: PaletteContext): PaletteEntry[] {
+  const me = currentActor().key;
+  return context.views.map((view, index) => ({
+    id: `view:${view.id}`,
+    label: `Go to view ${view.name}`,
+    icon: <ViewIcon name={view.icon} />,
+    hint: index < 9 ? shortcutKeys(`view${String(index + 1)}`) : undefined,
+    section: "Views",
+    run: () => {
+      context.navigate(viewUrl(view, { teamKey: context.teamKey, me }));
+    },
+  }));
+}
 
 /** Commands for the open issue, the selection or the focused row. */
 function issueEntries(context: PaletteContext): PaletteEntry[] {
@@ -121,6 +206,7 @@ function issueEntries(context: PaletteContext): PaletteEntry[] {
           section,
           step: projectStep(identifiers, bootstrap),
         },
+        ...planningEntries(identifiers, section),
         {
           id: "archive",
           label: "Archive or unarchive",
@@ -320,14 +406,9 @@ function workspaceEntries(context: PaletteContext): PaletteEntry[] {
 }
 
 export function rootEntries(context: PaletteContext): PaletteEntry[] {
-  return [...issueEntries(context), ...workspaceEntries(context)];
-}
-
-export function matchesEntry(entry: PaletteEntry, query: string) {
-  const needle = query.trim().toLowerCase();
-  return (
-    needle === "" ||
-    entry.label.toLowerCase().includes(needle) ||
-    entry.section.toLowerCase().includes(needle)
-  );
+  return [
+    ...issueEntries(context),
+    ...workspaceEntries(context),
+    ...viewEntries(context),
+  ];
 }

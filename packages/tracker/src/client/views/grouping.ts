@@ -1,6 +1,13 @@
 import type { BootstrapData, Issue } from "#client/data/api.ts";
 import { priorities } from "#client/data/issue-changes.ts";
 import type { GroupBy } from "./display-options.ts";
+import type { CalendarDay } from "#client/due/dates.ts";
+import {
+  dueBucket,
+  dueBucketLabels,
+  dueBucketOrder,
+  type DueBucket,
+} from "#client/due/due-display.ts";
 
 type State = BootstrapData["states"][number];
 
@@ -9,7 +16,8 @@ export type GroupMark =
   | { type: "state"; state: State }
   | { type: "priority"; priority: number }
   | { type: "project"; color: string | undefined }
-  | { type: "assignee"; actor: Issue["assignee"] };
+  | { type: "assignee"; actor: Issue["assignee"] }
+  | { type: "due"; bucket: DueBucket };
 
 export type GroupHeader = {
   kind: "group";
@@ -35,8 +43,25 @@ type Bucket = { key: string; label: string; mark: GroupMark; sort: string };
 // Urgent first and "No priority" last, as on a triage board.
 const priorityRank = (priority: number) => (priority === 0 ? 5 : priority);
 
-function bucketOf(issue: Issue, groupBy: Exclude<GroupBy, "none">): Bucket {
+function dueBucketOf(issue: Issue, today: CalendarDay): Bucket {
+  const bucket = dueBucket(issue.dueDate, today, issue.state.type);
+  return {
+    key: bucket,
+    label: dueBucketLabels[bucket],
+    mark: { type: "due", bucket },
+    sort: String(dueBucketOrder.indexOf(bucket)),
+  };
+}
+
+function bucketOf(
+  issue: Issue,
+  groupBy: Exclude<GroupBy, "none">,
+  today: CalendarDay,
+): Bucket {
   switch (groupBy) {
+    case "due": {
+      return dueBucketOf(issue, today);
+    }
     case "status": {
       return {
         key: issue.state.name,
@@ -109,6 +134,8 @@ export function buildRows(
     groupBy: GroupBy;
     collapsed: ReadonlySet<string>;
     states: readonly State[];
+    /** The browser's calendar day, for grouping by due date. */
+    today: CalendarDay;
   },
 ): { rows: ListRow[]; issues: Issue[] } {
   const { groupBy } = options;
@@ -130,7 +157,7 @@ export function buildRows(
     }
   }
   for (const issue of items) {
-    const bucket = bucketOf(issue, groupBy);
+    const bucket = bucketOf(issue, groupBy, options.today);
     const known = buckets.get(bucket.key) ?? { bucket, issues: [] };
     known.issues.push(issue);
     buckets.set(bucket.key, known);

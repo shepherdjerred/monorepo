@@ -1,8 +1,13 @@
 import { useRef, useState, type ReactNode } from "react";
 import { useSearchParams } from "react-router";
 import { Popover } from "@base-ui/react/popover";
+import { localToday } from "#client/due/dates.ts";
+import { duePresetNames, duePresets } from "#client/due/due-filter.ts";
+import { duePanel } from "#client/due/due-picker.tsx";
+import { notifyError } from "#client/ui/toast.tsx";
 import {
   Archive,
+  CalendarClock,
   CircleDashed,
   Folder,
   ListFilter,
@@ -39,8 +44,12 @@ const fieldIcons: Record<FilterField, ReactNode> = {
   creator: <PenLine size={15} />,
   label: <Tag size={15} />,
   project: <Folder size={15} />,
+  due: <CalendarClock size={15} />,
   archived: <Archive size={15} />,
 };
+
+/** The due filter's own row that asks for a day instead of a preset. */
+const dueBefore = "before";
 
 type Options = { value: string; label: string; icon?: ReactNode }[];
 
@@ -104,6 +113,15 @@ function fieldOptions(
           icon: <Swatch color={project.color} />,
         }));
     }
+    case "due": {
+      return [
+        ...duePresets.map((preset) => ({
+          value: preset,
+          label: duePresetNames[preset],
+        })),
+        { value: dueBefore, label: "Due before…" },
+      ];
+    }
     case "archived": {
       return [{ value: "true", label: "Include archived issues" }];
     }
@@ -128,6 +146,8 @@ export function FilterBar({
   const [params, setParams] = useSearchParams();
   const [open, setOpen] = useState(false);
   const [field, setField] = useState<FilterField>();
+  const [pickingDay, setPickingDay] = useState(false);
+  const DuePanel = duePanel.current?.DuePanel;
   const input = useRef<HTMLInputElement>(null);
   const team = bootstrap.teams.find(({ key }) => key === teamKey);
   const fields = filterFields.filter(
@@ -169,12 +189,17 @@ export function FilterBar({
           // Escape on a field's values steps back to the list of fields.
           if (field !== undefined && !next && details.reason === "escape-key") {
             details.cancel();
-            setField(undefined);
+            if (pickingDay) {
+              setPickingDay(false);
+            } else {
+              setField(undefined);
+            }
             return;
           }
           setOpen(next);
           if (!next) {
             setField(undefined);
+            setPickingDay(false);
           }
         }}
       >
@@ -200,38 +225,72 @@ export function FilterBar({
               initialFocus={input}
               aria-label="Filter issues"
             >
-              <CommandList
-                key={field ?? "fields"}
-                inputRef={input}
-                label={
-                  info === undefined ? "Filter by" : `Filter by ${info.name}`
-                }
-                placeholder={
-                  info === undefined ? "Filter by…" : `${info.name} is…`
-                }
-                items={items}
-                {...(field === undefined
-                  ? {}
-                  : {
-                      back: () => {
-                        setField(undefined);
-                      },
-                    })}
-                choose={(item) => {
-                  if (field === undefined) {
-                    setField(
-                      filterFields.find((each) => each.field === item.id)
-                        ?.field,
-                    );
-                    return;
-                  }
-                  write(toggleFilterValue(params, field, item.id));
-                  if (info?.multiple !== true) {
+              {pickingDay && DuePanel !== undefined ? (
+                <DuePanel
+                  autoFocus
+                  value={null}
+                  today={localToday()}
+                  clearable={false}
+                  label="Due on or before"
+                  inputRef={input}
+                  onPick={(day) => {
+                    if (day !== null) {
+                      write(setFilter(params, "due", [day]));
+                    }
                     setOpen(false);
                     setField(undefined);
+                    setPickingDay(false);
+                  }}
+                />
+              ) : (
+                <CommandList
+                  key={field ?? "fields"}
+                  inputRef={input}
+                  label={
+                    info === undefined ? "Filter by" : `Filter by ${info.name}`
                   }
-                }}
-              />
+                  placeholder={
+                    info === undefined ? "Filter by…" : `${info.name} is…`
+                  }
+                  items={items}
+                  {...(field === undefined
+                    ? {}
+                    : {
+                        back: () => {
+                          setField(undefined);
+                        },
+                      })}
+                  choose={(item) => {
+                    if (field === undefined) {
+                      const next = filterFields.find(
+                        (each) => each.field === item.id,
+                      )?.field;
+                      if (next === "due") {
+                        duePanel.prefetch();
+                      }
+                      setField(next);
+                      return;
+                    }
+                    if (field === "due" && item.id === dueBefore) {
+                      void (async () => {
+                        try {
+                          await duePanel.load();
+                        } catch {
+                          notifyError("The date picker could not load.");
+                          return;
+                        }
+                        setPickingDay(true);
+                      })();
+                      return;
+                    }
+                    write(toggleFilterValue(params, field, item.id));
+                    if (info?.multiple !== true) {
+                      setOpen(false);
+                      setField(undefined);
+                    }
+                  }}
+                />
+              )}
             </Popover.Popup>
           </Popover.Positioner>
         </Popover.Portal>

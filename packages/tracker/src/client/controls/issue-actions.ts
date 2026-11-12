@@ -7,6 +7,7 @@ import {
   selfAssignee,
   workspace,
 } from "#client/data/mutations.ts";
+import { openDuePicker } from "#client/due/due-picker.tsx";
 import { notify, notifyError } from "#client/ui/toast.tsx";
 import { branchName, issueUrl, joinLines } from "./copy-formats.ts";
 import { openSearchPicker } from "./search-picker.tsx";
@@ -91,6 +92,24 @@ export function pickProperty(
       } else if (value !== null) {
         applyChange(identifiers, { kind: "label", name: value, add });
       }
+    },
+  });
+}
+
+/** Open the due date picker for these issues. */
+export function pickDue(identifiers: readonly string[], anchor: HTMLElement) {
+  const dates = identifiers.map(
+    (identifier) => loadedIssue(identifier).dueDate,
+  );
+  if (dates.length === 0) {
+    return;
+  }
+  openDuePicker({
+    anchor,
+    title: `Due date of ${identifiers.length === 1 ? (identifiers[0] ?? "") : `${String(identifiers.length)} issues`}`,
+    value: shared(dates) ?? null,
+    pick: (dueDate) => {
+      applyChange(identifiers, { kind: "due", dueDate });
     },
   });
 }

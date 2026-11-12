@@ -23,6 +23,7 @@ import { useIssue } from "./issue-query.ts";
 import { RemoteEditNotice } from "#client/live/presence.tsx";
 import { isComposing } from "#client/ui/ime.ts";
 import { recentIssues } from "#client/shell/recent-issues.ts";
+import { SubIssues } from "#client/hierarchy/sub-issues.tsx";
 
 export function IssueDetail({
   identifier,
@@ -119,9 +120,29 @@ function IssueContent({
   return (
     <article className={`issue-detail ${peek ? "is-peek" : ""}`} ref={remember}>
       <header className="detail-toolbar">
-        <span>{issue.team.name}</span>
-        <span className="muted">/</span>
-        <span className="identifier">{issue.identifier}</span>
+        <nav className="detail-breadcrumb" aria-label="Breadcrumb">
+          <span>{issue.team.name}</span>
+          <span className="muted" aria-hidden="true">
+            /
+          </span>
+          {issue.parent !== null && (
+            <>
+              <Link
+                className="identifier parent-crumb"
+                to={`/issues/${issue.parent.identifier}`}
+                title={issue.parent.title}
+              >
+                {issue.parent.identifier}
+              </Link>
+              <span className="muted" aria-hidden="true">
+                /
+              </span>
+            </>
+          )}
+          <span className="identifier" aria-current="page">
+            {issue.identifier}
+          </span>
+        </nav>
         <RemoteEditNotice identifier={identifier} actors={bootstrap.actors} />
         <span className="spacer" />
         {peek && (
@@ -201,6 +222,7 @@ function IssueContent({
           </TitleHeading>
           <IssueDescription issue={issue} disabled={disabled} />
           <IssueAttachments files={issue.attachments} />
+          <SubIssues issue={issue} bootstrap={bootstrap} disabled={disabled} />
           <IssueRelations issue={issue} disabled={disabled} />
           <section>
             <div className="section-heading">

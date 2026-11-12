@@ -1,5 +1,11 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
+import {
+  createIssue,
+  removeScratchIssues,
+  scratchTag,
+  scratchTeam,
+} from "./data-helpers.ts";
 
 const surfaces: { name: string; open: (page: Page) => Promise<void> }[] = [
   {
@@ -113,6 +119,45 @@ const surfaces: { name: string; open: (page: Page) => Promise<void> }[] = [
     },
   },
   {
+    name: "an issue's sub-issues",
+    open: async (page) => {
+      const tag = scratchTag();
+      const parent = await createIssue(page.request, {
+        teamKey: scratchTeam,
+        title: `Accessible parent ${tag}`,
+      });
+      for (const title of ["Accessible child", "Another child"]) {
+        await createIssue(page.request, {
+          teamKey: scratchTeam,
+          title: `${title} ${tag}`,
+          parentIdentifier: parent,
+        });
+      }
+      await page.goto(`/issues/${parent}`);
+      await expect(
+        page.getByRole("list", { name: "Sub-issues" }).getByRole("listitem"),
+      ).toHaveCount(2);
+    },
+  },
+  {
+    name: "the due date picker and its calendar",
+    open: async (page) => {
+      await page.goto("/issues/AI-1");
+      await page.locator("#property-due").click();
+      await expect(page.getByRole("grid")).toBeVisible();
+    },
+  },
+  {
+    name: "the save view dialog",
+    open: async (page) => {
+      await page.goto("/issues?priority=1");
+      await page.locator("#save-view").click();
+      await expect(
+        page.getByRole("dialog", { name: "Save view" }),
+      ).toBeVisible();
+    },
+  },
+  {
     name: "settings",
     open: async (page) => {
       await page.goto("/settings");
@@ -122,6 +167,8 @@ const surfaces: { name: string; open: (page: Page) => Promise<void> }[] = [
     },
   },
 ];
+
+test.afterEach(({ request }) => removeScratchIssues(request));
 
 for (const colorScheme of ["light", "dark"] as const) {
   for (const surface of surfaces) {

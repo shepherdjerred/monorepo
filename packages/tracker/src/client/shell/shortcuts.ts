@@ -26,6 +26,11 @@ export type Shortcut = {
   anywhere?: boolean;
   /** Listed for reference; the dialog or editor it belongs to handles it. */
   local?: boolean;
+  /**
+   * How the help sheet lists it, when one line stands for a family of
+   * shortcuts; `false` leaves it to the line that does.
+   */
+  sheet?: false | { keys: string; description: string };
 };
 
 const key = (value: string): Binding => ({ type: "key", key: value });
@@ -173,6 +178,17 @@ export const shortcuts: readonly Shortcut[] = [
     description: "Go to my issues",
     group: "Navigation",
   },
+  ...[1, 2, 3, 4, 5, 6, 7, 8, 9].map((number): Shortcut => ({
+    action: `view${String(number)}`,
+    binding: sequence("g", String(number)),
+    keys: `G ${String(number)}`,
+    description: `Go to saved view ${String(number)}`,
+    group: "Navigation",
+    sheet:
+      number === 1
+        ? { keys: "G 1–9", description: "Go to the first nine saved views" }
+        : false,
+  })),
   {
     action: "s",
     binding: key("s"),
@@ -213,6 +229,20 @@ export const shortcuts: readonly Shortcut[] = [
     binding: key("P"),
     keys: "⇧ P",
     description: "Set project",
+    group: "Issue",
+  },
+  {
+    action: "D",
+    binding: key("D"),
+    keys: "⇧ D",
+    description: "Set due date",
+    group: "Issue",
+  },
+  {
+    action: "O",
+    binding: key("O"),
+    keys: "⇧ O",
+    description: "Add sub-issue",
     group: "Issue",
   },
   {

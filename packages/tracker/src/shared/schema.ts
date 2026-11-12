@@ -116,6 +116,8 @@ const issueListShape = {
   /** Inclusive bounds; issues without a due date never match. */
   dueBefore: DueDateSchema.optional(),
   dueAfter: DueDateSchema.optional(),
+  /** Whether the issue has a due date at all. */
+  hasDueDate: z.boolean().optional(),
   /** Due strictly before `today`, which the caller supplies. */
   overdue: z.boolean().optional(),
   today: DueDateSchema.optional(),

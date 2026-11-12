@@ -35,6 +35,10 @@ import { Toaster } from "#client/ui/toast.tsx";
 import { useLiveUpdates } from "#client/live/connection.ts";
 import { LiveAnnouncer, LiveIndicator } from "#client/live/presence.tsx";
 import type { ShellContext } from "./shell-context.ts";
+import { DuePickerHost } from "#client/due/due-picker.tsx";
+import { useCreateRequests } from "#client/hierarchy/hierarchy-actions.ts";
+import { ParentDialog } from "#client/hierarchy/parent-field.tsx";
+import { useVisibleViews } from "#client/saved-views/view-params.ts";
 
 const headings = {
   home: "Tracker",
@@ -99,6 +103,8 @@ export function Shell() {
     setDraft((known) => ({ id: known.id + 1, prefill: next }));
     setOverlay("create");
   };
+  useCreateRequests(create);
+  const views = useVisibleViews(data, teamKey);
   const shellState: ShellState = {
     route,
     list: issues,
@@ -110,6 +116,8 @@ export function Shell() {
     selectionScope: scope,
     create,
     prefill,
+    views,
+    teamKey,
   };
   const actions = shellActions(shellState);
   const loaded = useMemo(
@@ -225,6 +233,7 @@ export function Shell() {
               }
             }}
           />
+          <ParentDialog />
           <Modal
             title={peek.identifier ?? "Issue"}
             open={peek.identifier !== undefined}
@@ -233,6 +242,7 @@ export function Shell() {
             pickerScope="peek"
           >
             <SearchPickerHost bootstrap={context.bootstrap} scope="peek" />
+            <DuePickerHost scope="peek" />
             {peek.identifier !== undefined && (
               <IssueDetail
                 identifier={peek.identifier}
@@ -249,6 +259,8 @@ export function Shell() {
           bootstrap={context.bootstrap}
           targets={actionTargets(shellState)}
           prefill={prefill}
+          views={views}
+          teamKey={context.teamKey}
           action={(key) => actions[key]?.()}
           close={closeOverlay}
           navigate={(to) => {
@@ -265,6 +277,8 @@ export function Shell() {
         <ShortcutSheet />
       </Modal>
       <MoreSheet
+        bootstrap={data}
+        teamKey={teamKey}
         open={overlay === "more"}
         close={closeOverlay}
         help={() => {

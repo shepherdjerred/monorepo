@@ -12,6 +12,7 @@ import {
   forgetIssue,
   issueKey,
   listsKey,
+  parentsOf,
   patchDetail,
   patchIssue,
 } from "#client/data/cache.ts";
@@ -89,6 +90,7 @@ function issueRow(detail: IssueDetailData): Issue {
     votes: _votes,
     viewerVoted: _viewerVoted,
     relations: _relations,
+    children: _children,
     ...row
   } = detail;
   return row;
@@ -190,26 +192,55 @@ export function createLiveSync(deps: LiveSyncDeps) {
     });
   }
 
-  async function refreshIssue(identifier: string, change: LiveChange) {
+  /**
+   * Fetch a changed issue into every cached copy. Returns the parents it
+   * had and has, whose progress the change can have moved.
+   */
+  async function refreshIssue(
+    identifier: string,
+    change: LiveChange | undefined,
+  ): Promise<string[]> {
     const history = client.invalidateQueries({
       queryKey: eventsKey(identifier),
       refetchType: "active",
     });
+    const parents = parentsOf(client, identifier);
     try {
       const fresh = await deps.fetchIssue(identifier);
       const known = cachedIssue(client, identifier);
       // Forgotten meanwhile, or a newer copy already landed.
       if (known === undefined || known.revision > fresh.revision) {
-        return;
+        return [];
       }
       patchDetail(client, identifier, () => fresh);
       patchIssue(client, identifier, {}, issueRow(fresh));
-      deps.onRemoteIssue?.(identifier, change.actorId);
+      if (change !== undefined) {
+        deps.onRemoteIssue?.(identifier, change.actorId);
+      }
+      if (fresh.parent !== null) {
+        parents.push(fresh.parent.identifier);
+      }
     } catch {
       // The issue's own query refetches and reports what went wrong.
       await client.invalidateQueries({ queryKey: issueKey(identifier) });
     }
     await history;
+    return parents;
+  }
+
+  /** Parents the batch did not touch itself, refetched once each. */
+  async function refreshParents(
+    parents: readonly string[],
+    touched: ReadonlyMap<string, LiveChange>,
+  ) {
+    const pending = [...new Set(parents)].filter(
+      (identifier) =>
+        !touched.has(identifier) &&
+        cachedIssue(client, identifier) !== undefined,
+    );
+    await Promise.all(
+      pending.map((identifier) => refreshIssue(identifier, undefined)),
+    );
   }
 
   function unknownActor(batch: LiveChange[]) {
@@ -222,10 +253,11 @@ export function createLiveSync(deps: LiveSyncDeps) {
 
   async function showCreated(identifiers: string[]) {
     // Every loaded page of a list refetches, so lists refetch once a batch.
-    await client.invalidateQueries({
-      queryKey: listsKey,
-      refetchType: "active",
-    });
+    // An issue shown can have gained one of them as a sub-issue.
+    await Promise.all([
+      client.invalidateQueries({ queryKey: listsKey, refetchType: "active" }),
+      client.invalidateQueries({ queryKey: ["issue"], refetchType: "active" }),
+    ]);
     deps.onRemoteCreated?.(identifiers);
   }
 
@@ -244,13 +276,20 @@ export function createLiveSync(deps: LiveSyncDeps) {
       );
     }
     const appeared: string[] = [];
+    const refreshed: Promise<string[]>[] = [];
     for (const [identifier, change] of scope.touched) {
       if (cachedIssue(client, identifier) !== undefined) {
-        work.push(refreshIssue(identifier, change));
+        refreshed.push(refreshIssue(identifier, change));
       } else if (scope.created.has(identifier)) {
         appeared.push(identifier);
       }
     }
+    work.push(
+      (async () => {
+        const parents = await Promise.all(refreshed);
+        await refreshParents(parents.flat(), scope.touched);
+      })(),
+    );
     if (appeared.length > 0) {
       work.push(showCreated(appeared));
     }

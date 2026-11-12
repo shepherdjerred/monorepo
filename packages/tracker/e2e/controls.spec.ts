@@ -3,7 +3,9 @@ import { z } from "zod";
 import {
   createIssue,
   recordCalls,
+  openMenu,
   removeIssue,
+  selectRows,
   scratchTeam,
   toastSaying,
   undo,
@@ -51,29 +53,6 @@ async function scratchIssues(
     );
   }
   return { tag, identifiers };
-}
-
-/** Open the issue menu as the platform does: right click, or long press. */
-async function openMenu(page: Page, identifier: string, mobile: boolean) {
-  const link = page.locator(`a[data-issue-row="${identifier}"]`);
-  if (!mobile) {
-    await link.click({ button: "right" });
-    return;
-  }
-  const box = await link.boundingBox();
-  if (box === null) throw new Error(`${identifier} is not on screen`);
-  const point = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
-  const cdp = await page.context().newCDPSession(page);
-  await cdp.send("Input.dispatchTouchEvent", {
-    type: "touchStart",
-    touchPoints: [point],
-  });
-  await expect(page.getByRole("menu")).toBeVisible();
-  await cdp.send("Input.dispatchTouchEvent", {
-    type: "touchEnd",
-    touchPoints: [],
-  });
-  await cdp.detach();
 }
 
 test("a row's status changes in place, through the customizable select, without a peek", async ({
@@ -161,14 +140,7 @@ test("three selected issues change priority in one atomic request and one Undo r
   const mobile = info.project.name === "mobile";
   const { tag, identifiers } = await scratchIssues(page, 3);
   await page.goto(`/issues?team=${scratchTeam}&group=none&q=${tag}`);
-  for (const identifier of identifiers) {
-    await openMenu(page, identifier, mobile);
-    await page.getByRole("menuitem", { name: "Select", exact: true }).click();
-    await expect(row(page, identifier)).toHaveAttribute(
-      "data-selected",
-      "true",
-    );
-  }
+  await selectRows(page, identifiers, mobile);
   const bar = page.getByRole("region", { name: "Selected issues" });
   await expect(bar).toContainText("3 selected");
   const calls = recordCalls(page);

@@ -1,4 +1,4 @@
-import { useRef, useState, useSyncExternalStore } from "react";
+import { useRef, useState } from "react";
 import { Combobox } from "@base-ui/react/combobox";
 import { Check, Minus } from "lucide-react";
 import type { BootstrapData } from "#client/data/api.ts";
@@ -10,6 +10,7 @@ import {
   type PickerItem,
   type SearchPickerKind,
 } from "./picker-items.tsx";
+import { createPopupStore, pageScope, type PopupEntry } from "./popup-store.ts";
 
 /**
  * What a searchable picker edits. Callers bind `pick` to one issue, a
@@ -31,55 +32,20 @@ export type SearchPickerRequest = {
   pick: (value: string | null, add: boolean) => void;
 };
 
-type Open = {
-  id: number;
-  request: SearchPickerRequest;
-  open: boolean;
-  /** The host that renders it: the page, or the dialog the anchor is in. */
-  scope: string;
-};
-let current: Open | undefined;
-let nextId = 1;
-const listeners = new Set<() => void>();
-function publish(next: Open | undefined) {
-  current = next;
-  for (const listener of listeners) {
-    listener();
-  }
-}
-function subscribe(listener: () => void) {
-  listeners.add(listener);
-  return () => {
-    listeners.delete(listener);
-  };
-}
+type Open = PopupEntry<SearchPickerRequest>;
+const pickers = createPopupStore<SearchPickerRequest>();
 
-export const pageScope = "page";
-
-/**
- * Open the one searchable picker, anchored to `request.anchor`. A dialog
- * traps focus and treats anything outside it as outside, so a picker opened
- * from within one is rendered by that dialog's own host.
- */
+/** Open the one searchable picker, anchored to `request.anchor`. */
 export function openSearchPicker(request: SearchPickerRequest) {
-  const scope =
-    request.anchor.closest<HTMLElement>("[data-picker-scope]")?.dataset[
-      "pickerScope"
-    ] ?? pageScope;
-  publish({ id: nextId, request, open: true, scope });
-  nextId += 1;
+  pickers.open(request);
 }
 
 function closeSearchPicker(id: number) {
-  if (current?.id === id) {
-    publish({ ...current, open: false });
-  }
+  pickers.close(id);
 }
 
 function forgetSearchPicker(id: number) {
-  if (current?.id === id && !current.open) {
-    publish(undefined);
-  }
+  pickers.forget(id);
 }
 
 const labelColors = [
@@ -369,8 +335,8 @@ export function SearchPickerHost({
   bootstrap: BootstrapData;
   scope?: string;
 }) {
-  const entry = useSyncExternalStore(subscribe, () => current);
-  return entry?.scope === scope ? (
+  const entry = pickers.useEntry(scope);
+  return entry === undefined ? null : (
     <SearchPicker key={entry.id} entry={entry} bootstrap={bootstrap} />
-  ) : null;
+  );
 }

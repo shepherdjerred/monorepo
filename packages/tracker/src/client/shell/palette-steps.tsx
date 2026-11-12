@@ -22,6 +22,8 @@ export type PaletteEntry = {
   checked?: boolean;
   /** Run the command and keep the palette open, as a label toggle does. */
   stay?: boolean;
+  /** Shown whatever is typed: it was made from what is typed. */
+  always?: boolean;
   run?: () => void;
   step?: PaletteStep;
 };
@@ -30,7 +32,10 @@ export type PaletteStep = {
   id: string;
   title: string;
   placeholder: string;
-  entries: () => PaletteEntry[];
+  /** The step's rows; some read what is typed, as a due date does. */
+  entries: (query: string) => PaletteEntry[];
+  /** The step picks an issue from search results, as "Set parent" does. */
+  issues?: { exclude: readonly string[]; pick: (identifier: string) => void };
 };
 
 /** The nested lists the palette steps into to set one property. */

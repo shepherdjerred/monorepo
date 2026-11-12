@@ -1,12 +1,22 @@
 import type { ReactNode } from "react";
-import { Folder, Tag, Trash2, ThumbsUp, UserRoundX } from "lucide-react";
+import {
+  CalendarClock,
+  Folder,
+  Tag,
+  Trash2,
+  ThumbsUp,
+  UserRoundX,
+} from "lucide-react";
 import { ActorChip, Avatar, Swatch } from "#client/ui/ui.tsx";
 import { AbsoluteTime } from "#client/ui/time.tsx";
 import type { BootstrapData, IssueDetailData } from "#client/data/api.ts";
 import type { IssueChange } from "#client/data/issue-changes.ts";
 import { editIssue } from "#client/data/mutations.ts";
 import { EnumPicker } from "#client/controls/enum-picker.tsx";
-import { pickProperty } from "#client/controls/issue-actions.ts";
+import { pickDue, pickProperty } from "#client/controls/issue-actions.ts";
+import { DueDate } from "#client/due/due-chip.tsx";
+import { duePanel } from "#client/due/due-picker.tsx";
+import { ParentField } from "#client/hierarchy/parent-field.tsx";
 import {
   priorityOptions,
   stateOptions,
@@ -27,11 +37,14 @@ function PickerField({
   disabled,
   open,
   children,
+  prefetch,
 }: {
   id: string;
   name: string;
   disabled: boolean;
   open: (anchor: HTMLElement) => void;
+  /** Fetch what opening needs as the pointer or focus arrives. */
+  prefetch?: () => void;
   children: ReactNode;
 }) {
   return (
@@ -46,6 +59,8 @@ function PickerField({
         aria-haspopup="dialog"
         aria-labelledby={`${id}-name ${id}`}
         disabled={disabled}
+        onPointerEnter={prefetch}
+        onFocus={prefetch}
         onClick={(event) => {
           open(event.currentTarget);
         }}
@@ -136,6 +151,25 @@ export function IssueProperties({
           </>
         )}
       </PickerField>
+      <PickerField
+        id="property-due"
+        name="Due date"
+        disabled={disabled}
+        prefetch={duePanel.prefetch}
+        open={(anchor) => {
+          pickDue(targets, anchor);
+        }}
+      >
+        {issue.dueDate === null ? (
+          <>
+            <CalendarClock size={15} aria-hidden="true" />
+            <span className="muted">Set due date</span>
+          </>
+        ) : (
+          <DueDate due={issue.dueDate} state={issue.state.type} />
+        )}
+      </PickerField>
+      <ParentField issue={issue} disabled={disabled} />
       <PickerField
         id="property-labels"
         name="Labels"

@@ -183,6 +183,36 @@ describe("applying changes", () => {
     expect(invalidatedKeys()).toContain(JSON.stringify(eventsKey("AI-1")));
   });
 
+  test("a sub-issue changed elsewhere also refreshes its cached parent", async () => {
+    const client = cacheFixture();
+    // AI-2 is a sub-issue of AI-1 in the cached list; AI-1's detail is cached.
+    client.setQueryData<IssueListData>(["issues", { teamKey: "AI" }], {
+      pages: [
+        {
+          items: [
+            issueFixture(1),
+            issueFixture(2, {
+              parentId: "issue-1",
+              parent: { identifier: "AI-1", title: "Issue 1" },
+            }),
+          ],
+          nextCursor: null,
+        },
+      ],
+      pageParams: [undefined],
+    });
+    const { sync, fetched } = setup(client);
+    sync.receive(change("AI-2"));
+    await sync.flush();
+    expect(fetched).toEqual(["AI-2", "AI-1"]);
+    // The parent is fetched once even when the batch changed it too.
+    fetched.length = 0;
+    sync.receive(change("AI-2"));
+    sync.receive(change("AI-1"));
+    await sync.flush();
+    expect(fetched.toSorted()).toEqual(["AI-1", "AI-2"]);
+  });
+
   test("a fetch older than the cached copy is dropped", async () => {
     const { client, sync, remote } = setup();
     client.setQueryData(

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import {
   Archive,
+  CalendarClock,
   CircleDashed,
   Folder,
   SignalHigh,
@@ -14,10 +15,12 @@ import { deleteIssues } from "#client/data/mutations.ts";
 import { Modal } from "#client/ui/ui.tsx";
 import { EnumPicker } from "./enum-picker.tsx";
 import { SearchPickerHost } from "./search-picker.tsx";
+import { DuePickerHost, duePanel } from "#client/due/due-picker.tsx";
 import {
   applyChange,
   cancelDelete,
   confirmDelete,
+  pickDue,
   pickProperty,
   toggleArchived,
   useDeleteRequest,
@@ -40,11 +43,14 @@ function SearchButton({
   text,
   open,
   disabled,
+  prefetch,
 }: {
   id: string;
   icon: ReactNode;
   text: string;
   open: (anchor: HTMLElement) => void;
+  /** Fetch what opening needs as the pointer or focus arrives. */
+  prefetch?: () => void;
   disabled: boolean;
 }) {
   return (
@@ -54,6 +60,8 @@ function SearchButton({
       className="bulk-action"
       aria-haspopup="dialog"
       disabled={disabled}
+      onPointerEnter={prefetch}
+      onFocus={prefetch}
       onClick={(event) => {
         open(event.currentTarget);
       }}
@@ -151,6 +159,16 @@ export function BulkBar({
           pickProperty("project", identifiers, anchor);
         }}
       />
+      <SearchButton
+        id="bulk-due"
+        icon={<CalendarClock size={14} aria-hidden="true" />}
+        text="Due date"
+        disabled={disabled}
+        prefetch={duePanel.prefetch}
+        open={(anchor) => {
+          pickDue(identifiers, anchor);
+        }}
+      />
       <button
         type="button"
         className="bulk-action"
@@ -241,6 +259,7 @@ export function ControlsLayer({
   return (
     <>
       <SearchPickerHost bootstrap={bootstrap} />
+      <DuePickerHost />
       {scope !== "" && (
         <BulkBar
           bootstrap={bootstrap}

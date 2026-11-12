@@ -34,6 +34,9 @@ import {
   RowStatus,
 } from "#client/controls/row-controls.tsx";
 import { useSelection } from "#client/controls/selection.ts";
+import { pickDue } from "#client/controls/issue-actions.ts";
+import { RowDue } from "#client/due/due-chip.tsx";
+import { SubIssueBadge } from "#client/hierarchy/progress.tsx";
 import { StateIcon } from "#client/ui/icons.tsx";
 import { useShell } from "#client/shell/shell-context.ts";
 import { isPlainClick } from "#client/shell/route.ts";
@@ -125,6 +128,12 @@ function Card({ issue, options }: { issue: Issue; options: CardOptions }) {
           onFocus={focus}
         />
         <span className="identifier">{issue.identifier}</span>
+        {issue.parent !== null && (
+          <span className="row-parent" title={issue.parent.title}>
+            <span className="sr-only">sub-issue of </span>
+            {issue.parent.identifier}
+          </span>
+        )}
         <span className="spacer" />
         <button
           className="drag-handle"
@@ -172,6 +181,20 @@ function Card({ issue, options }: { issue: Issue; options: CardOptions }) {
         {!hidden.has("project") && issue.project !== null && (
           <span className="muted">{issue.project.name}</span>
         )}
+        {!hidden.has("due") && (
+          <RowDue
+            issue={issue}
+            disabled={disabled}
+            onFocus={focus}
+            open={(anchor) => {
+              pickDue([issue.identifier], anchor);
+            }}
+          />
+        )}
+        <SubIssueBadge
+          done={issue.completedChildCount}
+          total={issue.childCount}
+        />
         <span className="spacer" />
         {issue.voteCount > 0 && (
           <span className="muted">

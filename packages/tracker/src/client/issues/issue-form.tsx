@@ -1,6 +1,20 @@
 import { useState, type ReactNode } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { Folder, Tag, UserRound } from "lucide-react";
+import {
+  CalendarClock,
+  Folder,
+  GitFork,
+  Tag,
+  UserRound,
+  X,
+} from "lucide-react";
+import { localToday } from "#client/due/dates.ts";
+import { dueLabel } from "#client/due/due-display.ts";
+import {
+  DuePickerHost,
+  duePanel,
+  openDuePicker,
+} from "#client/due/due-picker.tsx";
 import type { BootstrapData } from "#client/data/api.ts";
 import { useDraft } from "#client/data/drafts.ts";
 import { createIssue } from "#client/data/mutations.ts";
@@ -26,6 +40,9 @@ export type IssuePrefill = {
   projectSlug?: string;
   labels?: readonly string[];
   assigneeKey?: string;
+  /** Create it as a sub-issue of this issue, in the same team. */
+  parentIdentifier?: string;
+  dueDate?: string;
 };
 
 type Choices = {
@@ -34,6 +51,8 @@ type Choices = {
   projectSlug: string | null;
   labels: readonly string[];
   assigneeKey: string | null;
+  parentIdentifier: string | null;
+  dueDate: string | null;
 };
 
 const startingChoices = (prefill: IssuePrefill): Choices => ({
@@ -42,6 +61,8 @@ const startingChoices = (prefill: IssuePrefill): Choices => ({
   projectSlug: prefill.projectSlug ?? null,
   labels: prefill.labels ?? [],
   assigneeKey: prefill.assigneeKey ?? null,
+  parentIdentifier: prefill.parentIdentifier ?? null,
+  dueDate: prefill.dueDate ?? null,
 });
 
 /** The values a searchable picker shows as chosen for this form. */
@@ -95,6 +116,62 @@ function PropertyButton({
       {icon}
       <span>{label}</span>
     </button>
+  );
+}
+
+/** The new issue's due date, and its parent when it is a sub-issue. */
+function PlanningChips({
+  dueDate,
+  parentIdentifier,
+  choose,
+}: {
+  dueDate: string | null;
+  parentIdentifier: string | null;
+  choose: (change: Partial<Choices>) => void;
+}) {
+  return (
+    <>
+      <button
+        type="button"
+        className="property-chip"
+        aria-haspopup="dialog"
+        onPointerEnter={duePanel.prefetch}
+        onFocus={duePanel.prefetch}
+        onClick={(event) => {
+          openDuePicker({
+            anchor: event.currentTarget,
+            title: "Due date of the new issue",
+            value: dueDate,
+            pick: (day) => {
+              choose({ dueDate: day });
+            },
+          });
+        }}
+      >
+        <CalendarClock size={14} aria-hidden="true" />
+        <span>
+          {dueDate === null
+            ? "Due date"
+            : `Due ${dueLabel(dueDate, localToday())}`}
+        </span>
+      </button>
+      {parentIdentifier !== null && (
+        <span className="property-chip parent-chip">
+          <GitFork size={14} aria-hidden="true" />
+          <span>Sub-issue of {parentIdentifier}</span>
+          <button
+            type="button"
+            className="icon-button"
+            aria-label={`Do not make it a sub-issue of ${parentIdentifier}`}
+            onClick={() => {
+              choose({ parentIdentifier: null });
+            }}
+          >
+            <X size={12} />
+          </button>
+        </span>
+      )}
+    </>
   );
 }
 
@@ -153,6 +230,10 @@ export function NewIssue({
             : { assigneeKey: choices.assigneeKey }),
           labels: [...choices.labels],
           attachmentIds: description.attachments,
+          ...(choices.parentIdentifier === null
+            ? {}
+            : { parentIdentifier: choices.parentIdentifier }),
+          ...(choices.dueDate === null ? {} : { dueDate: choices.dueDate }),
         },
         view
           ? undefined
@@ -193,6 +274,7 @@ export function NewIssue({
       pickerScope="new-issue"
     >
       <SearchPickerHost bootstrap={bootstrap} scope="new-issue" />
+      <DuePickerHost scope="new-issue" />
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -220,7 +302,12 @@ export function NewIssue({
               }))}
               onChange={(value) => {
                 setTeam(value);
-                choose({ labels: [], stateName: undefined });
+                // A parent belongs to its own team.
+                choose({
+                  labels: [],
+                  stateName: undefined,
+                  parentIdentifier: null,
+                });
               }}
             />
           </label>
@@ -291,6 +378,11 @@ export function NewIssue({
             }
             icon={<Tag size={14} aria-hidden="true" />}
             open={pick}
+          />
+          <PlanningChips
+            dueDate={choices.dueDate}
+            parentIdentifier={choices.parentIdentifier}
+            choose={choose}
           />
         </div>
         {create.error !== null && <ErrorNotice error={create.error} />}

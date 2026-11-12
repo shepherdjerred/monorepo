@@ -7,6 +7,7 @@ import {
   assignToMe,
   copyIds,
   copyLinks,
+  pickDue,
   pickProperty,
 } from "#client/controls/issue-actions.ts";
 import {
@@ -18,6 +19,9 @@ import {
   toggleSelected,
 } from "#client/controls/selection.ts";
 import { focusIssueRow, visibleOrder } from "./list-navigation.ts";
+import { currentActor } from "#client/data/identity.ts";
+import { requestSubIssue } from "#client/hierarchy/hierarchy-actions.ts";
+import { viewUrl, type SavedView } from "#client/saved-views/view-params.ts";
 import { hasAppHistory, type RouteInfo } from "./route.ts";
 
 export type Overlay = "create" | "palette" | "help" | "more";
@@ -38,9 +42,13 @@ export type Shell = {
   create: (prefill?: IssuePrefill) => void;
   /** What a new issue created from this view starts with. */
   prefill: IssuePrefill;
+  /** The saved views the sidebar lists, in order, and the team in view. */
+  views: readonly SavedView[];
+  teamKey: string | undefined;
 };
 
-type Property = "state" | "priority" | "assignee" | "labels" | "project";
+type Property =
+  "state" | "priority" | "assignee" | "labels" | "project" | "due";
 
 /** What issue actions apply to, and where their controls are on screen. */
 export type Targets = {
@@ -141,8 +149,50 @@ function openProperty(name: Property, shell: Shell) {
   if (anchor === null || name === "state" || name === "priority") {
     return false;
   }
-  pickProperty(name, targets.identifiers, anchor);
+  if (name === "due") {
+    pickDue(targets.identifiers, anchor);
+  } else {
+    pickProperty(name, targets.identifiers, anchor);
+  }
   return true;
+}
+
+/**
+ * On an open issue, go to its "Add sub-issue" field; elsewhere open New
+ * issue as a sub-issue of the one the action applies to.
+ */
+function addSubIssue(shell: Shell) {
+  const targets = actionTargets(shell);
+  const [only, ...rest] = targets?.identifiers ?? [];
+  if (targets === undefined || only === undefined || rest.length > 0) {
+    return false;
+  }
+  const field = document.querySelector<HTMLInputElement>("#add-sub-issue");
+  if (field !== null && targets.where === "issue") {
+    field.focus({ preventScroll: true });
+    field.scrollIntoView({ block: "center" });
+    return true;
+  }
+  requestSubIssue(only);
+  return true;
+}
+
+/** G 1–9: the nth saved view the sidebar lists. */
+function viewActions(shell: Shell) {
+  const { teamKey } = shell;
+  return Object.fromEntries(
+    [1, 2, 3, 4, 5, 6, 7, 8, 9].map((number) => [
+      `view${String(number)}`,
+      () => {
+        const view = shell.views[number - 1];
+        if (teamKey === undefined || view === undefined) {
+          return false;
+        }
+        void shell.navigate(viewUrl(view, { teamKey, me: currentActor().key }));
+        return true;
+      },
+    ]),
+  );
 }
 
 function selectionActions(shell: Shell) {
@@ -312,6 +362,9 @@ export function shellActions(shell: Shell): Record<string, () => boolean> {
     P: property("project"),
     a: property("assignee"),
     l: property("labels"),
+    D: property("due"),
+    O: () => addSubIssue(shell),
+    ...viewActions(shell),
     i: onTargets(assignToMe),
     copyId: onTargets(copyIds),
     copyLink: onTargets(copyLinks),

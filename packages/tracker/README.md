@@ -99,6 +99,41 @@ declared once in `src/client/shell/shortcuts.ts`, which both the key handler
 and the help sheet read; only the chords listed there are taken from the
 browser.
 
+Sub-issues, due dates and saved views add to the same address and keys:
+
+- `subissues=hide` lists only top-level issues; the browser sends
+  `hasParent: false`, so paging stays the server's. Rows and cards show a
+  sub-issue badge (`2/5`) and the parent's identifier.
+- `due` filters by due date: `overdue` (open work only, unless a status filter
+  is set), `today`, `week` (today through Sunday), `none`, or a day
+  `YYYY-MM-DD` meaning due on or before it. The browser sends its own local
+  `today`; `hide=due` hides the chip, `sort=due` orders soonest first and
+  `group=due` groups loaded rows into Overdue, Today, This week, Later and No
+  due date (finished work dated before today goes under Earlier).
+- Due dates are calendar days computed in the browser's time zone without
+  passing through timestamps. The picker reads words (`tomorrow`, `fri`,
+  `next week`, `jan 15`, `+3d`, `in 2 weeks`, `2026-12-01`), offers the
+  usual choices and a month grid (arrow keys, Page Up/Down, Home/End). A
+  bulk due date or parent is one `issues.bulkUpdate`.
+- `saved=<view id>` marks a list opened from a saved view. A view stores
+  only `issues.list` names plus `group` and `view`: `state` becomes
+  `states`, My issues becomes the viewer's `assigneeKey`, `subissues=hide`
+  becomes `hasParent: "false"`, and `due` becomes `overdue: "true"`,
+  `hasDueDate: "false"`, a `dueBefore` day, or the words `today`/`week` in
+  `dueBefore` (with `dueAfter: "today"`) that the browser resolves when it
+  opens the view. Collapsed groups and hidden properties are not stored.
+- Shortcuts: `⇧ O` adds a sub-issue (on an open issue it focuses the inline
+  field; Enter adds and stays, `⌘ Enter` adds and opens), `⇧ D` sets the
+  due date, `G 1`–`G 9` open the sidebar's saved views, and `⌥ ↑`/`⌥ ↓` on a
+  view move it. Set parent, Remove parent and Add sub-issue are also in the
+  palette and the issue menu.
+- In the palette, a command whose label the query starts, or one of whose
+  words it starts, is listed before issue results, so a command's name and
+  Enter run it; other matches follow the issues.
+- The due date panel, its month grid and parser, and the save-view dialog
+  are separate chunks, fetched when their control is hovered or focused and
+  awaited before they open, so the first load does not carry them.
+
 ## Contract and invariants
 
 Consumers import `@shepherdjerred/tracker/contract`: the `AppRouter` type and
@@ -167,7 +202,8 @@ lists.
 
 `dueDate` is a calendar day, `YYYY-MM-DD`, stored as a PostgreSQL `date` with no
 time or time zone; impossible dates are rejected. `dueBefore` and `dueAfter`
-are inclusive and never match an issue without a due date. `overdue` means
+are inclusive and never match an issue without a due date; `hasDueDate`
+selects issues with or without one. `overdue` means
 strictly before `today`, a day the caller must supply because the server does
 not guess anyone's time zone; it ignores issue state, so combine it with
 `states` to leave out finished work. `sort: "due"` lists the soonest first and

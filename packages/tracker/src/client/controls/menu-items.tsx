@@ -1,6 +1,9 @@
 import { createContext, use, type ReactNode } from "react";
 import { ContextMenu } from "@base-ui/react/context-menu";
 import {
+  CalendarClock,
+  CalendarDays,
+  CalendarX2,
   Check,
   ChevronRight,
   CircleDashed,
@@ -16,7 +19,14 @@ import { currentActor } from "#client/data/identity.ts";
 import { ariaShortcut, shortcutKeys } from "#client/shell/shortcuts.ts";
 import { Avatar, Swatch } from "#client/ui/ui.tsx";
 import { groupActors } from "./actor-order.ts";
-import { applyChange, assignToMe, pickProperty } from "./issue-actions.ts";
+import {
+  applyChange,
+  assignToMe,
+  pickDue,
+  pickProperty,
+} from "./issue-actions.ts";
+import { localToday, quickChoices } from "#client/due/dates.ts";
+import { dueLabel } from "#client/due/due-display.ts";
 import {
   priorityOptions,
   stateOptions,
@@ -123,6 +133,8 @@ export function PropertyMenus({
   const priority = shared(issues.map((issue) => issue.priority));
   const assignee = shared(issues.map((issue) => issue.assignee?.key ?? ""));
   const project = shared(issues.map((issue) => issue.project?.slug ?? ""));
+  const due = shared(issues.map((issue) => issue.dueDate)) ?? null;
+  const today = localToday();
   const me = currentActor().key;
   const released = use(ReleaseContext);
   const people = groupActors(
@@ -237,6 +249,42 @@ export function PropertyMenus({
               </ContextMenu.CheckboxItemIndicator>
             </ContextMenu.CheckboxItem>
           ))}
+      </Submenu>
+      <Submenu icon={<CalendarClock size={15} />} label="Due date">
+        {quickChoices(today).map((choice) => (
+          <Item
+            key={choice.id}
+            icon={<CalendarClock size={15} />}
+            label={`${choice.label} · ${dueLabel(choice.day, today)}`}
+            checked={due === choice.day}
+            onClick={() => {
+              applyChange(identifiers, { kind: "due", dueDate: choice.day });
+            }}
+          />
+        ))}
+        <ContextMenu.Separator className="menu-separator" />
+        <Item
+          icon={<CalendarDays size={15} />}
+          label="Pick a date…"
+          shortcut="D"
+          onClick={() => {
+            const target = anchor();
+            if (target !== null) {
+              requestAnimationFrame(() => {
+                pickDue(identifiers, target);
+              });
+            }
+          }}
+        />
+        {due !== null && (
+          <Item
+            icon={<CalendarX2 size={15} />}
+            label="Clear due date"
+            onClick={() => {
+              applyChange(identifiers, { kind: "due", dueDate: null });
+            }}
+          />
+        )}
       </Submenu>
       <Submenu icon={<Folder size={15} />} label="Project">
         <Item

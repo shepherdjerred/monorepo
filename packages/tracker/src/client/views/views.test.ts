@@ -36,6 +36,7 @@ describe("grouping", () => {
       groupBy: "status",
       collapsed: new Set(),
       states: [done, started, todo],
+      today: "2026-11-11",
     });
     expect(rows.map((row) => describeRow(row))).toEqual([
       "# Todo 2",
@@ -60,6 +61,7 @@ describe("grouping", () => {
       groupBy: "priority",
       collapsed: new Set(["2"]),
       states: workspaceFixture.states,
+      today: "2026-11-11",
     });
     expect(rows.map((row) => describeRow(row))).toEqual([
       "# Urgent 1",
@@ -76,6 +78,7 @@ describe("grouping", () => {
       groupBy: "project",
       collapsed: new Set(),
       states: workspaceFixture.states,
+      today: "2026-11-11",
     });
     expect(
       rows
@@ -86,6 +89,7 @@ describe("grouping", () => {
       groupBy: "none",
       collapsed: new Set(),
       states: workspaceFixture.states,
+      today: "2026-11-11",
     });
     expect(ungrouped.rows.map((row) => describeRow(row))).toEqual([
       "1 AI-1",

@@ -5,6 +5,7 @@ import {
   useWindowVirtualizer,
 } from "@tanstack/react-virtual";
 import { listRestore } from "#client/data/list-restore.ts";
+import { localToday } from "#client/due/dates.ts";
 import {
   priorityOptions,
   stateOptions,
@@ -133,14 +134,16 @@ export function IssueList() {
       ? allStates
       : allStates.filter(({ name }) => kept.includes(name));
   }, [allStates, stateFilter]);
+  const today = localToday();
   const { rows, issues } = useMemo(
     () =>
       buildRows(list.items, {
         groupBy: display.groupBy,
         collapsed: display.collapsed,
         states,
+        today,
       }),
-    [list.items, display.groupBy, display.collapsed, states],
+    [list.items, display.groupBy, display.collapsed, states, today],
   );
   const order = useMemo(
     () => issues.map(({ identifier }) => identifier),

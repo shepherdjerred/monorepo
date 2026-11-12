@@ -9,15 +9,24 @@ export function ShortcutSheet() {
           <h3>{group}</h3>
           <dl className="shortcut-list">
             {shortcuts
-              .filter((shortcut) => shortcut.group === group)
-              .map((shortcut) => (
-                <div key={shortcut.action}>
-                  <dt>{shortcut.description}</dt>
-                  <dd>
-                    <kbd>{shortcut.keys}</kbd>
-                  </dd>
-                </div>
-              ))}
+              .filter(
+                (shortcut) =>
+                  shortcut.group === group && shortcut.sheet !== false,
+              )
+              .map((shortcut) => {
+                const listed =
+                  shortcut.sheet === undefined || shortcut.sheet === false
+                    ? shortcut
+                    : shortcut.sheet;
+                return (
+                  <div key={shortcut.action}>
+                    <dt>{listed.description}</dt>
+                    <dd>
+                      <kbd>{listed.keys}</kbd>
+                    </dd>
+                  </div>
+                );
+              })}
           </dl>
         </section>
       ))}

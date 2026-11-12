@@ -12,6 +12,8 @@ import { hiddenIssues } from "#client/data/mutations.ts";
 import { IssueListSchema, type IssueListInput } from "#shared/schema.ts";
 import { currentActor } from "#client/data/identity.ts";
 import type { RouteInfo } from "#client/shell/route.ts";
+import { localToday } from "#client/due/dates.ts";
+import { dueFilterInput, isDueFilter } from "#client/due/due-filter.ts";
 
 export const listPageSize = 100;
 const boardPageSize = 250;
@@ -103,6 +105,17 @@ export function useIssuePages(input: IssueListInput | undefined) {
 }
 export type IssuePages = ReturnType<typeof useIssuePages>;
 
+/** The due date and sub-issue filters of a list address. */
+function planningFilters(params: URLSearchParams) {
+  const due = params.get("due");
+  return {
+    ...(due !== null && isDueFilter(due)
+      ? dueFilterInput(due, localToday(), params.has("state"))
+      : {}),
+    ...(params.get("subissues") === "hide" ? { hasParent: false } : {}),
+  };
+}
+
 /**
  * The issues behind the list, board and project views. An issue page keeps
  * the list it was reached from, so previous/next follow that list.
@@ -117,6 +130,7 @@ export function useIssueList(route: RouteInfo, teamKey: string | undefined) {
           projectSlug: route.projectSlug ?? params.get("project") ?? undefined,
           search: params.get("q") ?? undefined,
           states: params.getAll("state"),
+          ...planningFilters(params),
           labels: params.getAll("label"),
           assigneeKey:
             params.get("mine") === "true"

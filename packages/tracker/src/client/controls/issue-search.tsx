@@ -23,6 +23,8 @@ export function IssueSearchCombobox({
   placeholder = "Search or type an identifier…",
   exclude = [],
   id,
+  onPick,
+  autoFocus = false,
 }: {
   value: string;
   onValueChange: (value: string) => void;
@@ -31,6 +33,9 @@ export function IssueSearchCombobox({
   /** Issues that cannot be chosen, such as the issue itself. */
   exclude?: readonly string[];
   id?: string;
+  /** A result was chosen, as opposed to text typed. */
+  onPick?: (identifier: string) => void;
+  autoFocus?: boolean;
 }) {
   const query = value.trim();
   const results = useQuery({
@@ -66,6 +71,7 @@ export function IssueSearchCombobox({
         if (item !== null) {
           setChosen(item);
           onValueChange(item.identifier);
+          onPick?.(item.identifier);
         }
       }}
     >
@@ -75,6 +81,8 @@ export function IssueSearchCombobox({
         aria-label={label}
         placeholder={placeholder}
         autoComplete="off"
+        // Opened on request, as "Add existing…" or "Set parent…" are.
+        autoFocus={autoFocus}
       />
       <Combobox.Portal>
         <Combobox.Positioner
