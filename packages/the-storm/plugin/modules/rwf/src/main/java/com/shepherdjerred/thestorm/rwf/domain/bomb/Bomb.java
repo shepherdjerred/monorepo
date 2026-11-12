@@ -71,28 +71,38 @@ public record Bomb(BombSite site, BombState state) {
     };
   }
 
-  /** A living combatant right-clicks the bomb with a fuse. */
+  /** A living combatant taps the bomb with a fuse. A tap earns a slice of the clock. */
   public Result<Step, BombError> click(BombClick click) {
+    return work(click, false);
+  }
+
+  /** A living combatant is holding right-click on the bomb. Holding earns the clock in full. */
+  public Result<Step, BombError> hold(BombClick click) {
+    return work(click, true);
+  }
+
+  private Result<Step, BombError> work(BombClick click, boolean holding) {
     return switch (state) {
       case Destroyed _ -> Result.err(BombError.DESTROYED);
       case Idle idle ->
           team().filter(owner -> owner == click.team()).isPresent()
               ? Result.err(BombError.CANNOT_ARM_OWN_BOMB)
-              : Result.ok(attempt(BombAction.ARM, idle.attempts(), click));
+              : Result.ok(attempt(BombAction.ARM, idle.attempts(), click, holding));
       case Armed armed -> {
         if (armed.team() != click.team()) {
           yield isNuke()
-              ? Result.ok(attempt(BombAction.DEFUSE, armed.attempts(), click))
+              ? Result.ok(attempt(BombAction.DEFUSE, armed.attempts(), click, holding))
               : Result.err(BombError.CANNOT_DEFUSE_ENEMY_BOMB);
         }
         yield isNuke()
             ? Result.err(BombError.CANNOT_DEFUSE_OWN_NUKE)
-            : Result.ok(attempt(BombAction.DEFUSE, armed.attempts(), click));
+            : Result.ok(attempt(BombAction.DEFUSE, armed.attempts(), click, holding));
       }
     };
   }
 
-  private Step attempt(BombAction action, List<ArmAttempt> attempts, BombClick click) {
+  private Step attempt(
+      BombAction action, List<ArmAttempt> attempts, BombClick click, boolean holding) {
     var live = new ArrayList<ArmAttempt>();
     var found = false;
     for (var attempt : attempts) {
@@ -101,17 +111,21 @@ public record Bomb(BombSite site, BombState state) {
       }
       if (attempt.team() == click.team()) {
         found = true;
-        live.add(attempt.click(click.clicker(), click.fuse(), click.now()));
+        live.add(apply(attempt, click, holding));
       } else {
         live.add(attempt);
       }
     }
     if (!found) {
-      live.add(
-          ArmAttempt.begin(click.team(), action, click.now())
-              .click(click.clicker(), click.fuse(), click.now()));
+      live.add(apply(ArmAttempt.begin(click.team(), action, click.now()), click, holding));
     }
     return withAttempts(live).settle(click.now());
+  }
+
+  private static ArmAttempt apply(ArmAttempt attempt, BombClick click, boolean holding) {
+    return holding
+        ? attempt.hold(click.clicker(), click.fuse(), click.now())
+        : attempt.tap(click.clicker(), click.fuse(), click.now());
   }
 
   /** A tick: lapsed attempts drop, finished ones take effect, and an armed fuse burns. */

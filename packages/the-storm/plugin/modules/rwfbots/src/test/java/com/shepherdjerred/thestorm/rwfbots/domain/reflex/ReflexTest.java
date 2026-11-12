@@ -6,7 +6,6 @@ import static com.shepherdjerred.thestorm.rwfbots.domain.Fixtures.combatant;
 import static com.shepherdjerred.thestorm.rwfbots.domain.Fixtures.levers;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.shepherdjerred.thestorm.rwfbots.domain.difficulty.Lever;
 import com.shepherdjerred.thestorm.rwfbots.domain.difficulty.Levers;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Facing;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
@@ -50,6 +49,8 @@ final class ReflexTest {
         bombs,
         PoisonView.NONE,
         "synthetic",
+        List.of(),
+        List.of(),
         List.of(),
         List.of(),
         List.of());
@@ -532,30 +533,7 @@ final class ReflexTest {
   }
 
   @Test
-  void fuseClickGapsRemainReliableAtEverySkillWhilePreservingSmallTimingVariation() {
-    var skilled = gaps(levers(1), 2000);
-    var clumsy = gaps(levers(0).with(Lever.TECHNIQUE, 0.2), 2000);
-    assertThat(skilled).allMatch(gap -> gap < Reflex.FUSE_RESET_GAP);
-    assertThat(skilled).allMatch(gap -> gap == Reflex.FUSE_BASE_GAP);
-    assertThat(clumsy).allMatch(gap -> gap <= Reflex.FUSE_RESET_GAP - 3);
-    for (var skill = 0; skill <= 10; skill++) {
-      assertThat(gaps(levers(skill / 10.0), 2000)).allMatch(gap -> gap + 1 < Reflex.FUSE_RESET_GAP);
-    }
-    assertThat(clumsy.stream().mapToInt(Integer::intValue).average().orElseThrow())
-        .isGreaterThan(skilled.stream().mapToInt(Integer::intValue).average().orElseThrow());
-  }
-
-  private static List<Integer> gaps(Levers levers, int samples) {
-    var random = new SplittableRandom(9);
-    var out = new ArrayList<Integer>();
-    for (var i = 0; i < samples; i++) {
-      out.add(Reflex.fuseGap(levers, random));
-    }
-    return out;
-  }
-
-  @Test
-  void clicksTheBombWhenStandingNextToIt() {
+  void holdsTheFuseWhenStandingNextToTheBomb() {
     var random = new SplittableRandom(2);
     var self = combatant(1, RED, SyntheticMap.BLUE_BOMB.offset(1, 0, 0).feet());
     var bomb =
@@ -592,14 +570,57 @@ final class ReflexTest {
               Optional.empty());
       var step = Reflex.tick(state, input, context(levers(1)), random);
       state = step.state();
-      if (step.commands().stream().anyMatch(c -> c.equals(new BodyCommand.ClickBomb(bomb.id())))) {
+      if (step.commands().contains(new BodyCommand.StartUse())) {
         clicks.add((long) tick);
+        // The press that raises the fuse is the tap that starts the attempt.
+        assertThat(step.commands()).contains(new BodyCommand.ClickBomb(bomb.id()));
       }
     }
-    assertThat(clicks).hasSizeGreaterThan(10);
-    for (var i = 1; i < clicks.size(); i++) {
-      assertThat(clicks.get(i) - clicks.get(i - 1)).isLessThan(Reflex.FUSE_RESET_GAP);
-    }
+    // The view never reports the hand as raised, so the hold is asked for every tick.
+    assertThat(clicks).hasSize(100);
+  }
+
+  @Test
+  void aRaisedFuseOnAnAttemptUnderWayOnlyHolds() {
+    var random = new SplittableRandom(2);
+    var standing = combatant(1, RED, SyntheticMap.BLUE_BOMB.offset(1, 0, 0).feet());
+    var self = standing.withHands(Loadout.standard(Kit.TROOPER).fuseSlot(), true);
+    var arming =
+        new BombView(
+            new BombId(1),
+            new BombOwner.Team(BLUE),
+            SyntheticMap.BLUE_BOMB.center(),
+            new BombState.Arming(RED, 0.3, 1));
+    var decision =
+        new Decision(
+            self.id(),
+            Option.ARM,
+            Optional.empty(),
+            List.of(),
+            Stance.CAUTIOUS,
+            Optional.of(arming.id()),
+            Optional.empty(),
+            Optional.empty(),
+            "arm:arm",
+            1,
+            0,
+            java.util.Optional.empty());
+    var input =
+        new ReflexInput(
+            self,
+            world(1, List.of(self), List.of(arming)),
+            decision,
+            Optional.empty(),
+            3,
+            List.of(),
+            Optional.empty());
+
+    var step = Reflex.tick(ReflexState.initial(self.facing()), input, context(levers(1)), random);
+
+    assertThat(step.commands())
+        .noneMatch(BodyCommand.ClickBomb.class::isInstance)
+        .noneMatch(BodyCommand.StartUse.class::isInstance)
+        .noneMatch(BodyCommand.CancelUse.class::isInstance);
   }
 
   @Test

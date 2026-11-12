@@ -27,9 +27,10 @@ import java.util.regex.Pattern;
  * from a bot as it walks in, a reply from one bot when a human chats (a greet for a greeting, small
  * talk otherwise), now and then small talk or a jab at a rival, and one remark as the countdown
  * ends; then a greet from any bot when the match goes live, a brag from the killer or a reaction
- * from the victim, a plant or defuse line from the bomb worker, a line from the last bot standing
- * on a team, a win or loss line from any bot at the end, and now and then an idle taunt from a
- * living bot.
+ * from the victim, a plant or defuse line from the bomb worker, a win or loss line from any bot at
+ * the end, and now and then an idle taunt from a living bot. During the round a line is dropped,
+ * not saved, when the speaker is not safe, and the last living member of a team stays quiet until
+ * the round ends. Lobby chat is unchanged.
  *
  * <p>Only bots in the match speak, and outside the end of the match only while alive or for {@code
  * recentDeath} after dying. Each bot waits {@code botCooldown} between lines and never repeats a
@@ -49,10 +50,15 @@ public final class ChatDirector {
   private final Map<UUID, Set<String>> said = new HashMap<>();
   private final Map<UUID, Instant> diedAt = new HashMap<>();
   private final Map<UUID, UUID> lastKilledBy = new HashMap<>();
-  private final Set<String> lastAliveTeams = new HashSet<>();
   private final ArrayDeque<Instant> spoken = new ArrayDeque<>();
   private Instant nextTaunt;
   private boolean ended;
+
+  /** Set for the duration of {@link #on}: whether this moment is round chat, and who may say it. */
+  private boolean gateRound;
+
+  private Predicate<UUID> safeSpeaker = uuid -> true;
+  private ChatScene speaking = new ChatScene(List.of());
 
   /** A director for a match that went live at {@code startedAt}. */
   public ChatDirector(ChatSettings settings, RandomGenerator random, Instant startedAt) {
@@ -74,27 +80,59 @@ public final class ChatDirector {
 
   /** What the bots say about {@code moment}, given the match {@code scene} after it, in order. */
   public List<Utterance> on(ChatMoment moment, ChatScene scene, Instant now) {
-    return on(moment, scene, now, uuid -> true);
+    return on(moment, scene, now, Speakers.ANYONE);
   }
 
   /** Idle proposals wait for an available speaker; team/event context still uses the full scene. */
   public List<Utterance> on(
       ChatMoment moment, ChatScene scene, Instant now, Predicate<UUID> idleSpeaker) {
+    return on(moment, scene, now, new Speakers(idleSpeaker, uuid -> true));
+  }
+
+  /**
+   * Who may speak now.
+   *
+   * @param idle whether a bot is free to propose an idle line
+   * @param safe whether a bot is safe to start a round line; one that is not has that line dropped
+   */
+  public record Speakers(Predicate<UUID> idle, Predicate<UUID> safe) {
+
+    /** Everyone may speak. */
+    public static final Speakers ANYONE = new Speakers(uuid -> true, uuid -> true);
+  }
+
+  /**
+   * As {@link #on(ChatMoment, ChatScene, Instant, Predicate)}, and {@code speakers.safe()} admits a
+   * round line. A bot that fails it has that line dropped. The last living member of a team stays
+   * quiet until the round ends; an opening greet, lobby chat, and win or loss lines still happen.
+   */
+  public List<Utterance> on(ChatMoment moment, ChatScene scene, Instant now, Speakers speakers) {
+    var idleSpeaker = speakers.idle();
+    var safeSpeaker = speakers.safe();
     if (ended) {
       return List.of();
     }
+    this.safeSpeaker = safeSpeaker;
+    this.speaking = scene;
+    this.gateRound =
+        switch (moment) {
+          case ChatMoment.Started _,
+              ChatMoment.Died _,
+              ChatMoment.Planted _,
+              ChatMoment.Defused _,
+              ChatMoment.Idle _ ->
+              !scene.teams().isEmpty();
+          case ChatMoment.Ended _,
+              ChatMoment.Arrived _,
+              ChatMoment.HumanSaid _,
+              ChatMoment.CountdownCall _ ->
+              false;
+        };
     prune(now);
     var lines = new ArrayList<Utterance>();
     switch (moment) {
-      case ChatMoment.Started _ -> {
-        for (var team : scene.teams()) {
-          if (scene.alive(team).size() <= 1) {
-            // A team of one is not a last stand.
-            lastAliveTeams.add(team);
-          }
-        }
-        lines.addAll(speak(everyBot(scene, Moment.GREET, Optional.empty()), true, now));
-      }
+      case ChatMoment.Started _ ->
+          lines.addAll(speak(everyBot(scene, Moment.GREET, Optional.empty()), true, now));
       case ChatMoment.Died died -> {
         diedAt.put(died.victim(), now);
         died.killer().ifPresent(killer -> lastKilledBy.put(died.victim(), killer));
@@ -136,7 +174,6 @@ public final class ChatDirector {
       case ChatMoment.CountdownCall _ ->
           lines.addAll(speak(lobbyBots(scene, Moment.LOBBY), false, now));
     }
-    lines.addAll(speak(lastAlive(scene), false, now));
     return List.copyOf(lines);
   }
 
@@ -146,6 +183,7 @@ public final class ChatDirector {
         (scene.teams().isEmpty() ? lobbyTalk(scene) : taunters(scene))
             .stream()
                 .filter(candidate -> idleSpeaker.test(candidate.member().uuid()))
+                .filter(this::admitted)
                 .filter(candidate -> eligible(candidate, now))
                 .toList();
     if (candidates.isEmpty()) return List.of();
@@ -248,26 +286,22 @@ public final class ChatDirector {
     return candidates;
   }
 
-  /** The bot left alone on its team, once per team per match. */
-  private List<Candidate> lastAlive(ChatScene scene) {
-    var candidates = new ArrayList<Candidate>();
-    for (var team : scene.teams()) {
-      var alive = scene.alive(team);
-      if (alive.size() != 1 || !lastAliveTeams.add(team)) {
-        continue;
-      }
-      var last = alive.getFirst();
-      last.bot()
-          .ifPresent(bot ->
-              candidates.add(
-                  new Candidate(
-                      last,
-                      bot,
-                      Moment.ON_LAST_ALIVE,
-                      Chattiness.Context.PLAIN,
-                      Map.of(Placeholder.TEAM, team))));
-    }
-    return candidates;
+  /**
+   * A round line is said only when {@code safeSpeaker} allows it, and never by the last living
+   * member of a team. An opening greet is the exception to that silence. Anything the gate refuses
+   * is dropped.
+   */
+  private boolean admitted(Candidate candidate) {
+    if (!gateRound) return true;
+    if (candidate.moment() != Moment.GREET && lastOfTeam(candidate.member())) return false;
+    return safeSpeaker.test(candidate.member().uuid());
+  }
+
+  /** Whether {@code member} is alive and the only living member of its team. */
+  private boolean lastOfTeam(ChatScene.Member member) {
+    var team = member.team();
+    if (!member.alive() || team.isEmpty()) return false;
+    return speaking.alive(team.orElseThrow()).size() <= 1;
   }
 
   /** A greeting is answered in kind: hi, hey, hello, yo, sup, o/ and their stretched spellings. */
@@ -338,7 +372,7 @@ public final class ChatDirector {
   private List<Utterance> speak(List<Candidate> candidates, boolean all, Instant now) {
     var passed = new ArrayList<Pick>();
     for (var candidate : candidates) {
-      if (!eligible(candidate, now)) {
+      if (!admitted(candidate) || !eligible(candidate, now)) {
         continue;
       }
       var open = pickable(candidate);

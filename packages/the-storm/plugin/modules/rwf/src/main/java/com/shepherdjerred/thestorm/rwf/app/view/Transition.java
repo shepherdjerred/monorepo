@@ -174,6 +174,7 @@ public record Transition(Change change, List<Effect> effects, MatchState after) 
           new Change.Died(died.victim().uuid(), died.killer().map(CombatantId::uuid));
       case MatchEvent.BombClicked click ->
           new Change.BombClicked(click.id().uuid(), click.bombId());
+      case MatchEvent.BombHeld _ -> new Change.Ticked();
       case MatchEvent.ResetDone _ -> new Change.Reset();
       case MatchEvent.LookedAround looked -> new Change.LookedAround(looked.id().uuid());
       case MatchEvent.Ability ability ->

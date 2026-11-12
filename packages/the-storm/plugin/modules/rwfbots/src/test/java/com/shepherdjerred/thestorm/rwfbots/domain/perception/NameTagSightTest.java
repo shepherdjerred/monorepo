@@ -46,6 +46,8 @@ final class NameTagSightTest {
             "synthetic",
             List.of(),
             List.of(),
+            List.of(),
+            List.of(),
             List.of());
     return perception.perceive(PerceptionState.EMPTY, self, world, new SplittableRandom(1));
   }
@@ -95,6 +97,8 @@ final class NameTagSightTest {
             List.of(),
             PoisonView.NONE,
             "synthetic",
+            List.of(),
+            List.of(),
             List.of(),
             List.of(),
             List.of());

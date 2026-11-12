@@ -383,6 +383,8 @@ final class BodyDriverTest {
             "test",
             List.of(),
             List.of(),
+            List.of(),
+            List.of(),
             List.of());
     var input =
         new com.shepherdjerred.thestorm.rwfbots.domain.reflex.ReflexInput(

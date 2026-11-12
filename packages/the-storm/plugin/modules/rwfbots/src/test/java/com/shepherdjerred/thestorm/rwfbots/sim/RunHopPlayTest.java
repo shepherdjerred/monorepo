@@ -109,6 +109,8 @@ final class RunHopPlayTest {
               nav.mapId(),
               List.of(),
               List.of(),
+              List.of(),
+              List.of(),
               List.of());
       var step =
           Reflex.tick(

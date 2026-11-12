@@ -57,6 +57,8 @@ final class ObjectiveChoiceTest {
             nav.mapId(),
             List.of(),
             List.of(),
+            List.of(),
+            List.of(),
             List.of());
     return new TeamBrain.TeamSituation(
         nav,
@@ -111,7 +113,9 @@ final class ObjectiveChoiceTest {
             Map.of(),
             0,
             java.util.Map.of(),
-            -1);
+            -1,
+            Optional.empty(),
+            Set.of());
     return Blackboard.open(Fixtures.RED, Strategy.RUSH).withPlan(plan, 0);
   }
 

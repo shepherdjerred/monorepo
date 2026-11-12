@@ -100,7 +100,9 @@ final class TacticsCommitmentTest {
                   Map.of(self.id(), slot.key()),
                   0,
                   Map.of(),
-                  -1),
+                  -1,
+                  Optional.empty(),
+                  Set.of()),
               0);
     }
     var snapshot =
@@ -113,9 +115,21 @@ final class TacticsCommitmentTest {
             "synthetic",
             List.of(),
             List.of(),
+            List.of(),
+            List.of(),
             List.of());
     return new Situation(
         self, snapshot, new Percept(PerceptionState.EMPTY, List.of(enemy), 100), board, role);
+  }
+
+  @Test
+  void theLastSurvivorKeepsAYoungGoalUnlessABombCanBeArmed() {
+    var scene = sweep(20, 11, -1, false);
+    var young =
+        Optional.of(
+            Plan.of(Option.TAKE_SLOT, 80, new PlanStep.Route(SELF.plus(6, 0, 0), Stance.STEALTH)));
+    assertThat(Tactics.choose(Option.HUNT, young, scene, Map.of())).isEqualTo(Option.TAKE_SLOT);
+    assertThat(Tactics.choose(Option.ARM, young, scene, Map.of())).isEqualTo(Option.ARM);
   }
 
   @Test
@@ -294,6 +308,8 @@ final class TacticsCommitmentTest {
             List.of(),
             PoisonView.NONE,
             NAV.mapId(),
+            List.of(),
+            List.of(),
             List.of(),
             List.of(),
             List.of()),
@@ -487,6 +503,8 @@ final class TacticsCommitmentTest {
             NAV.mapId(),
             List.of(),
             List.of(),
+            List.of(),
+            List.of(),
             List.of());
     return new Situation(
         self,
@@ -509,6 +527,8 @@ final class TacticsCommitmentTest {
             List.of(bomb),
             PoisonView.NONE,
             NAV.mapId(),
+            List.of(),
+            List.of(),
             List.of(),
             List.of(),
             List.of());
@@ -598,6 +618,8 @@ final class TacticsCommitmentTest {
             original.poison(),
             original.mapId(),
             original.stimuli(),
+            List.of(),
+            List.of(),
             List.of(),
             List.of());
     var occupied =

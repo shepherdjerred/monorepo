@@ -28,4 +28,15 @@ public final class StreakPlay {
         && input.self().alive()
         && input.self().onGround();
   }
+
+  /**
+   * Whether the next reward may be called in here. A supply crate waits for {@code safe}: no enemy
+   * nearby and not on a bomb column. Other rewards need nothing more than {@link #now}.
+   *
+   * @param supply whether the next reward is a supply crate
+   * @param safe whether the cell under the bot is a safe place to call a supply crate in
+   */
+  public static boolean placeable(boolean supply, boolean safe) {
+    return !supply || safe;
+  }
 }

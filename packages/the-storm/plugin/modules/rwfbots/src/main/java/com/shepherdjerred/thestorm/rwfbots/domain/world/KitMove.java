@@ -60,7 +60,12 @@ public record KitMove(String item, Use use, double min, double max, int gapTicks
      * Burst against an enemy within {@code min} to push it away or off a ledge, at its own feet to
      * leap at one within {@code max} or away from one when hurt, as a wind charge.
      */
-    GUST
+    GUST,
+    /**
+     * An ender pearl from a supply crate: escape or a close that is shorter, otherwise a gap in the
+     * route, and never a kit pearl's habit of throwing whenever the range is merely open.
+     */
+    CRATE_PEARL
   }
 
   public KitMove {

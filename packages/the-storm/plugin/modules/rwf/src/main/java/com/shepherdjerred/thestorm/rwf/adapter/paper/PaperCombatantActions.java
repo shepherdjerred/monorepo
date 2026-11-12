@@ -404,6 +404,26 @@ final class PaperCombatantActions implements CombatantActions {
   }
 
   @Override
+  public Optional<ActionRefusal> lootCrate(CombatantId id, Vec3 at) {
+    return fighter(id)
+        .fold(
+            player -> {
+              var block =
+                  player
+                      .getWorld()
+                      .getBlockAt(
+                          (int) Math.floor(at.x()),
+                          (int) Math.floor(at.y()),
+                          (int) Math.floor(at.z()));
+              intent(id, "crate", "loot");
+              return runner.powers().streaks().loot(player, block)
+                  ? Optional.empty()
+                  : Optional.of(ActionRefusal.OUT_OF_REACH);
+            },
+            Optional::of);
+  }
+
+  @Override
   public Optional<ActionRefusal> pickKit(CombatantId id, String kitId) {
     if (runner.member(id).isEmpty()) {
       return Optional.of(ActionRefusal.NOT_A_MEMBER);

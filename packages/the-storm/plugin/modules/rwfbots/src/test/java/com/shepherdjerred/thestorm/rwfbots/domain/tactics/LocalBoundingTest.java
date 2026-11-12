@@ -19,6 +19,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.world.WorldSnapshot;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 final class LocalBoundingTest {
@@ -75,7 +76,9 @@ final class LocalBoundingTest {
             Map.of(self.id(), flank.key(), defender.id(), home.key()),
             0,
             Map.of(self.id(), 0, defender.id(), 0),
-            -1);
+            -1,
+            Optional.empty(),
+            Set.of());
     var snapshot =
         new WorldSnapshot(
             40,
@@ -84,6 +87,8 @@ final class LocalBoundingTest {
             List.of(),
             PoisonView.NONE,
             "test",
+            List.of(),
+            List.of(),
             List.of(),
             List.of(),
             List.of());

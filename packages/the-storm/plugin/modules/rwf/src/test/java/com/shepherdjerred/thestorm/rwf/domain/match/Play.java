@@ -165,6 +165,11 @@ final class Play {
     return ok(new MatchEvent.BombClicked(who, bombId, now));
   }
 
+  /** One sample of {@code who} holding right-click on the bomb. */
+  List<MatchEffect> hold(CombatantId who, String bombId) {
+    return ok(new MatchEvent.BombHeld(who, bombId, now));
+  }
+
   Combatant member(CombatantId id) {
     return match.member(id).orElseThrow();
   }

@@ -119,7 +119,9 @@ final class StuckSpotsTest {
                   Map.of(self.id(), slot.key()),
                   0,
                   Map.of(),
-                  -1),
+                  -1,
+                  Optional.empty(),
+                  Set.of()),
               0);
     }
     var snapshot =
@@ -130,6 +132,8 @@ final class StuckSpotsTest {
             List.of(),
             PoisonView.NONE,
             nav.mapId(),
+            List.of(),
+            List.of(),
             List.of(),
             List.of(),
             List.of());

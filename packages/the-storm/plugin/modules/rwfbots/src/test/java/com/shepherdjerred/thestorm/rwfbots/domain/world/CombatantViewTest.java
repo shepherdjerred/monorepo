@@ -36,6 +36,8 @@ final class CombatantViewTest {
                 "m",
                 List.of(),
                 List.of(),
+                List.of(),
+                List.of(),
                 List.of()))
         .isInstanceOf(IllegalArgumentException.class);
   }
@@ -53,6 +55,8 @@ final class CombatantViewTest {
             List.of(),
             PoisonView.NONE,
             "m",
+            List.of(),
+            List.of(),
             List.of(),
             List.of(),
             List.of());
@@ -73,6 +77,8 @@ final class CombatantViewTest {
             "m",
             List.of(),
             List.of(),
+            List.of(),
+            List.of(),
             List.of());
     assertThat(next.combatant(first.id())).contains(changed);
     assertThat(original.require(first.id())).isEqualTo(first);
@@ -86,6 +92,8 @@ final class CombatantViewTest {
             List.of(),
             PoisonView.NONE,
             "m",
+            List.of(),
+            List.of(),
             List.of(),
             List.of(),
             List.of());

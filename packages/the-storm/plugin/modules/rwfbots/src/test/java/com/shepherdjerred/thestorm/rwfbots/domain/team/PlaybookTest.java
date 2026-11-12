@@ -93,6 +93,8 @@ final class PlaybookTest {
         NAV.mapId(),
         List.of(),
         List.of(),
+        List.of(),
+        List.of(),
         List.of());
   }
 

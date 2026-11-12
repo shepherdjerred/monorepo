@@ -113,7 +113,9 @@ final class AggroTest {
                     Map.of(self.id(), slot.orElseThrow().key()),
                     0,
                     Map.of(),
-                    -1),
+                    -1,
+                    Optional.empty(),
+                    Set.of()),
                 0);
       }
       var snapshot =
@@ -124,6 +126,8 @@ final class AggroTest {
               List.of(),
               PoisonView.NONE,
               NAV.mapId(),
+              List.of(),
+              List.of(),
               List.of(),
               List.of(),
               List.of());
@@ -320,6 +324,8 @@ final class AggroTest {
               List.of(bomb),
               PoisonView.NONE,
               NAV.mapId(),
+              List.of(),
+              List.of(),
               List.of(),
               List.of(),
               List.of());

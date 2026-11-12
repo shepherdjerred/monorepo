@@ -47,6 +47,8 @@ final class SteakTest {
         "synthetic",
         List.of(),
         List.of(),
+        List.of(),
+        List.of(),
         List.of());
   }
 

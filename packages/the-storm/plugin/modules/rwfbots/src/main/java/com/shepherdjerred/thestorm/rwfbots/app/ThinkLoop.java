@@ -16,6 +16,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.tactics.Thought;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Blackboard;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Callout;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Places;
+import com.shepherdjerred.thestorm.rwfbots.domain.team.Posture;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.RetakeAdmission;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Role;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.SharedSighting;
@@ -24,9 +25,11 @@ import com.shepherdjerred.thestorm.rwfbots.domain.team.SlotFit;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.TeamBrain;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.TeamCallouts;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.TeamPlan;
+import com.shepherdjerred.thestorm.rwfbots.domain.team.TeamPosture;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantId;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Decision;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.MatchPhase;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.TeamId;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.WorldSnapshot;
 import java.util.ArrayList;
@@ -602,6 +605,7 @@ public final class ThinkLoop {
           places = placesOf(current.nav());
         }
         var active = activeMinds(current, snapshot);
+        stickPostures(current, snapshot);
         var cycle =
             new Cycle(
                 current,
@@ -707,6 +711,93 @@ public final class ThinkLoop {
                 mind.percept == null));
       }
       return observations;
+    }
+
+    /**
+     * Once three or more teams are alive, each bot team keeps a posture for the round. Poison makes
+     * a team that was waiting press. Two teams, and a match that is not live, leave the posture
+     * empty, which is press.
+     */
+    private void stickPostures(Match current, WorldSnapshot snapshot) {
+      var living =
+          snapshot.combatants().stream()
+              .filter(CombatantView::alive)
+              .map(CombatantView::team)
+              .distinct()
+              .count();
+      if (living < 3 || snapshot.matchPhase() != MatchPhase.LIVE) {
+        return;
+      }
+      var open = teams.values().stream().anyMatch(team -> team.board.plan().posture().isEmpty());
+      if (!open) {
+        if (snapshot.poison().active()) {
+          pressAll(snapshot);
+        }
+        return;
+      }
+      var choices = new ArrayList<TeamPosture.Choice>();
+      for (var team : teams.values()) {
+        choices.add(roll(current, snapshot, team.board.team()));
+      }
+      for (var choice : TeamPosture.settle(choices)) {
+        stick(current, snapshot, choice);
+      }
+    }
+
+    /** Poison ends every wait and every hunt: each team that was not pressing presses. */
+    private void pressAll(WorldSnapshot snapshot) {
+      for (var team : teams.values()) {
+        var plan = team.board.plan();
+        if (plan.posture().orElse(Posture.PRESS) != Posture.PRESS) {
+          team.board =
+              team.board.withPlan(plan.withStance(Posture.PRESS, plan.reckless()), snapshot.tick());
+        }
+      }
+    }
+
+    /** {@code id}'s roll from its bots' mean temper, seeded by the match. */
+    private TeamPosture.Choice roll(Match current, WorldSnapshot snapshot, TeamId id) {
+      var members = profiles().stream().filter(profile -> profile.team().equals(id)).toList();
+      var aggression =
+          members.stream().mapToDouble(profile -> profile.style().aggression()).average();
+      var patience = members.stream().mapToDouble(profile -> profile.style().patience()).average();
+      var temper = new TeamPosture.Temper(aggression.orElse(0.5), patience.orElse(0.5));
+      return new TeamPosture.Choice(
+          id,
+          TeamPosture.roll(
+              snapshot, id, temper, new SplittableRandom(current.seed() ^ id.value().hashCode())),
+          temper.aggression());
+    }
+
+    /** Keeps {@code choice} on its team's plan, with the bots that break from it. */
+    private void stick(Match current, WorldSnapshot snapshot, TeamPosture.Choice choice) {
+      var team = teams.get(choice.team());
+      if (team == null) {
+        return;
+      }
+      var reckless =
+          TeamPosture.slackers(
+              fighters(snapshot, choice.team()), current.seed() ^ choice.team().value().hashCode());
+      var plan = team.board.plan();
+      var same =
+          plan.posture().filter(choice.posture()::equals).isPresent()
+              && plan.reckless().equals(reckless);
+      if (!same) {
+        team.board =
+            team.board.withPlan(plan.withStance(choice.posture(), reckless), snapshot.tick());
+      }
+    }
+
+    /** {@code team}'s registered bots alive in the snapshot. */
+    private List<TeamPosture.Fighter> fighters(WorldSnapshot snapshot, TeamId team) {
+      var fighters = new ArrayList<TeamPosture.Fighter>();
+      for (var profile : profiles()) {
+        var alive = snapshot.combatant(profile.id()).filter(CombatantView::alive).isPresent();
+        if (profile.team().equals(team) && alive) {
+          fighters.add(new TeamPosture.Fighter(profile.id(), profile.style().aggression()));
+        }
+      }
+      return fighters;
     }
 
     /** The registered bots alive in the snapshot, in slot order, with their minds up to date. */

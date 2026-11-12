@@ -275,6 +275,8 @@ public final class RetakeAdmission {
         assignments,
         plan.dealtTick(),
         plan.groups(),
-        plan.pushedTick());
+        plan.pushedTick(),
+        plan.posture(),
+        plan.reckless());
   }
 }

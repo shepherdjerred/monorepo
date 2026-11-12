@@ -101,6 +101,8 @@ final class HumanSupportTest {
         NAV.mapId(),
         List.of(),
         List.of(),
+        List.of(),
+        List.of(),
         List.of());
   }
 

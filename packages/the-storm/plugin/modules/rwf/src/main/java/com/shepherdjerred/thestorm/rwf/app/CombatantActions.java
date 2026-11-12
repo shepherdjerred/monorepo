@@ -63,4 +63,13 @@ public interface CombatantActions {
    * dogs, an iron golem, napalm), on the block at the feet, as using its item there would.
    */
   Optional<ActionRefusal> useStreak(CombatantId id);
+
+  /**
+   * Right-click the supply crate whose block contains {@code at}. Empty when the crate was looted.
+   * Callers loot only when {@code Delivery.mayLoot} allows it: a refused click still reports that
+   * the block was a crate.
+   */
+  default Optional<ActionRefusal> lootCrate(CombatantId id, Vec3 at) {
+    return Optional.of(ActionRefusal.OUT_OF_REACH);
+  }
 }

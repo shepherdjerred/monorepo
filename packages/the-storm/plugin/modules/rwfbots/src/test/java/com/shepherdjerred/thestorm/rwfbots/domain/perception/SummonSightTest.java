@@ -49,7 +49,9 @@ final class SummonSightTest {
             "synthetic",
             sounds,
             List.of(),
-            summons);
+            summons,
+            List.of(),
+            List.of());
     return perception.perceive(PerceptionState.EMPTY, SELF, world, new SplittableRandom(1));
   }
 

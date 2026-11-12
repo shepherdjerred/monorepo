@@ -53,6 +53,8 @@ final class NameTagHoldTest {
             NAV.mapId(),
             List.of(),
             List.of(),
+            List.of(),
+            List.of(),
             List.of());
     var context =
         new TacticsContext(
@@ -93,7 +95,9 @@ final class NameTagHoldTest {
                     Map.of(self.id(), slot.key()),
                     0,
                     Map.of(),
-                    -1),
+                    -1,
+                    Optional.empty(),
+                    Set.of()),
                 0);
     var thought =
         Tactics.think(

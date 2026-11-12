@@ -44,6 +44,8 @@ final class PerceptionTest {
         "synthetic",
         sounds,
         List.of(),
+        List.of(),
+        List.of(),
         List.of());
   }
 
@@ -145,6 +147,8 @@ final class PerceptionTest {
             PoisonView.NONE,
             "synthetic",
             List.of(click),
+            List.of(),
+            List.of(),
             List.of(),
             List.of());
     assertThat(perceive(self, snapshot).state().suspicion().isRevealed(spy.id())).isTrue();

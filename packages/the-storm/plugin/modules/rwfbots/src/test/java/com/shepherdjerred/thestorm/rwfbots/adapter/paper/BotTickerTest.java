@@ -141,6 +141,8 @@ final class BotTickerTest {
             "test",
             List.of(),
             List.of(),
+            List.of(),
+            List.of(),
             List.of());
     return new ReflexInput(
         self,
@@ -179,6 +181,8 @@ final class BotTickerTest {
             List.of(),
             PoisonView.NONE,
             "test",
+            List.of(),
+            List.of(),
             List.of(),
             List.of(),
             List.of());
@@ -266,6 +270,8 @@ final class BotTickerTest {
         List.of(),
         PoisonView.NONE,
         "synthetic",
+        List.of(),
+        List.of(),
         List.of(),
         List.of(),
         List.of());

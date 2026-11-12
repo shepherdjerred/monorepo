@@ -181,6 +181,8 @@ final class ThinkLoopTest {
         NAV.mapId(),
         List.of(),
         List.of(),
+        List.of(),
+        List.of(),
         List.of());
   }
 
@@ -409,6 +411,8 @@ final class ThinkLoopTest {
               NAV.mapId(),
               List.of(),
               List.of(),
+              List.of(),
+              List.of(),
               List.of());
       serial.publish(snapshot);
       parallel.publish(snapshot);
@@ -629,6 +633,8 @@ final class ThinkLoopTest {
               original.poison(),
               original.mapId(),
               original.stimuli(),
+              List.of(),
+              List.of(),
               List.of(),
               List.of()));
       assertThat(loop.board().perceived()).isEqualTo(32);

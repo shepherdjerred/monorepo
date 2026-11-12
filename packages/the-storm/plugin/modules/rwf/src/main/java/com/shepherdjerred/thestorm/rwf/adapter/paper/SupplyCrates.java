@@ -3,6 +3,9 @@
 // SupplyCrateKillstreak.java); see packages/the-storm/NOTICE.
 package com.shepherdjerred.thestorm.rwf.adapter.paper;
 
+import com.shepherdjerred.thestorm.rwf.app.MatchCrates;
+import com.shepherdjerred.thestorm.rwf.app.view.MatchState;
+import com.shepherdjerred.thestorm.rwf.app.view.Point;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.CombatantId;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.TeamColor;
 import com.shepherdjerred.thestorm.rwf.domain.geometry.BlockPos;
@@ -12,6 +15,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,7 +37,7 @@ import org.bukkit.inventory.ItemStack;
  * Supply crates: a chest that lands where its owner called it, which only they may loot at first,
  * their team after 30 s and anyone after a minute, labelled above for each. Main thread only.
  */
-final class SupplyCrates {
+final class SupplyCrates implements MatchCrates {
 
   /** The label stands this high over the crate's block: Red Warfare's hologram rows. */
   private static final double LABEL_HEIGHT = 1.5;
@@ -65,6 +69,28 @@ final class SupplyCrates {
     this.context = context;
     this.keys = keys;
     this.blocks = blocks;
+  }
+
+  /** Landed crates, block x then z then y, at the centre of each chest's floor. */
+  @Override
+  public List<Landed> landed() {
+    return crates.entrySet().stream()
+        .sorted(
+            Comparator.comparingInt((Map.Entry<BlockPos, Crate> entry) -> entry.getKey().x())
+                .thenComparingInt(entry -> entry.getKey().z())
+                .thenComparingInt(entry -> entry.getKey().y()))
+        .map(entry -> {
+          var at = entry.getKey();
+          var crate = entry.getValue();
+          return new Landed(
+              crate.owner().uuid(),
+              MatchState.teamName(crate.team()),
+              new Point(at.x() + 0.5, at.y(), at.z() + 0.5),
+              crate.landed(),
+              crate.landed().plus(Delivery.TEAM_LOOTS_AFTER),
+              crate.landed().plus(Delivery.ANYONE_LOOTS_AFTER));
+        })
+        .toList();
   }
 
   /**

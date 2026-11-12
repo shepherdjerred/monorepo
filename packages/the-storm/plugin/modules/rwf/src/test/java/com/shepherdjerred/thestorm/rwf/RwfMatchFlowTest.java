@@ -59,6 +59,16 @@ import org.mockbukkit.mockbukkit.entity.PlayerMock;
  */
 final class RwfMatchFlowTest {
 
+  /**
+   * Taps one server tick apart, enough to finish a one-person, nine-second arm or defuse at the tap
+   * credit. A tap earns a slice of the clock however fast it comes, so mashing keeps these flows
+   * short. Holding is the fast path; MockBukkit cannot ray-trace a held aim, so the domain tests
+   * cover it.
+   */
+  private static final int TAPS_TO_FUSE = 60;
+
+  private static final Duration TAP_GAP = Duration.ofMillis(50);
+
   @TempDir Path directory;
   private @Nullable RwfHarness running;
 
@@ -129,14 +139,14 @@ final class RwfMatchFlowTest {
     var fuse = requireNonNull(alice.getInventory().getItem(0));
 
     // Arming alone takes nine seconds of clicks no more than 750 ms apart.
-    for (var i = 0; i < 24 && !armed(bombId); i++) {
+    for (var i = 0; i < TAPS_TO_FUSE && !armed(bombId); i++) {
       harness
           .server
           .getPluginManager()
           .callEvent(
               new PlayerInteractEvent(
                   alice, Action.RIGHT_CLICK_BLOCK, fuse, block.getBlock(), BlockFace.UP));
-      harness.tick(Duration.ofMillis(500));
+      harness.tick(TAP_GAP);
     }
 
     assertThat(armed(bombId)).isTrue();
@@ -150,9 +160,9 @@ final class RwfMatchFlowTest {
     // The owners defuse it: a bot on that team, through the actions port, within reach.
     var defuser = botOn(enemy);
     defuser.entity().teleport(block.clone().add(-1.5, 0, 0.5));
-    for (var i = 0; i < 24 && armed(bombId); i++) {
+    for (var i = 0; i < TAPS_TO_FUSE && armed(bombId); i++) {
       assertThat(harness.actions().clickBomb(defuser.id(), bombId)).isEmpty();
-      harness.tick(Duration.ofMillis(500));
+      harness.tick(TAP_GAP);
     }
 
     assertThat(armed(bombId)).isFalse();
@@ -313,14 +323,14 @@ final class RwfMatchFlowTest {
     alice.teleport(block.clone().add(1.5, 0, 0.5));
     alice.getInventory().setHeldItemSlot(0);
     var fuse = requireNonNull(alice.getInventory().getItem(0));
-    for (var i = 0; i < 24 && !armed(bombId); i++) {
+    for (var i = 0; i < TAPS_TO_FUSE && !armed(bombId); i++) {
       harness
           .server
           .getPluginManager()
           .callEvent(
               new PlayerInteractEvent(
                   alice, Action.RIGHT_CLICK_BLOCK, fuse, block.getBlock(), BlockFace.UP));
-      harness.tick(Duration.ofMillis(500));
+      harness.tick(TAP_GAP);
     }
     assertThat(armed(bombId)).isTrue();
 
@@ -595,9 +605,9 @@ final class RwfMatchFlowTest {
     var block = bombBlock(bombId);
     var armer = botOn(enemyOf(own));
     armer.entity().teleport(block.clone().add(1.5, 0, 0.5));
-    for (var i = 0; i < 24 && !armed(bombId); i++) {
+    for (var i = 0; i < TAPS_TO_FUSE && !armed(bombId); i++) {
       assertThat(harness.actions().clickBomb(armer.id(), bombId)).isEmpty();
-      harness.tick(Duration.ofMillis(500));
+      harness.tick(TAP_GAP);
     }
     assertThat(armed(bombId)).isTrue();
 

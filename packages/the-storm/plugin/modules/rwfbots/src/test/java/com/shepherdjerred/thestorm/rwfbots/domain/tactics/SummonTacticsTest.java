@@ -89,7 +89,9 @@ final class SummonTacticsTest {
                     Map.of(self.id(), slot.key()),
                     0,
                     Map.of(),
-                    -1),
+                    -1,
+                    Optional.empty(),
+                    Set.of()),
                 0);
       }
       var snapshot =
@@ -102,7 +104,9 @@ final class SummonTacticsTest {
               NAV.mapId(),
               List.of(),
               List.of(),
-              summons);
+              summons,
+              List.of(),
+              List.of());
       var percept =
           new Percept(
               new PerceptionState(Memory.EMPTY, Suspicion.NONE, -1, grudge),

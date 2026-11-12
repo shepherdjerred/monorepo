@@ -141,6 +141,35 @@ final class MeleePressureTest {
     assertThat(calmed.aim().look().differenceTo(toThreat)).isGreaterThan(135);
   }
 
+  @Test
+  void circlingBotsRunAlongsideInsteadOfFollowing() {
+    var self = combatant(1, RED, HERE).withVel(new Vec3(0, 0, 0.15));
+    var target = combatant(2, BLUE, HERE.plus(2.7, 0, 0)).withVel(new Vec3(0, 0, -0.15));
+
+    assertThat(MeleePressure.orbiting(self, target)).isTrue();
+    // The target circles towards -z; strafing the same way runs alongside it and ends the orbit.
+    assertThat(MeleePressure.cutAcross(self, target)).isEqualTo(-1);
+    assertThat(MeleePressure.orbiting(self, target.withVel(self.vel()))).isFalse();
+    assertThat(MeleePressure.orbiting(self, target.withVel(new Vec3(-0.2, 0, 0)))).isFalse();
+  }
+
+  @Test
+  void onlyCirclingThatLastsBreaksTheOrbit() {
+    var self = combatant(1, RED, HERE).withVel(new Vec3(0, 0, 0.15));
+    var target = combatant(2, BLUE, HERE.plus(2.7, 0, 0)).withVel(new Vec3(0, 0, -0.15));
+    var state = ReflexState.initial(self.facing());
+
+    var started = MeleePressure.circle(state, true, 100);
+    assertThat(MeleePressure.sustained(started, 100 + MeleePressure.ORBIT_SUSTAIN - 1)).isFalse();
+    var held = MeleePressure.circle(started, true, 100 + MeleePressure.ORBIT_SUSTAIN);
+    assertThat(MeleePressure.sustained(held, 100 + MeleePressure.ORBIT_SUSTAIN)).isTrue();
+    assertThat(
+            MeleePressure.alongside(held, self, target, 100 + MeleePressure.ORBIT_SUSTAIN)
+                .strafeDir())
+        .isEqualTo(-1);
+    assertThat(MeleePressure.sustained(MeleePressure.circle(held, false, 120), 120)).isFalse();
+  }
+
   private static Percept felt(Vec3 at, long tick) {
     var memory =
         new Memory(Map.of(new CombatantId(9), new Sighting(at, Vec3.ZERO, tick, 0.9, false, true)));
@@ -178,6 +207,8 @@ final class MeleePressureTest {
         List.of(),
         PoisonView.NONE,
         "synthetic",
+        List.of(),
+        List.of(),
         List.of(),
         List.of(),
         List.of());

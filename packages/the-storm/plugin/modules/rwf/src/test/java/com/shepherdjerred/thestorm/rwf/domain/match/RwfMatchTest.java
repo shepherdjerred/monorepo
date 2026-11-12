@@ -483,9 +483,11 @@ final class RwfMatchTest {
   @Nested
   final class Bombing {
 
-    private void clickFor(CombatantId who, String bomb, double seconds) {
-      for (var i = 0; i < seconds * 2; i++) {
-        play.click(who, bomb);
+    /** Presses right-click on {@code bomb}, holds it up to {@code seconds}, lets go once armed. */
+    private void holdFor(CombatantId who, String bomb, double seconds) {
+      play.click(who, bomb);
+      for (var i = 0; i < seconds * 2 && !play.match.bomb(bomb).orElseThrow().armed(); i++) {
+        play.hold(who, bomb);
         play.tickMillis(500);
       }
     }
@@ -502,17 +504,19 @@ final class RwfMatchTest {
     }
 
     @Test
-    void anEnemyArmsTheBombByClickingForNineSeconds() {
+    void anEnemyArmsTheBombByHoldingForNineSeconds() {
       play.start(Samples.twoTeams(), ALICE, BOB, CAROL, DAVE);
       var blue = play.anyOn(TeamColor.BLUE);
 
+      assertThat(play.hold(blue.id(), "red-1")).as("a hold alone starts nothing").isEmpty();
+      assertThat(play.match.bomb("red-1").orElseThrow().state().attempts()).isEmpty();
       play.click(blue.id(), "red-1");
       var snapshot = MatchSnapshot.of(play.match, play.now);
       assertThat(snapshot.bomb("red-1").orElseThrow().state())
           .isEqualTo(
-              new MatchSnapshot.BombView.State.Arming(TeamColor.BLUE, 0, List.of(blue.id())));
+              new MatchSnapshot.BombView.State.Arming(TeamColor.BLUE, 0.2 / 9, List.of(blue.id())));
 
-      clickFor(blue.id(), "red-1", 9.5);
+      holdFor(blue.id(), "red-1", 9.5);
 
       assertThat(play.match.bomb("red-1").orElseThrow().armed()).isTrue();
       var red = play.anyOn(TeamColor.RED);
@@ -525,7 +529,7 @@ final class RwfMatchTest {
     void anExplodedBombWipesItsOwners() {
       play.start(Samples.twoTeams(), ALICE, BOB, CAROL, DAVE);
       var blue = play.anyOn(TeamColor.BLUE);
-      clickFor(blue.id(), "red-1", 9.5);
+      holdFor(blue.id(), "red-1", 9.5);
       var armedAt = play.now;
 
       var effects = tickFor(play, 60);
@@ -572,7 +576,7 @@ final class RwfMatchTest {
       var red = play.anyOn(TeamColor.RED);
       var blue = play.anyOn(TeamColor.BLUE);
 
-      clickFor(red.id(), "nuke-1", 9.5);
+      holdFor(red.id(), "nuke-1", 9.5);
 
       assertThat(play.match.bomb("nuke-1").orElseThrow().team()).contains(TeamColor.RED);
       assertThat(play.refused(new BombClicked(red.id(), "nuke-1", play.now)))
@@ -584,7 +588,7 @@ final class RwfMatchTest {
     void aNukeAnnihilatesEveryoneElseAndTakesTheArmersBombsWithIt() {
       play.start(Samples.twoTeamsWithNuke(), ALICE, BOB, CAROL, DAVE);
       var red = play.anyOn(TeamColor.RED);
-      clickFor(red.id(), "nuke-1", 9.5);
+      holdFor(red.id(), "nuke-1", 9.5);
 
       var effects = tickFor(play, 60);
 
@@ -604,7 +608,7 @@ final class RwfMatchTest {
     void aDefeatedTeamsArmedNukeRemainsAThreatUntilDefusedOrExploded() {
       play.start(Samples.twoTeamsWithNuke(), ALICE, BOB, CAROL, DAVE);
       var reds = play.on(TeamColor.RED);
-      clickFor(reds.get(0).id(), "nuke-1", 9.5);
+      holdFor(reds.get(0).id(), "nuke-1", 9.5);
       play.died(reds.get(0).id(), Optional.empty());
 
       var effects = play.died(reds.get(1).id(), Optional.empty());

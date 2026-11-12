@@ -79,6 +79,8 @@ final class DefuseHandOffTest {
             NAV.mapId(),
             List.of(),
             List.of(),
+            List.of(),
+            List.of(),
             List.of());
     var visible = bodies.stream().filter(body -> !body.team().equals(RED)).toList();
     return new Situation(
@@ -124,7 +126,9 @@ final class DefuseHandOffTest {
             assignment,
             0,
             Map.of(),
-            -1);
+            -1,
+            Optional.empty(),
+            Set.of());
     return Blackboard.open(RED, Strategy.RUSH).withPlan(plan, 0);
   }
 

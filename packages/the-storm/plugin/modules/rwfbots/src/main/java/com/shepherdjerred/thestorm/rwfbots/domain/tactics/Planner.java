@@ -12,10 +12,9 @@ import com.shepherdjerred.thestorm.rwfbots.domain.reflex.BowSpacing;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.CombatFootwork;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.Reflex;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Lane;
-import com.shepherdjerred.thestorm.rwfbots.domain.team.Playbook;
+import com.shepherdjerred.thestorm.rwfbots.domain.team.Passages;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Role;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Slot;
-import com.shepherdjerred.thestorm.rwfbots.domain.team.SlotKind;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BombId;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BombState;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BombView;
@@ -222,33 +221,45 @@ public final class Planner {
       case TAKE_SLOT -> takeSlot(situation, context);
       case HOLD_SLOT -> holdSlot(situation, context);
       case HOLD_ANGLE -> holdHere(option, situation, context);
-      case HUNT ->
-          situation
-              .nearestEnemy()
-              .map(enemy ->
-                  Plan.of(
-                      option,
-                      now,
-                      new PlanStep.Route(
-                          around(situation, context, enemy.pos(), HUNT_RING),
-                          stanceFor(situation, context))))
-              .orElseGet(() ->
-                  situation
-                      .sensorPosition()
-                      .map(position ->
-                          Plan.of(
-                              option,
-                              now,
-                              new PlanStep.Route(
-                                  around(situation, context, position, HUNT_RING),
-                                  Stance.CAUTIOUS)))
-                      .orElseGet(() -> holdHere(option, situation, context)));
+      case HUNT -> {
+        var edge = Passages.edge(situation);
+        if (edge.isPresent()) {
+          yield Plan.of(option, now, new PlanStep.Route(edge.orElseThrow(), Stance.CAUTIOUS));
+        }
+        yield situation
+            .nearestEnemy()
+            .map(enemy ->
+                Plan.of(
+                    option,
+                    now,
+                    new PlanStep.Route(
+                        around(situation, context, enemy.pos(), HUNT_RING),
+                        SlotRoutes.stanceFor(situation, context))))
+            .orElseGet(() ->
+                situation
+                    .sensorPosition()
+                    .map(position ->
+                        Plan.of(
+                            option,
+                            now,
+                            new PlanStep.Route(
+                                around(situation, context, position, HUNT_RING), Stance.CAUTIOUS)))
+                    .orElseGet(() -> holdHere(option, situation, context)));
+      }
       case ESCAPE_POISON ->
           Plan.of(option, now, new PlanStep.Route(poisonExit(situation, context), Stance.CAUTIOUS));
       case RECOVER -> recovery(situation, context);
       case RESUPPLY ->
           Resupply.nearest(situation, context, TacticalMemory.EMPTY)
               .map(pickup -> Resupply.plan(now, pickup))
+              .orElseGet(() -> holdHere(option, situation, context));
+      case CRATE ->
+          CratePlay.trip(
+                  situation,
+                  Features.of(situation, context, slotPoint(situation, context), false),
+                  context,
+                  TacticalMemory.EMPTY)
+              .map(found -> CratePlay.plan(now, found))
               .orElseGet(() -> holdHere(option, situation, context));
       case REWIND ->
           Plan.of(
@@ -277,17 +288,10 @@ public final class Planner {
     return bystander.map(Situation.KnownEnemy::id).or(() -> Optional.of(pull.attacker()));
   }
 
-  private static Stance stanceFor(Situation situation, TacticsContext context) {
-    if (situation.isLastAlive()) {
-      return Stance.STEALTH;
-    }
-    return context.style().aggression() > 0.6 ? Stance.AGGRESSIVE : Stance.CAUTIOUS;
-  }
-
   /** Route to the bomb and arm it; helpers walk carefully, planters at their own pace. */
   private static Plan bombPlan(
       Option option, Situation situation, TacticsContext context, BombView bomb) {
-    var stance = option == Option.HELP_ARM ? Stance.CAUTIOUS : stanceFor(situation, context);
+    var stance = SlotRoutes.bombStance(option, situation, context);
     return Plan.of(
         option,
         situation.now(),
@@ -383,41 +387,7 @@ public final class Planner {
    * slot stays where it was dealt.
    */
   public static Optional<Vec3> slotPoint(Situation situation, TacticsContext context) {
-    return situation.slot().map(slot -> slotPoint(situation, context, slot));
-  }
-
-  private static Vec3 slotPoint(Situation situation, TacticsContext context, Slot slot) {
-    if (poisonDanger(situation, slot.pos(), POISON_MARGIN)) {
-      return poisonExit(situation, context);
-    }
-    if (slot.kind() != SlotKind.ESCORT) {
-      return slot.pos();
-    }
-    if (slot.buddy().isPresent()) {
-      return Accompany.point(situation, context, slot);
-    }
-    var planter = situation.planter();
-    if (planter.isEmpty()) {
-      return slot.pos();
-    }
-    var from = planter.orElseThrow().pos();
-    var heading =
-        situation
-            .board()
-            .plan()
-            .objective()
-            .flatMap(situation.snapshot()::bomb)
-            .map(BombView::pos)
-            .orElseGet(slot::watch)
-            .minus(from)
-            .horizontal();
-    if (heading.isZero()) {
-      return slot.pos();
-    }
-    var point = Playbook.escortPoint(from, heading.normalized(), slot.side());
-    var graph = context.nav().graph();
-    var node = graph.nearestNodeWithin(point, SNAP);
-    return node.isPresent() ? graph.feet(node.getAsInt()) : point;
+    return situation.slot().map(slot -> SlotRoutes.slotPoint(situation, context, slot));
   }
 
   private static Plan takeSlot(Situation situation, TacticsContext context) {
@@ -425,17 +395,22 @@ public final class Planner {
     if (slot.isEmpty()) {
       return holdHere(Option.TAKE_SLOT, situation, context);
     }
-    var goal = slotPoint(situation, context, slot.orElseThrow());
+    var chosen = slot.orElseThrow();
     var threat = contact(situation);
     if (threat.isPresent()) {
-      return bound(situation, context, goal, threat.orElseThrow());
+      return bound(
+          situation,
+          context,
+          SlotRoutes.slotPoint(situation, context, chosen),
+          threat.orElseThrow());
     }
-    var stance = situation.isLastAlive() ? Stance.STEALTH : Stance.AGGRESSIVE;
+    var goal = SlotRoutes.goal(situation, context, chosen);
+    var stance = SlotRoutes.slotStance(situation, context, chosen);
     return Plan.of(
         Option.TAKE_SLOT,
         situation.now(),
         new PlanStep.Route(goal, stance),
-        new PlanStep.Hold(goal, slot.orElseThrow().watch(), Stance.CAUTIOUS));
+        new PlanStep.Hold(goal, chosen.watch(), Stance.CAUTIOUS));
   }
 
   private static Plan holdSlot(Situation situation, TacticsContext context) {
@@ -443,13 +418,16 @@ public final class Planner {
     if (slot.isEmpty()) {
       return holdHere(Option.HOLD_SLOT, situation, context);
     }
-    var goal = slotPoint(situation, context, slot.orElseThrow());
+    var chosen = slot.orElseThrow();
     var threat = contact(situation);
+    var goal =
+        threat.isPresent()
+            ? SlotRoutes.slotPoint(situation, context, chosen)
+            : SlotRoutes.goal(situation, context, chosen);
     var now = situation.now();
     if (threat.isEmpty()) {
       var stance = situation.isLastAlive() ? Stance.STEALTH : Stance.CAUTIOUS;
-      return Plan.of(
-          Option.HOLD_SLOT, now, new PlanStep.Hold(goal, slot.orElseThrow().watch(), stance));
+      return Plan.of(Option.HOLD_SLOT, now, new PlanStep.Hold(goal, chosen.watch(), stance));
     }
     var cover =
         heldCover(situation, context, goal, threat.orElseThrow())
@@ -809,7 +787,7 @@ public final class Planner {
   }
 
   /** Away from the own bomb: towards the nearest armable bomb, else the enemy spawn. */
-  private static Vec3 poisonExit(Situation situation, TacticsContext context) {
+  static Vec3 poisonExit(Situation situation, TacticsContext context) {
     var self = situation.self();
     var radius = situation.snapshot().poison().bombRadius() + POISON_MARGIN;
     var goal =

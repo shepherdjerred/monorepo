@@ -1,14 +1,18 @@
 package com.shepherdjerred.thestorm.rwfbots.adapter.paper;
 
+import com.shepherdjerred.thestorm.rwf.app.MatchCrates;
 import com.shepherdjerred.thestorm.rwf.app.MatchSummons;
 import com.shepherdjerred.thestorm.rwf.app.NameTags;
 import com.shepherdjerred.thestorm.rwf.app.view.MatchState;
+import com.shepherdjerred.thestorm.rwf.app.view.StreakItems;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
 import com.shepherdjerred.thestorm.rwfbots.domain.tactics.Resupply;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BombOwner;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BombState;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BombView;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantId;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantView;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.CrateView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Kit;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.MatchPhase;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.PoisonView;
@@ -16,6 +20,8 @@ import com.shepherdjerred.thestorm.rwfbots.domain.world.Stimulus;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.SummonView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.TraversalState;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.WorldSnapshot;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -59,6 +65,7 @@ public final class SnapshotCapture {
   private final Capabilities capabilities;
   private final MatchSummons summons;
   private final NameTags nameTags;
+  private final MatchCrates crates;
   private final Map<UUID, SoundMotion> soundMotion = new HashMap<>();
   private boolean emitMotion = true;
   private long soundBaseline;
@@ -73,7 +80,8 @@ public final class SnapshotCapture {
         new SnapshotCapture(
             ids,
             entities,
-            new Sources(new StimulusCollector(stimuli.sounds(), stimuli.time()), summons, nameTags),
+            new Sources(
+                new StimulusCollector(stimuli.sounds(), stimuli.time()), summons, nameTags, crates),
             capabilities);
     capture.emitMotion = false;
     capture.soundBaseline = soundBaseline;
@@ -93,8 +101,16 @@ public final class SnapshotCapture {
    * @param stimuli where the tick's raw events wait
    * @param summons the match's killstreak creatures
    * @param nameTags whose name tags the enemy cannot see
+   * @param crates supply crates that have landed
    */
-  public record Sources(StimulusCollector stimuli, MatchSummons summons, NameTags nameTags) {}
+  public record Sources(
+      StimulusCollector stimuli, MatchSummons summons, NameTags nameTags, MatchCrates crates) {
+
+    /** A capture with no supply crates. */
+    public Sources(StimulusCollector stimuli, MatchSummons summons, NameTags nameTags) {
+      this(stimuli, summons, nameTags, List::of);
+    }
+  }
 
   /**
    * @param ids the match's id mapping
@@ -110,6 +126,7 @@ public final class SnapshotCapture {
     this.ids = ids;
     this.summons = sources.summons();
     this.nameTags = sources.nameTags();
+    this.crates = sources.crates();
     this.entities = entities;
     this.stimuli = sources.stimuli();
     this.traversal = new TraversalCapture(capabilities.noFallUntil(), capabilities.time());
@@ -154,7 +171,70 @@ public final class SnapshotCapture {
         mapId,
         stimuli(tick, present, sources),
         Quivers.loose(low),
-        field);
+        field,
+        landed(tick),
+        supplyCarriers(present));
+  }
+
+  /** Crates on the ground, skipping an owner the combatant pass did not already know. */
+  private List<CrateView> landed(long tick) {
+    var now = capabilities.time().instant();
+    var views = new ArrayList<CrateView>();
+    for (var landed : crates.landed()) {
+      var owner = ids.known(landed.owner());
+      if (owner.isEmpty()) {
+        continue;
+      }
+      var at = landed.position();
+      var landedTick = Math.min(tick, tickOf(landed.landed(), now, tick));
+      var teamTick = Math.max(landedTick, tickOf(landed.teamLoots(), now, tick));
+      views.add(
+          new CrateView(
+              new Vec3(at.x(), at.y(), at.z()),
+              owner.orElseThrow(),
+              IdMap.team(landed.team()),
+              landedTick,
+              teamTick,
+              Math.max(teamTick, tickOf(landed.anyoneLoots(), now, tick))));
+    }
+    return views;
+  }
+
+  /**
+   * The match tick of {@code at}, counted from {@code tick} at {@code now}. A future moment rounds
+   * up, so a bot never reaches for a crate before the match lets it.
+   */
+  private static long tickOf(Instant at, Instant now, long tick) {
+    var millis = Duration.between(now, at).toMillis();
+    return Math.max(0, tick + Math.ceilDiv(millis, 50L));
+  }
+
+  /** Combatants whose next dropped killstreak is a supply crate. */
+  private List<CombatantId> supplyCarriers(Map<UUID, Player> present) {
+    var carriers = new ArrayList<CombatantId>();
+    for (var entry : present.entrySet()) {
+      if (!nextSupply(entry.getValue())) {
+        continue;
+      }
+      ids.known(entry.getKey()).ifPresent(carriers::add);
+    }
+    return carriers;
+  }
+
+  private static boolean nextSupply(Player player) {
+    var inventory = player.getInventory();
+    for (var slot = 0; slot < inventory.getSize(); slot++) {
+      var stack = inventory.getItem(slot);
+      if (stack == null || stack.isEmpty()) {
+        continue;
+      }
+      var material = stack.getType().name();
+      if (!StreakItems.DROPPED.contains(material)) {
+        continue;
+      }
+      return material.equals(StreakItems.SUPPLY_CRATE);
+    }
+    return false;
   }
 
   private SummonView summon(MatchSummons.Creature creature) {

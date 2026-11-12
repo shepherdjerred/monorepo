@@ -106,7 +106,7 @@ final class RunHopTest {
         Optional.empty(),
         "run",
         NOW,
-        1,
+        0,
         Optional.empty());
   }
 
@@ -123,6 +123,8 @@ final class RunHopTest {
             List.of(),
             PoisonView.NONE,
             "lanes",
+            List.of(),
+            List.of(),
             List.of(),
             List.of(),
             List.of());
@@ -219,7 +221,9 @@ final class RunHopTest {
     var close = combatant(9, BLUE, new Vec3(OPEN + 3, 1, 4.5));
     var far = combatant(9, BLUE, new Vec3(OPEN + 18, 1, 4.5));
     var decision = route(points, Stance.AGGRESSIVE);
-    assertThat(hops(tick(self, decision, RUNNER, List.of(near)))).isFalse();
+    assertThat(hops(tick(self, decision, RUNNER, List.of(near))))
+        .as("an enemy in sight is not contact")
+        .isTrue();
     assertThat(hops(tick(self, decision, RUNNER, List.of(far)))).isTrue();
     var hopper = context(new ReflexContext.Habits(false, Reflex.EAT_BELOW, true), 0.65);
     assertThat(hops(tick(self, decision, hopper, List.of(near)))).isTrue();
@@ -246,11 +250,16 @@ final class RunHopTest {
   }
 
   @Test
-  void beginnersRunWithoutHoppingButABunnyHopperHopsAtAnySkill() {
+  void anOpeningRushHopsAtAnyTechniqueAndABowDoesNot() {
     var self = runner(OPEN, 4.5);
     var decision = route(lane(OPEN, 4.5, 16), Stance.AGGRESSIVE);
     assertThat(hops(tick(self, decision, context(ReflexContext.Habits.NONE, 0.2), List.of())))
-        .isFalse();
+        .as("the opening does not wait on technique")
+        .isTrue();
+    var bow =
+        new ReflexContext(
+            NAV, levers(0.2), Loadout.standard(Kit.LONGBOW), ReflexContext.Habits.NONE);
+    assertThat(hops(tick(self, decision, bow, List.of()))).as("a bow keeps its feet").isFalse();
     assertThat(
             hops(
                 tick(
@@ -259,6 +268,60 @@ final class RunHopTest {
                     context(new ReflexContext.Habits(false, Reflex.EAT_BELOW, true), 0.2),
                     List.of())))
         .isTrue();
+  }
+
+  @Test
+  void theOpeningEndsAtFirstContactAndInALaterLife() {
+    var decision = route(lane(OPEN, 4.5, 16), Stance.AGGRESSIVE);
+    var clumsy = context(ReflexContext.Habits.NONE, 0.2);
+    assertThat(hops(tick(runner(OPEN, 4.5), decision, clumsy, List.of()))).isTrue();
+
+    var hurt = runner(OPEN, 4.5).withLastHurtTick(NOW - 40);
+    assertThat(hops(tick(hurt, decision, clumsy, List.of())))
+        .as("a bot already in contact uses its own footwork")
+        .isFalse();
+    var respawned =
+        new Decision(
+            decision.bot(),
+            decision.option(),
+            decision.target(),
+            decision.waypoints(),
+            decision.stance(),
+            decision.bomb(),
+            decision.watch(),
+            decision.ability(),
+            decision.planLabel(),
+            decision.snapshotTick(),
+            1,
+            decision.routeFailure());
+    assertThat(hops(tick(runner(OPEN, 4.5), respawned, clumsy, List.of())))
+        .as("a later life is not the opening")
+        .isFalse();
+  }
+
+  @Test
+  void anOpeningMeleeAttackerSprintJumpsASlopedStraightAndACautiousAnchorDoesNot() {
+    var sloped = new ArrayList<Waypoint>();
+    for (var i = 1; i <= 16; i++) {
+      sloped.add(new Waypoint(new Vec3(OPEN + i * 0.08, 1 + i * 0.04, 4.5 + i), Hop.WALK));
+    }
+    var attacker = route(sloped, Stance.AGGRESSIVE);
+    var seen = combatant(9, BLUE, new Vec3(OPEN + 12, 1, 4.5));
+    var rushed =
+        tick(runner(OPEN, 4.5), attacker, context(ReflexContext.Habits.NONE, 0.2), List.of(seen));
+    assertThat(hops(rushed)).as("slope, gentle drift, enemy in sight: %s", rushed).isTrue();
+    assertThat(rushed)
+        .anySatisfy(command -> {
+          if (command instanceof BodyCommand.MoveToward move) assertThat(move.sprint()).isTrue();
+        });
+
+    var anchor = route(sloped, Stance.CAUTIOUS);
+    var walked = tick(runner(OPEN, 4.5), anchor, RUNNER, List.of());
+    assertThat(hops(walked)).isFalse();
+    assertThat(walked)
+        .filteredOn(BodyCommand.MoveToward.class::isInstance)
+        .map(BodyCommand.MoveToward.class::cast)
+        .allSatisfy(move -> assertThat(move.sprint()).isFalse());
   }
 
   @Test

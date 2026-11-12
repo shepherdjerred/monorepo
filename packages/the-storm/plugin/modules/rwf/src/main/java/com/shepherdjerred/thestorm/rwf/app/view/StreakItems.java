@@ -18,5 +18,8 @@ public final class StreakItems {
           .map(Killstreak::item)
           .collect(Collectors.toUnmodifiableSet());
 
+  /** The material of the supply crate's item. */
+  public static final String SUPPLY_CRATE = Killstreak.SUPPLY_CRATE.item();
+
   private StreakItems() {}
 }

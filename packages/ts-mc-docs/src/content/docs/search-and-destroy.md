@@ -22,7 +22,7 @@ Pick a kit by right-clicking the nether star in your hotbar. Your first kit is T
 - Each team has bombs. Arm an enemy team's bomb and, if it explodes, that team is eliminated. Defuse your own armed bomb to save your team.
 - Combat has no attack cooldown and uses classic knockback; shields and sweep attacks do nothing. Survival combat is unchanged.
 
-Hold the **Bomb Fuse** in your first hotbar slot and right-click a bomb to arm or defuse it. See the [bomb guide](/games/search-and-destroy-bombs/) for timing and other details.
+Hold the **Bomb Fuse** in your first hotbar slot and hold right-click on a bomb to arm or defuse it. Tapping still works, but it is much slower. See the [bomb guide](/games/search-and-destroy-bombs/) for timing and other details.
 
 Rounds eventually end with rising poison damage, so keep moving and fight rather than waiting by your bomb.
 

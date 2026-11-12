@@ -11,6 +11,7 @@ import com.shepherdjerred.thestorm.rwfbots.app.Governor;
 import com.shepherdjerred.thestorm.rwfbots.app.LoadTelemetry;
 import com.shepherdjerred.thestorm.rwfbots.app.ThinkLoop;
 import com.shepherdjerred.thestorm.rwfbots.app.ThinkStats;
+import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.VoxelGrid;
 import com.shepherdjerred.thestorm.rwfbots.domain.perception.Percept;
 import com.shepherdjerred.thestorm.rwfbots.domain.perception.Perception;
@@ -21,9 +22,11 @@ import com.shepherdjerred.thestorm.rwfbots.domain.reflex.Reflex;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.ReflexContext;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.ReflexInput;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.StreakPlay;
+import com.shepherdjerred.thestorm.rwfbots.domain.tactics.CratePlay;
 import com.shepherdjerred.thestorm.rwfbots.domain.tactics.FrozenWatch;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BodyCommand;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantView;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.CrateView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.SummonView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.WorldSnapshot;
 import java.util.Arrays;
@@ -51,6 +54,15 @@ public final class BotTicker {
 
   /** The hotbar and the main inventory slots. */
   static final int HOTBAR_AND_STORAGE = 36;
+
+  /** A blow this recent counts as being in a fight, so a crate wait yields. */
+  private static final int HURT_TICKS = 15;
+
+  /** A landed crate this close to the call, horizontally, is the one that was called in. */
+  private static final double CRATE_WATCH = 8;
+
+  /** A crate this close to where it was last seen is still that crate. */
+  private static final double CRATE_STILL = 1.5;
 
   private final Roster roster;
   private final ThinkLoop loop;
@@ -316,6 +328,7 @@ public final class BotTicker {
             roster.harness().controlled(match.matchId())
                 ? ReflexContext.Habits.NONE
                 : ReflexContext.Habits.of(profile.archetype(), profile.quirks()));
+    roster.bodies().entity(bot.uuid()).ifPresent(CrateGear::equip);
     if (communicating(bot, input, match)) return;
     var step = Reflex.tick(bot.reflex(), input, context, bot.random());
     bot.reflex(step.state());
@@ -339,13 +352,14 @@ public final class BotTicker {
             ? roster.harness().commands(controls)
             : learning.commands(controls);
     watchFrozen(bot, profile, input, commands);
-    if (StreakPlay.now(streaks(bot), input, bot.nextStreak())) {
+    if (callsStreak(bot, input)) {
       commands =
           java.util.stream.Stream.concat(
                   commands.stream(), java.util.stream.Stream.of(new BodyCommand.UseStreak()))
               .toList();
       bot.nextStreak(tick + StreakPlay.GAP_TICKS);
     }
+    commands = steerCrate(bot, input, commands);
     driver.apply(
         bot,
         commands,
@@ -510,6 +524,96 @@ public final class BotTicker {
       }
     }
     return bot.profile().isPresent();
+  }
+
+  /** Whether {@code bot} calls in its carried streak now: a supply crate only where it is safe. */
+  private boolean callsStreak(BotBody bot, ReflexInput input) {
+    if (!StreakPlay.now(streaks(bot), input, bot.nextStreak())) {
+      return false;
+    }
+    var supply = roster.bodies().entity(bot.uuid()).map(CrateGear::nextIsCrate).orElse(false);
+    var safe =
+        CratePlay.safeToCall(
+            input.self(), input.perceived(), input.target(), input.snapshot().bombs());
+    return StreakPlay.placeable(supply, safe);
+  }
+
+  /**
+   * Steers a bot that just called in a supply crate: hold at the call until it lands, walk to it,
+   * loot it in reach, and fight without forgetting it. The watch is set on the use tick, so this
+   * runs from the tick after.
+   */
+  private List<BodyCommand> steerCrate(BotBody bot, ReflexInput input, List<BodyCommand> commands) {
+    var watch = bot.crateWatch();
+    if (watch.isEmpty()) {
+      return commands;
+    }
+    var at = watch.orElseThrow();
+    var own = ownCrate(input, bot, at);
+    if (own.isPresent()) {
+      bot.seeCrate(own.orElseThrow().pos());
+    }
+    var self = input.self();
+    var hurt =
+        self.lastHurtTick() >= 0 && input.snapshot().tick() - self.lastHurtTick() <= HURT_TICKS;
+    var inReach =
+        own.filter(crate -> crate.pos().distance(self.pos()) <= CratePlay.REACH).isPresent();
+    var attention =
+        CratePlay.attention(
+            new CratePlay.Waiting(
+                input.snapshot().tick(),
+                bot.crateWatchUntil(),
+                input.target().isPresent() || hurt,
+                bot.crateSeen().isPresent(),
+                own.isPresent(),
+                inReach));
+    return switch (attention) {
+      case CLEAR -> {
+        bot.clearCrateWatch();
+        yield commands;
+      }
+      case FIGHT -> commands;
+      case LOOT -> {
+        driver.loot(bot, own.orElseThrow().pos());
+        yield replaceMotion(commands, new BodyCommand.Stop());
+      }
+      case HOLD -> replaceMotion(commands, new BodyCommand.Stop());
+      case APPROACH ->
+          replaceMotion(commands, new BodyCommand.MoveToward(bot.crateSeen().orElse(at), false));
+    };
+  }
+
+  private static Optional<CrateView> ownCrate(ReflexInput input, BotBody bot, Vec3 watch) {
+    Optional<CrateView> best = Optional.empty();
+    var bestDistance = Double.POSITIVE_INFINITY;
+    for (var crate : input.snapshot().crates()) {
+      if (!crate.owner().equals(input.self().id())) {
+        continue;
+      }
+      var nearWatch = crate.pos().horizontalDistance(watch) <= CRATE_WATCH;
+      var nearSeen =
+          bot.crateSeen().filter(seen -> crate.pos().distance(seen) <= CRATE_STILL).isPresent();
+      if (!nearWatch && !nearSeen) {
+        continue;
+      }
+      var distance = crate.pos().distance(input.self().pos());
+      if (distance < bestDistance) {
+        best = Optional.of(crate);
+        bestDistance = distance;
+      }
+    }
+    return best;
+  }
+
+  private static List<BodyCommand> replaceMotion(List<BodyCommand> commands, BodyCommand motion) {
+    return java.util.stream.Stream.concat(
+            commands.stream()
+                .filter(command ->
+                    !(command instanceof BodyCommand.MoveToward)
+                        && !(command instanceof BodyCommand.Stop)
+                        && !(command instanceof BodyCommand.Jump)),
+            java.util.stream.Stream.of(motion))
+        .toList();
   }
 
   /** How many killstreak rewards called in from the sky {@code bot} carries. */

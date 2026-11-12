@@ -107,7 +107,9 @@ final class SummonReflexTest {
             NAV.mapId(),
             List.of(),
             List.of(),
-            List.of(summon));
+            List.of(summon),
+            List.of(),
+            List.of());
     var input = ReflexInput.of(self, snapshot, decision, percept(Optional.empty(), summon));
     return Reflex.tick(
         ReflexState.initial(self.facing()),

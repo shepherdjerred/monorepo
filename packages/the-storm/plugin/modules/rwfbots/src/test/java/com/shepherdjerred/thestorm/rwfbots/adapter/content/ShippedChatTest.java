@@ -139,8 +139,11 @@ final class ShippedChatTest {
           .doesNotContain("{", "}")
           .hasSizeLessThanOrEqualTo(256);
     }
-    // A lobby and a match together speak every pool.
-    assertThat(heard).containsExactlyInAnyOrderElementsOf(EnumSet.allOf(Lines.Moment.class));
+    // A lobby and a match together speak every pool that is still said. The last living member of
+    // a team stays quiet, so the last-alive pool is not spoken during the round.
+    var spoken = EnumSet.allOf(Lines.Moment.class);
+    spoken.remove(Lines.Moment.ON_LAST_ALIVE);
+    assertThat(heard).containsExactlyInAnyOrderElementsOf(spoken);
   }
 
   private static ChatScene.Member dead(ChatScene.Member member) {

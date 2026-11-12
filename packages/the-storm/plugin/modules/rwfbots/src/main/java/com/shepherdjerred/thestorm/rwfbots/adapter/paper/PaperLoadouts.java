@@ -1,6 +1,8 @@
 package com.shepherdjerred.thestorm.rwfbots.adapter.paper;
 
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.Loadout;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.KitMove;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import org.bukkit.Material;
@@ -53,12 +55,35 @@ final class PaperLoadouts {
     }
     var player = body.orElseThrow();
     var inventory = player.getInventory();
-    return loadout.kitItems().stream()
-        .filter(item -> {
-          var stack = inventory.getItem(item.slot());
-          return stack != null && !stack.isEmpty() && !player.hasCooldown(stack);
-        })
-        .toList();
+    var usable =
+        loadout.kitItems().stream()
+            .filter(item -> {
+              var stack = inventory.getItem(item.slot());
+              return stack != null && !stack.isEmpty() && !player.hasCooldown(stack);
+            })
+            .toList();
+    if (loadout.kitItems().stream().anyMatch(PaperLoadouts::pearlMove)) {
+      return usable;
+    }
+    for (var slot = 0; slot < HOTBAR; slot++) {
+      var stack = inventory.getItem(slot);
+      if (stack != null
+          && stack.getType() == Material.ENDER_PEARL
+          && !stack.isEmpty()
+          && !player.hasCooldown(stack)) {
+        var items = new ArrayList<>(usable);
+        items.add(
+            new Loadout.KitItem(
+                new KitMove("ENDER_PEARL", KitMove.Use.CRATE_PEARL, 6, 32, 20), slot));
+        return items;
+      }
+    }
+    return usable;
+  }
+
+  /** A kit pearl already has its own throw. A crate pearl must not be added beside it. */
+  private static boolean pearlMove(Loadout.KitItem item) {
+    return item.move().use() == KitMove.Use.BLINK || item.move().use() == KitMove.Use.CRATE_PEARL;
   }
 
   /**

@@ -29,6 +29,16 @@ import org.mockbukkit.mockbukkit.entity.PlayerMock;
  */
 final class RwfBorderAndRewindTest {
 
+  /**
+   * Taps one server tick apart, enough to finish a one-person, nine-second arm or defuse at the tap
+   * credit. A tap earns a slice of the clock however fast it comes, so mashing keeps these flows
+   * short. Holding is the fast path; MockBukkit cannot ray-trace a held aim, so the domain tests
+   * cover it.
+   */
+  private static final int TAPS_TO_FUSE = 60;
+
+  private static final Duration TAP_GAP = Duration.ofMillis(50);
+
   @TempDir Path directory;
   private @Nullable RwfHarness running;
 
@@ -152,9 +162,9 @@ final class RwfBorderAndRewindTest {
     var site = harness.snapshot().bomb(bombId).orElseThrow().position();
     player.teleport(new Location(harness.rwf, site.x() + 1.5, site.y(), site.z() + 0.5));
     var aliceId = new CombatantId.Human(player.getUniqueId());
-    for (var i = 0; i < 24 && !armed(harness, bombId); i++) {
+    for (var i = 0; i < TAPS_TO_FUSE && !armed(harness, bombId); i++) {
       assertThat(harness.actions().clickBomb(aliceId, bombId)).isEmpty();
-      harness.tick(Duration.ofMillis(500));
+      harness.tick(TAP_GAP);
     }
     assertThat(armed(harness, bombId)).isTrue();
     for (var i = 0; i < 62 && harness.snapshot().phase() != MatchSnapshot.PhaseKind.ENDED; i++) {

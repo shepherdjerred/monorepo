@@ -15,8 +15,16 @@ import java.util.Set;
  * @param corridor the lane's nodes and their near neighbours
  * @param lateral the lane's widest sideways offset from the straight line home to objective, in
  *     blocks, signed; lanes are ordered by it
+ * @param cut whether this is a side passage or an underground route, kept off the left/middle/right
+ *     pick so it does not steal a main lane
  */
-public record Lane(List<Integer> nodes, List<Vec3> points, Set<Integer> corridor, double lateral) {
+public record Lane(
+    List<Integer> nodes, List<Vec3> points, Set<Integer> corridor, double lateral, boolean cut) {
+
+  /** A main lane, not a side passage. */
+  public Lane(List<Integer> nodes, List<Vec3> points, Set<Integer> corridor, double lateral) {
+    this(nodes, points, corridor, lateral, false);
+  }
 
   public Lane {
     nodes = List.copyOf(nodes);

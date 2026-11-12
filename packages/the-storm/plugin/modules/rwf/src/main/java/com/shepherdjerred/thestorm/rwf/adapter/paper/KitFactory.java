@@ -11,6 +11,8 @@ import com.shepherdjerred.thestorm.rwf.domain.kit.KitLayout;
 import com.shepherdjerred.thestorm.rwf.domain.kit.KitSpec;
 import com.shepherdjerred.thestorm.rwf.domain.kit.LoreLines;
 import io.papermc.paper.datacomponent.DataComponentTypes;
+import io.papermc.paper.datacomponent.item.Consumable;
+import io.papermc.paper.datacomponent.item.consumable.ItemUseAnimation;
 import io.papermc.paper.registry.RegistryAccess;
 import io.papermc.paper.registry.RegistryKey;
 import java.util.ArrayList;
@@ -49,6 +51,12 @@ final class KitFactory {
 
   /** The hotbar slot the Bomb Fuse is locked into. */
   static final int FUSE_SLOT = 0;
+
+  /**
+   * How long a held fuse would take to consume. A match never lasts this long; finishing is
+   * cancelled anyway. The duration is what lets a player and a bot keep the use raised.
+   */
+  private static final float FUSE_USE_SECONDS = 72_000f;
 
   /** The hotbar slot of the lobby's kit selector. */
   static final int SELECTOR_SLOT = 8;
@@ -342,7 +350,21 @@ final class KitFactory {
       stack.editMeta(meta -> meta.setEnchantmentGlintOverride(true));
     });
     keys.tagFuse(stack);
+    stack.setData(DataComponentTypes.CONSUMABLE, fuseUse());
     return stack;
+  }
+
+  /**
+   * A held use with no eat animation and no consume particles. Right-clicking a bomb is allowed to
+   * start it; {@code PlayerItemConsumeEvent} cancels the finish so the powder is never eaten.
+   */
+  private static Consumable fuseUse() {
+    return Consumable.consumable()
+        .consumeSeconds(FUSE_USE_SECONDS)
+        .animation(ItemUseAnimation.NONE)
+        .sound(Key.key(Key.MINECRAFT_NAMESPACE, "intentionally_empty"))
+        .hasConsumeParticles(false)
+        .build();
   }
 
   /** The hotbar slot of the team chestplate. */

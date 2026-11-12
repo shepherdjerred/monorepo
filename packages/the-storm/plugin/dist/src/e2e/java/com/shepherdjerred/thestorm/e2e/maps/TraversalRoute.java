@@ -113,6 +113,8 @@ final class TraversalRoute {
             context.nav().mapId(),
             List.of(),
             List.of(),
+            List.of(),
+            List.of(),
             List.of());
     var percept = new Percept(new PerceptionState(Memory.EMPTY, Suspicion.NONE), List.of(), tick);
     var situation =

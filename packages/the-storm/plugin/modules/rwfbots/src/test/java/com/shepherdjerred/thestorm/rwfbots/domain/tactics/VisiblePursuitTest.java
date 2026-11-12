@@ -206,6 +206,8 @@ final class VisiblePursuitTest {
         NAV.mapId(),
         List.of(),
         List.of(),
+        List.of(),
+        List.of(),
         List.of());
   }
 }

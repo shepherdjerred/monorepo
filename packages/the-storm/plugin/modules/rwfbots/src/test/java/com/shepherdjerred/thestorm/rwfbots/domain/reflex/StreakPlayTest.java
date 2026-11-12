@@ -38,6 +38,8 @@ final class StreakPlayTest {
             "synthetic",
             List.of(),
             List.of(),
+            List.of(),
+            List.of(),
             List.of());
     var decision =
         new Decision(

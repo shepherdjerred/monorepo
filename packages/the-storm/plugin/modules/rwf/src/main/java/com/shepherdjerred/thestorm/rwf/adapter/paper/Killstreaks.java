@@ -108,6 +108,11 @@ final class Killstreaks {
     return summons;
   }
 
+  /** The landed supply crates, for the bots' snapshot. */
+  com.shepherdjerred.thestorm.rwf.app.MatchCrates crates() {
+    return crates;
+  }
+
   Napalm napalm() {
     return napalm;
   }

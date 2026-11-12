@@ -26,10 +26,31 @@ final class Bombs {
   private Bombs() {}
 
   static Optional<MatchError> click(Draft draft, MatchEvent.BombClicked click) {
+    return input(draft, new Input(click.id(), click.bombId(), click.now(), false));
+  }
+
+  /**
+   * A held right-click. A hold only continues an attempt its team already has under way: the press
+   * that starts it is a tap. So a fuse still held when its attempt finishes does nothing more, and
+   * a defuser does not roll straight into arming the nuke it just saved. Continuation samples do
+   * not hiss again.
+   */
+  static Optional<MatchError> hold(Draft draft, MatchEvent.BombHeld held) {
+    return input(draft, new Input(held.id(), held.bombId(), held.now(), true));
+  }
+
+  /** A tap or a hold sample from {@code id} on {@code bombId}. */
+  private record Input(CombatantId id, String bombId, Instant now, boolean holding) {}
+
+  private static Optional<MatchError> input(Draft draft, Input input) {
+    var id = input.id();
+    var bombId = input.bombId();
+    var now = input.now();
+    var holding = input.holding();
     if (!(draft.phase instanceof Phase.Live)) {
       return Optional.of(MatchError.NOT_LIVE);
     }
-    var member = draft.member(click.id());
+    var member = draft.member(id);
     if (member.isEmpty()) {
       return Optional.of(MatchError.NOT_A_MEMBER);
     }
@@ -37,23 +58,44 @@ final class Bombs {
     if (!clicker.alive()) {
       return Optional.of(MatchError.NOT_ALIVE);
     }
-    var bomb = draft.bomb(click.bombId());
+    var bomb = draft.bomb(bombId);
     if (bomb.isEmpty()) {
       return Optional.of(MatchError.UNKNOWN_BOMB);
     }
     var before = bomb.orElseThrow();
     var team = clicker.team().orElseThrow();
-    var result = before.click(new BombClick(clicker.id(), team, clicker.fuse(), click.now()));
+    if (holding && !underWay(before, team, now)) {
+      return Optional.empty();
+    }
+    var sample = new BombClick(clicker.id(), team, clicker.fuse(), now);
+    var continuing = holding && continuingHold(before, team, now);
+    var result = holding ? before.hold(sample) : before.click(sample);
     return result.fold(
         step -> {
           draft.putBomb(step.bomb());
-          draft.effect(new MatchEffect.SoundAt(before.site().position(), SoundCue.FUSE_HISS));
+          if (!continuing) {
+            draft.effect(new MatchEffect.SoundAt(before.site().position(), SoundCue.FUSE_HISS));
+          }
           for (var outcome : step.outcomes()) {
             apply(draft, before, step.bomb(), outcome);
           }
           return Optional.empty();
         },
         error -> Optional.of(translate(error)));
+  }
+
+  /** Whether {@code team} has a live attempt on {@code bomb}, tapped or held. */
+  private static boolean underWay(Bomb bomb, TeamColor team, Instant now) {
+    return bomb.state().attempts().stream()
+        .anyMatch(attempt -> attempt.team() == team && attempt.valid(now));
+  }
+
+  /**
+   * Whether {@code team} already has a live hold on {@code bomb}, so this sample is not a new one.
+   */
+  private static boolean continuingHold(Bomb bomb, TeamColor team, Instant now) {
+    return bomb.state().attempts().stream()
+        .anyMatch(attempt -> attempt.team() == team && attempt.holding() && attempt.valid(now));
   }
 
   private static MatchError translate(BombError error) {

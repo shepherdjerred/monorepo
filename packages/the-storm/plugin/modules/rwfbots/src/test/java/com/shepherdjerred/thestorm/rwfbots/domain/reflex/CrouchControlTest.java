@@ -54,6 +54,8 @@ final class CrouchControlTest {
             NAV.mapId(),
             List.of(),
             List.of(),
+            List.of(),
+            List.of(),
             List.of());
     return Reflex.tick(
         state,

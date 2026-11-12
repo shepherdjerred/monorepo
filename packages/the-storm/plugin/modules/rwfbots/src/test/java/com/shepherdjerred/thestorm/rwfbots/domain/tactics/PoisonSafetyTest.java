@@ -73,7 +73,9 @@ final class PoisonSafetyTest {
             Map.of(self.id(), slot.key()),
             0,
             java.util.Map.of(),
-            -1);
+            -1,
+            Optional.empty(),
+            Set.of());
     var snapshot =
         new WorldSnapshot(
             100,
@@ -83,6 +85,8 @@ final class PoisonSafetyTest {
                 new BombView(new BombId(0), new BombOwner.Team(RED), BOMB, new BombState.Idle())),
             active ? PoisonView.startedAt(0, 0.1) : PoisonView.NONE,
             NAV.mapId(),
+            List.of(),
+            List.of(),
             List.of(),
             List.of(),
             List.of());

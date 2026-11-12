@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * The positions a team's playbook dealt and who holds each.
@@ -22,6 +23,9 @@ import java.util.Optional;
  * @param groups the squad each bot walks with
  * @param pushedTick when the push last moved, or -1 before the first deal; a push held too long in
  *     a stalemate moves anyway ({@link TeamBrain#STALL_TICKS})
+ * @param posture how the team plays once three or more teams are alive; empty means press, which a
+ *     two-team match always does
+ * @param reckless bots that ignore a wait or a hunt of the weakest and chase whoever is nearest
  */
 public record TeamPlan(
     Optional<Strategy> strategy,
@@ -33,7 +37,9 @@ public record TeamPlan(
     Map<CombatantId, String> assignment,
     long dealtTick,
     Map<CombatantId, Integer> groups,
-    long pushedTick) {
+    long pushedTick,
+    Optional<Posture> posture,
+    Set<CombatantId> reckless) {
 
   public static final TeamPlan NONE =
       new TeamPlan(
@@ -46,7 +52,9 @@ public record TeamPlan(
           Map.of(),
           -1,
           Map.of(),
-          -1);
+          -1,
+          Optional.empty(),
+          Set.of());
 
   public TeamPlan {
     lanes = List.copyOf(lanes);
@@ -56,6 +64,7 @@ public record TeamPlan(
     slots = List.copyOf(slots);
     assignment = Map.copyOf(assignment);
     groups = Map.copyOf(groups);
+    reckless = Set.copyOf(reckless);
     var keys = new HashSet<String>();
     for (var slot : slots) {
       if (!keys.add(slot.key())) {
@@ -68,6 +77,23 @@ public record TeamPlan(
     if (!keys.containsAll(assignment.values())) {
       throw new IllegalArgumentException("a bot holds a slot the plan does not have");
     }
+  }
+
+  /** The same plan, committed to {@code posture} with {@code reckless} ignoring it. */
+  public TeamPlan withStance(Posture posture, Set<CombatantId> reckless) {
+    return new TeamPlan(
+        strategy,
+        home,
+        objective,
+        lanes,
+        push,
+        slots,
+        assignment,
+        dealtTick,
+        groups,
+        pushedTick,
+        Optional.of(posture),
+        reckless);
   }
 
   /** The slot {@code bot} holds. */

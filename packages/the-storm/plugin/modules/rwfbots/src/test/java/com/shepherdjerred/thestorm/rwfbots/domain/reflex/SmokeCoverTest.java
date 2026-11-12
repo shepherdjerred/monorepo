@@ -116,10 +116,10 @@ final class SmokeCoverTest {
       state = step.state();
       uses += (int) step.commands().stream().filter(BodyCommand.UseKit.class::isInstance).count();
       clicks +=
-          (int) step.commands().stream().filter(BodyCommand.ClickBomb.class::isInstance).count();
+          (int) step.commands().stream().filter(BodyCommand.StartUse.class::isInstance).count();
     }
 
     assertThat(uses).as("one smoke in 30 seconds of defusing").isEqualTo(1);
-    assertThat(clicks).as("the defuse goes on").isGreaterThan(50);
+    assertThat(clicks).as("the defuse holds the fuse").isGreaterThan(50);
   }
 }

@@ -76,6 +76,8 @@ final class RoleAssignmentTest {
             nav.mapId(),
             List.of(),
             List.of(),
+            List.of(),
+            List.of(),
             List.of());
     var previous =
         new TeamPlan(
@@ -88,14 +90,17 @@ final class RoleAssignmentTest {
             Map.of(bots.getFirst().id(), slots.getFirst().key()),
             0,
             Map.of(),
-            -1);
+            -1,
+            Optional.empty(),
+            Set.of());
     var dealing =
         new TeamBrain.Dealing(
             previous,
             new TeamBrain.TeamSituation(nav, snapshot, bots, members),
             bots,
             false,
-            java.util.Set.of());
+            java.util.Set.of(),
+            List.of());
     var prepared = new RoleAssignment(dealing, slots);
     assertThat(prepared.rows()).isLessThan(bots.size());
     var rows = new ArrayList<float[]>();

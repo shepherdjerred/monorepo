@@ -209,6 +209,8 @@ final class ArcherDuelTest {
               FIELD.mapId(),
               heard,
               List.of(),
+              List.of(),
+              List.of(),
               List.of());
       var decision =
           new Decision(

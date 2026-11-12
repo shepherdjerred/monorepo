@@ -105,6 +105,8 @@ final class OpeningRunUpTest {
               Arenas.SYNTHETIC.mapId(),
               List.of(),
               List.of(),
+              List.of(),
+              List.of(),
               List.of());
       var step =
           Reflex.tick(

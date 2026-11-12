@@ -1243,6 +1243,8 @@ final class MatchRunner implements MatchView, MatchEvents {
         if (field.fellIntoVoid(member.id(), player, border)) {
           continue;
         }
+        FuseHolds.aimed(player, parts.keys(), parts.bombs())
+            .ifPresent(bombId -> holdBomb(member.id(), bombId));
         if (ticks % Battlefield.BORDER_EVERY_TICKS == 0) {
           field.hurtOutside(member.id(), player, border, now);
         }
@@ -1317,9 +1319,14 @@ final class MatchRunner implements MatchView, MatchEvents {
     return admission.snapshotRefusal(player, retry);
   }
 
-  /** A member right-clicked a bomb while holding the fuse. */
+  /** A member right-clicked a bomb while holding the fuse. A tap earns a slice of the clock. */
   Optional<MatchError> clickBomb(CombatantId id, String bombId) {
     return handle(new MatchEvent.BombClicked(id, bombId, now()));
+  }
+
+  /** A member is still holding right-click on the bomb. Holding earns the clock in full. */
+  private void holdBomb(CombatantId id, String bombId) {
+    handle(new MatchEvent.BombHeld(id, bombId, now()));
   }
 
   /**

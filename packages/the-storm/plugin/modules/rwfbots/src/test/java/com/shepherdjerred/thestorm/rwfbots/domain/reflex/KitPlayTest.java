@@ -151,6 +151,8 @@ final class KitPlayTest {
             "synthetic",
             List.of(),
             List.of(),
+            List.of(),
+            List.of(),
             List.of());
     return new ReflexInput(
         self, world, decision(self, List.of()), target, 0, List.of(), Optional.empty());
@@ -337,6 +339,8 @@ final class KitPlayTest {
             "synthetic",
             List.of(),
             List.of(),
+            List.of(),
+            List.of(),
             List.of());
     var waiting =
         new ReflexInput(
@@ -364,6 +368,8 @@ final class KitPlayTest {
             List.of(),
             PoisonView.NONE,
             "synthetic",
+            List.of(),
+            List.of(),
             List.of(),
             List.of(),
             List.of());
@@ -411,6 +417,8 @@ final class KitPlayTest {
               List.of(),
               PoisonView.NONE,
               "synthetic",
+              List.of(),
+              List.of(),
               List.of(),
               List.of(),
               List.of());
