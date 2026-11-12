@@ -88,7 +88,7 @@ export function createTrackerDeployment(chart: Chart, image: string) {
           PORT: EnvValue.fromValue("7351"),
           ENVIRONMENT: EnvValue.fromValue("production"),
           S3_ENDPOINT: EnvValue.fromValue(seaweedfsS3.endpoint),
-          S3_BUCKET: EnvValue.fromValue("tracker-attachments"),
+          ...seaweedfsS3.bucketEnv("S3_BUCKET", "tracker"),
           S3_REGION: EnvValue.fromValue("us-east-1"),
           ...seaweedfsS3.credentialsEnv(s3),
           ...fliptEnv({ namespace: "tracker", environment: "prod" }),

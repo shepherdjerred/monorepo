@@ -2,7 +2,6 @@ import { EnvValue, type ISecret } from "cdk8s-plus-31";
 import { seaweedfsS3 } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
 
 /** The SeaweedFS bucket holding archived Red Warfare match recordings. */
-export const RWF_ARCHIVE_BUCKET = "the-storm-rwf-recordings";
 
 /**
  * Object storage for the Red Warfare recording archive. The infra worker
@@ -13,7 +12,7 @@ export const RWF_ARCHIVE_BUCKET = "the-storm-rwf-recordings";
 export function rwfArchiveEnv(workerSecret: ISecret): Record<string, EnvValue> {
   return {
     RWF_ARCHIVE_S3_ENDPOINT: EnvValue.fromValue(seaweedfsS3.endpoint),
-    RWF_ARCHIVE_S3_BUCKET: EnvValue.fromValue(RWF_ARCHIVE_BUCKET),
+    ...seaweedfsS3.bucketEnv("RWF_ARCHIVE_S3_BUCKET", "temporal"),
     RWF_ARCHIVE_S3_REGION: EnvValue.fromValue("us-east-1"),
     RWF_ARCHIVE_S3_ACCESS_KEY_ID: EnvValue.fromSecretValue({
       secret: workerSecret,

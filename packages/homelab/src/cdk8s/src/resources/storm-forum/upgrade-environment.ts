@@ -1,4 +1,5 @@
 import type { EnvVar } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import { consumedBucket } from "homelab/src/platform-model.ts";
 import type { ForumRelease } from "./release-schema.ts";
 import { FORUM_RECOVERY_ANNOTATIONS } from "@shepherdjerred/ops-model/forum-recovery.ts";
 import { seaweedfsS3 } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
@@ -31,7 +32,12 @@ export function forumBootstrapEnvironment(
       name: "BUNDLE_ENDPOINT",
       value: seaweedfsS3.endpoint,
     },
-    { name: "BUNDLE_BUCKET", value: "storm-forum-releases" },
+    {
+      name: "BUNDLE_BUCKET",
+      // Both stages read one release bucket; the beta namespace has no
+      // release, so the model declares only production's consumer.
+      value: consumedBucket({ env: "BUNDLE_BUCKET" }),
+    },
     { name: "BUNDLE_KEY", value: release.bundleKey },
     { name: "BUNDLE_SHA256", value: release.bundleSha256 },
   ];

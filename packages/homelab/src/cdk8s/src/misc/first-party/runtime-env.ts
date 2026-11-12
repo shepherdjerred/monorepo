@@ -1,5 +1,6 @@
 import { EnvValue, type ISecret } from "cdk8s-plus-31";
 import type { Construct } from "constructs";
+import { consumedBucket, platformModel } from "homelab/src/platform-model.ts";
 import type { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { onePasswordSecret } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
@@ -120,10 +121,23 @@ const SEAWEEDFS_S3_ITEM_ID = "vet52jaeh75chsalu6lulugium";
  */
 export const seaweedfsS3 = {
   /** The in-cluster S3 endpoint; clients must use path-style addressing. */
-  endpoint: "http://seaweedfs-s3.seaweedfs.svc.cluster.local:8333",
+  endpoint: platformModel.seaweedfs.s3InClusterEndpoint,
 
   /** SeaweedFS ignores the region, but AWS SDKs refuse to sign without one. */
   region: "us-east-1",
+
+  /**
+   * The variable that names a bucket, with the bucket the platform model
+   * declares for it: the one `namespace` consumes, or without a namespace the
+   * one every consumer of `env` shares.
+   */
+  bucketEnv(env: string, namespace?: string): Record<string, EnvValue> {
+    return {
+      [env]: EnvValue.fromValue(
+        consumedBucket(namespace === undefined ? { env } : { env, namespace }),
+      ),
+    };
+  },
 
   /**
    * Mirror the credentials item into the scope's namespace. `name` sets the

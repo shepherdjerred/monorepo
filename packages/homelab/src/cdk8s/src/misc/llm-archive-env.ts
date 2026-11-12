@@ -1,4 +1,5 @@
 import { EnvValue } from "cdk8s-plus-31";
+import { seaweedfsS3 } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
 
 /**
  * Env vars consumed by `@shepherdjerred/llm-observability`'s
@@ -12,7 +13,7 @@ import { EnvValue } from "cdk8s-plus-31";
 export function llmArchiveEnvVars(): Record<string, EnvValue> {
   return {
     LLM_OBSERVABILITY_ENABLED: EnvValue.fromValue("true"),
-    LLM_ARCHIVE_S3_BUCKET: EnvValue.fromValue("llm-archive"),
+    ...seaweedfsS3.bucketEnv("LLM_ARCHIVE_S3_BUCKET"),
     LLM_ARCHIVE_S3_PREFIX: EnvValue.fromValue("llm"),
     LLM_ARCHIVE_REGION: EnvValue.fromValue("us-east-1"),
   };
