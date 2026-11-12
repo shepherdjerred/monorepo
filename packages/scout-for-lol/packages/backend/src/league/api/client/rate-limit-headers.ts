@@ -121,7 +121,7 @@ export function parseRateLimitType(headers: Headers): RateLimitType {
 }
 
 const RIOT_HOST_SUFFIX = ".api.riotgames.com";
-const ROUTE_PATTERN = /^[a-z]{2,6}\d{0,2}$/;
+const ROUTE_PATTERN = /^[a-z]{2,8}\d{0,2}$/;
 
 /**
  * Returns the Riot routing host label (`americas`, `na1`, ...) for a request
