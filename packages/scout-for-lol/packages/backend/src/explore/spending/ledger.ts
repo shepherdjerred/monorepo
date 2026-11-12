@@ -9,11 +9,23 @@ import {
   DEFAULT_EXPLORE_SPEND_POLICY,
 } from "#src/configuration/explore-spend.ts";
 
+/** Why a turn was refused before it reached the provider. */
+export type ExploreBudgetReason = "allowance" | "input_limit";
+
+const EXPLORE_BUDGET_MESSAGES: Record<ExploreBudgetReason, string> = {
+  allowance:
+    "Explore's spending allowance is exhausted. Try Luna, a narrower question, or wait for the allowance to reset.",
+  input_limit:
+    "This question exceeds Explore's input limit. Start a new conversation or select smaller datasets.",
+};
+
+/**
+ * An expected, user-facing refusal: the turn would exceed a configured spend
+ * or input bound. The message is shown to the user as written.
+ */
 export class ExploreBudgetError extends Error {
-  constructor(
-    message = "Explore's spending allowance is exhausted. Try Luna, a narrower question, or wait for the allowance to reset.",
-  ) {
-    super(message);
+  constructor(readonly reason: ExploreBudgetReason = "allowance") {
+    super(EXPLORE_BUDGET_MESSAGES[reason]);
     this.name = "ExploreBudgetError";
   }
 }
@@ -99,9 +111,7 @@ export async function reserveExploreCall(
     input.inputBound < 0 ||
     input.inputBound > EXPLORE_MAX_PROVIDER_INPUT_BOUND
   )
-    throw new ExploreBudgetError(
-      "This question exceeds Explore's input limit. Start a new conversation or select smaller datasets.",
-    );
+    throw new ExploreBudgetError("input_limit");
   return await database.$transaction(async (tx) => {
     await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext('scout-explore-spend'))`;
     const [global, user, turn] = await Promise.all([

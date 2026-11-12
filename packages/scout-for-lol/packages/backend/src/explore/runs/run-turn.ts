@@ -36,6 +36,7 @@ import {
 import { createLogger } from "#src/logger.ts";
 import {
   scoutExploreActiveRuns,
+  scoutExploreBudgetRejectionsTotal,
   scoutExploreInvalidCardSelectionsTotal,
   scoutExploreTurnDurationSeconds,
   scoutExploreTurnsTotal,
@@ -122,6 +123,13 @@ function recordTurnFailure(error: unknown): void {
     // rejected; this is a model-output outcome, not a Scout fault.
     logger.warn("Explore turn rejected an invalid card selection");
     scoutExploreInvalidCardSelectionsTotal.inc({ card_type: error.cardType });
+    return;
+  }
+  if (error instanceof ExploreBudgetError) {
+    // A configured spend or input limit refused the turn; the user is shown
+    // the limit message. An expected product limit, not a Scout fault.
+    logger.warn("Explore turn refused by a budget limit", error.reason);
+    scoutExploreBudgetRejectionsTotal.inc({ reason: error.reason });
     return;
   }
   logger.error("Explore turn failed mid-stream", errorMessage(error));

@@ -20,7 +20,10 @@ import {
 } from "@scout-for-lol/data";
 import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
 import * as Sentry from "@sentry/bun";
-import { scoutExploreInvalidCardSelectionsTotal } from "#src/metrics/explore.ts";
+import {
+  scoutExploreBudgetRejectionsTotal,
+  scoutExploreInvalidCardSelectionsTotal,
+} from "#src/metrics/explore.ts";
 
 vi.mock("@sentry/bun", async (importOriginal) => ({
   ...(await importOriginal<typeof Sentry>()),
@@ -129,9 +132,13 @@ const invalidCardAgent = async (params: ExploreAgentParams) => {
   );
 };
 
+const inputLimitAgent = () =>
+  Promise.reject(new ExploreBudgetError("input_limit"));
+
 beforeEach(async () => {
   vi.mocked(Sentry.captureException).mockClear();
   scoutExploreInvalidCardSelectionsTotal.reset();
+  scoutExploreBudgetRejectionsTotal.reset();
   resetExploreRateLimitStateForTests();
   await prisma.scoutInteractiveRun.deleteMany();
   await prisma.exploreMessage.deleteMany();
@@ -302,8 +309,11 @@ describe("persisted Explore failure handling", () => {
         new ExploreCardSelectionError("loadout", "private query"),
       ),
     ).toBe("explore:invalid_loadout_card");
+    expect(exploreFailureCode("failed", new ExploreBudgetError())).toBe(
+      "explore:budget_exceeded",
+    );
     expect(
-      exploreFailureCode("failed", new ExploreBudgetError("private allowance")),
+      exploreFailureCode("failed", new ExploreBudgetError("input_limit")),
     ).toBe("explore:budget_exceeded");
     expect(exploreFailureCode("stopped", new Error("private data"))).toBe(
       "explore:stopped",
@@ -545,6 +555,25 @@ describe("invalid Explore card selections", () => {
     const emitted = await scoutExploreInvalidCardSelectionsTotal.get();
     expect(
       emitted.values.find((series) => series.labels.card_type === "match")
+        ?.value,
+    ).toBe(1);
+    expect(getExploreQuotaStatus({ userId }).activeRun).toBe(false);
+  });
+});
+
+describe("Explore budget refusals", () => {
+  test("a turn over the input limit is refused and counted, not reported", async () => {
+    const { prepared, terminal } = await runWithRunRow(inputLimitAgent);
+
+    expect(terminal.outcome).toBe("failed");
+    const run = await prisma.scoutInteractiveRun.findUniqueOrThrow({
+      where: { id: prepared.ticket.runId },
+    });
+    expect(run.lastError).toBe("explore:budget_exceeded");
+    expect(Sentry.captureException).not.toHaveBeenCalled();
+    const emitted = await scoutExploreBudgetRejectionsTotal.get();
+    expect(
+      emitted.values.find((series) => series.labels.reason === "input_limit")
         ?.value,
     ).toBe(1);
     expect(getExploreQuotaStatus({ userId }).activeRun).toBe(false);
