@@ -1,4 +1,5 @@
 import { z } from "zod/v4";
+import { PromotionControlError } from "#activities/promotion/control-error.ts";
 /** Machine-readable approved variants; the agent selects one without rewriting it. */
 export async function approvedDiscordCopy(): Promise<string[]> {
   const root = new URL(
@@ -29,7 +30,8 @@ export async function assertDiscordPayload(
   const { content } = z.object({ content: z.string() }).parse(tool.body);
   const approved = await variants;
   if (!approved.includes(content))
-    throw new Error(
-      "Payload must exactly match an approved-messages.json variant; serialize it with JSON.stringify",
+    throw new PromotionControlError(
+      "approved-messages.json",
+      "unapproved_payload",
     );
 }

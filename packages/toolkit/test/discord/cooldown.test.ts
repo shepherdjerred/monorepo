@@ -3,6 +3,7 @@ import { Message, RateLimitError, TextChannel } from "discord.js-selfbot-v13";
 import { z } from "zod";
 import { routeRequest, type DaemonContext } from "#lib/discord/handlers.ts";
 import { createDiscordUserClient } from "#lib/discord/serve.ts";
+import { ApplicationCommandIndex } from "#lib/discord/application-commands.ts";
 import {
   DiscordCooldownError,
   throwDiscordWriteError,
@@ -41,6 +42,56 @@ it("classifies only the actual SDK's rejected matching mutation", () => {
     } catch (error_) {
       expect(error_).toBe(error);
     }
+  }
+});
+
+it("lets the SDK wait for a rate-limited command-index GET and retry to success", async () => {
+  const client = createDiscordUserClient();
+  const commandIndexPath = "/guilds/123/application-command-index";
+  const requestTimes: number[] = [];
+  const fetch = vi.spyOn(client.rest, "fetch").mockImplementation(async () => {
+    requestTimes.push(Date.now());
+    if (requestTimes.length === 1)
+      return Response.json(
+        { retry_after: 0.1 },
+        {
+          status: 429,
+          headers: {
+            "retry-after": "0.1",
+            "x-ratelimit-remaining": "0",
+            "x-ratelimit-limit": "1",
+            "x-ratelimit-reset-after": "0.1",
+          },
+        },
+      );
+    return Response.json({ applications: [], application_commands: [] });
+  });
+  const request = z
+    .custom<
+      (
+        method: string,
+        path: string,
+        options: { auth: false; route: string },
+      ) => Promise<unknown>
+    >((value) => typeof value === "function")
+    .parse(Reflect.get(client.rest, "request"));
+  try {
+    const result = await request.call(client.rest, "get", commandIndexPath, {
+      auth: false,
+      route: commandIndexPath,
+    });
+    expect(ApplicationCommandIndex.parse(result)).toEqual({
+      applications: [],
+      application_commands: [],
+    });
+    expect(fetch).toHaveBeenCalledTimes(2);
+    const [initial, retry] = z
+      .tuple([z.number(), z.number()])
+      .parse(requestTimes);
+    expect(retry - initial).toBeGreaterThanOrEqual(100);
+  } finally {
+    client.destroy();
+    vi.restoreAllMocks();
   }
 });
 

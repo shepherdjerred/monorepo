@@ -807,6 +807,8 @@ PinchTab credentials or config.
   `code: "DISCORD_COOLDOWN"`, `effect: "not-sent"`, `retryAfterMs` and
   `nextEligibleAt` only when the SDK rejects the matching initial mutation.
   Readback failures and unclassified errors never establish non-publication.
+  User-client GET requests use the SDK's native rate-limit queue; mutation
+  methods still reject rate limits without waiting to retry a write.
   The 3.7.1 SDK patch owns both the slash POST and reply promises, preventing a
   rejected POST from escaping as an unhandled background operation. It also
   preserves the longer `Retry-After` deadline for a channel sublimit. Remove it

@@ -68,7 +68,7 @@ export function createDiscordUserClient(): UserClient {
   return new UserClient({
     retryLimit: 0,
     restRequestTimeout: 20_000,
-    rejectOnRateLimit: () => true,
+    rejectOnRateLimit: ({ method }) => method.toLowerCase() !== "get",
   });
 }
 
