@@ -68,6 +68,9 @@ struct SessionsWindow: View {
     } else {
       await model.loadSessions()
       if model.selectedSessionID != nil { await model.loadConversation() }
+      if let session = model.selectedSessionID, model.captures.session == session {
+        await model.captures.reload()
+      }
     }
   }
 }
@@ -110,7 +113,7 @@ struct HistoryErrorView: View {
   }
 }
 
-private struct FixCommandView: View {
+struct FixCommandView: View {
   let command: String
 
   var body: some View {

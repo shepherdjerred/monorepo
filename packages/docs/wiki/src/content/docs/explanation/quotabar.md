@@ -331,6 +331,16 @@ speaks a [small HTTP/1.1 subset](packages/macos-ai-subscription-tracker/Sources/
 over a POSIX socket. It accepts one JSON response with a `Content-Length` body
 per connection and rejects anything else.
 
+A session's Requests tab shows what the agent actually sent, captured by the
+[request capture proxy](/explanation/agent-request-capture/). The transcript
+records what the agent chose to log; the capture records the system prompt,
+tool definitions, and history that reached the API, and what each request cost
+in context. The timeline puts each request's context composition side by side,
+so growth in system, tools, or history is visible at a glance. The inspector
+shows the "New in this request" diff because a long session resends almost
+everything each turn. The tab reads the same daemon API as the rest of the
+window, and loads one capture's rebuilt request only when it is selected.
+
 ## Release boundary
 
 The root Linux verification graph runs strict SwiftLint. Native build, test,

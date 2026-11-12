@@ -92,6 +92,8 @@ enum HistoryEndpoint: Equatable, Sendable {
   case usage(HistoryUsageGroup, range: HistoryTimeRange, source: HistorySource?)
   case tools(range: HistoryTimeRange, limit: Int)
   case facets
+  case captures(session: Int, limit: Int, offset: Int)
+  case capture(id: Int)
 
   var path: String {
     switch self {
@@ -101,6 +103,8 @@ enum HistoryEndpoint: Equatable, Sendable {
     case .usage: "/v1/usage"
     case .tools: "/v1/tools"
     case .facets: "/v1/facets"
+    case .captures: "/v1/captures"
+    case let .capture(id): "/v1/captures/\(id)"
     }
   }
 
@@ -125,7 +129,9 @@ enum HistoryEndpoint: Equatable, Sendable {
       [("groupBy", group.rawValue), ("since", range.sinceParameter), ("source", source?.rawValue)]
     case let .tools(range, limit):
       [("since", range.sinceParameter), ("limit", String(limit))]
-    case .facets:
+    case let .captures(session, limit, offset):
+      [("session", String(session)), ("limit", String(limit)), ("offset", String(offset))]
+    case .facets, .capture:
       []
     }
   }

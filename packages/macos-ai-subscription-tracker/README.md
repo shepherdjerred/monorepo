@@ -66,6 +66,23 @@ for past agent sessions recorded by the toolkit history index:
 - **Analytics** charts daily cost and tokens, cost by model, agent, project,
   and machine, and the most-called tools for the selected time range.
 
+A session's **Requests** tab lists the raw API requests `brim capture`
+recorded for it (`/v1/captures?session=<id>`): each request's time, model,
+status, duration, tokens including cache reads and writes, and a bar of how its
+context splits into system, tools, history, and new bytes. Requests whose
+inherited context was never captured, and non-`ok` statuses, are marked; Codex
+warm-ups are dimmed and labelled.
+Selecting one loads its detail (`/v1/captures/<id>`) into an inspector with the
+full rebuilt context (system prompt, tools grouped by namespace with their
+parameter schemas, messages), the response, and usage; a "New in this request"
+view of what it added over the previous one; the body as sent, which for a
+chained request leaves out the blocks it inherited, and the response JSON; and
+a protobuf field dump when the body was protobuf. A session
+with no captures says capture is off or was not used for it, and points to
+`brim capture install` and the
+[Capture raw agent requests](../docs/wiki/src/content/docs/how-to/capture-raw-agent-requests.md)
+how-to.
+
 A cost marked `≥` is a lower bound: the session used a model the price catalog
 does not know. A `—` instead of tokens and cost means the agent's transcripts
 record no usage at all, which is different from a session that cost nothing. Every read goes through the history daemon's read-only `/v1` API
