@@ -1,5 +1,7 @@
 import { createHash } from "node:crypto";
-import { constants, lstat, open } from "node:fs/promises";
+import { constants, lstat, open, realpath } from "node:fs/promises";
+import nodePath from "node:path";
+import { writeChunk } from "./operations-io.ts";
 import { DigestSchema, FileOperationConflict } from "./operations-types.ts";
 
 export type VerifiedFile = {
@@ -69,6 +71,134 @@ export async function hashStableFile(
     });
   } finally {
     await handle.close();
+  }
+}
+
+/** New private staging bytes only; the caller independently measures the target
+ * with ContentProof before acknowledging this actual invocation's copy. */
+export async function copyVerifiedExclusive(
+  source: string,
+  target: string,
+  {
+    checksum,
+    checkpoint,
+    beforeEffect,
+  }: {
+    checksum: string;
+    checkpoint: () => Promise<void>;
+    beforeEffect: () => void;
+  },
+) {
+  DigestSchema.parse(checksum);
+  const parents = await captureCopyParents([source, target]);
+  const before = await lstat(source, { bigint: true });
+  if (!before.isFile() || before.isSymbolicLink())
+    throw new FileOperationConflict("Copy source is not a regular file");
+  const input = await open(source, constants.O_RDONLY | constants.O_NOFOLLOW);
+  try {
+    requireSameFile(before, await input.stat({ bigint: true }));
+    await assertCopyParents(parents);
+    beforeEffect();
+    const output = await open(
+      target,
+      constants.O_WRONLY |
+        constants.O_CREAT |
+        constants.O_EXCL |
+        constants.O_NOFOLLOW,
+      0o600,
+    );
+    try {
+      const opened = await output.stat({ bigint: true });
+      if (!opened.isFile())
+        throw new FileOperationConflict("Copy target is not a regular file");
+      requireSameFile(opened, await lstat(target, { bigint: true }));
+      const hash = createHash("sha256");
+      const buffer = new Uint8Array(1024 * 1024);
+      for (;;) {
+        await checkpoint();
+        beforeEffect();
+        const { bytesRead } = await input.read(buffer);
+        if (bytesRead === 0) break;
+        const chunk = buffer.subarray(0, bytesRead);
+        hash.update(chunk);
+        beforeEffect();
+        await writeChunk(output, chunk);
+      }
+      requireSameFile(before, await input.stat({ bigint: true }));
+      requireSameFile(before, await lstat(source, { bigint: true }));
+      await assertCopyParents(parents);
+      if (hash.digest("hex") !== checksum)
+        throw new FileOperationConflict("Copy source checksum changed");
+      beforeEffect();
+      await output.sync();
+      const copied = await output.stat({ bigint: true });
+      if (
+        copied.dev !== opened.dev ||
+        copied.ino !== opened.ino ||
+        copied.size !== before.size
+      )
+        throw new FileOperationConflict(
+          "Exclusive copy target identity changed",
+        );
+      requireSameFile(copied, await lstat(target, { bigint: true }));
+      await assertCopyParents(parents);
+      beforeEffect();
+      // Read-only, invocation-local witness: retain the actual streamed file
+      // and directory identities through the caller's first journal ACK.
+      return async () => {
+        await assertCopyParents(parents);
+        requireSameFile(before, await lstat(source, { bigint: true }));
+        requireSameFile(copied, await lstat(target, { bigint: true }));
+        await assertCopyParents(parents);
+        beforeEffect();
+      };
+    } finally {
+      await output.close();
+    }
+  } finally {
+    await input.close();
+  }
+}
+
+async function captureCopyParents(paths: readonly string[]) {
+  const parents = new Map<string, { dev: bigint; ino: bigint }>();
+  for (const filename of paths) {
+    for (
+      let parent = nodePath.dirname(filename);
+      ;
+      parent = nodePath.dirname(parent)
+    ) {
+      if (!parents.has(parent)) {
+        const info = await lstat(parent, { bigint: true });
+        if (
+          !info.isDirectory() ||
+          info.isSymbolicLink() ||
+          (await realpath(parent)) !== parent
+        )
+          throw new FileOperationConflict(
+            "Copy ancestor is not a real directory",
+          );
+        parents.set(parent, { dev: info.dev, ino: info.ino });
+      }
+      if (nodePath.dirname(parent) === parent) break;
+    }
+  }
+  return parents;
+}
+
+async function assertCopyParents(
+  parents: ReadonlyMap<string, { dev: bigint; ino: bigint }>,
+) {
+  for (const [parent, expected] of parents) {
+    const current = await lstat(parent, { bigint: true });
+    if (
+      !current.isDirectory() ||
+      current.isSymbolicLink() ||
+      current.dev !== expected.dev ||
+      current.ino !== expected.ino ||
+      (await realpath(parent)) !== parent
+    )
+      throw new FileOperationConflict("Copy ancestor identity changed");
   }
 }
 

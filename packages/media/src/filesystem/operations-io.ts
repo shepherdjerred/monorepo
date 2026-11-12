@@ -298,7 +298,7 @@ export async function copyExclusive(
   }
 }
 
-async function writeChunk(
+export async function writeChunk(
   output: FileHandle,
   buffer: Uint8Array,
 ): Promise<void> {

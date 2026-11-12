@@ -1,4 +1,5 @@
 import { afterEach, expect, it, vi } from "vitest";
+import type { MockInstance } from "vitest";
 import {
   mkdtemp,
   mkdir,
@@ -22,16 +23,36 @@ import { ContentProof } from "#filesystem/content-proof.ts";
 import { saveManifest } from "#filesystem/operations-io.ts";
 import { OperationJournal } from "#filesystem/operations/journal.ts";
 import type * as FsPromises from "node:fs/promises";
+import type * as ContentProofModule from "#filesystem/content-proof.ts";
 
 const observation = vi.hoisted(
-  (): { afterStat: ((filename: string) => void) | null } => ({
+  (): {
+    afterStat: ((filename: string) => void) | null;
+    beforeCapture: ((filename: string) => Promise<void>) | null;
+    reads:
+      | {
+          filename: string;
+          read: MockInstance<FsPromises.FileHandle["read"]>;
+        }[]
+      | null;
+  } => ({
     afterStat: null,
+    beforeCapture: null,
+    reads: null,
   }),
 );
 vi.mock("node:fs/promises", async (importOriginal) => {
   const actual = await importOriginal<typeof FsPromises>();
   return {
     ...actual,
+    open: async (...args: Parameters<typeof actual.open>) => {
+      const handle = await actual.open(...args);
+      observation.reads?.push({
+        filename: String(args[0]),
+        read: vi.spyOn(handle, "read"),
+      });
+      return handle;
+    },
     lstat: async (...args: Parameters<typeof actual.lstat>) => {
       try {
         return await actual.lstat(...args);
@@ -42,12 +63,66 @@ vi.mock("node:fs/promises", async (importOriginal) => {
   };
 });
 
+vi.mock("#filesystem/content-proof.ts", async (importOriginal) => {
+  const actual = await importOriginal<typeof ContentProofModule>();
+  return {
+    ...actual,
+    ContentProof: class extends actual.ContentProof {
+      override async capture(
+        filename: string,
+        checkpoint: () => Promise<void>,
+      ) {
+        await observation.beforeCapture?.(filename);
+        return await super.capture(filename, checkpoint);
+      }
+    },
+  };
+});
+
 const directories: string[] = [];
 afterEach(async () => {
   vi.restoreAllMocks();
   observation.afterStat = null;
+  observation.beforeCapture = null;
+  observation.reads = null;
   for (const directory of directories.splice(0))
     await rm(directory, { recursive: true, force: true });
+});
+
+it("fresh preparation reads source and target media exactly once each", async () => {
+  const f = await fixture();
+  const bytes = f.bytes.repeat(Math.ceil((3 * 1024 * 1024) / f.bytes.length));
+  const source = path.join(f.roots.downloads, f.input.downloadPath);
+  await writeFile(source, bytes);
+  observation.reads = [];
+  await f.files.prepareImport({
+    ...f.input,
+    sha256: createHash("sha256").update(bytes).digest("hex"),
+  });
+  const totals = new Map<string, number>();
+  for (const observed of observation.reads) {
+    if (observed.filename !== source && observed.filename !== f.partial)
+      continue;
+    for (const call of observed.read.mock.results) {
+      if (call.type !== "return")
+        throw new Error("Expected successful native media reads");
+      const read = await call.value;
+      totals.set(
+        observed.filename,
+        (totals.get(observed.filename) ?? 0) + read.bytesRead,
+      );
+    }
+  }
+  expect({
+    source: totals.get(source),
+    partial: totals.get(f.partial),
+  }).toEqual({
+    source: Buffer.byteLength(bytes),
+    partial: Buffer.byteLength(bytes),
+  });
+  expect(JSON.parse(await readFile(f.journal, "utf8"))).toHaveProperty(
+    "preparedPartial",
+  );
 });
 
 it.each(["same", "different"])(
@@ -216,11 +291,13 @@ it.each(["torn", "changed source"])(
 
 it("expiry before the completed-copy acknowledgment leaves an unproven partial protected from cold adoption", async () => {
   const f = await fixture();
+  let copyStarted = false;
   let copied = false;
   const files = new FileOperations(f.roots, {
     ...f.options,
     checkpoint: (phase) => {
-      if (phase === "copying") copied = true;
+      if (phase === "copying") copyStarted = true;
+      if (phase === "hashing" && copyStarted) copied = true;
       return Promise.resolve();
     },
     beforeEffect: () => {
@@ -241,6 +318,149 @@ it("expiry before the completed-copy acknowledgment leaves an unproven partial p
   expect(after.ino).toBe(before.ino);
   expect(await readFile(f.partial, "utf8")).toBe(f.bytes);
   expect(await readFile(f.journal, "utf8")).toBe(raw);
+});
+
+it.each(["path swap", "same-inode rewrite"])(
+  "fresh copying rejects a same-byte source %s without acknowledging the partial",
+  async (kind) => {
+    const f = await fixture();
+    const source = path.join(f.roots.downloads, f.input.downloadPath);
+    let changed = false;
+    const files = new FileOperations(f.roots, {
+      ...f.options,
+      checkpoint: async (phase) => {
+        if (phase !== "copying" || changed) return;
+        changed = true;
+        if (kind === "path swap") {
+          const replacement = `${source}.foreign`;
+          await writeFile(replacement, f.bytes);
+          await rename(replacement, source);
+        } else await writeFile(source, f.bytes);
+      },
+    });
+    await expect(files.prepareImport(f.input)).rejects.toBeInstanceOf(
+      FileOperationConflict,
+    );
+    expect(changed).toBe(true);
+    expect(JSON.parse(await readFile(f.journal, "utf8"))).not.toHaveProperty(
+      "preparedPartial",
+    );
+    await expect(access(f.staged)).rejects.toMatchObject({ code: "ENOENT" });
+    await expect(
+      access(path.join(f.roots.library, f.input.libraryPath)),
+    ).rejects.toMatchObject({ code: "ENOENT" });
+  },
+);
+
+it.each(["target swap", "source parent swap", "source same-byte rewrite"])(
+  "%s after copying cannot gain the first partial acknowledgment",
+  async (kind) => {
+    const f = await fixture();
+    const source = path.join(f.roots.downloads, f.input.downloadPath);
+    let foreignInode: bigint | undefined;
+    let changed = false;
+    observation.beforeCapture = async (filename) => {
+      if (!changed && filename === f.partial) {
+        changed = true;
+        if (kind === "target swap") {
+          const replacement = `${f.partial}.foreign`;
+          await writeFile(replacement, f.bytes);
+          await rename(replacement, f.partial);
+          const foreign = await lstat(f.partial, { bigint: true });
+          foreignInode = foreign.ino;
+          return;
+        }
+        if (kind === "source parent swap") {
+          await rename(f.roots.downloads, `${f.roots.downloads}.original`);
+          await mkdir(f.roots.downloads);
+        }
+        await writeFile(source, f.bytes);
+      }
+    };
+    await expect(f.files.prepareImport(f.input)).rejects.toThrow(
+      kind === "target swap"
+        ? "Media file identity changed during verification"
+        : FileOperationConflict,
+    );
+    expect(changed).toBe(true);
+    if (kind === "target swap") {
+      const after = await lstat(f.partial, { bigint: true });
+      expect(after.ino).toBe(foreignInode);
+    }
+    expect(await readFile(f.partial, "utf8")).toBe(f.bytes);
+    expect(JSON.parse(await readFile(f.journal, "utf8"))).not.toHaveProperty(
+      "preparedPartial",
+    );
+    await expect(access(f.staged)).rejects.toMatchObject({ code: "ENOENT" });
+  },
+);
+
+it.each(["corrupt", "truncated"])(
+  "fresh copying rejects %s source bytes without acknowledging the copy",
+  async (kind) => {
+    const f = await fixture();
+    const bytes =
+      kind === "corrupt" ? "x".repeat(f.bytes.length) : f.bytes.slice(0, -1);
+    await writeFile(path.join(f.roots.downloads, f.input.downloadPath), bytes);
+    await expect(f.files.prepareImport(f.input)).rejects.toThrow(
+      "Copy source checksum changed",
+    );
+    expect(JSON.parse(await readFile(f.journal, "utf8"))).not.toHaveProperty(
+      "preparedPartial",
+    );
+    await expect(access(f.staged)).rejects.toMatchObject({ code: "ENOENT" });
+  },
+);
+
+it("cancellation while copying leaves the exclusive partial unacknowledged and cold protected", async () => {
+  const f = await fixture();
+  const bytes = f.bytes.repeat(Math.ceil((2 * 1024 * 1024) / f.bytes.length));
+  await writeFile(path.join(f.roots.downloads, f.input.downloadPath), bytes);
+  const input = {
+    ...f.input,
+    sha256: createHash("sha256").update(bytes).digest("hex"),
+  };
+  const cancellation = new Error("Actual copy cancellation");
+  let checkpoints = 0;
+  const files = new FileOperations(f.roots, {
+    ...f.options,
+    checkpoint: (phase) =>
+      phase === "copying" && ++checkpoints === 2
+        ? Promise.reject(cancellation)
+        : Promise.resolve(),
+  });
+  await expect(files.prepareImport(input)).rejects.toBe(cancellation);
+  const partial = await readFile(f.partial);
+  expect(partial.byteLength).toBe(1024 * 1024);
+  expect(
+    partial.equals(Buffer.from(bytes).subarray(0, partial.byteLength)),
+  ).toBe(true);
+  expect(JSON.parse(await readFile(f.journal, "utf8"))).not.toHaveProperty(
+    "preparedPartial",
+  );
+  await expect(
+    new FileOperations(f.roots, f.options).prepareImport(input),
+  ).rejects.toThrow("Unproven import partial requires recovery");
+  await expect(access(f.staged)).rejects.toMatchObject({ code: "ENOENT" });
+});
+
+it("an existing supplied ContentProof cannot gain unmeasured staging-path authority from the new-copy optimization", async () => {
+  const f = await fixture();
+  const contentProof = new ContentProof();
+  await contentProof.capture(
+    path.join(f.roots.downloads, f.input.downloadPath),
+    () => Promise.resolve(),
+  );
+  contentProof.seal();
+  await expect(
+    new FileOperations(f.roots, { ...f.options, contentProof }).prepareImport(
+      f.input,
+    ),
+  ).rejects.toBeInstanceOf(FileOperationConflict);
+  expect(JSON.parse(await readFile(f.journal, "utf8"))).not.toHaveProperty(
+    "preparedPartial",
+  );
+  await expect(access(f.staged)).rejects.toMatchObject({ code: "ENOENT" });
 });
 
 it("a same-byte journal swap during copying cannot be overwritten by the completed-copy acknowledgment", async () => {
