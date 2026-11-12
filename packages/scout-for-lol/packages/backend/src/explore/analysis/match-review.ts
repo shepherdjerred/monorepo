@@ -235,7 +235,9 @@ export function reviewedMatchFacts(
     (d) => d.matchId === matchId && d.kind === "match",
   );
   if (rawMatch === undefined) return { puuid: null, cardSupported: false };
-  const match = RawMatchSchema.parse(rawMatch.document);
+  const match = reviewableMatch(rawMatch.document, matchId);
+  // An end-of-game record is refused for review, so it has no card either.
+  if (match === null) return { puuid: null, cardSupported: false };
   const target =
     participantId === null
       ? undefined
