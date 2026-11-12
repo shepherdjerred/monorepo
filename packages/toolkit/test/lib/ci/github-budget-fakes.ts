@@ -22,14 +22,14 @@ export type Counters = {
 export const sha = (value: string) =>
   createHash("sha1").update(value).digest("hex").slice(0, 40);
 
-export function mulberry32(seed: number): () => number {
-  let state = seed >>> 0;
+/** A reproducible [0, 1) stream: the nth draw hashes the seed and n. */
+export function seededRandom(seed: number): () => number {
+  let draw = 0;
   return () => {
-    state = (state + 0x6d_2b_79_f5) >>> 0;
-    let t = state;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4_294_967_296;
+    const digest = createHash("sha256")
+      .update(`${String(seed)}:${String(draw++)}`)
+      .digest();
+    return digest.readUInt32BE(0) / 2 ** 32;
   };
 }
 

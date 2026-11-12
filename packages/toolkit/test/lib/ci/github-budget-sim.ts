@@ -17,7 +17,7 @@ import { MemoryStore } from "#lib/ci/github/budget.ts";
 import { CiObserver } from "#lib/ci/observer.ts";
 import {
   FakeCi,
-  mulberry32,
+  seededRandom,
   WOODPECKER,
   type Counters,
   type Pr,
@@ -133,7 +133,7 @@ export async function simulate(
     // Wait progress lines are not under test here.
   });
   const fake = new FakeCi(
-    mulberry32(options.seed),
+    seededRandom(options.seed),
     options.bucketLimit ?? 5000,
     options.mainEventsPerMinute / options.eventsPerMinute,
   );

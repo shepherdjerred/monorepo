@@ -581,8 +581,8 @@ everything else:
   reads continue, so readiness is still reported.
 
 A simulated hour of 30 waiters fed 66 Woodpecker events a minute (14 from
-main) spends about 290 GraphQL points and 1,440 charged REST requests, against
-about 28,400 points and 4,300 charged requests for the per-event snapshots this
+main) spends about 290 GraphQL points and 1,420 charged REST requests, against
+about 28,100 points and 4,300 charged requests for the per-event snapshots this
 replaced (`test/lib/ci/github-budget.load.test.ts`).
 
 `explain` and wait reports include pipeline elapsed time, workflow start delays,
