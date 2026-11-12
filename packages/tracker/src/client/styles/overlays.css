@@ -124,8 +124,12 @@
   font-size: 12px;
   text-align: left;
 }
-.palette-results [role="option"] > span:last-of-type {
+.palette-results .option-label,
+.palette-issue-copy {
   flex: 1;
+}
+.palette-search input:focus-visible {
+  outline: none;
 }
 .palette-results [role="option"]:hover {
   background: var(--hover);

@@ -17,15 +17,32 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { Link } from "react-router";
+import { useMemo } from "react";
+import { Link, useSearchParams } from "react-router";
 import { GripVertical, MessageSquare, ThumbsUp } from "lucide-react";
 import type { BootstrapData, Issue } from "#client/data/api.ts";
 import { moveIssue } from "#client/data/mutations.ts";
-import { Avatar, Priority, StateDot, Swatch } from "#client/ui/ui.tsx";
+import type { EnumOption } from "#client/controls/enum-picker.tsx";
+import {
+  priorityOptions,
+  stateOptions,
+} from "#client/controls/property-options.tsx";
+import {
+  RowAssignee,
+  RowLabels,
+  RowPriority,
+  RowStatus,
+} from "#client/controls/row-controls.tsx";
+import { useSelection } from "#client/controls/selection.ts";
+import { StateIcon } from "#client/ui/icons.tsx";
 import { useShell } from "#client/shell/shell-context.ts";
 import { isPlainClick } from "#client/shell/route.ts";
 import { useFreshRows } from "#client/live/remote-activity.ts";
 import { BoardKeyboardSensor } from "#client/board/keyboard-sensor.ts";
+import {
+  readDisplay,
+  type RowProperty,
+} from "#client/views/display-options.ts";
 
 const boardCollision: CollisionDetection = (args) => {
   const hits = pointerWithin({
@@ -63,7 +80,13 @@ const boardKeyboardCoordinates: KeyboardCoordinateGetter = (event, args) => {
     : { x: rect.left + 10, y: rect.top + 50 };
 };
 
-function Card({ issue }: { issue: Issue }) {
+type CardOptions = {
+  states: readonly EnumOption[];
+  hidden: ReadonlySet<RowProperty>;
+  disabled: boolean;
+};
+
+function Card({ issue, options }: { issue: Issue; options: CardOptions }) {
   const {
     attributes,
     listeners,
@@ -72,11 +95,18 @@ function Card({ issue }: { issue: Issue }) {
     transition,
     isDragging,
   } = useSortable({ id: issue.id, data: { stateId: issue.state.id } });
-  const { current, setCurrent, openPeek } = useShell();
+  const { current, setCurrent, openPeek, selectionScope } = useShell();
   const fresh = useFreshRows().has(issue.identifier);
+  const selected = useSelection(selectionScope).ids.has(issue.identifier);
+  const focus = () => {
+    setCurrent(issue.identifier);
+  };
+  const { hidden, disabled } = options;
   return (
     <article
       ref={setNodeRef}
+      data-row-issue={issue.identifier}
+      data-selected={selected}
       className={`board-card ${isDragging ? "dragging" : ""}`}
       data-fresh={fresh ? "" : undefined}
       style={{
@@ -88,7 +118,14 @@ function Card({ issue }: { issue: Issue }) {
       }}
     >
       <div className="card-top">
+        <RowStatus
+          issue={issue}
+          options={options.states}
+          disabled={disabled}
+          onFocus={focus}
+        />
         <span className="identifier">{issue.identifier}</span>
+        <span className="spacer" />
         <button
           className="drag-handle"
           aria-label={`Move ${issue.identifier}`}
@@ -115,27 +152,37 @@ function Card({ issue }: { issue: Issue }) {
       >
         {issue.title}
       </Link>
-      <div className="card-labels">
-        {issue.labels.map((l) => (
-          <span className="label" key={l.id}>
-            <Swatch color={l.color} />
-            {l.name}
-          </span>
-        ))}
-      </div>
+      {!hidden.has("labels") && (
+        <div className="card-labels">
+          <RowLabels
+            issue={issue}
+            disabled={disabled}
+            onFocus={focus}
+            limit={6}
+          />
+        </div>
+      )}
       <div className="card-bottom">
-        <Priority value={issue.priority} />
-        {issue.project !== null && (
+        <RowPriority
+          issue={issue}
+          options={priorityOptions}
+          disabled={disabled}
+          onFocus={focus}
+        />
+        {!hidden.has("project") && issue.project !== null && (
           <span className="muted">{issue.project.name}</span>
         )}
         <span className="spacer" />
         {issue.voteCount > 0 && (
           <span className="muted">
-            <ThumbsUp size={12} />
+            <ThumbsUp size={12} aria-hidden="true" />
             {issue.voteCount}
+            <span className="sr-only"> votes</span>
           </span>
         )}
-        {issue.assignee !== null && <Avatar actor={issue.assignee} />}
+        {!hidden.has("assignee") && (
+          <RowAssignee issue={issue} disabled={disabled} onFocus={focus} />
+        )}
       </div>
     </article>
   );
@@ -144,9 +191,11 @@ function Card({ issue }: { issue: Issue }) {
 function Column({
   state,
   items,
+  options,
 }: {
   state: BootstrapData["states"][number];
   items: Issue[];
+  options: CardOptions;
 }) {
   const { setNodeRef, isOver } = useDroppable({
     id: state.id,
@@ -159,7 +208,7 @@ function Column({
       aria-label={state.name}
     >
       <h2>
-        <StateDot color={state.color} />
+        <StateIcon type={state.type} color={state.color} />
         {state.name}
         <span className="count">{items.length}</span>
       </h2>
@@ -168,7 +217,7 @@ function Column({
         strategy={verticalListSortingStrategy}
       >
         {items.map((issue) => (
-          <Card issue={issue} key={issue.id} />
+          <Card issue={issue} key={issue.id} options={options} />
         ))}
       </SortableContext>
       {items.length === 0 && (
@@ -188,6 +237,23 @@ export function Board({
   items: Issue[];
   states: BootstrapData["states"];
 }) {
+  const { bootstrap } = useShell();
+  const [params] = useSearchParams();
+  const hidden = readDisplay(params).hidden;
+  const statusChoices = useMemo(
+    () =>
+      stateOptions(
+        [...states].sort(
+          (a, b) => a.position - b.position || a.id.localeCompare(b.id),
+        ),
+      ),
+    [states],
+  );
+  const options: CardOptions = {
+    states: statusChoices,
+    hidden,
+    disabled: !bootstrap.writesEnabled,
+  };
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
     useSensor(TouchSensor, {
@@ -252,6 +318,7 @@ export function Board({
             <Column
               key={state.id}
               state={state}
+              options={options}
               items={items
                 .filter((item) => item.state.id === state.id)
                 .sort(

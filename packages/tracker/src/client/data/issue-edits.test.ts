@@ -59,6 +59,7 @@ function fakeServer(initial: Issue = issueFixture(1)) {
       return stored;
     },
     move: async () => stored,
+    bulkUpdate: () => Promise.reject(new Error("Not part of these tests")),
     vote: async (_identifier, voted) => {
       await turn();
       stored = { ...stored, voteCount: voted ? 1 : 0 };
@@ -373,5 +374,141 @@ describe("deferred issue delete", () => {
     // The toast expiring afterwards must not send it again.
     await edits.commitDelete("AI-1");
     expect(server.removed).toHaveLength(1);
+  });
+});
+
+type Bulk = Parameters<IssueApi["bulkUpdate"]>[0];
+
+/** A server holding AI-1..AI-3 that applies bulk priority edits atomically. */
+function bulkServer() {
+  const stored = new Map(
+    [1, 2, 3].map((number) => [`AI-${String(number)}`, issueFixture(number)]),
+  );
+  const requests: Bulk[] = [];
+  let failWith: Error | undefined;
+  const api: IssueApi = {
+    update: () => Promise.reject(new Error("Bulk edits never send updates")),
+    move: () => Promise.reject(new Error("unused")),
+    vote: () => Promise.reject(new Error("unused")),
+    remove: () => Promise.reject(new Error("unused")),
+    detail: async (identifier) => {
+      const issue = stored.get(identifier);
+      if (issue === undefined) throw new Error(`No ${identifier}`);
+      return detailFixture(issue);
+    },
+    bulkUpdate: async (input) => {
+      requests.push(input);
+      if (failWith !== undefined) throw failWith;
+      const stale = input.identifiers.filter(
+        (identifier) =>
+          input.expectedRevisions[identifier] !==
+          stored.get(identifier)?.revision,
+      );
+      if (stale.length > 0) {
+        throw new Conflict(
+          `${stale.join(", ")} changed. Reload before saving.`,
+        );
+      }
+      const items = input.identifiers.map((identifier) => {
+        const issue = stored.get(identifier);
+        if (issue === undefined) throw new Error(`No ${identifier}`);
+        const next = {
+          ...issue,
+          priority: input.patch.priority ?? issue.priority,
+          revision: issue.revision + 1,
+        };
+        stored.set(identifier, next);
+        return next;
+      });
+      return { items };
+    },
+  };
+  return {
+    api,
+    requests,
+    stored,
+    fail(error: Error) {
+      failWith = error;
+    },
+    editElsewhere(identifier: string) {
+      const issue = stored.get(identifier);
+      if (issue !== undefined) {
+        stored.set(identifier, { ...issue, revision: issue.revision + 1 });
+      }
+    },
+  };
+}
+
+function bulkSetup() {
+  const server = bulkServer();
+  const client = cacheFixture();
+  const edits = createIssueEdits({
+    client,
+    api: server.api,
+    onError: () => {
+      throw new Error("A bulk edit reports through its caller");
+    },
+  });
+  const priority = (identifier: string) =>
+    cachedIssue(client, identifier)?.priority;
+  return { client, edits, server, priority };
+}
+
+const three = ["AI-1", "AI-2", "AI-3"];
+
+describe("atomic bulk edits", () => {
+  test("every issue changes at once and one request carries each revision", async () => {
+    const { edits, server, priority } = bulkSetup();
+    const saving = edits.bulk(three, { kind: "priority", priority: 1 });
+    expect(three.map((identifier) => priority(identifier))).toEqual([1, 1, 1]);
+    expect(await saving).toEqual({ ok: true, value: undefined });
+    expect(server.requests).toEqual([
+      {
+        identifiers: three,
+        expectedRevisions: { "AI-1": 1, "AI-2": 1, "AI-3": 1 },
+        patch: { priority: 1 },
+      },
+    ]);
+    // The cache now carries the revisions the server returned.
+    const again = edits.bulk(three, { kind: "priority", priority: 2 });
+    await again;
+    expect(server.requests[1]?.expectedRevisions).toEqual({
+      "AI-1": 2,
+      "AI-2": 2,
+      "AI-3": 2,
+    });
+  });
+
+  test("a refused bulk edit takes the change back on every issue", async () => {
+    const { client, edits, server } = bulkSetup();
+    const before = cacheSnapshot(client);
+    server.fail(new Error("AI-2: Unknown state"));
+    const outcome = await edits.bulk(three, { kind: "priority", priority: 1 });
+    expect(outcome.ok).toBe(false);
+    expect(cacheSnapshot(client)).toEqual(before);
+  });
+
+  test("a stale revision reloads the issues the server named and retries once", async () => {
+    const { edits, server, priority } = bulkSetup();
+    server.editElsewhere("AI-2");
+    const outcome = await edits.bulk(three, { kind: "priority", priority: 3 });
+    expect(outcome.ok).toBe(true);
+    expect(server.requests).toHaveLength(2);
+    expect(server.requests[1]?.expectedRevisions).toEqual({
+      "AI-1": 1,
+      "AI-2": 2,
+      "AI-3": 1,
+    });
+    expect(three.map((identifier) => priority(identifier))).toEqual([3, 3, 3]);
+  });
+
+  test("a bulk edit waits for an issue's earlier edit and uses its revision", async () => {
+    const { edits, server } = bulkSetup();
+    const first = edits.bulk(["AI-1"], { kind: "priority", priority: 2 });
+    const second = edits.bulk(three, { kind: "priority", priority: 4 });
+    await Promise.all([first, second]);
+    expect(
+      server.requests.map(({ expectedRevisions }) => expectedRevisions),
+    ).toEqual([{ "AI-1": 1 }, { "AI-1": 2, "AI-2": 1, "AI-3": 1 }]);
   });
 });

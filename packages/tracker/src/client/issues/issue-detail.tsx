@@ -3,7 +3,7 @@ import { IssueDescription } from "./issue-description.tsx";
 import { IssueTimeline } from "./issue-timeline.tsx";
 import { IssueProperties } from "./issue-properties.tsx";
 import { IssueRelations } from "./issue-relations.tsx";
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router";
 import { Archive, ArrowUpRight, History } from "lucide-react";
@@ -21,6 +21,8 @@ import { MarkdownEditor } from "#client/ui/markdown.tsx";
 import { ActivityList } from "./activity.tsx";
 import { useIssue } from "./issue-query.ts";
 import { RemoteEditNotice } from "#client/live/presence.tsx";
+import { isComposing } from "#client/ui/ime.ts";
+import { recentIssues } from "#client/shell/recent-issues.ts";
 
 export function IssueDetail({
   identifier,
@@ -103,8 +105,19 @@ function IssueContent({
   });
   const disabled = !bootstrap.writesEnabled;
   const TitleHeading = peek ? "h2" : "h1";
+  // Opening an issue puts it first among the palette's recent issues.
+  // Remembered once per opening, not on every title edit.
+  const openedTitle = useRef(issue.title);
+  const remember = useCallback(
+    (element: HTMLElement | null) => {
+      if (element !== null) {
+        recentIssues.remember({ identifier, title: openedTitle.current });
+      }
+    },
+    [identifier],
+  );
   return (
-    <article className={`issue-detail ${peek ? "is-peek" : ""}`}>
+    <article className={`issue-detail ${peek ? "is-peek" : ""}`} ref={remember}>
       <header className="detail-toolbar">
         <span>{issue.team.name}</span>
         <span className="muted">/</span>
@@ -174,7 +187,8 @@ function IssueContent({
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   e.preventDefault();
-                  e.currentTarget.blur();
+                  // That Enter may be confirming an IME conversion instead.
+                  if (!isComposing(e.nativeEvent)) e.currentTarget.blur();
                 }
                 // Escape takes back an unsaved title before it closes anything.
                 if (e.key === "Escape" && title !== issue.title) {

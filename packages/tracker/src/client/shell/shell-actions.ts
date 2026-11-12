@@ -1,12 +1,28 @@
 import type { NavigateFunction } from "react-router";
 import { undoStack } from "#client/data/undo.ts";
 import type { IssuePages } from "#client/issues/issue-list-query.ts";
-import { focusIssueRow } from "./list-navigation.ts";
+import type { IssuePrefill } from "#client/issues/issue-form.tsx";
+import { openPicker } from "#client/controls/enum-picker.tsx";
+import {
+  assignToMe,
+  copyIds,
+  copyLinks,
+  pickProperty,
+} from "#client/controls/issue-actions.ts";
+import {
+  emptySelection,
+  extendSelection,
+  selectAll,
+  selectedInOrder,
+  selectionStore,
+  toggleSelected,
+} from "#client/controls/selection.ts";
+import { focusIssueRow, visibleOrder } from "./list-navigation.ts";
 import { hasAppHistory, type RouteInfo } from "./route.ts";
 
 export type Overlay = "create" | "palette" | "help" | "more";
 
-type Shell = {
+export type Shell = {
   route: RouteInfo;
   list: IssuePages;
   peek: {
@@ -18,22 +34,54 @@ type Shell = {
   navigate: NavigateFunction;
   overlay: Overlay | undefined;
   setOverlay: (overlay: Overlay | undefined) => void;
+  selectionScope: string;
+  create: (prefill?: IssuePrefill) => void;
+  /** What a new issue created from this view starts with. */
+  prefill: IssuePrefill;
 };
 
-function focusProperty(property: string) {
-  const element = document.querySelector(`#${property}`);
-  if (element instanceof HTMLSelectElement) {
-    element.focus();
-    element.showPicker();
-  } else {
-    element?.querySelector("input")?.focus();
-  }
-}
+type Property = "state" | "priority" | "assignee" | "labels" | "project";
 
-function neighbour<T>(items: T[], index: number, delta: number) {
+/** What issue actions apply to, and where their controls are on screen. */
+export type Targets = {
+  identifiers: string[];
+  where: "issue" | "selection" | "row";
+};
+
+const rowSelector = (name: string, identifier: string) =>
+  `[data-picker="${name}"][data-issue="${CSS.escape(identifier)}"]`;
+const rowLink = (identifier: string) =>
+  document.querySelector<HTMLElement>(
+    `a[data-issue-row="${CSS.escape(identifier)}"]`,
+  );
+
+function neighbour<T>(items: readonly T[], index: number, delta: number) {
   return items[
     index === -1 ? 0 : Math.max(0, Math.min(items.length - 1, index + delta))
   ];
+}
+
+/** The identifiers in the order the screen shows them. */
+function screenOrder(shell: Shell): readonly string[] {
+  if (shell.route.view === "board") {
+    return [
+      ...document.querySelectorAll<HTMLAnchorElement>("a[data-issue-row]"),
+    ].flatMap((card) => {
+      const identifier = card.dataset["issueRow"];
+      return identifier === undefined ? [] : [identifier];
+    });
+  }
+  return visibleOrder() ?? shell.list.items.map(({ identifier }) => identifier);
+}
+
+function focusIssue(shell: Shell, identifier: string) {
+  if (shell.route.view === "board") {
+    const card = rowLink(identifier);
+    card?.focus({ preventScroll: true });
+    card?.scrollIntoView({ block: "nearest" });
+    return card !== null;
+  }
+  return focusIssueRow(identifier);
 }
 
 /**
@@ -42,22 +90,112 @@ function neighbour<T>(items: T[], index: number, delta: number) {
  * the board follows the cards as they are laid out in columns.
  */
 function focusRow(delta: number, shell: Shell) {
-  if (shell.route.view === "board") {
-    const cards = [
-      ...document.querySelectorAll<HTMLAnchorElement>("a[data-issue-row]"),
-    ];
-    const index = cards.findIndex(
-      (card) => card.dataset["issueRow"] === shell.current,
-    );
-    const next = neighbour(cards, index, delta);
-    next?.focus({ preventScroll: true });
-    next?.scrollIntoView({ block: "nearest" });
-    return next !== undefined;
+  const order = screenOrder(shell);
+  const next = neighbour(order, order.indexOf(shell.current ?? ""), delta);
+  return next !== undefined && focusIssue(shell, next);
+}
+
+/**
+ * The issues an action applies to: the open issue, else the selection,
+ * else the row the keyboard rests on.
+ */
+export function actionTargets(shell: Shell): Targets | undefined {
+  const open = shell.peek.identifier ?? shell.route.identifier;
+  if (open !== undefined) {
+    return { identifiers: [open], where: "issue" };
   }
-  const { items } = shell.list;
-  const index = items.findIndex((item) => item.identifier === shell.current);
-  const next = neighbour(items, index, delta);
-  return next !== undefined && focusIssueRow(next.identifier);
+  if (!shell.route.isList) {
+    return;
+  }
+  const order = screenOrder(shell);
+  const selected = selectedInOrder(
+    selectionStore.read(shell.selectionScope),
+    order,
+  );
+  if (selected.length > 0) {
+    return { identifiers: selected, where: "selection" };
+  }
+  return shell.current !== undefined && order.includes(shell.current)
+    ? { identifiers: [shell.current], where: "row" }
+    : undefined;
+}
+
+/** Open the picker for a property of whatever the action applies to. */
+function openProperty(name: Property, shell: Shell) {
+  const targets = actionTargets(shell);
+  const [first] = targets?.identifiers ?? [];
+  if (targets === undefined || first === undefined) {
+    return false;
+  }
+  const selector =
+    targets.where === "issue"
+      ? `#property-${name}`
+      : targets.where === "selection"
+        ? `#bulk-${name}`
+        : rowSelector(name, first);
+  if (openPicker(document.querySelector(selector))) {
+    return true;
+  }
+  // A property the row does not show opens from the row itself.
+  const anchor = rowLink(first);
+  if (anchor === null || name === "state" || name === "priority") {
+    return false;
+  }
+  pickProperty(name, targets.identifiers, anchor);
+  return true;
+}
+
+function selectionActions(shell: Shell) {
+  const scope = shell.selectionScope;
+  const listFocused = shell.route.isList && shell.peek.identifier === undefined;
+  const extend = (delta: number) => () => {
+    const order = screenOrder(shell);
+    const { current } = shell;
+    if (!listFocused || current === undefined || !order.includes(current)) {
+      return false;
+    }
+    const next = neighbour(order, order.indexOf(current), delta);
+    if (next === undefined) {
+      return false;
+    }
+    selectionStore.update(scope, (selection) =>
+      extendSelection(selection, order, current, next),
+    );
+    focusIssue(shell, next);
+    return true;
+  };
+  return {
+    x: () => {
+      const { current } = shell;
+      if (!listFocused || current === undefined) {
+        return false;
+      }
+      selectionStore.update(scope, (selection) =>
+        toggleSelected(selection, current),
+      );
+      return true;
+    },
+    J: extend(1),
+    K: extend(-1),
+    selectAll: () => {
+      // Elsewhere ⌘ A keeps selecting the page's text.
+      if (
+        !listFocused ||
+        document.activeElement?.closest(".issue-list, .board") == null
+      ) {
+        return false;
+      }
+      selectionStore.update(scope, () => selectAll(screenOrder(shell)));
+      return true;
+    },
+    clear: () => {
+      if (selectionStore.read(scope).ids.size === 0) {
+        return false;
+      }
+      selectionStore.update(scope, () => emptySelection);
+      return true;
+    },
+  };
 }
 
 /**
@@ -69,6 +207,7 @@ export function shellActions(shell: Shell): Record<string, () => boolean> {
   const { items } = shell.list;
   const openIssue = peek.identifier ?? route.identifier;
   const listFocused = route.isList && peek.identifier === undefined;
+  const selection = selectionActions(shell);
   const go = (to: string) => () => {
     void navigate(to);
     return true;
@@ -84,10 +223,15 @@ export function shellActions(shell: Shell): Record<string, () => boolean> {
     run();
     return true;
   };
-  const property = (name: string) =>
-    onIssue(() => {
-      focusProperty(`property-${name}`);
-    });
+  const onTargets = (run: (identifiers: string[]) => void) => () => {
+    const targets = actionTargets(shell);
+    if (targets === undefined) {
+      return false;
+    }
+    run(targets.identifiers);
+    return true;
+  };
+  const property = (name: Property) => () => openProperty(name, shell);
   const adjacent = (delta: number) =>
     onIssue(() => {
       const index = items.findIndex((item) => item.identifier === openIssue);
@@ -110,22 +254,31 @@ export function shellActions(shell: Shell): Record<string, () => boolean> {
       shell.setOverlay(shell.overlay === "palette" ? undefined : "palette");
       return true;
     },
-    c: show("create"),
+    c: () => {
+      shell.create();
+      return true;
+    },
+    C: () => {
+      shell.create(shell.prefill);
+      return true;
+    },
     "?": show("help"),
     "/": () => {
       const search = document.querySelector<HTMLInputElement>("#issue-search");
       search?.focus();
       return search !== null;
     },
+    f: () => openPicker(document.querySelector("#filter-button")),
     undo: () => undoStack.runNewest(),
     j: () => listFocused && focusRow(1, shell),
     k: () => listFocused && focusRow(-1, shell),
+    ...selection,
     Enter: () => {
-      const target = items.some(
-        ({ identifier }) => identifier === shell.current,
-      )
-        ? shell.current
-        : items[0]?.identifier;
+      const order = screenOrder(shell);
+      const target =
+        shell.current !== undefined && order.includes(shell.current)
+          ? shell.current
+          : order[0];
       if (!listFocused || target === undefined) {
         return false;
       }
@@ -136,6 +289,9 @@ export function shellActions(shell: Shell): Record<string, () => boolean> {
       // The peek dialog also closes itself; `close` ignores the second call.
       if (peek.identifier !== undefined) {
         peek.close();
+        return true;
+      }
+      if (selection.clear()) {
         return true;
       }
       if (route.identifier === undefined) {
@@ -156,6 +312,9 @@ export function shellActions(shell: Shell): Record<string, () => boolean> {
     P: property("project"),
     a: property("assignee"),
     l: property("labels"),
+    i: onTargets(assignToMe),
+    copyId: onTargets(copyIds),
+    copyLink: onTargets(copyLinks),
     v: onIssue(() => {
       document.querySelector<HTMLButtonElement>("#issue-vote")?.click();
     }),

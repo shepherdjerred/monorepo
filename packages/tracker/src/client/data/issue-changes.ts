@@ -302,3 +302,42 @@ export function boardSlot(
     ...(after === undefined ? {} : { afterId: after.id }),
   };
 }
+
+/** The `issues.update` fields that make an edit. */
+export function updateInput(change: IssueChange) {
+  switch (change.kind) {
+    case "state": {
+      return { stateName: change.stateName };
+    }
+    case "priority": {
+      return { priority: change.priority };
+    }
+    case "assignee": {
+      return { assigneeKey: change.assigneeKey };
+    }
+    case "project": {
+      return { projectSlug: change.projectSlug };
+    }
+    case "label": {
+      return change.add
+        ? { addLabels: [change.name] }
+        : { removeLabels: [change.name] };
+    }
+    case "title": {
+      return { title: change.title };
+    }
+    case "archive": {
+      return { archived: change.archived };
+    }
+    case "description": {
+      return {
+        description: change.description,
+        attachmentIds: change.attachmentIds,
+      };
+    }
+    case "move":
+    case "vote": {
+      throw new Error(`A ${change.kind} is not an issue update`);
+    }
+  }
+}

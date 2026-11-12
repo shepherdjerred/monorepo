@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { z } from "zod";
 import { useMutation } from "@tanstack/react-query";
 import type { BootstrapData } from "#client/data/api.ts";
 import {
@@ -14,26 +13,8 @@ import { StateTypeSchema } from "#shared/schema.ts";
 import { currentActor, saveActor } from "#client/data/identity.ts";
 import { ErrorNotice, Swatch } from "#client/ui/ui.tsx";
 import { notify } from "#client/ui/toast.tsx";
+import { applyTheme, savedTheme, type Theme } from "#client/ui/theme.ts";
 
-const ThemeSchema = z.enum(["system", "light", "dark"]);
-type Theme = z.infer<typeof ThemeSchema>;
-// The page background of each scheme; the browser tints its chrome with it.
-const themeColors = { light: "#ffffff", dark: "#1b1b1f" };
-
-/**
- * The only writer of the saved theme. `index.html` reads the same key before
- * first paint so an explicit choice never flashes the other scheme.
- */
-function applyTheme(theme: Theme) {
-  document.documentElement.dataset["theme"] = theme;
-  localStorage.setItem("tracker.theme", theme);
-  for (const meta of document.querySelectorAll<HTMLMetaElement>(
-    'meta[name="theme-color"]',
-  )) {
-    const scheme = meta.media.includes("dark") ? "dark" : "light";
-    meta.content = themeColors[theme === "system" ? scheme : theme];
-  }
-}
 export function Settings({
   bootstrap,
   teamKey: currentTeamKey,
@@ -41,10 +22,7 @@ export function Settings({
   bootstrap: BootstrapData;
   teamKey: string;
 }) {
-  const [theme, setTheme] = useState<Theme>(() => {
-    const saved = ThemeSchema.safeParse(localStorage.getItem("tracker.theme"));
-    return saved.success ? saved.data : "system";
-  });
+  const [theme, setTheme] = useState<Theme>(savedTheme);
   const actor = currentActor();
   const [key, setKey] = useState(actor.key);
   const [name, setName] = useState(actor.name);

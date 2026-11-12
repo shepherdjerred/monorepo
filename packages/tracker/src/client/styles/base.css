@@ -191,10 +191,6 @@ summary {
   border-radius: 6px;
   flex-shrink: 0;
 }
-.state-dot {
-  font-size: 16px;
-  line-height: 1;
-}
 .priority {
   width: 17px;
   text-align: center;

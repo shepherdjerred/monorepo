@@ -5,6 +5,7 @@
   overflow-x: auto;
   min-height: calc(100dvh - 230px);
   scroll-snap-type: x proximity;
+  scroll-padding-inline: 30px;
   align-items: stretch;
 }
 .board-column {
@@ -45,7 +46,6 @@
 .card-top {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   margin-bottom: 5px;
 }
 .drag-handle {
@@ -70,15 +70,22 @@
 }
 .card-labels {
   display: flex;
+  margin: 6px -3px;
+}
+.card-labels .row-labels {
   flex-wrap: wrap;
+  max-width: 100%;
+}
+.card-top {
   gap: 4px;
-  margin: 10px 0;
+  margin-left: -3px;
 }
 .card-bottom {
   display: flex;
   align-items: center;
   gap: 6px;
   min-height: 23px;
+  margin-left: -3px;
 }
 .card-bottom .muted {
   font-size: 11px;
@@ -97,6 +104,7 @@
 }
 @media (max-width: 767px) {
   .board {
+    scroll-padding-inline: 16px;
     padding: 0 16px 25px;
     gap: 12px;
   }

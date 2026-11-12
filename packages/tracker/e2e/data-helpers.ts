@@ -21,13 +21,40 @@ const ListedSchema = z.object({
 
 export async function createIssue(
   request: APIRequestContext,
-  input: { teamKey: string; title: string },
+  input: {
+    teamKey: string;
+    title: string;
+    priority?: number;
+    stateName?: string;
+    labels?: string[];
+  },
 ) {
   const response = await request.post("/trpc/issues.create", {
     data: { actor, ...input },
   });
   expect(response.ok()).toBe(true);
   return CreatedSchema.parse(await response.json()).result.data.identifier;
+}
+
+const RevisionSchema = z.object({
+  result: z.object({ data: z.object({ revision: z.number() }) }),
+});
+
+/**
+ * Delete an issue a spec made in the shared team, so the specs that read
+ * that team's list in its default grouping see it as seeded.
+ */
+export async function removeIssue(
+  request: APIRequestContext,
+  identifier: string,
+) {
+  const input = encodeURIComponent(JSON.stringify({ identifier }));
+  const found = await request.get(`/trpc/issues.byIdentifier?input=${input}`);
+  const { revision } = RevisionSchema.parse(await found.json()).result.data;
+  const response = await request.post("/trpc/issues.delete", {
+    data: { actor, identifier, expectedRevision: revision },
+  });
+  expect(response.ok()).toBe(true);
 }
 
 /**
@@ -57,6 +84,16 @@ export async function seedLongList(request: APIRequestContext) {
     });
   }
   return Math.max(seeded, longCount);
+}
+
+/**
+ * A word no other issue's title shares, so `?q=` lists only one test's
+ * issues: search also matches similar titles, which near timestamps are.
+ */
+export function uniqueTag() {
+  return Array.from(crypto.getRandomValues(new Uint8Array(10)), (byte) =>
+    String.fromCodePoint(97 + (byte % 26)),
+  ).join("");
 }
 
 /** Every tRPC call the page makes, as `procedures?input`, decoded. */

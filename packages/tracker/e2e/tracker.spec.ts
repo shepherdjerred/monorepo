@@ -7,7 +7,8 @@ async function prepareBoard(page: Page, title: string) {
     .last()
     .click();
   await page.getByLabel("Issue title", { exact: true }).fill(title);
-  await page.keyboard.press("ControlOrMeta+Enter");
+  // ⌘ Enter creates in place; adding Shift opens the new issue.
+  await page.keyboard.press("ControlOrMeta+Shift+Enter");
   await expect(page).toHaveURL(/\/issues\/AI-\d+$/u);
   await expect(page.getByRole("dialog")).toHaveCount(0);
   const identifier = page.url().split("/").at(-1);
@@ -135,7 +136,7 @@ test("creates an issue, comments, votes, attaches and retains edit history", asy
   await page
     .getByPlaceholder("Add a description…")
     .fill("## Expected behavior\nA reproducible acceptance case.");
-  await page.keyboard.press("ControlOrMeta+Enter");
+  await page.keyboard.press("ControlOrMeta+Shift+Enter");
   await expect(page).toHaveURL(/\/issues\/AI-\d+$/u);
   // The layout now outlives navigation, so the closing dialog and the new
   // issue page can coexist for a frame; both label a field "Issue title".

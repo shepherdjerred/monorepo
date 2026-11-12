@@ -16,6 +16,13 @@ import {
 } from "./issue-changes.ts";
 import { createIssueEdits } from "./issue-edits.ts";
 import {
+  bulkSummary,
+  groupEdits,
+  planBulk,
+  type BulkChange,
+  type IssueEdit,
+} from "./bulk-changes.ts";
+import {
   dismissToast,
   notify,
   notifyError,
@@ -33,6 +40,8 @@ const edits = createIssueEdits({
       voted
         ? api.votes.cast.mutate({ actor: currentActor(), identifier })
         : api.votes.remove.mutate({ actor: currentActor(), identifier }),
+    bulkUpdate: (input) =>
+      api.issues.bulkUpdate.mutate({ actor: currentActor(), ...input }),
     detail: (identifier) =>
       api.issues.byIdentifier.query({
         identifier,
@@ -129,6 +138,106 @@ export function editIssue(
       );
 }
 
+const reason = (error: unknown) =>
+  error instanceof Error ? error.message : "Something went wrong";
+
+/**
+ * Take back a bulk edit. The issues can have had different values before
+ * it, so the inverse edits are grouped by identical change and each group is
+ * one `issues.bulkUpdate`: the undo is atomic within a group, not across
+ * groups, and a group that fails is reported on its own.
+ */
+async function undoBulk(inverses: readonly IssueEdit[], summary: string) {
+  const outcomes = await Promise.all(
+    groupEdits(inverses).map(({ change, identifiers }) =>
+      edits.bulk(identifiers, change),
+    ),
+  );
+  const failures = outcomes.flatMap((outcome) =>
+    outcome.ok ? [] : [reason(outcome.error)],
+  );
+  if (failures.length === 0) {
+    notify(`Undone: ${summary}`);
+  } else {
+    notifyError(`Not undone: ${failures.join(" ")}`);
+  }
+}
+
+/**
+ * Apply one change to several issues in one atomic request: every issue
+ * changes at once on screen, the server saves all of them or none, and one
+ * toast confirms them with one Undo. Issues the change would not alter are
+ * left out; the toast counts every issue the action was asked about.
+ */
+export async function bulkEdit(
+  identifiers: readonly string[],
+  change: BulkChange,
+): Promise<Outcome> {
+  const summary = bulkSummary(change, identifiers.length, workspace());
+  const { changes, inverses } = planBulk(
+    identifiers.map((identifier) => loadedIssue(identifier)),
+    change,
+  );
+  if (changes.length === 0) {
+    notify(summary);
+    return { ok: true, value: undefined };
+  }
+  let failed = false;
+  const toast = notifyUndo(summary, {
+    undo: () => {
+      if (!failed) {
+        void undoBulk(inverses, summary);
+      }
+    },
+  });
+  const outcome = await edits.bulk(
+    changes.map(([identifier]) => identifier),
+    change,
+  );
+  if (outcome.ok) {
+    noteActor();
+  } else {
+    failed = true;
+    dismissToast(toast);
+    // The server's message names the issues that stopped the edit.
+    notifyError(`Not saved: ${reason(outcome.error)}`);
+  }
+  return outcome;
+}
+
+/**
+ * The browser's actor only joins the workspace with its first mutation, so
+ * until then it is added here and can be assigned straight away.
+ */
+export function selfAssignee() {
+  const actor = currentActor();
+  if (!workspace().actors.some(({ key }) => key === actor.key)) {
+    const now = new Date().toISOString();
+    queryClient.setQueryData<BootstrapData>(bootstrapKey, (data) =>
+      data === undefined
+        ? data
+        : {
+            ...data,
+            actors: [
+              ...data.actors,
+              {
+                id: `optimistic-${actor.key}`,
+                key: actor.key,
+                kind: actor.kind,
+                name: actor.name,
+                firstSeenAt: now,
+                lastSeenAt: now,
+                seenCount: 0,
+                firstMetadata: actor.metadata,
+                metadata: actor.metadata,
+              },
+            ],
+          },
+    );
+  }
+  return actor.key;
+}
+
 /** Move a card on the board; Undo returns it to the slot it left. */
 export function moveIssue(
   identifier: string,
@@ -159,29 +268,48 @@ export function moveIssue(
 
 const deleteToasts = new Map<string, string>();
 
+const countOf = (identifiers: readonly string[]) =>
+  identifiers.length === 1
+    ? (identifiers[0] ?? "")
+    : `${String(identifiers.length)} issues`;
+
 /**
- * Delete an issue. The server cannot restore one, so the issue only
- * disappears here until the Undo toast goes away, and is deleted then.
+ * Delete issues. The server cannot restore one, so they only disappear here
+ * until the one Undo toast goes away, and are deleted then.
  */
-export function deleteIssue(identifier: string) {
-  edits.requestDelete(identifier);
+export function deleteIssues(identifiers: readonly string[]) {
+  for (const identifier of identifiers) {
+    edits.requestDelete(identifier);
+  }
+  const key = identifiers.join(" ");
   deleteToasts.set(
-    identifier,
-    notifyUndo(`${identifier} deleted`, {
+    key,
+    notifyUndo(`${countOf(identifiers)} deleted`, {
       undo: () => {
-        deleteToasts.delete(identifier);
-        if (edits.cancelDelete(identifier)) {
-          notify(`${identifier} restored`);
+        deleteToasts.delete(key);
+        const gone = identifiers.filter(
+          (identifier) => !edits.cancelDelete(identifier),
+        );
+        if (gone.length === 0) {
+          notify(`${countOf(identifiers)} restored`);
         } else {
-          notifyError(`${identifier} was already deleted`);
+          notifyError(
+            `${gone.join(", ")} ${gone.length === 1 ? "was" : "were"} already deleted`,
+          );
         }
       },
       expire: () => {
-        deleteToasts.delete(identifier);
-        void edits.commitDelete(identifier);
+        deleteToasts.delete(key);
+        for (const identifier of identifiers) {
+          void edits.commitDelete(identifier);
+        }
       },
     }),
   );
+}
+
+export function deleteIssue(identifier: string) {
+  deleteIssues([identifier]);
 }
 
 /**
@@ -210,7 +338,10 @@ type NewIssue = Omit<Parameters<typeof api.issues.create.mutate>[0], "actor">;
  * Create an issue. Its identifier is the server's to assign, so nothing shows
  * before the answer; the answer then seeds the issue page and the lists.
  */
-export async function createIssue(input: NewIssue) {
+export async function createIssue(
+  input: NewIssue,
+  view?: (identifier: string) => void,
+) {
   const issue = await api.issues.create.mutate({
     actor: currentActor(),
     ...input,
@@ -227,6 +358,16 @@ export async function createIssue(input: NewIssue) {
   }
   void queryClient.invalidateQueries({ queryKey: listsKey });
   noteActor();
-  notify(`${issue.identifier} created`);
+  notify(
+    `${issue.identifier} created`,
+    view === undefined
+      ? undefined
+      : {
+          label: "Open",
+          run: () => {
+            view(issue.identifier);
+          },
+        },
+  );
   return issue;
 }
