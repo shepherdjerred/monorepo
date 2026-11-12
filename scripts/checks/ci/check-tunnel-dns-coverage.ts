@@ -2,7 +2,10 @@
 
 import path from "node:path";
 import { DomainRegistrySchema } from "../../../packages/homelab/src/domain-registry.ts";
-import { publicHostnames } from "../../../packages/homelab/src/platform-model.ts";
+import {
+  publicHostnames,
+  tunnelCnameTarget,
+} from "../../../packages/homelab/src/platform-model.ts";
 import {
   readSynthesizedConfiguration,
   type SynthesizedConfiguration,
@@ -202,7 +205,10 @@ function assertBaselineModuleHost(moduleText: string): void {
       /^\s*zone_id\s*=\s*var\.zone_id\s*$/m,
       /^\s*name\s*=\s*"mta-sts"\s*$/m,
       /^\s*type\s*=\s*"CNAME"\s*$/m,
-      /^\s*content\s*=\s*"3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"\s*$/m,
+      new RegExp(
+        String.raw`^\s*content\s*=\s*"${tunnelCnameTarget().replaceAll(".", String.raw`\.`)}"\s*$`,
+        "m",
+      ),
       /^\s*proxied\s*=\s*true\s*$/m,
     ].every((field) => field.test(host.body)) ||
     /\b(?:count|for_each)\s*=/.test(host.body)
@@ -308,7 +314,7 @@ async function main(): Promise<void> {
     );
   }
   console.error(
-    "\nAdd a proxied CNAME to 3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com for each in the cloudflare stack (packages/homelab-cdktn/src/stacks/cloudflare), then re-synthesize.",
+    `\nAdd a proxied CNAME to ${tunnelCnameTarget()} for each in the cloudflare stack (packages/homelab-cdktn/src/stacks/cloudflare), then re-synthesize.`,
   );
   process.exit(1);
 }

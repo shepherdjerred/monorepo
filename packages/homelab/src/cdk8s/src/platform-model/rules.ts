@@ -12,6 +12,13 @@ import type { OpenTofuSide } from "./opentofu-side.ts";
  * A rule compares the platform model with one rendering. Rules come in pairs,
  * because a fact can be missing from a rendering or rendered without being
  * declared, and the second is how a hostname added on only one side is caught.
+ *
+ * cdk8s renders from the model, so a value it takes from a lookup cannot
+ * disagree with its definition, and no rule compares one: the tunnel a
+ * TunnelBinding names and the static-site table are the model's own. The
+ * Kubernetes rules that remain ask whether every definition is rendered, and
+ * catch what can still be written without the model: an entry built by hand,
+ * a literal in an environment variable, or an upstream chart's own Ingress.
  */
 export type Sides = {
   definitions: PlatformDefinitions;
@@ -25,7 +32,6 @@ export type RuleId =
   | "tunnelBindingsWithoutDefinition"
   | "tunnelRecordsWithoutDefinition"
   | "staticSitesWithoutCaddySite"
-  | "caddySitesWithoutDefinition"
   | "staticSitesWithoutBucket"
   | "bucketsWithMismatchedExpiry"
   | "zonesWithMismatchedImmutableCache"
@@ -80,23 +86,19 @@ const IN_CLUSTER_S3 = /\bseaweedfs-s3\.[a-z0-9-]+(?:\.svc\b|:\d)/;
 export const RULES: readonly Rule[] = [
   {
     id: "publicHostnamesWithoutTunnelBinding",
-    name: "every public hostname has a TunnelBinding to its Service on the tunnel",
-    violations: ({ definitions, kubernetes }) => {
-      const { cloudflareTunnel } = definitions.model;
-      return definitions.publicHostnames
+    name: "every public hostname has a TunnelBinding to its Service",
+    violations: ({ definitions, kubernetes }) =>
+      definitions.publicHostnames
         .filter(
           (definition) =>
             !kubernetes.tunnelBindings.some(
               (binding) =>
                 binding.hostname === definition.hostname &&
                 binding.namespace === definition.namespace &&
-                binding.service === definition.service &&
-                binding.tunnel.kind === cloudflareTunnel.kind &&
-                binding.tunnel.name === cloudflareTunnel.name,
+                binding.service === definition.service,
             ),
         )
-        .map((definition) => definition.hostname);
-    },
+        .map((definition) => definition.hostname),
   },
   {
     id: "publicHostnamesWithoutTunnelRecord",
@@ -149,17 +151,7 @@ export const RULES: readonly Rule[] = [
         )
         .map((site) => site.hostname),
   },
-  {
-    id: "caddySitesWithoutDefinition",
-    name: "every bucket-backed host of the static-site origin is a declared static site",
-    violations: ({ definitions, kubernetes }) =>
-      difference(
-        kubernetes.caddySites
-          .filter((site) => site.bucket !== undefined)
-          .map((site) => site.hostname),
-        definitions.model.staticSites.map((site) => site.hostname),
-      ),
-  },
+
   {
     id: "staticSitesWithoutBucket",
     name: "every static site's bucket is declared in the seaweedfs stack",

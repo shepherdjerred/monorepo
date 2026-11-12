@@ -74,20 +74,17 @@ const definitions: PlatformDefinitions = {
   immutablePathPrefixesByZone: new Map([["example.com", ["/_astro/"]]]),
 };
 
-const tunnel = { kind: "ClusterTunnel", name: "tunnel" };
 const kubernetes: KubernetesSide = {
   tunnelBindings: [
     {
       namespace: "app",
       hostname: "app.example.com",
       service: "app-web",
-      tunnel,
     },
     {
       namespace: "sites",
       hostname: "www.example.com",
       service: "sites",
-      tunnel,
     },
   ],
   caddySites: [{ hostname: "www.example.com", bucket: "www" }],
@@ -210,7 +207,6 @@ const DISAGREEMENTS: [string, Sides, Partial<Record<RuleId, string[]>>][] = [
             namespace: "app",
             hostname: "new.example.com",
             service: "app-web",
-            tunnel,
           },
         ],
       },

@@ -3,9 +3,14 @@ import { mailPolicyHosts } from "homelab/src/domain-registry.ts";
 import modelJson from "homelab/src/platform-model.json" with { type: "json" };
 import {
   PlatformModelSchema,
+  consumedBucket,
   immutablePathPrefixesByZone,
   platformModel,
+  publicHostname,
+  publicHostnameOfService,
   publicHostnames,
+  staticSite,
+  tailnetService,
   scopedCredentials,
   seaweedfsTailnetS3Endpoint,
   tunnelCnameTarget,
@@ -123,5 +128,59 @@ describe("platform model", () => {
     ],
   ])("the schema rejects %s", (_name, change, message) => {
     expect(() => PlatformModelSchema.parse(change(modelJson))).toThrow(message);
+  });
+});
+
+describe("platform model lookups", () => {
+  test("resolve a declared id to its definition", () => {
+    expect(publicHostname("plex.sjer.red")).toEqual({
+      hostname: "plex.sjer.red",
+      namespace: "media",
+      service: "media-plex-service",
+    });
+    expect(publicHostnameOfService("media-plex-service").hostname).toBe(
+      "plex.sjer.red",
+    );
+    // Static sites and mail-policy hosts are routed to the static-site origin.
+    expect(publicHostname("sjer.red")).toMatchObject(
+      platformModel.staticSiteOrigin,
+    );
+    expect(publicHostname(mailPolicyHosts[0]?.hostname ?? "")).toMatchObject(
+      platformModel.staticSiteOrigin,
+    );
+    expect(staticSite("sjer.red").bucket).toBe("sjer-red");
+    expect(tailnetService("delivery")).toMatchObject({
+      namespace: "delivery",
+      tags: ["tag:delivery"],
+      fqdn: `delivery.${platformModel.tailnet.domain}`,
+      origin: `https://delivery.${platformModel.tailnet.domain}`,
+    });
+    expect(consumedBucket({ env: "S3_BUCKET", namespace: "tracker" })).toBe(
+      "tracker-attachments",
+    );
+    expect(consumedBucket({ env: "LLM_ARCHIVE_S3_BUCKET" })).toBe(
+      "llm-archive",
+    );
+  });
+
+  test.each([
+    ["an undeclared hostname", () => publicHostname("nowhere.sjer.red")],
+    ["a Service with no hostname", () => publicHostnameOfService("nothing")],
+    [
+      "a Service with several hostnames",
+      () => publicHostnameOfService("minecraft-tsmc-bluemap"),
+    ],
+    ["an undeclared static site", () => staticSite("nowhere.sjer.red")],
+    ["an undeclared tailnet service", () => tailnetService("nowhere")],
+    [
+      "a bucket variable the namespace does not consume",
+      () => consumedBucket({ env: "S3_BUCKET", namespace: "media" }),
+    ],
+    [
+      "a bucket variable whose consumers name different buckets",
+      () => consumedBucket({ env: "S3_BUCKET_NAME" }),
+    ],
+  ])("%s throws instead of falling back", (_name, lookup) => {
+    expect(lookup).toThrow(/platform-model\.json declares \d+ entries/);
   });
 });

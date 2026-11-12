@@ -173,6 +173,31 @@ environment). `.deployment`, `.service`, `.claims` and `.policies` remain
 reachable. Sonarr, Radarr, Prowlarr, Tautulli, Bazarr, Syncthing and
 Maintainerr use it.
 
+## Rendering from the platform model
+
+[`../platform-model.json`](../platform-model.json) declares the hostnames,
+static sites, tailnet services and buckets that OpenTofu also renders. cdk8s
+states none of them a second time: it looks each one up, and a lookup for an
+id the model does not declare throws during synthesis.
+
+| To render                         | Write                                                                                                            |
+| --------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| A hostname through the tunnel     | `createCloudflareTunnelBinding(chart, id, { serviceName, port })`; the hostname is the one routed to the Service |
+| One of a Service's several names  | the same, with `hostname: publicHostname("bluemap.ts-mc.net")`                                                   |
+| A tailnet ingress                 | `host: tailnetService("plex")` on `TailscaleIngress`, `LinuxServerApp` and `FirstPartyWebService`                |
+| A tailnet name in a URL or header | `tailnetService("plex").fqdn` or `.origin`                                                                       |
+| A static site                     | an entry under `staticSites` in the model; `resources/s3-static-sites/sites.ts` adds probes, proxies and headers |
+| A bucket name in a workload's env | `...seaweedfsS3.bucketEnv("S3_BUCKET", "tracker")`                                                               |
+| The in-cluster S3 endpoint        | `seaweedfsS3.endpoint`                                                                                           |
+
+The constructs check the entry they are given: a tunnel binding refuses a
+route to another Service or namespace, and an ingress refuses a tailnet
+service of another namespace or exposure.
+
+Two call sites build a `TailnetService` by hand because nothing renders their
+name yet, so the model cannot declare it: storm-forum's beta stage, and a
+service the scaffolder has prepared but not activated.
+
 ## Rendered-output safety nets
 
 A refactor of shared constructs must not change what is rendered. Two checks

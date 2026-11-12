@@ -84,7 +84,13 @@ rest from the registries that already own it (`domain-registry.json`, the
 | `ScopedCredential` | `OnePasswordItem` naming the title   | the `onepassword_item` that writes it        |
 | `BucketConsumer`   | bucket name in a workload's env      | the SeaweedFS bucket                         |
 
-Neither synthesizer reads the model yet. Until they do,
+cdk8s renders from the model. Its constructs take a model entry instead of a
+string, looked up with `publicHostname`, `publicHostnameOfService`,
+`staticSite`, `tailnetService` or `consumedBucket`; an id the model does not
+declare throws at synthesis. See
+[Rendering from the platform model](src/cdk8s/README.md#rendering-from-the-platform-model).
+
+The OpenTofu stacks do not read the model yet. Until they do,
 [`src/cdk8s/src/platform-model`](src/cdk8s/src/platform-model) holds every
 definition against both renderings: it reads the synthesized manifests and the
 OpenTofu stacks, and fails on a fact that is declared but not rendered, or
