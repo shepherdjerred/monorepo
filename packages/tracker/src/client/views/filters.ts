@@ -1,6 +1,8 @@
 import type { BootstrapData } from "#client/data/api.ts";
 import { priorities } from "#client/data/issue-changes.ts";
 import type { IssuePrefill } from "#client/issues/issue-form.tsx";
+import { localToday } from "#client/due/dates.ts";
+import { dueFilterName, isDueFilter } from "#client/due/due-filter.ts";
 
 /**
  * The list filters and the URL parameters they have always used, so links
@@ -13,6 +15,7 @@ export type FilterField =
   | "creator"
   | "label"
   | "project"
+  | "due"
   | "archived";
 
 type Catalog = Pick<BootstrapData, "actors" | "projects">;
@@ -32,6 +35,7 @@ export const filterFields: readonly FilterFieldInfo[] = [
   { field: "creator", name: "Creator", multiple: false },
   { field: "label", name: "Label", multiple: true },
   { field: "project", name: "Project", multiple: false },
+  { field: "due", name: "Due date", multiple: false },
   { field: "archived", name: "Archived", multiple: false },
 ];
 
@@ -54,6 +58,9 @@ export function filterValues(
     }
     case "archived": {
       return params.get("archived") === "true" ? ["true"] : [];
+    }
+    case "due": {
+      return params.getAll(field).filter(isDueFilter).slice(0, 1);
     }
     case "priority":
     case "creator":
@@ -132,6 +139,9 @@ export function valueName(
     case "archived": {
       return "included";
     }
+    case "due": {
+      return dueFilterName(value, localToday());
+    }
     case "state":
     case "label": {
       return value;
@@ -156,6 +166,7 @@ const verbs: Record<FilterField, (count: number) => string> = {
   project: () => "is",
   label: (count) => (count > 1 ? "have" : "has"),
   archived: () => "",
+  due: () => "",
 };
 
 /** The filters in effect, as the chips under the view header show them. */
@@ -167,6 +178,18 @@ export function filterChips(
     const values = filterValues(params, field);
     if (values.length === 0) {
       return [];
+    }
+    // A due filter reads as one phrase: "Overdue", "Due by Nov 20".
+    if (field === "due") {
+      const phrase = valueName(field, values[0] ?? "", catalog);
+      const chip: FilterChip = {
+        field,
+        subject: phrase,
+        verb: "",
+        values: "",
+        text: phrase,
+      };
+      return [chip];
     }
     const subject =
       field === "label" && values.length > 1

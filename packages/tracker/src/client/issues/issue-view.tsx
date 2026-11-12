@@ -1,5 +1,5 @@
 import { Suspense, lazy, useCallback, useRef, useState } from "react";
-import { NavLink, useSearchParams } from "react-router";
+import { NavLink, useParams, useSearchParams } from "react-router";
 import { LayoutGrid, List, Plus, Search } from "lucide-react";
 import type { BootstrapData } from "#client/data/api.ts";
 import { Empty, ErrorNotice } from "#client/ui/ui.tsx";
@@ -10,6 +10,9 @@ import { FilterBar } from "#client/views/filter-bar.tsx";
 import { IssueList } from "./issue-list.tsx";
 import { useShell } from "#client/shell/shell-context.ts";
 import { rememberTeam } from "#client/shell/team.ts";
+import { SaveView } from "#client/saved-views/save-view.tsx";
+import { ViewIcon } from "#client/saved-views/view-icons.tsx";
+import { savedViewParam } from "#client/saved-views/view-params.ts";
 
 const Board = lazy(async () => {
   const module = await import("#client/board/board.tsx");
@@ -19,15 +22,25 @@ const Board = lazy(async () => {
 export function IssueView() {
   const { bootstrap, teamKey, view, list, create, selectionScope } = useShell();
   const [params] = useSearchParams();
+  const { slug } = useParams();
   const team = bootstrap.teams.find(({ key }) => key === teamKey);
   const shared = new URLSearchParams(params);
   shared.delete("peek");
+  const source = bootstrap.views.find(
+    (item) => item.id === params.get(savedViewParam),
+  );
   return (
     <>
       <div className="view-heading">
         <div>
           <h2>
-            {params.get("mine") === "true" ? "My issues" : "All issues"}
+            {source !== undefined && (
+              <span className="heading-icon">
+                <ViewIcon name={source.icon} size={16} />
+              </span>
+            )}
+            {source?.name ??
+              (params.get("mine") === "true" ? "My issues" : "All issues")}
             <span className="count">
               {list.items.length}
               {/* The server reports no total; "+" says more pages exist. */}
@@ -67,6 +80,7 @@ export function IssueView() {
         teamKey={teamKey}
         board={view === "board"}
         projectRoute={view === "project"}
+        projectSlug={view === "project" ? slug : undefined}
       />
       {list.error !== null && <ErrorNotice error={list.error} />}
       <IssueContextMenu
@@ -171,11 +185,13 @@ function Toolbar({
   teamKey,
   board,
   projectRoute,
+  projectSlug,
 }: {
   bootstrap: BootstrapData;
   teamKey: string;
   board: boolean;
   projectRoute: boolean;
+  projectSlug: string | undefined;
 }) {
   const [params, setParams] = useSearchParams();
   return (
@@ -187,6 +203,12 @@ function Toolbar({
         projectRoute={projectRoute}
       />
       <span className="spacer" />
+      <SaveView
+        bootstrap={bootstrap}
+        teamKey={teamKey}
+        board={board}
+        projectSlug={projectSlug}
+      />
       <EnumPicker
         id="team-picker"
         label="Team"
@@ -204,6 +226,8 @@ function Toolbar({
           next.delete("state");
           next.delete("label");
           next.delete("collapsed");
+          // A view belongs to the list it was opened as.
+          next.delete(savedViewParam);
           rememberTeam(value);
           setParams(next, { preventScrollReset: true });
         }}

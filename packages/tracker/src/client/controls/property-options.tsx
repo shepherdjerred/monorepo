@@ -1,5 +1,6 @@
 import {
   ArrowDownWideNarrow,
+  CalendarClock,
   CalendarPlus,
   CircleDashed,
   Clock,
@@ -50,6 +51,7 @@ export const sortOptions: (EnumOption & { value: Sort })[] = [
   { value: "created", label: "Last created", icon: <CalendarPlus size={14} /> },
   { value: "priority", label: "Priority", icon: <SignalHigh size={14} /> },
   { value: "votes", label: "Most votes", icon: <ThumbsUp size={14} /> },
+  { value: "due", label: "Due date", icon: <CalendarClock size={14} /> },
 ];
 
 export const groupOptions: (EnumOption & { value: GroupBy })[] = [
@@ -61,5 +63,6 @@ export const groupOptions: (EnumOption & { value: GroupBy })[] = [
   },
   { value: "project", label: "Project", icon: <Folder size={14} /> },
   { value: "assignee", label: "Assignee", icon: <UserRound size={14} /> },
+  { value: "due", label: "Due date", icon: <CalendarClock size={14} /> },
   { value: "none", label: "No grouping", icon: <Rows3 size={14} /> },
 ];

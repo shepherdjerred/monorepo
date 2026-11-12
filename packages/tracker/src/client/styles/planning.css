@@ -1,0 +1,539 @@
+/* Due dates, sub-issues and saved views. */
+
+/* Due chips: overdue in danger, due today or tomorrow in warning. */
+.due-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--muted);
+  font-size: 11px;
+  white-space: nowrap;
+}
+.due-chip[data-tone="soon"] {
+  color: var(--warning);
+}
+.due-chip[data-tone="overdue"] {
+  color: var(--danger);
+}
+.row-due {
+  padding-inline: 5px;
+}
+.issue-row .row-due {
+  width: 86px;
+  justify-content: flex-end;
+}
+.due-group-mark[data-bucket="overdue"] {
+  color: var(--danger);
+}
+.due-group-mark[data-bucket="today"] {
+  color: var(--warning);
+}
+
+/* The due date picker. */
+.due-popover {
+  width: 280px;
+  max-height: min(560px, var(--available-height, 560px));
+  padding: 8px;
+}
+.due-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.due-input {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.due-input input {
+  width: 100%;
+  font-size: 12px;
+}
+.due-input input[aria-invalid="true"] {
+  border-color: var(--danger);
+}
+.due-preview {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 18px;
+  padding: 0 2px;
+  font-size: 11px;
+}
+.due-preview:empty {
+  display: none;
+}
+.due-preview kbd {
+  margin-left: auto;
+  color: var(--muted);
+}
+.due-choices {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.due-choice {
+  justify-content: space-between;
+  width: 100%;
+  min-height: 30px;
+  padding: 4px 8px;
+  border: 0;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 450;
+}
+.due-choice[aria-pressed="true"] {
+  color: var(--accent);
+  font-weight: 600;
+}
+.due-choice .muted {
+  font-size: 11px;
+}
+.due-clear {
+  align-self: flex-start;
+  padding-inline: 4px;
+}
+/* Wide screens show the choices beside the month, so it fits under a field. */
+@media (min-width: 768px) {
+  .due-popover {
+    width: 500px;
+    max-width: calc(100vw - 16px);
+  }
+  .due-popover .due-panel {
+    display: grid;
+    grid-template-columns: 172px minmax(0, 1fr);
+    grid-template-areas:
+      "input input"
+      "choices calendar"
+      "clear calendar";
+    grid-template-rows: auto auto 1fr;
+    column-gap: 12px;
+  }
+  .due-popover .due-input {
+    grid-area: input;
+  }
+  .due-popover .due-choices {
+    grid-area: choices;
+  }
+  .due-popover .calendar {
+    grid-area: calendar;
+    padding: 0 0 0 12px;
+    border-top: 0;
+    border-left: 1px solid var(--border);
+  }
+  .due-popover .due-clear {
+    grid-area: clear;
+    align-self: end;
+    justify-self: start;
+  }
+}
+
+/* A month grid, in the date picker dialog pattern. */
+.calendar {
+  border-top: 1px solid var(--border);
+  padding-top: 6px;
+}
+.calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.calendar-title {
+  font-size: 12px;
+  font-weight: 600;
+}
+.calendar-grid {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 12px;
+}
+.calendar-grid th {
+  padding: 4px 0;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 500;
+  text-align: center;
+}
+.calendar-grid td {
+  height: 32px;
+  padding: 0;
+  border-radius: 6px;
+  text-align: center;
+  cursor: pointer;
+  font-variant-numeric: tabular-nums;
+}
+.calendar-grid td:hover {
+  background: var(--hover);
+}
+.calendar-grid td:focus-visible {
+  outline-offset: -2px;
+}
+.calendar-grid td[data-outside] {
+  color: var(--muted);
+}
+.calendar-grid td[aria-current="date"] {
+  color: var(--accent);
+  font-weight: 700;
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+.calendar-grid td[aria-selected="true"] {
+  background: var(--accent);
+  color: var(--bg);
+  font-weight: 600;
+}
+
+/* Sub-issue progress: a ring drawn with a conic gradient. */
+progress.progress-ring,
+.ring-mark {
+  --size: 14px;
+  --fill: var(--accent);
+  appearance: none;
+  display: inline-block;
+  flex-shrink: 0;
+  width: var(--size);
+  height: var(--size);
+  border: 0;
+  border-radius: 50%;
+  background: conic-gradient(
+    var(--fill) calc(var(--value, 0) * 1%),
+    color-mix(in srgb, var(--muted) 30%, transparent) 0
+  );
+  mask-image: radial-gradient(
+    transparent calc(50% - 2.5px),
+    black calc(50% - 2px)
+  );
+}
+progress.progress-ring {
+  --size: 16px;
+}
+progress.progress-ring[data-complete],
+.ring-mark[data-complete] {
+  --fill: var(--success);
+}
+progress.progress-ring::-webkit-progress-bar,
+progress.progress-ring::-webkit-progress-value {
+  background: none;
+}
+progress.progress-ring::-moz-progress-bar {
+  background: none;
+}
+@media (forced-colors: active) {
+  progress.progress-ring,
+  .ring-mark {
+    forced-color-adjust: none;
+    --fill: CanvasText;
+  }
+}
+.sub-issue-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--muted);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.row-parent {
+  color: var(--muted);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+/* The issue page: breadcrumb, sub-issues and the parent field. */
+.detail-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.parent-crumb:hover {
+  color: var(--accent);
+}
+.sub-issues .section-heading {
+  justify-content: flex-start;
+  gap: 10px;
+}
+.sub-issue-progress {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-variant-numeric: tabular-nums;
+}
+.sub-issue-list {
+  margin: 0 0 6px;
+  padding: 0;
+  list-style: none;
+}
+.sub-issue {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 2px 4px;
+  border-radius: 6px;
+}
+.sub-issue:hover {
+  background: var(--subtle);
+}
+.sub-issue[data-pending] {
+  opacity: 0.6;
+}
+.sub-issue .identifier {
+  width: 58px;
+}
+.sub-issue-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 500;
+}
+.sub-issue-remove {
+  opacity: 0;
+}
+.sub-issue:hover .sub-issue-remove,
+.sub-issue-remove:focus-visible {
+  opacity: 1;
+}
+.sub-issue-add {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 6px;
+  color: var(--muted);
+}
+.sub-issue-add input {
+  flex: 1;
+  border-color: transparent;
+  background: transparent;
+  padding-inline: 4px;
+  font-size: 12px;
+}
+.sub-issue-add input:hover,
+.sub-issue-add input:focus {
+  border-color: var(--border);
+  background: var(--panel);
+}
+.sub-issue-adopt {
+  margin-bottom: 10px;
+}
+.sub-issue-adopt .issue-search-input,
+.parent-search .issue-search-input,
+.parent-dialog .issue-search-input {
+  width: 100%;
+}
+.property-parent {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.property-parent .property-value {
+  flex: 1;
+  min-width: 0;
+}
+.parent-value .identifier {
+  margin-right: 2px;
+}
+.parent-chip {
+  gap: 6px;
+}
+.parent-chip .icon-button {
+  width: 20px;
+  height: 20px;
+}
+
+/* Display: the sub-issue switch. */
+.display-switch input {
+  width: 30px;
+  height: 18px;
+}
+
+/* Saved views in the sidebar. */
+.view-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0 0 20px;
+  padding: 0;
+  list-style: none;
+}
+.view-nav-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  border-radius: 6px;
+}
+.view-nav-item[data-over] {
+  box-shadow: inset 0 2px var(--accent);
+}
+.view-nav-item > a {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 7px 10px;
+  border-radius: 6px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.view-nav-item > a > span:not(.view-scope) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.view-nav-item > a:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+.view-nav-item > a.active {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+}
+.view-nav-item > a[draggable="true"] {
+  cursor: grab;
+}
+.view-actions {
+  position: absolute;
+  right: 2px;
+  width: 26px;
+  height: 26px;
+  opacity: 0;
+}
+.view-nav-item:hover .view-actions,
+.view-actions:focus-visible,
+.view-actions[data-popup-open] {
+  opacity: 1;
+}
+.sheet-views {
+  margin-bottom: 8px;
+}
+.sheet-views .view-actions {
+  opacity: 1;
+}
+.heading-icon {
+  display: inline-flex;
+  color: var(--accent);
+}
+.save-view {
+  display: flex;
+  gap: 6px;
+}
+
+/* The save view dialog. */
+.view-dialog form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.icon-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.icon-choices legend {
+  width: 100%;
+}
+.icon-choice {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  color: var(--muted);
+  cursor: pointer;
+}
+.icon-choice input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.icon-choice:has(:checked) {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.icon-choice:has(:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.scope-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+}
+.scope-choices legend {
+  width: 100%;
+}
+.scope-choices input {
+  accent-color: #7c59d9;
+}
+.scope-choices label {
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  font-weight: 450;
+}
+
+@media (max-width: 767px) {
+  .issue-row .row-due {
+    width: auto;
+  }
+  .sub-issue {
+    min-height: 44px;
+  }
+  .sub-issue-remove {
+    opacity: 1;
+  }
+  .calendar-grid td {
+    height: 38px;
+  }
+  .due-choices {
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+  }
+  .due-choice {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+    min-height: 44px;
+  }
+  .icon-choice {
+    width: 42px;
+    height: 42px;
+  }
+  .save-view .toolbar-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .due-popover {
+    width: min(320px, calc(100vw - 16px));
+  }
+  .due-input input {
+    font-size: 16px;
+  }
+  .sub-issue-add input {
+    font-size: 16px;
+  }
+}
+.row-id {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: baseline;
+  gap: 6px;
+}

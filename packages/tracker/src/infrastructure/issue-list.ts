@@ -124,6 +124,13 @@ function dueFilters(input: IssueListInput): Sql[] {
     ...(input.dueAfter === undefined
       ? []
       : [sql`i."dueDate" >= ${input.dueAfter}::date`]),
+    ...(input.hasDueDate === undefined
+      ? []
+      : [
+          input.hasDueDate
+            ? sql`i."dueDate" IS NOT NULL`
+            : sql`i."dueDate" IS NULL`,
+        ]),
     ...(input.overdue === undefined
       ? []
       : [

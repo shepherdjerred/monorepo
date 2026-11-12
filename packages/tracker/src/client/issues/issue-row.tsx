@@ -1,6 +1,6 @@
 import type { CSSProperties, Ref } from "react";
 import { Link } from "react-router";
-import { ChevronRight, Plus } from "lucide-react";
+import { CalendarClock, ChevronRight, Plus } from "lucide-react";
 import type { Issue } from "#client/data/api.ts";
 import type { EnumOption } from "#client/controls/enum-picker.tsx";
 import {
@@ -13,6 +13,9 @@ import { Avatar, Priority, Swatch } from "#client/ui/ui.tsx";
 import { StateIcon } from "#client/ui/icons.tsx";
 import { RelativeTime } from "#client/ui/time.tsx";
 import { isPlainClick } from "#client/shell/route.ts";
+import { pickDue } from "#client/controls/issue-actions.ts";
+import { RowDue } from "#client/due/due-chip.tsx";
+import { SubIssueBadge } from "#client/hierarchy/progress.tsx";
 import type { RowProperty } from "#client/views/display-options.ts";
 import type { GroupHeader } from "#client/views/grouping.ts";
 
@@ -119,9 +122,22 @@ export function IssueRowItem({
           }
         }}
       >
-        <span className="identifier">{issue.identifier}</span>
+        <span className="row-id">
+          <span className="identifier">{issue.identifier}</span>
+          {issue.parent !== null && (
+            <span className="row-parent" title={issue.parent.title}>
+              <span className="sr-only">sub-issue of </span>
+              {issue.parent.identifier}
+              <span aria-hidden="true"> ›</span>
+            </span>
+          )}
+        </span>
         <span className="issue-row-title">{issue.title}</span>
       </Link>
+      <SubIssueBadge
+        done={issue.completedChildCount}
+        total={issue.childCount}
+      />
       {!hidden.has("labels") && (
         <RowLabels
           issue={issue}
@@ -146,6 +162,16 @@ export function IssueRowItem({
           {issue.voteCount}
           <span className="sr-only"> votes</span>
         </span>
+      )}
+      {!hidden.has("due") && (
+        <RowDue
+          issue={issue}
+          disabled={options.disabled}
+          onFocus={actions.focus}
+          open={(anchor) => {
+            pickDue([issue.identifier], anchor);
+          }}
+        />
       )}
       {!hidden.has("date") && (
         <RelativeTime
@@ -182,6 +208,15 @@ export function GroupMarkIcon({ header }: { header: GroupHeader }) {
         <span className="unassigned" aria-hidden="true" />
       ) : (
         <Avatar actor={mark.actor} decorative />
+      );
+    }
+    case "due": {
+      return (
+        <CalendarClock
+          size={14}
+          className="due-group-mark"
+          data-bucket={mark.bucket}
+        />
       );
     }
   }

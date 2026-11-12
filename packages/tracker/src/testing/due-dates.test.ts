@@ -126,6 +126,14 @@ it("stores, filters, sorts and audits due dates as calendar days", async () => {
   ).toHaveLength(3);
   expect(await titles({ dueAfter: "2027-01-01" })).toEqual([]);
 
+  // `hasDueDate` splits the issues into dated and undated ones.
+  const dated = await list({ hasDueDate: true });
+  const undated = await list({ hasDueDate: false });
+  expect(dated.total + undated.total).toBe(7);
+  expect(dated.items.every(({ dueDate }) => dueDate !== null)).toBe(true);
+  expect(undated.items.every(({ dueDate }) => dueDate === null)).toBe(true);
+  expect(undated.total).toBeGreaterThan(0);
+
   // Overdue is strictly before the caller's today.
   const today = "2026-03-10";
   expect(await titles({ sort: "due", overdue: true, today })).toEqual([

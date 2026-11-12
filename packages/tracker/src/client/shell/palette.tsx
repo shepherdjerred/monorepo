@@ -12,12 +12,14 @@ import { api, type BootstrapData } from "#client/data/api.ts";
 import { Modal, ErrorNotice } from "#client/ui/ui.tsx";
 import { StateIcon } from "#client/ui/icons.tsx";
 import type { IssuePrefill } from "#client/issues/issue-form.tsx";
-import { matchesEntry, rootEntries } from "./palette-commands.tsx";
+import { rootEntries } from "./palette-commands.tsx";
+import { matchesEntry, rankEntries } from "./palette-rank.ts";
 import type { PaletteEntry, PaletteStep } from "./palette-steps.tsx";
 import { recentIssues } from "./recent-issues.ts";
 import { isPlainClick } from "./route.ts";
 import type { Targets } from "./shell-actions.ts";
 import { isComposing } from "#client/ui/ime.ts";
+import type { SavedView } from "#client/saved-views/view-params.ts";
 
 const listId = "palette-results";
 const optionId = (index: number) => `palette-option-${String(index)}`;
@@ -37,7 +39,10 @@ function offeredIssues(
   found: readonly IssueResult[] | undefined,
 ): readonly IssueResult[] {
   if (step !== undefined) {
-    return [];
+    const exclude = step.issues?.exclude;
+    return exclude === undefined || !searching
+      ? []
+      : (found ?? []).filter(({ identifier }) => !exclude.includes(identifier));
   }
   return searching
     ? (found ?? [])
@@ -55,6 +60,11 @@ function subjectOf(targets: Targets | undefined) {
     ? only
     : `${String(targets.identifiers.length)} issues`;
 }
+
+/** One row of the palette, in the order arrows and Enter step through. */
+type Option =
+  | { kind: "issue"; issue: IssueResult }
+  | { kind: "entry"; entry: PaletteEntry };
 
 /** Consecutive entries of one section share a heading. */
 function sections(entries: readonly PaletteEntry[]) {
@@ -75,12 +85,35 @@ function IssueOption({
   index,
   active,
   close,
+  pick,
 }: {
   issue: IssueResult;
   index: number;
   active: boolean;
   close: () => void;
+  /** Choosing the issue picks it for a step instead of opening it. */
+  pick: (() => void) | undefined;
 }) {
+  if (pick !== undefined) {
+    return (
+      <button
+        type="button"
+        role="option"
+        id={optionId(index)}
+        aria-selected={active}
+        tabIndex={-1}
+        onClick={pick}
+      >
+        {issue.state !== undefined && (
+          <StateIcon type={issue.state.type} color={issue.state.color} />
+        )}
+        <span className="identifier">{issue.identifier}</span>
+        <span className="palette-issue-copy">
+          <span>{issue.title}</span>
+        </span>
+      </button>
+    );
+  }
   return (
     <Link
       role="option"
@@ -111,6 +144,69 @@ function IssueOption({
   );
 }
 
+/** Commands under their section headings; `start` is the first row's index. */
+function EntryGroups({
+  entries,
+  start,
+  active,
+  choose,
+}: {
+  entries: readonly PaletteEntry[];
+  start: number;
+  active: number;
+  choose: (index: number) => void;
+}) {
+  return (
+    <>
+      {sections(entries).map((group) => (
+        <div
+          role="group"
+          aria-labelledby={`palette-section-${String(start + group.start)}`}
+          key={`${group.name}-${String(start + group.start)}`}
+        >
+          <div
+            className="palette-group"
+            id={`palette-section-${String(start + group.start)}`}
+          >
+            {group.name}
+          </div>
+          {group.entries.map((entry, offset) => {
+            const index = start + group.start + offset;
+            return (
+              <button
+                role="option"
+                id={optionId(index)}
+                aria-selected={active === index}
+                tabIndex={-1}
+                key={entry.id}
+                onClick={() => {
+                  choose(index);
+                }}
+              >
+                <span className="option-icon">{entry.icon}</span>
+                <span className="option-label">{entry.label}</span>
+                {entry.checked === true && (
+                  <>
+                    <Check
+                      size={14}
+                      className="menu-check"
+                      aria-hidden="true"
+                    />
+                    <span className="sr-only">, current</span>
+                  </>
+                )}
+                {entry.hint !== undefined && (
+                  <kbd aria-hidden="true">{entry.hint}</kbd>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      ))}
+    </>
+  );
+}
+
 /**
  * Search and commands. Commands act on the open issue, the selection or the
  * focused row; a command ending in "…" steps into a nested list without
@@ -124,6 +220,8 @@ export function Palette({
   bootstrap,
   targets,
   prefill,
+  views,
+  teamKey,
 }: {
   close: () => void;
   navigate: (to: string) => void;
@@ -132,6 +230,8 @@ export function Palette({
   bootstrap: BootstrapData;
   targets: Targets | undefined;
   prefill: IssuePrefill;
+  views: readonly SavedView[];
+  teamKey: string;
 }) {
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState(0);
@@ -139,7 +239,9 @@ export function Palette({
   // A command that keeps the palette open changes what its rows show.
   const [, setVersion] = useState(0);
   const step = steps.at(-1);
-  const searching = step === undefined && query.trim().length > 0;
+  const searching =
+    (step === undefined || step.issues !== undefined) &&
+    query.trim().length > 0;
   const results = useQuery({
     queryKey: ["search", query],
     queryFn: () => api.search.query.query({ query }),
@@ -148,10 +250,25 @@ export function Palette({
   const issues = offeredIssues(step, searching, results.data?.items);
   const entries = (
     step === undefined
-      ? rootEntries({ bootstrap, targets, action, navigate, create, prefill })
-      : step.entries()
-  ).filter((entry) => matchesEntry(entry, query));
-  const count = issues.length + entries.length;
+      ? rootEntries({
+          bootstrap,
+          targets,
+          action,
+          navigate,
+          create,
+          prefill,
+          views,
+          teamKey,
+        })
+      : step.entries(query)
+  ).filter((entry) => entry.always === true || matchesEntry(entry, query));
+  const { leading, trailing } = rankEntries(entries, query);
+  const ordered: Option[] = [
+    ...leading.map((entry) => ({ kind: "entry" as const, entry })),
+    ...issues.map((issue) => ({ kind: "issue" as const, issue })),
+    ...trailing.map((entry) => ({ kind: "entry" as const, entry })),
+  ];
+  const count = ordered.length;
   const active = Math.min(selected, count - 1);
   function back() {
     setSteps((known) => known.slice(0, -1));
@@ -159,18 +276,24 @@ export function Palette({
     setSelected(0);
   }
   function choose(index: number) {
-    const issue = issues[index];
-    if (issue !== undefined) {
+    const option = ordered[index];
+    if (option === undefined) {
+      return;
+    }
+    const picking = step?.issues;
+    if (option.kind === "issue") {
+      const { identifier } = option.issue;
       close();
       requestAnimationFrame(() => {
-        navigate(`/issues/${issue.identifier}`);
+        if (picking === undefined) {
+          navigate(`/issues/${identifier}`);
+        } else {
+          picking.pick(identifier);
+        }
       });
       return;
     }
-    const entry = entries[index - issues.length];
-    if (entry === undefined) {
-      return;
-    }
+    const { entry } = option;
     const next = entry.step;
     if (next !== undefined) {
       setSteps((known) => [...known, next]);
@@ -269,67 +392,44 @@ export function Palette({
         role="listbox"
         aria-label="Results"
       >
+        <EntryGroups
+          entries={leading}
+          start={0}
+          active={active}
+          choose={choose}
+        />
         {issues.length > 0 && (
           <div role="group" aria-labelledby="palette-issues">
             <div className="palette-group" id="palette-issues">
               {searching ? "Issues" : "Recent issues"}
             </div>
-            {issues.map((issue, index) => (
-              <IssueOption
-                key={issue.id}
-                issue={issue}
-                index={index}
-                active={active === index}
-                close={close}
-              />
-            ))}
-          </div>
-        )}
-        {sections(entries).map((group) => (
-          <div
-            role="group"
-            aria-labelledby={`palette-section-${String(group.start)}`}
-            key={`${group.name}-${String(group.start)}`}
-          >
-            <div
-              className="palette-group"
-              id={`palette-section-${String(group.start)}`}
-            >
-              {group.name}
-            </div>
-            {group.entries.map((entry, offset) => {
-              const index = issues.length + group.start + offset;
+            {issues.map((issue, offset) => {
+              const index = leading.length + offset;
               return (
-                <button
-                  role="option"
-                  id={optionId(index)}
-                  aria-selected={active === index}
-                  tabIndex={-1}
-                  key={entry.id}
-                  onClick={() => {
-                    choose(index);
-                  }}
-                >
-                  <span className="option-icon">{entry.icon}</span>
-                  <span className="option-label">{entry.label}</span>
-                  {entry.checked === true && (
-                    <>
-                      <Check
-                        size={14}
-                        className="menu-check"
-                        aria-hidden="true"
-                      />
-                      <span className="sr-only">, current</span>
-                    </>
-                  )}
-                  {entry.hint !== undefined && (
-                    <kbd aria-hidden="true">{entry.hint}</kbd>
-                  )}
-                </button>
+                <IssueOption
+                  key={issue.id}
+                  issue={issue}
+                  index={index}
+                  active={active === index}
+                  close={close}
+                  pick={
+                    step?.issues === undefined
+                      ? undefined
+                      : () => {
+                          choose(index);
+                        }
+                  }
+                />
               );
             })}
           </div>
-        ))}
+        )}
+        <EntryGroups
+          entries={trailing}
+          start={leading.length + issues.length}
+          active={active}
+          choose={choose}
+        />
       </div>
       {count === 0 && !results.isFetching && (
         <p className="palette-empty muted">

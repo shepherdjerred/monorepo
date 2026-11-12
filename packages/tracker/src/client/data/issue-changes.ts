@@ -1,5 +1,7 @@
 import type { BootstrapData, Issue } from "./api.ts";
 import type { CachedIssue, IssuePatch } from "./cache.ts";
+import { localToday } from "#client/due/dates.ts";
+import { dueLabel } from "#client/due/due-display.ts";
 
 /** One user-level edit to an issue: the unit that is queued, sent and undone. */
 export type IssueChange =
@@ -18,13 +20,18 @@ export type IssueChange =
       beforeId?: string;
       afterId?: string;
     }
-  | { kind: "vote"; voted: boolean };
+  | { kind: "vote"; voted: boolean }
+  | { kind: "parent"; parentIdentifier: string | null }
+  | { kind: "due"; dueDate: string | null };
 
 /** The workspace records an edit refers to by name, slug or key. */
 export type Catalog = Pick<
   BootstrapData,
   "states" | "labels" | "projects" | "actors"
->;
+> & {
+  /** Another cached issue, for the title of a new parent. */
+  issue?: (identifier: string) => Pick<Issue, "id" | "title"> | undefined;
+};
 
 export const priorities = ["No priority", "Urgent", "High", "Medium", "Low"];
 
@@ -88,6 +95,28 @@ function referencePatch(
   return { project, projectId: project.id };
 }
 
+/**
+ * A parent shows by identifier and title. The title is known when the parent
+ * is cached; until the server answers it stands in as the identifier.
+ */
+function parentPatch(
+  issue: CachedIssue,
+  parentIdentifier: string | null,
+  catalog: Catalog,
+): IssuePatch {
+  if (parentIdentifier === null) {
+    return { parent: null, parentId: null };
+  }
+  if (issue.parent?.identifier === parentIdentifier) {
+    return { parent: issue.parent, parentId: issue.parentId };
+  }
+  const known = catalog.issue?.(parentIdentifier);
+  return {
+    parent: { identifier: parentIdentifier, title: known?.title ?? "" },
+    parentId: known?.id ?? `optimistic-${parentIdentifier}`,
+  };
+}
+
 /** The fields an edit rewrites, given the issue as it stands before the edit. */
 export function changePatch(
   issue: CachedIssue,
@@ -125,6 +154,12 @@ export function changePatch(
         `state ${change.stateId}`,
       );
       return { state, stateId: state.id, boardOrder: change.boardOrder };
+    }
+    case "parent": {
+      return parentPatch(issue, change.parentIdentifier, catalog);
+    }
+    case "due": {
+      return { dueDate: change.dueDate };
     }
     case "vote": {
       if (issue.viewerVoted === change.voted) {
@@ -175,6 +210,12 @@ export function changeSlice(
         boardOrder: issue.boardOrder,
       };
     }
+    case "parent": {
+      return { parent: issue.parent, parentId: issue.parentId };
+    }
+    case "due": {
+      return { dueDate: issue.dueDate };
+    }
     case "vote": {
       return {
         voteCount: issue.voteCount,
@@ -212,6 +253,15 @@ export function inverseChange(
     }
     case "archive": {
       return { kind: "archive", archived: !change.archived };
+    }
+    case "parent": {
+      return {
+        kind: "parent",
+        parentIdentifier: issue.parent?.identifier ?? null,
+      };
+    }
+    case "due": {
+      return { kind: "due", dueDate: issue.dueDate };
     }
     case "title":
     case "description":
@@ -276,6 +326,16 @@ export function changeSummary(change: IssueChange, catalog: Catalog) {
     case "vote": {
       return change.voted ? "vote added" : "vote removed";
     }
+    case "parent": {
+      return change.parentIdentifier === null
+        ? "parent removed"
+        : `moved under ${change.parentIdentifier}`;
+    }
+    case "due": {
+      return change.dueDate === null
+        ? "due date cleared"
+        : `due ${dueLabel(change.dueDate, localToday()).toLowerCase()}`;
+    }
   }
 }
 
@@ -334,6 +394,12 @@ export function updateInput(change: IssueChange) {
         description: change.description,
         attachmentIds: change.attachmentIds,
       };
+    }
+    case "parent": {
+      return { parentIdentifier: change.parentIdentifier };
+    }
+    case "due": {
+      return { dueDate: change.dueDate };
     }
     case "move":
     case "vote": {

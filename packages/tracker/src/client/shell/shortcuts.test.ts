@@ -1,6 +1,8 @@
 import { describe, expect, test } from "vitest";
 import { createRecentIssues } from "./recent-issues.ts";
 import { bindingId, resolveShortcut, shortcuts } from "./shortcuts.ts";
+import { matchesEntry, namesCommand, rankEntries } from "./palette-rank.ts";
+import type { PaletteEntry } from "./palette-steps.tsx";
 
 const press = (key: string, modifiers: Partial<KeyboardEvent> = {}) => ({
   key,
@@ -102,5 +104,42 @@ describe("recent issues", () => {
     expect(listed).toHaveLength(8);
     expect(listed[0]).toEqual({ identifier: "AI-5", title: "reopened" });
     expect(listed.map(({ identifier }) => identifier)).not.toContain("AI-1");
+  });
+});
+
+const entry = (label: string, section = "Commands"): PaletteEntry => ({
+  id: label,
+  label,
+  icon: null,
+  section,
+});
+
+describe("palette ranking", () => {
+  const setParent = entry("Set parent…", "AI-1");
+  const dueDate = entry("Set due date…", "AI-1");
+  const view = entry("Go to view Urgent bugs", "Views");
+  const theme = entry("Change theme…");
+
+  test("a query that starts the label or one of its words names the command", () => {
+    expect(namesCommand(setParent, "Set parent")).toBe(true);
+    expect(namesCommand(setParent, "set p")).toBe(true);
+    expect(namesCommand(setParent, "PARENT")).toBe(true);
+    expect(namesCommand(dueDate, "due da")).toBe(true);
+    expect(namesCommand(view, "urgent")).toBe(true);
+    expect(namesCommand(view, "urgent bugs")).toBe(true);
+    // Inside a word, or empty, is only a weak match.
+    expect(namesCommand(setParent, "arent")).toBe(false);
+    expect(matchesEntry(setParent, "arent")).toBe(true);
+    expect(namesCommand(setParent, "  ")).toBe(false);
+  });
+
+  test("named commands lead, ahead of issue results; weak matches follow them", () => {
+    const { leading, trailing } = rankEntries(
+      [theme, dueDate, setParent, view],
+      "parent",
+    );
+    expect(leading).toEqual([setParent]);
+    expect(trailing).toEqual([theme, dueDate, view]);
+    expect(rankEntries([theme, setParent], "").leading).toEqual([]);
   });
 });

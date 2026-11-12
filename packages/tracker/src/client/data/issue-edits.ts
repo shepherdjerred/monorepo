@@ -37,6 +37,8 @@ export type IssueApi = {
     removeLabels?: string[];
     archived?: boolean;
     attachmentIds?: string[];
+    parentIdentifier?: string | null;
+    dueDate?: string | null;
   }) => Promise<Issue>;
   move: (input: {
     identifier: string;
@@ -129,7 +131,10 @@ export function createIssueEdits(deps: {
     if (bootstrap === undefined) {
       throw new Error("The workspace is not loaded");
     }
-    return bootstrap;
+    return {
+      ...bootstrap,
+      issue: (identifier: string) => cachedIssue(client, identifier),
+    };
   }
 
   function open(identifier: string) {

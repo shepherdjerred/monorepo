@@ -26,6 +26,9 @@ export type IssuePatch = Partial<
     | "archivedAt"
     | "boardOrder"
     | "voteCount"
+    | "parent"
+    | "parentId"
+    | "dueDate"
   >
 > & { viewerVoted?: boolean };
 
@@ -94,9 +97,108 @@ function mapRows(
     : data;
 }
 
+type Child = IssueDetailData["children"][number];
+
+const childOf = (issue: CachedIssue): Child => ({
+  identifier: issue.identifier,
+  title: issue.title,
+  state: issue.state,
+  priority: issue.priority,
+  assignee: issue.assignee,
+});
+
+/** The sub-issues a parent shows once one of them changed as `child`. */
+function withChild(
+  parent: IssueDetailData,
+  child: CachedIssue,
+): Child[] | undefined {
+  const index = parent.children.findIndex(
+    ({ identifier }) => identifier === child.identifier,
+  );
+  // Archived sub-issues are not listed or counted, as on the server.
+  const belongs =
+    child.parent?.identifier === parent.identifier && child.archivedAt === null;
+  if (index === -1) {
+    return belongs ? [...parent.children, childOf(child)] : undefined;
+  }
+  if (!belongs) {
+    return parent.children.filter((_, at) => at !== index);
+  }
+  const next = childOf(child);
+  const known = parent.children[index];
+  return known !== undefined && JSON.stringify(known) === JSON.stringify(next)
+    ? undefined
+    : parent.children.map((item, at) => (at === index ? next : item));
+}
+
+const childCounts = (children: readonly Child[]) => ({
+  childCount: children.length,
+  completedChildCount: children.filter(
+    ({ state }) => state.type === "completed",
+  ).length,
+});
+
+/**
+ * Keep each cached parent's sub-issues, and the counts its rows show, in
+ * step with an edit to one of them, so progress moves with the edit.
+ */
+function syncParents(client: QueryClient, child: CachedIssue) {
+  const changed: IssueDetailData[] = [];
+  for (const [key, detail] of client.getQueriesData<IssueDetailData>({
+    queryKey: ["issue"],
+  })) {
+    if (detail === undefined || detail.identifier === child.identifier) {
+      continue;
+    }
+    const children = withChild(detail, child);
+    if (children !== undefined) {
+      const next = { ...detail, children, ...childCounts(children) };
+      client.setQueryData(key, next);
+      changed.push(next);
+    }
+  }
+  for (const parent of changed) {
+    client.setQueriesData<IssueListData>({ queryKey: listsKey }, (data) =>
+      mapRows(data, (items) =>
+        items.some((row) => row.identifier === parent.identifier)
+          ? items.map((row) =>
+              row.identifier === parent.identifier
+                ? {
+                    ...row,
+                    childCount: parent.childCount,
+                    completedChildCount: parent.completedChildCount,
+                  }
+                : row,
+            )
+          : items,
+      ),
+    );
+  }
+}
+
+/** Every cached detail an issue is listed under as a sub-issue. */
+export function parentsOf(client: QueryClient, identifier: string) {
+  const parents = new Set<string>();
+  const parent = cachedIssue(client, identifier)?.parent?.identifier;
+  if (parent !== undefined) {
+    parents.add(parent);
+  }
+  for (const [, detail] of client.getQueriesData<IssueDetailData>({
+    queryKey: ["issue"],
+  })) {
+    if (
+      detail?.children.some((child) => child.identifier === identifier) === true
+    ) {
+      parents.add(detail.identifier);
+    }
+  }
+  return [...parents];
+}
+
 /**
  * Write fields onto every cached copy of an issue. A list row never carries
- * `viewerVoted`; only the detail does.
+ * `viewerVoted`; only the detail does. A parent that is cached sees the
+ * change among its sub-issues.
  */
 export function patchIssue(
   client: QueryClient,
@@ -104,6 +206,7 @@ export function patchIssue(
   patch: IssuePatch,
   server?: Issue,
 ) {
+  const known = cachedIssue(client, identifier);
   const { viewerVoted: _viewerVoted, ...rowPatch } = patch;
   client.setQueryData<IssueDetailData>(issueKey(identifier), (detail) =>
     detail === undefined ? detail : { ...detail, ...server, ...patch },
@@ -119,6 +222,9 @@ export function patchIssue(
         : items,
     ),
   );
+  if (known !== undefined) {
+    syncParents(client, { ...known, ...server, ...rowPatch });
+  }
 }
 
 /** Drop an issue from every cached list and forget its detail and history. */
@@ -147,6 +253,10 @@ export function patchDetail(
 
 /** Refetch what one issue's mutation can have changed, and nothing else. */
 export function invalidateIssue(client: QueryClient, identifier: string) {
+  // A parent's progress and sub-issue list depend on its children.
+  for (const parent of parentsOf(client, identifier)) {
+    void client.invalidateQueries({ queryKey: issueKey(parent) });
+  }
   void client.invalidateQueries({ queryKey: issueKey(identifier) });
   void client.invalidateQueries({ queryKey: eventsKey(identifier) });
   void client.invalidateQueries({ queryKey: listsKey });

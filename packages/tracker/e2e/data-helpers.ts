@@ -27,6 +27,8 @@ export async function createIssue(
     priority?: number;
     stateName?: string;
     labels?: string[];
+    parentIdentifier?: string;
+    dueDate?: string;
   },
 ) {
   const response = await request.post("/trpc/issues.create", {
@@ -55,6 +57,22 @@ export async function removeIssue(
     data: { actor, identifier, expectedRevision: revision },
   });
   expect(response.ok()).toBe(true);
+}
+
+/**
+ * Delete every scratch-team issue whose title has `tag`, so a spec leaves
+ * the scratch team's list as long as it found it.
+ */
+async function removeTagged(request: APIRequestContext, tag: string) {
+  const input = encodeURIComponent(
+    JSON.stringify({ teamKey: scratchTeam, search: tag, limit: 500 }),
+  );
+  const response = await request.get(`/trpc/issues.list?input=${input}`);
+  const { items } = ListedSchema.parse(await response.json()).result.data;
+  for (const { identifier } of items) {
+    // An edit the page made may still be saving; delete at its revision.
+    await expect(() => removeIssue(request, identifier)).toPass();
+  }
 }
 
 /**
@@ -96,6 +114,21 @@ export function uniqueTag() {
   ).join("");
 }
 
+const madeTags: string[] = [];
+
+/** A unique tag whose issues `removeScratchIssues` deletes after the test. */
+export function scratchTag() {
+  const tag = uniqueTag();
+  madeTags.push(tag);
+  return tag;
+}
+
+export async function removeScratchIssues(request: APIRequestContext) {
+  for (const tag of madeTags.splice(0)) {
+    await removeTagged(request, tag);
+  }
+}
+
 /** Every tRPC call the page makes, as `procedures?input`, decoded. */
 export function recordCalls(page: Page) {
   const calls: string[] = [];
@@ -108,6 +141,105 @@ export function recordCalls(page: Page) {
     }
   });
   return calls;
+}
+
+/** Open the issue menu as the platform does: right click, or long press. */
+export async function openMenu(
+  page: Page,
+  identifier: string,
+  mobile: boolean,
+) {
+  const link = page.locator(`a[data-issue-row="${identifier}"]`);
+  if (!mobile) {
+    await link.click({ button: "right" });
+    return;
+  }
+  const box = await link.boundingBox();
+  if (box === null) throw new Error(`${identifier} is not on screen`);
+  const point = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send("Input.dispatchTouchEvent", {
+    type: "touchStart",
+    touchPoints: [point],
+  });
+  await expect(page.getByRole("menu")).toBeVisible();
+  await cdp.send("Input.dispatchTouchEvent", {
+    type: "touchEnd",
+    touchPoints: [],
+  });
+  await cdp.detach();
+}
+
+/** Select rows from their menu, as on a phone where there is no checkbox. */
+export async function selectRows(
+  page: Page,
+  identifiers: readonly string[],
+  mobile: boolean,
+) {
+  for (const identifier of identifiers) {
+    await openMenu(page, identifier, mobile);
+    await page.getByRole("menuitem", { name: "Select", exact: true }).click();
+    await expect(
+      page.locator(`li[data-row-issue="${identifier}"]`),
+    ).toHaveAttribute("data-selected", "true");
+  }
+}
+
+const ViewSchema = z.object({
+  result: z.object({ data: z.object({ id: z.string(), name: z.string() }) }),
+});
+const ViewsSchema = z.object({
+  result: z.object({
+    data: z.array(z.object({ id: z.string(), name: z.string() })),
+  }),
+});
+
+/** Save a view through the API, as the CLI does. */
+export async function createView(
+  request: APIRequestContext,
+  input: {
+    name: string;
+    icon?: string;
+    params: Record<string, string | string[]>;
+    teamKey?: string | null;
+  },
+) {
+  const response = await request.post("/trpc/views.create", {
+    data: { actor, icon: "list", ...input },
+  });
+  expect(response.ok()).toBe(true);
+  return ViewSchema.parse(await response.json()).result.data;
+}
+
+/** Every saved view, in the shared order. */
+export async function listViews(request: APIRequestContext) {
+  const response = await request.get("/trpc/views.list");
+  return ViewsSchema.parse(await response.json()).result.data;
+}
+
+/** Delete the views a spec saved, so the sidebar is as other specs expect. */
+export async function removeViews(
+  request: APIRequestContext,
+  names: readonly string[],
+) {
+  for (const view of await listViews(request)) {
+    if (names.includes(view.name)) {
+      const response = await request.post("/trpc/views.delete", {
+        data: { actor, id: view.id },
+      });
+      expect(response.ok()).toBe(true);
+    }
+  }
+}
+
+export async function reorderViews(
+  request: APIRequestContext,
+  ids: readonly string[],
+) {
+  const response = await request.post("/trpc/views.reorder", {
+    data: { actor, ids },
+  });
+  expect(response.ok()).toBe(true);
 }
 
 export const toast = (page: Page) => page.locator(".toast");

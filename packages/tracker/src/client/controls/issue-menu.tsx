@@ -6,11 +6,20 @@ import {
   Copy,
   ExternalLink,
   GitBranch,
+  GitFork,
   Link2,
+  ListPlus,
   SquareCheck,
   Trash2,
+  Unlink,
   UserRoundCheck,
 } from "lucide-react";
+import { duePanel } from "#client/due/due-picker.tsx";
+import {
+  removeParent,
+  requestParent,
+  requestSubIssue,
+} from "#client/hierarchy/hierarchy-actions.ts";
 import type { BootstrapData, Issue } from "#client/data/api.ts";
 import {
   assignToMe,
@@ -50,6 +59,47 @@ const rowOf = (target: EventTarget | null) =>
     ? target.closest<HTMLElement>("[data-row-issue]")?.dataset["rowIssue"]
     : undefined;
 
+/** Where the issues sit in a hierarchy: their parent, a new sub-issue. */
+function HierarchyItems({
+  issues,
+  targets,
+}: {
+  issues: readonly Issue[];
+  targets: readonly string[];
+}) {
+  const [only, ...rest] = issues;
+  return (
+    <>
+      <Item
+        icon={<GitFork size={15} />}
+        label="Set parent…"
+        onClick={() => {
+          requestParent(targets);
+        }}
+      />
+      {only !== undefined && rest.length === 0 && (
+        <Item
+          icon={<ListPlus size={15} />}
+          label="Add sub-issue"
+          shortcut="O"
+          onClick={() => {
+            requestSubIssue(only.identifier);
+          }}
+        />
+      )}
+      {issues.some((issue) => issue.parent !== null) && (
+        <Item
+          icon={<Unlink size={15} />}
+          label="Remove parent"
+          onClick={() => {
+            removeParent(targets);
+          }}
+        />
+      )}
+    </>
+  );
+}
+
 /** The actions for the issues the menu opened on. */
 function MenuItems({
   issues,
@@ -81,14 +131,17 @@ function MenuItems({
         <PropertyMenus issues={issues} bootstrap={bootstrap} anchor={anchor} />
       )}
       {!disabled && (
-        <Item
-          icon={<UserRoundCheck size={15} />}
-          label="Assign to me"
-          shortcut="i"
-          onClick={() => {
-            assignToMe(targets);
-          }}
-        />
+        <>
+          <Item
+            icon={<UserRoundCheck size={15} />}
+            label="Assign to me"
+            shortcut="i"
+            onClick={() => {
+              assignToMe(targets);
+            }}
+          />
+          <HierarchyItems issues={issues} targets={targets} />
+        </>
       )}
       {only !== undefined && issues.length === 1 && (
         <Item
@@ -197,6 +250,8 @@ export function IssueContextMenu({
           setOpen(false);
           return;
         }
+        // The menu offers "Pick a date…"; its picker loads meanwhile.
+        duePanel.prefetch();
         touchedAt.current =
           details.event.type === "touchstart" ? pressedAt.current : undefined;
         const row = pressed.current;

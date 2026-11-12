@@ -354,9 +354,15 @@ export async function createIssue(
       votes: [],
       viewerVoted: false,
       relations: [],
+      children: [],
     });
   }
   void queryClient.invalidateQueries({ queryKey: listsKey });
+  if (input.parentIdentifier !== undefined && input.parentIdentifier !== null) {
+    void queryClient.invalidateQueries({
+      queryKey: issueKey(input.parentIdentifier),
+    });
+  }
   noteActor();
   notify(
     `${issue.identifier} created`,

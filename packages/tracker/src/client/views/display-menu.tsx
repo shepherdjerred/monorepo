@@ -20,6 +20,7 @@ const propertyNames: Record<RowProperty, string> = {
   labels: "Labels",
   project: "Project",
   date: "Updated",
+  due: "Due date",
   assignee: "Assignee",
 };
 
@@ -77,6 +78,18 @@ export function DisplayMenu({ board }: { board: boolean }) {
                 </label>
               </>
             )}
+            <label className="display-row display-switch">
+              <span>Show sub-issues</span>
+              <input
+                type="checkbox"
+                role="switch"
+                id="display-subissues"
+                checked={display.showSubIssues}
+                onChange={(event) => {
+                  write({ showSubIssues: event.target.checked });
+                }}
+              />
+            </label>
             <fieldset className="display-properties">
               <legend>Show on {board ? "cards" : "rows"}</legend>
               <div>

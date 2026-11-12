@@ -16,6 +16,7 @@ import type { BootstrapData } from "#client/data/api.ts";
 import { Modal, Swatch } from "#client/ui/ui.tsx";
 import { LiveIndicator } from "#client/live/presence.tsx";
 import { rememberTeam } from "./team.ts";
+import { ViewsNav } from "#client/saved-views/views-nav.tsx";
 
 const links = [
   { name: "Issues", path: "/issues", icon: List },
@@ -70,6 +71,9 @@ export function Sidebar({
             </NavLink>
           ))}
         </nav>
+        {bootstrap !== undefined && teamKey !== undefined && (
+          <ViewsNav bootstrap={bootstrap} teamKey={teamKey} />
+        )}
         <p className="nav-heading">Teams</p>
         <div className="team-nav">
           {bootstrap?.teams.map((team) => (
@@ -149,16 +153,29 @@ export function BottomNavigation({
   );
 }
 export function MoreSheet({
+  bootstrap,
+  teamKey,
   open,
   close,
   help,
 }: {
+  bootstrap: BootstrapData | undefined;
+  teamKey: string | undefined;
   open: boolean;
   close: () => void;
   help: () => void;
 }) {
   return (
     <Modal title="More" open={open} onClose={close} className="sheet">
+      {bootstrap !== undefined && teamKey !== undefined && (
+        <div className="sheet-views">
+          <ViewsNav
+            bootstrap={bootstrap}
+            teamKey={teamKey}
+            onNavigate={close}
+          />
+        </div>
+      )}
       <nav className="sheet-links" aria-label="More navigation">
         <NavLink to="/actors" onClick={close}>
           <Users size={18} />

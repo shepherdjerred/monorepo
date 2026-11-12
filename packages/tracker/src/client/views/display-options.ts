@@ -10,15 +10,23 @@ export const GroupBySchema = z.enum([
   "priority",
   "project",
   "assignee",
+  "due",
   "none",
 ]);
 export type GroupBy = z.infer<typeof GroupBySchema>;
-export const SortSchema = z.enum(["updated", "created", "priority", "votes"]);
+export const SortSchema = z.enum([
+  "updated",
+  "created",
+  "priority",
+  "votes",
+  "due",
+]);
 export type Sort = z.infer<typeof SortSchema>;
 export const RowPropertySchema = z.enum([
   "labels",
   "project",
   "date",
+  "due",
   "assignee",
 ]);
 export type RowProperty = z.infer<typeof RowPropertySchema>;
@@ -29,6 +37,8 @@ export const displayParams = {
   collapsed: "collapsed",
   hide: "hide",
   sort: "sort",
+  /** `subissues=hide` lists only top-level issues. */
+  subissues: "subissues",
 } as const;
 
 export const defaultGroupBy: GroupBy = "status";
@@ -39,6 +49,7 @@ export type DisplayOptions = {
   collapsed: ReadonlySet<string>;
   hidden: ReadonlySet<RowProperty>;
   sort: Sort;
+  showSubIssues: boolean;
 };
 
 /** Unknown values in a hand-edited link fall back to the defaults. */
@@ -55,6 +66,7 @@ export function readDisplay(params: URLSearchParams): DisplayOptions {
       }),
     ),
     sort: sort.success ? sort.data : defaultSort,
+    showSubIssues: params.get(displayParams.subissues) !== "hide",
   };
 }
 
@@ -94,6 +106,13 @@ export function writeDisplay(
       displayParams.hide,
       rowProperties.filter((property) => hidden.has(property)),
     );
+  }
+  if (change.showSubIssues !== undefined) {
+    if (change.showSubIssues) {
+      next.delete(displayParams.subissues);
+    } else {
+      next.set(displayParams.subissues, "hide");
+    }
   }
   if (change.sort !== undefined) {
     if (change.sort === defaultSort) {

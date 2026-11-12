@@ -1,4 +1,6 @@
 import type { CachedIssue } from "./cache.ts";
+import { localToday } from "#client/due/dates.ts";
+import { dueLabel } from "#client/due/due-display.ts";
 import {
   inverseChange,
   updateInput,
@@ -10,7 +12,17 @@ import {
 /** The edits a bulk action can make; a board move needs its own slot. */
 export type BulkChange = Extract<
   IssueChange,
-  { kind: "state" | "priority" | "assignee" | "project" | "label" | "archive" }
+  {
+    kind:
+      | "state"
+      | "priority"
+      | "assignee"
+      | "project"
+      | "label"
+      | "archive"
+      | "due"
+      | "parent";
+  }
 >;
 export type IssueEdit = readonly [identifier: string, change: BulkChange];
 
@@ -36,6 +48,12 @@ export function changesNothing(issue: CachedIssue, change: BulkChange) {
     }
     case "archive": {
       return (issue.archivedAt !== null) === change.archived;
+    }
+    case "due": {
+      return issue.dueDate === change.dueDate;
+    }
+    case "parent": {
+      return (issue.parent?.identifier ?? null) === change.parentIdentifier;
     }
   }
 }
@@ -69,7 +87,9 @@ function bulkInverse(issue: CachedIssue, change: BulkChange): BulkChange {
     case "assignee":
     case "project":
     case "label":
-    case "archive": {
+    case "archive":
+    case "due":
+    case "parent": {
       return inverse;
     }
     case "title":
@@ -151,6 +171,16 @@ export function bulkSummary(
     case "archive": {
       return `${change.archived ? "Archived" : "Unarchived"} ${issues}`;
     }
+    case "due": {
+      return change.dueDate === null
+        ? `Cleared the due date of ${issues}`
+        : `Set ${issues} due ${dueLabel(change.dueDate, localToday()).toLowerCase()}`;
+    }
+    case "parent": {
+      return change.parentIdentifier === null
+        ? `Removed the parent of ${issues}`
+        : `Moved ${issues} under ${change.parentIdentifier}`;
+    }
   }
 }
 
@@ -163,6 +193,8 @@ export type BulkPatch = {
   addLabels?: string[];
   removeLabels?: string[];
   archived?: boolean;
+  dueDate?: string | null;
+  parentIdentifier?: string | null;
 };
 
 /** A bulk change as the fields `issues.bulkUpdate` sets on every issue. */
@@ -173,7 +205,9 @@ export function bulkPatch(change: BulkChange): BulkPatch {
     case "assignee":
     case "project":
     case "label":
-    case "archive": {
+    case "archive":
+    case "due":
+    case "parent": {
       return updateInput(change);
     }
   }
