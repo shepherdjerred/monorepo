@@ -33,7 +33,7 @@ Each subdirectory is an independent root module with its own `backend.tf` (S3 st
 
 ### Stacks synthesized from TypeScript
 
-`anthropic`, `discord`, `dockerhub` and `github` have no `.tf` files. Their configuration is
+`anthropic`, `application-secrets`, `discord`, `dockerhub` and `github` have no `.tf` files. Their configuration is
 `main.tf.json`, synthesized by the [CDK Terrain](https://cdktn.io/docs) app in
 [`packages/homelab-cdktn`](../../../homelab-cdktn) and committed next to the stack's `.terraform.lock.hcl`.
 OpenTofu, `tofu-stack.ts`, the stack archive and Delivery read that file like

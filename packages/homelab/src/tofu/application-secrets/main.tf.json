@@ -1,0 +1,105 @@
+{
+  "import": [
+    {
+      "for_each": "${var.adoption_keys}",
+      "id": "${nonsensitive(var.adoption_values[each.key])}",
+      "to": "random_password.credentials[each.key]"
+    }
+  ],
+  "locals": {
+    "credentials": "${jsondecode(file(\"${path.module}/desired-state.json\")).credentials}"
+  },
+  "output": {
+    "application_secret_handoffs": {
+      "description": "Sensitive operator handoffs; the stack has no 1Password write provider.",
+      "sensitive": true,
+      "value": "${{ for key, credential in local.credentials : key => { value = random_password.credentials[key].result, revision = credential.revision, onepassword_targets = credential.onepassword_targets } }}"
+    }
+  },
+  "provider": { "random": [{}] },
+  "resource": {
+    "random_password": {
+      "credentials": {
+        "for_each": "${local.credentials}",
+        "keepers": "${each.value.revision == 0 ? null : { revision = tostring(each.value.revision) }}",
+        "length": "${each.value.revision == 0 ? lookup(var.adoption_lengths, each.key, 64) : 64}",
+        "lifecycle": {
+          "precondition": [
+            {
+              "condition": "${each.value.revision > 0 || contains(keys(var.adoption_lengths), each.key)}",
+              "error_message": "Revision zero requires verified adoption lengths; do not generate replacements during adoption."
+            }
+          ]
+        },
+        "lower": true,
+        "min_lower": "${each.value.revision == 0 ? 0 : 1}",
+        "min_numeric": "${each.value.revision == 0 ? 0 : 1}",
+        "numeric": true,
+        "special": "${each.value.revision == 0}",
+        "upper": "${each.value.revision == 0}"
+      }
+    }
+  },
+  "terraform": {
+    "backend": {
+      "s3": {
+        "bucket": "homelab-tofu-state",
+        "endpoints": { "s3": "https://seaweedfs-s3.tailnet-1a49.ts.net" },
+        "key": "application-secrets/terraform.tfstate",
+        "region": "auto",
+        "skip_credentials_validation": true,
+        "skip_metadata_api_check": true,
+        "skip_region_validation": true,
+        "skip_requesting_account_id": true,
+        "skip_s3_checksum": true,
+        "use_lockfile": true,
+        "use_path_style": true
+      }
+    },
+    "encryption": {
+      "key_provider": {
+        "pbkdf2": {
+          "state": { "passphrase": "${var.tofu_state_encryption_passphrase}" }
+        }
+      },
+      "method": {
+        "aes_gcm": { "encrypted": { "keys": "${key_provider.pbkdf2.state}" } }
+      },
+      "plan": { "enforced": true, "method": "method.aes_gcm.encrypted" },
+      "state": { "enforced": true, "method": "method.aes_gcm.encrypted" }
+    },
+    "required_providers": {
+      "random": { "source": "hashicorp/random", "version": "3.9.1" }
+    },
+    "required_version": ">= 1.12.0"
+  },
+  "variable": {
+    "adoption_keys": {
+      "default": [],
+      "description": "Explicit nonsecret keys to import, supplied only during initial adoption.",
+      "type": "set(string)"
+    },
+    "adoption_lengths": {
+      "default": {},
+      "description": "Nonsecret lengths inspected during adoption; retain for revision zero.",
+      "type": "map(number)"
+    },
+    "adoption_values": {
+      "default": {},
+      "description": "Existing values passed in memory by the operator; never in argv or files.",
+      "sensitive": true,
+      "type": "map(string)"
+    },
+    "tofu_state_encryption_passphrase": {
+      "description": "Unique application-secrets state passphrase supplied by the operator.",
+      "sensitive": true,
+      "type": "string",
+      "validation": [
+        {
+          "condition": "${(length(var.tofu_state_encryption_passphrase) >= 16)}",
+          "error_message": "State encryption requires a passphrase of at least 16 characters."
+        }
+      ]
+    }
+  }
+}

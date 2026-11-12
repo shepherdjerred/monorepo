@@ -5,6 +5,12 @@ It has no 1Password provider or CI credential grant. The stack wrapper accepts
 `validate` and an operator-only `adopt EXPECTED_HEAD` command; general plan,
 apply and rotation remain disabled.
 
+The configuration is `main.tf.json`, synthesized from
+`packages/homelab-cdktn/src/stacks/application-secrets.ts`; see
+`packages/homelab-cdktn/README.md`. The adoption runner accepts changes only
+at `random_password.credentials["<key>"]`, so that resource and its `import`
+block keep those addresses.
+
 The catalog has one rotation unit per credential and environment. A unit may
 have multiple fields only when they represent the same account, permission
 boundary and rotation owner. The preparation tool checks equality in memory;
@@ -101,7 +107,7 @@ duplicated credentials remain review candidates until their ownership and
 consumer boundaries are established. The mapping is metadata, not a vault
 deduplication or an authorization to change live items.
 
-`test:secrets:tofu` copies the stack into a disposable local backend with
-synthetic values. It verifies import preservation, an unchanged second plan,
+`test:secrets:tofu` copies the committed `main.tf.json`, less its remote
+backend, into a disposable local backend with synthetic values. It verifies import preservation, an unchanged second plan,
 encrypted state and isolation of an explicit rotation. It does not use live
 1Password or the remote state backend.
