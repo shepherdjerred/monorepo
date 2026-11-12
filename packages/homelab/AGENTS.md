@@ -24,6 +24,11 @@ homelab repository skill before changing or operating it.
   Helm generator input must regenerate and commit the matching types.
 - OpenTofu owns external control planes and remote state. Inspect the owning
   stack before changing a provider dashboard or API directly.
+- A stack with a `src/tofu/<stack>/main.tf.json` is synthesized from
+  `packages/homelab-cdktn`. Edit the TypeScript there, run
+  `bun run --cwd packages/homelab-cdktn synth`, and commit the regenerated
+  file; never edit it by hand. A construct id is a resource address, so a
+  rename needs a `moved` block. Follow `packages/homelab-cdktn/README.md`.
 
 ## Secrets and network
 

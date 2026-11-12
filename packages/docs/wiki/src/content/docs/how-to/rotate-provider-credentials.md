@@ -12,14 +12,17 @@ why the three providers differ, see [LLM stack](/explanation/llm-stack/).
 Rotate one workload at a time. Keep the previous credential active until its
 consumer proves the replacement works, then revoke it.
 
-| Provider  | Stack                  | Applied by | Credential in 1Password                   |
-| --------- | ---------------------- | ---------- | ----------------------------------------- |
-| OpenAI    | `openai`               | Woodpecker | `OPENAI_API_KEY` field                    |
-| Google    | `google`               | Operator   | Per-workload item, written by OpenTofu    |
-| Anthropic | `anthropic-federation` | Operator   | Per-workload ID item, written by OpenTofu |
+| Provider  | Stack                  | Applied by                    | Credential in 1Password                   |
+| --------- | ---------------------- | ----------------------------- | ----------------------------------------- |
+| OpenAI    | `openai`               | Delivery, on an approved plan | `OPENAI_API_KEY` field                    |
+| Google    | `google`               | Operator                      | Per-workload item, written by OpenTofu    |
+| Anthropic | `anthropic-federation` | Operator                      | Per-workload ID item, written by OpenTofu |
 
 Each workload's 1Password target is in its stack's `desired-state.json` under
 [`packages/homelab/src/tofu/`](https://github.com/shepherdjerred/monorepo/tree/main/packages/homelab/src/tofu).
+The stack runner injects that file as variables, so the edits below need no
+re-synthesis. To change a stack's resources instead, see
+[Change an OpenTofu stack](/how-to/change-an-opentofu-stack/).
 For the OpenAI handoff, put values into 1Password with the app or a
 non-printing `op item edit`. Never place a key in a shell argument, file,
 command output, or chat.
@@ -29,12 +32,10 @@ command output, or chat.
 1. Add a new `openai_service_accounts` entry for the workload in
    `openai/desired-state.json`, with a new dated name and the same
    `onepassword_targets`. Keep the old entry.
-2. Merge, then trigger a manual build of the current main commit with
-   `TOFU_PLATFORM_PLAN=openai`. Review its successful saved plan and record the
-   pipeline number. Within 24 hours, trigger a second manual build of the same
-   commit with `TOFU_PLATFORM_APPLY=openai` and
-   `TOFU_PLATFORM_PLAN_PIPELINE=<reviewed pipeline number>`. The second build
-   applies the exact reviewed plan after release admission.
+2. Merge. Delivery plans the `tofu-openai` deployment and waits on its saved
+   plan. Review that plan and
+   [approve it](/how-to/cut-a-homelab-release/#approve-or-reject-an-opentofu-plan)
+   before it expires. Delivery then applies the exact approved plan.
 3. Read the new key from the stack's sensitive `openai_service_account_handoffs`
    output and write it to the target field.
 4. Wait for the 1Password Connect operator to refresh the Kubernetes Secret, then

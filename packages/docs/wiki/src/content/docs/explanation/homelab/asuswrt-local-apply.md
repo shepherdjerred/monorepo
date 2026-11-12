@@ -6,40 +6,42 @@ sidebar:
 ---
 
 The `asuswrt` OpenTofu stack tracks the home Asus router and its access points
-as real OpenTofu state, yet nothing in CI ever applies it.
+as real OpenTofu state, yet no automation ever applies it.
 
 That split — shared remote state, local-only apply — is the whole point of this
-page. The state object is as durable and as shared as every CI-applied stack;
-only the actor and the network path differ.
+page. The state object is as durable and as shared as every stack Delivery
+applies; only the actor and the network path differ.
 
 ```mermaid
 flowchart LR
-    accTitle: Where the asuswrt stack is applied versus the CI-driven Tofu stacks
-    accDescr: CI applies the CI-driven Tofu stacks to the shared remote state but has no route to the home LAN devices; an operator machine that can reach both the LAN and the state backend applies the asuswrt stack to the same shared state.
+    accTitle: Where the asuswrt stack is applied versus the stacks Delivery applies
+    accDescr: Delivery Jobs in the cluster plan and apply the other stacks against the shared remote state but have no route to the home LAN devices; an operator machine that can reach both the LAN and the state backend applies the asuswrt stack to the same shared state.
 
-    ci[CI runner]
+    ci[Delivery Job in the cluster]
     state[(Shared remote state)]
     router[Home Asus router + APs]
     operator[Operator machine]
 
-    ci -->|plan/apply CI-driven stacks| state
+    ci -->|plan/apply other stacks| state
     ci -.->|no route| router
     operator -->|apply asuswrt| router
     operator -->|same shared state| state
 ```
 
-## Why CI cannot own it
+## Why automation cannot own it
 
-Most stacks under `packages/homelab/src/tofu/` are planned on each pull request
-and applied on merge, driven by the plan and apply allowlists in
-[the OpenTofu lanes](https://github.com/shepherdjerred/monorepo/blob/main/packages/woodpecker-config-extension/src/pipeline/lanes/tofu.ts).
+Most stacks under `packages/homelab/src/tofu/` are validated on each pull
+request by
+[the OpenTofu lanes](https://github.com/shepherdjerred/monorepo/blob/main/packages/woodpecker-config-extension/src/pipeline/lanes/tofu.ts),
+then planned and applied by Delivery after merge. Each stack's mode is declared in the
+[platform policy](https://github.com/shepherdjerred/monorepo/blob/main/packages/ops-model/platform-policy.json).
 
-A few stacks sit outside those loops, each for its own reason. `asuswrt` is out
-because the CI runner reaches the shared state backend but has no network route
-to the home LAN where the router lives. An apply therefore has to run from a
+A few stacks are `operator-only`, each for its own reason. `asuswrt` is out
+because a Job in the cluster reaches the shared state backend but has no
+network route to the home LAN where the router lives. An apply therefore has to run from a
 machine that can reach **both** the LAN and the state backend.
 
-The alternative — exposing the router's admin interface to the CI network —
+The alternative — exposing the router's admin interface to the cluster network —
 trades a manual step for a permanent attack surface on the device that fronts
 the house. The manual step is the cheaper cost.
 

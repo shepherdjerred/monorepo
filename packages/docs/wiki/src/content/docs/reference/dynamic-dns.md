@@ -6,7 +6,7 @@ description: Hostname ownership, address families, and credential inputs for the
 The [DDNS deployment](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/ddns.ts)
 maintains home-address records in Cloudflare.
 Application CNAME records belong to the
-[Cloudflare stack](https://github.com/shepherdjerred/monorepo/tree/main/packages/homelab/src/tofu/cloudflare).
+[Cloudflare stack](https://github.com/shepherdjerred/monorepo/tree/main/packages/homelab-cdktn/src/stacks/cloudflare).
 
 | Hostname             | Address families  | Configuration                                                |
 | -------------------- | ----------------- | ------------------------------------------------------------ |
