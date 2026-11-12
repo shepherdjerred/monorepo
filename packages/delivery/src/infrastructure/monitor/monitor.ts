@@ -97,13 +97,16 @@ export async function watchAnchor(
 ): Promise<Deployment> {
   let anchor = row;
   while (anchor.kind === "retire-host") {
+    if (anchor.previousAcceptedDeploymentId === null) {
+      // Only a retirement from before the model v2 migration lacks its
+      // predecessor; the migration settled it `unmonitored` where accepted.
+      if (anchor.monitorState === "unmonitored") return anchor;
+      throw new Error(
+        `Host retirement ${anchor.id} records no accepted deployment it follows`,
+      );
+    }
     const previous = await tx.deployment.findUniqueOrThrow({
-      where: {
-        id: required(
-          anchor.previousAcceptedDeploymentId,
-          "Retired host's accepted deployment",
-        ),
-      },
+      where: { id: anchor.previousAcceptedDeploymentId },
     });
     // `acceptanceMonitor` started a new watch at this retirement.
     if (previous.monitorState === null) return anchor;

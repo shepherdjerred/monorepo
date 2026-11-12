@@ -330,3 +330,19 @@ test("a chain of host retirements keeps the original watch (W1)", async () => {
   );
   expect(alarmed.outcome).toBe("alarmed");
 });
+
+test("an accepted retirement from before model v2 anchors its own unmonitored watch", async () => {
+  const { workerA, workerB, env } = await suite.fixture.acceptedPool();
+  const retired = await retire(workerA, workerB.buildId);
+  // The v2 migration renamed `retire-worker` rows without a predecessor and
+  // settled the accepted one unmonitored.
+  await suite.cluster.database.deployment.update({
+    where: { id: retired.id },
+    data: { previousAcceptedDeploymentId: null, monitorState: "unmonitored" },
+  });
+  expect(await suite.delivery.monitorStatus(env.id)).toMatchObject({
+    deploymentId: retired.id,
+    claimedAt: retired.startedAt?.toISOString(),
+    state: "unmonitored",
+  });
+});

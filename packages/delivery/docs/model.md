@@ -769,7 +769,8 @@ no counted alarm; `alarmed` when a counted alarm fired while watching.
   selection, so it carries the watch of the deployment it follows: its
   state and its clock. Through any chain of retirements, alarms count from
   the claim (W2), and evidence accrues from the acceptance, of the
-  deployment that introduced the selection.
+  deployment that introduced the selection. A retirement that follows a
+  deployment with no monitor state starts the watch itself.
 - W2. An alarm while `watching` records the alarm as evidence, suppresses
   automatic selection of the alarmed set revision (D3) and, under
   `automatic` policy, creates an automatic `rollback` deployment to the last
