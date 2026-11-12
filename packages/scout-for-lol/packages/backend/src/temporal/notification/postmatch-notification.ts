@@ -21,8 +21,12 @@ import { withMvpVoteFurniture } from "#src/mvp-votes/components.ts";
 import { emptyMvpTallyEmbed } from "#src/mvp-votes/tally.ts";
 import { resolveScoutObservedMatchContext } from "#src/temporal/match/match-context.ts";
 import type { ScoutReportComponentsSchema } from "#src/temporal/notification-lane/notification-receipts.ts";
-import type { ScoutAttestedReportArtifact } from "#src/temporal/notification/notification-artifact.ts";
-import { resolveQueueTypeFromGame } from "@scout-for-lol/data";
+import type {
+  ScoutAttestedReportArtifact,
+  ScoutAttestedUnsupportedQueueNotice,
+} from "#src/temporal/notification/notification-artifact.ts";
+import { buildUnsupportedQueueMessage } from "#src/league/tasks/postmatch/unsupported-queue-notice.ts";
+import { classifyGame, resolveQueueTypeFromGame } from "@scout-for-lol/data";
 import { gameResultTimestamp } from "@scout-for-lol/domain/artifacts/game-result.ts";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { ApplicationFailure } from "@temporalio/common";
@@ -303,4 +307,74 @@ export function buildPostmatchNotificationMessage(
     case "none":
       return message;
   }
+}
+
+/** The game a post-match intent names when Scout cannot classify its queue. */
+export type ScoutUnsupportedPostmatchGame = {
+  readonly queueId: number;
+  readonly gameMode: string;
+  readonly gameType: string | null;
+  readonly players: readonly string[];
+};
+
+function unsupportedGame(
+  classification: Extract<ReturnType<typeof classifyGame>, { kind: "unknown" }>,
+  players: readonly string[],
+): ScoutUnsupportedPostmatchGame {
+  if (players.length === 0) {
+    // As for a report: an intent names this match, so a roster with nobody to
+    // name is a disagreement between minter and renderer no retry resolves.
+    throw ApplicationFailure.nonRetryable(
+      "No tracked player remains to name in the unsupported-queue notice",
+      "MissingDomainRecord",
+    );
+  }
+  return {
+    queueId: classification.queueId,
+    gameMode: classification.gameMode,
+    gameType: classification.gameType ?? null,
+    players,
+  };
+}
+
+/**
+ * Whether this match's queue is one Scout cannot classify, and if so what the
+ * notice must say. Reads the same evidence the minter classified: the frozen
+ * report scoreboard when one stands, otherwise the observed payload and roster.
+ */
+export async function resolveUnsupportedPostmatchGame(
+  riotMatchId: RiotMatchId,
+): Promise<ScoutUnsupportedPostmatchGame | null> {
+  const scoreboard = await readReportScoreboard(riotMatchId);
+  if (scoreboard !== null) {
+    const classification = classifyGame(scoreboard.result);
+    if (classification.kind === "queue") return null;
+    const players = await getAccountConfigsByPuuids(
+      scoreboard.trackedPuuids,
+      prisma,
+    );
+    return unsupportedGame(
+      classification,
+      players.map((player) => player.alias),
+    );
+  }
+  const context = await resolveScoutObservedMatchContext(riotMatchId);
+  const classification = classifyGame(context.matchData.info);
+  return classification.kind === "queue"
+    ? null
+    : unsupportedGame(
+        classification,
+        context.trackedPlayers.map((player) => player.alias),
+      );
+}
+
+/** The notice an unsupported-queue intent delivers; pure over the receipt. */
+export function buildUnsupportedQueueNotificationMessage(
+  artifact: ScoutAttestedUnsupportedQueueNotice,
+): MessageCreateOptions {
+  return buildUnsupportedQueueMessage({
+    aliases: artifact.evidence.players,
+    queueId: artifact.evidence.queueId,
+    gameMode: artifact.evidence.gameMode,
+  });
 }

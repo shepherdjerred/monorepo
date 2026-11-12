@@ -44,8 +44,11 @@ vi.mock("#src/league/tasks/postmatch/match-report-generator.ts", () => ({
   generateMatchReport: stubs.generateMatchReport,
 }));
 
-const { buildPostmatchNotificationMessage, renderPostmatchNotification } =
-  await import("#src/temporal/notification/postmatch-notification.ts");
+const {
+  buildPostmatchNotificationMessage,
+  buildUnsupportedQueueNotificationMessage,
+  renderPostmatchNotification,
+} = await import("#src/temporal/notification/postmatch-notification.ts");
 const { inlineMatchLink, matchLinkComponents } =
   await import("#src/league/tasks/postmatch/match-report-components.ts");
 const { withMvpVoteFurniture } = await import("#src/mvp-votes/components.ts");
@@ -271,6 +274,33 @@ describe("what the disassembly refuses", () => {
 
     await expect(renderPostmatchNotification(RIOT_MATCH, LIVE)).rejects.toThrow(
       scenario.reason,
+    );
+  });
+});
+
+describe("the unsupported-queue notice", () => {
+  test("says Scout does not support the mode yet and that the game was recorded", () => {
+    const message = buildUnsupportedQueueNotificationMessage({
+      evidence: {
+        artifact: "unsupported-queue",
+        riotMatchId: MATCH,
+        queueId: 9999,
+        gameMode: "NEWMODE",
+        gameType: "MATCHED_GAME",
+        players: ["jerred", "alice"],
+      },
+    });
+
+    expect(message.files).toBeUndefined();
+    expect(message.embeds).toHaveLength(1);
+    const embed = z
+      .object({ title: z.string(), description: z.string() })
+      .parse(
+        (message.embeds ?? []).map((e) => ("toJSON" in e ? e.toJSON() : e))[0],
+      );
+    expect(embed.title).toBe("Game type not supported yet");
+    expect(embed.description).toBe(
+      "jerred, alice finished a game in queue 9999 (NEWMODE). Scout does not support reports for this mode yet, but the game was recorded.",
     );
   });
 });

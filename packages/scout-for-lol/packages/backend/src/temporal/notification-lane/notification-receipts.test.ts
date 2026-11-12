@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { NotificationIntentKindSchema } from "@scout-for-lol/domain/notifications/intent.ts";
 import {
   SCOUT_NOTIFICATION_RENDER_RECEIPT_KINDS,
@@ -65,6 +66,34 @@ describe("review retirement evidence compatibility", () => {
         scoutNotificationRenderEvidenceCodec.parse({ ...legacy, version }),
       ).toThrow();
     }
+  });
+});
+
+describe("unsupported-queue evidence", () => {
+  const evidence = {
+    artifact: "unsupported-queue" as const,
+    riotMatchId: RiotMatchIdSchema.parse("NA1_9301"),
+    queueId: 9999,
+    gameMode: "NEWMODE",
+    gameType: null,
+    players: ["jerred"],
+  };
+
+  test("round-trips under the existing version, so no receipt is reinterpreted", () => {
+    const serialized = scoutNotificationRenderEvidenceCodec.serialize(evidence);
+    expect(serialized.version).toBe(2);
+    expect(scoutNotificationRenderEvidenceCodec.parse(serialized)).toEqual(
+      evidence,
+    );
+  });
+
+  test("refuses a notice naming nobody", () => {
+    expect(() =>
+      scoutNotificationRenderEvidenceCodec.serialize({
+        ...evidence,
+        players: [],
+      }),
+    ).toThrow();
   });
 });
 
