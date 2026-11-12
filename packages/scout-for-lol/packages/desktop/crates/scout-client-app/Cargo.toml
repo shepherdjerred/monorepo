@@ -1,6 +1,6 @@
 [package]
 name = "scout-client-app"
-description = "egui desktop shell for Scout Client"
+description = "Scout Client supervisor, tray, and egui window"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -24,6 +24,8 @@ open.workspace = true
 scout-client-core = { path = "../scout-client-core" }
 scout-client-runtime = { path = "../scout-client-runtime" }
 scout-desktop-ipc = { path = "../scout-desktop-ipc" }
+# Builds everywhere; it contains the gpui window only on Windows and macOS.
+scout-desktop-ui = { path = "../scout-desktop-ui" }
 tokio = { workspace = true, features = ["process"] }
 tracing.workspace = true
 tracing-subscriber.workspace = true

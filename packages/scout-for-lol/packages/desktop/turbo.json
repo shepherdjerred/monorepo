@@ -13,6 +13,8 @@
         "Cargo.lock",
         "rustfmt.toml",
         "$TURBO_ROOT$/packages/scout-for-lol/packages/data/src/scout-client/protocol.contract.json",
+        "$TURBO_ROOT$/packages/scout-for-lol/packages/design-system/tokens/themes.json",
+        "$TURBO_ROOT$/packages/scout-for-lol/packages/design-system/tokens/themes.schema.json",
         "!target/**"
       ],
       "outputs": []
@@ -24,6 +26,8 @@
         "**/Cargo.toml",
         "Cargo.lock",
         "$TURBO_ROOT$/packages/scout-for-lol/packages/data/src/scout-client/protocol.contract.json",
+        "$TURBO_ROOT$/packages/scout-for-lol/packages/design-system/tokens/themes.json",
+        "$TURBO_ROOT$/packages/scout-for-lol/packages/design-system/tokens/themes.schema.json",
         "!target/**"
       ],
       "outputs": []
@@ -35,6 +39,8 @@
         "**/Cargo.toml",
         "Cargo.lock",
         "$TURBO_ROOT$/packages/scout-for-lol/packages/data/src/scout-client/protocol.contract.json",
+        "$TURBO_ROOT$/packages/scout-for-lol/packages/design-system/tokens/themes.json",
+        "$TURBO_ROOT$/packages/scout-for-lol/packages/design-system/tokens/themes.schema.json",
         "!target/**"
       ],
       "outputs": []
@@ -52,6 +58,8 @@
         "**/Cargo.toml",
         "Cargo.lock",
         "$TURBO_ROOT$/packages/scout-for-lol/packages/data/src/scout-client/protocol.contract.json",
+        "$TURBO_ROOT$/packages/scout-for-lol/packages/design-system/tokens/themes.json",
+        "$TURBO_ROOT$/packages/scout-for-lol/packages/design-system/tokens/themes.schema.json",
         "!target/**"
       ],
       "outputs": []
@@ -64,6 +72,8 @@
         "Cargo.lock",
         "rustfmt.toml",
         "$TURBO_ROOT$/packages/scout-for-lol/packages/data/src/scout-client/protocol.contract.json",
+        "$TURBO_ROOT$/packages/scout-for-lol/packages/design-system/tokens/themes.json",
+        "$TURBO_ROOT$/packages/scout-for-lol/packages/design-system/tokens/themes.schema.json",
         "!target/**"
       ],
       "outputs": []

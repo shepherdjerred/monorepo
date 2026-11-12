@@ -8,8 +8,11 @@
 //! One executable, two processes. Started normally it is the supervisor: it
 //! owns the instance lock and the collector, never touches the GPU, and runs
 //! the window as a child (`--window`) that it relaunches when it crashes.
+//! The window renders with egui unless `SCOUT_DESKTOP_UI=gpui` or `--ui=gpui`
+//! selects the gpui-kit window (`scout-desktop-ui`).
 
 mod supervisor;
+mod toolkit;
 mod tray;
 mod ui;
 mod window;
@@ -27,6 +30,7 @@ use tokio::sync::mpsc;
 use tracing_subscriber::EnvFilter;
 
 use crate::supervisor::{Supervisor, SupervisorExit, WindowLauncher};
+use crate::toolkit::{UI_ENVIRONMENT, WindowToolkit};
 
 const DEFAULT_BACKEND_ORIGIN: &str = "https://beta.scout-for-lol.com";
 /// The argument that makes this executable the window process.
@@ -85,15 +89,45 @@ fn install_panic_hook(diagnostics: Arc<Diagnostics>) {
 fn main() -> ExitCode {
     install_logging();
     let arguments = std::env::args().skip(1).collect::<Vec<_>>();
+    let environment = std::env::var(UI_ENVIRONMENT).ok();
+    let toolkit = match WindowToolkit::select(&arguments, environment.as_deref()) {
+        Ok(toolkit) if toolkit.available() => toolkit,
+        Ok(toolkit) => {
+            eprintln!(
+                "Scout Client: {} is built only for Windows and macOS",
+                toolkit.argument()
+            );
+            return ExitCode::from(2);
+        }
+        Err(error) => {
+            eprintln!("Scout Client: {error}");
+            return ExitCode::from(2);
+        }
+    };
     if arguments.iter().any(|argument| argument == WINDOW_ARGUMENT) {
-        return window::run();
+        return run_window(toolkit);
     }
-    supervise(&arguments)
+    supervise(&arguments, toolkit)
+}
+
+/// Run as the window process with the toolkit the supervisor chose.
+fn run_window(toolkit: WindowToolkit) -> ExitCode {
+    match toolkit {
+        WindowToolkit::Egui => window::run(),
+        #[cfg(any(windows, target_os = "macos"))]
+        WindowToolkit::Gpui => scout_desktop_ui::run(scout_desktop_ui::BuildInfo {
+            client_version: env!("CARGO_PKG_VERSION"),
+            protocol_version: scout_client_core::protocol::PROTOCOL_VERSION,
+        }),
+        // `main` refuses a toolkit this build does not contain.
+        #[cfg(not(any(windows, target_os = "macos")))]
+        WindowToolkit::Gpui => ExitCode::from(2),
+    }
 }
 
 /// Run as the supervisor: own the instance lock and the collector, and run the
 /// window as a child process.
-fn supervise(arguments: &[String]) -> ExitCode {
+fn supervise(arguments: &[String], toolkit: WindowToolkit) -> ExitCode {
     let background = arguments.iter().any(|argument| argument == "--background");
     // Held until the supervisor ends, so a second launch never reads the same
     // outbox. The window process never takes it.
@@ -124,7 +158,11 @@ fn supervise(arguments: &[String]) -> ExitCode {
     };
     let runtime = ClientRuntime::start(backend_origin(arguments));
     install_panic_hook(Arc::clone(runtime.diagnostics()));
-    let launcher = WindowLauncher::new(executable, vec![WINDOW_ARGUMENT.to_owned()]);
+    tracing::info!(?toolkit, "Scout Client window toolkit");
+    let launcher = WindowLauncher::new(
+        executable,
+        vec![WINDOW_ARGUMENT.to_owned(), toolkit.argument().to_owned()],
+    );
     let (control, control_receiver) = mpsc::unbounded_channel();
     let exit = tray::run(
         control,
