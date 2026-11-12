@@ -16,19 +16,21 @@
  * caller's transaction rolls back and the intent is left unconsumed.
  */
 
-import type {
-  CreationIntentKind,
-  CreationIntentPayload,
-  DiscordAccountId,
-  DiscordGuildId,
-  LeaguePuuid,
-  PermissionSet,
-  Region,
+import {
+  reportUpdateFields,
+  type CreationIntentKind,
+  type CreationIntentPayload,
+  type DiscordAccountId,
+  type DiscordGuildId,
+  type LeaguePuuid,
+  type PermissionSet,
+  type Region,
 } from "@scout-for-lol/data";
 import type { Db } from "#src/database/index.ts";
 import type { AuditDetail } from "#src/lib/audit/audited-mutation.ts";
 import { createCompetitionForActor } from "#src/lib/competitions/create.ts";
 import { createReportInTransaction } from "#src/lib/reports/create.ts";
+import { updateReportInTransaction } from "#src/lib/reports/update.ts";
 import {
   addSubscription,
   lockPlayerIdentity,
@@ -46,6 +48,17 @@ export type CreationIntentOutcome =
       entityId: number;
       guildId: DiscordGuildId;
     }
+  /** An existing report was edited. `entity` stays `report` so links agree. */
+  | {
+      kind: "updated";
+      entity: "report";
+      entityId: number;
+      guildId: DiscordGuildId;
+    }
+  /** The report a `report_update` named no longer exists in its guild. */
+  | { kind: "report_not_found"; message: string }
+  /** The report a `report_update` named is system-managed and read-only. */
+  | { kind: "report_system_managed"; message: string }
   /** A per-server or per-owner active-entity limit rejected the request. */
   | { kind: "limit_reached"; message: string }
   /** The report's `queryText` is not compilable ScoutQL. */
@@ -139,6 +152,84 @@ async function executeReport(
         cronExpression: payload.cronExpression,
         scheduleTimezone: payload.scheduleTimezone,
         isEnabled: payload.isEnabled,
+        via: "explore",
+      },
+    },
+    postCommit: { kind: "report" },
+  };
+}
+
+async function executeReportUpdate(
+  tx: Db,
+  params: ExecuteCreationIntentParams & { payload: { kind: "report_update" } },
+): Promise<CreationExecution> {
+  const { payload, guildId } = params;
+  const { kind: _kind, guildId: _guildId, reportId, ...input } = payload;
+  if (reportUpdateFields(input).length === 0) {
+    return {
+      outcome: {
+        kind: "invalid_configuration",
+        message:
+          "That update changes nothing, so the report was left as it is.",
+      },
+      audit: null,
+      postCommit: null,
+    };
+  }
+  // Re-runs the mutable/exists/compile checks against live state inside the
+  // claim transaction; the caller has already re-checked reports:update.
+  const result = await updateReportInTransaction(tx, {
+    reportId,
+    serverId: guildId,
+    input,
+  });
+  if (result.kind === "not_found") {
+    return {
+      outcome: {
+        kind: "report_not_found",
+        message:
+          "That report no longer exists in this server. Nothing was changed.",
+      },
+      audit: null,
+      postCommit: null,
+    };
+  }
+  if (result.kind === "system_managed") {
+    return {
+      outcome: {
+        kind: "report_system_managed",
+        message:
+          "That report is system-managed and cannot be edited. Nothing was changed.",
+      },
+      audit: null,
+      postCommit: null,
+    };
+  }
+  if (result.kind === "invalid_query") {
+    return {
+      outcome: { kind: "invalid_query", message: result.message },
+      audit: null,
+      postCommit: null,
+    };
+  }
+  return {
+    outcome: {
+      kind: "updated",
+      entity: "report",
+      entityId: result.report.id,
+      guildId,
+    },
+    audit: {
+      action: "REPORT_UPDATE",
+      targetChannelId: result.report.channelId,
+      payload: {
+        reportId: result.report.id,
+        fields: reportUpdateFields(input),
+        title: result.report.title,
+        queryText: result.report.queryText,
+        cronExpression: result.report.cronExpression,
+        scheduleTimezone: result.report.scheduleTimezone,
+        isEnabled: result.report.isEnabled,
         via: "explore",
       },
     },
@@ -405,6 +496,9 @@ export async function executeCreationIntent(
   const { payload } = params;
   if (payload.kind === "report") {
     return await executeReport(tx, { ...params, payload });
+  }
+  if (payload.kind === "report_update") {
+    return await executeReportUpdate(tx, { ...params, payload });
   }
   return payload.kind === "competition"
     ? await executeCompetition(tx, { ...params, payload })

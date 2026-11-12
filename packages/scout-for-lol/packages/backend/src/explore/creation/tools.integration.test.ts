@@ -271,6 +271,118 @@ describe("prepare_report_creation", () => {
   });
 });
 
+async function seedReportForUpdateTest(
+  overrides?: Partial<{ isSystemManaged: boolean; title: string }>,
+): Promise<number> {
+  const now = new Date();
+  const report = await prisma.report.create({
+    data: {
+      serverId: GUILD,
+      ownerId: REQUESTER,
+      channelId: CHANNEL,
+      title: overrides?.title ?? "Weekly games",
+      queryText: QUERY_TEXT,
+      isEnabled: true,
+      isSystemManaged: overrides?.isSystemManaged ?? false,
+      cronExpression: "0 12 * * 1",
+      scheduleTimezone: "UTC",
+      createdTime: now,
+      updatedTime: now,
+    },
+  });
+  return report.id;
+}
+
+describe("prepare_report_update", () => {
+  const seedReport = seedReportForUpdateTest;
+
+  test("a queryText rewrite mints a report_update intent and changes nothing", async () => {
+    const reportId = await seedReport();
+    const newQuery =
+      "SELECT player, COUNT(*) AS wins FROM match_participants GROUP BY player RENDER table";
+    const result = await executors().prepareReportUpdate({
+      guildId: GUILD,
+      reportId,
+      queryText: newQuery,
+    });
+
+    expect(result.kind).toBe("creation_confirmation_required");
+    expect(result.intent?.kind).toBe("report_update");
+    expect(result.message).toContain("Nothing has been changed yet");
+
+    const rows = await prisma.confirmationIntent.findMany();
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.kind).toBe("report_update");
+    const payload = ConfirmationIntentPayloadSchema.parse(
+      JSON.parse(rows[0]?.payload ?? "{}"),
+    );
+    expect(payload.kind).toBe("report_update");
+    if (payload.kind !== "report_update") return;
+    expect(payload.reportId).toBe(reportId);
+    expect(payload.queryText).toBe(newQuery);
+    // The proposal is a proposal: the report itself is untouched.
+    const report = await prisma.report.findUniqueOrThrow({
+      where: { id: reportId },
+    });
+    expect(report.queryText).toBe(QUERY_TEXT);
+  });
+
+  test("an unknown report id is refused before anything is minted", async () => {
+    const result = await executors().prepareReportUpdate({
+      guildId: GUILD,
+      reportId: 999_999,
+      title: "Renamed",
+    });
+    expect(result.kind).toBe("invalid");
+    expect(result.message).toContain("not found");
+    await expect(prisma.confirmationIntent.count()).resolves.toBe(0);
+  });
+
+  test("a system-managed report is refused", async () => {
+    const reportId = await seedReport({ isSystemManaged: true });
+    const result = await executors().prepareReportUpdate({
+      guildId: GUILD,
+      reportId,
+      title: "Renamed",
+    });
+    expect(result.kind).toBe("invalid");
+    expect(result.message).toContain("system-managed");
+    await expect(prisma.confirmationIntent.count()).resolves.toBe(0);
+  });
+
+  test("uncompilable ScoutQL is refused", async () => {
+    const reportId = await seedReport();
+    const result = await executors().prepareReportUpdate({
+      guildId: GUILD,
+      reportId,
+      queryText: "SELECT nonsense FROM nowhere",
+    });
+    expect(result.kind).toBe("invalid");
+    await expect(prisma.confirmationIntent.count()).resolves.toBe(0);
+  });
+
+  test("an edit that changes nothing is refused", async () => {
+    const reportId = await seedReport();
+    const result = await executors().prepareReportUpdate({
+      guildId: GUILD,
+      reportId,
+    });
+    expect(result.kind).toBe("invalid");
+    await expect(prisma.confirmationIntent.count()).resolves.toBe(0);
+  });
+
+  test("a report in another guild is not found here", async () => {
+    const reportId = await seedReport();
+    const result = await executors().prepareReportUpdate({
+      guildId: GUILD,
+      reportId: reportId + 1000,
+      title: "Renamed",
+    });
+    expect(result.kind).toBe("invalid");
+    await expect(prisma.confirmationIntent.count()).resolves.toBe(0);
+  });
+});
+
 async function preparedDiscordUserId(): Promise<string | undefined> {
   const row = await prisma.confirmationIntent.findFirstOrThrow();
   const payload = ConfirmationIntentPayloadSchema.parse(

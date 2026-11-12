@@ -75,6 +75,7 @@ export const CREATE_PERMISSION: Record<CreationIntentKind, Permission> = {
   report: P("reports", "create"),
   subscription: P("subscriptions", "create"),
   competition: P("competitions", "create"),
+  report_update: P("reports", "update"),
 };
 
 export type LoadedCreationIntent = {
@@ -97,7 +98,8 @@ function asCreationPayload(
   switch (payload.kind) {
     case "report":
     case "subscription":
-    case "competition": {
+    case "competition":
+    case "report_update": {
       return payload;
     }
     case "dare_publish":
@@ -187,11 +189,15 @@ async function authorizeCreation(
   // The competition sub-gates (competitions:invite / competitions:schedule) and
   // the creation rate limit live inside `createCompetitionForActor`, which
   // receives this same PermissionSet — re-checking them here would be a second
-  // copy of a reviewed policy.
-  await assertChannelInGuild({
-    guildId: loaded.guildId,
-    channelId: loaded.payload.channelId,
-  });
+  // copy of a reviewed policy. A report_update that keeps its channel has no
+  // channel to re-check; its exists/system-managed checks run inside the
+  // claim transaction in `updateReportInTransaction`.
+  if (loaded.payload.channelId !== undefined) {
+    await assertChannelInGuild({
+      guildId: loaded.guildId,
+      channelId: loaded.payload.channelId,
+    });
+  }
   return permissions;
 }
 

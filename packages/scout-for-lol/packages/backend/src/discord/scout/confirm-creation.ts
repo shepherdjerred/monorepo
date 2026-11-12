@@ -41,6 +41,7 @@ const PAGE_FOR_ENTITY = {
   report: "reports",
   subscription: "subscriptions",
   competition: "competitions",
+  report_update: "reports",
 } as const;
 
 /** What to tell the clicker, in the words the web card uses. */
@@ -52,8 +53,11 @@ export function creationOutcomeMessage(
     case "created": {
       return `Done — your ${outcome.entity} is created. Manage it at ${getGuildPageUrl(guildId, PAGE_FOR_ENTITY[outcome.entity])}`;
     }
+    case "updated": {
+      return `Done — your report is updated. Manage it at ${getGuildPageUrl(guildId, PAGE_FOR_ENTITY[outcome.entity])}`;
+    }
     case "intent_expired": {
-      return "This confirmation expired, so nothing was created. Ask Scout to prepare it again.";
+      return "This confirmation expired, so nothing was changed. Ask Scout to prepare it again.";
     }
     case "already_consumed": {
       // Written by this same path; a row that does not parse is a broken
@@ -70,8 +74,10 @@ export function creationOutcomeMessage(
     case "missing_permission":
     case "account_already_subscribed":
     case "subscription_already_exists":
-    case "riot_id_not_found": {
-      return `Nothing was created: ${outcome.message}`;
+    case "riot_id_not_found":
+    case "report_not_found":
+    case "report_system_managed": {
+      return `Nothing was changed: ${outcome.message}`;
     }
   }
 }

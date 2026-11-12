@@ -261,6 +261,140 @@ describe("explore.confirmCreationIntent — reports", () => {
   });
 });
 
+async function seedReportForUpdate(
+  overrides?: Partial<{ isSystemManaged: boolean }>,
+): Promise<number> {
+  const now = new Date();
+  const report = await db.report.create({
+    data: {
+      serverId: GUILD,
+      ownerId: ACTOR,
+      channelId: CHANNEL,
+      title: "Weekly games",
+      queryText: QUERY_TEXT,
+      isEnabled: true,
+      isSystemManaged: overrides?.isSystemManaged ?? false,
+      cronExpression: "0 12 * * 1",
+      scheduleTimezone: "UTC",
+      createdTime: now,
+      updatedTime: now,
+    },
+  });
+  return report.id;
+}
+
+function updatePayload(reportId: number): ConfirmationIntentPayload {
+  return ConfirmationIntentPayloadSchema.parse({
+    kind: "report_update",
+    guildId: GUILD,
+    reportId,
+    title: "Weekly wins",
+    queryText:
+      "SELECT player, COUNT(*) AS wins FROM match_participants GROUP BY player RENDER table",
+  });
+}
+
+describe("explore.confirmCreationIntent — report updates", () => {
+  test("applies the edit, writes a REPORT_UPDATE audit row and enqueues the schedule", async () => {
+    await grant({ resource: "reports", action: "update" });
+    const reportId = await seedReportForUpdate();
+    const before = await db.report.findUniqueOrThrow({
+      where: { id: reportId },
+    });
+    const intentId = await mintIntent(updatePayload(reportId));
+
+    const result = await caller().explore.confirmCreationIntent({ intentId });
+
+    expect(result).toMatchObject({
+      kind: "updated",
+      entity: "report",
+      entityId: reportId,
+      guildId: GUILD,
+    });
+    const report = await db.report.findUniqueOrThrow({
+      where: { id: reportId },
+    });
+    expect(report.title).toBe("Weekly wins");
+    expect(report.queryText).toContain("wins");
+    expect(report.revision).toBe(before.revision + 1);
+
+    const audits = await db.auditLog.findMany({ where: { serverId: GUILD } });
+    expect(audits).toHaveLength(1);
+    expect(audits[0]?.action).toBe("REPORT_UPDATE");
+    expect(JSON.parse(audits[0]?.payload ?? "{}")).toMatchObject({
+      reportId,
+      via: "explore",
+    });
+    expect(await db.reportScheduleOutbox.count()).toBe(1);
+  });
+
+  test("reports:create alone does not authorize an update", async () => {
+    await grant({ resource: "reports", action: "create" });
+    const reportId = await seedReportForUpdate();
+    const intentId = await mintIntent(updatePayload(reportId));
+
+    await expect(
+      caller().explore.confirmCreationIntent({ intentId }),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+    const report = await db.report.findUniqueOrThrow({
+      where: { id: reportId },
+    });
+    expect(report.title).toBe("Weekly games");
+  });
+
+  test("a report deleted after preparing is a refusal, not an error", async () => {
+    await grant({ resource: "reports", action: "update" });
+    const reportId = await seedReportForUpdate();
+    const intentId = await mintIntent(updatePayload(reportId));
+    await db.report.delete({ where: { id: reportId } });
+
+    const result = await caller().explore.confirmCreationIntent({ intentId });
+
+    expect(result).toMatchObject({ kind: "report_not_found" });
+    expect(await db.auditLog.count()).toBe(0);
+  });
+
+  test("a report made system-managed after preparing is refused", async () => {
+    await grant({ resource: "reports", action: "update" });
+    const reportId = await seedReportForUpdate();
+    const intentId = await mintIntent(updatePayload(reportId));
+    await db.report.update({
+      where: { id: reportId },
+      data: { isSystemManaged: true },
+    });
+
+    const result = await caller().explore.confirmCreationIntent({ intentId });
+
+    expect(result).toMatchObject({ kind: "report_system_managed" });
+    const report = await db.report.findUniqueOrThrow({
+      where: { id: reportId },
+    });
+    expect(report.title).toBe("Weekly games");
+  });
+
+  test("disabling via isEnabled clears the next scheduled run", async () => {
+    await grant({ resource: "reports", action: "update" });
+    const reportId = await seedReportForUpdate();
+    const intentId = await mintIntent(
+      ConfirmationIntentPayloadSchema.parse({
+        kind: "report_update",
+        guildId: GUILD,
+        reportId,
+        isEnabled: false,
+      }),
+    );
+
+    const result = await caller().explore.confirmCreationIntent({ intentId });
+
+    expect(result).toMatchObject({ kind: "updated" });
+    const report = await db.report.findUniqueOrThrow({
+      where: { id: reportId },
+    });
+    expect(report.isEnabled).toBe(false);
+    expect(report.nextScheduledRunAt).toBeNull();
+  });
+});
+
 describe("explore.confirmCreationIntent — subscriptions", () => {
   test("creates the player, account and subscription with an audit row", async () => {
     await grant({ resource: "subscriptions", action: "create" });

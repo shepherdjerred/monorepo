@@ -27,6 +27,8 @@ import {
   PlayerAliasSchema,
   RegionSchema,
   ReportCreateInputSchema,
+  ReportIdSchema,
+  ReportUpdateInputSchema,
   RiotIdPartsSchema,
   SeasonIdSchema,
 } from "@scout-for-lol/data";
@@ -134,6 +136,20 @@ export const ListGuildChannelsToolInputSchema = z.strictObject({
 export const PrepareReportToolInputSchema = z.strictObject({
   guildId: DiscordGuildIdSchema,
   ...ReportCreateInputSchema.shape,
+});
+
+/**
+ * An edit to an existing report. `reportId` is Scout's numeric report id —
+ * the model learns it from `get_server_setup`, never from a user-typed name.
+ * Every other field is optional; at least one must be set, which the
+ * executor checks so an empty edit is a typed refusal rather than a throw.
+ * A display-column change is a `queryText` rewrite carrying the new SELECT /
+ * RENDER, exactly as `prepare_report_creation` would author it.
+ */
+export const PrepareReportUpdateToolInputSchema = z.strictObject({
+  guildId: DiscordGuildIdSchema,
+  reportId: ReportIdSchema,
+  ...ReportUpdateInputSchema.shape,
 });
 
 /**

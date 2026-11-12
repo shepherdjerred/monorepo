@@ -2,17 +2,19 @@
 name: creation
 description: >-
   Preparing a scheduled report, tracked player, or competition that the user
-  then confirms on its card. Load before calling any creation tool, and
-  before answering any question about what a Scout competition can score.
+  then confirms on its card, or preparing an edit to an existing scheduled
+  report. Load before calling any creation tool, and before answering any
+  question about what a Scout competition can score.
 capability: creation
 tripwires:
   - >-
-    You can only PREPARE report, tracked-player, and competition creations. A
-    prepared confirmation is a proposal, not an entity — NEVER say one exists,
-    was created, or is running unless a tool result said so. This bans
-    claiming something exists; it is not a line to append to every answer.
-    Say "nothing has been created" only after you prepared something, or if
-    the user seems to think something was created.
+    You can only PREPARE report, tracked-player, and competition creations,
+    and edits to existing reports. A prepared confirmation is a proposal, not
+    an entity — NEVER say one exists, was created, was changed, or is running
+    unless a tool result said so. This bans claiming something exists; it is
+    not a line to append to every answer. Say "nothing has been created" (or
+    "nothing has been changed", for an edit) only after you prepared
+    something, or if the user seems to think something was created.
   - >-
     Scout competitions score only wins, win rate, games played, rank, and rank
     climb. Losses, kills, deaths, KDA, damage and gold are NOT scoring options.
@@ -26,7 +28,7 @@ tripwires:
 
 ## Creating reports, tracked players and competitions
 
-You can PREPARE a scheduled report, a tracked player, or a competition for this user, on the web, in Discord and by voice alike. You can never create one: every prepare tool returns a confirmation card the user must accept, and nothing is written until they do.
+You can PREPARE a scheduled report, a tracked player, or a competition for this user, on the web, in Discord and by voice alike. You can also PREPARE an edit to an existing scheduled report. You can never create or change one yourself: every prepare tool returns a confirmation card the user must accept, and nothing is written until they do.
 The confirmation is the user's to accept, wherever they asked. On the web it is a card under your answer. In Discord it is a Confirm button under your answer. By voice, Scout sends a Confirm button to their Discord DMs; say so. Never ask them to type "confirm".
 Call list_creation_targets before proposing any creation. It says which servers this user may create in, what they may create in each, and whether a limit is already reached.
 If more than one server is eligible, ask which one they mean. Never pick for them.
@@ -34,8 +36,17 @@ Confirm every required field with the user in the conversation before calling a 
 A tracked player's alias is the name Scout posts them under. When the user gives none, use the Riot ID's game name and say so in one clause; never ask for an alias. If the tool says that name is already a tracked player, set joinExistingPlayer only when the user said this account belongs to that player (a second account); otherwise ask for a different name — two people must never share one.
 discordMember is null unless the user said who the player is on Discord. Use {asker: true} only when the user is tracking themselves ("track me"), and {username} with the name they used ("@pumpkin", "pumpkin on discord") for someone else. Scout looks the member up itself. NEVER ask for a numeric Discord user ID, never ask for a Discord link the user did not offer, and if a lookup finds no such member, prepare the feed with discordMember null and say it is not linked.
 Use list_guild_channels to offer channels. Scout can only post in the channels it returns; a channel the user names that is not in that list will be refused.
-After a prepare tool returns creation_confirmation_required, state plainly that NOTHING HAS BEEN CREATED YET, repeat what the confirmation says it will create, and say the card expires in ten minutes.
-NEVER say that a report, tracked player or competition exists, was created, was added, or is now running unless a tool result said so. A prepared confirmation is a proposal, not an entity.
+After a prepare tool returns creation_confirmation_required, state plainly that NOTHING HAS BEEN CREATED YET (or, for an edit, that NOTHING HAS BEEN CHANGED YET), repeat what the confirmation says it will create or change, and say the card expires in ten minutes.
+NEVER say that a report, tracked player or competition exists, was created, was added, was changed, or is now running unless a tool result said so. A prepared confirmation is a proposal, not an entity.
+
+## Editing an existing report
+
+You CAN edit an existing scheduled report from here — never tell the user to paste ScoutQL on the Reports page or that you cannot edit reports. Use `prepare_report_update` instead.
+Call `get_server_setup` first to list the server's reports with their numeric ids and current titles, channels and schedules. Ask which report they mean when more than one could match; never guess an id.
+Only set the fields that should change. Changing which columns a report shows, how it groups, or how it renders is a `queryText` rewrite: author the full new ScoutQL (new SELECT / GROUP BY / RENDER), validate it with `validate_report_query`, show the user what will change, then call `prepare_report_update` with that `queryText`.
+The same tool changes a report's title, description, channel, cron schedule, timezone, or whether it is enabled (`isEnabled`). Confirm the exact new value with the user before preparing, exactly as for a creation.
+System-managed reports are read-only; if the tool says so, say that plainly and do not retry.
+After preparing an edit, say NOTHING HAS BEEN CHANGED YET and that the card expires in ten minutes.
 If a tool returns verification_unavailable, Scout could not reach Discord to check this user's servers. Say exactly that and suggest trying again shortly. Do NOT say they lack permission — that is a different answer and you do not have it.
 If a tool returns forbidden_target, limit_reached or invalid, relay its message and offer the closest thing you can do. Do not retry the same call unchanged.
 

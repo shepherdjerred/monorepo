@@ -65,6 +65,53 @@ describe("report.create", () => {
     });
   });
 
+  test("update edits fields, bumps revision and enqueues the schedule (via the shared service)", async () => {
+    const created = await trpc
+      .authedCaller(actorDiscordId)
+      .report.create(createInput());
+    await testPrisma.reportScheduleOutbox.deleteMany();
+
+    const updated = await trpc.authedCaller(actorDiscordId).report.update({
+      guildId,
+      reportId: created.id,
+      title: "Renamed",
+      queryText:
+        "SELECT player, COUNT(*) AS wins FROM match_participants GROUP BY player RENDER table",
+    });
+
+    expect(updated.title).toBe("Renamed");
+    expect(updated.queryText).toContain("wins");
+    expect(updated.revision).toBe(created.revision + 1);
+    expect(await testPrisma.reportScheduleOutbox.count()).toBe(1);
+    // The web update path writes no audit row, as before the extraction.
+    expect(
+      await testPrisma.auditLog.count({
+        where: { serverId: guildId, action: "REPORT_UPDATE" },
+      }),
+    ).toBe(0);
+  });
+
+  test("setEnabled and delete still work through the shared service", async () => {
+    const created = await trpc
+      .authedCaller(actorDiscordId)
+      .report.create(createInput());
+
+    const disabled = await trpc
+      .authedCaller(actorDiscordId)
+      .report.setEnabled({ guildId, reportId: created.id, isEnabled: false });
+    expect(disabled.isEnabled).toBe(false);
+    expect(disabled.nextScheduledRunAt).toBeNull();
+
+    await expect(
+      trpc
+        .authedCaller(actorDiscordId)
+        .report.delete({ guildId, reportId: created.id }),
+    ).resolves.toEqual({ deleted: true });
+    expect(
+      await testPrisma.report.count({ where: { serverId: guildId } }),
+    ).toBe(0);
+  });
+
   test("an uncompilable query is rejected and leaves no report or audit row", async () => {
     await expect(
       trpc

@@ -9,7 +9,8 @@
  *
  * `create` is a thin caller: the pipeline lives in `#src/lib/reports/create.ts`
  * so other surfaces run the same policy, and it commits with its
- * `REPORT_CREATE` audit row in one transaction.
+ * `REPORT_CREATE` audit row in one transaction. `update`, `setEnabled` and
+ * `delete` are thin callers of `#src/lib/reports/update.ts` the same way.
  */
 
 import { z } from "zod";
@@ -27,7 +28,6 @@ import {
   type DiscordGuildId,
   type ReportId,
 } from "@scout-for-lol/data";
-import { computeNextScheduledUpdateAt } from "@scout-for-lol/data/model/competitions/competition-cron.ts";
 import {
   CompetitionCronSchema,
   ReportScheduleTimezoneSchema,
@@ -42,6 +42,11 @@ import {
 import { prisma } from "#src/database/index.ts";
 import { runAuditedMutation } from "#src/lib/audit/audited-mutation.ts";
 import { createReportInTransaction } from "#src/lib/reports/create.ts";
+import {
+  deleteReportInTransaction,
+  setReportEnabledInTransaction,
+  updateReportInTransaction,
+} from "#src/lib/reports/update.ts";
 import { executeReportQuery } from "#src/reports/query/query-engine.ts";
 import { compileScoutQl } from "@scout-for-lol/data/model/scoutql/parse/compile.ts";
 import { planResultColumns } from "#src/reports/query/plan-columns.ts";
@@ -56,11 +61,7 @@ import {
   ReportDataBrowseInputSchema,
 } from "#src/reports/query/data-explorer.ts";
 import { ACCOUNT_IDENTITY_COLUMN_IDS } from "#src/reports/query/data-explorer-columns.ts";
-import {
-  enqueueReportScheduleDeletion,
-  enqueueReportScheduleUpsert,
-  notifyReportScheduleReconciler,
-} from "#src/reports/schedule/temporal-schedules.ts";
+import { notifyReportScheduleReconciler } from "#src/reports/schedule/temporal-schedules.ts";
 import { runManualReportWithTemporal } from "#src/reports/schedule/manual-temporal-run.ts";
 
 const GuildInput = z.object({ guildId: DiscordGuildIdSchema });
@@ -270,43 +271,27 @@ export const reportRouter = router({
         }
       }
 
-      const now = new Date();
-      const updated = await prisma.$transaction(async (tx) => {
-        const next = await tx.report.update({
-          where: { id: input.reportId },
-          data: {
-            ...(input.title === undefined ? {} : { title: input.title }),
-            ...(input.description === undefined
-              ? {}
-              : { description: input.description }),
-            ...(input.channelId === undefined
-              ? {}
-              : { channelId: input.channelId }),
-            ...(input.queryText === undefined
-              ? {}
-              : { queryText: input.queryText }),
-            ...(input.cronExpression === undefined &&
-            input.scheduleTimezone === undefined
-              ? {}
-              : {
-                  cronExpression: input.cronExpression ?? report.cronExpression,
-                  scheduleTimezone:
-                    input.scheduleTimezone ?? report.scheduleTimezone,
-                  nextScheduledRunAt: computeNextScheduledUpdateAt(
-                    input.cronExpression ?? report.cronExpression,
-                    now,
-                    input.scheduleTimezone ?? report.scheduleTimezone,
-                  ),
-                }),
-            revision: { increment: 1 },
-            updatedTime: now,
-          },
+      const result = await prisma.$transaction(async (tx) =>
+        updateReportInTransaction(tx, {
+          reportId: input.reportId,
+          serverId: input.guildId,
+          input,
+        }),
+      );
+      if (result.kind === "not_found") {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Report not found" });
+      }
+      if (result.kind === "system_managed") {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "System-managed reports cannot be modified.",
         });
-        await enqueueReportScheduleUpsert(tx, next.id, next.revision);
-        return next;
-      });
+      }
+      if (result.kind === "invalid_query") {
+        throw new TRPCError({ code: "BAD_REQUEST", message: result.message });
+      }
       await notifyReportScheduleReconciler();
-      return updated;
+      return result.report;
     }),
 
   setEnabled: guildMutationProcedure("reports", "update")
@@ -314,33 +299,24 @@ export const reportRouter = router({
     .mutation(async ({ input }) => {
       const report = await loadReportOr404(input.reportId, input.guildId);
       assertReportMutable(report);
-      const now = new Date();
-      const updated = await prisma.$transaction(async (tx) => {
-        const next = await tx.report.update({
-          where: { id: input.reportId },
-          data: input.isEnabled
-            ? {
-                isEnabled: true,
-                nextScheduledRunAt: computeNextScheduledUpdateAt(
-                  report.cronExpression,
-                  now,
-                  report.scheduleTimezone,
-                ),
-                revision: { increment: 1 },
-                updatedTime: now,
-              }
-            : {
-                isEnabled: false,
-                nextScheduledRunAt: null,
-                revision: { increment: 1 },
-                updatedTime: now,
-              },
+      const result = await prisma.$transaction(async (tx) =>
+        setReportEnabledInTransaction(tx, {
+          reportId: input.reportId,
+          serverId: input.guildId,
+          isEnabled: input.isEnabled,
+        }),
+      );
+      if (result.kind === "not_found") {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Report not found" });
+      }
+      if (result.kind === "system_managed") {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "System-managed reports cannot be modified.",
         });
-        await enqueueReportScheduleUpsert(tx, next.id, next.revision);
-        return next;
-      });
+      }
       await notifyReportScheduleReconciler();
-      return updated;
+      return result.report;
     }),
 
   delete: guildMutationProcedure("reports", "delete")
@@ -348,17 +324,21 @@ export const reportRouter = router({
     .mutation(async ({ input }) => {
       const report = await loadReportOr404(input.reportId, input.guildId);
       assertReportMutable(report);
-      await prisma.$transaction(async (tx) => {
-        const deleting = await tx.report.update({
-          where: { id: input.reportId },
-          data: { revision: { increment: 1 } },
-          select: { id: true, revision: true },
+      const result = await prisma.$transaction(async (tx) =>
+        deleteReportInTransaction(tx, {
+          reportId: input.reportId,
+          serverId: input.guildId,
+        }),
+      );
+      if (result.kind === "not_found") {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Report not found" });
+      }
+      if (result.kind === "system_managed") {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "System-managed reports cannot be modified.",
         });
-        await enqueueReportScheduleDeletion(tx, deleting.id, deleting.revision);
-        await tx.report.delete({
-          where: { id: deleting.id, revision: deleting.revision },
-        });
-      });
+      }
       await notifyReportScheduleReconciler();
       return { deleted: true };
     }),

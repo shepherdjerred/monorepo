@@ -212,6 +212,8 @@ export async function mintCreationIntent(
     payload: CreationIntentPayload;
     guildId: DiscordGuildId;
     summary: string;
+    /** Overrides the "nothing has been created" message, for edits. */
+    message?: string;
   },
 ): Promise<CreationPrepareResult> {
   const now = context.now();
@@ -233,6 +235,7 @@ export async function mintCreationIntent(
   return CreationPrepareResultSchema.parse({
     kind: "creation_confirmation_required",
     message:
+      input.message ??
       "Nothing has been created yet. Tell the user this is waiting for their confirmation and that the card expires in ten minutes.",
     intent: {
       intentId: created.intent.id,

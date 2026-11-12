@@ -37,6 +37,7 @@ const CREATE_PERMISSION: Record<CreationIntentKind, Permission> = {
   report: P("reports", "create"),
   subscription: P("subscriptions", "create"),
   competition: P("competitions", "create"),
+  report_update: P("reports", "update"),
 };
 
 const DENIED: CreationLimitPreview = { atLimit: false, limitMessage: null };
@@ -59,6 +60,8 @@ async function limitFor(
   kind: CreationIntentKind,
 ): Promise<CreationLimitPreview> {
   if (!permitted(guild, kind)) return DENIED;
+  // Editing an existing report has no creation limit to preview.
+  if (kind === "report_update") return DENIED;
   if (kind === "report") {
     return await previewReportLimit(context.db, {
       guildId: guild.guildId,

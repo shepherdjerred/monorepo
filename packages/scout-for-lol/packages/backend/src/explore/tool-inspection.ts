@@ -7,6 +7,7 @@ import {
   ListGuildChannelsToolInputSchema,
   PrepareCompetitionToolInputSchema,
   PrepareReportToolInputSchema,
+  PrepareReportUpdateToolInputSchema,
   PrepareSubscriptionToolInputSchema,
 } from "#src/explore/creation/schemas.ts";
 import { inspectRegisteredTool } from "#src/explore/inspection/tool-contracts.ts";
@@ -115,6 +116,13 @@ const CREATION_TOOL_SCHEMAS = new Map<
     "prepare_report_creation",
     {
       input: PrepareReportToolInputSchema,
+      output: CreationPrepareResultSchema,
+    },
+  ],
+  [
+    "prepare_report_update",
+    {
+      input: PrepareReportUpdateToolInputSchema,
       output: CreationPrepareResultSchema,
     },
   ],

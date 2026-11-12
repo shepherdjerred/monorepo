@@ -11,7 +11,11 @@ import {
   RegionSchema,
   RiotIdPartsSchema,
 } from "#src/model/riot/league-account.ts";
-import { ReportCreateInputSchema } from "#src/model/reports/report.ts";
+import {
+  ReportCreateInputSchema,
+  ReportIdSchema,
+  ReportUpdateInputSchema,
+} from "#src/model/reports/report.ts";
 import { SubscriptionFilterSpecSchema } from "#src/model/core/subscription-filter.ts";
 import {
   operationsIntentPayloadArms,
@@ -78,6 +82,20 @@ const creationIntentPayloadArms = [
     guildId: DiscordGuildIdSchema,
     ...CompetitionWriteSchema.shape,
   }),
+  /**
+   * An edit to an existing report, prepared by Explore. `reportId` names the
+   * row in `guildId`; the remaining fields are the partial
+   * `ReportCreateInput`-shaped edit (see `ReportUpdateInputSchema`), so a
+   * display-column change is simply a `queryText` rewrite. Nothing here is
+   * trusted as authorization: confirm re-checks `reports:update`, that the
+   * report still exists in the guild, and that it is not system-managed.
+   */
+  z.strictObject({
+    kind: z.literal("report_update"),
+    guildId: DiscordGuildIdSchema,
+    reportId: ReportIdSchema,
+    ...ReportUpdateInputSchema.shape,
+  }),
 ] as const;
 
 export const DareIntentPayloadSchema = z.discriminatedUnion(
@@ -114,14 +132,17 @@ export const DareIntentKindSchema = z.enum([
 export type DareIntentKind = z.infer<typeof DareIntentKindSchema>;
 
 /**
- * The kinds that create a domain entity rather than acting on an existing
- * dare. They are gated, authorized and executed by their own procedure, so the
- * split is a real boundary and not merely a naming convention.
+ * The kinds an Explore agent may prepare for confirmation rather than acting
+ * on an existing dare. `report_update` edits an existing report instead of
+ * creating one, but it is gated, authorized and executed by the same
+ * procedure as the creations, so it lives with them; the split from the dare
+ * kinds is a real boundary and not merely a naming convention.
  */
 export const CreationIntentKindSchema = z.enum([
   "report",
   "subscription",
   "competition",
+  "report_update",
 ]);
 export type CreationIntentKind = z.infer<typeof CreationIntentKindSchema>;
 

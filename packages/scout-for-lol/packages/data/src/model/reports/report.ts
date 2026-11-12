@@ -364,3 +364,40 @@ export const ReportCreateInputSchema = z.object({
 });
 
 export type ReportCreateInput = z.infer<typeof ReportCreateInputSchema>;
+
+/**
+ * A partial edit to an existing report: every field of
+ * {@link ReportCreateInputSchema} optional, so one shape describes both the
+ * web form's `report.update` input and the fields an Explore
+ * `report_update` confirmation intent carries. At least one field must be
+ * present for the edit to mean anything; the prepare and confirm paths
+ * enforce that, since this schema is also spread into discriminated-union
+ * arms where a refinement cannot live.
+ */
+export const ReportUpdateInputSchema = z.object({
+  title: ReportTitleSchema.optional(),
+  description: ReportDescriptionSchema.nullable().optional(),
+  channelId: DiscordChannelIdSchema.optional(),
+  queryText: ReportQueryTextSchema.optional(),
+  cronExpression: CompetitionCronSchema.optional(),
+  scheduleTimezone: ReportScheduleTimezoneSchema.optional(),
+  isEnabled: z.boolean().optional(),
+});
+
+export type ReportUpdateInput = z.infer<typeof ReportUpdateInputSchema>;
+
+/** The field names a {@link ReportUpdateInput} actually sets. */
+export function reportUpdateFields(
+  input: ReportUpdateInput,
+): (keyof ReportUpdateInput)[] {
+  const fields: (keyof ReportUpdateInput)[] = [
+    "title",
+    "description",
+    "channelId",
+    "queryText",
+    "cronExpression",
+    "scheduleTimezone",
+    "isEnabled",
+  ];
+  return fields.filter((key) => input[key] !== undefined);
+}

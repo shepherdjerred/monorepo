@@ -26,6 +26,7 @@ export type CreationIntentState =
       readonly at: Date;
       readonly entity: string;
       readonly entityId: number;
+      readonly action: "created" | "updated";
     }
   | { readonly state: "refused"; readonly at: Date; readonly reason: string };
 
@@ -42,6 +43,12 @@ export const CreationStoredOutcomeSchema = z.union([
     guildId: DiscordGuildIdSchema,
   }),
   z.strictObject({
+    kind: z.literal("updated"),
+    entity: z.literal("report"),
+    entityId: z.number().int(),
+    guildId: DiscordGuildIdSchema,
+  }),
+  z.strictObject({
     kind: z.enum([
       "limit_reached",
       "invalid_query",
@@ -51,6 +58,8 @@ export const CreationStoredOutcomeSchema = z.union([
       "account_already_subscribed",
       "subscription_already_exists",
       "riot_id_not_found",
+      "report_not_found",
+      "report_system_managed",
     ]),
     message: z.string(),
   }),
@@ -106,12 +115,13 @@ export async function loadCreationIntentStates(
       );
       return [
         row.id,
-        outcome.kind === "created"
+        outcome.kind === "created" || outcome.kind === "updated"
           ? {
               state: "confirmed",
               at: row.consumedAt,
               entity: outcome.entity,
               entityId: outcome.entityId,
+              action: outcome.kind === "updated" ? "updated" : "created",
             }
           : { state: "refused", at: row.consumedAt, reason: outcome.message },
       ];
@@ -129,7 +139,9 @@ function describeState(state: CreationIntentState | undefined): string {
       return "expired unconfirmed, so it was never created; it must be prepared again";
     }
     case "confirmed": {
-      return `CONFIRMED at ${state.at.toISOString()}: it created the ${state.entity} (id ${state.entityId.toString()}). Never say it was not created or ask for this card to be confirmed again. That is a past event: it may since have been edited or removed, so read the server's setup before saying it is active now`;
+      return state.action === "updated"
+        ? `CONFIRMED at ${state.at.toISOString()}: it updated the ${state.entity} (id ${state.entityId.toString()}). Never say it was not updated or ask for this card to be confirmed again. That is a past event: it may since have been edited or removed, so read the server's setup before saying it is active now`
+        : `CONFIRMED at ${state.at.toISOString()}: it created the ${state.entity} (id ${state.entityId.toString()}). Never say it was not created or ask for this card to be confirmed again. That is a past event: it may since have been edited or removed, so read the server's setup before saying it is active now`;
     }
     case "refused": {
       return `confirmation was refused at ${state.at.toISOString()}: ${state.reason}`;

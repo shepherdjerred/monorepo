@@ -1,5 +1,6 @@
 /**
- * The five Explore creation tools.
+ * The Explore creation tools (plus `prepare_report_update`, which edits an
+ * existing report through the same confirmation-intent protocol).
  *
  * The security model in one line: **the model never writes domain state.** A
  * prepare tool mints a confirmation intent describing a report, subscription or
@@ -24,6 +25,7 @@ import {
 import type { CreationToolContext } from "#src/explore/creation/context.ts";
 import { prepareCompetitionCreation } from "#src/explore/creation/prepare-competition.ts";
 import { prepareReportCreation } from "#src/explore/creation/prepare-report.ts";
+import { prepareReportUpdate } from "#src/explore/creation/prepare-report-update.ts";
 import { prepareSubscriptionCreation } from "#src/explore/creation/prepare-subscription.ts";
 import {
   CreationChannelsResultSchema,
@@ -33,6 +35,7 @@ import {
   ListGuildChannelsToolInputSchema,
   PrepareCompetitionToolInputSchema,
   PrepareReportToolInputSchema,
+  PrepareReportUpdateToolInputSchema,
   PrepareSubscriptionToolInputSchema,
 } from "#src/explore/creation/schemas.ts";
 import {
@@ -141,6 +144,10 @@ export function createCreationToolExecutors(input: {
       input.track("prepare_report_creation", () =>
         prepareReportCreation(context, raw),
       ),
+    prepareReportUpdate: (raw: unknown) =>
+      input.track("prepare_report_update", () =>
+        prepareReportUpdate(context, raw),
+      ),
     prepareSubscription: (raw: unknown) =>
       input.track("prepare_subscription_creation", () =>
         prepareSubscriptionCreation(context, raw),
@@ -190,6 +197,12 @@ export function createCreationExploreTools(input: CreationExploreToolsInput) {
       inputSchema: PrepareReportToolInputSchema,
       outputSchema: CreationPrepareResultSchema,
       execute: (raw) => executors.prepareReport(raw),
+    }),
+    prepare_report_update: tool({
+      description: `Prepare an edit to an existing scheduled report for the user to confirm. Get the report's id from get_server_setup, validate any new query with validate_report_query first, and confirm the exact change with the user. Changing which columns a report shows is a queryText rewrite with the new SELECT / RENDER. This changes nothing yet. It returns a confirmation card, saved in this Explore conversation, that the user must accept within ten minutes; say plainly that nothing has been changed yet.`,
+      inputSchema: PrepareReportUpdateToolInputSchema,
+      outputSchema: CreationPrepareResultSchema,
+      execute: (raw) => executors.prepareReportUpdate(raw),
     }),
     prepare_subscription_creation: tool({
       description: `Prepare a tracked player for the user to confirm. Scout resolves the Riot ID against Riot itself and freezes the account it found, so confirm the exact Riot ID, region, display name and channel with the user first. ${PREPARE_DESCRIPTION_SUFFIX}`,

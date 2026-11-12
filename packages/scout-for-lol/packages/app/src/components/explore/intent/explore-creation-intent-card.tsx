@@ -66,7 +66,7 @@ export function CreationConfirmationView(props: {
     confirming: props.confirming,
     expired: props.expired,
   });
-  const note = creationCardNote(state);
+  const note = creationCardNote(state, props.intent.kind);
   return (
     <ExploreConfirmationCard
       state={state}
@@ -119,9 +119,14 @@ function trackCreationOutcome(
   outcome: CreationConfirmationOutcome,
 ): void {
   if (outcome.status === "confirmed") {
-    track(creationConfirmedEvent(outcome.created.entity), {
-      guild_id: outcome.created.guildId,
-    });
+    track(
+      creationConfirmedEvent(
+        kind === "report_update" ? "report_update" : outcome.created.entity,
+      ),
+      {
+        guild_id: outcome.created.guildId,
+      },
+    );
     return;
   }
   track("explore_creation_confirm_failed", { kind, reason: outcome.reason });
@@ -133,6 +138,7 @@ function createdListPathKey(
 ): readonly unknown[] {
   switch (entity) {
     case "report":
+    case "report_update":
       return trpc.report.list.pathKey();
     case "subscription":
       return trpc.subscription.list.pathKey();

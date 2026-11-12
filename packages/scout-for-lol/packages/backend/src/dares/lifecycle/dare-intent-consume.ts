@@ -38,6 +38,7 @@ function asDarePayload(
     case "report":
     case "subscription":
     case "competition":
+    case "report_update":
     case "ops_reconcile_pipeline":
     case "ops_retry_notification":
     case "ops_suppress_stale_notification":

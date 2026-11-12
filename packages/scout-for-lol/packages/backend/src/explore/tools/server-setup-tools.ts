@@ -411,6 +411,7 @@ export function createServerSetupExecutor(
           })),
         },
         reports: reports.map((report) => ({
+          id: report.id,
           title: report.title,
           channel: label(report.channelId),
           enabled: report.isEnabled,

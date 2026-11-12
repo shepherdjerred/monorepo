@@ -150,6 +150,7 @@ export function createdEntityLink(created: CreatedEntity): {
   const guildPath = `/g/${created.guildId}`;
   switch (created.entity) {
     case "report":
+    case "report_update":
       return {
         href: `${guildPath}/reports/${created.entityId.toString()}`,
         label: "Open the report",
@@ -172,18 +173,21 @@ const CREATION_CONFIRM_LABEL: Record<CreationIntentKind, string> = {
   report: "Create this report",
   subscription: "Track this player",
   competition: "Start this competition",
+  report_update: "Update this report",
 };
 
 const CREATION_CREATED_HEADING: Record<CreationIntentKind, string> = {
   report: "Report created",
   subscription: "Player tracked",
   competition: "Competition created",
+  report_update: "Report updated",
 };
 
 const CREATION_FAILED_HEADING: Record<CreationIntentKind, string> = {
   report: "Report was not created",
   subscription: "Player was not tracked",
   competition: "Competition was not created",
+  report_update: "Report was not updated",
 };
 
 /**
@@ -193,15 +197,23 @@ const CREATION_FAILED_HEADING: Record<CreationIntentKind, string> = {
  * included, so a person who had just created a report read that it did not
  * exist.
  */
-export function creationCardNote(state: ConfirmationCardState): string | null {
+export function creationCardNote(
+  state: ConfirmationCardState,
+  kind?: CreationIntentKind,
+): string | null {
+  const isUpdate = kind === "report_update";
   switch (state) {
     case "pending":
     case "confirming":
-      return "Nothing has been created yet. Scout checks your permissions again when you confirm.";
+      return isUpdate
+        ? "Nothing has been changed yet. Scout checks your permissions again when you confirm."
+        : "Nothing has been created yet. Scout checks your permissions again when you confirm.";
     case "expired":
-      return "Nothing was created. Ask Scout to prepare it again.";
+      return isUpdate
+        ? "Nothing was changed. Ask Scout to prepare it again."
+        : "Nothing was created. Ask Scout to prepare it again.";
     case "failed":
-      return "Nothing was created.";
+      return isUpdate ? "Nothing was changed." : "Nothing was created.";
     case "confirmed":
       return null;
   }
@@ -231,6 +243,7 @@ const CREATION_CONFIRMED_EVENT: Record<
   report: "explore_report_created",
   subscription: "explore_subscription_created",
   competition: "explore_competition_created",
+  report_update: "explore_report_updated",
 };
 
 /**
