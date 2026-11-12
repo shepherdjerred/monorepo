@@ -7,7 +7,7 @@ import { ExploreBudgetError } from "#src/explore/spending/ledger.ts";
 
 describe("budget error surfacing", () => {
   test("finds a budget error wrapped by the SDK", () => {
-    const budget = new ExploreBudgetError("over the input limit");
+    const budget = new ExploreBudgetError("input_limit");
     const wrapped = new Error("stream failed", { cause: budget });
     expect(budgetErrorOf(wrapped)).toBe(budget);
     expect(exploreFailureCode("failed", wrapped)).toBe(
