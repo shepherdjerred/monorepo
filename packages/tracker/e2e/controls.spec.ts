@@ -233,21 +233,24 @@ test("grouping by priority shows headers, and a collapsed group stays collapsed 
 test("filters are picked in one popover and removed as chips", async ({
   page,
 }) => {
-  await page.goto("/issues?state=Done");
+  // Specs keep adding issues and the list renders only the rows near the
+  // viewport. No spec assigns a project, so a project keeps this list to
+  // the seeded issues.
+  await page.goto("/issues?state=Done&project=toolkit");
   const chips = page.getByRole("list", { name: "Active filters" });
   await expect(chips).toContainText("Status is Done");
   await expect(
     page.getByRole("link", { name: /Keep session identity stable/u }),
   ).toBeVisible();
   await expect(
-    page.getByRole("link", { name: /Make attachment uploads resumable/u }),
+    page.getByRole("link", { name: /Polish the issue creation flow/u }),
   ).toHaveCount(0);
   await page
     .getByRole("button", { name: "Remove filter: Status is Done" })
     .click();
-  await expect(page).toHaveURL(/\/issues$/u);
+  await expect(page).toHaveURL(/\/issues\?project=toolkit$/u);
   await expect(
-    page.getByRole("link", { name: /Make attachment uploads resumable/u }),
+    page.getByRole("link", { name: /Polish the issue creation flow/u }),
   ).toBeVisible();
 
   await page.getByRole("button", { name: /^Filter/u }).click();
@@ -260,7 +263,7 @@ test("filters are picked in one popover and removed as chips", async ({
   await page.keyboard.press("Escape");
   await expect(chips).toContainText("Label has bug");
   await expect(
-    page.getByRole("link", { name: /Make attachment uploads resumable/u }),
+    page.getByRole("link", { name: /Polish the issue creation flow/u }),
   ).toHaveCount(0);
 });
 
