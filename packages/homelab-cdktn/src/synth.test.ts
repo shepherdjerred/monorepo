@@ -3,6 +3,7 @@ import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import { imageRegistry } from "@shepherdjerred/version-catalog/image-registry";
 import { SYNTHESIZED_STACKS } from "#src/app.ts";
+import { TAILNET_POLICY } from "#src/stacks/tailscale-policy.ts";
 import {
   staleStacks,
   synthesize,
@@ -152,6 +153,60 @@ describe("dockerhub", () => {
     expect(Object.keys(dockerhub.variable ?? {})).toEqual([
       "tofu_state_encryption_passphrase",
     ]);
+  });
+});
+
+describe("tailscale", () => {
+  test("keeps the one policy resource and encodes the policy with its keys untouched", async () => {
+    const tailscale = await configuration("tailscale");
+    expect(addresses(tailscale.resource)).toEqual(["tailscale_acl.homelab"]);
+    expect(tailscale.resource["tailscale_acl"]?.["homelab"]).toEqual({
+      acl: "${jsonencode(local.policy)}",
+      overwrite_existing_content: true,
+    });
+    // Policy fields and tags are data: `tagOwners` must not become
+    // `tag_owners`, and no rule may be dropped or reordered.
+    expect(tailscale.locals).toEqual({ policy: TAILNET_POLICY });
+    expect(Object.keys(TAILNET_POLICY).toSorted()).toEqual([
+      "acls",
+      "autoApprovers",
+      "groups",
+      "ssh",
+      "tagOwners",
+      "tests",
+    ]);
+    expect(tailscale.variable).toEqual({
+      tailscale_tailnet: {
+        default: "-",
+        description:
+          "Tailscale tailnet (organization). '-' resolves to the OAuth client's default tailnet.",
+        type: "string",
+      },
+    });
+    // The lock file records this constraint; a different one rewrites it.
+    expect(tailscale.terraform.required_providers["tailscale"]).toEqual({
+      source: "tailscale/tailscale",
+      version: "~> 0.17",
+    });
+    expect(tailscale.import).toBeUndefined();
+    expect(tailscale.moved).toBeUndefined();
+    expect(tailscale.removed).toBeUndefined();
+    expect(tailscale.terraform.encryption).toBeUndefined();
+  });
+
+  test("the owner keeps full access and the cluster keeps its state backend path", () => {
+    // Losing either cuts off the homelab; the policy's own `tests` guard the
+    // second on apply, this guards both before a plan exists.
+    expect(TAILNET_POLICY.acls).toContainEqual({
+      action: "accept",
+      src: ["autogroup:admin"],
+      dst: ["*:*"],
+    });
+    expect(TAILNET_POLICY.acls).toContainEqual({
+      action: "accept",
+      src: ["tag:k8s"],
+      dst: ["tag:k8s:443"],
+    });
   });
 });
 

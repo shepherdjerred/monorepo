@@ -1,0 +1,140 @@
+{
+  "locals": {
+    "policy": {
+      "acls": [
+        { "action": "accept", "dst": ["*:*"], "src": ["autogroup:admin"] },
+        {
+          "action": "accept",
+          "dst": ["tag:k8s:80,443"],
+          "src": ["autogroup:members"]
+        },
+        {
+          "action": "accept",
+          "dst": ["tag:k8s:*"],
+          "src": ["tag:k8s-operator"]
+        },
+        {
+          "action": "accept",
+          "dst": ["tag:server:9090,9093,9100,10250"],
+          "src": ["tag:monitoring"]
+        },
+        {
+          "action": "accept",
+          "dst": ["tag:server:*"],
+          "proto": "icmp",
+          "src": ["tag:monitoring"]
+        },
+        { "action": "accept", "dst": ["tag:k8s:443"], "src": ["tag:k8s"] },
+        {
+          "action": "accept",
+          "dst": [
+            "tag:k8s:6443",
+            "tag:k8s:10250",
+            "tag:k8s:9100",
+            "tag:k8s:50000"
+          ],
+          "src": ["tag:k8s"]
+        },
+        { "action": "accept", "dst": ["tag:k8s:443"], "src": ["tag:ci"] },
+        {
+          "action": "accept",
+          "dst": ["tag:k8s-operator:443"],
+          "src": ["tag:k8s"]
+        }
+      ],
+      "autoApprovers": { "exitNode": [], "routes": {} },
+      "groups": {},
+      "ssh": [
+        {
+          "action": "accept",
+          "dst": ["tag:server"],
+          "src": ["autogroup:admin"],
+          "users": ["autogroup:nonroot", "root"]
+        },
+        {
+          "action": "accept",
+          "dst": ["autogroup:self"],
+          "src": ["autogroup:members"],
+          "users": ["autogroup:nonroot"]
+        }
+      ],
+      "tagOwners": {
+        "tag:ci": ["autogroup:admin"],
+        "tag:delivery": ["autogroup:admin", "tag:k8s-operator"],
+        "tag:iot": ["autogroup:admin"],
+        "tag:k8s": ["tag:k8s-operator"],
+        "tag:k8s-operator": ["autogroup:admin"],
+        "tag:monitoring": ["autogroup:admin"],
+        "tag:server": ["autogroup:admin"]
+      },
+      "tests": [
+        { "deny": ["tag:k8s:443", "tag:server:22"], "src": "tag:delivery" },
+        { "deny": ["tag:delivery:443"], "src": "tag:ci" },
+        { "accept": ["tag:k8s:443"], "src": "tag:k8s-operator" },
+        {
+          "accept": ["tag:server:9100"],
+          "deny": ["tag:server:22"],
+          "src": "tag:monitoring"
+        },
+        {
+          "accept": [
+            "tag:k8s:443",
+            "tag:k8s:6443",
+            "tag:k8s:10250",
+            "tag:k8s:9100",
+            "tag:k8s:50000"
+          ],
+          "deny": ["tag:k8s:22"],
+          "src": "tag:k8s"
+        },
+        {
+          "accept": ["tag:k8s:443"],
+          "deny": ["tag:server:22", "tag:k8s:22"],
+          "src": "tag:ci"
+        },
+        {
+          "accept": ["tag:k8s-operator:443"],
+          "deny": ["tag:k8s-operator:22"],
+          "src": "tag:k8s"
+        }
+      ]
+    }
+  },
+  "provider": { "tailscale": [{ "tailnet": "${var.tailscale_tailnet}" }] },
+  "resource": {
+    "tailscale_acl": {
+      "homelab": {
+        "acl": "${jsonencode(local.policy)}",
+        "overwrite_existing_content": true
+      }
+    }
+  },
+  "terraform": {
+    "backend": {
+      "s3": {
+        "bucket": "homelab-tofu-state",
+        "endpoints": { "s3": "https://seaweedfs-s3.tailnet-1a49.ts.net" },
+        "key": "tailscale/terraform.tfstate",
+        "region": "auto",
+        "skip_credentials_validation": true,
+        "skip_metadata_api_check": true,
+        "skip_region_validation": true,
+        "skip_requesting_account_id": true,
+        "skip_s3_checksum": true,
+        "use_lockfile": true,
+        "use_path_style": true
+      }
+    },
+    "required_providers": {
+      "tailscale": { "source": "tailscale/tailscale", "version": "~> 0.17" }
+    },
+    "required_version": ">= 1.6.0"
+  },
+  "variable": {
+    "tailscale_tailnet": {
+      "default": "-",
+      "description": "Tailscale tailnet (organization). '-' resolves to the OAuth client's default tailnet.",
+      "type": "string"
+    }
+  }
+}

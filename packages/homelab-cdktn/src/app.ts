@@ -6,6 +6,7 @@ import { AnthropicFederationStack } from "#src/stacks/anthropic-federation.ts";
 import { AnthropicStack } from "#src/stacks/anthropic.ts";
 import { DockerhubStack } from "#src/stacks/dockerhub.ts";
 import { GithubStack } from "#src/stacks/github.ts";
+import { TailscaleStack } from "#src/stacks/tailscale.ts";
 
 /**
  * Stacks whose `src/tofu/<stack>/main.tf.json` is synthesized from this app,
@@ -17,6 +18,7 @@ export const SYNTHESIZED_STACKS = [
   "anthropic-federation",
   "dockerhub",
   "github",
+  "tailscale",
 ] as const;
 
 export type SynthesizedStack = (typeof SYNTHESIZED_STACKS)[number];
@@ -27,6 +29,7 @@ const STACKS: Record<SynthesizedStack, new (scope: Construct) => HomelabStack> =
     "anthropic-federation": AnthropicFederationStack,
     dockerhub: DockerhubStack,
     github: GithubStack,
+    tailscale: TailscaleStack,
   };
 
 /**

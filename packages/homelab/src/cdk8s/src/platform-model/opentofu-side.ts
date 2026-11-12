@@ -65,12 +65,15 @@ type Stack = {
   /** `.tf` blocks of the root module; empty for a synthesized stack. */
   blocks: readonly HclBlock[];
   resources: readonly Resource[];
+  /** `locals` of a synthesized stack; empty for an HCL stack. */
+  locals: Readonly<Record<string, unknown>>;
   /** The stack's source with comments removed, for name scans. */
   text: string;
   backendEndpoint: string | undefined;
 };
 
 const SynthesizedStackSchema = z.looseObject({
+  locals: z.record(z.string(), z.unknown()).optional(),
   resource: z
     .record(z.string(), z.record(z.string(), z.record(z.string(), z.unknown())))
     .optional(),
@@ -161,6 +164,7 @@ async function readStack(name: string): Promise<Stack> {
             ),
           })),
       ),
+      locals: stack.locals ?? {},
       text: source,
       backendEndpoint: stack.terraform.backend?.s3?.endpoints.s3,
     };
@@ -174,6 +178,7 @@ async function readStack(name: string): Promise<Stack> {
     name,
     blocks,
     resources: hclResources(name, blocks),
+    locals: {},
     text: sources.map((source) => withoutHclComments(source)).join("\n"),
     backendEndpoint: literalString(backend),
   };
@@ -385,19 +390,32 @@ function readSeaweedfs(
   };
 }
 
+/** The `acl` expression of the synthesized stack. */
+const ENCODED_POLICY = "${jsonencode(local.policy)}";
+
+const TailnetPolicySchema = z.looseObject({
+  tagOwners: z.record(z.string(), z.array(z.string())),
+});
+
+/**
+ * The tailscale stack is synthesized: its policy is `local.policy`, which the
+ * one `tailscale_acl` resource encodes whole. Anything else fails here, so
+ * the tags are never read from a policy other than the one applied.
+ */
 function readTailscale(stack: Stack): Pick<OpenTofuSide, "tailscaleTags"> {
-  hclOnly(stack, "tag owners");
-  const policy = stack.resources.find(
+  const policies = stack.resources.filter(
     (resource) => resource.type === "tailscale_acl",
   );
-  const owners = /\btagOwners\s*=\s*\{([^}]*)\}/.exec(
-    policy?.attributes.get("acl") ?? "",
-  )?.[1];
-  if (owners === undefined)
-    throw new Error("tailscale: tagOwners not found in tailscale_acl");
+  const [policy] = policies;
+  if (policy === undefined || policies.length !== 1)
+    throw new Error("tailscale: expected exactly one tailscale_acl");
+  if (policy.attributes.get("acl") !== JSON.stringify(ENCODED_POLICY))
+    throw new Error(
+      "tailscale: tailscale_acl does not encode local.policy; update readTailscale",
+    );
   return {
     tailscaleTags: new Set(
-      [...owners.matchAll(/"(tag:[^"]+)"\s*=/g)].map((match) => match[1] ?? ""),
+      Object.keys(TailnetPolicySchema.parse(stack.locals["policy"]).tagOwners),
     ),
   };
 }
