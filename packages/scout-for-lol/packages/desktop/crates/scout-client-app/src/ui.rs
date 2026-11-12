@@ -7,7 +7,7 @@ use eframe::egui;
 use tray_icon::menu::{Menu, MenuEvent, MenuItem};
 use tray_icon::{Icon, TrayIcon, TrayIconBuilder};
 
-use crate::runtime::{ClientRuntime, RuntimeState};
+use scout_client_runtime::runtime::{ClientRuntime, RuntimeState};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Page {

@@ -18,23 +18,14 @@ name = "scout-client"
 path = "src/main.rs"
 
 [dependencies]
-auto-launch.workspace = true
-chrono.workspace = true
-directories.workspace = true
 eframe.workspace = true
 egui.workspace = true
-hex.workspace = true
-keyring.workspace = true
 open.workspace = true
-reqwest.workspace = true
 scout-client-core = { path = "../scout-client-core" }
-serde_json.workspace = true
-sha2.workspace = true
-tokio.workspace = true
+scout-client-runtime = { path = "../scout-client-runtime" }
 tracing.workspace = true
 tracing-subscriber.workspace = true
 tray-icon.workspace = true
-uuid.workspace = true
 
 [lints]
 workspace = true

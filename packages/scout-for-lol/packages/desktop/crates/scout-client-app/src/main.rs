@@ -5,8 +5,6 @@
 
 //! Scout Client native entry point.
 
-mod runtime;
-mod startup;
 mod ui;
 
 use std::panic::AssertUnwindSafe;
@@ -20,8 +18,8 @@ use scout_client_core::diagnostics::{
 };
 use tracing_subscriber::EnvFilter;
 
-use crate::runtime::ClientRuntime;
 use crate::ui::ScoutApp;
+use scout_client_runtime::runtime::ClientRuntime;
 
 const APP_ID: &str = "com.scout-for-lol.client";
 const DEFAULT_BACKEND_ORIGIN: &str = "https://beta.scout-for-lol.com";
