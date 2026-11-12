@@ -244,23 +244,23 @@ function optionalFlagValue(
   args: readonly string[],
   flag: string,
 ): string | undefined {
-  const index = args.indexOf(flag);
-  if (index === -1) {
+  const position = args.findIndex((arg) => arg === flag);
+  if (position < 0) {
     return undefined;
   }
-  const value = args[index + 1];
-  if (value === undefined || value.startsWith("--")) {
-    throw new Error(`Missing value for ${flag}`);
+  const next = args.at(position + 1);
+  if (next === undefined || next.startsWith("--")) {
+    throw new Error(`${flag} needs a value`);
   }
-  return value;
+  return next;
 }
 
 function requiredFlagValue(args: readonly string[], flag: string): string {
-  const value = optionalFlagValue(args, flag);
-  if (value === undefined) {
-    throw new Error(`Missing required flag ${flag}`);
+  const found = optionalFlagValue(args, flag);
+  if (found === undefined) {
+    throw new Error(`${flag} is required`);
   }
-  return value;
+  return found;
 }
 
 export const FixtureCliConfigSchema = z.strictObject({
