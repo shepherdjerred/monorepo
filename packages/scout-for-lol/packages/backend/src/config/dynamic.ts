@@ -130,7 +130,7 @@ const DEFINITION = {
   exploreModel: {
     schema: z.string().trim().min(1),
     sources: ["flag", "env", "default"],
-    default: "gpt-5.6-luna",
+    default: "gpt-6-luna",
     names: { flag: "scout-explore-model", env: "EXPLORE_MODEL" },
   },
   /**

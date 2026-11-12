@@ -263,7 +263,7 @@ describe("local runtime flags", () => {
   test("defaults Scout Explore to GPT-5.6 Luna and accepts an override", () => {
     delete Bun.env["EXPLORE_MODEL"];
     resetConfigurationForTests();
-    expect(configuration.exploreModel).toBe("gpt-5.6-luna");
+    expect(configuration.exploreModel).toBe("gpt-6-luna");
 
     Bun.env["EXPLORE_MODEL"] = "gpt-5.6-terra";
     resetConfigurationForTests();

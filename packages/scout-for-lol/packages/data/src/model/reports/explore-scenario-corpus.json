@@ -563,6 +563,175 @@
         }
       ],
       "origin": "A user asked for last five games with fewer than five recorded; Explore answered honestly. Kept as a control that should pass before any fix."
+    },
+    {
+      "id": "privacy-remove-riot-id",
+      "surfaces": ["web", "discord"],
+      "asker": {
+        "username": "moss",
+        "displayName": "Moss"
+      },
+      "guild": {
+        "name": "Harbor Lane",
+        "channels": ["general"],
+        "players": [
+          {
+            "alias": "Moss",
+            "linkedToAsker": true,
+            "account": {
+              "kind": "lake",
+              "rank": 7
+            },
+            "feeds": ["general"]
+          }
+        ]
+      },
+      "turns": [
+        {
+          "question": "how do I remove my RIOT ID from scout so I dont get tracked",
+          "expect": {
+            "mustMentionAnyOf": [["Privacy settings", "privacy settings"]],
+            "mustNotMention": [
+              "send your riot id",
+              "send me your riot id",
+              "ask an admin to remove"
+            ],
+            "rubric": [
+              "Gives the Privacy settings page as the answer: link the Riot account and turn off Match notifications so their games stop being posted in every server.",
+              "Does not ask the user to send their Riot ID and does not make an admin the first step.",
+              "Presents it as something the user does themselves in settings, not a request an admin or support must action."
+            ]
+          }
+        }
+      ],
+      "origin": "A Prod Discord user asked three times in two minutes (Nov 5) how to remove their Riot ID and got clarification questions instead of the privacy setting."
+    },
+    {
+      "id": "privacy-stop-tracking",
+      "surfaces": ["web"],
+      "asker": {
+        "username": "moss",
+        "displayName": "Moss"
+      },
+      "guild": {
+        "name": "Harbor Lane",
+        "channels": ["general"],
+        "players": [
+          {
+            "alias": "Moss",
+            "linkedToAsker": true,
+            "account": {
+              "kind": "lake",
+              "rank": 7
+            },
+            "feeds": ["general"]
+          }
+        ]
+      },
+      "turns": [
+        {
+          "question": "how do I stop servers from tracking my games? and my account",
+          "expect": {
+            "mustMentionAnyOf": [
+              ["Privacy settings", "privacy settings"],
+              ["Match notifications", "match notifications"]
+            ],
+            "rubric": [
+              "Answers with the Privacy settings: turn off Match notifications for the linked Riot account to stop notifications about their games across all servers.",
+              "Gives the settings link rather than only naming a page."
+            ]
+          }
+        }
+      ],
+      "origin": "A Prod web user (Nov 9) asked how to stop servers tracking their games; the privacy setting is the direct answer."
+    },
+    {
+      "id": "ambiguous-player-losses",
+      "surfaces": ["discord"],
+      "asker": {
+        "username": "wren",
+        "displayName": "wren"
+      },
+      "guild": {
+        "name": "Harbor Lane",
+        "channels": ["general"],
+        "players": [
+          {
+            "alias": "Mitch",
+            "account": {
+              "kind": "lake",
+              "rank": 2
+            }
+          },
+          {
+            "alias": "MitchTwo",
+            "account": {
+              "kind": "lake",
+              "rank": 9
+            }
+          }
+        ]
+      },
+      "turns": [
+        {
+          "question": "why does mitch lose?",
+          "expect": {
+            "mustNotMention": ["which mitch did you mean?"],
+            "rubric": [
+              "Names the matching players with distinguishing detail (Riot IDs, games, last played) instead of guessing one.",
+              "Offers the candidates as selectable follow-ups that repeat the question with a full Riot ID, so picking one continues this conversation.",
+              "Does not start answering about a Mitch before the user picks."
+            ]
+          }
+        }
+      ],
+      "origin": "A Prod Discord user asked 'why does mitch lose?' with four matching players, got a prose question, and had to start a second conversation with the full Riot ID."
+    },
+    {
+      "id": "report-edit-display",
+      "surfaces": ["web"],
+      "asker": {
+        "username": "wren",
+        "displayName": "wren"
+      },
+      "guild": {
+        "name": "Harbor Lane",
+        "channels": ["general", "wunk-games-played"],
+        "players": [
+          {
+            "alias": "wren",
+            "linkedToAsker": true,
+            "account": {
+              "kind": "lake",
+              "rank": 11
+            }
+          }
+        ],
+        "reports": [
+          {
+            "title": "Epstein List",
+            "channel": "wunk-games-played"
+          }
+        ]
+      },
+      "turns": [
+        {
+          "question": "Can you change my Epstein List report to only show player, queue, champion and deaths, sorted by most deaths?",
+          "expect": {
+            "mustNotMention": [
+              "I can't edit",
+              "cannot edit an existing",
+              "paste this query"
+            ],
+            "rubric": [
+              "Offers to edit the existing Epstein List report through a confirmation, rather than creating a duplicate or telling the user to paste ScoutQL.",
+              "The proposed change keeps only player, queue, champion and deaths, sorted by deaths descending.",
+              "Nothing is changed until the user confirms."
+            ]
+          }
+        }
+      ],
+      "origin": "A Prod user (Nov 10) asked four times to clean up a report's display, was told Explore cannot edit reports, and deleted/recreated it."
     }
   ]
 }

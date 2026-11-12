@@ -240,8 +240,8 @@ describe("ManagedFlagInventorySchema", () => {
   });
 
   test("uses Luna in both managed environments", () => {
-    expect(exploreModel("beta")).toBe("gpt-5.6-luna");
-    expect(exploreModel("prod")).toBe("gpt-5.6-luna");
+    expect(exploreModel("beta")).toBe("gpt-6-luna");
+    expect(exploreModel("prod")).toBe("gpt-6-luna");
     expect(() =>
       materializeManagedNamespaceEnvironment(
         managedFlagInventory,
