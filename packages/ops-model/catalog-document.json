@@ -129,7 +129,7 @@
     },
     {
       "id": "ops-dashboard",
-      "title": "Ops dashboard",
+      "title": "Hub",
       "kind": "workload",
       "package": "alert-dashboard",
       "aliases": ["alert-dashboard", "ops"]
@@ -1259,7 +1259,7 @@
     },
     {
       "id": "ops-dashboard",
-      "title": "Ops dashboard",
+      "title": "Hub",
       "package": "alert-dashboard",
       "lifecycle": "active",
       "selfHosted": false,

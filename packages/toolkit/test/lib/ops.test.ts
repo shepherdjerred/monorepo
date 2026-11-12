@@ -89,7 +89,7 @@ describe("ops snapshot client", () => {
 
   test("a network failure is an error naming the URL", async () => {
     await expect(fetchOpsSnapshot("http://127.0.0.1:9")).rejects.toThrow(
-      /Could not reach the ops dashboard at http:\/\/127\.0\.0\.1:9\//,
+      /Could not reach Hub at http:\/\/127\.0\.0\.1:9\//,
     );
   });
 });
@@ -179,9 +179,7 @@ describe("toolkit ops summary subprocess", () => {
     route = { status: 502, body: "bad gateway" };
     const result = await runToolkit(["ops", "summary"]);
     expect(result.code).toBe(1);
-    expect(result.stderr).toContain(
-      "toolkit ops: Ops dashboard returned HTTP 502",
-    );
+    expect(result.stderr).toContain("toolkit ops: Hub returned HTTP 502");
     expect(result.stdout).toBe("");
   });
 });

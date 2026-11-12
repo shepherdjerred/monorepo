@@ -64,7 +64,7 @@
     {
       "key": "alert-dashboard",
       "name": "Alert Dashboard",
-      "description": "Ops dashboard (alert-dashboard) feature flags."
+      "description": "Hub (alert-dashboard) feature flags."
     },
     {
       "key": "the-storm",

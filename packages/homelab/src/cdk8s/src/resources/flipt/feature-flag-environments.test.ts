@@ -128,7 +128,7 @@ describe("Flipt consumer environments", () => {
       createChart: (app: App) => createTrmnlDashboardChart(app),
     },
     {
-      name: "Ops dashboard",
+      name: "Hub",
       environment: "prod",
       namespace: "alert-dashboard",
       count: 1,

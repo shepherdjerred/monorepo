@@ -376,7 +376,7 @@
     {
       "id": "ops-dashboard",
       "images": ["alert-dashboard"],
-      "title": "Ops dashboard",
+      "title": "Hub",
       "kind": "workload",
       "package": "alert-dashboard",
       "aliases": ["alert-dashboard", "ops"],

@@ -56,7 +56,7 @@ describe("digest email", () => {
 
   it("states staleness, trends, and incidents in both bodies", () => {
     const email = renderDigestEmail(report);
-    expect(email.subject).toBe("[Ops] Weekly digest 2026-W40: Warning");
+    expect(email.subject).toBe("[Hub] Weekly digest 2026-W40: Warning");
     for (const body of [email.htmlBody, email.textBody]) {
       expect(body).toContain("stale");
       expect(body).toContain("Deploys");
