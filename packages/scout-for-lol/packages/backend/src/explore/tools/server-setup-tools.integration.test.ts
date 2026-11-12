@@ -234,6 +234,9 @@ describe("get_server_setup", () => {
     expect(json).toContain('"channel":"#general"');
     expect(json).toContain("a channel Scout can no longer post in");
     expect(json).toContain('"title":"Weekly Win Rates"');
+    // Explore rewrites a report's query from the saved text, so setup must
+    // carry it; without it the model asked users to paste their queries.
+    expect(json).toContain(SCENARIO_REPORT_QUERY.slice(0, 40));
     expect(json).toContain("/app/g/100000000000000091/reports");
     expect(result.message).toContain("can no longer post in");
   });

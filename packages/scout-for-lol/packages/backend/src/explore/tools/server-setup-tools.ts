@@ -417,6 +417,7 @@ export function createServerSetupExecutor(
           enabled: report.isEnabled,
           schedule: `${report.cronExpression} (${report.scheduleTimezone})`,
           ownedByAsker: report.ownerId === options.requesterId,
+          queryText: report.queryText,
         })),
         reportLimitForAsker: reportLimitText(reportLimit, grants),
         activeCompetitions,
