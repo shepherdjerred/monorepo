@@ -182,6 +182,7 @@ export async function mintPostmatchNotificationIntents(input: {
       queueId: context.matchData.info.queueId,
       gameMode: context.matchData.info.gameMode,
       gameType: context.matchData.info.gameType,
+      tournamentCode: context.matchData.info.tournamentCode,
     },
     gameCreation: context.matchData.info.gameCreation,
     createdAt: new Date(),

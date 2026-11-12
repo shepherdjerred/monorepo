@@ -15,7 +15,8 @@ import { resolvePostmatchDeliveryChannels } from "#src/league/tasks/notification
 import { postmatchReportFreshnessDeadline } from "#src/league/tasks/postmatch/match-report-delivery.ts";
 import { createLogger } from "#src/logger.ts";
 import { durableCommit } from "#src/temporal/match/match-commits.ts";
-import { resolveQueueTypeFromGame } from "@scout-for-lol/data";
+import { classifyGame } from "@scout-for-lol/data";
+import { unsupportedQueueReportsTotal } from "#src/metrics/index.ts";
 import type { OpaqueVersionedEnvelope } from "@scout-for-lol/domain/codec/versioned.ts";
 import {
   NotificationIntentKeySchema,
@@ -183,19 +184,31 @@ export async function mintPostmatchIntents(
     matchId: RiotMatchId;
     puuids: readonly LeaguePuuid[];
     /** v1's own three queue inputs, so one match resolves one queue type. */
-    queue: { queueId: number; gameMode: string; gameType: string };
+    queue: {
+      queueId: number;
+      gameMode: string;
+      gameType: string;
+      tournamentCode?: string | null | undefined;
+    };
     gameCreation: number;
     createdAt: Date;
   },
 ): Promise<MatchIntentsSummary> {
   const summary = emptySummary();
+  // The attested report artifact is an image report; a game Scout cannot
+  // classify has no report to attest, so no intent stands for it and nothing
+  // retries a render that cannot succeed.
+  const classification = classifyGame(args.queue);
+  if (classification.kind === "unknown") {
+    unsupportedQueueReportsTotal.inc();
+    logger.warn(
+      `⚠️  No post-match intent for ${args.matchId}: unsupported queue ${args.queue.queueId.toString()} (${args.queue.gameMode})`,
+    );
+    return summary;
+  }
   const { deliverable } = await resolvePostmatchDeliveryChannels({
     puuids: [...args.puuids],
-    queueType: resolveQueueTypeFromGame(
-      args.queue.queueId,
-      args.queue.gameMode,
-      args.queue.gameType,
-    ),
+    queueType: classification.queue,
   });
   const freshnessDeadline = postmatchReportFreshnessDeadline(args.gameCreation);
   for (const channel of deliverable) {
