@@ -9,6 +9,7 @@ import { ArrStack } from "#src/stacks/arr.ts";
 import { BackblazeStack } from "#src/stacks/backblaze.ts";
 import { CloudflareTokensStack } from "#src/stacks/cloudflare-tokens.ts";
 import { DockerhubStack } from "#src/stacks/dockerhub.ts";
+import { DockerhubTokensStack } from "#src/stacks/dockerhub-tokens.ts";
 import { GithubStack } from "#src/stacks/github.ts";
 import { TailscaleStack } from "#src/stacks/tailscale.ts";
 
@@ -25,6 +26,7 @@ export const SYNTHESIZED_STACKS = [
   "backblaze",
   "cloudflare-tokens",
   "dockerhub",
+  "dockerhub-tokens",
   "github",
   "tailscale",
 ] as const;
@@ -40,6 +42,7 @@ const STACKS: Record<SynthesizedStack, new (scope: Construct) => HomelabStack> =
     backblaze: BackblazeStack,
     "cloudflare-tokens": CloudflareTokensStack,
     dockerhub: DockerhubStack,
+    "dockerhub-tokens": DockerhubTokensStack,
     github: GithubStack,
     tailscale: TailscaleStack,
   };

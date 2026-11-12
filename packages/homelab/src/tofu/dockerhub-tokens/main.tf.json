@@ -1,0 +1,85 @@
+{
+  "data": {
+    "docker_access_tokens": { "account": {} },
+    "docker_login": {
+      "operator": { "depends_on": ["data.docker_access_tokens.account"] }
+    }
+  },
+  "output": {
+    "credentials": {
+      "description": "In-memory handoff to separate 1Password items; never print or save the decrypted output.",
+      "sensitive": true,
+      "value": "${{ for purpose, token in docker_access_token.automation : purpose => { username = data.docker_login.operator.username, token = token.token, uuid = token.uuid } }}"
+    }
+  },
+  "provider": { "docker": [{}] },
+  "resource": {
+    "docker_access_token": {
+      "automation": {
+        "for_each": {
+          "management": { "scopes": ["repo:read", "repo:write", "repo:admin"] },
+          "publisher": { "scopes": ["repo:read", "repo:write"] },
+          "reader": { "scopes": ["repo:read"] },
+          "renovate": { "scopes": ["repo:read"] }
+        },
+        "lifecycle": {
+          "precondition": [
+            {
+              "condition": "${(data.docker_login.operator.username == \"shepherdjerred\")}",
+              "error_message": "Sign into Docker Desktop as shepherdjerred before managing homelab tokens."
+            }
+          ],
+          "prevent_destroy": true
+        },
+        "scopes": "${each.value.scopes}",
+        "token_label": "homelab-${each.key}"
+      }
+    }
+  },
+  "terraform": {
+    "backend": {
+      "s3": {
+        "bucket": "homelab-tofu-state",
+        "endpoints": { "s3": "https://seaweedfs-s3.tailnet-1a49.ts.net" },
+        "key": "dockerhub-tokens/terraform.tfstate",
+        "region": "auto",
+        "skip_credentials_validation": true,
+        "skip_metadata_api_check": true,
+        "skip_region_validation": true,
+        "skip_requesting_account_id": true,
+        "skip_s3_checksum": true,
+        "use_lockfile": true,
+        "use_path_style": true
+      }
+    },
+    "encryption": {
+      "key_provider": {
+        "pbkdf2": {
+          "state": { "passphrase": "${var.tofu_state_encryption_passphrase}" }
+        }
+      },
+      "method": {
+        "aes_gcm": { "encrypted": { "keys": "${key_provider.pbkdf2.state}" } }
+      },
+      "plan": { "enforced": true, "method": "method.aes_gcm.encrypted" },
+      "state": { "enforced": true, "method": "method.aes_gcm.encrypted" }
+    },
+    "required_providers": {
+      "docker": { "source": "docker/docker", "version": "0.7.0" }
+    },
+    "required_version": ">= 1.11.0"
+  },
+  "variable": {
+    "tofu_state_encryption_passphrase": {
+      "description": "Passphrase encrypting Docker Hub token state and plans.",
+      "sensitive": true,
+      "type": "string",
+      "validation": [
+        {
+          "condition": "${(length(var.tofu_state_encryption_passphrase) >= 16)}",
+          "error_message": "The state encryption passphrase must contain at least 16 characters."
+        }
+      ]
+    }
+  }
+}
