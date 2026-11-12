@@ -7,6 +7,7 @@ import {
   Service,
   Volume,
 } from "cdk8s-plus-31";
+import { tailnetService } from "homelab/src/platform-model.ts";
 import type { Chart } from "cdk8s";
 import { ApiObject, Duration, JsonPatch, Size } from "cdk8s";
 import {
@@ -128,7 +129,7 @@ export function createScryptedDeployment(chart: Chart) {
 
   new TailscaleIngress(chart, "scrypted-tailscale-ingress", {
     service,
-    host: "scrypted",
+    host: tailnetService("scrypted"),
     // Target the plaintext HTTP port: the Tailscale ingress proxies to the
     // backend over HTTP, so pointing it at Scrypted's HTTPS-only 10443 502s.
     port: 11_080,

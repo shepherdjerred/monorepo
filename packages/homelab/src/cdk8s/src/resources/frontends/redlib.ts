@@ -1,4 +1,5 @@
 import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { tailnetService } from "homelab/src/platform-model.ts";
 import {
   Deployment,
   DeploymentStrategy,
@@ -49,7 +50,7 @@ export function createRedlibDeployment(chart: Chart) {
 
   new TailscaleIngress(chart, "redlib-tailscale-ingress", {
     service,
-    host: "redlib",
+    host: tailnetService("redlib"),
     // "/" proxies Reddit's front page, so it fails whenever Reddit refuses
     // the instance (it now answers 403, which redlib renders as 404). The
     // settings page is served locally and proves the process is up; Delivery

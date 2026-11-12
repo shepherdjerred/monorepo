@@ -61,6 +61,8 @@ const DeploymentManifest = z.looseObject({
 
 // A claim must be listed in the backup policy, so the fixtures borrow real
 // ones rather than widen the policy: Prowlarr's, and Syncthing's pair.
+import { tailnetService } from "homelab/src/platform-model.ts";
+
 const base: LinuxServerAppProps = {
   name: "prowlarr",
   image: "ghcr.io/linuxserver/example:1",
@@ -310,7 +312,9 @@ describe("LinuxServerApp workload", () => {
 
 describe("LinuxServerApp exposure", () => {
   test("a tailnet host is an Ingress on the Service with a blackbox probe", () => {
-    const { identities, of } = render({ tailscale: { host: "prowlarr" } });
+    const { identities, of } = render({
+      tailscale: { host: tailnetService("prowlarr") },
+    });
     expect(identities.at(-1)).toBe(
       "Ingress/media-prowlarr-tailscale-ingress-ingress",
     );
@@ -330,7 +334,7 @@ describe("LinuxServerApp exposure", () => {
 
   test("a proxy class labels the Ingress", () => {
     const { of } = render({
-      tailscale: { host: "prowlarr", proxyClass: "medium" },
+      tailscale: { host: tailnetService("prowlarr"), proxyClass: "medium" },
     });
     expect(of("Ingress")[0]?.metadata.labels).toEqual({
       "tailscale.com/proxy-class": "medium",
@@ -339,7 +343,7 @@ describe("LinuxServerApp exposure", () => {
 
   test("policies select the namespace and render last, typed by their directions", () => {
     const { app, identities, of } = render({
-      tailscale: { host: "prowlarr" },
+      tailscale: { host: tailnetService("prowlarr") },
       policies: [
         { name: "app-ingress-netpol", ingress: [tailscaleIngressRule()] },
         { name: "app-egress-netpol", egress: [dnsEgressRule()] },

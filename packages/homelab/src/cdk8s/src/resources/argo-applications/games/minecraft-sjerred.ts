@@ -1,4 +1,5 @@
 import type { Chart } from "cdk8s";
+import { tailnetService } from "homelab/src/platform-model.ts";
 import { createMinecraftProxyTrust } from "@shepherdjerred/homelab/cdk8s/src/misc/minecraft/proxy-trust.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import {
@@ -84,7 +85,7 @@ export function createMinecraftSjerredResources(chart: Chart): void {
     namespace: NAMESPACE,
     service: "minecraft-sjerred-dynmap",
     port: 8123,
-    hosts: ["minecraft-sjerred-dynmap"],
+    hosts: [tailnetService("minecraft-sjerred-dynmap")],
     // The server statefulset hibernates at 0 replicas (mc-router wake-on-join),
     // so a synthetic probe only measures sleep: 60s failures around the clock.
     disableProbe: true,

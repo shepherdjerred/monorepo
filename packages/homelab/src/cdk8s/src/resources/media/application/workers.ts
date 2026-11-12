@@ -1,4 +1,5 @@
 import { temporalAddressEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/address.ts";
+import { tailnetService } from "homelab/src/platform-model.ts";
 import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
 import {
@@ -75,7 +76,7 @@ export function createMediaActivityWorkers(
       POSTAL_HOST: EnvValue.fromValue(
         "http://postal-postal-web-service.postal.svc.cluster.local:5000",
       ),
-      POSTAL_HOST_HEADER: EnvValue.fromValue("postal.tailnet-1a49.ts.net"),
+      POSTAL_HOST_HEADER: EnvValue.fromValue(tailnetService("postal").fqdn),
       PLEX_SERVER_URL: EnvValue.fromValue(
         `http://${props.plex.serviceName}.media.svc.cluster.local:32400`,
       ),

@@ -1,4 +1,5 @@
 import type { Chart } from "cdk8s";
+import { tailnetService } from "homelab/src/platform-model.ts";
 import { ApiObject, JsonPatch, Size } from "cdk8s";
 import {
   Capability,
@@ -216,7 +217,7 @@ export function createStashDeployment(chart: Chart) {
 
   new TailscaleIngress(chart, "stash-ingress", {
     service,
-    host: "stash",
+    host: tailnetService("stash"),
     proxyClass: "medium",
     probePath: "/healthz",
   });

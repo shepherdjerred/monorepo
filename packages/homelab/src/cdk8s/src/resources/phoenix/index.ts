@@ -1,4 +1,5 @@
 import type { Chart } from "cdk8s";
+import { tailnetService } from "homelab/src/platform-model.ts";
 import { Size } from "cdk8s";
 import {
   Cpu,
@@ -103,9 +104,7 @@ export function createPhoenixDeployment(chart: Chart) {
         }),
         PHOENIX_SQL_DATABASE_URL: EnvValue.fromValue(buildPgUrl()),
         PHOENIX_WORKING_DIR: EnvValue.fromValue("/data"),
-        PHOENIX_ROOT_URL: EnvValue.fromValue(
-          "https://phoenix.tailnet-1a49.ts.net",
-        ),
+        PHOENIX_ROOT_URL: EnvValue.fromValue(tailnetService("phoenix").origin),
 
         PHOENIX_ENABLE_AUTH: EnvValue.fromValue("true"),
         PHOENIX_USE_SECURE_COOKIES: EnvValue.fromValue("true"),
@@ -193,7 +192,7 @@ export function createPhoenixDeployment(chart: Chart) {
 
   new TailscaleIngress(chart, "phoenix-tailscale-ingress", {
     service,
-    host: "phoenix",
+    host: tailnetService("phoenix"),
     probePath: "/healthz",
   });
 

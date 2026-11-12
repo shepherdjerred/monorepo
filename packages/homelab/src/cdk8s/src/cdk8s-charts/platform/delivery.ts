@@ -1,4 +1,5 @@
 import { Chart, Duration, Size, type App } from "cdk8s";
+import { tailnetService } from "homelab/src/platform-model.ts";
 import {
   Capability,
   ConfigMap,
@@ -165,9 +166,7 @@ export function createDeliveryChart(
         HOST: EnvValue.fromValue("0.0.0.0"),
         PORT: EnvValue.fromValue("7353"),
         HOME: EnvValue.fromValue("/tmp"),
-        PUBLIC_ORIGIN: EnvValue.fromValue(
-          "https://delivery.tailnet-1a49.ts.net",
-        ),
+        PUBLIC_ORIGIN: EnvValue.fromValue(tailnetService("delivery").origin),
         ENVIRONMENT: EnvValue.fromValue("production"),
         DELIVERY_MACHINE_CREDENTIALS: EnvValue.fromSecretValue({
           secret: bootstrap,
@@ -221,11 +220,8 @@ export function createDeliveryChart(
     ports: [{ name: "http", port: 7353 }],
   });
   new TailscaleIngress(chart, "operator-ingress", {
-    metadata: {
-      name: DELIVERY_TAILSCALE_INGRESS.name,
-      annotations: { "tailscale.com/tags": "tag:delivery" },
-    },
-    host: "delivery",
+    metadata: { name: DELIVERY_TAILSCALE_INGRESS.name },
+    host: tailnetService("delivery"),
     service,
     port: 7353,
     probePath: "/healthz",

@@ -7,6 +7,8 @@ import {
 } from "cdk8s-plus-31";
 import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
+import { tailnetService } from "homelab/src/platform-model.ts";
+import { tailnetTags } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import {
   setRevisionHistoryLimit,
   withCommonProps,
@@ -52,7 +54,9 @@ export function createGolinkDeployment(chart: Chart) {
           secret: Secret.fromSecretName(chart, "tailscale-auth-key", item.name),
           key: "client_secret",
         }),
-        TS_ADVERTISE_TAGS: EnvValue.fromValue("tag:k8s-operator"),
+        TS_ADVERTISE_TAGS: EnvValue.fromValue(
+          tailnetTags(tailnetService("go")),
+        ),
       },
       securityContext: {
         user: UID,

@@ -1,4 +1,5 @@
 import type { Chart } from "cdk8s";
+import { tailnetService } from "homelab/src/platform-model.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { Namespace } from "cdk8s-plus-31";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
@@ -318,7 +319,7 @@ export function createAlloyGatewayResources(chart: Chart): OnePasswordItem {
     namespace: "alloy-gateway",
     service: "alloy-gateway",
     port: TAILNET_METRICS_PORT,
-    hosts: ["otlp-metrics"],
+    hosts: [tailnetService("otlp-metrics")],
     probeModule: "tcp_connect",
   });
   return monitoringAuth;

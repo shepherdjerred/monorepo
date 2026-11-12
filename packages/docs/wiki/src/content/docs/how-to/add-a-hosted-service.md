@@ -102,7 +102,10 @@ service's name throughout.
 
 5. For a web service, declare its tailnet host in
    [`platform-model.json`](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/platform-model.json),
-   beside the `tracker` host.
+   beside the `tracker` host, and replace the prepared `host` entry in
+   `resources/notes/index.ts` with `tailnetService("notes")`, imported from
+   `homelab/src/platform-model.ts`. The lookup fails synthesis for a host the
+   model does not declare.
 
 6. Delete the service's line from `chartsWithoutRecipe` in
    `scripts/checks/service-registration-exemptions.json`.

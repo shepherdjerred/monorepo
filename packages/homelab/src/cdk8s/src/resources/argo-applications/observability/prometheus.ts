@@ -1,4 +1,5 @@
 import type { Chart } from "cdk8s";
+import { tailnetService } from "homelab/src/platform-model.ts";
 import { Size } from "cdk8s";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
@@ -207,7 +208,7 @@ export async function createPrometheusApp(chart: Chart) {
       service: { targetPort: ALERTMANAGER_GATEWAY_PORT },
       alertmanagerSpec: {
         listenLocal: true,
-        externalUrl: "https://alertmanager.tailnet-1a49.ts.net",
+        externalUrl: tailnetService("alertmanager").origin,
         // Alertmanager's active-alert state is in-memory only (the PVC persists
         // just nflog/silences), so when it dies mid-outage, resolve events for
         // alerts that clear during the gap are never sent and the Alerts ledger
@@ -421,7 +422,7 @@ export async function createPrometheusApp(chart: Chart) {
       service: { targetPort: PROMETHEUS_GATEWAY_PORT },
       prometheusSpec: {
         listenLocal: true,
-        externalUrl: "https://prometheus.tailnet-1a49.ts.net",
+        externalUrl: tailnetService("prometheus").origin,
         retention: "365d", // Keep data for 1 year
         retentionSize: "200GB", // Safety limit - keep headroom below PVC usage alerts
         // Baseline request so Prometheus isn't BestEffort (first evicted under

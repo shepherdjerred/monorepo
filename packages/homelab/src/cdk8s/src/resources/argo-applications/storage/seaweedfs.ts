@@ -1,4 +1,5 @@
 import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { tailnetService } from "homelab/src/platform-model.ts";
 import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
 import {
@@ -125,7 +126,7 @@ export function createSeaweedfsResources(chart: Chart): void {
     namespace: "seaweedfs",
     service: "seaweedfs-s3",
     port: 8333,
-    hosts: ["seaweedfs-s3"],
+    hosts: [tailnetService("seaweedfs-s3")],
     proxyClass: "heavy",
     // Anonymous "/" is a denied S3 ListBuckets (403); /status is the S3
     // gateway's unauthenticated health endpoint.
@@ -194,7 +195,7 @@ export function createSeaweedfsResources(chart: Chart): void {
     namespace: "seaweedfs",
     service: "seaweedfs-filer-ui",
     port: FILER_UPSTREAM_PORT,
-    hosts: ["seaweedfs-filer"],
+    hosts: [tailnetService("seaweedfs-filer")],
     probePath: "/health",
   });
 }

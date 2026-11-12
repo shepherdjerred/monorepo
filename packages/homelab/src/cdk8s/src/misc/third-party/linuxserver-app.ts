@@ -1,4 +1,5 @@
 import type { Size } from "cdk8s";
+import type { TailnetService } from "homelab/src/platform-model.ts";
 import {
   Deployment,
   DeploymentStrategy,
@@ -106,7 +107,7 @@ export type LinuxServerAppProps = {
    */
   extend?: (claimVolumes: Volume[]) => LinuxServerAppExtension;
   /** The tailnet hostname the Service is reached on. */
-  tailscale?: { host: string; proxyClass?: TailscaleProxyClass };
+  tailscale?: { host: TailnetService; proxyClass?: TailscaleProxyClass };
   /** The namespace's policies, rendered in order after the ingress. */
   policies?: LinuxServerNetworkPolicy[];
 };

@@ -1,4 +1,5 @@
 import { temporalAddressEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/address.ts";
+import { tailnetService } from "homelab/src/platform-model.ts";
 import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { Chart } from "cdk8s";
 import { Duration } from "cdk8s";
@@ -69,7 +70,7 @@ export function createTemporalUiDeployment(
           TEMPORAL_UI_UPSTREAM_PORT.toString(),
         ),
         TEMPORAL_CORS_ORIGINS: EnvValue.fromValue(
-          "https://temporal-ui.tailnet-1a49.ts.net",
+          tailnetService("temporal-ui").origin,
         ),
       },
       ...temporalUtilityContainerDefaults(),
@@ -120,7 +121,7 @@ export function createTemporalUiDeployment(
 
   new TailscaleIngress(chart, "temporal-ui-tailscale-ingress", {
     service,
-    host: "temporal-ui",
+    host: tailnetService("temporal-ui"),
     probePath: "/health",
   });
 

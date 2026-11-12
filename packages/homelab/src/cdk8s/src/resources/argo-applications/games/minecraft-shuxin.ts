@@ -1,4 +1,5 @@
 import type { Chart } from "cdk8s";
+import { tailnetService } from "homelab/src/platform-model.ts";
 import { createMinecraftProxyTrust } from "@shepherdjerred/homelab/cdk8s/src/misc/minecraft/proxy-trust.ts";
 import { Size } from "cdk8s";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
@@ -40,7 +41,7 @@ export function createMinecraftShuxinResources(chart: Chart): void {
     namespace: "minecraft-shuxin",
     service: "minecraft-shuxin-bluemap",
     port: 8100,
-    hosts: ["minecraft-shuxin-bluemap"],
+    hosts: [tailnetService("minecraft-shuxin-bluemap")],
     // The server statefulset hibernates at 0 replicas (mc-router wake-on-join),
     // so a synthetic probe only measures sleep: 60s failures around the clock.
     disableProbe: true,

@@ -1,4 +1,5 @@
 import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { tailnetService } from "homelab/src/platform-model.ts";
 import { DeploymentStrategy, EnvValue, Probe, Secret } from "cdk8s-plus-31";
 import type { Chart } from "cdk8s";
 import { Cpu } from "cdk8s-plus-31";
@@ -185,7 +186,7 @@ export function createTasknotesDeployment(chart: Chart) {
       // "/" is AUTH_TOKEN-gated (401); /api/health is the unauthenticated
       // health endpoint (same one the container's k8s probes use).
       probePath: "/api/health",
-      hosts: [{ id: "tasknotes-ingress", host: "tasknotes" }],
+      hosts: [{ id: "tasknotes-ingress", host: tailnetService("tasknotes") }],
     },
     policies: [
       // Allow ingress from Tailscale (mobile app via Tailscale)

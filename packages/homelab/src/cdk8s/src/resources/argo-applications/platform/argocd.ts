@@ -1,4 +1,5 @@
 import type { Chart } from "cdk8s";
+import { tailnetService } from "homelab/src/platform-model.ts";
 import {
   deliveryArgoPolicy,
   deliveryArgoAccounts,
@@ -161,7 +162,7 @@ export function createArgoCdResources(chart: Chart): void {
     namespace: "argocd",
     service: "argocd-server",
     port: 443,
-    hosts: ["argocd"],
+    hosts: [tailnetService("argocd")],
     proxyClass: "medium",
     // argocd-server's in-cluster cert is self-signed (see the noTlsVerify
     // comment below) — the blackbox probe needs the same TLS-skip treatment.
@@ -212,7 +213,7 @@ export function createArgoCdApp(chart: Chart) {
 
   const argoCdValues: HelmValuesForChart<"argo-cd"> = {
     global: {
-      domain: "argocd.tailnet-1a49.ts.net",
+      domain: tailnetService("argocd").fqdn,
     },
     // Baseline requests (no limits) so ArgoCD isn't BestEffort — without them the
     // GitOps layer is first in line for eviction under memory pressure. Values

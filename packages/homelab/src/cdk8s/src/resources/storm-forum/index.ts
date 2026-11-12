@@ -2,6 +2,11 @@ import { createForumCredentials } from "./credentials.ts";
 import fs from "node:fs";
 import path from "node:path";
 import { Chart, type App } from "cdk8s";
+import {
+  tailnetFqdn,
+  tailnetService,
+  type TailnetService,
+} from "homelab/src/platform-model.ts";
 import { Pods, Service } from "cdk8s-plus-31";
 import {
   IntOrString,
@@ -322,15 +327,22 @@ export function createStormForumChart(
     selector,
     ports: [{ port: 8081, name: "admin" }],
   });
+  // The beta stage has no release, so nothing renders its two tailnet names
+  // and the platform model cannot declare them (it holds only what both sides
+  // render). Production names come from the model.
+  const tailnetHost = (host: string): TailnetService =>
+    release.stage === "beta"
+      ? { host, namespace, exposure: "ingress" }
+      : tailnetService(host);
   new TailscaleIngress(chart, "admin", {
-    host: `${namespace}-admin`,
+    host: tailnetHost(`${namespace}-admin`),
     service: adminService,
     port: 8081,
     probeModule: "tcp_connect",
   });
   if (release.stage === "beta") {
     new TailscaleIngress(chart, "staging", {
-      host: namespace,
+      host: tailnetHost(namespace),
       service,
       port: 8080,
       probePath: "/readyz",
@@ -371,7 +383,7 @@ export function createStormForumChart(
                   name: "FORUM_URL",
                   value:
                     release.stage === "beta"
-                      ? "https://storm-forum-beta.tailnet-1a49.ts.net"
+                      ? `https://${tailnetFqdn("storm-forum-beta")}`
                       : "https://ts-mc.net",
                 },
               ],

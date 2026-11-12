@@ -1,4 +1,5 @@
 import type { Chart } from "cdk8s";
+import { tailnetService } from "homelab/src/platform-model.ts";
 import { Size } from "cdk8s";
 import { IntOrString } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import {
@@ -35,7 +36,7 @@ export function createSyncthingDeployment(chart: Chart) {
     // Deliberately BestEffort (no requests/limits) — negligible or
     // non-critical usage; see the 2026-06-12 right-sizing plan.
     resources: {},
-    tailscale: { host: "syncthing" },
+    tailscale: { host: tailnetService("syncthing") },
     policies: [
       {
         // Allow ingress from Tailscale only

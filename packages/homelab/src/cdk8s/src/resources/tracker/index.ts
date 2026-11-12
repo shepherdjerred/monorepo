@@ -1,4 +1,5 @@
 import type { Chart } from "cdk8s";
+import { tailnetService } from "homelab/src/platform-model.ts";
 import { Size } from "cdk8s";
 import { Cpu, DeploymentStrategy, EnvValue, Secret } from "cdk8s-plus-31";
 import { restrictedContainer } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
@@ -100,7 +101,7 @@ export function createTrackerDeployment(chart: Chart, image: string) {
     serviceName: "tracker",
     tailscale: {
       probePath: "/readyz",
-      hosts: [{ id: "tracker-ingress", host: "tracker" }],
+      hosts: [{ id: "tracker-ingress", host: tailnetService("tracker") }],
     },
     policies: [
       {

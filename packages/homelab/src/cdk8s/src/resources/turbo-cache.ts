@@ -1,4 +1,5 @@
 import type { Chart } from "cdk8s";
+import { tailnetService } from "homelab/src/platform-model.ts";
 import { Duration, Size } from "cdk8s";
 import {
   Cpu,
@@ -192,7 +193,7 @@ export function createTurboCacheDeployment(chart: Chart) {
   // machines and in-cluster CI agents on the tailnet.
   new TailscaleIngress(chart, "turbo-cache-tailscale-ingress", {
     service,
-    host: "turbo-cache",
+    host: tailnetService("turbo-cache"),
     // Its proxy's measured p95 working set is 123Mi (7d, 2026-10-31).
     proxyClass: "heavy",
     // "/" has no route (404); /v8/artifacts/status answers 200 without a

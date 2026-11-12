@@ -1,4 +1,5 @@
 import { EnvValue, type ISecret } from "cdk8s-plus-31";
+import { tailnetService } from "homelab/src/platform-model.ts";
 
 /**
  * Environment for the ops-snapshot collector and digest trigger on the infra
@@ -24,9 +25,7 @@ export function opsSnapshotEnv(secret: ISecret): Record<string, EnvValue> {
     TRACKER_URL: EnvValue.fromValue(
       "http://tracker.tracker.svc.cluster.local:7351",
     ),
-    TRACKER_PUBLIC_URL: EnvValue.fromValue(
-      "https://tracker.tailnet-1a49.ts.net",
-    ),
+    TRACKER_PUBLIC_URL: EnvValue.fromValue(tailnetService("tracker").origin),
     POSTHOG_PERSONAL_API_KEY: EnvValue.fromSecretValue({
       secret,
       key: "POSTHOG_PERSONAL_API_KEY",

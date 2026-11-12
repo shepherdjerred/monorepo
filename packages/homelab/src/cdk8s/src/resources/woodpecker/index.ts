@@ -1,4 +1,5 @@
 import type { Chart } from "cdk8s";
+import { tailnetService } from "homelab/src/platform-model.ts";
 import { Size } from "cdk8s";
 import {
   Cpu,
@@ -243,7 +244,9 @@ export function createWoodpeckerServer(chart: Chart) {
   new KubeService(chart, "woodpecker-grpc-service", {
     metadata: {
       name: "woodpecker-grpc",
-      annotations: { "tailscale.com/hostname": "woodpecker-grpc" },
+      annotations: {
+        "tailscale.com/hostname": tailnetService("woodpecker-grpc").host,
+      },
     },
     spec: {
       type: "LoadBalancer",
@@ -305,7 +308,7 @@ export function createWoodpeckerServer(chart: Chart) {
 
   new TailscaleIngress(chart, "woodpecker-tailscale-ingress", {
     service,
-    host: "woodpecker",
+    host: tailnetService("woodpecker"),
     port: WOODPECKER_HTTP_PORT,
   });
 

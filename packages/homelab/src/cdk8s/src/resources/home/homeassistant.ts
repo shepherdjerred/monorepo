@@ -7,6 +7,7 @@ import {
   Service,
   Volume,
 } from "cdk8s-plus-31";
+import { tailnetService } from "homelab/src/platform-model.ts";
 import type { Chart } from "cdk8s";
 import { ApiObject, JsonPatch, Size } from "cdk8s";
 import {
@@ -168,7 +169,7 @@ export async function createHomeAssistantDeployment(chart: Chart) {
 
   new TailscaleIngress(chart, "homeassistant-tailscale-ingress", {
     service,
-    host: "homeassistant",
+    host: tailnetService("homeassistant"),
   });
 
   createCloudflareTunnelBinding(chart, "homeassistant-cf-tunnel", {

@@ -1,4 +1,5 @@
 import type { Chart } from "cdk8s";
+import { tailnetService } from "homelab/src/platform-model.ts";
 import { Size } from "cdk8s";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
@@ -115,7 +116,7 @@ groups:
         annotations:
           summary: "Home Assistant error logs detected"
           description: "Home Assistant has logged {{ "{{" }} $value {{ "}}" }} errors in the last 5 minutes."
-          runbook_url: "https://grafana.tailnet-1a49.ts.net/explore?schemaVersion=1&panes=%7B%22v1d%22:%7B%22datasource%22:%22loki%22,%22queries%22:%5B%7B%22refId%22:%22A%22,%22expr%22:%22%7Bapp%3D%5C%22homeassistant%5C%22%7D%20%7C~%20%5C%22(?i)(error%7Cexception%7Cfailed%7Cfailure)%5C%22%22%7D%5D%7D%7D"
+          runbook_url: "${tailnetService("grafana").origin}/explore?schemaVersion=1&panes=%7B%22v1d%22:%7B%22datasource%22:%22loki%22,%22queries%22:%5B%7B%22refId%22:%22A%22,%22expr%22:%22%7Bapp%3D%5C%22homeassistant%5C%22%7D%20%7C~%20%5C%22(?i)(error%7Cexception%7Cfailed%7Cfailure)%5C%22%22%7D%5D%7D%7D"
       - alert: HomeAssistantWarningLogs
         expr: |
           sum by (app) (
@@ -136,7 +137,7 @@ groups:
         annotations:
           summary: "Home Assistant integration setup failed"
           description: "A Home Assistant integration failed to set up. Check logs for details."
-          runbook_url: "https://grafana.tailnet-1a49.ts.net/explore?schemaVersion=1&panes=%7B%22v1d%22:%7B%22datasource%22:%22loki%22,%22queries%22:%5B%7B%22refId%22:%22A%22,%22expr%22:%22%7Bapp%3D%5C%22homeassistant%5C%22%7D%20%7C~%20%5C%22(?i)(setup%20failed%7Cintegration%20.*%20failed%7Cunable%20to%20set%20up)%5C%22%22%7D%5D%7D%7D"
+          runbook_url: "${tailnetService("grafana").origin}/explore?schemaVersion=1&panes=%7B%22v1d%22:%7B%22datasource%22:%22loki%22,%22queries%22:%5B%7B%22refId%22:%22A%22,%22expr%22:%22%7Bapp%3D%5C%22homeassistant%5C%22%7D%20%7C~%20%5C%22(?i)(setup%20failed%7Cintegration%20.*%20failed%7Cunable%20to%20set%20up)%5C%22%22%7D%5D%7D%7D"
 `;
 
 // Loki alerting rules for TaskNotes logs
@@ -271,7 +272,7 @@ export function createLokiResources(chart: Chart): void {
     namespace: "loki",
     service: "loki",
     port: 3100,
-    hosts: ["loki"],
+    hosts: [tailnetService("loki")],
     proxyClass: "medium",
     // Loki returns 404 at "/"; its readiness endpoint is /ready.
     probePath: "/ready",

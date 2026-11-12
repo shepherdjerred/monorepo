@@ -6,6 +6,7 @@ import {
   Secret,
   Volume,
 } from "cdk8s-plus-31";
+import { tailnetService } from "homelab/src/platform-model.ts";
 import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
 import {
@@ -170,6 +171,6 @@ export function createBazarrDeployment(
         limit: Size.gibibytes(3),
       },
     },
-    tailscale: { host: "bazarr", proxyClass: "medium" },
+    tailscale: { host: tailnetService("bazarr"), proxyClass: "medium" },
   });
 }

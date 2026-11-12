@@ -9,6 +9,7 @@ import {
   Service,
   Volume,
 } from "cdk8s-plus-31";
+import { tailnetService } from "homelab/src/platform-model.ts";
 import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
 import {
@@ -119,11 +120,11 @@ export function createPostalDeployment(
     }),
 
     // Web server configuration
-    POSTAL_WEB_HOSTNAME: EnvValue.fromValue("postal.tailnet-1a49.ts.net"),
+    POSTAL_WEB_HOSTNAME: EnvValue.fromValue(tailnetService("postal").fqdn),
     POSTAL_WEB_PROTOCOL: EnvValue.fromValue("https"),
 
     // SMTP server hostname (for outbound mail identification)
-    POSTAL_SMTP_HOSTNAME: EnvValue.fromValue("postal.tailnet-1a49.ts.net"),
+    POSTAL_SMTP_HOSTNAME: EnvValue.fromValue(tailnetService("postal").fqdn),
 
     // Postal checks the sending domain's SPF record for this relay provider.
     DNS_SPF_INCLUDE: EnvValue.fromValue("spf.messagingengine.com"),
@@ -413,7 +414,7 @@ export function createPostalDeployment(
         ALLOWED_SENDER_DOMAINS: EnvValue.fromValue("*"),
         // TLS configuration for outbound to Fastmail
         POSTFIX_smtp_tls_security_level: EnvValue.fromValue("encrypt"),
-        POSTFIX_myhostname: EnvValue.fromValue("postal.tailnet-1a49.ts.net"),
+        POSTFIX_myhostname: EnvValue.fromValue(tailnetService("postal").fqdn),
         // Allow relaying to any recipient from trusted networks (localhost)
         POSTFIX_smtpd_recipient_restrictions: EnvValue.fromValue(
           "permit_mynetworks,reject",
@@ -476,7 +477,7 @@ export function createPostalDeployment(
     namespace: "postal",
     service: webService.name,
     port: 5000,
-    hosts: ["postal"],
+    hosts: [tailnetService("postal")],
     // The Rails web UI 403s every path when addressed by the in-cluster
     // service DNS name (host allowlist), so no HTTP path can pass from the
     // blackbox exporter — TCP connect is the strongest verifiable signal.

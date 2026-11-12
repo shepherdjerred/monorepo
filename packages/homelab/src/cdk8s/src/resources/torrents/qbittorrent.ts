@@ -10,6 +10,7 @@ import {
   Service,
   Volume,
 } from "cdk8s-plus-31";
+import { tailnetService } from "homelab/src/platform-model.ts";
 import type { Chart } from "cdk8s";
 import { Duration, Size } from "cdk8s";
 import { fileURLToPath } from "node:url";
@@ -365,7 +366,7 @@ export function createQBitTorrentDeployment(
 
   new TailscaleIngress(chart, "qbittorrent-tailscale-ingress", {
     service,
-    host: "qbittorrent",
+    host: tailnetService("qbittorrent"),
   });
 
   // Create ServiceMonitor for Prometheus to scrape qBittorrent metrics

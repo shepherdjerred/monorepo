@@ -1,4 +1,5 @@
 import type { Chart } from "cdk8s";
+import { tailnetService } from "homelab/src/platform-model.ts";
 import { Size } from "cdk8s";
 import { Cpu, EnvValue, type ISecret, Pods } from "cdk8s-plus-31";
 import { createTemporalDomainWorker } from "./domain-worker.ts";
@@ -109,7 +110,7 @@ export function createTemporalIngressWorkers(
         "home",
         "temporal-home-worker",
       ),
-      HA_URL: EnvValue.fromValue("https://homeassistant.tailnet-1a49.ts.net"),
+      HA_URL: EnvValue.fromValue(tailnetService("homeassistant").origin),
       HA_TOKEN: EnvValue.fromSecretValue({
         secret: props.secret,
         key: "HA_TOKEN",
@@ -143,7 +144,7 @@ export function createTemporalIngressWorkers(
       POSTAL_HOST: EnvValue.fromValue(
         "http://postal-postal-web-service.postal.svc.cluster.local:5000",
       ),
-      POSTAL_HOST_HEADER: EnvValue.fromValue("postal.tailnet-1a49.ts.net"),
+      POSTAL_HOST_HEADER: EnvValue.fromValue(tailnetService("postal").fqdn),
       POSTAL_API_KEY: EnvValue.fromSecretValue({
         secret: props.secret,
         key: "POSTAL_API_KEY",

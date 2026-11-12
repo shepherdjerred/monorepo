@@ -17,7 +17,10 @@ import {
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
-import type { PublicHostname } from "homelab/src/platform-model.ts";
+import type {
+  PublicHostname,
+  TailnetService,
+} from "homelab/src/platform-model.ts";
 import { httpProbes } from "./kubelet-probes.ts";
 import {
   createFirstPartyNetworkPolicies,
@@ -49,7 +52,7 @@ export type FirstPartyServerContainer = Omit<
  * A tailnet hostname. `id` is the `TailscaleIngress` construct id, which seeds
  * the Ingress name.
  */
-export type FirstPartyTailscaleHost = { id: string; host: string };
+export type FirstPartyTailscaleHost = { id: string; host: TailnetService };
 
 export type FirstPartyWebServiceProps = {
   /**

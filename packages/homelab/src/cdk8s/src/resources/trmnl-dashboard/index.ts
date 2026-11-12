@@ -1,4 +1,5 @@
 import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { tailnetService } from "homelab/src/platform-model.ts";
 import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
 import { Cpu, EnvValue, Secret, ServiceAccount } from "cdk8s-plus-31";
@@ -62,9 +63,7 @@ export function createTrmnlDashboardDeployment(chart: Chart) {
             secret,
             key: "TRMNL_API_KEY",
           }),
-          HA_URL: EnvValue.fromValue(
-            "https://homeassistant.tailnet-1a49.ts.net",
-          ),
+          HA_URL: EnvValue.fromValue(tailnetService("homeassistant").origin),
           HA_TOKEN: EnvValue.fromSecretValue({
             secret,
             key: "HA_TOKEN",
