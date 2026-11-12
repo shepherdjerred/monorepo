@@ -11,6 +11,7 @@ import {
   deliveryJobManifest,
   assertMatchingDeliveryJob,
 } from "./job-manifest.ts";
+import { requireExecutableDeliveryJobRequest } from "./job-request-limit.ts";
 import {
   DELIVERY_JOB_RESULT_PREFIX,
   DeliveryJobReceiptSchema,
@@ -167,6 +168,7 @@ export async function runDeliveryJob(
   const config = runtime.kubernetes;
   const jobs = config.makeApiClient(BatchV1Api);
   const pods = config.makeApiClient(CoreV1Api);
+  requireExecutableDeliveryJobRequest(input);
   const expected = deliveryJobManifest(input);
   const namespace = z.string().parse(expected.metadata?.namespace);
   const name = z.string().parse(expected.metadata?.name);

@@ -88,6 +88,17 @@ function selections() {
   return { detail, restored };
 }
 
+/** `record` with the host of `buildId` retired to zero replicas in its frozen pool. */
+function retired(record: DeploymentDetail, buildId: string) {
+  const copy = structuredClone(record);
+  for (const worker of copy.deployment.workerSnapshot?.versions ?? [])
+    if (worker.buildId === buildId) {
+      worker.replicas = 0;
+      worker.retiredAt = "2026-10-31T00:00:00.000Z";
+    }
+  return copy;
+}
+
 describe("accepted worker restoration", () => {
   test("requires the exact accepted deployment, selection, image and retained host", () => {
     const { detail, restored } = selections();
@@ -155,6 +166,23 @@ describe("accepted worker restoration", () => {
     );
     promotion.deployment.restoredDeploymentId = null;
     expect(workerAcceptanceMode(promotion, null)).toBe("prerequisite");
+  });
+
+  test("freezes only live hosts of both pools and still refuses a retired restored host", () => {
+    const { detail, restored } = selections();
+    const input = workerRoutingInput(
+      retired(detail, STABLE),
+      retired(restored, STABLE),
+    );
+    for (const frozen of [input.detail, input.restored])
+      expect(
+        frozen?.deployment.workerSnapshot?.versions.map(
+          (worker) => worker.buildId,
+        ),
+      ).toEqual([CANDIDATE]);
+    expect(() =>
+      workerRoutingInput(detail, retired(restored, CANDIDATE)),
+    ).toThrow();
   });
 
   test("restores after beta advances while preserving image, replay, poller and canary checks", async () => {

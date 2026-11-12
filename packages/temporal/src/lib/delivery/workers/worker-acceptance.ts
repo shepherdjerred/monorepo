@@ -4,7 +4,7 @@ import {
   WorkerRolloutSnapshotSchema,
   type DeploymentDetail,
 } from "@shepherdjerred/delivery/contract";
-import { workerRolloutTarget } from "./worker-pool.ts";
+import { workerRolloutTarget, withStageWorkerPool } from "./worker-pool.ts";
 
 /** Job input retains the immutable request identity and the restored acceptance. */
 export const WorkerRoutingSnapshotSchema = WorkerRolloutSnapshotSchema.extend({
@@ -130,12 +130,19 @@ function requireRestoredImage(
     throw new Error("Rollback image lacks matching accepted worker evidence");
 }
 
-/** Both values come from authenticated Delivery reads, then freeze into the Job. */
+/**
+ * Both values come from authenticated Delivery reads, then freeze into the
+ * Job with only their live hosts: routing and restored acceptance read no
+ * retired one (see stageWorkerPool).
+ */
 export function workerRoutingInput(
   detail: DeploymentDetail,
   restored: DeploymentDetail | null,
 ) {
-  const input = WorkerRoutingInputSchema.parse({ detail, restored });
+  const input = WorkerRoutingInputSchema.parse({
+    detail: withStageWorkerPool(detail),
+    restored: restored === null ? null : withStageWorkerPool(restored),
+  });
   workerAcceptanceMode(input.detail, input.restored);
   return input;
 }

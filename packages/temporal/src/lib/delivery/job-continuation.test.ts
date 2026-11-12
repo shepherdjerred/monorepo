@@ -1,6 +1,8 @@
 import { expect, test, vi } from "vitest";
-import { getOrCreateDeliveryJob } from "./job.ts";
+import { KubeConfig } from "@kubernetes/client-node";
+import { getOrCreateDeliveryJob, runDeliveryJob } from "./job.ts";
 import { deliveryJobManifest } from "./job-manifest.ts";
+import { DELIVERY_JOB_REQUEST_MAX_BYTES } from "./job-request-limit.ts";
 
 function fixture() {
   const expected = deliveryJobManifest({
@@ -71,4 +73,38 @@ test("missing or replaced Jobs never recreate side effects, including a persiste
     }),
   ).rejects.toThrow("incarnation");
   expect(create).not.toHaveBeenCalled();
+});
+test("a request its container could never exec is refused before any Kubernetes call", async () => {
+  const kubernetes = new KubeConfig();
+  // Nothing listens here: reaching the API would fail with a connection error.
+  kubernetes.loadFromOptions({
+    clusters: [{ name: "fixture", server: "http://127.0.0.1:9" }],
+    users: [{ name: "fixture" }],
+    contexts: [{ name: "fixture", cluster: "fixture", user: "fixture" }],
+    currentContext: "fixture",
+  });
+  const receipts = vi.fn<() => Promise<void>>();
+  await expect(
+    runDeliveryJob(
+      {
+        deploymentId: "oversized/1",
+        stageKey: "worker-image-provenance",
+        recipe: "worker-images",
+        runnerImage: `docker.io/shepherdjerred/ci-base@sha256:${"a".repeat(64)}`,
+        sourceRevision: "b".repeat(40),
+        input: { pool: "x".repeat(DELIVERY_JOB_REQUEST_MAX_BYTES) },
+      },
+      receipts,
+      undefined,
+      {
+        kubernetes,
+        heartbeat: vi.fn(),
+        cancellationSignal: new AbortController().signal,
+      },
+    ),
+  ).rejects.toMatchObject({
+    type: "DeliveryJobRequestTooLarge",
+    nonRetryable: true,
+  });
+  expect(receipts).not.toHaveBeenCalled();
 });
