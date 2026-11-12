@@ -9,6 +9,8 @@
  * through `toolkit temporal`. See the wiki how-to "Remediate Scout client
  * uploads".
  */
+import { z } from "zod";
+import { createLogger } from "#src/logger.ts";
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { prisma } from "#src/database/index.ts";
 import configuration from "#src/configuration.ts";
@@ -37,11 +39,19 @@ import {
 import {
   applyRemediationPlan,
   buildRemediationPlan,
-  formatRemediationPlan,
-  parseRemediationArgs,
-  type RemediationDeps,
 } from "#src/scout-client/remediation/remediation.ts";
+import { formatRemediationPlan } from "#src/scout-client/remediation/format.ts";
+import { parseRemediationArgs } from "#src/scout-client/remediation/args.ts";
+import type { RemediationDeps } from "#src/scout-client/remediation/deps.ts";
 
+import { storedRawArchiveDescriptor } from "#src/report-lake/durable-receipts.ts";
+import { readArchivedPrematchSnapshot } from "#src/report-lake/receipted-archive.ts";
+
+const PrematchProvenanceSchema = z.object({
+  scoutClientEvidence: z.object({ observationId: z.string() }),
+});
+
+const logger = createLogger("remediate-scout-client-uploads");
 const SOURCE = "scout_client_remediation";
 const ACTOR = "scout-client-remediation";
 
@@ -177,7 +187,7 @@ const deps: RemediationDeps = {
       }),
   },
   log: (line) => {
-    console.log(`  done: ${line}`);
+    logger.info(`  done: ${line}`);
   },
 };
 
@@ -185,14 +195,27 @@ try {
   const plan = await buildRemediationPlan(prisma, scope, {
     hasMatch: async (matchId) =>
       (await deps.riot.fetchMatch(matchId)) !== undefined,
+    prematchSourceObservation: async (matchId) => {
+      const descriptor = await storedRawArchiveDescriptor(
+        prisma,
+        matchId,
+        "prematch",
+      );
+      if (descriptor === null) return null;
+      const snapshot = await readArchivedPrematchSnapshot(descriptor, matchId);
+      const evidence = PrematchProvenanceSchema.safeParse(snapshot);
+      return evidence.success
+        ? evidence.data.scoutClientEvidence.observationId
+        : null;
+    },
   });
-  for (const line of formatRemediationPlan(plan)) console.log(line);
+  for (const line of formatRemediationPlan(plan)) logger.info(line);
   if (apply) {
-    console.log("Applying.");
+    logger.info("Applying.");
     await applyRemediationPlan(prisma, plan, deps);
-    console.log("Applied. Rerun without --apply to confirm nothing remains.");
+    logger.info("Applied. Rerun without --apply to confirm nothing remains.");
   } else {
-    console.log(
+    logger.info(
       "Dry run: nothing changed. Pass --apply to carry out the plan.",
     );
   }

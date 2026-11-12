@@ -1,16 +1,15 @@
-import { z } from "zod";
-import {
-  DiscordAccountIdSchema,
-  type DiscordAccountId,
-  type RawMatch,
-  type RawTimeline,
-} from "@scout-for-lol/data";
+import { type DiscordAccountId, type RawMatch } from "@scout-for-lol/data";
 import {
   RiotMatchIdSchema,
   type RiotMatchId,
 } from "@scout-for-lol/domain/identity/brands.ts";
-import type { ArtifactKind } from "@scout-for-lol/domain/artifacts/descriptors.ts";
+import type {
+  ArtifactKind,
+  LakeArtifactKind,
+} from "@scout-for-lol/domain/artifacts/descriptors.ts";
+import type { RemediationDeps } from "./deps.ts";
 import type { Db } from "#src/database/index.ts";
+import { carriesClientTimeline } from "#src/scout-client/canonical-match.ts";
 import { platformRouteOf } from "#src/durable/match/match-identity.ts";
 import {
   lakeStagingReceiptKind,
@@ -37,6 +36,11 @@ export type RemediationAction =
   | "rederive"
   /** Riot does not have it: remove the client-derived artifacts. */
   | "delete"
+  /**
+   * Riot's result is stored, but a client timeline rides with it: replace the
+   * timeline with Riot's, or remove it when Riot has none.
+   */
+  | "timeline"
   /** Nothing client-derived was stored; only raw observations remain. */
   | "observations-only";
 
@@ -46,6 +50,12 @@ export type RemediationMatch = {
   readonly observationIds: readonly string[];
   /** The match's canonical selection row points at this scope's upload. */
   readonly clientSelected: boolean;
+  /**
+   * A timeline is archived and this scope uploaded a bundle that carries one.
+   * It can be true while the result is Riot's: a client timeline fills in
+   * when Riot has none.
+   */
+  readonly clientTimeline: boolean;
   /** Archive receipts that exist for the match today. */
   readonly archived: {
     readonly match: boolean;
@@ -54,6 +64,11 @@ export type RemediationMatch = {
   };
   /** Accepted post-game uploads for the same game from other devices. */
   readonly otherSuppliers: number;
+};
+
+export type RemediationPrematchSnapshot = {
+  readonly matchId: RiotMatchId;
+  readonly observationId: string;
 };
 
 export type RemediationDevice = {
@@ -71,6 +86,8 @@ export type RemediationPlan = {
   readonly matches: readonly RemediationMatch[];
   /** Prematch (gameflow) observation ids. */
   readonly prematchObservationIds: readonly string[];
+  /** Canonical prematch snapshots that were derived from this scope's uploads. */
+  readonly prematchSnapshots: readonly RemediationPrematchSnapshot[];
   /** Every raw observation that will be deleted, by kind. */
   readonly observationCounts: Readonly<Record<string, number>>;
   readonly observationTotal: number;
@@ -81,6 +98,13 @@ export type RemediationPlan = {
 export type RiotMatchOracle = {
   /** Whether Riot returns the match. Unexpected failures must throw. */
   readonly hasMatch: (matchId: RiotMatchId) => Promise<boolean>;
+  /**
+   * The gameflow observation an archived canonical prematch snapshot was
+   * derived from, or null when Riot's spectator data supplied it.
+   */
+  readonly prematchSourceObservation: (
+    matchId: RiotMatchId,
+  ) => Promise<string | null>;
 };
 
 const ARTIFACT_KINDS: readonly ArtifactKind[] = [
@@ -139,6 +163,7 @@ export async function buildRemediationPlan(
       gameId: true,
       platformId: true,
       disposition: true,
+      payload: true,
     },
     orderBy: { observationId: "asc" },
   });
@@ -148,52 +173,12 @@ export async function buildRemediationPlan(
     observationCounts[row.kind] = (observationCounts[row.kind] ?? 0) + 1;
   }
 
-  const byMatch = new Map<RiotMatchId, string[]>();
-  for (const row of observations) {
-    if (row.kind !== "post_game") continue;
-    const matchId = matchIdOf(row);
-    if (matchId === null) continue;
-    byMatch.set(matchId, [...(byMatch.get(matchId) ?? []), row.observationId]);
-  }
-
-  const matches: RemediationMatch[] = [];
-  for (const [matchId, observationIds] of byMatch) {
-    const canonical = await db.scoutClientCanonicalMatch.findUnique({
-      where: { riotMatchId: matchId },
-      select: { sourceObservationId: true },
-    });
-    const clientSelected =
-      canonical !== null &&
-      observations.some(
-        (row) => row.observationId === canonical.sourceObservationId,
-      );
-    const archived = {
-      match: await hasReceipt(db, matchId, "match"),
-      timeline: await hasReceipt(db, matchId, "timeline"),
-      clientBundle: await hasReceipt(db, matchId, "client_bundle"),
-    };
-    const clientDerived = clientSelected || archived.clientBundle;
-    const action = await actionFor(clientDerived, matchId, oracle);
-    const gameId = matchId.slice(matchId.indexOf("_") + 1);
-    const platform = platformRouteOf(matchId);
-    const otherSuppliers = await db.scoutClientObservation.count({
-      where: {
-        kind: "post_game",
-        disposition: "ACCEPTED",
-        gameId,
-        platformId: { equals: platform, mode: "insensitive" },
-        deviceId: { notIn: deviceIds },
-      },
-    });
-    matches.push({
-      matchId,
-      action,
-      observationIds,
-      clientSelected,
-      archived,
-      otherSuppliers,
-    });
-  }
+  const matches = await planMatches(db, observations, deviceIds, oracle);
+  const prematchSnapshots = await planPrematchSnapshots(
+    db,
+    observations,
+    oracle,
+  );
 
   return {
     scope,
@@ -202,6 +187,7 @@ export async function buildRemediationPlan(
       .filter((device) => device.deviceState === "ACTIVE")
       .map((device) => device.id),
     matches,
+    prematchSnapshots,
     prematchObservationIds: observations
       .filter((row) => row.kind === "gameflow")
       .map((row) => row.observationId),
@@ -213,13 +199,103 @@ export async function buildRemediationPlan(
   };
 }
 
+type ScopedObservation = {
+  readonly observationId: string;
+  readonly kind: string;
+  readonly gameId: string | null;
+  readonly platformId: string | null;
+  readonly payload: unknown;
+};
+
+async function planMatches(
+  db: Db,
+  observations: readonly ScopedObservation[],
+  deviceIds: readonly string[],
+  oracle: RiotMatchOracle,
+): Promise<RemediationMatch[]> {
+  const byMatch = new Map<RiotMatchId, string[]>();
+  const timelineSuppliers = new Set<RiotMatchId>();
+  for (const row of observations) {
+    if (row.kind !== "post_game") continue;
+    const matchId = matchIdOf(row);
+    if (matchId === null) continue;
+    byMatch.set(matchId, [...(byMatch.get(matchId) ?? []), row.observationId]);
+    if (carriesClientTimeline(row.payload)) timelineSuppliers.add(matchId);
+  }
+  const matches: RemediationMatch[] = [];
+  for (const [matchId, observationIds] of byMatch) {
+    const canonical = await db.scoutClientCanonicalMatch.findUnique({
+      where: { riotMatchId: matchId },
+      select: { sourceObservationId: true },
+    });
+    // The bundle receipt is match-wide: it archives the SELECTED observation,
+    // whoever supplied the other observations. The result is this scope's
+    // only when the selection row names one of this scope's uploads.
+    const clientSelected =
+      canonical !== null &&
+      observations.some(
+        (row) => row.observationId === canonical.sourceObservationId,
+      );
+    const archived = {
+      match: await hasReceipt(db, matchId, "match"),
+      timeline: await hasReceipt(db, matchId, "timeline"),
+      clientBundle: await hasReceipt(db, matchId, "client_bundle"),
+    };
+    const clientTimeline = archived.timeline && timelineSuppliers.has(matchId);
+    matches.push({
+      matchId,
+      action: await actionFor(clientSelected, clientTimeline, matchId, oracle),
+      observationIds,
+      clientSelected,
+      clientTimeline,
+      archived,
+      otherSuppliers: await db.scoutClientObservation.count({
+        where: {
+          kind: "post_game",
+          disposition: "ACCEPTED",
+          gameId: matchId.slice(matchId.indexOf("_") + 1),
+          platformId: { equals: platformRouteOf(matchId), mode: "insensitive" },
+          deviceId: { notIn: [...deviceIds] },
+        },
+      }),
+    });
+  }
+  return matches;
+}
+
+async function planPrematchSnapshots(
+  db: Db,
+  observations: readonly ScopedObservation[],
+  oracle: RiotMatchOracle,
+): Promise<RemediationPrematchSnapshot[]> {
+  const gameflow = observations.filter((row) => row.kind === "gameflow");
+  const scoped = new Set(gameflow.map((row) => row.observationId));
+  const matchIds = new Set<RiotMatchId>();
+  for (const row of gameflow) {
+    const matchId = matchIdOf(row);
+    if (matchId !== null) matchIds.add(matchId);
+  }
+  const snapshots: RemediationPrematchSnapshot[] = [];
+  for (const matchId of matchIds) {
+    if (!(await hasReceipt(db, matchId, "prematch"))) continue;
+    const source = await oracle.prematchSourceObservation(matchId);
+    if (source !== null && scoped.has(source)) {
+      snapshots.push({ matchId, observationId: source });
+    }
+  }
+  return snapshots;
+}
+
 async function actionFor(
-  clientDerived: boolean,
+  clientSelected: boolean,
+  clientTimeline: boolean,
   matchId: RiotMatchId,
   oracle: RiotMatchOracle,
 ): Promise<RemediationAction> {
-  if (!clientDerived) return "observations-only";
-  return (await oracle.hasMatch(matchId)) ? "rederive" : "delete";
+  if (clientSelected) {
+    return (await oracle.hasMatch(matchId)) ? "rederive" : "delete";
+  }
+  return clientTimeline ? "timeline" : "observations-only";
 }
 
 async function hasReceipt(
@@ -239,85 +315,11 @@ export function isPlanEmpty(plan: RemediationPlan): boolean {
   return (
     plan.revokeDeviceIds.length === 0 &&
     plan.matches.every((match) => match.action === "observations-only") &&
+    plan.prematchSnapshots.length === 0 &&
     plan.observationTotal === 0 &&
     plan.aliasCount === 0
   );
 }
-
-/** The plan as operator-readable lines. Carries ids only, never payloads. */
-export function formatRemediationPlan(plan: RemediationPlan): string[] {
-  const lines: string[] = [];
-  const scope =
-    plan.scope.kind === "owner"
-      ? `owner ${plan.scope.ownerId}`
-      : `device ${plan.scope.deviceId}`;
-  lines.push(`Scope: ${scope}`);
-  lines.push(`Devices: ${plan.devices.length.toString()}`);
-  for (const device of plan.devices) {
-    lines.push(
-      `  device ${device.id} owner ${device.ownerId} (${device.deviceName}) ${device.deviceState}`,
-    );
-  }
-  lines.push(
-    `1. Revoke ${plan.revokeDeviceIds.length.toString()} active device(s)`,
-  );
-  const timelines = plan.matches.filter(
-    (match) => match.action !== "observations-only" && match.archived.timeline,
-  ).length;
-  lines.push(
-    `Supplied: ${plan.matches.length.toString()} match(es), ${timelines.toString()} client-derived timeline(s), ${plan.prematchObservationIds.length.toString()} prematch observation(s)`,
-  );
-  lines.push("2. Matches");
-  for (const match of plan.matches) {
-    const others =
-      match.otherSuppliers > 0
-        ? ` (${match.otherSuppliers.toString()} other device upload(s) exist)`
-        : "";
-    lines.push(
-      `  ${match.matchId} ${match.action}${others} observations: ${match.observationIds.join(", ")}`,
-    );
-  }
-  lines.push(
-    `3. Delete ${plan.observationTotal.toString()} raw observation(s) ${JSON.stringify(plan.observationCounts)} and ${plan.aliasCount.toString()} learned alias(es)`,
-  );
-  lines.push(
-    "4. Rebuild the report lake, then refresh Hall of Fame and competitions",
-  );
-  return lines;
-}
-
-export type RemediationDeps = {
-  readonly riot: {
-    readonly fetchMatch: (
-      matchId: RiotMatchId,
-    ) => Promise<RawMatch | undefined>;
-    readonly fetchTimeline: (
-      matchId: RiotMatchId,
-    ) => Promise<RawTimeline | undefined>;
-  };
-  /** Deleting a key that does not exist must succeed. */
-  readonly objects: { readonly delete: (key: string) => Promise<void> };
-  readonly ingestMatch: (
-    match: RawMatch,
-    trackedPlayerAliases: string[],
-  ) => Promise<void>;
-  readonly ingestTimeline: (
-    timeline: RawTimeline,
-    trackedPlayerAliases: string[],
-    gameCreatedAt: Date,
-  ) => Promise<void>;
-  /** The existing device revoke path. */
-  readonly revokeDevice: (
-    deviceId: string,
-    ownerId: string,
-  ) => Promise<boolean>;
-  readonly refresh: {
-    readonly rebuildLake: () => Promise<void>;
-    readonly refreshHallOfFame: () => Promise<void>;
-    readonly refreshCompetitions: () => Promise<void>;
-  };
-  readonly log?: (line: string) => void;
-};
 
 async function trackedAliasesFor(db: Db, match: RawMatch): Promise<string[]> {
   const accounts = await db.account.findMany({
@@ -353,6 +355,75 @@ async function removeClientArtifacts(
       },
     },
   });
+}
+
+/** Canonical prematch snapshots derived from the scope's gameflow uploads. */
+async function removePrematchSnapshots(
+  db: Db,
+  deps: RemediationDeps,
+  plan: RemediationPlan,
+): Promise<void> {
+  for (const snapshot of plan.prematchSnapshots) {
+    await removeArtifacts(db, deps, {
+      matchId: snapshot.matchId,
+      kinds: ["prematch"],
+      staged: ["prematch"],
+    });
+  }
+}
+
+/** Remove one artifact kind's object and the receipts that name it. */
+async function removeArtifacts(
+  db: Db,
+  deps: RemediationDeps,
+  target: {
+    readonly matchId: RiotMatchId;
+    readonly kinds: readonly ArtifactKind[];
+    readonly staged: readonly LakeArtifactKind[];
+  },
+): Promise<void> {
+  const { matchId, kinds, staged } = target;
+  for (const kind of kinds) {
+    const descriptor = await storedRawArchiveDescriptor(db, matchId, kind);
+    if (descriptor !== null) await deps.objects.delete(descriptor.key);
+  }
+  await db.matchProcessingReceipt.deleteMany({
+    where: {
+      riotMatchId: matchId,
+      kind: {
+        in: [
+          ...kinds.map((kind) => rawArchiveReceiptKind(kind)),
+          ...staged.map((kind) => lakeStagingReceiptKind(kind)),
+        ],
+      },
+    },
+  });
+}
+
+/**
+ * Replace a client timeline that sits beside Riot's result. Riot's copy is
+ * fetched first so a Riot failure changes nothing; with none, the client
+ * timeline is simply removed. The lake rebuild drops its projection.
+ */
+async function replaceClientTimeline(
+  db: Db,
+  deps: RemediationDeps,
+  matchId: RiotMatchId,
+): Promise<void> {
+  const timeline = await deps.riot.fetchTimeline(matchId);
+  const match =
+    timeline === undefined ? undefined : await deps.riot.fetchMatch(matchId);
+  await removeArtifacts(db, deps, {
+    matchId,
+    kinds: ["timeline"],
+    staged: ["timeline"],
+  });
+  if (timeline === undefined || match === undefined) return;
+  await deps.ingestTimeline(
+    timeline,
+    await trackedAliasesFor(db, match),
+    new Date(match.info.gameCreation),
+  );
 }
 
 async function rederiveMatch(
@@ -447,8 +518,12 @@ export async function applyRemediationPlan(
     if (match.action === "rederive")
       await rederiveMatch(db, deps, match.matchId);
     if (match.action === "delete") await deleteMatch(db, deps, match.matchId);
+    if (match.action === "timeline")
+      await replaceClientTimeline(db, deps, match.matchId);
     log(`${match.action} ${match.matchId}`);
   }
+  await removePrematchSnapshots(db, deps, plan);
+  if (plan.prematchSnapshots.length > 0) log("removed canonical prematch");
   await deleteObservations(
     db,
     deps,
@@ -461,60 +536,4 @@ export async function applyRemediationPlan(
   log("Hall of Fame refreshed");
   await deps.refresh.refreshCompetitions();
   log("competitions refreshed");
-}
-
-const ArgsSchema = z
-  .object({
-    owner: z.string().min(1).optional(),
-    device: z.string().min(1).optional(),
-    apply: z.boolean(),
-  })
-  .refine(
-    (args) => (args.owner === undefined) === (args.device !== undefined),
-    {
-      message: "Pass exactly one of --owner <userId> or --device <deviceId>",
-    },
-  );
-
-export type RemediationArgs = {
-  readonly scope: RemediationScope;
-  readonly apply: boolean;
-};
-
-/** `--dry-run` is the default; `--apply` is required to change anything. */
-export function parseRemediationArgs(argv: readonly string[]): RemediationArgs {
-  const values: { owner?: string; device?: string } = {};
-  let apply = false;
-  for (let index = 0; index < argv.length; index += 1) {
-    const arg = argv[index] ?? "";
-    switch (arg) {
-      case "--apply":
-        apply = true;
-        break;
-      case "--dry-run":
-        apply = false;
-        break;
-      case "--owner":
-      case "--device": {
-        const value = argv[index + 1];
-        if (value === undefined) throw new Error(`${arg} requires a value`);
-        values[arg === "--owner" ? "owner" : "device"] = value;
-        index += 1;
-        break;
-      }
-      default:
-        throw new Error(`Unknown argument: ${arg}`);
-    }
-  }
-  const parsed = ArgsSchema.parse({ ...values, apply });
-  if (parsed.owner !== undefined) {
-    return {
-      apply,
-      scope: {
-        kind: "owner",
-        ownerId: DiscordAccountIdSchema.parse(parsed.owner),
-      },
-    };
-  }
-  return { apply, scope: { kind: "device", deviceId: parsed.device ?? "" } };
 }

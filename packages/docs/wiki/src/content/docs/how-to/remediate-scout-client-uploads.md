@@ -68,7 +68,13 @@ The plan lists the devices to revoke, then each match as one of:
 | ------------------- | --------------------------------------------------------- |
 | `rederive`          | Riot returns the match; its payload replaces the client's |
 | `delete`            | Riot does not; the client-derived artifacts are removed   |
+| `timeline`          | Riot's result stands; only a client timeline is replaced  |
 | `observations-only` | Nothing client-derived was stored; raw evidence remains   |
+
+A match is `rederive` or `delete` only when its selection row names one of the
+scope's own uploads; another owner's selected match is never touched. The plan
+also lists canonical prematch snapshots whose archived payload names one of the
+scope's gameflow observations, and removes them before the observations.
 
 It also counts prematch observations, raw observations, and identity aliases
 learned from the devices. A match with `other device upload(s) exist` has

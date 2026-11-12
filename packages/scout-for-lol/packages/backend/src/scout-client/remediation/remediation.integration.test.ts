@@ -23,13 +23,10 @@ vi.doMock("#src/database/index.ts", async (original) => ({
 }));
 
 const { lookupMatchContributors } = await import("./contributor-lookup.ts");
-const {
-  applyRemediationPlan,
-  buildRemediationPlan,
-  isPlanEmpty,
-  formatRemediationPlan,
-  parseRemediationArgs,
-} = await import("./remediation.ts");
+const { applyRemediationPlan, buildRemediationPlan, isPlanEmpty } =
+  await import("./remediation.ts");
+const { formatRemediationPlan } = await import("./format.ts");
+const { parseRemediationArgs } = await import("./args.ts");
 const { rawArchiveReceiptRecord } =
   await import("#src/report-lake/durable-receipts.ts");
 const { recordReceipt } =
@@ -50,8 +47,9 @@ async function observation(
   device: string,
   kind: string,
   gameId: string | null,
-  rawArchiveKey?: string,
+  extra: { rawArchiveKey?: string; payload?: object } = {},
 ): Promise<string> {
+  const { rawArchiveKey, payload = { resource: kind, data: {} } } = extra;
   sequence += 1;
   const observationId = crypto.randomUUID();
   await prisma.scoutClientObservation.create({
@@ -66,7 +64,7 @@ async function observation(
       kind,
       gameId,
       platformId: gameId === null ? null : "NA1",
-      payload: { resource: kind, data: {} },
+      payload,
       bodyDigest: `digest-${sequence.toString()}`,
       disposition: "ACCEPTED",
       ...(rawArchiveKey === undefined ? {} : { rawArchiveKey }),
@@ -222,6 +220,18 @@ function fakes(riotHas: ReadonlySet<string>) {
   };
 }
 
+function oracleOf(
+  riot: Fakes,
+  prematch: Readonly<Record<string, string>> = {},
+) {
+  return {
+    hasMatch: async (id: RiotMatchId) =>
+      (await riot.deps.riot.fetchMatch(id)) !== undefined,
+    prematchSourceObservation: (id: RiotMatchId) =>
+      Promise.resolve(prematch[id] ?? null),
+  };
+}
+
 async function snapshot() {
   return {
     observations: await prisma.scoutClientObservation.count(),
@@ -235,12 +245,9 @@ async function snapshot() {
 
 async function seed() {
   const riotObs = await observation(deviceId, "post_game", "7101");
-  const lostObs = await observation(
-    deviceId,
-    "post_game",
-    "7102",
-    "scout-client/observations/x.json",
-  );
+  const lostObs = await observation(deviceId, "post_game", "7102", {
+    rawArchiveKey: "scout-client/observations/x.json",
+  });
   await observation(deviceId, "gameflow", "7101");
   await observation(otherDeviceId, "post_game", "7103");
   await clientMatch(RIOT_MATCH, riotObs);
@@ -258,10 +265,7 @@ describe("remediation plan", () => {
     const before = await snapshot();
     const riot = fakes(new Set([RIOT_MATCH]));
 
-    const plan = await buildRemediationPlan(prisma, scope(), {
-      hasMatch: async (id) =>
-        (await riot.deps.riot.fetchMatch(id)) !== undefined,
-    });
+    const plan = await buildRemediationPlan(prisma, scope(), oracleOf(riot));
 
     expect(await snapshot()).toEqual(before);
     expect(riot.deleted).toEqual([]);
@@ -277,10 +281,7 @@ describe("remediation plan", () => {
   test("re-derives a match Riot has and deletes one it does not", async () => {
     const { lostKeys } = await seed();
     const riot = fakes(new Set([RIOT_MATCH]));
-    const plan = await buildRemediationPlan(prisma, scope(), {
-      hasMatch: async (id) =>
-        (await riot.deps.riot.fetchMatch(id)) !== undefined,
-    });
+    const plan = await buildRemediationPlan(prisma, scope(), oracleOf(riot));
 
     await applyRemediationPlan(prisma, plan, riot.deps);
 
@@ -307,10 +308,7 @@ describe("remediation plan", () => {
   test("applying twice is safe and the second plan is empty", async () => {
     await seed();
     const riot = fakes(new Set([RIOT_MATCH]));
-    const oracle = {
-      hasMatch: async (id: RiotMatchId) =>
-        (await riot.deps.riot.fetchMatch(id)) !== undefined,
-    };
+    const oracle = oracleOf(riot);
     const first = await buildRemediationPlan(prisma, scope(), oracle);
     await applyRemediationPlan(prisma, first, riot.deps);
     const after = await snapshot();
@@ -327,10 +325,7 @@ describe("remediation plan", () => {
   test("an interrupted run is finished by running it again", async () => {
     await seed();
     const riot = fakes(new Set([RIOT_MATCH]));
-    const oracle = {
-      hasMatch: async (id: RiotMatchId) =>
-        (await riot.deps.riot.fetchMatch(id)) !== undefined,
-    };
+    const oracle = oracleOf(riot);
     const plan = await buildRemediationPlan(prisma, scope(), oracle);
     const failing: Fakes["deps"] = {
       ...riot.deps,
@@ -355,10 +350,79 @@ describe("remediation plan", () => {
     const plan = await buildRemediationPlan(
       prisma,
       { kind: "device", deviceId: otherDeviceId },
-      { hasMatch: () => Promise.resolve(false) },
+      { ...oracleOf(fakes(new Set())), hasMatch: () => Promise.resolve(false) },
     );
     expect(plan.devices.map((d) => d.id)).toEqual([otherDeviceId]);
     expect(plan.observationTotal).toBe(1);
+  });
+});
+
+describe("remediation scope", () => {
+  test("leaves a match alone when another owner's upload was selected", async () => {
+    const mine = await observation(deviceId, "post_game", "7101");
+    const theirs = await observation(otherDeviceId, "post_game", "7101");
+    expect(mine).not.toBe(theirs);
+    const keys = await clientMatch(RIOT_MATCH, theirs);
+    const riot = fakes(new Set());
+
+    const plan = await buildRemediationPlan(prisma, scope(), oracleOf(riot));
+    expect(plan.matches).toHaveLength(1);
+    expect(plan.matches[0]).toMatchObject({
+      action: "observations-only",
+      clientSelected: false,
+    });
+    await applyRemediationPlan(prisma, plan, riot.deps);
+
+    for (const key of keys) expect(riot.deleted).not.toContain(key);
+    expect(await prisma.scoutClientCanonicalMatch.count()).toBe(1);
+    expect(await prisma.matchProcessingReceipt.count()).toBe(3);
+  });
+
+  test("replaces a client timeline that rides with Riot's result", async () => {
+    await observation(deviceId, "post_game", "7101", {
+      payload: { data: { matchHistory: {}, timeline: {} } },
+    });
+    const key = await archive(RIOT_MATCH, "timeline");
+    const matchKey = await archive(RIOT_MATCH, "match");
+    const riot = fakes(new Set([RIOT_MATCH]));
+
+    const plan = await buildRemediationPlan(prisma, scope(), oracleOf(riot));
+    expect(plan.matches[0]).toMatchObject({
+      action: "timeline",
+      clientSelected: false,
+      clientTimeline: true,
+    });
+    await applyRemediationPlan(prisma, plan, riot.deps);
+
+    expect(riot.deleted).toContain(key);
+    expect(riot.deleted).not.toContain(matchKey);
+    // Riot's match stays archived.
+    expect(await prisma.matchProcessingReceipt.count()).toBe(1);
+    const second = await buildRemediationPlan(prisma, scope(), oracleOf(riot));
+    expect(isPlanEmpty(second)).toBe(true);
+  });
+
+  test("removes a canonical prematch snapshot derived from the scope", async () => {
+    const flow = await observation(deviceId, "gameflow", "7101");
+    const other = await observation(otherDeviceId, "gameflow", "7102");
+    const key = await archive(RIOT_MATCH, "prematch");
+    await archive(LOST_MATCH, "prematch");
+    const riot = fakes(new Set());
+
+    const plan = await buildRemediationPlan(
+      prisma,
+      scope(),
+      oracleOf(riot, { [RIOT_MATCH]: flow, [LOST_MATCH]: other }),
+    );
+    expect(plan.prematchSnapshots).toEqual([
+      { matchId: RIOT_MATCH, observationId: flow },
+    ]);
+    expect(isPlanEmpty(plan)).toBe(false);
+    await applyRemediationPlan(prisma, plan, riot.deps);
+
+    expect(riot.deleted).toContain(key);
+    // Only the other owner's snapshot receipt remains.
+    expect(await prisma.matchProcessingReceipt.count()).toBe(1);
   });
 });
 
