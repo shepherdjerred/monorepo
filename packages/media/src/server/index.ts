@@ -7,6 +7,9 @@ import { MediaAuth } from "#application/media-auth.ts";
 import { CredentialCipher } from "#application/security.ts";
 import { PrismaAuthStore } from "#infrastructure/auth-store.ts";
 import { TmdbCatalogApplication } from "#infrastructure/catalog.ts";
+import { PrismaExternalLibraryRegistration } from "#infrastructure/external-library/registration/service.ts";
+import { createExternalEditionCorrection } from "#infrastructure/external-library/edition/correction.ts";
+import { PrismaExternalEditionStore } from "#infrastructure/external-library/edition/records.ts";
 import {
   BootstrapSchema,
   mediaBehaviorConfig,
@@ -251,6 +254,33 @@ const app = createMediaApp({
     temporal.describe,
   ),
   plexAdmin: plexAdministration,
+  externalLibrary: {
+    registration: new PrismaExternalLibraryRegistration(database, {
+      serverMachineId: bootstrap.PLEX_SERVER_MACHINE_ID,
+      ownerClient: (actor) => plexAdministration.libraryClient(actor),
+      sections: async () => {
+        const config = mediaBehaviorConfig(bootstrap.ENVIRONMENT, true);
+        const [movie, series] = await Promise.all([
+          config.get("permittedMovieSectionId"),
+          config.get("permittedTvSectionId"),
+        ]);
+        return { movie: movie.value, series: series.value };
+      },
+    }),
+    edition: async (actor) =>
+      createExternalEditionCorrection({
+        plex: await plexAdministration.libraryClient(actor),
+        store: new PrismaExternalEditionStore(database),
+        expectedServerMachineId: bootstrap.PLEX_SERVER_MACHINE_ID,
+        permittedMovieSection: async () => {
+          const section = await mediaBehaviorConfig(
+            bootstrap.ENVIRONMENT,
+            true,
+          ).get("permittedMovieSectionId");
+          return section.value;
+        },
+      }),
+  },
   catalog: catalogApplication,
   publicOrigin: bootstrap.PUBLIC_ORIGIN,
   afterWrite: () => {

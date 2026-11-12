@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { GenerationsSchema } from "#shared/file-plan.ts";
 import { PublicationAuthorityReferenceSchema } from "#shared/publication-proof/references.ts";
+import { MoviePublicationReferenceV2Schema } from "#shared/movie-editions/publication-v2.ts";
+import { MovieEditionScopeSchema } from "#shared/movie-editions/registry.ts";
 import { PublicationHashSchema as Hash } from "#shared/publication-proof/effects.ts";
 import {
   PlexBindingScopeSchema,
@@ -23,7 +25,16 @@ export const PlexTargetExpectedSchema = z.strictObject({
   canonicalIdentityHash: Hash,
   numberingHash: Hash,
 });
+export const ExistingMovieAssetPlexParentV2Schema = z.strictObject({
+  kind: z.literal("existing_movie_asset_v2"),
+  scope: MovieEditionScopeSchema,
+  assetId: z.uuid(),
+  assetVersion: z.int().nonnegative(),
+  recoveryEpoch: z.int().nonnegative(),
+  physicalGrant: MoviePublicationReferenceV2Schema,
+});
 export const PlexPublicationParentSchema = z.discriminatedUnion("kind", [
+  ExistingMovieAssetPlexParentV2Schema,
   z.strictObject({
     kind: z.literal("acquisition"),
     operationId: z.uuid(),

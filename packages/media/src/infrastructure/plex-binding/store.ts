@@ -15,6 +15,9 @@ import {
 } from "#shared/plex-binding/observations.ts";
 import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
 import { commitVerifiedPlexBindings } from "./commit.ts";
+import type { VerifiedMovieServingPlexV2 } from "#shared/movie-editions/plex-v2.ts";
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import { movieInventoryParent } from "#infrastructure/movie-editions/plex/inventory/expected.ts";
 import {
   loadPlexVerificationRequest,
   readPlexVerificationCompletion,
@@ -26,18 +29,22 @@ export async function queuePlexBindingReverification(
     expected: PlexBindingExpected;
     renewalBucket: number;
   },
+  budget?: PublicationAuthorityReadBudget,
 ): Promise<{ operationId: string; created: boolean }> {
   const expected = PlexBindingExpectedSchema.parse(input.expected);
+  const movie = movieInventoryParent(expected);
   if (!Number.isSafeInteger(input.renewalBucket) || input.renewalBucket < 0)
     throw new Error("Plex verification renewal bucket is invalid");
   if (
     expected.parents.some(
       (parent) =>
         parent.kind !== "existing_asset" &&
+        parent.kind !== "existing_movie_asset_v2" &&
         parent.kind !== "restore" &&
         parent.kind !== "rollback",
     ) ||
-    expected.targets.some((target) => target.scope.edition !== "default") ||
+    (movie === null &&
+      expected.targets.some((target) => target.scope.edition !== "default")) ||
     expected.newGroups.length === 0
   )
     throw new Error(
@@ -50,9 +57,11 @@ export async function queuePlexBindingReverification(
     where: { idempotencyKey: key },
   });
   if (previous !== null) {
+    budget?.consume(1);
     const parent = await loadPlexVerificationRequest(
       tx,
       ReverifyPlexBindingInputSchema.parse(previous.payload),
+      budget,
     );
     if (
       parent.request.expectedHash !== expectedHash ||
@@ -97,8 +106,9 @@ export async function queuePlexBindingReverification(
 export async function loadPlexBindingVerificationRequest(
   tx: Prisma.TransactionClient,
   input: ReverifyPlexBindingInput,
+  budget?: PublicationAuthorityReadBudget,
 ) {
-  const result = await loadPlexVerificationRequest(tx, input);
+  const result = await loadPlexVerificationRequest(tx, input, budget);
   return {
     expected: result.expected,
     expectedHash: result.request.expectedHash,
@@ -108,8 +118,9 @@ export async function loadPlexBindingVerificationRequest(
 export async function readPlexBindingVerificationCompletion(
   tx: Prisma.TransactionClient,
   input: ReverifyPlexBindingInput,
+  budget?: PublicationAuthorityReadBudget,
 ) {
-  return readPlexVerificationCompletion(tx, input);
+  return readPlexVerificationCompletion(tx, input, budget);
 }
 
 /** Called after the complete lock prelude; ACK readback is independent of current permission. */
@@ -118,20 +129,29 @@ export async function commitPlexBindingVerification(
   input: {
     input: ReverifyPlexBindingInput;
     expected: PlexBindingExpected;
-    verified: VerifiedServingPlex;
+    verified: VerifiedServingPlex | VerifiedMovieServingPlexV2;
   },
+  budget?: PublicationAuthorityReadBudget,
 ) {
   await tx.$queryRaw`SELECT id FROM "Operation" WHERE id=${input.input.operationId} FOR UPDATE`;
-  const committed = await readPlexVerificationCompletion(tx, input.input);
+  const committed = await readPlexVerificationCompletion(
+    tx,
+    input.input,
+    budget,
+  );
   if (committed !== null) return committed;
   input.verified.freshness.assertActive();
-  const parent = await loadPlexVerificationRequest(tx, input.input);
+  const parent = await loadPlexVerificationRequest(tx, input.input, budget);
   if (parent.request.expectedHash !== identityHash(input.expected))
     throw new Error("Plex verification request changed before commit");
-  const bindings = await commitVerifiedPlexBindings(tx, {
-    expected: parent.expected,
-    verified: input.verified,
-  });
+  const bindings = await commitVerifiedPlexBindings(
+    tx,
+    {
+      expected: parent.expected,
+      verified: input.verified,
+    },
+    budget,
+  );
   input.verified.freshness.assertActive();
   const completion = PlexBindingVerificationCompletionSchema.parse({
     schemaVersion: 1,

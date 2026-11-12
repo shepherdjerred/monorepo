@@ -67,6 +67,33 @@ test("completed download with an infinite ratio does not claim playback or delet
   expect(html).toContain("does not authorize deletion");
 });
 
+test("externally available Plex copies are visible without claiming owned playback or a movie edition", () => {
+  const value = fixture();
+  value.playback.externalAvailableItems = 1;
+  const html = renderToStaticMarkup(<MediaProgress visibility={value} />);
+  expect(html).toContain("Available in Plex; managed by the existing stack.");
+  expect(html).not.toContain("Ready to watch");
+  expect(html).not.toContain("Your current version");
+  expect(value.playback).toMatchObject({
+    playable: false,
+    currentAssetId: null,
+    currentVersion: null,
+  });
+});
+
+test("collection availability distinguishes existing Plex episodes from Media-owned playback", () => {
+  const value = fixture();
+  value.playback.scope = "collection";
+  value.playback.visibleItems = 10;
+  value.playback.externalAvailableItems = 9;
+  const html = renderToStaticMarkup(<MediaProgress visibility={value} />);
+  expect(html).toContain("0 of 10 visible episodes are ready to watch.");
+  expect(html).toContain(
+    "9 visible episodes are available in Plex; managed by the existing stack.",
+  );
+  expect(value.playback.playable).toBe(false);
+});
+
 test("current source protections remain visible without a saved cleanup evaluation", () => {
   const value = fixture();
   const diagnostics = firstTorrent(value).diagnostics;

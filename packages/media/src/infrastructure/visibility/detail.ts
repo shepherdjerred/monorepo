@@ -92,11 +92,8 @@ export async function mediaVisibility(
     orderBy: [{ createdAt: "desc" }, { id: "asc" }],
     take: 21,
   });
-  const { playable, association } = await visiblePlayback(
-    tx,
-    visible,
-    input.plexAccess,
-  );
+  const { playable, association, externalAvailableItems } =
+    await visiblePlayback(tx, visible, input.plexAccess);
   const current = collection ? null : playable[0]?.asset;
   const movieRequests = await visibleMovieRequests(tx, {
     media: input.media,
@@ -112,6 +109,7 @@ export async function mediaVisibility(
       playable: playable.length > 0,
       playableItems: new Set(playable.map((item) => item.mediaId)).size,
       visibleItems: visible.length,
+      ...(externalAvailableItems === 0 ? {} : { externalAvailableItems }),
       association,
       currentAssetId: current?.id ?? null,
       currentVersion: current?.version ?? null,

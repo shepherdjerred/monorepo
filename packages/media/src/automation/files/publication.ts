@@ -19,6 +19,7 @@ import { Prisma } from "#generated/prisma/client.ts";
 import {
   FileGuardError,
   FilePlanSchema,
+  GenerationsSchema,
   type FileContext,
   type Transaction,
   type FilePlanEntry,
@@ -123,7 +124,11 @@ export async function promote(
         await context.checkpoint("publication-authorization");
         if (!(await context.enabled.acquisition()))
           throw new FileGuardError("acquisition_disabled");
-        await assertProfile(tx, entry);
+        await assertProfile(
+          tx,
+          entry,
+          GenerationsSchema.parse(current.generations),
+        );
         await assertPrevious(tx, entry, current.recoveryEpoch);
         await assertMeasuredUpgrade(
           tx,
@@ -180,6 +185,9 @@ export async function promote(
 export async function assertProfile(
   tx: Transaction,
   entry: FilePlanEntry,
+  // Ordinary publication already validated this transaction's current attempt,
+  // reservations and intent generations; owner Retry retains its original plan.
+  generations: Readonly<Record<string, number>> = entry.generations,
 ): Promise<void> {
   const properties = z
     .object({ profileVersions: z.record(z.string(), z.number().int()) })
@@ -197,7 +205,7 @@ export async function assertProfile(
     });
     if (
       profile.version !== properties.profileVersions[mediaId] ||
-      intent.generation !== entry.generations[mediaId]
+      intent.generation !== generations[mediaId]
     )
       throw new FileGuardError("profile_obsolete");
   }

@@ -21,20 +21,29 @@ import { PlexBindingProtection } from "./errors.ts";
 import { invalidateRetentionPlexProjections } from "./retention.ts";
 import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import type { CompensationPublicationPhase } from "#infrastructure/native-compensation/series-pack/publication/adapter.ts";
+import {
+  MovieServingPlexV2Schema,
+  type VerifiedMovieServingPlexV2,
+} from "#shared/movie-editions/plex-v2.ts";
+import { movieInventoryParent } from "#infrastructure/movie-editions/plex/inventory/expected.ts";
+import { invalidateMoviePlexConsequences } from "#infrastructure/movie-editions/plex/consequences.ts";
 
 /** Same transaction as the caller's publication and its immutable completion receipt. */
 export async function commitVerifiedPlexBindings(
   tx: Prisma.TransactionClient,
   input: {
     expected: PlexBindingExpected;
-    verified: VerifiedServingPlex;
+    verified: VerifiedServingPlex | VerifiedMovieServingPlexV2;
   },
   budget = new PublicationAuthorityReadBudget(),
   compensationPhase?: CompensationPublicationPhase,
 ): Promise<PlexBindingSnapshot[]> {
   const { expected, verified } = input;
   const { freshness, ...rawObservation } = verified;
-  const observation = ServingPlexObservationSchema.parse(rawObservation);
+  const observation =
+    movieInventoryParent(expected) === null
+      ? ServingPlexObservationSchema.parse(rawObservation)
+      : MovieServingPlexV2Schema.parse(rawObservation);
   freshness.assertActive();
   if (Date.parse(observation.verification.expiresAt) > freshness.expiresAtMs)
     throw new Error("Plex verification outlives its original authority");
@@ -75,6 +84,7 @@ export async function commitVerifiedPlexBindings(
       row,
     ]),
   );
+  if (movieInventoryParent(expected) !== null) budget.consume(stored.length);
   const previous = new Map(
     expected.previous.map((row) => [plexScopeKey(row.scope), row]),
   );
@@ -145,7 +155,9 @@ export async function commitVerifiedPlexBindings(
 
 function assertVerifiedCoverage(
   expected: PlexBindingExpected,
-  observation: z.infer<typeof ServingPlexObservationSchema>,
+  observation:
+    | z.infer<typeof ServingPlexObservationSchema>
+    | z.infer<typeof MovieServingPlexV2Schema>,
 ) {
   const groups = new Map(
     expected.newGroups.map((group) => [group.assetId, identityHash(group)]),
@@ -227,6 +239,11 @@ async function invalidatePlexConsequences(
   freshness: PlexBindingFreshness,
 ) {
   if (changed.length === 0) return;
+  const movie = movieInventoryParent(expected);
+  if (movie !== null) {
+    await invalidateMoviePlexConsequences(tx, movie.scope, freshness);
+    return;
+  }
   const keys = new Set(changed);
   const mediaIds = [
     ...new Set(

@@ -19,6 +19,7 @@ import {
   verifyMovieProtectionHttp,
 } from "./media/movie-edition-http.test-support.ts";
 import { verifyPlexEventHttp } from "./plex-events/http.test-support.ts";
+import { verifyExternalLibraryHttp } from "./external-library-http.test-support.ts";
 
 const actor: MediaActor = {
   id: "member",
@@ -437,6 +438,10 @@ function fixture() {
   };
   return { dependencies, act, createRequest };
 }
+
+test("external library owner API retains session, origin and CSRF gates", async () => {
+  await verifyExternalLibraryHttp(fixture().dependencies, headers);
+});
 
 const headers = {
   Origin: "https://media.example.test",

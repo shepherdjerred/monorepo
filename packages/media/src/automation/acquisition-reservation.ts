@@ -3,6 +3,7 @@ import {
   lockDefaultScopes,
 } from "#infrastructure/editions/locks.ts";
 import { MediaError } from "#application/errors.ts";
+import { assertNoExternalLibrary } from "#infrastructure/external-library/protection.ts";
 import { networkMovieAccess } from "./editions/access.ts";
 import { assertAttemptMovieChoice } from "./editions/choice.ts";
 import {
@@ -68,6 +69,7 @@ export async function reserveCandidate(
   const movieAccess = await networkMovieAccess(context, proposedIds);
   return serializable(context.db, async (tx) => {
     await lockCanonicalMedia(tx, proposedIds);
+    await assertNoExternalLibrary(tx, proposedIds);
     await readDefaultTarget(tx, defaultScope(input.mediaId));
     const targets = await lockDefaultScopes(
       tx,

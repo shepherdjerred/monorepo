@@ -575,9 +575,13 @@ writer-lease and exclusion deadlines; awaited work cannot restart that window.
 Deferred SQL checks enforce the same minimum at commit, including work performed
 after the last JavaScript guard.
 
-The existing inventory reconciliation can queue default-only cold verification
-for already owned assets. It neither creates requests nor refreshes consent or
-old publication receipts. The `@shepherdjerred/media/plex-binding` export defines
+Inventory reconciliation queues ordinary default-only cold verification for
+already owned assets. Owned movies with a current schema2 association use their
+explicit immutable movie physical parent to renew either the default or a named
+cut through the same reverification workflow. Renewal changes the scoped binding
+and invalidates only that cut's derived watch and retention projections. It
+neither creates requests nor refreshes consent or old publication receipts.
+The `@shepherdjerred/media/plex-binding` export defines
 `reverifyPlexBinding`: its strict input contains schema version, operation ID,
 recovery epoch and up to 100 sorted unique asset IDs. Complete coverage remains
 in PostgreSQL. Its result is verified with a binding count, superseded, or
@@ -695,6 +699,50 @@ point values, so downstream arithmetic is not byte-exact. These measurements
 neither reserve space nor grant ownership, cleanup or write permission. Existing
 immediate copy-time capacity checks remain authoritative; collection never
 changes acknowledgement of an existing file operation.
+
+## External library registration API
+
+Existing Plex libraries can be registered separately through the owner-only
+external-library API while Radarr and Sonarr continue running. First adopt each
+canonical movie or series through `catalog.adopt` and finish its catalog refresh.
+`GET /api/v1/admin/external-library/items?sectionType=movie&offset=0` (or `show`)
+lists bounded Plex items and their actual GUIDs and Parts. `POST
+/api/v1/admin/external-library/preview` takes `{sectionType,ratingKey}` and an
+`Idempotency-Key`; inspect the returned canonical mapping, physical cohort and
+protected conflicts. `POST /api/v1/admin/external-library/apply` takes
+`{previewOperationId,previewHash}` and its own stable `Idempotency-Key` within the
+60-second review lifetime. It rechecks the current owner, PMS server/section,
+GUID hierarchy, exact Part/path/size, canonical versions and complete normal
+inventory cohort before recording the explicit command and registration event.
+Missing catalog identities, stale reviews and changed proofs require a new
+preview. Owned paths, any owned coverage history and active reservations are
+preserved and reported rather than overwritten.
+
+Registration creates only passive default targets when missing, unowned
+published assets and their current coverage. It creates no request, monitoring,
+profile binding, torrent, filesystem ownership or automation grant, and leaves
+existing targets unchanged. Movie and episode reads project generic available
+presence only while the registered inventory evidence is fresh; registration
+does not change their stored lifecycle, target availability or collection state.
+Generic externally managed Plex availability is
+separate from owned playable bindings. Movie labels are retained as observed;
+an unmarked or unverified cut never implies Theatrical or fulfills a canonical
+edition request. Availability requires the latest normal inventory source
+collection (phase `section >= 2`, independently of later owned cleanup) within
+25 hours: the 24-hour cadence plus its one-hour execution bound. Current
+unowned coverage continues protecting against duplicate acquisition and
+upgrades when that observation becomes stale. Inventory itself remains
+observation-only; registration requires the explicit owner command.
+During an incomplete or failed inventory collection, replaced cohort evidence
+temporarily shows reconciliation until a complete collection is available.
+
+Edition correction is a separate owner-reviewed metadata-only command
+(`edition-preview`, `edition-apply`). It verifies the configured server/section,
+canonical GUID and filename cut, single Part/path/size and watch facts, then
+records durable intent before changing only `editionTitle`. It grants no
+filesystem ownership or automation authority and leaves exclusive v3 handoff
+unchanged. Unmarked files never imply Theatrical; ambiguous markers remain
+protected. An uncertain intent permits readback only, never another PUT.
 
 ## Ownership handoff API contract
 

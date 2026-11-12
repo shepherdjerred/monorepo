@@ -50,6 +50,10 @@ function parentAssets(
   switch (parent.kind) {
     case "existing_asset":
       return existingParent(tx, parent, context);
+    case "existing_movie_asset_v2":
+      throw new Error(
+        "Scoped movie inventory requires its explicit parent reader",
+      );
     case "acquisition":
       return acquisitionParent(tx, parent, context);
     case "restore":

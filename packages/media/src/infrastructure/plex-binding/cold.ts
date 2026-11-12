@@ -11,6 +11,7 @@ import { findPublicationOriginalGrant } from "#infrastructure/publication-proof/
 import { snapshotPublicationAsset } from "#infrastructure/publication-proof/snapshots.ts";
 import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { ordinaryPlexLineageReader } from "./lineage.ts";
+import { captureMovieInventoryExpected } from "#infrastructure/movie-editions/plex/inventory/expected.ts";
 import {
   assertPlexRestorationParent,
   readPlexRestorationParent,
@@ -43,6 +44,16 @@ export async function captureExistingPlexBindingExpected(
     new Set(input.assetIds).size !== input.assetIds.length
   )
     throw new PlexBindingProtection("scope_changed");
+  const singleAssetId = input.assetIds[0];
+  if (singleAssetId !== undefined && input.assetIds.length === 1) {
+    const movie = await captureMovieInventoryExpected(
+      tx,
+      singleAssetId,
+      input.access,
+      budget,
+    );
+    if (movie !== null) return movie;
+  }
   const selected = await tx.assetCoverage.findMany({
     where: {
       assetId: { in: [...input.assetIds] },
@@ -237,7 +248,11 @@ async function publicationParentAssets(
   budget: PublicationAuthorityReadBudget,
   compensationPhase?: CompensationPublicationPhase,
 ): Promise<Set<string>> {
-  if (parent.kind === "existing_asset") return new Set([parent.assetId]);
+  if (
+    parent.kind === "existing_asset" ||
+    parent.kind === "existing_movie_asset_v2"
+  )
+    return new Set([parent.assetId]);
   if (parent.kind === "compensation") {
     const phase =
       compensationPhase === undefined

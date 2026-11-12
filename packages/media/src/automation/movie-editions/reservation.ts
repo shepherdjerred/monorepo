@@ -6,6 +6,7 @@ import type {
 } from "#generated/prisma/client.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
 import { serializable } from "#automation/store.ts";
+import { assertNoExternalLibrary } from "#infrastructure/external-library/protection.ts";
 import { networkMovieAccess } from "#automation/editions/access.ts";
 import { requireMovieChoiceAccess } from "#infrastructure/movie-editions/access.ts";
 import { lockMovieCommand } from "#infrastructure/movie-editions/locks.ts";
@@ -47,6 +48,7 @@ export async function reserveMovieCandidateV4(
   if (!(await context.gates.acquisition())) return null;
   return serializable(context.db, async (tx) => {
     const { target } = await lockMovieCommand(tx, input.scope);
+    await assertNoExternalLibrary(tx, [input.mediaId]);
     await assertNoPublicationCompensationFence(tx, {
       mediaIds: [input.mediaId],
     });

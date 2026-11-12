@@ -20,6 +20,8 @@ import {
   type VisibilitySections,
 } from "./access.ts";
 import { mediaVisibility } from "./detail.ts";
+import { externalAvailableMediaIds } from "#infrastructure/external-library/availability.ts";
+import type { MediaVisibility } from "#shared/visibility/detail.ts";
 import {
   hasPendingSeriesPackPublicationV1,
   SERIES_PACK_PUBLICATION_PENDING,
@@ -159,21 +161,38 @@ export function readMediaDetail(
       mediaIds: [mediaId],
       assetIds: item.assets.map((coverage) => coverage.asset.id),
     });
+    const children = item.children.filter((child) => reader.visible(child));
+    const externalPermitted =
+      reader.user.plexIdentity?.permittedSectionIds.includes(
+        plexAccess.sectionId,
+      ) === true;
+    const external = await externalAvailableMediaIds(
+      tx,
+      [item, ...children]
+        .filter((row) => row.kind === "movie" || row.kind === "episode")
+        .map((row) => row.id),
+      externalPermitted ? [plexAccess] : [],
+    );
+    const visibility = await mediaVisibility(tx, {
+      media: item,
+      userId: actor.id,
+      owner: reader.owner,
+      epoch: runtime.recoveryEpoch,
+      serverMachineId: input.serverMachineId,
+      movieSectionId: input.movieSectionId,
+      movieChoiceAccess,
+      plexAccess,
+      visible: reader.visible,
+    });
     return MediaDetailSchema.parse({
       ...item,
+      availability: external.has(item.id) ? "available" : item.availability,
       intent: defaultIntent(item.intents),
-      children: item.children.filter((child) => reader.visible(child)),
-      visibility: await mediaVisibility(tx, {
-        media: item,
-        userId: actor.id,
-        owner: reader.owner,
-        epoch: runtime.recoveryEpoch,
-        serverMachineId: input.serverMachineId,
-        movieSectionId: input.movieSectionId,
-        movieChoiceAccess,
-        plexAccess,
-        visible: reader.visible,
-      }),
+      children: children.map((child) => ({
+        ...child,
+        availability: external.has(child.id) ? "available" : child.availability,
+      })),
+      visibility: scopedExternalVisibility(visibility, externalPermitted),
       subtitlePolicies: policies,
       assets: item.assets.map((coverage) => ({
         ...coverage,
@@ -204,6 +223,27 @@ export function readMediaDetail(
         : {}),
     });
   });
+}
+
+function scopedExternalVisibility(
+  visibility: MediaVisibility,
+  permitted: boolean,
+): MediaVisibility {
+  const external = visibility.playback.externalAvailableItems ?? 0;
+  if (permitted || external === 0) return visibility;
+  return {
+    ...visibility,
+    playback: {
+      ...visibility.playback,
+      externalAvailableItems: 0,
+      association: {
+        ...visibility.playback.association,
+        reconciliationRequiredItems:
+          visibility.playback.association.reconciliationRequiredItems +
+          external,
+      },
+    },
+  };
 }
 
 function pendingSubtitleStatus(

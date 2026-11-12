@@ -2,12 +2,17 @@ import type { z } from "zod";
 import type { Prisma } from "#generated/prisma/client.ts";
 import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
 import {
-  PlexAssociationV1Schema,
   PlexAssociationSchema,
+  PlexAssociationV1Schema,
+  PlexMovieAssociationV2Schema,
   PlexBindingSnapshotSchema,
+  type PlexAssociation,
   type PlexBindingScope,
 } from "#shared/plex-binding/contract.ts";
-import { PlexBindingExpectedSchema } from "#shared/plex-binding/expected.ts";
+import {
+  PlexBindingExpectedSchema,
+  type PlexBindingExpected,
+} from "#shared/plex-binding/expected.ts";
 import {
   ReverifyPlexBindingInputSchema,
   ReverifyPlexBindingResultSchema,
@@ -106,6 +111,7 @@ function pointerRecord(
 export async function loadPlexVerificationRequest(
   tx: Prisma.TransactionClient,
   raw: ReverifyPlexBindingInput,
+  budget?: PublicationAuthorityReadBudget,
 ) {
   const input = ReverifyPlexBindingInputSchema.parse(raw);
   const request = await tx.plexBindingVerificationRequest.findUniqueOrThrow({
@@ -115,6 +121,7 @@ export async function loadPlexVerificationRequest(
   const command = ReverifyPlexBindingInputSchema.parse(
     request.operation.payload,
   );
+  budget?.consume(2);
   if (
     identityHash(command) !== identityHash(input) ||
     request.operation.kind !== input.kind ||
@@ -141,12 +148,14 @@ export async function loadPlexVerificationRequest(
 export async function readPlexVerificationCompletion(
   tx: Prisma.TransactionClient,
   input: ReverifyPlexBindingInput,
+  budget?: PublicationAuthorityReadBudget,
 ) {
-  const parent = await loadPlexVerificationRequest(tx, input);
+  const parent = await loadPlexVerificationRequest(tx, input, budget);
   const receipt = await tx.plexBindingVerificationReceipt.findUnique({
     where: { operationId: input.operationId },
   });
   if (receipt === null) return null;
+  budget?.consume(1);
   const completion = parsePlexRecord(
     PlexBindingVerificationCompletionSchema,
     receipt.completion,
@@ -159,6 +168,7 @@ export async function readPlexVerificationCompletion(
     },
   });
   const byId = new Map(evidence.map((row) => [row.id, row]));
+  budget?.consume(evidence.length);
   const groupHashes = new Set(
     parent.expected.newGroups.map((group) => identityHash(group)),
   );
@@ -175,6 +185,7 @@ export async function readPlexVerificationCompletion(
     .flatMap((group) => group.coverage)
     .map((scope) => `${scope.mediaId}/${scope.edition}`)
     .sort();
+  const AssociationSchema = completionAssociationSchema(parent.expected);
   if (
     identityHash(expectedScopes) !==
     identityHash(
@@ -188,8 +199,8 @@ export async function readPlexVerificationCompletion(
     const row = byId.get(binding.evidenceId);
     if (row?.associationHash !== binding.associationHash)
       throw new Error("Plex completion evidence missing");
-    const association = parsePlexRecord(
-      PlexAssociationV1Schema,
+    const association = parsePlexRecord<PlexAssociation>(
+      AssociationSchema,
       row.evidence,
       row.associationHash,
     );
@@ -218,6 +229,14 @@ export async function readPlexVerificationCompletion(
     status: "verified",
     bindingCount: completion.bindingCount,
   });
+}
+
+function completionAssociationSchema(expected: PlexBindingExpected) {
+  return expected.parents.some(
+    (value) => value.kind === "existing_movie_asset_v2",
+  )
+    ? PlexMovieAssociationV2Schema
+    : PlexAssociationV1Schema;
 }
 
 function assertCompletionParent(

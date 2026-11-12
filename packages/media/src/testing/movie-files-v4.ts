@@ -24,7 +24,12 @@ export async function movieFilesV4Fixture(
   db: Database,
   network: MediaAutomationContext,
   base: Base,
-  input: { bytes: Uint8Array; edition?: MovieEditionKey; memberName?: string },
+  input: {
+    bytes: Uint8Array;
+    edition?: MovieEditionKey;
+    memberName?: string;
+    tmdbId?: number;
+  },
 ) {
   const files = await mappedPublicationFixture(db);
   try {
@@ -33,8 +38,9 @@ export async function movieFilesV4Fixture(
       where: { id: base.media.id },
       data: {
         tmdbId:
+          input.tmdbId ??
           z.int().parse(crypto.getRandomValues(new Uint32Array(1))[0]) %
-          2_000_000_000,
+            2_000_000_000,
         runtimeMinutes: 1,
         originalLanguage: "en",
       },

@@ -27,6 +27,7 @@ import { acquisitionInvocation } from "./acquisition-management/invocation.ts";
 import { acknowledgeManagedAcquisition } from "./acquisition-management/acknowledgement.ts";
 import { selectSeriesPackV1 } from "./acquisition-management/series-pack/select.ts";
 import { seriesPackIdentityV1 } from "#shared/acquisition/library-management.ts";
+import { assertNoExternalLibrary } from "#infrastructure/external-library/protection.ts";
 type AcquisitionActivities = Pick<
   MediaNetworkActivities,
   "reconcileMediaIntent" | "submitMediaTorrent" | "observeMediaAcquisition"
@@ -83,6 +84,7 @@ async function reconcile(
       attemptId: null,
       reason: "intent_ownership_unconfirmed",
     };
+  await assertNoExternalLibrary(context.db, [input.mediaId]);
   const profile = await loadProfile(context.db, input.mediaId);
   if (profile === null)
     return {

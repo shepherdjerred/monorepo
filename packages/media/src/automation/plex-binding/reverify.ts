@@ -22,6 +22,9 @@ import {
   type PlexBindingExecution,
 } from "#shared/plex-binding/activities.ts";
 import { bindingAccess } from "./access.ts";
+import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import { movieInventoryParent } from "#infrastructure/movie-editions/plex/inventory/expected.ts";
+import { verifyMoviePlexV2 } from "#automation/movie-editions/plex-verification.ts";
 
 export async function reverifyPlexBinding(
   context: MediaAutomationContext,
@@ -46,22 +49,34 @@ export async function reverifyPlexBinding(
       guards: [execution],
     });
     const expected = prior.request.expected;
+    const movie = movieInventoryParent(expected);
+    const budget =
+      movie === null ? undefined : new PublicationAuthorityReadBudget();
+    // The initial request and completion lookup each returned request+Operation.
+    // A historical completion returned above and performs no new current work.
+    budget?.consume(4);
     const access = await bindingAccess(
       context,
       expected.access.map((value) => value.sectionType),
     );
     freshness.assertActive();
     const prepared = await context.db.$transaction(async (tx) => {
-      await assertPlexBindingExpected(tx, expected, freshness, { access });
+      await assertPlexBindingExpected(tx, expected, freshness, {
+        access,
+        ...(budget === undefined ? {} : { budget }),
+      });
       const scope = await preparePlexBindingLockScope(tx, expected);
       const canonicalTargets = await readPlexCanonicalTargets(
         tx,
         expected.targets.map((value) => value.scope),
       );
+      budget?.consume(canonicalTargets.length);
       freshness.assertActive();
       return { scope, canonicalTargets };
     });
-    const verified = await verifyPlexAssociations(
+    const verified = await (
+      movie === null ? verifyPlexAssociations : verifyMoviePlexV2
+    )(
       context,
       {
         purpose: "current_serving",
@@ -79,17 +94,30 @@ export async function reverifyPlexBinding(
     }
     const result = await serializable(context.db, async (tx) => {
       // A concurrent winner's exact receipt remains an ACK even if current state drifted.
-      const completed = await readPlexBindingVerificationCompletion(tx, input);
+      const completed = await readPlexBindingVerificationCompletion(
+        tx,
+        input,
+        budget,
+      );
       execution.assertActive();
       if (completed !== null) {
         return completed;
       }
-      await lockPlexBindingScope(tx, prepared.scope, verified.freshness);
-      const committed = await commitPlexBindingVerification(tx, {
-        input,
-        expected,
-        verified,
-      });
+      await lockPlexBindingScope(
+        tx,
+        prepared.scope,
+        verified.freshness,
+        budget === undefined ? {} : { budget },
+      );
+      const committed = await commitPlexBindingVerification(
+        tx,
+        {
+          input,
+          expected,
+          verified,
+        },
+        budget,
+      );
       verified.freshness.assertActive();
       return committed;
     });

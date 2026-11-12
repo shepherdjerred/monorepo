@@ -10,6 +10,7 @@ import {
 import { assertMovieAcquisitionOperationV4 } from "#infrastructure/movie-editions/lifecycle/operation.ts";
 import { runtimeAuthority } from "#infrastructure/handoff/authority.ts";
 import { MediaError } from "#application/errors.ts";
+import { externalLibraryProtected } from "#infrastructure/external-library/protection.ts";
 import { ProviderAdmissionDeferred } from "#automation/providers.ts";
 import {
   searchMovieCandidatesV4,
@@ -107,6 +108,12 @@ export async function reconcileMovieIntentV4(
       status: "blocked",
       attemptId: null,
       reason: "acquisition_disabled",
+    };
+  if (await externalLibraryProtected(context.db, [input.mediaId]))
+    return {
+      status: "blocked",
+      attemptId: null,
+      reason: "external_library_protected",
     };
   if (target.profileId === null)
     return {
