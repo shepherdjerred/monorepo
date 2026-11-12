@@ -18,41 +18,37 @@ function environment(): Record<string, string | undefined> {
   };
 }
 
+/** A source on a controllable clock whose Nth mint returns `token-N`. */
+function clockedSource() {
+  vi.spyOn(console, "log").mockImplementation(vi.fn());
+  const clock = { now: 0 };
+  const mint = vi.fn(async () => ({
+    token: `token-${String(mint.mock.calls.length)}`,
+    expiresAt: new Date(clock.now + HOUR_MS),
+  }));
+  const read = installationTokenSource({
+    installationId: "456",
+    mint,
+    now: () => clock.now,
+  });
+  return { clock, mint, read };
+}
+
 describe("installationTokenSource", () => {
   test("mints once and reuses the token while it is fresh", async () => {
-    vi.spyOn(console, "log").mockImplementation(vi.fn());
-    let now = 0;
-    const mint = vi.fn(async () => ({
-      token: `token-${String(mint.mock.calls.length)}`,
-      expiresAt: new Date(now + HOUR_MS),
-    }));
-    const read = installationTokenSource({
-      installationId: "456",
-      mint,
-      now: () => now,
-    });
+    const { clock, mint, read } = clockedSource();
 
     expect(await read()).toBe("token-1");
-    now = HOUR_MS - READ_TOKEN_REFRESH_MARGIN_MS - 1;
+    clock.now = HOUR_MS - READ_TOKEN_REFRESH_MARGIN_MS - 1;
     expect(await read()).toBe("token-1");
     expect(mint).toHaveBeenCalledTimes(1);
   });
 
   test("mints a new token before the held one expires", async () => {
-    vi.spyOn(console, "log").mockImplementation(vi.fn());
-    let now = 0;
-    const mint = vi.fn(async () => ({
-      token: `token-${String(mint.mock.calls.length)}`,
-      expiresAt: new Date(now + HOUR_MS),
-    }));
-    const read = installationTokenSource({
-      installationId: "456",
-      mint,
-      now: () => now,
-    });
+    const { clock, mint, read } = clockedSource();
 
     await read();
-    now = HOUR_MS - READ_TOKEN_REFRESH_MARGIN_MS;
+    clock.now = HOUR_MS - READ_TOKEN_REFRESH_MARGIN_MS;
     expect(await read()).toBe("token-2");
     expect(mint).toHaveBeenCalledTimes(2);
   });
