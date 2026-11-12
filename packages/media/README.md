@@ -733,6 +733,8 @@ collection (phase `section >= 2`, independently of later owned cleanup) within
 unowned coverage continues protecting against duplicate acquisition and
 upgrades when that observation becomes stale. Inventory itself remains
 observation-only; registration requires the explicit owner command.
+During an incomplete or failed inventory collection, replaced cohort evidence
+temporarily shows reconciliation until a complete collection is available.
 
 Edition correction is a separate owner-reviewed metadata-only command
 (`edition-preview`, `edition-apply`). It verifies the configured server/section,
