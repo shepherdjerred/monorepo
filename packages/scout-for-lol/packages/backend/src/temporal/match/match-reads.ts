@@ -19,6 +19,7 @@ import {
 } from "@scout-for-lol/temporal/activity-contracts";
 import { SCOUT_PAGE_MAX } from "@scout-for-lol/temporal/pipeline-contracts";
 import { prisma } from "#src/database/index.ts";
+import { recordRiotListedAfterClientSelection } from "#src/scout-client/telemetry/capture-metrics.ts";
 import { listIntentsForMatch } from "#src/database/durable/intent-repository.ts";
 import type { MatchNotificationIntentRecord } from "#src/database/durable/intent-row.ts";
 import { getMatchPipelineState } from "#src/database/durable/match-pipeline-state.ts";
@@ -102,6 +103,9 @@ export async function discoverPostMatchIds(options?: {
   if (discovery.outcome === "skipped") {
     return ScoutPostMatchScanResultSchema.parse({ outcome: "skipped" });
   }
+  await recordRiotListedAfterClientSelection(
+    discovery.matches.slice(0, SCOUT_PAGE_MAX).map((intent) => intent.matchId),
+  );
   const matches = await Promise.all(
     discovery.matches.slice(0, SCOUT_PAGE_MAX).map(async (intent) => {
       if (intent.gameEndTimestamp === undefined) {

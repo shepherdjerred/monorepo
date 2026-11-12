@@ -1,6 +1,7 @@
 export * from "./model/index.ts";
 export * from "./customs/customs.schema.ts";
 export * from "./scout-client/protocol.schema.ts";
+export * from "./scout-client/post-game-outcome.ts";
 export * from "./scout-client/lcu-clash.schema.ts";
 export * from "./seasons.ts";
 

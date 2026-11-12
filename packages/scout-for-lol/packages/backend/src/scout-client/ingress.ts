@@ -4,9 +4,17 @@ import {
   type ScoutClientObservation,
   type ScoutClientObservationBatch,
   type ScoutClientObservationQuarantineReason,
+  projectPostGameOutcome,
   riotWithholdsMatchResult,
   withoutScoutClientCredentials,
+  type QueueType,
+  type ScoutClientPostGameOutcome,
 } from "@scout-for-lol/data";
+import {
+  gameKindOf,
+  recordPostGameOutcome,
+  recordStoredObservation,
+} from "./telemetry/capture-metrics.ts";
 import { prisma } from "#src/database/index.ts";
 import { Prisma } from "#generated/prisma/client/index.js";
 import {
@@ -35,10 +43,10 @@ import {
 } from "./identity-alias.ts";
 import {
   learnBatchIdentities,
-  gameflowCarriesRoster,
   observationUuids,
   translateObservation,
 } from "./observation-identity.ts";
+import { observationQuarantineReason } from "./quarantine/observation-quarantine.ts";
 import { reconcileProcessedClientBinding } from "./late-binding.ts";
 import { withObserverPlatform } from "./platform-context.ts";
 import { projectClashEntity } from "./clash-entities.ts";
@@ -135,57 +143,6 @@ function bodyDigest(observation: ScoutClientObservation): string {
   return new Bun.CryptoHasher("sha256")
     .update(JSON.stringify(observation))
     .digest("hex");
-}
-
-function payloadContainsPuuid(payload: unknown, puuid: string): boolean {
-  if (payload === puuid) return true;
-  return Array.isArray(payload)
-    ? payload.some((value) => payloadContainsPuuid(value, puuid))
-    : payload !== null &&
-        typeof payload === "object" &&
-        Object.entries(payload).some(
-          ([key, value]) =>
-            ((key === "puuid" || key === "summonerPuuid") && value === puuid) ||
-            payloadContainsPuuid(value, puuid),
-        );
-}
-
-export function observationQuarantineReason(
-  observation: ScoutClientObservation,
-  verifiedPuuids: ReadonlySet<string>,
-  acceptedAppVersions: ReadonlySet<string>,
-  now: Date,
-): ScoutClientObservationQuarantineReason | null {
-  if (!acceptedAppVersions.has(observation.appVersion)) {
-    return "unverified_app_version";
-  }
-  if (
-    new Date(observation.capturedAt).getTime() >
-    now.getTime() + 5 * 60 * 1000
-  ) {
-    return "future_timestamp";
-  }
-  if (
-    observation.localPuuid !== undefined &&
-    !verifiedPuuids.has(observation.localPuuid)
-  ) {
-    return "unverified_local_puuid";
-  }
-  const participantKinds = new Set(["lobby", "champ_select", "post_game"]);
-  if (
-    participantKinds.has(observation.kind) ||
-    gameflowCarriesRoster(observation)
-  ) {
-    if (observation.localPuuid === undefined) {
-      return "missing_observer_puuid";
-    }
-    if (!payloadContainsPuuid(observation.payload, observation.localPuuid)) {
-      return "observer_puuid_not_in_payload";
-    }
-  }
-  return observation.kind === "post_game" && observation.gameId === undefined
-    ? "missing_post_game_id"
-    : null;
 }
 
 /** The observer UUID the client sent, kept when it was a League-client UUID. */
@@ -286,6 +243,7 @@ async function createObservation(
     }
     throw error;
   }
+  recordStoredObservation(observation, reason);
   return {
     observationId: observation.observationId,
     outcome: reason === null ? "accepted" : "quarantined",
@@ -382,6 +340,25 @@ export function acceptedClientMatchDispatches(
   now = new Date(),
   identities: IdentityMap = new Map(),
 ): readonly ScoutClientMatchDispatchItem[] {
+  return evaluateClientPostGames(batch, receipts, now, identities).dispatches;
+}
+
+type PostGameEvaluation = {
+  readonly observationId: string;
+  readonly outcome: ScoutClientPostGameOutcome;
+  readonly gameKind: QueueType | "unknown";
+};
+
+function evaluateClientPostGames(
+  batch: ScoutClientObservationBatch,
+  receipts: readonly Receipt[],
+  now: Date,
+  identities: IdentityMap,
+): {
+  readonly dispatches: readonly ScoutClientMatchDispatchItem[];
+  readonly evaluations: readonly PostGameEvaluation[];
+} {
+  const evaluations: PostGameEvaluation[] = [];
   const accepted = new Set(
     receipts
       .filter((receipt) => receipt.outcome !== "quarantined")
@@ -421,12 +398,32 @@ export function acceptedClientMatchDispatches(
       },
       identities,
     );
-    if (match === null) continue;
+    if (match === null) {
+      evaluations.push({
+        observationId: observation.observationId,
+        outcome: projectPostGameOutcome({
+          identityResolved: true,
+          conversion: "unsupported",
+          deliveryMode: null,
+        }),
+        gameKind: "unknown",
+      });
+      continue;
+    }
     const deliveryMode = postGameDeliveryMode(
       observation,
       match.info.gameEndTimestamp,
       now,
     );
+    evaluations.push({
+      observationId: observation.observationId,
+      outcome: projectPostGameOutcome({
+        identityResolved: true,
+        conversion: "complete",
+        deliveryMode,
+      }),
+      gameKind: gameKindOf(match.info),
+    });
     if (deliveryMode === null) continue;
     const candidate: ScoutClientMatchDispatchItem = {
       riotMatchId: parsed.data,
@@ -444,11 +441,12 @@ export function acceptedClientMatchDispatches(
       starts.set(parsed.data, candidate);
     }
   }
-  return [...starts.values()].sort(
+  const dispatches = [...starts.values()].sort(
     (left, right) =>
       left.gameEndTimestamp - right.gameEndTimestamp ||
       left.riotMatchId.localeCompare(right.riotMatchId),
   );
+  return { dispatches, evaluations };
 }
 
 /**
@@ -473,12 +471,23 @@ export async function startAcceptedClientMatches(
     }),
   };
   // Ingest has already learned every alias this batch can teach.
-  const dispatches = acceptedClientMatchDispatches(
+  const { dispatches, evaluations } = evaluateClientPostGames(
     contextualBatch,
     receipts,
     new Date(),
     await readIdentityAliases(observationUuids(batch.observations)),
   );
+  // Only a first acceptance counts: reconciliation and client retries replay
+  // this path with `already_accepted` receipts for observations counted before.
+  const fresh = new Set(
+    receipts
+      .filter((receipt) => receipt.outcome === "accepted")
+      .map((receipt) => receipt.observationId),
+  );
+  for (const evaluation of evaluations) {
+    if (fresh.has(evaluation.observationId))
+      recordPostGameOutcome(evaluation.outcome, evaluation.gameKind);
+  }
   const admitted = await Promise.all(
     dispatches.map(async (item) => {
       const policy = await admitMatchEvidence({

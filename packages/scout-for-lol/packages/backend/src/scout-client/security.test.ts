@@ -1,9 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { ScoutClientObservationSchema } from "@scout-for-lol/data";
-import {
-  nextScoutClientObservationSequence,
-  observationQuarantineReason,
-} from "./ingress.ts";
+import { nextScoutClientObservationSequence } from "./ingress.ts";
+import { observationQuarantineReason } from "./quarantine/observation-quarantine.ts";
 import { digestMatches, randomSecret, secretDigest } from "./secrets.ts";
 
 const NOW = new Date("2026-09-20T12:00:00Z");

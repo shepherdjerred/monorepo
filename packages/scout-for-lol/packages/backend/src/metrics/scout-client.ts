@@ -1,4 +1,4 @@
-import { Counter, Gauge } from "prom-client";
+import { Counter, Gauge, Histogram } from "prom-client";
 import { registry } from "#src/metrics/registry.ts";
 
 /**
@@ -60,5 +60,92 @@ export const scoutClientProjectionOutcomesTotal = new Counter({
   name: "scout_client_projection_outcomes_total",
   help: "Terminal outcomes of recovering Scout Client post-game observations",
   labelNames: ["outcome"] as const,
+  registers: [registry],
+});
+
+/**
+ * Observations the server received, by kind and what became of them. `kind` is
+ * the protocol's closed observation-kind set and `quarantine_reason` its closed
+ * reason set (`none` for an accepted observation), so every label is bounded;
+ * no device, player or match identifier is ever a label.
+ *
+ * Counted once, when the observation is first stored, so a client retrying its
+ * outbox does not inflate it. A rising `quarantined` share is the first sign a
+ * rollout is dropping client evidence.
+ */
+export const scoutClientObservationsTotal = new Counter({
+  name: "scout_client_observations_total",
+  help: "Scout Client observations first stored, by kind, outcome and quarantine reason",
+  labelNames: ["kind", "outcome", "quarantine_reason"] as const,
+  registers: [registry],
+});
+
+/**
+ * What became of each Scout Client post-game observation: the typed outcome
+ * projection's closed set (`ScoutClientPostGameOutcome`), and the shared
+ * classifier's queue type of the game, or `unknown`.
+ */
+export const scoutClientPostGameOutcomeTotal = new Counter({
+  name: "scout_client_post_game_outcome_total",
+  help: "Scout Client post-game observations by projected outcome and game kind",
+  labelNames: ["outcome", "game_kind"] as const,
+  registers: [registry],
+});
+
+/**
+ * Seconds from a game ending to its post-match report being delivered to
+ * Discord. Buckets span the two-minute Riot-first grace through a delayed
+ * client outbox.
+ */
+export const scoutClientGameEndToDeliveredSeconds = new Histogram({
+  name: "scout_client_game_end_to_delivered_seconds",
+  help: "Seconds from game end to the post-match report being delivered to Discord",
+  buckets: [30, 60, 120, 180, 300, 600, 900, 1800, 3600, 7200],
+  registers: [registry],
+});
+
+/**
+ * Matches Riot's history listed after a client selection was already made for
+ * them. Each is a match two sources both claim: the duplicate-risk signal.
+ */
+export const scoutClientRiotListedAfterSelectionTotal = new Counter({
+  name: "scout_client_riot_listed_after_selection_total",
+  help: "Matches Riot listed after a Scout Client selection had already been made",
+  registers: [registry],
+});
+
+/**
+ * League-client UUIDs reported in the last day that still have no Riot alias:
+ * the identities whose lookups have not (or not yet) succeeded. The lookups'
+ * own failures are `scout_client_identity_aliases_total` by outcome. Reads -1
+ * when the sweep fails.
+ */
+export const scoutClientAliasLookupBacklog = new Gauge({
+  name: "scout_client_alias_lookup_backlog",
+  help: "Distinct League-client UUIDs seen in the last day with no Riot alias",
+  registers: [registry],
+});
+
+/** Devices that checked in over the last fifteen minutes; -1 when the sweep fails. */
+export const scoutClientActiveDevices = new Gauge({
+  name: "scout_client_active_devices",
+  help: "Scout Client devices seen in the last fifteen minutes",
+  registers: [registry],
+});
+
+/**
+ * Accepted post-game and Clash observations whose evidence has not finished
+ * reconciling, and the age in seconds of the oldest. Both read -1 when the
+ * sweep fails.
+ */
+export const scoutClientReconciliationBacklog = new Gauge({
+  name: "scout_client_reconciliation_backlog",
+  help: "Accepted Scout Client observations awaiting evidence reconciliation",
+  registers: [registry],
+});
+
+export const scoutClientReconciliationOldestAgeSeconds = new Gauge({
+  name: "scout_client_reconciliation_oldest_age_seconds",
+  help: "Age in seconds of the oldest accepted observation awaiting reconciliation",
   registers: [registry],
 });

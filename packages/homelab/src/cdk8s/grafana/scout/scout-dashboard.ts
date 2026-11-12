@@ -5,6 +5,7 @@ import * as stat from "@grafana/grafana-foundation-sdk/stat";
 import * as prometheus from "@grafana/grafana-foundation-sdk/prometheus";
 import { exportDashboardWithHelmEscaping } from "@shepherdjerred/homelab/cdk8s/grafana/dashboard-export.ts";
 import { addPreMatchRow } from "./scout-dashboard-prematch-panels.ts";
+import { addScoutClientRow } from "./scout-dashboard-client-panels.ts";
 import { addApiAndCompetitionRows } from "./scout-dashboard-api-competition-rows.ts";
 import { addScheduledReportRows } from "./scout-dashboard-scheduled-report-panels.ts";
 import { addGuildHealthRows } from "./scout-dashboard-health-panels.ts";
@@ -334,6 +335,10 @@ export function createScoutDashboard() {
   // subscription conversion.
   addWebSurfaceRows(builder, prometheusDatasource);
   addAdoptionFunnelRows(builder, prometheusDatasource);
+
+  // Scout Client capture: observation outcomes, backlogs, alias lookups, and
+  // game-end to Discord latency.
+  addScoutClientRow(builder, prometheusDatasource);
 
   return builder.build();
 }
