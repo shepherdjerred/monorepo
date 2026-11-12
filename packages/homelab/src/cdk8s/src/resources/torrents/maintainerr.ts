@@ -1,69 +1,35 @@
-import {
-  Cpu,
-  Deployment,
-  DeploymentStrategy,
-  Service,
-  Volume,
-} from "cdk8s-plus-31";
+import { Cpu } from "cdk8s-plus-31";
 import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
-import {
-  withCommonLinuxServerProps,
-  linuxServerPod,
-} from "@shepherdjerred/homelab/cdk8s/src/misc/linux-server.ts";
-import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
-import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
-import { setRevisionHistoryLimit } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
+import { LinuxServerApp } from "@shepherdjerred/homelab/cdk8s/src/misc/third-party/linuxserver-app.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 export function createMaintainerrDeployment(chart: Chart) {
-  const deployment = new Deployment(chart, "maintainerr", {
-    replicas: 1,
-    strategy: DeploymentStrategy.recreate(),
-    ...linuxServerPod({ fsGroup: true }),
-  });
-
-  const localPathVolume = new ZfsNvmeVolume(chart, "maintainerr-pvc", {
-    storage: Size.gibibytes(8),
-  });
-
-  deployment.addContainer(
-    withCommonLinuxServerProps({
-      image: `ghcr.io/jorenn92/maintainerr:${versions["jorenn92/maintainerr"]}`,
-      portNumber: 6246,
-      volumeMounts: [
-        {
-          path: "/opt/data",
-          volume: Volume.fromPersistentVolumeClaim(
-            chart,
-            "maintainerr-volume",
-            localPathVolume.claim,
-          ),
-        },
-      ],
-      resources: {
-        cpu: {
-          request: Cpu.millis(50),
-          limit: Cpu.millis(1000),
-        },
-        memory: {
-          request: Size.mebibytes(256),
-          limit: Size.mebibytes(512),
-        },
+  // Not a LinuxServer.io image, but it has always been rendered with their
+  // root-start security context, PUID/PGID and kube-linter exemptions.
+  new LinuxServerApp(chart, "maintainerr-app", {
+    name: "maintainerr",
+    image: `ghcr.io/jorenn92/maintainerr:${versions["jorenn92/maintainerr"]}`,
+    port: 6246,
+    fsGroup: true,
+    claims: [
+      {
+        claim: "maintainerr-pvc",
+        volumeId: "maintainerr-volume",
+        storage: Size.gibibytes(8),
+        path: "/opt/data",
       },
-    }),
-  );
-
-  setRevisionHistoryLimit(deployment);
-
-  const service = new Service(chart, "maintainerr-service", {
-    selector: deployment,
-    ports: [{ port: 6246 }],
-  });
-
-  new TailscaleIngress(chart, "maintainerr-tailscale-ingress", {
-    service,
-    host: "maintainerr",
-    proxyClass: "medium",
+    ],
+    resources: {
+      cpu: {
+        request: Cpu.millis(50),
+        limit: Cpu.millis(1000),
+      },
+      memory: {
+        request: Size.mebibytes(256),
+        limit: Size.mebibytes(512),
+      },
+    },
+    tailscale: { host: "maintainerr", proxyClass: "medium" },
   });
 }
