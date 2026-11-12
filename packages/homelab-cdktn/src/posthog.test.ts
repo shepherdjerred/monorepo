@@ -1,23 +1,19 @@
 import path from "node:path";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
-import { synthesize } from "#scripts/synth.ts";
+import {
+  ResourcesSchema,
+  TerraformSchema,
+  enforcedEncryption,
+  synthesizedStack,
+} from "#src/testing.ts";
 
 const ConfigurationSchema = z.looseObject({
-  terraform: z.looseObject({
-    encryption: z.unknown(),
-    required_providers: z.record(
-      z.string(),
-      z.object({ source: z.string(), version: z.string() }),
-    ),
-  }),
+  terraform: TerraformSchema,
   provider: z.record(z.string(), z.unknown()),
   variable: z.record(z.string(), z.unknown()),
   locals: z.record(z.string(), z.record(z.string(), z.unknown())),
-  resource: z.record(
-    z.string(),
-    z.record(z.string(), z.record(z.string(), z.unknown())),
-  ),
+  resource: ResourcesSchema,
   import: z.array(z.strictObject({ to: z.string(), id: z.string() })),
   moved: z.unknown().optional(),
   removed: z.unknown().optional(),
@@ -31,10 +27,7 @@ const RegistrySchema = z.looseObject({
 });
 
 async function posthog() {
-  const synthesized = await synthesize();
-  return ConfigurationSchema.parse(
-    JSON.parse(synthesized.get("posthog") ?? ""),
-  );
+  return synthesizedStack("posthog", ConfigurationSchema);
 }
 
 /** PostHog ids of the dashboards adopted with their tile layouts. */
@@ -145,16 +138,13 @@ describe("posthog", () => {
       posthog: [{ organization_id: ORGANIZATION, project_id: PROJECT }],
     });
     // Encrypted state names its key provider; another name cannot read it.
-    expect(terraform.encryption).toEqual({
-      key_provider: {
-        pbkdf2: { posthog: { passphrase: "${var.state_passphrase}" } },
-      },
-      method: {
-        aes_gcm: { posthog: { keys: "${key_provider.pbkdf2.posthog}" } },
-      },
-      state: { method: "method.aes_gcm.posthog", enforced: true },
-      plan: { method: "method.aes_gcm.posthog", enforced: true },
-    });
+    expect(terraform.encryption).toEqual(
+      enforcedEncryption({
+        variable: "state_passphrase",
+        keyProvider: "posthog",
+        method: "posthog",
+      }),
+    );
     expect(variable).toEqual({
       state_passphrase: {
         description:

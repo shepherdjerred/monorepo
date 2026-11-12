@@ -1,19 +1,12 @@
 import path from "node:path";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
-import { synthesize } from "#scripts/synth.ts";
+import { VersionedTerraformSchema, synthesizedStack } from "#src/testing.ts";
 
 const MANAGED = "cloudflare_api_token.managed";
 
 const ConfigurationSchema = z.looseObject({
-  terraform: z.looseObject({
-    encryption: z.unknown(),
-    required_version: z.string(),
-    required_providers: z.record(
-      z.string(),
-      z.object({ source: z.string(), version: z.string() }),
-    ),
-  }),
+  terraform: VersionedTerraformSchema,
   variable: z.record(z.string(), z.record(z.string(), z.unknown())),
   locals: z.record(z.string(), z.unknown()),
   resource: z.record(z.string(), z.record(z.string(), z.unknown())),
@@ -46,10 +39,7 @@ const DesiredStateSchema = z.looseObject({
 });
 
 async function cloudflareTokens() {
-  const synthesized = await synthesize();
-  return ConfigurationSchema.parse(
-    JSON.parse(synthesized.get("cloudflare-tokens") ?? ""),
-  );
+  return synthesizedStack("cloudflare-tokens", ConfigurationSchema);
 }
 
 /** The committed registry the stack runner injects as `cloudflare_api_tokens`. */

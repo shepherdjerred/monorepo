@@ -1,15 +1,9 @@
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
-import { synthesize } from "#scripts/synth.ts";
+import { TerraformSchema, synthesizedStack } from "#src/testing.ts";
 
 const ConfigurationSchema = z.looseObject({
-  terraform: z.looseObject({
-    encryption: z.unknown(),
-    required_providers: z.record(
-      z.string(),
-      z.object({ source: z.string(), version: z.string() }),
-    ),
-  }),
+  terraform: TerraformSchema,
   variable: z.record(z.string(), z.unknown()),
   resource: z.record(z.string(), z.record(z.string(), z.unknown())),
   import: z.array(z.record(z.string(), z.unknown())),
@@ -19,10 +13,7 @@ const ConfigurationSchema = z.looseObject({
 });
 
 async function anthropic() {
-  const synthesized = await synthesize();
-  return ConfigurationSchema.parse(
-    JSON.parse(synthesized.get("anthropic") ?? ""),
-  );
+  return synthesizedStack("anthropic", ConfigurationSchema);
 }
 
 describe("anthropic", () => {

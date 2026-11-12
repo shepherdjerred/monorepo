@@ -1,22 +1,16 @@
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
-import { synthesize } from "#scripts/synth.ts";
+import {
+  ResourcesSchema,
+  VersionedTerraformSchema,
+  synthesizedStack,
+} from "#src/testing.ts";
 
 const ConfigurationSchema = z.looseObject({
-  terraform: z.looseObject({
-    encryption: z.unknown(),
-    required_version: z.string(),
-    required_providers: z.record(
-      z.string(),
-      z.object({ source: z.string(), version: z.string() }),
-    ),
-  }),
+  terraform: VersionedTerraformSchema,
   provider: z.record(z.string(), z.unknown()),
   variable: z.record(z.string(), z.unknown()),
-  resource: z.record(
-    z.string(),
-    z.record(z.string(), z.record(z.string(), z.unknown())),
-  ),
+  resource: ResourcesSchema,
   import: z.array(z.record(z.string(), z.unknown())),
   moved: z.array(z.object({ from: z.string(), to: z.string() })),
   removed: z.array(z.record(z.string(), z.unknown())),
@@ -24,8 +18,7 @@ const ConfigurationSchema = z.looseObject({
 });
 
 async function openai() {
-  const synthesized = await synthesize();
-  return ConfigurationSchema.parse(JSON.parse(synthesized.get("openai") ?? ""));
+  return synthesizedStack("openai", ConfigurationSchema);
 }
 
 /** Each `for_each` instance the stack forgets, and the address it is forgotten at. */

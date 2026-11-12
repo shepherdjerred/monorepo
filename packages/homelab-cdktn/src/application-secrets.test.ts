@@ -1,24 +1,19 @@
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
-import { synthesize } from "#scripts/synth.ts";
+import {
+  ResourcesSchema,
+  VersionedTerraformSchema,
+  enforcedEncryption,
+  synthesizedStack,
+} from "#src/testing.ts";
 
 const ConfigurationSchema = z.looseObject({
-  terraform: z.looseObject({
-    encryption: z.unknown(),
-    required_version: z.string(),
-    required_providers: z.record(
-      z.string(),
-      z.object({ source: z.string(), version: z.string() }),
-    ),
-  }),
+  terraform: VersionedTerraformSchema,
   provider: z.record(z.string(), z.unknown()),
   variable: z.record(z.string(), z.record(z.string(), z.unknown())),
   locals: z.record(z.string(), z.unknown()),
   data: z.unknown().optional(),
-  resource: z.record(
-    z.string(),
-    z.record(z.string(), z.record(z.string(), z.unknown())),
-  ),
+  resource: ResourcesSchema,
   import: z.array(z.record(z.string(), z.string())),
   output: z.record(z.string(), z.record(z.string(), z.unknown())),
   moved: z.unknown().optional(),
@@ -26,10 +21,7 @@ const ConfigurationSchema = z.looseObject({
 });
 
 async function applicationSecrets() {
-  const synthesized = await synthesize();
-  return ConfigurationSchema.parse(
-    JSON.parse(synthesized.get("application-secrets") ?? ""),
-  );
+  return synthesizedStack("application-secrets", ConfigurationSchema);
 }
 
 describe("application-secrets", () => {
@@ -141,17 +133,6 @@ describe("application-secrets", () => {
       random: { source: "hashicorp/random", version: "3.9.1" },
     });
     expect(terraform.required_version).toBe(">= 1.12.0");
-    expect(terraform.encryption).toEqual({
-      key_provider: {
-        pbkdf2: {
-          state: { passphrase: "${var.tofu_state_encryption_passphrase}" },
-        },
-      },
-      method: {
-        aes_gcm: { encrypted: { keys: "${key_provider.pbkdf2.state}" } },
-      },
-      state: { method: "method.aes_gcm.encrypted", enforced: true },
-      plan: { method: "method.aes_gcm.encrypted", enforced: true },
-    });
+    expect(terraform.encryption).toEqual(enforcedEncryption());
   });
 });

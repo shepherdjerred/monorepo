@@ -4,7 +4,7 @@ import path from "node:path";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import { encryptStateAndPlans } from "#src/encryption.ts";
-import { synthesizeStack } from "#src/testing.ts";
+import { enforcedEncryption, synthesizeStack } from "#src/testing.ts";
 
 const EncryptedSchema = z.looseObject({
   terraform: z.looseObject({ encryption: z.unknown() }),
@@ -67,18 +67,7 @@ describe("state and plan encryption", () => {
         ],
       },
     });
-    expect(terraform.encryption).toEqual({
-      key_provider: {
-        pbkdf2: {
-          state: { passphrase: "${var.tofu_state_encryption_passphrase}" },
-        },
-      },
-      method: {
-        aes_gcm: { encrypted: { keys: "${key_provider.pbkdf2.state}" } },
-      },
-      state: { method: "method.aes_gcm.encrypted", enforced: true },
-      plan: { method: "method.aes_gcm.encrypted", enforced: true },
-    });
+    expect(terraform.encryption).toEqual(enforcedEncryption());
   });
 
   test("keeps a stack's own variable, key provider and method names", async () => {
@@ -92,16 +81,13 @@ describe("state and plan encryption", () => {
         "The PostHog state passphrase must contain at least 16 characters.",
     });
     expect(Object.keys(variable)).toEqual(["state_passphrase"]);
-    expect(terraform.encryption).toEqual({
-      key_provider: {
-        pbkdf2: { posthog: { passphrase: "${var.state_passphrase}" } },
-      },
-      method: {
-        aes_gcm: { posthog: { keys: "${key_provider.pbkdf2.posthog}" } },
-      },
-      state: { method: "method.aes_gcm.posthog", enforced: true },
-      plan: { method: "method.aes_gcm.posthog", enforced: true },
-    });
+    expect(terraform.encryption).toEqual(
+      enforcedEncryption({
+        variable: "state_passphrase",
+        keyProvider: "posthog",
+        method: "posthog",
+      }),
+    );
   });
 
   /**
