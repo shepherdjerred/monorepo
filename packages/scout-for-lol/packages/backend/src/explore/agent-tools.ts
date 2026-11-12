@@ -218,7 +218,7 @@ export function createExploreTools(options: ExploreToolsOptions) {
               ? `No player matches "${inputData.query}". Say the data does not cover them rather than guessing at a similar name.`
               : found.length === 1
                 ? `One match. Use player(${quoteScoutQlString(found[0]?.displayName ?? inputData.query)}) in the query.`
-                : `${found.length.toString()} people match. Ask which one they meant before querying.`,
+                : `${found.length.toString()} people match. Do not query yet: list the candidates with their Riot IDs, games and last-played dates, and offer up to three (most games first) as followUps repeating the user's question with the candidate's full Riot ID, so picking one resolves the name in this conversation.`,
         };
       }),
   });

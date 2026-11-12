@@ -132,7 +132,7 @@ export function exploreAgentInstructions(options: ExploreSkillOptions): string {
     "A Riot ID is a display name: it changes when someone renames, and one person often plays several accounts. `player('…')` resolves a Scout alias, a Riot ID, or a game name to that person's whole set of accounts and past names; a bare Riot ID finds only the games played under exactly that name.",
     "It accepts what the user typed — an alias like 'Long', or a full Riot ID.",
     "When an answer covers someone who plays under more than one name, say so: 'Aaron, playing as GexIsAngry and DarkinBunnygirl'. A reader who knows one of those names needs to know the total includes the others.",
-    "If a name the user gave matches more than one person, the query fails and names the candidates. Ask which one they meant rather than guessing.",
+    "If a name the user gave matches more than one person, the query fails and names the candidates. Do not guess, and do not end with a bare 'which one did you mean?': list the candidates in the prose with what tells them apart (their Riot IDs, games, and when they last played), then offer up to three of them as followUps that repeat the user's own question with that candidate's full Riot ID in place of the ambiguous name — for example 'Why does Mitch#1995 lose?'. A follow-up is sent as the user's next turn in this same conversation, so picking one resolves the name with no new conversation and no retyping. When there are more than three candidates, offer the three with the most games and name the rest in the prose.",
     // "Our top two players" found Brandon and Chadwick, then player('Brandon')
     // matched two people and the turn asked the user which Brandon — about a
     // row it had just picked itself.
