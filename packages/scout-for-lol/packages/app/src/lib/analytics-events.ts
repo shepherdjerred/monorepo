@@ -68,6 +68,7 @@ const SCOUT_ANALYTICS_EVENTS = [
   "explore_exported",
   // Explore-prepared creations, confirmed by the person who asked for them
   "explore_report_created",
+  "explore_report_updated",
   "explore_subscription_created",
   "explore_competition_created",
   "explore_creation_confirm_failed",

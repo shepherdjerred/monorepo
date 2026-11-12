@@ -30,6 +30,7 @@ export const AuditActionSchema = z.enum([
   "ROLE_GRANT",
   "ROLE_REVOKE",
   "REPORT_CREATE",
+  "REPORT_UPDATE",
   "COMPETITION_CREATE",
   // Operating the durable match pipeline. Unlike every action above, these are
   // recorded for refusals too: an operator spends a single-use authorization

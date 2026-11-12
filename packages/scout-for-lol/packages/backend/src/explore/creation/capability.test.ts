@@ -181,6 +181,7 @@ describe("creation tool registration", () => {
       "list_guild_channels",
       "prepare_competition_creation",
       "prepare_report_creation",
+      "prepare_report_update",
       "prepare_subscription_creation",
     ]);
     // Building the toolset is Tier 1 only.

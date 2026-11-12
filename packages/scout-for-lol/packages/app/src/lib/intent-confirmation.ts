@@ -122,6 +122,8 @@ export type CreationFailureReason =
   | "account_already_subscribed"
   | "subscription_already_exists"
   | "riot_id_not_found"
+  | "report_not_found"
+  | "report_system_managed"
   | "intent_expired"
   | "already_used"
   | "unrecognized";
@@ -133,6 +135,13 @@ export type CreationConfirmationOutcome =
 const CreatedResultSchema = z.looseObject({
   kind: z.literal("created"),
   entity: CreationIntentKindSchema,
+  entityId: z.number().int().positive(),
+  guildId: DiscordGuildIdSchema,
+});
+
+const UpdatedResultSchema = z.looseObject({
+  kind: z.literal("updated"),
+  entity: z.literal("report"),
   entityId: z.number().int().positive(),
   guildId: DiscordGuildIdSchema,
 });
@@ -152,6 +161,8 @@ const RefusedResultSchema = z.looseObject({
     "account_already_subscribed",
     "subscription_already_exists",
     "riot_id_not_found",
+    "report_not_found",
+    "report_system_managed",
     "intent_expired",
   ]),
   message: z.string().min(1).optional(),
@@ -166,6 +177,7 @@ const CREATION_NOUN: Record<CreationIntentKind, string> = {
   report: "Report",
   subscription: "Subscription",
   competition: "Competition",
+  report_update: "Report",
 };
 
 const DEFAULT_FAILURE_MESSAGE: Record<CreationFailureReason, string> = {
@@ -177,6 +189,8 @@ const DEFAULT_FAILURE_MESSAGE: Record<CreationFailureReason, string> = {
   account_already_subscribed: "That account is already tracked.",
   subscription_already_exists: "That player is already tracked there.",
   riot_id_not_found: "Riot no longer recognises that Riot ID.",
+  report_not_found: "That report no longer exists.",
+  report_system_managed: "That report is system-managed and cannot be edited.",
   intent_expired: "This confirmation expired before it was used.",
   already_used: "This confirmation has already been used.",
   unrecognized: "Scout could not confirm that.",
@@ -201,6 +215,18 @@ function refusal(
 function classifyDirectCreationResult(
   result: unknown,
 ): CreationConfirmationOutcome {
+  const updated = UpdatedResultSchema.safeParse(result);
+  if (updated.success) {
+    return {
+      status: "confirmed",
+      message: "Report updated.",
+      created: {
+        entity: updated.data.entity,
+        entityId: updated.data.entityId,
+        guildId: updated.data.guildId,
+      },
+    };
+  }
   const created = CreatedResultSchema.safeParse(result);
   if (created.success) {
     return {
@@ -247,7 +273,10 @@ export function classifyCreationIntentConfirmation(
   return stored.status === "confirmed"
     ? {
         ...stored,
-        message: `${CREATION_NOUN[stored.created.entity]} was already created.`,
+        message:
+          kind === "report_update"
+            ? "Report was already updated."
+            : `${CREATION_NOUN[stored.created.entity]} was already created.`,
       }
     : stored;
 }
