@@ -40,7 +40,7 @@ export const DEBT: Readonly<Record<RuleId, ReadonlySet<string>>> = {
   ]),
 
   staticSitesWithoutCaddySite: new Set(),
-  caddySitesWithoutDefinition: new Set(),
+
   staticSitesWithoutBucket: new Set(),
 
   /** Buckets whose expiry rule matches no static site. */

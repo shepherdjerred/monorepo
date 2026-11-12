@@ -217,9 +217,7 @@ export function createStreambotDeployment(
             VOICE_ASSETS_DIR: EnvValue.fromValue("/opt/streambot/voice"),
             VOICE_KWS_RUNTIME: EnvValue.fromValue("auto"),
             VOICE_CAPTURE_ENABLED: EnvValue.fromValue("true"),
-            VOICE_CAPTURE_BUCKET: EnvValue.fromValue(
-              "streambot-voice-captures",
-            ),
+            ...seaweedfsS3.bucketEnv("VOICE_CAPTURE_BUCKET", "media"),
             S3_ENDPOINT: EnvValue.fromValue(seaweedfsS3.endpoint),
             S3_FORCE_PATH_STYLE: EnvValue.fromValue("true"),
             AWS_REGION: EnvValue.fromValue("us-east-1"),

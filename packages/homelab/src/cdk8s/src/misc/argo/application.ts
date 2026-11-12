@@ -1,4 +1,5 @@
 import type { ApiObjectMetadata } from "cdk8s";
+import { tailnetService } from "homelab/src/platform-model.ts";
 import type { Construct } from "constructs";
 import {
   Application,
@@ -19,7 +20,7 @@ import {
 
 /** The chart repository every first-party wrapper chart is published to. */
 export const FIRST_PARTY_CHART_REPOSITORY =
-  "https://chartmuseum.tailnet-1a49.ts.net";
+  tailnetService("chartmuseum").origin;
 /** Tracks the newest published 2.x wrapper chart, prereleases included. */
 export const FIRST_PARTY_CHART_REVISION = "~2.0.0-0";
 /** The history depth every Application keeps unless it says otherwise. */

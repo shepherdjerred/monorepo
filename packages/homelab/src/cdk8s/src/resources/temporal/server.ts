@@ -1,4 +1,5 @@
 import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { tailnetService } from "homelab/src/platform-model.ts";
 import type { Chart } from "cdk8s";
 import { Duration, Size } from "cdk8s";
 import type { ConfigMap } from "cdk8s-plus-31";
@@ -277,7 +278,7 @@ export function createTemporalServerDeployment(
 
   new TailscaleIngress(chart, "temporal-tailscale-ingress", {
     service: externalService,
-    host: "temporal",
+    host: tailnetService("temporal"),
     // Temporal's frontend speaks gRPC, not HTTP — an HTTP probe would
     // misreport it as down even when healthy.
     probeModule: "tcp_connect",

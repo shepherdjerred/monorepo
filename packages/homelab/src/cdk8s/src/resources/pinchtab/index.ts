@@ -1,4 +1,5 @@
 import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { tailnetService } from "homelab/src/platform-model.ts";
 import type { Chart } from "cdk8s";
 import { Duration, Size } from "cdk8s";
 import {
@@ -312,7 +313,7 @@ ip6tables -L OUTPUT -n`,
   // Tailnet access to the dashboard/API for debugging and profile login flows.
   new TailscaleIngress(chart, "pinchtab-tailscale-ingress", {
     service,
-    host: "pinchtab",
+    host: tailnetService("pinchtab"),
     proxyClass: "medium",
   });
 

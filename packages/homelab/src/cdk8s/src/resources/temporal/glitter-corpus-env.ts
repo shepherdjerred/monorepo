@@ -7,7 +7,7 @@ function glitterCorpusStorageEnv(
   return {
     GLITTER_DISCORD_GUILD_ID: EnvValue.fromValue("208425771172102144"),
     GLITTER_CORPUS_S3_ENDPOINT: EnvValue.fromValue(seaweedfsS3.endpoint),
-    GLITTER_CORPUS_S3_BUCKET: EnvValue.fromValue("glitter-discord-corpus"),
+    ...seaweedfsS3.bucketEnv("GLITTER_CORPUS_S3_BUCKET", "temporal"),
     GLITTER_CORPUS_S3_ACCESS_KEY_ID: EnvValue.fromSecretValue({
       secret: workerSecret,
       key: "AWS_ACCESS_KEY_ID",

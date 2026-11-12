@@ -1,4 +1,5 @@
 import type { Chart } from "cdk8s";
+import { tailnetService } from "homelab/src/platform-model.ts";
 import { Duration, Size } from "cdk8s";
 import {
   Cpu,
@@ -203,7 +204,7 @@ export function createBugsinkDeployment(chart: Chart) {
         }),
         DEBUG: EnvValue.fromValue("False"),
         ALLOWED_HOSTS: EnvValue.fromValue(
-          "bugsink.shepherdjerred.com,bugsink.sjer.red,bugsink.tailnet-1a49.ts.net,bugsink-bugsink-service.bugsink,bugsink-bugsink-service.bugsink.svc.cluster.local,localhost,127.0.0.1",
+          `bugsink.shepherdjerred.com,bugsink.sjer.red,${tailnetService("bugsink").fqdn},bugsink-bugsink-service.bugsink,bugsink-bugsink-service.bugsink.svc.cluster.local,localhost,127.0.0.1`,
         ),
 
         // URL configuration
@@ -386,13 +387,12 @@ export function createBugsinkDeployment(chart: Chart) {
 
   new TailscaleIngress(chart, "bugsink-tailscale-ingress", {
     service,
-    host: "bugsink",
+    host: tailnetService("bugsink"),
   });
 
   // Cloudflare Tunnel for public access
   createCloudflareTunnelBinding(chart, "bugsink-cf-tunnel", {
     serviceName: service.name,
-    fqdn: "bugsink.sjer.red",
     port: 8000,
   });
 

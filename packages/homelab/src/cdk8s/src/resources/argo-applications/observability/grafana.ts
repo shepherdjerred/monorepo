@@ -1,4 +1,5 @@
 import type { Chart } from "cdk8s";
+import { tailnetService } from "homelab/src/platform-model.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { Namespace } from "cdk8s-plus-31";
@@ -18,7 +19,7 @@ export function createGrafanaApp(chart: Chart) {
     namespace: "prometheus",
     service: "prometheus-grafana",
     port: 80,
-    hosts: ["grafana"],
+    hosts: [tailnetService("grafana")],
   });
 
   return argoApplication(chart, {

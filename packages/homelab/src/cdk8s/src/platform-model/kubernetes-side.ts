@@ -15,7 +15,6 @@ export type KubernetesSide = {
     namespace: string;
     hostname: string;
     service: string;
-    tunnel: { kind: string; name: string };
   }[];
   /** Site blocks of the static-site origin's Caddyfile. */
   caddySites: readonly { hostname: string; bucket: string | undefined }[];
@@ -46,7 +45,6 @@ const TunnelBindingSchema = z.looseObject({
       spec: z.looseObject({ fqdn: z.string() }),
     }),
   ),
-  tunnelRef: z.looseObject({ kind: z.string(), name: z.string() }),
 });
 
 const AnnotationsSchema = z.looseObject({
@@ -193,7 +191,6 @@ export async function readKubernetesSide(): Promise<KubernetesSide> {
           namespace: namespaceOf(object),
           hostname: subject.spec.fqdn,
           service: subject.name,
-          tunnel: binding.tunnelRef,
         }));
       }),
     caddySites: objects

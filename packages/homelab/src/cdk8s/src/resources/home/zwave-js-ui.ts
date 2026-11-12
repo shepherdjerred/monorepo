@@ -11,6 +11,7 @@ import {
   Service,
   Volume,
 } from "cdk8s-plus-31";
+import { tailnetService } from "homelab/src/platform-model.ts";
 import type { Chart } from "cdk8s";
 import { Duration, Size } from "cdk8s";
 import {
@@ -198,7 +199,7 @@ export function createZwaveJsUiDeployment(chart: Chart) {
   // via ws://zwave-js-ui.home.svc.cluster.local:3000.
   new TailscaleIngress(chart, "zwave-js-ui-tailscale-ingress", {
     service,
-    host: "zwave",
+    host: tailnetService("zwave"),
     port: 8091,
   });
 }

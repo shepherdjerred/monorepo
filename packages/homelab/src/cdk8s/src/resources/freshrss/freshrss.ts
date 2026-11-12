@@ -1,4 +1,5 @@
 import type { Chart } from "cdk8s";
+import { tailnetService } from "homelab/src/platform-model.ts";
 import { Size } from "cdk8s";
 import {
   ConfigMap,
@@ -210,12 +211,11 @@ export async function createFreshRssDeployment(chart: Chart): Promise<void> {
 
   new TailscaleIngress(chart, "freshrss-tailscale-ingress", {
     service,
-    host: "freshrss",
+    host: tailnetService("freshrss"),
   });
 
   createCloudflareTunnelBinding(chart, "freshrss-cf-tunnel", {
     serviceName: service.name,
-    subdomain: "freshrss",
     port: 80,
   });
 }

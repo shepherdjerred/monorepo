@@ -107,7 +107,6 @@ export function createGlitterBoysLauncherChart(
   });
   createCloudflareTunnelBinding(chart, "public", {
     serviceName: service.name,
-    fqdn: "launcher.glitter-boys.com",
     port: 8080,
     probePath: "/healthz",
     publicProbePath: "/healthz",

@@ -1,4 +1,5 @@
 import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { tailnetService } from "homelab/src/platform-model.ts";
 import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
 import {
@@ -462,7 +463,7 @@ export function createFliptDeployment(chart: Chart) {
 
   new TailscaleIngress(chart, "flipt-ingress", {
     service,
-    host: "flipt",
+    host: tailnetService("flipt"),
     probePath: "/health",
   });
 

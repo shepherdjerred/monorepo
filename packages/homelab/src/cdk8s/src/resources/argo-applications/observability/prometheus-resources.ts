@@ -1,4 +1,5 @@
 import type { Chart } from "cdk8s";
+import { tailnetService } from "homelab/src/platform-model.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
@@ -10,7 +11,7 @@ function createPrometheusIngresses(chart: Chart): void {
     namespace: "prometheus",
     service: "prometheus-kube-prometheus-alertmanager",
     port: 9093,
-    hosts: ["alertmanager"],
+    hosts: [tailnetService("alertmanager")],
     proxyClass: "medium",
     probePath: "/-/healthy",
   });
@@ -19,7 +20,7 @@ function createPrometheusIngresses(chart: Chart): void {
     namespace: "prometheus",
     service: "prometheus-kube-prometheus-prometheus",
     port: 9090,
-    hosts: ["prometheus"],
+    hosts: [tailnetService("prometheus")],
     probePath: "/-/healthy",
   });
 }
@@ -49,7 +50,7 @@ export function createPrometheusResources(chart: Chart): {
     namespace: "prometheus",
     service: "prometheus-grafana",
     port: 80,
-    hosts: ["grafana"],
+    hosts: [tailnetService("grafana")],
   });
 
   const alertDashboardSecrets = new OnePasswordItem(

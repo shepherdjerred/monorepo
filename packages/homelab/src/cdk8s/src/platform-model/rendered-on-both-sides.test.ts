@@ -11,6 +11,10 @@ import { RULES, type Sides } from "./rules.ts";
  * the cdk8s manifests and the OpenTofu stacks. A hostname with a
  * TunnelBinding and no DNS record fails here, and so does the reverse.
  *
+ * cdk8s reads the model, so its half of each rule is "every definition is
+ * rendered"; the OpenTofu stacks do not read it yet, and are compared value by
+ * value.
+ *
  * Each rule holds except for the entries in `debt-allowlists.ts`, asserted in
  * both directions: nothing outside the allowlist may break the rule, and
  * nothing inside it may satisfy it. Fix the disagreement, then delete its

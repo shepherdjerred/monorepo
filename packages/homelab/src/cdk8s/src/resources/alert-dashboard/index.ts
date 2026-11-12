@@ -1,4 +1,5 @@
 import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { tailnetService } from "homelab/src/platform-model.ts";
 import type { Chart } from "cdk8s";
 import { Cpu, DeploymentStrategy, EnvValue, Secret } from "cdk8s-plus-31";
 import { Size } from "cdk8s";
@@ -131,7 +132,7 @@ export function createAlertDashboardDeployment(chart: Chart) {
               key: "POSTAL_API_KEY",
             }),
             POSTAL_HOST_HEADER: EnvValue.fromValue(
-              "postal.tailnet-1a49.ts.net",
+              tailnetService("postal").fqdn,
             ),
             OTEL_EXPORTER_OTLP_ENDPOINT: EnvValue.fromValue(
               OTLP_GATEWAY_BASE_URL,
@@ -145,11 +146,11 @@ export function createAlertDashboardDeployment(chart: Chart) {
     tailscale: {
       probePath: "/healthz",
       hosts: [
-        { id: "alert-dashboard-ingress", host: "alerts" },
+        { id: "alert-dashboard-ingress", host: tailnetService("alerts") },
         // The same app serves the ops overview.
-        { id: "alert-dashboard-ops-ingress", host: "ops" },
+        { id: "alert-dashboard-ops-ingress", host: tailnetService("ops") },
         // The product is Hub; `ops` and `alerts` stay for existing links.
-        { id: "alert-dashboard-hub-ingress", host: "hub" },
+        { id: "alert-dashboard-hub-ingress", host: tailnetService("hub") },
       ],
     },
     policies: [

@@ -208,7 +208,19 @@ export function create${pascalCase(name)}Deployment(chart: Chart) {
     serviceName: "${name}",
     tailscale: {
       probePath: "/healthz",
-      hosts: [{ id: "${name}-ingress", host: "${host}" }],
+      hosts: [
+        {
+          id: "${name}-ingress",
+          // A prepared service renders nothing, so the platform model cannot
+          // declare its tailnet name yet. Activation declares "${host}" in
+          // platform-model.json and replaces this with tailnetService("${host}").
+          host: {
+            host: "${host}",
+            namespace: "${name}",
+            exposure: "ingress",
+          },
+        },
+      ],
     },
     policies: [
       {

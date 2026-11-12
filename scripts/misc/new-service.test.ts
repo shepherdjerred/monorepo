@@ -151,7 +151,7 @@ describe("scaffoldService", () => {
     const web = await read("resources/fixture-notes/index.ts");
     expect(web).toContain("new FirstPartyWebService(");
     expect(web).toContain(
-      'hosts: [{ id: "fixture-notes-ingress", host: "fixture-notes" }]',
+      'host: "fixture-notes",\n            namespace: "fixture-notes",\n            exposure: "ingress",',
     );
     expect(web).toContain("export const FIXTURE_NOTES_ACTIVE = false;");
     const worker = await read("resources/fixture-worker/index.ts");

@@ -223,7 +223,7 @@ export function createTemporalOperationsWorkers(
         secret: props.secret,
         key: "OPENAI_API_KEY",
       }),
-      S3_BUCKET_NAME: EnvValue.fromValue("better-skill-capped"),
+      ...seaweedfsS3.bucketEnv("S3_BUCKET_NAME", "temporal"),
       S3_KEY: EnvValue.fromValue("data/manifest.json"),
       WOODPECKER_TOKEN: EnvValue.fromSecretValue({
         secret: props.secret,

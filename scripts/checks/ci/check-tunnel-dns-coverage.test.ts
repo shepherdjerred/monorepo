@@ -9,7 +9,6 @@ import {
   collectDnsNames,
   collectZones,
   evaluateTunnelDnsCoverage,
-  isScannableTunnelBindingSource,
   uncoveredTunnelBindings,
   type DnsName,
   type TunnelBinding,
@@ -45,21 +44,9 @@ describe("tunnel DNS coverage", () => {
     }
   });
 
-  test("ignores test fixtures while retaining production TypeScript sources", () => {
-    expect(isScannableTunnelBindingSource("resources/caddy.test.ts")).toBe(
-      false,
-    );
-    expect(isScannableTunnelBindingSource("resources/caddy.ts")).toBe(true);
-  });
-
-  test("reports the exact uncovered production hostname and declaration path", () => {
+  test("reports the exact uncovered production hostname and its route", () => {
     const bindings: TunnelBinding[] = [
-      {
-        file: "/repo/packages/homelab/src/cdk8s/src/resources/caddy.ts",
-        line: 31,
-        fqdn: "missing.sjer.red",
-        source: "subdomain",
-      },
+      { fqdn: "missing.sjer.red", service: "caddy/caddy" },
     ];
     expect(
       uncoveredTunnelBindings(bindings, new Map<string, Zone>(), []),
@@ -68,12 +55,7 @@ describe("tunnel DNS coverage", () => {
 
   test("accepts an FQDN covered by its Cloudflare zone record", () => {
     const bindings: TunnelBinding[] = [
-      {
-        file: "/repo/packages/homelab/src/cdk8s/src/resources/caddy.ts",
-        line: 31,
-        fqdn: "app.sjer.red",
-        source: "subdomain",
-      },
+      { fqdn: "app.sjer.red", service: "caddy/caddy" },
     ];
     const zones = new Map<string, Zone>([
       ["sjer_red", { ref: "sjer_red", name: "sjer.red" }],

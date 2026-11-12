@@ -1,4 +1,5 @@
 import { temporalAddressEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/address.ts";
+import { tailnetService } from "homelab/src/platform-model.ts";
 import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
 import { Cpu, DeploymentStrategy, EnvValue, type ISecret } from "cdk8s-plus-31";
@@ -97,7 +98,7 @@ export function createMediaApi(
     serviceName: "media-api",
     tailscale: {
       probePath: "/readyz",
-      hosts: [{ id: "media-api-ingress", host: "media" }],
+      hosts: [{ id: "media-api-ingress", host: tailnetService("media") }],
     },
     // The API's policy renders with the workers' in `network-policy.ts`,
     // after the workers themselves.

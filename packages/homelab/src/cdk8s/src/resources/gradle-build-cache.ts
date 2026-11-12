@@ -1,4 +1,5 @@
 import type { Chart } from "cdk8s";
+import { tailnetService } from "homelab/src/platform-model.ts";
 import { Duration, Size } from "cdk8s";
 import {
   ConfigMap,
@@ -323,7 +324,7 @@ export function createGradleBuildCacheDeployment(chart: Chart) {
   // HTTPS, which is the only egress their network policy allows.
   new TailscaleIngress(chart, "gradle-build-cache-ingress", {
     service,
-    host: "gradle-build-cache",
+    host: tailnetService("gradle-build-cache"),
     proxyClass: "medium",
     probePath: "/healthz",
   });

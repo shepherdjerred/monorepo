@@ -1,5 +1,6 @@
 import type { App } from "cdk8s";
 import { z } from "zod";
+import { platformModel } from "homelab/src/platform-model.ts";
 import type { CatalogCore } from "@shepherdjerred/ops-model/delivery-catalog/core.ts";
 import {
   environmentService,
@@ -46,7 +47,8 @@ const CRD_PROVIDERS: Readonly<Record<string, string>> = {
   "kueue.x-k8s.io": "kueue/prod",
 };
 const SEAWEEDFS_STACK = "tofu-seaweedfs/prod";
-const SEAWEEDFS_S3 = "seaweedfs-s3.seaweedfs.svc.cluster.local";
+const SEAWEEDFS_S3 = new URL(platformModel.seaweedfs.s3InClusterEndpoint)
+  .hostname;
 const GPU_RESOURCE = "gpu.intel.com/i915";
 
 /** Ordering contracts no object reveals; each names its reason. */

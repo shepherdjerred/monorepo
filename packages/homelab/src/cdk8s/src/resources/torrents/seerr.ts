@@ -1,4 +1,5 @@
 import type { Chart } from "cdk8s";
+import { tailnetService } from "homelab/src/platform-model.ts";
 import { Size } from "cdk8s";
 import {
   Cpu,
@@ -88,12 +89,11 @@ export function createSeerrDeployment(chart: Chart) {
 
   new TailscaleIngress(chart, "seerr-tailscale-ingress", {
     service,
-    host: "seerr",
+    host: tailnetService("seerr"),
   });
 
   createCloudflareTunnelBinding(chart, "seerr-cf-tunnel", {
     serviceName: service.name,
-    subdomain: "seerr",
     port: SEERR_PORT,
   });
 }

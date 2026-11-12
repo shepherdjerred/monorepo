@@ -86,39 +86,31 @@ export function createScoutDeployment(
       },
     },
   });
-  const {
-    path,
-    applicationId,
-    s3BucketName,
-    selinuxLevel,
-    cpuRequest,
-    memoryRequest,
-  } = match(stage)
-    .with("beta", () => {
-      return {
-        path: vaultItemPath("rtu44pohnp5ixdp2njuv5f6t2e"),
-        applicationId: "1311755320745394317",
-        s3BucketName: "scout-beta",
-        selinuxLevel: zfsVolumeSelinuxLevels.scoutBeta,
-        cpuRequest: Cpu.millis(50),
-        // 14d p95 to 2026-11-08: RSS 2.68Gi, working set 2.41Gi. The gateway
-        // owns voice and reserves its own resident baseline; voice and report
-        // peaks share the node's burst memory within their limits.
-        memoryRequest: Size.mebibytes(2816),
-      };
-    })
-    .with("prod", () => {
-      return {
-        path: vaultItemPath("pacrc4wfbtct4y3qazkvazop5a"),
-        applicationId: "1182800769188110366",
-        s3BucketName: "scout-prod",
-        selinuxLevel: zfsVolumeSelinuxLevels.scoutProd,
-        cpuRequest: Cpu.millis(100),
-        // 14d p95 to 2026-11-08: RSS 2.66Gi, working set 2.20Gi.
-        memoryRequest: Size.mebibytes(2816),
-      };
-    })
-    .exhaustive();
+  const { path, applicationId, selinuxLevel, cpuRequest, memoryRequest } =
+    match(stage)
+      .with("beta", () => {
+        return {
+          path: vaultItemPath("rtu44pohnp5ixdp2njuv5f6t2e"),
+          applicationId: "1311755320745394317",
+          selinuxLevel: zfsVolumeSelinuxLevels.scoutBeta,
+          cpuRequest: Cpu.millis(50),
+          // 14d p95 to 2026-11-08: RSS 2.68Gi, working set 2.41Gi. The gateway
+          // owns voice and reserves its own resident baseline; voice and report
+          // peaks share the node's burst memory within their limits.
+          memoryRequest: Size.mebibytes(2816),
+        };
+      })
+      .with("prod", () => {
+        return {
+          path: vaultItemPath("pacrc4wfbtct4y3qazkvazop5a"),
+          applicationId: "1182800769188110366",
+          selinuxLevel: zfsVolumeSelinuxLevels.scoutProd,
+          cpuRequest: Cpu.millis(100),
+          // 14d p95 to 2026-11-08: RSS 2.66Gi, working set 2.20Gi.
+          memoryRequest: Size.mebibytes(2816),
+        };
+      })
+      .exhaustive();
 
   const onePasswordItem = new OnePasswordItem(chart, "scout-for-lol-1p", {
     spec: {
@@ -265,8 +257,8 @@ export function createScoutDeployment(
       ),
       key: "RIOT_API_KEY",
     }),
-    S3_BUCKET_NAME: EnvValue.fromValue(s3BucketName),
-    SUPPORT_BUCKET_NAME: EnvValue.fromValue(`scout-support-${stage}`),
+    ...seaweedfsS3.bucketEnv("S3_BUCKET_NAME", `scout-${stage}`),
+    ...seaweedfsS3.bucketEnv("SUPPORT_BUCKET_NAME", `scout-${stage}`),
     ...bugsinkEnv(
       Secret.fromSecretName(chart, "bugsink-dsn-secret", onePasswordItem.name),
     ),

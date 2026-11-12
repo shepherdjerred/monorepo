@@ -2,6 +2,7 @@ import { App, Chart, Size, Testing } from "cdk8s";
 import { Cpu, DeploymentStrategy } from "cdk8s-plus-31";
 import { beforeEach, describe, expect, test } from "vitest";
 import { z } from "zod";
+import type { TailnetService } from "homelab/src/platform-model.ts";
 import { synthManifests } from "@shepherdjerred/homelab/cdk8s/src/testing/synth-manifests.ts";
 import { restrictedContainer } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import {
@@ -65,6 +66,11 @@ const data = {
   storage: Size.gibibytes(8),
   path: "/data",
 };
+
+/** A tailnet service of the fixture namespace, as the platform model would declare it. */
+function tailnetHost(host: string): TailnetService {
+  return { host, namespace: "widgets", exposure: "ingress" };
+}
 
 const base: FirstPartyWebServiceProps = {
   name: "widget",
@@ -315,8 +321,8 @@ describe("FirstPartyWebService exposure", () => {
       tailscale: {
         probePath: "/healthz",
         hosts: [
-          { id: "widget-ingress", host: "widget" },
-          { id: "widget-alt-ingress", host: "gadget" },
+          { id: "widget-ingress", host: tailnetHost("widget") },
+          { id: "widget-alt-ingress", host: tailnetHost("gadget") },
         ],
       },
     });
@@ -343,7 +349,11 @@ describe("FirstPartyWebService exposure", () => {
     const { of } = render({
       cloudflare: {
         id: "widget-cf-tunnel",
-        fqdn: "widget.example.com",
+        hostname: {
+          hostname: "widget.example.com",
+          namespace: "widgets",
+          service: "widgets-widget-service",
+        },
         probePath: "/livez",
       },
     });
@@ -362,7 +372,7 @@ describe("FirstPartyWebService exposure", () => {
     const { web, identities, of } = render({
       tailscale: {
         probePath: "/healthz",
-        hosts: [{ id: "widget-ingress", host: "widget" }],
+        hosts: [{ id: "widget-ingress", host: tailnetHost("widget") }],
       },
       policies: [
         {

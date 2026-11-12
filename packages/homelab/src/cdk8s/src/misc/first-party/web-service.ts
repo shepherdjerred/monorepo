@@ -17,6 +17,10 @@ import {
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
+import type {
+  PublicHostname,
+  TailnetService,
+} from "homelab/src/platform-model.ts";
 import { httpProbes } from "./kubelet-probes.ts";
 import {
   createFirstPartyNetworkPolicies,
@@ -48,7 +52,7 @@ export type FirstPartyServerContainer = Omit<
  * A tailnet hostname. `id` is the `TailscaleIngress` construct id, which seeds
  * the Ingress name.
  */
-export type FirstPartyTailscaleHost = { id: string; host: string };
+export type FirstPartyTailscaleHost = { id: string; host: TailnetService };
 
 export type FirstPartyWebServiceProps = {
   /**
@@ -104,11 +108,15 @@ export type FirstPartyWebServiceProps = {
    * probe of the Service, which requests `probePath`.
    */
   tailscale?: { probePath: string; hosts: FirstPartyTailscaleHost[] };
-  /** A public hostname through the Cloudflare tunnel. */
+  /**
+   * A route through the Cloudflare tunnel, to the hostname the platform model
+   * declares for the Service.
+   */
   cloudflare?: {
     /** The TunnelBinding's construct id. */
     id: string;
-    fqdn: string;
+    /** The model's route, for a Service it cannot be looked up by. */
+    hostname?: PublicHostname;
     /** Path of the in-cluster and the public blackbox probe. */
     probePath: string;
   };
@@ -156,7 +164,9 @@ function exposeService(
   if (props.cloudflare !== undefined) {
     createCloudflareTunnelBinding(scope, props.cloudflare.id, {
       serviceName: service.name,
-      fqdn: props.cloudflare.fqdn,
+      ...(props.cloudflare.hostname === undefined
+        ? {}
+        : { hostname: props.cloudflare.hostname }),
       port: props.port,
       probePath: props.cloudflare.probePath,
       publicProbePath: props.cloudflare.probePath,

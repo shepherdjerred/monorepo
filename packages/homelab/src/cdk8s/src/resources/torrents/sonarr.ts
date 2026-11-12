@@ -1,4 +1,5 @@
 import { Cpu, type PersistentVolumeClaim } from "cdk8s-plus-31";
+import { tailnetService } from "homelab/src/platform-model.ts";
 import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
 import { LinuxServerApp } from "@shepherdjerred/homelab/cdk8s/src/misc/third-party/linuxserver-app.ts";
@@ -42,6 +43,6 @@ export function createSonarrDeployment(
         limit: Size.mebibytes(768),
       },
     },
-    tailscale: { host: "sonarr", proxyClass: "medium" },
+    tailscale: { host: tailnetService("sonarr"), proxyClass: "medium" },
   });
 }

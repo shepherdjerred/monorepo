@@ -25,7 +25,6 @@ export function createTemporalWorkerGithubWebhookService(
 
   createCloudflareTunnelBinding(chart, "temporal-worker-gh-webhook-cf-tunnel", {
     serviceName: webhookService.name,
-    subdomain: "pr-bot",
     port: 9466,
     // POST-only webhook receiver: GET / would 404/405 even when healthy, so
     // the in-cluster probe just checks the port accepts a connection. The
@@ -58,7 +57,6 @@ export function createAgentTaskApiService(
 
   createCloudflareTunnelBinding(chart, "temporal-worker-agent-task-cf-tunnel", {
     serviceName: agentTaskService.name,
-    subdomain: "temporal-agent-tasks",
     port: 9467,
     // POST-only receiver — see the gh-webhook probe comment above. The Hono
     // server exposes GET /healthz -> 200, so the public probe checks the
@@ -91,7 +89,6 @@ export function createSleepWebhookService(
     "temporal-worker-sleep-webhook-cf-tunnel",
     {
       serviceName: sleepWebhookService.name,
-      subdomain: "temporal-sleep",
       port: 9469,
       probeModule: "tcp_connect",
       publicProbeModule: "http_2xx",
@@ -137,7 +134,6 @@ export function createXcodeCloudWebhookService(
     "temporal-worker-xcode-cloud-webhook-cf-tunnel",
     {
       serviceName: webhookService.name,
-      subdomain: "xcode-cloud-webhook",
       port: 9468,
       // POST-only receiver — see the gh-webhook probe comment above. The Hono
       // server exposes GET /healthz -> 200, so the public probe checks the

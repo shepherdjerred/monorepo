@@ -1,4 +1,5 @@
 import type { Chart } from "cdk8s";
+import { tailnetService } from "homelab/src/platform-model.ts";
 import { Size } from "cdk8s";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
@@ -14,13 +15,12 @@ export function createChartMuseumResources(chart: Chart): OnePasswordItem {
     namespace: "chartmuseum",
     service: "chartmuseum",
     port: 8080,
-    hosts: ["chartmuseum"],
+    hosts: [tailnetService("chartmuseum")],
     proxyClass: "heavy",
   });
 
   createCloudflareTunnelBinding(chart, "chartmuseum-cf-tunnel", {
     serviceName: "chartmuseum",
-    subdomain: "chartmuseum",
     namespace: "chartmuseum",
     port: 8080,
   });

@@ -1,4 +1,5 @@
 import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { tailnetService } from "homelab/src/platform-model.ts";
 import type { Chart } from "cdk8s";
 import { ApiObject, JsonPatch, Size } from "cdk8s";
 import {
@@ -121,7 +122,7 @@ ${stickyTmpBootstrap}for firewall in iptables ip6tables; do
     fi
   done
 done
-for host in temporal.tailnet-1a49.ts.net temporal-ui.tailnet-1a49.ts.net; do
+for host in ${tailnetService("temporal").fqdn} ${tailnetService("temporal-ui").fqdn}; do
   addresses="$(getent ahosts "$host" | awk '{print $1}' | sort -u)"
   if [ -z "$addresses" ]; then
     echo "unable to resolve $host for the provider firewall" >&2

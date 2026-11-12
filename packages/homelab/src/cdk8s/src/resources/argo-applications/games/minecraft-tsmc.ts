@@ -1,5 +1,6 @@
 import type { Chart } from "cdk8s";
 import { DELIVERY_ACTIVE_DELEGATIONS } from "homelab/src/delivery-ownership.ts";
+import { publicHostname, tailnetService } from "homelab/src/platform-model.ts";
 import { siteAnalyticsConfiguration } from "@shepherdjerred/homelab/cdk8s/src/misc/analytics.ts";
 import { createMinecraftProxyTrust } from "@shepherdjerred/homelab/cdk8s/src/misc/minecraft/proxy-trust.ts";
 import { createMinecraftPublicStatus } from "@shepherdjerred/homelab/cdk8s/src/misc/minecraft/public-status.ts";
@@ -110,21 +111,21 @@ export function createMinecraftTsmcResources(chart: Chart): void {
     namespace: "minecraft-tsmc",
     service: "minecraft-tsmc-bluemap",
     port: 8100,
-    hosts: ["minecraft-tsmc-bluemap"],
+    hosts: [tailnetService("minecraft-tsmc-bluemap")],
     proxyClass: "medium",
   });
 
   createCloudflareTunnelBinding(chart, "minecraft-tsmc-bluemap-cf-tunnel", {
+    hostname: publicHostname("bluemap.ts-mc.net"),
     serviceName: "minecraft-tsmc-bluemap",
-    fqdn: "bluemap.ts-mc.net",
     namespace: "minecraft-tsmc",
     disableDnsUpdates: true,
     port: 8100,
   });
 
   createCloudflareTunnelBinding(chart, "minecraft-tsmc-livemap-cf-tunnel", {
+    hostname: publicHostname("livemap.ts-mc.net"),
     serviceName: "minecraft-tsmc-bluemap",
-    fqdn: "livemap.ts-mc.net",
     namespace: "minecraft-tsmc",
     disableDnsUpdates: true,
     port: 8100,

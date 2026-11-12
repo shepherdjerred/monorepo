@@ -1,3 +1,4 @@
+import { platformModel, staticSite } from "homelab/src/platform-model.ts";
 import type { StaticSiteConfig } from "@shepherdjerred/homelab/cdk8s/src/misc/s3-static-site.ts";
 import { seaweedfsS3 } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
 
@@ -163,17 +164,13 @@ const scoutDocsProbes = [
   },
 ] as const satisfies NonNullable<StaticSiteConfig["probes"]>;
 
-// DNS records for all sites are managed by OpenTofu (src/tofu/cloudflare/).
+/** What a site adds to the hostname and bucket the platform model declares. */
+type SiteOptions = Omit<StaticSiteConfig, "hostname" | "bucket">;
+
 /** The Scout site: the SPA and docs from the bucket, with API traffic to the stage backend. */
-function scoutSite(
-  hostname: string,
-  bucket: string,
-  stage: "prod" | "beta",
-): StaticSiteConfig {
+function scoutSite(stage: "prod" | "beta"): SiteOptions {
   const upstream = `scout-service-${stage}.scout-${stage}.svc.cluster.local:3000`;
   return {
-    hostname,
-    bucket,
     reverseProxies: [
       { path: "/api/healthz", upstream, rewriteTo: "/healthz" },
       { path: "/trpc*", upstream },
@@ -190,11 +187,14 @@ function scoutSite(
   };
 }
 
-export const staticSites: StaticSiteConfig[] = [
-  { hostname: "statically-typed.com", bucket: "statically-typed" },
-  {
-    hostname: "sjer.red",
-    bucket: "sjer-red",
+/**
+ * Probes, proxies and headers by hostname. A site without an entry is served
+ * with the defaults. The hostnames, their buckets and their order come from
+ * `staticSites` in `platform-model.json`, which OpenTofu's DNS records and
+ * buckets are held against.
+ */
+const SITE_OPTIONS: Readonly<Record<string, SiteOptions>> = {
+  "sjer.red": {
     probes: [{ endpoint: "rss", path: "/rss.xml", module: "rss_2xx" }],
     // sjer.red is HTTPS-everywhere via Cloudflare Tunnel for every site under
     // it, so lock the whole zone with includeSubDomains. Browsers honor this
@@ -203,17 +203,12 @@ export const staticSites: StaticSiteConfig[] = [
       "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
     },
   },
-  { hostname: "webring.sjer.red", bucket: "webring" },
-  {
-    hostname: "resume.sjer.red",
-    bucket: "resume",
+  "resume.sjer.red": {
     responseHeaders: { "X-Frame-Options": "SAMEORIGIN" },
   },
-  scoutSite("scout-for-lol.com", "scout-frontend", "prod"),
-  scoutSite("beta.scout-for-lol.com", "scout-frontend-beta", "beta"),
-  {
-    hostname: "design.scout-for-lol.com",
-    bucket: "scout-design-system",
+  "scout-for-lol.com": scoutSite("prod"),
+  "beta.scout-for-lol.com": scoutSite("beta"),
+  "design.scout-for-lol.com": {
     probes: [
       // The manager shell is a thin loader; the preview is where a story
       // actually renders, so both are worth watching.
@@ -226,9 +221,7 @@ export const staticSites: StaticSiteConfig[] = [
       "X-Frame-Options": "SAMEORIGIN",
     },
   },
-  {
-    hostname: "better-skill-capped.com",
-    bucket: "better-skill-capped",
+  "better-skill-capped.com": {
     // `/course/<uuid>` is a client-side TanStack Router route, so the bucket has
     // no object at that key. Without the fallback a shared course link or a
     // hard refresh gets the trailing-slash redirect and then a 404 page.
@@ -237,10 +230,8 @@ export const staticSites: StaticSiteConfig[] = [
   // Keep the old route through this release. The Cloudflare redirect is
   // applied after ArgoCD, so removing the binding here first would create a
   // window where the old CNAME reaches a tunnel with no route.
-  { hostname: "clauderon.com", bucket: "clauderon" },
-  {
-    hostname: "docs.ts-mc.net",
-    bucket: "ts-mc-docs",
+  "clauderon.com": {},
+  "docs.ts-mc.net": {
     probes: [
       {
         endpoint: "sitemap",
@@ -260,22 +251,14 @@ export const staticSites: StaticSiteConfig[] = [
     ],
     responseHeaders: { "Content-Security-Policy": tsMcDocsCsp },
   },
-  {
-    hostname: "glitter-boys.com",
-    bucket: "glitter-boys",
+  "glitter-boys.com": {
     probes: [
       { endpoint: "docs", path: "/docs/", module: "http_200_no_redirect" },
     ],
     responseHeaders: { "Content-Security-Policy": glitterBoysCsp },
   },
-  { hostname: "ppl.glitter-boys.com", bucket: "glitter-boys-ppl" },
-  { hostname: "cook.sjer.red", bucket: "cook" },
-  { hostname: "cross-compilers.sjer.red", bucket: "cross-compilers" },
-  { hostname: "stocks.sjer.red", bucket: "stocks-sjer-red" },
   // Shared host for landing and campaign pages; each item is a top-level route.
-  {
-    hostname: "public.ts-mc.net",
-    bucket: "landing-pages",
+  "public.ts-mc.net": {
     probes: [
       {
         endpoint: "the-storm",
@@ -285,9 +268,7 @@ export const staticSites: StaticSiteConfig[] = [
     ],
     responseHeaders: { "Content-Security-Policy": landingPagesCsp },
   },
-  {
-    hostname: "wiki.sjer.red",
-    bucket: "wiki-sjer-red",
+  "wiki.sjer.red": {
     probes: [
       {
         endpoint: "sitemap",
@@ -299,8 +280,21 @@ export const staticSites: StaticSiteConfig[] = [
   },
   // Public artifact host. PR screenshots are served from the `pr/assets/<n>/`
   // prefix; uploads go through `toolkit pr asset`.
-  { hostname: "public.sjer.red", bucket: "public-sjer-red" },
-];
+  "public.sjer.red": {},
+};
+
+// A site is added in the model. Options for a hostname the model does not
+// declare would otherwise be silently dropped.
+for (const hostname of Object.keys(SITE_OPTIONS)) staticSite(hostname);
+
+// DNS records for all sites are managed by OpenTofu (src/tofu/cloudflare/).
+export const staticSites: StaticSiteConfig[] = platformModel.staticSites.map(
+  ({ hostname, bucket }) => ({
+    hostname,
+    bucket,
+    ...SITE_OPTIONS[hostname],
+  }),
+);
 
 // In-cluster SeaweedFS S3 gateway. Caddy/s3proxy runs in this cluster, so it must
 // reach SeaweedFS directly via the Kubernetes service — NOT via the public

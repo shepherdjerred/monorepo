@@ -9,6 +9,7 @@ import {
   Service,
   Volume,
 } from "cdk8s-plus-31";
+import { tailnetService } from "homelab/src/platform-model.ts";
 import type { Chart } from "cdk8s";
 import { ApiObject, JsonPatch, Size } from "cdk8s";
 import {
@@ -76,7 +77,7 @@ export function createPlexDeployment(
         //   Lets LAN clients (e.g. Apple TV) bypass Plex Relay's 2 Mbps cap.
         // - Tailscale URL: for tailnet-attached remote clients.
         ADVERTISE_IP: EnvValue.fromValue(
-          "http://192.168.1.81:32400,https://plex.tailnet-1a49.ts.net",
+          `http://192.168.1.81:32400,${tailnetService("plex").origin}`,
         ),
       },
       // https://support.plex.tv/articles/201543147-what-network-ports-do-i-need-to-allow-through-my-firewall/
@@ -252,14 +253,13 @@ export function createPlexDeployment(
   // backend probe, so probePath must be identical at both call sites.
   new TailscaleIngress(chart, "plex-tailscale-ingress", {
     service,
-    host: "plex",
+    host: tailnetService("plex"),
     proxyClass: "medium",
     probePath: "/identity",
   });
 
   createCloudflareTunnelBinding(chart, "plex-cf-tunnel", {
     serviceName: service.name,
-    subdomain: "plex",
     port: 32_400,
     probePath: "/identity",
     publicProbePath: "/identity",

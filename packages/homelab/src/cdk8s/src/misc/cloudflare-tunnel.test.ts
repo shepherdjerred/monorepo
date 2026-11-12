@@ -30,7 +30,11 @@ test("declares Cloudflare TunnelBinding defaults owned by the operator", () => {
   });
   createCloudflareTunnelBinding(chart, "test-binding", {
     serviceName: "test-service",
-    subdomain: "test",
+    hostname: {
+      hostname: "test.sjer.red",
+      namespace: "test",
+      service: "test-service",
+    },
     port: 8080,
     disableProbe: true,
   });

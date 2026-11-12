@@ -1,4 +1,5 @@
 import type { Chart } from "cdk8s";
+import { tailnetService } from "homelab/src/platform-model.ts";
 import { createMinecraftProxyTrust } from "@shepherdjerred/homelab/cdk8s/src/misc/minecraft/proxy-trust.ts";
 import { Size } from "cdk8s";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
@@ -40,7 +41,7 @@ export function createMinecraftShuxinResources(chart: Chart): void {
     namespace: "minecraft-shuxin",
     service: "minecraft-shuxin-bluemap",
     port: 8100,
-    hosts: ["minecraft-shuxin-bluemap"],
+    hosts: [tailnetService("minecraft-shuxin-bluemap")],
     // The server statefulset hibernates at 0 replicas (mc-router wake-on-join),
     // so a synthetic probe only measures sleep: 60s failures around the clock.
     disableProbe: true,
@@ -48,11 +49,10 @@ export function createMinecraftShuxinResources(chart: Chart): void {
 
   createCloudflareTunnelBinding(chart, "minecraft-shuxin-bluemap-cf-tunnel", {
     serviceName: "minecraft-shuxin-bluemap",
-    // First-level subdomain: Cloudflare Universal SSL covers only *.sjer.red,
+    // The hostname is a first-level subdomain: Cloudflare Universal SSL covers only *.sjer.red,
     // so the former shuxin.bluemap.sjer.red could never complete a TLS
     // handshake. Must match the tofu DNS record in
     // packages/homelab-cdktn/src/stacks/cloudflare/sjer-red.ts.
-    subdomain: "shuxin-bluemap",
     namespace: "minecraft-shuxin",
     port: 8100,
     // Hibernates at 0 replicas (see above).
