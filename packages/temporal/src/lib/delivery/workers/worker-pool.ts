@@ -81,6 +81,35 @@ function validateHosts(pool: WorkerPoolSnapshot) {
   }
 }
 
+/**
+ * The pool a worker stage Job reads: its live hosts only. Delivery keeps every
+ * retired host in the frozen pool at zero replicas, so the sync keeps
+ * rendering their Deployments, and that pool grows with every rollout. No Job
+ * reads a retired host: image provenance proves the live images, routing
+ * finds the live candidate, a rollback matches the restored live host, and
+ * the control-plane proof's chart render fingerprints only control-plane
+ * workloads, which no retained host is. Freezing the whole pool into the
+ * request made it outgrow the kernel's per-string exec limit.
+ */
+export function stageWorkerPool(pool: WorkerPoolSnapshot): WorkerPoolSnapshot {
+  return {
+    ...pool,
+    versions: pool.versions.filter((worker) => worker.replicas === 1),
+  };
+}
+
+/** The deployment as a stage Job reads it, with {@link stageWorkerPool}. */
+export function withStageWorkerPool<
+  T extends { deployment: { workerSnapshot: WorkerPoolSnapshot | null } },
+>(detail: T): T {
+  const pool = detail.deployment.workerSnapshot;
+  if (pool === null) return detail;
+  return {
+    ...detail,
+    deployment: { ...detail.deployment, workerSnapshot: stageWorkerPool(pool) },
+  };
+}
+
 export function workerPoolParameters(
   detail: DeploymentDetail,
 ): Record<string, string> {

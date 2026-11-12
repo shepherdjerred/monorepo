@@ -59,3 +59,37 @@ export function centralRolloutPool(input: {
     })),
   };
 }
+
+/** A deterministic UUID-shaped identifier, as Delivery's real keys are. */
+function uuid(index: number, salt: string) {
+  const hex = `${salt}${index.toString(16)}`.padStart(32, "0").slice(-32);
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+}
+
+/**
+ * Test fixture: `count` retired central hosts as Delivery keeps them in the
+ * frozen pool, at zero replicas with a retirement time, sized like
+ * production rows (UUID keys, CI artifact ids, a runtime digest).
+ */
+export function retiredCentralWorkers(count: number) {
+  return Array.from({ length: count }, (_, index) => {
+    const buildId = `${index.toString(16).padStart(12, "0")}${"e".repeat(28)}`;
+    const digest = `sha256:${index.toString(16).padStart(64, "0")}`;
+    return {
+      id: uuid(index, "1d"),
+      environmentId: "temporal/prod",
+      buildId,
+      artifactId: `ci/1/${String(10_000 + index)}/image/temporal-worker`,
+      artifactBuildId: uuid(index, "2b"),
+      sourceRevision: buildId,
+      image: `docker.io/shepherdjerred/temporal-worker@${digest}`,
+      digest,
+      runtimeDigests: [`sha256:${index.toString(16).padStart(64, "f")}`],
+      introducedByDeploymentId: uuid(index, "3d"),
+      host: workerHostSpecification("central"),
+      replicas: 0,
+      generation: 1,
+      retiredAt: "2026-10-21T23:24:02.736Z",
+    };
+  });
+}

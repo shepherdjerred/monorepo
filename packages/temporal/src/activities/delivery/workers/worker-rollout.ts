@@ -13,6 +13,7 @@ import {
 import { deliveryRequest } from "#lib/delivery/client.ts";
 import { DeliveryJobFailedError, runDeliveryJob } from "#lib/delivery/job.ts";
 import { deliveryJobManifest } from "#lib/delivery/job-manifest.ts";
+import { requireExecutableDeliveryJobRequest } from "#lib/delivery/job-request-limit.ts";
 import type {
   DeliveryJobRequest,
   DeliveryJobReceipt,
@@ -96,6 +97,8 @@ async function workerJob(
       .parse(Bun.env["GIT_SHA"]),
     input,
   };
+  // Refused before the stage records an operation it could never run.
+  requireExecutableDeliveryJobRequest(request);
   const operationId = z
     .string()
     .parse(deliveryJobManifest(request).metadata?.name);

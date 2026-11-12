@@ -235,6 +235,16 @@ fixed traffic bake periods; original hosts remain until independent drainage
 proof permits retirement. A partial routing response is inspected before
 repeating the same step.
 
+A retired host stays in the pool at zero replicas, so the sync keeps rendering
+its Deployment and the pool grows with every rollout. Worker stage Jobs read
+only live hosts, so their request (the `DELIVERY_JOB_REQUEST` environment
+string) freezes only those, and its size does not grow with retirements. The
+image-provenance proof renders the chart with that live pool; retained hosts
+are never control-plane workloads, so its result is unchanged. A request over
+the kernel's 128 KiB exec limit for one environment string is refused before
+the stage records an operation or a Job exists, rather than failing in the
+container with `argument list too long`.
+
 A model recipe's `worker-rollout` step runs the same Jobs. Its apply-safety
 step first proves every retained image's Build ID and the served routes, and
 refuses a pool that still has legacy pollers. Only then does it write the

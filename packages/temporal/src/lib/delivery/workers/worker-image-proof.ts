@@ -7,13 +7,23 @@ import { z } from "zod";
 import { deliverySelection } from "#lib/delivery/selection.ts";
 import { WorkerChartProofSchema } from "./worker-control-plane.ts";
 import { modelWorkerChartSelection } from "#lib/delivery/model/worker-selection.ts";
+import { deliveryWorkerPool, withStageWorkerPool } from "./worker-pool.ts";
 export const WorkerImageProofInputSchema = z.strictObject({
   detail: WorkerRolloutSnapshotSchema,
   controlPlane: WorkerChartProofSchema.nullable(),
 });
-export function workerImageProofInput(detail: DeploymentDetail) {
+/**
+ * The image-provenance Job's input, carrying only the live hosts it proves.
+ * The central control-plane proof renders the chart with that same live pool:
+ * retained hosts render outside the control-plane workloads it fingerprints,
+ * so the retired ones cannot change its result.
+ */
+export function workerImageProofInput(full: DeploymentDetail) {
+  const detail = withStageWorkerPool(full);
   if (detail.deployment.workerSnapshot?.target !== "central")
     return WorkerImageProofInputSchema.parse({ detail, controlPlane: null });
+  // The whole frozen pool still passes the checks the sync renders it under.
+  deliveryWorkerPool(full);
   if (detail.pipeline.definition.kind !== "argocd")
     return WorkerImageProofInputSchema.parse({
       detail,
