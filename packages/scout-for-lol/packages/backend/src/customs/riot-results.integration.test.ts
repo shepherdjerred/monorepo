@@ -7,8 +7,8 @@ import {
   LeaguePuuidSchema,
   PlayerIdSchema,
   RawMatchSchema,
-  SCOUT_CLIENT_DATA_VERSION,
 } from "@scout-for-lol/data";
+import { withFirstParticipantAsBot } from "#src/testing/bot-match-fixture.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import { finalizeManagedCustomResult } from "#src/customs/riot-results.ts";
 import { clearCustomsTestData } from "#src/customs/test-database.ts";
@@ -265,21 +265,7 @@ describe("managed Customs results", () => {
 
   test("a bot in the game is a typed non-roster member, not a schema throw", async () => {
     const seeded = await seedPendingResult();
-    const participants = fixture.info.participants.map((participant, index) =>
-      index === 0
-        ? { ...participant, puuid: null, participantKind: "bot" as const }
-        : { ...participant, participantKind: "player" as const },
-    );
-    const withBot = RawMatchSchema.parse({
-      metadata: {
-        ...fixture.metadata,
-        dataVersion: SCOUT_CLIENT_DATA_VERSION,
-        participants: participants.flatMap((participant) =>
-          participant.puuid === null ? [] : [participant.puuid],
-        ),
-      },
-      info: { ...fixture.info, participants },
-    });
+    const withBot = withFirstParticipantAsBot(fixture);
 
     await expect(
       finalizeManagedCustomResult(testPrisma, withBot, "SCOUT_CLIENT"),

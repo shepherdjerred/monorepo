@@ -1,5 +1,6 @@
 import { beforeEach, expect, test, vi } from "vitest";
-import { RawMatchSchema, SCOUT_CLIENT_DATA_VERSION } from "@scout-for-lol/data";
+import { RawMatchSchema } from "@scout-for-lol/data";
+import { withFirstParticipantAsBot } from "#src/testing/bot-match-fixture.ts";
 
 const mocks = vi.hoisted(() => ({
   findFirst: vi.fn(),
@@ -42,21 +43,7 @@ test("ignores a Riot tournament code without an observed binding", async () => {
 });
 
 test("a game with a bot is reviewed, never judged or thrown on", () => {
-  const participants = fixture.info.participants.map((participant, index) =>
-    index === 0
-      ? { ...participant, puuid: null, participantKind: "bot" as const }
-      : { ...participant, participantKind: "player" as const },
-  );
-  const withBot = RawMatchSchema.parse({
-    metadata: {
-      ...fixture.metadata,
-      dataVersion: SCOUT_CLIENT_DATA_VERSION,
-      participants: participants.flatMap((participant) =>
-        participant.puuid === null ? [] : [participant.puuid],
-      ),
-    },
-    info: { ...fixture.info, participants },
-  });
+  const withBot = withFirstParticipantAsBot(fixture);
 
   expect(duelGameJudgement(withBot, null)).toMatchObject({
     kind: "review",
