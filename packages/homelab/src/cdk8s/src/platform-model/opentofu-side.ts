@@ -9,6 +9,7 @@ import {
   type HclBlock,
 } from "./hcl.ts";
 import { tailnetNamesIn } from "./tailnet-names.ts";
+import { readTailscale } from "./tailscale-side.ts";
 
 /**
  * What the OpenTofu stacks declare for the facts in the platform model.
@@ -390,36 +391,6 @@ function readSeaweedfs(
   };
 }
 
-/** The `acl` expression of the synthesized stack. */
-const ENCODED_POLICY = "${jsonencode(local.policy)}";
-
-const TailnetPolicySchema = z.looseObject({
-  tagOwners: z.record(z.string(), z.array(z.string())),
-});
-
-/**
- * The tailscale stack is synthesized: its policy is `local.policy`, which the
- * one `tailscale_acl` resource encodes whole. Anything else fails here, so
- * the tags are never read from a policy other than the one applied.
- */
-function readTailscale(stack: Stack): Pick<OpenTofuSide, "tailscaleTags"> {
-  const policies = stack.resources.filter(
-    (resource) => resource.type === "tailscale_acl",
-  );
-  const [policy] = policies;
-  if (policy === undefined || policies.length !== 1)
-    throw new Error("tailscale: expected exactly one tailscale_acl");
-  if (policy.attributes.get("acl") !== JSON.stringify(ENCODED_POLICY))
-    throw new Error(
-      "tailscale: tailscale_acl does not encode local.policy; update readTailscale",
-    );
-  return {
-    tailscaleTags: new Set(
-      Object.keys(TailnetPolicySchema.parse(stack.locals["policy"]).tagOwners),
-    ),
-  };
-}
-
 /**
  * A reference attribute such as `var.x` or `each.value.y`: bare in HCL, and a
  * `"${...}"` string in a synthesized stack's JSON.
@@ -432,12 +403,24 @@ function unwrapInterpolation(
     : (/^"\$\{([^"]*)\}"$/.exec(expression)?.[1] ?? expression);
 }
 
+const TitledEntriesSchema = z.record(
+  z.string(),
+  z.looseObject({ title: z.string() }),
+);
+
 /** Titles a `for_each` item resource takes from its stack's own data. */
 function onePasswordTitles(stack: Stack, item: Resource): string[] {
   const literal = text(item, "title");
   if (literal !== undefined) return [literal];
   const title = unwrapInterpolation(item.attributes.get("title"));
-  const source = unwrapInterpolation(item.attributes.get("for_each"));
+  const rawSource = item.attributes.get("for_each");
+  const source = unwrapInterpolation(rawSource);
+  if (title === "each.value.title" && rawSource?.startsWith("{") === true) {
+    // A synthesized stack inlines the for_each map as a JSON object.
+    return Object.values(TitledEntriesSchema.parse(JSON.parse(rawSource))).map(
+      (entry) => entry.title,
+    );
+  }
   if (title === "each.value.title" && source?.startsWith("local.") === true) {
     const entries = blocksOf(stack.blocks, "locals")
       .map((locals) =>

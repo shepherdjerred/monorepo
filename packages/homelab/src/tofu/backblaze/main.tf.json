@@ -1,0 +1,237 @@
+{
+  "locals": {
+    "bucket_ids": {
+      "postgres_wal": "${b2_bucket.postgres_wal.bucket_id}",
+      "seaweedfs_backups": "${b2_bucket.seaweedfs_backups.bucket_id}",
+      "velero": "${b2_bucket.velero.bucket_id}"
+    }
+  },
+  "output": {
+    "bucket_names": {
+      "description": "Private backup buckets. seaweedfs-backups keeps the name Delivery receipts store.",
+      "value": {
+        "postgres_wal": "${b2_bucket.postgres_wal.bucket_name}",
+        "seaweedfs_backups": "${b2_bucket.seaweedfs_backups.bucket_name}",
+        "velero": "${b2_bucket.velero.bucket_name}"
+      }
+    },
+    "region": {
+      "description": "Backblaze region these buckets belong to.",
+      "value": "us-west-004"
+    },
+    "s3_endpoint": {
+      "description": "S3-compatible endpoint for the account region.",
+      "value": "https://s3.us-west-004.backblazeb2.com"
+    }
+  },
+  "provider": { "b2": [{}], "onepassword": [{}] },
+  "resource": {
+    "b2_application_key": {
+      "backup": {
+        "bucket_ids": ["${local.bucket_ids[each.key]}"],
+        "capabilities": "${each.value.capabilities}",
+        "for_each": {
+          "postgres_wal": {
+            "aws_credentials_file": false,
+            "capabilities": [
+              "listBuckets",
+              "listFiles",
+              "readFiles",
+              "writeFiles",
+              "deleteFiles"
+            ],
+            "title": "backblaze-postgres-wal"
+          },
+          "seaweedfs_backups": {
+            "aws_credentials_file": false,
+            "capabilities": [
+              "listBuckets",
+              "listFiles",
+              "readFiles",
+              "writeFiles",
+              "deleteFiles",
+              "readFileRetentions",
+              "writeFileRetentions"
+            ],
+            "title": "backblaze-seaweedfs-backups"
+          },
+          "velero": {
+            "aws_credentials_file": true,
+            "capabilities": [
+              "listBuckets",
+              "listFiles",
+              "readFiles",
+              "writeFiles",
+              "deleteFiles"
+            ],
+            "title": "backblaze-velero"
+          }
+        },
+        "key_name": "${each.value.title}"
+      }
+    },
+    "b2_bucket": {
+      "postgres_wal": {
+        "bucket_name": "sjerred-postgres-wal",
+        "bucket_type": "allPrivate",
+        "lifecycle": { "prevent_destroy": true },
+        "lifecycle_rules": [
+          {
+            "days_from_hiding_to_deleting": 30,
+            "days_from_starting_to_canceling_unfinished_large_files": 7,
+            "file_name_prefix": ""
+          }
+        ]
+      },
+      "seaweedfs_backups": {
+        "bucket_name": "seaweedfs-backups",
+        "bucket_type": "allPrivate",
+        "file_lock_configuration": [{ "is_file_lock_enabled": true }],
+        "lifecycle": { "prevent_destroy": true },
+        "lifecycle_rules": [
+          {
+            "days_from_hiding_to_deleting": 30,
+            "days_from_starting_to_canceling_unfinished_large_files": 7,
+            "file_name_prefix": ""
+          }
+        ]
+      },
+      "velero": {
+        "bucket_name": "sjerred-velero",
+        "bucket_type": "allPrivate",
+        "lifecycle": { "prevent_destroy": true },
+        "lifecycle_rules": [
+          {
+            "days_from_hiding_to_deleting": 30,
+            "days_from_starting_to_canceling_unfinished_large_files": 7,
+            "file_name_prefix": ""
+          }
+        ]
+      }
+    },
+    "onepassword_item": {
+      "backup": {
+        "category": "secure_note",
+        "for_each": {
+          "postgres_wal": {
+            "aws_credentials_file": false,
+            "capabilities": [
+              "listBuckets",
+              "listFiles",
+              "readFiles",
+              "writeFiles",
+              "deleteFiles"
+            ],
+            "title": "backblaze-postgres-wal"
+          },
+          "seaweedfs_backups": {
+            "aws_credentials_file": false,
+            "capabilities": [
+              "listBuckets",
+              "listFiles",
+              "readFiles",
+              "writeFiles",
+              "deleteFiles",
+              "readFileRetentions",
+              "writeFileRetentions"
+            ],
+            "title": "backblaze-seaweedfs-backups"
+          },
+          "velero": {
+            "aws_credentials_file": true,
+            "capabilities": [
+              "listBuckets",
+              "listFiles",
+              "readFiles",
+              "writeFiles",
+              "deleteFiles"
+            ],
+            "title": "backblaze-velero"
+          }
+        },
+        "section": [
+          {
+            "dynamic": {
+              "field": [
+                {
+                  "content": {
+                    "label": "B2_ACCESS_KEY_ID",
+                    "type": "CONCEALED",
+                    "value": "${b2_application_key.backup[each.key].application_key_id}"
+                  },
+                  "for_each": [true]
+                },
+                {
+                  "content": {
+                    "label": "B2_SECRET_ACCESS_KEY",
+                    "type": "CONCEALED",
+                    "value": "${b2_application_key.backup[each.key].application_key}"
+                  },
+                  "for_each": [true]
+                },
+                {
+                  "content": {
+                    "label": "cloud",
+                    "type": "CONCEALED",
+                    "value": "[default]\naws_access_key_id=${b2_application_key.backup[each.key].application_key_id}\naws_secret_access_key=${b2_application_key.backup[each.key].application_key}\n"
+                  },
+                  "for_each": "${each.value.aws_credentials_file ? [true] : []}"
+                }
+              ]
+            },
+            "label": "credentials"
+          }
+        ],
+        "title": "${each.value.title}",
+        "vault": "v64ocnykdqju4ui6j6pua56xw4"
+      }
+    }
+  },
+  "terraform": {
+    "backend": {
+      "s3": {
+        "bucket": "homelab-tofu-state",
+        "endpoints": { "s3": "https://seaweedfs-s3.tailnet-1a49.ts.net" },
+        "key": "backblaze/terraform.tfstate",
+        "region": "auto",
+        "skip_credentials_validation": true,
+        "skip_metadata_api_check": true,
+        "skip_region_validation": true,
+        "skip_requesting_account_id": true,
+        "skip_s3_checksum": true,
+        "use_lockfile": true,
+        "use_path_style": true
+      }
+    },
+    "encryption": {
+      "key_provider": {
+        "pbkdf2": {
+          "state": { "passphrase": "${var.tofu_state_encryption_passphrase}" }
+        }
+      },
+      "method": {
+        "aes_gcm": { "encrypted": { "keys": "${key_provider.pbkdf2.state}" } }
+      },
+      "plan": { "enforced": true, "method": "method.aes_gcm.encrypted" },
+      "state": { "enforced": true, "method": "method.aes_gcm.encrypted" }
+    },
+    "required_providers": {
+      "b2": { "source": "backblaze/b2", "version": "0.14.0" },
+      "onepassword": { "source": "1password/onepassword", "version": "~> 3.0" }
+    },
+    "required_version": ">= 1.11.0"
+  },
+  "variable": {
+    "tofu_state_encryption_passphrase": {
+      "description": "Passphrase encrypting Backblaze state and plans.",
+      "sensitive": true,
+      "type": "string",
+      "validation": [
+        {
+          "condition": "${(length(var.tofu_state_encryption_passphrase) >= 16)}",
+          "error_message": "The state encryption passphrase must contain at least 16 characters."
+        }
+      ]
+    }
+  }
+}
