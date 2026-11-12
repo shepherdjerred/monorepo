@@ -21,13 +21,11 @@ export const sitePaths = {
     ...workspacePaths,
     "packages/statically-typed",
     "packages/homelab/src/cdk8s/src/resources/s3-static-sites/sites.ts",
-    "packages/homelab/src/tofu/cloudflare/statically-typed-com.tf",
-    "packages/homelab/src/tofu/seaweedfs/buckets.tf",
-    // The same zone and bucket once those stacks are synthesized: the
-    // committed JSON OpenTofu runs, and the CDK Terrain source it comes from.
+    // The zone and the bucket: the committed JSON OpenTofu runs, and the CDK
+    // Terrain source it comes from.
     "packages/homelab/src/tofu/cloudflare/main.tf.json",
     "packages/homelab/src/tofu/seaweedfs/main.tf.json",
-    "packages/homelab-cdktn/src/stacks/cloudflare.ts",
+    "packages/homelab-cdktn/src/stacks/cloudflare",
     "packages/homelab-cdktn/src/stacks/seaweedfs.ts",
     "packages/scout-for-lol/packages/design-system/assets/fonts/BerkeleyMono/BerkeleyMono-Regular.woff2",
     ...deployScripts,

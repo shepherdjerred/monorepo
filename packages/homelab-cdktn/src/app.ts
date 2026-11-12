@@ -4,13 +4,19 @@ import { OPENTOFU_TARGET_VERSION } from "#src/homelab-stack.ts";
 import type { HomelabStack } from "#src/homelab-stack.ts";
 import { AnthropicFederationStack } from "#src/stacks/anthropic-federation.ts";
 import { AnthropicStack } from "#src/stacks/anthropic.ts";
+import { ApplicationSecretsStack } from "#src/stacks/application-secrets.ts";
 import { ArgocdStack } from "#src/stacks/argocd.ts";
 import { ArrStack } from "#src/stacks/arr.ts";
 import { BackblazeStack } from "#src/stacks/backblaze.ts";
 import { CloudflareTokensStack } from "#src/stacks/cloudflare-tokens.ts";
+import { CloudflareStack } from "#src/stacks/cloudflare/index.ts";
+import { DiscordStack } from "#src/stacks/discord.ts";
 import { DockerhubStack } from "#src/stacks/dockerhub.ts";
 import { DockerhubTokensStack } from "#src/stacks/dockerhub-tokens.ts";
 import { GithubStack } from "#src/stacks/github.ts";
+import { OpenaiStack } from "#src/stacks/openai.ts";
+import { PosthogStack } from "#src/stacks/posthog.ts";
+import { SeaweedfsStack } from "#src/stacks/seaweedfs.ts";
 import { TailscaleStack } from "#src/stacks/tailscale.ts";
 
 /**
@@ -21,13 +27,19 @@ import { TailscaleStack } from "#src/stacks/tailscale.ts";
 export const SYNTHESIZED_STACKS = [
   "anthropic",
   "anthropic-federation",
+  "application-secrets",
   "argocd",
   "arr",
   "backblaze",
+  "cloudflare",
   "cloudflare-tokens",
+  "discord",
   "dockerhub",
   "dockerhub-tokens",
   "github",
+  "openai",
+  "posthog",
+  "seaweedfs",
   "tailscale",
 ] as const;
 
@@ -37,13 +49,19 @@ const STACKS: Record<SynthesizedStack, new (scope: Construct) => HomelabStack> =
   {
     anthropic: AnthropicStack,
     "anthropic-federation": AnthropicFederationStack,
+    "application-secrets": ApplicationSecretsStack,
     argocd: ArgocdStack,
     arr: ArrStack,
     backblaze: BackblazeStack,
+    cloudflare: CloudflareStack,
     "cloudflare-tokens": CloudflareTokensStack,
+    discord: DiscordStack,
     dockerhub: DockerhubStack,
     "dockerhub-tokens": DockerhubTokensStack,
     github: GithubStack,
+    openai: OpenaiStack,
+    posthog: PosthogStack,
+    seaweedfs: SeaweedfsStack,
     tailscale: TailscaleStack,
   };
 

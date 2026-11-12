@@ -8,6 +8,13 @@ import { assertAdoptionPlan } from "./adopt-application-secrets.ts";
 
 const stackDir = new URL("../../src/tofu/application-secrets/", import.meta.url)
   .pathname;
+const EnforcedSchema = z.looseObject({ enforced: z.boolean() });
+const ConfigurationSchema = z.looseObject({
+  terraform: z.looseObject({
+    backend: z.record(z.string(), z.unknown()),
+    encryption: z.looseObject({ state: EnforcedSchema, plan: EnforcedSchema }),
+  }),
+});
 const PlanSchema = z.object({
   resource_changes: z.array(
     z.object({
@@ -48,18 +55,23 @@ test("encrypted fixture adoption preserves values and only an explicit revision 
       env,
     );
   try {
-    for (const file of [
-      "providers.tf",
-      "variables.tf",
-      "state-encryption.tf",
-      "credentials.tf",
-      ".terraform.lock.hcl",
-    ]) {
-      await Bun.write(
-        path.join(fixtureRoot, file),
-        await Bun.file(path.join(stackDir, file)).text(),
-      );
-    }
+    // The synthesized configuration exactly as committed, less its remote
+    // backend: the fixture keeps encrypted state on local disk.
+    const { terraform, ...configuration } = ConfigurationSchema.parse(
+      await Bun.file(path.join(stackDir, "main.tf.json")).json(),
+    );
+    const { backend, ...settings } = terraform;
+    expect(Object.keys(backend)).toEqual(["s3"]);
+    expect(settings.encryption.state.enforced).toBe(true);
+    expect(settings.encryption.plan.enforced).toBe(true);
+    await Bun.write(
+      path.join(fixtureRoot, "main.tf.json"),
+      JSON.stringify({ ...configuration, terraform: settings }),
+    );
+    await Bun.write(
+      path.join(fixtureRoot, ".terraform.lock.hcl"),
+      await Bun.file(path.join(stackDir, ".terraform.lock.hcl")).text(),
+    );
     const catalog = {
       credentials: {
         first: { revision: 0, onepassword_targets: [] },

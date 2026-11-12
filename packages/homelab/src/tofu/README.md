@@ -16,7 +16,7 @@ tofu/
 ├── arr/                 # Radarr/Sonarr/Prowlarr config, imported from the live instances
 ├── asuswrt/             # Asus routers & APs (custom provider, local-run only)
 ├── backblaze/           # Backup buckets and scoped keys; Velero writes to sjerred-velero (operator-applied)
-├── cloudflare/          # DNS zones, bot management, email security (one .tf per domain)
+├── cloudflare/          # DNS zones, records, redirects, R2 buckets and the mail/TLS baseline
 ├── cloudflare-tokens/   # Scoped API tokens, isolated from the DNS stack
 ├── discord/             # Imported Discord bot application settings
 ├── github/              # Repository settings and branch rulesets
@@ -33,7 +33,7 @@ Each subdirectory is an independent root module with its own `backend.tf` (S3 st
 
 ### Stacks synthesized from TypeScript
 
-`anthropic`, `anthropic-federation`, `argocd`, `arr`, `backblaze`, `cloudflare-tokens`, `dockerhub`, `dockerhub-tokens`, `github` and `tailscale` have no `.tf` files.
+`anthropic`, `anthropic-federation`, `application-secrets`, `argocd`, `arr`, `backblaze`, `cloudflare`, `cloudflare-tokens`, `discord`, `dockerhub`, `dockerhub-tokens`, `github`, `openai`, `posthog`, `seaweedfs` and `tailscale` have no root `.tf` files.
 Their configuration is
 `main.tf.json`, synthesized by the [CDK Terrain](https://cdktn.io/docs) app in
 [`packages/homelab-cdktn`](../../../homelab-cdktn) and committed next to the stack's `.terraform.lock.hcl`.
@@ -53,6 +53,12 @@ are the construct ids in `packages/homelab-cdktn/src/stacks/<stack>.ts`, so rena
 state change. A synthesized stack is accepted only on a plan against live state
 that reports no changes. `tofu validate -backend=false` does not evaluate the
 `encryption` block, so validation alone does not prove an encrypted stack.
+
+The `cloudflare` root still calls its two local modules,
+`cloudflare/modules/domain-baseline` and `cloudflare/modules/static-cache`,
+which stay hand-written HCL next to `main.tf.json` and are archived with it.
+Their resources keep their `module.<name>…` addresses; flattening them into
+TypeScript is a separate change with explicit `moved` blocks.
 
 ### Provider versions
 
@@ -102,6 +108,7 @@ To port a stack, follow `packages/homelab-cdktn/README.md`.
   - `anthropic-federation` — `ANTHROPIC_ADMIN_API_KEY`, an `org:admin` OAuth token as `ANTHROPIC_AUTH_TOKEN`, `OP_ACCOUNT` for the 1Password provider's desktop-app auth, and `TOFU_STATE_ENCRYPTION_PASSPHRASE`
   - `google` — the operator's Application Default Credentials, `OP_ACCOUNT` for the 1Password provider's desktop-app auth, and `TOFU_STATE_ENCRYPTION_PASSPHRASE`
   - `cloudflare-tokens` — a bootstrap `CLOUDFLARE_API_TOKEN` and `TOFU_STATE_ENCRYPTION_PASSPHRASE`
+  - `posthog` — a PostHog API key as `POSTHOG_CLI_API_KEY` and the stack's own `POSTHOG_TOFU_STATE_PASSPHRASE`
 
 Non-secret platform desired state is committed in each platform stack's
 `desired-state.json` and checked against `platform-desired-state.schema.json`.
@@ -209,9 +216,15 @@ requires connectivity to both the LAN and tailnet; see
 
 ### Cloudflare
 
-`cloudflare/jerred-archives.tf` owns the private R2 archive bucket, and
-`cloudflare/pinterest-archives.tf` owns its private counterpart for Pinterest
-work archives. Each bucket declaration prevents destruction; each lifecycle rule
+The stack's source is
+[`packages/homelab-cdktn/src/stacks/cloudflare`](../../../homelab-cdktn/src/stacks/cloudflare):
+`zones.ts` declares the zones, `sjer-red.ts`, `ts-mc-net.ts` and `domains.ts`
+their application records, `baseline.ts` the shared baseline and `buckets.ts`
+the R2 buckets.
+
+`buckets.ts` owns the private R2 archive bucket `jerred-archives` and its
+private counterpart for Pinterest work archives, `pinterest-archives`. Each
+bucket declaration prevents destruction; each lifecycle rule
 removes only abandoned multipart uploads after seven days and never expires
 completed archives. The `personal-archives-r2` entry in `cloudflare-tokens`
 grants object read and write on only these two buckets. Retain
@@ -222,8 +235,8 @@ scheduled backups are the only backup. They are written to the Backblaze
 bucket that held backups taken before that move is no longer managed and is
 retired out-of-band, as is the unused `glitter-discord-corpus` bucket.
 
-`cloudflare/ts-mc-bucket.tf` and `cloudflare/sjerred-bucket.tf` own the public
-download buckets behind `storage.ts-mc.net` and `files.sjer.red`. Both prevent
+`buckets.ts` also owns the public download buckets `ts-mc` and `sjerred`
+behind `storage.ts-mc.net` and `files.sjer.red`. Both prevent
 destruction, keep `r2.dev` disabled, and only abort abandoned multipart uploads.
 They also own the two custom domains, which create those DNS records. The
 provider cannot import an existing `cloudflare_r2_custom_domain` and fails to
@@ -234,11 +247,13 @@ and confirm a full plan shows no changes before pushing that state. Write the
 pulled state to a file inside the `op run` child, because `op run` masks
 secret values, including the account ID, in the child's standard output.
 
-Each domain's `.tf` file owns its existing zone and application-specific records.
+`zones.ts` owns each existing zone and the per-zone files its
+application-specific records.
 The shared `cloudflare/modules/domain-baseline` module owns DNSSEC, Fastmail MX,
 DKIM, SPF, DMARC, TLS reporting, CAA, HTTPS/TLS/HSTS settings, and certificate
-transparency monitoring. `baseline-migrations.tf` preserves existing state
-addresses; `baseline-imports.tf` adopts previously implicit control-plane settings.
+transparency monitoring. In `baseline.ts`, `baselineMoves` preserves existing
+state addresses and `baselineImports` adopts previously implicit control-plane
+settings.
 
 [`domain-registry.json`](../domain-registry.json) is the domain inventory and
 MTA-STS policy source for both OpenTofu and Caddy. Every managed zone needs a
@@ -320,7 +335,8 @@ deletion, so inspect the exact plan before changing that field.
 
 `discord/desired-state.json` is the checked-in allowlist of true bot
 applications, expected application IDs, 1Password item references, and managed
-settings. `discord/applications.tf` is import-only. Each bot has its own
+settings. The stack (`packages/homelab-cdktn/src/stacks/discord.ts`) is
+import-only. Each bot has its own
 provider configuration and manages descriptions, install URLs, interaction
 endpoints, role-connection URLs, and tags. Every application has
 `prevent_destroy`; applications are never created or deleted by this stack.
@@ -346,6 +362,20 @@ forgets. Before archiving a project in the dashboard, remove its service
 accounts and model allowlist from desired state and apply that change;
 otherwise every later plan fails until each unreadable resource is removed from
 state.
+
+Projects archived in the dashboard, which the stack forgets instead of
+destroying:
+
+| Desired-state key           | Project id                      |
+| --------------------------- | ------------------------------- |
+| `scout-beta`                | `proj_W3LLi8mKyuKdJkxou38TpHIR` |
+| `scout-active-2026-09`      | `proj_3I9qDcL4Qvc82676p2g59DjA` |
+| `scout-prod-active-2026-09` | `proj_CRibw9zX9kDaFnQzynYbKdIm` |
+
+The stack is synthesized from `packages/homelab-cdktn/src/stacks/openai.ts`.
+Both providers serve resource types that start with `openai_`: the official
+one is the default for that prefix, and the companion keeps the local name
+`openaikeys`, which only `openai_project_service_account` selects.
 
 Spend controls denominate their thresholds inconsistently upstream, and the
 committed values rely on it: `openai_project_spend_limit` /
@@ -401,6 +431,34 @@ operator's Application Default Credentials. `google_billing_account_id` and
 See [Rotate LLM provider credentials](https://github.com/shepherdjerred/monorepo/blob/main/packages/docs/wiki/src/content/docs/how-to/rotate-provider-credentials.md)
 for the operator steps, spend caps, and JWKS refresh.
 
+### PostHog
+
+The `posthog` stack owns the `monorepo` project and its capture settings, the
+owner's organization membership, the `j.sjer.red` reverse-proxy record, the
+Pinterest Ads source, the GeoIP transformation, and every dashboard, tile
+layout and insight. The project, membership, proxy record and source have
+`prevent_destroy`.
+
+Its source is
+[`packages/homelab-cdktn/src/stacks/posthog.ts`](../../../homelab-cdktn/src/stacks/posthog.ts)
+and the modules under `posthog/` beside it:
+
+- `adopted.json` holds the objects that existed before the stack and were
+  imported: dashboards, layouts, insights and the GeoIP function. Each key is
+  the object's Terraform resource name and `importId` its PostHog id. To adopt
+  another object, add an entry; the stack writes its `import` block.
+- `feature-usage.ts` and `storm-product-metrics.ts` declare the dashboards this
+  repository designed. Add a dashboard the same way, as a module the stack
+  reads.
+
+Queries and layouts are JSON documents. They reach OpenTofu as local values
+and are encoded there with `jsonencode`, which sorts keys, so key order in the
+source does not change the applied value. `app_urls` and `recording_domains`
+come from [`config/analytics-sites.json`](../../../../config/analytics-sites.json),
+inlined at synthesis: after changing the registry, run
+`bun run --cwd packages/homelab-cdktn synth` and commit the regenerated
+`posthog/main.tf.json`.
+
 ### GitHub
 
 Repository settings for `shepherdjerred/monorepo` and the `shepherdjerred` profile-README repo (`repos.tf`):
@@ -420,6 +478,18 @@ All S3 buckets on the self-hosted SeaweedFS instance, managed via the AWS provid
 Includes static site buckets, application storage (scout), and the tofu state backend bucket itself.
 
 The `homelab-tofu-state` bucket has `prevent_destroy = true` since it stores state for all tofu modules.
+
+The buckets are declared in
+[`packages/homelab-cdktn/src/stacks/seaweedfs.ts`](../../../homelab-cdktn/src/stacks/seaweedfs.ts).
+Edit them there, run `bun run --cwd packages/homelab-cdktn synth`, and commit
+the regenerated `seaweedfs/main.tf.json`. The landing and 404 pages seeded into
+`public-sjer-red` stay in `seaweedfs/public/`, which the stack reads with
+`filemd5` and uploads.
+
+SeaweedFS lifecycle rules and the seed pages are `terraform_data` resources
+whose `local-exec` provisioners call the AWS CLI with the deployment identity.
+A plan never shows a provisioner's script, so a zero-change plan does not
+cover one: `packages/homelab-cdktn/src/seaweedfs.test.ts` pins each script.
 
 ### Tailscale
 
@@ -471,10 +541,16 @@ The RT-AX88U Pro router and the RT-AX88U / RT-BE86U access points — system set
 
 ## Adding a New Domain
 
-1. Create `cloudflare/{domain-with-dashes}.tf`
-2. Copy the pattern from an existing file (e.g. `scout-for-lol-com.tf`)
-3. Update the zone name, resource names, and DMARC `rua` email
-4. Run `tofu -chdir=cloudflare plan` to verify, then `apply`
+1. Add the domain to [`domain-registry.json`](../domain-registry.json).
+2. In `packages/homelab-cdktn/src/stacks/cloudflare`, add its zone to
+   `ZONE_RESOURCES` and `zones()` in `zones.ts`, and its application records
+   to `domains.ts`, following an existing zone such as `scoutForLol`. The
+   baseline module instance and its `baseline_zone_ids` binding follow from
+   those two.
+3. Run `bun run --cwd packages/homelab-cdktn synth` and commit the regenerated
+   `cloudflare/main.tf.json`.
+4. Run `bun packages/homelab/scripts/tofu/tofu-stack.ts cloudflare plan` to
+   verify the plan creates only the new domain's resources.
 
 To import existing Cloudflare records into state, use [`cf-terraforming`](https://github.com/cloudflare/cf-terraforming).
 

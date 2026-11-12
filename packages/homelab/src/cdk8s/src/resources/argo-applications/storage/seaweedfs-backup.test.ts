@@ -1,5 +1,4 @@
 import { App, Chart } from "cdk8s";
-import { readdir } from "node:fs/promises";
 import path from "node:path";
 import { parseAllDocuments } from "yaml";
 import { describe, expect, test } from "vitest";
@@ -72,23 +71,16 @@ function synthesizedBuckets(configuration: SynthesizedConfiguration) {
   );
 }
 
-/** Every bucket the seaweedfs OpenTofu stack declares, in either configuration format. */
+/** Every bucket the synthesized seaweedfs OpenTofu stack declares. */
 async function declaredBuckets(): Promise<Set<string>> {
   const synthesized = await readSynthesizedConfiguration(SEAWEEDFS_TOFU_STACK);
-  if (synthesized !== undefined) return synthesizedBuckets(synthesized);
-  const names = new Set<string>();
-  for (const file of await readdir(SEAWEEDFS_TOFU_STACK)) {
-    if (!file.endsWith(".tf")) continue;
-    const source = await Bun.file(path.join(SEAWEEDFS_TOFU_STACK, file)).text();
-    for (const match of source.matchAll(/^\s*bucket\s*=\s*"([^"]+)"/gmu)) {
-      if (match[1] !== undefined) names.add(match[1]);
-    }
-  }
-  return names;
+  if (synthesized === undefined)
+    throw new Error("the seaweedfs stack has no synthesized main.tf.json");
+  return synthesizedBuckets(synthesized);
 }
 
 describe("SeaweedFS backup to Backblaze", () => {
-  test("reads declared buckets from a synthesized stack as it does from HCL", () => {
+  test("reads only literal bucket names from a synthesized stack", () => {
     expect(
       synthesizedBuckets(
         parseSynthesizedConfiguration(

@@ -52,7 +52,7 @@ export function createMinecraftShuxinResources(chart: Chart): void {
     // First-level subdomain: Cloudflare Universal SSL covers only *.sjer.red,
     // so the former shuxin.bluemap.sjer.red could never complete a TLS
     // handshake. Must match the tofu DNS record in
-    // src/tofu/cloudflare/sjer-red.tf.
+    // packages/homelab-cdktn/src/stacks/cloudflare/sjer-red.ts.
     subdomain: "shuxin-bluemap",
     namespace: "minecraft-shuxin",
     port: 8100,

@@ -1,0 +1,469 @@
+{
+  "import": [
+    {
+      "for_each": "${{ for name, project in var.openai_projects : name => project if try(project.project_id, null) != null }}",
+      "id": "${each.value.project_id}",
+      "to": "openai_project.managed[each.key]"
+    },
+    {
+      "for_each": "${var.openai_groups}",
+      "id": "${each.value.group_id}",
+      "to": "openai_group.managed[each.key]"
+    },
+    {
+      "for_each": "${var.openai_certificates}",
+      "id": "${each.value.certificate_id}",
+      "to": "openai_certificate.managed[each.key]"
+    },
+    {
+      "for_each": "${var.openai_organization_users}",
+      "id": "${each.value.user_id}",
+      "to": "openai_organization_user.managed[each.key]"
+    }
+  ],
+  "moved": [
+    {
+      "from": "openai_project.managed[\"buildkite\"]",
+      "to": "openai_project.managed[\"woodpecker\"]"
+    },
+    {
+      "from": "openai_project_spend_alert.managed[\"buildkite-monthly\"]",
+      "to": "openai_project_spend_alert.managed[\"woodpecker-monthly\"]"
+    },
+    {
+      "from": "openai_project_spend_limit.managed[\"buildkite-monthly\"]",
+      "to": "openai_project_spend_limit.managed[\"woodpecker-monthly\"]"
+    },
+    {
+      "from": "openai_project_model_permissions.managed[\"buildkite\"]",
+      "to": "openai_project_model_permissions.managed[\"woodpecker\"]"
+    },
+    {
+      "from": "openai_project.managed[\"openrouter\"]",
+      "to": "openai_project.retired_openrouter"
+    },
+    {
+      "from": "openai_project.managed[\"scout-beta\"]",
+      "to": "openai_project.retired_scout_beta"
+    },
+    {
+      "from": "openai_project_spend_alert.managed[\"scout-beta-monthly\"]",
+      "to": "openai_project_spend_alert.retired_scout_beta_monthly"
+    },
+    {
+      "from": "openai_project_spend_limit.managed[\"scout-beta-monthly\"]",
+      "to": "openai_project_spend_limit.retired_scout_beta_monthly"
+    },
+    {
+      "from": "openai_project.managed[\"scout-active-2026-09\"]",
+      "to": "openai_project.retired_scout_active_2026_09"
+    },
+    {
+      "from": "openai_project_spend_alert.managed[\"scout-monthly\"]",
+      "to": "openai_project_spend_alert.retired_scout_monthly"
+    },
+    {
+      "from": "openai_project_spend_limit.managed[\"scout-active-monthly-2026-09\"]",
+      "to": "openai_project_spend_limit.retired_scout_active_monthly_2026_09"
+    },
+    {
+      "from": "openai_project.managed[\"scout-prod-active-2026-09\"]",
+      "to": "openai_project.retired_scout_prod_active_2026_09"
+    },
+    {
+      "from": "openai_project_spend_alert.managed[\"scout-prod-monthly\"]",
+      "to": "openai_project_spend_alert.retired_scout_prod_monthly"
+    },
+    {
+      "from": "openai_project_spend_limit.managed[\"scout-prod-monthly\"]",
+      "to": "openai_project_spend_limit.retired_scout_prod_monthly"
+    }
+  ],
+  "output": {
+    "openai_project_ids": {
+      "description": "OpenAI project IDs",
+      "value": "${{ for name, project in openai_project.managed : name => project.id }}"
+    },
+    "openai_service_account_handoffs": {
+      "description": "Generated service-account keys and their existing 1Password rotation units",
+      "sensitive": true,
+      "value": "${{ for name, account in openai_project_service_account.service_accounts : name => { api_key = account.api_key, onepassword_targets = var.openai_service_accounts[name].onepassword_targets } }}"
+    }
+  },
+  "provider": { "openai": [{}], "openaikeys": [{}] },
+  "removed": [
+    {
+      "from": "openai_project.retired_openrouter",
+      "lifecycle": { "destroy": false }
+    },
+    {
+      "from": "openai_project.retired_scout_beta",
+      "lifecycle": { "destroy": false }
+    },
+    {
+      "from": "openai_project_spend_alert.retired_scout_beta_monthly",
+      "lifecycle": { "destroy": false }
+    },
+    {
+      "from": "openai_project_spend_limit.retired_scout_beta_monthly",
+      "lifecycle": { "destroy": false }
+    },
+    {
+      "from": "openai_project.retired_scout_active_2026_09",
+      "lifecycle": { "destroy": false }
+    },
+    {
+      "from": "openai_project_spend_alert.retired_scout_monthly",
+      "lifecycle": { "destroy": false }
+    },
+    {
+      "from": "openai_project_spend_limit.retired_scout_active_monthly_2026_09",
+      "lifecycle": { "destroy": false }
+    },
+    {
+      "from": "openai_project.retired_scout_prod_active_2026_09",
+      "lifecycle": { "destroy": false }
+    },
+    {
+      "from": "openai_project_spend_alert.retired_scout_prod_monthly",
+      "lifecycle": { "destroy": false }
+    },
+    {
+      "from": "openai_project_spend_limit.retired_scout_prod_monthly",
+      "lifecycle": { "destroy": false }
+    }
+  ],
+  "resource": {
+    "openai_certificate": {
+      "managed": {
+        "certificate": "${var.openai_certificate_values[each.key]}",
+        "for_each": "${var.openai_certificates}",
+        "name": "${try(each.value.name, null)}"
+      }
+    },
+    "openai_group": {
+      "managed": {
+        "for_each": "${var.openai_groups}",
+        "lifecycle": { "prevent_destroy": true },
+        "name": "${each.value.name}"
+      }
+    },
+    "openai_group_role": {
+      "managed": {
+        "for_each": "${var.openai_group_roles}",
+        "group_id": "${openai_group.managed[each.value.group_key].id}",
+        "role_id": "${each.value.role_id}"
+      }
+    },
+    "openai_group_user": {
+      "managed": {
+        "for_each": "${var.openai_group_users}",
+        "group_id": "${openai_group.managed[each.value.group_key].id}",
+        "user_id": "${each.value.user_id}"
+      }
+    },
+    "openai_organization_spend_alert": {
+      "managed": {
+        "currency": "${each.value.currency}",
+        "for_each": "${var.openai_organization_spend_alerts}",
+        "interval": "${each.value.interval}",
+        "notification_channel_recipients": "${each.value.notification_channel_recipients}",
+        "notification_channel_subject_prefix": "${try(each.value.notification_channel_subject_prefix, null)}",
+        "notification_channel_type": "${each.value.notification_channel_type}",
+        "threshold_amount": "${each.value.threshold_amount}"
+      }
+    },
+    "openai_organization_spend_limit": {
+      "managed": {
+        "currency": "${each.value.currency}",
+        "for_each": "${var.openai_organization_spend_limits}",
+        "interval": "${each.value.interval}",
+        "threshold_amount": "${each.value.threshold_amount}"
+      }
+    },
+    "openai_organization_user": {
+      "managed": {
+        "developer_persona": "${try(each.value.developer_persona, null)}",
+        "for_each": "${var.openai_organization_users}",
+        "lifecycle": { "prevent_destroy": true },
+        "role": "${try(each.value.role, null)}",
+        "technical_level": "${try(each.value.technical_level, null)}"
+      }
+    },
+    "openai_project": {
+      "managed": {
+        "external_key_id": "${try(each.value.external_key_id, null)}",
+        "for_each": "${var.openai_projects}",
+        "geography": "${try(each.value.geography, null)}",
+        "name": "${each.value.name}"
+      }
+    },
+    "openai_project_data_retention": {
+      "managed": {
+        "for_each": "${var.openai_project_data_retention}",
+        "project_id": "${openai_project.managed[each.value.project_key].id}",
+        "type": "${each.value.type}"
+      }
+    },
+    "openai_project_group": {
+      "managed": {
+        "for_each": "${var.openai_project_groups}",
+        "group_id": "${openai_group.managed[each.value.group_key].id}",
+        "project_id": "${openai_project.managed[each.value.project_key].id}",
+        "role": "${each.value.role}"
+      }
+    },
+    "openai_project_group_role": {
+      "managed": {
+        "for_each": "${var.openai_project_group_roles}",
+        "group_id": "${openai_group.managed[each.value.group_key].id}",
+        "project_id": "${openai_project.managed[each.value.project_key].id}",
+        "role_id": "${each.value.role_id}"
+      }
+    },
+    "openai_project_hosted_tool_permissions": {
+      "managed": {
+        "code_interpreter_enabled": "${each.value.code_interpreter_enabled}",
+        "file_search_enabled": "${each.value.file_search_enabled}",
+        "for_each": "${var.openai_project_hosted_tool_permissions}",
+        "image_generation_enabled": "${each.value.image_generation_enabled}",
+        "mcp_enabled": "${each.value.mcp_enabled}",
+        "project_id": "${openai_project.managed[each.value.project_key].id}",
+        "web_search_enabled": "${each.value.web_search_enabled}"
+      }
+    },
+    "openai_project_model_permissions": {
+      "managed": {
+        "for_each": "${var.openai_project_model_permissions}",
+        "mode": "${each.value.mode}",
+        "model_ids": "${each.value.model_ids}",
+        "project_id": "${openai_project.managed[each.value.project_key].id}"
+      }
+    },
+    "openai_project_rate_limit": {
+      "managed": {
+        "batch_1_day_max_input_tokens": "${try(each.value.batch_1_day_max_input_tokens, null)}",
+        "for_each": "${var.openai_project_rate_limits}",
+        "max_audio_megabytes_per_1_minute": "${try(each.value.max_audio_megabytes_per_1_minute, null)}",
+        "max_images_per_1_minute": "${try(each.value.max_images_per_1_minute, null)}",
+        "max_requests_per_1_day": "${try(each.value.max_requests_per_1_day, null)}",
+        "max_requests_per_1_minute": "${try(each.value.max_requests_per_1_minute, null)}",
+        "max_tokens_per_1_minute": "${try(each.value.max_tokens_per_1_minute, null)}",
+        "project_id": "${openai_project.managed[each.value.project_key].id}",
+        "rate_limit_id": "${each.value.rate_limit_id}"
+      }
+    },
+    "openai_project_service_account": {
+      "service_accounts": {
+        "for_each": "${var.openai_service_accounts}",
+        "name": "${each.value.name}",
+        "project_id": "${openai_project.managed[each.value.project_key].id}",
+        "provider": "openaikeys"
+      }
+    },
+    "openai_project_spend_alert": {
+      "managed": {
+        "currency": "${each.value.currency}",
+        "for_each": "${var.openai_project_spend_alerts}",
+        "interval": "${each.value.interval}",
+        "notification_channel_recipients": "${each.value.notification_channel_recipients}",
+        "notification_channel_subject_prefix": "${try(each.value.notification_channel_subject_prefix, null)}",
+        "notification_channel_type": "${each.value.notification_channel_type}",
+        "project_id": "${openai_project.managed[each.value.project_key].id}",
+        "threshold_amount": "${each.value.threshold_amount}"
+      }
+    },
+    "openai_project_spend_limit": {
+      "managed": {
+        "currency": "${each.value.currency}",
+        "depends_on": ["openai_project_spend_alert.managed"],
+        "for_each": "${var.openai_project_spend_limits}",
+        "interval": "${each.value.interval}",
+        "project_id": "${openai_project.managed[each.value.project_key].id}",
+        "threshold_amount": "${each.value.threshold_amount}"
+      }
+    },
+    "openai_project_user_role": {
+      "managed": {
+        "for_each": "${var.openai_project_users}",
+        "project_id": "${openai_project.managed[each.value.project_key].id}",
+        "role_id": "${each.value.role_id}",
+        "user_id": "${each.value.user_id}"
+      }
+    },
+    "openai_role": {
+      "managed": {
+        "description": "${try(each.value.description, null)}",
+        "for_each": "${var.openai_roles}",
+        "permissions": "${each.value.permissions}",
+        "role_name": "${each.value.role_name}"
+      }
+    },
+    "openai_user_role": {
+      "managed": {
+        "for_each": "${var.openai_user_roles}",
+        "role_id": "${each.value.role_id}",
+        "user_id": "${each.value.user_id}"
+      }
+    }
+  },
+  "terraform": {
+    "backend": {
+      "s3": {
+        "bucket": "homelab-tofu-state",
+        "endpoints": { "s3": "https://seaweedfs-s3.tailnet-1a49.ts.net" },
+        "key": "openai/terraform.tfstate",
+        "region": "auto",
+        "skip_credentials_validation": true,
+        "skip_metadata_api_check": true,
+        "skip_region_validation": true,
+        "skip_requesting_account_id": true,
+        "skip_s3_checksum": true,
+        "use_lockfile": true,
+        "use_path_style": true
+      }
+    },
+    "encryption": {
+      "key_provider": {
+        "pbkdf2": {
+          "state": { "passphrase": "${var.tofu_state_encryption_passphrase}" }
+        }
+      },
+      "method": {
+        "aes_gcm": { "encrypted": { "keys": "${key_provider.pbkdf2.state}" } }
+      },
+      "plan": { "enforced": true, "method": "method.aes_gcm.encrypted" },
+      "state": { "enforced": true, "method": "method.aes_gcm.encrypted" }
+    },
+    "required_providers": {
+      "openai": { "source": "openai/openai", "version": "~> 1.1" },
+      "openaikeys": { "source": "jianyuan/openai", "version": "~> 0.7" }
+    },
+    "required_version": ">= 1.9.0"
+  },
+  "variable": {
+    "openai_certificate_values": {
+      "default": {},
+      "description": "OpenAI certificate PEM values keyed by certificate metadata",
+      "sensitive": true,
+      "type": "map(string)",
+      "validation": [
+        {
+          "condition": "${length(setsubtract(toset(keys(var.openai_certificates)), toset(keys(var.openai_certificate_values)))) == 0}",
+          "error_message": "Every openai_certificates entry needs a matching openai_certificate_values entry."
+        }
+      ]
+    },
+    "openai_certificates": {
+      "default": {},
+      "description": "OpenAI certificate metadata",
+      "type": "map(object({ certificate_id = string, name = optional(string) }))"
+    },
+    "openai_group_roles": {
+      "default": {},
+      "description": "OpenAI organization group role assignments",
+      "type": "map(object({ group_key = string, role_id = string }))"
+    },
+    "openai_group_users": {
+      "default": {},
+      "description": "OpenAI organization group memberships",
+      "type": "map(object({ group_key = string, user_id = string }))"
+    },
+    "openai_groups": {
+      "default": {},
+      "description": "Existing OpenAI organization groups to import and manage",
+      "type": "map(object({ group_id = string, name = string }))"
+    },
+    "openai_organization_spend_alerts": {
+      "default": {},
+      "description": "OpenAI organization spend alerts",
+      "type": "map(object({ threshold_amount = number, currency = string, interval = string, notification_channel_type = string, notification_channel_recipients = list(string), notification_channel_subject_prefix = optional(string) }))"
+    },
+    "openai_organization_spend_limits": {
+      "default": {},
+      "description": "OpenAI organization hard spend limits",
+      "type": "map(object({ threshold_amount = number, currency = string, interval = string }))"
+    },
+    "openai_organization_users": {
+      "default": {},
+      "description": "Existing OpenAI organization users to manage after importing them",
+      "type": "map(object({ user_id = string, role = optional(string), developer_persona = optional(string), technical_level = optional(string) }))"
+    },
+    "openai_project_data_retention": {
+      "default": {},
+      "description": "OpenAI project data retention controls",
+      "type": "map(object({ project_key = string, type = string }))"
+    },
+    "openai_project_group_roles": {
+      "default": {},
+      "description": "OpenAI project group role assignments",
+      "type": "map(object({ project_key = string, group_key = string, role_id = string }))"
+    },
+    "openai_project_groups": {
+      "default": {},
+      "description": "OpenAI project group assignments",
+      "type": "map(object({ project_key = string, group_key = string, role = string }))"
+    },
+    "openai_project_hosted_tool_permissions": {
+      "default": {},
+      "description": "OpenAI project hosted tool controls",
+      "type": "map(object({ project_key = string, file_search_enabled = bool, web_search_enabled = bool, image_generation_enabled = bool, mcp_enabled = bool, code_interpreter_enabled = bool }))"
+    },
+    "openai_project_model_permissions": {
+      "default": {},
+      "description": "OpenAI project model allow/deny lists",
+      "type": "map(object({ project_key = string, mode = string, model_ids = list(string) }))"
+    },
+    "openai_project_rate_limits": {
+      "default": {},
+      "description": "OpenAI existing project rate limits",
+      "type": "map(object({ project_key = string, rate_limit_id = string, batch_1_day_max_input_tokens = optional(number), max_audio_megabytes_per_1_minute = optional(number), max_images_per_1_minute = optional(number), max_requests_per_1_day = optional(number), max_requests_per_1_minute = optional(number), max_tokens_per_1_minute = optional(number) }))"
+    },
+    "openai_project_spend_alerts": {
+      "default": {},
+      "description": "OpenAI project spend alerts",
+      "type": "map(object({ project_key = string, threshold_amount = number, currency = string, interval = string, notification_channel_type = string, notification_channel_recipients = list(string), notification_channel_subject_prefix = optional(string) }))"
+    },
+    "openai_project_spend_limits": {
+      "default": {},
+      "description": "OpenAI project hard spend limits",
+      "type": "map(object({ project_key = string, threshold_amount = number, currency = string, interval = string }))"
+    },
+    "openai_project_users": {
+      "default": {},
+      "description": "OpenAI project user memberships and roles",
+      "type": "map(object({ project_key = string, user_id = string, role_id = string }))"
+    },
+    "openai_projects": {
+      "default": {},
+      "description": "OpenAI projects to create and manage",
+      "type": "map(object({ project_id = optional(string), name = string, geography = optional(string), external_key_id = optional(string) }))"
+    },
+    "openai_roles": {
+      "default": {},
+      "description": "Custom OpenAI organization roles",
+      "type": "map(object({ role_name = string, permissions = list(string), description = optional(string) }))"
+    },
+    "openai_service_accounts": {
+      "default": {},
+      "description": "OpenAI project service accounts whose generated keys are handed to 1Password",
+      "type": "map(object({ project_key = string, name = string, onepassword_targets = list(object({ vault_item_id = string, vault_field = string, vault_json_path = optional(string) })) }))"
+    },
+    "openai_user_roles": {
+      "default": {},
+      "description": "OpenAI organization user role assignments",
+      "type": "map(object({ user_id = string, role_id = string }))"
+    },
+    "tofu_state_encryption_passphrase": {
+      "description": "OpenTofu state and plan encryption passphrase from 1Password",
+      "sensitive": true,
+      "type": "string",
+      "validation": [
+        {
+          "condition": "${(length(var.tofu_state_encryption_passphrase) >= 16)}",
+          "error_message": "The OpenTofu state encryption passphrase must be at least 16 characters."
+        }
+      ]
+    }
+  }
+}

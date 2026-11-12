@@ -81,7 +81,7 @@ public_key = "${AUTH_PUBLIC_KEY_2025_10_23}"
 //
 // Design notes:
 // - Stateless container: ALL document CRDT state + attachments live in
-//   SeaweedFS (S3) bucket `relay-docs` (created in src/tofu/seaweedfs/buckets.tf),
+//   SeaweedFS (S3) bucket `relay-docs` (declared in packages/homelab-cdktn/src/stacks/seaweedfs.ts),
 //   so there is no PVC.
 // - S3 credentials are the SHARED SeaweedFS creds (same 1Password item used by
 //   pokemon/birmel/scout/s3-static-sites); the item exposes SEAWEEDFS_* fields

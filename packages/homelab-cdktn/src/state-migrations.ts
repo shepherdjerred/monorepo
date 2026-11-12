@@ -2,7 +2,7 @@ import type { TerraformResource, TerraformStack } from "cdktn";
 
 type MovedBlock = { from: string; to: string };
 type RemovedBlock = { from: string; lifecycle: { destroy: false } };
-type ImportBlock = { to: string; id: string };
+type ImportBlock = { to: string; id: string; for_each?: string };
 type Migrations = {
   moved: MovedBlock[];
   removed: RemovedBlock[];
@@ -89,6 +89,30 @@ export function importInstance(
     );
   const { imports } = migrationsOf(stack);
   imports.push({ to, id });
+  stack.addOverride("import", imports);
+}
+
+/**
+ * Imports existing objects at an address `importFrom` cannot name: a resource
+ * inside a module call, or one object per entry of `forEach`, whose `to` and
+ * `id` then read `each.key` and `each.value`:
+ *
+ *     importAddress(this, {
+ *       forEach: "${local.zone_ids}",
+ *       to: "module.baseline[each.key].cloudflare_zone_setting.ssl",
+ *       id: "${each.value}/ssl",
+ *     });
+ */
+export function importAddress(
+  stack: TerraformStack,
+  block: { to: string; id: string; forEach?: string },
+): void {
+  const { imports } = migrationsOf(stack);
+  imports.push({
+    ...(block.forEach === undefined ? {} : { for_each: block.forEach }),
+    to: block.to,
+    id: block.id,
+  });
   stack.addOverride("import", imports);
 }
 

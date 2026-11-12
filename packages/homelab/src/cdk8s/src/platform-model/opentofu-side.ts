@@ -1,13 +1,19 @@
 import path from "node:path";
 import { z } from "zod";
 import { domainRegistry } from "homelab/src/domain-registry.ts";
+import { literalString, objectEntries, parseHcl } from "./hcl.ts";
 import {
-  literalString,
-  literalStrings,
-  objectEntries,
-  parseHcl,
-  type HclBlock,
-} from "./hcl.ts";
+  TOFU_ROOT,
+  blocksOf,
+  hclResources,
+  readHclFiles,
+  readStack,
+  stackNames,
+  text,
+  type ModuleCall,
+  type Resource,
+  type Stack,
+} from "./opentofu-stack.ts";
 import { tailnetNamesIn } from "./tailnet-names.ts";
 import { readTailscale } from "./tailscale-side.ts";
 
@@ -51,158 +57,6 @@ export type OpenTofuSide = {
   stateBackendEndpoints: readonly { stack: string; endpoint: string }[];
 };
 
-const TOFU_ROOT = path.resolve(import.meta.dirname, "../../../tofu");
-
-type Resource = {
-  stack: string;
-  type: string;
-  name: string;
-  /** Attribute text: an HCL expression, or the JSON-encoded value. */
-  attributes: ReadonlyMap<string, string>;
-};
-
-type Stack = {
-  name: string;
-  /** `.tf` blocks of the root module; empty for a synthesized stack. */
-  blocks: readonly HclBlock[];
-  resources: readonly Resource[];
-  /** `locals` of a synthesized stack; empty for an HCL stack. */
-  locals: Readonly<Record<string, unknown>>;
-  /** The stack's source with comments removed, for name scans. */
-  text: string;
-  backendEndpoint: string | undefined;
-};
-
-const SynthesizedStackSchema = z.looseObject({
-  locals: z.record(z.string(), z.unknown()).optional(),
-  resource: z
-    .record(z.string(), z.record(z.string(), z.record(z.string(), z.unknown())))
-    .optional(),
-  terraform: z.looseObject({
-    backend: z
-      .looseObject({
-        s3: z
-          .looseObject({ endpoints: z.looseObject({ s3: z.string() }) })
-          .optional(),
-      })
-      .optional(),
-  }),
-});
-
-function blocksOf(
-  blocks: readonly HclBlock[],
-  type: string,
-  ...labels: string[]
-): HclBlock[] {
-  return blocks.filter(
-    (block) =>
-      block.type === type &&
-      labels.every((label, index) => block.labels[index] === label),
-  );
-}
-
-function hclResources(stack: string, blocks: readonly HclBlock[]): Resource[] {
-  return blocksOf(blocks, "resource").map((block) => ({
-    stack,
-    type: block.labels[0] ?? "",
-    name: block.labels[1] ?? "",
-    attributes: block.attributes,
-  }));
-}
-
-/** An attribute's literal string, from either an HCL expression or a JSON value. */
-function text(resource: Resource, attribute: string): string | undefined {
-  return literalString(resource.attributes.get(attribute));
-}
-
-/** Source text with `#` and `//` line comments removed, strings kept. */
-function withoutHclComments(source: string): string {
-  return source
-    .split("\n")
-    .map((line) => {
-      let quoted = false;
-      for (let index = 0; index < line.length; index += 1) {
-        const char = line[index];
-        if (char === "\\") index += 1;
-        else if (char === '"') quoted = !quoted;
-        else if (!quoted && (char === "#" || line.startsWith("//", index)))
-          return line.slice(0, index);
-      }
-      return line;
-    })
-    .join("\n");
-}
-
-async function readHclFiles(directory: string): Promise<string[]> {
-  const files: string[] = [];
-  for await (const file of new Bun.Glob("*.tf").scan({ cwd: directory }))
-    files.push(file);
-  return Promise.all(
-    files.toSorted().map((file) => Bun.file(path.join(directory, file)).text()),
-  );
-}
-
-async function readStack(name: string): Promise<Stack> {
-  const directory = path.join(TOFU_ROOT, name);
-  const synthesized = Bun.file(path.join(directory, "main.tf.json"));
-  if (await synthesized.exists()) {
-    const source = await synthesized.text();
-    const stack = SynthesizedStackSchema.parse(JSON.parse(source));
-    return {
-      name,
-      blocks: [],
-      resources: Object.entries(stack.resource ?? {}).flatMap(
-        ([type, byName]) =>
-          Object.entries(byName).map(([resourceName, attributes]) => ({
-            stack: name,
-            type,
-            name: resourceName,
-            attributes: new Map(
-              Object.entries(attributes).map(([key, value]) => [
-                key,
-                JSON.stringify(value),
-              ]),
-            ),
-          })),
-      ),
-      locals: stack.locals ?? {},
-      text: source,
-      backendEndpoint: stack.terraform.backend?.s3?.endpoints.s3,
-    };
-  }
-  const sources = await readHclFiles(directory);
-  const blocks = sources.flatMap((source) => parseHcl(source));
-  const backend = blocksOf(blocks, "terraform")
-    .flatMap((terraform) => blocksOf(terraform.blocks, "backend", "s3"))
-    .map((s3) => objectEntries(s3.attributes.get("endpoints"))?.get("s3"))[0];
-  return {
-    name,
-    blocks,
-    resources: hclResources(name, blocks),
-    locals: {},
-    text: sources.map((source) => withoutHclComments(source)).join("\n"),
-    backendEndpoint: literalString(backend),
-  };
-}
-
-async function stackNames(): Promise<string[]> {
-  const names = new Set<string>();
-  for await (const file of new Bun.Glob("*/{*.tf,main.tf.json}").scan({
-    cwd: TOFU_ROOT,
-  }))
-    names.add(file.split("/")[0] ?? "");
-  return [...names].toSorted();
-}
-
-/** A stack-specific extractor reads HCL; a ported stack needs its JSON reader. */
-function hclOnly(stack: Stack, fact: string): readonly HclBlock[] {
-  if (stack.blocks.length === 0)
-    throw new Error(
-      `The ${stack.name} stack is synthesized: read ${fact} from the platform model in readOpenTofuSide`,
-    );
-  return stack.blocks;
-}
-
 function reference(expression: string | undefined, pattern: RegExp): string {
   const match = pattern.exec(expression ?? "");
   if (match?.[1] === undefined)
@@ -245,7 +99,10 @@ function tunnelRecord(
   };
 }
 
-/** Resolves a `cloudflare_zone.<label>.id` reference to the zone's name. */
+/**
+ * Resolves a synthesized `"${cloudflare_zone.<label>.id}"` reference, given as
+ * its JSON text, to the zone's name.
+ */
 function zoneResolver(
   stack: Stack,
 ): (expression: string | undefined) => string {
@@ -260,66 +117,80 @@ function zoneResolver(
       }),
   );
   return (expression) => {
-    const label = reference(expression, /^cloudflare_zone\.(\w+)\.id$/);
+    const label = reference(
+      unwrapInterpolation(expression),
+      /^cloudflare_zone\.(\w+)\.id$/,
+    );
     const zone = zones.get(label);
     if (zone === undefined) throw new Error(`Unknown cloudflare_zone.${label}`);
     return zone;
   };
 }
 
+const REGISTRY_FILE = 'file("${path.module}/../../domain-registry.json")';
+
 /**
- * Tunnel records a child module declares, one set per module instance. Only
- * the domain baseline does: an instance per registered domain, each in that
- * domain's own zone.
+ * Tunnel records a child module declares, one set per module instance. The
+ * modules are still HCL. Only the domain baseline declares any: an instance
+ * per registered domain, each in that domain's own zone.
  */
 async function moduleTunnelRecords(
   stack: Stack,
-  call: HclBlock,
+  call: ModuleCall,
   zoneOf: (expression: string | undefined) => string,
 ): Promise<TunnelRecord[]> {
-  const label = `module.${call.labels[0] ?? ""}`;
-  const source = literalString(call.attributes.get("source"));
-  if (source === undefined) throw new Error(`${label} has no literal source`);
+  const label = `module.${call.name}`;
+  const source = call.arguments["source"];
+  if (typeof source !== "string")
+    throw new TypeError(`${label} has no literal source`);
   const sources = await readHclFiles(path.join(TOFU_ROOT, stack.name, source));
   const records = hclResources(
     stack.name,
     sources.flatMap((moduleSource) => parseHcl(moduleSource)),
   ).filter((resource) => pointsAtTunnel(resource));
   if (records.length === 0) return [];
+  const registry = stack.locals["domain_registry"];
+  const zoneIds = z
+    .record(z.string(), z.string())
+    .safeParse(stack.locals["baseline_zone_ids"]);
   if (
-    call.attributes.get("for_each") !== "local.domain_registry.domains" ||
-    call.attributes.get("zone_id") !== "local.baseline_zone_ids[each.key]" ||
+    typeof registry !== "string" ||
+    !zoneIds.success ||
+    call.arguments["for_each"] !== "${local.domain_registry.domains}" ||
+    !registry.includes(REGISTRY_FILE) ||
+    call.arguments["zone_id"] !== "${local.baseline_zone_ids[each.key]}" ||
     records.some((record) => record.attributes.get("zone_id") !== "var.zone_id")
   )
     throw new Error(
       `${label} declares tunnel records with wiring this reader does not know`,
     );
-  const zoneIds = blocksOf(stack.blocks, "locals")
-    .map((locals) => objectEntries(locals.attributes.get("baseline_zone_ids")))
-    .find((entries) => entries !== undefined);
   return Object.keys(domainRegistry.domains).flatMap((domain) =>
     records.map((record) =>
       tunnelRecord(
         record,
         `${label}["${domain}"].cloudflare_dns_record.${record.name}`,
-        zoneOf(zoneIds?.get(domain)),
+        zoneOf(JSON.stringify(zoneIds.data[domain])),
       ),
     ),
   );
 }
 
+/**
+ * The cloudflare stack is synthesized: its records and module calls are read
+ * from `main.tf.json`, and the two modules it calls from their HCL.
+ */
 async function readCloudflare(
   stack: Stack,
 ): Promise<
   Pick<OpenTofuSide, "tunnelRecords" | "immutablePathPrefixesByZone">
 > {
-  const modules = blocksOf(
-    hclOnly(stack, "tunnel records and cache rules"),
-    "module",
-  );
+  if (stack.blocks.length > 0)
+    throw new Error(
+      "cloudflare: expected the synthesized main.tf.json; update readCloudflare",
+    );
   const zoneOf = zoneResolver(stack);
   const fromModules = await Promise.all(
-    modules.map((call) => moduleTunnelRecords(stack, call, zoneOf)),
+    stack.modules.map((call) => moduleTunnelRecords(stack, call, zoneOf)),
   );
   return {
     tunnelRecords: [
@@ -335,30 +206,33 @@ async function readCloudflare(
       ...fromModules.flat(),
     ],
     immutablePathPrefixesByZone: new Map(
-      modules
-        .filter(
-          (call) =>
-            literalString(call.attributes.get("source")) ===
-            "./modules/static-cache",
-        )
+      stack.modules
+        .filter((call) => call.arguments["source"] === "./modules/static-cache")
         .map((call) => {
-          const prefixes = literalStrings(
-            call.attributes.get("asset_prefixes"),
-          );
-          if (prefixes === undefined)
+          const prefixes = z
+            .array(z.string())
+            .safeParse(call.arguments["asset_prefixes"]);
+          if (!prefixes.success)
             throw new Error(
-              `module.${call.labels[0] ?? ""} has no literal asset_prefixes`,
+              `module.${call.name} has no literal asset_prefixes`,
             );
-          return [zoneOf(call.attributes.get("zone_id")), prefixes.toSorted()];
+          return [
+            zoneOf(JSON.stringify(call.arguments["zone_id"])),
+            prefixes.data.toSorted(),
+          ];
         }),
     ),
   };
 }
 
+/**
+ * The seaweedfs stack is synthesized: its hashed-asset lifecycle rules iterate
+ * `local.static_site_immutable_prefixes`. Anything else fails here, so the
+ * prefixes are never read from a local the rules do not apply.
+ */
 function readSeaweedfs(
   stack: Stack,
 ): Pick<OpenTofuSide, "seaweedfsBuckets" | "expiringPrefixesByBucket"> {
-  const blocks = hclOnly(stack, "buckets and lifecycle prefixes");
   const seaweedfsBuckets = new Set(
     stack.resources
       .filter((resource) => resource.type === "aws_s3_bucket")
@@ -369,25 +243,24 @@ function readSeaweedfs(
         return name;
       }),
   );
-  const prefixes = blocksOf(blocks, "locals")
-    .map((locals) =>
-      objectEntries(locals.attributes.get("static_site_immutable_prefixes")),
-    )
-    .find((entries) => entries !== undefined);
-  if (prefixes === undefined)
+  const lifecycle = stack.resources.find(
+    (resource) =>
+      resource.type === "terraform_data" &&
+      resource.name === "static_site_asset_lifecycle",
+  );
+  if (
+    unwrapInterpolation(lifecycle?.attributes.get("for_each")) !==
+    "local.static_site_immutable_prefixes"
+  )
     throw new Error(
-      "seaweedfs: local.static_site_immutable_prefixes not found",
+      "seaweedfs: static_site_asset_lifecycle does not iterate local.static_site_immutable_prefixes; update readSeaweedfs",
     );
+  const prefixes = z
+    .record(z.string(), z.array(z.string()))
+    .parse(stack.locals["static_site_immutable_prefixes"]);
   return {
     seaweedfsBuckets,
-    expiringPrefixesByBucket: new Map(
-      [...prefixes].map(([bucket, expression]) => {
-        const values = literalStrings(expression);
-        if (values === undefined)
-          throw new Error(`seaweedfs: prefixes of ${bucket} are not literals`);
-        return [bucket, values];
-      }),
-    ),
+    expiringPrefixesByBucket: new Map(Object.entries(prefixes)),
   };
 }
 

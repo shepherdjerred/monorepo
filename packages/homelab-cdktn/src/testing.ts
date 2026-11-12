@@ -3,12 +3,65 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { App, TerraformStack } from "cdktn";
 import { z } from "zod";
-import { withoutGeneratorMetadata } from "#scripts/synth.ts";
+import { synthesize, withoutGeneratorMetadata } from "#scripts/synth.ts";
+import type { SynthesizedStack } from "#src/app.ts";
+
+/** `resource.<type>.<name>` and its arguments, as a synthesized stack writes them. */
+export const ResourcesSchema = z.record(
+  z.string(),
+  z.record(z.string(), z.record(z.string(), z.unknown())),
+);
+
+/** The `terraform` block of a synthesized stack: provider pins and encryption. */
+export const TerraformSchema = z.looseObject({
+  encryption: z.unknown(),
+  required_providers: z.record(
+    z.string(),
+    z.object({ source: z.string(), version: z.string() }),
+  ),
+});
+
+/** {@link TerraformSchema} for a stack that also pins the OpenTofu version. */
+export const VersionedTerraformSchema = TerraformSchema.extend({
+  required_version: z.string(),
+});
+
+/** The committed app's configuration for one stack, parsed by the test's schema. */
+export async function synthesizedStack<Schema extends z.ZodType>(
+  stack: SynthesizedStack,
+  schema: Schema,
+): Promise<z.infer<Schema>> {
+  const synthesized = await synthesize();
+  return schema.parse(JSON.parse(synthesized.get(stack) ?? ""));
+}
+
+/**
+ * The enforced state and plan `encryption` block a stack must synthesize,
+ * written out independently of `encryptStateAndPlans`. The defaults are the
+ * names the HCL stacks used; a stack whose encrypted state records other
+ * names passes its own.
+ */
+export function enforcedEncryption({
+  variable = "tofu_state_encryption_passphrase",
+  keyProvider = "state",
+  method = "encrypted",
+}: { variable?: string; keyProvider?: string; method?: string } = {}) {
+  return {
+    key_provider: {
+      pbkdf2: { [keyProvider]: { passphrase: `\${var.${variable}}` } },
+    },
+    method: {
+      aes_gcm: {
+        [method]: { keys: `\${key_provider.pbkdf2.${keyProvider}}` },
+      },
+    },
+    state: { method: `method.aes_gcm.${method}`, enforced: true },
+    plan: { method: `method.aes_gcm.${method}`, enforced: true },
+  };
+}
 
 const SynthesizedSchema = z.looseObject({
-  resource: z
-    .record(z.string(), z.record(z.string(), z.record(z.string(), z.unknown())))
-    .optional(),
+  resource: ResourcesSchema.optional(),
   import: z.array(z.record(z.string(), z.unknown())).optional(),
   moved: z.array(z.record(z.string(), z.unknown())).optional(),
   removed: z.array(z.record(z.string(), z.unknown())).optional(),

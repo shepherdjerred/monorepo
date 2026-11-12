@@ -4,6 +4,7 @@ import { Repository } from "#generated/providers/github/repository/index.ts";
 import {
   adopt,
   forget,
+  importAddress,
   importInstance,
   moved,
   protect,
@@ -172,6 +173,31 @@ describe("importing a for_each instance", () => {
       {
         id: "shepherdjerred/media",
         to: 'docker_hub_repository.image["media"]',
+      },
+    ]);
+  });
+
+  test("imports into a module call, once or per entry of a for_each", async () => {
+    const stack = await synthesizeStack((scope) => {
+      importAddress(scope, {
+        forEach: "${local.zone_ids}",
+        to: "module.baseline[each.key].cloudflare_zone_setting.ssl",
+        id: "${each.value}/ssl",
+      });
+      importAddress(scope, {
+        to: 'module.baseline["example.com"].cloudflare_zone_dnssec.dnssec',
+        id: "zone-id",
+      });
+    });
+    expect(stack.import).toEqual([
+      {
+        for_each: "${local.zone_ids}",
+        to: "module.baseline[each.key].cloudflare_zone_setting.ssl",
+        id: "${each.value}/ssl",
+      },
+      {
+        to: 'module.baseline["example.com"].cloudflare_zone_dnssec.dnssec',
+        id: "zone-id",
       },
     ]);
   });
