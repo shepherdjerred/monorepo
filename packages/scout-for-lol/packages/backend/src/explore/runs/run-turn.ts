@@ -110,7 +110,7 @@ export function exploreFailureCode(
 ): string {
   if (outcome === "stopped") return "explore:stopped";
   if (outcome === "interrupted") return "explore:interrupted";
-  if (error instanceof ExploreBudgetError) return "explore:budget_exceeded";
+  if (budgetErrorOf(error) !== null) return "explore:budget_exceeded";
   return error instanceof ExploreCardSelectionError
     ? `explore:invalid_${error.cardType}_card`
     : "explore:execution_failed";
@@ -128,12 +128,20 @@ function recordTurnFailure(error: unknown): void {
   Sentry.captureException(error, { tags: { source: "explore-turn-run" } });
 }
 
+/** The SDK wraps middleware errors; the budget refusal is worth surfacing. */
+export function budgetErrorOf(error: unknown): ExploreBudgetError | null {
+  let current: unknown = error;
+  for (let depth = 0; depth < 5 && current instanceof Error; depth++) {
+    if (current instanceof ExploreBudgetError) return current;
+    current = current.cause;
+  }
+  return null;
+}
+
 function visibleError(outcome: ExploreTurnOutcome, error: unknown): string {
-  if (outcome === "stopped")
-    return "This question was stopped before an answer was produced.";
-  return error instanceof ExploreBudgetError
-    ? error.message
-    : "This answer could not be completed.";
+  return outcome === "stopped"
+    ? "This question was stopped before an answer was produced."
+    : (budgetErrorOf(error)?.message ?? "This answer could not be completed.");
 }
 
 /**

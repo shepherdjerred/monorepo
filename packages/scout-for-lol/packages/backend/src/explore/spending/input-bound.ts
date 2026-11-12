@@ -1,5 +1,16 @@
-/** A conservative token bound, including provider framing overhead. */
-export const EXPLORE_MAX_PROVIDER_INPUT_BOUND = 256_000;
+/**
+ * A conservative token bound, including provider framing overhead.
+ *
+ * Counted in serialized bytes (a token never takes less than one byte), so
+ * this is a worst case: the standing system prompt, tool schemas and answer
+ * format alone serialize to roughly 200 KB and are prompt-cached by the
+ * provider, and a normal multi-query turn's tool results add tens of KB
+ * more. At 256 KB a build question that ran its queries as instructed died
+ * mid-stream on the reservation while the provider had billed ~40k tokens;
+ * 512 KB keeps the reservation a real ceiling without refusing turns the
+ * model can comfortably serve.
+ */
+export const EXPLORE_MAX_PROVIDER_INPUT_BOUND = 512_000;
 
 /**
  * Tokens reserved for one attached image.
