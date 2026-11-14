@@ -34,6 +34,18 @@ The lobby-binding service in
 owns that decision. Neither the desktop client nor a lobby creator assigns the
 canonical Scout game.
 
+## Hidden players stay hidden
+
+Riot's policy is that products cannot identify or analyze players the game
+deliberately hides, and Spectator marks those players with a null PUUID. The
+client's gameflow roster often names them anyway. Prematch enrichment
+([`enrichPrematch`](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/scout-client/canonical/local-prematch.ts))
+therefore fills a null-PUUID Spectator slot only with the paired observer's own verified
+account. Every other hidden slot stays anonymous, and the loading screen
+([`loading-screen-builder.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/league/tasks/prematch/loading-screen-builder.ts))
+renders it as an anonymous row. Bots are not hidden players, so their display data
+still comes from the client roster.
+
 ## Riot remains the preferred match source
 
 Local observations supplement Riot rather than replacing it. A client postgame

@@ -152,17 +152,23 @@ test("Riot facts win while a unique private slot can gain its identity", () => {
       riotId: "Champion",
     })),
   };
-  const enriched = enrichPrematch(riot, client);
+  const enriched = enrichPrematch(riot, client, observer);
   expect(enriched.gameLength).toBe(50);
   expect(enriched.participants[0]?.puuid).toBe(observer);
   expect(enriched.participants[1]?.puuid).toBeNull();
   expect(
-    enrichPrematch(riot, {
-      ...client,
-      participants: [...client.participants, ...client.participants],
-    }).participants[0]?.puuid,
+    enrichPrematch(
+      riot,
+      {
+        ...client,
+        participants: [...client.participants, ...client.participants],
+      },
+      observer,
+    ).participants[0]?.puuid,
   ).toBeNull();
-  expect(enrichPrematch(riot, { ...client, gameId: 124 })).toEqual(riot);
+  expect(enrichPrematch(riot, { ...client, gameId: 124 }, observer)).toEqual(
+    riot,
+  );
 });
 
 test("identity-only gameflow can enrich Riot without pretending it can render a whole roster", () => {
@@ -194,9 +200,9 @@ test("identity-only gameflow can enrich Riot without pretending it can render a 
       puuid: null,
     })),
   };
-  expect(enrichPrematch(riot, identities).participants[0]?.puuid).toBe(
-    observer,
-  );
+  expect(
+    enrichPrematch(riot, identities, observer).participants[0]?.puuid,
+  ).toBe(observer);
   const first = riot.participants[0];
   if (first === undefined) throw new Error("Fixture has no participant");
   const ambiguous = {
@@ -204,8 +210,66 @@ test("identity-only gameflow can enrich Riot without pretending it can render a 
     participants: [...riot.participants, { ...first, spell2Id: 7 }],
   };
   expect(
-    enrichPrematch(ambiguous, identities).participants.every(
+    enrichPrematch(ambiguous, identities, observer).participants.every(
       (player) => player.puuid === null,
     ),
   ).toBe(true);
+});
+
+const hiddenPuuid = "h".repeat(78);
+function hiddenFixture() {
+  const riotSlot = {
+    puuid: null,
+    riotId: "Champion",
+    spell1Id: 4,
+    spell2Id: 14,
+    lastSelectedSkinIndex: 0,
+    profileIconId: 1,
+    bot: false,
+  };
+  const base = parseLocalPrematch(session, observer, "NA1", "123");
+  if (base === null) throw new Error("Fixture must describe a game");
+  const riot = {
+    ...base,
+    participants: [
+      { ...riotSlot, teamId: 100, championId: 1 },
+      { ...riotSlot, teamId: 200, championId: 2 },
+      { ...riotSlot, teamId: 200, championId: 3, bot: true },
+    ],
+  };
+  const client = {
+    gameId: 123,
+    platformId: "NA1",
+    gameQueueConfigId: 0,
+    participants: [
+      { teamId: 100, championId: 1, puuid: observer, riotId: "Player#NA1" },
+      { teamId: 200, championId: 2, puuid: hiddenPuuid, riotId: "Hidden#NA1" },
+      { teamId: 200, championId: 3, puuid: null, riotId: "Bot Annie" },
+    ],
+  };
+  return { riot, client };
+}
+
+test("a hidden non-observer slot stays hidden even when the client roster names it", () => {
+  const { riot, client } = hiddenFixture();
+  const hidden = enrichPrematch(riot, client, observer).participants[1];
+  expect(hidden?.puuid).toBeNull();
+  expect(hidden?.riotId).toBe("Champion");
+});
+
+test("the observer's own hidden slot is filled", () => {
+  const { riot, client } = hiddenFixture();
+  expect(enrichPrematch(riot, client, observer).participants[0]).toMatchObject({
+    puuid: observer,
+    riotId: "Player#NA1",
+  });
+});
+
+test("bots are not hidden players and still take client roster data", () => {
+  const { riot, client } = hiddenFixture();
+  expect(enrichPrematch(riot, client, observer).participants[2]).toMatchObject({
+    puuid: null,
+    riotId: "Bot Annie",
+    bot: true,
+  });
 });
