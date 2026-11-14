@@ -39,6 +39,7 @@ it("drains fake provider/storage on actual SIGTERM before telemetry closes, with
       "usage persisted",
       "activity cleanup",
       "resources closed",
+      "connections closed",
       "tracing flushed",
       "callgraph flushed",
     ]);

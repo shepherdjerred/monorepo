@@ -245,6 +245,21 @@ the kernel's 128 KiB exec limit for one environment string is refused before
 the stage records an operation or a Job exists, rather than failing in the
 container with `argument list too long`.
 
+A worker pod's termination grace is a maximum for in-flight Activities, never
+a wait. On SIGTERM the entrypoint stops polling, lets every Worker's `run()`
+settle, then closes its servers, its Temporal connections and telemetry. An
+open `NativeConnection` keeps the SDK runtime referenced, so the process must
+close it to exit. `POST_DRAIN_EXIT_MS` (10 s) bounds that cleanup: a process
+still alive that long after its drain completed logs a warning and exits 1.
+The bound starts only when the drain has completed, so it never shortens one.
+This matters to a rollout because worker Deployments use `Recreate`: the new
+pod is not created until the old one is gone, and the sync readback (10
+minutes) and the Deployment progress deadline (600 s) are both shorter than
+the promotion worker's 18-minute grace. An idle worker that idled out its
+grace would fail its own rollout; a worker that is still running a promotion
+legitimately may, and that sync is retried by recovery rather than by
+shortening the grace.
+
 A model recipe's `worker-rollout` step runs the same Jobs. Its apply-safety
 step first proves every retained image's Build ID and the served routes, and
 refuses a pool that still has legacy pollers. Only then does it write the

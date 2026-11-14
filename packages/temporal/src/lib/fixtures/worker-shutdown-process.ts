@@ -48,6 +48,10 @@ const shutdown = createWorkerShutdown({
     await provider.stop(true);
     events.push("resources closed");
   },
+  closeConnections: () => {
+    events.push("connections closed");
+    return Promise.resolve();
+  },
   closeTracing: async () => {
     if (!(await Bun.file(usagePath).exists()))
       throw new Error("Tracing closed before usage persistence");
