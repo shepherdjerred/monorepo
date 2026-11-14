@@ -1,5 +1,6 @@
 import { DeliveryError } from "#domain/error.ts";
 import { readProjectedKubernetes } from "#infrastructure/kubernetes/projected-identity.ts";
+import { reportFailedRead } from "#infrastructure/kubernetes/projected-reader.ts";
 
 export type IngressKubernetesReader = (path: string) => Promise<unknown>;
 const directory = "/var/run/delivery-ingress";
@@ -7,7 +8,10 @@ const directory = "/var/run/delivery-ingress";
 /** Lazy projected, read-only identity. Health and bearer requests never load Kubernetes credentials. */
 export const readIngressKubernetes: IngressKubernetesReader = async (path) => {
   const parsed = await readProjectedKubernetes(directory, path).catch(
-    () => null,
+    (error: unknown) => {
+      reportFailedRead("ingress", path, error);
+      return null;
+    },
   );
   if (parsed === null)
     throw new DeliveryError(

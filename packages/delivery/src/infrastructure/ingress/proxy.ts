@@ -2,6 +2,7 @@ import { isIP } from "node:net";
 import { z } from "zod";
 import { DELIVERY_TAILSCALE_INGRESS as target } from "@shepherdjerred/ops-model/delivery-ingress.ts";
 import { DeliveryError } from "#domain/error.ts";
+import { listKubernetes } from "#infrastructure/kubernetes/projected-reader.ts";
 import {
   readIngressKubernetes,
   type IngressKubernetesReader,
@@ -56,10 +57,10 @@ const Pod = z.looseObject({
     })
     .default({ conditions: [] }),
 });
-const PodList = z.looseObject({
-  metadata: z.looseObject({ continue: z.string().optional() }),
-  items: z.array(Pod).max(1000),
-});
+const MAX_PROXY_PODS = 1000;
+/** A proxy Pod is about 10 KiB, so a page of fifty is half of one bounded read. */
+const PROXY_POD_PAGE = 50;
+const Pods = z.array(Pod).max(MAX_PROXY_PODS);
 const StatefulSet = z.looseObject({
   metadata: Metadata,
   spec: z.looseObject({
@@ -118,15 +119,20 @@ async function observe(read: IngressKubernetesReader) {
     read(
       `/apis/networking.k8s.io/v1/namespaces/${target.namespace}/ingresses/${target.name}`,
     ),
-    read(`/api/v1/namespaces/${target.proxyNamespace}/pods?limit=1000`),
+    // Every Pod of the namespace, not only the proxy's: an address must be
+    // unique among all of them. One proxy Pod exists per exposed Ingress, so
+    // the list is paged; a list over its bound is refused, never truncated.
+    listKubernetes(read, `/api/v1/namespaces/${target.proxyNamespace}/pods`, {
+      maxItems: MAX_PROXY_PODS,
+      pageSize: PROXY_POD_PAGE,
+    }),
   ]);
   const ingress = Ingress.parse(rawIngress),
-    pods = PodList.parse(rawPods);
+    pods = { items: Pods.parse(rawPods) };
   requireIdentity(
     ingress.metadata.name === target.name &&
       ingress.metadata.namespace === target.namespace &&
       live(ingress.metadata) &&
-      (pods.metadata.continue === undefined || pods.metadata.continue === "") &&
       ingress.metadata.annotations["tailscale.com/funnel"] !== "true",
   );
   const allAddresses = new Map<string, string>();

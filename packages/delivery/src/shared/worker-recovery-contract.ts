@@ -62,11 +62,20 @@ const KubernetesObject = z.record(z.string(), z.unknown());
  * Application object, every Deployment and every `worker-family` Pod in the
  * pool's namespace (model D5, I2). The executor never reads these with its own credential.
  */
+/** Most objects of each kind one observation carries; a larger namespace is refused, never truncated. */
+export const WORKER_RECOVERY_OBSERVATION_BOUNDS = {
+  deployments: 500,
+  pods: 2000,
+} as const;
 export const WorkerRecoveryObservationSchema = z
   .object({
     application: KubernetesObject,
-    deployments: z.array(KubernetesObject).max(500),
-    pods: z.array(KubernetesObject).max(2000),
+    deployments: z
+      .array(KubernetesObject)
+      .max(WORKER_RECOVERY_OBSERVATION_BOUNDS.deployments),
+    pods: z
+      .array(KubernetesObject)
+      .max(WORKER_RECOVERY_OBSERVATION_BOUNDS.pods),
   })
   .strict();
 export type WorkerRecoveryObservation = z.infer<

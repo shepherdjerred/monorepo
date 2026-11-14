@@ -1,6 +1,6 @@
-import { z } from "zod";
 import { DELIVERY_KUBERNETES_READERS } from "@shepherdjerred/ops-model/delivery-readers.ts";
 import {
+  WORKER_RECOVERY_OBSERVATION_BOUNDS,
   WorkerPoolSnapshotSchema,
   WorkerRecoveryObservationSchema,
   workerHostSpecification,
@@ -17,6 +17,7 @@ import type { Delivery } from "#infrastructure/delivery.ts";
 import { findIntent } from "#infrastructure/recovery-intents.ts";
 import type { ApplicationReader } from "#infrastructure/kubernetes/application-reader.ts";
 import {
+  listKubernetes,
   projectedReader,
   type KubernetesRead,
 } from "#infrastructure/kubernetes/projected-reader.ts";
@@ -35,9 +36,6 @@ export function createWorkerRecoveryReader(
   return projectedReader(DELIVERY_KUBERNETES_READERS.workerRecovery, read);
 }
 
-const Items = z.object({
-  items: z.array(z.record(z.string(), z.unknown())),
-});
 const namespaces: readonly string[] =
   DELIVERY_KUBERNETES_READERS.workerRecovery.namespaces;
 
@@ -96,16 +94,26 @@ export async function observeWorkerRecovery(
       "CONFLICT",
       `Application ${host.application} does not exist; keep target ownership`,
     );
+  // A retired host keeps its Deployment at zero replicas, so the namespace
+  // gains one with every rollout and the whole list outgrows any single
+  // bounded response. Deployments carry no label to select on and every
+  // proof needs each host's whole object, so both lists are read in pages.
   const [deployments, pods] = await Promise.all([
-    readers.readKubernetes(`/apis/apps/v1/namespaces/${namespace}/deployments`),
+    listKubernetes(
+      readers.readKubernetes,
+      `/apis/apps/v1/namespaces/${namespace}/deployments`,
+      { maxItems: WORKER_RECOVERY_OBSERVATION_BOUNDS.deployments },
+    ),
     // Only worker hosts carry the family label every proof filters on.
-    readers.readKubernetes(
+    listKubernetes(
+      readers.readKubernetes,
       `/api/v1/namespaces/${namespace}/pods?labelSelector=worker-family`,
+      { maxItems: WORKER_RECOVERY_OBSERVATION_BOUNDS.pods },
     ),
   ]);
   return WorkerRecoveryObservationSchema.parse({
     application: observed,
-    deployments: Items.parse(deployments).items,
-    pods: Items.parse(pods).items,
+    deployments,
+    pods,
   });
 }

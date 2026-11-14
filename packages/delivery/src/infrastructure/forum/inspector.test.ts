@@ -201,7 +201,9 @@ function nativeTransport(
       requests.push(`application:${name}`);
       return object("Application", name);
     },
-    readKubernetes: async (path: string) => {
+    readKubernetes: async (read: string) => {
+      // Lists arrive paged; the fixture serves each collection as one page.
+      const path = read.split("?", 1)[0] ?? read;
       requests.push(path);
       const match =
         /^\/(?:api\/v1|apis\/apps\/v1|apis\/batch\/v1)\/namespaces\/storm-forum\/([a-z]+)(?:\/([a-z0-9-]+))?$/u.exec(
