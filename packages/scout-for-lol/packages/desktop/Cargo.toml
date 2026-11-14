@@ -4,6 +4,7 @@ members = [
   "crates/scout-client-core",
   "crates/scout-client-runtime",
   "crates/scout-desktop-ipc",
+  "crates/scout-desktop-ui",
   "crates/scout-client-app",
 ]
 
@@ -15,6 +16,7 @@ license = "GPL-3.0-only"
 publish = false
 
 [workspace.dependencies]
+async-channel = "2.5.0"
 auto-launch = "0.6.0"
 base64 = "0.23.1"
 chrono = { version = "0.4.42", default-features = false, features = ["clock", "serde"] }
@@ -22,6 +24,12 @@ directories = "6.0.0"
 eframe = { version = "0.36.2", default-features = false, features = ["accesskit", "default_fonts", "glow", "persistence", "wayland", "x11"] }
 egui = "0.36.2"
 futures-util = "0.3.31"
+# gpui-kit pins a pre-1.0 GPUI snapshot and ships weekly. All three are exact
+# pins used only by scout-desktop-ui; an upgrade is its own PR, re-checked on
+# Windows. Renovate groups them with automerge off.
+gpui = { package = "gpui-pre", version = "=0.3.12" }
+gpui-kit = "=0.9.1"
+gpui-platform = { package = "gpui-pre-platform", version = "=0.3.12" }
 hex = "0.4.3"
 keyring = "4.2.0"
 open = "5.3.3"

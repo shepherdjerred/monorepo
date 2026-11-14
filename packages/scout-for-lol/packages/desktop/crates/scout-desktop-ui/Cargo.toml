@@ -1,0 +1,47 @@
+[package]
+name = "scout-desktop-ui"
+description = "gpui-kit window for Scout Desktop"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+scout-desktop-ipc = { path = "../scout-desktop-ipc" }
+
+# The only GPUI dependencies in the workspace, and only where the window can
+# run. Linux builds and tests the view models, link and tokens without them.
+# `tests/gpui_boundary.rs` keeps it that way.
+[target.'cfg(any(windows, target_os = "macos"))'.dependencies]
+async-channel.workspace = true
+gpui.workspace = true
+gpui-kit.workspace = true
+
+# Compile the Metal shaders when the window starts rather than at build time,
+# so a macOS build needs no Metal Toolchain download on top of Xcode.
+[target.'cfg(target_os = "macos")'.dependencies]
+gpui-platform = { workspace = true, features = ["runtime_shaders"] }
+
+[build-dependencies]
+serde_json.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true
+
+# The offscreen renderer behind `tests/render_pages.rs`. Dev-only, so release
+# builds never carry GPUI's test support. It is enabled on GPUI itself, not on
+# gpui-kit: gpui-kit's `test-support` names its optional gpui-fast backend,
+# whose exact pins (`taffy =0.15.0`, `unicode-properties =0.1.3`) conflict
+# with the versions GPUI resolves to.
+[target.'cfg(target_os = "macos")'.dev-dependencies]
+async-channel.workspace = true
+gpui = { workspace = true, features = ["test-support"] }
+gpui-platform = { workspace = true, features = ["runtime_shaders", "test-support"] }
+
+[[test]]
+name = "render_pages"
+harness = false
+
+[lints]
+workspace = true

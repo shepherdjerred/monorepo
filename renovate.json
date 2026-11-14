@@ -249,6 +249,13 @@
       "groupName": "seaweedfs"
     },
     {
+      "description": "gpui-kit pins its pre-1.0 GPUI snapshot (the gpui-pre crates) to an exact version and ships weekly, so Scout Desktop pins both exactly and bumps them together in one PR, never automerged. Each upgrade is its own PR and is re-checked on Windows before it merges (packages/scout-for-lol/packages/desktop/README.md).",
+      "matchManagers": ["cargo"],
+      "matchPackageNames": ["gpui-kit", "/^gpui-pre/"],
+      "groupName": "gpui-kit",
+      "automerge": false
+    },
+    {
       "description": "packages/the-storm/server/Dockerfile builds FROM the version catalog's itzg/minecraft-server pin (minecraft-tsmc.test.ts requires them equal), so bump both in one PR",
       "matchPackageNames": ["itzg/minecraft-server"],
       "groupName": "itzg/minecraft-server"

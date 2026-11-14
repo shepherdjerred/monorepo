@@ -1,8 +1,10 @@
 # Scout Client
 
-Pure-Rust `egui` desktop observer for League of Legends. The application is a
+Pure-Rust desktop observer for League of Legends. The application is a
 background tray process with a small native status, pairing, settings, and
-diagnostics window, which runs as a separate child process. It reads only the local gameplay endpoints declared in
+diagnostics window, which runs as a separate child process. The window renders
+with `egui` by default; a `gpui-kit` window can be selected instead (see
+"Window toolkit"). It reads only the local gameplay endpoints declared in
 `scout-client-core::lcu::LcuEndpoint` and persists outbound observations in a
 SQLite outbox before delivery. Custom and duel games are recognized from an
 exact observed roster; League gameflow then advances the bound game without
@@ -19,7 +21,7 @@ bun run test
 bun run lint
 ```
 
-The workspace has four crates:
+The workspace has five crates:
 
 - `scout-client-core`: LCU access, protocol, outbox, credentials, and
   diagnostics.
@@ -27,6 +29,19 @@ The workspace has four crates:
   observation, upload, history, Clash, and start-at-login registration).
 - `scout-desktop-ipc`: the JSON-lines messages between the supervisor and the
   window process.
+- `scout-desktop-ui`: the `gpui-kit` window. It is the only crate that depends
+  on `gpui-kit` or GPUI (`gpui-pre`), and only on Windows and macOS:
+  - `kit/` is the only module that names `gpui_kit`. It wraps components under
+    Scout names (`ScoutButton`, `ScoutToggle`, `StatusRow`, `Page`, `NavItem`,
+    `Shell`, `theme()`), so a gpui-kit API change stays inside it.
+  - `view_model` builds plain structs for each page from the IPC
+    `StateSnapshot`, and maps every control to the `WindowMessage` it sends.
+  - `link` decodes supervisor lines and writes commands.
+  - `tokens` holds theme constants that `build.rs` generates.
+
+  The view models, link and tokens build on every target, so Linux CI builds
+  and tests them without GUI libraries.
+
 - `scout-client-app`: the `scout-client` binary: the supervisor, its tray, and
   the `egui` window.
 
@@ -38,8 +53,8 @@ The workspace has four crates:
   single-instance lock, owns `ClientRuntime`, and runs the tray. It never opens
   a window or a graphics context.
 - The **window** is the same executable started by the supervisor with
-  `--window`. It renders the `egui` UI from what the supervisor sends and holds
-  no collector, outbox, or lock.
+  `--window`. It renders the `egui` or `gpui-kit` UI from what the supervisor
+  sends and holds no collector, outbox, or lock.
 
 Graphics devices get lost on Windows (sleep/resume, a driver reset, a
 hybrid-GPU switch), and that can abort a process outright instead of
@@ -82,6 +97,71 @@ needs a window, so the supervisor runs a windowless `winit` event loop on its
 main thread for the tray (as an accessory app on macOS, so it has no Dock icon)
 and supervises on another thread. On Linux the KSNI backend runs its own D-Bus
 thread.
+
+### Window toolkit
+
+The supervisor launches the `gpui-kit` window when `SCOUT_DESKTOP_UI=gpui` is
+set or `--ui=gpui` is passed; the flag wins over the variable. Otherwise it
+launches the `egui` window. Any other value is refused at startup with exit
+status 2, and so is `gpui` on Linux, where the window is not built.
+
+```bash
+mise exec -- cargo run --package scout-client-app -- --ui=gpui
+SCOUT_DESKTOP_UI=gpui mise exec -- cargo run --package scout-client-app
+```
+
+Choosing a toolkit picks which process starts. That is bootstrap, not product
+behaviour, so it is an environment variable or flag rather than a feature flag.
+Both windows render the same IPC state and send the same commands. The
+supervisor passes `--window --ui=<toolkit>` to the child explicitly, so the
+child never depends on the environment it inherits. Crash detection,
+relaunch, close, and quit treat both windows the same way. Start-at-login
+registration does not record the toolkit, so a login start opens `egui`.
+
+The `gpui-kit` window uses the system UI font and the platform monospace font.
+Beaufort, Spiegel, and Berkeley Mono are not bundled until their licensing is
+decided.
+
+#### Theme tokens
+
+`scout-desktop-ui/build.rs` reads the design system's language-neutral
+`design-system/tokens/themes.json` and its `themes.schema.json`. It emits one
+`ThemeTokens` constant per theme, and the window uses `modern-dark`. The build
+fails if a color or shape token the window uses is missing from a theme, is no
+longer required by the schema, or is not in the schema's color format. The
+token list is `USED_COLORS` and `USED_LENGTHS` in `src/token_source.rs`.
+
+#### Pinning and upgrades
+
+`gpui-kit` pins a pre-1.0 GPUI snapshot (`gpui-pre`) to an exact version and
+releases weekly. Both are exact `=` pins in `[workspace.dependencies]`, along
+with `gpui-pre-platform`. Renovate groups them into one PR with automerge off.
+
+- Each upgrade is its own PR, with no other change.
+- The `kit/` module absorbs API changes.
+- Before it merges, an upgrade is built and run on Windows: open each page,
+  toggle start at login, and resize the window. Windows reports for GPUI
+  describe black strips while resizing and a black first frame on Intel
+  integrated graphics. GPUI also aborts after five failed GPU device-loss
+  recoveries, which the supervisor's relaunch absorbs.
+
+`tests/gpui_boundary.rs` reads `cargo metadata` and fails if any other crate
+declares a GPUI dependency, or if this crate's GPUI dependencies lose their
+Windows-and-macOS target gate.
+
+#### Build prerequisites
+
+| OS      | Needed for the `gpui-kit` window                                                                                                                                                 |
+| ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| macOS   | macOS 15 or later and Xcode. The Metal shaders compile when the window starts (`gpui-pre-platform`'s `runtime_shaders`), so the separate Metal Toolchain download is not needed. |
+| Windows | Windows 10 or later, the MSVC toolchain, and CMake. Build on Windows: cross-compiling from another OS fails looking for `fxc.exe`, the DirectX shader compiler.                  |
+| Linux   | Nothing. The window is not built, and the rest of the workspace needs no GUI libraries.                                                                                          |
+
+`tests/render_pages.rs` drives the real window offscreen on macOS with GPUI's
+Metal renderer. It feeds supervisor messages in as IPC lines, clicks the
+navigation and the start-at-login checkbox, and checks the commands that come
+out. Set `SCOUT_DESKTOP_UI_CAPTURE_DIR` to also write one PNG per page.
+Windows has no headless GPUI renderer, so the Windows check stays manual.
 
 ### Runtime layout
 
