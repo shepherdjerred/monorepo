@@ -12,6 +12,7 @@ import type {
 } from "@shepherdjerred/streambot/sports/prepared-input.ts";
 import type { SportsResolver } from "@shepherdjerred/streambot/sports/types.ts";
 import { sportsEventForSource } from "@shepherdjerred/streambot/sports/sports-resolver.ts";
+import { preparedSportsInputFields } from "@shepherdjerred/streambot/sources/prepared-input-fields.ts";
 
 export async function resolveSportsRequest(
   config: Config,
@@ -58,20 +59,7 @@ function concreteSportsInput(
 ): ConcreteResolvedSource {
   return {
     title: prepared.title,
-    ffmpegInput: prepared.input,
-    ffmpegInputHeaders: prepared.headers,
-    ...(prepared.inputOptions === undefined
-      ? {}
-      : { ffmpegInputOptions: prepared.inputOptions }),
-    ...(prepared.audioInput === undefined
-      ? {}
-      : { audioInput: prepared.audioInput }),
-    ...(prepared.audioInputHeaders === undefined
-      ? {}
-      : { audioInputHeaders: prepared.audioInputHeaders }),
-    ...(prepared.audioInputOptions === undefined
-      ? {}
-      : { audioInputOptions: prepared.audioInputOptions }),
+    ...preparedSportsInputFields(prepared),
     mediaKind: "video",
     live: true,
     chapters: [],

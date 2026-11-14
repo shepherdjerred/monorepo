@@ -4,10 +4,8 @@ import { z } from "zod";
 import type { PreparedSportsInput } from "./prepared-input.ts";
 import { createSportsHlsRelay } from "./loader-hls.ts";
 import { SportsPlaybackError } from "./failures.ts";
-import {
-  createDashResourceRegistry,
-  readSportsResponse,
-} from "./clearkey-dash-resources.ts";
+import { createDashResourceRegistry } from "./clearkey-dash-resources.ts";
+import { readSportsResponse } from "./relay/http-response.ts";
 
 const record = z.record(z.string(), z.unknown());
 const hex = z.string().regex(/^[\da-f]{32}$/i);

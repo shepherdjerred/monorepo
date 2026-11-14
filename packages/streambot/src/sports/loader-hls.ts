@@ -3,6 +3,7 @@ import type { PreparedSportsInput } from "./prepared-input.ts";
 import { SportsPlaybackError } from "./failures.ts";
 import { SportsSegmentDecoder } from "./segment-decoder.ts";
 import { sportsMediaResponse } from "./media-range.ts";
+import { readSportsResponse } from "./relay/http-response.ts";
 
 const BootSchema = z.object({ t: z.string().min(1), hs: z.url() });
 const NativeSchema = z.object({ ok: z.literal(true), q: z.url() });
@@ -25,29 +26,6 @@ function approvedResource(value: string): URL {
     throw new SportsPlaybackError("unsupported-format");
   }
   return url;
-}
-
-async function readBounded(response: Response): Promise<Uint8Array> {
-  const reader = response.body?.getReader();
-  if (reader === undefined) throw new SportsPlaybackError("unavailable");
-  const chunks: Uint8Array[] = [];
-  let size = 0;
-  try {
-    for (;;) {
-      const result = await reader.read();
-      if (result.done) break;
-      const value: unknown = result.value;
-      if (!(value instanceof Uint8Array))
-        throw new SportsPlaybackError("unsupported-format");
-      size += value.length;
-      if (size > LIMIT) throw new SportsPlaybackError("unsupported-format");
-      chunks.push(value);
-    }
-  } finally {
-    await reader.cancel();
-    reader.releaseLock();
-  }
-  return Buffer.concat(chunks);
 }
 
 type RelayResource = {
@@ -88,7 +66,9 @@ export async function prepareLoaderHls(
   });
   if (!response.ok) throw new SportsPlaybackError("unavailable");
   const native = NativeSchema.safeParse(
-    JSON.parse(new TextDecoder().decode(await readBounded(response))),
+    JSON.parse(
+      new TextDecoder().decode(await readSportsResponse(response, LIMIT)),
+    ),
   );
   if (!native.success) throw new SportsPlaybackError("unavailable");
   const playlist = approvedResource(native.data.q);
@@ -202,7 +182,7 @@ export function createSportsHlsRelay(
           throw new SportsPlaybackError(
             upstream.status === 403 ? "session-expired" : "unavailable",
           );
-        const bytes = await readBounded(upstream);
+        const bytes = await readSportsResponse(upstream, LIMIT);
         const transformSegment =
           options.transformSegment ?? decoder.decode.bind(decoder);
         if (!resource.playlist)

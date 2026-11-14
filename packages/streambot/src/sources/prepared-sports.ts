@@ -7,6 +7,7 @@ import { SportsPlaybackError } from "@shepherdjerred/streambot/sports/failures.t
 import { StreamCrashError } from "@shepherdjerred/streambot/streamer/stream-errors.ts";
 import { RESOLVE_TIMEOUT_MS } from "@shepherdjerred/streambot/machine/playback-helpers.ts";
 import type { PreparedSportsInput } from "@shepherdjerred/streambot/sports/prepared-input.ts";
+import { preparedSportsInputFields } from "@shepherdjerred/streambot/sources/prepared-input-fields.ts";
 
 function providerFailure(
   error: unknown,
@@ -85,20 +86,7 @@ export async function runWithPreparedSportsInput(
         resolved: {
           ...metadata,
           hdr: prepared.hdr ?? false,
-          ffmpegInput: prepared.input,
-          ffmpegInputHeaders: prepared.headers,
-          ...(prepared.inputOptions === undefined
-            ? {}
-            : { ffmpegInputOptions: prepared.inputOptions }),
-          ...(prepared.audioInput === undefined
-            ? {}
-            : { audioInput: prepared.audioInput }),
-          ...(prepared.audioInputHeaders === undefined
-            ? {}
-            : { audioInputHeaders: prepared.audioInputHeaders }),
-          ...(prepared.audioInputOptions === undefined
-            ? {}
-            : { audioInputOptions: prepared.audioInputOptions }),
+          ...preparedSportsInputFields(prepared),
           ...(prepared.videoStreamIndex === undefined
             ? {}
             : { ffmpegVideoStreamIndex: prepared.videoStreamIndex }),
