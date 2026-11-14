@@ -114,7 +114,7 @@ export function getScoutDurableRuleGroup(): PrometheusRuleSpecGroups {
         annotations: {
           summary: "Scout has notification intents at the operator dead end",
           message: escapePrometheusTemplate(
-            "Scout {{ $labels.environment }} is holding notification intents in `unknown-delivery`: the send left and the response never arrived. Nothing will retry these, by design — resolve each one through the operations console after confirming whether the message actually landed.",
+            "Scout {{ $labels.environment }} is holding notification intents in `unknown-delivery`: the send left and the response never arrived. Nothing will retry these, by design — resolve each one through the operations console, or `toolkit scout ops resolve-unknown` without a browser, after confirming whether the message actually landed.",
           ),
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(

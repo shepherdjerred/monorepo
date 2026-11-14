@@ -127,6 +127,54 @@ the permanent form, and existing occasional outreach route to this conversation;
 GitHub issues and personal developer DMs are not support entrypoints. The
 community Discord is optional and is not mirrored into private support.
 
+## Operations console
+
+The operations console (`/app/operations`) operates the durable pipeline:
+it lists stalled match processing, stalled and `unknown-delivery`
+notification intents, unprojected matches, live recovery batches, unaccepted
+Workflow starts and unresolved report chunks, and answers them with
+`ops_*` confirmation intents (`OperationsIntentPayloadSchema` in
+`@scout-for-lol/data`). Access is decided in one order on every path: the
+Git-managed allowlist in `src/operations/operator-allowlist.ts` (anyone else
+is refused), then the `scout_operations_console_enabled` flag for that
+operator (off hides the surface, and can never grant it).
+
+Every action is a single-use confirmation intent attributed to the control
+guild. `src/operations/operations-commands.ts` holds the one prepare, claim,
+execute, audit and post-commit dispatch sequence that both transports call,
+so an action has the same effect and the same `OPS_*` audit row however it
+arrives. A claimed intent stores its outcome; confirming it again replays that
+outcome without acting.
+
+### Machine API
+
+Agents use `/api/operations/v1` instead of a browser session, normally through
+`toolkit scout ops` (see the toolkit README):
+
+| Method and path          | Answer                                                   |
+| ------------------------ | -------------------------------------------------------- |
+| `GET /queues`            | The console's queues; `?limit=` and `?cursor.<queue>=`   |
+| `GET /report-deliveries` | `UNKNOWN`/`SENDING` report chunks with their nonce       |
+| `GET /intents/<id>`      | One intent this credential's operator minted             |
+| `POST /intents`          | `{ payload, idempotencyKey, note }`: prepare and confirm |
+
+Requests carry `Authorization: Bearer sop_…`. The token is the
+`SCOUT_OPERATIONS_TOKEN` field of the stage's Scout 1Password item; the
+backend keeps only its SHA-256 digest and compares in constant time. The
+operator it acts as is declared in `src/operations/machine-credential.ts`, not
+in the secret, and every request re-checks the allowlist (403) and the flag
+(404); an unknown token is 401. Request and response shapes are
+`operations-machine-api.ts` in `@scout-for-lol/data`, and validation failures
+are 400s with issue paths.
+
+`POST /intents` mints the intent for the credential's operator under the
+caller's `idempotencyKey` and claims it in the same request. A retry with the
+same key and payload returns `already_consumed` with the stored result and
+acts on nothing; the same key with a different payload is a 409. The audit row
+is the console's, with `provenance: { via: "machine-token", credential, note }`
+added to its payload so machine actions are distinguishable and carry the
+caller's justification.
+
 ## Commands
 
 ```bash
@@ -1983,6 +2031,8 @@ are used automatically. For a full local backend + web app, use
 `--no-background-jobs` now sets only `SCOUT_DEV_SKIP_REPORT_LAKE_FOLD`, a
 dev-only switch for the one boot step a laptop with no published lake build and
 no S3 bucket cannot complete; it is rejected outside `ENVIRONMENT=dev`.
+`SCOUT_OPERATIONS_TOKEN` is optional: unset, the operations machine API
+authenticates nobody; set to anything but a `sop_` token, startup fails.
 
 That flag skips the fold and nothing else. The separate check that the lake
 holds a published build still runs while it is set, downgraded from a refusal

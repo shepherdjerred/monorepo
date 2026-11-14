@@ -1,24 +1,15 @@
-import configuration from "#src/configuration.ts";
-import { prisma } from "#src/database/index.ts";
-import { recordMutationAudit } from "#src/lib/audit/audited-mutation.ts";
-import { claimAndExecute } from "#src/lib/confirmation-intent/claim.ts";
-import { createConfirmationIntent } from "#src/lib/confirmation-intent/create.ts";
 import {
-  executeOperationsIntent,
-  type OperationsOutcome,
-} from "#src/operations/operations-execution.ts";
+  confirmOperationsIntent,
+  listUnresolvedReportDeliveries,
+  operationsIntentStatus,
+  prepareOperationsIntent,
+  type OperationsConfirmResult,
+} from "#src/operations/operations-commands.ts";
 import {
   OPERATIONS_QUEUE_MAX,
-  OPERATIONS_QUEUE_NAMES,
   readMatchPipeline,
   readOperationsQueues,
 } from "#src/operations/operations-reads.ts";
-import { SCOUT_OPERATIONS_GUILD } from "#src/operations/operator-allowlist.ts";
-import {
-  dispatchOperationsWorkflowStart,
-  type OperationsDispatchResult,
-  type OperationsWorkflowStart,
-} from "#src/operations/workflow-dispatch.ts";
 import { scoutTemporalStartsAvailable } from "#src/temporal/availability.ts";
 import { inboxRouter } from "#src/trpc/router/operations/inbox.router.ts";
 import {
@@ -28,51 +19,24 @@ import {
 } from "#src/trpc/router/operations/operations-access.ts";
 import { router } from "#src/trpc/trpc.ts";
 import {
+  OPERATIONS_QUEUE_NAMES,
   OperationsIntentPayloadSchema,
   type OperationsIntentPayload,
 } from "@scout-for-lol/data";
 import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 
-/**
- * How long an operator has to confirm. Short on purpose: these act on live
- * pipeline state, and an intent prepared against a view of the queues that has
- * since moved on should expire rather than wait.
- */
-const OPERATIONS_INTENT_TTL_MS = 5 * 60 * 1000;
-
 const intentInput = z.strictObject({ intentId: z.uuid() });
-
-/**
- * The answer to one confirmation.
- *
- * `executed` reports the outcome the transaction actually produced and, only
- * for the arms that describe one, what the post-commit dispatch did.
- * `already_consumed` carries the stored outcome and deliberately carries NO
- * dispatch: this call dispatched nothing, and reporting the first call's
- * dispatch as though it were this one's would be claiming an effect that did
- * not happen here.
- */
-type OperationsConfirmResult =
-  | {
-      kind: "executed";
-      outcome: OperationsOutcome;
-      dispatch: OperationsDispatchResult | null;
-    }
-  | { kind: "intent_expired" }
-  | { kind: "already_consumed"; result: unknown };
 
 const prepare = operationsMutationProcedure
   .input(z.strictObject({ payload: OperationsIntentPayloadSchema }))
   .mutation(async ({ ctx, input }) => {
     const payload: OperationsIntentPayload = input.payload;
-    const expiresAt = new Date(Date.now() + OPERATIONS_INTENT_TTL_MS);
-    const created = await createConfirmationIntent(prisma, {
-      serverId: SCOUT_OPERATIONS_GUILD,
-      actorDiscordId: ctx.operator,
+    const created = await prepareOperationsIntent({
+      operator: ctx.operator,
       payload,
       idempotencyKey: crypto.randomUUID(),
-      expiresAt,
+      now: new Date(),
     });
     if (created.kind === "idempotency_conflict") {
       // A fresh UUID per call makes this a broken invariant rather than a user
@@ -96,74 +60,23 @@ const confirm = operationsMutationProcedure
       intentId: input.intentId,
       operator: ctx.operator,
     });
-    const now = new Date();
-
-    // Captured out of the transaction callback rather than returned, so the
-    // outcome stored on the intent stays exactly what the transaction did and
-    // a replay repeats no side effects.
-    const captured: { postCommit: OperationsWorkflowStart | null } = {
-      postCommit: null,
-    };
-    const claimed = await claimAndExecute(
-      prisma,
-      { intentId: loaded.intent.id, actorDiscordId: ctx.operator, now },
-      async (tx) => {
-        const executed = await executeOperationsIntent(tx, {
-          payload: loaded.payload,
-          now,
-        });
-        captured.postCommit = executed.postCommit;
-        await recordMutationAudit({
-          ctx,
-          guildId: SCOUT_OPERATIONS_GUILD,
-          tx,
-          detail: executed.audit,
-        });
-        return executed.outcome;
-      },
-    );
-
-    if (claimed.kind === "intent_expired") {
-      return { kind: "intent_expired" };
-    }
-    if (claimed.kind === "already_consumed") {
-      return { kind: "already_consumed", result: claimed.result };
-    }
-
-    const postCommit = captured.postCommit;
-    const dispatch =
-      postCommit === null
-        ? null
-        : await dispatchOperationsWorkflowStart(
-            configuration.environment,
-            postCommit,
-            ctx.operator,
-          );
-    return { kind: "executed", outcome: claimed, dispatch };
+    return await confirmOperationsIntent({
+      loaded,
+      actor: { operator: ctx.operator, request: ctx.webSession },
+    });
   });
 
 const intentStatus = operationsProcedure
   .input(intentInput)
-  .query(async ({ ctx, input }) => {
-    const { intent, payload } = await requireOperationsIntent({
-      intentId: input.intentId,
-      operator: ctx.operator,
-    });
-    return {
-      state:
-        intent.consumedAt === null
-          ? intent.expiresAt.getTime() <= Date.now()
-            ? ("expired" as const)
-            : ("pending" as const)
-          : ("consumed" as const),
-      kind: payload.kind,
-      expiresAt: intent.expiresAt.toISOString(),
-      result:
-        intent.resultJson === null
-          ? null
-          : z.json().parse(JSON.parse(intent.resultJson)),
-    };
-  });
+  .query(async ({ ctx, input }) =>
+    operationsIntentStatus(
+      await requireOperationsIntent({
+        intentId: input.intentId,
+        operator: ctx.operator,
+      }),
+      new Date(),
+    ),
+  );
 
 /**
  * Per-queue continuation tokens. Each queue pages independently: they drain at
@@ -225,16 +138,7 @@ const availability = operationsProcedure.query(() => ({
 export const operationsRouter = router({
   inbox: inboxRouter,
   reportDeliveries: operationsProcedure.query(
-    async () =>
-      await prisma.reportDeliveryChunk.findMany({
-        where: { state: { in: ["UNKNOWN", "SENDING"] } },
-        orderBy: [
-          { updatedAt: "asc" },
-          { reportRunId: "asc" },
-          { chunkIndex: "asc" },
-        ],
-        take: OPERATIONS_QUEUE_MAX,
-      }),
+    async () => await listUnresolvedReportDeliveries(),
   ),
   availability,
   queues,

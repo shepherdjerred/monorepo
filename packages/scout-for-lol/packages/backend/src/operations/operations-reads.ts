@@ -1,3 +1,4 @@
+import type { OperationsQueueName } from "@scout-for-lol/data";
 import {
   WorkflowStartRequestIdSchema,
   type RiotMatchId,
@@ -65,15 +66,8 @@ import {
 /** The page size any one queue may return to the console. */
 export const OPERATIONS_QUEUE_MAX = 50;
 
-export const OPERATIONS_QUEUE_NAMES = [
-  "stalledMatchProcessing",
-  "stalledNotifications",
-  "unknownDeliveries",
-  "unprojectedMatches",
-  "liveRecoveryBatches",
-  "unacceptedWorkflowStarts",
-] as const;
-export type OperationsQueueName = (typeof OPERATIONS_QUEUE_NAMES)[number];
+// The queue names (`OPERATIONS_QUEUE_NAMES`) are the machine API's contract
+// too, so they live in `@scout-for-lol/data`.
 
 /**
  * Whether more rows follow, and where to resume.

@@ -15,6 +15,7 @@ import {
 import { handleVersion } from "#src/http/version.ts";
 import { createLogger } from "#src/logger.ts";
 import { getMetrics } from "#src/metrics/index.ts";
+import { handleOperationsMachineRoute } from "#src/operations/machine-http.ts";
 import {
   httpRequestDuration,
   httpRequestsTotal,
@@ -178,6 +179,11 @@ const server = Bun.serve({
 async function dispatch(request: Request, url: URL): Promise<Response> {
   const scoutClientResponse = await handleScoutClientRoute(request, url);
   if (scoutClientResponse !== null) return scoutClientResponse;
+
+  // Bearer-authenticated operations console for agents. No CORS: it is not a
+  // browser surface, and the SPA keeps using tRPC with its session cookie.
+  const operationsResponse = await handleOperationsMachineRoute(request, url);
+  if (operationsResponse !== null) return operationsResponse;
 
   // Handle CORS preflight requests
   if (request.method === "OPTIONS") {
