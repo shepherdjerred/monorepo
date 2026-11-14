@@ -59,6 +59,7 @@ Monorepo workflows:
   screenshot-server <PKG>      Start a site without browser credentials
   alerts <list|show>           Query the durable alert ledger
   ops summary [--needs-me]     Summarize the homelab ops snapshot
+  scout ops <ACTION>           Operate Scout's durable pipeline without a browser
   promotion <ACTION> [TARGET]  Operate The Storm promotion agents and posting history
   bugsink <SUBCOMMAND>         Query self-hosted error tracking
   discord <SUBCOMMAND>         Use the local Discord session daemon
@@ -114,6 +115,10 @@ const SUBCOMMAND_HANDLERS = new Map<string, () => Promise<SubcommandHandler>>([
     () => import("./handlers/alerts.ts").then((m) => m.handleAlertsCommand),
   ],
   ["ops", () => import("./handlers/ops.ts").then((m) => m.handleOpsCommand)],
+  [
+    "scout",
+    () => import("./handlers/scout.ts").then((m) => m.handleScoutCommand),
+  ],
   [
     "bugsink",
     () => import("./handlers/bugsink.ts").then((m) => m.handleBugsinkCommand),

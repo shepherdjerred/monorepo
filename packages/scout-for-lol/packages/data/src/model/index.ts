@@ -5,6 +5,7 @@ export * from "./competitions/competition-format.ts";
 export * from "./competitions/competition-write.ts";
 export * from "./confirmation-intent.ts";
 export * from "./operations/operations-intent.ts";
+export * from "./operations/operations-machine-api.ts";
 export * from "./core/calendar-date.ts";
 export * from "./core/discord.ts";
 export * from "./core/audio-source.ts";

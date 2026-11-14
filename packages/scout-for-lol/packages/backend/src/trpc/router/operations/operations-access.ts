@@ -1,17 +1,11 @@
 import { TRPCError } from "@trpc/server";
+import type { DiscordAccountId } from "@scout-for-lol/data";
 import {
-  OperationsIntentPayloadSchema,
-  type DiscordAccountId,
-  type OperationsIntentPayload,
-} from "@scout-for-lol/data";
-import type { ConfirmationIntent } from "#generated/prisma/client/index.js";
-import { isPolicyEnabled } from "#src/configuration/flags.ts";
-import { prisma } from "#src/database/index.ts";
-import { readConfirmationIntentPayload } from "#src/lib/confirmation-intent/payload.ts";
-import {
-  SCOUT_OPERATIONS_GUILD,
-  scoutOperatorId,
-} from "#src/operations/operator-allowlist.ts";
+  findOperationsIntent,
+  operationsConsoleEnabled,
+  type LoadedOperationsIntent,
+} from "#src/operations/operations-commands.ts";
+import { scoutOperatorId } from "#src/operations/operator-allowlist.ts";
 import {
   middleware,
   webMutationProcedure,
@@ -79,12 +73,7 @@ export const operatorMutationProcedure = webMutationProcedure.use(
 async function requireOperationsConsole(
   operator: DiscordAccountId,
 ): Promise<void> {
-  if (
-    !(await isPolicyEnabled("scout_operations_console_enabled", {
-      user: operator,
-      server: SCOUT_OPERATIONS_GUILD,
-    }))
-  ) {
+  if (!(await operationsConsoleEnabled(operator))) {
     throw new TRPCError({
       code: "NOT_FOUND",
       message: "Scout operations are unavailable",
@@ -120,41 +109,17 @@ export function operationsIntentNotFound(): TRPCError {
   });
 }
 
-export type LoadedOperationsIntent = {
-  readonly intent: ConfirmationIntent;
-  readonly payload: OperationsIntentPayload;
-};
-
 /**
  * Read the intent this operator minted, proving it is an operations intent.
- *
- * The guild is compared against the intent ROW, never taken from a payload or
- * an input: an operations intent is attributed to the control guild when it is
- * minted, and a row carrying any other guild did not come from this surface.
+ * See {@link findOperationsIntent} for why every refusal is the same absence.
  */
 export async function requireOperationsIntent(args: {
   intentId: string;
   operator: DiscordAccountId;
 }): Promise<LoadedOperationsIntent> {
-  const intent = await prisma.confirmationIntent.findUnique({
-    where: { id: args.intentId },
-  });
-  if (intent === null) {
+  const loaded = await findOperationsIntent(args);
+  if (loaded === null) {
     throw operationsIntentNotFound();
   }
-  if (
-    intent.actorDiscordId !== args.operator ||
-    intent.serverId !== SCOUT_OPERATIONS_GUILD
-  ) {
-    throw operationsIntentNotFound();
-  }
-  const parsed = OperationsIntentPayloadSchema.safeParse(
-    readConfirmationIntentPayload(intent),
-  );
-  if (!parsed.success) {
-    // A dare or creation intent minted by another surface. Reported as absent
-    // rather than as a type error, for the same reason as above.
-    throw operationsIntentNotFound();
-  }
-  return { intent, payload: parsed.data };
+  return loaded;
 }

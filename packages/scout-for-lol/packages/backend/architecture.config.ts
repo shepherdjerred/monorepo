@@ -263,7 +263,7 @@ export default defineArchitecture({
       name: "http-is-limited-to-its-endpoint-adapters",
       comment:
         "`http/` mounts the tRPC handler plus the health, Explore stream, report AI, " +
-        "customs, Scout client and Temporal health endpoints. Those adapters are its complete direct application surface; " +
+        "customs, Scout client, operations machine API and Temporal health endpoints. Those adapters are its complete direct application surface; " +
         "a new feature or repository must join tRPC or be introduced explicitly as an HTTP endpoint.",
       from: "http",
       to: everythingExcept(
@@ -279,6 +279,7 @@ export default defineArchitecture({
         "scout-client",
         "support",
         "temporal",
+        "operations",
       ),
     },
   ],

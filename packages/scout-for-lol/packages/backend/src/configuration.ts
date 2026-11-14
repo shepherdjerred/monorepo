@@ -123,6 +123,29 @@ export type ProductAnalyticsConfiguration = z.infer<
   typeof ProductAnalyticsConfigurationSchema
 >;
 
+const OperationsTokenSchema = z.string().regex(/^sop_[\w-]{32,128}$/);
+
+/**
+ * The SHA-256 digest of the operations machine token, or `undefined` when this
+ * deployment has none (the machine API then authenticates nobody).
+ *
+ * Only the digest is kept: the token itself is dropped here, so nothing after
+ * boot holds a value that could be logged or echoed. A present value that is
+ * not a `sop_` token is a broken credential and throws rather than silently
+ * disabling the API.
+ */
+export function parseOperationsTokenDigest(
+  value: string | undefined,
+): string | undefined {
+  if (value === undefined) return undefined;
+  if (!OperationsTokenSchema.safeParse(value).success) {
+    throw new Error(
+      "SCOUT_OPERATIONS_TOKEN is set but is not a sop_ operations token",
+    );
+  }
+  return new Bun.CryptoHasher("sha256").update(value).digest("hex");
+}
+
 export function resolveEnvironment(): Environment {
   const raw = env.get("ENVIRONMENT").default("dev").asString();
   const parsed = EnvironmentSchema.safeParse(raw);
@@ -259,6 +282,11 @@ function computeConfiguration() {
     applicationId: getRequiredEnvVar("APPLICATION_ID"),
     discordClientSecret: getOptionalEnvVar("DISCORD_CLIENT_SECRET"),
     jwtSigningSecret: getOptionalEnvVar("JWT_SIGNING_SECRET"),
+    // Machine credential for the operations API. Who it acts as is declared
+    // in Git (`operations/machine-credential.ts`), never here.
+    operationsTokenDigest: parseOperationsTokenDigest(
+      getOptionalEnvVar("SCOUT_OPERATIONS_TOKEN"),
+    ),
     webAppOrigin: getOptionalEnvVar(
       "WEB_APP_ORIGIN",
       "https://scout-for-lol.com",
@@ -438,6 +466,9 @@ const configuration: Configuration = {
   },
   get jwtSigningSecret() {
     return getConfiguration().jwtSigningSecret;
+  },
+  get operationsTokenDigest() {
+    return getConfiguration().operationsTokenDigest;
   },
   get webAppOrigin() {
     return getConfiguration().webAppOrigin;

@@ -283,12 +283,34 @@ async function executeReleaseRecoveryPolicy(
   });
 }
 
+/**
+ * How a confirmation reached the backend, when it was not the browser console.
+ *
+ * Nested under its own key so the machine caller's `note` never collides with
+ * a payload's own `note` (`ops_suppress_stale_notification` has one).
+ */
+export type OperationsAuditProvenance = {
+  readonly via: "machine-token";
+  /** The Git-declared label of the credential that authenticated. */
+  readonly credential: string;
+  /** The machine caller's justification, required on every request. */
+  readonly note: string;
+};
+
 function auditFor(
   payload: OperationsIntentPayload,
   outcome: OperationsOutcome,
+  provenance: OperationsAuditProvenance | undefined,
 ): AuditDetail {
   const action = OPERATIONS_AUDIT_ACTIONS[payload.kind];
-  return { action, payload: { ...payload, outcome: outcome.kind } };
+  return {
+    action,
+    payload: {
+      ...payload,
+      outcome: outcome.kind,
+      ...(provenance === undefined ? {} : { provenance }),
+    },
+  };
 }
 
 const OPERATIONS_AUDIT_ACTIONS = {
@@ -314,11 +336,19 @@ const OPERATIONS_AUDIT_ACTIONS = {
  */
 export async function executeOperationsIntent(
   tx: Db,
-  params: { payload: OperationsIntentPayload; now: Date },
+  params: {
+    payload: OperationsIntentPayload;
+    now: Date;
+    provenance?: OperationsAuditProvenance | undefined;
+  },
 ): Promise<OperationsExecution> {
   const { payload, now } = params;
   const { outcome, postCommit } = await runArm(tx, payload, now);
-  return { outcome, audit: auditFor(payload, outcome), postCommit };
+  return {
+    outcome,
+    audit: auditFor(payload, outcome, params.provenance),
+    postCommit,
+  };
 }
 
 async function executeResolveReportDelivery(

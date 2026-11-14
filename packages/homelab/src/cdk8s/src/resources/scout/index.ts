@@ -370,6 +370,17 @@ export function createScoutDeployment(
           Secret.fromSecretName(chart, "riot-rso-secret", onePasswordItem.name),
         )
       : {}),
+    // Machine credential for the operations API (`/api/operations/v1`), which
+    // only the application role serves. The backend keeps its digest; the
+    // operator it acts as is declared in Scout's source, not here.
+    SCOUT_OPERATIONS_TOKEN: EnvValue.fromSecretValue({
+      secret: Secret.fromSecretName(
+        chart,
+        "scout-operations-token-secret",
+        onePasswordItem.name,
+      ),
+      key: "SCOUT_OPERATIONS_TOKEN",
+    }),
     ...scoutTemporalMetricsEnv,
     SCOUT_RUNTIME_ROLE: EnvValue.fromValue("application"),
   };

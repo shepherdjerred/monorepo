@@ -30,6 +30,9 @@ describe("classifyRoute", () => {
     "/api/scout-client/v1/pairings",
     "/api/scout-client/v1/check-ins",
     "/api/scout-client/v1/observations/batch",
+    "/api/operations/v1/queues",
+    "/api/operations/v1/report-deliveries",
+    "/api/operations/v1/intents",
   ])("maps the known route %s to itself", (path) => {
     expect(classifyRoute(path)).toBe(path);
   });
@@ -58,6 +61,11 @@ describe("classifyRoute", () => {
     expect(classifyRoute("/api/scout-client/v1/replays/123456789")).toBe(
       "/api/scout-client/v1/replays/:gameId",
     );
+    expect(
+      classifyRoute(
+        "/api/operations/v1/intents/4fa2a856-53af-42a4-85af-5cc085a942a3",
+      ),
+    ).toBe("/api/operations/v1/intents/:id");
   });
 
   it.each([
