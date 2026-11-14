@@ -28,7 +28,7 @@ import {
 } from "./pairing.ts";
 import { pairingCreationAllowed } from "./pairing-rate-limit.ts";
 import { acceptDesktopEvent } from "./desktop/events.ts";
-import { contractRefusal } from "./desktop/contract.ts";
+import { contractRefusal, desktopErrorResponse } from "./desktop/contract.ts";
 import { handleDesktopExploreRoute } from "./desktop/explore-routes.ts";
 import {
   ingestObservationBatch,
@@ -155,11 +155,19 @@ async function handleIngestPairing(request: Request): Promise<Response> {
 async function handleDesktopPairing(request: Request): Promise<Response> {
   const refusal = contractRefusal(request);
   if (refusal !== null) return refusal;
-  if (!pairingCreationAllowed(request)) return pairingRateLimited();
+  if (!pairingCreationAllowed(request))
+    return desktopErrorResponse(
+      "rate_limited",
+      "Too many pairing requests. Try again in a minute.",
+    );
   const input = ScoutClientCreatePairingSchema.safeParse(
     await boundedJson(request),
   );
-  if (!input.success) return jsonResponse({ error: "invalid_request" }, 400);
+  if (!input.success)
+    return desktopErrorResponse(
+      "invalid_request",
+      "The pairing request is not valid.",
+    );
   const pairing = await createPairing(
     input.data satisfies PairingInput,
     new Date(),

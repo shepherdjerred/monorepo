@@ -7,7 +7,7 @@ import { DiscordUpstreamError } from "#src/lib/discord-rest.ts";
 import {
   authenticateScoutClient,
   type ScopedScoutClient,
-} from "#src/scout-client/authentication.ts";
+} from "#src/scout-client/access/authentication.ts";
 import { desktopErrorResponse } from "./contract.ts";
 import { desktopReadAllowed } from "./rate-limit.ts";
 
