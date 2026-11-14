@@ -1,5 +1,7 @@
 import { Prisma } from "#generated/prisma/client.ts";
 import { MediaError } from "#application/errors.ts";
+import { automaticallyExpired } from "./playback-renewal.ts";
+import { hasPendingInterestProgress } from "./pending-progress.ts";
 
 /** The hierarchy has movie or series/season/episode depth. No parent MediaItem
  * locks are acquired after a leaf lock; policy targets and claims use SHARE. */
@@ -75,12 +77,21 @@ export async function householdRetentionState(
     explicit?.libraryKeep === false &&
     policyOwner?.role === "owner" &&
     !policyOwner.restricted;
-  const reason = householdProtectionReason({
+  let reason = householdProtectionReason({
     libraryKeep,
     holds,
     roots,
     ownerConsent,
   });
+  if (
+    reason === null &&
+    (await hasPendingInterestProgress(
+      tx,
+      roots.filter(automaticallyExpired).map((request) => request.id),
+      new Date(),
+    ))
+  )
+    reason = "requester_playback_renewal_pending";
   const recipients = [
     ...new Map(
       roots.map((request) => [

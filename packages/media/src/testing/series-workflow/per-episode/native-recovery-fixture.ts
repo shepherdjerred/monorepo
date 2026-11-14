@@ -173,7 +173,7 @@ export async function createPerEpisodeNativeRecoveryFixtureV1(
     );
     f.wire.plex.activeSessions = (signal) =>
       sessionClient.activeSessions(signal);
-    const userPlex = await nativeSeriesPackRequesterWatchV1(f.context, f.user);
+    const userPlex = await nativeSeriesPackRequesterWatchV1(f);
     const context = {
       ...f.context,
       userPlex,

@@ -26,16 +26,367 @@ import { queueExistingPlexBinding } from "#automation/plex-binding/queue.ts";
 import { createPlexBindingActivities } from "#automation/plex-binding/activities.ts";
 import { ReverifyPlexBindingInputSchema } from "#shared/plex-binding/activities.ts";
 import { PrismaMediaApplication } from "#infrastructure/media-service.ts";
+import { PrismaPlaybackCollector } from "#infrastructure/playback/collector.ts";
+import { PrismaPlaybackHistory } from "#infrastructure/playback/service.ts";
+import { snapshotHash } from "#migration/profile-import.ts";
+import type { PlexPlaybackSession } from "#integrations/plex-playback.ts";
+import { queueRetentionCheck } from "#automation/watch.ts";
+import { createRetentionActivities } from "#automation/retention.ts";
 
 const h = automationTestHarness();
 const directories: string[] = [];
 const closers: (() => Promise<void>)[] = [];
 const DAY = 86_400_000;
+const PLAYBACK_ORIGIN = new Date(Date.now() - 20 * 60_000);
 afterEach(async () => {
   for (const close of closers.splice(0)) await close();
   for (const directory of directories.splice(0))
     await rm(directory, { recursive: true, force: true });
 });
+
+type PlaybackControl =
+  | "resumed"
+  | "historical"
+  | "other_user"
+  | "manual_drop"
+  | "manual_finished"
+  | "pre_expiry";
+async function prepareExpiredPlayback(
+  f: Awaited<ReturnType<typeof fixture>>,
+  mode: PlaybackControl,
+) {
+  const owner = await f.db.mediaUser.findFirstOrThrow({
+    where: { role: "owner", restricted: false },
+  });
+  const mapping = await f.db.plexIdentityMapping.findUniqueOrThrow({
+    where: { userId: f.user.id },
+  });
+  if (mapping.serverAccountId === null)
+    throw new Error("Native playback requires exact account mapping");
+  const claim = await f.db.plexItemClaim.findFirstOrThrow({
+    where: {
+      mediaId: f.rootId,
+      edition: "default",
+      serverMachineId: mapping.serverMachineId,
+    },
+  });
+  const existing = await f.db.playbackCollector.findUnique({
+    where: { serverMachineId: mapping.serverMachineId },
+  });
+  if (existing === null)
+    expect(
+      await f.db.$transaction((tx) => householdRetentionState(tx, f.rootId)),
+    ).toMatchObject({ reason: "requester_playback_renewal_pending" });
+  const clock = { now: new Date(PLAYBACK_ORIGIN) };
+  const through = (existing?.importedThrough ?? clock.now).toISOString();
+  const sourceInstanceId =
+    existing?.importSourceInstanceId ?? "synthetic-interest-native-history";
+  const rows =
+    mode === "historical"
+      ? [
+          {
+            id: "1",
+            user_id: mapping.serverAccountId,
+            rating_key: claim.ratingKey,
+            started: Math.floor(clock.now.getTime() / 1000) - 300,
+            stopped: Math.floor(clock.now.getTime() / 1000) - 1,
+            duration: 250,
+            percent_complete: 40,
+            full_title: "Synthetic historical playback",
+            grandparent_title: null,
+            media_type: "movie",
+            platform: "tvOS",
+            player: "Synthetic TV",
+            transcode_decision: "direct_play" as const,
+          },
+        ]
+      : [];
+  const history = new PrismaPlaybackHistory(
+    f.db,
+    mapping.serverMachineId,
+    () => clock.now,
+    () =>
+      Promise.resolve({
+        capturedAt: new Date(through),
+        expiresAt: new Date(clock.now.getTime() + 60_000),
+        inventoryDigest: "synthetic-stopped-history",
+      }),
+  );
+  await history.importHistory(owner, {
+    sourceInstanceId,
+    serverMachineId: mapping.serverMachineId,
+    through,
+    rows,
+    userBindings: [
+      {
+        sourceUserId: mapping.serverAccountId,
+        userId: f.user.id,
+        plexAccountId: f.user.plexAccountId,
+      },
+    ],
+  });
+  const checkpoint = await f.db.playbackCollector.findUniqueOrThrow({
+    where: { serverMachineId: mapping.serverMachineId },
+  });
+  if (checkpoint.collectionStartedAt === null)
+    await history.sealHandoff(owner, {
+      sourceInstanceId,
+      through,
+      expectedVersion: checkpoint.version,
+      expectedSessions: rows.length,
+      snapshotDigest: snapshotHash(
+        rows.map((row) => ({ id: row.id, sha256: snapshotHash(row) })),
+      ),
+      quiescenceCapturedAt: through,
+      inventoryDigest: "synthetic-stopped-history",
+    });
+
+  clock.now = new Date(
+    (
+      checkpoint.observedAt ??
+      checkpoint.collectionStartedAt ??
+      PLAYBACK_ORIGIN
+    ).getTime() + 1,
+  );
+  await new PrismaPlaybackCollector(
+    f.db,
+    { sessions: () => Promise.resolve([]) },
+    mapping.serverMachineId,
+    () => clock.now,
+  ).reconcile();
+
+  return { mapping, claim, clock };
+}
+
+async function exerciseExpiredPlayback(
+  f: Awaited<ReturnType<typeof fixture>>,
+  mode: PlaybackControl,
+  expired: Awaited<ReturnType<Awaited<ReturnType<typeof fixture>>["read"]>>,
+  noticeEventId: string,
+) {
+  const releasedAt = expired.interestReleasedAt;
+  if (releasedAt === null)
+    throw new Error("Expected automatic release producer evidence");
+  if (mode === "manual_drop" || mode === "manual_finished") {
+    const elapsedManualDb = queryFixtureDatabase(f.db, {
+      query: {
+        mediaRequest: {
+          async update({ args, query }) {
+            if (
+              args.where.id === expired.id &&
+              (args.data.interestState === "dropped" ||
+                args.data.interestState === "finished")
+            ) {
+              // Original manual command policy clock, preceding the actual native
+              // collector samples; no existing session or release is rewritten.
+              args.data.interestRenewedAt = releasedAt;
+              args.data.interestReleasedAt = releasedAt;
+            }
+            return query(args);
+          },
+        },
+      },
+    });
+    await new RequestInterestCommands(elapsedManualDb, {
+      keepDays: 30,
+    }).execute(f.user, crypto.randomUUID(), {
+      schemaVersion: 1,
+      requestId: expired.id,
+      expectedVersion: expired.version,
+      expectedInterestRevision: expired.interestRevision,
+      action: mode === "manual_drop" ? "drop" : "finished",
+    });
+  }
+  const { mapping, claim, clock } = await prepareExpiredPlayback(f, mode);
+  if (mapping.serverAccountId === null)
+    throw new Error("Expected exact playback account");
+  const target = await f.db.mediaIntent.findUniqueOrThrow({
+    where: { mediaId_edition: { mediaId: f.rootId, edition: "default" } },
+  });
+  const bucket = `renewal:${crypto.randomUUID()}`;
+  await queueRetentionCheck(f.transport.context, f.rootId, bucket);
+  const operation = await f.db.operation.findUniqueOrThrow({
+    where: {
+      idempotencyKey: `retention:${f.rootId}:${String(target.generation)}:${bucket}`,
+    },
+  });
+  const retentionInput = z
+    .object({ operationId: z.uuid(), mediaId: z.uuid(), generation: z.int() })
+    .parse(operation.payload);
+  const retention = createRetentionActivities(f.transport.context);
+  const before = await retention.evaluateMediaRetention(retentionInput);
+  expect(before.status).toBe("warning");
+  if (before.decisionId === null)
+    throw new Error("Expected genuine Leaving Soon decision");
+
+  await collectExpiredPlayback(f, mode, {
+    mapping,
+    ratingKey: claim.ratingKey,
+    clock,
+  });
+  // No interest page has run since the collected sample. The final native
+  // retention evaluator must protect even after the session stops.
+  const pending = await retention.evaluateMediaRetention(retentionInput);
+  if (mode === "resumed")
+    expect(pending).toMatchObject({
+      status: "protected",
+      reason: "requester_playback_renewal_pending",
+    });
+  else {
+    expect(pending.status).toBe("warning");
+    const beforeSweep = await f.read();
+    expect(beforeSweep.interestState).toBe(expectedPlaybackState(mode));
+  }
+  await f.sweep();
+  const renewed = await f.read();
+  if (mode === "resumed") {
+    expect(renewed).toMatchObject({
+      interestState: "following",
+      interestReleasedAt: null,
+      interestReleaseReason: null,
+      interestNoticeEventId: null,
+      interestNoticeRevision: null,
+      interestNoticeAcceptedAt: null,
+      interestNoticeViewedAt: null,
+    });
+    expect(renewed.interestRevision).toBe(expired.interestRevision + 1);
+    expect(renewed.lastMeaningfulProgressAt?.getTime()).toBeGreaterThan(
+      expired.interestReleasedAt?.getTime() ?? Infinity,
+    );
+    const renewedTarget = await f.db.mediaIntent.findUniqueOrThrow({
+      where: { mediaId_edition: { mediaId: f.rootId, edition: "default" } },
+    });
+    expect(renewedTarget.generation).toBe(target.generation + 1);
+    expect(
+      await f.db.retentionDecision.findUniqueOrThrow({
+        where: { id: before.decisionId },
+      }),
+    ).toMatchObject({ state: "cancelled" });
+    expect(
+      await retention.evaluateMediaRetention(retentionInput),
+    ).toMatchObject({ status: "obsolete", reason: "intent_obsolete" });
+    expect(
+      await f.db.$transaction((tx) =>
+        noticeAcceptance(tx, renewed, new Date()),
+      ),
+    ).toBeNull();
+    await f.sweep();
+    const afterAnotherSweep = await f.read();
+    expect(afterAnotherSweep.interestState).toBe("following");
+    expect(
+      await f.db.applicationEvent.count({
+        where: { mediaId: f.rootId, kind: "request_interest_playback_renewed" },
+      }),
+    ).toBe(1);
+  } else {
+    expect(renewed.interestState).toBe(expectedPlaybackState(mode));
+    expect(
+      await f.db.applicationEvent.count({
+        where: { mediaId: f.rootId, kind: "request_interest_playback_renewed" },
+      }),
+    ).toBe(0);
+  }
+  expect(
+    await f.db.applicationEvent.findUniqueOrThrow({
+      where: { id: noticeEventId },
+    }),
+  ).toMatchObject({ kind: "interest_check" });
+  expect(
+    await f.db.libraryAsset.findUniqueOrThrow({
+      where: { id: f.published.entry.assetId },
+    }),
+  ).toMatchObject({ state: "published", owned: true });
+}
+
+function expectedPlaybackState(mode: PlaybackControl) {
+  return mode === "manual_drop"
+    ? "dropped"
+    : mode === "manual_finished"
+      ? "finished"
+      : "expired";
+}
+
+async function collectExpiredPlayback(
+  f: Awaited<ReturnType<typeof fixture>>,
+  mode: PlaybackControl,
+  input: {
+    mapping: Awaited<ReturnType<typeof prepareExpiredPlayback>>["mapping"];
+    ratingKey: string;
+    clock: { now: Date };
+  },
+) {
+  const { mapping, ratingKey, clock } = input;
+  if (mapping.serverAccountId === null)
+    throw new Error("Expected native account mapping");
+  let account = mapping.serverAccountId;
+  if (mode === "other_user") {
+    const other = await f.db.mediaUser.create({
+      data: {
+        plexAccountId: crypto.randomUUID(),
+        displayName: "Other native viewer",
+      },
+    });
+    account = crypto.randomUUID();
+    await f.db.plexIdentityMapping.create({
+      data: {
+        ...mapping,
+        userId: other.id,
+        serverAccountId: account,
+        homeUserId: null,
+      },
+    });
+  }
+  const session: PlexPlaybackSession = {
+    sessionId: crypto.randomUUID(),
+    serverAccountId: account,
+    ratingKey,
+    title: "Synthetic current native playback",
+    seriesTitle: null,
+    mediaType: "movie",
+    platform: "tvOS",
+    playerId: crypto.randomUUID(),
+    state: "playing",
+    durationMs: 3_600_000,
+    progressMs: 0,
+    decision: "direct_play",
+  };
+  let sessions = mode === "historical" ? [] : [session];
+  const collector = new PrismaPlaybackCollector(
+    f.db,
+    { sessions: () => Promise.resolve(sessions) },
+    mapping.serverMachineId,
+    () => clock.now,
+  );
+  clock.now = new Date(clock.now.getTime() + 1);
+  await collector.reconcile();
+  for (let sample = 0; sample < 2; sample++) {
+    clock.now = new Date(clock.now.getTime() + 60_000);
+    session.progressMs += 60_000;
+    await collector.reconcile();
+  }
+  sessions = [];
+  clock.now = new Date(clock.now.getTime() + 1);
+  await collector.reconcile();
+  if (mode !== "historical")
+    expect(
+      await f.db.playbackSessionIdentity.findUniqueOrThrow({
+        where: {
+          source_sourceInstanceId_sourceSessionId: {
+            source: "plex",
+            sourceInstanceId: mapping.serverMachineId,
+            sourceSessionId: session.sessionId,
+          },
+        },
+        include: { session: true },
+      }),
+    ).toMatchObject({
+      session: {
+        state: "stopped",
+        watchedMs: 120_000,
+        meaningfulProgressAt: new Date(clock.now.getTime() - 1),
+      },
+    });
+}
 
 /** Physical inspection/promotion, actual Plex binding/finalization and native requester observation.
  * Only external protocol responses and the existing inspection fixture are synthetic. */
@@ -149,12 +500,12 @@ async function fixture(tv = false) {
     db.$transaction(async (tx) =>
       nativeInterestFacts(tx, await read(), new Date()),
     );
-  const sweep = async () => {
+  const sweep = async (database = db) => {
     // One production sweep page is intentionally one request. Drain pages so
     // sibling leaf claims cannot hide the root under test.
     let cursor: string | null = null;
     for (let page = 0; page < 100; page++) {
-      const result = await reconcileRequestInterests(db, { cursor });
+      const result = await reconcileRequestInterests(database, { cursor });
       if (result.processed === 0) return;
       cursor = result.nextCursor;
     }
@@ -656,7 +1007,17 @@ test("foreign video waits for required English captions, and publication alone d
   });
 }, 60_000);
 
-test.each(["fresh", "elapsed", "renewed"] as const)(
+test.each([
+  "fresh",
+  "elapsed",
+  "renewed",
+  "historical",
+  "resumed",
+  "other_user",
+  "manual_drop",
+  "manual_finished",
+  "pre_expiry",
+] as const)(
   "native unwatched movie waits 30 days and an accepted private notice's seven-day reply period (%s)",
   async (mode) => {
     const f = await fixture();
@@ -681,8 +1042,31 @@ test.each(["fresh", "elapsed", "renewed"] as const)(
     const deliveries = new Set<string>();
     const accepted = new Set<string>();
     const historical = mode !== "fresh";
+    const playbackControl =
+      mode === "resumed" ||
+      mode === "historical" ||
+      mode === "other_user" ||
+      mode === "manual_drop" ||
+      mode === "manual_finished" ||
+      mode === "pre_expiry";
+    const releasedAt = new Date(
+      Date.now() - (mode === "pre_expiry" ? 60_000 : DAY),
+    );
     const policyDb = queryFixtureDatabase(f.db, {
       query: {
+        mediaRequest: {
+          async update({ args, query }) {
+            // Elapsed policy time at the ORIGINAL release producer, not a
+            // fabricated session/projection or a rewritten existing release.
+            if (
+              playbackControl &&
+              args.where.id === f.request.id &&
+              args.data.interestState === "expired"
+            )
+              args.data.interestReleasedAt = releasedAt;
+            return query(args);
+          },
+        },
         applicationEvent: {
           async create({ args, query }) {
             const selected =
@@ -812,9 +1196,10 @@ test.each(["fresh", "elapsed", "renewed"] as const)(
         },
       );
     }
-    await f.sweep();
+    await f.sweep(policyDb);
     expect(await f.read()).toMatchObject({
-      interestState: mode === "elapsed" ? "expired" : "following",
+      interestState:
+        mode === "elapsed" || playbackControl ? "expired" : "following",
     });
     const after = await f.db.notificationDelivery.findUniqueOrThrow({
       where: { id: delivery.id },
@@ -824,6 +1209,10 @@ test.each(["fresh", "elapsed", "renewed"] as const)(
     if (mode === "renewed") {
       const renewed = await f.read();
       expect(renewed.interestNoticeEventId).toBeNull();
+    }
+    if (playbackControl) {
+      const expired = await f.read();
+      await exerciseExpiredPlayback(f, mode, expired, delivery.eventId);
     }
   },
   60_000,

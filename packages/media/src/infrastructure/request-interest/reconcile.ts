@@ -15,6 +15,11 @@ import { lockMovieCommand } from "#infrastructure/movie-editions/locks.ts";
 import { nativeInterestFacts } from "./facts.ts";
 import { noticeAcceptance } from "./acceptance.ts";
 import { MovieEditionKeySchema } from "#shared/movie-editions/registry.ts";
+import {
+  automaticallyExpired,
+  renewExpiredInterest,
+} from "./playback-renewal.ts";
+import { lockInterestPlayback } from "./pending-progress.ts";
 
 /** One Temporal activity page, not a timer or a broad all-library transaction. */
 export async function reconcileRequestInterests(
@@ -31,7 +36,10 @@ export async function reconcileRequestInterests(
       active: true,
       excluded: false,
       keepingPolicy: "temporary",
-      interestState: "following",
+      OR: [
+        { interestState: "following" },
+        { interestState: "expired", interestReleaseReason: "lost_interest" },
+      ],
       ...(input.cursor === null ? {} : { id: { gt: input.cursor } }),
     },
     orderBy: { id: "asc" },
@@ -74,10 +82,20 @@ export async function reconcileRequestInterests(
           request.excluded ||
           !request.direct ||
           request.keepingPolicy !== "temporary" ||
-          request.interestState !== "following"
+          (request.interestState !== "following" &&
+            !automaticallyExpired(request))
+        )
+          return;
+        if (
+          automaticallyExpired(request) &&
+          !(await lockInterestPlayback(tx, [request.id]))
         )
           return;
         const facts = await nativeInterestFacts(tx, request, now);
+        if (automaticallyExpired(request)) {
+          await renewExpiredInterest(tx, request, facts.progressAt, now);
+          return;
+        }
         if (await advanceProgress(tx, request, facts, now)) return;
         const acceptance = await noticeAcceptance(tx, request, now);
         const evaluation = evaluateRequestInterest({

@@ -77,6 +77,17 @@ export async function assertNativeSeriesPackWatchV1(
       },
     });
     expect(new Set(observed.map((row) => row.mediaId)).size).toBe(page + 1);
+    const requesterIds = [
+      scenario.household.owner.id,
+      scenario.household.requester.id,
+    ].toSorted();
+    for (const mediaId of new Set(observed.map((row) => row.mediaId)))
+      expect(
+        observed
+          .filter((row) => row.mediaId === mediaId)
+          .map((row) => row.userId)
+          .toSorted(),
+      ).toEqual(requesterIds);
     for (const row of observed) completed.add(row.mediaId);
   }
   expect(completed.size).toBe(2);
