@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { chmod, mkdtemp, rm, stat } from "node:fs/promises";
+import { chmod, mkdir, mkdtemp, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { z } from "zod";
@@ -13,7 +13,10 @@ import {
   dockerTokenPlanSummary,
 } from "./dockerhub-tokens.ts";
 import { STACK_MANIFEST, parseTofuStack } from "./tofu-stack-manifest.ts";
-import { asuswrtProviderPin } from "./asuswrt-provider.ts";
+import {
+  asuswrtProviderInstallationConfig,
+  asuswrtProviderPin,
+} from "./asuswrt-provider.ts";
 import {
   loadProviderPins,
   lockedProviders,
@@ -703,6 +706,109 @@ process.exit(action === "init" ? ${String(initExit)} : ${String(planExit)});
 );
 
 describe("provider pins", () => {
+  test("installs the local provider offline and retains direct discovery for other providers", async () => {
+    const pin = await asuswrtProviderPin();
+    const address = providerAddress(pin);
+    const pathValue = Bun.env["PATH"];
+    if (pathValue === undefined)
+      throw new Error("PATH is required for OpenTofu");
+    const fixture = await mkdtemp(path.join(tmpdir(), "tofu-local-provider-"));
+    try {
+      const platform = `${process.platform}_${process.arch === "x64" ? "amd64" : process.arch}`;
+      const mirrorRoot = path.join(fixture, "mirror");
+      const providerDirectory = path.join(
+        mirrorRoot,
+        address,
+        pin.version,
+        platform,
+      );
+      await mkdir(providerDirectory, { recursive: true });
+      const providerBasename = `terraform-provider-asuswrt_v${pin.version}`;
+      // Init installs this artifact; it must never execute or configure it.
+      const providerFile = path.join(providerDirectory, providerBasename);
+      await Bun.write(providerFile, "#!/bin/sh\nexit 73\n");
+      await chmod(providerFile, 0o755);
+      const cliConfig = path.join(fixture, "provider.tfrc");
+      await Bun.write(
+        cliConfig,
+        asuswrtProviderInstallationConfig(mirrorRoot, address),
+      );
+      const requiredProviders: Record<
+        string,
+        { source: string; version: string }
+      > = {
+        asuswrt: { source: address, version: pin.version },
+      };
+      const writeConfiguration = async () =>
+        await Bun.write(
+          path.join(fixture, "main.tf.json"),
+          JSON.stringify({
+            terraform: { required_providers: requiredProviders },
+          }),
+        );
+      const init = async () => {
+        const child = Bun.spawn(
+          [
+            "tofu",
+            `-chdir=${fixture}`,
+            "init",
+            "-backend=false",
+            "-input=false",
+          ],
+          {
+            env: {
+              PATH: pathValue,
+              HOME: fixture,
+              TF_CLI_CONFIG_FILE: cliConfig,
+              TF_IN_AUTOMATION: "true",
+              CHECKPOINT_DISABLE: "1",
+              HTTP_PROXY: "http://127.0.0.1:1",
+              HTTPS_PROXY: "http://127.0.0.1:1",
+              ALL_PROXY: "http://127.0.0.1:1",
+              NO_PROXY: "",
+            },
+            stdin: "ignore",
+            stdout: "pipe",
+            stderr: "pipe",
+          },
+        );
+        const [exitCode, stdout, stderr] = await Promise.all([
+          child.exited,
+          new Response(child.stdout).text(),
+          new Response(child.stderr).text(),
+        ]);
+        return { exitCode, output: stdout + stderr };
+      };
+      await writeConfiguration();
+      const local = await init();
+      expect(local.exitCode, local.output).toBe(0);
+      expect(
+        await Bun.file(
+          path.join(
+            fixture,
+            ".terraform/providers",
+            address,
+            pin.version,
+            platform,
+            providerBasename,
+          ),
+        ).exists(),
+      ).toBe(true);
+
+      requiredProviders["remote"] = {
+        source: "registry.opentofu.org/fixture/not-local",
+        version: "0.1.0",
+      };
+      await writeConfiguration();
+      const remote = await init();
+      expect(remote.exitCode, remote.output).not.toBe(0);
+      expect(remote.output).toContain("fixture/not-local");
+      expect(remote.output).toContain("127.0.0.1:1");
+    } finally {
+      await rm(fixture, { recursive: true, force: true });
+    }
+  });
+
   test("builds the AsusWRT provider at the pinned version its stack requires", async () => {
     const pin = await asuswrtProviderPin();
     expect(providerAddress(pin)).toBe(
