@@ -1808,6 +1808,9 @@
     },
     "packages/scout-for-lol/packages/desktop": {
       "name": "@scout-for-lol/desktop",
+      "devDependencies": {
+        "vitest": "5.0.3",
+      },
     },
     "packages/scout-for-lol/packages/docs-site": {
       "name": "@scout-for-lol/docs-site",

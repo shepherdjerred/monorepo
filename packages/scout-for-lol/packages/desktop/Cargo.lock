@@ -4708,6 +4708,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "minisign-verify"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "871285dc19d8d0ebe0eef3d0e99a205f2a71363b122632cbbfa4a6c370a960ce"
+
+[[package]]
 name = "miniz_oxide"
 version = "0.8.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7161,14 +7167,24 @@ checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
 name = "scout-client-app"
 version = "0.1.0"
 dependencies = [
+ "base64 0.23.1",
+ "chrono",
+ "directories",
  "eframe",
  "egui",
+ "hex",
+ "minisign-verify",
  "open",
+ "reqwest",
  "scout-client-core",
  "scout-client-runtime",
  "scout-desktop-ipc",
  "scout-desktop-ui",
+ "semver",
+ "serde",
  "serde_json",
+ "sha2 0.11.0",
+ "thiserror 2.0.21",
  "tokio",
  "tracing",
  "tracing-subscriber",

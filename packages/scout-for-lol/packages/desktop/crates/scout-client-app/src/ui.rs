@@ -2,7 +2,7 @@
 //! snapshots.
 
 use eframe::egui;
-use scout_desktop_ipc::{GameflowPhase, StateSnapshot, WindowMessage};
+use scout_desktop_ipc::{GameflowPhase, StateSnapshot, UpdateSnapshot, WindowMessage};
 
 use crate::window::SupervisorLink;
 
@@ -22,6 +22,7 @@ pub struct ScoutApp {
     tray_available: bool,
     state: StateSnapshot,
     phase: GameflowPhase,
+    update: UpdateSnapshot,
 }
 
 impl ScoutApp {
@@ -36,6 +37,7 @@ impl ScoutApp {
             tray_available: false,
             state: StateSnapshot::default(),
             phase: GameflowPhase::default(),
+            update: UpdateSnapshot::default(),
         }
     }
 
@@ -44,6 +46,7 @@ impl ScoutApp {
         self.tray_available = updates.tray_available;
         self.state = updates.state;
         self.phase = updates.phase;
+        self.update = updates.update;
         if let Some(bundle) = updates.bundle {
             context.copy_text(bundle);
         }
@@ -92,7 +95,7 @@ impl eframe::App for ScoutApp {
             });
         let mut outgoing = Vec::new();
         egui::CentralPanel::default().show(ui, |ui| match self.page {
-            Page::Overview => overview(ui, &self.state),
+            Page::Overview => overview(ui, &self.state, &self.update),
             Page::Activity => activity(ui, &self.state),
             Page::Settings => settings(ui, &self.state, &mut outgoing),
             Page::Diagnostics => diagnostics(ui, &self.state, &self.phase, &mut outgoing),
@@ -110,7 +113,7 @@ fn should_quit_on_close(closing: bool, tray_available: bool, close_requested: bo
     !closing && !tray_available && close_requested
 }
 
-fn overview(ui: &mut egui::Ui, state: &StateSnapshot) {
+fn overview(ui: &mut egui::Ui, state: &StateSnapshot, update: &UpdateSnapshot) {
     ui.heading("League observer");
     ui.add_space(12.0);
     status_row(
@@ -147,6 +150,7 @@ fn overview(ui: &mut egui::Ui, state: &StateSnapshot) {
         "Last upload",
         state.last_upload_at.as_deref().unwrap_or("Not yet"),
     );
+    status_row(ui, "Updates", &update.summary());
     if let Some(error) = &state.last_error {
         ui.add_space(16.0);
         ui.colored_label(egui::Color32::LIGHT_RED, error);

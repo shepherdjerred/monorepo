@@ -20,7 +20,7 @@ use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 
 /// The version both ends must announce in their `hello`.
-pub const PROTOCOL_VERSION: u32 = 2;
+pub const PROTOCOL_VERSION: u32 = 3;
 
 /// A message from the supervisor to the window.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -49,6 +49,11 @@ pub enum SupervisorMessage {
     DiagnosticsBundle {
         /// Allow-listed counters and events, as JSONL.
         text: String,
+    },
+    /// Where the self-update stands, sent when it changes.
+    Update {
+        /// What the window shows.
+        update: UpdateSnapshot,
     },
     /// Bring the window to the front (the tray's "Open" while it is running).
     Show,
@@ -124,6 +129,60 @@ pub struct StateSnapshot {
     pub last_error: Option<String>,
     /// What the Diagnostics page shows.
     pub diagnostics: DiagnosticsSnapshot,
+}
+
+/// Where an update stands.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum UpdateStatus {
+    /// This build does not update itself (a development build, or a platform
+    /// without an installer the updater can run).
+    #[default]
+    Disabled,
+    /// Waiting for the next check.
+    Idle,
+    /// Asking the release channel for a newer version.
+    Checking,
+    /// The build is current.
+    UpToDate,
+    /// A newer version is downloading.
+    Downloading,
+    /// A newer version is verified and waits for a quit or an idle moment.
+    Ready,
+    /// The last check or download failed; the cause is in the diagnostics.
+    Failed,
+}
+
+/// The window's view of the updater. It carries no URL, path or free text.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct UpdateSnapshot {
+    /// Where the update stands.
+    pub status: UpdateStatus,
+    /// The version being downloaded or waiting to install.
+    pub version: Option<String>,
+    /// Whether this build is below the channel's minimum version.
+    pub required: bool,
+}
+
+impl UpdateSnapshot {
+    /// The one line both windows show.
+    #[must_use]
+    pub fn summary(&self) -> String {
+        let version = self.version.as_deref().unwrap_or("a newer version");
+        match self.status {
+            UpdateStatus::Disabled => "Not available in this build".to_owned(),
+            UpdateStatus::Idle => "Waiting for the next check".to_owned(),
+            UpdateStatus::Checking => "Checking for updates".to_owned(),
+            UpdateStatus::UpToDate => "Up to date".to_owned(),
+            UpdateStatus::Downloading => format!("Downloading {version}"),
+            UpdateStatus::Ready if self.required => {
+                format!("{version} is required and installs when no game is running")
+            }
+            UpdateStatus::Ready => format!("{version} installs when you quit Scout"),
+            UpdateStatus::Failed => "The last update check failed".to_owned(),
+        }
+    }
 }
 
 /// The two opt-out switches. The window uses `send_error_reports` to open or
@@ -253,7 +312,8 @@ pub fn decode_line<T: DeserializeOwned>(line: &str) -> Result<T, CodecError> {
 mod tests {
     use super::{
         CounterReading, DiagnosticsSnapshot, GameflowPhase, PROTOCOL_VERSION, PrivacySnapshot,
-        StateSnapshot, SupervisorMessage, WindowMessage, check_protocol, decode_line, encode_line,
+        StateSnapshot, SupervisorMessage, UpdateSnapshot, UpdateStatus, WindowMessage,
+        check_protocol, decode_line, encode_line,
     };
 
     fn sample_state() -> StateSnapshot {
@@ -302,6 +362,13 @@ mod tests {
             SupervisorMessage::DiagnosticsBundle {
                 text: "# observations_uploaded 12\n{\"level\":\"info\"}\n".to_owned(),
             },
+            SupervisorMessage::Update {
+                update: UpdateSnapshot {
+                    status: UpdateStatus::Ready,
+                    version: Some("0.2.0".to_owned()),
+                    required: false,
+                },
+            },
             SupervisorMessage::Show,
             SupervisorMessage::Close,
         ];
@@ -312,6 +379,28 @@ mod tests {
             assert_eq!(decode_line::<SupervisorMessage>(&line)?, message);
         }
         Ok(())
+    }
+
+    #[test]
+    fn the_update_line_says_what_will_happen() {
+        let ready = UpdateSnapshot {
+            status: UpdateStatus::Ready,
+            version: Some("0.2.0".to_owned()),
+            required: false,
+        };
+        assert_eq!(ready.summary(), "0.2.0 installs when you quit Scout");
+        assert!(
+            UpdateSnapshot {
+                required: true,
+                ..ready
+            }
+            .summary()
+            .contains("required")
+        );
+        assert_eq!(
+            UpdateSnapshot::default().summary(),
+            "Not available in this build"
+        );
     }
 
     #[test]

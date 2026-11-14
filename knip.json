@@ -323,6 +323,10 @@
         "*.ts"
       ]
     },
+    "packages/scout-for-lol/packages/desktop": {
+      "entry": ["scripts/*-release.ts"],
+      "project": ["scripts/**/*.ts"]
+    },
     "packages/scout-for-lol/packages/design-audit": {
       "entry": ["playwright.config.ts"]
     },

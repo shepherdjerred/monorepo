@@ -241,7 +241,9 @@ fn frame(
         .collect();
     let state = &link.state;
     let page = match current {
-        PageId::Overview => views::overview(OverviewModel::new(state)).into_any_element(),
+        PageId::Overview => {
+            views::overview(OverviewModel::new(state).with_update(&link.update)).into_any_element()
+        }
         PageId::Activity => views::activity(ActivityModel::new(state)).into_any_element(),
         PageId::Settings => views::settings(&SettingsModel::new(state), send).into_any_element(),
         PageId::Diagnostics => {

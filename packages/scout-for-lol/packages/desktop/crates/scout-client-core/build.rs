@@ -287,6 +287,8 @@ struct ReleaseProfileFile {
     keyring_service: String,
     data_directory: DataDirectory,
     autostart_name: String,
+    update_origin: String,
+    update_public_key: String,
 }
 
 #[derive(Deserialize)]
@@ -319,6 +321,37 @@ fn validate_profile(file_channel: &str, profile: &ReleaseProfileFile) -> Result<
     if !origin_ok {
         return Err(invalid_contract(format!(
             "{name}: backend_origin must be a bare https origin without path or trailing slash"
+        )));
+    }
+    let update_origin_ok = profile
+        .update_origin
+        .strip_prefix("https://")
+        .is_some_and(|host| {
+            !host.is_empty()
+                && host
+                    .bytes()
+                    .all(|byte| byte.is_ascii_alphanumeric() || byte == b'.' || byte == b'-')
+        });
+    if !update_origin_ok {
+        return Err(invalid_contract(format!(
+            "{name}: update_origin must be a bare https origin without path or trailing slash"
+        )));
+    }
+    // The key is the base64 of a minisign public-key file, the form
+    // `cargo packager signer generate` writes. Its signature check happens in
+    // the app's tests; here only its shape is enforced, so a pasted private key
+    // or a placeholder cannot compile in.
+    let key_ok = profile.update_public_key.len() == 152
+        && profile
+            .update_public_key
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'+' | b'/' | b'='))
+        && profile
+            .update_public_key
+            .starts_with("dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6");
+    if !key_ok {
+        return Err(invalid_contract(format!(
+            "{name}: update_public_key must be a base64 minisign public key"
         )));
     }
     let identifier_ok = profile.identifier.split('.').count() >= 3
@@ -364,7 +397,8 @@ fn render_profile(profile: &ReleaseProfileFile) -> String {
     format!(
         "ReleaseProfile {{ channel: {:?}, product_name: {:?}, binary_name: {:?}, identifier: {:?}, \
          backend_origin: {:?}, keyring_service: {:?}, data_qualifier: {:?}, \
-         data_organization: {:?}, data_application: {:?}, autostart_name: {:?} }}",
+         data_organization: {:?}, data_application: {:?}, autostart_name: {:?}, \
+         update_origin: {:?}, update_public_key: {:?} }}",
         profile.channel,
         profile.product_name,
         profile.binary_name,
@@ -375,6 +409,8 @@ fn render_profile(profile: &ReleaseProfileFile) -> String {
         profile.data_directory.organization,
         profile.data_directory.application,
         profile.autostart_name,
+        profile.update_origin,
+        profile.update_public_key,
     )
 }
 
@@ -382,9 +418,9 @@ fn render_profile(profile: &ReleaseProfileFile) -> String {
 /// compiled one; an unset variable means a development build, which is beta.
 fn generate_profiles(manifest_dir: &Path, output_dir: &Path) -> Result<(), Box<dyn Error>> {
     println!("cargo:rerun-if-env-changed=SCOUT_DESKTOP_PROFILE");
-    let selected = match env::var("SCOUT_DESKTOP_PROFILE") {
-        Ok(value) => value,
-        Err(env::VarError::NotPresent) => "beta".to_owned(),
+    let (selected, packaged) = match env::var("SCOUT_DESKTOP_PROFILE") {
+        Ok(value) => (value, true),
+        Err(env::VarError::NotPresent) => ("beta".to_owned(), false),
         Err(error) => return Err(Box::new(error)),
     };
     if selected != "stable" && selected != "beta" {
@@ -405,16 +441,17 @@ fn generate_profiles(manifest_dir: &Path, output_dir: &Path) -> Result<(), Box<d
         || stable.keyring_service == beta.keyring_service
         || stable.product_name == beta.product_name
         || stable.binary_name == beta.binary_name
+        || stable.update_public_key == beta.update_public_key
         || (stable.data_directory.qualifier == beta.data_directory.qualifier
             && stable.data_directory.organization == beta.data_directory.organization
             && stable.data_directory.application == beta.data_directory.application)
     {
         return Err(Box::new(invalid_contract(
-            "stable and beta profiles must not share identifier, product name, binary name, keyring service or data directory",
+            "stable and beta profiles must not share identifier, product name, binary name, keyring service, data directory or update key",
         )));
     }
     let source = format!(
-        "/// The public build.\npub const STABLE: ReleaseProfile = {};\n/// The build that installs beside stable and targets the beta backend.\npub const BETA: ReleaseProfile = {};\n/// The profile this binary was built with.\nconst COMPILED: ReleaseProfile = {};\n",
+        "/// The public build.\npub const STABLE: ReleaseProfile = {};\n/// The build that installs beside stable and targets the beta backend.\npub const BETA: ReleaseProfile = {};\n/// The profile this binary was built with.\nconst COMPILED: ReleaseProfile = {};\n/// Whether the profile was selected explicitly, as the packaging scripts do, rather than defaulted for a development build.\nconst PACKAGED: bool = {};\n",
         render_profile(stable),
         render_profile(beta),
         if selected == "stable" {
@@ -422,6 +459,7 @@ fn generate_profiles(manifest_dir: &Path, output_dir: &Path) -> Result<(), Box<d
         } else {
             "BETA"
         },
+        packaged,
     );
     fs::write(output_dir.join("release_profile.rs"), source)?;
     Ok(())

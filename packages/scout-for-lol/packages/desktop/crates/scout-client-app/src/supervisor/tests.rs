@@ -10,6 +10,10 @@ use scout_client_runtime::runtime::{GameflowPhase, PhaseReceiver, RuntimeState, 
 use scout_desktop_ipc::{PROTOCOL_VERSION, SupervisorMessage};
 use tokio::sync::{mpsc, watch};
 
+use crate::updater::policy::UpdateConfig;
+use crate::updater::service::{UpdateHandle, UpdateService};
+use crate::updater::testing::{FakeUpdater, available, version};
+
 use super::{
     Collector, Control, MAX_QUICK_CRASHES, STABLE_RUN, Supervisor, SupervisorExit, Window,
     WindowLauncher, WindowStatus, quick_crashes_now,
@@ -38,8 +42,8 @@ fn a_crash_after_a_stable_run_starts_the_count_over() {
 
 /// A collector that records what the supervisor asked of it.
 struct FakeCollector {
-    state: watch::Sender<RuntimeState>,
-    phase: watch::Sender<GameflowPhase>,
+    state: Arc<watch::Sender<RuntimeState>>,
+    phase: Arc<watch::Sender<GameflowPhase>>,
     diagnostics: Arc<Diagnostics>,
     calls: Arc<Mutex<Vec<String>>>,
     usage: Arc<Mutex<Vec<UsageEvent>>>,
@@ -58,13 +62,22 @@ impl FakeCollector {
         let usage = Arc::new(Mutex::new(Vec::new()));
         let diagnostics = Arc::new(Diagnostics::in_memory());
         let collector = Self {
-            state: watch::channel(RuntimeState::default()).0,
-            phase: watch::channel(GameflowPhase::default()).0,
+            state: Arc::new(watch::channel(RuntimeState::default()).0),
+            phase: Arc::new(watch::channel(GameflowPhase::default()).0),
             diagnostics: Arc::clone(&diagnostics),
             calls: Arc::clone(&calls),
             usage: Arc::clone(&usage),
         };
         (collector, calls, diagnostics, usage)
+    }
+
+    fn senders(
+        &self,
+    ) -> (
+        Arc<watch::Sender<RuntimeState>>,
+        Arc<watch::Sender<GameflowPhase>>,
+    ) {
+        (Arc::clone(&self.state), Arc::clone(&self.phase))
     }
 
     fn call(&self, name: &str) {
@@ -131,13 +144,18 @@ fn crash_details(diagnostics: &Diagnostics) -> Vec<String> {
 /// cleanly. `before` runs between the greeting and the wait.
 fn window_script(before: &str) -> String {
     format!(
-        r#"printf '{{"type":"hello","protocol":2}}\n'
+        r#"printf '{{"type":"hello","protocol":{PROTOCOL_VERSION}}}\n'
 {before}
 while IFS= read -r line; do
   case "$line" in *'"type":"close"'*) exit 0 ;; esac
 done
 exit 0"#
     )
+}
+
+/// A window stub that greets and exits cleanly.
+fn hello_only() -> String {
+    format!(r#"printf '{{"type":"hello","protocol":{PROTOCOL_VERSION}}}\n'"#)
 }
 
 fn sh(script: &str, extra: &[&str]) -> WindowLauncher {
@@ -160,6 +178,8 @@ struct Harness {
     usage: Arc<Mutex<Vec<UsageEvent>>>,
     diagnostics: Arc<Diagnostics>,
     directory: PathBuf,
+    runtime_state: Arc<watch::Sender<RuntimeState>>,
+    phase: Arc<watch::Sender<GameflowPhase>>,
 }
 
 fn start(
@@ -167,11 +187,29 @@ fn start(
     tray_available: bool,
     open_window: bool,
 ) -> Result<Harness, Box<dyn std::error::Error>> {
+    start_with(
+        launcher,
+        tray_available,
+        open_window,
+        None,
+        GameflowPhase::default(),
+    )
+}
+
+fn start_with(
+    launcher: WindowLauncher,
+    tray_available: bool,
+    open_window: bool,
+    updates: Option<UpdateHandle>,
+    phase: GameflowPhase,
+) -> Result<Harness, Box<dyn std::error::Error>> {
     let directory = scratch_directory()?;
     let lock = InstanceLock::acquire_in(&directory)?;
     let (collector, calls, diagnostics, usage) = FakeCollector::new();
+    let (runtime_state, phase_sender) = collector.senders();
+    phase_sender.send_replace(phase);
     let (control, receiver) = mpsc::unbounded_channel();
-    let supervisor = Supervisor::new(
+    let mut supervisor = Supervisor::new(
         lock,
         collector,
         launcher,
@@ -179,6 +217,9 @@ fn start(
         tray_available,
         open_window,
     );
+    if let Some(updates) = updates {
+        supervisor = supervisor.with_updates(updates);
+    }
     let status = supervisor.status();
     let run = tokio::spawn(supervisor.run());
     Ok(Harness {
@@ -189,6 +230,8 @@ fn start(
         usage,
         diagnostics,
         directory,
+        runtime_state,
+        phase: phase_sender,
     })
 }
 
@@ -458,11 +501,7 @@ async fn quit_from_the_tray_closes_the_window() -> TestResult {
 async fn closing_the_window_keeps_collecting_while_a_tray_can_reopen_it() -> TestResult {
     // The stub greets and exits cleanly, as a window does when its close
     // button is pressed.
-    let mut harness = start(
-        sh("printf '{\"type\":\"hello\",\"protocol\":2}\\n'", &[]),
-        true,
-        true,
-    )?;
+    let mut harness = start(sh(&hello_only(), &[]), true, true)?;
     harness
         .wait_for(|status| status.launches == 1 && !status.running)
         .await?;
@@ -488,11 +527,7 @@ async fn closing_the_window_keeps_collecting_while_a_tray_can_reopen_it() -> Tes
 #[tokio::test]
 async fn closing_the_only_window_without_a_tray_quits() -> TestResult {
     // `--background` is ignored without a tray: nothing else could open it.
-    let harness = start(
-        sh("printf '{\"type\":\"hello\",\"protocol\":2}\\n'", &[]),
-        false,
-        false,
-    )?;
+    let harness = start(sh(&hello_only(), &[]), false, false)?;
     let (exit, calls, _diagnostics, directory) = harness.finish().await?;
     assert_eq!(exit, SupervisorExit::WindowClosedWithoutTray);
     assert_eq!(calls, ["stop"]);
@@ -555,8 +590,10 @@ async fn a_protocol_mismatch_is_not_relaunched() -> TestResult {
 #[cfg(unix)]
 #[tokio::test]
 async fn an_unknown_message_is_treated_as_a_crash() -> TestResult {
-    let script = r#"printf '{"type":"hello","protocol":2}\n{"type":"format_disk"}\n'; while read -r line; do :; done"#;
-    let mut harness = start(sh(script, &[]), true, true)?;
+    let script = format!(
+        r#"printf '{{"type":"hello","protocol":{PROTOCOL_VERSION}}}\n{{"type":"format_disk"}}\n'; while read -r line; do :; done"#
+    );
+    let mut harness = start(sh(&script, &[]), true, true)?;
     let status = harness.wait_for(|status| status.given_up).await?;
     assert_eq!(status.launches, MAX_QUICK_CRASHES);
     let crashes = crash_details(&harness.diagnostics);
@@ -600,6 +637,178 @@ async fn the_supervisor_holds_the_instance_lock_for_its_life() -> TestResult {
         "the lock is released when the supervisor ends: {again:?}"
     );
     drop(again);
+    std::fs::remove_dir_all(directory)?;
+    Ok(())
+}
+
+/// An update that is checked at once, and installed as soon as the app is idle.
+const IMMEDIATE: UpdateConfig = UpdateConfig {
+    first_check_delay: Duration::ZERO,
+    check_interval: Duration::from_hours(6),
+    idle_install_after: Duration::ZERO,
+};
+
+/// An updater that does nothing until it is told to.
+const WAITING: UpdateConfig = UpdateConfig {
+    first_check_delay: Duration::from_hours(24),
+    check_interval: Duration::from_hours(24),
+    idle_install_after: Duration::ZERO,
+};
+
+fn updates(updater: &Arc<FakeUpdater>, config: UpdateConfig) -> UpdateHandle {
+    UpdateService::start(
+        Arc::clone(updater),
+        config,
+        version("0.1.0"),
+        Arc::new(Diagnostics::in_memory()),
+    )
+}
+
+async fn staged(handle: &UpdateHandle) -> TestResult {
+    let mut status = handle.subscribe();
+    tokio::time::timeout(
+        PATIENCE,
+        status.wait_for(|status| status.status == scout_desktop_ipc::UpdateStatus::Ready),
+    )
+    .await??;
+    Ok(())
+}
+
+#[cfg(unix)]
+#[tokio::test]
+async fn a_426_from_the_backend_triggers_an_update_check_at_once() -> TestResult {
+    let updater = FakeUpdater::offering(Some(available("0.2.0", true)));
+    let handle = updates(&updater, WAITING);
+    let mut harness = start_with(
+        sh(&window_script(""), &[]),
+        true,
+        true,
+        Some(handle.clone()),
+        GameflowPhase::default(),
+    )?;
+    harness.wait_for(|status| status.running).await?;
+    tokio::time::sleep(Duration::from_millis(100)).await;
+    assert_eq!(updater.checks(), 0, "nothing is due for a day");
+
+    harness
+        .runtime_state
+        .send_modify(|state| state.upgrade_required = Some("0.2.0".to_owned()));
+    staged(&handle).await?;
+    assert_eq!(updater.checks(), 1);
+
+    harness.control.send(Control::Quit)?;
+    let (_exit, _calls, _diagnostics, directory) = harness.finish().await?;
+    std::fs::remove_dir_all(directory)?;
+    Ok(())
+}
+
+#[cfg(unix)]
+#[tokio::test]
+async fn an_idle_supervisor_installs_a_staged_update_and_hands_over() -> TestResult {
+    let updater = FakeUpdater::offering(Some(available("0.2.0", false)));
+    let handle = updates(&updater, IMMEDIATE);
+    staged(&handle).await?;
+    // The window is closed: tray-only, nothing in the way.
+    let harness = start_with(
+        sh(&window_script(""), &[]),
+        true,
+        false,
+        Some(handle),
+        GameflowPhase::default(),
+    )?;
+
+    let (exit, calls, _diagnostics, directory) = harness.finish().await?;
+    assert_eq!(exit, SupervisorExit::Updating);
+    assert_eq!(
+        calls,
+        ["stop"],
+        "collection stops cleanly before the handover"
+    );
+    assert_eq!(updater.installs(), [(version("0.2.0"), true)]);
+    std::fs::remove_dir_all(directory)?;
+    Ok(())
+}
+
+#[cfg(unix)]
+#[tokio::test]
+async fn an_open_window_keeps_an_idle_install_waiting() -> TestResult {
+    let updater = FakeUpdater::offering(Some(available("0.2.0", false)));
+    let handle = updates(&updater, IMMEDIATE);
+    staged(&handle).await?;
+    let mut harness = start_with(
+        sh(&window_script(""), &[]),
+        true,
+        true,
+        Some(handle),
+        GameflowPhase::default(),
+    )?;
+    harness.wait_for(|status| status.running).await?;
+
+    tokio::time::sleep(Duration::from_millis(2_500)).await;
+    assert!(!harness.run.is_finished());
+    assert_eq!(updater.install_count(), 0);
+
+    harness.control.send(Control::Quit)?;
+    let (exit, _calls, _diagnostics, directory) = harness.finish().await?;
+    assert_eq!(exit, SupervisorExit::Quit);
+    // A quit is the other way an update installs, and it does not restart.
+    assert_eq!(updater.installs(), [(version("0.2.0"), false)]);
+    std::fs::remove_dir_all(directory)?;
+    Ok(())
+}
+
+#[cfg(unix)]
+#[tokio::test]
+async fn no_install_runs_while_the_game_is_in_champ_select_or_in_game() -> TestResult {
+    let updater = FakeUpdater::offering(Some(available("0.2.0", false)));
+    let handle = updates(&updater, IMMEDIATE);
+    staged(&handle).await?;
+    let harness = start_with(
+        sh(&window_script(""), &[]),
+        true,
+        false,
+        Some(handle),
+        GameflowPhase::ChampSelect,
+    )?;
+
+    // Several refresh ticks pass: the idle path is due but the phase forbids it.
+    tokio::time::sleep(Duration::from_millis(2_500)).await;
+    assert!(!harness.run.is_finished());
+    assert_eq!(updater.install_count(), 0);
+
+    harness.phase.send_replace(GameflowPhase::InProgress);
+    tokio::time::sleep(Duration::from_millis(1_500)).await;
+    assert_eq!(updater.install_count(), 0);
+
+    // Quitting mid-game does not install either; the update stays staged.
+    harness.control.send(Control::Quit)?;
+    let (exit, _calls, _diagnostics, directory) = harness.finish().await?;
+    assert_eq!(exit, SupervisorExit::Quit);
+    assert_eq!(updater.install_count(), 0);
+    std::fs::remove_dir_all(directory)?;
+    Ok(())
+}
+
+#[cfg(unix)]
+#[tokio::test]
+async fn the_install_waits_for_the_game_to_end() -> TestResult {
+    let updater = FakeUpdater::offering(Some(available("0.2.0", false)));
+    let handle = updates(&updater, IMMEDIATE);
+    staged(&handle).await?;
+    let harness = start_with(
+        sh(&window_script(""), &[]),
+        true,
+        false,
+        Some(handle),
+        GameflowPhase::InProgress,
+    )?;
+    tokio::time::sleep(Duration::from_millis(1_500)).await;
+    assert_eq!(updater.install_count(), 0);
+
+    harness.phase.send_replace(GameflowPhase::None);
+    let (exit, _calls, _diagnostics, directory) = harness.finish().await?;
+    assert_eq!(exit, SupervisorExit::Updating);
+    assert_eq!(updater.installs(), [(version("0.2.0"), true)]);
     std::fs::remove_dir_all(directory)?;
     Ok(())
 }
