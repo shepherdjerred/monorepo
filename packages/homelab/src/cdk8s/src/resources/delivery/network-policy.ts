@@ -73,7 +73,6 @@ export function createDeliveryNetworkPolicy(chart: Chart) {
         kubernetesApiEgressRule(),
         postgresEgress("delivery-postgresql"),
         fliptEgress(),
-        { to: [nsPeer("woodpecker")], ports: [tcp(8000)] },
         {
           to: ["storm-forum", "storm-forum-beta"].map((name) => ({
             ...nsPeer(name),

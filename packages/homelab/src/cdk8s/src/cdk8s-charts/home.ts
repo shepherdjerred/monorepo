@@ -92,6 +92,14 @@ export async function createHomeChart(app: App) {
         dnsEgressRule(),
         // External HTTPS (Eufy cloud API)
         externalHttpsEgressRule(),
+        // Push notifications (motion, doorbell, lock events) arrive over a
+        // long-lived TLS connection to Google's FCM endpoint,
+        // mtalk.google.com:5228 (eufy-security-client `src/push/client.ts`).
+        // Google publishes no fixed range for it.
+        {
+          to: [{ ipBlock: { cidr: "0.0.0.0/0" } }],
+          ports: [tcp(5228)],
+        },
         // Allow all UDP egress (any port, any destination) for Eufy P2P.
         // Eufy stations perform NAT traversal with dynamic ephemeral ports on
         // both ends, so neither the destination IP nor port can be enumerated

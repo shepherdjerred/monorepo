@@ -13,13 +13,17 @@ import {
   TEMPORAL_POSTGRES_TLS_SECRET,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/temporal-db-tls.ts";
 import { ZFS_WAL_PARAMETERS } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/zfs-wal-parameters.ts";
-import { tcp } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
+import {
+  postgresOperatorIngressRule,
+  tcp,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 
 export const TEMPORAL_POSTGRES_CLUSTER = "temporal-postgresql";
 
 /**
- * Ingress policy for the Temporal PostgreSQL pods: only the server and the
- * schema-migration hook may connect.
+ * Ingress policy for the Temporal PostgreSQL pods: only the server, the
+ * schema-migration hook and the postgres-operator that manages the cluster
+ * may connect.
  *
  * This must itself be a PreSync hook, staged ahead of the schema-migration
  * Job's own PreSync wave (-1): PreSync hooks run in a phase that completes
@@ -63,6 +67,7 @@ export function createTemporalPostgreSQLNetworkPolicy(chart: Chart) {
           ],
           ports: [tcp(5432)],
         },
+        postgresOperatorIngressRule(),
       ],
     },
   });

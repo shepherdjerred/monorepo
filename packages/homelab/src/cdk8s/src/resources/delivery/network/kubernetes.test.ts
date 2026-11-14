@@ -100,7 +100,7 @@ test("actual Job creators and platform recovery admit only the reviewed post-DNA
       ),
     ).toEqual([
       {
-        to: [{ ipBlock: { cidr: "192.168.1.81/32" } }],
+        to: [{ ipBlock: { cidr: "100.102.88.88/32" } }],
         ports: [{ port: 6443, protocol: "TCP" }],
       },
     ]);

@@ -1,38 +1,10 @@
 import { describe, expect, test } from "vitest";
-import type {
-  Fleet,
-  FleetNetworkPolicy,
-  FleetService,
-  FleetWorkload,
-} from "./fleet.ts";
+import type { Fleet, FleetNetworkPolicy, FleetService } from "./fleet.ts";
+import { fleetOf, workload } from "./fleet-fixtures.ts";
 import { unreciprocatedRules } from "./policy-reciprocity.ts";
 
 const NAMESPACE_NAME = "kubernetes.io/metadata.name";
 const SMTP = { protocol: "TCP", port: 25, endPort: undefined };
-
-function workload(
-  namespace: string,
-  name: string,
-  containerPort: number,
-): FleetWorkload {
-  return {
-    key: `${namespace}/${name}`,
-    kind: "Deployment",
-    namespace,
-    name,
-    longRunning: true,
-    hostNetwork: false,
-    podLabels: { app: name },
-    podSeccomp: undefined,
-    containers: [
-      {
-        key: `${namespace}/${name}/main`,
-        runsToCompletion: false,
-        spec: { name: "main", ports: [{ containerPort }] },
-      },
-    ],
-  };
-}
 
 /** A mail namespace: `smtp` behind a Service and policed, `relay` neither. */
 function fleetWith(
@@ -73,8 +45,7 @@ function fleetWith(
     ],
     egress: [],
   };
-  return {
-    objects: [],
+  return fleetOf({
     workloads: [
       workload("forum", "web", 8080),
       workload("mail", "smtp", 25),
@@ -83,10 +54,7 @@ function fleetWith(
     ],
     networkPolicies: [client, smtp],
     services,
-    serviceSelectors: [],
-    applicationNamespaces: new Set(),
-    backendProbes: [],
-  };
+  });
 }
 
 const SMTP_SERVICE: FleetService = {

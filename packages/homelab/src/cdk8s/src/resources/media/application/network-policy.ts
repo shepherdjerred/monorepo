@@ -8,6 +8,7 @@ import {
   fliptEgress,
   otlpEgress,
   postgresEgress,
+  postgresOperatorIngressRule,
   prometheusIngressRule,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import { postgresClusterPodLabels } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/cluster-label.ts";
@@ -105,10 +106,7 @@ export function createMediaApplicationNetworkPolicies(chart: Chart): void {
           ],
           ports: [tcp(5432)],
         },
-        {
-          from: [nsPeer("postgres-operator")],
-          ports: [tcp(5432), tcp(8008)],
-        },
+        postgresOperatorIngressRule(),
         {
           from: [
             {

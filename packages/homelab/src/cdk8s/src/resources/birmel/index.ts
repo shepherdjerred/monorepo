@@ -25,6 +25,7 @@ import {
   otlpEgress,
   prometheusIngressRule,
   externalHttpsEgressRule,
+  seaweedfsEgress,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import {
   NET_ADMIN_FIREWALL_RESOURCES,
@@ -89,7 +90,8 @@ export function createBirmelDeployment(chart: Chart) {
           prometheusIngressRule([8080]),
         ],
       },
-      // Allow egress to DNS, Flipt, the OTLP trace gateway, PinchTab, and external HTTPS
+      // Allow egress to DNS, Flipt, the OTLP trace gateway, PinchTab,
+      // SeaweedFS S3, and external HTTPS
       {
         name: "birmel-egress-netpol",
         selects: "namespace",
@@ -105,6 +107,9 @@ export function createBirmelDeployment(chart: Chart) {
             to: [nsPeer("pinchtab")],
             ports: [tcp(9867)],
           },
+          // SeaweedFS S3 (`S3_ENDPOINT`,
+          // seaweedfs-s3.seaweedfs.svc.cluster.local:8333)
+          seaweedfsEgress(),
           // External HTTPS (Discord, OpenAI, Anthropic, GitHub, and Bugsink via its
           // public bugsink.sjer.red DSN host)
           externalHttpsEgressRule(),

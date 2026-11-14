@@ -17,10 +17,13 @@ async function emittedApiConsumers() {
       import { emitWorkflow } from "./src/pipeline/emit.ts";
       import { TEST_IMAGES, TEST_IDENTITY } from "./test/identity.ts";
       import { parse } from "yaml";
-      const consumers = buildPipelineSteps({images: TEST_IMAGES, changedBase: "base", deliveryPublication: true})
+      // Both Delivery catalogs: v1 registers CI images from the refresh
+      // lanes, v2 from its own step, and either can be the live one.
+      const consumers = [false, true]
+        .flatMap(deliveryCatalogV2 => buildPipelineSteps({images: TEST_IMAGES, changedBase: "base", deliveryPublication: true, deliveryCatalogV2}))
         .filter(step => step.secrets?.some(grant => grant.env === "DELIVERY_API_TOKEN"))
         .map(step => ({key: step.key, labels: parse(emitWorkflow(step, TEST_IDENTITY)).steps[0].backend_options.kubernetes.labels}));
-      console.log(JSON.stringify(consumers));
+      console.log(JSON.stringify([...new Map(consumers.map(consumer => [consumer.key, consumer])).values()]));
     `,
     ],
     {
@@ -148,6 +151,7 @@ describe("CI step pod network boundary", () => {
     const consumers = await emittedApiConsumers();
     expect(consumers.map((consumer) => consumer.key).toSorted()).toEqual([
       "ci-base-refresh",
+      "ci-images-register",
       "ci-playwright-refresh",
       "delivery-publish",
       "helm-push",

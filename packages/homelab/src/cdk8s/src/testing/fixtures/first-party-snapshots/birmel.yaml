@@ -482,6 +482,13 @@ spec:
             matchLabels:
               kubernetes.io/metadata.name: pinchtab
     - ports:
+        - port: 8333
+          protocol: TCP
+      to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: seaweedfs
+    - ports:
         - port: 443
           protocol: TCP
       to:
