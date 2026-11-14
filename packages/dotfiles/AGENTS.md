@@ -109,9 +109,12 @@ listing what is left.
   after the turn ends.
 - For "get CI green", "drive CI green", or "get it green, then merge", delegate
   to the `ci-driver` subagent with the PR and whether merging is authorized,
-  keep working meanwhile, and relay its report. In Codex, once your own work
-  is done, block on one `wait_agent` call with `timeout_ms` 3600000 rather
-  than polling.
+  keep working meanwhile, and relay its report. A driver can stall without
+  reporting, so also hold your own backstop: in Claude Code, one
+  `toolkit ci wait <PR> --json` with `run_in_background` per delegated PR, and
+  when it settles without the driver's report, check the PR and take over. In
+  Codex, once your own work is done, block on one `wait_agent` call with
+  `timeout_ms` 3600000 rather than polling.
 
 ## Sharing results with Jerred
 
