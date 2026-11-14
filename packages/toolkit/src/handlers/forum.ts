@@ -1,8 +1,5 @@
 import { z } from "zod";
-import { actorContext, detectActor } from "#lib/tracker/actor.ts";
-import { claudeModel } from "#lib/tracker/model.ts";
-import { trackerClient, trackerUrl } from "#lib/tracker/client.ts";
-import { loadToolkitConfig } from "#lib/toolkit-config.ts";
+import { trackerContext } from "#lib/tracker/context.ts";
 import { forumCommand } from "#commands/forum.ts";
 import { parseForumArgs } from "#commands/forum-options.ts";
 
@@ -40,34 +37,8 @@ export async function handleForumCommand(
     return;
   }
   const { values, positionals } = parseForumArgs(args);
-  const config = await loadToolkitConfig();
-  const url = trackerUrl(values.url ?? (await config.value("trackerUrl")));
   const result = await forumCommand(
-    {
-      url,
-      client: trackerClient(url),
-      actor: async () => {
-        const model = await claudeModel(Bun.env);
-        return detectActor(
-          {
-            ...Bun.env,
-            ...(values["actor-key"] === undefined
-              ? {}
-              : { TRACKER_ACTOR_KEY: values["actor-key"] }),
-            ...(values["actor-kind"] === undefined
-              ? {}
-              : { TRACKER_ACTOR_KIND: values["actor-kind"] }),
-            ...(values["actor-name"] === undefined
-              ? {}
-              : { TRACKER_ACTOR_NAME: values["actor-name"] }),
-          },
-          {
-            ...actorContext(await config.value("trackerActorName")),
-            ...(model === undefined ? {} : { model }),
-          },
-        );
-      },
-    },
+    await trackerContext(values),
     z
       .enum([
         "list",

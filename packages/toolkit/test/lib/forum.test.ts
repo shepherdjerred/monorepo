@@ -4,6 +4,7 @@ import { parseForumArgs } from "#commands/forum-options.ts";
 import { trackerClient } from "#lib/tracker/client.ts";
 import { coordinationSummary, formatCoordination } from "#lib/forum.ts";
 import { requiredCredentialsFor } from "#lib/credential-commands.ts";
+import { trackerRequest } from "./tracker/request.ts";
 
 const id = "00000000-0000-4000-8000-000000000001";
 const servers: ReturnType<typeof Bun.serve>[] = [];
@@ -16,13 +17,9 @@ function fixture(failure = false) {
     hostname: "127.0.0.1",
     port: 0,
     async fetch(request) {
-      const url = new URL(request.url);
-      const procedure = url.pathname.slice("/trpc/".length);
-      const input: unknown =
-        request.method === "GET"
-          ? JSON.parse(url.searchParams.get("input") ?? "{}")
-          : await request.json();
-      requests.push({ procedure, input });
+      const received = await trackerRequest(request);
+      requests.push(received);
+      const { procedure } = received;
       if (failure)
         return Response.json(
           {
