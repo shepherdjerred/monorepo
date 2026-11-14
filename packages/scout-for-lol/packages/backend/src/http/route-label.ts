@@ -29,6 +29,9 @@ const EXACT_ROUTES = new Set<string>([
   "/api/scout-client/v1/pairings",
   "/api/scout-client/v1/check-ins",
   "/api/scout-client/v1/observations/batch",
+  "/api/operations/v1/queues",
+  "/api/operations/v1/report-deliveries",
+  "/api/operations/v1/intents",
 ]);
 
 /** Paths with dynamic segments, mapped to a templated label. */
@@ -48,6 +51,10 @@ const PATTERN_ROUTES: readonly { pattern: RegExp; label: string }[] = [
   {
     pattern: /^\/api\/scout-client\/v1\/replays\/\d+$/,
     label: "/api/scout-client/v1/replays/:gameId",
+  },
+  {
+    pattern: /^\/api\/operations\/v1\/intents\/[0-9a-f-]+$/,
+    label: "/api/operations/v1/intents/:id",
   },
   {
     pattern: /^\/api\/competition\/\d+\/leaderboard\.png$/,

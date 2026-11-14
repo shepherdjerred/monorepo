@@ -1,5 +1,6 @@
 import { describe, test, expect, afterEach } from "vitest";
 import {
+  parseOperationsTokenDigest,
   parseProductAnalyticsConfiguration,
   parseVoiceAssistantConfiguration,
   resetConfigurationForTests,
@@ -356,5 +357,28 @@ describe("parseVoiceAssistantConfiguration", () => {
         kwsRuntime: "gpu",
       }),
     ).toThrow();
+  });
+});
+
+describe("parseOperationsTokenDigest", () => {
+  test("absence means no machine credential", () => {
+    expect(parseOperationsTokenDigest(undefined)).toBeUndefined();
+  });
+
+  test("a sop_ token is reduced to its SHA-256 digest", () => {
+    const token = `sop_${"Z9_-".repeat(11)}`;
+    expect(parseOperationsTokenDigest(token)).toBe(
+      new Bun.CryptoHasher("sha256").update(token).digest("hex"),
+    );
+  });
+
+  test.each([
+    ["a token from another scheme", `sct_${"a".repeat(43)}`],
+    ["a truncated token", "sop_short"],
+    ["a token with whitespace", `sop_${"a".repeat(42)} `],
+  ])("%s throws instead of disabling the API", (_name, value) => {
+    expect(() => parseOperationsTokenDigest(value)).toThrow(
+      /SCOUT_OPERATIONS_TOKEN/,
+    );
   });
 });

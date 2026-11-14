@@ -31,6 +31,8 @@ const DELIVERY_TRMNL_READER_ITEM_ID = "542onhpijguqgaukmyvbujbu74";
 const DELIVERY_TRMNL_ACCOUNT_ITEM_ID = "p7th6tqeel7k2sm47mrrto7oca";
 const DELIVERY_SITE_ACTIVATOR_ITEM_ID = "l5c76kuxgqckt3xc7pmman6l4u";
 const DELIVERY_CACHE_PURGE_ITEM_ID = "la7gkfl5eqtxiiv2hq3qujx2gi";
+const SCOUT_BETA_ITEM_ID = "rtu44pohnp5ixdp2njuv5f6t2e";
+const SCOUT_PROD_ITEM_ID = "pacrc4wfbtct4y3qazkvazop5a";
 
 export const CREDENTIAL_REGISTRY: Record<string, CredentialSpec> = {
   MC_BRIDGE_TOKEN: {
@@ -109,6 +111,22 @@ export const CREDENTIAL_REGISTRY: Record<string, CredentialSpec> = {
     source: {
       kind: "op",
       ref: `${HOMELAB_VAULT_REF}/${DELIVERY_SERVICE_ITEM_ID}/DELIVERY_ADMIN_TOKEN`,
+    },
+  },
+  SCOUT_OPERATIONS_TOKEN_BETA: {
+    description:
+      "Scout beta operations machine token (acts as its Git-bound operator)",
+    source: {
+      kind: "op",
+      ref: `${HOMELAB_VAULT_REF}/${SCOUT_BETA_ITEM_ID}/SCOUT_OPERATIONS_TOKEN`,
+    },
+  },
+  SCOUT_OPERATIONS_TOKEN_PROD: {
+    description:
+      "Scout production operations machine token (acts as its Git-bound operator)",
+    source: {
+      kind: "op",
+      ref: `${HOMELAB_VAULT_REF}/${SCOUT_PROD_ITEM_ID}/SCOUT_OPERATIONS_TOKEN`,
     },
   },
   GRAFANA_API_KEY: {
