@@ -87,6 +87,13 @@
         "error": "unavailable",
         "message": "Scout could not verify your servers. Try again shortly."
       }
+    },
+    {
+      "status": 503,
+      "body": {
+        "error": "feature_disabled",
+        "message": "Explore in Scout Desktop is turned off right now."
+      }
     }
   ]
 }

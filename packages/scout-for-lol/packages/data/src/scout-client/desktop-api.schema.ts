@@ -148,6 +148,7 @@ export const SCOUT_DESKTOP_API_ERRORS = {
   quota_exceeded: 429,
   stream_limit: 429,
   unavailable: 503,
+  feature_disabled: 503,
 } as const;
 export const ScoutDesktopApiErrorCodeSchema = z.enum([
   "invalid_request",
@@ -163,6 +164,7 @@ export const ScoutDesktopApiErrorCodeSchema = z.enum([
   "quota_exceeded",
   "stream_limit",
   "unavailable",
+  "feature_disabled",
 ]);
 export type ScoutDesktopApiErrorCode = z.infer<
   typeof ScoutDesktopApiErrorCodeSchema

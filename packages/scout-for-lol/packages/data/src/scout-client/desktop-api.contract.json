@@ -86,6 +86,7 @@
     "rate_limited": 429,
     "quota_exceeded": 429,
     "stream_limit": 429,
-    "unavailable": 503
+    "unavailable": 503,
+    "feature_disabled": 503
   }
 }

@@ -2600,6 +2600,18 @@
       "thresholdRollouts": []
     },
     {
+      "key": "scout_desktop_explore_enabled",
+      "owner": "scout",
+      "namespace": "scout",
+      "source": "scout-policy",
+      "purpose": "Offer Explore to Scout Desktop over its REST routes. Evaluated per device owner (user, then the owner's Explore-eligible servers); off answers every route with feature_disabled.",
+      "type": "boolean",
+      "default": true,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "scout-consumer-player-profiles-enabled",
       "owner": "scout",
       "namespace": "scout",

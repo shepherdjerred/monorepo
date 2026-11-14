@@ -1,6 +1,7 @@
 import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import type { DiscordAccountId } from "@scout-for-lol/data";
 import { TRPCError } from "@trpc/server";
+import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import { prisma } from "#src/database/index.ts";
 import { assertExploreAccess } from "#src/explore/access.ts";
 import { DiscordUpstreamError } from "#src/lib/discord-rest.ts";
@@ -69,6 +70,29 @@ function exploreAccessRefusal(error: unknown): DesktopExploreAuthResult | null {
     : null;
 }
 
+/**
+ * Whether `scout_desktop_explore_enabled` is on for this owner: a user-targeted
+ * answer first, then each server the owner may use Explore in, so a rollout or
+ * a disable can target either. Flipt alone answers, with no database read; the
+ * guilds are the ones Explore access already resolved.
+ */
+async function desktopExploreEnabledFor(
+  userId: DiscordAccountId,
+  guildIds: readonly DiscordGuildId[],
+): Promise<boolean> {
+  if (
+    await isPolicyEnabled("scout_desktop_explore_enabled", { user: userId })
+  ) {
+    return true;
+  }
+  for (const server of guildIds) {
+    if (await isPolicyEnabled("scout_desktop_explore_enabled", { server })) {
+      return true;
+    }
+  }
+  return false;
+}
+
 export async function authenticateDesktopExplore(
   request: Request,
   now = Date.now(),
@@ -94,6 +118,12 @@ export async function authenticateDesktopExplore(
   });
   try {
     const guildIds = await assertExploreAccess(user);
+    if (!(await desktopExploreEnabledFor(device.ownerId, guildIds))) {
+      return refuse(
+        "feature_disabled",
+        "Explore in Scout Desktop is turned off right now.",
+      );
+    }
     return {
       ok: true,
       caller: { device, userId: device.ownerId, guildIds },

@@ -910,6 +910,12 @@ observer as `/api/explore/stream`: a snapshot on attach, then live events, then
 at most `DESKTOP_STREAMS_PER_DEVICE` open streams in a process; one more is 429
 `stream_limit`.
 
+`scout_desktop_explore_enabled` gates every desktop Explore route. It defaults
+on in beta and production (a player opts in by pairing), so it is a kill
+switch: after authentication and Explore access, it is evaluated for the
+owner's user and then each eligible server, and `false` for all of them is a
+503 `feature_disabled` before the body is read. Only `desktop/auth.ts` reads it.
+
 `data/src/scout-client/desktop-api.contract.json` is the language-neutral
 contract: versions, routes, stream event types, scopes and error codes. Golden
 bodies in `desktop-fixtures/` are parsed by the Zod schemas and by the strict

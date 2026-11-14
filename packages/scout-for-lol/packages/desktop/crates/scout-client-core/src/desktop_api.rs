@@ -81,6 +81,8 @@ pub enum DesktopApiErrorCode {
     StreamLimit,
     /// Scout could not verify access or start the turn right now; retry.
     Unavailable,
+    /// Explore in Scout Desktop is turned off for this owner.
+    FeatureDisabled,
 }
 
 /// Body of every desktop refusal.
