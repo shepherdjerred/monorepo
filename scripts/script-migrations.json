@@ -248,6 +248,11 @@
       "reason": "Eleven-line command shim does not justify a runtime dependency"
     },
     {
+      "source": "packages/dotfiles/.chezmoitemplates/launchagent-reload.sh",
+      "disposition": "retain",
+      "reason": "Shared shell fragment is included in the chezmoi macOS bootstrap hook before user runtimes are guaranteed"
+    },
+    {
       "source": "packages/dotfiles/claude-managed/install-managed-settings.sh",
       "disposition": "retain",
       "reason": "Small sudo installer does not justify a runtime dependency"

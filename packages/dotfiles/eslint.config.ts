@@ -12,6 +12,7 @@ export default [
   },
   {
     files: [
+      "bin/executable_update.ts",
       "bin/executable_git_cleanup.ts",
       "bin/git_cleanup_core.ts",
       "bin/executable_restart_codex_panes.ts",

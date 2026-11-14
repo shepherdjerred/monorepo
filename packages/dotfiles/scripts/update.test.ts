@@ -11,7 +11,10 @@ test("propagates a failed command exit code", async () => {
 
 test("stops before maintenance commands when chezmoi update fails", async () => {
   const commands: Command[] = [];
-  const failedCommand: Command = { executable: "chezmoi", args: ["update"] };
+  const failedCommand: Command = {
+    executable: "chezmoi",
+    args: ["update", "--init"],
+  };
 
   await expect(
     main(async (command) => {
@@ -25,14 +28,17 @@ test("stops before maintenance commands when chezmoi update fails", async () => 
   expect(commands).toEqual([failedCommand]);
 });
 
-test("runs chezmoi update without a redundant apply", async () => {
+test("regenerates chezmoi config during update without a redundant apply", async () => {
   const commands: Command[] = [];
 
   await main(async (command) => {
     commands.push(command);
   }, workstation);
 
-  expect(commands).toContainEqual({ executable: "chezmoi", args: ["update"] });
+  expect(commands).toContainEqual({
+    executable: "chezmoi",
+    args: ["update", "--init"],
+  });
   expect(commands).not.toContainEqual({
     executable: "chezmoi",
     args: ["apply"],
