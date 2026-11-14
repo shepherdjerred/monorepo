@@ -26,6 +26,7 @@ export const DELIVERY_CI_API_STEPS = [
   "images",
   "ci-base-refresh",
   "ci-playwright-refresh",
+  "ci-images-register",
   "helm-push",
   "delivery-publish",
   "scout-site-archives",
