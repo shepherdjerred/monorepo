@@ -308,6 +308,83 @@ describe("desktop Explore authentication", () => {
   });
 });
 
+const EXPLORE_ROUTES = Object.entries(SCOUT_DESKTOP_API_ROUTES).filter(
+  ([name]) => name.startsWith("explore_"),
+);
+
+describe("desktop Explore flag", () => {
+  test("every Explore route is covered", () => {
+    expect(EXPLORE_ROUTES.map(([name]) => name).toSorted()).toEqual([
+      "explore_conversations_get",
+      "explore_conversations_list",
+      "explore_runs_active",
+      "explore_runs_outcome",
+      "explore_runs_start",
+      "explore_runs_stop",
+      "explore_runs_stream",
+      "explore_status",
+    ]);
+  });
+
+  test.each(EXPLORE_ROUTES)(
+    "%s is refused with feature_disabled when the flag is off",
+    async (_name, route) => {
+      mocks.isPolicyEnabled.mockResolvedValue(false);
+
+      const response = await send(desktopRequest(route.path));
+
+      expect(response.status).toBe(503);
+      expect(await errorCode(response)).toBe("feature_disabled");
+      expect(mocks.exploreStatusFor).not.toHaveBeenCalled();
+      expect(mocks.startRun).not.toHaveBeenCalled();
+      expect(mocks.subscribeRun).not.toHaveBeenCalled();
+    },
+  );
+
+  test("the flag is evaluated for the owner, then each eligible server", async () => {
+    mocks.isPolicyEnabled.mockResolvedValue(false);
+
+    await send(desktopRequest(STATUS_PATH));
+
+    expect(mocks.isPolicyEnabled.mock.calls).toEqual([
+      ["scout_desktop_explore_enabled", { user: OWNER_ID }],
+      ["scout_desktop_explore_enabled", { server: SHARED_GUILD }],
+    ]);
+  });
+
+  test("a user-targeted answer is enough", async () => {
+    mocks.isPolicyEnabled.mockImplementation(
+      (_name: string, attributes: { user?: string }) =>
+        Promise.resolve(attributes.user === OWNER_ID),
+    );
+
+    const response = await send(desktopRequest(STATUS_PATH));
+
+    expect(response.status).toBe(200);
+  });
+
+  test("a server-targeted answer is enough", async () => {
+    mocks.isPolicyEnabled.mockImplementation(
+      (_name: string, attributes: { server?: string }) =>
+        Promise.resolve(attributes.server === SHARED_GUILD),
+    );
+
+    const response = await send(desktopRequest(STATUS_PATH));
+
+    expect(response.status).toBe(200);
+  });
+
+  test("an unauthenticated request is refused before the flag is read", async () => {
+    mocks.findDevice.mockResolvedValue(null);
+    mocks.isPolicyEnabled.mockResolvedValue(false);
+
+    const response = await send(desktopRequest(STATUS_PATH));
+
+    expect(await errorCode(response)).toBe("unauthorized");
+    expect(mocks.isPolicyEnabled).not.toHaveBeenCalled();
+  });
+});
+
 describe("desktop contract version", () => {
   test.each([
     ["missing", undefined],

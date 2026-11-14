@@ -163,6 +163,7 @@ export type FlagName =
   | "initial_match_history_import_enabled"
   | "scout_client_ingestion"
   | "scout_client_result_recovery"
+  | "scout_desktop_explore_enabled"
   | "scout_operations_console_enabled"
   | "scout_durable_orchestration_enabled"
   | "scout_support_conversations_enabled"
@@ -350,6 +351,15 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
     default: false,
     overrides: [{ value: true, attributes: {}, betaOnly: true }],
   },
+  /**
+   * Explore in Scout Desktop, over the REST routes in
+   * `scout-client/desktop/`. `authenticateDesktopExplore` is the only reader.
+   *
+   * On everywhere: a player opts in by pairing the desktop with the `explore`
+   * scope. The flag is the kill switch; Flipt turns it off for a user or
+   * server, and the same answer is this fallback when the provider is down.
+   */
+  scout_desktop_explore_enabled: { default: true, overrides: [] },
   /**
    * The "Hey Scout" voice assistant (`/scout join` + `/scout leave`).
    *
