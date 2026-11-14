@@ -1,28 +1,26 @@
 import { expect, test } from "vitest";
 import { z } from "zod";
 import { asuswrtProviderPin } from "homelab/scripts/tofu/asuswrt-provider.ts";
-import { synthesize } from "#scripts/synth.ts";
+import {
+  ProviderBlocksSchema,
+  synthesizedStack,
+  VariablesSchema,
+  VersionedTerraformSchema,
+} from "#src/testing.ts";
 
-const ResourceSchema = z.looseObject({ provider: z.string() });
-
+// This stack's state is not encrypted, so it has no `encryption` block.
 const ConfigurationSchema = z.looseObject({
-  terraform: z.looseObject({
-    required_providers: z.record(
-      z.string(),
-      z.object({ source: z.string(), version: z.string() }),
-    ),
-    required_version: z.string(),
-  }),
-  provider: z.record(z.string(), z.array(z.record(z.string(), z.unknown()))),
-  variable: z.record(z.string(), z.record(z.string(), z.unknown())),
-  resource: z.record(z.string(), z.record(z.string(), ResourceSchema)),
+  terraform: VersionedTerraformSchema.partial({ encryption: true }),
+  provider: ProviderBlocksSchema,
+  variable: VariablesSchema,
+  resource: z.record(
+    z.string(),
+    z.record(z.string(), z.looseObject({ provider: z.string() })),
+  ),
 });
 
 async function asuswrt() {
-  const synthesized = await synthesize();
-  return ConfigurationSchema.parse(
-    JSON.parse(synthesized.get("asuswrt") ?? ""),
-  );
+  return await synthesizedStack("asuswrt", ConfigurationSchema);
 }
 
 /** Every address of the stack's state, with the device alias that owns it. */

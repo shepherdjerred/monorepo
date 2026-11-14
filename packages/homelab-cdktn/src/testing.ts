@@ -12,6 +12,18 @@ export const ResourcesSchema = z.record(
   z.record(z.string(), z.record(z.string(), z.unknown())),
 );
 
+/** `provider.<name>`: one block per alias, as a synthesized stack writes them. */
+export const ProviderBlocksSchema = z.record(
+  z.string(),
+  z.array(z.record(z.string(), z.unknown())),
+);
+
+/** `variable.<name>` and its arguments. */
+export const VariablesSchema = z.record(
+  z.string(),
+  z.record(z.string(), z.unknown()),
+);
+
 /** The `terraform` block of a synthesized stack: provider pins and encryption. */
 export const TerraformSchema = z.looseObject({
   encryption: z.unknown(),
