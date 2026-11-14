@@ -18,6 +18,43 @@ const settings = {
   sections: { movie: "1", series: "2" },
 };
 
+test("subtitle authority guards preserve unrelated application-event writes and protect download history", async () => {
+  const db = harness.database();
+  const eventId = crypto.randomUUID();
+  expect(
+    await db.$executeRaw`INSERT INTO "ApplicationEvent" (id,kind,payload) VALUES (${eventId},'calendar_guard_control','{}'::jsonb)`,
+  ).toBe(1);
+  expect(
+    await db.applicationEvent.update({
+      where: { id: eventId },
+      data: { payload: { observed: true } },
+    }),
+  ).toMatchObject({ id: eventId, payload: { observed: true } });
+  await db.applicationEvent.delete({ where: { id: eventId } });
+  expect(
+    await db.applicationEvent.findUnique({ where: { id: eventId } }),
+  ).toBeNull();
+
+  const download = await db.applicationEvent.create({
+    data: {
+      kind: "subtitle_download_requested",
+      payload: { candidateId: "guard-control" },
+    },
+  });
+  await expect(
+    db.$executeRaw`UPDATE "ApplicationEvent" SET payload='{}'::jsonb WHERE id=${download.id}`,
+  ).rejects.toThrow("Automatic subtitle authority events are immutable");
+  await expect(
+    db.$executeRaw`DELETE FROM "ApplicationEvent" WHERE id=${download.id}`,
+  ).rejects.toThrow("Automatic subtitle authority events are immutable");
+  expect(
+    await db.applicationEvent.findUnique({ where: { id: download.id } }),
+  ).toMatchObject({
+    kind: "subtitle_download_requested",
+    payload: { candidateId: "guard-control" },
+  });
+});
+
 test("library and calendar show proved external presence without taking ownership, and enforce fresh access", async () => {
   const db = harness.database();
   const fixture = await externalLibraryFixture(db);

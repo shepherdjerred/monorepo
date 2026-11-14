@@ -77,7 +77,7 @@ END;
 $$;
 
 CREATE FUNCTION media_subtitle_automatic_event_v1() RETURNS trigger LANGUAGE plpgsql AS $$
-DECLARE candidate "SubtitleAsset"; old "SubtitleAsset"; asset "LibraryAsset"; replacement "SubtitleReplacement"; review "SubtitleReplacementReview"; parent "ApplicationEvent";
+DECLARE candidate "SubtitleAsset"; previous_caption "SubtitleAsset"; asset "LibraryAsset"; replacement "SubtitleReplacement"; review "SubtitleReplacementReview"; parent "ApplicationEvent";
 BEGIN
   IF TG_OP IN ('UPDATE','DELETE') AND OLD.kind IN ('subtitle_download_requested','subtitle_automatic_upgrade_candidate_v1','subtitle_automatic_upgrade_authorized_v1') THEN
     RAISE EXCEPTION 'Automatic subtitle authority events are immutable';
@@ -85,9 +85,9 @@ BEGIN
   IF TG_OP='DELETE' THEN RETURN OLD; END IF;
   IF NEW.kind='subtitle_automatic_upgrade_candidate_v1' THEN
     SELECT s.* INTO STRICT candidate FROM "SubtitleAsset" s WHERE s.id=NEW.payload->>'subtitleId';
-    SELECT s.* INTO STRICT old FROM "SubtitleAsset" s WHERE s.id=NEW.payload->>'oldSubtitleId';
+    SELECT s.* INTO STRICT previous_caption FROM "SubtitleAsset" s WHERE s.id=NEW.payload->>'oldSubtitleId';
     SELECT a.* INTO STRICT asset FROM "LibraryAsset" a WHERE a.id=candidate."assetId";
-    IF NOT media_subtitle_automatic_candidate_valid_v1(candidate,old,asset,NEW,NEW.payload->'scope') THEN RAISE EXCEPTION 'Automatic subtitle candidate requires its actual download, numerical improvement and video parent'; END IF;
+    IF NOT media_subtitle_automatic_candidate_valid_v1(candidate,previous_caption,asset,NEW,NEW.payload->'scope') THEN RAISE EXCEPTION 'Automatic subtitle candidate requires its actual download, numerical improvement and video parent'; END IF;
   ELSIF NEW.kind='subtitle_automatic_upgrade_authorized_v1' THEN
     SELECT r.* INTO STRICT replacement FROM "SubtitleReplacement" r WHERE r.id=NEW.payload->>'replacementId';
     SELECT r.* INTO STRICT review FROM "SubtitleReplacementReview" r WHERE r."replacementId"=replacement.id;
@@ -118,15 +118,15 @@ CREATE TRIGGER subtitle_download_checkpoint_v1 BEFORE UPDATE ON "Operation" FOR 
 -- A marker alone never creates authority. Its event is committed atomically,
 -- and a later physical transition must belong to this transaction's receipt.
 CREATE FUNCTION media_subtitle_automatic_parent_v1() RETURNS trigger LANGUAGE plpgsql AS $$
-DECLARE candidate "SubtitleAsset"; old "SubtitleAsset"; asset "LibraryAsset"; event "ApplicationEvent";
+DECLARE candidate "SubtitleAsset"; previous_caption "SubtitleAsset"; asset "LibraryAsset"; event "ApplicationEvent";
 BEGIN
   IF NOT (NEW."matchingEvidence" ? 'automaticSubtitleUpgradeV1') THEN RETURN NEW; END IF;
   SELECT s.* INTO STRICT candidate FROM "SubtitleAsset" s WHERE s.id=NEW.id;
   SELECT e.* INTO STRICT event FROM "ApplicationEvent" e WHERE e.id=candidate."matchingEvidence"#>>'{automaticSubtitleUpgradeV1,eventId}';
   IF TG_OP='INSERT' OR NOT (OLD."matchingEvidence" ? 'automaticSubtitleUpgradeV1') THEN
-    SELECT s.* INTO STRICT old FROM "SubtitleAsset" s WHERE s.id=event.payload->>'oldSubtitleId';
+    SELECT s.* INTO STRICT previous_caption FROM "SubtitleAsset" s WHERE s.id=event.payload->>'oldSubtitleId';
     SELECT a.* INTO STRICT asset FROM "LibraryAsset" a WHERE a.id=candidate."assetId";
-    IF NOT media_subtitle_automatic_candidate_valid_v1(candidate,old,asset,event,event.payload->'scope') THEN
+    IF NOT media_subtitle_automatic_candidate_valid_v1(candidate,previous_caption,asset,event,event.payload->'scope') THEN
       RAISE EXCEPTION 'Automatic subtitle marker requires its actual candidate event';
     END IF;
   -- Guard the replacement birth/swap only. Once installed, the unchanged
