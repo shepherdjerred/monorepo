@@ -1,29 +1,25 @@
 import { expect, test } from "vitest";
 import { readFile } from "node:fs/promises";
 import { z } from "zod";
-import { createSubtitleReplacementActivities } from "#automation/subtitle-replacement/activities.ts";
 import { createMediaFileActivities } from "#automation/files/activities.ts";
 import { workerFilePath } from "#automation/files/paths/locations.ts";
 import { prepareBoundRetention } from "#automation/retention/lifecycle.test-fixture.ts";
-import { elapsedQuarantineClient } from "#automation/files/plex-binding/elapsed-quarantine.test-support.ts";
 import { automaticSubtitleHarness } from "./test-fixture.ts";
-import { RequestInterestCommands } from "#infrastructure/request-interest/commands.ts";
+import {
+  quarantineFixtureWithElapsedGrace,
+  prepareAutomaticFixtureReplacement,
+} from "#testing/retention/movie-fixtures.ts";
+import { continueFixtureRequest } from "#testing/retention-interest.ts";
 const harness = automaticSubtitleHarness();
 
 test("an automatic caption keeps its bytes and ancestry through actual native quarantine and restore", async () => {
   const f = await harness.setup("native", true);
-  const input = { job: f.job, candidateSubtitleId: f.candidate.id };
-  const prepared = await f.automatic.begin(input);
-  if (prepared === null) throw new Error("Automatic preparation missing");
-  const replacements = createSubtitleReplacementActivities(f.context);
-  await replacements.prepareSubtitleReplacement({
-    replacementId: prepared.replacementId,
-    operationId: prepared.preparationOperationId,
-  });
-  await f.automatic.approve({
-    ...input,
-    replacementId: prepared.replacementId,
-  });
+  const {
+    prepared,
+    files: replacements,
+    approve,
+  } = await prepareAutomaticFixtureReplacement(f);
+  await approve();
   const row = await f.db.subtitleReplacement.findUniqueOrThrow({
     where: { id: prepared.replacementId },
   });
@@ -39,35 +35,12 @@ test("an automatic caption keeps its bytes and ancestry through actual native qu
     where: { id: f.candidate.id },
   });
   const bound = await prepareBoundRetention(f, f.initialPublication, f.network);
-  const timing = await elapsedQuarantineClient(f.db, {
-    ...bound.retention.input,
-    mediaIds: [f.media.id],
-  });
-  f.context.db = timing.db;
-  try {
-    expect(await bound.quarantine()).toEqual({ status: "quarantined" });
-  } finally {
-    f.context.db = f.db;
-  }
-  await timing.assertCommitted();
+  await quarantineFixtureWithElapsedGrace(f, bound);
   const prior = await f.db.operation.findMany({
     where: { targetId: f.media.id },
     select: { id: true },
   });
-  const request = await f.db.mediaRequest.findUniqueOrThrow({
-    where: { id: f.request.id },
-  });
-  await new RequestInterestCommands(f.db, { keepDays: 30 }).execute(
-    f.user,
-    crypto.randomUUID(),
-    {
-      schemaVersion: 1,
-      requestId: request.id,
-      expectedVersion: request.version,
-      expectedInterestRevision: request.interestRevision,
-      action: "continue",
-    },
-  );
+  const { request } = await continueFixtureRequest(f.db, f.user, f.request.id);
   const restore = await f.db.operation.findFirstOrThrow({
     where: {
       kind: "restore_media",

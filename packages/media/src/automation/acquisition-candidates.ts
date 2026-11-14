@@ -16,7 +16,10 @@ import { selectProviderCandidate } from "./provider-selection.ts";
 import { ProviderIdSchema } from "./providers.ts";
 import { IntegrationError } from "#integrations/http.ts";
 import type { ProviderCandidate } from "#integrations/providers.ts";
-import { currentMeasuredQuality } from "./acquisition-management/current-quality.ts";
+import {
+  currentMeasuredQuality,
+  currentDefaultCoverageQuery,
+} from "./acquisition-management/current-quality.ts";
 import { EpisodeNumberingSchema } from "#shared/numbering.ts";
 import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { canonicalReferences } from "#infrastructure/acquisition-identity/references.ts";
@@ -59,21 +62,9 @@ export async function currentRelease(
   mediaId: string,
   budget?: PublicationAuthorityReadBudget,
 ): Promise<ReleaseAttributes | null> {
-  const coverage = await context.db.assetCoverage.findFirst({
-    where: { mediaId, edition: "default", current: true },
-    include: {
-      asset: {
-        include: {
-          coverage: {
-            where: { current: true },
-            include: {
-              media: { include: { parent: { include: { parent: true } } } },
-            },
-          },
-        },
-      },
-    },
-  });
+  const coverage = await context.db.assetCoverage.findFirst(
+    currentDefaultCoverageQuery(mediaId),
+  );
   if (coverage === null) return null;
   const measured = PublicReleaseAttributesSchema.extend({
     id: z.string(),

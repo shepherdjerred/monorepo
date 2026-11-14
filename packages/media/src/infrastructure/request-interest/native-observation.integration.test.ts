@@ -32,6 +32,8 @@ import { snapshotHash } from "#migration/profile-import.ts";
 import type { PlexPlaybackSession } from "#integrations/plex-playback.ts";
 import { queueRetentionCheck } from "#automation/watch.ts";
 import { createRetentionActivities } from "#automation/retention.ts";
+import { elapsedInterestNoticeQueries } from "#automation/retention/fixtures/elapsed.ts";
+import { sampleFixturePlayback } from "#testing/retention-interest.ts";
 
 const h = automationTestHarness();
 const directories: string[] = [];
@@ -410,16 +412,9 @@ async function collectExpiredPlayback(
     mapping.serverMachineId,
     () => clock.now,
   );
-  clock.now = new Date(clock.now.getTime() + 1);
-  await collector.reconcile();
-  for (let sample = 0; sample < 2; sample++) {
-    clock.now = new Date(clock.now.getTime() + 60_000);
-    session.progressMs += 60_000;
-    await collector.reconcile();
-  }
-  sessions = [];
-  clock.now = new Date(clock.now.getTime() + 1);
-  await collector.reconcile();
+  await sampleFixturePlayback(collector, session, clock, () => {
+    sessions = [];
+  });
   if (mode !== "historical")
     expect(
       await f.db.playbackSessionIdentity.findUniqueOrThrow({
@@ -1092,8 +1087,6 @@ test.each([
     // No serving binding, playback authority, native clock or existing receipt is changed.
     const noticeAt = new Date(Date.now() - 8 * DAY);
     const events = new Set<string>();
-    const deliveries = new Set<string>();
-    const accepted = new Set<string>();
     const historical = mode !== "fresh";
     const playbackControl =
       mode === "resumed" ||
@@ -1107,6 +1100,7 @@ test.each([
     );
     const policyDb = queryFixtureDatabase(f.db, {
       query: {
+        ...elapsedInterestNoticeQueries(events, noticeAt),
         mediaRequest: {
           async update({ args, query }) {
             // Elapsed policy time at the ORIGINAL release producer, not a
@@ -1130,39 +1124,6 @@ test.each([
             const row = await query(args);
             if (selected) events.add(z.uuid().parse(row.id));
             return row;
-          },
-        },
-        notificationDelivery: {
-          async create({ args, query }) {
-            const selected =
-              args.data.eventId !== undefined && events.has(args.data.eventId);
-            if (selected)
-              args.data.createdAt = new Date(noticeAt.getTime() + 1);
-            const row = await query(args);
-            if (selected) deliveries.add(z.uuid().parse(row.id));
-            return row;
-          },
-          async update({ args, query }) {
-            const id = args.where.id ?? "";
-            if (
-              deliveries.has(id) &&
-              !accepted.has(id) &&
-              args.data.acceptedAt instanceof Date
-            ) {
-              args.data.acceptedAt = new Date(noticeAt.getTime() + 3);
-              accepted.add(id);
-            }
-            return query(args);
-          },
-        },
-        notificationDeliveryAttempt: {
-          async create({ args, query }) {
-            if (
-              args.data.deliveryId !== undefined &&
-              deliveries.has(args.data.deliveryId)
-            )
-              args.data.startedAt = new Date(noticeAt.getTime() + 2);
-            return query(args);
           },
         },
       },

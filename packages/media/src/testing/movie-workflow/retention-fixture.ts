@@ -10,7 +10,10 @@ import { MovieOperationV4Schema } from "#shared/movie-editions/lifecycle/automat
 import { testPlexBindingExecution } from "#testing/plex-binding-execution.ts";
 import { createFixtureLifecycle } from "#testing/fixture-lifecycle.ts";
 import { createManagedMovieFixture } from "./managed-fixture.ts";
-import { completeFixtureRetentionInterests } from "#testing/retention-interest.ts";
+import {
+  completeFixtureRetentionInterests,
+  fixtureNotificationReceipts,
+} from "#testing/retention-interest.ts";
 import {
   prepareInitialReleasedInterest,
   type InitialInterestScenario,
@@ -51,23 +54,13 @@ export async function createMovieRetentionFixture(
       update: { emailEnabled: true },
     });
     const sent: Parameters<MediaAutomationContext["notify"]>[0][] = [];
-    const receipts = new Map<string, string>();
     const context: MediaAutomationContext = {
       ...base,
       now: () => new Date(Date.now() + (elapsed ? 8 * 86_400_000 : 0)),
       publicOrigin: page.url.origin,
-      notify: (message, mutation) => {
-        mutation?.beforeMutation();
-        sent.push(message);
-        const receipt = `synthetic-warning:${message.idempotencyKey}`;
-        receipts.set(receipt, message.recipient);
-        return Promise.resolve({ receipt });
-      },
-      reconcileNotification: (input) =>
-        Promise.resolve({
-          status: receipts.has(input.receipt) ? "delivered" : "unknown",
-          recipient: receipts.get(input.receipt) ?? null,
-        }),
+      ...fixtureNotificationReceipts("synthetic-warning", (message) =>
+        sent.push(message),
+      ),
     };
     if (interestScenario === undefined)
       await completeFixtureRetentionInterests(base, [f.scope.mediaId], edition);

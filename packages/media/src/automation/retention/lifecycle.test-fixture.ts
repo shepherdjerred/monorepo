@@ -18,7 +18,10 @@ import {
   preparePhysicalPublication,
 } from "#automation/plex-binding/test-fixture.ts";
 import { retentionPlexContext } from "./fixtures/plex.ts";
-import { completeFixtureRetentionInterests } from "#testing/retention-interest.ts";
+import {
+  completeFixtureRetentionInterests,
+  fixtureNotificationReceipts,
+} from "#testing/retention-interest.ts";
 import {
   prepareInitialReleasedInterest,
   type InitialInterestScenario,
@@ -61,21 +64,10 @@ export async function prepareBoundRetention(
     where: { id: published.attempt.id },
   });
   const transport = await retentionPlexContext(db, base, attempt.mediaIds);
-  const receipts = new Map<string, string>();
   const context: MediaAutomationContext = {
     ...transport.context,
     plexBindingExecution: bindingTestExecution,
-    notify: (message, mutation) => {
-      mutation?.beforeMutation();
-      const receipt = `synthetic-warning:${message.idempotencyKey}`;
-      receipts.set(receipt, message.recipient);
-      return Promise.resolve({ receipt });
-    },
-    reconcileNotification: (input) =>
-      Promise.resolve({
-        status: receipts.has(input.receipt) ? "delivered" : "unknown",
-        recipient: receipts.get(input.receipt) ?? null,
-      }),
+    ...fixtureNotificationReceipts("synthetic-warning"),
   };
   await prepareRequesters(db, context, attempt.mediaIds);
   const publication = createPublicationActivities(context);

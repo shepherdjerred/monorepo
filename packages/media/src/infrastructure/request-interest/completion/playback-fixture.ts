@@ -5,6 +5,7 @@ import { PrismaPlaybackHistory } from "#infrastructure/playback/service.ts";
 import { PrismaPlaybackCollector } from "#infrastructure/playback/collector.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import type { PlexPlaybackSession } from "#integrations/plex-playback.ts";
+import { sampleFixturePlayback } from "#testing/retention-interest.ts";
 
 export async function incompleteNativeRewatch(
   f: Awaited<ReturnType<typeof completionFixture>>,
@@ -105,16 +106,9 @@ export async function incompleteNativeRewatch(
     mapping.serverMachineId,
     () => clock.now,
   );
-  clock.now = new Date(clock.now.getTime() + 1);
-  await collector.reconcile();
-  for (let sample = 0; sample < 2; sample++) {
-    clock.now = new Date(clock.now.getTime() + 60_000);
-    session.progressMs += 60_000;
-    await collector.reconcile();
-  }
-  sessions = [];
-  clock.now = new Date(clock.now.getTime() + 1);
-  await collector.reconcile();
+  await sampleFixturePlayback(collector, session, clock, () => {
+    sessions = [];
+  });
   const recorded = await f.db.playbackSessionIdentity.findUniqueOrThrow({
     where: {
       source_sourceInstanceId_sourceSessionId: {

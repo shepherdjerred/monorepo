@@ -1,7 +1,10 @@
 import { afterEach, beforeAll, expect, test } from "vitest";
 import { readFile } from "node:fs/promises";
 import { z } from "zod";
-import { createAcquiredMovieUpgradeFixture } from "#testing/movie-workflow/upgrade-fixture.ts";
+import {
+  createAcquiredMovieUpgradeFixture,
+  finishMovieFixturePublication,
+} from "#testing/movie-workflow/upgrade-fixture.ts";
 import { movieVideoFixture } from "#testing/movie-video.ts";
 import { createSeedingActivities } from "#automation/seeding.ts";
 import { workerFilePath } from "#automation/files/paths/locations.ts";
@@ -89,10 +92,7 @@ async function publishedUpgrade() {
   expect(
     await f.fileMovie.promoteMovieFilesV4(input, testPublicationExecution()),
   ).toEqual({ status: "published" });
-  expect(
-    await f.movie.publishMovieToPlexV4(input, testPlexBindingExecution()),
-  ).toEqual({ status: "available", reason: null });
-  await f.movie.finalizeMovieAcquisitionV4(input, testPlexBindingExecution());
+  await finishMovieFixturePublication(f, input);
   const attempt = await db.acquisitionAttempt.findUniqueOrThrow({
     where: { id: input.attemptId },
   });

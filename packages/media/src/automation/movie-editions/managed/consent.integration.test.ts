@@ -9,6 +9,7 @@ import { MovieEditionKeySchema } from "#shared/movie-editions/registry.ts";
 import { chooseTestMovieEdition } from "#infrastructure/movie-editions/test-support.ts";
 import type { MediaActor } from "#application/auth.ts";
 import { grantTestRequesterAccess } from "#testing/authority.ts";
+import { finishMovieFixturePublication } from "#testing/movie-workflow/upgrade-fixture.ts";
 
 const h = automationTestHarness();
 const directories: string[] = [];
@@ -117,10 +118,7 @@ test.each(MovieEditionKeySchema.options)(
     expect(
       await f.fileMovie.promoteMovieFilesV4(input, testPublicationExecution()),
     ).toEqual({ status: "published" });
-    expect(
-      await f.movie.publishMovieToPlexV4(input, testPlexBindingExecution()),
-    ).toEqual({ status: "available", reason: null });
-    await f.movie.finalizeMovieAcquisitionV4(input, testPlexBindingExecution());
+    await finishMovieFixturePublication(f, input);
     expect(
       await db.acquisitionAttempt.findUniqueOrThrow({
         where: { id: input.attemptId },

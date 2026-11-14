@@ -5,7 +5,7 @@ import { createMediaFileActivities } from "#automation/files/activities.ts";
 import { FilePlanSchema } from "#automation/files/types.ts";
 import { mappedPublicationFixture } from "#automation/publication-proof/test-fixture.ts";
 import { prepareBoundRetention } from "#automation/retention/lifecycle.test-fixture.ts";
-import { elapsedQuarantineClient } from "#automation/files/plex-binding/elapsed-quarantine.test-support.ts";
+import { quarantineFixtureWithElapsedGrace } from "#testing/retention/movie-fixtures.ts";
 import { elapsedPublicationClient } from "#automation/files/plex-binding/elapsed-publication.test-support.ts";
 import { retentionPlexContext } from "#automation/retention/fixtures/plex.ts";
 import { bindingTestExecution } from "#automation/plex-binding/test-fixture.ts";
@@ -153,17 +153,7 @@ test("quarantine and purge consume the replacement checksum without changing qua
     f.initialPublication,
     harness.network(),
   );
-  const timing = await elapsedQuarantineClient(f.db, {
-    ...bound.retention.input,
-    mediaIds: [f.media.id],
-  });
-  f.context.db = timing.db;
-  try {
-    expect(await bound.quarantine()).toEqual({ status: "quarantined" });
-  } finally {
-    f.context.db = f.db;
-  }
-  const birth = await timing.assertCommitted();
+  const { birth, timing } = await quarantineFixtureWithElapsedGrace(f, bound);
   await expect(access(f.filename)).rejects.toThrow();
   expect(await readFile(f.paths.oldArchive, "utf8")).toBe(f.oldText);
   await bound.observe(true);

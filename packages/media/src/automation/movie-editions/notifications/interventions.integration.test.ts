@@ -1,7 +1,8 @@
-import { afterEach, beforeAll, expect, test } from "vitest";
+import { expect, test } from "vitest";
 import { z } from "zod";
 import { createMovieWorkflowFixture } from "#testing/movie-workflow/fixture.ts";
-import { movieVideoFixture } from "#testing/movie-video.ts";
+import { retentionMovieFixtures } from "#testing/retention/movie-fixtures.ts";
+import { fixtureNotificationReceipts } from "#testing/retention-interest.ts";
 import { grantTestRequesterAccess } from "#testing/authority.ts";
 import { testPlexBindingExecution } from "#testing/plex-binding-execution.ts";
 import { MovieLifecycleCommands } from "#infrastructure/movie-editions/lifecycle/commands.ts";
@@ -17,14 +18,8 @@ import {
 } from "#shared/movie-editions/registry.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
 
-const closers: (() => Promise<void>)[] = [];
-let bytes: Uint8Array;
-beforeAll(async () => {
-  bytes = await movieVideoFixture();
-});
-afterEach(async () => {
-  for (const close of closers.splice(0)) await close();
-});
+const movies = retentionMovieFixtures();
+const closers = movies.closers;
 
 async function fixture(
   edition: MovieEditionKey = "extended_cut",
@@ -32,7 +27,9 @@ async function fixture(
   reason: string | null = "movie_operation_failed",
   restrictedRequester = false,
 ) {
-  const f = await createMovieWorkflowFixture(edition, { bytes });
+  const f = await createMovieWorkflowFixture(edition, {
+    bytes: movies.bytes(),
+  });
   closers.push(f.close);
   const db = f.source.db;
   const owner = await db.mediaUser.findFirstOrThrow({
@@ -66,22 +63,12 @@ async function fixture(
   });
   closers.unshift(() => page.stop(true));
   const sent: Parameters<MediaAutomationContext["notify"]>[0][] = [];
-  const receipts = new Map<string, string>();
   const context: MediaAutomationContext = {
     ...f.source.context,
     publicOrigin: page.url.origin,
-    notify: (message, mutation) => {
-      mutation?.beforeMutation();
-      sent.push(message);
-      const receipt = `synthetic-movie-intervention:${message.idempotencyKey}`;
-      receipts.set(receipt, message.recipient);
-      return Promise.resolve({ receipt });
-    },
-    reconcileNotification: (input) =>
-      Promise.resolve({
-        status: receipts.has(input.receipt) ? "delivered" : "unknown",
-        recipient: receipts.get(input.receipt) ?? null,
-      }),
+    ...fixtureNotificationReceipts("synthetic-movie-intervention", (message) =>
+      sent.push(message),
+    ),
   };
   const reconciled = await f.movie.reconcileMovieIntentV4(
     f.input,

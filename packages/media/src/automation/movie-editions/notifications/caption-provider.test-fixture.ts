@@ -3,6 +3,33 @@ import { fromOpenSubtitles } from "#automation/subtitle-sources.ts";
 import type { SubtitleSearch } from "#domain/subtitle-maintenance/provider.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
 
+/** Exact provider search envelope; each caller retains its actual language/release fixture. */
+export function captionSearchResponse(
+  query: SubtitleSearch,
+  input: { language: string; release: string; filename: string },
+) {
+  return Response.json({
+    total_pages: 1,
+    data: [
+      {
+        id: "1",
+        attributes: {
+          language: input.language,
+          release: input.release,
+          ai_translated: false,
+          machine_translated: false,
+          foreign_parts_only: false,
+          hearing_impaired: false,
+          feature_details: {
+            tmdb_id: query.scoreReferenceV1?.tmdbId ?? undefined,
+          },
+          files: [{ file_id: 1, file_name: input.filename }],
+        },
+      },
+    ],
+  });
+}
+
 /** Actual provider adapter and durable download producer; remote responses and bytes are synthetic. */
 export async function captionProviderFixture(
   context: MediaAutomationContext,
@@ -47,26 +74,10 @@ export async function captionProviderFixture(
           return Promise.resolve(Response.json({ token: "synthetic" }));
         if (url.pathname.endsWith("/subtitles"))
           return Promise.resolve(
-            Response.json({
-              total_pages: 1,
-              data: [
-                {
-                  id: "1",
-                  attributes: {
-                    language:
-                      query.language === "zh-Hans" ? "zh-cn" : query.language,
-                    release: "Synthetic human caption",
-                    ai_translated: false,
-                    machine_translated: false,
-                    foreign_parts_only: false,
-                    hearing_impaired: false,
-                    feature_details: {
-                      tmdb_id: query.scoreReferenceV1?.tmdbId ?? undefined,
-                    },
-                    files: [{ file_id: 1, file_name: filename }],
-                  },
-                },
-              ],
+            captionSearchResponse(query, {
+              language: query.language === "zh-Hans" ? "zh-cn" : query.language,
+              release: "Synthetic human caption",
+              filename,
             }),
           );
         if (url.pathname.endsWith("/download"))

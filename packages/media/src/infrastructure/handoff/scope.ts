@@ -43,12 +43,10 @@ export async function buildHandoffScope(
 }
 
 async function reviewedBundle(tx: Prisma.TransactionClient, input: Input) {
-  const review = await tx.migrationBundleReview.findUniqueOrThrow({
-    where: { id: input.bundleReviewId },
-    include: { bundle: true },
-  });
-  const manifest = MigrationBundleProtocolSchema.parse(review.bundle.manifest);
-  const report = BundleReportSchema.parse(review.report);
+  const { review, manifest, report } = await readHandoffBundleReview(
+    tx,
+    input.bundleReviewId,
+  );
   if (
     review.status !== "approved" ||
     review.version !== input.bundleReviewVersion ||
@@ -62,6 +60,20 @@ async function reviewedBundle(tx: Prisma.TransactionClient, input: Input) {
     !report.stable
   )
     throw conflict("handoff_review_changed");
+  return { review, manifest, report };
+}
+
+/** Preview and preparation parse the same literal reviewed source bundle. */
+export async function readHandoffBundleReview(
+  tx: Prisma.TransactionClient,
+  bundleReviewId: string,
+) {
+  const review = await tx.migrationBundleReview.findUniqueOrThrow({
+    where: { id: bundleReviewId },
+    include: { bundle: true },
+  });
+  const manifest = MigrationBundleProtocolSchema.parse(review.bundle.manifest);
+  const report = BundleReportSchema.parse(review.report);
   return { review, manifest, report };
 }
 

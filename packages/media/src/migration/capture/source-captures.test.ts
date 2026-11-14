@@ -3,6 +3,7 @@ import { captureSeerr } from "./seerr-capture.ts";
 import { captureBazarr } from "./bazarr-capture.ts";
 import { validateCapture } from "./capture-validation.ts";
 import { normalizeCapture } from "#migration/normalize.ts";
+import { captureGetFixture as fetcher } from "./capture.test-fixture.ts";
 import compatibility from "#migration/fixtures/capture-compatibility.json" with { type: "json" };
 
 const source = {
@@ -10,24 +11,6 @@ const source = {
   baseUrl: "http://127.0.0.1:1234",
   apiKey: "synthetic-private-key",
 };
-function fetcher(reply: (url: URL) => unknown): typeof fetch {
-  return Object.assign(
-    async (
-      input: Parameters<typeof fetch>[0],
-      init?: Parameters<typeof fetch>[1],
-    ) => {
-      expect(init?.method).toBe("GET");
-      return Response.json(
-        reply(new URL(input instanceof Request ? input.url : input)),
-      );
-    },
-    {
-      preconnect() {
-        /* Fixture has no network. */
-      },
-    },
-  );
-}
 function seerrReply(url: URL) {
   if (url.pathname.endsWith("status"))
     return { version: compatibility.seerr.version };

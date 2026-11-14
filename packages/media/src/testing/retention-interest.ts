@@ -5,6 +5,72 @@ import { nativeInterestFacts } from "#infrastructure/request-interest/facts.ts";
 import { reconcileRequestInterests } from "#infrastructure/request-interest/reconcile.ts";
 import type { Database } from "#infrastructure/database.ts";
 import type { MovieEditionKey } from "#shared/movie-editions/registry.ts";
+import { RequestInterestCommands } from "#infrastructure/request-interest/commands.ts";
+import type { MediaActor } from "#application/auth.ts";
+import type { PrismaPlaybackCollector } from "#infrastructure/playback/collector.ts";
+import type { PlexPlaybackSession } from "#integrations/plex-playback.ts";
+
+/** Read current CAS versions immediately before genuine personal Continue. */
+export async function continueFixtureRequest(
+  db: Database,
+  user: MediaActor,
+  requestId: string,
+) {
+  const request = await db.mediaRequest.findUniqueOrThrow({
+    where: { id: requestId },
+  });
+  const result = await new RequestInterestCommands(db, {
+    keepDays: 30,
+  }).execute(user, crypto.randomUUID(), {
+    schemaVersion: 1,
+    requestId: request.id,
+    expectedVersion: request.version,
+    expectedInterestRevision: request.interestRevision,
+    action: "continue",
+  });
+  return { request, result };
+}
+
+/** Exact private-provider receipts for synthetic notification transports. */
+export function fixtureNotificationReceipts(
+  prefix: string,
+  onSend?: (message: Parameters<MediaAutomationContext["notify"]>[0]) => void,
+): Pick<MediaAutomationContext, "notify" | "reconcileNotification"> {
+  const receipts = new Map<string, string>();
+  return {
+    notify: (message, mutation) => {
+      mutation?.beforeMutation();
+      onSend?.(message);
+      const receipt = `${prefix}:${message.idempotencyKey}`;
+      receipts.set(receipt, message.recipient);
+      return Promise.resolve({ receipt });
+    },
+    reconcileNotification: (input) =>
+      Promise.resolve({
+        status: receipts.has(input.receipt) ? "delivered" : "unknown",
+        recipient: receipts.get(input.receipt) ?? null,
+      }),
+  };
+}
+
+/** Preserve the two native one-minute progress samples and final stopped observation. */
+export async function sampleFixturePlayback(
+  collector: PrismaPlaybackCollector,
+  session: PlexPlaybackSession,
+  clock: { now: Date },
+  stop: () => void,
+) {
+  clock.now = new Date(clock.now.getTime() + 1);
+  await collector.reconcile();
+  for (let sample = 0; sample < 2; sample++) {
+    clock.now = new Date(clock.now.getTime() + 60_000);
+    session.progressMs += 60_000;
+    await collector.reconcile();
+  }
+  stop();
+  clock.now = new Date(clock.now.getTime() + 1);
+  await collector.reconcile();
+}
 
 /** Explicit initial external-catalog facts for retention-eligible direct episode
  * fixtures only. Generic catalog defaults and future/unknown controls stay intact. */

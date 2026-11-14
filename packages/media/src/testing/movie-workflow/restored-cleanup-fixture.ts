@@ -14,7 +14,10 @@ import { requestTestMovieV4 } from "#testing/movie-v4.ts";
 import { testPublicationExecution } from "#testing/publication-execution.ts";
 import { testPlexBindingExecution } from "#testing/plex-binding-execution.ts";
 import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
-import { completeFixtureRetentionInterests } from "#testing/retention-interest.ts";
+import {
+  completeFixtureRetentionInterests,
+  fixtureNotificationReceipts,
+} from "#testing/retention-interest.ts";
 import { pendingInAppWarningHistory } from "#automation/retention/fixtures/elapsed.ts";
 import { refreshRetentionReceipts } from "#automation/notifications/retention-receipts.ts";
 
@@ -46,23 +49,12 @@ export async function createRestoredMovieCleanupFixture(
       create: { userId: user.id, emailEnabled: true },
       update: { emailEnabled: true },
     });
-    const receipts = new Map<string, string>();
     const policyNow = () => new Date(Date.now() + 8 * 86_400_000);
     const context: MediaAutomationContext = {
       ...f.context,
       now: policyNow,
       publicOrigin: page.url.origin,
-      notify: (message, mutation) => {
-        mutation?.beforeMutation();
-        const receipt = `synthetic-restored-cleanup:${message.idempotencyKey}`;
-        receipts.set(receipt, message.recipient);
-        return Promise.resolve({ receipt });
-      },
-      reconcileNotification: (input) =>
-        Promise.resolve({
-          status: receipts.has(input.receipt) ? "delivered" : "unknown",
-          recipient: receipts.get(input.receipt) ?? null,
-        }),
+      ...fixtureNotificationReceipts("synthetic-restored-cleanup"),
     };
     await completeFixtureRetentionInterests(
       context,

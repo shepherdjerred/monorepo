@@ -9,6 +9,7 @@ import { workerFilePath } from "#automation/files/paths/locations.ts";
 import { createMediaFileActivities } from "#automation/files/activities.ts";
 import { MediaRequestCommands } from "#infrastructure/request-commands.ts";
 import { createSweepActivities } from "#automation/sweeps.ts";
+import type { SubtitlePolicyTargetSchema } from "#shared/subtitle-policy.ts";
 import { targetHarness, subtitleTransport } from "./target-fixture.ts";
 import {
   currentSubtitleWork,
@@ -18,18 +19,25 @@ import {
 
 const harness = targetHarness();
 
-test("an ordinary language-only request queues ASSRT and installs proven Simplified Chinese without inventing forced or HI flags", async () => {
-  const f = await harness.setup();
-  await f.db.mediaSubtitlePolicyVersion.create({
+function recordPolicyTargets(
+  f: Awaited<ReturnType<typeof harness.setup>>,
+  targets: z.infer<typeof SubtitlePolicyTargetSchema>[],
+) {
+  return f.db.mediaSubtitlePolicyVersion.create({
     data: {
       mediaId: f.media.id,
       actorId: f.user.id,
       version: 1,
       recoveryEpoch: 0,
       source: { fixture: true },
-      rules: { schemaVersion: 1, protectedReasons: [], targets: [] },
+      rules: { schemaVersion: 1, protectedReasons: [], targets },
     },
   });
+}
+
+test("an ordinary language-only request queues ASSRT and installs proven Simplified Chinese without inventing forced or HI flags", async () => {
+  const f = await harness.setup();
+  await recordPolicyTargets(f, []);
   await f.db.mediaRequest.update({
     where: { id: f.request.id },
     data: { subtitleLanguages: ["zh-Hans"] },
@@ -165,29 +173,16 @@ test("regular Simplified Chinese becomes ready only after real speech proof and 
   expect(createHash("sha256").update(videoBytes).digest("hex")).toBe(
     f.asset.checksum,
   );
-  await f.db.mediaSubtitlePolicyVersion.create({
-    data: {
-      mediaId: f.media.id,
-      actorId: f.user.id,
-      version: 1,
-      recoveryEpoch: 0,
-      source: { fixture: true },
-      rules: {
-        schemaVersion: 1,
-        protectedReasons: [],
-        targets: [
-          {
-            sourceItemId: 1,
-            language: "zh-Hans",
-            audioLanguage: "zh",
-            forced: false,
-            hearingImpaired: "any",
-            audio: "any",
-          },
-        ],
-      },
+  await recordPolicyTargets(f, [
+    {
+      sourceItemId: 1,
+      language: "zh-Hans",
+      audioLanguage: "zh",
+      forced: false,
+      hearingImpaired: "any",
+      audio: "any",
     },
-  });
+  ]);
   const provider = await harness.assrt(f.db);
   expect(await f.queue()).toBe(1);
   const [input] = await f.inputs();
@@ -280,28 +275,15 @@ test.each([
   async (target) => {
     const f = await harness.setup();
     const provider = await harness.assrt(f.db);
-    await f.db.mediaSubtitlePolicyVersion.create({
-      data: {
-        mediaId: f.media.id,
-        actorId: f.user.id,
-        version: 1,
-        recoveryEpoch: 0,
-        source: { fixture: true },
-        rules: {
-          schemaVersion: 1,
-          protectedReasons: [],
-          targets: [
-            {
-              sourceItemId: 1,
-              language: "zh-Hans",
-              audioLanguage: "zh",
-              audio: "any",
-              ...target,
-            },
-          ],
-        },
+    await recordPolicyTargets(f, [
+      {
+        sourceItemId: 1,
+        language: "zh-Hans",
+        audioLanguage: "zh",
+        audio: "any",
+        ...target,
       },
-    });
+    ]);
     expect(await f.queue()).toBe(1);
     const [input] = await f.inputs();
     if (input === undefined) throw new Error("No exact Chinese target");
@@ -370,29 +352,16 @@ test("audio exemptions omit targets while unknown required audio remains visible
 
 test("hearing-impaired required metadata cannot be replaced by ordinary captions", async () => {
   const f = await harness.setup();
-  await f.db.mediaSubtitlePolicyVersion.create({
-    data: {
-      mediaId: f.media.id,
-      actorId: f.user.id,
-      version: 1,
-      recoveryEpoch: 0,
-      source: { fixture: true },
-      rules: {
-        schemaVersion: 1,
-        protectedReasons: [],
-        targets: [
-          {
-            sourceItemId: 1,
-            language: "en",
-            audioLanguage: "en",
-            forced: false,
-            hearingImpaired: "required",
-            audio: "any",
-          },
-        ],
-      },
+  await recordPolicyTargets(f, [
+    {
+      sourceItemId: 1,
+      language: "en",
+      audioLanguage: "en",
+      forced: false,
+      hearingImpaired: "required",
+      audio: "any",
     },
-  });
+  ]);
   await f.queue();
   const [input] = await f.inputs();
   if (input === undefined) throw new Error("No target");

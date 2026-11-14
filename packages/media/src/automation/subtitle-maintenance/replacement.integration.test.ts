@@ -1,27 +1,15 @@
 import { expect, test } from "vitest";
 import { readFile } from "node:fs/promises";
-import { createSubtitleReplacementActivities } from "#automation/subtitle-replacement/activities.ts";
 import { workerFilePath } from "#automation/files/paths/locations.ts";
 import { automaticSubtitleHarness } from "./test-fixture.ts";
+import { prepareAutomaticFixtureReplacement } from "#testing/retention/movie-fixtures.ts";
 const harness = automaticSubtitleHarness();
 test("real automatic upgrade swaps captions through native review/receipt without human approval", async () => {
   const f = await harness.setup();
-  const input = { job: f.job, candidateSubtitleId: f.candidate.id };
-  const prepared = await f.automatic.begin(input);
-  if (prepared === null) throw new Error("Automatic preparation missing");
-  const files = createSubtitleReplacementActivities(f.context);
-  expect(
-    await files.prepareSubtitleReplacement({
-      replacementId: prepared.replacementId,
-      operationId: prepared.preparationOperationId,
-    }),
-  ).toEqual({ state: "ready" });
-  expect(
-    await f.automatic.approve({
-      ...input,
-      replacementId: prepared.replacementId,
-    }),
-  ).toBe("queued");
+  const { input, prepared, files, preparation, approve } =
+    await prepareAutomaticFixtureReplacement(f);
+  expect(preparation).toEqual({ state: "ready" });
+  expect(await approve()).toBe("queued");
   const row = await f.db.subtitleReplacement.findUniqueOrThrow({
     where: { id: prepared.replacementId },
     include: { review: true },
@@ -102,18 +90,9 @@ test("a fabricated automatic marker is refused by native deferred authority", as
 
 test("disabling automatic maintenance at the effect checkpoint preserves installed bytes", async () => {
   const f = await harness.setup();
-  const input = { job: f.job, candidateSubtitleId: f.candidate.id };
-  const prepared = await f.automatic.begin(input);
-  if (prepared === null) throw new Error("Automatic preparation missing");
-  const files = createSubtitleReplacementActivities(f.context);
-  await files.prepareSubtitleReplacement({
-    replacementId: prepared.replacementId,
-    operationId: prepared.preparationOperationId,
-  });
-  await f.automatic.approve({
-    ...input,
-    replacementId: prepared.replacementId,
-  });
+  const { prepared, files, approve } =
+    await prepareAutomaticFixtureReplacement(f);
+  await approve();
   const row = await f.db.subtitleReplacement.findUniqueOrThrow({
     where: { id: prepared.replacementId },
   });

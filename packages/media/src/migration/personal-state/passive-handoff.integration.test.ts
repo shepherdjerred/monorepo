@@ -1,8 +1,10 @@
-import { afterAll, beforeAll, expect, test } from "vitest";
-import { lstat, readFile, rm } from "node:fs/promises";
+import { expect, test } from "vitest";
+import { lstat } from "node:fs/promises";
 import { z } from "zod";
-import { startMediaTestPostgres } from "#testing/postgres.ts";
-import { movieVideoFixture } from "#testing/movie-video.ts";
+import {
+  libraryAdoptionHarness,
+  expectUnmovedLibraryVideo,
+} from "#automation/handoff/library-fixture.ts";
 import { inspectMedia } from "#filesystem/media-tools.ts";
 import { handoffFixture } from "#automation/handoff/test-fixture.ts";
 import { applyPreparedHandoff } from "#automation/handoff/apply.ts";
@@ -27,19 +29,10 @@ import { adoptLibraryTargets } from "#automation/handoff/library-adopt.ts";
 import { LibraryHandoffNetworkProtocolSchema } from "#shared/handoff/protocol.ts";
 import { lockDefaultScopes } from "#infrastructure/editions/locks.ts";
 import { loadLibraryAssetParentV1 } from "#infrastructure/handoff/library-asset.ts";
+import { singleLibraryPlexMovie } from "#automation/handoff/plex-edit-fixture.ts";
 
-let cluster: Awaited<ReturnType<typeof startMediaTestPostgres>>;
-let bytes: Uint8Array;
-const directories: string[] = [];
-beforeAll(async () => {
-  cluster = await startMediaTestPostgres();
-  bytes = await movieVideoFixture();
-}, 60_000);
-afterAll(async () => {
-  await cluster.close();
-  for (const directory of directories)
-    await rm(directory, { recursive: true, force: true });
-});
+const cluster = libraryAdoptionHarness();
+const directories = cluster.directories;
 
 async function fixture(edition: MovieEditionKey, register = true) {
   const db = cluster.database;
@@ -47,7 +40,7 @@ async function fixture(edition: MovieEditionKey, register = true) {
   const label = MOVIE_EDITION_REGISTRY[edition].plexLabel;
   const f = await handoffFixture(db, {
     initialEdition: edition,
-    bytes,
+    bytes: cluster.bytes,
     reviewSelection: ({ report }) =>
       report.entries
         .filter((entry) => entry.kind === "file")
@@ -89,7 +82,7 @@ async function fixture(edition: MovieEditionKey, register = true) {
         canonicalEdition: null,
         editionConfidence: "unknown",
         canonicalPath: target,
-        sizeBytes: String(bytes.byteLength),
+        sizeBytes: String(cluster.bytes.byteLength),
         members: [
           {
             mediaId,
@@ -114,7 +107,7 @@ async function fixture(edition: MovieEditionKey, register = true) {
       const asset = await db.libraryAsset.create({
         data: {
           path: target,
-          sizeBytes: BigInt(bytes.byteLength),
+          sizeBytes: BigInt(cluster.bytes.byteLength),
           state: "published",
           owned: false,
           ownershipEpoch: -1,
@@ -171,11 +164,9 @@ async function fixture(edition: MovieEditionKey, register = true) {
     lastViewedAt: 1234,
     viewOffset: 45_000,
   };
-  f.network.context.plex.libraryPage = () =>
-    Promise.resolve({ total: 1, items: [item] });
-  f.network.context.plex.metadata = () => Promise.resolve(item);
-  f.network.context.plex.metadataForEditionEdit = () => Promise.resolve(item);
-  return { ...f, item };
+  const library = singleLibraryPlexMovie(f.network.context.plex, item);
+  const context = Object.assign(f.network.context, { plex: library.client });
+  return { ...f, network: { ...f.network, context }, item };
 }
 
 test.each(["default", "directors_cut"] as const)(
@@ -239,9 +230,7 @@ test.each(["default", "directors_cut"] as const)(
     expect(asset.coverage).toMatchObject([
       { edition, current: true, mediaId: f.network.media.id },
     ]);
-    expect(await readFile(f.target)).toEqual(Buffer.from(bytes));
-    const after = await lstat(f.target, { bigint: true });
-    expect([after.ino, after.mtimeNs]).toEqual([before.ino, before.mtimeNs]);
+    await expectUnmovedLibraryVideo(f.target, cluster.bytes, before);
     expect(f.item).toMatchObject({
       viewCount: 3,
       lastViewedAt: 1234,

@@ -1,4 +1,4 @@
-import { afterEach, beforeAll, expect, test } from "vitest";
+import { expect, test } from "vitest";
 import { rm } from "node:fs/promises";
 import { z } from "zod";
 import type { MediaActor } from "#application/auth.ts";
@@ -14,7 +14,6 @@ import {
 import { createMediaFileActivities } from "#automation/files/activities.ts";
 import { createPublicationActivities } from "#automation/publication.ts";
 import { createMovieRetentionFixture } from "#testing/movie-workflow/retention-fixture.ts";
-import { movieVideoFixture } from "#testing/movie-video.ts";
 import { testPublicationExecution } from "#testing/publication-execution.ts";
 import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { quarantineMovieFilesV4 } from "#automation/movie-editions/retention/quarantine.ts";
@@ -22,19 +21,17 @@ import { restoreMovieFilesV4 } from "#automation/movie-editions/retention/restor
 import { MovieOperationV4Schema } from "#shared/movie-editions/lifecycle/automation-v4.ts";
 import { mappedPublicationFixture } from "#automation/publication-proof/test-fixture.ts";
 import { sharedTvFileFixture } from "#automation/native-archive/fixtures/shared-tv.ts";
+import {
+  retentionMovieFixtures,
+  acceptedFixtureMovieWarning,
+} from "#testing/retention/movie-fixtures.ts";
 import { seedFixtureReleasedEpisodes } from "#testing/retention-interest.ts";
 import { preparePhysicalPublication } from "#automation/plex-binding/test-fixture.ts";
 import { createCoverageActivities } from "#automation/reconciliation/coverage.ts";
 
 const h = automationTestHarness();
-const close: (() => Promise<void>)[] = [];
-let bytes: Uint8Array;
-beforeAll(async () => {
-  bytes = await movieVideoFixture();
-});
-afterEach(async () => {
-  for (const end of close.splice(0)) await end();
-});
+const movies = retentionMovieFixtures();
+const close = movies.closers;
 type Subject = {
   db: Database;
   user: MediaActor;
@@ -180,19 +177,14 @@ function movieFiles(
 test.each(["default", "directors_cut"] as const)(
   "Keep watching uses the actual V4 %s quarantine parent without a new movie choice or acquisition",
   async (edition) => {
-    const f = await createMovieRetentionFixture(edition, bytes);
+    const f = await createMovieRetentionFixture(edition, movies.bytes());
     close.push(f.close);
-    expect(await f.warning()).toMatchObject({ status: "warning" });
-    await f.deliverWarning();
-    const due = await f.evaluate();
-    if (
-      due.status !== "quarantine" ||
-      due.decisionId === null ||
-      f.context.now === undefined
-    )
-      throw new Error("Native V4 quarantine prerequisite failed");
+    const { due, now } = await acceptedFixtureMovieWarning(
+      f,
+      "Native V4 quarantine prerequisite failed",
+    );
     await quarantineMovieFilesV4(
-      { ...movieFiles(f), now: f.context.now },
+      { ...movieFiles(f), now },
       {
         schemaVersion: 4,
         operationId: f.input.operationId,

@@ -27,7 +27,7 @@ import {
 import type { SubtitleSource } from "#domain/subtitle-maintenance/provider.ts";
 import { isMachineLabelled } from "#integrations/subtitle-validation.ts";
 import { evaluateSubtitle } from "#domain/subtitles.ts";
-import { createHash } from "node:crypto";
+import { validatedSubtitleContent } from "#automation/subtitles/validated-content.ts";
 import {
   findReusableSubtitleV1,
   subtitleUpgradeCurrentV1,
@@ -219,19 +219,9 @@ async function persist(
         qualityStatus: "accepted",
         storageKind: "sidecar",
         ownershipEpoch: input.recoveryEpoch,
-        checksum: createHash("sha256").update(validated.text).digest("hex"),
+        ...validatedSubtitleContent(source, validated),
         videoChecksum: work.asset.checksum,
         videoVersion: work.asset.version,
-        forced: source.forced,
-        hearingImpaired: source.hearingImpaired,
-        content: new TextEncoder().encode(validated.text),
-        provenance: {
-          filename: source.filename,
-          description: source.description,
-          format: validated.format,
-          simplifiedEvidence: validated.simplifiedEvidence,
-          traditionalEvidence: validated.traditionalEvidence,
-        },
         matchingEvidence: {
           operationId: input.operationId,
           ...subtitleScoreEvidenceV1(source),

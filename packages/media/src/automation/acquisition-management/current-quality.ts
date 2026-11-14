@@ -10,6 +10,25 @@ type Metadata = {
   } | null;
 };
 
+/** Selection and final file guards must measure the same current default cohort. */
+export function currentDefaultCoverageQuery(mediaId: string) {
+  return {
+    where: { mediaId, edition: "default", current: true },
+    include: {
+      asset: {
+        include: {
+          coverage: {
+            where: { current: true },
+            include: {
+              media: { include: { parent: { include: { parent: true } } } },
+            },
+          },
+        },
+      },
+    },
+  } as const;
+}
+
 export function currentMeasuredQuality(
   attributes: ReleaseAttributes,
   media: readonly Metadata[],

@@ -5,7 +5,7 @@ import {
   assertDefaultEdition,
 } from "#shared/editions/scope.ts";
 import { lockDefaultScopes } from "#infrastructure/editions/locks.ts";
-import { createHash } from "node:crypto";
+import { validatedSubtitleContent } from "./subtitles/validated-content.ts";
 import { lockSubtitlePolicies } from "#infrastructure/subtitle-policy.ts";
 import { lockEffectiveRequests } from "#infrastructure/request-claims.ts";
 import {
@@ -223,19 +223,9 @@ async function persist(
         qualityStatus: "accepted",
         ownershipEpoch: runtime.recoveryEpoch,
         storageKind: "sidecar",
-        checksum: createHash("sha256").update(validated.text).digest("hex"),
+        ...validatedSubtitleContent(source, validated),
         videoChecksum: asset.checksum,
         videoVersion: asset.version,
-        forced: source.forced,
-        hearingImpaired: source.hearingImpaired,
-        content: new TextEncoder().encode(validated.text),
-        provenance: {
-          filename: source.filename,
-          description: source.description,
-          format: validated.format,
-          simplifiedEvidence: validated.simplifiedEvidence,
-          traditionalEvidence: validated.traditionalEvidence,
-        },
         matchingEvidence: {
           operationId: selection.operationId,
           ...subtitleScoreEvidenceV1(source),

@@ -26,6 +26,24 @@ export function automaticallyExpired(request: Claim) {
   );
 }
 
+/** Every native interest transition advances the same target and media CAS fences. */
+export async function advanceInterestScope(
+  tx: Prisma.TransactionClient,
+  request: Pick<MediaRequest, "mediaId" | "edition">,
+) {
+  const target = await tx.mediaIntent.update({
+    where: {
+      mediaId_edition: { mediaId: request.mediaId, edition: request.edition },
+    },
+    data: { generation: { increment: 1 }, version: { increment: 1 } },
+  });
+  await tx.mediaItem.update({
+    where: { id: request.mediaId },
+    data: { version: { increment: 1 } },
+  });
+  return target;
+}
+
 export function resumesExpiredInterest(
   request: Claim,
   progressAt: number | null,
@@ -65,16 +83,7 @@ export async function renewExpiredInterest(
       version: { increment: 1 },
     },
   });
-  await tx.mediaIntent.update({
-    where: {
-      mediaId_edition: { mediaId: request.mediaId, edition: request.edition },
-    },
-    data: { generation: { increment: 1 }, version: { increment: 1 } },
-  });
-  await tx.mediaItem.update({
-    where: { id: request.mediaId },
-    data: { version: { increment: 1 } },
-  });
+  await advanceInterestScope(tx, request);
   await tx.retentionDecision.updateMany({
     where: {
       edition: request.edition,

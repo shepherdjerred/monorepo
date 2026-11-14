@@ -1,7 +1,6 @@
-import { afterEach, beforeAll, describe, expect, test } from "vitest";
-import { rm } from "node:fs/promises";
+import { describe, expect, test } from "vitest";
 import { automationTestHarness } from "#testing/automation.ts";
-import { movieVideoFixture } from "#testing/movie-video.ts";
+import { retentionMovieFixtures } from "#testing/retention/movie-fixtures.ts";
 import { moviePlexV4Fixture } from "#testing/movie-plex-v4.ts";
 import { testPlexBindingExecution } from "#testing/plex-binding-execution.ts";
 import { publishMoviePlexV4 } from "#automation/movie-editions/plex-publication.ts";
@@ -20,15 +19,8 @@ import { createMovieWatchFacetV4 } from "./movie-activities.ts";
 import { createSweepActivities } from "#automation/sweeps.ts";
 
 const h = automationTestHarness();
-const directories: string[] = [];
-let bytes: Uint8Array;
-beforeAll(async () => {
-  bytes = await movieVideoFixture();
-});
-afterEach(async () => {
-  for (const directory of directories.splice(0))
-    await rm(directory, { recursive: true, force: true });
-});
+const movies = retentionMovieFixtures();
+const directories = movies.directories;
 
 async function fixture(edition: MovieEditionKey = "extended_cut", source = h) {
   const base = await source.fixture();
@@ -38,7 +30,7 @@ async function fixture(edition: MovieEditionKey = "extended_cut", source = h) {
     base,
     {
       edition,
-      bytes,
+      bytes: movies.bytes(),
     },
   );
   directories.push(f.files.directory);

@@ -1,24 +1,6 @@
 import { expect, test } from "vitest";
 import { captureDrainInventory } from "./drain-inventory.ts";
-
-function wire(reply: (url: URL) => unknown): typeof fetch {
-  return Object.assign(
-    async (
-      input: Parameters<typeof fetch>[0],
-      init?: Parameters<typeof fetch>[1],
-    ) => {
-      expect(init?.method).toBe("GET");
-      return Response.json(
-        reply(new URL(input instanceof Request ? input.url : input)),
-      );
-    },
-    {
-      preconnect() {
-        /* No network. */
-      },
-    },
-  );
-}
+import { captureGetFixture as wire } from "./capture.test-fixture.ts";
 const source = {
   source: "sonarr" as const,
   sourceInstanceId: "a".repeat(64),

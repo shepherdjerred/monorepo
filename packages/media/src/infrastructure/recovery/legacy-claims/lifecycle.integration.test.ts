@@ -13,7 +13,7 @@ import { workerFilePath } from "#automation/files/paths/locations.ts";
 import { buildRecoveryClaims } from "./projection.ts";
 import { legacyLifecycleHarness } from "./lifecycle-fixture.ts";
 import { LEGACY_CLAIM_PROTECTION } from "./protection.ts";
-import { RequestInterestCommands } from "#infrastructure/request-interest/commands.ts";
+import { continueFixtureRequest } from "#testing/retention-interest.ts";
 const harness = legacyLifecycleHarness();
 
 test("explicit owner removal cannot bypass a newly arrived unresolved household claim", async () => {
@@ -94,20 +94,7 @@ test("explicit owner removal cannot bypass a newly arrived unresolved household 
 
 test("a late claim during upgrade archive hashing prevents cleanup of the recoverable previous video", async () => {
   const f = await harness.fixture();
-  const request = await f.db.mediaRequest.findUniqueOrThrow({
-    where: { id: f.request.id },
-  });
-  await new RequestInterestCommands(f.db, { keepDays: 30 }).execute(
-    f.user,
-    crypto.randomUUID(),
-    {
-      schemaVersion: 1,
-      requestId: request.id,
-      expectedVersion: request.version,
-      expectedInterestRevision: request.interestRevision,
-      action: "continue",
-    },
-  );
+  await continueFixtureRequest(f.db, f.user, f.request.id);
   await f.db.acquisitionAttempt.update({
     where: { id: f.published.attempt.id },
     data: { state: "completed" },

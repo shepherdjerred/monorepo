@@ -18,6 +18,7 @@ import { MovieEditionKeySchema } from "#shared/movie-editions/registry.ts";
 import {
   automaticallyExpired,
   renewExpiredInterest,
+  advanceInterestScope,
 } from "./playback-renewal.ts";
 import { lockInterestPlayback } from "./pending-progress.ts";
 
@@ -251,16 +252,7 @@ async function releaseInterest(
       version: { increment: 1 },
     },
   });
-  const target = await tx.mediaIntent.update({
-    where: {
-      mediaId_edition: { mediaId: request.mediaId, edition: request.edition },
-    },
-    data: { generation: { increment: 1 }, version: { increment: 1 } },
-  });
-  await tx.mediaItem.update({
-    where: { id: request.mediaId },
-    data: { version: { increment: 1 } },
-  });
+  const target = await advanceInterestScope(tx, request);
   await tx.applicationEvent.create({
     data: {
       mediaId: request.mediaId,

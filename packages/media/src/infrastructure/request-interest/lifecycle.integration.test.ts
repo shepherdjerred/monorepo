@@ -220,24 +220,25 @@ test("a migrated Keep is inherited and owner Temporary changes the whole tree sy
   ).toMatchObject({ libraryKeep: true, libraryPolicyExplicit: false });
 });
 
+async function setExplicitLibraryKeep(
+  f: Awaited<ReturnType<typeof fixture>>,
+  level: "series" | "episode",
+  keep: boolean,
+) {
+  await f.db.mediaIntent.update({
+    where: { mediaId_edition: { mediaId: f[level].id, edition: "default" } },
+    data: {
+      libraryKeep: keep,
+      libraryPolicyExplicit: true,
+      libraryPolicyActorId: f.owner.id,
+    },
+  });
+}
+
 test("a more specific explicit Keep remains protective beneath temporary series policy", async () => {
   const f = await fixture();
-  await f.db.mediaIntent.update({
-    where: { mediaId_edition: { mediaId: f.series.id, edition: "default" } },
-    data: {
-      libraryKeep: false,
-      libraryPolicyExplicit: true,
-      libraryPolicyActorId: f.owner.id,
-    },
-  });
-  await f.db.mediaIntent.update({
-    where: { mediaId_edition: { mediaId: f.episode.id, edition: "default" } },
-    data: {
-      libraryKeep: true,
-      libraryPolicyExplicit: true,
-      libraryPolicyActorId: f.owner.id,
-    },
-  });
+  await setExplicitLibraryKeep(f, "series", false);
+  await setExplicitLibraryKeep(f, "episode", true);
   await f.commands.execute(f.member, crypto.randomUUID(), f.input("finished"));
   expect(
     await f.db.$transaction((tx) => householdRetentionState(tx, f.episode.id)),
@@ -246,22 +247,8 @@ test("a more specific explicit Keep remains protective beneath temporary series 
 
 test("an explicit whole-series Keep protects a leaf even when its owner policy is Temporary", async () => {
   const f = await fixture();
-  await f.db.mediaIntent.update({
-    where: { mediaId_edition: { mediaId: f.series.id, edition: "default" } },
-    data: {
-      libraryKeep: true,
-      libraryPolicyExplicit: true,
-      libraryPolicyActorId: f.owner.id,
-    },
-  });
-  await f.db.mediaIntent.update({
-    where: { mediaId_edition: { mediaId: f.episode.id, edition: "default" } },
-    data: {
-      libraryKeep: false,
-      libraryPolicyExplicit: true,
-      libraryPolicyActorId: f.owner.id,
-    },
-  });
+  await setExplicitLibraryKeep(f, "series", true);
+  await setExplicitLibraryKeep(f, "episode", false);
   await f.commands.execute(f.member, crypto.randomUUID(), f.input("finished"));
   expect(
     await f.db.$transaction((tx) => householdRetentionState(tx, f.episode.id)),

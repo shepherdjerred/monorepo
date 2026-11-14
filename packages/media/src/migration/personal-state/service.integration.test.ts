@@ -56,6 +56,50 @@ async function establishCurrentMovieTarget(
   ).toMatchObject({ editionRootId: f.movie.id });
 }
 
+async function holdCurrentLibrary(
+  f: Awaited<ReturnType<typeof fixture>>,
+  keep: boolean,
+  reason: string,
+) {
+  await f.db.mediaIntent.upsert({
+    where: { mediaId_edition: defaultScope(f.movie.id) },
+    create: { mediaId: f.movie.id, libraryKeep: keep },
+    update: { libraryKeep: keep },
+  });
+  await f.db.recoveryHold.create({
+    data: { mediaId: f.movie.id, recoveryEpoch: 0, reason },
+  });
+}
+
+async function importCurrentPersonalState(
+  f: Awaited<ReturnType<typeof fixture>>,
+) {
+  const preview = await f.service.preview(f.owner, f.selection);
+  return f.service.apply(f.owner, crypto.randomUUID(), {
+    ...f.selection,
+    previewHash: preview.previewHash,
+    acknowledgeExistingLibraryKeep: true,
+    acknowledgeTemporaryFollowingClaims: true,
+  });
+}
+
+function currentMovieRecoveryClaims(f: Awaited<ReturnType<typeof fixture>>) {
+  return f.db.$transaction((tx) =>
+    buildMovieRecoveryClaimsV3(
+      tx,
+      {
+        scope: {
+          mediaId: f.movie.id,
+          rootMediaId: f.movie.id,
+          edition: "default",
+        },
+        epoch: 0,
+      },
+      new PublicationAuthorityReadBudget(),
+    ),
+  );
+}
+
 test("independent Plex requester imports as Temporary/following without fabricated movie choice, watched state or transfer", async () => {
   const f = await fixture();
   const before = {
@@ -171,41 +215,15 @@ test.each(["migration_household_intent_review_required", "manual_owner_hold"])(
   async (reason) => {
     const f = await fixture();
     await establishCurrentMovieTarget(f);
-    await f.db.mediaIntent.upsert({
-      where: { mediaId_edition: { mediaId: f.movie.id, edition: "default" } },
-      create: { mediaId: f.movie.id, libraryKeep: true },
-      update: { libraryKeep: true },
-    });
-    await f.db.recoveryHold.create({
-      data: { mediaId: f.movie.id, recoveryEpoch: 0, reason },
-    });
-    const preview = await f.service.preview(f.owner, f.selection);
-    await f.service.apply(f.owner, crypto.randomUUID(), {
-      ...f.selection,
-      previewHash: preview.previewHash,
-      acknowledgeExistingLibraryKeep: true,
-      acknowledgeTemporaryFollowingClaims: true,
-    });
+    await holdCurrentLibrary(f, true, reason);
+    await importCurrentPersonalState(f);
     const hold = await f.db.recoveryHold.findUniqueOrThrow({
       where: { mediaId_edition: { mediaId: f.movie.id, edition: "default" } },
     });
     expect(hold.releasedAt !== null).toBe(
       reason === "migration_household_intent_review_required",
     );
-    const projected = await f.db.$transaction((tx) =>
-      buildMovieRecoveryClaimsV3(
-        tx,
-        {
-          scope: {
-            mediaId: f.movie.id,
-            rootMediaId: f.movie.id,
-            edition: "default",
-          },
-          epoch: 0,
-        },
-        new PublicationAuthorityReadBudget(),
-      ),
-    );
+    const projected = await currentMovieRecoveryClaims(f);
     expect(projected.claims).toEqual([]);
     expect(projected.blockers).toEqual([]);
     expect(await f.db.recoveryReleaseReceipt.count()).toBe(0);
@@ -228,25 +246,12 @@ test("an additional unaccounted captured approval retains the generated hold", a
   const f = await fixture();
   await establishCurrentMovieTarget(f);
   await f.capture({ requesterSourceId: "unmapped-old-account" });
-  await f.db.mediaIntent.upsert({
-    where: { mediaId_edition: { mediaId: f.movie.id, edition: "default" } },
-    create: { mediaId: f.movie.id, libraryKeep: true },
-    update: { libraryKeep: true },
-  });
-  await f.db.recoveryHold.create({
-    data: {
-      mediaId: f.movie.id,
-      recoveryEpoch: 0,
-      reason: "migration_household_intent_review_required",
-    },
-  });
-  const preview = await f.service.preview(f.owner, f.selection);
-  await f.service.apply(f.owner, crypto.randomUUID(), {
-    ...f.selection,
-    previewHash: preview.previewHash,
-    acknowledgeExistingLibraryKeep: true,
-    acknowledgeTemporaryFollowingClaims: true,
-  });
+  await holdCurrentLibrary(
+    f,
+    true,
+    "migration_household_intent_review_required",
+  );
+  await importCurrentPersonalState(f);
   const hold = await f.db.recoveryHold.findUniqueOrThrow({
     where: { mediaId_edition: { mediaId: f.movie.id, edition: "default" } },
   });
@@ -255,13 +260,7 @@ test("an additional unaccounted captured approval retains the generated hold", a
 
 test("wrong native source lineage cannot account a captured approval", async () => {
   const f = await fixture();
-  const preview = await f.service.preview(f.owner, f.selection);
-  await f.service.apply(f.owner, crypto.randomUUID(), {
-    ...f.selection,
-    previewHash: preview.previewHash,
-    acknowledgeExistingLibraryKeep: true,
-    acknowledgeTemporaryFollowingClaims: true,
-  });
+  await importCurrentPersonalState(f);
   const request = await f.db.mediaRequest.findFirstOrThrow({
     where: { mediaId: f.movie.id },
   });
@@ -271,45 +270,19 @@ test("wrong native source lineage cannot account a captured approval", async () 
     where: { id: request.id },
     data: { userId: f.owner.id, version: { increment: 1 } },
   });
-  const projected = await f.db.$transaction((tx) =>
-    buildMovieRecoveryClaimsV3(
-      tx,
-      {
-        scope: {
-          mediaId: f.movie.id,
-          rootMediaId: f.movie.id,
-          edition: "default",
-        },
-        epoch: 0,
-      },
-      new PublicationAuthorityReadBudget(),
-    ),
-  );
+  const projected = await currentMovieRecoveryClaims(f);
   expect(projected.claims).toHaveLength(1);
 });
 
 test("an incomplete import without established library Keep cannot release the generated hold", async () => {
   const f = await fixture();
   await establishCurrentMovieTarget(f);
-  await f.db.mediaIntent.upsert({
-    where: { mediaId_edition: { mediaId: f.movie.id, edition: "default" } },
-    create: { mediaId: f.movie.id, libraryKeep: false },
-    update: { libraryKeep: false },
-  });
-  await f.db.recoveryHold.create({
-    data: {
-      mediaId: f.movie.id,
-      recoveryEpoch: 0,
-      reason: "migration_household_intent_review_required",
-    },
-  });
-  const preview = await f.service.preview(f.owner, f.selection);
-  await f.service.apply(f.owner, crypto.randomUUID(), {
-    ...f.selection,
-    previewHash: preview.previewHash,
-    acknowledgeExistingLibraryKeep: true,
-    acknowledgeTemporaryFollowingClaims: true,
-  });
+  await holdCurrentLibrary(
+    f,
+    false,
+    "migration_household_intent_review_required",
+  );
+  await importCurrentPersonalState(f);
   const hold = await f.db.recoveryHold.findUniqueOrThrow({
     where: { mediaId_edition: { mediaId: f.movie.id, edition: "default" } },
   });

@@ -13,7 +13,10 @@ import { Prisma } from "#generated/prisma/client.ts";
 import { z } from "zod";
 import { defaultScope } from "#shared/editions/scope.ts";
 import { targetWhere } from "#infrastructure/editions/targets.ts";
-import { currentMeasuredQuality } from "#automation/acquisition-management/current-quality.ts";
+import {
+  currentMeasuredQuality,
+  currentDefaultCoverageQuery,
+} from "#automation/acquisition-management/current-quality.ts";
 import { measuredQualityError } from "#automation/files/content-rejection.ts";
 
 const StoredReleaseSchema = PublicReleaseAttributesSchema.extend({
@@ -80,21 +83,9 @@ export async function assertMeasuredUpgrade(
     const evaluated = evaluateRelease(measured, profile, [mediaId]);
     if (!evaluated.accepted)
       throw measuredQualityError(measured, profile, mediaId, evaluated);
-    const coverage = await db.assetCoverage.findMany({
-      where: { mediaId, edition: "default", current: true },
-      include: {
-        asset: {
-          include: {
-            coverage: {
-              where: { current: true },
-              include: {
-                media: { include: { parent: { include: { parent: true } } } },
-              },
-            },
-          },
-        },
-      },
-    });
+    const coverage = await db.assetCoverage.findMany(
+      currentDefaultCoverageQuery(mediaId),
+    );
     for (const current of coverage) {
       if (current.assetId === publishedAssetId) continue;
       const previous = currentMeasuredQuality(

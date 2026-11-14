@@ -9,6 +9,11 @@ import type { MovieEditionKey } from "#shared/movie-editions/registry.ts";
 import { MovieLifecycleCommands } from "#infrastructure/movie-editions/lifecycle/commands.ts";
 import { prepareSubtitleSpeechV1 } from "#automation/files/subtitle-lifecycle/speech.ts";
 import { authorizeMovieSubtitleSpeechV4 } from "#automation/files/subtitle-lifecycle/movie-speech-authority.ts";
+import {
+  acquireMovieFixture,
+  publishMovieFixtureFiles,
+  finishMovieFixturePublication,
+} from "#testing/movie-workflow/upgrade-fixture.ts";
 
 const close: (() => Promise<void>)[] = [];
 afterEach(async () => {
@@ -19,40 +24,9 @@ afterEach(async () => {
 async function fixture(edition: MovieEditionKey = "extended_cut") {
   const f = await createMovieWorkflowFixture(edition, { missingEnglish: true });
   close.push(f.close);
-  const reserved = await f.movie.reconcileMovieIntentV4(
-    f.input,
-    testPlexBindingExecution(),
-  );
-  expect(reserved.status).toBe("acquire");
-  const input = {
-    schemaVersion: 4 as const,
-    operationId: f.input.operationId,
-    scope: f.input.scope,
-    attemptId: z.uuid().parse(reserved.attemptId),
-  };
-  expect(
-    await f.movie.submitMovieTorrentV4(input, testPlexBindingExecution()),
-  ).toMatchObject({ status: "submitted" });
-  expect(
-    await f.movie.observeMovieAcquisitionV4(input, testPlexBindingExecution()),
-  ).toMatchObject({ status: "ready" });
-  expect(
-    await f.fileMovie.inspectAndStageMovieV4(input, testPublicationExecution()),
-  ).toEqual({ status: "staged" });
-  expect(
-    await f.fileMovie.prepareMoviePublicationV4(
-      input,
-      testPublicationExecution(),
-      new PublicationAuthorityReadBudget(),
-    ),
-  ).toEqual({ status: "prepared" });
-  expect(
-    await f.fileMovie.promoteMovieFilesV4(input, testPublicationExecution()),
-  ).toEqual({ status: "published" });
-  expect(
-    await f.movie.publishMovieToPlexV4(input, testPlexBindingExecution()),
-  ).toMatchObject({ status: "available" });
-  await f.movie.finalizeMovieAcquisitionV4(input, testPlexBindingExecution());
+  const input = await acquireMovieFixture(f);
+  await publishMovieFixtureFiles(f, input);
+  await finishMovieFixturePublication(f, input);
   const captions = await f.captionOperations();
   const operation = captions.find(
     (row) =>

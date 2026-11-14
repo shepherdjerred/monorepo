@@ -8,6 +8,85 @@ import type {
 import { queryFixtureDatabase } from "#testing/query-client.ts";
 
 const historical = () => new Date(Date.now() - 8 * 86_400_000);
+type FixtureQueryHooks = Parameters<typeof queryFixtureDatabase>[1]["query"];
+
+function selectedNoticeDeliveryBirth(
+  events: Set<string>,
+  deliveries: Set<string>,
+  createdAt: () => Date,
+) {
+  const hooks = {
+    notificationDelivery: {
+      create: async ({ args, query }) => {
+        const selected =
+          args.data.eventId !== undefined && events.has(args.data.eventId);
+        if (selected) args.data.createdAt = createdAt();
+        const row = await query(args);
+        if (selected) deliveries.add(z.uuid().parse(row.id));
+        return row;
+      },
+    },
+  } satisfies FixtureQueryHooks;
+  return hooks.notificationDelivery.create;
+}
+
+function firstNoticeAcceptance(
+  deliveries: Set<string>,
+  accepted: Set<string>,
+  acceptedAt: () => Date,
+) {
+  const write = z.object({ acceptedAt: z.instanceof(Date) });
+  const hooks = {
+    notificationDelivery: {
+      update: async ({ args, query }) => {
+        const id = args.where.id ?? "";
+        if (
+          deliveries.has(id) &&
+          !accepted.has(id) &&
+          write.safeParse(args.data).success
+        ) {
+          args.data.acceptedAt = acceptedAt();
+          accepted.add(id);
+        }
+        return query(args);
+      },
+    },
+  } satisfies FixtureQueryHooks;
+  return hooks.notificationDelivery.update;
+}
+
+/** Simulated original interest-notice birth/receipt sequence; never rewrites an accepted receipt. */
+export function elapsedInterestNoticeQueries(
+  events: Set<string>,
+  noticeAt: Date,
+) {
+  const deliveries = new Set<string>(),
+    accepted = new Set<string>();
+  return {
+    notificationDelivery: {
+      create: selectedNoticeDeliveryBirth(
+        events,
+        deliveries,
+        () => new Date(noticeAt.getTime() + 1),
+      ),
+      update: firstNoticeAcceptance(
+        deliveries,
+        accepted,
+        () => new Date(noticeAt.getTime() + 3),
+      ),
+    },
+    notificationDeliveryAttempt: {
+      async create({ args, query }) {
+        if (
+          args.data.deliveryId !== undefined &&
+          deliveries.has(args.data.deliveryId)
+        )
+          args.data.startedAt = new Date(noticeAt.getTime() + 2);
+        return query(args);
+      },
+    },
+  } satisfies FixtureQueryHooks;
+}
 
 /** Simulated elapsed grace at original producer writes, never a clock or authority override. */
 export function elapsedWarningClient(
@@ -45,25 +124,12 @@ export function elapsedWarningClient(
         },
       },
       notificationDelivery: {
-        async create({ args, query }) {
-          const selected =
-            args.data.eventId !== undefined && events.has(args.data.eventId);
-          if (selected) args.data.createdAt = historical();
-          const row = await query(args);
-          if (selected) deliveries.add(z.uuid().parse(row.id));
-          return row;
-        },
-        async update({ args, query }) {
-          if (
-            deliveries.has(args.where.id ?? "") &&
-            !acceptedDeliveries.has(args.where.id ?? "") &&
-            args.data.acceptedAt instanceof Date
-          ) {
-            args.data.acceptedAt = historical();
-            acceptedDeliveries.add(z.uuid().parse(args.where.id));
-          }
-          return query(args);
-        },
+        create: selectedNoticeDeliveryBirth(events, deliveries, historical),
+        update: firstNoticeAcceptance(
+          deliveries,
+          acceptedDeliveries,
+          historical,
+        ),
       },
       notificationDeliveryAttempt: {
         async create({ args, query }) {

@@ -1,9 +1,12 @@
-import { afterAll, beforeAll, expect, test } from "vitest";
-import { lstat, readFile, rm, writeFile } from "node:fs/promises";
+import { expect, test } from "vitest";
+import { lstat, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
-import { startMediaTestPostgres } from "#testing/postgres.ts";
-import { movieVideoFixture } from "#testing/movie-video.ts";
+import {
+  libraryAdoptionHarness,
+  expectNoLibraryRequests,
+  expectUnmovedLibraryVideo,
+} from "./library-fixture.ts";
 import { inspectMedia } from "#filesystem/media-tools.ts";
 import {
   MOVIE_EDITION_REGISTRY,
@@ -23,18 +26,8 @@ import type {
   MigrationBundleSchema,
 } from "#shared/migration-handoff.ts";
 
-let cluster: Awaited<ReturnType<typeof startMediaTestPostgres>>;
-let bytes: Uint8Array;
-const directories: string[] = [];
-beforeAll(async () => {
-  cluster = await startMediaTestPostgres();
-  bytes = await movieVideoFixture();
-}, 60_000);
-afterAll(async () => {
-  await cluster.close();
-  for (const directory of directories)
-    await rm(directory, { recursive: true, force: true });
-});
+const cluster = libraryAdoptionHarness();
+const directories = cluster.directories;
 
 async function fixture(
   edition: MovieEditionKey,
@@ -51,7 +44,7 @@ async function fixture(
     fileName:
       options.fileName ??
       `Synthetic Film (2020)${edition === "default" ? "" : ` {edition-${label}}`}.1080p.mkv`,
-    bytes,
+    bytes: cluster.bytes,
     async extendReport({ report, manifest, target }) {
       directories.push(path.dirname(path.dirname(target)));
       if (options.subtitle) await appendSidecar({ report, manifest, target });
@@ -60,7 +53,7 @@ async function fixture(
       if (original?.sourceRecord.kind !== "file")
         throw new Error("Missing source file fixture");
       const name = "Synthetic Film (2020) {edition-Theatrical Cut}.1080p.mkv";
-      await writeFile(path.join(path.dirname(target), name), bytes);
+      await writeFile(path.join(path.dirname(target), name), cluster.bytes);
       const sourceRecord = {
         ...original.sourceRecord,
         sourceId: "file2",
@@ -115,7 +108,7 @@ async function fixture(
                 path.dirname(value.target),
                 "Synthetic Film (2020) {edition-Theatrical Cut}.1080p.mkv",
               ),
-              size: bytes.byteLength,
+              size: cluster.bytes.byteLength,
             },
           ],
         },
@@ -164,14 +157,8 @@ test.each(MovieEditionKeySchema.options)(
     expect(asset.coverage).toMatchObject([
       { mediaId: f.network.media.id, edition, current: true },
     ]);
-    expect(await readFile(f.target)).toEqual(Buffer.from(bytes));
-    const after = await lstat(f.target, { bigint: true });
-    expect([after.ino, after.mtimeNs]).toEqual([before.ino, before.mtimeNs]);
-    expect(
-      await cluster.database.mediaRequest.count({
-        where: { mediaId: f.network.media.id },
-      }),
-    ).toBe(0);
+    await expectUnmovedLibraryVideo(f.target, cluster.bytes, before);
+    await expectNoLibraryRequests(cluster.database, f.network.media.id);
     expect(await cluster.database.torrent.count()).toBe(torrentsBefore);
     const receipt =
       await cluster.database.mediaHandoffReceipt.findUniqueOrThrow({
@@ -378,7 +365,7 @@ test("changed Plex cut protects before ownership and leaves the file untouched",
       where: { path: f.target },
     }),
   ).toBeNull();
-  expect(await readFile(f.target)).toEqual(Buffer.from(bytes));
+  expect(await readFile(f.target)).toEqual(Buffer.from(cluster.bytes));
 });
 
 test("an unversioned migration cannot bypass movie classification", async () => {

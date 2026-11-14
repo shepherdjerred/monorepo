@@ -1,17 +1,16 @@
 import { z } from "zod";
 import type { Prisma } from "#generated/prisma/client.ts";
-import {
-  BundleReportSchema,
-  MigrationSelectionSchema,
-} from "#shared/migration-handoff.ts";
-import { MigrationBundleProtocolSchema } from "#shared/handoff/library-bundle.ts";
+import { MigrationSelectionSchema } from "#shared/migration-handoff.ts";
 import {
   PassiveRegistrationApprovalSchema,
   type PassiveRegistrationPreviewInputSchema,
 } from "#shared/handoff/passive-registration.ts";
 import { ExternalLibraryRegistrationSchema } from "#shared/external-library/contract.ts";
 import { canonicalJson, snapshotHash } from "#migration/profile-import.ts";
-import { projectHandoffFile } from "#infrastructure/handoff/scope.ts";
+import {
+  projectHandoffFile,
+  readHandoffBundleReview,
+} from "#infrastructure/handoff/scope.ts";
 import { validatePassiveRegistration } from "#infrastructure/handoff/passive-registration.ts";
 import { selectedHandoffEntries } from "#infrastructure/handoff/selection.ts";
 
@@ -21,12 +20,10 @@ export async function previewPassiveRegistrations(
   tx: Prisma.TransactionClient,
   input: z.infer<typeof PassiveRegistrationPreviewInputSchema>,
 ) {
-  const review = await tx.migrationBundleReview.findUniqueOrThrow({
-    where: { id: input.bundleReviewId },
-    include: { bundle: true },
-  });
-  const manifest = MigrationBundleProtocolSchema.parse(review.bundle.manifest);
-  const report = BundleReportSchema.parse(review.report);
+  const { review, manifest, report } = await readHandoffBundleReview(
+    tx,
+    input.bundleReviewId,
+  );
   if (
     review.status !== "approved" ||
     review.version !== input.bundleReviewVersion ||

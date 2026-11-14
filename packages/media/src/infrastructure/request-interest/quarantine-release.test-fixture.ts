@@ -14,6 +14,7 @@ import { MediaRequestCommands } from "#infrastructure/request-commands.ts";
 import type { MediaActor } from "#application/auth.ts";
 import { reconcileRequestInterests } from "./reconcile.ts";
 import { PrismaAuthStore } from "#infrastructure/auth-store.ts";
+import { elapsedInterestNoticeQueries } from "#automation/retention/fixtures/elapsed.ts";
 
 export type InitialInterestScenario =
   | "finished_manually"
@@ -264,13 +265,12 @@ function elapsedInterestPolicy(
   mediaIds: readonly string[],
 ) {
   const ids = new Set(mediaIds),
-    events = new Set<string>(),
-    deliveries = new Set<string>(),
-    accepted = new Set<string>();
+    events = new Set<string>();
   const noticeAt = new Date(Date.now() - 17 * DAY),
     releaseAt = new Date(Date.now() - 9 * DAY);
   return queryFixtureDatabase(context.db, {
     query: {
+      ...elapsedInterestNoticeQueries(events, noticeAt),
       mediaRequest: {
         async update({ args, query }) {
           if (args.data.interestReleasedAt instanceof Date) {
@@ -300,38 +300,6 @@ function elapsedInterestPolicy(
           if (selected && args.data.kind === "interest_check")
             events.add(z.uuid().parse(row.id));
           return row;
-        },
-      },
-      notificationDelivery: {
-        async create({ args, query }) {
-          const selected =
-            args.data.eventId !== undefined && events.has(args.data.eventId);
-          if (selected) args.data.createdAt = new Date(noticeAt.getTime() + 1);
-          const row = await query(args);
-          if (selected) deliveries.add(z.uuid().parse(row.id));
-          return row;
-        },
-        async update({ args, query }) {
-          const id = args.where.id ?? "";
-          if (
-            deliveries.has(id) &&
-            !accepted.has(id) &&
-            args.data.acceptedAt instanceof Date
-          ) {
-            args.data.acceptedAt = new Date(noticeAt.getTime() + 3);
-            accepted.add(id);
-          }
-          return query(args);
-        },
-      },
-      notificationDeliveryAttempt: {
-        async create({ args, query }) {
-          if (
-            args.data.deliveryId !== undefined &&
-            deliveries.has(args.data.deliveryId)
-          )
-            args.data.startedAt = new Date(noticeAt.getTime() + 2);
-          return query(args);
         },
       },
     },

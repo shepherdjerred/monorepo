@@ -1,9 +1,13 @@
-import { afterEach, beforeAll, expect, test } from "vitest";
+import { expect, test } from "vitest";
 import { access, readFile, rm } from "node:fs/promises";
 import path from "node:path";
 import { automationTestHarness } from "#testing/automation.ts";
 import { mappedPublicationFixture } from "#automation/publication-proof/test-fixture.ts";
 import { sharedTvFileFixture } from "#automation/native-archive/fixtures/shared-tv.ts";
+import {
+  retentionMovieFixtures,
+  acceptedFixtureMovieWarning,
+} from "#testing/retention/movie-fixtures.ts";
 import { seedFixtureReleasedEpisodes } from "#testing/retention-interest.ts";
 import { preparePhysicalPublication } from "#automation/plex-binding/test-fixture.ts";
 import { prepareBoundRetention } from "#automation/retention/lifecycle.test-fixture.ts";
@@ -11,7 +15,6 @@ import { elapsedQuarantineClient } from "#automation/files/plex-binding/elapsed-
 import { createMediaFileActivities } from "#automation/files/activities.ts";
 import { RemovalPlanSchema } from "#automation/files/types.ts";
 import { createMovieRetentionFixture } from "#testing/movie-workflow/retention-fixture.ts";
-import { movieVideoFixture } from "#testing/movie-video.ts";
 import { testPublicationExecution } from "#testing/publication-execution.ts";
 import { testPlexBindingExecution } from "#testing/plex-binding-execution.ts";
 import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
@@ -23,14 +26,8 @@ import { householdRetentionState } from "./protection.ts";
 import type { InitialInterestScenario } from "./quarantine-release.test-fixture.ts";
 
 const h = automationTestHarness();
-const closers: (() => Promise<void>)[] = [];
-let bytes: Uint8Array;
-beforeAll(async () => {
-  bytes = await movieVideoFixture();
-});
-afterEach(async () => {
-  for (const close of closers.splice(0)) await close();
-});
+const movies = retentionMovieFixtures();
+const closers = movies.closers;
 
 async function ordinary(scenario: InitialInterestScenario, shared = false) {
   const db = h.database();
@@ -188,25 +185,20 @@ test.each(["lost_interest", "finished_manually", "dropped_manually"] as const)(
   async (scenario) => {
     const f = await createMovieRetentionFixture(
       "directors_cut",
-      bytes,
+      movies.bytes(),
       true,
       scenario,
     );
     closers.push(f.close);
-    expect(await f.warning()).toMatchObject({ status: "warning" });
-    await f.deliverWarning();
-    const due = await f.evaluate();
-    if (
-      due.status !== "quarantine" ||
-      due.decisionId === null ||
-      f.context.now === undefined
-    )
-      throw new Error("Native named quarantine prerequisite failed");
+    const { due, now } = await acceptedFixtureMovieWarning(
+      f,
+      "Native named quarantine prerequisite failed",
+    );
     const execution = testPublicationExecution();
     await quarantineMovieFilesV4(
       {
         ...f.source.files.context,
-        now: f.context.now,
+        now,
         publicationExecution: () => execution,
         movieManagement: {
           execution,
