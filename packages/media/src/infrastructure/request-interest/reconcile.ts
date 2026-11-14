@@ -98,28 +98,12 @@ export async function reconcileRequestInterests(
         }
         if (await advanceProgress(tx, request, facts, now)) return;
         const acceptance = await noticeAcceptance(tx, request, now);
-        const evaluation = evaluateRequestInterest({
-          now: now.getTime(),
+        const evaluation = currentInterestEvaluation({
+          request,
+          facts,
+          acceptance,
           kind: initial.media.kind,
-          policy: request.keepingPolicy,
-          state: request.interestState,
-          revision: request.interestRevision,
-          renewedAt: request.interestRenewedAt.getTime(),
-          usableUnwatchedSince: request.usableUnwatchedSince?.getTime() ?? null,
-          lastProgressAt: request.lastMeaningfulProgressAt?.getTime() ?? null,
-          usableUnwatched: facts.usableUnwatched,
-          watchedComplete: facts.watchedComplete,
-          requestedCoverageComplete: facts.requestedCoverageComplete,
-          terminalStatus: facts.terminalStatus,
-          terminalObservedAt: facts.terminalObservedAt,
-          notice:
-            request.interestNoticeEventId === null
-              ? null
-              : {
-                  revision: request.interestNoticeRevision ?? -1,
-                  acceptedAt: acceptance?.getTime() ?? null,
-                  failed: acceptance === null,
-                },
+          now,
         });
         await applyEvaluation(tx, {
           request,
@@ -136,6 +120,41 @@ export async function reconcileRequestInterests(
     processed: requests.length,
     nextCursor: requests.at(-1)?.id ?? null,
   };
+}
+
+function currentInterestEvaluation(input: {
+  request: MediaRequest;
+  facts: Awaited<ReturnType<typeof nativeInterestFacts>>;
+  acceptance: Date | null;
+  kind: MediaKind;
+  now: Date;
+}) {
+  const { request, facts, acceptance, kind, now } = input;
+  return evaluateRequestInterest({
+    now: now.getTime(),
+    kind,
+    policy: request.keepingPolicy,
+    state: request.interestState,
+    revision: request.interestRevision,
+    renewedAt: request.interestRenewedAt.getTime(),
+    completionRequiredAfter: request.completionRequiredAfter?.getTime() ?? null,
+    completionComplete: facts.completionComplete,
+    usableUnwatchedSince: request.usableUnwatchedSince?.getTime() ?? null,
+    lastProgressAt: request.lastMeaningfulProgressAt?.getTime() ?? null,
+    usableUnwatched: facts.usableUnwatched,
+    watchedComplete: facts.watchedComplete,
+    requestedCoverageComplete: facts.requestedCoverageComplete,
+    terminalStatus: facts.terminalStatus,
+    terminalObservedAt: facts.terminalObservedAt,
+    notice:
+      request.interestNoticeEventId === null
+        ? null
+        : {
+            revision: request.interestNoticeRevision ?? -1,
+            acceptedAt: acceptance?.getTime() ?? null,
+            failed: acceptance === null,
+          },
+  });
 }
 
 async function advanceProgress(

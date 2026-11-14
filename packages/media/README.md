@@ -25,6 +25,15 @@ catching up on an ongoing series keeps the subscription. Whole-show protection
 is checked through the ancestor chain before file effects. Finished and Drop
 retain request history while stopping future acquisition authority.
 
+Restarting a request that finished automatically after a watched movie or completed
+series starts a fresh viewing cycle. Existing Plex watched flags, early progress
+and history cannot finish that new cycle: each required movie or episode needs a
+new native completion bound to the current person and media identities. Unknown
+or rebound identities protect the request. Ordinary Keep watching resumes an
+unfinished cycle and retains completed-episode credit. Re-requesting after manual
+Finished, Drop, expiry or cancellation also preserves that cycle. Normal 30/60-day
+inactivity clocks and private-notice rules still apply from the renewed interest.
+
 Inactivity clocks advance only when proven usable, unwatched content is
 available: 30 days before starting, or 60 days without further meaningful
 progress. A private interest reminder provides seven days to reply. Its exact
@@ -1743,14 +1752,35 @@ fields remain the compatibility envelope; they do not override the resolved
 rules. Profile versions preserve the captured snapshot. Unknown rules,
 original-language evidence, or required release metadata protect the candidate.
 
-The production matcher invokes the self-contained
-`/opt/media-regex/RegexOracle` executable on Node or Bun. It uses .NET 10.0.11,
+The production matcher invokes the self-contained `RegexOracle` executable from
+`PATH` on Node or Bun. The image links `/usr/local/bin/RegexOracle` to the packaged
+`/opt/media-regex/RegexOracle` binary. It uses .NET 10.0.11,
 explicit `en-US` culture, a 25 ms regex deadline and a 60 second process deadline.
 The production image excludes the .NET SDK. Input and output are bounded and
 validated through a Node child-process protocol. Matching happens before database
 locks; final guards use only exact pattern/input observations. New predicates
 without observations protect until evidence is refreshed. Acquisition-referenced
 candidate evidence stays immutable.
+
+Native verification requires that same self-contained matcher on `PATH`; a
+missing executable fails the check. From the repository root, publish with the
+pinned SDK and runtime, retaining the entire output directory beside its binary:
+
+```sh
+MEDIA_REGEX_CACHE="${XDG_CACHE_HOME:-$HOME/.cache}/media-regex"
+mise exec -- dotnet publish packages/media/scripts/regex-oracle/RegexOracle.csproj \
+  --configuration Release --runtime osx-arm64 --self-contained true \
+  --artifacts-path "$MEDIA_REGEX_CACHE/build" --output "$MEDIA_REGEX_CACHE/publish"
+mkdir -p "$HOME/.local/bin"
+ln -s "$MEDIA_REGEX_CACHE/publish/RegexOracle" "$HOME/.local/bin/RegexOracle"
+```
+
+Use the native runtime identifier (`osx-arm64`, `osx-x64`, `linux-arm64`, or
+`linux-x64`) and an existing writable executable directory on your `PATH`.
+The example assumes `$HOME/.local/bin` is on it; the link command refuses an
+existing entry. The repository SDK pin and
+[`RegexOracle.csproj`](scripts/regex-oracle/RegexOracle.csproj) runtime pin match
+the image; no regex implementation is substituted for local checks.
 
 The source parser supports a verified scene-name subset and captured Sonarr
 anime forms with bracketed groups, absolute numbering, checksums, explicit

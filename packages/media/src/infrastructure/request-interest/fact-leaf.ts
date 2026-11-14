@@ -9,12 +9,15 @@ import { subtitleAccepted } from "#domain/subtitle-quality.ts";
 import { PlexAssociationSchema } from "#shared/plex-binding/contract.ts";
 import { parsePlexRecord } from "#infrastructure/plex-binding/records.ts";
 import type { requestLeaves } from "./fact-scope.ts";
+import { completionAfterFence } from "#domain/household/completion.ts";
 
 type Leaf = Awaited<ReturnType<typeof requestLeaves>>[number];
 export type LeafObservation = {
   state:
     "unknown" | "unavailable" | "watched" | "unwatched" | "subtitles_pending";
   ratingKey: string | null;
+  completionCurrent: boolean;
+  usable: boolean | null;
 };
 
 export async function observeInterestLeaf(
@@ -34,14 +37,40 @@ export async function observeInterestLeaf(
     !assetUsable(asset, epoch) ||
     (leaf.kind === "episode" && (leaf.airDate === null || leaf.airDate > now))
   )
-    return { state: "unavailable", ratingKey: null };
+    return {
+      state: "unavailable",
+      ratingKey: null,
+      completionCurrent: false,
+      usable: false,
+    };
   const current = await leafWatch(tx, input);
-  if (current === null) return { state: "unknown", ratingKey: null };
-  if (current.watched)
-    return { state: "watched", ratingKey: current.ratingKey };
+  if (current === null)
+    return {
+      state: "unknown",
+      ratingKey: null,
+      completionCurrent: false,
+      usable: null,
+    };
+  const fence = input.request.completionRequiredAfter;
+  const completionCurrent =
+    (fence === null ||
+      completionAfterFence(current.completion, fence.getTime())) &&
+    current.watched;
+  if (fence === null && current.watched)
+    return {
+      state: "watched",
+      ratingKey: current.ratingKey,
+      completionCurrent,
+      usable: true,
+    };
   const originalLanguage = leaf.originalLanguage ?? input.originalLanguage;
   if (originalLanguage === null || asset === undefined)
-    return { state: "unknown", ratingKey: null };
+    return {
+      state: "unknown",
+      ratingKey: null,
+      completionCurrent: false,
+      usable: null,
+    };
   const needsEnglish = !["en", "eng"].includes(originalLanguage);
   const captions = asset.subtitles.some((subtitle) =>
     subtitleAccepted({
@@ -52,8 +81,14 @@ export async function observeInterestLeaf(
     }),
   );
   return {
-    state: needsEnglish && !captions ? "subtitles_pending" : "unwatched",
+    state: current.watched
+      ? "watched"
+      : needsEnglish && !captions
+        ? "subtitles_pending"
+        : "unwatched",
     ratingKey: current.ratingKey,
+    completionCurrent,
+    usable: !needsEnglish || captions,
   };
 }
 
@@ -102,7 +137,19 @@ async function leafWatch(
     authority,
   });
   return watched.status === "known"
-    ? { watched: watched.projection.watched, ratingKey: claim.ratingKey }
+    ? {
+        watched: watched.projection.watched,
+        ratingKey: claim.ratingKey,
+        completion:
+          watched.completion === null
+            ? null
+            : {
+                previousObservedAt:
+                  watched.completion.previousObservedAt.getTime(),
+                completedObservedAt:
+                  watched.completion.completedObservedAt.getTime(),
+              },
+      }
     : null;
 }
 

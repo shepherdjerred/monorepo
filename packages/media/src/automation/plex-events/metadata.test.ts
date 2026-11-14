@@ -1,7 +1,10 @@
 import { expect, test } from "vitest";
 import { associationFixture } from "#automation/publication/association/test-fixture.ts";
 import { verifyPlexAssociations } from "#automation/publication/association.ts";
-import { observeAssociatedWatch } from "./metadata.ts";
+import {
+  observeAssociatedWatch,
+  observeAssociatedWatchValue,
+} from "./metadata.ts";
 
 async function bound(kind: "movie" | "episode" = "movie") {
   const f = associationFixture(kind);
@@ -39,6 +42,27 @@ test.each([undefined, 0, 2])(
     ).toBe((viewCount ?? 0) > 0);
     expect(signals).toHaveLength(1);
     expect(signals[0]?.aborted).toBe(false);
+    expect(f.calls.map((url) => url.pathname)).toEqual([
+      `/library/metadata/${f.item.ratingKey}`,
+    ]);
+  },
+);
+
+test.each([undefined, 0, 3])(
+  "retains actual optional counter %s from the same validated response",
+  async (viewCount) => {
+    const f = await bound();
+    if (viewCount !== undefined) f.item.viewCount = viewCount;
+    expect(
+      await observeAssociatedWatchValue(
+        {
+          plex: f.createClient(),
+          execution: f.execution,
+          freshness: f.verified.freshness,
+        },
+        f.association,
+      ),
+    ).toEqual({ watched: (viewCount ?? 0) > 0, viewCount: viewCount ?? null });
     expect(f.calls.map((url) => url.pathname)).toEqual([
       `/library/metadata/${f.item.ratingKey}`,
     ]);

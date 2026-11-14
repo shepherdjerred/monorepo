@@ -3,7 +3,7 @@ import { IntegrationError } from "#integrations/http.ts";
 import type { WatchObservationOptions } from "./authority.ts";
 import type { PlexBindingExecution } from "#shared/plex-binding/activities.ts";
 import { plexBindingFreshness } from "#infrastructure/plex-binding/freshness.ts";
-import { observeAssociatedWatch } from "./metadata.ts";
+import { observeAssociatedWatchValue } from "./metadata.ts";
 import { prepareWatchBatch, type PreparedWatchBatch } from "./prepare.ts";
 import { finalizeWatchBatch, type WatchOutcome } from "./finalize.ts";
 import { assertWatchActive, watchCheckpoint } from "./execution.ts";
@@ -60,7 +60,7 @@ async function readRequester(
       )
         return unknown;
     }
-    const watched = await observeAssociatedWatch(
+    const watched = await observeAssociatedWatchValue(
       { plex: client, execution: active, freshness },
       batch.authority.binding.association,
     );
@@ -70,7 +70,7 @@ async function readRequester(
       userId: reader.userId,
       outcome: {
         kind: "observed",
-        watched,
+        ...watched,
         scopedAccess: reader.verifyAccess,
         freshness,
       },

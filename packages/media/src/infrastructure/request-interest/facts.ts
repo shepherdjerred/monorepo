@@ -28,6 +28,7 @@ export async function nativeInterestFacts(
   const unknown = {
     usableUnwatched: null,
     watchedComplete: null,
+    completionComplete: null,
     requestedCoverageComplete: false,
     progressAt: null,
     terminalStatus: "unknown",
@@ -66,21 +67,47 @@ export async function nativeInterestFacts(
         ),
       },
       source: "plex",
-      meaningfulProgressAt: { not: null, lte: now },
+      meaningfulProgressAt: cycleProgressWhere(request, now),
     },
     orderBy: { meaningfulProgressAt: "desc" },
     select: { meaningfulProgressAt: true },
   });
   return {
-    usableUnwatched: usableInterestBacklog(
-      observations.map((value) => value.state),
-    ),
-    watchedComplete: observations.every((value) => value.state === "watched"),
-    requestedCoverageComplete: observations.every(
-      (value) => value.state !== "unavailable",
-    ),
+    ...observedCoverageFacts(request, observations),
     progressAt: progress?.meaningfulProgressAt?.getTime() ?? null,
     terminalStatus: terminalStatus(series?.seriesStatus ?? null),
     terminalObservedAt: series?.seriesStatusObservedAt?.getTime() ?? null,
+  };
+}
+
+function cycleProgressWhere(request: MediaRequest, now: Date) {
+  return {
+    not: null,
+    lte: now,
+    ...(request.completionRequiredAfter === null
+      ? {}
+      : { gt: request.completionRequiredAfter }),
+  };
+}
+
+function observedCoverageFacts(
+  request: MediaRequest,
+  observations: readonly LeafObservation[],
+) {
+  return {
+    // Current watched truth remains unchanged. A renewed cycle can still have
+    // usable rewatch content while its old watched counter proves no new finish.
+    usableUnwatched:
+      request.completionRequiredAfter === null
+        ? usableInterestBacklog(observations.map((value) => value.state))
+        : observations.every((value) => value.usable === true) &&
+          observations.some((value) => !value.completionCurrent),
+    watchedComplete: observations.every((value) => value.state === "watched"),
+    completionComplete: observations.every((value) => value.completionCurrent),
+    requestedCoverageComplete: observations.every(
+      (value) =>
+        value.state !== "unavailable" &&
+        (request.completionRequiredAfter === null || value.usable === true),
+    ),
   };
 }

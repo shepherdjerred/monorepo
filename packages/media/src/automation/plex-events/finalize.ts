@@ -1,4 +1,8 @@
-import { Prisma, type WatchState } from "#generated/prisma/client.ts";
+import {
+  Prisma,
+  type WatchState,
+  type PlexWatchProjection,
+} from "#generated/prisma/client.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
 import { queueOperation, serializable } from "#automation/store.ts";
 import { RETENTION_DEFAULTS } from "#domain/retention.ts";
@@ -18,7 +22,6 @@ import {
 import { releasedWatchMayKeepWarning } from "./released-interest.ts";
 import { quarantinedReleaseObservationOnly } from "#infrastructure/request-interest/quarantine-release.ts";
 import type { BoundWatchAuthority } from "#shared/plex-binding/watch.ts";
-import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import {
   watchAwait,
   assertWatchActive,
@@ -31,6 +34,8 @@ export type WatchOutcome = {
     | {
         kind: "observed";
         watched: boolean;
+        /** Boolean-only historical callers supply no fresh counter evidence. */
+        viewCount?: number | null;
         scopedAccess: boolean;
         freshness: PlexBindingFreshness;
       }
@@ -207,7 +212,6 @@ async function applyOutcome(
   const original = prepared.authority.binding;
   if (original === null)
     throw new Error("Prepared watch omitted its immutable association");
-  const key = { userId: result.userId, mediaId: prepared.mediaId, edition };
   if (result.outcome.kind === "unknown") {
     await watchAwait(
       execution,
@@ -226,29 +230,7 @@ async function applyOutcome(
     );
     return;
   }
-  const prior = await watchAwait(
-    execution,
-    tx.watchState.findUnique({ where: { userId_mediaId_edition: key } }),
-  );
-  const stableReleasedUnwatched =
-    original.authority.purpose === "current_serving" &&
-    !result.outcome.watched &&
-    prior?.watched === false &&
-    releasedWatchMayKeepWarning(input.authority, result.userId, new Date()) &&
-    (await watchAwait(
-      execution,
-      priorCurrentUnwatched(
-        tx,
-        {
-          key,
-          prior,
-          authority: original.authority,
-          settledRevision: input.settledRevision,
-        },
-        prepared.authority.scope.budget,
-      ),
-    ));
-  await watchAwait(
+  const committed = await watchAwait(
     execution,
     commitBoundWatch(
       tx,
@@ -258,11 +240,24 @@ async function applyOutcome(
         watchBatchRevision: prepared.revision,
         observedAt: prepared.startedAt,
         watched: result.outcome.watched,
+        viewCount: result.outcome.viewCount ?? null,
       },
       result.outcome.freshness,
       prepared.authority.scope.budget,
     ),
   );
+  const prior = committed.previousWatchState;
+  const stableReleasedUnwatched =
+    original.authority.purpose === "current_serving" &&
+    !result.outcome.watched &&
+    prior?.watched === false &&
+    releasedWatchMayKeepWarning(input.authority, result.userId, new Date()) &&
+    priorCurrentUnwatched({
+      prior,
+      projection: committed.previousProjection,
+      authority: original.authority,
+      settledRevision: input.settledRevision,
+    });
   if (result.outcome.watched) return;
   if (original.authority.purpose === "quarantined") {
     if (
@@ -371,16 +366,12 @@ function assertExpectedQuarantineObservation(
 /** The current physical binding was already revalidated under this scope lock.
  * Verify the prior settled native projection against that exact binding without
  * traversing physical ancestry a second time for every participant. */
-async function priorCurrentUnwatched(
-  tx: Prisma.TransactionClient,
-  input: {
-    key: { userId: string; mediaId: string; edition: string };
-    prior: WatchState;
-    authority: BoundWatchAuthority;
-    settledRevision: bigint;
-  },
-  budget?: PublicationAuthorityReadBudget,
-) {
+function priorCurrentUnwatched(input: {
+  prior: WatchState;
+  projection: PlexWatchProjection | null;
+  authority: BoundWatchAuthority;
+  settledRevision: bigint;
+}) {
   if (
     input.prior.source !== "plex_current" ||
     input.prior.watched ||
@@ -389,10 +380,7 @@ async function priorCurrentUnwatched(
       RETENTION_DEFAULTS.maximumWatchAgeMs
   )
     return false;
-  budget?.consume(1);
-  const projection = await tx.plexWatchProjection.findUnique({
-    where: { userId_mediaId_edition: input.key },
-  });
+  const projection = input.projection;
   if (projection === null) return false;
   const stored = parseWatchProjectionAuthority(projection);
   return (

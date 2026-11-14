@@ -14,7 +14,7 @@ import {
   type LibraryKeepingCommand,
   InterestCheckNoticeSchema,
 } from "#shared/household/interests.ts";
-import { renewedInterest } from "./policy.ts";
+import { renewedInterest, renewedCompletionFence } from "./policy.ts";
 import { MovieEditionKeySchema } from "#shared/movie-editions/registry.ts";
 import { continuedRequestRestore } from "./continue-restore.ts";
 import type {
@@ -209,7 +209,12 @@ export class RequestInterestCommands extends MediaCommandBase {
       );
     const changed = await tx.mediaRequest.update({
       where: { id: request.id },
-      data: changedInterestData(input.action, now),
+      data: {
+        ...changedInterestData(input.action, now),
+        ...(input.action === "continue"
+          ? renewedCompletionFence(request, now)
+          : {}),
+      },
     });
     const target = await tx.mediaIntent.findUniqueOrThrow({
       where: {

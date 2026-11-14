@@ -20,6 +20,7 @@ import type { PublicationAuthorityReadBudget } from "#infrastructure/publication
 import {
   requestKeepingPolicy,
   renewedInterest,
+  renewedCompletionFence,
 } from "#infrastructure/request-interest/policy.ts";
 
 export async function chooseMovieEdition(
@@ -134,6 +135,7 @@ export async function chooseMovieEdition(
       authority: movieChoiceAudit(subject, access),
     },
   });
+  const interest = renewedInterest(new Date());
   const request = await tx.mediaRequest.update({
     where: { id: base.id },
     data: {
@@ -142,7 +144,8 @@ export async function chooseMovieEdition(
       excluded: false,
       coverageCompletedAt: null,
       subtitleLanguages: input.options.subtitleLanguages,
-      ...renewedInterest(new Date()),
+      ...interest,
+      ...renewedCompletionFence(prior, interest.interestRenewedAt),
       keepingPolicy,
       interestRevision: { increment: 1 },
       movieEditionChoiceId: choice.id,

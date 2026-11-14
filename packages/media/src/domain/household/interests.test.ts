@@ -24,6 +24,135 @@ const base: InterestFacts = {
   terminalObservedAt: null,
   notice: null,
 };
+describe("renewed household interest", () => {
+  it("Continue protects old watched truth and early rewatch progress until fresh completion", () => {
+    const renewed = {
+      ...base,
+      renewedAt: 10 * day,
+      completionRequiredAfter: 10 * day,
+      usableUnwatchedSince: 10 * day,
+      watchedComplete: true,
+      completionComplete: false,
+    };
+    expect(
+      evaluateRequestInterest({ ...renewed, now: 11 * day }),
+    ).toMatchObject({ state: "following" });
+    expect(
+      evaluateRequestInterest({
+        ...renewed,
+        now: 11 * day,
+        lastProgressAt: 10.5 * day,
+      }),
+    ).toMatchObject({ state: "following" });
+    expect(
+      evaluateRequestInterest({
+        ...renewed,
+        now: 11 * day,
+        completionComplete: true,
+      }),
+    ).toEqual({
+      state: "release",
+      reason: "watched",
+      stateAfter: "finished",
+    });
+  });
+  it("a renewed watched backlog still uses actual 30/60-day cycle progress and accepted seven-day notices", () => {
+    const renewed = {
+      ...base,
+      renewedAt: 10 * day,
+      completionRequiredAfter: 10 * day,
+      usableUnwatchedSince: 10 * day,
+      watchedComplete: true,
+      completionComplete: false,
+    };
+    expect(
+      evaluateRequestInterest({
+        ...renewed,
+        now: 41 * day,
+        lastProgressAt: 9 * day,
+      }),
+    ).toMatchObject({ state: "notice_pending" });
+    expect(
+      evaluateRequestInterest({
+        ...renewed,
+        now: 79 * day,
+        lastProgressAt: 20 * day,
+      }),
+    ).toMatchObject({ state: "following" });
+    expect(
+      evaluateRequestInterest({
+        ...renewed,
+        now: 80 * day,
+        lastProgressAt: 20 * day,
+      }),
+    ).toMatchObject({ state: "notice_pending" });
+    expect(
+      evaluateRequestInterest({
+        ...renewed,
+        now: 46 * day,
+        notice: { revision: 3, acceptedAt: 40 * day, failed: false },
+      }),
+    ).toMatchObject({ state: "reply_pending" });
+    expect(
+      evaluateRequestInterest({
+        ...renewed,
+        now: 47 * day,
+        notice: { revision: 3, acceptedAt: 40 * day, failed: false },
+      }),
+    ).toEqual({
+      state: "release",
+      reason: "lost_interest",
+      stateAfter: "expired",
+    });
+    expect(
+      evaluateRequestInterest({
+        ...renewed,
+        now: 47 * day,
+        notice: { revision: 2, acceptedAt: 40 * day, failed: false },
+      }),
+    ).toMatchObject({ state: "notice_pending" });
+  });
+  it("renewed completion still needs every usable requested leaf, fresh terminal metadata and current consent", () => {
+    const renewed = {
+      ...base,
+      now: 11 * day,
+      renewedAt: 10 * day,
+      completionRequiredAfter: 10 * day,
+      usableUnwatchedSince: 10 * day,
+      kind: "series" as const,
+      watchedComplete: true,
+      completionComplete: true,
+      terminalStatus: "ended" as const,
+      terminalObservedAt: 11 * day,
+    };
+    expect(evaluateRequestInterest(renewed)).toMatchObject({
+      state: "release",
+      reason: "series_finished",
+    });
+    expect(
+      evaluateRequestInterest({ ...renewed, completionComplete: false }),
+    ).toMatchObject({ state: "following" });
+    expect(
+      evaluateRequestInterest({
+        ...renewed,
+        requestedCoverageComplete: false,
+        usableUnwatched: false,
+      }),
+    ).toMatchObject({ state: "protected" });
+    expect(
+      evaluateRequestInterest({ ...renewed, terminalStatus: "unknown" }),
+    ).toMatchObject({ state: "protected", reason: "caught_up_following" });
+    expect(
+      evaluateRequestInterest({ ...renewed, policy: "keep" }),
+    ).toMatchObject({ state: "protected", reason: "keep_indefinitely" });
+    expect(
+      evaluateRequestInterest({ ...renewed, state: "dropped" }),
+    ).toMatchObject({
+      state: "protected",
+      reason: "interest_already_released",
+    });
+  });
+});
 describe("temporary household interest", () => {
   it("keeps explicitly permanent media regardless of watched status", () => {
     expect(

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { NativeCompletionWindowSchema } from "./completion.ts";
 import { PublicationHashSchema as Hash } from "#shared/publication-proof/effects.ts";
 import { MovieEditionScopeSchema } from "#shared/movie-editions/registry.ts";
 import {
@@ -165,7 +166,11 @@ export type QuarantinePlexRefV2 = z.infer<typeof QuarantinePlexRefV2Schema>;
 export type BoundWatchAuthority = z.infer<typeof BoundWatchAuthoritySchema>;
 export type PlexWatchProjectionV1 = z.infer<typeof PlexWatchProjectionV1Schema>;
 export type BoundWatchRead =
-  | { status: "known"; projection: PlexWatchProjectionV1 }
+  | {
+      status: "known";
+      projection: PlexWatchProjectionV1;
+      completion: z.infer<typeof NativeCompletionWindowSchema> | null;
+    }
   | {
       status: "unknown";
       reason: "missing" | "stale" | "authority_changed" | "value_changed";

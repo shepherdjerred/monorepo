@@ -1,5 +1,21 @@
 import { MediaError } from "#application/errors.ts";
 import type { MediaActor } from "#application/auth.ts";
+import type { MediaRequest } from "#generated/prisma/client.ts";
+
+/** Only a native completed cycle starts a rewatch. Personal stops and unfinished
+ * renewals retain their cycle's credit, including a partially completed rewatch. */
+export function renewedCompletionFence(
+  prior: Pick<
+    MediaRequest,
+    "interestReleaseReason" | "completionRequiredAfter"
+  > | null,
+  now: Date,
+) {
+  return prior !== null &&
+    ["watched", "series_finished"].includes(prior.interestReleaseReason ?? "")
+    ? { completionRequiredAfter: now }
+    : {};
+}
 
 export function requestKeepingPolicy(
   actor: MediaActor,

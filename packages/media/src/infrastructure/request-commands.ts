@@ -27,6 +27,7 @@ import { queueMediaSubtitleTargets } from "#automation/subtitles/queue.ts";
 import {
   requestKeepingPolicy,
   renewedInterest,
+  renewedCompletionFence,
   preservedClaimKeep,
 } from "./request-interest/policy.ts";
 
@@ -115,6 +116,7 @@ export class MediaRequestCommands extends MediaCommandBase {
       update: {
         ...options,
         ...interest,
+        ...renewedCompletionFence(previousRequest, interest.interestRenewedAt),
         keepingPolicy,
         interestRevision: { increment: 1 },
         direct: true,

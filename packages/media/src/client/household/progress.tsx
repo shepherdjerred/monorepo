@@ -51,6 +51,8 @@ export function RequestInterestProgress({
       "Some titles are waiting for the English captions needed to watch them.",
     requested_content_unavailable:
       "Some requested content has not aired or is not available yet.",
+    pending_native_completion:
+      "Following again until you finish watching or choose Finished.",
   };
   return (
     <details
@@ -73,7 +75,7 @@ export function RequestInterestProgress({
                     ["Requested", data.counts.requested],
                     ["Aired / released", data.counts.released],
                     ["Available to watch", data.counts.available],
-                    ["Watched", data.counts.watched],
+                    ["Watched in Plex", data.counts.watched],
                     [
                       "Waiting for required captions",
                       data.counts.captionsPending,

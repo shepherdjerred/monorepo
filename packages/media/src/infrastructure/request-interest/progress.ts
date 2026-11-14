@@ -94,13 +94,17 @@ async function readProgress(
   if (observations.some((value) => value.state === "unknown"))
     return result("unknown", "current_playback_or_caption_authority_unknown");
   counts.available = observations.filter(
-    (value) => value.state === "watched" || value.state === "unwatched",
+    (value) =>
+      (value.state === "watched" || value.state === "unwatched") &&
+      (request.completionRequiredAfter === null || value.usable === true),
   ).length;
   counts.watched = observations.filter(
     (value) => value.state === "watched",
   ).length;
   counts.captionsPending = observations.filter(
-    (value) => value.state === "subtitles_pending",
+    (value) =>
+      value.state === "subtitles_pending" ||
+      (value.state === "watched" && value.usable === false),
   ).length;
   const disposition = progressDisposition({
     ...observationInput,
@@ -191,32 +195,56 @@ function progressDisposition(input: {
   const container =
     request.media.kind === "series" || request.media.kind === "season";
   const status = currentSeriesStatus(series, now);
+  const currentCycle = (value: LeafObservation) =>
+    value.state === "watched" &&
+    (request.completionRequiredAfter === null ||
+      (value.completionCurrent && value.usable === true));
   if (
     container &&
     status === "continuing" &&
-    caughtUp(leaves, observations, now)
+    caughtUp(leaves, observations, now, currentCycle)
   )
     return { status: "caught_up", reason: "following_future_episodes" };
-  if (observations.every((value) => value.state === "watched")) {
+  if (observations.every((value) => currentCycle(value))) {
     return container && status === "unknown"
       ? { status: "unknown", reason: "series_status_not_current" }
       : { status: "complete", reason: null };
   }
-  return { status: "following", reason: pendingReason(observations) };
+  return {
+    status: "following",
+    reason:
+      pendingReason(observations) ??
+      (request.completionRequiredAfter !== null &&
+      observations.some((value) => !value.completionCurrent)
+        ? "pending_native_completion"
+        : null),
+  };
 }
 
-function caughtUp(leaves: Leaves, observations: LeafObservation[], now: Date) {
+function caughtUp(
+  leaves: Leaves,
+  observations: LeafObservation[],
+  now: Date,
+  complete: (value: LeafObservation) => boolean,
+) {
   if (leaves.some((leaf) => leaf.airDate === null)) return false;
   const released = leaves.flatMap((leaf, index) =>
     leaf.airDate !== null && leaf.airDate <= now ? [observations[index]] : [],
   );
   return (
-    released.length > 0 && released.every((value) => value?.state === "watched")
+    released.length > 0 &&
+    released.every((value) => value !== undefined && complete(value))
   );
 }
 
 function pendingReason(observations: LeafObservation[]) {
-  if (observations.some((value) => value.state === "subtitles_pending"))
+  if (
+    observations.some(
+      (value) =>
+        value.state === "subtitles_pending" ||
+        (value.state === "watched" && value.usable === false),
+    )
+  )
     return "required_english_captions_pending";
   return observations.some((value) => value.state === "unavailable")
     ? "requested_content_unavailable"

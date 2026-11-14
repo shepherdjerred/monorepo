@@ -12,6 +12,9 @@ export type InterestFacts = {
   state: "following" | "finished" | "dropped" | "expired";
   revision: number;
   renewedAt: number;
+  /** NULL/absent is the original initial/imported-request policy. */
+  completionRequiredAfter?: number | null;
+  completionComplete?: boolean | null;
   usableUnwatchedSince: number | null;
   lastProgressAt: number | null;
   usableUnwatched: boolean | null;
@@ -55,7 +58,11 @@ export function evaluateRequestInterest(
     return protect("interest_clock_invalid");
   if (input.watchedComplete === null || input.usableUnwatched === null)
     return protect("playback_or_access_unknown", true);
-  if (input.watchedComplete && input.requestedCoverageComplete)
+  if (
+    input.watchedComplete &&
+    input.requestedCoverageComplete &&
+    cycleCompleted(input)
+  )
     return completedInterest(input);
   if (!input.usableUnwatched)
     return protect("no_usable_unwatched_content", true);
@@ -68,13 +75,26 @@ export function evaluateRequestInterest(
     input.renewedAt,
     input.lastProgressAt ?? 0,
   );
-  const delay =
-    input.lastProgressAt === null
-      ? INTEREST_POLICY.neverStartedMs
-      : INTEREST_POLICY.lostInterestMs;
+  const delay = currentCycleProgress(input)
+    ? INTEREST_POLICY.lostInterestMs
+    : INTEREST_POLICY.neverStartedMs;
   return input.now - baseline < delay
     ? { state: "following", usableSince }
     : evaluateReply(input, usableSince, baseline, delay);
+}
+
+function cycleCompleted(input: InterestFacts) {
+  return (
+    input.completionRequiredAfter == null || input.completionComplete === true
+  );
+}
+
+function currentCycleProgress(input: InterestFacts) {
+  return (
+    input.lastProgressAt !== null &&
+    (input.completionRequiredAfter == null ||
+      input.lastProgressAt > input.completionRequiredAfter)
+  );
 }
 
 /** Aging a following request requires every requested sibling to be usable;

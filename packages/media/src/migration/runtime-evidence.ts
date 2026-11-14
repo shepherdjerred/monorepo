@@ -91,7 +91,7 @@ function specificationRequests(
 export async function collectResolvedEvidence(
   profile: ResolvedProfile,
   evidence: ResolvedEvidence,
-  executable = "/opt/media-regex/RegexOracle",
+  executable = "RegexOracle",
 ): Promise<ResolvedEvidence> {
   const requests = regexRequests(profile, evidence.release);
   if (requests.length === 0 || evidence.protectedReasons.length > 0)

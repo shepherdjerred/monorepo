@@ -1,5 +1,9 @@
 import { z } from "zod";
-import type { PlexWatchProjection, Prisma } from "#generated/prisma/client.ts";
+import type {
+  PlexWatchProjection,
+  WatchState,
+  Prisma,
+} from "#generated/prisma/client.ts";
 import { RETENTION_DEFAULTS } from "#domain/retention.ts";
 import {
   BoundWatchAuthoritySchema,
@@ -21,6 +25,15 @@ import { effectiveRequestWhere } from "#infrastructure/request-claims.ts";
 import { queueOperation } from "#automation/store.ts";
 import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { queueMovieQuarantinedWatchRestore } from "#infrastructure/movie-editions/retention/quarantine-watch.ts";
+import { PlexViewCountSchema } from "#shared/plex-binding/completion.ts";
+import {
+  parseWatchProjectionAuthority as readProjectionAuthority,
+  readNativeCompletionWindow,
+  nextProjectionCompletion,
+} from "./completion/projection.ts";
+export function parseWatchProjectionAuthority(row: PlexWatchProjection) {
+  return readProjectionAuthority(row);
+}
 
 async function readImmutableWatchAssociation(
   tx: Prisma.TransactionClient,
@@ -94,25 +107,6 @@ async function assertBoundAuthority(
     if (identityHash(current.authority) !== identityHash(authority))
       throw new PlexBindingProtection("binding_changed");
   }
-}
-
-export function parseWatchProjectionAuthority(row: PlexWatchProjection) {
-  const stored = parsePlexRecord(
-    BoundWatchAuthoritySchema,
-    row.authority,
-    row.authorityHash,
-  );
-  if (
-    row.evidenceId !== stored.binding.evidenceId ||
-    row.associationHash !== stored.binding.associationHash ||
-    row.bindingRevision !== stored.binding.revision ||
-    row.purpose !== stored.purpose ||
-    row.mediaId !== stored.binding.scope.mediaId ||
-    row.edition !== stored.binding.scope.edition ||
-    row.source !== "plex"
-  )
-    throw new Error("Watch projection relational authority changed");
-  return stored;
 }
 
 /** Protective clearing preserves immutable integrity without requiring still-positive authority. */
@@ -197,7 +191,11 @@ export async function readCurrentBoundWatch(
     watched: row.watched,
     source: "plex",
   });
-  return { status: "known", projection };
+  return {
+    status: "known",
+    projection,
+    completion: readNativeCompletionWindow(row),
+  };
 }
 
 /** Called inside the existing issued/settled whole-cohort transaction; never acquires another root. */
@@ -209,10 +207,15 @@ export async function commitBoundWatch(
     watchBatchRevision: bigint;
     observedAt: Date;
     watched: boolean | null;
+    /** Historical boolean-only callers retain unknown completion authority. */
+    viewCount?: number | null;
   },
   freshness: PlexBindingFreshness,
   budget?: PublicationAuthorityReadBudget,
-): Promise<void> {
+): Promise<{
+  previousProjection: PlexWatchProjection | null;
+  previousWatchState: WatchState | null;
+}> {
   freshness.assertActive();
   const authority = BoundWatchAuthoritySchema.parse(input.authority);
   const key = { userId: input.userId, ...authority.binding.scope };
@@ -242,19 +245,42 @@ export async function commitBoundWatch(
     await tx.plexWatchProjection.deleteMany({ where: key });
     freshness.assertActive();
     await tx.watchState.deleteMany({ where: key });
+    freshness.assertActive();
+    return { previousProjection: null, previousWatchState: null };
   } else {
+    budget?.consume(1);
+    const previousProjection = await tx.plexWatchProjection.findUnique({
+      where: { userId_mediaId_edition: key },
+    });
+    const previousWatchState = await tx.watchState.findUnique({
+      where: { userId_mediaId_edition: key },
+    });
+    const completion = nextProjectionCompletion({
+      previous:
+        previousProjection !== null &&
+        previousWatchState?.source === "plex_current" &&
+        previousWatchState.watched === previousProjection.watched &&
+        previousWatchState.observedAt.getTime() ===
+          previousProjection.observedAt.getTime()
+          ? previousProjection
+          : null,
+      authority,
+      settledRevision: fence.settledRevision,
+      observedAt: input.observedAt,
+      watched: input.watched,
+      viewCount:
+        input.viewCount == null
+          ? null
+          : PlexViewCountSchema.parse(input.viewCount),
+      now,
+    });
     const values = {
       watched: input.watched,
       observedAt: input.observedAt,
       source: "plex_current",
     };
-    await tx.watchState.upsert({
-      where: { userId_mediaId_edition: key },
-      create: { ...key, ...values },
-      update: values,
-    });
-    freshness.assertActive();
     const projection = {
+      ...completion,
       evidenceId: authority.binding.evidenceId,
       associationHash: authority.binding.associationHash,
       bindingRevision: authority.binding.revision,
@@ -271,8 +297,15 @@ export async function commitBoundWatch(
       create: { ...key, ...projection },
       update: projection,
     });
+    freshness.assertActive();
+    await tx.watchState.upsert({
+      where: { userId_mediaId_edition: key },
+      create: { ...key, ...values },
+      update: values,
+    });
+    freshness.assertActive();
+    return { previousProjection, previousWatchState };
   }
-  freshness.assertActive();
 }
 
 /** Caller holds the complete receipt asset/media cohort before identities, assets and watch fences. */

@@ -223,6 +223,9 @@ model PlexPathClaim {
 }
 
 model PlexWatchProjection {
+  viewCount Int?
+  completionPreviousObservedAt DateTime?
+  completionObservedAt DateTime?
   userId String
   user MediaUser @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: Restrict)
   mediaId String
@@ -575,6 +578,7 @@ model MediaItem {
 }
 
 model MediaRequest {
+  completionRequiredAfter DateTime?
   keepingPolicy KeepingPolicy @default(temporary)
   interestState RequestInterestState @default(following)
   interestRevision Int @default(0)
