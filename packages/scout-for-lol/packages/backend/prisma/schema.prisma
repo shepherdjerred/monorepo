@@ -671,6 +671,9 @@ model ScoutClientPairing {
   architecture    String
   appVersion      String
   protocolVersion Int
+  /// What the approver grants: `ingest`, plus `explore` for a `pairings/v2`
+  /// request. The exchanged device inherits exactly this list.
+  scopes          String[]  @default(["ingest"])
   state           String    @default("PENDING")
   expiresAt       DateTime
   approvedAt      DateTime?
@@ -698,6 +701,9 @@ model ScoutClientDevice {
   architecture    String
   appVersion      String
   protocolVersion Int
+  /// Copied from the approved pairing. A device paired before scopes existed
+  /// holds `ingest` only and must pair again to read Explore.
+  scopes          String[]  @default(["ingest"])
   deviceState     String    @default("ACTIVE")
   lastSeenAt      DateTime?
   revokedAt       DateTime?

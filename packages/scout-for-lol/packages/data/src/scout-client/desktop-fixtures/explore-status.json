@@ -1,0 +1,36 @@
+{
+  "route": "explore_status",
+  "request": {},
+  "response": {
+    "modelPickerEnabled": false,
+    "spending": {
+      "month": "2026-11",
+      "globalUsedMicros": 1250000,
+      "userUsedMicros": 42000,
+      "globalRemainingMicros": 98750000,
+      "userRemainingMicros": 1958000,
+      "resetsAt": "2026-12-01T00:00:00.000Z"
+    },
+    "quota": [
+      {
+        "scope": "user",
+        "window": "hour",
+        "used": 2,
+        "limit": 20,
+        "remaining": 18,
+        "resetsAt": "2026-11-14T13:00:00.000Z"
+      },
+      {
+        "scope": "global",
+        "window": "day",
+        "used": 140,
+        "limit": 2000,
+        "remaining": 1860,
+        "resetsAt": "2026-11-15T00:00:00.000Z"
+      }
+    ]
+  },
+  "invalidRequests": [
+    { "reason": "an unknown key", "body": { "verbose": true } }
+  ]
+}

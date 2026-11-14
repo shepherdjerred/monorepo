@@ -1,0 +1,18 @@
+{
+  "route": "explore_conversations_list",
+  "request": {},
+  "response": {
+    "conversations": [
+      {
+        "id": "0f4d6c1e-8a51-4c62-9a1e-3b7f2d9c5e10",
+        "title": "Who carries our ARAMs?",
+        "origin": "web",
+        "shareToken": null,
+        "sharedLeafId": null,
+        "createdAt": "2026-11-13T20:01:02.000Z",
+        "updatedAt": "2026-11-13T20:03:40.000Z"
+      }
+    ]
+  },
+  "invalidRequests": [{ "reason": "an unknown key", "body": { "limit": 10 } }]
+}

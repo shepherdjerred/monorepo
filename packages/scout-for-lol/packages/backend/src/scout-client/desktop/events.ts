@@ -1,40 +1,26 @@
 import { ScoutDesktopEventSchema } from "@scout-for-lol/data";
 import { getProductAnalytics } from "#src/analytics/product-analytics.ts";
 import type { AuthenticatedScoutClient } from "#src/scout-client/access/authentication.ts";
+import { deviceWindowLimiter } from "./rate-limit.ts";
 
 // The desktop client's product events (`SCOUT_DESKTOP_EVENTS_PATH`). The client
 // never talks to PostHog: it posts a closed, bounded event here as an
 // authenticated device, and the backend forwards it under the device owner's
 // privacy-scoped identity.
 
-const WINDOW_MS = 60_000;
 /** A client sends a handful of events per session; this is generous headroom. */
-const PER_DEVICE_LIMIT = 30;
-const MAX_TRACKED_DEVICES = 10_000;
-
-let windowStartedAt = Date.now();
-const callsByDevice = new Map<string, number>();
+const eventLimiter = deviceWindowLimiter(30);
 
 /** Fixed-window limit per device, so one client cannot flood analytics. */
 export function desktopEventAllowed(
   deviceId: string,
   now = Date.now(),
 ): boolean {
-  if (now - windowStartedAt >= WINDOW_MS) {
-    windowStartedAt = now;
-    callsByDevice.clear();
-  }
-  const calls = (callsByDevice.get(deviceId) ?? 0) + 1;
-  if (calls > PER_DEVICE_LIMIT) return false;
-  if (calls > 1 || callsByDevice.size < MAX_TRACKED_DEVICES) {
-    callsByDevice.set(deviceId, calls);
-  }
-  return true;
+  return eventLimiter.allow(deviceId, now);
 }
 
 export function resetDesktopEventLimitForTests(now = Date.now()): void {
-  windowStartedAt = now;
-  callsByDevice.clear();
+  eventLimiter.reset(now);
 }
 
 export type DesktopEventResult =

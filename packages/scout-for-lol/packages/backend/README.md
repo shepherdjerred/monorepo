@@ -872,6 +872,36 @@ an ordinary failed request and keep their outbox; current clients show the
 minimum version in their status. Check-in is refused before the device records
 the build, and a batch is judged by the build the device last checked in with.
 
+### Device scopes and the desktop Explore API
+
+A device credential holds the scopes its pairing asked for and its owner
+approved: `ingest` for every capture route, and `explore` to read Explore as
+the owner. `POST /api/scout-client/v1/pairings` still asks for `ingest` only
+and keeps its original response body. `POST /api/scout-client/v1/pairings/v2`
+asks for both and returns a match code derived from the pairing id; the
+approval page shows the same code beside the requested scopes, so an approver
+can tell a link someone else sent them from a request their own computer made.
+Devices paired before scopes existed hold `ingest` and pair again for Explore.
+
+`scout-client/desktop/` serves Explore to Scout Desktop as plain REST under
+`/api/scout-client/v1/explore/`: `status`, `conversations/list` and
+`conversations/get`, all `POST`. Each calls the function its tRPC procedure
+calls. These routes accept only a `Bearer sct_…` device token, never a cookie,
+and never pass through tRPC's `createContext`: a bearer path there would reach
+every `protectedProcedure`, including mutations that rely on the cookie
+session being the only credential. A request is checked in this order: the
+`X-Scout-Desktop-Contract` version (426 below the minimum), the device token
+(401), a per-device read limit (429), the `explore` scope (403
+`scope_required`), then `assertExploreAccess` for the owning user, where a
+failed Discord token refresh is 401 `reauthorize_required` and an outage is 503. Explore is not capture, so the `scout_client_ingestion` policy and its
+production hard-disable do not gate these routes.
+
+`data/src/scout-client/desktop-api.contract.json` is the language-neutral
+contract: versions, routes, scopes and error codes. Golden bodies in
+`desktop-fixtures/` are parsed by the Zod schemas and by the strict serde types
+in `scout-client-core/src/desktop_api.rs`. Bodies are strict in both
+directions, so a change adds a route rather than a field on an existing one.
+
 ### Raw observation archive
 
 Every persisted Scout Client observation is a durable S3 archive job, including

@@ -1,6 +1,8 @@
 import {
   SCOUT_CLIENT_MAX_BATCH_BYTES,
+  SCOUT_DESKTOP_API_ROUTES,
   SCOUT_DESKTOP_EVENTS_PATH,
+  SCOUT_DESKTOP_PAIRING_V2_SCOPES,
   ScoutClientCheckInSchema,
   ScoutClientCheckInResponseSchema,
   ScoutClientCreatePairingSchema,
@@ -8,6 +10,7 @@ import {
   ScoutClientPairingExchangeSchema,
   SCOUT_CLIENT_UPGRADE_REQUIRED_STATUS,
   type ScoutClientUpgradeRequired,
+  ScoutDesktopPairingV2ResponseSchema,
 } from "@scout-for-lol/data";
 import { z } from "zod";
 import { clientUpgradeRequired } from "./access/minimum-version.ts";
@@ -25,6 +28,8 @@ import {
 } from "./pairing.ts";
 import { pairingCreationAllowed } from "./pairing-rate-limit.ts";
 import { acceptDesktopEvent } from "./desktop/events.ts";
+import { contractRefusal, desktopErrorResponse } from "./desktop/contract.ts";
+import { handleDesktopExploreRoute } from "./desktop/explore-routes.ts";
 import {
   ingestObservationBatch,
   nextScoutClientObservationSequence,
@@ -119,25 +124,67 @@ async function boundedJson(request: Request): Promise<unknown> {
   }
 }
 
+function pairingRateLimited(): Response {
+  const response = jsonResponse({ error: "rate_limited" }, 429);
+  response.headers.set("Retry-After", "60");
+  return response;
+}
+
+/**
+ * The original pairing route: an `ingest` credential, and the response body
+ * every released client parses strictly, so it never gains a field.
+ */
+async function handleIngestPairing(request: Request): Promise<Response> {
+  if (!pairingCreationAllowed(request)) return pairingRateLimited();
+  const input = ScoutClientCreatePairingSchema.safeParse(
+    await boundedJson(request),
+  );
+  if (!input.success) return jsonResponse({ error: "invalid_request" }, 400);
+  const { pairingId, pairingSecret, approvalUrl, expiresAt } =
+    await createPairing(input.data satisfies PairingInput);
+  return jsonResponse(
+    { pairingId, pairingSecret, approvalUrl, expiresAt },
+    201,
+  );
+}
+
+/**
+ * A desktop pairing that asks its approver for `ingest` and `explore`, and
+ * returns the match code the approval page shows beside the request.
+ */
+async function handleDesktopPairing(request: Request): Promise<Response> {
+  const refusal = contractRefusal(request);
+  if (refusal !== null) return refusal;
+  if (!pairingCreationAllowed(request))
+    return desktopErrorResponse(
+      "rate_limited",
+      "Too many pairing requests. Try again in a minute.",
+    );
+  const input = ScoutClientCreatePairingSchema.safeParse(
+    await boundedJson(request),
+  );
+  if (!input.success)
+    return desktopErrorResponse(
+      "invalid_request",
+      "The pairing request is not valid.",
+    );
+  const pairing = await createPairing(
+    input.data satisfies PairingInput,
+    new Date(),
+    SCOUT_DESKTOP_PAIRING_V2_SCOPES,
+  );
+  return jsonResponse(ScoutDesktopPairingV2ResponseSchema.parse(pairing), 201);
+}
+
 async function handlePairingRoute(
   request: Request,
   pathname: string,
 ): Promise<Response | null> {
   if (pathname === `${API_PREFIX}/pairings`) {
-    if (!pairingCreationAllowed(request)) {
-      const response = jsonResponse({ error: "rate_limited" }, 429);
-      response.headers.set("Retry-After", "60");
-      return response;
-    }
-    const input = ScoutClientCreatePairingSchema.safeParse(
-      await boundedJson(request),
-    );
-    return input.success
-      ? jsonResponse(
-          await createPairing(input.data satisfies PairingInput),
-          201,
-        )
-      : jsonResponse({ error: "invalid_request" }, 400);
+    return await handleIngestPairing(request);
+  }
+  if (pathname === SCOUT_DESKTOP_API_ROUTES.pairings_v2.path) {
+    return await handleDesktopPairing(request);
   }
 
   const exchangeMatch = EXCHANGE_PATH.exec(pathname);
@@ -287,6 +334,13 @@ export async function handleScoutClientRoute(
   url: URL,
 ): Promise<Response | null> {
   if (!url.pathname.startsWith(API_PREFIX)) return null;
+  // Explore answers as the device's owner and is gated by the `explore` scope
+  // and Explore access, not by the capture kill switch below.
+  const desktopResponse = await handleDesktopExploreRoute(
+    request,
+    url.pathname,
+  );
+  if (desktopResponse !== null) return desktopResponse;
   const replayMatch = REPLAY_PATH.exec(url.pathname);
   // Decided from Flipt before any pairing, authentication or body read, so a
   // closed environment touches no database. Self-revocation stays open: a

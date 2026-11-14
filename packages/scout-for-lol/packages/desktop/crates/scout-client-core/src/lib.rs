@@ -2,6 +2,7 @@
 
 pub mod backend;
 pub mod credentials;
+pub mod desktop_api;
 pub mod diagnostics;
 pub mod lcu;
 pub mod outbox;

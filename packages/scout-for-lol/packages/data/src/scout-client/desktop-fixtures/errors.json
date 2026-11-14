@@ -1,0 +1,64 @@
+{
+  "errors": [
+    {
+      "status": 400,
+      "body": {
+        "error": "invalid_request",
+        "message": "The request body does not match this route."
+      }
+    },
+    {
+      "status": 401,
+      "body": {
+        "error": "unauthorized",
+        "message": "This device is not signed in."
+      }
+    },
+    {
+      "status": 401,
+      "body": {
+        "error": "reauthorize_required",
+        "message": "Your Discord login expired. Sign in to Scout on the web again."
+      }
+    },
+    {
+      "status": 403,
+      "body": {
+        "error": "scope_required",
+        "message": "Pair this device again to use Explore."
+      }
+    },
+    {
+      "status": 403,
+      "body": {
+        "error": "explore_forbidden",
+        "message": "Join a server that uses Scout to access Explore."
+      }
+    },
+    {
+      "status": 404,
+      "body": { "error": "not_found", "message": "Conversation not found." }
+    },
+    {
+      "status": 426,
+      "body": {
+        "error": "contract_unsupported",
+        "message": "Update Scout Desktop to keep using Explore."
+      }
+    },
+    {
+      "status": 429,
+      "body": {
+        "error": "rate_limited",
+        "message": "Too many requests from this device. Try again shortly."
+      }
+    },
+    {
+      "status": 503,
+      "body": {
+        "error": "unavailable",
+        "message": "Scout could not verify your servers. Try again shortly."
+      }
+    }
+  ]
+}

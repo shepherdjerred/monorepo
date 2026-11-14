@@ -11,6 +11,7 @@ import {
   ErrorState,
   LoadingState,
 } from "@scout-for-lol/design-system/domain/states";
+import type { ScoutDesktopScope } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/query/trpc.ts";
 
 type PairingSummary = {
@@ -18,7 +19,26 @@ type PairingSummary = {
   readonly platform: string;
   readonly architecture: string;
   readonly appVersion: string;
+  readonly scopes: readonly ScoutDesktopScope[];
+  /** Shown only for a request from a client that displays it too. */
+  readonly matchCode: string | null;
   readonly state: "PENDING" | "APPROVED" | "EXCHANGED" | "EXPIRED";
+};
+
+/** What approving each scope lets this computer do, in the approver's words. */
+const SCOPE_COPY: Record<
+  ScoutDesktopScope,
+  { readonly title: string; readonly detail: string }
+> = {
+  ingest: {
+    title: "Send your League games",
+    detail: "Upload the games this computer captures from the League client.",
+  },
+  explore: {
+    title: "Use Explore as you",
+    detail:
+      "Read your saved Explore conversations and ask Explore questions with your Discord account.",
+  },
 };
 
 export function ScoutClientPairingCard(props: {
@@ -40,6 +60,23 @@ export function ScoutClientPairingCard(props: {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-5">
+          {props.pairing.matchCode === null ? null : (
+            <div className="rounded-md border border-scout-border px-4 py-3 text-center">
+              <p className="text-xs font-medium uppercase tracking-wider text-scout-subtle">
+                Match code
+              </p>
+              <p
+                className="font-mono text-2xl font-semibold tracking-widest"
+                data-testid="pairing-match-code"
+              >
+                {props.pairing.matchCode}
+              </p>
+              <p className="text-xs text-scout-subtle">
+                Scout Client on your computer shows the same code. If it does
+                not, do not approve.
+              </p>
+            </div>
+          )}
           <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
             <dt className="text-scout-subtle">Device</dt>
             <dd>{props.pairing.deviceName}</dd>
@@ -50,6 +87,27 @@ export function ScoutClientPairingCard(props: {
             <dt className="text-scout-subtle">Client</dt>
             <dd>{props.pairing.appVersion}</dd>
           </dl>
+          <section
+            aria-labelledby="pairing-scopes-heading"
+            className="space-y-2"
+          >
+            <h2
+              id="pairing-scopes-heading"
+              className="text-sm font-semibold text-scout-ink"
+            >
+              This device will be able to
+            </h2>
+            <ul className="space-y-2 text-sm">
+              {props.pairing.scopes.map((scope) => (
+                <li key={scope}>
+                  <p className="font-medium">{SCOPE_COPY[scope].title}</p>
+                  <p className="text-scout-subtle">
+                    {SCOPE_COPY[scope].detail}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          </section>
           {props.approvalState === "error" && (
             <p className="text-sm text-scout-danger">
               Pairing could not be approved. Start a new request from Scout

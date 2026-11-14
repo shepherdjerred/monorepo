@@ -6,6 +6,8 @@ const pending = {
   platform: "windows",
   architecture: "x86_64",
   appVersion: "0.1.0",
+  scopes: ["ingest"],
+  matchCode: null,
   state: "PENDING",
 } as const;
 
@@ -27,6 +29,19 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Approval: Story = {};
+
+/** A `pairings/v2` request from Scout Desktop, asking for Explore too. */
+export const DesktopExploreApproval: Story = {
+  args: {
+    pairing: {
+      ...pending,
+      deviceName: "Scout Desktop on DESKTOP-7Q2",
+      appVersion: "0.4.0",
+      scopes: ["ingest", "explore"],
+      matchCode: "K7M-4QX",
+    },
+  },
+};
 
 export const Approving: Story = {
   args: { approvalState: "pending" },

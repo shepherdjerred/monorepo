@@ -136,6 +136,7 @@ function databaseWith(deviceOwner: string, playerGuilds: readonly string[]) {
       ownerId: deviceOwner,
       appVersion: "0.1.0",
       deviceState: "ACTIVE",
+      scopes: ["ingest"],
     }),
   );
   const findPlayers = vi.fn(() =>
@@ -278,6 +279,7 @@ test("a server-targeted rule enables the devices of every owner with a Player th
     deviceId: "00000000-0000-4000-8000-000000000001",
     ownerId: member,
     appVersion: "0.1.0",
+    scopes: ["ingest"],
   });
   expect(findPlayers).toHaveBeenCalledWith({
     where: { discordId: member },

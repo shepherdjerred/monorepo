@@ -1,0 +1,40 @@
+{
+  "contractVersion": 1,
+  "minimumContractVersion": 1,
+  "header": "X-Scout-Desktop-Contract",
+  "scopes": ["ingest", "explore"],
+  "pairingScopes": ["ingest", "explore"],
+  "routes": {
+    "pairings_v2": {
+      "method": "POST",
+      "path": "/api/scout-client/v1/pairings/v2",
+      "scope": null
+    },
+    "explore_status": {
+      "method": "POST",
+      "path": "/api/scout-client/v1/explore/status",
+      "scope": "explore"
+    },
+    "explore_conversations_list": {
+      "method": "POST",
+      "path": "/api/scout-client/v1/explore/conversations/list",
+      "scope": "explore"
+    },
+    "explore_conversations_get": {
+      "method": "POST",
+      "path": "/api/scout-client/v1/explore/conversations/get",
+      "scope": "explore"
+    }
+  },
+  "errors": {
+    "invalid_request": 400,
+    "unauthorized": 401,
+    "reauthorize_required": 401,
+    "scope_required": 403,
+    "explore_forbidden": 403,
+    "not_found": 404,
+    "contract_unsupported": 426,
+    "rate_limited": 429,
+    "unavailable": 503
+  }
+}
