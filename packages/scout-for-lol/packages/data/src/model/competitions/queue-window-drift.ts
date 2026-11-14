@@ -21,11 +21,10 @@ import {
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-// Riot's queues.json identifies these as Co-op vs. AI, outside the competitive
-// availability model. Keep this explicit so a genuinely new ID still warns.
-const COOP_VS_AI_QUEUE_IDS = new Set([
-  800, 810, 820, 830, 840, 850, 870, 880, 890,
-]);
+// Retired Co-op vs. AI ids per Riot's queues.json (Twisted Treeline and the
+// pre-March-2024 Summoner's Rift ids). The live ids 870/880/890 are mapped to
+// "co-op vs ai". Keep this explicit so a genuinely new ID still warns.
+const RETIRED_COOP_VS_AI_QUEUE_IDS = new Set([800, 810, 820, 830, 840, 850]);
 
 /** Distinct-days + total-match thresholds that trigger opening a window. */
 const OPEN_MIN_DISTINCT_DAYS = 2;
@@ -238,7 +237,7 @@ function aggregateObservations(
   const unknownTotals = new Map<string, number>();
 
   for (const [queueId, byDate] of Object.entries(counts)) {
-    if (COOP_VS_AI_QUEUE_IDS.has(Number(queueId))) continue;
+    if (RETIRED_COOP_VS_AI_QUEUE_IDS.has(Number(queueId))) continue;
     const queueType = parseQueueType(Number(queueId));
     for (const [date, count] of Object.entries(byDate)) {
       if (count <= 0) {

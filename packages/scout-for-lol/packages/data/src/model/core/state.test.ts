@@ -29,8 +29,11 @@ describe("parseQueueType", () => {
     [1750, "arena"],
     [1900, "urf"],
     [2300, "brawl"],
-    [3260, "classic"],
-    [3262, "classic"],
+    [3260, "normal"],
+    [3262, "normal"],
+    [870, "co-op vs ai"],
+    [880, "co-op vs ai"],
+    [890, "co-op vs ai"],
     [4310, "classic"],
     [2400, "aram mayhem"],
     [2450, "classic aram mayhem"],
@@ -103,8 +106,8 @@ describe("Arena queue resolution", () => {
 });
 
 describe("League Classic queue resolution", () => {
-  test.each([3260, 3262, 4310])("resolves queue %i as Classic", (queueId) => {
-    expect(parseQueueType(queueId)).toBe("classic");
+  test("resolves queue 4310 as Classic", () => {
+    expect(parseQueueType(4310)).toBe("classic");
   });
 
   test("resolves the exact CLASSIC mode and legacy JADE alias as Classic", () => {
@@ -116,7 +119,41 @@ describe("League Classic queue resolution", () => {
   test.each([3260, 3262])(
     "resolves ordinary CLASSIC queue %i as normal",
     (queueId) => {
+      expect(parseQueueType(queueId)).toBe("normal");
       expect(resolveQueueTypeFromGame(queueId, "CLASSIC")).toBe("normal");
+      expect(
+        classifyGame({
+          queueId,
+          gameMode: "CLASSIC",
+          gameType: "MATCHED_GAME",
+        }),
+      ).toEqual(queue("normal"));
+    },
+  );
+
+  test.each([870, 880, 890])(
+    "classifies Co-op vs AI queue %i as co-op vs ai",
+    (queueId) => {
+      expect(
+        classifyGame({
+          queueId,
+          gameMode: "CLASSIC",
+          gameType: "MATCHED_GAME",
+        }),
+      ).toEqual(queue("co-op vs ai"));
+    },
+  );
+
+  test.each([800, 810, 820, 830, 840, 850])(
+    "leaves retired Co-op vs AI queue %i unmapped",
+    (queueId) => {
+      expect(
+        classifyGame({
+          queueId,
+          gameMode: "CLASSIC",
+          gameType: "MATCHED_GAME",
+        }).kind,
+      ).toBe("unknown");
     },
   );
 
@@ -226,6 +263,7 @@ describe("queueTypeToDisplayString", () => {
     ["hard doom bots", "Hard Doom Bots"],
     ["custom", "custom"],
     ["tournament", "tournament"],
+    ["co-op vs ai", "Co-op vs AI"],
   ];
 
   test.each(cases)("%s renders as %s", (queueType, expected) => {
