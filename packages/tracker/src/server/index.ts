@@ -6,6 +6,7 @@ import { BootstrapSchema, behaviorConfig } from "#infrastructure/config.ts";
 import { createDatabase } from "#infrastructure/database.ts";
 import { PrismaUnitOfWork } from "#infrastructure/prisma-unit-of-work.ts";
 import { Issues } from "#infrastructure/issues.ts";
+import { Forum } from "#infrastructure/forum.ts";
 import { Collaboration } from "#infrastructure/collaboration.ts";
 import { Catalog } from "#infrastructure/catalog.ts";
 import { Attachments } from "#infrastructure/attachments.ts";
@@ -34,6 +35,8 @@ const changes = createChangeHub(config.DATABASE_URL);
 // in the background and never delays startup.
 if (await behavior.value("liveUpdatesEnabled")) void changes.start();
 const app = createApp({
+  forum: new Forum(database, unit),
+  forumEnabled: () => behavior.value("forumEnabled"),
   issues: new Issues(database, unit),
   collaboration: new Collaboration(database, unit),
   catalog: new Catalog(unit),

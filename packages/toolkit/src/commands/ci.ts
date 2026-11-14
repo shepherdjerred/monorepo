@@ -36,6 +36,11 @@ import { formatLatency, latencyReport } from "#lib/ci/latency.ts";
 import { ciMaintenance } from "#lib/ci/maintenance.ts";
 import { latencyEvidence } from "#lib/ci/latency-evidence.ts";
 import {
+  coordinationSummary,
+  formatCoordination,
+  type CoordinationSummary,
+} from "#lib/forum.ts";
+import {
   mainFailure,
   reportCommandError,
   summarizeMain,
@@ -58,12 +63,22 @@ export async function reportResult(
   result: WaitResult,
   observer: CiObserver,
   json: boolean,
-  signal?: AbortSignal,
+  options: { signal?: AbortSignal; coordination?: CoordinationSummary } = {},
 ): Promise<void> {
+  const { signal, coordination } = options;
   const report = await resultReport(result, observer, signal);
   console.log(
     sanitizeText(
-      json ? JSON.stringify(report, null, 2) : formatResult(report),
+      json
+        ? JSON.stringify(
+            {
+              ...report,
+              ...(coordination === undefined ? {} : { coordination }),
+            },
+            null,
+            2,
+          )
+        : `${formatResult(report)}${coordination === undefined ? "" : `\n${formatCoordination(coordination)}`}`,
       [observer.github.token, observer.woodpecker.token],
     ),
   );
@@ -200,7 +215,7 @@ async function runWait(
       { ...options, mainPolicy: "report" },
       signal,
     );
-    await reportResult(result, observer, options.json, signal);
+    await reportResult(result, observer, options.json, { signal });
   });
 }
 
@@ -349,9 +364,10 @@ async function showMain(observer: CiObserver, json: boolean): Promise<void> {
   const report = {
     ...summarizeMain(main, observer),
     diagnostics,
+    coordination: await coordinationSummary(["main", "ci"]),
     guidance:
       main.state === "red"
-        ? "Keep working if main is red; do not try to fix main unless explicitly told."
+        ? "Main is red. Read active notices with toolkit forum list --kind notice; repair main only when your changes caused the failure or you were explicitly instructed. Otherwise continue your task."
         : "Pending builds are expected; main's current build is shown separately from its last verdict.",
   };
   const text = [
@@ -361,6 +377,7 @@ async function showMain(observer: CiObserver, json: boolean): Promise<void> {
         `${diagnostic.workflow}\n${diagnostic.logs}\n${diagnostic.command}`,
     ),
     report.guidance,
+    formatCoordination(report.coordination),
   ].join("\n");
   console.log(
     sanitizeText(json ? JSON.stringify(report, null, 2) : text, secrets),
@@ -400,6 +417,7 @@ async function execute(
     },
     observer,
     options.json,
+    { coordination: await coordinationSummary(["main", "ci"]) },
   );
 }
 

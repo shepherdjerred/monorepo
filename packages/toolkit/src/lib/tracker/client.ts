@@ -20,7 +20,7 @@ export function trackerUrl(value: string): string {
   return url.toString().replace(/\/$/u, "");
 }
 
-function options(baseUrl: string) {
+function options(baseUrl: string, timeoutMs = 30_000) {
   return {
     links: [
       httpLink({
@@ -28,7 +28,7 @@ function options(baseUrl: string) {
         fetch: async (url: string | URL, init) => {
           const response = await fetch(url, {
             ...init,
-            signal: AbortSignal.timeout(30_000),
+            signal: AbortSignal.timeout(timeoutMs),
           });
           return {
             status: response.status,
@@ -44,8 +44,8 @@ function options(baseUrl: string) {
   };
 }
 
-export function trackerClient(baseUrl: string) {
-  return createTRPCClient<AppRouter>(options(baseUrl));
+export function trackerClient(baseUrl: string, timeoutMs?: number) {
+  return createTRPCClient<AppRouter>(options(baseUrl, timeoutMs));
 }
 export function trackerApi(baseUrl: string) {
   return createTRPCUntypedClient(options(baseUrl));

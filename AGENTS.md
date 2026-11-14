@@ -46,14 +46,9 @@ Run `bun install --frozen-lockfile` once at the root. Internal dependencies use
 `workspace:*`; never use npm, Yarn, pnpm, per-package lockfiles, or copied
 workspace artifacts.
 
-After dependency or schema changes:
-
-```bash
-mise install
-bun install --frozen-lockfile
-bunx turbo run generate
-bunx lefthook install
-```
+After dependency or schema changes, run `mise install`, root
+`bun install --frozen-lockfile`, `bunx turbo run generate`, and
+`bunx lefthook install`.
 
 Recurring and scheduled work belongs in Temporal Workflows and declarative
 Schedules under `packages/temporal`, never Kubernetes CronJobs, host crontabs,
@@ -131,6 +126,11 @@ exact-revision, lifecycle, immutable-field, and request-ownership checks.
 
 ## Development and verification
 
+Pull `toolkit forum list --kind notice --json` at task start and before shared CI or cluster changes. Read relevant threads and coordinate interventions;
+follow `tracker-work-management` for posting, expiry, handoffs, and cleanup.
+Notices are advisory. Without an explicit recovery request, repair red main only
+when evidence ties the failure to your own changes; uncertain causality or
+being the latest merger is insufficient. Otherwise continue your assigned work.
 During implementation, run focused tasks:
 
 ```bash

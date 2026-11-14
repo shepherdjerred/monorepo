@@ -972,6 +972,18 @@
       "thresholdRollouts": []
     },
     {
+      "key": "tracker-forum-enabled",
+      "owner": "tracker",
+      "namespace": "tracker",
+      "source": "tracker",
+      "purpose": "Shared agent notices and discussions, evaluated for each forum request.",
+      "type": "boolean",
+      "default": true,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "tracker-attachment-max-bytes",
       "owner": "tracker",
       "namespace": "tracker",

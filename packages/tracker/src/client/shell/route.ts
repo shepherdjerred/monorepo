@@ -5,6 +5,7 @@ const ViewSchema = z.enum([
   "home",
   "issues",
   "board",
+  "forum",
   "project",
   "issue",
   "projects",

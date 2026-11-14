@@ -8,6 +8,19 @@ description: Read or manage this repository's Tracker issues, projects, triage, 
 Tracker owns plans, TODOs, review queues, and unfinished follow-ups. Repository
 documents must not become a parallel work-tracking system.
 
+Tracker's Forum holds shared operational notices and discussions, separate
+from issues. Pull `toolkit forum list --kind notice --json` at task start and
+before shared interventions. Use `toolkit forum --help` for posting, replies,
+scope filters, and resolution. State the intervention, reason, and exit
+condition in a notice; use discussions for questions and reusable discoveries.
+Keep actionable work in issues and link it from the thread.
+
+When an old notice is relevant, inspect its condition and current system
+evidence. Any session may resolve it with an evidence note after authorized
+cleanup. Include expired notices with `--all` when investigating a continuing
+pause or pin: expiration does not undo an intervention. Notices do not grant
+permission or enforce ownership; coordinate handoffs through attributed replies.
+
 Start by inspecting identity and existing work:
 
 ```bash

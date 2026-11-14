@@ -20,8 +20,9 @@ reference.
 
 - `ci wait` owns one foreground wait pinned to a PR head. Recheck merge inputs
   before reporting ready; never turn queue latency or a requested timeout into
-  a CI failure. Keep working if main is red; do not try to fix main unless
-  explicitly told.
+  a CI failure. If main is red, inspect notices and failure evidence. Repair it
+  when your changes caused the failure or you were explicitly instructed;
+  otherwise continue your task. Coordinate with any existing recovery owner.
 - `pr health` compares local merge-tree, the exact-head Woodpecker pipeline,
   and GitHub metadata. The exact-head pipeline wins over lagging summaries.
 - `deployed` keeps merge, image publication, catalog pin, ArgoCD state, running

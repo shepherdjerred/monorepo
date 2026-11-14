@@ -21,6 +21,24 @@ import {
   LiveMessageSchema as LiveMessageUnion,
 } from "./live-updates.ts";
 import type { z } from "zod";
+import {
+  ForumKindSchema as ForumKind,
+  ForumListSchema as ForumList,
+  ForumReferenceSchema as ForumReference,
+  CreateForumPostSchema as CreateForumPost,
+  UpdateForumPostSchema as UpdateForumPost,
+  ReplyForumSchema as ReplyForum,
+  ResolveForumSchema as ResolveForum,
+  ReopenForumSchema as ReopenForum,
+} from "./forum.ts";
+export const ForumKindSchema = ForumKind.clone();
+export const ForumListSchema = ForumList.clone();
+export const ForumReferenceSchema = ForumReference.clone();
+export const CreateForumPostSchema = CreateForumPost.clone();
+export const UpdateForumPostSchema = UpdateForumPost.clone();
+export const ReplyForumSchema = ReplyForum.clone();
+export const ResolveForumSchema = ResolveForum.clone();
+export const ReopenForumSchema = ReopenForum.clone();
 
 export type AppRouter = ServerRouter & { readonly __wireContract?: never };
 export type ActorEnvelope = z.infer<typeof Actor>;

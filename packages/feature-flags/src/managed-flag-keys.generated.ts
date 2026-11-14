@@ -102,6 +102,7 @@ export const TRACKER_BOOLEAN_FLAG_KEYS = [
   "tracker-writes-enabled",
   "tracker-telemetry-enabled",
   "tracker-live-updates-enabled",
+  "tracker-forum-enabled",
 ] as const;
 
 export type TrackerBooleanFlagKey = (typeof TRACKER_BOOLEAN_FLAG_KEYS)[number];

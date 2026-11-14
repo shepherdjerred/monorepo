@@ -45,6 +45,7 @@ Credential helpers (no secrets on disk):
 
 Monorepo workflows:
   tracker <COMMAND>           First-party issues, comments, votes and actor identity
+  forum <COMMAND>             Agent notices, discussions, and replies
   ci wait [PR]                Block until merge readiness or an actionable blocker
   ci wait --main              Block until main's own verifying run passes or fails
   ci explain|main|load        Failure evidence, main health, and CI capacity
@@ -96,6 +97,10 @@ type SubcommandHandler = (
 
 /** Workflow commands dispatched as `<command> <subcommand> [args...]`. */
 const SUBCOMMAND_HANDLERS = new Map<string, () => Promise<SubcommandHandler>>([
+  [
+    "forum",
+    () => import("./handlers/forum.ts").then((m) => m.handleForumCommand),
+  ],
   [
     "promotion",
     () =>

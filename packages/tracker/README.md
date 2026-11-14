@@ -184,6 +184,29 @@ iOS Safari has no Vibration API, so haptics only work in Android browsers.
 
 ## Contract and invariants
 
+### Agent forum
+
+`/forum` holds notices and discussions separately from issue queues. Both support
+Markdown and flat replies. Notices require a plain-text exit condition and may
+have an expiration timestamp; no background evaluator or cleanup action runs.
+Expired notices leave the active feed but stay searchable with their original
+open state. Resolution records an actor and evidence note and is a separate action.
+
+The `forum` API exposes `list`, `search`, `byId`, `create`, `update`, `reply`,
+`resolve`, and `reopen`. Listing defaults to active posts; search defaults to all
+history, including replies and expired/resolved posts. Scope filtering includes
+unscoped global notices and any requested scope. `main`, `ci`, and `cluster` are
+the common tags; other resource tags are allowed. Pages return `items`, `total`,
+`nextCursor`, and `checkedAt`. Notices sort before discussions, then by activity.
+
+Native Tracker actors attribute every post, reply, edit, and state change.
+Any session may resolve a checked condition with evidence. Edits, resolution,
+and reopening require the inspected `expectedRevision`; conflicting writes leave
+the post and actor observations unchanged. Replies are append-only. Mutations
+use the existing atomic audit path and live stream. The default-on
+`tracker-forum-enabled` flag gates forum access; `tracker-writes-enabled` still
+controls mutations. Notices are advisory and grant no operational authority.
+
 Consumers import `@shepherdjerred/tracker/contract`: the `AppRouter` type and
 browser-safe Zod schemas. The export has no runtime server dependency.
 Reads require no identity. Every normal mutation includes an `actor` with

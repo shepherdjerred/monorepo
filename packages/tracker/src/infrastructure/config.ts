@@ -24,6 +24,12 @@ export type Bootstrap = z.infer<typeof BootstrapSchema>;
 export function behaviorConfig(stage: string) {
   return defineConfig({
     definition: {
+      forumEnabled: {
+        schema: z.boolean(),
+        sources: ["flag", "default"],
+        default: true,
+        names: { flag: "tracker-forum-enabled" },
+      },
       writesEnabled: {
         schema: z.boolean(),
         sources: ["flag", "default"],
@@ -61,6 +67,7 @@ export function behaviorConfig(stage: string) {
         targetingKey: "tracker",
         attributes: { stage },
         kinds: {
+          forumEnabled: "boolean",
           writesEnabled: "boolean",
           telemetryEnabled: "boolean",
           liveUpdatesEnabled: "boolean",

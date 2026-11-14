@@ -268,7 +268,7 @@ export function buildPrHealthReport(evidence: PrHealthEvidence): HealthReport {
 }
 
 const RED_MAIN_STEP =
-  "Main is red; keep working. Do not try to fix main unless explicitly told.";
+  "Main is red; keep working. Read active notices with toolkit forum list --kind notice; repair main only when your changes caused the failure or you were explicitly instructed. Otherwise continue your task.";
 
 function readinessSteps(verdict: Verdict, mainRed: boolean): string[] {
   if (verdict.outcome === "ready") return [];

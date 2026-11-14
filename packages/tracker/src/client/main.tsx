@@ -17,6 +17,7 @@ import { IssueDetail } from "#client/issues/issue-detail.tsx";
 import { Actors } from "#client/pages/actors.tsx";
 import { GlobalActivity } from "#client/pages/activity-page.tsx";
 import { Projects } from "#client/pages/projects.tsx";
+import { Forum } from "#client/forum/forum.tsx";
 import { Empty } from "#client/ui/ui.tsx";
 import { SettingsSkeleton } from "#client/ui/skeleton.tsx";
 import { useShell } from "#client/shell/shell-context.ts";
@@ -75,6 +76,7 @@ const router = createBrowserRouter([
         handle: viewHandle("issue"),
       },
       { path: "board", element: <IssueView />, handle: viewHandle("board") },
+      { path: "forum", element: <Forum />, handle: viewHandle("forum") },
       {
         path: "projects",
         element: <Projects />,

@@ -1,3 +1,4 @@
+import { Forum } from "#infrastructure/forum.ts";
 import { expect, it } from "vitest";
 import { TRPCError } from "@trpc/server";
 import { Attachments } from "#infrastructure/attachments.ts";
@@ -178,6 +179,8 @@ it("rejects malformed and mismatched cursors as a bad request", async () => {
     ),
     requestId: "cursors",
     writesEnabled: () => Promise.resolve(true),
+    forum: new Forum(suite.database, suite.unit),
+    forumEnabled: async () => true,
     liveUpdatesEnabled: () => Promise.resolve(false),
   });
   for (const cursor of [

@@ -1,3 +1,4 @@
+import { Forum } from "#infrastructure/forum.ts";
 import { z } from "zod";
 import { startTestPostgres, cloneTestDatabase } from "#testing/postgres.ts";
 import { memoryObjectStore } from "#testing/memory-object-store.ts";
@@ -99,6 +100,8 @@ const app = createApp({
   attachments: new Attachments(suite.database, unit, memoryObjectStore()),
   writesEnabled: () => Promise.resolve(true),
   attachmentMaxBytes: () => Promise.resolve(25 * 1024 * 1024),
+  forum: new Forum(suite.database, unit),
+  forumEnabled: () => Promise.resolve(true),
   liveUpdatesEnabled: () => Promise.resolve(true),
   changes,
 });

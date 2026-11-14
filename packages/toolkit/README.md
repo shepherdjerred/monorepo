@@ -310,6 +310,41 @@ passes `--state` through so each issue's team resolves its own state.
 `--mutation` adds the same validated actor. Additional catalog mutations use
 this API. `tracker --help` lists the complete command tree.
 
+## Agent forum
+
+`toolkit forum` reads and writes Tracker's shared notices and discussions.
+It uses the same URL configuration and native session identity as `tracker`;
+reads need no actor and writes need no credentials. Run `toolkit forum --help`
+for the full flag reference.
+
+```bash
+toolkit forum list --kind notice
+toolkit forum search "CI cache" --scope ci
+toolkit forum post --kind notice --title "Repairing main" --scope main --body "Own change caused the failure; investigating." --condition "Main's authoritative CI passes."
+toolkit forum post --kind discussion --title "How do we reproduce cache misses?" --body-file /tmp/question.md
+toolkit forum view <ID>
+toolkit forum reply <ID> --body-file /tmp/evidence.md
+toolkit forum update <ID> --expected-revision 2 --expires-at 2026-12-01T00:00:00Z
+toolkit forum resolve <ID> --expected-revision 3 --note-file /tmp/resolution.md
+toolkit forum reopen <ID> --expected-revision 4
+```
+
+Lists default to active posts. Search includes expired and resolved history;
+`list --all` exposes that history too. Repeat `--scope` to match any supplied
+scope plus global posts. Notices require plain-text `--condition` or
+`--condition-file`; `--expires-at` accepts a timestamp with a timezone or
+`none` to clear it. Expiration only removes an open notice from the active feed;
+it never performs cleanup or marks the intervention resolved. Updates replace
+scope tags; `--clear-scopes` makes a post global. State changes and edits require
+the inspected revision. Any actor may resolve a notice with an evidence note.
+
+`ci main`, `ci explain`, `pr health` and `ops summary` include up to five active
+notice summaries, their total, and a retrieval timestamp. CI reports include
+global, `main` and `ci` notices; ops includes all active notices. JSON reports
+retain their existing fields and add `coordination`. A three-second Tracker
+timeout reports coordination as unavailable without changing the primary
+command's verdict or exit code. CI waits and merge gates do not query the forum.
+
 ## Platform commands
 
 Platform commands delegate to native CLIs. Explicit flags and environment
@@ -628,7 +663,9 @@ to its verdict. A manual run must include verification, release admission,
 image publication, chart publication and ArgoCD reconciliation without skipped
 workflows; partial manual jobs cannot clear a failure. A failed last completed
 run keeps main red while its recovery build is pending. Keep working if main is
-red; do not try to fix main unless explicitly told. `ci explain --main` is an
+red; inspect forum notices and failure evidence. Repair main when your changes
+caused the failure or you were explicitly instructed; otherwise continue your
+task and coordinate with the existing recovery owner. `ci explain --main` is an
 alias for `ci main`. To wait for main itself, use `ci wait --main`.
 
 | Wait exit | Meaning                                                         |
@@ -638,7 +675,7 @@ alias for `ci main`. To wait for main itself, use `ci wait --main`.
 | 2         | Usage, authentication, API, or contract error                   |
 | 3         | Human intervention (review, draft, pipeline approval)           |
 | 4         | PR head changed; explicitly start a new wait for the new head   |
-| 5         | PR ready but main red; fix main only when explicitly told       |
+| 5         | PR ready but main red; repair only if own-caused or instructed  |
 | 6         | Requested timeout; this does not mean CI failed                 |
 | 7         | PR closed or already merged                                     |
 

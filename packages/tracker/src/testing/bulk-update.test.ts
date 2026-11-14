@@ -1,3 +1,4 @@
+import { Forum } from "#infrastructure/forum.ts";
 import { expect, it } from "vitest";
 import { TRPCError } from "@trpc/server";
 import { TrackerError } from "#domain/error.ts";
@@ -223,6 +224,8 @@ it("validates the request shape at the API boundary", async () => {
     ),
     requestId: "bulk-shape",
     writesEnabled: () => Promise.resolve(true),
+    forum: new Forum(suite.database, suite.unit),
+    forumEnabled: async () => true,
     liveUpdatesEnabled: () => Promise.resolve(false),
   });
   const [issue] = await created(1, "Bulk shape");
