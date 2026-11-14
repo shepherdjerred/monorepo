@@ -22,6 +22,10 @@ import { householdRetentionState } from "./protection.ts";
 import { requestTestMovieV4 } from "#testing/movie-v4.ts";
 import { noticeAcceptance } from "./acceptance.ts";
 import { InterestCheckNoticeSchema } from "#shared/household/interests.ts";
+import { queueExistingPlexBinding } from "#automation/plex-binding/queue.ts";
+import { createPlexBindingActivities } from "#automation/plex-binding/activities.ts";
+import { ReverifyPlexBindingInputSchema } from "#shared/plex-binding/activities.ts";
+import { PrismaMediaApplication } from "#infrastructure/media-service.ts";
 
 const h = automationTestHarness();
 const directories: string[] = [];
@@ -119,6 +123,26 @@ async function fixture(tv = false) {
         reason: null,
       });
   };
+  const refreshServing = async (watched: boolean) => {
+    // Catalog growth changes the complete numbering digest. Obtain a new
+    // native binding and watch observation instead of reusing stale authority.
+    const queued = await queueExistingPlexBinding(
+      transport.context,
+      published.entry.assetId,
+    );
+    if (queued.status !== "queued")
+      throw new Error(`Fixture binding refresh protected: ${queued.reason}`);
+    const operation = await db.operation.findUniqueOrThrow({
+      where: { id: queued.operationId },
+    });
+    expect(
+      await createPlexBindingActivities(transport.context).reverify(
+        ReverifyPlexBindingInputSchema.parse(operation.payload),
+        transport.context.plexBindingExecution(),
+      ),
+    ).toEqual({ status: "verified", bindingCount: ids.length });
+    await observe(watched);
+  };
   const read = () =>
     db.mediaRequest.findUniqueOrThrow({ where: { id: request.id } });
   const facts = async () =>
@@ -146,6 +170,7 @@ async function fixture(tv = false) {
     request,
     transport,
     observe,
+    refreshServing,
     read,
     facts,
     sweep,
@@ -190,6 +215,18 @@ test.each(["default", "directors_cut"] as const)(
         role: "owner",
       },
     });
+    const priorProfile = await db.qualityProfileDefault.findUnique({
+      where: { kind: "movie" },
+    });
+    await new PrismaMediaApplication(db, { keepDays: 30 }).setProfileDefault(
+      owner,
+      crypto.randomUUID(),
+      "movie",
+      {
+        expectedVersion: priorProfile?.version ?? 0,
+        profileId: base.profile.id,
+      },
+    );
     const chosen = await requestTestMovieV4(
       db,
       base.user,
@@ -340,6 +377,8 @@ test("known unaired and missing requested episodes protect complete-show release
       airDate: new Date(Date.now() + DAY),
     },
   });
+  expect(await f.facts()).toMatchObject({ watchedComplete: null });
+  await f.refreshServing(true);
   expect(await f.facts()).toMatchObject({
     requestedCoverageComplete: false,
     watchedComplete: false,
@@ -430,6 +469,8 @@ test.each(["unaired", "missing", "captions_pending"] as const)(
           airDate: new Date(Date.now() + (blocked === "unaired" ? DAY : -DAY)),
         },
       });
+      expect(await f.facts()).toMatchObject({ watchedComplete: null });
+      await f.refreshServing(false);
     }
     const request = await f.read();
     const acceptedAt = new Date(Date.now() - 8 * DAY);
@@ -518,6 +559,8 @@ test("snapshot request masks later catalog additions but unknown air dates remai
       episodeNumber: 3,
     },
   });
+  expect(await f.facts()).toMatchObject({ watchedComplete: null });
+  await f.refreshServing(true);
   expect(await f.facts()).toMatchObject({
     requestedCoverageComplete: true,
     watchedComplete: true,
