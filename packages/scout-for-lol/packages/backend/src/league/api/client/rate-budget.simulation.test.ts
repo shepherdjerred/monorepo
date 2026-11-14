@@ -594,4 +594,16 @@ describe("RiotBudgetLedger", () => {
     ledger.abandon(ROUTE, "match");
     expect(ledger.admit(input("realtime"))).toEqual({ ok: true });
   });
+
+  test("a probe response without app headers keeps the route unlearned", () => {
+    const { ledger } = setup();
+    expect(ledger.admit(input("realtime"))).toEqual({ ok: true });
+    ledger.observe(ROUTE, "match", new Headers());
+    expect(ledger.admit(input("realtime"))).toEqual({ ok: true });
+    expect(ledger.admit(input("realtime"))).toEqual({
+      ok: false,
+      waitMs: DEFAULT_RIOT_BUDGET_CONFIG.probeWaitMs,
+      reason: "probe-in-flight",
+    });
+  });
 });

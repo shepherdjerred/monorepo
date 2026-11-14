@@ -142,8 +142,8 @@ export class RiotBudgetLedger {
   ): void {
     const routeScope = this.scope(routeKey(route));
     const methodScope = this.scope(methodKey(route, method));
-    this.learn(routeScope, parseAppRateLimitWindows(headers), now);
-    this.learn(methodScope, parseMethodRateLimitWindows(headers), now);
+    this.learn(routeScope, parseAppRateLimitWindows(headers), now, true);
+    this.learn(methodScope, parseMethodRateLimitWindows(headers), now, false);
   }
 
   /** Releases a reservation whose request produced no response. */
@@ -202,8 +202,15 @@ export class RiotBudgetLedger {
     scope: Scope,
     windows: { windowSeconds: number; count: number; limit: number }[],
     now: number,
+    requireWindows: boolean,
   ): void {
     scope.unconfirmed = Math.max(0, scope.unconfirmed - 1);
+    // An app-scope response without usage headers (an upstream error, say)
+    // teaches nothing: keep the scope unlearned so the single-probe rule still
+    // holds. A method scope without windows simply has no method limit.
+    if (requireWindows && windows.length === 0) {
+      return;
+    }
     scope.observedAt = now;
     scope.needsProbe = false;
     for (const window of windows) {
