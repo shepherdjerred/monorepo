@@ -65,6 +65,8 @@ describe("direct ffmpeg runner", () => {
     expect(command).toContain("testsrc=size=16x16:rate=2:duration=1");
     expect(codecData?.video).toBe("wrapped_avframe");
     expect(progress?.frames).toBeGreaterThanOrEqual(1);
+    expect(progress?.duplicatedFrames).toBe(3);
+    expect(progress?.droppedFrames).toBe(2);
     expect(outputBytes).toBeGreaterThan(0);
   });
 

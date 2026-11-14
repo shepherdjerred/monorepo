@@ -306,14 +306,13 @@ describe("audio-only segments suppress the video-only gauges", () => {
     const video = createStreamObserver(false);
     video.observer.onCommand?.("ffmpeg -hwaccel vaapi -i in.mkv out");
     await expect(engagedValue()).resolves.toBe(1);
-    video.dispose();
-
     const music = createStreamObserver(false, undefined, undefined, {
       audioOnly: true,
     });
     music.observer.onCommand?.("ffmpeg -i in.webm -vn -c:a libopus out");
     await expect(engagedValue()).resolves.toBe(1);
     music.dispose();
+    video.dispose();
 
     // The control: the same command through a video observer DOES write the 0, so the assertion
     // above is about the audioOnly flag rather than about the command line.
@@ -358,7 +357,7 @@ describe("audio-only segments suppress the video-only gauges", () => {
     music.dispose();
     const after = await pipelineQueueDepth.get();
     expect(after.values.find((v) => v.labels.kind === "video")?.value).toBe(7);
-    expect(after.values.find((v) => v.labels.kind === "audio")).toBeUndefined();
+    expect(after.values.find((v) => v.labels.kind === "audio")?.value).toBe(3);
     video.dispose();
   });
 });

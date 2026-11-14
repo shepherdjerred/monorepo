@@ -16,6 +16,11 @@
 
 import type { StreamObserver } from "@shepherdjerred/discord-video-stream";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
+import { OwnedPlaybackGauges } from "@shepherdjerred/streambot/observability/owned-playback-gauges.ts";
+import {
+  createPlaybackDiagnostics,
+  type PlaybackDiagnosticContext,
+} from "@shepherdjerred/streambot/observability/playback-diagnostics.ts";
 import {
   ffmpegBitrateKbps,
   ffmpegFps,
@@ -31,6 +36,7 @@ import {
   sendLateFramesTotal,
   sendSyncEventsTotal,
   sendSyncWaitSecondsTotal,
+  streamHardware,
 } from "@shepherdjerred/streambot/observability/metrics.ts";
 
 const log = logger.child("streamer:metrics");
@@ -91,6 +97,7 @@ const STALL_STDERR_TAIL_LINES = 15;
 const PROGRESS_PROTOCOL_LINE = /^[a-z_0-9]+=/u;
 
 export type StreamObserverOptions = {
+  readonly diagnosticContext?: PlaybackDiagnosticContext;
   /** Watchdog cadence. Defaults to {@link PROGRESS_TICK_MS}. */
   readonly progressTickMs?: number;
   /**
@@ -100,13 +107,26 @@ export type StreamObserverOptions = {
    * Writing `hw_decode_engaged = 0` for a stream with no picture reads on a dashboard exactly like
    * "hardware decode broke", and a `ffmpeg_fps` pinned at 0 reads like a frozen encoder. Neither is
    * true: there is no video path to report on. The labelled ones (`ffmpeg_fps`,
-   * `pipeline_queue_depth{kind:"video"}`) therefore stay absent; `hw_decode_engaged` carries no
-   * labels and so cannot be absent once written at all, but it keeps the last video segment's
-   * reading instead of being overwritten with a false alarm. `dispose` correspondingly leaves a
-   * concurrent video session's series alone rather than resetting gauges this segment never wrote.
+   * `pipeline_queue_depth{kind:"video"}`) therefore stay absent. Ownership keeps a music
+   * segment from overwriting or removing a concurrent video's readings.
    */
   readonly audioOnly?: boolean;
 };
+
+export function playbackObserverOptions(
+  audioOnly: boolean,
+  pipelineMode: PlaybackDiagnosticContext["pipelineMode"],
+  offsetSeconds: () => number,
+): StreamObserverOptions {
+  return {
+    audioOnly,
+    diagnosticContext: {
+      transport: audioOnly ? "voice" : "go-live",
+      pipelineMode,
+      offsetSeconds,
+    },
+  };
+}
 
 /**
  * Build a {@link StreamObserver} for one streaming segment. `hardware` labels the metrics with the
@@ -133,6 +153,16 @@ export function createStreamObserver(
   const hw = hardware ? "true" : "false";
   const progressTickMs = options.progressTickMs ?? PROGRESS_TICK_MS;
   const audioOnly = options.audioOnly ?? false;
+  const gauges = new OwnedPlaybackGauges();
+  const diagnostics = createPlaybackDiagnostics(hw, now, gauges, {
+    context: options.diagnosticContext,
+    progressAgeSeconds: () =>
+      lastProgressWallMs === undefined
+        ? 0
+        : Math.max(0, now() - lastProgressWallMs) / 1000,
+  });
+  let disposed = false;
+  if (!audioOnly) gauges.set(streamHardware, {}, hardware ? 1 : 0, "min");
   let prevMediaSeconds: number | undefined;
   let prevWallMs: number | undefined;
   let lastProgressWallMs: number | undefined;
@@ -152,7 +182,7 @@ export function createStreamObserver(
     progressAgeTimer = setInterval(() => {
       if (lastProgressWallMs === undefined) return;
       const ageSeconds = (now() - lastProgressWallMs) / 1000;
-      ffmpegProgressAgeSeconds.set(ageSeconds);
+      gauges.set(ffmpegProgressAgeSeconds, {}, ageSeconds, "max");
       if (!stallFired && ageSeconds >= STALL_AFTER_SECONDS) {
         stallFired = true;
         log.warn("ffmpeg progress stalled", {
@@ -169,31 +199,22 @@ export function createStreamObserver(
   };
 
   const dispose = () => {
+    if (disposed) return;
+    disposed = true;
     if (progressAgeTimer !== undefined) {
       clearInterval(progressAgeTimer);
       progressAgeTimer = undefined;
     }
-    // Clear segment-scoped gauges so their last values don't outlive the stream. Without this,
-    // stale readings survive indefinitely (a frozen 1.397x speed_ratio manufactured a false
-    // "healthy 1.4x baseline" during the 2026-07-18 investigation — the bug reproduced 3×).
-    ffmpegSpeedRatio.reset();
-    ffmpegBitrateKbps.reset();
-    ffmpegProgressAgeSeconds.reset();
-    playbackBehindSeconds.reset();
-    if (audioOnly) {
-      // Only the series this segment actually wrote. A blanket reset here would wipe a concurrent
-      // video session's fps and video queue depth — gauges an audio-only segment never touched.
-      pipelineQueueDepth.remove("audio");
-      return;
-    }
-    ffmpegFps.reset();
-    pipelineQueueDepth.reset();
+    diagnostics.dispose();
+    gauges.dispose();
   };
 
   const observer: StreamObserver = {
     onCommand: (command) => {
+      if (disposed) return;
       const engaged = commandUsesHardwareDecode(command);
-      if (!audioOnly) hwDecodeEngaged.set(engaged ? 1 : 0);
+      if (!audioOnly) gauges.set(hwDecodeEngaged, {}, engaged ? 1 : 0, "min");
+      diagnostics.reset();
       // The command can contain signed media URLs and HTTP authorization headers.
       log.info("ffmpeg command started", { hwDecodeEngaged: engaged });
       // A new command is a new progress epoch. A `/seek` restarts ffmpeg at a new `-ss` offset, so
@@ -207,18 +228,21 @@ export function createStreamObserver(
       // Treat command start as the initial progress sample so the age gauge is meaningful before
       // the first onProgress callback (which can be > 1s out on a cold ffmpeg startup).
       lastProgressWallMs = now();
-      ffmpegProgressAgeSeconds.set(0);
+      gauges.set(ffmpegProgressAgeSeconds, {}, 0, "max");
       startProgressAgeTimer();
     },
     onStderrLine: (line) => {
+      if (disposed) return;
       if (PROGRESS_PROTOCOL_LINE.test(line)) return;
       stderrTail.push(line);
       if (stderrTail.length > STALL_STDERR_TAIL_LINES) stderrTail.shift();
     },
     onProcessStart: (pid) => {
+      if (disposed) return;
       log.info("ffmpeg subprocess started", { pid });
     },
     onCodecData: (data) => {
+      if (disposed) return;
       log.info("ffmpeg input codec", {
         video: data.video,
         audio: data.audio,
@@ -228,11 +252,18 @@ export function createStreamObserver(
       });
     },
     onProgress: (progress) => {
+      if (disposed) return;
+      if (!audioOnly) diagnostics.onProgress(progress);
       if (!audioOnly && typeof progress.currentFps === "number") {
-        ffmpegFps.set({ hardware: hw }, progress.currentFps);
+        gauges.set(ffmpegFps, { hardware: hw }, progress.currentFps, "min");
       }
       if (typeof progress.currentKbps === "number") {
-        ffmpegBitrateKbps.set({ hardware: hw }, progress.currentKbps);
+        gauges.set(
+          ffmpegBitrateKbps,
+          { hardware: hw },
+          progress.currentKbps,
+          "sum",
+        );
       }
       const mediaSeconds = parseTimemarkSeconds(progress.timemark);
       const wallMs = now();
@@ -246,7 +277,7 @@ export function createStreamObserver(
         (prevMediaSeconds === undefined || mediaSeconds > prevMediaSeconds);
       if (mediaAdvanced) {
         lastProgressWallMs = wallMs;
-        ffmpegProgressAgeSeconds.set(0);
+        gauges.set(ffmpegProgressAgeSeconds, {}, 0, "max");
         stallFired = false;
       }
       if (
@@ -260,7 +291,12 @@ export function createStreamObserver(
         // firing before ffmpeg advanced the media clock) would otherwise write ratio=0, which is
         // indistinguishable from "catastrophically behind realtime" on the dashboard.
         if (deltaWall > 0 && deltaMedia > 0) {
-          ffmpegSpeedRatio.set({ hardware: hw }, deltaMedia / deltaWall);
+          gauges.set(
+            ffmpegSpeedRatio,
+            { hardware: hw },
+            deltaMedia / deltaWall,
+            "min",
+          );
           // Increment the monotonic media-time counter by the same delta. rate() over this gives
           // the producer's realtime rate even when ffmpeg's own `speed=` figure stalls — the
           // canonical stall detector per the ffmpeg-user mailing list.
@@ -273,11 +309,18 @@ export function createStreamObserver(
       }
     },
     onSendStats: (stats) => {
+      if (disposed) return;
+      diagnostics.observer.onSendStats(stats);
       sendFrametimeRatio.observe({ kind: stats.kind }, stats.ratio);
       if (stats.ratio > 1) {
         sendLateFramesTotal.inc({ kind: stats.kind });
       }
-      playbackBehindSeconds.set({ kind: stats.kind }, stats.behindMs / 1000);
+      gauges.set(
+        playbackBehindSeconds,
+        { kind: stats.kind },
+        stats.behindMs / 1000,
+        "max",
+      );
       // 200 ms (≈ 6 video frames), NOT one frametime: per-frame behindMs oscillates by the NUT
       // interleave jitter (~1 video frame, 33 ms), which exceeds audio's 20 ms budget — a
       // one-frametime threshold counts ordinary jitter on ~half of audio frames. 200 ms is where
@@ -313,9 +356,15 @@ export function createStreamObserver(
       }
     },
     onQueueDepth: (depth) => {
-      if (!audioOnly) pipelineQueueDepth.set({ kind: "video" }, depth.video);
-      pipelineQueueDepth.set({ kind: "audio" }, depth.audio);
+      if (disposed) return;
+      diagnostics.observer.onQueueDepth(depth);
+      if (!audioOnly)
+        gauges.set(pipelineQueueDepth, { kind: "video" }, depth.video, "max");
+      gauges.set(pipelineQueueDepth, { kind: "audio" }, depth.audio, "max");
     },
+    onPacketReady: diagnostics.observer.onPacketReady,
+    onVideoFeedback: diagnostics.observer.onVideoFeedback,
+    onVideoSubmission: diagnostics.observer.onVideoSubmission,
   };
 
   return { observer, dispose };

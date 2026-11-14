@@ -5,6 +5,7 @@ import * as common from "@grafana/grafana-foundation-sdk/common";
 import * as prometheus from "@grafana/grafana-foundation-sdk/prometheus";
 import { exportDashboardWithHelmEscaping } from "@shepherdjerred/homelab/cdk8s/grafana/dashboard-export.ts";
 import { addVoiceAssistantPanels } from "./streambot-voice-panels.ts";
+import { addPlaybackDiagnosticPanels } from "./streambot-playback-panels.ts";
 
 /**
  * Grafana dashboard for streambot (the Discord media streamer).
@@ -16,11 +17,12 @@ import { addVoiceAssistantPanels } from "./streambot-voice-panels.ts";
  *
  * Rows:
  *   1. Realtime health — ffmpeg speed ratio, fps, bitrate, event-loop lag
- *   2. Send path — frametime ratio p95, late-frame rate, playback-behind (the viewer-facing
- *      stutter signal), demux→pacer queue depth, A/V sync corrections
+ *   2. Send path — frametime ratio p95, late-frame rate, sender schedule lag,
+ *      demux→pacer queue depth, A/V sync corrections
  *   3. Pipeline — hw-decode engaged, stream active, hw->sw fallbacks, segment duration
  *   4. Source — current media properties (codec/resolution/HDR/audio)
  *   5. Process — CPU, memory, restarts, distinct-pods (pod churn)
+ *   6. Playback diagnostics — short sender gaps and Discord peer feedback, independent of viewer stats
  */
 
 // Strip per-pod labels so a single logical series survives pod restarts.
@@ -46,7 +48,7 @@ export function createStreambotDashboard() {
     new timeseries.PanelBuilder()
       .title("ffmpeg speed ratio (realtime)")
       .description(
-        "Media seconds produced per wall-clock second. Since -readrate 1, ~1.0 is the steady-state CEILING (not idle headroom): > 1.0 only during the initial burst or post-dip catch-up. Sustained < 1.0 = production fell behind (transcode-bound or consumer backpressure). For the viewer-facing symptom, see 'Playback behind schedule'.",
+        "Media seconds produced per wall-clock second. Since -readrate 1, ~1.0 is the steady-state ceiling: > 1.0 occurs during the initial burst or post-dip catch-up. Sustained < 1.0 = production fell behind (transcode-bound or consumer backpressure). Healthy production does not prove smooth Discord delivery.",
       )
       .datasource(prometheusDatasource)
       .withTarget(
@@ -115,7 +117,7 @@ export function createStreambotDashboard() {
     new timeseries.PanelBuilder()
       .title("Send frametime ratio (p95)")
       .description(
-        "p95 fraction of a frame's wall-clock budget consumed by the Discord send path, by kind. > 1.0 means the send path (not ffmpeg) is the bottleneck.",
+        "p95 fraction of a frame's wall-clock budget consumed by submission to the native transport, by kind. This ends before native RTP pacing and network delivery; a low value does not prove the peer or viewer received the frame.",
       )
       .datasource(prometheusDatasource)
       .withTarget(
@@ -164,7 +166,7 @@ export function createStreambotDashboard() {
     new timeseries.PanelBuilder()
       .title("Playback behind schedule")
       .description(
-        "Sender-side schedule lag (wall-clock elapsed minus media-time elapsed since the pacing anchor). THE direct viewer-facing stutter signal: sustained growth here is what the viewer experiences, regardless of what speed ratio shows. Anything above ~1s warrants investigation.",
+        "Sender-side schedule lag (wall-clock elapsed minus media-time elapsed since the pacing anchor). Sustained growth means frames are submitted late; low sampled lag does not prove smooth delivery. The lateness histogram below retains short excursions between scrapes.",
       )
       .datasource(prometheusDatasource)
       .withTarget(
@@ -193,7 +195,7 @@ export function createStreambotDashboard() {
     new timeseries.PanelBuilder()
       .title("Demux→pacer queue depth")
       .description(
-        "Buffered packets between the demuxer and the paced send stream. Empty during a speed-ratio dip = producer starved (transcode-bound); full (video caps at ~144) = the pacer is the backpressure source (consumer-paced).",
+        "Buffered packets between the demuxer and the paced send stream. Empty queues alongside sender source-idle time support upstream starvation; full queues support consumer backpressure. A sampled empty queue alone does not establish a bottleneck.",
       )
       .datasource(prometheusDatasource)
       .withTarget(
@@ -420,6 +422,7 @@ export function createStreambotDashboard() {
 
   // Row 6 — Voice assistant (no user, transcript, or media-query labels)
   addVoiceAssistantPanels(builder);
+  addPlaybackDiagnosticPanels(builder);
 
   return builder.build();
 }

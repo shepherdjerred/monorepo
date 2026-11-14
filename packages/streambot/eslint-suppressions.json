@@ -14,11 +14,6 @@
       "count": 1
     }
   },
-  "src/streamer/streamer.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
   "src/voice/corpus-generator.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1

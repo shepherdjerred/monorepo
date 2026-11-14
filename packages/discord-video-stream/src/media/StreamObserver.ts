@@ -1,3 +1,6 @@
+import type { VideoFeedback, VideoSubmission } from "../client/voice/VideoFeedback.js";
+export type { VideoFeedback, VideoSubmission } from "../client/voice/VideoFeedback.js";
+
 /**
  * Optional observability seam. A consumer (e.g. streambot) can pass a {@link StreamObserver} via the
  * prepare/play options to receive the runtime signals the pipeline already computes but otherwise
@@ -25,6 +28,8 @@ export type FfmpegCodecData = {
  */
 export type FfmpegProgress = {
   frames?: number;
+  duplicatedFrames?: number;
+  droppedFrames?: number;
   currentFps?: number;
   currentKbps?: number;
   targetSize?: number;
@@ -52,6 +57,12 @@ export type SendStats = {
   behindMs: number;
   /** Wall-clock ms spent waiting in the A/V ahead-sync loop before completing this frame (usually 0). */
   syncWaitMs: number;
+  /** Time between consecutive transport submission completions; absent on the first frame. */
+  sendIntervalMs?: number;
+  /** Time the pacer was ready without a source packet, excluding its own scheduled wait. */
+  sourceIdleMs?: number;
+  /** False during the deliberately unpaced startup burst. */
+  paced?: boolean;
   /** A/V sync correction taken on this frame, if any. Each correction re-anchors the schedule. */
   syncEvent?: "ahead" | "behind";
   /**
@@ -72,6 +83,10 @@ export type PacketReadyStats = {
   ptsMs: number;
   /** Packet duration on the encoded media timeline, in milliseconds. */
   durationMs: number;
+  /** Encoded packet bytes; no payload is exposed to observers. */
+  bytes?: number;
+  /** Whether this is a video random-access packet. */
+  keyframe?: boolean;
 };
 
 /** Buffered packet counts between the demuxer and the paced send streams. */
@@ -109,6 +124,10 @@ export type StreamObserver = {
   onPacketReady?: (stats: PacketReadyStats) => void;
   /** Per-frame send timing from the video/audio send path. High volume — sample/aggregate downstream. */
   onSendStats?: (stats: SendStats) => void;
+  /** Sanitized RTCP feedback from Discord's immediate peer, not viewer playback statistics. */
+  onVideoFeedback?: (event: VideoFeedback) => void;
+  /** Local submission outcome; submitted does not establish peer or viewer delivery. */
+  onVideoSubmission?: (event: VideoSubmission) => void;
   /**
    * Periodic (~5 s) demux→pacer queue depths. Separates producer-starved dips (queues empty) from
    * consumer-paced backpressure (queues full) — the distinction that required in-pod thread

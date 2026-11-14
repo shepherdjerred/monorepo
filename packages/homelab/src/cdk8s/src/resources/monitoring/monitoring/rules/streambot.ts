@@ -24,7 +24,7 @@ export function getStreambotRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "StreambotEncoderStalled",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "rate(streambot_ffmpeg_out_time_seconds_total[1m]) < 0.5 and streambot_stream_active == 1",
+            "rate(streambot_ffmpeg_out_time_seconds_total[1m]) < 0.5 and on(namespace, pod) streambot_stream_active > 0",
           ),
           for: "30s",
           labels: { severity: "critical", category: "streaming" },
@@ -38,7 +38,7 @@ export function getStreambotRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "StreambotEncoderProducerAhead",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "avg_over_time(streambot_ffmpeg_speed_ratio[1m]) > 1.25 and streambot_stream_active == 1",
+            "avg_over_time(streambot_ffmpeg_speed_ratio[1m]) > 1.25 and on(namespace, pod) streambot_stream_active > 0",
           ),
           for: "1m",
           labels: { severity: "warning", category: "streaming" },
@@ -53,7 +53,7 @@ export function getStreambotRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "StreambotPlaybackBehindSchedule",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "max(streambot_playback_behind_seconds) > 1 and on() streambot_stream_active == 1",
+            "max(streambot_playback_behind_seconds) > 1 and on() max(streambot_stream_active) > 0",
           ),
           for: "1m",
           labels: { severity: "critical", category: "streaming" },
@@ -68,7 +68,7 @@ export function getStreambotRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "StreambotEncoderFallingBehind",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "avg_over_time(streambot_ffmpeg_speed_ratio[1m]) < 0.95 and streambot_stream_active == 1",
+            "avg_over_time(streambot_ffmpeg_speed_ratio[1m]) < 0.95 and on(namespace, pod) streambot_stream_active > 0",
           ),
           for: "30s",
           labels: { severity: "critical", category: "streaming" },
@@ -83,7 +83,7 @@ export function getStreambotRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "StreambotProgressStalled",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "streambot_ffmpeg_progress_age_seconds > 5 and streambot_stream_active == 1",
+            "streambot_ffmpeg_progress_age_seconds > 5 and on(namespace, pod) streambot_stream_active > 0",
           ),
           for: "30s",
           labels: { severity: "critical", category: "streaming" },
