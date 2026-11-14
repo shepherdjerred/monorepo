@@ -4,6 +4,10 @@ import {
   ensureDevPostgres,
   psqlMaintenance,
 } from "#src/testing/postgres-server.ts";
+import {
+  currentDatabaseOwner,
+  ownerCommentSql,
+} from "#src/testing/test-database-owner.ts";
 
 /**
  * A throwaway Postgres database built by replaying the checked-in migrations,
@@ -58,6 +62,7 @@ export function replayMigrationsBefore(
   ensureDevPostgres();
   psqlMaintenance(`DROP DATABASE IF EXISTS "${databaseName}" WITH (FORCE)`);
   psqlMaintenance(`CREATE DATABASE "${databaseName}"`);
+  psqlMaintenance(ownerCommentSql(databaseName, currentDatabaseOwner()));
 
   function psql(sql: string): string {
     const result = Bun.spawnSync(

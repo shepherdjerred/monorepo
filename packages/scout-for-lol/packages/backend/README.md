@@ -200,6 +200,17 @@ bun run smoke            # Smoke-test the built image
 bun run compact:report-lake  # Manually fold/rebuild the DuckDB report lake
 ```
 
+Test databases live on the machine-wide dev Postgres that every checkout and
+session shares, so each one the harness creates (the template, its clones,
+migration replays) records its owner — host, PID and that process's start time —
+in its `COMMENT ON DATABASE`. A suite drops its own databases at teardown. The
+start-of-run sweep (`src/testing/test-template.ts`) drops a leaked
+`scout_test_*` database only when its owner record names this host, the owner
+process has exited or its PID was reused, it is past a five-minute grace
+period, and it has no connections; it never forces a drop. Databases without an
+owner record, including those created before owner records existed, are logged
+and kept; remove them by hand once nothing uses them.
+
 ### Explore recovery evaluation
 
 Explore's per-call output allowance includes hidden reasoning as well as the

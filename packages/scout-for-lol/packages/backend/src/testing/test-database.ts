@@ -6,6 +6,10 @@ import {
   devPostgresPort,
 } from "#src/testing/postgres-server.ts";
 import {
+  currentDatabaseOwner,
+  formatOwnerComment,
+} from "#src/testing/test-database-owner.ts";
+import {
   ensureTestTemplateSync,
   getTestTemplateDatabase,
 } from "#src/testing/test-template.ts";
@@ -55,7 +59,8 @@ function testDatabaseName(testName: string): string {
  * Postgres server (`createdb -T` is a server-side file copy, ~50–150ms —
  * the Postgres equivalent of the old copy-a-SQLite-file strategy). The first
  * call in a process starts the server and ensures the template; suites that
- * never call this never start Postgres.
+ * never call this never start Postgres. The database records this process as
+ * its owner, so another run's sweep keeps it while this process lives.
  *
  * @param testName - A unique name for this test suite (encoded into the
  *   database name)
@@ -83,6 +88,8 @@ export function createTestDatabase(testName: string): {
       "-T",
       templateDatabase,
       dbName,
+      // createdb's description argument: the owner record the sweep reads.
+      formatOwnerComment(currentDatabaseOwner()),
     ],
     { stdout: "pipe", stderr: "pipe" },
   );

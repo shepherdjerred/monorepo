@@ -13,10 +13,24 @@
  * refresh exactly once. The database name includes the content hash so
  * parallel checkouts never rebuild one another's template while sharing the
  * machine-wide server.
+ *
+ * The template and every clone carry an owner record
+ * (src/testing/test-database-owner.ts); the sweep and the template rebuild
+ * drop only databases whose recorded owner is provably gone from this host,
+ * and never force a drop over live connections.
  */
 import { SEASONS } from "@scout-for-lol/data";
 import { createLogger } from "#src/logger.ts";
 import { z } from "zod";
+import {
+  currentDatabaseOwner,
+  decideSweep,
+  decideTemplateRebuild,
+  hostProcessProbe,
+  ownerCommentSql,
+  parseOwnerComment,
+  type OwnerRecord,
+} from "#src/testing/test-database-owner.ts";
 import {
   devDatabaseUrl,
   devPostgresDataRoot,
@@ -27,9 +41,12 @@ import {
 
 const logger = createLogger("test-template");
 
-/** Bump to force a rebuild when refresh logic changes shape. */
-const TEMPLATE_SCHEMA_VERSION = "1";
-const SWEEP_MAX_AGE_MS = 30 * 60 * 1000;
+/**
+ * Bump to force a rebuild when refresh logic changes shape. 2: templates carry
+ * an owner record, so a partial build can be told apart from a live one.
+ */
+const TEMPLATE_SCHEMA_VERSION = "2";
+const UNOWNED_LOG_LIMIT = 10;
 const TEMPLATE_LOCK_STALE_MS = 10 * 60 * 1000;
 const TEMPLATE_LOCK_OWNER = "owner.json";
 const TemplateLockOwnerSchema = z.object({
@@ -180,9 +197,26 @@ async function rebuildTemplate(
   databaseName: string,
   hash: string,
 ): Promise<void> {
+  const existing = listDatabases(`datname = '${databaseName}'`)[0];
+  const decision = decideTemplateRebuild({
+    exists: existing !== undefined,
+    record: existing?.record ?? { kind: "none" },
+    wantedHash: hash,
+    activeConnections: existing?.connections ?? 0,
+    probe: hostProcessProbe,
+  });
+  if (decision.action === "refuse") {
+    throw new Error(
+      `Refusing to rebuild ${databaseName}: ${decision.reason}. Drop it by hand only after confirming no run uses it.`,
+    );
+  }
   logger.info(`Rebuilding ${databaseName} (hash ${hash.slice(0, 12)}…)`);
-  psqlMaintenance(`DROP DATABASE IF EXISTS ${databaseName} WITH (FORCE)`);
-  psqlMaintenance(`CREATE DATABASE ${databaseName}`);
+  if (decision.action === "drop-partial") {
+    // No FORCE: a connection that appeared since the check fails the drop.
+    psqlMaintenance(`DROP DATABASE "${databaseName}"`);
+  }
+  psqlMaintenance(`CREATE DATABASE "${databaseName}"`);
+  psqlMaintenance(ownerCommentSql(databaseName, currentDatabaseOwner()));
 
   const templateUrl = devDatabaseUrl(databaseName);
   const deploy = Bun.spawnSync(["bun", "x", "prisma", "migrate", "deploy"], {
@@ -231,6 +265,13 @@ async function rebuildTemplate(
     // createdb -T refuses while connections to the template remain.
     await seedPrisma.$disconnect();
   }
+  // Marks the build complete, so a later rebuild never drops this template.
+  psqlMaintenance(
+    ownerCommentSql(databaseName, {
+      ...currentDatabaseOwner(),
+      templateHash: hash,
+    }),
+  );
 }
 
 /**
@@ -272,33 +313,81 @@ export async function ensureTestTemplate(): Promise<void> {
   }
 }
 
+const DatabaseRowSchema = z.array(
+  z.strictObject({
+    name: z.string(),
+    comment: z.string().nullable(),
+    connections: z.number().int().nonnegative(),
+  }),
+);
+
+type DatabaseRow = { name: string; record: OwnerRecord; connections: number };
+
+/** Databases matching `where`, with their owner record and connection count. */
+function listDatabases(where: string): DatabaseRow[] {
+  const json = psqlMaintenance(
+    `SELECT coalesce(json_agg(json_build_object(` +
+      `'name', d.datname, ` +
+      `'comment', shobj_description(d.oid, 'pg_database'), ` +
+      `'connections', (SELECT count(*) FROM pg_stat_activity a WHERE a.datid = d.oid)` +
+      `)), '[]') FROM pg_database d WHERE ${where}`,
+  );
+  return DatabaseRowSchema.parse(JSON.parse(json)).map((row) => ({
+    name: row.name,
+    record: parseOwnerComment(row.comment),
+    connections: row.connections,
+  }));
+}
+
 /**
- * Drop leaked `scout_test_*` databases from crashed runs. Names encode their
- * creation epoch-ms, so only databases older than the age bound are dropped —
- * never a concurrently running suite's.
+ * Drop `scout_test_*` databases leaked by crashed runs on this host. Only a
+ * database whose owner record names this host, whose owner process is gone
+ * (dead, or its PID reused), that is past the grace period and has no
+ * connections is dropped, and never with FORCE. Unowned databases — legacy,
+ * other tools — are logged and kept; age alone never drops anything.
  */
 export function sweepStaleTestDatabases(): void {
   ensureDevPostgres();
-  const rows = psqlMaintenance(
-    "SELECT datname FROM pg_database WHERE datname LIKE 'scout_test_%'",
-  );
-  if (rows === "") {
-    return;
-  }
   const now = Date.now();
-  for (const name of rows.split("\n")) {
-    const match = /^scout_test_(\d+)_/.exec(name);
-    if (match?.[1] === undefined) {
-      continue;
-    }
-    if (now - Number.parseInt(match[1], 10) < SWEEP_MAX_AGE_MS) {
+  const unowned: string[] = [];
+  for (const row of listDatabases(
+    String.raw`d.datname LIKE 'scout\_test\_%'`,
+  )) {
+    const decision = decideSweep({
+      record: row.record,
+      activeConnections: row.connections,
+      now,
+      probe: hostProcessProbe,
+    });
+    if (decision.action === "keep") {
+      if (
+        decision.reason === "unowned" ||
+        decision.reason === "malformed-owner"
+      ) {
+        unowned.push(row.name);
+      } else if (decision.reason === "active-connections") {
+        logger.warn(
+          `Keeping ${row.name}: its owner is gone but ${row.connections.toString()} connection(s) remain`,
+        );
+      }
       continue;
     }
     try {
-      psqlMaintenance(`DROP DATABASE IF EXISTS "${name}" WITH (FORCE)`);
+      psqlMaintenance(`DROP DATABASE IF EXISTS "${row.name}"`);
     } catch (error) {
-      // Best effort — a racing drop or lingering connection is not fatal.
-      logger.warn(`Failed to sweep stale test database ${name}`, { error });
+      // A connection that arrived since the listing makes the drop fail; the
+      // database is kept and the next sweep reconsiders it.
+      logger.warn(`Failed to sweep stale test database ${row.name}`, { error });
     }
+  }
+  if (unowned.length > 0) {
+    const shown = unowned.slice(0, UNOWNED_LOG_LIMIT).join(", ");
+    const more =
+      unowned.length > UNOWNED_LOG_LIMIT
+        ? ` and ${(unowned.length - UNOWNED_LOG_LIMIT).toString()} more`
+        : "";
+    logger.info(
+      `Kept ${unowned.length.toString()} scout_test_* database(s) with no harness owner record: ${shown}${more}`,
+    );
   }
 }
