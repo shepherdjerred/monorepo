@@ -209,7 +209,15 @@ export async function completionFixture(
     );
     return read();
   };
-  const refreshBinding = async () => {
+  const refreshBinding = async (changedPointer = false) => {
+    const before = await db.plexBindingCurrent.findMany({
+      where: { mediaId: { in: f.published.entry.mediaIds } },
+      orderBy: { mediaId: "asc" },
+    });
+    const physical = await db.libraryAsset.findUniqueOrThrow({
+      where: { id: f.asset.id },
+    });
+    if (changedPointer) reindexCompletionItems(f);
     const queued = await queueExistingPlexBinding(f.context, f.asset.id);
     if (queued.status !== "queued")
       throw new Error(`Native rebind protected: ${queued.reason}`);
@@ -222,6 +230,28 @@ export async function completionFixture(
         f.context.plexBindingExecution(),
       ),
     ).toMatchObject({ status: "verified" });
+    const after = await db.plexBindingCurrent.findMany({
+      where: { mediaId: { in: f.published.entry.mediaIds } },
+      orderBy: { mediaId: "asc" },
+    });
+    expect(after).toHaveLength(before.length);
+    for (const [index, previous] of before.entries()) {
+      const current = after[index];
+      if (current === undefined)
+        throw new Error("Native reverify lost physical cohort coverage");
+      if (changedPointer) {
+        expect(current.evidenceId).not.toBe(previous.evidenceId);
+        expect(current.associationHash).not.toBe(previous.associationHash);
+        expect(current.revision).toBe(previous.revision + 1);
+      } else {
+        expect(current.evidenceId).toBe(previous.evidenceId);
+        expect(current.associationHash).toBe(previous.associationHash);
+        expect(current.revision).toBe(previous.revision);
+      }
+    }
+    expect(
+      await db.libraryAsset.findUniqueOrThrow({ where: { id: f.asset.id } }),
+    ).toEqual(physical);
   };
   const requestAgain = async () => {
     if (tv) {
@@ -312,4 +342,25 @@ function markIncompleteTv(
   if (item === undefined)
     throw new Error("Partial native TV fixture omitted its last item");
   f.state.viewCountOverrides.set(item.ratingKey, 0);
+}
+
+/** Plex reindexing changes only the synthetic HTTP pointer, never physical bytes or DB proof. */
+function reindexCompletionItems(
+  f: Awaited<ReturnType<typeof prepareBoundRetention>>,
+) {
+  for (const mediaId of f.published.entry.mediaIds) {
+    const previous = f.items.get(mediaId);
+    if (previous === undefined)
+      throw new Error("Native reindex omitted its physical item");
+    const ratingKey = String(
+      z.coerce.number().int().positive().parse(previous.ratingKey) +
+        1_000_000_000,
+    );
+    if (f.metadata.has(ratingKey))
+      throw new Error("Synthetic reindex pointer already exists");
+    const current = { ...previous, ratingKey };
+    f.items.set(mediaId, current);
+    f.metadata.delete(previous.ratingKey);
+    f.metadata.set(ratingKey, current);
+  }
 }

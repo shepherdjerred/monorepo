@@ -100,7 +100,7 @@ test.each(["decrease", "unknown", "rebind"] as const)(
     await f.observe(2);
     expect(await f.facts()).toMatchObject({ completionComplete: true });
     if (change === "unknown") await f.unknown();
-    if (change === "rebind") await f.refreshBinding();
+    if (change === "rebind") await f.refreshBinding(true);
     await f.observe(change === "decrease" ? 1 : 3);
     expect(await f.facts()).toMatchObject({
       watchedComplete: true,
@@ -110,6 +110,21 @@ test.each(["decrease", "unknown", "rebind"] as const)(
     expect(await f.read()).toMatchObject({ interestState: "following" });
   },
 );
+
+test("reverifying an unchanged native association preserves genuine completion", async () => {
+  const f = await fixture();
+  await f.continued();
+  await f.observe(1);
+  await f.observe(2);
+  expect(await f.facts()).toMatchObject({ completionComplete: true });
+  await f.refreshBinding();
+  expect(await f.facts()).toMatchObject({ completionComplete: true });
+  await f.sweep();
+  expect(await f.read()).toMatchObject({
+    interestState: "finished",
+    interestReleaseReason: "watched",
+  });
+});
 
 test("an ended followed series needs fresh completion for every requested leaf", async () => {
   const f = await fixture(true);
