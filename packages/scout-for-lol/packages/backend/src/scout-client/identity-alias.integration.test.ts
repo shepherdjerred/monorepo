@@ -9,6 +9,7 @@ import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { RiotHttpError } from "#src/league/api/client/errors.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import { createTestScoutClientDevice } from "#src/testing/scout-client-device.ts";
+import { riotMatchWithSeats } from "#src/testing/riot-match-seats.ts";
 import type { AuthenticatedScoutClient } from "./authentication.ts";
 
 const { prisma } = createTestDatabase("scout-client-identity-alias");
@@ -25,6 +26,10 @@ vi.doMock("#src/league/api/api.ts", () => ({
 
 const { ingestObservationBatch } = await import("./ingress.ts");
 const { readTimelineSelection } = await import("./canonical-match.ts");
+const { drainAliasAttempts } =
+  await import("./alias-attempts/identity-alias-attempts.ts");
+const { learnAliasesFromRiotMatch } =
+  await import("./alias-attempts/riot-match-aliases.ts");
 
 const OWNER_ID = DiscordAccountIdSchema.parse("160509172704739328");
 const GUILD_ID = DiscordGuildIdSchema.parse("1337623164146155593");
@@ -140,8 +145,8 @@ function postGameWithTimeline() {
         matchHistory: {
           ...matchHistory(),
           participants: [
-            { participantId: 1, teamId: 100 },
-            { participantId: 2, teamId: 200 },
+            { participantId: 1, teamId: 100, championId: 1 },
+            { participantId: 2, teamId: 200, championId: 2 },
           ],
         },
         timeline: {
@@ -190,6 +195,7 @@ beforeEach(async () => {
     },
   );
   await prisma.leagueIdentityAlias.deleteMany();
+  await prisma.leagueIdentityAliasAttempt.deleteMany();
   // An accepted profile projects a snapshot row that pins its observation,
   // as does a canonical selection.
   await prisma.scoutClientCanonicalMatch.deleteMany();
@@ -267,21 +273,6 @@ describe("ingesting observations named by League-client UUID", () => {
     }
     // The stored payload is the evidence, kept exactly as the client sent it.
     expect(JSON.stringify(stored[1]?.payload)).toContain(FRIEND_UUID);
-  });
-
-  test("learns an alias for every player a post-game identifies in full", async () => {
-    await ingestObservationBatch(device, batch(accountProfile(), postGame()));
-
-    const aliases = await prisma.leagueIdentityAlias.findMany({
-      orderBy: { lcuUuid: "asc" },
-      select: { lcuUuid: true, puuid: true, source: true },
-    });
-    expect(aliases).toEqual(
-      [
-        { lcuUuid: SELF_UUID, puuid: SELF_PUUID, source: "riot_id" },
-        { lcuUuid: FRIEND_UUID, puuid: FRIEND_PUUID, source: "riot_id" },
-      ].sort((left, right) => left.lcuUuid.localeCompare(right.lcuUuid)),
-    );
   });
 
   test("looks a player up once, then answers from the alias", async () => {
@@ -459,6 +450,7 @@ describe("client-sourced match timelines", () => {
       device,
       batch(accountProfile(), postGameWithTimeline()),
     );
+    await drainAliasAttempts(new Date());
     const source = await prisma.scoutClientObservation.findFirstOrThrow({
       where: { kind: "post_game" },
     });
@@ -487,5 +479,148 @@ describe("client-sourced match timelines", () => {
     expect(
       await readTimelineSelection(RiotMatchIdSchema.parse("NA1_5653248720")),
     ).toEqual({ source: "RIOT" });
+  });
+});
+
+describe("durable alias attempts", () => {
+  test("resolves only the observer inline and queues everyone else", async () => {
+    await ingestObservationBatch(device, batch(accountProfile(), postGame()));
+
+    expect(await prisma.leagueIdentityAlias.findMany()).toMatchObject([
+      { lcuUuid: SELF_UUID, puuid: SELF_PUUID, source: "riot_id" },
+    ]);
+    expect(mocks.byRiotId).toHaveBeenCalledTimes(1);
+    expect(mocks.byRiotId).toHaveBeenCalledWith("sjerred", "sjerr", "AMERICAS");
+    const attempt = await prisma.leagueIdentityAliasAttempt.findUniqueOrThrow({
+      where: { lcuUuid: FRIEND_UUID },
+    });
+    expect(attempt).toMatchObject({
+      state: "pending",
+      attempts: 0,
+      gameName: "Virmel",
+      tagLine: "NA1",
+    });
+    expect(attempt.observationIds).toHaveLength(1);
+  });
+
+  test("the drain resolves a queued player and re-queues the observations that named them", async () => {
+    await ingestObservationBatch(device, batch(accountProfile(), postGame()));
+    const named = await prisma.leagueIdentityAliasAttempt.findUniqueOrThrow({
+      where: { lcuUuid: FRIEND_UUID },
+    });
+    await prisma.scoutClientObservation.update({
+      where: { observationId: named.observationIds[0] },
+      data: { recoveryComplete: true, recoveryAttemptAt: new Date() },
+    });
+
+    const made = await drainAliasAttempts(new Date());
+
+    expect(made).toBe(1);
+    expect(
+      await prisma.leagueIdentityAlias.findUnique({
+        where: { lcuUuid: FRIEND_UUID },
+      }),
+    ).toMatchObject({ puuid: FRIEND_PUUID, source: "riot_id" });
+    expect(
+      await prisma.leagueIdentityAliasAttempt.findUniqueOrThrow({
+        where: { lcuUuid: FRIEND_UUID },
+      }),
+    ).toMatchObject({ state: "resolved", attempts: 1 });
+    expect(
+      await prisma.scoutClientObservation.findUniqueOrThrow({
+        where: { observationId: named.observationIds[0] },
+        select: { recoveryComplete: true, recoveryAttemptAt: true },
+      }),
+    ).toEqual({ recoveryComplete: false, recoveryAttemptAt: new Date(0) });
+  });
+
+  test("the drain backs off a failed lookup and records the error class", async () => {
+    await ingestObservationBatch(device, batch(accountProfile(), postGame()));
+    mocks.byRiotId.mockRejectedValueOnce(
+      new RiotHttpError({
+        status: 503,
+        statusText: "Unavailable",
+        body: null,
+        url: "https://americas.api.riotgames.com/riot/account/v1/accounts/by-riot-id",
+        headers: new Headers(),
+      }),
+    );
+    const now = new Date();
+
+    await drainAliasAttempts(now);
+
+    const attempt = await prisma.leagueIdentityAliasAttempt.findUniqueOrThrow({
+      where: { lcuUuid: FRIEND_UUID },
+    });
+    expect(attempt).toMatchObject({
+      state: "pending",
+      attempts: 1,
+      lastErrorClass: "server_error",
+    });
+    expect(attempt.nextAttemptAt.getTime()).toBe(now.getTime() + 60_000);
+    // Not due again yet.
+    expect(await drainAliasAttempts(now)).toBe(0);
+  });
+
+  test("records a blank Riot ID as no_riot_id instead of dropping it", async () => {
+    const blank = observation(
+      "post_game",
+      {
+        resource: "post_game",
+        data: {
+          matchHistory: {
+            participantIdentities: [
+              {
+                participantId: 2,
+                player: { puuid: FRIEND_UUID, gameName: "", tagLine: "" },
+              },
+            ],
+          },
+        },
+      },
+      { gameId: "5653248720", platformId: "NA1" },
+    );
+
+    await ingestObservationBatch(device, batch(accountProfile(), blank));
+
+    expect(
+      await prisma.leagueIdentityAliasAttempt.findUniqueOrThrow({
+        where: { lcuUuid: FRIEND_UUID },
+      }),
+    ).toMatchObject({ state: "no_riot_id" });
+    expect(await drainAliasAttempts(new Date())).toBe(0);
+  });
+
+  test("learns a client participant's alias from the Riot-published game", async () => {
+    await ingestObservationBatch(
+      device,
+      batch(accountProfile(), postGameWithTimeline()),
+    );
+    const riotMatch = await riotMatchWithSeats(
+      RiotMatchIdSchema.parse("NA1_5653248720"),
+      [
+        { participantId: 1, teamId: 100, championId: 1, puuid: SELF_PUUID },
+        { participantId: 2, teamId: 200, championId: 2, puuid: FRIEND_PUUID },
+      ],
+    );
+
+    expect(await learnAliasesFromRiotMatch(riotMatch)).toBe(1);
+
+    expect(
+      await prisma.leagueIdentityAlias.findUnique({
+        where: { lcuUuid: FRIEND_UUID },
+      }),
+    ).toMatchObject({ puuid: FRIEND_PUUID, source: "riot_match" });
+    // The queued lookup is moot and Riot is never asked about Virmel.
+    expect(
+      await prisma.leagueIdentityAliasAttempt.findUniqueOrThrow({
+        where: { lcuUuid: FRIEND_UUID },
+      }),
+    ).toMatchObject({ state: "resolved" });
+    expect(mocks.byRiotId).not.toHaveBeenCalledWith(
+      "Virmel",
+      "NA1",
+      expect.anything(),
+    );
   });
 });

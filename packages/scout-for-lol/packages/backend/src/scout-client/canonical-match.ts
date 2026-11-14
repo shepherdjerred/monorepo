@@ -25,6 +25,7 @@ import {
   translatePayloadIdentities,
 } from "./identity-alias.ts";
 
+import { learnAliasesFromRiotMatch } from "./alias-attempts/riot-match-aliases.ts";
 import { clientEvidenceReadyAt } from "#src/evidence/source-grace.ts";
 
 type Candidate = {
@@ -191,6 +192,10 @@ export async function readClientTimelineCandidates(
   expectedMatch?: RawMatch,
 ) {
   if (isFeatureHardDisabled("scout_client_ingestion")) return [];
+  // A Riot-published game teaches the client's participants' aliases for free,
+  // and the translation below is the first thing to benefit.
+  if (expectedMatch !== undefined)
+    await learnAliasesFromRiotMatch(expectedMatch);
   const platform = platformRouteOf(riotMatchId);
   const candidates = await prisma.scoutClientObservation.findMany({
     where: {

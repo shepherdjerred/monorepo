@@ -3,11 +3,16 @@ import type { ScoutClientObservation } from "@scout-for-lol/data";
 import { prisma } from "#src/database/index.ts";
 import type { AuthenticatedScoutClient } from "./authentication.ts";
 import {
+  type AttemptCandidate,
+  enqueueAliasAttempts,
+} from "./alias-attempts/identity-alias-attempts.ts";
+import {
   accountRouteFor,
   type IdentityMap,
   isLcuUuid,
   type LcuIdentity,
   lcuIdentitiesIn,
+  lcuUnnamedIdentitiesIn,
   lcuUuidsIn,
   learnIdentityAliases,
   translatePayloadIdentities,
@@ -106,14 +111,32 @@ export async function learnBatchIdentities(
     observerUuids,
   };
   const stated = new Set<string>();
+  const queued: AttemptCandidate[] = [];
   for (const observation of observations) {
     const identities = lcuIdentitiesIn(observation.payload);
     for (const identity of identities) stated.add(identity.lcuUuid);
-    await learnIdentityAliases(identities, {
+    // Only the observer's own identity is resolved inline; it is what decides
+    // whether the batch is attributable. Everyone else is queued for the
+    // reconciliation drain, so the request makes no account-v1 calls for them.
+    const own = identities.filter((named) => observerUuids.has(named.lcuUuid));
+    await learnIdentityAliases(own, {
       ...options,
       route: accountRouteFor(observation.platformId),
     });
+    for (const identity of [
+      ...identities,
+      ...lcuUnnamedIdentitiesIn(observation.payload),
+    ].filter((other) => !observerUuids.has(other.lcuUuid))) {
+      queued.push({
+        lcuUuid: identity.lcuUuid,
+        gameName: identity.gameName,
+        tagLine: identity.tagLine,
+        platformId: observation.platformId,
+        observationId: observation.observationId,
+      });
+    }
   }
+  await enqueueAliasAttempts(queued, device.deviceId);
   // An observer this batch names only by UUID: use the newest profile the
   // device reported earlier.
   for (const observer of observerUuids) {
