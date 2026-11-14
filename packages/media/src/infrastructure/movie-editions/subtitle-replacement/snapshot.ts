@@ -23,6 +23,7 @@ import { subtitleDestination } from "#domain/subtitle-path.ts";
 import { replacementCandidateBytes } from "#automation/subtitle-replacement/candidate.ts";
 import { FileGuardError } from "#automation/files/types.ts";
 import type { HeldMovieRollbackCaptionSourceV1 } from "./rollback-source.ts";
+import { movieReplacementCandidateSourceV1 } from "#infrastructure/subtitle-maintenance/candidate-authority.ts";
 
 const hash = (value: unknown) => identityHash(nativeJson(value));
 
@@ -85,10 +86,6 @@ export async function captureMovieReplacementSnapshotV2(
         oldSubtitleId: z.literal(old.id),
         expectedOldVersion: z.literal(old.version),
       }),
-      movieManualReplacementV2: z.strictObject({
-        schemaVersion: z.literal(2),
-        eventId: z.uuid(),
-      }),
     })
     .parse(candidate.matchingEvidence);
   if (evidence.targetAuthority !== work.authority)
@@ -107,25 +104,17 @@ export async function captureMovieReplacementSnapshotV2(
     throw new FileGuardError(
       "subtitle_replacement_requires_distinct_same_path",
     );
-  const event = await tx.applicationEvent.findUniqueOrThrow({
-    where: { id: evidence.movieManualReplacementV2.eventId },
-  });
-  budget.consume(1);
-  const candidateSource = z
-    .object({
-      subtitleId: z.literal(candidate.id),
-      oldSubtitleId: z.literal(old.id),
-      assetId: z.literal(asset.id),
-      checksum: z.literal(bytes.checksum),
-      scope: z.json(),
-    })
-    .parse(event.payload);
-  if (
-    event.kind !== "movie_subtitle_replacement_candidate_v2" ||
-    event.actorId === null ||
-    hash(candidateSource.scope) !== hash(input.scope)
-  )
-    throw new Error("Movie replacement candidate lost its actual owner upload");
+  const event = await movieReplacementCandidateSourceV1(
+    tx,
+    {
+      candidate,
+      old,
+      scope: input.scope,
+      assetId: asset.id,
+      targetAuthority: work.authority,
+    },
+    budget,
+  );
   const { publication, source } = await captureMovieReplacementSourceV2(
     tx,
     {

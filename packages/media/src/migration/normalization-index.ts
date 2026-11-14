@@ -28,7 +28,7 @@ export function buildNormalizationIndex(
   const fileCoverage = new Map<string, number>();
   for (const target of targets) {
     const ids =
-      target.kind === "episode"
+      target.kind === "episode" || target.kind === "season"
         ? (target.seriesExternalIds ?? target.externalIds)
         : target.externalIds;
     for (const key of externalKeys(

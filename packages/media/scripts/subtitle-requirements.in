@@ -1,0 +1,2 @@
+# Pinned alongside the version catalog; the generated hash lock is used by the worker image.
+ffsubsync==0.5.1

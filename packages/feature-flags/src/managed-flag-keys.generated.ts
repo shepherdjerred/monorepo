@@ -51,6 +51,7 @@ export const MEDIA_BOOLEAN_FLAG_KEYS = [
   "media-shared-announcements-upgrades",
   "media-requests-enabled",
   "media-acquisition-enabled",
+  "media-subtitle-maintenance-enabled",
   "media-capacity-observation-enabled",
   "media-plex-event-hints-enabled",
   "media-source-cleanup-enabled",

@@ -1,4 +1,13 @@
 import * as m from "#workflows/media/core.ts";
+import * as playback from "#workflows/media/playback.ts";
+export const reconcileMediaPlaybackWorkflow =
+  playback.reconcileMediaPlaybackWorkflow;
+import * as qualityGuide from "#workflows/media/quality-guide/workflow.ts";
+import * as subtitleMaintenance from "#workflows/media/subtitle-maintenance/workflow.ts";
+export const maintainMediaSubtitlesV1Workflow =
+  subtitleMaintenance.maintainMediaSubtitlesV1Workflow;
+export const refreshMediaQualityGuidesWorkflow =
+  qualityGuide.refreshMediaQualityGuidesWorkflow;
 import * as movie from "#workflows/media/movie-editions/acquisition.ts";
 import * as movieSubtitles from "#workflows/media/movie-editions/subtitles.ts";
 import * as movieWatch from "#workflows/media/movie-editions/watch.ts";

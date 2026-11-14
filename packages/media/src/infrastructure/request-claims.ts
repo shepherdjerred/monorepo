@@ -5,6 +5,7 @@ export const effectiveRequestWhere = {
   edition: "default",
   active: true,
   excluded: false,
+  interestState: "following",
   OR: [
     { direct: true },
     {
@@ -12,6 +13,30 @@ export const effectiveRequestWhere = {
         some: {
           edition: "default",
           active: true,
+          rootRequest: {
+            edition: "default",
+            active: true,
+            excluded: false,
+            direct: true,
+            interestState: "following",
+          },
+        },
+      },
+    },
+  ],
+} satisfies Prisma.MediaRequestWhereInput;
+
+/** Playback/removal explanations retain released interests and their expanded
+ * coverage. This is observation authority only, never acquisition authority. */
+export const retentionRequestWhere = {
+  edition: "default",
+  excluded: false,
+  OR: [
+    { direct: true, active: true },
+    {
+      coverageSources: {
+        some: {
+          edition: "default",
           rootRequest: {
             edition: "default",
             active: true,

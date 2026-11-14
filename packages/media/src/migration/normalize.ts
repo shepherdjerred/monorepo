@@ -70,7 +70,7 @@ function identity(
   const matched: Target[] = [];
   for (const target of candidates) {
     const targetIds =
-      target.kind === "episode"
+      target.kind === "episode" || target.kind === "season"
         ? (target.seriesExternalIds ?? target.externalIds)
         : target.externalIds;
     if (sharesIds(ids, targetIds)) matched.push(target);

@@ -9,6 +9,20 @@ export function registerNotificationActions(
   app: Hono<{ Variables: { actor: MediaActor; requestId: string } }>,
   notifications: NotificationApplication,
 ): void {
+  app.post("/api/v1/notifications/:id/read", async (c) => {
+    const input = parseInput(
+      z.strictObject({ expectedVersion: z.int().nonnegative() }),
+      await readJson(c.req.raw),
+    );
+    return c.json(
+      await notifications.acknowledgeRead(
+        c.get("actor"),
+        parseInput(IdempotencyKeySchema, c.req.header("Idempotency-Key")),
+        c.req.param("id"),
+        input.expectedVersion,
+      ),
+    );
+  });
   app.post("/api/v1/notifications/:id/retry", async (c) => {
     const input = parseInput(
       z.object({ expectedVersion: z.number().int().nonnegative() }).strict(),

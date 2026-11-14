@@ -12,6 +12,7 @@ import {
   currentSubtitlePolicies,
   policyStatus,
 } from "#infrastructure/subtitle-policy.ts";
+import { defaultHouseholdCaptionRequirements } from "#infrastructure/quality-guide/captions.ts";
 import {
   visibilityReader,
   visibilityAncestry,
@@ -63,7 +64,7 @@ export function readMediaDetail(
           orderBy: [{ seasonNumber: "asc" }, { episodeNumber: "asc" }],
           take: 1000,
         },
-        intents: { where: { edition: "default" } },
+        intents: { where: { edition: "default" }, include: { profile: true } },
         requests: {
           where: {
             ...effectiveRequestWhere,
@@ -184,6 +185,7 @@ export function readMediaDetail(
       plexAccess,
       visible: reader.visible,
     });
+    const household = await defaultHouseholdCaptionRequirements(tx, item);
     return MediaDetailSchema.parse({
       ...item,
       availability: external.has(item.id) ? "available" : item.availability,
@@ -204,6 +206,7 @@ export function readMediaDetail(
               policy: policies[0],
               asset: coverage.asset,
               epoch: runtime.recoveryEpoch,
+              household,
             }),
             publicationPending,
           ),
@@ -254,6 +257,7 @@ function pendingSubtitleStatus(
   return {
     satisfied: false,
     missing: status?.missing ?? [],
+    householdMissing: status?.householdMissing ?? [],
     protectedReasons: [
       ...new Set([
         ...(status?.protectedReasons ?? []),

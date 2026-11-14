@@ -1,18 +1,13 @@
 import type { Prisma } from "#generated/prisma/client.ts";
-import { currentFulfillmentAsset } from "#automation/editions/fulfillment.ts";
 import {
   boundRequesterWatch,
   type BoundMediaCohort,
 } from "#automation/retention/binding.ts";
 import { RETENTION_DEFAULTS } from "#domain/retention.ts";
-import {
-  requireMovieChoiceAccess,
-  type MovieChoiceAccess,
-} from "#infrastructure/movie-editions/access.ts";
+import type { MovieChoiceAccess } from "#infrastructure/movie-editions/access.ts";
 import type { MovieChoiceFreshness } from "#infrastructure/movie-editions/freshness.ts";
-import { readMovieDemandAuthority } from "#infrastructure/movie-editions/fulfillment.ts";
 import { plexBindingFreshness } from "#infrastructure/plex-binding/freshness.ts";
-import { effectiveRequestWhere } from "#infrastructure/request-claims.ts";
+import { householdRetentionState } from "#infrastructure/request-interest/protection.ts";
 import type { PlexBindingFreshness } from "#shared/plex-binding/contract.ts";
 import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 
@@ -29,7 +24,7 @@ export type RequesterWatchContext = {
     | undefined;
 };
 
-async function memberRequestersWatched(
+async function memberInterestsReleased(
   tx: Prisma.TransactionClient,
   context: RequesterWatchContext & {
     binding: NonNullable<RequesterWatchContext["binding"]>;
@@ -37,36 +32,13 @@ async function memberRequestersWatched(
   member: BoundMediaCohort["original"][number],
 ): Promise<boolean> {
   const mediaId = member.authority.binding.scope.mediaId;
-  const movieScope = context.binding.cohort.movieScope;
-  const media = await tx.mediaItem.findUniqueOrThrow({
-    where: { id: mediaId },
-  });
-  if (media.kind === "movie") {
-    const { demands, freshness } = await readMovieDemandAuthority(tx, {
-      mediaId,
-      currentAsset: await currentFulfillmentAsset(
-        tx,
-        mediaId,
-        movieScope?.edition,
-      ),
-      access: requireMovieChoiceAccess(context.movieAccess ?? {}),
-      ...(movieScope === undefined ? {} : { scope: movieScope }),
-      ...(context.binding.budget === undefined
-        ? {}
-        : { budget: context.binding.budget }),
-    });
-    if (demands.some((demand) => demand.fulfillment.status !== "fulfilled"))
-      return false;
-    if (freshness !== null) context.captureFreshness?.(freshness);
-  }
-  const claims = await tx.mediaRequest.findMany({
-    where: {
-      mediaId,
-      ...effectiveRequestWhere,
-      edition: movieScope?.edition ?? "default",
-      user: { role: { not: "owner" } },
-    },
-  });
+  const household = await householdRetentionState(
+    tx,
+    mediaId,
+    context.binding.cohort.movieScope?.edition ?? "default",
+  );
+  if (household.reason !== null) return false;
+  const claims = household.recipients;
   const observations = await Promise.all(
     claims.map((claim) =>
       boundRequesterWatch(tx, member, claim.userId, context.binding.budget),
@@ -87,31 +59,30 @@ async function memberRequestersWatched(
       );
   }
   const now = Date.now();
-  const watched =
+  const confirmed =
     claims.length > 0 &&
     claims.every((claim) =>
       observations.some(
         (observation) =>
           observation !== null &&
           observation.userId === claim.userId &&
-          observation.watched &&
           Date.parse(observation.observedAt) <= now &&
           now - Date.parse(observation.observedAt) <=
             RETENTION_DEFAULTS.maximumWatchAgeMs,
       ),
     );
   context.binding.freshness.assertActive();
-  return watched;
+  return confirmed;
 }
 
-export async function allRequestersWatched(
+export async function allHouseholdInterestsReleased(
   tx: Prisma.TransactionClient,
   context: RequesterWatchContext,
 ): Promise<boolean> {
   const binding = context.binding;
   if (binding === undefined) return false;
   for (const member of binding.cohort.original) {
-    if (!(await memberRequestersWatched(tx, { ...context, binding }, member)))
+    if (!(await memberInterestsReleased(tx, { ...context, binding }, member)))
       return false;
   }
   return true;

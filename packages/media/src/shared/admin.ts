@@ -14,16 +14,32 @@ export const SubtitleProviderIdSchema = z.enum([
   "assrt",
   "subhd",
   "zimuku",
+  "subf2m",
 ]);
 export const AdminProviderIdSchema = z.enum([
   ...TrackerProviderIdSchema.options,
   ...SubtitleProviderIdSchema.options,
 ]);
 export type AdminProviderId = z.infer<typeof AdminProviderIdSchema>;
+export const ProviderSelectionSchema = z.strictObject({
+  priority: z.int().min(1).max(50),
+  minimumSeeders: z.int().min(0).max(1000),
+  delaySeconds: z.int().min(0).max(86_400),
+  bypassAtHighestQuality: z.boolean(),
+});
+export function personalProviderSelection(privateTracker: boolean) {
+  return ProviderSelectionSchema.parse({
+    priority: privateTracker ? 1 : 25,
+    minimumSeeders: 1,
+    delaySeconds: 900,
+    bypassAtHighestQuality: true,
+  });
+}
 export const ProviderConfigurationSchema = z
   .object({
     minimumIntervalSeconds: z.number().int().min(1).max(3600),
     dailyDownloadLimit: z.number().int().min(1).max(1000),
+    selection: ProviderSelectionSchema.optional(),
   })
   .strict();
 export const defaultProviderConfiguration = {

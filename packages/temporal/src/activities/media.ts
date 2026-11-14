@@ -23,6 +23,12 @@ import type {
 } from "@shepherdjerred/media/native-series-pack-compensation";
 import { createSeedingWorkerActivities } from "./media/seeding.ts";
 import { createProviderFeedWorkerActivitiesV1 } from "./media/provider-feed.ts";
+import { createPlaybackWorkerActivities } from "./media/playback/activities.ts";
+import type { PlaybackActivities } from "@shepherdjerred/media/playback";
+import { createQualityGuideWorkerActivities } from "./media/quality-guide/activities.ts";
+import type { QualityGuideActivities } from "@shepherdjerred/media/quality-guide";
+import type { SubtitleMaintenanceActivitiesV1 } from "@shepherdjerred/media/subtitle-maintenance";
+import { createSubtitleMaintenanceWorkerActivitiesV1 } from "./media/subtitle-maintenance/activities.ts";
 import {
   createRequestedMovieRollbackFileWorkerActivitiesV1,
   createRequestedMovieRollbackNetworkWorkerActivitiesV1,
@@ -81,6 +87,9 @@ import {
 let networkRuntime: ReturnType<typeof createMediaNetworkRuntime> | undefined;
 let fileRuntime: ReturnType<typeof createMediaFileRuntime> | undefined;
 type NetworkActivities = MediaNetworkActivities &
+  PlaybackActivities &
+  SubtitleMaintenanceActivitiesV1 &
+  QualityGuideActivities &
   SeriesPackNativeNetworkActivitiesV1 &
   RequestedMovieRollbackNetworkActivitiesV1 &
   MovieWatchActivitiesV4 &
@@ -98,6 +107,9 @@ type CoreNetworkActivities = Omit<
   | keyof MovieNetworkActivitiesV4
   | keyof RequestedMovieRollbackNetworkActivitiesV1
   | keyof MovieWatchActivitiesV4
+  | keyof PlaybackActivities
+  | keyof QualityGuideActivities
+  | keyof SubtitleMaintenanceActivitiesV1
   | keyof LibraryPlexBindingActivities
   | keyof LibraryHandoffNetworkActivities
   | "publishMediaToPlex"
@@ -208,6 +220,9 @@ function assertNotCancelled(): void {
 }
 
 export const mediaNetworkWorkerActivities: NetworkActivities = {
+  ...createPlaybackWorkerActivities(getMediaNetworkRuntime),
+  ...createSubtitleMaintenanceWorkerActivitiesV1(getMediaNetworkRuntime),
+  ...createQualityGuideWorkerActivities(getMediaNetworkRuntime),
   ...createAcquisitionNetworkWorkerActivities(getMediaNetworkRuntime),
   ...createMovieWatchWorkerActivitiesV4(getMediaNetworkRuntime),
   ...createProviderFeedWorkerActivitiesV1(getMediaNetworkRuntime),
@@ -352,6 +367,8 @@ export const mediaFileWorkerActivities: FileActivities = {
     withFiles((activities) => activities.purgeMediaFiles(input)),
   installMediaSubtitles: (input) =>
     withFiles((activities) => activities.installMediaSubtitles(input)),
+  prepareSubtitleSpeechV1: (input) =>
+    withFiles((activities) => activities.prepareSubtitleSpeechV1(input)),
 };
 
 export async function closeMediaActivityRuntimes(): Promise<void> {

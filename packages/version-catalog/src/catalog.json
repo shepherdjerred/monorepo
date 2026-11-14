@@ -3,6 +3,16 @@
   "schemaVersion": 1,
   "entries": [
     {
+      "name": "ffsubsync",
+      "category": "upstream",
+      "artifactType": "package",
+      "management": { "managed": false },
+      "value": "0.5.1",
+      "notes": [
+        "Media subtitle timing and classic WebRTC speech coverage. Full dependency hashes are pinned in packages/media/scripts/subtitle-requirements.txt; changes require the speech coverage and timing tests."
+      ]
+    },
+    {
       "name": "realm/SwiftLint",
       "category": "upstream",
       "artifactType": "source",

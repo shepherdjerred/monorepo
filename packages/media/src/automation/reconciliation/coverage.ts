@@ -44,6 +44,7 @@ export function createCoverageActivities(
           active: true,
           direct: true,
           excluded: false,
+          interestState: "following",
           OR: [
             { mediaId: input.mediaId },
             { media: { parentId: input.mediaId, kind: "season" } },
@@ -198,6 +199,7 @@ function episodeIncluded(current: MediaRequest, episode: MediaItem) {
     episode.createdAt <= current.coverageCompletedAt;
   return (
     current.active &&
+    current.interestState === "following" &&
     !current.excluded &&
     current.direct &&
     inSnapshot &&
@@ -290,6 +292,7 @@ async function projectEpisode(
         active: true,
         direct: true,
         excluded: false,
+        interestState: "following",
       },
     },
   });

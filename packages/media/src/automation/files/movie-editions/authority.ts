@@ -21,6 +21,7 @@ import {
 import { movieEditionLibraryPath } from "#automation/files/editions/movie-path.ts";
 import { PublicReleaseAttributesSchema } from "#shared/api.ts";
 import { chooseUpgrade, evaluateRelease } from "#domain/quality.ts";
+import { measuredQualityError } from "#automation/files/content-rejection.ts";
 import {
   fileIdentityEvidence,
   assertFileIdentity,
@@ -221,8 +222,16 @@ export async function assertMovieMeasuredUpgradeV4(
   },
 ) {
   const scope = authority.identity.scope;
-  if (!evaluateRelease(measured, authority.profile, [scope.mediaId]).accepted)
-    throw new FileGuardError("measured_quality_rejected");
+  const evaluated = evaluateRelease(measured, authority.profile, [
+    scope.mediaId,
+  ]);
+  if (!evaluated.accepted)
+    throw measuredQualityError(
+      measured,
+      authority.profile,
+      scope.mediaId,
+      evaluated,
+    );
   const previous = await moviePredecessorV4(
     tx,
     scope,

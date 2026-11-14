@@ -20,6 +20,10 @@ import { CredentialCipher } from "#application/security.ts";
 import { createRequesterAccessRefresh } from "./network/requester-access.ts";
 import { mediaBehaviorConfig } from "#infrastructure/config.ts";
 import { PlexClient } from "#integrations/plex.ts";
+import { PlexPlaybackClient } from "#integrations/plex-playback.ts";
+import { PrismaPlaybackCollector } from "#infrastructure/playback/collector.ts";
+import { createRequestInterestReconciler } from "./request-interests.ts";
+import { createLibraryMaintenanceFacets } from "./network/library-maintenance.ts";
 import { QbittorrentClient } from "#integrations/qbittorrent.ts";
 import type { PlexBindingExecution } from "#shared/plex-binding/activities.ts";
 import { PlexAccessSchema } from "#shared/plex-binding/contract.ts";
@@ -403,6 +407,20 @@ export async function createMediaNetworkRuntime(
     acquisition: createAcquisitionNetworkFacet(context),
     seeding: createSeedingNetworkFacet(context),
     providerFeed: createProviderFeedNetworkFacetV1(context),
+    playback: new PrismaPlaybackCollector(
+      context.db,
+      new PlexPlaybackClient({
+        baseUrl: bootstrap.PLEX_SERVER_URL,
+        token: bootstrap.PLEX_SERVER_TOKEN,
+        clientIdentifier: `media-playback-${bootstrap.PLEX_SERVER_MACHINE_ID}`,
+      }),
+      bootstrap.PLEX_SERVER_MACHINE_ID,
+    ),
+    requestInterests: createRequestInterestReconciler(
+      context,
+      bootstrap.PLEX_SERVER_MACHINE_ID,
+    ),
+    ...createLibraryMaintenanceFacets(context, behavior),
     seriesPackFeed: {
       matchSeriesPackFeedSource: createSeriesPackFeedFacetV1(context),
     },

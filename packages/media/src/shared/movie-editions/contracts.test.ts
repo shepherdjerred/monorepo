@@ -9,6 +9,16 @@ import {
 } from "./registry.ts";
 import { MovieEditionRequestViewSchema } from "./view.ts";
 import { MovieEditionFulfillmentSchema } from "./fulfillment.ts";
+import {
+  MovieLibraryReferenceV2Schema,
+  MoviePassiveLibraryReferenceV1Schema,
+  MoviePublicationReferenceV2Schema,
+} from "./publication-v2.ts";
+import {
+  LibraryAssetReferenceV1Schema,
+  PassiveLibraryAssetReferenceV1Schema,
+  LibraryAssetReferenceProtocolSchema,
+} from "#shared/handoff/library-ownership.ts";
 
 const mediaId = "10000000-0000-4000-8000-000000000001";
 const subjectUserId = "10000000-0000-4000-8000-000000000002";
@@ -130,4 +140,59 @@ describe("explicit movie edition boundary", () => {
       }).success,
     ).toBe(false);
   });
+});
+
+describe("literal library parent reference versions", () => {
+  const fields = {
+    receiptId: requestId,
+    planId: subjectUserId,
+    planHash: "a".repeat(64),
+    assetId: mediaId,
+    assetVersion: 0,
+    bindingHash: "b".repeat(64),
+    physicalEvidenceHash: "c".repeat(64),
+  };
+  it.each([
+    {
+      label: "movie",
+      historical: MovieLibraryReferenceV2Schema,
+      passive: MoviePassiveLibraryReferenceV1Schema,
+      protocol: MoviePublicationReferenceV2Schema,
+      reference: { kind: "movie_library_adoption_v2", scope, ...fields },
+    },
+    {
+      label: "library",
+      historical: LibraryAssetReferenceV1Schema,
+      passive: PassiveLibraryAssetReferenceV1Schema,
+      protocol: LibraryAssetReferenceProtocolSchema,
+      reference: { kind: "library_adoption_v1", ...fields },
+    },
+  ])(
+    "keeps $label version-zero literal and version-one a separate strict branch",
+    ({ historical, passive, protocol, reference }) => {
+      expect(historical.parse(reference)).toEqual(reference);
+      expect(protocol.parse(reference)).toEqual(reference);
+      const registered = { ...reference, assetVersion: 1 };
+      expect(historical.safeParse(registered).success).toBe(false);
+      expect(passive.safeParse(reference).success).toBe(false);
+      expect(passive.parse(registered)).toEqual(registered);
+      expect(protocol.parse(registered)).toEqual(registered);
+      for (const assetVersion of [-1, 2, 1.5, null, "1"])
+        expect(protocol.safeParse({ ...reference, assetVersion }).success).toBe(
+          false,
+        );
+      const { assetVersion: _version, ...missing } = reference;
+      expect(protocol.safeParse(missing).success).toBe(false);
+      expect(
+        protocol.safeParse({ ...registered, registrationApproved: true })
+          .success,
+      ).toBe(false);
+      expect(
+        protocol.safeParse({ ...registered, planHash: "unbound" }).success,
+      ).toBe(false);
+      expect(
+        protocol.safeParse({ ...registered, receiptId: "absent" }).success,
+      ).toBe(false);
+    },
+  );
 });

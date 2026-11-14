@@ -143,7 +143,76 @@ describe("public tracker contracts", () => {
       empty.search({ query: "Fixture", kind: "movie" }),
     ).resolves.toEqual([]);
   });
+});
 
+describe("TPB recent feed", () => {
+  it("reads TPB's real keywordless snapshot and filters non-video rows without hiding scans", async () => {
+    let calls = 0;
+    const provider = new PirateBayProvider(async (url) => {
+      calls++;
+      expect(url.href).toBe(
+        "https://apibay.org/precompiled/data_top100_recent.json",
+      );
+      return Response.json([
+        {
+          id: "42",
+          name: "Film",
+          info_hash: hash,
+          size: "1024",
+          seeders: "5",
+          category: "201",
+        },
+        {
+          id: "43",
+          name: "Audio",
+          info_hash: hash,
+          size: "1024",
+          seeders: "5",
+          category: "101",
+        },
+        {
+          id: "44",
+          name: "Unknown",
+          info_hash: hash,
+          size: "1024",
+          seeders: "5",
+        },
+      ]);
+    });
+    expect(await provider.recent({ page: 1 })).toMatchObject({
+      scanned: 3,
+      nextPage: null,
+      candidates: [{ providerReleaseId: "42", infoHash: hash }],
+    });
+    expect(await provider.recent({ page: 2 })).toEqual({
+      scanned: 0,
+      candidates: [],
+      nextPage: null,
+    });
+    expect(calls).toBe(1);
+    await expect(provider.recent({ page: 0 })).rejects.toThrow();
+  });
+
+  it("refuses an oversized TPB snapshot rather than advancing over an unseen tail", async () => {
+    const provider = new PirateBayProvider(async () =>
+      Response.json(
+        Array.from({ length: 101 }, (_, i) => ({
+          id: String(i + 1),
+          name: "Film",
+          info_hash: hash,
+          size: "1024",
+          seeders: "5",
+          category: "201",
+        })),
+      ),
+    );
+    await expect(provider.recent({ page: 1 })).rejects.toThrow(
+      "invalid-response",
+    );
+  });
+});
+
+describe("legacy public parsing contracts", () => {
   it("parses MagnetDownload rows and refuses challenge pages or ambiguous hashes", () => {
     const html =
       '<table><tr><td class="x-item"><a href="/info/42" title="Fixture &amp; Film">Title</a><div class="tail">Files: 1 size: 1.5 GiB Type: video</div></td></tr></table>';

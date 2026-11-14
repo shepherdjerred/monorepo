@@ -163,6 +163,11 @@ async function queueDue(
 ) {
   const intent = defaultIntent(item.intents);
   if (intent === null) throw new Error("Sweep item lost desired state");
+  const calendarQueued = await queueCalendarRefresh(
+    context,
+    item,
+    intent.libraryKeep,
+  );
   if (!intent.desiredPresence) return;
   await serializable(context.db, (tx) =>
     queueMediaSubtitleTargets(tx, item.id),
@@ -201,6 +206,16 @@ async function queueDue(
       return;
     }
   }
+  await queueDueOperation(context, item, intent.generation, calendarQueued);
+}
+
+async function queueDueOperation(
+  context: MediaAutomationContext,
+  item: { id: string; kind: string },
+  generation: number,
+  calendarQueued: boolean,
+) {
+  if (calendarQueued && item.kind === "series") return;
   await serializable(context.db, async (tx) => {
     await queueOperation(tx, {
       key: `due:${item.id}:${String(Math.floor(Date.now() / 21_600_000))}`,
@@ -208,9 +223,41 @@ async function queueDue(
       targetId: item.id,
       payload: {
         mediaId: item.id,
-        generation: intent.generation,
+        generation,
         cursor: null,
       },
     });
   });
+}
+
+/** Public catalog dates/status are informational and do not require file-write authority. */
+async function queueCalendarRefresh(
+  context: MediaAutomationContext,
+  item: { id: string; kind: string; tmdbId: number | null },
+  libraryKeep: boolean,
+) {
+  if ((item.kind !== "movie" && item.kind !== "series") || item.tmdbId === null)
+    return false;
+  const claim = libraryKeep
+    ? null
+    : await context.db.mediaRequest.findFirst({
+        where: {
+          mediaId: item.id,
+          direct: true,
+          active: true,
+          excluded: false,
+          interestState: "following",
+        },
+        select: { id: true },
+      });
+  if (!libraryKeep && claim === null) return false;
+  await serializable(context.db, (tx) =>
+    queueOperation(tx, {
+      key: `calendar:${item.id}:${String(Math.floor(Date.now() / 21_600_000))}`,
+      kind: "refresh_catalog",
+      targetId: item.id,
+      payload: { mediaId: item.id, cursor: null },
+    }),
+  );
+  return true;
 }

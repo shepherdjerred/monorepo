@@ -16,9 +16,12 @@ import {
   subtitleArchive,
   subtitleVersionMatches,
   requireUntargetedProvider,
+} from "./subtitle-sources.ts";
+import {
+  subtitleProviderCandidateAllowedV1,
   type SubtitleSearch,
   type SubtitleSource,
-} from "./subtitle-sources.ts";
+} from "#domain/subtitle-maintenance/provider.ts";
 
 export type SubtitleLookup = SubtitleSource | null | { pending: true };
 
@@ -56,8 +59,10 @@ export async function fromSubhd(
   requireResumableBrowser(state, binding);
   if (state === undefined) {
     const found = await provider.search(input.query);
-    const candidates = found.filter((candidate) =>
-      subtitleVersionMatches(candidate.release, input.sourceFilename),
+    const candidates = found.filter(
+      (candidate) =>
+        subtitleVersionMatches(candidate.release, input.sourceFilename) &&
+        subtitleProviderCandidateAllowedV1(input, "subhd", candidate.id),
     );
     if (candidates.length !== 1 || candidates[0] === undefined) return null;
     const candidate = candidates[0];
@@ -139,6 +144,7 @@ export async function fromZimuku(
     const candidates = found.filter(
       (candidate) =>
         candidate.simplifiedLabel &&
+        subtitleProviderCandidateAllowedV1(input, "zimuku", candidate.id) &&
         subtitleVersionMatches(candidate.release, input.sourceFilename),
     );
     if (candidates.length !== 1 || candidates[0] === undefined) continue;

@@ -253,6 +253,7 @@ async function selectionBlocker(
     return edition.reasons[0] ?? "edition_evidence_ambiguous";
   if (input.reviewed) return null;
   const evaluated = chooseUpgrade({
+    phase: "listing",
     candidate: {
       id: release.id,
       providerId: release.providerId,

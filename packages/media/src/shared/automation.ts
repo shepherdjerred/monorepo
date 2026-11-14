@@ -1,4 +1,5 @@
 import type { MatchFeedSourceV1 } from "./feeds/contract.ts";
+import type { SubtitleUpgradeV1 } from "./subtitle-maintenance/score.ts";
 import type { OrdinaryStagingBatch } from "./acquisition/ordinary-staging.ts";
 export type MediaStagingInput = {
   operationId: string;
@@ -161,6 +162,7 @@ export type MediaNetworkActivities = PlexBindingActivities & {
   }>;
   finalizeMediaAcquisition: (input: MediaAttemptOperation) => Promise<void>;
   findMediaSubtitles: (input: {
+    upgradeV1?: SubtitleUpgradeV1;
     operationId: string;
     assetId: string;
     language: string;
@@ -211,6 +213,10 @@ export type MediaNetworkActivities = PlexBindingActivities & {
 };
 
 export type MediaFileActivities = {
+  prepareSubtitleSpeechV1: (input: {
+    subtitleId: string;
+    operationId: string;
+  }) => Promise<{ status: "prepared" | "blocked"; reason?: string }>;
   rollbackPublishedSeriesPackV1: (input: MediaAttemptOperation) => Promise<{
     status: "rolled_back" | "protected" | "obsolete";
     reason?: string;

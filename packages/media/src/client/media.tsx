@@ -309,6 +309,12 @@ function MediaFiles({ media }: { media: MediaDetail }) {
                         : "Without HI captions"}
                   </p>
                 ))}
+                {asset.subtitleStatus.householdMissing.map((target) => (
+                  <p className="helper" key={`household-${target.language}`}>
+                    English regular subtitles required for original-language
+                    playback
+                  </p>
+                ))}
                 {asset.subtitleStatus.protectedReasons.map((reason) => (
                   <p className="helper" key={reason}>
                     {humanize(reason)}

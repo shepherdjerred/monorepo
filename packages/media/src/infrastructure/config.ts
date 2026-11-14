@@ -73,6 +73,12 @@ export function mediaBehaviorConfig(
         default: true,
         names: { flag: "media-acquisition-enabled" },
       },
+      subtitleMaintenanceEnabled: {
+        schema: z.boolean(),
+        sources: ["flag", "default"],
+        default: true,
+        names: { flag: "media-subtitle-maintenance-enabled" },
+      },
       capacityObservationEnabled: {
         schema: z.boolean(),
         sources: ["flag", "default"],
@@ -150,6 +156,7 @@ export function mediaBehaviorConfig(
           sharedDiscordChannelId: "string",
           requestsEnabled: "boolean",
           acquisitionEnabled: "boolean",
+          subtitleMaintenanceEnabled: "boolean",
           capacityObservationEnabled: "boolean",
           plexEventHintsEnabled: "boolean",
           sourceCleanupEnabled: "boolean",

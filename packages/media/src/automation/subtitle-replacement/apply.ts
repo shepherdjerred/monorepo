@@ -39,6 +39,8 @@ import { bindPlexTransactionDeadline } from "#infrastructure/plex-binding/freshn
 import { movieReplacementFreshness } from "#automation/movie-editions/subtitle-replacement/authority.ts";
 import { MovieReplacementSnapshotV2Schema } from "#shared/movie-editions/subtitle-replacement-v2.ts";
 import { holdMovieRollbackCaptionSourceV1 } from "#infrastructure/movie-editions/subtitle-replacement/rollback-source.ts";
+import { assertAutomaticSubtitleAuthorizationV1 } from "#automation/subtitle-maintenance/authorization.ts";
+import type { Prisma } from "#generated/prisma/client.ts";
 
 export async function applyReplacement(
   initialContext: FileContext,
@@ -68,7 +70,7 @@ export async function applyReplacement(
       throw new FileGuardError("subtitle_replacement_coordinator_changed");
     if (!reconcile) {
       await assertReplacementSnapshot(tx, current.id, {}, context);
-      requireApproval(context, current.review, current.snapshotHash);
+      await requireApproval(context, current, tx);
     }
     return current;
   });
@@ -110,7 +112,7 @@ export async function applyReplacement(
       if (current.state !== "applying")
         throw new FileGuardError("subtitle_replacement_coordinator_changed");
       await assertReplacementSnapshot(tx, current.id, {}, context);
-      requireApproval(context, current.review, current.snapshotHash);
+      await requireApproval(context, current, tx);
       await proof.content.digest(proof.paths.source);
       await proof.content.digest(proof.paths.staged);
       if (
@@ -164,7 +166,7 @@ export async function applyReplacement(
       let forward = effect !== "restored";
       try {
         await assertReplacementSnapshot(tx, current.id, held, context);
-        requireApproval(context, current.review, current.snapshotHash);
+        await requireApproval(context, current, tx);
         if (!(await context.enabled.acquisition())) forward = false;
       } catch (error) {
         if (
@@ -188,9 +190,8 @@ export async function applyReplacement(
           context,
         );
         await proof.content.digest(proof.paths.video);
-        if (forward && !(await context.enabled.acquisition()))
-          throw new FileGuardError("acquisition_disabled");
         await context.checkpoint("subtitle-replacement-authorized");
+        await requireForwardPolicy(context, current, forward);
       };
       await authorize();
       const freshness = await publicationAuthorityDeadline(
@@ -250,6 +251,7 @@ export async function applyReplacement(
           )
             throw new FileGuardError("subtitle_replacement_archive_missing");
           await context.checkpoint("subtitle-replacement-before-receipt");
+          await requireForwardPolicy(context, current, true);
           await settleReplacement(tx, context, current, {
             outcome: "installed",
             proof,
@@ -278,21 +280,56 @@ export async function applyReplacement(
   );
 }
 
-function requireApproval(
+async function requireForwardPolicy(
   context: FileContext,
-  review: {
-    approvedById: string | null;
-    approvedAt: Date | null;
-    observationHash: string;
-    observation: unknown;
-    expiresAt: Date;
-  } | null,
-  snapshot: string,
+  row: { review: { approvedById: string | null } | null },
+  forward: boolean,
 ) {
+  if (!forward) return;
+  if (!(await context.enabled.acquisition()))
+    throw new FileGuardError("acquisition_disabled");
   if (
-    review?.approvedAt === null ||
-    review?.approvedAt === undefined ||
-    review.approvedById === null ||
+    row.review?.approvedById === null &&
+    (context.enabled.subtitleMaintenance === undefined ||
+      !(await context.enabled.subtitleMaintenance()))
+  )
+    throw new FileGuardError("subtitle_maintenance_disabled");
+}
+
+async function requireApproval(
+  context: FileContext,
+  row: {
+    id: string;
+    snapshotHash: string;
+    review: {
+      approvedById: string | null;
+      approvedAt: Date | null;
+      observationHash: string;
+      observation: unknown;
+      expiresAt: Date;
+    } | null;
+  },
+  tx: Prisma.TransactionClient,
+) {
+  const { review } = row;
+  if (
+    review !== null &&
+    review.approvedAt === null &&
+    review.approvedById === null
+  )
+    await assertAutomaticSubtitleAuthorizationV1(tx, context, {
+      replacementId: row.id,
+      snapshotHash: row.snapshotHash,
+      observationHash: review.observationHash,
+    });
+  const automatic =
+    review !== null &&
+    review.approvedAt === null &&
+    review.approvedById === null;
+  if (
+    review === null ||
+    (!automatic &&
+      (review.approvedAt === null || review.approvedById === null)) ||
     review.expiresAt <= now(context) ||
     snapshotHash(z.json().parse(review.observation)) !== review.observationHash
   )
@@ -302,7 +339,7 @@ function requireApproval(
     typeof observed !== "object" ||
     observed === null ||
     !("snapshotHash" in observed) ||
-    observed.snapshotHash !== snapshot
+    observed.snapshotHash !== row.snapshotHash
   )
     throw new FileGuardError("subtitle_replacement_review_changed");
 }

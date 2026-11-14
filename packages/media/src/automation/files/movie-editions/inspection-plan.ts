@@ -27,13 +27,17 @@ import { prepareResolvedMovieEvidenceV4 } from "#migration/movie-evidence/prepar
 import { measureQuality } from "#automation/files/resolved-measurement.ts";
 import type { MovieFileAuthorityV4 } from "./authority.ts";
 import { assertMovieMeasuredUpgradeV4 } from "./authority.ts";
+import { MeasuredContentRejection } from "#automation/files/content-rejection.ts";
 
 /** Probe/hash/regex work runs outside final PG locks; the caller rechecks this complete plan before staging. */
 export async function prepareMovieFilePlanV4(
   context: PublicationContext,
   input: MovieAttemptOperationV4,
   authority: MovieFileAuthorityV4,
-  beforeEmbedded: () => Promise<void>,
+  callbacks: {
+    beforeEmbedded: () => Promise<void>;
+    rejectContent: (error: MeasuredContentRejection) => Promise<void>;
+  },
 ) {
   const videos = authority.observation.files.filter(
     (file) =>
@@ -80,6 +84,7 @@ export async function prepareMovieFilePlanV4(
     providerId: authority.release.providerId,
     title: authority.release.title,
     ...probeAttributes(probe, authority.assessment.attributes.quality),
+    runtimeMs: Math.round(Number(probe.format.duration) * 1000),
     mediaIds: [input.scope.mediaId],
     sizeBytes: member.size,
   };
@@ -107,10 +112,11 @@ export async function prepareMovieFilePlanV4(
       prepared,
     );
   }
-  const previous = await assertMovieMeasuredUpgradeV4(
-    context.db,
+  const previous = await inspectMovieQuality(
+    context,
     authority,
     measured,
+    callbacks.rejectContent,
   );
   const checksum = await sha256File(source.absolute, async () => {
     await context.checkpoint("hashing");
@@ -150,7 +156,7 @@ export async function prepareMovieFilePlanV4(
     };
   });
   const assetId = crypto.randomUUID();
-  await beforeEmbedded();
+  await callbacks.beforeEmbedded();
   const embedded = await stageEmbedded({
     context,
     kind: "movies",
@@ -208,4 +214,18 @@ export async function prepareMovieFilePlanV4(
       },
     ],
   });
+}
+
+async function inspectMovieQuality(
+  context: PublicationContext,
+  authority: MovieFileAuthorityV4,
+  measured: Parameters<typeof assertMovieMeasuredUpgradeV4>[2],
+  rejectContent: (error: MeasuredContentRejection) => Promise<void>,
+) {
+  try {
+    return await assertMovieMeasuredUpgradeV4(context.db, authority, measured);
+  } catch (error) {
+    if (error instanceof MeasuredContentRejection) await rejectContent(error);
+    throw error;
+  }
 }

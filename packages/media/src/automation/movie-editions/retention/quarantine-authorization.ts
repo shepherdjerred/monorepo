@@ -21,6 +21,8 @@ import {
   assertMovieQuarantineLegacyClaims,
   movieRetentionAssetVersion,
 } from "./quarantine-scope.ts";
+import { householdRetentionState } from "#infrastructure/request-interest/protection.ts";
+import { removalNoticeAcceptance } from "#infrastructure/request-interest/notice-proof.ts";
 
 /**
  * This capability never leaves the final transaction. Canonical/target/request,
@@ -43,6 +45,7 @@ export async function captureMovieQuarantineAuthorization(
   },
 ) {
   const { scope, budget } = input.movie;
+  const household = await releasedHousehold(tx, scope);
   await assertPublicationUnfenced(tx, [scope.mediaId], [input.entry.assetId]);
   await assertNoMediaSubtitleReplacement(tx, [scope.mediaId]);
   const decision = await tx.retentionDecision.findUniqueOrThrow({
@@ -114,7 +117,12 @@ export async function captureMovieQuarantineAuthorization(
   });
   if (
     identityHash(demand.demands.map((row) => row.requestId).sort()) !==
-    identityHash(item.requests.map((row) => row.id).sort())
+    identityHash(
+      item.requests
+        .filter((row) => row.interestState === "following")
+        .map((row) => row.id)
+        .sort(),
+    )
   )
     throw new FileGuardError("request_obsolete");
   const requesters = await quarantineRequesterFacts(tx, {
@@ -123,6 +131,7 @@ export async function captureMovieQuarantineAuthorization(
     item,
     demand,
     timestamp: observed.wall,
+    recipients: household.recipients,
   });
   const evaluation = evaluateRetention({
     now: observed.wall,
@@ -170,6 +179,19 @@ export async function captureMovieQuarantineAuthorization(
   return freshness;
 }
 
+async function releasedHousehold(
+  tx: Prisma.TransactionClient,
+  scope: MovieRemovalScope["scope"],
+) {
+  const household = await householdRetentionState(
+    tx,
+    scope.mediaId,
+    scope.edition,
+  );
+  if (household.reason !== null) throw new FileGuardError(household.reason);
+  return household;
+}
+
 function assertMoviePurgeElapsed(
   decision: { quarantinedAt: Date | null; purgeAfter: Date | null },
   input: { purge?: boolean; policyTime: Date },
@@ -196,6 +218,9 @@ async function quarantineRequesterFacts(
     }>;
     demand: Awaited<ReturnType<typeof readMovieDemandAuthority>>;
     timestamp: number;
+    recipients: Awaited<
+      ReturnType<typeof householdRetentionState>
+    >["recipients"];
   },
 ) {
   const authority = input.plex.byMedia.get(input.movie.scope.mediaId);
@@ -203,24 +228,8 @@ async function quarantineRequesterFacts(
     throw new FileGuardError("reconciliation_required");
   const deadlines: number[] = [];
   const values = [];
-  for (const request of input.item.requests) {
-    const fulfillment = input.demand.demands.find(
-      (row) => row.requestId === request.id,
-    )?.fulfillment;
-    if (fulfillment === undefined)
-      throw new Error("Movie quarantine omitted request fulfillment");
-    if (request.user.role === "owner") {
-      values.push({
-        userId: request.userId,
-        owner: true,
-        fulfillment,
-        watched: null,
-        observedAt: null,
-        warningAcceptedAt: null,
-        warningFailed: false,
-      });
-      continue;
-    }
+  for (const request of input.recipients) {
+    const fulfillment = { status: "not_applicable" as const, reason: null };
     const watch = await readCurrentBoundWatch(
       tx,
       { userId: request.userId, authority },
@@ -231,24 +240,18 @@ async function quarantineRequesterFacts(
       where: {
         eventId: input.eventId,
         userId: request.userId,
-        state: "accepted",
-        channel: { in: ["email", "discord"] },
-        OR: [{ providerStatus: null }, { providerStatus: { not: "bounced" } }],
-        acceptedAt: { not: null, lte: new Date(input.timestamp) },
-        reconciledAt: {
-          gte: new Date(input.timestamp - 60_000),
-          lte: new Date(input.timestamp),
-        },
+        ...removalNoticeAcceptance(new Date(input.timestamp)),
       },
       orderBy: { acceptedAt: "asc" },
     });
     if (projection !== null)
       deadlines.push(Date.parse(projection.observedAt) + 900_000);
-    if (delivery?.reconciledAt != null)
+    if (delivery?.reconciledAt != null && delivery.channel !== "in_app")
       deadlines.push(delivery.reconciledAt.getTime() + 60_000);
     values.push({
       userId: request.userId,
-      owner: false,
+      owner: request.user.role === "owner",
+      released: true,
       fulfillment,
       watched: projection?.watched ?? null,
       observedAt:

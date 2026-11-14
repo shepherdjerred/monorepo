@@ -11,6 +11,7 @@ import {
 import { movieEditionDisplayLabel } from "#shared/movie-editions/registry.ts";
 import { defaultPhysicalRoot } from "#infrastructure/handoff/default-edition.ts";
 import { mirrorDefaultAvailability } from "#infrastructure/editions/availability.ts";
+import { releasePersonalMigrationHolds } from "#migration/personal-state/holds.ts";
 
 export async function adoptLibraryTargets(
   tx: Prisma.TransactionClient,
@@ -43,7 +44,20 @@ export async function adoptLibraryTargets(
       (item) =>
         item.mediaId === selected.mediaId && item.edition === selected.edition,
     );
+    const priorKeeping = await tx.mediaIntent.findUnique({
+      where: {
+        mediaId_edition: {
+          mediaId: selected.mediaId,
+          edition: selected.edition,
+        },
+      },
+      select: { libraryPolicyExplicit: true },
+    });
     const data = {
+      ...(priorKeeping?.libraryPolicyExplicit === true ||
+      !(await hasPhysicalLibrary(tx, selected, scope.files))
+        ? {}
+        : { libraryKeep: true }),
       profileId: media.profileId,
       automationEpoch: scope.request.recoveryEpoch,
       desiredPresence: true,
@@ -103,6 +117,55 @@ export async function adoptLibraryTargets(
     });
   }
   await updateCanonicalMedia(tx, input);
+  const imported = await tx.applicationEvent.findFirst({
+    where: { kind: "personal_state_imported", actorId: { not: null } },
+    orderBy: { createdAt: "desc" },
+    select: { id: true, actorId: true },
+  });
+  if (imported?.actorId !== null && imported?.actorId !== undefined)
+    await releasePersonalMigrationHolds(tx, {
+      actorId: imported.actorId,
+      eventId: imported.id,
+      scopes: scope.targets,
+    });
+}
+
+async function hasPhysicalLibrary(
+  tx: Prisma.TransactionClient,
+  selected: LibraryHandoffScope["targets"][number],
+  files: LibraryHandoffScope["files"],
+) {
+  const ancestry = {
+    OR: [
+      { id: selected.mediaId },
+      { parentId: selected.mediaId },
+      { parent: { parentId: selected.mediaId } },
+    ],
+  } satisfies Prisma.MediaItemWhereInput;
+  const provedIds = files
+    .filter((file) => file.edition === selected.edition)
+    .flatMap((file) => file.mediaIds);
+  // applyPreparedHandoff has rechecked every selected file's physical proof.
+  // Targets precede native asset/coverage rebinding, so current coverage alone
+  // cannot recognize a fresh file or a passive file's newly reviewed named cut.
+  if (
+    provedIds.length > 0 &&
+    (await tx.mediaItem.findFirst({
+      where: { id: { in: provedIds }, ...ancestry },
+      select: { id: true },
+    })) !== null
+  )
+    return true;
+  return (
+    (await tx.assetCoverage.findFirst({
+      where: {
+        current: true,
+        edition: selected.edition,
+        media: ancestry,
+      },
+      select: { assetId: true },
+    })) !== null
+  );
 }
 
 async function retainHouseholdHold(
@@ -113,6 +176,19 @@ async function retainHouseholdHold(
   },
 ) {
   const { scope, selected } = input;
+  const prior = await tx.recoveryHold.findUnique({
+    where: {
+      mediaId_edition: { mediaId: selected.mediaId, edition: selected.edition },
+    },
+  });
+  // A file import must not overwrite a real/manual hold, or resurrect a source
+  // review that a genuine immutable personal-import receipt already settled.
+  if (
+    prior !== null &&
+    (prior.reason !== "migration_household_intent_review_required" ||
+      prior.releasedAt !== null)
+  )
+    return;
   if (
     scope.files.some(
       (file) =>
@@ -139,6 +215,7 @@ async function retainHouseholdHold(
         releasedAt: null,
         releasedById: null,
         releaseEvidence: Prisma.DbNull,
+        version: { increment: 1 },
       },
     });
 }

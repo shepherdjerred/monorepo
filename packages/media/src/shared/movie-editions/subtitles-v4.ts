@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { MovieEditionScopeSchema, MovieEditionHashSchema } from "./registry.ts";
+import { SubtitleUpgradeV1Schema } from "#shared/subtitle-maintenance/score.ts";
 
 export const MovieSubtitleTargetV4Schema = z.strictObject({
   language: z.string().regex(/^[a-z]{2,3}(?:-[A-Za-z]{2,8})?$/u),
@@ -14,6 +15,7 @@ export const MovieSubtitleOperationV4Schema =
     assetId: z.uuid(),
     recoveryEpoch: z.int().nonnegative(),
     targetAuthority: MovieEditionHashSchema,
+    upgradeV1: SubtitleUpgradeV1Schema.optional(),
   });
 export const MovieSubtitleInstallV4Schema = z.strictObject({
   schemaVersion: z.literal(4),

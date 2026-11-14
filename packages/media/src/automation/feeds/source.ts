@@ -8,6 +8,7 @@ import { nativeJson } from "#infrastructure/native-recovery/snapshots.ts";
 import { FeedSourceV1Schema } from "#shared/feeds/contract.ts";
 import { queueOperation } from "#automation/store.ts";
 import { parseSeriesSeasonSetV1 } from "#domain/acquisition-identity/series-season-set.ts";
+import { nextProviderAvailability } from "#domain/provider-availability.ts";
 
 /** Immutable observations are separate from a target-specific release interpretation or acquisition. */
 export async function retainFeedSourceV1(
@@ -15,6 +16,7 @@ export async function retainFeedSourceV1(
   cipher: CredentialCipher,
   source: ProviderCandidate,
 ) {
+  await refreshFeedAvailability(tx, cipher, source);
   const fingerprint = identityHash(candidateSourceIdentity(source));
   const key = `feed-source-v1:${source.providerId}:${fingerprint}`;
   const payload = FeedSourceV1Schema.parse({
@@ -82,5 +84,54 @@ export async function readFeedSourceV1(
     identityHash(candidateSourceIdentity(source)) !== stored.identityHash
   )
     throw new Error("Provider feed snapshot identity changed");
-  return source;
+  return {
+    ...source,
+    availabilityObservedAtV1:
+      source.availabilityObservedAtV1 ?? event.createdAt.toISOString(),
+  };
+}
+
+async function refreshFeedAvailability(
+  tx: Prisma.TransactionClient,
+  cipher: CredentialCipher,
+  source: ProviderCandidate,
+) {
+  const release = await tx.releaseCandidate.findUnique({
+    where: {
+      providerId_providerReleaseId: {
+        providerId: source.providerId,
+        providerReleaseId: source.providerReleaseId,
+      },
+    },
+  });
+  if (release === null) return;
+  await tx.$queryRaw`SELECT id FROM "ReleaseCandidate" WHERE id=${release.id} FOR UPDATE`;
+  const current = await tx.releaseCandidate.findUniqueOrThrow({
+    where: { id: release.id },
+  });
+  if (current.encryptedSource === null) return;
+  const previous = StoredCandidateSchema.parse(
+    JSON.parse(
+      cipher.decrypt(
+        current.encryptedSource,
+        `release:${current.providerId}:${current.providerReleaseId}`,
+      ),
+    ),
+  );
+  if (candidateSourceIdentity(previous) !== candidateSourceIdentity(source))
+    return;
+  const observedAt =
+    source.availabilityObservedAtV1 === undefined
+      ? new Date()
+      : new Date(source.availabilityObservedAtV1);
+  const availability = nextProviderAvailability(
+    current.availability,
+    source,
+    observedAt,
+  );
+  if (availability !== null)
+    await tx.releaseCandidate.update({
+      where: { id: release.id },
+      data: { availability },
+    });
 }

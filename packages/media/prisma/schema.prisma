@@ -40,6 +40,82 @@ enum OperationStatus {
   reconciling
 }
 
+enum KeepingPolicy {
+  keep
+  temporary
+}
+
+enum RequestInterestState {
+  following
+  finished
+  dropped
+  expired
+}
+
+model MediaReleaseDate {
+  id String @id
+  mediaId String
+  media MediaItem @relation(fields: [mediaId], references: [id], onDelete: Restrict)
+  region String
+  kind String
+  date String?
+  precision String
+  observedAt DateTime
+  @@index([region, date, mediaId])
+}
+
+// Viewing history never grants file, request or current-watch authority.
+model PlaybackSession {
+  id String @id @default(uuid())
+  serverMachineId String
+  serverAccountId String
+  userId String?
+  ratingKey String
+  title String
+  seriesTitle String?
+  mediaType String
+  platform String
+  playerId String
+  decision String
+  startedAt DateTime
+  stoppedAt DateTime?
+  lastSeenAt DateTime
+  durationMs Int
+  watchedMs Int @default(0)
+  maxProgressMs Int @default(0)
+  lastProgressMs Int @default(0)
+  meaningfulProgressAt DateTime?
+  reportingCompleted Boolean @default(false)
+  state String
+  source String
+  sourceSnapshotDigest String?
+  identities PlaybackSessionIdentity[]
+  @@index([userId, startedAt, id])
+  @@index([serverMachineId, serverAccountId, ratingKey, startedAt])
+  @@index([serverMachineId, state, lastSeenAt])
+}
+
+model PlaybackSessionIdentity {
+  source String
+  sourceInstanceId String
+  sourceSessionId String
+  sessionId String
+  session PlaybackSession @relation(fields: [sessionId], references: [id], onDelete: Restrict)
+  @@id([source, sourceInstanceId, sourceSessionId])
+  @@index([sessionId])
+}
+
+model PlaybackCollector {
+  serverMachineId String @id
+  collectionStartedAt DateTime?
+  observedAt DateTime?
+  importedThrough DateTime?
+  importSourceInstanceId String?
+  handoffEvidence Json?
+  interestCursor String?
+  version Int @default(0)
+}
+
 // Internal transaction-local validation work, empty after every successful commit.
 model PlexClaimValidation {
   transactionId BigInt
@@ -460,6 +536,10 @@ model Credential {
 }
 
 model MediaItem {
+  seriesStatus String?
+  seriesStatusObservedAt DateTime?
+  catalogCompletedAt DateTime?
+  releaseDates MediaReleaseDate[]
   subtitlePolicies MediaSubtitlePolicyVersion[]
   recoveryHolds RecoveryHold[]
   editionDefinitions MediaEditionDefinition[]
@@ -495,6 +575,18 @@ model MediaItem {
 }
 
 model MediaRequest {
+  keepingPolicy KeepingPolicy @default(temporary)
+  interestState RequestInterestState @default(following)
+  interestRevision Int @default(0)
+  interestRenewedAt DateTime @default(now())
+  usableUnwatchedSince DateTime?
+  lastMeaningfulProgressAt DateTime?
+  interestNoticeEventId String?
+  interestNoticeRevision Int?
+  interestNoticeAcceptedAt DateTime?
+  interestNoticeViewedAt DateTime?
+  interestReleasedAt DateTime?
+  interestReleaseReason String?
   id                    String    @id @default(uuid())
   userId                String
   user                  MediaUser @relation(fields: [userId], references: [id])
@@ -613,6 +705,9 @@ model MediaEditionDefinition {
 }
 
 model MediaIntent {
+  libraryKeep Boolean @default(false)
+  libraryPolicyExplicit Boolean @default(false)
+  libraryPolicyActorId String?
   movieAssessments MovieReleaseAssessment[]
   plexEvidence PlexAssociationEvidence[]
   plexBinding PlexBindingCurrent?
@@ -657,6 +752,7 @@ model ReleaseCandidate {
   mediaIds          String[]
   searchedForMediaIds String[] @default([])
   sourceEvidence Json?
+  availability Json?
   createdAt         DateTime             @default(now())
   attempts          AcquisitionAttempt[]
 

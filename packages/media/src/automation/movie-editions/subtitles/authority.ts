@@ -12,6 +12,7 @@ import {
 } from "#automation/subtitles/authority.ts";
 import type { SubtitleTarget } from "#domain/subtitle-quality.ts";
 import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import { movieHouseholdCaptionRequirements } from "#infrastructure/quality-guide/captions.ts";
 
 /** One exact cut; caption progress never changes its sibling target's authority. */
 export async function currentMovieSubtitleWorkV4(
@@ -41,6 +42,7 @@ export async function currentMovieSubtitleWorkV4(
     where: {
       mediaId_edition: { mediaId: scope.mediaId, edition: scope.edition },
     },
+    include: { profile: true },
   });
   const policies = await currentMovieSubtitlePolicies(tx, scope, budget);
   const sponsors = await eligibleAcquisitionSponsors(tx, {
@@ -62,6 +64,13 @@ export async function currentMovieSubtitleWorkV4(
   );
   targets.push(...requirements.targets);
   const reasons = [...requirements.reasons];
+  const household = await movieHouseholdCaptionRequirements(
+    tx,
+    { target, coverage: asset.coverage[0] },
+    budget,
+  );
+  targets.push(...household.targets);
+  reasons.push(...household.reasons);
   if (asset.subtitles.length > 100)
     reasons.push("subtitle_inventory_requires_bounded_reconciliation");
   if (
@@ -95,6 +104,7 @@ export async function currentMovieSubtitleWorkV4(
     checksum: asset.checksum,
     epoch,
     audio,
+    household: household.binding,
     target:
       target === null
         ? null

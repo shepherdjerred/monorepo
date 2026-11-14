@@ -1,0 +1,69 @@
+.playback-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 1rem;
+}
+.playback-filters label {
+  display: grid;
+  gap: 0.4rem;
+}
+.playback-filters :is(input, select) {
+  border: 1px solid #445347;
+  padding: 0.65rem 0.75rem;
+  border-radius: 5px;
+  background: #131c16;
+  color: #eef0e9;
+  min-block-size: 44px;
+  max-inline-size: 100%;
+}
+.playback-summary,
+.playback-rankings {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+  gap: 1rem;
+}
+.playback-summary dd {
+  margin: 0.25rem 0;
+  font-size: 1.8rem;
+}
+.playback-now {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+  gap: 1rem;
+  padding: 0 1.5rem;
+}
+.playback-now progress {
+  inline-size: 100%;
+}
+.playback-table {
+  overflow: auto;
+  max-inline-size: 100%;
+  max-block-size: 40rem;
+}
+.playback-table table {
+  inline-size: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.playback-table th,
+.playback-table td {
+  padding: 0.8rem;
+  text-align: start;
+  vertical-align: top;
+  min-inline-size: 7rem;
+}
+.playback-table thead {
+  position: sticky;
+  inset-block-start: 0;
+  background: var(--surface, #172127);
+}
+.playback-table tbody th {
+  min-inline-size: 13rem;
+}
+.playback-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-block-start: 1rem;
+}

@@ -25,6 +25,10 @@ import { stageSeriesPackMembers } from "./series-pack/staging.ts";
 import { stageOrdinaryMedia } from "./ordinary-staging.ts";
 import { publishAcquisitionFiles } from "./series-pack/publication-flow.ts";
 import { rollbackPublishedSeriesPack } from "./series-pack/bounded-publication.ts";
+import {
+  prepareAndInstallSubtitle,
+  type SubtitleInput,
+} from "./subtitle-speech.ts";
 
 const network = proxyActivities<MediaNetworkActivities>({
   taskQueue: TASK_QUEUES.MEDIA_NETWORK,
@@ -284,36 +288,29 @@ async function verifyRollback(
   });
 }
 
-export async function acquireMediaSubtitlesWorkflow(input: {
-  operationId: string;
-  assetId: string;
-  language: string;
-  forced?: boolean;
-  hearingImpaired?: "required" | "excluded" | "any";
-  targetAuthority?: string;
-}): Promise<MediaWorkflowResult> {
+export async function acquireMediaSubtitlesWorkflow(
+  input: SubtitleInput,
+): Promise<MediaWorkflowResult> {
   return withRecoveryCheckpoint(input.operationId, () =>
     acquireSubtitles(input),
   );
 }
 
-async function acquireSubtitles(input: {
-  operationId: string;
-  assetId: string;
-  language: string;
-  forced?: boolean;
-  hearingImpaired?: "required" | "excluded" | "any";
-  targetAuthority?: string;
-}): Promise<MediaWorkflowResult> {
+async function acquireSubtitles(
+  input: SubtitleInput,
+): Promise<MediaWorkflowResult> {
   for (let poll = 0; poll < 28; poll++) {
     const result = await network.findMediaSubtitles(input);
     if (result.status === "found") {
       if (result.subtitleId === null)
         throw new Error("Found subtitles require an asset identity");
-      const installed = await files.installMediaSubtitles({
-        operationId: input.operationId,
-        subtitleId: result.subtitleId,
-      });
+      const installed = await prepareAndInstallSubtitle(
+        {
+          operationId: input.operationId,
+          subtitleId: result.subtitleId,
+        },
+        files,
+      );
       return finish(input.operationId, subtitleInstallResult(installed));
     }
     if (result.status === "blocked" || result.status === "obsolete")

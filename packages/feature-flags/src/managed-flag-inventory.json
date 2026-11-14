@@ -442,6 +442,18 @@
       "thresholdRollouts": []
     },
     {
+      "key": "media-subtitle-maintenance-enabled",
+      "owner": "media",
+      "namespace": "media",
+      "source": "media",
+      "purpose": "Maintain required subtitles and replace recent sidecars only with independently scored improvements under current video and policy authority.",
+      "type": "boolean",
+      "default": true,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "media-capacity-observation-enabled",
       "owner": "media",
       "namespace": "media",

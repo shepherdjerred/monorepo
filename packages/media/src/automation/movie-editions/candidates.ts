@@ -37,6 +37,8 @@ import { movieManagementContext } from "./management-context.ts";
 import { movieCurrentQuality } from "./current-quality.ts";
 import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
+import { providerCandidateAdmission } from "#automation/provider-selection.ts";
+import { compareProviderCandidates } from "#domain/provider-selection.ts";
 import type {
   MovieProviderSearchProgressV4,
   MovieReconcileOperationV4,
@@ -67,6 +69,7 @@ export type MovieCandidateV4 = {
   assessment: MovieReleaseAssessmentRef;
   rank: number;
   score: number;
+  priority: number;
 };
 
 /** Only measured properties of this edition can supply its current quality; another cut is not its predecessor. */
@@ -170,7 +173,12 @@ async function retainSource(
     version: target.profile.version,
     ...target.rules,
   };
-  const evaluation = evaluateRelease(attributes, profile, [input.mediaId]);
+  const evaluation = evaluateRelease(
+    attributes,
+    profile,
+    [input.mediaId],
+    "listing",
+  );
   const stored = await persistCandidateSnapshot(context, {
     source,
     attributes,
@@ -225,6 +233,7 @@ export async function storeMovieCandidateV4(
     ...current.value.attributes,
   };
   const chosen = chooseUpgrade({
+    phase: "listing",
     candidate,
     current: await currentMovieReleaseV4(context.db, scope),
     profile: {
@@ -234,14 +243,26 @@ export async function storeMovieCandidateV4(
     },
     mediaIds: [scope.mediaId],
   });
-  return chosen.upgrade
-    ? {
-        releaseId,
-        assessment: assessment.ref,
-        rank: chosen.evaluation.qualityRank,
-        score: chosen.evaluation.score,
-      }
-    : null;
+  if (!chosen.upgrade) return null;
+  const admission = await providerCandidateAdmission(context, {
+    releaseId,
+    mediaId: scope.mediaId,
+    edition: scope.edition,
+    rank: chosen.evaluation.qualityRank,
+    profile: {
+      id: current.current.profile.id,
+      version: current.current.profile.version,
+      ...current.current.rules,
+    },
+  });
+  if (!admission.accepted) return null;
+  return {
+    releaseId,
+    assessment: assessment.ref,
+    rank: chosen.evaluation.qualityRank,
+    score: chosen.evaluation.score,
+    priority: admission.priority,
+  };
 }
 
 async function assessProviderResults(
@@ -363,10 +384,10 @@ export async function searchMovieCandidatesV4(
         .filter((provider) => completed.has(provider.id))
         .map((provider) => ProviderIdSchema.parse(provider.id)),
     });
-  return accepted.sort(
-    (left, right) =>
-      right.rank - left.rank ||
-      right.score - left.score ||
-      left.releaseId.localeCompare(right.releaseId),
+  return accepted.sort((left, right) =>
+    compareProviderCandidates(
+      { ...left, id: left.releaseId },
+      { ...right, id: right.releaseId },
+    ),
   );
 }

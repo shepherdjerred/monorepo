@@ -9,8 +9,16 @@ import {
   IntegrationError,
   json,
   request,
+  boundedBytes as readBoundedBytes,
   type FetchTransport,
 } from "./http.ts";
+export function boundedBytes(
+  response: Response,
+  maximum: number,
+  service: string,
+) {
+  return readBoundedBytes(response, maximum, service);
+}
 
 const HashSchema = z
   .string()
@@ -40,6 +48,7 @@ export type ProviderRecentPage = {
 
 /** Activity-local only: private download URLs can contain passkeys. Never emit this type into workflow history or UI responses. */
 export type ProviderCandidate = {
+  availabilityObservedAtV1?: string | undefined;
   providerId:
     | "knaben"
     | "thepiratebay"
@@ -161,6 +170,7 @@ export class KnabenProvider {
         : [
             {
               providerId: "knaben",
+              availabilityObservedAtV1: new Date().toISOString(),
               providerReleaseId: hit.id,
               title: hit.title,
               editionEvidence: releaseTitleEvidence("knaben", [
@@ -190,6 +200,7 @@ const PirateBayResponseSchema = z.array(
     info_hash: z.string(),
     size: CountSchema,
     seeders: CountSchema,
+    category: CountSchema.optional(),
   }),
 );
 
@@ -212,11 +223,53 @@ export class PirateBayProvider {
         "thepiratebay",
       ),
     );
+    return this.candidates(results);
+  }
+
+  /** TPB's actual recent endpoint is a single bounded snapshot, not a title search. */
+  async recent(
+    input: { page: number },
+    signal?: AbortSignal,
+  ): Promise<ProviderRecentPage> {
+    const { page } = RecentInputSchema.parse(input);
+    if (page !== 1) return { candidates: [], scanned: 0, nextPage: null };
+    const response = await request(
+      this.transport,
+      "thepiratebay",
+      endpoint("https://apibay.org", "precompiled/data_top100_recent.json"),
+      signal === undefined ? {} : { signal },
+    );
+    const parsed = PirateBayResponseSchema.max(100).safeParse(
+      await json(response, "thepiratebay"),
+    );
+    if (!parsed.success)
+      throw new IntegrationError("thepiratebay", "invalid-response");
+    const results = parsed.data;
+    if (results.length === 1 && results[0]?.id === "0")
+      return { candidates: [], scanned: 0, nextPage: null };
+    return {
+      candidates: this.candidates(
+        results.filter(
+          (item) =>
+            item.category !== undefined &&
+            item.category >= 200 &&
+            item.category < 300,
+        ),
+      ),
+      scanned: results.length,
+      nextPage: null,
+    };
+  }
+
+  private candidates(
+    results: z.infer<typeof PirateBayResponseSchema>,
+  ): ProviderCandidate[] {
     if (results.length === 1 && results[0]?.id === "0") return [];
     return results.map((item) => {
       const hash = HashSchema.parse(item.info_hash);
       return {
         providerId: "thepiratebay",
+        availabilityObservedAtV1: new Date().toISOString(),
         providerReleaseId: item.id,
         title: item.name,
         editionEvidence: releaseTitleEvidence("thepiratebay", [
@@ -355,6 +408,7 @@ export class AvistazFamilyProvider {
       const download = sameOriginUrl(item.download, this.baseUrl);
       return {
         providerId: this.config.providerId,
+        availabilityObservedAtV1: new Date().toISOString(),
         providerReleaseId: details.pathname,
         editionEvidence: releaseTitleEvidence(this.config.providerId, [
           { field: "file_name", text: item.file_name },
@@ -441,37 +495,4 @@ function checkedMagnet(value: string, hash: string): string {
   )
     throw new IntegrationError("provider", "invalid-response");
   return value;
-}
-
-export async function boundedBytes(
-  response: Response,
-  maximum: number,
-  service: string,
-): Promise<Uint8Array<ArrayBuffer>> {
-  if (response.body === null)
-    throw new IntegrationError(service, "invalid-response");
-  const reader = response.body.getReader();
-  const chunks: Uint8Array[] = [];
-  let length = 0;
-  try {
-    for (;;) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      length += value.byteLength;
-      if (length > maximum) {
-        await reader.cancel();
-        throw new IntegrationError(service, "invalid-response");
-      }
-      chunks.push(value);
-    }
-  } finally {
-    reader.releaseLock();
-  }
-  const result = new Uint8Array(length);
-  let offset = 0;
-  for (const chunk of chunks) {
-    result.set(chunk, offset);
-    offset += chunk.byteLength;
-  }
-  return result;
 }

@@ -75,5 +75,10 @@ test("measured resolution accounts for cropped video and does not invent unknown
       },
       "WEB-2160p",
     ),
-  ).toEqual({ quality: "WEB-1080p", codec: "HEVC", audioLanguages: [] });
+  ).toEqual({
+    quality: "WEB-1080p",
+    codec: "HEVC",
+    audioLanguages: [],
+    videoCompatibility: "compatible",
+  });
 });

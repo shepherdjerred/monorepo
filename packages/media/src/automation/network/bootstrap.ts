@@ -38,6 +38,7 @@ export function createGates(stage: string) {
   const read = async (
     key:
       | "acquisitionEnabled"
+      | "subtitleMaintenanceEnabled"
       | "sourceCleanupEnabled"
       | "quarantineEnabled"
       | "purgeEnabled",
@@ -47,6 +48,7 @@ export function createGates(stage: string) {
   };
   return {
     acquisition: () => read("acquisitionEnabled"),
+    subtitleMaintenance: () => read("subtitleMaintenanceEnabled"),
     sourceCleanup: () => read("sourceCleanupEnabled"),
     quarantine: () => read("quarantineEnabled"),
     purge: () => read("purgeEnabled"),

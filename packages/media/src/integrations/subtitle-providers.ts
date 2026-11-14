@@ -25,6 +25,7 @@ const OpenSubtitleSchema = z.object({
         season_number: z.number().int().optional(),
         episode_number: z.number().int().optional(),
         imdb_id: z.number().int().optional(),
+        parent_imdb_id: z.number().int().positive().nullable().optional(),
         tmdb_id: z.number().int().optional(),
       })
       .optional(),
@@ -60,6 +61,8 @@ export class OpenSubtitlesProvider {
       page?: number;
       forced?: boolean;
       hearingImpaired?: "required" | "excluded" | "any";
+      imdbId?: string;
+      parentImdbId?: string;
     },
     signal?: AbortSignal,
   ) {
@@ -82,6 +85,28 @@ export class OpenSubtitlesProvider {
     });
     if (input.forced !== undefined)
       parameters.set("foreign_parts_only", input.forced ? "only" : "exclude");
+    if (input.imdbId !== undefined)
+      parameters.set(
+        "imdb_id",
+        BigInt(
+          z
+            .string()
+            .regex(/^tt\d+$/u)
+            .parse(input.imdbId)
+            .slice(2),
+        ).toString(),
+      );
+    if (input.parentImdbId !== undefined)
+      parameters.set(
+        "parent_imdb_id",
+        BigInt(
+          z
+            .string()
+            .regex(/^tt\d+$/u)
+            .parse(input.parentImdbId)
+            .slice(2),
+        ).toString(),
+      );
     if (input.hearingImpaired !== undefined)
       parameters.set(
         "hearing_impaired",

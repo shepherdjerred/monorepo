@@ -16,6 +16,7 @@ import { lockMovieCommand } from "#infrastructure/movie-editions/locks.ts";
 import { readMovieRetentionWarningV4 } from "#shared/movie-editions/retention-v4.ts";
 import { readMovieRemovalNoticeV4 } from "#shared/movie-editions/removal-v4.ts";
 import { readMovieInterventionNoticeV4 } from "#shared/movie-editions/intervention/v4.ts";
+import { InterestCheckNoticeSchema } from "#shared/household/interests.ts";
 
 /** Match Keep/unwatch and root-cancellation ordering before locking delivery authority. */
 export async function lockDelivery(
@@ -39,11 +40,29 @@ export async function lockDelivery(
   const movieIntervention = readMovieInterventionNoticeV4(
     snapshot.event.payload,
   );
+  const interest =
+    snapshot.event.kind === "interest_check"
+      ? InterestCheckNoticeSchema.parse(snapshot.event.payload)
+      : null;
+  const interestMedia =
+    interest === null
+      ? null
+      : await tx.mediaItem.findUnique({
+          where: { id: interest.mediaId },
+          select: { kind: true },
+        });
   const movieScope =
     movieNotice?.source.scope ??
     movieWarning?.scope ??
     movieRemoval?.source.scope ??
-    movieIntervention?.source.scope;
+    movieIntervention?.source.scope ??
+    (interest !== null && interestMedia?.kind === "movie"
+      ? {
+          mediaId: interest.mediaId,
+          rootMediaId: interest.mediaId,
+          edition: interest.edition,
+        }
+      : undefined);
   if (movieScope === undefined)
     await lockDefaultScopes(
       tx,

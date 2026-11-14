@@ -4,6 +4,7 @@ import {
   CanonicalIdentitySchema,
 } from "./identity.ts";
 import { SeriesPackSourceV1Schema } from "./series-pack-v1.ts";
+import { LibraryMonitoringMaskSchema } from "#shared/handoff/monitoring-mask.ts";
 
 const Hash = z.string().regex(/^[a-f0-9]{64}$/u);
 const Targets = z
@@ -47,6 +48,7 @@ export const LibrarySeriesManagementV2Schema =
     schemaVersion: z.literal(2),
     policyScope: z.literal("series"),
     includeSpecials: z.boolean(),
+    monitoringMask: LibraryMonitoringMaskSchema.optional(),
     rootGenerationAtCapture: z.int().positive(),
   });
 /** Existing leaves may retain several actual approvals without granting future episodes. */

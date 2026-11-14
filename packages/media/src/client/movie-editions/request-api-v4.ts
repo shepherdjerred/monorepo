@@ -29,6 +29,7 @@ export function movieRequestV4(
   context: MovieEditionContextV4,
   edition: MovieEditionKey,
   languages: string,
+  keepingPolicy?: "keep" | "temporary",
 ): MovieRequestV4 {
   const selected = context.options.find((option) => option.edition === edition);
   if (selected === undefined)
@@ -65,7 +66,10 @@ export function movieRequestV4(
       definitionDigest: selected.definitionDigest,
       registryVersion: context.registryVersion,
     },
-    options: { subtitleLanguages },
+    options: {
+      subtitleLanguages,
+      ...(keepingPolicy === undefined ? {} : { keepingPolicy }),
+    },
   });
 }
 

@@ -2,6 +2,10 @@ import { Prisma } from "#generated/prisma/client.ts";
 import type { HandoffProtocolScope } from "#shared/handoff/protocol.ts";
 import { lockDefaultMedia } from "./default-edition.ts";
 import {
+  assertPassiveRegistration,
+  passiveRegistrationApproval,
+} from "./passive-registration.ts";
+import {
   matchesMovieDefinition,
   movieDefinitionRef,
 } from "#infrastructure/movie-editions/definition.ts";
@@ -38,7 +42,10 @@ export async function assertLibraryHandoffSnapshot(
       throw new Error("Initial library adoption target changed");
   }
   for (const file of scope.files) {
-    if (
+    const registration = passiveRegistrationApproval(scope.request, file);
+    if (registration !== undefined) {
+      await assertPassiveRegistration(tx, registration, file);
+    } else if (
       file.existingAssetId !== null ||
       (await tx.libraryAsset.findUnique({
         where: { path: file.canonicalPath },

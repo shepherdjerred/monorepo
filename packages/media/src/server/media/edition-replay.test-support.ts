@@ -76,6 +76,7 @@ export async function verifyDefaultReplayHttp(
     const input = await f.command({
       action: "request",
       requesterUserId: managed.id,
+      keepingPolicy: "temporary",
     });
     const key = crypto.randomUUID();
     const post = (idempotencyKey = key, body: unknown = input) =>
@@ -93,6 +94,7 @@ export async function verifyDefaultReplayHttp(
       mediaId: f.media.id,
       subtitleLanguages: [],
       includeSpecials: false,
+      keepingPolicy: "temporary",
     });
     const count = await db.operation.count({ where: { targetId: f.media.id } });
     const outboxCount = await db.outboxCommand.count();

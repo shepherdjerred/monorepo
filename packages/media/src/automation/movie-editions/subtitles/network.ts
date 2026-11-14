@@ -14,10 +14,6 @@ import { lockRuntimeAuthority } from "#infrastructure/handoff/authority.ts";
 import { lockSubtitlePolicies } from "#infrastructure/subtitle-policy.ts";
 import { assertNoPublicationCompensationFence } from "#infrastructure/native-compensation/fence.ts";
 import {
-  reusableSubtitle,
-  targetRequired,
-} from "#automation/subtitles/authority.ts";
-import {
   defaultSources,
   searchSubtitleProviders,
   validateProviderSubtitle,
@@ -25,12 +21,25 @@ import {
 } from "#automation/subtitles/providers.ts";
 import {
   subtitleMetadataMatches,
+  regularDialogueRequirement,
   subtitleVersionMatches,
-  type SubtitleSource,
 } from "#automation/subtitle-sources.ts";
+import type { SubtitleSource } from "#domain/subtitle-maintenance/provider.ts";
 import { isMachineLabelled } from "#integrations/subtitle-validation.ts";
 import { evaluateSubtitle } from "#domain/subtitles.ts";
 import { createHash } from "node:crypto";
+import {
+  findReusableSubtitleV1,
+  subtitleUpgradeCurrentV1,
+  subtitleCandidateWorkCurrentV1,
+  subtitleScoreEvidenceV1,
+  rejectedSubtitleChecksumsV1,
+} from "#automation/subtitles/upgrade.ts";
+import { subtitleScoreReferenceV1 } from "#infrastructure/subtitle-maintenance/reference.ts";
+import {
+  subtitleSourceDecisionV1,
+  recordSubtitleSourceRejectionV1,
+} from "#automation/subtitle-maintenance/source-policy.ts";
 import { currentMovieSubtitleWorkV4 } from "./authority.ts";
 import { assertMovieSubtitleOperationV4 } from "./operation.ts";
 import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
@@ -77,9 +86,12 @@ async function authorizedWork(
       budget,
     );
     if (
-      work.protectedReasons.length > 0 ||
-      work.authority !== input.targetAuthority ||
-      !targetRequired(work, movieSubtitleTargetV4(input))
+      !subtitleCandidateWorkCurrentV1(
+        work,
+        movieSubtitleTargetV4(input),
+        input.targetAuthority,
+        input.upgradeV1,
+      )
     )
       return null;
     const execution = context.plexBindingExecution();
@@ -108,7 +120,7 @@ async function persist(
   budget: PublicationAuthorityReadBudget,
 ): Promise<Result> {
   originalFreshness.assertActive();
-  if (!subtitleMetadataMatches(movieSubtitleTargetV4(input), source))
+  if (!subtitleMetadataMatches(movieSubtitleTargetV4(input), source, true))
     return blocked("subtitle_target_metadata_unproven");
   const validated = validateProviderSubtitle(
     source,
@@ -142,21 +154,45 @@ async function persist(
     );
     originalFreshness.assertActive();
     if (
-      work.protectedReasons.length > 0 ||
-      work.authority !== input.targetAuthority ||
-      !targetRequired(work, movieSubtitleTargetV4(input))
+      !subtitleCandidateWorkCurrentV1(
+        work,
+        movieSubtitleTargetV4(input),
+        input.targetAuthority,
+        input.upgradeV1,
+      )
     )
       return obsolete();
-    const existing = work.asset.subtitles.find((subtitle) =>
-      reusableSubtitle(
-        subtitle,
-        work,
-        input.recoveryEpoch,
-        movieSubtitleTargetV4(input),
-      ),
+    const existing = findReusableSubtitleV1(
+      work,
+      input.recoveryEpoch,
+      movieSubtitleTargetV4(input),
+      input.upgradeV1,
     );
     if (existing !== undefined)
       return { status: "found", subtitleId: existing.id, reason: null };
+    const reference = subtitleScoreReferenceV1(work.asset);
+    const decision = subtitleSourceDecisionV1(source, {
+      language: input.language,
+      ...(reference === null ? {} : { scoreReferenceV1: reference }),
+      ...(input.upgradeV1 === undefined ? {} : { upgradeV1: input.upgradeV1 }),
+      excludedChecksumsV1: rejectedSubtitleChecksumsV1(
+        work,
+        input.recoveryEpoch,
+        reference,
+      ),
+    });
+    if (!decision.accepted) {
+      await recordSubtitleSourceRejectionV1(tx, {
+        operationId: input.operationId,
+        asset: work.asset,
+        epoch: input.recoveryEpoch,
+        providerId,
+        language: input.language,
+        source,
+        decision,
+      });
+      return blocked(z.string().parse(decision.reason));
+    }
     const evaluation = evaluateSubtitle({
       requestedLanguage: input.language,
       actualLanguage: source.actualLanguage,
@@ -197,7 +233,13 @@ async function persist(
           traditionalEvidence: validated.traditionalEvidence,
         },
         matchingEvidence: {
+          operationId: input.operationId,
+          ...subtitleScoreEvidenceV1(source),
+          ...regularDialogueRequirement(target, source),
           schemaVersion: 4,
+          ...(source.catalogEvidenceV1 === undefined
+            ? {}
+            : { catalogEvidenceV1: source.catalogEvidenceV1 }),
           movieScope: input.scope,
           assetVersion: work.asset.version,
           assetChecksum: work.asset.checksum,
@@ -237,13 +279,19 @@ export async function findMovieSubtitlesV4(
   await refreshMovieScopeRequestersV4(context, input.scope);
   const work = await authorizedWork(context, input, budget);
   if (work === null) return obsolete();
-  const existing = work.asset.subtitles.find((subtitle) =>
-    reusableSubtitle(
-      subtitle,
+  if (
+    !subtitleUpgradeCurrentV1(
       work,
-      input.recoveryEpoch,
+      input.upgradeV1,
       movieSubtitleTargetV4(input),
-    ),
+    )
+  )
+    return obsolete();
+  const existing = findReusableSubtitleV1(
+    work,
+    input.recoveryEpoch,
+    movieSubtitleTargetV4(input),
+    input.upgradeV1,
   );
   if (existing !== undefined)
     return { status: "found", subtitleId: existing.id, reason: null };
@@ -257,12 +305,16 @@ export async function findMovieSubtitlesV4(
   const coverage = work.asset.coverage[0];
   if (coverage === undefined)
     throw new Error("Authorized subtitle asset lost its exact movie coverage");
+  const scoreReference = subtitleScoreReferenceV1(work.asset);
   return searchSubtitleProviders(
     context,
     {
       operationId: input.operationId,
+      assetIdV1: work.asset.id,
       sourceFilename: path.basename(work.asset.sourcePath),
       query: coverage.media.title,
+      ...(scoreReference === null ? {} : { scoreReferenceV1: scoreReference }),
+      ...(input.upgradeV1 === undefined ? {} : { upgradeV1: input.upgradeV1 }),
       language: input.language,
       ...(input.forced === undefined ? {} : { forced: input.forced }),
       ...(input.hearingImpaired === undefined

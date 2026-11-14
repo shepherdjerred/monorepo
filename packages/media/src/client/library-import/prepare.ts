@@ -5,6 +5,8 @@ import {
 } from "#shared/handoff/library-v3.ts";
 import type { MovieEditionKey } from "#shared/movie-editions/registry.ts";
 import { readApi } from "#client/api.ts";
+import { capturedMonitoringForSeries } from "#client/personal-migration/monitoring.ts";
+import { PassiveRegistrationPreviewSchema } from "#shared/handoff/passive-registration.ts";
 import {
   libraryBatchEntries,
   libraryProfileBindings,
@@ -56,13 +58,23 @@ export async function prepareLibraryBatch(
   const ids = [...new Set(policies.flatMap((entry) => entry.mediaIds))];
   if (ids.length > 100)
     throw new Error("Select a smaller batch with at most 100 policy targets");
-  const [inventory, versions] = await Promise.all([
+  const [inventory, versions, registeredAssets] = await Promise.all([
     readApi("/admin/native-recovery", NativeRecoveryInventorySchema),
     ids.length === 0
       ? []
       : readApi(
           `/admin/handoffs/subtitle-policies?${new URLSearchParams(ids.map((id) => ["mediaId", id])).toString()}`,
           LibrarySubtitlePolicyVersionsSchema,
+        ),
+    choices.files.length === 0
+      ? []
+      : readApi(
+          `/admin/migration/personal/passive?${new URLSearchParams([
+            ["bundleReviewId", review.id],
+            ["bundleReviewVersion", String(review.version)],
+            ...choices.files.map((id) => ["provenanceKey", id]),
+          ]).toString()}`,
+          PassiveRegistrationPreviewSchema,
         ),
   ]);
   const runtime = inventory.runtime;
@@ -73,6 +85,7 @@ export async function prepareLibraryBatch(
     schemaVersion: 3,
     purpose: "migration",
     plexEditionLabels: "update_in_place",
+    ...(registeredAssets.length === 0 ? {} : { registeredAssets }),
     bundleReviewId: review.id,
     bundleReviewVersion: review.version,
     bundleHash: review.manifest.bundleHash,
@@ -94,6 +107,7 @@ export async function prepareLibraryBatch(
             title: entry.mappedMedia[0]?.title,
             provenanceKey: entry.provenanceKey,
             includeFutureEpisodes: true,
+            ...capturedMonitoringForSeries(review, entry),
             includeSpecials:
               choices.seriesMonitoring?.[entry.provenanceKey]
                 ?.includeSpecials === true,

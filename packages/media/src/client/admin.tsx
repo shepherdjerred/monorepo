@@ -56,6 +56,7 @@ function providerInput(form: FormData, provider: ProviderStatus): SaveProvider {
     expectedUpdatedAt: provider.updatedAt,
     enabled: form.get("enabled") === "on",
     configuration: {
+      ...provider.configuration,
       minimumIntervalSeconds: Number(text(form, "minimumIntervalSeconds")),
       dailyDownloadLimit: Number(text(form, "dailyDownloadLimit")),
     },
@@ -117,6 +118,17 @@ function ProviderEditor({
       {provider.kind === "tracker" && (
         <p>Recent-release feed: {feedDescriptions[provider.feedState]}</p>
       )}
+      {provider.kind === "tracker" &&
+        provider.configuration.selection !== undefined && (
+          <p className="helper">
+            Selection priority {provider.configuration.selection.priority} · At
+            least {provider.configuration.selection.minimumSeeders} seeder(s) ·
+            Wait {provider.configuration.selection.delaySeconds / 60} minutes
+            {provider.configuration.selection.bypassAtHighestQuality
+              ? "; highest allowed quality bypasses the wait."
+              : "."}
+          </p>
+        )}
       {provider.nextAllowedAt !== null && (
         <p>
           Next permitted request:{" "}

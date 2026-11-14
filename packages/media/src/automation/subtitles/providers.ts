@@ -3,17 +3,19 @@ import type { MediaAutomationContext } from "#automation/context.ts";
 import type { MediaNetworkActivities } from "#shared/automation.ts";
 import { IntegrationError } from "#integrations/http.ts";
 import { validateSubtitle } from "#integrations/subtitle-validation.ts";
-import {
-  fromAssrt,
-  fromOpenSubtitles,
-  type SubtitleSearch,
-  type SubtitleSource,
-} from "#automation/subtitle-sources.ts";
+import { fromAssrt, fromOpenSubtitles } from "#automation/subtitle-sources.ts";
+import type {
+  SubtitleSearch,
+  SubtitleSource,
+} from "#domain/subtitle-maintenance/provider.ts";
 import {
   fromSubhd,
   fromZimuku,
   type SubtitleLookup,
 } from "#automation/subtitle-browser-sources.ts";
+import { fromSubf2m } from "#automation/subtitle-maintenance/subf2m.ts";
+import { scoredSubtitleSourceV1 } from "#automation/subtitle-maintenance/source-policy.ts";
+import { subtitleSearchExclusionsV1 } from "#automation/subtitle-maintenance/exclusions.ts";
 
 export type SubtitleSourceLoader = (
   context: MediaAutomationContext,
@@ -24,6 +26,7 @@ export const defaultSources: Readonly<Record<string, SubtitleSourceLoader>> = {
   assrt: fromAssrt,
   subhd: fromSubhd,
   zimuku: fromZimuku,
+  subf2m: fromSubf2m,
 };
 
 /** Provider quotas and leases are shared by every edition and subtitle consumer. */
@@ -121,11 +124,12 @@ export async function searchSubtitleProviders(
     providerId: string,
   ) => Promise<LookupResult>,
 ): Promise<LookupResult> {
+  const currentQuery = await subtitleSearchExclusionsV1(context, query);
   const providers = await context.db.mediaProvider.findMany({
     where: { id: { in: Object.keys(sources) }, enabled: true },
   });
   let failure: string | null = null;
-  for (const id of ["opensubtitles", "assrt", "subhd", "zimuku"]) {
+  for (const id of ["opensubtitles", "assrt", "subhd", "zimuku", "subf2m"]) {
     const source = sources[id];
     if (
       source === undefined ||
@@ -133,9 +137,14 @@ export async function searchSubtitleProviders(
     )
       continue;
     try {
-      const result = await withProvider(context, id, query, source);
+      const result = await withProvider(context, id, currentQuery, source);
       if (result === null) continue;
-      return await subtitleProviderResult(result, persist, id);
+      return await subtitleProviderResult(
+        result,
+        (candidate, providerId) =>
+          persist(scoredSubtitleSourceV1(candidate, currentQuery), providerId),
+        id,
+      );
     } catch (error) {
       if (!(error instanceof IntegrationError)) throw error;
       await context.db.mediaProvider.update({

@@ -12,7 +12,11 @@ async function recipientMatches(
   current: Delivery,
   fingerprint: string,
 ) {
-  if (!["owner_health", "email_verification"].includes(current.event.kind))
+  if (
+    !["owner_health", "email_verification", "interest_check"].includes(
+      current.event.kind,
+    )
+  )
     return true;
   const message = await composeMessage(tx, context, current);
   return (

@@ -18,6 +18,10 @@ import { FileGuardError } from "#automation/files/types.ts";
 import { authorizeMovieFilesV4, assertMovieFilePlanV4 } from "./authority.ts";
 import { prepareMovieFilePlanV4 } from "./inspection-plan.ts";
 import { stageMoviePlanV4 } from "./staging.ts";
+import {
+  rejectUnstagedContentV1,
+  type MeasuredContentRejection,
+} from "#automation/files/content-rejection.ts";
 
 export async function inspectAndStageMovieV4(
   initial: FileContext,
@@ -50,7 +54,20 @@ export async function inspectAndStageMovieV4(
   };
   const prepared =
     authority.attempt.filePlan === null
-      ? await prepareMovieFilePlanV4(context, input, authority, reauthorize)
+      ? await prepareMovieFilePlanV4(context, input, authority, {
+          beforeEmbedded: reauthorize,
+          rejectContent: async (error: MeasuredContentRejection) => {
+            await context.db.$transaction(async (tx) => {
+              await authorizeMovieFilesV4(tx, context, input, access);
+              await rejectUnstagedContentV1(
+                tx,
+                input.attemptId,
+                error,
+                context.movieManagement.budget,
+              );
+            });
+          },
+        })
       : MovieFilePlanSchema.parse(authority.attempt.filePlan);
   const plan = await context.db.$transaction(async (tx) => {
     const current = await authorizeMovieFilesV4(tx, context, input, access);

@@ -59,10 +59,8 @@ export async function readLibrarySeriesPolicy(
   const target = await tx.mediaIntent.findUniqueOrThrow({
     where: { mediaId_edition: { mediaId: series.id, edition: "default" } },
   });
-  const { selected, profileId, includeSpecials } = seriesApproval(
-    approval,
-    series.id,
-  );
+  const { selected, profileId, includeSpecials, monitoringMask } =
+    seriesApproval(approval, series.id);
   if (
     series.kind !== "series" ||
     series.catalogState !== "ready" ||
@@ -101,6 +99,7 @@ export async function readLibrarySeriesPolicy(
     kind: "library_series_management" as const,
     policyScope: "series" as const,
     includeSpecials,
+    ...optionalMonitoringMask(monitoringMask),
     seriesId: series.id,
     receiptId: approval.receipt.id,
     planId: approval.receipt.planId,
@@ -115,6 +114,12 @@ export async function readLibrarySeriesPolicy(
     rootGenerationAtCapture: target.generation,
     birthEpoch: input.epoch,
   };
+}
+
+function optionalMonitoringMask(
+  monitoringMask: ReturnType<typeof seriesApproval>["monitoringMask"],
+) {
+  return monitoringMask === undefined ? {} : { monitoringMask };
 }
 
 function seriesApproval(approval: LibraryHandoffReceipt, seriesId: string) {
@@ -147,5 +152,6 @@ function seriesApproval(approval: LibraryHandoffReceipt, seriesId: string) {
     selected,
     profileId: policy.profileId,
     includeSpecials: configuration.includeSpecials,
+    monitoringMask: configuration.monitoringMask,
   };
 }
