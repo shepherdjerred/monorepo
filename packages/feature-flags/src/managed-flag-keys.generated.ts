@@ -188,6 +188,7 @@ export const SCOUT_BOOLEAN_FLAG_KEYS = [
   "scout-consumer-player-profiles-enabled",
   "scout-explore-analysis-enabled",
   "scout-explore-model-picker-enabled",
+  "scout-evidence-recovery-enabled",
   "scout-temporal-call-graph-tracing",
   "scout_client_ingestion",
   "scout_client_result_recovery",

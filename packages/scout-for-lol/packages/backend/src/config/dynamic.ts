@@ -25,6 +25,31 @@ import { z } from "zod";
 
 const logger = createLogger("config-dynamic");
 
+const EVIDENCE_RECOVERY_FLAG = "scout-evidence-recovery-enabled";
+
+/** The Flipt environment whose managed defaults a Scout process starts from. */
+function managedEnvironment(
+  environment: Readonly<Record<string, string | undefined>>,
+): "prod" | "beta" {
+  return (environment["FLIPT_ENVIRONMENT"] ?? environment["ENVIRONMENT"]) ===
+    "prod"
+    ? "prod"
+    : "beta";
+}
+
+/**
+ * The evidence-recovery value a process uses when no flag answers: the managed
+ * inventory's default for its environment (on in beta, off in prod).
+ */
+export function evidenceRecoveryDefault(
+  environment: Readonly<Record<string, string | undefined>>,
+): boolean {
+  return managedBooleanDefault(
+    EVIDENCE_RECOVERY_FLAG,
+    managedEnvironment(environment),
+  );
+}
+
 /**
  * Scout's dynamically configurable values.
  *
@@ -166,6 +191,23 @@ const DEFINITION = {
     default: false,
     names: { flag: "scout-temporal-call-graph-tracing" },
   },
+  /**
+   * The evidence-recovery contract for Riot match processing: admission,
+   * history recovery, timelines, raw Riot capture, source reads, lake
+   * eligibility and report scoreboards.
+   *
+   * Boot-pinned: the value is captured once after the first refresh and never
+   * moves for the life of the process, so one worker never mixes two
+   * processing contracts. A Flipt change takes effect on the next restart. Its
+   * default is the managed environment default (on in beta, off in prod),
+   * independent of `scout_client_ingestion`.
+   */
+  evidenceRecoveryEnabled: {
+    schema: z.boolean(),
+    sources: ["flag", "default"],
+    default: false,
+    names: { flag: EVIDENCE_RECOVERY_FLAG },
+  },
 } as const;
 
 /**
@@ -204,11 +246,12 @@ function buildSnapshot(
         ...DEFINITION.temporalCallGraphTracing,
         default: managedBooleanDefault(
           "scout-temporal-call-graph-tracing",
-          (environment["FLIPT_ENVIRONMENT"] ?? environment["ENVIRONMENT"]) ===
-            "prod"
-            ? "prod"
-            : "beta",
+          managedEnvironment(environment),
         ),
+      },
+      evidenceRecoveryEnabled: {
+        ...DEFINITION.evidenceRecoveryEnabled,
+        default: evidenceRecoveryDefault(environment),
       },
     },
     sources: {
@@ -230,6 +273,7 @@ function buildSnapshot(
                 temporalCallGraphTracing: "boolean",
                 exploreAnalysisEnabled: "boolean",
                 exploreModelPickerEnabled: "boolean",
+                evidenceRecoveryEnabled: "boolean",
               },
             }),
           }
@@ -249,6 +293,7 @@ function buildSnapshot(
       exploreSpendPolicy: DEFAULT_EXPLORE_SPEND_POLICY,
       exploreAnalysisEnabled: false,
       exploreModelPickerEnabled: false,
+      evidenceRecoveryEnabled: evidenceRecoveryDefault(environment),
       ...seed,
     },
     onRefreshError: (key, message) => {
@@ -260,6 +305,7 @@ function buildSnapshot(
 }
 
 let snapshot: Snapshot | undefined;
+let evidenceRecoveryAtBoot: boolean | undefined;
 let pollTimer: ReturnType<typeof setInterval> | undefined;
 const refreshListeners = new Set<() => Promise<void>>();
 
@@ -316,6 +362,7 @@ export async function initializeDynamicConfig(
   });
   snapshot = buildSnapshot(options.environment ?? Bun.env, options.seed, true);
   await snapshot.refresh();
+  evidenceRecoveryAtBoot = snapshot.get("evidenceRecoveryEnabled");
   if (options.startPolling !== false) {
     pollTimer ??= setInterval(() => {
       void refreshDynamicConfigAndNotify();
@@ -416,6 +463,15 @@ export function temporalCallGraphTracing(): boolean {
   return snapshot?.get("temporalCallGraphTracing") ?? false;
 }
 
+/**
+ * The evidence-recovery decision captured when this process initialized
+ * dynamic config, or `undefined` before initialization. Later refreshes never
+ * change it; read it through `evidence/recovery-gate.ts`.
+ */
+export function evidenceRecoveryBootDecision(): boolean | undefined {
+  return evidenceRecoveryAtBoot;
+}
+
 export async function shutdownDynamicConfig(): Promise<void> {
   if (pollTimer !== undefined) {
     clearInterval(pollTimer);
@@ -423,5 +479,6 @@ export async function shutdownDynamicConfig(): Promise<void> {
   }
   refreshListeners.clear();
   snapshot = undefined;
+  evidenceRecoveryAtBoot = undefined;
   await shutdownFeatureFlags();
 }

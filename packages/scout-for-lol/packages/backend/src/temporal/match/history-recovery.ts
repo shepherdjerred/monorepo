@@ -1,9 +1,7 @@
 import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { prisma } from "#src/database/index.ts";
-import {
-  admitMatchEvidence,
-  evidenceRecoveryEnabled,
-} from "#src/evidence/admission.ts";
+import { admitMatchEvidence } from "#src/evidence/admission.ts";
+import { evidenceRecoveryEnabled } from "#src/evidence/recovery-gate.ts";
 import { resolveCompleteMatch } from "#src/evidence/matches.ts";
 import { resolveMatchTimeline } from "#src/evidence/timelines.ts";
 import { resolveScoutObservedMatchContext } from "./match-context.ts";

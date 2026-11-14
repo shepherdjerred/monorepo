@@ -3,7 +3,7 @@ import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import type { MatchDeliveryMode } from "@scout-for-lol/domain/match-processing/states.ts";
 import { processingEligibility } from "@scout-for-lol/domain/match-processing/eligibility.ts";
 import { prisma } from "#src/database/index.ts";
-import { isFeatureHardDisabled } from "#src/configuration/flags.ts";
+import { evidenceRecoveryEnabled } from "./recovery-gate.ts";
 
 const PolicySchema = z.enum(["FULL", "HISTORY_ONLY"]);
 type AdmissionInput = {
@@ -37,11 +37,6 @@ function legacyEligibility(
   return legacy?.processingPolicy === "FULL"
     ? ({ policy: "FULL", reason: "legacy-live" } as const)
     : null;
-}
-
-/** One rollout boundary. Production retains its existing Riot processing contract. */
-export function evidenceRecoveryEnabled(): boolean {
-  return !isFeatureHardDisabled("scout_client_ingestion");
 }
 
 /** Later history evidence does not change a previously admitted live decision. */

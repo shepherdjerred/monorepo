@@ -341,6 +341,22 @@ describe("Managed flag inventory validation", () => {
     }
   });
 
+  test("keeps Scout evidence recovery on in beta and off in prod, apart from the client flag", () => {
+    const key = "scout-evidence-recovery-enabled";
+    expect(managedBooleanDefault(key, "beta")).toBe(true);
+    expect(managedBooleanDefault(key, "prod")).toBe(false);
+    expect(scoutPolicyFlag("prod", key)).toMatchObject({
+      rollouts: [],
+      rules: [],
+      thresholdRollouts: [],
+    });
+    expect(
+      managedFlagInventory.flags
+        .find((flag) => flag.key === key)
+        ?.defaultOffExceptions?.map((exception) => exception.environment),
+    ).toEqual(["prod"]);
+  });
+
   test("materializes a full-state environment override", () => {
     const parsed = ManagedFlagInventorySchema.parse(inventory([fullOverride]));
     expect(

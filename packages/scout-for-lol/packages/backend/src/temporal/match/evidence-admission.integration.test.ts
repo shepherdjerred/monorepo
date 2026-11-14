@@ -18,6 +18,9 @@ vi.mock("#src/configuration/flags.ts", async (original) => ({
   ...(await original()),
   isFeatureHardDisabled: () => mode.production,
 }));
+vi.mock("#src/evidence/recovery-gate.ts", () => ({
+  evidenceRecoveryEnabled: () => !mode.production,
+}));
 vi.mock("#src/temporal/effect-fence.ts", async (original) => ({
   ...(await original()),
   runGuardedEffect: forbiddenEffect,

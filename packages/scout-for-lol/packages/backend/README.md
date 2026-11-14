@@ -731,6 +731,22 @@ Riot's polling cursor. Effect readers filter history before limits and
 aggregation; analytical history remains queryable. `HISTORY_ONLY` has no
 promotion path.
 
+The evidence-recovery contract for Riot match processing is one rollout
+boundary: `evidenceRecoveryEnabled()` in `src/evidence/recovery-gate.ts`, backed
+by the managed Flipt boolean `scout-evidence-recovery-enabled`. It gates
+admission, history recovery, the timeline deadline, raw Riot payload capture,
+Riot 403 absence handling, lake eligibility and report scoreboards. The backend
+resolves it once when dynamic config initializes and pins that decision for the
+life of the process, so a Flipt change takes effect on the next restart and one
+worker never mixes two processing contracts. The managed default is on in beta
+and off in production; a process that never initializes dynamic config, such
+as a script, uses the same default for its `ENVIRONMENT`. Where this README
+says evidence behaviour is beta-only or that production retains its existing
+contract, it means this gate is off there. The gate is independent of
+`scout_client_ingestion`, so lifting the Scout Client hard-disable does not
+change production's Riot processing, and promoting the gate does not open
+client ingress.
+
 Scout Client is beta-only. Production hard-disables `scout_client_ingestion`
 and `scout_client_result_recovery` before local overrides or Flipt evaluation.
 The managed production declarations also have false defaults and no rollouts;
@@ -739,6 +755,8 @@ remain unavailable in production even if a provider answers true. Accepted
 historical observations cannot supply new prematch, match, timeline, mastery,
 teammate or Clash enrichment there. Existing immutable archives stay readable,
 and devices can still revoke their own credentials while capture is disabled.
+This hard-disable covers client ingress and client-data reads only; Riot
+evidence recovery follows its own gate above.
 
 ### Raw observation archive
 
@@ -779,8 +797,8 @@ and responses that cannot parse as JSON are not captured by this hook.
 The durable archive worker uses the same immutable-object primitive as client
 archival, under `riot/observations/YYYY/MM/DD/<capture>/<sha256>.json`.
 Valid match captures publish normalized result and Clash evidence independently
-of canonical selection. Both capture and draining remain hard-disabled in
-production.
+of canonical selection. Both capture and draining follow the evidence-recovery
+gate, so they stay off in production.
 
 The League client names every player by a 36-character UUID — in the
 current-summoner profile, lobbies, match history, end-of-game blocks, and
@@ -836,7 +854,7 @@ observation runs its applicable projections before match-level completion is
 rechecked; a standing sibling result cannot skip the new projection pass.
 
 Ingestion reconciliation resolves report-ready evidence through the same
-Riot-priority result policy. With beta evidence recovery enabled, a Riot 403
+Riot-priority result policy. With evidence recovery enabled (beta), a Riot 403
 for a match or timeline is Riot's definitive answer, not a bug: the evidence
 readers tell the Riot caller to expect it, so it is logged and counted in
 `riotApiErrorsTotal` but never sent to Bugsink, and it does not block
@@ -870,8 +888,9 @@ cursor, settle markets, award progression or finalize a custom game. Those
 operations retain their complete-match requirements. Live report intents also
 require permanent FULL admission; historical scoreboards render silently and
 cannot produce settlement announcements. Failed renders retry from the frozen
-snapshot even if source lookup rows later disappear. This path shares the
-existing production hard-disable for client evidence recovery.
+snapshot even if source lookup rows later disappear. This path is off in
+production twice over: client scoreboards need `scout_client_ingestion`, and
+freezing or reading a report scoreboard needs the evidence-recovery gate.
 
 #### Complete client matches
 

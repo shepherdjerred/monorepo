@@ -6,7 +6,7 @@ import {
 import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { prisma, type Db } from "#src/database/index.ts";
-import { evidenceRecoveryEnabled } from "./admission.ts";
+import { evidenceRecoveryEnabled } from "./recovery-gate.ts";
 import { registeredResultPuuids } from "./result-accounts.ts";
 
 export const ReportScoreboardSchema = z.strictObject({

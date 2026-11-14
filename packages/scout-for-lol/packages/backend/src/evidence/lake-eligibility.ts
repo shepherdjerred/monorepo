@@ -4,11 +4,8 @@ import {
 } from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 import type { DuckDBSession } from "#src/reports/duckdb/instance.ts";
-import {
-  effectEligibleMatchIds,
-  effectTimelineMatchIds,
-  evidenceRecoveryEnabled,
-} from "./admission.ts";
+import { effectEligibleMatchIds, effectTimelineMatchIds } from "./admission.ts";
+import { evidenceRecoveryEnabled } from "./recovery-gate.ts";
 
 /** Apply admission before game caps/order/SQL aggregation, not after evaluation. */
 export async function restrictEffectMatchRelation(
