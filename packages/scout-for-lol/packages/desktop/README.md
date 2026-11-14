@@ -67,7 +67,7 @@ version and whether a tray exists, then `state` snapshots (the runtime state
 plus diagnostics counters and recent events), `phase` changes, the diagnostics
 bundle on request, `show`, and `close`. The window sends its own `hello`, then
 `pair`, `disconnect`, `open_url` (http and https only), `open_log_folder`,
-`request_diagnostics`, `set_start_at_login`, and `quit`. Decoding is strict: an
+`request_diagnostics`, `set_start_at_login`, `set_privacy`, and `quit`. Decoding is strict: an
 unknown type is a broken contract, and the supervisor treats it as a window
 crash. Logging goes to stderr in both processes, because the window's stdout
 carries the protocol.
@@ -363,8 +363,67 @@ happened within a minute on a hybrid-GPU machine. So the window is not trusted
 to stay up, and it runs in its own process (see "Process model"). Diagnostics
 live in the supervisor, which records each window crash as `window_crash`.
 
-Errors and crashes are also reported to Bugsink once a DSN is configured in
-`scout_client_core::reporting`; until then the reporter is not installed and
-everything stays on the machine. Only `Error` and `Critical` records are sent,
-and they are the same allow-listed records, so nothing leaves that the local log
-does not already hold.
+Errors, crashes and product events leave the machine only as described in
+"Error reports and usage data", and only while the user has not opted out.
+
+## Error reports and usage data
+
+Two settings, **Send error reports** and **Send usage data**, are on by default
+and appear on the Settings page of both the egui and the gpui window. They are
+stored in `settings.json` in the per-user data directory, beside the outbox but
+not inside it: the outbox file is scoped to a backend and device and is
+recreated on pairing, which must not reset a privacy choice. A missing file is
+both on; a file that cannot be read turns both off and records a
+`load_settings` diagnostic, because a damaged file must never send what the user
+turned off.
+
+**Where "off" is enforced.** A checkbox only flips a `SendGate`
+(`scout_client_core::settings`); each sending layer checks its own gate and
+refuses to send while it is closed, so no UI path is needed for the opt-out to
+hold:
+
+- Error reports: `BugsinkSink` checks the gate, and the SDK's `before_send` hook
+  checks it again for every event, including panics the SDK captures itself.
+- Usage data: `UsageReporter::report` checks the gate immediately before the
+  network call, and the backend method it calls is crate-private, so nothing
+  else can send an event. Events are not retried.
+
+The supervisor owns the settings. The window process starts its own error
+reporter with the stored choice and then follows the `privacy` field of every
+snapshot, so an opt-out reaches both processes without a restart.
+
+**Error reports** go to the public "Scout desktop client" Bugsink project
+(`BUGSINK_DSN` in `scout_client_core::reporting`, compiled into the binary: a
+Sentry DSN only authorises submitting events, like the one in
+`packages/tasks-for-obsidian/App.tsx`). Both processes initialise reporting,
+tagged `process=supervisor` or `process=window`. Only `Error` and `Critical`
+diagnostics are sent, and a window abort that cannot report itself is reported
+by the supervisor as a `window_crash` at `Critical` level. Every outgoing event
+passes `scrub_event`: free text is redacted of paths, Riot IDs and long opaque
+tokens; user, request, server name, breadcrumbs, extra data, modules, threads,
+debug images, source file paths, local variables, panic payload text and every
+tag outside an allow-list are removed. Debug builds do not report.
+
+**Usage data** is a closed set of events, `app_started`, `device_paired`,
+`post_game_reported`, `update_applied` and `window_crashed`. Each carries only
+the app version and bounded enum properties (`platform`, and for
+`window_crashed` a `cause` and an `outcome`). The client never contacts PostHog:
+it posts each event to `POST /api/scout-client/v1/desktop/events` as the paired
+device, and the backend validates it strictly, rate-limits it per device, and
+forwards it under a one-way digest of the device owner's identity (never the
+Discord ID, device ID or any gameplay value). Events wait for the first
+check-in, so an unpaired client sends nothing. `update_applied` is noticed by
+comparing the running version with the one recorded in `settings.json`.
+
+The contract is `data/src/scout-client/desktop-events.contract.json` with
+`desktop-events.fixtures.json`; the Zod schema
+(`desktop-events.schema.ts`) and the serde types (`telemetry.rs`) each have
+tests that fail when they drift from it. Adding an event or a property means
+changing the contract, both implementations, the backend forwarder and the
+privacy policy together.
+
+What is never sent through either channel: Riot IDs, PUUIDs, Discord IDs,
+file paths, tokens or credentials, League chat, replay contents, and
+gameplay observations. Gameplay observations and replays are a separate,
+paired-account upload that these two settings do not control; disconnecting
+the device stops it.

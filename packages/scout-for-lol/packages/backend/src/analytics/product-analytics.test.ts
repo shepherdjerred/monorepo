@@ -89,6 +89,50 @@ describe("Scout product analytics adapter", () => {
     });
   });
 
+  test("scopes a desktop event to a one-way owner digest with bounded properties", () => {
+    const transport = createTransportFixture();
+    const analytics = createProductAnalytics({
+      analyticsConfiguration,
+      environment: "beta",
+      version: "2.0.0-9000",
+      transport,
+    });
+    const ownerId = "1310000000000000042";
+
+    analytics.captureDesktop(
+      { ownerId },
+      {
+        event: "window_crashed",
+        appVersion: "0.1.0",
+        properties: {
+          platform: "windows",
+          cause: "exited",
+          outcome: "relaunched",
+        },
+      },
+    );
+
+    expect(transport.capture).toHaveBeenCalledTimes(1);
+    const message = transport.capture.mock.calls[0]?.[0];
+    expect(message?.event).toBe("desktop_window_crashed");
+    expect(message?.disableGeoip).toBe(true);
+    expect(message?.distinctId).toMatch(
+      /^scout-beta:desktop-owner:[0-9a-f]{32}$/,
+    );
+    expect(JSON.stringify(message)).not.toContain(ownerId);
+    expect(message?.properties).toEqual({
+      platform: "windows",
+      cause: "exited",
+      outcome: "relaunched",
+      app_version: "0.1.0",
+      stage: "beta",
+      site_key: "scout-beta",
+      site_hostname: "beta.scout-for-lol.com",
+      source: "scout-desktop",
+      version: "2.0.0-9000",
+    });
+  });
+
   test("flushes the transport during shutdown", async () => {
     const transport = createTransportFixture();
     const analytics = createProductAnalytics({

@@ -428,6 +428,7 @@ describe("guild removal", () => {
     expect(
       await captureGuildRemoval(SERVER_ID, removedAt, prisma, {
         capture,
+        captureDesktop: vi.fn(),
         shutdown,
       }),
     ).toBe(true);

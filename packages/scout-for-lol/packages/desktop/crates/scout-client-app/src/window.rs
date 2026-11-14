@@ -10,6 +10,7 @@ use std::process::ExitCode;
 use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 
 use eframe::egui;
+use scout_client_core::settings::SendGate;
 use scout_desktop_ipc::{
     GameflowPhase, PROTOCOL_VERSION, StateSnapshot, SupervisorMessage, WindowMessage,
     check_protocol, decode_line, encode_line,
@@ -21,8 +22,15 @@ const APP_ID: &str = "com.scout-for-lol.client";
 
 /// Run the window until it closes. A clean close exits 0; a broken link to the
 /// supervisor exits 3, which the supervisor treats like a crash.
-pub fn run() -> ExitCode {
-    let link = SupervisorLink::default();
+///
+/// `error_gate` is the window's own error-report switch. It starts from the
+/// stored choice and follows every snapshot the supervisor sends, so an
+/// opt-out reaches this process too.
+pub fn run(error_gate: SendGate) -> ExitCode {
+    let link = SupervisorLink {
+        inbox: Arc::default(),
+        error_gate,
+    };
     if !link.send(&WindowMessage::Hello {
         protocol: PROTOCOL_VERSION,
     }) {
@@ -97,6 +105,7 @@ pub struct Updates {
 #[derive(Debug, Clone, Default)]
 pub struct SupervisorLink {
     inbox: Arc<Mutex<Inbox>>,
+    error_gate: SendGate,
 }
 
 impl SupervisorLink {
@@ -108,11 +117,12 @@ impl SupervisorLink {
     /// `context` after each.
     pub fn listen(&self, context: egui::Context) {
         let inbox = Arc::clone(&self.inbox);
+        let error_gate = self.error_gate.clone();
         std::thread::spawn(move || {
             let stdin = std::io::stdin();
             for line in stdin.lock().lines() {
                 let failure = match line {
-                    Ok(line) => receive(&inbox, &line).err(),
+                    Ok(line) => receive(&inbox, &error_gate, &line).err(),
                     Err(error) => Some(format!("could not read the supervisor: {error}")),
                 };
                 if let Some(failure) = failure {
@@ -171,7 +181,7 @@ impl SupervisorLink {
     }
 }
 
-fn receive(inbox: &Mutex<Inbox>, line: &str) -> Result<(), String> {
+fn receive(inbox: &Mutex<Inbox>, error_gate: &SendGate, line: &str) -> Result<(), String> {
     let message = decode_line::<SupervisorMessage>(line).map_err(|error| error.to_string())?;
     let mut inbox = inbox.lock().unwrap_or_else(PoisonError::into_inner);
     match message {
@@ -182,7 +192,11 @@ fn receive(inbox: &Mutex<Inbox>, line: &str) -> Result<(), String> {
             check_protocol(protocol).map_err(|mismatch| mismatch.to_string())?;
             inbox.tray_available = Some(tray_available);
         }
-        SupervisorMessage::State { state } => inbox.state = state,
+        SupervisorMessage::State { state } => {
+            // The user's choice, applied to this process's own reporter.
+            error_gate.set(state.privacy.send_error_reports);
+            inbox.state = state;
+        }
         SupervisorMessage::Phase { phase } => inbox.phase = phase,
         SupervisorMessage::DiagnosticsBundle { text } => inbox.bundle = Some(text),
         SupervisorMessage::Show => inbox.show = true,
@@ -197,6 +211,9 @@ mod tests {
 
     use scout_desktop_ipc::{GameflowPhase, PROTOCOL_VERSION, SupervisorMessage, encode_line};
 
+    use scout_client_core::settings::SendGate;
+    use scout_desktop_ipc::{PrivacySnapshot, StateSnapshot};
+
     use super::{Inbox, receive};
 
     fn line(message: &SupervisorMessage) -> Result<String, scout_desktop_ipc::CodecError> {
@@ -206,8 +223,10 @@ mod tests {
     #[test]
     fn supervisor_messages_update_the_inbox() -> Result<(), Box<dyn std::error::Error>> {
         let inbox = Mutex::new(Inbox::default());
+        let gate = SendGate::new(true);
         receive(
             &inbox,
+            &gate,
             &line(&SupervisorMessage::Hello {
                 protocol: PROTOCOL_VERSION,
                 tray_available: true,
@@ -215,11 +234,14 @@ mod tests {
         )?;
         receive(
             &inbox,
+            &gate,
             &line(&SupervisorMessage::Phase {
                 phase: GameflowPhase::Lobby,
             })?,
         )?;
-        receive(&inbox, &line(&SupervisorMessage::Show)?)?;
+        receive(&inbox, &gate, &line(&SupervisorMessage::Show)?)?;
+        // Messages other than a snapshot never touch the privacy choice.
+        assert!(gate.allows());
         let inbox = inbox.into_inner()?;
         assert_eq!(inbox.tray_available, Some(true));
         assert_eq!(inbox.phase, GameflowPhase::Lobby);
@@ -231,12 +253,36 @@ mod tests {
     #[test]
     fn a_mismatched_or_unknown_message_breaks_the_link() -> Result<(), Box<dyn std::error::Error>> {
         let inbox = Mutex::new(Inbox::default());
+        let gate = SendGate::new(true);
         let hello = line(&SupervisorMessage::Hello {
             protocol: PROTOCOL_VERSION + 1,
             tray_available: true,
         })?;
-        assert!(receive(&inbox, &hello).is_err());
-        assert!(receive(&inbox, "{\"type\":\"reformat\"}").is_err());
+        assert!(receive(&inbox, &gate, &hello).is_err());
+        assert!(receive(&inbox, &gate, "{\"type\":\"reformat\"}").is_err());
+        Ok(())
+    }
+
+    #[test]
+    fn a_snapshot_opens_and_closes_the_windows_error_reporter()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let inbox = Mutex::new(Inbox::default());
+        let gate = SendGate::new(true);
+        let snapshot = |send_error_reports| {
+            line(&SupervisorMessage::State {
+                state: StateSnapshot {
+                    privacy: PrivacySnapshot {
+                        send_error_reports,
+                        send_usage_data: true,
+                    },
+                    ..StateSnapshot::default()
+                },
+            })
+        };
+        receive(&inbox, &gate, &snapshot(false)?)?;
+        assert!(!gate.allows(), "an opt-out must reach the window process");
+        receive(&inbox, &gate, &snapshot(true)?)?;
+        assert!(gate.allows());
         Ok(())
     }
 }

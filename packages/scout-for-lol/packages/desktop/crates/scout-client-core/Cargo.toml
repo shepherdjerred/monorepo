@@ -23,6 +23,9 @@ tokio.workspace = true
 url.workspace = true
 uuid.workspace = true
 
+[dev-dependencies]
+tokio = { workspace = true, features = ["net"] }
+
 [build-dependencies]
 serde.workspace = true
 serde_json.workspace = true

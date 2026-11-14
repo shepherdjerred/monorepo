@@ -7,3 +7,5 @@ pub mod lcu;
 pub mod outbox;
 pub mod protocol;
 pub mod reporting;
+pub mod settings;
+pub mod telemetry;

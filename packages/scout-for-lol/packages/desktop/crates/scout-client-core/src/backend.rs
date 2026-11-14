@@ -229,6 +229,26 @@ impl ScoutBackendClient {
         Ok(receipt.next_sequence)
     }
 
+    /// Post one product event. Crate-private on purpose: the only caller is
+    /// [`crate::telemetry::UsageReporter`], which checks the opt-out gate, so
+    /// no code path can send usage data around the user's choice.
+    pub(crate) async fn send_usage_event(
+        &self,
+        credential: &DeviceCredential,
+        body: &crate::telemetry::UsageEventBody,
+    ) -> Result<(), BackendError> {
+        self.http
+            .post(self.endpoint(crate::telemetry::USAGE_EVENTS_PATH)?)
+            .bearer_auth(&credential.token)
+            .json(body)
+            .send()
+            .await
+            .map_err(BackendError::Request)?
+            .checked()
+            .await?;
+        Ok(())
+    }
+
     /// Revoke this bearer before removing it from the operating-system store.
     ///
     /// An unauthorized response means the credential is already unusable and

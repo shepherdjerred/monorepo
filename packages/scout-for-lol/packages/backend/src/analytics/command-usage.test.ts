@@ -175,6 +175,7 @@ describe("captureDiscordCommandUsed", () => {
     });
     const analytics: ProductAnalytics = {
       capture,
+      captureDesktop: vi.fn(),
       shutdown: () => Promise.resolve(),
     };
 

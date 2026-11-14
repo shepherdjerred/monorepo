@@ -1,0 +1,99 @@
+{
+  "valid": [
+    {
+      "event": "app_started",
+      "appVersion": "0.1.0",
+      "properties": { "platform": "windows" }
+    },
+    {
+      "event": "device_paired",
+      "appVersion": "0.1.0",
+      "properties": { "platform": "macos" }
+    },
+    {
+      "event": "post_game_reported",
+      "appVersion": "0.1.0",
+      "properties": { "platform": "linux" }
+    },
+    {
+      "event": "update_applied",
+      "appVersion": "0.2.0-beta.1",
+      "properties": { "platform": "windows" }
+    },
+    {
+      "event": "window_crashed",
+      "appVersion": "0.1.0",
+      "properties": {
+        "platform": "windows",
+        "cause": "unresponsive",
+        "outcome": "relaunched"
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "reason": "an event outside the closed set",
+      "body": {
+        "event": "champion_picked",
+        "appVersion": "0.1.0",
+        "properties": { "platform": "windows" }
+      }
+    },
+    {
+      "reason": "an unknown property on a known event",
+      "body": {
+        "event": "app_started",
+        "appVersion": "0.1.0",
+        "properties": { "platform": "windows", "puuid": "abc" }
+      }
+    },
+    {
+      "reason": "a free-text property value",
+      "body": {
+        "event": "app_started",
+        "appVersion": "0.1.0",
+        "properties": { "platform": "C:\\Users\\someone" }
+      }
+    },
+    {
+      "reason": "a property that belongs to another event",
+      "body": {
+        "event": "app_started",
+        "appVersion": "0.1.0",
+        "properties": { "platform": "windows", "cause": "exited" }
+      }
+    },
+    {
+      "reason": "a window_crashed event missing its bounded properties",
+      "body": {
+        "event": "window_crashed",
+        "appVersion": "0.1.0",
+        "properties": { "platform": "windows" }
+      }
+    },
+    {
+      "reason": "an unknown top-level field",
+      "body": {
+        "event": "app_started",
+        "appVersion": "0.1.0",
+        "properties": { "platform": "windows" },
+        "riotId": "Name#TAG1"
+      }
+    },
+    {
+      "reason": "an app version that is not a version",
+      "body": {
+        "event": "app_started",
+        "appVersion": "/Users/someone/scout",
+        "properties": { "platform": "windows" }
+      }
+    },
+    {
+      "reason": "a missing app version",
+      "body": {
+        "event": "app_started",
+        "properties": { "platform": "windows" }
+      }
+    }
+  ]
+}

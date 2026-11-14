@@ -27,6 +27,7 @@ use super::replay::{
 };
 use super::state::{StateHub, set_error, update_state};
 use super::upload::upload_pending;
+use super::usage::{UsageChannel, UsageQueue};
 use crate::startup;
 
 pub(super) async fn run_collector(
@@ -35,6 +36,7 @@ pub(super) async fn run_collector(
     mut shutdown: watch::Receiver<bool>,
     mut commands: mpsc::UnboundedReceiver<RuntimeCommand>,
     backend_origin: String,
+    usage: UsageChannel,
 ) {
     diagnostics.record(DiagnosticEvent::new(
         DiagnosticLevel::Info,
@@ -44,15 +46,7 @@ pub(super) async fn run_collector(
     ));
     let Some((backend, mut credential, mut outbox)) = collector_resources(&state, &backend_origin)
     else {
-        diagnostics.record(
-            DiagnosticEvent::new(
-                DiagnosticLevel::Critical,
-                DiagnosticCategory::Runtime,
-                "open_resources",
-                DiagnosticOutcome::Failed,
-            )
-            .with_detail("backend client, credential store, or outbox unavailable"),
-        );
+        record_resources_unavailable(&diagnostics);
         return;
     };
     update_state(&state, |snapshot| snapshot.paired = credential.is_some());
@@ -101,6 +95,7 @@ pub(super) async fn run_collector(
                     &mut payloads,
                     &mut credential,
                     &mut pending_pairing,
+                    &usage.queue,
                 ).await {
                     set_error(&state, error);
                 }
@@ -115,11 +110,13 @@ pub(super) async fn run_collector(
                         live_client: live_client.as_ref(),
                         tick_number,
                         diagnostics: &diagnostics,
+                        usage: &usage.queue,
                     }).await
                 {
                     set_error(&state, error);
                 }
                 collection_workers.tick(&state, &outbox, &diagnostics, tick_number, credential.as_ref().is_some_and(|credential| checked_in_device == Some(credential.device_id))).await;
+                usage.flush_after_check_in(&backend, credential.as_ref(), checked_in_device, &diagnostics);
                 if tick_number % 15 == 1
                     && replay_upload_task.is_none()
                     && let Some(active_credential) = &credential
@@ -135,6 +132,18 @@ pub(super) async fn run_collector(
             }
         }
     }
+}
+
+fn record_resources_unavailable(diagnostics: &Diagnostics) {
+    diagnostics.record(
+        DiagnosticEvent::new(
+            DiagnosticLevel::Critical,
+            DiagnosticCategory::Runtime,
+            "open_resources",
+            DiagnosticOutcome::Failed,
+        )
+        .with_detail("backend client, credential store, or outbox unavailable"),
+    );
 }
 
 /// The collection tick. `Delay` keeps ticks evenly spaced after a sleep/resume
@@ -156,6 +165,7 @@ pub(super) struct ObservationTickContext<'a> {
     live_client: Option<&'a LiveClient>,
     tick_number: u64,
     diagnostics: &'a Diagnostics,
+    usage: &'a UsageQueue,
 }
 
 pub(super) async fn collect_and_upload_observations(
@@ -225,6 +235,7 @@ pub(super) async fn collect_and_upload_observations(
             context.outbox,
             context.credential,
             context.diagnostics,
+            context.usage,
         )
         .await
     {

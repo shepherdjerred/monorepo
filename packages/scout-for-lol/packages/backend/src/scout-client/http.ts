@@ -1,5 +1,6 @@
 import {
   SCOUT_CLIENT_MAX_BATCH_BYTES,
+  SCOUT_DESKTOP_EVENTS_PATH,
   ScoutClientCheckInSchema,
   ScoutClientCheckInResponseSchema,
   ScoutClientCreatePairingSchema,
@@ -20,6 +21,7 @@ import {
   type PairingInput,
 } from "./pairing.ts";
 import { pairingCreationAllowed } from "./pairing-rate-limit.ts";
+import { acceptDesktopEvent } from "./desktop/events.ts";
 import {
   ingestObservationBatch,
   nextScoutClientObservationSequence,
@@ -178,6 +180,29 @@ async function handleCheckIn(
   );
 }
 
+async function handleDesktopEvent(
+  request: Request,
+  device: AuthenticatedScoutClient,
+): Promise<Response> {
+  const result = acceptDesktopEvent(device, await boundedJson(request));
+  if (result.status === 202) return jsonResponse({ accepted: true }, 202);
+  const response = jsonResponse({ error: result.error }, result.status);
+  if (result.status === 429) response.headers.set("Retry-After", "60");
+  return response;
+}
+
+async function handleReplayOffer(
+  request: Request,
+  gameId: string | undefined,
+  device: AuthenticatedScoutClient,
+): Promise<Response> {
+  if (gameId === undefined) return jsonResponse({ error: "not_found" }, 404);
+  const offer = ReplayOfferRequestSchema.safeParse(await boundedJson(request));
+  return offer.success
+    ? jsonResponse(await decideReplayOffer(gameId, offer.data, device))
+    : jsonResponse({ error: "invalid_request" }, 400);
+}
+
 async function handleAuthenticatedRoute(
   request: Request,
   pathname: string,
@@ -193,18 +218,15 @@ async function handleAuthenticatedRoute(
 
   const offerMatch = REPLAY_OFFER_PATH.exec(pathname);
   if (offerMatch !== null) {
-    const gameId = offerMatch[1];
-    if (gameId === undefined) return jsonResponse({ error: "not_found" }, 404);
-    const offer = ReplayOfferRequestSchema.safeParse(
-      await boundedJson(request),
-    );
-    return offer.success
-      ? jsonResponse(await decideReplayOffer(gameId, offer.data, device))
-      : jsonResponse({ error: "invalid_request" }, 400);
+    return await handleReplayOffer(request, offerMatch[1], device);
   }
 
   if (pathname === `${API_PREFIX}/check-ins`) {
     return await handleCheckIn(request, device);
+  }
+
+  if (pathname === SCOUT_DESKTOP_EVENTS_PATH) {
+    return await handleDesktopEvent(request, device);
   }
 
   if (pathname === SELF_REVOKE_PATH) {

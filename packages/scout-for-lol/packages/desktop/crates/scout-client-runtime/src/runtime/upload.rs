@@ -10,12 +10,14 @@ use scout_client_core::protocol::ObservationKind;
 use scout_client_core::protocol::ObservationOutcome;
 use scout_client_core::protocol::ObservationQuarantineReason;
 use scout_client_core::protocol::ObservationReceipt;
+use scout_client_core::telemetry::UsageEvent;
 use serde_json::Value;
 use std::collections::HashMap;
 use uuid::Uuid;
 
 use super::replay::record_backend_outcome;
 use super::state::{StateHub, clear_runtime_error, update_state};
+use super::usage::UsageQueue;
 
 pub(super) async fn upload_pending(
     state: &StateHub,
@@ -23,6 +25,7 @@ pub(super) async fn upload_pending(
     outbox: &ObservationOutbox,
     credential: &DeviceCredential,
     diagnostics: &Diagnostics,
+    usage: &UsageQueue,
 ) -> Result<(), String> {
     let pending = outbox.pending(100).map_err(|error| error.to_string())?;
     if pending.is_empty() {
@@ -57,6 +60,11 @@ pub(super) async fn upload_pending(
     diagnostics.counters().observation_uploaded(submitted_count);
     for item in receipt.receipts {
         if let Some(observation) = submitted.get(&item.observation_id) {
+            if observation.kind == ObservationKind::PostGame
+                && item.outcome == ObservationOutcome::Accepted
+            {
+                usage.push(UsageEvent::PostGameReported);
+            }
             apply_observation_receipt(outbox, observation, &item, &receipt.server_time)?;
         }
     }
