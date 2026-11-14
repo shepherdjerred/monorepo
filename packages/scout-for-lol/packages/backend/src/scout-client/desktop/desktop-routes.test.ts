@@ -138,6 +138,7 @@ beforeEach(() => {
   resetConfigurationForTests();
   resetDesktopReadRateLimitForTests();
   resetPairingRateLimitForTests();
+  mocks.isPolicyEnabled.mockResolvedValue(true);
   mocks.findDevice.mockResolvedValue(device());
   mocks.findUser.mockResolvedValue({
     discordId: OWNER_ID,

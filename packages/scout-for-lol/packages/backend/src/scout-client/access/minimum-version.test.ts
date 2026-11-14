@@ -71,6 +71,7 @@ beforeEach(() => {
       ownerId: "160509172704739328",
       appVersion: mocks.device.appVersion,
       deviceState: "ACTIVE",
+      scopes: ["ingest"],
     }),
   );
 });
