@@ -14,7 +14,7 @@ import {
 } from "#src/testing/test-database.ts";
 import { createTestScoutClientDevice } from "#src/testing/scout-client-device.ts";
 import fixture from "#src/scout-client/canonical/testdata/classic-end-of-game.json";
-import type { resolveCompleteMatch } from "#src/evidence/matches.ts";
+import type { resolveCanonicalMatch } from "#src/evidence/matches.ts";
 import type { fetchMatchData } from "#src/league/tasks/postmatch/match-data-fetcher.ts";
 import { RiotHttpError } from "#src/league/api/client/errors.ts";
 
@@ -22,7 +22,7 @@ const { prisma } = createTestDatabase("terminal-scoreboard-recovery");
 const io = vi.hoisted(() => ({
   hardDisabled: vi.fn(() => false),
   render: vi.fn(async () => "rendered"),
-  completeMatch: vi.fn<typeof resolveCompleteMatch>(),
+  completeMatch: vi.fn<typeof resolveCanonicalMatch>(),
   fetchMatch: vi.fn<typeof fetchMatchData>(),
 }));
 vi.mock("#src/database/index.ts", async () => await testDatabaseModule(prisma));
@@ -35,7 +35,7 @@ vi.mock("#src/evidence/recovery-gate.ts", () => ({
   evidenceRecoveryEnabled: () => !io.hardDisabled(),
 }));
 vi.mock("#src/evidence/matches.ts", () => ({
-  resolveCompleteMatch: io.completeMatch,
+  resolveCanonicalMatch: io.completeMatch,
 }));
 vi.mock("#src/league/tasks/postmatch/match-data-fetcher.ts", () => ({
   fetchMatchData: io.fetchMatch,
@@ -219,9 +219,9 @@ test("accepted Classic scoreboard reaches an ordinary pending report intent with
 test("a forbidden Riot read cannot block the real resolver from recovering a client scoreboard", async () => {
   await upload();
   const actual = await vi.importActual<{
-    resolveCompleteMatch: typeof resolveCompleteMatch;
+    resolveCanonicalMatch: typeof resolveCanonicalMatch;
   }>("#src/evidence/matches.ts");
-  io.completeMatch.mockImplementation(actual.resolveCompleteMatch);
+  io.completeMatch.mockImplementation(actual.resolveCanonicalMatch);
   io.fetchMatch.mockRejectedValue(
     new RiotHttpError({
       status: 403,

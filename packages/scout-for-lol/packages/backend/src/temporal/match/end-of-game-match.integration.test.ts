@@ -11,6 +11,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { ApplicationFailure } from "@temporalio/common";
+import { z } from "zod";
 import {
   CanonicalMatchRecordSchema,
   DiscordAccountIdSchema,
@@ -142,8 +143,6 @@ const { admitMatchEvidence } = await import("#src/evidence/admission.ts");
 const { gameResultFromMatch } =
   await import("#src/scout-client/canonical/riot-result.ts");
 const { listStagingFiles } = await import("#src/report-lake/staging.ts");
-const { withDuckDBConnection } =
-  await import("#src/reports/duckdb/instance.ts");
 const { classicEndOfGameMatch, classicMatchId } =
   await import("#src/testing/scout-client/end-of-game-fixtures.ts");
 const {
@@ -273,15 +272,33 @@ function archivedRecord() {
   return CanonicalMatchRecordSchema.parse(JSON.parse(body));
 }
 
+const StagedMatchRowSchema = z.looseObject({
+  coverage: z.string(),
+  game_version: z.string().nullable(),
+});
+
+/** The distinct coverage of the staged `matches` rows (JSON Lines files). */
 async function stagedCoverage(): Promise<unknown[]> {
   const files = await listStagingFiles(io.lakeDir, "matches");
   expect(files.length).toBeGreaterThan(0);
-  return await withDuckDBConnection(
-    async (session) =>
-      await session.run(
-        `SELECT DISTINCT coverage, game_version IS NULL AS unversioned FROM read_parquet([${files.map((file) => `'${file}'`).join(", ")}])`,
-      ),
+  const texts = await Promise.all(
+    files.map(async (file) => await Bun.file(file).text()),
   );
+  const rows = texts
+    .flatMap((text) => text.split("\n"))
+    .filter((line) => line.trim().length > 0)
+    .map((line) => StagedMatchRowSchema.parse(JSON.parse(line)));
+  expect(rows.length).toBeGreaterThan(0);
+  return [
+    ...new Set(
+      rows.map((row) =>
+        JSON.stringify({
+          coverage: row.coverage,
+          unversioned: row.game_version === null,
+        }),
+      ),
+    ),
+  ].map((row): unknown => JSON.parse(row));
 }
 
 async function intentCount(): Promise<number> {
