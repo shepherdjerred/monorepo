@@ -45,6 +45,9 @@ pub(super) async fn collect_once(
     diagnostics: &Diagnostics,
 ) -> Result<(), String> {
     let Some(lockfile) = optional_lockfile(discover_lockfile())? else {
+        // League closing is not a witnessed transition; a later end time for
+        // this game would be fabricated.
+        payloads.remove(IN_PROGRESS_GAME_KEY);
         update_state(state, |snapshot| {
             snapshot.league_connected = false;
             snapshot.gameflow_phase = None;
@@ -125,7 +128,7 @@ pub(super) async fn collect_once(
 
     collect_live_frame(live_client, outbox, payloads, Some(&local_puuid)).await?;
     bind_observed_lobby(outbox, payloads, Some(&local_puuid), diagnostics)?;
-    remember_game_start(outbox, payloads, &local_puuid)?;
+    remember_game_timing(outbox, payloads, &local_puuid)?;
 
     if tick_number % 15 == 1 {
         // Preserve the post-game bundle before querying optional profile
@@ -387,6 +390,65 @@ pub(super) fn remember_game_start(
         .map_err(|error| error.to_string())
 }
 
+fn remember_game_timing(
+    outbox: &ObservationOutbox,
+    payloads: &mut HashMap<String, Vec<u8>>,
+    observer: &str,
+) -> Result<(), String> {
+    remember_game_start(outbox, payloads, observer)?;
+    witness_game_end(
+        outbox,
+        payloads,
+        observer,
+        chrono::Utc::now().timestamp_millis(),
+    )
+}
+
+const IN_PROGRESS_GAME_KEY: &str = "in_progress_game";
+
+/// Record the gameflow transition out of `InProgress` as an end witness.
+///
+/// The stats block can fail to appear (League closed, endpoint late), so the
+/// moment the phase leaves `InProgress` is the only end evidence such a game
+/// has. `remember_game_end` keeps the earliest time, so a later, real
+/// end-of-game observation never moves it later.
+pub(super) fn witness_game_end(
+    outbox: &ObservationOutbox,
+    payloads: &mut HashMap<String, Vec<u8>>,
+    observer: &str,
+    observed_at_millis: i64,
+) -> Result<(), String> {
+    let session = payloads
+        .get("gameflow_session")
+        .map(|body| serde_json::from_slice::<Value>(body))
+        .transpose()
+        .map_err(|error| error.to_string())?;
+    let in_progress = session
+        .as_ref()
+        .filter(|session| find_string(session, &["phase"]).as_deref() == Some("InProgress"))
+        .and_then(|session| find_string(session, &["gameId"]))
+        .filter(|game_id| game_id != "0");
+    if let Some(game_id) = in_progress {
+        payloads.insert(IN_PROGRESS_GAME_KEY.to_owned(), game_id.into_bytes());
+        return Ok(());
+    }
+    // A dropped client reports `Reconnect` while the match is still running;
+    // keep the marker so only the real exit from the match records the end.
+    if session
+        .as_ref()
+        .is_some_and(|session| find_string(session, &["phase"]).as_deref() == Some("Reconnect"))
+    {
+        return Ok(());
+    }
+    let Some(previous) = payloads.remove(IN_PROGRESS_GAME_KEY) else {
+        return Ok(());
+    };
+    let game_id = String::from_utf8(previous).map_err(|error| error.to_string())?;
+    outbox
+        .remember_game_end(observer, &game_id, observed_at_millis)
+        .map_err(|error| error.to_string())
+}
+
 pub(super) fn game_start_evidence(
     session: &Value,
     frame: &Value,
@@ -535,6 +597,85 @@ mod tests {
 
         assert_eq!(outbox.pending(100)?.len(), 0);
         assert_eq!(lobby_bindings(&diagnostics), Some(0));
+        let _ = std::fs::remove_file(&path);
+        Ok(())
+    }
+
+    #[test]
+    fn leaving_in_progress_witnesses_the_end_and_keeps_the_minimum()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let path = std::env::temp_dir().join(format!("scout-runtime-{}.db", Uuid::new_v4()));
+        let outbox = ObservationOutbox::open(&path)?;
+        let mut payloads = HashMap::new();
+        payloads.insert("gameflow_session".to_owned(), in_progress_session()?);
+        witness_game_end(&outbox, &mut payloads, "puuid", 1_000)?;
+        // Still in progress: nothing recorded yet.
+        outbox.remember_game_start("puuid", "5653248720", 500)?;
+        assert_eq!(outbox.pending_game_timing("puuid", "5653248720")?, None);
+
+        payloads.insert(
+            "gameflow_session".to_owned(),
+            serde_json::to_vec(&json!({ "phase": "WaitingForStats" }))?,
+        );
+        witness_game_end(&outbox, &mut payloads, "puuid", 9_000)?;
+        let timing = outbox.pending_game_timing("puuid", "5653248720")?;
+        assert_eq!(timing.map(|timing| timing.ended_at_millis), Some(9_000));
+
+        // A later end-of-game observation must not move the witness later.
+        outbox.remember_game_end("puuid", "5653248720", 20_000)?;
+        assert_eq!(
+            outbox
+                .pending_game_timing("puuid", "5653248720")?
+                .map(|timing| timing.ended_at_millis),
+            Some(9_000)
+        );
+        // An earlier one lowers it.
+        outbox.remember_game_end("puuid", "5653248720", 8_000)?;
+        assert_eq!(
+            outbox
+                .pending_game_timing("puuid", "5653248720")?
+                .map(|timing| timing.ended_at_millis),
+            Some(8_000)
+        );
+        // The witness fires once per game.
+        witness_game_end(&outbox, &mut payloads, "puuid", 50_000)?;
+        assert_eq!(
+            outbox
+                .pending_game_timing("puuid", "5653248720")?
+                .map(|timing| timing.ended_at_millis),
+            Some(8_000)
+        );
+        let _ = std::fs::remove_file(&path);
+        Ok(())
+    }
+
+    #[test]
+    fn reconnecting_does_not_witness_an_end() -> Result<(), Box<dyn std::error::Error>> {
+        let path = std::env::temp_dir().join(format!("scout-runtime-{}.db", Uuid::new_v4()));
+        let outbox = ObservationOutbox::open(&path)?;
+        let mut payloads = HashMap::new();
+        payloads.insert("gameflow_session".to_owned(), in_progress_session()?);
+        witness_game_end(&outbox, &mut payloads, "puuid", 1_000)?;
+        outbox.remember_game_start("puuid", "5653248720", 500)?;
+
+        payloads.insert(
+            "gameflow_session".to_owned(),
+            serde_json::to_vec(&json!({ "phase": "Reconnect" }))?,
+        );
+        witness_game_end(&outbox, &mut payloads, "puuid", 9_000)?;
+        assert_eq!(outbox.pending_game_timing("puuid", "5653248720")?, None);
+
+        payloads.insert(
+            "gameflow_session".to_owned(),
+            serde_json::to_vec(&json!({ "phase": "WaitingForStats" }))?,
+        );
+        witness_game_end(&outbox, &mut payloads, "puuid", 30_000)?;
+        assert_eq!(
+            outbox
+                .pending_game_timing("puuid", "5653248720")?
+                .map(|timing| timing.ended_at_millis),
+            Some(30_000)
+        );
         let _ = std::fs::remove_file(&path);
         Ok(())
     }

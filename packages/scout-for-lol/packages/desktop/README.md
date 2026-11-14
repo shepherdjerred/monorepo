@@ -158,6 +158,23 @@ deferrals remain retryable, with backoff up to one hour. An outbox migration
 reoffers files older builds abandoned for missing evidence. Permanent server
 validation rejections remain terminal. The client does not download replays.
 
+## Which games get reported
+
+A game that ends while the client is running gets a report: the full one when
+the end-of-game stats block, timing and history agree, otherwise at least the
+end-of-game scoreboard. A game the client did not see stays history-only, and a
+post-game block seen more than 15 minutes late is treated as historical.
+
+The gameflow transition out of `InProgress` is recorded as an end witness, so a
+game whose stats block never appears (League closed, endpoint late) still has an
+end time. The earliest observation wins. Closing League is not a transition.
+
+The collection tick skips missed ticks (`MissedTickBehavior::Delay`) instead of
+bursting them after sleep or resume. Unresolved game hints retry with the same
+escalating backoff as game recovery, 5 seconds per attempt up to 5 minutes.
+Once a game's result and timeline are checkpointed, its pending end-of-game and
+timing rows are deleted.
+
 ## Lobby and game identity
 
 LCU exposes a lobby's `partyId` while the lobby exists and a real `gameId` only

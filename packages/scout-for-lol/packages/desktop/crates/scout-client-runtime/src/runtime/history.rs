@@ -246,6 +246,14 @@ fn discover_page(
             timeline_queued: false,
             full_game: None,
         };
+        // A recovered game's result is already durable; rebuilding it here
+        // would lose the witnessed context once that is pruned.
+        if outbox
+            .game_result_queued(observer, &platform.to_uppercase(), &game_id)
+            .map_err(|error| error.to_string())?
+        {
+            continue;
+        }
         // The first row can already describe a result. Give it the same
         // witnessed-completion context as the full game before it is uploaded;
         // server admission is permanent and cannot be upgraded by a later row.
@@ -378,12 +386,30 @@ async fn collect_game(
             now,
         )
         .map_err(|error| error.to_string())?;
+    // Result and timeline are both checkpointed, so the witnessed end-of-game
+    // fragment and timing pair have been consumed and are no longer needed.
+    if pending.timeline_queued || timeline.is_some() {
+        prune_game_context(outbox, observer, &pending.game_id)?;
+    }
     record_post_game_read(
         diagnostics,
         DiagnosticOutcome::Succeeded,
         "full game durable; missing artifacts remain independently retryable",
     );
     Ok(())
+}
+
+fn prune_game_context(
+    outbox: &ObservationOutbox,
+    observer: &str,
+    game_id: &str,
+) -> Result<(), String> {
+    outbox
+        .forget_end_of_game(observer, game_id)
+        .map_err(|error| error.to_string())?;
+    outbox
+        .forget_game_timing(observer, game_id)
+        .map_err(|error| error.to_string())
 }
 
 fn identity_agrees(game: &Value, pending: &RecoveryGame, observer: &str) -> bool {
@@ -493,7 +519,7 @@ fn contains_observer(value: &Value, observer: &str) -> bool {
 mod tests {
     use super::{
         ObservationOutbox, PendingGameTiming, RecoveryGame, context_agrees, discover_page,
-        history_games, remember_game_references,
+        history_games, prune_game_context, remember_game_references,
     };
     use scout_client_core::diagnostics::Diagnostics;
     use scout_client_core::protocol::ObservationEnvelope;
@@ -564,6 +590,47 @@ mod tests {
         assert!(snapshots[1].payload["data"].get("endOfGame").is_none());
         assert_eq!(snapshots[2].payload["resource"], "match_history_game:789");
         drop(reopened);
+        std::fs::remove_file(path)?;
+        Ok(())
+    }
+
+    #[test]
+    fn checkpointed_games_drop_their_witness_rows_and_are_not_rebuilt_history_only()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let path = std::env::temp_dir().join(format!(
+            "scout-history-prune-{}.sqlite",
+            uuid::Uuid::new_v4()
+        ));
+        let outbox = ObservationOutbox::open(&path)?;
+        let creation = 1_800_000_000_000_i64;
+        outbox.remember_game_start("owner", "123", creation)?;
+        outbox.remember_game_end("owner", "123", creation + 1_800_000)?;
+        outbox.remember_end_of_game(
+            "owner",
+            "123",
+            &serde_json::to_vec(&json!({"gameId": "123", "platformId": "NA1", "puuid": "owner"}))?,
+        )?;
+        outbox.discover_game("owner", "NA1", "123", true)?;
+        let game = outbox.recovery_games("owner", 0, 1)?.remove(0);
+        outbox.checkpoint_game("owner", &game, Some(b"{}"), true, true, 0)?;
+
+        prune_game_context(&outbox, "owner", "123")?;
+        assert_eq!(outbox.pending_end_of_game("owner", "123")?, None);
+        assert_eq!(outbox.pending_game_timing("owner", "123")?, None);
+
+        // The next history sweep must not queue a history-only copy.
+        let rows = json!({"games": {"games": [
+            {"gameId": 123, "platformId": "NA1", "gameCreation": creation}
+        ]}});
+        discover_page(
+            &outbox,
+            &mut HashMap::new(),
+            "owner",
+            &rows,
+            &Diagnostics::in_memory(),
+        )?;
+        assert_eq!(outbox.pending(100)?.len(), 0);
+        drop(outbox);
         std::fs::remove_file(path)?;
         Ok(())
     }

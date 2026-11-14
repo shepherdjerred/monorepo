@@ -84,6 +84,7 @@ impl ObservationOutbox {
         add_missing_columns(&connection)?;
         connection.execute_batch(COALESCE_KEY_INDEX)?;
         connection.execute_batch(recovery::SCHEMA)?;
+        recovery::migrate(&connection)?;
         // Older builds permanently recorded a temporary lack of evidence as
         // HTTP 409. Re-offer those files once under the server's current policy.
         let transaction = connection.transaction_with_behavior(TransactionBehavior::Immediate)?;
