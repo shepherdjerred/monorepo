@@ -37,13 +37,14 @@ describe("Temporal internal service boundary", () => {
     });
   });
 
-  test("permits cluster S3 only for its five additional consuming roles", () => {
+  test("permits cluster S3 only for its six additional consuming roles", () => {
     const synthesized = resources();
     const components = [
       "reports-worker",
       "repo-worker",
       "scout-worker",
       "glitter-corpus-worker",
+      "glitter-context-worker",
       "infra-worker",
     ];
     // The infra worker mounts its service-account token, so it is read
@@ -53,10 +54,9 @@ describe("Temporal internal service boundary", () => {
         synthesized,
         `temporal-temporal-${component}`,
       );
-      const endpointKey =
-        component === "glitter-corpus-worker"
-          ? "GLITTER_CORPUS_S3_ENDPOINT"
-          : "S3_ENDPOINT";
+      const endpointKey = component.startsWith("glitter-")
+        ? "GLITTER_CORPUS_S3_ENDPOINT"
+        : "S3_ENDPOINT";
       expect(
         container.env.find((variable) => variable.name === endpointKey)?.value,
       ).toMatch(/:8333$/u);

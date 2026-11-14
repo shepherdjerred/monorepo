@@ -106,6 +106,17 @@ export function createPostalChart(app: App) {
           ],
           ports: [tcp(5000)],
         },
+        // The Temporal reports worker submits report mail through Postal's
+        // API (`POSTAL_HOST`).
+        {
+          from: [
+            {
+              ...nsPeer("temporal"),
+              podSelector: { matchLabels: { component: "reports-worker" } },
+            },
+          ],
+          ports: [tcp(5000)],
+        },
       ],
       egress: [
         // Allow DNS

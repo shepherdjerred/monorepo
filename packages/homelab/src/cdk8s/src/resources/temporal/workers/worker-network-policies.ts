@@ -116,6 +116,9 @@ function createTemporalWorkersSeaweedfsEgressPolicy(chart: Chart): void {
               "repo-worker",
               "scout-worker",
               "glitter-corpus-worker",
+              // Reads the corpus the corpus worker writes
+              // (`GLITTER_CORPUS_S3_ENDPOINT`).
+              "glitter-context-worker",
               // The Red Warfare recording archive on the mining-reset queue.
               "infra-worker",
             ],
