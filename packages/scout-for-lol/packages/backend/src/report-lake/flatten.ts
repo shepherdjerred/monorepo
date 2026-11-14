@@ -80,6 +80,7 @@ export function flattenMatch(match: RawMatch): MatchLakeRow[] {
       match.info.queueId,
       match.info.gameMode,
       match.info.gameType,
+      match.info.tournamentCode,
     ) ?? null;
   const matchId = match.metadata.matchId;
 
@@ -190,18 +191,24 @@ export function flattenMatch(match: RawMatch): MatchLakeRow[] {
   }));
 }
 
-export function flattenMatchTeams(match: RawMatch): MatchTeamLakeRow[] {
-  const queue = resolveQueueTypeFromGame(
-    match.info.queueId,
-    match.info.gameMode,
-    match.info.gameType,
+function isArenaMatch(match: RawMatch): boolean {
+  return (
+    resolveQueueTypeFromGame(
+      match.info.queueId,
+      match.info.gameMode,
+      match.info.gameType,
+      match.info.tournamentCode,
+    ) === "arena"
   );
+}
+
+export function flattenMatchTeams(match: RawMatch): MatchTeamLakeRow[] {
   // Arena's raw `teams` are keyed by the two sides (100 and 0), while
   // participants are keyed by eight player subteams (1 through 8). There is
   // no truthful team-level aggregate to expose until Riot supplies matching
   // subteam rows, so omit this relation rather than publishing misleading
   // joins.
-  if (queue === "arena") return [];
+  if (isArenaMatch(match)) return [];
   const matchId = match.metadata.matchId;
   const month = lakeMonth(match.info.gameCreation);
   return match.info.teams.map((team) => ({
@@ -232,12 +239,7 @@ export function flattenMatchTeams(match: RawMatch): MatchTeamLakeRow[] {
 }
 
 export function flattenMatchTeamBans(match: RawMatch): MatchTeamBanLakeRow[] {
-  const queue = resolveQueueTypeFromGame(
-    match.info.queueId,
-    match.info.gameMode,
-    match.info.gameType,
-  );
-  if (queue === "arena") return [];
+  if (isArenaMatch(match)) return [];
   const matchId = match.metadata.matchId;
   const month = lakeMonth(match.info.gameCreation);
   return match.info.teams.flatMap((team) =>

@@ -11,6 +11,7 @@ import {
   reportsFailedTotal,
   reportsGeneratedTotal,
   scoutItemCacheMissTotal,
+  unsupportedQueueReportsTotal,
 } from "#src/metrics/index.ts";
 import { withMvpVoteFurniture } from "#src/mvp-votes/components.ts";
 import { shouldAttachMvpVotes } from "#src/mvp-votes/eligibility.ts";
@@ -27,13 +28,15 @@ import {
   type Rank,
   rankForQueue,
   type RawMatch,
+  classifyGame,
   resolveQueueTypeFromGame,
+  type GameClassification,
   type RiotMatchId,
 } from "@scout-for-lol/data/index.ts";
 import { setItemMissHandler } from "@scout-for-lol/report";
 import {
   type AttachmentBuilder,
-  type EmbedBuilder,
+  EmbedBuilder,
   type MessageCreateOptions,
 } from "discord.js";
 import { z } from "zod";
@@ -198,6 +201,30 @@ type StandardMatchContext = {
 };
 
 /**
+ * A finished game whose queue Scout cannot name. Users hear that it was seen
+ * and not reported, rather than receiving a report labelled as another mode.
+ */
+function unsupportedQueueMessage(
+  matchId: RiotMatchId,
+  playersInMatch: readonly { alias: string }[],
+  classification: Extract<GameClassification, { kind: "unknown" }>,
+): MessageCreateOptions {
+  unsupportedQueueReportsTotal.inc();
+  logger.warn(
+    `[generateMatchReport] Unsupported queue for ${matchId}: queueId=${classification.queueId.toString()} gameMode=${classification.gameMode} gameType=${classification.gameType ?? "unknown"}`,
+  );
+  const aliases = playersInMatch.map((player) => player.alias).join(", ");
+  const embed = new EmbedBuilder()
+    .setTitle("Game type not supported yet")
+    .setDescription(
+      `${aliases} finished a game in a mode Scout does not recognise ` +
+        `(queue ${classification.queueId.toString()}, ${classification.gameMode}), ` +
+        `so no report was generated.`,
+    );
+  return { embeds: [embed] };
+}
+
+/**
  * Process standard match and generate Discord message
  */
 async function processStandardMatch(
@@ -218,11 +245,16 @@ async function processStandardMatch(
     throw new Error("No player data available");
   }
 
-  const queueType = resolveQueueTypeFromGame(
-    matchData.info.queueId,
-    matchData.info.gameMode,
-    matchData.info.gameType,
-  );
+  const classification = classifyGame({
+    queueId: matchData.info.queueId,
+    gameMode: matchData.info.gameMode,
+    gameType: matchData.info.gameType,
+    tournamentCode: matchData.info.tournamentCode,
+  });
+  if (classification.kind === "unknown") {
+    return unsupportedQueueMessage(matchId, playersInMatch, classification);
+  }
+  const queueType = classification.queue;
   const queue =
     queueType === "solo" || queueType === "flex" || queueType === "ranked 5s"
       ? queueType
@@ -288,7 +320,7 @@ async function processStandardMatch(
 
   // Generate completion message
   const playerAliases = playersInMatch.map((p) => p.alias);
-  const queueTypeForMessage = completedMatch.queueType ?? "custom";
+  const queueTypeForMessage = queueType;
   const completionMessage = formatGameCompletionMessage(
     playerAliases,
     queueTypeForMessage,
@@ -399,6 +431,7 @@ export async function generateMatchReport(
       matchData.info.queueId,
       matchData.info.gameMode,
       matchData.info.gameType,
+      matchData.info.tournamentCode,
     );
     if (
       isClassicQueueType(queueType) &&
@@ -460,6 +493,7 @@ export async function generateMatchReport(
         matchData.info.queueId,
         matchData.info.gameMode,
         matchData.info.gameType,
+        matchData.info.tournamentCode,
       ) ?? "unknown";
     reportsGeneratedTotal.inc({ queue_type: generatedQueueType });
 
@@ -470,6 +504,7 @@ export async function generateMatchReport(
         matchData.info.queueId,
         matchData.info.gameMode,
         matchData.info.gameType,
+        matchData.info.tournamentCode,
       ) ?? "unknown";
     reportsFailedTotal.inc({ queue_type: queueType });
     logErrorDetails(error, matchId, matchData, trackedPlayers);

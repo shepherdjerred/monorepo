@@ -607,7 +607,7 @@ describe("role-paired match scoreboards", () => {
 
   test("pairs custom CLASSIC games on Summoner's Rift", () => {
     for (const context of [
-      { queue: "custom", queue_id: 0, game_type: "MATCHED_GAME" },
+      { queue: "custom", queue_id: 0, game_type: "CUSTOM_GAME" },
       { queue: null, queue_id: 3110, game_type: "CUSTOM_GAME" },
     ]) {
       const matchups = buildRoleMatchups({

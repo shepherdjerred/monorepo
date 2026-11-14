@@ -125,7 +125,8 @@ export function isHallEligibleMatch(
     match.game_duration_seconds >= 300 &&
     Number.isFinite(gameEndAt) &&
     gameEndAt >= trackingStartedAt.getTime() &&
-    match.queue !== "custom"
+    match.queue !== "custom" &&
+    match.queue !== "tournament"
   );
 }
 

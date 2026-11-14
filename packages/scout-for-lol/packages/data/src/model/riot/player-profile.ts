@@ -53,8 +53,11 @@ export const PLAYER_PROFILE_QUEUE_GROUPS = [
       "aram mayhem",
       "classic",
       "classic aram mayhem",
-      "custom",
     ],
+  },
+  {
+    label: "Lobbies",
+    queues: ["custom", "tournament"],
   },
   {
     label: "PvE",

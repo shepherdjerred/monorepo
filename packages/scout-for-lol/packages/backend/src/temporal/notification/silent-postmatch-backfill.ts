@@ -151,6 +151,7 @@ export async function backfillSilentPostmatchArtifact(
     context.matchData.info.queueId,
     context.matchData.info.gameMode,
     context.matchData.info.gameType,
+    context.matchData.info.tournamentCode,
   );
   const { deliverable } = await resolvePostmatchDeliveryChannels({
     puuids: context.observedPuuids,

@@ -13,7 +13,7 @@ import {
 import {
   getChampionDisplayName,
   gameResultTimestamp,
-  resolveQueueTypeFromGame,
+  classifyGame,
   queueTypeToDisplayString,
 } from "@scout-for-lol/data";
 import { useTRPC, type RouterOutputs } from "#src/lib/query/trpc.ts";
@@ -21,13 +21,10 @@ import { useTRPC, type RouterOutputs } from "#src/lib/query/trpc.ts";
 type Results = RouterOutputs["scoutClient"]["results"];
 
 function resultTitle(game: Results["results"][number]): string {
-  if (game.gameType === "CUSTOM_GAME") return "Custom game";
-  const queue = resolveQueueTypeFromGame(
-    game.queueId,
-    game.gameMode,
-    game.gameType,
-  );
-  return queue === undefined ? game.gameMode : queueTypeToDisplayString(queue);
+  const classification = classifyGame(game);
+  return classification.kind === "queue"
+    ? queueTypeToDisplayString(classification.queue)
+    : game.gameMode;
 }
 
 /** A scoreboard can show known facts even when the full report lacks inputs. */

@@ -118,6 +118,7 @@ export async function ensureMatchMvpContest(
     match.info.queueId,
     match.info.gameMode,
     match.info.gameType,
+    match.info.tournamentCode,
   );
   const queryColumns = { gameCreationAt, queueType: queueType ?? null };
   const existing = await prismaClient.matchMvpContest.findUnique({

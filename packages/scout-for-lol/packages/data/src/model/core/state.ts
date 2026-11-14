@@ -24,6 +24,7 @@ export const QueueTypeSchema = z.enum([
   "normal doom bots",
   "hard doom bots",
   "custom",
+  "tournament",
 ]);
 
 const ARENA_QUEUE_ID = 1700;
@@ -52,7 +53,6 @@ export function parseQueueType(input: number): QueueType | undefined {
   return (
     match(input)
       .returnType<QueueType | undefined>()
-      .with(0, () => "custom")
       .with(420, () => "solo")
       .with(400, () => "draft pick")
       .with(440, () => "flex")
@@ -76,10 +76,10 @@ export function parseQueueType(input: number): QueueType | undefined {
       .with(3220, () => "aram mayhem")
       .with(3270, () => "aram mayhem")
       .with(3280, () => "classic aram mayhem")
-      .with(3100, () => "custom")
-      // 3130 was previously mapped to easy doom bots, but every lake match with
-      // this id is a custom lobby (gameType CUSTOM_GAME, gameMode CLASSIC).
-      .with(3130, () => "custom")
+      // Ids 0, 3100 and 3130 are ad-hoc ids Riot attaches to user lobbies
+      // (3130 was once mapped to easy doom bots). They say nothing by
+      // themselves; `classifyGame` requires the custom game type.
+      .with(0, 3100, 3130, (): QueueType | undefined => undefined)
       .with(1900, () => "urf")
       // Doom Bots ids per the game-client queue catalog (CommunityDragon):
       // 4250/4251/4252 = "Veigar's Evil!" (Trial 1, the introductory tier),
@@ -109,30 +109,69 @@ export function isArenaQueueOrMode(queueId: number, gameMode: string): boolean {
 }
 
 // Custom and tutorial games surface as `gameType: "CUSTOM"` (Spectator V5) or
-// `"CUSTOM_GAME"` (Match V5). Riot does not publish a stable queue ID for these,
-// so live payloads carry ad-hoc values (e.g. 3110 for a custom Summoner's Rift
-// draft) that are absent from queues.json and therefore unmapped by
-// `parseQueueType`. Detect them by game type instead.
-function isCustomGameType(gameType: string | undefined): boolean {
+// `"CUSTOM_GAME"` (Match V5). Riot's game type is custom for user lobbies,
+// Practice Tool, tournament-code games and live Clash alike, so it is only one
+// input to `classifyGame`, never a label on its own.
+export function isRiotCustomGameType(gameType: string | undefined): boolean {
   return gameType?.toUpperCase().startsWith("CUSTOM") ?? false;
 }
 
-export function resolveQueueTypeFromGame(
-  queueId: number,
-  gameMode: string,
-  gameType?: string,
-): QueueType | undefined {
-  if (gameMode === "JADE") {
-    return "classic";
-  }
-  if (gameMode === "KIWI_JADE") {
+const PRACTICE_TOOL_GAME_MODE = "PRACTICETOOL";
+
+export type GameClassificationInput = {
+  readonly queueId: number;
+  readonly gameMode: string;
+  readonly gameType?: string | undefined;
+  /** Match V5 `info.tournamentCode`; empty or absent for ordinary games. */
+  readonly tournamentCode?: string | null | undefined;
+};
+
+export type GameClassification =
+  | { readonly kind: "queue"; readonly queue: QueueType }
+  | {
+      readonly kind: "unknown";
+      readonly queueId: number;
+      readonly gameMode: string;
+      readonly gameType: string | undefined;
+    };
+
+/**
+ * Classify a game from Riot's queue id, game mode, game type and tournament
+ * code. An unrecognised game is `unknown` and is never relabelled as another
+ * type: `custom` means a lobby a user created in League (Riot game type is
+ * custom, not Clash, no tournament code, not Practice Tool).
+ */
+export function classifyGame(
+  game: GameClassificationInput,
+): GameClassification {
+  const queue = classifyQueue(game);
+  return queue === undefined
+    ? {
+        kind: "unknown",
+        queueId: game.queueId,
+        gameMode: game.gameMode,
+        gameType: game.gameType,
+      }
+    : { kind: "queue", queue };
+}
+
+function classifyQueue(game: GameClassificationInput): QueueType | undefined {
+  const { queueId, gameMode, gameType, tournamentCode } = game;
+  if (gameMode === "JADE") return "classic";
+  if (gameMode === "KIWI_JADE" || gameMode === "CLASSIC ARAM MAYHEM") {
     return "classic aram mayhem";
   }
-  if (gameMode === "CLASSIC ARAM MAYHEM") {
-    return "classic aram mayhem";
-  }
-  if (isArenaQueueOrMode(queueId, gameMode)) {
-    return "arena";
+  if (isArenaQueueOrMode(queueId, gameMode)) return "arena";
+  // Live Clash arrives with a custom game type; the queue id decides.
+  if (queueId === 700) return "clash";
+  if (queueId === 720) return "aram clash";
+  if (gameMode === PRACTICE_TOOL_GAME_MODE) return undefined;
+  if (
+    tournamentCode !== undefined &&
+    tournamentCode !== null &&
+    tournamentCode !== ""
+  ) {
+    return "tournament";
   }
   const mapped = parseQueueType(queueId);
   if (mapped !== undefined) {
@@ -140,10 +179,34 @@ export function resolveQueueTypeFromGame(
       ? "normal"
       : mapped;
   }
-  // Unknown queue ID: only treat as "custom" when the payload says so. A
-  // genuinely-new ranked/normal queue still resolves to undefined (unchanged
-  // behavior for callers that don't pass gameType).
-  return isCustomGameType(gameType) ? "custom" : undefined;
+  return isRiotCustomGameType(gameType) ? "custom" : undefined;
+}
+
+/**
+ * The queue of a classified game, or undefined when the game is unknown.
+ * Callers that must tell users about an unknown game use `classifyGame`.
+ */
+export function resolveQueueTypeFromGame(
+  queueId: number,
+  gameMode: string,
+  gameType?: string,
+  tournamentCode?: string | null,
+): QueueType | undefined {
+  const classification = classifyGame({
+    queueId,
+    gameMode,
+    gameType,
+    tournamentCode,
+  });
+  return classification.kind === "queue" ? classification.queue : undefined;
+}
+
+/**
+ * Whether the roster may legitimately hold fewer than ten players: custom
+ * lobbies and tournament games pick any team size.
+ */
+export function mayHavePartialRoster(queue: QueueType | undefined): boolean {
+  return queue === "custom" || queue === "tournament";
 }
 
 /**
@@ -183,6 +246,7 @@ export function queueTypeToDisplayString(queueType: QueueType): string {
     .with("normal doom bots", () => "Normal Doom Bots")
     .with("hard doom bots", () => "Hard Doom Bots")
     .with("custom", () => "custom")
+    .with("tournament", () => "tournament")
     .with("draft pick", () => "draft pick")
     .with("quickplay", () => "quickplay")
     .with("swiftplay", () => "swiftplay")

@@ -8,7 +8,7 @@ import {
   RawTimelineSchema,
   type PlatformRoute,
   platformToRegionalRoute,
-  isCustomMatchPayload,
+  hasRiotCustomGameType,
   missingExpectedMatchFields,
 } from "@scout-for-lol/data";
 import {
@@ -76,7 +76,7 @@ export async function fetchMatchData(
     return match;
   }
 
-  if (isCustomMatchPayload(match)) {
+  if (hasRiotCustomGameType(match)) {
     // Tolerated: Riot omits mission progress, ranked progression, and the
     // tournament code for lobbies that have no such concept. Counted so the
     // tolerance is measurable rather than invisible.

@@ -24,6 +24,7 @@ import {
   GameIdSchema,
   inferStandardLanesWithCurrentPriors,
   resolveQueueTypeFromGame,
+  mayHavePartialRoster,
   resolveClassicChampionKey,
   getClassicChampionId,
   getClassicSpellId,
@@ -279,7 +280,7 @@ function inferStandardParticipants(
   // A custom lobby is legitimately not a full ten — a tournament code carries
   // a teamSize of 1-5. Every other queue arriving short is the partial
   // pre-start-lobby snapshot the poller defers on, so it must keep raising.
-  const isCustomLobby = queueType === "custom";
+  const isCustomLobby = mayHavePartialRoster(queueType);
   const rosterSize = participants.length + bots.length;
 
   if (!isCustomLobby && rosterSize !== 10) {
@@ -432,7 +433,7 @@ export async function buildLoadingScreenData(
     gameInfo.gameQueueConfigId === RANKED_5S_QUEUE_ID;
   const layout = isOrdinaryClassicQueue
     ? "standard"
-    : loadingScreenLayoutForQueueType(queueType);
+    : loadingScreenLayoutForQueueType(queueType, gameInfo.mapId);
   let mapName: ReturnType<typeof mapIdToName>;
   try {
     mapName =

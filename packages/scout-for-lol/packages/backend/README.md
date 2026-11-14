@@ -985,8 +985,8 @@ histories recorded before chunking.
 
 Riot gets two minutes of first refusal: ingress dispatches a client post-game
 with `readyAt` two minutes out, and `resolveLocalCanonicalMatch` selects only
-observations that old. A game Riot withholds — any custom, live Clash among
-them, or a queue `queue-post-match.ts` marks `never` — skips the wait
+observations that old. A game Riot withholds — a user-created custom lobby
+(live Clash and tournament games are published, so they wait), or a queue `queue-post-match.ts` marks `never` — skips the wait
 (`riotWithholdsMatchResult`); both sources are read independently and Riot wins when it
 does publish. A payload must field at least two sides, so an old client's
 one-player history row is never published as the match.
@@ -1047,9 +1047,10 @@ resolver and existing game-scoped workflow, so this creates no second
 notification path.
 
 `scout-client/prematch-coverage.ts` measures misses: over the last day (less a
-15-minute grace), `scout_client_observed_games{custom}` counts games a client
-reported in progress and `scout_client_games_without_prematch{custom}` those
-with no `raw-archive-prematch` receipt. Both read -1 when the sweep fails.
+15-minute grace), `scout_client_observed_games{game_kind}` counts games a client
+reported in progress and `scout_client_games_without_prematch{game_kind}` those
+with no `raw-archive-prematch` receipt. `game_kind` is the shared classifier's
+queue type, or `unknown`; a failed sweep publishes -1 under `sweep_failed`.
 
 ### Provenance
 

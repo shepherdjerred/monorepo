@@ -106,6 +106,7 @@ export async function capturePostmatchRanksForDares(
     input.matchData.info.queueId,
     input.matchData.info.gameMode,
     input.matchData.info.gameType,
+    input.matchData.info.tournamentCode,
   );
   if (queue !== "solo" && queue !== "flex") {
     return { players: undefined, changes: undefined };

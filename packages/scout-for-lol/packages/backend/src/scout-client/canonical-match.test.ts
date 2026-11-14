@@ -398,7 +398,7 @@ describe("resolveLocalCanonicalMatch", () => {
     // Riot almost never publishes a custom, so waiting only delays the report.
     const custom = RawMatchSchema.parse({
       ...fixture,
-      info: { ...fixture.info, gameType: "CUSTOM_GAME" },
+      info: { ...fixture.info, queueId: 0, gameType: "CUSTOM_GAME" },
     });
     const now = new Date();
     const fresh = { ...candidate({ data: custom }), receivedAt: now };

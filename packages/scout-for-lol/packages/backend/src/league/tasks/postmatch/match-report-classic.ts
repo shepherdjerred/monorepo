@@ -107,6 +107,7 @@ export function buildClassicMatch(
     matchData.info.queueId,
     matchData.info.gameMode,
     matchData.info.gameType,
+    matchData.info.tournamentCode,
   );
   const classicQueueType = ClassicQueueTypeSchema.safeParse(queueType);
   if (!classicQueueType.success) {

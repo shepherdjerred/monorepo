@@ -243,6 +243,7 @@ export async function renderPostmatchNotification(
       context.matchData.info.queueId,
       context.matchData.info.gameMode,
       context.matchData.info.gameType,
+      context.matchData.info.tournamentCode,
     ),
   });
   const message = await generateMatchReport(

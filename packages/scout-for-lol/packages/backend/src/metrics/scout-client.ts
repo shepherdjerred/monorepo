@@ -28,8 +28,9 @@ export const scoutClientIdentityAliasesTotal = new Counter({
 
 /**
  * Games a paired Scout Client watched start, and how many of them Scout never
- * got a prematch for, over the sweep's lookback window. `custom` splits
- * customs from matchmade games.
+ * got a prematch for, over the sweep's lookback window. `game_kind` is the
+ * shared classifier's queue type, or `unknown`; a failed sweep publishes -1
+ * under `sweep_failed`.
  *
  * This decides whether the client needs to supply prematch itself: Riot's
  * Spectator API gives Scout its prematch today, and a client-built one is
@@ -39,14 +40,14 @@ export const scoutClientIdentityAliasesTotal = new Counter({
 export const scoutClientObservedGames = new Gauge({
   name: "scout_client_observed_games",
   help: "Games a Scout Client observed in progress, over the lookback window",
-  labelNames: ["custom"] as const,
+  labelNames: ["game_kind"] as const,
   registers: [registry],
 });
 
 export const scoutClientGamesWithoutPrematch = new Gauge({
   name: "scout_client_games_without_prematch",
   help: "Games a Scout Client observed in progress that Scout archived no prematch for",
-  labelNames: ["custom"] as const,
+  labelNames: ["game_kind"] as const,
   registers: [registry],
 });
 

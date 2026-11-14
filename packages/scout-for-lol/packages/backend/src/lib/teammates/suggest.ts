@@ -19,7 +19,7 @@ import {
   PlayerAliasSchema,
   RegionSchema,
   RiotIdSchema,
-  isCustomMatchPayload,
+  classifyGame,
   type LeaguePuuid,
   type RiotMatchId,
   type RawMatch,
@@ -33,6 +33,20 @@ import { recentClientRounds } from "#src/lib/teammates/client-rounds.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("teammate-suggestions");
+
+/** A lobby a user created (or a tournament game): not a source of matchmade teammates. */
+function isUserLobby(match: RawMatch): boolean {
+  const classification = classifyGame({
+    queueId: match.info.queueId,
+    gameMode: match.info.gameMode,
+    gameType: match.info.gameType,
+    tournamentCode: match.info.tournamentCode,
+  });
+  return (
+    classification.kind === "queue" &&
+    (classification.queue === "custom" || classification.queue === "tournament")
+  );
+}
 
 /** Riot calls per suggestion run. One ID list call per self account plus one
  * detail fetch per match, so the detail budget is the binding limit. */
@@ -172,7 +186,7 @@ export function aggregateTeammates(input: {
 
   for (const round of input.rounds) {
     const { match } = round;
-    if (isCustomMatchPayload(match)) continue;
+    if (isUserLobby(match)) continue;
     const selfTeamIds = new Set(
       match.info.participants
         .filter((participant) => input.selfPuuids.has(participant.puuid))

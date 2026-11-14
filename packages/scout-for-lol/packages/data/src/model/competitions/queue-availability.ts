@@ -80,6 +80,7 @@ export const QUEUE_AVAILABILITY: Record<QueueType, QueueAvailability> = {
   "normal doom bots": limitedFromJson("normal doom bots"),
   "hard doom bots": limitedFromJson("hard doom bots"),
   custom: PERMANENT,
+  tournament: PERMANENT,
 };
 
 // Fail fast if the JSON carries a key that is not a known QueueType, or window

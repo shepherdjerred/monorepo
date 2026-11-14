@@ -182,6 +182,7 @@ describe("guild community insights", () => {
       ...row,
       queue: "custom",
       queue_id: 0,
+      game_type: "CUSTOM_GAME",
     }));
     const insights = buildCommunityInsights({
       players,

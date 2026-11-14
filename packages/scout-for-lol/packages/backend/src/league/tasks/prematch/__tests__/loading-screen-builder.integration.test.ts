@@ -586,28 +586,6 @@ describe("buildLoadingScreenData standard and custom layouts", () => {
     // for a side they are on. The human's lane is omitted rather than guessed.
     expect(self?.lane).toBeUndefined();
   });
-
-  test("queue 3100 (Custom) resolves to standard layout", async () => {
-    const baseGameInfo = await loadSpectatorPayload(
-      `${currentDir}testdata/spectator-ranked-flex.json`,
-    );
-
-    const gameInfo = RawCurrentGameInfoSchema.parse({
-      ...baseGameInfo,
-      gameQueueConfigId: 3100,
-      gameMode: "CLASSIC",
-    });
-
-    const result = await buildLoadingScreenData(
-      gameInfo,
-      new Set(),
-      "AMERICA_NORTH",
-    );
-
-    const parsed = LoadingScreenDataSchema.parse(result);
-    expect(parsed.queueType).toBe("custom");
-    expect(parsed.layout).toBe("standard");
-  });
 });
 
 describe("buildLoadingScreenData custom rank integration", () => {
@@ -627,6 +605,7 @@ describe("buildLoadingScreenData custom rank integration", () => {
       ...baseGameInfo,
       gameQueueConfigId: 3100,
       gameMode: "CLASSIC",
+      gameType: "CUSTOM",
       bannedChampions: [],
       participants,
     });
@@ -687,27 +666,31 @@ describe("buildLoadingScreenData custom rank integration", () => {
     expect(String(result.queueDisplayName)).toBe("Summoner's Rift");
   });
 
-  test("queue 0 (Custom) with CLASSIC mode stays custom standard layout", async () => {
-    const baseGameInfo = await loadSpectatorPayload(
-      `${currentDir}testdata/spectator-ranked-flex.json`,
-    );
+  test.each([0, 3100])(
+    "queue %d (Custom) with CLASSIC mode stays custom standard layout",
+    async (queueId) => {
+      const baseGameInfo = await loadSpectatorPayload(
+        `${currentDir}testdata/spectator-ranked-flex.json`,
+      );
 
-    const gameInfo = RawCurrentGameInfoSchema.parse({
-      ...baseGameInfo,
-      gameQueueConfigId: 0,
-      gameMode: "CLASSIC",
-    });
+      const gameInfo = RawCurrentGameInfoSchema.parse({
+        ...baseGameInfo,
+        gameQueueConfigId: queueId,
+        gameMode: "CLASSIC",
+        gameType: "CUSTOM",
+      });
 
-    const result = await buildLoadingScreenData(
-      gameInfo,
-      new Set(),
-      "AMERICA_NORTH",
-    );
+      const result = await buildLoadingScreenData(
+        gameInfo,
+        new Set(),
+        "AMERICA_NORTH",
+      );
 
-    const parsed = LoadingScreenDataSchema.parse(result);
-    expect(parsed.queueType).toBe("custom");
-    expect(parsed.layout).toBe("standard");
-  });
+      const parsed = LoadingScreenDataSchema.parse(result);
+      expect(parsed.queueType).toBe("custom");
+      expect(parsed.layout).toBe("standard");
+    },
+  );
 });
 
 describe("buildLoadingScreenData for The Bandlewood", () => {

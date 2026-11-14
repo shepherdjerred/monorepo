@@ -52,6 +52,7 @@ export function toMatch(
     rawMatch.info.queueId,
     rawMatch.info.gameMode,
     rawMatch.info.gameType,
+    rawMatch.info.tournamentCode,
   );
 
   if (queueType === "arena") {

@@ -1,6 +1,6 @@
 import {
   QueueTypeSchema,
-  resolveQueueTypeFromGame,
+  classifyGame,
   type QueueType,
 } from "#src/model/core/state.ts";
 
@@ -111,6 +111,8 @@ export const QUEUE_POST_MATCH_DATA: Record<QueueType, QueuePostMatchData> = {
   "normal doom bots": "available",
   "hard doom bots": "available",
   custom: "available",
+  /** Tournament-code games are Riot-hosted; Match-V5 publishes some of them. */
+  tournament: "available",
 };
 
 export function queueHasPostMatchData(queue: QueueType): boolean {
@@ -124,23 +126,24 @@ export function queueHasPostMatchData(queue: QueueType): boolean {
  * A different question from {@link queueHasPostMatchData}: that one asks
  * whether Scout can learn a queue's results from Riot at all, and every
  * custom answers yes because Riot publishes the occasional one. This one is
- * about a single game. A custom (`gameType` CUSTOM — live Clash arrives this
- * way too) is almost never published, and a `never` queue never is, so the
- * client's copy is used as soon as it arrives. Riot is still asked first; it
- * simply isn't waited for.
+ * about a single game, decided from the classified queue: a user-created
+ * custom lobby is almost never published and a `never` queue never is, so the
+ * client's copy is used as soon as it arrives. Clash and tournament games are
+ * published, and an unclassifiable game is treated like any other game Riot
+ * may publish. Riot is still asked first; it simply isn't waited for.
  */
 export function riotWithholdsMatchResult(game: {
   readonly queueId: number;
   readonly gameMode: string;
   readonly gameType: string;
+  readonly tournamentCode?: string | null | undefined;
 }): boolean {
-  if (game.gameType.toUpperCase().startsWith("CUSTOM")) return true;
-  const queue = resolveQueueTypeFromGame(
-    game.queueId,
-    game.gameMode,
-    game.gameType,
+  const classification = classifyGame(game);
+  return (
+    classification.kind === "queue" &&
+    (classification.queue === "custom" ||
+      QUEUE_POST_MATCH_DATA[classification.queue] === "never")
   );
-  return queue !== undefined && QUEUE_POST_MATCH_DATA[queue] === "never";
 }
 
 /** Every queue Scout can only ever see pre-match, for prompts and pickers. */
