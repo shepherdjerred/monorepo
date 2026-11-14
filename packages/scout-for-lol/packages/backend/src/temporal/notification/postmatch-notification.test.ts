@@ -79,7 +79,7 @@ function legacyStandardReport(): MessageCreateOptions {
   };
 }
 
-/** An Arena or Classic report: no link. */
+/** An Arena report: no link. */
 function reportWithoutLink(): MessageCreateOptions {
   return {
     content: "jerred finished an arena game",

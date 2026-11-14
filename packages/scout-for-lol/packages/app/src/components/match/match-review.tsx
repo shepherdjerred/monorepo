@@ -10,6 +10,8 @@ import {
 import {
   MatchScoreboards,
   RolePairedMatchScoreboard,
+  numberedTeams,
+  participantKey,
   type MatchTeam,
   type RoleMatchup,
 } from "./match-scoreboard.tsx";
@@ -34,7 +36,7 @@ export function MatchReview(props: {
     mapId: number;
     queueId: number;
     gameMode: string;
-    gameVersion: string;
+    gameVersion: string | null;
     gameDurationSeconds: number;
     roleMatchups: RoleMatchup[] | null;
   };
@@ -71,7 +73,7 @@ function MatchReviewContent(props: {
   const [selectedId, setSelectedId] = useState(
     props.teams
       .flatMap((team) => team.participants)
-      .find((p) => p.selectedPlayer === true)?.participantId,
+      .find((p) => p.selectedPlayer === true)?.participantId ?? undefined,
   );
   const selected = props.teams
     .flatMap((team) => team.participants)
@@ -101,10 +103,13 @@ function MatchReviewContent(props: {
           }}
         >
           <option value="">Team overview</option>
-          {teams.map((team) => (
+          {numberedTeams(teams).map((team) => (
             <optgroup key={team.teamId} label={teamName(team.teamId)}>
-              {team.participants.map((p) => (
-                <option key={p.participantId} value={p.participantId}>
+              {team.participants.map((p, index) => (
+                <option
+                  key={participantKey(team.teamId, p, index)}
+                  value={p.participantId}
+                >
                   {participantName(p)}
                 </option>
               ))}
@@ -197,7 +202,7 @@ function MatchReviewContent(props: {
           <MatchReviewTimeline
             source={props.source}
             matchId={props.matchId}
-            teams={teams}
+            teams={numberedTeams(teams)}
             showRiftMap={props.showRiftMap}
             compareLanes={props.matchups != null}
             selectedId={selectedId}
@@ -224,10 +229,25 @@ function TeamComparison(props: { teams: MatchTeam[] }) {
       get: (team: MatchTeam) =>
         team.participants.reduce((sum, p) => sum + p.goldEarned, 0),
     },
-    { label: "Turrets", get: (team: MatchTeam) => team.objectives.turrets },
-    { label: "Dragons", get: (team: MatchTeam) => team.objectives.dragons },
-    { label: "Barons", get: (team: MatchTeam) => team.objectives.barons },
   ];
+  // A record that states no team objectives has nothing to compare.
+  const objectiveStats =
+    blue.objectives === null || red.objectives === null
+      ? []
+      : [
+          {
+            label: "Turrets",
+            get: (team: MatchTeam) => team.objectives?.turrets ?? 0,
+          },
+          {
+            label: "Dragons",
+            get: (team: MatchTeam) => team.objectives?.dragons ?? 0,
+          },
+          {
+            label: "Barons",
+            get: (team: MatchTeam) => team.objectives?.barons ?? 0,
+          },
+        ];
   return (
     <section className="space-y-3" aria-label="Team comparison">
       <div className="flex justify-between text-sm font-semibold">
@@ -238,7 +258,7 @@ function TeamComparison(props: { teams: MatchTeam[] }) {
           {teamName(red.teamId)} · {red.win ? "Victory" : "Defeat"}
         </span>
       </div>
-      {stats.map((stat) => {
+      {[...stats, ...objectiveStats].map((stat) => {
         const left = stat.get(blue);
         const right = stat.get(red);
         return (

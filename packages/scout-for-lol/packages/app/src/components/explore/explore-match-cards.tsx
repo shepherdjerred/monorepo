@@ -13,12 +13,7 @@ import { Button } from "@scout-for-lol/design-system/components/button";
 import { ChampionIcon } from "#src/components/match/champion-icon.tsx";
 import { MatchObjectivesSummary } from "#src/components/match/match-objectives-summary.tsx";
 import { formatRiotId } from "#src/lib/format/riot-id-format.ts";
-
-const UTC_TIME = new Intl.DateTimeFormat("en-US", {
-  dateStyle: "medium",
-  timeStyle: "short",
-  timeZone: "UTC",
-});
+import { matchFacts } from "#src/lib/player/match-review.ts";
 
 function duration(seconds: number): string {
   return `${Math.floor(seconds / 60).toString()}m ${(seconds % 60).toString()}s`;
@@ -44,9 +39,9 @@ function TeamChampions(props: {
       role="group"
       aria-label={`Team ${props.team.teamId.toString()} champions`}
     >
-      {props.team.participants.map((participant) => (
+      {props.team.participants.map((participant, index) => (
         <ChampionIcon
-          key={participant.participantId}
+          key={participant.participantId ?? `slot:${index.toString()}`}
           championName={participant.championName}
           {...(props.decorative === undefined
             ? {}
@@ -64,8 +59,7 @@ function MatchHeader(props: { match: ExploreMatchSnapshot }) {
     <div className="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2 gap-y-1">
       <p className="font-medium text-scout-ink">{matchLabel(match)}</p>
       <p className="text-xs text-scout-subtle">
-        {UTC_TIME.format(new Date(match.gameCreationMs))} UTC ·{" "}
-        {duration(match.gameDurationSeconds)}
+        {matchFacts(match).when} · {duration(match.gameDurationSeconds)}
       </p>
     </div>
   );
@@ -102,7 +96,7 @@ function MediumMatchCard(props: { card: ExploreMatchCard }) {
           </div>
         </div>
         <p className="text-xs text-scout-subtle">
-          Patch {match.gameVersion} · Map {match.mapId.toString()} ·{" "}
+          {matchFacts(match).patch} · Map {match.mapId.toString()} ·{" "}
           {match.matchId}
         </p>
       </CardHeader>
@@ -141,7 +135,7 @@ function LargeMatchCard(props: { card: ExploreMatchCard }) {
           </div>
         </div>
         <p className="text-xs text-scout-subtle">
-          Patch {match.gameVersion} · Map {match.mapId.toString()} ·{" "}
+          {matchFacts(match).patch} · Map {match.mapId.toString()} ·{" "}
           {match.matchId}
         </p>
       </CardHeader>
@@ -164,9 +158,11 @@ function LargeMatchCard(props: { card: ExploreMatchCard }) {
                 </p>
               </div>
               <ul className="space-y-2">
-                {team.participants.map((participant) => (
+                {team.participants.map((participant, index) => (
                   <li
-                    key={participant.participantId}
+                    key={
+                      participant.participantId ?? `slot:${index.toString()}`
+                    }
                     className="flex items-center gap-2 text-sm"
                   >
                     <ChampionIcon

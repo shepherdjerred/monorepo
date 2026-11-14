@@ -11,7 +11,12 @@ import type { User } from "#generated/prisma/client/index.js";
 import { assertConsumerPlayerScope } from "#src/consumer/player-access.ts";
 import { prisma } from "#src/database/index.ts";
 import { arenaAugmentsFromLakeRow } from "#src/report-lake/arena.ts";
-import { matchLoadoutFromLakeRow } from "#src/report-lake/loadout.ts";
+import {
+  matchRowChampionName,
+  matchRowLoadout,
+  orderMatchRows,
+} from "#src/explore-match/match-row-view.ts";
+import { normalizeRiotIdPart } from "#src/explore-match/match-view.ts";
 import {
   fetchFullMatch,
   fetchTimelineChartFrames,
@@ -143,7 +148,7 @@ function matchView(match: AuthorizedMatch) {
     throw new Error("Authorized match has no participants");
   }
   const totals = teamTotals(match.rows);
-  const participants = match.rows.map((row) => {
+  const participants = orderMatchRows(match.rows).map((row) => {
     const team = totals.get(row.team_id);
     if (team === undefined) {
       throw new Error("Match participant has no team totals");
@@ -156,11 +161,11 @@ function matchView(match: AuthorizedMatch) {
       augments: arenaAugmentsFromLakeRow(row),
       selectedPlayer: isPlayerRow(row, match.player.puuids),
       riotId: {
-        gameName: row.riot_id_game_name,
-        tagLine: row.riot_id_tagline,
+        gameName: normalizeRiotIdPart(row.riot_id_game_name),
+        tagLine: normalizeRiotIdPart(row.riot_id_tagline),
       },
       championId: row.champion_id,
-      championName: row.champion_name,
+      championName: matchRowChampionName(row),
       position: row.team_position,
       win: row.win,
       kills: row.kills,
@@ -178,7 +183,7 @@ function matchView(match: AuthorizedMatch) {
         barons: row.baron_kills,
         dragons: row.dragon_kills,
       },
-      loadout: matchLoadoutFromLakeRow(row),
+      loadout: matchRowLoadout(row),
       scoutAliases:
         row.puuid === null ? [] : (match.aliasesByPuuid.get(row.puuid) ?? []),
     };

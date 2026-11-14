@@ -42,14 +42,17 @@ function matchEmbed(card: ExploreMatchCard): EmbedBuilder {
       .slice(0, 1024),
     inline: true,
   }));
-  return new EmbedBuilder()
-    .setTitle(
-      `${match.queue ?? match.gameMode} · ${duration(match.gameDurationSeconds)}`,
-    )
-    .setURL(getExploreMatchUrl(match.matchId))
-    .setColor(CARD_COLOR)
-    .setTimestamp(new Date(match.gameCreationMs))
-    .addFields(fields);
+  return (
+    new EmbedBuilder()
+      .setTitle(
+        `${match.queue ?? match.gameMode} · ${duration(match.gameDurationSeconds)}`,
+      )
+      .setURL(getExploreMatchUrl(match.matchId))
+      .setColor(CARD_COLOR)
+      // A null creation time clears the timestamp rather than inventing one.
+      .setTimestamp(match.gameCreationMs)
+      .addFields(fields)
+  );
 }
 
 function loadoutEmbed(card: ExploreLoadoutCard): EmbedBuilder {

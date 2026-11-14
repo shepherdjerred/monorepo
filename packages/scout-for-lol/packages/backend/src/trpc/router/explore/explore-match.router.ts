@@ -27,7 +27,10 @@ import {
   MATCH_KEY_EVENT_TYPES,
 } from "#src/trpc/router/match-timeline.ts";
 import { protectedProcedure, router } from "#src/trpc/trpc.ts";
-import { matchLoadoutFromLakeRow } from "#src/report-lake/loadout.ts";
+import {
+  matchRowLoadout,
+  orderMatchRows,
+} from "#src/explore-match/match-row-view.ts";
 import { buildRoleMatchups } from "#src/trpc/router/consumer/consumer-match-role-matchups.ts";
 
 const MatchInput = z.object({ matchId: RiotMatchIdSchema });
@@ -73,6 +76,10 @@ export const exploreMatchRouter = router({
       }),
     ]);
     const snapshot = exploreMatchSnapshot(rows, teamRows);
+    // The snapshot lists participants in `orderMatchRows` order, so the
+    // rows pair with them by position; an end-of-game row has no id to match.
+    const orderedRows = orderMatchRows(rows);
+    let rowIndex = 0;
     return {
       match: {
         ...snapshot,
@@ -80,13 +87,11 @@ export const exploreMatchRouter = router({
         teams: snapshot.teams.map((team) => ({
           ...team,
           participants: team.participants.map((participant) => {
-            const row = rows.find(
-              (candidate) =>
-                candidate.participant_id === participant.participantId,
-            );
+            const row = orderedRows[rowIndex];
+            rowIndex += 1;
             if (row === undefined)
               throw new Error("Explore participant missing from match");
-            return { ...participant, loadout: matchLoadoutFromLakeRow(row) };
+            return { ...participant, loadout: matchRowLoadout(row) };
           }),
         })),
       },

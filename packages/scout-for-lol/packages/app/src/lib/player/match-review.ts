@@ -15,14 +15,49 @@ export function supportsReviewMap(match: {
   mapId: number;
   queueId: number;
   gameMode: string;
-  gameVersion: string;
+  gameVersion: string | null;
 }): boolean {
   return (
     match.mapId === 11 &&
     !isClassicAssetMode(match.queueId, match.gameMode) &&
+    match.gameVersion !== null &&
     Number(match.gameVersion.split(".")[0]) >= 14
   );
 }
+/** The map a match was played on; empty for a map the match pages do not name. */
+export function matchMapLabel(mapId: number): string {
+  return mapId === 11
+    ? "Summoner’s Rift"
+    : mapId === 12
+      ? "Howling Abyss"
+      : mapId === 453
+        ? "Classic Rift"
+        : "";
+}
+
+/** Match-header facts; a record that states no time or patch says so. */
+export function matchFacts(match: {
+  gameCreationMs: number | null;
+  gameVersion: string | null;
+}): { when: string; patch: string } {
+  return {
+    when:
+      match.gameCreationMs === null
+        ? "Start time not recorded"
+        : `${MATCH_TIME.format(new Date(match.gameCreationMs))} UTC`,
+    patch:
+      match.gameVersion === null
+        ? "Patch not recorded"
+        : `Patch ${match.gameVersion}`,
+  };
+}
+
+const MATCH_TIME = new Intl.DateTimeFormat("en-US", {
+  dateStyle: "medium",
+  timeStyle: "short",
+  timeZone: "UTC",
+});
+
 export function matchQueueLabel(queue: string | null): string {
   if (queue === null) return "Match review";
   const parsed = QueueTypeSchema.safeParse(queue.toLowerCase());
@@ -184,9 +219,12 @@ export function eventTeam(
   teams: MatchTeam[],
 ): number | null {
   if (event.type === "GAME_END") return event.winningTeamId;
-  const killerTeam = teams.find((team) =>
-    team.participants.some((p) => p.participantId === event.killerId),
-  )?.teamId;
+  const killerTeam =
+    event.killerId === null
+      ? undefined
+      : teams.find((team) =>
+          team.participants.some((p) => p.participantId === event.killerId),
+        )?.teamId;
   // A building's team_id identifies its owner, not the team that destroyed it.
   if (event.type === "BUILDING_KILL")
     return (
@@ -203,7 +241,10 @@ export function eventDescription(
 ): string {
   const participants = teams.flatMap((team) => team.participants);
   const name = (id: number | null) => {
-    const participant = participants.find((p) => p.participantId === id);
+    const participant =
+      id === null
+        ? undefined
+        : participants.find((p) => p.participantId === id);
     return participant === undefined
       ? "Minions or a turret"
       : championNameToDisplayName(participant.championName);

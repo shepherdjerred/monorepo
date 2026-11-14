@@ -13,8 +13,8 @@ export function inlineMatchLink(matchId: RiotMatchId): string {
 
 /**
  * Legacy link button retained to rebuild receipts rendered before match links
- * moved inline. Standard-path reports only: the Explore match page rejects
- * Arena and Classic asset modes (`isExploreMatchSnapshotSupported`).
+ * moved inline. Standard and Classic reports only: the Explore match page
+ * rejects Arena (`isExploreMatchSnapshotSupported`).
  */
 export function matchLinkComponents(
   matchId: RiotMatchId,

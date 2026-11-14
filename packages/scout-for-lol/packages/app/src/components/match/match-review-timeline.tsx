@@ -10,7 +10,7 @@ import {
   ComparePlayer,
 } from "./match-review-visuals.tsx";
 import { useTRPC } from "#src/lib/query/trpc.ts";
-import type { MatchTeam } from "./match-scoreboard.tsx";
+import type { NumberedMatchTeam } from "./match-scoreboard.tsx";
 import { MatchTimeline } from "./match-timeline.tsx";
 import {
   eventDescription,
@@ -30,7 +30,7 @@ export type ReviewSource =
 type Props = {
   source: ReviewSource;
   matchId: RiotMatchId;
-  teams: MatchTeam[];
+  teams: NumberedMatchTeam[];
   showRiftMap: boolean;
   compareLanes: boolean;
   selectedId: number | undefined;

@@ -11,6 +11,7 @@ import {
 import { classicMatchToImage, classicMatchToSvg } from "@scout-for-lol/report";
 import { buildClassicMatch } from "./match-report-classic.ts";
 import { generateMatchReport } from "./match-report-generator.ts";
+import { inlineMatchLink } from "./match-report-components.ts";
 import { toMatch } from "#src/league/model/match.ts";
 
 const fixtureUrl = new URL(
@@ -19,6 +20,10 @@ const fixtureUrl = new URL(
 );
 const realS3FixtureUrl = new URL(
   "testdata/match-classic-aram-mayhem-s3.json",
+  import.meta.url,
+);
+const arenaFixtureUrl = new URL(
+  "../../../../../../testdata/arena.json",
   import.meta.url,
 );
 const PNG_SIGNATURE = [137, 80, 78, 71, 13, 10, 26, 10];
@@ -475,6 +480,45 @@ describe("generateMatchReport with a pre-rendered image", () => {
     const attachment = z.instanceof(Uint8Array).parse(files[0]?.attachment);
     expect(new Uint8Array(attachment)).toEqual(prerenderedImage);
     expect(files[0]?.name).toBe(`${rawMatch.metadata.matchId}.png`);
+  });
+});
+
+async function reportFor(rawMatch: RawMatch) {
+  const tracked = rawMatch.info.participants[0];
+  if (tracked === undefined) {
+    throw new Error("The fixture is missing its tracked participant");
+  }
+  const trackedPlayer = PlayerConfigEntrySchema.parse({
+    alias: "Linker",
+    league: {
+      leagueAccount: { puuid: tracked.puuid, region: "AMERICA_NORTH" },
+    },
+  });
+  return await generateMatchReport(rawMatch, [trackedPlayer], {
+    targetGuildIds: [],
+    prerenderedImage: new Uint8Array([...PNG_SIGNATURE, 1]),
+  });
+}
+
+describe("generateMatchReport match links", () => {
+  test("a Classic report links to the match page", async () => {
+    const rawMatch = await classicMatchFixture();
+    const result = await reportFor(rawMatch);
+
+    expect(result?.content).toMatch(/finished a .+ game/);
+    expect(
+      result?.content?.endsWith(
+        `\n\n${inlineMatchLink(rawMatch.metadata.matchId)}`,
+      ),
+    ).toBe(true);
+  });
+
+  test("an Arena report carries no match link", async () => {
+    const input: unknown = await Bun.file(arenaFixtureUrl).json();
+    const result = await reportFor(RawMatchSchema.parse(input));
+
+    expect(result?.content).toBeDefined();
+    expect(result?.content).not.toContain("View match");
   });
 });
 

@@ -2,6 +2,7 @@ import {
   championNameToDisplayName,
   getChampionImageUrl,
 } from "@scout-for-lol/data";
+import { ChampionPortrait } from "@scout-for-lol/design-system/assets";
 import { cn } from "#src/lib/cn.ts";
 
 /**
@@ -15,6 +16,9 @@ import { cn } from "#src/lib/cn.ts";
  * the image lookup while every visible label goes through
  * `championNameToDisplayName` (the difference between "MonkeyKing" and
  * "Wukong").
+ *
+ * A League Classic champion (`Jade_*`) has no Data Dragon CDN image, so it
+ * resolves through the bundled game asset manifest instead.
  */
 export function ChampionIcon(props: {
   championName: string;
@@ -24,6 +28,18 @@ export function ChampionIcon(props: {
 }) {
   const display = championNameToDisplayName(props.championName);
   const pixels = props.size === "md" ? 40 : 32;
+
+  if (props.championName.startsWith("Jade_")) {
+    return (
+      <ChampionPortrait
+        champion={props.championName}
+        alt={props.decorative === true ? "" : display}
+        title={display}
+        style={{ width: pixels, height: pixels }}
+        className={cn("rounded-md bg-muted", props.className)}
+      />
+    );
+  }
 
   return (
     <img

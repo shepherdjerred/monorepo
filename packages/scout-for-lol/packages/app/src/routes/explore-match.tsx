@@ -6,7 +6,11 @@ import {
   CardTitle,
 } from "@scout-for-lol/design-system/components/card";
 import { MatchReview } from "#src/components/match/match-review.tsx";
-import { matchQueueLabel } from "#src/lib/player/match-review.ts";
+import {
+  matchFacts,
+  matchMapLabel,
+  matchQueueLabel,
+} from "#src/lib/player/match-review.ts";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import { useExploreMatchParams } from "#src/lib/routes/route-params.ts";
 import { useTRPC } from "#src/lib/query/trpc.ts";
@@ -14,12 +18,6 @@ import { useTRPC } from "#src/lib/query/trpc.ts";
 function duration(seconds: number): string {
   return `${Math.floor(seconds / 60).toString()}m ${(seconds % 60).toString()}s`;
 }
-
-const UTC_TIME = new Intl.DateTimeFormat("en-US", {
-  dateStyle: "medium",
-  timeStyle: "short",
-  timeZone: "UTC",
-});
 
 export function ExploreMatch() {
   const { matchId } = useExploreMatchParams();
@@ -50,6 +48,7 @@ export function ExploreMatch() {
   }
 
   const match = value.data.match;
+  const facts = matchFacts(match);
   return (
     <PageShell>
       <header>
@@ -58,13 +57,8 @@ export function ExploreMatch() {
           {matchQueueLabel(match.queue)}
         </h1>
         <p className="mt-2 text-sm text-scout-subtle">
-          {UTC_TIME.format(new Date(match.gameCreationMs))} UTC ·{" "}
-          {duration(match.gameDurationSeconds)} · Patch {match.gameVersion} ·
-          {match.mapId === 11
-            ? "Summoner’s Rift"
-            : match.mapId === 12
-              ? "Howling Abyss"
-              : ""}
+          {facts.when} · {duration(match.gameDurationSeconds)} · {facts.patch} ·{" "}
+          {matchMapLabel(match.mapId)}
         </p>
       </header>
       <MatchReview
