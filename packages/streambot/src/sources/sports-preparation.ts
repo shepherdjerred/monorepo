@@ -94,6 +94,7 @@ export async function validatePreparedSportsInput(
   assertSportsHasAudioAndVideo(info);
   return {
     ...prepared,
+    hdr: info?.hdr ?? false,
     ...(info?.videoStreamIndex === undefined
       ? {}
       : { videoStreamIndex: info.videoStreamIndex }),

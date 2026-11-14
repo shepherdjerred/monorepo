@@ -35,6 +35,18 @@ async function observeFailure(promise: Promise<never>): Promise<void> {
     /* Observed again by the playback actor. */
   }
 }
+
+function mediaResponseHeaders(upstream: Response): Headers {
+  const headers = new Headers({
+    "Content-Type": "application/octet-stream",
+    "Cache-Control": "no-store",
+  });
+  for (const name of ["Content-Range", "Accept-Ranges"]) {
+    const value = upstream.headers.get(name);
+    if (value !== null) headers.set(name, value);
+  }
+  return headers;
+}
 type FetchMedia = (
   input: Parameters<typeof fetch>[0],
   init?: RequestInit,
@@ -339,16 +351,20 @@ async function prepareClearKeyInput(
         AbortSignal.timeout(15_000),
       ]),
     });
+    if (upstream.status === 416) {
+      await upstream.body?.cancel();
+      return new Response(null, {
+        status: 416,
+        headers: mediaResponseHeaders(upstream),
+      });
+    }
     if (!upstream.ok)
       throw new SportsPlaybackError(
         upstream.status === 403 ? "session-expired" : "unavailable",
       );
     return new Response(await readSportsResponse(upstream, 33_554_432), {
       status: upstream.status,
-      headers: {
-        "Content-Type": "application/octet-stream",
-        "Cache-Control": "no-store",
-      },
+      headers: mediaResponseHeaders(upstream),
     });
   };
   const serveManifest = async (
@@ -361,7 +377,7 @@ async function prepareClearKeyInput(
     if (current[kind].key !== initial[kind].key)
       throw new SportsPlaybackError("session-expired");
     const xml = registry
-      .rewrite(current[kind].xml, manifest.href)
+      .rewrite(current[kind].xml, manifest.href, kind)
       .replaceAll(`/${nonce}/resource/`, `${origin}/${nonce}/resource/`);
     return new Response(xml, {
       headers: {
@@ -377,8 +393,14 @@ async function prepareClearKeyInput(
       const pathname = new URL(request.url).pathname;
       if (request.method !== "GET") return new Response(null, { status: 404 });
       try {
-        const resource = registry.resolve(pathname);
-        if (resource !== null) return await serveResource(resource, request);
+        const resource = registry.acquire(pathname);
+        if (resource !== null) {
+          try {
+            return await serveResource(resource.url, request);
+          } finally {
+            resource.release();
+          }
+        }
         if (pathname === `/${nonce}/video.mpd`)
           return await serveManifest("video", request);
         return pathname === `/${nonce}/audio.mpd`

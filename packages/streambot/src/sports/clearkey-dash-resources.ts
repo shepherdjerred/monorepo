@@ -17,7 +17,31 @@ const builder = new Builder({
 });
 const PLACEHOLDER =
   /\$(?:RepresentationID|Number|Bandwidth|Time)(?:%0\d+d)?\$/g;
-type Resource = { template: string; placeholders: string[] };
+type Resource = { template: string; placeholders: string[]; inFlight: number };
+
+function findResource(
+  pathname: string,
+  prefix: string,
+  entries: ReadonlyMap<string, Resource>,
+  approve: (value: string) => URL,
+) {
+  if (!pathname.startsWith(prefix)) return null;
+  const suffix = pathname.slice(prefix.length);
+  const slash = suffix.indexOf("/");
+  if (slash === -1) return null;
+  const resource = entries.get(suffix.slice(0, slash));
+  if (resource === undefined || !suffix.endsWith(".m4s")) return null;
+  const rawValues = suffix.slice(slash + 1, -4);
+  const values = rawValues === "" ? [] : rawValues.split("/");
+  if (values.length !== resource.placeholders.length) return null;
+  let url = resource.template;
+  for (const [index, placeholder] of resource.placeholders.entries()) {
+    const value = values[index];
+    if (value === undefined || !/^[\w-]+$/.test(value)) return null;
+    url = url.replace(placeholder, value);
+  }
+  return { resource, url: approve(url) };
+}
 
 /** Closed template registry: request paths can substitute DASH variables, never choose a host. */
 export function createDashResourceRegistry(
@@ -26,7 +50,23 @@ export function createDashResourceRegistry(
 ) {
   const entries = new Map<string, Resource>();
   const identifiers = new Map<string, string>();
-  const register = (value: string, base: string): string => {
+  const references = new Map<string, Set<string>>();
+  const prune = () => {
+    const retained = new Set(
+      [...references.values()].flatMap((ids) => [...ids]),
+    );
+    for (const [id, resource] of entries) {
+      if (resource.inFlight === 0 && !retained.has(id)) {
+        entries.delete(id);
+        identifiers.delete(resource.template);
+      }
+    }
+  };
+  const register = (
+    value: string,
+    base: string,
+    current: Set<string>,
+  ): string => {
     const template = approve(new URL(value, base).href).href;
     let id = identifiers.get(template);
     if (id === undefined) {
@@ -36,17 +76,22 @@ export function createDashResourceRegistry(
       const placeholders = [...template.matchAll(PLACEHOLDER)].map(
         (match) => match[0],
       );
-      entries.set(id, { template, placeholders });
+      entries.set(id, { template, placeholders, inFlight: 0 });
       identifiers.set(template, id);
     }
     const resource = entries.get(id);
     if (resource === undefined)
       throw new Error("DASH resource registration failed");
+    current.add(id);
     return prefix + id + "/" + resource.placeholders.join("/") + ".m4s";
   };
-  const rewriteNode = (value: unknown, base: string): unknown => {
+  const rewriteNode = (
+    value: unknown,
+    base: string,
+    current: Set<string>,
+  ): unknown => {
     if (Array.isArray(value))
-      return value.map((child) => rewriteNode(child, base));
+      return value.map((child) => rewriteNode(child, base, current));
     if (value === null || typeof value !== "object") return value;
     const node = NodeSchema.parse(value);
     const rawBase = node["BaseURL"];
@@ -63,7 +108,7 @@ export function createDashResourceRegistry(
           // Directory bases have already been applied to every descendant resource.
           return nextBase.endsWith("/")
             ? []
-            : [[name, register(nextBase, base)]];
+            : [[name, register(nextBase, base, current)]];
         }
         if (name === "@_xlink:href" || name === "@_href")
           throw new SportsPlaybackError("unsupported-format");
@@ -71,41 +116,49 @@ export function createDashResourceRegistry(
           [
             name,
             ATTRIBUTES.has(name)
-              ? register(z.string().parse(child), nextBase)
-              : rewriteNode(child, nextBase),
+              ? register(z.string().parse(child), nextBase, current)
+              : rewriteNode(child, nextBase, current),
           ],
         ];
       }),
     );
   };
   return {
-    rewrite: (xml: string, base: string) => {
+    rewrite: (xml: string, base: string, owner = "manifest") => {
       if (/<!DOCTYPE|<!ENTITY/i.test(xml))
         throw new SportsPlaybackError("unsupported-format");
       const parsed: unknown = parser.parse(xml);
-      return builder.build(rewriteNode(parsed, base));
+      const current = new Set<string>();
+      try {
+        const result = builder.build(rewriteNode(parsed, base, current));
+        references.set(owner, current);
+        return result;
+      } finally {
+        prune();
+      }
     },
     resolve(pathname: string): URL | null {
-      if (!pathname.startsWith(prefix)) return null;
-      const suffix = pathname.slice(prefix.length);
-      const slash = suffix.indexOf("/");
-      if (slash === -1) return null;
-      const resource = entries.get(suffix.slice(0, slash));
-      if (resource === undefined || !suffix.endsWith(".m4s")) return null;
-      const rawValues = suffix.slice(slash + 1, -4);
-      const values = rawValues === "" ? [] : rawValues.split("/");
-      if (values.length !== resource.placeholders.length) return null;
-      let url = resource.template;
-      for (const [index, placeholder] of resource.placeholders.entries()) {
-        const value = values[index];
-        if (value === undefined || !/^[\w-]+$/.test(value)) return null;
-        url = url.replace(placeholder, value);
-      }
-      return approve(url);
+      return findResource(pathname, prefix, entries, approve)?.url ?? null;
+    },
+    acquire(pathname: string) {
+      const found = findResource(pathname, prefix, entries, approve);
+      if (found === null) return null;
+      found.resource.inFlight++;
+      let released = false;
+      return {
+        url: found.url,
+        release: () => {
+          if (released) return;
+          released = true;
+          found.resource.inFlight--;
+          prune();
+        },
+      };
     },
     clear: () => {
       entries.clear();
       identifiers.clear();
+      references.clear();
     },
   };
 }

@@ -2,6 +2,7 @@ import { z } from "zod";
 import type { PreparedSportsInput } from "./prepared-input.ts";
 import { SportsPlaybackError } from "./failures.ts";
 import { SportsSegmentDecoder } from "./segment-decoder.ts";
+import { sportsMediaResponse } from "./media-range.ts";
 
 const BootSchema = z.object({ t: z.string().min(1), hs: z.url() });
 const NativeSchema = z.object({ ok: z.literal(true), q: z.url() });
@@ -204,17 +205,20 @@ export function createSportsHlsRelay(
         const bytes = await readBounded(upstream);
         const transformSegment =
           options.transformSegment ?? decoder.decode.bind(decoder);
-        const content = resource.playlist
-          ? rewrite(new TextDecoder().decode(bytes), resource.url)
-          : await transformSegment(bytes);
-        return new Response(content, {
-          headers: {
-            "Content-Type": resource.playlist
-              ? "application/vnd.apple.mpegurl"
-              : "application/octet-stream",
-            "Cache-Control": "no-store",
+        if (!resource.playlist)
+          return sportsMediaResponse(
+            await transformSegment(bytes),
+            request.headers.get("Range"),
+          );
+        return new Response(
+          rewrite(new TextDecoder().decode(bytes), resource.url),
+          {
+            headers: {
+              "Content-Type": "application/vnd.apple.mpegurl",
+              "Cache-Control": "no-store",
+            },
           },
-        });
+        );
       } catch (error) {
         if (!lifetime.signal.aborted && !request.signal.aborted)
           failure.reject(

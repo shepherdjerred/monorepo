@@ -53,6 +53,15 @@ describe("native loader HLS relay", () => {
       );
       const segmentBytes = await segmentResponse.arrayBuffer();
       expect(new Uint8Array(segmentBytes)).toEqual(bytes);
+      const partial = await originalFetch(new URL(segment, prepared.input), {
+        headers: { Range: "bytes=1-2" },
+      });
+      expect(partial.status).toBe(206);
+      expect(partial.headers.get("Content-Range")).toBe("bytes 1-2/4");
+      expect(partial.headers.get("Content-Length")).toBe("2");
+      expect(new Uint8Array(await partial.arrayBuffer())).toEqual(
+        new Uint8Array([0, 1]),
+      );
       const arbitrary = await originalFetch(
         new URL("/arbitrary", prepared.input),
       );

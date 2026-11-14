@@ -127,6 +127,71 @@ describe("ClearKey media preparation", () => {
       ),
     ).toThrow("approved");
   });
+  it("preserves DASH byte-range request and response metadata", async () => {
+    const bootstrap = await envelope("fixture-ticket");
+    let rejectedBodyCancelled = false;
+    const input = await prepareClearKey(
+      'window.SE_CK={"t":"fixture-ticket","v":false};',
+      "https://v2.streameast.ga/ClearKeyEmbed.php?t=fixture",
+      new AbortController().signal,
+      {
+        fetcher: async (request, init) => {
+          if (init?.method === "POST") return Response.json(bootstrap);
+          const url = new URL(
+            request instanceof Request ? request.url : request.toString(),
+          );
+          if (url.pathname.endsWith(".mpd")) return new Response(xml);
+          const range = new Headers(init?.headers).get("Range");
+          if (range === "bytes=0-3")
+            return new Response(new Uint8Array([1, 2, 3, 4]), {
+              status: 206,
+              headers: {
+                "Content-Range": "bytes 0-3/10",
+                "Accept-Ranges": "bytes",
+                "Set-Cookie": "fixture-only",
+              },
+            });
+          return new Response(
+            new ReadableStream<Uint8Array>({
+              cancel() {
+                rejectedBodyCancelled = true;
+              },
+            }),
+            {
+              status: 416,
+              headers: { "Content-Range": "bytes */10" },
+            },
+          );
+        },
+      },
+    );
+    if (input === null) throw new Error("Fixture did not prepare");
+    try {
+      const manifestResponse = await fetch(input.input);
+      const manifest = await manifestResponse.text();
+      const resource = /initialization="([^"]+)"/.exec(manifest)?.[1];
+      if (resource === undefined)
+        throw new Error("Fixture initialization resource missing");
+      const partial = await fetch(resource, {
+        headers: { Range: "bytes=0-3" },
+      });
+      expect(partial.status).toBe(206);
+      expect(partial.headers.get("Content-Range")).toBe("bytes 0-3/10");
+      expect(partial.headers.get("Accept-Ranges")).toBe("bytes");
+      expect(partial.headers.has("Set-Cookie")).toBe(false);
+      expect([...new Uint8Array(await partial.arrayBuffer())]).toEqual([
+        1, 2, 3, 4,
+      ]);
+      const exhausted = await fetch(resource, {
+        headers: { Range: "bytes=10-" },
+      });
+      expect(exhausted.status).toBe(416);
+      expect(exhausted.headers.get("Content-Range")).toBe("bytes */10");
+      expect(rejectedBodyCancelled).toBe(true);
+    } finally {
+      await input.close();
+    }
+  });
   it("serves refreshed per-track MPDs and releases its loopback listener", async () => {
     const ticket = "fixture-ticket";
     const bootstrap = await envelope(ticket);
@@ -158,5 +223,64 @@ describe("ClearKey media preparation", () => {
       await input.close();
     }
     await expect(fetch(input.input)).rejects.toThrow();
+  });
+});
+
+const rollingManifest = (segment: string) =>
+  `<MPD><Period><AdaptationSet><Representation><SegmentList><SegmentURL media="${segment}"/></SegmentList></Representation></AdaptationSet></Period></MPD>`;
+const rollingMediaPath = (value: string) => {
+  const path = /media="([^"]+)"/.exec(value)?.[1];
+  if (path === undefined) throw new Error("Fixture media path missing");
+  return path;
+};
+const rollingRegistry = () =>
+  createDashResourceRegistry("/fixture/", (value) => {
+    const url = new URL(value);
+    if (url.hostname !== "u.steast.io")
+      throw new Error("Unexpected fixture media host");
+    return url;
+  });
+describe("DASH rolling resource lifetime", () => {
+  it("keeps current audio/video and in-flight resources across more than 2048 refreshes", () => {
+    const resources = rollingRegistry();
+    const original = rollingMediaPath(
+      resources.rewrite(rollingManifest("video-0.m4s"), manifestUrl, "video"),
+    );
+    const audio = rollingMediaPath(
+      resources.rewrite(rollingManifest("audio.m4s"), manifestUrl, "audio"),
+    );
+    const held = resources.acquire(original);
+    if (held === null) throw new Error("Fixture resource did not acquire");
+    let previous = original;
+    for (let index = 1; index <= 2100; index++) {
+      const current = rollingMediaPath(
+        resources.rewrite(
+          rollingManifest(`video-${String(index)}.m4s`),
+          manifestUrl,
+          "video",
+        ),
+      );
+      if (previous !== original) expect(resources.resolve(previous)).toBeNull();
+      expect(resources.resolve(audio)).not.toBeNull();
+      previous = current;
+    }
+    expect(resources.resolve(original)).not.toBeNull();
+    held.release();
+    held.release();
+    expect(resources.resolve(original)).toBeNull();
+    expect(resources.resolve(previous)).not.toBeNull();
+    expect(resources.resolve(audio)).not.toBeNull();
+  });
+  it("preserves the last valid snapshot when a new manifest is rejected", () => {
+    const resources = rollingRegistry();
+    const valid = rollingMediaPath(
+      resources.rewrite(rollingManifest("valid.m4s"), manifestUrl, "video"),
+    );
+    const invalid = rollingManifest("new.m4s").replace(
+      "</SegmentList>",
+      '<SegmentURL media="https://127.0.0.1/private"/></SegmentList>',
+    );
+    expect(() => resources.rewrite(invalid, manifestUrl, "video")).toThrow();
+    expect(resources.resolve(valid)).not.toBeNull();
   });
 });

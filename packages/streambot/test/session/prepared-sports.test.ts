@@ -5,6 +5,7 @@ import { SportsPlaybackError } from "@shepherdjerred/streambot/sports/failures.t
 import {
   initialPlaybackContext,
   queueCrashRetryUpdates,
+  RESOLVE_TIMEOUT_MS,
 } from "@shepherdjerred/streambot/machine/playback-helpers.ts";
 import { UserIdSchema } from "@shepherdjerred/streambot/types/ids.ts";
 import {
@@ -32,46 +33,157 @@ function input(): RunStreamInput {
   };
 }
 
-describe("sports playback input lifetime", () => {
-  it("aborts and drains playback before closing a failed provider session", async () => {
-    const failure = Promise.withResolvers<never>();
-    const events: string[] = [];
-    const prepare = async () => ({
-      title: "Fixture",
-      input: "http://127.0.0.1/input",
-      headers: {},
-      failure: failure.promise,
-      close: async () => {
-        events.push("closed");
-      },
-    });
-    const run = async (_request: RunStreamInput, signal: AbortSignal) => {
-      const drained = new Promise<void>((resolve) =>
-        signal.addEventListener(
-          "abort",
-          () => {
-            events.push("drained");
-            resolve();
-          },
-          { once: true },
-        ),
+describe("sports preparation budget and metadata", () => {
+  it("bounds deferred preparation without entering playback", async () => {
+    vi.useFakeTimers();
+    try {
+      const run = vi.fn();
+      const pending = runWithPreparedSportsInput(
+        input(),
+        new AbortController().signal,
+        (_recipe, signal) =>
+          new Promise((_resolve, reject) =>
+            signal.addEventListener(
+              "abort",
+              () => {
+                reject(
+                  signal.reason instanceof Error
+                    ? signal.reason
+                    : new Error("preparation aborted"),
+                );
+              },
+              { once: true },
+            ),
+          ),
+        run,
       );
-      failure.reject(new SportsPlaybackError("session-expired"));
-      await drained;
-    };
+      const failed = expect(pending).rejects.toMatchObject({
+        kind: "provider-session",
+      });
+      await vi.advanceTimersByTimeAsync(RESOLVE_TIMEOUT_MS);
+      await failed;
+      expect(run).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("clears the preparation deadline before a long-lived lease starts streaming", async () => {
+    vi.useFakeTimers();
+    try {
+      const entered = Promise.withResolvers<true>();
+      const done = Promise.withResolvers<true>();
+      let preparationSignal: AbortSignal | undefined;
+      const pending = runWithPreparedSportsInput(
+        input(),
+        new AbortController().signal,
+        async (_recipe, signal) => {
+          preparationSignal = signal;
+          return {
+            title: "Fixture",
+            input: "http://127.0.0.1/fresh",
+            headers: {},
+            close: () => Promise.resolve(),
+          };
+        },
+        async () => {
+          entered.resolve(true);
+          await done.promise;
+        },
+      );
+      await entered.promise;
+      await vi.advanceTimersByTimeAsync(RESOLVE_TIMEOUT_MS + 1);
+      expect(preparationSignal?.aborted).toBe(false);
+      done.resolve(true);
+      await pending;
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+  it.each([false, true])(
+    "uses freshly probed HDR=%s after switching feeds",
+    async (hdr) => {
+      const request = input();
+      const prepare = async () => ({
+        title: "Replacement feed",
+        input: "http://127.0.0.1/fresh",
+        headers: {},
+        hdr,
+        close: () => Promise.resolve(),
+      });
+      await runWithPreparedSportsInput(
+        { ...request, resolved: { ...request.resolved, hdr: !hdr } },
+        new AbortController().signal,
+        prepare,
+        async ({ resolved }) => {
+          expect(resolved.hdr).toBe(hdr);
+        },
+      );
+    },
+  );
+});
+
+describe("sports playback input lifetime", () => {
+  it.each(["session-expired", "unsupported-format"] as const)(
+    "aborts and drains playback before closing a failed provider session (%s)",
+    async (kind) => {
+      const failure = Promise.withResolvers<never>();
+      const events: string[] = [];
+      const prepare = async () => ({
+        title: "Fixture",
+        input: "http://127.0.0.1/input",
+        headers: {},
+        failure: failure.promise,
+        close: async () => {
+          events.push("closed");
+        },
+      });
+      const run = async (_request: RunStreamInput, signal: AbortSignal) => {
+        const drained = new Promise<void>((resolve) =>
+          signal.addEventListener(
+            "abort",
+            () => {
+              events.push("drained");
+              resolve();
+            },
+            { once: true },
+          ),
+        );
+        failure.reject(new SportsPlaybackError(kind));
+        await drained;
+      };
+      await expect(
+        runWithPreparedSportsInput(
+          input(),
+          new AbortController().signal,
+          prepare,
+          run,
+        ),
+      ).rejects.toMatchObject({
+        kind: "provider-session",
+        pipelineMode: "sw",
+        positionSeconds: 0,
+      });
+      expect(events).toEqual(["drained", "closed"]);
+    },
+  );
+
+  it("keeps unsupported-format terminal when no candidate could prepare", async () => {
+    const run = vi.fn();
     await expect(
       runWithPreparedSportsInput(
         input(),
         new AbortController().signal,
-        prepare,
+        async () => {
+          throw new SportsPlaybackError("unsupported-format");
+        },
         run,
       ),
     ).rejects.toMatchObject({
-      kind: "provider-session",
-      pipelineMode: "sw",
-      positionSeconds: 0,
+      name: "SportsPlaybackError",
+      kind: "unsupported-format",
     });
-    expect(events).toEqual(["drained", "closed"]);
+    expect(run).not.toHaveBeenCalled();
   });
 
   it("charges provider retries to the bounded budget without advancing the hardware pipeline", () => {

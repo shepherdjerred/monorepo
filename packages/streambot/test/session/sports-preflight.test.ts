@@ -3,6 +3,7 @@ import { loadConfig } from "@shepherdjerred/streambot/config/index.ts";
 import { resolveSource } from "@shepherdjerred/streambot/sources/resolve.ts";
 import * as probe from "@shepherdjerred/streambot/sources/probe.ts";
 import type { SportsResolver } from "@shepherdjerred/streambot/sports/types.ts";
+import { validatePreparedSportsInput } from "@shepherdjerred/streambot/sources/sports-preparation.ts";
 
 afterEach(() => vi.restoreAllMocks());
 const config = loadConfig({
@@ -34,6 +35,34 @@ function fixture() {
   };
   return { prepare, close, resolver };
 }
+
+it.each([false, true])(
+  "retains freshly probed HDR=%s in the prepared attempt",
+  async (hdr) => {
+    const f = fixture();
+    vi.spyOn(probe, "probeMedia").mockResolvedValue({
+      videoCodec: "h264",
+      width: 640,
+      height: 360,
+      pixelFormat: "yuv420p",
+      hdr,
+      audioCodec: "aac",
+      audioChannels: 2,
+      durationSeconds: undefined,
+    });
+    const prepared = await f.prepare();
+    try {
+      const validated = await validatePreparedSportsInput(
+        config,
+        prepared,
+        new AbortController().signal,
+      );
+      expect(validated.hdr).toBe(hdr);
+    } finally {
+      await prepared.close();
+    }
+  },
+);
 
 it("preflight probes per-track inputs then discards all private input state", async () => {
   const f = fixture();

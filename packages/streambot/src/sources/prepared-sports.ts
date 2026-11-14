@@ -5,13 +5,20 @@ import type {
 import type { PrepareSportsInput } from "@shepherdjerred/streambot/sports/prepared-input.ts";
 import { SportsPlaybackError } from "@shepherdjerred/streambot/sports/failures.ts";
 import { StreamCrashError } from "@shepherdjerred/streambot/streamer/stream-errors.ts";
+import { RESOLVE_TIMEOUT_MS } from "@shepherdjerred/streambot/machine/playback-helpers.ts";
+import type { PreparedSportsInput } from "@shepherdjerred/streambot/sports/prepared-input.ts";
 
-function providerFailure(error: unknown, input: RunStreamInput): unknown {
+function providerFailure(
+  error: unknown,
+  input: RunStreamInput,
+  duringPlayback = false,
+): unknown {
   if (
     !(error instanceof SportsPlaybackError) ||
     (error.kind !== "session-expired" &&
       error.kind !== "unavailable" &&
-      error.kind !== "timeout")
+      error.kind !== "timeout" &&
+      !(duringPlayback && error.kind === "unsupported-format"))
   )
     return error;
   return new StreamCrashError(error.message, {
@@ -43,19 +50,33 @@ export async function runWithPreparedSportsInput(
   }
   if (prepare === undefined)
     throw new Error("Sports input preparation is not configured");
-  const prepared = await prepare(input.resolved.sportsRecipe, signal).catch(
-    (error: unknown) => {
-      throw providerFailure(error, input);
-    },
-  );
+  const deadline = new AbortController();
+  const preparationSignal = AbortSignal.any([signal, deadline.signal]);
+  const timer = setTimeout(() => {
+    deadline.abort(new SportsPlaybackError("timeout"));
+  }, RESOLVE_TIMEOUT_MS);
+  let prepared: PreparedSportsInput;
+  try {
+    prepared = await prepare(input.resolved.sportsRecipe, preparationSignal);
+  } catch (error) {
+    signal.throwIfAborted();
+    throw providerFailure(
+      deadline.signal.aborted ? deadline.signal.reason : error,
+      input,
+    );
+  } finally {
+    clearTimeout(timer);
+  }
   const playback = new AbortController();
   let running: Promise<void> | undefined;
   try {
+    preparationSignal.throwIfAborted();
     signal.throwIfAborted();
     const {
       sportsRecipe: _recipe,
       ffmpegVideoStreamIndex: _videoIndex,
       ffmpegAudioStreamIndex: _audioIndex,
+      hdr: _hdr,
       ...metadata
     } = input.resolved;
     running = run(
@@ -63,6 +84,7 @@ export async function runWithPreparedSportsInput(
         ...input,
         resolved: {
           ...metadata,
+          hdr: prepared.hdr ?? false,
           ffmpegInput: prepared.input,
           ffmpegInputHeaders: prepared.headers,
           ...(prepared.inputOptions === undefined
@@ -92,7 +114,7 @@ export async function runWithPreparedSportsInput(
       : Promise.race([running, prepared.failure]));
   } catch (error) {
     signal.throwIfAborted();
-    throw providerFailure(error, input);
+    throw providerFailure(error, input, true);
   } finally {
     playback.abort();
     if (running !== undefined) await Promise.allSettled([running]);
