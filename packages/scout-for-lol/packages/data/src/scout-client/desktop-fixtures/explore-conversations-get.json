@@ -1,0 +1,73 @@
+{
+  "route": "explore_conversations_get",
+  "request": { "conversationId": "0f4d6c1e-8a51-4c62-9a1e-3b7f2d9c5e10" },
+  "response": {
+    "conversation": {
+      "id": "0f4d6c1e-8a51-4c62-9a1e-3b7f2d9c5e10",
+      "title": "Who carries our ARAMs?",
+      "preferredModel": null,
+      "origin": "web",
+      "shareToken": null,
+      "sharedLeafId": null,
+      "createdAt": "2026-11-13T20:01:02.000Z",
+      "updatedAt": "2026-11-13T20:03:40.000Z"
+    },
+    "messages": [
+      {
+        "id": "6a1c2b9e-0d34-4f1a-8c55-7e2b1d4a9f01",
+        "role": "user",
+        "parentId": null,
+        "siblingIds": ["6a1c2b9e-0d34-4f1a-8c55-7e2b1d4a9f01"],
+        "versionIndex": 0,
+        "versionCount": 1,
+        "content": "Who has the best ARAM win rate this month?",
+        "queryText": null,
+        "caveats": [],
+        "followUps": [],
+        "preview": null,
+        "visualization": null,
+        "matchCards": [],
+        "loadoutCards": [],
+        "guildIds": [],
+        "attachments": [],
+        "trace": [],
+        "createdAt": "2026-11-13T20:01:02.000Z"
+      },
+      {
+        "id": "9b2e4c7d-1f53-4a8b-9d66-8f3c2e5b0a12",
+        "role": "assistant",
+        "parentId": "6a1c2b9e-0d34-4f1a-8c55-7e2b1d4a9f01",
+        "siblingIds": ["9b2e4c7d-1f53-4a8b-9d66-8f3c2e5b0a12"],
+        "versionIndex": 0,
+        "versionCount": 1,
+        "content": "Over 31 ARAM games this month, Jinx mains lead with a 61% win rate.",
+        "generation": { "model": "gpt-6.1-sol", "reasoningEffort": "high" },
+        "queryText": null,
+        "caveats": ["Only games Scout recorded are counted."],
+        "followUps": ["Break that down by champion"],
+        "preview": null,
+        "visualization": null,
+        "matchCards": [],
+        "loadoutCards": [],
+        "guildIds": ["123456789012345678"],
+        "attachments": [],
+        "trace": [],
+        "createdAt": "2026-11-13T20:03:40.000Z"
+      }
+    ]
+  },
+  "invalidRequests": [
+    { "reason": "a missing conversation id", "body": {} },
+    {
+      "reason": "a malformed conversation id",
+      "body": { "conversationId": "not-a-uuid" }
+    },
+    {
+      "reason": "an unknown key",
+      "body": {
+        "conversationId": "0f4d6c1e-8a51-4c62-9a1e-3b7f2d9c5e10",
+        "version": 4
+      }
+    }
+  ]
+}

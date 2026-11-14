@@ -1,6 +1,8 @@
 import {
   DiscordAccountIdSchema,
+  ScoutDesktopScopeSchema,
   type DiscordAccountId,
+  type ScoutDesktopScope,
 } from "@scout-for-lol/data";
 import { z } from "zod";
 import { prisma } from "#src/database/index.ts";
@@ -9,6 +11,14 @@ import { digestMatches, randomSecret, secretDigest } from "./secrets.ts";
 
 const PAIRING_TTL_MS = 10 * 60 * 1000;
 const ABANDONED_PAIRING_RETENTION_MS = 24 * 60 * 60 * 1000;
+const PairingScopesSchema = z.array(ScoutDesktopScopeSchema).min(1);
+/** Capital letters without I and O, then digits without 0 and 1. */
+const MATCH_CODE_ALPHABET = [
+  ...Array.from({ length: 26 }, (_, index) =>
+    String.fromCodePoint(65 + index),
+  ).filter((letter) => letter !== "I" && letter !== "O"),
+  ...Array.from({ length: 8 }, (_, index) => String(index + 2)),
+];
 const PairingStateSchema = z.enum([
   "PENDING",
   "APPROVED",
@@ -34,7 +44,26 @@ export type PairingExchange =
       readonly token: string;
     };
 
-export async function createPairing(input: PairingInput, now = new Date()) {
+/**
+ * The short code the desktop and the approval page both show.
+ *
+ * Derived from the pairing id rather than stored: it is not a secret, only a
+ * way for the approver to see that the request on the page is the one their
+ * own computer started, so a link someone else sent them is recognisable.
+ */
+export function pairingMatchCode(pairingId: string): string {
+  const digest = new Bun.CryptoHasher("sha256").update(pairingId).digest();
+  const characters = [...digest.subarray(0, 6)].map(
+    (byte) => MATCH_CODE_ALPHABET[byte % MATCH_CODE_ALPHABET.length] ?? "",
+  );
+  return `${characters.slice(0, 3).join("")}-${characters.slice(3).join("")}`;
+}
+
+export async function createPairing(
+  input: PairingInput,
+  now = new Date(),
+  scopes: readonly ScoutDesktopScope[] = ["ingest"],
+) {
   await prisma.scoutClientPairing.deleteMany({
     where: {
       state: { in: ["PENDING", "APPROVED", "EXPIRED"] },
@@ -53,6 +82,7 @@ export async function createPairing(input: PairingInput, now = new Date()) {
       architecture: input.architecture,
       appVersion: input.appVersion,
       protocolVersion: input.protocolVersion,
+      scopes: PairingScopesSchema.parse(scopes),
       expiresAt,
     },
     select: { id: true },
@@ -62,6 +92,8 @@ export async function createPairing(input: PairingInput, now = new Date()) {
     pairingSecret,
     approvalUrl: `${getAppOrigin()}/app/scout-client/pair/${pairing.id}`,
     expiresAt: expiresAt.toISOString(),
+    scopes: PairingScopesSchema.parse(scopes),
+    matchCode: pairingMatchCode(pairing.id),
   };
 }
 
@@ -74,6 +106,7 @@ export async function pairingForApproval(pairingId: string, now = new Date()) {
       platform: true,
       architecture: true,
       appVersion: true,
+      scopes: true,
       state: true,
       expiresAt: true,
       approvedById: true,
@@ -81,15 +114,16 @@ export async function pairingForApproval(pairingId: string, now = new Date()) {
   });
   if (pairing === null) return null;
   const state = PairingStateSchema.parse(pairing.state);
+  const scopes = PairingScopesSchema.parse(pairing.scopes);
   if (state === "PENDING" && pairing.expiresAt <= now) {
     await prisma.scoutClientPairing.updateMany({
       where: { id: pairing.id, state: "PENDING" },
       data: { state: "EXPIRED" },
     });
     const expiredState = PairingStateSchema.parse("EXPIRED");
-    return { ...pairing, state: expiredState };
+    return { ...pairing, scopes, state: expiredState };
   }
-  return { ...pairing, state };
+  return { ...pairing, scopes, state };
 }
 
 export async function approvePairing(
@@ -152,6 +186,8 @@ export async function exchangePairing(
         architecture: pairing.architecture,
         appVersion: pairing.appVersion,
         protocolVersion: pairing.protocolVersion,
+        // Exactly what the owner saw and approved on the pairing page.
+        scopes: PairingScopesSchema.parse(pairing.scopes),
         lastSeenAt: now,
         versions: { create: { appVersion: pairing.appVersion } },
       },

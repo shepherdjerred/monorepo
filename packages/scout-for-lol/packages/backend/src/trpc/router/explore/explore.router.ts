@@ -1,8 +1,4 @@
 import type { User } from "#generated/prisma/client/index.js";
-import {
-  exploreModelPickerEnabled,
-  exploreSpendPolicy,
-} from "#src/config/dynamic.ts";
 import { consumeDareConfirmationIntent } from "#src/dares/lifecycle/dare-intent-consume.ts";
 import { tryEnsureDareCallout } from "#src/dares/presentation/dare-callout.ts";
 import { prisma } from "#src/database/index.ts";
@@ -17,7 +13,7 @@ import {
   ExploreRunUnavailableError,
   exploreRunManager,
 } from "#src/explore/runs/run-manager.ts";
-import { exploreSpendingStatus } from "#src/explore/spending/ledger.ts";
+import { exploreStatusFor } from "#src/explore/spending/status.ts";
 import {
   ExploreInvalidTurnError,
   ExploreNotFoundError,
@@ -31,7 +27,6 @@ import {
 } from "#src/explore/store.ts";
 import { scoutExploreSharesTotal } from "#src/metrics/explore.ts";
 import { resolvePlayerIdentities } from "#src/reports/identity.ts";
-import { durableExploreQuotaStatus } from "#src/temporal/durable-quota.ts";
 import { exploreAttachmentProcedures } from "#src/trpc/router/explore/explore-attachment-procedures.ts";
 import { exploreCreationProcedures } from "#src/trpc/router/explore/explore-creation-procedures.ts";
 import {
@@ -218,11 +213,11 @@ export const exploreRouter = router({
     }
     try {
       const { userId } = await requireExploreUserAndGuilds(ctx.user);
-      const status = await durableExploreQuotaStatus(userId);
+      const status = await exploreStatusFor(userId);
       return {
         enabled: true,
-        modelPickerEnabled: exploreModelPickerEnabled(),
-        spending: await exploreSpendingStatus(userId, exploreSpendPolicy()),
+        modelPickerEnabled: status.modelPickerEnabled,
+        spending: status.spending,
         quota: status.quota,
       };
     } catch (error) {

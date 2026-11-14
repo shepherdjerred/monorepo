@@ -13,6 +13,7 @@ import {
 import {
   approvePairing,
   pairingForApproval,
+  pairingMatchCode,
   revokeDevice,
 } from "#src/scout-client/pairing.ts";
 
@@ -53,6 +54,13 @@ export const scoutClientRouter = router({
         platform: pairing.platform,
         architecture: pairing.architecture,
         appVersion: pairing.appVersion,
+        scopes: pairing.scopes,
+        // Only a `pairings/v2` request asks for Explore, and only a client
+        // that sends one displays the code, so an older client's request is
+        // not shown a code its owner has nothing to compare with.
+        matchCode: pairing.scopes.includes("explore")
+          ? pairingMatchCode(pairing.id)
+          : null,
         state: pairing.state,
         expiresAt: pairing.expiresAt.toISOString(),
       };

@@ -1,0 +1,31 @@
+{
+  "route": "pairings_v2",
+  "request": {
+    "deviceName": "Scout Desktop on DESKTOP-7Q2",
+    "platform": "windows",
+    "architecture": "x86_64",
+    "appVersion": "0.4.0",
+    "protocolVersion": 1
+  },
+  "response": {
+    "pairingId": "4fa2a856-53af-42a4-85af-5cc085a942a3",
+    "pairingSecret": "scp_0123456789abcdefghijklmnopqrstuvwxyzABCDEFG",
+    "approvalUrl": "https://scout-for-lol.com/app/scout-client/pair/4fa2a856-53af-42a4-85af-5cc085a942a3",
+    "expiresAt": "2026-11-14T12:10:00.000Z",
+    "scopes": ["ingest", "explore"],
+    "matchCode": "K7M-4QX"
+  },
+  "invalidRequests": [
+    {
+      "reason": "an unknown key",
+      "body": {
+        "deviceName": "Scout Desktop",
+        "platform": "windows",
+        "architecture": "x86_64",
+        "appVersion": "0.4.0",
+        "protocolVersion": 1,
+        "scopes": ["explore"]
+      }
+    }
+  ]
+}
