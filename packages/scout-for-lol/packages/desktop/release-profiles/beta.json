@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "channel": "beta",
+  "product_name": "Scout Desktop Beta",
+  "binary_name": "scout-client-beta",
+  "identifier": "com.scout-for-lol.client.beta",
+  "backend_origin": "https://beta.scout-for-lol.com",
+  "keyring_service": "com.scout-for-lol.client.beta",
+  "data_directory": {
+    "qualifier": "com",
+    "organization": "Scout",
+    "application": "Scout Desktop Beta"
+  },
+  "autostart_name": "Scout Desktop Beta"
+}

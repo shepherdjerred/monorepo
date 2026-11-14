@@ -24,6 +24,7 @@ use std::sync::Arc;
 use scout_client_core::diagnostics::{
     DiagnosticCategory, DiagnosticEvent, DiagnosticLevel, DiagnosticOutcome, Diagnostics,
 };
+use scout_client_core::profile::ReleaseProfile;
 use scout_client_core::reporting::{
     ReportingProcess, reporting_environment, start_error_reporting,
 };
@@ -35,7 +36,6 @@ use tracing_subscriber::EnvFilter;
 use crate::supervisor::{Supervisor, SupervisorExit, WindowLauncher};
 use crate::toolkit::{UI_ENVIRONMENT, WindowToolkit};
 
-const DEFAULT_BACKEND_ORIGIN: &str = "https://beta.scout-for-lol.com";
 /// The argument that makes this executable the window process.
 const WINDOW_ARGUMENT: &str = "--window";
 
@@ -43,7 +43,7 @@ fn backend_origin(arguments: &[String]) -> String {
     arguments
         .iter()
         .find_map(|argument| argument.strip_prefix("--server=").map(str::to_owned))
-        .unwrap_or_else(|| DEFAULT_BACKEND_ORIGIN.to_owned())
+        .unwrap_or_else(|| ReleaseProfile::compiled().backend_origin.to_owned())
 }
 
 /// Install the console logger, on stderr: the window process's stdout carries
@@ -216,11 +216,23 @@ fn supervise(arguments: &[String], toolkit: WindowToolkit) -> ExitCode {
 
 #[cfg(test)]
 mod tests {
-    use super::{DEFAULT_BACKEND_ORIGIN, backend_origin};
+    use scout_client_core::profile::{BETA, ReleaseProfile, STABLE};
+    use scout_client_core::reporting::reporting_environment;
+
+    use super::backend_origin;
 
     #[test]
-    fn packaged_preview_targets_the_beta_backend() {
-        assert_eq!(backend_origin(&[]), DEFAULT_BACKEND_ORIGIN);
+    fn the_packaged_build_targets_its_profile_backend() {
+        assert_eq!(
+            backend_origin(&[]),
+            ReleaseProfile::compiled().backend_origin
+        );
+    }
+
+    #[test]
+    fn stable_reports_as_production_and_beta_as_beta() {
+        assert_eq!(reporting_environment(STABLE.backend_origin), "production");
+        assert_eq!(reporting_environment(BETA.backend_origin), "beta");
     }
 
     #[test]

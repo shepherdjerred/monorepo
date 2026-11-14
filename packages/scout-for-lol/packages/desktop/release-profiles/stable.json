@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "channel": "stable",
+  "product_name": "Scout Desktop",
+  "binary_name": "scout-client",
+  "identifier": "com.scout-for-lol.client",
+  "backend_origin": "https://scout-for-lol.com",
+  "keyring_service": "com.scout-for-lol.client",
+  "data_directory": {
+    "qualifier": "com",
+    "organization": "Scout",
+    "application": "Scout Client"
+  },
+  "autostart_name": "Scout Client"
+}

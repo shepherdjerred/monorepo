@@ -6,7 +6,7 @@ use std::{
     error::Error,
     fs,
     io::{self, ErrorKind},
-    path::PathBuf,
+    path::{Path, PathBuf},
 };
 
 use serde::Deserialize;
@@ -247,11 +247,165 @@ pub enum ObservationQuarantineReason {{
     ))
 }
 
+/// One release profile file under `release-profiles/`.
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct ReleaseProfileFile {
+    schema: u8,
+    channel: String,
+    product_name: String,
+    binary_name: String,
+    identifier: String,
+    backend_origin: String,
+    keyring_service: String,
+    data_directory: DataDirectory,
+    autostart_name: String,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct DataDirectory {
+    qualifier: String,
+    organization: String,
+    application: String,
+}
+
+fn validate_profile(file_channel: &str, profile: &ReleaseProfileFile) -> Result<(), io::Error> {
+    let name = format!("release profile {file_channel}");
+    if profile.schema != 1 {
+        return Err(invalid_contract(format!("{name}: schema must be 1")));
+    }
+    if profile.channel != file_channel {
+        return Err(invalid_contract(format!(
+            "{name}: channel must be {file_channel}"
+        )));
+    }
+    let origin_ok = profile
+        .backend_origin
+        .strip_prefix("https://")
+        .is_some_and(|host| {
+            !host.is_empty()
+                && host
+                    .bytes()
+                    .all(|byte| byte.is_ascii_alphanumeric() || byte == b'.' || byte == b'-')
+        });
+    if !origin_ok {
+        return Err(invalid_contract(format!(
+            "{name}: backend_origin must be a bare https origin without path or trailing slash"
+        )));
+    }
+    let identifier_ok = profile.identifier.split('.').count() >= 3
+        && profile.identifier.split('.').all(|part| {
+            !part.is_empty()
+                && part
+                    .bytes()
+                    .all(|byte| byte.is_ascii_alphanumeric() || byte == b'-')
+        });
+    if !identifier_ok {
+        return Err(invalid_contract(format!(
+            "{name}: identifier must be reverse-DNS"
+        )));
+    }
+    for (field, value) in [
+        ("product_name", &profile.product_name),
+        ("binary_name", &profile.binary_name),
+        ("keyring_service", &profile.keyring_service),
+        ("autostart_name", &profile.autostart_name),
+        (
+            "data_directory.qualifier",
+            &profile.data_directory.qualifier,
+        ),
+        (
+            "data_directory.organization",
+            &profile.data_directory.organization,
+        ),
+        (
+            "data_directory.application",
+            &profile.data_directory.application,
+        ),
+    ] {
+        if value.trim().is_empty() || value.trim() != value {
+            return Err(invalid_contract(format!(
+                "{name}: {field} must be non-empty and trimmed"
+            )));
+        }
+    }
+    Ok(())
+}
+
+fn render_profile(profile: &ReleaseProfileFile) -> String {
+    format!(
+        "ReleaseProfile {{ channel: {:?}, product_name: {:?}, binary_name: {:?}, identifier: {:?}, \
+         backend_origin: {:?}, keyring_service: {:?}, data_qualifier: {:?}, \
+         data_organization: {:?}, data_application: {:?}, autostart_name: {:?} }}",
+        profile.channel,
+        profile.product_name,
+        profile.binary_name,
+        profile.identifier,
+        profile.backend_origin,
+        profile.keyring_service,
+        profile.data_directory.qualifier,
+        profile.data_directory.organization,
+        profile.data_directory.application,
+        profile.autostart_name,
+    )
+}
+
+/// Generate `STABLE`, `BETA` and `COMPILED`. `SCOUT_DESKTOP_PROFILE` picks the
+/// compiled one; an unset variable means a development build, which is beta.
+fn generate_profiles(manifest_dir: &Path, output_dir: &Path) -> Result<(), Box<dyn Error>> {
+    println!("cargo:rerun-if-env-changed=SCOUT_DESKTOP_PROFILE");
+    let selected = match env::var("SCOUT_DESKTOP_PROFILE") {
+        Ok(value) => value,
+        Err(env::VarError::NotPresent) => "beta".to_owned(),
+        Err(error) => return Err(Box::new(error)),
+    };
+    if selected != "stable" && selected != "beta" {
+        return Err(Box::new(invalid_contract(format!(
+            "SCOUT_DESKTOP_PROFILE must be stable or beta, not {selected:?}"
+        ))));
+    }
+    let mut profiles = Vec::new();
+    for channel in ["stable", "beta"] {
+        let path = manifest_dir.join(format!("../../release-profiles/{channel}.json"));
+        println!("cargo:rerun-if-changed={}", path.display());
+        let profile: ReleaseProfileFile = serde_json::from_str(&fs::read_to_string(&path)?)?;
+        validate_profile(channel, &profile)?;
+        profiles.push(profile);
+    }
+    let (stable, beta) = (&profiles[0], &profiles[1]);
+    if stable.identifier == beta.identifier
+        || stable.keyring_service == beta.keyring_service
+        || stable.product_name == beta.product_name
+        || stable.binary_name == beta.binary_name
+        || (stable.data_directory.qualifier == beta.data_directory.qualifier
+            && stable.data_directory.organization == beta.data_directory.organization
+            && stable.data_directory.application == beta.data_directory.application)
+    {
+        return Err(Box::new(invalid_contract(
+            "stable and beta profiles must not share identifier, product name, binary name, keyring service or data directory",
+        )));
+    }
+    let source = format!(
+        "/// The public build.\npub const STABLE: ReleaseProfile = {};\n/// The build that installs beside stable and targets the beta backend.\npub const BETA: ReleaseProfile = {};\n/// The profile this binary was built with.\nconst COMPILED: ReleaseProfile = {};\n",
+        render_profile(stable),
+        render_profile(beta),
+        if selected == "stable" {
+            "STABLE"
+        } else {
+            "BETA"
+        },
+    );
+    fs::write(output_dir.join("release_profile.rs"), source)?;
+    Ok(())
+}
+
 fn main() -> Result<(), Box<dyn Error>> {
-    let manifest_dir = env::var_os("CARGO_MANIFEST_DIR")
-        .ok_or_else(|| invalid_contract("CARGO_MANIFEST_DIR is not set"))?;
-    let contract_path =
-        PathBuf::from(manifest_dir).join("../../../data/src/scout-client/protocol.contract.json");
+    let manifest_dir = PathBuf::from(
+        env::var_os("CARGO_MANIFEST_DIR")
+            .ok_or_else(|| invalid_contract("CARGO_MANIFEST_DIR is not set"))?,
+    );
+    let contract_path = manifest_dir.join("../../../data/src/scout-client/protocol.contract.json");
     println!("cargo:rerun-if-changed={}", contract_path.display());
 
     let contract_json = fs::read_to_string(&contract_path)?;
@@ -260,8 +414,10 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let output_dir =
         env::var_os("OUT_DIR").ok_or_else(|| invalid_contract("OUT_DIR is not set"))?;
+    let output_dir = PathBuf::from(output_dir);
+    generate_profiles(&manifest_dir, &output_dir)?;
     fs::write(
-        PathBuf::from(output_dir).join("protocol_contract.rs"),
+        output_dir.join("protocol_contract.rs"),
         render_contract(&contract)?,
     )?;
     Ok(())

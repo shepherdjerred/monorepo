@@ -1,6 +1,7 @@
 //! Where the outbox and diagnostics live on disk.
 
 use directories::ProjectDirs;
+use scout_client_core::profile::ReleaseProfile;
 use sha2::Digest as _;
 use sha2::Sha256;
 use std::path::PathBuf;
@@ -19,7 +20,12 @@ pub(super) fn outbox_file_name(backend_origin: &str, device_id: Option<Uuid>) ->
 
 /// The per-user directory holding the outbox and the diagnostics log.
 pub(crate) fn data_directory() -> Option<PathBuf> {
-    let project = ProjectDirs::from("com", "Scout", "Scout Client")?;
+    let profile = ReleaseProfile::compiled();
+    let project = ProjectDirs::from(
+        profile.data_qualifier,
+        profile.data_organization,
+        profile.data_application,
+    )?;
     let directory = project.data_local_dir().to_path_buf();
     if let Err(error) = std::fs::create_dir_all(&directory) {
         error!(%error, "could not create Scout Client data directory");

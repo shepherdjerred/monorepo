@@ -210,10 +210,13 @@ fn settings(ui: &mut egui::Ui, state: &StateSnapshot, outgoing: &mut Vec<WindowM
             send_usage_data,
         });
     }
-    ui.label(
-        "Error reports are crashes and failures with no account, path or League data. \
-         Usage data is a handful of counts such as \"app started\". Both are on by \
-         default and never include gameplay observations.",
+    ui.add(
+        egui::Label::new(
+            "Error reports are crashes and failures with no account, path or League data. \
+             Usage data is a handful of counts such as \"app started\". Both are on by \
+             default and never include gameplay observations.",
+        )
+        .wrap(),
     );
     ui.add_space(16.0);
     if ui.button("Quit Scout").clicked() {

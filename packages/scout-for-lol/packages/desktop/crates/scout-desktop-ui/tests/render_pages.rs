@@ -225,8 +225,38 @@ mod render {
                 image.height(),
                 colors.len()
             );
-            Ok(image.into_raw())
+            let (width, height) = (image.width() as usize, image.height() as usize);
+            let raw = image.into_raw();
+            assert_right_gutter_clear(name, &raw, width, height)?;
+            Ok(raw)
         }
+    }
+
+    /// Text that does not wrap runs off the right edge. The page has 24 px of
+    /// padding (48 device pixels at 2x), so nothing may be drawn in the last
+    /// 16 device pixels of any row; the top-right pixel is the canvas.
+    fn assert_right_gutter_clear(
+        name: &str,
+        rgba: &[u8],
+        width: usize,
+        height: usize,
+    ) -> Result<(), Error> {
+        const GUTTER: usize = 16;
+        let edge = &rgba[(width - 1) * 4..width * 4];
+        for row in 0..height {
+            let start = row * width * 4;
+            for column in width - GUTTER..width {
+                let at = start + column * 4;
+                if rgba[at..at + 4] != *edge {
+                    return Err(format!(
+                        "{name}: content is drawn at x={column}, y={row}, inside the right \
+                         margin; a line is not wrapping"
+                    )
+                    .into());
+                }
+            }
+        }
+        Ok(())
     }
 
     /// The centre of a navigation entry: the sidebar's 12 px padding, the

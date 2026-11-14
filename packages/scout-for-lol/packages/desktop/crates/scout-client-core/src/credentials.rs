@@ -6,7 +6,8 @@ use sha2::{Digest, Sha256};
 use thiserror::Error;
 use uuid::Uuid;
 
-const SERVICE: &str = "com.scout-for-lol.client";
+use crate::profile::ReleaseProfile;
+
 const USERNAME_PREFIX: &str = "device-credential";
 
 fn credential_username(backend_origin: &str) -> String {
@@ -15,7 +16,10 @@ fn credential_username(backend_origin: &str) -> String {
 }
 
 fn credential_entry(backend_origin: &str) -> Result<Entry, KeyringError> {
-    Entry::new(SERVICE, &credential_username(backend_origin))
+    Entry::new(
+        ReleaseProfile::compiled().keyring_service,
+        &credential_username(backend_origin),
+    )
 }
 
 /// Paired device identity kept in Keychain or Windows Credential Manager.
