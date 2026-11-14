@@ -16,15 +16,14 @@
  * create intent) can map them onto its own transport. The router maps the same
  * results back onto the errors it has always thrown.
  *
- * Two failures deliberately stay exceptions rather than results, because the
- * caller's transaction must roll back rather than commit a partial
- * competition:
+ * Dates that break `CompetitionDatesSchema` (start after end, or a window over
+ * 90 days) come back as `invalid_configuration` before anything is written.
  *
- *   - a malformed `dates` payload throws the `CompetitionDatesSchema` ZodError
- *     before anything is written, exactly as the router did inline;
- *   - `InitialEntrantsValidationError` is raised by `enrollInitialPlayers`
- *     *after* the competition row is inserted, so swallowing it into a result
- *     would leave that row behind.
+ * One failure deliberately stays an exception rather than a result, because
+ * the caller's transaction must roll back rather than commit a partial
+ * competition: `InitialEntrantsValidationError` is raised by
+ * `enrollInitialPlayers` *after* the competition row is inserted, so
+ * swallowing it into a result would leave that row behind.
  */
 
 import type {
@@ -170,7 +169,6 @@ function checkSchedulePermission(params: {
 /**
  * Authorize and stage a new competition inside `params.db`.
  *
- * @throws ZodError when `input.dates` fails `CompetitionDatesSchema`.
  * @throws InitialEntrantsValidationError when the requested initial roster is
  * invalid — raised after the competition row exists, so the caller's
  * transaction must abort.
@@ -180,7 +178,18 @@ export async function createCompetitionForActor(
 ): Promise<CreateCompetitionResult> {
   const { db, permissions, guildId, ownerId, input } = params;
 
-  const dates = CompetitionDatesSchema.parse(input.dates);
+  const parsedDates = CompetitionDatesSchema.safeParse(input.dates);
+  if (!parsedDates.success) {
+    // Order and the 90-day limit are user-correctable input rules, not a
+    // broken contract: answer them like any other invalid configuration.
+    return {
+      kind: "invalid_configuration",
+      message: parsedDates.error.issues
+        .map((issue) => issue.message)
+        .join("; "),
+    };
+  }
+  const dates = parsedDates.data;
   try {
     validateCompetitionConfiguration(input.criteria, input.gameVariant);
   } catch (error) {
