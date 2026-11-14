@@ -617,6 +617,8 @@ function createFfmpegStderrHandler(
     const key = line.slice(0, separator);
     const value = line.slice(separator + 1);
     if (key === "frame") progress.frames = Number(value);
+    else if (key === "dup_frames") progress.duplicatedFrames = Number(value);
+    else if (key === "drop_frames") progress.droppedFrames = Number(value);
     else if (key === "fps") progress.currentFps = Number(value);
     else if (key === "bitrate") progress.currentKbps = Number.parseFloat(value);
     else if (key === "total_size") {
@@ -1770,6 +1772,13 @@ export async function attachPipeline(
   }
 
   let resolveDone: (() => void) | undefined;
+  // Subscribe only once synchronous setup has succeeded, so a failed attach cannot leak listeners.
+  if (video && options.observer?.onVideoFeedback) {
+    cleanupFuncs.push(conn.subscribeVideoFeedback(options.observer.onVideoFeedback));
+  }
+  if (video && options.observer?.onVideoSubmission) {
+    cleanupFuncs.push(conn.subscribeVideoSubmission(options.observer.onVideoSubmission));
+  }
   const done = new Promise<void>((resolve, reject) => {
     resolveDone = () => {
       cleanup();

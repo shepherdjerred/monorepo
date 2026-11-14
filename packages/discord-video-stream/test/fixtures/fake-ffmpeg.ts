@@ -26,6 +26,8 @@ console.error("  Duration: 00:00:01.00, start: 0.000000, bitrate: N/A");
 console.error("  Stream #0:0: Video: wrapped_avframe, yuv420p");
 console.error("frame=1");
 console.error("fps=2");
+console.error("dup_frames=3");
+console.error("drop_frames=2");
 console.error("bitrate=1.0kbits/s");
 console.error("total_size=14");
 console.error("out_time=00:00:01.000000");

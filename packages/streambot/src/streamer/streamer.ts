@@ -29,12 +29,12 @@ import { redactMediaUrls } from "@shepherdjerred/discord-video-stream";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
 import {
   createStreamObserver,
+  playbackObserverOptions,
   STALL_AFTER_SECONDS,
 } from "@shepherdjerred/streambot/observability/stream-observer.ts";
 import {
   streamActive,
   streamCrashesTotal,
-  streamHardware,
   streamSegmentDurationSeconds,
   streamSegmentsTotal,
 } from "@shepherdjerred/streambot/observability/metrics.ts";
@@ -431,7 +431,11 @@ export class StreambotStreamer implements StreamerLike {
       },
       // A music segment must leave the video-only gauges alone rather than writing zeros into them:
       // `hw_decode_engaged` pinned at 0 reads as "hardware decode broke", not "there is no video".
-      { audioOnly: isMusic },
+      playbackObserverOptions(
+        isMusic,
+        pipelineMode,
+        () => this.clock.stallOffsetSeconds,
+      ),
     );
 
     // Music borrows the already-joined voice connection through the mixer, which is the only thing
@@ -510,9 +514,6 @@ export class StreambotStreamer implements StreamerLike {
     const segmentHardware = useHardware ? "true" : "false";
     const segmentStartedMs = this.now();
     streamActive.inc();
-    // Suppressed, not zeroed, for music: there is no encoder on this path at all, and a 0 here is
-    // read on the dashboard as "the hardware path failed and we fell back".
-    if (!isMusic) streamHardware.set(useHardware ? 1 : 0);
     let outcome: "ended" | "ended-short" | "crash" | "error" = "ended";
     let playbackStarted = false;
     try {

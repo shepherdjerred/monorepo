@@ -37,6 +37,7 @@ export class BaseMediaStream extends Writable {
   private _liveGate: LiveScheduleGate | undefined;
   /** When this stream last completed a frame and became ready for the next one. */
   private _readyAt: number | undefined;
+  private _lastSubmissionAt: number | undefined;
 
   constructor(type: SendStats["kind"], noSleep = false, observer?: StreamObserver) {
     super({ objectMode: true, highWaterMark: 0 });
@@ -167,8 +168,13 @@ export class BaseMediaStream extends Writable {
     };
 
     const start_sendFrame = this.now();
+    const paced = !this._noSleep;
     await this._sendFrame(Buffer.from(data), frametime);
     const end_sendFrame = this.now();
+    const sendIntervalMs = this._lastSubmissionAt === undefined
+      ? undefined
+      : Math.max(0, end_sendFrame - this._lastSubmissionAt);
+    this._lastSubmissionAt = end_sendFrame;
 
     this._pts = (Number(pts) / timeBase.den) * timeBase.num * 1000;
     this.emit("pts", this._pts);
@@ -239,6 +245,9 @@ export class BaseMediaStream extends Writable {
         frametime,
         behindMs,
         syncWaitMs,
+        paced,
+        sourceIdleMs: idleMs,
+        ...(sendIntervalMs === undefined ? {} : { sendIntervalMs }),
         ...(syncEvent !== undefined ? { syncEvent } : {}),
         ...(liveEvent !== undefined ? { liveEvent } : {}),
         ...(liveHoldMs > 0 ? { liveHoldMs } : {}),

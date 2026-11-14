@@ -169,7 +169,13 @@ function packetReadyStats(
   if (!Number.isFinite(ptsMs) || !Number.isFinite(durationMs)) {
     throw new Error(`invalid ${kind} packet timing`);
   }
-  return { kind, ptsMs, durationMs };
+  return {
+    kind,
+    ptsMs,
+    durationMs,
+    bytes: packet.data?.byteLength ?? 0,
+    keyframe: kind === "video" && (packet.flags & 1) !== 0,
+  };
 }
 
 export async function demux(

@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { getStreambotRuleGroups } from "./streambot.ts";
+import { runPromtoolFixture } from "./platform/promtool-fixture.ts";
 
 const rules = getStreambotRuleGroups().flatMap((group) => group.rules ?? []);
 
@@ -8,6 +9,67 @@ function requireRule(alert: string) {
   if (rule === undefined) throw new Error(`Missing ${alert} rule`);
   return rule;
 }
+
+describe("Streambot pipeline alert activity matching", () => {
+  test.each([
+    {
+      alert: "StreambotEncoderStalled",
+      metric: 'streambot_ffmpeg_out_time_seconds_total{hardware="true"}',
+      values: "0+0x12",
+    },
+    {
+      alert: "StreambotEncoderProducerAhead",
+      metric: 'streambot_ffmpeg_speed_ratio{hardware="true"}',
+      values: "1.5+0x12",
+    },
+    {
+      alert: "StreambotEncoderFallingBehind",
+      metric: 'streambot_ffmpeg_speed_ratio{hardware="true"}',
+      values: "0.5+0x12",
+    },
+    {
+      alert: "StreambotProgressStalled",
+      metric: "streambot_ffmpeg_progress_age_seconds{}",
+      values: "10+0x12",
+    },
+    {
+      alert: "StreambotPlaybackBehindSchedule",
+      metric: 'streambot_playback_behind_seconds{kind="video"}',
+      values: "2+0x12",
+    },
+  ])("$alert handles concurrent segments and idle telemetry", async (entry) => {
+    const expression = requireRule(entry.alert).expr.value;
+    if (typeof expression !== "string") {
+      throw new TypeError(`Missing expression for ${entry.alert}`);
+    }
+    await runPromtoolFixture({
+      evaluation_interval: "15s",
+      tests: [2, 0].map((active) => ({
+        interval: "15s",
+        input_series: [
+          {
+            series: entry.metric
+              .replace("{", '{namespace="media",pod="streambot-active",')
+              .replace(",}", "}"),
+            values: entry.values,
+          },
+          {
+            series:
+              'streambot_stream_active{namespace="media",pod="streambot-active"}',
+            values: `${String(active)}+0x12`,
+          },
+        ],
+        promql_expr_test: [
+          {
+            expr: `count(${expression})`,
+            eval_time: "2m",
+            exp_samples: active > 0 ? [{ labels: "{}", value: 1 }] : [],
+          },
+        ],
+      })),
+    });
+  });
+});
 
 describe("Streambot voice alerts", () => {
   test("warns only when an active receive path stays unready", () => {

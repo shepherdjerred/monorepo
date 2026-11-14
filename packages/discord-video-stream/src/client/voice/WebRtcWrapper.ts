@@ -24,6 +24,7 @@ import {
 } from "../processing/AnnexBHelper.js";
 import { rewriteSPSVUI } from "../processing/SPSVUIRewriter.js";
 import type { BaseMediaConnection } from "./BaseMediaConnection.js";
+import { parseVideoFeedback, type VideoFeedback, type VideoSubmission } from "./VideoFeedback.js";
 
 /**
  * Fail loud if the loaded @lng2004/node-datachannel binding lacks the patched
@@ -107,24 +108,37 @@ export class WebRtcConnWrapper {
   private _mediaConn: BaseMediaConnection;
 
   private _webRtcConn?: PeerConnection;
-  private _audioDef: Audio;
-  private _videoDef: Video;
+  private _audioDef?: Audio;
   private _audioTrack?: Track;
   private _videoTrack?: Track;
   private _audioPacketizer?: RtpPacketizer;
-  // The media handler bound to the audio track. libdatachannel processes an
-  // incoming RTP packet on the chain ROOT only, so when we receive audio this
-  // must be an RtcpReceivingSession (with the outbound packetizer chained under
-  // it); when we only send, it is the packetizer itself.
+  // Receive depacketization wraps the outbound audio chain; sending-only tracks bind the
+  // packetizer directly. Rebuild this together with the packetizer on transport replacement.
   private _audioMediaHandler?: MediaHandler;
   private _videoPacketizer?: RtpPacketizer;
   private _videoCodec?: SupportedVideoCodec;
+  private _videoPlayoutDelayMaxMs = DEFAULT_VIDEO_PLAYOUT_DELAY_MAX_MS;
+  private readonly _videoFeedbackListeners = new Set<(event: VideoFeedback) => void>();
+  private readonly _videoSubmissionListeners = new Set<(event: VideoSubmission) => void>();
 
   constructor(mediaConn: BaseMediaConnection) {
     this._mediaConn = mediaConn;
+  }
+
+  public initWebRtc() {
+    const params = this._mediaConn.webRtcParams;
+    if (params === undefined || params === null) throw new Error("WebRTC parameters not set");
+    // addTrack copies each description. Declare the negotiated outbound SSRCs BEFORE that copy:
+    // native RTCP dispatch uses these mappings, and the NACK responder needs FID to generate RTX
+    // rather than replaying the original SRTP sequence. Fresh descriptions avoid stale SSRCs after
+    // reconnect. Without this, RR/NACK/PLI are silently discarded while sends still look healthy.
     this._audioDef = new Audio("0", "SendRecv");
-    this._videoDef = new Video("1", "SendRecv");
     this._audioDef.addOpusCodec(CodecPayloadType.opus.payload_type);
+    this._audioDef.addSSRC(params.audioSsrc);
+    const videoDef = new Video("1", "SendRecv");
+    videoDef.addSSRC(params.videoSsrc);
+    videoDef.addSSRC(params.rtxSsrc);
+    videoDef.parseSdpLine(`a=ssrc-group:FID ${params.videoSsrc} ${params.rtxSsrc}`);
     for (const {
       name,
       payload_type,
@@ -133,38 +147,63 @@ export class WebRtcConnWrapper {
     } of Object.values(CodecPayloadType).filter((el) => el.type === "video")) {
       switch (name) {
         case "H264":
-          this._videoDef.addH264Codec(payload_type);
+          videoDef.addH264Codec(payload_type);
           break;
         case "H265":
-          this._videoDef.addH265Codec(payload_type);
+          videoDef.addH265Codec(payload_type);
           break;
         case "VP8":
-          this._videoDef.addVP8Codec(payload_type);
+          videoDef.addVP8Codec(payload_type);
           break;
         case "VP9":
-          this._videoDef.addVP9Codec(payload_type);
+          videoDef.addVP9Codec(payload_type);
           break;
         case "AV1":
-          this._videoDef.addAV1Codec(payload_type);
+          videoDef.addAV1Codec(payload_type);
           break;
       }
-      this._videoDef.addRTXCodec(rtx_payload_type, payload_type, clockRate);
+      videoDef.addRTXCodec(rtx_payload_type, payload_type, clockRate);
     }
-  }
-
-  public initWebRtc() {
-    this._webRtcConn = new PeerConnection("", {
+    const peer = new PeerConnection("", {
       iceServers: ["stun:stun.l.google.com:19302"],
     });
-    this._audioTrack = this._webRtcConn.addTrack(this._audioDef);
+    this._webRtcConn = peer;
+    this._audioTrack = peer.addTrack(this._audioDef);
     if (this._mediaConn.receiveAudio) {
       this._audioTrack.onMessage((packet) => {
         this._mediaConn.handleIncomingAudioPacket(packet);
       });
     }
-    this._videoTrack = this._webRtcConn.addTrack(this._videoDef);
-    this._setMediaHandler();
+    this._videoTrack = peer.addTrack(videoDef);
+    this._videoTrack.onMessage((packet) => {
+      if (this._webRtcConn !== peer || this._videoFeedbackListeners.size === 0) return;
+      for (const event of parseVideoFeedback(packet, params.videoSsrc)) {
+        for (const listener of this._videoFeedbackListeners) listener(event);
+      }
+    });
+    // A transport reconnect may renegotiate every SSRC while the playback segment remains alive.
+    // Its packetizers must match the new descriptions, not keep writing the previous source IDs.
+    if (this._videoCodec !== undefined) {
+      this.setPacketizer(this._videoCodec, this._videoPlayoutDelayMaxMs);
+    } else if (this._audioPacketizer !== undefined) {
+      this.setAudioPacketizer();
+    }
     return this._webRtcConn;
+  }
+
+  /** Segment-owned subscriptions survive transport reconnects and must be disposed on teardown. */
+  public subscribeVideoFeedback(listener: (event: VideoFeedback) => void): () => void {
+    this._videoFeedbackListeners.add(listener);
+    return () => { this._videoFeedbackListeners.delete(listener); };
+  }
+
+  public subscribeVideoSubmission(listener: (event: VideoSubmission) => void): () => void {
+    this._videoSubmissionListeners.add(listener);
+    return () => { this._videoSubmissionListeners.delete(listener); };
+  }
+
+  private _reportVideoSubmission(outcome: VideoSubmission["outcome"]): void {
+    for (const listener of this._videoSubmissionListeners) listener({ outcome });
   }
 
   private _setMediaHandler() {
@@ -190,11 +229,14 @@ export class WebRtcConnWrapper {
     // speaker SSRCs lazily over the gateway, so we register each one here as it
     // is learned. Keeping the description SSRC in sync lets any later
     // renegotiation rebuild the same mapping.
+    if (this._audioDef === undefined) throw new Error("Audio track definition not set");
     if (!this._audioDef.hasSSRC(ssrc)) this._audioDef.addSSRC(ssrc);
     this._webRtcConn.registerIncomingSsrc(ssrc, mid);
   }
 
   public close() {
+    this._videoFeedbackListeners.clear();
+    this._videoSubmissionListeners.clear();
     this._webRtcConn?.close();
   }
 
@@ -257,14 +299,14 @@ export class WebRtcConnWrapper {
     this._audioPacketizer = new RtpPacketizer(rtpConfig);
     this._audioPacketizer.addToChain(new RtcpSrReporter(rtpConfig));
     this._audioPacketizer.addToChain(new RtcpNackResponder());
-    // Inbound audio only reaches the track's onMessage handler when the chain
-    // ROOT can depacketize incoming RTP. libdatachannel runs incoming() on the
-    // root handler only, so an appended RtcpReceivingSession never fires. When
-    // we receive, root the chain at the receiving session and chain the outbound
-    // packetizer under it (outgoing frames still traverse the whole chain and
-    // get packetized). Without this every inbound packet is dropped inside
-    // libdatachannel before handleIncomingAudioPacket runs, so the voice
-    // assistant never hears a wake word.
+    this._setAudioMediaHandler();
+    this._setMediaHandler();
+  }
+
+  private _setAudioMediaHandler(): void {
+    if (this._audioPacketizer === undefined) throw new Error("Audio packetizer not set");
+    // Receive depacketization belongs ahead of the outbound packetizer. Rebuild this root when
+    // replacing the packetizer so it cannot retain a previous transport's RTP source or clock.
     if (this._mediaConn.receiveAudio) {
       const receivingSession = new RtcpReceivingSession();
       receivingSession.addToChain(this._audioPacketizer);
@@ -272,12 +314,12 @@ export class WebRtcConnWrapper {
     } else {
       this._audioMediaHandler = this._audioPacketizer;
     }
-    this._setMediaHandler();
   }
 
   public sendVideoFrame(frame: Buffer, frametime: number) {
-    if (!this.ready) return;
-    if (!this._videoPacketizer) return;
+    if (!this.ready) { this._reportVideoSubmission("not-ready"); return; }
+    if (!this._videoPacketizer) { this._reportVideoSubmission("missing-packetizer"); return; }
+    if (!this._videoTrack) { this._reportVideoSubmission("missing-track"); return; }
     const { rtpConfig } = this._videoPacketizer;
     const { clockRate } = rtpConfig;
     if (this._videoCodec === "H264") {
@@ -314,7 +356,15 @@ export class WebRtcConnWrapper {
       }
       frame = daveSession.encrypt(DAVE_MEDIA_TYPE_VIDEO, daveCodec, frame);
     }
-    this._videoTrack?.sendMessageBinary(frame);
+    try {
+      // PacingHandler moves RTP into its asynchronous queue and returns false even on healthy
+      // sends. Record the submission, never reinterpret that boolean as delivery failure.
+      this._videoTrack.sendMessageBinary(frame);
+    } catch (error) {
+      this._reportVideoSubmission("error");
+      throw error;
+    }
+    this._reportVideoSubmission("submitted");
     rtpConfig.timestamp += Math.round((frametime * clockRate) / 1000);
   }
 
@@ -334,6 +384,7 @@ export class WebRtcConnWrapper {
   ): void {
     if (!this.mediaConnection.webRtcParams)
       throw new Error("WebRTC connection not ready");
+    this._videoPlayoutDelayMaxMs = videoPlayoutDelayMaxMs;
     const { audioSsrc, videoSsrc } = this.mediaConnection.webRtcParams;
     const rtpConfigAudio = new RtpPacketizationConfig(
       audioSsrc,
@@ -383,6 +434,7 @@ export class WebRtcConnWrapper {
     this._videoPacketizer.addToChain(new RtcpNackResponder());
     this._videoPacketizer.addToChain(new PacingHandler(25 * 1000 * 1000, 1));
 
+    this._setAudioMediaHandler();
     this._setMediaHandler();
   }
 }

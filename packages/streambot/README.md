@@ -312,6 +312,49 @@ This package is a ground-up rewrite behaviorally inspired by
 documents the attribution and the deliberate divergences (state machine over
 mutable flags, bot/userbot split, no web UI, branded types, VAAPI encoding).
 
+## Playback diagnostics
+
+The Streambot Grafana dashboard separates encoder progress, sender timing and
+Discord peer feedback. None of these establishes whether a particular viewer
+decoded and displayed every frame.
+
+| Signal                                                                              | Meaning                                                                                                                                                                                             |
+| ----------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `streambot_ffmpeg_speed_ratio`                                                      | Media seconds produced per wall-clock second. Around 1.0 is expected with the readrate cap; it does not measure spare encoder capacity.                                                             |
+| `streambot_send_interval_seconds`                                                   | Time between submissions to the native transport. Excludes the startup burst. It ends before native RTP pacing and network delivery.                                                                |
+| `streambot_source_idle_seconds`                                                     | Time the paced sender was ready without another encoded packet. Correlate with queues and encoder progress before attributing it to encoding or source I/O.                                         |
+| `streambot_send_lateness_seconds`                                                   | Per-frame delay against the sender schedule. Histogram buckets retain short delays after the instantaneous lag gauge recovers.                                                                      |
+| `streambot_send_gaps_total`, `streambot_source_starvations_total`                   | Counts of paced send intervals and source-idle periods exceeding 200 ms. Useful for rare gaps that percentiles hide.                                                                                |
+| `streambot_demux_interval_seconds`                                                  | Encoded packet cadence at the demux boundary, including downstream backpressure and startup. It does not isolate encoder production time.                                                           |
+| `streambot_encoded_packet_bytes`                                                    | Encoded packet sizes split into audio, video keyframes and delta frames, before RTP fragmentation.                                                                                                  |
+| `streambot_ffmpeg_frames_total`                                                     | ffmpeg progress deltas for produced, duplicated and dropped frames. Duplication is distinct from network packet loss.                                                                               |
+| `streambot_video_receiver_fraction_lost`, `streambot_video_receiver_jitter_seconds` | RTCP receiver-report observations from the Discord peer. They describe the sender-to-peer leg, not each viewer.                                                                                     |
+| `streambot_video_feedback_total`, `streambot_video_nack_packets_total`              | Peer feedback message counts and packets requested by NACK, including repeated requests. Requests do not prove successful retransmission.                                                           |
+| `streambot_video_submissions_total`                                                 | Video-frame handoff attempts by outcome. Submitted means the native send call was invoked, not confirmed delivery. Other outcomes expose frames discarded before submission or a thrown send error. |
+| `streambot_video_receiver_last_report_timestamp_seconds`                            | Latest valid receiver-report time across active pipelines. Zero means none; one fresh pipeline does not establish freshness for all concurrent videos.                                              |
+
+Histograms and counters retain excursions between the 30-second Prometheus
+scrapes. Sender timing excludes the initial burst; demux timing includes it.
+Missing receiver reports stay absent rather than appearing as zero loss.
+Bounded playback anomaly logs and spans correlate through an opaque pipeline
+identifier and command epoch. These identifiers are log/trace metadata, never
+metric labels; diagnostics omit media URLs, paths and Discord identities.
+
+Contributor query examples from the repository root:
+
+```bash
+toolkit prom query 'sum by (kind) (increase(streambot_send_gaps_total[5m]))'
+toolkit prom query 'sum by (kind) (increase(streambot_source_starvations_total[5m]))'
+toolkit prom query 'sum by (type) (rate(streambot_video_feedback_total[5m]))'
+toolkit prom query 'time() - (streambot_video_receiver_last_report_timestamp_seconds > 0)'
+toolkit loki query '{service_name="streambot"} |= "playback timing anomaly"' --since 30m --limit 50
+```
+
+For an intermittent freeze, preserve its timestamp and compare the sender
+histograms, peer-report freshness and Discord viewer statistics over the same
+window. Healthy sender metrics with missing or stale peer reports leave the
+delivery leg unresolved.
+
 ## Commands
 
 ```bash

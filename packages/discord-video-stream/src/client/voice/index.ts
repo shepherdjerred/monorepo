@@ -5,3 +5,4 @@ export * from "./StreamConnection.js";
 export * from "./BaseMediaConnection.js";
 export * from "./VoiceReceiveObserver.js";
 export * from "./WebRtcWrapper.js";
+export type { VideoFeedback, VideoSubmission } from "./VideoFeedback.js";

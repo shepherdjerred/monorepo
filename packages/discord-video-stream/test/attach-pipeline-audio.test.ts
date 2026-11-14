@@ -189,6 +189,38 @@ async function voiceSegment() {
 }
 
 describe("attachPipeline timestamp normalization", () => {
+  test("transport subscriptions are released on abort and seek teardown", async () => {
+    for (const abort of [false, true]) {
+      demuxState.next = { video: videoTrack(), audio: audioTrack() };
+      const feedback = new Set();
+      const submissions = new Set();
+      const conn = makeConn();
+      conn.subscribeVideoFeedback = (listener) => {
+        feedback.add(listener);
+        return () => feedback.delete(listener);
+      };
+      conn.subscribeVideoSubmission = (listener) => {
+        submissions.add(listener);
+        return () => submissions.delete(listener);
+      };
+      const controller = new AbortController();
+      const pipeline = await attach(conn, makeStreamer(), {
+        observer: { onVideoFeedback: () => {}, onVideoSubmission: () => {} },
+      }, controller.signal);
+      expect(feedback.size).toBe(1);
+      expect(submissions.size).toBe(1);
+      if (abort) {
+        const rejected = expect(pipeline.done).rejects.toThrow("stopped");
+        controller.abort(new Error("stopped"));
+        await rejected;
+      }
+      pipeline.destroy();
+      await pipeline.done.catch(() => {});
+      expect(feedback.size).toBe(0);
+      expect(submissions.size).toBe(0);
+    }
+  });
+
   test("forwards the flag into demux", async () => {
     demuxState.calls = [];
     demuxState.next = { video: videoTrack(), audio: audioTrack() };

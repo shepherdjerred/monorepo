@@ -83,6 +83,27 @@ function collectStats(): { stats: SendStats[]; observer: StreamObserver } {
 }
 
 describe("BaseMediaStream pacing telemetry", () => {
+  test("reports real submission intervals and source starvation across schedule recovery", async () => {
+    const { stats, observer } = collectStats();
+    const clock = new ManualClock();
+    const stream = new TestStream("video", false, observer, clock);
+    await writeFrame(stream, 0);
+    clock.advance(350);
+    await writeFrame(stream, 100 / 3);
+    expect(stats[0]?.sendIntervalMs).toBeUndefined();
+    expect(stats[1]?.sendIntervalMs).toBeGreaterThan(350);
+    expect(stats[1]?.sourceIdleMs).toBe(350);
+    expect(stats[1]?.paced).toBe(true);
+    stream.destroy();
+  });
+
+  test("marks deliberate startup burst frames as unpaced", async () => {
+    const { stats, observer } = collectStats();
+    const stream = new TestStream("video", true, observer, new ManualClock());
+    await writeFrame(stream, 0);
+    expect(stats[0]?.paced).toBe(false);
+    stream.destroy();
+  });
   test("reports behindMs=0 and no syncEvent for an on-schedule unsynced stream", async () => {
     const { stats, observer } = collectStats();
     const clock = new ManualClock();
