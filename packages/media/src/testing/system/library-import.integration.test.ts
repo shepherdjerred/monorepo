@@ -58,9 +58,11 @@ async function read<T>(
     `/api/v1${route}`,
     body === undefined ? {} : { body, key: crypto.randomUUID() },
   );
-  expect(response.status).toBeGreaterThanOrEqual(200);
-  expect(response.status).toBeLessThan(300);
-  return schema.parse(await response.json());
+  const payload: unknown = await response.json();
+  const diagnostic = JSON.stringify({ route, body: payload });
+  expect(response.status, diagnostic).toBeGreaterThanOrEqual(200);
+  expect(response.status, diagnostic).toBeLessThan(300);
+  return schema.parse(payload);
 }
 async function login(client: SystemHttpBrowser) {
   const pin = await read(
@@ -166,6 +168,29 @@ test("the owner batch producer prepares actual library-only HTTP captures and qu
       rootMappings,
     },
   );
+  const canonicalMedia = created.report.entries.filter(
+    (entry) =>
+      entry.kind === "media" &&
+      entry.mediaIds.length === 1 &&
+      entry.mediaIds[0] === fixture.network.media.id,
+  );
+  expect(canonicalMedia).toHaveLength(1);
+  expect(canonicalMedia[0]?.state).toBe("adoptable_evidence_ready");
+  const capturedFiles = created.report.entries.filter(
+    (entry) => entry.kind === "file" && entry.sourceId === "file1",
+  );
+  expect(capturedFiles).toHaveLength(1);
+  expect(capturedFiles[0]).toMatchObject({
+    state: "protected_exact",
+    reasons: expect.arrayContaining(["live_mount_and_checksum_proof_required"]),
+  });
+  const selected = canonicalMedia.map((entry) => ({
+    provenanceKey: entry.provenanceKey,
+    evidenceHash: entry.observationHash,
+  }));
+  expect(selected.map((entry) => entry.provenanceKey)).not.toContain(
+    capturedFiles[0]?.provenanceKey,
+  );
   await read(
     browser,
     `/admin/migration/bundles/${created.id}/review`,
@@ -178,12 +203,7 @@ test("the owner batch producer prepares actual library-only HTTP captures and qu
       recoveryEpoch: created.recoveryEpoch,
       runtimeVersion: created.runtimeVersion,
       acknowledgeNoOwnershipTransfer: true,
-      selected: created.report.entries
-        .filter((entry) => entry.kind === "media" || entry.kind === "file")
-        .map((entry) => ({
-          provenanceKey: entry.provenanceKey,
-          evidenceHash: entry.observationHash,
-        })),
+      selected,
     },
   );
   const review = await read(
