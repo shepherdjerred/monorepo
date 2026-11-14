@@ -1,17 +1,18 @@
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, PoisonError};
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use scout_client_core::diagnostics::Diagnostics;
 use scout_client_core::settings::PrivacySettings;
 use scout_client_core::telemetry::{UsageEvent, WindowCrashCause, WindowCrashOutcome};
 use scout_client_runtime::instance::{InstanceLock, InstanceLockError};
 use scout_client_runtime::runtime::{GameflowPhase, PhaseReceiver, RuntimeState, StateReceiver};
+use scout_desktop_ipc::{PROTOCOL_VERSION, SupervisorMessage};
 use tokio::sync::{mpsc, watch};
 
 use super::{
-    Collector, Control, MAX_QUICK_CRASHES, STABLE_RUN, Supervisor, SupervisorExit, WindowLauncher,
-    WindowStatus, quick_crashes_now,
+    Collector, Control, MAX_QUICK_CRASHES, STABLE_RUN, Supervisor, SupervisorExit, Window,
+    WindowLauncher, WindowStatus, quick_crashes_now,
 };
 
 type TestResult = Result<(), Box<dyn std::error::Error>>;
@@ -307,6 +308,53 @@ async fn window_crashes_become_bounded_usage_events() -> TestResult {
     );
     harness.control.send(Control::Quit)?;
     let (_exit, _calls, _diagnostics, directory) = harness.finish().await?;
+    std::fs::remove_dir_all(directory)?;
+    Ok(())
+}
+
+#[cfg(unix)]
+#[tokio::test]
+async fn a_write_to_a_window_that_already_exited_does_not_blame_the_supervisor() -> TestResult {
+    // Whether the greeting lands before or after a quick exit is a race the
+    // supervisor cannot win, so it must not change the crash's cause. Waiting
+    // for the exit first makes the "after" side certain.
+    let directory = scratch_directory()?;
+    let (collector, _calls, _diagnostics, _usage) = FakeCollector::new();
+    let launcher = sh("exit 3", &[]);
+    let mut child = launcher.spawn()?;
+    let stdin = child.stdin.take();
+    child.wait().await?;
+    let mut window = Window {
+        child,
+        stdin,
+        lines: None,
+        started: Instant::now(),
+        greeted: false,
+        relaunch: true,
+        cause: None,
+        last_state: None,
+    };
+    let (_control, receiver) = mpsc::unbounded_channel();
+    let supervisor = Supervisor::new(
+        InstanceLock::acquire_in(&directory)?,
+        collector,
+        launcher,
+        receiver,
+        true,
+        true,
+    );
+    supervisor
+        .deliver(
+            &mut window,
+            &SupervisorMessage::Hello {
+                protocol: PROTOCOL_VERSION,
+                tray_available: true,
+            },
+        )
+        .await;
+    assert!(window.stdin.is_none());
+    assert_eq!(window.cause, None);
+    drop(supervisor);
     std::fs::remove_dir_all(directory)?;
     Ok(())
 }

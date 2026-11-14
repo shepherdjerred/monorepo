@@ -491,8 +491,13 @@ impl<C: Collector> Supervisor<C> {
         match written {
             Ok(Ok(())) => return,
             // A window that is exiting closes its pipe; its exit status, not
-            // this write, is the event worth recording.
-            Ok(Err(error)) if error.kind() == std::io::ErrorKind::BrokenPipe => {}
+            // this write, is the event worth recording. The supervisor did not
+            // kill it, so the exit keeps its own cause rather than becoming an
+            // unresponsive window, whichever side of the exit the write fell.
+            Ok(Err(error)) if error.kind() == std::io::ErrorKind::BrokenPipe => {
+                window.stdin = None;
+                return;
+            }
             Ok(Err(error)) => self.record(window_crash_event(
                 DiagnosticOutcome::Failed,
                 format!("could not write to the window: {error}"),
