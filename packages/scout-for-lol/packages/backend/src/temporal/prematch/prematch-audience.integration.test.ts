@@ -5,7 +5,7 @@ import {
   createTestDatabase,
   testDatabaseModule,
 } from "#src/testing/test-database.ts";
-import { fullPrematchRosterFixture } from "#src/testing/raw-capture-fixtures.ts";
+import { fullPrematchRosterFixture } from "#src/testing/report-lake/raw-capture-fixtures.ts";
 
 /**
  * Who the prematch announcement is owed to, in a process whose Discord guild

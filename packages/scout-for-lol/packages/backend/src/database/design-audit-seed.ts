@@ -18,7 +18,10 @@ import {
   designAuditMatchFixtures,
   designAuditHistoryFixtures,
 } from "#src/database/design-audit-match-fixture.ts";
-import { resetTestLake, writeTestLake } from "#src/testing/test-report-lake.ts";
+import {
+  resetTestLake,
+  writeTestLake,
+} from "#src/testing/report-lake/test-report-lake.ts";
 
 const DEFAULT_GUILD_ID = "1337623164146155593";
 const DEFAULT_DISCORD_ID = "000000000000000001";

@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { getMetrics } from "#src/metrics/index.ts";
 import { savePrematchDataToS3 } from "#src/storage/s3.ts";
-import { rawCurrentGameInfoFixture } from "#src/testing/raw-capture-fixtures.ts";
+import { rawCurrentGameInfoFixture } from "#src/testing/report-lake/raw-capture-fixtures.ts";
 import { resetConfigurationForTests } from "#src/configuration.ts";
 
 function getCounterValue(

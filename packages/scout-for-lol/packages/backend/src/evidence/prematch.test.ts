@@ -1,6 +1,6 @@
 import { beforeEach, expect, test, vi } from "vitest";
 import { LeaguePuuidSchema } from "@scout-for-lol/data";
-import { rawCurrentGameInfoFixture } from "#src/testing/raw-capture-fixtures.ts";
+import { rawCurrentGameInfoFixture } from "#src/testing/report-lake/raw-capture-fixtures.ts";
 
 const io = vi.hoisted(() => ({ riot: vi.fn(), client: vi.fn() }));
 vi.mock("#src/league/api/spectator.ts", () => ({ getActiveGame: io.riot }));

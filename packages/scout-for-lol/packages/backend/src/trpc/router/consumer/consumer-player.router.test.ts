@@ -23,7 +23,7 @@ import {
 } from "#src/configuration/flags.ts";
 import { createOfflineTrpcHarness } from "#src/testing/test-trpc-caller.ts";
 import { testPuuid } from "#src/testing/test-ids.ts";
-import { writeTestLake } from "#src/testing/test-report-lake.ts";
+import { writeTestLake } from "#src/testing/report-lake/test-report-lake.ts";
 
 // The live view reads each captured game's roster from its archived spectator
 // snapshot; the object store is not part of this suite.

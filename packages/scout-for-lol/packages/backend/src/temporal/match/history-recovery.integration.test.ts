@@ -7,7 +7,7 @@ import {
 } from "#src/testing/test-database.ts";
 import type { resolveMatchTimeline } from "#src/evidence/timelines.ts";
 import type { RiotSourceAbsence } from "#src/league/api/client/errors.ts";
-import { createTestScoutClientDevice } from "#src/testing/scout-client-device.ts";
+import { createTestScoutClientDevice } from "#src/testing/scout-client/scout-client-device.ts";
 
 const { prisma } = createTestDatabase("historical-match-recovery");
 const io = vi.hoisted(() => ({

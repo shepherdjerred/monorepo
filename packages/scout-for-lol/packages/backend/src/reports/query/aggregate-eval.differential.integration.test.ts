@@ -17,7 +17,7 @@ import type {
   PlanAggregateRow,
   PlanOutputEvidence,
 } from "#src/reports/query/plan-rows.ts";
-import { writeTestLake } from "#src/testing/test-report-lake.ts";
+import { writeTestLake } from "#src/testing/report-lake/test-report-lake.ts";
 import { testGuildId, testPuuid } from "#src/testing/test-ids.ts";
 
 /**

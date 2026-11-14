@@ -14,7 +14,7 @@ import {
 } from "@scout-for-lol/temporal/match-receipts";
 import type * as DatabaseModule from "#src/database/index.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
-import { createTestScoutClientDevice } from "#src/testing/scout-client-device.ts";
+import { createTestScoutClientDevice } from "#src/testing/scout-client/scout-client-device.ts";
 import {
   testAccountId,
   testGuildId,

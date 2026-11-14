@@ -9,7 +9,10 @@ import {
   fetchGuildAccountCounts,
   fetchGuildMatchRows,
 } from "#src/reports/duckdb/community/community-lake.ts";
-import { resetTestLake, writeTestLake } from "#src/testing/test-report-lake.ts";
+import {
+  resetTestLake,
+  writeTestLake,
+} from "#src/testing/report-lake/test-report-lake.ts";
 import { testGuildId, testPuuid } from "#src/testing/test-ids.ts";
 
 const lakeDir = await mkdtemp(path.join(tmpdir(), "scout-community-lake-"));

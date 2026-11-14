@@ -10,8 +10,8 @@ import type { PlanQueryInput } from "#src/reports/duckdb/compile-plan.ts";
 import type { LakeFiles } from "#src/reports/duckdb/lake.ts";
 import { guildScope } from "#src/reports/duckdb/scope.ts";
 import { lakeMonth, lakeTimestamp } from "#src/report-lake/schema.ts";
-import { writeTempTestLake } from "#src/testing/test-report-lake.ts";
-import { testEventRow } from "#src/testing/test-timeline-rows.ts";
+import { writeTempTestLake } from "#src/testing/report-lake/test-report-lake.ts";
+import { testEventRow } from "#src/testing/report-lake/test-timeline-rows.ts";
 import { testGuildId, testPuuid } from "#src/testing/test-ids.ts";
 import {
   and,

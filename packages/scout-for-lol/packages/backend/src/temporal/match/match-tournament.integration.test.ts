@@ -4,7 +4,7 @@ import type { RawMatch } from "@scout-for-lol/data";
 import type * as DatabaseModule from "#src/database/index.ts";
 import { clearCustomsTestData } from "#src/customs/test-database.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
-import { loadRawMatchFixture } from "#src/testing/raw-capture-fixtures.ts";
+import { loadRawMatchFixture } from "#src/testing/report-lake/raw-capture-fixtures.ts";
 import {
   testAccountId,
   testChannelId,

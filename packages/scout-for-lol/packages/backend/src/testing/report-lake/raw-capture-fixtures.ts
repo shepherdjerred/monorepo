@@ -23,7 +23,7 @@ import {
  */
 
 const MATCH_FIXTURE_URL = new URL(
-  "../league/model/__tests__/testdata/matches_2025_09_19_NA1_5370969615.json",
+  "../../league/model/__tests__/testdata/matches_2025_09_19_NA1_5370969615.json",
   import.meta.url,
 );
 
