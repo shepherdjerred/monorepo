@@ -2245,7 +2245,7 @@ model MatchObservation {
 model MatchEvidenceAdmission {
   riotMatchId              String    @id
   policy                   String // FULL | HISTORY_ONLY; immutable after admission
-  reason                   String // live-completion | history-discovery | late-discovery | legacy-live | legacy-history
+  reason                   String // live-completion | history-discovery | late-discovery | legacy-live | legacy-history | clash-alias
   firstDiscoveredAt        DateTime
   completedAt              DateTime? // Legacy completion remains unknown until resolved evidence supplies it.
   riotHistoryListed        Boolean   @default(false)

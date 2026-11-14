@@ -287,8 +287,14 @@ export async function clashMatchPageIds(
 ): Promise<Map<string, RiotMatchId>> {
   const pages = new Map<string, RiotMatchId>();
   if (games.length === 0) return pages;
+  // Callers pass whole sighting rows; the lookup filters on the key alone.
   const unique = [
-    ...new Map(games.map((game) => [clashGameKey(game), game])).values(),
+    ...new Map(
+      games.map(({ platform, gameId }) => [
+        clashGameKey({ platform, gameId }),
+        { platform, gameId },
+      ]),
+    ).values(),
   ];
   const identities = new Map<string, RiotMatchId>();
   for (let offset = 0; offset < unique.length; offset += 100) {
