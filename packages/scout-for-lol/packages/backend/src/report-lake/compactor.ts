@@ -9,7 +9,10 @@ import {
   type CompactionSummary as PublishedCompactionSummary,
 } from "#src/report-lake/compaction-publish.ts";
 type CompactionSummary = PublishedCompactionSummary;
-import { lakeSchemaFingerprint } from "#src/report-lake/schema.ts";
+import {
+  LAKE_PREDECESSOR_SCHEMA_FINGERPRINT,
+  lakeSchemaStatus,
+} from "#src/report-lake/schema.ts";
 import {
   buildDirPath,
   ensureLakeScaffold,
@@ -59,6 +62,26 @@ async function withCompactionLock<T>(fn: () => Promise<T>): Promise<T> {
 }
 
 /**
+ * Whether the published build has the declared predecessor schema, so the
+ * next fold is the migration's full rebuild.
+ *
+ * Callers that fold inline, where a rebuild would hold something else up,
+ * check this and leave the migration to the scheduled lake job: the boot fold
+ * would keep the single application pod unready for the whole rebuild, and an
+ * import would wait on it. Readers serve the published build and staging
+ * meanwhile, so skipping the inline fold loses nothing.
+ */
+export async function reportLakeMigrationPending(
+  lakeDir: string = resolveLakeDir(),
+): Promise<boolean> {
+  const currentDir = await readCurrentBuildDir(lakeDir);
+  return (
+    currentDir !== undefined &&
+    lakeSchemaStatus(await readBuildFingerprint(currentDir)) === "predecessor"
+  );
+}
+
+/**
  * Tier 1 — fold: hardlink the current build, add staged rows as fold
  * parquet files, refresh the accounts snapshot, publish. Cost scales with
  * the staging backlog (typically a handful of matches), never with total
@@ -83,10 +106,19 @@ export async function runReportLakeFold(
     }
 
     // A fold hardlinks the published build's parquet and appends fold files
-    // written at the same physical column set. Reject incompatible builds
-    // before creating mixed-schema Parquet.
+    // written at the same physical column set. The one declared predecessor
+    // schema is migrated by a full rebuild instead, which never mixes the two
+    // layouts; any other incompatible build is rejected before creating
+    // mixed-schema Parquet.
     const publishedFingerprint = await readBuildFingerprint(currentDir);
-    if (publishedFingerprint !== lakeSchemaFingerprint()) {
+    const status = lakeSchemaStatus(publishedFingerprint);
+    if (status === "predecessor") {
+      logger.info(
+        `Published build has the predecessor schema (${LAKE_PREDECESSOR_SCHEMA_FINGERPRINT}); migrating via full rebuild`,
+      );
+      return await rebuildReportLake(prisma, lakeDir, startedAt, options);
+    }
+    if (status === "unknown") {
       throw new Error(
         `Published report lake has an unknown schema (${publishedFingerprint ?? "unrecorded"}); refusing to fold before its physical layout is established`,
       );

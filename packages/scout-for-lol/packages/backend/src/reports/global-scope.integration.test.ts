@@ -290,3 +290,119 @@ describe("global scope", () => {
     ).rejects.toThrow(/needs exactly one server/);
   });
 });
+
+/** A participant row naming no player: a bot, or an unaliased player. */
+function nonPlayer(
+  matchId: RiotMatchId,
+  participantKind: "bot" | "unresolved",
+  slot: number,
+) {
+  return {
+    ...untrackedMatch(matchId, `${participantKind}-${slot.toString()}`, false),
+    playerId: slot,
+    participantKind,
+    championName: "Jinx",
+    championId: 222,
+    teamId: 200,
+  };
+}
+
+function seen(result: Awaited<ReturnType<typeof executeReportQuery>>) {
+  return result.rows.map(
+    (row) => row.values.find((value) => value.column === "seen")?.value,
+  );
+}
+
+async function jinxCount(
+  scope: Parameters<typeof executeReportQuery>[0]["scope"],
+) {
+  return seen(
+    await executeReportQuery({
+      prisma,
+      scope,
+      queryText:
+        "SELECT COUNT(*) AS seen FROM match_participants WHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 30 DAY GROUP BY champion",
+      now,
+    }),
+  );
+}
+
+async function globalPrematchCount(where: string) {
+  return seen(
+    await executeReportQuery({
+      prisma,
+      scope: GLOBAL_SCOPE,
+      queryText: `SELECT COUNT(*) AS seen FROM prematch_participants WHERE observed_at >= CURRENT_TIMESTAMP - INTERVAL 30 DAY${where}`,
+      now,
+    }),
+  );
+}
+
+describe("global scope and non-player rows", () => {
+  test("aggregates leave out bot and unresolved rows; guild scope never sees them", async () => {
+    const matchId = RiotMatchIdSchema.parse("NA1_1");
+    await writeTestLake(lakeDir, {
+      serverId,
+      matchFacts: [
+        {
+          ...trackedMatch(matchId, true),
+          championName: "Jinx",
+          championId: 222,
+        },
+      ],
+      untrackedMatchFacts: [
+        {
+          ...untrackedMatch(matchId, "Opponent", false),
+          playerId: 2,
+          championName: "Jinx",
+          championId: 222,
+        },
+        nonPlayer(matchId, "bot", 6),
+        nonPlayer(matchId, "bot", 7),
+        nonPlayer(matchId, "unresolved", 8),
+      ],
+    });
+    // Five Jinx rows are in the lake; two are players.
+    expect(await jinxCount(GLOBAL_SCOPE)).toEqual([2]);
+    expect(await jinxCount(guildScope(serverId))).toEqual([1]);
+  });
+
+  test("prematch aggregates leave out bots unless the query names bot", async () => {
+    const observation = {
+      playerAlias: "Bot",
+      dedupeKey: "NA1:1",
+      queue: "solo",
+      observedAt: now,
+    };
+    await writeTestLake(lakeDir, {
+      serverId,
+      prematchFacts: [
+        {
+          ...observation,
+          playerId: 1,
+          playerAlias: "Tracked Player",
+          puuid: TRACKED_PUUID,
+        },
+        {
+          ...observation,
+          playerId: 6,
+          puuid: testPuuid("prematch-bot-6"),
+          bot: true,
+          championId: 1,
+          teamId: 200,
+        },
+        {
+          ...observation,
+          playerId: 7,
+          puuid: testPuuid("prematch-bot-7"),
+          bot: true,
+          championId: 2,
+          teamId: 200,
+        },
+      ],
+    });
+    expect(await globalPrematchCount("")).toEqual([1]);
+    // Naming the column that tells bots apart keeps them, each its own row.
+    expect(await globalPrematchCount(" AND bot = true")).toEqual([2]);
+  });
+});

@@ -18,7 +18,8 @@ const LakeIntSchema = z.union([z.bigint(), z.number()]).transform(Number);
 const MatchLoadoutRowSchema = z.object({
   match_id: RiotMatchIdSchema,
   game_duration_seconds: LakeIntSchema,
-  puuid: z.string(),
+  // NULL for a bot or an unresolved player.
+  puuid: z.string().nullable(),
   participant_id: LakeIntSchema,
   champion_id: LakeIntSchema,
   champion_name: z.string(),

@@ -34,6 +34,8 @@ export type TestLakeMatchFact = {
   discordId?: DiscordAccountId | null;
   matchId: RiotMatchId;
   puuid: LeaguePuuid;
+  /** A bot or unresolved row is written with a NULL puuid; keep it untracked. */
+  participantKind?: "bot" | "unresolved";
   queue: string | null;
   queueId?: number;
   gameMode?: string;
@@ -91,11 +93,30 @@ export type TestLakePrematchFact = {
   discordId?: DiscordAccountId | null;
   dedupeKey: string;
   puuid: LeaguePuuid;
+  /** A bot's row is written with a NULL puuid; keep it untracked. */
+  bot?: boolean;
   queue: string | null;
   championId?: number;
   observedAt: Date;
   teamId?: number;
 };
+
+/** Only a player row carries its PUUID; a bot or unresolved row has none. */
+function participantIdentity(
+  fact: TestLakeMatchFact,
+): Pick<MatchLakeRow, "puuid" | "participant_kind" | "participant_id"> {
+  return fact.participantKind === undefined
+    ? {
+        puuid: fact.puuid,
+        participant_kind: "player",
+        participant_id: fact.playerId,
+      }
+    : {
+        puuid: null,
+        participant_kind: fact.participantKind,
+        participant_id: fact.playerId,
+      };
+}
 
 export function matchRowFromFact(fact: TestLakeMatchFact): MatchLakeRow {
   const created = fact.gameCreationAt.getTime();
@@ -127,10 +148,10 @@ export function matchRowFromFact(fact: TestLakeMatchFact): MatchLakeRow {
     game_type: "MATCHED_GAME",
     game_version: "16.1.1",
     data_source: "RIOT",
+    coverage: "complete",
     end_of_game_result: "GameComplete",
     map_id: fact.mapId ?? 11,
-    puuid: fact.puuid,
-    participant_id: fact.playerId,
+    ...participantIdentity(fact),
     team_id: fact.teamId ?? 100,
     riot_id_game_name: fact.riotIdGameName ?? fact.playerAlias,
     riot_id_tagline: fact.riotIdTagline ?? "NA1",
@@ -267,13 +288,13 @@ export function prematchRowFromFact(
     game_mode: "CLASSIC",
     game_type: "MATCHED_GAME",
     map_id: 11,
-    puuid: fact.puuid,
+    puuid: fact.bot === true ? null : fact.puuid,
     team_id: fact.teamId ?? 100,
     player_subteam_id: null,
     champion_id: fact.championId ?? 22,
     riot_id: `${fact.playerAlias}#NA1`,
     summoner_name: fact.playerAlias,
     selected_skin_index: 0,
-    bot: false,
+    bot: fact.bot ?? false,
   };
 }

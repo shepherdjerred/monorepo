@@ -104,7 +104,37 @@ export type FactsCteInput = {
   projected: string[];
   /** Extra computed items (group-facts virtual columns), already fragments. */
   extraItems: SqlFragment[];
+  /**
+   * The query names a column that tells non-players apart
+   * (`participant_kind`, or `bot` on prematch), so global scope keeps them.
+   */
+  nonPlayersNamed?: boolean | undefined;
 };
+
+/**
+ * Global aggregates describe players: a bot's rows, frames and actions are
+ * left out unless the query names the column that tells them apart. Tracked
+ * scopes need no filter, because the accounts join drops every NULL puuid.
+ *
+ * `participant_kind` cannot be read until the migration's read gate lifts
+ * (MATCH_MIGRATION_GATED_COLUMNS), so for now a non-player is recognized by
+ * its NULL puuid, which also leaves out unresolved players. The follow-up
+ * that lifts the gate narrows the match and frame predicates to bots.
+ */
+function globalPlayerFilter(source: PlanColumnSource): string | null {
+  return (
+    match(source)
+      .with("match", "timeline-frame", () => "m.puuid IS NOT NULL")
+      .with("prematch", () => "NOT m.bot")
+      // An event without an acting participant (a tower's, a minion's) stays.
+      .with(
+        "timeline-event",
+        () => "(p.participant_id IS NULL OR p.puuid IS NOT NULL)",
+      )
+      .with("match-team", "match-team-ban", () => null)
+      .exhaustive()
+  );
+}
 
 function identityProjection(
   scope: LakeQueryScope,
@@ -182,25 +212,40 @@ function championNamesCte(): SqlFragment {
 }
 
 /**
- * One row per (match, puuid): the participant facts a timeline frame lacks.
- * Grouped for the same reason the match dimension is — a join against it can
- * never fan a frame out.
+ * Who a participant row or frame is, as one join key: the PUUID for a player,
+ * else the slot. A bot's or an unresolved player's row and frames both have a
+ * NULL puuid, which an equality join would drop; a PUUID never starts with
+ * `slot:`, so the two never collide. For a player this is exactly the PUUID
+ * key the join always used.
+ */
+function participantKey(alias: string): string {
+  return `coalesce(${alias}.puuid, 'slot:' || ${alias}.participant_id::VARCHAR)`;
+}
+
+/**
+ * One row per (match, participant key): the participant facts a timeline
+ * frame lacks. Grouped for the same reason the match dimension is — a join
+ * against it can never fan a frame out.
  */
 function participantDimensionCte(dimension: SqlFragment): SqlFragment {
   return seq(
-    "part_dim AS (SELECT match_id, puuid, any_value(game_creation_at) AS game_creation_at, any_value(queue) AS queue, any_value(",
+    `part_dim AS (SELECT match_id, ${participantKey("d")} AS participant_key, any_value(puuid) AS puuid, any_value(game_creation_at) AS game_creation_at, any_value(queue) AS queue, any_value(`,
     frag(String.raw`regexp_extract(game_version, '^[0-9]+\.[0-9]+')`),
     ") AS patch, any_value(map_id) AS map_id, any_value(participant_id) AS participant_id, any_value(team_id) AS team_id, any_value(champion_id) AS champion_id, any_value(champion_name) AS champion_name, any_value(team_position) AS team_position, any_value(win) AS win, any_value(concat_ws('#', riot_id_game_name, riot_id_tagline)) AS riot_id FROM (",
     dimension,
-    ") GROUP BY match_id, puuid)",
+    ") d GROUP BY match_id, participant_key)",
   );
+}
+
+/** A frame's participant row: same match, same participant key. */
+function sameParticipant(dim: string, frame: string): string {
+  return `${dim}.match_id = ${frame}.match_id AND ${dim}.participant_key = ${participantKey(frame)}`;
 }
 
 const PARTICIPANT_ITEMS =
   "p.game_creation_at AS game_creation_at, p.queue AS queue, p.patch AS patch, p.map_id AS map_id, p.champion_id AS champion_id, p.champion_name AS champion_name, p.team_position AS team_position, p.team_id AS team_id, p.win AS win";
 
-const PARTICIPANT_JOIN =
-  " JOIN part_dim p ON p.match_id = m.match_id AND p.puuid = m.puuid";
+const PARTICIPANT_JOIN = ` JOIN part_dim p ON ${sameParticipant("p", "m")}`;
 
 /** The other side of a two-team game. Arena and other modes get NULL, never a wrong team. */
 const OTHER_TEAM = "CASE p.team_id WHEN 100 THEN 200 WHEN 200 THEN 100 END";
@@ -240,7 +285,7 @@ function teamGoldCte(frames: SqlFragment, narrowed: boolean): SqlFragment {
   return seq(
     "team_gold AS (SELECT f.match_id, f.frame_index, sum(f.total_gold) FILTER (WHERE pd.team_id = 100) AS blue, sum(f.total_gold) FILTER (WHERE pd.team_id = 200) AS red FROM (",
     frames,
-    `) f${narrowed ? FRAME_KEYS_SEMI_JOIN : ""} JOIN part_dim pd ON pd.match_id = f.match_id AND pd.puuid = f.puuid GROUP BY f.match_id, f.frame_index)`,
+    `) f${narrowed ? FRAME_KEYS_SEMI_JOIN : ""} JOIN part_dim pd ON ${sameParticipant("pd", "f")} GROUP BY f.match_id, f.frame_index)`,
   );
 }
 
@@ -254,7 +299,7 @@ function laneGoldCte(frames: SqlFragment, narrowed: boolean): SqlFragment {
   return seq(
     "lane_gold AS (SELECT f.match_id, f.frame_index, pd.team_id, pd.team_position, any_value(f.total_gold) AS gold FROM (",
     frames,
-    `) f${narrowed ? FRAME_KEYS_SEMI_JOIN : ""} JOIN part_dim pd ON pd.match_id = f.match_id AND pd.puuid = f.puuid WHERE pd.team_position IN ('TOP', 'JUNGLE', 'MIDDLE', 'BOTTOM', 'UTILITY') GROUP BY f.match_id, f.frame_index, pd.team_id, pd.team_position)`,
+    `) f${narrowed ? FRAME_KEYS_SEMI_JOIN : ""} JOIN part_dim pd ON ${sameParticipant("pd", "f")} WHERE pd.team_position IN ('TOP', 'JUNGLE', 'MIDDLE', 'BOTTOM', 'UTILITY') GROUP BY f.match_id, f.frame_index, pd.team_id, pd.team_position)`,
   );
 }
 
@@ -483,6 +528,10 @@ export function buildFactsCte(input: FactsCteInput): SqlFragment {
   }
   const lookupCtes = lookups.ctes.flatMap((cte) => [cte, frag(", ")]);
   if (input.scope.kind === "global") {
+    const players =
+      input.nonPlayersNamed === true
+        ? null
+        : globalPlayerFilter(input.columnSource);
     return seq(
       "WITH ",
       ...lookupCtes,
@@ -490,7 +539,7 @@ export function buildFactsCte(input: FactsCteInput): SqlFragment {
       items,
       " FROM (",
       rows,
-      `) m${lookups.joins})`,
+      `) m${lookups.joins}${players === null ? "" : ` WHERE ${players}`})`,
     );
   }
   const accounts = trackedAccountsSource(input);

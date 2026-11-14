@@ -72,7 +72,8 @@ const MatchParticipantRowSchema = z
     game_type: z.string(),
     game_version: z.string(),
     map_id: LakeIntSchema,
-    puuid: z.string(),
+    // NULL for a bot or an unresolved player.
+    puuid: z.string().nullable(),
     participant_id: LakeIntSchema,
     team_id: LakeIntSchema,
     player_subteam_id: LakeIntSchema.nullable(),

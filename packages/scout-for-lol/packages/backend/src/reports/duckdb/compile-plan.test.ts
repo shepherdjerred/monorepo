@@ -123,7 +123,7 @@ describe("pushdown", () => {
     ).toBe(2);
     expect(compiled.aggregateSql).toContain("UNION ALL BY NAME");
     expect(compiled.aggregateSql).toContain(
-      "PARTITION BY match_id, puuid ORDER BY src",
+      "PARTITION BY match_id, puuid, participant_id, team_id, champion_id ORDER BY src",
     );
     // The dedupe must wrap a subquery that already contains the WHERE.
     expect(compiled.aggregateSql.indexOf("((queue) = (?))")).toBeLessThan(
@@ -468,6 +468,39 @@ describe("select shape", () => {
     );
     expect(compiled.aggregateSql).toContain("(puuid) AS __key_0");
     expect(compiled.aggregateSql).toContain("NULL::BIGINT AS player_id");
+  });
+});
+
+function globalPrematchSql(where?: ScoutQlPredicate): string {
+  return mustCompile(
+    makeInput({
+      scope: GLOBAL_SCOPE,
+      plan: makePlan({
+        source: "prematch_participants",
+        ...(where === undefined ? {} : { where }),
+      }),
+    }),
+  ).aggregateSql;
+}
+
+describe("non-player rows", () => {
+  const PLAYERS_ONLY = ") m WHERE m.puuid IS NOT NULL)";
+
+  test("global participant aggregates keep players only", () => {
+    expect(
+      mustCompile(makeInput({ scope: GLOBAL_SCOPE })).aggregateSql,
+    ).toContain(PLAYERS_ONLY);
+  });
+
+  test("a tracked scope needs no filter: the accounts join drops a NULL puuid", () => {
+    const sql = mustCompile(makeInput()).aggregateSql;
+    expect(sql).not.toContain("m.puuid IS NOT NULL");
+    expect(sql).toContain("JOIN accounts a ON a.puuid = m.puuid");
+  });
+
+  test("global prematch aggregates leave out bots unless the plan names bot", () => {
+    expect(globalPrematchSql()).toContain(") m WHERE NOT m.bot)");
+    expect(globalPrematchSql(eq("bot", true))).not.toContain("NOT m.bot");
   });
 });
 

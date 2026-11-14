@@ -114,8 +114,14 @@ export function scoutRuntimeSubsystems(
           return;
         }
         if (capabilities.reportLakeFold) {
-          const { runReportLakeFold } =
+          const { reportLakeMigrationPending, runReportLakeFold } =
             await import("#src/report-lake/compactor.ts");
+          if (await reportLakeMigrationPending()) {
+            logger.warn(
+              "🗂️  Report lake has the predecessor schema; serving it while the scheduled fold runs the migration rebuild",
+            );
+            return;
+          }
           await runReportLakeFold();
           return;
         }

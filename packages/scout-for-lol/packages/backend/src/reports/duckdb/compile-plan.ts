@@ -114,6 +114,9 @@ type SplitWhere = {
 /** Loadout ids, which a scan selects only when a plan reads one. */
 const LOADOUT: ReadonlySet<string> = new Set(LOADOUT_COLUMNS);
 
+/** Columns that tell a bot from a player; naming one keeps bots in global scope. */
+const NON_PLAYER_COLUMNS = ["participant_kind", "bot"] as const;
+
 function splitWhere(
   where: ScoutQlPredicate | undefined,
   columns: ColumnMap,
@@ -186,6 +189,8 @@ function buildFactsPipeline(
     playerGrouped?: boolean;
     /** Loadout name columns the plan names. */
     loadoutNames?: ReadonlySet<string>;
+    /** The plan names participant_kind or bot; see globalPlayerFilter. */
+    nonPlayersNamed?: boolean;
   },
 ): FactsPipeline | undefined {
   const factsContext: ExprContext = {
@@ -260,6 +265,7 @@ function buildFactsPipeline(
     loadoutNames: extras.loadoutNames,
     projected: [...extras.projected],
     extraItems: extras.extraItems,
+    nonPlayersNamed: extras.nonPlayersNamed,
   });
 
   const residualFragments = residual.map((conjunct) =>
@@ -333,6 +339,7 @@ export function compileScoutQlPlanQuery(
     projected,
     extraItems: [],
     playerGrouped: groupings.some((grouping) => grouping.playerIdentity),
+    nonPlayersNamed: NON_PLAYER_COLUMNS.some((name) => referenced.has(name)),
     teamLookup:
       kind.columnSource === "match" &&
       [...referenced].some((name) => TEAM_LOOKUP_COLUMNS.has(name)),

@@ -13,7 +13,7 @@ import { NdjsonFileWriter } from "#src/report-lake/ndjson-writer.ts";
 import { copyNdjsonToParquet } from "#src/report-lake/parquet/copy-ndjson.ts";
 import { createS3Client } from "#src/storage/s3-client.ts";
 import { readBuildFingerprint } from "#src/report-lake/build-manifest.ts";
-import { lakeSchemaFingerprint } from "#src/report-lake/schema.ts";
+import { lakeSchemaStatus } from "#src/report-lake/schema.ts";
 import {
   populateMatchesFromS3,
   populatePrematchFromS3,
@@ -56,9 +56,13 @@ export async function rebuildReportLake(
 ): Promise<CompactionSummary> {
   const { onProgress, abortSignal } = options;
   const currentDir = await readCurrentBuildDir(lakeDir);
+  // A rebuild replaces a build at the current schema or at the one declared
+  // predecessor (see LAKE_PREDECESSOR_SCHEMA_FINGERPRINT). Readers keep using
+  // the published build and staging until CURRENT switches, so migrating
+  // from the predecessor never takes the lake offline.
   if (
     currentDir !== undefined &&
-    (await readBuildFingerprint(currentDir)) !== lakeSchemaFingerprint()
+    lakeSchemaStatus(await readBuildFingerprint(currentDir)) === "unknown"
   ) {
     throw new Error(
       "Published report lake has an unknown schema; refusing to rebuild before its physical layout is established",

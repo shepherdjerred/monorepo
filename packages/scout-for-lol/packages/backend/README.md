@@ -365,6 +365,46 @@ wire-only compatibility fields. Folds and rebuilds reject an incompatible
 published fingerprint before creating a candidate build; schema changes require
 an explicit migration rather than mixing old and new Parquet columns.
 
+A migration is one declared predecessor, never a bridge. The current one adds
+`matches.participant_kind` and `matches.coverage`:
+
+- `LAKE_PREDECESSOR_SCHEMA_FINGERPRINT` (`report-lake/schema.ts`) names the
+  one older schema this build accepts. A test pins it to the current schema
+  minus the new columns.
+- A fold that finds that schema published runs a full rebuild instead, so no
+  fold mixes layouts. The rebuild accepts the predecessor as the build it
+  replaces, and any other fingerprint still throws.
+- Only the scheduled lake job runs that rebuild, under its heartbeats. The
+  boot fold and initial-history publishing skip their inline fold while the
+  migration is pending (`reportLakeMigrationPending`). Otherwise the single
+  application pod, which uses a Recreate rollout, would stay unready for the
+  whole rebuild.
+- Until both stages publish, no read names the new columns
+  (`MATCH_MIGRATION_GATED_COLUMNS` in `data/src/model/reports/`). Reports,
+  ScoutQL, Dares and raw-document analysis keep reading the predecessor build
+  and staging while the rebuild runs, so the lake stays available.
+- After Beta and Prod each publish a build at the current fingerprint, one
+  follow-up deletes the predecessor constant and the gate together. The
+  columns then become ordinary reads and ScoutQL catalog columns.
+
+Every participant has a `matches` row. `puuid` is non-null exactly when the row
+names a player; a bot or an unresolved player has a `NULL` `puuid` and its
+`participant_kind`, and no League-client UUID ever reaches the lake. Prematch
+writes bot rows (`bot = true`, `NULL` `puuid`) and still writes no row for a
+hidden player. Unknown values are `NULL`, never zero: `participant_id`,
+`game_creation_at`, `game_version`, and the team first-objective flags and
+Rift Herald count are nullable for the end-of-game record. Readers handle a
+`NULL` `puuid` as follows:
+
+- Tracked scopes join `accounts` on `puuid`, which drops non-players.
+- Global ScoutQL aggregates keep only players unless the query names the
+  column that tells them apart (`participant_kind`, or `bot` on prematch).
+  While `participant_kind` is gated, a player is recognized by its non-null
+  `puuid`, which also leaves out unresolved players.
+- Participant and prematch dedupe keys add the slot, team and champion, and
+  timeline frames join their participant by `puuid`, else slot. A bot's gold
+  still counts toward its team.
+
 Publication atomically switches `CURRENT`. Writes committed during a rebuild
 remain in the staging read view until a later fold; a failed candidate leaves
 the published build and staging untouched. Rollback images must support the
@@ -844,9 +884,8 @@ Dares, Hall of Fame and challenges skip the rest without change. Riot
 documents never state a kind, and a Riot participant without a 78-character
 PUUID fails validation as a broken contract: Scout does not guess how
 Match-V5 encodes a bot. The observer must still be a resolved player. The
-report lake has no column for a participant's kind yet, so it refuses a
-document naming a bot or an unresolved player (`report-lake/non-player.ts`):
-staging reports the failure and a rebuild skips and counts the document.
+report lake stores every participant, with its kind in
+`matches.participant_kind` and a `NULL` `puuid` for anyone but a player.
 
 A client can claim any Riot ID for a UUID; ownership is still checked against
 the device owner's accounts. An alias whose PUUID is the reporting owner's

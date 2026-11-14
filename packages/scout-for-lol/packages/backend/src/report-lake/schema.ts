@@ -112,19 +112,30 @@ export function duckDbEmptySelect(
  * full rebuild; a rename, addition, removal, or type change is not, and does.
  */
 export function lakeSchemaFingerprint(): string {
-  const tables: Record<string, Record<string, DuckDbColumnType>> = {
-    raw_documents: RAW_DOCUMENT_LAKE_COLUMNS,
-    matches: MATCH_LAKE_COLUMNS,
-    match_teams: MATCH_TEAM_LAKE_COLUMNS,
-    match_team_bans: MATCH_TEAM_BAN_LAKE_COLUMNS,
-    prematch: PREMATCH_LAKE_COLUMNS,
-    accounts: ACCOUNT_LAKE_COLUMNS,
-    competition_rank_history: COMPETITION_RANK_HISTORY_LAKE_COLUMNS,
-    timeline_events: TIMELINE_EVENT_LAKE_COLUMNS,
-    timeline_event_participants: TIMELINE_EVENT_PARTICIPANT_LAKE_COLUMNS,
-    timeline_participant_frames: TIMELINE_PARTICIPANT_FRAME_LAKE_COLUMNS,
-    timeline_coverage: TIMELINE_COVERAGE_LAKE_COLUMNS,
-  };
+  return lakeSchemaFingerprintOf(LAKE_TABLE_COLUMNS);
+}
+
+type LakeTableColumns = Readonly<
+  Record<string, Readonly<Record<string, DuckDbColumnType>>>
+>;
+
+/** Every lake table's column-type map, as the fingerprint covers them. */
+export const LAKE_TABLE_COLUMNS: LakeTableColumns = {
+  raw_documents: RAW_DOCUMENT_LAKE_COLUMNS,
+  matches: MATCH_LAKE_COLUMNS,
+  match_teams: MATCH_TEAM_LAKE_COLUMNS,
+  match_team_bans: MATCH_TEAM_BAN_LAKE_COLUMNS,
+  prematch: PREMATCH_LAKE_COLUMNS,
+  accounts: ACCOUNT_LAKE_COLUMNS,
+  competition_rank_history: COMPETITION_RANK_HISTORY_LAKE_COLUMNS,
+  timeline_events: TIMELINE_EVENT_LAKE_COLUMNS,
+  timeline_event_participants: TIMELINE_EVENT_PARTICIPANT_LAKE_COLUMNS,
+  timeline_participant_frames: TIMELINE_PARTICIPANT_FRAME_LAKE_COLUMNS,
+  timeline_coverage: TIMELINE_COVERAGE_LAKE_COLUMNS,
+};
+
+/** The fingerprint of a set of table column maps (see lakeSchemaFingerprint). */
+export function lakeSchemaFingerprintOf(tables: LakeTableColumns): string {
   const hasher = new Bun.CryptoHasher("sha256");
   for (const [table, columns] of Object.entries(tables)) {
     const signature = Object.entries(columns)
@@ -134,4 +145,29 @@ export function lakeSchemaFingerprint(): string {
     hasher.update(`${table}=${signature}\n`);
   }
   return hasher.digest("hex").slice(0, 16);
+}
+
+/**
+ * The one schema this checkout migrates from: the lake before
+ * `matches.participant_kind` and `matches.coverage` existed. A fold that
+ * finds it published runs a full rebuild instead, so no fold mixes the two
+ * physical layouts, and that rebuild accepts it as the build it replaces.
+ *
+ * This is a one-time allowance, not a bridge: no read names the columns the
+ * predecessor lacks (`MATCH_MIGRATION_GATED_COLUMNS`) until Beta and Prod have
+ * both published the rebuild. The follow-up deletes this constant and that
+ * gate together.
+ */
+export const LAKE_PREDECESSOR_SCHEMA_FINGERPRINT = "e086a72a1a8176aa";
+
+export type LakeSchemaStatus = "current" | "predecessor" | "unknown";
+
+/** How a published build's recorded fingerprint relates to this checkout. */
+export function lakeSchemaStatus(
+  fingerprint: string | undefined,
+): LakeSchemaStatus {
+  if (fingerprint === lakeSchemaFingerprint()) return "current";
+  return fingerprint === LAKE_PREDECESSOR_SCHEMA_FINGERPRINT
+    ? "predecessor"
+    : "unknown";
 }

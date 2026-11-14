@@ -23,9 +23,15 @@ const DESCRIPTIONS: Record<string, string> = {
   data_source:
     "Where the match result came from: RIOT, or SCOUT_CLIENT for a game Riot never published that a player's Scout Client captured.",
   end_of_game_result: "End-of-game result (GameComplete, or an abort state).",
+  coverage:
+    "How complete the match record is: complete, or end_of_game for a game known only from the League client's end-of-game screen, which states no timeline, bans or participant slots.",
   map_id: "Riot numeric map id.",
-  puuid: "Riot player UUID for this participant.",
-  participant_id: "Participant slot within the match (1–10).",
+  puuid:
+    "Riot player UUID for this participant; NULL for a bot or a player Scout has not identified yet.",
+  participant_kind:
+    "Who the row is: player, bot, or unresolved (a player Scout has not identified yet).",
+  participant_id:
+    "Participant slot within the match (1–10); NULL when the record does not state it.",
   team_id: "Team id (100 blue, 200 red).",
   riot_id_game_name: "Riot ID game name at match time.",
   riot_id_tagline: "Riot ID tagline at match time.",

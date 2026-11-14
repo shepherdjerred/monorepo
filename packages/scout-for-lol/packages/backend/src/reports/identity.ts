@@ -259,7 +259,7 @@ async function lookupByRiotId(
   const rows = await runQuery(
     `SELECT DISTINCT puuid
        FROM (${source.sql})
-      WHERE ${full.sql} OR ${gameName.sql}`,
+      WHERE puuid IS NOT NULL AND (${full.sql} OR ${gameName.sql})`,
     [...source.params, scalarParam(full.value), scalarParam(gameName.value)],
     z.object({ puuid: z.string() }),
     abortSignal,

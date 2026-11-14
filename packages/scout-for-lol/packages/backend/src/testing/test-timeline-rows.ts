@@ -15,7 +15,8 @@ import { lakeMonth, lakeTimestamp } from "#src/report-lake/schema.ts";
 export function testFrameRow(input: {
   readonly matchId: RiotMatchId;
   readonly gameCreationAt: Date;
-  readonly puuid: LeaguePuuid;
+  /** NULL for a bot's or an unresolved player's frame. */
+  readonly puuid: LeaguePuuid | null;
   readonly participantId: number;
   readonly minute: number;
   readonly totalGold: number;

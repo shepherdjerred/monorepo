@@ -14,7 +14,7 @@ const PrematchIdentityRowSchema = z.object({
 export type LakePrematchIdentityRow = z.infer<typeof PrematchIdentityRowSchema>;
 
 /**
- * Distinct (puuid, riot_id) pairs from prematch observations — the
+ * Distinct (puuid, riot_id) pairs from players' prematch observations — the
  * summoner-index backfill source. Returns [] before the first compaction
  * (fail-soft: the backfill is idempotent and re-runs on next startup).
  */
@@ -23,7 +23,11 @@ export async function fetchDistinctPrematchIdentities(
 ): Promise<LakePrematchIdentityRow[]> {
   const lakeDir = options.lakeDir ?? resolveLakeDir();
   return await withLakeQueryRetry(lakeDir, async (files) => {
-    const source = buildPrematchSource(files, { sql: "", params: [] });
+    // A bot's row has no PUUID, and a bot is nobody to index.
+    const source = buildPrematchSource(files, {
+      sql: "puuid IS NOT NULL",
+      params: [],
+    });
     if (source === undefined) return [];
     const sql = `SELECT DISTINCT puuid, riot_id FROM (${source.sql})`;
     return await withDuckDBConnection(async (session) => {

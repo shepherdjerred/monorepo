@@ -125,15 +125,18 @@ does not invent identities for unresolved records. A backup from before the
 cutover is not automatically safe to restore into this runtime: it must first
 be reconciled to the canonical storage contract.
 
-Ordinary physical schema fingerprints still bind readers and replay datasets to
-their lake layout. The temporary bridge recognizes the current layout, Beta's
-legacy `identity_map_json` layout, and Prod's older variant that also predates
-`matches.data_source`. This permits an online rebuild without forcing every
-application deployment to cold-rebuild the lake. A candidate must preserve
-published projection keys through its files or the retained committed staging
-view before `CURRENT` changes. Writes arriving during the rebuild stay
-queryable in staging and are consumed by a later fold; cleanup only removes
-captured generations covered by the exact rebuilt source.
+Physical schema fingerprints bind readers and replay datasets to their lake
+layout. A schema change is migrated by naming exactly one predecessor
+fingerprint. A fold that finds the predecessor published runs a full rebuild,
+because folding would mix two physical layouts. Reads of the new columns stay
+gated until Beta and Prod have both published a rebuild. Readers therefore
+keep using the predecessor build and staging while the rebuild runs, and no
+deployment has to cold-rebuild the lake. Writes arriving during the rebuild
+stay queryable in staging and are consumed by a later fold; cleanup only
+removes captured generations covered by the exact rebuilt source. A follow-up
+then deletes the predecessor and the gate together, so the allowance never
+becomes a bridge
+([schema.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/report-lake/schema.ts)).
 
 ## Writes: live ingest can recover staging; initial import cannot
 
@@ -360,6 +363,29 @@ a build published before a column existed fails any read that names it until
 the schema fingerprint's rebuild publishes. Leaving the loadout out of ordinary
 reads keeps reports working through that window
 ([lake.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/reports/duckdb/lake.ts)).
+
+### Bots and unidentified players
+
+Every game mode is data, including bot games and client-captured games with
+players Scout has not identified yet. Every participant therefore gets a row,
+and `participant_kind` says who it is: `player`, `bot`, or `unresolved`.
+Only a player has a `puuid`. The others keep their statistics with a `NULL`
+`puuid`, and a League-client UUID is never written, so a later alias can
+resolve the player on rebuild without the lake ever holding a non-Riot
+identity. A hidden player in pre-match data still has no row at all.
+
+A `NULL` `puuid` is what keeps these rows out of player-centred answers by
+default. Tracked scopes join the server's accounts on `puuid` and never see
+them. Global aggregates describe players, so they leave non-players out unless
+the query names the column that tells them apart. The rows stay in the match
+for anything about the game itself: a bot's gold counts toward its team, and
+row identity uses the participant's slot, team and champion when there is no
+`puuid` to key on.
+
+`coverage` records how complete the record is: `complete` for a Match-V5
+document, or `end_of_game` for a game known only from the League client's
+end-of-game screen. That record states no timeline, bans or slots, and those
+values are `NULL`, never zero.
 
 Dares expose those relations, the four timeline
 relations, and `T1` through `T5`. Each target relation is an ordinary filtered
