@@ -1,0 +1,90 @@
+{
+  "apiVersion": 1,
+  "now": "2026-11-13T23:10:00.000Z",
+  "since": "2026-11-08T00:00:00.000Z",
+  "machine": "all",
+  "agent": null,
+  "activeOnly": false,
+  "blocks": [
+    {
+      "agent": "claude",
+      "start": "2026-11-08T17:00:00.000Z",
+      "end": "2026-11-08T22:00:00.000Z",
+      "firstEventAt": "2026-11-08T17:00:00.000Z",
+      "lastEventAt": "2026-11-08T17:00:00.000Z",
+      "isActive": false,
+      "alignedToQuota": false,
+      "machines": [null],
+      "models": ["claude-opus-5-5"],
+      "inputTokens": 1200,
+      "outputTokens": 340,
+      "cacheReadTokens": 48000,
+      "cacheCreationTokens": 2100,
+      "cachedInputTokens": 0,
+      "reasoningTokens": 0,
+      "totalTokens": 51640,
+      "events": 1,
+      "costUsd": 0.62,
+      "costComplete": true,
+      "projection": null
+    },
+    {
+      "agent": "claude",
+      "start": "2026-11-13T20:30:00.000Z",
+      "end": "2026-11-14T01:30:00.000Z",
+      "firstEventAt": "2026-11-13T21:10:00.000Z",
+      "lastEventAt": "2026-11-13T22:40:00.000Z",
+      "isActive": true,
+      "alignedToQuota": true,
+      "machines": [null, "jerred-desktop"],
+      "models": ["claude-haiku-5-5", "claude-opus-5-5"],
+      "inputTokens": 6400,
+      "outputTokens": 1310,
+      "cacheReadTokens": 132000,
+      "cacheCreationTokens": 5200,
+      "cachedInputTokens": 0,
+      "reasoningTokens": 0,
+      "totalTokens": 144910,
+      "events": 3,
+      "costUsd": 2.2,
+      "costComplete": true,
+      "projection": {
+        "elapsedMinutes": 160,
+        "remainingMinutes": 140,
+        "tokensPerMinute": 1207.5833333333333,
+        "costPerHour": 1.1,
+        "projectedTokens": 313972,
+        "projectedCostUsd": 4.7666666666666675
+      }
+    },
+    {
+      "agent": "codex",
+      "start": "2026-11-11T16:00:00.000Z",
+      "end": "2026-11-11T21:00:00.000Z",
+      "firstEventAt": "2026-11-11T16:00:00.000Z",
+      "lastEventAt": "2026-11-11T16:20:00.000Z",
+      "isActive": false,
+      "alignedToQuota": false,
+      "machines": [null],
+      "models": ["gpt-5.5", "gpt-preview-x"],
+      "inputTokens": 51000,
+      "outputTokens": 2200,
+      "cacheReadTokens": 0,
+      "cacheCreationTokens": 0,
+      "cachedInputTokens": 0,
+      "reasoningTokens": 0,
+      "totalTokens": 53200,
+      "events": 2,
+      "costUsd": 0.4,
+      "costComplete": false,
+      "projection": null
+    }
+  ],
+  "gaps": [
+    {
+      "agent": "claude",
+      "start": "2026-11-08T22:00:00.000Z",
+      "end": "2026-11-13T20:30:00.000Z"
+    }
+  ]
+}

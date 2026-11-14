@@ -264,3 +264,127 @@ export function queryUsageEventsForDocument(
       costComplete: row.cost_complete === 1,
     }));
 }
+
+/**
+ * Which usage events the 5-hour blocks read: some sources (every source when
+ * null), this machine (`local`), every machine (`all`), or one mirrored
+ * machine id.
+ */
+export type BlockEventFilter = {
+  readonly sources: readonly HistorySourceName[] | null;
+  readonly machine: string;
+  /** Inclusive lower bound on `occurred_at`; null reads from the start. */
+  readonly from: string | null;
+};
+
+/** One indexed usage event as the block builder reads it. */
+export type BlockUsageEvent = {
+  readonly source: HistorySourceName;
+  /** Null for this machine's own sessions. */
+  readonly machine: string | null;
+  readonly occurredAt: string;
+  readonly model: string;
+  readonly inputTokens: number;
+  readonly outputTokens: number;
+  readonly cacheReadTokens: number;
+  readonly cacheCreationTokens: number;
+  readonly cachedInputTokens: number;
+  readonly reasoningTokens: number;
+  readonly costUsd: number | null;
+  readonly costComplete: boolean;
+};
+
+const BlockEventRowSchema = z.object({
+  source: z.string(),
+  machine: z.string().nullable(),
+  occurred_at: z.string(),
+  model: z.string(),
+  input_tokens: z.number(),
+  output_tokens: z.number(),
+  cache_read_tokens: z.number(),
+  cache_creation_tokens: z.number(),
+  cached_input_tokens: z.number(),
+  reasoning_tokens: z.number(),
+  cost_usd: z.number().nullable(),
+  cost_complete: z.number(),
+});
+
+function blockFilterClauses(
+  filter: Omit<BlockEventFilter, "from">,
+  clauses: string[],
+  values: string[],
+): void {
+  if (filter.sources !== null) {
+    clauses.push(`u.source IN (${filter.sources.map(() => "?").join(", ")})`);
+    values.push(...filter.sources);
+  }
+  if (filter.machine === "local") {
+    clauses.push("d.machine IS NULL");
+  } else if (filter.machine !== "all") {
+    clauses.push("d.machine = ?");
+    values.push(filter.machine);
+  }
+}
+
+/** Usage events matching the filter, oldest first. */
+export function queryBlockEvents(
+  database: Database,
+  filter: BlockEventFilter,
+): BlockUsageEvent[] {
+  const clauses: string[] = [];
+  const values: string[] = [];
+  blockFilterClauses(filter, clauses, values);
+  if (filter.from !== null) {
+    clauses.push("u.occurred_at >= ?");
+    values.push(filter.from);
+  }
+  return database
+    .prepare(
+      `SELECT u.source, d.machine, u.occurred_at, u.model,
+              u.input_tokens, u.output_tokens, u.cache_read_tokens,
+              u.cache_creation_tokens, u.cached_input_tokens,
+              u.reasoning_tokens, u.cost_usd, u.cost_complete
+         FROM usage_events u
+         JOIN documents d ON d.id = u.document_id
+        ${clauses.length > 0 ? `WHERE ${clauses.join(" AND ")}` : ""}
+        ORDER BY u.occurred_at, u.rowid`,
+    )
+    .all(...values)
+    .map((row: unknown) => BlockEventRowSchema.parse(row))
+    .map((row) => ({
+      source: parseHistorySourceName(row.source, "in usage blocks"),
+      machine: row.machine,
+      occurredAt: row.occurred_at,
+      model: row.model,
+      inputTokens: row.input_tokens,
+      outputTokens: row.output_tokens,
+      cacheReadTokens: row.cache_read_tokens,
+      cacheCreationTokens: row.cache_creation_tokens,
+      cachedInputTokens: row.cached_input_tokens,
+      reasoningTokens: row.reasoning_tokens,
+      costUsd: row.cost_usd,
+      costComplete: row.cost_complete === 1,
+    }));
+}
+
+const EarliestRowSchema = z.object({ earliest: z.string().nullable() });
+
+/** The oldest matching event's `occurred_at`, or null when there is none. */
+export function queryEarliestUsage(
+  database: Database,
+  filter: Omit<BlockEventFilter, "from">,
+): string | null {
+  const clauses: string[] = [];
+  const values: string[] = [];
+  blockFilterClauses(filter, clauses, values);
+  return EarliestRowSchema.parse(
+    database
+      .prepare(
+        `SELECT min(u.occurred_at) AS earliest
+           FROM usage_events u
+           JOIN documents d ON d.id = u.document_id
+          ${clauses.length > 0 ? `WHERE ${clauses.join(" AND ")}` : ""}`,
+      )
+      .get(...values),
+  ).earliest;
+}

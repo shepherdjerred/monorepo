@@ -31,10 +31,16 @@ import type {
   HistoryApiUsageGroup,
   HistoryApiUsageResponse,
 } from "./api/schema.ts";
+import type { HistoryApiUsageReportResponse } from "./api/report-schema.ts";
+import { queryUsageReport, type UsageReportQuery } from "./usage-report.ts";
 import {
+  queryBlockEvents,
+  queryEarliestUsage,
   queryUsage,
   queryUsageEventsForDocument,
   queryUsageFingerprints,
+  type BlockEventFilter,
+  type BlockUsageEvent,
   type ExportableUsageEvent,
   type UsageDocumentFingerprint,
   type UsageQueryOptions,
@@ -428,6 +434,19 @@ export class HistoryIndex {
     readonly source: HistorySourceName | null;
   }): HistoryApiUsageResponse {
     return queryUsageGroups(this.#database, options);
+  }
+
+  /** The calendar period report; both of its queries see one snapshot. */
+  usageReport(query: UsageReportQuery): HistoryApiUsageReportResponse {
+    return this.readSnapshot(() => queryUsageReport(this.#database, query));
+  }
+
+  blockEvents(filter: BlockEventFilter): BlockUsageEvent[] {
+    return queryBlockEvents(this.#database, filter);
+  }
+
+  earliestUsageAt(filter: Omit<BlockEventFilter, "from">): string | null {
+    return queryEarliestUsage(this.#database, filter);
   }
 
   tools(options: {

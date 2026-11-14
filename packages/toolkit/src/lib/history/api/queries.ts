@@ -41,7 +41,7 @@ const SessionRowSchema = z.object({
   tool_call_count: z.number(),
 });
 
-const UsageColumnsSchema = z.object({
+export const UsageColumnsSchema = z.object({
   input_tokens: z.number(),
   output_tokens: z.number(),
   cache_read_tokens: z.number(),
@@ -68,7 +68,7 @@ const UsageGroupRowSchema = UsageColumnsSchema.extend({
   events: z.number(),
 });
 
-const USAGE_SUMS = `
+export const USAGE_SUMS = `
   coalesce(sum(u.input_tokens), 0) AS input_tokens,
   coalesce(sum(u.output_tokens), 0) AS output_tokens,
   coalesce(sum(u.cache_read_tokens), 0) AS cache_read_tokens,
@@ -93,7 +93,9 @@ export const EMPTY_API_USAGE: HistoryApiUsage = {
   costComplete: true,
 };
 
-function toUsage(row: z.infer<typeof UsageColumnsSchema>): HistoryApiUsage {
+export function toUsage(
+  row: z.infer<typeof UsageColumnsSchema>,
+): HistoryApiUsage {
   return {
     inputTokens: row.input_tokens,
     outputTokens: row.output_tokens,

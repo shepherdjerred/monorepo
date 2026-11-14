@@ -1,5 +1,14 @@
 import { z } from "zod";
 import { HistorySourceNameSchema } from "#lib/history/types.ts";
+import {
+  ApiVersionSchema,
+  TimestampSchema,
+  TOKEN_COUNT_FIELDS,
+} from "./schema-common.ts";
+import {
+  HistoryApiBlocksResponseSchema,
+  HistoryApiUsageReportResponseSchema,
+} from "./report-schema.ts";
 
 /**
  * The history daemon's read API (`/v1/*` over `~/.toolkit/history/daemon.sock`).
@@ -10,29 +19,6 @@ import { HistorySourceNameSchema } from "#lib/history/types.ts";
  * language-neutral source of truth; a TS test keeps these zod schemas
  * identical to them, and both languages decode the shared fixtures.
  */
-
-export const HISTORY_API_VERSION = 1;
-
-const ApiVersionSchema = z.literal(HISTORY_API_VERSION);
-
-/** Every timestamp is ISO 8601; sources normalize before indexing. */
-const TimestampSchema = z.iso.datetime({ offset: true });
-
-const TokenCountSchema = z.number().int().nonnegative();
-
-/**
- * Token counts shared by session and captured-request usage. Anthropic cache
- * reads and writes are additive; OpenAI `cachedInputTokens` is the cached
- * subset of `inputTokens`.
- */
-const TOKEN_COUNT_FIELDS = {
-  inputTokens: TokenCountSchema,
-  outputTokens: TokenCountSchema,
-  cacheReadTokens: TokenCountSchema,
-  cacheCreationTokens: TokenCountSchema,
-  cachedInputTokens: TokenCountSchema,
-  reasoningTokens: TokenCountSchema,
-};
 
 export const HistoryApiUsageSchema = z
   .strictObject({
@@ -403,6 +389,8 @@ export const HISTORY_API_CONTRACTS = {
   "history-api-sessions": HistoryApiSessionsResponseSchema,
   "history-api-session-detail": HistoryApiSessionDetailResponseSchema,
   "history-api-usage": HistoryApiUsageResponseSchema,
+  "history-api-usage-report": HistoryApiUsageReportResponseSchema,
+  "history-api-blocks": HistoryApiBlocksResponseSchema,
   "history-api-tools": HistoryApiToolsResponseSchema,
   "history-api-facets": HistoryApiFacetsResponseSchema,
   "history-api-captures": HistoryApiCapturesResponseSchema,

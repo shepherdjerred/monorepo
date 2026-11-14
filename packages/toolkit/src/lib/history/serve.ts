@@ -9,6 +9,7 @@ import {
   type UsageMetricsExport,
 } from "./usage-metrics.ts";
 import { handleHistoryApiRequest } from "./api/handler.ts";
+import { loadQuotaSnapshots } from "./blocks.ts";
 import { ingestCaptureSpool } from "./captures/ingest.ts";
 import { CaptureStore } from "./captures/store.ts";
 import { createHistorySources } from "./sources.ts";
@@ -296,7 +297,14 @@ export async function runHistoryDaemon(): Promise<void> {
     fetch: async (request): Promise<Response> => {
       try {
         const api = await handleHistoryApiRequest(
-          { index, captures, readMessages: targetedMessages },
+          {
+            index,
+            captures,
+            readMessages: targetedMessages,
+            now: () => new Date(),
+            loadQuotaSnapshots: () =>
+              loadQuotaSnapshots(defaultSnapshotsPath()),
+          },
           request,
         );
         if (api !== null) {

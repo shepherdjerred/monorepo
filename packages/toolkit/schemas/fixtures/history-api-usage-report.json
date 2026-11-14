@@ -1,0 +1,128 @@
+{
+  "apiVersion": 1,
+  "period": "week",
+  "timezone": "America/Los_Angeles",
+  "startOfWeek": "monday",
+  "breakdown": ["agent", "machine"],
+  "since": "2026-11-01T07:00:00.000Z",
+  "until": null,
+  "filters": {
+    "agent": null,
+    "source": null,
+    "machine": null,
+    "project": null
+  },
+  "total": {
+    "inputTokens": 58600,
+    "outputTokens": 3850,
+    "cacheReadTokens": 180000,
+    "cacheCreationTokens": 7300,
+    "cachedInputTokens": 0,
+    "reasoningTokens": 0,
+    "totalTokens": 249750,
+    "events": 6,
+    "costUsd": 3.22,
+    "costComplete": false,
+    "unpricedModels": ["gpt-preview-x"]
+  },
+  "periods": [
+    {
+      "period": "2026-11-02",
+      "start": "2026-11-02T08:00:00.000Z",
+      "end": "2026-11-09T08:00:00.000Z",
+      "inputTokens": 1200,
+      "outputTokens": 340,
+      "cacheReadTokens": 48000,
+      "cacheCreationTokens": 2100,
+      "cachedInputTokens": 0,
+      "reasoningTokens": 0,
+      "totalTokens": 51640,
+      "events": 1,
+      "costUsd": 0.62,
+      "costComplete": true,
+      "breakdown": [
+        {
+          "agent": "claude",
+          "model": null,
+          "project": null,
+          "machine": null,
+          "inputTokens": 1200,
+          "outputTokens": 340,
+          "cacheReadTokens": 48000,
+          "cacheCreationTokens": 2100,
+          "cachedInputTokens": 0,
+          "reasoningTokens": 0,
+          "totalTokens": 51640,
+          "events": 1,
+          "costUsd": 0.62,
+          "costComplete": true
+        }
+      ]
+    },
+    {
+      "period": "2026-11-09",
+      "start": "2026-11-09T08:00:00.000Z",
+      "end": "2026-11-16T08:00:00.000Z",
+      "inputTokens": 57400,
+      "outputTokens": 3510,
+      "cacheReadTokens": 132000,
+      "cacheCreationTokens": 5200,
+      "cachedInputTokens": 0,
+      "reasoningTokens": 0,
+      "totalTokens": 198110,
+      "events": 5,
+      "costUsd": 2.6,
+      "costComplete": false,
+      "breakdown": [
+        {
+          "agent": "claude",
+          "model": null,
+          "project": null,
+          "machine": null,
+          "inputTokens": 5800,
+          "outputTokens": 1220,
+          "cacheReadTokens": 120000,
+          "cacheCreationTokens": 4900,
+          "cachedInputTokens": 0,
+          "reasoningTokens": 0,
+          "totalTokens": 131920,
+          "events": 2,
+          "costUsd": 2.15,
+          "costComplete": true
+        },
+        {
+          "agent": "codex",
+          "model": null,
+          "project": null,
+          "machine": null,
+          "inputTokens": 51000,
+          "outputTokens": 2200,
+          "cacheReadTokens": 0,
+          "cacheCreationTokens": 0,
+          "cachedInputTokens": 0,
+          "reasoningTokens": 0,
+          "totalTokens": 53200,
+          "events": 2,
+          "costUsd": 0.4,
+          "costComplete": false
+        },
+        {
+          "agent": "claude",
+          "model": null,
+          "project": null,
+          "machine": "jerred-desktop",
+          "inputTokens": 600,
+          "outputTokens": 90,
+          "cacheReadTokens": 12000,
+          "cacheCreationTokens": 300,
+          "cachedInputTokens": 0,
+          "reasoningTokens": 0,
+          "totalTokens": 12990,
+          "events": 1,
+          "costUsd": 0.05,
+          "costComplete": true
+        }
+      ]
+    }
+  ]
+}
