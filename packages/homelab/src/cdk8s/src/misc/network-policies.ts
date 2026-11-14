@@ -3,6 +3,7 @@ import {
   IntOrString,
   KubeNetworkPolicy,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import { PROD_NODE_INTERNAL_IP } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
 import { postgresClusterPodLabels } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/cluster-label.ts";
 
 /**
@@ -142,11 +143,25 @@ export function externalHttpsEgressRule() {
   };
 }
 
-/** The reviewed control-plane endpoint after Kubernetes Service DNAT. */
+/** The address and port the `kubernetes` Service's Endpoints advertise. */
+export const KUBERNETES_API_ENDPOINT = {
+  cidr: `${PROD_NODE_INTERNAL_IP}/32`,
+  port: 6443,
+} as const;
+
+/**
+ * The Kubernetes API server, as a pod's connection to the `kubernetes`
+ * Service looks after DNAT.
+ *
+ * NetworkPolicy is evaluated against the translated destination, which is the
+ * address the API server advertises in the `kubernetes` Endpoints: the
+ * control-plane node's InternalIP. Here that is the node's Tailscale address,
+ * not its LAN address, so the rule takes it from the node registry.
+ */
 export function kubernetesApiEgressRule() {
   return {
-    to: [{ ipBlock: { cidr: "192.168.1.81/32" } }],
-    ports: [{ port: IntOrString.fromNumber(6443), protocol: "TCP" }],
+    to: [{ ipBlock: { cidr: KUBERNETES_API_ENDPOINT.cidr } }],
+    ports: [tcp(KUBERNETES_API_ENDPOINT.port)],
   };
 }
 
