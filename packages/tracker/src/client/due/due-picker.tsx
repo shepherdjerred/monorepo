@@ -7,6 +7,7 @@ import {
   type PopupEntry,
 } from "#client/controls/popup-store.ts";
 import { deferred } from "#client/ui/lazy.ts";
+import { leavingPopup } from "#client/ui/leaving.tsx";
 import { notifyError } from "#client/ui/toast.tsx";
 
 /**
@@ -75,6 +76,7 @@ function DuePopover({ entry }: { entry: Open }) {
         >
           <Popover.Popup
             className="picker-popup due-popover"
+            render={leavingPopup}
             aria-label={request.title}
             initialFocus={input}
             finalFocus={() =>

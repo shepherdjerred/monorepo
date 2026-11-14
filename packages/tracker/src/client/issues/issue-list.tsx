@@ -24,10 +24,16 @@ import { useFreshRows } from "#client/live/remote-activity.ts";
 import { readDisplay, toggleCollapsed } from "#client/views/display-options.ts";
 import {
   buildRows,
+  groupPlaces,
   type GroupHeader,
   type ListRow,
 } from "#client/views/grouping.ts";
 import { GroupHeading, IssueRowItem, type RowOptions } from "./issue-row.tsx";
+import { feedback } from "#client/feedback/index.ts";
+import { glideRows, holdRowsStill } from "#client/feedback/motion.ts";
+
+/** How long the rows of a group that just opened count as arriving. */
+const openingMs = 500;
 
 const phone = "(max-width: 767px)";
 /** A row's usual height under `list.css`, used until it has been measured. */
@@ -227,6 +233,10 @@ export function IssueList() {
     () => issues.map(({ identifier }) => identifier),
     [issues],
   );
+  const places = useMemo(() => groupPlaces(rows), [rows]);
+  // The group just opened, so its rows can arrive rather than appear.
+  const [opening, setOpening] = useState<string>();
+  const openingTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const selection = useSelection(shell.selectionScope);
   const selecting = selection.ids.size > 0;
   const statusChoices = useMemo(() => stateOptions(allStates), [allStates]);
@@ -309,6 +319,8 @@ export function IssueList() {
       globalThis.addEventListener("scroll", scrolled, { passive: true });
       // That offset is a first guess; the anchor row then settles it exactly.
       let settling = resume?.anchor !== undefined;
+      // Rows hold still meanwhile, so no glide moves them under the restore.
+      const still = settling ? holdRowsStill() : undefined;
       const release =
         resume?.anchor === undefined
           ? undefined
@@ -329,6 +341,7 @@ export function IssueList() {
               done: () => {
                 settling = false;
                 resumed.current = true;
+                still?.();
               },
             });
       const save = () => {
@@ -370,6 +383,7 @@ export function IssueList() {
       return () => {
         save();
         release?.();
+        still?.();
         forget();
         globalThis.removeEventListener("pagehide", save);
         globalThis.removeEventListener("scroll", scrolled);
@@ -387,6 +401,16 @@ export function IssueList() {
   const sticky = offset > 0 ? stickyHeader(rows, firstVisible) : undefined;
   const setSize = list.hasMore ? -1 : issues.length;
   const toggleGroup = (key: string) => {
+    glideRows();
+    clearTimeout(openingTimer.current);
+    if (display.collapsed.has(key)) {
+      setOpening(key);
+      openingTimer.current = setTimeout(() => {
+        setOpening(undefined);
+      }, openingMs);
+    } else {
+      setOpening(undefined);
+    }
     setParams(toggleCollapsed(params, key), {
       replace: true,
       preventScrollReset: true,
@@ -449,6 +473,7 @@ export function IssueList() {
             );
           }
           const { identifier } = row.issue;
+          const place = places.get(item.index);
           return (
             <IssueRowItem
               key={rowKey(row)}
@@ -459,6 +484,10 @@ export function IssueList() {
                 index: item.index,
                 measure: virtualizer.measureElement,
                 style,
+                entering:
+                  place !== undefined && place.group === opening
+                    ? place.place
+                    : undefined,
               }}
               options={options}
               state={{
@@ -475,9 +504,11 @@ export function IssueList() {
                   openPeek(identifier);
                 },
                 toggle: () => {
+                  feedback("select");
                   update((value) => toggleSelected(value, identifier));
                 },
                 extend: () => {
+                  feedback("select");
                   update((value) =>
                     extendSelection(
                       value,

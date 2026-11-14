@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { api } from "#client/data/api.ts";
 import { ErrorNotice } from "#client/ui/ui.tsx";
+import { ActivitySkeleton } from "#client/ui/skeleton.tsx";
 import { ActivityList } from "#client/issues/activity.tsx";
 
 export function GlobalActivity() {
@@ -12,7 +13,7 @@ export function GlobalActivity() {
     <div className="reading-page">
       {query.error !== null && <ErrorNotice error={query.error} />}
       {query.data === undefined ? (
-        <div className="loading">Loading activity…</div>
+        <ActivitySkeleton />
       ) : (
         <ActivityList events={query.data} detailed />
       )}

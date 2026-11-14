@@ -167,9 +167,11 @@ test("Shift+C creates an issue in the view, ⌘ Enter stays and ⌘ ⇧ Enter op
     .fill(`${title} opened`);
   await page.keyboard.press("ControlOrMeta+Shift+Enter");
   await expect(page).toHaveURL(/\/issues\/AI-\d+$/u);
-  await expect(page.getByLabel("Issue title", { exact: true })).toHaveValue(
-    `${title} opened`,
-  );
+  // The New issue dialog may still be fading out; the page's title is the
+  // one in the accessibility tree.
+  await expect(
+    page.getByRole("textbox", { name: "Issue title", exact: true }),
+  ).toHaveValue(`${title} opened`);
   await removeIssue(page.request, identifier);
   await removeIssue(page.request, page.url().split("/").at(-1) ?? "");
 });

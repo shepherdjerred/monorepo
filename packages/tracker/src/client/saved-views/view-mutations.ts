@@ -4,6 +4,7 @@ import { currentActor } from "#client/data/identity.ts";
 import { noteActor, workspace } from "#client/data/mutations.ts";
 import { notify, notifyError } from "#client/ui/toast.tsx";
 import type { SavedView, ViewParams } from "./view-params.ts";
+import { feedback } from "#client/feedback/index.ts";
 
 type ViewFields = {
   name: string;
@@ -83,6 +84,9 @@ export async function createView(fields: ViewFields) {
     },
     settle,
   });
+  if (outcome.ok) {
+    feedback("create");
+  }
   return report(outcome, `View “${fields.name}” saved`, "View not saved");
 }
 

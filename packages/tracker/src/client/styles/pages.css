@@ -206,3 +206,88 @@
     min-width: 120px;
   }
 }
+/* Settings → Feedback. */
+.feedback-options {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 18px;
+}
+.feedback-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.switch-field {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+.switch-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.settings-page .switch-copy label {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.switch {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  width: 34px;
+  height: 20px;
+  margin-top: 1px;
+  padding: 2px;
+  border: 1px solid var(--muted);
+  border-radius: 10px;
+  background: var(--subtle);
+  cursor: pointer;
+  transition:
+    background-color var(--dur-1) var(--ease-out),
+    border-color var(--dur-1) var(--ease-out);
+}
+.switch[data-checked] {
+  border-color: #7c59d9;
+  background: #7c59d9;
+}
+.switch-thumb {
+  display: block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--muted);
+  transition:
+    translate var(--dur-2) var(--ease-spring),
+    background-color var(--dur-1) var(--ease-out);
+}
+.switch[data-checked] .switch-thumb {
+  translate: 14px 0;
+  background: #fff;
+}
+.switch:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+.feedback-note {
+  margin-top: 16px;
+}
+@media (max-width: 767px) {
+  .feedback-row {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .switch-field {
+    min-height: 44px;
+  }
+  .feedback-row .toolbar-button {
+    min-height: 44px;
+  }
+}

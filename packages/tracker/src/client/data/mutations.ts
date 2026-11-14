@@ -28,6 +28,9 @@ import {
   notifyError,
   notifyUndo,
 } from "#client/ui/toast.tsx";
+import { feedback } from "#client/feedback/index.ts";
+import { editOutcome } from "#client/feedback/policy.ts";
+import { glideRows, leave, settleStatus } from "#client/feedback/motion.ts";
 
 const edits = createIssueEdits({
   client: queryClient,
@@ -87,6 +90,42 @@ export function noteActor() {
   }
 }
 
+/**
+ * Acknowledge an edit the moment it shows, once however many issues it
+ * touched: a sound and a buzz for its outcome, a settling status icon, rows
+ * that glide to their new places, and rows that fade out when an archive
+ * takes them off the list.
+ */
+function acknowledge(
+  identifiers: readonly string[],
+  change: Exclude<IssueChange, { kind: "move" }>,
+) {
+  const [first] = identifiers;
+  if (first === undefined) {
+    return;
+  }
+  const { teamId } = loadedIssue(first);
+  const stateType =
+    change.kind === "state"
+      ? workspace().states.find(
+          (state) => state.teamId === teamId && state.name === change.stateName,
+        )?.type
+      : undefined;
+  const outcome = editOutcome(change.kind, stateType);
+  if (outcome !== undefined) {
+    feedback(outcome);
+  }
+  // An edit can move the row: to the top of a list ordered by update, or
+  // into another group. It glides there rather than jumping.
+  glideRows();
+  if (change.kind === "state") {
+    settleStatus(identifiers);
+  }
+  if (change.kind === "archive" && change.archived) {
+    leave(identifiers);
+  }
+}
+
 /** Save an edit with Undo on offer from the moment it shows. */
 async function saveWithUndo(
   saving: Promise<Outcome>,
@@ -127,6 +166,7 @@ export function editIssue(
 ): Promise<Outcome> {
   const inverse = inverseChange(loadedIssue(identifier), change);
   const title = `${identifier} ${changeSummary(change, workspace())}`;
+  acknowledge([identifier], change);
   const saving = edits.edit(identifier, change);
   return inverse === undefined
     ? saveThenConfirm(saving, title)
@@ -182,6 +222,10 @@ export async function bulkEdit(
     notify(summary);
     return { ok: true, value: undefined };
   }
+  acknowledge(
+    changes.map(([identifier]) => identifier),
+    change,
+  );
   let failed = false;
   const toast = notifyUndo(summary, {
     undo: () => {
@@ -278,6 +322,8 @@ const countOf = (identifiers: readonly string[]) =>
  * until the one Undo toast goes away, and are deleted then.
  */
 export function deleteIssues(identifiers: readonly string[]) {
+  feedback("destructive");
+  leave(identifiers);
   for (const identifier of identifiers) {
     edits.requestDelete(identifier);
   }
@@ -364,6 +410,7 @@ export async function createIssue(
     });
   }
   noteActor();
+  feedback("create");
   notify(
     `${issue.identifier} created`,
     view === undefined

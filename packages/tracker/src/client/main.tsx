@@ -18,6 +18,7 @@ import { Actors } from "#client/pages/actors.tsx";
 import { GlobalActivity } from "#client/pages/activity-page.tsx";
 import { Projects } from "#client/pages/projects.tsx";
 import { Empty } from "#client/ui/ui.tsx";
+import { SettingsSkeleton } from "#client/ui/skeleton.tsx";
 import { useShell } from "#client/shell/shell-context.ts";
 import { viewHandle } from "#client/shell/route.ts";
 import "./styles.css";
@@ -48,7 +49,7 @@ function IssuePage() {
 function SettingsPage() {
   const { bootstrap, teamKey } = useShell();
   return (
-    <Suspense fallback={<div className="loading">Loading settings…</div>}>
+    <Suspense fallback={<SettingsSkeleton />}>
       <Settings bootstrap={bootstrap} teamKey={teamKey} />
     </Suspense>
   );

@@ -34,6 +34,15 @@ import { useTeamKey } from "./team.ts";
 import { Toaster } from "#client/ui/toast.tsx";
 import { useLiveUpdates } from "#client/live/connection.ts";
 import { LiveAnnouncer, LiveIndicator } from "#client/live/presence.tsx";
+import { ViewSkeleton } from "#client/issues/issue-view.tsx";
+import {
+  ActivitySkeleton,
+  ActorsSkeleton,
+  DetailSkeleton,
+  SettingsSkeleton,
+} from "#client/ui/skeleton.tsx";
+import { feedback } from "#client/feedback/index.ts";
+import { useViewTransitions } from "#client/feedback/motion.ts";
 import type { ShellContext } from "./shell-context.ts";
 import { DuePickerHost } from "#client/due/due-picker.tsx";
 import { useCreateRequests } from "#client/hierarchy/hierarchy-actions.ts";
@@ -68,6 +77,53 @@ function pageHeading(route: RouteInfo, data: BootstrapData | undefined) {
     : headings[route.view];
 }
 
+/** The routed page's shape while the workspace it needs is loading. */
+function WorkspaceSkeleton({ route }: { route: RouteInfo }) {
+  switch (route.view) {
+    case "issue": {
+      return <DetailSkeleton identifier={route.identifier ?? ""} />;
+    }
+    case "activity": {
+      return (
+        <div className="reading-page">
+          <ActivitySkeleton />
+        </div>
+      );
+    }
+    case "actors":
+    case "actor":
+    case "projects": {
+      return (
+        <div className="reading-page">
+          <ActorsSkeleton />
+        </div>
+      );
+    }
+    case "settings": {
+      return <SettingsSkeleton />;
+    }
+    case "home":
+    case "issues":
+    case "board":
+    case "project":
+    case "not-found": {
+      return <ViewSkeleton board={route.view === "board"} />;
+    }
+  }
+}
+
+/**
+ * The peek shown while its dialog is open and while it animates closed, so
+ * it leaves with its content rather than as an empty frame.
+ */
+function useShownPeek(identifier: string | undefined) {
+  const [shown, setShown] = useState(identifier);
+  if (identifier !== undefined && identifier !== shown) {
+    setShown(identifier);
+  }
+  return identifier ?? shown;
+}
+
 /** The persistent layout: navigation, overlays and shortcuts outlive every route. */
 export function Shell() {
   const bootstrap = useQuery({
@@ -84,7 +140,19 @@ export function Shell() {
   const peek = usePeek(route.isList);
   const pageIssue = useIssue(route.identifier);
   useLiveUpdates(data?.liveUpdatesEnabled === true);
-  const [overlay, setOverlay] = useState<Overlay>();
+  const [overlay, setOverlayState] = useState<Overlay>();
+  // Each opening of the palette starts fresh; between openings it stays
+  // mounted so it can animate closed.
+  const [paletteSession, setPaletteSession] = useState(0);
+  const setOverlay = (next: Overlay | undefined) => {
+    if (next === "palette" && overlay !== "palette") {
+      setPaletteSession((session) => session + 1);
+      feedback("palette");
+    }
+    setOverlayState(next);
+  };
+  const shownPeek = useShownPeek(peek.identifier);
+  const viewTransitions = useViewTransitions();
   const [current, setCurrent] = useState<string>();
   // Each New issue opens fresh, with the fields the caller filled in.
   const [draft, setDraft] = useState<{ id: number; prefill: IssuePrefill }>({
@@ -205,7 +273,7 @@ export function Shell() {
         <main id="main" tabIndex={-1}>
           {bootstrap.error !== null && <ErrorNotice error={bootstrap.error} />}
           {context === undefined ? (
-            <div className="loading">Loading workspace…</div>
+            <WorkspaceSkeleton route={route} />
           ) : (
             <>
               {!context.bootstrap.writesEnabled && (
@@ -229,13 +297,16 @@ export function Shell() {
             prefill={draft.prefill}
             onCreated={(value, view) => {
               if (view) {
+                // The new issue's page takes over the screen at once; the
+                // dialog it came from does not linger over it.
+                setDraft((known) => ({ id: known.id + 1, prefill: {} }));
                 void navigate(`/issues/${value}`);
               }
             }}
           />
           <ParentDialog />
           <Modal
-            title={peek.identifier ?? "Issue"}
+            title={shownPeek ?? "Issue"}
             open={peek.identifier !== undefined}
             onClose={peek.close}
             className="peek"
@@ -243,9 +314,9 @@ export function Shell() {
           >
             <SearchPickerHost bootstrap={context.bootstrap} scope="peek" />
             <DuePickerHost scope="peek" />
-            {peek.identifier !== undefined && (
+            {shownPeek !== undefined && (
               <IssueDetail
-                identifier={peek.identifier}
+                identifier={shownPeek}
                 bootstrap={context.bootstrap}
                 peek
                 close={peek.close}
@@ -254,8 +325,10 @@ export function Shell() {
           </Modal>
         </>
       )}
-      {overlay === "palette" && context !== undefined && (
+      {paletteSession > 0 && context !== undefined && (
         <Palette
+          key={paletteSession}
+          open={overlay === "palette"}
           bootstrap={context.bootstrap}
           targets={actionTargets(shellState)}
           prefill={prefill}
@@ -264,7 +337,10 @@ export function Shell() {
           action={(key) => actions[key]?.()}
           close={closeOverlay}
           navigate={(to) => {
-            void navigate(to);
+            // Opening an issue page from the palette morphs into it.
+            void navigate(to, {
+              viewTransition: viewTransitions && to.startsWith("/issues/"),
+            });
           }}
           create={create}
         />

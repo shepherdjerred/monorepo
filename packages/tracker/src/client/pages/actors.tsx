@@ -7,6 +7,7 @@ import {
 } from "#client/issues/issue-list-query.ts";
 import { IssueListSchema } from "#shared/schema.ts";
 import { Avatar, ErrorNotice } from "#client/ui/ui.tsx";
+import { ActorsSkeleton } from "#client/ui/skeleton.tsx";
 import { ActivityList } from "#client/issues/activity.tsx";
 import { AbsoluteTime, RelativeTime } from "#client/ui/time.tsx";
 
@@ -40,7 +41,9 @@ export function Actors() {
   return (
     <div className="reading-page">
       {actors.error !== null && <ErrorNotice error={actors.error} />}
-      {actor === undefined ? (
+      {actors.data === undefined && actors.error === null ? (
+        <ActorsSkeleton />
+      ) : actor === undefined ? (
         <div className="actor-grid">
           {actors.data?.map((a) => (
             <Link

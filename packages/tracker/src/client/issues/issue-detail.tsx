@@ -5,7 +5,12 @@ import { IssueProperties } from "./issue-properties.tsx";
 import { IssueRelations } from "./issue-relations.tsx";
 import { useCallback, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Link, useNavigate } from "react-router";
+import {
+  Link,
+  useLocation,
+  useNavigate,
+  useViewTransitionState,
+} from "react-router";
 import { Archive, ArrowUpRight, History } from "lucide-react";
 import {
   api,
@@ -27,6 +32,19 @@ import { RemoteEditNotice } from "#client/live/presence.tsx";
 import { isComposing } from "#client/ui/ime.ts";
 import { recentIssues } from "#client/shell/recent-issues.ts";
 import { SubIssues } from "#client/hierarchy/sub-issues.tsx";
+import { DetailSkeleton } from "#client/ui/skeleton.tsx";
+import { useViewTransitions } from "#client/feedback/motion.ts";
+
+/**
+ * A peek is what morphs into the issue page when it is opened in full, and
+ * back out of it on Back; the page names its own title in CSS.
+ */
+function usePeekMorph(identifier: string, peek: boolean) {
+  const path = `/issues/${identifier}`;
+  const moving = useViewTransitionState(path);
+  const { pathname } = useLocation();
+  return peek && moving && pathname !== path;
+}
 
 export function IssueDetail({
   identifier,
@@ -44,7 +62,7 @@ export function IssueDetail({
     return <ErrorNotice error={query.error} />;
   }
   if (query.data === undefined) {
-    return <div className="loading">Loading issue…</div>;
+    return <DetailSkeleton identifier={identifier} peek={peek} />;
   }
   return (
     <IssueContent
@@ -70,6 +88,8 @@ function IssueContent({
 }) {
   const navigate = useNavigate();
   const { identifier } = issue;
+  const morph = usePeekMorph(identifier, peek);
+  const viewTransition = useViewTransitions();
   const [title, setTitle] = useState(issue.title);
   const [savedTitle, setSavedTitle] = useState(issue.title);
   const [typingTitle, setTypingTitle] = useState(false);
@@ -136,7 +156,12 @@ function IssueContent({
     [identifier],
   );
   return (
-    <article className={`issue-detail ${peek ? "is-peek" : ""}`} ref={remember}>
+    <article
+      className={`issue-detail ${peek ? "is-peek" : ""}`}
+      ref={remember}
+      data-detail-issue={identifier}
+      data-vt-subject={morph ? "" : undefined}
+    >
       <header className="detail-toolbar">
         <nav className="detail-breadcrumb" aria-label="Breadcrumb">
           <span>{issue.team.name}</span>
@@ -168,6 +193,7 @@ function IssueContent({
             className="icon-button"
             aria-label="Open full issue"
             to={`/issues/${issue.identifier}`}
+            viewTransition={viewTransition}
           >
             <ArrowUpRight size={16} />
           </Link>

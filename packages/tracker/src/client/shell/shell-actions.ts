@@ -22,6 +22,7 @@ import { focusIssueRow, visibleOrder } from "./list-navigation.ts";
 import { currentActor } from "#client/data/identity.ts";
 import { requestSubIssue } from "#client/hierarchy/hierarchy-actions.ts";
 import { viewUrl, type SavedView } from "#client/saved-views/view-params.ts";
+import { feedback } from "#client/feedback/index.ts";
 import { hasAppHistory, type RouteInfo } from "./route.ts";
 
 export type Overlay = "create" | "palette" | "help" | "more";
@@ -220,6 +221,7 @@ function selectionActions(shell: Shell) {
       if (!listFocused || current === undefined) {
         return false;
       }
+      feedback("select");
       selectionStore.update(scope, (selection) =>
         toggleSelected(selection, current),
       );

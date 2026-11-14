@@ -114,6 +114,10 @@ test("a due date set on three selected issues is one bulkUpdate request", async 
   await page.goto(`/issues?team=${scratchTeam}&group=none&q=${tag}`);
   await selectRows(page, identifiers, mobile);
   const calls = recordCalls(page);
+  // The reload below must not cut off the save it then checks.
+  const saved = page.waitForResponse(
+    (response) => response.url().includes("issues.bulkUpdate") && response.ok(),
+  );
   const bar = page.getByRole("region", { name: "Selected issues" });
   await bar.locator("#bulk-due").click();
   await page
@@ -130,6 +134,7 @@ test("a due date set on three selected issues is one bulkUpdate request", async 
     .poll(() => calls.filter((call) => call.startsWith("issues.bulkUpdate")))
     .toHaveLength(1);
   expect(calls.filter((call) => call.startsWith("issues.update"))).toEqual([]);
+  await saved;
   await page.reload();
   for (const identifier of identifiers) {
     await expect(

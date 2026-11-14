@@ -20,6 +20,7 @@ import { isPlainClick } from "./route.ts";
 import type { Targets } from "./shell-actions.ts";
 import { isComposing } from "#client/ui/ime.ts";
 import type { SavedView } from "#client/saved-views/view-params.ts";
+import { useViewTransitions } from "#client/feedback/motion.ts";
 
 const listId = "palette-results";
 const optionId = (index: number) => `palette-option-${String(index)}`;
@@ -94,6 +95,7 @@ function IssueOption({
   /** Choosing the issue picks it for a step instead of opening it. */
   pick: (() => void) | undefined;
 }) {
+  const viewTransition = useViewTransitions();
   if (pick !== undefined) {
     return (
       <button
@@ -121,6 +123,7 @@ function IssueOption({
       aria-selected={active}
       tabIndex={-1}
       to={`/issues/${issue.identifier}`}
+      viewTransition={viewTransition}
       onClick={(event) => {
         if (isPlainClick(event)) {
           close();
@@ -213,6 +216,7 @@ function EntryGroups({
  * leaving the palette, and Escape or Backspace on an empty query steps out.
  */
 export function Palette({
+  open,
   close,
   navigate,
   create,
@@ -223,6 +227,7 @@ export function Palette({
   views,
   teamKey,
 }: {
+  open: boolean;
   close: () => void;
   navigate: (to: string) => void;
   create: (prefill?: IssuePrefill) => void;
@@ -245,7 +250,7 @@ export function Palette({
   const results = useQuery({
     queryKey: ["search", query],
     queryFn: () => api.search.query.query({ query }),
-    enabled: searching,
+    enabled: open && searching,
   });
   const issues = offeredIssues(step, searching, results.data?.items);
   const entries = (
@@ -325,7 +330,7 @@ export function Palette({
   return (
     <Modal
       title="Search and commands"
-      open
+      open={open}
       onClose={close}
       className="palette"
       onEscape={() => {

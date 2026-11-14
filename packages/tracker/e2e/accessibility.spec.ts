@@ -166,9 +166,42 @@ const surfaces: { name: string; open: (page: Page) => Promise<void> }[] = [
       ).toBeVisible();
     },
   },
+  {
+    name: "the settings feedback switches",
+    open: async (page) => {
+      await page.goto("/settings");
+      await expect(
+        page.getByRole("heading", { name: "Feedback", exact: true }),
+      ).toBeVisible();
+      // One switch on and one off, so both states are checked.
+      await page.getByRole("switch", { name: "Sounds" }).click();
+      await expect(
+        page.getByRole("switch", { name: "Sounds" }),
+      ).not.toBeChecked();
+      await expect(page.getByRole("switch", { name: "Haptics" })).toBeChecked();
+    },
+  },
 ];
 
 test.afterEach(({ request }) => removeScratchIssues(request));
+/**
+ * Let opening and closing surfaces finish moving first: half-faded text is
+ * a moment of an animation, not a state anyone reads.
+ */
+async function settle(page: Page) {
+  await page.evaluate(async () => {
+    await Promise.allSettled(
+      globalThis.document
+        .getAnimations()
+        .filter(
+          (animation) =>
+            animation.effect?.getComputedTiming().iterations !==
+            Number.POSITIVE_INFINITY,
+        )
+        .map(async (animation) => animation.finished),
+    );
+  });
+}
 
 for (const colorScheme of ["light", "dark"] as const) {
   for (const surface of surfaces) {
@@ -177,6 +210,7 @@ for (const colorScheme of ["light", "dark"] as const) {
     }) => {
       await page.emulateMedia({ colorScheme });
       await surface.open(page);
+      await settle(page);
       const { violations } = await new AxeBuilder({ page }).analyze();
       const blocking = violations
         .filter(({ impact }) => impact === "serious" || impact === "critical")

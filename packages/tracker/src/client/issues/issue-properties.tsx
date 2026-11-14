@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import {
   CalendarClock,
   Folder,
@@ -68,6 +68,43 @@ function PickerField({
         {children}
       </button>
     </div>
+  );
+}
+
+/**
+ * Votes count up or down the way they moved; casting one pops the thumb.
+ * Only a change animates, never the first render.
+ */
+function VoteButton({
+  issue,
+  disabled,
+  toggle,
+}: {
+  issue: IssueDetailData;
+  disabled: boolean;
+  toggle: () => void;
+}) {
+  const [seen, setSeen] = useState(issue.voteCount);
+  const [tick, setTick] = useState<"up" | "down">();
+  if (issue.voteCount !== seen) {
+    setTick(issue.voteCount > seen ? "up" : "down");
+    setSeen(issue.voteCount);
+  }
+  return (
+    <button
+      id="issue-vote"
+      className={`vote-button ${issue.viewerVoted ? "voted" : ""}`}
+      aria-pressed={issue.viewerVoted}
+      data-tick={tick}
+      disabled={disabled}
+      onClick={toggle}
+    >
+      <ThumbsUp size={15} key={issue.voteCount} />
+      <span className="vote-count" data-tick={tick}>
+        <span key={issue.voteCount}>{issue.voteCount}</span>
+      </span>{" "}
+      {issue.voteCount === 1 ? "vote" : "votes"}
+    </button>
   );
 }
 
@@ -194,18 +231,13 @@ export function IssueProperties({
           </span>
         )}
       </PickerField>
-      <button
-        id="issue-vote"
-        className={`vote-button ${issue.viewerVoted ? "voted" : ""}`}
-        aria-pressed={issue.viewerVoted}
+      <VoteButton
+        issue={issue}
         disabled={disabled}
-        onClick={() => {
+        toggle={() => {
           update({ kind: "vote", voted: !issue.viewerVoted });
         }}
-      >
-        <ThumbsUp size={15} />
-        {issue.voteCount} {issue.voteCount === 1 ? "vote" : "votes"}
-      </button>
+      />
       <div className="created-by">
         <span className="muted">Created by</span>
         <ActorChip actor={issue.creator} />

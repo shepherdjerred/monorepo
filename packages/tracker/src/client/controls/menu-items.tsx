@@ -32,6 +32,7 @@ import {
   stateOptions,
   teamStates,
 } from "./property-options.tsx";
+import { leavingPopup } from "#client/ui/leaving.tsx";
 
 /** The parts of the issue context menu: items and property submenus. */
 /** Whether a click is the finger lifting from the long press that opened the menu. */
@@ -103,7 +104,7 @@ function Submenu({
           sideOffset={2}
           alignOffset={-4}
         >
-          <ContextMenu.Popup className="menu-popup">
+          <ContextMenu.Popup className="menu-popup" render={leavingPopup}>
             {children}
           </ContextMenu.Popup>
         </ContextMenu.Positioner>

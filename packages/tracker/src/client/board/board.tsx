@@ -1,5 +1,6 @@
 import {
   DndContext,
+  DragOverlay,
   MouseSensor,
   TouchSensor,
   closestCorners,
@@ -7,7 +8,10 @@ import {
   useDroppable,
   useSensor,
   useSensors,
+  useDndContext,
   type DragEndEvent,
+  type DragStartEvent,
+  type DropAnimationFunction,
   type CollisionDetection,
   type KeyboardCoordinateGetter,
 } from "@dnd-kit/core";
@@ -17,7 +21,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { GripVertical, MessageSquare, ThumbsUp } from "lucide-react";
 import type { BootstrapData, Issue } from "#client/data/api.ts";
@@ -37,7 +41,10 @@ import { useSelection } from "#client/controls/selection.ts";
 import { pickDue } from "#client/controls/issue-actions.ts";
 import { RowDue } from "#client/due/due-chip.tsx";
 import { SubIssueBadge } from "#client/hierarchy/progress.tsx";
-import { StateIcon } from "#client/ui/icons.tsx";
+import { PriorityGlyph, StateIcon } from "#client/ui/icons.tsx";
+import { Avatar, Swatch } from "#client/ui/ui.tsx";
+import { feedback } from "#client/feedback/index.ts";
+import { easeOut, spring, useReducedMotion } from "#client/feedback/motion.ts";
 import { useShell } from "#client/shell/shell-context.ts";
 import { isPlainClick } from "#client/shell/route.ts";
 import { useFreshRows } from "#client/live/remote-activity.ts";
@@ -101,6 +108,10 @@ function Card({ issue, options }: { issue: Issue; options: CardOptions }) {
   const { current, setCurrent, openPeek, selectionScope } = useShell();
   const fresh = useFreshRows().has(issue.identifier);
   const selected = useSelection(selectionScope).ids.has(issue.identifier);
+  // While a pointer carries the card, the slot it left cannot be clicked or
+  // selected; a keyboard drag keeps focus on its handle.
+  const { activatorEvent } = useDndContext();
+  const lifted = isDragging && !(activatorEvent instanceof KeyboardEvent);
   const focus = () => {
     setCurrent(issue.identifier);
   };
@@ -110,6 +121,7 @@ function Card({ issue, options }: { issue: Issue; options: CardOptions }) {
       ref={setNodeRef}
       data-row-issue={issue.identifier}
       data-selected={selected}
+      inert={lifted}
       className={`board-card ${isDragging ? "dragging" : ""}`}
       data-fresh={fresh ? "" : undefined}
       style={{
@@ -211,6 +223,115 @@ function Card({ issue, options }: { issue: Issue; options: CardOptions }) {
   );
 }
 
+/**
+ * The card as it is carried: a still picture of it, with nothing to focus or
+ * press, so the page keeps exactly one of each control.
+ */
+function LiftedCard({
+  issue,
+  hidden,
+}: {
+  issue: Issue;
+  hidden: ReadonlySet<RowProperty>;
+}) {
+  return (
+    <article className="lifted-card" aria-hidden="true">
+      <div className="card-top">
+        <span className="option-icon">
+          <StateIcon type={issue.state.type} color={issue.state.color} />
+        </span>
+        <span className="identifier">{issue.identifier}</span>
+        <span className="spacer" />
+        <span className="drag-handle">
+          <GripVertical size={16} />
+        </span>
+      </div>
+      <span className="card-title">{issue.title}</span>
+      {!hidden.has("labels") && issue.labels.length > 0 && (
+        <div className="card-labels">
+          <span className="row-labels">
+            {issue.labels.slice(0, 6).map((label) => (
+              <span className="label" key={label.id}>
+                <Swatch color={label.color} />
+                {label.name}
+              </span>
+            ))}
+          </span>
+        </div>
+      )}
+      <div className="card-bottom">
+        <span className={`priority priority-${String(issue.priority)}`}>
+          <PriorityGlyph value={issue.priority} />
+        </span>
+        {!hidden.has("project") && issue.project !== null && (
+          <span className="muted">{issue.project.name}</span>
+        )}
+        <span className="spacer" />
+        {!hidden.has("assignee") &&
+          (issue.assignee === null ? (
+            <span className="unassigned" />
+          ) : (
+            <Avatar actor={issue.assignee} decorative />
+          ))}
+      </div>
+    </article>
+  );
+}
+
+const frame = () =>
+  new Promise((resolve) => {
+    requestAnimationFrame(resolve);
+  });
+
+/**
+ * The carried card settles into the slot the card now has. The drop has
+ * already moved it in the cache, so this waits for that render and flies to
+ * wherever the card landed, in its own column or another.
+ */
+function settleInto(
+  identifierOf: (id: string) => string | undefined,
+): DropAnimationFunction {
+  return async ({ active, dragOverlay }) => {
+    await frame();
+    await frame();
+    const identifier = identifierOf(String(active.id));
+    const target =
+      identifier === undefined
+        ? null
+        : document.querySelector<HTMLElement>(
+            `.board-card[data-row-issue="${CSS.escape(identifier)}"]`,
+          );
+    if (target === null) {
+      return;
+    }
+    const from = dragOverlay.node.getBoundingClientRect();
+    const to = target.getBoundingClientRect();
+    const timing = { duration: 260, easing: spring, fill: "forwards" } as const;
+    target.style.visibility = "hidden";
+    const flight = dragOverlay.node.animate(
+      [
+        { translate: "0 0" },
+        {
+          translate: `${String(to.left - from.left)}px ${String(to.top - from.top)}px`,
+        },
+      ],
+      timing,
+    );
+    dragOverlay.node.firstElementChild?.animate(
+      [
+        { rotate: "2deg", scale: "1.02" },
+        { rotate: "0deg", scale: "1" },
+      ],
+      { ...timing, easing: easeOut },
+    );
+    try {
+      await flight.finished;
+    } finally {
+      target.style.visibility = "";
+    }
+  };
+}
+
 function Column({
   state,
   items,
@@ -277,6 +398,17 @@ export function Board({
     hidden,
     disabled: !bootstrap.writesEnabled,
   };
+  const reduced = useReducedMotion();
+  const [carried, setCarried] = useState<string>();
+  const carriedIssue = items.find(({ id }) => id === carried);
+  const dropAnimation = useMemo(
+    () => settleInto((id) => items.find((item) => item.id === id)?.identifier),
+    [items],
+  );
+  function lifted(event: DragStartEvent) {
+    setCarried(String(event.active.id));
+    feedback("pickup");
+  }
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
     useSensor(TouchSensor, {
@@ -289,6 +421,7 @@ export function Board({
   // A drop moves the card in the cache at once; moves of one card are saved
   // in order, so the board never has to wait for the previous one.
   function dropped(event: DragEndEvent) {
+    setCarried(undefined);
     const { active, over } = event;
     if (over === null || active.id === over.id) return;
     const issue = items.find(({ id }) => id === active.id);
@@ -304,6 +437,7 @@ export function Board({
         : column.findIndex(({ id }) => id === target.id);
     const before = column[index - 1];
     const after = column[index];
+    feedback("drop");
     void moveIssue(issue.identifier, {
       stateId: state.id,
       boardOrder:
@@ -334,7 +468,11 @@ export function Board({
         }}
         autoScroll={{ threshold: { x: 0.05, y: 0.05 }, acceleration: 5 }}
         collisionDetection={boardCollision}
+        onDragStart={lifted}
         onDragEnd={dropped}
+        onDragCancel={() => {
+          setCarried(undefined);
+        }}
       >
         <div className="board">
           {states.map((state) => (
@@ -351,6 +489,11 @@ export function Board({
             />
           ))}
         </div>
+        <DragOverlay dropAnimation={reduced ? null : dropAnimation}>
+          {carriedIssue === undefined ? null : (
+            <LiftedCard issue={carriedIssue} hidden={hidden} />
+          )}
+        </DragOverlay>
       </DndContext>
     </>
   );

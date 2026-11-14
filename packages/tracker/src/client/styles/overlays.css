@@ -301,8 +301,7 @@
     var(--toast-swipe-movement-y, 0)
   );
 }
-.toast[data-limited],
-.toast[data-ending-style] {
+.toast[data-limited] {
   display: none;
 }
 .toast[data-type="error"] {

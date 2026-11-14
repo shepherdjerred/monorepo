@@ -465,7 +465,9 @@ function plainKeyTaken(event: KeyboardEvent, blocked: boolean) {
     blocked ||
     target?.closest(editable) != null ||
     target?.closest(popup) != null ||
-    document.querySelector('[role="dialog"]:not(.peek)') !== null ||
+    // A dialog animating closed is inert and no longer holds the keys.
+    document.querySelector('[role="dialog"]:not(.peek):not([inert])') !==
+      null ||
     (event.key === "Enter" && target?.closest(activatable) != null)
   );
 }
