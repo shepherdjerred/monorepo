@@ -14,7 +14,10 @@ import {
   getCompetitionStatus,
   type CompetitionWithCriteria,
 } from "@scout-for-lol/data";
-import { CompetitionDatesSchema } from "#src/database/competition/competition-dates.ts";
+import {
+  CompetitionDatesSchema,
+  type CompetitionDates,
+} from "#src/database/competition/competition-dates.ts";
 import type { UpdateCompetitionInput } from "#src/database/competition/queries.ts";
 import { ReportScheduleTimezoneSchema } from "@scout-for-lol/data/model/competitions/competition-cron.ts";
 
@@ -71,6 +74,21 @@ export function assertCompetitionEditable(
 }
 
 /**
+ * Start-before-end and the 90-day limit are user-correctable rules: answer a
+ * violation as BAD_REQUEST with the rule's message, not a 500.
+ */
+function parseCompetitionDatesOrBadRequest(
+  dates: NonNullable<CompetitionEditInput["dates"]>,
+): CompetitionDates {
+  const parsed = CompetitionDatesSchema.safeParse(dates);
+  if (parsed.success) return parsed.data;
+  throw new TRPCError({
+    code: "BAD_REQUEST",
+    message: parsed.error.issues.map((issue) => issue.message).join("; "),
+  });
+}
+
+/**
  * Build the sparse update payload — only the keys the caller actually provided,
  * as required by exactOptionalPropertyTypes.
  */
@@ -92,7 +110,7 @@ export function buildCompetitionUpdateInput(
       : { maxParticipants: input.maxParticipants }),
     ...(input.dates === undefined
       ? {}
-      : { dates: CompetitionDatesSchema.parse(input.dates) }),
+      : { dates: parseCompetitionDatesOrBadRequest(input.dates) }),
     ...(input.criteria === undefined ? {} : { criteria: input.criteria }),
     ...(input.analysisTimezone === undefined
       ? {}

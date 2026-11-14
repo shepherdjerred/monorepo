@@ -297,6 +297,29 @@ describe("competition.create auto-enrollment", () => {
   });
 });
 
+describe("competition.create date rules", () => {
+  test("rejects a fixed window over 90 days as BAD_REQUEST, not a server error", async () => {
+    const guildId = nextGuildId();
+    const startDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    await expect(
+      trpc.authedCaller().competition.create({
+        ...createInput(guildId, "OPEN"),
+        dates: {
+          type: "FIXED_DATES",
+          startDate,
+          endDate: new Date(startDate.getTime() + 732 * 24 * 60 * 60 * 1000),
+        },
+      }),
+    ).rejects.toMatchObject({
+      code: "BAD_REQUEST",
+      message: "Competition duration cannot exceed 90 days (got 732 days)",
+    });
+    expect(
+      await testPrisma.competition.count({ where: { serverId: guildId } }),
+    ).toBe(0);
+  });
+});
+
 describe("competition.create auditing", () => {
   test("writes a COMPETITION_CREATE audit row", async () => {
     const guildId = nextGuildId();
