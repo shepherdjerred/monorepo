@@ -490,7 +490,12 @@ describe("durable alias attempts", () => {
       { lcuUuid: SELF_UUID, puuid: SELF_PUUID, source: "riot_id" },
     ]);
     expect(mocks.byRiotId).toHaveBeenCalledTimes(1);
-    expect(mocks.byRiotId).toHaveBeenCalledWith("sjerred", "sjerr", "AMERICAS");
+    expect(mocks.byRiotId).toHaveBeenCalledWith(
+      "sjerred",
+      "sjerr",
+      "AMERICAS",
+      { priority: "realtime" },
+    );
     const attempt = await prisma.leagueIdentityAliasAttempt.findUniqueOrThrow({
       where: { lcuUuid: FRIEND_UUID },
     });
