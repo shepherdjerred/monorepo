@@ -42,7 +42,9 @@ async function pipeThrough(
 
 // Sequential commands (must run in order)
 const sequentialCommands: Command[] = [
-  { executable: "chezmoi", args: ["update"] },
+  // Regenerate config from the pulled template before applying, retaining the
+  // machine profile recorded by init.
+  { executable: "chezmoi", args: ["update", "--init"] },
   ...(isLinux
     ? [
         { executable: "sudo", args: ["apt", "update"] },

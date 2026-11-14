@@ -10,6 +10,18 @@ For macOS open-file exhaustion, follow [How to persist higher file limits](macos
 
 The Windows PC uses a separate source, [dotfiles-windows](../dotfiles-windows/).
 
+## Update command
+
+`~/bin/update.ts` runs `chezmoi update --init` before package maintenance.
+This pulls the source, regenerates the chezmoi config using the recorded machine
+profile, and applies once. Local file conflicts still prompt for a decision;
+the command does not force-overwrite changes. A failed apply stops maintenance.
+
+The macOS LaunchAgent hook validates each installed plist and checks its exact
+`gui/<uid>/<label>` service before reloading it. The caller's launchd session
+can differ from that GUI domain, especially over SSH. The GUI login must exist
+before the hook can load its agents.
+
 ## Agent wrappers
 
 `~/.local/share/agent-bin` holds one POSIX `sh` wrapper per coding-agent CLI:

@@ -1,20 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 {{ if eq .chezmoi.os "darwin" -}}
-GUI_DOMAIN="gui/$(id -u)"
-
-# Reload a LaunchAgent from its installed plist when the plist and the program
-# it runs are both present.
-reload_agent() {
-    local label="$1" program="$2"
-    local plist="$HOME/Library/LaunchAgents/$label.plist"
-    if [ -f "$plist" ] && command -v "$program" >/dev/null; then
-        if launchctl list | grep -q "$label"; then
-            launchctl bootout "$GUI_DOMAIN" "$plist"
-        fi
-        launchctl bootstrap "$GUI_DOMAIN" "$plist"
-    fi
-}
+{{ include ".chezmoitemplates/launchagent-reload.sh" }}
 
 # {{ include "Library/LaunchAgents/com.jerred.dark-notify.plist" | sha256sum }}
 reload_agent com.jerred.dark-notify dark-notify

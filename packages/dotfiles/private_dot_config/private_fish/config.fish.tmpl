@@ -125,11 +125,25 @@ if status is-interactive
   atuin init fish | source
 
   set -q CARAPACE_BRIDGES; or set -Ux CARAPACE_BRIDGES 'zsh,fish,bash,inshellisense'
-  mkdir -p ~/.config/fish/completions
-  # Run the following block only once a day
-  if test (find ~/.config/fish/completions -name '*.fish' -mtime -1 | wc -l) -eq 0
-      echo "running carapace..."
-      carapace --list | awk '{print $1}' | xargs -I{} touch ~/.config/fish/completions/{}.fish # disable auto-loaded completions (#185)
+  mkdir -p "$__fish_config_dir/completions" "$__fish_cache_dir"
+  set -l carapace_stamp "$__fish_cache_dir/carapace-completions"
+  # Refresh once a day without changing existing completions or following
+  # symlinks into application bundles (OrbStack supplies docker and kubectl).
+  if not test -f "$carapace_stamp"; or test -n "$(find "$carapace_stamp" -mtime +0 -print)"
+      set -l carapace_commands (carapace --list | string match --regex '^\S+')
+      if test "$pipestatus[1]" -eq 0
+          set -l refresh_ok 1
+          for name in $carapace_commands
+              set -l completion "$__fish_config_dir/completions/$name.fish"
+              if not test -e "$completion"; and not test -L "$completion"
+                  # Empty files disable other auto-loaded completions (#185).
+                  touch "$completion"; or set refresh_ok 0
+              end
+          end
+          if test $refresh_ok -eq 1
+              touch "$carapace_stamp"
+          end
+      end
   end
   # Lazy-load carapace on first tab completion
   function _carapace_lazy --on-event fish_complete
