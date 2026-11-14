@@ -87,8 +87,11 @@ live dispatch schedule and current enabled audience, then applies the runner's
 cooldown, preferred posting window and daily attempt cap. It is an opportunity,
 not a reserved execution: runtime availability and spend limits still apply.
 Paused, disabled, held or manually run sources show the reason instead of a
-date. A producer without timing observations shows timing as unavailable; the
-raw recorded cooldown is never presented as a planned run.
+date. If an older producer omits timing observations, the page derives run and
+success times from the recorded execution batches and confirmed action history.
+Its next planned column says `Schedule data unavailable` until the producer can
+observe the schedule; the raw recorded cooldown is never presented as a planned
+run.
 
 The dashboard and runner are independent processes. Closing the page or stopping
 its launcher does not stop promotion execution. No publishing controls or

@@ -7,6 +7,7 @@ import { SourceGroups } from "./source-groups.tsx";
 import { HistoryPanel } from "./history-panel.tsx";
 import { time } from "./ui.tsx";
 import { PromotionSpendSummary } from "./spend-summary.tsx";
+import { sourceTimingSummary } from "./source-timing.ts";
 
 export function PromotionPage() {
   const initialSource =
@@ -82,7 +83,10 @@ export function PromotionPage() {
         {data && (
           <>
             <RunPanel summary={data.lastRun} />
-            <SourceGroups summary={data.lastRun} onHistory={historyFor} />
+            <SourceGroups
+              summary={sourceTimingSummary(data)}
+              onHistory={historyFor}
+            />
             <details
               id="promotion-history"
               className="p-history"
