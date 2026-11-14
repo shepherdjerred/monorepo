@@ -129,14 +129,11 @@ async function processClassicMatch(
     });
     throw error;
   }
-  // No "View match" link: the Explore match page rejects Classic asset
-  // modes (isExploreMatchSnapshotSupported), so a link here would open
-  // "Match unavailable".
   return {
-    content: formatGameCompletionMessage(
+    content: `${formatGameCompletionMessage(
       classicMatch.players.map((player) => player.playerConfig.alias),
       classicMatch.queueType,
-    ),
+    )}\n\n${inlineMatchLink(matchId)}`,
     files: [attachment],
     embeds: [embed],
   };

@@ -1,5 +1,5 @@
 import { getChampionImageUrl } from "@scout-for-lol/data";
-import type { MatchTeam } from "./match-scoreboard.tsx";
+import type { NumberedMatchTeam } from "./match-scoreboard.tsx";
 import {
   matchClock,
   participantName,
@@ -9,7 +9,7 @@ import {
 } from "#src/lib/player/match-review.ts";
 
 export function ComparePlayer(props: {
-  teams: MatchTeam[];
+  teams: NumberedMatchTeam[];
   selectedId: number | undefined;
   onSelect: (id: number) => void;
 }) {
@@ -140,7 +140,7 @@ export function GoldChart(props: {
 
 export function RiftMap(props: {
   snapshot: ReviewSnapshot;
-  teams: MatchTeam[];
+  teams: NumberedMatchTeam[];
   selectedId: number | undefined;
   onSelect: (id: number) => void;
 }) {

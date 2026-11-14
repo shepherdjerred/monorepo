@@ -11,7 +11,7 @@ import { formatRiotId } from "#src/lib/format/riot-id-format.ts";
 export type ArenaSubteam = {
   subteamId: number;
   participants: {
-    participantId: number;
+    participantId: number | null;
     placement: number | null;
     championName: string;
     riotId: { gameName: string | null; tagLine: string | null };
@@ -42,8 +42,11 @@ export function ArenaSubteams(props: { subteams: ArenaSubteam[] }) {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {subteam.participants.map((participant) => (
-                <div key={participant.participantId} className="flex gap-2">
+              {subteam.participants.map((participant, index) => (
+                <div
+                  key={`${subteam.subteamId.toString()}:${index.toString()}`}
+                  className="flex gap-2"
+                >
                   <ChampionIcon championName={participant.championName} />
                   <div className="min-w-0 text-sm">
                     <p className="font-medium">

@@ -27,7 +27,8 @@ import { MatchLoadoutDisplay } from "#src/components/match/match-loadout.tsx";
 import { formatRiotId } from "#src/lib/format/riot-id-format.ts";
 
 export type MatchParticipant = {
-  participantId: number;
+  /** Null for an end-of-game record, which numbers no participant. */
+  participantId: number | null;
   teamId?: number | undefined;
   selectedPlayer?: boolean | undefined;
   riotId: { gameName: string | null; tagLine: string | null };
@@ -60,13 +61,44 @@ export type MatchTeam = {
   teamId: number;
   win: boolean;
   participants: MatchParticipant[];
+  /** Null when the record states no team objectives. */
   objectives: {
     turrets: number;
     inhibitors: number;
     barons: number;
     dragons: number;
-  };
+  } | null;
 };
+
+/** A participant the timeline can follow: only these have frames and events. */
+export type NumberedMatchParticipant = MatchParticipant & {
+  participantId: number;
+};
+export type NumberedMatchTeam = Omit<MatchTeam, "participants"> & {
+  participants: NumberedMatchParticipant[];
+};
+
+export function numberedTeams(teams: MatchTeam[]): NumberedMatchTeam[] {
+  return teams.map((team) => ({
+    ...team,
+    participants: team.participants.flatMap((participant) =>
+      participant.participantId === null
+        ? []
+        : [{ ...participant, participantId: participant.participantId }],
+    ),
+  }));
+}
+
+/** A stable React key; a participant without an id is placed by its roster slot. */
+export function participantKey(
+  teamId: number,
+  participant: MatchParticipant,
+  index: number,
+): string {
+  return participant.participantId === null
+    ? `${teamId.toString()}:slot:${index.toString()}`
+    : participant.participantId.toString();
+}
 
 export type RoleMatchup = {
   role: Lane;
@@ -142,9 +174,9 @@ export function MatchScoreboards(props: {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {team.participants.map((participant) => (
+                {team.participants.map((participant, rowIndex) => (
                   <TableRow
-                    key={participant.participantId}
+                    key={participantKey(team.teamId, participant, rowIndex)}
                     className={
                       participant.selectedPlayer === true
                         ? "bg-scout-brand/10"

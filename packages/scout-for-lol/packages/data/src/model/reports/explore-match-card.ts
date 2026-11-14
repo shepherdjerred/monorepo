@@ -49,7 +49,8 @@ const ObjectivesSchema = z
 
 const ExploreMatchCardParticipantSchema = z
   .object({
-    participantId: z.number().int().positive(),
+    // Null for an end-of-game record, which numbers no participant.
+    participantId: z.number().int().positive().nullable(),
     riotId: RiotIdSchema,
     championId: z.number().int().positive(),
     championName: z.string().min(1).max(100),
@@ -72,7 +73,8 @@ const ExploreMatchCardTeamSchema = z
     teamId: z.number().int().positive(),
     win: z.boolean(),
     kills: z.number().int().nonnegative(),
-    objectives: ObjectivesSchema,
+    // Null when the lake holds no team row, as for a Classic end-of-game record.
+    objectives: ObjectivesSchema.nullable(),
     participants: z.array(ExploreMatchCardParticipantSchema).min(1).max(18),
   })
   .strict();
@@ -80,13 +82,15 @@ const ExploreMatchCardTeamSchema = z
 export const ExploreMatchSnapshotSchema = z
   .object({
     matchId: RiotMatchIdSchema,
-    gameCreationMs: z.number().int().nonnegative(),
+    // Null when the record states no lobby creation time.
+    gameCreationMs: z.number().int().nonnegative().nullable(),
     gameDurationSeconds: z.number().int().nonnegative(),
     queue: z.string().min(1).max(200).nullable(),
     queueId: z.number().int().nonnegative(),
     gameMode: z.string().min(1).max(100),
     gameType: z.string().min(1).max(100),
-    gameVersion: z.string().min(1).max(100),
+    // Null when the record states no game version.
+    gameVersion: z.string().min(1).max(100).nullable(),
     mapId: z.number().int().nonnegative(),
     teams: z.array(ExploreMatchCardTeamSchema).min(2).max(18),
   })

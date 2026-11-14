@@ -2,7 +2,10 @@ import { Loaded } from "@shepherdjerred/loaded";
 import { useEffect, useRef } from "react";
 import { Link, useSearchParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
-import { matchQueueLabel } from "#src/lib/player/match-review.ts";
+import {
+  matchMapLabel,
+  matchQueueLabel,
+} from "#src/lib/player/match-review.ts";
 import { ArenaSubteams } from "#src/components/match/match-arena-subteams.tsx";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import {
@@ -101,13 +104,22 @@ export function ConsumerMatch() {
             {matchQueueLabel(match.queue)}
           </h1>
           <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-scout-subtle">
-            <span>{new Date(match.gameCreationMs).toLocaleString()}</span>
+            <span>
+              {match.gameCreationMs === null
+                ? "Start time not recorded"
+                : new Date(match.gameCreationMs).toLocaleString()}
+            </span>
             <span>·</span>
             <span>{duration(match.gameDurationSeconds)}</span>
             <span>·</span>
-            <span>Patch {match.gameVersion}</span>
-            {match.mapId === 11 && <span>Summoner’s Rift</span>}
-            {match.mapId === 12 && <span>Howling Abyss</span>}
+            <span>
+              {match.gameVersion === null
+                ? "Patch not recorded"
+                : `Patch ${match.gameVersion}`}
+            </span>
+            {matchMapLabel(match.mapId) !== "" && (
+              <span>{matchMapLabel(match.mapId)}</span>
+            )}
           </div>
         </div>
         <Button asChild variant="outline">

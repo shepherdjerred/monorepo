@@ -21,6 +21,16 @@ export type RoleMatchup = {
   } | null;
 };
 
+/** A role pairing needs timeline frames, which are keyed by participant id. */
+function requiredParticipantId(row: LakeMatchParticipantRow): number {
+  if (row.participant_id === null) {
+    throw new Error(
+      `Role matchup row for ${row.match_id} has no participant id`,
+    );
+  }
+  return row.participant_id;
+}
+
 function uniqueRoleParticipant(
   rows: LakeMatchParticipantRow[],
   teamId: number,
@@ -40,6 +50,8 @@ export function buildRoleMatchups(options: {
   if (options.rows[0] === undefined || !isStandardRiftGame(options.rows[0])) {
     return null;
   }
+  // An end-of-game record numbers no participant and has no timeline to pair.
+  if (options.rows.some((row) => row.participant_id === null)) return null;
   const blue = options.rows.filter((row) => row.team_id === 100);
   const red = options.rows.filter((row) => row.team_id === 200);
   if (options.rows.length !== 10 || blue.length !== 5 || red.length !== 5) {
@@ -61,13 +73,17 @@ export function buildRoleMatchups(options: {
     if (!hasAt15) {
       return {
         role,
-        blueParticipantId: blueParticipant.participant_id,
-        redParticipantId: redParticipant.participant_id,
+        blueParticipantId: requiredParticipantId(blueParticipant),
+        redParticipantId: requiredParticipantId(redParticipant),
         at15: null,
       };
     }
-    const blueFrame = framesByParticipant.get(blueParticipant.participant_id);
-    const redFrame = framesByParticipant.get(redParticipant.participant_id);
+    const blueFrame = framesByParticipant.get(
+      requiredParticipantId(blueParticipant),
+    );
+    const redFrame = framesByParticipant.get(
+      requiredParticipantId(redParticipant),
+    );
     if (blueFrame === undefined || redFrame === undefined) {
       throw new Error(
         `Complete timeline for ${blueParticipant.match_id} is missing a 15-minute lane frame`,
@@ -75,8 +91,8 @@ export function buildRoleMatchups(options: {
     }
     return {
       role,
-      blueParticipantId: blueParticipant.participant_id,
-      redParticipantId: redParticipant.participant_id,
+      blueParticipantId: requiredParticipantId(blueParticipant),
+      redParticipantId: requiredParticipantId(redParticipant),
       at15: {
         timestampMs: blueFrame.frame_timestamp_ms,
         goldDelta: blueFrame.total_gold - redFrame.total_gold,

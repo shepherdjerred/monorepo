@@ -61,20 +61,22 @@ export async function runSource<T>(options: {
   );
 }
 
-const MatchParticipantRowSchema = z
+export const MatchParticipantRowSchema = z
   .object({
     match_id: RiotMatchIdSchema,
-    game_creation_ms: LakeIntSchema,
+    // NULL for an end-of-game record: it states no lobby creation time or version.
+    game_creation_ms: LakeIntSchema.nullable(),
     game_duration_seconds: LakeIntSchema,
     queue: z.string().nullable(),
     queue_id: LakeIntSchema,
     game_mode: z.string(),
     game_type: z.string(),
-    game_version: z.string(),
+    game_version: z.string().nullable(),
     map_id: LakeIntSchema,
     // NULL for a bot or an unresolved player.
     puuid: z.string().nullable(),
-    participant_id: LakeIntSchema,
+    // NULL for an end-of-game record, which numbers no participant.
+    participant_id: LakeIntSchema.nullable(),
     team_id: LakeIntSchema,
     player_subteam_id: LakeIntSchema.nullable(),
     placement: LakeIntSchema.nullable(),
@@ -135,7 +137,7 @@ export async function fetchFullMatch(options: {
           `gold_earned, vision_score, total_damage_dealt_to_champions, turret_kills, ` +
           `inhibitor_kills, baron_kills, dragon_kills, ${MATCH_LOADOUT_LAKE_COLUMNS_SQL} ` +
           `FROM (${source.sql}) ` +
-          `ORDER BY team_id, participant_id`,
+          `ORDER BY team_id, participant_id, champion_id`,
         schema: MatchParticipantRowSchema,
       });
     },

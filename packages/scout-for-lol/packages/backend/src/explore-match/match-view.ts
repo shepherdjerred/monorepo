@@ -13,6 +13,7 @@ import {
   type ReportAiPreviewSummary,
 } from "@scout-for-lol/data";
 import type { ScoutQlSource } from "@scout-for-lol/data/model/scoutql/parse/plan.ts";
+import { matchRowChampionName, orderMatchRows } from "./match-row-view.ts";
 import {
   fetchFullMatch,
   fetchFullMatchTeams,
@@ -39,15 +40,15 @@ function ratio(part: number, total: number): number | null {
   return total > 0 ? part / total : null;
 }
 
-/** Arena and Classic modes need scoreboards this neutral snapshot cannot render. */
+/**
+ * Arena needs subteam and placement grouping this neutral two-team snapshot
+ * cannot render; every other mode, Classic included, is a team scoreboard.
+ */
 export function isExploreMatchSnapshotSupported(
   queueId: number,
   gameMode: string,
 ): boolean {
-  return (
-    !isArenaQueueOrMode(queueId, gameMode) &&
-    !isClassicAssetMode(queueId, gameMode)
-  );
+  return !isArenaQueueOrMode(queueId, gameMode);
 }
 
 export function normalizeRiotIdPart(value: string | null): string | null {
@@ -68,13 +69,19 @@ export function exploreMatchSnapshot(
       "This match mode does not support the Explore match snapshot",
     );
   }
-  const grouped = Map.groupBy(rows, (row) => row.team_id);
+  const grouped = Map.groupBy(orderMatchRows(rows), (row) => row.team_id);
   const teams = [...grouped.entries()]
     .toSorted(([left], [right]) => left - right)
     .map(([teamId, teamParticipants]) => {
       const team = matchTeams.find((row) => row.team_id === teamId);
-      if (team === undefined)
+      // Only a Classic record may lack team objectives; any other mode's
+      // missing team row is a broken lake and stays loud.
+      if (
+        team === undefined &&
+        !isClassicAssetMode(first.queue_id, first.game_mode)
+      ) {
         throw new Error("Explore match is missing a team row");
+      }
       const teamFirst = requiredFirst(teamParticipants);
       const kills = teamParticipants.reduce(
         (total, row) => total + row.kills,
@@ -88,12 +95,15 @@ export function exploreMatchSnapshot(
         teamId,
         win: teamFirst.win,
         kills,
-        objectives: {
-          turrets: team.tower_kills,
-          inhibitors: team.inhibitor_kills,
-          barons: team.baron_kills,
-          dragons: team.dragon_kills,
-        },
+        objectives:
+          team === undefined
+            ? null
+            : {
+                turrets: team.tower_kills,
+                inhibitors: team.inhibitor_kills,
+                barons: team.baron_kills,
+                dragons: team.dragon_kills,
+              },
         participants: teamParticipants.map((row) => ({
           participantId: row.participant_id,
           riotId: {
@@ -101,7 +111,7 @@ export function exploreMatchSnapshot(
             tagLine: normalizeRiotIdPart(row.riot_id_tagline),
           },
           championId: row.champion_id,
-          championName: row.champion_name,
+          championName: matchRowChampionName(row),
           position: row.team_position,
           kills: row.kills,
           deaths: row.deaths,
@@ -259,10 +269,18 @@ export function inferFrameTeamId(
     return undefined;
   }
   const lowTeams = distinctTeamIds(
-    rows.filter((row) => row.participant_id <= FIVE_V_FIVE_SIDE_SIZE),
+    rows.filter(
+      (row) =>
+        row.participant_id !== null &&
+        row.participant_id <= FIVE_V_FIVE_SIDE_SIZE,
+    ),
   );
   const highTeams = distinctTeamIds(
-    rows.filter((row) => row.participant_id > FIVE_V_FIVE_SIDE_SIZE),
+    rows.filter(
+      (row) =>
+        row.participant_id !== null &&
+        row.participant_id > FIVE_V_FIVE_SIDE_SIZE,
+    ),
   );
   if (lowTeams.size !== 1 || highTeams.size !== 1) {
     return undefined;
