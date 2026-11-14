@@ -20,25 +20,34 @@ import { postGameDeliveryMode } from "./dispatch-policy.ts";
 import { resolveResultEvidence } from "#src/evidence/results.ts";
 import { parseEndOfGameResult } from "./canonical/end-of-game-result.ts";
 import { z } from "zod";
+import { isArenaClientPayload } from "./canonical/unsupported-mode.ts";
 
 const NORMALIZER_VERSION = 1;
+
+/**
+ * `unsupported_mode` is terminal: Riot publishes the results of that mode
+ * (Arena), so the client's observation is complete without a projection.
+ */
+export type ClientProjectionOutcome =
+  "projected" | "skipped" | "unsupported_mode";
 
 /** Projection only: never dispatch settlement, progression or notifications here. */
 export async function projectClientGameResult(
   observation: ScoutClientObservation,
-): Promise<void> {
-  if (isFeatureHardDisabled("scout_client_ingestion")) return;
+): Promise<ClientProjectionOutcome> {
+  if (isFeatureHardDisabled("scout_client_ingestion")) return "skipped";
   if (
     observation.kind !== "post_game" ||
     observation.localPuuid === undefined ||
     observation.platformId === undefined ||
     observation.gameId === undefined
   )
-    return;
+    return "skipped";
+  if (isArenaClientPayload(observation.payload)) return "unsupported_mode";
   const matchId = RiotMatchIdSchema.safeParse(
     `${observation.platformId.toUpperCase()}_${observation.gameId}`,
   );
-  if (!matchId.success) return;
+  if (!matchId.success) return "skipped";
   let result = parseLocalGameResult(
     matchId.data,
     observation.payload,
@@ -65,6 +74,9 @@ export async function projectClientGameResult(
     const envelope = z
       .object({ data: z.unknown() })
       .safeParse(context?.payload);
+    // An Arena end-of-game block may state no queue; only the gameflow does.
+    if (envelope.success && isArenaClientPayload(envelope.data.data))
+      return "unsupported_mode";
     result = parseEndOfGameResult({
       matchId: matchId.data,
       payload: observation.payload,
@@ -73,16 +85,16 @@ export async function projectClientGameResult(
       sourceId: observation.observationId,
     });
   }
-  if (result === null) return;
+  if (result === null) return "skipped";
   const completedAt = localResultCompletionTime(observation.payload, result);
-  if (completedAt === null) return;
+  if (completedAt === null) return "skipped";
   const discoveredAt = received.receivedAt;
   const deliveryMode = postGameDeliveryMode(
     observation,
     completedAt,
     discoveredAt,
   );
-  if (deliveryMode === null) return;
+  if (deliveryMode === null) return "skipped";
   await admitMatchEvidence({
     matchId: matchId.data,
     completedAt,
@@ -102,6 +114,7 @@ export async function projectClientGameResult(
     update: { result, normalizerVersion: NORMALIZER_VERSION },
   });
   await projectResultEvidence(result, new Date(observation.capturedAt));
+  return "projected";
 }
 
 /** Only the caller's registered accounts can reveal their recovered results. */

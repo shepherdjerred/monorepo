@@ -4,6 +4,11 @@ import {
   SCOUT_CLIENT_DATA_VERSION,
   type RawMatch,
 } from "@scout-for-lol/data";
+import {
+  ARENA_UNSUPPORTED,
+  isArenaClientPayload,
+  type UnsupportedClientMode,
+} from "./unsupported-mode.ts";
 import { convertParticipant } from "./lcu-participant.ts";
 import { firstObjectiveTeam } from "./lcu-team.ts";
 import {
@@ -81,6 +86,33 @@ function sourcePuuid(player: SourcePlayer) {
  * closed instead of receiving plausible-looking zeroes.
  */
 export function convertLcuMatchBundle(
+  riotMatchId: RiotMatchId,
+  payload: unknown,
+): RawMatch | null {
+  const outcome = convertLcuMatchBundleChecked(riotMatchId, payload);
+  return outcome.kind === "converted" ? outcome.match : null;
+}
+
+export type LcuConversion =
+  | { kind: "converted"; match: RawMatch }
+  | UnsupportedClientMode
+  | { kind: "incomplete" };
+
+/**
+ * Like {@link convertLcuMatchBundle}, but names why nothing was produced.
+ * Arena is refused before any conversion: Riot publishes its results, and
+ * the converter would otherwise drop placement, subteams and augments.
+ */
+export function convertLcuMatchBundleChecked(
+  riotMatchId: RiotMatchId,
+  payload: unknown,
+): LcuConversion {
+  if (isArenaClientPayload(payload)) return ARENA_UNSUPPORTED;
+  const match = convertSupportedLcuMatchBundle(riotMatchId, payload);
+  return match === null ? { kind: "incomplete" } : { kind: "converted", match };
+}
+
+function convertSupportedLcuMatchBundle(
   riotMatchId: RiotMatchId,
   payload: unknown,
 ): RawMatch | null {
