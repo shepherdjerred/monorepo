@@ -770,6 +770,34 @@ PinchTab credentials or config.
   line per section, what is waiting on you, and the top attention signals with
   their first link. A non-200 response, unreachable dashboard, or snapshot that
   breaks the `@shepherdjerred/ops-model` contract exits nonzero.
+- `toolkit scout ops <action> --environment beta|prod` operates Scout's
+  durable-pipeline operations console without a browser, through the backend's
+  `/api/operations/v1` machine API:
+
+  ```bash
+  toolkit scout ops queues --environment prod --json
+  toolkit scout ops report-deliveries --environment prod --json
+  toolkit scout ops status <INTENT_ID> --environment prod
+  toolkit scout ops resolve-unknown --environment prod --intent-key KEY \
+    --nonce NONCE --not-delivered --note "No unowned bot post in the window"
+  toolkit scout ops resolve-report --environment prod --run-id N \
+    --channel-id ID --chunk-index N --nonce NONCE \
+    --delivered --message-id ID --delivered-at ISO --note "Matched post"
+  toolkit scout ops submit --environment beta --file payload.json --note "..."
+  ```
+
+  Each action is the console's own prepare and confirm in one request, acting
+  as the operator Scout's source binds the stage token to, and audited with the
+  required `--note`. `submit` takes any `ops_*` payload as JSON. The default
+  idempotency key is derived from the payload, so re-running an identical
+  command replays the first result instead of acting again; pass a fresh
+  `--idempotency-key` to repeat an operation on purpose. `--dry-run` prints the
+  request without resolving the token. Exit status is 0 when the operation took
+  effect (now or under an earlier request with the same key), 3 when the
+  pipeline claimed and refused it, 1 when an earlier unclaimed intent expired,
+  and 2 for request, authentication or authorization failures. `--url`
+  overrides the stage origin, for example a local backend.
+
 - `toolkit bugsink ...` queries teams, projects, issues, events, stacktraces,
   and releases in self-hosted Bugsink. `issues` lists unresolved, unmuted
   issues across every project unless `--project` narrows it; `--all` includes
@@ -1323,6 +1351,7 @@ header values and root paths containing the same text are preserved.
 | `woodpecker`, `pr`, `posthog`, `cf`, `argocd`, `grafana`, `prom`, `loki`, `tempo`, `temporal`, `bugsink` | 1Password service account |
 | `talosctl`, `kube credential`, `aws credential`, `run`                                                   | 1Password service account |
 | `discord`                                                                                                | macOS Keychain            |
+| `scout ops` (`SCOUT_OPERATIONS_TOKEN_BETA`, `SCOUT_OPERATIONS_TOKEN_PROD`)                               | 1Password service account |
 | `brim sync pull` (`BRIM_SYNC_AGE_IDENTITY`)                                                              | 1Password service account |
 | `brim sync` in broker mode (`BRIM_SYNC_S3_ACCESS_KEY_ID`, `BRIM_SYNC_S3_SECRET_ACCESS_KEY`)              | 1Password service account |
 
