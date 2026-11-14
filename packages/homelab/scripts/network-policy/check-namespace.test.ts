@@ -7,6 +7,7 @@ import {
   type CheckDependencies,
 } from "./check-namespace.ts";
 import {
+  breakGlassPolicy,
   fakeRunner,
   items,
   otherPolicy,
@@ -63,6 +64,7 @@ describe("arguments", () => {
       json: false,
       sinceMinutes: 10,
       expectStage: undefined,
+      allowBreakGlass: false,
     });
   });
 
@@ -75,6 +77,7 @@ describe("arguments", () => {
         "30",
         "--expect-stage",
         "enforced",
+        "--allow-break-glass",
       ]),
     ).toEqual({
       target: "all-staged",
@@ -82,6 +85,7 @@ describe("arguments", () => {
       json: true,
       sinceMinutes: 30,
       expectStage: "enforced",
+      allowBreakGlass: true,
     });
   });
 
@@ -270,6 +274,44 @@ describe("the gate", () => {
     expect(result.output).toMatch(/^media\s+open\s+PASS/mu);
     expect(result.output).toMatch(/^tracker\s+enforced\s+PASS/mu);
     expect(result.output).toContain("2/2 namespaces pass");
+  });
+
+  test("a live break-glass policy fails the gate unless allowed", async () => {
+    const policies = [
+      stagingPolicy("tracker", "enforced"),
+      breakGlassPolicy("tracker"),
+    ];
+    const forgotten = await runCheck(
+      parseCheckArguments(["tracker"]),
+      dependencies(cluster(policies).run),
+    );
+    expect(forgotten.exitCode).toBe(1);
+    expect(forgotten.output).toContain(
+      "FAIL         stage     open (break-glass); staging policy: enforced",
+    );
+    expect(forgotten.output).toContain("netpol:open tracker --close --apply");
+    const allowed = await runCheck(
+      parseCheckArguments(["tracker", "--allow-break-glass"]),
+      dependencies(cluster(policies).run),
+    );
+    expect(allowed.exitCode).toBe(0);
+    expect(allowed.output).toContain(
+      "INFO         stage     open (break-glass); staging policy: enforced",
+    );
+  });
+
+  test("--all-staged also checks an unstaged namespace with a break-glass policy", async () => {
+    const result = await runCheck(
+      parseCheckArguments(["--all-staged"]),
+      dependencies(
+        cluster([stagingPolicy("media", "open"), breakGlassPolicy("flipt")])
+          .run,
+      ),
+    );
+    expect(result.exitCode).toBe(1);
+    expect(result.output).toMatch(/^flipt\s+open \(break-glass\)\s.*FAIL$/mu);
+    expect(result.output).toMatch(/^media\s+open\s.*PASS/mu);
+    expect(result.output).toContain("1/2 namespaces pass");
   });
 
   test("--all-staged with nothing staged is not a pass", async () => {

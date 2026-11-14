@@ -18,10 +18,6 @@ export const NEVER_LABEL = "homelab.sjer.red/enforcement-staging";
 export const NEVER_VALUE = "never";
 export const STAGE_MAP_PATH =
   "packages/homelab/src/cdk8s/src/fleet-policy/enforcement-stages.ts";
-export const BREAK_GLASS_FIELD_MANAGER = "network-policy-break-glass";
-export const BREAK_GLASS_REASON_ANNOTATION =
-  "homelab.sjer.red/break-glass-reason";
-const ARGOCD_TRACKING_ANNOTATION = "argocd.argoproj.io/tracking-id";
 
 export const NamespaceNameSchema = z
   .string()
@@ -48,7 +44,7 @@ export const NetworkPolicySchema = z.object({
   metadata: z.object({
     name: z.string(),
     namespace: z.string(),
-    annotations: z.record(z.string(), z.string()).optional(),
+    labels: z.record(z.string(), z.string()).optional(),
   }),
   spec: z.object({
     podSelector: LabelSelectorSchema,
@@ -89,24 +85,32 @@ function allowsAll(rules: readonly unknown[] | undefined): boolean {
   return (rules ?? []).some((rule) => EmptyRuleSchema.safeParse(rule).success);
 }
 
+/** Selects every pod and allows all ingress and egress. */
+export function allowsEverythingForEveryPod(policy: NetworkPolicy): boolean {
+  const { podSelector, policyTypes, ingress, egress } = policy.spec;
+  const types = new Set(policyTypes);
+  return (
+    (podSelector.matchExpressions ?? []).length === 0 &&
+    Object.keys(podSelector.matchLabels ?? {}).length === 0 &&
+    types.has("Ingress") &&
+    types.has("Egress") &&
+    allowsAll(ingress) &&
+    allowsAll(egress)
+  );
+}
+
 export function stageOf(policy: NetworkPolicy | undefined): Stage {
   if (policy === undefined) {
     return "none";
   }
-  const { podSelector, policyTypes, ingress, egress } = policy.spec;
+  const { podSelector } = policy.spec;
   if ((podSelector.matchExpressions ?? []).length > 0) {
     return "unrecognized";
   }
   const labels = Object.entries(podSelector.matchLabels ?? {});
   const [label, ...others] = labels;
   if (label === undefined) {
-    const types = new Set(policyTypes);
-    return types.has("Ingress") &&
-      types.has("Egress") &&
-      allowsAll(ingress) &&
-      allowsAll(egress)
-      ? "open"
-      : "unrecognized";
+    return allowsEverythingForEveryPod(policy) ? "open" : "unrecognized";
   }
   return others.length === 0 &&
     label[0] === NEVER_LABEL &&
@@ -143,55 +147,6 @@ export function namespacesWithPolicies(
   return [
     ...new Set(policies.map((policy) => policy.metadata.namespace)),
   ].toSorted();
-}
-
-/** The ArgoCD Application that renders a policy, from its tracking id. */
-export function owningApplication(policy: NetworkPolicy): string | undefined {
-  const tracking = policy.metadata.annotations?.[ARGOCD_TRACKING_ANNOTATION];
-  const [application] = tracking?.split(":") ?? [];
-  return application === undefined || application === ""
-    ? undefined
-    : application;
-}
-
-export type StagingManifest = {
-  apiVersion: "networking.k8s.io/v1";
-  kind: "NetworkPolicy";
-  metadata: {
-    name: string;
-    namespace: string;
-    annotations?: Record<string, string>;
-  };
-  spec: {
-    podSelector: Record<string, never>;
-    policyTypes: ["Ingress", "Egress"];
-    ingress: [Record<string, never>];
-    egress: [Record<string, never>];
-  };
-};
-
-/** The allow-all staging policy that opens a namespace. */
-export function openStagingManifest(
-  namespace: string,
-  reason?: string,
-): StagingManifest {
-  return {
-    apiVersion: "networking.k8s.io/v1",
-    kind: "NetworkPolicy",
-    metadata: {
-      name: stagingPolicyName(namespace),
-      namespace,
-      ...(reason === undefined
-        ? {}
-        : { annotations: { [BREAK_GLASS_REASON_ANNOTATION]: reason } }),
-    },
-    spec: {
-      podSelector: {},
-      policyTypes: ["Ingress", "Egress"],
-      ingress: [{}],
-      egress: [{}],
-    },
-  };
 }
 
 export async function readNetworkPolicies(

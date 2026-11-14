@@ -296,22 +296,65 @@ const result = (
   details: string[] = [],
 ): CheckResult => ({ check: id, status, summary: `${id} summary`, details });
 
+const STAGE = { expected: undefined, allowBreakGlass: false };
+
 describe("stage and aggregation", () => {
   test("the stage is an observation unless unrecognized or unexpected", () => {
-    expect(evaluateStage("none", undefined)).toMatchObject({
+    expect(evaluateStage("tracker", "none", "none", STAGE)).toEqual({
+      check: "stage",
       status: "info",
       summary: "no staging policy",
+      details: [],
     });
-    expect(evaluateStage("enforced", "enforced").status).toBe("info");
-    expect(evaluateStage("unrecognized", undefined).status).toBe("fail");
-    expect(evaluateStage("open", "enforced")).toMatchObject({
+    expect(
+      evaluateStage("tracker", "enforced", "none", {
+        ...STAGE,
+        expected: "enforced",
+      }).status,
+    ).toBe("info");
+    expect(evaluateStage("tracker", "unrecognized", "none", STAGE).status).toBe(
+      "fail",
+    );
+    expect(
+      evaluateStage("tracker", "open", "none", {
+        ...STAGE,
+        expected: "enforced",
+      }),
+    ).toMatchObject({ status: "fail", summary: "open, expected enforced" });
+  });
+
+  test("a break-glass policy reads as open and fails unless allowed", () => {
+    const forgotten = evaluateStage("tracker", "enforced", "open", STAGE);
+    expect(forgotten.status).toBe("fail");
+    expect(forgotten.summary).toBe(
+      "open (break-glass); staging policy: enforced",
+    );
+    expect(forgotten.details).toEqual([
+      "a break-glass policy is live: reconcile the stage map, then run netpol:open tracker --close --apply (or pass --allow-break-glass)",
+    ]);
+    expect(
+      evaluateStage("tracker", "enforced", "open", {
+        ...STAGE,
+        allowBreakGlass: true,
+      }),
+    ).toMatchObject({
+      status: "info",
+      summary: "open (break-glass); staging policy: enforced",
+      details: [],
+    });
+    expect(evaluateStage("tracker", "none", "open", STAGE).summary).toBe(
+      "open (break-glass); staging policy: none",
+    );
+    expect(
+      evaluateStage("tracker", "open", "unrecognized", STAGE),
+    ).toMatchObject({
       status: "fail",
-      summary: "open, expected enforced",
+      summary: "open (unrecognized break-glass)",
     });
   });
 
   test("a namespace passes unless a check failed; unchecked is called out", () => {
-    const passing = namespaceReport("tracker", "open", [
+    const passing = namespaceReport("tracker", "open", "none", [
       result("stage", "info"),
       result("pods", "pass"),
       result("probes", "not-checked"),
@@ -326,7 +369,7 @@ describe("stage and aggregation", () => {
         "Result: PASS (with unchecked)",
       ].join("\n"),
     );
-    const failing = namespaceReport("media", "enforced", [
+    const failing = namespaceReport("media", "enforced", "open", [
       result("pods", "pass"),
       result("urls", "fail", ["public https://plex: HTTP 502"]),
     ]);
@@ -336,9 +379,9 @@ describe("stage and aggregation", () => {
     );
     expect(renderTable([passing, failing])).toBe(
       [
-        "NAMESPACE  STAGE     PODS  SERVICES  URLS  PROBES       DENIALS  RESULT",
-        "tracker    open      PASS  -         -     NOT CHECKED  -        PASS (with unchecked)",
-        "media      enforced  PASS  -         FAIL  -            -        FAIL",
+        "NAMESPACE  STAGE               PODS  SERVICES  URLS  PROBES       DENIALS  RESULT",
+        "tracker    open                PASS  -         -     NOT CHECKED  -        PASS (with unchecked)",
+        "media      open (break-glass)  PASS  -         FAIL  -            -        FAIL",
         "",
         "media urls: urls summary",
         "    - public https://plex: HTTP 502",

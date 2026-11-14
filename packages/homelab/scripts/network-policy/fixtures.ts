@@ -1,4 +1,5 @@
 /** Test fixtures: live-shaped objects and a recording fake command runner. */
+import { BREAK_GLASS_LABEL, breakGlassPolicyName } from "./break-glass.ts";
 import type { CommandResult, CommandRunner } from "./command.ts";
 import type { Probe } from "./namespace-urls.ts";
 import {
@@ -17,25 +18,31 @@ const ALLOW_ALL = {
 export function stagingPolicy(
   namespace: string,
   stage: "open" | "enforced",
-  application?: string,
 ): NetworkPolicy {
   return {
-    metadata: {
-      name: stagingPolicyName(namespace),
-      namespace,
-      ...(application === undefined
-        ? {}
-        : {
-            annotations: {
-              "argocd.argoproj.io/tracking-id": `${application}:networking.k8s.io/NetworkPolicy:${namespace}/${stagingPolicyName(namespace)}`,
-            },
-          }),
-    },
+    metadata: { name: stagingPolicyName(namespace), namespace },
     spec: {
       podSelector:
         stage === "open" ? {} : { matchLabels: { [NEVER_LABEL]: NEVER_VALUE } },
       ...ALLOW_ALL,
     },
+  };
+}
+
+/** A break-glass policy; overrides make the half-matching variants. */
+export function breakGlassPolicy(
+  namespace: string,
+  overrides: { name?: string; labelled?: boolean } = {},
+): NetworkPolicy {
+  return {
+    metadata: {
+      name: overrides.name ?? breakGlassPolicyName(namespace),
+      namespace,
+      ...(overrides.labelled === false
+        ? {}
+        : { labels: { [BREAK_GLASS_LABEL]: "true" } }),
+    },
+    spec: { podSelector: {}, ...ALLOW_ALL },
   };
 }
 

@@ -3,8 +3,6 @@ import { otherPolicy, stagingPolicy } from "./fixtures.ts";
 import {
   namespacesWithPolicies,
   NetworkPolicySchema,
-  openStagingManifest,
-  owningApplication,
   stagedNamespaces,
   stageOf,
   stagingPolicyName,
@@ -79,7 +77,7 @@ describe("stage detection", () => {
 
 describe("discovery", () => {
   const policies = [
-    stagingPolicy("tracker", "enforced", "tracker"),
+    stagingPolicy("tracker", "enforced"),
     otherPolicy("tracker", "tracker-app-netpol"),
     otherPolicy("media", "plex"),
     // Named for another namespace, or the old fixed name: not a staging policy.
@@ -109,43 +107,5 @@ describe("discovery", () => {
       "redlib",
       "tracker",
     ]);
-  });
-
-  test("the owning Application is the tracking id's first field", () => {
-    expect(owningApplication(stagingPolicy("tracker", "open", "tracker"))).toBe(
-      "tracker",
-    );
-    expect(owningApplication(stagingPolicy("tracker", "open"))).toBeUndefined();
-  });
-});
-
-describe("open manifest", () => {
-  test("is the allow-all staging policy and reads back as open", () => {
-    const manifest = openStagingManifest("tracker");
-    expect(manifest).toEqual({
-      apiVersion: "networking.k8s.io/v1",
-      kind: "NetworkPolicy",
-      metadata: { name: "enforcement-staging-tracker", namespace: "tracker" },
-      spec: {
-        podSelector: {},
-        policyTypes: ["Ingress", "Egress"],
-        ingress: [{}],
-        egress: [{}],
-      },
-    });
-    expect(stageOf(NetworkPolicySchema.parse(manifest))).toBe("open");
-  });
-
-  test("records the reason as an annotation", () => {
-    expect(
-      openStagingManifest("tracker", "Tracker cannot reach PostgreSQL").metadata
-        .annotations,
-    ).toEqual({
-      "homelab.sjer.red/break-glass-reason": "Tracker cannot reach PostgreSQL",
-    });
-  });
-
-  test("refuses a name that is not a namespace", () => {
-    expect(() => openStagingManifest("kube-system; rm")).toThrow();
   });
 });

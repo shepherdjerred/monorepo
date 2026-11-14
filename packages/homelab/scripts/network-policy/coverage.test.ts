@@ -5,7 +5,7 @@ import {
   renderCoverage,
   type PodSummary,
 } from "./coverage.ts";
-import { otherPolicy, stagingPolicy } from "./fixtures.ts";
+import { breakGlassPolicy, otherPolicy, stagingPolicy } from "./fixtures.ts";
 
 function pods(
   namespace: string,
@@ -119,13 +119,49 @@ describe("coverage decision", () => {
   });
 });
 
+describe("break-glass in coverage", () => {
+  test("is its own column, never counted as a policy, and listed even alone", () => {
+    const report = coverageReport(
+      [
+        otherPolicy("tracker", "tracker-app"),
+        stagingPolicy("tracker", "enforced"),
+        breakGlassPolicy("tracker"),
+        otherPolicy("argocd", "argocd-server"),
+        breakGlassPolicy("argocd"),
+        breakGlassPolicy("redlib"),
+        breakGlassPolicy("media", { labelled: false }),
+        otherPolicy("media", "plex"),
+        stagingPolicy("media", "open"),
+      ],
+      live,
+      [],
+    );
+    expect(
+      report.rows.map(
+        (row) =>
+          `${row.namespace} ${String(row.policies)} ${row.breakGlass} ${row.result}`,
+      ),
+    ).toEqual([
+      "argocd 1 open unstaged",
+      "media 1 unrecognized staged",
+      "redlib 0 open no policies",
+      "tracker 1 open staged",
+    ]);
+    // A break-glass policy does not stand in for the staging policy.
+    expect(report.ok).toBe(false);
+    expect(renderCoverage(report)).toContain(
+      "tracker    1         2     enforced           open          staged",
+    );
+  });
+});
+
 describe("coverage rendering", () => {
   test("names the failing namespaces", () => {
     expect(renderCoverage(coverageReport(policies.slice(0, 4), live, []))).toBe(
       [
-        "NAMESPACE  POLICIES  PODS  STAGING            RESULT",
-        "argocd     2         7     no staging policy  FAIL (unstaged)",
-        "tracker    1         2     open               staged",
+        "NAMESPACE  POLICIES  PODS  STAGING            BREAK-GLASS  RESULT",
+        "argocd     2         7     no staging policy  -            FAIL (unstaged)",
+        "tracker    1         2     open               -            staged",
         "",
         "FAIL: 1/2 namespaces have policies and pods but no usable staging policy: argocd",
       ].join("\n"),

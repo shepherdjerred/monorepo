@@ -4,7 +4,7 @@ import {
   type CheckStatus,
   type NamespaceReport,
 } from "./namespace-checks.ts";
-import { stageLabel } from "./staging-policy.ts";
+import { effectiveStageLabel } from "./break-glass.ts";
 
 const STATUS_LABELS: Record<CheckStatus, string> = {
   pass: "PASS",
@@ -71,7 +71,7 @@ export function renderTable(reports: readonly NamespaceReport[]): string {
     ],
     ...reports.map((report) => [
       report.namespace,
-      stageLabel(report.stage),
+      effectiveStageLabel(report.stage, report.breakGlass),
       ...checkCells(report),
       resultLabel(report),
     ]),

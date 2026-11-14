@@ -207,40 +207,60 @@ that live state.
 | `bun run netpol:check <namespace> [--json]`                       | Read-only gate for one namespace                                  |
 | `bun run netpol:check --all-staged [--json]`                      | The gate for every staged namespace, as a table                   |
 | `bun run netpol:check --coverage [--allow-unstaged <name>]...`    | Pre-switch gate: every namespace with policies and pods is staged |
-| `bun run netpol:open <namespace>\|--all`                          | Dry run: the manifest and what it would change                    |
+| `bun run netpol:open <namespace>\|--all`                          | Dry run: the break-glass manifest and what it would change        |
 | `bun run netpol:open <namespace>\|--all --apply --reason "<why>"` | Break-glass: open the namespace(s) in the cluster                 |
+| `bun run netpol:open <namespace>\|--all --close`                  | Dry run: the break-glass policies that would be deleted           |
+| `bun run netpol:open <namespace>\|--all --close --apply`          | Delete the break-glass policies                                   |
 
 `netpol:check` exits non-zero when any check fails. `--since-minutes <n>`
 (default 10) sets the restart and denial window; `--expect-stage
-open|enforced` fails when the live stage differs.
+open|enforced` fails when the staging policy's stage differs;
+`--allow-break-glass` accepts a live break-glass policy.
 
-| Check      | Source                                                                                       | Result                                        |
-| ---------- | -------------------------------------------------------------------------------------------- | --------------------------------------------- |
-| `stage`    | The live staging policy's selector and rules                                                 | Reported; fails if unrecognized or unexpected |
-| `pods`     | `kubectl get pods`: every pod Ready, no container restart in the window                      | Pass or fail                                  |
-| `services` | Services and EndpointSlices: every Service backed by pods has a ready endpoint               | Pass or fail                                  |
-| `urls`     | Hosts from `platform-model.json`; path and accepted statuses from the live blackbox `Probe`s | Pass, fail or not checked                     |
-| `probes`   | `toolkit prom query probe_success` for the namespace's `Probe` jobs                          | Pass, fail or not checked                     |
-| `denials`  | `kube-network-policies` container log of the `kube-flannel` pods                             | A note; never gates                           |
+| Check      | Source                                                                                       | Result                                                                       |
+| ---------- | -------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `stage`    | The live staging and break-glass policies                                                    | Reported; fails if unrecognized, unexpected, or a break-glass policy is live |
+| `pods`     | `kubectl get pods`: every pod Ready, no container restart in the window                      | Pass or fail                                                                 |
+| `services` | Services and EndpointSlices: every Service backed by pods has a ready endpoint               | Pass or fail                                                                 |
+| `urls`     | Hosts from `platform-model.json`; path and accepted statuses from the live blackbox `Probe`s | Pass, fail or not checked                                                    |
+| `probes`   | `toolkit prom query probe_success` for the namespace's `Probe` jobs                          | Pass, fail or not checked                                                    |
+| `denials`  | `kube-network-policies` container log of the `kube-flannel` pods                             | A note; never gates                                                          |
 
 `--coverage` reads only policies and pods. It lists every namespace that has a
 NetworkPolicy other than its own staging policy, with its policy count, pod
-count and stage, and fails while any of them has pods but no staging policy
-(or an unrecognized one). A namespace without pods is reported as `no pods`
-and passes. `--allow-unstaged` excuses a namespace by name, or by prefix when
-the entry ends in `-` or `*`; it is repeatable.
+count, stage and break-glass state, and fails while any of them has pods but
+no staging policy (or an unrecognized one). A namespace without pods is
+reported as `no pods` and passes. `--allow-unstaged` excuses a namespace by
+name, or by prefix when the entry ends in `-` or `*`; it is repeatable.
 
 "Not checked" is never a pass: it marks a tailnet host that is not HTTP, or a
 Prometheus that could not be queried. URL requests run from the operator's
 machine and do not follow redirects; a redirect from a service whose probe
 follows redirects counts as an answer.
 
+### Break-glass
+
 `netpol:open --apply` is the one sanctioned direct `kubectl apply` in this
-package. It writes only `enforcement-staging-<namespace>` (server-side apply,
-field manager `network-policy-break-glass`), refuses to run without
-`--reason`, deletes nothing, and prints the stage-map entries that must be set
-to `"open"` in source. ArgoCD reverts the live change at the owning
-Application's next sync, so the source change has to follow.
+package. It never touches the staging policy, which ArgoCD self-heals back to
+source. It creates a separate allow-all NetworkPolicy,
+`enforcement-break-glass-<namespace>`, labelled
+`homelab.sjer.red/break-glass: "true"` and annotated with the reason, the
+kubectl context and an RFC 3339 timestamp (server-side apply, field manager
+`network-policy-break-glass`). It refuses to run without `--reason`.
+
+ArgoCD leaves that object alone because it does not track it: tracking here
+is by the `argocd.argoproj.io/tracking-id` annotation, no AppProject monitors
+orphaned resources, `resource.exclusions` covers only Velero kinds, and prune
+removes only tracked resources that left git. The policy therefore stays until
+an operator closes it.
+
+While a break-glass policy is live, `netpol:check` reports the stage as
+`open (break-glass)` and fails unless `--allow-break-glass` is passed;
+`--all-staged` includes every namespace that has one, and `--coverage` shows
+it in its own column. To remove it, set the namespace's stage-map entry to
+`"open"` in source, let ArgoCD sync, then run `--close --apply`. `--close`
+deletes only a policy that carries both the label and the expected name, and
+refuses, with a non-zero exit, anything that carries only one of them.
 
 ## Manifest validation
 

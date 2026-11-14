@@ -4,6 +4,12 @@
  * where an open staging policy selects the pods the other policies select.
  */
 import { z } from "zod";
+import {
+  breakGlassCandidates,
+  breakGlassNamespaces,
+  breakGlassState,
+  type BreakGlassState,
+} from "./break-glass.ts";
 import { alignedRows } from "./report.ts";
 import {
   stageLabel,
@@ -24,19 +30,26 @@ export type PodSummary = z.infer<typeof PodSummarySchema>;
  * - `staged`: the staging policy exists, open or enforced.
  * - `no pods`: no staging policy, and no pod for a policy to select.
  * - `allowed`: no staging policy, excused by an `--allow-unstaged` entry.
+ * - `no policies`: only a break-glass policy; nothing else to bite.
  * - `unstaged`: policies and pods but no staging policy. Fails.
  * - `unrecognized`: a staging policy that is neither open nor enforced. Fails.
  */
 export type CoverageResult =
-  "staged" | "no pods" | "allowed" | "unstaged" | "unrecognized";
+  | "staged"
+  | "no pods"
+  | "allowed"
+  | "no policies"
+  | "unstaged"
+  | "unrecognized";
 
 export type CoverageRow = {
   namespace: string;
-  /** NetworkPolicies other than the namespace's own staging policy. */
+  /** NetworkPolicies other than its own staging and break-glass policies. */
   policies: number;
   /** Pods a policy can select: every pod that has not finished. */
   pods: number;
   stage: Stage;
+  breakGlass: BreakGlassState;
   result: CoverageResult;
 };
 
@@ -77,16 +90,24 @@ function resultOf(
   return allowed ? "allowed" : "unstaged";
 }
 
-/** One row per namespace that has a policy other than its own staging policy. */
+/**
+ * One row per namespace that has a policy other than its own staging policy,
+ * or a break-glass policy.
+ */
 export function coverageReport(
   policies: readonly NetworkPolicy[],
   pods: readonly PodSummary[],
   allow: readonly string[],
 ): CoverageReport {
-  const counts = new Map<string, number>();
+  const counts = new Map<string, number>(
+    breakGlassNamespaces(policies).map((namespace) => [namespace, 0]),
+  );
   for (const policy of policies) {
     const { name, namespace } = policy.metadata;
-    if (name !== stagingPolicyName(namespace)) {
+    if (
+      name !== stagingPolicyName(namespace) &&
+      !breakGlassCandidates(policies, namespace).includes(policy)
+    ) {
       counts.set(namespace, (counts.get(namespace) ?? 0) + 1);
     }
   }
@@ -105,7 +126,11 @@ export function coverageReport(
         policies: count,
         pods: live,
         stage,
-        result: resultOf(stage, live, allowsUnstaged(namespace, allow)),
+        breakGlass: breakGlassState(policies, namespace),
+        result:
+          count === 0 && stage === "none"
+            ? "no policies"
+            : resultOf(stage, live, allowsUnstaged(namespace, allow)),
       };
     });
   return { ok: rows.every((row) => !failed(row)), rows };
@@ -119,12 +144,13 @@ export function renderCoverage(report: CoverageReport): string {
   const failing = report.rows.filter((row) => failed(row));
   return [
     ...alignedRows([
-      ["NAMESPACE", "POLICIES", "PODS", "STAGING", "RESULT"],
+      ["NAMESPACE", "POLICIES", "PODS", "STAGING", "BREAK-GLASS", "RESULT"],
       ...report.rows.map((row) => [
         row.namespace,
         String(row.policies),
         String(row.pods),
         stageLabel(row.stage),
+        row.breakGlass === "none" ? "-" : row.breakGlass,
         failed(row) ? `FAIL (${row.result})` : row.result,
       ]),
     ]),
