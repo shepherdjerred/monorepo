@@ -13,7 +13,7 @@ const CreatedSchema = z.object({
 const ListedSchema = z.object({
   result: z.object({
     data: z.object({
-      items: z.array(z.object({ identifier: z.string() })),
+      items: z.array(z.object({ identifier: z.string(), title: z.string() })),
       nextCursor: z.string().nullable(),
     }),
   }),
@@ -69,7 +69,9 @@ async function removeTagged(request: APIRequestContext, tag: string) {
   );
   const response = await request.get(`/trpc/issues.list?input=${input}`);
   const { items } = ListedSchema.parse(await response.json()).result.data;
-  for (const { identifier } of items) {
+  // Search also returns similar titles; delete only the ones this tag made.
+  const own = items.filter(({ title }) => title.includes(tag));
+  for (const { identifier } of own) {
     // An edit the page made may still be saving; delete at its revision.
     await expect(() => removeIssue(request, identifier)).toPass();
   }
