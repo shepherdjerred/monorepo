@@ -5,7 +5,7 @@
   "scripts": {
     "build": "mise exec -- cargo build --workspace --all-targets --locked",
     "typecheck": "mise exec -- cargo check --workspace --all-targets --all-features --locked",
-    "test": "mise exec -- cargo test --workspace --all-features --locked",
+    "test": "mise exec -- cargo test --workspace --all-features --locked && bun --no-install --bun vitest --config ../../../../vitest.config.ts run scripts",
     "test:ci": "bun ../../../../scripts/ci/run-ci-test.ts",
     "lint": "mise exec -- cargo fmt --all -- --check && mise exec -- cargo clippy --workspace --all-targets --all-features --locked -- -D warnings",
     "format": "mise exec -- cargo fmt --all -- --check",
@@ -14,6 +14,13 @@
     "prepare-package": "bun scripts/prepare-package.ts",
     "package": "bun run package:stable",
     "package:stable": "SCOUT_DESKTOP_PROFILE=stable mise exec -- cargo packager --release --config packaging/stable.json",
-    "package:beta": "SCOUT_DESKTOP_PROFILE=beta mise exec -- cargo packager --release --config packaging/beta.json"
+    "package:beta": "SCOUT_DESKTOP_PROFILE=beta mise exec -- cargo packager --release --config packaging/beta.json",
+    "release:package:stable": "bun scripts/with-release-credentials.ts stable package-release.ts",
+    "release:package:beta": "bun scripts/with-release-credentials.ts beta package-release.ts",
+    "release:publish:stable": "bun scripts/with-release-credentials.ts stable publish-release.ts",
+    "release:publish:beta": "bun scripts/with-release-credentials.ts beta publish-release.ts"
+  },
+  "devDependencies": {
+    "vitest": "5.0.3"
   }
 }

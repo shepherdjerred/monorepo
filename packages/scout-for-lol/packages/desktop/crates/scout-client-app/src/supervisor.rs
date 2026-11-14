@@ -22,11 +22,13 @@ use scout_client_runtime::runtime::{
 };
 use scout_desktop_ipc::{
     CounterReading, DiagnosticsSnapshot, PROTOCOL_VERSION, PrivacySnapshot, StateSnapshot,
-    SupervisorMessage, WindowMessage, check_protocol, decode_line, encode_line,
+    SupervisorMessage, UpdateSnapshot, WindowMessage, check_protocol, decode_line, encode_line,
 };
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader, Lines};
 use tokio::process::{Child, ChildStdin, ChildStdout, Command};
 use tokio::sync::{mpsc, watch};
+
+use crate::updater::service::{InstallOutcome, UpdateHandle};
 
 /// A crash after this long is a fresh incident, not part of a crash loop.
 pub const STABLE_RUN: Duration = Duration::from_mins(10);
@@ -162,6 +164,9 @@ pub enum SupervisorExit {
     Quit,
     /// The window closed with no tray to reopen it.
     WindowClosedWithoutTray,
+    /// An update installer was started while the app sat idle; it restarts
+    /// the new version itself.
+    Updating,
     /// Every control sender was dropped.
     ControlClosed,
     /// The supervisor itself panicked.
@@ -176,6 +181,8 @@ pub struct Supervisor<C: Collector> {
     tray_available: bool,
     open_window: bool,
     status: watch::Sender<WindowStatus>,
+    /// The self-updater, when this build has one.
+    updates: Option<UpdateHandle>,
     /// Held for the supervisor's life, so a second supervisor cannot share the
     /// outbox. The window process never takes it.
     _instance_lock: scout_client_runtime::instance::InstanceLock,
@@ -199,8 +206,16 @@ impl<C: Collector> Supervisor<C> {
             tray_available,
             open_window,
             status: watch::channel(WindowStatus::default()).0,
+            updates: None,
             _instance_lock: instance_lock,
         }
+    }
+
+    /// Let this supervisor install updates: on quit, and when the app is idle.
+    #[must_use]
+    pub fn with_updates(mut self, updates: UpdateHandle) -> Self {
+        self.updates = Some(updates);
+        self
     }
 
     /// Follow the window's lifecycle.
@@ -222,6 +237,7 @@ impl<C: Collector> Supervisor<C> {
         if self.open_window || !self.tray_available {
             window = self.launch(&state, &phase).await;
         }
+        let mut update_status = self.updates.as_ref().map(UpdateHandle::subscribe);
         let mut refresh = tokio::time::interval(REFRESH);
         refresh.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
         let exit = loop {
@@ -266,8 +282,19 @@ impl<C: Collector> Supervisor<C> {
                     }
                 },
                 Ok(()) = state.changed() => {
+                    // A 426 means this build is below the backend's minimum:
+                    // look for the release that fixes that right away.
+                    let refused = state.borrow().upgrade_required.is_some();
+                    if let Some(updates) = &self.updates {
+                        updates.observe_upgrade_required(refused);
+                    }
                     if let Some(running) = window.as_mut() {
                         self.send_state(running, &state).await;
+                    }
+                }
+                true = update_changed(&mut update_status) => {
+                    if let Some(running) = window.as_mut() {
+                        self.send_update(running).await;
                     }
                 }
                 Ok(()) = phase.changed() => {
@@ -280,6 +307,9 @@ impl<C: Collector> Supervisor<C> {
                     if let Some(running) = window.as_mut() {
                         self.send_state(running, &state).await;
                     }
+                    if self.install_when_idle(window.is_some(), &phase) {
+                        break SupervisorExit::Updating;
+                    }
                 }
             }
         };
@@ -288,7 +318,27 @@ impl<C: Collector> Supervisor<C> {
         }
         self.status.send_modify(|status| status.running = false);
         self.collector.stop();
+        // A user who quit gets the update they were waiting on, once the
+        // outbox has been closed cleanly, and never over a live game.
+        if matches!(
+            exit,
+            SupervisorExit::Quit | SupervisorExit::WindowClosedWithoutTray
+        ) && let Some(updates) = &self.updates
+        {
+            updates.install(false, &phase.borrow());
+        }
         exit
+    }
+
+    /// Start a staged update's installer when the app has sat idle. Returns
+    /// whether it started, which ends this process.
+    fn install_when_idle(&self, window_open: bool, phase: &PhaseReceiver) -> bool {
+        let Some(updates) = &self.updates else {
+            return false;
+        };
+        let phase = phase.borrow().clone();
+        updates.idle_install_due(window_open, &phase, Instant::now())
+            && matches!(updates.install(true, &phase), InstallOutcome::Started(_))
     }
 
     async fn launch(&self, state: &StateReceiver, phase: &PhaseReceiver) -> Option<Window> {
@@ -342,6 +392,7 @@ impl<C: Collector> Supervisor<C> {
         self.send_state(&mut window, state).await;
         let message = phase_message(&phase.borrow());
         self.deliver(&mut window, &message).await;
+        self.send_update(&mut window).await;
         Some(window)
     }
 
@@ -465,6 +516,14 @@ impl<C: Collector> Supervisor<C> {
         )
         .await;
         window.last_state = Some(snapshot);
+    }
+
+    async fn send_update(&self, window: &mut Window) {
+        if let Some(updates) = &self.updates {
+            let update = updates.snapshot();
+            self.deliver(window, &SupervisorMessage::Update { update })
+                .await;
+        }
     }
 
     /// Write one message. A window that cannot take it is treated as crashed:
@@ -609,6 +668,16 @@ async fn next_event(window: &mut Option<Window>) -> WindowEvent {
             tracing::warn!(%error, "could not wait for the Scout Client window");
             std::future::pending().await
         }
+    }
+}
+
+/// The next change to the update state, or pending forever when this build has
+/// no updater. `false` if the updater ended, which never happens while the
+/// supervisor holds its handle.
+async fn update_changed(receiver: &mut Option<watch::Receiver<UpdateSnapshot>>) -> bool {
+    match receiver {
+        Some(receiver) => receiver.changed().await.is_ok(),
+        None => std::future::pending().await,
     }
 }
 

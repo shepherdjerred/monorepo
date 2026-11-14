@@ -13,8 +13,8 @@ use eframe::egui;
 use scout_client_core::profile::ReleaseProfile;
 use scout_client_core::settings::SendGate;
 use scout_desktop_ipc::{
-    GameflowPhase, PROTOCOL_VERSION, StateSnapshot, SupervisorMessage, WindowMessage,
-    check_protocol, decode_line, encode_line,
+    GameflowPhase, PROTOCOL_VERSION, StateSnapshot, SupervisorMessage, UpdateSnapshot,
+    WindowMessage, check_protocol, decode_line, encode_line,
 };
 
 use crate::ui::ScoutApp;
@@ -78,6 +78,7 @@ struct Inbox {
     tray_available: Option<bool>,
     state: StateSnapshot,
     phase: GameflowPhase,
+    update: UpdateSnapshot,
     bundle: Option<String>,
     show: bool,
     close: bool,
@@ -94,6 +95,8 @@ pub struct Updates {
     pub state: StateSnapshot,
     /// The latest gameflow phase.
     pub phase: GameflowPhase,
+    /// Where the self-update stands.
+    pub update: UpdateSnapshot,
     /// A diagnostics bundle to copy, once.
     pub bundle: Option<String>,
     /// Bring the window to the front, once.
@@ -171,6 +174,7 @@ impl SupervisorLink {
             tray_available: inbox.tray_available.unwrap_or(false),
             state: inbox.state.clone(),
             phase: inbox.phase.clone(),
+            update: inbox.update.clone(),
             bundle: inbox.bundle.take(),
             show: std::mem::take(&mut inbox.show),
             close: inbox.close,
@@ -199,6 +203,7 @@ fn receive(inbox: &Mutex<Inbox>, error_gate: &SendGate, line: &str) -> Result<()
             inbox.state = state;
         }
         SupervisorMessage::Phase { phase } => inbox.phase = phase,
+        SupervisorMessage::Update { update } => inbox.update = update,
         SupervisorMessage::DiagnosticsBundle { text } => inbox.bundle = Some(text),
         SupervisorMessage::Show => inbox.show = true,
         SupervisorMessage::Close => inbox.close = true,
@@ -213,7 +218,7 @@ mod tests {
     use scout_desktop_ipc::{GameflowPhase, PROTOCOL_VERSION, SupervisorMessage, encode_line};
 
     use scout_client_core::settings::SendGate;
-    use scout_desktop_ipc::{PrivacySnapshot, StateSnapshot};
+    use scout_desktop_ipc::{PrivacySnapshot, StateSnapshot, UpdateSnapshot, UpdateStatus};
 
     use super::{Inbox, receive};
 
@@ -241,9 +246,22 @@ mod tests {
             })?,
         )?;
         receive(&inbox, &gate, &line(&SupervisorMessage::Show)?)?;
+        receive(
+            &inbox,
+            &gate,
+            &line(&SupervisorMessage::Update {
+                update: UpdateSnapshot {
+                    status: UpdateStatus::Ready,
+                    version: Some("0.2.0".to_owned()),
+                    required: false,
+                },
+            })?,
+        )?;
         // Messages other than a snapshot never touch the privacy choice.
         assert!(gate.allows());
         let inbox = inbox.into_inner()?;
+        assert_eq!(inbox.update.status, UpdateStatus::Ready);
+        assert_eq!(inbox.update.summary(), "0.2.0 installs when you quit Scout");
         assert_eq!(inbox.tray_available, Some(true));
         assert_eq!(inbox.phase, GameflowPhase::Lobby);
         assert!(inbox.show);

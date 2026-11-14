@@ -31,6 +31,11 @@ pub struct ReleaseProfile {
     pub data_application: &'static str,
     /// Name of the start-at-login registration.
     pub autostart_name: &'static str,
+    /// Origin that serves this build's update channel manifest and releases.
+    pub update_origin: &'static str,
+    /// Base64 of the minisign public key that verifies this channel's
+    /// installers. The private key is in 1Password and never in the repository.
+    pub update_public_key: &'static str,
 }
 
 include!(concat!(env!("OUT_DIR"), "/release_profile.rs"));
@@ -40,6 +45,14 @@ impl ReleaseProfile {
     #[must_use]
     pub const fn compiled() -> Self {
         COMPILED
+    }
+
+    /// Whether this binary was built by the packaging scripts, which name
+    /// their profile, rather than as a development build that defaults to
+    /// beta. A development build never updates itself.
+    #[must_use]
+    pub const fn is_packaged() -> bool {
+        PACKAGED
     }
 }
 
@@ -70,11 +83,22 @@ mod tests {
     }
 
     #[test]
+    fn each_channel_verifies_updates_with_its_own_key() {
+        assert_ne!(STABLE.update_public_key, BETA.update_public_key);
+        assert_eq!(STABLE.update_origin, BETA.update_origin);
+        assert!(STABLE.update_origin.starts_with("https://"));
+    }
+
+    #[test]
     fn a_development_build_is_beta_unless_the_profile_is_selected() {
         let expected = match option_env!("SCOUT_DESKTOP_PROFILE") {
             Some("stable") => STABLE,
             _ => BETA,
         };
         assert_eq!(ReleaseProfile::compiled(), expected);
+        assert_eq!(
+            ReleaseProfile::is_packaged(),
+            option_env!("SCOUT_DESKTOP_PROFILE").is_some()
+        );
     }
 }

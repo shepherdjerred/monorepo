@@ -67,8 +67,8 @@ window loses nothing.
 The two talk over the child's stdio, one JSON object per line, tagged by
 `type` (`scout-desktop-ipc`). The supervisor sends a `hello` with the protocol
 version and whether a tray exists, then `state` snapshots (the runtime state
-plus diagnostics counters and recent events), `phase` changes, the diagnostics
-bundle on request, `show`, and `close`. The window sends its own `hello`, then
+plus diagnostics counters and recent events), `phase` changes, `update` (the
+self-update state), the diagnostics bundle on request, `show`, and `close`. The window sends its own `hello`, then
 `pair`, `disconnect`, `open_url` (http and https only), `open_log_folder`,
 `request_diagnostics`, `set_start_at_login`, `set_privacy`, and `quit`. Decoding is strict: an
 unknown type is a broken contract, and the supervisor treats it as a window
@@ -283,9 +283,144 @@ The DMG step lays out its window with Finder AppleScript. From a session
 without Finder automation access (SSH, an agent), it fails with `AppleEvent
 timed out`; set `CI=true` so create-dmg skips that step (the image is the same,
 minus its icon placement). Always package through these scripts: the profile is chosen by the environment
-variable the script sets, and the config only names the installer. Build and
-sign on the platform the format targets; signing and publication are the
-operator-run release lane and are not part of these scripts yet.
+variable the script sets, and the config only names the installer. Build on
+the platform the format targets. These scripts produce unsigned installers;
+operating-system code signing (Authenticode, notarization) is not part of
+them yet, and update signing is a separate step in "Releasing an update".
+
+### Self-update
+
+A packaged build keeps itself current. The supervisor (never the window, and
+never the tray's event loop) runs the updater from `scout-client-app/src/updater/`
+on its own tokio runtime.
+
+**What it does**
+
+1. Thirty seconds after start, and then every six hours (`UpdateConfig`, typed
+   config in `updater/policy.rs`; the client cannot reach the backend's Flipt),
+   it fetches `https://download.scout-for-lol.com/<channel>.json` for the
+   compiled-in profile's channel. The manifest is validated against the shared
+   contract (below) and must name the same channel.
+2. A release strictly newer than the running build is downloaded in the
+   background to `<data dir>/updates/<version>/`. The size, SHA-256 and
+   signature are checked and the file is renamed into place only if all three
+   pass. A release at or below the running version is never offered, so the
+   channel cannot downgrade a build, and redirects are never followed.
+3. A verified update waits. It installs in two ways: when the user quits Scout
+   (after the collector has stopped cleanly, with no restart), or when the
+   window has been closed for ten minutes with no game phase in the way (the
+   installer then starts the new version). A required update, where the
+   running build is below the manifest's `minimumVersion`, skips the ten
+   minutes. The installer is verified once more immediately before it runs.
+4. The installer is the `cargo packager` NSIS installer, run passively (`/P
+/NS`, plus `/R` for an idle install) and detached, so it outlives the
+   supervisor that started it.
+
+**It never interrupts a live game.** An install, whether on quit or at idle,
+starts only while the gameflow phase is `Disconnected`, `None` or `Lobby`
+(`policy::install_allowed`, an allow-list over `RuntimeState`'s typed phase).
+Matchmaking, ready check, champion select, loading, a game, a reconnect, every
+end-of-game phase and any phase this build does not know all defer it. The
+phase is rechecked at the moment of installing, and a deferred update stays
+staged for the next opportunity.
+
+**HTTP 426.** The supervisor watches `RuntimeState::upgrade_required`. The
+moment the backend starts refusing this build it checks the channel at once
+instead of waiting for the interval, so a required release is downloaded as
+soon as the backend demands it.
+
+**Window.** The supervisor sends `SupervisorMessage::Update` over the IPC link
+whenever the update state changes (`UpdateSnapshot`: a status, the version and
+whether it is required, never a URL or path), and both windows show it as an
+"Updates" row on the Overview page. Failures are recorded in diagnostics
+(`update_check`, `update_download`, `update_install`).
+
+**Telemetry.** `update_applied` is sent by the first run of a new version
+(`SettingsStore::note_run_version`) through the same usage-data gate as every
+other event, so an opted-out user sends nothing.
+
+**Where it does not run.** A development build (no `SCOUT_DESKTOP_PROFILE`), a
+build started with `--server=`, and any platform other than Windows x86-64
+(macOS DMG and Linux builds have no installer the updater can run) never update.
+`ReleaseProfile::is_packaged()` is what separates a packaged build.
+
+**Mechanism.** `cargo packager` signs installers with minisign
+(`cargo packager signer`), and the client verifies that signature with
+`minisign-verify` against the channel's public key compiled in from
+`release-profiles/<channel>.json` (`update_public_key`). Two keys, one per
+channel, so a leaked beta key cannot ship stable. The channel manifest is
+transport metadata only; the signature is the trust root, so a tampered
+manifest or bucket cannot install anything. The `cargo-packager-updater` crate
+is not used: its last release was 0.2.3 on 2025-07-21, it pulls a second
+`reqwest` (0.12) and `dirs` major version, its own manifest format has no
+SHA-256, size, minimum version or release notes, and its download-and-install
+flow cannot express the game-phase gate. The Glitter Boys launcher's
+Ed25519 manifest envelope was not reused either, because it needs its own
+signing tool and key format where `cargo packager` already writes the
+signatures this client verifies. The `Updater` trait in `updater/mod.rs` is the
+seam; `HttpUpdater` is the one implementation.
+
+**Manifest contract.** `data/src/scout-client/desktop-update-manifest.contract.json`
+is the language-neutral source of truth, with
+`desktop-update-manifest.schema.ts` (Zod), `desktop-update-manifest.fixtures.json`
+and `updater/manifest.rs` (serde plus the rules JSON cannot express) validating
+the same file. It holds the channel, the version, the `minimumVersion`, a UTC
+`publishedAt`, the release notes, and per platform artifact the URL, SHA-256,
+size, minisign signature and format. Artifact URLs must be exactly
+`https://download.scout-for-lol.com/releases/<version>/<file>`.
+
+**Keys.** The minisign private keys and their passwords are in 1Password, in
+the `Homelab` vault, item `Scout Desktop release`, fields
+`stable-update-signing-key`, `stable-update-signing-password`,
+`beta-update-signing-key` and `beta-update-signing-password` (the matching
+`*-update-public-key` fields hold the public halves). They were generated with
+`cargo packager signer generate` and never touched a file in the repository.
+Only the public keys are committed. Rotating a key is a roll-forward: publish
+a release signed with the old key whose profile carries the new public key,
+then sign the following releases with the new key. A build that never receives
+that bridge release cannot verify later ones, so rotate before retiring a key.
+
+### Releasing an update
+
+Releases are manual and operator-run. Nothing in CI or Delivery runs these
+steps, and the publication script is never run against the live bucket by a
+pull request.
+
+1. Set the workspace `version` in `Cargo.toml` above the live channel's, and
+   write release notes to a file.
+2. On the Windows host, `bun run release:package:stable` (or `:beta`) builds
+   the installer with that channel's profile and signs it. The channel's
+   signing key and password are resolved from 1Password for that process only
+   (`release-signing.<channel>.env` holds locators, never values). Output:
+   `dist/<channel>/` with the installer and its `.sig`.
+3. Preview without credentials:
+   `bun run release:publish:stable -- --notes-file notes.md --dry-run`
+   verifies the signature with the channel's public key and prints the
+   manifest it would publish.
+4. Publish: `bun run release:publish:stable -- --notes-file notes.md
+[--minimum-version X.Y.Z]`. The script, in order:
+   - refuses an installer that the channel's public key does not verify;
+   - reads the live manifest and refuses to publish a version that is not
+     newer, or a `minimumVersion` below the live one (never downgrade);
+   - uploads `releases/<version>/<installer>` and its `.sig` as immutable
+     objects (`Cache-Control: public, max-age=31536000, immutable`, created
+     with `If-None-Match: *`; identical bytes already there are a no-op so an
+     interrupted run can be retried, different bytes are refused);
+   - reads both back from `https://download.scout-for-lol.com`;
+   - only then replaces `<channel>.json` (`Cache-Control: no-cache`) under an
+     `If-Match` ETag precondition, so a concurrent publisher is refused, and
+     reads it back from the public host. Until that last write no client can
+     see the release.
+5. Raise the backend's minimum version in Flipt only after the release is
+   public, when the old builds must update.
+
+Rollback is roll-forward: publish a newer version that contains the fix. A
+channel never serves an older version than a client has.
+
+Release objects live in the `scout-desktop` SeaweedFS bucket behind
+`download.scout-for-lol.com` (declared in `packages/homelab`; the bucket and
+host must be applied by Delivery before the first publication, or the readback
+step fails).
 
 ### Renaming Scout Client to Scout Desktop
 

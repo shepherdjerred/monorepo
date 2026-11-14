@@ -9,8 +9,8 @@ use std::io::{BufRead, Write};
 use std::sync::{Arc, Mutex, PoisonError};
 
 use scout_desktop_ipc::{
-    GameflowPhase, PROTOCOL_VERSION, StateSnapshot, SupervisorMessage, WindowMessage,
-    check_protocol, decode_line, encode_line,
+    GameflowPhase, PROTOCOL_VERSION, StateSnapshot, SupervisorMessage, UpdateSnapshot,
+    WindowMessage, check_protocol, decode_line, encode_line,
 };
 
 /// What the supervisor has told the window so far.
@@ -22,6 +22,8 @@ pub struct WindowState {
     pub state: StateSnapshot,
     /// The latest gameflow phase.
     pub phase: GameflowPhase,
+    /// Where the self-update stands.
+    pub update: UpdateSnapshot,
     /// Whether any snapshot has arrived, so a default snapshot is never
     /// mistaken for the user's privacy choice.
     pub state_received: bool,
@@ -72,6 +74,10 @@ impl WindowState {
             }
             SupervisorMessage::Phase { phase } => {
                 self.phase = phase;
+                Effect::Render
+            }
+            SupervisorMessage::Update { update } => {
+                self.update = update;
                 Effect::Render
             }
             SupervisorMessage::DiagnosticsBundle { text } => Effect::CopyBundle(text),

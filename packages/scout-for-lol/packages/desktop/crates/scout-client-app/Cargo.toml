@@ -12,9 +12,20 @@ name = "scout-client"
 path = "src/main.rs"
 
 [dependencies]
+base64.workspace = true
+chrono.workspace = true
+directories.workspace = true
 eframe.workspace = true
 egui.workspace = true
+hex.workspace = true
+minisign-verify.workspace = true
 open.workspace = true
+reqwest.workspace = true
+semver.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+thiserror.workspace = true
 scout-client-core = { path = "../scout-client-core" }
 scout-client-runtime = { path = "../scout-client-runtime" }
 scout-desktop-ipc = { path = "../scout-desktop-ipc" }
@@ -36,7 +47,7 @@ serde_json.workspace = true
 winresource = "0.1.23"
 
 [dev-dependencies]
-serde_json.workspace = true
+tokio = { workspace = true, features = ["net", "process", "test-util"] }
 uuid.workspace = true
 
 [lints]

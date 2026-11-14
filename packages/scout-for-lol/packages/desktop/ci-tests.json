@@ -5,6 +5,10 @@
     {
       "runner": "cargo",
       "args": ["--workspace", "--all-features", "--locked"]
+    },
+    {
+      "runner": "vitest",
+      "args": ["scripts"]
     }
   ]
 }

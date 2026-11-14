@@ -202,8 +202,10 @@ impl UsageEventBody {
     }
 }
 
-/// `MAJOR.MINOR.PATCH` with an optional short pre-release, nothing else.
-fn is_app_version(version: &str) -> bool {
+/// `MAJOR.MINOR.PATCH` with an optional short pre-release, nothing else. The
+/// update manifest uses the same version shape.
+#[must_use]
+pub fn is_app_version(version: &str) -> bool {
     if version.len() > APP_VERSION_MAX_BYTES {
         return false;
     }
@@ -453,6 +455,30 @@ mod tests {
             device_id: Uuid::new_v4(),
             token: "sct_test".to_owned(),
         }
+    }
+
+    #[tokio::test]
+    async fn an_opted_out_user_never_sends_update_applied() -> Result<(), Box<dyn std::error::Error>>
+    {
+        let (origin, connections) = counting_server().await?;
+        let backend = ScoutBackendClient::new(&origin)?;
+        let gate = SendGate::new(false);
+        let reporter = UsageReporter::new(gate.clone(), "0.2.0");
+
+        let outcome = reporter
+            .report(&backend, &credential(), UsageEvent::UpdateApplied)
+            .await;
+        assert!(matches!(outcome, UsageOutcome::Suppressed));
+        tokio::time::sleep(Duration::from_millis(200)).await;
+        assert_eq!(connections.load(Ordering::SeqCst), 0);
+
+        gate.set(true);
+        let outcome = reporter
+            .report(&backend, &credential(), UsageEvent::UpdateApplied)
+            .await;
+        assert!(matches!(outcome, UsageOutcome::Sent), "{outcome:?}");
+        assert_eq!(connections.load(Ordering::SeqCst), 1);
+        Ok(())
     }
 
     #[tokio::test]

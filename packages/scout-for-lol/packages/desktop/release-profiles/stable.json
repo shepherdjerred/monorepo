@@ -11,5 +11,7 @@
     "organization": "Scout",
     "application": "Scout Client"
   },
-  "autostart_name": "Scout Client"
+  "autostart_name": "Scout Client",
+  "update_origin": "https://download.scout-for-lol.com",
+  "update_public_key": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDIyRUIzMjA1RkZGMjhCOEQKUldTTmkvTC9CVExySXI4ZzAvaElYdThCdzhhbktaTUVxZlkxZzVYQ0gvY1FDR0ZmdFVBNE9oNkcK"
 }

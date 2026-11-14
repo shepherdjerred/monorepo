@@ -4,7 +4,9 @@
 //! The views render these structs and nothing else; every control maps to the
 //! [`WindowMessage`] it sends.
 
-use scout_desktop_ipc::{GameflowPhase, StateSnapshot, WindowMessage};
+use scout_desktop_ipc::{
+    GameflowPhase, StateSnapshot, UpdateSnapshot, UpdateStatus, WindowMessage,
+};
 
 /// What the window was built as, shown on the Diagnostics page.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -92,6 +94,19 @@ pub struct OverviewModel {
 }
 
 impl OverviewModel {
+    /// Add the self-update line, after the status rows.
+    #[must_use]
+    pub fn with_update(mut self, update: &UpdateSnapshot) -> Self {
+        let tone = match update.status {
+            UpdateStatus::Failed => Tone::Waiting,
+            UpdateStatus::UpToDate | UpdateStatus::Ready => Tone::Good,
+            _ => Tone::Normal,
+        };
+        self.rows
+            .push(StatusLine::new("Updates", update.summary(), tone));
+        self
+    }
+
     /// Build the Overview page from a snapshot.
     #[must_use]
     pub fn new(state: &StateSnapshot) -> Self {
@@ -395,6 +410,24 @@ mod tests {
         let labels = PageId::ALL.map(PageId::label);
         assert_eq!(labels, ["Overview", "Activity", "Settings", "Diagnostics"]);
         assert_eq!(PageId::default(), PageId::Overview);
+    }
+
+    #[test]
+    fn overview_ends_with_the_update_line() {
+        use scout_desktop_ipc::{UpdateSnapshot, UpdateStatus};
+        let model = OverviewModel::new(&StateSnapshot::default()).with_update(&UpdateSnapshot {
+            status: UpdateStatus::Ready,
+            version: Some("0.2.0".to_owned()),
+            required: false,
+        });
+        let last = model
+            .rows
+            .last()
+            .map(|row| (row.label, row.value.as_str(), row.tone));
+        assert_eq!(
+            last,
+            Some(("Updates", "0.2.0 installs when you quit Scout", Tone::Good))
+        );
     }
 
     #[test]

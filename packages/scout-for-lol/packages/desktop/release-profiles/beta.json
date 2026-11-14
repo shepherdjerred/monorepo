@@ -11,5 +11,7 @@
     "organization": "Scout",
     "application": "Scout Desktop Beta"
   },
-  "autostart_name": "Scout Desktop Beta"
+  "autostart_name": "Scout Desktop Beta",
+  "update_origin": "https://download.scout-for-lol.com",
+  "update_public_key": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDE0MDA4NzQ0QTJGM0Q3MDEKUldRQjEvT2lSSWNBRkpxMnZhR1FxYjNGcytFelNtUUtLLzNhRnA5VGxNZEpZSXl4V0V0bTA2OXQK"
 }

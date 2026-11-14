@@ -15,6 +15,7 @@ mod supervisor;
 mod toolkit;
 mod tray;
 mod ui;
+mod updater;
 mod window;
 
 use std::panic::AssertUnwindSafe;
@@ -187,9 +188,13 @@ fn supervise(arguments: &[String], toolkit: WindowToolkit) -> ExitCode {
         ],
     );
     let (control, control_receiver) = mpsc::unbounded_channel();
+    let server_overridden = arguments
+        .iter()
+        .any(|argument| argument.starts_with("--server="));
     let exit = tray::run(
         control,
         Box::new(move |tray_available| {
+            let diagnostics = Arc::clone(runtime.diagnostics());
             let supervisor = Supervisor::new(
                 instance_lock,
                 runtime,
@@ -201,7 +206,16 @@ fn supervise(arguments: &[String], toolkit: WindowToolkit) -> ExitCode {
             // A supervisor panic must end the process rather than leave a
             // tray with nothing behind it; the panic hook has recorded it.
             std::panic::catch_unwind(AssertUnwindSafe(|| {
-                async_runtime.block_on(supervisor.run())
+                async_runtime.block_on(async move {
+                    // The updater's task lives on this runtime, off the tray's
+                    // event loop.
+                    let supervisor =
+                        match updater::start_for_this_build(server_overridden, diagnostics) {
+                            Some(updates) => supervisor.with_updates(updates),
+                            None => supervisor,
+                        };
+                    supervisor.run().await
+                })
             }))
             .unwrap_or(SupervisorExit::Panicked)
         }),

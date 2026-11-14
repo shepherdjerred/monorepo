@@ -1,0 +1,305 @@
+{
+  "valid": [
+    {
+      "schema": 1,
+      "channel": "stable",
+      "version": "0.2.0",
+      "minimumVersion": "0.1.0",
+      "publishedAt": "2026-11-14T12:00:00Z",
+      "notes": "Scout Desktop now updates itself.",
+      "platforms": {
+        "windows-x86_64": {
+          "url": "https://download.scout-for-lol.com/releases/0.2.0/scout-desktop-stable_0.2.0_x64-setup.exe",
+          "sha256": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+          "size": 14680064,
+          "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIGNhcmdvLXBhY2thZ2VyIHNlY3JldCBrZXkKUlVTZ29WL0NXQ24rNXc2ZktTVHNDQkJvN0EwemE5akVsTVNMdlQ3cHIzRkZnU3pJYk52b3BnMW53RzVwKzlnMU9HK1F0ejZQdG8yNk12SldiSGFwODFiNVZsN0tVcEozdkF3PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk0Njk0MjQxCWZpbGU6Zi50eHQKQWNGQVpsSFcrZ3lHM3cwUTJGRnVlQTNiWWYxS0JXT1JBVTlGTzNnMXE1VDd3ajhpeTF1dlE1VE5wTGVzR3BsSVZwTXY3NjBZZm5zVjYrVXRJMzZzQ1E9PQo=",
+          "format": "nsis"
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "channel": "beta",
+      "version": "1.0.0-beta.2",
+      "minimumVersion": "1.0.0-beta.2",
+      "publishedAt": "2026-12-01T00:00:00Z",
+      "notes": "",
+      "platforms": {
+        "windows-x86_64": {
+          "url": "https://download.scout-for-lol.com/releases/1.0.0-beta.2/scout-desktop-beta_1.0.0-beta.2_x64-setup.exe",
+          "sha256": "2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae",
+          "size": 1,
+          "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIGNhcmdvLXBhY2thZ2VyIHNlY3JldCBrZXkKUlVTZ29WL0NXQ24rNXc2ZktTVHNDQkJvN0EwemE5akVsTVNMdlQ3cHIzRkZnU3pJYk52b3BnMW53RzVwKzlnMU9HK1F0ejZQdG8yNk12SldiSGFwODFiNVZsN0tVcEozdkF3PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk0Njk0MjQxCWZpbGU6Zi50eHQKQWNGQVpsSFcrZ3lHM3cwUTJGRnVlQTNiWWYxS0JXT1JBVTlGTzNnMXE1VDd3ajhpeTF1dlE1VE5wTGVzR3BsSVZwTXY3NjBZZm5zVjYrVXRJMzZzQ1E9PQo=",
+          "format": "nsis"
+        }
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "reason": "an unknown schema version",
+      "body": {
+        "schema": 2,
+        "channel": "stable",
+        "version": "0.2.0",
+        "minimumVersion": "0.1.0",
+        "publishedAt": "2026-11-14T12:00:00Z",
+        "notes": "",
+        "platforms": {}
+      }
+    },
+    {
+      "reason": "an unknown channel",
+      "body": {
+        "schema": 1,
+        "channel": "nightly",
+        "version": "0.2.0",
+        "minimumVersion": "0.1.0",
+        "publishedAt": "2026-11-14T12:00:00Z",
+        "notes": "",
+        "platforms": {}
+      }
+    },
+    {
+      "reason": "no platform artifact",
+      "body": {
+        "schema": 1,
+        "channel": "stable",
+        "version": "0.2.0",
+        "minimumVersion": "0.1.0",
+        "publishedAt": "2026-11-14T12:00:00Z",
+        "notes": "",
+        "platforms": {}
+      }
+    },
+    {
+      "reason": "a minimum version newer than the release",
+      "body": {
+        "schema": 1,
+        "channel": "stable",
+        "version": "0.2.0",
+        "minimumVersion": "0.3.0",
+        "publishedAt": "2026-11-14T12:00:00Z",
+        "notes": "",
+        "platforms": {
+          "windows-x86_64": {
+            "url": "https://download.scout-for-lol.com/releases/0.2.0/scout-desktop-stable_0.2.0_x64-setup.exe",
+            "sha256": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+            "size": 14680064,
+            "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIGNhcmdvLXBhY2thZ2VyIHNlY3JldCBrZXkK",
+            "format": "nsis"
+          }
+        }
+      }
+    },
+    {
+      "reason": "an artifact on another host",
+      "body": {
+        "schema": 1,
+        "channel": "stable",
+        "version": "0.2.0",
+        "minimumVersion": "0.1.0",
+        "publishedAt": "2026-11-14T12:00:00Z",
+        "notes": "",
+        "platforms": {
+          "windows-x86_64": {
+            "url": "https://example.com/releases/0.2.0/scout-desktop-stable_0.2.0_x64-setup.exe",
+            "sha256": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+            "size": 14680064,
+            "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIGNhcmdvLXBhY2thZ2VyIHNlY3JldCBrZXkK",
+            "format": "nsis"
+          }
+        }
+      }
+    },
+    {
+      "reason": "an artifact outside its own version directory",
+      "body": {
+        "schema": 1,
+        "channel": "stable",
+        "version": "0.2.0",
+        "minimumVersion": "0.1.0",
+        "publishedAt": "2026-11-14T12:00:00Z",
+        "notes": "",
+        "platforms": {
+          "windows-x86_64": {
+            "url": "https://download.scout-for-lol.com/releases/0.1.0/scout-desktop-stable_0.1.0_x64-setup.exe",
+            "sha256": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+            "size": 14680064,
+            "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIGNhcmdvLXBhY2thZ2VyIHNlY3JldCBrZXkK",
+            "format": "nsis"
+          }
+        }
+      }
+    },
+    {
+      "reason": "an artifact url with a path traversal",
+      "body": {
+        "schema": 1,
+        "channel": "stable",
+        "version": "0.2.0",
+        "minimumVersion": "0.1.0",
+        "publishedAt": "2026-11-14T12:00:00Z",
+        "notes": "",
+        "platforms": {
+          "windows-x86_64": {
+            "url": "https://download.scout-for-lol.com/releases/0.2.0/../0.1.0/x.exe",
+            "sha256": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+            "size": 14680064,
+            "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIGNhcmdvLXBhY2thZ2VyIHNlY3JldCBrZXkK",
+            "format": "nsis"
+          }
+        }
+      }
+    },
+    {
+      "reason": "a plain-http artifact url",
+      "body": {
+        "schema": 1,
+        "channel": "stable",
+        "version": "0.2.0",
+        "minimumVersion": "0.1.0",
+        "publishedAt": "2026-11-14T12:00:00Z",
+        "notes": "",
+        "platforms": {
+          "windows-x86_64": {
+            "url": "http://download.scout-for-lol.com/releases/0.2.0/scout-desktop-stable_0.2.0_x64-setup.exe",
+            "sha256": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+            "size": 14680064,
+            "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIGNhcmdvLXBhY2thZ2VyIHNlY3JldCBrZXkK",
+            "format": "nsis"
+          }
+        }
+      }
+    },
+    {
+      "reason": "an uppercase or short sha256",
+      "body": {
+        "schema": 1,
+        "channel": "stable",
+        "version": "0.2.0",
+        "minimumVersion": "0.1.0",
+        "publishedAt": "2026-11-14T12:00:00Z",
+        "notes": "",
+        "platforms": {
+          "windows-x86_64": {
+            "url": "https://download.scout-for-lol.com/releases/0.2.0/scout-desktop-stable_0.2.0_x64-setup.exe",
+            "sha256": "9F86D081",
+            "size": 14680064,
+            "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIGNhcmdvLXBhY2thZ2VyIHNlY3JldCBrZXkK",
+            "format": "nsis"
+          }
+        }
+      }
+    },
+    {
+      "reason": "a zero-byte artifact",
+      "body": {
+        "schema": 1,
+        "channel": "stable",
+        "version": "0.2.0",
+        "minimumVersion": "0.1.0",
+        "publishedAt": "2026-11-14T12:00:00Z",
+        "notes": "",
+        "platforms": {
+          "windows-x86_64": {
+            "url": "https://download.scout-for-lol.com/releases/0.2.0/scout-desktop-stable_0.2.0_x64-setup.exe",
+            "sha256": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+            "size": 0,
+            "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIGNhcmdvLXBhY2thZ2VyIHNlY3JldCBrZXkK",
+            "format": "nsis"
+          }
+        }
+      }
+    },
+    {
+      "reason": "a missing signature",
+      "body": {
+        "schema": 1,
+        "channel": "stable",
+        "version": "0.2.0",
+        "minimumVersion": "0.1.0",
+        "publishedAt": "2026-11-14T12:00:00Z",
+        "notes": "",
+        "platforms": {
+          "windows-x86_64": {
+            "url": "https://download.scout-for-lol.com/releases/0.2.0/scout-desktop-stable_0.2.0_x64-setup.exe",
+            "sha256": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+            "size": 14680064,
+            "format": "nsis"
+          }
+        }
+      }
+    },
+    {
+      "reason": "an unknown platform",
+      "body": {
+        "schema": 1,
+        "channel": "stable",
+        "version": "0.2.0",
+        "minimumVersion": "0.1.0",
+        "publishedAt": "2026-11-14T12:00:00Z",
+        "notes": "",
+        "platforms": {
+          "linux-x86_64": {
+            "url": "https://download.scout-for-lol.com/releases/0.2.0/scout-desktop-stable_0.2.0.AppImage",
+            "sha256": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+            "size": 14680064,
+            "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIGNhcmdvLXBhY2thZ2VyIHNlY3JldCBrZXkK",
+            "format": "nsis"
+          }
+        }
+      }
+    },
+    {
+      "reason": "an unknown field",
+      "body": {
+        "schema": 1,
+        "channel": "stable",
+        "version": "0.2.0",
+        "minimumVersion": "0.1.0",
+        "publishedAt": "2026-11-14T12:00:00Z",
+        "notes": "",
+        "rolloutPercent": 10,
+        "platforms": {
+          "windows-x86_64": {
+            "url": "https://download.scout-for-lol.com/releases/0.2.0/scout-desktop-stable_0.2.0_x64-setup.exe",
+            "sha256": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+            "size": 14680064,
+            "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIGNhcmdvLXBhY2thZ2VyIHNlY3JldCBrZXkK",
+            "format": "nsis"
+          }
+        }
+      }
+    },
+    {
+      "reason": "a publication time that is not a real date",
+      "body": {
+        "schema": 1,
+        "channel": "stable",
+        "version": "0.2.0",
+        "minimumVersion": "0.1.0",
+        "publishedAt": "2026-13-45T12:00:00Z",
+        "notes": "",
+        "platforms": {
+          "windows-x86_64": {
+            "url": "https://download.scout-for-lol.com/releases/0.2.0/scout-desktop-stable_0.2.0_x64-setup.exe",
+            "sha256": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+            "size": 14680064,
+            "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIGNhcmdvLXBhY2thZ2VyIHNlY3JldCBrZXkK",
+            "format": "nsis"
+          }
+        }
+      }
+    }
+  ],
+  "versionOrdering": [
+    { "lower": "0.1.0", "higher": "0.2.0" },
+    { "lower": "0.9.0", "higher": "0.10.0" },
+    { "lower": "1.0.0-beta.1", "higher": "1.0.0-beta.2" },
+    { "lower": "1.0.0-beta.2", "higher": "1.0.0-beta.10" },
+    { "lower": "1.0.0-beta.2", "higher": "1.0.0" },
+    { "lower": "1.0.0-1", "higher": "1.0.0-alpha" },
+    { "lower": "1.0.0-alpha", "higher": "1.0.0-alpha.1" }
+  ]
+}
