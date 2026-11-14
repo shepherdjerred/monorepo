@@ -1,6 +1,8 @@
 import { describe, expect, test } from "vitest";
 import {
   MODELS,
+  ModelEntrySchema,
+  PricingOnlyModelError,
   allModelIds,
   assertModelId,
   costForTextUsage,
@@ -66,7 +68,9 @@ describe("catalog integrity", () => {
     for (const model of Object.values(MODELS)) {
       expect(model.capabilities.inputModalities.length).toBeGreaterThan(0);
       expect(model.capabilities.outputModalities.length).toBeGreaterThan(0);
-      if (model.status !== "deprecated") {
+      if (model.pricingOnly === true) {
+        expect(model.routes).toEqual({});
+      } else if (model.status !== "deprecated") {
         expect(model.routes.native).toBeDefined();
       }
     }
@@ -424,5 +428,77 @@ describe("native pricing dimensions", () => {
         serverToolRequests: { webSearch: 1 },
       }),
     ).toBeUndefined();
+  });
+});
+
+describe("pricingOnly models", () => {
+  const PRICING_ONLY = ["kimi-k3.1-pro", "kimi-k3.1-pro-highspeed"];
+
+  test("Kimi K3.1 Pro is priced from Moonshot's published rates", () => {
+    expect(getModel("kimi-k3.1-pro")).toMatchObject({
+      provider: "moonshot",
+      pricingOnly: true,
+      routes: {},
+    });
+    // 1,000 uncached input at $2, 5,000 cache reads at $0.20, 300 5-minute
+    // cache writes at $2, and 200 output at $10, per 1M.
+    expect(
+      costForTextUsage("kimi-k3.1-pro", {
+        inputTokens: 1000,
+        outputTokens: 200,
+        cacheReadTokens: 5000,
+        cacheWriteTokens: 300,
+      }),
+    ).toBeCloseTo(5600e-6, 12);
+    expect(
+      costForTextUsage("kimi-k3.1-pro-highspeed", {
+        inputTokens: 1000,
+        outputTokens: 200,
+        cacheReadTokens: 5000,
+        cacheWriteTokensByTtl: { "1h": 300 },
+      }),
+    ).toBeCloseTo((4000 + 1000 + 2400 + 4000) * 1e-6, 12);
+  });
+
+  test("the runtime can never resolve a pricingOnly model", () => {
+    for (const id of PRICING_ONLY) {
+      expect(isModelId(id)).toBe(true);
+      expect(getNativeRoute(id)).toBeUndefined();
+      expect(() => requireNativeRoute(id)).toThrow(PricingOnlyModelError);
+      expect(() => requireNativeRoute(id, "language")).toThrow(
+        PricingOnlyModelError,
+      );
+      expect(modelIdForNativeRoute("openai", id)).toBeUndefined();
+    }
+  });
+
+  test("a pricingOnly entry that declares a route is rejected", () => {
+    const kimi = getModel("kimi-k3.1-pro");
+    expect(
+      ModelEntrySchema.safeParse({
+        ...kimi,
+        routes: {
+          native: {
+            provider: "openai",
+            modelId: "kimi-k3.1-pro",
+            endpoint: "language",
+          },
+        },
+      }).success,
+    ).toBe(false);
+    expect(
+      ModelEntrySchema.safeParse({ ...kimi, pricingOnly: false }).success,
+    ).toBe(false);
+  });
+
+  test("a moonshot creator never reaches the transport provider enum", () => {
+    expect(
+      modelsByProvider("moonshot")
+        .map((model) => model.id)
+        .sort(),
+    ).toEqual(PRICING_ONLY);
+    for (const model of modelsByProvider("moonshot")) {
+      expect(model.pricingOnly).toBe(true);
+    }
   });
 });

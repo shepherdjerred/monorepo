@@ -14,6 +14,8 @@ public enum HistorySource: String, Decodable, CaseIterable, Hashable, Sendable {
   case codex
   case antigravity
   case grok
+  case kimi
+  case muse
   case cursor
   case conductor
   case claudeMirror = "claude-mirror"
@@ -25,6 +27,8 @@ public enum HistorySource: String, Decodable, CaseIterable, Hashable, Sendable {
     case .codex: "Codex"
     case .antigravity: "Antigravity"
     case .grok: "Grok"
+    case .kimi: "Kimi Code"
+    case .muse: "Meta Muse"
     case .cursor: "Cursor"
     case .conductor: "Conductor"
     case .claudeMirror: "Claude Code (mirrored)"

@@ -23,7 +23,15 @@ import {
   type StagedScan,
 } from "@shepherdjerred/toolkit/lib/history/sources-shared.ts";
 import {
-  EMPTY_DOCUMENT_DETAILS,
+  antigravityRootOfDatabase,
+  antigravitySummariesPath,
+  antigravityTranscriptPath,
+  readAntigravitySummaries,
+  readAntigravityTranscript,
+  type AntigravitySummary,
+} from "./antigravity-transcript.ts";
+import { makeHistoryDocument } from "@shepherdjerred/toolkit/lib/history/query/messages.ts";
+import {
   type HistoryDocument,
   type HistoryMessage,
   type HistoryRecord,
@@ -144,6 +152,8 @@ function scanStepEvents(
 async function buildAntigravityDocument(
   database: Database,
   filePath: string,
+  summary: AntigravitySummary | undefined,
+  transcript: readonly HistoryMessage[] | null,
 ): Promise<HistoryDocument> {
   const tables = tableNames(database);
   if (!tables.has("gen_metadata") && !tables.has("steps")) {
@@ -191,22 +201,21 @@ async function buildAntigravityDocument(
     );
   });
 
-  return {
-    source: "antigravity",
-    sourceId: filePath,
-    title: documentTitle(usageEvents, runtimeId),
-    path: filePath,
-    workspace: null,
-    agent: "Antigravity",
-    createdAt: new Date(earliestMs).toISOString(),
-    updatedAt: new Date(latestMs).toISOString(),
-    runtimeId,
-    openingPromptHash: null,
-    dialogueText: "",
-    toolOutputText: "",
-    usageEvents,
-    ...EMPTY_DOCUMENT_DETAILS,
-  } satisfies HistoryDocument;
+  return makeHistoryDocument(
+    {
+      source: "antigravity",
+      sourceId: filePath,
+      title: summary?.title ?? documentTitle(usageEvents, runtimeId),
+      path: filePath,
+      workspace: summary?.workspace ?? null,
+      agent: "Antigravity",
+      createdAt: new Date(earliestMs).toISOString(),
+      updatedAt: new Date(latestMs).toISOString(),
+      runtimeId,
+      usageEvents,
+    },
+    transcript ?? [],
+  );
 }
 
 /**
@@ -222,10 +231,21 @@ async function buildAntigravityDocument(
  */
 async function scanAntigravityDatabase(
   filePath: string,
+  summaries: ReadonlyMap<string, AntigravitySummary>,
 ): Promise<HistoryDocument> {
   const database = await readImmutableDatabase(filePath, "Antigravity");
   try {
-    return await buildAntigravityDocument(database, filePath);
+    const runtimeId = path.basename(filePath, ".db");
+    const transcript = await readAntigravityTranscript(
+      antigravityRootOfDatabase(filePath),
+      runtimeId,
+    );
+    return await buildAntigravityDocument(
+      database,
+      filePath,
+      summaries.get(runtimeId),
+      transcript,
+    );
   } finally {
     database.close();
   }
@@ -256,6 +276,39 @@ async function antigravityDatabaseFiles(root: string): Promise<string[]> {
 const ANTIGRAVITY_NO_TRANSCRIPT_TEXT =
   "Antigravity session — no transcript text available locally";
 
+/**
+ * Sidecar files whose change must re-parse a conversation: its brain
+ * transcript, and the root's summaries database (title and workspace).
+ * The sidecars are fingerprinted with the databases; only the databases are
+ * indexed documents.
+ */
+async function antigravitySidecars(files: readonly string[]): Promise<{
+  readonly sidecars: readonly string[];
+  readonly owners: ReadonlyMap<string, readonly string[]>;
+}> {
+  const sidecars: string[] = [];
+  const owners = new Map<string, string[]>();
+  const claim = (sidecar: string, database: string): void => {
+    owners.set(sidecar, [...(owners.get(sidecar) ?? []), database]);
+  };
+  for (const file of files) {
+    const root = antigravityRootOfDatabase(file);
+    const candidates = [
+      antigravityTranscriptPath(root, path.basename(file, ".db")),
+      antigravitySummariesPath(root),
+    ];
+    for (const candidate of candidates) {
+      if (await pathExists(candidate)) {
+        if (!owners.has(candidate)) {
+          sidecars.push(candidate);
+        }
+        claim(candidate, file);
+      }
+    }
+  }
+  return { sidecars, owners };
+}
+
 async function scanAntigravity(
   paths: HistoryPaths,
   previous: ReadonlyMap<string, string> | null,
@@ -271,11 +324,34 @@ async function scanAntigravity(
       staged: new Map(),
     };
   }
-  const plan = await planFileScan(files, previous, force);
+  const { sidecars, owners } = await antigravitySidecars(files);
+  const plan = await planFileScan([...files, ...sidecars], previous, force);
+  const databases = new Set(files);
+  const parseFiles = plan.full
+    ? files
+    : [
+        ...new Set(
+          plan.parseFiles.flatMap((file) =>
+            databases.has(file) ? [file] : (owners.get(file) ?? []),
+          ),
+        ),
+      ].sort();
   try {
+    const summariesByRoot = new Map<
+      string,
+      ReadonlyMap<string, AntigravitySummary>
+    >();
+    for (const root of new Set(
+      parseFiles.map((file) => antigravityRootOfDatabase(file)),
+    )) {
+      summariesByRoot.set(root, await readAntigravitySummaries(root));
+    }
     const documents: HistoryDocument[] = [];
-    for (const file of plan.parseFiles) {
-      documents.push(await scanAntigravityDatabase(file));
+    for (const file of parseFiles) {
+      const summaries = summariesByRoot.get(antigravityRootOfDatabase(file));
+      documents.push(
+        await scanAntigravityDatabase(file, summaries ?? new Map()),
+      );
     }
     return {
       result: plan.full
@@ -304,13 +380,20 @@ export function createAntigravitySource(): HistorySource {
           const messages = new Map<string, readonly HistoryMessage[]>();
           for (const record of records) {
             if (await pathExists(record.sourceId)) {
-              messages.set(record.sourceId, [
-                {
-                  role: "unknown",
-                  text: ANTIGRAVITY_NO_TRANSCRIPT_TEXT,
-                  createdAt: null,
-                },
-              ]);
+              const transcript = await readAntigravityTranscript(
+                antigravityRootOfDatabase(record.sourceId),
+                path.basename(record.sourceId, ".db"),
+              );
+              messages.set(
+                record.sourceId,
+                transcript ?? [
+                  {
+                    role: "unknown",
+                    text: ANTIGRAVITY_NO_TRANSCRIPT_TEXT,
+                    createdAt: null,
+                  },
+                ],
+              );
             }
           }
           return messages;

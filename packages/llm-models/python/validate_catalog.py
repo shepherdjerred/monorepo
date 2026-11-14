@@ -159,7 +159,10 @@ class Routes(BaseModel):
 class ModelEntry(BaseModel):
     model_config = {"extra": "forbid"}
     id: str = Field(min_length=1)
-    provider: Literal["openai", "anthropic", "google"]
+    # Who made and bills the model; a superset of the NativeRoute transports.
+    provider: Literal["openai", "anthropic", "google", "moonshot"]
+    # Priced but never called: no routes, and the runtime refuses it.
+    pricingOnly: Literal[True] | None = None
     displayName: str = Field(min_length=1)
     description: str | None = None
     pricing: Pricing
@@ -170,6 +173,17 @@ class ModelEntry(BaseModel):
     routes: Routes
     status: Literal["current", "preview", "deprecated"]
     category: str | None = None
+
+    @model_validator(mode="after")
+    def pricing_only_has_no_routes(self) -> ModelEntry:
+        routes = self.routes
+        if self.pricingOnly and (
+            routes.native is not None
+            or routes.claudeAgentSdk is not None
+            or routes.codexSdk is not None
+        ):
+            raise ValueError(f"pricingOnly model {self.id!r} must declare no routes")
+        return self
 
 
 CatalogAdapter = TypeAdapter(dict[str, ModelEntry])

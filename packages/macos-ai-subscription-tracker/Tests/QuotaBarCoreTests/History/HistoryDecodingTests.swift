@@ -138,6 +138,23 @@ final class HistoryDecodingTests: XCTestCase {
       Set(HistorySource.allCases.map(\.displayName)).count, HistorySource.allCases.count)
   }
 
+  /// The toolkit's JSON Schema is the source of truth for source names; a
+  /// source added there must be decodable here, and none may be invented.
+  func testSourcesMatchTheSchemaEnum() throws {
+    var url = URL(fileURLWithPath: #filePath)
+    for _ in 0..<5 { url.deleteLastPathComponent() }
+    let schema = try Data(
+      contentsOf: url.appendingPathComponent(
+        "toolkit/schemas/history-api-session-detail.schema.json"))
+    let root = try XCTUnwrap(JSONSerialization.jsonObject(with: schema) as? [String: Any])
+    let properties = try XCTUnwrap(root["properties"] as? [String: Any])
+    let session = try XCTUnwrap(properties["session"] as? [String: Any])
+    let sessionProperties = try XCTUnwrap(session["properties"] as? [String: Any])
+    let source = try XCTUnwrap(sessionProperties["source"] as? [String: Any])
+    let names = try XCTUnwrap(source["enum"] as? [String])
+    XCTAssertEqual(Set(names), Set(HistorySource.allCases.map(\.rawValue)))
+  }
+
   private func decode<Value: HistoryVersionedResponse>(_ fixture: String, path: String) throws
     -> Value
   {

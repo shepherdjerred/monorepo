@@ -8,6 +8,8 @@ export const HISTORY_SOURCE_NAMES = [
   "cursor",
   "antigravity",
   "grok",
+  "kimi",
+  "muse",
   "claude-mirror",
   "codex-mirror",
 ] as const;

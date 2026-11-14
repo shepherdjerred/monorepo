@@ -1012,7 +1012,7 @@ canvas result, and verifies it cell by cell. Applies are journaled under
 #### History search
 
 `history` maintains a private local index of Conductor, Claude Code, Codex,
-Cursor, Antigravity, and Grok CLI
+Cursor, Antigravity, Grok CLI, Kimi Code, and Meta Muse
 conversations. Install the macOS LaunchAgent once; search itself only reads
 the index and never performs live service checks.
 
@@ -1067,6 +1067,15 @@ Antigravity's local conversation databases carry no reconstructible transcript
 text (only usage telemetry), so its indexed dialogue is minimal by design —
 its value here is the token/cost data, not search.
 
+Kimi Code is read from `~/.kimi-code/sessions/wd_*/session_*/`: `state.json`
+supplies the title, workspace, and timestamps, and each
+`agents/<agentId>/wire.jsonl` (the main agent and every subagent) is its own
+session. Kimi records no git branch. Meta Muse is read from
+`~/.local/share/muse`: `session-index.db` (opened read-only) lists root
+sessions with their title, workspace, and branch, each pointing at its
+`session.jsonl` event log, and every `subagent/<uuid>/session.jsonl` beside a
+root log is indexed as its own session titled after its parent.
+
 ##### Read API
 
 The daemon also serves a read-only JSON API over its socket for Brim's
@@ -1102,7 +1111,7 @@ curl --unix-socket ~/.toolkit/history/daemon.sock 'http://history/v1/usage?group
 
 `history usage` reports token counts and an estimated USD cost per source,
 populated for the sources whose local data actually carries usage
-(Claude Code, Codex, Antigravity, Grok — Cursor and Conductor
+(Claude Code, Codex, Antigravity, Grok, Kimi Code, Meta Muse — Cursor and Conductor
 don't appear in the report at all today, since their local data doesn't
 reliably carry usage). Cost comes from whichever source is authoritative:
 Grok CLI self-reports its own per-turn cost (`costUsdTicks`), which is used
@@ -1119,7 +1128,12 @@ window boundary, instead of attributing its entire history to whichever
 window its most recent message falls in. Codex's `cached_input_tokens` is
 priced as a subset already included in its input tokens (OpenAI's cache
 discount), distinct from the additive cache-read/cache-write tokens Claude
-Code and Antigravity's Claude-backed sessions report.
+Code and Antigravity's Claude-backed sessions report. Kimi Code reports
+additive cache reads and writes like Claude Code and is priced as the Kimi API
+model it logs (`kimi-code/k3.1-pro` is the catalog's `pricingOnly`
+`kimi-k3.1-pro`). Meta Muse reports its cache reads as a cached subset of
+input like Codex; its models have no published per-token price, so it reports
+real token counts with an unpriced cost.
 
 ##### Usage metrics push
 

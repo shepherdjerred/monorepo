@@ -6,6 +6,8 @@ import { createCodexSource } from "./sources/codex-scan.ts";
 import { createConductorSource } from "./sources/conductor.ts";
 import { createCursorSource } from "./sources/cursor.ts";
 import { createGrokSource } from "./sources/grok.ts";
+import { createKimiSource } from "./sources/kimi.ts";
+import { createMuseSource } from "./sources/muse.ts";
 import {
   claudeMirrorPaths,
   codexMirrorPaths,
@@ -379,6 +381,8 @@ export function createHistorySources(): readonly HistorySource[] {
     createCursorSource(),
     createAntigravitySource(),
     createGrokSource(),
+    createKimiSource(),
+    createMuseSource(),
     createMirrorSource({
       name: "claude-mirror",
       label: "Claude Code",

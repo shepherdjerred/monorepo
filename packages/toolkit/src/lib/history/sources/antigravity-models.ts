@@ -38,6 +38,9 @@ export function modelNameFromId(id: number): string {
 }
 
 const MODEL_NAME_MAP: Readonly<Record<string, string>> = {
+  "gemini 3.8 flash": "gemini-3.8-flash",
+  "gemini-3.8-flash-n": "gemini-3.8-flash",
+  model_placeholder_m318: "gemini-3.8-flash",
   "gemini 3.7 flash": "gemini-3.7-flash",
   "gemini 3.7 flash thinking": "gemini-3.7-flash",
   "gemini 3.7 pro": "gemini-3.7-pro",

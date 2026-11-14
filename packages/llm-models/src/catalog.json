@@ -1042,5 +1042,74 @@
         "endpoint": "language"
       }
     }
+  },
+  "kimi-k3.1-pro": {
+    "id": "kimi-k3.1-pro",
+    "provider": "moonshot",
+    "pricingOnly": true,
+    "displayName": "Kimi K3.1 Pro",
+    "description": "Moonshot's K3.1 flagship, priced for Kimi Code usage logs (which name it kimi-code/k3.1-pro); never called from this repo. Prices from https://platform.kimi.ai/docs/pricing/chat; limits from https://platform.kimi.ai/docs/guide/kimi-k3-1-pro-quickstart.",
+    "pricing": {
+      "modality": "text",
+      "input": 2,
+      "output": 10,
+      "cacheRead": 0.2,
+      "cacheWrite": 2,
+      "cacheWriteByTtl": {
+        "5m": 2,
+        "1h": 4
+      },
+      "serviceTierMultipliers": {
+        "batch": 0.6
+      }
+    },
+    "contextWindow": 1048576,
+    "capabilities": {
+      "inputModalities": ["text", "image", "video"],
+      "outputModalities": ["text"],
+      "tools": true,
+      "structuredOutputs": true,
+      "webSearch": false,
+      "reasoning": true,
+      "supportsTemperature": false,
+      "supportsTopP": false,
+      "maxTokens": 1048576,
+      "effortTiers": ["low", "high", "max"]
+    },
+    "status": "current",
+    "routes": {}
+  },
+  "kimi-k3.1-pro-highspeed": {
+    "id": "kimi-k3.1-pro-highspeed",
+    "provider": "moonshot",
+    "pricingOnly": true,
+    "displayName": "Kimi K3.1 Pro Highspeed",
+    "description": "Faster K3.1 Pro tier at double the price, priced for usage attribution; never called from this repo. Prices from https://platform.kimi.ai/docs/pricing/chat; limits from https://platform.kimi.ai/docs/guide/kimi-k3-1-pro-quickstart.",
+    "pricing": {
+      "modality": "text",
+      "input": 4,
+      "output": 20,
+      "cacheRead": 0.2,
+      "cacheWrite": 4,
+      "cacheWriteByTtl": {
+        "5m": 4,
+        "1h": 8
+      }
+    },
+    "contextWindow": 1048576,
+    "capabilities": {
+      "inputModalities": ["text", "image", "video"],
+      "outputModalities": ["text"],
+      "tools": true,
+      "structuredOutputs": true,
+      "webSearch": false,
+      "reasoning": true,
+      "supportsTemperature": false,
+      "supportsTopP": false,
+      "maxTokens": 1048576,
+      "effortTiers": ["low", "high", "max"]
+    },
+    "status": "current",
+    "routes": {}
   }
 }

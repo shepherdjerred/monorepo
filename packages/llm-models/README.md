@@ -1,16 +1,25 @@
 # @shepherdjerred/llm-models
 
-Language-neutral catalog of the active LLM models used across this repo, with
+Language-neutral catalog of the LLM models this repo uses or prices, with
 pricing and capabilities. The source of truth is `src/catalog.json`, described
 by [catalog.schema.json](catalog.schema.json) (JSON Schema 2020-12) and
 validated at runtime by Zod in TypeScript and Pydantic in Python.
 
 Units: text and image-input token prices are **USD per 1,000,000 tokens**;
 image-output prices are **USD per image**. Each entry carries provider
-(`openai` | `anthropic` | `google`),
+(`openai` | `anthropic` | `google` | `moonshot`),
 display name, pricing (text or image modality, including cache pricing),
 capabilities (temperature/top-p support, effort tiers, adaptive thinking),
 context window, and status (`current` | `preview` | `deprecated`).
+
+An entry's `provider` is who made and bills the model; its `routes.native`
+provider is the transport `llm-runtime` calls, and only `openai`, `anthropic`,
+and `google` are transports. A model the repo prices but never calls, such as
+Moonshot's `kimi-k3.1-pro` whose usage Kimi Code logs locally, is marked
+`"pricingOnly": true`. It declares no routes (the schema rejects one that
+does), `requireNativeRoute` refuses it with `PricingOnlyModelError`, and route
+lookups never resolve to it, so the runtime cannot call it. Every other
+`current` or `preview` entry must declare a native route.
 
 ## TypeScript consumption
 
@@ -52,6 +61,10 @@ price, output price, context window). It rewrites drifted values by default,
 never adds or removes models, and deliberately skips cache prices and image
 models (upstreams normalize those inconsistently); models absent from both
 upstreams are reported as overlay-only and stay manually maintained.
+`pricingOnly` entries are always overlay-only: the upstream indexes are scoped
+to the three direct APIs, so their creators are excluded from the coverage
+check and their prices are kept by hand against the creator's pricing page
+(cited in each entry's `description`).
 
 An edit that fails a plausibility guard (see `priceDecision` /
 `contextRejection`) is **withheld** rather than applied, and needs a human to

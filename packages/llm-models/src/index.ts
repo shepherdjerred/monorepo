@@ -12,8 +12,25 @@
 import { z } from "zod";
 import catalogJson from "./catalog.json" with { type: "json" };
 
+/**
+ * A transport `llm-runtime` can call: the providers with a native route and
+ * an SDK client. Every exhaustive switch over `Provider` is a runtime path.
+ */
 export const ProviderSchema = z.enum(["openai", "anthropic", "google"]);
 export type Provider = z.infer<typeof ProviderSchema>;
+
+/**
+ * Who made and bills a model, for cost attribution. A superset of `Provider`:
+ * a creator we only price (Moonshot's Kimi, logged by a local coding agent)
+ * has no transport, so its entries are `pricingOnly` and never routable.
+ */
+export const ModelCreatorSchema = z.enum([
+  "openai",
+  "anthropic",
+  "google",
+  "moonshot",
+]);
+export type ModelCreator = z.infer<typeof ModelCreatorSchema>;
 
 export const LongContextSurchargeSchema = z.strictObject({
   /** The surcharge applies only when the complete request exceeds this input-token count. */
@@ -158,67 +175,82 @@ export const AcceptedPriceSchema = z.strictObject({
 });
 export type AcceptedPrice = z.infer<typeof AcceptedPriceSchema>;
 
-export const ModelEntrySchema = z.strictObject({
-  id: z.string().min(1),
-  provider: ProviderSchema,
-  displayName: z.string().min(1),
-  description: z.string().optional(),
-  pricing: ModelPricingSchema,
-  contextWindow: z.number().int().positive().optional(),
-  /** When true, the sync script will not overwrite contextWindow from upstream sources. */
-  pinnedContextWindow: z.boolean().optional(),
-  /**
-   * A divergence a human looked at and decided to keep, so the sync script
-   * stops re-reporting it every week.
-   *
-   * An acceptance is a claim about a PAIR — "upstream says `upstream`, we
-   * deliberately hold `catalog`" — and both halves are checked. Recording only
-   * the upstream number would let the catalog side drift away underneath the
-   * decision: an intermediate plausible price gets applied, upstream later
-   * returns to the accepted number, and the acceptance would then suppress a
-   * catalog value nobody ever reviewed. Neither a blanket mute nor a
-   * one-sided one is safe; this catalog feeds every cost calculation in the
-   * repo, so a repricing must never pass silently.
-   */
-  acceptedUpstreamPricing: z
-    .strictObject({
-      input: AcceptedPriceSchema.optional(),
-      output: AcceptedPriceSchema.optional(),
-      /** Why the catalog value wins. Required — an unexplained mute rots. */
-      reason: z.string().min(1),
-      /**
-       * When the acceptance lapses, as an ISO instant. Required, and not
-       * optional on purpose: prices are time-bound, so an acceptance that
-       * never expires is the rot this field exists to prevent. A date living
-       * only in `reason` is prose the code cannot enforce — if the promotion
-       * that justified the divergence is extended, an unexpiring acceptance
-       * suppresses it forever with nothing to trigger re-adjudication. Past
-       * this instant the divergence is reported again like any other.
-       */
-      // `offset: true` to match catalog.schema.json's RFC 3339 `date-time` and
-      // the Python view. Zod's default accepts only `Z`, so an operator writing
-      // a perfectly valid `-07:00` acceptance got a catalog every other
-      // consumer reads and TypeScript alone refuses to import. A bare local
-      // time stays rejected in all three: this is an instant, and an expiry
-      // ambiguous by hours cannot decide whether a divergence is still accepted.
-      expiresAt: z.iso.datetime({ offset: true }),
-    })
-    // An acceptance with neither price is well-formed and inert: `reconcile`
-    // matches acceptances per field, so it can never suppress anything. It
-    // would sit in the catalog carrying a reason and an expiry, reading like a
-    // decision that was made while the divergence it names keeps re-alerting.
-    // Omit the block entirely instead.
-    .refine(
-      (accepted) =>
-        accepted.input !== undefined || accepted.output !== undefined,
-      { message: "acceptedUpstreamPricing needs at least one of input/output" },
-    )
-    .optional(),
-  capabilities: ModelCapabilitiesSchema,
-  routes: ModelRoutesSchema,
-  status: ModelStatusSchema,
-  category: z.string().optional(),
-});
+export const ModelEntrySchema = z
+  .strictObject({
+    id: z.string().min(1),
+    provider: ModelCreatorSchema,
+    /**
+     * A model this repository prices but never calls, such as one a local
+     * coding agent logs usage for. It declares no routes, and
+     * `requireNativeRoute` refuses it, so `llm-runtime` can never resolve it.
+     * `true` or absent; there is no meaningful `false`.
+     */
+    pricingOnly: z.literal(true).optional(),
+    displayName: z.string().min(1),
+    description: z.string().optional(),
+    pricing: ModelPricingSchema,
+    contextWindow: z.number().int().positive().optional(),
+    /** When true, the sync script will not overwrite contextWindow from upstream sources. */
+    pinnedContextWindow: z.boolean().optional(),
+    /**
+     * A divergence a human looked at and decided to keep, so the sync script
+     * stops re-reporting it every week.
+     *
+     * An acceptance is a claim about a PAIR — "upstream says `upstream`, we
+     * deliberately hold `catalog`" — and both halves are checked. Recording only
+     * the upstream number would let the catalog side drift away underneath the
+     * decision: an intermediate plausible price gets applied, upstream later
+     * returns to the accepted number, and the acceptance would then suppress a
+     * catalog value nobody ever reviewed. Neither a blanket mute nor a
+     * one-sided one is safe; this catalog feeds every cost calculation in the
+     * repo, so a repricing must never pass silently.
+     */
+    acceptedUpstreamPricing: z
+      .strictObject({
+        input: AcceptedPriceSchema.optional(),
+        output: AcceptedPriceSchema.optional(),
+        /** Why the catalog value wins. Required — an unexplained mute rots. */
+        reason: z.string().min(1),
+        /**
+         * When the acceptance lapses, as an ISO instant. Required, and not
+         * optional on purpose: prices are time-bound, so an acceptance that
+         * never expires is the rot this field exists to prevent. A date living
+         * only in `reason` is prose the code cannot enforce — if the promotion
+         * that justified the divergence is extended, an unexpiring acceptance
+         * suppresses it forever with nothing to trigger re-adjudication. Past
+         * this instant the divergence is reported again like any other.
+         */
+        // `offset: true` to match catalog.schema.json's RFC 3339 `date-time` and
+        // the Python view. Zod's default accepts only `Z`, so an operator writing
+        // a perfectly valid `-07:00` acceptance got a catalog every other
+        // consumer reads and TypeScript alone refuses to import. A bare local
+        // time stays rejected in all three: this is an instant, and an expiry
+        // ambiguous by hours cannot decide whether a divergence is still accepted.
+        expiresAt: z.iso.datetime({ offset: true }),
+      })
+      // An acceptance with neither price is well-formed and inert: `reconcile`
+      // matches acceptances per field, so it can never suppress anything. It
+      // would sit in the catalog carrying a reason and an expiry, reading like a
+      // decision that was made while the divergence it names keeps re-alerting.
+      // Omit the block entirely instead.
+      .refine(
+        (accepted) =>
+          accepted.input !== undefined || accepted.output !== undefined,
+        {
+          message: "acceptedUpstreamPricing needs at least one of input/output",
+        },
+      )
+      .optional(),
+    capabilities: ModelCapabilitiesSchema,
+    routes: ModelRoutesSchema,
+    status: ModelStatusSchema,
+    category: z.string().optional(),
+  })
+  .refine(
+    (entry) =>
+      entry.pricingOnly !== true || Object.keys(entry.routes).length === 0,
+    { message: "a pricingOnly model must declare no routes" },
+  );
 export type ModelEntry = z.infer<typeof ModelEntrySchema>;
 
 export const CatalogSchema = z
@@ -304,6 +336,17 @@ export function modelIdForNativeRoute(
   return ids?.length === 1 ? ids[0] : undefined;
 }
 
+/** A call resolved a model the catalog only prices; nothing can serve it. */
+export class PricingOnlyModelError extends Error {
+  override name = "PricingOnlyModelError";
+
+  constructor(readonly modelId: string) {
+    super(
+      `Model ${modelId} is pricingOnly: it is priced for usage attribution and cannot be called`,
+    );
+  }
+}
+
 export function requireNativeRoute(
   id: string,
   endpoint?: ModelEndpoint,
@@ -311,6 +354,9 @@ export function requireNativeRoute(
   const model = getModel(id);
   if (model === undefined) {
     throw new Error(`Unknown model id: ${id}`);
+  }
+  if (model.pricingOnly === true) {
+    throw new PricingOnlyModelError(id);
   }
   const route = model.routes.native;
   if (route === undefined) {
@@ -498,6 +544,6 @@ export function allModelIds(): string[] {
   return Object.keys(MODELS);
 }
 
-export function modelsByProvider(provider: Provider): ModelEntry[] {
+export function modelsByProvider(provider: ModelCreator): ModelEntry[] {
   return Object.values(MODELS).filter((model) => model.provider === provider);
 }

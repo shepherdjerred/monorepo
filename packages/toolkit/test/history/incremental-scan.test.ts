@@ -43,6 +43,8 @@ let paths: HistoryPaths = {
   cursorConversationDb: "",
   antigravityRoots: [],
   grokHome: "",
+  kimiSessionsDir: "",
+  museRoot: "",
   codexSessionsDir: "",
   brimSyncMirrorIndex: "",
 };
