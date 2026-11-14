@@ -32,4 +32,18 @@ export const server = {
   docs: "https://docs.ts-mc.net/",
   forum: "https://ts-mc.net/",
   map: "https://bluemap.ts-mc.net/",
+  about: "/the-storm/about/",
+  join: "#join",
+  consoles: "#consoles",
+  guides: {
+    firstSession: "https://docs.ts-mc.net/getting-started/",
+    vanilla: "https://docs.ts-mc.net/survival/vanilla-differences/",
+    camps: "https://docs.ts-mc.net/homes/camps-and-towns/",
+    locks: "https://docs.ts-mc.net/homes/locks/",
+    pvp: "https://docs.ts-mc.net/survival/pvp/",
+    graves: "https://docs.ts-mc.net/survival/graves/",
+    worlds: "https://docs.ts-mc.net/survival/worlds/",
+    games: "https://docs.ts-mc.net/search-and-destroy/",
+    norms: "https://docs.ts-mc.net/norms/",
+  },
 } as const;

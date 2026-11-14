@@ -265,6 +265,11 @@ const SITE_OPTIONS: Readonly<Record<string, SiteOptions>> = {
         path: "/the-storm/",
         module: "http_200_no_redirect",
       },
+      {
+        endpoint: "the-storm-about",
+        path: "/the-storm/about/",
+        module: "http_200_no_redirect",
+      },
     ],
     responseHeaders: { "Content-Security-Policy": landingPagesCsp },
   },
