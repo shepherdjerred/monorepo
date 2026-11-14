@@ -7,6 +7,7 @@ import type { OutcomeRecord } from "#activities/outcome.ts";
 import {
   HA_ENTITY_NOT_FOUND_ERROR_TYPE,
   HA_OPTIONAL_MEDIA_PLAYER_ERROR_TYPE,
+  OUTDOOR_WEATHER_UNAVAILABLE_ERROR_TYPE,
 } from "#shared/infra/ha-errors.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import {
@@ -56,6 +57,8 @@ type Scenario = {
   notifications: string[];
   outcomes: OutcomeRecord[];
   mediaPlayerFailures: Set<string>;
+  weatherFailure: ApplicationFailure | undefined;
+  weatherAttempts: number;
 };
 
 function makeScenario(
@@ -72,6 +75,8 @@ function makeScenario(
     notifications: [],
     outcomes: [],
     mediaPlayerFailures: new Set(),
+    weatherFailure: undefined,
+    weatherAttempts: 0,
   };
 }
 
@@ -158,9 +163,19 @@ function makeActivities(scenario: Scenario) {
       return Promise.resolve();
     },
     getOutdoorTemperatureC: (): Promise<number> => {
-      return Promise.resolve(scenario.outdoorC);
+      scenario.weatherAttempts += 1;
+      return scenario.weatherFailure === undefined
+        ? Promise.resolve(scenario.outdoorC)
+        : Promise.reject(scenario.weatherFailure);
     },
   };
+}
+
+function weatherOutage(): ApplicationFailure {
+  return ApplicationFailure.retryable(
+    "Open-Meteo request failed: timed out",
+    OUTDOOR_WEATHER_UNAVAILABLE_ERROR_TYPE,
+  );
 }
 
 const TURN_OFF_MASTER_BATHROOM: ServiceCall = {
@@ -253,6 +268,29 @@ describe("floor heat weather inputs", () => {
 
 describe("goodMorningPreheat", () => {
   test(
+    "skips heat with a warning outcome when the weather API is down",
+    async () => {
+      const scenario = makeScenario({ indoorC: 18, outdoorC: 5 });
+      scenario.weatherFailure = weatherOutage();
+      await runWorker(
+        scenario,
+        goodMorningPreheat,
+        `preheat-weather-outage-${crypto.randomUUID()}`,
+      );
+      expect(scenario.weatherAttempts).toBe(3);
+      expect(climateCalls(scenario)).toEqual([]);
+      expect(scenario.outcomes).toEqual([
+        {
+          workflow: "goodMorningPreheat",
+          outcome: "skipped",
+          reason: "weather-unavailable",
+        },
+      ]);
+    },
+    WORKFLOW_TEST_TIMEOUT_MS,
+  );
+
+  test(
     "skips without touching the thermostat on a warm morning",
     async () => {
       const scenario = makeScenario({ indoorC: 26, outdoorC: 28 });
@@ -327,6 +365,66 @@ describe("goodMorningPreheat", () => {
 });
 
 describe("goodMorningWakeUp", () => {
+  test(
+    "keeps the wake routine running with heat skipped when the weather API is down",
+    async () => {
+      const scenario = makeScenario({ indoorC: 18, outdoorC: 5 });
+      scenario.weatherFailure = weatherOutage();
+
+      const workflowId = `wake-weather-outage-${crypto.randomUUID()}`;
+      await runWorker(scenario, goodMorningWakeUp, workflowId);
+
+      expect(scenario.weatherAttempts).toBe(3);
+      expect(climateCalls(scenario)).toEqual([TURN_OFF_MASTER_BATHROOM]);
+      expect(scenario.notifications).toEqual(["Good Morning"]);
+      expect(
+        scenario.serviceCalls.some(
+          (call) =>
+            call.domain === "media_player" && call.service === "play_media",
+        ),
+      ).toBe(true);
+      expect(scenario.outcomes).toEqual([
+        {
+          workflow: "goodMorningWakeUp",
+          outcome: "executed",
+          reason: "wake-routine-complete-weather-unavailable",
+        },
+      ]);
+
+      // The recorded history (including the patch marker) must replay.
+      const history = await testEnv.client.workflow
+        .getHandle(workflowId)
+        .fetchHistory();
+      await Worker.runReplayHistory(
+        { workflowsPath: new URL("../index.ts", import.meta.url).pathname },
+        history,
+      );
+    },
+    WORKFLOW_TEST_TIMEOUT_MS,
+  );
+
+  test(
+    "still fails on an untyped weather failure instead of degrading",
+    async () => {
+      const scenario = makeScenario({ indoorC: 18, outdoorC: 5 });
+      scenario.weatherFailure = ApplicationFailure.nonRetryable(
+        "malformed body",
+        "ZodError",
+      );
+      await expectNonRetryableApplicationFailure(
+        runWorker(
+          scenario,
+          goodMorningWakeUp,
+          `wake-weather-contract-${crypto.randomUUID()}`,
+        ),
+        "ZodError",
+        "malformed body",
+      );
+      expect(scenario.notifications).toEqual([]);
+    },
+    WORKFLOW_TEST_TIMEOUT_MS,
+  );
+
   test(
     "keeps the turn-off backstop while skipping heat when temperature is unavailable",
     async () => {
