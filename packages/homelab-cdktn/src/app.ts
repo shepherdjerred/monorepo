@@ -13,6 +13,7 @@ import { CloudflareStack } from "#src/stacks/cloudflare/index.ts";
 import { DiscordStack } from "#src/stacks/discord.ts";
 import { DockerhubStack } from "#src/stacks/dockerhub.ts";
 import { DockerhubTokensStack } from "#src/stacks/dockerhub-tokens.ts";
+import { GoogleStack } from "#src/stacks/google.ts";
 import { GithubStack } from "#src/stacks/github.ts";
 import { OpenaiStack } from "#src/stacks/openai.ts";
 import { PosthogStack } from "#src/stacks/posthog.ts";
@@ -37,6 +38,7 @@ export const SYNTHESIZED_STACKS = [
   "dockerhub",
   "dockerhub-tokens",
   "github",
+  "google",
   "openai",
   "posthog",
   "seaweedfs",
@@ -59,6 +61,7 @@ const STACKS: Record<SynthesizedStack, new (scope: Construct) => HomelabStack> =
     dockerhub: DockerhubStack,
     "dockerhub-tokens": DockerhubTokensStack,
     github: GithubStack,
+    google: GoogleStack,
     openai: OpenaiStack,
     posthog: PosthogStack,
     seaweedfs: SeaweedfsStack,

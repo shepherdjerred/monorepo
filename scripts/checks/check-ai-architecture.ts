@@ -131,6 +131,9 @@ const DURABLE_AGENT_CLAUDE_SDK_PATHS = new Set([
 // These homelab files describe provider-specific OpenTofu resources and their
 // credential handoffs. They are infrastructure metadata, not inference paths.
 const HOMELAB_PLATFORM_METADATA_PATHS = new Set([
+  // Creates each workload's Gemini API key and writes it to that workload's
+  // 1Password item (formerly HCL, which this guard never scanned).
+  "packages/homelab-cdktn/src/stacks/google.ts",
   "packages/homelab/scripts/platform-desired-state.ts",
   "packages/homelab/scripts/tofu/tofu-stack-manifest.ts",
 ]);

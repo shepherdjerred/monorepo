@@ -1,0 +1,202 @@
+{
+  "data": {
+    "google_billing_account": {
+      "llm": { "billing_account": "${var.google_billing_account_id}" }
+    }
+  },
+  "locals": {
+    "gemini_quota_limits": "${merge([\n  for workload, config in var.google_workloads : merge([\n    for model, limit in config.gemini_quota_limits : merge(\n      limit.requests_per_day == null ? {} : {\n        \"${workload}/${model}/day\" = {\n          workload = workload\n          model    = model\n          quota_id = \"GenerateRequestsPerDayPerProjectPerModel\"\n          value    = limit.requests_per_day\n        }\n      },\n      {\n        \"${workload}/${model}/minute\" = {\n          workload = workload\n          model    = model\n          quota_id = \"GenerateRequestsPerMinutePerProjectPerModel\"\n          value    = limit.requests_per_minute\n        }\n      },\n    )\n  ]...)\n]...)}",
+    "project_services": "${toset([\"apikeys.googleapis.com\",\"cloudquotas.googleapis.com\",\"generativelanguage.googleapis.com\",\"monitoring.googleapis.com\"])}",
+    "workload_services": "${{ for pair in setproduct(keys(var.google_workloads), local.project_services) : \"${pair[0]}/${pair[1]}\" => { workload = pair[0], service = pair[1] } }}"
+  },
+  "output": {
+    "google_gemini_spend_caps": {
+      "description": "Per-workload project and the AI Studio spend cap to set by hand",
+      "value": "${{ for key, project in google_project.workload : key => { project_id = project.project_id, ai_studio_spend_cap_usd = var.google_workloads[key].ai_studio_spend_cap_usd, onepassword_item_title = onepassword_item.gemini[key].title } }}"
+    }
+  },
+  "provider": {
+    "google": [
+      {
+        "billing_project": "${var.google_quota_project_id}",
+        "user_project_override": true
+      }
+    ],
+    "onepassword": [{}]
+  },
+  "resource": {
+    "google_apikeys_key": {
+      "gemini": {
+        "depends_on": ["google_project_service.workload"],
+        "display_name": "Gemini API key for ${each.key} (revision ${each.value.gemini_key_revision})",
+        "for_each": "${var.google_workloads}",
+        "lifecycle": { "create_before_destroy": true },
+        "name": "gemini-${each.key}-r${each.value.gemini_key_revision}",
+        "project": "${google_project.workload[each.key].project_id}",
+        "restrictions": {
+          "api_targets": [{ "service": "generativelanguage.googleapis.com" }]
+        },
+        "service_account_email": "${google_service_account.gemini_key[each.key].email}"
+      }
+    },
+    "google_billing_budget": {
+      "workload": {
+        "amount": {
+          "specified_amount": {
+            "currency_code": "USD",
+            "units": "${tostring(each.value.monthly_budget_usd)}"
+          }
+        },
+        "billing_account": "${data.google_billing_account.llm.id}",
+        "budget_filter": {
+          "calendar_period": "MONTH",
+          "credit_types_treatment": "INCLUDE_ALL_CREDITS",
+          "projects": ["projects/${google_project.workload[each.key].number}"]
+        },
+        "display_name": "llm ${each.key}",
+        "for_each": "${var.google_workloads}",
+        "threshold_rules": [
+          { "threshold_percent": 0.5 },
+          { "threshold_percent": 0.9 },
+          { "threshold_percent": 1 },
+          { "spend_basis": "FORECASTED_SPEND", "threshold_percent": 1 }
+        ]
+      }
+    },
+    "google_cloud_quotas_quota_preference": {
+      "gemini": {
+        "depends_on": ["google_project_service.workload"],
+        "dimensions": { "model": "${each.value.model}" },
+        "for_each": "${local.gemini_quota_limits}",
+        "ignore_safety_checks": "QUOTA_DECREASE_BELOW_USAGE",
+        "justification": "Runaway guard for ${each.value.workload}: bounds worst-case daily Gemini spend",
+        "parent": "projects/${google_project.workload[each.value.workload].project_id}",
+        "quota_config": { "preferred_value": "${tostring(each.value.value)}" },
+        "quota_id": "${each.value.quota_id}",
+        "service": "generativelanguage.googleapis.com"
+      }
+    },
+    "google_project": {
+      "workload": {
+        "billing_account": "${var.google_billing_account_id}",
+        "deletion_policy": "PREVENT",
+        "for_each": "${var.google_workloads}",
+        "name": "${each.value.display_name}",
+        "project_id": "${each.value.project_id}"
+      }
+    },
+    "google_project_service": {
+      "workload": {
+        "disable_on_destroy": false,
+        "for_each": "${local.workload_services}",
+        "project": "${google_project.workload[each.value.workload].project_id}",
+        "service": "${each.value.service}"
+      }
+    },
+    "google_service_account": {
+      "gemini_key": {
+        "account_id": "gemini-auth-key",
+        "depends_on": ["google_project_service.workload"],
+        "display_name": "Gemini API authorization key for ${each.key}",
+        "for_each": "${var.google_workloads}",
+        "project": "${google_project.workload[each.key].project_id}"
+      }
+    },
+    "onepassword_item": {
+      "gemini": {
+        "category": "secure_note",
+        "for_each": "${var.google_workloads}",
+        "section": [
+          {
+            "field": [
+              {
+                "label": "GEMINI_API_KEY",
+                "type": "CONCEALED",
+                "value": "${google_apikeys_key.gemini[each.key].key_string}"
+              }
+            ],
+            "label": "credentials"
+          }
+        ],
+        "title": "${each.value.onepassword_item_title}",
+        "vault": "v64ocnykdqju4ui6j6pua56xw4"
+      }
+    }
+  },
+  "terraform": {
+    "backend": {
+      "s3": {
+        "bucket": "homelab-tofu-state",
+        "endpoints": { "s3": "https://seaweedfs-s3.tailnet-1a49.ts.net" },
+        "key": "google/terraform.tfstate",
+        "region": "auto",
+        "skip_credentials_validation": true,
+        "skip_metadata_api_check": true,
+        "skip_region_validation": true,
+        "skip_requesting_account_id": true,
+        "skip_s3_checksum": true,
+        "use_lockfile": true,
+        "use_path_style": true
+      }
+    },
+    "encryption": {
+      "key_provider": {
+        "pbkdf2": {
+          "state": { "passphrase": "${var.tofu_state_encryption_passphrase}" }
+        }
+      },
+      "method": {
+        "aes_gcm": { "encrypted": { "keys": "${key_provider.pbkdf2.state}" } }
+      },
+      "plan": { "enforced": true, "method": "method.aes_gcm.encrypted" },
+      "state": { "enforced": true, "method": "method.aes_gcm.encrypted" }
+    },
+    "required_providers": {
+      "google": { "source": "hashicorp/google", "version": "~> 8.4" },
+      "onepassword": { "source": "1password/onepassword", "version": "~> 3.0" }
+    },
+    "required_version": ">= 1.9.0"
+  },
+  "variable": {
+    "google_billing_account_id": {
+      "description": "Cloud Billing account every LLM project bills to (XXXXXX-XXXXXX-XXXXXX)",
+      "type": "string",
+      "validation": [
+        {
+          "condition": "${can(regex(\"^[0-9A-F]{6}-[0-9A-F]{6}-[0-9A-F]{6}$\", var.google_billing_account_id))}",
+          "error_message": "google_billing_account_id must look like 012345-6789AB-CDEF01."
+        }
+      ]
+    },
+    "google_quota_project_id": {
+      "description": "Existing project that user credentials bill API quota to; created once by hand",
+      "type": "string"
+    },
+    "google_workloads": {
+      "default": {},
+      "description": "One Gemini API project per app and environment, keyed app-env",
+      "type": "map(object({\n  project_id = string\n  display_name = string\n  monthly_budget_usd = number\n  ai_studio_spend_cap_usd = number\n  gemini_key_revision = number\n  onepassword_item_title = string\n  gemini_quota_limits = map(object({\n    requests_per_day = optional(number)\n    requests_per_minute = number\n  }))\n}))",
+      "validation": [
+        {
+          "condition": "${alltrue([for workload in values(var.google_workloads) : length(workload.project_id) >= 6 && length(workload.project_id) <= 30])}",
+          "error_message": "Google project IDs must be 6 to 30 characters."
+        },
+        {
+          "condition": "${alltrue([for workload in values(var.google_workloads) : workload.ai_studio_spend_cap_usd <= workload.monthly_budget_usd])}",
+          "error_message": "ai_studio_spend_cap_usd must not exceed monthly_budget_usd."
+        }
+      ]
+    },
+    "tofu_state_encryption_passphrase": {
+      "description": "OpenTofu state and plan encryption passphrase from 1Password",
+      "sensitive": true,
+      "type": "string",
+      "validation": [
+        {
+          "condition": "${(length(var.tofu_state_encryption_passphrase) >= 16)}",
+          "error_message": "The OpenTofu state encryption passphrase must be at least 16 characters."
+        }
+      ]
+    }
+  }
+}
