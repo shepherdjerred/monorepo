@@ -1,5 +1,5 @@
 import { prisma } from "#src/database/index.ts";
-import { isFeatureHardDisabled } from "#src/configuration/flags.ts";
+import { isScoutClientEvidenceLive } from "#src/scout-client/access/policy.ts";
 import { persistRawObservation } from "./object-store.ts";
 import { observationArchiveEnvelope } from "./envelope.ts";
 import type { Prisma } from "#generated/prisma/client/index.js";
@@ -12,7 +12,7 @@ const CONCURRENCY = 4;
 export async function reconcileRawClientObservations(
   now = new Date(),
 ): Promise<number> {
-  if (isFeatureHardDisabled("scout_client_ingestion")) return 0;
+  if (!(await isScoutClientEvidenceLive())) return 0;
   const due = {
     rawArchivedAt: null,
     rawArchiveNextAttemptAt: { lte: now },

@@ -28,6 +28,12 @@ const ProtocolContractSchema = z.strictObject({
   }),
   observationKinds: z.array(z.string().min(1)).min(1),
   quarantineReasons: z.array(z.string().min(1)).min(1),
+  // A status every released client already treats as a plain failure: not 401
+  // (revocation), 409 (replay deferral) or 503 (designed retry).
+  clientUpgradeRequired: z.strictObject({
+    httpStatus: z.literal(426),
+    error: z.string().regex(/^[a-z]+(?:_[a-z]+)*$/),
+  }),
 });
 
 const contractPath = path.join(

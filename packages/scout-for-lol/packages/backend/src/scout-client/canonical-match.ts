@@ -12,7 +12,7 @@ import {
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 import { prisma } from "#src/database/index.ts";
-import { isFeatureHardDisabled } from "#src/configuration/flags.ts";
+import { isScoutClientEvidenceLive } from "./access/policy.ts";
 import { platformRouteOf } from "#src/durable/match/match-identity.ts";
 import {
   LOCAL_MATCH_TIMING_DRIFT_MS,
@@ -158,7 +158,7 @@ export type SelectedCanonicalMatch = CanonicalMatchRecord & {
 export async function readSelectedCanonicalMatch(
   riotMatchId: RiotMatchId,
 ): Promise<SelectedCanonicalMatch | null> {
-  if (isFeatureHardDisabled("scout_client_ingestion")) return null;
+  if (!(await isScoutClientEvidenceLive())) return null;
   const selected = await prisma.scoutClientCanonicalMatch.findUnique({
     where: { riotMatchId },
     include: { sourceObservation: true },
@@ -228,8 +228,7 @@ export async function readTimelineSelection(
 ): Promise<TimelineSelection> {
   const frozen = await readFrozenTimeline(riotMatchId);
   if (frozen !== null) return { source: "ARCHIVED", timeline: frozen };
-  if (isFeatureHardDisabled("scout_client_ingestion"))
-    return { source: "RIOT" };
+  if (!(await isScoutClientEvidenceLive())) return { source: "RIOT" };
   const selected = await prisma.scoutClientCanonicalMatch.findUnique({
     where: { riotMatchId },
     include: { sourceObservation: true },
@@ -252,7 +251,7 @@ export async function readClientTimelineCandidates(
   riotMatchId: RiotMatchId,
   expectedMatch?: RawMatch,
 ) {
-  if (isFeatureHardDisabled("scout_client_ingestion")) return [];
+  if (!(await isScoutClientEvidenceLive())) return [];
   // A Riot-published game teaches the client's participants' aliases for free,
   // and the translation below is the first thing to benefit.
   if (expectedMatch !== undefined)
@@ -367,7 +366,7 @@ export async function resolveLocalCanonicalMatch(
   riotMatchId: RiotMatchId,
   now = new Date(),
 ): Promise<RawMatch | null> {
-  if (isFeatureHardDisabled("scout_client_ingestion")) return null;
+  if (!(await isScoutClientEvidenceLive())) return null;
   const selected = await readSelectedLocalCanonicalMatch(riotMatchId);
   if (selected !== null) return selected;
 
@@ -395,7 +394,7 @@ async function acceptedPostGameObservations(riotMatchId: RiotMatchId) {
 
 /** Source adapter: expose compatible candidates without choosing against Riot. */
 export async function readLocalCanonicalCandidates(riotMatchId: RiotMatchId) {
-  if (isFeatureHardDisabled("scout_client_ingestion")) return [];
+  if (!(await isScoutClientEvidenceLive())) return [];
 
   const candidates = await acceptedPostGameObservations(riotMatchId);
   const parsed = await Promise.all(
@@ -466,7 +465,7 @@ export async function selectLocalCanonicalMatch(
  * out Riot's first refusal, like a bundle, though the deadline is longer.
  */
 export async function readLocalEndOfGameCandidates(riotMatchId: RiotMatchId) {
-  if (isFeatureHardDisabled("scout_client_ingestion")) return [];
+  if (!(await isScoutClientEvidenceLive())) return [];
   const deadlineMs = scoutClientEndOfGameDeadlineSeconds() * 1000;
   const candidates = await acceptedPostGameObservations(riotMatchId);
   const parsed = await Promise.all(

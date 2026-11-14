@@ -51,4 +51,5 @@ export const SCOUT_CLIENT_PROTOCOL_CONTRACT = {
     "observer_puuid_not_in_payload",
     "missing_post_game_id",
   ],
+  clientUpgradeRequired: { httpStatus: 426, error: "client_upgrade_required" },
 } as const;

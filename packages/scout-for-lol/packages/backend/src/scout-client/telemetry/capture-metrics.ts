@@ -12,7 +12,7 @@ import {
 import { isLcuUuid } from "#src/scout-client/identity-alias.ts";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { prisma, type Db } from "#src/database/index.ts";
-import { isPolicyEnabled } from "#src/configuration/flags.ts";
+import { scoutClientOwnerPolicy } from "#src/scout-client/access/policy.ts";
 import { createLogger } from "#src/logger.ts";
 import {
   scoutClientActiveDevices,
@@ -100,13 +100,12 @@ export async function readCaptureBacklog(
     .parse(aliases);
   // Rows the recovery policy skips (globally or per owner) are not stuck, so
   // they stay out of the backlog the stale-reconciliation alert watches.
+  const recoveryEnabled = scoutClientOwnerPolicy(
+    "scout_client_result_recovery",
+  );
   const eligible = [];
   for (const row of z.array(BacklogRowSchema).parse(reconciliation)) {
-    if (
-      await isPolicyEnabled("scout_client_result_recovery", {
-        user: DiscordAccountIdSchema.parse(row.owner),
-      })
-    )
+    if (await recoveryEnabled(DiscordAccountIdSchema.parse(row.owner)))
       eligible.push(row);
   }
   const backlogCount = eligible.reduce((sum, row) => sum + row.backlog, 0);

@@ -16,7 +16,7 @@ use std::collections::HashMap;
 use uuid::Uuid;
 
 use super::replay::record_backend_outcome;
-use super::state::{StateHub, clear_runtime_error, update_state};
+use super::state::{StateHub, clear_runtime_error, observe_upgrade_requirement, update_state};
 use super::usage::UsageQueue;
 
 pub(super) async fn upload_pending(
@@ -50,6 +50,7 @@ pub(super) async fn upload_pending(
     let submitted_count = submitted.len() as u64;
     let started = std::time::Instant::now();
     let outcome = backend.upload_observations(credential, &batch).await;
+    observe_upgrade_requirement(state, &outcome);
     let receipt = record_backend_outcome(
         diagnostics,
         "upload_observations",

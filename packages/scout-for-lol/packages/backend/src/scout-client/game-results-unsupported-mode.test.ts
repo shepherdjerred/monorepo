@@ -20,8 +20,8 @@ vi.mock("#src/database/index.ts", () => ({
     scoutClientGameResult: { upsert: mocks.upsert },
   },
 }));
-vi.mock("#src/configuration/flags.ts", () => ({
-  isFeatureHardDisabled: () => false,
+vi.mock("./access/policy.ts", () => ({
+  isScoutClientEvidenceLive: () => Promise.resolve(true),
 }));
 vi.mock("#src/evidence/admission.ts", () => ({
   admitMatchEvidence: mocks.admit,

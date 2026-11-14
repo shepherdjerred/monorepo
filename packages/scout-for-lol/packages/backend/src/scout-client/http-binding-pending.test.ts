@@ -12,7 +12,7 @@ const mocks = vi.hoisted(() => ({
   ingest: vi.fn(),
   start: vi.fn(),
 }));
-vi.mock("./authentication.ts", () => ({
+vi.mock("./access/authentication.ts", () => ({
   authenticateScoutClient: mocks.authenticate,
 }));
 vi.mock("./ingress.ts", async (importOriginal) => ({

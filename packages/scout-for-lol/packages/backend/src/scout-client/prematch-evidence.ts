@@ -1,4 +1,5 @@
 import {
+  DiscordAccountIdSchema,
   regionToPlatformRoute,
   RawCurrentGameInfoSchema,
   type LeaguePuuid,
@@ -7,9 +8,9 @@ import {
 } from "@scout-for-lol/data";
 import { prisma } from "#src/database/index.ts";
 import {
-  isPolicyEnabled,
-  isFeatureHardDisabled,
-} from "#src/configuration/flags.ts";
+  isScoutClientEvidenceLive,
+  scoutClientOwnerPolicy,
+} from "./access/policy.ts";
 import {
   parseLocalPrematch,
   parseLocalPrematchIdentities,
@@ -41,7 +42,7 @@ export async function readClientPrematchEvidence(
   region: Region,
   now = new Date(),
 ) {
-  if (isFeatureHardDisabled("scout_client_ingestion")) return null;
+  if (!(await isScoutClientEvidenceLive())) return null;
   const rows = await prisma.scoutClientObservation.findMany({
     where: {
       localPuuid: puuid,
@@ -60,11 +61,12 @@ export async function readClientPrematchEvidence(
       device: { select: { ownerId: true } },
     },
   });
+  const recoveryEnabled = scoutClientOwnerPolicy(
+    "scout_client_result_recovery",
+  );
   for (const row of rows) {
     if (
-      !(await isPolicyEnabled("scout_client_result_recovery", {
-        user: row.device.ownerId,
-      }))
+      !(await recoveryEnabled(DiscordAccountIdSchema.parse(row.device.ownerId)))
     )
       continue;
     if (clientSessionEnded(row.payload)) return null;

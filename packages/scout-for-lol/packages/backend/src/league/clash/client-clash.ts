@@ -8,7 +8,7 @@ import {
   type LcuClashRoster,
 } from "@scout-for-lol/data";
 import { prisma } from "#src/database/index.ts";
-import { isFeatureHardDisabled } from "#src/configuration/flags.ts";
+import { isScoutClientEvidenceLive } from "#src/scout-client/access/policy.ts";
 import {
   readIdentityAliases,
   lcuUuidsIn,
@@ -179,7 +179,7 @@ export async function readClientClashTeams(
   now: Date,
   includeHistory = false,
 ): Promise<ClientClashTeam[]> {
-  if (isFeatureHardDisabled("scout_client_ingestion")) return [];
+  if (!(await isScoutClientEvidenceLive())) return [];
   if (puuids.length === 0) return [];
   const capturedAt = includeHistory
     ? {}

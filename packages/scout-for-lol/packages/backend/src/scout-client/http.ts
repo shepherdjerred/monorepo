@@ -6,14 +6,17 @@ import {
   ScoutClientCreatePairingSchema,
   ScoutClientObservationBatchSchema,
   ScoutClientPairingExchangeSchema,
+  SCOUT_CLIENT_UPGRADE_REQUIRED_STATUS,
+  type ScoutClientUpgradeRequired,
 } from "@scout-for-lol/data";
 import { z } from "zod";
+import { clientUpgradeRequired } from "./access/minimum-version.ts";
 import { prisma } from "#src/database/index.ts";
-import { isFeatureHardDisabled } from "#src/configuration/flags.ts";
+import { isScoutClientLive } from "./access/policy.ts";
 import {
   authenticateScoutClient,
   type AuthenticatedScoutClient,
-} from "./authentication.ts";
+} from "./access/authentication.ts";
 import {
   createPairing,
   exchangePairing,
@@ -57,6 +60,16 @@ function jsonResponse(body: unknown, status = 200): Response {
     status,
     headers: { "Cache-Control": "no-store" },
   });
+}
+
+/**
+ * A distinct status every released client already treats as a failed request,
+ * so an older build keeps its outbox and a current one reads the typed body.
+ */
+function upgradeRequiredResponse(
+  refusal: ScoutClientUpgradeRequired,
+): Response {
+  return jsonResponse(refusal, SCOUT_CLIENT_UPGRADE_REQUIRED_STATUS);
 }
 
 async function boundedJson(request: Request): Promise<unknown> {
@@ -146,6 +159,10 @@ async function handleCheckIn(
 ): Promise<Response> {
   const input = ScoutClientCheckInSchema.safeParse(await boundedJson(request));
   if (!input.success) return jsonResponse({ error: "invalid_request" }, 400);
+  // Refused before the device records the build, so an old build never
+  // becomes the version a later batch is judged by.
+  const upgrade = clientUpgradeRequired(input.data.appVersion);
+  if (upgrade !== null) return upgradeRequiredResponse(upgrade);
   const checkedInAt = new Date();
   const checkIn = await prisma.$transaction([
     prisma.scoutClientDevice.update({
@@ -235,6 +252,10 @@ async function handleAuthenticatedRoute(
   }
 
   if (pathname === `${API_PREFIX}/observations/batch`) {
+    // The running build is the one the device last checked in with; the
+    // observations themselves may predate it and stay acceptable.
+    const upgrade = clientUpgradeRequired(device.appVersion);
+    if (upgrade !== null) return upgradeRequiredResponse(upgrade);
     const input = ScoutClientObservationBatchSchema.safeParse(
       await boundedJson(request),
     );
@@ -267,9 +288,12 @@ export async function handleScoutClientRoute(
 ): Promise<Response | null> {
   if (!url.pathname.startsWith(API_PREFIX)) return null;
   const replayMatch = REPLAY_PATH.exec(url.pathname);
+  // Decided from Flipt before any pairing, authentication or body read, so a
+  // closed environment touches no database. Self-revocation stays open: a
+  // device must always be able to give up its own credential.
   if (
-    isFeatureHardDisabled("scout_client_ingestion") &&
-    url.pathname !== SELF_REVOKE_PATH
+    url.pathname !== SELF_REVOKE_PATH &&
+    !(await isScoutClientLive("scout_client_ingestion"))
   ) {
     return await disabledClientResponse(request, replayMatch);
   }

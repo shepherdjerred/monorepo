@@ -2,7 +2,7 @@ import type { DiscordAccountId } from "@scout-for-lol/domain/identity/discord.ts
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { DiscordAccountIdSchema } from "@scout-for-lol/data";
-import { isPolicyEnabled } from "#src/configuration/flags.ts";
+import { isScoutClientEnabledFor } from "#src/scout-client/access/policy.ts";
 import { prisma } from "#src/database/index.ts";
 import { readClientGameResults } from "#src/scout-client/game-results.ts";
 import {
@@ -18,7 +18,7 @@ import {
 
 async function requireClientFeature(discordId: DiscordAccountId) {
   const user = DiscordAccountIdSchema.parse(discordId);
-  if (!(await isPolicyEnabled("scout_client_ingestion", { user }))) {
+  if (!(await isScoutClientEnabledFor("scout_client_ingestion", user))) {
     throw new TRPCError({
       code: "FORBIDDEN",
       message: "Scout Client pairing is not enabled for this account",

@@ -4,7 +4,7 @@ import {
 } from "@scout-for-lol/domain/identity/league-account.ts";
 import { beforeEach, expect, test, vi } from "vitest";
 import { DiscordAccountIdSchema } from "@scout-for-lol/data";
-import type { AuthenticatedScoutClient } from "./authentication.ts";
+import type { AuthenticatedScoutClient } from "./access/authentication.ts";
 import { REPLAY_UPLOAD_LEASE_MS } from "./replay-lease.ts";
 
 const mocks = vi.hoisted(() => ({

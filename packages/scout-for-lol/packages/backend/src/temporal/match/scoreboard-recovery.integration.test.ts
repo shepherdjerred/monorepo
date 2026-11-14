@@ -30,7 +30,12 @@ vi.mock("#src/configuration/flags.ts", async (original) => ({
   ...(await original()),
   isFeatureHardDisabled: io.hardDisabled,
 }));
-// Production is both client hard-disabled and evidence-recovery off.
+// Production has the Scout Client off in Flipt and evidence recovery off.
+vi.mock("#src/scout-client/access/policy.ts", async (original) => ({
+  ...(await original()),
+  isScoutClientLive: async () => !io.hardDisabled(),
+  isScoutClientEvidenceLive: async () => !io.hardDisabled(),
+}));
 vi.mock("#src/evidence/recovery-gate.ts", () => ({
   evidenceRecoveryEnabled: () => !io.hardDisabled(),
 }));

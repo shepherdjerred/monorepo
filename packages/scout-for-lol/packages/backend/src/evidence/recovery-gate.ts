@@ -10,8 +10,8 @@ import {
  * `scout-evidence-recovery-enabled` is promoted there.
  *
  * This gate is its own managed key, deliberately independent of
- * `scout_client_ingestion`: lifting the Scout Client production hard-disable
- * must not also switch production's Riot processing for every match.
+ * `scout_client_ingestion`: rolling the Scout Client out in production must
+ * not also switch production's Riot processing for every match.
  *
  * The value is the decision dynamic config captured at boot, so it is read
  * synchronously and never moves while the process runs. A process that never

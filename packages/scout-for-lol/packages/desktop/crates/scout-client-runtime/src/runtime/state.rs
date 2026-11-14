@@ -1,5 +1,6 @@
 //! The published runtime snapshot and its typed gameflow phase.
 
+use scout_client_core::backend::BackendError;
 use scout_client_core::settings::PrivacySettings;
 use tokio::sync::watch;
 
@@ -121,8 +122,28 @@ pub struct RuntimeState {
     pub last_upload_at: Option<String>,
     /// Last typed boundary error.
     pub last_error: Option<String>,
+    /// The oldest build Scout accepts, while it refuses this one as too old.
+    /// Observations stay queued until an upgraded build checks in.
+    pub upgrade_required: Option<String>,
     last_runtime_error: Option<String>,
     last_replay_error: Option<String>,
+}
+
+/// Publish whether the backend refused this build as too old.
+///
+/// A success clears the requirement; any other failure leaves it as it was,
+/// since an outage says nothing about the running build.
+pub(super) fn observe_upgrade_requirement<T>(state: &StateHub, outcome: &Result<T, BackendError>) {
+    let upgrade_required = match outcome {
+        Ok(_) => None,
+        Err(error) => match error.upgrade_required() {
+            Some(refusal) => Some(refusal.minimum_version.clone()),
+            None => return,
+        },
+    };
+    update_state(state, |snapshot| {
+        snapshot.upgrade_required = upgrade_required;
+    });
 }
 
 pub(super) fn set_error(state: &StateHub, message: String) {
@@ -196,6 +217,28 @@ mod tests {
 
         update_state(&state, clear_replay_error);
         assert!(receiver.borrow().last_error.is_none());
+    }
+
+    fn upgrade_refusal() -> BackendError {
+        BackendError::UpgradeRequired(scout_client_core::protocol::ClientUpgradeRequired {
+            error: scout_client_core::protocol::CLIENT_UPGRADE_REQUIRED_ERROR.to_owned(),
+            minimum_version: "0.2.0".to_owned(),
+        })
+    }
+
+    #[test]
+    fn an_upgrade_refusal_stays_in_the_status_until_a_request_succeeds() {
+        let state = StateHub::default();
+        let receiver = state.subscribe();
+        observe_upgrade_requirement::<()>(&state, &Err(upgrade_refusal()));
+        assert_eq!(receiver.borrow().upgrade_required.as_deref(), Some("0.2.0"));
+
+        // An outage says nothing about the build, so the requirement stays.
+        observe_upgrade_requirement::<()>(&state, &Err(BackendError::CheckInReceipt));
+        assert_eq!(receiver.borrow().upgrade_required.as_deref(), Some("0.2.0"));
+
+        observe_upgrade_requirement(&state, &Ok(()));
+        assert!(receiver.borrow().upgrade_required.is_none());
     }
 
     #[test]

@@ -1,6 +1,6 @@
 import { DiscordAccountIdSchema } from "@scout-for-lol/data";
 import { beforeEach, describe, expect, test, vi } from "vitest";
-import type { AuthenticatedScoutClient } from "#src/scout-client/authentication.ts";
+import type { AuthenticatedScoutClient } from "#src/scout-client/access/authentication.ts";
 import { createAnalyticsFixture } from "#src/testing/analytics-fixture.ts";
 
 type AnalyticsFixture = ReturnType<typeof createAnalyticsFixture>;
@@ -12,7 +12,7 @@ const analytics: { current: AnalyticsFixture | undefined } = vi.hoisted(() => ({
   current: undefined,
 }));
 
-vi.mock("#src/scout-client/authentication.ts", () => ({
+vi.mock("#src/scout-client/access/authentication.ts", () => ({
   authenticateScoutClient: authenticate,
 }));
 vi.mock("#src/analytics/product-analytics.ts", () => ({

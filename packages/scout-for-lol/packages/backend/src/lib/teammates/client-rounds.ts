@@ -4,7 +4,7 @@ import {
   type RiotMatchId,
 } from "@scout-for-lol/domain/identity/brands.ts";
 import { prisma } from "#src/database/index.ts";
-import { isFeatureHardDisabled } from "#src/configuration/flags.ts";
+import { isScoutClientEvidenceLive } from "#src/scout-client/access/policy.ts";
 import { readSelectedLocalCanonicalMatch } from "#src/scout-client/canonical-match.ts";
 
 export type ClientRound = {
@@ -25,7 +25,7 @@ export async function recentClientRounds(
   accounts: readonly { readonly puuid: LeaguePuuid; readonly region: Region }[],
   limit: number,
 ): Promise<ClientRound[]> {
-  if (isFeatureHardDisabled("scout_client_ingestion")) return [];
+  if (!(await isScoutClientEvidenceLive())) return [];
   const regionOf = new Map<string, Region>(
     accounts.map((account) => [account.puuid, account.region]),
   );

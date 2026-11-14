@@ -4,7 +4,7 @@ import {
   LeaguePuuidSchema,
 } from "@scout-for-lol/domain/identity/league-account.ts";
 import { z } from "zod";
-import { isFeatureHardDisabled } from "#src/configuration/flags.ts";
+import { isScoutClientEvidenceLive } from "#src/scout-client/access/policy.ts";
 import { prisma } from "#src/database/index.ts";
 import { platformRouteOf } from "#src/durable/match/match-identity.ts";
 import { createLogger } from "#src/logger.ts";
@@ -213,7 +213,7 @@ async function learnFromObservation(
 export async function learnAliasesFromRiotMatch(
   riotMatch: RawMatch,
 ): Promise<number> {
-  if (isFeatureHardDisabled("scout_client_ingestion")) return 0;
+  if (!(await isScoutClientEvidenceLive())) return 0;
   if (riotMatch.metadata.dataVersion === SCOUT_CLIENT_DATA_VERSION) return 0;
   const matchId = riotMatch.metadata.matchId;
   const observations = await prisma.scoutClientObservation.findMany({

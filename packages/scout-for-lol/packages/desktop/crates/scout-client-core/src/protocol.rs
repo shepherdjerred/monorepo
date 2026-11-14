@@ -305,6 +305,48 @@ pub struct CheckInResponse {
     pub next_sequence: u64,
 }
 
+/// The backend's refusal of a build older than the minimum it supports.
+///
+/// Check-in and observation batch answer it with
+/// [`CLIENT_UPGRADE_REQUIRED_STATUS`]. Builds that predate this type see an
+/// ordinary failed request and keep their outbox, so the refusal never costs
+/// them evidence.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ClientUpgradeRequired {
+    /// Always [`CLIENT_UPGRADE_REQUIRED_ERROR`].
+    pub error: String,
+    /// The oldest build the backend accepts.
+    pub minimum_version: String,
+}
+
+impl ClientUpgradeRequired {
+    /// Read a refusal body, or `None` when the body is not this refusal.
+    #[must_use]
+    pub fn from_body(body: &str) -> Option<Self> {
+        let refusal: Self = serde_json::from_str(body).ok()?;
+        refusal.validate().ok()?;
+        Some(refusal)
+    }
+
+    /// Check the error code and the bounded version.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`ProtocolError`] for another error code or a minimum version
+    /// that is empty or longer than any app version.
+    pub fn validate(&self) -> Result<(), ProtocolError> {
+        if self.error != CLIENT_UPGRADE_REQUIRED_ERROR {
+            return Err(ProtocolError::UnexpectedErrorCode(self.error.clone()));
+        }
+        bounded_string(
+            "minimumVersion",
+            &self.minimum_version,
+            APP_VERSION_MAX_BYTES,
+        )
+    }
+}
+
 /// Device self-revocation acknowledgement.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -421,6 +463,9 @@ pub enum ProtocolError {
     /// JSON serialization failed.
     #[error("failed to serialize observation: {0}")]
     Serialize(serde_json::Error),
+    /// A typed refusal carried an error code other than the expected one.
+    #[error("unexpected error code {0:?}")]
+    UnexpectedErrorCode(String),
 }
 
 /// Stable map type used when deterministic ordering matters in protocol fixtures.
@@ -431,10 +476,46 @@ mod tests {
     use serde_json::json;
 
     use super::{
-        MAX_OBSERVATION_BATCH_BYTES, OBSERVATION_SCHEMA_VERSION, ObservationBatch,
-        ObservationBatchReceipt, ObservationEnvelope, ObservationKind, ObservationOutcome,
-        ObservationQuarantineReason, ProtocolError,
+        CLIENT_UPGRADE_REQUIRED_STATUS, ClientUpgradeRequired, MAX_OBSERVATION_BATCH_BYTES,
+        OBSERVATION_SCHEMA_VERSION, ObservationBatch, ObservationBatchReceipt, ObservationEnvelope,
+        ObservationKind, ObservationOutcome, ObservationQuarantineReason, ProtocolError,
     };
+
+    const UPGRADE_REQUIRED_FIXTURES: &str =
+        include_str!("../../../../data/src/scout-client/client-upgrade-required.fixtures.json");
+
+    #[test]
+    fn upgrade_required_uses_a_status_released_clients_treat_as_failure() {
+        assert_eq!(CLIENT_UPGRADE_REQUIRED_STATUS, 426);
+    }
+
+    #[test]
+    fn valid_upgrade_required_fixtures_round_trip() -> Result<(), Box<dyn std::error::Error>> {
+        let fixtures: serde_json::Value = serde_json::from_str(UPGRADE_REQUIRED_FIXTURES)?;
+        let valid = fixtures["valid"].as_array().ok_or("valid fixtures")?;
+        assert_ne!(valid.len(), 0);
+        for fixture in valid {
+            let refusal = ClientUpgradeRequired::from_body(&fixture.to_string())
+                .ok_or("valid fixture refused")?;
+            assert_eq!(&serde_json::to_value(&refusal)?, fixture);
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn invalid_upgrade_required_fixtures_are_refused() -> Result<(), Box<dyn std::error::Error>> {
+        let fixtures: serde_json::Value = serde_json::from_str(UPGRADE_REQUIRED_FIXTURES)?;
+        let invalid = fixtures["invalid"].as_array().ok_or("invalid fixtures")?;
+        assert_ne!(invalid.len(), 0);
+        for fixture in invalid {
+            let reason = fixture["reason"].as_str().unwrap_or("?");
+            assert!(
+                ClientUpgradeRequired::from_body(&fixture["body"].to_string()).is_none(),
+                "{reason} must be refused"
+            );
+        }
+        Ok(())
+    }
 
     #[test]
     fn accepts_a_bounded_gameplay_observation() -> Result<(), ProtocolError> {

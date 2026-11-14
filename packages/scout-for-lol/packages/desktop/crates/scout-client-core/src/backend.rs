@@ -13,9 +13,9 @@ use uuid::Uuid;
 use crate::credentials::DeviceCredential;
 use crate::diagnostics::sanitize_detail;
 use crate::protocol::{
-    CheckInRequest, CheckInResponse, CreatePairingRequest, CreatePairingResponse,
-    ExchangePairingRequest, ExchangePairingResponse, ObservationBatch, ObservationBatchReceipt,
-    PROTOCOL_VERSION, RevokeDeviceResponse,
+    CLIENT_UPGRADE_REQUIRED_STATUS, CheckInRequest, CheckInResponse, ClientUpgradeRequired,
+    CreatePairingRequest, CreatePairingResponse, ExchangePairingRequest, ExchangePairingResponse,
+    ObservationBatch, ObservationBatchReceipt, PROTOCOL_VERSION, RevokeDeviceResponse,
 };
 
 const REPLAY_UPLOAD_TIMEOUT: Duration = Duration::from_hours(1);
@@ -394,10 +394,21 @@ impl CheckedResponse for reqwest::Response {
         }
         // A body we cannot read is not worth losing the status over.
         let message = self.text().await.unwrap_or_default();
-        Err(BackendError::Rejected {
-            status: status.as_u16(),
-            message: sanitize_detail(message.trim()),
-        })
+        Err(rejection(status.as_u16(), message.trim()))
+    }
+}
+
+/// The typed failure for a non-success answer: the upgrade refusal when the
+/// status and body are exactly that, otherwise the server's own words.
+fn rejection(status: u16, body: &str) -> BackendError {
+    if status == CLIENT_UPGRADE_REQUIRED_STATUS
+        && let Some(refusal) = ClientUpgradeRequired::from_body(body)
+    {
+        return BackendError::UpgradeRequired(refusal);
+    }
+    BackendError::Rejected {
+        status,
+        message: sanitize_detail(body),
     }
 }
 
@@ -418,6 +429,12 @@ pub enum BackendError {
         /// The server's own bounded explanation, empty when it gave none.
         message: String,
     },
+    /// Server refused this build as older than the minimum it supports.
+    #[error(
+        "Scout needs Scout Client {} or newer; update this app to keep reporting games",
+        .0.minimum_version
+    )]
+    UpgradeRequired(ClientUpgradeRequired),
     /// Local replay could not be opened or inspected.
     #[error("local replay file could not be read: {0}")]
     ReplayFile(std::io::Error),
@@ -441,7 +458,17 @@ impl BackendError {
     pub fn status(&self) -> Option<u16> {
         match self {
             Self::Rejected { status, .. } => Some(*status),
+            Self::UpgradeRequired(_) => Some(CLIENT_UPGRADE_REQUIRED_STATUS),
             Self::Request(error) => error.status().map(|status| status.as_u16()),
+            _ => None,
+        }
+    }
+
+    /// The server's upgrade refusal, when this build is below its minimum.
+    #[must_use]
+    pub fn upgrade_required(&self) -> Option<&ClientUpgradeRequired> {
+        match self {
+            Self::UpgradeRequired(refusal) => Some(refusal),
             _ => None,
         }
     }
@@ -548,6 +575,45 @@ mod tests {
         assert!(!rejection(503, "Service Unavailable").is_designed_retry());
         assert!(!rejection(503, &pending[..40]).is_designed_retry());
         assert!(!BackendError::ReplayReceipt.is_designed_retry());
+    }
+
+    #[test]
+    fn a_426_upgrade_body_becomes_the_typed_refusal() {
+        let error = super::rejection(
+            426,
+            r#"{"error":"client_upgrade_required","minimumVersion":"0.2.0"}"#,
+        );
+        assert_eq!(
+            error
+                .upgrade_required()
+                .map(|refusal| refusal.minimum_version.as_str()),
+            Some("0.2.0")
+        );
+        assert_eq!(error.status(), Some(426));
+        assert!(!error.is_designed_retry());
+        assert!(!error.replay_should_be_deferred());
+        assert_eq!(error.terminal_replay_rejection_status(), None);
+        assert_eq!(
+            error.to_string(),
+            "Scout needs Scout Client 0.2.0 or newer; update this app to keep reporting games"
+        );
+    }
+
+    #[test]
+    fn only_the_exact_upgrade_body_on_426_is_the_typed_refusal() {
+        let upgrade = r#"{"error":"client_upgrade_required","minimumVersion":"0.2.0"}"#;
+        // The same body on another status, or another 426 body, stays an
+        // ordinary rejection carrying the server's words.
+        for (status, body) in [
+            (403, upgrade),
+            (426, r#"{"error":"scout_client_disabled"}"#),
+            (426, "Upgrade Required"),
+        ] {
+            let error = super::rejection(status, body);
+            assert!(error.upgrade_required().is_none(), "{status} {body}");
+            assert_eq!(error.status(), Some(status));
+            assert_eq!(error.server_message(), Some(body));
+        }
     }
 
     #[test]

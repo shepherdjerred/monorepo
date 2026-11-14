@@ -11,7 +11,7 @@ import {
 import { prisma } from "#src/database/index.ts";
 import { storedRawArchiveDescriptor } from "#src/report-lake/durable-receipts.ts";
 import { readArchivedCanonicalMatch } from "#src/report-lake/receipted-archive.ts";
-import type { AuthenticatedScoutClient } from "#src/scout-client/authentication.ts";
+import type { AuthenticatedScoutClient } from "#src/scout-client/access/authentication.ts";
 import { readSelectedLocalCanonicalMatch } from "#src/scout-client/canonical-match.ts";
 import { withRiotIdentities } from "#src/scout-client/identity-alias.ts";
 import {

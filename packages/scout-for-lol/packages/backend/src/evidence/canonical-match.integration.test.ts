@@ -17,10 +17,6 @@ const io = vi.hoisted(() => ({
   fetchMatch: vi.fn<typeof fetchMatchData>(),
 }));
 vi.mock("#src/database/index.ts", async () => await testDatabaseModule(prisma));
-vi.mock("#src/configuration/flags.ts", async (original) => ({
-  ...(await original()),
-  isFeatureHardDisabled: () => false,
-}));
 vi.mock("#src/league/tasks/postmatch/match-data-fetcher.ts", () => ({
   fetchMatchData: io.fetchMatch,
 }));

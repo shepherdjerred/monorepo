@@ -9,16 +9,16 @@ import {
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import { createTestScoutClientDevice } from "#src/testing/scout-client/scout-client-device.ts";
 import { z } from "zod";
-import { resetConfigurationForTests } from "#src/configuration.ts";
 
 const { prisma } = createTestDatabase("client-data-recovery");
 vi.doMock("#src/database/index.ts", async (original) => ({
   ...(await original()),
   prisma,
 }));
+const flipt = { scoutClient: true };
 vi.doMock("#src/configuration/flags.ts", async (original) => ({
   ...(await original()),
-  isPolicyEnabled: () => Promise.resolve(true),
+  isPolicyEnabled: () => Promise.resolve(flipt.scoutClient),
 }));
 const dispatch = vi.fn(() => Promise.resolve());
 const spectator = vi.fn(() => Promise.resolve({ kind: "not-in-game" }));
@@ -431,7 +431,7 @@ async function clashHistoryGameIds() {
     .sort();
 }
 
-test("production Clash history excludes stored client results while retaining Riot results", async () => {
+test("Clash history excludes stored client results while retaining Riot results when the Scout Client is off", async () => {
   const base = {
     platform: "NA1",
     puuid: PLAYER,
@@ -453,15 +453,12 @@ test("production Clash history excludes stored client results while retaining Ri
     resultSource: "RIOT",
   });
   expect(await clashHistoryGameIds()).toEqual(["7101", "7102"]);
-  const previousEnvironment = Bun.env["ENVIRONMENT"];
-  Bun.env["ENVIRONMENT"] = "prod";
-  resetConfigurationForTests();
+  // Production's Flipt answer until the owner-first rollout begins.
+  flipt.scoutClient = false;
   try {
     expect(await clashHistoryGameIds()).toEqual(["7102"]);
   } finally {
-    if (previousEnvironment === undefined) delete Bun.env["ENVIRONMENT"];
-    else Bun.env["ENVIRONMENT"] = previousEnvironment;
-    resetConfigurationForTests();
+    flipt.scoutClient = true;
   }
 });
 

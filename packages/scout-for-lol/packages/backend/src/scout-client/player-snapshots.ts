@@ -4,7 +4,7 @@ import {
   type LeaguePuuid,
 } from "@scout-for-lol/data";
 import { prisma } from "#src/database/index.ts";
-import { isFeatureHardDisabled } from "#src/configuration/flags.ts";
+import { isScoutClientEvidenceLive } from "./access/policy.ts";
 import { withRiotIdentities } from "./identity-alias.ts";
 
 const LocalMasteryRowSchema = RawChampionMasterySchema.extend({
@@ -36,7 +36,7 @@ export async function readLocalMasterySnapshot(puuid: LeaguePuuid): Promise<{
   readonly rows: readonly LocalMasteryRow[];
   readonly capturedAt: Date;
 } | null> {
-  if (isFeatureHardDisabled("scout_client_ingestion")) return null;
+  if (!(await isScoutClientEvidenceLive())) return null;
   const snapshot = await prisma.scoutClientPlayerSnapshot.findUnique({
     where: {
       localPuuid_resource: { localPuuid: puuid, resource: "champion_mastery" },

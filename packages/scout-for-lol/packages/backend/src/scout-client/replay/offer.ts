@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { prisma } from "#src/database/index.ts";
-import type { AuthenticatedScoutClient } from "#src/scout-client/authentication.ts";
+import type { AuthenticatedScoutClient } from "#src/scout-client/access/authentication.ts";
 import { resolveReplayProvenance } from "./evidence.ts";
 
 /**
