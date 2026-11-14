@@ -1,0 +1,16 @@
+{
+  "route": "explore_runs_stop",
+  "request": { "runId": "3d8f1a62-7b4c-4e29-9a05-c61e2f7b8d43" },
+  "response": { "ok": true },
+  "invalidRequests": [
+    { "reason": "a missing run id", "body": {} },
+    { "reason": "a malformed run id", "body": { "runId": "run-1" } },
+    {
+      "reason": "an unknown key",
+      "body": {
+        "runId": "3d8f1a62-7b4c-4e29-9a05-c61e2f7b8d43",
+        "force": true
+      }
+    }
+  ]
+}

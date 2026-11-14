@@ -13,6 +13,14 @@ import { useTRPC } from "#src/lib/query/trpc.ts";
  * every render — which is how Explore's follow-the-stream effect ended up
  * scrolling the page on renders that had nothing to do with new content.
  */
+/**
+ * The transcript shape this bundle parses. The server down-shapes older
+ * versions for tabs still running an earlier bundle; v5 is the first that
+ * knows the `desktop` origin. Every `explore.get` key uses it, so a cache
+ * update and the query it targets always agree.
+ */
+export const EXPLORE_TRANSCRIPT_VERSION = 5;
+
 const NO_MESSAGES: ExploreMessage[] = [];
 const NO_QUOTA: ExploreQuotaSnapshot[] = [];
 
@@ -32,7 +40,7 @@ export function useExploreConversation(conversationId: string | null) {
   const transcript = useQuery({
     ...trpc.explore.get.queryOptions({
       conversationId: conversationId ?? "",
-      version: 4,
+      version: EXPLORE_TRANSCRIPT_VERSION,
     }),
     enabled: enabled && conversationId !== null,
     select: (data) => ExploreTranscriptSchema.parse(data),

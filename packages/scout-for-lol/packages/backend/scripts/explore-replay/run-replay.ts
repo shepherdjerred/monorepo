@@ -66,6 +66,7 @@ import {
   replaySignalWeight,
 } from "#src/explore/replay/signals.ts";
 import { buildTranscript } from "#src/explore/store-mappers.ts";
+import { ExploreSurfaceSchema } from "#src/explore/surface.ts";
 import { DiscordUpstreamError } from "#src/lib/discord-rest.ts";
 import {
   createBotRestReader,
@@ -881,7 +882,7 @@ async function runGuild(input: {
       // by surface, so the hash covers the prompt for every surface.
       promptSha256: sha256Hex(
         JSON.stringify(
-          (["web", "discord", "voice"] as const).map((promptSurface) =>
+          ExploreSurfaceSchema.options.map((promptSurface) =>
             exploreAgentInstructions({
               analysis: exploreAnalysisEnabled(),
               dares: config.capabilities.dares,

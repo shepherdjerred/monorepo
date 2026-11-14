@@ -38,6 +38,7 @@ export * from "./competitions/queue-window-drift.ts";
 export * from "./riot/rank.ts";
 export * from "./reports/report.ts";
 export * from "./reports/explore.ts";
+export * from "./reports/explore-origin.ts";
 export * from "./reports/explore-attachment.ts";
 export * from "./reports/explore-answer.ts";
 export * from "./reports/explore-match-card.ts";

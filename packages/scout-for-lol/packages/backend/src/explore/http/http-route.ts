@@ -4,6 +4,7 @@ import {
   ExploreRunObserveRequestSchema,
   ExploreShareTokenSchema,
   ExploreStreamEventSchema,
+  type DiscordAccountId,
   type ExploreQuotaSnapshot,
   type ExploreRunObserveRequest,
   type ExploreStreamEvent,
@@ -60,6 +61,42 @@ export async function handleExploreRoute(
     return jsonError(authResult.message, authResult.status, corsHeaders);
   }
 
+  const observed = await observeExploreRun({
+    request,
+    runId: parsedBody.input.runId,
+    userId: authResult.identity.userId,
+    headers: corsHeaders,
+  });
+  return observed ?? jsonError("Run not found.", 404, corsHeaders);
+}
+
+/**
+ * Attach one observer to a server-owned run and answer with its SSE stream,
+ * or null when the caller owns no such run.
+ *
+ * The browser's `/api/explore/stream` and Scout Desktop's `runs/stream` both
+ * answer through this, so the two surfaces read one event model: the
+ * snapshot on attach, then live events, then `done`. Losing the response
+ * detaches this observer only; the run keeps going.
+ *
+ * `onDetach` runs exactly once, when the stream ends for any reason, so a
+ * caller can hold a per-observer resource (Scout Desktop's per-device
+ * observer cap) for precisely the stream's lifetime.
+ */
+export async function observeExploreRun(input: {
+  request: Request;
+  runId: string;
+  userId: DiscordAccountId;
+  headers: Record<string, string>;
+  onDetach?: () => void;
+}): Promise<Response | null> {
+  const { request } = input;
+  let released = false;
+  const release = (): void => {
+    if (released) return;
+    released = true;
+    input.onDetach?.();
+  };
   let disconnect = noop;
   const observerBody = createObserverBody(() => {
     disconnect();
@@ -70,24 +107,34 @@ export async function handleExploreRoute(
     request.signal.removeEventListener("abort", detach);
     unsubscribe();
     writer.disconnected();
+    release();
   };
-  const subscription = await exploreRunManager.subscribeDurable(
-    parsedBody.input.runId,
-    authResult.identity.userId,
-    (event) => {
-      if (event.type === "done") {
-        request.signal.removeEventListener("abort", detach);
-        unsubscribe();
-        writer.finish(event);
-      } else {
-        writer.emit(event);
-      }
-    },
-  );
+  let subscription: (() => void) | null;
+  try {
+    subscription = await exploreRunManager.subscribeDurable(
+      input.runId,
+      input.userId,
+      (event) => {
+        if (event.type === "done") {
+          request.signal.removeEventListener("abort", detach);
+          unsubscribe();
+          writer.finish(event);
+          release();
+        } else {
+          writer.emit(event);
+        }
+      },
+    );
+  } catch (error) {
+    writer.disconnected();
+    release();
+    throw error;
+  }
   if (subscription === null) {
     writer.disconnected();
     observerBody.controller.close();
-    return jsonError("Run not found.", 404, corsHeaders);
+    release();
+    return null;
   }
   unsubscribe = subscription;
   disconnect = detach;
@@ -101,7 +148,7 @@ export async function handleExploreRoute(
       "Cache-Control": "no-cache, no-transform",
       Connection: "keep-alive",
       "X-Accel-Buffering": "no",
-      ...corsHeaders,
+      ...input.headers,
     },
   });
 }

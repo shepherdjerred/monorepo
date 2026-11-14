@@ -4,6 +4,7 @@ import {
   ExploreRunPreviewEventSchema,
   ExploreRunSnapshotEventSchema,
   type ExploreActiveRun,
+  type ExploreConversationOrigin,
   type ExploreMessage,
   type ExploreRunOutcome,
   type ExploreStreamEvent,
@@ -85,7 +86,7 @@ export async function resolveTurnTarget(input: {
   request: ExploreTurnRequest;
   identity: ExploreRateLimitIdentity;
   newId: string;
-  origin: "legacy" | "web" | "discord" | "voice";
+  origin: ExploreConversationOrigin;
 }): Promise<StartedTurn> {
   if (input.request.question === null) {
     if (

@@ -6,14 +6,27 @@ import statusFixture from "./desktop-fixtures/explore-status.json" with { type: 
 import listFixture from "./desktop-fixtures/explore-conversations-list.json" with { type: "json" };
 import getFixture from "./desktop-fixtures/explore-conversations-get.json" with { type: "json" };
 import pairingFixture from "./desktop-fixtures/pairings-v2.json" with { type: "json" };
+import startFixture from "./desktop-fixtures/explore-runs-start.json" with { type: "json" };
+import stopFixture from "./desktop-fixtures/explore-runs-stop.json" with { type: "json" };
+import activeFixture from "./desktop-fixtures/explore-runs-active.json" with { type: "json" };
+import outcomeFixture from "./desktop-fixtures/explore-runs-outcome.json" with { type: "json" };
+import streamFixture from "./desktop-fixtures/explore-runs-stream.json" with { type: "json" };
 import { ScoutClientCreatePairingSchema } from "./protocol.schema.ts";
+import {
+  ExploreActiveRunSchema,
+  ExploreRunObserveRequestSchema,
+  ExploreRunOutcomeResultSchema,
+  ExploreTurnRequestSchema,
+} from "#src/model/reports/explore.ts";
 import {
   SCOUT_DESKTOP_API_ERRORS,
   SCOUT_DESKTOP_API_ROUTES,
   SCOUT_DESKTOP_CONTRACT_HEADER,
   SCOUT_DESKTOP_CONTRACT_VERSION,
   SCOUT_DESKTOP_MINIMUM_CONTRACT_VERSION,
+  SCOUT_DESKTOP_ORIGIN_CONTRACT_VERSION,
   SCOUT_DESKTOP_PAIRING_V2_SCOPES,
+  SCOUT_DESKTOP_STREAM_EVENT_TYPES,
   ScoutDesktopApiErrorCodeSchema,
   ScoutDesktopApiErrorSchema,
   ScoutDesktopApiRouteSchema,
@@ -23,7 +36,11 @@ import {
   ScoutDesktopConversationListResponseSchema,
   ScoutDesktopExploreStatusRequestSchema,
   ScoutDesktopExploreStatusResponseSchema,
+  ScoutDesktopEmptyRequestSchema,
   ScoutDesktopPairingV2ResponseSchema,
+  ScoutDesktopRunActiveResponseSchema,
+  ScoutDesktopRunStopResponseSchema,
+  ScoutDesktopRunStreamResponseSchema,
   ScoutDesktopScopeSchema,
   type ScoutDesktopApiRoute,
 } from "./desktop-api.schema.ts";
@@ -60,6 +77,31 @@ const ROUTE_SCHEMAS: Record<
     response: ScoutDesktopConversationGetResponseSchema,
     fixture: getFixture,
   },
+  explore_runs_start: {
+    request: ExploreTurnRequestSchema,
+    response: ExploreActiveRunSchema,
+    fixture: startFixture,
+  },
+  explore_runs_stop: {
+    request: ExploreRunObserveRequestSchema,
+    response: ScoutDesktopRunStopResponseSchema,
+    fixture: stopFixture,
+  },
+  explore_runs_active: {
+    request: ScoutDesktopEmptyRequestSchema,
+    response: ScoutDesktopRunActiveResponseSchema,
+    fixture: activeFixture,
+  },
+  explore_runs_outcome: {
+    request: ExploreRunObserveRequestSchema,
+    response: ExploreRunOutcomeResultSchema,
+    fixture: outcomeFixture,
+  },
+  explore_runs_stream: {
+    request: ExploreRunObserveRequestSchema,
+    response: ScoutDesktopRunStreamResponseSchema,
+    fixture: streamFixture,
+  },
 };
 
 const routeNames = ScoutDesktopApiRouteSchema.options;
@@ -71,6 +113,9 @@ describe("Scout desktop API contract", () => {
       rawContract.minimumContractVersion,
     );
     expect(SCOUT_DESKTOP_MINIMUM_CONTRACT_VERSION).toBeLessThanOrEqual(
+      SCOUT_DESKTOP_CONTRACT_VERSION,
+    );
+    expect(SCOUT_DESKTOP_ORIGIN_CONTRACT_VERSION).toBeLessThanOrEqual(
       SCOUT_DESKTOP_CONTRACT_VERSION,
     );
     expect(SCOUT_DESKTOP_CONTRACT_HEADER).toBe(rawContract.header);
@@ -103,6 +148,21 @@ describe("Scout desktop API contract", () => {
         fixture.body,
       );
     }
+  });
+
+  test("the contract lists every stream event, and the golden stream has one of each", () => {
+    expect(rawContract.streamEvents).toEqual(SCOUT_DESKTOP_STREAM_EVENT_TYPES);
+    const types = ScoutDesktopRunStreamResponseSchema.parse(
+      streamFixture.response,
+    ).events.map((event) => event.type);
+    expect(types).toEqual(rawContract.streamEvents);
+  });
+
+  test("only the stream route answers with an event stream", () => {
+    const streaming = routeNames.filter(
+      (name) => SCOUT_DESKTOP_API_ROUTES[name].response === "event-stream",
+    );
+    expect(streaming).toEqual(["explore_runs_stream"]);
   });
 
   test.each(routeNames)("%s golden bodies round-trip", (name) => {

@@ -7,6 +7,7 @@ import {
 } from "#src/lib/explore/explore-share-link.ts";
 import { track } from "#src/lib/analytics.ts";
 import { useTRPC } from "#src/lib/query/trpc.ts";
+import { EXPLORE_TRANSCRIPT_VERSION } from "#src/hooks/use-explore-conversation.ts";
 
 /**
  * TS types `navigator.clipboard` as always present, but insecure origins and
@@ -75,7 +76,10 @@ export function useExploreShare(params: {
   const refresh = useCallback(
     async (conversationId: string): Promise<void> => {
       await queryClient.invalidateQueries({
-        queryKey: trpc.explore.get.queryKey({ conversationId, version: 4 }),
+        queryKey: trpc.explore.get.queryKey({
+          conversationId,
+          version: EXPLORE_TRANSCRIPT_VERSION,
+        }),
       });
       await queryClient.invalidateQueries({
         queryKey: trpc.explore.list.queryKey(),

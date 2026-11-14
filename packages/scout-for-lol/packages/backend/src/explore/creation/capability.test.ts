@@ -109,7 +109,7 @@ describe("resolveCreationCapability", () => {
     ).resolves.toEqual({ guildIds: [ENABLED_GUILD], surface: "web" });
   });
 
-  test.each(["discord", "voice"] as const)(
+  test.each(["discord", "voice", "desktop"] as const)(
     "%s gets the same creation capability as the web",
     async (surface) => {
       clearFlagOverrides("explore_creation_enabled");
@@ -222,9 +222,16 @@ describe("resolveCreationAccess", () => {
     surface: "web",
   };
 
-  test.each(["discord", "voice"] as const)(
-    "%s resolves permissions through the bot, with no OAuth probe",
-    async (surface) => {
+  // Desktop acts as its owner with the web session's stored OAuth grant, so
+  // it probes the OAuth guild list once, as the web does; Discord and voice
+  // have no grant and ask the bot.
+  test.each([
+    { surface: "discord", oauth: 0 },
+    { surface: "voice", oauth: 0 },
+    { surface: "desktop", oauth: 1 },
+  ] as const)(
+    "$surface resolves permissions per guild with $oauth OAuth probe(s)",
+    async ({ surface, oauth }) => {
       const counters: AccessCounters = { oauth: 0, permission: 0 };
       const access = await countedAccess(counters, (guildId) =>
         guildId === ENABLED_GUILD
@@ -234,7 +241,7 @@ describe("resolveCreationAccess", () => {
             ),
       )({ capability: { ...capability, surface }, requesterId: REQUESTER });
 
-      expect(counters).toEqual({ oauth: 0, permission: 2 });
+      expect(counters).toEqual({ oauth, permission: 2 });
       expect(access.kind).toBe("resolved");
       if (access.kind !== "resolved") return;
       expect(access.guilds.map((guild) => guild.guildId)).toEqual([

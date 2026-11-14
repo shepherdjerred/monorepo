@@ -7,6 +7,7 @@ import {
   type ReactNode,
 } from "react";
 import * as Sentry from "@sentry/react";
+import { EXPLORE_TRANSCRIPT_VERSION } from "#src/hooks/use-explore-conversation.ts";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { matchPath, useLocation } from "react-router";
 import {
@@ -135,7 +136,10 @@ export function ExploreRunsProvider(props: { children: ReactNode }) {
     async (conversationId: string): Promise<ExploreTranscript | undefined> => {
       await Promise.all([
         queryClient.invalidateQueries({
-          queryKey: trpc.explore.get.queryKey({ conversationId, version: 4 }),
+          queryKey: trpc.explore.get.queryKey({
+            conversationId,
+            version: EXPLORE_TRANSCRIPT_VERSION,
+          }),
         }),
         queryClient.invalidateQueries({
           queryKey: trpc.explore.list.queryKey(),

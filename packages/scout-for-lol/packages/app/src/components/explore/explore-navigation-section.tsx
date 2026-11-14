@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
 import type { ExploreConversation } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/query/trpc.ts";
+import { EXPLORE_TRANSCRIPT_VERSION } from "#src/hooks/use-explore-conversation.ts";
 import { ExploreSidebar } from "#src/components/explore/explore-sidebar.tsx";
 import { useOptionalExploreRuns } from "#src/components/explore/explore-runs-context.ts";
 import { RenameConversationDialog } from "#src/components/dialogs/rename-conversation-dialog.tsx";
@@ -74,7 +75,7 @@ export function ExploreNavigationSection(props: { activeId: string | null }) {
             queryClient.invalidateQueries({
               queryKey: trpc.explore.get.queryKey({
                 conversationId: conversation.id,
-                version: 4,
+                version: EXPLORE_TRANSCRIPT_VERSION,
               }),
             }),
           ]);
@@ -96,7 +97,7 @@ export function ExploreNavigationSection(props: { activeId: string | null }) {
           queryClient.removeQueries({
             queryKey: trpc.explore.get.queryKey({
               conversationId: conversation.id,
-              version: 4,
+              version: EXPLORE_TRANSCRIPT_VERSION,
             }),
           });
           void queryClient.invalidateQueries({

@@ -1,0 +1,161 @@
+{
+  "route": "explore_runs_stream",
+  "request": { "runId": "3d8f1a62-7b4c-4e29-9a05-c61e2f7b8d43" },
+  "response": {
+    "events": [
+      {
+        "type": "snapshot",
+        "runId": "3d8f1a62-7b4c-4e29-9a05-c61e2f7b8d43",
+        "conversationId": "7c3e5a91-2b64-4d0f-8e17-5a9c4b2d6f30",
+        "questionMessageId": "e5b7c9d1-3f24-4a6b-8c8e-0d2f4a6b8c01",
+        "leafIdAtStart": null,
+        "versionCountAtStart": 0,
+        "startedAt": "2026-11-14T09:12:30.000Z",
+        "answer": "Jinx and Lulu lead",
+        "activity": "Counting ARAM games this month",
+        "trace": [
+          {
+            "toolCallId": "call_validate_1",
+            "toolName": "validate_query",
+            "message": "Checked the query.",
+            "status": "succeeded",
+            "durationMs": 41,
+            "details": null,
+            "rawInput": {
+              "kind": "value",
+              "value": { "queue": "ARAM" },
+              "byteLength": 16
+            },
+            "rawOutput": {
+              "kind": "omitted",
+              "reason": "payload_limit",
+              "byteLength": 90000
+            }
+          }
+        ]
+      },
+      {
+        "type": "run_preview",
+        "preview": {
+          "columns": [
+            { "key": "champion", "label": "Champion", "format": "text" },
+            { "key": "win_rate", "label": "Win rate", "format": "percent" }
+          ],
+          "rows": [
+            {
+              "label": "Jinx",
+              "games": 31,
+              "values": [
+                { "column": "champion", "value": "Jinx" },
+                { "column": "win_rate", "value": 0.61 }
+              ]
+            }
+          ],
+          "visualizationRows": [],
+          "rowsReturned": 1,
+          "rowsScanned": 412,
+          "renderKind": "TABLE"
+        },
+        "ignorable": true
+      },
+      {
+        "type": "started",
+        "runId": "3d8f1a62-7b4c-4e29-9a05-c61e2f7b8d43",
+        "conversationId": "7c3e5a91-2b64-4d0f-8e17-5a9c4b2d6f30",
+        "questionMessageId": "e5b7c9d1-3f24-4a6b-8c8e-0d2f4a6b8c01"
+      },
+      {
+        "type": "activity",
+        "text": "Running the query",
+        "toolCallId": "call_execute_1",
+        "ignorable": true
+      },
+      {
+        "type": "tool_call",
+        "toolCallId": "call_execute_1",
+        "toolName": "execute_query",
+        "message": "Running the query.",
+        "details": null,
+        "rawInput": null
+      },
+      {
+        "type": "tool_result",
+        "toolCallId": "call_execute_1",
+        "toolName": "execute_query",
+        "status": "succeeded",
+        "message": "The query returned 1 row.",
+        "durationMs": 230,
+        "details": null,
+        "rawOutput": null
+      },
+      {
+        "type": "preview",
+        "preview": {
+          "columns": [
+            { "key": "champion", "label": "Champion", "format": "text" }
+          ],
+          "rows": [
+            {
+              "label": "Jinx",
+              "values": [{ "column": "champion", "value": "Jinx" }]
+            }
+          ],
+          "visualizationRows": [],
+          "rowsReturned": 1,
+          "rowsScanned": 412,
+          "renderKind": "TABLE"
+        },
+        "visualization": null
+      },
+      { "type": "answer_delta", "text": " with a 61% win rate." },
+      {
+        "type": "final",
+        "message": {
+          "id": "9b2e4c7d-1f53-4a8b-9d66-8f3c2e5b0a12",
+          "role": "assistant",
+          "parentId": "e5b7c9d1-3f24-4a6b-8c8e-0d2f4a6b8c01",
+          "siblingIds": ["9b2e4c7d-1f53-4a8b-9d66-8f3c2e5b0a12"],
+          "versionIndex": 0,
+          "versionCount": 1,
+          "content": "Jinx and Lulu lead with a 61% win rate.",
+          "queryText": null,
+          "caveats": [],
+          "followUps": ["Break that down by champion"],
+          "preview": null,
+          "visualization": null,
+          "trace": [],
+          "createdAt": "2026-11-14T09:13:05.000Z"
+        },
+        "title": "Best ADC pair this week",
+        "quota": [
+          {
+            "scope": "user",
+            "window": "hour",
+            "used": 3,
+            "limit": 20,
+            "remaining": 17,
+            "resetsAt": "2026-11-14T10:00:00.000Z"
+          }
+        ]
+      },
+      {
+        "type": "error",
+        "message": "Explore could not finish this answer.",
+        "retryAfterSeconds": null,
+        "quota": null
+      },
+      { "type": "done", "outcome": "succeeded" }
+    ]
+  },
+  "invalidRequests": [
+    { "reason": "a missing run id", "body": {} },
+    { "reason": "a malformed run id", "body": { "runId": "run-1" } },
+    {
+      "reason": "an unknown key",
+      "body": {
+        "runId": "3d8f1a62-7b4c-4e29-9a05-c61e2f7b8d43",
+        "since": 4
+      }
+    }
+  ]
+}

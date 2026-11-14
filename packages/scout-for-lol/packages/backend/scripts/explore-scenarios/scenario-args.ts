@@ -19,7 +19,7 @@ export const SCENARIO_USAGE = [
   "Usage: bun run test:explore:scenarios -- [options]",
   "",
   "  --only <id,id>          Run only these case ids",
-  "  --surfaces <list>       web,discord,voice (default: each case's own list)",
+  "  --surfaces <list>       web,discord,voice,desktop (default: each case's own list)",
   "  --concurrency <n>       Runs in flight at once (default 3)",
   "  --no-judge              Skip the rubric judge; deterministic checks only",
   "  --write                 Write the summary report next to the code",

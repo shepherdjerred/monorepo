@@ -6,11 +6,12 @@ import {
   renderExploreSkillBody,
   type ExploreSkillContext,
 } from "#src/explore/skills/registry.ts";
+import type { ExploreSurface } from "#src/explore/surface.ts";
 import { describe, expect, test } from "vitest";
 
 const WEB_CONTEXT: ExploreSkillContext = { surface: "web" };
 
-function skillsOn(surface: "web" | "discord" | "voice"): string[] {
+function skillsOn(surface: ExploreSurface): string[] {
   return enabledExploreSkills({ surface }).map((candidate) => candidate.name);
 }
 
@@ -65,12 +66,13 @@ describe("enabledExploreSkills", () => {
       clash: true,
       creation: true,
     };
-    const names = (surface: "web" | "discord" | "voice") =>
+    const names = (surface: ExploreSurface) =>
       enabledExploreSkills({ ...options, surface })
         .map((candidate) => candidate.name)
         .filter((name) => name !== "voice-response");
     expect(names("discord")).toEqual(names("web"));
     expect(names("voice")).toEqual(names("web"));
+    expect(names("desktop")).toEqual(names("web"));
     expect(names("discord")).toContain("creation");
     expect(names("discord")).toContain("loadouts");
   });
@@ -79,6 +81,7 @@ describe("enabledExploreSkills", () => {
     expect(skillsOn("voice")).toContain("voice-response");
     expect(skillsOn("web")).not.toContain("voice-response");
     expect(skillsOn("discord")).not.toContain("voice-response");
+    expect(skillsOn("desktop")).not.toContain("voice-response");
   });
 });
 
