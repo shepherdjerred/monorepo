@@ -23,7 +23,7 @@ import {
   searchCandidates,
 } from "#automation/acquisition-candidates.ts";
 import { reserveCandidate } from "#automation/acquisition-reservation.ts";
-import { StoredCandidateSchema } from "#automation/providers.ts";
+import { KnabenProvider } from "#integrations/providers.ts";
 
 let cluster: Awaited<ReturnType<typeof startMediaTestPostgres>>;
 let owner: MediaActor;
@@ -237,6 +237,7 @@ test("an active reservation defers the current pointer until it drains without c
       kind: "series",
       title: "Guide Reservation Fixture",
       tmdbId: 123_456,
+      year: 2026,
     },
   });
   const media = await cluster.database.mediaItem.create({
@@ -280,25 +281,29 @@ test("an active reservation defers the current pointer until it drains without c
     db,
     new CredentialCipher(randomBytes(32).toString("base64")),
   );
-  const listing = StoredCandidateSchema.parse({
-    providerId: "knaben",
-    providerReleaseId: crypto.randomUUID(),
-    title: "Guide.Reservation.Fixture.S01E01.1080p.WEB-DL.H264.English-GROUP",
-    sizeBytes: 2_000_000_000,
-    seeders: 100,
-    infoHash: "a".repeat(40),
-    detailsUrl: "https://example.com",
-    download: {
-      kind: "magnet",
-      value: `magnet:?xt=urn:btih:${"a".repeat(40)}`,
-    },
-    references: [
-      { namespace: "tmdb", value: String(series.tmdbId), kind: "series" },
-    ],
+  const provider = new KnabenProvider((url) => {
+    expect(url.pathname).toBe("/v2/search");
+    expect(url.searchParams.get("q")).toContain(series.title);
+    return Promise.resolve(
+      Response.json({
+        hits: [
+          {
+            id: crypto.randomUUID(),
+            title:
+              "Guide.Reservation.Fixture.2026.S01E01.1080p.WEB-DL.H264.English-GROUP",
+            bytes: 2_000_000_000,
+            seeders: 100,
+            hash: "a".repeat(40),
+            details: "https://example.com",
+            magnetUrl: `magnet:?xt=urn:btih:${"a".repeat(40)}`,
+            link: null,
+          },
+        ],
+      }),
+    );
   });
   context.providers = {
-    withProvider: async (_id, work) =>
-      work({ search: () => Promise.resolve([listing]) }),
+    withProvider: async (_id, work) => work(provider),
   };
   const reservedProfile = await loadProfile(db, media.id);
   if (reservedProfile === null)

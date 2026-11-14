@@ -30,6 +30,7 @@ import {
 import { PlexBindingProtection } from "#infrastructure/plex-binding/errors.ts";
 import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { queueOperation } from "#automation/store.ts";
+import { finalQuarantineRelease } from "#infrastructure/request-interest/quarantine-release.ts";
 
 type Decision = Prisma.RetentionDecisionGetPayload<{
   include: { plexProjection: true };
@@ -335,6 +336,21 @@ export async function queueMovieQuarantinedWatchRestore(
     identityHash(receipt.scope) !== identityHash(scope)
   )
     throw new Error("Movie watch restore lost its exact quarantine parent");
+  budget?.consume(1);
+  const actorClaim = await tx.mediaRequest.findUnique({
+    where: {
+      userId_mediaId_edition: {
+        userId,
+        mediaId: scope.mediaId,
+        edition: scope.edition,
+      },
+    },
+  });
+  freshness.assertActive();
+  // A named movie has no parent coverage in another title/edition. This is
+  // observation-only, never permission to restore or remove its physical file.
+  if (actorClaim !== null && finalQuarantineRelease(actorClaim, new Date()))
+    return null;
   const key = `movie-plex-unwatched-restore:${identityHash({
     operationId: parent.id,
     receiptHash: quarantine.operationResultHash,

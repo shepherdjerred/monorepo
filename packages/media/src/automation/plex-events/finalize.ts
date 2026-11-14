@@ -16,6 +16,7 @@ import {
   parseWatchProjectionAuthority,
 } from "#infrastructure/plex-binding/watch.ts";
 import { releasedWatchMayKeepWarning } from "./released-interest.ts";
+import { quarantinedReleaseObservationOnly } from "#infrastructure/request-interest/quarantine-release.ts";
 import type { BoundWatchAuthority } from "#shared/plex-binding/watch.ts";
 import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import {
@@ -264,7 +265,15 @@ async function applyOutcome(
   );
   if (result.outcome.watched) return;
   if (original.authority.purpose === "quarantined") {
-    await watchAwait(
+    if (
+      quarantinedReleaseObservationOnly(
+        input.authority,
+        result.userId,
+        new Date(),
+      )
+    )
+      return;
+    const restored = await watchAwait(
       execution,
       queueQuarantinedUnwatchedRestore(
         tx,
@@ -276,6 +285,11 @@ async function applyOutcome(
         result.outcome.freshness,
         prepared.authority.scope.budget,
       ),
+    );
+    assertExpectedQuarantineObservation(
+      restored,
+      input.authority,
+      result.userId,
     );
     return;
   }
@@ -338,6 +352,20 @@ async function applyOutcome(
       },
     }),
   );
+}
+
+function assertExpectedQuarantineObservation(
+  restored: { operationId: string; created: boolean } | null,
+  authority: WatchAuthority,
+  userId: string,
+) {
+  if (
+    restored === null &&
+    !quarantinedReleaseObservationOnly(authority, userId, new Date())
+  )
+    throw new Error(
+      "Quarantine restore omitted demand without a current final release",
+    );
 }
 
 /** The current physical binding was already revalidated under this scope lock.

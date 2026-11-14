@@ -11,6 +11,10 @@ import { testPlexBindingExecution } from "#testing/plex-binding-execution.ts";
 import { createFixtureLifecycle } from "#testing/fixture-lifecycle.ts";
 import { createManagedMovieFixture } from "./managed-fixture.ts";
 import { completeFixtureRetentionInterests } from "#testing/retention-interest.ts";
+import {
+  prepareInitialReleasedInterest,
+  type InitialInterestScenario,
+} from "#infrastructure/request-interest/quarantine-release.test-fixture.ts";
 import { pendingInAppWarningHistory } from "#automation/retention/fixtures/elapsed.ts";
 import { refreshRetentionReceipts } from "#automation/notifications/retention-receipts.ts";
 
@@ -19,6 +23,7 @@ export async function createMovieRetentionFixture(
   edition: MovieEditionKey,
   bytes: Uint8Array,
   elapsed = true,
+  interestScenario?: InitialInterestScenario,
 ) {
   const f = await createPublishedMovieFixture(edition, bytes);
   const { db, user, context: base } = f.source;
@@ -62,7 +67,15 @@ export async function createMovieRetentionFixture(
           recipient: receipts.get(input.receipt) ?? null,
         }),
     };
-    await completeFixtureRetentionInterests(base, [f.scope.mediaId], edition);
+    if (interestScenario === undefined)
+      await completeFixtureRetentionInterests(base, [f.scope.mediaId], edition);
+    else {
+      f.source.wire.setWatched(false);
+      await prepareInitialReleasedInterest(context, [f.scope.mediaId], {
+        edition,
+        scenario: interestScenario,
+      });
+    }
     const target = await db.mediaIntent.findUniqueOrThrow({
       where: { mediaId_edition: { mediaId: f.scope.mediaId, edition } },
     });

@@ -178,6 +178,7 @@ export async function sponsorClaim(
             active: true,
             direct: true,
             excluded: false,
+            interestState: "following",
           },
         },
         include: { rootRequest: true },
@@ -185,9 +186,13 @@ export async function sponsorClaim(
     },
   });
   assertDefaultEdition(sponsor.edition);
-  const roots = sponsor.direct
-    ? [sponsor]
-    : sponsor.coverageSources.map((source) => source.rootRequest);
+  const roots =
+    sponsor.direct &&
+    sponsor.active &&
+    !sponsor.excluded &&
+    sponsor.interestState === "following"
+      ? [sponsor]
+      : sponsor.coverageSources.map((source) => source.rootRequest);
   if (roots.length === 0)
     throw new MediaError(
       "sponsor_inactive",

@@ -19,6 +19,10 @@ import {
 } from "#automation/plex-binding/test-fixture.ts";
 import { retentionPlexContext } from "./fixtures/plex.ts";
 import { completeFixtureRetentionInterests } from "#testing/retention-interest.ts";
+import {
+  prepareInitialReleasedInterest,
+  type InitialInterestScenario,
+} from "#infrastructure/request-interest/quarantine-release.test-fixture.ts";
 import { refreshRetentionReceipts } from "#automation/notifications/retention-receipts.ts";
 import {
   elapsedWarningClient,
@@ -34,6 +38,7 @@ export async function prepareBoundRetention(
   files: Files,
   published: Published,
   base: MediaAutomationContext,
+  interestScenario?: InitialInterestScenario,
 ) {
   if (files.context.pathMapping === undefined)
     throw new Error(
@@ -62,6 +67,12 @@ export async function prepareBoundRetention(
   };
   await prepareRequesters(db, context, attempt.mediaIds);
   const publication = createPublicationActivities(context);
+  await initialUnwatchedScenario(
+    context,
+    transport.state,
+    attempt.mediaIds,
+    interestScenario,
+  );
   const available = await publication.publishMediaToPlex(published.input);
   if (available.status !== "available")
     throw new Error(
@@ -75,7 +86,7 @@ export async function prepareBoundRetention(
         `Actual retention watch failed: ${JSON.stringify(watch)}`,
       );
   }
-  await completeFixtureRetentionInterests(context, attempt.mediaIds);
+  await initialInterestScenario(context, attempt.mediaIds, interestScenario);
   const target = await db.mediaIntent.findUniqueOrThrow({
     where: { mediaId_edition: { mediaId: files.media.id, edition: "default" } },
   });
@@ -206,6 +217,30 @@ export async function prepareBoundRetention(
         retention.input,
       ),
   };
+}
+
+async function initialUnwatchedScenario(
+  context: MediaAutomationContext,
+  state: { watched: boolean | null },
+  mediaIds: string[],
+  scenario: InitialInterestScenario | undefined,
+) {
+  if (scenario === undefined) return;
+  await context.db.mediaItem.updateMany({
+    where: { id: { in: mediaIds } },
+    data: { originalLanguage: "en" },
+  });
+  state.watched = false;
+}
+
+async function initialInterestScenario(
+  context: MediaAutomationContext,
+  mediaIds: string[],
+  scenario: InitialInterestScenario | undefined,
+) {
+  if (scenario === undefined)
+    await completeFixtureRetentionInterests(context, mediaIds);
+  else await prepareInitialReleasedInterest(context, mediaIds, { scenario });
 }
 
 /** Real producers plus injected HTTP; eight-day grace is an explicitly simulated fixture precondition. */

@@ -16,6 +16,7 @@ import {
 } from "#shared/household/interests.ts";
 import { renewedInterest } from "./policy.ts";
 import { MovieEditionKeySchema } from "#shared/movie-editions/registry.ts";
+import { continuedRequestRestore } from "./continue-restore.ts";
 import type {
   MediaRequest,
   Prisma,
@@ -136,12 +137,6 @@ export class RequestInterestCommands extends MediaCommandBase {
             "Request does not exist",
             404,
           );
-        if (!initial.direct)
-          throw new MediaError(
-            "root_request_required",
-            "Manage interest on the original request",
-            409,
-          );
         if (initial.media.kind === "movie")
           await lockMovieCommand(tx, {
             rootMediaId: initial.mediaId,
@@ -212,7 +207,7 @@ export class RequestInterestCommands extends MediaCommandBase {
         "Make this request temporary before finishing it",
         409,
       );
-    await tx.mediaRequest.update({
+    const changed = await tx.mediaRequest.update({
       where: { id: request.id },
       data: changedInterestData(input.action, now),
     });
@@ -221,6 +216,14 @@ export class RequestInterestCommands extends MediaCommandBase {
         mediaId_edition: { mediaId: request.mediaId, edition: request.edition },
       },
     });
+    const restore =
+      input.action === "continue"
+        ? await continuedRequestRestore(tx, {
+            request: changed,
+            target: { ...target, generation: target.generation + 1 },
+            kind,
+          })
+        : null;
     const updated = await tx.mediaIntent.update({
       where: {
         mediaId_edition: { mediaId: request.mediaId, edition: request.edition },
@@ -228,6 +231,14 @@ export class RequestInterestCommands extends MediaCommandBase {
       data: {
         generation: { increment: 1 },
         version: { increment: 1 },
+        ...(restore === null
+          ? {}
+          : {
+              desiredPresence: true,
+              monitoring: true,
+              intentionallyRemovedAt: null,
+              automationEpoch: restore.epoch,
+            }),
         ...(["keep", "temporary"].includes(input.action)
           ? {
               libraryKeep: input.action === "keep",
@@ -252,7 +263,14 @@ export class RequestInterestCommands extends MediaCommandBase {
         },
         data: { state: "cancelled", version: { increment: 1 } },
       });
-    if (request.edition === "default")
+    if (restore !== null)
+      await this.enqueue(tx, actor, {
+        kind: restore.kind,
+        mediaId: request.mediaId,
+        generation: updated.generation,
+        details: restore.details,
+      });
+    else if (request.edition === "default")
       await this.enqueue(tx, actor, {
         kind:
           kind === "series" || kind === "season"
@@ -304,6 +322,18 @@ function validateInterestCommand(
     throw new MediaError(
       "version_conflict",
       "Interest changed; refresh before acting",
+      409,
+    );
+  if (input.action === "continue" && (!request.active || request.excluded))
+    throw new MediaError(
+      "request_not_active",
+      "Create a new request to resume this cancelled request",
+      409,
+    );
+  if (!request.direct)
+    throw new MediaError(
+      "root_request_required",
+      "Manage interest on the original request",
       409,
     );
   if (

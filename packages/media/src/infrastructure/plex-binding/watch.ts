@@ -285,7 +285,7 @@ export async function queueQuarantinedUnwatchedRestore(
   },
   freshness: PlexBindingFreshness,
   budget?: PublicationAuthorityReadBudget,
-): Promise<{ operationId: string; created: boolean }> {
+): Promise<{ operationId: string; created: boolean } | null> {
   freshness.assertActive();
   const authority = BoundWatchAuthoritySchema.parse(input.authority);
   if (authority.purpose !== "quarantined")

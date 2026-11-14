@@ -1,13 +1,42 @@
-import { Prisma } from "#generated/prisma/client.ts";
+import { Prisma, type MediaRequest } from "#generated/prisma/client.ts";
+
+type FollowingInterest = Pick<
+  MediaRequest,
+  "active" | "excluded" | "direct" | "interestState"
+>;
+
+/** Caller supplies its already locked, exact edition/media/source scope.
+ * Personal direct release does not withdraw another current container interest. */
+export function hasFollowingRequestInterest(
+  request: FollowingInterest & {
+    coverageSources: readonly {
+      active: boolean;
+      rootRequest: FollowingInterest;
+    }[];
+  },
+): boolean {
+  return (
+    request.active &&
+    !request.excluded &&
+    ((request.direct && request.interestState === "following") ||
+      request.coverageSources.some(
+        (source) =>
+          source.active &&
+          source.rootRequest.active &&
+          !source.rootRequest.excluded &&
+          source.rootRequest.direct &&
+          source.rootRequest.interestState === "following",
+      ))
+  );
+}
 
 /** Root cancellation removes authority immediately, before paginated cleanup. */
 export const effectiveRequestWhere = {
   edition: "default",
   active: true,
   excluded: false,
-  interestState: "following",
   OR: [
-    { direct: true },
+    { direct: true, interestState: "following" },
     {
       coverageSources: {
         some: {
