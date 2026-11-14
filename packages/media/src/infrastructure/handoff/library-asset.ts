@@ -2,7 +2,10 @@ import { z } from "zod";
 import type { Prisma } from "#generated/prisma/client.ts";
 import { HandoffNetworkV2Schema } from "#shared/handoff-v2.ts";
 import { StableHandoffNetworkV3Schema } from "#shared/handoff/library-v3.ts";
-import { LibraryAssetReferenceV1Schema } from "#shared/handoff/library-ownership.ts";
+import {
+  LibraryAssetReferenceV1Schema,
+  PassiveLibraryAssetReferenceV1Schema,
+} from "#shared/handoff/library-ownership.ts";
 import { PublicationAssetSnapshotSchema } from "#shared/publication-proof/intent.ts";
 import {
   readLibraryHandoffReceipt,
@@ -12,7 +15,10 @@ import { movieLibraryParentV2FromReceipt } from "#infrastructure/movie-editions/
 import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
 import { nativeJson } from "#infrastructure/native-recovery/snapshots.ts";
-import { initialLibraryAssetVersion } from "./passive-registration.ts";
+import {
+  initialLibraryAssetVersion,
+  passiveRegistrationApproval,
+} from "./passive-registration.ts";
 
 const hash = (value: unknown) => identityHash(nativeJson(value));
 type File = LibraryHandoffReceipt["selection"]["scope"]["files"][number];
@@ -43,12 +49,16 @@ export async function loadLibraryAssetParentV1(
           .asset
       : tvAsset(original, file);
   const plex = initialAssociations(selection.networkEvidence, file);
+  const ReferenceSchema =
+    passiveRegistrationApproval(selection.scope.request, file) === undefined
+      ? LibraryAssetReferenceV1Schema
+      : PassiveLibraryAssetReferenceV1Schema;
   return {
     asset,
     actorId: receipt.actorId,
     file,
     scope: selection.scope,
-    reference: LibraryAssetReferenceV1Schema.parse({
+    reference: ReferenceSchema.parse({
       kind: "library_adoption_v1",
       receiptId: receipt.id,
       planId: receipt.planId,

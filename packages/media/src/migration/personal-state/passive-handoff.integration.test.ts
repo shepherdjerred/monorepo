@@ -25,6 +25,8 @@ import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proo
 import { previewPassiveRegistrations } from "./passive-preview.ts";
 import { adoptLibraryTargets } from "#automation/handoff/library-adopt.ts";
 import { LibraryHandoffNetworkProtocolSchema } from "#shared/handoff/protocol.ts";
+import { lockDefaultScopes } from "#infrastructure/editions/locks.ts";
+import { loadLibraryAssetParentV1 } from "#infrastructure/handoff/library-asset.ts";
 
 let cluster: Awaited<ReturnType<typeof startMediaTestPostgres>>;
 let bytes: Uint8Array;
@@ -39,15 +41,23 @@ afterAll(async () => {
     await rm(directory, { recursive: true, force: true });
 });
 
-async function fixture(edition: MovieEditionKey) {
+async function fixture(edition: MovieEditionKey, register = true) {
   const db = cluster.database;
   let approval: PassiveRegistrationApproval | undefined;
   const label = MOVIE_EDITION_REGISTRY[edition].plexLabel;
   const f = await handoffFixture(db, {
     initialEdition: edition,
     bytes,
+    reviewSelection: ({ report }) =>
+      report.entries
+        .filter((entry) => entry.kind === "file")
+        .map((entry) => ({
+          provenanceKey: entry.provenanceKey,
+          evidenceHash: entry.observationHash,
+        })),
     fileName: `Synthetic Film (2020)${edition === "default" ? "" : ` {edition-${label}}`}.mkv`,
     async extendReport({ report, target }) {
+      if (!register) return;
       const entry = report.entries.find((item) => item.kind === "file");
       const mediaId = z.uuid().parse(entry?.mediaIds[0]);
       const root = await db.mediaItem.findUniqueOrThrow({
@@ -124,7 +134,7 @@ async function fixture(edition: MovieEditionKey) {
       });
     },
     prepareRequest({ request, report }) {
-      if (approval === undefined)
+      if (register && approval === undefined)
         throw new Error("Missing exact passive registration fixture");
       const files = report.entries.filter((entry) => entry.kind === "file");
       return PrepareLibraryHandoffV3Schema.parse({
@@ -136,7 +146,7 @@ async function fixture(edition: MovieEditionKey) {
           provenanceKey: entry.provenanceKey,
           evidenceHash: entry.observationHash,
         })),
-        registeredAssets: [approval],
+        ...(approval === undefined ? {} : { registeredAssets: [approval] }),
         movies: files.map((entry) => ({
           provenanceKey: entry.provenanceKey,
           edition,
@@ -188,6 +198,24 @@ test.each(["default", "directors_cut"] as const)(
       }),
     );
     expect(approvals).toEqual(preparedScope.request.registeredAssets);
+    await expect(
+      cluster.database.$transaction((tx) =>
+        previewPassiveRegistrations(tx, {
+          bundleReviewId: preparedScope.request.bundleReviewId,
+          bundleReviewVersion: preparedScope.request.bundleReviewVersion + 1,
+          selected: preparedScope.files.map((file) => file.provenanceKey),
+        }),
+      ),
+    ).rejects.toThrow("unchanged approved complete bundle");
+    await expect(
+      cluster.database.$transaction((tx) =>
+        previewPassiveRegistrations(tx, {
+          bundleReviewId: preparedScope.request.bundleReviewId,
+          bundleReviewVersion: preparedScope.request.bundleReviewVersion,
+          selected: ["f".repeat(64)],
+        }),
+      ),
+    ).rejects.toThrow("exact selected file evidence");
     const receiptId = await applyPreparedHandoff(
       f.context,
       ready.input,
@@ -229,6 +257,14 @@ test.each(["default", "directors_cut"] as const)(
       new PublicationAuthorityReadBudget(),
     );
     expect(parent.asset.version).toBe(1);
+    expect(parent.reference.assetVersion).toBe(1);
+    const servingParent = await loadLibraryAssetParentV1(
+      cluster.database,
+      { receiptId, assetId: asset.id },
+      new PublicationAuthorityReadBudget(),
+    );
+    expect(servingParent.asset).toEqual(parent.asset);
+    expect(servingParent.reference.assetVersion).toBe(1);
     expect(
       await cluster.database.mediaIntent.findUniqueOrThrow({
         where: { mediaId_edition: { mediaId: f.network.media.id, edition } },
@@ -255,6 +291,43 @@ test.each(["default", "directors_cut"] as const)(
   },
 );
 
+test("an unregistered initial file retains its literal version-zero movie and serving references", async () => {
+  const f = await fixture("default", false);
+  const ready = await f.ready();
+  const receiptId = await applyPreparedHandoff(
+    f.context,
+    ready.input,
+    ready.prepared,
+  );
+  const asset = await cluster.database.libraryAsset.findUniqueOrThrow({
+    where: { path: f.target },
+  });
+  expect(asset).toMatchObject({ owned: true, version: 0 });
+  const parent = await loadMovieLibraryParentV2(
+    cluster.database,
+    { receiptId, assetId: asset.id },
+    new PublicationAuthorityReadBudget(),
+  );
+  const servingParent = await loadLibraryAssetParentV1(
+    cluster.database,
+    { receiptId, assetId: asset.id },
+    new PublicationAuthorityReadBudget(),
+  );
+  expect(parent.reference.assetVersion).toBe(0);
+  expect(servingParent.reference.assetVersion).toBe(0);
+  expect(servingParent.asset).toEqual(parent.asset);
+  expect(
+    await cluster.database.mediaIntent.findUniqueOrThrow({
+      where: {
+        mediaId_edition: { mediaId: f.network.media.id, edition: "default" },
+      },
+    }),
+  ).toMatchObject({ libraryKeep: true });
+  expect(
+    LibraryHandoffScopeV3Schema.parse(ready.prepared.scope).request,
+  ).not.toHaveProperty("registeredAssets");
+});
+
 test("metadata-only monitored titles without physical library coverage do not gain library Keep", async () => {
   const f = await fixture("default");
   const ready = await f.ready();
@@ -272,25 +345,42 @@ test("metadata-only monitored titles without physical library coverage do not ga
   const network = LibraryHandoffNetworkProtocolSchema.parse(
     observation.evidence,
   );
-  await cluster.database.$transaction((tx) =>
-    adoptLibraryTargets(tx, {
+  await cluster.database.$transaction(async (tx) => {
+    // Normal handoff scope preparation establishes and locks the passive
+    // default target before adoption, even for metadata-only selections.
+    const [locked] = await lockDefaultScopes(
+      tx,
+      [{ mediaId: absent.id, edition: "default" }],
+      { createMissing: true },
+    );
+    if (locked === undefined) throw new Error("Missing prepared target");
+    expect(locked.existed).toBe(false);
+    expect(locked.target.libraryKeep).toBe(false);
+    await adoptLibraryTargets(tx, {
       planId: f.planId,
       scope: {
         ...scope,
         files: [],
-        media: [{ ...original, mediaId: absent.id }],
+        media: [
+          {
+            ...original,
+            mediaId: absent.id,
+            version: absent.version,
+            generation: locked.target.generation,
+          },
+        ],
         targets: [
           {
             mediaId: absent.id,
             edition: "default",
-            generation: null,
-            version: null,
+            generation: locked.target.generation,
+            version: locked.target.version,
           },
         ],
       },
       network: { ...network, plex: [] },
-    }),
-  );
+    });
+  });
   expect(
     await cluster.database.mediaIntent.findUniqueOrThrow({
       where: { mediaId_edition: { mediaId: absent.id, edition: "default" } },

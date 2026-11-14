@@ -12,3 +12,13 @@ export const LibraryAssetReferenceV1Schema = z.strictObject({
   bindingHash: EvidenceHashSchema,
   physicalEvidenceHash: EvidenceHashSchema,
 });
+
+/** A registered passive file gains its first physical owner at exactly version one. */
+export const PassiveLibraryAssetReferenceV1Schema =
+  LibraryAssetReferenceV1Schema.extend({
+    assetVersion: z.literal(1),
+  });
+export const LibraryAssetReferenceProtocolSchema = z.union([
+  LibraryAssetReferenceV1Schema,
+  PassiveLibraryAssetReferenceV1Schema,
+]);
