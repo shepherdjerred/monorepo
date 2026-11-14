@@ -2,6 +2,7 @@ import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.
 import { describe, test, expect, vi } from "vitest";
 import { RiotClient, type FetchFunction } from "./riot-client.ts";
 import { RiotHttpError } from "./errors.ts";
+import { riotApiLimiterDecisionsTotal } from "#src/metrics/riot-rate-limit.ts";
 import { LeaguePuuidSchema, RiotMatchIdSchema } from "@scout-for-lol/data";
 
 function getUrlString(input: string | URL | Request): string {
@@ -246,5 +247,36 @@ describe("RiotClient", () => {
       client.match.get(testMatchId, "AMERICAS", { maxRetries: 0 }),
     ).rejects.toThrow(RiotHttpError);
     expect(mockFetch).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("RiotClient request priority", () => {
+  const apiKey = "RGAPI-test-api-key";
+  const testMatchId = RiotMatchIdSchema.parse("NA1_5123456789");
+
+  test("passes request options through the match timeline call", async () => {
+    riotApiLimiterDecisionsTotal.reset();
+    const mockFetch: FetchFunction = vi.fn(() =>
+      Promise.resolve(
+        Response.json(
+          { message: "Rate limit exceeded" },
+          { status: 429, headers: { "Retry-After": "0" } },
+        ),
+      ),
+    );
+    const client = new RiotClient({ apiKey, fetchFn: mockFetch });
+
+    await expect(
+      client.match.timeline(testMatchId, "AMERICAS", {
+        maxRetries: 0,
+        priority: "interactive",
+      }),
+    ).rejects.toThrow(RiotHttpError);
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+    const decisions = await riotApiLimiterDecisionsTotal.get();
+    expect(
+      decisions.values.find((v) => v.labels.outcome === "admitted")?.labels
+        .priority,
+    ).toBe("interactive");
   });
 });

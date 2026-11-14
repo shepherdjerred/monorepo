@@ -7,6 +7,7 @@ import {
   initializeDynamicConfig,
   isDynamicConfigReady,
   llmHourlyTokenBudget,
+  riotBudgetMode,
   shutdownDynamicConfig,
   temporalCallGraphTracing,
   type DynamicConfigSeed,
@@ -245,5 +246,37 @@ describe("explore quota limits", () => {
       startPolling: false,
     });
     expect(exploreQuotaLimits()).toEqual(DEFAULT_EXPLORE_QUOTA_LIMITS);
+  });
+});
+
+describe("riot budget mode", () => {
+  test("is observe before initialization and when no flag answers", async () => {
+    expect(riotBudgetMode()).toBe("observe");
+    await initializeDynamicConfig({
+      environment: DISABLED,
+      seed: SEED,
+      startPolling: false,
+    });
+    expect(riotBudgetMode()).toBe("observe");
+  });
+
+  test("the flag can switch it to enforce", async () => {
+    await initializeDynamicConfig({
+      environment: DISABLED,
+      seed: SEED,
+      startPolling: false,
+      provider: new StaticProvider({ "scout-riot-budget-mode": "enforce" }),
+    });
+    expect(riotBudgetMode()).toBe("enforce");
+  });
+
+  test("an unknown mode is refused and observe is kept", async () => {
+    await initializeDynamicConfig({
+      environment: DISABLED,
+      seed: SEED,
+      startPolling: false,
+      provider: new StaticProvider({ "scout-riot-budget-mode": "turbo" }),
+    });
+    expect(riotBudgetMode()).toBe("observe");
   });
 });

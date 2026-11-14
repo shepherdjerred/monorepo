@@ -62,6 +62,9 @@ export class RiotClient {
     this.rateLimiter = new RateLimiter({
       concurrency: options.concurrency,
       maxRetries: options.maxRetries,
+      reservedRealtimeSlots: options.reservedRealtimeSlots,
+      budgetMode: options.budgetMode,
+      ledger: options.ledger,
     });
     this.fetchFn = options.fetchFn ?? fetch;
     this.onPayload = options.onPayload;
@@ -95,10 +98,11 @@ export class RiotClient {
     getByPuuid: async (
       puuid: LeaguePuuid,
       regionalRoute: AccountRegionalRoute | RegionalRoute = "AMERICAS",
+      requestOptions: RateLimitedRequestOptions = {},
     ): Promise<RawAccount> => {
       const region = regionalRoute === "SEA" ? "ASIA" : regionalRoute;
       const url = `https://${region.toLowerCase()}.api.riotgames.com/riot/account/v1/accounts/by-puuid/${encodeURIComponent(puuid)}`;
-      const data = await this.fetchJson(url);
+      const data = await this.fetchJson(url, requestOptions);
       return RawAccountSchema.parse(data);
     },
 
@@ -106,10 +110,11 @@ export class RiotClient {
       gameName: RiotGameName | string,
       tagLine: RiotTagLine | string,
       regionalRoute: AccountRegionalRoute | RegionalRoute = "AMERICAS",
+      requestOptions: RateLimitedRequestOptions = {},
     ): Promise<RawAccount> => {
       const region = regionalRoute === "SEA" ? "ASIA" : regionalRoute;
       const url = `https://${region.toLowerCase()}.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${encodeURIComponent(gameName)}/${encodeURIComponent(tagLine)}`;
-      const data = await this.fetchJson(url);
+      const data = await this.fetchJson(url, requestOptions);
       return RawAccountSchema.parse(data);
     },
   };
@@ -153,9 +158,10 @@ export class RiotClient {
     timeline: async (
       matchId: RiotMatchId,
       regionalRoute: RegionalRoute,
+      requestOptions: RateLimitedRequestOptions = {},
     ): Promise<unknown> => {
       const url = `https://${regionalRoute.toLowerCase()}.api.riotgames.com/lol/match/v5/matches/${encodeURIComponent(matchId)}/timeline`;
-      return this.fetchJson(url);
+      return this.fetchJson(url, requestOptions);
     },
   };
 
@@ -196,36 +202,40 @@ export class RiotClient {
     activeGame: async (
       puuid: LeaguePuuid,
       platform: PlatformRoute,
+      requestOptions: RateLimitedRequestOptions = {},
     ): Promise<unknown> => {
       const url = `https://${platform.toLowerCase()}.api.riotgames.com/lol/spectator/v5/active-games/by-summoner/${encodeURIComponent(puuid)}`;
-      return this.fetchJson(url);
+      return this.fetchJson(url, requestOptions);
     },
   };
 
   public readonly clash = {
     tournaments: async (
       platform: PlatformRoute,
+      requestOptions: RateLimitedRequestOptions = {},
     ): Promise<RawClashTournament[]> => {
       const url = `https://${platform.toLowerCase()}.api.riotgames.com/lol/clash/v1/tournaments`;
-      const data = await this.fetchJson(url);
+      const data = await this.fetchJson(url, requestOptions);
       return RawClashTournamentListSchema.parse(data);
     },
 
     playersByPuuid: async (
       puuid: LeaguePuuid,
       platform: PlatformRoute,
+      requestOptions: RateLimitedRequestOptions = {},
     ): Promise<RawClashPlayerList> => {
       const url = `https://${platform.toLowerCase()}.api.riotgames.com/lol/clash/v1/players/by-puuid/${encodeURIComponent(puuid)}`;
-      const data = await this.fetchJson(url);
+      const data = await this.fetchJson(url, requestOptions);
       return RawClashPlayerListSchema.parse(data);
     },
 
     teamById: async (
       teamId: string,
       platform: PlatformRoute,
+      requestOptions: RateLimitedRequestOptions = {},
     ): Promise<RawClashTeam> => {
       const url = `https://${platform.toLowerCase()}.api.riotgames.com/lol/clash/v1/teams/${encodeURIComponent(teamId)}`;
-      const data = await this.fetchJson(url);
+      const data = await this.fetchJson(url, requestOptions);
       return RawClashTeamSchema.parse(data);
     },
   };

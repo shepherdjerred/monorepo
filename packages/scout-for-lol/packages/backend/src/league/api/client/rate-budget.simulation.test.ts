@@ -4,6 +4,7 @@ import {
   RiotBudgetLedger,
   type RiotPriority,
 } from "./rate-budget.ts";
+import { RateLimiter } from "./rate-limiter.ts";
 
 /**
  * Discrete-event simulation on a virtual clock: no timers, no sleeping. A fake
@@ -605,5 +606,170 @@ describe("RiotBudgetLedger", () => {
       waitMs: DEFAULT_RIOT_BUDGET_CONFIG.probeWaitMs,
       reason: "probe-in-flight",
     });
+  });
+});
+
+/**
+ * The same virtual-clock idea applied to the real `RateLimiter`, which is
+ * async: each timer fires only after every pending microtask has settled, so
+ * the limiter's queueing runs exactly as it would in production, just without
+ * waiting. Realtime arrives in bursts while backfill and crawl workers keep
+ * every slot they can get busy.
+ */
+class AsyncClock {
+  now = 0;
+  private seq = 0;
+  private timers: { at: number; seq: number; resolve: () => void }[] = [];
+
+  readonly runtime = {
+    now: (): number => this.now,
+    random: (): number => 0,
+    sleep: (milliseconds: number): Promise<void> =>
+      new Promise<void>((resolve) => {
+        this.timers.push({
+          at: this.now + milliseconds,
+          seq: this.seq++,
+          resolve,
+        });
+      }),
+  };
+
+  async runUntil(end: number): Promise<void> {
+    for (;;) {
+      await new Promise((resolve) => setImmediate(resolve));
+      let next: (typeof this.timers)[number] | undefined;
+      for (const timer of this.timers) {
+        if (
+          next === undefined ||
+          timer.at < next.at ||
+          (timer.at === next.at && timer.seq < next.seq)
+        ) {
+          next = timer;
+        }
+      }
+      if (next === undefined || next.at > end) {
+        break;
+      }
+      const due = next;
+      this.timers = this.timers.filter((timer) => timer !== due);
+      this.now = due.at;
+      due.resolve();
+    }
+    this.now = end;
+  }
+}
+
+const LIMITER_URL =
+  "https://americas.api.riotgames.com/lol/match/v5/matches/NA1_1";
+const LIMITER_LATENCY_MS = 50;
+const LIMITER_END = 60 * SECOND;
+
+async function simulateLimiter(scenario: {
+  /** Priority given to the saturating background workers, or none. */
+  background: { backfill: RiotPriority; crawl: RiotPriority } | undefined;
+}): Promise<{ realtimeWaits: number[]; backgroundSends: number }> {
+  const clock = new AsyncClock();
+  const limiter = new RateLimiter(
+    { concurrency: 5, maxRetries: 0, budgetMode: () => "observe" },
+    clock.runtime,
+  );
+  const realtimeWaits: number[] = [];
+  let backgroundSends = 0;
+  const send = (priority: RiotPriority, onSent: () => void) =>
+    limiter.execute(
+      LIMITER_URL,
+      async () => {
+        onSent();
+        await clock.runtime.sleep(LIMITER_LATENCY_MS);
+        return new Response("ok");
+      },
+      { priority },
+    );
+
+  const runs: Promise<unknown>[] = [];
+  const background = scenario.background;
+  if (background !== undefined) {
+    for (const priority of [background.backfill, background.crawl]) {
+      for (let worker = 0; worker < 8; worker += 1) {
+        runs.push(
+          (async () => {
+            while (clock.now < LIMITER_END) {
+              await send(priority, () => {
+                backgroundSends += 1;
+              });
+            }
+          })(),
+        );
+      }
+    }
+  }
+
+  // Ten realtime requests every two seconds, offset from the background start.
+  for (let at = 1 * SECOND + 7; at < LIMITER_END; at += 2 * SECOND) {
+    runs.push(
+      (async () => {
+        await clock.runtime.sleep(at);
+        await Promise.all(
+          Array.from({ length: 10 }, () => {
+            const arrival = clock.now;
+            return send("realtime", () => {
+              realtimeWaits.push(clock.now - arrival);
+            });
+          }),
+        );
+      })(),
+    );
+  }
+
+  await clock.runUntil(LIMITER_END + 10 * SECOND);
+  await Promise.all(runs);
+  return { realtimeWaits, backgroundSends };
+}
+
+function max(waits: number[]): number {
+  return Math.max(...waits);
+}
+
+function mean(waits: number[]): number {
+  return waits.reduce((sum, wait) => sum + wait, 0) / waits.length;
+}
+
+describe("RateLimiter priority simulation", () => {
+  test("realtime wait is unchanged by saturating backfill and crawl", async () => {
+    const idle = await simulateLimiter({ background: undefined });
+    const saturated = await simulateLimiter({
+      background: { backfill: "backfill", crawl: "crawl" },
+    });
+    // Without priorities: every caller tagged (or left) realtime, one FIFO.
+    const fifo = await simulateLimiter({
+      background: { backfill: "realtime", crawl: "realtime" },
+    });
+
+    const bursts = Math.ceil((LIMITER_END - SECOND) / (2 * SECOND));
+    expect(idle.realtimeWaits).toHaveLength(10 * bursts);
+    expect(saturated.realtimeWaits).toHaveLength(10 * bursts);
+
+    // Idle: five slots serve a burst of ten in two waves.
+    expect(max(idle.realtimeWaits)).toBe(LIMITER_LATENCY_MS);
+    // Saturated: at worst one in-flight background request per slot finishes
+    // first, so realtime never waits more than one extra request latency.
+    expect(max(saturated.realtimeWaits)).toBeLessThanOrEqual(
+      max(idle.realtimeWaits) + LIMITER_LATENCY_MS,
+    );
+    expect(mean(saturated.realtimeWaits)).toBeLessThanOrEqual(
+      mean(idle.realtimeWaits) + LIMITER_LATENCY_MS,
+    );
+    // The background still ran nearly flat out on the slots realtime left.
+    const capacity = (4 * LIMITER_END) / LIMITER_LATENCY_MS;
+    expect(saturated.backgroundSends).toBeGreaterThan(0.8 * capacity);
+
+    // And the classes are what bought that: one FIFO queue makes realtime
+    // wait behind all sixteen background workers.
+    expect(max(fifo.realtimeWaits)).toBeGreaterThan(
+      2 * max(saturated.realtimeWaits),
+    );
+    expect(mean(fifo.realtimeWaits)).toBeGreaterThan(
+      2 * mean(saturated.realtimeWaits),
+    );
   });
 });

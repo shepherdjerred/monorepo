@@ -208,6 +208,7 @@ export const SCOUT_VARIANT_FLAG_KEYS = [
   "scout-feature-tip-cooldown-hours",
   "scout-feature-tip-percent",
   "scout-report-ai-model",
+  "scout-riot-budget-mode",
 ] as const;
 
 export type ScoutVariantFlagKey = (typeof SCOUT_VARIANT_FLAG_KEYS)[number];

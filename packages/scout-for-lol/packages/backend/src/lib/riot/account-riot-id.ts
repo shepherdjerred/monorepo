@@ -54,7 +54,9 @@ export async function getRiotIdByPuuid(
     const regionalRoute = platformToAccountRegionalRoute(region);
     const parsedPuuid = LeaguePuuidSchema.parse(puuid);
     const account = await withTimeout(
-      riotClient.account.getByPuuid(parsedPuuid, regionalRoute),
+      riotClient.account.getByPuuid(parsedPuuid, regionalRoute, {
+        priority: "interactive",
+      }),
     );
     return {
       gameName: account.gameName,

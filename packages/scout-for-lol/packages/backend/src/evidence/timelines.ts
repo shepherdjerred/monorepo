@@ -127,7 +127,7 @@ async function acquireTimeline(
               matchId,
               platformRouteOf(matchId),
               bestEffort ? "return_undefined" : "return_undefined_on_404",
-              expectedRiotAbsenceStatuses(),
+              { expectedAbsenceStatuses: expectedRiotAbsenceStatuses() },
             ),
           remainingMs,
         ),

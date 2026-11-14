@@ -20,6 +20,20 @@ import {
 
 export type RiotPriority = "realtime" | "interactive" | "backfill" | "crawl";
 
+/** Highest first: the order the limiter serves its per-class queues in. */
+export const RIOT_PRIORITIES: readonly RiotPriority[] = [
+  "realtime",
+  "interactive",
+  "backfill",
+  "crawl",
+];
+
+/**
+ * `observe` consults the ledger and records its decision but always admits;
+ * `enforce` holds a refused request until the ledger admits it.
+ */
+export type RiotBudgetMode = "observe" | "enforce";
+
 export type RiotBudgetConfig = {
   /** Fraction of each window's limit a priority class may fill. */
   ceilings: Record<RiotPriority, number>;
@@ -144,6 +158,16 @@ export class RiotBudgetLedger {
     const methodScope = this.scope(methodKey(route, method));
     this.learn(routeScope, parseAppRateLimitWindows(headers), now, true);
     this.learn(methodScope, parseMethodRateLimitWindows(headers), now, false);
+  }
+
+  /**
+   * Counts a request that is sent although `admit` refused it (the limiter's
+   * `observe` mode), so its later `observe` or `abandon` releases its own
+   * reservation rather than another request's.
+   */
+  reserve(route: string, method: string): void {
+    this.scope(routeKey(route)).unconfirmed += 1;
+    this.scope(methodKey(route, method)).unconfirmed += 1;
   }
 
   /** Releases a reservation whose request produced no response. */

@@ -51,6 +51,7 @@ export const DEFAULT_STATIC_FLAG_OVERRIDES: Record<
   "scout-report-ai-model": "gpt-5.6-sol",
   "scout-feature-tip-percent": 10,
   "scout-feature-tip-cooldown-hours": 72,
+  "scout-riot-budget-mode": "observe",
   "llm-hourly-token-budget": 2_000_000,
   "llm-daily-token-budget": 20_000_000,
 };

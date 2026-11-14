@@ -99,7 +99,9 @@ export async function runClashSnapshot(): Promise<void> {
   for (const platform of platforms.toSorted((left, right) =>
     left.localeCompare(right),
   )) {
-    const tournaments = await riotClient.clash.tournaments(platform);
+    const tournaments = await riotClient.clash.tournaments(platform, {
+      priority: "backfill",
+    });
     await replacePlatformTournaments({ platform, tournaments, fetchedAt });
     for (const tournament of tournaments) {
       tournamentsByKey.set(`${platform}:${String(tournament.id)}`, tournament);
@@ -130,6 +132,7 @@ async function pollRegisteredPlayers(
     const players = await riotClient.clash.playersByPuuid(
       account.puuid,
       account.platform,
+      { priority: "backfill" },
     );
     pending.push({ account, players });
   }
@@ -235,7 +238,9 @@ async function fetchClashTeam(
   teamId: string,
 ): Promise<RawClashTeam | undefined> {
   try {
-    return await riotClient.clash.teamById(teamId, platform);
+    return await riotClient.clash.teamById(teamId, platform, {
+      priority: "backfill",
+    });
   } catch (error) {
     if (extractHttpStatus(error) === 404) {
       logger.info(`Clash team ${teamId} on ${platform} was 404`);

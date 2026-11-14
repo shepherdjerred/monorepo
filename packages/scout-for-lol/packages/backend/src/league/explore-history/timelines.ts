@@ -83,6 +83,7 @@ export async function importExploreTimelines(
         ref.match_id,
         ref.platform_id,
         "return_undefined_on_404",
+        { priority: "interactive" },
       );
       if (timeline === undefined) {
         unavailable += 1;

@@ -16,6 +16,7 @@ import {
   regionToPlatformRoute,
 } from "@scout-for-lol/data";
 import { riotClient } from "#src/league/api/api.ts";
+import type { RiotPriority } from "#src/league/api/client/rate-budget.ts";
 import { extractHttpStatus } from "#src/league/api/client/errors.ts";
 import { callRiotOrThrow } from "#src/league/api/riot-call.ts";
 import { getRank } from "#src/league/model/rank.ts";
@@ -25,6 +26,7 @@ import { PermanentImportError } from "#src/league/initial-history/errors.ts";
 export const INITIAL_HISTORY_MATCH_COUNT = 20;
 
 export async function fetchInitialMatchIds(input: {
+  priority: RiotPriority;
   puuid: LeaguePuuid;
   region: Region;
 }): Promise<RiotMatchId[]> {
@@ -43,12 +45,13 @@ export async function fetchInitialMatchIds(input: {
         {
           count: INITIAL_HISTORY_MATCH_COUNT,
         },
-        { maxRetries: 0 },
+        { maxRetries: 0, priority: input.priority },
       ),
   );
 }
 
 export async function fetchInitialMatch(input: {
+  priority: RiotPriority;
   matchId: RiotMatchId;
   region: Region;
 }): Promise<RawMatch | null> {
@@ -71,7 +74,7 @@ export async function fetchInitialMatch(input: {
         riotClient.match.get(
           input.matchId,
           platformToRegionalRoute(input.region),
-          { maxRetries: 0 },
+          { maxRetries: 0, priority: input.priority },
         ),
     );
   } catch (error) {
@@ -108,6 +111,7 @@ function rankOrUndefined(
 }
 
 export async function fetchCurrentRanks(input: {
+  priority: RiotPriority;
   puuid: LeaguePuuid;
   region: Region;
 }): Promise<Ranks> {
@@ -123,6 +127,7 @@ export async function fetchCurrentRanks(input: {
     () =>
       riotClient.league.byPuuid(puuid, regionToPlatformRoute(input.region), {
         maxRetries: 0,
+        priority: input.priority,
       }),
   );
   return {

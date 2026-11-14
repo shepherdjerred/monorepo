@@ -2051,6 +2051,29 @@ Turbo passes and hashes `SCOUT_PG_PORT` for both `test` and `test:ci`. Moving
 existing development data to a new major requires an explicit dump/restore;
 starting the harness does not migrate a previous cluster.
 
+## Riot request priorities
+
+Every Riot request goes through one in-process limiter
+(`src/league/api/client/rate-limiter.ts`, five slots). Each call site passes a
+`priority`: `realtime` (tracked players' spectator, match, timeline, match-list
+and rank reads), `interactive` (Explore, Riot ID lookups, teammate
+suggestions), `backfill` (initial history, recovery, mastery and Clash
+snapshots) or `crawl`. An untagged call is `realtime`, so nothing is demoted by
+omission. A freed slot goes to the highest class waiting, and one slot only
+ever serves `realtime`.
+
+Retry-After cooldowns cover what Riot limited: the routing host for an
+application 429, the host and endpoint for a method 429. A service 429 is Riot
+shedding load, so only that request backs off, exponentially.
+
+Each attempt also asks `RiotBudgetLedger` (`rate-budget.ts`) whether its class
+is under its share of the key-wide window. `scout-riot-budget-mode` decides
+what that answer does: `observe` (the default everywhere) records it in
+`riot_api_limiter_decisions_total` as `admitted` or `would_defer` and sends
+regardless; `enforce` holds refused requests (`deferred`). Switch to `enforce`
+only once realtime has shown zero `would_defer` across 50k realtime requests.
+`riot_api_limiter_wait_seconds{priority}` shows time spent queued.
+
 ## Configuration
 
 Environment variables are validated with `env-var`/Zod at startup. Discord and

@@ -1,4 +1,5 @@
 import { riotClient } from "#src/league/api/api.ts";
+import type { RiotPriority } from "#src/league/api/client/rate-budget.ts";
 import {
   type Region,
   type RiotMatchId,
@@ -26,6 +27,16 @@ import { saveFailedPayloadToS3 } from "#src/storage/s3-helpers.ts";
 
 const logger = createLogger("match-data-fetcher");
 
+export type RiotFetchOptions = {
+  /**
+   * Statuses the caller treats as Riot's definitive answer: counted and
+   * rethrown, never reported to Bugsink.
+   */
+  expectedAbsenceStatuses?: readonly number[];
+  /** Post-match processing of tracked players is the realtime default. */
+  priority?: RiotPriority;
+};
+
 /**
  * Fetch match data from Riot API
  *
@@ -44,9 +55,7 @@ export async function fetchMatchData(
   route: PlatformRoute | Region,
   failureMode:
     "return_undefined" | "return_undefined_on_404" = "return_undefined",
-  // Statuses the caller treats as Riot's definitive answer: counted and
-  // rethrown, never reported to Bugsink.
-  expectedAbsenceStatuses: readonly number[] = [],
+  options: RiotFetchOptions = {},
 ): Promise<RawMatch | undefined> {
   const regionalRoute = platformToRegionalRoute(route);
   const config: CallRiotConfig<RawMatch> = {
@@ -60,9 +69,12 @@ export async function fetchMatchData(
       id: matchId,
     },
     bugsink: true,
-    expectedAbsenceStatuses,
+    expectedAbsenceStatuses: options.expectedAbsenceStatuses ?? [],
   };
-  const fetch = () => riotClient.match.get(matchId, regionalRoute);
+  const fetch = () =>
+    riotClient.match.get(matchId, regionalRoute, {
+      priority: options.priority ?? "realtime",
+    });
   const match =
     failureMode === "return_undefined_on_404"
       ? await callRiotOrUndefinedOn404(config, fetch)
@@ -133,9 +145,7 @@ export async function fetchMatchTimeline(
     | "return_undefined"
     | "return_undefined_on_404"
     | "throw" = "return_undefined",
-  // Statuses the caller treats as Riot's definitive answer: counted and
-  // rethrown, never reported to Bugsink.
-  expectedAbsenceStatuses: readonly number[] = [],
+  options: RiotFetchOptions = {},
 ): Promise<RawTimeline | undefined> {
   const regionalRoute = platformToRegionalRoute(playerRegion);
   const config: CallRiotConfig<RawTimeline> = {
@@ -149,9 +159,12 @@ export async function fetchMatchTimeline(
       id: matchId,
     },
     bugsink: true,
-    expectedAbsenceStatuses,
+    expectedAbsenceStatuses: options.expectedAbsenceStatuses ?? [],
   };
-  const fetch = () => riotClient.match.timeline(matchId, regionalRoute);
+  const fetch = () =>
+    riotClient.match.timeline(matchId, regionalRoute, {
+      priority: options.priority ?? "realtime",
+    });
   switch (failureMode) {
     case "throw":
       return await callRiotOrThrow(config, fetch);

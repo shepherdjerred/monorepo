@@ -1,4 +1,5 @@
 import { riotClient } from "#src/league/api/api.ts";
+import type { RiotPriority } from "#src/league/api/client/rate-budget.ts";
 import {
   type PlayerConfigEntry,
   type RiotMatchId,
@@ -18,6 +19,8 @@ const logger = createLogger("api-match-history");
 export async function getRecentMatchIds(
   player: PlayerConfigEntry,
   count = 5,
+  // Match-history polling for tracked players is the realtime path.
+  priority: RiotPriority = "realtime",
 ): Promise<RiotMatchId[] | undefined> {
   const playerAlias = player.alias;
   const playerPuuid = player.league.leagueAccount.puuid;
@@ -36,7 +39,13 @@ export async function getRecentMatchIds(
       context: { playerAlias, region: playerRegion },
       bugsink: true,
     },
-    () => riotClient.match.list(playerPuuid, regionalRoute, { count }),
+    () =>
+      riotClient.match.list(
+        playerPuuid,
+        regionalRoute,
+        { count },
+        { priority },
+      ),
   );
 }
 

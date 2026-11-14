@@ -54,6 +54,7 @@ export async function refreshChampionMasterySnapshot(input: {
   const entries = await riotClient.championMastery.byPuuid(
     puuid,
     regionToPlatformRoute(input.region),
+    { priority: "backfill" },
   );
   const fetchedAt = new Date();
   await database.championMasterySnapshot.upsert({

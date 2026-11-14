@@ -96,7 +96,7 @@ describe("on-demand match acquisition", () => {
         puuid,
         "AMERICAS",
         { count: 100, type: matchType ?? "ranked" },
-        { maxRetries: 0 },
+        { maxRetries: 0, priority: "interactive" },
       );
       expect(fetchMatch).toHaveBeenCalledTimes(11);
       expect(

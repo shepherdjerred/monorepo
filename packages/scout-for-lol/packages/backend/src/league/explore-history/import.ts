@@ -67,7 +67,7 @@ async function fetchMatchIds(
         puuid,
         platformToRegionalRoute(input.region),
         { count: input.requestedMatches, type: input.matchType ?? "ranked" },
-        { maxRetries: 0 },
+        { maxRetries: 0, priority: "interactive" },
       ),
   );
 }
@@ -101,6 +101,7 @@ export async function importExploreRankedHistory(
       const match = await fetchInitialMatch({
         matchId: matchId,
         region: input.region,
+        priority: "interactive",
       });
       if (match === null) {
         skipped += 1;

@@ -238,6 +238,7 @@ export function createRiotPlayerExploreTools(input: {
           const ranks = await fetchCurrentRanks({
             puuid: targetResult.puuid,
             region: targetResult.region,
+            priority: "interactive",
           });
           const text = rankText(ranks);
           return {

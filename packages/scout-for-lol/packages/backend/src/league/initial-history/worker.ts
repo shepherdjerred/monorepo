@@ -175,7 +175,11 @@ async function ingestOneMatch(
 ): Promise<InitialMatchHistoryImport> {
   const matchId = RiotMatchIdSchema.parse(matchIds[job.nextMatchIndex]);
   const region = RegionSchema.parse(job.region);
-  const match = await fetchInitialMatch({ matchId, region });
+  const match = await fetchInitialMatch({
+    matchId,
+    region,
+    priority: "backfill",
+  });
   if (match === null) {
     initialHistoryImportMatchesTotal.inc({ outcome: "skipped" });
     return await db.initialMatchHistoryImport.update({
@@ -244,6 +248,7 @@ export async function processRiotPhases(
         matchIds = await fetchInitialMatchIds({
           puuid: job.puuid,
           region: RegionSchema.parse(job.region),
+          priority: "backfill",
         });
       } finally {
         countCall();
@@ -295,6 +300,7 @@ export async function processRiotPhases(
         ranks = await fetchCurrentRanks({
           puuid: job.puuid,
           region: RegionSchema.parse(job.region),
+          priority: "backfill",
         });
       } finally {
         countCall();

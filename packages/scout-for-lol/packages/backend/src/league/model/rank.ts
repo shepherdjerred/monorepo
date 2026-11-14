@@ -82,7 +82,12 @@ async function fetchRanksByPuuid(input: {
       schemaLabel: "summoner-league",
       context: input.context,
     },
-    () => riotClient.league.byPuuid(parsedPuuid, platform),
+    // Loading screens, rank history and Dares read tracked players' ranks
+    // on the realtime path.
+    () =>
+      riotClient.league.byPuuid(parsedPuuid, platform, {
+        priority: "realtime",
+      }),
   );
 
   return entries === undefined

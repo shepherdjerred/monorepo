@@ -1,4 +1,5 @@
 import { riotClient } from "#src/league/api/api.ts";
+import type { RiotPriority } from "#src/league/api/client/rate-budget.ts";
 import {
   type Region,
   type RawCurrentGameInfo,
@@ -55,6 +56,9 @@ export type SpectatorResult =
 export async function getActiveGame(
   puuid: LeaguePuuid,
   region: Region,
+  // Prematch evidence for tracked players is the realtime path; Explore's
+  // current-opponent tool passes `interactive`.
+  priority: RiotPriority = "realtime",
 ): Promise<SpectatorResult> {
   try {
     const platform = regionToPlatformRoute(region);
@@ -68,7 +72,7 @@ export async function getActiveGame(
 
     logger.info(`[getActiveGame] 🔍 Checking active game for ${puuid}`);
     const rawGame = await withTimeout(
-      riotClient.spectator.activeGame(puuid, platform),
+      riotClient.spectator.activeGame(puuid, platform, { priority }),
     );
 
     riotApiRequestsTotal.inc({ source: "spectator", status: "success" });
