@@ -4,10 +4,10 @@ use scout_client_core::diagnostics::Diagnostics;
 use scout_client_core::lcu::{LcuClient, LcuEndpoint, discover_lockfile};
 use scout_client_core::outbox::ObservationOutbox;
 use std::collections::HashMap;
-use std::sync::{Arc, RwLock};
 use tokio::task::JoinHandle;
 
-use super::{RuntimeState, set_error};
+use super::state::{StateHub, set_error};
+use std::sync::Arc;
 
 type CollectionTask = JoinHandle<(HashMap<String, Vec<u8>>, Result<(), String>)>;
 
@@ -34,7 +34,7 @@ pub(super) struct CollectionWorkers {
 impl CollectionWorkers {
     pub(super) async fn tick(
         &mut self,
-        state: &Arc<RwLock<RuntimeState>>,
+        state: &StateHub,
         outbox: &ObservationOutbox,
         diagnostics: &Arc<Diagnostics>,
         tick: u64,
@@ -119,8 +119,14 @@ async fn collect(
             .await
         }
         Collector::Profile => {
-            super::collect_profile_snapshots(&client, outbox, payloads, Some(observer), diagnostics)
-                .await
+            super::profile::collect_profile_snapshots(
+                &client,
+                outbox,
+                payloads,
+                Some(observer),
+                diagnostics,
+            )
+            .await
         }
         Collector::Clash => {
             super::clash::collect_snapshots(

@@ -7,7 +7,7 @@ use eframe::egui;
 use tray_icon::menu::{Menu, MenuEvent, MenuItem};
 use tray_icon::{Icon, TrayIcon, TrayIconBuilder};
 
-use scout_client_runtime::runtime::{ClientRuntime, RuntimeState};
+use scout_client_runtime::runtime::{ClientRuntime, RuntimeState, StateReceiver};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Page {
@@ -26,6 +26,7 @@ enum TrayCommand {
 /// Native Scout Client egui application.
 pub struct ScoutApp {
     runtime: Rc<ClientRuntime>,
+    state: StateReceiver,
     page: Page,
     quitting: bool,
     tray_commands: Receiver<TrayCommand>,
@@ -44,6 +45,7 @@ impl ScoutApp {
                 .send_viewport_cmd(egui::ViewportCommand::Visible(true));
         }
         Self {
+            state: runtime.state(),
             runtime,
             page: Page::Overview,
             quitting: false,
@@ -53,10 +55,7 @@ impl ScoutApp {
     }
 
     fn snapshot(&self) -> RuntimeState {
-        self.runtime
-            .state
-            .read()
-            .map_or_else(|_| RuntimeState::default(), |state| state.clone())
+        self.state.borrow().clone()
     }
 
     fn handle_tray(&mut self, context: &egui::Context) {

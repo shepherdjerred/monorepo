@@ -9,10 +9,8 @@ use scout_client_core::protocol::ObservationKind;
 use std::collections::{HashMap, HashSet};
 use std::time::Instant;
 
-use super::{
-    ObservationSlot, PROFILE_PASS_BUDGET, PROFILE_SNAPSHOT_ENDPOINTS, ids_from, noted_lcu_read,
-    out_of_budget, record_endpoint_payload,
-};
+use super::observe::{ObservationSlot, noted_lcu_read, record_endpoint_payload};
+use super::profile::{PROFILE_PASS_BUDGET, PROFILE_SNAPSHOT_ENDPOINTS, ids_from, out_of_budget};
 
 pub(super) async fn collect_snapshots(
     client: &LcuClient,

@@ -19,6 +19,7 @@ use scout_client_core::diagnostics::{
 use tracing_subscriber::EnvFilter;
 
 use crate::ui::ScoutApp;
+use scout_client_runtime::instance::InstanceLock;
 use scout_client_runtime::runtime::ClientRuntime;
 
 const APP_ID: &str = "com.scout-for-lol.client";
@@ -77,6 +78,16 @@ fn main() -> eframe::Result {
 
     let arguments = std::env::args().skip(1).collect::<Vec<_>>();
     let background = arguments.iter().any(|argument| argument == "--background");
+    // Held until the process exits, so a second launch never reads the same
+    // outbox. Released explicitly before a crash relaunch takes over.
+    let instance_lock = match InstanceLock::acquire() {
+        Ok(lock) => lock,
+        Err(error) => {
+            eprintln!("{error}");
+            tracing::error!(%error, "another Scout Client instance is running");
+            std::process::exit(2);
+        }
+    };
     let runtime = Rc::new(ClientRuntime::start(backend_origin(&arguments)));
     let diagnostics = Arc::clone(runtime.diagnostics());
     install_panic_hook(Arc::clone(&diagnostics));
@@ -108,6 +119,7 @@ fn main() -> eframe::Result {
         ));
         std::process::exit(1);
     }
+    drop(instance_lock);
     let relaunch = std::env::current_exe().and_then(|executable| {
         std::process::Command::new(executable)
             .args(relaunch_arguments(&arguments, crashes))

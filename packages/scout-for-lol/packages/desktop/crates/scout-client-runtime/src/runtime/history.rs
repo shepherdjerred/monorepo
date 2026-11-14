@@ -7,7 +7,7 @@ use scout_client_core::protocol::{ObservationKind, without_credentials};
 use serde_json::{Value, json};
 use std::collections::HashMap;
 
-use super::{ObservationSlot, enqueue_resource_if_changed, record_post_game_read};
+use super::observe::{ObservationSlot, enqueue_resource_if_changed, record_post_game_read};
 
 pub(super) async fn collect_recent_matches(
     client: &LcuClient,
@@ -106,7 +106,7 @@ pub(super) fn remember_game_references(
             for (key, value) in fields {
                 if key == "gameId"
                     && let Some(id) =
-                        super::scalar_id(value).filter(|id| GameId::parse(id).is_some())
+                        super::profile::scalar_id(value).filter(|id| GameId::parse(id).is_some())
                 {
                     outbox
                         .remember_game_hint(observer, &id)
@@ -117,7 +117,7 @@ pub(super) fn remember_game_references(
                 {
                     for id in ids {
                         if let Some(id) =
-                            super::scalar_id(id).filter(|id| GameId::parse(id).is_some())
+                            super::profile::scalar_id(id).filter(|id| GameId::parse(id).is_some())
                         {
                             outbox
                                 .remember_game_hint(observer, &id)
@@ -215,7 +215,7 @@ fn discover_page(
     for game in games {
         let Some(game_id) = game
             .get("gameId")
-            .and_then(super::scalar_id)
+            .and_then(super::profile::scalar_id)
             .filter(|id| GameId::parse(id).is_some())
         else {
             continue;
@@ -387,7 +387,10 @@ async fn collect_game(
 }
 
 fn identity_agrees(game: &Value, pending: &RecoveryGame, observer: &str) -> bool {
-    game.get("gameId").and_then(super::scalar_id).as_deref() == Some(pending.game_id.as_str())
+    game.get("gameId")
+        .and_then(super::profile::scalar_id)
+        .as_deref()
+        == Some(pending.game_id.as_str())
         && game
             .get("platformId")
             .and_then(Value::as_str)
