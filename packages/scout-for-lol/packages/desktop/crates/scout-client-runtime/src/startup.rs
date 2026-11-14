@@ -1,6 +1,7 @@
 //! Per-user Windows and macOS start-at-login registration.
 
 use auto_launch::{AutoLaunch, AutoLaunchBuilder};
+use scout_client_core::profile::ReleaseProfile;
 
 fn registration(backend_origin: &str) -> Result<AutoLaunch, String> {
     let executable = std::env::current_exe().map_err(|error| error.to_string())?;
@@ -10,7 +11,7 @@ fn registration(backend_origin: &str) -> Result<AutoLaunch, String> {
     let mut builder = AutoLaunchBuilder::new();
     let server_argument = format!("--server={backend_origin}");
     builder
-        .set_app_name("Scout Client")
+        .set_app_name(ReleaseProfile::compiled().autostart_name)
         .set_app_path(path)
         .set_args(&["--background", &server_argument]);
     #[cfg(target_os = "macos")]

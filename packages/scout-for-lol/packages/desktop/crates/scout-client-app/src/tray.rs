@@ -7,6 +7,7 @@
 //! another thread. On Linux the KSNI backend runs its own D-Bus thread, so no
 //! event loop is needed there.
 
+use scout_client_core::profile::ReleaseProfile;
 use tokio::sync::mpsc::UnboundedSender;
 use tray_icon::menu::{Menu, MenuEvent, MenuItem};
 use tray_icon::{Icon, TrayIcon, TrayIconBuilder};
@@ -137,7 +138,7 @@ fn create_tray(control: UnboundedSender<Control>) -> Option<TrayIcon> {
     };
     match TrayIconBuilder::new()
         .with_menu(Box::new(menu))
-        .with_tooltip("Scout Client")
+        .with_tooltip(ReleaseProfile::compiled().product_name)
         .with_icon(icon)
         .build()
     {

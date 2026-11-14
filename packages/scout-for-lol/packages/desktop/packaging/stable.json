@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/crabnebula-dev/cargo-packager/main/crates/packager/schema.json",
+  "name": "scout-client",
+  "productName": "Scout Desktop",
+  "identifier": "com.scout-for-lol.client",
+  "description": "Scout Desktop observes your League of Legends games for Scout.",
+  "publisher": "Scout",
+  "formats": ["nsis", "dmg"],
+  "icons": ["../assets/icon.ico", "../assets/icon.icns"],
+  "outDir": "../dist/stable",
+  "beforePackagingCommand": "cargo build --release --locked --package scout-client-app",
+  "binariesDir": "../target/release",
+  "binaries": [{ "path": "scout-client", "main": true }],
+  "nsis": {
+    "installMode": "currentUser",
+    "installerIcon": "../assets/icon.ico",
+    "preinstallSection": "Section \"RemoveScoutClient\"\n  ReadRegStr $R8 SHCTX \"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Scout Client\" \"UninstallString\"\n  ReadRegStr $R9 SHCTX \"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Scout Client\" \"InstallLocation\"\n  ${If} $R8 != \"\"\n  ${AndIf} $R9 != \"\"\n    ; Both values are stored quoted.\n    StrCpy $R8 $R8 -1 1\n    StrCpy $R9 $R9 -1 1\n    ${If} ${FileExists} \"$R8\"\n      ; _?= keeps the uninstaller in place so ExecWait waits for it. App data\n      ; survives: the silent uninstaller never ticks the delete-data box.\n      ExecWait '\"$R8\" /S _?=$R9' $0\n      Delete \"$R8\"\n      RMDir \"$R9\"\n    ${EndIf}\n  ${EndIf}\nSectionEnd\n"
+  }
+}

@@ -10,6 +10,7 @@ use std::process::ExitCode;
 use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 
 use eframe::egui;
+use scout_client_core::profile::ReleaseProfile;
 use scout_client_core::settings::SendGate;
 use scout_desktop_ipc::{
     GameflowPhase, PROTOCOL_VERSION, StateSnapshot, SupervisorMessage, WindowMessage,
@@ -56,7 +57,7 @@ pub fn run(error_gate: SendGate) -> ExitCode {
 fn run_native(link: SupervisorLink) -> eframe::Result {
     let viewport = egui::ViewportBuilder::default()
         .with_app_id(APP_ID)
-        .with_title("Scout Client")
+        .with_title(ReleaseProfile::compiled().product_name)
         .with_inner_size([760.0, 520.0])
         .with_min_inner_size([620.0, 420.0]);
     let options = eframe::NativeOptions {
@@ -65,7 +66,7 @@ fn run_native(link: SupervisorLink) -> eframe::Result {
         ..Default::default()
     };
     eframe::run_native(
-        "Scout Client",
+        ReleaseProfile::compiled().product_name,
         options,
         Box::new(move |context| Ok(Box::new(ScoutApp::new(context, link)))),
     )

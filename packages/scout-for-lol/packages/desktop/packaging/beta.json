@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/crabnebula-dev/cargo-packager/main/crates/packager/schema.json",
+  "name": "scout-client",
+  "productName": "Scout Desktop Beta",
+  "identifier": "com.scout-for-lol.client.beta",
+  "description": "Scout Desktop Beta observes your League of Legends games for the Scout beta.",
+  "publisher": "Scout",
+  "formats": ["nsis", "dmg"],
+  "icons": ["../assets/icon.ico", "../assets/icon.icns"],
+  "outDir": "../dist/beta",
+  "beforePackagingCommand": "cargo build --release --locked --package scout-client-app",
+  "binariesDir": "../target/release",
+  "binaries": [{ "path": "scout-client", "main": true }],
+  "nsis": {
+    "installMode": "currentUser",
+    "installerIcon": "../assets/icon.ico"
+  }
+}

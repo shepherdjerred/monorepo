@@ -1,17 +1,11 @@
 [package]
 name = "scout-client-app"
-description = "Scout Client supervisor, tray, and egui window"
+description = "Scout Desktop supervisor, tray, and egui window"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 publish.workspace = true
-
-[package.metadata.packager]
-product-name = "Scout Client"
-identifier = "com.scout-for-lol.client"
-before-packaging-command = "cargo build --release --locked --package scout-client-app"
-out-dir = "dist"
 
 [[bin]]
 name = "scout-client"
@@ -37,7 +31,12 @@ url.workspace = true
 [target.'cfg(any(target_os = "windows", target_os = "macos"))'.dependencies]
 winit = { version = "0.30.13", default-features = false }
 
+[build-dependencies]
+serde_json.workspace = true
+winresource = "0.1.23"
+
 [dev-dependencies]
+serde_json.workspace = true
 uuid.workspace = true
 
 [lints]

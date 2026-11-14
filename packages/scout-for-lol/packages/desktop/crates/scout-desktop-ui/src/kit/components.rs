@@ -207,15 +207,22 @@ pub fn section_heading(text: impl Into<SharedString>) -> impl IntoElement {
 }
 
 /// Ordinary body text.
+///
+/// `w_full` gives the text a definite width to wrap at; without it a long line
+/// takes its natural width and runs off the right edge of the page.
 #[must_use]
 pub fn body_text(text: impl Into<SharedString>) -> impl IntoElement {
-    div().text_color(color(theme().text)).child(text.into())
+    div()
+        .w_full()
+        .text_color(color(theme().text))
+        .child(text.into())
 }
 
-/// Secondary, explanatory text.
+/// Secondary, explanatory text. Wraps at the page width like [`body_text`].
 #[must_use]
 pub fn note_text(text: impl Into<SharedString>) -> impl IntoElement {
     div()
+        .w_full()
         .text_sm()
         .text_color(color(theme().text_muted))
         .child(text.into())
@@ -442,6 +449,8 @@ impl RenderOnce for Shell {
                     )
                     .children(self.navigation),
             )
-            .child(div().flex_1().h_full().child(self.page))
+            // `min_w_0` lets the page shrink to the window: a flex item
+            // otherwise refuses to be narrower than its longest unwrapped line.
+            .child(div().flex_1().min_w_0().h_full().child(self.page))
     }
 }

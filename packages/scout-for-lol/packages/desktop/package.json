@@ -10,6 +10,9 @@
     "lint": "mise exec -- cargo fmt --all -- --check && mise exec -- cargo clippy --workspace --all-targets --all-features --locked -- -D warnings",
     "format": "mise exec -- cargo fmt --all -- --check",
     "format:write": "mise exec -- cargo fmt --all",
-    "package": "mise exec -- cargo packager --release"
+    "icons": "bun scripts/build-icons.ts",
+    "package": "bun run package:stable",
+    "package:stable": "SCOUT_DESKTOP_PROFILE=stable mise exec -- cargo packager --release --config packaging/stable.json",
+    "package:beta": "SCOUT_DESKTOP_PROFILE=beta mise exec -- cargo packager --release --config packaging/beta.json"
   }
 }

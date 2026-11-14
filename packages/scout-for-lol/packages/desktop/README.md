@@ -1,4 +1,7 @@
-# Scout Client
+# Scout Desktop
+
+(Formerly Scout Client; the crates, the `scout-client` binary and the data
+directory keep the old name.)
 
 Pure-Rust desktop observer for League of Legends. The application is a
 background tray process with a small native status, pairing, settings, and
@@ -160,7 +163,9 @@ Windows-and-macOS target gate.
 `tests/render_pages.rs` drives the real window offscreen on macOS with GPUI's
 Metal renderer. It feeds supervisor messages in as IPC lines, clicks the
 navigation and the start-at-login checkbox, and checks the commands that come
-out. Set `SCOUT_DESKTOP_UI_CAPTURE_DIR` to also write one PNG per page.
+out. Every capture must leave the last 16 device pixels of each row blank, so a
+line that stops wrapping at the window edge fails the test. Set
+`SCOUT_DESKTOP_UI_CAPTURE_DIR` to also write one PNG per page.
 Windows has no headless GPUI renderer, so the Windows check stays manual.
 
 ### Runtime layout
@@ -203,11 +208,94 @@ with status 2. The operating system drops the lock when its holder exits, so a
 crash never leaves a stale lock. The supervisor holds it; the window process
 never takes it, so relaunching a window never contends for it.
 
-Preview packages target `https://beta.scout-for-lol.com`, where the ingestion
-flag is rolled out. Use `--server=http://127.0.0.1:<port>` for a local backend;
-an explicit server is also retained in start-at-login registration. Remote
-origins must use HTTPS. `bun run package` builds the platform-native installer
-from the workspace metadata and pinned repository toolchain.
+Use `--server=http://127.0.0.1:<port>` for a local backend; an explicit server
+is also retained in start-at-login registration. Remote origins must use
+HTTPS. Without `--server`, the backend is the compiled-in release profile's
+(see "Release profiles").
+
+## Release profiles
+
+The product ships as two builds that differ only by a compiled-in profile,
+`release-profiles/stable.json` or `release-profiles/beta.json`.
+`scout-client-core/build.rs` validates both on every build (schema, channel
+matching the file name, a bare HTTPS backend origin, a reverse-DNS identifier,
+and no field shared between the two that must be distinct) and generates
+`scout_client_core::profile::{STABLE, BETA}` plus the one this binary carries,
+`ReleaseProfile::compiled()`. `SCOUT_DESKTOP_PROFILE=stable|beta` picks it at
+build time; an unset variable, which is every development build, is **beta**.
+Any other value fails the build.
+
+| Field               | Stable                      | Beta                             |
+| ------------------- | --------------------------- | -------------------------------- |
+| Product name        | Scout Desktop               | Scout Desktop Beta               |
+| Backend             | `https://scout-for-lol.com` | `https://beta.scout-for-lol.com` |
+| Identifier          | `com.scout-for-lol.client`  | `com.scout-for-lol.client.beta`  |
+| Keyring service     | `com.scout-for-lol.client`  | `com.scout-for-lol.client.beta`  |
+| Data directory      | `Scout Client` (unchanged)  | `Scout Desktop Beta`             |
+| Start-at-login name | `Scout Client` (unchanged)  | `Scout Desktop Beta`             |
+
+Stable keeps the identifier, keyring service, data directory and binary name
+the client has always had, so a user who already paired and has an outbox keeps
+both (credentials and the outbox are scoped to the backend origin, so a stable
+build pairs once with production). Beta has its own identifier, keyring entry
+and data directory, so it installs and runs beside stable. The profile feeds
+the credential store, the data directory, the start-at-login registration, the
+window title, the tray tooltip, the default backend and the Windows version
+resource. `--server=` still overrides the backend for development.
+
+Error reports follow the backend: `reporting_environment` maps the beta origin
+to `beta`, a loopback origin to `development`, and everything else to
+`production`.
+
+### Building an installer
+
+`packaging/stable.json` and `packaging/beta.json` are the `cargo packager`
+configs, and `tests/packaging.rs` fails if either disagrees with its profile.
+Install formats are NSIS on Windows (`installMode = "currentUser"`, so no
+elevation) and DMG on macOS. Icons come from the design system's
+`app-icon-512.png`; regenerate the committed `assets/icon.ico` and
+`assets/icon.icns` with `bun run icons` (macOS, uses `sips` and `iconutil`).
+Windows also gets an embedded version resource (icon, product name, file
+version) from `winresource` in `scout-client-app/build.rs`.
+
+```bash
+bun run package:stable   # SCOUT_DESKTOP_PROFILE=stable, dist/stable/
+bun run package:beta     # SCOUT_DESKTOP_PROFILE=beta,   dist/beta/
+```
+
+The DMG step lays out its window with Finder AppleScript. From a session
+without Finder automation access (SSH, an agent), it fails with `AppleEvent
+timed out`; set `CI=true` so create-dmg skips that step (the image is the same,
+minus its icon placement). Always package through these scripts: the profile is chosen by the environment
+variable the script sets, and the config only names the installer. Build and
+sign on the platform the format targets; signing and publication are the
+operator-run release lane and are not part of these scripts yet.
+
+### Renaming Scout Client to Scout Desktop
+
+cargo-packager's NSIS template keys the install directory, the uninstall
+entry and the process kill on the product name and the binary name, not on the
+identifier. A "Scout Desktop" installer therefore does not recognise an
+installed "Scout Client" as its own predecessor. `packaging/stable.json` uses
+cargo-packager's supported `nsis.preinstallSection` hook to add a section that
+runs before the install section. It reads the old
+`...\Uninstall\Scout Client` registry entry and, when present, silently runs
+that uninstaller (`/S _?=<dir>`, which waits for it) and removes the leftovers.
+The silent uninstaller never ticks "delete app data", so the data directory,
+outbox and credentials stay. The binary name is unchanged, so the installer's
+running-process check also closes a running Scout Client. The beta installer
+has no such hook: it never replaced anything.
+
+The hook is NSIS script and has not been run on Windows in CI; verify it on
+the Windows build machine with an old "Scout Client" installed before the first
+public release. Both installers share the `scout-client.exe` name, so
+installing beta closes a running stable (and the reverse); giving beta its own
+binary name is the follow-up if that matters.
+
+On macOS the DMG carries `Scout Desktop.app` and there is no uninstaller; a
+user drags the old "Scout Client" app to the Trash. Its login item is named
+"Scout Client" and the stable build keeps that name, so it is replaced rather
+than duplicated.
 
 The Riot lockfile credential stays local and is redacted by construction. The
 client is not an arbitrary LCU proxy and does not collect chat, friends, social,
