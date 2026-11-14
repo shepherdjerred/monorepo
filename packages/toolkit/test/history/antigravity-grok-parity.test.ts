@@ -2,11 +2,19 @@ import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { mkdir, mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { defaultHistoryPaths, type HistoryPaths } from "#lib/history/paths.ts";
-import { createHistorySources } from "#lib/history/sources.ts";
-import type { HistoryDocument, HistoryRecord } from "#lib/history/types.ts";
+import type { HistoryPaths } from "#lib/history/paths.ts";
+import type {
+  HistoryDocument,
+  HistoryRecord,
+  HistorySource,
+} from "#lib/history/types.ts";
 import { writeAntigravityFixture } from "./history-fixtures/antigravity.ts";
 import { writeDatabase } from "./history-fixtures/database.ts";
+
+import {
+  historyPathsUnder,
+  historySourceNamed,
+} from "./history-fixtures/sources.ts";
 
 let root = "";
 
@@ -18,16 +26,12 @@ afterAll(async () => {
   await rm(root, { recursive: true, force: true });
 });
 
-function source(name: "antigravity" | "grok") {
-  const found = createHistorySources().find((entry) => entry.name === name);
-  if (found === undefined) {
-    throw new Error(`${name} source is missing`);
-  }
-  return found;
+function source(name: "antigravity" | "grok"): HistorySource {
+  return historySourceNamed(name);
 }
 
 function pathsFor(overrides: Partial<HistoryPaths>): HistoryPaths {
-  return { ...defaultHistoryPaths(path.join(root, "home")), ...overrides };
+  return historyPathsUnder(root, overrides);
 }
 
 async function scanDocuments(

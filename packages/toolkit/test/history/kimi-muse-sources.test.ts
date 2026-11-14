@@ -2,8 +2,7 @@ import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { defaultHistoryPaths, type HistoryPaths } from "#lib/history/paths.ts";
-import { createHistorySources } from "#lib/history/sources.ts";
+import type { HistoryPaths } from "#lib/history/paths.ts";
 import { kimiModelCandidates } from "#lib/history/sources/kimi.ts";
 import type {
   HistoryDocument,
@@ -29,6 +28,11 @@ import {
   writeMuseFixture,
 } from "./history-fixtures/muse.ts";
 
+import {
+  historyPathsUnder,
+  historySourceNamed,
+} from "./history-fixtures/sources.ts";
+
 let root = "";
 
 beforeAll(async () => {
@@ -40,15 +44,11 @@ afterAll(async () => {
 });
 
 function source(name: "kimi" | "muse"): HistorySource {
-  const found = createHistorySources().find((entry) => entry.name === name);
-  if (found === undefined) {
-    throw new Error(`${name} source is missing`);
-  }
-  return found;
+  return historySourceNamed(name);
 }
 
 function pathsFor(overrides: Partial<HistoryPaths>): HistoryPaths {
-  return { ...defaultHistoryPaths(path.join(root, "home")), ...overrides };
+  return historyPathsUnder(root, overrides);
 }
 
 async function scanDocuments(
