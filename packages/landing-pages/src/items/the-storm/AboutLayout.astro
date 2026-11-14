@@ -1,0 +1,43 @@
+---
+import "./about.css";
+import { Font, getImage } from "astro:assets";
+import Base from "../../layouts/Base.astro";
+import windmill from "./assets/windmill.jpg";
+
+interface Props {
+  title: string;
+  description: string;
+}
+
+const { title, description } = Astro.props;
+const card = await getImage({
+  src: windmill,
+  width: 1200,
+  height: 630,
+  fit: "cover",
+  format: "jpg",
+});
+---
+
+<Base
+  pageKey="the-storm"
+  title={title}
+  description={description}
+  themeColor="#142d22"
+  image={{
+    src: new URL(card.src, Astro.site).href,
+    alt: "A Minecraft windmill above a wheat field on a sunny day.",
+    width: 1200,
+    height: 630,
+  }}
+>
+  <Fragment slot="head">
+    <Font cssVariable="--font-outfit" />
+    <link rel="icon" type="image/svg+xml" href="/the-storm/favicon.svg" />
+  </Fragment>
+  <slot />
+</Base>
+
+<script>
+  import "./landing.ts";
+</script>

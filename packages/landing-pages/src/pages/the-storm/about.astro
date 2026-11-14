@@ -1,0 +1,488 @@
+---
+import { Picture } from "astro:assets";
+import AboutLayout from "../../items/the-storm/AboutLayout.astro";
+import { server } from "../../items/the-storm/server.ts";
+import windmill from "../../items/the-storm/assets/windmill.jpg";
+
+const formats = ["avif", "webp"];
+const widths = [480, 800, 1200];
+const heroSizes = "(min-width: 1800px) 560px, (min-width: 800px) 44vw, 100vw";
+---
+
+<AboutLayout
+  title="The Storm: a vanilla Minecraft SMP for Java and Bedrock"
+  description="The Storm is a Minecraft survival server for Java and Bedrock. It plays close to vanilla, with land claims, chests that lock when you place them, graves when you die, and a world that never resets."
+>
+  <a class="skip-link" href="#content">
+    Skip to content
+  </a>
+  <main id="content">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <p class="eyebrow">Minecraft SMP for Java and Bedrock</p>
+        <h1 id="hero-title">The Storm</h1>
+        <p class="hero-subline">
+          Vanilla survival with land claims and locked chests, on a world we
+          don’t reset.
+        </p>
+      </div>
+
+      <figure class="hero-media">
+        <Picture
+          src={windmill}
+          formats={formats}
+          widths={widths}
+          sizes={heroSizes}
+          alt="The timber windmill at The Storm's spawn above a golden wheat field."
+          loading="eager"
+          fetchpriority="high"
+        />
+      </figure>
+
+      <div class="connect" aria-label="Server address" data-edition="java">
+        <div class="connect-head">
+          <div
+            class="edition-toggle"
+            role="group"
+            aria-label="Minecraft edition"
+          >
+            <button
+              type="button"
+              data-edition-choice="java"
+              aria-pressed="true"
+            >
+              Java
+            </button>
+            <button
+              type="button"
+              data-edition-choice="bedrock"
+              aria-pressed="false"
+            >
+              Bedrock
+            </button>
+          </div>
+          <button type="button" class="copy" data-copy-address>
+            Copy
+          </button>
+        </div>
+        <div class="edition" data-edition-panel="java">
+          <span class="label">Java Edition {server.java.versions}</span>
+          <span class="address">{server.java.address}</span>
+          <p class="note">
+            On a computer? Go to Multiplayer → Add Server and paste it in. It
+            runs best on {server.java.bestOn}, and older versions can join too.
+          </p>
+        </div>
+        <div class="edition" data-edition-panel="bedrock" hidden>
+          <span class="label">Bedrock Edition, {server.bedrock.version}</span>
+          <span class="address">{server.bedrock.address}</span>
+          <span class="port">
+            Port: <strong>{server.bedrock.port}</strong>
+          </span>
+          <p class="note">
+            On a phone, tablet, or Windows? Go to Play → Servers → Add Server
+            and enter the address and port.
+          </p>
+          <p class="note">
+            On a console?{" "}
+            <a
+              href={server.consoles}
+              data-track="console"
+              data-placement="about-card"
+            >
+              Follow the console guide
+            </a>
+            .
+          </p>
+        </div>
+      </div>
+
+      <div class="hero-actions">
+        <a
+          class="button primary"
+          href={server.join}
+          data-track="section"
+          data-placement="about-hero"
+        >
+          How to join
+        </a>
+        <a
+          class="button"
+          href={server.discord}
+          data-track="discord"
+          data-placement="about-hero"
+        >
+          Discord
+        </a>
+      </div>
+    </section>
+
+    <section class="section facts" id="details" aria-labelledby="details-title">
+      <div class="section-heading">
+        <h2 id="details-title">Server details</h2>
+      </div>
+      <dl class="fact-grid">
+        <div>
+          <dt>Gameplay</dt>
+          <dd>Survival, close to vanilla</dd>
+        </div>
+        <div>
+          <dt>Versions</dt>
+          <dd>
+            Java {server.java.versions}, and the {server.bedrock.version} of
+            Bedrock
+          </dd>
+        </div>
+        <div>
+          <dt>Protection</dt>
+          <dd>Land claims, and chests that lock when you place them</dd>
+        </div>
+        <div>
+          <dt>PvP</dt>
+          <dd>Off in Spawn Town, optional everywhere else</dd>
+        </div>
+        <div>
+          <dt>Death</dt>
+          <dd>Your items go into a grave</dd>
+        </div>
+        <div>
+          <dt>World</dt>
+          <dd>Never resets</dd>
+        </div>
+        <div>
+          <dt>Joining</dt>
+          <dd>No whitelist, forum account, or mods needed</dd>
+        </div>
+        <div>
+          <dt>Optional</dt>
+          <dd>Towns, quests, shops, skills, and minigames</dd>
+        </div>
+      </dl>
+    </section>
+
+    <section class="section join" id="join" aria-labelledby="join-title">
+      <div class="section-heading">
+        <h2 id="join-title">How to join</h2>
+      </div>
+      <ol class="join-steps">
+        <li>
+          <span class="step-label">Java {server.java.versions}</span>
+          <h3>Add the server</h3>
+          <p>
+            Go to <strong>Multiplayer → Add Server</strong> and enter{" "}
+            <code>{server.java.address}</code>. It runs best on{" "}
+            {server.java.bestOn}, and older versions can join too.
+          </p>
+        </li>
+        <li>
+          <span class="step-label">Bedrock, {server.bedrock.version}</span>
+          <h3>Add the address and port</h3>
+          <p>
+            Go to <strong>Play → Servers → Add Server</strong>, then enter{" "}
+            <code>{server.bedrock.address}</code> as the address and{" "}
+            <code>{server.bedrock.port}</code> as the port.
+          </p>
+        </li>
+      </ol>
+      <details class="console-guide" id="consoles">
+        <summary>Playing on Switch, Xbox, or PlayStation?</summary>
+        <div class="console-content">
+          <p>
+            Consoles only show Mojang’s featured servers, so there’s no Add
+            Server button. You can still join through{" "}
+            <a href={server.bedrockConnect.url}>BedrockConnect</a>, a free
+            server list made by the community. It’s run by its own volunteers,
+            not by The Storm.
+          </p>
+          <ol class="console-steps">
+            <li>
+              <strong>Set your console’s DNS to manual.</strong>
+              <dl class="dns">
+                <div>
+                  <dt>Switch or Xbox</dt>
+                  <dd>
+                    Primary <code>{server.bedrockConnect.switchXboxDns}</code>
+                  </dd>
+                  <dd>
+                    Secondary <code>{server.bedrockConnect.secondaryDns}</code>
+                  </dd>
+                </div>
+                <div>
+                  <dt>PlayStation</dt>
+                  <dd>
+                    Primary <code>{server.bedrockConnect.playStationDns}</code>
+                  </dd>
+                  <dd>
+                    Secondary <code>{server.bedrockConnect.secondaryDns}</code>
+                  </dd>
+                </div>
+              </dl>
+            </li>
+            <li>
+              <strong>Open a featured server.</strong> In Minecraft, go to
+              Servers and join The Hive or Lifeboat. The BedrockConnect server
+              list opens instead.
+            </li>
+            <li>
+              <strong>Add The Storm.</strong> Choose Connect to a Server, enter{" "}
+              <code>{server.bedrock.address}</code> and port{" "}
+              <code>{server.bedrock.port}</code>, and turn on Add to server list
+              so it’s saved for next time.
+            </li>
+          </ol>
+          <p>
+            To undo this later, set your DNS back to automatic. If the server
+            list doesn’t open, a friend on a phone or PC can join first, and
+            then you can join them from your Friends tab.
+          </p>
+        </div>
+      </details>
+    </section>
+
+    <section
+      class="section faq"
+      id="questions"
+      aria-labelledby="questions-title"
+    >
+      <div class="section-heading">
+        <h2 id="questions-title">Questions</h2>
+      </div>
+      <div class="faq-list">
+        <details>
+          <summary>What do I need to join?</summary>
+          <div class="faq-answer">
+            <p>
+              Java {server.java.versions} or the {server.bedrock.version} of
+              Bedrock, signed in with your Microsoft account. There’s no
+              whitelist, and you don’t need a forum account. Cracked clients
+              can’t connect.
+            </p>
+            <a
+              href={server.join}
+              data-track="section"
+              data-placement="about-faq-versions"
+            >
+              How to join
+            </a>
+            {" · "}
+            <a
+              href={server.consoles}
+              data-track="console"
+              data-placement="about-faq-consoles"
+            >
+              Console setup
+            </a>
+          </div>
+        </details>
+        <details>
+          <summary>How close to vanilla is it?</summary>
+          <div class="faq-answer">
+            <p>
+              You gather, craft, and build as usual, and there’s nothing to
+              install. Redstone and farms work the way they do in vanilla. On
+              top of that we add claims, locks, homes, and graves. Duplication
+              glitches are turned off, and monsters get stronger far from spawn.
+            </p>
+            <a
+              href={server.guides.vanilla}
+              data-track="docs"
+              data-placement="about-faq-vanilla"
+            >
+              What’s different from vanilla
+            </a>
+          </div>
+        </details>
+        <details>
+          <summary>Do I have to use towns, quests, or the economy?</summary>
+          <div class="faq-answer">
+            <p>
+              No. A camp is free and holds your claims, and it never has to
+              become a town. Quests, crystals, shops, and the minigames are
+              there if you want them.
+            </p>
+            <a
+              href={server.guides.firstSession}
+              data-track="docs"
+              data-placement="about-faq-first-session"
+            >
+              Your first session
+            </a>
+            {" · "}
+            <a
+              href={server.guides.games}
+              data-track="docs"
+              data-placement="about-faq-games"
+            >
+              Search and Destroy
+            </a>
+          </div>
+        </details>
+        <details>
+          <summary>How do claims and locks work?</summary>
+          <div class="faq-answer">
+            <p>
+              Stand where you want to build and run <code>/camp create</code>,
+              then <code>/claim</code>. That protects the chunk you’re standing
+              in, 16 by 16 blocks, so other players can’t build there, open your
+              containers, or hurt your animals. Chests and doors lock to you
+              when you place them.
+            </p>
+            <a
+              href={server.guides.camps}
+              data-track="docs"
+              data-placement="about-faq-claims"
+            >
+              Camps and towns
+            </a>
+            {" · "}
+            <a
+              href={server.guides.locks}
+              data-track="docs"
+              data-placement="about-faq-locks"
+            >
+              Locks
+            </a>
+          </div>
+        </details>
+        <details>
+          <summary>Can I turn PvP off?</summary>
+          <div class="faq-answer">
+            <p>
+              Yes. PvP is off in Spawn Town and on everywhere else by default.
+              Run <code>/pvp off</code> before you leave town if you don’t want
+              to fight. You can change the setting once a week, and claiming
+              land doesn’t turn PvP off.
+            </p>
+            <a
+              href={server.guides.pvp}
+              data-track="docs"
+              data-placement="about-faq-pvp"
+            >
+              PvP and safety
+            </a>
+          </div>
+        </details>
+        <details>
+          <summary>Is keep inventory on?</summary>
+          <div class="faq-answer">
+            <p>
+              No. When you die, your items usually go into a grave near where
+              you died. Only you can open it for the first two hours, and{" "}
+              <code>/graves</code> lists your graves.
+            </p>
+            <a
+              href={server.guides.graves}
+              data-track="docs"
+              data-placement="about-faq-graves"
+            >
+              Graves
+            </a>
+          </div>
+        </details>
+        <details>
+          <summary>Can people grief or steal?</summary>
+          <div class="faq-answer">
+            <p>
+              Griefing is against the rules, and staff can roll it back. Nobody
+              else can build on claimed land or open a locked container. An
+              unlocked chest that someone can reach is fair game, so leave the
+              locks on.
+            </p>
+            <a
+              href={server.guides.norms}
+              data-track="docs"
+              data-placement="about-faq-griefing"
+            >
+              Server norms
+            </a>
+          </div>
+        </details>
+        <details>
+          <summary>Does the world reset?</summary>
+          <div class="faq-answer">
+            <p>
+              No. Most people build in Frontier, the main survival world. The
+              2015 and 2016 worlds have been restored as well, and you can
+              explore both.
+            </p>
+            <a
+              href={server.guides.worlds}
+              data-track="docs"
+              data-placement="about-faq-worlds"
+            >
+              Worlds
+            </a>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <section class="section rules" aria-labelledby="rules-title">
+      <div class="section-heading">
+        <h2 id="rules-title">Rules and links</h2>
+      </div>
+      <div class="rules-grid">
+        <article class="rules-card">
+          <h3>The rules in short</h3>
+          <ul class="rules-list">
+            <li>No griefing, hacks, harassment, or bullying.</li>
+            <li>
+              Build on your own land or get permission first. Leave other
+              players’ animals, pets, and villagers alone.
+            </li>
+            <li>
+              Keep chat safe for work. The full rules are in game under{" "}
+              <code>/rules</code>.
+            </li>
+          </ul>
+        </article>
+        <article class="links-card">
+          <h3>Links</h3>
+          <nav class="official-links" aria-label="Official Storm links">
+            <a
+              href={server.discord}
+              data-track="discord"
+              data-placement="about-links"
+            >
+              Discord
+            </a>
+            <a
+              href={server.docs}
+              data-track="docs"
+              data-placement="about-links"
+            >
+              Player docs
+            </a>
+            <a href={server.map}>Live map</a>
+            <a href={server.forum}>Community forum</a>
+            <a
+              href={server.guides.norms}
+              data-track="docs"
+              data-placement="about-links"
+            >
+              Full server norms
+            </a>
+          </nav>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <a class="wordmark" href={server.about}>
+      The Storm
+    </a>
+    <nav aria-label="More from The Storm">
+      <a href={server.join} data-track="section" data-placement="about-footer">
+        Join the server
+      </a>
+      <a
+        href={server.discord}
+        data-track="discord"
+        data-placement="about-footer"
+      >
+        Discord
+      </a>
+    </nav>
+  </footer>
+</AboutLayout>
