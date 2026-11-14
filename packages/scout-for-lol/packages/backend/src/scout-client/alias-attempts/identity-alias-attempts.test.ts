@@ -300,7 +300,14 @@ describe("ingress identity learning", () => {
     );
 
     expect(mocks.byRiotId).toHaveBeenCalledTimes(1);
-    expect(mocks.byRiotId).toHaveBeenCalledWith("sjerred", "sjerr", "AMERICAS");
+    expect(mocks.byRiotId).toHaveBeenCalledWith(
+      "sjerred",
+      "sjerr",
+      "AMERICAS",
+      {
+        priority: "realtime",
+      },
+    );
     expect(mocks.attemptCreateMany).toHaveBeenCalledWith({
       data: [
         expect.objectContaining({
