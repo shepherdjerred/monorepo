@@ -2,6 +2,7 @@ import {
   ActivityFailure,
   ApplicationFailure,
   log,
+  patched,
   proxyActivities,
   sleep,
 } from "@temporalio/workflow";
@@ -19,6 +20,7 @@ import type { WeatherActivities } from "#activities/weather.ts";
 import {
   HA_ENTITY_NOT_FOUND_ERROR_TYPE,
   HA_OPTIONAL_MEDIA_PLAYER_ERROR_TYPE,
+  OUTDOOR_WEATHER_UNAVAILABLE_ERROR_TYPE,
 } from "#shared/infra/ha-errors.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 
@@ -123,6 +125,17 @@ function isMissingEntityFailure(error: unknown): boolean {
   return isApplicationFailureOfType(error, HA_ENTITY_NOT_FOUND_ERROR_TYPE);
 }
 
+// Histories recorded before this patch ended the run when the weather activity
+// exhausted its retries; those must keep failing on replay.
+const WEATHER_OUTAGE_PATCH = "good-morning-weather-outage-v1";
+
+function isOutdoorWeatherUnavailableFailure(error: unknown): boolean {
+  return (
+    isApplicationFailureOfType(error, OUTDOOR_WEATHER_UNAVAILABLE_ERROR_TYPE) &&
+    patched(WEATHER_OUTAGE_PATCH)
+  );
+}
+
 function isOptionalMediaPlayerFailure(error: unknown): boolean {
   return isApplicationFailureOfType(error, HA_OPTIONAL_MEDIA_PLAYER_ERROR_TYPE);
 }
@@ -203,7 +216,22 @@ export async function goodMorningPreheat(): Promise<void> {
     return;
   }
 
-  const decision = await floorHeatDecision();
+  let decision: Awaited<ReturnType<typeof floorHeatDecision>>;
+  try {
+    decision = await floorHeatDecision();
+  } catch (error: unknown) {
+    // Preheat only exists to heat the floor, and goodMorningWakeUp re-asserts
+    // the setpoint on cold mornings, so an upstream weather outage skips heat
+    // with a warning instead of failing the run and alerting on a third party.
+    if (!isOutdoorWeatherUnavailableFailure(error)) {
+      throw error;
+    }
+    log.warn(
+      "good_morning_preheat: outdoor weather unavailable, skipping heat",
+    );
+    await setOutcome("skipped", "weather-unavailable");
+    return;
+  }
   if (!decision.heat) {
     log.info(
       `good_morning_preheat: not cold (indoor ${String(decision.indoorC)}°C, outdoor ${String(decision.outdoorC)}°C), skipping heat`,
@@ -251,6 +279,7 @@ export async function goodMorningWakeUp(): Promise<void> {
   // routine (notification, media, lights) is unconditional.
   let heat: boolean;
   let sensorUnavailable = false;
+  let weatherUnavailable = false;
   try {
     const decision = await floorHeatDecision();
     heat = decision.heat;
@@ -266,17 +295,24 @@ export async function goodMorningWakeUp(): Promise<void> {
       );
     }
   } catch (error: unknown) {
-    if (
-      !(error instanceof ApplicationFailure) ||
-      error.type !== "TemperatureSensorUnavailableError"
+    if (isOutdoorWeatherUnavailableFailure(error)) {
+      weatherUnavailable = true;
+      heat = false;
+      log.warn(
+        "good_morning_wake_up: outdoor weather unavailable, skipping heat activation and continuing wake routine",
+      );
+    } else if (
+      error instanceof ApplicationFailure &&
+      error.type === "TemperatureSensorUnavailableError"
     ) {
+      sensorUnavailable = true;
+      heat = false;
+      log.warn(
+        "good_morning_wake_up: bathroom temperature unavailable, skipping heat activation and continuing wake routine",
+      );
+    } else {
       throw error;
     }
-    sensorUnavailable = true;
-    heat = false;
-    log.warn(
-      "good_morning_wake_up: bathroom temperature unavailable, skipping heat activation and continuing wake routine",
-    );
   }
 
   await sendNotification("Good Morning", "Good Morning! Time to wake up.");
@@ -318,9 +354,11 @@ export async function goodMorningWakeUp(): Promise<void> {
     "executed",
     sensorUnavailable
       ? "wake-routine-complete-temperature-unavailable"
-      : heat
-        ? "wake-routine-complete"
-        : "wake-routine-complete-no-heat",
+      : weatherUnavailable
+        ? "wake-routine-complete-weather-unavailable"
+        : heat
+          ? "wake-routine-complete"
+          : "wake-routine-complete-no-heat",
   );
 }
 

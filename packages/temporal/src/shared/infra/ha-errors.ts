@@ -12,3 +12,11 @@ export const HA_ENTITY_NOT_FOUND_ERROR_TYPE = "HaEntityNotFoundError";
 // authentication, malformed requests, or required devices.
 export const HA_OPTIONAL_MEDIA_PLAYER_ERROR_TYPE =
   "HaOptionalMediaPlayerUnavailableError";
+
+// Open-Meteo is an external dependency for the good-morning floor-heat
+// decision. A timeout, network failure or non-OK response is an outage the
+// workflow may degrade around; a malformed body is a contract violation and
+// stays an untyped failure. Retryable, so the activity's retry budget applies
+// before a workflow ever sees it.
+export const OUTDOOR_WEATHER_UNAVAILABLE_ERROR_TYPE =
+  "OutdoorWeatherUnavailableError";
