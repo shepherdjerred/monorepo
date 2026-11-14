@@ -27,6 +27,12 @@ it("stops polling immediately and flushes only after final usage and Activity cl
     closeResources: async () => {
       events.push("close resources");
     },
+    closeConnections: async () => {
+      events.push("close connections");
+    },
+    afterDrain: () => {
+      events.push("drained");
+    },
     closeTracing: async () => {
       events.push("flush tracing");
     },
@@ -47,7 +53,9 @@ it("stops polling immediately and flushes only after final usage and Activity cl
     "usage stored",
     "activity cleanup",
     "run settled",
+    "drained",
     "close resources",
+    "close connections",
     "flush tracing",
     "flush callgraph",
   ]);
@@ -57,6 +65,7 @@ it("stops polling immediately and flushes only after final usage and Activity cl
 
 it("retains final tracing even when ingress and resources fail or a run rejects", async () => {
   const trace = vi.fn(() => Promise.resolve()),
+    connections = vi.fn(() => Promise.resolve()),
     callGraph = vi.fn(() => Promise.resolve());
   const failedRun = Promise.reject(new Error("Activity failed"));
   const shutdown = createWorkerShutdown({
@@ -68,10 +77,12 @@ it("retains final tracing even when ingress and resources fail or a run rejects"
     closeResources: async () => {
       throw new Error("Resources failed");
     },
+    closeConnections: connections,
     closeTracing: trace,
     closeCallGraph: callGraph,
   });
   await expect(shutdown()).rejects.toThrow("Worker shutdown failed");
+  expect(connections).toHaveBeenCalledOnce();
   expect(trace).toHaveBeenCalledOnce();
   expect(callGraph).toHaveBeenCalledOnce();
 });

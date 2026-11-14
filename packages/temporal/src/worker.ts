@@ -62,6 +62,7 @@ import { restoreGlitterCorpusMetricsAfterWorkerStart } from "./observability/res
 import { prepareAgentChatRuntimeRoot } from "./activities/agent/chat/runtime-root.ts";
 import { connectTemporalWhenReady } from "./lib/temporal-startup-connection.ts";
 import { createWorkerShutdown } from "./lib/worker-shutdown.ts";
+import { exitAfterDrain } from "./lib/worker-exit.ts";
 
 const DEFAULT_ADDRESS = "temporal-server.temporal.svc.cluster.local:7233";
 const DEFAULT_METRICS_ADDRESS = "0.0.0.0:9464";
@@ -228,6 +229,7 @@ async function registerGatewaySchedules(
 }
 
 async function startRoleServices(options: StartRoleServicesOptions): Promise<{
+  readonly clientConnection?: Connection;
   readonly eventBridge?: EventBridgeHandle;
   readonly httpServers?: EventBridgeHandle;
 }> {
@@ -266,6 +268,7 @@ async function startRoleServices(options: StartRoleServicesOptions): Promise<{
     httpServers = startHttpServers(client);
   }
   return {
+    clientConnection,
     ...(httpServers === undefined ? {} : { httpServers }),
     ...(options.roleContract.runsEventBridge
       ? { eventBridge: startEventBridgeSupervisor(client) }
@@ -386,14 +389,15 @@ async function main(): Promise<void> {
     }
   }
 
-  const { httpServers, eventBridge } = await startRoleServices({
-    address,
-    bootstrapMetadata,
-    callGraphTracing,
-    namespace,
-    scheduleReconciliation,
-    roleContract,
-  });
+  const { clientConnection, httpServers, eventBridge } =
+    await startRoleServices({
+      address,
+      bootstrapMetadata,
+      callGraphTracing,
+      namespace,
+      scheduleReconciliation,
+      roleContract,
+    });
 
   // The event-loop-backed health endpoint starts only after every worker in
   // this role has been created and all role-specific startup has completed.
@@ -417,6 +421,27 @@ async function main(): Promise<void> {
       await closeMediaActivityRuntimes();
       await stopMetricsServer();
       await promotionStatus?.stop(true);
+    },
+    // Every Worker has stopped by now. An open NativeConnection keeps the SDK
+    // runtime referenced, so the process would otherwise outlive its drain
+    // until the kubelet's SIGKILL at the end of the termination grace.
+    closeConnections: async () => {
+      try {
+        await connection.close();
+      } finally {
+        await clientConnection?.close();
+      }
+    },
+    afterDrain: () => {
+      exitAfterDrain({
+        onForcedExit: (fields) => {
+          jsonLog(
+            "warning",
+            "Worker did not exit after its drain completed; forcing exit",
+            fields,
+          );
+        },
+      });
     },
     closeTracing: shutdownTracing,
     closeCallGraph: shutdownCallGraphTracing,
