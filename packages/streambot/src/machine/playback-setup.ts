@@ -109,9 +109,10 @@ export function playbackSetup(actors: PlaybackActors) {
       // loop/replay of the same item starts from 0.
       consumeSeek: assign({ resumeSeekSeconds: 0 }),
       // The current item finished, was skipped, or playback stopped: its recovery budget resets.
-      resetCrashRetries: assign({ crashRetries: 0 }),
+      resetCrashRetries: assign({ crashRetries: 0, pipelineRetries: 0 }),
       completeStream: assign({
         crashRetries: 0,
+        pipelineRetries: 0,
         completedStreams: ({ context }) => context.completedStreams + 1,
       }),
       // Clear ALL crash/stall recovery state (resume seek + retry budget). Applied to every
@@ -120,13 +121,18 @@ export function playbackSetup(actors: PlaybackActors) {
       // pipeline onto the next dequeued item. The success path (`resolving → streaming`) must NOT
       // clear these — streaming consumes resumeSeekSeconds (via its `consumeSeek` exit) and picks
       // its pipeline from crashRetries — so this is applied per-transition, not as a state exit.
-      clearRecovery: assign({ resumeSeekSeconds: 0, crashRetries: 0 }),
+      clearRecovery: assign({
+        resumeSeekSeconds: 0,
+        crashRetries: 0,
+        pipelineRetries: 0,
+      }),
       playNow: assign(({ event }) => ({
         current: queuedItem(event),
         resolved: null,
         resumeSeekSeconds: 0,
         pausedPositionSeconds: null,
         crashRetries: 0,
+        pipelineRetries: 0,
         startPaused: false,
       })),
       queuePlayNow: assign(({ event }) => ({
@@ -136,6 +142,7 @@ export function playbackSetup(actors: PlaybackActors) {
         resumeSeekSeconds: 0,
         pausedPositionSeconds: null,
         crashRetries: 0,
+        pipelineRetries: 0,
         startPaused: false,
       })),
       playNowWhileJoining: assign(({ context, event }) =>

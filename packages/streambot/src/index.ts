@@ -58,7 +58,7 @@ import { LolEsportsClient } from "@shepherdjerred/streambot/sports/lolesports.ts
 import { LolPlaybackSchedules } from "@shepherdjerred/streambot/sports/playback-schedules.ts";
 import { scheduledPlaybackPorts } from "@shepherdjerred/streambot/session/scheduled-playback.ts";
 import { startScheduleServer } from "@shepherdjerred/streambot/sports/schedule-server.ts";
-import { BrowserSportsResolver } from "@shepherdjerred/streambot/sports/sports-resolver.ts";
+import { createSportsResolver } from "@shepherdjerred/streambot/sources/create-sports-resolver.ts";
 
 const LIBRARY_REFRESH_MS = 5 * 60 * 1000;
 
@@ -159,7 +159,7 @@ async function main(): Promise<void> {
   const lol = new LolEsportsClient();
   const sports = new SportsService(sportsBrowser, lol);
   let schedules: LolPlaybackSchedules | undefined;
-  const sportsResolver = new BrowserSportsResolver(sportsBrowser);
+  const sportsResolver = createSportsResolver(sportsBrowser, config);
 
   // Log every userbot in and snapshot guild membership before anything tries to acquire one.
   const pool = new UserbotPool(config.discord.userTokens, config);
@@ -191,6 +191,7 @@ async function main(): Promise<void> {
     featureGate: mediaFeatureGate,
   });
   const sessions = new SessionManager({
+    prepareSportsInput: sportsResolver.prepare.bind(sportsResolver),
     config,
     pool,
     resolveSource: (input, signal) =>

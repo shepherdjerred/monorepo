@@ -51,6 +51,9 @@ export function createSession(
   const actors = buildPlaybackActors({
     entry,
     resolveSource: options.deps.resolveSource,
+    ...(options.deps.prepareSportsInput === undefined
+      ? {}
+      : { prepareSportsInput: options.deps.prepareSportsInput }),
     teardownHold: () => session.teardownHold,
     beforeStream: (input) => options.saveSnapshot(session, input.seekSeconds),
   });

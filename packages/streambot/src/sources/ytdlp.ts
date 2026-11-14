@@ -2,7 +2,7 @@ import { z } from "zod";
 import { parseYoutubeSearchLine } from "./youtube-search-result.ts";
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
-import type { ResolvedSource } from "@shepherdjerred/streambot/machine/types.ts";
+import type { ConcreteResolvedSource } from "@shepherdjerred/streambot/machine/types.ts";
 import type {
   MediaKind,
   MediaKindPass,
@@ -291,7 +291,7 @@ export async function resolveWithYtdlp(
   source: Source,
   signal: AbortSignal,
   requireLive = false,
-): Promise<ResolvedSource> {
+): Promise<ConcreteResolvedSource> {
   const maxHeight = config.stream.height;
   const firstKind: MediaKind = source.mode === "video" ? "video" : "music";
   const firstPass: MediaKindPass =

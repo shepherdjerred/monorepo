@@ -26,6 +26,28 @@ test("ffprobe diagnostics do not retain signed source URLs", () => {
   expect(redacted).toContain("[redacted media URL]");
 });
 
+test("ffprobe diagnostics remove keys echoed from per-input decryption options", () => {
+  const key = "11".repeat(16);
+  expect(
+    redactProbeError(
+      `Invalid key ${key}`,
+      "https://fixture.example/manifest.mpd",
+      ["-cenc_decryption_key", key],
+    ),
+  ).toBe("Invalid key <redacted>");
+});
+
+test("ffprobe diagnostics redact nested HLS decryption options and echoed bare keys", () => {
+  const key = "11".repeat(16);
+  const option = `decryption_key=${key}`;
+  expect(
+    redactProbeError(`Failed ${option}; invalid key ${key}`, "fixture", [
+      "-seg_format_options",
+      option,
+    ]),
+  ).toBe("Failed <redacted>; invalid key <redacted>");
+});
+
 describe("isHdrTransfer", () => {
   test("recognises PQ and HLG as HDR", () => {
     expect(isHdrTransfer("smpte2084")).toBe(true);

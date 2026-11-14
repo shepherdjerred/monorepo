@@ -1,6 +1,7 @@
 import {
   redactHeaderArgument,
   redactMediaUrls,
+  redactFfmpegDiagnostics,
 } from "../src/media/newApi.ts";
 import { describe, expect, test } from "vitest";
 import {
@@ -31,6 +32,43 @@ function killQuietly(command: FfmpegProcessHandle): void {
 }
 
 describe("ffmpeg command redaction", () => {
+  test("observer command lines redact content keys while the subprocess gets the real option", async () => {
+    const key = "11".repeat(16);
+    let observed = "";
+    const prepared = prepareStream("tcp://127.0.0.1:1", {
+      customInputOptions: ["-cenc_decryption_key", key],
+      observer: { onCommand: (value) => { observed = value; } },
+    });
+    try {
+      expect(prepared.command.args).toContain(key);
+      expect(observed).toContain("-cenc_decryption_key");
+      expect(observed).not.toContain(key);
+    } finally {
+      killQuietly(prepared.command);
+      prepared.output.destroy();
+      await Promise.allSettled([prepared.promise]);
+    }
+  });
+
+  test("redacts HLS segment format options and a bare key echoed by FFmpeg", () => {
+    const key = "11".repeat(16);
+    const option = `decryption_key=${key}:use_tfdt=1`;
+    const redacted = redactFfmpegDiagnostics(`Failed option ${option}; invalid key ${key}`, ["-seg_format_options", option]);
+    expect(redacted).not.toContain(key);
+    expect(redacted).not.toContain(option);
+    expect(redacted).toBe("Failed option <redacted>; invalid key <redacted>");
+  });
+  test("removes separate and inline content-key options from diagnostics", () => {
+    const videoKey = "22".repeat(16);
+    const audioKey = "33".repeat(16);
+    const args = ["-cenc_decryption_key", videoKey, `-decryption_key=${audioKey}`];
+    const diagnostic = `Invalid key ${videoKey}, audio ${audioKey}, https://cdn.example/a?token=private`;
+    const redacted = redactFfmpegDiagnostics(diagnostic, args);
+    expect(redacted).not.toContain(videoKey);
+    expect(redacted).not.toContain(audioKey);
+    expect(redacted).not.toContain("token=private");
+    expect(redacted).toContain("Invalid key <redacted>");
+  });
   test("redacts signed CDN URLs from diagnostics", () => {
     const message = "Input #0 from https://cdn.example/live.m3u8?token=secret123";
     expect(redactMediaUrls(message)).toBe(
@@ -51,6 +89,10 @@ describe("ffmpeg command redaction", () => {
     // The control: redaction must not swallow the ordinary headers that make a log useful.
     expect(rendered).toContain("User-Agent: Mozilla/5.0");
     expect(rendered).toContain("Accept: */*");
+  });
+
+  test("removes a provider session header echoed to stderr", () => {
+    expect(redactFfmpegDiagnostics("Request X-Streambot-Media-Session: temporary-private-value failed", ["-headers", "X-Streambot-Media-Session: temporary-private-value\r\n"])).not.toContain("temporary-private-value");
   });
 
   test("leaves a header block with nothing sensitive untouched", () => {

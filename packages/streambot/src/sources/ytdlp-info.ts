@@ -13,7 +13,7 @@
  */
 
 import { z } from "zod";
-import type { ResolvedSource } from "@shepherdjerred/streambot/machine/types.ts";
+import type { ConcreteResolvedSource } from "@shepherdjerred/streambot/machine/types.ts";
 import { toChapters } from "@shepherdjerred/streambot/sources/chapters.ts";
 import {
   classifyMediaKind,
@@ -311,7 +311,7 @@ export type ToResolvedSourceOptions = {
 export function toResolvedSource(
   info: YtdlpInfo,
   options: ToResolvedSourceOptions,
-): ResolvedSource {
+): ConcreteResolvedSource {
   const channel = info.channel ?? info.uploader;
   const inputs = toStreamInputs(info, options.mediaKind);
   return {
