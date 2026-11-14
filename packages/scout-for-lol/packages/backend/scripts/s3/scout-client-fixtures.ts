@@ -53,7 +53,7 @@ export type PostgameFixture = {
 
 const IdentitySchema = z.object({
   puuid: z.string(),
-  name: z.string(),
+  names: z.array(z.string()),
   summonerId: z.number().optional(),
 });
 
@@ -112,7 +112,19 @@ function realIdentities(bundle: ClientBundle): Identity[] {
     result.push(
       IdentitySchema.parse({
         puuid,
-        name: entry.player.gameName ?? entry.player.summonerName ?? "",
+        // Every alias the client reports for this player, so a summonerName
+        // that differs from the gameName is redacted too.
+        names: [
+          ...new Set(
+            [
+              entry.player.gameName,
+              entry.player.riotIdGameName,
+              entry.player.summonerName,
+            ].filter(
+              (name): name is string => name !== undefined && name !== "",
+            ),
+          ),
+        ],
         summonerId: entry.player.summonerId,
       }),
     );
@@ -135,8 +147,8 @@ function buildMapping(identities: readonly Identity[]): Mapping {
   identities.forEach((identity, index) => {
     const number = index + 1;
     mapping.uuids.set(identity.puuid, fakeUuid(number));
-    if (identity.name !== "") {
-      mapping.names.set(identity.name, `Player${String(number)}`);
+    for (const name of identity.names) {
+      mapping.names.set(name, `Player${String(number)}`);
     }
     if (identity.summonerId !== undefined) {
       mapping.summonerIds.set(identity.summonerId, 1000 + number);
@@ -193,8 +205,10 @@ export function assertRedacted(
     if (text.includes(identity.puuid)) {
       throw new Error("a real PUUID survived redaction");
     }
-    if (identity.name !== "" && text.includes(JSON.stringify(identity.name))) {
-      throw new Error("a real player name survived redaction");
+    for (const name of identity.names) {
+      if (text.includes(JSON.stringify(name))) {
+        throw new Error("a real player name survived redaction");
+      }
     }
     if (
       identity.summonerId !== undefined &&

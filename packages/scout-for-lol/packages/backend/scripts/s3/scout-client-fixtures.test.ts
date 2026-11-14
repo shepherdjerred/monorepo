@@ -165,6 +165,24 @@ describe("redactClientBundle", () => {
     expect(text).toContain("Player2");
   });
 
+  test("redacts a summonerName that differs from the gameName", () => {
+    const bundle = syntheticBundle();
+    const identities = bundle.data.matchHistory.participantIdentities;
+    const [other] = identities;
+    if (other === undefined) {
+      throw new Error("synthetic bundle has no participants");
+    }
+    other.player.summonerName = "LegacyOther";
+    const local = identities[1];
+    if (local === undefined) {
+      throw new Error("synthetic bundle has no local player");
+    }
+    local.player.summonerName = "LegacyLocal";
+    const text = JSON.stringify(redactClientBundle(bundle));
+    expect(text).not.toContain("LegacyOther");
+    expect(text).not.toContain("LegacyLocal");
+  });
+
   test("rejects a bundle that is not a post-game payload", () => {
     expect(() => redactClientBundle({ resource: "lobby", data: {} })).toThrow();
   });
