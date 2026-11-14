@@ -13,6 +13,7 @@ import { RequestInterestCommands } from "./commands.ts";
 import { MediaRequestCommands } from "#infrastructure/request-commands.ts";
 import type { MediaActor } from "#application/auth.ts";
 import { reconcileRequestInterests } from "./reconcile.ts";
+import { PrismaAuthStore } from "#infrastructure/auth-store.ts";
 
 export type InitialInterestScenario =
   | "finished_manually"
@@ -29,6 +30,7 @@ export async function prepareInitialReleasedInterest(
   input: { edition?: MovieEditionKey; scenario: InitialInterestScenario },
 ) {
   const edition = input.edition ?? "default";
+  await preparePlaybackOwner(context, input.scenario);
   const requests = await context.db.mediaRequest.findMany({
     where: {
       mediaId: { in: [...mediaIds] },
@@ -60,8 +62,8 @@ export async function prepareInitialReleasedInterest(
       await context.db.mediaRequest.update({
         where: { id: request.id },
         data: {
-          interestRenewedAt: new Date(Date.now() - 40 * DAY),
-          usableUnwatchedSince: new Date(Date.now() - 40 * DAY),
+          interestRenewedAt: new Date(Date.now() - 48 * DAY),
+          usableUnwatchedSince: new Date(Date.now() - 48 * DAY),
         },
       });
       const predecessor = await context.db.mediaRequest.findFirst({
@@ -126,6 +128,55 @@ export async function prepareInitialReleasedInterest(
     });
   }
   if (input.scenario === "lost_interest") await readyEmptyPlayback(context);
+}
+
+/** A separate configured owner authenticates history handoff; no requester is promoted. */
+async function preparePlaybackOwner(
+  context: MediaAutomationContext,
+  scenario: InitialInterestScenario,
+) {
+  if (scenario !== "lost_interest") return;
+  const existing = await context.db.mediaUser.findFirst({
+    where: { role: "owner", restricted: false },
+  });
+  if (existing !== null) return;
+  const serverMachineId = context.serverMachineId;
+  if (serverMachineId === undefined)
+    throw new Error("Native playback fixture lacks its server identity");
+  const auth = new PrismaAuthStore(context.db);
+  const now = new Date(),
+    expiresAt = new Date(now.getTime() + 60_000);
+  const loginId = crypto.randomUUID(),
+    ownerAccountId = "710099000002";
+  await auth.saveLogin({
+    id: loginId,
+    pinId: 1,
+    pinCode: "synthetic-quarantine-owner",
+    browserHash: "synthetic-quarantine-owner",
+    expiresAt,
+    encryptedDevice: "synthetic-unused-device",
+  });
+  await auth.completeLogin({
+    loginId,
+    now,
+    accountId: ownerAccountId,
+    ownerAccountId,
+    displayName: "Synthetic quarantine history owner",
+    encryptedCredential: context.cipher.encrypt(
+      JSON.stringify({ token: "synthetic-quarantine-owner-token" }),
+      `plex:${ownerAccountId}`,
+    ),
+    access: {
+      accountId: ownerAccountId,
+      serverMachineId,
+      permittedSectionIds: [],
+      permittedMediaKinds: [],
+      plexRestricted: false,
+    },
+    sessionId: crypto.randomUUID(),
+    csrfHash: "synthetic-quarantine-owner",
+    expiresAt,
+  });
 }
 
 async function prepareOwnerTemporary(
