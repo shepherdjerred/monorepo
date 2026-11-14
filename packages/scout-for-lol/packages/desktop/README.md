@@ -228,6 +228,7 @@ Any other value fails the build.
 | Field               | Stable                      | Beta                             |
 | ------------------- | --------------------------- | -------------------------------- |
 | Product name        | Scout Desktop               | Scout Desktop Beta               |
+| Installed binary    | `scout-client`              | `scout-client-beta`              |
 | Backend             | `https://scout-for-lol.com` | `https://beta.scout-for-lol.com` |
 | Identifier          | `com.scout-for-lol.client`  | `com.scout-for-lol.client.beta`  |
 | Keyring service     | `com.scout-for-lol.client`  | `com.scout-for-lol.client.beta`  |
@@ -288,9 +289,15 @@ has no such hook: it never replaced anything.
 
 The hook is NSIS script and has not been run on Windows in CI; verify it on
 the Windows build machine with an old "Scout Client" installed before the first
-public release. Both installers share the `scout-client.exe` name, so
-installing beta closes a running stable (and the reverse); giving beta its own
-binary name is the follow-up if that matters.
+public release.
+
+Beta installs beside stable because nothing NSIS keys on is shared: the product
+name (install directory and uninstall entry) and the binary name (running-process
+kill and shortcuts) both differ. The cargo binary is always `scout-client`;
+`scripts/prepare-package.ts`, the packager's `beforePackagingCommand`, builds
+with the channel's profile and stages the copy as `scout-client-beta` for beta.
+The supervisor relaunches its window through `current_exe`, so it needs no
+knowledge of the name.
 
 On macOS the DMG carries `Scout Desktop.app` and there is no uninstaller; a
 user drags the old "Scout Client" app to the Trash. Its login item is named

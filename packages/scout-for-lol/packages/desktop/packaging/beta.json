@@ -8,9 +8,9 @@
   "formats": ["nsis", "dmg"],
   "icons": ["../assets/icon.ico", "../assets/icon.icns"],
   "outDir": "../dist/beta",
-  "beforePackagingCommand": "cargo build --release --locked --package scout-client-app",
-  "binariesDir": "../target/release",
-  "binaries": [{ "path": "scout-client", "main": true }],
+  "beforePackagingCommand": "bun ../scripts/prepare-package.ts beta",
+  "binariesDir": "../target/package/beta",
+  "binaries": [{ "path": "scout-client-beta", "main": true }],
   "nsis": {
     "installMode": "currentUser",
     "installerIcon": "../assets/icon.ico"

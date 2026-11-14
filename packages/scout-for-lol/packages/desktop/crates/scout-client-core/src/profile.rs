@@ -14,6 +14,9 @@ pub struct ReleaseProfile {
     pub channel: &'static str,
     /// User-visible product name; also the installer and install directory name.
     pub product_name: &'static str,
+    /// Executable name inside the installer. NSIS keys its process kill and
+    /// shortcuts on it, so beta needs its own to install beside stable.
+    pub binary_name: &'static str,
     /// Reverse-DNS application identifier.
     pub identifier: &'static str,
     /// Backend this build pairs with and uploads to.
@@ -48,6 +51,7 @@ mod tests {
     fn stable_keeps_the_identity_existing_installs_use() {
         assert_eq!(STABLE.product_name, "Scout Desktop");
         assert_eq!(STABLE.backend_origin, "https://scout-for-lol.com");
+        assert_eq!(STABLE.binary_name, "scout-client");
         assert_eq!(STABLE.identifier, "com.scout-for-lol.client");
         assert_eq!(STABLE.keyring_service, "com.scout-for-lol.client");
         assert_eq!(STABLE.data_qualifier, "com");
@@ -59,6 +63,7 @@ mod tests {
     fn beta_installs_alongside_stable_and_targets_the_beta_backend() {
         assert_eq!(BETA.product_name, "Scout Desktop Beta");
         assert_eq!(BETA.backend_origin, "https://beta.scout-for-lol.com");
+        assert_ne!(BETA.binary_name, STABLE.binary_name);
         assert_ne!(BETA.identifier, STABLE.identifier);
         assert_ne!(BETA.keyring_service, STABLE.keyring_service);
         assert_ne!(BETA.data_application, STABLE.data_application);

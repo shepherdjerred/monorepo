@@ -254,6 +254,7 @@ struct ReleaseProfileFile {
     schema: u8,
     channel: String,
     product_name: String,
+    binary_name: String,
     identifier: String,
     backend_origin: String,
     keyring_service: String,
@@ -307,6 +308,7 @@ fn validate_profile(file_channel: &str, profile: &ReleaseProfileFile) -> Result<
     }
     for (field, value) in [
         ("product_name", &profile.product_name),
+        ("binary_name", &profile.binary_name),
         ("keyring_service", &profile.keyring_service),
         ("autostart_name", &profile.autostart_name),
         (
@@ -333,11 +335,12 @@ fn validate_profile(file_channel: &str, profile: &ReleaseProfileFile) -> Result<
 
 fn render_profile(profile: &ReleaseProfileFile) -> String {
     format!(
-        "ReleaseProfile {{ channel: {:?}, product_name: {:?}, identifier: {:?}, \
+        "ReleaseProfile {{ channel: {:?}, product_name: {:?}, binary_name: {:?}, identifier: {:?}, \
          backend_origin: {:?}, keyring_service: {:?}, data_qualifier: {:?}, \
          data_organization: {:?}, data_application: {:?}, autostart_name: {:?} }}",
         profile.channel,
         profile.product_name,
+        profile.binary_name,
         profile.identifier,
         profile.backend_origin,
         profile.keyring_service,
@@ -374,12 +377,13 @@ fn generate_profiles(manifest_dir: &Path, output_dir: &Path) -> Result<(), Box<d
     if stable.identifier == beta.identifier
         || stable.keyring_service == beta.keyring_service
         || stable.product_name == beta.product_name
+        || stable.binary_name == beta.binary_name
         || (stable.data_directory.qualifier == beta.data_directory.qualifier
             && stable.data_directory.organization == beta.data_directory.organization
             && stable.data_directory.application == beta.data_directory.application)
     {
         return Err(Box::new(invalid_contract(
-            "stable and beta profiles must not share identifier, product name, keyring service or data directory",
+            "stable and beta profiles must not share identifier, product name, binary name, keyring service or data directory",
         )));
     }
     let source = format!(

@@ -8,8 +8,8 @@
   "formats": ["nsis", "dmg"],
   "icons": ["../assets/icon.ico", "../assets/icon.icns"],
   "outDir": "../dist/stable",
-  "beforePackagingCommand": "cargo build --release --locked --package scout-client-app",
-  "binariesDir": "../target/release",
+  "beforePackagingCommand": "bun ../scripts/prepare-package.ts stable",
+  "binariesDir": "../target/package/stable",
   "binaries": [{ "path": "scout-client", "main": true }],
   "nsis": {
     "installMode": "currentUser",
