@@ -88,6 +88,7 @@ export const TORVALDS_SOURCE_PATCHES = [
   "certsans",
   "apiserver",
   "etcd-metrics",
+  "flannel-network-policies",
   "image",
   "dns",
   "kubelet",

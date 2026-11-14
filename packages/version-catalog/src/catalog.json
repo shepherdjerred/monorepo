@@ -1152,7 +1152,7 @@
         "datasource": "github-releases",
         "versioning": "semver"
       },
-      "value": "1.14.2"
+      "value": "1.14.6"
     },
     {
       "name": "siderolabs/installer-liskov",
@@ -1165,7 +1165,7 @@
         "versioning": "semver",
         "packageName": "metal-installer-secureboot/d953d04c966642907c1061252288cdc30189c2973f083de93355faac1e9d54cb"
       },
-      "value": "v1.14.2@sha256:92ab950ac3166567f3600cc2f56ac3b758c2649c4d8a8100248c7e31ad000bb2",
+      "value": "v1.14.6@sha256:c0ddc2f17d9d5ebfd1c8de27e44637ef61ebeba601ca1ac064cfb67f556d4add",
       "component": true
     },
     {
@@ -1179,7 +1179,7 @@
         "versioning": "semver",
         "packageName": "metal-installer-secureboot/4560d31e3c529f9808e0898c2804d25be14201992fe2792abd4a09618e0d39a9"
       },
-      "value": "v1.14.2@sha256:eb2e89ba92c85b594a23cd3239d4a1878077e0375d29af2790b0bb982b644e14",
+      "value": "v1.14.6@sha256:ffa2e340205a83491582cdf8bcc6d9d48bd8f4472515ea5754ea48967d09200c",
       "component": true
     },
     {
