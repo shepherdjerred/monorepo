@@ -284,6 +284,21 @@ mod render {
             return Err("the snapshot with start at login off did not repaint".into());
         }
 
+        // Usage data off: the supervisor's snapshot repaints the toggle.
+        harness.receive(&SupervisorMessage::State {
+            state: StateSnapshot {
+                privacy: PrivacySnapshot {
+                    send_error_reports: true,
+                    send_usage_data: false,
+                },
+                ..sample_state()
+            },
+        })?;
+        let usage_off = harness.capture("settings-usage-off")?;
+        if before == usage_off {
+            return Err("the snapshot with usage data off did not repaint".into());
+        }
+
         // Close from the supervisor ends the window's listener cleanly.
         harness.receive(&SupervisorMessage::Close)?;
         if harness.captured.messages()?.len() != 1 {
