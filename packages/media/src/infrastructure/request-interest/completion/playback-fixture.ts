@@ -9,9 +9,7 @@ import type { PlexPlaybackSession } from "#integrations/plex-playback.ts";
 export async function incompleteNativeRewatch(
   f: Awaited<ReturnType<typeof completionFixture>>,
 ) {
-  const owner = await f.db.mediaUser.findFirstOrThrow({
-    where: { role: "owner", restricted: false },
-  });
+  const owner = f.owner;
   const mapping = await f.db.plexIdentityMapping.findUniqueOrThrow({
     where: { userId: f.files.user.id },
   });

@@ -292,11 +292,16 @@ export async function commitBoundWatch(
       authority: z.record(z.string(), z.json()).parse(authority),
       authorityHash: identityHash(authority),
     };
-    await tx.plexWatchProjection.upsert({
-      where: { userId_mediaId_edition: key },
-      create: { ...key, ...projection },
-      update: projection,
-    });
+    // The held watch fence serializes this existence check and write. A native
+    // upsert would run BEFORE INSERT before its conflict UPDATE, which must not
+    // submit an existing row's derived completion as a new-row birth.
+    if (previousProjection === null)
+      await tx.plexWatchProjection.create({ data: { ...key, ...projection } });
+    else
+      await tx.plexWatchProjection.update({
+        where: { userId_mediaId_edition: key },
+        data: projection,
+      });
     freshness.assertActive();
     await tx.watchState.upsert({
       where: { userId_mediaId_edition: key },

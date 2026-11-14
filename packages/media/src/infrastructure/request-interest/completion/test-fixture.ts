@@ -20,6 +20,7 @@ import { queryFixtureDatabase } from "#testing/query-client.ts";
 import { PrismaMediaApplication } from "#infrastructure/media-service.ts";
 import { MovieLifecycleCommands } from "#infrastructure/movie-editions/lifecycle/commands.ts";
 import { MovieRequestV4Schema } from "#shared/movie-editions/lifecycle/lifecycle-v4.ts";
+import { PrismaAuthStore } from "#infrastructure/auth-store.ts";
 
 const DAY = 86_400_000;
 export async function completionFixture(
@@ -29,6 +30,44 @@ export async function completionFixture(
   initiallyComplete = true,
 ) {
   const db = harness.database();
+  // Declare the separate configured owner before any physical/viewer proof.
+  // The real login producer grants no extra library access or requester claims.
+  const auth = new PrismaAuthStore(db);
+  const now = new Date();
+  const ownerAccountId = "710099000001";
+  const loginId = crypto.randomUUID();
+  const expiresAt = new Date(now.getTime() + 60_000);
+  await auth.saveLogin({
+    id: loginId,
+    pinId: 1,
+    pinCode: "synthetic-completion-owner",
+    browserHash: "synthetic-completion-owner",
+    expiresAt,
+    encryptedDevice: "synthetic-unused-device",
+  });
+  const owner = await auth.completeLogin({
+    loginId,
+    now,
+    accountId: ownerAccountId,
+    ownerAccountId,
+    displayName: "Synthetic completion owner",
+    encryptedCredential: harness
+      .context()
+      .cipher.encrypt(
+        JSON.stringify({ token: "synthetic-completion-owner-token" }),
+        `plex:${ownerAccountId}`,
+      ),
+    access: {
+      accountId: ownerAccountId,
+      serverMachineId: "fixture-server",
+      permittedSectionIds: [],
+      permittedMediaKinds: [],
+      plexRestricted: false,
+    },
+    sessionId: crypto.randomUUID(),
+    csrfHash: "synthetic-completion-owner",
+    expiresAt,
+  });
   const plexAccountId = String(
     1 + z.int().parse(crypto.getRandomValues(new Uint32Array(1))[0]),
   );
@@ -64,9 +103,6 @@ export async function completionFixture(
     serverMachineId: "fixture-server",
   });
   if (tv) {
-    const owner = await db.mediaUser.findFirstOrThrow({
-      where: { role: "owner", restricted: false },
-    });
     const priorDefault = await db.qualityProfileDefault.findUnique({
       where: { kind: "series" },
     });
@@ -251,6 +287,7 @@ export async function completionFixture(
     ...f,
     db,
     files,
+    owner,
     rootId,
     requestId,
     commands,
