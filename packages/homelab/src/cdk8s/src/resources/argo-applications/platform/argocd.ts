@@ -190,10 +190,13 @@ export function createArgoCdTunnel(chart: Chart): void {
   // re-sync on every argocd reinstall. The actual auth boundary on this endpoint
   // is the ArgoCD bearer token (Authorization header) — TLS-verify would only
   // matter against an attacker that can already MITM in-cluster pod-to-pod
-  // traffic between cloudflared and argocd-server, and Cilium's WireGuard mesh
-  // already encrypts that path at L3. If we ever issue argocd-server a cert
-  // from a real CA (cert-manager + private intermediate), revisit and remove
-  // this flag.
+  // traffic between cloudflared and argocd-server. Nothing below TLS protects
+  // that path: the CNI is flannel (VXLAN over the LAN, unencrypted), and
+  // NetworkPolicies are not enforced today (the planned enforcer is
+  // kube-network-policies, which filters but does not encrypt). The hop is
+  // still TLS-encrypted; only the server's identity goes unverified. If we
+  // ever issue argocd-server a cert from a real CA (cert-manager + private
+  // intermediate), revisit and remove this flag.
   createCloudflareTunnelBinding(chart, "argocd-cf-tunnel", {
     serviceName: "argocd-server",
     namespace: "argocd",

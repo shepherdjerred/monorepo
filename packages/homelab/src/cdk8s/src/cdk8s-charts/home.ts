@@ -29,8 +29,13 @@ export async function createHomeChart(app: App) {
   createZwaveJsUiDeployment(chart);
 
   // NetworkPolicy: Allow ingress to home namespace from Tailscale, Cloudflare tunnel, and LAN
-  // Note: homeassistant uses hostNetwork — whether NetworkPolicies apply depends on the CNI plugin.
-  // Cilium does enforce policies on hostNetwork pods, so this policy affects all pods in the namespace.
+  // Note: Home Assistant and Scrypted use hostNetwork, so no NetworkPolicy can
+  // select them: they share the node's network namespace and their traffic is
+  // node traffic. The CNI is flannel, which enforces no NetworkPolicy today;
+  // the planned enforcer, kube-network-policies, does not police hostNetwork
+  // pods either. This policy therefore affects only the pod-network pods in
+  // the namespace (eufy-security-ws, zwave-js-ui), and the LAN rules below do
+  // not restrict the hostNetwork pods.
   new KubeNetworkPolicy(chart, "home-ingress-policy", {
     metadata: { name: "home-ingress-policy" },
     spec: {
