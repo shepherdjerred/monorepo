@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import type { Fleet, FleetNetworkPolicy, FleetService } from "./fleet.ts";
-import { workload } from "./fleet-fixtures.ts";
+import { fleetOf, workload } from "./fleet-fixtures.ts";
 import { unreciprocatedRules } from "./policy-reciprocity.ts";
 
 const NAMESPACE_NAME = "kubernetes.io/metadata.name";
@@ -45,8 +45,7 @@ function fleetWith(
     ],
     egress: [],
   };
-  return {
-    objects: [],
+  return fleetOf({
     workloads: [
       workload("forum", "web", 8080),
       workload("mail", "smtp", 25),
@@ -55,10 +54,7 @@ function fleetWith(
     ],
     networkPolicies: [client, smtp],
     services,
-    serviceSelectors: [],
-    applicationNamespaces: new Set(),
-    backendProbes: [],
-  };
+  });
 }
 
 const SMTP_SERVICE: FleetService = {
