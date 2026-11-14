@@ -22,7 +22,11 @@ describe("native PinchTab transport", () => {
             ref: z.string(),
             text: z.string(),
           }),
-          z.strictObject({ kind: z.literal("hover"), ref: z.string() }),
+          z.strictObject({
+            kind: z.enum(["hover", "click"]),
+            ref: z.string(),
+            humanize: z.literal(false),
+          }),
         ])
         .parse(await request.json());
       actions.push(body);
@@ -117,13 +121,20 @@ describe("native PinchTab transport", () => {
       failPointer = false;
       await browser.preparePointer("e41");
       expect(actions.slice(1)).toEqual([
-        { kind: "hover", ref: "e41" },
-        { kind: "hover", ref: "e41" },
+        { kind: "hover", ref: "e41", humanize: false },
+        { kind: "hover", ref: "e41", humanize: false },
       ]);
       await expect(browser.preparePointer("unobserved")).rejects.toThrow(
         "Refresh",
       );
       expect(actions).toHaveLength(3);
+      // Even an internal caller cannot select the unguarded humanized click path.
+      await browser.action({ kind: "click", ref: "e41", humanize: true });
+      expect(actions.at(-1)).toEqual({
+        kind: "click",
+        ref: "e41",
+        humanize: false,
+      });
       expect(paths).toContain("/tabs/page/attr?selector=e41&name=type");
       await browser.snapshot({ selector: "main", depth: 3 });
       expect(paths).toContain(
@@ -139,7 +150,11 @@ describe("native PinchTab transport", () => {
       );
       navigateOnHover = true;
       await expect(browser.preparePointer("e41")).rejects.toThrow("Refresh");
-      expect(actions.at(-1)).toEqual({ kind: "hover", ref: "e41" });
+      expect(actions.at(-1)).toEqual({
+        kind: "hover",
+        ref: "e41",
+        humanize: false,
+      });
       await expect(browser.accessibleControl("e41")).rejects.toThrow("Refresh");
       await expect(browser.open("https://outside.invalid/")).rejects.toThrow(
         "scope",

@@ -257,7 +257,10 @@ export class PromotionBrowser {
 
   async action(body: Record<string, unknown>): Promise<unknown> {
     const before = await this.currentUrl();
-    const result = await this.json(`${this.tab()}/action`, body);
+    // Humanized input skips topmost checks and samples a different point each time.
+    const nativeBody =
+      body["kind"] === "click" ? { ...body, humanize: false } : body;
+    const result = await this.json(`${this.tab()}/action`, nativeBody);
     if ((await this.currentUrl()) !== before) {
       this.controls.clear();
       await this.evaluate(installChallengeCapture);
@@ -282,7 +285,7 @@ export class PromotionBrowser {
   /** Native hover may scroll/expose menus; it validates pointer access without forcing a click. */
   async preparePointer(ref: string): Promise<void> {
     await this.accessibleControl(ref);
-    await this.action({ kind: "hover", ref });
+    await this.action({ kind: "hover", ref, humanize: false });
     await this.accessibleControl(ref);
   }
   async followLink(
@@ -292,7 +295,6 @@ export class PromotionBrowser {
     assertPromotionUrl(this.target, address);
     return await this.action(body);
   }
-
   async attribute(selector: string, name: string): Promise<string | null> {
     await this.currentUrl();
     return z
@@ -303,7 +305,6 @@ export class PromotionBrowser {
         ),
       ).value;
   }
-
   async accessibleControl(ref: string) {
     await this.currentUrl();
     const node = this.controls.get(ref);
@@ -313,7 +314,6 @@ export class PromotionBrowser {
       );
     return node;
   }
-
   async challenge(): Promise<PromotionChallenge> {
     await this.evaluate(installChallengeCapture);
     const websiteURL = await this.currentUrl();
