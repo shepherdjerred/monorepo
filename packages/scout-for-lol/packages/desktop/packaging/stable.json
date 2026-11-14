@@ -2,6 +2,7 @@
   "$schema": "https://raw.githubusercontent.com/crabnebula-dev/cargo-packager/main/crates/packager/schema.json",
   "name": "scout-client",
   "productName": "Scout Desktop",
+  "version": "0.1.0",
   "identifier": "com.scout-for-lol.client",
   "description": "Scout Desktop observes your League of Legends games for Scout.",
   "publisher": "Scout",

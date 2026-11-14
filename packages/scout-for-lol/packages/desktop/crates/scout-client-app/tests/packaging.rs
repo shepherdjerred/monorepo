@@ -34,6 +34,11 @@ fn each_installer_config_matches_its_release_profile() -> Result<(), Box<dyn Err
             text(&packager, "identifier")?,
             text(&profile, "identifier")?
         );
+        assert_eq!(
+            text(&packager, "version")?,
+            env!("CARGO_PKG_VERSION"),
+            "an explicit --config does not inherit the workspace version, and NSIS needs one"
+        );
         assert_eq!(text(&packager, "outDir")?, format!("../dist/{channel}"));
         assert_eq!(
             text(&packager["binaries"][0], "path")?,
