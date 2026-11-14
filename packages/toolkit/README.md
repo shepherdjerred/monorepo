@@ -1169,11 +1169,14 @@ daemon log each scan until Brim rewrites it.
 
 ##### Mirrored machines
 
-`brim sync pull` mirrors other machines' Claude Code and Codex transcripts into
-`~/.toolkit/brim-sync/mirror/`. The index scans them as the `claude-mirror` and
-`codex-mirror` sources: source ids gain a `<machine>/` prefix and the agent
-names the machine, so `toolkit history search --source claude-mirror` finds
-them. Codex mirror documents are built from the rollout JSONL itself, because
+`brim sync pull` mirrors other machines' Claude Code, Codex, Grok, Kimi, Muse
+and Antigravity sessions into `~/.toolkit/brim-sync/mirror/`. The index scans
+them as the `claude-mirror`, `codex-mirror`, `grok-mirror`, `kimi-mirror`,
+`muse-mirror` and `antigravity-mirror` sources, each running the ordinary
+reader over the mirrored root: source ids gain a `<machine>/` prefix and the
+agent names the machine, so `toolkit history search --source claude-mirror`
+finds them. A mirrored Muse index lists every session, so sessions whose logs
+fell outside the pull window are skipped rather than failing the scan. Codex mirror documents are built from the rollout JSONL itself, because
 the Codex message database stays on its own machine. `history usage` includes
 mirrored tokens per source, but they never enter the usage-export ledger: the
 machine that spent them already exports them.
@@ -1199,8 +1202,8 @@ wrapper is an error, and `--dry-run` prints the resolved wrapper path and args.
 #### Brim sync
 
 The standalone `brim` binary (also `toolkit brim sync`) keeps an encrypted,
-permanent archive of every machine's Claude Code and Codex transcripts in the
-SeaweedFS `brim-sessions` bucket:
+permanent archive of every machine's Claude Code, Codex, Grok, Kimi, Muse and
+Antigravity sessions in the SeaweedFS `brim-sessions` bucket:
 
 ```bash
 brim sync push            # archive new complete lines from this machine
@@ -1212,9 +1215,32 @@ brim sync install         # macOS LaunchAgent, every 5 minutes
 ```
 
 Push scans `~/.claude/projects` (or `CLAUDE_CONFIG_DIR`), Codex `sessions`,
-`archived_sessions` and `history.jsonl` (or `CODEX_HOME`). Transcripts only
-grow, so each run uploads just the new complete lines as one segment; a file
-that shrinks or whose tail changed starts a new generation. Each segment and
+`archived_sessions` and `history.jsonl` (or `CODEX_HOME`), and the roots the
+history sources read for the other agents, taking only the files each reader
+opens:
+
+| Agent       | Archived                                                                                                                                   |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Grok        | `~/.grok/sessions/**/updates.jsonl` and its `summary.json`                                                                                 |
+| Kimi        | `~/.kimi-code/sessions/<workdir>/<session>/state.json` and `agents/<agent>/wire.jsonl`                                                     |
+| Muse        | `~/.local/share/muse/sessions/**/session.jsonl` (subagents included) and a snapshot of `session-index.db`                                  |
+| Antigravity | per root: snapshots of `conversations/*.db` and `conversation_summaries.db`, and `brain/<id>/.system_generated/logs/transcript_full.jsonl` |
+
+JSONL transcripts only grow, so each run uploads just the new complete lines as
+one segment; a file that shrinks or whose tail changed starts a new
+generation. JSON state files and SQLite snapshots are archived whole, as a new
+generation whenever their content changes. Files of one session (a log and its
+state, a conversation's database and transcript) share their newest mtime, so a
+pull window keeps them together, and a state file without its log is skipped.
+
+A live SQLite file is never uploaded raw. Push reads it through SQLite in one
+read transaction (`sqlite3_serialize`, so pages still in the WAL are included),
+copies only the tables and columns the history reader queries into a fresh
+in-memory database, redacts every text and blob cell there on its own, vacuums
+it and uploads that image. Full-text indexes, message bodies and every other
+column stay on the machine, and nothing unredacted is written to disk. The
+Muse snapshot stores session paths relative to the Muse root so a mirror can
+resolve them. Each segment and
 the per-machine manifest are zstd-compressed and age-encrypted to
 `brimSyncRecipient`; object keys are opaque hashes. The manifest is the commit
 point and is written last, so a crash resumes from the last commit. A file
@@ -1233,8 +1259,10 @@ Push also overwrites leaked credentials in each segment before upload:
 Anthropic, OpenAI project and Linear keys, and JWTs whose header and payload
 decode to JSON. Each match must be standalone (not inside a longer base64
 token) and is replaced with a same-length `REDACTED-<kind>` marker, so
-archive offsets stay equal to source offsets. `brim sync redact [--dry-run]`
-does the same to this machine's transcripts in place: it re-reads each match
+archive offsets stay equal to source offsets. JSON and JSONL are scanned one
+JSON string at a time, so a match (such as a PEM key's BEGIN and END armor)
+never spans two values or records. `brim sync redact [--dry-run]`
+does the same to this machine's JSONL transcripts in place: it re-reads each match
 before overwriting it, keeps file size and inode, and restores the mtime, so a
 CLI still appending is unaffected. It then retires the affected archive
 generations; the next `brim sync push` re-uploads those files and deletes the

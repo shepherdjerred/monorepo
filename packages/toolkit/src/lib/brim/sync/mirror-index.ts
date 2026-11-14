@@ -1,5 +1,6 @@
 import path from "node:path";
 import { z } from "zod";
+import type { SyncTool } from "./manifest.ts";
 
 /**
  * `~/.toolkit/brim-sync/mirror/index.json` tells local readers which remote
@@ -30,6 +31,14 @@ export const MirrorMachineSchema = z
     codexSessionsDirs: z.array(z.string().min(1)),
     codexArchivedSessionsDirs: z.array(z.string().min(1)),
     codexHistoryFiles: z.array(z.string().min(1)),
+    /**
+     * Mirrored roots of the stores added after the first index version. An
+     * index written before them omits these, meaning none were mirrored.
+     */
+    grokHomes: z.array(z.string().min(1)).optional(),
+    kimiSessionsDirs: z.array(z.string().min(1)).optional(),
+    museRoots: z.array(z.string().min(1)).optional(),
+    antigravityRoots: z.array(z.string().min(1)).optional(),
   })
   .meta({ title: "BrimSyncMirrorMachine" });
 export type MirrorMachine = z.infer<typeof MirrorMachineSchema>;
@@ -64,31 +73,49 @@ export function archiveRootOf(relPath: string): string {
   return segments.slice(0, numbered ? 2 : 1).join("/");
 }
 
-export function mirrorRoots(
-  rootDir: string,
-  entries: readonly { tool: "claude" | "codex"; relPath: string }[],
-): Pick<
+export type MirrorRoots = Pick<
   MirrorMachine,
   | "claudeProjectsDirs"
   | "codexSessionsDirs"
   | "codexArchivedSessionsDirs"
   | "codexHistoryFiles"
-> {
+> &
+  Required<
+    Pick<
+      MirrorMachine,
+      "grokHomes" | "kimiSessionsDirs" | "museRoots" | "antigravityRoots"
+    >
+  >;
+
+/**
+ * The reader roots inside one machine's mirror, from the archive paths it
+ * holds. See `roots.ts` for the Grok, Kimi, Muse and Antigravity layout.
+ */
+export function mirrorRoots(
+  rootDir: string,
+  entries: readonly { tool: SyncTool; relPath: string }[],
+): MirrorRoots {
   const roots = new Set(
     entries.map((entry) => `${entry.tool}/${archiveRootOf(entry.relPath)}`),
   );
+  const under = (tool: string): string[] =>
+    [...roots].filter((root) => root.startsWith(`${tool}/`)).toSorted();
+  const absolute = (root: string): string =>
+    path.join(rootDir, ...root.split("/"));
   const pick = (tool: string, leaf: string): string[] =>
-    [...roots]
-      .filter(
-        (root) =>
-          root.startsWith(`${tool}/`) && root.split("/").at(-1) === leaf,
-      )
-      .toSorted()
-      .map((root) => path.join(rootDir, ...root.split("/")));
+    under(tool)
+      .filter((root) => root.split("/").at(-1) === leaf)
+      .map((root) => absolute(root));
+  const toolDir = (tool: string): string[] =>
+    under(tool).length === 0 ? [] : [path.join(rootDir, tool)];
   return {
     claudeProjectsDirs: pick("claude", "projects"),
     codexSessionsDirs: pick("codex", "sessions"),
     codexArchivedSessionsDirs: pick("codex", "archived_sessions"),
     codexHistoryFiles: pick("codex", "history.jsonl"),
+    grokHomes: toolDir("grok"),
+    kimiSessionsDirs: pick("kimi", "sessions"),
+    museRoots: toolDir("muse"),
+    antigravityRoots: under("antigravity").map((root) => absolute(root)),
   };
 }

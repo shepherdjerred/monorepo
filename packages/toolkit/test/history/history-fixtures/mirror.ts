@@ -1,12 +1,17 @@
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import type { MirrorIndex } from "#lib/brim/sync/mirror-index.ts";
+import { writeAntigravityFixture } from "./antigravity.ts";
 import { writeClaudeFixture } from "./claude.ts";
 import { writeCodexSessionUsageFixture } from "./codex.ts";
+import { writeGrokFixture } from "./grok.ts";
+import { writeKimiFixture } from "./kimi.ts";
+import { writeMuseFixture } from "./muse.ts";
 
 /**
  * A `brim sync` mirror of one remote machine ("studio") holding the same
- * Claude and Codex fixtures as the local sources. Returns the index path.
+ * fixtures as the local sources, laid out as `brim sync pull` writes them.
+ * Returns the index path.
  */
 export async function writeMirrorFixture(mirrorDir: string): Promise<string> {
   const machineRoot = path.join(mirrorDir, "studio");
@@ -78,6 +83,17 @@ export async function writeMirrorFixture(mirrorDir: string): Promise<string> {
       .join("\n")
       .concat("\n"),
   );
+  const grokHome = path.join(machineRoot, "grok");
+  const kimiSessions = path.join(machineRoot, "kimi/sessions");
+  const museRoot = path.join(machineRoot, "muse");
+  const antigravityRoot = path.join(
+    machineRoot,
+    "antigravity/gemini-antigravity-cli",
+  );
+  await writeGrokFixture(grokHome);
+  await writeKimiFixture(kimiSessions);
+  await writeMuseFixture(museRoot);
+  await writeAntigravityFixture(antigravityRoot);
   const index: MirrorIndex = {
     schemaVersion: 1,
     generatedAt: "2026-11-02T00:00:00.000Z",
@@ -94,6 +110,10 @@ export async function writeMirrorFixture(mirrorDir: string): Promise<string> {
         codexSessionsDirs: [codexSessions],
         codexArchivedSessionsDirs: [],
         codexHistoryFiles: [],
+        grokHomes: [grokHome],
+        kimiSessionsDirs: [kimiSessions],
+        museRoots: [museRoot],
+        antigravityRoots: [antigravityRoot],
       },
     ],
   };

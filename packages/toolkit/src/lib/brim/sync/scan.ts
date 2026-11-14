@@ -2,92 +2,64 @@ import { readdir, stat } from "node:fs/promises";
 import path from "node:path";
 import type { SyncTool } from "./manifest.ts";
 import { toArchivePath } from "./paths.ts";
+import type { SqliteProjection } from "./snapshot.ts";
 
 /**
- * Where Claude Code and Codex keep their transcripts on this machine. Mirrors
- * Brim's `LocalLogLocations`: a set `CLAUDE_CONFIG_DIR` / `CODEX_HOME`
- * (comma-separated, `~` expanded) replaces the defaults.
+ * How a file is archived. `jsonl` is append-only: new complete lines are
+ * uploaded as they appear. `json` and `sqlite` are replaced whole: each change
+ * starts a new generation. A `sqlite` file is archived as a redacted snapshot
+ * of the projected tables (see `snapshot.ts`), never as its live bytes.
+ */
+export type SourceFormat =
+  | { readonly kind: "jsonl" }
+  | { readonly kind: "json" }
+  | { readonly kind: "sqlite"; readonly projection: SqliteProjection };
+
+/**
+ * A file chosen for the archive. Files that share a `group` (one session's
+ * log and its state, or a conversation's database and transcript) carry the
+ * group's newest mtime, so a pull window keeps or drops them together; a
+ * `sidecar` is dropped when its group has no other file.
+ */
+export type FileSelection = {
+  readonly format: SourceFormat;
+  readonly group?: string;
+  readonly sidecar?: boolean;
+};
+
+/**
+ * Where an agent keeps its sessions on this machine. Claude Code and Codex
+ * mirror Brim's `LocalLogLocations`: a set `CLAUDE_CONFIG_DIR` / `CODEX_HOME`
+ * (comma-separated, `~` expanded) replaces the defaults. Grok, Kimi, Muse and
+ * Antigravity use the history sources' own roots (`defaultHistoryPaths`), so
+ * push archives exactly what `toolkit history` reads.
  */
 export type SyncRoot = {
   readonly tool: SyncTool;
-  /** Directory scanned for `*.jsonl`, or a single file. */
+  /** A directory, or a single file. */
   readonly source: string;
   readonly kind: "directory" | "file";
   /** Archive path prefix for everything under `source`. */
   readonly archivePrefix: string;
+  /**
+   * Which files to archive, by `/`-separated path relative to a directory
+   * root (`""` for a file root); `null` skips the file.
+   */
+  readonly select: (relative: string) => FileSelection | null;
 };
 
 export type SourceFile = {
   readonly tool: SyncTool;
   readonly relPath: string;
   readonly absolutePath: string;
+  readonly format: SourceFormat;
+  /** Bytes on disk (for SQLite, the database plus its WAL). */
   readonly size: number;
+  /** The newest mtime in the file's group (for SQLite, including its WAL). */
   readonly mtimeMs: number;
 };
 
-type Environment = Readonly<Record<string, string | undefined>>;
-
-function configuredDirs(
-  value: string | undefined,
-  home: string,
-): string[] | null {
-  return value === undefined || value.trim().length === 0
-    ? null
-    : value
-        .split(",")
-        .map((entry) => entry.trim())
-        .filter((entry) => entry.length > 0)
-        .map((entry) =>
-          entry === "~" || entry.startsWith("~/")
-            ? path.join(home, entry.slice(1))
-            : entry,
-        );
-}
-
-/**
- * With more than one config dir, each one's files are kept apart under its
- * own numbered prefix so identical relative paths cannot collide.
- */
-function numbered(prefix: string, index: number, count: number): string {
-  return count === 1 ? prefix : `${String(index)}/${prefix}`;
-}
-
-export function syncRoots(environment: Environment, home: string): SyncRoot[] {
-  const claudeDirs = configuredDirs(environment["CLAUDE_CONFIG_DIR"], home) ?? [
-    path.join(home, ".claude"),
-  ];
-  const codexDirs = configuredDirs(environment["CODEX_HOME"], home) ?? [
-    path.join(home, ".codex"),
-  ];
-  const roots: SyncRoot[] = [];
-  for (const [index, dir] of claudeDirs.entries()) {
-    roots.push({
-      tool: "claude",
-      source: path.join(dir, "projects"),
-      kind: "directory",
-      archivePrefix: numbered("projects", index, claudeDirs.length),
-    });
-  }
-  for (const [index, dir] of codexDirs.entries()) {
-    for (const child of ["sessions", "archived_sessions"]) {
-      roots.push({
-        tool: "codex",
-        source: path.join(dir, child),
-        kind: "directory",
-        archivePrefix: numbered(child, index, codexDirs.length),
-      });
-    }
-    roots.push({
-      tool: "codex",
-      source: path.join(dir, "history.jsonl"),
-      kind: "file",
-      archivePrefix: numbered("history.jsonl", index, codexDirs.length),
-    });
-  }
-  return roots;
-}
-
-async function jsonlUnder(directory: string): Promise<string[]> {
+async function filesUnder(directory: string): Promise<string[]> {
   let entries;
   try {
     entries = await readdir(directory, {
@@ -99,7 +71,7 @@ async function jsonlUnder(directory: string): Promise<string[]> {
     throw error;
   }
   return entries
-    .filter((entry) => entry.isFile() && entry.name.endsWith(".jsonl"))
+    .filter((entry) => entry.isFile())
     .map((entry) => path.join(entry.parentPath, entry.name))
     .toSorted();
 }
@@ -124,24 +96,87 @@ async function statFile(
   }
 }
 
-/** Every transcript under `roots`, keyed by archive path. */
+/** A SQLite file's change signal: the database plus its WAL. */
+async function statSqlite(
+  file: string,
+): Promise<{ size: number; mtimeMs: number } | null> {
+  const database = await statFile(file);
+  if (database === null) return null;
+  const wal = await statFile(`${file}-wal`);
+  return wal === null
+    ? database
+    : {
+        size: database.size + wal.size,
+        mtimeMs: Math.max(database.mtimeMs, wal.mtimeMs),
+      };
+}
+
+type Candidate = {
+  readonly file: Omit<SourceFile, "mtimeMs">;
+  readonly mtimeMs: number;
+  readonly group: string;
+  readonly sidecar: boolean;
+};
+
+async function candidatesFor(root: SyncRoot): Promise<Candidate[]> {
+  const listed =
+    root.kind === "file" ? [root.source] : await filesUnder(root.source);
+  const candidates: Candidate[] = [];
+  for (const absolutePath of listed) {
+    const relative =
+      root.kind === "file"
+        ? ""
+        : toArchivePath(path.relative(root.source, absolutePath));
+    const selection = root.select(relative);
+    if (selection === null) continue;
+    const info =
+      selection.format.kind === "sqlite"
+        ? await statSqlite(absolutePath)
+        : await statFile(absolutePath);
+    // A file removed between listing and stat is simply not present.
+    if (info === null) continue;
+    const relPath =
+      root.kind === "file"
+        ? root.archivePrefix
+        : `${root.archivePrefix}/${relative}`;
+    candidates.push({
+      file: {
+        tool: root.tool,
+        relPath,
+        absolutePath,
+        format: selection.format,
+        size: info.size,
+      },
+      mtimeMs: info.mtimeMs,
+      group: `${root.tool}:${selection.group ?? relPath}`,
+      sidecar: selection.sidecar ?? false,
+    });
+  }
+  return candidates;
+}
+
+/**
+ * Every file to archive under `roots`. A group shares its newest mtime, and
+ * a sidecar whose group has nothing else is left out.
+ */
 export async function scanSourceFiles(
   roots: readonly SyncRoot[],
 ): Promise<SourceFile[]> {
-  const files: SourceFile[] = [];
-  for (const root of roots) {
-    const candidates =
-      root.kind === "file" ? [root.source] : await jsonlUnder(root.source);
-    for (const absolutePath of candidates) {
-      const info = await statFile(absolutePath);
-      // A file removed between listing and stat is simply not present.
-      if (info === null) continue;
-      const relPath =
-        root.kind === "file"
-          ? root.archivePrefix
-          : `${root.archivePrefix}/${toArchivePath(path.relative(root.source, absolutePath))}`;
-      files.push({ tool: root.tool, relPath, absolutePath, ...info });
-    }
+  const candidates: Candidate[] = [];
+  for (const root of roots) candidates.push(...(await candidatesFor(root)));
+  const newest = new Map<string, number>();
+  const primaries = new Set<string>();
+  for (const candidate of candidates) {
+    newest.set(
+      candidate.group,
+      Math.max(newest.get(candidate.group) ?? 0, candidate.mtimeMs),
+    );
+    if (!candidate.sidecar) primaries.add(candidate.group);
   }
-  return files;
+  return candidates
+    .filter((candidate) => primaries.has(candidate.group))
+    .map((candidate) => ({
+      ...candidate.file,
+      mtimeMs: newest.get(candidate.group) ?? candidate.mtimeMs,
+    }));
 }

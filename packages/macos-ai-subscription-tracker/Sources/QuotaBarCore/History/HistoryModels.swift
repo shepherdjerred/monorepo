@@ -20,6 +20,10 @@ public enum HistorySource: String, Decodable, CaseIterable, Hashable, Sendable {
   case conductor
   case claudeMirror = "claude-mirror"
   case codexMirror = "codex-mirror"
+  case grokMirror = "grok-mirror"
+  case kimiMirror = "kimi-mirror"
+  case museMirror = "muse-mirror"
+  case antigravityMirror = "antigravity-mirror"
 
   public var displayName: String {
     switch self {
@@ -33,6 +37,10 @@ public enum HistorySource: String, Decodable, CaseIterable, Hashable, Sendable {
     case .conductor: "Conductor"
     case .claudeMirror: "Claude Code (mirrored)"
     case .codexMirror: "Codex (mirrored)"
+    case .grokMirror: "Grok (mirrored)"
+    case .kimiMirror: "Kimi Code (mirrored)"
+    case .museMirror: "Meta Muse (mirrored)"
+    case .antigravityMirror: "Antigravity (mirrored)"
     }
   }
 }

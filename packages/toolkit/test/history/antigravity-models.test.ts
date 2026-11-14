@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import {
   modelNameFromId,
   normalizeModelName,
-} from "#lib/history/sources/antigravity-models.ts";
+} from "#lib/history/sources/antigravity/antigravity-models.ts";
 import { catalogCost } from "#lib/history/usage-cost.ts";
 
 const USAGE = {

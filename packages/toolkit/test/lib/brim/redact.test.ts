@@ -3,6 +3,7 @@ import {
   countByKind,
   findSecrets,
   redactBytes,
+  redactJsonStrings,
 } from "#lib/brim/sync/redact.ts";
 
 // Low-entropy stand-ins assembled at run time; none is a real credential.
@@ -107,5 +108,51 @@ describe("redactBytes", () => {
     const result = redactBytes(input);
     expect(result.bytes).toBe(input);
     expect(result.matches).toEqual([]);
+  });
+});
+
+describe("redactJsonStrings", () => {
+  const begin = "-----BEGIN PRIVATE KEY-----";
+  const end = "-----END PRIVATE KEY-----";
+
+  test("never pairs PEM armor across records (AI-567)", () => {
+    const records = [
+      JSON.stringify({ type: "user", text: `docs mention ${begin} here` }),
+      JSON.stringify({ type: "assistant", text: "an unrelated record" }),
+      JSON.stringify({ type: "user", text: `and ${end} there` }),
+    ];
+    const input = bytes(`${records.join("\n")}\n`);
+    // Whole-text matching pairs the BEGIN in record 1 with the END in record 3.
+    expect(countByKind(findSecrets(input))).toEqual({ "private-key": 1 });
+    const result = redactJsonStrings(input);
+    expect(result.matches).toEqual([]);
+    expect(text(result.bytes).split("\n").slice(0, 3)).toEqual(records);
+  });
+
+  test("still redacts a key inside one string, with escaped newlines", () => {
+    const key = `${begin}\n${"k".repeat(64)}\n${end}`;
+    const records = [
+      JSON.stringify({ type: "tool", output: `cat id: ${key}` }),
+      JSON.stringify({ type: "assistant", text: "untouched" }),
+    ];
+    const result = redactJsonStrings(bytes(`${records.join("\n")}\n`));
+    expect(countByKind(result.matches)).toEqual({ "private-key": 1 });
+    const [first, second] = text(result.bytes).split("\n");
+    expect(first).toContain("REDACTED-private-key");
+    expect(first).not.toContain("k".repeat(64));
+    expect(() => JSON.parse(first ?? "") as unknown).not.toThrow();
+    expect(second).toBe(records[1]);
+  });
+
+  test("redacts each string of a pretty-printed JSON file", () => {
+    const input = JSON.stringify(
+      { a: `token ${linear}`, b: { c: jwt } },
+      null,
+      2,
+    );
+    const result = redactJsonStrings(bytes(input));
+    expect(countByKind(result.matches)).toEqual({ "linear-key": 1, jwt: 1 });
+    expect(result.bytes.length).toBe(bytes(input).length);
+    expect(() => JSON.parse(text(result.bytes)) as unknown).not.toThrow();
   });
 });

@@ -34,7 +34,15 @@
       ],
       "codexSessionsDirs": [],
       "codexArchivedSessionsDirs": [],
-      "codexHistoryFiles": []
+      "codexHistoryFiles": [],
+      "grokHomes": ["/Users/tester/.toolkit/brim-sync/mirror/studio/grok"],
+      "kimiSessionsDirs": [
+        "/Users/tester/.toolkit/brim-sync/mirror/studio/kimi/sessions"
+      ],
+      "museRoots": ["/Users/tester/.toolkit/brim-sync/mirror/studio/muse"],
+      "antigravityRoots": [
+        "/Users/tester/.toolkit/brim-sync/mirror/studio/antigravity/gemini-antigravity-cli"
+      ]
     }
   ]
 }

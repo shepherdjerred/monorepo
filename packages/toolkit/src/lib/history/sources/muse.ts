@@ -120,16 +120,28 @@ async function subagentLogs(sessionDir: string): Promise<string[]> {
  */
 async function museLogs(
   rowsList: readonly MuseSessionRow[],
+  museRoot: string,
+  mirrored: boolean,
 ): Promise<MuseLog[]> {
   const logs: MuseLog[] = [];
   const seen = new Set<string>();
-  for (const row of rowsList) {
-    if (row.layout !== "session_jsonl") {
+  for (const indexed of rowsList) {
+    if (indexed.layout !== "session_jsonl") {
       throw new Error(
-        `Muse session ${row.session_id} has an unsupported layout: ${row.layout}`,
+        `Muse session ${indexed.session_id} has an unsupported layout: ${indexed.layout}`,
       );
     }
+    // Muse stores absolute paths; a `brim sync` snapshot stores them
+    // relative to the root it was taken from.
+    const row = {
+      ...indexed,
+      session_dir: path.resolve(museRoot, indexed.session_dir),
+      session_log_path: path.resolve(museRoot, indexed.session_log_path),
+    };
     if (!(await pathExists(row.session_log_path))) {
+      // A mirror holds only the pull window's logs, while its index lists
+      // every session.
+      if (mirrored) continue;
       throw new Error(`Muse session log is missing: ${row.session_log_path}`);
     }
     if (!seen.has(row.session_log_path)) {
@@ -227,6 +239,7 @@ async function scanMuse(
   paths: HistoryPaths,
   previous: ReadonlyMap<string, string> | null,
   force: boolean,
+  mirrored: boolean,
 ): Promise<StagedScan<ReadonlyMap<string, string>>> {
   const dbPath = path.join(paths.museRoot, INDEX_DB);
   if (!(await pathExists(dbPath))) {
@@ -237,7 +250,11 @@ async function scanMuse(
   }
   let logs: MuseLog[];
   try {
-    logs = await museLogs(await museSessionRows(dbPath));
+    logs = await museLogs(
+      await museSessionRows(dbPath),
+      paths.museRoot,
+      mirrored,
+    );
   } catch (error: unknown) {
     return {
       result: failedScanResult("muse", "unreadable", error),
@@ -280,11 +297,24 @@ async function scanMuse(
   }
 }
 
-export function createMuseSource(): HistorySource {
+/**
+ * `mirrored` is for a `brim sync` mirror, whose index lists sessions whose
+ * logs fell outside the pull window; those are skipped rather than failing.
+ */
+export function createMuseSource(
+  options: { readonly mirrored?: boolean } = {},
+): HistorySource {
+  const mirrored = options.mirrored ?? false;
   return {
     name: "muse",
     label: "Meta Muse",
-    ...createStagedScanner(scanMuse),
+    ...createStagedScanner(
+      (
+        paths: HistoryPaths,
+        previous: ReadonlyMap<string, string> | null,
+        force: boolean,
+      ) => scanMuse(paths, previous, force, mirrored),
+    ),
     async read(_paths: HistoryPaths, records: readonly HistoryRecord[]) {
       return sourceReadResult(
         "muse",

@@ -11,7 +11,14 @@ import { SyncSetupError } from "./errors.ts";
  * only writer of its own prefix.
  */
 
-export const SYNC_TOOLS = ["claude", "codex"] as const;
+export const SYNC_TOOLS = [
+  "claude",
+  "codex",
+  "grok",
+  "kimi",
+  "muse",
+  "antigravity",
+] as const;
 export const SyncToolSchema = z.enum(SYNC_TOOLS);
 export type SyncTool = z.infer<typeof SyncToolSchema>;
 

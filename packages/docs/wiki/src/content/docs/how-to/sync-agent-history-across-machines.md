@@ -1,13 +1,13 @@
 ---
 title: Sync agent history across machines
-description: Turn on the encrypted Brim sync archive on each Mac and the Windows PC so Claude Code and Codex sessions from every machine can be searched and counted on the Macs.
+description: Turn on the encrypted Brim sync archive on each Mac and the Windows PC so Claude Code, Codex, Grok, Kimi, Muse and Antigravity sessions from every machine can be searched and counted on the Macs.
 sidebar:
   order: 44
 ---
 
 This guide connects a machine to the Brim sync archive. Every machine pushes
-its transcripts, and each Mac also pulls the others for `toolkit history` and
-Brim's usage caption. [About Brim](/explanation/quotabar/#cross-machine-sync)
+its Claude Code, Codex, Grok, Kimi, Muse and Antigravity sessions, and each Mac
+also pulls the others for `toolkit history` and Brim's usage caption. [About Brim](/explanation/quotabar/#cross-machine-sync)
 explains the design.
 
 ## Before the first machine
@@ -102,7 +102,9 @@ brim sync pull
 toolkit history search --source codex-mirror "<a phrase from a PC session>"
 ```
 
-`brim sync status` lists each mirrored machine with its pull time. Brim shows
+Sessions from the other agents use the matching source: `grok-mirror`,
+`kimi-mirror`, `muse-mirror` or `antigravity-mirror`. `brim sync status` lists
+each mirrored machine with its pull time. Brim shows
 an `All machines` line under Claude Code and Codex once another machine has
 usage today.
 
@@ -118,9 +120,10 @@ every copy in this order, or a pull restores what you removed.
    launchctl bootout gui/$(id -u)/com.jerred.brim-sync
    ```
 
-2. On each machine, preview and then overwrite the matches in its own
+2. On each machine, preview and then overwrite the matches in its own JSONL
    transcripts. The second command also retires the affected archive
-   generations.
+   generations. JSON state files and SQLite snapshots are not edited in place;
+   push redacts a fresh copy of them each time they change.
 
    ```bash
    brim sync redact --dry-run
@@ -156,6 +159,8 @@ provider in a session is still only made harmless by rotating it.
 | `already has an archive but … manifest.json is missing` | Run one push with `BRIM_SYNC_AGE_IDENTITY` available so it adopts the remote manifest   |
 | `another sync is running`                               | A backfill is still running; the next scheduled run continues                           |
 | `a single line exceeds 64 MiB`                          | That file is skipped and reported each run; every other file still syncs                |
+| `not complete JSON; it may be mid-write`                | The agent was writing that state file; the next run retries it                          |
+| `a Muse session path lies outside the Muse root`        | Muse indexed a session outside `~/.local/share/muse`; that index is not synced          |
 | Brim shows `Other machines' usage could not be read.`   | `~/.toolkit/brim-sync/mirror/index.json` is invalid; run `brim sync pull` to rewrite it |
 
 ## Related
