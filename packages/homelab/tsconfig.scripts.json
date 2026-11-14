@@ -81,6 +81,7 @@
     "scripts/tofu/credential-handoff.ts",
     "scripts/tofu/credential-handoff.test.ts",
     "scripts/tofu/application-secrets.integration.test.ts",
-    "scripts/tofu/github-ruleset-ready.ts"
+    "scripts/tofu/github-ruleset-ready.ts",
+    "scripts/network-policy/*.ts"
   ]
 }
