@@ -1,0 +1,1503 @@
+{
+  "caveats": {
+    "stopped": "This answer was stopped before it finished.",
+    "interrupted": "This answer was interrupted by an error before it finished."
+  },
+  "turns": [
+    {
+      "name": "started fills the conversation and question ids",
+      "start": {
+        "conversationId": null,
+        "question": "Who wins?",
+        "leafIdAtStart": null
+      },
+      "steps": [
+        {
+          "event": {
+            "type": "started",
+            "runId": "66666666-6666-4666-8666-666666666666",
+            "conversationId": "11111111-1111-4111-8111-111111111111",
+            "questionMessageId": "33333333-3333-4333-8333-333333333333"
+          }
+        }
+      ],
+      "expectTurn": {
+        "conversationId": "11111111-1111-4111-8111-111111111111",
+        "questionMessageId": "33333333-3333-4333-8333-333333333333",
+        "runId": "66666666-6666-4666-8666-666666666666"
+      }
+    },
+    {
+      "name": "a reconnect snapshot replaces prior deltas before streaming resumes",
+      "start": {
+        "conversationId": "11111111-1111-4111-8111-111111111111",
+        "question": "Who wins?",
+        "leafIdAtStart": null
+      },
+      "steps": [
+        {
+          "event": {
+            "type": "started",
+            "runId": "66666666-6666-4666-8666-666666666666",
+            "conversationId": "11111111-1111-4111-8111-111111111111",
+            "questionMessageId": "33333333-3333-4333-8333-333333333333"
+          }
+        },
+        {
+          "event": {
+            "type": "answer_delta",
+            "text": "Jinx Jinx"
+          }
+        },
+        {
+          "event": {
+            "type": "snapshot",
+            "runId": "66666666-6666-4666-8666-666666666666",
+            "conversationId": "11111111-1111-4111-8111-111111111111",
+            "questionMessageId": "33333333-3333-4333-8333-333333333333",
+            "leafIdAtStart": "55555555-5555-4555-8555-555555555555",
+            "versionCountAtStart": 1,
+            "startedAt": "2026-08-18T12:00:00.000Z",
+            "answer": "Jinx",
+            "activity": "Querying match data.",
+            "trace": []
+          }
+        },
+        {
+          "event": {
+            "type": "answer_delta",
+            "text": " wins."
+          }
+        }
+      ],
+      "expectTurn": {
+        "answer": "Jinx wins.",
+        "activity": "Querying match data.",
+        "trace": [],
+        "leafIdAtStart": "55555555-5555-4555-8555-555555555555"
+      }
+    },
+    {
+      "name": "answer deltas accumulate in order",
+      "start": {
+        "conversationId": "11111111-1111-4111-8111-111111111111",
+        "question": "Who wins?",
+        "leafIdAtStart": null
+      },
+      "steps": [
+        {
+          "event": {
+            "type": "started",
+            "runId": "66666666-6666-4666-8666-666666666666",
+            "conversationId": "11111111-1111-4111-8111-111111111111",
+            "questionMessageId": "33333333-3333-4333-8333-333333333333"
+          }
+        },
+        {
+          "event": {
+            "type": "answer_delta",
+            "text": "Jinx "
+          }
+        },
+        {
+          "event": {
+            "type": "answer_delta",
+            "text": "wins."
+          }
+        }
+      ],
+      "expectTurn": {
+        "answer": "Jinx wins."
+      }
+    },
+    {
+      "name": "pairs live tool calls and results by provider call id",
+      "start": {
+        "conversationId": "11111111-1111-4111-8111-111111111111",
+        "question": "Who wins?",
+        "leafIdAtStart": null
+      },
+      "steps": [
+        {
+          "event": {
+            "type": "started",
+            "runId": "66666666-6666-4666-8666-666666666666",
+            "conversationId": "11111111-1111-4111-8111-111111111111",
+            "questionMessageId": "33333333-3333-4333-8333-333333333333"
+          }
+        },
+        {
+          "event": {
+            "type": "tool_call",
+            "toolCallId": "tool-1",
+            "toolName": "run_report_query",
+            "message": "Querying match data.",
+            "details": {
+              "kind": "execution",
+              "queryText": "FROM matches SELECT games",
+              "ok": null,
+              "rowsReturned": null,
+              "rowsScanned": null,
+              "renderKind": null
+            },
+            "rawInput": {
+              "kind": "value",
+              "value": {
+                "queryText": "FROM matches SELECT games"
+              },
+              "byteLength": 46
+            }
+          },
+          "expectTurn": {
+            "trace": [
+              {
+                "status": "running"
+              }
+            ]
+          }
+        },
+        {
+          "event": {
+            "type": "tool_result",
+            "toolCallId": "tool-1",
+            "toolName": "run_report_query",
+            "status": "succeeded",
+            "message": "Got results.",
+            "durationMs": 125,
+            "details": {
+              "kind": "execution",
+              "queryText": "FROM matches SELECT games",
+              "ok": true,
+              "rowsReturned": 1,
+              "rowsScanned": 42,
+              "renderKind": "TABLE"
+            },
+            "rawOutput": null
+          }
+        }
+      ],
+      "expectTurn": {
+        "trace": [
+          {
+            "toolCallId": "tool-1",
+            "status": "succeeded",
+            "durationMs": 125,
+            "rawInput": {
+              "kind": "value"
+            },
+            "details": {
+              "ok": true
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "a result for a call this client never saw is appended",
+      "start": {
+        "conversationId": "11111111-1111-4111-8111-111111111111",
+        "question": "Who wins?",
+        "leafIdAtStart": null
+      },
+      "steps": [
+        {
+          "event": {
+            "type": "started",
+            "runId": "66666666-6666-4666-8666-666666666666",
+            "conversationId": "11111111-1111-4111-8111-111111111111",
+            "questionMessageId": "33333333-3333-4333-8333-333333333333"
+          }
+        },
+        {
+          "event": {
+            "type": "tool_result",
+            "toolCallId": "tool-9",
+            "toolName": "run_report_query",
+            "status": "failed",
+            "message": "The query failed.",
+            "durationMs": null,
+            "details": null,
+            "rawOutput": null
+          }
+        }
+      ],
+      "expectTurn": {
+        "trace": [
+          {
+            "toolCallId": "tool-9",
+            "status": "failed",
+            "durationMs": null,
+            "rawInput": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "final pins the persisted message and replaces the streamed text",
+      "start": {
+        "conversationId": "11111111-1111-4111-8111-111111111111",
+        "question": "Who wins?",
+        "leafIdAtStart": null
+      },
+      "steps": [
+        {
+          "event": {
+            "type": "started",
+            "runId": "66666666-6666-4666-8666-666666666666",
+            "conversationId": "11111111-1111-4111-8111-111111111111",
+            "questionMessageId": "33333333-3333-4333-8333-333333333333"
+          }
+        },
+        {
+          "event": {
+            "type": "answer_delta",
+            "text": "Jin"
+          }
+        },
+        {
+          "event": {
+            "type": "final",
+            "message": {
+              "id": "44444444-4444-4444-8444-444444444444",
+              "role": "assistant",
+              "parentId": "33333333-3333-4333-8333-333333333333",
+              "content": "Jinx.",
+              "createdAt": "2026-08-14T12:00:00.000Z"
+            },
+            "title": "Who wins?",
+            "quota": []
+          }
+        }
+      ],
+      "expectTurn": {
+        "finalMessageId": "44444444-4444-4444-8444-444444444444",
+        "answer": "Jinx.",
+        "activity": null
+      }
+    },
+    {
+      "name": "stopping interrupts running steps and keeps finished ones",
+      "start": {
+        "conversationId": "11111111-1111-4111-8111-111111111111",
+        "question": "Who wins?",
+        "leafIdAtStart": null
+      },
+      "steps": [
+        {
+          "event": {
+            "type": "started",
+            "runId": "66666666-6666-4666-8666-666666666666",
+            "conversationId": "11111111-1111-4111-8111-111111111111",
+            "questionMessageId": "33333333-3333-4333-8333-333333333333"
+          }
+        },
+        {
+          "event": {
+            "type": "tool_call",
+            "toolCallId": "tool-1",
+            "toolName": "run_report_query",
+            "message": "Querying match data.",
+            "details": null,
+            "rawInput": null
+          }
+        },
+        {
+          "event": {
+            "type": "tool_call",
+            "toolCallId": "tool-2",
+            "toolName": "run_report_query",
+            "message": "Querying match data.",
+            "details": null,
+            "rawInput": null
+          }
+        },
+        {
+          "event": {
+            "type": "tool_result",
+            "toolCallId": "tool-2",
+            "toolName": "run_report_query",
+            "status": "succeeded",
+            "message": "Got results.",
+            "durationMs": 125,
+            "details": null,
+            "rawOutput": null
+          }
+        },
+        {
+          "event": {
+            "type": "answer_delta",
+            "text": "Jin"
+          }
+        },
+        {
+          "markStopping": true
+        }
+      ],
+      "expectTurn": {
+        "phase": "stopping",
+        "activity": "Stopped — saving the partial answer…",
+        "trace": [
+          {
+            "toolCallId": "tool-1",
+            "status": "interrupted",
+            "message": "Interrupted before this step finished."
+          },
+          {
+            "toolCallId": "tool-2",
+            "status": "succeeded",
+            "message": "Got results."
+          }
+        ]
+      }
+    },
+    {
+      "name": "stopping before any answer clears the status",
+      "start": {
+        "conversationId": "11111111-1111-4111-8111-111111111111",
+        "question": "Who wins?",
+        "leafIdAtStart": null
+      },
+      "steps": [
+        {
+          "event": {
+            "type": "started",
+            "runId": "66666666-6666-4666-8666-666666666666",
+            "conversationId": "11111111-1111-4111-8111-111111111111",
+            "questionMessageId": "33333333-3333-4333-8333-333333333333"
+          }
+        },
+        {
+          "markStopping": true
+        }
+      ],
+      "expectTurn": {
+        "phase": "stopping",
+        "activity": null
+      },
+      "visible": [
+        {
+          "displayedConversationId": "11111111-1111-4111-8111-111111111111",
+          "messages": [],
+          "expect": {
+            "stopping": true,
+            "activity": null,
+            "pendingQuestion": "Who wins?"
+          }
+        }
+      ]
+    },
+    {
+      "name": "hides everything for another conversation",
+      "start": {
+        "conversationId": "11111111-1111-4111-8111-111111111111",
+        "question": "Who wins?",
+        "leafIdAtStart": null
+      },
+      "steps": [
+        {
+          "event": {
+            "type": "started",
+            "runId": "66666666-6666-4666-8666-666666666666",
+            "conversationId": "11111111-1111-4111-8111-111111111111",
+            "questionMessageId": "33333333-3333-4333-8333-333333333333"
+          }
+        }
+      ],
+      "visible": [
+        {
+          "displayedConversationId": "22222222-2222-4222-8222-222222222222",
+          "messages": [],
+          "expect": {
+            "pendingQuestion": null,
+            "pendingAnswer": null,
+            "activity": null,
+            "stopping": false,
+            "trace": [],
+            "preview": null,
+            "visualization": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "matches a not-yet-created conversation to the new view",
+      "start": {
+        "conversationId": null,
+        "question": "Who wins?",
+        "leafIdAtStart": null
+      },
+      "steps": [],
+      "visible": [
+        {
+          "displayedConversationId": null,
+          "messages": [],
+          "expect": {
+            "pendingQuestion": "Who wins?"
+          }
+        }
+      ]
+    },
+    {
+      "name": "keeps a started new conversation on the blank explore view",
+      "start": {
+        "conversationId": "11111111-1111-4111-8111-111111111111",
+        "question": "Who wins?",
+        "leafIdAtStart": null
+      },
+      "steps": [
+        {
+          "event": {
+            "type": "started",
+            "runId": "66666666-6666-4666-8666-666666666666",
+            "conversationId": "11111111-1111-4111-8111-111111111111",
+            "questionMessageId": "33333333-3333-4333-8333-333333333333"
+          }
+        }
+      ],
+      "visible": [
+        {
+          "displayedConversationId": null,
+          "messages": [],
+          "expect": {
+            "pendingQuestion": "Who wins?",
+            "activity": "Thinking…"
+          }
+        }
+      ]
+    },
+    {
+      "name": "drops the question once the transcript contains it",
+      "start": {
+        "conversationId": "11111111-1111-4111-8111-111111111111",
+        "question": "Who wins?",
+        "leafIdAtStart": null
+      },
+      "steps": [
+        {
+          "event": {
+            "type": "started",
+            "runId": "66666666-6666-4666-8666-666666666666",
+            "conversationId": "11111111-1111-4111-8111-111111111111",
+            "questionMessageId": "33333333-3333-4333-8333-333333333333"
+          }
+        }
+      ],
+      "visible": [
+        {
+          "displayedConversationId": "11111111-1111-4111-8111-111111111111",
+          "messages": [
+            {
+              "id": "33333333-3333-4333-8333-333333333333",
+              "role": "user",
+              "parentId": null,
+              "content": "Who wins?",
+              "createdAt": "2026-08-14T12:00:00.000Z"
+            }
+          ],
+          "expect": {
+            "pendingQuestion": null,
+            "activity": "Thinking…"
+          }
+        }
+      ]
+    },
+    {
+      "name": "drops the answer once the turn has landed",
+      "start": {
+        "conversationId": "11111111-1111-4111-8111-111111111111",
+        "question": "Who wins?",
+        "leafIdAtStart": null
+      },
+      "steps": [
+        {
+          "event": {
+            "type": "started",
+            "runId": "66666666-6666-4666-8666-666666666666",
+            "conversationId": "11111111-1111-4111-8111-111111111111",
+            "questionMessageId": "33333333-3333-4333-8333-333333333333"
+          }
+        },
+        {
+          "event": {
+            "type": "answer_delta",
+            "text": "Jinx."
+          }
+        },
+        {
+          "event": {
+            "type": "final",
+            "message": {
+              "id": "44444444-4444-4444-8444-444444444444",
+              "role": "assistant",
+              "parentId": "33333333-3333-4333-8333-333333333333",
+              "content": "Jinx.",
+              "createdAt": "2026-08-14T12:00:00.000Z"
+            },
+            "title": "Who wins?",
+            "quota": []
+          }
+        }
+      ],
+      "visible": [
+        {
+          "displayedConversationId": "11111111-1111-4111-8111-111111111111",
+          "messages": [
+            {
+              "id": "33333333-3333-4333-8333-333333333333",
+              "role": "user",
+              "parentId": null,
+              "content": "Who wins?",
+              "createdAt": "2026-08-14T12:00:00.000Z"
+            },
+            {
+              "id": "44444444-4444-4444-8444-444444444444",
+              "role": "assistant",
+              "parentId": "33333333-3333-4333-8333-333333333333",
+              "content": "Jinx.",
+              "createdAt": "2026-08-14T12:00:00.000Z"
+            }
+          ],
+          "expect": {
+            "pendingQuestion": null,
+            "pendingAnswer": null,
+            "activity": null,
+            "stopping": false,
+            "trace": [],
+            "preview": null,
+            "visualization": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "sees a salvage row under the question",
+      "start": {
+        "conversationId": "11111111-1111-4111-8111-111111111111",
+        "question": "Who wins?",
+        "leafIdAtStart": null
+      },
+      "steps": [
+        {
+          "event": {
+            "type": "started",
+            "runId": "66666666-6666-4666-8666-666666666666",
+            "conversationId": "11111111-1111-4111-8111-111111111111",
+            "questionMessageId": "33333333-3333-4333-8333-333333333333"
+          }
+        },
+        {
+          "event": {
+            "type": "answer_delta",
+            "text": "Jin"
+          }
+        },
+        {
+          "markStopping": true
+        }
+      ],
+      "landed": [
+        {
+          "messages": [
+            {
+              "id": "33333333-3333-4333-8333-333333333333",
+              "role": "user",
+              "parentId": null,
+              "content": "Who wins?",
+              "createdAt": "2026-08-14T12:00:00.000Z"
+            },
+            {
+              "id": "44444444-4444-4444-8444-444444444444",
+              "role": "assistant",
+              "parentId": "33333333-3333-4333-8333-333333333333",
+              "content": "Jinx.",
+              "createdAt": "2026-08-14T12:00:00.000Z"
+            }
+          ],
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "ignores the pre-existing answer during a regenerate",
+      "start": {
+        "conversationId": "11111111-1111-4111-8111-111111111111",
+        "question": null,
+        "leafIdAtStart": "55555555-5555-4555-8555-555555555555"
+      },
+      "steps": [
+        {
+          "event": {
+            "type": "started",
+            "runId": "66666666-6666-4666-8666-666666666666",
+            "conversationId": "11111111-1111-4111-8111-111111111111",
+            "questionMessageId": "33333333-3333-4333-8333-333333333333"
+          }
+        }
+      ],
+      "landed": [
+        {
+          "messages": [
+            {
+              "id": "33333333-3333-4333-8333-333333333333",
+              "role": "user",
+              "parentId": null,
+              "content": "Who wins?",
+              "createdAt": "2026-08-14T12:00:00.000Z"
+            },
+            {
+              "id": "55555555-5555-4555-8555-555555555555",
+              "role": "assistant",
+              "parentId": "33333333-3333-4333-8333-333333333333",
+              "content": "Jinx.",
+              "createdAt": "2026-08-14T12:00:00.000Z"
+            }
+          ],
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "is not landed while only the question is persisted",
+      "start": {
+        "conversationId": "11111111-1111-4111-8111-111111111111",
+        "question": "Who wins?",
+        "leafIdAtStart": null
+      },
+      "steps": [
+        {
+          "event": {
+            "type": "started",
+            "runId": "66666666-6666-4666-8666-666666666666",
+            "conversationId": "11111111-1111-4111-8111-111111111111",
+            "questionMessageId": "33333333-3333-4333-8333-333333333333"
+          }
+        }
+      ],
+      "landed": [
+        {
+          "messages": [
+            {
+              "id": "33333333-3333-4333-8333-333333333333",
+              "role": "user",
+              "parentId": null,
+              "content": "Who wins?",
+              "createdAt": "2026-08-14T12:00:00.000Z"
+            }
+          ],
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "before started: hides the optimistic question once the transcript carries it",
+      "start": {
+        "conversationId": "11111111-1111-4111-8111-111111111111",
+        "question": "Who wins?",
+        "leafIdAtStart": null
+      },
+      "steps": [],
+      "expectTurn": {
+        "questionMessageId": null
+      },
+      "visible": [
+        {
+          "displayedConversationId": "11111111-1111-4111-8111-111111111111",
+          "messages": [
+            {
+              "id": "33333333-3333-4333-8333-333333333333",
+              "role": "user",
+              "parentId": null,
+              "content": "Who wins?",
+              "createdAt": "2026-08-14T12:00:00.000Z"
+            }
+          ],
+          "expect": {
+            "pendingQuestion": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "before started: matches its persisted row even when the question was typed with padding",
+      "start": {
+        "conversationId": "11111111-1111-4111-8111-111111111111",
+        "question": "  Who wins?  ",
+        "leafIdAtStart": null
+      },
+      "steps": [],
+      "visible": [
+        {
+          "displayedConversationId": "11111111-1111-4111-8111-111111111111",
+          "messages": [
+            {
+              "id": "33333333-3333-4333-8333-333333333333",
+              "role": "user",
+              "parentId": null,
+              "content": "Who wins?",
+              "createdAt": "2026-08-14T12:00:00.000Z"
+            }
+          ],
+          "expect": {
+            "pendingQuestion": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "before started: still shows it while the transcript has not caught up",
+      "start": {
+        "conversationId": "11111111-1111-4111-8111-111111111111",
+        "question": "Who wins?",
+        "leafIdAtStart": null
+      },
+      "steps": [],
+      "visible": [
+        {
+          "displayedConversationId": "11111111-1111-4111-8111-111111111111",
+          "messages": [],
+          "expect": {
+            "pendingQuestion": "Who wins?"
+          }
+        }
+      ]
+    },
+    {
+      "name": "before started: does not mistake the leaf that was already on screen for this turn",
+      "start": {
+        "conversationId": "11111111-1111-4111-8111-111111111111",
+        "question": "Who wins?",
+        "leafIdAtStart": "33333333-3333-4333-8333-333333333333"
+      },
+      "steps": [],
+      "visible": [
+        {
+          "displayedConversationId": "11111111-1111-4111-8111-111111111111",
+          "messages": [
+            {
+              "id": "33333333-3333-4333-8333-333333333333",
+              "role": "user",
+              "parentId": null,
+              "content": "Who wins?",
+              "createdAt": "2026-08-14T12:00:00.000Z"
+            }
+          ],
+          "expect": {
+            "pendingQuestion": "Who wins?"
+          }
+        }
+      ]
+    },
+    {
+      "name": "before started: does not match a different question with the same shape",
+      "start": {
+        "conversationId": "11111111-1111-4111-8111-111111111111",
+        "question": "Who loses?",
+        "leafIdAtStart": null
+      },
+      "steps": [],
+      "visible": [
+        {
+          "displayedConversationId": "11111111-1111-4111-8111-111111111111",
+          "messages": [
+            {
+              "id": "33333333-3333-4333-8333-333333333333",
+              "role": "user",
+              "parentId": null,
+              "content": "Who wins?",
+              "createdAt": "2026-08-14T12:00:00.000Z"
+            }
+          ],
+          "expect": {
+            "pendingQuestion": "Who loses?"
+          }
+        }
+      ]
+    },
+    {
+      "name": "before started: a regenerate has no question to duplicate",
+      "start": {
+        "conversationId": "11111111-1111-4111-8111-111111111111",
+        "question": null,
+        "leafIdAtStart": null
+      },
+      "steps": [],
+      "visible": [
+        {
+          "displayedConversationId": "11111111-1111-4111-8111-111111111111",
+          "messages": [
+            {
+              "id": "33333333-3333-4333-8333-333333333333",
+              "role": "user",
+              "parentId": null,
+              "content": "Who wins?",
+              "createdAt": "2026-08-14T12:00:00.000Z"
+            }
+          ],
+          "expect": {
+            "pendingQuestion": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "before started: an answer already under the question is not a question row",
+      "start": {
+        "conversationId": "11111111-1111-4111-8111-111111111111",
+        "question": "Who wins?",
+        "leafIdAtStart": null
+      },
+      "steps": [],
+      "visible": [
+        {
+          "displayedConversationId": "11111111-1111-4111-8111-111111111111",
+          "messages": [
+            {
+              "id": "33333333-3333-4333-8333-333333333333",
+              "role": "user",
+              "parentId": null,
+              "content": "Who wins?",
+              "createdAt": "2026-08-14T12:00:00.000Z"
+            },
+            {
+              "id": "44444444-4444-4444-8444-444444444444",
+              "role": "assistant",
+              "parentId": "33333333-3333-4333-8333-333333333333",
+              "content": "Jinx.",
+              "createdAt": "2026-08-14T12:00:00.000Z"
+            }
+          ],
+          "expect": {
+            "pendingQuestion": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "renders a query result as soon as the preview event arrives",
+      "start": {
+        "conversationId": "11111111-1111-4111-8111-111111111111",
+        "question": "Who wins?",
+        "leafIdAtStart": null
+      },
+      "steps": [
+        {
+          "event": {
+            "type": "started",
+            "runId": "66666666-6666-4666-8666-666666666666",
+            "conversationId": "11111111-1111-4111-8111-111111111111",
+            "questionMessageId": "33333333-3333-4333-8333-333333333333"
+          }
+        },
+        {
+          "event": {
+            "type": "preview",
+            "preview": {
+              "columns": [
+                {
+                  "key": "label",
+                  "label": "Champion",
+                  "format": "text"
+                },
+                {
+                  "key": "games",
+                  "label": "Games",
+                  "format": "integer"
+                }
+              ],
+              "rows": [
+                {
+                  "label": "Jinx",
+                  "values": [
+                    {
+                      "column": "games",
+                      "value": 84
+                    }
+                  ]
+                }
+              ],
+              "visualizationRows": [],
+              "rowsReturned": 1,
+              "rowsScanned": 1284,
+              "renderKind": "TABLE"
+            },
+            "visualization": null
+          }
+        }
+      ],
+      "expectTurn": {
+        "preview": {
+          "rows": [
+            {
+              "label": "Jinx"
+            }
+          ],
+          "rowsScanned": 1284
+        }
+      }
+    },
+    {
+      "name": "a later query replaces an earlier one",
+      "start": {
+        "conversationId": "11111111-1111-4111-8111-111111111111",
+        "question": "Who wins?",
+        "leafIdAtStart": null
+      },
+      "steps": [
+        {
+          "event": {
+            "type": "started",
+            "runId": "66666666-6666-4666-8666-666666666666",
+            "conversationId": "11111111-1111-4111-8111-111111111111",
+            "questionMessageId": "33333333-3333-4333-8333-333333333333"
+          }
+        },
+        {
+          "event": {
+            "type": "preview",
+            "preview": {
+              "columns": [
+                {
+                  "key": "label",
+                  "label": "Champion",
+                  "format": "text"
+                },
+                {
+                  "key": "games",
+                  "label": "Games",
+                  "format": "integer"
+                }
+              ],
+              "rows": [
+                {
+                  "label": "Jinx",
+                  "values": [
+                    {
+                      "column": "games",
+                      "value": 84
+                    }
+                  ]
+                }
+              ],
+              "visualizationRows": [],
+              "rowsReturned": 1,
+              "rowsScanned": 1284,
+              "renderKind": "TABLE"
+            },
+            "visualization": null
+          }
+        },
+        {
+          "event": {
+            "type": "preview",
+            "preview": {
+              "columns": [
+                {
+                  "key": "label",
+                  "label": "Champion",
+                  "format": "text"
+                },
+                {
+                  "key": "games",
+                  "label": "Games",
+                  "format": "integer"
+                }
+              ],
+              "rows": [],
+              "visualizationRows": [],
+              "rowsReturned": 0,
+              "rowsScanned": 7,
+              "renderKind": "TABLE"
+            },
+            "visualization": null
+          }
+        }
+      ],
+      "expectTurn": {
+        "preview": {
+          "rowsScanned": 7
+        }
+      }
+    },
+    {
+      "name": "a reconnect restores the table and drops a possibly stale chart",
+      "start": {
+        "conversationId": "11111111-1111-4111-8111-111111111111",
+        "question": "Who wins?",
+        "leafIdAtStart": null
+      },
+      "steps": [
+        {
+          "event": {
+            "type": "started",
+            "runId": "66666666-6666-4666-8666-666666666666",
+            "conversationId": "11111111-1111-4111-8111-111111111111",
+            "questionMessageId": "33333333-3333-4333-8333-333333333333"
+          }
+        },
+        {
+          "event": {
+            "type": "preview",
+            "preview": {
+              "columns": [
+                {
+                  "key": "label",
+                  "label": "Champion",
+                  "format": "text"
+                },
+                {
+                  "key": "games",
+                  "label": "Games",
+                  "format": "integer"
+                }
+              ],
+              "rows": [
+                {
+                  "label": "Jinx",
+                  "values": [
+                    {
+                      "column": "games",
+                      "value": 84
+                    }
+                  ]
+                }
+              ],
+              "visualizationRows": [],
+              "rowsReturned": 1,
+              "rowsScanned": 1284,
+              "renderKind": "TABLE"
+            },
+            "visualization": null
+          }
+        },
+        {
+          "event": {
+            "type": "snapshot",
+            "runId": "66666666-6666-4666-8666-666666666666",
+            "conversationId": "11111111-1111-4111-8111-111111111111",
+            "questionMessageId": "33333333-3333-4333-8333-333333333333",
+            "leafIdAtStart": null,
+            "versionCountAtStart": 0,
+            "startedAt": "2026-08-18T12:00:00.000Z",
+            "answer": "Jinx",
+            "activity": "Querying match data.",
+            "trace": []
+          },
+          "expectTurn": {
+            "preview": null
+          }
+        },
+        {
+          "event": {
+            "type": "run_preview",
+            "preview": {
+              "columns": [
+                {
+                  "key": "label",
+                  "label": "Champion",
+                  "format": "text"
+                },
+                {
+                  "key": "games",
+                  "label": "Games",
+                  "format": "integer"
+                }
+              ],
+              "rows": [
+                {
+                  "label": "Jinx",
+                  "values": [
+                    {
+                      "column": "games",
+                      "value": 84
+                    }
+                  ]
+                }
+              ],
+              "visualizationRows": [],
+              "rowsReturned": 1,
+              "rowsScanned": 1284,
+              "renderKind": "TABLE"
+            },
+            "ignorable": true
+          }
+        }
+      ],
+      "expectTurn": {
+        "preview": {
+          "rowsScanned": 1284
+        },
+        "visualization": null
+      }
+    },
+    {
+      "name": "a reconnect after a second query does not keep the first chart",
+      "start": {
+        "conversationId": "11111111-1111-4111-8111-111111111111",
+        "question": "Who wins?",
+        "leafIdAtStart": null
+      },
+      "steps": [
+        {
+          "event": {
+            "type": "started",
+            "runId": "66666666-6666-4666-8666-666666666666",
+            "conversationId": "11111111-1111-4111-8111-111111111111",
+            "questionMessageId": "33333333-3333-4333-8333-333333333333"
+          }
+        },
+        {
+          "event": {
+            "type": "preview",
+            "preview": {
+              "columns": [
+                {
+                  "key": "label",
+                  "label": "Champion",
+                  "format": "text"
+                },
+                {
+                  "key": "games",
+                  "label": "Games",
+                  "format": "integer"
+                }
+              ],
+              "rows": [
+                {
+                  "label": "Jinx",
+                  "values": [
+                    {
+                      "column": "games",
+                      "value": 84
+                    }
+                  ]
+                }
+              ],
+              "visualizationRows": [],
+              "rowsReturned": 1,
+              "rowsScanned": 1284,
+              "renderKind": "TABLE"
+            },
+            "visualization": {
+              "version": 1,
+              "generatedAt": "2026-08-18T12:00:00.000Z",
+              "kind": "line_chart",
+              "title": "Games per week",
+              "temporal": null,
+              "bucket": null,
+              "display": {
+                "theme": null,
+                "palette": null,
+                "smooth": false,
+                "stack": "none",
+                "rollingWindow": null,
+                "cumulative": false,
+                "sparkline": false
+              },
+              "series": [],
+              "annotations": [],
+              "trends": []
+            }
+          },
+          "expectTurn": {
+            "visualization": {
+              "version": 1
+            }
+          }
+        },
+        {
+          "event": {
+            "type": "snapshot",
+            "runId": "66666666-6666-4666-8666-666666666666",
+            "conversationId": "11111111-1111-4111-8111-111111111111",
+            "questionMessageId": "33333333-3333-4333-8333-333333333333",
+            "leafIdAtStart": null,
+            "versionCountAtStart": 0,
+            "startedAt": "2026-08-18T12:00:00.000Z",
+            "answer": "Jinx",
+            "activity": "Querying match data.",
+            "trace": []
+          }
+        },
+        {
+          "event": {
+            "type": "run_preview",
+            "preview": {
+              "columns": [
+                {
+                  "key": "label",
+                  "label": "Champion",
+                  "format": "text"
+                },
+                {
+                  "key": "games",
+                  "label": "Games",
+                  "format": "integer"
+                }
+              ],
+              "rows": [
+                {
+                  "label": "Jinx",
+                  "values": [
+                    {
+                      "column": "games",
+                      "value": 84
+                    }
+                  ]
+                }
+              ],
+              "visualizationRows": [],
+              "rowsReturned": 1,
+              "rowsScanned": 7,
+              "renderKind": "TABLE"
+            },
+            "ignorable": true
+          }
+        }
+      ],
+      "expectTurn": {
+        "preview": {
+          "rowsScanned": 7
+        },
+        "visualization": null
+      }
+    },
+    {
+      "name": "stops rendering its own copy once the turn has landed",
+      "start": {
+        "conversationId": "11111111-1111-4111-8111-111111111111",
+        "question": "Who wins?",
+        "leafIdAtStart": null
+      },
+      "steps": [
+        {
+          "event": {
+            "type": "started",
+            "runId": "66666666-6666-4666-8666-666666666666",
+            "conversationId": "11111111-1111-4111-8111-111111111111",
+            "questionMessageId": "33333333-3333-4333-8333-333333333333"
+          }
+        },
+        {
+          "event": {
+            "type": "preview",
+            "preview": {
+              "columns": [
+                {
+                  "key": "label",
+                  "label": "Champion",
+                  "format": "text"
+                },
+                {
+                  "key": "games",
+                  "label": "Games",
+                  "format": "integer"
+                }
+              ],
+              "rows": [
+                {
+                  "label": "Jinx",
+                  "values": [
+                    {
+                      "column": "games",
+                      "value": 84
+                    }
+                  ]
+                }
+              ],
+              "visualizationRows": [],
+              "rowsReturned": 1,
+              "rowsScanned": 1284,
+              "renderKind": "TABLE"
+            },
+            "visualization": null
+          }
+        },
+        {
+          "event": {
+            "type": "final",
+            "message": {
+              "id": "44444444-4444-4444-8444-444444444444",
+              "role": "assistant",
+              "parentId": "33333333-3333-4333-8333-333333333333",
+              "content": "Jinx.",
+              "createdAt": "2026-08-14T12:00:00.000Z"
+            },
+            "title": "Who wins?",
+            "quota": []
+          }
+        }
+      ],
+      "visible": [
+        {
+          "displayedConversationId": "11111111-1111-4111-8111-111111111111",
+          "messages": [
+            {
+              "id": "44444444-4444-4444-8444-444444444444",
+              "role": "assistant",
+              "parentId": "33333333-3333-4333-8333-333333333333",
+              "content": "Jinx.",
+              "createdAt": "2026-08-14T12:00:00.000Z"
+            }
+          ],
+          "expect": {
+            "preview": null
+          }
+        }
+      ]
+    }
+  ],
+  "completions": [
+    {
+      "name": "does not mistake the old answer for a failed regeneration",
+      "run": {
+        "questionMessageId": "33333333-3333-4333-8333-333333333333",
+        "versionCountAtStart": 2
+      },
+      "outcome": "failed",
+      "finalMessageId": null,
+      "messages": [
+        {
+          "id": "77777777-7777-4777-8777-777777777777",
+          "role": "assistant",
+          "parentId": "33333333-3333-4333-8333-333333333333",
+          "content": "Answer",
+          "caveats": [],
+          "siblingIds": [
+            "55555555-5555-4555-8555-555555555555",
+            "77777777-7777-4777-8777-777777777777"
+          ],
+          "createdAt": "2026-08-20T00:00:00.000Z"
+        }
+      ],
+      "expect": {
+        "markerState": "failed",
+        "answerVisible": false
+      }
+    },
+    {
+      "name": "recognizes a persisted answer when completion raced reconnection",
+      "run": {
+        "questionMessageId": "33333333-3333-4333-8333-333333333333",
+        "versionCountAtStart": 1
+      },
+      "outcome": "interrupted",
+      "finalMessageId": null,
+      "messages": [
+        {
+          "id": "44444444-4444-4444-8444-444444444444",
+          "role": "assistant",
+          "parentId": "33333333-3333-4333-8333-333333333333",
+          "content": "Answer",
+          "caveats": [],
+          "siblingIds": [
+            "55555555-5555-4555-8555-555555555555",
+            "44444444-4444-4444-8444-444444444444"
+          ],
+          "createdAt": "2026-08-20T00:00:00.000Z"
+        }
+      ],
+      "expect": {
+        "markerState": "completed",
+        "answerVisible": true
+      }
+    },
+    {
+      "name": "an interrupted caveat remains a failure even after persistence",
+      "run": {
+        "questionMessageId": "33333333-3333-4333-8333-333333333333",
+        "versionCountAtStart": 0
+      },
+      "outcome": "interrupted",
+      "finalMessageId": "44444444-4444-4444-8444-444444444444",
+      "messages": [
+        {
+          "id": "44444444-4444-4444-8444-444444444444",
+          "role": "assistant",
+          "parentId": "33333333-3333-4333-8333-333333333333",
+          "content": "Answer",
+          "caveats": [
+            "This answer was interrupted by an error before it finished."
+          ],
+          "siblingIds": ["44444444-4444-4444-8444-444444444444"],
+          "createdAt": "2026-08-20T00:00:00.000Z"
+        }
+      ],
+      "expect": {
+        "markerState": "failed",
+        "answerVisible": true
+      }
+    },
+    {
+      "name": "a stopped run without a persisted answer is not a failure",
+      "run": {
+        "questionMessageId": "33333333-3333-4333-8333-333333333333",
+        "versionCountAtStart": 0
+      },
+      "outcome": "stopped",
+      "finalMessageId": null,
+      "messages": [],
+      "expect": {
+        "markerState": null,
+        "answerVisible": false
+      }
+    },
+    {
+      "name": "a stopped caveat settles without a marker",
+      "run": {
+        "questionMessageId": "33333333-3333-4333-8333-333333333333",
+        "versionCountAtStart": 0
+      },
+      "outcome": "succeeded",
+      "finalMessageId": "44444444-4444-4444-8444-444444444444",
+      "messages": [
+        {
+          "id": "44444444-4444-4444-8444-444444444444",
+          "role": "assistant",
+          "parentId": "33333333-3333-4333-8333-333333333333",
+          "content": "Answer",
+          "caveats": ["This answer was stopped before it finished."],
+          "siblingIds": ["44444444-4444-4444-8444-444444444444"],
+          "createdAt": "2026-08-20T00:00:00.000Z"
+        }
+      ],
+      "expect": {
+        "markerState": null,
+        "answerVisible": true
+      },
+      "clear": {
+        "displayedConversationId": "22222222-2222-4222-8222-222222222222",
+        "runConversationId": "11111111-1111-4111-8111-111111111111",
+        "expect": true
+      }
+    },
+    {
+      "name": "keeps a completion marker when another branch is visible",
+      "run": {
+        "questionMessageId": "33333333-3333-4333-8333-333333333333",
+        "versionCountAtStart": 1
+      },
+      "outcome": "succeeded",
+      "finalMessageId": "44444444-4444-4444-8444-444444444444",
+      "messages": [
+        {
+          "id": "55555555-5555-4555-8555-555555555555",
+          "role": "assistant",
+          "parentId": "33333333-3333-4333-8333-333333333333",
+          "content": "Answer",
+          "caveats": [],
+          "siblingIds": ["55555555-5555-4555-8555-555555555555"],
+          "createdAt": "2026-08-20T00:00:00.000Z"
+        }
+      ],
+      "expect": {
+        "markerState": "completed",
+        "answerVisible": false
+      },
+      "clear": {
+        "displayedConversationId": "11111111-1111-4111-8111-111111111111",
+        "runConversationId": "11111111-1111-4111-8111-111111111111",
+        "expect": false
+      }
+    }
+  ]
+}

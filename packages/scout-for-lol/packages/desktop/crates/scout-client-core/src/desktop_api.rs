@@ -5,6 +5,11 @@
 //! backend validates the same files with Zod; the tests here hold these strict
 //! serde types to them, so either side drifting fails its own suite.
 //!
+//! These are the envelopes the pairing flow and the Explore client share.
+//! Transcript messages and `runs/stream` frames are typed in the
+//! `scout-explore-client` crate, together with the turn reducer that reads
+//! them.
+//!
 //! Every body is strict in both directions. A route never gains a field: a
 //! change ships as a new route and a contract version bump. An enum never
 //! gains a member for a build that predates it either; the server down-shapes
@@ -14,7 +19,6 @@ use std::collections::BTreeMap;
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 use uuid::Uuid;
 
 /// Request header carrying the client's desktop contract version.
@@ -264,19 +268,6 @@ pub struct ConversationDetail {
     pub updated_at: DateTime<Utc>,
 }
 
-/// Response from `explore/conversations/get`.
-///
-/// Messages stay JSON here; the Explore client crate owns their typed model
-/// together with the turn reducer that consumes them.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct ConversationGetResponse {
-    /// Conversation header.
-    pub conversation: ConversationDetail,
-    /// Messages on the current branch, oldest first.
-    pub messages: Vec<Value>,
-}
-
 /// Where a turn attaches in the conversation tree.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(
@@ -392,151 +383,6 @@ pub struct RunOutcomeResponse {
     pub outcome: Option<RunOutcome>,
 }
 
-/// How a tool call finished.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum ToolStatus {
-    /// It returned.
-    Succeeded,
-    /// It failed.
-    Failed,
-}
-
-/// One frame of `runs/stream`: `event: <type>` and `data: <json>`.
-///
-/// Tables, traces and messages stay JSON here; the Explore client crate owns
-/// their typed model together with the turn reducer. A frame whose type this
-/// build does not know may be skipped only when it carries `ignorable: true`;
-/// anything else is a stream this build cannot render honestly.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(
-    tag = "type",
-    rename_all = "snake_case",
-    rename_all_fields = "camelCase",
-    deny_unknown_fields
-)]
-pub enum StreamEvent {
-    /// Complete replaceable state, always the first frame after attaching.
-    Snapshot {
-        /// Run id.
-        run_id: Uuid,
-        /// Conversation id.
-        conversation_id: Uuid,
-        /// The question being answered.
-        question_message_id: Uuid,
-        /// The leaf on screen when the run began.
-        leaf_id_at_start: Option<Uuid>,
-        /// Answers that existed when the run began.
-        version_count_at_start: u32,
-        /// When the run began.
-        started_at: DateTime<Utc>,
-        /// The answer so far.
-        answer: Option<String>,
-        /// What the run is doing now.
-        activity: Option<String>,
-        /// Tool calls so far.
-        trace: Vec<Value>,
-    },
-    /// The newest table, sent straight after a snapshot.
-    RunPreview {
-        /// The table, if any.
-        preview: Option<Value>,
-        /// Always true.
-        ignorable: bool,
-    },
-    /// The run began.
-    Started {
-        /// Run id.
-        run_id: Uuid,
-        /// Conversation id.
-        conversation_id: Uuid,
-        /// The question being answered.
-        question_message_id: Uuid,
-    },
-    /// Owner-only narration of what the run is doing.
-    Activity {
-        /// The narration.
-        text: String,
-        /// The tool call it narrates, if any.
-        tool_call_id: Option<String>,
-        /// Always true.
-        ignorable: bool,
-    },
-    /// A tool call began.
-    ToolCall {
-        /// Provider call id.
-        tool_call_id: String,
-        /// Tool name.
-        tool_name: String,
-        /// Generic description.
-        message: String,
-        /// Structured details, if any.
-        details: Option<Value>,
-        /// The call's input, if kept.
-        raw_input: Option<Value>,
-    },
-    /// A tool call finished.
-    ToolResult {
-        /// Provider call id.
-        tool_call_id: String,
-        /// Tool name.
-        tool_name: String,
-        /// How it finished.
-        status: ToolStatus,
-        /// Generic description.
-        message: String,
-        /// Duration in milliseconds, if measured.
-        duration_ms: Option<u64>,
-        /// Structured details, if any.
-        details: Option<Value>,
-        /// The call's output, if kept.
-        raw_output: Option<Value>,
-    },
-    /// A query result to show while the answer is written.
-    Preview {
-        /// The table.
-        preview: Value,
-        /// A chart for it, if any.
-        visualization: Option<Value>,
-    },
-    /// More answer text.
-    AnswerDelta {
-        /// Text to append.
-        text: String,
-    },
-    /// The persisted answer.
-    Final {
-        /// The assistant message.
-        message: Value,
-        /// The conversation's title.
-        title: String,
-        /// Quota after the turn.
-        quota: Vec<ExploreQuota>,
-    },
-    /// The run failed.
-    Error {
-        /// Human-readable reason, safe to show.
-        message: String,
-        /// When to try again, if known.
-        retry_after_seconds: Option<u32>,
-        /// Quota at the failure, if relevant.
-        quota: Option<Vec<ExploreQuota>>,
-    },
-    /// The last frame.
-    Done {
-        /// How the run ended.
-        outcome: RunOutcome,
-    },
-}
-
-/// The golden `runs/stream` body: its frames, in order.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct RunStreamFrames {
-    /// Frames as the server sends them.
-    pub events: Vec<StreamEvent>,
-}
-
 /// How a route answers.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "kebab-case")]
@@ -592,14 +438,13 @@ mod tests {
     use serde_json::Value;
 
     use super::{
-        ActiveRun, ConversationGetRequest, ConversationGetResponse, ConversationListResponse,
-        DESKTOP_CONTRACT_HEADER, DESKTOP_CONTRACT_VERSION, DesktopApiContract, DesktopApiError,
-        DeviceScope, EXPLORE_CONVERSATIONS_GET_PATH, EXPLORE_CONVERSATIONS_LIST_PATH,
-        EXPLORE_RUNS_ACTIVE_PATH, EXPLORE_RUNS_OUTCOME_PATH, EXPLORE_RUNS_START_PATH,
-        EXPLORE_RUNS_STOP_PATH, EXPLORE_RUNS_STREAM_PATH, EXPLORE_STATUS_PATH, EmptyRequest,
-        ExploreStatusResponse, PAIRINGS_V2_PATH, PairingV2Response, RouteResponseKind,
-        RunActiveResponse, RunOutcomeResponse, RunRequest, RunStartRequest, RunStopResponse,
-        RunStreamFrames,
+        ActiveRun, ConversationListResponse, DESKTOP_CONTRACT_HEADER, DESKTOP_CONTRACT_VERSION,
+        DesktopApiContract, DesktopApiError, DeviceScope, EXPLORE_CONVERSATIONS_GET_PATH,
+        EXPLORE_CONVERSATIONS_LIST_PATH, EXPLORE_RUNS_ACTIVE_PATH, EXPLORE_RUNS_OUTCOME_PATH,
+        EXPLORE_RUNS_START_PATH, EXPLORE_RUNS_STOP_PATH, EXPLORE_RUNS_STREAM_PATH,
+        EXPLORE_STATUS_PATH, EmptyRequest, ExploreStatusResponse, PAIRINGS_V2_PATH,
+        PairingV2Response, RouteResponseKind, RunActiveResponse, RunOutcomeResponse, RunRequest,
+        RunStartRequest, RunStopResponse,
     };
     use crate::protocol::CreatePairingRequest;
 
@@ -732,31 +577,6 @@ mod tests {
     }
 
     #[test]
-    fn the_golden_stream_has_exactly_one_frame_per_event_type() -> TestResult {
-        let contract: DesktopApiContract = serde_json::from_str(CONTRACT)?;
-        let fixture: Value = serde_json::from_str(RUNS_STREAM)?;
-        let frames: RunStreamFrames = serde_json::from_value(fixture["response"].clone())?;
-        let types: Vec<String> = frames
-            .events
-            .iter()
-            .map(|event| {
-                serde_json::to_value(event).map(|value| value["type"].as_str().map(str::to_owned))
-            })
-            .collect::<Result<Option<Vec<_>>, _>>()?
-            .ok_or("frame type")?;
-        assert_eq!(types, contract.stream_events);
-        Ok(())
-    }
-
-    #[test]
-    fn an_unknown_stream_frame_is_refused() {
-        let frame = serde_json::json!({ "type": "answer_delta", "text": "x", "extra": 1 });
-        assert!(serde_json::from_value::<super::StreamEvent>(frame).is_err());
-        let unknown = serde_json::json!({ "type": "replay", "ignorable": true });
-        assert!(serde_json::from_value::<super::StreamEvent>(unknown).is_err());
-    }
-
-    #[test]
     fn runs_start_fixture_parses_strictly() -> TestResult {
         check_route::<RunStartRequest, ActiveRun>(RUNS_START, "explore_runs_start")
     }
@@ -782,11 +602,6 @@ mod tests {
     #[test]
     fn runs_outcome_fixture_parses_strictly() -> TestResult {
         check_route::<RunRequest, RunOutcomeResponse>(RUNS_OUTCOME, "explore_runs_outcome")
-    }
-
-    #[test]
-    fn runs_stream_fixture_parses_strictly() -> TestResult {
-        check_route::<RunRequest, RunStreamFrames>(RUNS_STREAM, "explore_runs_stream")
     }
 
     #[test]
@@ -834,13 +649,5 @@ mod tests {
     #[test]
     fn conversation_list_fixture_parses_strictly() -> TestResult {
         check_route::<EmptyRequest, ConversationListResponse>(LIST, "explore_conversations_list")
-    }
-
-    #[test]
-    fn conversation_get_fixture_parses_strictly() -> TestResult {
-        check_route::<ConversationGetRequest, ConversationGetResponse>(
-            GET,
-            "explore_conversations_get",
-        )
     }
 }
