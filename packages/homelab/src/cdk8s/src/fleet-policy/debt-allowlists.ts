@@ -331,7 +331,17 @@ export const PROBE_PORTS_NOT_ADMITTED: ReadonlySet<string> = new Set();
  * Egress rules naming another namespace whose Ingress policy does not admit
  * the rule's pods on the port (`<namespace>/<policy> -> <peer>:<port>`).
  */
-export const UNRECIPROCATED_EGRESS_RULES: ReadonlySet<string> = new Set();
+export const UNRECIPROCATED_EGRESS_RULES: ReadonlySet<string> = new Set([
+  // Delivery reaches Woodpecker through its public URL (`WOODPECKER_URL`,
+  // HTTPS), so nothing uses this in-cluster rule and
+  // `woodpecker-server-netpol` does not admit delivery. Decide whether
+  // delivery should call the Service directly; if not, delete the egress.
+  "delivery/delivery-application-network -> woodpecker:8000",
+  // Only the web pod's activities container is a Temporal worker; the
+  // release Job never connects, and `temporal-server-netpol` admits web pods
+  // only. The release pods share `forumEgress` with the web pods.
+  "storm-forum/storm-forum-release-network -> temporal:7233",
+]);
 
 /**
  * Ingress rules naming another namespace whose Egress policy does not let it

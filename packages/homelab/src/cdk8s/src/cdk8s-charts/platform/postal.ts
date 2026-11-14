@@ -46,6 +46,17 @@ export function createPostalChart(app: App) {
           // Allow SMTP from application namespaces.
           from: [
             nsPeer("bugsink"),
+            // The forum's PHP mailer sends through this Service
+            // (`storm-forum/config/forum.json`): the web pod serves requests
+            // and runs the job queue, and the release Job runs the queue too.
+            ...["storm-forum", "storm-forum-beta"].flatMap((namespace) =>
+              ["web", "release"].map((component) => ({
+                ...nsPeer(namespace),
+                podSelector: {
+                  matchLabels: { app: "storm-forum", component },
+                },
+              })),
+            ),
             {
               // Alertmanager's independent alert-dashboard fallback receiver.
               namespaceSelector: {
