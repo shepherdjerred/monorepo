@@ -339,12 +339,6 @@
       "allowedVersions": "<1.14.1 || >=1.14.3"
     },
     {
-      "description": "Skip .terraform.lock.hcl hash maintenance for hashicorp/aws only. To refresh a lock, Renovate recomputes the h1 hashes itself by downloading every published platform's provider zip (lockfile/index.ts createHashes -> terraform-provider getBuilds -> calculateHashScheme1Hashes), fetching them with concurrency=16. The aws provider ships ~15 platforms at ~150-200MB each, so the parallel downloads OOM-kill the Mend-hosted runner mid-run before it can regenerate Dependency Dashboard #481. Observed 2026-07-03: two runs in a row died at 'Calculating hashes for 15 builds' on branch renovate/aws-6.x-lockfile with no 'Repository finished', leaving #481 stale and the recreate/unlimit checkboxes stuck. Reducing platforms does NOT help: OpenTofu 1.12 records h1 for every platform from the signed SHA256SUMS regardless of `tofu providers lock -platform`, and Renovate hashes every build getBuilds returns, not the ones in the lock. skipArtifactsUpdate stops the in-range lock-only refresh branch from being created at all while still surfacing aws version/constraint-bump PRs. Trade-off: the aws lock is no longer auto-maintained -- when an aws constraint bump lands, regenerate packages/homelab/src/tofu/seaweedfs/.terraform.lock.hcl with `tofu init -upgrade` (CI runs plain `tofu init`, so a stale lock fails fast and visibly). Only aws is affected; every other provider's lock is small and stays Renovate-maintained.",
-      "matchDatasources": ["terraform-provider"],
-      "matchPackageNames": ["hashicorp/aws"],
-      "skipArtifactsUpdate": true
-    },
-    {
       "description": "Storm's Java convention script resolves tool and library versions from libs.versions.toml. Skip native Gradle extraction of this catalog-only consumer, which mistakes version(\"jacoco\") and version(\"pmd\") for literal versions; the authoritative TOML catalog remains managed.",
       "matchManagers": ["gradle"],
       "matchFileNames": [

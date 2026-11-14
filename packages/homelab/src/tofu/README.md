@@ -52,14 +52,15 @@ bun run --cwd packages/homelab-cdktn synth    # rewrite src/tofu/<stack>/main.tf
 bunx turbo run build test --filter=@homelab/cdktn # fails when a committed file is stale
 ```
 
-A stack holds either hand-written HCL or a synthesized `main.tf.json`, never
-both; `tofu-stack.ts` refuses a directory that mixes them. Resource addresses
+A stack is its synthesized `main.tf.json` and holds no HCL: `tofu-stack.ts`,
+the archive producer and the homelab tests refuse a directory without that
+file, or with a `.tf` file at its root or in a local module. Resource addresses
 are the construct ids in `packages/homelab-cdktn/src/stacks/<stack>.ts`, so renaming one is a
 state change. A synthesized stack is accepted only on a plan against live state
 that reports no changes. `tofu validate -backend=false` does not evaluate the
 `encryption` block, so validation alone does not prove an encrypted stack.
 
-A synthesized stack holds no HCL at all. The two local modules the
+The two local modules the
 `cloudflare` root used to call are TypeScript constructs; each of their
 resources is a root resource with a `moved` block from its old
 `module.<name>…` address, kept until state no longer holds it.
@@ -77,21 +78,18 @@ cannot run commands after an upgrade, so a pin bump is finished by hand on its
 branch:
 
 ```bash
-bun run --cwd packages/homelab-cdktn providers:refresh            # every synthesized stack
-bun run --cwd packages/homelab-cdktn providers:refresh -- argocd  # named stacks, either format
+bun run --cwd packages/homelab-cdktn providers:refresh            # every stack
+bun run --cwd packages/homelab-cdktn providers:refresh -- argocd  # named stacks only
 bun run --cwd packages/homelab-cdktn providers:refresh -- --check # report only
 ```
 
 It moves each stack's `.terraform.lock.hcl` to the pins, regenerates the
 bindings and re-synthesizes. It reads provider registries and never
 initializes a backend. A lock moved to a new version is a provider upgrade:
-accept it on a plan against live state like any other stack change.
+accept it on a plan against live state like any other stack change. Nothing
+else maintains a lock file.
 
-A hand-written HCL stack keeps its own `required_providers` constraints and
-its lock is still maintained by Renovate's terraform manager, so it may differ
-from the pin until the stack is ported.
-
-To port a stack, follow `packages/homelab-cdktn/README.md`.
+To add a stack, follow `packages/homelab-cdktn/README.md`.
 
 ## Prerequisites
 
@@ -196,11 +194,11 @@ Every default-branch build also freezes each stack as an immutable,
 content-addressed archive (`s3://delivery-artifacts/tofu/<stack>/<digest>.tar`)
 and registers it with Delivery under the `tofu-<stack>` service. An archive
 holds the stack directory under its repository path, including
-`.terraform.lock.hcl` and any local `modules/`, plus the repository files the
+`.terraform.lock.hcl`, plus the repository files the
 stack's `externalFiles` entry in `scripts/tofu/tofu-stack-manifest.ts`
 declares; `.terraform/`, state, saved plans, `tests/` and `desired-state.json`
 are left out. A configuration that reads a file outside its directory must
-declare it there: `bun run lint:tofu` and the homelab test suite fail on an
+declare it there: the homelab test suite and the archive producer fail on an
 undeclared read, an unread declaration, or a declared file that does not
 exist. Every stack's S3 backend sets `use_lockfile = true`, so concurrent runs
 serialize on the state bucket's lock object rather than on a shared checkout.

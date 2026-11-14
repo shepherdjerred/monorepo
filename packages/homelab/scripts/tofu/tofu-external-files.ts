@@ -16,7 +16,7 @@ import type { StackDefinition } from "./tofu-stack-manifest.ts";
 
 export const TOFU_STACK_ROOT = "packages/homelab/src/tofu";
 
-/** HCL functions whose first argument names a file relative to the root module. */
+/** OpenTofu functions whose first argument names a file relative to the root module. */
 const FILE_FUNCTIONS = [
   "file",
   "filebase64",
@@ -37,38 +37,41 @@ const FILE_CALL = new RegExp(
 const PATH_EXPRESSION =
   /\$\{path\.(?<base>module|root|cwd)\}(?<rest>[^"\s$]*)/gu;
 /**
- * Configuration files tofu loads: every `.tf` and `.tf.json` outside the data
- * directory and the test tree. A synthesized root may still call a local HCL
- * module, so one stack can hold both kinds.
+ * Configuration files tofu loads: every `.tf.json` outside the data directory
+ * and the test tree. {@link assertSynthesizedStack} keeps HCL out of a stack.
  */
-const CONFIGURATION_FILES = "**/*.{tf,tf.json}";
+const CONFIGURATION_FILES = "**/*.tf.json";
+const HCL_FILES = "**/*.tf";
 const SKIPPED_DIRECTORIES = new Set([".terraform", "tests"]);
 
-export type StackConfigurationFormat = "hcl" | "synthesized";
-
 /**
- * A stack is either hand-written HCL (`providers.tf`) or the committed cdktn
- * synthesis (`main.tf.json`, from `packages/homelab-cdktn`). OpenTofu loads both kinds
- * from one directory, so a stack holding both would declare everything twice.
+ * A stack is the committed cdktn synthesis (`main.tf.json`, from
+ * `packages/homelab-cdktn`) and holds no HCL, at its root or in a local
+ * module: OpenTofu would load a root `.tf` file next to the synthesis and
+ * declare things twice, and nothing in the repository lints or reads HCL.
+ * `stack` names the directory in the error.
  */
-export async function stackConfigurationFormat(
-  stack: TofuStack,
-  stackDir: string,
-): Promise<StackConfigurationFormat> {
-  const synthesized = await Bun.file(`${stackDir}/main.tf.json`).exists();
-  const hcl = await Array.fromAsync(
-    new Bun.Glob("*.tf").scan({ cwd: stackDir }),
-  );
-  if (synthesized && hcl.length > 0) {
+export async function assertSynthesizedStack(
+  stack: string,
+  stackDirectory: string,
+): Promise<void> {
+  if (!(await Bun.file(path.join(stackDirectory, "main.tf.json")).exists()))
     throw new Error(
-      `Stack ${stack} has both a synthesized main.tf.json and HCL files: ${hcl.toSorted().join(", ")}`,
+      `Stack ${stack} has no synthesized main.tf.json; packages/homelab-cdktn synthesizes every stack`,
     );
-  }
-  if (synthesized) return "synthesized";
-  if (hcl.includes("providers.tf")) return "hcl";
-  throw new Error(
-    `Stack ${stack} has neither providers.tf nor a synthesized main.tf.json`,
+  // Dot entries are skipped: OpenTofu ignores them, and `.terraform/` holds
+  // the modules and providers it downloaded, which are not the stack's.
+  const hcl = await Array.fromAsync(
+    new Bun.Glob(HCL_FILES).scan({
+      cwd: stackDirectory,
+      onlyFiles: true,
+      followSymlinks: false,
+    }),
   );
+  if (hcl.length > 0)
+    throw new Error(
+      `Stack ${stack} holds HCL next to its synthesized main.tf.json: ${hcl.toSorted().join(", ")}`,
+    );
 }
 
 export type StackFileReference = {
@@ -84,13 +87,6 @@ function within(file: string, directory: string): boolean {
   return file === directory || file.startsWith(`${directory}${path.sep}`);
 }
 
-function stripFullLineComments(content: string): string {
-  return content
-    .split("\n")
-    .filter((line) => !/^\s*(?:#|\/\/)/u.test(line))
-    .join("\n");
-}
-
 /** Every string of a JSON configuration, one per line: its expressions, unescaped. */
 function jsonExpressions(value: unknown): string[] {
   if (typeof value === "string") return [value];
@@ -103,13 +99,10 @@ function jsonExpressions(value: unknown): string[] {
 
 /**
  * The text file references are searched in. JSON syntax escapes the quotes of
- * `file("...")` inside its string values, so those are decoded first; HCL is
- * searched as written, without its comment lines.
+ * `file("...")` inside its string values, so those are decoded first.
  */
-function searchableConfiguration(file: string, content: string): string {
-  return file.endsWith(".tf.json")
-    ? jsonExpressions(JSON.parse(content)).join("\n")
-    : stripFullLineComments(content);
+function searchableConfiguration(content: string): string {
+  return jsonExpressions(JSON.parse(content)).join("\n");
 }
 
 function resolveReference(
@@ -135,7 +128,7 @@ export function fileReferences(input: {
 }): StackFileReference[] {
   const source = path.relative(input.repoRoot, input.file);
   const moduleDirectory = path.dirname(input.file);
-  const content = searchableConfiguration(input.file, input.content);
+  const content = searchableConfiguration(input.content);
   const references: StackFileReference[] = [];
   for (const match of content.matchAll(PATH_EXPRESSION)) {
     const base = match.groups?.["base"];
@@ -213,13 +206,17 @@ export async function stackFileReferences(input: {
   return references;
 }
 
-/** External references must equal the declaration, and every declared file must be a regular file. */
+/**
+ * The stack must be a synthesis holding no HCL, its external references must
+ * equal the declaration, and every declared file must be a regular file.
+ */
 export async function verifyStackExternalFiles(input: {
   repoRoot: string;
   stackDirectory: string;
   declared: readonly string[];
 }): Promise<StackFileReference[]> {
   const stack = path.relative(input.repoRoot, input.stackDirectory);
+  await assertSynthesizedStack(stack, input.stackDirectory);
   const references = await stackFileReferences(input);
   const external = new Map<string, StackFileReference>();
   for (const reference of references)

@@ -8,8 +8,7 @@ import type { TofuStack } from "@shepherdjerred/ops-model/platform-policy.ts";
 
 const STACKS_REL = "src/tofu";
 
-export type TofuAction =
-  "validate" | "plan" | "apply" | "prepare" | "apply-saved";
+export type TofuAction = "validate" | "plan" | "apply";
 
 export function assertStackExecutionContext(
   stack: TofuStack,

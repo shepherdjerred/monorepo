@@ -61,7 +61,6 @@
     "scripts/helm/repository-chart-inputs.ts",
     "scripts/helm/lint-helm.ts",
     "scripts/helm/lint-helm.test.ts",
-    "scripts/tofu/lint-tofu.ts",
     "scripts/tofu/tofu-external-files.ts",
     "scripts/tofu/tofu-external-files.test.ts",
     "scripts/check-kubeconform.ts",

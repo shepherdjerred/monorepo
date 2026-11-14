@@ -73,10 +73,9 @@ function synthesizedBuckets(configuration: SynthesizedConfiguration) {
 
 /** Every bucket the synthesized seaweedfs OpenTofu stack declares. */
 async function declaredBuckets(): Promise<Set<string>> {
-  const synthesized = await readSynthesizedConfiguration(SEAWEEDFS_TOFU_STACK);
-  if (synthesized === undefined)
-    throw new Error("the seaweedfs stack has no synthesized main.tf.json");
-  return synthesizedBuckets(synthesized);
+  return synthesizedBuckets(
+    await readSynthesizedConfiguration(SEAWEEDFS_TOFU_STACK),
+  );
 }
 
 describe("SeaweedFS backup to Backblaze", () => {

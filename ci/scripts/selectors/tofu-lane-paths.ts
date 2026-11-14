@@ -35,37 +35,3 @@ export const platformTofuPaths = [
   "packages/homelab/src/cdk8s/src/resources/argo-applications/ci/woodpecker-credentials.ts",
   "packages/homelab/src/cdk8s/onepassword-vault-snapshot.json",
 ] as const;
-
-// Stacks Woodpecker can plan and apply. anthropic-federation and google are
-// operator-applied (an org:admin OAuth token and a user's ADC respectively),
-// so they validate in CI but never appear here.
-export const platformTofuStacks = [
-  "openai",
-  "anthropic",
-  "discord",
-  "cloudflare-tokens",
-] as const;
-
-export type PlatformTofuStack = (typeof platformTofuStacks)[number];
-
-export function requestedPlatformTofuApply(
-  environment: Readonly<Record<string, string | undefined>>,
-): PlatformTofuStack | undefined {
-  const requested = environment["TOFU_PLATFORM_APPLY"];
-  if (requested === undefined || requested.length === 0) return undefined;
-  for (const stack of platformTofuStacks) {
-    if (requested === stack) {
-      const defaultBranch = environment["CI_REPO_DEFAULT_BRANCH"] ?? "main";
-      const branch = environment["CI_COMMIT_BRANCH"];
-      if (branch !== defaultBranch) {
-        throw new Error(
-          `TOFU_PLATFORM_APPLY is ${defaultBranch}-only; CI_COMMIT_BRANCH was ${branch ?? "unset"}`,
-        );
-      }
-      return stack;
-    }
-  }
-  throw new Error(
-    `TOFU_PLATFORM_APPLY must be one of ${platformTofuStacks.join(", ")}`,
-  );
-}

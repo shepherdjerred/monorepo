@@ -90,7 +90,6 @@ bun run typecheck
 bun run test
 bun run lint
 bun run --cwd src/cdk8s check:1password
-bun run lint:tofu
 bun run check:kubeconform
 ```
 

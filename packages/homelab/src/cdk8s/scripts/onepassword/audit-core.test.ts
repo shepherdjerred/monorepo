@@ -400,14 +400,7 @@ const managed = (item: string, source: string) => ({
 });
 
 describe("items an OpenTofu stack writes", () => {
-  test("reads literal titles from HCL and from a synthesized stack alike", () => {
-    const hcl = "packages/homelab/src/tofu/argocd/token.tf";
-    expect(
-      managedItemReferences(
-        'resource "onepassword_item" "delivery" {\n  title = "delivery-argocd-token"\n}\nresource "onepassword_item" "each" {\n  title = each.value.title\n}\n',
-        hcl,
-      ),
-    ).toEqual([managed("delivery-argocd-token", hcl)]);
+  test("reads literal titles from a synthesized stack", () => {
     const json = "packages/homelab/src/tofu/argocd/main.tf.json";
     expect(
       managedItemReferences(
@@ -430,12 +423,6 @@ describe("items an OpenTofu stack writes", () => {
       managedItemReferences(
         '{"resource":{"onepassword_item":{"x":{"title":"x"}}}}',
         "packages/homelab/src/tofu/argocd/desired-state.json",
-      ),
-    ).toEqual([]);
-    expect(
-      managedItemReferences(
-        'title = "x"',
-        "packages/homelab/src/tofu/argocd/variables.tf",
       ),
     ).toEqual([]);
   });

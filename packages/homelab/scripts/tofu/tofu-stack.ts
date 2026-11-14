@@ -24,14 +24,9 @@ import {
   type StackDefinition,
 } from "./tofu-stack-manifest.ts";
 import type { TofuStack } from "@shepherdjerred/ops-model/platform-policy.ts";
-import {
-  loadReviewedPlatformPlan,
-  publishPlatformPlan,
-  consumeReviewedPlatformPlan,
-} from "./platform-plan-handoff.ts";
 import { assertApplicationSecretAction } from "./application-secrets.ts";
 import { adoptApplicationSecrets } from "./adopt-application-secrets.ts";
-import { stackConfigurationFormat } from "./tofu-external-files.ts";
+import { assertSynthesizedStack } from "./tofu-external-files.ts";
 import { prepareAsuswrtProvider } from "./asuswrt-provider.ts";
 import {
   assertStackExecutionContext,
@@ -57,13 +52,6 @@ const AMBIENT_ENV_ALLOWLIST = [
   "TMPDIR",
   "USER",
 ] as const;
-
-const REVIEWABLE_PLATFORM_STACKS = new Set<TofuStack>([
-  "openai",
-  "anthropic",
-  "discord",
-  "cloudflare-tokens",
-]);
 
 function homelabRoot(): string {
   return new URL("../..", import.meta.url).pathname;
@@ -250,17 +238,13 @@ async function validateStack(
 
 function usage(): never {
   console.error(
-    "Usage: bun packages/homelab/scripts/tofu/tofu-stack.ts <stack> validate|plan|apply|prepare|apply-saved [--dry-run]\nApplication adoption: application-secrets adopt EXPECTED_HEAD",
+    "Usage: bun packages/homelab/scripts/tofu/tofu-stack.ts <stack> validate|plan|apply [--dry-run]\nApplication adoption: application-secrets adopt EXPECTED_HEAD",
   );
   process.exit(1);
 }
 
 function parseAction(value: string | undefined): TofuAction {
-  return value === "validate" ||
-    value === "plan" ||
-    value === "apply" ||
-    value === "prepare" ||
-    value === "apply-saved"
+  return value === "validate" || value === "plan" || value === "apply"
     ? value
     : usage();
 }
@@ -295,83 +279,6 @@ async function plan(
   throw new Error(message);
 }
 
-async function reviewedPlatformOperation(input: {
-  readonly stack: TofuStack;
-  readonly definition: StackDefinition;
-  readonly action: "prepare" | "apply-saved";
-  readonly env: Record<string, string>;
-  readonly options: RunOptions;
-}): Promise<void> {
-  const { stack, definition, action, env, options } = input;
-  if (definition.platform === undefined) {
-    throw new Error(`platform definition is missing for ${stack}`);
-  }
-  const planRoot = await temporaryDirectory("tofu-reviewed-plan", env);
-  const planPath = `${planRoot}/plan.tfplan`;
-  try {
-    if (action === "prepare") {
-      const result = await runAllowExit(
-        [
-          "tofu",
-          `-chdir=${STACKS_REL}/${stack}`,
-          "plan",
-          "-input=false",
-          "-detailed-exitcode",
-          `-out=${planPath}`,
-        ],
-        options,
-      );
-      if (result.exitCode !== 0 && result.exitCode !== 2) {
-        throw new Error(
-          `tofu saved plan failed (exit ${result.exitCode.toString()})`,
-        );
-      }
-      await publishPlatformPlan(definition.platform, planPath);
-      return;
-    }
-    const sourcePipeline = requireEnv("TOFU_PLATFORM_PLAN_PIPELINE");
-    await loadReviewedPlatformPlan(
-      definition.platform,
-      sourcePipeline,
-      planPath,
-    );
-    await run(
-      [
-        "tofu",
-        `-chdir=${STACKS_REL}/${stack}`,
-        "apply",
-        "-input=false",
-        planPath,
-      ],
-      options,
-    );
-    console.log(`--- applied reviewed plan: ${stack}`);
-    try {
-      await consumeReviewedPlatformPlan(sourcePipeline);
-    } catch (error) {
-      throw new Error(
-        `OpenTofu apply succeeded for ${stack}, but plan ${sourcePipeline} remains unconsumed; inspect live state before any retry`,
-        { cause: error },
-      );
-    }
-  } finally {
-    await removeTemporaryDirectory(planRoot);
-  }
-}
-
-function assertStackActionSupported(
-  stack: TofuStack,
-  action: TofuAction,
-): void {
-  if (stack === "application-secrets") assertApplicationSecretAction(action);
-  if (
-    (action === "prepare" || action === "apply-saved") &&
-    !REVIEWABLE_PLATFORM_STACKS.has(stack)
-  ) {
-    throw new Error(`reviewed plan operation is unavailable for ${stack}`);
-  }
-}
-
 async function main(): Promise<void> {
   const args = Bun.argv.slice(2);
   if (args.includes("--help") || args.includes("-h")) usage();
@@ -383,10 +290,10 @@ async function main(): Promise<void> {
     return adoptApplicationSecrets(args);
   const action = parseAction(positional[1]);
   assertStackExecutionContext(stack, action, Bun.env["CI"]);
-  assertStackActionSupported(stack, action);
+  if (stack === "application-secrets") assertApplicationSecretAction(action);
   const root = homelabRoot();
   const stackDir = `${root}/${STACKS_REL}/${stack}`;
-  await stackConfigurationFormat(stack, stackDir);
+  await assertSynthesizedStack(stack, stackDir);
   if (args.includes("--dry-run")) {
     console.log(`DRYRUN: would run tofu ${action} for ${stack}`);
     return;
@@ -428,16 +335,6 @@ async function main(): Promise<void> {
     ["tofu", `-chdir=${STACKS_REL}/${stack}`, "init", "-input=false"],
     options,
   );
-  if (action === "prepare" || action === "apply-saved") {
-    await reviewedPlatformOperation({
-      stack,
-      definition,
-      action,
-      env,
-      options,
-    });
-    return;
-  }
   await run(
     [
       "tofu",

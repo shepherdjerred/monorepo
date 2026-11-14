@@ -39,8 +39,8 @@ syncs. The [cdktn app](packages/homelab-cdktn/src/app.ts) renders one
 
 OpenTofu is still the engine for the second half. Synthesis only writes JSON.
 Planning and applying are OpenTofu reading that file, exactly as it would read
-HCL. The app's `SYNTHESIZED_STACKS` list names the stacks written this way; a
-stack is either synthesized or hand-written HCL, never both.
+HCL. The app's `SYNTHESIZED_STACKS` list names every stack; none holds
+hand-written HCL.
 
 ## Why a shared model and not an import
 

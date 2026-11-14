@@ -176,35 +176,28 @@ export function sourceAuditReferences(
 
 /** Consume evaluated grants, including constants and ordered containers. */
 /**
- * 1Password items an OpenTofu stack writes with a literal title, from either
- * hand-written HCL or the committed cdktn synthesis (`main.tf.json`).
- * Dynamic titles are protected separately; live state remains a gap.
+ * 1Password items an OpenTofu stack writes with a literal title, from the
+ * committed cdktn synthesis (`main.tf.json`). Dynamic titles are protected
+ * separately; live state remains a gap.
  */
 export function managedItemReferences(
   text: string,
   source: string,
 ): AuditReference[] {
-  if (!source.startsWith("packages/homelab/src/tofu/")) return [];
-  const managed = (item: string): AuditReference => ({
-    item,
-    source,
-    managed: true,
-    wholeItem: true,
+  if (
+    !source.startsWith("packages/homelab/src/tofu/") ||
+    !source.endsWith("/main.tf.json")
+  )
+    return [];
+  return synthesizedResources(
+    parseSynthesizedConfiguration(text),
+    "onepassword_item",
+  ).flatMap((resource) => {
+    const title = literalAttribute(resource.attributes, "title");
+    return title === undefined
+      ? []
+      : [{ item: title, source, managed: true, wholeItem: true }];
   });
-  if (source.endsWith("/main.tf.json")) {
-    return synthesizedResources(
-      parseSynthesizedConfiguration(text),
-      "onepassword_item",
-    ).flatMap((resource) => {
-      const title = literalAttribute(resource.attributes, "title");
-      return title === undefined ? [] : [managed(title)];
-    });
-  }
-  return source.endsWith(".tf") && /resource\s+"onepassword_item"/u.test(text)
-    ? [...text.matchAll(/title\s*=\s*"([^"$]+)"/gu)].flatMap((match) =>
-        match[1] === undefined ? [] : [managed(match[1])],
-      )
-    : [];
 }
 
 export function pipelineGrantManifests(

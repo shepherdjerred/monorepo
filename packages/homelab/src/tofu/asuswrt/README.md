@@ -11,19 +11,20 @@ bindings are generated from the same locally built provider, so
 `bunx turbo run generate --filter=@homelab/cdktn` needs Go as well as `tofu`
 and Node.
 
-| Alias      | Device       | IP            | Mode   | Managed here                                                            |
-| ---------- | ------------ | ------------- | ------ | ----------------------------------------------------------------------- |
-| `router`   | RT-AX88U Pro | 192.168.1.1   | router | system, DHCP static leases, port-forwards, wireless wl0/wl1             |
-| `ap_ax88u` | RT-AX88U     | 192.168.1.214 | AP     | system, wireless wl0/wl1                                                |
-| `ap_be86u` | RT-BE86U     | 192.168.1.2   | AP     | system (wireless deferred — see `docs/todos/asuswrt-be86u-wireless.md`) |
+| Alias      | Device       | IP            | Mode   | Managed here                                                |
+| ---------- | ------------ | ------------- | ------ | ----------------------------------------------------------- |
+| `router`   | RT-AX88U Pro | 192.168.1.1   | router | system, DHCP static leases, port-forwards, wireless wl0/wl1 |
+| `ap_ax88u` | RT-AX88U     | 192.168.1.214 | AP     | system, wireless wl0/wl1                                    |
+| `ap_be86u` | RT-BE86U     | 192.168.1.2   | AP     | system (wireless is not managed yet)                        |
 
-## Local-run only (NOT in CI)
+## Local-run only (CI validates, never plans)
 
-This stack is **deliberately excluded from CI drift checks** — the Woodpecker
-OpenTofu lanes do not select or apply it. CI's tofu steps run in a Kubernetes pod
-with tailnet egress only and cannot reach the LAN (`192.168.1.0/24`); wiring
-drift-detection would require a Tailscale subnet router advertising the LAN, which
-does not exist yet. Run this stack locally from a machine that is on **both** the
+Woodpecker's `tofu-validate` step validates this stack offline on pull
+requests like every other, against the provider built from this repository,
+and every main build archives it. Nothing in CI or Delivery plans or applies
+it: those pods have tailnet egress only and cannot reach the LAN
+(`192.168.1.0/24`), which would take a Tailscale subnet router advertising the
+LAN that does not exist yet. Run this stack locally from a machine that is on **both** the
 home LAN (to reach the routers) and the tailnet (to reach the SeaweedFS state
 backend).
 

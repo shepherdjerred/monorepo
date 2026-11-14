@@ -5,11 +5,9 @@ sidebar:
   order: 10
 ---
 
-A synthesized stack is changed in TypeScript, re-synthesized, and applied by
-Delivery after merge. Never edit `main.tf.json` by hand.
-
-A stack whose directory under `packages/homelab/src/tofu/` holds `.tf` files
-is still hand-written HCL. Edit those files and skip step 2.
+Every stack is changed in TypeScript, re-synthesized, and applied by
+Delivery after merge. Never edit `main.tf.json` by hand, and never add a
+`.tf` file to a stack directory: the stack runner refuses it.
 [One platform model, two synthesizers](/explanation/homelab/one-platform-model-two-synthesizers/)
 explains the design.
 
@@ -59,7 +57,6 @@ goes with it. Use the helpers under
 
 ```bash
 bunx turbo run build typecheck test lint --filter=@homelab/cdktn
-bun run --cwd packages/homelab lint:tofu
 bun packages/homelab/scripts/tofu/tofu-stack.ts <stack> validate
 ```
 
@@ -96,10 +93,10 @@ builds, so a plan read afterwards is too late to stop a surprise. Do not run
 
 CI validates configuration and never plans or applies it.
 
-| Check           | What it proves                                                                          |
-| --------------- | --------------------------------------------------------------------------------------- |
-| `tofu-validate` | Committed `main.tf.json` files match a fresh synthesis; every stack passes validation   |
-| `verify`        | The cdktn typecheck, tests and lint pass, and `lint:tofu` finds no undeclared file read |
+| Check           | What it proves                                                                        |
+| --------------- | ------------------------------------------------------------------------------------- |
+| `tofu-validate` | Committed `main.tf.json` files match a fresh synthesis; every stack passes validation |
+| `verify`        | The cdktn typecheck, tests and lint pass, and no stack reads an undeclared file       |
 
 Wait for it with `toolkit ci wait <PR>`.
 
