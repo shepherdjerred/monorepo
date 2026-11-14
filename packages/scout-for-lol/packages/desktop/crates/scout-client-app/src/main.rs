@@ -4,26 +4,33 @@
 )]
 
 //! Scout Client native entry point.
+//!
+//! One executable, two processes. Started normally it is the supervisor: it
+//! owns the instance lock and the collector, never touches the GPU, and runs
+//! the window as a child (`--window`) that it relaunches when it crashes.
 
+mod supervisor;
+mod tray;
 mod ui;
+mod window;
 
 use std::panic::AssertUnwindSafe;
-use std::rc::Rc;
+use std::process::ExitCode;
 use std::sync::Arc;
-use std::time::{Duration, Instant};
 
-use eframe::egui;
 use scout_client_core::diagnostics::{
     DiagnosticCategory, DiagnosticEvent, DiagnosticLevel, DiagnosticOutcome, Diagnostics,
 };
-use tracing_subscriber::EnvFilter;
-
-use crate::ui::ScoutApp;
 use scout_client_runtime::instance::InstanceLock;
 use scout_client_runtime::runtime::ClientRuntime;
+use tokio::sync::mpsc;
+use tracing_subscriber::EnvFilter;
 
-const APP_ID: &str = "com.scout-for-lol.client";
+use crate::supervisor::{Supervisor, SupervisorExit, WindowLauncher};
+
 const DEFAULT_BACKEND_ORIGIN: &str = "https://beta.scout-for-lol.com";
+/// The argument that makes this executable the window process.
+const WINDOW_ARGUMENT: &str = "--window";
 
 fn backend_origin(arguments: &[String]) -> String {
     arguments
@@ -32,9 +39,10 @@ fn backend_origin(arguments: &[String]) -> String {
         .unwrap_or_else(|| DEFAULT_BACKEND_ORIGIN.to_owned())
 }
 
-/// Install the console logger.
+/// Install the console logger, on stderr: the window process's stdout carries
+/// the supervisor protocol.
 ///
-/// The release Windows build is a GUI-subsystem binary with no valid stdout
+/// The release Windows build is a GUI-subsystem binary with no valid stderr
 /// handle, so this reaches a human only under `cargo run`. The durable record
 /// is the JSONL log the runtime writes; see `scout_client_core::diagnostics`.
 /// The filter defaults to `info` because an unset `RUST_LOG` otherwise silences
@@ -44,6 +52,7 @@ fn install_logging() {
     tracing_subscriber::fmt()
         .with_env_filter(filter)
         .with_target(false)
+        .with_writer(std::io::stderr)
         .compact()
         .init();
 }
@@ -73,181 +82,80 @@ fn install_panic_hook(diagnostics: Arc<Diagnostics>) {
     }));
 }
 
-fn main() -> eframe::Result {
+fn main() -> ExitCode {
     install_logging();
-
     let arguments = std::env::args().skip(1).collect::<Vec<_>>();
+    if arguments.iter().any(|argument| argument == WINDOW_ARGUMENT) {
+        return window::run();
+    }
+    supervise(&arguments)
+}
+
+/// Run as the supervisor: own the instance lock and the collector, and run the
+/// window as a child process.
+fn supervise(arguments: &[String]) -> ExitCode {
     let background = arguments.iter().any(|argument| argument == "--background");
-    // Held until the process exits, so a second launch never reads the same
-    // outbox. Released explicitly before a crash relaunch takes over.
+    // Held until the supervisor ends, so a second launch never reads the same
+    // outbox. The window process never takes it.
     let instance_lock = match InstanceLock::acquire() {
         Ok(lock) => lock,
         Err(error) => {
             eprintln!("{error}");
             tracing::error!(%error, "another Scout Client instance is running");
-            std::process::exit(2);
+            return ExitCode::from(2);
         }
     };
-    let runtime = Rc::new(ClientRuntime::start(backend_origin(&arguments)));
-    let diagnostics = Arc::clone(runtime.diagnostics());
-    install_panic_hook(Arc::clone(&diagnostics));
-    let started = Instant::now();
-    // The window is the client's most fragile part: glow and wgpu both panic
-    // on Windows when the GPU context is lost (sleep/resume, a driver reset, a
-    // hybrid-GPU switch). A panic must not take collection down with it.
-    let window = std::panic::catch_unwind(AssertUnwindSafe(|| {
-        run_window(background, Rc::clone(&runtime))
-    }));
-    let Err(_) = window else {
-        return window.unwrap_or(Ok(()));
+    let executable = match std::env::current_exe() {
+        Ok(executable) => executable,
+        Err(error) => {
+            eprintln!("Scout Client cannot locate its own executable: {error}");
+            return ExitCode::FAILURE;
+        }
     };
-    // The window is gone, but its collector still runs; stop it so the
-    // relaunched client is the only one reading and sending the outbox.
-    if let Some(runtime) = Rc::into_inner(runtime) {
-        runtime.stop();
-    } else {
-        diagnostics.record(window_crash_event(
-            DiagnosticOutcome::Failed,
-            "the crashed window still held the collector".to_owned(),
-        ));
-    }
-    let crashes = quick_crashes_now(quick_crashes(&arguments), started.elapsed());
-    if crashes >= MAX_QUICK_CRASHES {
-        diagnostics.record(window_crash_event(
-            DiagnosticOutcome::Failed,
-            format!("not restarting after {crashes} quick window crashes"),
-        ));
-        std::process::exit(1);
-    }
-    drop(instance_lock);
-    let relaunch = std::env::current_exe().and_then(|executable| {
-        std::process::Command::new(executable)
-            .args(relaunch_arguments(&arguments, crashes))
-            .spawn()
-    });
-    diagnostics.record(match relaunch {
-        Ok(_) => window_crash_event(
-            DiagnosticOutcome::Deferred,
-            "relaunched the client".to_owned(),
-        ),
-        Err(error) => window_crash_event(
-            DiagnosticOutcome::Failed,
-            format!("could not relaunch the client: {error}"),
-        ),
-    });
-    std::process::exit(1);
-}
-
-/// How many times in a row the window had crashed soon after starting, as the
-/// crashed client passes it to the one it relaunches.
-const QUICK_CRASHES_ARGUMENT: &str = "--quick-crashes=";
-/// A crash after this long is a fresh incident, not part of a crash loop.
-const STABLE_RUN: Duration = Duration::from_mins(10);
-/// The quick crash on which the client stops relaunching.
-const MAX_QUICK_CRASHES: u32 = 3;
-
-fn quick_crashes(arguments: &[String]) -> u32 {
-    arguments
-        .iter()
-        .find_map(|argument| argument.strip_prefix(QUICK_CRASHES_ARGUMENT))
-        .and_then(|count| count.parse().ok())
-        .unwrap_or(0)
-}
-
-/// The quick crashes in a row, counting the one that just happened.
-fn quick_crashes_now(before: u32, ran_for: Duration) -> u32 {
-    if ran_for >= STABLE_RUN {
-        1
-    } else {
-        before.saturating_add(1)
-    }
-}
-
-/// The same arguments, with the quick-crash count replaced.
-fn relaunch_arguments(arguments: &[String], quick_crashes: u32) -> Vec<String> {
-    arguments
-        .iter()
-        .filter(|argument| !argument.starts_with(QUICK_CRASHES_ARGUMENT))
-        .cloned()
-        .chain([format!("{QUICK_CRASHES_ARGUMENT}{quick_crashes}")])
-        .collect()
-}
-
-fn window_crash_event(outcome: DiagnosticOutcome, detail: String) -> DiagnosticEvent {
-    DiagnosticEvent::new(
-        DiagnosticLevel::Critical,
-        DiagnosticCategory::Runtime,
-        "window_crash",
-        outcome,
-    )
-    .with_detail(detail)
-}
-
-/// Run the window. glow is the renderer: it ran for days at a time here, and
-/// wgpu panicked within a minute on the same hybrid-GPU machine.
-fn run_window(background: bool, runtime: Rc<ClientRuntime>) -> eframe::Result {
-    let viewport = egui::ViewportBuilder::default()
-        .with_app_id(APP_ID)
-        .with_title("Scout Client")
-        .with_visible(!background)
-        .with_inner_size([760.0, 520.0])
-        .with_min_inner_size([620.0, 420.0]);
-    let options = eframe::NativeOptions {
-        viewport,
-        renderer: eframe::Renderer::Glow,
-        ..Default::default()
+    let async_runtime = match tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+    {
+        Ok(runtime) => runtime,
+        Err(error) => {
+            eprintln!("Scout Client could not start its supervisor: {error}");
+            return ExitCode::FAILURE;
+        }
     };
-    eframe::run_native(
-        "Scout Client",
-        options,
-        Box::new(move |context| Ok(Box::new(ScoutApp::new(context, runtime)))),
-    )
+    let runtime = ClientRuntime::start(backend_origin(arguments));
+    install_panic_hook(Arc::clone(runtime.diagnostics()));
+    let launcher = WindowLauncher::new(executable, vec![WINDOW_ARGUMENT.to_owned()]);
+    let (control, control_receiver) = mpsc::unbounded_channel();
+    let exit = tray::run(
+        control,
+        Box::new(move |tray_available| {
+            let supervisor = Supervisor::new(
+                instance_lock,
+                runtime,
+                launcher,
+                control_receiver,
+                tray_available,
+                !background,
+            );
+            // A supervisor panic must end the process rather than leave a
+            // tray with nothing behind it; the panic hook has recorded it.
+            std::panic::catch_unwind(AssertUnwindSafe(|| {
+                async_runtime.block_on(supervisor.run())
+            }))
+            .unwrap_or(SupervisorExit::Panicked)
+        }),
+    );
+    tracing::info!(?exit, "Scout Client stopped");
+    if exit == SupervisorExit::Panicked {
+        ExitCode::FAILURE
+    } else {
+        ExitCode::SUCCESS
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use std::time::Duration;
-
-    use super::{
-        DEFAULT_BACKEND_ORIGIN, MAX_QUICK_CRASHES, STABLE_RUN, backend_origin, quick_crashes,
-        quick_crashes_now, relaunch_arguments,
-    };
-
-    #[test]
-    fn the_third_quick_crash_is_the_last() {
-        // A client started without a count crashes, relaunches, crashes,
-        // relaunches, and stops on its third crash.
-        let soon = Duration::from_secs(30);
-        let first = quick_crashes_now(0, soon);
-        let second = quick_crashes_now(first, soon);
-        let third = quick_crashes_now(second, soon);
-        assert_eq!([first, second, third], [1, 2, MAX_QUICK_CRASHES]);
-        assert!(second < MAX_QUICK_CRASHES);
-    }
-
-    #[test]
-    fn a_crash_after_a_stable_run_starts_the_count_over() {
-        assert_eq!(quick_crashes_now(MAX_QUICK_CRASHES - 1, STABLE_RUN), 1);
-    }
-
-    #[test]
-    fn a_relaunch_keeps_its_arguments_and_replaces_the_count() {
-        let arguments = [
-            "--background".to_owned(),
-            "--quick-crashes=1".to_owned(),
-            "--server=https://beta.scout-for-lol.com".to_owned(),
-        ];
-        assert_eq!(quick_crashes(&arguments), 1);
-        assert_eq!(
-            relaunch_arguments(&arguments, 2),
-            [
-                "--background",
-                "--server=https://beta.scout-for-lol.com",
-                "--quick-crashes=2",
-            ]
-        );
-        assert_eq!(quick_crashes(&["--background".to_owned()]), 0);
-    }
+    use super::{DEFAULT_BACKEND_ORIGIN, backend_origin};
 
     #[test]
     fn packaged_preview_targets_the_beta_backend() {
