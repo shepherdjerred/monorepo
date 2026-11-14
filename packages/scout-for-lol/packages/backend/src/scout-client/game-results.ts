@@ -3,6 +3,8 @@ import {
   type GameResult,
 } from "@scout-for-lol/domain/artifacts/game-result.ts";
 import { admitMatchEvidence } from "#src/evidence/admission.ts";
+import { clashGameFingerprint } from "#src/league/clash/identity.ts";
+import { clashClientShadowedByRiot } from "#src/league/clash/alias.ts";
 import {
   RiotMatchIdSchema,
   type RiotMatchId,
@@ -95,12 +97,21 @@ export async function projectClientGameResult(
     discoveredAt,
   );
   if (deliveryMode === null) return "skipped";
-  await admitMatchEvidence({
-    matchId: matchId.data,
-    completedAt,
-    discoveredAt,
-    historical: deliveryMode === "silent-backfill",
-  });
+  // A Clash game Riot's alias already reported stays evidence only: without
+  // an admission, history recovery never renders a second report for it.
+  const shadowed =
+    clashGameFingerprint({
+      platform: observation.platformId,
+      queueId: result.queueId,
+      participants: result.participants,
+    }) !== null && (await clashClientShadowedByRiot(matchId.data));
+  if (!shadowed)
+    await admitMatchEvidence({
+      matchId: matchId.data,
+      completedAt,
+      discoveredAt,
+      historical: deliveryMode === "silent-backfill",
+    });
   await prisma.scoutClientGameResult.upsert({
     where: { observationId: observation.observationId },
     create: {

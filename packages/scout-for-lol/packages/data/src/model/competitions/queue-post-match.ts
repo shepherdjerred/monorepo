@@ -52,6 +52,8 @@ export const QUEUE_POST_MATCH_DATA: Record<QueueType, QueuePostMatchData> = {
    * queue 700; Match-V5 404s the spectator game id. Post-match discovery still
    * finds Clash through the unfiltered match list when Riot publishes a
    * MATCHED_GAME id, which is why this stays `available` rather than `never`.
+   * That later id is an alias of the live game, so live Clash takes the
+   * client's result first (`queueResultSource`).
    */
   clash: "available",
   /**
@@ -127,17 +129,37 @@ export function queueHasPostMatchData(queue: QueueType): boolean {
 }
 
 /**
- * Whether Riot is not going to publish this game's result, so a result the
- * Scout Client captured needn't wait for Riot to go first.
+ * Where a finished game's result comes from first.
+ *
+ * `riot`: Riot publishes the game under the id Scout watched, so a client
+ * capture waits briefly for Riot to go first. `client`: the client's copy is
+ * used as soon as it arrives, because Riot will not publish this game under
+ * that id. A user-created custom lobby is almost never published and a
+ * `never` queue never is. Clash is published later under a different
+ * Match-V5 id, which Scout records as an alias of the live game
+ * (`ClashGameIdentity`) instead of a second report.
+ */
+export type QueueResultSource = "riot" | "client";
+
+export function queueResultSource(queue: QueueType): QueueResultSource {
+  return queue === "custom" ||
+    queue === "clash" ||
+    QUEUE_POST_MATCH_DATA[queue] === "never"
+    ? "client"
+    : "riot";
+}
+
+/**
+ * Whether Riot is not going to publish this game's result under its live id,
+ * so a result the Scout Client captured needn't wait for Riot to go first.
  *
  * A different question from {@link queueHasPostMatchData}: that one asks
  * whether Scout can learn a queue's results from Riot at all, and every
  * custom answers yes because Riot publishes the occasional one. This one is
- * about a single game, decided from the classified queue: a user-created
- * custom lobby is almost never published and a `never` queue never is, so the
- * client's copy is used as soon as it arrives. Clash and tournament games are
- * published, and an unclassifiable game is treated like any other game Riot
- * may publish. Riot is still asked first; it simply isn't waited for.
+ * about a single game, decided from the classified queue's
+ * {@link queueResultSource}. Tournament-code games are published under their
+ * own id, and an unclassifiable game is treated like any other game Riot may
+ * publish. Riot is still asked first; it simply isn't waited for.
  */
 export function riotWithholdsMatchResult(game: {
   readonly queueId: number;
@@ -148,8 +170,7 @@ export function riotWithholdsMatchResult(game: {
   const classification = classifyGame(game);
   return (
     classification.kind === "queue" &&
-    (classification.queue === "custom" ||
-      QUEUE_POST_MATCH_DATA[classification.queue] === "never")
+    queueResultSource(classification.queue) === "client"
   );
 }
 

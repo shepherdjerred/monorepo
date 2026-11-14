@@ -3,6 +3,7 @@ import {
   QUEUE_POST_MATCH_DATA,
   queueHasPostMatchData,
   queuePostMatchNote,
+  queueResultSource,
   queuesWithoutPostMatchData,
   riotWithholdsMatchResult,
 } from "#src/model/competitions/queue-post-match.ts";
@@ -60,15 +61,25 @@ describe("riotWithholdsMatchResult", () => {
     ).toBe(true);
   });
 
-  test("live Clash and tournament games are not lumped in with lobbies", () => {
-    // Live Clash arrives as a custom game type on queue 700; Riot publishes it.
-    expect(
-      riotWithholdsMatchResult({
-        queueId: 700,
-        gameMode: "CLASSIC",
-        gameType: "CUSTOM",
-      }),
-    ).toBe(false);
+  test("live Clash uses the client at once; Riot's later id is an alias", () => {
+    // Live Clash arrives as a custom game type on queue 700. Riot publishes it
+    // only under a different Match-V5 id, never the live one.
+    for (const queueId of [700, 720]) {
+      for (const gameType of ["CUSTOM", "MATCHED_GAME"]) {
+        expect(
+          riotWithholdsMatchResult({
+            queueId,
+            gameMode: queueId === 720 ? "ARAM" : "CLASSIC",
+            gameType,
+          }),
+        ).toBe(true);
+      }
+    }
+    expect(queueResultSource("clash")).toBe("client");
+    expect(queueResultSource("solo")).toBe("riot");
+  });
+
+  test("tournament games are not lumped in with lobbies", () => {
     expect(
       riotWithholdsMatchResult({
         queueId: 0,

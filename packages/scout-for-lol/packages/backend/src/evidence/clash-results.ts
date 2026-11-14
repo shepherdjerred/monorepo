@@ -27,6 +27,37 @@ export function enrichClashTeamResults(
   };
 }
 
+/**
+ * Attach the match page of each bracket game a tracked team member finished.
+ * Links never change the round's result.
+ */
+export function linkClashTeamMatches(
+  team: ClientClashTeam,
+  evidence: readonly ClashResultEvidence[],
+  matchPageIds: ReadonlyMap<string, string>,
+): ClientClashTeam {
+  const platform = team.platformId;
+  return {
+    ...team,
+    matches: team.matches.map((match) => ({
+      ...match,
+      matchIds:
+        platform === null
+          ? []
+          : match.gameIds.flatMap((gameId) => {
+              const played = evidence.some(
+                (row) =>
+                  row.platform === platform &&
+                  row.gameId === gameId &&
+                  team.memberPuuids.includes(row.puuid),
+              );
+              const page = matchPageIds.get(`${platform}:${gameId}`);
+              return played && page !== undefined ? [page] : [];
+            }),
+    })),
+  };
+}
+
 function enrichMatch(
   team: ClientClashTeam,
   match: ClientClashMatch,

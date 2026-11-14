@@ -16,8 +16,14 @@ import {
 } from "#src/scout-client/identity-alias.ts";
 import {
   enrichClashTeamResults,
+  linkClashTeamMatches,
   type ClashResultEvidence,
 } from "#src/evidence/clash-results.ts";
+import {
+  canonicalClashGameIds,
+  clashGameKey,
+  clashMatchPageIds,
+} from "#src/league/clash/identity.ts";
 import { MatchDataSourceSchema } from "@scout-for-lol/domain/match-processing/states.ts";
 import type {
   ClientClashLabels,
@@ -221,18 +227,50 @@ export async function readClientClashTeams(
   return await readClashResults(retained, puuids);
 }
 
-async function readClashResults(
-  retained: ClientClashTeam[],
-  puuids: readonly string[],
-): Promise<ClientClashTeam[]> {
-  const games = retained.flatMap(({ platformId, matches }) =>
+function bracketGames(
+  teams: readonly ClientClashTeam[],
+): { platform: string; gameId: string }[] {
+  return teams.flatMap(({ platformId, matches }) =>
     platformId === null
       ? []
       : matches.flatMap((match) =>
           match.gameIds.map((gameId) => ({ platform: platformId, gameId })),
         ),
   );
-  if (games.length === 0) return retained;
+}
+
+/** A bracket game id that is Riot's alias of a live Clash game reads as that game. */
+async function withCanonicalGameIds(
+  teams: readonly ClientClashTeam[],
+): Promise<ClientClashTeam[]> {
+  const canonical = await canonicalClashGameIds(bracketGames(teams));
+  return teams.map((team) => {
+    const platform = team.platformId;
+    if (platform === null || canonical.size === 0) return team;
+    return {
+      ...team,
+      matches: team.matches.map((match) => ({
+        ...match,
+        gameIds: [
+          ...new Set(
+            match.gameIds.map(
+              (gameId) =>
+                canonical.get(clashGameKey({ platform, gameId })) ?? gameId,
+            ),
+          ),
+        ],
+      })),
+    };
+  });
+}
+
+async function readClashResults(
+  bracketTeams: ClientClashTeam[],
+  puuids: readonly string[],
+): Promise<ClientClashTeam[]> {
+  if (bracketGames(bracketTeams).length === 0) return bracketTeams;
+  const retained = await withCanonicalGameIds(bracketTeams);
+  const games = bracketGames(retained);
   const evidence: ClashResultEvidence[] = [];
   const unique = [
     ...new Map(
@@ -254,7 +292,14 @@ async function readClashResults(
       })),
     );
   }
-  return retained.map((team) => enrichClashTeamResults(team, evidence));
+  const pages = await clashMatchPageIds(evidence);
+  return retained.map((team) =>
+    linkClashTeamMatches(
+      enrichClashTeamResults(team, evidence),
+      evidence,
+      pages,
+    ),
+  );
 }
 
 async function parseClashEvidence(

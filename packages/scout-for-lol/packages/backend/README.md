@@ -1095,10 +1095,12 @@ histories recorded before chunking.
 
 Riot gets two minutes of first refusal: ingress dispatches a client post-game
 with `readyAt` two minutes out, and `resolveLocalCanonicalMatch` selects only
-observations that old. A game Riot withholds — a user-created custom lobby
-(live Clash and tournament games are published, so they wait), or a queue `queue-post-match.ts` marks `never` — skips the wait
-(`riotWithholdsMatchResult`); both sources are read independently and Riot wins when it
-does publish. A payload must field at least two sides, so an old client's
+observations that old. A game Riot will not publish under its live id — a
+user-created custom lobby, live Clash (published later under a different
+Match-V5 id, see below), or a queue `queue-post-match.ts` marks `never` —
+skips the wait (`queueResultSource`, `riotWithholdsMatchResult`). Tournament
+games are published under their own id, so they wait. Both sources are read
+independently and Riot wins when it does publish under the same id. A payload must field at least two sides, so an old client's
 one-player history row is never published as the match.
 
 In beta, `advanceMatchCursor` requires live eligibility and actual listing by
@@ -1138,7 +1140,37 @@ The projection fills two gaps:
 
 The LCU shapes (`data/src/scout-client/lcu-clash.schema.ts`) were written
 before a Clash window could confirm them. Every field is optional, and an
-unrecognised payload projects to nothing rather than failing.
+unrecognised payload projects to nothing rather than failing. Beta has
+captured Clash summary, player, tournament and history resources, but no
+roster or bracket payload yet, so those two shapes stay unconfirmed.
+
+### One identity per Clash game
+
+Spectator and the client share a live Clash game id; Match-V5 never serves
+it and later publishes the finished game under a different id.
+`ClashGameIdentity` records the live id as canonical when a queue 700/720
+prematch is archived or a client post-game arrives, with a fingerprint of
+platform, queue and the ten sorted `team:champion` pairs
+(`league/clash/identity.ts`).
+
+When Riot discovery lists an unadmitted Clash match, `league/clash/alias.ts`
+looks up that fingerprint within 30 minutes of its `gameStartTimestamp`
+(the measured Spectator-start and prematch-archive gaps; see
+`CLASH_ALIAS_WINDOW_MS`) and records the Riot id as the identity's alias:
+
+- the live game already has a canonical record (an admission or a pipeline
+  run): Riot's id is admitted `HISTORY_ONLY` with reason `clash-alias` and
+  dropped from discovery, so it has no pipeline run, report or lake row.
+  Its captured payload stays as evidence;
+- only the prematch was seen: Riot's match is processed normally;
+- no identity matches: Riot's match is processed normally.
+
+A client post-game for a game whose Riot alias was already processed starts no
+second run and takes no admission. Sightings, history and bracket results
+resolve through the alias, so one game is one history row; rows written under
+an alias before it was known are merged into the live game's row by the
+`clash-snapshot` backfill. `clash.history` and bracket rounds carry the id of
+whichever match page was processed, live or Riot.
 
 ### Prematch coverage
 

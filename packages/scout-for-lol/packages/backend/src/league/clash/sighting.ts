@@ -1,3 +1,4 @@
+import { z } from "zod";
 import {
   ClashCupQueueSchema,
   LeaguePuuidSchema,
@@ -12,9 +13,17 @@ import {
   type RawCurrentGameInfo,
 } from "@scout-for-lol/data";
 import { prisma } from "#src/database/index.ts";
-import type { MatchDataSource } from "@scout-for-lol/domain/match-processing/states.ts";
+import {
+  MatchDataSourceSchema,
+  type MatchDataSource,
+} from "@scout-for-lol/domain/match-processing/states.ts";
+import {
+  canonicalClashGameId,
+  recordClashGameIdentity,
+} from "#src/league/clash/identity.ts";
 
-type ClashSightingSource = "prematch" | "match";
+const ClashSightingSourceSchema = z.enum(["prematch", "match"]);
+type ClashSightingSource = z.infer<typeof ClashSightingSourceSchema>;
 
 export type ClashSightingWrite = {
   platform: PlatformRoute;
@@ -107,9 +116,17 @@ export async function resolveClashSightingLabels(input: {
     : { cupKey: cup.nameKey, cupDay: cup.cupDay, teamRiotId: null };
 }
 
+/**
+ * Riot's published id of a Clash game resolves to the live game it aliases,
+ * so a prematch lobby, a client result and Riot's result share one row.
+ */
 export async function upsertClashGameSighting(
-  incoming: ClashSightingWrite,
+  write: ClashSightingWrite,
 ): Promise<void> {
+  const incoming = {
+    ...write,
+    gameId: await canonicalClashGameId(write),
+  };
   const labels = await resolveClashSightingLabels({
     puuid: incoming.puuid,
     platform: incoming.platform,
@@ -180,6 +197,13 @@ export async function recordClashPrematchSightings(
     gameInfo.gameStartTime > 0 ? gameInfo.gameStartTime : Date.now(),
   );
   const gameId = gameInfo.gameId.toString();
+  await recordClashGameIdentity({
+    platform,
+    gameId,
+    queueId: gameInfo.gameQueueConfigId,
+    participants: gameInfo.participants,
+    startAt: observedAt,
+  });
   for (const participant of gameInfo.participants) {
     if (participant.puuid === null || !trackedPuuids.has(participant.puuid)) {
       continue;
@@ -196,4 +220,39 @@ export async function recordClashPrematchSightings(
       win: null,
     });
   }
+}
+
+/**
+ * Fold sightings written under a Riot alias into the live game's row, then
+ * drop the alias row. Each row re-enters through `upsertClashGameSighting`,
+ * so Riot-over-client and match-over-prematch precedence still holds, and a
+ * rerun after a crash between the two writes repeats an idempotent upsert.
+ * Returns the number of alias rows merged.
+ */
+export async function mergeClashAliasSightings(
+  riotMatchId: string | null = null,
+): Promise<number> {
+  const rows = await prisma.$queryRaw<{ id: number }[]>`
+    SELECT s."id" FROM "ClashGameSighting" s
+    JOIN "ClashGameIdentity" i ON i."riotMatchId" = s."platform" || '_' || s."gameId"
+    WHERE ${riotMatchId}::text IS NULL OR i."riotMatchId" = ${riotMatchId}::text
+    ORDER BY s."id"`;
+  for (const { id } of rows) {
+    const row = await prisma.clashGameSighting.findUnique({ where: { id } });
+    if (row === null) continue;
+    await upsertClashGameSighting({
+      platform: PlatformRouteSchema.parse(row.platform),
+      gameId: row.gameId,
+      puuid: LeaguePuuidSchema.parse(row.puuid),
+      source: ClashSightingSourceSchema.parse(row.source),
+      resultSource: MatchDataSourceSchema.parse(row.resultSource),
+      queue: ClashCupQueueSchema.parse(row.queue),
+      championId: row.championId,
+      teamId: row.teamId,
+      observedAt: row.observedAt,
+      win: row.win,
+    });
+    await prisma.clashGameSighting.delete({ where: { id } });
+  }
+  return rows.length;
 }

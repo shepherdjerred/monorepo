@@ -15,6 +15,12 @@ export type ClientClashMatch = {
   readonly result: "won" | "lost" | "pending";
   readonly status: string | null;
   readonly gameIds: readonly string[];
+  /**
+   * Match pages for this round's games that a tracked team member played.
+   * A secondary link only: several games never imply a series winner, and a
+   * round no tracked player was in shows its bracket outcome alone.
+   */
+  readonly matchIds?: readonly string[];
 };
 
 export type ClientClashTeam = {

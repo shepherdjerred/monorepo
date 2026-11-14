@@ -8,6 +8,11 @@ import { getActiveServerIds } from "#src/discord/utils/guild-membership.ts";
 import { getPuuidsBlockedFromLivePolling } from "#src/league/initial-history/live-polling.ts";
 import { fetchMatchData } from "#src/league/tasks/postmatch/match-data-fetcher.ts";
 import {
+  clashAliasAdmissions,
+  withoutClashAliases,
+} from "#src/league/clash/alias.ts";
+import type { RawMatch, RiotMatchId } from "@scout-for-lol/data";
+import {
   activeDareTargetPuuids,
   selectMatchPollAccounts,
   unavailableRequiredPuuids,
@@ -125,11 +130,20 @@ async function collectMatchDiscovery(): Promise<MatchDiscovery> {
     };
   }
   const intents = deduplicateMatchIntents(collected.playersWithMatches);
+  // A Clash alias settled on an earlier pass stays listed in Riot's history
+  // until a newer game moves the cursor; its completion is already known.
+  const settledAliases = await clashAliasAdmissions(
+    intents.map((intent) => intent.matchId),
+  );
+  const fetched = new Map<RiotMatchId, RawMatch>();
   const ordered = await orderMatchIntentsByCompletion(
     intents,
     currentTime.getTime(),
     async (intent) => {
+      const settled = settledAliases.get(intent.matchId);
+      if (settled != null) return settled.getTime();
       const match = await fetchMatchData(intent.matchId, intent.region);
+      if (match !== undefined) fetched.set(intent.matchId, match);
       return match?.info.gameEndTimestamp;
     },
   );
@@ -151,7 +165,14 @@ async function collectMatchDiscovery(): Promise<MatchDiscovery> {
   }
   return {
     complete: true,
-    intents: ordered.intents,
+    // Riot's later id of a Clash game Scout already reported is an alias,
+    // not a second match: it never reaches the per-match pipeline.
+    intents: await withoutClashAliases(
+      ordered.intents,
+      fetched,
+      settledAliases,
+      currentTime,
+    ),
     allPlayerConfigs: accountsWithState.map((account) => account.config),
     evidenceWatermark: currentTime,
   };

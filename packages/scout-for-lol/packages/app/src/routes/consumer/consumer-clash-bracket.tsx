@@ -6,7 +6,9 @@ import {
   CardTitle,
 } from "@scout-for-lol/design-system/components/card";
 import { Badge } from "@scout-for-lol/design-system/components/badge";
+import { Link } from "react-router";
 import type { RouterOutputs } from "#src/lib/query/trpc.ts";
+import { clashMatchPath } from "#src/routes/consumer/consumer-clash-copy.ts";
 
 const RESULT_LABEL = { won: "Won", lost: "Lost", pending: "Up next" } as const;
 
@@ -90,6 +92,17 @@ export function ClashBracketSection(props: {
                       ? ""
                       : `Round ${String(match.round)} · `}
                     {opponentLabel(match.opponent)}
+                    {(match.matchIds ?? []).map((matchId, gameIndex, all) => (
+                      <Link
+                        key={matchId}
+                        to={clashMatchPath(matchId)}
+                        className="ml-2 text-xs text-scout-subtle underline underline-offset-4 hover:text-scout-ink"
+                      >
+                        {all.length === 1
+                          ? "View match"
+                          : `Game ${String(gameIndex + 1)}`}
+                      </Link>
+                    ))}
                   </span>
                   <Badge
                     variant={

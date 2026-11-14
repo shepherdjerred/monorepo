@@ -8,12 +8,21 @@ import {
 import { Badge } from "@scout-for-lol/design-system/components/badge";
 import type { RouterOutputs } from "#src/lib/query/trpc.ts";
 import { ClashBracketSection } from "#src/routes/consumer/consumer-clash-bracket.tsx";
+import { Link } from "react-router";
 import {
+  clashMatchPath,
   clashTeamLabel,
   formatClashIso,
   sightingOutcomeLabel,
   titleCaseToken,
 } from "#src/routes/consumer/consumer-clash-copy.ts";
+
+type ClashHistorySighting =
+  RouterOutputs["clash"]["history"]["cups"][number]["players"][number]["sightings"][number];
+
+function sightingSummary(sighting: ClashHistorySighting): string {
+  return `Match ${String(sighting.matchIndex)} · ${sighting.championName} · ${formatClashIso(sighting.observedAt)}`;
+}
 
 type QueryView<T> = {
   isPending: boolean;
@@ -80,11 +89,16 @@ export function ClashHistorySection(props: {
                         key={`${sighting.platform}:${sighting.gameId}`}
                         className="flex flex-wrap items-center justify-between gap-2 text-scout-subtle"
                       >
-                        <span>
-                          Match {String(sighting.matchIndex)} ·{" "}
-                          {sighting.championName} ·{" "}
-                          {formatClashIso(sighting.observedAt)}
-                        </span>
+                        {sighting.matchId === null ? (
+                          <span>{sightingSummary(sighting)}</span>
+                        ) : (
+                          <Link
+                            to={clashMatchPath(sighting.matchId)}
+                            className="text-scout-ink underline underline-offset-4"
+                          >
+                            {sightingSummary(sighting)}
+                          </Link>
+                        )}
                         <Badge variant="secondary">
                           {sightingOutcomeLabel(sighting.outcome)}
                         </Badge>
