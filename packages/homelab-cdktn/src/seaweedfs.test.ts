@@ -83,6 +83,7 @@ const BUCKETS = {
   resume: "resume",
   scout_beta: "scout-beta",
   scout_design_system: "scout-design-system",
+  scout_desktop: "scout-desktop",
   scout_frontend: "scout-frontend",
   scout_frontend_beta: "scout-frontend-beta",
   scout_prod: "scout-prod",
@@ -111,6 +112,7 @@ const PROTECTED_BUCKETS = [
   "glitter_discord_corpus",
   "homelab_tofu_state",
   "relay_docs",
+  "scout_desktop",
   "storm_forum_backups",
   "storm_forum_releases",
   "the_storm_capture_fixtures",
@@ -202,6 +204,27 @@ const TERRAFORM_DATA = {
         '  --endpoint-url "${self.input.endpoint_url}" \\',
         '  --content-type "text/html; charset=utf-8"',
         'aws s3 cp "${path.module}/public/404.html" "s3://${self.input.bucket}/404.html" \\',
+        '  --endpoint-url "${self.input.endpoint_url}" \\',
+        '  --content-type "text/html; charset=utf-8"',
+        "",
+      ].join("\n"),
+    ),
+  },
+  // Seeded so the root probe is green before the first release; the channel
+  // manifests are not, so the first publication creates them.
+  scout_desktop_seed: {
+    input: {
+      bucket: "${aws_s3_bucket.scout_desktop.id}",
+      endpoint_url: ENDPOINT,
+      index_md5: '${filemd5("${path.module}/scout-desktop/index.html")}',
+      not_found_md5: '${filemd5("${path.module}/scout-desktop/404.html")}',
+    },
+    provisioner: provisioner(
+      [
+        'aws s3 cp "${path.module}/scout-desktop/index.html" "s3://${self.input.bucket}/index.html" \\',
+        '  --endpoint-url "${self.input.endpoint_url}" \\',
+        '  --content-type "text/html; charset=utf-8"',
+        'aws s3 cp "${path.module}/scout-desktop/404.html" "s3://${self.input.bucket}/404.html" \\',
         '  --endpoint-url "${self.input.endpoint_url}" \\',
         '  --content-type "text/html; charset=utf-8"',
         "",

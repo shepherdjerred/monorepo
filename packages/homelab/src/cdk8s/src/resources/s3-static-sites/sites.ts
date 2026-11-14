@@ -43,6 +43,18 @@ const scoutCsp = [
 ].join("; ");
 
 /**
+ * CSP for the Scout Desktop release host. The root is a placeholder page with
+ * inline styling; every other path is a download or a JSON feed.
+ */
+const scoutDesktopCsp = [
+  "default-src 'none'",
+  "style-src 'unsafe-inline'",
+  "base-uri 'none'",
+  "form-action 'none'",
+  "frame-ancestors 'none'",
+].join("; ");
+
+/**
  * CSP for the Scout Storybook catalogs.
  *
  * Deliberately not `scoutCsp`: the catalog talks to no analytics, no error
@@ -220,6 +232,14 @@ const SITE_OPTIONS: Readonly<Record<string, SiteOptions>> = {
       // the DENY default would leave the catalog permanently blank.
       "X-Frame-Options": "SAMEORIGIN",
     },
+  },
+  // Scout Desktop installers and update feeds, published by an operator
+  // (scripts/release); no site build writes here. Cache-Control is set per
+  // object at upload: `/releases/<version>/...` is immutable, `/<channel>.json`
+  // is `no-cache`. The host serves files to the updater and to download links,
+  // never a page that loads anything, so the policy allows nothing.
+  "download.scout-for-lol.com": {
+    responseHeaders: { "Content-Security-Policy": scoutDesktopCsp },
   },
   "better-skill-capped.com": {
     // `/course/<uuid>` is a client-side TanStack Router route, so the bucket has
