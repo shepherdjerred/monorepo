@@ -6,6 +6,7 @@ import {
   type ExploreAnswer,
   type ExploreAttachPoint,
   type ExploreConversation,
+  type ExploreConversationOrigin,
   type ExploreMessage,
   type ExploreMatchCard,
   type ExploreLoadoutCard,
@@ -166,7 +167,7 @@ export async function startExploreTurn(
     question: string;
     attach: ExploreAttachPoint;
     /** Server-owned surface that creates a new conversation. */
-    origin?: "legacy" | "web" | "discord" | "voice";
+    origin?: ExploreConversationOrigin;
   },
 ): Promise<{
   conversationId: string;

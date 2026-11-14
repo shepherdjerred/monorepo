@@ -12,12 +12,17 @@ import { rejectDuplicateCaseIds } from "#src/model/reports/explore-capability-co
  * asker is linked to this player", and those states are exactly where Explore
  * failed people. This corpus can.
  *
- * Every case runs on every surface it lists. Web, Discord and voice are meant
- * to share one capability set, so a case that passes on the web and fails on
- * Discord is a failure, not a surface difference.
+ * Every case runs on every surface it lists. Web, Discord, voice and Scout
+ * Desktop are meant to share one capability set, so a case that passes on the
+ * web and fails on Discord is a failure, not a surface difference.
  */
 
-export const ExploreScenarioSurfaceSchema = z.enum(["web", "discord", "voice"]);
+export const ExploreScenarioSurfaceSchema = z.enum([
+  "web",
+  "discord",
+  "voice",
+  "desktop",
+]);
 export type ExploreScenarioSurface = z.infer<
   typeof ExploreScenarioSurfaceSchema
 >;
@@ -168,7 +173,7 @@ export const ExploreScenarioCaseSchema = z
     surfaces: z
       .array(ExploreScenarioSurfaceSchema)
       .min(1)
-      .default(["web", "discord", "voice"]),
+      .default(["web", "discord", "voice", "desktop"]),
     asker: z
       .object({
         username: NameSchema,

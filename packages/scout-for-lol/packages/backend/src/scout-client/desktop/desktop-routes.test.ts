@@ -1,8 +1,11 @@
 import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
 import {
+  DiscordAccountIdSchema,
   SCOUT_DESKTOP_API_ROUTES,
   SCOUT_DESKTOP_CONTRACT_HEADER,
+  SCOUT_DESKTOP_CONTRACT_VERSION,
   ScoutDesktopApiErrorSchema,
+  ScoutDesktopConversationGetResponseSchema,
   ScoutDesktopConversationListResponseSchema,
   ScoutDesktopExploreStatusResponseSchema,
   ScoutDesktopPairingV2ResponseSchema,
@@ -13,6 +16,12 @@ import { DiscordUpstreamError } from "#src/lib/discord-rest.ts";
 import { secretDigest } from "#src/scout-client/secrets.ts";
 import statusFixture from "@scout-for-lol/data/scout-client/desktop-fixtures/explore-status.json" with { type: "json" };
 import getFixture from "@scout-for-lol/data/scout-client/desktop-fixtures/explore-conversations-get.json" with { type: "json" };
+import startFixture from "@scout-for-lol/data/scout-client/desktop-fixtures/explore-runs-start.json" with { type: "json" };
+import stopFixture from "@scout-for-lol/data/scout-client/desktop-fixtures/explore-runs-stop.json" with { type: "json" };
+import activeFixture from "@scout-for-lol/data/scout-client/desktop-fixtures/explore-runs-active.json" with { type: "json" };
+import outcomeFixture from "@scout-for-lol/data/scout-client/desktop-fixtures/explore-runs-outcome.json" with { type: "json" };
+import streamFixture from "@scout-for-lol/data/scout-client/desktop-fixtures/explore-runs-stream.json" with { type: "json" };
+import { exploreQuotaLimits } from "#src/config/dynamic.ts";
 
 const mocks = vi.hoisted(() => ({
   findDevice: vi.fn(),
@@ -25,6 +34,11 @@ const mocks = vi.hoisted(() => ({
   exploreStatusFor: vi.fn(),
   listConversations: vi.fn(),
   loadTranscript: vi.fn(),
+  startRun: vi.fn(),
+  stopRun: vi.fn(),
+  listRuns: vi.fn(),
+  runOutcome: vi.fn(),
+  subscribeRun: vi.fn(),
 }));
 
 vi.mock("#src/database/index.ts", () => ({
@@ -62,12 +76,38 @@ vi.mock("#src/explore/store.ts", async (importOriginal) => ({
 vi.mock("#src/trpc/auth-web-helpers.ts", () => ({
   getAppOrigin: () => "https://scout.invalid",
 }));
+// The run manager is the one the web's tRPC procedures use; its methods are
+// spies so each test can stand in a run, or route to a real manager.
+vi.mock("#src/explore/runs/run-manager.ts", async (importOriginal) => ({
+  ...(await importOriginal()),
+  exploreRunManager: {
+    start: mocks.startRun,
+    stop: mocks.stopRun,
+    listDurable: mocks.listRuns,
+    durableOutcome: mocks.runOutcome,
+    subscribeDurable: mocks.subscribeRun,
+  },
+}));
 
 const { handleScoutClientRoute } = await import("#src/scout-client/http.ts");
 const { resetDesktopReadRateLimitForTests, DESKTOP_READ_LIMIT_PER_MINUTE } =
   await import("./rate-limit.ts");
 const { resetPairingRateLimitForTests } =
   await import("#src/scout-client/pairing-rate-limit.ts");
+const {
+  DESKTOP_STREAMS_PER_DEVICE,
+  desktopStreamsHeldForTests,
+  resetDesktopStreamSlotsForTests,
+} = await import("./explore-run-routes.ts");
+const {
+  ExploreConversationBusyError,
+  resetExploreRateLimitStateForTests,
+  tryStartExploreTurn,
+} = await import("#src/explore/rate-limit.ts");
+const { ExploreRunManager, ExploreRunUnavailableError } =
+  await import("#src/explore/runs/run-manager.ts");
+const { ExploreInvalidTurnError, ExploreNotFoundError } =
+  await import("#src/explore/store.ts");
 
 const TOKEN = `sct_${"a".repeat(43)}`;
 const OWNER_ID = "160509172704739328";
@@ -138,6 +178,8 @@ beforeEach(() => {
   resetConfigurationForTests();
   resetDesktopReadRateLimitForTests();
   resetPairingRateLimitForTests();
+  resetDesktopStreamSlotsForTests();
+  resetExploreRateLimitStateForTests();
   mocks.isPolicyEnabled.mockResolvedValue(true);
   mocks.findDevice.mockResolvedValue(device());
   mocks.findUser.mockResolvedValue({
@@ -289,7 +331,9 @@ describe("desktop contract version", () => {
   test("every answer names the server's contract version", async () => {
     const response = await send(desktopRequest(STATUS_PATH));
 
-    expect(response.headers.get(SCOUT_DESKTOP_CONTRACT_HEADER)).toBe("1");
+    expect(response.headers.get(SCOUT_DESKTOP_CONTRACT_HEADER)).toBe(
+      String(SCOUT_DESKTOP_CONTRACT_VERSION),
+    );
     expect(response.headers.get("Cache-Control")).toBe("no-store");
   });
 });
@@ -476,4 +520,408 @@ describe("desktop pairing", () => {
       }),
     );
   });
+});
+
+const RUN_ID = startFixture.response.runId;
+const OTHER_DEVICE_ID = "5ab3b967-64b0-43b5-96b0-6dd196a053b4";
+const START_PATH = SCOUT_DESKTOP_API_ROUTES.explore_runs_start.path;
+const STOP_PATH = SCOUT_DESKTOP_API_ROUTES.explore_runs_stop.path;
+const ACTIVE_PATH = SCOUT_DESKTOP_API_ROUTES.explore_runs_active.path;
+const OUTCOME_PATH = SCOUT_DESKTOP_API_ROUTES.explore_runs_outcome.path;
+const STREAM_PATH = SCOUT_DESKTOP_API_ROUTES.explore_runs_stream.path;
+const RUN_PATHS = [
+  START_PATH,
+  STOP_PATH,
+  ACTIVE_PATH,
+  OUTCOME_PATH,
+  STREAM_PATH,
+];
+
+/** A golden frame of each type, by type. */
+const FRAMES = new Map(
+  streamFixture.response.events.map((event) => [event.type, event]),
+);
+function frame(type: string): unknown {
+  const found = FRAMES.get(type);
+  if (found === undefined) throw new Error(`no golden ${type} frame`);
+  return found;
+}
+
+describe("desktop Explore run routes", () => {
+  test.each(RUN_PATHS)("%s refuses a cookie-only request", async (path) => {
+    const response = await send(
+      new Request(`${ORIGIN}${path}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          [SCOUT_DESKTOP_CONTRACT_HEADER]: "2",
+          Cookie: "scout_session=signed.jwt.value; scout_csrf=csrf-token",
+          "X-CSRF-Token": "csrf-token",
+          Origin: ORIGIN,
+        },
+        body: JSON.stringify({ runId: RUN_ID }),
+      }),
+    );
+
+    expect(response.status).toBe(401);
+    expect(await errorCode(response)).toBe("unauthorized");
+    expect(mocks.createContext).not.toHaveBeenCalled();
+    expect(mocks.findDevice).not.toHaveBeenCalled();
+    expect(mocks.startRun).not.toHaveBeenCalled();
+    expect(mocks.subscribeRun).not.toHaveBeenCalled();
+  });
+
+  test.each(RUN_PATHS)("%s needs the explore scope", async (path) => {
+    mocks.findDevice.mockResolvedValue(device({ scopes: ["ingest"] }));
+
+    const response = await send(
+      desktopRequest(path, { body: { runId: RUN_ID } }),
+    );
+
+    expect(response.status).toBe(403);
+    expect(await errorCode(response)).toBe("scope_required");
+    expect(mocks.startRun).not.toHaveBeenCalled();
+    expect(mocks.stopRun).not.toHaveBeenCalled();
+    expect(mocks.subscribeRun).not.toHaveBeenCalled();
+  });
+
+  test("start answers as the owner, on the desktop surface", async () => {
+    mocks.startRun.mockResolvedValue(startFixture.response);
+
+    const response = await send(
+      desktopRequest(START_PATH, { body: startFixture.request }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual(startFixture.response);
+    expect(mocks.startRun).toHaveBeenCalledWith(
+      { userId: OWNER_ID },
+      startFixture.request,
+      [SHARED_GUILD],
+      { surface: "desktop" },
+    );
+  });
+
+  test.each([
+    [
+      "a busy conversation",
+      () => new ExploreConversationBusyError("Busy."),
+      "conversation_busy",
+    ],
+    [
+      "Temporal down",
+      () => new ExploreRunUnavailableError("Down."),
+      "unavailable",
+    ],
+    [
+      "a missing conversation",
+      () => new ExploreNotFoundError("Gone."),
+      "not_found",
+    ],
+    [
+      "an invalid turn",
+      () => new ExploreInvalidTurnError("No question."),
+      "invalid_turn",
+    ],
+  ] as const)("start maps %s as the web does", async (_label, error, code) => {
+    mocks.startRun.mockRejectedValue(error());
+
+    const response = await send(
+      desktopRequest(START_PATH, { body: startFixture.request }),
+    );
+
+    expect(await errorCode(response)).toBe(code);
+  });
+
+  test("an unexpected start failure is not dressed up as a refusal", async () => {
+    mocks.startRun.mockRejectedValue(new Error("broken invariant"));
+
+    await expect(
+      send(desktopRequest(START_PATH, { body: startFixture.request })),
+    ).rejects.toThrow("broken invariant");
+  });
+
+  test.each([
+    ["an unknown key", { ...startFixture.request, surface: "web" }],
+    ["no attach point", { conversationId: null, question: "x", attach: {} }],
+  ])("start refuses %s before any run", async (_label, body) => {
+    const response = await send(desktopRequest(START_PATH, { body }));
+
+    expect(response.status).toBe(400);
+    expect(await errorCode(response)).toBe("invalid_request");
+    expect(mocks.startRun).not.toHaveBeenCalled();
+  });
+
+  test("stop stops the owner's run, and another user's run is not found", async () => {
+    mocks.stopRun.mockResolvedValueOnce(true).mockResolvedValueOnce(false);
+
+    const stopped = await send(
+      desktopRequest(STOP_PATH, { body: { runId: RUN_ID } }),
+    );
+    expect(stopped.status).toBe(200);
+    expect(await stopped.json()).toEqual(stopFixture.response);
+    expect(mocks.stopRun).toHaveBeenCalledWith(RUN_ID, OWNER_ID);
+
+    const foreign = await send(
+      desktopRequest(STOP_PATH, { body: { runId: RUN_ID } }),
+    );
+    expect(foreign.status).toBe(404);
+    expect(await errorCode(foreign)).toBe("not_found");
+  });
+
+  test("active lists the owner's runs on every surface", async () => {
+    mocks.listRuns.mockResolvedValue(activeFixture.response.runs);
+
+    const response = await send(desktopRequest(ACTIVE_PATH));
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual(activeFixture.response);
+    expect(mocks.listRuns).toHaveBeenCalledWith(OWNER_ID);
+  });
+
+  test("outcome reads the owner's finished run", async () => {
+    mocks.runOutcome.mockResolvedValue("succeeded");
+
+    const response = await send(
+      desktopRequest(OUTCOME_PATH, { body: { runId: RUN_ID } }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual(outcomeFixture.response);
+    expect(mocks.runOutcome).toHaveBeenCalledWith(RUN_ID, OWNER_ID);
+  });
+});
+
+describe("desktop turns share the owner's Explore quota with the web", () => {
+  /** The identity the web's `explore.start` uses for this owner. */
+  const OWNER_IDENTITY = { userId: DiscordAccountIdSchema.parse(OWNER_ID) };
+
+  // The web's `explore.start` and the desktop route call the same manager
+  // with the same `{ userId }` identity. A real manager (inline, so a refusal
+  // never reaches Postgres) proves the desktop is held to what the web spent.
+  beforeEach(() => {
+    const manager = new ExploreRunManager({ inlineExecutionForTests: true });
+    mocks.startRun.mockImplementation((identity, request, guildIds, context) =>
+      manager.start(identity, request, guildIds, context),
+    );
+  });
+
+  test("a web answer in flight holds a desktop turn back", async () => {
+    const web = tryStartExploreTurn(OWNER_IDENTITY);
+    if (!web.allowed) throw new Error("the web turn should start");
+
+    const response = await send(
+      desktopRequest(START_PATH, { body: startFixture.request }),
+    );
+
+    expect(response.status).toBe(429);
+    expect(await errorCode(response)).toBe("quota_exceeded");
+    expect(response.headers.get("Retry-After")).toBe("30");
+    web.finish();
+  });
+
+  test("questions asked on the web count against the desktop", async () => {
+    for (let turn = 0; turn < exploreQuotaLimits().userMinute; turn += 1) {
+      const web = tryStartExploreTurn(OWNER_IDENTITY);
+      if (!web.allowed) throw new Error("the web turn should start");
+      web.commit();
+      web.finish();
+    }
+
+    const response = await send(
+      desktopRequest(START_PATH, { body: startFixture.request }),
+    );
+
+    expect(response.status).toBe(429);
+    expect(await errorCode(response)).toBe("quota_exceeded");
+    expect(Number(response.headers.get("Retry-After"))).toBeGreaterThan(0);
+  });
+});
+
+type Frame = { readonly event: string; readonly data: unknown };
+
+/** Read SSE frames from a response one at a time, as the client does. */
+function frames(response: Response) {
+  if (response.body === null) throw new Error("stream has no body");
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffered = "";
+  return {
+    async next(): Promise<Frame | null> {
+      for (;;) {
+        const end = buffered.indexOf("\n\n");
+        if (end !== -1) {
+          const [eventLine = "", dataLine = ""] = buffered
+            .slice(0, end)
+            .split("\n");
+          buffered = buffered.slice(end + 2);
+          const data: unknown = JSON.parse(dataLine.slice("data: ".length));
+          return { event: eventLine.slice("event: ".length), data };
+        }
+        const chunk = await reader.read();
+        if (chunk.done) return null;
+        buffered += decoder.decode(chunk.value, { stream: true });
+      }
+    },
+    cancel: () => reader.cancel(),
+  };
+}
+
+async function openStream(runId: string = RUN_ID): Promise<Response> {
+  return await send(desktopRequest(STREAM_PATH, { body: { runId } }));
+}
+
+async function openStreamStatus(): Promise<number> {
+  const response = await openStream();
+  return response.status;
+}
+
+/** The next frame's type and body, or undefined once the stream ends. */
+async function nextEvent(reader: ReturnType<typeof frames>) {
+  const next = await reader.next();
+  return next?.event;
+}
+async function nextData(reader: ReturnType<typeof frames>) {
+  const next = await reader.next();
+  return next?.data;
+}
+
+describe("desktop run stream", () => {
+  let subscribers: ((event: unknown) => void)[] = [];
+  let unsubscribed = 0;
+
+  beforeEach(() => {
+    subscribers = [];
+    unsubscribed = 0;
+    // What the manager does on every attach: a snapshot, then the table, then
+    // live events until `done`.
+    mocks.subscribeRun.mockImplementation((runId, userId, subscriber) => {
+      if (runId !== RUN_ID || userId !== OWNER_ID) return Promise.resolve(null);
+      subscriber(frame("snapshot"));
+      subscriber(frame("run_preview"));
+      subscribers.push(subscriber);
+      return Promise.resolve(() => {
+        unsubscribed += 1;
+      });
+    });
+  });
+
+  test("a started run streams its snapshot, live events and done", async () => {
+    mocks.startRun.mockResolvedValue(startFixture.response);
+    const started = await send(
+      desktopRequest(START_PATH, { body: startFixture.request }),
+    );
+    expect(started.status).toBe(200);
+
+    const response = await openStream();
+    expect(response.status).toBe(200);
+    expect(response.headers.get("Content-Type")).toContain("text/event-stream");
+    expect(response.headers.get(SCOUT_DESKTOP_CONTRACT_HEADER)).toBe(
+      String(SCOUT_DESKTOP_CONTRACT_VERSION),
+    );
+    const reader = frames(response);
+    expect(await nextData(reader)).toEqual(frame("snapshot"));
+    expect(await nextEvent(reader)).toBe("run_preview");
+    expect(desktopStreamsHeldForTests(DEVICE_ID)).toBe(1);
+
+    subscribers[0]?.(frame("answer_delta"));
+    subscribers[0]?.(frame("done"));
+
+    expect(await reader.next()).toEqual({
+      event: "answer_delta",
+      data: frame("answer_delta"),
+    });
+    expect(await nextData(reader)).toEqual(frame("done"));
+    expect(await reader.next()).toBeNull();
+    expect(desktopStreamsHeldForTests(DEVICE_ID)).toBe(0);
+    expect(mocks.subscribeRun).toHaveBeenCalledWith(
+      RUN_ID,
+      OWNER_ID,
+      expect.any(Function),
+    );
+  });
+
+  test("a reconnect starts again from a whole snapshot", async () => {
+    const first = frames(await openStream());
+    expect(await nextEvent(first)).toBe("snapshot");
+    await first.cancel();
+    expect(unsubscribed).toBe(1);
+    expect(desktopStreamsHeldForTests(DEVICE_ID)).toBe(0);
+
+    const second = frames(await openStream());
+
+    expect(await nextData(second)).toEqual(frame("snapshot"));
+    expect(desktopStreamsHeldForTests(DEVICE_ID)).toBe(1);
+  });
+
+  test("another user's run is not found and holds no slot", async () => {
+    const response = await openStream(getFixture.response.conversation.id);
+
+    expect(response.status).toBe(404);
+    expect(await errorCode(response)).toBe("not_found");
+    expect(desktopStreamsHeldForTests(DEVICE_ID)).toBe(0);
+  });
+
+  test("each device may hold only so many streams at once", async () => {
+    const open = [];
+    for (let stream = 0; stream < DESKTOP_STREAMS_PER_DEVICE; stream += 1) {
+      const response = await openStream();
+      expect(response.status).toBe(200);
+      open.push(frames(response));
+    }
+
+    const refused = await openStream();
+    expect(refused.status).toBe(429);
+    expect(await errorCode(refused)).toBe("stream_limit");
+    expect(mocks.subscribeRun).toHaveBeenCalledTimes(
+      DESKTOP_STREAMS_PER_DEVICE,
+    );
+
+    // The cap is per device: the owner's other computer is unaffected.
+    mocks.findDevice.mockResolvedValueOnce(device({ id: OTHER_DEVICE_ID }));
+    expect(await openStreamStatus()).toBe(200);
+
+    // Closing one stream frees its slot.
+    await open[0]?.cancel();
+    expect(await openStreamStatus()).toBe(200);
+  });
+});
+
+describe("conversation origin by contract version", () => {
+  const desktopConversation = {
+    ...getFixture.response.conversation,
+    origin: "desktop",
+  };
+
+  test.each([
+    ["1", "web"],
+    ["2", "desktop"],
+  ])(
+    "a version-%s client reads a desktop conversation as %s",
+    async (version, origin) => {
+      mocks.listConversations.mockResolvedValue([desktopConversation]);
+      mocks.loadTranscript.mockResolvedValue({
+        ...getFixture.response,
+        conversation: desktopConversation,
+      });
+      const headers = { [SCOUT_DESKTOP_CONTRACT_HEADER]: version };
+
+      const listed = await send(desktopRequest(LIST_PATH, { headers }));
+      const list = ScoutDesktopConversationListResponseSchema.parse(
+        await listed.json(),
+      );
+      const read = await send(
+        desktopRequest(GET_PATH, {
+          headers,
+          body: { conversationId: CONVERSATION_ID },
+        }),
+      );
+      const transcript = ScoutDesktopConversationGetResponseSchema.parse(
+        await read.json(),
+      );
+
+      expect(list.conversations.map((entry) => entry.origin)).toEqual([origin]);
+      expect(transcript.conversation.origin).toBe(origin);
+    },
+  );
 });

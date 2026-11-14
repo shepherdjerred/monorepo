@@ -130,7 +130,9 @@ async function runOne(input: {
           guildIds: [world.guildId],
           surface: run.surface,
           originChannelId:
-            run.surface === "web" ? null : (world.channels[0]?.id ?? null),
+            run.surface === "web" || run.surface === "desktop"
+              ? null
+              : (world.channels[0]?.id ?? null),
           images,
         },
         {
@@ -154,7 +156,7 @@ async function runOne(input: {
               surface: run.surface,
               transcript,
               runtime: input.runtime,
-              // Web and Discord attach images; voice cannot.
+              // Web, Discord and desktop attach images; voice cannot.
               imageDelivered:
                 turn.image === undefined
                   ? null

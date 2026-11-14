@@ -1,0 +1,52 @@
+{
+  "route": "explore_runs_start",
+  "request": {
+    "conversationId": null,
+    "question": "Who has the best ARAM win rate this month?",
+    "attach": { "kind": "leaf" }
+  },
+  "response": {
+    "runId": "3d8f1a62-7b4c-4e29-9a05-c61e2f7b8d43",
+    "conversationId": "7c3e5a91-2b64-4d0f-8e17-5a9c4b2d6f30",
+    "questionMessageId": "e5b7c9d1-3f24-4a6b-8c8e-0d2f4a6b8c01",
+    "leafIdAtStart": null,
+    "versionCountAtStart": 0,
+    "startedAt": "2026-11-14T09:12:30.000Z"
+  },
+  "invalidRequests": [
+    {
+      "reason": "an unknown key",
+      "body": {
+        "conversationId": null,
+        "question": "Who carries?",
+        "attach": { "kind": "leaf" },
+        "surface": "web"
+      }
+    },
+    {
+      "reason": "an unknown attach point",
+      "body": {
+        "conversationId": null,
+        "question": "Who carries?",
+        "attach": { "kind": "sibling" }
+      }
+    },
+    {
+      "reason": "a malformed conversation id",
+      "body": {
+        "conversationId": "not-a-uuid",
+        "question": "Who carries?",
+        "attach": { "kind": "leaf" }
+      }
+    },
+    {
+      "reason": "an unknown model",
+      "body": {
+        "conversationId": null,
+        "question": "Who carries?",
+        "attach": { "kind": "leaf" },
+        "model": "gpt-2"
+      }
+    }
+  ]
+}

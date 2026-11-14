@@ -176,10 +176,22 @@ function verificationUnavailable(): CreationAccess {
  * How tier 2 learns the asker's permissions in one guild, by surface.
  *
  * The web probes the OAuth guild list once up front, so an outage is told
- * apart from "no eligible guilds" before any guild is judged. Discord and voice
- * have no OAuth token; the bot answers per guild, and its errors keep the same
- * outage-versus-denial meaning.
+ * apart from "no eligible guilds" before any guild is judged. Scout Desktop
+ * acts as its owner with that same stored OAuth grant, so it takes the same
+ * branch. Discord and voice have no OAuth token; the bot answers per guild,
+ * and its errors keep the same outage-versus-denial meaning.
  */
+function usesOwnerOAuth(surface: ExploreSurface): boolean {
+  switch (surface) {
+    case "web":
+    case "desktop":
+      return true;
+    case "discord":
+    case "voice":
+      return false;
+  }
+}
+
 async function permissionSource(
   input: { capability: CreationCapability; requesterId: DiscordAccountId },
   dependencies: CreationAccessDependencies,
@@ -187,7 +199,7 @@ async function permissionSource(
   | ((guildId: DiscordGuildId) => Promise<PermissionSet>)
   | { readonly outage: true }
 > {
-  if (input.capability.surface !== "web") {
+  if (!usesOwnerOAuth(input.capability.surface)) {
     return (guildId) =>
       dependencies.resolveMemberPermissions(input.requesterId, guildId);
   }

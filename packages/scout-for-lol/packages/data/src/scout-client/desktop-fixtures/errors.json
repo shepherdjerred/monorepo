@@ -8,6 +8,13 @@
       }
     },
     {
+      "status": 400,
+      "body": {
+        "error": "invalid_turn",
+        "message": "Answering again needs an existing question."
+      }
+    },
+    {
       "status": 401,
       "body": {
         "error": "unauthorized",
@@ -40,6 +47,13 @@
       "body": { "error": "not_found", "message": "Conversation not found." }
     },
     {
+      "status": 409,
+      "body": {
+        "error": "conversation_busy",
+        "message": "This conversation already has an answer running."
+      }
+    },
+    {
       "status": 426,
       "body": {
         "error": "contract_unsupported",
@@ -51,6 +65,20 @@
       "body": {
         "error": "rate_limited",
         "message": "Too many requests from this device. Try again shortly."
+      }
+    },
+    {
+      "status": 429,
+      "body": {
+        "error": "quota_exceeded",
+        "message": "You already have an Explore answer running."
+      }
+    },
+    {
+      "status": 429,
+      "body": {
+        "error": "stream_limit",
+        "message": "This device is already following too many answers. Close one and try again."
       }
     },
     {

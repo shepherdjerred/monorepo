@@ -8,15 +8,13 @@ import {
 } from "#src/explore/access.ts";
 import { sharedToolPayload } from "#src/explore/inspection/tool-payloads.ts";
 import { ExploreConversationBusyError } from "#src/explore/rate-limit.ts";
+import { exploreRunManager } from "#src/explore/runs/run-manager.ts";
 import {
-  ExploreRunRateLimitedError,
-  ExploreRunUnavailableError,
-  exploreRunManager,
-} from "#src/explore/runs/run-manager.ts";
+  classifyExploreStartError,
+  type ExploreStartRefusal,
+} from "#src/explore/runs/start-refusal.ts";
 import { exploreStatusFor } from "#src/explore/spending/status.ts";
 import {
-  ExploreInvalidTurnError,
-  ExploreNotFoundError,
   listExploreConversations,
   loadExploreTranscript,
   loadSharedExploreTranscript,
@@ -54,6 +52,7 @@ import {
   ExploreRunOutcomeResultSchema,
   ExploreShareTokenSchema,
   ExploreTurnRequestSchema,
+  exploreOriginForPreDesktopReader,
   type DiscordAccountId,
 } from "@scout-for-lol/data";
 import { TRPCError } from "@trpc/server";
@@ -81,6 +80,15 @@ async function requireExploreUser(user: User): Promise<DiscordAccountId> {
 }
 
 const exploreProcedure = protectedProcedure;
+
+/** How `explore.start` answers each refusal; Scout Desktop maps the same set. */
+const START_REFUSAL_CODES = {
+  busy: "CONFLICT",
+  rate_limited: "TOO_MANY_REQUESTS",
+  unavailable: "SERVICE_UNAVAILABLE",
+  not_found: "NOT_FOUND",
+  invalid_turn: "BAD_REQUEST",
+} as const satisfies Record<ExploreStartRefusal["kind"], TRPCError["code"]>;
 
 /**
  * The status of one confirmation intent the caller owns.
@@ -288,28 +296,12 @@ export const exploreRouter = router({
       try {
         return await exploreRunManager.start({ userId }, input, guildIds);
       } catch (error) {
-        if (error instanceof ExploreConversationBusyError) {
-          throw new TRPCError({ code: "CONFLICT", message: error.message });
-        }
-        if (error instanceof ExploreRunRateLimitedError) {
-          throw new TRPCError({
-            code: "TOO_MANY_REQUESTS",
-            message: error.message,
-          });
-        }
-        if (error instanceof ExploreRunUnavailableError) {
-          throw new TRPCError({
-            code: "SERVICE_UNAVAILABLE",
-            message: error.message,
-          });
-        }
-        if (error instanceof ExploreNotFoundError) {
-          throw new TRPCError({ code: "NOT_FOUND", message: error.message });
-        }
-        if (error instanceof ExploreInvalidTurnError) {
-          throw new TRPCError({ code: "BAD_REQUEST", message: error.message });
-        }
-        throw error;
+        const refusal = classifyExploreStartError(error);
+        if (refusal === null) throw error;
+        throw new TRPCError({
+          code: START_REFUSAL_CODES[refusal.kind],
+          message: refusal.message,
+        });
       }
     }),
 
@@ -326,22 +318,33 @@ export const exploreRouter = router({
   get: exploreProcedure
     .input(
       conversationInput.extend({
-        version: z.union([z.literal(3), z.literal(4)]).optional(),
+        version: z.union([z.literal(3), z.literal(4), z.literal(5)]).optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
       const userId = await requireExploreUser(ctx.user);
-      const transcript = await loadExploreTranscript(
+      const loaded = await loadExploreTranscript(
         prisma,
         input.conversationId,
         userId,
       );
-      if (transcript === null) {
+      if (loaded === null) {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "Conversation not found.",
         });
       }
+      // v5 adds the `desktop` origin. Older bundles parse the origin enum
+      // strictly, so they are told `web`, which a desktop conversation is in
+      // every way they can render.
+      if (input.version === 5) return loaded;
+      const transcript = {
+        ...loaded,
+        conversation: {
+          ...loaded.conversation,
+          origin: exploreOriginForPreDesktopReader(loaded.conversation.origin),
+        },
+      };
       // v4 adds question images. A tab still on a v3 bundle parses messages
       // strictly, so v3 gets the same transcript without the new key.
       if (input.version === 4) return transcript;

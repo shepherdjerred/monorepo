@@ -1,0 +1,9 @@
+{
+  "route": "explore_runs_outcome",
+  "request": { "runId": "3d8f1a62-7b4c-4e29-9a05-c61e2f7b8d43" },
+  "response": { "outcome": "succeeded" },
+  "invalidRequests": [
+    { "reason": "a missing run id", "body": {} },
+    { "reason": "a malformed run id", "body": { "runId": 42 } }
+  ]
+}

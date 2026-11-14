@@ -1,5 +1,5 @@
 {
-  "contractVersion": 1,
+  "contractVersion": 2,
   "minimumContractVersion": 1,
   "header": "X-Scout-Desktop-Contract",
   "scopes": ["ingest", "explore"],
@@ -8,33 +8,84 @@
     "pairings_v2": {
       "method": "POST",
       "path": "/api/scout-client/v1/pairings/v2",
-      "scope": null
+      "scope": null,
+      "response": "json"
     },
     "explore_status": {
       "method": "POST",
       "path": "/api/scout-client/v1/explore/status",
-      "scope": "explore"
+      "scope": "explore",
+      "response": "json"
     },
     "explore_conversations_list": {
       "method": "POST",
       "path": "/api/scout-client/v1/explore/conversations/list",
-      "scope": "explore"
+      "scope": "explore",
+      "response": "json"
     },
     "explore_conversations_get": {
       "method": "POST",
       "path": "/api/scout-client/v1/explore/conversations/get",
-      "scope": "explore"
+      "scope": "explore",
+      "response": "json"
+    },
+    "explore_runs_start": {
+      "method": "POST",
+      "path": "/api/scout-client/v1/explore/runs/start",
+      "scope": "explore",
+      "response": "json"
+    },
+    "explore_runs_stop": {
+      "method": "POST",
+      "path": "/api/scout-client/v1/explore/runs/stop",
+      "scope": "explore",
+      "response": "json"
+    },
+    "explore_runs_active": {
+      "method": "POST",
+      "path": "/api/scout-client/v1/explore/runs/active",
+      "scope": "explore",
+      "response": "json"
+    },
+    "explore_runs_outcome": {
+      "method": "POST",
+      "path": "/api/scout-client/v1/explore/runs/outcome",
+      "scope": "explore",
+      "response": "json"
+    },
+    "explore_runs_stream": {
+      "method": "POST",
+      "path": "/api/scout-client/v1/explore/runs/stream",
+      "scope": "explore",
+      "response": "event-stream"
     }
   },
+  "streamEvents": [
+    "snapshot",
+    "run_preview",
+    "started",
+    "activity",
+    "tool_call",
+    "tool_result",
+    "preview",
+    "answer_delta",
+    "final",
+    "error",
+    "done"
+  ],
   "errors": {
     "invalid_request": 400,
+    "invalid_turn": 400,
     "unauthorized": 401,
     "reauthorize_required": 401,
     "scope_required": 403,
     "explore_forbidden": 403,
     "not_found": 404,
+    "conversation_busy": 409,
     "contract_unsupported": 426,
     "rate_limited": 429,
+    "quota_exceeded": 429,
+    "stream_limit": 429,
     "unavailable": 503
   }
 }

@@ -896,11 +896,29 @@ session being the only credential. A request is checked in this order: the
 failed Discord token refresh is 401 `reauthorize_required` and an outage is 503. Explore is not capture, so the `scout_client_ingestion` policy and its
 production hard-disable do not gate these routes.
 
+Runs use `runs/start`, `runs/stop`, `runs/active`, `runs/outcome` and
+`runs/stream` (`explore-run-routes.ts`). `runs/start` calls
+`exploreRunManager.start` with the owner's `{ userId }` and the `desktop`
+surface, so a desktop turn shares the per-user Explore quota and the
+one-active-run limit with the web, Discord and Voice. Start refusals come from
+`classifyExploreStartError` (`explore/runs/start-refusal.ts`), which
+`explore.start` maps to tRPC codes and the desktop maps to `conversation_busy`,
+`quota_exceeded` (with `Retry-After`), `unavailable`, `not_found` and
+`invalid_turn`. `runs/stream` answers through `observeExploreRun`, the same
+observer as `/api/explore/stream`: a snapshot on attach, then live events, then
+`done`, and the server lifts its idle timeout for both paths. Each device holds
+at most `DESKTOP_STREAMS_PER_DEVICE` open streams in a process; one more is 429
+`stream_limit`.
+
 `data/src/scout-client/desktop-api.contract.json` is the language-neutral
-contract: versions, routes, scopes and error codes. Golden bodies in
-`desktop-fixtures/` are parsed by the Zod schemas and by the strict serde types
-in `scout-client-core/src/desktop_api.rs`. Bodies are strict in both
-directions, so a change adds a route rather than a field on an existing one.
+contract: versions, routes, stream event types, scopes and error codes. Golden
+bodies in `desktop-fixtures/` are parsed by the Zod schemas and by the strict
+serde types in `scout-client-core/src/desktop_api.rs`, and both suites require
+a fixture for every route, error code and stream event type. Bodies are strict
+in both directions, so a change adds a route rather than a field on an existing
+one. An enum gains a member only behind a contract version: a client declaring
+contract 1 reads a `desktop` conversation origin as `web`, as a browser bundle
+below `explore.get` version 5 does.
 
 ### Raw observation archive
 

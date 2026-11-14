@@ -6,7 +6,9 @@
 //! serde types to them, so either side drifting fails its own suite.
 //!
 //! Every body is strict in both directions. A route never gains a field: a
-//! change ships as a new route and a contract version bump.
+//! change ships as a new route and a contract version bump. An enum never
+//! gains a member for a build that predates it either; the server down-shapes
+//! to the version a request declares.
 
 use std::collections::BTreeMap;
 
@@ -18,7 +20,17 @@ use uuid::Uuid;
 /// Request header carrying the client's desktop contract version.
 pub const DESKTOP_CONTRACT_HEADER: &str = "X-Scout-Desktop-Contract";
 /// Desktop contract version this build speaks.
-pub const DESKTOP_CONTRACT_VERSION: u32 = 1;
+pub const DESKTOP_CONTRACT_VERSION: u32 = 2;
+/// Path of the route that starts an Explore turn.
+pub const EXPLORE_RUNS_START_PATH: &str = "/api/scout-client/v1/explore/runs/start";
+/// Path of the route that stops a running turn.
+pub const EXPLORE_RUNS_STOP_PATH: &str = "/api/scout-client/v1/explore/runs/stop";
+/// Path of the route that lists the owner's running turns.
+pub const EXPLORE_RUNS_ACTIVE_PATH: &str = "/api/scout-client/v1/explore/runs/active";
+/// Path of the route that reads a finished turn's outcome.
+pub const EXPLORE_RUNS_OUTCOME_PATH: &str = "/api/scout-client/v1/explore/runs/outcome";
+/// Path of the `text/event-stream` route that observes a running turn.
+pub const EXPLORE_RUNS_STREAM_PATH: &str = "/api/scout-client/v1/explore/runs/stream";
 /// Path of the pairing route that asks for `ingest` and `explore`.
 pub const PAIRINGS_V2_PATH: &str = "/api/scout-client/v1/pairings/v2";
 /// Path of the Explore status route.
@@ -44,6 +56,8 @@ pub enum DeviceScope {
 pub enum DesktopApiErrorCode {
     /// The body does not match the route.
     InvalidRequest,
+    /// The turn cannot start as asked, such as answering a missing question.
+    InvalidTurn,
     /// No active device credential.
     Unauthorized,
     /// The owner's Discord grant expired; they must sign in on the web again.
@@ -52,13 +66,20 @@ pub enum DesktopApiErrorCode {
     ScopeRequired,
     /// The owner shares no server that may use Explore.
     ExploreForbidden,
-    /// The conversation does not exist or belongs to someone else.
+    /// The conversation or run does not exist or belongs to someone else.
     NotFound,
+    /// The conversation already has an answer running.
+    ConversationBusy,
     /// This build's contract is older than the server accepts.
     ContractUnsupported,
-    /// Too many reads from this device.
+    /// Too many requests from this device.
     RateLimited,
-    /// Scout could not verify access right now; retry.
+    /// The owner's Explore quota, shared with every surface, is spent or
+    /// already running a turn; `Retry-After` says when to try again.
+    QuotaExceeded,
+    /// This device already holds as many open streams as it may.
+    StreamLimit,
+    /// Scout could not verify access or start the turn right now; retry.
     Unavailable,
 }
 
@@ -179,6 +200,8 @@ pub enum ConversationOrigin {
     Discord,
     /// Discord voice.
     Voice,
+    /// Scout Desktop. A version-1 request is told `web` instead.
+    Desktop,
 }
 
 /// One conversation in the owner's list.
@@ -252,6 +275,276 @@ pub struct ConversationGetResponse {
     pub messages: Vec<Value>,
 }
 
+/// Where a turn attaches in the conversation tree.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(
+    tag = "kind",
+    rename_all = "snake_case",
+    rename_all_fields = "camelCase",
+    deny_unknown_fields
+)]
+pub enum AttachPoint {
+    /// Continue the branch on screen.
+    Leaf,
+    /// Fork the opening question.
+    Root,
+    /// Attach under one message: an edit names the edited question's parent,
+    /// a regenerate names the question to answer again.
+    Message {
+        /// The message to attach under.
+        message_id: Uuid,
+    },
+}
+
+/// A model the owner may pick when the server enables the picker.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum ExploreModel {
+    /// The default model.
+    #[serde(rename = "gpt-6-luna")]
+    Luna,
+    /// The larger model.
+    #[serde(rename = "gpt-6.1-sol")]
+    Sol,
+}
+
+/// Request to `explore/runs/start`: the web's `explore.start` request.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct RunStartRequest {
+    /// The conversation to continue, or none to start a new one.
+    pub conversation_id: Option<Uuid>,
+    /// The question, or none to answer an existing question again.
+    pub question: Option<String>,
+    /// Where the turn attaches.
+    pub attach: AttachPoint,
+    /// A model choice; omitted unless the owner picked one.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub model: Option<ExploreModel>,
+    /// Uploaded images for a new question; omitted when there are none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub attachment_ids: Option<Vec<Uuid>>,
+}
+
+/// A turn the server is answering: the answer to `runs/start`, and each entry
+/// of `runs/active`.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ActiveRun {
+    /// Run id, used to stop or observe it.
+    pub run_id: Uuid,
+    /// The conversation it answers in.
+    pub conversation_id: Uuid,
+    /// The question it answers.
+    pub question_message_id: Uuid,
+    /// The leaf on screen when it began.
+    pub leaf_id_at_start: Option<Uuid>,
+    /// Answers to this question that existed when it began.
+    pub version_count_at_start: u32,
+    /// When it began.
+    pub started_at: DateTime<Utc>,
+}
+
+/// Request naming one run: `runs/stop`, `runs/outcome` and `runs/stream`.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct RunRequest {
+    /// The run.
+    pub run_id: Uuid,
+}
+
+/// Response from `runs/stop`.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct RunStopResponse {
+    /// Always true; a run that cannot be stopped is a `not_found` refusal.
+    pub ok: bool,
+}
+
+/// Response from `runs/active`.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct RunActiveResponse {
+    /// The owner's runs on every surface, oldest first.
+    pub runs: Vec<ActiveRun>,
+}
+
+/// How a run ended.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum RunOutcome {
+    /// It answered.
+    Succeeded,
+    /// It failed.
+    Failed,
+    /// The owner stopped it.
+    Stopped,
+    /// An error interrupted it mid-answer.
+    Interrupted,
+}
+
+/// Response from `runs/outcome`.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct RunOutcomeResponse {
+    /// How the run ended, or none while it runs or once forgotten.
+    pub outcome: Option<RunOutcome>,
+}
+
+/// How a tool call finished.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ToolStatus {
+    /// It returned.
+    Succeeded,
+    /// It failed.
+    Failed,
+}
+
+/// One frame of `runs/stream`: `event: <type>` and `data: <json>`.
+///
+/// Tables, traces and messages stay JSON here; the Explore client crate owns
+/// their typed model together with the turn reducer. A frame whose type this
+/// build does not know may be skipped only when it carries `ignorable: true`;
+/// anything else is a stream this build cannot render honestly.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(
+    tag = "type",
+    rename_all = "snake_case",
+    rename_all_fields = "camelCase",
+    deny_unknown_fields
+)]
+pub enum StreamEvent {
+    /// Complete replaceable state, always the first frame after attaching.
+    Snapshot {
+        /// Run id.
+        run_id: Uuid,
+        /// Conversation id.
+        conversation_id: Uuid,
+        /// The question being answered.
+        question_message_id: Uuid,
+        /// The leaf on screen when the run began.
+        leaf_id_at_start: Option<Uuid>,
+        /// Answers that existed when the run began.
+        version_count_at_start: u32,
+        /// When the run began.
+        started_at: DateTime<Utc>,
+        /// The answer so far.
+        answer: Option<String>,
+        /// What the run is doing now.
+        activity: Option<String>,
+        /// Tool calls so far.
+        trace: Vec<Value>,
+    },
+    /// The newest table, sent straight after a snapshot.
+    RunPreview {
+        /// The table, if any.
+        preview: Option<Value>,
+        /// Always true.
+        ignorable: bool,
+    },
+    /// The run began.
+    Started {
+        /// Run id.
+        run_id: Uuid,
+        /// Conversation id.
+        conversation_id: Uuid,
+        /// The question being answered.
+        question_message_id: Uuid,
+    },
+    /// Owner-only narration of what the run is doing.
+    Activity {
+        /// The narration.
+        text: String,
+        /// The tool call it narrates, if any.
+        tool_call_id: Option<String>,
+        /// Always true.
+        ignorable: bool,
+    },
+    /// A tool call began.
+    ToolCall {
+        /// Provider call id.
+        tool_call_id: String,
+        /// Tool name.
+        tool_name: String,
+        /// Generic description.
+        message: String,
+        /// Structured details, if any.
+        details: Option<Value>,
+        /// The call's input, if kept.
+        raw_input: Option<Value>,
+    },
+    /// A tool call finished.
+    ToolResult {
+        /// Provider call id.
+        tool_call_id: String,
+        /// Tool name.
+        tool_name: String,
+        /// How it finished.
+        status: ToolStatus,
+        /// Generic description.
+        message: String,
+        /// Duration in milliseconds, if measured.
+        duration_ms: Option<u64>,
+        /// Structured details, if any.
+        details: Option<Value>,
+        /// The call's output, if kept.
+        raw_output: Option<Value>,
+    },
+    /// A query result to show while the answer is written.
+    Preview {
+        /// The table.
+        preview: Value,
+        /// A chart for it, if any.
+        visualization: Option<Value>,
+    },
+    /// More answer text.
+    AnswerDelta {
+        /// Text to append.
+        text: String,
+    },
+    /// The persisted answer.
+    Final {
+        /// The assistant message.
+        message: Value,
+        /// The conversation's title.
+        title: String,
+        /// Quota after the turn.
+        quota: Vec<ExploreQuota>,
+    },
+    /// The run failed.
+    Error {
+        /// Human-readable reason, safe to show.
+        message: String,
+        /// When to try again, if known.
+        retry_after_seconds: Option<u32>,
+        /// Quota at the failure, if relevant.
+        quota: Option<Vec<ExploreQuota>>,
+    },
+    /// The last frame.
+    Done {
+        /// How the run ended.
+        outcome: RunOutcome,
+    },
+}
+
+/// The golden `runs/stream` body: its frames, in order.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct RunStreamFrames {
+    /// Frames as the server sends them.
+    pub events: Vec<StreamEvent>,
+}
+
+/// How a route answers.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum RouteResponseKind {
+    /// One JSON body.
+    Json,
+    /// A `text/event-stream` of [`StreamEvent`] frames.
+    EventStream,
+}
+
 /// One route in the shared contract.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -262,6 +555,8 @@ pub struct DesktopRoute {
     pub path: String,
     /// Scope the device must hold, or none for pairing.
     pub scope: Option<DeviceScope>,
+    /// How the route answers.
+    pub response: RouteResponseKind,
 }
 
 /// The shared contract file.
@@ -280,6 +575,8 @@ pub struct DesktopApiContract {
     pub pairing_scopes: Vec<DeviceScope>,
     /// Routes by name.
     pub routes: BTreeMap<String, DesktopRoute>,
+    /// Every `runs/stream` event type.
+    pub stream_events: Vec<String>,
     /// Refusal codes and their HTTP status.
     pub errors: BTreeMap<DesktopApiErrorCode, u16>,
 }
@@ -293,11 +590,14 @@ mod tests {
     use serde_json::Value;
 
     use super::{
-        ConversationGetRequest, ConversationGetResponse, ConversationListResponse,
+        ActiveRun, ConversationGetRequest, ConversationGetResponse, ConversationListResponse,
         DESKTOP_CONTRACT_HEADER, DESKTOP_CONTRACT_VERSION, DesktopApiContract, DesktopApiError,
         DeviceScope, EXPLORE_CONVERSATIONS_GET_PATH, EXPLORE_CONVERSATIONS_LIST_PATH,
-        EXPLORE_STATUS_PATH, EmptyRequest, ExploreStatusResponse, PAIRINGS_V2_PATH,
-        PairingV2Response,
+        EXPLORE_RUNS_ACTIVE_PATH, EXPLORE_RUNS_OUTCOME_PATH, EXPLORE_RUNS_START_PATH,
+        EXPLORE_RUNS_STOP_PATH, EXPLORE_RUNS_STREAM_PATH, EXPLORE_STATUS_PATH, EmptyRequest,
+        ExploreStatusResponse, PAIRINGS_V2_PATH, PairingV2Response, RouteResponseKind,
+        RunActiveResponse, RunOutcomeResponse, RunRequest, RunStartRequest, RunStopResponse,
+        RunStreamFrames,
     };
     use crate::protocol::CreatePairingRequest;
 
@@ -317,6 +617,17 @@ mod tests {
     const GET: &str = include_str!(
         "../../../../data/src/scout-client/desktop-fixtures/explore-conversations-get.json"
     );
+    const RUNS_START: &str =
+        include_str!("../../../../data/src/scout-client/desktop-fixtures/explore-runs-start.json");
+    const RUNS_STOP: &str =
+        include_str!("../../../../data/src/scout-client/desktop-fixtures/explore-runs-stop.json");
+    const RUNS_ACTIVE: &str =
+        include_str!("../../../../data/src/scout-client/desktop-fixtures/explore-runs-active.json");
+    const RUNS_OUTCOME: &str = include_str!(
+        "../../../../data/src/scout-client/desktop-fixtures/explore-runs-outcome.json"
+    );
+    const RUNS_STREAM: &str =
+        include_str!("../../../../data/src/scout-client/desktop-fixtures/explore-runs-stream.json");
 
     /// Parse strictly, then prove serialising and parsing again is lossless.
     fn round_trip<T>(value: &Value) -> TestResult
@@ -375,12 +686,105 @@ mod tests {
                     "explore_conversations_list",
                     EXPLORE_CONVERSATIONS_LIST_PATH
                 ),
+                ("explore_runs_active", EXPLORE_RUNS_ACTIVE_PATH),
+                ("explore_runs_outcome", EXPLORE_RUNS_OUTCOME_PATH),
+                ("explore_runs_start", EXPLORE_RUNS_START_PATH),
+                ("explore_runs_stop", EXPLORE_RUNS_STOP_PATH),
+                ("explore_runs_stream", EXPLORE_RUNS_STREAM_PATH),
                 ("explore_status", EXPLORE_STATUS_PATH),
                 ("pairings_v2", PAIRINGS_V2_PATH),
             ])
         );
         assert!(contract.routes.values().all(|route| route.method == "POST"));
+        let streaming: Vec<&str> = contract
+            .routes
+            .iter()
+            .filter(|(_, route)| route.response == RouteResponseKind::EventStream)
+            .map(|(name, _)| name.as_str())
+            .collect();
+        assert_eq!(streaming, vec!["explore_runs_stream"]);
         Ok(())
+    }
+
+    #[test]
+    fn every_route_has_a_golden_fixture() -> TestResult {
+        let contract: DesktopApiContract = serde_json::from_str(CONTRACT)?;
+        let mut named = Vec::new();
+        for fixture in [
+            PAIRINGS_V2,
+            STATUS,
+            LIST,
+            GET,
+            RUNS_START,
+            RUNS_STOP,
+            RUNS_ACTIVE,
+            RUNS_OUTCOME,
+            RUNS_STREAM,
+        ] {
+            let fixture: Value = serde_json::from_str(fixture)?;
+            named.push(fixture["route"].as_str().ok_or("route name")?.to_owned());
+        }
+        named.sort();
+        assert_eq!(named, contract.routes.keys().cloned().collect::<Vec<_>>());
+        Ok(())
+    }
+
+    #[test]
+    fn the_golden_stream_has_exactly_one_frame_per_event_type() -> TestResult {
+        let contract: DesktopApiContract = serde_json::from_str(CONTRACT)?;
+        let fixture: Value = serde_json::from_str(RUNS_STREAM)?;
+        let frames: RunStreamFrames = serde_json::from_value(fixture["response"].clone())?;
+        let types: Vec<String> = frames
+            .events
+            .iter()
+            .map(|event| {
+                serde_json::to_value(event).map(|value| value["type"].as_str().map(str::to_owned))
+            })
+            .collect::<Result<Option<Vec<_>>, _>>()?
+            .ok_or("frame type")?;
+        assert_eq!(types, contract.stream_events);
+        Ok(())
+    }
+
+    #[test]
+    fn an_unknown_stream_frame_is_refused() {
+        let frame = serde_json::json!({ "type": "answer_delta", "text": "x", "extra": 1 });
+        assert!(serde_json::from_value::<super::StreamEvent>(frame).is_err());
+        let unknown = serde_json::json!({ "type": "replay", "ignorable": true });
+        assert!(serde_json::from_value::<super::StreamEvent>(unknown).is_err());
+    }
+
+    #[test]
+    fn runs_start_fixture_parses_strictly() -> TestResult {
+        check_route::<RunStartRequest, ActiveRun>(RUNS_START, "explore_runs_start")
+    }
+
+    #[test]
+    fn a_start_request_omits_unset_options() -> TestResult {
+        let fixture: Value = serde_json::from_str(RUNS_START)?;
+        let request: RunStartRequest = serde_json::from_value(fixture["request"].clone())?;
+        assert_eq!(serde_json::to_value(&request)?, fixture["request"]);
+        Ok(())
+    }
+
+    #[test]
+    fn runs_stop_fixture_parses_strictly() -> TestResult {
+        check_route::<RunRequest, RunStopResponse>(RUNS_STOP, "explore_runs_stop")
+    }
+
+    #[test]
+    fn runs_active_fixture_parses_strictly() -> TestResult {
+        check_route::<EmptyRequest, RunActiveResponse>(RUNS_ACTIVE, "explore_runs_active")
+    }
+
+    #[test]
+    fn runs_outcome_fixture_parses_strictly() -> TestResult {
+        check_route::<RunRequest, RunOutcomeResponse>(RUNS_OUTCOME, "explore_runs_outcome")
+    }
+
+    #[test]
+    fn runs_stream_fixture_parses_strictly() -> TestResult {
+        check_route::<RunRequest, RunStreamFrames>(RUNS_STREAM, "explore_runs_stream")
     }
 
     #[test]

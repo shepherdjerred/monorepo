@@ -10,6 +10,7 @@ import { ReportAiPreviewSummarySchema } from "#src/model/reports/report-ai.ts";
 import { EXPLORE_ANSWER_MAX_LENGTH } from "#src/model/reports/explore-answer.ts";
 import { ExploreMatchCardSchema } from "#src/model/reports/explore-match-card.ts";
 import { ExploreLoadoutCardSchema } from "#src/model/reports/explore-loadout-card.ts";
+import { ExploreConversationOriginSchema } from "#src/model/reports/explore-origin.ts";
 
 /**
  * Contracts for the explore surface — a conversation over the whole report
@@ -372,7 +373,7 @@ export const ExploreConversationSchema = z
     id: ExploreConversationIdSchema,
     title: ExploreConversationTitleSchema,
     preferredModel: z.enum(["gpt-6-luna", "gpt-6.1-sol"]).nullable().optional(),
-    origin: z.enum(["legacy", "web", "discord", "voice"]).default("legacy"),
+    origin: ExploreConversationOriginSchema.default("legacy"),
     shareToken: ExploreShareTokenSchema.nullable().default(null),
     /** The leaf a share link is pinned to, if the conversation is shared. */
     sharedLeafId: z.uuid().nullable().default(null),

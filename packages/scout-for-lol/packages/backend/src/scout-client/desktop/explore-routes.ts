@@ -1,10 +1,14 @@
 import {
+  EXPLORE_REQUEST_MAX_BYTES,
   SCOUT_DESKTOP_API_ROUTES,
+  SCOUT_DESKTOP_ORIGIN_CONTRACT_VERSION,
   ScoutDesktopConversationGetRequestSchema,
   ScoutDesktopConversationGetResponseSchema,
   ScoutDesktopConversationListRequestSchema,
   ScoutDesktopConversationListResponseSchema,
   ScoutDesktopExploreStatusRequestSchema,
+  exploreOriginForPreDesktopReader,
+  type ExploreConversationOrigin,
   type ScoutDesktopExploreStatusResponse,
 } from "@scout-for-lol/data";
 import { prisma } from "#src/database/index.ts";
@@ -14,40 +18,43 @@ import {
   loadExploreTranscript,
 } from "#src/explore/store.ts";
 import { readBodyWithinLimit } from "#src/utils/bounded-request-body.ts";
+import { authenticateDesktopExplore } from "./auth.ts";
 import {
-  authenticateDesktopExplore,
-  type DesktopExploreCaller,
-} from "./auth.ts";
-import {
-  contractRefusal,
+  acceptedContractVersion,
+  contractUnsupportedResponse,
   desktopErrorResponse,
   desktopJsonResponse,
 } from "./contract.ts";
+import {
+  DESKTOP_RUN_ROUTES,
+  invalidRequest,
+  type DesktopRoute,
+  type DesktopRouteHandler,
+} from "./explore-run-routes.ts";
 
 /**
- * Read-only Explore over REST for Scout Desktop.
+ * Explore over REST for Scout Desktop.
  *
- * Each route calls the same store or status function its tRPC procedure
- * calls, so the desktop and the web read one implementation. Starting,
- * stopping and observing a run arrive with the streaming routes.
+ * Each route calls the same store, status or run-manager function its tRPC
+ * procedure calls, so the desktop and the web share one implementation. The
+ * conversation reads live here; starting, stopping and observing runs live in
+ * `explore-run-routes.ts`.
  */
 
 /** Read bodies are a handful of ids; anything larger is not a read. */
 const MAX_READ_BODY_BYTES = 4096;
 
-type DesktopRouteHandler = (
-  caller: DesktopExploreCaller,
-  body: unknown,
-) => Promise<Response>;
-
-function invalidRequest(): Response {
-  return desktopErrorResponse(
-    "invalid_request",
-    "The request body does not match this route.",
-  );
+/** The origin as this client's contract version knows it. */
+function originFor(
+  contractVersion: number,
+  origin: ExploreConversationOrigin,
+): ExploreConversationOrigin {
+  return contractVersion >= SCOUT_DESKTOP_ORIGIN_CONTRACT_VERSION
+    ? origin
+    : exploreOriginForPreDesktopReader(origin);
 }
 
-const exploreStatus: DesktopRouteHandler = async (caller, body) => {
+const exploreStatus: DesktopRouteHandler = async ({ caller, body }) => {
   if (!ScoutDesktopExploreStatusRequestSchema.safeParse(body).success) {
     return invalidRequest();
   }
@@ -57,7 +64,11 @@ const exploreStatus: DesktopRouteHandler = async (caller, body) => {
   return desktopJsonResponse(status);
 };
 
-const listConversations: DesktopRouteHandler = async (caller, body) => {
+const listConversations: DesktopRouteHandler = async ({
+  caller,
+  body,
+  contractVersion,
+}) => {
   if (!ScoutDesktopConversationListRequestSchema.safeParse(body).success) {
     return invalidRequest();
   }
@@ -65,13 +76,20 @@ const listConversations: DesktopRouteHandler = async (caller, body) => {
   return desktopJsonResponse(
     ScoutDesktopConversationListResponseSchema.parse({
       conversations: conversations.map(
-        ({ preferredModel: _preferred, ...conversation }) => conversation,
+        ({ preferredModel: _preferred, ...conversation }) => ({
+          ...conversation,
+          origin: originFor(contractVersion, conversation.origin),
+        }),
       ),
     }),
   );
 };
 
-const getConversation: DesktopRouteHandler = async (caller, body) => {
+const getConversation: DesktopRouteHandler = async ({
+  caller,
+  body,
+  contractVersion,
+}) => {
   const input = ScoutDesktopConversationGetRequestSchema.safeParse(body);
   if (!input.success) return invalidRequest();
   const transcript = await loadExploreTranscript(
@@ -83,26 +101,54 @@ const getConversation: DesktopRouteHandler = async (caller, body) => {
   return transcript === null
     ? desktopErrorResponse("not_found", "Conversation not found.")
     : desktopJsonResponse(
-        ScoutDesktopConversationGetResponseSchema.parse(transcript),
+        ScoutDesktopConversationGetResponseSchema.parse({
+          ...transcript,
+          conversation: {
+            ...transcript.conversation,
+            origin: originFor(contractVersion, transcript.conversation.origin),
+          },
+        }),
       );
 };
 
-const HANDLERS = new Map<string, DesktopRouteHandler>([
-  [SCOUT_DESKTOP_API_ROUTES.explore_status.path, exploreStatus],
-  [SCOUT_DESKTOP_API_ROUTES.explore_conversations_list.path, listConversations],
-  [SCOUT_DESKTOP_API_ROUTES.explore_conversations_get.path, getConversation],
+const ROUTES = new Map<string, DesktopRoute>([
+  [
+    SCOUT_DESKTOP_API_ROUTES.explore_status.path,
+    { handler: exploreStatus, maxBodyBytes: MAX_READ_BODY_BYTES },
+  ],
+  [
+    SCOUT_DESKTOP_API_ROUTES.explore_conversations_list.path,
+    { handler: listConversations, maxBodyBytes: MAX_READ_BODY_BYTES },
+  ],
+  [
+    SCOUT_DESKTOP_API_ROUTES.explore_conversations_get.path,
+    { handler: getConversation, maxBodyBytes: MAX_READ_BODY_BYTES },
+  ],
+  ...DESKTOP_RUN_ROUTES.map(
+    ({ path, handler, turn }) =>
+      [
+        path,
+        {
+          handler,
+          maxBodyBytes: turn ? EXPLORE_REQUEST_MAX_BYTES : MAX_READ_BODY_BYTES,
+        },
+      ] as const,
+  ),
 ]);
 
 const INVALID_BODY = Symbol("invalid body");
 
-/** The JSON body, or {@link INVALID_BODY} for anything a read cannot be. */
-async function readBody(request: Request): Promise<unknown> {
+/** The JSON body, or {@link INVALID_BODY} for anything a route cannot take. */
+async function readBody(
+  request: Request,
+  maxBodyBytes: number,
+): Promise<unknown> {
   if (
     request.headers.get("Content-Type")?.startsWith("application/json") !== true
   ) {
     return INVALID_BODY;
   }
-  const body = await readBodyWithinLimit(request, MAX_READ_BODY_BYTES);
+  const body = await readBodyWithinLimit(request, maxBodyBytes);
   if (!body.ok) return INVALID_BODY;
   try {
     const parsed: unknown = JSON.parse(body.text);
@@ -123,20 +169,25 @@ export async function handleDesktopExploreRoute(
   request: Request,
   pathname: string,
 ): Promise<Response | null> {
-  const handler = HANDLERS.get(pathname);
-  if (handler === undefined) return null;
+  const route = ROUTES.get(pathname);
+  if (route === undefined) return null;
   if (request.method !== "POST") {
     return new Response("Method Not Allowed", {
       status: 405,
       headers: { Allow: "POST" },
     });
   }
-  const refusal = contractRefusal(request);
-  if (refusal !== null) return refusal;
+  const contractVersion = acceptedContractVersion(request);
+  if (contractVersion === null) return contractUnsupportedResponse();
   const auth = await authenticateDesktopExplore(request);
   if (!auth.ok) return auth.response;
-  const body = await readBody(request);
+  const body = await readBody(request, route.maxBodyBytes);
   return body === INVALID_BODY
     ? invalidRequest()
-    : await handler(auth.caller, body);
+    : await route.handler({
+        caller: auth.caller,
+        body,
+        request,
+        contractVersion,
+      });
 }

@@ -22,6 +22,7 @@ import {
 } from "#src/metrics/platform/web.ts";
 import { handleReportAiRoute } from "#src/reports/ai/http-route.ts";
 import { handleScoutClientRoute } from "#src/scout-client/http.ts";
+import { SCOUT_DESKTOP_API_ROUTES } from "@scout-for-lol/data";
 import { handleSupportScreenshot } from "#src/support/http.ts";
 import { handleAuthRoutes } from "#src/trpc/auth-web.ts";
 import { handleRiotAuthRoutes } from "#src/trpc/riot/http.ts";
@@ -35,6 +36,12 @@ import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 const logger = createLogger("http-server");
 
 logger.info("🌐 Initializing HTTP server");
+
+/** The two Explore run observers: the browser's and Scout Desktop's. */
+const EXPLORE_OBSERVER_PATHS: ReadonlySet<string> = new Set([
+  EXPLORE_STREAM_PATH,
+  SCOUT_DESKTOP_API_ROUTES.explore_runs_stream.path,
+]);
 
 /**
  * tRPC error codes that represent expected client/user faults (bad input,
@@ -151,7 +158,7 @@ const server = Bun.serve({
     // Only a successfully authenticated SSE observer may stay quiet while the
     // model reasons between tool calls; the run itself has a bounded timeout.
     if (
-      url.pathname === EXPLORE_STREAM_PATH &&
+      EXPLORE_OBSERVER_PATHS.has(url.pathname) &&
       response.status === 200 &&
       response.headers.get("Content-Type")?.startsWith("text/event-stream") ===
         true

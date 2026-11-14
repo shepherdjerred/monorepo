@@ -72,6 +72,7 @@ const SURFACE_INDEX: Readonly<Record<ExploreScenarioSurface, number>> = {
   web: 0,
   discord: 1,
   voice: 2,
+  desktop: 3,
 };
 
 /**
