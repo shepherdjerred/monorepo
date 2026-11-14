@@ -99,6 +99,31 @@ describe("Scout static sites", () => {
   });
 });
 
+describe("Scout Desktop release host", () => {
+  const desktop = staticSites.find(
+    ({ hostname }) => hostname === "download.scout-for-lol.com",
+  );
+  if (desktop === undefined) {
+    throw new Error("download.scout-for-lol.com static site is missing");
+  }
+
+  test("serves its own bucket, not a Scout site bucket", () => {
+    expect(desktop.bucket).toBe("scout-desktop");
+  });
+
+  test("probes only the seeded root until the first release exists", () => {
+    // The channel manifests 404 until an operator publishes; a probe on them
+    // lands with the first publication.
+    expect(desktop.probes).toBeUndefined();
+  });
+
+  test("loads nothing and cannot be framed", () => {
+    const csp = desktop.responseHeaders?.["Content-Security-Policy"] ?? "";
+    expect(csp).toContain("default-src 'none'");
+    expect(csp).toContain("frame-ancestors 'none'");
+  });
+});
+
 describe("ScoutQL reference probes", () => {
   const routes = [
     ["scoutql-sources", "/docs/reference/scoutql-sources/"],

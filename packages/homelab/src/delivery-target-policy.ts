@@ -99,4 +99,6 @@ export const INDEPENDENT_STATIC_BUCKET_OWNERS: Readonly<
     "Cloudflare redirect lifecycle; retained compatibility bucket has no website producer",
   "public-sjer-red":
     "Artifact publication (toolkit pr asset); no website archive writer",
+  "scout-desktop":
+    "Manual Scout Desktop release publication (installers and update feeds); no website archive writer",
 };

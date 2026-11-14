@@ -508,8 +508,12 @@ in the model (the state bucket, CI handoff, Delivery artifacts, workstation
 archives) are declared in the stack alone. After changing either, run
 `bun run --cwd packages/homelab-cdktn synth` and commit the regenerated
 `seaweedfs/main.tf.json`. The landing and 404 pages seeded into
-`public-sjer-red` stay in `seaweedfs/public/`, which the stack reads with
-`filemd5` and uploads.
+`public-sjer-red` stay in `seaweedfs/public/`, and those seeded into
+`scout-desktop` (the `download.scout-for-lol.com` release host) in
+`seaweedfs/scout-desktop/`; the stack reads each with `filemd5` and uploads it.
+The `scout-desktop` bucket is protected and has no expiry: an operator
+publishes `releases/<version>/...` objects (immutable) and the `stable.json`
+and `beta.json` channel manifests (`no-cache`), and neither is seeded.
 
 SeaweedFS lifecycle rules and the seed pages are `terraform_data` resources
 whose `local-exec` provisioners call the AWS CLI with the deployment identity.

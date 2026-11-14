@@ -179,6 +179,11 @@
       "immutablePrefixes": []
     },
     {
+      "hostname": "download.scout-for-lol.com",
+      "bucket": "scout-desktop",
+      "immutablePrefixes": []
+    },
+    {
       "hostname": "better-skill-capped.com",
       "bucket": "better-skill-capped",
       "immutablePrefixes": ["assets/"]
