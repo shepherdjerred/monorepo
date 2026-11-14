@@ -22,6 +22,7 @@ import { registerLakeStagingLagSweep } from "#src/report-lake/lake-staging-lag.t
 import type { ScoutRuntimeDependencies } from "#src/runtime/boot.ts";
 import type { ScoutTemporalSupervisor } from "#src/temporal/supervisor.ts";
 import { registerPostmatchMintGapSweep } from "#src/temporal/notification/postmatch-mint-gap.ts";
+import { registerCaptureBacklogSweep } from "#src/scout-client/telemetry/capture-metrics.ts";
 import { registerPrematchCoverageSweep } from "#src/scout-client/prematch-coverage.ts";
 
 const logger = createLogger("runtime-subsystems");
@@ -66,6 +67,7 @@ export function scoutRuntimeSubsystems(
         registerLakeStagingLagSweep();
         registerPostmatchMintGapSweep();
         registerPrematchCoverageSweep();
+        registerCaptureBacklogSweep();
       }
     },
 

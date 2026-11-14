@@ -12,6 +12,7 @@ import { prisma } from "#src/database/index.ts";
 import { toIsoInstant } from "#src/durable/match/match-identity.ts";
 import { buildMatchReceipt } from "#src/durable/match/receipt-evidence.ts";
 import { createLogger } from "#src/logger.ts";
+import { recordGameEndToDelivered } from "#src/scout-client/telemetry/capture-metrics.ts";
 import { subscriptionGuildOfChannel } from "#src/temporal/notification/subscription-guild.ts";
 
 const logger = createLogger("scout-v2-postmatch-follow-up");
@@ -62,6 +63,7 @@ export async function afterPostmatchDelivered(
   const state = record.intent.state;
   const target = record.intent.target;
   if (state.kind !== "delivered" || target.kind !== "channel") return;
+  await recordGameEndToDelivered(record.matchId, state.deliveredAt);
   const guildId = await subscriptionGuildOfChannel(target.channelId);
   if (guildId === null) {
     logger.warn(

@@ -9,7 +9,7 @@ import {
   withRiotIdentities,
   isLcuUuid,
 } from "./identity-alias.ts";
-import { observationQuarantineReason } from "./ingress.ts";
+import { observationQuarantineReason } from "./quarantine/observation-quarantine.ts";
 import { withObserverPlatform } from "./platform-context.ts";
 import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
 
