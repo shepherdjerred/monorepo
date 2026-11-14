@@ -1,4 +1,6 @@
 import { parseArgs } from "node:util";
+import { handlePromotionAbsence } from "./promotion-absence.ts";
+import { handlePromotionAiAllocationCommand } from "./promotion-ai-allocation.ts";
 
 const USAGE = `toolkit promotion <status|preview|run|pause|resume|reconcile> [target] [--json] [--dry-run]
 
@@ -7,6 +9,11 @@ preview, run and reconcile require one exact target ID.
 All commands address the production Temporal namespace. Manual runs retain
 the same posting limits and buffered cooldown as scheduled runs.
 reconcile inspects an uncertain prior attempt and never submits a new post.
+resolve-absence TARGET --evidence-file FILE --evidence-sha256 SHA --resolution-id UUID
+  plans an independently reviewed absence resolution; --apply also requires
+  --expected-state-etag ETAG. Resolution records no-action and pauses the target.
+allocate-ai --file FILE plans conservative budget allocation for one closed
+  execution with unknown exact AI usage. --apply uses the native reviewed plan.
 --dry-run prints the non-secret native invocation without starting a Workflow.`;
 
 export function promotionInvocation(
@@ -79,6 +86,14 @@ export async function handlePromotionCommand(
   args: string[],
   runtime: PromotionCommandRuntime = commandRuntime,
 ): Promise<void> {
+  if (subcommand === "resolve-absence") {
+    await handlePromotionAbsence(args);
+    return;
+  }
+  if (subcommand === "allocate-ai") {
+    await handlePromotionAiAllocationCommand(args);
+    return;
+  }
   if (
     subcommand === undefined ||
     subcommand === "--help" ||

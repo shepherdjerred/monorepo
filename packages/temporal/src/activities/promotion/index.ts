@@ -30,6 +30,9 @@ import { promotionWindow } from "#shared/promotion/cadence.ts";
 import { trackPromotionExecution } from "./control/tracked-execution.ts";
 import { resetReconciliation } from "./control/reconciliation.ts";
 import { finishPromotionBatch } from "./control/batches.ts";
+import { resolvePromotionAbsenceActivity } from "./control/absence-resolution-activity.ts";
+import { allocatePromotionAi } from "./control/ai-allocation.ts";
+import { readPromotionSpend } from "./control/status.ts";
 import {
   assertPromotionOwnership,
   promotionStore,
@@ -382,10 +385,17 @@ async function acknowledgePromotionAlert(
 }
 
 async function collectPromotionDailyReport() {
-  return promotionReport(await states(), await solverSpend());
+  return promotionReport(
+    await states(),
+    await solverSpend(),
+    undefined,
+    await readPromotionSpend(),
+  );
 }
 
 export const promotionControlActivities = {
+  resolvePromotionAbsence: resolvePromotionAbsenceActivity,
+  allocatePromotionAi,
   finishPromotionBatch: async (input: { id: string; overlaps: string[] }) =>
     finishPromotionBatch({ ...input, store: promotionStore() }),
   inspectPromotionTick,

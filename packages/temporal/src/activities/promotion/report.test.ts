@@ -5,6 +5,24 @@ import { ReportEnvelopeV1Schema } from "#shared/reports/report.ts";
 import { promotionAlertFingerprint, promotionReport } from "./report.ts";
 
 describe("promotion operator reports", () => {
+  it("keeps reviewed budget allocations distinct from recorded charges and unknown exact usage", async () => {
+    const environment = new MockActivityEnvironment();
+    const result = await environment.run(() =>
+      Promise.resolve(
+        promotionReport([initialPromotionState("pmc", 900)], 0, undefined, {
+          aiUsd: 0,
+          allocatedAiUsd: 0.04877852,
+          unknownAi: 1,
+          unallocatedUnknownAi: 0,
+        }),
+      ),
+    );
+    const report = ReportEnvelopeV1Schema.parse(result);
+    expect(report.headline).toContain(
+      "$0.00000 recorded + $0.04878 reviewed budget allocation",
+    );
+    expect(report.headline).toContain("1 exact costs unknown (0 unallocated)");
+  });
   it("reports uninspected targets as inconclusive instead of successfully verified", async () => {
     const environment = new MockActivityEnvironment();
     const result = await environment.run(() =>

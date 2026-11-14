@@ -1,5 +1,6 @@
 import { temporalAddressEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/address.ts";
 import type { Chart } from "cdk8s";
+import { PROMOTION_POD_TERMINATION_SECONDS } from "@shepherdjerred/ops-model/promotion/drain-policy.ts";
 import {
   EnvValue,
   Secret,
@@ -62,6 +63,7 @@ export function createTemporalPromotionWorker(
     // Install and verify the node prerequisite before releasing this opt-in.
     sandboxSeccompProfile: `profiles/${promotionPolicy.profileName}`,
     initializeStickyTmpDirectory: true,
+    terminationGraceSeconds: PROMOTION_POD_TERMINATION_SECONDS,
     serviceAccount,
     envVariables: {
       ...temporalFeatureFlagEnvironment(),

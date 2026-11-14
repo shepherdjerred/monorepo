@@ -2,6 +2,19 @@ import { describe, expect, it, vi } from "vitest";
 import { harness } from "./tool-test-support.ts";
 
 describe("native pointer preflight", () => {
+  it("rejects a model-supplied humanization override before native actions", async () => {
+    const test = await harness(false);
+    const beforeMutation = vi.spyOn(test.journal, "beforeMutation");
+    await expect(
+      test.handle({
+        endpoint: "action",
+        body: { kind: "click", ref: "e4", humanize: true },
+      }),
+    ).rejects.toThrow();
+    expect(test.preparePointer).not.toHaveBeenCalled();
+    expect(beforeMutation).not.toHaveBeenCalled();
+    expect(test.action).not.toHaveBeenCalled();
+  });
   it("checks the same pointer target before the effect checkpoint and allows repositioning", async () => {
     const test = await harness(false);
     const beforeMutation = vi.spyOn(test.journal, "beforeMutation");

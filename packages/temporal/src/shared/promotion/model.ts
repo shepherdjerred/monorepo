@@ -1,4 +1,5 @@
 import { z } from "zod/v4";
+import { PromotionOperatorResolutionSchema } from "@shepherdjerred/ops-model/promotion/absence-resolution.ts";
 
 export const PromotionPolicySchema = z.discriminatedUnion("kind", [
   z.strictObject({
@@ -144,6 +145,7 @@ export const PromotionAttemptSchema = z.strictObject({
   ]),
   receiptUrl: z.url().nullable(),
   evidenceKey: z.string().nullable(),
+  operatorResolution: PromotionOperatorResolutionSchema.optional(),
   contentHash: z.string().min(1),
   contentExcerpt: z.string().max(1000).nullable().optional(),
   beforeSubmission: z.array(PromotionObservationSchema),

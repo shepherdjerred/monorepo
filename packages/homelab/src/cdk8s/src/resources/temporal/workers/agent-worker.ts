@@ -1,7 +1,7 @@
 import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { tailnetService } from "homelab/src/platform-model.ts";
 import type { Chart } from "cdk8s";
-import { ApiObject, JsonPatch, Size } from "cdk8s";
+import { ApiObject, Duration, JsonPatch, Size } from "cdk8s";
 import {
   Capability,
   ConfigMap,
@@ -34,6 +34,7 @@ type CreateTemporalAgentWorkerProps = {
   component?: string;
   sandboxSeccompProfile?: string;
   initializeStickyTmpDirectory?: boolean;
+  terminationGraceSeconds?: number;
 };
 
 const AGENT_WORKER_UID = 1000;
@@ -67,6 +68,13 @@ export function createTemporalAgentWorker(
   const component = props.component ?? "agent-worker";
   const deployment = new Deployment(chart, name, {
     replicas: 1,
+    ...(props.terminationGraceSeconds === undefined
+      ? {}
+      : {
+          terminationGracePeriod: Duration.seconds(
+            props.terminationGraceSeconds,
+          ),
+        }),
     strategy: DeploymentStrategy.recreate(),
     metadata: {
       annotations: { "argocd.argoproj.io/sync-wave": "3" },

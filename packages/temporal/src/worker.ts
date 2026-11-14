@@ -61,6 +61,7 @@ import { createQueueWorker } from "./worker-factory.ts";
 import { restoreGlitterCorpusMetricsAfterWorkerStart } from "./observability/restore-startup-metrics.ts";
 import { prepareAgentChatRuntimeRoot } from "./activities/agent/chat/runtime-root.ts";
 import { connectTemporalWhenReady } from "./lib/temporal-startup-connection.ts";
+import { createWorkerShutdown } from "./lib/worker-shutdown.ts";
 
 const DEFAULT_ADDRESS = "temporal-server.temporal.svc.cluster.local:7233";
 const DEFAULT_METRICS_ADDRESS = "0.0.0.0:9464";
@@ -399,48 +400,37 @@ async function main(): Promise<void> {
   const promotionStatus = await startPromotionStatus(role);
   startMetricsServer();
 
-  // Guard against double-shutdown. Kubernetes may deliver SIGTERM more than
-  // once during pod termination, and the Temporal SDK throws
-  // `IllegalStateError: Not running. Current state: DRAINING` if shutdown()
-  // is called against a worker that has already begun draining. Tracking
-  // this with a flag means subsequent signals are no-ops, and a state check
-  // on `worker` covers the case where the worker drained for a non-signal
-  // reason (e.g., lost server connection) before SIGTERM arrived.
   let shutdownStarted = false;
   let finishControlLifecycle: (() => void) | undefined;
   const controlLifecycle = new Promise<void>((resolve) => {
     finishControlLifecycle = resolve;
   });
+  const workerRuns = workers.map((roleWorker) => roleWorker.run());
+  const drain = createWorkerShutdown({
+    workers,
+    runs: workerRuns,
+    closeIngress: async () => {
+      await httpServers?.close();
+      await eventBridge?.close();
+    },
+    closeResources: async () => {
+      await closeMediaActivityRuntimes();
+      await stopMetricsServer();
+      await promotionStatus?.stop(true);
+    },
+    closeTracing: shutdownTracing,
+    closeCallGraph: shutdownCallGraphTracing,
+  });
   const shutdown = async (signal: string): Promise<void> => {
-    if (shutdownStarted) {
-      jsonLog("info", "Shutdown already in progress, ignoring signal", {
-        signal,
-      });
-      return;
+    if (!shutdownStarted) {
+      shutdownStarted = true;
+      jsonLog("info", "Shutting down worker", { signal });
     }
-    shutdownStarted = true;
-    jsonLog("info", "Shutting down worker", { signal });
-    if (httpServers !== undefined) {
-      await httpServers.close();
+    try {
+      await drain();
+    } finally {
+      finishControlLifecycle?.();
     }
-    if (eventBridge !== undefined) {
-      await eventBridge.close();
-    }
-    for (const roleWorker of workers) {
-      const state = roleWorker.getState();
-      if (state === "RUNNING") {
-        roleWorker.shutdown();
-      } else {
-        jsonLog("info", "Worker not RUNNING, skipping shutdown()", {
-          state,
-        });
-      }
-    }
-    await stopMetricsServer();
-    await promotionStatus?.stop(true);
-    await shutdownTracing();
-    await shutdownCallGraphTracing();
-    finishControlLifecycle?.();
   };
 
   process.on("SIGTERM", () => {
@@ -450,15 +440,17 @@ async function main(): Promise<void> {
     void shutdown("SIGINT");
   });
 
-  const workerRuns = workers.map((roleWorker) => roleWorker.run());
   if (roleContract.restoresGlitterCorpusMetrics) {
     void restoreGlitterCorpusMetricsAfterWorkerStart(() => shutdownStarted);
   }
   if (workerRuns.length === 0) {
     await controlLifecycle;
   } else {
-    await Promise.all(workerRuns);
-    await closeMediaActivityRuntimes();
+    try {
+      await Promise.all(workerRuns);
+    } finally {
+      await shutdown("worker runs settled");
+    }
   }
 }
 

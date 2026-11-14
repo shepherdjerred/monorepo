@@ -1602,6 +1602,30 @@ and recovery codes remain in 1Password.
 | `toolkit promotion resume [target]`        | Resume inspection; uncertain effects still require reconciliation |
 | `toolkit promotion reconcile <target>`     | Inspect a prior uncertain effect without creating another         |
 
+An operator can independently review an authoritative last-bump watermark and
+record absence for one original uncertain occurrence through
+`toolkit promotion resolve-absence`. Use matching toolkit and Temporal control-worker
+releases implementing this command. Its strict public-fact evidence schema is
+`@shepherdjerred/ops-model/promotion/absence-resolution.ts`.
+This separate control Workflow never invokes
+a provider or browser. It checks closed owners and binds the exact evidence
+digest to one reviewed-state CAS. It records `no-action`, preserves cooldowns,
+and pauses the target. A prepared audit is not a committed resolution; existing
+model receipt validation remains unchanged. The human wiki's “How to resolve an
+uncertain promotion bump” page covers evidence preparation and conflict readback.
+
+`toolkit promotion allocate-ai --file FILE` performs a native read-only plan for
+one closed execution whose AI ledger entry has unknown exact usage. The strict
+request schema is `@shepherdjerred/ops-model/promotion/ai-allocation.ts`.
+An independently reviewed provider aggregate must cover the whole generation,
+including the exact provider identity and model. Legacy rows without a model
+require historical model evidence. Apply uses the plan's ledger ETag and row
+digest and computed audit identity for one audited CAS. A changed price requires
+a new reviewed plan. It preserves `chargedUsd: null` and exact usage as
+unknown, while counting the conservative allocation against the existing budget.
+Unallocated unknown entries still block execution. This control command never
+starts an agent or publishes a promotion.
+
 For a native owner bump, the executor uses the existing listing's bump control
 and records acceptance, rejection or an explicit site cooldown. It does not need
 an independent historical eligibility proof before attempting the selected bump.

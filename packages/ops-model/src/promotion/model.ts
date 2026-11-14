@@ -109,13 +109,21 @@ export const PromotionOverviewSchema = z.object({
     }),
   ),
   batches: z.array(PromotionBatchSchema.extend({ interrupted: z.boolean() })),
-  spend: z.object({
-    day: z.string(),
-    aiUsd: z.number(),
-    captchaUsd: z.number(),
-    pendingCaptchaUsd: z.number(),
-    unknownAi: z.number(),
-  }),
+  spend: z
+    .object({
+      day: z.string(),
+      aiUsd: z.number(),
+      captchaUsd: z.number(),
+      pendingCaptchaUsd: z.number(),
+      unknownAi: z.number(),
+      allocatedAiUsd: z.number().nonnegative().default(0),
+      unallocatedUnknownAi: z.number().int().nonnegative().optional(),
+    })
+    .transform((spend) => ({
+      ...spend,
+      // v1 producers predate reviewed allocations; every unknown still blocks.
+      unallocatedUnknownAi: spend.unallocatedUnknownAi ?? spend.unknownAi,
+    })),
 });
 export type PromotionOverview = z.infer<typeof PromotionOverviewSchema>;
 export const PromotionHistoryResponseSchema = z.object({

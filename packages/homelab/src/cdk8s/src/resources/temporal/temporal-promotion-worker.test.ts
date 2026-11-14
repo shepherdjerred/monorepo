@@ -32,6 +32,7 @@ const DeploymentSchema = z.object({
     template: z.object({
       spec: z.object({
         automountServiceAccountToken: z.boolean(),
+        terminationGracePeriodSeconds: z.number(),
         serviceAccountName: z.string(),
         securityContext: z
           .object({
@@ -111,6 +112,9 @@ describe("promotion worker sandbox isolation", () => {
       if (deployment === undefined)
         throw new Error(`Missing ${role} deployment`);
       const pod = deployment.spec.template.spec;
+      expect(pod.terminationGracePeriodSeconds).toBe(
+        { promotion: 1080, agent: 30 }[role],
+      );
       expect(pod.containers).toHaveLength(1);
       expect(pod.initContainers).toHaveLength(1);
       const main = pod.containers[0];

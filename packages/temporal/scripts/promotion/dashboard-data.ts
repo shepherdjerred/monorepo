@@ -24,6 +24,10 @@ import { SolverBudgetSchema } from "#activities/promotion/store.ts";
 import { promotionSpendDay } from "#activities/promotion/control/budget.ts";
 import { promotionRunSummary } from "@shepherdjerred/ops-model/promotion/summary.ts";
 import { localOwnerAlive } from "./process-owner.ts";
+import {
+  PromotionAiLedgerSchema,
+  promotionAiAccounting,
+} from "@shepherdjerred/ops-model/promotion/ai-allocation.ts";
 
 const Row = z.object({ key: z.string(), value: z.string() });
 const Result = z.object({
@@ -42,10 +46,6 @@ const Report = z.array(
       .object({ status: z.string(), summary: z.string().optional() })
       .optional(),
   }),
-);
-const Ledger = z.record(
-  z.string(),
-  z.object({ chargedUsd: z.number().nullable() }),
 );
 export function ownerAbsent(pid: number, startedAt?: string) {
   return !localOwnerAlive(pid, startedAt);
@@ -224,7 +224,9 @@ async function loadReports(
 
 function readSpend(objects: Map<string, unknown>) {
   const day = promotionSpendDay();
-  const ledger = Ledger.parse(objects.get(`ai/daily/${day}.json`) ?? {});
+  const ledger = PromotionAiLedgerSchema.parse(
+    objects.get(`ai/daily/${day}.json`) ?? {},
+  );
   let captchaUsd = 0,
     pendingCaptchaUsd = 0;
   for (const [key, value] of objects)
@@ -243,12 +245,7 @@ function readSpend(objects: Map<string, unknown>) {
       }
   return {
     day,
-    aiUsd: Object.values(ledger).reduce(
-      (sum, row) => sum + (row.chargedUsd ?? 0),
-      0,
-    ),
-    unknownAi: Object.values(ledger).filter((row) => row.chargedUsd === null)
-      .length,
+    ...promotionAiAccounting(Object.values(ledger)),
     captchaUsd,
     pendingCaptchaUsd,
   };

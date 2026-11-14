@@ -3,6 +3,9 @@ import * as promotion from "./promotion/index.ts";
 export const runStormPromotion = promotion.runStormPromotion;
 export const dispatchStormPromotion = promotion.dispatchStormPromotion;
 export const manageStormPromotion = promotion.manageStormPromotion;
+export const resolveStormPromotionAbsence =
+  promotion.resolveStormPromotionAbsence;
+export const allocateStormPromotionAi = promotion.allocateStormPromotionAi;
 export const reportStormPromotion = promotion.reportStormPromotion;
 export const reportStormPromotionAcceptance =
   promotion.reportStormPromotionAcceptance;

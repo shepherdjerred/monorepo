@@ -43,6 +43,14 @@ async function output(
   return result.stdout.trim();
 }
 
+/** The unpublished local provider must never be resolved through a registry. */
+export function asuswrtProviderInstallationConfig(
+  mirrorRoot: string,
+  address: string,
+): string {
+  return `provider_installation {\n  filesystem_mirror {\n    path = ${JSON.stringify(mirrorRoot)}\n    include = [${JSON.stringify(address)}]\n  }\n  direct {\n    exclude = [${JSON.stringify(address)}]\n  }\n}\n`;
+}
+
 /**
  * Compiles the provider at its pinned version and points `TF_CLI_CONFIG_FILE`
  * in `env` at a CLI configuration that serves it. Returns the temporary root
@@ -78,7 +86,7 @@ export async function prepareAsuswrtProvider(
   const cliConfig = `${temporaryRoot}/tofu.tfrc`;
   await Bun.write(
     cliConfig,
-    `provider_installation {\n  filesystem_mirror {\n    path = "${temporaryRoot}/mirror"\n    include = ["${address}"]\n  }\n  direct {}\n}\n`,
+    asuswrtProviderInstallationConfig(`${temporaryRoot}/mirror`, address),
   );
   env["TF_CLI_CONFIG_FILE"] = cliConfig;
   return temporaryRoot;
