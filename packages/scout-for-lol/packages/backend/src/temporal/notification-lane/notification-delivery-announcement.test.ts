@@ -12,7 +12,7 @@ import {
 const stubs = vi.hoisted(() => ({
   requireIntentRecord: vi.fn(),
   resolveNotificationGate: vi.fn(),
-  readAttestedReportArtifact: vi.fn(),
+  readAttestedPostmatchArtifact: vi.fn(),
   readAttestedPrematchArtifact: vi.fn(),
   resolveScoutObservedMatchContext: vi.fn(),
   generateMatchReport: vi.fn(),
@@ -47,7 +47,7 @@ vi.mock("#src/temporal/notification/notification-artifact.ts", async () => {
   );
   return {
     MalformedRenderReceiptError: actual.MalformedRenderReceiptError,
-    readAttestedReportArtifact: stubs.readAttestedReportArtifact,
+    readAttestedPostmatchArtifact: stubs.readAttestedPostmatchArtifact,
     readAttestedPrematchArtifact: stubs.readAttestedPrematchArtifact,
   };
 });

@@ -137,6 +137,18 @@ export const ScoutNotificationRenderEvidenceSchema = z.discriminatedUnion(
       riotMatchId: RiotMatchIdSchema,
       reason: z.enum(["unsupported-queue", "text-only"]),
     }),
+    // A finished game in a queue Scout cannot classify. It is a text-only
+    // notice that carries the facts the message states, so the send needs
+    // nothing from the match payload and the notice is never a mislabelled
+    // report.
+    z.strictObject({
+      artifact: z.literal("unsupported-queue"),
+      riotMatchId: RiotMatchIdSchema,
+      queueId: z.int().nonnegative(),
+      gameMode: z.string(),
+      gameType: z.string().nullable(),
+      players: z.array(z.string().min(1)).min(1),
+    }),
   ],
 );
 
@@ -151,6 +163,7 @@ const Version2RenderEvidenceSchema = z.discriminatedUnion("artifact", [
   }),
   ScoutNotificationRenderEvidenceSchema.options[1],
   ScoutNotificationRenderEvidenceSchema.options[2],
+  ScoutNotificationRenderEvidenceSchema.options[3],
 ]);
 
 export const scoutNotificationRenderEvidenceCodec = defineVersionedCodec({

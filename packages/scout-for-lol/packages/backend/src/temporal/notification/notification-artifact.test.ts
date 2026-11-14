@@ -34,7 +34,7 @@ const {
   InconsistentAttestedObjectError,
   MalformedRenderReceiptError,
   readAttestedPrematchArtifact,
-  readAttestedReportArtifact,
+  readAttestedPostmatchArtifact,
 } = await import("#src/temporal/notification/notification-artifact.ts");
 
 const MATCH = RiotMatchIdSchema.parse("NA1_9301");
@@ -78,8 +78,9 @@ describe("the post-match reader", () => {
   test("reads only the attested report image", async () => {
     stubs.readNotificationArtifact.mockResolvedValue(REPORT);
 
-    const artifact = await readAttestedReportArtifact(MATCH, NEVER_ABORTED);
+    const artifact = await readAttestedPostmatchArtifact(MATCH, NEVER_ABORTED);
 
+    if (!("image" in artifact)) throw new Error("expected a report");
     expect(artifact.image).toBe(IMAGE);
     expect(artifact.evidence.content).toBe(REPORT.content);
     expect(stubs.readNotificationArtifact).toHaveBeenCalledWith(
@@ -88,6 +89,23 @@ describe("the post-match reader", () => {
       undefined,
     );
     expect(stubs.readVerifiedRawObjectBytes).toHaveBeenCalledTimes(1);
+  });
+
+  test("reads the unsupported-queue notice without touching the object store", async () => {
+    const evidence = {
+      artifact: "unsupported-queue",
+      riotMatchId: MATCH,
+      queueId: 9999,
+      gameMode: "NEWMODE",
+      gameType: "MATCHED_GAME",
+      players: ["Alice"],
+    };
+    stubs.readNotificationArtifact.mockResolvedValue(evidence);
+
+    const artifact = await readAttestedPostmatchArtifact(MATCH, NEVER_ABORTED);
+
+    expect(artifact).toEqual({ evidence });
+    expect(stubs.readVerifiedRawObjectBytes).not.toHaveBeenCalled();
   });
 
   test.each([
@@ -109,7 +127,7 @@ describe("the post-match reader", () => {
       stubs.readNotificationArtifact.mockResolvedValue(scenario.evidence);
 
       await expect(
-        readAttestedReportArtifact(MATCH, NEVER_ABORTED),
+        readAttestedPostmatchArtifact(MATCH, NEVER_ABORTED),
       ).rejects.toBeInstanceOf(MalformedRenderReceiptError);
       expect(stubs.readVerifiedRawObjectBytes).not.toHaveBeenCalled();
     },
@@ -125,7 +143,7 @@ describe("the post-match reader", () => {
       image: { ...REPORT.image, bytes: IMAGE.byteLength + 1 },
     });
 
-    const outcome = readAttestedReportArtifact(MATCH, NEVER_ABORTED);
+    const outcome = readAttestedPostmatchArtifact(MATCH, NEVER_ABORTED);
     await expect(outcome).rejects.toBeInstanceOf(
       InconsistentAttestedObjectError,
     );
@@ -137,7 +155,7 @@ describe("the post-match reader", () => {
     // ordering violation the delivery keeps retryable.
     stubs.readNotificationArtifact.mockResolvedValue(null);
 
-    const outcome = readAttestedReportArtifact(MATCH, NEVER_ABORTED);
+    const outcome = readAttestedPostmatchArtifact(MATCH, NEVER_ABORTED);
     await expect(outcome).rejects.toThrow(/No postmatch render receipt/u);
     await expect(outcome).rejects.not.toBeInstanceOf(
       MalformedRenderReceiptError,
