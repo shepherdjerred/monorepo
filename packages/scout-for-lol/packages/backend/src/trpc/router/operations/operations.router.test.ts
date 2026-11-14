@@ -30,10 +30,7 @@ import {
   type OperationsIntentPayload,
 } from "@scout-for-lol/data";
 import configuration from "#src/configuration.ts";
-import {
-  addFlagOverride,
-  resetFlagOverrides,
-} from "#src/configuration/flags.ts";
+import { resetFlagOverrides } from "#src/configuration/flags.ts";
 import type { MatchNotificationIntentRecord } from "#src/database/durable/intent-row.ts";
 import {
   upsertIntent,
@@ -50,6 +47,7 @@ import {
   firstOperator,
   instant,
   operationsIntentRecord,
+  resetOperationsSuiteState,
 } from "#src/testing/operations-fixtures.ts";
 import { createOfflineTrpcHarness } from "#src/testing/test-trpc-caller.ts";
 import { testAccountId, testChannelId } from "#src/testing/test-ids.ts";
@@ -184,16 +182,8 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
-  await db.confirmationIntent.deleteMany();
-  await db.auditLog.deleteMany();
-  await db.matchNotificationIntent.deleteMany();
-  await db.matchObservation.deleteMany();
   await db.scoutWorkflowStart.deleteMany();
-
-  resetFlagOverrides("scout_operations_console_enabled");
-  // Deliberately global rather than targeted at the operator: every denial in
-  // this file must be the allowlist's doing, never the flag's.
-  addFlagOverride("scout_operations_console_enabled", true, {});
+  await resetOperationsSuiteState(db);
 });
 
 afterAll(async () => {

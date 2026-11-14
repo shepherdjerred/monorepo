@@ -22,16 +22,14 @@ import {
   OperationsIntentStatusSchema,
   type DiscordAccountId,
 } from "@scout-for-lol/data";
-import {
-  addFlagOverride,
-  resetFlagOverrides,
-} from "#src/configuration/flags.ts";
+import { resetFlagOverrides } from "#src/configuration/flags.ts";
 import { upsertIntent } from "#src/database/durable/intent-repository.ts";
 import type { OperationsMachineCredential } from "#src/operations/machine-credential.ts";
 import {
   firstOperator,
   instant,
   operationsIntentRecord,
+  resetOperationsSuiteState,
 } from "#src/testing/operations-fixtures.ts";
 import { createOfflineTrpcHarness } from "#src/testing/test-trpc-caller.ts";
 import { testAccountId, testChannelId } from "#src/testing/test-ids.ts";
@@ -182,13 +180,7 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
-  await db.confirmationIntent.deleteMany();
-  await db.auditLog.deleteMany();
-  await db.matchNotificationIntent.deleteMany();
-  await db.matchObservation.deleteMany();
-  resetFlagOverrides("scout_operations_console_enabled");
-  // Global, so every denial below is the credential's or allowlist's doing.
-  addFlagOverride("scout_operations_console_enabled", true, {});
+  await resetOperationsSuiteState(db);
 });
 
 afterAll(async () => {
