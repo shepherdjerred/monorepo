@@ -5,6 +5,7 @@ import {
 } from "#src/league/model/rank-history.ts";
 import { getRankByPuuid } from "#src/league/model/rank.ts";
 import {
+  canonicalMatchCreatedAt,
   DareContractSchema,
   rankForQueue,
   resolveQueueTypeFromGame,
@@ -12,7 +13,8 @@ import {
   type PlayerConfigEntry,
   type Rank,
   type Ranks,
-  type RawMatch,
+  type CanonicalMatch,
+  canonicalMatchTournamentCode,
 } from "@scout-for-lol/data";
 
 export type PostmatchRankChanges = ReadonlyMap<
@@ -40,7 +42,7 @@ function storedRanks(ranks: Ranks) {
 }
 
 async function rankRequiredPuuids(
-  matchData: RawMatch,
+  matchData: CanonicalMatch,
   queue: "solo" | "flex",
   prismaClient: ExtendedPrismaClient,
 ): Promise<Set<string>> {
@@ -62,7 +64,7 @@ async function rankRequiredPuuids(
 }
 
 function rankRequiredPuuidsFromContracts(
-  matchData: RawMatch,
+  matchData: CanonicalMatch,
   queue: "solo" | "flex",
   serializedContracts: readonly string[],
 ): Set<string> {
@@ -93,7 +95,7 @@ function rankRequiredPuuidsFromContracts(
  */
 export async function capturePostmatchRanksForDares(
   input: {
-    matchData: RawMatch;
+    matchData: CanonicalMatch;
     trackedPlayers: PlayerConfigEntry[];
     now?: Date | undefined;
   },
@@ -106,7 +108,7 @@ export async function capturePostmatchRanksForDares(
     input.matchData.info.queueId,
     input.matchData.info.gameMode,
     input.matchData.info.gameType,
-    input.matchData.info.tournamentCode,
+    canonicalMatchTournamentCode(input.matchData),
   );
   if (queue !== "solo" && queue !== "flex") {
     return { players: undefined, changes: undefined };
@@ -151,7 +153,7 @@ export async function capturePostmatchRanksForDares(
       queueType: queue,
       rankBefore: previous,
       rankAfter: current,
-      matchGameCreationTimestamp: input.matchData.info.gameCreation,
+      matchGameCreationTimestamp: canonicalMatchCreatedAt(input.matchData),
       matchGameEndTimestamp: input.matchData.info.gameEndTimestamp,
       prismaClient: dependencies.prismaClient,
       capturedAt,

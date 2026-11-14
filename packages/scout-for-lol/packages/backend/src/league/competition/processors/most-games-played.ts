@@ -1,7 +1,7 @@
 import type {
   CompetitionGameVariant,
   MostGamesPlayedCriteria,
-  RawMatch,
+  CanonicalMatch,
 } from "@scout-for-lol/data";
 import type {
   LeaderboardEntry,
@@ -17,7 +17,7 @@ import {
  * Counts the number of games played by each participant in the specified queue
  */
 export function processMostGamesPlayed(
-  matches: RawMatch[],
+  matches: CanonicalMatch[],
   participants: PlayerWithAccounts[],
   criteria: MostGamesPlayedCriteria,
   gameVariant: CompetitionGameVariant,

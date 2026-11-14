@@ -1,6 +1,7 @@
 import { beforeEach, expect, test, vi } from "vitest";
 import { RawMatchSchema } from "@scout-for-lol/data";
 import { withFirstParticipantAsBot } from "#src/testing/lcu/bot-match-fixture.ts";
+import { classicEndOfGameMatch } from "#src/testing/scout-client/end-of-game-fixtures.ts";
 
 const mocks = vi.hoisted(() => ({
   findFirst: vi.fn(),
@@ -57,4 +58,23 @@ test("a game with a bot is reviewed, never judged or thrown on", () => {
     kind: "review",
     evidence: { reason: "Complete timeline evidence is unavailable" },
   });
+});
+
+test("a game known only from its end-of-game block is refused with a typed review, never judged", async () => {
+  const endOfGame = await classicEndOfGameMatch();
+
+  const judged = duelGameJudgement(endOfGame, null);
+
+  expect(judged).toMatchObject({
+    kind: "review",
+    evidence: {
+      matchId: endOfGame.metadata.matchId,
+      state: "needs_review",
+      winnerCompetitorId: null,
+      timelineComplete: false,
+      reason:
+        "The game was recorded from the end-of-game screen, which has no timeline to judge a duel objective",
+    },
+  });
+  await expect(duelMatchNeedsTimeline(endOfGame)).resolves.toBe(false);
 });

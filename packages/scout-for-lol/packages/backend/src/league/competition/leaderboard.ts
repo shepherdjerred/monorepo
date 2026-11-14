@@ -6,7 +6,7 @@ import type {
   Rank,
   RankedQueueType,
   Ranks,
-  RawMatch,
+  CanonicalMatch,
 } from "@scout-for-lol/data/index.ts";
 import {
   getCompetitionStatus,
@@ -433,7 +433,7 @@ export async function calculateLeaderboard(
     .with({ type: "HIGHEST_WIN_RATE" }, () => true)
     .exhaustive();
 
-  let matches: RawMatch[] = [];
+  let matches: CanonicalMatch[] = [];
 
   if (needsMatchData) {
     logger.info(

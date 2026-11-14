@@ -1,8 +1,8 @@
 import type {
-  RawMatch,
+  CanonicalMatch,
   CompetitionQueueType,
   CompetitionGameVariant,
-  RawParticipant,
+  CanonicalParticipant,
 } from "@scout-for-lol/data";
 import type {
   LeaderboardEntry,
@@ -31,12 +31,12 @@ export type WinGameCounts = {
  * @returns Object with win and game counts per player ID
  */
 export function countWinsAndGames(
-  matches: RawMatch[],
+  matches: CanonicalMatch[],
   participants: PlayerWithAccounts[],
   queueFilters: readonly CompetitionQueueType[],
   ...configuration: [
     gameVariant: CompetitionGameVariant,
-    participantFilter?: (participantData: RawParticipant) => boolean,
+    participantFilter?: (participantData: CanonicalParticipant) => boolean,
   ]
 ): WinGameCounts {
   const [gameVariant, participantFilter] = configuration;

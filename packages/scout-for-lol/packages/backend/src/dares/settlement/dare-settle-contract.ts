@@ -1,4 +1,5 @@
 import type { Prisma } from "#generated/prisma/client/index.js";
+import { dareCoverageEligibility } from "#src/dares/evaluation/dare-coverage-eligibility.ts";
 import { matchTouchesRelationalDare } from "#src/dares/evaluation/dare-match-eligibility.ts";
 import { isRemakeMatch } from "#src/dares/evaluation/remake.ts";
 import {
@@ -31,7 +32,8 @@ import {
   resolveQueueTypeFromGame,
   type DareContract,
   type DareSqlEvidence,
-  type RawMatch,
+  type CanonicalMatch,
+  canonicalMatchTournamentCode,
 } from "@scout-for-lol/data";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 
@@ -147,7 +149,7 @@ async function resolveDare(
 
 function evidenceCreateData(
   dareId: number,
-  matchData: RawMatch,
+  matchData: CanonicalMatch,
   queueType: string,
   evidence: DareSqlEvidence,
 ) {
@@ -248,7 +250,7 @@ export function dareRaceEvaluationEnd(
 export async function captureDareSqlForMatch(input: {
   dare: ActiveRelationalDareRow;
   contract: DareContract;
-  matchData: RawMatch;
+  matchData: CanonicalMatch;
   prismaClient: ExtendedPrismaClient;
   now: Date;
   /** Whether the match this settles is owed a public delivery. */
@@ -261,11 +263,17 @@ export async function captureDareSqlForMatch(input: {
   ) {
     return undefined;
   }
+  // A game Scout knows only from the end-of-game block is not one this
+  // contract counts when it reads what the block lacks. That is an
+  // ineligible game, never a failed settlement.
+  if (dareCoverageEligibility(matchData, contract).kind === "ineligible") {
+    return undefined;
+  }
   const queue = resolveQueueTypeFromGame(
     matchData.info.queueId,
     matchData.info.gameMode,
     matchData.info.gameType,
-    matchData.info.tournamentCode,
+    canonicalMatchTournamentCode(matchData),
   );
   if (queue === undefined) return undefined;
   const evidence = await evaluateContract(

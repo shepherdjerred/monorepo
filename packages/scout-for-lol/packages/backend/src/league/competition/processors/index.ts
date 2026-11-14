@@ -2,7 +2,7 @@ import type {
   CompetitionCriteria,
   CompetitionGameVariant,
   Ranks,
-  RawMatch,
+  CanonicalMatch,
 } from "@scout-for-lol/data";
 import { match } from "ts-pattern";
 import { processMostGamesPlayed } from "#src/league/competition/processors/most-games-played.ts";
@@ -37,7 +37,7 @@ export type SnapshotData = {
  */
 export function processCriteria(
   criteria: CompetitionCriteria,
-  matches: RawMatch[],
+  matches: CanonicalMatch[],
   participants: PlayerWithAccounts[],
   ...configuration: [
     snapshotData?: SnapshotData,

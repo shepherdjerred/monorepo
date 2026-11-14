@@ -1,8 +1,8 @@
 import type {
-  RawMatch,
+  CanonicalMatch,
   CompetitionQueueType,
   CompetitionGameVariant,
-  RawParticipant,
+  CanonicalParticipant,
 } from "@scout-for-lol/data";
 import type {
   LeaderboardEntry,
@@ -17,11 +17,11 @@ import {
  * Configuration for creating a win-based processor
  */
 type WinBasedProcessorConfig<T> = {
-  matches: RawMatch[];
+  matches: CanonicalMatch[];
   participants: PlayerWithAccounts[];
   queues: readonly CompetitionQueueType[];
   gameVariant: CompetitionGameVariant;
-  participantFilter?: (participantData: RawParticipant) => boolean;
+  participantFilter?: (participantData: CanonicalParticipant) => boolean;
   scoreFn: (wins: number, games: number) => number;
   metadataFn: (
     wins: number,

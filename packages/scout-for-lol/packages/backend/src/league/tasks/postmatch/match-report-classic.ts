@@ -2,13 +2,14 @@ import type {
   ClassicChampion,
   ClassicMatch,
   PlayerConfigEntry,
-  RawMatch,
-  RawParticipant,
+  CanonicalMatch,
+  CanonicalParticipant,
   Team,
 } from "@scout-for-lol/data";
 import {
   ClassicMatchSchema,
   ClassicQueueTypeSchema,
+  canonicalMatchTournamentCode,
   findParticipant,
   getOutcome,
   mapIdToName,
@@ -36,7 +37,7 @@ function nonBlank(value: string | undefined): string | undefined {
 }
 
 function resolveClassicIdentity(
-  participant: RawParticipant,
+  participant: CanonicalParticipant,
 ): Pick<ClassicChampion, "riotIdGameName" | "riotIdTagLine"> {
   return {
     riotIdGameName:
@@ -48,7 +49,7 @@ function resolveClassicIdentity(
   };
 }
 
-function toClassicChampion(participant: RawParticipant): ClassicChampion {
+function toClassicChampion(participant: CanonicalParticipant): ClassicChampion {
   try {
     return {
       puuid: participant.puuid,
@@ -89,25 +90,25 @@ function toClassicChampion(participant: RawParticipant): ClassicChampion {
   }
 }
 
-function requireTeam(participant: RawParticipant): Team {
+function requireTeam(participant: CanonicalParticipant): Team {
   const team = parseTeam(participant.teamId);
   if (team === undefined) {
     throw new Error(
-      `Classic match participant ${participant.participantId.toString()} has unsupported team ID ${participant.teamId.toString()}`,
+      `Classic match participant ${participant.championName} has unsupported team ID ${participant.teamId.toString()}`,
     );
   }
   return team;
 }
 
 export function buildClassicMatch(
-  matchData: RawMatch,
+  matchData: CanonicalMatch,
   playersInMatch: PlayerConfigEntry[],
 ): ClassicMatch | undefined {
   const queueType = resolveQueueTypeFromGame(
     matchData.info.queueId,
     matchData.info.gameMode,
     matchData.info.gameType,
-    matchData.info.tournamentCode,
+    canonicalMatchTournamentCode(matchData),
   );
   const classicQueueType = ClassicQueueTypeSchema.safeParse(queueType);
   if (!classicQueueType.success) {

@@ -11,7 +11,7 @@ import {
   isHallEligibleMatch,
   type DiscordGuildId,
   type HallRecordHolder,
-  type RawMatch,
+  type CanonicalMatch,
 } from "@scout-for-lol/data";
 import { prisma, type Db } from "#src/database/index.ts";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
@@ -170,7 +170,9 @@ async function evaluateGuild(
 }
 
 /** Evaluate one durably ingested match before account cursors advance. */
-export async function evaluateHallMatch(matchData: RawMatch): Promise<void> {
+export async function evaluateHallMatch(
+  matchData: CanonicalMatch,
+): Promise<void> {
   const matchId = matchData.metadata.matchId;
   const participantPuuids = matchData.metadata.participants;
   const accounts = await prisma.account.findMany({

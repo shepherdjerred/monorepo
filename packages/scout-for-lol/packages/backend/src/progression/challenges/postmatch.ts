@@ -4,7 +4,9 @@ import {
   LeaguePuuidSchema,
   challengeNeedsTimeline,
   type LeaguePuuid,
-  type RawMatch,
+  type CanonicalMatch,
+  type MatchCoverage,
+  matchCoverageOf,
 } from "@scout-for-lol/data";
 import {
   scoutChallengeRunRecomputeWorkflowId,
@@ -130,6 +132,19 @@ function timelineRequirementForRevision(
   return challengeNeedsTimeline(contract.matchPredicate);
 }
 
+/**
+ * A rule flagged `timelineRequired` has nothing to read on a game known only
+ * from the end-of-game block, which has no timeline. The game is skipped for
+ * that rule, not failed: later recomputes count it as missing timeline
+ * evidence. Rules that read only participant stats run.
+ */
+function skipsForCoverage(
+  timelineRequired: boolean,
+  coverage: MatchCoverage,
+): boolean {
+  return timelineRequired && coverage === "end_of_game";
+}
+
 async function createMatchRevision(
   db: ExtendedPrismaClient,
   options: {
@@ -137,6 +152,7 @@ async function createMatchRevision(
     readonly matchId: ReturnType<typeof RiotMatchIdSchema.parse>;
     readonly stage: ScoutStage;
     readonly participantPuuids: readonly LeaguePuuid[];
+    readonly coverage: MatchCoverage;
   },
 ): Promise<PreparedChallengeRun | null> {
   return await db.$transaction(async (tx) => {
@@ -171,7 +187,8 @@ async function createMatchRevision(
         revision.selectedAccountsJson,
         options.participantPuuids,
       );
-      return timelineRequired === null
+      return timelineRequired === null ||
+        skipsForCoverage(timelineRequired, options.coverage)
         ? null
         : {
             runId: options.runId,
@@ -202,7 +219,12 @@ async function createMatchRevision(
       priorRevision.selectedAccountsJson,
       options.participantPuuids,
     );
-    if (timelineRequired === null) return null;
+    if (
+      timelineRequired === null ||
+      skipsForCoverage(timelineRequired, options.coverage)
+    ) {
+      return null;
+    }
     const updated = await tx.challengeRun.update({
       where: { id: options.runId },
       data: { evaluationRevision: { increment: 1 }, recomputing: true },
@@ -241,7 +263,7 @@ async function createMatchRevision(
 }
 
 export async function prepareChallengeRunsForMatch(
-  match: RawMatch,
+  match: CanonicalMatch,
   stage: ScoutStage,
   db: ExtendedPrismaClient = prisma,
 ): Promise<readonly PreparedChallengeRun[]> {
@@ -249,6 +271,7 @@ export async function prepareChallengeRunsForMatch(
   const participantPuuids = match.metadata.participants.map((puuid) =>
     LeaguePuuidSchema.parse(puuid),
   );
+  const coverage = matchCoverageOf(match.metadata);
   const runIds = await challengeRunIdsForMatch(participantPuuids, db);
   const revisions: PreparedChallengeRun[] = [];
   for (const runId of runIds) {
@@ -257,6 +280,7 @@ export async function prepareChallengeRunsForMatch(
       matchId,
       stage,
       participantPuuids,
+      coverage,
     });
     if (revision === null) continue;
     revisions.push(revision);

@@ -3,8 +3,9 @@ import {
   isClassicQueueType,
   type CompetitionQueueType,
   type CompetitionGameVariant,
-  type RawMatch,
-  type RawParticipant,
+  type CanonicalMatch,
+  type CanonicalParticipant,
+  canonicalMatchTournamentCode,
 } from "@scout-for-lol/data";
 import type { PlayerWithAccounts } from "#src/league/competition/processors/types.ts";
 
@@ -13,7 +14,7 @@ import type { PlayerWithAccounts } from "#src/league/competition/processors/type
  */
 export function isPlayerInMatch(
   player: PlayerWithAccounts,
-  match: RawMatch,
+  match: CanonicalMatch,
 ): boolean {
   const playerPuuids = new Set<string>(
     player.accounts.map((account) => account.puuid),
@@ -25,7 +26,7 @@ export function isPlayerInMatch(
  * Check if a match belongs to the specified queue type
  */
 export function matchesQueues(
-  match: RawMatch,
+  match: CanonicalMatch,
   queueFilters: readonly CompetitionQueueType[],
   gameVariant: CompetitionGameVariant,
 ): boolean {
@@ -33,7 +34,7 @@ export function matchesQueues(
     match.info.queueId,
     match.info.gameMode,
     match.info.gameType,
-    match.info.tournamentCode,
+    canonicalMatchTournamentCode(match),
   );
 
   if (queueType === undefined) {
@@ -53,8 +54,8 @@ export function matchesQueues(
  */
 export function getPlayerParticipant(
   player: PlayerWithAccounts,
-  match: RawMatch,
-): RawParticipant | undefined {
+  match: CanonicalMatch,
+): CanonicalParticipant | undefined {
   const playerPuuids = new Set<string>(
     player.accounts.map((account) => account.puuid),
   );
@@ -67,6 +68,6 @@ export function getPlayerParticipant(
 /**
  * Check if a participant won the match
  */
-export function isWin(participant: RawParticipant): boolean {
+export function isWin(participant: CanonicalParticipant): boolean {
   return participant.win;
 }

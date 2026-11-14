@@ -97,6 +97,8 @@ export async function createDareSqlLakeRelations(
     files: LakeFiles;
     maxEligibleGames: number;
     excludeMultiTeamGames: boolean;
+    /** The contract reads what an end-of-game record lacks (see `dareEndOfGameEligibility`). */
+    excludeEndOfGameGames: boolean;
     matchOrder: "oldest" | "newest";
   },
 ): Promise<void> {
@@ -153,6 +155,12 @@ export async function createDareSqlLakeRelations(
   const multiTeamClause = input.excludeMultiTeamGames
     ? "AND match_id NOT IN (SELECT match_id FROM _dare_multi_team_ids)"
     : "";
+  // `coverage` is read-gated (MATCH_MIGRATION_GATED_COLUMNS), so a game known
+  // only from the end-of-game block is recognised by the game version it never
+  // states: Riot's and the history bundle's documents always carry one.
+  const endOfGameClause = input.excludeEndOfGameGames
+    ? "AND match_id NOT IN (SELECT match_id FROM _dare_match_window WHERE game_version IS NULL)"
+    : "";
   const matchOrder = input.matchOrder === "newest" ? "DESC" : "ASC";
   await session.run(
     `CREATE TEMP TABLE _dare_match_ids AS
@@ -161,6 +169,7 @@ export async function createDareSqlLakeRelations(
      WHERE (${targetMembership.join(" OR ")})
      AND match_id NOT IN (SELECT match_id FROM _dare_remake_ids)
      ${multiTeamClause}
+     ${endOfGameClause}
      GROUP BY match_id
      ORDER BY MIN(game_end_at) ${matchOrder}, match_id ${matchOrder}
      LIMIT ?`,

@@ -1,7 +1,8 @@
 import type { MatchDataSource } from "@scout-for-lol/domain/match-processing/states.ts";
 import {
   type PlayerConfigEntry,
-  type RawMatch,
+  type CanonicalMatch,
+  completeMatchOf,
   type RawTimeline,
 } from "@scout-for-lol/data";
 import configuration from "#src/configuration.ts";
@@ -27,7 +28,7 @@ import {
  * must supply any timeline whose persistence was required by an active run.
  */
 export async function processCompetitiveProgressionMatch(input: {
-  readonly match: RawMatch;
+  readonly match: CanonicalMatch;
   readonly matchDataSource: MatchDataSource;
   readonly timeline: RawTimeline | null | undefined;
   readonly trackedPlayers: PlayerConfigEntry[];
@@ -48,20 +49,24 @@ export async function processCompetitiveProgressionMatch(input: {
   let timelineHandled = false;
   const matchId = input.match.metadata.matchId;
   let timeline = input.timeline;
+  // A game known only from the end-of-game block has no timeline to fetch.
+  // Challenge rules that need one skip it when the revision is prepared, and a
+  // duel game is sent to review, so nothing here waits for one.
+  const completeMatch = completeMatchOf(input.match);
   async function ensureProgressionTimeline(required: boolean): Promise<void> {
-    if (timelineHandled) return;
+    if (timelineHandled || completeMatch === null) return;
     if (timeline === null || timeline === undefined) {
       // Timeline availability is independent of result provenance. Preparation
       // may have pinned missing coverage after its deadline; challenge and duel
       // consumers retain that decision even if later evidence improves history.
       timeline = required
         ? await fetchTimelineForProgression(
-            input.match,
+            completeMatch,
             matchId,
             input.trackedPlayers,
           )
         : await fetchTimelineForDuelProgression(
-            input.match,
+            completeMatch,
             matchId,
             input.trackedPlayers,
           );
@@ -70,7 +75,7 @@ export async function processCompetitiveProgressionMatch(input: {
         timeline,
         input.trackedPlayers,
         matchId,
-        input.match,
+        completeMatch,
       );
     }
     timelineHandled = required || timeline !== undefined;
