@@ -29,6 +29,10 @@ import { subtitleDestination } from "#domain/subtitle-path.ts";
 import { grantTestLease } from "#testing/authority.ts";
 import { captionProviderFixture } from "#automation/movie-editions/notifications/caption-provider.test-fixture.ts";
 import { prepareSubtitleSpeechV1 } from "#automation/files/subtitle-lifecycle/speech.ts";
+import {
+  SubtitleMatchScoreV1Schema,
+  subtitleScorePercent,
+} from "#shared/subtitle-maintenance/score.ts";
 
 const h = automationTestHarness();
 const directories: string[] = [];
@@ -46,11 +50,13 @@ afterEach(async () => {
 async function fixture(
   edition: MovieEditionKey = "extended_cut",
   videoBytes = bytes,
+  releaseGroup?: string,
 ) {
   const db = h.database();
   const f = await movieFilesV4Fixture(db, h.context(), await h.fixture(), {
     bytes: videoBytes,
     edition,
+    ...(releaseGroup === undefined ? {} : { releaseGroup }),
   });
   directories.push(f.files.directory);
   await inspectAndStageMovieV4(f.files.context, f.input);
@@ -125,6 +131,7 @@ test("actual measured candidate installs one to two with its original native phy
   const f = await fixture(
     "extended_cut",
     await movieVideoFixture(1920, [], { speech: true }),
+    "GROUP",
   );
   await f.queue();
   const targets = await f.inputs();
@@ -135,7 +142,7 @@ test("actual measured candidate installs one to two with its original native phy
     where: { providerId: "opensubtitles" },
   });
   const found = await findMovieSubtitlesV4(f.context, target, sources);
-  expect(found.status).toBe("found");
+  expect(found).toMatchObject({ status: "found", reason: null });
   const input = {
     schemaVersion: 4 as const,
     operationId: target.operationId,
@@ -143,6 +150,15 @@ test("actual measured candidate installs one to two with its original native phy
     assetId: f.assetId,
     subtitleId: z.uuid().parse(found.subtitleId),
   };
+  const candidate = await f.db.subtitleAsset.findUniqueOrThrow({
+    where: { id: input.subtitleId },
+  });
+  const score = z
+    .object({ matchScoreV1: SubtitleMatchScoreV1Schema })
+    .parse(candidate.matchingEvidence).matchScoreV1;
+  expect(score.matches).toContain("release_group");
+  expect(subtitleScorePercent(score)).toBeGreaterThanOrEqual(80);
+  expect(subtitleScorePercent(score)).toBeLessThan(86);
   await prepareSubtitleSpeechV1(f.files.context, input);
   const prepared = await f.db.subtitleAsset.findUniqueOrThrow({
     where: { id: input.subtitleId },
