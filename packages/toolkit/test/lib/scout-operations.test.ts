@@ -306,6 +306,20 @@ describe("exit status", () => {
     expect(submissionExitCode(response)).toBe(code);
   });
 
+  test("an authorized start whose handoff was unavailable exits 4", () => {
+    const base = {
+      kind: "executed",
+      intentId: INTENT_ID,
+      outcome: { kind: "start-authorized", workflow: "reconcile-pipeline" },
+    } as const;
+    expect(
+      submissionExitCode({ ...base, dispatch: { outcome: "unavailable" } }),
+    ).toBe(4);
+    expect(
+      submissionExitCode({ ...base, dispatch: { outcome: "started" } }),
+    ).toBe(0);
+  });
+
   test("a dry run prints the request and contacts nothing", async () => {
     const parsed: ParsedScoutOps = await parseScoutOpsArgs([
       "resolve-unknown",

@@ -794,7 +794,9 @@ PinchTab credentials or config.
   `--idempotency-key` to repeat an operation on purpose. `--dry-run` prints the
   request without resolving the token. Exit status is 0 when the operation took
   effect (now or under an earlier request with the same key), 3 when the
-  pipeline claimed and refused it, 1 when an earlier unclaimed intent expired,
+  pipeline claimed and refused it, 4 when it authorized a Workflow start but the
+  handoff was unavailable (no Workflow is running; re-submit once the worker is
+  up), 1 when an earlier unclaimed intent expired,
   and 2 for request, authentication or authorization failures. `--url`
   overrides the stage origin, for example a local backend.
 

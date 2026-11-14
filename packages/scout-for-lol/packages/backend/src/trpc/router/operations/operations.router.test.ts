@@ -12,7 +12,6 @@ import {
   shutdownFeatureFlags,
 } from "@shepherdjerred/feature-flags";
 import {
-  IsoInstantSchema,
   NotificationIntentKeySchema,
   RiotMatchIdSchema,
 } from "@scout-for-lol/domain/identity/brands.ts";
@@ -47,7 +46,11 @@ import {
   recordWorkflowStartAccepted,
   requestWorkflowStart,
 } from "#src/database/durable/workflow-start-repository.ts";
-import { SCOUT_OPERATOR_IDS } from "#src/operations/operator-allowlist.ts";
+import {
+  firstOperator,
+  instant,
+  operationsIntentRecord,
+} from "#src/testing/operations-fixtures.ts";
 import { createOfflineTrpcHarness } from "#src/testing/test-trpc-caller.ts";
 import { testAccountId, testChannelId } from "#src/testing/test-ids.ts";
 
@@ -68,13 +71,7 @@ import { testAccountId, testChannelId } from "#src/testing/test-ids.ts";
  * router (see its docblock).
  */
 
-const [FIRST_OPERATOR] = SCOUT_OPERATOR_IDS;
-if (FIRST_OPERATOR === undefined) {
-  // An empty allowlist would make every assertion below vacuous rather than
-  // failing, so it is refused here instead.
-  throw new Error("The operator allowlist is empty; these tests prove nothing");
-}
-const OPERATOR = FIRST_OPERATOR;
+const OPERATOR = firstOperator();
 const STRANGER = testAccountId("920000001");
 const CHANNEL = testChannelId("420003");
 const MATCH_ID = RiotMatchIdSchema.parse("NA1_5312279829");
@@ -86,10 +83,6 @@ function caller(discordId: DiscordAccountId = OPERATOR) {
   return trpc.authedCaller(discordId);
 }
 
-function instant(offsetMs: number) {
-  return IsoInstantSchema.parse(new Date(Date.now() + offsetMs).toISOString());
-}
-
 function intentRecord(args: {
   key: string;
   deadlineOffsetMs: number;
@@ -97,19 +90,11 @@ function intentRecord(args: {
   attemptCount: number;
   kind?: MatchNotificationIntentRecord["intent"]["kind"];
 }): MatchNotificationIntentRecord {
-  return {
+  return operationsIntentRecord({
+    ...args,
     matchId: MATCH_ID,
-    intent: {
-      key: NotificationIntentKeySchema.parse(args.key),
-      kind: args.kind ?? "postmatch",
-      origin: { kind: "live" },
-      target: { kind: "channel", channelId: CHANNEL },
-      freshnessDeadline: instant(args.deadlineOffsetMs),
-      createdAt: instant(-60_000),
-      attemptCount: args.attemptCount,
-      state: args.state,
-    },
-  };
+    channelId: CHANNEL,
+  });
 }
 
 async function seedIntent(

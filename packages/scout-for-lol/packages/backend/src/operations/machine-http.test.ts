@@ -11,7 +11,6 @@ import {
   shutdownFeatureFlags,
 } from "@shepherdjerred/feature-flags";
 import {
-  IsoInstantSchema,
   NotificationIntentKeySchema,
   RiotMatchIdSchema,
 } from "@scout-for-lol/domain/identity/brands.ts";
@@ -27,10 +26,13 @@ import {
   addFlagOverride,
   resetFlagOverrides,
 } from "#src/configuration/flags.ts";
-import type { MatchNotificationIntentRecord } from "#src/database/durable/intent-row.ts";
 import { upsertIntent } from "#src/database/durable/intent-repository.ts";
 import type { OperationsMachineCredential } from "#src/operations/machine-credential.ts";
-import { SCOUT_OPERATOR_IDS } from "#src/operations/operator-allowlist.ts";
+import {
+  firstOperator,
+  instant,
+  operationsIntentRecord,
+} from "#src/testing/operations-fixtures.ts";
 import { createOfflineTrpcHarness } from "#src/testing/test-trpc-caller.ts";
 import { testAccountId, testChannelId } from "#src/testing/test-ids.ts";
 
@@ -48,11 +50,7 @@ import { testAccountId, testChannelId } from "#src/testing/test-ids.ts";
  * The harness swaps the database module, so the handler is imported after it.
  */
 
-const [FIRST_OPERATOR] = SCOUT_OPERATOR_IDS;
-if (FIRST_OPERATOR === undefined) {
-  throw new Error("The operator allowlist is empty; these tests prove nothing");
-}
-const OPERATOR = FIRST_OPERATOR;
+const OPERATOR = firstOperator();
 const STRANGER = testAccountId("920000101");
 const CHANNEL = testChannelId("420103");
 const MATCH_ID = RiotMatchIdSchema.parse("NA1_5312279911");
@@ -144,33 +142,24 @@ async function intentState(): Promise<string> {
   return row.state;
 }
 
-function instant(offsetMs: number) {
-  return IsoInstantSchema.parse(new Date(Date.now() + offsetMs).toISOString());
-}
-
 const NONCE = NotificationAttemptNonceSchema.parse("run-501:attempt-1");
 const INTENT_KEY = NotificationIntentKeySchema.parse(
   "notification:NA1_5312279911:channel:420103",
 );
 
 async function seedUnknownDelivery(): Promise<void> {
-  const record: MatchNotificationIntentRecord = {
+  const record = operationsIntentRecord({
     matchId: MATCH_ID,
-    intent: {
-      key: INTENT_KEY,
-      kind: "postmatch",
-      origin: { kind: "live" },
-      target: { kind: "channel", channelId: CHANNEL },
-      freshnessDeadline: instant(60 * 60_000),
-      createdAt: instant(-60_000),
-      attemptCount: 1,
-      state: {
-        kind: "unknown-delivery",
-        attemptNonce: NONCE,
-        observedAt: instant(-30_000),
-      },
+    channelId: CHANNEL,
+    key: INTENT_KEY,
+    deadlineOffsetMs: 60 * 60_000,
+    attemptCount: 1,
+    state: {
+      kind: "unknown-delivery",
+      attemptNonce: NONCE,
+      observedAt: instant(-30_000),
     },
-  };
+  });
   const seeded = await upsertIntent(db, record);
   expect(seeded.outcome).toBe("applied");
 }

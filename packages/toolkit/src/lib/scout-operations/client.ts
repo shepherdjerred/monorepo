@@ -170,7 +170,8 @@ const StoredOutcomeSchema = z.looseObject({ kind: z.string() });
 /**
  * The command's exit status for a submission: 0 when the operation took
  * effect (now or on the first request with this key), 3 when the backend
- * claimed it but refused to change anything, 1 when an earlier unclaimed
+ * claimed it but refused to change anything, 4 when it authorized a Workflow
+ * start but the handoff was unavailable (nothing is running), 1 when an earlier unclaimed
  * intent expired and nothing ran.
  */
 export function submissionExitCode(
@@ -178,7 +179,13 @@ export function submissionExitCode(
 ): number {
   switch (response.kind) {
     case "executed":
-      return REFUSED_OUTCOMES.has(response.outcome.kind) ? 3 : 0;
+      if (REFUSED_OUTCOMES.has(response.outcome.kind)) {
+        return 3;
+      }
+      return response.outcome.kind === "start-authorized" &&
+        response.dispatch?.outcome === "unavailable"
+        ? 4
+        : 0;
     case "already_consumed": {
       const stored = StoredOutcomeSchema.safeParse(response.result);
       return stored.success && REFUSED_OUTCOMES.has(stored.data.kind) ? 3 : 0;
