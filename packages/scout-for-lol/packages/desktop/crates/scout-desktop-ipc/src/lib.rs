@@ -20,7 +20,7 @@ use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 
 /// The version both ends must announce in their `hello`.
-pub const PROTOCOL_VERSION: u32 = 1;
+pub const PROTOCOL_VERSION: u32 = 2;
 
 /// A message from the supervisor to the window.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -83,6 +83,14 @@ pub enum WindowMessage {
         /// Whether Scout Client starts at login.
         enabled: bool,
     },
+    /// Change the two privacy switches. Both are sent together so the
+    /// supervisor never has to merge a half-known state.
+    SetPrivacy {
+        /// Whether crash and error reports may be sent.
+        send_error_reports: bool,
+        /// Whether product events may be sent.
+        send_usage_data: bool,
+    },
     /// The user quit Scout: stop collection and the window.
     Quit,
 }
@@ -102,6 +110,8 @@ pub struct StateSnapshot {
     pub paired: bool,
     /// Whether Scout Client is registered to start for the current user.
     pub start_at_login: bool,
+    /// The user's two privacy switches.
+    pub privacy: PrivacySnapshot,
     /// Human-readable pairing state.
     pub pairing_status: Option<String>,
     /// Browser approval URL while pairing is pending.
@@ -114,6 +124,17 @@ pub struct StateSnapshot {
     pub last_error: Option<String>,
     /// What the Diagnostics page shows.
     pub diagnostics: DiagnosticsSnapshot,
+}
+
+/// The two opt-out switches. The window uses `send_error_reports` to open or
+/// close its own error reporter, so an opt-out reaches both processes.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct PrivacySnapshot {
+    /// Whether crash and error reports may be sent.
+    pub send_error_reports: bool,
+    /// Whether product events may be sent.
+    pub send_usage_data: bool,
 }
 
 /// The Diagnostics page's view of the supervisor's diagnostics.
@@ -231,8 +252,8 @@ pub fn decode_line<T: DeserializeOwned>(line: &str) -> Result<T, CodecError> {
 #[cfg(test)]
 mod tests {
     use super::{
-        CounterReading, DiagnosticsSnapshot, GameflowPhase, PROTOCOL_VERSION, StateSnapshot,
-        SupervisorMessage, WindowMessage, check_protocol, decode_line, encode_line,
+        CounterReading, DiagnosticsSnapshot, GameflowPhase, PROTOCOL_VERSION, PrivacySnapshot,
+        StateSnapshot, SupervisorMessage, WindowMessage, check_protocol, decode_line, encode_line,
     };
 
     fn sample_state() -> StateSnapshot {
@@ -242,6 +263,10 @@ mod tests {
             account_label: Some("Scout#NA1".to_owned()),
             paired: true,
             start_at_login: false,
+            privacy: PrivacySnapshot {
+                send_error_reports: true,
+                send_usage_data: false,
+            },
             pairing_status: None,
             approval_url: Some("https://beta.scout-for-lol.com/pair/abc".to_owned()),
             pending_observations: 4,
@@ -303,6 +328,10 @@ mod tests {
             WindowMessage::OpenLogFolder,
             WindowMessage::RequestDiagnostics,
             WindowMessage::SetStartAtLogin { enabled: true },
+            WindowMessage::SetPrivacy {
+                send_error_reports: false,
+                send_usage_data: true,
+            },
             WindowMessage::Quit,
         ];
         for message in messages {

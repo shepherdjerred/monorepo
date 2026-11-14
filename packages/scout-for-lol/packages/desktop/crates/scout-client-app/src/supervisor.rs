@@ -15,12 +15,14 @@ use std::time::{Duration, Instant};
 use scout_client_core::diagnostics::{
     DiagnosticCategory, DiagnosticEvent, DiagnosticLevel, DiagnosticOutcome, Diagnostics,
 };
+use scout_client_core::settings::PrivacySettings;
+use scout_client_core::telemetry::{UsageEvent, WindowCrashCause, WindowCrashOutcome};
 use scout_client_runtime::runtime::{
     ClientRuntime, GameflowPhase, PhaseReceiver, RuntimeState, StateReceiver,
 };
 use scout_desktop_ipc::{
-    CounterReading, DiagnosticsSnapshot, PROTOCOL_VERSION, StateSnapshot, SupervisorMessage,
-    WindowMessage, check_protocol, decode_line, encode_line,
+    CounterReading, DiagnosticsSnapshot, PROTOCOL_VERSION, PrivacySnapshot, StateSnapshot,
+    SupervisorMessage, WindowMessage, check_protocol, decode_line, encode_line,
 };
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader, Lines};
 use tokio::process::{Child, ChildStdin, ChildStdout, Command};
@@ -67,6 +69,10 @@ pub trait Collector {
     fn disconnect(&self);
     /// Change the start-at-login registration.
     fn set_start_at_login(&self, enabled: bool);
+    /// Change the two privacy switches.
+    fn set_privacy_settings(&self, settings: PrivacySettings);
+    /// Queue a product event; sent only while usage data is on.
+    fn report_usage(&self, event: UsageEvent);
     /// Stop collection and wait for it to finish.
     fn stop(self);
 }
@@ -92,6 +98,12 @@ impl Collector for ClientRuntime {
     }
     fn set_start_at_login(&self, enabled: bool) {
         ClientRuntime::set_start_at_login(self, enabled);
+    }
+    fn set_privacy_settings(&self, settings: PrivacySettings) {
+        ClientRuntime::set_privacy_settings(self, settings);
+    }
+    fn report_usage(&self, event: UsageEvent) {
+        ClientRuntime::report_usage(self, event);
     }
     fn stop(self) {
         ClientRuntime::stop(self);
@@ -240,7 +252,7 @@ impl<C: Collector> Supervisor<C> {
                     WindowEvent::Unreadable(detail) => {
                         if let Some(running) = window.as_mut() {
                             self.record(window_crash_event(DiagnosticOutcome::Failed, detail));
-                            running.kill();
+                            running.kill_because(WindowCrashCause::Unresponsive);
                         }
                     }
                     WindowEvent::Exited(status) => {
@@ -287,6 +299,10 @@ impl<C: Collector> Supervisor<C> {
                     DiagnosticOutcome::Failed,
                     format!("could not start the window: {error}"),
                 ));
+                self.report_crash(
+                    WindowCrashCause::LaunchFailed,
+                    WindowCrashOutcome::NotRelaunched,
+                );
                 return None;
             }
         };
@@ -295,6 +311,10 @@ impl<C: Collector> Supervisor<C> {
                 DiagnosticOutcome::Failed,
                 "the window started without piped stdio".to_owned(),
             ));
+            self.report_crash(
+                WindowCrashCause::LaunchFailed,
+                WindowCrashOutcome::NotRelaunched,
+            );
             return None;
         };
         self.status.send_modify(|status| {
@@ -308,6 +328,7 @@ impl<C: Collector> Supervisor<C> {
             started: Instant::now(),
             greeted: false,
             relaunch: true,
+            cause: None,
             last_state: None,
         };
         self.deliver(
@@ -334,7 +355,7 @@ impl<C: Collector> Supervisor<C> {
                     mismatch.to_string(),
                 ));
                 window.relaunch = false;
-                window.kill();
+                window.kill_because(WindowCrashCause::ProtocolMismatch);
             } else {
                 window.greeted = true;
             }
@@ -345,7 +366,7 @@ impl<C: Collector> Supervisor<C> {
                 DiagnosticOutcome::Failed,
                 "the window sent a command before its hello".to_owned(),
             ));
-            window.kill();
+            window.kill_because(WindowCrashCause::Unresponsive);
             return Handled::Continue;
         }
         match message {
@@ -355,6 +376,13 @@ impl<C: Collector> Supervisor<C> {
             WindowMessage::SetStartAtLogin { enabled } => {
                 self.collector.set_start_at_login(enabled);
             }
+            WindowMessage::SetPrivacy {
+                send_error_reports,
+                send_usage_data,
+            } => self.collector.set_privacy_settings(PrivacySettings {
+                send_error_reports,
+                send_usage_data,
+            }),
             WindowMessage::OpenUrl { url } => open_web_page(&url),
             WindowMessage::OpenLogFolder => {
                 if let Some(directory) = self.collector.log_directory()
@@ -384,6 +412,7 @@ impl<C: Collector> Supervisor<C> {
     }
 
     fn after_exit(&self, ended: &Window, status: ExitStatus, quick_crashes: &mut u32) -> AfterExit {
+        let cause = ended.cause.unwrap_or(WindowCrashCause::Exited);
         if status.success() {
             return if self.tray_available {
                 AfterExit::Wait
@@ -396,6 +425,7 @@ impl<C: Collector> Supervisor<C> {
                 DiagnosticOutcome::Failed,
                 format!("the window exited ({status}); not relaunching"),
             ));
+            self.report_crash(cause, WindowCrashOutcome::NotRelaunched);
             return self.wait_or_quit();
         }
         *quick_crashes = quick_crashes_now(*quick_crashes, ended.started.elapsed());
@@ -407,12 +437,14 @@ impl<C: Collector> Supervisor<C> {
                 ),
             ));
             self.status.send_modify(|status| status.given_up = true);
+            self.report_crash(cause, WindowCrashOutcome::GaveUp);
             return self.wait_or_quit();
         }
         self.record(window_crash_event(
             DiagnosticOutcome::Deferred,
             format!("the window exited ({status}); relaunching it"),
         ));
+        self.report_crash(cause, WindowCrashOutcome::Relaunched);
         AfterExit::Relaunch
     }
 
@@ -471,7 +503,7 @@ impl<C: Collector> Supervisor<C> {
             )),
         }
         window.stdin = None;
-        window.kill();
+        window.kill_because(WindowCrashCause::Unresponsive);
     }
 
     async fn close(&self, mut window: Window) {
@@ -490,6 +522,13 @@ impl<C: Collector> Supervisor<C> {
 
     fn record(&self, event: DiagnosticEvent) {
         self.collector.diagnostics().record(event);
+    }
+
+    /// The product event for a crash; whether it is sent is the usage-data
+    /// switch's decision, made where events are sent.
+    fn report_crash(&self, cause: WindowCrashCause, outcome: WindowCrashOutcome) {
+        self.collector
+            .report_usage(UsageEvent::WindowCrashed { cause, outcome });
     }
 }
 
@@ -513,10 +552,17 @@ struct Window {
     greeted: bool,
     /// Cleared when relaunching could only repeat the failure.
     relaunch: bool,
+    /// Why the supervisor killed it, when it did; otherwise it exited alone.
+    cause: Option<WindowCrashCause>,
     last_state: Option<StateSnapshot>,
 }
 
 impl Window {
+    fn kill_because(&mut self, cause: WindowCrashCause) {
+        self.cause.get_or_insert(cause);
+        self.kill();
+    }
+
     fn kill(&mut self) {
         if let Err(error) = self.child.start_kill() {
             tracing::warn!(%error, "could not kill the Scout Client window");
@@ -585,6 +631,10 @@ pub fn snapshot(
         account_label: state.account_label.clone(),
         paired: state.paired,
         start_at_login: state.start_at_login,
+        privacy: PrivacySnapshot {
+            send_error_reports: state.privacy.send_error_reports,
+            send_usage_data: state.privacy.send_usage_data,
+        },
         pairing_status: state.pairing_status.clone(),
         approval_url: state.approval_url.clone(),
         pending_observations: u64::try_from(state.pending_observations).unwrap_or(u64::MAX),

@@ -195,6 +195,27 @@ fn settings(ui: &mut egui::Ui, state: &StateSnapshot, outgoing: &mut Vec<WindowM
     }
     ui.label("Scout observes gameplay state only while League is running.");
     ui.add_space(16.0);
+    ui.strong("Privacy");
+    let mut send_error_reports = state.privacy.send_error_reports;
+    let mut send_usage_data = state.privacy.send_usage_data;
+    let reports_changed = ui
+        .checkbox(&mut send_error_reports, "Send error reports")
+        .changed();
+    let usage_changed = ui
+        .checkbox(&mut send_usage_data, "Send usage data")
+        .changed();
+    if reports_changed || usage_changed {
+        outgoing.push(WindowMessage::SetPrivacy {
+            send_error_reports,
+            send_usage_data,
+        });
+    }
+    ui.label(
+        "Error reports are crashes and failures with no account, path or League data. \
+         Usage data is a handful of counts such as \"app started\". Both are on by \
+         default and never include gameplay observations.",
+    );
+    ui.add_space(16.0);
     if ui.button("Quit Scout").clicked() {
         outgoing.push(WindowMessage::Quit);
     }

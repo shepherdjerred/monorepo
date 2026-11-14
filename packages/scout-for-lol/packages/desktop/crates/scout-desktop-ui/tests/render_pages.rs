@@ -32,8 +32,8 @@ mod render {
         WindowOptions, px, size,
     };
     use scout_desktop_ipc::{
-        CounterReading, DiagnosticsSnapshot, GameflowPhase, PROTOCOL_VERSION, StateSnapshot,
-        SupervisorMessage, WindowMessage, decode_line, encode_line,
+        CounterReading, DiagnosticsSnapshot, GameflowPhase, PROTOCOL_VERSION, PrivacySnapshot,
+        StateSnapshot, SupervisorMessage, WindowMessage, decode_line, encode_line,
     };
     use scout_desktop_ui::BuildInfo;
     use scout_desktop_ui::preview::{Incoming, Outbound, ScoutWindow, prepare};
@@ -79,6 +79,10 @@ mod render {
             account_label: Some("Scout#NA1".to_owned()),
             paired: false,
             start_at_login: true,
+            privacy: PrivacySnapshot {
+                send_error_reports: true,
+                send_usage_data: true,
+            },
             pairing_status: Some("Waiting for approval in the browser".to_owned()),
             approval_url: Some("https://beta.scout-for-lol.com/pair/abc".to_owned()),
             pending_observations: 4,
@@ -278,6 +282,21 @@ mod render {
         let after = harness.capture("settings-after-toggle")?;
         if before == after {
             return Err("the snapshot with start at login off did not repaint".into());
+        }
+
+        // Usage data off: the supervisor's snapshot repaints the toggle.
+        harness.receive(&SupervisorMessage::State {
+            state: StateSnapshot {
+                privacy: PrivacySnapshot {
+                    send_error_reports: true,
+                    send_usage_data: false,
+                },
+                ..sample_state()
+            },
+        })?;
+        let usage_off = harness.capture("settings-usage-off")?;
+        if before == usage_off {
+            return Err("the snapshot with usage data off did not repaint".into());
         }
 
         // Close from the supervisor ends the window's listener cleanly.

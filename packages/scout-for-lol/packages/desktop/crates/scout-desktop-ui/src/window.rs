@@ -21,8 +21,12 @@ const LINK_BROKEN: u8 = 3;
 
 /// Run the window until it closes. A clean close exits 0; a broken link to
 /// the supervisor exits 3, which the supervisor treats like a crash.
+///
+/// `on_error_reports` is told the user's "Send error reports" choice each time
+/// the supervisor's snapshot arrives, so an opt-out reaches this process's own
+/// error reporter without a restart.
 #[must_use]
-pub fn run(build: BuildInfo) -> ExitCode {
+pub fn run(build: BuildInfo, on_error_reports: impl Fn(bool) + 'static) -> ExitCode {
     let outbound = Outbound::new(std::io::stdout());
     if !outbound.hello() {
         eprintln!("Scout Client window: the supervisor is not listening");
@@ -36,11 +40,13 @@ pub fn run(build: BuildInfo) -> ExitCode {
     });
 
     let app_outbound = outbound.clone();
+    let privacy_listener: PrivacyListener = Rc::new(on_error_reports);
     kit::run_application(move |cx| {
         let closed_outbound = app_outbound.clone();
         kit::on_window_closed(cx, move |cx| exit_after_close(&closed_outbound, cx));
         let opened = kit::open_main_window(cx, "Scout Client", move |window, cx| {
             ScoutWindow::new(window, cx, receiver, app_outbound, build)
+                .with_privacy_listener(privacy_listener)
         });
         if let Err(error) = opened {
             eprintln!("Scout Client window: could not open a window: {error}");
@@ -71,9 +77,13 @@ fn exit_status(outbound: &Outbound<Stdout>) -> ExitCode {
     }
 }
 
+/// Told whether error reports are allowed, after every snapshot.
+type PrivacyListener = Rc<dyn Fn(bool)>;
+
 /// The root view. Production writes to stdout; the render test writes to a
 /// buffer.
 pub struct ScoutWindow<W> {
+    privacy_listener: Option<PrivacyListener>,
     link: WindowState,
     outbound: Outbound<W>,
     page: PageId,
@@ -107,6 +117,7 @@ impl<W: Write + 'static> ScoutWindow<W> {
             let _ = this.update(cx, |this, _| this.close_requested());
         });
         Self {
+            privacy_listener: None,
             link: WindowState::default(),
             outbound,
             page: PageId::default(),
@@ -114,6 +125,13 @@ impl<W: Write + 'static> ScoutWindow<W> {
             build,
             _listener: listener,
         }
+    }
+
+    /// Follow the user's error-report choice from every snapshot.
+    #[must_use]
+    fn with_privacy_listener(mut self, listener: PrivacyListener) -> Self {
+        self.privacy_listener = Some(listener);
+        self
     }
 
     /// Handle one event from the supervisor. Returns whether to keep
@@ -127,6 +145,11 @@ impl<W: Write + 'static> ScoutWindow<W> {
         match incoming {
             Incoming::Line(line) => match self.link.receive(&line) {
                 Ok(Effect::Render) => {
+                    if self.link.state_received
+                        && let Some(listener) = &self.privacy_listener
+                    {
+                        listener(self.link.state.privacy.send_error_reports);
+                    }
                     cx.notify();
                     true
                 }

@@ -24,6 +24,9 @@ use std::sync::Arc;
 use scout_client_core::diagnostics::{
     DiagnosticCategory, DiagnosticEvent, DiagnosticLevel, DiagnosticOutcome, Diagnostics,
 };
+use scout_client_core::reporting::{
+    ReportingProcess, reporting_environment, start_error_reporting,
+};
 use scout_client_runtime::instance::InstanceLock;
 use scout_client_runtime::runtime::ClientRuntime;
 use tokio::sync::mpsc;
@@ -105,20 +108,35 @@ fn main() -> ExitCode {
         }
     };
     if arguments.iter().any(|argument| argument == WINDOW_ARGUMENT) {
-        return run_window(toolkit);
+        return run_window(toolkit, &arguments);
     }
     supervise(&arguments, toolkit)
 }
 
 /// Run as the window process with the toolkit the supervisor chose.
-fn run_window(toolkit: WindowToolkit) -> ExitCode {
+///
+/// The window reports its own panics, so it starts its own error reporter.
+/// Its gate begins as the stored choice and then follows every snapshot the
+/// supervisor sends. A GPU abort that kills the process outright cannot report
+/// itself; the supervisor reports that as a `window_crash`.
+fn run_window(toolkit: WindowToolkit, arguments: &[String]) -> ExitCode {
+    let gates = scout_client_runtime::runtime::load_privacy_gates();
+    let error_gate = gates.error_reports;
+    let _reporting = start_error_reporting(
+        reporting_environment(&backend_origin(arguments)),
+        ReportingProcess::Window,
+        error_gate.clone(),
+    );
     match toolkit {
-        WindowToolkit::Egui => window::run(),
+        WindowToolkit::Egui => window::run(error_gate),
         #[cfg(any(windows, target_os = "macos"))]
-        WindowToolkit::Gpui => scout_desktop_ui::run(scout_desktop_ui::BuildInfo {
-            client_version: env!("CARGO_PKG_VERSION"),
-            protocol_version: scout_client_core::protocol::PROTOCOL_VERSION,
-        }),
+        WindowToolkit::Gpui => scout_desktop_ui::run(
+            scout_desktop_ui::BuildInfo {
+                client_version: env!("CARGO_PKG_VERSION"),
+                protocol_version: scout_client_core::protocol::PROTOCOL_VERSION,
+            },
+            move |allowed| error_gate.set(allowed),
+        ),
         // `main` refuses a toolkit this build does not contain.
         #[cfg(not(any(windows, target_os = "macos")))]
         WindowToolkit::Gpui => ExitCode::from(2),
@@ -161,7 +179,12 @@ fn supervise(arguments: &[String], toolkit: WindowToolkit) -> ExitCode {
     tracing::info!(?toolkit, "Scout Client window toolkit");
     let launcher = WindowLauncher::new(
         executable,
-        vec![WINDOW_ARGUMENT.to_owned(), toolkit.argument().to_owned()],
+        vec![
+            WINDOW_ARGUMENT.to_owned(),
+            toolkit.argument().to_owned(),
+            // The window labels its error reports beta or production.
+            format!("--server={}", backend_origin(arguments)),
+        ],
     );
     let (control, control_receiver) = mpsc::unbounded_channel();
     let exit = tray::run(

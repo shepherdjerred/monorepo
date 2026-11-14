@@ -173,6 +173,10 @@ pub struct SettingsModel {
     pub pairing_actions: Vec<Action>,
     /// Whether start at login is on.
     pub start_at_login: bool,
+    /// Whether crash and error reports may be sent.
+    pub send_error_reports: bool,
+    /// Whether product events may be sent.
+    pub send_usage_data: bool,
     /// The quit button.
     pub quit: Action,
 }
@@ -181,6 +185,12 @@ pub struct SettingsModel {
 pub const OBSERVATION_NOTE: &str = "Scout observes gameplay state only while League is running.";
 /// The start-at-login label.
 pub const START_AT_LOGIN_LABEL: &str = "Start Scout Client at login";
+/// The error-report switch's label.
+pub const SEND_ERROR_REPORTS_LABEL: &str = "Send error reports";
+/// The usage-data switch's label.
+pub const SEND_USAGE_DATA_LABEL: &str = "Send usage data";
+/// What the two privacy switches do, in the words the privacy page uses.
+pub const PRIVACY_SWITCHES_NOTE: &str = "Error reports are crashes and failures with no account, path or League data. Usage data is a handful of counts such as \"app started\". Both are on by default and never include gameplay observations.";
 
 impl SettingsModel {
     /// Build the Settings page from a snapshot.
@@ -225,6 +235,8 @@ impl SettingsModel {
             pairing_status,
             pairing_actions,
             start_at_login: state.start_at_login,
+            send_error_reports: state.privacy.send_error_reports,
+            send_usage_data: state.privacy.send_usage_data,
             quit: Action {
                 id: "quit",
                 label: "Quit Scout",
@@ -232,6 +244,24 @@ impl SettingsModel {
                 primary: false,
                 destructive: false,
             },
+        }
+    }
+
+    /// The message flipping "Send error reports", leaving the other switch.
+    #[must_use]
+    pub const fn toggle_error_reports(&self) -> WindowMessage {
+        WindowMessage::SetPrivacy {
+            send_error_reports: !self.send_error_reports,
+            send_usage_data: self.send_usage_data,
+        }
+    }
+
+    /// The message flipping "Send usage data", leaving the other switch.
+    #[must_use]
+    pub const fn toggle_usage_data(&self) -> WindowMessage {
+        WindowMessage::SetPrivacy {
+            send_error_reports: self.send_error_reports,
+            send_usage_data: !self.send_usage_data,
         }
     }
 
@@ -313,7 +343,8 @@ pub const fn should_quit_on_close(closing: bool, tray_available: bool) -> bool {
 #[cfg(test)]
 mod tests {
     use scout_desktop_ipc::{
-        CounterReading, DiagnosticsSnapshot, GameflowPhase, StateSnapshot, WindowMessage,
+        CounterReading, DiagnosticsSnapshot, GameflowPhase, PrivacySnapshot, StateSnapshot,
+        WindowMessage,
     };
 
     use super::{
@@ -336,6 +367,10 @@ mod tests {
             account_label: Some("Scout#NA1".to_owned()),
             paired: true,
             start_at_login: true,
+            privacy: PrivacySnapshot {
+                send_error_reports: true,
+                send_usage_data: false,
+            },
             pending_observations: 4,
             last_upload_at: Some("2026-11-11T10:00:00Z".to_owned()),
             last_error: Some("League unavailable".to_owned()),
@@ -431,6 +466,25 @@ mod tests {
         assert_eq!(
             SettingsModel::new(&unpaired()).toggle_start_at_login(),
             WindowMessage::SetStartAtLogin { enabled: true }
+        );
+    }
+
+    #[test]
+    fn each_privacy_toggle_flips_only_its_own_switch() {
+        let model = SettingsModel::new(&paired());
+        assert_eq!(
+            model.toggle_error_reports(),
+            WindowMessage::SetPrivacy {
+                send_error_reports: false,
+                send_usage_data: false,
+            }
+        );
+        assert_eq!(
+            model.toggle_usage_data(),
+            WindowMessage::SetPrivacy {
+                send_error_reports: true,
+                send_usage_data: true,
+            }
         );
     }
 

@@ -1,5 +1,6 @@
 //! The published runtime snapshot and its typed gameflow phase.
 
+use scout_client_core::settings::PrivacySettings;
 use tokio::sync::watch;
 
 /// Gameflow phase as the League client reports it, for subscribers that react
@@ -108,6 +109,8 @@ pub struct RuntimeState {
     pub paired: bool,
     /// Whether Scout Client is registered to start for the current user.
     pub start_at_login: bool,
+    /// The user's error-report and usage-data switches.
+    pub privacy: PrivacySettings,
     /// Human-readable pairing state.
     pub pairing_status: Option<String>,
     /// Browser approval URL while pairing is pending.

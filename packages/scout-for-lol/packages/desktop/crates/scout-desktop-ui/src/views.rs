@@ -9,7 +9,8 @@ use crate::kit::{
 };
 use crate::view_model::{
     Action, ActivityModel, DiagnosticsModel, OBSERVATION_NOTE, OverviewModel, PRIVACY_NOTE,
-    START_AT_LOGIN_LABEL, SettingsModel,
+    PRIVACY_SWITCHES_NOTE, SEND_ERROR_REPORTS_LABEL, SEND_USAGE_DATA_LABEL, START_AT_LOGIN_LABEL,
+    SettingsModel,
 };
 
 /// Builds the handler that sends one command to the supervisor.
@@ -63,6 +64,20 @@ pub fn settings(model: &SettingsModel, send: &Send) -> impl IntoElement {
             send(model.toggle_start_at_login()),
         ))
         .child(note_text(OBSERVATION_NOTE))
+        .child(section_heading("Privacy"))
+        .child(ScoutToggle::new(
+            "send-error-reports",
+            SEND_ERROR_REPORTS_LABEL,
+            model.send_error_reports,
+            send(model.toggle_error_reports()),
+        ))
+        .child(ScoutToggle::new(
+            "send-usage-data",
+            SEND_USAGE_DATA_LABEL,
+            model.send_usage_data,
+            send(model.toggle_usage_data()),
+        ))
+        .child(note_text(PRIVACY_SWITCHES_NOTE))
         .child(section_heading("Scout"))
         .child(action_row().child(button(&model.quit, send)))
 }

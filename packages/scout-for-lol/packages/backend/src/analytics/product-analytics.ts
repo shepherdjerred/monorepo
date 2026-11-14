@@ -8,7 +8,9 @@ import {
   productAnalyticsFailuresTotal,
 } from "#src/metrics/product-analytics.ts";
 import { getErrorMessage } from "#src/utils/errors.ts";
+import type { ScoutDesktopEvent } from "@scout-for-lol/data";
 import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
+import { createHash } from "node:crypto";
 import { PostHog } from "posthog-node";
 
 const logger = createLogger("product-analytics");
@@ -159,7 +161,24 @@ export type ProductAnalyticsTransport = {
   shutdown: () => Promise<void>;
 };
 
+/**
+ * Who a desktop client event is about: the device owner, never their Discord
+ * account id. The id is only an input to a one-way digest scoped to this site,
+ * so one person is one analytics identity across their devices and the
+ * Discord id cannot be recovered from PostHog.
+ */
+export type DesktopAnalyticsOwner = { ownerId: string };
+
 export type ProductAnalytics = {
+  /**
+   * One event sent by the desktop client. Properties are the validated,
+   * bounded-enum set from the shared desktop event contract plus the client's
+   * app version; there is no guild, no device id and no free text.
+   */
+  captureDesktop: (
+    owner: DesktopAnalyticsOwner,
+    event: ScoutDesktopEvent,
+  ) => void;
   capture: (
     installation: AnalyticsInstallation,
     event: ProductAnalyticsEvent,
@@ -236,6 +255,9 @@ export function createProductAnalytics(options: {
       capture() {
         return;
       },
+      captureDesktop() {
+        return;
+      },
       shutdown() {
         return Promise.resolve();
       },
@@ -294,6 +316,38 @@ export function createProductAnalytics(options: {
   };
 
   return {
+    captureDesktop(owner, event) {
+      const eventName = `desktop_${event.event}`;
+      try {
+        const ownerKey = createHash("sha256")
+          .update(
+            `scout-desktop-owner:${analyticsConfiguration.siteKey}:${owner.ownerId}`,
+          )
+          .digest("hex")
+          .slice(0, 32);
+        transport.capture({
+          distinctId: `${analyticsConfiguration.siteKey}:desktop-owner:${ownerKey}`,
+          event: eventName,
+          disableGeoip: true,
+          properties: {
+            ...event.properties,
+            app_version: event.appVersion,
+            stage: options.environment,
+            site_key: analyticsConfiguration.siteKey,
+            site_hostname: analyticsConfiguration.siteHostname,
+            source: "scout-desktop",
+            version: options.version,
+          },
+        });
+        productAnalyticsEventsTotal.inc({ event: eventName });
+      } catch (error) {
+        productAnalyticsFailuresTotal.inc({ operation: "capture" });
+        logger.error(
+          `Failed to enqueue ${eventName} product analytics event`,
+          getErrorMessage(error),
+        );
+      }
+    },
     capture(installation, event, eventOptions) {
       capture({
         distinctId: `${analyticsConfiguration.siteKey}:guild-install:${installation.analyticsInstallationId}`,

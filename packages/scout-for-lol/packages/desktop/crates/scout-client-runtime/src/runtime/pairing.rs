@@ -11,7 +11,9 @@ use uuid::Uuid;
 use super::RuntimeCommand;
 use super::paths::outbox_path;
 use super::state::{StateHub, clear_runtime_error, set_error, set_runtime_error, update_state};
+use super::usage::UsageQueue;
 use crate::startup;
+use scout_client_core::telemetry::UsageEvent;
 
 pub(super) struct PendingPairing {
     id: Uuid,
@@ -114,6 +116,7 @@ pub(super) async fn poll_pairing(
     payloads: &mut HashMap<String, Vec<u8>>,
     credential: &mut Option<DeviceCredential>,
     pending_pairing: &mut Option<PendingPairing>,
+    usage: &UsageQueue,
 ) -> Result<(), String> {
     let Some(pairing) = pending_pairing else {
         return Ok(());
@@ -136,6 +139,7 @@ pub(super) async fn poll_pairing(
             payloads.clear();
             *credential = Some(issued);
             *pending_pairing = None;
+            usage.push(UsageEvent::DevicePaired);
             update_state(state, |snapshot| {
                 snapshot.paired = true;
                 snapshot.pairing_status = Some("Paired".to_owned());

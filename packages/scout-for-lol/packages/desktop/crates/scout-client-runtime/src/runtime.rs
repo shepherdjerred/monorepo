@@ -13,8 +13,11 @@ use scout_client_core::diagnostics::{
     DiagnosticCategory, DiagnosticEvent, DiagnosticLevel, DiagnosticOutcome, Diagnostics, FileSink,
 };
 use scout_client_core::reporting::{
-    BugsinkSink, ReportingGuard, reporting_environment, reporting_status, start_error_reporting,
+    BugsinkSink, ReportingGuard, ReportingProcess, reporting_environment, reporting_status,
+    start_error_reporting,
 };
+use scout_client_core::settings::{PrivacyGates, PrivacySettings, SettingsStore};
+use scout_client_core::telemetry::UsageEvent;
 use tokio::runtime::Runtime;
 use tokio::sync::{mpsc, watch};
 use tracing::info;
@@ -31,6 +34,7 @@ mod profile;
 mod replay;
 mod state;
 mod upload;
+mod usage;
 
 pub(crate) use paths::data_directory;
 pub use state::{GameflowPhase, RuntimeState};
@@ -42,12 +46,72 @@ pub type PhaseReceiver = watch::Receiver<GameflowPhase>;
 
 use collector::run_collector;
 use paths::log_directory;
-use state::{StateHub, set_error};
+use state::{StateHub, set_error, update_state};
+use usage::{UsageChannel, UsageQueue};
 
 enum RuntimeCommand {
     StartPairing,
     Disconnect,
     SetStartAtLogin(bool),
+}
+
+/// Where the settings file lives, when there is a per-user data directory.
+fn settings_store() -> Option<SettingsStore> {
+    data_directory().map(|directory| SettingsStore::in_directory(&directory))
+}
+
+/// The stored privacy choice, and why it could not be read.
+///
+/// Fails closed: with no settings folder or a damaged file nothing is sent,
+/// because the only thing worse than a lost report is one the user had turned
+/// off.
+fn load_privacy(store: Option<&SettingsStore>) -> (PrivacySettings, Option<String>) {
+    match store.map(SettingsStore::load) {
+        Some(Ok(settings)) => (settings, None),
+        Some(Err(error)) => (PrivacySettings::all_off(), Some(error.to_string())),
+        None => (
+            PrivacySettings::all_off(),
+            Some("there is no settings folder".to_owned()),
+        ),
+    }
+}
+
+fn record_settings_problem(diagnostics: &Diagnostics, operation: &'static str, problem: &str) {
+    diagnostics.record(
+        DiagnosticEvent::new(
+            DiagnosticLevel::Warn,
+            DiagnosticCategory::Runtime,
+            operation,
+            DiagnosticOutcome::Failed,
+        )
+        .with_detail(format!(
+            "{problem}; error reports and usage data stay off until Settings is saved"
+        )),
+    );
+}
+
+/// `app_started`, and `update_applied` when this is the first run of a new
+/// version. They wait in the queue for the first check-in.
+fn queue_startup_events(
+    settings: Option<&SettingsStore>,
+    diagnostics: &Diagnostics,
+    usage: &UsageQueue,
+) {
+    usage.push(UsageEvent::AppStarted);
+    match settings.map(|store| store.note_run_version(env!("CARGO_PKG_VERSION"))) {
+        Some(Ok(Some(_previous))) => usage.push(UsageEvent::UpdateApplied),
+        Some(Err(error)) => {
+            record_settings_problem(diagnostics, "note_run_version", &error.to_string());
+        }
+        Some(Ok(None)) | None => {}
+    }
+}
+
+/// The privacy gates for a process that does not own the runtime, such as the
+/// window. They start from the stored choice and fail closed.
+#[must_use]
+pub fn load_privacy_gates() -> PrivacyGates {
+    PrivacyGates::new(load_privacy(settings_store().as_ref()).0)
 }
 
 /// Handle owned by the desktop application.
@@ -57,6 +121,9 @@ pub struct ClientRuntime {
     log_directory: Option<PathBuf>,
     /// Flushes queued error reports when the runtime is dropped.
     _reporting: Option<ReportingGuard>,
+    settings: Option<SettingsStore>,
+    gates: PrivacyGates,
+    usage: UsageQueue,
     commands: mpsc::UnboundedSender<RuntimeCommand>,
     shutdown: watch::Sender<bool>,
     thread: std::thread::JoinHandle<()>,
@@ -72,18 +139,35 @@ impl ClientRuntime {
         if let Some(sink) = log_directory.clone().and_then(FileSink::new) {
             diagnostics = diagnostics.with_sink(Box::new(sink));
         }
+        let settings = settings_store();
+        let (privacy, privacy_problem) = load_privacy(settings.as_ref());
+        let gates = PrivacyGates::new(privacy);
         // Only when this build has somewhere to report to; the guard must
-        // outlive the process, so it is held here.
-        let reporting = start_error_reporting(reporting_environment(&backend_origin));
+        // outlive the process, so it is held here. The reporter is installed
+        // even while reports are off, because the switch can be flipped back
+        // on without a restart; the gate is what stops sends meanwhile.
+        let reporting = start_error_reporting(
+            reporting_environment(&backend_origin),
+            ReportingProcess::Supervisor,
+            gates.error_reports.clone(),
+        );
         if reporting.is_some() {
-            diagnostics = diagnostics.with_sink(Box::new(BugsinkSink));
+            diagnostics =
+                diagnostics.with_sink(Box::new(BugsinkSink::new(gates.error_reports.clone())));
         }
         let diagnostics = Arc::new(diagnostics);
-        diagnostics.record(reporting_status());
+        diagnostics.record(reporting_status(&gates.error_reports));
+        if let Some(problem) = privacy_problem {
+            record_settings_problem(&diagnostics, "load_settings", &problem);
+        }
+        let usage = UsageQueue::default();
+        queue_startup_events(settings.as_ref(), &diagnostics, &usage);
+        update_state(&state, |snapshot| snapshot.privacy = privacy);
         let (shutdown, shutdown_receiver) = watch::channel(false);
         let (commands, command_receiver) = mpsc::unbounded_channel();
         let worker_state = Arc::clone(&state);
         let worker_diagnostics = Arc::clone(&diagnostics);
+        let usage_channel = UsageChannel::new(usage.clone(), gates.usage_data.clone());
         let thread = std::thread::spawn(move || {
             let runtime = match Runtime::new() {
                 Ok(runtime) => runtime,
@@ -110,6 +194,7 @@ impl ClientRuntime {
                 shutdown_receiver,
                 command_receiver,
                 backend_origin,
+                usage_channel,
             ));
         });
         Self {
@@ -117,6 +202,9 @@ impl ClientRuntime {
             diagnostics,
             log_directory,
             _reporting: reporting,
+            settings,
+            gates,
+            usage,
             commands,
             shutdown,
             thread,
@@ -172,6 +260,34 @@ impl ClientRuntime {
         {
             info!("Scout Client collector had already stopped");
         }
+    }
+
+    /// Change the two privacy switches.
+    ///
+    /// The gates close or open first, so an opt-out takes effect for the very
+    /// next report or event even if the choice cannot be written to disk; the
+    /// failure to persist is then shown to the user.
+    pub fn set_privacy_settings(&self, settings: PrivacySettings) {
+        self.gates.apply(settings);
+        update_state(&self.state, |snapshot| snapshot.privacy = settings);
+        let saved = self.settings.as_ref().map_or_else(
+            || Err("there is no settings folder to save to".to_owned()),
+            |store| store.save(settings).map_err(|error| error.to_string()),
+        );
+        if let Err(error) = saved {
+            set_error(
+                &self.state,
+                format!(
+                    "Could not save privacy settings; they apply until Scout restarts: {error}"
+                ),
+            );
+        }
+    }
+
+    /// Queue a product event; the collector sends it unless the user has
+    /// turned usage data off.
+    pub fn report_usage(&self, event: UsageEvent) {
+        self.usage.push(event);
     }
 
     /// Request graceful background shutdown.

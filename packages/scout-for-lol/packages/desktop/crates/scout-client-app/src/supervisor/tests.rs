@@ -3,6 +3,8 @@ use std::sync::{Arc, Mutex, PoisonError};
 use std::time::Duration;
 
 use scout_client_core::diagnostics::Diagnostics;
+use scout_client_core::settings::PrivacySettings;
+use scout_client_core::telemetry::{UsageEvent, WindowCrashCause, WindowCrashOutcome};
 use scout_client_runtime::instance::{InstanceLock, InstanceLockError};
 use scout_client_runtime::runtime::{GameflowPhase, PhaseReceiver, RuntimeState, StateReceiver};
 use tokio::sync::{mpsc, watch};
@@ -39,19 +41,29 @@ struct FakeCollector {
     phase: watch::Sender<GameflowPhase>,
     diagnostics: Arc<Diagnostics>,
     calls: Arc<Mutex<Vec<String>>>,
+    usage: Arc<Mutex<Vec<UsageEvent>>>,
 }
 
+type Collected = (
+    FakeCollector,
+    Arc<Mutex<Vec<String>>>,
+    Arc<Diagnostics>,
+    Arc<Mutex<Vec<UsageEvent>>>,
+);
+
 impl FakeCollector {
-    fn new() -> (Self, Arc<Mutex<Vec<String>>>, Arc<Diagnostics>) {
+    fn new() -> Collected {
         let calls = Arc::new(Mutex::new(Vec::new()));
+        let usage = Arc::new(Mutex::new(Vec::new()));
         let diagnostics = Arc::new(Diagnostics::in_memory());
         let collector = Self {
             state: watch::channel(RuntimeState::default()).0,
             phase: watch::channel(GameflowPhase::default()).0,
             diagnostics: Arc::clone(&diagnostics),
             calls: Arc::clone(&calls),
+            usage: Arc::clone(&usage),
         };
-        (collector, calls, diagnostics)
+        (collector, calls, diagnostics, usage)
     }
 
     fn call(&self, name: &str) {
@@ -84,6 +96,18 @@ impl Collector for FakeCollector {
     fn set_start_at_login(&self, enabled: bool) {
         self.call(&format!("start_at_login={enabled}"));
     }
+    fn set_privacy_settings(&self, settings: PrivacySettings) {
+        self.call(&format!(
+            "privacy=errors:{},usage:{}",
+            settings.send_error_reports, settings.send_usage_data
+        ));
+    }
+    fn report_usage(&self, event: UsageEvent) {
+        self.usage
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .push(event);
+    }
     fn stop(self) {
         self.call("stop");
     }
@@ -106,7 +130,7 @@ fn crash_details(diagnostics: &Diagnostics) -> Vec<String> {
 /// cleanly. `before` runs between the greeting and the wait.
 fn window_script(before: &str) -> String {
     format!(
-        r#"printf '{{"type":"hello","protocol":1}}\n'
+        r#"printf '{{"type":"hello","protocol":2}}\n'
 {before}
 while IFS= read -r line; do
   case "$line" in *'"type":"close"'*) exit 0 ;; esac
@@ -132,6 +156,7 @@ struct Harness {
     status: watch::Receiver<WindowStatus>,
     run: tokio::task::JoinHandle<SupervisorExit>,
     calls: Arc<Mutex<Vec<String>>>,
+    usage: Arc<Mutex<Vec<UsageEvent>>>,
     diagnostics: Arc<Diagnostics>,
     directory: PathBuf,
 }
@@ -143,7 +168,7 @@ fn start(
 ) -> Result<Harness, Box<dyn std::error::Error>> {
     let directory = scratch_directory()?;
     let lock = InstanceLock::acquire_in(&directory)?;
-    let (collector, calls, diagnostics) = FakeCollector::new();
+    let (collector, calls, diagnostics, usage) = FakeCollector::new();
     let (control, receiver) = mpsc::unbounded_channel();
     let supervisor = Supervisor::new(
         lock,
@@ -160,6 +185,7 @@ fn start(
         status,
         run,
         calls,
+        usage,
         diagnostics,
         directory,
     })
@@ -256,6 +282,73 @@ async fn quick_crashes_stop_relaunching_after_the_limit() -> TestResult {
     Ok(())
 }
 
+fn crash_events(usage: &Mutex<Vec<UsageEvent>>) -> Vec<UsageEvent> {
+    usage.lock().unwrap_or_else(PoisonError::into_inner).clone()
+}
+
+#[cfg(unix)]
+#[tokio::test]
+async fn window_crashes_become_bounded_usage_events() -> TestResult {
+    // Three quick exits: relaunched twice, then given up on.
+    let mut harness = start(sh("exit 3", &[]), true, true)?;
+    harness.wait_for(|status| status.given_up).await?;
+    let events = crash_events(&harness.usage);
+    let crash = |outcome| UsageEvent::WindowCrashed {
+        cause: WindowCrashCause::Exited,
+        outcome,
+    };
+    assert_eq!(
+        events,
+        [
+            crash(WindowCrashOutcome::Relaunched),
+            crash(WindowCrashOutcome::Relaunched),
+            crash(WindowCrashOutcome::GaveUp),
+        ]
+    );
+    harness.control.send(Control::Quit)?;
+    let (_exit, _calls, _diagnostics, directory) = harness.finish().await?;
+    std::fs::remove_dir_all(directory)?;
+    Ok(())
+}
+
+#[cfg(unix)]
+#[tokio::test]
+async fn a_protocol_mismatch_is_reported_with_its_own_cause() -> TestResult {
+    let script =
+        "printf '{\"type\":\"hello\",\"protocol\":999}\\n'; while read -r line; do :; done";
+    let mut harness = start(sh(script, &[]), true, true)?;
+    harness
+        .wait_for(|status| status.launches == 1 && !status.running)
+        .await?;
+    tokio::time::sleep(Duration::from_millis(200)).await;
+    assert_eq!(
+        crash_events(&harness.usage),
+        [UsageEvent::WindowCrashed {
+            cause: WindowCrashCause::ProtocolMismatch,
+            outcome: WindowCrashOutcome::NotRelaunched,
+        }]
+    );
+    harness.control.send(Control::Quit)?;
+    let (_exit, _calls, _diagnostics, directory) = harness.finish().await?;
+    std::fs::remove_dir_all(directory)?;
+    Ok(())
+}
+
+#[cfg(unix)]
+#[tokio::test]
+async fn the_window_can_change_the_privacy_switches() -> TestResult {
+    let script = window_script(
+        r#"printf '{"type":"set_privacy","send_error_reports":false,"send_usage_data":true}\n'
+printf '{"type":"quit"}\n'"#,
+    );
+    let harness = start(sh(&script, &[]), true, true)?;
+    let (exit, calls, _diagnostics, directory) = harness.finish().await?;
+    assert_eq!(exit, SupervisorExit::Quit);
+    assert_eq!(calls, ["privacy=errors:false,usage:true", "stop"]);
+    std::fs::remove_dir_all(directory)?;
+    Ok(())
+}
+
 #[cfg(unix)]
 #[tokio::test]
 async fn quick_crashes_without_a_tray_exit_instead_of_waiting() -> TestResult {
@@ -318,7 +411,7 @@ async fn closing_the_window_keeps_collecting_while_a_tray_can_reopen_it() -> Tes
     // The stub greets and exits cleanly, as a window does when its close
     // button is pressed.
     let mut harness = start(
-        sh("printf '{\"type\":\"hello\",\"protocol\":1}\\n'", &[]),
+        sh("printf '{\"type\":\"hello\",\"protocol\":2}\\n'", &[]),
         true,
         true,
     )?;
@@ -348,7 +441,7 @@ async fn closing_the_window_keeps_collecting_while_a_tray_can_reopen_it() -> Tes
 async fn closing_the_only_window_without_a_tray_quits() -> TestResult {
     // `--background` is ignored without a tray: nothing else could open it.
     let harness = start(
-        sh("printf '{\"type\":\"hello\",\"protocol\":1}\\n'", &[]),
+        sh("printf '{\"type\":\"hello\",\"protocol\":2}\\n'", &[]),
         false,
         false,
     )?;
@@ -414,7 +507,7 @@ async fn a_protocol_mismatch_is_not_relaunched() -> TestResult {
 #[cfg(unix)]
 #[tokio::test]
 async fn an_unknown_message_is_treated_as_a_crash() -> TestResult {
-    let script = r#"printf '{"type":"hello","protocol":1}\n{"type":"format_disk"}\n'; while read -r line; do :; done"#;
+    let script = r#"printf '{"type":"hello","protocol":2}\n{"type":"format_disk"}\n'; while read -r line; do :; done"#;
     let mut harness = start(sh(script, &[]), true, true)?;
     let status = harness.wait_for(|status| status.given_up).await?;
     assert_eq!(status.launches, MAX_QUICK_CRASHES);

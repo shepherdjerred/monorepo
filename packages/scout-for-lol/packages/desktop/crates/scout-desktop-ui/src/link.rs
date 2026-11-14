@@ -22,6 +22,9 @@ pub struct WindowState {
     pub state: StateSnapshot,
     /// The latest gameflow phase.
     pub phase: GameflowPhase,
+    /// Whether any snapshot has arrived, so a default snapshot is never
+    /// mistaken for the user's privacy choice.
+    pub state_received: bool,
 }
 
 /// What a message asks the window to do beyond re-rendering.
@@ -64,6 +67,7 @@ impl WindowState {
             }
             SupervisorMessage::State { state } => {
                 self.state = state;
+                self.state_received = true;
                 Effect::Render
             }
             SupervisorMessage::Phase { phase } => {

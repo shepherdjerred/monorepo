@@ -1,0 +1,18 @@
+{
+  "contractVersion": 1,
+  "path": "/api/scout-client/v1/desktop/events",
+  "appVersionMaxBytes": 64,
+  "commonProperties": {
+    "platform": ["windows", "macos", "linux", "other"]
+  },
+  "events": {
+    "app_started": {},
+    "device_paired": {},
+    "post_game_reported": {},
+    "update_applied": {},
+    "window_crashed": {
+      "cause": ["exited", "unresponsive", "protocol_mismatch", "launch_failed"],
+      "outcome": ["relaunched", "gave_up", "not_relaunched"]
+    }
+  }
+}
