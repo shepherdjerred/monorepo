@@ -59,7 +59,14 @@ async function read<T>(
     body === undefined ? {} : { body, key: crypto.randomUUID() },
   );
   const payload: unknown = await response.json();
-  const diagnostic = JSON.stringify({ route, body: payload });
+  const diagnostic = JSON.stringify({
+    route,
+    body: payload,
+    errors: http.errors.map((error) => ({
+      name: error.name,
+      message: error.message,
+    })),
+  });
   expect(response.status, diagnostic).toBeGreaterThanOrEqual(200);
   expect(response.status, diagnostic).toBeLessThan(300);
   return schema.parse(payload);
@@ -78,6 +85,83 @@ async function login(client: SystemHttpBrowser) {
     {},
   );
   return result.user;
+}
+async function approveLibraryScope(
+  review: z.infer<typeof BundleReviewProtocolSchema>,
+  selected: z.infer<typeof BundleReviewProtocolSchema>["selection"],
+) {
+  return read(
+    browser,
+    `/admin/migration/bundles/${review.id}/review`,
+    CommandResultSchema,
+    {
+      action: "approve",
+      expectedVersion: review.version,
+      bundleHash: review.manifest.bundleHash,
+      reportHash: review.report.reportHash,
+      recoveryEpoch: review.recoveryEpoch,
+      runtimeVersion: review.runtimeVersion,
+      acknowledgeNoOwnershipTransfer: true,
+      selected,
+    },
+  );
+}
+async function rejectUnapprovedFile(
+  created: z.infer<typeof BundleReviewProtocolSchema>,
+  unrelatedId: string,
+  provenanceKey: string,
+) {
+  const unrelatedEntries = created.report.entries.filter(
+    (entry) => entry.kind === "media" && entry.mediaIds.includes(unrelatedId),
+  );
+  expect(unrelatedEntries).toHaveLength(1);
+  expect(unrelatedEntries[0]?.state).toBe("adoptable_evidence_ready");
+  await approveLibraryScope(
+    created,
+    unrelatedEntries.map((entry) => ({
+      provenanceKey: entry.provenanceKey,
+      evidenceHash: entry.observationHash,
+    })),
+  );
+  const unrelatedReview = await read(
+    browser,
+    `/admin/migration/bundles/${created.id}`,
+    BundleReviewProtocolSchema,
+  );
+  const rejectedPreview = await browser.request(
+    `/api/v1/admin/migration/personal/passive?${new URLSearchParams([
+      ["bundleReviewId", created.id],
+      ["bundleReviewVersion", String(unrelatedReview.version)],
+      ["provenanceKey", provenanceKey],
+    ]).toString()}`,
+  );
+  expect(rejectedPreview.status).toBe(409);
+  expect(await rejectedPreview.json()).toMatchObject({
+    error: { code: "handoff_scope_expansion_requires_review" },
+  });
+  return unrelatedReview;
+}
+function bindLibraryClient() {
+  const originalFetch = globalThis.fetch;
+  vi.stubGlobal(
+    "fetch",
+    async (input: string | URL | Request, init?: RequestInit) => {
+      if (typeof input !== "string" || !input.startsWith("/api/v1/"))
+        return originalFetch(input, init);
+      const response = await browser.request(input);
+      const diagnostic = JSON.stringify({
+        route: input,
+        body: response.ok ? null : await response.clone().json(),
+        errors: http.errors.map((error) => ({
+          name: error.name,
+          message: error.message,
+        })),
+      });
+      expect(response.status, diagnostic).toBeGreaterThanOrEqual(200);
+      expect(response.status, diagnostic).toBeLessThan(300);
+      return response;
+    },
+  );
 }
 beforeAll(async () => {
   cluster = await startMediaTestPostgres();
@@ -120,6 +204,13 @@ test("the owner batch producer prepares actual library-only HTTP captures and qu
     tmdb: Number(fixture.network.media.tmdbId),
   });
   media.profileSourceId = String(resolved.profile.id);
+  const unrelated = await cluster.database.mediaItem.create({
+    data: {
+      kind: "movie",
+      title: "Unrelated review target",
+      tmdbId: 2_000_000_001,
+    },
+  });
   const movie = await read(
     browser,
     "/admin/migration",
@@ -127,6 +218,7 @@ test("the owner batch producer prepares actual library-only HTTP captures and qu
     {
       snapshot: captureFixture("radarr", [
         media,
+        mediaFixture("unrelated", "movie", { tmdb: 2_000_000_001 }),
         {
           kind: "file",
           sourceId: "file1",
@@ -191,21 +283,12 @@ test("the owner batch producer prepares actual library-only HTTP captures and qu
   expect(selected.map((entry) => entry.provenanceKey)).not.toContain(
     capturedFiles[0]?.provenanceKey,
   );
-  await read(
-    browser,
-    `/admin/migration/bundles/${created.id}/review`,
-    CommandResultSchema,
-    {
-      action: "approve",
-      expectedVersion: created.version,
-      bundleHash: created.manifest.bundleHash,
-      reportHash: created.report.reportHash,
-      recoveryEpoch: created.recoveryEpoch,
-      runtimeVersion: created.runtimeVersion,
-      acknowledgeNoOwnershipTransfer: true,
-      selected,
-    },
+  const unrelatedReview = await rejectUnapprovedFile(
+    created,
+    unrelated.id,
+    z.string().parse(capturedFiles[0]?.provenanceKey),
   );
+  await approveLibraryScope(unrelatedReview, selected);
   const review = await read(
     browser,
     `/admin/migration/bundles/${created.id}`,
@@ -217,12 +300,7 @@ test("the owner batch producer prepares actual library-only HTTP captures and qu
   const batch = libraryBatchEntries(review, keys);
   const profiles = await read(browser, "/profiles", ProfileListSchema);
   const groups = libraryProfileGroups(review, batch.media, profiles);
-  const originalFetch = globalThis.fetch;
-  vi.stubGlobal("fetch", (input: string | URL | Request, init?: RequestInit) =>
-    typeof input === "string" && input.startsWith("/api/v1/")
-      ? browser.request(input)
-      : originalFetch(input, init),
-  );
+  bindLibraryClient();
   const body = await prepareLibraryBatch(
     review,
     { files: keys, profiles: {}, cuts: {}, chinese: {} },

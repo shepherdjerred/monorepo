@@ -13,6 +13,7 @@ import { ExternalLibraryRegistrationSchema } from "#shared/external-library/cont
 import { canonicalJson, snapshotHash } from "#migration/profile-import.ts";
 import { projectHandoffFile } from "#infrastructure/handoff/scope.ts";
 import { validatePassiveRegistration } from "#infrastructure/handoff/passive-registration.ts";
+import { selectedHandoffEntries } from "#infrastructure/handoff/selection.ts";
 
 /** Read-only producer for explicit owner approvals, using the same source/path
  * projection that preparation later rechecks under physical ownership locks. */
@@ -50,15 +51,20 @@ export async function previewPassiveRegistrations(
         entry.sourceRecord.kind !== "file" ||
         entry.confidence !== "exact" ||
         snapshotHash(z.json().parse(entry.sourceRecord)) !==
-          entry.observationHash ||
-        !approved.some(
-          (item) =>
-            item.provenanceKey === entry.provenanceKey &&
-            item.evidenceHash === entry.observationHash,
-        ),
+          entry.observationHash,
     )
   )
     throw new Error("Passive preview requires exact selected file evidence");
+  // File rows remain protected pending physical proof. Authorize their exact
+  // canonical coverage through the same reviewed ancestry as handoff prepare.
+  await selectedHandoffEntries(tx, {
+    report,
+    approved,
+    selected: entries.map((entry) => ({
+      provenanceKey: entry.provenanceKey,
+      evidenceHash: entry.observationHash,
+    })),
+  });
   const media = await tx.mediaItem.findMany({
     where: {
       id: { in: [...new Set(entries.flatMap((entry) => entry.mediaIds))] },
