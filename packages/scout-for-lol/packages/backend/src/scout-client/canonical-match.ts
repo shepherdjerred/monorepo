@@ -149,6 +149,11 @@ const TimelineBundleSchema = z.object({
   timeline: z.unknown(),
 });
 
+/** Whether an observation's payload embeds a timeline a match could use. */
+export function carriesClientTimeline(payload: unknown): boolean {
+  return TimelineBundleSchema.safeParse(embeddedPayload(payload)).success;
+}
+
 /**
  * Where a match's timeline comes from. A match whose canonical payload is the
  * client's exists because Riot can't see the game, so its timeline comes from
