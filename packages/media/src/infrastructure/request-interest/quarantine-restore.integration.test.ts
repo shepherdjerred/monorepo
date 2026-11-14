@@ -219,7 +219,9 @@ test.each(["default", "directors_cut"] as const)(
       edition,
     });
     expect(command.kind).toBe("restore_movie_edition_v4");
-    const input = MovieOperationV4Schema.parse(command.payload);
+    const input = MovieOperationV4Schema.parse(
+      z.object(MovieOperationV4Schema.shape).parse(command.payload),
+    );
     expect(input.scope).toEqual(f.scope);
     const current = await f.db.mediaRequest.findUniqueOrThrow({
       where: { id: before.id },
