@@ -95,6 +95,33 @@ describe("Dare eligibility by coverage", () => {
     expect(dareEndOfGameEligibility(compiled)).toEqual({ kind: "eligible" });
   });
 
+  test("a CTE that renames a stated column to a null column's name stays eligible", async () => {
+    const compiled = await compileDareSql({
+      queryText: `WITH qualifying_game AS (
+        SELECT match_id, game_end_at, team_position AS role, win AS matched FROM T1
+      )
+      SELECT EXISTS (SELECT 1 FROM qualifying_game WHERE matched AND role = 'MIDDLE') AS achieved`,
+      targetKeys: ["T1"],
+    });
+
+    expect(dareEndOfGameEligibility(compiled)).toEqual({ kind: "eligible" });
+  });
+
+  test("a CTE that renames a null column is ineligible where it reads it", async () => {
+    const compiled = await compileDareSql({
+      queryText: `WITH qualifying_game AS (
+        SELECT match_id, game_end_at, role AS position, win AS matched FROM T1
+      )
+      SELECT EXISTS (SELECT 1 FROM qualifying_game WHERE matched AND position = 'MIDDLE') AS achieved`,
+      targetKeys: ["T1"],
+    });
+
+    expect(dareEndOfGameEligibility(compiled)).toMatchObject({
+      kind: "ineligible",
+      references: ["role"],
+    });
+  });
+
   test("coverage decides: a complete game is eligible for a contract an end-of-game game is not", async () => {
     const compiled = await playerContract("participant_id = 1");
 

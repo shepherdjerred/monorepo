@@ -1,5 +1,5 @@
 import {
-  dareSqlColumnOrigin,
+  dareSqlColumnReadsLakeRelation,
   dareSqlQueryScope,
   type DareSqlScope,
 } from "#src/dares/sql/dare-sql-column-origin.ts";
@@ -62,11 +62,13 @@ function collectColumnReferences(
   if (inner !== null && stringValue(object["class"]) === "COLUMN_REF") {
     const names = arrayValue(object["column_names"]);
     const name = stringValue(names.at(-1))?.toLowerCase();
-    // A CTE's own column that happens to share a lake name is not the lake's.
+    // Only a read of the lake relation itself counts. A CTE's column that
+    // shares a lake name, or renames another column to it, is not the lake's;
+    // what the CTE reads is audited in its own body.
     if (
       name !== undefined &&
       NULLABLE_COLUMNS.has(name) &&
-      dareSqlColumnOrigin(inner, names) !== "derived"
+      dareSqlColumnReadsLakeRelation(inner, names)
     ) {
       references.add(name);
     }

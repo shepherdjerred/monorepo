@@ -293,3 +293,59 @@ export function dareSqlColumnOrigin(
 ): DareSqlColumnOrigin {
   return columnOrigin(scope, columnNames, new Set());
 }
+
+/**
+ * Whether a column of one scope's unqualified name is a lake relation's own:
+ * `true` or `false` when this scope decides, `null` to look in the parent.
+ */
+function unqualifiedReadsLake(
+  scope: DareSqlScope,
+  column: string,
+): boolean | null {
+  for (const entry of scope.relations) {
+    if (entry.relation.kind === "lake") continue;
+    const origin = derivedOrigin(
+      entry.relation.definition,
+      scope,
+      column,
+      new Set(),
+    );
+    if (origin !== "absent") return false;
+  }
+  return scope.relations.some((entry) => entry.relation.kind === "lake")
+    ? true
+    : null;
+}
+
+/**
+ * Whether a `COLUMN_REF` names a column of a lake relation itself, not one a
+ * derived relation publishes. A derived relation that forwards or renames a lake
+ * column reads it in its own body, where this answers true for the underlying
+ * name; callers that audit lake reads take each read there, once.
+ */
+export function dareSqlColumnReadsLakeRelation(
+  scope: DareSqlScope,
+  columnNames: readonly JsonValue[],
+): boolean {
+  const names = columnNames
+    .map((part) => lowerString(part))
+    .filter((part) => part !== null);
+  const column = names.at(-1);
+  if (column === undefined || names.length !== columnNames.length) {
+    return false;
+  }
+  const qualifier = names.at(-2);
+  let current: DareSqlScope | null = scope;
+  while (current !== null) {
+    const entry =
+      qualifier === undefined
+        ? undefined
+        : current.relations.find((candidate) => candidate.name === qualifier);
+    if (entry !== undefined) return entry.relation.kind === "lake";
+    const decided =
+      qualifier === undefined ? unqualifiedReadsLake(current, column) : null;
+    if (decided !== null) return decided;
+    current = current.parent;
+  }
+  return false;
+}
