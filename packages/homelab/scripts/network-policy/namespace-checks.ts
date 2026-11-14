@@ -6,7 +6,8 @@ import {
   type Probe,
   type UrlCheck,
 } from "./namespace-urls.ts";
-import { stageLabel, type Stage } from "./staging-policy.ts";
+import { effectiveStageLabel, type BreakGlassState } from "./break-glass.ts";
+import type { Stage } from "./staging-policy.ts";
 
 /**
  * - `pass` / `fail`: the check ran.
@@ -34,7 +35,10 @@ export type CheckResult = {
 
 export type NamespaceReport = {
   namespace: string;
+  /** The stage of the staging policy. */
   stage: Stage;
+  /** A break-glass policy overrides the stage while it exists. */
+  breakGlass: BreakGlassState;
   ok: boolean;
   checks: CheckResult[];
 };
@@ -61,21 +65,32 @@ function problems(items: readonly Item[]): string[] {
     .map((item) => item.detail);
 }
 
+export type StageExpectation = {
+  /** Fail when the staging policy's stage differs. */
+  expected: "open" | "enforced" | undefined;
+  /** Without this, a break-glass policy fails the check so it cannot hide. */
+  allowBreakGlass: boolean;
+};
+
 export function evaluateStage(
+  namespace: string,
   stage: Stage,
-  expected: "open" | "enforced" | undefined,
+  breakGlass: BreakGlassState,
+  { expected, allowBreakGlass }: StageExpectation,
 ): CheckResult {
-  const failed =
-    stage === "unrecognized" || (expected !== undefined && stage !== expected);
-  const expectation =
-    expected === undefined || stage === expected
-      ? ""
-      : `, expected ${expected}`;
+  const unexpected = expected !== undefined && stage !== expected;
+  const forgotten = breakGlass !== "none" && !allowBreakGlass;
+  const staging = breakGlass === "open" ? `; staging policy: ${stage}` : "";
   return {
     check: "stage",
-    status: failed ? "fail" : "info",
-    summary: `${stageLabel(stage)}${expectation}`,
-    details: [],
+    status:
+      stage === "unrecognized" || unexpected || forgotten ? "fail" : "info",
+    summary: `${effectiveStageLabel(stage, breakGlass)}${staging}${unexpected ? `, expected ${expected}` : ""}`,
+    details: forgotten
+      ? [
+          `a break-glass policy is live: reconcile the stage map, then run netpol:open ${namespace} --close --apply (or pass --allow-break-glass)`,
+        ]
+      : [],
   };
 }
 
@@ -434,11 +449,13 @@ export function evaluateDenials(
 export function namespaceReport(
   namespace: string,
   stage: Stage,
+  breakGlass: BreakGlassState,
   checks: CheckResult[],
 ): NamespaceReport {
   return {
     namespace,
     stage,
+    breakGlass,
     ok: checks.every((check) => check.status !== "fail"),
     checks,
   };

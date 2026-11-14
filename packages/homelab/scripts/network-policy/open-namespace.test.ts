@@ -1,27 +1,45 @@
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
-import { fakeRunner, items, otherPolicy, stagingPolicy } from "./fixtures.ts";
+import {
+  breakGlassPolicy,
+  fakeRunner,
+  items,
+  otherPolicy,
+  stagingPolicy,
+  type Call,
+} from "./fixtures.ts";
 import {
   APPLY_COMMAND,
+  deleteCommand,
   parseOpenArguments,
+  planClose,
   planOpen,
   reconcileInstruction,
   runOpen,
 } from "./open-namespace.ts";
+import type { NetworkPolicy } from "./staging-policy.ts";
 
 const AppliedSchema = z.object({
   kind: z.string(),
   metadata: z.object({ name: z.string(), namespace: z.string() }),
 });
 
+const NOW = new Date("2026-11-13T12:00:00.000Z");
+const RECORD = { reason: "db down", operator: "admin@torvalds", at: NOW };
+
 describe("arguments", () => {
   test("a dry run is the default", () => {
     expect(parseOpenArguments(["tracker"])).toEqual({
       target: { namespace: "tracker" },
+      mode: "open",
       apply: false,
       reason: undefined,
     });
     expect(parseOpenArguments(["--all"]).target).toBe("all");
+    expect(parseOpenArguments(["tracker", "--close"])).toMatchObject({
+      mode: "close",
+      apply: false,
+    });
   });
 
   test("--apply is refused without a reason", () => {
@@ -37,9 +55,22 @@ describe("arguments", () => {
       parseOpenArguments(["tracker", "--apply", "--reason", " db down "]),
     ).toEqual({
       target: { namespace: "tracker" },
+      mode: "open",
       apply: true,
       reason: "db down",
     });
+  });
+
+  test("--close --apply needs no reason and takes none", () => {
+    expect(parseOpenArguments(["--all", "--close", "--apply"])).toEqual({
+      target: "all",
+      mode: "close",
+      apply: true,
+      reason: undefined,
+    });
+    expect(() =>
+      parseOpenArguments(["tracker", "--close", "--reason", "x"]),
+    ).toThrow("--close takes no --reason");
   });
 
   test("refuses no target, two targets, bad names and unknown flags", () => {
@@ -56,165 +87,322 @@ describe("arguments", () => {
 });
 
 const policies = [
-  stagingPolicy("tracker", "enforced", "tracker"),
+  stagingPolicy("tracker", "enforced"),
   otherPolicy("tracker", "tracker-app-netpol"),
-  stagingPolicy("media", "open", "media"),
+  stagingPolicy("media", "open"),
   otherPolicy("flipt", "flipt-netpol"),
 ];
 
-describe("plan", () => {
-  test("updates an enforced namespace, creates a missing policy, leaves an open one", () => {
-    const plans = planOpen(["flipt", "media", "tracker"], policies, undefined);
+describe("open plan", () => {
+  test("creates a break-glass policy per namespace and never names the staging policy", () => {
+    const plans = planOpen(
+      ["flipt", "media", "tracker"],
+      [...policies, breakGlassPolicy("media")],
+      RECORD,
+    );
     expect(
-      plans.map((plan) => [plan.namespace, plan.before, plan.action]),
+      plans.map((plan) => [
+        plan.namespace,
+        plan.staging,
+        plan.before,
+        plan.action,
+        plan.manifest.metadata.name,
+      ]),
     ).toEqual([
-      ["flipt", "none", "create"],
-      ["media", "open", "unchanged"],
-      ["tracker", "enforced", "update"],
+      ["flipt", "none", "none", "create", "enforcement-break-glass-flipt"],
+      ["media", "open", "open", "refresh", "enforcement-break-glass-media"],
+      [
+        "tracker",
+        "enforced",
+        "none",
+        "create",
+        "enforcement-break-glass-tracker",
+      ],
     ]);
-    expect(plans.map((plan) => plan.manifest.metadata.name)).toEqual([
-      "enforcement-staging-flipt",
-      "enforcement-staging-media",
-      "enforcement-staging-tracker",
-    ]);
-    expect(plans[2]?.application).toBe("tracker");
   });
 
-  test("the reconcile instruction names the stage map entry", () => {
+  test("the reconcile instruction names the stage map entry and the close", () => {
     const text = reconcileInstruction(["tracker"]);
     expect(text).toContain(
       "packages/homelab/src/cdk8s/src/fleet-policy/enforcement-stages.ts",
     );
     expect(text).toContain('"tracker": "open"');
+    expect(text).toContain("bun run netpol:open tracker --close --apply");
+    expect(reconcileInstruction(["flipt", "tracker"])).toContain(
+      "bun run netpol:open --all --close --apply",
+    );
     expect(reconcileInstruction([])).toContain("nothing to reconcile");
   });
 });
 
-function cluster(after = policies) {
-  let applied = false;
+/** A cluster whose policies become `after` once a write has run. */
+function cluster(before: NetworkPolicy[], after: NetworkPolicy[] = before) {
+  let written = false;
+  const write = () => {
+    written = true;
+    return { stdout: "ok" };
+  };
   return fakeRunner([
-    ["get networkpolicies", () => items(...(applied ? after : policies))],
+    ["get networkpolicies", () => items(...(written ? after : before))],
     ["get namespace", { stdout: "{}" }],
-    [
-      "kubectl apply",
-      () => {
-        applied = true;
-        return { stdout: "applied" };
-      },
-    ],
+    ["config current-context", { stdout: "admin@torvalds\n" }],
+    ["kubectl apply", write],
+    [" delete ", write],
   ]);
 }
 
-describe("dry run", () => {
-  test("prints the manifest and the change, and only reads", async () => {
-    const { run, calls } = cluster();
-    const result = await runOpen(parseOpenArguments(["tracker"]), run);
+function writes(calls: readonly Call[]): Call[] {
+  return calls.filter(
+    ({ command }) => command.includes("apply") || command.includes("delete"),
+  );
+}
+
+function dependencies(run: ReturnType<typeof cluster>["run"]) {
+  return { run, now: () => NOW };
+}
+
+describe("open", () => {
+  test("the dry run prints the manifest and the change, and only reads", async () => {
+    const { run, calls } = cluster(policies);
+    const result = await runOpen(
+      parseOpenArguments(["tracker"]),
+      dependencies(run),
+    );
     expect(result.exitCode).toBe(0);
     expect(result.output).toContain("DRY RUN: nothing is changed.");
     expect(result.output).toContain(
-      "Namespace tracker: update enforcement-staging-tracker: enforced -> open (rendered by ArgoCD Application tracker)",
+      "Namespace tracker: create enforcement-break-glass-tracker (staging policy: enforced; break-glass before: none)",
     );
-    expect(result.output).toContain("  name: enforcement-staging-tracker");
+    expect(result.output).toContain("  name: enforcement-break-glass-tracker");
+    expect(result.output).toContain('homelab.sjer.red/break-glass: "true"');
+    expect(result.output).toContain(
+      "homelab.sjer.red/break-glass-operator: admin@torvalds",
+    );
+    expect(result.output).toContain(
+      "homelab.sjer.red/break-glass-at: 2026-11-13T12:00:00.000Z",
+    );
     expect(result.output).toContain("  podSelector: {}");
-    expect(result.output).toContain('"tracker": "open"');
-    expect(calls.map(({ command }) => command[1])).toEqual(["get", "get"]);
+    expect(result.output).not.toContain("enforcement-staging-tracker");
+    expect(writes(calls)).toEqual([]);
   });
 
   test("a namespace that does not exist is refused", async () => {
     const { run } = fakeRunner([["get networkpolicies", items(...policies)]]);
-    await expect(runOpen(parseOpenArguments(["typo"]), run)).rejects.toThrow(
-      "get namespace typo",
-    );
+    await expect(
+      runOpen(parseOpenArguments(["typo"]), dependencies(run)),
+    ).rejects.toThrow("get namespace typo");
   });
-});
 
-describe("apply", () => {
-  const opened = [
-    stagingPolicy("tracker", "open", "tracker"),
-    stagingPolicy("media", "open", "media"),
-    stagingPolicy("flipt", "open"),
-  ];
-
-  test("applies only the staging policy, server-side, and reads it back", async () => {
-    const { run, calls } = cluster(opened);
+  test("applies only the break-glass policy, without forcing, and reads it back", async () => {
+    const { run, calls } = cluster(policies, [
+      ...policies,
+      breakGlassPolicy("tracker"),
+    ]);
     const result = await runOpen(
       parseOpenArguments(["tracker", "--apply", "--reason", "db down"]),
-      run,
+      dependencies(run),
     );
     expect(result.exitCode).toBe(0);
     expect(result.output).toContain("BREAK-GLASS APPLY, reason: db down");
     expect(result.output).toContain(
-      "Namespace tracker: before enforced, after open",
+      "Namespace tracker: break-glass before none, after open",
     );
-    expect(result.output).toContain('"tracker": "open"');
-    const writes = calls.filter(({ command }) => command[1] !== "get");
-    expect(writes).toHaveLength(1);
-    expect(writes[0]?.command).toEqual([
+    expect(result.output).toContain("netpol:open tracker --close --apply");
+    const [write, ...others] = writes(calls);
+    expect(others).toEqual([]);
+    expect(write?.command).toEqual([
       "kubectl",
       "apply",
       "--server-side",
-      "--force-conflicts",
       "--field-manager=network-policy-break-glass",
       "-f",
       "-",
     ]);
-    expect(JSON.parse(writes[0]?.stdin ?? "")).toMatchObject({
+    expect(JSON.parse(write?.stdin ?? "")).toMatchObject({
       kind: "NetworkPolicy",
       metadata: {
-        name: "enforcement-staging-tracker",
+        name: "enforcement-break-glass-tracker",
         namespace: "tracker",
-        annotations: { "homelab.sjer.red/break-glass-reason": "db down" },
+        labels: { "homelab.sjer.red/break-glass": "true" },
+        annotations: {
+          "homelab.sjer.red/break-glass-reason": "db down",
+          "homelab.sjer.red/break-glass-operator": "admin@torvalds",
+          "homelab.sjer.red/break-glass-at": "2026-11-13T12:00:00.000Z",
+        },
       },
-      spec: { podSelector: {} },
+      spec: { podSelector: {}, ingress: [{}], egress: [{}] },
     });
   });
 
-  test("--all opens every namespace with policies and never touches another policy", async () => {
-    const { run, calls } = cluster(opened);
+  test("--all opens every namespace with policies and writes nothing else", async () => {
+    const opened = ["flipt", "media", "tracker"].map((namespace) =>
+      breakGlassPolicy(namespace),
+    );
+    const { run, calls } = cluster(policies, [...policies, ...opened]);
     const result = await runOpen(
       parseOpenArguments(["--all", "--apply", "--reason", "outage"]),
-      run,
+      dependencies(run),
     );
     expect(result.exitCode).toBe(0);
-    expect(result.output).toContain(
-      "Namespace media: already open, nothing to apply",
-    );
-    const writes = calls.filter(({ command }) => command[1] !== "get");
-    expect(writes.map(({ command }) => command)).toEqual([
+    expect(writes(calls).map(({ command }) => command)).toEqual([
+      [...APPLY_COMMAND],
       [...APPLY_COMMAND],
       [...APPLY_COMMAND],
     ]);
     expect(
-      writes.map(({ stdin = "" }) => {
+      writes(calls).map(({ stdin = "" }) => {
         const { kind, metadata } = AppliedSchema.parse(JSON.parse(stdin));
         return `${kind} ${metadata.namespace}/${metadata.name}`;
       }),
     ).toEqual([
-      "NetworkPolicy flipt/enforcement-staging-flipt",
-      "NetworkPolicy tracker/enforcement-staging-tracker",
+      "NetworkPolicy flipt/enforcement-break-glass-flipt",
+      "NetworkPolicy media/enforcement-break-glass-media",
+      "NetworkPolicy tracker/enforcement-break-glass-tracker",
     ]);
   });
 
-  test("a failed apply, or a policy still closed afterwards, exits non-zero", async () => {
-    const stillClosed = await runOpen(
+  test("a failed apply, or no open policy afterwards, exits non-zero", async () => {
+    const missing = await runOpen(
       parseOpenArguments(["tracker", "--apply", "--reason", "db down"]),
-      cluster(policies).run,
+      dependencies(cluster(policies).run),
     );
-    expect(stillClosed.exitCode).toBe(1);
-    expect(stillClosed.output).toContain(
-      "after enforced FAILED: the policy is not open after the apply",
+    expect(missing.exitCode).toBe(1);
+    expect(missing.output).toContain(
+      "after none FAILED: no open break-glass policy after the apply",
     );
     const { run } = fakeRunner([
       ["get networkpolicies", items(...policies)],
       ["get namespace", { stdout: "{}" }],
+      ["config current-context", { stdout: "admin@torvalds" }],
       ["kubectl apply", { exitCode: 1, stderr: "forbidden" }],
     ]);
     const refused = await runOpen(
       parseOpenArguments(["tracker", "--apply", "--reason", "db down"]),
-      run,
+      dependencies(run),
     );
     expect(refused.exitCode).toBe(1);
     expect(refused.output).toContain("FAILED: kubectl apply");
     expect(refused.output).toContain("forbidden");
+  });
+});
+
+const broken = [
+  ...policies,
+  breakGlassPolicy("tracker"),
+  breakGlassPolicy("media", { name: "plex" }),
+  breakGlassPolicy("flipt", { labelled: false }),
+];
+
+describe("close", () => {
+  test("the plan deletes only the labelled policy with the expected name", () => {
+    expect(planClose(["argocd", "flipt", "media", "tracker"], broken)).toEqual([
+      { namespace: "argocd", staging: "none", deletable: false, refused: [] },
+      {
+        namespace: "flipt",
+        staging: "none",
+        deletable: false,
+        refused: [
+          "REFUSED flipt/enforcement-break-glass-flipt: has the break-glass name but not the label homelab.sjer.red/break-glass=true",
+        ],
+      },
+      {
+        namespace: "media",
+        staging: "open",
+        deletable: false,
+        refused: [
+          "REFUSED media/plex: carries the break-glass label but is not named enforcement-break-glass-media",
+        ],
+      },
+      {
+        namespace: "tracker",
+        staging: "enforced",
+        deletable: true,
+        refused: [],
+      },
+    ]);
+  });
+
+  test("the delete is filtered by label and name on the server", () => {
+    expect(deleteCommand("tracker")).toEqual([
+      "kubectl",
+      "--namespace",
+      "tracker",
+      "delete",
+      "networkpolicies.networking.k8s.io",
+      "--selector",
+      "homelab.sjer.red/break-glass=true",
+      "--field-selector",
+      "metadata.name=enforcement-break-glass-tracker",
+    ]);
+  });
+
+  test("the dry run says what would go and what governs afterwards, and only reads", async () => {
+    const { run, calls } = cluster(broken);
+    const result = await runOpen(
+      parseOpenArguments(["tracker", "--close"]),
+      dependencies(run),
+    );
+    expect(result.exitCode).toBe(0);
+    expect(result.output).toContain("DRY RUN: nothing is changed.");
+    expect(result.output).toContain(
+      "Namespace tracker: would delete tracker/enforcement-break-glass-tracker; the namespace is then governed by its staging policy: enforced",
+    );
+    expect(writes(calls)).toEqual([]);
+    const none = await runOpen(
+      parseOpenArguments(["argocd", "--close"]),
+      dependencies(cluster(broken).run),
+    );
+    expect(none.output).toContain(
+      "Namespace argocd: no break-glass policy to delete",
+    );
+  });
+
+  test("--all --apply deletes each real break-glass policy and refuses the rest", async () => {
+    const { run, calls } = cluster(
+      broken,
+      broken.filter(
+        (policy) => policy.metadata.name !== "enforcement-break-glass-tracker",
+      ),
+    );
+    const result = await runOpen(
+      parseOpenArguments(["--all", "--close", "--apply"]),
+      dependencies(run),
+    );
+    expect(writes(calls).map(({ command }) => command)).toEqual([
+      deleteCommand("tracker"),
+    ]);
+    expect(result.output).toContain(
+      "Namespace tracker: deleted tracker/enforcement-break-glass-tracker",
+    );
+    expect(result.output).toContain("REFUSED media/plex");
+    expect(result.output).toContain(
+      "REFUSED flipt/enforcement-break-glass-flipt",
+    );
+    // A refusal is not a silent success.
+    expect(result.exitCode).toBe(1);
+  });
+
+  test("a clean close exits zero; a policy that survives does not", async () => {
+    const live = [...policies, breakGlassPolicy("tracker")];
+    const clean = await runOpen(
+      parseOpenArguments(["tracker", "--close", "--apply"]),
+      dependencies(cluster(live, policies).run),
+    );
+    expect(clean.exitCode).toBe(0);
+    const stuck = await runOpen(
+      parseOpenArguments(["tracker", "--close", "--apply"]),
+      dependencies(cluster(live).run),
+    );
+    expect(stuck.exitCode).toBe(1);
+    expect(stuck.output).toContain("FAILED tracker: the policy still exists");
+  });
+
+  test("with nothing to close it says so", async () => {
+    const result = await runOpen(
+      parseOpenArguments(["--all", "--close", "--apply"]),
+      dependencies(cluster(policies).run),
+    );
+    expect(result.exitCode).toBe(0);
+    expect(result.output).toContain("No break-glass policy exists.");
   });
 });

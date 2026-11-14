@@ -7,8 +7,9 @@
  *   bun scripts/network-policy/check-namespace.ts --all-staged [--json]
  *   bun scripts/network-policy/check-namespace.ts --coverage [--allow-unstaged <name-or-prefix>]... [--json]
  *
- * Flags: `--since-minutes <n>` (restart and denial window, default 10) and
- * `--expect-stage open|enforced` (fail when the live stage differs).
+ * Flags: `--since-minutes <n>` (restart and denial window, default 10),
+ * `--expect-stage open|enforced` (fail when the live stage differs) and
+ * `--allow-break-glass` (a live break-glass policy otherwise fails the gate).
  * Exits non-zero when any check of any namespace fails.
  *
  * `--coverage` is the pre-switch gate: it fails while any namespace has
@@ -17,6 +18,7 @@
 import { parseArgs } from "node:util";
 import { z } from "zod";
 import { platformModel, publicHostnames } from "#platform-model";
+import { breakGlassNamespaces, breakGlassState } from "./break-glass.ts";
 import {
   commandFailure,
   kubectlJson,
@@ -77,6 +79,7 @@ export type CheckOptions = {
   json: boolean;
   sinceMinutes: number;
   expectStage: "open" | "enforced" | undefined;
+  allowBreakGlass: boolean;
 };
 
 const OptionsSchema = z.object({
@@ -88,6 +91,7 @@ const OptionsSchema = z.object({
     .default([]),
   "since-minutes": z.coerce.number().int().positive().default(10),
   "expect-stage": z.enum(["open", "enforced"]).optional(),
+  "allow-break-glass": z.boolean().default(false),
 });
 
 export function parseCheckArguments(argv: readonly string[]): CheckOptions {
@@ -101,6 +105,7 @@ export function parseCheckArguments(argv: readonly string[]): CheckOptions {
       "allow-unstaged": { type: "string", multiple: true },
       "since-minutes": { type: "string" },
       "expect-stage": { type: "string" },
+      "allow-break-glass": { type: "boolean" },
     },
   });
   const options = OptionsSchema.parse(values);
@@ -113,7 +118,7 @@ export function parseCheckArguments(argv: readonly string[]): CheckOptions {
   const strayAllow = !options.coverage && options["allow-unstaged"].length > 0;
   if (targets !== 1 || strayAllow || extra.length > 0) {
     throw new Error(
-      "Usage: check-namespace.ts <namespace>|--all-staged [--json] [--since-minutes <n>] [--expect-stage open|enforced]\n" +
+      "Usage: check-namespace.ts <namespace>|--all-staged [--json] [--since-minutes <n>] [--expect-stage open|enforced] [--allow-break-glass]\n" +
         "       check-namespace.ts --coverage [--allow-unstaged <name-or-prefix>]... [--json]",
     );
   }
@@ -127,6 +132,7 @@ export function parseCheckArguments(argv: readonly string[]): CheckOptions {
     json: options.json,
     sinceMinutes: options["since-minutes"],
     expectStage: options["expect-stage"],
+    allowBreakGlass: options["allow-break-glass"],
   };
 }
 
@@ -279,7 +285,10 @@ export async function checkNamespace(
   namespace: string,
   cluster: ClusterFacts,
   dependencies: CheckDependencies,
-  options: Pick<CheckOptions, "sinceMinutes" | "expectStage">,
+  options: Pick<
+    CheckOptions,
+    "sinceMinutes" | "expectStage" | "allowBreakGlass"
+  >,
 ): Promise<NamespaceReport> {
   const { run } = dependencies;
   const inNamespace = (resource: string) => [
@@ -312,8 +321,12 @@ export async function checkNamespace(
     urls.checks.map((check) => answer(check, dependencies.fetchUrl)),
   );
   const stage = stageOf(stagingPolicyOf(cluster.policies, namespace));
-  return namespaceReport(namespace, stage, [
-    evaluateStage(stage, options.expectStage),
+  const breakGlass = breakGlassState(cluster.policies, namespace);
+  return namespaceReport(namespace, stage, breakGlass, [
+    evaluateStage(namespace, stage, breakGlass, {
+      expected: options.expectStage,
+      allowBreakGlass: options.allowBreakGlass,
+    }),
     evaluatePods(pods.items, dependencies.now(), options.sinceMinutes),
     evaluateServices(services.items, slices.items),
     evaluateUrls(answers, urls.unchecked),
@@ -373,13 +386,19 @@ export async function runCheck(
       exitCode: report.ok ? 0 : 1,
     };
   }
-  const namespaces = stagedNamespaces(cluster.policies);
+  // A break-glass policy in an unstaged namespace is checked too.
+  const namespaces = [
+    ...new Set([
+      ...stagedNamespaces(cluster.policies),
+      ...breakGlassNamespaces(cluster.policies),
+    ]),
+  ].toSorted();
   if (namespaces.length === 0) {
     // An empty gate must not read as a passed one.
     return {
       output: options.json
         ? "[]"
-        : "No namespace has an enforcement-staging-<namespace> policy; nothing was checked.",
+        : "No namespace has a staging or break-glass policy; nothing was checked.",
       exitCode: 1,
     };
   }
