@@ -397,6 +397,24 @@ spec:
     - Ingress
     - Egress
 ---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: enforcement-staging-alert-dashboard
+  namespace: alert-dashboard
+  annotations:
+    homelab.sjer.red/description: "Enforcement staging: allows all traffic for every pod while the stage is open, and selects no pod once it is enforced. Wiki how-to/cut-a-namespace-over-to-enforced-policies."
+    homelab.sjer.red/enforcement-stage: open
+spec:
+  egress:
+    - {}
+  ingress:
+    - {}
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+---
 apiVersion: onepassword.com/v1
 kind: OnePasswordItem
 metadata:

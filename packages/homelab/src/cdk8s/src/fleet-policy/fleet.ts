@@ -3,6 +3,7 @@ import {
   getRegisteredBackendProbes,
   type BackendProbeDescriptor,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/probe-registry.ts";
+import { enforcementStagingPolicyName } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import {
   objectIdentity,
   synthesizedCharts,
@@ -202,7 +203,14 @@ export type FleetService = {
 export type Fleet = {
   objects: readonly SynthesizedObject[];
   workloads: readonly FleetWorkload[];
+  /**
+   * The policies that decide traffic once a namespace is enforced. The
+   * enforcement staging policies are kept apart so that no rule can count
+   * an allow-all staging policy as coverage or admission.
+   */
   networkPolicies: readonly FleetNetworkPolicy[];
+  /** The enforcement staging policy of each staged namespace. */
+  enforcementStagingPolicies: readonly FleetNetworkPolicy[];
   services: readonly FleetService[];
   /** Service selectors by namespace. */
   serviceSelectors: readonly {
@@ -328,15 +336,22 @@ export function againstDebt(
   };
 }
 
-export async function loadFleet(): Promise<Fleet> {
-  // A companion chart can render the same object as its owner chart; the API
-  // server holds one, so the fleet does too.
-  const byIdentity = new Map<string, SynthesizedObject>();
-  const charts = await synthesizedCharts();
-  for (const objects of charts.values())
-    for (const object of objects)
-      byIdentity.set(objectIdentity(object), object);
-  const objects = [...byIdentity.values()];
+function isStaging(policy: FleetNetworkPolicy): boolean {
+  return policy.name === enforcementStagingPolicyName(policy.namespace);
+}
+
+/** The fleet the given rendered objects and registered probes make up. */
+export function fleetOf(
+  objects: readonly SynthesizedObject[],
+  backendProbes: readonly BackendProbeDescriptor[],
+): Fleet {
+  const policies = objects
+    .filter(
+      (object) =>
+        object.kind === "NetworkPolicy" &&
+        object.apiVersion === "networking.k8s.io/v1",
+    )
+    .map((object) => toNetworkPolicy(object));
   const services = objects
     .filter((object) => object.kind === "Service")
     .map((object) => toService(object));
@@ -346,13 +361,8 @@ export async function loadFleet(): Promise<Fleet> {
     workloads: objects
       .filter((object) => WORKLOAD_KINDS.has(object.kind))
       .map((object) => toWorkload(object)),
-    networkPolicies: objects
-      .filter(
-        (object) =>
-          object.kind === "NetworkPolicy" &&
-          object.apiVersion === "networking.k8s.io/v1",
-      )
-      .map((object) => toNetworkPolicy(object)),
+    networkPolicies: policies.filter((policy) => !isStaging(policy)),
+    enforcementStagingPolicies: policies.filter((policy) => isStaging(policy)),
     services,
     serviceSelectors: services.flatMap(({ namespace, selector }) =>
       selector === undefined ? [] : [{ namespace, selector }],
@@ -365,7 +375,18 @@ export async function loadFleet(): Promise<Fleet> {
             ApplicationSpecSchema.parse(object).spec.destination.namespace,
         ),
     ),
-    // The registry is filled while the charts above are constructed.
-    backendProbes: getRegisteredBackendProbes(),
+    backendProbes,
   };
+}
+
+export async function loadFleet(): Promise<Fleet> {
+  // A companion chart can render the same object as its owner chart; the API
+  // server holds one, so the fleet does too.
+  const byIdentity = new Map<string, SynthesizedObject>();
+  const charts = await synthesizedCharts();
+  for (const objects of charts.values())
+    for (const object of objects)
+      byIdentity.set(objectIdentity(object), object);
+  // The registry is filled while the charts above are constructed.
+  return fleetOf([...byIdentity.values()], getRegisteredBackendProbes());
 }

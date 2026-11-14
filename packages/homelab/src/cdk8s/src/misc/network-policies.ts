@@ -1,4 +1,8 @@
-import { IntOrString } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import type { Chart } from "cdk8s";
+import {
+  IntOrString,
+  KubeNetworkPolicy,
+} from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { postgresClusterPodLabels } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/cluster-label.ts";
 
 /**
@@ -137,4 +141,64 @@ export function kubernetesApiEgressRule() {
 /** Metrics scraped by Prometheus from explicitly named workload ports. */
 export function prometheusIngressRule(ports: readonly number[]) {
   return namespaceIngressRule("prometheus", ports);
+}
+
+/**
+ * The name of the one staging policy a namespace with policies carries. It
+ * includes the namespace because the root chart renders policies into several
+ * namespaces and `release-root` identifies a root object by group, kind and
+ * name alone.
+ */
+export function enforcementStagingPolicyName(namespace: string): string {
+  return `enforcement-staging-${namespace}`;
+}
+
+/** A label no pod carries: the selector of a cut-over staging policy. */
+export const ENFORCEMENT_STAGING_NEVER_LABEL = {
+  "homelab.sjer.red/enforcement-staging": "never",
+} as const;
+
+/**
+ * Where a namespace stands on NetworkPolicy enforcement: `open` while its
+ * staging policy still allows everything, `enforced` once only its real
+ * policies decide.
+ */
+export type EnforcementStage = "open" | "enforced";
+
+/**
+ * The staging policy of one namespace: allow everything, both ways.
+ *
+ * NetworkPolicies are additive, so while this selects every pod (`open`) the
+ * namespace behaves as if nothing were enforced, whatever its other policies
+ * say. `enforced` points the selector at a label no pod carries, which leaves
+ * the real policies in charge. Only the selector differs between the stages,
+ * so cutting a namespace over and reverting it are in-place updates of one
+ * object and never wait on a prune.
+ */
+export function enforcementStagingPolicy(
+  chart: Chart,
+  namespace: string,
+  stage: EnforcementStage,
+) {
+  const name = enforcementStagingPolicyName(namespace);
+  return new KubeNetworkPolicy(chart, name, {
+    metadata: {
+      name,
+      namespace,
+      annotations: {
+        "homelab.sjer.red/enforcement-stage": stage,
+        "homelab.sjer.red/description":
+          "Enforcement staging: allows all traffic for every pod while the stage is open, and selects no pod once it is enforced. Wiki how-to/cut-a-namespace-over-to-enforced-policies.",
+      },
+    },
+    spec: {
+      podSelector:
+        stage === "open"
+          ? {}
+          : { matchLabels: { ...ENFORCEMENT_STAGING_NEVER_LABEL } },
+      policyTypes: ["Ingress", "Egress"],
+      ingress: [{}],
+      egress: [{}],
+    },
+  });
 }
