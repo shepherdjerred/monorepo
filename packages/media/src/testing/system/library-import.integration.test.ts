@@ -42,11 +42,13 @@ import { createSystemHttpServer } from "./http.ts";
 
 let cluster: Awaited<ReturnType<typeof startMediaTestPostgres>>;
 let fixture: Awaited<ReturnType<typeof libraryPlexFixture>>;
+let independentFixture: Awaited<ReturnType<typeof libraryPlexFixture>>;
 let external: ReturnType<typeof systemExternalServices>;
 let http: ReturnType<typeof createSystemHttpServer>;
 let owner: z.infer<typeof UserSchema>;
 let browser: SystemHttpBrowser;
 const starts: WorkflowStart[] = [];
+const additionalDirectories: string[] = [];
 
 async function read<T>(
   client: SystemHttpBrowser,
@@ -168,6 +170,10 @@ beforeAll(async () => {
   fixture = await libraryPlexFixture(cluster.database, "directors_cut", {
     classify: "from_filename",
   });
+  independentFixture = await libraryPlexFixture(cluster.database, "default", {
+    classify: "from_filename",
+  });
+  additionalDirectories.push(independentFixture.directory);
   external = systemExternalServices();
   http = createSystemHttpServer({
     ...external,
@@ -191,6 +197,8 @@ afterAll(async () => {
   await external.close();
   await cluster.close();
   await rm(fixture.directory, { recursive: true });
+  for (const directory of additionalDirectories)
+    await rm(directory, { recursive: true });
 });
 
 test("the owner batch producer prepares actual library-only HTTP captures and queues the exact scope without adopting or requesting", async () => {
@@ -204,13 +212,6 @@ test("the owner batch producer prepares actual library-only HTTP captures and qu
     tmdb: Number(fixture.network.media.tmdbId),
   });
   media.profileSourceId = String(resolved.profile.id);
-  const unrelated = await cluster.database.mediaItem.create({
-    data: {
-      kind: "movie",
-      title: "Unrelated review target",
-      tmdbId: 2_000_000_001,
-    },
-  });
   const movie = await read(
     browser,
     "/admin/migration",
@@ -218,7 +219,6 @@ test("the owner batch producer prepares actual library-only HTTP captures and qu
     {
       snapshot: captureFixture("radarr", [
         media,
-        mediaFixture("unrelated", "movie", { tmdb: 2_000_000_001 }),
         {
           kind: "file",
           sourceId: "file1",
@@ -283,12 +283,7 @@ test("the owner batch producer prepares actual library-only HTTP captures and qu
   expect(selected.map((entry) => entry.provenanceKey)).not.toContain(
     capturedFiles[0]?.provenanceKey,
   );
-  const unrelatedReview = await rejectUnapprovedFile(
-    created,
-    unrelated.id,
-    z.string().parse(capturedFiles[0]?.provenanceKey),
-  );
-  await approveLibraryScope(unrelatedReview, selected);
+  await approveLibraryScope(created, selected);
   const review = await read(
     browser,
     `/admin/migration/bundles/${created.id}`,
@@ -300,10 +295,25 @@ test("the owner batch producer prepares actual library-only HTTP captures and qu
   const batch = libraryBatchEntries(review, keys);
   const profiles = await read(browser, "/profiles", ProfileListSchema);
   const groups = libraryProfileGroups(review, batch.media, profiles);
+  expect(groups).toHaveLength(1);
+  expect(groups[0]?.options).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        profile: expect.objectContaining({ id: profile.id }),
+      }),
+    ]),
+  );
   bindLibraryClient();
   const body = await prepareLibraryBatch(
     review,
-    { files: keys, profiles: {}, cuts: {}, chinese: {} },
+    {
+      files: keys,
+      profiles: Object.fromEntries(
+        groups.map((group) => [group.key, profile.id]),
+      ),
+      cuts: {},
+      chinese: {},
+    },
     groups,
   );
   const commandKey = crypto.randomUUID();
@@ -381,6 +391,88 @@ test("the owner batch producer prepares actual library-only HTTP captures and qu
   expect(
     await cluster.database.mediaRequest.count({ where: { userId: owner.id } }),
   ).toBe(0);
+});
+
+test("a separate immutable unrelated approval cannot authorize another physical library file", async () => {
+  const independent = independentFixture;
+  const unrelated = await cluster.database.mediaItem.create({
+    data: {
+      kind: "movie",
+      title: "Unrelated review target",
+      tmdbId: 2_000_000_001,
+    },
+  });
+  const movie = await read(
+    browser,
+    "/admin/migration",
+    MigrationProposalSchema,
+    {
+      snapshot: captureFixture("radarr", [
+        mediaFixture("physical-movie", "movie", {
+          tmdb: Number(independent.network.media.tmdbId),
+        }),
+        mediaFixture("unrelated", "movie", { tmdb: 2_000_000_001 }),
+        {
+          kind: "file",
+          sourceId: "unapproved-file",
+          mediaSourceIds: ["physical-movie"],
+          path: `/movies/${path.basename(independent.target)}`,
+          sizeBytes: Buffer.byteLength(independent.bytes),
+          checksum: null,
+          downloadHash: null,
+          qualitySourceId: "3",
+        },
+      ]),
+    },
+  );
+  const tv = await read(browser, "/admin/migration", MigrationProposalSchema, {
+    snapshot: captureFixture("sonarr"),
+  });
+  const created = await read(
+    browser,
+    "/admin/migration/bundles",
+    BundleReviewProtocolSchema,
+    {
+      schemaVersion: 2,
+      purpose: "initial_library",
+      captureIds: [movie.captureId, tv.captureId],
+      rootMappings: [
+        {
+          captureId: movie.captureId,
+          sourceRoot: "/movies",
+          canonicalRoot: independent.context.files.roots.movies.library,
+          verified: false,
+        },
+        {
+          captureId: tv.captureId,
+          sourceRoot: "/tv",
+          canonicalRoot: independent.context.files.roots.tv.library,
+          verified: false,
+        },
+      ],
+    },
+  );
+  const files = created.report.entries.filter(
+    (entry) => entry.kind === "file" && entry.sourceId === "unapproved-file",
+  );
+  expect(files).toHaveLength(1);
+  expect(files[0]).toMatchObject({
+    state: "protected_exact",
+    mediaIds: [independent.network.media.id],
+  });
+  const reviewed = await rejectUnapprovedFile(
+    created,
+    unrelated.id,
+    z.string().parse(files[0]?.provenanceKey),
+  );
+  expect(reviewed).toMatchObject({ status: "approved", version: 1 });
+  expect(reviewed.selection).toHaveLength(1);
+  const unchanged = await read(
+    browser,
+    `/admin/migration/bundles/${created.id}`,
+    BundleReviewProtocolSchema,
+  );
+  expect(unchanged).toEqual(reviewed);
 });
 
 test("policy version review returns the target's own version independently of its inherited effective policy", async () => {
