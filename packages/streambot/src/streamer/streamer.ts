@@ -1,4 +1,5 @@
 import { Client } from "discord.js-selfbot-v13";
+import { concreteMediaInput } from "@shepherdjerred/streambot/sources/prepared-sports.ts";
 import {
   Streamer,
   createSeekablePlayer,
@@ -44,6 +45,7 @@ import { buildStallReport } from "@shepherdjerred/streambot/streamer/stall-repor
 import { VoiceAudioMixer } from "@shepherdjerred/streambot/streamer/voice-audio-mixer.ts";
 import {
   buildPlaybackPrepareOptions,
+  assertPlaybackTransport,
   buildGoLivePlayOptions,
 } from "@shepherdjerred/streambot/streamer/prepare-options.ts";
 import {
@@ -345,14 +347,7 @@ export class StreambotStreamer implements StreamerLike {
     input: RunStreamInput,
     signal: AbortSignal,
   ): Promise<void> => {
-    if (
-      this.transport !== undefined &&
-      input.resolved.mediaKind !== this.transport
-    ) {
-      throw new Error(
-        `Playback transport mismatch: expected ${this.transport}`,
-      );
-    }
+    assertPlaybackTransport(input.resolved.mediaKind, this.transport);
     await runStreamWithFallback(input, signal, {
       hardwareAcceleration: this.config.stream.hardwareAcceleration,
       lastPosition: () => this.lastPlaybackPositionSeconds,
@@ -463,7 +458,7 @@ export class StreambotStreamer implements StreamerLike {
     // at a new offset without dropping the connection.
     const player = this.createPlayer(
       this.streamer,
-      input.resolved.ffmpegInput,
+      concreteMediaInput(input.resolved),
       {
         prepare: { ...prepareOpts, observer },
         play: {

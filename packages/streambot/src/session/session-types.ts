@@ -1,4 +1,5 @@
 import type { Actor } from "xstate";
+import type { PrepareSportsInput } from "@shepherdjerred/streambot/sports/prepared-input.ts";
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import type { UserbotProvider } from "@shepherdjerred/streambot/pool/userbot-pool.ts";
 import type {
@@ -195,6 +196,7 @@ export function keyOf(
  * either of them.
  */
 export type SessionManagerDeps = {
+  readonly prepareSportsInput?: PrepareSportsInput;
   readonly config: Config;
   readonly pool: UserbotProvider;
   /** Resolve a queued source to an ffmpeg input (injected so the machine stays pure + testable). */

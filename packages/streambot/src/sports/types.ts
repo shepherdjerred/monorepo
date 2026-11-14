@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { SportsArtworkSchema } from "./artwork.ts";
+import type { PrepareSportsInput } from "./prepared-input.ts";
 
 export const SportsProviderSchema = z.enum([
   "streameast",
@@ -75,6 +76,7 @@ export type SportsCatalog = {
 };
 
 export type SportsResolver = {
+  readonly prepare?: PrepareSportsInput;
   readonly resolve: (
     sourceUrl: string,
     signal: AbortSignal,

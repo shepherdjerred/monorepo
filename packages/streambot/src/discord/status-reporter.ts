@@ -185,11 +185,13 @@ export class StatusReporter {
     this.lastCrashNonce = notice.nonce;
     const at = formatTimecode(notice.positionSeconds);
     const what =
-      notice.reason === "stall"
-        ? "stalled"
-        : notice.reason === "ended-short"
-          ? "ended early"
-          : "crashed";
+      notice.reason === "provider-session"
+        ? "lost its media session"
+        : notice.reason === "stall"
+          ? "stalled"
+          : notice.reason === "ended-short"
+            ? "ended early"
+            : "crashed";
     if (notice.kind === "retry") {
       const pipeline = notice.pipelineMode === "sw" ? "software" : "hardware";
       const recovery =

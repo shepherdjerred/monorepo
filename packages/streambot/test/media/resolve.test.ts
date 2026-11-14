@@ -7,7 +7,7 @@ import {
 import type { LibraryEntry } from "@shepherdjerred/streambot/sources/library.ts";
 import { NoUsableFormatError } from "@shepherdjerred/streambot/sources/format-select.ts";
 import { parseFfprobeOutput } from "@shepherdjerred/streambot/sources/probe.ts";
-import { assertSportsHasAudioAndVideo } from "@shepherdjerred/streambot/sources/resolve.ts";
+import { assertSportsHasAudioAndVideo } from "@shepherdjerred/streambot/sources/sports-preparation.ts";
 
 const entries: LibraryEntry[] = [
   {

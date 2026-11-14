@@ -18,10 +18,51 @@ const log = logger.child("probe");
 /** Hard cap so probing a slow/remote input can never wedge the resolve step. */
 const PROBE_TIMEOUT_MS = 15_000;
 
-export function redactProbeError(message: string, input: string): string {
-  return message
+function contentKeyValues(inputOptions: readonly string[]): string[] {
+  const values: string[] = [];
+  const sensitive = new Set([
+    "-cenc_decryption_key",
+    "-decryption_key",
+    "-decryption_keys",
+    "-seg_format_options",
+  ]);
+  for (const [index, option] of inputOptions.entries()) {
+    const name = option.split("=", 1)[0] ?? "";
+    if (!sensitive.has(name)) continue;
+    const separator = option.indexOf("=");
+    const value =
+      separator === -1 ? inputOptions[index + 1] : option.slice(separator + 1);
+    if (value === undefined || value.length === 0) continue;
+    values.push(value);
+    if (name === "-seg_format_options")
+      values.push(
+        ...[
+          ...value.matchAll(/(?:^|:)(?:cenc_)?decryption_key=([^:]+)/gu),
+        ].flatMap((match) => (match[1] === undefined ? [] : [match[1]])),
+      );
+  }
+  return values;
+}
+
+export function redactProbeError(
+  message: string,
+  input: string,
+  inputOptions: readonly string[] = [],
+  headers: Readonly<Record<string, string>> = {},
+): string {
+  let redacted = message
     .replaceAll(input, "[redacted media URL]")
     .replaceAll(/https?:\/\/[^\s"'<>]+/g, "[redacted URL]");
+  const headerValues = Object.entries(headers).flatMap(([name, value]) =>
+    /^(?:authorization|cookie|proxy-authorization|set-cookie|x-api-key|x-streambot-media-session)$/iu.test(
+      name,
+    ) && value.length > 0
+      ? [value]
+      : [],
+  );
+  for (const secret of [...contentKeyValues(inputOptions), ...headerValues])
+    redacted = redacted.replaceAll(secret, "<redacted>");
+  return redacted;
 }
 
 const StreamSchema = z.object({
@@ -165,14 +206,24 @@ export async function probeMedia(
     if (exitCode !== 0) {
       log.warn("ffprobe exited non-zero", {
         exitCode,
-        stderr: redactProbeError(stderr.trim(), input),
+        stderr: redactProbeError(
+          stderr.trim(),
+          input,
+          options?.inputOptions,
+          options?.headers,
+        ),
       });
       return null;
     }
     return parseFfprobeOutput(JSON.parse(stdout));
   } catch (error) {
     log.warn("ffprobe failed", {
-      error: redactProbeError(getErrorMessage(error), input),
+      error: redactProbeError(
+        getErrorMessage(error),
+        input,
+        options?.inputOptions,
+        options?.headers,
+      ),
     });
     return null;
   }

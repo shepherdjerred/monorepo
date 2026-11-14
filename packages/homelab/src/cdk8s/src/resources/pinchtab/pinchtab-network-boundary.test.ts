@@ -122,7 +122,7 @@ function resources(): unknown[] {
 }
 
 describe("PinchTab network boundary", () => {
-  test("allows website browsing and eval while keeping other capabilities closed", () => {
+  test("allows browsing, eval and media response inspection while keeping other capabilities closed", () => {
     const configMap = resources().flatMap((resource) => {
       const parsed = ConfigMapSchema.safeParse(resource);
       return parsed.success ? [parsed.data] : [];
@@ -138,7 +138,10 @@ describe("PinchTab network boundary", () => {
     const enabledCapabilities = Object.entries(config.security)
       .filter(([name, value]) => name.startsWith("allow") && value === true)
       .map(([name]) => name);
-    expect(enabledCapabilities).toEqual(["allowEvaluate"]);
+    expect(enabledCapabilities).toEqual([
+      "allowEvaluate",
+      "allowNetworkIntercept",
+    ]);
     expect(config.security.trustedResolveCIDRs).toEqual([]);
     expect(config.security.trustedProxyCIDRs).toEqual([]);
     expect(config.security.attach).toEqual({

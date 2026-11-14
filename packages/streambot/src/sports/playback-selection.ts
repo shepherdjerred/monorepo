@@ -22,6 +22,7 @@ import { hasLolSportsCue } from "./lolesports.ts";
 import { redactMediaUrls } from "@shepherdjerred/discord-video-stream";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
 import { getErrorMessage } from "@shepherdjerred/streambot/util/errors.ts";
+import { SportsPlaybackError, sportsFailureMessage } from "./failures.ts";
 
 const log = logger.child("sports");
 
@@ -39,7 +40,7 @@ function loggablePage(pageUrl: string): string {
 }
 
 /**
- * The listener sees one generic sentence for every resolve failure, so the operator log is the
+ * The listener sees bounded failure categories, so the operator log is the
  * only place the real cause (an upstream page redesign, an unapproved CDN host, a probe 403)
  * survives. Signed stream URLs are redacted, and the page is reduced to origin and path.
  */
@@ -50,6 +51,7 @@ function logSportsResolveFailure(
   log.warn("sports stream resolve failed", {
     provider: event.provider,
     page: loggablePage(event.pageUrl),
+    ...(error instanceof SportsPlaybackError ? { kind: error.kind } : {}),
     error: redactMediaUrls(getErrorMessage(error)),
   });
 }
@@ -155,6 +157,10 @@ export async function selectDirectRequestUrl(input: {
   } catch (error) {
     throwIfSportsRequestAborted(input.signal);
     logSportsResolveFailure(event, error);
+    if (error instanceof SportsPlaybackError)
+      throw new PlaybackCommandBoundaryError(sportsFailureMessage(error), {
+        cause: error,
+      });
     if (error instanceof SportsProOnlyError)
       throw new PlaybackCommandBoundaryError(
         proOnlyMessage(input.listed?.title ?? "That game"),
@@ -230,7 +236,9 @@ async function attemptSportsEvent(
       signal: AbortSignal,
     ) => Promise<ResolvedSource>;
   },
-): Promise<SportsPlaybackSelection | "pro-only" | "failed"> {
+): Promise<
+  SportsPlaybackSelection | SportsPlaybackError | "pro-only" | "failed"
+> {
   if (event.proOnly === true) return "pro-only";
   const source: Source = {
     kind: "url",
@@ -249,11 +257,13 @@ async function attemptSportsEvent(
     if (error instanceof SportsProOnlyError) return "pro-only";
     if (input.provider !== "auto") {
       throw new PlaybackCommandBoundaryError(
-        `I couldn't start the ${event.provider} stream for ${event.title}.`,
+        error instanceof SportsPlaybackError
+          ? sportsFailureMessage(error)
+          : `I couldn't start the ${event.provider} stream for ${event.title}.`,
         { cause: error },
       );
     }
-    return "failed";
+    return error instanceof SportsPlaybackError ? error : "failed";
   }
 }
 
@@ -290,15 +300,32 @@ export async function selectSportsPlayback(input: {
   }
 
   let proOnly = 0;
+  const failures: (SportsPlaybackError | "failed")[] = [];
   for (const event of result.events) {
     input.signal.throwIfAborted();
     const attempt = await attemptSportsEvent(event, input);
     if (attempt === "pro-only") proOnly += 1;
-    else if (attempt !== "failed") return attempt;
+    else if (attempt === "failed" || attempt instanceof SportsPlaybackError)
+      failures.push(attempt);
+    else return attempt;
   }
   const first = result.events[0];
   if (first !== undefined && proOnly === result.events.length)
     throw new PlaybackCommandBoundaryError(proOnlyMessage(first.title));
+  const typedFailure = failures.find(
+    (failure) => failure instanceof SportsPlaybackError,
+  );
+  if (typedFailure instanceof SportsPlaybackError) {
+    const failure = failures.every(
+      (item) =>
+        item instanceof SportsPlaybackError && item.kind === typedFailure.kind,
+    )
+      ? typedFailure
+      : new SportsPlaybackError("unavailable");
+    throw new PlaybackCommandBoundaryError(sportsFailureMessage(failure), {
+      cause: failure,
+    });
+  }
   throw new PlaybackCommandBoundaryError(
     `I found ${result.events[0]?.title ?? input.query}, but its listed providers could not start a stream right now.`,
   );

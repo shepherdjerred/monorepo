@@ -105,6 +105,8 @@ test.each([false, true])(
       headers: candidate.audioInputHeaders,
     });
     expect(resolve).toHaveBeenCalledTimes(preResolved ? 0 : 1);
+    if ("sportsRecipe" in result)
+      throw new Error("LoL resolution must return a concrete broadcast input");
     const playback = prepareStream(
       result.ffmpegInput,
       buildVideoPrepareOptions({

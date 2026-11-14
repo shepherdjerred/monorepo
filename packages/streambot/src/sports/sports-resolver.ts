@@ -4,6 +4,11 @@ import {
 } from "@shepherdjerred/streambot/sports/types.ts";
 import type { SportsPageRenderer } from "@shepherdjerred/streambot/sports/pinchtab.ts";
 import type { SportsResolver } from "@shepherdjerred/streambot/sports/types.ts";
+import {
+  createSportsPreparer,
+  type ValidateSportsInput,
+} from "./provider-preparation.ts";
+import type { PrepareSportsInput } from "./prepared-input.ts";
 
 const PAGE_HOSTS = new Set([
   "v2.streameast.ga",
@@ -204,7 +209,19 @@ type ResolvedHls = {
 };
 
 export class BrowserSportsResolver implements SportsResolver {
-  constructor(private readonly browser: SportsPageRenderer) {}
+  readonly prepare?: PrepareSportsInput;
+
+  constructor(
+    private readonly browser: SportsPageRenderer,
+    validate?: ValidateSportsInput,
+  ) {
+    if (validate !== undefined)
+      this.prepare = createSportsPreparer(
+        browser,
+        this.resolve.bind(this),
+        validate,
+      );
+  }
 
   async resolve(
     sourceUrl: string,
