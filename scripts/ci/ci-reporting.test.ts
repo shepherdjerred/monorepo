@@ -546,6 +546,13 @@ describe("CI reporting manifest", () => {
           "scripts/homelab-build-inputs.test.ts",
           "scripts/minecraft/capture-resources.test.ts",
           "scripts/tofu/application-secrets.integration.test.ts",
+          "scripts/network-policy/staging-policy.test.ts",
+          "scripts/network-policy/coverage.test.ts",
+          "scripts/network-policy/break-glass.test.ts",
+          "scripts/network-policy/namespace-urls.test.ts",
+          "scripts/network-policy/namespace-checks.test.ts",
+          "scripts/network-policy/check-namespace.test.ts",
+          "scripts/network-policy/open-namespace.test.ts",
         ],
       },
     ]);
