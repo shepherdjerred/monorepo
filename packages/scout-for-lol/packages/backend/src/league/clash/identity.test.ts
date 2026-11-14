@@ -1,6 +1,10 @@
 import { describe, expect, test } from "vitest";
 import { RiotMatchIdSchema } from "@scout-for-lol/data";
-import { clashGameFingerprint, decideClashAlias } from "./identity.ts";
+import {
+  clashGameFingerprint,
+  clashMatchPage,
+  decideClashAlias,
+} from "./identity.ts";
 
 const participants = [
   [100, 157],
@@ -80,30 +84,67 @@ describe("clashGameFingerprint", () => {
   });
 });
 
-describe("decideClashAlias", () => {
-  const canonicalMatchId = RiotMatchIdSchema.parse("NA1_5645340874");
+const canonicalMatchId = RiotMatchIdSchema.parse("NA1_5645340874");
+const riotMatchId = RiotMatchIdSchema.parse("NA1_5421167767");
 
+describe("decideClashAlias", () => {
   test("no live game near the start is a miss", () => {
-    expect(
-      decideClashAlias({ candidate: undefined, canonicalRecorded: false }),
-    ).toEqual({ kind: "miss" });
+    expect(decideClashAlias({ riotMatchId, candidate: undefined })).toEqual({
+      kind: "miss",
+    });
   });
 
-  test("a live game Scout already reported makes Riot's id an alias only", () => {
+  test("a live game the client claimed makes Riot's id an alias only", () => {
     expect(
       decideClashAlias({
-        candidate: { canonicalMatchId },
-        canonicalRecorded: true,
+        riotMatchId,
+        candidate: { canonicalMatchId, processingMatchId: canonicalMatchId },
       }),
     ).toEqual({ kind: "alias-only", canonicalMatchId });
   });
 
-  test("a live game with no client data still processes Riot's match", () => {
+  test("a live game Riot's id claimed is processed under Riot's id", () => {
     expect(
       decideClashAlias({
-        candidate: { canonicalMatchId },
-        canonicalRecorded: false,
+        riotMatchId,
+        candidate: { canonicalMatchId, processingMatchId: riotMatchId },
       }),
     ).toEqual({ kind: "alias-and-process", canonicalMatchId });
+  });
+});
+
+describe("clashMatchPage", () => {
+  test("links whichever id the pipeline processed, live id first", () => {
+    expect(
+      clashMatchPage({
+        canonical: canonicalMatchId,
+        alias: riotMatchId,
+        processed: new Set([canonicalMatchId, riotMatchId]),
+      }),
+    ).toBe(canonicalMatchId);
+    expect(
+      clashMatchPage({
+        canonical: canonicalMatchId,
+        alias: riotMatchId,
+        processed: new Set([riotMatchId]),
+      }),
+    ).toBe(riotMatchId);
+  });
+
+  test("a result-only game with no processed page gets no link", () => {
+    expect(
+      clashMatchPage({
+        canonical: canonicalMatchId,
+        alias: riotMatchId,
+        processed: new Set(),
+      }),
+    ).toBeUndefined();
+    expect(
+      clashMatchPage({
+        canonical: canonicalMatchId,
+        alias: undefined,
+        processed: new Set(),
+      }),
+    ).toBeUndefined();
   });
 });

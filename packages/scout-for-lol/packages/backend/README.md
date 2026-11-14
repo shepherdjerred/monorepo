@@ -1156,21 +1156,27 @@ platform, queue and the ten sorted `team:champion` pairs
 When Riot discovery lists an unadmitted Clash match, `league/clash/alias.ts`
 looks up that fingerprint within 30 minutes of its `gameStartTimestamp`
 (the measured Spectator-start and prematch-archive gaps; see
-`CLASH_ALIAS_WINDOW_MS`) and records the Riot id as the identity's alias:
+`CLASH_ALIAS_WINDOW_MS`) and records the Riot id as the identity's alias.
 
-- the live game already has a canonical record (an admission or a pipeline
-  run): Riot's id is admitted `HISTORY_ONLY` with reason `clash-alias` and
-  dropped from discovery, so it has no pipeline run, report or lake row.
-  Its captured payload stays as evidence;
-- only the prematch was seen: Riot's match is processed normally;
+Exactly one id per game is processed. `processingMatchId` is set once, by a
+conditional write on the identity row that both ingress paths make: a client
+post-game (dispatch or result projection) claims the live id, and Riot
+discovery claims its own id in the statement that records the alias. The row
+lock orders concurrent claims; an unowned game with client evidence or a
+pipeline run from before the claim existed goes to the live id.
+
+- the live id owns the game: Riot's id is admitted `HISTORY_ONLY` with reason
+  `clash-alias` and dropped from discovery, so it has no pipeline run, report
+  or lake row. Its captured payload stays as evidence;
+- Riot's id owns the game: Riot's match is processed normally, and a later
+  client post-game starts no run and takes no admission;
 - no identity matches: Riot's match is processed normally.
 
-A client post-game for a game whose Riot alias was already processed starts no
-second run and takes no admission. Sightings, history and bracket results
-resolve through the alias, so one game is one history row; rows written under
-an alias before it was known are merged into the live game's row by the
-`clash-snapshot` backfill. `clash.history` and bracket rounds carry the id of
-whichever match page was processed, live or Riot.
+Sightings, history and bracket results resolve through the alias, so one game
+is one history row; rows written under an alias before it was known are merged
+into the live game's row by the `clash-snapshot` backfill. `clash.history` and
+bracket rounds link whichever id has a processed match page, and nothing when
+neither does.
 
 ### Prematch coverage
 

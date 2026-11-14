@@ -273,13 +273,17 @@ model ClashGameSighting {
 // Match-V5 id, found later by fingerprint (platform, queue, ten sorted
 // team:champion pairs) near `startAt` and recorded here as an alias.
 model ClashGameIdentity {
-  platform    String
-  gameId      String
-  fingerprint String
-  startAt     DateTime
-  riotMatchId String?  @unique
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  platform          String
+  gameId            String
+  fingerprint       String
+  startAt           DateTime
+  riotMatchId       String?  @unique
+  /// The one id the match pipeline processes for this game: the live id when
+  /// a client report claimed it first, Riot's alias when Riot did. Set once,
+  /// by a conditional update both ingress paths honour.
+  processingMatchId String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   @@id([platform, gameId])
   @@index([fingerprint, startAt])

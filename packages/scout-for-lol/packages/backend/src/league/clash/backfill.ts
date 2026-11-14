@@ -225,7 +225,10 @@ async function backfillClashIdentitiesFromLake(): Promise<void> {
     await recordClashGameIdentity(clashGameFromLake(row));
   for (const row of matches) {
     const game = clashGameFromLake(row);
-    await claimClashGameAlias(clashCanonicalMatchId(game), game);
+    // Already processed under its own id: the alias joins history only.
+    await claimClashGameAlias(clashCanonicalMatchId(game), game, {
+      claimProcessing: false,
+    });
   }
 }
 

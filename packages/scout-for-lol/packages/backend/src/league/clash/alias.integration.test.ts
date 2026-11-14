@@ -23,9 +23,9 @@ vi.doMock("#src/configuration/flags.ts", async (importOriginal) => ({
 }));
 
 const {
-  clashClientShadowedByRiot,
   resolveRiotClashDiscovery,
   withoutClashAliases,
+  withoutShadowedClashGames,
   clashAliasAdmissions,
 } = await import("./alias.ts");
 const { recordClashGameIdentity, CLASH_ALIAS_WINDOW_MS } =
@@ -55,21 +55,67 @@ function discovered(match?: RawMatch): Map<RiotMatchId, RawMatch> {
 }
 
 /** Riot's later publication of the live Clash game, under its own id. */
-function riotClash(matchId: RiotMatchId = RIOT_MATCH_ID): RawMatch {
+function riotClash(
+  matchId: RiotMatchId = RIOT_MATCH_ID,
+  startAt = START,
+): RawMatch {
   return {
     ...RIFT,
     metadata: { ...RIFT.metadata, matchId },
-    info: { ...RIFT.info, queueId: 700 },
+    info: {
+      ...RIFT.info,
+      queueId: 700,
+      gameStartTimestamp: startAt.getTime(),
+    },
   };
 }
 
-async function recordLiveGame(startAt = START): Promise<void> {
+async function recordLiveGame(
+  startAt = START,
+  gameId = LIVE_GAME_ID,
+): Promise<void> {
   await recordClashGameIdentity({
     platform: "NA1",
-    gameId: LIVE_GAME_ID,
+    gameId,
     queueId: 700,
     participants: RIFT.info.participants,
     startAt,
+  });
+}
+
+/** The client's post-game dispatch for a live game, as ingress hands it over. */
+async function dispatchFromClient(
+  startAt = START,
+  gameId = LIVE_GAME_ID,
+): Promise<RiotMatchId[]> {
+  const riotMatchId = RiotMatchIdSchema.parse(`NA1_${gameId}`);
+  const kept = await withoutShadowedClashGames(
+    [{ riotMatchId }],
+    new Map([
+      [
+        riotMatchId,
+        {
+          queueId: 700,
+          participants: RIFT.info.participants,
+          gameStartTimestamp: startAt.getTime(),
+        },
+      ],
+    ]),
+  );
+  return kept.map((dispatch) => dispatch.riotMatchId);
+}
+
+/** A match the pipeline committed, which is what gives it a match page. */
+async function processed(matchId: RiotMatchId): Promise<void> {
+  await prisma.matchObservation.create({
+    data: {
+      riotMatchId: matchId,
+      platformRoute: "NA1",
+      processingPolicy: "FULL",
+      deliveryMode: "live",
+      gameCreatedAt: START,
+      observedAt: START,
+    },
   });
 }
 
@@ -101,6 +147,7 @@ beforeEach(async () => {
   await prisma.clashGameSighting.deleteMany();
   await prisma.clashGameIdentity.deleteMany();
   await prisma.matchEvidenceAdmission.deleteMany();
+  await prisma.matchObservation.deleteMany();
   await prisma.account.deleteMany();
   await prisma.player.deleteMany();
 });
@@ -173,23 +220,53 @@ describe("Riot discovery of a Clash match", () => {
     await expect(
       withoutClashAliases(intents, discovered(), settled),
     ).resolves.toEqual([]);
-    // The client's own run is not shadowed: it is the canonical report.
-    await expect(clashClientShadowedByRiot(LIVE_MATCH_ID)).resolves.toBe(false);
+    // The client's own run keeps going: it is the canonical report.
+    await expect(dispatchFromClient()).resolves.toEqual([LIVE_MATCH_ID]);
   });
 
-  test("a client report after Riot's processed alias starts no second run", async () => {
+  test("a client report after Riot claimed the game starts no second run", async () => {
     await recordLiveGame();
     const intents = [{ matchId: RIOT_MATCH_ID }];
     await expect(
       withoutClashAliases(intents, discovered(riotClash()), NONE_SETTLED),
     ).resolves.toEqual(intents);
-    await admitMatchEvidence({
-      matchId: RIOT_MATCH_ID,
-      completedAt: RIFT.info.gameEndTimestamp,
-      historical: false,
-      riotHistoryListed: true,
-    });
-    await expect(clashClientShadowedByRiot(LIVE_MATCH_ID)).resolves.toBe(true);
+    await expect(dispatchFromClient()).resolves.toEqual([]);
+    const identity = await prisma.clashGameIdentity.findFirstOrThrow();
+    expect(identity.processingMatchId).toBe(RIOT_MATCH_ID);
+  });
+
+  test("concurrent client and Riot reports process the game exactly once", async () => {
+    for (let index = 0; index < 12; index += 1) {
+      const startAt = new Date(START.getTime() + index * 3 * 60 * 60 * 1000);
+      const gameId = (5_645_340_900 + index).toString();
+      const riotMatchId = RiotMatchIdSchema.parse(
+        `NA1_${(5_421_167_800 + index).toString()}`,
+      );
+      await recordLiveGame(startAt, gameId);
+      const [decision, clientRuns] = await Promise.all([
+        resolveRiotClashDiscovery(riotClash(riotMatchId, startAt)),
+        dispatchFromClient(startAt, gameId),
+      ]);
+      // Intents are minted only by the run that processes an id, so one
+      // processed id per game is one report and one intent per channel.
+      const runs = [
+        ...(decision.kind === "alias-and-process" ? [riotMatchId] : []),
+        ...clientRuns,
+      ];
+      expect(decision.kind).not.toBe("miss");
+      expect(runs).toHaveLength(1);
+      const identity = await prisma.clashGameIdentity.findUniqueOrThrow({
+        where: { platform_gameId: { platform: "NA1", gameId } },
+      });
+      expect(identity.riotMatchId).toBe(riotMatchId);
+      expect(identity.processingMatchId).toBe(runs[0]);
+      const riotAdmission = await prisma.matchEvidenceAdmission.findUnique({
+        where: { riotMatchId },
+      });
+      expect(riotAdmission?.reason ?? null).toBe(
+        decision.kind === "alias-only" ? "clash-alias" : null,
+      );
+    }
   });
 
   test("an ordinary match keeps flowing to the pipeline", async () => {
@@ -250,20 +327,40 @@ describe("Clash sightings across the alias", () => {
     // Aliased after both sightings were written and before any merge.
     await upsertClashGameSighting(sighting("5421167767", "match"));
     await resolveRiotClashDiscovery(riotClash());
-    const cups = await readClashHistoryForGuild(GUILD);
-    const rows = cups.flatMap((cup) =>
-      cup.players.flatMap((player) => player.sightings),
-    );
-    expect(
-      rows
-        .map((row) => [row.gameId, row.outcome, row.matchId])
-        .toSorted((left, right) =>
-          String(left[0]).localeCompare(String(right[0])),
-        ),
-    ).toEqual([
+    await processed(RiotMatchIdSchema.parse("NA1_5421160000"));
+    await processed(RIOT_MATCH_ID);
+    await expect(historyLinks()).resolves.toEqual([
       ["5421160000", "win", "NA1_5421160000"],
       // Only Riot processed it, so its page is Riot's id.
       [LIVE_GAME_ID, "win", RIOT_MATCH_ID],
     ]);
   });
+
+  test("a result-only game with no processed page has no link", async () => {
+    await createTrackedTestPlayer(prisma, {
+      alias: "Scout Classic",
+      serverId: GUILD,
+      accounts: [PLAYER],
+      creatorDiscordId: DiscordAccountIdSchema.parse("160509172704739328"),
+      createdAt: START,
+    });
+    await recordLiveGame();
+    await upsertClashGameSighting(sighting(LIVE_GAME_ID, "match"));
+    // Aliased for history, but neither id was ever processed.
+    await prisma.clashGameIdentity.update({
+      where: { platform_gameId: { platform: "NA1", gameId: LIVE_GAME_ID } },
+      data: { riotMatchId: RIOT_MATCH_ID },
+    });
+    await expect(historyLinks()).resolves.toEqual([
+      [LIVE_GAME_ID, "win", null],
+    ]);
+  });
 });
+
+async function historyLinks(): Promise<(string | null)[][]> {
+  const cups = await readClashHistoryForGuild(GUILD);
+  return cups
+    .flatMap((cup) => cup.players.flatMap((player) => player.sightings))
+    .map((row) => [row.gameId, row.outcome, row.matchId])
+    .toSorted((left, right) => String(left[0]).localeCompare(String(right[0])));
+}

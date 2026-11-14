@@ -9,12 +9,11 @@ import {
   admitClashAlias,
 } from "#src/evidence/admission.ts";
 import {
+  claimClashClientProcessing,
   claimClashGameAlias,
   clashCanonicalMatchId,
-  clashCanonicalRecorded,
   clashGameFingerprint,
   decideClashAlias,
-  recordClashGameIdentity,
   type ClashAliasDecision,
   type ClashGameShape,
 } from "#src/league/clash/identity.ts";
@@ -39,15 +38,18 @@ export async function resolveRiotClashDiscovery(
   };
   if (clashGameFingerprint(game) === null) return { kind: "miss" };
   const riotMatchId = RiotMatchIdSchema.parse(match.metadata.matchId);
-  const claimed = await claimClashGameAlias(riotMatchId, game);
-  const canonicalMatchId =
-    claimed === undefined ? undefined : clashCanonicalMatchId(claimed);
+  const claimed = await claimClashGameAlias(riotMatchId, game, {
+    claimProcessing: true,
+  });
   const decision = decideClashAlias({
+    riotMatchId,
     candidate:
-      canonicalMatchId === undefined ? undefined : { canonicalMatchId },
-    canonicalRecorded:
-      canonicalMatchId !== undefined &&
-      (await clashCanonicalRecorded(canonicalMatchId)),
+      claimed === undefined
+        ? undefined
+        : {
+            canonicalMatchId: clashCanonicalMatchId(claimed),
+            processingMatchId: claimed.processingMatchId,
+          },
   });
   if (decision.kind === "alias-only")
     await admitClashAlias({
@@ -94,9 +96,10 @@ export async function withoutClashAliases<
 }
 
 /**
- * A live Clash game gets its canonical identity when the client reports it.
- * If Riot's alias of it was already processed, Riot's report stands and the
- * client's copy is kept as evidence without starting a second run.
+ * A live Clash game gets its canonical identity when the client reports it,
+ * and the client claims processing for the live id. If Riot's alias won that
+ * claim, Riot's report stands and the client's copy is kept as evidence
+ * without starting a second run.
  */
 export async function withoutShadowedClashGames<
   D extends { readonly riotMatchId: RiotMatchId },
@@ -113,18 +116,14 @@ export async function withoutShadowedClashGames<
     if (game === undefined)
       throw new Error(`Dispatch ${dispatch.riotMatchId} has no parsed game`);
     const separator = dispatch.riotMatchId.indexOf("_");
-    const identity = {
+    const owns = await claimClashClientProcessing({
       platform: dispatch.riotMatchId.slice(0, separator),
       gameId: dispatch.riotMatchId.slice(separator + 1),
       queueId: game.queueId,
       participants: game.participants,
       startAt: new Date(game.gameStartTimestamp),
-    };
-    if (clashGameFingerprint(identity) !== null) {
-      await recordClashGameIdentity(identity);
-      if (await clashClientShadowedByRiot(dispatch.riotMatchId)) continue;
-    }
-    kept.push(dispatch);
+    });
+    if (owns) kept.push(dispatch);
   }
   return kept;
 }
@@ -144,39 +143,4 @@ export async function clashAliasAdmissions(
           select: { riotMatchId: true, completedAt: true },
         });
   return new Map(rows.map((row) => [row.riotMatchId, row.completedAt]));
-}
-
-/**
- * Whether a client post-game arrived for a live Clash game whose Riot alias
- * was already processed, before the client reported. Riot's report stands;
- * the client's copy stays evidence and does not start a second run.
- */
-export async function clashClientShadowedByRiot(
-  matchId: RiotMatchId,
-): Promise<boolean> {
-  const separator = matchId.indexOf("_");
-  const identity = await prisma.clashGameIdentity.findUnique({
-    where: {
-      platform_gameId: {
-        platform: matchId.slice(0, separator),
-        gameId: matchId.slice(separator + 1),
-      },
-    },
-    select: { riotMatchId: true },
-  });
-  if (identity?.riotMatchId == null) return false;
-  const [admission, observation] = await Promise.all([
-    prisma.matchEvidenceAdmission.findUnique({
-      where: { riotMatchId: identity.riotMatchId },
-      select: { reason: true },
-    }),
-    prisma.matchObservation.findUnique({
-      where: { riotMatchId: identity.riotMatchId },
-      select: { riotMatchId: true },
-    }),
-  ]);
-  return (
-    admission?.reason !== CLASH_ALIAS_ADMISSION_REASON &&
-    (admission !== null || observation !== null)
-  );
 }

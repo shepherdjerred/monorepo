@@ -98,36 +98,94 @@ export async function recordClashGameIdentity(
 
 export type ClashAliasDecision =
   | { readonly kind: "miss" }
-  /** A canonical record exists: Riot's id is admitted as an alias only. */
+  /** The live id owns processing: Riot's id is admitted as an alias only. */
   | { readonly kind: "alias-only"; readonly canonicalMatchId: RiotMatchId }
-  /** Only the live game was seen: Riot's match is processed and aliased. */
+  /** Riot's id won the processing claim: it is processed and aliased. */
   | {
       readonly kind: "alias-and-process";
       readonly canonicalMatchId: RiotMatchId;
     };
 
 export function decideClashAlias(input: {
-  candidate: { canonicalMatchId: RiotMatchId } | undefined;
-  canonicalRecorded: boolean;
+  riotMatchId: RiotMatchId;
+  candidate:
+    | { canonicalMatchId: RiotMatchId; processingMatchId: string | null }
+    | undefined;
 }): ClashAliasDecision {
-  if (input.candidate === undefined) return { kind: "miss" };
-  return input.canonicalRecorded
-    ? { kind: "alias-only", canonicalMatchId: input.candidate.canonicalMatchId }
-    : {
+  const candidate = input.candidate;
+  if (candidate === undefined) return { kind: "miss" };
+  return candidate.processingMatchId === input.riotMatchId
+    ? {
         kind: "alias-and-process",
-        canonicalMatchId: input.candidate.canonicalMatchId,
-      };
+        canonicalMatchId: candidate.canonicalMatchId,
+      }
+    : { kind: "alias-only", canonicalMatchId: candidate.canonicalMatchId };
+}
+
+/**
+ * Riot's half of the processing claim, in the statement that records the
+ * alias. An unowned game goes to the live id when it already has client
+ * evidence or a pipeline run (recorded before ownership existed), and to
+ * Riot's id otherwise. The row lock orders it against the client's claim.
+ */
+async function claimAliasWithProcessing(
+  riotMatchId: RiotMatchId,
+  identity: { platform: string; gameId: string },
+): Promise<{ processingMatchId: string | null } | undefined> {
+  const rows = await prisma.$queryRaw<{ processingMatchId: string | null }[]>`
+    UPDATE "ClashGameIdentity" i SET
+      "riotMatchId" = ${riotMatchId},
+      "processingMatchId" = COALESCE(i."processingMatchId",
+        CASE WHEN EXISTS (SELECT 1 FROM "MatchEvidenceAdmission" a
+                          WHERE a."riotMatchId" = i."platform" || '_' || i."gameId")
+               OR EXISTS (SELECT 1 FROM "MatchObservation" o
+                          WHERE o."riotMatchId" = i."platform" || '_' || i."gameId")
+             THEN i."platform" || '_' || i."gameId" ELSE ${riotMatchId} END),
+      "updatedAt" = NOW()
+    WHERE i."platform" = ${identity.platform} AND i."gameId" = ${identity.gameId}
+      AND (i."riotMatchId" IS NULL OR i."riotMatchId" = ${riotMatchId})
+    RETURNING i."processingMatchId"`;
+  return rows[0];
+}
+
+/**
+ * The client's half of the processing claim: record the live game and claim
+ * it for its own id unless Riot's alias already owns it. True when the
+ * client's id is the one to process; a non-Clash game is always its own.
+ */
+export async function claimClashClientProcessing(
+  game: ClashGameShape & { readonly gameId: string; readonly startAt: Date },
+): Promise<boolean> {
+  const fingerprint = clashGameFingerprint(game);
+  if (fingerprint === null) return true;
+  const platform = game.platform.toUpperCase();
+  const canonical = clashCanonicalMatchId({ platform, gameId: game.gameId });
+  const rows = await prisma.$queryRaw<{ processingMatchId: string | null }[]>`
+    INSERT INTO "ClashGameIdentity"
+      ("platform", "gameId", "fingerprint", "startAt", "processingMatchId", "updatedAt")
+    VALUES (${platform}, ${game.gameId}, ${fingerprint}, ${game.startAt}, ${canonical}, NOW())
+    ON CONFLICT ("platform", "gameId") DO UPDATE SET
+      "processingMatchId" = COALESCE("ClashGameIdentity"."processingMatchId", EXCLUDED."processingMatchId"),
+      "updatedAt" = NOW()
+    RETURNING "processingMatchId"`;
+  return rows[0]?.processingMatchId === canonical;
 }
 
 /**
  * Find and claim the live game a published Riot Clash match is. The nearest
  * unclaimed identity with the same fingerprint inside the window wins; one
  * already claimed by this Riot id is reused, so the claim is idempotent.
+ * Discovery also claims processing; a lake backfill of games already
+ * processed records the alias alone.
  */
 export async function claimClashGameAlias(
   riotMatchId: RiotMatchId,
   game: ClashGameShape & { readonly startAt: Date },
-): Promise<{ platform: string; gameId: string } | undefined> {
+  options: { claimProcessing: boolean },
+): Promise<
+  | { platform: string; gameId: string; processingMatchId: string | null }
+  | undefined
+> {
   const fingerprint = clashGameFingerprint(game);
   if (fingerprint === null) return undefined;
   const start = game.startAt.getTime();
@@ -151,16 +209,18 @@ export async function claimClashGameAlias(
           Math.abs(right.startAt.getTime() - start),
     );
   for (const candidate of ranked) {
+    const identity = { platform: candidate.platform, gameId: candidate.gameId };
+    if (options.claimProcessing) {
+      const claimed = await claimAliasWithProcessing(riotMatchId, identity);
+      if (claimed !== undefined) return { ...identity, ...claimed };
+      continue;
+    }
     const claimed = await prisma.clashGameIdentity.updateMany({
-      where: {
-        platform: candidate.platform,
-        gameId: candidate.gameId,
-        OR: [{ riotMatchId: null }, { riotMatchId }],
-      },
+      where: { ...identity, OR: [{ riotMatchId: null }, { riotMatchId }] },
       data: { riotMatchId },
     });
     if (claimed.count > 0)
-      return { platform: candidate.platform, gameId: candidate.gameId };
+      return { ...identity, processingMatchId: candidate.processingMatchId };
   }
   return undefined;
 }
@@ -206,11 +266,22 @@ export function clashGameKey(game: {
 }
 
 /**
- * The match page for each canonical game: whichever id the pipeline
- * processed. A client-reported game is processed under the live id; a game
- * only Riot reported is processed under Riot's alias. With no processing
- * record (a lake backfill), the published id is the one the lake holds.
+ * A game's match page is whichever of its ids the pipeline processed: the
+ * live id for a client-reported game, Riot's alias when only Riot reported
+ * it. A game neither id was processed for has no page, so it gets no link.
  */
+export function clashMatchPage(input: {
+  canonical: RiotMatchId;
+  alias: RiotMatchId | undefined;
+  processed: ReadonlySet<string>;
+}): RiotMatchId | undefined {
+  if (input.processed.has(input.canonical)) return input.canonical;
+  return input.alias !== undefined && input.processed.has(input.alias)
+    ? input.alias
+    : undefined;
+}
+
+/** Match pages for canonical games; a game with no processed page is absent. */
 export async function clashMatchPageIds(
   games: readonly { platform: string; gameId: string }[],
 ): Promise<Map<string, RiotMatchId>> {
@@ -245,29 +316,12 @@ export async function clashMatchPageIds(
     for (const row of rows) observed.add(row.riotMatchId);
   }
   for (const game of unique) {
-    const canonical = clashCanonicalMatchId(game);
-    const alias = identities.get(clashGameKey(game));
-    pages.set(
-      clashGameKey(game),
-      alias === undefined || observed.has(canonical) ? canonical : alias,
-    );
+    const page = clashMatchPage({
+      canonical: clashCanonicalMatchId(game),
+      alias: identities.get(clashGameKey(game)),
+      processed: observed,
+    });
+    if (page !== undefined) pages.set(clashGameKey(game), page);
   }
   return pages;
-}
-
-/** Whether the live game already has a canonical record (client evidence or a pipeline run). */
-export async function clashCanonicalRecorded(
-  matchId: RiotMatchId,
-): Promise<boolean> {
-  const [admission, observation] = await Promise.all([
-    prisma.matchEvidenceAdmission.findUnique({
-      where: { riotMatchId: matchId },
-      select: { riotMatchId: true },
-    }),
-    prisma.matchObservation.findUnique({
-      where: { riotMatchId: matchId },
-      select: { riotMatchId: true },
-    }),
-  ]);
-  return admission !== null || observation !== null;
 }
