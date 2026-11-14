@@ -1,4 +1,4 @@
-import { Client, Connection } from "@temporalio/client";
+import { Client, Connection, type ConnectionOptions } from "@temporalio/client";
 import { createTemporalClientTracingInterceptor } from "@shepherdjerred/temporal-observability/interceptors";
 import {
   type TemporalNamespace,
@@ -58,6 +58,7 @@ export async function createTemporalVisibilityClient(
 
 export async function createTemporalReadClient(
   namespace: TemporalNamespace,
+  options: Pick<ConnectionOptions, "connectTimeout"> = {},
 ): Promise<Client> {
   const cachedClient = cachedVisibilityClients.get(namespace);
   if (cachedClient !== undefined) {
@@ -65,7 +66,7 @@ export async function createTemporalReadClient(
   }
 
   const address = Bun.env["TEMPORAL_ADDRESS"] ?? DEFAULT_ADDRESS;
-  const connection = await Connection.connect({ address });
+  const connection = await Connection.connect({ address, ...options });
   const client = new Client({ connection, namespace });
   cachedVisibilityClients.set(namespace, client);
   return client;

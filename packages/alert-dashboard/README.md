@@ -79,6 +79,17 @@ targets, phases, outcomes and heartbeats; the page polls every five seconds.
 Uncertain effects and locks are never cleared by viewing the page. Historical
 receipts describe verification at the recorded time, not current visibility.
 
+Each source shows its last started publishing run, most recent confirmed action,
+and next expected scheduled opportunity in Pacific time. Previews, unstarted
+inventory skips and report save times do not advance the last-run column; a
+later failure does not erase the last success. The scheduled forecast reads the
+live dispatch schedule and current enabled audience, then applies the runner's
+cooldown, preferred posting window and daily attempt cap. It is an opportunity,
+not a reserved execution: runtime availability and spend limits still apply.
+Paused, disabled, held or manually run sources show the reason instead of a
+date. A producer without timing observations shows timing as unavailable; the
+raw recorded cooldown is never presented as a planned run.
+
 The dashboard and runner are independent processes. Closing the page or stopping
 its launcher does not stop promotion execution. No publishing controls or
 unattended schedule are enabled by this command. Missing/invalid local storage

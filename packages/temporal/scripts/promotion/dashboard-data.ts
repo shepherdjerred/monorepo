@@ -23,6 +23,7 @@ import {
 import { SolverBudgetSchema } from "#activities/promotion/store.ts";
 import { promotionSpendDay } from "#activities/promotion/control/budget.ts";
 import { promotionRunSummary } from "@shepherdjerred/ops-model/promotion/summary.ts";
+import { promotionHistoryTiming } from "@shepherdjerred/ops-model/promotion/timing.ts";
 import { localOwnerAlive } from "./process-owner.ts";
 import {
   PromotionAiLedgerSchema,
@@ -148,7 +149,7 @@ export async function readDashboard(directory: string) {
       batch.finishedAt === null && ownerAbsent(batch.pid, batch.startedAt),
   }));
   const sources = promotionManifest.targets.map((target) =>
-    sourceView(target, states.get(target.id), history),
+    sourceView(target, states.get(target.id), history, batches),
   );
   const overview = PromotionOverviewSchema.parse({
     version: 1,
@@ -255,6 +256,7 @@ function sourceView(
   target: PromotionTarget,
   state: PromotionState | undefined,
   history: PromotionHistoryEntry[],
+  batches: PromotionBatch[],
 ) {
   const entries = history.filter((item) => item.targetId === target.id);
   const latest = entries.find((item) => item.timeBasis !== "attempt") ?? null;
@@ -278,6 +280,11 @@ function sourceView(
     notes: target.notes,
     constraint: constraint(target, state),
     nextAllowedAt: deadline === 0 ? null : new Date(deadline).toISOString(),
+    timing: {
+      ...promotionHistoryTiming({ targetId: target.id, batches, history }),
+      nextPlannedAt: null,
+      nextPlannedReason: "Manual runs only",
+    },
     latest,
     preview: entries.find((item) => item.mode === "preview") ?? null,
     lastAction:

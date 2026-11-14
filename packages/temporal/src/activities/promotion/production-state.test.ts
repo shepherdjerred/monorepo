@@ -31,13 +31,15 @@ it("reads production progress and receipts without initializing or mutating stat
     selected: ["pmc"],
   });
   const occurrenceId = "storm-promotion/pmc/fixture";
+  const runAt = "2026-11-12T08:00:00Z";
+  const successAt = "2026-11-12T08:01:00Z";
   await updatePromotionState(store, "pmc", (state) => ({
     ...state,
     attempts: [
       {
         occurrenceId,
-        attemptedAt: new Date().toISOString(),
-        settledAt: new Date().toISOString(),
+        attemptedAt: runAt,
+        settledAt: successAt,
         status: "verified",
         receiptUrl: "https://www.planetminecraft.com/server/the-storm-3004178/",
         evidenceKey: null,
@@ -55,12 +57,23 @@ it("reads production progress and receipts without initializing or mutating stat
       phase: "verified",
       summary: "Bumped and confirmed",
       occurrenceId,
+      startedAt: runAt,
       finishedAt: new Date().toISOString(),
     },
   });
   await finishPromotionBatch({ store, id: "sweep", overlaps: [] });
   put.mockClear();
-  const view = await readProductionPromotionStatus(store);
+  const now = Date.parse("2026-11-14T09:00:00Z");
+  const view = await readProductionPromotionStatus(store, {
+    now,
+    readPlanning: () =>
+      Promise.resolve({
+        available: true,
+        enabled: true,
+        enabledTargets: ["pmc"],
+        schedule: { status: "active", times: ["2026-11-15T00:00:00Z"] },
+      }),
+  });
   expect(put).not.toHaveBeenCalled();
   expect(view.overview.scheduling).toBe("scheduled");
   expect(
@@ -71,6 +84,36 @@ it("reads production progress and receipts without initializing or mutating stat
     receiptUrl: "https://www.planetminecraft.com/server/the-storm-3004178/",
   });
   expect(view.overview.lastRun.counts.done).toBe(1);
+  const timing = {
+    lastRunAt: runAt,
+    lastSuccessAt: successAt,
+    nextPlannedAt: "2026-11-15T00:00:00.000Z",
+    nextPlannedReason: "Expected scheduled opportunity",
+  };
+  expect(
+    view.overview.sources.find((source) => source.id === "pmc")?.timing,
+  ).toEqual(timing);
+  expect(
+    view.overview.lastRun.rows.find((row) => row.targetId === "pmc")?.timing,
+  ).toEqual(timing);
+  const unavailable = await readProductionPromotionStatus(store, {
+    now,
+    readPlanning: () =>
+      Promise.resolve({
+        available: true,
+        enabled: true,
+        enabledTargets: ["pmc"],
+        schedule: { status: "unavailable" },
+      }),
+  });
+  expect(
+    unavailable.overview.sources.find((source) => source.id === "pmc")?.timing,
+  ).toEqual({
+    ...timing,
+    nextPlannedAt: null,
+    nextPlannedReason: "Schedule unavailable",
+  });
+  expect(put).not.toHaveBeenCalled();
 });
 
 it("bounds read-only reconciliation by original effect and batch without altering the effect", async () => {

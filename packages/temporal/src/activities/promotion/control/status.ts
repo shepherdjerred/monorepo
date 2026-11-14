@@ -6,11 +6,13 @@ import {
   type PromotionOverview,
 } from "@shepherdjerred/ops-model/promotion/model.ts";
 import { promotionRunSummary } from "@shepherdjerred/ops-model/promotion/summary.ts";
+import { promotionHistoryTiming } from "@shepherdjerred/ops-model/promotion/timing.ts";
 import {
   PromotionStateSchema,
   initialPromotionState,
   promotionDispatchAt,
   promotionFailurePause,
+  type PromotionState,
 } from "#shared/promotion/model.ts";
 import { promotionManifest } from "#activities/promotion/manifest.ts";
 import { PromotionBatchIndex } from "./batches.ts";
@@ -24,6 +26,10 @@ import {
   PromotionAiLedgerSchema,
   promotionAiAccounting,
 } from "@shepherdjerred/ops-model/promotion/ai-allocation.ts";
+import {
+  promotionNextPlanned,
+  type PromotionPlanningObservation,
+} from "./status-timing.ts";
 
 type Batch = z.infer<typeof PromotionBatchSchema>;
 function entryStatus(batch: Batch, entry: Batch["entries"][number]) {
@@ -101,8 +107,17 @@ async function readBatches(store: PromotionStore) {
 
 export async function readProductionPromotionStatus(
   store: PromotionStore = promotionStore(),
+  options: {
+    now?: number;
+    readPlanning?: (
+      states: PromotionState[],
+      now: number,
+    ) => Promise<PromotionPlanningObservation>;
+  } = {},
 ) {
+  const now = options.now ?? Date.now();
   const states = await readStates(store);
+  const planning = await options.readPlanning?.(states, now);
   const batches = await readBatches(store);
   const cleanups = await readCleanups(store, batches);
   const evidence = new Map<string, string>();
@@ -188,6 +203,16 @@ export async function readProductionPromotionStatus(
             ? "Paused"
             : (promotionFailurePause(state) ?? state.blockedReason ?? ""),
         nextAllowedAt: due === 0 ? null : new Date(due).toISOString(),
+        timing: {
+          ...promotionHistoryTiming({ targetId: target.id, batches, history }),
+          ...promotionNextPlanned({
+            target,
+            state,
+            batches,
+            now,
+            ...(planning === undefined ? {} : { planning }),
+          }),
+        },
         latest: entries.find((h) => h.timeBasis === "execution") ?? null,
         preview: entries.find((h) => h.mode === "preview") ?? null,
         lastAction:
@@ -204,7 +229,7 @@ export async function readProductionPromotionStatus(
   }));
   const overview = PromotionOverviewSchema.parse({
     version: 1,
-    readAt: new Date().toISOString(),
+    readAt: new Date(now).toISOString(),
     scheduling: "scheduled",
     sources,
     batches: presentation,

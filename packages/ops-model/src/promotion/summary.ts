@@ -222,6 +222,7 @@ function runRow(
     intervention,
     ...rowEvidence(source, selected, initial),
     nextAllowedAt: unknownCooldown ? null : source.nextAllowedAt,
+    ...(source.timing === undefined ? {} : { timing: source.timing }),
   };
 }
 

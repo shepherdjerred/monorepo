@@ -43,6 +43,13 @@ export const PromotionBatchSchema = z.object({
   ),
 });
 export type PromotionBatch = z.infer<typeof PromotionBatchSchema>;
+export const PromotionSourceTimingSchema = z.object({
+  lastRunAt: z.iso.datetime().nullable(),
+  lastSuccessAt: z.iso.datetime().nullable(),
+  nextPlannedAt: z.iso.datetime().nullable(),
+  nextPlannedReason: z.string().min(1),
+});
+export type PromotionSourceTiming = z.infer<typeof PromotionSourceTimingSchema>;
 export const PromotionRunRowSchema = z.object({
   targetId: z.string(),
   name: z.string(),
@@ -66,6 +73,8 @@ export const PromotionRunRowSchema = z.object({
   receiptUrl: z.string().nullable(),
   evidenceId: z.string().nullable(),
   nextAllowedAt: z.string().nullable(),
+  // Additive v1 contract: older producers cannot claim a planned execution time.
+  timing: PromotionSourceTimingSchema.optional(),
 });
 export type PromotionRunRow = z.infer<typeof PromotionRunRowSchema>;
 export const PromotionRunSummarySchema = z.object({
@@ -103,6 +112,7 @@ export const PromotionOverviewSchema = z.object({
       notes: z.string(),
       constraint: z.string(),
       nextAllowedAt: z.string().nullable(),
+      timing: PromotionSourceTimingSchema.optional(),
       latest: PromotionHistoryEntrySchema.nullable(),
       preview: PromotionHistoryEntrySchema.nullable(),
       lastAction: PromotionHistoryEntrySchema.nullable(),
