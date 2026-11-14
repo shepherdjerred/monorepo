@@ -364,6 +364,23 @@ describe("goodMorningPreheat", () => {
   );
 });
 
+/** A wake run that skipped heat but still turned it off and ran the routine. */
+function expectDegradedWakeRoutine(
+  scenario: ReturnType<typeof makeScenario>,
+  reason: string,
+) {
+  expect(climateCalls(scenario)).toEqual([TURN_OFF_MASTER_BATHROOM]);
+  expect(scenario.notifications).toEqual(["Good Morning"]);
+  expect(
+    scenario.serviceCalls.some(
+      (call) => call.domain === "media_player" && call.service === "play_media",
+    ),
+  ).toBe(true);
+  expect(scenario.outcomes).toEqual([
+    { workflow: "goodMorningWakeUp", outcome: "executed", reason },
+  ]);
+}
+
 describe("goodMorningWakeUp", () => {
   test(
     "keeps the wake routine running with heat skipped when the weather API is down",
@@ -375,21 +392,10 @@ describe("goodMorningWakeUp", () => {
       await runWorker(scenario, goodMorningWakeUp, workflowId);
 
       expect(scenario.weatherAttempts).toBe(3);
-      expect(climateCalls(scenario)).toEqual([TURN_OFF_MASTER_BATHROOM]);
-      expect(scenario.notifications).toEqual(["Good Morning"]);
-      expect(
-        scenario.serviceCalls.some(
-          (call) =>
-            call.domain === "media_player" && call.service === "play_media",
-        ),
-      ).toBe(true);
-      expect(scenario.outcomes).toEqual([
-        {
-          workflow: "goodMorningWakeUp",
-          outcome: "executed",
-          reason: "wake-routine-complete-weather-unavailable",
-        },
-      ]);
+      expectDegradedWakeRoutine(
+        scenario,
+        "wake-routine-complete-weather-unavailable",
+      );
 
       // The recorded history (including the patch marker) must replay.
       const history = await testEnv.client.workflow
@@ -437,21 +443,10 @@ describe("goodMorningWakeUp", () => {
         "wake-temperature-unavailable-" + crypto.randomUUID(),
       );
 
-      expect(climateCalls(scenario)).toEqual([TURN_OFF_MASTER_BATHROOM]);
-      expect(scenario.notifications).toEqual(["Good Morning"]);
-      expect(
-        scenario.serviceCalls.some(
-          (call) =>
-            call.domain === "media_player" && call.service === "play_media",
-        ),
-      ).toBe(true);
-      expect(scenario.outcomes).toEqual([
-        {
-          workflow: "goodMorningWakeUp",
-          outcome: "executed",
-          reason: "wake-routine-complete-temperature-unavailable",
-        },
-      ]);
+      expectDegradedWakeRoutine(
+        scenario,
+        "wake-routine-complete-temperature-unavailable",
+      );
     },
     WORKFLOW_TEST_TIMEOUT_MS,
   );
