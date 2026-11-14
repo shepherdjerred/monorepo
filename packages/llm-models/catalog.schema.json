@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/shepherdjerred/monorepo/packages/llm-models/catalog.schema.json",
   "title": "LLM model catalog",
-  "description": "Language-neutral source of truth for the active LLM models we use. Token prices are USD per 1,000,000 tokens; image prices are USD per image. Validated at runtime by Zod (TS) and Pydantic (Python).",
+  "description": "Language-neutral source of truth for the LLM models we use or price. Token prices are USD per 1,000,000 tokens; image prices are USD per image. Validated at runtime by Zod (TS) and Pydantic (Python).",
   "type": "object",
   "additionalProperties": {
     "$ref": "#/$defs/modelEntry"
@@ -20,13 +20,28 @@
         "status"
       ],
       "additionalProperties": false,
+      "if": {
+        "required": ["pricingOnly"]
+      },
+      "then": {
+        "properties": {
+          "routes": {
+            "maxProperties": 0
+          }
+        }
+      },
       "properties": {
         "id": {
           "type": "string",
           "minLength": 1
         },
         "provider": {
-          "enum": ["openai", "anthropic", "google"]
+          "description": "Who made and bills the model. A superset of the native-route transports: a creator with no transport (moonshot) only appears on pricingOnly entries.",
+          "enum": ["openai", "anthropic", "google", "moonshot"]
+        },
+        "pricingOnly": {
+          "description": "A model this repository prices but never calls. It declares no routes and the runtime refuses to resolve it.",
+          "const": true
         },
         "displayName": {
           "type": "string",

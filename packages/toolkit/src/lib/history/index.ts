@@ -40,7 +40,7 @@ import {
   type UsageQueryOptions,
 } from "./usage-query.ts";
 
-const INDEX_SCHEMA_VERSION = 5;
+const INDEX_SCHEMA_VERSION = 6;
 
 type HistoryQueryOptions = DocumentFilter & {
   readonly limit?: number;

@@ -31,6 +31,7 @@ import type {
   UsageEventEntry,
 } from "#lib/history/types.ts";
 import {
+  catalogCost,
   optionalUsageNumber,
   reportedCost,
   requiredUsageNumber,
@@ -53,18 +54,46 @@ type GrokSessionMeta = {
   readonly sessionId: string | null;
   readonly cwd: string | null;
   readonly defaultModel: string | null;
+  readonly gitBranch: string | null;
 };
 
 type GrokLineLocation = UsageFieldLocation;
 
-function grokReportedCost(
+/**
+ * Model ids to try against the shared catalog: the id as Grok reports it,
+ * without a provider prefix, and without the `-build` agent suffix.
+ */
+function grokModelCandidates(model: string): string[] {
+  const unprefixed = model.replace(/^(?:x-ai|xai)\//, "");
+  const base = unprefixed.replace(/-build$/, "");
+  return [...new Set([model, unprefixed, base])];
+}
+
+/**
+ * "auto" cost: the turn's own `costUsdTicks` when Grok reported one,
+ * otherwise the turn's usage priced from the shared catalog. A model the
+ * catalog doesn't know stays unpriced (`costComplete` false). Grok's
+ * `inputTokens` already includes the cached-read tokens, so the catalog is
+ * given them as `cachedInputTokens` (a subset of input), not as an
+ * additional cache-read bucket.
+ */
+function grokCost(
   usage: Record<string, unknown>,
+  model: string,
+  counts: UsageCounts,
   location: GrokLineLocation,
 ): UsageCost {
   // costUsdTicks is genuinely optional — a turn with no priced cost data
   // omits it entirely, distinct from a turn that failed to report tokens.
   const ticks = optionalUsageNumber("Grok", usage, "costUsdTicks", location);
-  return reportedCost(ticks > 0 ? ticks / TICKS_PER_USD : null);
+  if (ticks > 0) {
+    return reportedCost(ticks / TICKS_PER_USD);
+  }
+  return catalogCost(grokModelCandidates(model), {
+    ...counts,
+    cacheReadTokens: 0,
+    cachedInputTokens: counts.cacheReadTokens,
+  });
 }
 
 function grokUsageCounts(
@@ -128,20 +157,22 @@ function grokUsageEntries(
           `Malformed Grok model usage entry for model "${model}" on line ${String(location.lineNumber)} in ${location.filePath}`,
         );
       }
+      const counts = grokUsageCounts(modelRecord, location);
       return usageEventEntry(
         occurredAt,
         model,
-        grokUsageCounts(modelRecord, location),
-        grokReportedCost(modelRecord, location),
+        counts,
+        grokCost(modelRecord, model, counts, location),
       );
     });
   }
+  const counts = grokUsageCounts(usage, location);
   return [
     usageEventEntry(
       occurredAt,
       defaultModel,
-      grokUsageCounts(usage, location),
-      grokReportedCost(usage, location),
+      counts,
+      grokCost(usage, defaultModel, counts, location),
     ),
   ];
 }
@@ -382,7 +413,7 @@ function urlDecodeSegment(segment: string): string {
 async function grokSessionMeta(updatesPath: string): Promise<GrokSessionMeta> {
   const summaryPath = path.join(path.dirname(updatesPath), "summary.json");
   if (!(await pathExists(summaryPath))) {
-    return { sessionId: null, cwd: null, defaultModel: null };
+    return { sessionId: null, cwd: null, defaultModel: null, gitBranch: null };
   }
   const raw = await Bun.file(summaryPath).text();
   let parsed: unknown;
@@ -403,7 +434,8 @@ async function grokSessionMeta(updatesPath: string): Promise<GrokSessionMeta> {
     (info === null ? null : stringValue(info["cwd"])) ??
     stringValue(record["git_root_dir"]);
   const defaultModel = stringValue(record["current_model_id"]);
-  return { sessionId, cwd, defaultModel };
+  const gitBranch = stringValue(record["head_branch"]);
+  return { sessionId, cwd, defaultModel, gitBranch };
 }
 
 async function grokSessionFiles(grokHome: string): Promise<string[]> {
@@ -439,6 +471,7 @@ async function grokDocument(
       updatedAt: parsed.updatedAt ?? fallback,
       runtimeId: sessionId,
       usageEvents: parsed.usageEvents,
+      gitBranch: meta.gitBranch,
     },
     parsed.messages,
   );

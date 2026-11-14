@@ -54,15 +54,21 @@ import { emit, emitReport } from "#scripts/report.ts";
  * Deprecated entries keep their prices for historical attribution and are
  * allowed to lose their route; a `current` or `preview` entry without one is a
  * model application code can ask for and the runtime will refuse, so it fails
- * the sync rather than waiting to throw in production.
+ * the sync rather than waiting to throw in production. A `pricingOnly` entry
+ * is never callable, so it has no route by contract.
  *
  * This is a catalog invariant, not an upstream reachability probe: confirming a
  * model is still served would mean authenticating to all three providers from
  * an unattended weekly job. Pricing drift already covers the "quietly changed"
  * case for text models, and a withdrawn model shows up as overlay-only.
  */
-function missingNativeRoute(id: string, entry: ModelEntry): string | undefined {
-  return entry.status === "deprecated" || entry.routes.native !== undefined
+export function missingNativeRoute(
+  id: string,
+  entry: ModelEntry,
+): string | undefined {
+  return entry.pricingOnly === true ||
+    entry.status === "deprecated" ||
+    entry.routes.native !== undefined
     ? undefined
     : `${id} (${entry.status}) has no native route`;
 }
@@ -247,6 +253,25 @@ export function assertUpstreamCoverage(
       `no upstream covered any model for: ${missing.join(", ")}; refusing to report an incomplete cross-check as clean`,
     );
   }
+}
+
+/**
+ * The providers whose text models an upstream must cover for the run to count
+ * as a real cross-check. `pricingOnly` entries are excluded: their creators
+ * (Moonshot) are not among the direct APIs the upstream indexes are scoped
+ * to, so they are always overlay-only and maintained by hand against the
+ * creator's own pricing page — requiring coverage for them would fail every
+ * run.
+ */
+export function crossCheckedProviders(catalog: Catalog): ReadonlySet<string> {
+  return new Set(
+    Object.values(catalog)
+      .filter(
+        (entry) =>
+          entry.pricing.modality === "text" && entry.pricingOnly !== true,
+      )
+      .map((entry) => entry.provider),
+  );
 }
 
 /**
@@ -616,15 +641,7 @@ async function main(): Promise<void> {
   ]);
   const modelsDev = indexModelsDev(modelsDevRaw);
   const liteLlm = indexLiteLlm(liteLlmRaw);
-  assertUpstreamCoverage(
-    modelsDev,
-    liteLlm,
-    new Set(
-      Object.values(catalog)
-        .filter((entry) => entry.pricing.modality === "text")
-        .map((entry) => entry.provider),
-    ),
-  );
+  assertUpstreamCoverage(modelsDev, liteLlm, crossCheckedProviders(catalog));
   const now = new Date();
   const drifted: string[] = [];
   const models: Record<string, ModelVerdict> = {};

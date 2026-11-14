@@ -33,6 +33,8 @@ import { writeConductorFixture } from "./history-fixtures/conductor.ts";
 import { writeCursorFixture } from "./history-fixtures/cursor.ts";
 import { writeDatabase } from "./history-fixtures/database.ts";
 import { writeGrokFixture } from "./history-fixtures/grok.ts";
+import { writeKimiFixture } from "./history-fixtures/kimi.ts";
+import { writeMuseFixture } from "./history-fixtures/muse.ts";
 import { writeMirrorFixture } from "./history-fixtures/mirror.ts";
 
 let fixtureRoot = "";
@@ -182,6 +184,10 @@ beforeAll(async () => {
   const brimSyncMirrorIndex = await writeMirrorFixture(
     path.join(fixtureRoot, "brim-sync-mirror"),
   );
+  const kimi = await writeKimiFixture(
+    path.join(fixtureRoot, "kimi-code/sessions"),
+  );
+  const muse = await writeMuseFixture(path.join(fixtureRoot, "muse"));
 
   paths = {
     home: fixtureRoot,
@@ -193,6 +199,8 @@ beforeAll(async () => {
     cursorConversationDb: cursorDb,
     antigravityRoots: [antigravityRoot],
     grokHome,
+    kimiSessionsDir: kimi.sessionsDir,
+    museRoot: muse.museRoot,
     codexSessionsDir,
     brimSyncMirrorIndex,
   };

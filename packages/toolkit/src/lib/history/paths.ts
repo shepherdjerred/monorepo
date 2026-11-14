@@ -12,6 +12,10 @@ export type HistoryPaths = {
   readonly cursorConversationDb: string;
   readonly antigravityRoots: readonly string[];
   readonly grokHome: string;
+  /** Kimi Code's session tree: one `wd_<slug>_<hash>` dir per workdir. */
+  readonly kimiSessionsDir: string;
+  /** Meta Muse's data root: `session-index.db` plus `sessions/YYYY/MM/DD`. */
+  readonly museRoot: string;
   readonly codexSessionsDir: string;
   /** Index of other machines' transcripts pulled by `brim sync pull`. */
   readonly brimSyncMirrorIndex: string;
@@ -54,6 +58,8 @@ export function defaultHistoryPaths(home = os.homedir()): HistoryPaths {
       ".config/antigravity",
     ].map((root) => path.join(home, root)),
     grokHome: path.join(home, ".grok"),
+    kimiSessionsDir: path.join(home, ".kimi-code/sessions"),
+    museRoot: path.join(home, ".local/share/muse"),
     codexSessionsDir: path.join(home, ".codex/sessions"),
     brimSyncMirrorIndex: path.join(
       home,

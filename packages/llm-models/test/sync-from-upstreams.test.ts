@@ -2,6 +2,8 @@ import { describe, expect, test } from "vitest";
 import {
   assertUpstreamCoverage,
   contextRejection,
+  crossCheckedProviders,
+  missingNativeRoute,
   indexLiteLlm,
   indexModelsDev,
   priceDecision,
@@ -732,5 +734,26 @@ describe("applicable fields for an embedding model", () => {
       rejected: [],
     });
     expect(verdict.unmeasured).toContain("output");
+  });
+});
+
+function pricingOnly(): ModelEntry {
+  return entry({ provider: "moonshot", pricingOnly: true });
+}
+
+describe("pricingOnly entries", () => {
+  test("are not reported as missing a native route", () => {
+    expect(missingNativeRoute("subject", pricingOnly())).toBeUndefined();
+    expect(missingNativeRoute("subject", entry({}))).toBe(
+      "subject (current) has no native route",
+    );
+  });
+
+  test("do not require upstream coverage for their creator", () => {
+    const catalog = CatalogSchema.parse({
+      routed: { ...entry({}), id: "routed" },
+      kimi: { ...pricingOnly(), id: "kimi" },
+    });
+    expect([...crossCheckedProviders(catalog)]).toEqual(["anthropic"]);
   });
 });
