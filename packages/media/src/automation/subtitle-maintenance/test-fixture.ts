@@ -18,6 +18,7 @@ const digest = (text: string) =>
 
 export function automaticSubtitleHarness() {
   const harness = automationTestHarness();
+  const ownerAccountId = crypto.randomUUID();
   const directories: string[] = [];
   afterAll(async () => {
     for (const directory of directories)
@@ -37,12 +38,14 @@ export function automaticSubtitleHarness() {
       const asset = await db.libraryAsset.findUniqueOrThrow({
         where: { id: published.entry.assetId },
       });
-      const owner = await db.mediaUser.create({
-        data: {
-          plexAccountId: crypto.randomUUID(),
+      const owner = await db.mediaUser.upsert({
+        where: { plexAccountId: ownerAccountId },
+        create: {
+          plexAccountId: ownerAccountId,
           displayName: "Owner",
           role: "owner",
         },
+        update: {},
       });
       await db.mediaRequest.update({
         where: { id: f.request.id },

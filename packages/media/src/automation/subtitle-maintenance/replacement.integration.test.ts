@@ -55,12 +55,20 @@ test("a source without its actual claimed provider download cannot obtain automa
   const f = await harness.setup("missing-event");
   await expect(
     f.automatic.begin({ job: f.job, candidateSubtitleId: f.candidate.id }),
-  ).rejects.toThrow();
+  ).rejects.toMatchObject({ code: "P2025" });
   expect(
     await f.db.applicationEvent.count({
-      where: { kind: "subtitle_automatic_upgrade_candidate_v1" },
+      where: {
+        kind: "subtitle_automatic_upgrade_candidate_v1",
+        payload: { path: ["operationId"], equals: f.job.operationId },
+      },
     }),
   ).toBe(0);
+  expect(
+    await f.db.subtitleAsset.findUniqueOrThrow({
+      where: { id: f.candidate.id },
+    }),
+  ).toEqual(f.candidate);
 });
 test("an installed caption changed since the scheduled search remains untouched", async () => {
   const f = await harness.setup();
