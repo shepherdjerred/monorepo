@@ -102,7 +102,7 @@ export async function householdRetentionState(
   ];
   if (ownerConsent && recipients.length === 0)
     recipients.push({ userId: policyOwner.id, user: policyOwner });
-  return { reason, roots, recipients, libraryKeep, ancestry };
+  return { reason, roots, recipients, libraryKeep, ancestry, ownerConsent };
 }
 
 function householdProtectionReason(input: {

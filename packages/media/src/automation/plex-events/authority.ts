@@ -203,7 +203,7 @@ export async function lockWatchAuthority(
         mediaId: { in: mediaIds },
         ...requestWhere,
       },
-      select: { userId: true },
+      include: { coverageSources: { include: { rootRequest: true } } },
     }),
   );
   const household = await householdRetentionState(tx, media.id, edition);
@@ -344,6 +344,9 @@ export async function lockWatchAuthority(
     binding,
     scope,
     hintCurrent,
+    household,
+    claims,
+    cohortClaims,
     ...nativeCompensationMetadata(compensation),
   };
 }

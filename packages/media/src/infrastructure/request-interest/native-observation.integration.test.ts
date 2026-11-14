@@ -237,6 +237,16 @@ async function exerciseExpiredPlayback(
     const beforeSweep = await f.read();
     expect(beforeSweep.interestState).toBe(expectedPlaybackState(mode));
   }
+  const stableTarget = await f.db.mediaIntent.findUniqueOrThrow({
+    where: { mediaId_edition: { mediaId: f.rootId, edition: "default" } },
+  });
+  expect(stableTarget.generation).toBe(target.generation);
+  expect(
+    await f.db.retentionDecision.findUniqueOrThrow({
+      where: { id: before.decisionId },
+    }),
+  ).toMatchObject({ state: "warning_pending", generation: target.generation });
+  if (mode !== "resumed") expect(pending.decisionId).toBe(before.decisionId);
   await f.sweep();
   const renewed = await f.read();
   if (mode === "resumed") {
@@ -286,6 +296,12 @@ async function exerciseExpiredPlayback(
       }),
     ).toBe(0);
   }
+  if (mode === "manual_finished")
+    await assertNativeUnwatchCancels(f, {
+      decisionId: before.decisionId,
+      generation: target.generation,
+      retentionInput,
+    });
   expect(
     await f.db.applicationEvent.findUniqueOrThrow({
       where: { id: noticeEventId },
@@ -296,6 +312,43 @@ async function exerciseExpiredPlayback(
       where: { id: f.published.entry.assetId },
     }),
   ).toMatchObject({ state: "published", owned: true });
+}
+
+async function assertNativeUnwatchCancels(
+  f: Awaited<ReturnType<typeof fixture>>,
+  input: {
+    decisionId: string;
+    generation: number;
+    retentionInput: {
+      operationId: string;
+      mediaId: string;
+      generation: number;
+    };
+  },
+) {
+  // Even a released requester must retain true→false unwatch protection.
+  await f.observe(true);
+  await f.observe(false);
+  const target = await f.db.mediaIntent.findUniqueOrThrow({
+    where: { mediaId_edition: { mediaId: f.rootId, edition: "default" } },
+  });
+  expect(target.generation).toBe(input.generation + 1);
+  expect(
+    await f.db.retentionDecision.findUniqueOrThrow({
+      where: { id: input.decisionId },
+    }),
+  ).toMatchObject({ state: "cancelled" });
+  expect(
+    await createRetentionActivities(f.transport.context).evaluateMediaRetention(
+      input.retentionInput,
+    ),
+  ).toMatchObject({ status: "obsolete", reason: "intent_obsolete" });
+  expect(
+    await f.db.applicationEvent.findFirstOrThrow({
+      where: { mediaId: f.rootId, kind: "media_marked_unwatched" },
+      orderBy: { createdAt: "desc" },
+    }),
+  ).toMatchObject({ payload: { generation: target.generation } });
 }
 
 function expectedPlaybackState(mode: PlaybackControl) {

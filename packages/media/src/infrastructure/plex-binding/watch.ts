@@ -96,7 +96,7 @@ async function assertBoundAuthority(
   }
 }
 
-function parseWatchProjectionAuthority(row: PlexWatchProjection) {
+export function parseWatchProjectionAuthority(row: PlexWatchProjection) {
   const stored = parsePlexRecord(
     BoundWatchAuthoritySchema,
     row.authority,
