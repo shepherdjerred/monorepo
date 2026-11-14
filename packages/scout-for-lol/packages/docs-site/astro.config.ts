@@ -6,6 +6,15 @@ import starlight from "@astrojs/starlight";
 import { defineConfig } from "astro/config";
 import { scoutAssetsPlugin } from "@scout-for-lol/design-system/build";
 
+/**
+ * The content layer persists its data store (`data-store.json`) in `cacheDir`
+ * and never keys it by environment, so a store written by one flavour is
+ * replayed into the other, and concurrent Astro processes (a prod `typecheck`
+ * or `lint` beside the beta `test:ci` build in one `turbo run`) race on its
+ * atomic rename. Each flavour therefore owns its own cache directory.
+ */
+const flavor = env.PUBLIC_SCOUT_SITE_FLAVOR === "beta" ? "beta" : "prod";
+
 const siteOrigin = env.PUBLIC_DOCS_SITE_ORIGIN ?? "https://scout-for-lol.com";
 const posthogHeadAttrs = {
   "data-posthog-project-token": env.PUBLIC_POSTHOG_PROJECT_TOKEN,
@@ -31,6 +40,7 @@ const posthogHeadAttrs = {
  */
 export default defineConfig({
   base: "/docs/",
+  cacheDir: `./node_modules/.astro-${flavor}/`,
   build: {
     format: "directory",
     inlineStylesheets: "never",
