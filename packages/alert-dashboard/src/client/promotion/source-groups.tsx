@@ -4,6 +4,26 @@ import type {
 } from "@shepherdjerred/ops-model/promotion/model.ts";
 import { LinkOut, time } from "./ui.tsx";
 
+function SourceTime({
+  value,
+  empty,
+  detail,
+}: {
+  value: string | null | undefined;
+  empty: string;
+  detail?: string | undefined;
+}) {
+  return value === undefined ? (
+    <span className="p-muted">Unavailable</span>
+  ) : value === null ? (
+    <span className="p-muted">{empty}</span>
+  ) : (
+    <time className="p-source-time" dateTime={value} title={detail}>
+      {time(value)}
+    </time>
+  );
+}
+
 function outcome(row: PromotionRunRow) {
   switch (row.outcome) {
     case "done":
@@ -29,75 +49,115 @@ function outcome(row: PromotionRunRow) {
 
 function SourceList({
   rows,
+  label,
   onHistory,
 }: {
   rows: PromotionRunRow[];
+  label: string;
   onHistory: (id: string) => void;
 }) {
   return (
-    <div className="p-source-list">
-      {rows.map((row) => (
-        <article className="p-source-item" key={row.targetId}>
-          <div className="p-source-name">
-            <strong>{row.name}</strong>
-            <small>{row.platform}</small>
-          </div>
-          <span className={`p-outcome p-outcome-${row.health}`}>
-            {outcome(row)}
-          </span>
-          <div className="p-source-reason">
-            <p>{row.reason}</p>
-            <details className="p-row-detail">
-              <summary>Details and receipt</summary>
-              <p>{row.detail}</p>
-              {row.intervention !== null && (
-                <p>
-                  {row.intervention === "corrected"
-                    ? "The post was corrected and its final text was verified."
-                    : row.intervention === "cleanup"
-                      ? "Reply cleanup succeeded on a later attempt."
-                      : "An earlier attempt failed; the later attempt succeeded and was verified."}
-                </p>
-              )}
-              {row.initialDetail !== null &&
-                row.initialDetail !== row.detail && (
+    <div
+      className="p-source-list"
+      role="region"
+      aria-label={label}
+      tabIndex={0}
+    >
+      <table className="p-source-table">
+        <caption className="sr-only">{label}. All times are Pacific.</caption>
+        <thead>
+          <tr>
+            <th scope="col">Source</th>
+            <th scope="col">Outcome</th>
+            <th scope="col">Last run</th>
+            <th scope="col">Last success</th>
+            <th scope="col">Next planned</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr className="p-source-item" key={row.targetId}>
+              <th className="p-source-name" scope="row">
+                <strong>{row.name}</strong>
+                <small>{row.platform}</small>
+              </th>
+              <td className="p-source-reason" data-label="Outcome">
+                <span className={`p-outcome p-outcome-${row.health}`}>
+                  {outcome(row)}
+                </span>
+                <p>{row.reason}</p>
+                <details className="p-row-detail">
+                  <summary>Details and receipt</summary>
+                  <p>{row.detail}</p>
+                  {row.intervention !== null && (
+                    <p>
+                      {row.intervention === "corrected"
+                        ? "The post was corrected and its final text was verified."
+                        : row.intervention === "cleanup"
+                          ? "Reply cleanup succeeded on a later attempt."
+                          : "An earlier attempt failed; the later attempt succeeded and was verified."}
+                    </p>
+                  )}
+                  {row.initialDetail !== null &&
+                    row.initialDetail !== row.detail && (
+                      <p>
+                        <strong>First attempt:</strong> {row.initialDetail}
+                      </p>
+                    )}
                   <p>
-                    <strong>First attempt:</strong> {row.initialDetail}
+                    {row.knownGood
+                      ? "This source has a confirmed automated action."
+                      : "No confirmed automated publishing action is recorded yet."}
                   </p>
-                )}
-              <p>
-                {row.knownGood
-                  ? "This source has a confirmed automated action."
-                  : "No confirmed automated publishing action is recorded yet."}
-              </p>
-              {row.nextAllowedAt !== null && (
-                <p>Recorded next allowed time: {time(row.nextAllowedAt)}</p>
-              )}
-              <div className="p-flex">
-                <LinkOut url={row.receiptUrl} label="Receipt" />
-                <LinkOut url={row.url} label="Source" />
-                {row.evidenceId !== null && (
-                  <a
-                    href={`/api/v1/promotion/evidence/${row.evidenceId}`}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    Captured evidence ↗
-                  </a>
-                )}
-                <a
-                  href="#promotion-history"
-                  onClick={() => {
-                    onHistory(row.targetId);
-                  }}
-                >
-                  View history
-                </a>
-              </div>
-            </details>
-          </div>
-        </article>
-      ))}
+                  {row.nextAllowedAt !== null && (
+                    <p>Recorded next allowed time: {time(row.nextAllowedAt)}</p>
+                  )}
+                  <div className="p-flex">
+                    <LinkOut url={row.receiptUrl} label="Receipt" />
+                    <LinkOut url={row.url} label="Source" />
+                    {row.evidenceId !== null && (
+                      <a
+                        href={`/api/v1/promotion/evidence/${row.evidenceId}`}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Captured evidence ↗
+                      </a>
+                    )}
+                    <a
+                      href="#promotion-history"
+                      onClick={() => {
+                        onHistory(row.targetId);
+                      }}
+                    >
+                      View history
+                    </a>
+                  </div>
+                </details>
+              </td>
+              <td className="p-source-timing" data-label="Last run">
+                <SourceTime
+                  value={row.timing?.lastRunAt}
+                  empty="Not recorded"
+                />
+              </td>
+              <td className="p-source-timing" data-label="Last success">
+                <SourceTime
+                  value={row.timing?.lastSuccessAt}
+                  empty="No confirmed success"
+                />
+              </td>
+              <td className="p-source-timing" data-label="Next planned">
+                <SourceTime
+                  value={row.timing?.nextPlannedAt}
+                  empty={row.timing?.nextPlannedReason ?? "Unavailable"}
+                  detail={row.timing?.nextPlannedReason}
+                />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
@@ -127,7 +187,11 @@ export function SourceGroups({
         {issues.length === 0 ? (
           <p className="p-muted">No unresolved errors for this run.</p>
         ) : (
-          <SourceList rows={issues} onHistory={onHistory} />
+          <SourceList
+            rows={issues}
+            label="Sources needing attention"
+            onHistory={onHistory}
+          />
         )}
       </section>
       {checking.length > 0 && (
@@ -135,20 +199,34 @@ export function SourceGroups({
           <h2>
             In progress / not yet verified <span>{checking.length}</span>
           </h2>
-          <SourceList rows={checking} onHistory={onHistory} />
+          <SourceList
+            rows={checking}
+            label="Sources in progress"
+            onHistory={onHistory}
+          />
         </section>
       )}
       <section id="sources-working" className="p-source-group">
         <h2>
           Working as expected <span>{done.length + waiting.length}</span>
         </h2>
-        {done.length > 0 && <SourceList rows={done} onHistory={onHistory} />}
+        {done.length > 0 && (
+          <SourceList
+            rows={done}
+            label="Working sources"
+            onHistory={onHistory}
+          />
+        )}
         {waiting.length > 0 && (
           <details className="p-fold">
             <summary>
               {waiting.length} not run — cooldown or not selected
             </summary>
-            <SourceList rows={waiting} onHistory={onHistory} />
+            <SourceList
+              rows={waiting}
+              label="Sources not run"
+              onHistory={onHistory}
+            />
           </details>
         )}
         {done.length + waiting.length === 0 && (
@@ -167,7 +245,11 @@ export function SourceGroups({
           </span>
         </summary>
         <div id="sources-disabled">
-          <SourceList rows={disabled} onHistory={onHistory} />
+          <SourceList
+            rows={disabled}
+            label="Disabled sources"
+            onHistory={onHistory}
+          />
         </div>
       </details>
     </>

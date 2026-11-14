@@ -67,6 +67,12 @@ it("reads legacy previews separately from confirmed actions without changing sto
       expect(source?.preview?.status).toBe("preview");
       expect(source?.latest?.timeBasis).toBe("report-saved");
       expect(source?.lastAction?.occurrenceId).toBe("manual/pmc");
+      expect(source?.timing).toEqual({
+        lastRunAt: null,
+        lastSuccessAt: "2026-11-01T00:00:01Z",
+        nextPlannedAt: null,
+        nextPlannedReason: "Manual runs only",
+      });
       expect(db.query("SELECT * FROM objects ORDER BY key").all()).toEqual(
         before,
       );

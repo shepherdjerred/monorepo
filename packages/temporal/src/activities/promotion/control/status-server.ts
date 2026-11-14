@@ -8,6 +8,7 @@ import {
   promotionStoragePrefix,
 } from "#activities/promotion/store.ts";
 import { readProductionPromotionStatus } from "./status.ts";
+import { readPromotionPlanningObservation } from "./status-schedule.ts";
 
 const Query = z.object({
   targetId: z.string().optional(),
@@ -27,7 +28,9 @@ export function startPromotionStatusServer(token: string) {
     | undefined;
   const read = async () => {
     if (cached !== undefined && Date.now() - readAt < 5000) return cached;
-    pending ??= readProductionPromotionStatus(store);
+    pending ??= readProductionPromotionStatus(store, {
+      readPlanning: readPromotionPlanningObservation,
+    });
     try {
       cached = await pending;
       readAt = Date.now();
