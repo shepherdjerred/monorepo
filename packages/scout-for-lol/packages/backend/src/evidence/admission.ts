@@ -95,6 +95,39 @@ export async function admitMatchEvidence(
   });
 }
 
+/** Admission reason for Riot's later id of a Clash game Scout already reported. */
+export const CLASH_ALIAS_ADMISSION_REASON = "clash-alias";
+
+/**
+ * Admit Riot's published id of a Clash game as an alias only: permanently
+ * HISTORY_ONLY and already settled for history recovery, so no pipeline run,
+ * report or lake row follows. Riot's payload stays as captured evidence.
+ * Written regardless of the recovery gate, because discovery reads it to
+ * keep skipping the id; an existing admission is never rewritten.
+ */
+export async function admitClashAlias(input: {
+  matchId: RiotMatchId;
+  completedAt: number;
+  discoveredAt?: Date;
+}): Promise<void> {
+  const now = input.discoveredAt ?? new Date();
+  await prisma.matchEvidenceAdmission.upsert({
+    where: { riotMatchId: input.matchId },
+    create: {
+      riotMatchId: input.matchId,
+      policy: "HISTORY_ONLY",
+      reason: CLASH_ALIAS_ADMISSION_REASON,
+      firstDiscoveredAt: now,
+      completedAt: new Date(input.completedAt),
+      riotHistoryListed: true,
+      timelineFinalizedAt: now,
+      historyReportComplete: true,
+      historyTimelineRecovered: true,
+    },
+    update: {},
+  });
+}
+
 /** Guard Activities as well as orchestration: old histories can still call them. */
 export async function matchEffectsAllowed(
   matchId: RiotMatchId,

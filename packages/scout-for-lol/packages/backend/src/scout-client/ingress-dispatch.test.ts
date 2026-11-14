@@ -3,7 +3,7 @@ import {
   RawMatchSchema,
   ScoutClientObservationBatchSchema,
 } from "@scout-for-lol/data";
-import { acceptedClientMatchDispatches } from "./ingress.ts";
+import { acceptedClientMatchDispatches } from "./dispatch-policy.ts";
 import { acceptedClientBindingMatchIds } from "./accepted-observations.ts";
 import { LOCAL_CANONICAL_DELAY_MS } from "#src/evidence/source-grace.ts";
 

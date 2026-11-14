@@ -11,6 +11,7 @@ import {
 } from "@scout-for-lol/data";
 import { prisma } from "#src/database/index.ts";
 import { upsertClashGameSighting } from "#src/league/clash/sighting.ts";
+import { recordClashGameIdentity } from "#src/league/clash/identity.ts";
 import { registeredResultPuuids } from "./result-accounts.ts";
 
 /** Independent result projection; no source selection, dispatch or game effects. */
@@ -39,10 +40,19 @@ export async function projectResultEvidence(
     resolveQueueTypeFromGame(result.queueId, result.gameMode, result.gameType),
   );
   if (!queue.success) return;
-  const tracked = new Set<string>(await registeredResultPuuids(result));
   const [platform, gameId] = result.matchId.split("_");
-  if (gameId === undefined)
+  if (platform === undefined || gameId === undefined)
     throw new Error("Validated match has no game identity");
+  // A client result is the live game; Riot's result may be its later alias.
+  if (result.source === "SCOUT_CLIENT" && result.gameCreation !== null)
+    await recordClashGameIdentity({
+      platform,
+      gameId,
+      queueId: result.queueId,
+      participants: result.participants,
+      startAt: new Date(result.gameCreation),
+    });
+  const tracked = new Set<string>(await registeredResultPuuids(result));
   for (const player of result.participants) {
     if (player.identity.kind !== "riot" || !tracked.has(player.identity.puuid))
       continue;

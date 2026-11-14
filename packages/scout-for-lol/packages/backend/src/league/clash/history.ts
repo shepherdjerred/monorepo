@@ -12,10 +12,16 @@ import {
   type PlatformRoute,
   type RawClashTeam,
   type RawClashTournament,
+  type RiotMatchId,
   type Region,
 } from "@scout-for-lol/data";
 import { prisma } from "#src/database/index.ts";
 import { isFeatureHardDisabled } from "#src/configuration/flags.ts";
+import {
+  canonicalClashGameIds,
+  clashGameKey,
+  clashMatchPageIds,
+} from "#src/league/clash/identity.ts";
 import {
   clashScheduleSightingWindow,
   formatClashThemeLabel,
@@ -87,6 +93,8 @@ export type ClashHistorySighting = {
   queue: string;
   matchIndex: number;
   outcome: "lobby" | "win" | "loss" | "unresolved";
+  /** The game's match page; null for a lobby with no finished game. */
+  matchId: RiotMatchId | null;
 };
 
 export type ClashHistoryPlayer = {
@@ -111,6 +119,7 @@ export type ClashHistorySightingRecord = {
   gameId: string;
   puuid: LeaguePuuid;
   source: string;
+  resultSource?: string;
   queue: string;
   championId: number;
   observedAt: Date;
@@ -161,19 +170,56 @@ export async function readClashHistoryForGuild(
   if (sightings.length === 0) {
     return [];
   }
-  return groupClashHistory({
+  const resolved = collapseClashAliasSightings(
     sightings,
+    await canonicalClashGameIds(sightings),
+  );
+  return groupClashHistory({
+    sightings: resolved,
     memberships,
     aliasByPuuid: new Map(
       accounts.map((account) => [account.puuid, account.alias]),
     ),
+    matchPageIds: await clashMatchPageIds(
+      resolved.filter((sighting) => sighting.source === "match"),
+    ),
   });
+}
+
+function sightingRank(sighting: SightingRow): number {
+  if (sighting.source !== "match") return 0;
+  return sighting.resultSource === "RIOT" ? 2 : 1;
+}
+
+/**
+ * One row per game and player: a row still under Riot's alias id (written
+ * before the alias was known and not yet merged) joins its live game, and
+ * the finished, Riot-sourced row wins over a client row or a lobby.
+ */
+export function collapseClashAliasSightings(
+  sightings: readonly SightingRow[],
+  canonicalByGame: ReadonlyMap<string, string>,
+): SightingRow[] {
+  const rows = new Map<string, SightingRow>();
+  for (const sighting of sightings) {
+    const gameId =
+      canonicalByGame.get(clashGameKey(sighting)) ?? sighting.gameId;
+    const row = { ...sighting, gameId };
+    const key = `${clashGameKey(row)}:${row.puuid}`;
+    const existing = rows.get(key);
+    if (existing === undefined || sightingRank(row) > sightingRank(existing))
+      rows.set(key, row);
+  }
+  return [...rows.values()].toSorted(
+    (left, right) => left.observedAt.getTime() - right.observedAt.getTime(),
+  );
 }
 
 export function groupClashHistory(input: {
   sightings: readonly SightingRow[];
   memberships: readonly MembershipRow[];
   aliasByPuuid: ReadonlyMap<string, string>;
+  matchPageIds?: ReadonlyMap<string, RiotMatchId>;
 }): ClashHistoryCup[] {
   const cups = new Map<string, ClashHistoryCup>();
   const matchIndexByPlayerCup = new Map<string, number>();
@@ -199,6 +245,10 @@ export function groupClashHistory(input: {
       queue: sighting.queue,
       matchIndex: nextIndex,
       outcome: sightingOutcome(sighting),
+      matchId:
+        sighting.source === "match"
+          ? (input.matchPageIds?.get(clashGameKey(sighting)) ?? null)
+          : null,
     });
   }
   return [...cups.values()].toSorted((left, right) =>

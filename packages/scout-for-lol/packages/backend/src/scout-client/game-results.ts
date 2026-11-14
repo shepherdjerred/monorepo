@@ -3,6 +3,7 @@ import {
   type GameResult,
 } from "@scout-for-lol/domain/artifacts/game-result.ts";
 import { admitMatchEvidence } from "#src/evidence/admission.ts";
+import { claimClashClientProcessing } from "#src/league/clash/identity.ts";
 import {
   RiotMatchIdSchema,
   type RiotMatchId,
@@ -95,12 +96,24 @@ export async function projectClientGameResult(
     discoveredAt,
   );
   if (deliveryMode === null) return "skipped";
-  await admitMatchEvidence({
-    matchId: matchId.data,
-    completedAt,
-    discoveredAt,
-    historical: deliveryMode === "silent-backfill",
+  // A Clash game whose Riot alias won the processing claim stays evidence
+  // only: without an admission, history recovery never reports it twice.
+  const owns = await claimClashClientProcessing({
+    platform: observation.platformId,
+    gameId: observation.gameId,
+    queueId: result.queueId,
+    participants: result.participants,
+    startAt: new Date(
+      result.gameCreation ?? completedAt - result.durationSeconds * 1000,
+    ),
   });
+  if (owns)
+    await admitMatchEvidence({
+      matchId: matchId.data,
+      completedAt,
+      discoveredAt,
+      historical: deliveryMode === "silent-backfill",
+    });
   await prisma.scoutClientGameResult.upsert({
     where: { observationId: observation.observationId },
     create: {

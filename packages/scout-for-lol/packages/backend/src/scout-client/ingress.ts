@@ -4,24 +4,15 @@ import {
   type ScoutClientObservation,
   type ScoutClientObservationBatch,
   type ScoutClientObservationQuarantineReason,
-  projectPostGameOutcome,
-  riotWithholdsMatchResult,
   withoutScoutClientCredentials,
-  type QueueType,
-  type ScoutClientPostGameOutcome,
 } from "@scout-for-lol/data";
 import {
-  gameKindOf,
   recordPostGameOutcome,
   recordStoredObservation,
 } from "./telemetry/capture-metrics.ts";
 import { prisma } from "#src/database/index.ts";
+import { withoutShadowedClashGames } from "#src/league/clash/alias.ts";
 import { Prisma } from "#generated/prisma/client/index.js";
-import {
-  IsoInstantSchema,
-  RiotMatchIdSchema,
-} from "@scout-for-lol/domain/identity/brands.ts";
-import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
 import configuration from "#src/configuration.ts";
 import {
   isPolicyEnabled,
@@ -29,18 +20,9 @@ import {
 } from "#src/configuration/flags.ts";
 import { currentScoutTemporalSupervisor } from "#src/temporal/runtime.ts";
 import { signalScoutClientMatchDispatch } from "#src/temporal/pipeline-starts.ts";
-import {
-  ScoutClientMatchDispatchBatchSchema,
-  type ScoutClientMatchDispatchItem,
-} from "@scout-for-lol/temporal/workflow-contracts";
+import { ScoutClientMatchDispatchBatchSchema } from "@scout-for-lol/temporal/workflow-contracts";
 import type { AuthenticatedScoutClient } from "./authentication.ts";
-import { parseLocalCanonicalMatch } from "./canonical-match.ts";
-import { LOCAL_CANONICAL_DELAY_MS } from "#src/evidence/source-grace.ts";
-import {
-  type IdentityMap,
-  isLcuUuid,
-  readIdentityAliases,
-} from "./identity-alias.ts";
+import { isLcuUuid, readIdentityAliases } from "./identity-alias.ts";
 import {
   learnBatchIdentities,
   observationUuids,
@@ -51,12 +33,11 @@ import { reconcileProcessedClientBinding } from "./late-binding.ts";
 import { withObserverPlatform } from "./platform-context.ts";
 import { projectClashEntity } from "./clash-entities.ts";
 import { projectClientGameResult } from "./game-results.ts";
-import { unconvertedConversion } from "./canonical/end-of-game-result.ts";
 import {
   acceptedObservationPlatforms,
   acceptedClientBindingMatchIds,
 } from "./accepted-observations.ts";
-import { postGameDeliveryMode } from "./dispatch-policy.ts";
+import { bodyDigest, evaluateClientPostGames } from "./dispatch-policy.ts";
 import {
   admitMatchEvidence,
   admittedDeliveryMode,
@@ -138,12 +119,6 @@ async function projectPlayerSnapshot(
       "updatedAt" = NOW()
     WHERE EXCLUDED."capturedAt" >= "ScoutClientPlayerSnapshot"."capturedAt"
   `;
-}
-
-function bodyDigest(observation: ScoutClientObservation): string {
-  return new Bun.CryptoHasher("sha256")
-    .update(JSON.stringify(observation))
-    .digest("hex");
 }
 
 /** The observer UUID the client sent, kept when it was a League-client UUID. */
@@ -330,127 +305,6 @@ export async function ingestObservationBatch(
 }
 
 /**
- * Select only complete, identity-consistent local matches for dispatch.
- * Match-history discoveries are backfills even when the LCU happened to
- * return enough fields to promote them; only an observed end-of-game bundle
- * is a live completion.
- */
-export function acceptedClientMatchDispatches(
-  batch: ScoutClientObservationBatch,
-  receipts: readonly Receipt[],
-  now = new Date(),
-  identities: IdentityMap = new Map(),
-): readonly ScoutClientMatchDispatchItem[] {
-  return evaluateClientPostGames(batch, receipts, now, identities).dispatches;
-}
-
-type PostGameEvaluation = {
-  readonly observationId: string;
-  readonly outcome: ScoutClientPostGameOutcome;
-  readonly gameKind: QueueType | "unknown";
-};
-
-function evaluateClientPostGames(
-  batch: ScoutClientObservationBatch,
-  receipts: readonly Receipt[],
-  now: Date,
-  identities: IdentityMap,
-): {
-  readonly dispatches: readonly ScoutClientMatchDispatchItem[];
-  readonly evaluations: readonly PostGameEvaluation[];
-} {
-  const evaluations: PostGameEvaluation[] = [];
-  const accepted = new Set(
-    receipts
-      .filter((receipt) => receipt.outcome !== "quarantined")
-      .map((receipt) => receipt.observationId),
-  );
-  // Riot gets first refusal for two minutes — except on a game it will never
-  // publish, a custom or a never-published queue, which is ready at once.
-  const riotFirstReadyAt = IsoInstantSchema.parse(
-    new Date(now.getTime() + LOCAL_CANONICAL_DELAY_MS).toISOString(),
-  );
-  const immediatelyReadyAt = IsoInstantSchema.parse(now.toISOString());
-  const starts = new Map<string, ScoutClientMatchDispatchItem>();
-  for (const raw of batch.observations) {
-    const observation = translateObservation(raw, identities);
-    if (
-      observation.kind !== "post_game" ||
-      !accepted.has(observation.observationId) ||
-      observation.platformId === undefined ||
-      observation.gameId === undefined ||
-      observation.localPuuid === undefined
-    ) {
-      continue;
-    }
-    const parsed = RiotMatchIdSchema.safeParse(
-      `${observation.platformId.toUpperCase()}_${observation.gameId}`,
-    );
-    if (!parsed.success) continue;
-    const sourcePuuid = LeaguePuuidSchema.parse(observation.localPuuid);
-    const match = parseLocalCanonicalMatch(
-      parsed.data,
-      {
-        observationId: observation.observationId,
-        platformId: observation.platformId,
-        localPuuid: observation.localPuuid,
-        payload: raw.payload,
-        bodyDigest: bodyDigest(raw),
-      },
-      identities,
-    );
-    if (match === null) {
-      evaluations.push({
-        observationId: observation.observationId,
-        outcome: projectPostGameOutcome({
-          identityResolved: true,
-          conversion: unconvertedConversion(raw.payload),
-          deliveryMode: null,
-        }),
-        gameKind: "unknown",
-      });
-      continue;
-    }
-    const deliveryMode = postGameDeliveryMode(
-      observation,
-      match.info.gameEndTimestamp,
-      now,
-    );
-    evaluations.push({
-      observationId: observation.observationId,
-      outcome: projectPostGameOutcome({
-        identityResolved: true,
-        conversion: "complete",
-        deliveryMode,
-      }),
-      gameKind: gameKindOf(match.info),
-    });
-    if (deliveryMode === null) continue;
-    const candidate: ScoutClientMatchDispatchItem = {
-      riotMatchId: parsed.data,
-      sourcePuuid,
-      deliveryMode,
-      gameEndTimestamp: match.info.gameEndTimestamp,
-      readyAt: riotWithholdsMatchResult(match.info)
-        ? immediatelyReadyAt
-        : riotFirstReadyAt,
-      completionTargets: [],
-      orderingAssured: false,
-    };
-    const existing = starts.get(parsed.data);
-    if (existing === undefined || deliveryMode === "live") {
-      starts.set(parsed.data, candidate);
-    }
-  }
-  const dispatches = [...starts.values()].sort(
-    (left, right) =>
-      left.gameEndTimestamp - right.gameEndTimestamp ||
-      left.riotMatchId.localeCompare(right.riotMatchId),
-  );
-  return { dispatches, evaluations };
-}
-
-/**
  * Durably enqueue accepted native matches behind the same serialized ordering
  * contract as Riot discovery. Failure is returned to the client so its outbox
  * retries the already-idempotent observation and signal together.
@@ -472,7 +326,11 @@ export async function startAcceptedClientMatches(
     }),
   };
   // Ingest has already learned every alias this batch can teach.
-  const { dispatches, evaluations } = evaluateClientPostGames(
+  const {
+    dispatches: evaluated,
+    evaluations,
+    games,
+  } = evaluateClientPostGames(
     contextualBatch,
     receipts,
     new Date(),
@@ -489,6 +347,7 @@ export async function startAcceptedClientMatches(
     if (fresh.has(evaluation.observationId))
       recordPostGameOutcome(evaluation.outcome, evaluation.gameKind);
   }
+  const dispatches = await withoutShadowedClashGames(evaluated, games);
   const admitted = await Promise.all(
     dispatches.map(async (item) => {
       const policy = await admitMatchEvidence({

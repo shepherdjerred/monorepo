@@ -67,6 +67,11 @@ export function sightingOutcomeLabel(
         : "Loss";
 }
 
+/** The Explore match page for a Clash game's canonical match id. */
+export function clashMatchPath(matchId: string): string {
+  return `/explore/matches/${encodeURIComponent(matchId)}`;
+}
+
 export function clashTeamLabel(input: {
   teamAbbreviation?: string | undefined;
   teamName?: string | undefined;
