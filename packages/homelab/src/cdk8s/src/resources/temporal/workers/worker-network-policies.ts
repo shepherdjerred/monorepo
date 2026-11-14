@@ -9,6 +9,7 @@ import {
   nsPeer,
   tcp,
   cloudflareTunnelIngressRule,
+  blackboxProbeIngressRule,
   fliptEgress,
   otlpEgress,
   prometheusIngressRule,
@@ -17,6 +18,12 @@ import {
   ALERTMANAGER_GATEWAY_PORT,
   PROMETHEUS_GATEWAY_PORT,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/monitoring-auth-gateways.ts";
+
+/**
+ * The gateway's public webhook listeners (GitHub, agent tasks, Xcode Cloud,
+ * sleep), each behind its own Service and TunnelBinding in `http-services.ts`.
+ */
+const GATEWAY_WEBHOOK_PORTS = [9466, 9467, 9468, 9469] as const;
 
 /**
  * Prometheus and Alertmanager listen on loopback behind a same-pod
@@ -188,7 +195,12 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
     spec: {
       podSelector: { matchLabels: { component: "gateway" } },
       policyTypes: ["Ingress", "Egress"],
-      ingress: [cloudflareTunnelIngressRule([9466, 9467, 9468, 9469])],
+      ingress: [
+        cloudflareTunnelIngressRule(GATEWAY_WEBHOOK_PORTS),
+        // Each webhook Service is a registered probe target, so
+        // blackbox-exporter connects to the same ports in-cluster.
+        ...GATEWAY_WEBHOOK_PORTS.map((port) => blackboxProbeIngressRule(port)),
+      ],
       egress: [monitoringEgress(ALERTMANAGER_GATEWAY_PORT)],
     },
   });

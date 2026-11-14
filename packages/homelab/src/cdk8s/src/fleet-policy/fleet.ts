@@ -127,6 +127,7 @@ const ServiceSpecSchema = z.object({
         z.looseObject({
           port: z.number(),
           targetPort: z.union([z.number(), z.string()]).optional(),
+          protocol: z.string().optional(),
         }),
       )
       .optional(),
@@ -196,7 +197,12 @@ export type FleetService = {
   name: string;
   /** Absent on a Service whose endpoints are managed elsewhere. */
   selector: Readonly<Record<string, string>> | undefined;
-  ports: readonly { port: number; targetPort: number | string | undefined }[];
+  /** The protocol defaults to TCP. */
+  ports: readonly {
+    port: number;
+    targetPort: number | string | undefined;
+    protocol: string;
+  }[];
 };
 
 export type Fleet = {
@@ -288,7 +294,11 @@ function toService(object: SynthesizedObject): FleetService {
     namespace: namespaceOf(object),
     name: object.metadata.name,
     selector,
-    ports: (ports ?? []).map(({ port, targetPort }) => ({ port, targetPort })),
+    ports: (ports ?? []).map(({ port, targetPort, protocol = "TCP" }) => ({
+      port,
+      targetPort,
+      protocol,
+    })),
   };
 }
 

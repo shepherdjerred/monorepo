@@ -197,7 +197,7 @@ spec:
     - from:
         - namespaceSelector:
             matchLabels:
-              kubernetes.io/metadata.name: cloudflare-tunnel
+              kubernetes.io/metadata.name: cloudflare-operator-system
       ports:
         - port: 3000
           protocol: TCP

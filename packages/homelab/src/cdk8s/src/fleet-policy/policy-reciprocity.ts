@@ -12,6 +12,7 @@ import {
   podsOf,
   policiesAllow,
   policiesSelecting,
+  portsCover,
   type Pods,
 } from "./network-reachability.ts";
 
@@ -26,7 +27,12 @@ import {
  */
 
 /** The pods one side of a rule names, and whether NetworkPolicy binds them. */
-type Party = { pods: Pods; policed: boolean };
+type Party = {
+  pods: Pods;
+  policed: boolean;
+  /** Whether a synthesized workload backs the pods, so every label is known. */
+  synthesized: boolean;
+};
 
 /**
  * The label sets a selector requires: its matchLabels, once per combination
@@ -66,12 +72,59 @@ function partiesNamedBy(
     ? labelSetsRequiredBy(selector).map((labels) => ({
         pods: podsLabelled(namespace, labels),
         policed: true,
+        synthesized: false,
       }))
     : workloads.map((workload) => ({
         pods: podsOf(workload),
         // NetworkPolicy does not apply to host-network pods.
         policed: !workload.hostNetwork,
+        synthesized: true,
       }));
+}
+
+/**
+ * Whether a Service of the party's namespace forwards to the party's pods on
+ * the rule's port. NetworkPolicy matches the pod port, so the Service's
+ * target port is compared, resolved against the pods when it is named.
+ */
+function servedOn(fleet: Fleet, party: Party, port: FleetPolicyPort): boolean {
+  if (!party.synthesized) return false;
+  const { namespace, labels, namedPorts } = party.pods;
+  return fleet.services
+    .filter(
+      (service) =>
+        service.namespace === namespace &&
+        service.selector !== undefined &&
+        selectorMatches({ matchLabels: service.selector }, labels),
+    )
+    .some((service) =>
+      service.ports.some(({ port: servicePort, targetPort, protocol }) =>
+        portsCover(
+          [port],
+          { protocol, port: targetPort ?? servicePort, endPort: undefined },
+          namedPorts,
+        ),
+      ),
+    );
+}
+
+/**
+ * The peers an Egress rule's port is meant for. A namespace-wide peer names
+ * every workload of the namespace, but a connection on one port reaches the
+ * workloads a Service exposes on it. When some named workload is exposed on
+ * the port, only those answer for the rule: a neighbour that no policy binds,
+ * or that admits the source without serving the port, proves nothing about
+ * them. When none is (pods synthesis cannot see, or a port no Service
+ * carries), every named peer still counts.
+ */
+function peersServing(
+  fleet: Fleet,
+  peers: readonly Party[],
+  port: FleetPolicyPort | undefined,
+): readonly Party[] {
+  if (port === undefined) return peers;
+  const serving = peers.filter((peer) => servedOn(fleet, peer, port));
+  return serving.length === 0 ? peers : serving;
 }
 
 function describePort(port: FleetPolicyPort | undefined): string {
@@ -101,7 +154,9 @@ function describePeer(namespace: string, selector: LabelSelector): string {
  *
  * Both sides are judged by "some pod" because a rule and a selector name a
  * set: a namespace-wide peer is reciprocated by the one workload it is meant
- * for, not by every workload that happens to share the namespace.
+ * for, not by every workload that happens to share the namespace. For an
+ * Egress rule the workloads it is meant for are those a Service exposes on
+ * its port (`peersServing`).
  */
 function reciprocated(
   fleet: Fleet,
@@ -113,7 +168,9 @@ function reciprocated(
   },
 ): boolean {
   const opposite = type === "Egress" ? "Ingress" : "Egress";
-  return rule.peers.some((peer) => {
+  const answering =
+    type === "Egress" ? peersServing(fleet, rule.peers, rule.port) : rule.peers;
+  return answering.some((peer) => {
     if (!peer.policed) return true;
     const policies = policiesSelecting(fleet, opposite, peer.pods);
     return (

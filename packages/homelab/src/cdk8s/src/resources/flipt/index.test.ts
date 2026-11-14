@@ -416,6 +416,7 @@ describe("Flipt network policy", () => {
       "delivery",
     ],
     ["Citizens companions to read their gameplay gate", "minecraft-tsmc"],
+    ["Tracker to read its managed flags", "tracker"],
   ])("allows %s", (_label, namespace) => {
     const policy = z
       .object({

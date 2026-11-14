@@ -323,52 +323,31 @@ export const CONTAINERS_WITHOUT_SECCOMP: ReadonlySet<string> = new Set([
  * Registered probe ports a NetworkPolicy closes to one of the peers that
  * connect to them (`<namespace>/<service>:<port> from <source namespace>`):
  * blackbox-exporter in `prometheus`, the Tailscale proxy in `tailscale`, or
- * cloudflared in `cloudflare-tunnel`.
+ * cloudflared in `cloudflare-operator-system`.
  */
-export const PROBE_PORTS_NOT_ADMITTED: ReadonlySet<string> = new Set([
-  // The policy admits the `cloudflare-tunnel` namespace
-  // (`cloudflareTunnelIngressRule`), where no cloudflared pod runs.
-  "bugsink/bugsink-bugsink-service:8000 from cloudflare-operator-system",
-  "freshrss/freshrss-service:80 from cloudflare-operator-system",
-  "glitter-boys-launcher/glitter-boys-launcher-http:8080 from cloudflare-operator-system",
-  "home/home-homeassistant-service:8123 from cloudflare-operator-system",
-  "media/media-plex-service:32400 from cloudflare-operator-system",
-  "media/media-seerr-service:5055 from cloudflare-operator-system",
-  "media/streambot-web:8080 from cloudflare-operator-system",
-  "relay/relay-relay-service:8080 from cloudflare-operator-system",
-  "temporal/temporal-worker-agent-tasks:9467 from cloudflare-operator-system",
-  "temporal/temporal-worker-gh-webhook:9466 from cloudflare-operator-system",
-  "temporal/temporal-worker-sleep-webhook:9469 from cloudflare-operator-system",
-  "temporal/temporal-worker-xcode-cloud-webhook:9468 from cloudflare-operator-system",
-  "trmnl-dashboard/trmnl-dashboard-trmnl-dashboard-service:3000 from cloudflare-operator-system",
-  "woodpecker/woodpecker-server:8000 from cloudflare-operator-system",
-  // The gateway's webhook ports are opened to the tunnel only
-  // (`temporal-gateway-ingress-netpol`), not to blackbox-exporter.
-  "temporal/temporal-worker-agent-tasks:9467 from prometheus",
-  "temporal/temporal-worker-gh-webhook:9466 from prometheus",
-  "temporal/temporal-worker-sleep-webhook:9469 from prometheus",
-  "temporal/temporal-worker-xcode-cloud-webhook:9468 from prometheus",
-]);
+export const PROBE_PORTS_NOT_ADMITTED: ReadonlySet<string> = new Set();
 
 /**
  * Egress rules naming another namespace whose Ingress policy does not admit
  * the rule's pods on the port (`<namespace>/<policy> -> <peer>:<port>`).
  */
 export const UNRECIPROCATED_EGRESS_RULES: ReadonlySet<string> = new Set([
-  // `minecraft-tsmc-query` admits the forum's web pods, not its release pods.
-  "storm-forum/storm-forum-release-network -> minecraft-tsmc{app.kubernetes.io/instance=minecraft-tsmc,app.kubernetes.io/name=minecraft}:25565/UDP",
-  // `flipt-ingress-netpol` does not list the tracker namespace.
-  "tracker/tracker-app-netpol -> flipt:8080",
+  // Delivery reaches Woodpecker through its public URL (`WOODPECKER_URL`,
+  // HTTPS), so nothing uses this in-cluster rule and
+  // `woodpecker-server-netpol` does not admit delivery. Decide whether
+  // delivery should call the Service directly; if not, delete the egress.
+  "delivery/delivery-application-network -> woodpecker:8000",
+  // Only the web pod's activities container is a Temporal worker; the
+  // release Job never connects, and `temporal-server-netpol` admits web pods
+  // only. The release pods share `forumEgress` with the web pods.
+  "storm-forum/storm-forum-release-network -> temporal:7233",
 ]);
 
 /**
  * Ingress rules naming another namespace whose Egress policy does not let it
  * reach the rule's pods on the port (`<namespace>/<policy> <- <peer>:<port>`).
  */
-export const UNRECIPROCATED_INGRESS_RULES: ReadonlySet<string> = new Set([
-  // `birmel-egress-netpol` has no rule towards postal.
-  "postal/postal-smtp-netpol <- birmel:25",
-]);
+export const UNRECIPROCATED_INGRESS_RULES: ReadonlySet<string> = new Set();
 
 /**
  * Containers of upstream Helm charts, rendered with our values, that declare

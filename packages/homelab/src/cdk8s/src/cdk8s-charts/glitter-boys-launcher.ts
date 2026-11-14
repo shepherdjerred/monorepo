@@ -22,6 +22,7 @@ import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/pro
 import {
   dnsEgressRule,
   nsPeer,
+  cloudflareTunnelPeer,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import {
   withCommonProps,
@@ -123,7 +124,7 @@ export function createGlitterBoysLauncherChart(
       policyTypes: ["Ingress", "Egress"],
       ingress: [
         {
-          from: [nsPeer("cloudflare-tunnel")],
+          from: [cloudflareTunnelPeer()],
           ports: [{ port: IntOrString.fromNumber(8080) }],
         },
         {
