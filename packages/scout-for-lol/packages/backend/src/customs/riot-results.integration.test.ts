@@ -8,7 +8,7 @@ import {
   PlayerIdSchema,
   RawMatchSchema,
 } from "@scout-for-lol/data";
-import { withFirstParticipantAsBot } from "#src/testing/bot-match-fixture.ts";
+import { withFirstParticipantAsBot } from "#src/testing/lcu/bot-match-fixture.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import { finalizeManagedCustomResult } from "#src/customs/riot-results.ts";
 import { clearCustomsTestData } from "#src/customs/test-database.ts";

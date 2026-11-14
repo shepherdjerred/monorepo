@@ -1,6 +1,6 @@
 import { beforeEach, expect, test, vi } from "vitest";
 import { RawMatchSchema } from "@scout-for-lol/data";
-import { withFirstParticipantAsBot } from "#src/testing/bot-match-fixture.ts";
+import { withFirstParticipantAsBot } from "#src/testing/lcu/bot-match-fixture.ts";
 
 const mocks = vi.hoisted(() => ({
   findFirst: vi.fn(),
