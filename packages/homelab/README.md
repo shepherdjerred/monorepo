@@ -192,6 +192,56 @@ No application-side Tailscale credential or additional OAuth client is required.
 Never apply manifests directly with `kubectl apply` — all changes go through
 ArgoCD, which reverts direct mutations.
 
+## NetworkPolicy enforcement tooling
+
+Each namespace that has NetworkPolicies carries one allow-all staging policy,
+`enforcement-staging-<namespace>`, rendered from
+`src/cdk8s/src/fleet-policy/enforcement-stages.ts`. While its `podSelector` is
+`{}` the namespace is **open**; while it selects
+`homelab.sjer.red/enforcement-staging: never`, a label no pod carries, the
+namespace is **enforced**. Two scripts under `scripts/network-policy/` read
+that live state.
+
+| Command                                                           | Effect                                                            |
+| ----------------------------------------------------------------- | ----------------------------------------------------------------- |
+| `bun run netpol:check <namespace> [--json]`                       | Read-only gate for one namespace                                  |
+| `bun run netpol:check --all-staged [--json]`                      | The gate for every staged namespace, as a table                   |
+| `bun run netpol:check --coverage [--allow-unstaged <name>]...`    | Pre-switch gate: every namespace with policies and pods is staged |
+| `bun run netpol:open <namespace>\|--all`                          | Dry run: the manifest and what it would change                    |
+| `bun run netpol:open <namespace>\|--all --apply --reason "<why>"` | Break-glass: open the namespace(s) in the cluster                 |
+
+`netpol:check` exits non-zero when any check fails. `--since-minutes <n>`
+(default 10) sets the restart and denial window; `--expect-stage
+open|enforced` fails when the live stage differs.
+
+| Check      | Source                                                                                       | Result                                        |
+| ---------- | -------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| `stage`    | The live staging policy's selector and rules                                                 | Reported; fails if unrecognized or unexpected |
+| `pods`     | `kubectl get pods`: every pod Ready, no container restart in the window                      | Pass or fail                                  |
+| `services` | Services and EndpointSlices: every Service backed by pods has a ready endpoint               | Pass or fail                                  |
+| `urls`     | Hosts from `platform-model.json`; path and accepted statuses from the live blackbox `Probe`s | Pass, fail or not checked                     |
+| `probes`   | `toolkit prom query probe_success` for the namespace's `Probe` jobs                          | Pass, fail or not checked                     |
+| `denials`  | `kube-network-policies` container log of the `kube-flannel` pods                             | A note; never gates                           |
+
+`--coverage` reads only policies and pods. It lists every namespace that has a
+NetworkPolicy other than its own staging policy, with its policy count, pod
+count and stage, and fails while any of them has pods but no staging policy
+(or an unrecognized one). A namespace without pods is reported as `no pods`
+and passes. `--allow-unstaged` excuses a namespace by name, or by prefix when
+the entry ends in `-` or `*`; it is repeatable.
+
+"Not checked" is never a pass: it marks a tailnet host that is not HTTP, or a
+Prometheus that could not be queried. URL requests run from the operator's
+machine and do not follow redirects; a redirect from a service whose probe
+follows redirects counts as an answer.
+
+`netpol:open --apply` is the one sanctioned direct `kubectl apply` in this
+package. It writes only `enforcement-staging-<namespace>` (server-side apply,
+field manager `network-policy-break-glass`), refuses to run without
+`--reason`, deletes nothing, and prints the stage-map entries that must be set
+to `"open"` in source. ArgoCD reverts the live change at the owning
+Application's next sync, so the source change has to follow.
+
 ## Manifest validation
 
 CDK8s `dist/` contains native Kubernetes manifests for kubeconform validation.
