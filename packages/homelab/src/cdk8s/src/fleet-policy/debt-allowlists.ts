@@ -325,14 +325,7 @@ export const CONTAINERS_WITHOUT_SECCOMP: ReadonlySet<string> = new Set([
  * blackbox-exporter in `prometheus`, the Tailscale proxy in `tailscale`, or
  * cloudflared in `cloudflare-operator-system`.
  */
-export const PROBE_PORTS_NOT_ADMITTED: ReadonlySet<string> = new Set([
-  // The gateway's webhook ports are opened to the tunnel only
-  // (`temporal-gateway-ingress-netpol`), not to blackbox-exporter.
-  "temporal/temporal-worker-agent-tasks:9467 from prometheus",
-  "temporal/temporal-worker-gh-webhook:9466 from prometheus",
-  "temporal/temporal-worker-sleep-webhook:9469 from prometheus",
-  "temporal/temporal-worker-xcode-cloud-webhook:9468 from prometheus",
-]);
+export const PROBE_PORTS_NOT_ADMITTED: ReadonlySet<string> = new Set();
 
 /**
  * Egress rules naming another namespace whose Ingress policy does not admit
