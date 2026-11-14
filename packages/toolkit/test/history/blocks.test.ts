@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, test } from "vitest";
+import { describe, expect, test } from "vitest";
 import { defaultSnapshotsPath } from "#lib/brim/cache.ts";
 import { PROVIDER_ORDER } from "#lib/brim/rank.ts";
 import {
@@ -15,23 +15,13 @@ import {
 } from "#lib/history/blocks.ts";
 import { HISTORY_AGENT_NAMES } from "#lib/history/agents.ts";
 import {
-  usageFixture,
+  useUsageFixtures,
   writeSnapshots,
   type SyntheticSession,
   type UsageFixture,
 } from "#test/support/usage-index.ts";
 
-const fixtures: UsageFixture[] = [];
-
-afterEach(async () => {
-  await Promise.all(fixtures.splice(0).map((fixture) => fixture.close()));
-});
-
-async function open(sessions: readonly SyntheticSession[]) {
-  const fixture = await usageFixture(sessions);
-  fixtures.push(fixture);
-  return fixture;
-}
+const open = useUsageFixtures();
 
 async function blocks(
   fixture: UsageFixture,

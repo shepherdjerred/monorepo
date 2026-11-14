@@ -217,9 +217,8 @@ export function queryUsageFingerprints(
     }));
 }
 
-const ExportEventRowSchema = z.object({
-  source: z.string(),
-  source_id: z.string(),
+/** One event's own columns, shared by the export and block readers. */
+const UsageEventColumnsSchema = z.object({
   occurred_at: z.string(),
   model: z.string(),
   input_tokens: z.number(),
@@ -232,16 +231,38 @@ const ExportEventRowSchema = z.object({
   cost_complete: z.number(),
 });
 
+const USAGE_EVENT_COLUMNS = `u.occurred_at, u.model,
+  u.input_tokens, u.output_tokens, u.cache_read_tokens,
+  u.cache_creation_tokens, u.cached_input_tokens,
+  u.reasoning_tokens, u.cost_usd, u.cost_complete`;
+
+function usageEventFields(row: z.infer<typeof UsageEventColumnsSchema>) {
+  return {
+    occurredAt: row.occurred_at,
+    model: row.model,
+    inputTokens: row.input_tokens,
+    outputTokens: row.output_tokens,
+    cacheReadTokens: row.cache_read_tokens,
+    cacheCreationTokens: row.cache_creation_tokens,
+    cachedInputTokens: row.cached_input_tokens,
+    reasoningTokens: row.reasoning_tokens,
+    costUsd: row.cost_usd,
+    costComplete: row.cost_complete === 1,
+  };
+}
+
+const ExportEventRowSchema = UsageEventColumnsSchema.extend({
+  source: z.string(),
+  source_id: z.string(),
+});
+
 export function queryUsageEventsForDocument(
   database: Database,
   documentId: number,
 ): ExportableUsageEvent[] {
   return database
     .prepare(
-      `SELECT d.source, d.source_id, u.occurred_at, u.model,
-              u.input_tokens, u.output_tokens, u.cache_read_tokens,
-              u.cache_creation_tokens, u.cached_input_tokens,
-              u.reasoning_tokens, u.cost_usd, u.cost_complete
+      `SELECT d.source, d.source_id, ${USAGE_EVENT_COLUMNS}
          FROM usage_events u
          JOIN documents d ON d.id = u.document_id
         WHERE u.document_id = ?
@@ -252,16 +273,7 @@ export function queryUsageEventsForDocument(
     .map((row) => ({
       source: parseHistorySourceName(row.source, "in usage export"),
       sourceId: row.source_id,
-      occurredAt: row.occurred_at,
-      model: row.model,
-      inputTokens: row.input_tokens,
-      outputTokens: row.output_tokens,
-      cacheReadTokens: row.cache_read_tokens,
-      cacheCreationTokens: row.cache_creation_tokens,
-      cachedInputTokens: row.cached_input_tokens,
-      reasoningTokens: row.reasoning_tokens,
-      costUsd: row.cost_usd,
-      costComplete: row.cost_complete === 1,
+      ...usageEventFields(row),
     }));
 }
 
@@ -294,19 +306,9 @@ export type BlockUsageEvent = {
   readonly costComplete: boolean;
 };
 
-const BlockEventRowSchema = z.object({
+const BlockEventRowSchema = UsageEventColumnsSchema.extend({
   source: z.string(),
   machine: z.string().nullable(),
-  occurred_at: z.string(),
-  model: z.string(),
-  input_tokens: z.number(),
-  output_tokens: z.number(),
-  cache_read_tokens: z.number(),
-  cache_creation_tokens: z.number(),
-  cached_input_tokens: z.number(),
-  reasoning_tokens: z.number(),
-  cost_usd: z.number().nullable(),
-  cost_complete: z.number(),
 });
 
 function blockFilterClauses(
@@ -340,10 +342,7 @@ export function queryBlockEvents(
   }
   return database
     .prepare(
-      `SELECT u.source, d.machine, u.occurred_at, u.model,
-              u.input_tokens, u.output_tokens, u.cache_read_tokens,
-              u.cache_creation_tokens, u.cached_input_tokens,
-              u.reasoning_tokens, u.cost_usd, u.cost_complete
+      `SELECT u.source, d.machine, ${USAGE_EVENT_COLUMNS}
          FROM usage_events u
          JOIN documents d ON d.id = u.document_id
         ${clauses.length > 0 ? `WHERE ${clauses.join(" AND ")}` : ""}
@@ -354,16 +353,7 @@ export function queryBlockEvents(
     .map((row) => ({
       source: parseHistorySourceName(row.source, "in usage blocks"),
       machine: row.machine,
-      occurredAt: row.occurred_at,
-      model: row.model,
-      inputTokens: row.input_tokens,
-      outputTokens: row.output_tokens,
-      cacheReadTokens: row.cache_read_tokens,
-      cacheCreationTokens: row.cache_creation_tokens,
-      cachedInputTokens: row.cached_input_tokens,
-      reasoningTokens: row.reasoning_tokens,
-      costUsd: row.cost_usd,
-      costComplete: row.cost_complete === 1,
+      ...usageEventFields(row),
     }));
 }
 

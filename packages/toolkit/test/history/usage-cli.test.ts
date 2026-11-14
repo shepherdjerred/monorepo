@@ -1,9 +1,12 @@
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
-import path from "node:path";
 import {
   HistoryApiBlocksResponseSchema,
   HistoryApiUsageReportResponseSchema,
 } from "#lib/history/api/report-schema.ts";
+import {
+  runHistoryCli,
+  type HistoryCliResult,
+} from "#test/support/history-cli.ts";
 import { usageFixture, type UsageFixture } from "#test/support/usage-index.ts";
 
 /**
@@ -50,26 +53,8 @@ afterAll(async () => {
   await fixture?.close();
 });
 
-async function runHistory(args: readonly string[]): Promise<{
-  readonly exitCode: number;
-  readonly stdout: string;
-  readonly stderr: string;
-}> {
-  const child = Bun.spawn(
-    [process.execPath, "run", "src/index.ts", "history", ...args],
-    {
-      cwd: path.join(import.meta.dir, "../.."),
-      env: { ...Bun.env, HOME: current().home },
-      stdout: "pipe",
-      stderr: "pipe",
-    },
-  );
-  const [exitCode, stdout, stderr] = await Promise.all([
-    child.exited,
-    new Response(child.stdout).text(),
-    new Response(child.stderr).text(),
-  ]);
-  return { exitCode, stdout, stderr };
+async function runHistory(args: readonly string[]): Promise<HistoryCliResult> {
+  return runHistoryCli(args, { HOME: current().home });
 }
 
 describe("history usage and blocks CLI", () => {

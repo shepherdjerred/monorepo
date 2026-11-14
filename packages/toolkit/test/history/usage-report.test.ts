@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, test } from "vitest";
+import { describe, expect, test } from "vitest";
 import {
   HistoryApiUsageReportResponseSchema,
   type HistoryApiUsageReportResponse,
@@ -8,22 +8,12 @@ import {
   HistoryApiUsageResponseSchema,
 } from "#lib/history/api/schema.ts";
 import {
-  usageFixture,
+  useUsageFixtures,
   type SyntheticSession,
   type UsageFixture,
 } from "#test/support/usage-index.ts";
 
-const fixtures: UsageFixture[] = [];
-
-afterEach(async () => {
-  await Promise.all(fixtures.splice(0).map((fixture) => fixture.close()));
-});
-
-async function open(sessions: readonly SyntheticSession[]) {
-  const fixture = await usageFixture(sessions);
-  fixtures.push(fixture);
-  return fixture;
-}
+const open = useUsageFixtures();
 
 async function report(
   fixture: UsageFixture,

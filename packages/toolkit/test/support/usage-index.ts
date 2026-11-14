@@ -1,3 +1,4 @@
+import { afterEach } from "vitest";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -146,6 +147,24 @@ export async function usageFixture(
       index.close();
       await rm(home, { recursive: true, force: true });
     },
+  };
+}
+
+/**
+ * Registers an `afterEach` that closes every fixture it opened and returns
+ * the opener. Call it once at a test file's top level.
+ */
+export function useUsageFixtures(): (
+  sessions: readonly SyntheticSession[],
+) => Promise<UsageFixture> {
+  const opened: UsageFixture[] = [];
+  afterEach(async () => {
+    await Promise.all(opened.splice(0).map((fixture) => fixture.close()));
+  });
+  return async (sessions) => {
+    const fixture = await usageFixture(sessions);
+    opened.push(fixture);
+    return fixture;
   };
 }
 
