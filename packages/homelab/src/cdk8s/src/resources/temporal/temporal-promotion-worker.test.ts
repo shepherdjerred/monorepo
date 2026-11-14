@@ -126,7 +126,7 @@ describe("promotion worker sandbox isolation", () => {
         role === "promotion"
           ? {
               type: "Localhost",
-              localhostProfile: `profiles/${promotionPolicy.profileName}`,
+              localhostProfile: `profiles/${promotionPolicy.selected}`,
             }
           : undefined,
       );
@@ -149,7 +149,11 @@ describe("promotion worker sandbox isolation", () => {
         main.securityContext.capabilities.add.map(
           (capability) => `CAP_${capability}`,
         ),
-      ).toEqual(promotionPolicy.capabilities);
+      ).toEqual(
+        promotionPolicy.profiles.find(
+          (profile) => profile.profileName === promotionPolicy.selected,
+        )?.capabilities,
+      );
       expect(firewall).toMatchObject({
         name: "install-provider-firewall",
         securityContext: {

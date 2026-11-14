@@ -7,7 +7,7 @@ import {
   type VersionCatalogEntry,
 } from "@shepherdjerred/version-catalog";
 import rawVersionCatalog from "@shepherdjerred/version-catalog/catalog.json";
-import promotionPolicy from "./seccomp/promotion-policy.json";
+import promotionPolicies from "./seccomp/promotion-policy.json";
 
 /**
  * The `cluster-nodes` components (Delivery model X13) are the images each
@@ -136,66 +136,100 @@ const Profile = z.strictObject({
   syscalls: z.array(Syscall),
 });
 
-test("promotion node profile preserves the reviewed containerd baseline and exact delta", async () => {
-  const [document] = parseAllDocuments(
-    await Bun.file(
-      new URL("torvalds/patches/promotion-seccomp.yaml", import.meta.url),
-    ).text(),
+const selectedPolicy = promotionPolicies.profiles.find(
+  (profile) => profile.profileName === promotionPolicies.selected,
+);
+
+test("promotion profiles are uniquely named and exactly one is selected", () => {
+  const names = promotionPolicies.profiles.map(
+    (profile) => profile.profileName,
   );
-  const rendered = z
-    .strictObject({
-      machine: z.strictObject({
-        seccompProfiles: z.tuple([
-          z.strictObject({ name: z.string(), value: Profile }),
-        ]),
-      }),
-    })
-    .parse(document?.toJSON()).machine.seccompProfiles[0];
-  expect(rendered.name).toBe(promotionPolicy.profileName);
-  expect(rendered.value.architectures).toEqual([
-    "SCMP_ARCH_X86_64",
-    "SCMP_ARCH_X86",
-    "SCMP_ARCH_X32",
+  expect(new Set(names).size).toBe(names.length);
+  expect(names.filter((name) => name === promotionPolicies.selected)).toEqual([
+    promotionPolicies.selected,
   ]);
-  const { syscalls, ...fields } = rendered.value;
-  expect(syscalls.slice(-promotionPolicy.delta.length)).toEqual(
-    promotionPolicy.delta,
-  );
-  const baseline = {
-    ...fields,
-    syscalls: syscalls.slice(0, -promotionPolicy.delta.length),
-  };
-  expect(
-    new Bun.CryptoHasher("sha256")
-      .update(JSON.stringify(baseline))
-      .digest("hex"),
-  ).toBe(promotionPolicy.baselineSha256);
-  expect(baseline.syscalls).toContainEqual({
-    names: ["clone3"],
-    action: "SCMP_ACT_ERRNO",
-    errnoRet: 38,
-  });
-  expect(promotionPolicy.delta).toEqual([
-    ...[0x38_02_00_11, 0x78_02_00_11].map((value) => ({
-      names: ["clone"],
-      action: "SCMP_ACT_ALLOW",
-      args: [{ index: 0, value, op: "SCMP_CMP_EQ" }],
-    })),
-    {
-      names: ["unshare"],
-      action: "SCMP_ACT_ALLOW",
-      args: [{ index: 0, value: 0x10_00_00_00, op: "SCMP_CMP_EQ" }],
-    },
-    { names: ["mount", "pivot_root"], action: "SCMP_ACT_ALLOW" },
-    {
-      names: ["umount2"],
-      action: "SCMP_ACT_ALLOW",
-      args: [{ index: 1, value: 2, op: "SCMP_CMP_EQ" }],
-    },
-  ]);
+  const patches = promotionPolicies.profiles.map((profile) => profile.patch);
+  expect(new Set(patches).size).toBe(patches.length);
+  // A name encodes its reviewed provider and runtime, so content cannot drift
+  // under an unchanged name.
+  for (const profile of promotionPolicies.profiles) {
+    expect(profile.profileName).toBe(
+      `promotion-codex-${profile.codexVersion.replaceAll(".", "").padStart(5, "0")}-containerd-${profile.containerdVersion.replaceAll(".", "")}-v1.json`,
+    );
+  }
 });
 
-test("promotion profile provenance follows the node, provider and actual worker capabilities", async () => {
+// Every profile the node carries stays bound to its own reviewed baseline,
+// whether the chart selects it, it is staged, or it awaits retirement.
+test.each(promotionPolicies.profiles)(
+  "promotion node profile $profileName preserves the reviewed containerd baseline and exact delta",
+  async (promotionPolicy) => {
+    const [document, ...extra] = parseAllDocuments(
+      await Bun.file(
+        new URL(
+          `torvalds/patches/${promotionPolicy.patch}.yaml`,
+          import.meta.url,
+        ),
+      ).text(),
+    );
+    expect(extra).toEqual([]);
+    const rendered = z
+      .strictObject({
+        machine: z.strictObject({
+          seccompProfiles: z.tuple([
+            z.strictObject({ name: z.string(), value: Profile }),
+          ]),
+        }),
+      })
+      .parse(document?.toJSON()).machine.seccompProfiles[0];
+    expect(rendered.name).toBe(promotionPolicy.profileName);
+    expect(rendered.value.architectures).toEqual([
+      "SCMP_ARCH_X86_64",
+      "SCMP_ARCH_X86",
+      "SCMP_ARCH_X32",
+    ]);
+    const { syscalls, ...fields } = rendered.value;
+    expect(syscalls.slice(-promotionPolicy.delta.length)).toEqual(
+      promotionPolicy.delta,
+    );
+    const baseline = {
+      ...fields,
+      syscalls: syscalls.slice(0, -promotionPolicy.delta.length),
+    };
+    expect(
+      new Bun.CryptoHasher("sha256")
+        .update(JSON.stringify(baseline))
+        .digest("hex"),
+    ).toBe(promotionPolicy.baselineSha256);
+    expect(baseline.syscalls).toContainEqual({
+      names: ["clone3"],
+      action: "SCMP_ACT_ERRNO",
+      errnoRet: 38,
+    });
+    expect(promotionPolicy.delta).toEqual([
+      ...[0x38_02_00_11, 0x78_02_00_11].map((value) => ({
+        names: ["clone"],
+        action: "SCMP_ACT_ALLOW",
+        args: [{ index: 0, value, op: "SCMP_CMP_EQ" }],
+      })),
+      {
+        names: ["unshare"],
+        action: "SCMP_ACT_ALLOW",
+        args: [{ index: 0, value: 0x10_00_00_00, op: "SCMP_CMP_EQ" }],
+      },
+      { names: ["mount", "pivot_root"], action: "SCMP_ACT_ALLOW" },
+      {
+        names: ["umount2"],
+        action: "SCMP_ACT_ALLOW",
+        args: [{ index: 1, value: 2, op: "SCMP_CMP_EQ" }],
+      },
+    ]);
+  },
+);
+
+test("selected promotion profile provenance follows the node, provider and actual worker capabilities", async () => {
+  if (selectedPolicy === undefined) throw new Error("No selected profile");
+  const promotionPolicy = selectedPolicy;
   expect(promotionPolicy.talosVersion).toBe(entry("siderolabs/talos").value);
   const temporalPackage = z
     .object({
@@ -208,12 +242,6 @@ test("promotion profile provenance follows the node, provider and actual worker 
     );
   expect(promotionPolicy.codexVersion).toBe(
     temporalPackage.dependencies["@openai/codex-sdk"],
-  );
-  const module = await Bun.file(
-    new URL("seccomp/go.mod", import.meta.url),
-  ).text();
-  expect(module).toContain(
-    `github.com/containerd/containerd/v2 v${promotionPolicy.containerdVersion}\n`,
   );
   const worker = await Bun.file(
     new URL(
@@ -240,4 +268,23 @@ test("promotion profile provenance follows the node, provider and actual worker 
     new URL("liskov/patches/sysctls.yaml", import.meta.url),
   ).text();
   expect(ciSysctls).not.toContain("user.max_user_namespaces");
+});
+
+test("the profile generator pins the newest reviewed containerd release", async () => {
+  const module = await Bun.file(
+    new URL("seccomp/go.mod", import.meta.url),
+  ).text();
+  const pinned =
+    /^\tgithub\.com\/containerd\/containerd\/v2 v(?<version>\S+)$/mu.exec(
+      module,
+    )?.groups?.["version"];
+  const reviewed = promotionPolicies.profiles.map(
+    (profile) => profile.containerdVersion,
+  );
+  // The generator reproduces the newest profile; older ones stay bound by
+  // their baseline hash above. The selected release is never ahead of it.
+  expect(pinned).toBe(reviewed.toSorted(Bun.semver.order).at(-1));
+  expect(
+    Bun.semver.order(selectedPolicy?.containerdVersion ?? "", pinned ?? ""),
+  ).toBeLessThanOrEqual(0);
 });

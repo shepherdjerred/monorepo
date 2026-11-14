@@ -1,6 +1,10 @@
 import { describe, expect, test, vi } from "vitest";
 import { stringify } from "yaml";
-import { parseMachineConfig, type TalosRunner } from "./machine-config.ts";
+import {
+  parseMachineConfig,
+  PROMOTION_PROFILES,
+  type TalosRunner,
+} from "./machine-config.ts";
 import {
   operatePromotionSandbox as realOperate,
   parseOperatorArgs,
@@ -8,6 +12,13 @@ import {
   TARGET,
   type OperatorOptions,
 } from "./promotion-sandbox.ts";
+import promotionPolicy from "./seccomp/promotion-policy.json";
+
+const selected = promotionPolicy.profiles.find(
+  (profile) => profile.profileName === promotionPolicy.selected,
+);
+if (selected === undefined) throw new Error("fixture missing selected policy");
+const talosTag = `v${selected.talosVersion}`;
 
 const nodeInfo = {
   metadata: { name: "torvalds" },
@@ -15,8 +26,8 @@ const nodeInfo = {
     nodeInfo: {
       architecture: "amd64",
       operatingSystem: "linux",
-      containerRuntimeVersion: "containerd://2.3.6",
-      osImage: "Talos (v1.14.2)",
+      containerRuntimeVersion: `containerd://${selected.containerdVersion}`,
+      osImage: `Talos (${talosTag})`,
       kernelVersion: "6.18.54-talos",
     },
   },
@@ -50,7 +61,7 @@ const current =
     secret: SECRET,
   });
 
-function profileFromConfig(candidate: string) {
+function profileFromConfig(candidate: string, path: string | undefined) {
   const doc = parseMachineConfig(candidate).find(
     (entry) => entry["version"] === "v1alpha1",
   );
@@ -63,10 +74,16 @@ function profileFromConfig(candidate: string) {
     throw new TypeError("fixture missing profiles");
   const profiles: unknown = machine.seccompProfiles;
   if (!Array.isArray(profiles)) throw new TypeError("fixture invalid profiles");
-  const first: unknown = profiles[0];
-  if (typeof first !== "object" || first === null || !("value" in first))
+  const named: unknown = profiles.find(
+    (profile: unknown) =>
+      typeof profile === "object" &&
+      profile !== null &&
+      "name" in profile &&
+      path === `/var/lib/kubelet/seccomp/profiles/${String(profile.name)}`,
+  );
+  if (typeof named !== "object" || named === null || !("value" in named))
     throw new TypeError("fixture missing profile");
-  return JSON.stringify(first.value, null, 2) + "\n";
+  return JSON.stringify(named.value, null, 2) + "\n";
 }
 
 function fixture(
@@ -121,7 +138,7 @@ function fixture(
       return (
         options.runtime ??
         JSON.stringify({
-          version: { tag: "v1.14.2", os: "linux", arch: "amd64" },
+          version: { tag: talosTag, os: "linux", arch: "amd64" },
           platform: { name: "metal", mode: "metal" },
         })
       );
@@ -140,7 +157,7 @@ function fixture(
     if (args[0] === "read") {
       return args[1] === "/proc/sys/user/max_user_namespaces"
         ? (options.quota ?? "128\n")
-        : (options.profile ?? profileFromConfig(candidate));
+        : (options.profile ?? profileFromConfig(candidate, args[1]));
     }
     if (args[0] === "health") {
       if (options.healthFailure) throw new Error(SECRET);
@@ -245,9 +262,25 @@ describe("promotion operator reviewed plan and apply", () => {
       "get",
       "get",
       "read",
-      "read",
+      ...PROMOTION_PROFILES.map(() => "read"),
       "health",
     ]);
+    // Every declared profile is read back from its own node path.
+    expect(
+      calls
+        .filter((call) => call.args[0] === "read")
+        .slice(1)
+        .map((call) => call.args[1]),
+    ).toEqual(
+      PROMOTION_PROFILES.map(
+        ({ profileName }) => `/var/lib/kubelet/seccomp/profiles/${profileName}`,
+      ),
+    );
+    expect(result).toMatchObject({
+      installedProfiles: PROMOTION_PROFILES.map(({ profileName }) => ({
+        profileName,
+      })),
+    });
     const apply = calls.find((call) => call.args[0] === "apply-config");
     expect(apply?.args).toEqual([
       "apply-config",
@@ -414,12 +447,19 @@ describe("promotion operator failure handling and verification", () => {
     expect(calls.at(-1)?.args[0]).toBe("health");
   });
 
-  test.each(["v1.14.1", "arm64"])(
+  // A staged or retiring profile's own release is not the reviewed live runtime.
+  test.each([
+    "v1.14.1",
+    "arm64",
+    ...promotionPolicy.profiles
+      .filter((profile) => profile.talosVersion !== selected.talosVersion)
+      .map((profile) => `v${profile.talosVersion}`),
+  ])(
     "rejects a different runtime pin %s before reading machine configuration",
     async (different) => {
       const runtime = JSON.stringify({
         version: {
-          tag: different.startsWith("v") ? different : "v1.14.2",
+          tag: different.startsWith("v") ? different : talosTag,
           os: "linux",
           arch: different === "arm64" ? different : "amd64",
         },

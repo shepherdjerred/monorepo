@@ -30,8 +30,13 @@ describe("pinned official Codex bubblewrap artifacts", () => {
           ),
         ).json(),
       );
-    const policy = z
-      .object({ codexVersion: z.string() })
+    const policies = z
+      .object({
+        selected: z.string(),
+        profiles: z.array(
+          z.object({ profileName: z.string(), codexVersion: z.string() }),
+        ),
+      })
       .parse(
         await Bun.file(
           new URL(
@@ -43,7 +48,12 @@ describe("pinned official Codex bubblewrap artifacts", () => {
     expect(cli.name).toBe("@openai/codex");
     expect(cli.version).toBe(pins.codexVersion);
     expect(source.dependencies["@openai/codex-sdk"]).toBe(pins.codexVersion);
-    expect(policy.codexVersion).toBe(pins.codexVersion);
+    // The profile the promotion chart selects is the one reviewed for this CLI.
+    expect(
+      policies.profiles.find(
+        (profile) => profile.profileName === policies.selected,
+      )?.codexVersion,
+    ).toBe(pins.codexVersion);
     const lock = await Bun.file(
       new URL("../../../../../bun.lock", import.meta.url),
     ).text();

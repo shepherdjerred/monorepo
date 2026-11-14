@@ -10,8 +10,17 @@ import {
 import promotionPolicy from "./seccomp/promotion-policy.json";
 
 export const TARGET = "torvalds.tailnet-1a49.ts.net";
-const PROFILE_NAME = "promotion-codex-01621-containerd-236-v1.json";
-const PROFILE_PATH = `/var/lib/kubelet/seccomp/profiles/${PROFILE_NAME}`;
+const PROFILE_DIRECTORY = "/var/lib/kubelet/seccomp/profiles";
+/**
+ * The node must run the release the chart-selected profile was reviewed for.
+ * A staged replacement is installed ahead of the release it targets, so its
+ * own pins are deliberately not the live guard until the chart selects it.
+ */
+const selectedPolicy = promotionPolicy.profiles.find(
+  (profile) => profile.profileName === promotionPolicy.selected,
+);
+if (selectedPolicy === undefined)
+  throw new Error("Promotion policy selects an undeclared profile");
 const Resource = z.object({
   node: z.enum(["torvalds", TARGET]),
   metadata: z.object({ version: z.number().int().nonnegative() }),
@@ -20,7 +29,7 @@ const Resource = z.object({
 const ObjectValue = z.record(z.string(), z.unknown());
 const RuntimeVersion = z.object({
   version: z.object({
-    tag: z.literal(`v${promotionPolicy.talosVersion}`),
+    tag: z.literal(`v${selectedPolicy.talosVersion}`),
     os: z.literal("linux"),
     arch: z.literal("amd64"),
   }),
@@ -33,9 +42,9 @@ const KubernetesNode = z.object({
       architecture: z.literal("amd64"),
       operatingSystem: z.literal("linux"),
       containerRuntimeVersion: z.literal(
-        `containerd://${promotionPolicy.containerdVersion}`,
+        `containerd://${selectedPolicy.containerdVersion}`,
       ),
-      osImage: z.literal(`Talos (v${promotionPolicy.talosVersion})`),
+      osImage: z.literal(`Talos (v${selectedPolicy.talosVersion})`),
       kernelVersion: z.string().min(1),
     }),
   }),
@@ -145,7 +154,10 @@ function semanticHash(config: string) {
   return sha256(canonicalJson(parseMachineConfig(config)));
 }
 
-function assertExpectedStartingPolicy(config: string, profileHash: string) {
+function assertExpectedStartingPolicy(
+  config: string,
+  declared: readonly { profileName: string; profileSha256: string }[],
+) {
   const document = parseMachineConfig(config).find(
     (entry) => entry["version"] === "v1alpha1",
   );
@@ -157,9 +169,12 @@ function assertExpectedStartingPolicy(config: string, profileHash: string) {
   }
   const profiles = z.array(ObjectValue).parse(machine["seccompProfiles"] ?? []);
   for (const profile of profiles) {
+    const reviewed = declared.find(
+      (candidate) => candidate.profileName === profile["name"],
+    );
     if (
-      profile["name"] === PROFILE_NAME &&
-      sha256(canonicalJson(profile["value"])) !== profileHash
+      reviewed !== undefined &&
+      sha256(canonicalJson(profile["value"])) !== reviewed.profileSha256
     ) {
       throw new Error("An existing named profile has different contents");
     }
@@ -200,7 +215,7 @@ export async function operatePromotionSandbox(
     "source policy and native full-config validation",
     async () => {
       const update = await prepareTorvaldsSandboxUpdate(before.spec, runner);
-      assertExpectedStartingPolicy(before.spec, update.evidence.profileSha256);
+      assertExpectedStartingPolicy(before.spec, update.evidence.profiles);
       return update;
     },
   );
@@ -318,19 +333,27 @@ export async function operatePromotionSandbox(
       "runtime namespace quota",
       "expected 128; stop and inspect",
     );
-  const installed = await atLayer(
-    "installed profile readback; do not retry apply",
-    () => runner(targetArgs(["read", PROFILE_PATH])),
-  );
-  const installedSemanticHash = await atLayer(
-    "installed profile parsing; do not retry apply",
-    () => sha256(canonicalJson(JSON.parse(installed))),
-  );
-  if (installedSemanticHash !== plan.profileSha256) {
-    throw new OperatorError(
-      "installed profile comparison",
-      "profile differs from reviewed source; stop and inspect",
+  const installedProfiles = [];
+  for (const { profileName, profileSha256 } of plan.profiles) {
+    const installed = await atLayer(
+      "installed profile readback; do not retry apply",
+      () => runner(targetArgs(["read", `${PROFILE_DIRECTORY}/${profileName}`])),
     );
+    const installedSemanticHash = await atLayer(
+      "installed profile parsing; do not retry apply",
+      () => sha256(canonicalJson(JSON.parse(installed))),
+    );
+    if (installedSemanticHash !== profileSha256) {
+      throw new OperatorError(
+        "installed profile comparison",
+        "profile differs from reviewed source; stop and inspect",
+      );
+    }
+    installedProfiles.push({
+      profileName,
+      installedProfileSha256: sha256(installed),
+      installedProfileSemanticSha256: installedSemanticHash,
+    });
   }
   await atLayer("post-apply node health; do not retry apply", () =>
     runner(
@@ -353,8 +376,7 @@ export async function operatePromotionSandbox(
     readbackPersistentResourceVersion: afterPersistent.metadata.version,
     configSemanticEquality: true,
     observedQuota: "128",
-    installedProfileSha256: sha256(installed),
-    installedProfileSemanticSha256: installedSemanticHash,
+    installedProfiles,
     talosHealth: "passed",
     workloadAcceptance:
       "separate chart release and production container checks required",
