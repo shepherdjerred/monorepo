@@ -5,7 +5,7 @@ import {
   type ScoutClientObservation,
 } from "@scout-for-lol/data";
 import { prisma } from "#src/database/index.ts";
-import { isFeatureHardDisabled } from "#src/configuration/flags.ts";
+import { isScoutClientEvidenceLive } from "./access/policy.ts";
 
 const IdSchema = z
   .union([z.string().min(1).max(128), z.number().int().positive()])
@@ -51,7 +51,7 @@ export function observedClashEntity(payload: unknown) {
 export async function projectClashEntity(
   observation: ScoutClientObservation,
 ): Promise<void> {
-  if (isFeatureHardDisabled("scout_client_ingestion")) return;
+  if (!(await isScoutClientEvidenceLive())) return;
   if (observation.kind !== "clash" || observation.localPuuid === undefined)
     return;
   const entity = observedClashEntity(observation.payload);

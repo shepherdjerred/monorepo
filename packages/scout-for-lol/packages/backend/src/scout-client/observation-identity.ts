@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { ScoutClientObservation } from "@scout-for-lol/data";
 import { prisma } from "#src/database/index.ts";
-import type { AuthenticatedScoutClient } from "./authentication.ts";
+import type { AuthenticatedScoutClient } from "./access/authentication.ts";
 import {
   type AttemptCandidate,
   enqueueAliasAttempts,

@@ -150,6 +150,35 @@ export const ScoutClientCheckInResponseSchema = z.strictObject({
   nextSequence: z.number().int().positive().max(Number.MAX_SAFE_INTEGER),
 });
 
+/**
+ * The HTTP status of a {@link ScoutClientUpgradeRequiredSchema} refusal.
+ *
+ * Every released client already treats it as an ordinary failure: its outbox
+ * keeps the batch and retries, and nothing about it reads as revocation (401),
+ * replay deferral (409) or the designed binding retry (503). Released clients
+ * also refuse unknown fields on success bodies, so the refusal could never be a
+ * 200 with a new shape.
+ */
+export const SCOUT_CLIENT_UPGRADE_REQUIRED_STATUS =
+  protocolContract.clientUpgradeRequired.httpStatus;
+
+/**
+ * Check-in and observation-batch answer this, with
+ * {@link SCOUT_CLIENT_UPGRADE_REQUIRED_STATUS}, when the running build is
+ * older than the minimum Scout supports.
+ */
+export const ScoutClientUpgradeRequiredSchema = z.strictObject({
+  error: z.literal(protocolContract.clientUpgradeRequired.error),
+  minimumVersion: z
+    .string()
+    .min(1)
+    .max(protocolContract.envelopeStringMaxBytes.appVersion),
+});
+
+export type ScoutClientUpgradeRequired = z.infer<
+  typeof ScoutClientUpgradeRequiredSchema
+>;
+
 export type ScoutClientObservation = z.infer<
   typeof ScoutClientObservationSchema
 >;

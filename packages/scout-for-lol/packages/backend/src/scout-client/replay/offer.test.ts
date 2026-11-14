@@ -1,6 +1,6 @@
 import { beforeEach, expect, test, vi } from "vitest";
 import { DiscordAccountIdSchema } from "@scout-for-lol/data";
-import type { AuthenticatedScoutClient } from "#src/scout-client/authentication.ts";
+import type { AuthenticatedScoutClient } from "#src/scout-client/access/authentication.ts";
 
 const mocks = vi.hoisted(() => ({
   artifactFindUnique: vi.fn(),

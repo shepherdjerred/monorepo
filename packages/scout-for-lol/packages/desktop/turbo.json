@@ -18,6 +18,7 @@
         "$TURBO_ROOT$/packages/scout-for-lol/packages/data/src/scout-client/protocol.contract.json",
         "$TURBO_ROOT$/packages/scout-for-lol/packages/data/src/scout-client/desktop-events.contract.json",
         "$TURBO_ROOT$/packages/scout-for-lol/packages/data/src/scout-client/desktop-events.fixtures.json",
+        "$TURBO_ROOT$/packages/scout-for-lol/packages/data/src/scout-client/client-upgrade-required.fixtures.json",
         "$TURBO_ROOT$/packages/scout-for-lol/packages/design-system/tokens/themes.json",
         "$TURBO_ROOT$/packages/scout-for-lol/packages/design-system/tokens/themes.schema.json",
         "!target/**"
@@ -36,6 +37,7 @@
         "$TURBO_ROOT$/packages/scout-for-lol/packages/data/src/scout-client/protocol.contract.json",
         "$TURBO_ROOT$/packages/scout-for-lol/packages/data/src/scout-client/desktop-events.contract.json",
         "$TURBO_ROOT$/packages/scout-for-lol/packages/data/src/scout-client/desktop-events.fixtures.json",
+        "$TURBO_ROOT$/packages/scout-for-lol/packages/data/src/scout-client/client-upgrade-required.fixtures.json",
         "$TURBO_ROOT$/packages/scout-for-lol/packages/design-system/tokens/themes.json",
         "$TURBO_ROOT$/packages/scout-for-lol/packages/design-system/tokens/themes.schema.json",
         "!target/**"
@@ -54,6 +56,7 @@
         "$TURBO_ROOT$/packages/scout-for-lol/packages/data/src/scout-client/protocol.contract.json",
         "$TURBO_ROOT$/packages/scout-for-lol/packages/data/src/scout-client/desktop-events.contract.json",
         "$TURBO_ROOT$/packages/scout-for-lol/packages/data/src/scout-client/desktop-events.fixtures.json",
+        "$TURBO_ROOT$/packages/scout-for-lol/packages/data/src/scout-client/client-upgrade-required.fixtures.json",
         "$TURBO_ROOT$/packages/scout-for-lol/packages/design-system/tokens/themes.json",
         "$TURBO_ROOT$/packages/scout-for-lol/packages/design-system/tokens/themes.schema.json",
         "!target/**"
@@ -78,6 +81,7 @@
         "$TURBO_ROOT$/packages/scout-for-lol/packages/data/src/scout-client/protocol.contract.json",
         "$TURBO_ROOT$/packages/scout-for-lol/packages/data/src/scout-client/desktop-events.contract.json",
         "$TURBO_ROOT$/packages/scout-for-lol/packages/data/src/scout-client/desktop-events.fixtures.json",
+        "$TURBO_ROOT$/packages/scout-for-lol/packages/data/src/scout-client/client-upgrade-required.fixtures.json",
         "$TURBO_ROOT$/packages/scout-for-lol/packages/design-system/tokens/themes.json",
         "$TURBO_ROOT$/packages/scout-for-lol/packages/design-system/tokens/themes.schema.json",
         "!target/**"
@@ -97,6 +101,7 @@
         "$TURBO_ROOT$/packages/scout-for-lol/packages/data/src/scout-client/protocol.contract.json",
         "$TURBO_ROOT$/packages/scout-for-lol/packages/data/src/scout-client/desktop-events.contract.json",
         "$TURBO_ROOT$/packages/scout-for-lol/packages/data/src/scout-client/desktop-events.fixtures.json",
+        "$TURBO_ROOT$/packages/scout-for-lol/packages/data/src/scout-client/client-upgrade-required.fixtures.json",
         "$TURBO_ROOT$/packages/scout-for-lol/packages/design-system/tokens/themes.json",
         "$TURBO_ROOT$/packages/scout-for-lol/packages/design-system/tokens/themes.schema.json",
         "!target/**"

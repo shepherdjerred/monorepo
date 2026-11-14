@@ -47,10 +47,6 @@ const io = vi.hoisted(() => ({
   render: vi.fn(async () => "rendered"),
 }));
 vi.mock("#src/database/index.ts", async () => await testDatabaseModule(prisma));
-vi.mock("#src/configuration/flags.ts", async (original) => ({
-  ...(await original()),
-  isFeatureHardDisabled: () => false,
-}));
 vi.mock("#src/evidence/recovery-gate.ts", () => ({
   evidenceRecoveryEnabled: () => true,
 }));

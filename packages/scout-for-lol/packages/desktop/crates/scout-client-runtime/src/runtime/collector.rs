@@ -25,7 +25,7 @@ use super::replay::{
     ReplayUploadTask, cancel_replay_upload, finish_replay_upload, record_backend_outcome,
     start_replay_upload,
 };
-use super::state::{StateHub, set_error, update_state};
+use super::state::{StateHub, observe_upgrade_requirement, set_error, update_state};
 use super::upload::upload_pending;
 use super::usage::{UsageChannel, UsageQueue};
 use crate::startup;
@@ -173,6 +173,7 @@ pub(super) async fn collect_and_upload_observations(
 ) -> Result<(), String> {
     let mut tick_error = None;
     let upload_ready = if let Err(error) = ensure_checked_in(
+        context.state,
         context.backend,
         context.outbox,
         context.credential,
@@ -282,6 +283,7 @@ pub(super) fn load_startup_state(state: &StateHub, backend_origin: &str) {
 }
 
 pub(super) async fn ensure_checked_in(
+    state: &StateHub,
     backend: &ScoutBackendClient,
     outbox: &ObservationOutbox,
     credential: &DeviceCredential,
@@ -295,6 +297,7 @@ pub(super) async fn ensure_checked_in(
     let outcome = backend
         .check_in(credential, env!("CARGO_PKG_VERSION"))
         .await;
+    observe_upgrade_requirement(state, &outcome);
     let next_sequence = record_backend_outcome(diagnostics, "check_in", started, outcome, None)?;
     outbox
         .ensure_next_sequence_at_least(next_sequence)

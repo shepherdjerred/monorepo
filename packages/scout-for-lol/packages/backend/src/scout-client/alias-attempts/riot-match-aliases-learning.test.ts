@@ -26,8 +26,8 @@ vi.mock("#src/database/index.ts", () => ({
     },
   },
 }));
-vi.mock("#src/configuration/flags.ts", () => ({
-  isFeatureHardDisabled: () => false,
+vi.mock("#src/scout-client/access/policy.ts", () => ({
+  isScoutClientEvidenceLive: () => Promise.resolve(true),
 }));
 
 const { learnAliasesFromRiotMatch } = await import("./riot-match-aliases.ts");

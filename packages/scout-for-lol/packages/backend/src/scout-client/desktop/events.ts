@@ -1,6 +1,6 @@
 import { ScoutDesktopEventSchema } from "@scout-for-lol/data";
 import { getProductAnalytics } from "#src/analytics/product-analytics.ts";
-import type { AuthenticatedScoutClient } from "#src/scout-client/authentication.ts";
+import type { AuthenticatedScoutClient } from "#src/scout-client/access/authentication.ts";
 
 // The desktop client's product events (`SCOUT_DESKTOP_EVENTS_PATH`). The client
 // never talks to PostHog: it posts a closed, bounded event here as an

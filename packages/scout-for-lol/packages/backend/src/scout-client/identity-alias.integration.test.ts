@@ -10,7 +10,7 @@ import { RiotHttpError } from "#src/league/api/client/errors.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import { createTestScoutClientDevice } from "#src/testing/scout-client/scout-client-device.ts";
 import { riotMatchWithSeats } from "#src/testing/riot-match-seats.ts";
-import type { AuthenticatedScoutClient } from "./authentication.ts";
+import type { AuthenticatedScoutClient } from "./access/authentication.ts";
 
 const { prisma } = createTestDatabase("scout-client-identity-alias");
 

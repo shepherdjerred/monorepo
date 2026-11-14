@@ -2723,6 +2723,18 @@
       "thresholdRollouts": []
     },
     {
+      "key": "scout-client-minimum-version",
+      "owner": "scout",
+      "namespace": "scout",
+      "source": "scout-dynamic",
+      "purpose": "Oldest Scout Client build (semantic version) that check-in and observation batch accept; older builds get a typed client_upgrade_required refusal.",
+      "type": "variant",
+      "default": "0.1.0",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "scout-feature-tip-percent",
       "owner": "scout",
       "namespace": "scout",
@@ -2805,7 +2817,7 @@
       "owner": "scout",
       "namespace": "scout",
       "source": "scout-policy",
-      "purpose": "Accept observations from paired Scout native clients.",
+      "purpose": "Pair Scout native clients, accept their observations, and read stored client evidence. Evaluated per device owner (user, then each guild where the owner has a Player); false for the owner and the owner's server closes every path.",
       "type": "boolean",
       "default": false,
       "rollouts": [],
@@ -2814,10 +2826,10 @@
       "defaultOffExceptions": [
         {
           "environment": "prod",
-          "reason": "Owner deferred this Scout production feature; only Temporal tracing changes in this rollout.",
-          "issue": "AI-442",
-          "enableWhen": "Owner authorizes this feature and compatible artifacts plus its feature-specific production acceptance pass.",
-          "reviewBy": "2026-12-07"
+          "reason": "Production rollout gated on owner-first evidence (AI-553): the client reaches the owner, then the owner's server, then everyone, each step taken in Flipt only on evidence.",
+          "issue": "AI-553",
+          "enableWhen": "1. scout-evidence-recovery-enabled is on in prod with workflow replay clean, every new match getting an admission row, and live intents per match unchanged. 2. The lake migration rebuild publishes and a known Riot match reads identically before and after. 3. Owner only: one real game each of Classic, ARAM Mayhem, bot custom and human custom reaches Discord once and appears on its match page. 4. Owner's server, then everyone: no duplicate posts, quarantines explained, backlogs draining, with AI-524 (unknown deliveries) fixed before widening past the owner.",
+          "reviewBy": "2026-12-12"
         }
       ]
     },
@@ -2826,7 +2838,7 @@
       "owner": "scout",
       "namespace": "scout",
       "source": "scout-policy",
-      "purpose": "Recover validated local scoreboards and Clash results independently of Match-V5 completeness.",
+      "purpose": "Recover validated local scoreboards and Clash results independently of Match-V5 completeness. Evaluated per device owner like scout_client_ingestion.",
       "type": "boolean",
       "default": false,
       "rollouts": [],
@@ -2835,10 +2847,10 @@
       "defaultOffExceptions": [
         {
           "environment": "prod",
-          "reason": "Owner deferred this Scout production feature; only Temporal tracing changes in this rollout.",
-          "issue": "AI-442",
-          "enableWhen": "Owner authorizes this feature and compatible artifacts plus its feature-specific production acceptance pass.",
-          "reviewBy": "2026-12-07"
+          "reason": "Production rollout gated on owner-first evidence (AI-553): recovery follows scout_client_ingestion to the owner, then the owner's server, then everyone, each step taken in Flipt only on evidence.",
+          "issue": "AI-553",
+          "enableWhen": "1. scout-evidence-recovery-enabled is on in prod with workflow replay clean, every new match getting an admission row, and live intents per match unchanged. 2. The lake migration rebuild publishes and a known Riot match reads identically before and after. 3. Owner only: one real game each of Classic, ARAM Mayhem, bot custom and human custom reaches Discord once and appears on its match page. 4. Owner's server, then everyone: no duplicate posts, quarantines explained, backlogs draining, with AI-524 (unknown deliveries) fixed before widening past the owner.",
+          "reviewBy": "2026-12-12"
         }
       ]
     },

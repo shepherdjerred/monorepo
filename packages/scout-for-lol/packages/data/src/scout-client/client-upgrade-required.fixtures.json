@@ -1,0 +1,35 @@
+{
+  "valid": [
+    { "error": "client_upgrade_required", "minimumVersion": "0.2.0" },
+    { "error": "client_upgrade_required", "minimumVersion": "1.0.0-beta.1" }
+  ],
+  "invalid": [
+    {
+      "reason": "another error code",
+      "body": { "error": "scout_client_disabled", "minimumVersion": "0.2.0" }
+    },
+    {
+      "reason": "an unknown field",
+      "body": {
+        "error": "client_upgrade_required",
+        "minimumVersion": "0.2.0",
+        "retryAfterSeconds": 60
+      }
+    },
+    {
+      "reason": "a missing minimum version",
+      "body": { "error": "client_upgrade_required" }
+    },
+    {
+      "reason": "an empty minimum version",
+      "body": { "error": "client_upgrade_required", "minimumVersion": "" }
+    },
+    {
+      "reason": "a minimum version longer than any app version",
+      "body": {
+        "error": "client_upgrade_required",
+        "minimumVersion": "0.0.0-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    }
+  ]
+}

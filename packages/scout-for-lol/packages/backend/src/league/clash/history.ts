@@ -16,7 +16,7 @@ import {
   type Region,
 } from "@scout-for-lol/data";
 import { prisma } from "#src/database/index.ts";
-import { isFeatureHardDisabled } from "#src/configuration/flags.ts";
+import { isScoutClientEvidenceLive } from "#src/scout-client/access/policy.ts";
 import {
   canonicalClashGameIds,
   clashGameKey,
@@ -153,13 +153,12 @@ export async function readClashHistoryForGuild(
     return [];
   }
   const puuids = accounts.map((account) => account.puuid);
+  const clientEvidenceLive = await isScoutClientEvidenceLive();
   const [sightings, memberships] = await Promise.all([
     prisma.clashGameSighting.findMany({
       where: {
         puuid: { in: puuids },
-        ...(isFeatureHardDisabled("scout_client_ingestion")
-          ? { resultSource: "RIOT" }
-          : {}),
+        ...(clientEvidenceLive ? {} : { resultSource: "RIOT" }),
       },
       orderBy: [{ observedAt: "asc" }],
     }),

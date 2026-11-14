@@ -15,13 +15,13 @@ import { withoutShadowedClashGames } from "#src/league/clash/alias.ts";
 import { Prisma } from "#generated/prisma/client/index.js";
 import configuration from "#src/configuration.ts";
 import {
-  isPolicyEnabled,
-  isFeatureHardDisabled,
-} from "#src/configuration/flags.ts";
+  isScoutClientEnabledFor,
+  isScoutClientEvidenceLive,
+} from "./access/policy.ts";
 import { currentScoutTemporalSupervisor } from "#src/temporal/runtime.ts";
 import { signalScoutClientMatchDispatch } from "#src/temporal/pipeline-starts.ts";
 import { ScoutClientMatchDispatchBatchSchema } from "@scout-for-lol/temporal/workflow-contracts";
-import type { AuthenticatedScoutClient } from "./authentication.ts";
+import type { AuthenticatedScoutClient } from "./access/authentication.ts";
 import { isLcuUuid, readIdentityAliases } from "./identity-alias.ts";
 import {
   learnBatchIdentities,
@@ -233,8 +233,8 @@ export async function ingestObservationBatch(
   batch: ScoutClientObservationBatch,
   now = new Date(),
 ): Promise<readonly Receipt[]> {
-  if (isFeatureHardDisabled("scout_client_ingestion"))
-    throw new Error("Scout Client ingestion is disabled in production");
+  if (!(await isScoutClientEvidenceLive()))
+    throw new Error("Scout Client ingestion is disabled in this environment");
   await learnBatchIdentities(device, batch.observations);
   const identities = await readIdentityAliases(
     observationUuids(batch.observations),
@@ -273,9 +273,10 @@ export async function ingestObservationBatch(
   );
   const attestation = { verifiedPuuids, acceptedAppVersions };
   const receipts: Receipt[] = [];
-  const recoverResults = await isPolicyEnabled("scout_client_result_recovery", {
-    user: device.ownerId,
-  });
+  const recoverResults = await isScoutClientEnabledFor(
+    "scout_client_result_recovery",
+    device.ownerId,
+  );
   for (const [index, sent] of batch.observations.entries()) {
     const raw = stripped[index] ?? withoutScoutClientCredentials(sent);
     const observation = withObserverPlatform(
@@ -314,7 +315,7 @@ export async function startAcceptedClientMatches(
   batch: ScoutClientObservationBatch,
   receipts: readonly Receipt[],
 ): Promise<void> {
-  if (isFeatureHardDisabled("scout_client_ingestion")) return;
+  if (!(await isScoutClientEvidenceLive())) return;
   const platforms = await acceptedObservationPlatforms(
     receipts
       .filter((receipt) => receipt.outcome !== "quarantined")

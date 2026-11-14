@@ -130,7 +130,7 @@ type FlagOverride = {
   value: boolean;
   attributes: FlagAttributes;
   /**
-   * Early access for the beta guild, and nothing more.
+   * Early access outside production, and nothing more.
    *
    * The registry is the fail-closed fallback for when Flipt is unavailable,
    * and the beta guild carries the same Discord id in both deployments. An
@@ -186,8 +186,6 @@ const PRODUCTION_HARD_DISABLED_FLAGS: ReadonlySet<FlagName> = new Set<FlagName>(
     "dare_notifications_enabled",
     "duels_enabled",
     "voice_assistant_enabled",
-    "scout_client_ingestion",
-    "scout_client_result_recovery",
   ],
 );
 
@@ -333,15 +331,25 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
     default: false,
     overrides: [],
   },
+  /**
+   * The Scout Client: pairing, ingestion, and every read of stored client
+   * evidence. `scout-client/access/policy.ts` is the only reader.
+   *
+   * Flipt owns the rollout in both environments: on for everyone in beta, and
+   * in production off until the owner-first rollout steps target the owner,
+   * then the owner's server, then everyone. This fallback mirrors those managed
+   * defaults, so a provider outage in production fails closed rather than
+   * opening an ingress surface, while beta and local development keep the
+   * client on.
+   */
   scout_client_ingestion: {
-    // Pairing and ingestion are available to beta accounts through Flipt's
-    // managed environment rollout. Production is hard-disabled above.
-    // The compatibility registry remains off so
-    // a provider outage fails closed instead of opening a new ingress surface.
     default: false,
-    overrides: [],
+    overrides: [{ value: true, attributes: {}, betaOnly: true }],
   },
-  scout_client_result_recovery: { default: false, overrides: [] },
+  scout_client_result_recovery: {
+    default: false,
+    overrides: [{ value: true, attributes: {}, betaOnly: true }],
+  },
   /**
    * The "Hey Scout" voice assistant (`/scout join` + `/scout leave`).
    *

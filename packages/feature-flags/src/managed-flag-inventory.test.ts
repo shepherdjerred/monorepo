@@ -318,27 +318,59 @@ describe("ManagedFlagInventorySchema", () => {
 });
 
 describe("Managed flag inventory validation", () => {
-  test("enables Scout Client capture and recovery only in beta", () => {
+  test("enables Scout Client capture and recovery in beta and leaves production to an owner-first Flipt rollout", () => {
     for (const key of [
       "scout_client_ingestion",
       "scout_client_result_recovery",
-    ]) {
-      expect(
-        managedFlagInventory.flags.find((flag) => flag.key === key)?.default,
-      ).toBe(false);
+    ] as const) {
+      const declared = managedFlagInventory.flags.find(
+        (flag) => flag.key === key,
+      );
+      if (declared?.type !== "boolean") throw new Error(`${key} missing`);
+      expect(declared.default).toBe(false);
       expect(scoutPolicyFlag("beta", key)).toMatchObject({
         default: true,
         rollouts: [],
         rules: [],
         thresholdRollouts: [],
       });
-      expect(scoutPolicyFlag("prod", key)).toMatchObject({
+      // Production stays off in this declaration. Reconciliation never
+      // overwrites live targeting, so the owner, owner's-server and everyone
+      // steps are operator Flipt changes taken on evidence.
+      const production = scoutPolicyFlag("prod", key);
+      if (production.type !== "boolean") throw new Error(`${key} type`);
+      expect(production).toMatchObject({
         default: false,
         rollouts: [],
         rules: [],
         thresholdRollouts: [],
       });
+      expect(classifyManagedBoolean(production)).toBe("off");
+      expect(managedBooleanDefault(key, "prod")).toBe(false);
+      expect(managedBooleanDefault(key, "beta")).toBe(true);
+      expect(declared.defaultOffExceptions).toEqual([
+        expect.objectContaining({
+          environment: "prod",
+          issue: "AI-553",
+          reason: expect.stringContaining(
+            "Production rollout gated on owner-first evidence (AI-553)",
+          ),
+          enableWhen: expect.stringMatching(
+            /^1\. .*2\. .*3\. Owner only: .*4\. Owner's server, then everyone: /u,
+          ),
+        }),
+      ]);
     }
+  });
+
+  test("accepts every released Scout Client build by default", () => {
+    expect(
+      materializeManagedNamespaceEnvironment(
+        managedFlagInventory,
+        "prod",
+        "scout",
+      ).find((flag) => flag.key === "scout-client-minimum-version"),
+    ).toMatchObject({ type: "variant", default: "0.1.0", rollouts: [] });
   });
 
   test("keeps Scout evidence recovery on in beta and off in prod, apart from the client flag", () => {

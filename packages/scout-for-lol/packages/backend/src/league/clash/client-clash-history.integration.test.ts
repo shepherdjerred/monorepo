@@ -8,10 +8,6 @@ import { createTestScoutClientDevice } from "#src/testing/scout-client/scout-cli
 
 const { prisma } = createTestDatabase("clash-history-pagination");
 vi.mock("#src/database/index.ts", async () => await testDatabaseModule(prisma));
-vi.mock("#src/configuration/flags.ts", async (original) => ({
-  ...(await original()),
-  isFeatureHardDisabled: () => false,
-}));
 const { readClientClashTeams } = await import("./client-clash.ts");
 afterAll(async () => {
   await prisma.$disconnect();

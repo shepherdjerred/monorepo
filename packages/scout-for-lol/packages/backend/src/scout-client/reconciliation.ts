@@ -2,10 +2,11 @@ import {
   revalidateClientObservation,
   type RecoveryObservationRow,
 } from "./revalidation.ts";
+import { isScoutClientLive, scoutClientOwnerPolicy } from "./access/policy.ts";
 import {
-  isPolicyEnabled,
-  isFeatureHardDisabled,
-} from "#src/configuration/flags.ts";
+  DiscordAccountIdSchema,
+  type DiscordAccountId,
+} from "@scout-for-lol/data";
 import { prisma } from "#src/database/index.ts";
 import { projectClientGameResult } from "./game-results.ts";
 import { projectClashEntity } from "./clash-entities.ts";
@@ -23,7 +24,7 @@ const logger = createLogger("scout-client-reconciliation");
 export async function reconcileAcceptedClientEvidence(
   now = new Date(),
 ): Promise<number> {
-  if (isFeatureHardDisabled("scout_client_result_recovery")) return 0;
+  if (!(await isScoutClientLive("scout_client_result_recovery"))) return 0;
   const rows = await prisma.scoutClientObservation.findMany({
     where: {
       disposition: { in: ["ACCEPTED", "QUARANTINED"] },
@@ -43,6 +44,9 @@ export async function reconcileAcceptedClientEvidence(
     take: 50,
     include: { device: { select: { ownerId: true } } },
   });
+  const recoveryEnabled = scoutClientOwnerPolicy(
+    "scout_client_result_recovery",
+  );
   const failures: unknown[] = [];
   for (const row of rows) {
     // Checkpoint the attempt before work so a failing row cannot starve a page.
@@ -55,7 +59,7 @@ export async function reconcileAcceptedClientEvidence(
       },
     });
     try {
-      await recoverRow(row, now);
+      await recoverRow(row, now, recoveryEnabled);
     } catch (error) {
       if (error instanceof ClientBindingReconciliationPending) {
         // The checkpoint above leaves the row incomplete, so a later page
@@ -79,11 +83,10 @@ export async function reconcileAcceptedClientEvidence(
 async function recoverRow(
   row: RecoveryObservationRow,
   now: Date,
+  recoveryEnabled: (owner: DiscordAccountId) => Promise<boolean>,
 ): Promise<void> {
   if (
-    !(await isPolicyEnabled("scout_client_result_recovery", {
-      user: row.device.ownerId,
-    }))
+    !(await recoveryEnabled(DiscordAccountIdSchema.parse(row.device.ownerId)))
   )
     return;
   const observation = await revalidateClientObservation(row, now);

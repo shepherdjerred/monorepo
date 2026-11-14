@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
   revalidate: vi.fn(),
   start: vi.fn(),
   project: vi.fn(),
+  ownerEnabled: vi.fn(() => Promise.resolve(true)),
 }));
 vi.mock("#src/database/index.ts", () => ({
   prisma: {
@@ -14,9 +15,9 @@ vi.mock("#src/database/index.ts", () => ({
     scoutClientGameResult: { findFirst: vi.fn(() => Promise.resolve(null)) },
   },
 }));
-vi.mock("#src/configuration/flags.ts", () => ({
-  isFeatureHardDisabled: () => false,
-  isPolicyEnabled: () => Promise.resolve(true),
+vi.mock("./access/policy.ts", () => ({
+  isScoutClientLive: () => Promise.resolve(true),
+  scoutClientOwnerPolicy: () => mocks.ownerEnabled,
 }));
 vi.mock("./revalidation.ts", () => ({
   revalidateClientObservation: mocks.revalidate,

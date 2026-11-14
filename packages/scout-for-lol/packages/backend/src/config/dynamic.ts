@@ -66,6 +66,22 @@ export function evidenceRecoveryDefault(
 export const DEFAULT_SCOUT_CLIENT_END_OF_GAME_DEADLINE_SECONDS = 360;
 
 /**
+ * The oldest Scout Client build check-in and observation batch accept.
+ *
+ * Every build released so far is 0.1.0, so the default refuses none of them.
+ * Raising it is an operator Flipt change; a build below it gets the typed
+ * `client_upgrade_required` refusal and keeps its outbox until it upgrades.
+ */
+export const DEFAULT_SCOUT_CLIENT_MINIMUM_VERSION = "0.1.0";
+
+/** A strict semantic version, as a Scout Client reports its own build. */
+export const SemanticVersionSchema = z
+  .string()
+  .regex(
+    /^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-[\da-z-]+(?:\.[\da-z-]+)*)?(?:\+[\da-z-]+(?:\.[\da-z-]+)*)?$/i,
+  );
+
+/**
  * Scout's dynamically configurable values.
  *
  * Bootstrap stays in `configuration.ts` — env-only by definition, read before
@@ -242,6 +258,13 @@ const DEFINITION = {
     default: DEFAULT_SCOUT_CLIENT_END_OF_GAME_DEADLINE_SECONDS,
     names: { flag: "scout-client-end-of-game-deadline-seconds" },
   },
+  /** See {@link DEFAULT_SCOUT_CLIENT_MINIMUM_VERSION}. */
+  scoutClientMinimumVersion: {
+    schema: SemanticVersionSchema,
+    sources: ["flag", "default"],
+    default: DEFAULT_SCOUT_CLIENT_MINIMUM_VERSION,
+    names: { flag: "scout-client-minimum-version" },
+  },
 } as const;
 
 /**
@@ -310,6 +333,7 @@ function buildSnapshot(
                 evidenceRecoveryEnabled: "boolean",
                 riotBudgetMode: "string",
                 scoutClientEndOfGameDeadlineSeconds: "number",
+                scoutClientMinimumVersion: "string",
               },
             }),
           }
@@ -333,6 +357,7 @@ function buildSnapshot(
       riotBudgetMode: "observe",
       scoutClientEndOfGameDeadlineSeconds:
         DEFAULT_SCOUT_CLIENT_END_OF_GAME_DEADLINE_SECONDS,
+      scoutClientMinimumVersion: DEFAULT_SCOUT_CLIENT_MINIMUM_VERSION,
       ...seed,
     },
     onRefreshError: (key, message) => {
@@ -505,6 +530,14 @@ export function scoutClientEndOfGameDeadlineSeconds(): number {
   return (
     snapshot?.get("scoutClientEndOfGameDeadlineSeconds") ??
     DEFAULT_SCOUT_CLIENT_END_OF_GAME_DEADLINE_SECONDS
+  );
+}
+
+/** Read per request, so a raised minimum applies to the next check-in. */
+export function scoutClientMinimumVersion(): string {
+  return (
+    snapshot?.get("scoutClientMinimumVersion") ??
+    DEFAULT_SCOUT_CLIENT_MINIMUM_VERSION
   );
 }
 

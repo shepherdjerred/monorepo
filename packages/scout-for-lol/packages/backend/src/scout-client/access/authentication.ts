@@ -3,8 +3,8 @@ import {
   type DiscordAccountId,
 } from "@scout-for-lol/data";
 import { prisma } from "#src/database/index.ts";
-import { isPolicyEnabled } from "#src/configuration/flags.ts";
-import { secretDigest } from "./secrets.ts";
+import { isScoutClientEnabledFor } from "./policy.ts";
+import { secretDigest } from "#src/scout-client/secrets.ts";
 
 export type AuthenticatedScoutClient = {
   readonly deviceId: string;
@@ -26,7 +26,7 @@ export async function authenticateScoutClient(
   if (device?.deviceState !== "ACTIVE") return null;
   const ownerId = DiscordAccountIdSchema.parse(device.ownerId);
   return requireEnabledPolicy &&
-    !(await isPolicyEnabled("scout_client_ingestion", { user: ownerId }))
+    !(await isScoutClientEnabledFor("scout_client_ingestion", ownerId))
     ? null
     : { deviceId: device.id, ownerId, appVersion: device.appVersion };
 }

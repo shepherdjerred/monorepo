@@ -199,6 +199,16 @@ that wakes only when the phase changes, for a future overlay or coach. A League
 label this build does not know arrives as `GameflowPhase::Unrecognized`, and
 `Disconnected` means no signed-in League client.
 
+When Scout refuses this build as older than its minimum supported version,
+check-in and observation batch answer HTTP 426 with a typed
+`client_upgrade_required` body (`ClientUpgradeRequired`, from
+`protocol.contract.json`). `BackendError::UpgradeRequired` carries it,
+`RuntimeState::upgrade_required` holds the minimum version until a later
+check-in or upload succeeds, and `last_error` tells the user to update.
+Observations stay in the outbox, and the refusal is recorded as a deferred
+warning rather than an error report. Builds released before this type treat the
+426 as an ordinary failed request and also keep their outbox.
+
 ### Single instance
 
 `InstanceLock::acquire` takes an exclusive lock on `scout-client.lock` in the
@@ -212,6 +222,11 @@ Use `--server=http://127.0.0.1:<port>` for a local backend; an explicit server
 is also retained in start-at-login registration. Remote origins must use
 HTTPS. Without `--server`, the backend is the compiled-in release profile's
 (see "Release profiles").
+
+Preview packages' ingestion flag is on for everyone on beta. Production enables the client in Flipt, owner first,
+then the owner's server, then everyone. Before the first step every device
+route answers `403 scout_client_disabled`; after it, a device whose owner no
+step reaches yet is refused as `401 unauthorized`, as in beta.
 
 ## Release profiles
 

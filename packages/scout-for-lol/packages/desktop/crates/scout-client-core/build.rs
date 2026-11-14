@@ -22,6 +22,14 @@ struct ProtocolContract {
     envelope_string_max_bytes: EnvelopeStringLimits,
     observation_kinds: Vec<String>,
     quarantine_reasons: Vec<String>,
+    client_upgrade_required: ClientUpgradeRequiredContract,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct ClientUpgradeRequiredContract {
+    http_status: u16,
+    error: String,
 }
 
 #[derive(Deserialize)]
@@ -170,6 +178,19 @@ fn validate_contract(contract: &ProtocolContract) -> Result<(), io::Error> {
     if contract.quarantine_reasons.is_empty() {
         return Err(invalid_contract("quarantineReasons must not be empty"));
     }
+    // Released clients read 401 as revocation and 409 as replay deferral, so
+    // the upgrade refusal must be some other client error.
+    let upgrade_status = contract.client_upgrade_required.http_status;
+    if !(400..=499).contains(&upgrade_status) || matches!(upgrade_status, 401 | 409) {
+        return Err(invalid_contract(
+            "clientUpgradeRequired.httpStatus must be a 4xx other than 401 or 409",
+        ));
+    }
+    if contract.client_upgrade_required.error.is_empty() {
+        return Err(invalid_contract(
+            "clientUpgradeRequired.error must not be empty",
+        ));
+    }
     Ok(())
 }
 
@@ -212,6 +233,10 @@ const PLATFORM_ID_MAX_BYTES: usize = {};
 const LOCAL_PUUID_MAX_BYTES: usize = {};
 pub(crate) const LOBBY_ID_MAX_BYTES: usize = {};
 const GAME_ID_MAX_BYTES: usize = {};
+/// HTTP status of a `client_upgrade_required` refusal.
+pub const CLIENT_UPGRADE_REQUIRED_STATUS: u16 = {};
+/// The `error` code of a `client_upgrade_required` refusal.
+pub const CLIENT_UPGRADE_REQUIRED_ERROR: &str = {:?};
 
 /// A curated, gameplay-only observation family.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -242,6 +267,8 @@ pub enum ObservationQuarantineReason {{
         rust_usize(contract.envelope_string_max_bytes.local_puuid),
         rust_usize(contract.envelope_string_max_bytes.lobby_id),
         rust_usize(contract.envelope_string_max_bytes.game_id),
+        contract.client_upgrade_required.http_status,
+        contract.client_upgrade_required.error,
         enum_variants(&contract.observation_kinds, "observation family")?,
         enum_variants(&contract.quarantine_reasons, "quarantine reason")?,
     ))

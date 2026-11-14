@@ -246,8 +246,10 @@ pub(super) fn record_backend_outcome<T>(
         .http_response(outcome.as_ref().map_or(status, |_| Some(200)));
     let (level, result) = match &outcome {
         Ok(_) => (DiagnosticLevel::Info, DiagnosticOutcome::Succeeded),
-        // The server asked for this retry; below Error, so no sink reports it.
-        Err(error) if error.is_designed_retry() => {
+        // The server asked for this retry, or refused an old build the user
+        // must upgrade; below Error, so no sink reports either. The outbox
+        // keeps the batch through both.
+        Err(error) if error.is_designed_retry() || error.upgrade_required().is_some() => {
             (DiagnosticLevel::Warn, DiagnosticOutcome::Deferred)
         }
         Err(_) => (DiagnosticLevel::Error, DiagnosticOutcome::Failed),
@@ -748,6 +750,44 @@ mod tests {
                 ),
                 (DiagnosticLevel::Error, DiagnosticOutcome::Failed, Some(503)),
             ]
+        );
+    }
+
+    #[test]
+    fn an_upgrade_refusal_is_recorded_below_error_and_still_fails_the_call() {
+        let diagnostics = Diagnostics::in_memory();
+        let outcome: Result<(), BackendError> = Err(BackendError::UpgradeRequired(
+            scout_client_core::protocol::ClientUpgradeRequired {
+                error: scout_client_core::protocol::CLIENT_UPGRADE_REQUIRED_ERROR.to_owned(),
+                minimum_version: "0.2.0".to_owned(),
+            },
+        ));
+        let failure = record_backend_outcome(
+            &diagnostics,
+            "check_in",
+            std::time::Instant::now(),
+            outcome,
+            None,
+        );
+        assert_eq!(
+            failure,
+            Err(
+                "Scout needs Scout Client 0.2.0 or newer; update this app to keep reporting games"
+                    .to_owned()
+            )
+        );
+        let recorded: Vec<_> = diagnostics
+            .events()
+            .into_iter()
+            .map(|event| (event.level, event.outcome, event.status))
+            .collect();
+        assert_eq!(
+            recorded,
+            [(
+                DiagnosticLevel::Warn,
+                DiagnosticOutcome::Deferred,
+                Some(426)
+            )]
         );
     }
 

@@ -1,8 +1,11 @@
 import { describe, expect, test } from "vitest";
 import rawProtocolContract from "./protocol.contract.json" with { type: "json" };
+import upgradeRequiredFixtures from "./client-upgrade-required.fixtures.json" with { type: "json" };
 import { SCOUT_CLIENT_PROTOCOL_CONTRACT } from "./protocol.generated.ts";
 import {
+  SCOUT_CLIENT_UPGRADE_REQUIRED_STATUS,
   ScoutClientCheckInResponseSchema,
+  ScoutClientUpgradeRequiredSchema,
   ScoutClientObservationBatchSchema,
   ScoutClientObservationSchema,
   isScoutClientCredentialKey,
@@ -127,5 +130,24 @@ describe("Scout Client protocol", () => {
         nextSequence: Number.MAX_SAFE_INTEGER + 1,
       }).success,
     ).toBe(false);
+  });
+});
+
+describe("client_upgrade_required", () => {
+  test("is a status released clients already treat as a plain failure", () => {
+    expect(SCOUT_CLIENT_UPGRADE_REQUIRED_STATUS).toBe(426);
+  });
+
+  test.each(upgradeRequiredFixtures.valid)(
+    "accepts minimum version $minimumVersion",
+    (fixture) => {
+      expect(ScoutClientUpgradeRequiredSchema.parse(fixture)).toEqual(fixture);
+    },
+  );
+
+  test.each(upgradeRequiredFixtures.invalid)("rejects $reason", ({ body }) => {
+    expect(ScoutClientUpgradeRequiredSchema.safeParse(body).success).toBe(
+      false,
+    );
   });
 });

@@ -11,7 +11,7 @@ import {
 import type { ScoutClientObservation } from "@scout-for-lol/data";
 import type { DiscordAccountId } from "@scout-for-lol/domain/identity/discord.ts";
 import { prisma } from "#src/database/index.ts";
-import { isFeatureHardDisabled } from "#src/configuration/flags.ts";
+import { isScoutClientEvidenceLive } from "./access/policy.ts";
 import { projectResultEvidence } from "#src/evidence/result-projection.ts";
 import {
   localResultCompletionTime,
@@ -36,7 +36,7 @@ export type ClientProjectionOutcome =
 export async function projectClientGameResult(
   observation: ScoutClientObservation,
 ): Promise<ClientProjectionOutcome> {
-  if (isFeatureHardDisabled("scout_client_ingestion")) return "skipped";
+  if (!(await isScoutClientEvidenceLive())) return "skipped";
   if (
     observation.kind !== "post_game" ||
     observation.localPuuid === undefined ||
@@ -138,7 +138,7 @@ export async function readClientGameResults(
   results: GameResult[];
   conflicts: { matchId: RiotMatchId; sourceIds: string[] }[];
 }> {
-  if (isFeatureHardDisabled("scout_client_ingestion"))
+  if (!(await isScoutClientEvidenceLive()))
     return { results: [], conflicts: [] };
   const accounts = await prisma.account.findMany({
     where: { player: { discordId: ownerId } },

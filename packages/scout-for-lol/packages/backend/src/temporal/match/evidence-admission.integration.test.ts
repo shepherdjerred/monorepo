@@ -18,6 +18,12 @@ vi.mock("#src/configuration/flags.ts", async (original) => ({
   ...(await original()),
   isFeatureHardDisabled: () => mode.production,
 }));
+// Production's Flipt answer while the Scout Client is off for everyone.
+vi.mock("#src/scout-client/access/policy.ts", async (original) => ({
+  ...(await original()),
+  isScoutClientLive: async () => !mode.production,
+  isScoutClientEvidenceLive: async () => !mode.production,
+}));
 vi.mock("#src/evidence/recovery-gate.ts", () => ({
   evidenceRecoveryEnabled: () => !mode.production,
 }));

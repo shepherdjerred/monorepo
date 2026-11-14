@@ -28,6 +28,10 @@ const PRODUCTION_DENIED_FLAGS = [
   "dare_notifications_enabled",
   "duels_enabled",
   "voice_assistant_enabled",
+] as const;
+
+/** Off in production by Flipt's managed state, not by a code-level denial. */
+const SCOUT_CLIENT_FLAGS = [
   "scout_client_ingestion",
   "scout_client_result_recovery",
 ] as const;
@@ -57,7 +61,7 @@ afterEach(() => {
   // file from switching `debug` off for every test that runs after it.
   resetFlagOverrides("debug");
   resetFlagOverrides("initial_match_history_import_enabled");
-  for (const flag of PRODUCTION_DENIED_FLAGS) {
+  for (const flag of [...PRODUCTION_DENIED_FLAGS, ...SCOUT_CLIENT_FLAGS]) {
     resetFlagOverrides(flag);
   }
   if (originalEnvironment === undefined) {
@@ -90,8 +94,6 @@ describe("production hard-disable policy", () => {
         dare_notifications_enabled: true,
         duels_enabled: true,
         voice_assistant_enabled: true,
-        scout_client_ingestion: true,
-        scout_client_result_recovery: true,
       }),
     });
 
@@ -122,10 +124,7 @@ describe("production hard-disable policy", () => {
       }),
     });
     try {
-      for (const flag of [
-        "scout_client_ingestion",
-        "scout_client_result_recovery",
-      ] as const) {
+      for (const flag of SCOUT_CLIENT_FLAGS) {
         await expect(isPolicyEnabled(flag, { user: SOMEONE })).resolves.toBe(
           true,
         );
@@ -139,9 +138,35 @@ describe("production hard-disable policy", () => {
     Bun.env["ENVIRONMENT"] = "prod";
     resetConfigurationForTests();
 
-    expect(getFlag("scout_client_ingestion", { user: ME })).toBe(false);
-    expect(getFlag("scout_client_ingestion", { user: SOMEONE })).toBe(false);
+    for (const flag of SCOUT_CLIENT_FLAGS) {
+      expect(getFlag(flag, { user: ME, server: MY_SERVER })).toBe(false);
+      expect(getFlag(flag, { user: SOMEONE })).toBe(false);
+    }
   });
+
+  test.each([true, false])(
+    "leaves the Scout Client to Flipt in production when it answers %s",
+    async (answer) => {
+      Bun.env["ENVIRONMENT"] = "prod";
+      resetConfigurationForTests();
+      await initFeatureFlags({
+        environment: { FEATURE_FLAGS_MODE: "disabled" },
+        provider: new StaticProvider({
+          scout_client_ingestion: answer,
+          scout_client_result_recovery: answer,
+        }),
+      });
+      try {
+        for (const flag of SCOUT_CLIENT_FLAGS) {
+          await expect(
+            isPolicyEnabled(flag, { server: MY_SERVER, user: SOMEONE }),
+          ).resolves.toBe(answer);
+        }
+      } finally {
+        await shutdownFeatureFlags();
+      }
+    },
+  );
 
   test("keeps those same beta rollouts outside production", () => {
     Bun.env["ENVIRONMENT"] = "beta";
@@ -155,8 +180,11 @@ describe("production hard-disable policy", () => {
     expect(listGuildsWithFlagEnabled("hall_of_fame_enabled")).toEqual([
       MY_SERVER,
     ]);
-    expect(getFlag("scout_client_ingestion", { user: ME })).toBe(false);
-    expect(getFlag("scout_client_ingestion", { user: SOMEONE })).toBe(false);
+    // Beta's managed default is on for everyone; the fallback matches it.
+    for (const flag of SCOUT_CLIENT_FLAGS) {
+      expect(getFlag(flag, { user: ME })).toBe(true);
+      expect(getFlag(flag, { user: SOMEONE })).toBe(true);
+    }
   });
 
   test("leaves every other surface to its ordinary flag", async () => {

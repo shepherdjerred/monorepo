@@ -13,8 +13,8 @@ import { resetConfigurationForTests } from "#src/configuration.ts";
 import { DEFAULT_EXPLORE_QUOTA_LIMITS } from "#src/configuration/explore-quota.ts";
 
 const io = vi.hoisted(() => ({ hardDisabled: vi.fn(() => false) }));
-// The Scout Client hard-disable is the coupling this gate replaced. Driving it
-// directly proves the gate no longer reads it.
+// The production hard-disable policy is the coupling this gate replaced.
+// Driving it directly proves the gate no longer reads it.
 vi.mock("#src/configuration/flags.ts", async (original) => ({
   ...(await original()),
   isFeatureHardDisabled: io.hardDisabled,
@@ -128,7 +128,7 @@ describe("evidence-recovery gate", () => {
     ["prod", false],
     ["beta", true],
   ] as const)(
-    "%s does not move when the scout_client_ingestion hard-disable changes",
+    "%s does not move with the Scout Client flags or the hard-disable policy",
     async (environment, expected) => {
       deployAs(environment);
       await initializeDynamicConfig({

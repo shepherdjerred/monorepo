@@ -6,7 +6,7 @@ import configuration from "#src/configuration.ts";
 import { prisma, type Db } from "#src/database/index.ts";
 import { createS3Client } from "#src/storage/s3-client.ts";
 import { createLogger } from "#src/logger.ts";
-import type { AuthenticatedScoutClient } from "./authentication.ts";
+import type { AuthenticatedScoutClient } from "./access/authentication.ts";
 import {
   ReplayContainerError,
   validateReplayContainer,
