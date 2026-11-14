@@ -34,7 +34,7 @@ const RawObjectivesSchema = z
   })
   .strict();
 
-const RawBanSchema = z
+export const RawBanSchema = z
   .object({
     championId: z.number(),
     pickTurn: z.number(),

@@ -138,3 +138,33 @@ export type LegacyParticipant = z.infer<typeof LegacyParticipantSchema>;
 export type LegacyIdentity = z.infer<typeof LegacyIdentitySchema>;
 export type Replay = z.infer<typeof ReplaySchema>;
 export type LocalMatchBundle = z.infer<typeof LocalMatchBundleSchema>;
+
+/**
+ * What one League-client participant states, gathered by a converter from
+ * whichever sources it has. `records` are statistic sources in precedence
+ * order; the rest are the facts a source states outside its statistics.
+ */
+export type LcuParticipantFacts = {
+  readonly records: readonly ValueRecord[];
+  /** `null` when no source numbers the participant (the end-of-game block). */
+  readonly participantId: number | null;
+  readonly teamId: number;
+  readonly championId: number;
+  /** The source's champion name, used only when the ID has no known key. */
+  readonly championName: string | undefined;
+  readonly skinName: string | undefined;
+  readonly spell1Id: number;
+  readonly spell2Id: number;
+  readonly timeline:
+    { lane?: string | undefined; role?: string | undefined } | undefined;
+  readonly profileIcon: number | undefined;
+  readonly riotIdGameName: string | undefined;
+  readonly riotIdName: string | undefined;
+  /** The statistics source's own tag line, read before any record. */
+  readonly riotIdTagLine: string | undefined;
+  /** The identity's tag line, read after every record. */
+  readonly identityTagLine: string | undefined;
+  readonly summonerId: string | undefined;
+  readonly summonerLevel: number | undefined;
+  readonly summonerName: string | undefined;
+};

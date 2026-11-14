@@ -7,8 +7,8 @@ import { rawDocumentRow } from "#src/report-lake/staging/raw-documents.ts";
 import { populateCompetitionRankHistoryFromS3 as populateRankHistory } from "#src/report-lake/rebuild/rank-history.ts";
 
 import {
+  CanonicalMatchRecordSchema,
   RawCurrentGameInfoSchema,
-  RawMatchSchema,
   RawTimelineSchema,
 } from "@scout-for-lol/data";
 import { createLogger } from "#src/logger.ts";
@@ -105,7 +105,8 @@ export async function populateMatchesFromS3(
         await setImmediate();
         options.abortSignal?.throwIfAborted();
         const rawParsed: unknown = JSON.parse(rawText);
-        const parsed = RawMatchSchema.safeParse(rawParsed);
+        // A Match-V5 document or an end-of-game record, by its own version.
+        const parsed = CanonicalMatchRecordSchema.safeParse(rawParsed);
         if (!parsed.success) {
           logger.warn(`Skipping S3 match ${key}: rawJson failed validation`, {
             issue: parsed.error.issues[0],
@@ -113,11 +114,11 @@ export async function populateMatchesFromS3(
           return null;
         }
         return {
-          match: parsed.data,
+          match: parsed.data.match,
           source: sourceKey(key, rawText),
           raw: s3RawDocumentRow({
             kind: "match",
-            matchId: parsed.data.metadata.matchId,
+            matchId: parsed.data.match.metadata.matchId,
             key,
             rawText,
             capturedAt: observedAt,

@@ -7,7 +7,7 @@ import type { ArtifactResolution } from "@scout-for-lol/domain/artifacts/resolut
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { prisma } from "#src/database/index.ts";
 import { storedRawArchiveDescriptor } from "#src/report-lake/durable-receipts.ts";
-import { readArchivedMatchPayload } from "#src/report-lake/receipted-archive.ts";
+import { readArchivedCanonicalMatch } from "#src/report-lake/receipted-archive.ts";
 import { gameResultFromMatch } from "#src/scout-client/canonical/riot-result.ts";
 
 /** One result policy serves owner history and other projections. */
@@ -34,10 +34,14 @@ export async function resolveResultEvidence(
     ).values(),
   ];
   const archive = await storedRawArchiveDescriptor(prisma, matchId, "match");
-  const value =
+  const archived =
     archive === null
+      ? null
+      : await readArchivedCanonicalMatch(archive, matchId);
+  const value =
+    archived === null
       ? resolveGameResult(all)
-      : gameResultFromMatch(await readArchivedMatchPayload(archive, matchId));
+      : gameResultFromMatch(archived.match);
   const evidence = all.map(({ source, sourceId }) => ({ source, sourceId }));
   if (value === null)
     return all.length === 0

@@ -968,6 +968,40 @@ is derived only when provable — from kill counts, or the timeline's first kill
 when both teams took one — and a match whose required "first" can't be proven
 is refused.
 
+#### End-of-game records
+
+A client that serves no match history for a game (common for League Classic)
+uploads only the end-of-game block. `canonical/eog-match.ts`
+(`convertEndOfGameMatch`) builds an `EndOfGameMatch` from it and the same
+device's latest earlier gameflow session, tagged `dataVersion: "local-eog-1"`.
+It is not a Match-V5 document: `CanonicalMatch = RawMatch | EndOfGameMatch`,
+and a consumer opts in to the union. `matchCoverageOf` reads `complete |
+end_of_game` from the version, as `matchDataSourceOf` reads the source.
+
+- Stated: every participant stat, item, spell, rune and detected position; the
+  win; queue and map (from gameflow); platform; duration, end, and start (end
+  minus duration).
+- Derived from player stats: champion, baron and dragon kills are team sums,
+  and tower and inhibitor kills are the other side's stated losses, since a
+  player's own count misses minion kills. First blood and first tower come
+  from player flags. Other firsts are set only when one side took any.
+- `null`, never zero: `participantId`, `gameCreation`, `gameVersion`, bans
+  (unless gameflow states them, which no beta capture does), Rift Herald,
+  Voidgrub and Atakhan objectives, feats, any undecided "first", and the
+  timeline.
+
+`resolveCanonicalMatch` (`evidence/matches.ts`) prefers a complete match,
+Riot's or a bundle's. It falls back to an end-of-game record only after its
+deadline, `scout-client-end-of-game-deadline-seconds` (default 360, sized
+from beta's bundle lag), and only once Riot definitively lacks the game or
+never publishes its queue. Disagreeing records are a conflict and produce no
+record. The pick is frozen in the same `ScoutClientCanonicalMatch` row as a
+bundle, and never upgraded. `resolveCompleteMatch` reports a frozen record as
+unavailable. Stored-match readers (the archive, competitions' S3 query, lake
+rebuild, Explore review, showcase, scripts) parse `CanonicalMatchSchema`, and
+the lake writes the record's rows with `coverage = 'end_of_game'`. Nothing in
+the match pipeline produces the record yet.
+
 Timeline selection is independent of result selection. Riot supplies its
 timeline when available; accepted client timeline observations can fill a
 missing timeline even for a Riot result. Participant IDs must identify the

@@ -1,17 +1,20 @@
 import type {
   AccountLakeRow,
   CachedLeaderboard,
+  CanonicalMatch,
+  CanonicalParticipant,
   CompetitionRankHistoryLakeRow,
   MatchLakeRow,
   MatchTeamBanLakeRow,
   MatchTeamLakeRow,
   PrematchLakeRow,
   RawCurrentGameInfo,
-  RawMatch,
-  RawParticipant,
 } from "@scout-for-lol/data";
 import {
+  canonicalMatchCreatedAt,
+  canonicalMatchTournamentCode,
   computeKda,
+  matchCoverageOf,
   matchDataSourceOf,
   participantKindOf,
   rankToLeaguePoints,
@@ -27,25 +30,33 @@ import { participantLoadoutLakeRow } from "#src/report-lake/loadout.ts";
  *
  * These are the ONLY places lake rows are produced (staging appends at ingest
  * and compaction rebuilds), so the derivations below define lake semantics.
+ *
+ * A match is a Match-V5 document or an end-of-game record. The record's rows
+ * say so in `coverage` and carry `NULL` for what it does not state: the
+ * participant number, creation time, game version, the unstated team
+ * objectives and firsts, and the bans (no ban rows). Its `month` partition
+ * comes from the game's start, the closest stated instant.
  */
 
 type AccountWithPlayer = Prisma.AccountGetPayload<{
   include: { player: true };
 }>;
 
-function participantKda(participant: RawParticipant): number {
+function participantKda(participant: CanonicalParticipant): number {
   return computeKda(participant);
 }
 
-function participantCreepScore(participant: RawParticipant): number {
+function participantCreepScore(participant: CanonicalParticipant): number {
   return participant.totalMinionsKilled + participant.neutralMinionsKilled;
 }
 
-function participantSurrendered(participant: RawParticipant): boolean {
+function participantSurrendered(participant: CanonicalParticipant): boolean {
   return participant.gameEndedInSurrender || participant.teamEarlySurrendered;
 }
 
-function participantEarlySurrendered(participant: RawParticipant): boolean {
+function participantEarlySurrendered(
+  participant: CanonicalParticipant,
+): boolean {
   return (
     participant.gameEndedInEarlySurrender || participant.teamEarlySurrendered
   );
@@ -56,7 +67,7 @@ function participantEarlySurrendered(participant: RawParticipant): boolean {
  * secondary; perk0 is the keystone. A mode without runes (Arena) records no
  * styles, which stays NULL rather than a made-up page.
  */
-function participantLoadout(participant: RawParticipant) {
+function participantLoadout(participant: CanonicalParticipant) {
   const loadout = participantLoadoutLakeRow(participant);
   return {
     summoner1_id: participant.summoner1Id,
@@ -75,13 +86,13 @@ function participantLoadout(participant: RawParticipant) {
   };
 }
 
-export function flattenMatch(match: RawMatch): MatchLakeRow[] {
+export function flattenMatch(match: CanonicalMatch): MatchLakeRow[] {
   const queue =
     resolveQueueTypeFromGame(
       match.info.queueId,
       match.info.gameMode,
       match.info.gameType,
-      match.info.tournamentCode,
+      canonicalMatchTournamentCode(match),
     ) ?? null;
   const matchId = match.metadata.matchId;
 
@@ -92,8 +103,11 @@ export function flattenMatch(match: RawMatch): MatchLakeRow[] {
     match_id: matchId,
     game_id: match.info.gameId.toString(),
     platform_id: match.info.platformId,
-    month: lakeMonth(match.info.gameCreation),
-    game_creation_at: lakeTimestamp(match.info.gameCreation),
+    month: lakeMonth(canonicalMatchCreatedAt(match)),
+    game_creation_at:
+      match.info.gameCreation === null
+        ? null
+        : lakeTimestamp(match.info.gameCreation),
     game_start_at: lakeTimestamp(match.info.gameStartTimestamp),
     game_end_at: lakeTimestamp(match.info.gameEndTimestamp),
     game_duration_seconds: match.info.gameDuration,
@@ -103,8 +117,7 @@ export function flattenMatch(match: RawMatch): MatchLakeRow[] {
     game_type: match.info.gameType,
     game_version: match.info.gameVersion,
     data_source: matchDataSourceOf(match.metadata),
-    // A RawMatch is a Match-V5 document; the end-of-game record is not one.
-    coverage: "complete",
+    coverage: matchCoverageOf(match.metadata),
     end_of_game_result: match.info.endOfGameResult ?? null,
     map_id: match.info.mapId,
     puuid: participant.puuid,
@@ -198,18 +211,18 @@ export function flattenMatch(match: RawMatch): MatchLakeRow[] {
   }));
 }
 
-function isArenaMatch(match: RawMatch): boolean {
+function isArenaMatch(match: CanonicalMatch): boolean {
   return (
     resolveQueueTypeFromGame(
       match.info.queueId,
       match.info.gameMode,
       match.info.gameType,
-      match.info.tournamentCode,
+      canonicalMatchTournamentCode(match),
     ) === "arena"
   );
 }
 
-export function flattenMatchTeams(match: RawMatch): MatchTeamLakeRow[] {
+export function flattenMatchTeams(match: CanonicalMatch): MatchTeamLakeRow[] {
   // Arena's raw `teams` are keyed by the two sides (100 and 0), while
   // participants are keyed by eight player subteams (1 through 8). There is
   // no truthful team-level aggregate to expose until Riot supplies matching
@@ -217,7 +230,7 @@ export function flattenMatchTeams(match: RawMatch): MatchTeamLakeRow[] {
   // joins.
   if (isArenaMatch(match)) return [];
   const matchId = match.metadata.matchId;
-  const month = lakeMonth(match.info.gameCreation);
+  const month = lakeMonth(canonicalMatchCreatedAt(match));
   return match.info.teams.map((team) => ({
     match_id: matchId,
     month,
@@ -245,12 +258,15 @@ export function flattenMatchTeams(match: RawMatch): MatchTeamLakeRow[] {
   }));
 }
 
-export function flattenMatchTeamBans(match: RawMatch): MatchTeamBanLakeRow[] {
+export function flattenMatchTeamBans(
+  match: CanonicalMatch,
+): MatchTeamBanLakeRow[] {
   if (isArenaMatch(match)) return [];
   const matchId = match.metadata.matchId;
-  const month = lakeMonth(match.info.gameCreation);
+  const month = lakeMonth(canonicalMatchCreatedAt(match));
+  // An end-of-game record's bans are `null` unless gameflow stated them.
   return match.info.teams.flatMap((team) =>
-    team.bans.map((ban) => ({
+    (team.bans ?? []).map((ban) => ({
       match_id: matchId,
       month,
       team_id: team.teamId,

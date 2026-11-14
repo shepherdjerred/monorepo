@@ -6,8 +6,8 @@ const mocks = vi.hoisted(() => ({
   fetchMatchData: vi.fn(),
   getAccountsWithState: vi.fn(),
   getActiveServerIds: vi.fn(),
-  readArchivedMatchPayload: vi.fn(),
-  readSelectedLocalCanonicalMatch: vi.fn(),
+  readArchivedCanonicalMatch: vi.fn(),
+  readSelectedCanonicalMatch: vi.fn(),
   resolveLocalCanonicalMatch: vi.fn(),
   readLocalCanonicalCandidates: vi.fn(),
   selectLocalCanonicalMatch: vi.fn(),
@@ -28,7 +28,7 @@ vi.mock("#src/league/tasks/postmatch/match-data-fetcher.ts", () => ({
 }));
 vi.mock("#src/scout-client/canonical-match.ts", async (original) => ({
   ...(await original()),
-  readSelectedLocalCanonicalMatch: mocks.readSelectedLocalCanonicalMatch,
+  readSelectedCanonicalMatch: mocks.readSelectedCanonicalMatch,
   resolveLocalCanonicalMatch: mocks.resolveLocalCanonicalMatch,
   readLocalCanonicalCandidates: mocks.readLocalCanonicalCandidates,
   selectLocalCanonicalMatch: mocks.selectLocalCanonicalMatch,
@@ -37,7 +37,7 @@ vi.mock("#src/report-lake/durable-receipts.ts", () => ({
   storedRawArchiveDescriptor: mocks.storedRawArchiveDescriptor,
 }));
 vi.mock("#src/report-lake/receipted-archive.ts", () => ({
-  readArchivedMatchPayload: mocks.readArchivedMatchPayload,
+  readArchivedCanonicalMatch: mocks.readArchivedCanonicalMatch,
 }));
 
 const { resolveScoutMatchContext } = await import("./match-context.ts");
@@ -74,7 +74,7 @@ beforeEach(() => {
     },
   ]);
   mocks.storedRawArchiveDescriptor.mockResolvedValue(null);
-  mocks.readSelectedLocalCanonicalMatch.mockResolvedValue(null);
+  mocks.readSelectedCanonicalMatch.mockResolvedValue(null);
   mocks.resolveLocalCanonicalMatch.mockResolvedValue(null);
   mocks.readLocalCanonicalCandidates.mockResolvedValue([]);
   mocks.selectLocalCanonicalMatch.mockResolvedValue(localFixture);
@@ -84,17 +84,20 @@ beforeEach(() => {
 test("reuses an archived canonical match while retaining its source provenance", async () => {
   const descriptor = { key: "canonical-match" };
   mocks.storedRawArchiveDescriptor.mockResolvedValue(descriptor);
-  mocks.readArchivedMatchPayload.mockResolvedValue(fixture);
+  mocks.readArchivedCanonicalMatch.mockResolvedValue({
+    coverage: "complete",
+    match: fixture,
+  });
 
   const context = await resolveScoutMatchContext(riotMatchId);
 
   expect(context.matchData).toBe(fixture);
   expect(context.matchDataSource).toBe("RIOT");
-  expect(mocks.readArchivedMatchPayload).toHaveBeenCalledWith(
+  expect(mocks.readArchivedCanonicalMatch).toHaveBeenCalledWith(
     descriptor,
     riotMatchId,
   );
-  expect(mocks.readSelectedLocalCanonicalMatch).not.toHaveBeenCalled();
+  expect(mocks.readSelectedCanonicalMatch).not.toHaveBeenCalled();
   expect(mocks.fetchMatchData).not.toHaveBeenCalled();
   expect(mocks.resolveLocalCanonicalMatch).not.toHaveBeenCalled();
 });
@@ -102,8 +105,15 @@ test("reuses an archived canonical match while retaining its source provenance",
 test("retains local provenance after the selected payload is archived", async () => {
   const descriptor = { key: "canonical-match" };
   mocks.storedRawArchiveDescriptor.mockResolvedValue(descriptor);
-  mocks.readArchivedMatchPayload.mockResolvedValue(localFixture);
-  mocks.readSelectedLocalCanonicalMatch.mockResolvedValue(localFixture);
+  mocks.readArchivedCanonicalMatch.mockResolvedValue({
+    coverage: "complete",
+    match: localFixture,
+  });
+  mocks.readSelectedCanonicalMatch.mockResolvedValue({
+    coverage: "complete",
+    match: localFixture,
+    observationId: "client-fixture",
+  });
 
   const context = await resolveScoutMatchContext(riotMatchId);
 

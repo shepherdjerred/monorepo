@@ -1,5 +1,6 @@
 import { expect, test } from "vitest";
 import { RawMatchSchema, RawTimelineSchema } from "@scout-for-lol/data";
+import { classicEndOfGameMatch } from "#src/testing/scout-client/end-of-game-fixtures.ts";
 import {
   recordedMatchRoster,
   reviewedMatchFacts,
@@ -261,4 +262,27 @@ test("the roster says when Scout has no stored match", async () => {
   expect(
     recordedMatchRoster({ documents: [] }, match.metadata.matchId),
   ).toMatchObject({ ok: false });
+});
+
+test("an end-of-game record is refused by name, not as a parse failure", async () => {
+  const match = await classicEndOfGameMatch();
+  // The lake stores the document as JSON text.
+  const stored = JSON.stringify(match);
+  const data = {
+    documents: [
+      {
+        matchId: match.metadata.matchId,
+        kind: "match",
+        document: JSON.parse(stored),
+      },
+    ],
+  };
+  const refusal = {
+    ok: false,
+    message: expect.stringContaining("end-of-game screen"),
+  };
+  expect(recordedMatchRoster(data, match.metadata.matchId)).toEqual(refusal);
+  expect(summarizeRecordedMatch(data, match.metadata.matchId, 1, 0)).toEqual(
+    refusal,
+  );
 });

@@ -1,7 +1,7 @@
 import {
   getCachedAugmentNameById,
   type MatchLakeRow,
-  type RawParticipant,
+  type CanonicalParticipant,
 } from "@scout-for-lol/data";
 
 type AugmentLakeFields = Pick<
@@ -28,7 +28,7 @@ export class UnknownArenaAugmentError extends Error {
 }
 
 export function participantAugmentLakeFields(
-  participant: RawParticipant,
+  participant: CanonicalParticipant,
 ): AugmentLakeFields {
   return {
     augment_1_id: recordedAugment(participant.playerAugment1),

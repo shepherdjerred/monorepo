@@ -10,7 +10,7 @@ import {
 } from "@scout-for-lol/domain/identity/brands.ts";
 import { prisma } from "#src/database/index.ts";
 import { storedRawArchiveDescriptor } from "#src/report-lake/durable-receipts.ts";
-import { readArchivedMatchPayload } from "#src/report-lake/receipted-archive.ts";
+import { readArchivedCanonicalMatch } from "#src/report-lake/receipted-archive.ts";
 import type { AuthenticatedScoutClient } from "#src/scout-client/authentication.ts";
 import { readSelectedLocalCanonicalMatch } from "#src/scout-client/canonical-match.ts";
 import { withRiotIdentities } from "#src/scout-client/identity-alias.ts";
@@ -109,6 +109,10 @@ async function observedProvenance(
   return evidence;
 }
 
+/**
+ * The archived complete match. An end-of-game record states no game version,
+ * which replay provenance needs, so it vouches for no replay.
+ */
 async function readArchivedMatch(
   riotMatchId: RiotMatchId,
 ): Promise<RawMatch | null> {
@@ -117,9 +121,9 @@ async function readArchivedMatch(
     riotMatchId,
     "match",
   );
-  return descriptor === null
-    ? null
-    : await readArchivedMatchPayload(descriptor, riotMatchId);
+  if (descriptor === null) return null;
+  const record = await readArchivedCanonicalMatch(descriptor, riotMatchId);
+  return record.coverage === "complete" ? record.match : null;
 }
 
 /**

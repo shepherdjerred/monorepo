@@ -18,6 +18,7 @@ import {
 import { mockClient } from "aws-sdk-client-mock";
 import type { RawMatch } from "@scout-for-lol/data";
 import { queryMatchesByDateRange } from "#src/storage/s3-query.ts";
+import { classicEndOfGameMatch } from "#src/testing/scout-client/end-of-game-fixtures.ts";
 
 // Create S3 mock
 const s3Mock = mockClient(S3Client);
@@ -659,5 +660,30 @@ describe("queryMatchesByDateRange - data verification", () => {
     expect(retrieved?.metadata.participants).toContain(puuid);
     expect(retrieved?.info.gameMode).toBe("CLASSIC");
     expect(retrieved?.info.queueId).toBe(420);
+  });
+});
+
+describe("queryMatchesByDateRange - end-of-game records", () => {
+  test("reads an end-of-game record and passes over it by name", async () => {
+    const endOfGame = await classicEndOfGameMatch();
+    const date = new Date(endOfGame.info.gameStartTimestamp);
+    const [puuid] = endOfGame.metadata.participants;
+    if (puuid === undefined) throw new Error("The record names players");
+    const complete = createMockMatch("NA1_9100000240", [puuid], date);
+    const prefix = `games/${date.toISOString().slice(0, 10).replaceAll("-", "/")}/`;
+    const recordKey = generateMatchKey(endOfGame.metadata.matchId, date);
+    const completeKey = generateMatchKey("NA1_9100000240", date);
+    s3Mock.on(ListObjectsV2Command, { Prefix: prefix }).resolves({
+      Contents: [{ Key: recordKey }, { Key: completeKey }],
+    });
+    s3Mock
+      .on(GetObjectCommand, { Key: recordKey })
+      .callsFake(() => createMockGetObjectResponse(JSON.stringify(endOfGame)));
+    s3Mock
+      .on(GetObjectCommand, { Key: completeKey })
+      .callsFake(() => createMockGetObjectResponse(JSON.stringify(complete)));
+
+    // Competitions read complete matches until they opt in.
+    await expectRangeMatchIds(date, date, [puuid], ["NA1_9100000240"]);
   });
 });

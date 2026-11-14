@@ -1,10 +1,11 @@
 import {
+  canonicalMatchTournamentCode,
   computeKda,
-  RawMatchSchema,
+  CanonicalMatchRecordSchema,
   resolveQueueTypeFromGame,
   type QueueType,
-  type RawMatch,
-  type RawParticipant,
+  type CanonicalMatch,
+  type CanonicalParticipant,
 } from "@scout-for-lol/data";
 import { competitionChartToImage } from "@scout-for-lol/report";
 import {
@@ -19,7 +20,7 @@ import {
 } from "#src/showcase/generate-types.ts";
 
 function metricValue(
-  participant: RawParticipant,
+  participant: CanonicalParticipant,
   metric: ReportGraphMetric,
 ): number {
   switch (metric) {
@@ -44,7 +45,7 @@ function metricValue(
   }
 }
 
-function playerLabel(participant: RawParticipant): string {
+function playerLabel(participant: CanonicalParticipant): string {
   // championName is the last resort rather than a placeholder string: every
   // participant has one, and it still identifies the row to a reader. Riot may
   // send none of the three name fields for a custom game.
@@ -57,7 +58,7 @@ function playerLabel(participant: RawParticipant): string {
 }
 
 export function includeMatchForReportGraph(
-  match: RawMatch,
+  match: CanonicalMatch,
   queueFilter: QueueType[] | undefined,
 ): boolean {
   if (queueFilter === undefined) {
@@ -67,7 +68,7 @@ export function includeMatchForReportGraph(
     match.info.queueId,
     match.info.gameMode,
     match.info.gameType,
-    match.info.tournamentCode,
+    canonicalMatchTournamentCode(match),
   );
   return queue !== undefined && queueFilter.includes(queue);
 }
@@ -93,7 +94,7 @@ export async function generateReportGraph(
     if (json === undefined) {
       continue;
     }
-    const match = RawMatchSchema.parse(json);
+    const { match } = CanonicalMatchRecordSchema.parse(json);
     if (!includeMatchForReportGraph(match, entry.queueFilter)) {
       continue;
     }

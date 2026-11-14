@@ -52,6 +52,20 @@ export function evidenceRecoveryDefault(
 }
 
 /**
+ * How long, in seconds, an end-of-game record waits after its upload for the
+ * same game's history bundle and pending aliases before it freezes as the
+ * game's canonical match.
+ *
+ * Measured on beta (read-only, every accepted `post_game` observation from
+ * 2026-09-23 to 2026-11-09): of 37 games that had both, 32 bundles followed
+ * the end-of-game block within an hour, with p50 12 s, p90 201 s, p95 236 s
+ * and a 771 s maximum. The other five came 2 to 91 hours later, after the
+ * app restarted; those are recovery, not the live window. 360 s covers the
+ * live p95 with half again as margin; 81 games had no bundle at all.
+ */
+export const DEFAULT_SCOUT_CLIENT_END_OF_GAME_DEADLINE_SECONDS = 360;
+
+/**
  * Scout's dynamically configurable values.
  *
  * Bootstrap stays in `configuration.ts` — env-only by definition, read before
@@ -221,6 +235,13 @@ const DEFINITION = {
     default: "observe",
     names: { flag: "scout-riot-budget-mode" },
   },
+  /** See {@link DEFAULT_SCOUT_CLIENT_END_OF_GAME_DEADLINE_SECONDS}. */
+  scoutClientEndOfGameDeadlineSeconds: {
+    schema: z.coerce.number().int().positive().max(3600),
+    sources: ["flag", "default"],
+    default: DEFAULT_SCOUT_CLIENT_END_OF_GAME_DEADLINE_SECONDS,
+    names: { flag: "scout-client-end-of-game-deadline-seconds" },
+  },
 } as const;
 
 /**
@@ -288,6 +309,7 @@ function buildSnapshot(
                 exploreModelPickerEnabled: "boolean",
                 evidenceRecoveryEnabled: "boolean",
                 riotBudgetMode: "string",
+                scoutClientEndOfGameDeadlineSeconds: "number",
               },
             }),
           }
@@ -309,6 +331,8 @@ function buildSnapshot(
       exploreModelPickerEnabled: false,
       evidenceRecoveryEnabled: evidenceRecoveryDefault(environment),
       riotBudgetMode: "observe",
+      scoutClientEndOfGameDeadlineSeconds:
+        DEFAULT_SCOUT_CLIENT_END_OF_GAME_DEADLINE_SECONDS,
       ...seed,
     },
     onRefreshError: (key, message) => {
@@ -470,6 +494,17 @@ export function featureTipCooldownHours(): number {
   return (
     snapshot?.get("featureTipCooldownHours") ??
     configuration.featureTipCooldownHours
+  );
+}
+
+/**
+ * Read per resolution, so a changed deadline applies to the next readiness
+ * check. Only games still waiting see it; a frozen record never changes.
+ */
+export function scoutClientEndOfGameDeadlineSeconds(): number {
+  return (
+    snapshot?.get("scoutClientEndOfGameDeadlineSeconds") ??
+    DEFAULT_SCOUT_CLIENT_END_OF_GAME_DEADLINE_SECONDS
   );
 }
 

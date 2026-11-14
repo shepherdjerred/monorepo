@@ -1,5 +1,8 @@
 import type { S3Client } from "@aws-sdk/client-s3";
-import { RawCurrentGameInfoSchema, RawMatchSchema } from "@scout-for-lol/data";
+import {
+  CanonicalMatchRecordSchema,
+  RawCurrentGameInfoSchema,
+} from "@scout-for-lol/data";
 import { discordScreenshotToImage } from "@scout-for-lol/report";
 import { createS3Client } from "#src/storage/s3-client.ts";
 import { createPlayerAnonymizer } from "#src/showcase/anonymize.ts";
@@ -90,7 +93,7 @@ async function validateDataKey(params: {
   }
 
   if (params.entry.state === "postmatch") {
-    RawMatchSchema.parse(payload);
+    CanonicalMatchRecordSchema.parse(payload);
     return;
   }
 

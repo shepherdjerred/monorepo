@@ -4,6 +4,7 @@ import {
   MatchRunePageSchema,
   type MatchLoadout,
   type MatchRunePage,
+  type CanonicalParticipant,
   type RawParticipant,
 } from "@scout-for-lol/data";
 import { ITEM_SLOT_COLUMNS } from "@scout-for-lol/data/model/reports/lake-columns.ts";
@@ -55,9 +56,16 @@ export const MATCH_LOADOUT_LAKE_COLUMNS_SQL =
   "secondary_rune_style_id, secondary_rune_0_id, secondary_rune_1_id, " +
   "stat_perk_offense_id, stat_perk_flex_id, stat_perk_defense_id";
 
+/** Names a participant in an error; an end-of-game record numbers none. */
+function participantLabel(participant: CanonicalParticipant): string {
+  return participant.participantId === null
+    ? `${participant.championName} on team ${participant.teamId.toString()}`
+    : participant.participantId.toString();
+}
+
 function runeStyleId(
   style: RawParticipant["perks"]["styles"][number],
-  participantId: number,
+  participant: string,
 ): number {
   if (style.style !== 0) return style.style;
 
@@ -69,14 +77,14 @@ function runeStyleId(
   const [firstTree] = trees;
   if (firstTree === undefined || trees.some((tree) => tree !== firstTree)) {
     throw new Error(
-      `Participant ${participantId.toString()} has a missing ${style.description} rune style with inconsistent selections`,
+      `Participant ${participant} has a missing ${style.description} rune style with inconsistent selections`,
     );
   }
   return firstTree;
 }
 
 function runePageFromParticipant(
-  participant: RawParticipant,
+  participant: CanonicalParticipant,
 ): MatchRunePage | null {
   const primary = participant.perks.styles.find(
     (style) => style.description === "primaryStyle",
@@ -106,13 +114,13 @@ function runePageFromParticipant(
     secondary.selections.length !== 2
   ) {
     throw new Error(
-      `Participant ${participant.participantId.toString()} has a malformed rune page`,
+      `Participant ${participantLabel(participant)} has a malformed rune page`,
     );
   }
   return MatchRunePageSchema.parse({
-    primaryStyleId: runeStyleId(primary, participant.participantId),
+    primaryStyleId: runeStyleId(primary, participantLabel(participant)),
     primaryRuneIds: primary.selections.map((selection) => selection.perk),
-    secondaryStyleId: runeStyleId(secondary, participant.participantId),
+    secondaryStyleId: runeStyleId(secondary, participantLabel(participant)),
     secondaryRuneIds: secondary.selections.map((selection) => selection.perk),
     // A Scout Client match has no stat shards to state.
     statShardIds: participant.perks.statPerks ?? null,
@@ -197,7 +205,7 @@ export function matchLoadoutLakeFields(
 }
 
 export function participantLoadoutLakeRow(
-  participant: RawParticipant,
+  participant: CanonicalParticipant,
 ): MatchLoadoutLakeFields {
   return loadoutToLakeFields({
     itemIds: [

@@ -4,6 +4,8 @@ import {
   SCOUT_CLIENT_DATA_VERSION,
   sameStoredIdentity,
   storedParticipantIdentity,
+  type CanonicalMatch,
+  type CanonicalMatchRecord,
   type RawMatch,
   type RawTimeline,
 } from "@scout-for-lol/data";
@@ -18,6 +20,11 @@ import {
 } from "./canonical/lcu-match.ts";
 import { lcuParticipantIdentity } from "./canonical/lcu-identity.ts";
 import { convertLcuTimeline } from "./canonical/lcu-timeline.ts";
+import {
+  gameflowsBefore,
+  parseLocalEndOfGameMatch,
+} from "./end-of-game/observation.ts";
+import { scoutClientEndOfGameDeadlineSeconds } from "#src/config/dynamic.ts";
 import { storedRawArchiveDescriptor } from "#src/report-lake/durable-receipts.ts";
 import { readArchivedTimelinePayload } from "#src/report-lake/receipted-archive.ts";
 import {
@@ -135,28 +142,59 @@ async function candidateIdentities(candidate: Candidate): Promise<IdentityMap> {
   return readIdentityAliases(uuids);
 }
 
-/** Read the already-fixed local source without selecting a new one. */
-export async function readSelectedLocalCanonicalMatch(
+/** A frozen local selection, with the observation (and so device) it came from. */
+export type SelectedCanonicalMatch = CanonicalMatchRecord & {
+  readonly observationId: string;
+};
+
+/**
+ * Read the already-fixed local source, of either coverage, without selecting
+ * a new one. A selection is frozen: its observation must still convert to
+ * what was selected, or the drift is an internal contract break.
+ */
+export async function readSelectedCanonicalMatch(
   riotMatchId: RiotMatchId,
-): Promise<RawMatch | null> {
+): Promise<SelectedCanonicalMatch | null> {
   if (isFeatureHardDisabled("scout_client_ingestion")) return null;
   const selected = await prisma.scoutClientCanonicalMatch.findUnique({
     where: { riotMatchId },
     include: { sourceObservation: true },
   });
   if (selected === null) return null;
-  const match = parseLocalCanonicalMatch(
+  const observation = selected.sourceObservation;
+  const { observationId } = observation;
+  const identities = await candidateIdentities(observation);
+  const complete = parseLocalCanonicalMatch(
     riotMatchId,
-    selected.sourceObservation,
-    await candidateIdentities(selected.sourceObservation),
+    observation,
+    identities,
   );
-  if (match === null) {
-    throw ApplicationFailure.nonRetryable(
-      `Selected local payload for ${riotMatchId} no longer validates`,
-      "ScoutClientCanonicalDrift",
-    );
-  }
-  return match;
+  if (complete !== null)
+    return { coverage: "complete", match: complete, observationId };
+  const endOfGame = parseLocalEndOfGameMatch(
+    riotMatchId,
+    observation,
+    await gameflowsBefore(observation),
+    identities,
+  );
+  if (endOfGame !== null)
+    return { coverage: "end_of_game", match: endOfGame, observationId };
+  throw ApplicationFailure.nonRetryable(
+    `Selected local payload for ${riotMatchId} no longer validates`,
+    "ScoutClientCanonicalDrift",
+  );
+}
+
+/**
+ * The already-fixed local source when it is a complete match. A game frozen
+ * as an end-of-game record has no Match-V5 document, so a `RawMatch` caller
+ * reads none; the selection still stands and is never replaced.
+ */
+export async function readSelectedLocalCanonicalMatch(
+  riotMatchId: RiotMatchId,
+): Promise<RawMatch | null> {
+  const selected = await readSelectedCanonicalMatch(riotMatchId);
+  return selected?.coverage === "complete" ? selected.match : null;
 }
 
 const TimelineBundleSchema = z.object({
@@ -289,7 +327,7 @@ function conflictingCandidates(riotMatchId: RiotMatchId): never {
   );
 }
 
-function deterministicMatchJson(match: RawMatch): string {
+function deterministicMatchJson(match: CanonicalMatch): string {
   return JSON.stringify({
     ...match,
     info: {
@@ -302,8 +340,8 @@ function deterministicMatchJson(match: RawMatch): string {
 
 /** Compare local evidence while tolerating bounded observer clock differences. */
 export function localCanonicalMatchesAgree(
-  first: RawMatch,
-  candidate: RawMatch,
+  first: CanonicalMatch,
+  candidate: CanonicalMatch,
 ): boolean {
   return (
     deterministicMatchJson(first) === deterministicMatchJson(candidate) &&
@@ -337,13 +375,11 @@ export async function resolveLocalCanonicalMatch(
     : await selectLocalCanonicalMatch(riotMatchId, valid, now);
 }
 
-/** Source adapter: expose compatible candidates without choosing against Riot. */
-export async function readLocalCanonicalCandidates(riotMatchId: RiotMatchId) {
-  if (isFeatureHardDisabled("scout_client_ingestion")) return [];
-
+/** Every accepted `post_game` observation of this game, oldest first. */
+async function acceptedPostGameObservations(riotMatchId: RiotMatchId) {
   const platform = platformRouteOf(riotMatchId);
   const gameId = riotMatchId.slice(riotMatchId.indexOf("_") + 1);
-  const candidates = await prisma.scoutClientObservation.findMany({
+  return await prisma.scoutClientObservation.findMany({
     where: {
       kind: "post_game",
       disposition: "ACCEPTED",
@@ -352,6 +388,13 @@ export async function readLocalCanonicalCandidates(riotMatchId: RiotMatchId) {
     },
     orderBy: [{ capturedAt: "asc" }, { observationId: "asc" }],
   });
+}
+
+/** Source adapter: expose compatible candidates without choosing against Riot. */
+export async function readLocalCanonicalCandidates(riotMatchId: RiotMatchId) {
+  if (isFeatureHardDisabled("scout_client_ingestion")) return [];
+
+  const candidates = await acceptedPostGameObservations(riotMatchId);
   const parsed = await Promise.all(
     candidates.map(async (candidate) => ({
       candidate,
@@ -407,4 +450,77 @@ export async function selectLocalCanonicalMatch(
   );
   if (resolved === null) conflictingCandidates(riotMatchId);
   return resolved;
+}
+
+/**
+ * End-of-game records this game's uploads support: one per `post_game`
+ * observation that carries the end-of-game block alone and converts with its
+ * device's gameflow session.
+ *
+ * Each is eligible only once the deadline after its upload has passed, so
+ * the game's history bundle, and aliases for its unresolved players, have
+ * that long to arrive (`scoutClientEndOfGameDeadlineSeconds`). It also waits
+ * out Riot's first refusal, like a bundle, though the deadline is longer.
+ */
+export async function readLocalEndOfGameCandidates(riotMatchId: RiotMatchId) {
+  if (isFeatureHardDisabled("scout_client_ingestion")) return [];
+  const deadlineMs = scoutClientEndOfGameDeadlineSeconds() * 1000;
+  const candidates = await acceptedPostGameObservations(riotMatchId);
+  const parsed = await Promise.all(
+    candidates.map(async (candidate) => {
+      const match = parseLocalEndOfGameMatch(
+        riotMatchId,
+        candidate,
+        await gameflowsBefore(candidate),
+        await candidateIdentities(candidate),
+      );
+      if (match === null) return [];
+      const riotFirst = clientEvidenceReadyAt(match.info, candidate.receivedAt);
+      const deadline = candidate.receivedAt.getTime() + deadlineMs;
+      return [
+        {
+          candidate,
+          match,
+          eligibleAt: new Date(Math.max(riotFirst.getTime(), deadline)),
+        },
+      ];
+    }),
+  );
+  return parsed.flat();
+}
+
+/**
+ * Freeze an end-of-game record as the game's canonical match. Every candidate
+ * must agree, not only the eligible ones: two clients that disagree about the
+ * game produce no record. The selection row is the same one a bundle writes,
+ * so whichever froze first stands; the answer is read back from it.
+ */
+export async function selectLocalEndOfGameMatch(
+  riotMatchId: RiotMatchId,
+  candidates: Awaited<ReturnType<typeof readLocalEndOfGameCandidates>>,
+  now = new Date(),
+): Promise<SelectedCanonicalMatch> {
+  const first = candidates.find((entry) => entry.eligibleAt <= now);
+  if (first === undefined)
+    throw new Error("Cannot select an end-of-game record before its deadline");
+  if (
+    candidates.some(
+      ({ match }) => !localCanonicalMatchesAgree(first.match, match),
+    )
+  ) {
+    conflictingCandidates(riotMatchId);
+  }
+  await prisma.scoutClientCanonicalMatch.upsert({
+    where: { riotMatchId },
+    create: {
+      riotMatchId,
+      sourceObservationId: first.candidate.observationId,
+      payloadDigest: first.candidate.bodyDigest,
+      selectedAt: now,
+    },
+    update: {},
+  });
+  const selected = await readSelectedCanonicalMatch(riotMatchId);
+  if (selected === null) conflictingCandidates(riotMatchId);
+  return selected;
 }

@@ -48,9 +48,13 @@ export async function fetchLanePriorMatches(
   const matches: RawMatch[] = [];
 
   for (const key of keys) {
-    const match = await source.fetchMatch(key);
-    if (queueFiltered(match, config.queueIds)) {
-      matches.push(match);
+    const record = await source.fetchMatch(key);
+    // Lane priors are fitted on complete Match-V5 documents only.
+    if (
+      record.coverage === "complete" &&
+      queueFiltered(record.match, config.queueIds)
+    ) {
+      matches.push(record.match);
     }
   }
 
