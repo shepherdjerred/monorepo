@@ -1,4 +1,5 @@
 import { afterEach, beforeAll, expect, test } from "vitest";
+import { z } from "zod";
 import { createMovieRetentionFixture } from "#testing/movie-workflow/retention-fixture.ts";
 import { movieVideoFixture } from "#testing/movie-video.ts";
 import { grantTestRequesterAccess } from "#testing/authority.ts";
@@ -10,6 +11,9 @@ import { testPlexBindingExecution } from "#testing/plex-binding-execution.ts";
 import { MovieOperationV4Schema } from "#shared/movie-editions/lifecycle/automation-v4.ts";
 import { NativeArchiveScopeProtection } from "#infrastructure/native-archive/errors.ts";
 import { evaluateMovieRetentionV4 } from "./evaluate.ts";
+import { observeRequesterWatch } from "#automation/watch.ts";
+import { reconcileRequestInterests } from "#infrastructure/request-interest/reconcile.ts";
+import { nativeInterestFacts } from "#infrastructure/request-interest/facts.ts";
 
 const closers: (() => Promise<void>)[] = [];
 let bytes: Uint8Array;
@@ -39,12 +43,67 @@ async function addRequester(f: Fixture) {
       ),
     },
   });
-  await requestTestMovieV4(
+  const created = await requestTestMovieV4(
     f.db,
     { ...user, role: "member" },
     f.scope.mediaId,
     f.scope.edition,
   );
+  return z.uuid().parse(created.result.requestId);
+}
+
+/** Release only this newly added request through actual native watch and reconciliation. */
+async function completeNewRequester(f: Fixture, requestId: string) {
+  const request = await f.db.mediaRequest.findUniqueOrThrow({
+    where: { id: requestId },
+  });
+  expect(request).toMatchObject({
+    interestState: "following",
+    interestReleasedAt: null,
+  });
+  const now = new Date();
+  const facts = await f.db.$transaction((tx) =>
+    nativeInterestFacts(tx, request, now),
+  );
+  expect(facts).toMatchObject({
+    watchedComplete: true,
+    completionComplete: true,
+    requestedCoverageComplete: true,
+    usableUnwatched: false,
+  });
+  // A newly observed native progress record can require the producer's progress
+  // checkpoint before its separate completion checkpoint, as in the shared fixture.
+  const newProgress =
+    facts.progressAt !== null &&
+    facts.progressAt > (request.lastMeaningfulProgressAt?.getTime() ?? 0);
+  const cycles = newProgress ? 2 : 1;
+  for (let cycle = 0; cycle < cycles; cycle++) {
+    const predecessor = await f.db.mediaRequest.findFirst({
+      where: { id: { lt: requestId } },
+      orderBy: { id: "desc" },
+      select: { id: true },
+    });
+    expect(
+      await reconcileRequestInterests(f.db, {
+        cursor: predecessor?.id ?? null,
+        now,
+      }),
+    ).toEqual({ processed: 1, nextCursor: requestId });
+    if (newProgress && cycle === 0)
+      expect(
+        await f.db.mediaRequest.findUniqueOrThrow({ where: { id: requestId } }),
+      ).toMatchObject({
+        interestState: "following",
+        interestRevision: request.interestRevision + 1,
+        lastMeaningfulProgressAt: new Date(z.number().parse(facts.progressAt)),
+      });
+  }
+  expect(
+    await f.db.mediaRequest.findUniqueOrThrow({ where: { id: requestId } }),
+  ).toMatchObject({
+    interestState: "finished",
+    interestReleaseReason: "watched",
+  });
 }
 
 async function warning(f: Fixture) {
@@ -162,7 +221,15 @@ test("an explicit authority-budget failure before the warning attempt rolls back
 test("the original warning allowance spans a real household claim and rejects exhaustion before the second composition can send", async () => {
   const f = await createMovieRetentionFixture("extended_cut", bytes, false);
   closers.push(f.close);
-  for (let index = 0; index < 4; index++) await addRequester(f);
+  const requestIds: string[] = [];
+  for (let index = 0; index < 4; index++)
+    requestIds.push(await addRequester(f));
+  expect(
+    await observeRequesterWatch(f.context, f.scope.mediaId, {
+      edition: f.scope.edition,
+    }),
+  ).toEqual({ complete: true, reason: null });
+  for (const requestId of requestIds) await completeNewRequester(f, requestId);
   const { delivery, command, decisionId } = await warning(f);
   const history = await originalHistory(f, decisionId);
   let claimed = false;

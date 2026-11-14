@@ -7,6 +7,7 @@ import { workerFilePath } from "#automation/files/paths/locations.ts";
 import { prepareBoundRetention } from "#automation/retention/lifecycle.test-fixture.ts";
 import { elapsedQuarantineClient } from "#automation/files/plex-binding/elapsed-quarantine.test-support.ts";
 import { automaticSubtitleHarness } from "./test-fixture.ts";
+import { RequestInterestCommands } from "#infrastructure/request-interest/commands.ts";
 const harness = automaticSubtitleHarness();
 
 test("an automatic caption keeps its bytes and ancestry through actual native quarantine and restore", async () => {
@@ -49,10 +50,31 @@ test("an automatic caption keeps its bytes and ancestry through actual native qu
     f.context.db = f.db;
   }
   await timing.assertCommitted();
-  await bound.observe(false);
+  const prior = await f.db.operation.findMany({
+    where: { targetId: f.media.id },
+    select: { id: true },
+  });
+  const request = await f.db.mediaRequest.findUniqueOrThrow({
+    where: { id: f.request.id },
+  });
+  await new RequestInterestCommands(f.db, { keepDays: 30 }).execute(
+    f.user,
+    crypto.randomUUID(),
+    {
+      schemaVersion: 1,
+      requestId: request.id,
+      expectedVersion: request.version,
+      expectedInterestRevision: request.interestRevision,
+      action: "continue",
+    },
+  );
   const restore = await f.db.operation.findFirstOrThrow({
-    where: { kind: "restore_media", targetId: f.media.id },
-    orderBy: { createdAt: "desc" },
+    where: {
+      kind: "restore_media",
+      targetId: f.media.id,
+      id: { notIn: prior.map((operation) => operation.id) },
+      payload: { path: ["requestId"], equals: request.id },
+    },
   });
   const restoreInput = z
     .object({ operationId: z.uuid(), mediaId: z.uuid(), generation: z.int() })

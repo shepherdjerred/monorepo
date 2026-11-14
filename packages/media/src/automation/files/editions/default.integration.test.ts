@@ -146,6 +146,9 @@ test("default publication and quarantine mirror availability without changing ta
     }),
   ).toMatchObject({ edition: "default", editionRootId: f.media.id });
   const bound = await prepareBoundRetention(f, published, harness.context());
+  const completed = await harness.database().mediaIntent.findUniqueOrThrow({
+    where: targetWhere(defaultScope(f.media.id)),
+  });
   const retention = bound.retention;
   expect(
     await createMediaFileActivities(f.context).quarantineMediaFiles(
@@ -158,8 +161,8 @@ test("default publication and quarantine mirror availability without changing ta
     }),
   ).toMatchObject({
     availability: "quarantined",
-    version: before.version,
-    generation: before.generation,
-    automationEpoch: before.automationEpoch,
+    version: completed.version,
+    generation: completed.generation,
+    automationEpoch: completed.automationEpoch,
   });
 });

@@ -17,6 +17,7 @@ import {
   type WatchObservationOptions,
 } from "./authority.ts";
 import { watchAwait } from "./execution.ts";
+import { watchRequesterMappingVerification } from "#infrastructure/plex-binding/watch.ts";
 
 const CredentialSchema = z.object({ serverToken: z.string().min(1) });
 export type PreparedWatchBatch = {
@@ -41,29 +42,20 @@ function reader(
   input: { sections: { movie: string; series: string }; now: Date },
 ) {
   const { sections, now } = input;
-  const mapping = user.plexIdentity;
-  const verifiedAt = mapping?.verifiedAt;
   const credential = user.credentials[0];
   const expectedSection =
     authority.media.kind === "movie" ? sections.movie : sections.series;
-  const permitted =
-    mapping !== null &&
-    mapping.serverMachineId === context.serverMachineId &&
-    (mapping.kind === "account" || mapping.kind === "managed") &&
-    (mapping.kind !== "managed" || mapping.homeUserId === user.plexAccountId) &&
-    mapping.verifiedAt !== null &&
-    mapping.verifiedAt <= now &&
-    mapping.permittedSectionIds.includes(expectedSection) &&
-    authority.identity.plexSectionId === expectedSection &&
-    mapping.permittedMediaKinds.includes(
-      authority.media.kind === "movie" ? "movie" : "series",
-    ) &&
-    authority.identity.plexRatingKey !== undefined;
+  const verifiedAt = watchRequesterMappingVerification(user, {
+    serverMachineId: context.serverMachineId,
+    sectionId: expectedSection,
+    kind: authority.media.kind,
+    now,
+  });
   if (
-    !permitted ||
     credential === undefined ||
     verifiedAt === null ||
-    verifiedAt === undefined
+    authority.identity.plexRatingKey === undefined ||
+    authority.identity.plexSectionId !== expectedSection
   )
     return {
       userId: user.id,

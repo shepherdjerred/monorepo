@@ -11,6 +11,10 @@ import { PrismaAdminApplication } from "./admin-service.ts";
 import type { ManualSubtitle } from "#shared/admin.ts";
 import { PrismaSubtitleReplacements } from "./subtitle-replacement/service.ts";
 import { createMediaFileActivities } from "#automation/files/activities.ts";
+import { PrismaMediaCommands } from "#infrastructure/commands.ts";
+import { PrismaQualityGuideAdministration } from "#infrastructure/quality-guide/service.ts";
+import { GuideBundleSchema } from "#domain/quality-guide/contract.ts";
+import guideSource from "#domain/quality-guide/guide-fixture.json";
 
 const harness = automationTestHarness();
 const directories: string[] = [];
@@ -18,15 +22,10 @@ afterAll(async () => {
   for (const path of directories)
     await rm(path, { recursive: true, force: true });
 });
-async function fixture() {
+async function fixture(authority: "policy" | "request" = "policy") {
   const db = harness.database();
   const file = await mappedPublicationFixture(db);
   directories.push(file.directory);
-  const published = await preparePhysicalPublication(file);
-  const bound = await prepareBoundRetention(file, published, harness.context());
-  const asset = await db.libraryAsset.findUniqueOrThrow({
-    where: { id: published.entry.assetId },
-  });
   const owner = await db.mediaUser.create({
     data: {
       plexAccountId: crypto.randomUUID(),
@@ -34,10 +33,68 @@ async function fixture() {
       role: "owner",
     },
   });
-  await db.mediaRequest.update({
-    where: { id: file.request.id },
-    data: { subtitleLanguages: ["en"] },
+  const commands = new PrismaMediaCommands(db, {
+    keepDays: 30,
+    serverMachineId: "fixture-server",
   });
+  const configureIndependentPolicy =
+    authority === "policy"
+      ? async () => {
+          // Actual immutable TRaSH guide and owner assignment supply independent
+          // household captions while the genuine member interest can finish.
+          const guide = new PrismaQualityGuideAdministration(db, {
+            load: (kind) =>
+              Promise.resolve(
+                GuideBundleSchema.parse({
+                  revision: guideSource.revision,
+                  committedAt: guideSource.committedAt,
+                  ...guideSource.sources[kind],
+                }),
+              ),
+          });
+          const preview = await guide.preview(owner, {
+            kind: "movie",
+            scoreOverrides: {},
+          });
+          const profile = await guide.apply(owner, crypto.randomUUID(), {
+            kind: "movie",
+            scoreOverrides: {},
+            expectedRevision: preview.revision,
+            expectedContentHash: preview.contentHash,
+            profileId: null,
+            expectedVersion: 0,
+          });
+          const media = await db.mediaItem.update({
+            where: { id: file.media.id },
+            data: { originalLanguage: "ja" },
+          });
+          await commands.assignProfile(owner, crypto.randomUUID(), media.id, {
+            expectedVersion: media.version,
+            profileId: profile.profileId,
+          });
+        }
+      : undefined;
+  const published = await preparePhysicalPublication(file);
+  const bound = await prepareBoundRetention(
+    file,
+    published,
+    harness.context(),
+    configureIndependentPolicy === undefined
+      ? undefined
+      : {
+          afterPublicationBeforeInterestCompletion: configureIndependentPolicy,
+        },
+  );
+  const asset = await db.libraryAsset.findUniqueOrThrow({
+    where: { id: published.entry.assetId },
+  });
+  if (authority === "request")
+    await commands.createRequest(file.user, crypto.randomUUID(), {
+      mediaId: file.media.id,
+      keepingPolicy: "temporary",
+      subtitleLanguages: ["en"],
+      includeSpecials: false,
+    });
   const oldText = "1\n00:00:01,000 --> 00:00:03,000\nOriginal dialogue.\n";
   const path = subtitleDestination({
     videoPath: asset.path,
@@ -181,7 +238,7 @@ test("manual replacement rejects stale, cross-epoch, same-byte and different-des
 });
 
 test("manual replacement fails closed when current demand or owner authorization disappears", async () => {
-  const f = await fixture();
+  const f = await fixture("request");
   await f.db.mediaRequest.update({
     where: { id: f.file.request.id },
     data: { subtitleLanguages: [] },

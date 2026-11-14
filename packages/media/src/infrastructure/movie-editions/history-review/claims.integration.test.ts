@@ -298,7 +298,7 @@ async function assertDefaultRetentionAcceptance(
     ),
   ).toMatchObject({
     status: "protected",
-    reason: "owner_only_or_unclaimed",
+    reason: "library_kept_indefinitely",
   });
   expect(() => budget.consume(0)).not.toThrow();
   expect(

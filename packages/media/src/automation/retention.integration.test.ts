@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, expect, test } from "vitest";
+import { z } from "zod";
 import { PrismaNotificationApplication } from "#infrastructure/notification-service.ts";
 import { randomBytes } from "node:crypto";
 import { rm } from "node:fs/promises";
@@ -19,6 +20,11 @@ import type { MediaAutomationContext } from "./context.ts";
 import { createRetentionActivities } from "./retention.ts";
 import { createNotificationActivities } from "./notifications.ts";
 import { createSubtitleActivities } from "./subtitles.ts";
+import { RequestInterestCommands } from "#infrastructure/request-interest/commands.ts";
+import {
+  observeRequesterWatch,
+  queueRetentionCheck,
+} from "#automation/watch.ts";
 import {
   completeFixtureRetentionInterests,
   seedFixtureReleasedEpisodes,
@@ -98,7 +104,11 @@ test("observe mode and a changed recovery epoch cannot send restored pending not
   }
 });
 
-async function fixture(episode = false, elapsedWarning = false) {
+async function fixture(
+  episode = false,
+  elapsedWarning = false,
+  phase: "released" | "following" = "released",
+) {
   const db = cluster.database;
   const produced = await verifiedPublicationFixture(
     db,
@@ -171,10 +181,11 @@ async function fixture(episode = false, elapsedWarning = false) {
       return { receipt: "fixture-receipt" };
     },
   };
-  await completeFixtureRetentionInterests(
-    { ...context, db },
-    produced.published.attempt.mediaIds,
-  );
+  if (phase === "released")
+    await completeFixtureRetentionInterests(
+      { ...context, db },
+      produced.published.attempt.mediaIds,
+    );
   const target = await db.mediaIntent.findUniqueOrThrow({
     where: { mediaId_edition: { mediaId: media.id, edition: "default" } },
   });
@@ -252,7 +263,7 @@ test("requires accepted warning and seven full days, then a fresh playback/hold 
   });
   await expect(
     dueRetention.evaluateMediaRetention(due.input),
-  ).resolves.toMatchObject({ reason: "keep_hold" });
+  ).resolves.toMatchObject({ reason: "ancestor_keep_hold" });
 }, 30_000);
 
 test("unknown delivery is not retried or counted as acceptance", async () => {
@@ -370,7 +381,7 @@ test.each(["keep", "unknown_watch", "unwatched", "preferences"] as const)(
   },
 );
 
-test("a shared physical file stays protected for another unwatched requester", async () => {
+test("a shared physical file stays protected while another requester Continues with a genuinely unwatched leaf", async () => {
   const item = await fixture(true);
   const other = await cluster.database.mediaItem.findFirstOrThrow({
     where: {
@@ -381,10 +392,69 @@ test("a shared physical file stays protected for another unwatched requester", a
   const otherItem = item.produced.items.get(other.id);
   if (otherItem === undefined)
     throw new Error("Shared publication omitted its second binding");
+  const request = await cluster.database.mediaRequest.findUniqueOrThrow({
+    where: {
+      userId_mediaId_edition: {
+        userId: item.user.id,
+        mediaId: other.id,
+        edition: "default",
+      },
+    },
+  });
+  await new RequestInterestCommands(cluster.database, { keepDays: 30 }).execute(
+    item.user,
+    crypto.randomUUID(),
+    {
+      schemaVersion: 1,
+      requestId: request.id,
+      expectedVersion: request.version,
+      expectedInterestRevision: request.interestRevision,
+      action: "continue",
+    },
+  );
   item.produced.state.watchOverrides.set(otherItem.ratingKey, false);
+  expect(await observeRequesterWatch(item.context, other.id)).toEqual({
+    complete: true,
+    reason: null,
+  });
+  expect(
+    await cluster.database.watchState.findUniqueOrThrow({
+      where: {
+        userId_mediaId_edition: {
+          userId: item.user.id,
+          mediaId: other.id,
+          edition: "default",
+        },
+      },
+    }),
+  ).toMatchObject({ watched: false, source: "plex_current" });
+  const target = await cluster.database.mediaIntent.findUniqueOrThrow({
+    where: { mediaId_edition: { mediaId: item.media.id, edition: "default" } },
+  });
+  const bucket = "following-shared-retention";
+  await queueRetentionCheck(item.context, item.media.id, bucket);
+  const operation = await cluster.database.operation.findUniqueOrThrow({
+    where: {
+      idempotencyKey: `retention:${item.media.id}:${String(target.generation)}:${bucket}`,
+    },
+  });
+  const input = z
+    .object({ operationId: z.uuid(), mediaId: z.uuid(), generation: z.int() })
+    .parse(operation.payload);
+  const originalAsset = await cluster.database.libraryAsset.findUniqueOrThrow({
+    where: { id: item.asset.id },
+  });
   await expect(
-    createRetentionActivities(item.context).evaluateMediaRetention(item.input),
-  ).resolves.toMatchObject({ reason: "requester_unwatched" });
+    createRetentionActivities(item.context).evaluateMediaRetention(input),
+  ).resolves.toMatchObject({
+    status: "protected",
+    reason: "requester_still_following",
+  });
+  expect(
+    await cluster.database.libraryAsset.findUniqueOrThrow({
+      where: { id: item.asset.id },
+    }),
+  ).toEqual(originalAsset);
   expect(
     await cluster.database.retentionDecision.count({
       where: { mediaId: other.id },
@@ -394,15 +464,17 @@ test("a shared physical file stays protected for another unwatched requester", a
 
 test("missing requester credentials removes stale watched evidence", async () => {
   const item = await fixture();
-  await cluster.database.watchState.create({
-    data: {
-      userId: item.user.id,
-      mediaId: item.media.id,
-      watched: true,
-      source: "plex_current",
-      observedAt: new Date(),
-    },
-  });
+  expect(
+    await cluster.database.watchState.findUniqueOrThrow({
+      where: {
+        userId_mediaId_edition: {
+          userId: item.user.id,
+          mediaId: item.media.id,
+          edition: "default",
+        },
+      },
+    }),
+  ).toMatchObject({ watched: true, source: "plex_current" });
   await cluster.database.credential.deleteMany({
     where: { userId: item.user.id },
   });
@@ -411,6 +483,11 @@ test("missing requester credentials removes stale watched evidence", async () =>
   ).resolves.toMatchObject({ reason: "requester_watch_unknown" });
   expect(
     await cluster.database.watchState.count({
+      where: { mediaId: item.media.id },
+    }),
+  ).toBe(0);
+  expect(
+    await cluster.database.plexWatchProjection.count({
       where: { mediaId: item.media.id },
     }),
   ).toBe(0);
@@ -525,7 +602,7 @@ test("owner confirmation authorizes recoverable removal and rejects subsequent a
 });
 
 test("subtitle acquisition persists exact version evidence and replays without another download", async () => {
-  const item = await fixture();
+  const item = await fixture(false, false, "following");
   await cluster.database.mediaRequest.updateMany({
     where: { mediaId: item.media.id },
     data: { subtitleLanguages: ["en", "zh-Hans"] },
@@ -556,6 +633,13 @@ test("subtitle acquisition persists exact version evidence and replays without a
         actualLanguage: "en",
         forced: false,
         hearingImpaired: false,
+        catalogEvidenceV1: {
+          kind: "movie",
+          tmdbId: item.media.tmdbId,
+          imdbId: null,
+          season: null,
+          episode: null,
+        },
         bytes: new TextEncoder().encode(
           "1\n00:00:01,000 --> 00:00:03,000\nHello\n",
         ),

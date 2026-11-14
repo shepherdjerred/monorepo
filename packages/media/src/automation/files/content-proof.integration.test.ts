@@ -5,6 +5,7 @@ import { automationTestHarness } from "#testing/automation.ts";
 import { boundRetentionFixture } from "#automation/retention/lifecycle.test-fixture.ts";
 import { elapsedQuarantineClient } from "./plex-binding/elapsed-quarantine.test-support.ts";
 import { PrismaMediaCommands } from "#infrastructure/commands.ts";
+import { RequestInterestCommands } from "#infrastructure/request-interest/commands.ts";
 import { fileFixture } from "./test-support.ts";
 import { createMediaFileActivities } from "./activities.ts";
 import {
@@ -41,13 +42,33 @@ function pauseHash(context: FileContext) {
   };
 }
 
-async function keep(f: Awaited<ReturnType<typeof fileFixture>>) {
+async function keep(
+  f: Awaited<ReturnType<typeof fileFixture>>,
+  continueInterest = false,
+) {
   const db = harness.database();
   // A bounded real row-lock probe fails if hashing still holds database authority.
   await db.$transaction(async (tx) => {
     await tx.$executeRaw`SET LOCAL lock_timeout = '500ms'`;
     await tx.$queryRaw`SELECT id FROM "MediaItem" WHERE id = ${f.media.id} FOR UPDATE`;
   });
+  if (continueInterest) {
+    const request = await db.mediaRequest.findUniqueOrThrow({
+      where: { id: f.request.id },
+    });
+    await new RequestInterestCommands(db, { keepDays: 30 }).execute(
+      f.user,
+      crypto.randomUUID(),
+      {
+        schemaVersion: 1,
+        requestId: request.id,
+        expectedVersion: request.version,
+        expectedInterestRevision: request.interestRevision,
+        action: "continue",
+      },
+    );
+    return;
+  }
   const media = await db.mediaItem.findUniqueOrThrow({
     where: { id: f.media.id },
   });
@@ -139,7 +160,7 @@ test.each(["quarantine", "purge", "restore", "rollback"] as const)(
             : activities.rollbackMediaPromotion(original.input);
     await pause.entered;
     try {
-      await keep(f);
+      await keep(f, phase !== "rollback");
     } finally {
       pause.resume();
     }

@@ -32,14 +32,26 @@ import {
 
 type Files = Awaited<ReturnType<typeof fileFixture>>;
 type Published = Awaited<ReturnType<Files["published"]>>;
+type RetentionFixtureOptions = {
+  interestScenario?: InitialInterestScenario;
+  afterPublicationBeforeInterestCompletion?: () => Promise<void>;
+};
+
+function retentionFixtureOptions(
+  value?: InitialInterestScenario | RetentionFixtureOptions,
+): RetentionFixtureOptions | undefined {
+  return typeof value === "string" ? { interestScenario: value } : value;
+}
 
 /** The caller owns its already-produced mapped files, including any real caption work. */
 export async function prepareBoundRetention(
   files: Files,
   published: Published,
   base: MediaAutomationContext,
-  interestScenario?: InitialInterestScenario,
+  scenarioOrOptions?: InitialInterestScenario | RetentionFixtureOptions,
 ) {
+  const options = retentionFixtureOptions(scenarioOrOptions);
+  const interestScenario = options?.interestScenario;
   if (files.context.pathMapping === undefined)
     throw new Error(
       "Bound retention requires canonical mapping before the first publication",
@@ -79,6 +91,7 @@ export async function prepareBoundRetention(
       `Actual retention publication failed: ${JSON.stringify(available)}`,
     );
   await publication.finalizeMediaAcquisition(published.input);
+  await options?.afterPublicationBeforeInterestCompletion?.();
   for (const mediaId of attempt.mediaIds) {
     const watch = await observeRequesterWatch(context, mediaId);
     if (!watch.complete)

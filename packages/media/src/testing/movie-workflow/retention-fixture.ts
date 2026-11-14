@@ -31,8 +31,10 @@ export async function createMovieRetentionFixture(
     hostname: "127.0.0.1",
     port: 0,
     fetch: (request) =>
-      new URL(request.url).pathname === `/media/${f.scope.mediaId}`
-        ? new Response("Synthetic Media detail route", { status: 200 })
+      ["/library", "/requests"].includes(new URL(request.url).pathname)
+        ? new Response("Synthetic observational library/request route", {
+            status: 200,
+          })
         : new Response(null, { status: 404 }),
   });
   try {

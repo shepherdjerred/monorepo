@@ -10,6 +10,7 @@ import { fileFixture } from "./test-support.ts";
 import { createMediaFileActivities } from "./activities.ts";
 import { z } from "zod";
 import { PrismaMediaApplication } from "#infrastructure/media-service.ts";
+import { RequestInterestCommands } from "#infrastructure/request-interest/commands.ts";
 import { RemovalPlanSchema } from "./types.ts";
 import { elapsedQuarantineClient } from "./plex-binding/elapsed-quarantine.test-support.ts";
 import {
@@ -61,6 +62,15 @@ test("75-second original authority cannot renew during hashing; a new Network pr
     const originalAsset = await db.libraryAsset.findUniqueOrThrow({
       where: { id: bound.asset.id },
     });
+    const privateWarning = await db.notificationDelivery.findFirstOrThrow({
+      where: {
+        userId: f.user.id,
+        channel: "email",
+        eventId: z
+          .object({ warningEventId: z.string() })
+          .parse(original.evidence).warningEventId,
+      },
+    });
     let hashed = 0;
     f.context.checkpoint = async (phase) => {
       if (phase !== "content-proof-ready") return;
@@ -87,8 +97,8 @@ test("75-second original authority cannot renew during hashing; a new Network pr
           where: { mediaId: f.media.id },
           data: { observedAt: timestamp },
         });
-        await tx.notificationDelivery.updateMany({
-          where: { userId: f.user.id },
+        await tx.notificationDelivery.update({
+          where: { id: privateWarning.id },
           data: { reconciledAt: timestamp },
         });
       });
@@ -223,14 +233,19 @@ test.each(["keep", "unwatched", "cancelled"] as const)(
       f.context.checkpoint = async (phase) => {
         if (phase !== "content-proof-ready") return;
         if (change === "keep") {
-          const current = await db.mediaItem.findUniqueOrThrow({
-            where: { id: f.media.id },
+          const current = await db.mediaRequest.findUniqueOrThrow({
+            where: { id: f.request.id },
           });
-          await new PrismaMediaApplication(db, { keepDays: 30 }).act(
-            { ...f.user, role: "member" },
+          await new RequestInterestCommands(db, { keepDays: 30 }).execute(
+            f.user,
             crypto.randomUUID(),
-            f.media.id,
-            { action: "keep", expectedVersion: current.version },
+            {
+              schemaVersion: 1,
+              requestId: current.id,
+              expectedVersion: current.version,
+              expectedInterestRevision: current.interestRevision,
+              action: "continue",
+            },
           );
         }
         if (change === "cancelled") {

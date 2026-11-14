@@ -66,6 +66,7 @@ test("household migration keeps existing library without manufacturing permanent
     expect(
       await current.mediaRequest.findFirstOrThrow({
         where: { mediaId: series.id },
+        select: { keepingPolicy: true, interestState: true },
       }),
     ).toMatchObject({ keepingPolicy: "temporary", interestState: "following" });
     expect(
@@ -87,6 +88,7 @@ test("household migration keeps existing library without manufacturing permanent
     expect(
       await current.mediaRequest.create({
         data: { mediaId: fresh.id, userId: owner.id },
+        select: { keepingPolicy: true, interestState: true },
       }),
     ).toMatchObject({ keepingPolicy: "temporary", interestState: "following" });
   } finally {

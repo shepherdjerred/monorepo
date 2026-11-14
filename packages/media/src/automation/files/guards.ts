@@ -39,6 +39,8 @@ import {
 } from "#infrastructure/request-claims.ts";
 import { householdRetentionState } from "#infrastructure/request-interest/protection.ts";
 import { removalNoticeAcceptance } from "#infrastructure/request-interest/notice-proof.ts";
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import { captureRetentionMovieAuthority } from "./plex-binding/movie-retention-authority.ts";
 
 /** Caller holds all affected MediaItem rows, shared with reservation creation. */
 export async function assertNoMediaSubtitleReplacement(
@@ -161,6 +163,7 @@ export async function assertRetention(input: {
   mediaIds: readonly string[];
   generations: Readonly<Record<string, number>>;
   purge: boolean;
+  budget: PublicationAuthorityReadBudget;
   movieAccess?: MovieChoiceAccess | undefined;
   plex?: RetentionPlexAuthority | undefined;
 }): Promise<MovieChoiceFreshness | null> {
@@ -226,6 +229,7 @@ export async function assertRetention(input: {
       generations: input.generations,
       timestamp,
       warningEventId: warning.warningEventId,
+      budget: input.budget,
       movieAccess: input.movieAccess,
       plex: input.plex,
     });
@@ -330,6 +334,7 @@ async function assertRetentionItem(input: {
   generations: Readonly<Record<string, number>>;
   timestamp: number;
   warningEventId: string;
+  budget: PublicationAuthorityReadBudget;
   movieAccess?: MovieChoiceAccess | undefined;
   plex?: RetentionPlexAuthority | undefined;
 }) {
@@ -365,6 +370,16 @@ async function assertRetentionItem(input: {
     throw new FileGuardError("owner_only_or_unclaimed");
   const deadlines: number[] = [];
   const observed = { wall: Date.now(), monotonic: performance.now() };
+  const movieGuards = await captureRetentionMovieAuthority(tx, {
+    mediaId,
+    kind: item.kind,
+    requests: item.requests,
+    household,
+    access: input.movieAccess,
+    budget: input.budget,
+    plex: input.plex,
+  });
+  deadlines.push(...movieGuards.map((guard) => guard.expiresAtMs));
   for (const requester of requesters) {
     const authority = input.plex?.byMedia.get(mediaId);
     if (authority === undefined)
@@ -395,6 +410,7 @@ async function assertRetentionItem(input: {
   const deadline = Math.min(...deadlines);
   const freshness = retentionDeadline(observed, deadline, () => {
     input.plex?.freshness.assertActive();
+    for (const guard of movieGuards) guard.assertActive();
   });
   freshness.assertActive();
   await bindPlexTransactionDeadline(tx, freshness);

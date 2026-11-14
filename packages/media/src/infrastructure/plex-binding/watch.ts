@@ -3,6 +3,7 @@ import type {
   PlexWatchProjection,
   WatchState,
   Prisma,
+  PlexIdentityMapping,
 } from "#generated/prisma/client.ts";
 import { RETENTION_DEFAULTS } from "#domain/retention.ts";
 import {
@@ -33,6 +34,36 @@ import {
 } from "./completion/projection.ts";
 export function parseWatchProjectionAuthority(row: PlexWatchProjection) {
   return readProjectionAuthority(row);
+}
+
+/** Native observation identity, including historical requests without a cut choice.
+ * Older verification requires the observer's existing live scope check; this
+ * predicate alone never grants new acquisition or replaces that bounded proof. */
+export function watchRequesterMappingVerification(
+  user: { plexAccountId: string; plexIdentity: PlexIdentityMapping | null },
+  input: {
+    serverMachineId: string | undefined;
+    sectionId: string;
+    kind: string;
+    now: Date;
+  },
+): Date | null {
+  const mapping = user.plexIdentity;
+  const verifiedAt = mapping?.verifiedAt;
+  const permitted =
+    mapping !== null &&
+    mapping.serverMachineId === input.serverMachineId &&
+    (mapping.kind === "account" || mapping.kind === "managed") &&
+    (mapping.kind !== "managed" || mapping.homeUserId === user.plexAccountId) &&
+    mapping.verifiedAt !== null &&
+    mapping.verifiedAt <= input.now &&
+    mapping.permittedSectionIds.includes(input.sectionId) &&
+    mapping.permittedMediaKinds.includes(
+      input.kind === "movie" ? "movie" : "series",
+    );
+  return permitted && verifiedAt !== null && verifiedAt !== undefined
+    ? verifiedAt
+    : null;
 }
 
 async function readImmutableWatchAssociation(

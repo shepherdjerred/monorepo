@@ -20,7 +20,9 @@ test("a fresh authorized request resumes physically restored quarantine without 
   directories.push(f.file.directory);
   await f.apply();
   const first = await f.positiveRestore();
-  await f.activities.restoreNativeQuarantineFiles(first);
+  expect(await f.activities.restoreNativeQuarantineFiles(first)).toEqual({
+    status: "restored",
+  });
   const restored = await db.nativeQuarantineContinuation.findUniqueOrThrow({
     where: { id: first.continuationId },
   });
