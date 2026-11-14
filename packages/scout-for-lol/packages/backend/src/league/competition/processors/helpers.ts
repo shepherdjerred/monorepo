@@ -58,8 +58,9 @@ export function getPlayerParticipant(
   const playerPuuids = new Set<string>(
     player.accounts.map((account) => account.puuid),
   );
-  return match.info.participants.find((participant) =>
-    playerPuuids.has(participant.puuid),
+  return match.info.participants.find(
+    (participant) =>
+      participant.puuid !== null && playerPuuids.has(participant.puuid),
   );
 }
 

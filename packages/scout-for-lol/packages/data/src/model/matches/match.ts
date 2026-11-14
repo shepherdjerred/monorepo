@@ -48,7 +48,8 @@ export const CompletedMatchSchema = z.strictObject({
 });
 
 export const ClassicChampionSchema = z.strictObject({
-  puuid: z.string().min(1),
+  /** `null` for a bot or a player whose identity is still unresolved. */
+  puuid: z.string().min(1).nullable(),
   riotIdGameName: z.string().min(1),
   riotIdTagLine: z.string().min(1),
   championId: z.number().int().positive(),

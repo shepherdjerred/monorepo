@@ -99,6 +99,8 @@ export async function generateReportGraph(
     }
 
     for (const participant of match.info.participants) {
+      // Only players aggregate; a bot or unresolved row names nobody.
+      if (participant.puuid === null) continue;
       const previous = totals.get(participant.puuid) ?? {
         value: 0,
         games: 0,

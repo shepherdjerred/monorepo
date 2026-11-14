@@ -115,16 +115,17 @@ export function replayProvenanceFromMatch(
   uploaderPuuids: readonly string[],
 ): ReplayProvenance | null {
   const owned = new Set(uploaderPuuids);
-  const participant = match.info.participants.find((candidate) =>
-    owned.has(candidate.puuid),
+  const participant = match.info.participants.find(
+    (candidate) => candidate.puuid !== null && owned.has(candidate.puuid),
   );
-  if (participant === undefined) return null;
+  const localPuuid = participant?.puuid ?? null;
+  if (participant === undefined || localPuuid === null) return null;
   return {
-    localPuuid: participant.puuid,
+    localPuuid,
     leaguePatch: match.info.gameVersion,
     gameDurationSeconds: match.info.gameDuration,
     participant: {
-      puuid: LeaguePuuidSchema.parse(participant.puuid),
+      puuid: LeaguePuuidSchema.parse(localPuuid),
       teamId: participant.teamId,
       kills: participant.kills,
       deaths: participant.deaths,

@@ -93,7 +93,7 @@ function requireTeam(participant: RawParticipant): Team {
   const team = parseTeam(participant.teamId);
   if (team === undefined) {
     throw new Error(
-      `Classic match participant ${participant.puuid} has unsupported team ID ${participant.teamId.toString()}`,
+      `Classic match participant ${participant.participantId.toString()} has unsupported team ID ${participant.teamId.toString()}`,
     );
   }
   return team;

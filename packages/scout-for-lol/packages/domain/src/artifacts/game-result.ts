@@ -8,6 +8,7 @@ export const ParticipantIdentitySchema = z.discriminatedUnion("kind", [
   z.strictObject({ kind: z.literal("bot") }),
   z.strictObject({ kind: z.literal("unresolved") }),
 ]);
+export type ParticipantIdentity = z.infer<typeof ParticipantIdentitySchema>;
 
 const StatSchema = z.number().int().nonnegative().nullable();
 export const GameResultParticipantSchema = z.strictObject({

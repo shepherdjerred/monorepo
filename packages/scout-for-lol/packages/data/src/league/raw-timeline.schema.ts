@@ -1,5 +1,10 @@
 import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
+import { SCOUT_CLIENT_DATA_VERSION } from "./data-source.ts";
+import {
+  ParticipantKindSchema,
+  checkStoredIdentities,
+} from "./participant-identity.ts";
 import { preserveRawJson } from "./preserve-raw-json.ts";
 
 /**
@@ -192,7 +197,10 @@ export const RawTimelineFrameSchema = z.object({
 export const RawTimelineParticipantInfoSchema = z
   .object({
     participantId: z.number(),
-    puuid: z.string(),
+    /** Non-null exactly when the row names a player, as on a match. */
+    puuid: z.string().nullable(),
+    participantKind: ParticipantKindSchema.optional(),
+    leagueClientUuid: z.uuid().optional(),
   })
   .loose();
 
@@ -222,10 +230,22 @@ export const RawTimelineMetadataSchema = z.object({
  * Main RawTimeline schema - represents a match timeline from Riot Games Match V5 API
  */
 export const RawTimelineSchema = preserveRawJson(
-  z.object({
-    metadata: RawTimelineMetadataSchema,
-    info: RawTimelineInfoSchema,
-  }),
+  z
+    .object({
+      metadata: RawTimelineMetadataSchema,
+      info: RawTimelineInfoSchema,
+    })
+    .superRefine((timeline, ctx) => {
+      checkStoredIdentities(
+        {
+          scoutBuilt:
+            timeline.metadata.dataVersion === SCOUT_CLIENT_DATA_VERSION,
+          metadataParticipants: timeline.metadata.participants,
+          participants: timeline.info.participants,
+        },
+        ctx,
+      );
+    }),
 );
 
 // Export types

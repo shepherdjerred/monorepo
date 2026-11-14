@@ -1,5 +1,7 @@
 import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
+import { SCOUT_CLIENT_DATA_VERSION } from "./data-source.ts";
+import { checkStoredIdentities } from "./participant-identity.ts";
 import { preserveRawJson } from "./preserve-raw-json.ts";
 import { RawParticipantSchema } from "./raw-participant.schema.ts";
 import { RawTeamSchema } from "./raw-team.schema.ts";
@@ -57,6 +59,11 @@ export type RawInfo = z.infer<typeof RawInfoSchema>;
 
 /**
  * Main RawMatch schema - represents a complete match from Riot Games Match V5 API
+ *
+ * Participant identities are checked against the document's source: a Riot
+ * document names players by 78-character PUUID only, and anything else is a
+ * broken contract rather than a bot encoding to guess at. A Scout-built one
+ * states each row's kind and lists only its players in `metadata`.
  */
 export const RawMatchSchema = preserveRawJson(
   z
@@ -64,7 +71,17 @@ export const RawMatchSchema = preserveRawJson(
       metadata: RawMetadataSchema,
       info: RawInfoSchema,
     })
-    .strict(),
+    .strict()
+    .superRefine((match, ctx) => {
+      checkStoredIdentities(
+        {
+          scoutBuilt: match.metadata.dataVersion === SCOUT_CLIENT_DATA_VERSION,
+          metadataParticipants: match.metadata.participants,
+          participants: match.info.participants,
+        },
+        ctx,
+      );
+    }),
 );
 
 export type RawMatch = z.infer<typeof RawMatchSchema>;

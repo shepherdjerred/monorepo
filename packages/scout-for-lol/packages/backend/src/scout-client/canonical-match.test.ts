@@ -56,11 +56,21 @@ beforeEach(() => {
   vi.resetAllMocks();
 });
 
-/** A match as selected from a client: stamped as the client's, whatever it claimed. */
+/**
+ * A match as selected from a client: stamped as the client's, whatever it
+ * claimed, with every row stating the kind of participant it names.
+ */
 function asClientMatch(match: RawMatch): RawMatch {
   return {
     ...match,
     metadata: { ...match.metadata, dataVersion: SCOUT_CLIENT_DATA_VERSION },
+    info: {
+      ...match.info,
+      participants: match.info.participants.map((participant) => ({
+        ...participant,
+        participantKind: "player",
+      })),
+    },
   };
 }
 
@@ -213,15 +223,37 @@ describe("parseLocalCanonicalMatch", () => {
     expect(converted?.info.participants[0]?.puuid).toBe(localObserverPuuid);
   });
 
-  test("refuses a bundle whose players have no alias yet", () => {
-    // A canonical match is read downstream as Riot data; one that still names
-    // a player by UUID would join to nothing, or to the wrong rows.
+  test("refuses a bundle whose observer has no alias yet", () => {
+    // The observer is who vouches for the game; an observer Scout can't name
+    // by PUUID can't be matched to the paired account.
     expect(
       parseLocalCanonicalMatch(
         localMatchId,
         asClientSentIt(localBundleCandidate(LOCAL_TIMING)),
       ),
     ).toBeNull();
+  });
+
+  test("keeps an unaliased opponent unresolved, out of every PUUID list", () => {
+    const opponentUuid = "2c3d4e5f-6071-4829-9bac-1d2e3f4a5b6c";
+    const named = localBundleCandidate(LOCAL_TIMING);
+    const converted = parseLocalCanonicalMatch(localMatchId, {
+      ...named,
+      payload: JSON.parse(
+        JSON.stringify(named.payload).replaceAll(
+          localOpponentPuuid,
+          opponentUuid,
+        ),
+      ),
+    });
+
+    expect(converted?.metadata.participants).toEqual([localObserverPuuid]);
+    expect(converted?.info.participants[1]).toMatchObject({
+      participantKind: "unresolved",
+      puuid: null,
+      leagueClientUuid: opponentUuid,
+    });
+    expect(JSON.stringify(converted?.metadata)).not.toContain(opponentUuid);
   });
 
   test("refuses a one-player list row even with its end-of-game block", () => {

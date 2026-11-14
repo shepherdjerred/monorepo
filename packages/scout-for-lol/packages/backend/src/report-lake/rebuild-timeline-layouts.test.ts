@@ -37,11 +37,15 @@ let tempDir: string;
 
 function timelineFixture(matchId: RiotMatchId, gameId: number): RawTimeline {
   return RawTimelineSchema.parse({
-    metadata: { dataVersion: "2", matchId, participants: ["puuid-1"] },
+    metadata: {
+      dataVersion: "2",
+      matchId,
+      participants: ["puuid-1".padEnd(78, "x")],
+    },
     info: {
       frameInterval: 60_000,
       gameId,
-      participants: [{ participantId: 1, puuid: "puuid-1" }],
+      participants: [{ participantId: 1, puuid: "puuid-1".padEnd(78, "x") }],
       frames: [
         {
           timestamp: 0,

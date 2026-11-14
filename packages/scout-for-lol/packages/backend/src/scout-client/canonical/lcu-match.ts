@@ -9,12 +9,15 @@ import {
   isArenaClientPayload,
   type UnsupportedClientMode,
 } from "./unsupported-mode.ts";
+import { lcuParticipantIdentity } from "./lcu-identity.ts";
 import { convertParticipant } from "./lcu-participant.ts";
 import { firstObjectiveTeam } from "./lcu-team.ts";
 import {
   LocalMatchBundleSchema,
   LocalMatchCompletionSchema,
   SourcePlayerSchema,
+  type LegacyIdentity,
+  type LegacyParticipant,
   type LocalMatchBundle,
   type Replay,
   type SourcePlayer,
@@ -80,6 +83,39 @@ function sourcePuuid(player: SourcePlayer) {
 }
 
 /**
+ * The statistics source for one history participant, with who it names.
+ *
+ * A player is matched by identity. Every bot carries the same zero UUID, so a
+ * bot is matched by team and champion instead, against a source that states
+ * it is a bot; a source that can't single one out leaves the game unconverted.
+ */
+function matchSource(
+  participant: LegacyParticipant,
+  identity: LegacyIdentity,
+  players: readonly SourcePlayer[],
+) {
+  const named = lcuParticipantIdentity(identity.player.puuid, undefined);
+  if (named === null) return null;
+  const candidates =
+    named.kind === "bot"
+      ? players.filter(
+          (player) =>
+            player.botPlayer === true &&
+            player.teamId === participant.teamId &&
+            player.championId === participant.championId,
+        )
+      : players.filter(
+          (player) =>
+            player.botPlayer !== true &&
+            sourcePuuid(player) === identity.player.puuid,
+        );
+  const [source] = candidates;
+  return source === undefined || candidates.length !== 1
+    ? null
+    : { source, named };
+}
+
+/**
  * Combine the complete local sources exposed around post-game: legacy match
  * metadata plus per-participant EOG or ROFL statistics. Every Match-V5 field
  * is sourced or derived from an explicit local fact; incomplete bundles fail
@@ -137,11 +173,14 @@ function convertSupportedLcuMatchBundle(
   const participants = game.participants.flatMap((participant) => {
     const identity = identities.get(participant.participantId);
     if (identity === undefined) return [];
-    const source = players.find(
-      (player) => sourcePuuid(player) === identity.player.puuid,
+    const matched = matchSource(participant, identity, players);
+    if (matched === null) return [];
+    const converted = convertParticipant(
+      participant,
+      identity,
+      matched.source,
+      matched.named,
     );
-    if (source === undefined) return [];
-    const converted = convertParticipant(participant, identity, source);
     return converted === null ? [] : [converted];
   });
   if (
@@ -158,7 +197,9 @@ function convertSupportedLcuMatchBundle(
     metadata: {
       dataVersion: SCOUT_CLIENT_DATA_VERSION,
       matchId: riotMatchId,
-      participants: participants.map((participant) => participant.puuid),
+      participants: participants.flatMap((participant) =>
+        participant.puuid === null ? [] : [participant.puuid],
+      ),
     },
     info: {
       endOfGameResult: "GameComplete",

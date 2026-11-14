@@ -37,13 +37,13 @@ test("timeline preserves future events, nested damage, frame stats, empty arrays
     metadata: {
       dataVersion: "2",
       matchId: "NA1_123",
-      participants: ["account"],
+      participants: ["account".padEnd(78, "x")],
       future: null,
     },
     info: {
       frameInterval: 60_000,
       gameId: 123,
-      participants: [{ participantId: 1, puuid: "account" }],
+      participants: [{ participantId: 1, puuid: "account".padEnd(78, "x") }],
       frames: [
         { timestamp: 0, participantFrames: null, events: [] },
         {

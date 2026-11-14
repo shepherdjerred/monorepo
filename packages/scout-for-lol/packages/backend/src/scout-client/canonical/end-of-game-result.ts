@@ -1,17 +1,18 @@
 import { z } from "zod";
 import {
   GameResultSchema,
-  ParticipantIdentitySchema,
   type GameResult,
 } from "@scout-for-lol/domain/artifacts/game-result.ts";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
+import { lcuParticipantIdentity } from "./lcu-identity.ts";
 
 const IdSchema = z
   .union([z.number().int().positive(), z.string().regex(/^\d+$/u)])
   .transform(String);
 const StatSchema = z.number().int().nonnegative();
 const PlayerSchema = z.looseObject({
-  puuid: z.string().min(1),
+  // Every bot carries the zero UUID, or an empty one; players must differ.
+  puuid: z.string(),
   gameId: IdSchema,
   teamId: z.number().int().positive(),
   championId: z.number().int().positive(),
@@ -85,9 +86,12 @@ export function parseEndOfGameResult(input: {
   )
     return null;
   const players = game.teams.flatMap((team) => team.players);
+  // Bots share the zero UUID (or state none), so only players need be distinct.
+  const named = players.filter((player) => !player.botPlayer);
   if (
-    !players.some((player) => player.puuid === input.observer) ||
-    new Set(players.map((player) => player.puuid)).size !== players.length ||
+    named.some((player) => player.puuid === "") ||
+    !named.some((player) => player.puuid === input.observer) ||
+    new Set(named.map((player) => player.puuid)).size !== named.length ||
     new Set(game.teams.map((team) => team.teamId)).size !== game.teams.length
   )
     return null;
@@ -114,25 +118,15 @@ export function parseEndOfGameResult(input: {
     durationSeconds: game.gameLength,
     participants: game.teams.flatMap((team) =>
       team.players.map((player) => {
-        const riot = ParticipantIdentitySchema.safeParse({
-          kind: "riot",
-          puuid: player.puuid,
-        });
-        const local = ParticipantIdentitySchema.safeParse({
-          kind: "local",
-          uuid: player.puuid,
-        });
         return {
           participantId: null,
           teamId: team.teamId,
           championId: player.championId,
           identity: player.botPlayer
             ? { kind: "bot" }
-            : riot.success
-              ? riot.data
-              : local.success
-                ? local.data
-                : { kind: "unresolved" },
+            : (lcuParticipantIdentity(player.puuid, false) ?? {
+                kind: "unresolved",
+              }),
           name: `${player.riotIdGameName}#${player.riotIdTagLine}`,
           win: team.isWinningTeam,
           kills: player.stats.kills,

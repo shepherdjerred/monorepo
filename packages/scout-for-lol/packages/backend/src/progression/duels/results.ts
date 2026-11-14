@@ -116,6 +116,35 @@ function timelineInput(match: RawMatch, timeline: RawTimeline) {
   });
 }
 
+/**
+ * Whether the rules can judge a duel game, or a person must review it. A duel
+ * roster is four tracked players, so a game with a bot or an unresolved player
+ * can never match it; that is reviewed, never a parse throw.
+ */
+export function duelGameJudgement(
+  match: RawMatch,
+  timeline: RawTimeline | null | undefined,
+) {
+  const review = (reason: string) => ({
+    kind: "review" as const,
+    evidence: {
+      matchId: match.metadata.matchId,
+      state: "needs_review" as const,
+      winnerCompetitorId: null,
+      objective: null,
+      objectiveTimestampMs: null,
+      reason,
+      participantPuuids: match.metadata.participants,
+      timelineComplete: timeline !== null && timeline !== undefined,
+    },
+  });
+  if (match.info.participants.some((participant) => participant.puuid === null))
+    return review("The completed game includes a bot or an unresolved player");
+  return timeline === null || timeline === undefined
+    ? review("Complete timeline evidence is unavailable")
+    : { kind: "judge" as const, timeline };
+}
+
 function seriesAcceptsGame(
   seriesState: string,
   gameNumber: number,
@@ -271,22 +300,14 @@ export async function processDuelResult(
     parseDuelCompetitor(series.competitorOne),
     parseDuelCompetitor(series.competitorTwo),
   ];
+  const judged = duelGameJudgement(match, timeline);
   const evidence =
-    timeline === null || timeline === undefined
-      ? {
-          matchId: match.metadata.matchId,
-          state: "needs_review" as const,
-          winnerCompetitorId: null,
-          objective: null,
-          objectiveTimestampMs: null,
-          reason: "Complete timeline evidence is unavailable",
-          participantPuuids: match.metadata.participants,
-          timelineComplete: false,
-        }
+    judged.kind === "review"
+      ? judged.evidence
       : evaluateDuelGame(
           DuelRulesetV1Schema.parse(JSON.parse(series.rulesetJson)),
           competitors,
-          timelineInput(match, timeline),
+          timelineInput(match, judged.timeline),
         );
   if (
     evidence.state === "needs_review" ||

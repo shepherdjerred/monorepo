@@ -12,7 +12,11 @@ import {
 } from "@scout-for-lol/data";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
-import { indexOfPuuid, type MatchMvpRoster } from "#src/mvp-votes/roster.ts";
+import {
+  indexOfPuuid,
+  matchMvpRosterRefusal,
+  type MatchMvpRoster,
+} from "#src/mvp-votes/roster.ts";
 
 export const MIN_TRACKED_PLAYERS_ON_ONE_TEAM = 3;
 
@@ -33,7 +37,7 @@ export function hasTrackedSideForMvpVotes(input: {
   const tracked = new Set<string>(input.trackedPuuids);
   const counts = new Map<RiotTeamId, number>();
   for (const participant of input.participants) {
-    if (!tracked.has(participant.puuid)) {
+    if (participant.puuid === null || !tracked.has(participant.puuid)) {
       continue;
     }
     const teamId = RiotTeamIdSchema.safeParse(participant.teamId);
@@ -53,13 +57,20 @@ export function hasTrackedSideForMvpVotes(input: {
 export async function shouldAttachMvpVotes(input: {
   queueType: QueueType | undefined;
   targetGuildIds: readonly DiscordGuildId[];
-  participants: readonly { puuid: RawParticipant["puuid"]; teamId: number }[];
+  participants: readonly {
+    participantId: number;
+    puuid: RawParticipant["puuid"];
+    teamId: number;
+  }[];
   trackedPuuids: readonly LeaguePuuid[];
 }): Promise<boolean> {
   // V2 attests one postmatch message for every destination. Furniture that
   // went out because *any* audience guild had the flag would also land in
   // guilds where the flag is off. Require every destination instead.
   if (!isMvpVoteQueue(input.queueType) || input.targetGuildIds.length === 0) {
+    return false;
+  }
+  if (matchMvpRosterRefusal(input.participants) !== null) {
     return false;
   }
   if (

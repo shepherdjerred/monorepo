@@ -26,6 +26,7 @@ async function baseMatch(): Promise<RawMatch> {
 
 type Row = {
   puuid: RawParticipant["puuid"];
+  kind?: RawParticipant["participantKind"];
   team: number;
   name?: string;
   tag?: string;
@@ -41,9 +42,16 @@ function roster(
   const template = match.info.participants[0];
   if (template === undefined) throw new Error("fixture has no participants");
   const clone = structuredClone(match);
-  clone.metadata.participants = rows.map((row) => row.puuid);
+  clone.metadata.participants = rows.flatMap((row) =>
+    row.puuid === null ? [] : [row.puuid],
+  );
   clone.info.participants = rows.map((row) => {
-    const participant = { ...template, puuid: row.puuid, teamId: row.team };
+    const participant = {
+      ...template,
+      puuid: row.puuid,
+      ...(row.kind === undefined ? {} : { participantKind: row.kind }),
+      teamId: row.team,
+    };
     if (row.name === undefined) {
       delete participant.riotIdGameName;
     } else {
@@ -63,6 +71,11 @@ function roster(
     match: clone,
     matchId: clone.metadata.matchId,
   };
+}
+
+/** A bot or unaliased teammate with an otherwise suggestible Riot ID. */
+function nonPlayer(kind: "bot" | "unresolved"): Row {
+  return { puuid: null, kind, team: 100, name: kind, tag: "NA1" };
 }
 
 describe("aggregateTeammates", () => {
@@ -120,13 +133,14 @@ describe("aggregateTeammates", () => {
     expect(suggestions).toEqual([]);
   });
 
-  test("omits malformed PUUIDs and rows whose Riot ID would not parse", async () => {
+  test("omits bots, unresolved players and rows whose Riot ID would not parse", async () => {
     const base = await baseMatch();
     const rounds = [
       roster(base, [
         { puuid: SELF, team: 100, name: "Me" },
         { puuid: puuid("good"), team: 100, name: "Good", tag: "NA1" },
-        { puuid: "short", team: 100, name: "Short", tag: "NA1" },
+        nonPlayer("bot"),
+        nonPlayer("unresolved"),
         { puuid: puuid("bad-tag"), team: 100, name: "Bad", tag: "" },
       ]),
     ];

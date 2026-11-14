@@ -1,8 +1,9 @@
 import { ApplicationFailure } from "@temporalio/common";
 import {
-  RawInfoSchema,
   RawMatchSchema,
   SCOUT_CLIENT_DATA_VERSION,
+  sameStoredIdentity,
+  storedParticipantIdentity,
   type RawMatch,
   type RawTimeline,
 } from "@scout-for-lol/data";
@@ -15,6 +16,7 @@ import {
   LOCAL_MATCH_TIMING_DRIFT_MS,
   convertLcuMatchBundle,
 } from "./canonical/lcu-match.ts";
+import { lcuParticipantIdentity } from "./canonical/lcu-identity.ts";
 import { convertLcuTimeline } from "./canonical/lcu-timeline.ts";
 import { storedRawArchiveDescriptor } from "#src/report-lake/durable-receipts.ts";
 import { readArchivedTimelinePayload } from "#src/report-lake/receipted-archive.ts";
@@ -43,8 +45,50 @@ function embeddedPayload(payload: unknown): unknown {
   return embedded.success ? embedded.data.data : payload;
 }
 
-/** A Riot API PUUID: the only player identity a canonical match may carry. */
-const RIOT_PUUID_LENGTH = 78;
+const MatchV5WrapperSchema = z.looseObject({
+  metadata: z.looseObject({ matchId: z.string() }),
+  info: z.unknown(),
+});
+const MatchV5RosterSchema = z.looseObject({
+  participants: z.array(z.looseObject({ puuid: z.string() })),
+});
+
+/**
+ * A Scout-built match from a Match-V5-shaped client payload, bare `info` or
+ * wrapped. Whatever version or kinds the payload claims, it is the client's:
+ * each row's kind is decided here from its identity, the metadata is rebuilt
+ * to list only the players, and the stored bytes carry the provenance.
+ */
+function scoutBuiltMatchV5(
+  riotMatchId: RiotMatchId,
+  payload: unknown,
+): RawMatch | null {
+  const wrapped = MatchV5WrapperSchema.safeParse(payload);
+  if (wrapped.success && wrapped.data.metadata.matchId !== riotMatchId) {
+    return null;
+  }
+  const info = wrapped.success ? wrapped.data.info : payload;
+  const roster = MatchV5RosterSchema.safeParse(info);
+  if (!roster.success) return null;
+  const participants = roster.data.participants.flatMap((participant) => {
+    const named = lcuParticipantIdentity(participant.puuid, undefined);
+    return named === null
+      ? []
+      : [{ ...participant, ...storedParticipantIdentity(named) }];
+  });
+  if (participants.length !== roster.data.participants.length) return null;
+  const parsed = RawMatchSchema.safeParse({
+    metadata: {
+      dataVersion: SCOUT_CLIENT_DATA_VERSION,
+      matchId: riotMatchId,
+      participants: participants.flatMap((participant) =>
+        participant.puuid === null ? [] : [participant.puuid],
+      ),
+    },
+    info: { ...roster.data, participants },
+  });
+  return parsed.success ? parsed.data : null;
+}
 
 /**
  * Accept only complete Match-V5-compatible local evidence with identities that
@@ -53,10 +97,10 @@ const RIOT_PUUID_LENGTH = 78;
  * legacy match-history rows remain partial evidence and are never promoted.
  *
  * The payload names players by League-client UUID and is translated through
- * `identities` first. A match that still names anyone by UUID afterwards is
- * refused: a canonical match is read by everything downstream as Riot data,
- * and an identity from the other namespace would join to nothing at best and
- * to the wrong rows at worst.
+ * `identities` first. Every row then states its kind: a player by Riot PUUID,
+ * a bot, or an unresolved player whose UUID has no alias yet. Only players
+ * carry a PUUID, so nothing downstream can join a League-client UUID to Riot
+ * data; the observer itself must be a resolved player.
  */
 export function parseLocalCanonicalMatch(
   riotMatchId: RiotMatchId,
@@ -71,46 +115,17 @@ export function parseLocalCanonicalMatch(
     candidate.localPuuid === null
       ? null
       : (identities.get(candidate.localPuuid) ?? candidate.localPuuid);
-  const localBundle = convertLcuMatchBundle(riotMatchId, payload);
-  const complete = RawMatchSchema.safeParse(localBundle ?? payload);
-  const infoOnly = complete.success ? null : RawInfoSchema.safeParse(payload);
-  const infoMatch =
-    infoOnly?.success === true
-      ? RawMatchSchema.safeParse({
-          metadata: {
-            dataVersion: SCOUT_CLIENT_DATA_VERSION,
-            matchId: riotMatchId,
-            participants: infoOnly.data.participants.map(
-              (participant) => participant.puuid,
-            ),
-          },
-          info: infoOnly.data,
-        })
-      : null;
-  const match = complete.success
-    ? complete.data
-    : infoMatch?.success === true
-      ? infoMatch.data
-      : null;
+  const match =
+    convertLcuMatchBundle(riotMatchId, payload) ??
+    scoutBuiltMatchV5(riotMatchId, payload);
   if (match === null || localPuuid === null) return null;
   return match.metadata.matchId !== riotMatchId ||
     match.info.platformId.toUpperCase() !== platform ||
     candidate.platformId?.toUpperCase() !== platform ||
     `${platform}_${match.info.gameId.toString()}` !== riotMatchId ||
-    !match.metadata.participants.includes(localPuuid) ||
-    match.metadata.participants.some(
-      (puuid) => puuid.length !== RIOT_PUUID_LENGTH,
-    )
+    !match.metadata.participants.includes(localPuuid)
     ? null
-    : // Whatever version a client's payload claims, it is the client's: the
-      // stored bytes are what carry provenance downstream.
-      {
-        ...match,
-        metadata: {
-          ...match.metadata,
-          dataVersion: SCOUT_CLIENT_DATA_VERSION,
-        },
-      };
+    : match;
 }
 
 /** The aliases a stored candidate needs before it can be parsed. */
@@ -244,7 +259,11 @@ export async function readFrozenTimeline(
     : await readArchivedTimelinePayload(descriptor, riotMatchId);
 }
 
-/** A participant number must identify the same person in both artifacts. */
+/**
+ * A participant number must identify the same participant in both
+ * artifacts: the same kind, and for a player the same PUUID. Two bots share
+ * no identity, so their participant number is what pairs them.
+ */
 export function timelineMatchesResult(
   timeline: RawTimeline,
   match: RawMatch | undefined,
@@ -257,7 +276,7 @@ export function timelineMatchesResult(
         match.info.participants.some(
           (player) =>
             player.participantId === participant.participantId &&
-            player.puuid === participant.puuid,
+            sameStoredIdentity(player, participant),
         ),
       ))
   );

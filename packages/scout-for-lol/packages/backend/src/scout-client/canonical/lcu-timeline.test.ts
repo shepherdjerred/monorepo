@@ -112,23 +112,42 @@ describe("convertLcuTimeline", () => {
     expect(arena.result?.metadata.participants).toHaveLength(18);
   });
 
-  test("refuses a timeline whose players have no alias yet", async () => {
-    // A converted timeline is read downstream as Riot data; a League-client
-    // UUID in it would join to nothing, or to the wrong rows.
-    expect(
-      convertLcuTimeline(
-        RiotMatchIdSchema.parse("NA1_1"),
-        await fixture("lcu-game-ranked-solo"),
-        await fixture("lcu-timeline-ranked-solo"),
-      ),
-    ).toBeNull();
+  test("keeps players with no alias yet unresolved, never as a PUUID", async () => {
+    // A League-client UUID read as a PUUID would join to nothing, or to the
+    // wrong rows; it stays out of `puuid` and out of the metadata.
+    const rawGame = await fixture("lcu-game-ranked-solo");
+    const result = convertLcuTimeline(
+      RiotMatchIdSchema.parse("NA1_1"),
+      rawGame,
+      await fixture("lcu-timeline-ranked-solo"),
+    );
+
+    expect(result?.metadata.participants).toEqual([]);
+    expect(result?.info.participants).toHaveLength(10);
+    const uuids = [...lcuUuidsIn(rawGame)];
+    for (const participant of result?.info.participants ?? []) {
+      expect(participant.puuid).toBeNull();
+      expect(participant.participantKind).toBe("unresolved");
+      expect(uuids).toContain(participant.leagueClientUuid);
+    }
   });
 
-  test("refuses a bot game until Riot's bot identity is confirmed", async () => {
-    // Bots carry the all-zero League-client UUID. How Match-V5 encodes a bot
-    // isn't confirmed yet, so no identity is invented for one.
+  test("converts a bot game, naming each bot by kind alone", async () => {
+    // Every bot carries the all-zero League-client UUID, which names nobody.
     const { result } = await converted("bot-custom");
 
-    expect(result).toBeNull();
+    expect(result).not.toBeNull();
+    const kinds = result?.info.participants.map(
+      (participant) => participant.participantKind,
+    );
+    expect(kinds?.filter((kind) => kind === "player")).toHaveLength(1);
+    expect(kinds?.filter((kind) => kind === "bot")).toHaveLength(9);
+    expect(result?.metadata.participants).toHaveLength(1);
+    for (const participant of result?.info.participants ?? []) {
+      if (participant.participantKind === "bot") {
+        expect(participant.puuid).toBeNull();
+        expect(participant.leagueClientUuid).toBeUndefined();
+      }
+    }
   });
 });
