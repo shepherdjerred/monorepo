@@ -38,9 +38,12 @@ exists on the device — a lease, a port forward, a radio. Skipping the import
 there makes `apply` create a duplicate NVRAM entry instead of adopting the live
 one.
 
-Adding a tracked resource therefore takes two edits, not one: the `.tf` file,
-and a matching `address<TAB>import-id` line in the `IMPORTS` heredoc inside
-`packages/homelab/src/tofu/asuswrt/import.sh`. That heredoc is the import list.
+Adding a tracked resource therefore takes two edits, not one. Declare the
+resource in `packages/homelab-cdktn/src/stacks/asuswrt.ts` and run
+`bun run --cwd packages/homelab-cdktn synth`, which rewrites the committed
+`asuswrt/main.tf.json`. Then add a matching `address<TAB>import-id` line to the
+`IMPORTS` heredoc inside `packages/homelab/src/tofu/asuswrt/import.sh`. That
+heredoc is the import list.
 A resource missing from it is never imported, so `apply` creates the duplicate
 this step exists to prevent.
 

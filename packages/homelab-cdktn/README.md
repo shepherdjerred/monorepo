@@ -14,7 +14,7 @@ describes the stacks, their credentials and how they are run.
 ## Commands
 
 ```bash
-bunx turbo run generate --filter=@homelab/cdktn    # provider bindings (needs tofu, Node, registry access)
+bunx turbo run generate --filter=@homelab/cdktn    # provider bindings (needs tofu, Node, Go, registry access)
 bun run --cwd packages/homelab-cdktn synth         # rewrite every main.tf.json
 bunx turbo run build typecheck test lint --filter=@homelab/cdktn
 bun run --cwd packages/homelab-cdktn providers:refresh   # apply provider pin changes
@@ -184,6 +184,13 @@ Never run `apply`, `import`, or any `state` subcommand as part of a port.
 - **Generated bindings are not typechecked.** `generate` prepends TypeScript's
   no-check pragma to each one because the generator omits `override`
   modifiers; their types still flow into the stacks that import them.
+- **A provider built from this repository has no registry.** A pin marked
+  `"local": true` (AsusWRT) is compiled with Go into a throwaway filesystem
+  mirror, and `generate` points `cdktn get` at it through
+  `TF_CLI_CONFIG_FILE`; every other provider still comes from its registry.
+  Its stack commits no lock file, so `providers:refresh -- asuswrt` only
+  regenerates the bindings and re-synthesizes, and the stack's constraint is
+  the exact pinned version.
 - **`cdktn get` runs under Node**, not Bun. Synthesis runs under Bun and
   never calls the CLI or OpenTofu.
 - **A local module is copied into the synthesis and its `source` rewritten.**

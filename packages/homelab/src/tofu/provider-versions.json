@@ -113,6 +113,7 @@
       "registryUrl": "https://registry.opentofu.org",
       "source": "shepherdjerred/asuswrt",
       "version": "0.1.0",
+      "bindings": true,
       "local": true
     },
     {

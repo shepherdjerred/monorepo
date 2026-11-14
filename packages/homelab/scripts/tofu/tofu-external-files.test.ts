@@ -236,9 +236,9 @@ describe("tflint targets", () => {
     expect(repoRoot).not.toBe("");
   });
 
-  test("the live tree still has both kinds", () => {
+  test("every live stack is synthesized, leaving no HCL to lint", () => {
     const targets = lintTargets(path.join(repository, TOFU_STACK_ROOT));
-    expect(targets.hcl.length).toBeGreaterThan(0);
+    expect(targets.hcl).toEqual([]);
     expect(
       targets.synthesizedOnly.map((directory) => path.basename(directory)),
     ).toContain("github");

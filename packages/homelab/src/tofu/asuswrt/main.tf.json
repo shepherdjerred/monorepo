@@ -1,0 +1,214 @@
+{
+  "provider": {
+    "asuswrt": [
+      {
+        "alias": "router",
+        "host": "192.168.1.1",
+        "https": true,
+        "insecure": true,
+        "password": "${var.asuswrt_password}",
+        "port": 8443,
+        "username": "${var.asuswrt_username}"
+      },
+      {
+        "alias": "ap_be86u",
+        "host": "192.168.1.2",
+        "https": true,
+        "insecure": true,
+        "password": "${var.asuswrt_password}",
+        "port": 8443,
+        "username": "${var.asuswrt_username}"
+      },
+      {
+        "alias": "ap_ax88u",
+        "host": "192.168.1.214",
+        "https": true,
+        "insecure": true,
+        "password": "${var.asuswrt_password}",
+        "port": 8443,
+        "username": "${var.asuswrt_username}"
+      }
+    ]
+  },
+  "resource": {
+    "asuswrt_dhcp_static_lease": {
+      "ax88u_ap": {
+        "hostname": "RT-AX88U-9BA0",
+        "ip": "192.168.1.214",
+        "mac": "24:4B:FE:D0:9B:A0",
+        "provider": "asuswrt.router"
+      },
+      "lease_173": {
+        "ip": "192.168.1.173",
+        "mac": "50:26:EF:29:70:EE",
+        "provider": "asuswrt.router"
+      },
+      "lease_43": {
+        "ip": "192.168.1.43",
+        "mac": "50:26:EF:28:F1:DE",
+        "provider": "asuswrt.router"
+      },
+      "lease_61": {
+        "ip": "192.168.1.61",
+        "mac": "48:DA:35:6F:61:BF",
+        "provider": "asuswrt.router"
+      },
+      "lease_90": {
+        "ip": "192.168.1.90",
+        "mac": "4C:B9:EA:97:90:5A",
+        "provider": "asuswrt.router"
+      },
+      "plex_host": {
+        "ip": "192.168.1.81",
+        "mac": "08:BF:B8:D4:59:7F",
+        "provider": "asuswrt.router"
+      }
+    },
+    "asuswrt_port_forward": {
+      "mario_kart_http": {
+        "external_port": "80",
+        "internal_ip": "192.168.1.81",
+        "internal_port": "30080",
+        "name": "Mario Kart HTTP",
+        "protocol": "TCP",
+        "provider": "asuswrt.router"
+      },
+      "mario_kart_https": {
+        "external_port": "443",
+        "internal_ip": "192.168.1.81",
+        "internal_port": "30443",
+        "name": "Mario Kart HTTPS",
+        "protocol": "TCP",
+        "provider": "asuswrt.router"
+      },
+      "minecraft_bedrock": {
+        "external_port": "30003",
+        "internal_ip": "192.168.1.81",
+        "internal_port": "30003",
+        "name": "Mineraft Bedrock",
+        "protocol": "UDP",
+        "provider": "asuswrt.router"
+      },
+      "minecraft_mc_router": {
+        "external_port": "30000",
+        "internal_ip": "192.168.1.81",
+        "internal_port": "30000",
+        "name": "Minecraft mc-router",
+        "protocol": "TCP",
+        "provider": "asuswrt.router"
+      },
+      "minecraft_tsmc_bedrock": {
+        "external_port": "30004",
+        "internal_ip": "192.168.1.81",
+        "internal_port": "30004",
+        "name": "The Storm Bedrock",
+        "protocol": "UDP",
+        "provider": "asuswrt.router"
+      },
+      "plex": {
+        "external_port": "32400",
+        "internal_ip": "192.168.1.81",
+        "internal_port": "32400",
+        "name": "Plex",
+        "protocol": "TCP",
+        "provider": "asuswrt.router"
+      }
+    },
+    "asuswrt_system": {
+      "ax88u": {
+        "hostname": "RT-AX88U-9BA0",
+        "ntp_server_0": "pool.ntp.org",
+        "provider": "asuswrt.ap_ax88u",
+        "timezone": "PST8DST"
+      },
+      "be86u": {
+        "hostname": "RT-BE86U-9E90",
+        "ntp_server_0": "pool.ntp.org",
+        "ntp_server_1": "time.nist.gov",
+        "provider": "asuswrt.ap_be86u",
+        "timezone": "PST8DST"
+      },
+      "router": {
+        "hostname": "RT-AX88U_Pro-74C0",
+        "ntp_server_0": "pool.ntp.org",
+        "ntp_server_1": "time.nist.gov",
+        "provider": "asuswrt.router",
+        "timezone": "PST8DST"
+      }
+    },
+    "asuswrt_wireless_network": {
+      "ax88u_wl0": {
+        "auth_mode": "psk2",
+        "band": 0,
+        "bandwidth": 0,
+        "channel": 0,
+        "crypto": "aes",
+        "hidden": false,
+        "provider": "asuswrt.ap_ax88u",
+        "ssid": "Jerred"
+      },
+      "ax88u_wl1": {
+        "auth_mode": "psk2",
+        "band": 1,
+        "bandwidth": 0,
+        "channel": 0,
+        "crypto": "aes",
+        "hidden": false,
+        "provider": "asuswrt.ap_ax88u",
+        "ssid": "Jerred"
+      },
+      "wl0": {
+        "auth_mode": "psk2sae",
+        "band": 0,
+        "bandwidth": 1,
+        "channel": 6,
+        "crypto": "aes",
+        "hidden": false,
+        "provider": "asuswrt.router",
+        "ssid": "Jerred"
+      },
+      "wl1": {
+        "auth_mode": "psk2sae",
+        "band": 1,
+        "bandwidth": 3,
+        "channel": 149,
+        "crypto": "aes",
+        "hidden": false,
+        "provider": "asuswrt.router",
+        "ssid": "Jerred"
+      }
+    }
+  },
+  "terraform": {
+    "backend": {
+      "s3": {
+        "bucket": "homelab-tofu-state",
+        "endpoints": { "s3": "https://seaweedfs-s3.tailnet-1a49.ts.net" },
+        "key": "asuswrt/terraform.tfstate",
+        "region": "auto",
+        "skip_credentials_validation": true,
+        "skip_metadata_api_check": true,
+        "skip_region_validation": true,
+        "skip_requesting_account_id": true,
+        "skip_s3_checksum": true,
+        "use_lockfile": true,
+        "use_path_style": true
+      }
+    },
+    "required_providers": {
+      "asuswrt": { "source": "shepherdjerred/asuswrt", "version": "0.1.0" }
+    },
+    "required_version": ">= 1.6.0"
+  },
+  "variable": {
+    "asuswrt_password": {
+      "description": "Admin password for the Asus routers/APs (same on all three). Set via TF_VAR_asuswrt_password.",
+      "sensitive": true,
+      "type": "string"
+    },
+    "asuswrt_username": {
+      "description": "Admin username for the Asus routers/APs (same on all three). Set via TF_VAR_asuswrt_username.",
+      "type": "string"
+    }
+  }
+}

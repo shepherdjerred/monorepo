@@ -3,6 +3,14 @@
 Tracks configuration of the three home Asus devices as OpenTofu state using the
 custom `terraform-provider-asuswrt` (built from `packages/terraform-provider-asuswrt`).
 
+The configuration is synthesized from
+`packages/homelab-cdktn/src/stacks/asuswrt.ts`. To change a device setting,
+edit it there, run `bun run --cwd packages/homelab-cdktn synth` and commit the
+updated `main.tf.json`; never edit that file by hand. The stack's TypeScript
+bindings are generated from the same locally built provider, so
+`bunx turbo run generate --filter=@homelab/cdktn` needs Go as well as `tofu`
+and Node.
+
 | Alias      | Device       | IP            | Mode   | Managed here                                                            |
 | ---------- | ------------ | ------------- | ------ | ----------------------------------------------------------------------- |
 | `router`   | RT-AX88U Pro | 192.168.1.1   | router | system, DHCP static leases, port-forwards, wireless wl0/wl1             |
