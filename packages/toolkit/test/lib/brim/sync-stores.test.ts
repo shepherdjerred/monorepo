@@ -3,6 +3,11 @@ import { Database } from "bun:sqlite";
 import { appendFile, readFile, utimes, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
+import {
+  fileKeyFor,
+  generationPrefix,
+  readLocalManifest,
+} from "#lib/brim/sync/manifest.ts";
 import { readMirrorIndex } from "#lib/brim/sync/mirror-index.ts";
 import { createMemoryObjectStore } from "#lib/brim/sync/object-store.ts";
 import { pullArchive } from "#lib/brim/sync/pull.ts";
@@ -440,5 +445,65 @@ describe("brim sync agent stores: push, pull and history", () => {
       expect(result.error).toBeNull();
       expect(result.available).toBe(false);
     }
+  });
+});
+
+describe("brim sync agent stores: failed uploads", () => {
+  test("a failed replacement upload keeps the archived generation", async () => {
+    const store = createMemoryObjectStore();
+    const crypto = await keys();
+    const laptop = await machine("laptop");
+    const desktop = await machine("desktop");
+    const relPath = "sessions/%2Ftest%2Fproject/grok-session-1/summary.json";
+    const mirrorFile = mirrored(desktop, "laptop", `grok/${relPath}`);
+    await write(laptop.home, `${GROK}/updates.jsonl`, '{"a":1}\n');
+    const summary = await write(
+      laptop.home,
+      `${GROK}/summary.json`,
+      JSON.stringify({ title: "first" }),
+    );
+    await pushArchive(pushOptions(laptop, store, crypto));
+    await pull(desktop, crypto, store);
+    const entryOf = async () => {
+      const manifest = await readLocalManifest(laptop.paths.manifest);
+      return manifest?.files.find((file) => file.relPath === relPath);
+    };
+    const before = await entryOf();
+    expect(before?.gen).toBe(0);
+
+    await writeFile(summary, JSON.stringify({ title: "second" }));
+    const next = generationPrefix("laptop", fileKeyFor("grok", relPath), 1);
+    const failing = {
+      ...store,
+      put: (key: string, body: Uint8Array) =>
+        key.startsWith(next)
+          ? Promise.reject(new Error("simulated upload failure"))
+          : store.put(key, body),
+    };
+    const failed = await pushArchive(
+      pushOptions(laptop, store, crypto, { store: failing }),
+    );
+    expect(failed.errors).toEqual([
+      { relPath, message: "simulated upload failure" },
+    ]);
+    expect(await entryOf()).toEqual(before);
+    const manifest = await readLocalManifest(laptop.paths.manifest);
+    expect(manifest?.retired).toEqual([]);
+    await pull(desktop, crypto, store);
+    expect(await readFile(mirrorFile, "utf8")).toBe(
+      JSON.stringify({ title: "first" }),
+    );
+
+    const retried = await pushArchive(pushOptions(laptop, store, crypto));
+    expect(retried.errors).toEqual([]);
+    expect(retried.uploadedSegments).toBe(1);
+    const replaced = await entryOf();
+    expect(replaced?.gen).toBe(1);
+    await pull(desktop, crypto, store);
+    expect(await readFile(mirrorFile, "utf8")).toBe(
+      JSON.stringify({ title: "second" }),
+    );
+    const old = generationPrefix("laptop", fileKeyFor("grok", relPath), 0);
+    expect(await store.listKeys(old)).toEqual([]);
   });
 });

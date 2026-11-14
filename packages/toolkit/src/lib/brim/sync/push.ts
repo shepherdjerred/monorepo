@@ -304,8 +304,15 @@ function sameArchive(
 
 /**
  * Archives a JSON or SQLite file whole. Content that matches the archive only
- * refreshes the mtime; anything else starts a new generation and retires the
- * old one, which pull rebuilds atomically.
+ * refreshes the mtime; anything else is uploaded as a new generation, which
+ * pull rebuilds atomically.
+ *
+ * The new generation is staged off the manifest. Only once every segment is
+ * sealed and stored does it replace the entry and retire the old generation,
+ * together, so a failed upload leaves the archived file and its entry exactly
+ * as they were and the next push retries. Segments a failed attempt stored
+ * belong to a generation no manifest names; a retry overwrites them, and the
+ * purge of that generation, once it is superseded, deletes any left over.
  */
 async function archiveReplacement(
   run: PushRun,
@@ -315,42 +322,47 @@ async function archiveReplacement(
   const limit = run.options.segmentLimitBytes ?? 64 * MIB;
   const { bytes, matches } = await replacementBytes(source);
   const id = entryId(source.tool, source.relPath);
-  let entry = entries.get(id);
-  if (entry === undefined) {
-    entry = freshEntry(source, 0);
-    run.manifest.files.push(entry);
-    entries.set(id, entry);
-  } else if (sameArchive(entry, bytes, limit)) {
+  const entry = entries.get(id);
+  if (entry !== undefined && sameArchive(entry, bytes, limit)) {
     entry.mtimeMs = source.mtimeMs;
     entry.deletedAt = null;
     run.dirty = true;
     return { changed: false, rewritten: false };
-  } else if (entry.segments.length > 0) {
-    run.manifest.retired.push({ fileKey: entry.fileKey, gen: entry.gen });
-    Object.assign(entry, freshEntry(source, entry.gen + 1));
   }
-  entry.deletedAt = null;
+  const supersedes = entry !== undefined && entry.segments.length > 0;
+  const staged = freshEntry(
+    source,
+    entry === undefined ? 0 : entry.gen + (supersedes ? 1 : 0),
+  );
   for (const { offset, end } of segmentBounds(bytes.length, limit)) {
     const segment = bytes.subarray(offset, end);
     await run.options.store.put(
-      segmentKey(run.options.machineId, entry.fileKey, entry.gen, offset),
+      segmentKey(run.options.machineId, staged.fileKey, staged.gen, offset),
       await run.options.seal(segment),
     );
-    entry.segments.push({
+    staged.segments.push({
       offset,
       length: segment.length,
       sha256: sha256Hex(segment),
     });
-    run.uploadedSegments += 1;
-    run.uploadedBytes += segment.length;
-    run.bytesSinceCommit += segment.length;
   }
-  run.redactedSecrets += matches.length;
-  entry.size = bytes.length;
-  entry.mtimeMs = source.mtimeMs;
-  entry.tailSha256 = sha256Hex(
+  staged.size = bytes.length;
+  staged.tailSha256 = sha256Hex(
     bytes.subarray(Math.max(0, bytes.length - TAIL_BYTES)),
   );
+  if (entry === undefined) {
+    run.manifest.files.push(staged);
+    entries.set(id, staged);
+  } else {
+    if (supersedes) {
+      run.manifest.retired.push({ fileKey: entry.fileKey, gen: entry.gen });
+    }
+    Object.assign(entry, staged);
+  }
+  run.uploadedSegments += staged.segments.length;
+  run.uploadedBytes += bytes.length;
+  run.bytesSinceCommit += bytes.length;
+  run.redactedSecrets += matches.length;
   run.dirty = true;
   if (run.bytesSinceCommit >= (run.options.commitEveryBytes ?? 256 * MIB)) {
     await commit(run);
