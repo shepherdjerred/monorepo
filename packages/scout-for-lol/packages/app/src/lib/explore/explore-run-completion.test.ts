@@ -1,115 +1,59 @@
 import { describe, expect, test } from "vitest";
+import { z } from "zod";
 import {
-  EXPLORE_INTERRUPTED_CAVEAT,
   ExploreMessageSchema,
-  type ExploreMessage,
+  ExploreRunOutcomeSchema,
 } from "@scout-for-lol/data";
+import reducerFixture from "@scout-for-lol/data/scout-client/desktop-fixtures/explore-turn-reducer.json" with { type: "json" };
 import {
   resolveExploreRunCompletion,
   shouldClearExploreRunMarker,
 } from "#src/lib/explore/explore-run-completion.ts";
 
-const QUESTION_ID = "11111111-1111-4111-8111-111111111111";
-const OLD_ANSWER_ID = "22222222-2222-4222-8222-222222222222";
-const NEW_ANSWER_ID = "33333333-3333-4333-8333-333333333333";
-const OTHER_OLD_ANSWER_ID = "44444444-4444-4444-8444-444444444444";
-
-function answer(
-  id: string,
-  caveats: string[] = [],
-  siblingIds: string[] = [id],
-): ExploreMessage {
-  return ExploreMessageSchema.parse({
-    id,
-    role: "assistant",
-    parentId: QUESTION_ID,
-    content: "Answer",
-    caveats,
-    siblingIds,
-    createdAt: "2026-08-20T00:00:00.000Z",
-  });
-}
+/**
+ * Completion cases shared with Scout Desktop's Rust port
+ * (`scout-explore-client`), which runs the same file.
+ */
+const CompletionCaseSchema = z.strictObject({
+  name: z.string().min(1),
+  run: z.strictObject({
+    questionMessageId: z.uuid(),
+    versionCountAtStart: z.number().int().nonnegative(),
+  }),
+  outcome: ExploreRunOutcomeSchema,
+  finalMessageId: z.uuid().nullable(),
+  messages: z.array(ExploreMessageSchema),
+  expect: z.strictObject({
+    markerState: z.enum(["completed", "failed"]).nullable(),
+    answerVisible: z.boolean(),
+  }),
+  clear: z
+    .strictObject({
+      displayedConversationId: z.uuid().nullable(),
+      runConversationId: z.uuid(),
+      expect: z.boolean(),
+    })
+    .optional(),
+});
+const { completions } = z
+  .looseObject({ completions: z.array(CompletionCaseSchema).min(1) })
+  .parse(reducerFixture);
 
 describe("resolveExploreRunCompletion", () => {
-  test("does not mistake the old answer for a failed regeneration", () => {
-    expect(
-      resolveExploreRunCompletion({
-        run: {
-          questionMessageId: QUESTION_ID,
-          versionCountAtStart: 2,
-        },
-        outcome: "failed",
-        finalMessageId: null,
-        messages: [
-          answer(OTHER_OLD_ANSWER_ID, [], [OLD_ANSWER_ID, OTHER_OLD_ANSWER_ID]),
-        ],
-      }),
-    ).toEqual({ markerState: "failed", answerVisible: false });
-  });
-
-  test("recognizes a persisted answer when completion raced reconnection", () => {
-    expect(
-      resolveExploreRunCompletion({
-        run: {
-          questionMessageId: QUESTION_ID,
-          versionCountAtStart: 1,
-        },
-        outcome: "interrupted",
-        finalMessageId: null,
-        messages: [answer(NEW_ANSWER_ID, [], [OLD_ANSWER_ID, NEW_ANSWER_ID])],
-      }),
-    ).toEqual({ markerState: "completed", answerVisible: true });
-  });
-
-  test("an interrupted caveat remains a failure even after persistence", () => {
-    expect(
-      resolveExploreRunCompletion({
-        run: {
-          questionMessageId: QUESTION_ID,
-          versionCountAtStart: 0,
-        },
-        outcome: "interrupted",
-        finalMessageId: NEW_ANSWER_ID,
-        messages: [answer(NEW_ANSWER_ID, [EXPLORE_INTERRUPTED_CAVEAT])],
-      }),
-    ).toEqual({ markerState: "failed", answerVisible: true });
-  });
-
-  test("a stopped run without a persisted answer is not a failure", () => {
-    expect(
-      resolveExploreRunCompletion({
-        run: {
-          questionMessageId: QUESTION_ID,
-          versionCountAtStart: 0,
-        },
-        outcome: "stopped",
-        finalMessageId: null,
-        messages: [],
-      }),
-    ).toEqual({ markerState: null, answerVisible: false });
-  });
-
-  test("keeps a completion marker when another branch is visible", () => {
-    const completion = resolveExploreRunCompletion({
-      run: {
-        questionMessageId: QUESTION_ID,
-        versionCountAtStart: 1,
-      },
-      outcome: "succeeded",
-      finalMessageId: NEW_ANSWER_ID,
-      messages: [answer(OLD_ANSWER_ID)],
-    });
-
-    expect(completion).toEqual({
-      markerState: "completed",
-      answerVisible: false,
-    });
-    expect(
-      shouldClearExploreRunMarker({
-        ...completion,
-        displayedConversationId: "conversation-a",
-        runConversationId: "conversation-a",
-      }),
-    ).toBe(false);
-  });
+  test.each(completions.map((completion) => [completion.name, completion]))(
+    "%s",
+    (_name, completion) => {
+      const resolved = resolveExploreRunCompletion(completion);
+      expect(resolved).toEqual(completion.expect);
+      if (completion.clear !== undefined) {
+        expect(
+          shouldClearExploreRunMarker({
+            ...resolved,
+            displayedConversationId: completion.clear.displayedConversationId,
+            runConversationId: completion.clear.runConversationId,
+          }),
+        ).toBe(completion.clear.expect);
+      }
+    },
+  );
 });

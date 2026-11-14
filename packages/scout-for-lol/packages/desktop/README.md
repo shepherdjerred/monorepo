@@ -24,10 +24,13 @@ bun run test
 bun run lint
 ```
 
-The workspace has five crates:
+The workspace has six crates:
 
 - `scout-client-core`: LCU access, protocol, outbox, credentials, and
-  diagnostics.
+  diagnostics. `desktop_api` holds the Explore REST envelopes the pairing
+  flow and the Explore client share.
+- `scout-explore-client`: the client for Explore chat, with no UI
+  dependency (see "Explore client").
 - `scout-client-runtime`: the UI-independent collection runtime (pairing,
   observation, upload, history, Clash, and start-at-login registration).
 - `scout-desktop-ipc`: the JSON-lines messages between the supervisor and the
@@ -227,6 +230,49 @@ Preview packages' ingestion flag is on for everyone on beta. Production enables 
 then the owner's server, then everyone. Before the first step every device
 route answers `403 scout_client_disabled`; after it, a device whose owner no
 step reaches yet is refused as `401 unauthorized`, as in beta.
+
+### Explore client
+
+`scout-explore-client` talks to the authenticated Explore routes under
+`/api/scout-client/v1/explore/`, acting as the device's owning Discord user.
+Its contract is `data/src/scout-client/desktop-api.contract.json`, with
+golden bodies in `data/src/scout-client/desktop-fixtures/`.
+
+- `contract`: `build.rs` generates the route table (`Route`), the contract
+  version and header, the stream event names, and each refusal's HTTP status
+  from the contract file. Refusal codes are matched against
+  `scout_client_core::desktop_api::DesktopApiErrorCode` by name, so a code
+  added to or removed from the contract does not compile until the enum
+  follows.
+- `model`: strict serde types (`deny_unknown_fields`) for transcript
+  messages, traces, query results, match and loadout cards, and every
+  `runs/stream` event. Fields the Zod schemas default are defaulted here too.
+  A chart snapshot is carried without interpretation, because the window
+  shows the PNG the server renders from it.
+- `ExploreClient`: one typed method per Explore route. It reads the device
+  credential from the operating-system store, sends
+  `X-Scout-Desktop-Contract` on every request, and maps every refusal to
+  `ExploreClientError::Refused` with a `Recovery` (pair again, sign in on
+  the web, update the app, feature off, retry later, and so on). A 426 is
+  `UpgradeRequired`; a refusal at a status the contract does not give it is
+  `Unexpected`.
+- `stream`: `ExploreClient::follow_run` reads the SSE stream on its own HTTP
+  client (5-second connect timeout, 30-second idle read timeout, no total
+  timeout). Every response starts with a complete snapshot, so a lost
+  connection, an idle timeout or a corrupt frame reconnects with jittered
+  backoff from 0.5 to 15 seconds without duplicating state. It stops on
+  `done`; a 404 asks `runs/outcome` how the run ended; 401 and
+  `scope_required` end in `RePairRequired`, a 426 in `UpgradeRequired`, and
+  other permanent refusals such as `feature_disabled` in `Refused`. Frames
+  that stay corrupt across three fresh connections fail loudly.
+- `reducer`: a pure port of the web's turn reducer
+  (`app/src/lib/explore/explore-turn-state.ts` and
+  `explore-run-completion.ts`), plus `TurnView` for the error, outcome, title
+  and quota the web keeps in its page hook. Both suites run the sequences in
+  `desktop-fixtures/explore-turn-reducer.json`.
+
+The REST and stream tests run against a scripted loopback HTTP server in
+`crates/scout-explore-client/tests/http`.
 
 ## Release profiles
 

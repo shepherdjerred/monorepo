@@ -1,0 +1,31 @@
+[package]
+name = "scout-explore-client"
+description = "Scout Desktop's client for Explore chat: REST, the run stream, and the turn reducer"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+chrono.workspace = true
+fastrand.workspace = true
+futures-util.workspace = true
+reqwest.workspace = true
+scout-client-core = { path = "../scout-client-core" }
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+url.workspace = true
+uuid.workspace = true
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["net"] }
+
+[build-dependencies]
+serde.workspace = true
+serde_json.workspace = true
+
+[lints]
+workspace = true

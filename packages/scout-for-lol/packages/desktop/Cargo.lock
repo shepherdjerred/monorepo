@@ -7255,6 +7255,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "scout-explore-client"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "fastrand",
+ "futures-util",
+ "reqwest",
+ "scout-client-core",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.21",
+ "tokio",
+ "url",
+ "uuid",
+]
+
+[[package]]
 name = "screencapturekit"
 version = "0.2.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"

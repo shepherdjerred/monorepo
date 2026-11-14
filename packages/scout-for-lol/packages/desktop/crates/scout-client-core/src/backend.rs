@@ -27,6 +27,31 @@ pub struct ScoutBackendClient {
     origin: Url,
 }
 
+/// Validate and normalize a Scout backend origin: HTTPS, or loopback HTTP in
+/// local development, with no query or fragment and the path cleared.
+///
+/// The normalized form is also what scopes the device credential, so every
+/// client of the same backend reads the same credential slot.
+///
+/// # Errors
+///
+/// Returns [`BackendError::Origin`] for anything that is not such an origin.
+pub fn backend_origin(origin: &str) -> Result<Url, BackendError> {
+    let mut parsed = Url::parse(origin).map_err(|_| BackendError::Origin)?;
+    let is_loopback = parsed
+        .host_str()
+        .is_some_and(|host| matches!(host, "localhost" | "127.0.0.1" | "::1"));
+    if parsed.cannot_be_a_base()
+        || parsed.query().is_some()
+        || parsed.fragment().is_some()
+        || (parsed.scheme() != "https" && !(parsed.scheme() == "http" && is_loopback))
+    {
+        return Err(BackendError::Origin);
+    }
+    parsed.set_path("");
+    Ok(parsed)
+}
+
 /// Durable replay relay receipt.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -86,18 +111,7 @@ impl ScoutBackendClient {
     /// Returns [`BackendError::Origin`] for non-origin URLs, insecure remote
     /// HTTP, or a client-construction failure.
     pub fn new(origin: &str) -> Result<Self, BackendError> {
-        let mut parsed = Url::parse(origin).map_err(|_| BackendError::Origin)?;
-        let is_loopback = parsed
-            .host_str()
-            .is_some_and(|host| matches!(host, "localhost" | "127.0.0.1" | "::1"));
-        if parsed.cannot_be_a_base()
-            || parsed.query().is_some()
-            || parsed.fragment().is_some()
-            || (parsed.scheme() != "https" && !(parsed.scheme() == "http" && is_loopback))
-        {
-            return Err(BackendError::Origin);
-        }
-        parsed.set_path("");
+        let parsed = backend_origin(origin)?;
         let http = Client::builder()
             .connect_timeout(Duration::from_secs(5))
             .timeout(Duration::from_secs(15))
