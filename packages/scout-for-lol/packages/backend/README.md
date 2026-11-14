@@ -1067,6 +1067,23 @@ own receipt so a retry still archives it. It is evidence, not lake input:
 `LakeArtifactKind` excludes it, so it has no staging receipt and is never
 reported as lake backlog.
 
+`scripts/s3/scout-client-fixtures.ts` turns an archived bundle into a redacted
+fixture, `testdata/lcu/lcu-postgame-<name>.json`, shaped like
+`lcu-postgame-ranked.json`. It strips credentials with
+`withoutScoutClientCredentials`, then maps every player to a stable fake UUID,
+`PlayerN` and `TEST`, and refuses to write if a real identity survives. Run it
+through the service-account wrapper:
+
+```bash
+scripts/onepassword/with-service-account.sh bun run \
+  packages/scout-for-lol/packages/backend/scripts/s3/scout-client-fixtures.ts \
+  --bucket scout-beta --aws-profile seaweedfs \
+  --match-id NA1_5663121007 --date 2026-10-18 --name classic
+```
+
+`--date` is the `games/YYYY/MM/DD/` partition of the match. Pass
+`--observation-key` to read the raw archived observation instead of the bundle.
+
 ## The prematch path
 
 The `prematch-*` modules serve `scoutPrematchDiscoveryWorkflow` and
