@@ -4,9 +4,10 @@ Static Astro site served at `https://public.ts-mc.net` from the `landing-pages`
 bucket. It is the shared host for landing and campaign pages, such as ad
 destinations, across projects. Each page is an _item_.
 
-| Item        | URL                                   | Purpose                                |
-| ----------- | ------------------------------------- | -------------------------------------- |
-| `the-storm` | `https://public.ts-mc.net/the-storm/` | Pinterest ad destination for The Storm |
+| Item        | URL                                         | Purpose                                          |
+| ----------- | ------------------------------------------- | ------------------------------------------------ |
+| `the-storm` | `https://public.ts-mc.net/the-storm/`       | Pinterest ad destination for The Storm           |
+| `the-storm` | `https://public.ts-mc.net/the-storm/about/` | Server details for visitors from community posts |
 
 The root lists the items and is not indexed. `404.astro` covers unknown paths.
 
@@ -29,32 +30,35 @@ The root lists the items and is not indexed. `404.astro` covers unknown paths.
 `site_key: "landing-pages"` and the item's `page_key`. Campaign parameters
 (`utm_*`, Pinterest `epik`) stay in the URL, and PostHog records them as-is.
 
-The Storm item adds:
+The Storm pages share:
 
 - An address card with a Java/Bedrock toggle and one copy button for the
   selected edition. Phones and tablets open on Bedrock. Java shows "26.3 &
   older": the server runs 26.3, and ViaBackwards admits older clients. Bedrock
   says "latest version", because its support follows the live Geyser build.
-- Join steps and a console section (`#consoles`) live on the page itself, so
-  visitors from an ad don't have to leave for the docs. Consoles have no Add
-  Server button, so the section walks through BedrockConnect's DNS method.
-- Addresses come from `packages/storm-forum/config/forum.json`. The build fails
-  if the Java version stops matching the server image, the Discord invite stops
+- Addresses from `packages/storm-forum/config/forum.json`. The build fails if
+  the Java version stops matching the server image, the Discord invite stops
   matching the docs config, or the BedrockConnect DNS addresses stop matching
   the docs join page.
 - PostHog events `storm_server_address_copied` and `storm_edition_selected`
   (`edition`), plus `storm_discord_clicked`, `storm_docs_clicked`,
   `storm_join_steps_clicked` and `storm_console_steps_clicked` (`placement`).
-- `public/the-storm/pinterest.js`, which loads Scout's shared advertiser tag
-  `2612722784413`, the same one used by the forum portal. It skips visitors
-  with Do Not Track or Global Privacy Control set. It sends `pagevisit`, one
-  `lead` the first time an address is copied, and one `custom`
-  `storm_discord_clicked`.
+
+Both Storm pages contain join steps and a console section (`#consoles`), so
+visitors do not have to leave for the docs. The original landing page also
+loads `public/the-storm/pinterest.js`, Scout's shared advertiser tag
+`2612722784413`. The tag skips visitors with Do Not Track or Global Privacy
+Control set. It sends `pagevisit`, one `lead` the first time an address is
+copied, and one `custom` `storm_discord_clicked`. The about page does not load
+the advertiser tag.
+
+Both pages report `page_key: "the-storm"`. Tell them apart in PostHog by path,
+or by `placement`: every about-page value starts with `about-`.
 
 Ad destination URLs use
 `https://public.ts-mc.net/the-storm/?utm_source=pinterest&utm_medium=paid&utm_campaign=the-storm&utm_content=<two-digit-pin-number>`.
 
-## The Storm item
+## The Storm landing page
 
 Copy stays casual and lowercase, like the ads; visitors arrive from Pinterest,
 not from the docs. The design follows the friendly Pinterest set: Outfit and
@@ -70,6 +74,27 @@ before the photo, so it is on an ad visitor's first screen; wider screens keep
 the content in one centred `--page` column. Styles are inlined, and fonts come
 from the installed Fontsource files through Astro's font API with
 metric-matched fallbacks, so text paints immediately without a later shift.
+
+## The Storm about page
+
+The about page is for visitors who arrive from community posts and want the
+facts before joining. It presents The Storm as vanilla survival with
+quality-of-life features. Claims and automatic locks are the primary
+protections; towns, quests, the economy, skills, and minigames are optional.
+Its facts and FAQ link to the owning player docs rather than duplicating full
+reference material.
+
+Copy is sentence case and reads like the player docs: full sentences, "you"
+and "we", and facts taken from the docs page each answer links to. Section
+headings stand alone, with no label above them and no tag line.
+
+The separate layout and stylesheet use forest and charcoal surfaces, local
+Outfit, native FAQ disclosures, and one responsive hero screenshot. It supports
+light and dark color preferences, reduced motion, and forced colors, and keeps
+the existing address-card and PostHog behavior without loading Pinterest.
+
+Astro drops the whitespace when a line of text ends just before an inline
+element or expression on the next line, so those lines end with `{" "}`.
 
 ## Development
 
