@@ -29,6 +29,7 @@ import {
 import {
   readMovieSubtitleReceiptV4,
   assertMovieSubtitleReceiptV4,
+  assertMovieSubtitleCandidateVersionV4,
 } from "#infrastructure/movie-editions/subtitle-receipt.ts";
 import {
   MovieSubtitleInstallV4Schema,
@@ -99,6 +100,8 @@ export async function installMovieSubtitlesV4(
       .safeParse(subtitle.matchingEvidence).success
   )
     throw new FileGuardError("subtitle_replacement_review_required");
+  if (subtitle.state === "validated")
+    assertMovieSubtitleCandidateVersionV4(before, target);
   const authorize = async (tx: Transaction) => {
     await assertPublicationUnfenced(tx, [input.scope.mediaId], [input.assetId]);
     await context.checkpoint("movie-subtitle-authorization");

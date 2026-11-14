@@ -21,6 +21,11 @@ import {
 import { assertNoSubtitleReplacement } from "#infrastructure/subtitle-replacement/locks.ts";
 import { fileOperations } from "#automation/files/file-operations.ts";
 import { requirePublicationExecution } from "#automation/publication-proof/invocation.ts";
+import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import {
+  authorizeMovieSubtitleSpeechV4,
+  movieSubtitleSpeechOperation,
+} from "./movie-speech-authority.ts";
 
 /** Read-only video measurement and candidate-only evidence; never publishes or changes the provider's forced label. */
 export async function prepareSubtitleSpeechV1(
@@ -66,9 +71,28 @@ export async function prepareSubtitleSpeechV1(
   );
   const asset = subtitle.asset;
   const mediaIds = asset.coverage.map((c) => c.mediaId);
+  const movie = movieSubtitleSpeechOperation(operation, subtitle);
+  const budget =
+    context.movieManagement?.budget ?? new PublicationAuthorityReadBudget();
+  let movieFreshness:
+    Awaited<ReturnType<typeof authorizeMovieSubtitleSpeechV4>> | undefined;
+  if (movie !== null) budget.consume(3 + asset.coverage.length);
   const authorize = async () => {
     execution.assertActive();
     execution.signal.throwIfAborted();
+    if (movie !== null) {
+      movieFreshness?.assertActive();
+      const current = await authorizeMovieSubtitleSpeechV4(context, {
+        target: movie,
+        subtitle,
+        asset,
+        budget,
+        execution,
+      });
+      movieFreshness ??= current;
+      movieFreshness.assertActive();
+      return;
+    }
     if (
       !(await context.enabled.acquisition()) ||
       !asset.owned ||
@@ -115,6 +139,7 @@ export async function prepareSubtitleSpeechV1(
   const checkpoint = async () => {
     execution.assertActive();
     execution.signal.throwIfAborted();
+    movieFreshness?.assertActive();
     await context.checkpoint("subtitle-speech-measurement");
   };
   // One full integrity read; subsequent checks retain that descriptor/ancestor identity, not a second hash.
@@ -219,6 +244,7 @@ function requireSpeechCandidate(
     | "qualityStatus"
     | "forced"
     | "content"
+    | "version"
   >,
   command: { assetId: string; targetAuthority: string; recoveryEpoch: number },
   evidence: Record<string, unknown>,
@@ -229,6 +255,7 @@ function requireSpeechCandidate(
     command.targetAuthority !== evidence["targetAuthority"] ||
     command.recoveryEpoch !== subtitle.ownershipEpoch ||
     subtitle.state !== "validated" ||
+    subtitle.version !== 0 ||
     subtitle.qualityStatus !== "accepted" ||
     (regularTarget && subtitle.forced !== null) ||
     subtitle.content === null

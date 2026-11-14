@@ -684,6 +684,13 @@ TV 96/movie 86 synchronization thresholds before installation or before an
 immutable replacement snapshot. Provider identity and source authorship remain
 separate from this timing proof.
 
+Movie speech preparation checks the stored V4 operation and its exact edition,
+current consent and access before and after measurement, retaining the original
+Activity capability and 100-record read budget. A measured candidate advances
+from version zero to one before installation. Installation receipts accept only
+the existing unmeasured zero-to-one transition or a prepared one-to-two
+transition with current video/caption checksums, speech and timing proof.
+
 Automatic improvements use the existing replacement preparation, physical
 review, swap, compensation and receipt coordinators. Distinct immutable
 automatic-candidate and policy-authorization events bind the real download,
@@ -2066,9 +2073,12 @@ OpenSubtitles uses `foreign_parts_only` and `hearing_impaired` filters
 Returned boolean metadata must prove each explicit target before a download
 quota claim; missing metadata is unknown. Plain requested languages and legacy
 language-only workflow inputs leave forced/HI unspecified. ASSRT, SubHD and
-Zimuku remain usable for those requests, but cannot prove explicit forced/HI
-requirements and report an unsupported target. They do not infer those flags
-from a filename. Exact release matching, human
+Zimuku retain unknown flags rather than inferring them from a filename. An
+admitted regular English or Simplified Chinese candidate with an unknown forced
+flag requires independent dialogue-coverage proof before satisfying an explicit
+regular target. Forced-only and constrained HI targets still require known
+metadata; unsupported adapters reject them before claiming quota. Exact release
+matching, human
 provenance, timing and Simplified Chinese checks still apply. Unresolved imported
 policy semantics remain protected even when a provider supports the individual
 flags.
