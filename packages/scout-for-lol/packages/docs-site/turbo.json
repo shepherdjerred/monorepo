@@ -37,6 +37,15 @@
         "$TURBO_ROOT$/packages/scout-for-lol/eslint.config.ts"
       ]
     },
+    /**
+     * `astro check` syncs content into the same `cacheDir` that `build` and
+     * `lint` write. The root `typecheck` task has no `build` dependency, so it
+     * raced them (`ENOENT ... data-store.json.tmp`, pipeline 16958). Ordering
+     * after `build` serialises the writers, as for `lint`.
+     */
+    "typecheck": {
+      "dependsOn": ["build", "^build", "^generate", "generate"]
+    },
     "test": {
       "dependsOn": ["build", "^build", "generate"]
     },
