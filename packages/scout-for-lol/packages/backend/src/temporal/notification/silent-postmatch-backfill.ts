@@ -10,7 +10,10 @@ import { createLogger } from "#src/logger.ts";
 import { resolveScoutObservedMatchContext } from "#src/temporal/match/match-context.ts";
 import { scoutNotificationRenderReceiptKind } from "#src/temporal/notification-lane/notification-receipts.ts";
 import { renderMatchNotificationArtifact } from "#src/temporal/notification-lane/notification-render.ts";
-import { resolveQueueTypeFromGame } from "@scout-for-lol/data";
+import {
+  canonicalMatchTournamentCode,
+  resolveQueueTypeFromGame,
+} from "@scout-for-lol/data";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { SCOUT_MATCH_RECEIPT_KINDS } from "@scout-for-lol/temporal/match-receipts";
 import type { ScoutMatchRef } from "@scout-for-lol/temporal/pipeline-contracts";
@@ -151,7 +154,7 @@ export async function backfillSilentPostmatchArtifact(
     context.matchData.info.queueId,
     context.matchData.info.gameMode,
     context.matchData.info.gameType,
-    context.matchData.info.tournamentCode,
+    canonicalMatchTournamentCode(context.matchData),
   );
   const { deliverable } = await resolvePostmatchDeliveryChannels({
     puuids: context.observedPuuids,

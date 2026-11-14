@@ -1,5 +1,8 @@
 import type { LeaguePuuid, QueueType } from "@scout-for-lol/data";
-import { resolveQueueTypeFromGame } from "@scout-for-lol/data";
+import {
+  canonicalMatchTournamentCode,
+  resolveQueueTypeFromGame,
+} from "@scout-for-lol/data";
 import type {
   MatchNotificationIntentRecord,
   NotificationIntentRecord,
@@ -51,7 +54,7 @@ async function readSubjects(
       context.matchData.info.queueId,
       context.matchData.info.gameMode,
       context.matchData.info.gameType,
-      context.matchData.info.tournamentCode,
+      canonicalMatchTournamentCode(context.matchData),
     ),
   };
 }

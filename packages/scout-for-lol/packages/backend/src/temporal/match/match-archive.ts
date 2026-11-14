@@ -1,4 +1,5 @@
 import { ApplicationFailure } from "@temporalio/common";
+import { canonicalMatchCreatedAt } from "@scout-for-lol/data";
 import {
   admitMatchEvidence,
   admittedDeliveryMode,
@@ -39,7 +40,7 @@ import {
   archiveMatchReceipted,
   type ReceiptedArchiveResult,
 } from "#src/report-lake/receipted-archive.ts";
-import { readSelectedLocalCanonicalMatch } from "#src/scout-client/canonical-match.ts";
+import { readSelectedCanonicalMatch } from "#src/scout-client/canonical-match.ts";
 import { durableCommit } from "#src/temporal/match/match-commits.ts";
 import {
   resolveScoutMatchContext,
@@ -164,8 +165,10 @@ async function archiveMatchArtifact(
 }
 
 /**
- * The Scout Client bundle a client-sourced match was converted from,
- * archived beside the match — or `null` for a match whose result is Riot's.
+ * The Scout Client upload a client-sourced match was converted from — a
+ * history bundle, or the end-of-game block a frozen end-of-game record came
+ * from — archived beside the match, or `null` for a match whose result is
+ * Riot's.
  *
  * Gated by its own receipt rather than the match's, so a run that crashed
  * between the two writes still archives the bundle on its retry.
@@ -184,13 +187,13 @@ async function archiveClientBundleArtifact(
     include: { sourceObservation: true },
   });
   if (selected === null) return null;
-  const match = await readSelectedLocalCanonicalMatch(riotMatchId);
-  if (match === null) return null;
+  const record = await readSelectedCanonicalMatch(riotMatchId);
+  if (record === null) return null;
   return archivedArtifactFrom(
     await archiveClientBundleReceipted({
       matchId: riotMatchId,
       payload: selected.sourceObservation.payload,
-      gameCreatedAt: new Date(match.info.gameCreation),
+      gameCreatedAt: new Date(canonicalMatchCreatedAt(record.match)),
       observationId: selected.sourceObservationId,
     }),
     riotMatchId,
@@ -423,7 +426,9 @@ export async function commitMatchObservation(
     matchDataSource: context.matchDataSource,
     owner: { kind: "temporal-v2" },
     promotion: null,
-    gameCreatedAt: isoInstantFromEpochMs(context.matchData.info.gameCreation),
+    gameCreatedAt: isoInstantFromEpochMs(
+      canonicalMatchCreatedAt(context.matchData),
+    ),
     observedAt: toIsoInstant(new Date()),
     artifacts: {
       match:

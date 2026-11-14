@@ -1,3 +1,4 @@
+import { completeMatchOf } from "@scout-for-lol/data";
 import configuration from "#src/configuration.ts";
 import { finalizeManagedCustomResult } from "#src/customs/riot-results.ts";
 import { prisma } from "#src/database/index.ts";
@@ -92,19 +93,27 @@ export async function reconcileProcessedClientBinding(
   }
 
   const context = await resolveScoutMatchContext(riotMatchId);
-  await finalizeManagedCustomResult(
-    prisma,
-    context.matchData,
-    context.matchDataSource,
-  );
+  // A game frozen as an end-of-game record has no complete match: a managed
+  // custom result cannot project from it (the match stage refused it), and a
+  // duel has no timeline to read, so the duel stage records its typed review.
+  const complete = completeMatchOf(context.matchData);
+  if (complete !== null)
+    await finalizeManagedCustomResult(
+      prisma,
+      complete,
+      context.matchDataSource,
+    );
   if (state.state.policy !== "FULL") return true;
 
   if (await duelMatchNeedsTimeline(context.matchData)) {
-    const timeline = await fetchTimelineForDuelProgression(
-      context.matchData,
-      context.riotMatchId,
-      context.trackedPlayers,
-    );
+    const timeline =
+      complete === null
+        ? undefined
+        : await fetchTimelineForDuelProgression(
+            complete,
+            context.riotMatchId,
+            context.trackedPlayers,
+          );
     await processDuelResult(
       context.matchData,
       timeline,

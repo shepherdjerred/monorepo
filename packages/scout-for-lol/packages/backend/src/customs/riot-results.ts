@@ -5,6 +5,7 @@ import {
   CustomNightStateSchema,
   CustomTeamSchema,
   CustomWinnerSchema,
+  type CanonicalMatch,
   type RawMatch,
 } from "@scout-for-lol/data";
 import { ApplicationFailure } from "@temporalio/common";
@@ -31,7 +32,7 @@ const observedCustomGameInclude = {
  */
 export async function findObservedCustomGame(
   client: ExtendedPrismaClient,
-  match: RawMatch,
+  match: Pick<CanonicalMatch, "metadata">,
 ) {
   const matchId = match.metadata.matchId;
   const bound = await client.customGame.findFirst({

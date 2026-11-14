@@ -3,11 +3,10 @@ import { z } from "zod";
 import {
   CanonicalMatchRecordSchema,
   RawCurrentGameInfoSchema,
-  RawMatchSchema,
   RawTimelineSchema,
+  type CanonicalMatch,
   type CanonicalMatchRecord,
   type RawCurrentGameInfo,
-  type RawMatch,
   type RawTimeline,
 } from "@scout-for-lol/data";
 import { Prisma } from "#generated/prisma/client/index.js";
@@ -561,25 +560,32 @@ async function acquireFence(
   }
 }
 
+/**
+ * Archive a canonical match of either coverage. An end-of-game record is a
+ * game's whole canonical document, archived under the same key a Match-V5
+ * document would use; its own `dataVersion` tells a reader which it is.
+ */
 export async function archiveMatchReceipted(
-  match: RawMatch,
+  match: CanonicalMatch,
   trackedPlayerAliases: string[],
   options: ReceiptOptions = {},
-): Promise<ReceiptedArchiveResult<RawMatch>> {
+): Promise<ReceiptedArchiveResult<CanonicalMatch>> {
   return await archiveUnderFence({
     matchId: match.metadata.matchId,
     artifactKind: "match",
     options,
     put: async (abortSignal) =>
       await archiveMatchToS3(match, trackedPlayerAliases, abortSignal),
-    readCanonical: async (descriptor, abortSignal) =>
-      await readArchivedPayload({
+    readCanonical: async (descriptor, abortSignal) => {
+      const record = await readArchivedPayload({
         descriptor,
         matchId: match.metadata.matchId,
         abortSignal,
-        parse: (value) => RawMatchSchema.safeParse(value),
-        expected: "a MatchV5 payload",
-      }),
+        parse: (value) => CanonicalMatchRecordSchema.safeParse(value),
+        expected: "a canonical match",
+      });
+      return record.match;
+    },
   });
 }
 

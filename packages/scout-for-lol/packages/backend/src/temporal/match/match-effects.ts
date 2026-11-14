@@ -20,6 +20,10 @@ import {
   matchMayAnnounce,
   mintPostmatchIntents,
 } from "#src/temporal/notification/match-intents.ts";
+import {
+  canonicalMatchCreatedAt,
+  canonicalMatchTournamentCode,
+} from "@scout-for-lol/data";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import type {
   ScoutGuardedEffectResult,
@@ -182,9 +186,9 @@ export async function mintPostmatchNotificationIntents(input: {
       queueId: context.matchData.info.queueId,
       gameMode: context.matchData.info.gameMode,
       gameType: context.matchData.info.gameType,
-      tournamentCode: context.matchData.info.tournamentCode,
+      tournamentCode: canonicalMatchTournamentCode(context.matchData),
     },
-    gameCreation: context.matchData.info.gameCreation,
+    gameCreation: canonicalMatchCreatedAt(context.matchData),
     createdAt: new Date(),
   });
   logger.info(

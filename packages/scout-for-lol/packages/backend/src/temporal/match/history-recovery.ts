@@ -2,7 +2,7 @@ import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { prisma } from "#src/database/index.ts";
 import { admitMatchEvidence } from "#src/evidence/admission.ts";
 import { evidenceRecoveryEnabled } from "#src/evidence/recovery-gate.ts";
-import { resolveCompleteMatch } from "#src/evidence/matches.ts";
+import { resolveCanonicalMatch } from "#src/evidence/matches.ts";
 import { resolveMatchTimeline } from "#src/evidence/timelines.ts";
 import { resolveScoutObservedMatchContext } from "./match-context.ts";
 import {
@@ -14,7 +14,11 @@ import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { reconcileScoreboardReport } from "./scoreboard-recovery.ts";
 import type { ArtifactResolution } from "@scout-for-lol/domain/artifacts/resolution.ts";
 import { TIMELINE_RECOVERY_WINDOW_MS } from "@scout-for-lol/domain/match-processing/eligibility.ts";
-import type { RawMatch, RawTimeline } from "@scout-for-lol/data";
+import {
+  completeMatchOf,
+  type CanonicalMatch,
+  type RawTimeline,
+} from "@scout-for-lol/data";
 import type { EvidenceResolution } from "#src/evidence/source-read.ts";
 import { gameResultFromMatch } from "#src/scout-client/canonical/riot-result.ts";
 import type { RiotSourceAbsence } from "#src/league/api/client/errors.ts";
@@ -71,7 +75,7 @@ function abandonment(
 /** Riot refused the match itself, so no later stage can run. */
 function matchAbandonment(
   admission: { createdAt: Date },
-  match: EvidenceResolution<RawMatch>,
+  match: EvidenceResolution<CanonicalMatch>,
   clock: AttemptClock,
 ) {
   return match.kind === "unavailable"
@@ -95,6 +99,61 @@ function timelineAbandonment(
     : NOT_ABANDONED;
 }
 
+/**
+ * A game frozen as an end-of-game record has no timeline and never will, so
+ * once its report is settled there is nothing left to recover. Abandoned at
+ * once rather than after Riot's windows: no source can answer. New client
+ * evidence still reopens the row, exactly as for any abandonment.
+ */
+function endOfGameAbandonment(
+  admission: { policy: string },
+  reportComplete: boolean,
+  { evidenceReadAt }: AttemptClock,
+) {
+  return reportComplete || admission.policy === "FULL"
+    ? {
+        recoveryAbandonedAt: evidenceReadAt,
+        recoveryAbandonedReason: "end_of_game_record",
+      }
+    : NOT_ABANDONED;
+}
+
+/**
+ * The timeline history recovery can still find for a complete match, or
+ * `null` for an end-of-game record, which has none to find.
+ */
+async function historyTimeline(
+  matchId: RiotMatchId,
+  context: Awaited<ReturnType<typeof resolveScoutObservedMatchContext>>,
+): Promise<EvidenceResolution<RawTimeline> | null> {
+  const complete = completeMatchOf(context.matchData);
+  if (complete === null) return null;
+  const timeline = await resolveMatchTimeline({
+    match: complete,
+    players: context.trackedPlayers,
+    persistence: "required_if_available",
+    purpose: "history",
+  });
+  if (timeline.kind === "conflict")
+    throw new Error(`Conflicting history timeline evidence for ${matchId}`);
+  return timeline;
+}
+
+/** What one attempt settled about the timeline, as the admission records it. */
+function timelineOutcome(
+  admission: { createdAt: Date; policy: string },
+  timeline: EvidenceResolution<RawTimeline> | null,
+  reportComplete: boolean,
+  clock: AttemptClock,
+) {
+  return {
+    historyTimelineRecovered: timeline?.kind === "available",
+    ...(timeline === null
+      ? endOfGameAbandonment(admission, reportComplete, clock)
+      : timelineAbandonment(admission, timeline, reportComplete, clock)),
+  };
+}
+
 async function ensureHistoryReport(
   matchId: RiotMatchId,
   policy: string,
@@ -114,7 +173,7 @@ async function ensureHistoryReport(
 
 async function recoverReportOnly(
   matchId: RiotMatchId,
-  match: ArtifactResolution<RawMatch>,
+  match: ArtifactResolution<CanonicalMatch>,
 ): Promise<boolean> {
   if (match.kind === "conflict")
     throw new Error(`Conflicting match evidence for ${matchId}`);
@@ -186,7 +245,9 @@ export async function reconcileMatchHistory(now = new Date()): Promise<number> {
       const admission = await prisma.matchEvidenceAdmission.findUniqueOrThrow({
         where: { riotMatchId: matchId },
       });
-      const match = await resolveCompleteMatch(matchId);
+      // Either coverage: a game frozen as an end-of-game record is a settled
+      // canonical match, not a complete one that is still unavailable.
+      const match = await resolveCanonicalMatch(matchId);
       if (
         match.kind !== "available" ||
         (admission.policy === "FULL" &&
@@ -225,14 +286,7 @@ export async function reconcileMatchHistory(now = new Date()): Promise<number> {
         // writes match staging files on its own volume.
       }
       const context = await resolveScoutObservedMatchContext(matchId);
-      const timeline = await resolveMatchTimeline({
-        match: context.matchData,
-        players: context.trackedPlayers,
-        persistence: "required_if_available",
-        purpose: "history",
-      });
-      if (timeline.kind === "conflict")
-        throw new Error(`Conflicting history timeline evidence for ${matchId}`);
+      const timeline = await historyTimeline(matchId, context);
       const reportComplete = await ensureHistoryReport(
         matchId,
         admission.policy,
@@ -243,10 +297,9 @@ export async function reconcileMatchHistory(now = new Date()): Promise<number> {
         where: { riotMatchId: matchId, recoveryClaimId: claim },
         data: {
           historyReportComplete: reportComplete,
-          historyTimelineRecovered: timeline.kind === "available",
           recoveryClaimId: null,
           recoveryError: null,
-          ...timelineAbandonment(admission, timeline, reportComplete, clock),
+          ...timelineOutcome(admission, timeline, reportComplete, clock),
         },
       });
     } catch (error) {
