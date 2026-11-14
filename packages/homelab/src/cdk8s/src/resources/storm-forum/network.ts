@@ -65,7 +65,7 @@ export function createForumNetwork(chart: Chart, stage: "beta" | "prod"): void {
           ports: [tcp(8082)],
         },
       ],
-      egress: forumEgress(),
+      egress: forumEgress("web"),
     },
   });
   new KubeNetworkPolicy(chart, "release-network", {
@@ -75,7 +75,7 @@ export function createForumNetwork(chart: Chart, stage: "beta" | "prod"): void {
       },
       policyTypes: ["Ingress", "Egress"],
       ingress: [],
-      egress: forumEgress(),
+      egress: forumEgress("release"),
     },
   });
   // Only GET this exact StatefulSet. No list, scale, patch or router access.
@@ -104,27 +104,37 @@ export function createForumNetwork(chart: Chart, stage: "beta" | "prod"): void {
   });
 }
 
-function forumEgress() {
+/**
+ * Minecraft Query and Bedrock status over UDP. Only the web pod's activities
+ * container polls the server (`storm-forum/src/minecraft.ts`), and
+ * `minecraft-tsmc-query` admits only web pods; the release Job migrates the
+ * forum and never opens these sockets.
+ */
+function minecraftStatusEgress() {
+  return {
+    to: [
+      {
+        ...nsPeer("minecraft-tsmc"),
+        podSelector: {
+          matchLabels: {
+            "app.kubernetes.io/instance": "minecraft-tsmc",
+            "app.kubernetes.io/name": "minecraft",
+          },
+        },
+      },
+    ],
+    ports: [25_565, 19_132].map((number) => ({
+      port: IntOrString.fromNumber(number),
+      protocol: "UDP",
+    })),
+  };
+}
+
+function forumEgress(component: "web" | "release") {
   return [
     dnsEgressRule(),
     externalHttpsEgressRule(),
-    {
-      to: [
-        {
-          ...nsPeer("minecraft-tsmc"),
-          podSelector: {
-            matchLabels: {
-              "app.kubernetes.io/instance": "minecraft-tsmc",
-              "app.kubernetes.io/name": "minecraft",
-            },
-          },
-        },
-      ],
-      ports: [25_565, 19_132].map((number) => ({
-        port: IntOrString.fromNumber(number),
-        protocol: "UDP",
-      })),
-    },
+    ...(component === "web" ? [minecraftStatusEgress()] : []),
     {
       to: [
         {

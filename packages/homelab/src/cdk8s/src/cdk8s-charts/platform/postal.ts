@@ -46,7 +46,6 @@ export function createPostalChart(app: App) {
           // Allow SMTP from application namespaces.
           from: [
             nsPeer("bugsink"),
-            nsPeer("birmel"),
             {
               // Alertmanager's independent alert-dashboard fallback receiver.
               namespaceSelector: {

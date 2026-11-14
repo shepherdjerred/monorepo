@@ -43,6 +43,8 @@ const CONSUMER_NAMESPACES = [
   "minecraft-tsmc",
   "woodpecker-ci",
   "woodpecker",
+  // Tracker reads its managed flags through the shared config source.
+  "tracker",
 ] as const;
 
 export function createFliptChart(app: App) {
