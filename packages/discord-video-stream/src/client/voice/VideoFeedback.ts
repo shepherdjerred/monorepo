@@ -29,18 +29,18 @@ export function parseVideoFeedback(packet: Buffer, videoSsrc: number): VideoFeed
   const malformed = (): VideoFeedback[] => [{ type: "malformed" }];
   if (packet.length < 4 || packet.length > MAX_COMPOUND_BYTES) return malformed();
   // Track callbacks can also carry RTP. Those are not RTCP parser failures.
-  if (packet[1] < 192 || packet[1] > 223) return [];
+  if (packet.readUInt8(1) < 192 || packet.readUInt8(1) > 223) return [];
   let offset = 0;
   while (offset < packet.length) {
-    if (packet.length - offset < 4 || packet[offset] >> 6 !== 2) return malformed();
-    const count = packet[offset] & 0x1f;
-    const type = packet[offset + 1];
+    if (packet.length - offset < 4 || packet.readUInt8(offset) >> 6 !== 2) return malformed();
+    const count = packet.readUInt8(offset) & 0x1f;
+    const type = packet.readUInt8(offset + 1);
     const length = (packet.readUInt16BE(offset + 2) + 1) * 4;
     const end = offset + length;
     if (end > packet.length) return malformed();
     let payloadEnd = end;
-    if (packet[offset] & 0x20) {
-      const padding = packet[end - 1];
+    if (packet.readUInt8(offset) & 0x20) {
+      const padding = packet.readUInt8(end - 1);
       if (end !== packet.length || padding === 0 || padding > length - 4) return malformed();
       payloadEnd -= padding;
     }
@@ -51,7 +51,7 @@ export function parseVideoFeedback(packet: Buffer, videoSsrc: number): VideoFeed
         if (packet.readUInt32BE(report) !== videoSsrc) continue;
         events.push({
           type: "receiver-report",
-          fractionLost: packet[report + 4] / 256,
+          fractionLost: packet.readUInt8(report + 4) / 256,
           cumulativePacketsLost: packet.readIntBE(report + 5, 3),
           jitterSeconds: packet.readUInt32BE(report + 12) / VIDEO_CLOCK_RATE,
         });
