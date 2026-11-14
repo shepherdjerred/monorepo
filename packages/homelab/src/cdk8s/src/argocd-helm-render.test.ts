@@ -8,6 +8,11 @@ import { imageRegistry } from "@shepherdjerred/version-catalog/image-registry";
 import { againstDebt } from "@shepherdjerred/homelab/cdk8s/src/fleet-policy/fleet.ts";
 import { UPSTREAM_CONTAINERS_WITHOUT_REQUESTS } from "@shepherdjerred/homelab/cdk8s/src/fleet-policy/debt-allowlists.ts";
 import { workloadContainers } from "@shepherdjerred/homelab/cdk8s/src/testing/workload-containers.ts";
+import { upstreamPolicyNamespaces } from "@shepherdjerred/homelab/cdk8s/src/testing/upstream-policy-namespaces.ts";
+import {
+  ENFORCEMENT_STAGES,
+  STAGED_WITHOUT_RENDERED_POLICY,
+} from "@shepherdjerred/homelab/cdk8s/src/fleet-policy/enforcement-stages.ts";
 
 /**
  * ArgoCD Helm Render Tests
@@ -81,6 +86,7 @@ const ApplicationSchema = z.object({
     namespace: z.string().optional(),
   }),
   spec: z.object({
+    destination: z.object({ namespace: z.string() }),
     source: HelmSourceSchema.optional(),
     sources: z.array(HelmSourceSchema).optional(),
   }),
@@ -165,6 +171,8 @@ function privatePodSpecs(value: unknown): Record<string, unknown>[] {
 
 type ExternalChart = {
   appName: string;
+  /** The namespace the Application deploys the chart into. */
+  namespace: string;
   chart: string;
   repoURL: string;
   version: string;
@@ -217,6 +225,7 @@ function extractExternalCharts(yamlContent: string): ExternalChart[] {
 
       charts.push({
         appName: app.metadata.name,
+        namespace: app.spec.destination.namespace,
         chart: source.chart,
         repoURL: source.repoURL,
         version: source.targetRevision,
@@ -411,6 +420,46 @@ function upstreamRequestDebt(outcomes: readonly RenderOutcome[]): {
   };
 }
 
+/**
+ * The namespaces the rendered charts put a NetworkPolicy into, those among
+ * them with no enforcement stage, and the upstream-chart staging declarations
+ * whose Application's chart rendered no policy there. A chart that did not
+ * render shows nothing, so its declaration is neither confirmed nor stale.
+ */
+function upstreamStaging(outcomes: readonly RenderOutcome[]): {
+  namespaces: string[];
+  unstaged: string[];
+  stale: string[];
+} {
+  const rendered = outcomes.filter(({ result }) => result.exitCode === 0);
+  const namespaces = [
+    ...new Set(
+      rendered.flatMap(({ chart, result }) =>
+        upstreamPolicyNamespaces(result.stdout, chart.namespace),
+      ),
+    ),
+  ].sort();
+  return {
+    namespaces,
+    unstaged: namespaces.filter(
+      (namespace) => ENFORCEMENT_STAGES[namespace] === undefined,
+    ),
+    stale: Object.entries(STAGED_WITHOUT_RENDERED_POLICY).flatMap(
+      ([namespace, declaration]) =>
+        declaration.source === "upstream-chart" &&
+        rendered.some(
+          ({ chart, result }) =>
+            chart.appName === declaration.application &&
+            !upstreamPolicyNamespaces(result.stdout, chart.namespace).includes(
+              namespace,
+            ),
+        )
+          ? [namespace]
+          : [],
+    ),
+  };
+}
+
 const describeFn = shouldRun ? describe : describe.skip;
 
 describeFn("ArgoCD Helm Render - External Charts", () => {
@@ -535,6 +584,17 @@ describeFn("ArgoCD Helm Render - External Charts", () => {
 
     it("has no stale debt allowlist entry", () => {
       expect(upstreamRequestDebt(outcomes).stale).toEqual([]);
+    });
+  });
+
+  describe("every namespace an upstream chart renders a NetworkPolicy into is staged", () => {
+    it("has a stage entry", () => {
+      expect(upstreamStaging(outcomes).namespaces.length).toBeGreaterThan(0);
+      expect(upstreamStaging(outcomes).unstaged).toEqual([]);
+    });
+
+    it("has no stale upstream-chart staging declaration", () => {
+      expect(upstreamStaging(outcomes).stale).toEqual([]);
     });
   });
 

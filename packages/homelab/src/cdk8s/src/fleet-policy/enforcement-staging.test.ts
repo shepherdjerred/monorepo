@@ -16,8 +16,11 @@ import {
   type SynthesizedObject,
 } from "@shepherdjerred/homelab/cdk8s/src/testing/synthesized-charts.ts";
 import {
+  ENFORCED_WITHOUT_STAGING,
   ENFORCEMENT_STAGES,
+  enforcedWithoutStaging,
   enforcementStageOf,
+  STAGED_WITHOUT_RENDERED_POLICY,
 } from "./enforcement-stages.ts";
 import { fleetOf } from "./fleet.ts";
 import { unreciprocatedRules } from "./policy-reciprocity.ts";
@@ -89,6 +92,12 @@ describe("the fleet's enforcement staging", () => {
   const realPolicies = () =>
     objects.filter((object) => isPolicy(object) && !isStaging(object));
   const stagingPolicies = () => objects.filter((object) => isStaging(object));
+  /** Every namespace that must be staged: rendered policies, or declared. */
+  const stagedNamespaces = () =>
+    [
+      ...namespacesOf(realPolicies()),
+      ...Object.keys(STAGED_WITHOUT_RENDERED_POLICY),
+    ].sort();
 
   test("every namespace with a NetworkPolicy has a stage entry", () => {
     expect(
@@ -98,21 +107,33 @@ describe("the fleet's enforcement staging", () => {
     ).toEqual([]);
   });
 
-  test("every namespace with a NetworkPolicy has exactly one staging policy across all charts", () => {
+  test("every staged namespace has exactly one staging policy across all charts", () => {
     // Not deduplicated: two charts rendering the same staging policy would be
     // two Applications contending for one object.
     expect(
       stagingPolicies()
         .map((object) => object.metadata.namespace ?? "")
         .sort(),
-    ).toEqual(namespacesOf(realPolicies()));
+    ).toEqual(stagedNamespaces());
   });
 
   test("has no stale stage entry", () => {
+    expect(Object.keys(ENFORCEMENT_STAGES).sort()).toEqual(stagedNamespaces());
+  });
+
+  test("a namespace staged without a rendered policy has none rendered", () => {
     const withPolicies = new Set(namespacesOf(realPolicies()));
     expect(
-      Object.keys(ENFORCEMENT_STAGES).filter(
-        (namespace) => !withPolicies.has(namespace),
+      Object.keys(STAGED_WITHOUT_RENDERED_POLICY).filter((namespace) =>
+        withPolicies.has(namespace),
+      ),
+    ).toEqual([]);
+  });
+
+  test("no staged namespace is also listed as enforced without staging", () => {
+    expect(
+      Object.keys(ENFORCEMENT_STAGES).filter((namespace) =>
+        enforcedWithoutStaging(namespace),
       ),
     ).toEqual([]);
   });
@@ -125,6 +146,17 @@ describe("the fleet's enforcement staging", () => {
         EXPECTED_SPEC[enforcementStageOf(namespace)],
       );
     }
+  });
+});
+
+describe("enforcedWithoutStaging", () => {
+  test("matches a listed name exactly and a listed prefix by prefix", () => {
+    expect(ENFORCED_WITHOUT_STAGING.length).toBeGreaterThan(0);
+    expect(enforcedWithoutStaging("delivery-catalog-recovery")).toBe(true);
+    expect(enforcedWithoutStaging("delivery-catalog-recovery-2")).toBe(false);
+    expect(enforcedWithoutStaging("pg18-rehearsal-temporal")).toBe(true);
+    expect(enforcedWithoutStaging("ops-restore-temporal-20261010")).toBe(true);
+    expect(enforcedWithoutStaging("temporal")).toBe(false);
   });
 });
 
@@ -170,7 +202,7 @@ describe("applyEnforcementStaging", () => {
     policyIn(chart, "woodpecker", "b");
     policyIn(chart, "woodpecker-ci");
     new Chart(app, "no-policies");
-    applyEnforcementStaging(app);
+    applyEnforcementStaging(app, {});
     expect(
       rendered(chart)
         .filter((object) => isStaging(object))
@@ -182,7 +214,7 @@ describe("applyEnforcementStaging", () => {
     const app = new App();
     policyIn(new Chart(app, "new-service"), "new-service");
     expect(() => {
-      applyEnforcementStaging(app);
+      applyEnforcementStaging(app, {});
     }).toThrow(
       /new-service renders a NetworkPolicy but has no enforcement stage/u,
     );
@@ -194,7 +226,7 @@ describe("applyEnforcementStaging", () => {
     const owner = new Chart(app, "temporal");
     policyIn(data, "temporal", "database");
     policyIn(owner, "temporal", "server");
-    applyEnforcementStaging(app);
+    applyEnforcementStaging(app, {});
     expect(rendered(data).filter((object) => isStaging(object))).toEqual([]);
     expect(rendered(owner).filter((object) => isStaging(object))).toHaveLength(
       1,
@@ -206,7 +238,7 @@ describe("applyEnforcementStaging", () => {
     policyIn(new Chart(app, "one"), "media", "a");
     policyIn(new Chart(app, "two"), "media", "b");
     expect(() => {
-      applyEnforcementStaging(app);
+      applyEnforcementStaging(app, {});
     }).toThrow(/name one of them in SHARED_NAMESPACE_OWNERS/u);
   });
 
@@ -218,8 +250,40 @@ describe("applyEnforcementStaging", () => {
       enforcementStagingPolicyName("media"),
     );
     expect(() => {
-      applyEnforcementStaging(app);
+      applyEnforcementStaging(app, {});
     }).toThrow(/only applyEnforcementStaging renders/u);
+  });
+
+  test("a namespace staged without a rendered policy gets one in each named chart", () => {
+    const app = new App();
+    const root = new Chart(app, "apps");
+    const companion = new Chart(app, "argocd-companion");
+    applyEnforcementStaging(app, {
+      argocd: { charts: ["apps", "argocd-companion", "prometheus-companion"] },
+    });
+    for (const chart of [root, companion])
+      expect(
+        rendered(chart).map((object) => [
+          object.metadata.namespace,
+          object.metadata.name,
+        ]),
+      ).toEqual([["argocd", "enforcement-staging-argocd"]]);
+  });
+
+  test("a declared namespace that a chart now renders a policy into fails synthesis", () => {
+    const app = new App();
+    policyIn(new Chart(app, "media"), "media");
+    expect(() => {
+      applyEnforcementStaging(app, { media: { charts: ["media"] } });
+    }).toThrow(/a chart now renders a policy into: delete the entry/u);
+  });
+
+  test("a declared chart that is not rendered fails synthesis", () => {
+    const app = new App();
+    new Chart(app, "apps");
+    expect(() => {
+      applyEnforcementStaging(app, { argocd: { charts: ["missing"] } });
+    }).toThrow(/names chart missing for argocd, which is not rendered/u);
   });
 });
 

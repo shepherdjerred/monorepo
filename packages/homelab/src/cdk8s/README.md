@@ -265,6 +265,30 @@ carries the staging policy (`SHARED_NAMESPACE_OWNERS`). The fleet rules above
 never read a staging policy, so an open namespace cannot hide a workload with
 no policy or a closed probe port.
 
+The stage map covers three sources of policy, and each has its own guard:
+
+- **Policies these charts render.** Derived from synthesis; the fleet tests
+  hold the map and the rendered staging policies to exactly this set.
+- **Policies an upstream Helm chart renders** (`argocd`, `prometheus`).
+  Synthesis cannot see them, so `STAGED_WITHOUT_RENDERED_POLICY` declares the
+  namespace, its Application, and the charts that carry the staging policy:
+  the root chart and the Application's companion. The Helm render test
+  (`HELM_RENDER_TEST=1 bun run test -- src/argocd-helm-render.test.ts`) fails
+  when an upstream chart renders a `NetworkPolicy` into a namespace with no
+  stage entry.
+- **Policies that exist only in the cluster** (`live-only` entries of the same
+  list), for a namespace whose pods still run after its source was removed.
+  No test can derive these.
+
+`ENFORCED_WITHOUT_STAGING` lists the namespaces that keep a policy and are
+deliberately left unstaged: leftover isolation policies of finished rehearsals
+and recoveries, with no pods.
+
+None of this proves coverage of the running cluster. The authoritative check
+before enforcement is switched on is live: every namespace that has at least
+one `NetworkPolicy` and at least one pod must have its
+`enforcement-staging-<namespace>` policy.
+
 ## Commands
 
 ```bash

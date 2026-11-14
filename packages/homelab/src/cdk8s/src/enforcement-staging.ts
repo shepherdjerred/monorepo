@@ -1,5 +1,8 @@
 import { ApiObject, type App, type Chart } from "cdk8s";
-import { enforcementStageOf } from "./fleet-policy/enforcement-stages.ts";
+import {
+  enforcementStageOf,
+  STAGED_WITHOUT_RENDERED_POLICY,
+} from "./fleet-policy/enforcement-stages.ts";
 import {
   enforcementStagingPolicy,
   enforcementStagingPolicyName,
@@ -64,16 +67,47 @@ function stagingOwner(namespace: string, charts: readonly Chart[]): Chart {
   return owner;
 }
 
+type Unrendered = Readonly<Record<string, { charts: readonly string[] }>>;
+
+/** Stage the namespaces whose policies no chart here renders. */
+function stageUnrendered(
+  app: App,
+  unrendered: Unrendered,
+  rendered: ReadonlySet<string>,
+): void {
+  for (const [namespace, { charts }] of Object.entries(unrendered)) {
+    if (rendered.has(namespace))
+      throw new Error(
+        `STAGED_WITHOUT_RENDERED_POLICY names ${namespace}, which a chart now renders a policy into: delete the entry`,
+      );
+    for (const id of charts) {
+      const chart = app.charts.find((candidate) => candidate.node.id === id);
+      // A companion chart renders only under transition rendering.
+      if (chart === undefined && COMPANION_CHARTS.has(id)) continue;
+      if (chart === undefined)
+        throw new Error(
+          `STAGED_WITHOUT_RENDERED_POLICY names chart ${id} for ${namespace}, which is not rendered`,
+        );
+      enforcementStagingPolicy(chart, namespace, enforcementStageOf(namespace));
+    }
+  }
+}
+
 /**
  * Give every namespace the charts render a NetworkPolicy into its one
- * `enforcement-staging-<namespace>` policy, at the stage `ENFORCEMENT_STAGES` records.
+ * `enforcement-staging-<namespace>` policy, at the stage `ENFORCEMENT_STAGES`
+ * records, and likewise each namespace in `unrendered`, whose policies come
+ * from an upstream chart or exist only in the cluster.
  *
  * Runs over the finished app rather than in each chart so that a namespace
  * cannot gain a policy without being staged, and so that charts sharing a
  * namespace render one staging policy between them. A namespace with no
  * stage entry fails synthesis.
  */
-export function applyEnforcementStaging(app: App): void {
+export function applyEnforcementStaging(
+  app: App,
+  unrendered: Unrendered = STAGED_WITHOUT_RENDERED_POLICY,
+): void {
   const renderers = new Map<string, Chart[]>();
   for (const chart of app.charts)
     for (const namespace of policyNamespacesOf(chart))
@@ -91,4 +125,6 @@ export function applyEnforcementStaging(app: App): void {
     for (const chart of [owner, ...companions])
       enforcementStagingPolicy(chart, namespace, stage);
   }
+
+  stageUnrendered(app, unrendered, new Set(renderers.keys()));
 }
