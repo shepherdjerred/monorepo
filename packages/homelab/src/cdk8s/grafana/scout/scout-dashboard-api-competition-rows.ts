@@ -186,7 +186,7 @@ export function addApiAndCompetitionRows(
           .expr(
             `riot_api_app_rate_limit_count{${buildFilter()}} / riot_api_app_rate_limit_limit{${buildFilter()}}`,
           )
-          .legendFormat("{{environment}} - {{window_seconds}}s"),
+          .legendFormat("{{environment}} - {{route}} - {{window_seconds}}s"),
       )
       .unit("percentunit")
       .lineWidth(2)

@@ -1,7 +1,9 @@
 import { describe, expect, test, vi } from "vitest";
 import {
+  riotApi429Total,
   riotApiAppRateLimitCount,
   riotApiAppRateLimitLimit,
+  riotApiMethodRateLimitCount,
 } from "#src/metrics/riot-rate-limit.ts";
 import { RiotHttpError, RiotTransportError } from "./errors.ts";
 import { RateLimiter } from "./rate-limiter.ts";
@@ -452,5 +454,54 @@ describe("RateLimiter app rate-limit gauges", () => {
       countMetric.values.find((value) => value.labels.window_seconds === "1")
         ?.value,
     ).toBe(3);
+  });
+});
+
+describe("RateLimiter per-route metrics", () => {
+  test("records route-labelled method limits and typed 429s", async () => {
+    const limiter = new RateLimiter({ maxRetries: 0 });
+    const url = "https://europe.api.riotgames.com/lol/match/v5/matches/EUW1_9";
+
+    await limiter.execute(
+      url,
+      async () =>
+        new Response("ok", {
+          headers: {
+            "X-App-Rate-Limit": "20:1",
+            "X-App-Rate-Limit-Count": "2:1",
+            "X-Method-Rate-Limit": "2000:10",
+            "X-Method-Rate-Limit-Count": "9:10",
+          },
+        }),
+    );
+
+    const method = await riotApiMethodRateLimitCount.get();
+    expect(
+      method.values.find(
+        (v) =>
+          v.labels.route === "europe" &&
+          v.labels.method === "/lol/match/v5/matches/{matchId}" &&
+          v.labels.window_seconds === "10",
+      )?.value,
+    ).toBe(9);
+    const app = await riotApiAppRateLimitCount.get();
+    expect(app.values.find((v) => v.labels.route === "europe")?.value).toBe(2);
+
+    await expect(
+      limiter.execute(
+        url,
+        async () =>
+          new Response("", {
+            status: 429,
+            headers: { "X-Rate-Limit-Type": "method", "Retry-After": "0" },
+          }),
+      ),
+    ).rejects.toBeInstanceOf(RiotHttpError);
+    const total = await riotApi429Total.get();
+    expect(
+      total.values.find(
+        (v) => v.labels.route === "europe" && v.labels.limit_type === "method",
+      )?.value,
+    ).toBe(1);
   });
 });

@@ -1,14 +1,23 @@
 import { createLogger } from "#src/logger.ts";
 import {
+  riotApi429Total,
   riotApiAppRateLimitCount,
   riotApiAppRateLimitLimit,
+  riotApiMethodRateLimitCount,
+  riotApiMethodRateLimitLimit,
 } from "#src/metrics/riot-rate-limit.ts";
 import {
   isExpectedUpstreamError,
   RiotHttpError,
   RiotTransportError,
 } from "./errors.ts";
-import { parseAppRateLimitWindows } from "./rate-limit-headers.ts";
+import {
+  methodKeyOfUrl,
+  parseAppRateLimitWindows,
+  parseMethodRateLimitWindows,
+  parseRateLimitType,
+  routeOfUrl,
+} from "./rate-limit-headers.ts";
 
 const logger = createLogger("rate-limiter");
 
@@ -164,13 +173,31 @@ export class RateLimiter {
         throw new RiotTransportError(url, error);
       }
 
+      const route = routeOfUrl(url);
       for (const window of parseAppRateLimitWindows(response.headers)) {
-        const labels = { window_seconds: window.windowSeconds.toString() };
+        const labels = {
+          route,
+          window_seconds: window.windowSeconds.toString(),
+        };
         riotApiAppRateLimitCount.set(labels, window.count);
         riotApiAppRateLimitLimit.set(labels, window.limit);
       }
+      const method = methodKeyOfUrl(url);
+      for (const window of parseMethodRateLimitWindows(response.headers)) {
+        const labels = {
+          route,
+          method,
+          window_seconds: window.windowSeconds.toString(),
+        };
+        riotApiMethodRateLimitCount.set(labels, window.count);
+        riotApiMethodRateLimitLimit.set(labels, window.limit);
+      }
 
       if (response.status === 429) {
+        riotApi429Total.inc({
+          route,
+          limit_type: parseRateLimitType(response.headers),
+        });
         // Establish the shared cooldown before releasing the semaphore slot so
         // queued calls cannot start during Riot's Retry-After window.
         this.extendCooldown(response);

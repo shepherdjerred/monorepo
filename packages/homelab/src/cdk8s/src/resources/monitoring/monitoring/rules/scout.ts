@@ -71,11 +71,11 @@ export function getScoutRuleGroups(): PrometheusRuleSpecGroups[] {
           annotations: {
             summary: "Riot API app rate limit usage is elevated",
             message: escapePrometheusTemplate(
-              "Scout {{ $labels.environment }} is using {{ $value | humanizePercentage }} of its Riot app rate limit for the {{ $labels.window_seconds }}s window.",
+              "Scout {{ $labels.environment }} is using {{ $value | humanizePercentage }} of its Riot app rate limit for the {{ $labels.window_seconds }}s window on route {{ $labels.route }}.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "riot_api_app_rate_limit_count / riot_api_app_rate_limit_limit > 0.7",
+            "max by (environment, route, window_seconds) (riot_api_app_rate_limit_count / riot_api_app_rate_limit_limit) > 0.7",
           ),
           for: "5m",
           labels: {
@@ -87,11 +87,11 @@ export function getScoutRuleGroups(): PrometheusRuleSpecGroups[] {
           annotations: {
             summary: "Riot API app rate limit usage is critically high",
             message: escapePrometheusTemplate(
-              "Scout {{ $labels.environment }} is using {{ $value | humanizePercentage }} of its Riot app rate limit for the {{ $labels.window_seconds }}s window. Requests may start being throttled with 429s.",
+              "Scout {{ $labels.environment }} is using {{ $value | humanizePercentage }} of its Riot app rate limit for the {{ $labels.window_seconds }}s window on route {{ $labels.route }}. Requests may start being throttled with 429s.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "riot_api_app_rate_limit_count / riot_api_app_rate_limit_limit > 0.9",
+            "max by (environment, route, window_seconds) (riot_api_app_rate_limit_count / riot_api_app_rate_limit_limit) > 0.9",
           ),
           for: "5m",
           labels: {
