@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["crates/scout-client-core", "crates/scout-client-app"]
+members = ["crates/scout-client-core", "crates/scout-client-runtime", "crates/scout-client-app"]
 
 [workspace.package]
 version = "0.1.0"

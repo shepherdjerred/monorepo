@@ -19,6 +19,15 @@ bun run test
 bun run lint
 ```
 
+The workspace has three crates:
+
+- `scout-client-core`: LCU access, protocol, outbox, credentials, and
+  diagnostics.
+- `scout-client-runtime`: the UI-independent collection runtime (pairing,
+  observation, upload, history, Clash, and start-at-login registration).
+- `scout-client-app`: the `egui` shell, tray, and `scout-client` binary, which
+  drive the runtime through `ClientRuntime`.
+
 Preview packages target `https://beta.scout-for-lol.com`, where the ingestion
 flag is rolled out. Use `--server=http://127.0.0.1:<port>` for a local backend;
 an explicit server is also retained in start-at-login registration. Remote
