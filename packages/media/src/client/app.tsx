@@ -20,6 +20,10 @@ import { RecoveryPage } from "./recovery/page.tsx";
 import { MovieHistoryPageV3 } from "./movie-history/page.tsx";
 import { NativeRecoveryPage } from "./native-recovery/page.tsx";
 import { SubtitleReplacementPage } from "./subtitle-replacement/page.tsx";
+import { CalendarPage } from "./calendar/page.tsx";
+import { RemovalHistoryPage } from "./removal-history/page.tsx";
+import { LibraryPage } from "./library/page.tsx";
+import { PlaybackHistoryPage } from "./household/playback.tsx";
 
 export function App() {
   const session = useQuery({
@@ -73,17 +77,29 @@ function Shell({ user }: { user: MediaUser }) {
         </NavLink>
         <p className="nav-label">Your library</p>
         <nav aria-label="Main navigation">
+          <NavLink to="/library">
+            <span aria-hidden="true">▥</span> Library
+          </NavLink>
           <NavLink to="/" end>
             <span aria-hidden="true">✦</span> Discover
           </NavLink>
           <NavLink to="/requests">
             <span aria-hidden="true">▤</span> My requests
           </NavLink>
+          <NavLink to="/calendar">
+            <span aria-hidden="true">▦</span> Calendar
+          </NavLink>
+          <NavLink to="/history">
+            <span aria-hidden="true">◴</span> Watch history
+          </NavLink>
           <NavLink to="/activity">
             <span aria-hidden="true">⌁</span> Activity
           </NavLink>
           <NavLink to="/removals">
             <span aria-hidden="true">◷</span> Leaving soon
+          </NavLink>
+          <NavLink to="/removed">
+            <span aria-hidden="true">↶</span> Removed
           </NavLink>
           <NavLink to="/notifications">
             <span aria-hidden="true">◉</span> Notifications
@@ -187,6 +203,13 @@ function Shell({ user }: { user: MediaUser }) {
             }
           />
           <Route path="/" element={<Discover />} />
+          <Route path="/library" element={<LibraryPage user={user} />} />
+          <Route path="/calendar" element={<CalendarPage user={user} />} />
+          <Route
+            path="/history"
+            element={<PlaybackHistoryPage user={user} />}
+          />
+          <Route path="/removed" element={<RemovalHistoryPage user={user} />} />
           <Route
             path="/catalog/:kind/:id"
             element={<CatalogPage user={user} />}

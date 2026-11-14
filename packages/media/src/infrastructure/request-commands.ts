@@ -24,6 +24,10 @@ import {
 } from "./editions/locks.ts";
 import { commandAutomationEpoch } from "./handoff/authority.ts";
 import { queueMediaSubtitleTargets } from "#automation/subtitles/queue.ts";
+import {
+  requestKeepingPolicy,
+  renewedInterest,
+} from "./request-interest/policy.ts";
 
 export class MediaRequestCommands extends MediaCommandBase {
   createRequest(actor: MediaActor, key: string, input: CreateRequest) {
@@ -70,7 +74,7 @@ export class MediaRequestCommands extends MediaCommandBase {
     const { plexSectionId } = z
       .object({ plexSectionId: z.string().min(1).optional() })
       .parse(media.externalIds);
-    await authorizeRequester(db, actor, userId, {
+    const currentActor = await authorizeRequester(db, actor, userId, {
       ...this.settings,
       kind: media.kind,
       ...(plexSectionId === undefined ? {} : { sectionId: plexSectionId }),
@@ -87,13 +91,31 @@ export class MediaRequestCommands extends MediaCommandBase {
       includeFutureEpisodes:
         input.includeFutureEpisodes ?? media.kind === "series",
     };
+    const previousRequest = await db.mediaRequest.findUnique({
+      where: { userId_mediaId_edition: { userId, ...defaultScope(media.id) } },
+    });
+    const keepingPolicy = requestKeepingPolicy(
+      currentActor,
+      input.keepingPolicy,
+      previousRequest,
+    );
+    const interest = renewedInterest(new Date());
     const request = await db.mediaRequest.upsert({
       where: {
         userId_mediaId_edition: { userId, ...defaultScope(media.id) },
       },
-      create: { userId, mediaId: media.id, ...options },
+      create: {
+        userId,
+        mediaId: media.id,
+        ...options,
+        ...interest,
+        keepingPolicy,
+      },
       update: {
         ...options,
+        ...interest,
+        keepingPolicy,
+        interestRevision: { increment: 1 },
         direct: true,
         excluded: false,
         active: true,

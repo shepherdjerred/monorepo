@@ -12,6 +12,7 @@ import {
 } from "#automation/notifications/message.ts";
 import { queueDelivery } from "#automation/notifications/events.ts";
 import { CommandResultSchema } from "#shared/api.ts";
+import { acknowledgeNotificationRead } from "./read.ts";
 import {
   requireMovieChoiceAccess,
   type MovieChoiceAccess,
@@ -25,6 +26,23 @@ import {
 import { prepareNotificationBinding } from "#automation/notifications/binding.ts";
 
 export class NotificationDeliveryCommands extends MediaCommandBase {
+  acknowledgeRead(
+    actor: MediaActor,
+    key: string,
+    id: string,
+    expectedVersion: number,
+  ) {
+    return this.commandWithProtocol(
+      actor,
+      key,
+      {
+        command: { kind: "view_notification", input: { id, expectedVersion } },
+        decode: (value) => CommandResultSchema.parse(value),
+      },
+      (tx) => acknowledgeNotificationRead(tx, actor, id, expectedVersion),
+    );
+  }
+
   constructor(
     private readonly deliveryDatabase: Database,
     private readonly deliveryCipher: CredentialCipher,

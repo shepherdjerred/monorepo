@@ -31,6 +31,7 @@ export const MovieRequestV3Schema = z.strictObject({
   }),
   options: z.strictObject({
     subtitleLanguages: z.array(LanguageSchema).max(20),
+    keepingPolicy: z.enum(["keep", "temporary"]).optional(),
   }),
 });
 const Applied = z.strictObject({

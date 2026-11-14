@@ -44,6 +44,7 @@ export const CreateRequestSchema = z
   .object({
     mediaId: IdentifierSchema,
     requesterUserId: z.uuid().optional(),
+    keepingPolicy: z.enum(["keep", "temporary"]).optional(),
     subtitleLanguages: z.array(LanguageSchema).max(20).default([]),
     includeFutureEpisodes: z.boolean().optional(),
     includeSpecials: z.boolean().default(false),

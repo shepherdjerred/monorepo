@@ -8,6 +8,60 @@ Implementation and rollout acceptance are tracked in
 [AI-300](https://tracker.tailnet-1a49.ts.net/issues/AI-300). This package does not
 automatically take ownership of existing library files or torrents.
 
+## Household keeping and viewing APIs
+
+Requests distinguish permanent keeping policy from temporary interest. New owner
+requests require an explicit `keep` or `temporary` choice; member requests are
+temporary. Only the owner can grant permanent keeping. Migration keeps existing
+library scopes protected, while existing request interests remain temporary.
+An explicit owner library
+policy overrides inherited migration defaults without waiting for episode pages
+to expand. Independent personal Keeps still protect shared files.
+
+Temporary interest is `following`, `finished`, `dropped`, or `expired`. A watched
+movie can finish automatically. A TV request completes automatically only with
+fresh ended/cancelled metadata and complete requested, released coverage;
+catching up on an ongoing series keeps the subscription. Whole-show protection
+is checked through the ancestor chain before file effects. Finished and Drop
+retain request history while stopping future acquisition authority.
+
+Inactivity clocks advance only when proven usable, unwatched content is
+available: 30 days before starting, or 60 days without further meaningful
+progress. A private interest reminder provides seven days to reply. Its exact
+request revision must have an accepted private delivery or an acknowledged
+in-app view; failed or unknown delivery cannot expire interest. Watching or
+Keep watching renews interest and invalidates an older reminder. When no Keep
+or interested requester remains, removal still requires the existing identity,
+playback, ownership and file-cohort checks, a seven-day Leaving Soon period,
+and seven days of recoverable quarantine before purge.
+
+The authenticated read APIs are bounded and do not create acquisition or
+removal authority:
+
+| Route                              | Purpose                                                                |
+| ---------------------------------- | ---------------------------------------------------------------------- |
+| `GET /api/v1/library`              | Current visible library, keeping policy and personal interest.         |
+| `GET /api/v1/calendar`             | TV air dates and US theatrical, digital and physical movie dates.      |
+| `GET /api/v1/removal-history`      | Committed quarantine/removal history, retained after purge.            |
+| `GET /api/v1/playback/now-playing` | Separate whole-library playback observations, with explicit freshness. |
+| `GET /api/v1/playback/history`     | Searchable session history, separate from current Plex watched truth.  |
+| `GET /api/v1/playback/statistics`  | Plays, watch time, rankings and playback decisions.                    |
+| `GET /api/v1/request-interests`    | Personal interest state, notice and revision context.                  |
+
+`POST /api/v1/request-interests/:id/commands` applies revision-checked,
+idempotent interest actions. `POST /api/v1/library/:id/keeping-policy` changes
+owner library policy against the current media and target versions. Opening a
+notification link never changes these states.
+
+Calendar dates retain their source date-only precision, including TBA, rather
+than treating UTC midnight as an airing instant. Viewing history uses separate
+playback tables and a dedicated Plex parser; immutable file-serving evidence is
+unchanged. Statistics retain the two-minute minimum play and 85% reporting
+completion threshold. Neither historical import nor statistical completion
+writes current Plex watched state or authorizes retention. Household playback
+is owner-visible; members see their own sessions, and unmapped history stays
+owner-only.
+
 ## Edition scope
 
 Canonical media identity and lifecycle intent are separate. Current-state

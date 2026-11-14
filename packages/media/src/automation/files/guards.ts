@@ -9,9 +9,6 @@ import {
   type MovieChoiceAccess,
 } from "#infrastructure/movie-editions/access.ts";
 import { assertAttemptMovieChoice } from "#automation/editions/choice.ts";
-import { currentFulfillmentAsset } from "#automation/editions/fulfillment.ts";
-import { requireMovieChoiceAccess } from "#infrastructure/movie-editions/access.ts";
-import { readMovieDemandAuthority } from "#infrastructure/movie-editions/fulfillment.ts";
 import { readCurrentBoundWatch } from "#infrastructure/plex-binding/watch.ts";
 import { bindPlexTransactionDeadline } from "#infrastructure/plex-binding/freshness.ts";
 import type { RetentionPlexAuthority } from "./plex-binding/retention.ts";
@@ -37,8 +34,11 @@ import {
 } from "#infrastructure/handoff/authority.ts";
 import {
   effectiveRequestWhere,
+  retentionRequestWhere,
   lockEffectiveRequests,
 } from "#infrastructure/request-claims.ts";
+import { householdRetentionState } from "#infrastructure/request-interest/protection.ts";
+import { removalNoticeAcceptance } from "#infrastructure/request-interest/notice-proof.ts";
 
 /** Caller holds all affected MediaItem rows, shared with reservation creation. */
 export async function assertNoMediaSubtitleReplacement(
@@ -334,6 +334,8 @@ async function assertRetentionItem(input: {
   plex?: RetentionPlexAuthority | undefined;
 }) {
   const { tx, mediaId, generations, timestamp } = input;
+  const household = await householdRetentionState(tx, mediaId);
+  if (household.reason !== null) throw new FileGuardError(household.reason);
   const item = await tx.mediaItem.findUniqueOrThrow({
     where: { id: mediaId },
     include: {
@@ -342,7 +344,7 @@ async function assertRetentionItem(input: {
       requests: {
         where: {
           OR: [
-            effectiveRequestWhere,
+            retentionRequestWhere,
             {
               edition: { not: "default" },
               media: { kind: "movie" },
@@ -358,21 +360,7 @@ async function assertRetentionItem(input: {
   });
   if (defaultIntent(item.intents)?.generation !== generations[mediaId])
     throw new FileGuardError("intent_obsolete");
-  if (
-    item.holds.some(
-      (hold) =>
-        hold.isPin || hold.until === null || hold.until.getTime() > timestamp,
-    )
-  )
-    throw new FileGuardError("retention_hold");
-  const movie = await assertRetentionFulfillment(tx, {
-    mediaId,
-    kind: item.kind,
-    movieAccess: input.movieAccess,
-  });
-  const requesters = item.requests.filter(
-    (claim) => claim.edition === "default" && claim.user.role !== "owner",
-  );
+  const requesters = household.recipients;
   if (requesters.length === 0)
     throw new FileGuardError("owner_only_or_unclaimed");
   const deadlines: number[] = [];
@@ -386,41 +374,26 @@ async function assertRetentionItem(input: {
       authority,
     });
     input.plex?.freshness.assertActive();
-    const projection = confirmedWatch(watch);
+    if (watch.status !== "known") throw new FileGuardError("watch_unconfirmed");
+    const projection = watch.projection;
     deadlines.push(Date.parse(projection.observedAt) + 900_000);
-    const accepted = await tx.notificationDelivery.findFirst({
-      where: {
+    deadlines.push(
+      ...(await removalNoticeDeadlines(tx, {
         eventId: input.warningEventId,
         userId: requester.userId,
-        state: "accepted",
-        channel: { in: ["email", "discord"] },
-        OR: [{ providerStatus: null }, { providerStatus: { not: "bounced" } }],
-        acceptedAt: { lte: new Date(timestamp - 7 * 86_400_000) },
-        reconciledAt: {
-          gte: new Date(timestamp - 60_000),
-          lte: new Date(timestamp),
-        },
-        event: { mediaId },
-      },
-    });
-    if (accepted === null) throw new FileGuardError("warning_unconfirmed");
-    if (accepted.reconciledAt === null)
-      throw new Error(
-        "Accepted warning lost its checked reconciliation timestamp",
-      );
-    deadlines.push(accepted.reconciledAt.getTime() + 60_000);
+        mediaId,
+        timestamp,
+      })),
+    );
   }
   const reservation = await tx.acquisitionReservation.findUnique({
     where: targetWhere(defaultScope(mediaId)),
   });
   if (reservation !== null) throw new FileGuardError("acquisition_active");
-  if (movie?.freshness !== undefined && movie.freshness !== null)
-    deadlines.push(movie.freshness.expiresAtMs);
   if (input.plex !== undefined)
     deadlines.push(input.plex.freshness.expiresAtMs);
   const deadline = Math.min(...deadlines);
   const freshness = retentionDeadline(observed, deadline, () => {
-    movie?.freshness?.assertActive();
     input.plex?.freshness.assertActive();
   });
   freshness.assertActive();
@@ -428,12 +401,31 @@ async function assertRetentionItem(input: {
   return freshness;
 }
 
-function confirmedWatch(
-  watch: Awaited<ReturnType<typeof readCurrentBoundWatch>>,
+async function removalNoticeDeadlines(
+  tx: Transaction,
+  input: {
+    eventId: string;
+    userId: string;
+    mediaId: string;
+    timestamp: number;
+  },
 ) {
-  if (watch.status !== "known" || !watch.projection.watched)
-    throw new FileGuardError("watch_unconfirmed");
-  return watch.projection;
+  const accepted = await tx.notificationDelivery.findFirst({
+    where: {
+      eventId: input.eventId,
+      userId: input.userId,
+      ...removalNoticeAcceptance(new Date(input.timestamp)),
+      acceptedAt: { lte: new Date(input.timestamp - 7 * 86_400_000) },
+      event: { mediaId: input.mediaId },
+    },
+  });
+  if (accepted === null) throw new FileGuardError("warning_unconfirmed");
+  if (accepted.channel === "in_app") return [];
+  if (accepted.reconciledAt === null)
+    throw new Error(
+      "Accepted warning lost its checked reconciliation timestamp",
+    );
+  return [accepted.reconciledAt.getTime() + 60_000];
 }
 
 function retentionDeadline(
@@ -452,30 +444,4 @@ function retentionDeadline(
       throw new FileGuardError("retention_evidence_expired");
   };
   return { assertActive, expiresAtMs: deadline };
-}
-
-async function assertRetentionFulfillment(
-  tx: Transaction,
-  input: {
-    mediaId: string;
-    kind: string;
-    movieAccess: MovieChoiceAccess | undefined;
-  },
-) {
-  const currentAsset = await currentFulfillmentAsset(tx, input.mediaId);
-  const movie =
-    input.kind === "movie"
-      ? await readMovieDemandAuthority(tx, {
-          mediaId: input.mediaId,
-          currentAsset,
-          access: requireMovieChoiceAccess(input.movieAccess ?? {}),
-        })
-      : null;
-  for (const demand of movie?.demands ?? []) {
-    if (demand.fulfillment.status !== "fulfilled")
-      throw new FileGuardError(
-        demand.fulfillment.reason ?? "movie_edition_choice_required",
-      );
-  }
-  return movie;
 }

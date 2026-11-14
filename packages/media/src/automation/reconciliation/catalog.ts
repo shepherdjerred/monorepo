@@ -3,10 +3,17 @@ import type { MediaAutomationContext } from "#automation/context.ts";
 import { queueOperation, serializable } from "#automation/store.ts";
 import type { MediaNetworkActivities } from "#shared/automation.ts";
 import type { Prisma, MediaItem } from "#generated/prisma/client.ts";
-import { loadSeriesCatalogIdentity } from "#infrastructure/catalog-identity/catalog.ts";
+import {
+  loadMovieCatalogIdentity,
+  loadSeriesCatalogIdentity,
+} from "#infrastructure/catalog-identity/catalog.ts";
 import { persistCatalogMedia } from "#infrastructure/catalog-identity/persist.ts";
 import { lockCanonicalMedia } from "#infrastructure/editions/locks.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
+import {
+  normalizeMovieReleases,
+  seriesLifecycleStatus,
+} from "#domain/household/calendar.ts";
 
 const SeasonSchema = z.object({
   id: z.number().int(),
@@ -19,7 +26,7 @@ const EpisodeSchema = z.object({
   name: z.string(),
   season_number: z.number().int(),
   episode_number: z.number().int(),
-  air_date: z.string().nullable(),
+  air_date: z.union([z.literal(""), z.iso.date()]).nullable(),
   runtime: z.number().int().positive().nullable().optional(),
 });
 const CheckpointSchema = z.object({
@@ -39,6 +46,8 @@ export function createCatalogActivities(
       let media = await context.db.mediaItem.findUniqueOrThrow({
         where: { id: input.mediaId },
       });
+      if (media.kind === "movie")
+        return refreshMovieCalendar(context, input, media);
       if (media.kind !== "series" || media.tmdbId === null)
         throw new Error("Catalog refresh requires a canonical series");
       const operation = await context.db.operation.findUniqueOrThrow({
@@ -53,8 +62,8 @@ export function createCatalogActivities(
           context.tmdb,
           media.tmdbId,
         );
-        media = await serializable(context.db, (tx) =>
-          persistCatalogMedia(tx, {
+        media = await serializable(context.db, async (tx) => {
+          const item = await persistCatalogMedia(tx, {
             kind: "series",
             tmdbId: series.id,
             title: series.name,
@@ -69,8 +78,10 @@ export function createCatalogActivities(
             originalLanguage: series.original_language,
             runtimeMinutes: null,
             identity,
-          }),
-        );
+            seriesStatus: seriesLifecycleStatus(series.status),
+          });
+          return item;
+        });
         checkpoint = CheckpointSchema.parse({ seasons: series.seasons });
       }
       if (checkpoint.completed) return { processed: 0, nextCursor: null };
@@ -154,6 +165,45 @@ export function createCatalogActivities(
       };
     },
   };
+}
+
+async function refreshMovieCalendar(
+  context: MediaAutomationContext,
+  input: { mediaId: string; operationId: string },
+  media: MediaItem,
+) {
+  if (media.tmdbId === null)
+    throw new Error("Movie calendar requires a canonical TMDB identity");
+  const operation = await context.db.operation.findUniqueOrThrow({
+    where: { id: input.operationId },
+  });
+  if (
+    z
+      .object({ movieCalendarComplete: z.boolean().optional() })
+      .parse(operation.result ?? {}).movieCalendarComplete === true
+  )
+    return { processed: 0, nextCursor: null };
+  const { details: movie, identity } = await loadMovieCatalogIdentity(
+    context.tmdb,
+    media.tmdbId,
+  );
+  await serializable(context.db, async (tx) => {
+    await persistCatalogMedia(tx, {
+      kind: "movie",
+      tmdbId: movie.id,
+      title: movie.title,
+      year:
+        movie.release_date === ""
+          ? null
+          : Number(movie.release_date.slice(0, 4)),
+      originalLanguage: movie.original_language,
+      runtimeMinutes: movie.runtime,
+      identity,
+      releaseDates: normalizeMovieReleases(movie.release_dates?.results ?? []),
+    });
+    await tx.$executeRaw`UPDATE "Operation" SET result = COALESCE(result, '{}'::jsonb) || '{"movieCalendarComplete":true}'::jsonb WHERE id = ${input.operationId}`;
+  });
+  return { processed: 1, nextCursor: null };
 }
 
 async function lockCatalogPage(
@@ -247,13 +297,41 @@ async function persistEpisode(
         ...fields,
         airDate: fields.airDate?.toISOString() ?? null,
       });
-  if (!changed) return false;
-  await tx.mediaItem.upsert({
+  if (!changed) {
+    await persistEpisodeRelease(tx, existing.id, airDate);
+    return false;
+  }
+  const media = await tx.mediaItem.upsert({
     where: { kind_tmdbId: { kind: "episode", tmdbId: episode.id } },
     create: { kind: "episode", tmdbId: episode.id, ...fields },
     update: { ...fields, version: { increment: 1 } },
   });
+  await persistEpisodeRelease(tx, media.id, airDate);
   return true;
+}
+
+async function persistEpisodeRelease(
+  tx: Prisma.TransactionClient,
+  mediaId: string,
+  airDate: Date | null,
+) {
+  const date = airDate?.toISOString().slice(0, 10) ?? null;
+  const release = {
+    date,
+    precision: date === null ? "unknown" : "day",
+    observedAt: new Date(),
+  };
+  await tx.mediaReleaseDate.upsert({
+    where: { id: `episode:${mediaId}` },
+    create: {
+      id: `episode:${mediaId}`,
+      mediaId,
+      region: "",
+      kind: "episode",
+      ...release,
+    },
+    update: release,
+  });
 }
 
 function assertEpisodeReferences(
@@ -285,8 +363,12 @@ async function completeCatalog(
   await serializable(context.db, async (tx) => {
     await lockCanonicalMedia(tx, [input.mediaId]);
     await tx.mediaItem.updateMany({
-      where: { id: input.mediaId, catalogState: { not: "ready" } },
-      data: { catalogState: "ready", version: { increment: 1 } },
+      where: { id: input.mediaId, catalogCompletedAt: null },
+      data: {
+        catalogState: "ready",
+        catalogCompletedAt: new Date(),
+        version: { increment: 1 },
+      },
     });
     await tx.$executeRaw`UPDATE "Operation" SET result = COALESCE(result, '{}'::jsonb) || ${JSON.stringify({ catalog: { ...checkpoint, completed: true } })}::jsonb WHERE id = ${input.operationId}`;
     // Root requests are bounded separately by the due sweep; catalog completion

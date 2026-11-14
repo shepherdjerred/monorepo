@@ -244,6 +244,9 @@ function mediaFixture() {
 function fixture() {
   const { media, act, createRequest } = mediaFixture();
   const notifications: NotificationApplication = {
+    async acknowledgeRead() {
+      return { status: "completed" };
+    },
     async retryDelivery() {
       return { status: "queued" };
     },

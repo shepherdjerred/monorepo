@@ -17,6 +17,7 @@ import { TRACKER_ATTACHMENT_SCHEDULE } from "./tracker-attachments.ts";
 import { TEMPORAL_FAILURE_WATCH_SCHEDULE } from "./temporal-failure-watch.ts";
 import { DELIVERY_DISPATCH_SCHEDULE } from "./delivery.ts";
 import { MEDIA_SCHEDULES } from "./media.ts";
+import { MEDIA_PLAYBACK_SCHEDULE } from "./media-playback.ts";
 
 // Split out of register-schedules.ts (which sits at the repo's max-lines
 // cap) — the declarative SCHEDULES array plus its supporting types/data, no
@@ -75,6 +76,7 @@ export const SCHEDULES: ScheduleDefinition[] = schedulesInNamespace("prod", [
   ...AGENT_CHAT_SCHEDULES,
   ...CI_SCHEDULES,
   ...MEDIA_SCHEDULES,
+  MEDIA_PLAYBACK_SCHEDULE,
   TRACKER_ATTACHMENT_SCHEDULE,
   TEMPORAL_FAILURE_WATCH_SCHEDULE,
   DELIVERY_DISPATCH_SCHEDULE,

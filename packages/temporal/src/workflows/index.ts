@@ -443,6 +443,7 @@ import { reconcileStreambotPlaybackWorkflow as reconcileStreambot } from "./stre
 export const reconcileStreambotPlaybackWorkflow = () => reconcileStreambot();
 import * as mediaWorkflows from "./media/exports.ts";
 export const {
+  reconcileMediaPlaybackWorkflow,
   rollbackMovieEditionV1Workflow,
   restoreMovieEditionV4Workflow,
   retainMovieEditionV4Workflow,

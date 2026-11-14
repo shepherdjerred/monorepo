@@ -1,4 +1,7 @@
 import * as m from "#workflows/media/core.ts";
+import * as playback from "#workflows/media/playback.ts";
+export const reconcileMediaPlaybackWorkflow =
+  playback.reconcileMediaPlaybackWorkflow;
 import * as movie from "#workflows/media/movie-editions/acquisition.ts";
 import * as movieSubtitles from "#workflows/media/movie-editions/subtitles.ts";
 import * as movieWatch from "#workflows/media/movie-editions/watch.ts";

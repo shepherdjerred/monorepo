@@ -56,6 +56,12 @@ export async function createWarning(
     requests: Prisma.MediaRequestGetPayload<{
       include: { user: { include: { notificationPreference: true } } };
     }>[];
+    recipients?: {
+      userId: string;
+      user: Prisma.MediaUserGetPayload<{
+        include: { notificationPreference: true };
+      }>;
+    }[];
   },
   authority: {
     generation: number;
@@ -121,11 +127,33 @@ export async function createWarning(
       evidence: { warningEventId: event.id, recoveryEpoch: epoch },
     },
   });
-  for (const claim of item.requests.filter(
-    (request) => request.user.role !== "owner",
-  )) {
+  await queueWarningDeliveries(tx, {
+    recipients:
+      item.recipients ??
+      item.requests.filter((request) => request.user.role !== "owner"),
+    eventId: event.id,
+    epoch,
+  });
+  return decision;
+}
+
+async function queueWarningDeliveries(
+  tx: Prisma.TransactionClient,
+  input: {
+    recipients: {
+      userId: string;
+      user: Prisma.MediaUserGetPayload<{
+        include: { notificationPreference: true };
+      }>;
+    }[];
+    eventId: string;
+    epoch: number;
+  },
+) {
+  for (const claim of input.recipients) {
     const preference = claim.user.notificationPreference;
     const channels = [
+      "in_app",
       preference?.emailEnabled === true &&
       claim.user.emailVerifiedAt !== null &&
       claim.user.email !== null
@@ -138,21 +166,21 @@ export async function createWarning(
     for (const channel of channels) {
       const notification = await tx.notificationDelivery.create({
         data: {
-          eventId: event.id,
+          eventId: input.eventId,
           userId: claim.userId,
           channel,
           state: "pending",
-          recoveryEpoch: epoch,
+          recoveryEpoch: input.epoch,
         },
       });
-      await queueOperation(tx, {
-        key: `notification:${notification.id}`,
-        kind: "deliver_notification",
-        targetId: notification.id,
-        userId: claim.userId,
-        payload: { notificationId: notification.id },
-      });
+      if (channel !== "in_app")
+        await queueOperation(tx, {
+          key: `notification:${notification.id}`,
+          kind: "deliver_notification",
+          targetId: notification.id,
+          userId: claim.userId,
+          payload: { notificationId: notification.id },
+        });
     }
   }
-  return decision;
 }
