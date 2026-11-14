@@ -4,17 +4,15 @@
  * moves each stack's `.terraform.lock.hcl` to the pinned versions, regenerates
  * the provider bindings and re-synthesizes every stack.
  *
- *   bun run --cwd packages/homelab-cdktn providers:refresh            # synthesized stacks
- *   bun run --cwd packages/homelab-cdktn providers:refresh -- argocd  # named stacks, any format
+ *   bun run --cwd packages/homelab-cdktn providers:refresh            # every stack
+ *   bun run --cwd packages/homelab-cdktn providers:refresh -- argocd  # named stacks only
  *   bun run --cwd packages/homelab-cdktn providers:refresh -- --check # report only, exit 1 when stale
  *
  * It only reads provider registries and writes lock files, bindings and
  * synthesized JSON. It never initializes a backend, so it cannot touch state.
  *
- * By default only synthesized stacks are refreshed: a hand-written HCL stack's
- * lock is still maintained by Renovate's terraform manager and may run ahead
- * of the pin until the stack is ported. Naming a stack refreshes it anyway,
- * which is how a port aligns its lock with the bindings it was written for.
+ * Nothing else maintains a lock file: Renovate bumps only the pins, so this
+ * script is the one way a stack's lock moves.
  */
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";

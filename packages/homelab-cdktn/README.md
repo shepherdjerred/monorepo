@@ -1,15 +1,16 @@
 # @homelab/cdktn
 
-The CDK Terrain (cdktn) application that synthesizes OpenTofu stacks. Each
-ported stack is a TypeScript class in `src/stacks/<stack>.ts`, or in
+The CDK Terrain (cdktn) application that synthesizes every OpenTofu stack.
+Each stack is a TypeScript class in `src/stacks/<stack>.ts`, or in
 `src/stacks/<stack>/index.ts` when it is split across files; `bun run synth`
 writes its configuration to `packages/homelab/src/tofu/<stack>/main.tf.json`,
 which is committed next to the stack's lock file.
 
 OpenTofu stays the engine. Nothing here plans or applies: the stack runner
 (`packages/homelab/scripts/tofu/tofu-stack.ts`) and Delivery read the committed
-JSON exactly as they read hand-written HCL. `packages/homelab/src/tofu/README.md`
-describes the stacks, their credentials and how they are run.
+JSON, and refuse a stack directory that lacks it or holds a `.tf` file.
+`packages/homelab/src/tofu/README.md` describes the stacks, their credentials
+and how they are run.
 
 ## Commands
 
@@ -48,7 +49,7 @@ caused a plan diff.
 
 ### Flattening a local module
 
-A local HCL module the root calls is replaced in pass two by a construct
+A local HCL module the root calls is replaced by a construct
 extending `FlattenedModule` (`src/flattened-module.ts`). Create each resource
 through `place(resource, name, nameInModule)`: it gives the resource its root
 name and records the `module.<call>[…].<type>.<name>[…]` address it had, so
@@ -81,12 +82,11 @@ resource, and the module's conditions are decided at synthesis.
    stack's existing `required_version` and each provider's version
    constraint exactly as `.terraform.lock.hcl` records it.
 3. Add the stack to `SYNTHESIZED_STACKS` and `STACKS` in `src/app.ts`.
-4. Run `synth`, then delete every root `.tf` file of the stack in the same
-   commit. A directory holding both `main.tf.json` and root `.tf` files is
-   refused. A local module the root still calls (`modules/**`) stays HCL:
-   call it with `TerraformHclModule` under its HCL name, so its resources
-   keep their `module.<name>…` addresses. Flattening a module is pass two;
-   see "Flattening a local module".
+4. Run `synth`, then delete every `.tf` file of the stack in the same
+   commit, local modules included. A directory holding `main.tf.json` and a
+   `.tf` file anywhere is refused, because nothing lints or reads HCL. A
+   local module becomes a construct in the same port; see "Flattening a local
+   module".
 5. Add a synth test asserting the stack's resource addresses, imports,
    `moved` and `removed` blocks.
 6. Drop any `externalFiles` entry in `tofu-stack-manifest.ts` for a file the
@@ -193,9 +193,6 @@ Never run `apply`, `import`, or any `state` subcommand as part of a port.
   the exact pinned version.
 - **`cdktn get` runs under Node**, not Bun. Synthesis runs under Bun and
   never calls the CLI or OpenTofu.
-- **A local module is copied into the synthesis and its `source` rewritten.**
-  Pass `skipAssetCreationFromLocalModules: true` to `TerraformHclModule` so
-  `source` stays the committed `./modules/<name>` path.
 - **An output's `precondition` is dropped from JSON synthesis.** Add it with
   `output.addOverride("precondition", { condition, error_message })`.
 - **A dynamically typed attribute is bound as a map.**

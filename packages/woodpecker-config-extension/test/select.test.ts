@@ -586,14 +586,14 @@ describe("selected lane contracts", () => {
   });
 
   test("offline infrastructure validation is pull-request only", () => {
-    const keys = keysFor(["packages/homelab/src/tofu/seaweedfs/main.tf"]);
+    const keys = keysFor(["packages/homelab/src/tofu/seaweedfs/main.tf.json"]);
     expect(keys).toContain("tofu-validate");
     const steps = buildPipelineSteps({ images: IMAGES, changedBase: "x" });
     expect(
       steps.find((s) => s.key === "tofu-validate")?.dependsOn,
     ).toBeUndefined();
     expect(
-      keysFor(["packages/homelab/src/tofu/seaweedfs/main.tf"], "main"),
+      keysFor(["packages/homelab/src/tofu/seaweedfs/main.tf.json"], "main"),
     ).not.toContain("tofu-validate");
   });
 
@@ -619,9 +619,9 @@ describe("selected lane contracts", () => {
   });
 
   test("every OpenTofu stack directory is validated, including the locally built provider's", () => {
-    // A stack is hand-written HCL (providers.tf) or a synthesis (main.tf.json).
+    // A stack is its committed synthesis (main.tf.json).
     const stacks = [
-      ...new Bun.Glob("*/{providers.tf,main.tf.json}").scanSync({
+      ...new Bun.Glob("*/main.tf.json").scanSync({
         cwd: `${import.meta.dir}/../../homelab/src/tofu`,
       }),
     ].map((file) => file.replace(/\/[^/]+$/u, ""));

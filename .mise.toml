@@ -79,10 +79,6 @@ yq = "4.54.1"
 # Homelab automation (helm push, tofu wrappers, ArgoCD sync, site deploys)
 helm = "4.3.0"
 opentofu = "1.13.1"
-# Tofu-tree lint (packages/homelab lint:tofu), bundled terraform ruleset with
-# a repository-owned empty config — no plugins, no `tflint --init`, no network.
-# renovate: datasource=github-releases depName=terraform-linters/tflint
-tflint = "0.64.0"
 # Kubernetes schema validation of the cdk8s synth output (packages/homelab
 # check:kubeconform). Fetches upstream JSON schemas at validation time.
 # renovate: datasource=github-releases depName=yannh/kubeconform

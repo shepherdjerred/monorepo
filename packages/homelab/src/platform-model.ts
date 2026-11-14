@@ -1,8 +1,8 @@
 /**
  * The platform model: cross-tool facts declared once.
  *
- * Kubernetes (cdk8s) and OpenTofu (HCL stacks and the CDK Terrain app) each
- * render half of the same fact: a public hostname is a TunnelBinding and a
+ * Kubernetes (cdk8s) and OpenTofu (the CDK Terrain app) each render half of
+ * the same fact: a public hostname is a TunnelBinding and a
  * Cloudflare CNAME, a static site is a Caddy host and a SeaweedFS bucket. This
  * module is the single definition both synthesizers will consume.
  *

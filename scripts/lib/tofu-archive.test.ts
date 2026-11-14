@@ -39,14 +39,15 @@ async function fixture(options: { declaredRead?: boolean } = {}) {
   scratch.push(repoRoot);
   const stack = path.join(repoRoot, TOFU_STACK_ROOT, "cloudflare");
   const files: Record<string, string> = {
-    "backend.tf":
-      'terraform {\n  backend "s3" {\n    use_lockfile = true\n  }\n}\n',
-    "main.tf":
-      options.declaredRead === false
-        ? 'locals {\n  x = jsondecode(file("${path.module}/../../undeclared.json"))\n}\n'
-        : 'locals {\n  registry = jsondecode(file("${path.module}/../../domain-registry.json"))\n}\n',
+    "main.tf.json": `${JSON.stringify({
+      locals: {
+        registry: `\${jsondecode(file("\${path.module}/../../${
+          options.declaredRead === false ? "undeclared" : "domain-registry"
+        }.json"))}`,
+      },
+    })}\n`,
     ".terraform.lock.hcl": 'provider "x" {}\n',
-    "modules/static-cache/main.tf": 'variable "zone" {}\n',
+    "dns-audit.md": "# audit\n",
     "desired-state.json": "{}\n",
     "tests/domain.tftest.hcl": "run {}\n",
     ".terraform/providers/x/binary": "binary\n",
@@ -72,7 +73,7 @@ async function fixture(options: { declaredRead?: boolean } = {}) {
 }
 
 describe("OpenTofu stack archives", () => {
-  test("hold the stack source, lock file, local modules and declared inputs under repository paths", async () => {
+  test("hold the synthesis, lock file, other stack files and declared inputs under repository paths", async () => {
     const { repoRoot } = await fixture();
     expect(
       await tofuStackArchiveFiles("cloudflare", repoRoot, DECLARED),
@@ -80,9 +81,8 @@ describe("OpenTofu stack archives", () => {
       "packages/homelab/src/domain-registry.json",
       TOFU_ARCHIVE_LAYOUT,
       `${TOFU_STACK_ROOT}/cloudflare/.terraform.lock.hcl`,
-      `${TOFU_STACK_ROOT}/cloudflare/backend.tf`,
-      `${TOFU_STACK_ROOT}/cloudflare/main.tf`,
-      `${TOFU_STACK_ROOT}/cloudflare/modules/static-cache/main.tf`,
+      `${TOFU_STACK_ROOT}/cloudflare/dns-audit.md`,
+      `${TOFU_STACK_ROOT}/cloudflare/main.tf.json`,
     ]);
   });
 
@@ -179,16 +179,23 @@ describe("OpenTofu stack archives", () => {
     ]);
   });
 
-  test("a stack directory without configuration is not archived", async () => {
+  test("a stack directory that is not a committed synthesis is not archived", async () => {
     const { repoRoot, stack } = await fixture();
-    await rm(path.join(stack, "backend.tf"));
-    await rm(path.join(stack, "main.tf"));
-    await rm(path.join(stack, "modules"), { recursive: true });
+    await Bun.write(path.join(stack, "modules/static-cache/main.tf"), "\n");
     await expect(
       tofuStackArchiveFiles("cloudflare", repoRoot, DECLARED),
-    ).rejects.toThrow("has no configuration to archive");
-    // Synthesized JSON counts as configuration: the stack now gets as far as
-    // the external-file check, which no longer finds the declared read.
+    ).rejects.toThrow(
+      "holds HCL next to its synthesized main.tf.json: modules/static-cache/main.tf",
+    );
+    await rm(path.join(stack, "modules"), { recursive: true });
+    await rm(path.join(stack, "main.tf.json"));
+    await Bun.write(path.join(stack, "providers.tf"), "\n");
+    await expect(
+      tofuStackArchiveFiles("cloudflare", repoRoot, DECLARED),
+    ).rejects.toThrow("has no synthesized main.tf.json");
+    // An empty synthesis gets as far as the external-file check, which no
+    // longer finds the declared read.
+    await rm(path.join(stack, "providers.tf"));
     await Bun.write(path.join(stack, "main.tf.json"), "{}\n");
     await expect(
       tofuStackArchiveFiles("cloudflare", repoRoot, DECLARED),

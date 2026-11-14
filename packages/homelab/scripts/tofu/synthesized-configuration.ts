@@ -1,10 +1,10 @@
 /**
  * Reads the committed cdktn synthesis of a stack (`main.tf.json`).
  *
- * Repository checks that used to pattern-match HCL (tunnel DNS coverage, the
- * SeaweedFS backup bucket list, the 1Password vault audit) call this for a
- * ported stack and keep their HCL reader for one that is not. It is a bridge:
- * once the shared platform model exists those checks read the model instead.
+ * Repository checks that need what a stack declares (tunnel DNS coverage, the
+ * SeaweedFS backup bucket list, the 1Password vault audit) read it here. It
+ * is a bridge: once the shared platform model exists those checks read the
+ * model instead.
  */
 import path from "node:path";
 import { z } from "zod";
@@ -32,14 +32,16 @@ export function parseSynthesizedConfiguration(
   return SynthesizedConfigurationSchema.parse(JSON.parse(content));
 }
 
-/** The stack's synthesis, or `undefined` while the stack is hand-written HCL. */
+/** The stack's synthesis; a stack directory without one is a broken contract. */
 export async function readSynthesizedConfiguration(
   stackDirectory: string,
-): Promise<SynthesizedConfiguration | undefined> {
+): Promise<SynthesizedConfiguration> {
   const file = Bun.file(path.join(stackDirectory, "main.tf.json"));
-  return (await file.exists())
-    ? parseSynthesizedConfiguration(await file.text())
-    : undefined;
+  if (!(await file.exists()))
+    throw new Error(
+      `${stackDirectory} has no main.tf.json: packages/homelab-cdktn synthesizes every stack`,
+    );
+  return parseSynthesizedConfiguration(await file.text());
 }
 
 /** Every resource of one type, or of all types, in declaration order. */

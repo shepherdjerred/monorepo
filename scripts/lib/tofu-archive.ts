@@ -3,9 +3,9 @@
  *
  * Delivery plans and applies a stack from a content-addressed archive of its
  * exact source rather than from a Git fetch. An archive holds the stack
- * directory under its repository-relative path (lock file and local modules
- * included; local state, data directories, saved plans, tests and the desired
- * state file excluded) plus the external files the stack manifest declares,
+ * directory under its repository-relative path (the committed synthesis and
+ * lock file included; local state, data directories, saved plans, tests and the
+ * desired state file excluded) plus the external files the stack manifest declares,
  * so the archive is complete for `tofu init -lockfile=readonly` and `plan`.
  */
 import { lstat } from "node:fs/promises";
@@ -77,9 +77,7 @@ export async function tofuStackArchiveFiles(
       );
     files.push(staticArchivePath(`${prefix}/${relative}`));
   }
-  // Hand-written HCL, or the committed cdktn synthesis (`main.tf.json`).
-  if (!files.some((file) => file.endsWith(".tf") || file.endsWith(".tf.json")))
-    throw new Error(`OpenTofu stack ${name} has no configuration to archive`);
+  // Also refuses a directory that is not a committed synthesis.
   await verifyStackExternalFiles({
     repoRoot,
     stackDirectory: directory,

@@ -37,8 +37,6 @@ const LifecycleConfigurationSchema = z.strictObject({
 async function lifecycleResource(name: string) {
   const configuration =
     await readSynthesizedConfiguration(SEAWEEDFS_TOFU_STACK);
-  if (configuration === undefined)
-    throw new Error("the seaweedfs stack has no synthesized main.tf.json");
   const resource = synthesizedResources(configuration, "terraform_data").find(
     (candidate) => candidate.name === name,
   );
@@ -62,8 +60,7 @@ describe("SeaweedFS ci-handoff bucket", () => {
     const resource = await lifecycleResource("ci_handoff_lifecycle");
 
     expect(resource.input["bucket"]).toBe("${aws_s3_bucket.ci_handoff.id}");
-    // The longest a reader needs an earlier pipeline's handoff is the 24-hour
-    // reviewed-plan window (scripts/tofu/platform-plan-handoff.ts).
+    // Handoffs are build-scoped; 30 days leaves room to inspect a failed run.
     expect(resource.input["expire_days"]).toBe(30);
     expect(
       lifecycleConfiguration(

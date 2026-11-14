@@ -12,7 +12,7 @@ export type StackDefinition = {
   /**
    * Repository files outside the stack directory that its configuration reads
    * at plan time through `file()` and friends. The archive producer freezes
-   * exactly these next to the stack, and the external-file lint fails on any
+   * exactly these next to the stack, and the external-file check fails on any
    * other reference that escapes the directory.
    */
   externalFiles: readonly string[];

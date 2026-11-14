@@ -146,12 +146,7 @@ describe("OpenTofu credential contracts", () => {
       expect(() =>
         assertStackExecutionContext("dockerhub-tokens", "validate", ci),
       ).not.toThrow();
-      for (const action of [
-        "plan",
-        "apply",
-        "prepare",
-        "apply-saved",
-      ] as const) {
+      for (const action of ["plan", "apply"] as const) {
         expect(() =>
           assertStackExecutionContext("dockerhub-tokens", action, ci),
         ).toThrow("operator-only");

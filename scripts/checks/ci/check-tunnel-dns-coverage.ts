@@ -64,10 +64,6 @@ async function synthesizedStack(
   tofuCloudflare: string,
 ): Promise<SynthesizedConfiguration> {
   const synthesized = await readSynthesizedConfiguration(tofuCloudflare);
-  if (synthesized === undefined)
-    throw new Error(
-      `${tofuCloudflare} has no main.tf.json: the cloudflare stack is synthesized by packages/homelab-cdktn`,
-    );
   if (Object.keys(synthesized.module ?? {}).length > 0)
     throw new Error(
       `${tofuCloudflare} calls a module: its records cannot be read from main.tf.json, so DNS coverage cannot be proven`,

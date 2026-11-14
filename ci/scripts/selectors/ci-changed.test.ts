@@ -5,7 +5,6 @@ import {
   lanePaths,
   selectorPathsForLane,
 } from "../migration-core.ts";
-import { requestedPlatformTofuApply } from "./tofu-lane-paths.ts";
 import { ensureAncestor } from "./ensure-ancestor.ts";
 
 const HEAD_COMMIT = "a".repeat(40);
@@ -226,9 +225,6 @@ test("a synthesized zone or bucket still selects the site that depends on it", (
   // The cloudflare stack is a directory of sources; seaweedfs is one file.
   expect(paths).toContain("packages/homelab-cdktn/src/stacks/cloudflare");
   expect(paths).toContain("packages/homelab-cdktn/src/stacks/seaweedfs.ts");
-  expect(paths).not.toContain(
-    "packages/homelab/src/tofu/cloudflare/statically-typed-com.tf",
-  );
 });
 
 test("the registries the cloudflare stack is synthesized from select the OpenTofu lane", () => {
@@ -236,28 +232,6 @@ test("the registries the cloudflare stack is synthesized from select the OpenTof
   for (const registry of ["domain-registry", "platform-model"])
     for (const extension of ["json", "ts"])
       expect(paths).toContain(`packages/homelab/src/${registry}.${extension}`);
-});
-
-test("accepts only one exact main-only platform apply request", () => {
-  expect(
-    requestedPlatformTofuApply({
-      TOFU_PLATFORM_APPLY: "discord",
-      CI_COMMIT_BRANCH: "main",
-    }),
-  ).toBe("discord");
-  expect(requestedPlatformTofuApply({})).toBeUndefined();
-  expect(() =>
-    requestedPlatformTofuApply({
-      TOFU_PLATFORM_APPLY: "all",
-      CI_COMMIT_BRANCH: "main",
-    }),
-  ).toThrow("TOFU_PLATFORM_APPLY must be one of");
-  expect(() =>
-    requestedPlatformTofuApply({
-      TOFU_PLATFORM_APPLY: "openai",
-      CI_COMMIT_BRANCH: "feature/platforms",
-    }),
-  ).toThrow("TOFU_PLATFORM_APPLY is main-only");
 });
 
 test("site-scout excludes global CI inputs and uses exact release libraries", () => {
