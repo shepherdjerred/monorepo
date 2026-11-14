@@ -99,6 +99,16 @@ See the original investigation for the full investigation and why hung-task-pani
 
 **Active and verified**: torvalds serves the dedicated metrics listener on port 2381, its `/health` endpoint succeeds, and Prometheus reports `up{job="kube-etcd"} == 1`. The protected etcd service does not restart when this argument changes; configuration changes take effect at the next planned node reboot. Verify the running listener and scrape target after that reboot, and do not mark the dashboard verified from configuration alone. Rollout evidence belongs in the upgrade PR.
 
+### flannel-network-policies.yaml
+
+**Purpose**: Enforce NetworkPolicies by running `kube-network-policies` as a second container of the `kube-flannel` DaemonSet.
+
+**Current settings**: `KubeFlannelCNIConfig.kubeNetworkPoliciesEnabled: true`. The document is control-plane only, so `liskov` has no such patch; the control plane renders the DaemonSet for both nodes. Talos 1.14.6 pins enforcer v1.1.2.
+
+The live `torvalds` configuration keeps the legacy `cluster.network` section, which Talos refuses beside this document. The live switch is the legacy key `cluster.network.cni.flannel.kubeNetworkPoliciesEnabled`. A change to either form only re-renders the bootstrap manifest; the cluster changes at the next manifest sync. The window procedure, its rollback and the enforcer's known bugs are in [Switch on network policy enforcement](../../../docs/wiki/src/content/docs/how-to/switch-on-network-policy-enforcement.md).
+
+The enforcer serves metrics on port 9080 of every node address. No `NetworkRuleConfig` restricts it: the first such rule also creates the Talos host ingress chain, which drops conntrack-invalid packets on every port.
+
 ### Other Patches
 
 - `interface.yaml` - Network interface configuration

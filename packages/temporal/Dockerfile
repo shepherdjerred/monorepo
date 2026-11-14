@@ -192,7 +192,7 @@ ARG KUBECTL_VERSION=v1.37.1
 # renovate: datasource=github-releases depName=github/github-mcp-server
 ARG GITHUB_MCP_SERVER_VERSION=1.3.0
 # renovate: datasource=github-releases depName=siderolabs/talos
-ARG TALOSCTL_VERSION=v1.14.2
+ARG TALOSCTL_VERSION=v1.14.6
 # renovate: datasource=github-releases depName=opentofu/opentofu
 ARG TOFU_VERSION=1.13.1
 # renovate: datasource=github-releases depName=argoproj/argo-cd

@@ -1,0 +1,18 @@
+# Run kube-network-policies as a second container of the kube-flannel
+# DaemonSet, so NetworkPolicies are enforced. Flannel and kube-proxy stay.
+#
+# Control plane only: Talos rejects this document on a worker, and the
+# control plane renders the DaemonSet for every node, so liskov has no patch.
+#
+# Changing this key only re-renders the bootstrap manifest. The cluster
+# changes when the manifests are synced (`talosctl upgrade-k8s --to <current>`).
+#
+# The live torvalds configuration still carries the legacy `cluster.network`
+# section, and Talos refuses this document beside it. There the same switch is
+# `cluster.network.cni.flannel.kubeNetworkPoliciesEnabled`. The procedure is
+# packages/docs/wiki/src/content/docs/how-to/switch-on-network-policy-enforcement.md.
+#
+# https://docs.siderolabs.com/talos/v1.14/reference/configuration/kubernetes/kubeflannelcniconfig
+apiVersion: v1alpha1
+kind: KubeFlannelCNIConfig
+kubeNetworkPoliciesEnabled: true
