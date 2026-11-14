@@ -6,6 +6,7 @@ import {
 } from "./subtitle-policy.ts";
 import { OwnerHealthReasonSchema } from "./notification-authority.ts";
 import { ResolvedProfileSchema } from "#domain/resolved-contract.ts";
+import { ManagedGuideSchema } from "./quality-guide/contract.ts";
 import { ResolvedEvidenceProtocolSchema } from "#domain/resolved-evidence.ts";
 import {
   MediaItemSchema,
@@ -242,6 +243,9 @@ export const PublicReleaseAttributesSchema = z.object({
   quality: z.string(),
   codec: z.string(),
   audioLanguages: z.array(z.string()),
+  videoCompatibility: z
+    .enum(["compatible", "incompatible", "unknown"])
+    .optional(),
   sizeBytes: z.number().int().nonnegative(),
   scoreTags: z.array(z.string()),
   resolvedEvidence: ResolvedEvidenceProtocolSchema.optional(),
@@ -289,6 +293,7 @@ export const QualityRulesSchema = z
     cutoffQuality: z.string(),
     cutoffScore: z.number(),
     resolved: ResolvedProfileSchema.optional(),
+    managedGuide: ManagedGuideSchema.optional(),
   })
   .strict()
   .refine(

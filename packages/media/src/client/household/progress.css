@@ -1,0 +1,13 @@
+.interest-progress {
+  margin-block: 1rem;
+}
+.interest-progress-counts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
+  gap: 1rem;
+  margin-block: 1rem;
+}
+.interest-progress-counts dd {
+  margin: 0.25rem 0;
+  font-size: 1.5rem;
+}

@@ -23,7 +23,6 @@ import { verifyLibraryPlexBinding } from "./library.ts";
 
 const h = automationTestHarness();
 const directories: string[] = [];
-const downloadOperations: string[] = [];
 let bytes: Uint8Array;
 beforeAll(async () => {
   bytes = await movieVideoFixture();
@@ -31,16 +30,6 @@ beforeAll(async () => {
 afterEach(async () => {
   for (const directory of directories.splice(0))
     await rm(directory, { recursive: true, force: true });
-  const operations = downloadOperations.splice(0);
-  if (operations.length > 0)
-    await h.database().applicationEvent.deleteMany({
-      where: {
-        kind: "subtitle_download_requested",
-        OR: operations.map((operationId) => ({
-          payload: { path: ["operationId"], equals: operationId },
-        })),
-      },
-    });
 });
 
 type Fixture = Awaited<ReturnType<typeof libraryBindingFixture>>;
@@ -154,9 +143,12 @@ test.each(
         payload: row.payload,
       });
     }
-    const sources = await captionProviderFixture(f.context);
+    // Preserve actual download journals across every edition case.
+    const sources = await captionProviderFixture(
+      f.context,
+      MovieEditionKeySchema.options.length * 2,
+    );
     for (const target of targets) {
-      downloadOperations.push(target.operationId);
       await h
         .database()
         .providerLease.deleteMany({ where: { providerId: "opensubtitles" } });

@@ -19,6 +19,8 @@ import {
 import { snapshotHash } from "#migration/profile-import.ts";
 import { canonicalReferences } from "#infrastructure/acquisition-identity/references.ts";
 import { buildHandoffScope } from "./scope.ts";
+import { assertPassiveRegistration } from "./passive-registration.ts";
+import { capturedSeriesMask } from "#shared/handoff/captured-monitoring.ts";
 
 const conflict = (code: string) =>
   new MediaError(
@@ -43,22 +45,10 @@ export async function buildLibraryHandoffScope(
   );
   assertLibrarySelection(selected, input);
   const base = await buildHandoffScope(tx, librarySourceRequest(input));
-  await assertSeriesPolicies(tx, input);
-  const files = [];
-  for (const file of base.files) {
-    if (file.existingAssetId !== null)
-      throw conflict("library_asset_already_managed");
-    const classification =
-      file.libraryKind === "movies"
-        ? await classifyMovie(tx, { input, file, report })
-        : null;
-    files.push({
-      ...file,
-      edition: classification?.edition ?? "default",
-      classification: classification?.evidence ?? null,
-    });
-  }
+  await assertSeriesPolicies(tx, input, report);
+  const files = await projectLibraryFiles(tx, { input, report, base });
   const movieFiles = files.filter((file) => file.libraryKind === "movies");
+  assertRegistrationSelection(input, files);
   if (
     (input.schemaVersion === 2 && input.movies.length !== movieFiles.length) ||
     input.movies.some(
@@ -113,9 +103,68 @@ export async function buildLibraryHandoffScope(
   });
 }
 
+async function projectLibraryFiles(
+  tx: Prisma.TransactionClient,
+  options: {
+    input: z.infer<typeof PrepareLibraryHandoffProtocolSchema>;
+    report: z.infer<typeof BundleReportSchema>;
+    base: Awaited<ReturnType<typeof buildHandoffScope>>;
+  },
+) {
+  const { input, report, base } = options;
+  const files: LibraryHandoffScope["files"] = [];
+  for (const file of base.files) {
+    const registrations =
+      input.schemaVersion === 3 ? (input.registeredAssets ?? []) : [];
+    const registration = registrations.find(
+      (entry) => entry.provenanceKey === file.provenanceKey,
+    );
+    if (file.existingAssetId !== null) {
+      if (registration === undefined)
+        throw conflict("library_asset_already_managed");
+      await assertPassiveRegistration(tx, registration, file);
+    } else if (registration !== undefined)
+      throw conflict("library_passive_registration_missing");
+    const classification =
+      file.libraryKind === "movies"
+        ? await classifyMovie(tx, { input, file, report })
+        : null;
+    files.push({
+      ...file,
+      edition: classification?.edition ?? "default",
+      classification: classification?.evidence ?? null,
+    });
+  }
+  return files;
+}
+
+function assertRegistrationSelection(
+  input: z.infer<typeof PrepareLibraryHandoffProtocolSchema>,
+  files: LibraryHandoffScope["files"],
+) {
+  if (input.schemaVersion !== 3 || input.registeredAssets === undefined) return;
+  const registrations = input.registeredAssets;
+  if (
+    new Set(registrations.map((entry) => entry.assetId)).size !==
+      registrations.length ||
+    new Set(registrations.map((entry) => entry.provenanceKey)).size !==
+      registrations.length ||
+    registrations.some(
+      (entry) =>
+        !files.some(
+          (file) =>
+            file.provenanceKey === entry.provenanceKey &&
+            file.assetId === entry.assetId,
+        ),
+    )
+  )
+    throw conflict("library_passive_registration_selection_changed");
+}
+
 async function assertSeriesPolicies(
   tx: Prisma.TransactionClient,
   input: z.infer<typeof PrepareLibraryHandoffProtocolSchema>,
+  report: z.infer<typeof BundleReportSchema>,
 ) {
   if (input.schemaVersion !== 3) return;
   for (const policy of input.seriesMonitoring ?? []) {
@@ -124,6 +173,41 @@ async function assertSeriesPolicies(
     });
     if (series.kind !== "series" || series.title !== policy.title)
       throw conflict("library_series_policy_selection_changed");
+    const selectedRoot = report.entries.find(
+      (entry) => entry.provenanceKey === policy.provenanceKey,
+    );
+    if (
+      selectedRoot?.sourceRecord.kind === "media" &&
+      policy.monitoringMask === undefined &&
+      report.entries.some(
+        (entry) =>
+          entry.captureHash === selectedRoot.captureHash &&
+          entry.sourceRecord.kind === "media" &&
+          entry.sourceRecord.mediaKind === "season" &&
+          entry.sourceRecord.parentSourceId === selectedRoot.sourceId,
+      )
+    )
+      throw conflict("library_series_monitoring_mask_required");
+    if (policy.monitoringMask !== undefined) {
+      const root = report.entries.find(
+        (entry) => entry.provenanceKey === policy.provenanceKey,
+      );
+      if (
+        root?.sourceRecord.kind !== "media" ||
+        !root.sourceRecord.monitored ||
+        snapshotHash(
+          z.json().parse(
+            capturedSeriesMask(
+              report.entries
+                .filter((entry) => entry.captureHash === root.captureHash)
+                .map((entry) => entry.sourceRecord),
+              root.sourceRecord.sourceId,
+            ),
+          ),
+        ) !== snapshotHash(policy.monitoringMask)
+      )
+        throw conflict("library_series_monitoring_mask_changed");
+    }
   }
 }
 
@@ -303,6 +387,7 @@ function librarySourceRequest(
     const {
       plexEditionLabels: _labels,
       seriesMonitoring: _monitoring,
+      registeredAssets: _registrations,
       ...source
     } = input;
     return librarySourceRequestV2({ ...source, schemaVersion: 2 });

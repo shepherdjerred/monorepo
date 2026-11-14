@@ -78,6 +78,15 @@ export const ResolvedProfileSchema = z.object({
   profile: SourceProfileSchema,
   customFormats: z.array(CustomFormatSchema),
   qualityDefinitions: z.array(QualityDefinitionSchema),
+  householdPolicy: z
+    .strictObject({
+      schemaVersion: z.literal(1),
+      audio: z.literal("original"),
+      englishCaptionsForForeignAudio: z.literal(true),
+      provisionalUnknownListingAudio: z.literal(true),
+      rejectedFormatIds: z.array(Integer.positive()).max(10),
+    })
+    .optional(),
 });
 export const ResolvedReleaseSchema = z.object({
   id: z.string().min(1),

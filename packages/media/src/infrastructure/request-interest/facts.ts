@@ -6,6 +6,7 @@ import {
   requestLeaves,
 } from "./fact-scope.ts";
 import { observeInterestLeaf, type LeafObservation } from "./fact-leaf.ts";
+import { usableInterestBacklog } from "#domain/household/interests.ts";
 
 const MAX_COVERAGE = 1000;
 /** This is current, identity-bound observation. Historical playback never participates. */
@@ -71,7 +72,9 @@ export async function nativeInterestFacts(
     select: { meaningfulProgressAt: true },
   });
   return {
-    usableUnwatched: observations.some((value) => value.state === "unwatched"),
+    usableUnwatched: usableInterestBacklog(
+      observations.map((value) => value.state),
+    ),
     watchedComplete: observations.every((value) => value.state === "watched"),
     requestedCoverageComplete: observations.every(
       (value) => value.state !== "unavailable",

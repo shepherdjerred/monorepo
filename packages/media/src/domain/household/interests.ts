@@ -59,6 +59,8 @@ export function evaluateRequestInterest(
     return completedInterest(input);
   if (!input.usableUnwatched)
     return protect("no_usable_unwatched_content", true);
+  if (!input.requestedCoverageComplete)
+    return protect("requested_coverage_incomplete", true);
   const usableSince = input.usableUnwatchedSince ?? input.now;
   if (usableSince > input.now) return protect("interest_clock_invalid");
   const baseline = Math.max(
@@ -73,6 +75,19 @@ export function evaluateRequestInterest(
   return input.now - baseline < delay
     ? { state: "following", usableSince }
     : evaluateReply(input, usableSince, baseline, delay);
+}
+
+/** Aging a following request requires every requested sibling to be usable;
+ * an available backlog cannot hide unaired, missing or caption-pending content. */
+export function usableInterestBacklog(
+  states: readonly (
+    "unknown" | "unavailable" | "watched" | "unwatched" | "subtitles_pending"
+  )[],
+) {
+  return (
+    states.includes("unwatched") &&
+    states.every((state) => state === "watched" || state === "unwatched")
+  );
 }
 
 function completedInterest(input: InterestFacts): InterestEvaluation {

@@ -28,6 +28,7 @@ export async function candidateUpgradeAllowed(
   for (const mediaId of input.mediaIds)
     if (
       !chooseUpgrade({
+        phase: "listing",
         candidate,
         current: await currentRelease(context, mediaId),
         profile: input.profile,

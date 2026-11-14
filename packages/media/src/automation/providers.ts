@@ -31,6 +31,7 @@ export const ProviderIdSchema = z.enum([
   "animez",
 ]);
 export const StoredCandidateSchema = z.object({
+  availabilityObservedAtV1: z.iso.datetime().optional(),
   references: z.array(ProviderReferenceSchema).max(20).optional(),
   editionEvidence: z.array(ProviderEditionEvidenceSchema).max(20).optional(),
   providerId: ProviderIdSchema,

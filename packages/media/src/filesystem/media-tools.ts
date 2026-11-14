@@ -1,9 +1,11 @@
 import { spawn } from "node:child_process";
 import { z } from "zod";
 
+type MediaTool =
+  "ffprobe" | "ffmpeg" | "7zz" | "media-subtitle-analysis" | "ffsubsync";
 export class MediaToolError extends Error {
   constructor(
-    readonly tool: "ffprobe" | "ffmpeg" | "7zz",
+    readonly tool: MediaTool,
     readonly reason: "unavailable" | "failed" | "limit" | "cancelled",
   ) {
     super(`${tool}: ${reason}`);
@@ -12,16 +14,25 @@ export class MediaToolError extends Error {
 }
 
 export type RunMediaTool = (
-  tool: "ffprobe" | "ffmpeg" | "7zz",
+  tool: MediaTool,
   args: readonly string[],
-  options: { maxBytes: number; timeoutMs: number; signal?: AbortSignal },
+  options: {
+    maxBytes: number;
+    timeoutMs: number;
+    signal?: AbortSignal;
+    checkpoint?: () => Promise<void>;
+  },
 ) => Promise<Uint8Array<ArrayBuffer>>;
 
 /** Bounded, shell-free tool invocation with a credential-free environment. */
 export const runMediaTool: RunMediaTool = async (tool, args, options) => {
   options.signal?.throwIfAborted();
   return await new Promise((resolve, reject) => {
+    const group =
+      (tool === "media-subtitle-analysis" || tool === "ffsubsync") &&
+      process.platform !== "win32";
     const child = spawn(tool, [...args], {
+      detached: group,
       stdio: ["ignore", "pipe", "ignore"],
       env: { PATH: "/usr/local/bin:/usr/bin:/bin:/opt/homebrew/bin" },
     });
@@ -30,7 +41,14 @@ export const runMediaTool: RunMediaTool = async (tool, args, options) => {
     let failure: MediaToolError | undefined;
     const fail = (reason: "unavailable" | "failed" | "limit" | "cancelled") => {
       failure = new MediaToolError(tool, reason);
-      child.kill("SIGKILL");
+      if (group && child.pid !== undefined) {
+        try {
+          process.kill(-child.pid, "SIGKILL");
+        } catch (error) {
+          if (!z.object({ code: z.literal("ESRCH") }).safeParse(error).success)
+            throw error;
+        }
+      } else child.kill("SIGKILL");
     };
     const abort = () => {
       fail("cancelled");
@@ -38,9 +56,28 @@ export const runMediaTool: RunMediaTool = async (tool, args, options) => {
     const timeout = setTimeout(() => {
       fail("limit");
     }, options.timeoutMs);
+    let checking = false;
+    const beat = async () => {
+      if (checking) return;
+      checking = true;
+      try {
+        await options.checkpoint?.();
+      } catch {
+        fail("cancelled");
+      } finally {
+        checking = false;
+      }
+    };
+    const heartbeat =
+      options.checkpoint === undefined
+        ? undefined
+        : setInterval(() => {
+            void beat();
+          }, 10_000);
     options.signal?.addEventListener("abort", abort, { once: true });
     const cleanup = () => {
       clearTimeout(timeout);
+      if (heartbeat !== undefined) clearInterval(heartbeat);
       options.signal?.removeEventListener("abort", abort);
     };
     child.stdout.on("data", (value: unknown) => {
@@ -82,6 +119,17 @@ const StreamSchema = z.object({
   height: z.number().int().positive().optional(),
   color_transfer: z.string().optional(),
   color_primaries: z.string().optional(),
+  side_data_list: z
+    .array(
+      z.object({
+        side_data_type: z.string().optional(),
+        dv_profile: z.int().nonnegative().optional(),
+        bl_present_flag: z.union([z.literal(0), z.literal(1)]).optional(),
+        dv_bl_signal_compatibility_id: z.int().nonnegative().max(15).optional(),
+      }),
+    )
+    .max(100)
+    .optional(),
   channels: z.number().int().positive().optional(),
   disposition: z
     .object({

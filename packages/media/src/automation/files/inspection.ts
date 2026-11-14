@@ -6,6 +6,8 @@ import { z } from "zod";
 import { inspectMedia, type MediaProbe } from "#filesystem/media-tools.ts";
 import { sha256File } from "#filesystem/operations-io.ts";
 import { parseReleaseName } from "#domain/release-parser.ts";
+import { videoCompatibility } from "#domain/quality-guide/video-compatibility.ts";
+import { canonicalLanguage } from "#domain/quality-guide/language.ts";
 import { effectiveCandidate } from "#domain/acquisition-identity/effective.ts";
 import { lockAcquisitionMedia } from "#infrastructure/acquisition-identity/locks.ts";
 import {
@@ -31,7 +33,7 @@ import type { MovieChoiceAccess } from "#infrastructure/movie-editions/access.ts
 import type { Prisma } from "#generated/prisma/client.ts";
 import { stageEmbedded } from "./embedded.ts";
 import { captureEmbeddedStreamFacts } from "./subtitle-lifecycle/embedded-facts.ts";
-import { assertMeasuredUpgrade } from "./quality-guard.ts";
+import { assertInspectedQualityV1 } from "./quality-guide/inspection.ts";
 import { newLibraryPath, type NamingItem } from "./library-path.ts";
 import { resumeCommittedPublication } from "./committed-publication.ts";
 import { measureResolvedEvidence } from "./resolved-measurement.ts";
@@ -86,7 +88,12 @@ export function fileCoverage(
 export function probeAttributes(
   probe: MediaProbe,
   sourceQuality: string,
-): { quality: string; codec: string; audioLanguages: string[] } {
+): {
+  quality: string;
+  codec: string;
+  audioLanguages: string[];
+  videoCompatibility: "compatible" | "incompatible" | "unknown";
+} {
   const video = probe.streams.find((stream) => stream.codec_type === "video");
   if (video?.width === undefined || video.height === undefined)
     throw new FileGuardError("video_dimensions_missing");
@@ -105,31 +112,19 @@ export function probeAttributes(
     hevc: "HEVC",
     av1: "AV1",
   };
-  const languages: Record<string, string> = {
-    eng: "en",
-    jpn: "ja",
-    zho: "zh",
-    chi: "zh",
-    spa: "es",
-    fre: "fr",
-    fra: "fr",
-    ger: "de",
-    deu: "de",
-    kor: "ko",
-  };
   const audioLanguages = probe.streams
     .filter((stream) => stream.codec_type === "audio")
     .flatMap((stream) => {
       const code = stream.tags?.language?.toLowerCase();
       if (code === undefined) return [];
-      const language =
-        languages[code] ?? (/^[a-z]{2}$/u.test(code) ? code : undefined);
-      return language === undefined ? [] : [language];
+      const language = canonicalLanguage(code);
+      return language === null ? [] : [language];
     });
   return {
     quality: `${source}-${resolution}`,
     codec: codecs[video.codec_name ?? ""] ?? "unknown",
     audioLanguages: [...new Set(audioLanguages)],
+    videoCompatibility: videoCompatibility(video.side_data_list ?? []),
   };
 }
 
@@ -374,6 +369,7 @@ export async function inspectEntry(input: {
   const measured = {
     ...(identity === null ? original : effectiveCandidate(original, identity)),
     ...probeAttributes(probe, attributes.quality),
+    runtimeMs: Math.round(Number(probe.format.duration) * 1000),
     mediaIds,
     sizeBytes: file.size,
   };
@@ -383,11 +379,13 @@ export async function inspectEntry(input: {
     filename: nodePath.basename(file.name),
     ...seriesPackMeasurementV1(identity, evidence),
   });
-  const profileVersions = await assertMeasuredUpgrade(
-    context.db,
+  const profileVersions = await assertInspectedQualityV1(context, {
+    attemptId: attempt.id,
     measured,
     mediaIds,
-  );
+    attemptMediaIds: attempt.mediaIds,
+    movieAccess: input.movieAccess,
+  });
   const checksum = await sha256File(source.absolute, async () => {
     await context.checkpoint("hashing");
   });

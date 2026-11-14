@@ -70,6 +70,7 @@ try {
     target,
     historicalSource
       .replace(field, "")
+      .replace(/^\s+availability\s+Json\?\s*$/mu, "")
       .replace(generatorOutput, `output = ${output}`),
   );
   await generate(target);

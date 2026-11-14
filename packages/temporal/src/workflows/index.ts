@@ -444,6 +444,8 @@ export const reconcileStreambotPlaybackWorkflow = () => reconcileStreambot();
 import * as mediaWorkflows from "./media/exports.ts";
 export const {
   reconcileMediaPlaybackWorkflow,
+  refreshMediaQualityGuidesWorkflow,
+  maintainMediaSubtitlesV1Workflow,
   rollbackMovieEditionV1Workflow,
   restoreMovieEditionV4Workflow,
   retainMovieEditionV4Workflow,

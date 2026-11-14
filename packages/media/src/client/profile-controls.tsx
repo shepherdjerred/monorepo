@@ -4,6 +4,7 @@ import {
   CommandResultSchema,
   ProfileListSchema,
   SaveQualityProfileSchema,
+  QualityRulesSchema,
 } from "#shared/api.ts";
 import type { MediaUser } from "#shared/contract.ts";
 import { queryClient, readApi, writeApi } from "./api.ts";
@@ -108,6 +109,20 @@ export function ProfileEditor({
     onSuccess: async () =>
       queryClient.invalidateQueries({ queryKey: ["profiles"] }),
   });
+  if (
+    profile !== null &&
+    QualityRulesSchema.parse(profile.rules).managedGuide !== undefined
+  )
+    return (
+      <p>
+        Managed by the{" "}
+        <a className="text-link" href="#quality-guide">
+          living-room quality controls
+        </a>
+        . Preview changes there to retain the selected guide and your score
+        overrides.
+      </p>
+    );
   return (
     <form
       className="stack-form"

@@ -5,6 +5,7 @@ export const NativeFeedProviderSchema = z.enum([
   "privatehd",
   "avistaz",
   "animez",
+  "thepiratebay",
 ]);
 const Hash = z.string().regex(/^[a-f0-9]{64}$/u);
 const Page = z

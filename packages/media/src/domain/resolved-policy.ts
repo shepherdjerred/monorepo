@@ -51,6 +51,7 @@ export function evaluateResolvedPolicy(
   release: ReleaseAttributes,
   profile: QualityProfile,
   mediaIds: readonly string[],
+  phase: "listing" | "measured" = "measured",
 ): ReleaseEvaluation {
   const evidence = evidenceFor(release, profile);
   if (evidence === null || profile.resolved === undefined)
@@ -64,11 +65,21 @@ export function evaluateResolvedPolicy(
     profile.resolved,
     evidence.release,
     evidenceMatcher([evidence]),
+    phase,
   );
   const reasons = [
     ...evidence.protectedReasons,
     ...coverageReasons(release, mediaIds),
     ...result.reasons,
+    ...(phase === "listing" ||
+    profile.resolved.householdPolicy === undefined ||
+    release.videoCompatibility === "compatible"
+      ? []
+      : [
+          release.videoCompatibility === "incompatible"
+            ? "incompatible_dynamic_range"
+            : "video_compatibility_unknown",
+        ]),
   ].map((reason) => `resolved_${reason}`);
   return {
     accepted: result.status === "accepted" && reasons.length === 0,
@@ -82,11 +93,13 @@ export function chooseResolvedPolicy(input: {
   current: ReleaseAttributes | null;
   profile: QualityProfile;
   mediaIds: readonly string[];
+  phase?: "listing" | "measured";
 }) {
   const evaluation = evaluateResolvedPolicy(
     input.candidate,
     input.profile,
     input.mediaIds,
+    input.phase,
   );
   const candidate = evidenceFor(input.candidate, input.profile);
   if (
@@ -103,7 +116,10 @@ export function chooseResolvedPolicy(input: {
     input.current === null ? null : evidenceFor(input.current, input.profile);
   if (
     input.current !== null &&
-    (current === null || current.protectedReasons.length > 0)
+    (current === null ||
+      current.protectedReasons.length > 0 ||
+      (input.profile.resolved.householdPolicy !== undefined &&
+        input.current.videoCompatibility !== "compatible"))
   )
     return { upgrade: false, reason: "current_evidence_unknown", evaluation };
   const decision = chooseResolvedUpgrade({
@@ -113,6 +129,7 @@ export function chooseResolvedPolicy(input: {
     matcher: evidenceMatcher(
       current === null ? [candidate] : [candidate, current],
     ),
+    phase: input.phase,
   });
   return { upgrade: decision.upgrade, reason: decision.reason, evaluation };
 }

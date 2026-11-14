@@ -14,6 +14,10 @@ import { accountedRecoveryClaims, claimIdentityHash } from "./accounting.ts";
 import { projectLegacyCoordinates } from "./coordinates.ts";
 import { unresolvedRecoveryClaims } from "#infrastructure/recovery/provenance.ts";
 import { parseStoredClaim, relevantRecordWhere } from "./records.ts";
+import {
+  unreviewedPersonalRecords,
+  unaccountedPersonalClaim,
+} from "./personal-accounting.ts";
 
 export async function buildRecoveryClaims(
   db: Prisma.TransactionClient,
@@ -41,7 +45,7 @@ export async function buildRecoveryClaims(
   const claims: RecoveryClaimProjection[] = [];
   const blockers = new Set<string>();
   const relevantClaims: { userId: string; mediaIds: string[] }[] = [];
-  for (const stored of records) {
+  for (const stored of await unreviewedPersonalRecords(db, records, budget)) {
     const record = parseStoredClaim(stored);
     if (record.kind !== "request" || !record.active) continue;
     const projected = await projectLegacyCoordinates(db, record, media);
@@ -115,7 +119,11 @@ export async function buildRecoveryClaims(
       sourceScope: record.scope,
       seasons: record.seasons,
     });
-    appendUnaccounted(claims, accounted, claim);
+    appendUnaccounted(
+      claims,
+      accounted,
+      await unaccountedPersonalClaim(db, stored, claim, budget),
+    );
   }
   // Original applied handoff reports remain authoritative even if an old import
   // did not persist requester records. Never dismiss missing capture evidence.

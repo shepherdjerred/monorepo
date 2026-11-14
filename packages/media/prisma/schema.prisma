@@ -752,6 +752,7 @@ model ReleaseCandidate {
   mediaIds          String[]
   searchedForMediaIds String[] @default([])
   sourceEvidence Json?
+  availability Json?
   createdAt         DateTime             @default(now())
   attempts          AcquisitionAttempt[]
 

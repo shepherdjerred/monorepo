@@ -17,6 +17,15 @@ export const SubtitlePolicySchema = z.strictObject({
 export const SubtitlePolicySatisfactionSchema = z.object({
   satisfied: z.boolean(),
   missing: z.array(SubtitlePolicyTargetSchema),
+  householdMissing: z
+    .array(
+      z.object({
+        language: z.literal("en"),
+        forced: z.literal(false),
+        hearingImpaired: z.literal("any"),
+      }),
+    )
+    .default([]),
   protectedReasons: z.array(z.string()),
 });
 export const SubtitlePolicyResolutionSchema = z.strictObject({

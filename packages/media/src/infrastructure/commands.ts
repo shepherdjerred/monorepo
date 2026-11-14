@@ -333,6 +333,12 @@ export class PrismaMediaCommands extends MovieLifecycleCommands {
 
   saveProfile(actor: MediaActor, key: string, input: SaveQualityProfile) {
     requireOwner(actor);
+    if (input.rules.managedGuide !== undefined)
+      throw new MediaError(
+        "managed_guide_profile",
+        "Use the selected-guide preview and apply controls to preserve guide provenance and score overrides",
+        422,
+      );
     return this.command(
       actor,
       key,
@@ -342,6 +348,17 @@ export class PrismaMediaCommands extends MovieLifecycleCommands {
         const existing = await db.qualityProfile.findUnique({
           where: { id: profileId },
         });
+        if (
+          existing !== null &&
+          z
+            .object({ managedGuide: z.unknown().optional() })
+            .parse(existing.rules).managedGuide !== undefined
+        )
+          throw new MediaError(
+            "managed_guide_profile",
+            "Update this managed profile through its selected-guide preview so its overrides and provenance remain intact",
+            422,
+          );
         if (
           (existing === null && input.id !== undefined) ||
           (existing?.version ?? 0) !== input.expectedVersion

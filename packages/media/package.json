@@ -36,6 +36,8 @@
     "./capacity": "./src/shared/capacity/contract.ts",
     "./plex-events": "./src/shared/plex-events/contract.ts",
     "./playback": "./src/shared/household/playback.ts",
+    "./quality-guide": "./src/shared/quality-guide/contract.ts",
+    "./subtitle-maintenance": "./src/shared/subtitle-maintenance/activities.ts",
     "./plex-binding": "./src/shared/plex-binding/activities.ts",
     "./native-archive": "./src/shared/native-recovery/archive.ts",
     "./native-compensation": "./src/shared/native-recovery/compensation-runtime.ts",

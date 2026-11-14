@@ -96,6 +96,41 @@ test("restricted Seerr inventory and changing page totals cannot claim completen
   );
   expect(validateCapture(incomplete).complete).toBe(false);
 });
+test.each([1, 2, 3, 4, 5])(
+  "Seerr capture retains request and season status %i without confusing fulfillment with viewing",
+  async (status) => {
+    const capture = await captureSeerr(
+      { ...source, source: "seerr" },
+      fetcher((url) => {
+        const reply = seerrReply(url);
+        if (!url.pathname.endsWith("request")) return reply;
+        return {
+          pageInfo: { results: 1, page: 1 },
+          results: [
+            {
+              id: 4,
+              type: "tv",
+              status,
+              media: { tmdbId: 45, tvdbId: 46 },
+              requestedBy: { id: 17 },
+              seasons: [{ seasonNumber: 1, status }],
+            },
+          ],
+        };
+      }),
+    );
+    expect(validateCapture(capture)).toMatchObject({
+      complete: true,
+      stable: true,
+    });
+    expect(capture.records[0]).toMatchObject({
+      sourceStatus: status,
+      seasonStatuses: [{ season: 1, status }],
+      active: status === 2 || status === 5,
+      seasons: status === 2 || status === 5 ? [1] : [],
+    });
+  },
+);
 function bazarrReply(url: URL) {
   if (url.pathname.endsWith("status"))
     return {

@@ -22,6 +22,7 @@ import {
 import { librarySourceAssociation } from "./library-association.ts";
 import { readLibrarySeriesPolicy } from "./series-policy.ts";
 import { readLibraryBatchPolicy } from "./library-batches.ts";
+import { libraryEpisodeMonitored } from "#shared/handoff/monitoring-mask.ts";
 type Input = {
   mediaIds: readonly string[];
   epoch: number;
@@ -190,7 +191,7 @@ async function readSeriesManagedCoverage(
   state: {
     input: Input;
     seriesId: string;
-    leaves: { seasonNumber: number | null }[];
+    leaves: { seasonNumber: number | null; episodeNumber: number | null }[];
   },
   invocation: LibraryManagementInvocation,
 ) {
@@ -210,7 +211,14 @@ async function readSeriesManagedCoverage(
     if (input.expected !== undefined) protectLibraryManagement();
     return null;
   }
-  if (!policy.includeSpecials && leaves.some((leaf) => leaf.seasonNumber === 0))
+  if (
+    leaves.some(
+      (leaf) =>
+        leaf.seasonNumber === null ||
+        leaf.episodeNumber === null ||
+        !libraryEpisodeMonitored(policy, leaf.seasonNumber, leaf.episodeNumber),
+    )
+  )
     protectLibraryManagement();
   const targets = await tx.mediaIntent.findMany({
     where: { edition: "default", mediaId: { in: [...input.mediaIds] } },

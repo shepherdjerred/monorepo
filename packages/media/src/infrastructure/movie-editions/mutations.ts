@@ -12,6 +12,7 @@ import { releaseCancelledMovieReservationV4 } from "./lifecycle/cancellation.ts"
 import { personalRequestGenerationChange } from "#infrastructure/library-monitoring/intent.ts";
 import { invalidateMovieRetentionV4 } from "./lifecycle/invalidate.ts";
 import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import { preservedClaimKeep } from "#infrastructure/request-interest/policy.ts";
 
 export async function removeMovieChoice(
   tx: Prisma.TransactionClient,
@@ -59,6 +60,7 @@ export async function removeMovieChoice(
     purpose: "protect",
   });
   const cancel = input.action === "cancel_request";
+  const permanentKeep = preservedClaimKeep(request, cancel);
   const updated = await tx.mediaRequest.update({
     where: { id: request.id },
     data: {
@@ -83,6 +85,7 @@ export async function removeMovieChoice(
     },
     data: {
       ...personalRequestGenerationChange(target),
+      ...permanentKeep,
       version: { increment: 1 },
       ...(remaining === 0 ? { monitoring: target.libraryMonitoring } : {}),
     },
@@ -110,6 +113,7 @@ export async function removeMovieChoice(
         subjectUserId: current.subject.id,
         edition: request.edition,
         choiceRevision: updated.movieEditionChoiceRevision,
+        preservedPermanentKeep: permanentKeep.libraryKeep === true,
       },
     },
   });

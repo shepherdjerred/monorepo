@@ -7,6 +7,7 @@ import {
 import { MovieEditionScopeSchema } from "#shared/movie-editions/registry.ts";
 import { MovieEditionReasonSchema } from "#shared/movie-editions/fulfillment.ts";
 import { MediaVisibilitySchema } from "#shared/visibility/detail.ts";
+import { SubtitlePolicySatisfactionSchema } from "#shared/subtitle-policy.ts";
 import {
   MovieTargetExpectedV4Schema,
   MovieRemovalConfirmationV4Schema,
@@ -112,6 +113,7 @@ export const MovieTargetAssetV4Schema = z.strictObject({
     )
     .max(100),
   captionsTruncated: z.boolean(),
+  subtitleStatus: SubtitlePolicySatisfactionSchema.nullable().default(null),
 });
 export const MovieTargetProgressV4Schema = MediaVisibilitySchema.pick({
   attempts: true,

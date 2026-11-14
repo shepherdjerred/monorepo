@@ -33,6 +33,31 @@ export function MovieEditionFilesV4({
           Audio: {asset.properties.audioLanguages.join(", ")}
         </p>
       )}
+      {asset.subtitleStatus !== null && (
+        <div className="retention-summary">
+          <strong>
+            {asset.subtitleStatus.satisfied
+              ? "Subtitle requirements met"
+              : "Subtitle requirements pending"}
+          </strong>
+          {asset.subtitleStatus.householdMissing.length > 0 && (
+            <p className="helper">
+              English regular subtitles required for original-language playback
+            </p>
+          )}
+          {asset.subtitleStatus.missing.map((target) => (
+            <p className="helper" key={target.sourceItemId}>
+              {target.language} ·{" "}
+              {target.forced ? "Forced dialogue" : "Regular subtitles"}
+            </p>
+          ))}
+          {asset.subtitleStatus.protectedReasons.map((reason) => (
+            <p className="helper" key={reason}>
+              {humanize(reason)}
+            </p>
+          ))}
+        </div>
+      )}
       {asset.captions.length === 0 ? (
         <p className="helper">
           No installed or quarantined captions for this video.

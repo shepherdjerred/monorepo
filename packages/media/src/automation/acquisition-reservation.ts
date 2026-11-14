@@ -10,7 +10,7 @@ import {
   reservationAuthority,
   reservationMovieChoice,
 } from "./acquisition-management/reservation.ts";
-import { candidateUpgradeAllowed } from "./acquisition-management/quality.ts";
+import { reserveProviderUpgradeAllowed } from "./acquisition-management/provider-admission.ts";
 import { bindPlexTransactionDeadline } from "#infrastructure/plex-binding/freshness.ts";
 import type { MovieChoiceAccess } from "#infrastructure/movie-editions/access.ts";
 import { defaultScope } from "#shared/editions/scope.ts";
@@ -198,12 +198,17 @@ async function reserveLockedCandidate(
     return null;
   const mediaIds = [...new Set(identity?.coverage ?? release.mediaIds)].sort();
   if (
-    !(await candidateUpgradeAllowed(context, {
-      release,
-      identity,
-      profile,
-      mediaIds,
-    }))
+    !(await reserveProviderUpgradeAllowed(
+      context,
+      {
+        release,
+        identity,
+        profile,
+        mediaIds,
+        mediaId: input.mediaId,
+      },
+      tx,
+    ))
   )
     return null;
   if (!mediaIds.includes(input.mediaId))
@@ -380,7 +385,12 @@ export async function adoptReservation(
       identity === null
         ? rawAttributes
         : effectiveCandidate(rawAttributes, identity);
-    const evaluation = evaluateRelease(attributes, profile, [input.mediaId]);
+    const evaluation = evaluateRelease(
+      attributes,
+      profile,
+      [input.mediaId],
+      "listing",
+    );
     if (!evaluation.accepted) return waiting;
     const generations = GenerationsSchema.parse(
       reservation.attempt.generations,

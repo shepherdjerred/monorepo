@@ -10,12 +10,17 @@ import { IdempotencyKeySchema } from "#infrastructure/commands.ts";
 import { parseInput, readJson } from "#server/validation.ts";
 import type { RequestInterestCommands } from "#infrastructure/request-interest/commands.ts";
 import type { listRequestInterests } from "#infrastructure/request-interest/read.ts";
+import type { getRequestInterestProgress } from "#infrastructure/request-interest/progress.ts";
 
 export type RequestInterestApplication = {
   list: (
     actor: MediaActor,
     cursor: string | null,
   ) => ReturnType<typeof listRequestInterests>;
+  progress: (
+    actor: MediaActor,
+    requestId: string,
+  ) => ReturnType<typeof getRequestInterestProgress>;
   execute: RequestInterestCommands["execute"];
   libraryPolicy: RequestInterestCommands["libraryPolicy"];
 };
@@ -28,6 +33,14 @@ export function registerRequestInterestRoutes(
       await interest.list(
         c.get("actor"),
         parseInput(z.uuid().nullable(), c.req.query("cursor") ?? null),
+      ),
+    ),
+  );
+  app.get("/api/v1/request-interests/:id/progress", async (c) =>
+    c.json(
+      await interest.progress(
+        c.get("actor"),
+        parseInput(z.uuid(), c.req.param("id")),
       ),
     ),
   );

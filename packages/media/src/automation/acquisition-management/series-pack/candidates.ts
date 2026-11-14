@@ -6,6 +6,7 @@ import {
   type ReleaseMatchInput,
 } from "#domain/release-parser.ts";
 import { chooseUpgrade } from "#domain/quality.ts";
+import { providerCandidateAdmission } from "#automation/provider-selection.ts";
 import { parseSeriesSeasonSetV1 } from "#domain/acquisition-identity/series-season-set.ts";
 import { persistCandidateSnapshot } from "#automation/candidate-evidence.ts";
 import { assessSeriesPackV1 } from "./assessment.ts";
@@ -45,6 +46,7 @@ export async function storeSeriesPackCandidateV1(
     // This is an actual legacy parse performed now, retained independently of the new interpretation.
     const literal = matchRelease(input.literal).attributes;
     const legacy = chooseUpgrade({
+      phase: "listing",
       candidate: literal,
       profile: input.profile,
       current: input.current,
@@ -95,18 +97,26 @@ export async function storeSeriesPackCandidateV1(
   )
     return null;
   const selected = chooseUpgrade({
+    phase: "listing",
     candidate,
     current: input.current,
     profile: input.profile,
     mediaIds: [input.literal.media.id],
   });
   invocation.freshness.assertActive();
-  return selected.upgrade
-    ? {
-        id: releaseId,
-        rank: selected.evaluation.qualityRank,
-        score: selected.evaluation.score,
-        seriesPackV1: interpreted.captured,
-      }
-    : null;
+  if (!selected.upgrade) return null;
+  const admission = await providerCandidateAdmission(context, {
+    releaseId,
+    mediaId: input.literal.media.id,
+    rank: selected.evaluation.qualityRank,
+    profile: input.profile,
+  });
+  if (!admission.accepted) return null;
+  return {
+    id: releaseId,
+    rank: selected.evaluation.qualityRank,
+    score: selected.evaluation.score,
+    priority: admission.priority,
+    seriesPackV1: interpreted.captured,
+  };
 }

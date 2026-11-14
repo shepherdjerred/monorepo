@@ -100,7 +100,9 @@ export async function commitNativeFeedPageV1(
 ): Promise<FeedPageReceiptV1> {
   const { prepared, page } = input;
   const expected = prepared.checkpoint;
-  const limit = expected.providerId === "knaben" ? 100 : 50;
+  const limit = ["knaben", "thepiratebay"].includes(expected.providerId)
+    ? 100
+    : 50;
   if (
     !Number.isSafeInteger(page.scanned) ||
     page.scanned < page.candidates.length ||

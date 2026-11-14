@@ -14,6 +14,7 @@ const historical: ReleaseCandidate = {
   mediaIds: [],
   searchedForMediaIds: [],
   sourceEvidence: { infoHash: "a".repeat(40) },
+  availability: null,
   createdAt: new Date("2026-01-01T00:00:00Z"),
 };
 const canonical = {

@@ -6,6 +6,8 @@ import type {
   SubtitleVideo,
 } from "#domain/subtitle-quality.ts";
 import { SubtitlePolicySchema } from "#shared/subtitle-policy.ts";
+import { subtitleAccepted } from "#domain/subtitle-quality.ts";
+import type { householdCaptionRequirements } from "#infrastructure/quality-guide/captions.ts";
 
 /** Acquire after media and runtime locks, before policy reads or writes. */
 export async function lockSubtitlePolicies(
@@ -22,13 +24,18 @@ export function policyStatus(input: {
     subtitles: SubtitleQuality[];
   };
   epoch: number;
+  household?: Awaited<ReturnType<typeof householdCaptionRequirements>>;
 }) {
-  if (input.policy === undefined) return null;
+  if (input.policy === undefined && input.household?.binding == null)
+    return null;
   const properties = z
     .object({ audioLanguages: z.array(z.string()).optional() })
     .parse(input.asset.properties);
   const result = subtitlePolicySatisfaction({
-    rules: input.policy.rules,
+    rules:
+      input.policy === undefined
+        ? { schemaVersion: 1, targets: [], protectedReasons: [] }
+        : input.policy.rules,
     subtitles: input.asset.subtitles,
     asset: input.asset,
     epoch: input.epoch,
@@ -38,16 +45,31 @@ export function policyStatus(input: {
         ? null
         : properties.audioLanguages,
   });
-  return input.policy.recoveryEpoch === input.epoch
-    ? result
-    : {
-        ...result,
-        satisfied: false,
-        protectedReasons: [
-          ...result.protectedReasons,
-          "subtitle_policy_epoch_unconfirmed",
-        ],
-      };
+  const householdMissing =
+    input.household?.targets.filter(
+      (target) =>
+        !input.asset.subtitles.some((subtitle) =>
+          subtitleAccepted({
+            subtitle,
+            asset: input.asset,
+            epoch: input.epoch,
+            target,
+          }),
+        ),
+    ) ?? [];
+  const reasons = [
+    ...result.protectedReasons,
+    ...(input.household?.reasons ?? []),
+  ];
+  if (input.policy !== undefined && input.policy.recoveryEpoch !== input.epoch)
+    reasons.push("subtitle_policy_epoch_unconfirmed");
+  return {
+    ...result,
+    householdMissing,
+    protectedReasons: [...new Set(reasons)],
+    satisfied:
+      result.satisfied && householdMissing.length === 0 && reasons.length === 0,
+  };
 }
 
 export async function currentSubtitlePolicies(

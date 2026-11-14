@@ -9,6 +9,10 @@ import type {
   SourceQuality,
 } from "./resolved-contract.ts";
 import { calculateResolvedScore } from "./resolved-formats.ts";
+import {
+  canonicalLanguage,
+  originalAudioPresence,
+} from "./quality-guide/language.ts";
 
 export type ResolvedEvaluation = {
   status: "accepted" | "rejected" | "protected";
@@ -71,10 +75,34 @@ function sizeReasons(
     ? ["size_above_maximum"]
     : [];
 }
+function originalAudioReasons(
+  release: ResolvedRelease,
+  provisional: boolean,
+): string[] {
+  if (
+    release.originalLanguage === null ||
+    canonicalLanguage(release.originalLanguage) === null
+  )
+    return ["language_evidence_unknown"];
+  const presence = originalAudioPresence(
+    release.originalLanguage,
+    release.audioLanguages,
+  );
+  if (presence === "unknown")
+    return provisional ? [] : ["language_evidence_unknown"];
+  return presence === "present" ? [] : ["original_audio_missing"];
+}
 function languageReasons(
   profile: ResolvedProfile,
   release: ResolvedRelease,
+  phase: "listing" | "measured",
 ): string[] {
+  if (profile.householdPolicy !== undefined)
+    return originalAudioReasons(
+      release,
+      phase === "listing" &&
+        profile.householdPolicy.provisionalUnknownListingAudio,
+    );
   if (profile.source === "sonarr") return [];
   const language = profile.profile.language;
   if (language === undefined) return ["language_policy_unknown"];
@@ -101,6 +129,7 @@ export function evaluateResolvedRelease(
   inputProfile: ResolvedProfile,
   inputRelease: ResolvedRelease,
   matcher: RegexMatcher = () => "unknown",
+  phase: "listing" | "measured" = "measured",
 ): ResolvedEvaluation {
   const profile = ResolvedProfileSchema.parse(inputProfile);
   const release = ResolvedReleaseSchema.parse(inputRelease);
@@ -114,16 +143,20 @@ export function evaluateResolvedRelease(
       matchedFormats: [],
       unknownFormats: [],
     };
-  const score = calculateResolvedScore(
-    profile,
-    release,
-    quality.quality,
+  const score = calculateResolvedScore(profile, release, quality.quality, {
     matcher,
-  );
+    phase,
+  });
   const reasons = [
     ...sizeReasons(profile, release),
-    ...languageReasons(profile, release),
+    ...languageReasons(profile, release, phase),
   ];
+  if (
+    profile.householdPolicy?.rejectedFormatIds.some((id) =>
+      score.matched.includes(id),
+    ) === true
+  )
+    reasons.push("incompatible_dynamic_range");
   if (!quality.allowed) reasons.push("quality_rejected");
   if (!release.identityConfirmed) reasons.push("identity_unconfirmed");
   if (score.unknown.length > 0) reasons.push("custom_format_unknown");

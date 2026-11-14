@@ -62,10 +62,17 @@ function requestRecord(request: z.infer<typeof RequestWire>) {
     },
     scope: request.type === "movie" ? "movie" : "season",
     seasons: request.seasons
-      .filter((season) => season.status !== 3)
+      .filter((season) => season.status === 2 || season.status === 5)
       .map((season) => season.seasonNumber)
       .sort((a, b) => a - b),
-    active: request.status !== 3,
+    active: request.status === 2 || request.status === 5,
+    sourceStatus: request.status,
+    seasonStatuses: request.seasons
+      .map((season) => ({
+        season: season.seasonNumber,
+        status: season.status,
+      }))
+      .sort((a, b) => a.season - b.season),
   });
 }
 async function requests(reader: CaptureReader, records: MigrationRecord[]) {

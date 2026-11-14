@@ -25,7 +25,7 @@ import {
   type MovieOperationV4,
 } from "#shared/movie-editions/lifecycle/automation-v4.ts";
 import type { MovieReleaseAssessmentRef } from "#shared/movie-editions/release-assessment.ts";
-import { chooseUpgrade } from "#domain/quality.ts";
+import { reserveMovieProviderUpgradeAllowed } from "#automation/acquisition-management/provider-admission.ts";
 import { currentMovieReleaseV4 } from "./candidates.ts";
 import { requireMovieAcquisitionAuthorityV4 } from "./acquisition-authority.ts";
 import { movieManagementContext } from "./management-context.ts";
@@ -117,12 +117,19 @@ export async function reserveMovieCandidateV4(
       ...assessed.current.rules,
     };
     if (
-      !chooseUpgrade({
-        candidate,
-        current: await currentMovieReleaseV4(tx, input.scope),
-        profile,
-        mediaIds: [input.mediaId],
-      }).upgrade
+      !(await reserveMovieProviderUpgradeAllowed(
+        context,
+        {
+          candidate,
+          current: await currentMovieReleaseV4(tx, input.scope),
+          profile,
+          mediaIds: [input.mediaId],
+          mediaId: input.mediaId,
+          releaseId: selected.releaseId,
+          edition: input.scope.edition,
+        },
+        tx,
+      ))
     )
       return null;
     const authority = await requireMovieAcquisitionAuthorityV4(

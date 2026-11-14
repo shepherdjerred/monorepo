@@ -23,6 +23,7 @@ import { PlexClient } from "#integrations/plex.ts";
 import { PlexPlaybackClient } from "#integrations/plex-playback.ts";
 import { PrismaPlaybackCollector } from "#infrastructure/playback/collector.ts";
 import { createRequestInterestReconciler } from "./request-interests.ts";
+import { createLibraryMaintenanceFacets } from "./network/library-maintenance.ts";
 import { QbittorrentClient } from "#integrations/qbittorrent.ts";
 import type { PlexBindingExecution } from "#shared/plex-binding/activities.ts";
 import { PlexAccessSchema } from "#shared/plex-binding/contract.ts";
@@ -419,6 +420,7 @@ export async function createMediaNetworkRuntime(
       context,
       bootstrap.PLEX_SERVER_MACHINE_ID,
     ),
+    ...createLibraryMaintenanceFacets(context, behavior),
     seriesPackFeed: {
       matchSeriesPackFeedSource: createSeriesPackFeedFacetV1(context),
     },

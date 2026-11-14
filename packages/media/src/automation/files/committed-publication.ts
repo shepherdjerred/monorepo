@@ -16,7 +16,7 @@ import { fileOperations } from "./file-operations.ts";
 import {
   loadLockedDefaultProfile,
   storedMeasuredRelease,
-} from "./quality-guard.ts";
+} from "./quality-guide/guard.ts";
 import {
   FileGuardError,
   FilePlanSchema,

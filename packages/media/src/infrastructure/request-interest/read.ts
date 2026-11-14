@@ -3,6 +3,11 @@ import type { MediaActor } from "#application/auth.ts";
 import { MediaError } from "#application/errors.ts";
 import { INTEREST_POLICY } from "#domain/household/interests.ts";
 import { RequestInterestListSchema } from "#shared/household/interests.ts";
+import type {
+  ApplicationEvent,
+  MediaRequest,
+} from "#generated/prisma/client.ts";
+import { currentInterestNotice } from "./notice-identity.ts";
 
 export async function listRequestInterests(
   db: Database,
@@ -36,6 +41,11 @@ export async function listRequestInterests(
     where: { eventId: { in: eventIds }, channel: { in: ["email", "discord"] } },
     take: 101,
   });
+  const events = await db.applicationEvent.findMany({
+    where: { id: { in: eventIds } },
+    take: 50,
+  });
+  const eventById = new Map(events.map((event) => [event.id, event]));
   if (deliveries.length > 100)
     throw new Error(
       "Request interest page has duplicate private delivery identities",
@@ -62,20 +72,21 @@ export async function listRequestInterests(
               request.interestNoticeAcceptedAt.getTime() +
                 INTEREST_POLICY.replyMs,
             ).toISOString(),
-      ...noticeDeliveryStatus(request, deliveries, now),
+      ...noticeDeliveryStatus(
+        request,
+        deliveries,
+        now,
+        request.interestNoticeEventId === null
+          ? undefined
+          : eventById.get(request.interestNoticeEventId),
+      ),
     })),
     nextCursor: requests.length === 50 ? (requests.at(-1)?.id ?? null) : null,
   });
 }
 
 function noticeDeliveryStatus(
-  request: {
-    userId: string;
-    interestNoticeEventId: string | null;
-    interestNoticeRevision: number | null;
-    interestRevision: number;
-    interestNoticeViewedAt: Date | null;
-  },
+  request: MediaRequest,
   deliveries: {
     userId: string;
     eventId: string;
@@ -85,14 +96,22 @@ function noticeDeliveryStatus(
     acceptedAt: Date | null;
   }[],
   now: Date,
+  event: ApplicationEvent | undefined,
 ) {
   if (
     request.interestNoticeEventId === null ||
     request.interestNoticeRevision !== request.interestRevision
   )
     return { noticeDeliveryState: null, noticeReason: null };
+  const noticeEvent = currentInterestNotice(request, event);
+  if (noticeEvent === null)
+    return {
+      noticeDeliveryState: "attention",
+      noticeReason: "notice_identity_changed",
+    };
   if (
     request.interestNoticeViewedAt !== null &&
+    request.interestNoticeViewedAt >= noticeEvent.createdAt &&
     request.interestNoticeViewedAt <= now
   )
     return { noticeDeliveryState: "accepted", noticeReason: null };
@@ -107,6 +126,7 @@ function noticeDeliveryStatus(
         delivery.state === "accepted" &&
         delivery.providerStatus !== "bounced" &&
         delivery.acceptedAt !== null &&
+        delivery.acceptedAt >= noticeEvent.createdAt &&
         delivery.acceptedAt <= now &&
         delivery.reconciledAt !== null &&
         delivery.reconciledAt <= now &&

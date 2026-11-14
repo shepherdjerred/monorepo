@@ -87,6 +87,19 @@ async function series(reader: CaptureReader, records: MigrationRecord[]) {
       profileSourceId: String(show.qualityProfileId),
       monitored: show.monitored,
     });
+    for (const season of show.seasons) {
+      add(records, {
+        kind: "media",
+        sourceId: `season:${String(show.id)}:${String(season.seasonNumber)}`,
+        mediaKind: "season",
+        externalIds: sourceExternalIds(show),
+        parentSourceId: `series:${String(show.id)}`,
+        season: season.seasonNumber,
+        episode: null,
+        profileSourceId: String(show.qualityProfileId),
+        monitored: season.monitored,
+      });
+    }
     const episodes = await reader.read(
       `api/v3/episode?seriesId=${String(show.id)}`,
       z.array(EpisodeSchema).max(MAX_MIGRATION_RECORDS),

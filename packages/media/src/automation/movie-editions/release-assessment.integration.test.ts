@@ -11,7 +11,10 @@ import {
   identityHash,
 } from "#infrastructure/acquisition-identity/snapshot.ts";
 import { canonicalJson } from "#migration/profile-import.ts";
-import { QualityRulesSchema } from "#shared/api.ts";
+import {
+  QualityRulesSchema,
+  PublicReleaseAttributesSchema,
+} from "#shared/api.ts";
 import { MovieEditionScopeSchema } from "#shared/movie-editions/registry.ts";
 import { assertCurrentMovieAssessment } from "#infrastructure/movie-editions/release-assessment.ts";
 import {
@@ -20,6 +23,38 @@ import {
 } from "./release-assessment.ts";
 
 const h = automationTestHarness();
+
+test("actual availability can refresh after assessment while the literal source and digest remain frozen", async () => {
+  const f = await fixture();
+  await assessRetainedMovieRelease(h.context(), f.input);
+  const before = await f.db.releaseCandidate.findUniqueOrThrow({
+    where: { id: f.original.id },
+  });
+  const attributes = {
+    id: before.id,
+    providerId: before.providerId,
+    title: before.title,
+    ...PublicReleaseAttributesSchema.parse(before.attributes),
+  };
+  await persistCandidateSnapshot(h.context(), {
+    source: { ...f.source, seeders: 9 },
+    attributes,
+    evaluation: evaluateRelease(attributes, f.evaluatingProfile, [f.wrong.id]),
+  });
+  const after = await f.db.releaseCandidate.findUniqueOrThrow({
+    where: { id: before.id },
+  });
+  expect(after.availability).toMatchObject({
+    schemaVersion: 1,
+    providerId: f.source.providerId,
+    providerReleaseId: f.source.providerReleaseId,
+    seeders: 9,
+  });
+  expect(after.encryptedSource).toBe(before.encryptedSource);
+  expect(after.attributes).toEqual(before.attributes);
+  expect(after.sourceEvidence).toEqual(before.sourceEvidence);
+  expect(candidateDigest(after)).toBe(candidateDigest(before));
+});
 
 async function fixture() {
   const f = await h.fixture();

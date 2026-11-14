@@ -417,6 +417,19 @@ RUN set -e; \
 # --- uv (pinned PyPI release) ---
 RUN pip3 install --no-cache-dir --break-system-packages "uv==${UV_VERSION}" && uv --version
 
+# Subtitle timing and independent, non-neural speech coverage run in an isolated
+# environment. Every transitive package is version- and hash-locked.
+COPY packages/media/scripts/subtitle-requirements.txt /opt/media-subtitles/requirements.txt
+COPY packages/media/scripts/subtitle-build-requirements.txt /opt/media-subtitles/build-requirements.txt
+COPY packages/media/scripts/subtitle-analysis.py /opt/media-subtitles/analysis.py
+RUN python3 -m venv /opt/media-subtitles/venv && \
+    uv pip install --python /opt/media-subtitles/venv/bin/python --require-hashes --only-binary :all: -r /opt/media-subtitles/build-requirements.txt && \
+    uv pip install --python /opt/media-subtitles/venv/bin/python --require-hashes --no-build-isolation -r /opt/media-subtitles/requirements.txt && \
+    /opt/media-subtitles/venv/bin/python -c 'from importlib.metadata import version; assert version("ffsubsync") == "0.5.1"' && \
+    ln -s /opt/media-subtitles/venv/bin/ffsubsync /usr/local/bin/ffsubsync && \
+    printf '%s\n' '#!/bin/sh' 'exec /opt/media-subtitles/venv/bin/python /opt/media-subtitles/analysis.py "$@"' > /usr/local/bin/media-subtitle-analysis && \
+    chmod +x /usr/local/bin/media-subtitle-analysis
+
 # --- Trivy (per-arch release tarball, SHA256-verified) ---
 RUN set -e; \
     arch="$(dpkg --print-architecture)"; \

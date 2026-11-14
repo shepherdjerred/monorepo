@@ -24,6 +24,17 @@ export type CalendarReadSettings = {
   sections?: Partial<VisibilitySections> | undefined;
 };
 
+type CalendarMedia = Prisma.MediaItemGetPayload<{
+  include: typeof libraryViewInclude;
+}>;
+
+function episodeSeries(media: CalendarMedia) {
+  if (media.kind !== "episode") return null;
+  return media.parent?.kind === "series"
+    ? media.parent
+    : (media.parent?.parent ?? null);
+}
+
 export class PrismaCalendarApplication {
   constructor(
     private readonly db: Database,
@@ -133,8 +144,7 @@ export class PrismaCalendarApplication {
         events: visible
           .map((row) => {
             const media = row.media;
-            const series =
-              media.kind === "episode" ? (media.parent?.parent ?? null) : null;
+            const series = episodeSeries(media);
             return {
               id: row.id,
               mediaId: media.id,
