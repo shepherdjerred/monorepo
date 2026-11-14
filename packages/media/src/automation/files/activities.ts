@@ -19,6 +19,8 @@ import { removeFiles } from "./removal.ts";
 import { restoreFiles } from "./restoration.ts";
 import { PlexBindingProtection } from "#infrastructure/plex-binding/errors.ts";
 import { installSubtitle } from "./subtitles.ts";
+import { prepareSubtitleSpeechV1 } from "./subtitle-lifecycle/speech.ts";
+import { MediaToolError } from "#filesystem/media-tools.ts";
 import { FileOperationConflict } from "#filesystem/operations-types.ts";
 import { rollbackPromotion } from "./rollback.ts";
 import { cleanupUpgrade } from "./upgrade-cleanup.ts";
@@ -57,6 +59,26 @@ export function createMediaFileActivities(
 ): MediaFileActivities {
   const staging = createSeriesPackStagingFileFacetV1(context);
   return {
+    prepareSubtitleSpeechV1: async (input) => {
+      try {
+        await prepareSubtitleSpeechV1(context, input);
+        return { status: "prepared" };
+      } catch (error) {
+        if (error instanceof FileGuardError)
+          return { status: "blocked", reason: error.reason };
+        if (error instanceof MediaToolError)
+          return {
+            status: "blocked",
+            reason: `subtitle_analysis_${error.reason}`,
+          };
+        if (error instanceof FileOperationConflict)
+          return {
+            status: "blocked",
+            reason: "subtitle_analysis_file_changed",
+          };
+        throw error;
+      }
+    },
     ...createSeriesPackBoundedPublicationActivitiesV1(context),
     stageSeriesPackMembersV1: (input) => {
       const execution = requirePublicationExecution(

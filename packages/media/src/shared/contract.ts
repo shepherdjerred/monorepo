@@ -146,6 +146,7 @@ export type ReleaseAttributes = {
   quality: string;
   codec: string;
   audioLanguages: readonly string[];
+  videoCompatibility?: "compatible" | "incompatible" | "unknown" | undefined;
   sizeBytes: number;
   scoreTags: readonly string[];
   resolvedEvidence?: ResolvedEvidence | undefined;

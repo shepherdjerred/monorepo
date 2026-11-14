@@ -6,14 +6,29 @@ import {
 
 import type { ReleaseEvaluation } from "./release-evaluation.ts";
 
+/** Same rank space returned by evaluateRelease, including equal-rank WEB groups. */
+export function highestAllowedQualityRank(profile: QualityProfile): number {
+  return profile.resolved === undefined
+    ? profile.qualities.length - 1
+    : profile.resolved.profile.items.reduce(
+        (highest, item, index) =>
+          item.allowed &&
+          ("quality" in item || item.items.some((child) => child.allowed))
+            ? index
+            : highest,
+        -1,
+      );
+}
+
 /** Qualities are ordered from least to most desirable. Unknown qualities reject. */
 export function evaluateRelease(
   release: ReleaseAttributes,
   profile: QualityProfile,
   requiredMediaIds: readonly string[],
+  phase: "listing" | "measured" = "measured",
 ): ReleaseEvaluation {
   if (profile.resolved !== undefined)
-    return evaluateResolvedPolicy(release, profile, requiredMediaIds);
+    return evaluateResolvedPolicy(release, profile, requiredMediaIds, phase);
   validateProfile(profile);
   const reasons: string[] = [];
   const qualityRank = profile.qualities.indexOf(release.quality);
@@ -74,12 +89,14 @@ export function chooseUpgrade(input: {
   current: ReleaseAttributes | null;
   profile: QualityProfile;
   mediaIds: readonly string[];
+  phase?: "listing" | "measured";
 }): { upgrade: boolean; reason: string; evaluation: ReleaseEvaluation } {
   if (input.profile.resolved !== undefined) return chooseResolvedPolicy(input);
   const evaluation = evaluateRelease(
     input.candidate,
     input.profile,
     input.mediaIds,
+    input.phase,
   );
   if (!evaluation.accepted)
     return { upgrade: false, reason: "candidate_rejected", evaluation };

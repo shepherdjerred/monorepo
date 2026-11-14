@@ -121,7 +121,7 @@ export async function validAttempt(
     const profile = await loadProfile(context.db, intent.mediaId);
     if (
       profile === null ||
-      !evaluateRelease(release, profile, [intent.mediaId]).accepted
+      !evaluateRelease(release, profile, [intent.mediaId], "listing").accepted
     )
       return false;
     if (intent.generation === generations[intent.mediaId]) continue;

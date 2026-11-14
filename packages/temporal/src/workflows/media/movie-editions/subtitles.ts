@@ -3,12 +3,16 @@ import {
   continueAsNew,
   proxyActivities,
   sleep,
+  patched,
 } from "@temporalio/workflow";
 import type {
   MovieNetworkActivitiesV4,
   MovieFileActivitiesV4,
 } from "@shepherdjerred/media/movie-lifecycle";
-import type { MediaWorkflowResult } from "@shepherdjerred/media/automation";
+import type {
+  MediaWorkflowResult,
+  MediaFileActivities,
+} from "@shepherdjerred/media/automation";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import {
   finishMovieOperationV4,
@@ -37,6 +41,17 @@ const files = proxyActivities<
   cancellationType: ActivityCancellationType.WAIT_CANCELLATION_COMPLETED,
   retry: { maximumAttempts: 2, initialInterval: "2 seconds" },
 });
+const speech = proxyActivities<
+  Pick<MediaFileActivities, "prepareSubtitleSpeechV1">
+>({
+  taskQueue: TASK_QUEUES.MEDIA_FILES,
+  scheduleToStartTimeout: "30 seconds",
+  startToCloseTimeout: "1 hour",
+  scheduleToCloseTimeout: "2 hours",
+  heartbeatTimeout: "30 seconds",
+  cancellationType: ActivityCancellationType.WAIT_CANCELLATION_COMPLETED,
+  retry: { maximumAttempts: 2, initialInterval: "2 seconds" },
+});
 
 /** Quota-bearing downloads use their existing durable journal; uncertain outcomes never blindly retry. */
 export function acquireMovieSubtitlesV4Workflow(
@@ -50,6 +65,7 @@ export function acquireMovieSubtitlesV4Workflow(
     recoveryEpoch: raw.recoveryEpoch,
     language: raw.language,
     targetAuthority: raw.targetAuthority,
+    ...(raw.upgradeV1 === undefined ? {} : { upgradeV1: raw.upgradeV1 }),
     ...(raw.forced === undefined ? {} : { forced: raw.forced }),
     ...(raw.hearingImpaired === undefined
       ? {}
@@ -84,6 +100,17 @@ async function installSubtitles(
   input: Input,
   subtitleId: string,
 ): Promise<MediaWorkflowResult> {
+  if (patched("media-subtitle-speech-v1")) {
+    const prepared = await speech.prepareSubtitleSpeechV1({
+      operationId: input.operationId,
+      subtitleId,
+    });
+    if (prepared.status !== "prepared")
+      return finishMovieOperationV4(input.operationId, {
+        status: "blocked",
+        reason: prepared.reason ?? "subtitle_speech_protected",
+      });
+  }
   const installed = await files.installMovieSubtitlesV4({
     schemaVersion: 4,
     operationId: input.operationId,

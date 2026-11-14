@@ -45,7 +45,7 @@ import {
   assertMeasuredUpgrade,
   assertProfile,
   storedMeasuredRelease,
-} from "./quality-guard.ts";
+} from "./quality-guide/guard.ts";
 import {
   publicationReadBudget,
   seriesPackPublicationPhase,

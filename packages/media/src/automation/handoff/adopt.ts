@@ -223,7 +223,15 @@ async function adoptFiles(
           version: file.existingAssetVersion ?? -1,
           state: "published",
         },
-        data: { ...data, version: { increment: 1 } },
+        // The existing asset's edition FK cascades its complete passive coverage.
+        // This is used only after the explicit registration lineage and fresh
+        // Files/Plex/quiescence checks, never for an already-owned file.
+        data: {
+          ...data,
+          edition,
+          editionRootId: await physicalRoot(tx, file),
+          version: { increment: 1 },
+        },
       });
       if (updated.count !== 1)
         throw new Error("Handoff existing asset changed");

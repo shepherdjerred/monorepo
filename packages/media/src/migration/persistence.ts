@@ -22,6 +22,8 @@ import { migrationTargets } from "./catalog-targets.ts";
 import { PrismaMigrationBundles } from "./bundle-persistence.ts";
 import type { MigrationCatalogDiscovery } from "./catalog-discovery.ts";
 import type { DiscoverMigrationCatalogSchema } from "#shared/migration-catalog.ts";
+import type { MediaCommandSettings } from "#infrastructure/command-base.ts";
+import { PrismaPersonalMigration } from "./personal-state/service.ts";
 function proposal(row: {
   id: string;
   captureId: string;
@@ -59,12 +61,18 @@ function proposal(row: {
 }
 export class PrismaMigrationAdministration extends MediaCommandBase {
   readonly bundles: PrismaMigrationBundles;
+  readonly personal: PrismaPersonalMigration;
   constructor(
     private readonly db: Database,
     private readonly discovery?: MigrationCatalogDiscovery,
+    settings?: MediaCommandSettings,
   ) {
     super(db, { keepDays: 30 });
     this.bundles = new PrismaMigrationBundles(db);
+    this.personal = new PrismaPersonalMigration(
+      db,
+      settings ?? { keepDays: 30 },
+    );
   }
   async discover(
     actor: MediaActor,

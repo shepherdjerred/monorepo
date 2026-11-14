@@ -11,10 +11,15 @@ import { parseInput, readJson } from "./validation.ts";
 import { ReviewBundleSchema } from "#shared/migration-handoff.ts";
 import { CreateBundleProtocolSchema } from "#shared/handoff/library-bundle.ts";
 import { DiscoverMigrationCatalogSchema } from "#shared/migration-catalog.ts";
+import { registerPersonalMigrationRoutes } from "./personal-migration/routes.ts";
 export type MigrationAdministration = Pick<
   PrismaMigrationAdministration,
   "list" | "detail" | "upload" | "review" | "discover"
 > & {
+  personal?: Pick<
+    PrismaMigrationAdministration["personal"],
+    "preview" | "apply" | "imported" | "reconcile" | "passive"
+  >;
   bundles: Pick<
     PrismaMigrationAdministration["bundles"],
     "create" | "list" | "detail" | "review"
@@ -24,6 +29,8 @@ export function registerMigrationRoutes(
   app: Hono<{ Variables: { actor: MediaActor; requestId: string } }>,
   migration: MigrationAdministration,
 ): void {
+  if (migration.personal !== undefined)
+    registerPersonalMigrationRoutes(app, migration.personal);
   app.get("/api/v1/admin/migration/bundles", async (c) =>
     c.json(await migration.bundles.list(c.get("actor"))),
   );

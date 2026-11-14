@@ -5,6 +5,7 @@ import type { MovieEditionKey } from "#shared/movie-editions/registry.ts";
 import type { MovieChoiceAccess } from "./access.ts";
 import { z } from "zod";
 import { MovieRequestV3Schema } from "#shared/movie-editions/commands.ts";
+import { KeepingPolicySchema } from "#shared/household/interests.ts";
 
 /** Explicit new consent at a fixture boundary; never called implicitly by acquisition or recovery. */
 export async function chooseCurrentTestMovieEdition(
@@ -25,6 +26,12 @@ export async function chooseCurrentTestMovieEdition(
     mediaId: request.mediaId,
     access: input.access,
     subtitleLanguages: request.subtitleLanguages,
+    // Owners explicitly retain their current policy. Members renew with
+    // Temporary; the real command preserves any active owner-granted Keep.
+    keepingPolicy:
+      request.user.role === "owner" && !request.user.restricted
+        ? KeepingPolicySchema.parse(request.keepingPolicy)
+        : "temporary",
   });
 }
 
@@ -38,6 +45,7 @@ export async function chooseTestMovieEdition(
     edition?: MovieEditionKey;
     access: MovieChoiceAccess;
     subtitleLanguages?: string[];
+    keepingPolicy?: z.infer<typeof KeepingPolicySchema>;
   },
 ) {
   const app = new PrismaMediaApplication(db, { keepDays: 7, ...input.access });
@@ -75,7 +83,10 @@ export async function chooseTestMovieEdition(
       definitionDigest: selected.definitionDigest,
       registryVersion: context.registryVersion,
     },
-    options: { subtitleLanguages: input.subtitleLanguages ?? [] },
+    options: {
+      subtitleLanguages: input.subtitleLanguages ?? [],
+      keepingPolicy: input.keepingPolicy ?? "temporary",
+    },
   });
   const result = await app.requestMovieEdition(input.actor, key, command);
   return { app, context, result, key, command };

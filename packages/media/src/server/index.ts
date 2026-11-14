@@ -46,6 +46,9 @@ import { PrismaRemovalHistoryApplication } from "#infrastructure/library/views/r
 import { PrismaLibraryApplication } from "#infrastructure/library/views/library.ts";
 import { RequestInterestCommands } from "#infrastructure/request-interest/commands.ts";
 import { listRequestInterests } from "#infrastructure/request-interest/read.ts";
+import { getRequestInterestProgress } from "#infrastructure/request-interest/progress.ts";
+import { PrismaQualityGuideAdministration } from "#infrastructure/quality-guide/service.ts";
+import { TrashGuideClient } from "#integrations/trash-guide/client.ts";
 
 const bootstrap = BootstrapSchema.parse(Bun.env);
 await initFeatureFlags();
@@ -179,6 +182,8 @@ const app = createMediaApp({
   media,
   requestInterests: {
     list: (actor, cursor) => listRequestInterests(database, actor, cursor),
+    progress: (actor, requestId) =>
+      getRequestInterestProgress(database, actor, requestId),
     execute: (actor, key, input) =>
       requestInterestCommands.execute(actor, key, input),
     libraryPolicy: (actor, key, input) =>
@@ -213,6 +218,10 @@ const app = createMediaApp({
       series: permittedTvSectionId.value,
     },
   }),
+  qualityGuide: new PrismaQualityGuideAdministration(
+    database,
+    new TrashGuideClient(),
+  ),
   movieLifecycle: media,
   notifications: new PrismaNotificationApplication(database, cipher, discord, {
     publicOrigin: bootstrap.PUBLIC_ORIGIN,
@@ -300,6 +309,11 @@ const app = createMediaApp({
   migrationAdmin: new PrismaMigrationAdministration(
     database,
     new MigrationCatalogDiscovery(database, tmdbClient, catalogApplication),
+    {
+      keepDays: keepDays.value,
+      serverMachineId: bootstrap.PLEX_SERVER_MACHINE_ID,
+      movieAccess,
+    },
   ),
   plexExclusionAdmin: new PrismaPlexExclusionAdministration(
     database,

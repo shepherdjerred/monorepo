@@ -2,6 +2,7 @@ import type { ReleaseAttributes } from "#shared/contract.ts";
 import type { FileContext } from "./types.ts";
 import { QualityRulesSchema } from "#shared/api.ts";
 import { collectResolvedEvidence } from "#migration/runtime-evidence.ts";
+import { originalLanguageForMedia } from "#domain/quality-guide/language.ts";
 import type { ResolvedProfile } from "#domain/resolved-contract.ts";
 import type { ResolvedEvidence } from "#domain/resolved-evidence.ts";
 import {
@@ -19,7 +20,10 @@ export async function measureResolvedEvidence(input: {
   const { context, measured, filename } = input;
   const intents = await context.db.mediaIntent.findMany({
     where: { mediaId: { in: [...measured.mediaIds] }, edition: "default" },
-    include: { profile: true, media: true },
+    include: {
+      profile: true,
+      media: { include: { parent: { include: { parent: true } } } },
+    },
   });
   for (const intent of intents) {
     if (intent.profile === null) continue;
@@ -39,7 +43,7 @@ export async function measureResolvedEvidence(input: {
             0,
           )
         : null,
-      originalLanguage: intent.media.originalLanguage,
+      originalLanguage: originalLanguageForMedia(intent.media),
       audioLanguages:
         measured.audioLanguages.length === 0
           ? null

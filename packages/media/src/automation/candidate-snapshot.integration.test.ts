@@ -187,6 +187,13 @@ test("a claim holding its FK lock prevents refresh until claimed evidence and so
   const row = await database().releaseCandidate.findUniqueOrThrow({
     where: { id: f.row.id },
   });
-  expect(row).toEqual(f.row);
+  expect(row).toEqual({
+    ...f.row,
+    availability: expect.objectContaining({
+      providerId: f.source.providerId,
+      providerReleaseId: f.source.providerReleaseId,
+      seeders: 999,
+    }),
+  });
   expect(decrypt(row)).toEqual(f.source);
 });

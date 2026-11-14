@@ -11,8 +11,6 @@ import { lockEffectiveRequests } from "#infrastructure/request-claims.ts";
 import {
   currentSubtitleWork,
   SubtitleWorkSchema,
-  targetRequired,
-  reusableSubtitle,
 } from "./subtitles/authority.ts";
 import type { SubtitleTarget } from "#domain/subtitle-quality.ts";
 import { z } from "zod";
@@ -28,9 +26,12 @@ import type { MediaAutomationContext } from "./context.ts";
 import {
   subtitleVersionMatches,
   subtitleMetadataMatches,
-  type SubtitleSearch,
-  type SubtitleSource,
+  regularDialogueRequirement,
 } from "./subtitle-sources.ts";
+import type {
+  SubtitleSearch,
+  SubtitleSource,
+} from "#domain/subtitle-maintenance/provider.ts";
 import {
   defaultSources,
   searchSubtitleProviders,
@@ -38,6 +39,19 @@ import {
   type SubtitleSourceLoader as Source,
 } from "./subtitles/providers.ts";
 import { serializable } from "./store.ts";
+import type { SubtitleUpgradeV1 } from "#shared/subtitle-maintenance/score.ts";
+import {
+  findReusableSubtitleV1,
+  subtitleCandidateWorkCurrentV1,
+  subtitleScoreEvidenceV1,
+  rejectedSubtitleChecksumsV1,
+  assertSubtitleUpgradeOperationV1,
+} from "./subtitles/upgrade.ts";
+import { subtitleScoreReferenceV1 } from "#infrastructure/subtitle-maintenance/reference.ts";
+import {
+  subtitleSourceDecisionV1,
+  recordSubtitleSourceRejectionV1,
+} from "./subtitle-maintenance/source-policy.ts";
 
 type Result = Awaited<ReturnType<MediaNetworkActivities["findMediaSubtitles"]>>;
 type SubtitleAsset = Awaited<ReturnType<typeof loadAsset>>;
@@ -54,7 +68,12 @@ async function loadAsset(context: MediaAutomationContext, assetId: string) {
       coverage: {
         where: { current: true },
         include: {
-          media: { include: { intents: { where: { edition: "default" } } } },
+          media: {
+            include: {
+              intents: { where: { edition: "default" } },
+              parent: { include: { parent: true } },
+            },
+          },
         },
       },
     },
@@ -72,10 +91,14 @@ async function persist(
     providerId: string;
     recoveryEpoch: number;
     targetAuthority: string;
+    operationId: string;
+    upgradeV1?: SubtitleUpgradeV1;
   },
 ): Promise<Result> {
   const { providerId, language, recoveryEpoch } = selection;
-  if (!subtitleMetadataMatches(selection, source))
+  const query = searchInput(asset, selection);
+  if (query === null) return blocked("source_identity_missing");
+  if (!subtitleMetadataMatches(selection, source, true))
     return blocked("subtitle_target_metadata_unproven");
   const simplified = ["zh-CN", "zh-Hans"].includes(language);
   const validation = validateProviderSubtitle(source, simplified);
@@ -110,20 +133,46 @@ async function persist(
     await lockSubtitlePolicies(tx);
     const work = await currentSubtitleWork(tx, asset.id, recoveryEpoch);
     if (
-      work.authority !== selection.targetAuthority ||
-      work.protectedReasons.length > 0 ||
-      !targetRequired(work, selection)
+      !subtitleCandidateWorkCurrentV1(
+        work,
+        selection,
+        selection.targetAuthority,
+        selection.upgradeV1,
+      )
     )
       return {
         status: "obsolete",
         subtitleId: null,
         reason: "subtitle_target_changed",
       };
-    const existing = work.asset.subtitles.find((subtitle) =>
-      reusableSubtitle(subtitle, work, recoveryEpoch, selection),
+    const existing = findReusableSubtitleV1(
+      work,
+      recoveryEpoch,
+      selection,
+      selection.upgradeV1,
     );
     if (existing !== undefined)
       return { status: "found", subtitleId: existing.id, reason: null };
+    const decision = subtitleSourceDecisionV1(source, {
+      ...query,
+      excludedChecksumsV1: rejectedSubtitleChecksumsV1(
+        work,
+        recoveryEpoch,
+        query.scoreReferenceV1,
+      ),
+    });
+    if (!decision.accepted) {
+      await recordSubtitleSourceRejectionV1(tx, {
+        operationId: selection.operationId,
+        asset: work.asset,
+        epoch: recoveryEpoch,
+        providerId,
+        language,
+        source,
+        decision,
+      });
+      return blocked(z.string().parse(decision.reason));
+    }
     const current = await tx.libraryAsset.findUniqueOrThrow({
       where: { id: asset.id },
       include: { coverage: { where: { current: true } } },
@@ -188,7 +237,13 @@ async function persist(
           traditionalEvidence: validated.traditionalEvidence,
         },
         matchingEvidence: {
+          operationId: selection.operationId,
+          ...subtitleScoreEvidenceV1(source),
+          ...regularDialogueRequirement(selection, source),
           assetVersion: asset.version,
+          ...(source.catalogEvidenceV1 === undefined
+            ? {}
+            : { catalogEvidenceV1: source.catalogEvidenceV1 }),
           assetChecksum: asset.checksum,
           exactMediaMatch: true,
           videoVersionMatch: true,
@@ -215,14 +270,21 @@ async function persist(
 
 function searchInput(
   asset: SubtitleAsset,
-  input: SubtitleTarget & { operationId: string },
+  input: SubtitleTarget & {
+    operationId: string;
+    upgradeV1?: SubtitleUpgradeV1;
+  },
 ): SubtitleSearch | null {
   const media = asset.coverage[0]?.media;
   if (media === undefined || asset.sourcePath === null) return null;
+  const scoreReference = subtitleScoreReferenceV1(asset);
   return {
     operationId: input.operationId,
+    assetIdV1: asset.id,
     sourceFilename: nodePath.basename(asset.sourcePath),
     query: media.title,
+    ...(input.upgradeV1 === undefined ? {} : { upgradeV1: input.upgradeV1 }),
+    ...(scoreReference === null ? {} : { scoreReferenceV1: scoreReference }),
     language: input.language,
     ...(input.forced === undefined ? {} : { forced: input.forced }),
     ...(input.hearingImpaired === undefined
@@ -242,6 +304,7 @@ async function search(
     language: string;
     recoveryEpoch: number;
     targetAuthority: string;
+    upgradeV1?: SubtitleUpgradeV1;
   },
   sources: Readonly<Record<string, Source>>,
 ): Promise<Result> {
@@ -305,9 +368,12 @@ export function createSubtitleActivities(
       if (work.protectedReasons.length > 0)
         return blocked(work.protectedReasons.join(","));
       if (
-        !targetRequired(work, target) ||
-        (input.targetAuthority !== undefined &&
-          input.targetAuthority !== work.authority)
+        !subtitleCandidateWorkCurrentV1(
+          work,
+          target,
+          input.targetAuthority ?? work.authority,
+          input.upgradeV1,
+        )
       )
         return {
           status: "obsolete",
@@ -317,6 +383,7 @@ export function createSubtitleActivities(
       const operation = await context.db.operation.findUniqueOrThrow({
         where: { id: input.operationId },
       });
+      assertSubtitleUpgradeOperationV1(operation.payload, input);
       const birth = z
         .object({ recoveryEpoch: z.number().int().nonnegative() })
         .safeParse(operation.payload);
@@ -326,8 +393,11 @@ export function createSubtitleActivities(
           subtitleId: null,
           reason: "subtitle_operation_epoch_changed",
         };
-      const accepted = work.asset.subtitles.find((subtitle) =>
-        reusableSubtitle(subtitle, work, runtime.recoveryEpoch, target),
+      const accepted = findReusableSubtitleV1(
+        work,
+        runtime.recoveryEpoch,
+        target,
+        input.upgradeV1,
       );
       if (accepted !== undefined)
         return { status: "found", subtitleId: accepted.id, reason: null };

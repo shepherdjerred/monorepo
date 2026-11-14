@@ -152,3 +152,67 @@ test("forged counts, unknown payload keys and duplicate records are rejected", a
   ).toThrow();
   expect(() => validateCapture({ ...snapshot, apiKey: "secret" })).toThrow();
 });
+test("Sonarr capture retains disabled seasons and explicit per-episode monitoring separately", async () => {
+  const reply = Object.assign(
+    async (
+      input: Parameters<typeof fetch>[0],
+      init?: Parameters<typeof fetch>[1],
+    ) => {
+      expect(init?.method).toBe("GET");
+      const url = new URL(input instanceof Request ? input.url : input);
+      if (url.pathname.endsWith("system/status"))
+        return Response.json({ version: "4.0.0" });
+      if (url.pathname.endsWith("series"))
+        return Response.json([
+          {
+            id: 3,
+            tvdbId: 42,
+            qualityProfileId: 1,
+            monitored: true,
+            seasons: [
+              { seasonNumber: 0, monitored: false },
+              { seasonNumber: 1, monitored: false },
+              { seasonNumber: 2, monitored: true },
+            ],
+          },
+        ]);
+      if (url.pathname.endsWith("episode"))
+        return Response.json([
+          {
+            id: 4,
+            seriesId: 3,
+            seasonNumber: 1,
+            episodeNumber: 1,
+            episodeFileId: 0,
+            monitored: true,
+          },
+        ]);
+      return Response.json([]);
+    },
+    {
+      preconnect() {
+        /* No network. */
+      },
+    },
+  );
+  const capture = await captureManager(
+    { ...source(), source: "sonarr" },
+    reply,
+  );
+  expect(validateCapture(capture)).toMatchObject({
+    complete: true,
+    stable: true,
+  });
+  expect(
+    capture.records.filter(
+      (record) => record.kind === "media" && record.mediaKind === "season",
+    ),
+  ).toMatchObject([
+    { season: 0, monitored: false },
+    { season: 1, monitored: false },
+    { season: 2, monitored: true },
+  ]);
+  expect(
+    capture.records.find((record) => record.sourceId === "episode:4"),
+  ).toMatchObject({ season: 1, episode: 1, monitored: true });
+});

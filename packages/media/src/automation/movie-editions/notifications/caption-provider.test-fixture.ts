@@ -1,12 +1,13 @@
 import path from "node:path";
-import {
-  fromOpenSubtitles,
-  type SubtitleSearch,
-} from "#automation/subtitle-sources.ts";
+import { fromOpenSubtitles } from "#automation/subtitle-sources.ts";
+import type { SubtitleSearch } from "#domain/subtitle-maintenance/provider.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
 
 /** Actual provider adapter and durable download producer; remote responses and bytes are synthetic. */
-export async function captionProviderFixture(context: MediaAutomationContext) {
+export async function captionProviderFixture(
+  context: MediaAutomationContext,
+  dailyDownloadLimit = 10,
+) {
   const credential = await context.db.credential.create({
     data: {
       kind: "provider",
@@ -23,8 +24,17 @@ export async function captionProviderFixture(context: MediaAutomationContext) {
   });
   await context.db.mediaProvider.upsert({
     where: { id: "opensubtitles" },
-    create: { id: "opensubtitles", enabled: true, credentialId: credential.id },
-    update: { enabled: true, credentialId: credential.id },
+    create: {
+      id: "opensubtitles",
+      enabled: true,
+      credentialId: credential.id,
+      configuration: { dailyDownloadLimit },
+    },
+    update: {
+      enabled: true,
+      credentialId: credential.id,
+      configuration: { dailyDownloadLimit },
+    },
   });
   return {
     opensubtitles: async (

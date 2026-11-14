@@ -27,6 +27,7 @@ import { queueMediaSubtitleTargets } from "#automation/subtitles/queue.ts";
 import {
   requestKeepingPolicy,
   renewedInterest,
+  preservedClaimKeep,
 } from "./request-interest/policy.ts";
 
 export class MediaRequestCommands extends MediaCommandBase {
@@ -279,6 +280,7 @@ export class MediaRequestCommands extends MediaCommandBase {
       where: targetWhere(defaultScope(request.mediaId)),
       data: {
         ...personalRequestGenerationChange(target),
+        ...preservedClaimKeep(request),
         version: { increment: 1 },
         ...(remaining === 0 ? { monitoring: target.libraryMonitoring } : {}),
       },
@@ -301,7 +303,10 @@ export class MediaRequestCommands extends MediaCommandBase {
         mediaId: request.mediaId,
         actorId: actor.id,
         kind: "request_cancelled",
-        payload: { requestId },
+        payload: {
+          requestId,
+          preservedPermanentKeep: request.keepingPolicy === "keep",
+        },
       },
     });
     return { requestId, operationId, status: "queued" };

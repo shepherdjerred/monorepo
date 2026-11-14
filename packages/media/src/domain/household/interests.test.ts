@@ -3,6 +3,7 @@ import {
   evaluateRequestInterest,
   INTEREST_POLICY,
   type InterestFacts,
+  usableInterestBacklog,
 } from "./interests.ts";
 
 const day = 86_400_000;
@@ -186,5 +187,59 @@ describe("temporary household interest", () => {
   });
   it("keeps the seven-day reply policy independent of removal quarantine", () => {
     expect(INTEREST_POLICY.replyMs).toBe(7 * day);
+  });
+});
+
+describe("mixed requested coverage protects automatic aging", () => {
+  it.each([
+    { reason: "unaired", state: "unavailable" as const, complete: false },
+    { reason: "missing", state: "unavailable" as const, complete: false },
+    {
+      reason: "required captions pending",
+      state: "subtitles_pending" as const,
+      complete: true,
+    },
+  ])(
+    "an accepted notice cannot expire mixed available backlog and $reason",
+    ({ state, complete }) => {
+      const usableUnwatched = usableInterestBacklog(["unwatched", state]);
+      expect(usableUnwatched).toBe(false);
+      expect(
+        evaluateRequestInterest({
+          ...base,
+          kind: "series",
+          usableUnwatched,
+          requestedCoverageComplete: complete,
+          notice: { revision: 3, acceptedAt: 40 * day, failed: false },
+        }),
+      ).toMatchObject({ state: "protected", resetUsableClock: true });
+    },
+  );
+  it("incomplete requested coverage independently protects aging, while a fully usable backlog still expires", () => {
+    const notice = { revision: 3, acceptedAt: 40 * day, failed: false };
+    expect(
+      evaluateRequestInterest({
+        ...base,
+        kind: "series",
+        requestedCoverageComplete: false,
+        notice,
+      }),
+    ).toMatchObject({
+      state: "protected",
+      reason: "requested_coverage_incomplete",
+      resetUsableClock: true,
+    });
+    expect(
+      evaluateRequestInterest({
+        ...base,
+        kind: "series",
+        usableUnwatched: usableInterestBacklog(["watched", "unwatched"]),
+        notice,
+      }),
+    ).toEqual({
+      state: "release",
+      stateAfter: "expired",
+      reason: "lost_interest",
+    });
   });
 });

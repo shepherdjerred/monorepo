@@ -19,6 +19,10 @@ import { MediaError } from "#application/errors.ts";
 import type { PlexBindingExecution } from "#shared/plex-binding/activities.ts";
 import type { MediaItem } from "#generated/prisma/client.ts";
 import type { EditionTarget } from "#infrastructure/editions/targets.ts";
+import {
+  libraryEpisodeMonitored,
+  type LibraryMonitoringMask,
+} from "#shared/handoff/monitoring-mask.ts";
 
 export const LIBRARY_SERIES_CURSOR = "library-series:";
 type Input = Parameters<MediaNetworkActivities["expandCatalogRequests"]>[0];
@@ -167,7 +171,12 @@ async function expandLibrarySeries(
 function projectableEpisode(
   episode: MediaItem,
   target: EditionTarget,
-  policy: { seriesId: string; profileId: string; includeSpecials: boolean },
+  policy: {
+    seriesId: string;
+    profileId: string;
+    includeSpecials: boolean;
+    monitoringMask?: LibraryMonitoringMask;
+  },
   epoch: number,
 ) {
   if (
@@ -175,7 +184,11 @@ function projectableEpisode(
     episode.catalogState !== "ready" ||
     episode.seasonNumber === null ||
     episode.episodeNumber === null ||
-    (episode.seasonNumber === 0 && !policy.includeSpecials) ||
+    !libraryEpisodeMonitored(
+      policy,
+      episode.seasonNumber,
+      episode.episodeNumber,
+    ) ||
     target.editionRootId !== policy.seriesId ||
     target.intentionallyRemovedAt !== null ||
     target.libraryMonitoring

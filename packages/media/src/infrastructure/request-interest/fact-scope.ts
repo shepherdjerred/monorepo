@@ -54,6 +54,16 @@ export function requestLeaves(
     where: container
       ? {
           kind: "episode",
+          // A user's explicit leaf exclusion masks inherited requests too.
+          // Missing coverage rows are deliberately not a filter: known missing
+          // or unaired episodes must still prevent a false complete result.
+          requests: {
+            none: {
+              userId: request.userId,
+              edition: request.edition,
+              excluded: true,
+            },
+          },
           ...(root.kind === "series"
             ? { OR: [{ parentId: root.id }, { parent: { parentId: root.id } }] }
             : { parentId: root.id }),

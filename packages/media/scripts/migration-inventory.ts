@@ -14,6 +14,7 @@ import { captureSeerr } from "#migration/capture/seerr-capture.ts";
 import { captureBazarr } from "#migration/capture/bazarr-capture.ts";
 import { captureTorrents } from "#migration/capture/torrent-capture.ts";
 import { QbittorrentClient } from "#integrations/qbittorrent.ts";
+import { captureDrainInventory } from "#migration/capture/drain-inventory.ts";
 
 async function capture(input: {
   kind: string;
@@ -102,8 +103,27 @@ async function main() {
       "instance-id": { type: "string" },
       "radarr-instance-id": { type: "string" },
       "sonarr-instance-id": { type: "string" },
+      drain: { type: "boolean", default: false },
     },
   });
+  if (values.drain) {
+    if (
+      values.snapshot !== undefined ||
+      values.baseline !== undefined ||
+      values.targets !== undefined
+    )
+      throw new Error(
+        "Drain inventory requires an explicit live read-only manager capture",
+      );
+    const result = await captureDrainInventory({
+      source: z.enum(["radarr", "sonarr"]).parse(values.capture),
+      sourceInstanceId: EvidenceHashSchema.parse(values["instance-id"]),
+      baseUrl: z.url().parse(values["base-url"]),
+      apiKey: await credential(z.string().parse(values["api-key-reference"])),
+    });
+    process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
+    return;
+  }
   if ((values.snapshot === undefined) === (values.capture === undefined))
     throw new Error("Choose exactly one capture or snapshot input");
   const snapshot =

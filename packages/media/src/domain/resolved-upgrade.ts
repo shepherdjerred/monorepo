@@ -98,11 +98,13 @@ export function chooseResolvedUpgrade(input: {
   candidate: ResolvedRelease;
   current: ResolvedRelease | null;
   matcher?: RegexMatcher;
+  phase?: "listing" | "measured" | undefined;
 }): UpgradeDecision {
   const evaluation = evaluateResolvedRelease(
     input.profile,
     input.candidate,
     input.matcher,
+    input.phase,
   );
   if (evaluation.status !== "accepted")
     return {

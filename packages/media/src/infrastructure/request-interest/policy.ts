@@ -10,14 +10,18 @@ export function requestKeepingPolicy(
     keepingPolicy: "keep" | "temporary";
   } | null,
 ): "keep" | "temporary" {
-  if (actor.role !== "owner") {
+  if (actor.role !== "owner" || actor.restricted) {
     if (requested === "keep")
       throw new MediaError(
         "owner_required",
         "Only the owner can keep media indefinitely",
         403,
       );
-    return "temporary";
+    // Repeating a member request cannot revoke a permanent Keep granted by
+    // the owner. Only an owner policy command can change that protection.
+    return prior?.active === true && prior.keepingPolicy === "keep"
+      ? "keep"
+      : "temporary";
   }
   if (requested !== undefined) return requested;
   if (prior?.active === true && prior.interestState === "following")
@@ -41,4 +45,20 @@ export function renewedInterest(now: Date) {
     interestReleasedAt: null,
     interestReleaseReason: null,
   };
+}
+
+/** Cancellation withdraws acquisition consent, not a prior owner's permanent Keep. */
+export function preservedClaimKeep(
+  request: {
+    keepingPolicy: "keep" | "temporary";
+  },
+  cancelling = true,
+) {
+  return cancelling && request.keepingPolicy === "keep"
+    ? {
+        libraryKeep: true,
+        libraryPolicyExplicit: true,
+        libraryPolicyActorId: null,
+      }
+    : {};
 }

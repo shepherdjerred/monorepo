@@ -52,8 +52,8 @@ import {
   registerNumberingRoutes,
   type NumberingAdministration,
 } from "./numbering-routes.ts";
-import { z } from "zod";
 import type { MediaActor } from "#application/auth.ts";
+import { z } from "zod";
 import type { MediaAuth } from "#application/media-auth.ts";
 import { MediaError } from "#application/errors.ts";
 import { registerCapacityRoutes } from "./capacity-routes.ts";
@@ -80,8 +80,15 @@ import {
   registerRequestInterestRoutes,
   type RequestInterestApplication,
 } from "./household/interests.ts";
+import { registerQualityGuideRoutes } from "./quality-guide/routes.ts";
 import { IdempotencyKeySchema } from "#infrastructure/commands.ts";
-import { parseInput, readJson, readCookie } from "./validation.ts";
+import {
+  parseInput,
+  readJson,
+  readCookie,
+  CancelSchema,
+  RestrictSchema,
+} from "./validation.ts";
 import type { NotificationApplication } from "#application/notification-ports.ts";
 import {
   SaveQualityProfileSchema,
@@ -99,6 +106,7 @@ export type MediaAppDependencies = {
   removalHistory?: Pick<PrismaRemovalHistoryApplication, "list">;
   library?: Pick<PrismaLibraryApplication, "list">;
   requestInterests?: RequestInterestApplication;
+  qualityGuide?: Parameters<typeof registerQualityGuideRoutes>[1];
   movieLifecycle?: MovieLifecycleApplicationV4;
   externalLibrary?: ExternalLibraryAdministration;
   movieHistory?: MovieHistoryAdministration;
@@ -123,11 +131,6 @@ export type MediaAppDependencies = {
   onError: (error: Error, requestId: string) => void;
   afterWrite?: () => Promise<void>;
 };
-
-const CancelSchema = z
-  .object({ expectedVersion: z.number().int().nonnegative() })
-  .strict();
-const RestrictSchema = CancelSchema.extend({ restricted: z.boolean() });
 
 export function createMediaApp(dependencies: MediaAppDependencies) {
   const app = new Hono<{
@@ -255,6 +258,8 @@ export function createMediaApp(dependencies: MediaAppDependencies) {
     registerLibraryRoutes(app, dependencies.library);
   if (dependencies.requestInterests !== undefined)
     registerRequestInterestRoutes(app, dependencies.requestInterests);
+  if (dependencies.qualityGuide !== undefined)
+    registerQualityGuideRoutes(app, dependencies.qualityGuide);
   registerRecoveryRoutes(app, dependencies.recoveryAdmin);
   registerCapacityRoutes(app, dependencies.capacityAdmin);
   registerLegacyRequesterBindingRoutes(

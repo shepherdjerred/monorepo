@@ -9,6 +9,8 @@ import {
   RemovalHistoryQuerySchema,
 } from "#shared/household/calendar.ts";
 import { LibraryQuerySchema } from "#shared/household/library.ts";
+import { lockDefaultScopes } from "#infrastructure/editions/locks.ts";
+import { PrismaMediaApplication } from "#infrastructure/media-service.ts";
 
 const harness = automationTestHarness();
 const settings = {
@@ -37,8 +39,12 @@ test("library and calendar show proved external presence without taking ownershi
       observedAt: new Date(),
     },
   });
-  const library = new PrismaLibraryApplication(db, settings);
-  const calendar = new PrismaCalendarApplication(db, settings);
+  const observedSettings = {
+    ...settings,
+    serverMachineId: fixture.access.serverMachineId,
+  };
+  const library = new PrismaLibraryApplication(db, observedSettings);
+  const calendar = new PrismaCalendarApplication(db, observedSettings);
   const before = await db.libraryAsset.findMany({ orderBy: { id: "asc" } });
   const libraryPage = await library.list(
     fixture.owner,
@@ -82,7 +88,7 @@ test("former requesters retain their own completed removal history without house
     chooseMovieEdition: false,
   });
   const actor = { ...fixture.user, role: "member" as const };
-  await db.mediaRequest.update({
+  const request = await db.mediaRequest.findUniqueOrThrow({
     where: {
       userId_mediaId_edition: {
         userId: actor.id,
@@ -90,8 +96,13 @@ test("former requesters retain their own completed removal history without house
         edition: "default",
       },
     },
-    data: { active: false, interestState: "finished" },
   });
+  await new PrismaMediaApplication(db, { keepDays: 30 }).cancelRequest(
+    actor,
+    crypto.randomUUID(),
+    request.id,
+    request.version,
+  );
   const quarantineTime = new Date("2026-11-01T00:00:00Z");
   const decision = await db.retentionDecision.create({
     data: {
@@ -155,4 +166,64 @@ test("former requesters retain their own completed removal history without house
     RemovalHistoryQuerySchema.parse({}),
   );
   expect(unrelatedHistory.items).toEqual([]);
+});
+
+test("calendar episodes retain their followed series identity with or without an intermediate season", async () => {
+  const db = harness.database();
+  const f = await harness.fixture("calendar", {
+    chooseMovieEdition: false,
+    kind: "episode",
+  });
+  const series = await db.mediaItem.create({
+    data: { kind: "series", title: "Followed series" },
+  });
+  const season = await db.mediaItem.create({
+    data: {
+      kind: "season",
+      title: "Season 1",
+      parentId: series.id,
+      seasonNumber: 1,
+    },
+  });
+  await db.mediaItem.update({
+    where: { id: f.media.id },
+    data: { parentId: series.id, seasonNumber: 1, episodeNumber: 1 },
+  });
+  const nested = await db.mediaItem.create({
+    data: {
+      kind: "episode",
+      title: "Nested episode",
+      parentId: season.id,
+      seasonNumber: 1,
+      episodeNumber: 2,
+    },
+  });
+  await db.$transaction((tx) =>
+    lockDefaultScopes(tx, [{ mediaId: series.id, edition: "default" }], {
+      createMissing: true,
+    }),
+  );
+  await db.mediaRequest.create({
+    data: { mediaId: series.id, userId: f.user.id },
+  });
+  for (const mediaId of [f.media.id, nested.id])
+    await db.mediaReleaseDate.create({
+      data: {
+        id: `episode:${mediaId}`,
+        mediaId,
+        region: "",
+        kind: "episode",
+        date: "2026-11-15",
+        precision: "day",
+        observedAt: new Date(),
+      },
+    });
+  const page = await new PrismaCalendarApplication(db, settings).list(
+    { ...f.user, role: "member" },
+    CalendarQuerySchema.parse({ from: "2026-11-01", to: "2026-11-30" }),
+  );
+  for (const mediaId of [f.media.id, nested.id])
+    expect(
+      page.events.find((event) => event.mediaId === mediaId),
+    ).toMatchObject({ rootMediaId: series.id, seriesTitle: series.title });
 });

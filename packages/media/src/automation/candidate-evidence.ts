@@ -7,6 +7,7 @@ import { StoredCandidateSchema } from "./providers.ts";
 import type { ProviderCandidate } from "#integrations/providers.ts";
 import type { ReleaseEvaluation } from "#domain/release-evaluation.ts";
 import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import { nextProviderAvailability } from "#domain/provider-availability.ts";
 
 function identity(attributes: ReleaseAttributes): string {
   return JSON.stringify({
@@ -49,6 +50,10 @@ export async function persistCandidateSnapshot(
   },
 ): Promise<ReleaseAttributes | null> {
   const { source, attributes: next, evaluation } = input;
+  const observedAt =
+    source.availabilityObservedAtV1 === undefined
+      ? new Date()
+      : new Date(source.availabilityObservedAtV1);
   if (
     source.title !== next.title ||
     source.sizeBytes !== next.sizeBytes ||
@@ -106,6 +111,16 @@ export async function persistCandidateSnapshot(
         candidateSourceIdentity(source)
     )
       return null;
+    const availability = nextProviderAvailability(
+      row.availability,
+      source,
+      observedAt,
+    );
+    if (availability !== null)
+      await tx.releaseCandidate.update({
+        where: { id: releaseId },
+        data: { availability },
+      });
     if (
       (await tx.acquisitionAttempt.count({ where: { releaseId } })) > 0 ||
       (await tx.movieReleaseAssessment.count({ where: { releaseId } })) > 0

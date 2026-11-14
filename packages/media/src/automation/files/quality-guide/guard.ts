@@ -8,12 +8,13 @@ import {
   FileGuardError,
   type Transaction,
   type FilePlanEntry,
-} from "./types.ts";
+} from "#automation/files/types.ts";
 import { Prisma } from "#generated/prisma/client.ts";
 import { z } from "zod";
 import { defaultScope } from "#shared/editions/scope.ts";
 import { targetWhere } from "#infrastructure/editions/targets.ts";
 import { currentMeasuredQuality } from "#automation/acquisition-management/current-quality.ts";
+import { measuredQualityError } from "#automation/files/content-rejection.ts";
 
 const StoredReleaseSchema = PublicReleaseAttributesSchema.extend({
   id: z.string(),
@@ -76,8 +77,9 @@ export async function assertMeasuredUpgrade(
       id: intent.profile.id,
       version: intent.profile.version,
     };
-    if (!evaluateRelease(measured, profile, [mediaId]).accepted)
-      throw new FileGuardError("measured_quality_rejected");
+    const evaluated = evaluateRelease(measured, profile, [mediaId]);
+    if (!evaluated.accepted)
+      throw measuredQualityError(measured, profile, mediaId, evaluated);
     const coverage = await db.assetCoverage.findMany({
       where: { mediaId, edition: "default", current: true },
       include: {

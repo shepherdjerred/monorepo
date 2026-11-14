@@ -12,6 +12,7 @@ import { movieLibraryParentV2FromReceipt } from "#infrastructure/movie-editions/
 import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
 import { nativeJson } from "#infrastructure/native-recovery/snapshots.ts";
+import { initialLibraryAssetVersion } from "./passive-registration.ts";
 
 const hash = (value: unknown) => identityHash(nativeJson(value));
 type File = LibraryHandoffReceipt["selection"]["scope"]["files"][number];
@@ -80,8 +81,8 @@ function tvAsset(original: LibraryHandoffReceipt, file: File) {
     file.libraryKind !== "tv" ||
     file.classification !== null ||
     file.edition !== "default" ||
-    file.existingAssetId !== null ||
-    asset.version !== 0 ||
+    asset.version !==
+      initialLibraryAssetVersion(selection.scope.request, file) ||
     asset.state !== "published" ||
     asset.ownershipEpoch !== receipt.recoveryEpoch ||
     asset.path !== file.canonicalPath ||

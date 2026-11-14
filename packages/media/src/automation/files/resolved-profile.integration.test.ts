@@ -11,7 +11,7 @@ import { PrismaMediaCommands } from "#infrastructure/commands.ts";
 import {
   storedMeasuredRelease,
   assertMeasuredUpgrade,
-} from "./quality-guard.ts";
+} from "./quality-guide/guard.ts";
 
 let cluster: Awaited<ReturnType<typeof startMediaTestPostgres>>;
 const directories: string[] = [];

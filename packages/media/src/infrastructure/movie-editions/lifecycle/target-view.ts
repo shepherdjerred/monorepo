@@ -23,6 +23,7 @@ import {
 import { moviePublicTargetAssetV4 } from "./public/public-asset.ts";
 import { movieOperationalAdmissionV4 } from "./public/public-inventory.ts";
 import { readMovieTargetProgressV4 } from "./public/public-progress.ts";
+import { movieCaptionStatus } from "#infrastructure/quality-guide/movie-caption-status.ts";
 
 export async function readMovieTargetContextV4(
   tx: Prisma.TransactionClient,
@@ -122,7 +123,21 @@ export async function readMovieTargetContextV4(
     allowedActions,
     reasons: admission.reasons,
     removalConfirmation: confirmation,
-    currentAsset: moviePublicTargetAssetV4(asset, admission.epoch),
+    currentAsset: moviePublicTargetAssetV4(
+      asset,
+      admission.epoch,
+      await movieCaptionStatus(
+        tx,
+        {
+          profileId: target.profileId,
+          originalLanguage: media.originalLanguage,
+          scope,
+          asset,
+          epoch: admission.epoch,
+        },
+        budget,
+      ),
+    ),
     progress,
   });
 }

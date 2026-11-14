@@ -8,6 +8,9 @@ import {
   type RequestInterestCommand,
 } from "#shared/household/interests.ts";
 import { queryClient, readApi, writeApi } from "#client/api.ts";
+import { RequestInterestProgress } from "./progress.tsx";
+import { ImportedRequestSource } from "#client/personal-migration/source.tsx";
+import type { ImportedPersonalClaim } from "#shared/personal-migration/contract.ts";
 import {
   dateLabel,
   ErrorNotice,
@@ -18,7 +21,13 @@ import {
 
 type Interest = z.infer<typeof RequestInterestListSchema>["items"][number];
 
-export function RequestInterests({ user }: { user: MediaUser }) {
+export function RequestInterests({
+  user,
+  importedClaims,
+}: {
+  user: MediaUser;
+  importedClaims: readonly ImportedPersonalClaim[];
+}) {
   const [cursor, setCursor] = useState<string | null>(null);
   const interests = useQuery({
     queryKey: ["request-interests", user.id, cursor],
@@ -41,7 +50,14 @@ export function RequestInterests({ user }: { user: MediaUser }) {
       {interests.error !== null && <ErrorNotice error={interests.error} />}
       {interests.data?.items.length === 0 && <p>No interests on this page.</p>}
       {interests.data?.items.map((interest) => (
-        <InterestRow key={interest.requestId} user={user} interest={interest} />
+        <InterestRow
+          key={interest.requestId}
+          user={user}
+          interest={interest}
+          importedClaim={importedClaims.find(
+            (claim) => claim.requestId === interest.requestId,
+          )}
+        />
       ))}
       <div className="action-row">
         {cursor !== null && (
@@ -72,9 +88,11 @@ export function RequestInterests({ user }: { user: MediaUser }) {
 function InterestRow({
   user,
   interest,
+  importedClaim,
 }: {
   user: MediaUser;
   interest: Interest;
+  importedClaim: ImportedPersonalClaim | undefined;
 }) {
   const change = useMutation({
     mutationFn: (action: RequestInterestCommand["action"]) =>
@@ -96,6 +114,9 @@ function InterestRow({
     onSuccess: async () => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["request-interests"] }),
+        queryClient.invalidateQueries({
+          queryKey: ["request-interest-progress"],
+        }),
         queryClient.invalidateQueries({ queryKey: ["requests"] }),
         queryClient.invalidateQueries({ queryKey: ["removals"] }),
         queryClient.invalidateQueries({ queryKey: ["library"] }),
@@ -110,6 +131,9 @@ function InterestRow({
         <h3>
           <MediaLink id={interest.mediaId} title={interest.title} />
         </h3>
+        {importedClaim !== undefined && (
+          <ImportedRequestSource claim={importedClaim} viewerUserId={user.id} />
+        )}
         <p>
           {interest.keepingPolicy === "keep"
             ? "Keep indefinitely"
@@ -146,6 +170,11 @@ function InterestRow({
             )}
           </div>
         )}
+        <RequestInterestProgress
+          actorId={user.id}
+          requestId={interest.requestId}
+          title={interest.title}
+        />
         <div className="action-row">
           {own && (
             <button

@@ -18,6 +18,14 @@ export const SeriesSchema = z.object({
   imdbId: z.string().optional(),
   qualityProfileId: Id,
   monitored: z.boolean(),
+  seasons: z
+    .array(
+      z.object({
+        seasonNumber: z.number().int().nonnegative(),
+        monitored: z.boolean(),
+      }),
+    )
+    .max(1000),
 });
 export const EpisodeSchema = z.object({
   id: Id,

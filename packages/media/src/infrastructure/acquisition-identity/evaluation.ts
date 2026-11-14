@@ -165,6 +165,7 @@ export function previewQuality(
         ...QualityRulesSchema.parse(profile.rules),
       },
       [row.id],
+      "listing",
     );
     if (!evaluation.accepted)
       for (const reason of evaluation.reasons) blockers.add(reason);

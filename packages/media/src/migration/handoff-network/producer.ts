@@ -48,6 +48,7 @@ export function createHandoffNetworkProducer(context: HandoffNetworkContext) {
     );
     const evidence = HandoffNetworkProtocolSchema.parse({
       schemaVersion: handoffProtocolVersion(input.scope),
+      ...registeredServer(input.scope, context.expectedServerMachineId),
       planId,
       recoveryEpoch: input.plan.recoveryEpoch,
       quiescence,
@@ -94,4 +95,15 @@ export function createHandoffNetworkProducer(context: HandoffNetworkContext) {
       };
     });
   };
+}
+
+function registeredServer(
+  scope: Awaited<ReturnType<typeof readHandoffPlan>>["scope"],
+  machineId: string,
+) {
+  return "schemaVersion" in scope &&
+    scope.schemaVersion === 3 &&
+    (scope.request.registeredAssets?.length ?? 0) > 0
+    ? { registeredPlexServerMachineId: machineId }
+    : {};
 }

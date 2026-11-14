@@ -35,6 +35,15 @@ export function handoffPlexEditionChanges(
       { rootMediaId: mediaId, mediaId, edition: file.edition },
       file.assetId,
     );
+    if (
+      change !== null &&
+      scope.request.registeredAssets?.some(
+        (entry) => entry.assetId === file.assetId,
+      ) === true
+    )
+      throw new Error(
+        "Registered library files require their reviewed Plex edition labels before promotion",
+      );
     if (change !== null) plexEdits.push(change);
   }
   return {

@@ -17,6 +17,7 @@ import {
   assertLibraryHandoffSnapshot,
 } from "#infrastructure/handoff/scoped-snapshot.ts";
 import type { PreparedHandoffFiles } from "./files.ts";
+import { assertPassiveRegistrationAssociations } from "#infrastructure/handoff/passive-registration.ts";
 
 export function stableNetwork(raw: unknown) {
   const network = HandoffNetworkProtocolSchema.parse(raw);
@@ -27,6 +28,7 @@ export function stableNetwork(raw: unknown) {
     ...(network.schemaVersion === 1
       ? {}
       : { schemaVersion: network.schemaVersion }),
+    ...registeredServer(network),
     planId: network.planId,
     recoveryEpoch: network.recoveryEpoch,
     controllers: network.quiescence.controllers,
@@ -151,6 +153,20 @@ export async function finishHandoffPreparation(
       });
       if (network.expiresAt <= new Date())
         throw new Error("Handoff network proof expired during file inspection");
+      if (
+        "schemaVersion" in prepared.scope &&
+        prepared.scope.schemaVersion === 3
+      ) {
+        const evidence = HandoffNetworkProtocolSchema.parse(network.evidence);
+        if (evidence.schemaVersion !== 3)
+          throw new Error("Registered library network protocol changed");
+        await assertPassiveRegistrationAssociations(
+          tx,
+          prepared.scope,
+          evidence.plex,
+          evidence.registeredPlexServerMachineId,
+        );
+      }
       const files = stableFiles(prepared.evidence);
       const complete = FinishedHandoffSchema.parse({
         schemaVersion: handoffProtocolVersion(prepared.scope),
@@ -182,4 +198,13 @@ export async function finishHandoffPreparation(
     },
     { timeout: 30_000 },
   );
+}
+
+function registeredServer(
+  network: z.infer<typeof HandoffNetworkProtocolSchema>,
+) {
+  return network.schemaVersion === 3 &&
+    network.registeredPlexServerMachineId !== undefined
+    ? { registeredPlexServerMachineId: network.registeredPlexServerMachineId }
+    : {};
 }

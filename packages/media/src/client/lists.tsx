@@ -38,8 +38,11 @@ import { PlexProfileAdministration } from "./plex-admin.tsx";
 import { NumberingAdministration } from "./numbering-admin.tsx";
 import { MovieRequests } from "./movie-editions/requests.tsx";
 import { RequestInterests } from "./household/interests.tsx";
+import { QualityGuideAdministration } from "./quality-guide/administration.tsx";
+import { useImportedRequests } from "./personal-migration/source.tsx";
 
 export function RequestsPage({ user }: { user: MediaUser }) {
+  const imported = useImportedRequests(user.id);
   const requests = useQuery({
     queryKey: ["requests"],
     queryFn: async () => readApi("/requests", RequestListSchema),
@@ -54,7 +57,8 @@ export function RequestsPage({ user }: { user: MediaUser }) {
       </PageTitle>
       {requests.isPending && <Loading />}
       {requests.error !== null && <ErrorNotice error={requests.error} />}
-      <RequestInterests user={user} />
+      {imported.error !== null && <ErrorNotice error={imported.error} />}
+      <RequestInterests user={user} importedClaims={imported.data ?? []} />
       <MovieRequests user={user} />
       <div className="item-list">
         {requests.data
@@ -344,6 +348,7 @@ export function AdminPage({ user }: { user: MediaUser }) {
           </div>
         ))}
       </section>
+      <QualityGuideAdministration user={user} />
       <section className="panel">
         <h2>Quality profiles</h2>
         {profiles.isPending && <Loading />}

@@ -13,6 +13,7 @@ import { queueOperation } from "#automation/store.ts";
 import { lockDefaultScopes } from "#infrastructure/editions/locks.ts";
 import { lockMovieCommand } from "#infrastructure/movie-editions/locks.ts";
 import { nativeInterestFacts } from "./facts.ts";
+import { noticeAcceptance } from "./acceptance.ts";
 import { MovieEditionKeySchema } from "#shared/movie-editions/registry.ts";
 
 /** One Temporal activity page, not a timer or a broad all-library transaction. */
@@ -252,37 +253,6 @@ async function releaseInterest(
         cursor: null,
       },
     });
-}
-
-async function noticeAcceptance(
-  tx: Prisma.TransactionClient,
-  request: MediaRequest,
-  now: Date,
-): Promise<Date | null> {
-  if (
-    request.interestNoticeEventId === null ||
-    request.interestNoticeRevision !== request.interestRevision
-  )
-    return null;
-  if (
-    request.interestNoticeViewedAt !== null &&
-    request.interestNoticeViewedAt <= now
-  )
-    return request.interestNoticeViewedAt;
-  const accepted = await tx.notificationDelivery.findFirst({
-    where: {
-      eventId: request.interestNoticeEventId,
-      userId: request.userId,
-      state: "accepted",
-      channel: { in: ["email", "discord"] },
-      acceptedAt: { not: null, lte: now },
-      reconciledAt: { gte: new Date(now.getTime() - 60_000), lte: now },
-      OR: [{ providerStatus: null }, { providerStatus: { not: "bounced" } }],
-      event: { kind: "interest_check", mediaId: request.mediaId },
-    },
-    orderBy: { acceptedAt: "asc" },
-  });
-  return accepted?.acceptedAt ?? null;
 }
 
 async function queueInterestNotice(
