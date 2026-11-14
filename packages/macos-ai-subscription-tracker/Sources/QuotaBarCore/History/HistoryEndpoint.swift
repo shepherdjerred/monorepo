@@ -1,4 +1,4 @@
-import Foundation
+public import Foundation
 
 /// How far back the Sessions window looks. The daemon filters a session list
 /// by last update and usage by when each event happened.
@@ -83,6 +83,76 @@ extension HistorySessionFilter {
   }
 }
 
+/// `/v1/usage?period=…`: which calendar periods, in which zone, broken down
+/// by which dimensions.
+public struct HistoryUsageReportQuery: Equatable, Sendable {
+  public var period: HistoryUsagePeriod
+  public var breakdown: [HistoryUsageDimension]
+  public var timeZone: TimeZone
+  public var startOfWeek: HistoryWeekStart
+  /// The daemon's `since` value: `7d`, a local `YYYY-MM-DD`, or `nil` for no
+  /// lower bound.
+  public var since: String?
+
+  /// Periods of `calendar`'s zone and week start, over the Sessions window's
+  /// time range.
+  public init(
+    period: HistoryUsagePeriod, breakdown: [HistoryUsageDimension], range: HistoryTimeRange,
+    calendar: Calendar
+  ) {
+    self.period = period
+    self.breakdown = breakdown
+    timeZone = calendar.timeZone
+    startOfWeek = HistoryWeekStart(calendar: calendar)
+    since = range.sinceParameter
+  }
+
+  /// The local calendar day containing `date`.
+  public static func today(
+    breakdown: [HistoryUsageDimension], at date: Date, calendar: Calendar
+  ) -> Self {
+    var query = Self(period: .day, breakdown: breakdown, range: .all, calendar: calendar)
+    let day = calendar.dateComponents([.year, .month, .day], from: date)
+    query.since = String(
+      format: "%04d-%02d-%02d", locale: Locale(identifier: "en_US_POSIX"), day.year ?? 0,
+      day.month ?? 0, day.day ?? 0)
+    return query
+  }
+
+  fileprivate var queryItems: [(String, String?)] {
+    [
+      ("period", period.rawValue),
+      ("breakdown", breakdown.isEmpty ? nil : breakdown.map(\.rawValue).joined(separator: ",")),
+      ("timezone", timeZone.identifier), ("startOfWeek", startOfWeek.rawValue),
+      ("since", since),
+    ]
+  }
+}
+
+/// Whose events `/v1/blocks` builds blocks from.
+public enum HistoryBlocksScope: String, Sendable {
+  case thisMac = "local"
+  case allMachines = "all"
+}
+
+/// `/v1/blocks`: every agent's 5-hour blocks, or only the active ones.
+public struct HistoryBlocksQuery: Equatable, Sendable {
+  public var activeOnly: Bool
+  public var scope: HistoryBlocksScope
+  /// The daemon's `since` value; `nil` takes its default of three days.
+  public var since: String?
+
+  public init(activeOnly: Bool, scope: HistoryBlocksScope, since: String? = nil) {
+    self.activeOnly = activeOnly
+    self.scope = scope
+    self.since = since
+  }
+
+  fileprivate var queryItems: [(String, String?)] {
+    [("active", activeOnly ? "true" : nil), ("machine", scope.rawValue), ("since", since)]
+  }
+}
+
 /// A `/v1` request target (path and query).
 enum HistoryEndpoint: Equatable, Sendable {
   case sessions(HistorySessionFilter, range: HistoryTimeRange, limit: Int, offset: Int)
@@ -90,6 +160,8 @@ enum HistoryEndpoint: Equatable, Sendable {
     query: String, filter: HistorySessionFilter, range: HistoryTimeRange, limit: Int, offset: Int)
   case session(id: Int, offset: Int, limit: Int)
   case usage(HistoryUsageGroup, range: HistoryTimeRange, source: HistorySource?)
+  case usageReport(HistoryUsageReportQuery)
+  case blocks(HistoryBlocksQuery)
   case tools(range: HistoryTimeRange, limit: Int)
   case facets
   case captures(session: Int, limit: Int, offset: Int)
@@ -100,7 +172,8 @@ enum HistoryEndpoint: Equatable, Sendable {
     case .sessions: "/v1/sessions"
     case .search: "/v1/search"
     case let .session(id, _, _): "/v1/sessions/\(id)"
-    case .usage: "/v1/usage"
+    case .usage, .usageReport: "/v1/usage"
+    case .blocks: "/v1/blocks"
     case .tools: "/v1/tools"
     case .facets: "/v1/facets"
     case .captures: "/v1/captures"
@@ -127,6 +200,10 @@ enum HistoryEndpoint: Equatable, Sendable {
       [("offset", String(offset)), ("limit", String(limit))]
     case let .usage(group, range, source):
       [("groupBy", group.rawValue), ("since", range.sinceParameter), ("source", source?.rawValue)]
+    case let .usageReport(query):
+      query.queryItems
+    case let .blocks(query):
+      query.queryItems
     case let .tools(range, limit):
       [("since", range.sinceParameter), ("limit", String(limit))]
     case let .captures(session, limit, offset):

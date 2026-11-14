@@ -58,6 +58,10 @@ func fixtureTransport(failing failingPath: String? = nil) -> FakeHistoryTranspor
     case "/v1/sessions/42":
       let offset = target.contains("offset=0") ? 0 : 2
       return jsonResponse(conversationPage(offset: offset))
+    case "/v1/usage" where target.contains("period="):
+      return jsonResponse(try sharedHistoryFixture("usage-report"))
+    case "/v1/blocks":
+      return jsonResponse(try sharedHistoryFixture("blocks"))
     case "/v1/usage":
       let body = try sharedHistoryFixture("usage")
       return jsonResponse(target.contains("groupBy=day") ? body : regroup(body, target: target))

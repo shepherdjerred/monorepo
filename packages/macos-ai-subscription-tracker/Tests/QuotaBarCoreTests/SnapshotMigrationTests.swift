@@ -44,7 +44,7 @@ import XCTest
       settings: settings,
       store: SnapshotMigrationStore(loaded: [.claudeCode: cached]),
       historyStore: MemoryHistoryStore(),
-      refresh: QuotaBarRefresh(timeout: .seconds(1), localUsageScan: { _, _ in [:] })
+      refresh: QuotaBarRefresh(timeout: .seconds(1), history: offlineHistory)
     )
 
     guard case let .available(value) = model.state(for: .claudeCode) else {

@@ -64,7 +64,9 @@ struct SessionsWindow: View {
   private func refresh() async {
     await model.loadFacets()
     if model.selection == .analytics {
-      await model.loadAnalytics()
+      async let analytics: Void = model.loadAnalytics()
+      async let periodChart: Void = model.loadPeriodChart()
+      _ = await (analytics, periodChart)
     } else {
       await model.loadSessions()
       if model.selectedSessionID != nil { await model.loadConversation() }
@@ -115,11 +117,12 @@ struct HistoryErrorView: View {
 
 struct FixCommandView: View {
   let command: String
+  var font: Font = .system(.callout, design: .monospaced)
 
   var body: some View {
     HStack(spacing: 6) {
       Text(command)
-        .font(.system(.callout, design: .monospaced))
+        .font(font)
         .textSelection(.enabled)
       Button {
         NSPasteboard.general.clearContents()

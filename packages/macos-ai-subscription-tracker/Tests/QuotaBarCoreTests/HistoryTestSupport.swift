@@ -47,3 +47,13 @@ final class MemoryHistoryStore: UsageHistoryPersisting, @unchecked Sendable {
     lock.withLock { storedSamples = samples }
   }
 }
+
+/// A history daemon that is not running, for models whose tests do not read
+/// it.
+struct OfflineHistoryTransport: HistoryTransport {
+  func get(_ target: String) async throws -> HistoryHTTPResponse {
+    throw HistoryAPIError.daemonNotRunning(socketPath: "/nonexistent/daemon.sock")
+  }
+}
+
+let offlineHistory = HistoryClient(transport: OfflineHistoryTransport())

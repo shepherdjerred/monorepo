@@ -128,20 +128,26 @@ public enum APICreditGrants {
   }
 
   private static func expiry(from object: [String: Any]) throws -> Date? {
-    guard let raw = object["expires_at"], !LocalLogJSON.isNull(raw) else { return nil }
-    guard let text = raw as? String, let date = LocalLogTime().parse(text) else {
+    guard let raw = object["expires_at"], !(raw is NSNull) else { return nil }
+    guard let text = raw as? String, let date = HistoryTimestamp.parse(text) else {
       throw APICreditGrantError.malformed
     }
     return date
   }
 
   private static func decimal(_ value: Any?) throws -> Decimal {
-    guard let value, !LocalLogJSON.isNull(value) else { throw APICreditGrantError.malformed }
-    do {
-      return try LocalLogJSON.decimal(value)
-    } catch {
-      throw APICreditGrantError.malformed
+    guard let value, !(value is NSNull),
+      CFGetTypeID(value as AnyObject) != CFBooleanGetTypeID()
+    else { throw APICreditGrantError.malformed }
+    let posix = Locale(identifier: "en_US_POSIX")
+    if let whole = value as? Int { return Decimal(whole) }
+    if let number = value as? Double, let parsed = Decimal(string: String(number), locale: posix) {
+      return parsed
     }
+    if let text = value as? String, let parsed = Decimal(string: text, locale: posix) {
+      return parsed
+    }
+    throw APICreditGrantError.malformed
   }
 
   private static func currency(_ value: Any?) throws -> String {

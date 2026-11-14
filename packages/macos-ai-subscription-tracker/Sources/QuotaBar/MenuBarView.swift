@@ -190,12 +190,16 @@ struct MenuBarView: View {
         if let startupError {
           StatusMessage(symbol: "exclamationmark.triangle", text: startupError)
         }
+        if case let .failure(error) = model.historyUsage {
+          HistoryUsageUnavailable(error: error)
+        }
         ForEach(overview.providers) { provider in
           ProviderSectionView(
             overview: provider,
             date: date,
             history: model.history,
-            localUsage: model.localDailyUsage[provider.provider]
+            dailyUsage: historyUsage?.today[provider.provider],
+            activeBlock: historyUsage?.activeBlocks[provider.provider]
           )
           if provider.id != overview.providers.last?.id {
             Divider().padding(.leading, 25)
@@ -211,6 +215,11 @@ struct MenuBarView: View {
     .scrollBounceBehavior(.basedOnSize)
     .scrollIndicators(.visible)
     .frame(height: providerListHeight)
+  }
+
+  private var historyUsage: MenuHistoryUsage? {
+    guard case let .success(usage) = model.historyUsage else { return nil }
+    return usage
   }
 
   private var spendRow: some View {
@@ -290,5 +299,31 @@ private struct StatusMessage: View {
       .frame(maxWidth: .infinity, alignment: .leading)
       .padding(.vertical, 6)
       .help(text)
+  }
+}
+
+/// Why today's usage and blocks are missing, with the command that fixes it.
+private struct HistoryUsageUnavailable: View {
+  let error: HistoryAPIError
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 4) {
+      Label(title, systemImage: "bolt.horizontal.circle")
+        .font(.caption)
+        .foregroundStyle(.secondary)
+        .help(error.localizedDescription)
+      if let command = error.fixCommand {
+        FixCommandView(command: command, font: .caption.monospaced())
+      }
+    }
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .padding(.vertical, 6)
+  }
+
+  private var title: String {
+    switch error {
+    case .daemonNotRunning: "History daemon not running: no usage today or blocks"
+    default: "Usage unavailable: \(error.localizedDescription)"
+    }
   }
 }

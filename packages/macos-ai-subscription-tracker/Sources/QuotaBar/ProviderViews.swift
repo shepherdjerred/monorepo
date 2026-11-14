@@ -81,14 +81,15 @@ struct ProviderSectionView: View {
   let overview: ProviderOverview
   let date: Date
   let history: [UsageHistorySample]
-  var localUsage: LocalDailyUsage?
+  var dailyUsage: ProviderDailyUsage?
+  var activeBlock: HistoryUsageBlock?
 
   var body: some View {
     VStack(alignment: .leading, spacing: 7) {
       header
       content
-      if let localUsage {
-        LocalUsageCaption(usage: localUsage)
+      if dailyUsage != nil || activeBlock != nil {
+        HistoryUsageCaption(dailyUsage: dailyUsage, activeBlock: activeBlock, date: date)
       }
     }
     .padding(.vertical, 8)
@@ -197,30 +198,28 @@ struct ProviderSectionView: View {
   }
 }
 
-private struct LocalUsageCaption: View {
-  let usage: LocalDailyUsage
+/// Today's tokens and list-price cost from the history daemon, and the
+/// active 5-hour block.
+private struct HistoryUsageCaption: View {
+  let dailyUsage: ProviderDailyUsage?
+  let activeBlock: HistoryUsageBlock?
+  let date: Date
 
   var body: some View {
     VStack(alignment: .leading, spacing: 2) {
-      if let caption = usage.caption {
-        Text(caption)
-          .help(usage.helpText)
+      if let activeBlock {
+        Text(activeBlock.menuCaption(at: date))
+          .help(activeBlock.helpText)
       }
-      if let allMachines = usage.allMachinesCaption {
-        Text(allMachines)
-          .help(usage.allMachinesHelpText)
-      }
-      if usage.otherMachinesUnreadable {
-        Text(LocalDailyUsage.otherMachinesUnreadableMessage)
-          .help(LocalDailyUsage.otherMachinesUnreadableMessage)
-      }
-      if usage.unreadable {
-        Text(LocalDailyUsage.unreadableMessage)
-          .help(LocalDailyUsage.unreadableMessage)
-      }
-      if usage.pricingUnavailable {
-        Text(LocalDailyUsage.pricingUnavailableMessage)
-          .help(LocalDailyUsage.pricingUnavailableMessage)
+      if let dailyUsage {
+        if let caption = dailyUsage.caption {
+          Text(caption)
+            .help(dailyUsage.helpText)
+        }
+        if let allMachines = dailyUsage.allMachinesCaption {
+          Text(allMachines)
+            .help(dailyUsage.allMachinesHelpText)
+        }
       }
     }
     .font(.caption2)
@@ -277,11 +276,14 @@ struct WindowRow: View {
     .accessibilityValue(accessibilityValue)
   }
 
+  /// `behind · runs out ~3:40 PM` when the window empties before its
+  /// reset at the rate used so far, else `ahead · pace 6.7%/d · even 14.3%/d`.
   private func pacingCaption(_ pacing: WindowPacing) -> some View {
     let label = pacingStatusLabel(pacing.status)
-    let actual = WindowPacing.format(pacing.actualPacePerDay)
-    let even = WindowPacing.format(pacing.evenPacePerDay)
-    return Text("\(label) · pace \(actual) · even \(even)")
+    let detail =
+      pacing.runOutText(relativeTo: pacingDate)
+      ?? "pace \(pacing.format(pacing.actualPace)) · even \(pacing.format(pacing.evenPace))"
+    return Text("\(label) · \(detail)")
       .font(.caption2)
       .monospacedDigit()
       .foregroundStyle(stale ? .secondary : pacingColor(for: pacing.status))
@@ -310,11 +312,20 @@ struct WindowRow: View {
   }
 
   private func pacingHelp(_ pacing: WindowPacing) -> String {
-    let days = String(format: "%.1f", pacing.daysRemaining)
-    return "You are \(pacingStatusLabel(pacing.status)) of an even split: "
-      + "you have \(remainingText) left with \(days) days to go, or "
-      + "\(WindowPacing.format(pacing.actualPacePerDay)) available per day vs "
-      + "\(WindowPacing.format(pacing.evenPacePerDay)) at an even split."
+    let left = QuotaTimeFormatter.compactCountdown(
+      to: pacingDate.addingTimeInterval(pacing.secondsRemaining), from: pacingDate)
+    let unit = pacing.unit == .hour ? "hour" : "day"
+    var text =
+      "You are \(pacingStatusLabel(pacing.status)) of an even split: "
+      + "you have \(remainingText) left with \(left) to go, or "
+      + "\(pacing.format(pacing.actualPace)) available per \(unit) vs "
+      + "\(pacing.format(pacing.evenPace)) at an even split."
+    if let runsOutAt = pacing.runsOutAt {
+      text +=
+        " At the rate used since this window began, it runs out "
+        + "\(runsOutAt.formatted(date: .abbreviated, time: .shortened)), before its reset."
+    }
+    return text
   }
 
   private func pacingColor(for status: WindowPacing.Status) -> Color {
@@ -390,9 +401,10 @@ struct WindowRow: View {
     }
     if let pacing = WindowPacing.compute(window: window, at: pacingDate) {
       let label = pacingStatusLabel(pacing.status)
-      let actual = WindowPacing.format(pacing.actualPacePerDay)
-      let even = WindowPacing.format(pacing.evenPacePerDay)
+      let actual = pacing.format(pacing.actualPace)
+      let even = pacing.format(pacing.evenPace)
       values.append("\(label), pace \(actual), even split \(even)")
+      if let runOut = pacing.runOutText(relativeTo: pacingDate) { values.append(runOut) }
     }
     if window.isWeekly {
       if let todayUsedPercent {

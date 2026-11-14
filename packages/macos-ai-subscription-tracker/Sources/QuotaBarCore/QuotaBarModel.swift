@@ -13,19 +13,19 @@ private struct ActiveRefresh {
 
 public struct QuotaBarRefresh: Sendable {
   public var timeout: Duration
-  public var localUsageScan: @Sendable (Date, TimeZone) -> [ProviderID: LocalDailyUsage]
+  /// Reads today's usage and the active 5-hour blocks on each refresh.
+  public var history: HistoryClient
+  /// Defines "today" for the daily usage caption.
+  public var calendar: Calendar
 
   public init(
     timeout: Duration = .seconds(25),
-    localUsageScan: @escaping @Sendable (Date, TimeZone) -> [ProviderID: LocalDailyUsage] =
-      QuotaBarRefresh.scan
+    history: HistoryClient = HistoryClient(),
+    calendar: Calendar = .autoupdatingCurrent
   ) {
     self.timeout = timeout
-    self.localUsageScan = localUsageScan
-  }
-
-  public static func scan(_ date: Date, _ zone: TimeZone) -> [ProviderID: LocalDailyUsage] {
-    LocalUsageScanner.scan(now: date, timeZone: zone)
+    self.history = history
+    self.calendar = calendar
   }
 }
 
@@ -38,13 +38,16 @@ public final class QuotaBarModel {
   public private(set) var cacheErrorMessage: String?
   public private(set) var history: [UsageHistorySample] = []
   public private(set) var historyErrorMessage: String?
-  public private(set) var localDailyUsage: [ProviderID: LocalDailyUsage] = [:]
+  /// Today's usage and active blocks from the history daemon, or why they
+  /// could not be read; `nil` before the first refresh.
+  public private(set) var historyUsage: Result<MenuHistoryUsage, HistoryAPIError>?
 
   private let store: any SnapshotPersisting
   private let historyStore: any UsageHistoryPersisting
   private let providerFactory: ((Set<ProviderID>) throws -> [any UsageProvider])?
   private let providerTimeout: Duration
-  private let localUsageScan: @Sendable (Date, TimeZone) -> [ProviderID: LocalDailyUsage]
+  private let historyClient: HistoryClient
+  private let calendar: Calendar
   private var lastSuccessful: [ProviderID: UsageSnapshot] = [:]
   private var pollingTask: Task<Void, Never>?
   private var activeRefresh: ActiveRefresh?
@@ -65,7 +68,8 @@ public final class QuotaBarModel {
     self.historyStore = historyStore
     self.providerFactory = providerFactory
     providerTimeout = refresh.timeout
-    localUsageScan = refresh.localUsageScan
+    historyClient = refresh.history
+    calendar = refresh.calendar
     do {
       lastSuccessful = try store.load().mapValues(Self.migrateCachedSnapshot)
       for (provider, snapshot) in lastSuccessful {
@@ -219,10 +223,8 @@ public final class QuotaBarModel {
     for provider in enabled {
       providerRefreshAttempts[provider.id, default: 0] += 1
     }
-    let scan = localUsageScan
-    let timeZone = TimeZone.current
-    let usageTask = Task.detached(priority: .utility) {
-      scan(Date(), timeZone)
+    let usageTask = Task.detached(priority: .utility) { [historyClient, calendar] in
+      await Self.fetchHistoryUsage(client: historyClient, calendar: calendar, at: Date())
     }
     await withTaskGroup(of: ProviderFetchResult.self) { group in
       for provider in enabled {
@@ -234,9 +236,9 @@ public final class QuotaBarModel {
         apply(result)
       }
     }
-    localDailyUsage = await usageTask.value
+    historyUsage = await usageTask.value
     // Persist even when every fetch failed: failure rounds are exactly when
-    // the on-disk freshness markers change. Local daily totals stay in memory.
+    // the on-disk freshness markers change. History usage stays in memory.
     persistLastSuccessful()
   }
 
@@ -327,6 +329,35 @@ public final class QuotaBarModel {
       historyErrorMessage = nil
     } catch {
       historyErrorMessage = QuotaError.historyWriteFailed.localizedDescription
+    }
+  }
+
+  nonisolated private static func fetchHistoryUsage(
+    client: HistoryClient, calendar: Calendar, at date: Date
+  ) async -> Result<MenuHistoryUsage, HistoryAPIError> {
+    async let report = capture { () async throws(HistoryAPIError) in
+      try await client.usageReport(
+        .today(breakdown: DailyUsageSummary.breakdown, at: date, calendar: calendar))
+    }
+    async let blocks = capture { () async throws(HistoryAPIError) in
+      try await client.blocks(HistoryBlocksQuery(activeOnly: true, scope: .allMachines))
+    }
+    let (reportResult, blocksResult) = await (report, blocks)
+    return reportResult.flatMap { report in
+      blocksResult.map { blocks in
+        MenuHistoryUsage(
+          today: DailyUsageSummary(report), activeBlocks: blocks.activeByProvider)
+      }
+    }
+  }
+
+  nonisolated private static func capture<Value: Sendable>(
+    _ operation: () async throws(HistoryAPIError) -> Value
+  ) async -> Result<Value, HistoryAPIError> {
+    do {
+      return .success(try await operation())
+    } catch {
+      return .failure(error)
     }
   }
 
