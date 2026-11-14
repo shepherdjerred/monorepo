@@ -71,7 +71,10 @@ export function createPinchtabChart(app: App) {
   });
 
   // NetworkPolicy documents the same HTTPS-only public browsing boundary that
-  // the pod-local firewall enforces for the current Flannel CNI.
+  // the pod-local firewall enforces. The policy itself is not enforced until
+  // the switch described in the wiki page
+  // `explanation/homelab/network-policy-enforcement`, and then only once this
+  // namespace is cut over.
   new KubeNetworkPolicy(chart, "pinchtab-egress-netpol", {
     metadata: { name: "pinchtab-egress-netpol" },
     spec: {

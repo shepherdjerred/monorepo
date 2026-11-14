@@ -45,11 +45,12 @@ const BOUNDED = `has(c.resources) && has(c.resources.requests) && has(c.resource
  * pods; this turns any regression, or any pod not created by the harness,
  * into a rejected create instead of an unbounded or long-lived workload.
  *
- * Flannel does not enforce NetworkPolicy, and CronJobs are not allowed, so
- * the guard is the enforceable boundary: harness ownership, a TTL the daemon
- * reaps by plus a kubelet-enforced deadline, CI-node placement at batch
- * priority, bounded resources, pinned images only, and no PVCs (sandbox state
- * is disposable emptyDir).
+ * NetworkPolicy is not enforced until the switch described in the wiki page
+ * `explanation/homelab/network-policy-enforcement`, and CronJobs are not
+ * allowed, so the guard is the enforceable boundary: harness ownership, a TTL
+ * the daemon reaps by plus a kubelet-enforced deadline, CI-node placement at
+ * batch priority, bounded resources, pinned images only, and no PVCs (sandbox
+ * state is disposable emptyDir).
  */
 export function createMcSandboxPodGuard(
   chart: Chart,

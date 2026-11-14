@@ -244,11 +244,11 @@ accept connections`.
 kubectl -n RECOVERY_NAMESPACE logs -f postgresql-verify
 ```
 
-:::caution[The restore namespace's NetworkPolicy is not enforced]
-The homelab CNI is Flannel without a NetworkPolicy controller
-([agent task boundary](/explanation/temporal/agent-task-boundary/)). The
-namespace's deny-all policy therefore blocks nothing. The copy stays offline
-only because nothing in the Pod opens a connection.
+:::caution[The restore namespace's NetworkPolicy is not enforced yet]
+Nothing in the cluster enforces a NetworkPolicy until the switch described in
+[How network policy enforcement works here](/explanation/homelab/network-policy-enforcement/).
+Until then the namespace's deny-all policy blocks nothing. The copy stays
+offline only because nothing in the Pod opens a connection.
 :::
 
 Confirm that the copy holds no TCP or UDP socket. The command must print

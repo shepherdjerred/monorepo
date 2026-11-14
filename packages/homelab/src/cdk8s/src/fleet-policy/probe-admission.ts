@@ -20,7 +20,7 @@ import {
  * red or the route dead while every manifest still renders.
  */
 
-const TailscaleIngressSchema = z.looseObject({
+export const TailscaleIngressSchema = z.looseObject({
   spec: z.looseObject({
     ingressClassName: z.literal("tailscale"),
     defaultBackend: z.looseObject({
@@ -31,6 +31,19 @@ const TailscaleIngressSchema = z.looseObject({
     }),
   }),
 });
+
+/**
+ * The proxy pods the Tailscale operator serves one Ingress from. They run in
+ * the `tailscale` namespace and the operator labels them after the Ingress.
+ */
+export function tailscaleProxyPods(namespace: string, ingress: string): Pods {
+  return podsLabelled("tailscale", {
+    "tailscale.com/managed": "true",
+    "tailscale.com/parent-resource": ingress,
+    "tailscale.com/parent-resource-ns": namespace,
+    "tailscale.com/parent-resource-type": "ingress",
+  });
+}
 
 const TunnelBindingSchema = z.looseObject({
   subjects: z.array(z.looseObject({ name: z.string() })),
@@ -69,12 +82,7 @@ function probeSources(
     })
     .map((ingress) => ({
       name: "tailscale" as const,
-      pods: podsLabelled("tailscale", {
-        "tailscale.com/managed": "true",
-        "tailscale.com/parent-resource": ingress.metadata.name,
-        "tailscale.com/parent-resource-ns": probe.namespace,
-        "tailscale.com/parent-resource-type": "ingress",
-      }),
+      pods: tailscaleProxyPods(probe.namespace, ingress.metadata.name),
     }));
   // A TunnelBinding names a Service, not a port: the probe carries the port
   // it was declared with.
@@ -100,7 +108,7 @@ function probeSources(
   ];
 }
 
-type ProbeTarget = {
+export type ServicePortTarget = {
   /** The pods behind the port, when a synthesized workload backs it. */
   pods: Pods | undefined;
   /** The pod port the Service port forwards to. */
@@ -108,15 +116,16 @@ type ProbeTarget = {
 };
 
 /**
- * The pods and pod port behind a probed Service port. A Service an upstream
- * chart renders is not visible to synthesis, and neither are the pods of a
- * synthesized Service that no synthesized workload backs; for those the
- * Service port stands in for the pod port.
+ * The pods and pod port behind a Service port, for a probe or any other
+ * route to it. A Service an upstream chart renders is not visible to
+ * synthesis, and neither are the pods of a synthesized Service that no
+ * synthesized workload backs; for those the Service port stands in for the
+ * pod port.
  */
-function probeTargets(
+export function servicePortTargets(
   fleet: Fleet,
-  probe: BackendProbeDescriptor,
-): ProbeTarget[] {
+  probe: Pick<BackendProbeDescriptor, "namespace" | "serviceName" | "port">,
+): ServicePortTarget[] {
   const service = fleet.services.find(
     (candidate) =>
       candidate.namespace === probe.namespace &&
@@ -145,7 +154,7 @@ function targetPortOf(service: FleetService, port: number): number | string {
   );
   if (servicePort === undefined)
     throw new Error(
-      `Probe targets ${service.namespace}/${service.name}:${String(port)}, a port the Service does not expose`,
+      `${service.namespace}/${service.name}:${String(port)} is a probe or Ingress target, but the Service does not expose that port`,
     );
   return servicePort.targetPort ?? port;
 }
@@ -163,7 +172,7 @@ export function probePortsNotAdmitted(fleet: Fleet): string[] {
   return fleet.backendProbes.flatMap((probe) => {
     const sources = probeSources(fleet, probe);
     const closed = new Set<string>();
-    for (const { pods, port } of probeTargets(fleet, probe)) {
+    for (const { pods, port } of servicePortTargets(fleet, probe)) {
       const destination = pods ?? podsLabelled(probe.namespace);
       const policies = policiesSelecting(fleet, "Ingress", destination);
       if (policies.length === 0) continue;
