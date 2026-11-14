@@ -265,6 +265,7 @@ function dispatch(
     {
       dispatches: acceptedClientMatchDispatches(batch, receipts, uploadedAt),
       evaluations: [],
+      games: new Map(),
     },
     selectEndOfGameDispatches(batch, receipts, {
       now: uploadedAt,
@@ -340,7 +341,7 @@ describe("end-of-game-only dispatch", () => {
     );
   });
 
-  test("counts a converted block once, as an end-of-game outcome of its real queue", async () => {
+  test("counts a converted block once, as an end-of-game outcome of its real queue, with its game", async () => {
     const { block, uploadedAt, endOfGame } = await classicUploads();
     const batch = ScoutClientObservationBatchSchema.parse({
       observations: [endOfGame],
@@ -352,20 +353,24 @@ describe("end-of-game-only dispatch", () => {
       gameKind: "unknown",
     } as const;
 
-    expect(
-      withEndOfGameDispatches(
-        { dispatches: [], evaluations: [unconverted] },
-        selectEndOfGameDispatches(batch, receipts, {
-          now: uploadedAt,
-          identities: new Map(),
-          endOfGame: {
-            gameflows: new Map([
-              [endOfGame.observationId, [classicGameflow(block)]],
-            ]),
-            deadlineMs: END_OF_GAME_DEADLINE_MS,
-          },
-        }),
-      ).evaluations,
-    ).toEqual([{ ...unconverted, gameKind: "classic" }]);
+    const merged = withEndOfGameDispatches(
+      { dispatches: [], evaluations: [unconverted], games: new Map() },
+      selectEndOfGameDispatches(batch, receipts, {
+        now: uploadedAt,
+        identities: new Map(),
+        endOfGame: {
+          gameflows: new Map([
+            [endOfGame.observationId, [classicGameflow(block)]],
+          ]),
+          deadlineMs: END_OF_GAME_DEADLINE_MS,
+        },
+      }),
+    );
+
+    expect(merged.evaluations).toEqual([
+      { ...unconverted, gameKind: "classic" },
+    ]);
+    // Clash shadowing reads every dispatched game from `games`.
+    expect([...merged.games.keys()]).toEqual([await classicMatchId()]);
   });
 });

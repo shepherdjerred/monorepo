@@ -1,5 +1,6 @@
 import {
   projectPostGameOutcome,
+  type CanonicalMatch,
   type QueueType,
   type ScoutClientObservationBatch,
   type ScoutClientPostGameOutcome,
@@ -42,9 +43,14 @@ type PostGameEvaluation = {
   readonly gameKind: QueueType | "unknown";
 };
 
+/**
+ * A post-game selection: its dispatch items, its telemetry outcomes, and the
+ * game each item converted to, by match ID (Clash shadowing reads it).
+ */
 type PostGameSelection = {
   readonly dispatches: readonly ScoutClientMatchDispatchItem[];
   readonly evaluations: readonly PostGameEvaluation[];
+  readonly games: ReadonlyMap<string, CanonicalMatch["info"]>;
 };
 
 /**
@@ -91,6 +97,7 @@ export function selectEndOfGameDispatches(
 ): PostGameSelection {
   const dispatches: ScoutClientMatchDispatchItem[] = [];
   const evaluations: PostGameEvaluation[] = [];
+  const games = new Map<string, CanonicalMatch["info"]>();
   for (const raw of acceptedEndOfGameUploads(batch, receipts)) {
     const observation = translateObservation(raw, context.identities);
     const gameflows = context.endOfGame.gameflows.get(
@@ -133,6 +140,7 @@ export function selectEndOfGameDispatches(
       gameKind: gameKindOf(record.info),
     });
     if (deliveryMode === null) continue;
+    games.set(riotMatchId.data, record.info);
     dispatches.push({
       riotMatchId: riotMatchId.data,
       sourcePuuid: LeaguePuuidSchema.parse(observation.localPuuid),
@@ -149,7 +157,7 @@ export function selectEndOfGameDispatches(
       orderingAssured: false,
     });
   }
-  return { dispatches, evaluations };
+  return { dispatches, evaluations, games };
 }
 
 /**
@@ -213,13 +221,13 @@ function preferredDispatch(
  * once: a live item over a backfill, then the earlier `readyAt`, as the
  * dispatcher's own merge decides, so a bundle for the same game wins over its
  * block's deadline. An upload's end-of-game outcome replaces the "did not
- * convert" outcome the ordinary selection counted for it. Anything else the
- * ordinary selection carries passes through.
+ * convert" outcome the ordinary selection counted for it, and its game joins
+ * the ordinary selection's games.
  */
-export function withEndOfGameDispatches<T extends PostGameSelection>(
-  selection: T,
+export function withEndOfGameDispatches(
+  selection: PostGameSelection,
   endOfGame: PostGameSelection,
-): T {
+): PostGameSelection {
   const items = new Map<string, ScoutClientMatchDispatchItem>();
   for (const item of [...selection.dispatches, ...endOfGame.dispatches]) {
     const existing = items.get(item.riotMatchId);
@@ -232,7 +240,7 @@ export function withEndOfGameDispatches<T extends PostGameSelection>(
     endOfGame.evaluations.map((evaluation) => evaluation.observationId),
   );
   return {
-    ...selection,
+    games: new Map([...endOfGame.games, ...selection.games]),
     dispatches: [...items.values()].sort(
       (left, right) =>
         left.gameEndTimestamp - right.gameEndTimestamp ||
@@ -251,10 +259,7 @@ export function withEndOfGameDispatches<T extends PostGameSelection>(
  * Ingress's whole post-game selection at one instant: the ordinary `evaluate`
  * (complete bundles) with the end-of-game-only uploads merged in.
  */
-export async function selectPostGameDispatches<
-  T extends PostGameSelection,
-  R extends DispatchReceipt,
->(
+export async function selectPostGameDispatches<R extends DispatchReceipt>(
   selection: {
     readonly batch: ScoutClientObservationBatch;
     readonly receipts: readonly R[];
@@ -263,10 +268,10 @@ export async function selectPostGameDispatches<
       receipts: readonly R[],
       now: Date,
       identities: IdentityMap,
-    ) => T;
+    ) => PostGameSelection;
   },
   identities: IdentityMap,
-): Promise<T> {
+): Promise<PostGameSelection> {
   const { batch, receipts, evaluate } = selection;
   const now = new Date();
   return withEndOfGameDispatches(
