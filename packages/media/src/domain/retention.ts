@@ -14,6 +14,8 @@ export type RetentionRequester = {
   warningAcceptedAt: number | null;
   warningFailed: boolean;
   fulfillment: MovieEditionFulfillment;
+  /** A durable lifecycle release is distinct from the current watched boolean. */
+  released?: boolean;
 };
 
 export type RetentionInput = {
@@ -56,7 +58,9 @@ export function evaluateRetention(input: RetentionInput): RetentionEvaluation {
     return protect("keep_hold");
   const unfulfilled = fulfillmentProtection(input.requesters);
   if (unfulfilled !== null) return protect(unfulfilled);
-  const requesters = input.requesters.filter((requester) => !requester.owner);
+  const requesters = input.requesters.filter(
+    (requester) => !requester.owner || requester.released !== undefined,
+  );
   if (requesters.length === 0) return protect("owner_only_or_unclaimed");
   for (const requester of requesters) {
     const reason = watchProtection(requester, input.now);
@@ -89,6 +93,7 @@ function fulfillmentProtection(
   requesters: readonly RetentionRequester[],
 ): string | null {
   for (const requester of requesters) {
+    if (requester.released === true) continue;
     if (
       requester.fulfillment.status !== "fulfilled" &&
       requester.fulfillment.status !== "not_applicable"
@@ -109,7 +114,10 @@ function watchProtection(
     now - requester.observedAt > RETENTION_DEFAULTS.maximumWatchAgeMs
   )
     return "watch_stale";
-  return requester.watched ? null : "requester_unwatched";
+  if (requester.released === false) return "requester_still_following";
+  return requester.watched || requester.released === true
+    ? null
+    : "requester_unwatched";
 }
 
 export function extendKeep(now: number, existingUntil: number | null): number {

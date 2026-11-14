@@ -6,6 +6,12 @@ import type {
 } from "#shared/api.ts";
 
 export type NotificationApplication = {
+  acknowledgeRead: (
+    actor: MediaActor,
+    key: string,
+    id: string,
+    expectedVersion: number,
+  ) => Promise<CommandResult>;
   preferences: (actor: MediaActor) => Promise<NotificationPreferences>;
   updatePreferences: (
     actor: MediaActor,

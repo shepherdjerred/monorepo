@@ -12,6 +12,7 @@ export function PageTitle({
 }) {
   return (
     <header className="page-title">
+      <title>{title} · Media</title>
       <p className="eyebrow">{eyebrow}</p>
       <h1>{title}</h1>
       {children}

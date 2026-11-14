@@ -78,6 +78,8 @@ export const NotificationListSchema = z.array(
       kind: z.string(),
       healthReason: OwnerHealthReasonSchema.optional(),
       healthState: z.enum(["current", "superseded", "invalid"]).optional(),
+      interestRequestId: z.uuid().optional(),
+      interestRevision: z.int().nonnegative().optional(),
     }),
   }),
 );

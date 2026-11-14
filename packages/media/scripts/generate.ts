@@ -29,6 +29,35 @@ if (!field.test(source))
 const generatorOutput = /output\s+=\s+"\.\.\/generated\/prisma"/u;
 if (!generatorOutput.test(source))
   throw new Error("Media client output changed");
+const householdFields = new Set([
+  "libraryKeep",
+  "libraryPolicyExplicit",
+  "libraryPolicyActorId",
+  "keepingPolicy",
+  "interestState",
+  "interestRevision",
+  "interestRenewedAt",
+  "usableUnwatchedSince",
+  "lastMeaningfulProgressAt",
+  "interestNoticeEventId",
+  "interestNoticeRevision",
+  "interestNoticeAcceptedAt",
+  "interestNoticeViewedAt",
+  "interestReleasedAt",
+  "interestReleaseReason",
+  "seriesStatus",
+  "seriesStatusObservedAt",
+  "catalogCompletedAt",
+  "releaseDates",
+]);
+const historicalSource = source
+  .replaceAll(
+    /^model (?:MediaReleaseDate|PlaybackSession|PlaybackSessionIdentity|PlaybackCollector) \{[\s\S]+?^\}\n/gmu,
+    "",
+  )
+  .split("\n")
+  .filter((line) => !householdFields.has(line.trim().split(/\s+/u)[0] ?? ""))
+  .join("\n");
 const directory = await mkdtemp(
   path.join(tmpdir(), "media-historical-client-"),
 );
@@ -39,7 +68,9 @@ try {
   );
   await Bun.write(
     target,
-    source.replace(field, "").replace(generatorOutput, `output = ${output}`),
+    historicalSource
+      .replace(field, "")
+      .replace(generatorOutput, `output = ${output}`),
   );
   await generate(target);
 } finally {

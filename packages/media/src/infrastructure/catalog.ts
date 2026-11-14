@@ -8,6 +8,10 @@ import {
   loadSeriesCatalogIdentity,
 } from "./catalog-identity/catalog.ts";
 import { persistCatalogMedia } from "./catalog-identity/persist.ts";
+import {
+  normalizeMovieReleases,
+  seriesLifecycleStatus,
+} from "#domain/household/calendar.ts";
 
 function year(date: string | null): number | null {
   if (date === null || date.length === 0) return null;
@@ -88,6 +92,9 @@ export class TmdbCatalogApplication implements CatalogApplication {
           runtimeMinutes: movie.runtime,
           originalLanguage: movie.original_language,
           identity,
+          releaseDates: normalizeMovieReleases(
+            movie.release_dates?.results ?? [],
+          ),
         }),
       );
       return { mediaId: item.id };
@@ -105,6 +112,7 @@ export class TmdbCatalogApplication implements CatalogApplication {
         originalLanguage: series.original_language,
         runtimeMinutes: null,
         identity,
+        seriesStatus: seriesLifecycleStatus(series.status),
       });
       await queueOperation(db, {
         key: `catalog:${item.id}:${String(Math.floor(Date.now() / 3_600_000))}`,

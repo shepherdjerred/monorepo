@@ -300,6 +300,7 @@ export async function readMovieDemandAuthority(
           active: true,
           excluded: false,
           direct: true,
+          interestState: "following",
         },
       ],
     },

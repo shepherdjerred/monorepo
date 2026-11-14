@@ -20,6 +20,10 @@ import {
 import { MovieEditionSelector } from "./selector.tsx";
 import { MovieRequestSubject } from "./subject.tsx";
 import { movieAdmissionReasonV4 } from "./presentation-v4.ts";
+import {
+  KeepingPolicyChoice,
+  type KeepingChoice,
+} from "#client/household/keeping-policy.tsx";
 
 type MovieTarget = { mediaId: string } | { externalId: number };
 
@@ -59,6 +63,9 @@ function useMovieRequest({
 }) {
   const [edition, setEdition] = useState<MovieEditionKey | "">("");
   const [languages, setLanguages] = useState("en");
+  const [keepingPolicy, setKeepingPolicy] = useState<KeepingChoice>(
+    user.role === "owner" ? "" : "temporary",
+  );
   const [reviewed, setReviewed] = useState<MovieEditionContextV4 | null>(null);
   const [adoptedId, setAdoptedId] = useState<string | null>(null);
   const pending = useRef<MovieRequestV4 | null>(null);
@@ -78,6 +85,8 @@ function useMovieRequest({
       if (pending.current !== null)
         return submitMovieRequestV4(user.id, pending.current);
       if (edition === "") throw new Error("Choose a movie edition first.");
+      if (keepingPolicy === "")
+        throw new Error("Choose how long to keep this title.");
       let current = reviewed ?? context.data;
       if (current === undefined) {
         if (!("externalId" in target))
@@ -92,7 +101,12 @@ function useMovieRequest({
         current = await readMovieContextV4(adopted.mediaId, subjectUserId);
         setReviewed(current);
       }
-      pending.current = movieRequestV4(current, edition, languages);
+      pending.current = movieRequestV4(
+        current,
+        edition,
+        languages,
+        keepingPolicy,
+      );
       return submitMovieRequestV4(user.id, pending.current);
     },
     onSuccess: async (result) => {
@@ -133,6 +147,8 @@ function useMovieRequest({
     setEdition,
     languages,
     setLanguages,
+    keepingPolicy,
+    setKeepingPolicy,
     setReviewed,
     mediaId,
     context,
@@ -142,6 +158,7 @@ function useMovieRequest({
     selected,
     chooseAnother: () => {
       setEdition("");
+      setKeepingPolicy(user.role === "owner" ? "" : "temporary");
       setReviewed(null);
       request.reset();
     },
@@ -159,6 +176,8 @@ function SubjectMovieRequest(input: {
     setEdition,
     languages,
     setLanguages,
+    keepingPolicy,
+    setKeepingPolicy,
     setReviewed,
     mediaId,
     context,
@@ -183,6 +202,12 @@ function SubjectMovieRequest(input: {
           setEdition(value);
           setReviewed(context.data ?? null);
         }}
+      />
+      <KeepingPolicyChoice
+        owner={user.role === "owner"}
+        value={keepingPolicy}
+        disabled={disabled}
+        onChange={setKeepingPolicy}
       />
       <label>
         Subtitle languages
@@ -215,6 +240,7 @@ function SubjectMovieRequest(input: {
           request.isSuccess ||
           user.restricted ||
           edition === "" ||
+          keepingPolicy === "" ||
           commandNeedsReview(request.error) ||
           (mediaId !== null && context.data === undefined)
         }

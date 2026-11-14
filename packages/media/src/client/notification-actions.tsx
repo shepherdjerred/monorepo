@@ -14,7 +14,7 @@ export function DeliveryActions({
 }) {
   const [receipt, setReceipt] = useState("");
   const action = useMutation({
-    mutationFn: async (kind: "retry" | "reconcile") =>
+    mutationFn: async (kind: "retry" | "reconcile" | "read") =>
       writeApi({
         actorId: user.id,
         path: `/notifications/${encodeURIComponent(delivery.id)}/${kind}`,
@@ -38,6 +38,24 @@ export function DeliveryActions({
     );
   return (
     <div className="stack-form">
+      {delivery.channel === "in_app" && delivery.state === "pending" && (
+        <>
+          <p>
+            This title is leaving soon. Acknowledge this reminder to start your
+            seven-day warning period, or choose Keep watching from your requests
+            to stay interested.
+          </p>
+          <button
+            className="button"
+            disabled={action.isPending}
+            onClick={() => {
+              action.mutate("read");
+            }}
+          >
+            I have read this reminder
+          </button>
+        </>
+      )}
       {delivery.failureReason !== null && (
         <p className="muted">{delivery.failureReason.replaceAll("_", " ")}</p>
       )}
@@ -86,17 +104,18 @@ export function DeliveryActions({
           )}
         </>
       )}
-      {["unknown", "sending", "accepted"].includes(delivery.state) && (
-        <button
-          className="button"
-          disabled={action.isPending}
-          onClick={() => {
-            action.mutate("reconcile");
-          }}
-        >
-          Check provider receipt
-        </button>
-      )}
+      {delivery.channel !== "in_app" &&
+        ["unknown", "sending", "accepted"].includes(delivery.state) && (
+          <button
+            className="button"
+            disabled={action.isPending}
+            onClick={() => {
+              action.mutate("reconcile");
+            }}
+          >
+            Check provider receipt
+          </button>
+        )}
       {action.error !== null && <ErrorNotice error={action.error} />}
     </div>
   );

@@ -116,6 +116,7 @@ p {
   position: sticky;
   top: 0;
   height: 100vh;
+  overflow-y: auto;
 }
 .brand {
   display: flex;
@@ -165,6 +166,7 @@ p {
   color: #a8b3ac;
   font-size: 13px;
   font-weight: 500;
+  border-inline-start: 3px solid transparent;
 }
 .sidebar nav a span {
   width: 20px;
@@ -176,9 +178,10 @@ p {
   color: #f4f4ed;
   background: #1c2620;
 }
-.sidebar nav a.active {
+.sidebar nav a[aria-current="page"] {
   background: #29352b;
   color: #f0c48d;
+  border-inline-start-color: currentColor;
 }
 .sidebar-bottom {
   margin-top: auto;
