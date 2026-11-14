@@ -43,6 +43,11 @@ describe("catalog integrity", () => {
       "gpt-5.4-nano",
       "text-embedding-3-small",
       // Anthropic
+      "claude-fable-5-2",
+      "claude-fable-5-1",
+      "claude-opus-5-5",
+      "claude-sonnet-5-5",
+      "claude-haiku-5-5",
       "claude-opus-4-8",
       "claude-sonnet-4-6",
       "claude-haiku-4-5",
@@ -149,6 +154,36 @@ describe("pricing accessors", () => {
         outputTokens: 0,
       }),
     ).toBeCloseTo(0.02, 6);
+  });
+
+  test("current Claude models bill at the published rates", () => {
+    const million = { inputTokens: 1_000_000, outputTokens: 1_000_000 };
+    expect(costForTextUsage("claude-fable-5-2", million)).toBeCloseTo(48, 6);
+    expect(costForTextUsage("claude-fable-5-1", million)).toBeCloseTo(60, 6);
+    expect(costForTextUsage("claude-opus-5-5", million)).toBeCloseTo(24, 6);
+    expect(costForTextUsage("claude-sonnet-5-5", million)).toBeCloseTo(12, 6);
+    expect(
+      costForTextUsage("claude-fable-5-2", {
+        inputTokens: 0,
+        outputTokens: 0,
+        cacheReadTokens: 1_000_000,
+      }),
+    ).toBeCloseTo(0.2, 6);
+  });
+
+  test("Claude Haiku 5.5 prompts over 100K tokens bill at five times the rate", () => {
+    expect(
+      costForTextUsage("claude-haiku-5-5", {
+        inputTokens: 100_000,
+        outputTokens: 100_000,
+      }),
+    ).toBeCloseTo(0.06, 6);
+    expect(
+      costForTextUsage("claude-haiku-5-5", {
+        inputTokens: 100_001,
+        outputTokens: 100_000,
+      }),
+    ).toBeCloseTo((100_001 * 0.5 + 100_000 * 2.5) / 1_000_000, 6);
   });
 
   test("Luna pricing includes cache writes and the published long-context tier", () => {
