@@ -21,6 +21,10 @@ import {
   apiServerRulesOffEndpoint,
   postgresClustersClosedToOperator,
 } from "./platform-peers.ts";
+import {
+  egressPodsWithoutDns,
+  tailscaleBackendsNotAdmitted,
+} from "./platform-reachability.ts";
 import { unreciprocatedRules } from "./policy-reciprocity.ts";
 import { probePortsNotAdmitted } from "./probe-admission.ts";
 import {
@@ -111,6 +115,16 @@ const RULES: readonly {
     allowlist: NO_DEBT,
   },
   {
+    name: "every policed Tailscale Ingress backend admits its proxy on the backend port",
+    violations: tailscaleBackendsNotAdmitted,
+    allowlist: NO_DEBT,
+  },
+  {
+    name: "every pod an Egress policy selects can reach cluster DNS on 53 UDP and TCP",
+    violations: egressPodsWithoutDns,
+    allowlist: NO_DEBT,
+  },
+  {
     name: "every container that declares a port has a readiness or startup probe",
     violations: portContainersWithoutProbe,
     allowlist: PORT_CONTAINERS_WITHOUT_PROBE,
@@ -140,6 +154,14 @@ describe("fleet policy", () => {
     expect(fleet.serviceSelectors.length).toBeGreaterThan(50);
     expect(fleet.backendProbes.length).toBeGreaterThan(40);
     expect(configuredConnections(fleet).length).toBeGreaterThan(100);
+    expect(
+      fleet.objects.filter(({ kind }) => kind === "Ingress").length,
+    ).toBeGreaterThan(40);
+    expect(
+      fleet.networkPolicies.filter(({ policyTypes }) =>
+        policyTypes.includes("Egress"),
+      ).length,
+    ).toBeGreaterThan(50);
     expect(
       fleet.objects.filter(({ kind }) => kind === "postgresql").length,
     ).toBeGreaterThan(5);

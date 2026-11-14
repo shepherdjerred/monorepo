@@ -71,10 +71,13 @@ use it.
 Before the worker starts, a short-lived `NET_ADMIN` init container installs
 owner-matched rules that reject uid-1001 traffic to Temporal gRPC (`7233`) and
 the Temporal UI (`8080`), including their resolved Tailscale ingress addresses
-on `443`. The current homelab CNI is Flannel without a NetworkPolicy controller,
+on `443`. Nothing in the cluster enforces `NetworkPolicy` until the switch
+described in
+[How network policy enforcement works here](/explanation/homelab/network-policy-enforcement/),
 so this pod-local firewall is the enforcement mechanism. The separate
-agent-worker `NetworkPolicy` documents the same narrower topology for a future
-policy-capable CNI; it is not counted as an active control today.
+agent-worker `NetworkPolicy` declares the same narrower topology. It is not
+counted as an active control until enforcement is on and the `temporal`
+namespace is cut over.
 
 Pod Security Admission has no pod-scoped capability exception. The `temporal`
 namespace therefore enforces the `privileged` profile so this explicit init-

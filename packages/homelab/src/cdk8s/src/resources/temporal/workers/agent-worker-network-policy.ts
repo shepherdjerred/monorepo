@@ -13,8 +13,10 @@ import { monitoringEgress } from "@shepherdjerred/homelab/cdk8s/src/resources/te
 
 /**
  * Record the agent worker's narrow topology independently from the broad infra
- * worker policy. The current Flannel cluster does not enforce NetworkPolicy;
- * provider-to-Temporal denial is enforced by the pod-local uid firewall.
+ * worker policy. NetworkPolicy is not enforced until the switch described in
+ * the wiki page `explanation/homelab/network-policy-enforcement`, and then
+ * only once the `temporal` namespace is cut over; provider-to-Temporal denial
+ * is enforced by the pod-local uid firewall.
  */
 export function createTemporalAgentWorkerNetworkPolicy(chart: Chart): void {
   new KubeNetworkPolicy(chart, "temporal-agent-worker-netpol", {

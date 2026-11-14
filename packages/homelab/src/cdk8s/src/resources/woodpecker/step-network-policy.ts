@@ -50,14 +50,15 @@ const CI_POD_PEER = {
  * Step pods run branch code with production credentials mounted. Without this
  * policy nothing would constrain where that code could connect.
  *
- * Be honest about what it buys today: the cluster runs Flannel, which does not
- * enforce NetworkPolicy, so this is a declared boundary that takes effect if
- * the CNI is ever replaced — the same standing this repo's other policies have
- * (see the comments on the Temporal agent-worker and pinchtab policies, where
- * a pod-local firewall does the actual enforcement). Enforcing it for real
- * would mean injecting a firewall into every step container, and step pod
- * specs come from the configuration extension rather than from cdk8s, so that
- * is a separate and much larger change.
+ * Be honest about what it buys today: nothing in the cluster enforces
+ * NetworkPolicy until the switch described in the wiki page
+ * `explanation/homelab/network-policy-enforcement`, and after it this policy
+ * decides only once the `woodpecker-ci` namespace is cut over. Until then it
+ * is a declared boundary, the same standing this repo's other policies have.
+ * Step pods have no pod-local firewall of the kind the Temporal agent worker
+ * and pinchtab carry: step pod specs come from the configuration extension
+ * rather than from cdk8s, so injecting one is a separate and much larger
+ * change.
  *
  * One rule about reading labels, since `WOODPECKER_BACKEND_K8S_POD_LABELS_`
  * `ALLOW_FROM_STEP` is enabled: these labels arrive from generated YAML. That
@@ -122,8 +123,8 @@ export function createWoodpeckerStepNetworkPolicy(chart: Chart) {
         // ghcr.io, registry.npmjs.org, the published sites, and SeaweedFS S3
         // — which is reached over the tailnet rather than by cluster DNS.
         // A CIDR allowlist is not an option: GitHub's and npm's ranges
-        // change, and a rotted list would fail builds for a boundary that is
-        // not enforced anyway.
+        // change, and a rotted list would fail builds once the boundary is
+        // enforced while narrowing nothing before then.
         externalHttpsEgressRule(),
       ],
     },
