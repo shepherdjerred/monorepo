@@ -8,7 +8,7 @@ import {
   type BrimSyncPaths,
 } from "#lib/brim/sync/paths.ts";
 import type { PushOptions } from "#lib/brim/sync/push.ts";
-import { syncRoots } from "#lib/brim/sync/scan.ts";
+import { syncRoots } from "#lib/brim/sync/roots.ts";
 import { useTempDirectories } from "#test/support/temp-directories.ts";
 
 /** Fake machines, transcripts and keys for brim sync tests. */

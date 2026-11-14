@@ -9,7 +9,8 @@ import {
   type HistoryPaths,
 } from "#lib/history/paths.ts";
 import { createHistorySources } from "#lib/history/sources.ts";
-import type { HistorySource } from "#lib/history/types.ts";
+import { isMirrorSource, type HistorySource } from "#lib/history/types.ts";
+import { writeGrokFixture } from "./history-fixtures/grok.ts";
 import { writeMirrorFixture } from "./history-fixtures/mirror.ts";
 
 const roots: string[] = [];
@@ -131,5 +132,29 @@ describe("mirrored history sources", () => {
     );
     expect(index.usageFingerprints()).toEqual([]);
     index.close();
+  });
+
+  test("a mirrored Grok session is not exported a second time", async () => {
+    const { paths, home } = await mirrorHome();
+    await writeGrokFixture(paths.grokHome);
+    const local = await source("grok").scan(paths);
+    const mirror = await source("grok-mirror").scan(paths);
+    expect(local.documents.length).toBeGreaterThan(0);
+    expect(mirror.documents.length).toBe(local.documents.length);
+    const index = await HistoryIndex.open(defaultHistoryRuntimePaths(home));
+    await index.ingest([local, mirror]);
+    const exported = index.usageFingerprints();
+    expect(exported.map((entry) => entry.source)).toEqual(
+      local.documents.map(() => "grok"),
+    );
+    index.close();
+  });
+
+  test("every mirror source is excluded from the export", () => {
+    const names = createHistorySources().map((entry) => entry.name);
+    expect(names.filter((name) => name.endsWith("-mirror"))).toEqual(
+      names.filter((name) => isMirrorSource(name)),
+    );
+    expect(isMirrorSource("grok")).toBe(false);
   });
 });

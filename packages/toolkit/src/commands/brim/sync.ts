@@ -30,7 +30,7 @@ import {
   redactSources,
   type RedactReport,
 } from "#lib/brim/sync/redact-files.ts";
-import { syncRoots } from "#lib/brim/sync/scan.ts";
+import { syncRoots } from "#lib/brim/sync/roots.ts";
 import {
   brokeredS3Credentials,
   lazyOpener,
@@ -39,15 +39,17 @@ import {
 } from "#lib/brim/sync/settings.ts";
 
 export const SYNC_USAGE = `
-brim sync — encrypted cross-machine archive of Claude Code and Codex transcripts
+brim sync — encrypted cross-machine archive of agent sessions (Claude Code,
+Codex, Grok, Kimi, Muse and Antigravity)
 
-  brim sync push [--json]          Archive new transcript lines to S3
+  brim sync push [--json]          Archive new transcript lines and changed
+                                   state files to S3
   brim sync pull [--all] [--json]  Mirror other machines' recent sessions
   brim sync run [--json]           push, then pull (the macOS LaunchAgent)
   brim sync status [--json]        Local archive, mirror and agent state
   brim sync redact [--dry-run] [--json]
                                    Overwrite leaked credentials in this machine's
-                                   transcripts and re-archive the affected files;
+                                   JSONL transcripts and re-archive the affected files;
                                    also redacts brim capture's spool and store
   brim sync install | uninstall    Manage the 5-minute macOS LaunchAgent
 
@@ -58,7 +60,8 @@ everything. On Windows a Scheduled Task runs push; see the dotfiles-windows
 source.
 
 Push overwrites credentials (Anthropic, OpenAI and Linear keys, JWTs) with a
-same-length REDACTED-<kind> marker before upload. redact does the same to the
+same-length REDACTED-<kind> marker before upload. SQLite databases are uploaded
+as redacted snapshots of the tables the history readers use, never raw. redact does the same to the
 local files in place, then retires their archive generations; run push next
 to replace them in S3. Values are never printed.
 `;

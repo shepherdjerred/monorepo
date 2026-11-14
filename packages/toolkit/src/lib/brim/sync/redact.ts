@@ -152,18 +152,71 @@ export function replacementFor(match: SecretMatch): Uint8Array {
   return new TextEncoder().encode(label.padEnd(match.length, "x"));
 }
 
-/** A copy of `bytes` with every secret overwritten, plus what was found. */
-export function redactBytes(bytes: Uint8Array): {
-  readonly bytes: Uint8Array;
-  readonly matches: readonly SecretMatch[];
-} {
-  const matches = findSecrets(bytes);
+const QUOTE = 0x22;
+const BACKSLASH = 0x5c;
+const NEWLINE = 0x0a;
+
+/**
+ * Secrets in each JSON string literal of JSON or JSONL bytes, by offset. A
+ * PEM key's armor may span lines, so matching the whole text could pair a
+ * BEGIN in one record with an END in a later one and overwrite the JSON
+ * between them. A string ends at its closing quote or, in a torn line, at the
+ * newline, so every match stays inside one value of one record. JSON keeps
+ * every byte of text inside a string, so nothing outside one is scanned.
+ */
+export function findJsonStringSecrets(bytes: Uint8Array): SecretMatch[] {
+  const matches: SecretMatch[] = [];
+  const scan = (start: number, end: number) => {
+    for (const match of findSecrets(bytes.subarray(start, end))) {
+      matches.push({ ...match, offset: match.offset + start });
+    }
+  };
+  let start: number | null = null;
+  for (let index = 0; index < bytes.length; index += 1) {
+    const byte = bytes[index];
+    if (start === null) {
+      if (byte === QUOTE) start = index + 1;
+    } else if (byte === BACKSLASH && bytes[index + 1] !== NEWLINE) {
+      index += 1;
+    } else if (byte === QUOTE || byte === NEWLINE) {
+      scan(start, index);
+      start = null;
+    }
+  }
+  if (start !== null) scan(start, bytes.length);
+  return matches;
+}
+
+function overwriteMatches(
+  bytes: Uint8Array,
+  matches: readonly SecretMatch[],
+): { readonly bytes: Uint8Array; readonly matches: readonly SecretMatch[] } {
   if (matches.length === 0) return { bytes, matches };
   const redacted = Uint8Array.from(bytes);
   for (const match of matches) {
     redacted.set(replacementFor(match), match.offset);
   }
   return { bytes: redacted, matches };
+}
+
+/**
+ * A copy of `bytes` with every secret overwritten, plus what was found. The
+ * bytes are one value (a string, a SQLite cell, a captured body): a match may
+ * span anything inside it. Use `redactJsonStrings` for JSON or JSONL text.
+ */
+export function redactBytes(bytes: Uint8Array): {
+  readonly bytes: Uint8Array;
+  readonly matches: readonly SecretMatch[];
+} {
+  return overwriteMatches(bytes, findSecrets(bytes));
+}
+
+/** `redactBytes` scoped to each JSON string literal; see `findJsonStringSecrets`. */
+export function redactJsonStrings(bytes: Uint8Array): {
+  readonly bytes: Uint8Array;
+  readonly matches: readonly SecretMatch[];
+} {
+  return overwriteMatches(bytes, findJsonStringSecrets(bytes));
 }
 
 export function countByKind(

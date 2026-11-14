@@ -10,6 +10,7 @@ import {
 import type { BrimSyncPaths } from "./paths.ts";
 import {
   countByKind,
+  findJsonStringSecrets,
   findSecrets,
   replacementFor,
   type SecretKind,
@@ -41,7 +42,8 @@ export type RedactReport = {
 
 /**
  * Matches in one file, scanned in newline-aligned windows so a 300 MB rollout
- * never has to be held whole. Secrets never contain a newline, so none can
+ * never has to be held whole, one JSON string at a time so a match never
+ * spans two records. A JSON string never holds a raw newline, so none can
  * straddle a window.
  */
 async function secretsIn(source: SourceFile): Promise<SecretMatch[]> {
@@ -59,7 +61,7 @@ async function secretsIn(source: SourceFile): Promise<SecretMatch[]> {
         `${source.relPath}: a line exceeds ${String(WINDOW_BYTES)} bytes at ${String(position)}`,
       );
     }
-    for (const match of findSecrets(window.subarray(0, cut))) {
+    for (const match of findJsonStringSecrets(window.subarray(0, cut))) {
       matches.push({ ...match, offset: match.offset + position });
     }
     position += cut;
@@ -120,15 +122,18 @@ export type RedactOptions = {
 };
 
 /**
- * Overwrites every standalone secret in this machine's Claude Code and Codex
- * transcripts and retires the archive generations that still hold them. The
+ * Overwrites every standalone secret in this machine's JSONL transcripts and retires the archive generations that still hold them. The
  * next `brim sync push` re-uploads those files and deletes the old segments;
  * every mirror then rebuilds them on its next pull.
  */
 export async function redactSources(
   options: RedactOptions,
 ): Promise<RedactReport> {
-  const sources = await scanSourceFiles(options.roots);
+  // Only append-only transcripts are edited in place. JSON and SQLite files
+  // are redacted into the copy each push uploads, and a live SQLite file
+  // must never be overwritten byte-wise.
+  const scanned = await scanSourceFiles(options.roots);
+  const sources = scanned.filter((source) => source.format.kind === "jsonl");
   const files: RedactedFile[] = [];
   const all: SecretMatch[] = [];
   for (const source of sources) {

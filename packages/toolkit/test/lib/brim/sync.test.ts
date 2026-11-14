@@ -23,7 +23,8 @@ import { createMemoryObjectStore } from "#lib/brim/sync/object-store.ts";
 import { fromArchivePath } from "#lib/brim/sync/paths.ts";
 import { pullArchive } from "#lib/brim/sync/pull.ts";
 import { pushArchive } from "#lib/brim/sync/push.ts";
-import { scanSourceFiles, syncRoots } from "#lib/brim/sync/scan.ts";
+import { syncRoots } from "#lib/brim/sync/roots.ts";
+import { scanSourceFiles } from "#lib/brim/sync/scan.ts";
 import { brokeredS3Credentials } from "#lib/brim/sync/settings.ts";
 import {
   CLAUDE_SESSION,

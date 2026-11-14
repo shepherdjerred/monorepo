@@ -42,7 +42,11 @@
               "kimi",
               "muse",
               "claude-mirror",
-              "codex-mirror"
+              "codex-mirror",
+              "grok-mirror",
+              "kimi-mirror",
+              "muse-mirror",
+              "antigravity-mirror"
             ]
           },
           "sessions": {

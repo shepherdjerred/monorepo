@@ -3,6 +3,7 @@ import path from "node:path";
 import { z } from "zod";
 import {
   countByKind,
+  findJsonStringSecrets,
   findSecrets,
   redactBytes,
   replacementFor,
@@ -73,43 +74,11 @@ export function redactJsonValues(
   return { value: Object.fromEntries(entries), secrets };
 }
 
-const QUOTE = 0x22;
-const BACKSLASH = 0x5c;
-const NEWLINE = 0x0a;
-
-/**
- * Secrets in each JSON string literal of a spool file, by file offset. A
- * string ends at its closing quote or, in a torn line, at the newline, so a
- * match stays inside one value of one record.
- */
-function spoolSecrets(bytes: Uint8Array): SecretMatch[] {
-  const matches: SecretMatch[] = [];
-  const scan = (start: number, end: number) => {
-    for (const match of findSecrets(bytes.subarray(start, end))) {
-      matches.push({ ...match, offset: match.offset + start });
-    }
-  };
-  let start: number | null = null;
-  for (let index = 0; index < bytes.length; index += 1) {
-    const byte = bytes[index];
-    if (start === null) {
-      if (byte === QUOTE) start = index + 1;
-    } else if (byte === BACKSLASH && bytes[index + 1] !== NEWLINE) {
-      index += 1;
-    } else if (byte === QUOTE || byte === NEWLINE) {
-      scan(start, index);
-      start = null;
-    }
-  }
-  if (start !== null) scan(start, bytes.length);
-  return matches;
-}
-
 async function redactSpoolFile(
   file: string,
   dryRun: boolean,
 ): Promise<SecretMatch[]> {
-  const matches = spoolSecrets(await Bun.file(file).bytes());
+  const matches = findJsonStringSecrets(await Bun.file(file).bytes());
   if (dryRun || matches.length === 0) return matches;
   const handle = await open(file, "r+");
   try {

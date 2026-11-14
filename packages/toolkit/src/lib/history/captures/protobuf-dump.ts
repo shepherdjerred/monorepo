@@ -1,4 +1,4 @@
-import { readVarint } from "#lib/history/sources/antigravity-protobuf.ts";
+import { readVarint } from "#lib/history/sources/antigravity/antigravity-protobuf.ts";
 
 /**
  * A schema-less field dump of a protobuf body (Cursor's Connect RPC, or any

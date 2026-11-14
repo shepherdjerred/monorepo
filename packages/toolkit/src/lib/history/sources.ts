@@ -1,6 +1,6 @@
 import { stat } from "node:fs/promises";
 import path from "node:path";
-import { createAntigravitySource } from "./sources/antigravity.ts";
+import { createAntigravitySource } from "./sources/antigravity/antigravity.ts";
 import { createCodexRolloutSource } from "./sources/codex-rollout.ts";
 import { createCodexSource } from "./sources/codex-scan.ts";
 import { createConductorSource } from "./sources/conductor.ts";
@@ -9,9 +9,13 @@ import { createGrokSource } from "./sources/grok.ts";
 import { createKimiSource } from "./sources/kimi.ts";
 import { createMuseSource } from "./sources/muse.ts";
 import {
+  antigravityMirrorPaths,
   claudeMirrorPaths,
   codexMirrorPaths,
   createMirrorSource,
+  grokMirrorPaths,
+  kimiMirrorPaths,
+  museMirrorPaths,
 } from "./sources/mirror.ts";
 import {
   historyMessageRole,
@@ -394,6 +398,30 @@ export function createHistorySources(): readonly HistorySource[] {
       label: "Codex",
       createBase: createCodexRolloutSource,
       roots: codexMirrorPaths,
+    }),
+    createMirrorSource({
+      name: "grok-mirror",
+      label: "Grok",
+      createBase: createGrokSource,
+      roots: grokMirrorPaths,
+    }),
+    createMirrorSource({
+      name: "kimi-mirror",
+      label: "Kimi Code",
+      createBase: createKimiSource,
+      roots: kimiMirrorPaths,
+    }),
+    createMirrorSource({
+      name: "muse-mirror",
+      label: "Meta Muse",
+      createBase: () => createMuseSource({ mirrored: true }),
+      roots: museMirrorPaths,
+    }),
+    createMirrorSource({
+      name: "antigravity-mirror",
+      label: "Antigravity",
+      createBase: createAntigravitySource,
+      roots: antigravityMirrorPaths,
     }),
   ];
 }

@@ -19,10 +19,10 @@ import type {
 /**
  * Indexes other machines' transcripts that `brim sync pull` mirrored into
  * `~/.toolkit/brim-sync/mirror/`. Each mirrored root is scanned by its own
- * instance of the ordinary Claude or Codex source (so parsing, incremental
- * caches and usage pricing are identical), and the results are re-labelled:
- * the source becomes `claude-mirror` / `codex-mirror`, every source id gains
- * a `<machine>/` prefix, and the agent names the machine.
+ * instance of the ordinary agent source (so parsing, incremental caches and
+ * usage pricing are identical), and the results are re-labelled: the source
+ * becomes `<agent>-mirror`, every source id gains a `<machine>/` prefix, and
+ * the agent names the machine.
  *
  * Mirror sources never feed the usage-export ledger: those tokens were
  * already counted on the machine that spent them.
@@ -218,4 +218,43 @@ export function codexMirrorPaths(
     ...machine.codexSessionsDirs,
     ...machine.codexArchivedSessionsDirs,
   ].map((codexSessionsDir) => ({ ...base, codexSessionsDir }));
+}
+
+/** HistoryPaths for a mirrored Grok home. */
+export function grokMirrorPaths(
+  machine: MirrorMachine,
+  base: HistoryPaths,
+): HistoryPaths[] {
+  return (machine.grokHomes ?? []).map((grokHome) => ({ ...base, grokHome }));
+}
+
+/** HistoryPaths for a mirrored Kimi sessions directory. */
+export function kimiMirrorPaths(
+  machine: MirrorMachine,
+  base: HistoryPaths,
+): HistoryPaths[] {
+  return (machine.kimiSessionsDirs ?? []).map((kimiSessionsDir) => ({
+    ...base,
+    kimiSessionsDir,
+  }));
+}
+
+/** HistoryPaths for a mirrored Muse root (index snapshot plus logs). */
+export function museMirrorPaths(
+  machine: MirrorMachine,
+  base: HistoryPaths,
+): HistoryPaths[] {
+  return (machine.museRoots ?? []).map((museRoot) => ({ ...base, museRoot }));
+}
+
+/**
+ * One HistoryPaths holding every mirrored Antigravity root of a machine:
+ * Antigravity source ids are database paths, so they stay distinct.
+ */
+export function antigravityMirrorPaths(
+  machine: MirrorMachine,
+  base: HistoryPaths,
+): HistoryPaths[] {
+  const antigravityRoots = machine.antigravityRoots ?? [];
+  return antigravityRoots.length === 0 ? [] : [{ ...base, antigravityRoots }];
 }

@@ -12,7 +12,30 @@ export const HISTORY_SOURCE_NAMES = [
   "muse",
   "claude-mirror",
   "codex-mirror",
+  "grok-mirror",
+  "kimi-mirror",
+  "muse-mirror",
+  "antigravity-mirror",
 ] as const;
+
+/** Sources that index other machines' sessions pulled by `brim sync`. */
+export const MIRROR_HISTORY_SOURCE_NAMES = [
+  "claude-mirror",
+  "codex-mirror",
+  "grok-mirror",
+  "kimi-mirror",
+  "muse-mirror",
+  "antigravity-mirror",
+] as const satisfies readonly (typeof HISTORY_SOURCE_NAMES)[number][];
+
+const MIRROR_SOURCES: ReadonlySet<string> = new Set(
+  MIRROR_HISTORY_SOURCE_NAMES,
+);
+
+/** True for a source whose sessions were spent on another machine. */
+export function isMirrorSource(name: string): boolean {
+  return MIRROR_SOURCES.has(name);
+}
 
 export const HistorySourceNameSchema = z.enum(HISTORY_SOURCE_NAMES);
 

@@ -264,6 +264,16 @@ file that shrinks or whose tail changes starts a new generation instead of
 being patched. This keeps tens of gigabytes of Codex rollouts from being
 re-uploaded every five minutes.
 
+Not every agent keeps an append-only log. Grok and Kimi keep session state in
+small JSON files, and Muse and Antigravity keep their indexes in live SQLite
+databases. Those files are archived whole, as a new generation whenever their
+content changes. A live database is never copied byte for byte, because its
+WAL may hold committed pages the main file lacks and its free pages may hold
+deleted text. The [snapshot](packages/toolkit/src/lib/brim/sync/snapshot.ts)
+instead reads it through SQLite in one read transaction and keeps only the
+tables and columns the history reader uses. Full-text indexes and message
+bodies never leave the machine.
+
 Each machine writes only its own prefix, and its manifest is the commit point.
 Segments upload first and become visible only when a manifest names them.
 Concurrent writers never conflict, and a crash resumes from the last commit. A
@@ -282,8 +292,8 @@ every five minutes, and a pid lock lets a run skip while a long backfill
 continues. There is no resident daemon to crash or leak.
 
 The mirror is an input to the index, not to the metrics push. `toolkit history`
-indexes it as separate `claude-mirror` and `codex-mirror` sources, labelled by
-machine. Their tokens are excluded from the usage-export ledger, because each
+indexes it as separate `<agent>-mirror` sources, such as `claude-mirror` and
+`muse-mirror`, labelled by machine. Their tokens are excluded from the usage-export ledger, because each
 machine already exports its own. Codex mirror documents come from the rollout
 JSONL itself: Codex keeps message text in a local database that is not synced.
 Brim's `All machines` caption counts mirrored logs for this Mac's calendar day

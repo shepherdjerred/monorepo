@@ -5,7 +5,7 @@ import { createMemoryObjectStore } from "#lib/brim/sync/object-store.ts";
 import { pullArchive } from "#lib/brim/sync/pull.ts";
 import { pushArchive } from "#lib/brim/sync/push.ts";
 import { redactSources } from "#lib/brim/sync/redact-files.ts";
-import { syncRoots } from "#lib/brim/sync/scan.ts";
+import { syncRoots } from "#lib/brim/sync/roots.ts";
 import {
   CLAUDE_SESSION,
   CODEX_SESSION,

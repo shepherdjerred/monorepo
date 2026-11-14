@@ -1,6 +1,6 @@
 import { sha256Hex, type Opener, type Sealer } from "./crypto.ts";
 import { SyncSetupError } from "./errors.ts";
-import { redactBytes } from "./redact.ts";
+import { redactJsonStrings, type SecretMatch } from "./redact.ts";
 import {
   emptyManifest,
   emptyManifestFileState,
@@ -18,6 +18,7 @@ import {
 import type { ObjectStore } from "./object-store.ts";
 import type { BrimSyncPaths } from "./paths.ts";
 import { scanSourceFiles, type SourceFile, type SyncRoot } from "./scan.ts";
+import { sqliteSnapshot } from "./snapshot.ts";
 
 const TAIL_BYTES = 4096;
 const NEWLINE = 0x0a;
@@ -209,7 +210,7 @@ async function uploadNewLines(
     const offset = entry.size;
     // Same-length redaction keeps archive offsets equal to source offsets;
     // the segment checksum covers the bytes actually archived.
-    const redacted = redactBytes(segment);
+    const redacted = redactJsonStrings(segment);
     await run.options.store.put(
       segmentKey(run.options.machineId, entry.fileKey, entry.gen, offset),
       await run.options.seal(redacted.bytes),
@@ -251,8 +252,126 @@ function markDeleted(run: PushRun, present: ReadonlySet<string>): number {
 
 type FileOutcome = { readonly changed: boolean; readonly rewritten: boolean };
 
+/**
+ * The bytes a replaced file is archived as: a JSON file redacted one string
+ * at a time, or a SQLite file's redacted snapshot. A JSON file caught
+ * mid-write fails here and is retried on the next push.
+ */
+async function replacementBytes(
+  source: SourceFile,
+): Promise<{ bytes: Uint8Array; matches: readonly SecretMatch[] }> {
+  if (source.format.kind === "sqlite") {
+    return sqliteSnapshot(source.absolutePath, source.format.projection);
+  }
+  const bytes = await Bun.file(source.absolutePath).bytes();
+  try {
+    JSON.parse(new TextDecoder().decode(bytes));
+  } catch (error: unknown) {
+    throw new Error("not complete JSON; it may be mid-write", {
+      cause: error,
+    });
+  }
+  return redactJsonStrings(bytes);
+}
+
+function segmentBounds(
+  size: number,
+  limit: number,
+): { offset: number; end: number }[] {
+  const bounds: { offset: number; end: number }[] = [];
+  for (let offset = 0; offset < size; offset += limit) {
+    bounds.push({ offset, end: Math.min(size, offset + limit) });
+  }
+  return bounds;
+}
+
+function sameArchive(
+  entry: ManifestFile,
+  bytes: Uint8Array,
+  limit: number,
+): boolean {
+  const bounds = segmentBounds(bytes.length, limit);
+  return (
+    entry.size === bytes.length &&
+    entry.segments.length === bounds.length &&
+    bounds.every(
+      ({ offset, end }, index) =>
+        entry.segments[index]?.offset === offset &&
+        entry.segments[index].sha256 === sha256Hex(bytes.subarray(offset, end)),
+    )
+  );
+}
+
+/**
+ * Archives a JSON or SQLite file whole. Content that matches the archive only
+ * refreshes the mtime; anything else is uploaded as a new generation, which
+ * pull rebuilds atomically.
+ *
+ * The new generation is staged off the manifest. Only once every segment is
+ * sealed and stored does it replace the entry and retire the old generation,
+ * together, so a failed upload leaves the archived file and its entry exactly
+ * as they were and the next push retries. Segments a failed attempt stored
+ * belong to a generation no manifest names; a retry overwrites them, and the
+ * purge of that generation, once it is superseded, deletes any left over.
+ */
+async function archiveReplacement(
+  run: PushRun,
+  entries: Map<string, ManifestFile>,
+  source: SourceFile,
+): Promise<FileOutcome> {
+  const limit = run.options.segmentLimitBytes ?? 64 * MIB;
+  const { bytes, matches } = await replacementBytes(source);
+  const id = entryId(source.tool, source.relPath);
+  const entry = entries.get(id);
+  if (entry !== undefined && sameArchive(entry, bytes, limit)) {
+    entry.mtimeMs = source.mtimeMs;
+    entry.deletedAt = null;
+    run.dirty = true;
+    return { changed: false, rewritten: false };
+  }
+  const supersedes = entry !== undefined && entry.segments.length > 0;
+  const staged = freshEntry(
+    source,
+    entry === undefined ? 0 : entry.gen + (supersedes ? 1 : 0),
+  );
+  for (const { offset, end } of segmentBounds(bytes.length, limit)) {
+    const segment = bytes.subarray(offset, end);
+    await run.options.store.put(
+      segmentKey(run.options.machineId, staged.fileKey, staged.gen, offset),
+      await run.options.seal(segment),
+    );
+    staged.segments.push({
+      offset,
+      length: segment.length,
+      sha256: sha256Hex(segment),
+    });
+  }
+  staged.size = bytes.length;
+  staged.tailSha256 = sha256Hex(
+    bytes.subarray(Math.max(0, bytes.length - TAIL_BYTES)),
+  );
+  if (entry === undefined) {
+    run.manifest.files.push(staged);
+    entries.set(id, staged);
+  } else {
+    if (supersedes) {
+      run.manifest.retired.push({ fileKey: entry.fileKey, gen: entry.gen });
+    }
+    Object.assign(entry, staged);
+  }
+  run.uploadedSegments += staged.segments.length;
+  run.uploadedBytes += bytes.length;
+  run.bytesSinceCommit += bytes.length;
+  run.redactedSecrets += matches.length;
+  run.dirty = true;
+  if (run.bytesSinceCommit >= (run.options.commitEveryBytes ?? 256 * MIB)) {
+    await commit(run);
+  }
+  return { changed: true, rewritten: false };
+}
+
 /** Archives one source file's new lines, starting a generation if needed. */
-async function archiveSource(
+async function archiveLines(
   run: PushRun,
   entries: Map<string, ManifestFile>,
   source: SourceFile,
@@ -284,19 +403,35 @@ async function archiveSource(
   return { changed: entry.size !== before, rewritten };
 }
 
+function archiveSource(
+  run: PushRun,
+  entries: Map<string, ManifestFile>,
+  source: SourceFile,
+): Promise<FileOutcome> {
+  return source.format.kind === "jsonl"
+    ? archiveLines(run, entries, source)
+    : archiveReplacement(run, entries, source);
+}
+
+/**
+ * The fast path. An appended file is unchanged when its size and mtime are;
+ * a replaced file's archived size is its redacted or snapshot size, so only
+ * its (group) mtime is compared.
+ */
 function unchanged(
   entry: ManifestFile | undefined,
   source: SourceFile,
 ): boolean {
   return (
     entry?.deletedAt === null &&
-    entry.size === source.size &&
-    entry.mtimeMs === source.mtimeMs
+    entry.mtimeMs === source.mtimeMs &&
+    (source.format.kind !== "jsonl" || entry.size === source.size)
   );
 }
 
 /**
- * Archives every new complete line of every transcript. Idempotent: a run
+ * Archives every new complete line of every transcript, and the current
+ * redacted content of every changed JSON or SQLite file. Idempotent: a run
  * that crashes resumes from the last committed manifest, and re-uploading a
  * segment under the same key is harmless.
  */

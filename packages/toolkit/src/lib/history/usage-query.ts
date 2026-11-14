@@ -1,6 +1,7 @@
 import type { Database } from "bun:sqlite";
 import { z } from "zod";
 import {
+  MIRROR_HISTORY_SOURCE_NAMES,
   parseHistorySourceName,
   type HistorySourceName,
   type UsageBySource,
@@ -191,7 +192,7 @@ export function queryUsageFingerprints(
               count(DISTINCT u.model) AS models
          FROM usage_events u
          JOIN documents d ON d.id = u.document_id
-        WHERE d.source NOT IN ('claude-mirror', 'codex-mirror')
+        WHERE d.source NOT IN (${MIRROR_HISTORY_SOURCE_NAMES.map((name) => `'${name}'`).join(", ")})
         GROUP BY d.id
         ORDER BY d.id`,
     )
