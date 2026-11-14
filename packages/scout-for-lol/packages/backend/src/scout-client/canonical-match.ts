@@ -35,7 +35,10 @@ import {
 } from "./identity-alias.ts";
 
 import { learnAliasesFromRiotMatch } from "./alias-attempts/riot-match-aliases.ts";
-import { clientEvidenceReadyAt } from "#src/evidence/source-grace.ts";
+import {
+  clientEvidenceReadyAt,
+  endOfGameEvidenceReadyAt,
+} from "#src/evidence/source-grace.ts";
 
 type Candidate = {
   readonly observationId: string;
@@ -475,13 +478,15 @@ export async function readLocalEndOfGameCandidates(riotMatchId: RiotMatchId) {
         await candidateIdentities(candidate),
       );
       if (match === null) return [];
-      const riotFirst = clientEvidenceReadyAt(match.info, candidate.receivedAt);
-      const deadline = candidate.receivedAt.getTime() + deadlineMs;
       return [
         {
           candidate,
           match,
-          eligibleAt: new Date(Math.max(riotFirst.getTime(), deadline)),
+          eligibleAt: endOfGameEvidenceReadyAt(
+            match.info,
+            candidate.receivedAt,
+            deadlineMs,
+          ),
         },
       ];
     }),

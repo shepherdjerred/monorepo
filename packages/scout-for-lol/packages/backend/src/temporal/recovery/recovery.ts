@@ -1,3 +1,4 @@
+import { canonicalMatchCreatedAt } from "@scout-for-lol/data";
 import { ApplicationFailure } from "@temporalio/common";
 import type {
   RecoveryBatchId,
@@ -543,7 +544,9 @@ async function recoverArchivedMatch(
       matchDataSource: context.matchDataSource,
       owner: { kind: "temporal-v2" },
       promotion: null,
-      gameCreatedAt: isoInstantFromEpochMs(context.matchData.info.gameCreation),
+      gameCreatedAt: isoInstantFromEpochMs(
+        canonicalMatchCreatedAt(context.matchData),
+      ),
       observedAt: toIsoInstant(new Date()),
       artifacts: {
         match: { key: archived.key, digest: archived.digest },

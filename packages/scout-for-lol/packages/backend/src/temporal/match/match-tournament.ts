@@ -1,7 +1,7 @@
 import type { MatchDataSource } from "@scout-for-lol/domain/match-processing/states.ts";
 import { ApplicationFailure } from "@temporalio/common";
 import { matchEffectsAllowed } from "#src/evidence/admission.ts";
-import type { RawMatch } from "@scout-for-lol/data";
+import { completeMatchOf, type CanonicalMatch } from "@scout-for-lol/data";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import type { ScoutTournamentResultResult } from "@scout-for-lol/temporal/activity-contracts";
 import {
@@ -50,7 +50,7 @@ export async function finalizeTournamentResult(input: {
  * payload resolution.
  */
 export async function finalizeTournamentMatch(
-  matchData: RawMatch,
+  matchData: CanonicalMatch,
   matchDataSource: MatchDataSource = "RIOT",
 ): Promise<ScoutTournamentResultResult> {
   // The same identity rule the finalizer uses, so the gate and the work can
@@ -59,9 +59,19 @@ export async function finalizeTournamentMatch(
   if (observedGame === null) {
     return { outcome: "not-a-tournament-match" };
   }
+  // A managed custom result projects from the complete match. A game frozen
+  // as an end-of-game record never gets one, so its result cannot be
+  // finalized, and no retry changes that: the match goes to review rather
+  // than announcing a custom game whose result stayed open.
+  const complete = completeMatchOf(matchData);
+  if (complete === null)
+    throw ApplicationFailure.nonRetryable(
+      `Managed custom game ${observedGame.id} for ${matchData.metadata.matchId} has only an end-of-game record; its result needs the complete match`,
+      "ManagedCustomResultNeedsCompleteMatch",
+    );
 
   const alreadyReported = observedGame.state === "VERIFIED";
-  await finalizeManagedCustomResult(prisma, matchData, matchDataSource);
+  await finalizeManagedCustomResult(prisma, complete, matchDataSource);
 
   // The retired Discord Activity was the only Custom Night snapshot audience,
   // so no snapshot is broadcast. The frozen result schema keeps the field.

@@ -77,6 +77,19 @@ export async function resolveMatchTimeline(
     : await resolveAbsence(input, admission, deadline, candidate.riotAbsence);
 }
 
+/**
+ * Pin a game's timeline coverage as missing, for a game that can never have
+ * one: a game frozen as an end-of-game record. The same durable decision a
+ * passed deadline writes, so every reader (`timelineMissing`, Dare timeline
+ * waits, history recovery) treats it alike. A decision already made stands.
+ */
+export async function pinMissingTimeline(matchId: RiotMatchId): Promise<void> {
+  await prisma.matchEvidenceAdmission.updateMany({
+    where: { riotMatchId: matchId, timelineFinalizedAt: null },
+    data: { timelineFinalizedAt: new Date(), timelineMissing: true },
+  });
+}
+
 async function processingDeadline(
   matchId: RiotMatchId,
   admission: TimelineAdmission | null,

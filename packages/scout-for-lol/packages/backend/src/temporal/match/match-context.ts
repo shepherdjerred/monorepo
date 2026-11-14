@@ -1,6 +1,9 @@
 import type { MatchDataSource } from "@scout-for-lol/domain/match-processing/states.ts";
 import { ApplicationFailure } from "@temporalio/common";
-import { type PlayerConfigEntry, type RawMatch } from "@scout-for-lol/data";
+import {
+  type CanonicalMatch,
+  type PlayerConfigEntry,
+} from "@scout-for-lol/data";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
 import { prisma } from "#src/database/index.ts";
@@ -11,18 +14,8 @@ import {
 import { getObservation } from "#src/database/durable/observation-repository.ts";
 import { listTrackedAccounts } from "#src/database/durable/tracked-account-repository.ts";
 import { getActiveServerIds } from "#src/discord/utils/guild-membership.ts";
-import { resolveCompleteMatch } from "#src/evidence/matches.ts";
+import { resolveCanonicalMatch } from "#src/evidence/matches.ts";
 import { matchDataSourceOf } from "@scout-for-lol/data";
-
-function requireAuthoritativeMatchData(
-  matchId: RiotMatchId,
-  matchData: RawMatch | undefined,
-): RawMatch {
-  if (matchData === undefined) {
-    throw new Error(`Authoritative match data is unavailable for ${matchId}`);
-  }
-  return matchData;
-}
 
 /**
  * What every V2 per-match Activity needs before it can do anything: the
@@ -51,7 +44,7 @@ function requireAuthoritativeMatchData(
  */
 export type ScoutMatchContext = {
   readonly riotMatchId: RiotMatchId;
-  readonly matchData: RawMatch;
+  readonly matchData: CanonicalMatch;
   /** Durable provenance of the canonical match payload. */
   readonly matchDataSource: MatchDataSource;
   /**
@@ -76,7 +69,7 @@ export type ScoutMatchContext = {
  */
 export type ScoutObservedMatchContext = {
   readonly riotMatchId: RiotMatchId;
-  readonly matchData: RawMatch;
+  readonly matchData: CanonicalMatch;
   /** Durable provenance of the canonical match payload. */
   readonly matchDataSource: MatchDataSource;
   /** Every PUUID the observation recorded as tracked in this match. */
@@ -99,18 +92,31 @@ export type ScoutObservedMatchContext = {
  * this by construction.
  */
 async function canonicalMatchData(riotMatchId: RiotMatchId): Promise<{
-  readonly matchData: RawMatch;
+  readonly matchData: CanonicalMatch;
   readonly matchDataSource: MatchDataSource;
 }> {
-  const resolution = await resolveCompleteMatch(riotMatchId);
-  const matchData = requireAuthoritativeMatchData(
-    riotMatchId,
-    resolution.kind === "available" ? resolution.value : undefined,
-  );
-  return {
-    matchData,
-    matchDataSource: matchDataSourceOf(matchData.metadata),
-  };
+  const resolution = await resolveCanonicalMatch(riotMatchId);
+  switch (resolution.kind) {
+    case "available":
+      return {
+        matchData: resolution.value,
+        matchDataSource: matchDataSourceOf(resolution.value.metadata),
+      };
+    case "conflict":
+      // Disagreeing clients produce no record, and no retry reconciles them.
+      throw ApplicationFailure.nonRetryable(
+        `Paired clients supplied conflicting payloads for ${riotMatchId}; no canonical match is recorded`,
+        "ScoutClientObservationConflict",
+      );
+    case "pending":
+      throw new Error(
+        `Canonical match data for ${riotMatchId} is not decided yet; retry after ${resolution.retryAt}`,
+      );
+    case "unavailable":
+      throw new Error(
+        `Authoritative match data is unavailable for ${riotMatchId}: ${resolution.reason}`,
+      );
+  }
 }
 
 export async function resolveScoutMatchContext(

@@ -48,6 +48,7 @@ import {
   bindObservedMatch,
   projectObservedGameState,
 } from "./lobby-binding.ts";
+import { selectPostGameDispatches } from "./end-of-game/dispatch.ts";
 
 const UniqueViolationSchema = z.object({ code: z.literal("P2002") });
 
@@ -330,10 +331,8 @@ export async function startAcceptedClientMatches(
     dispatches: evaluated,
     evaluations,
     games,
-  } = evaluateClientPostGames(
-    contextualBatch,
-    receipts,
-    new Date(),
+  } = await selectPostGameDispatches(
+    { batch: contextualBatch, receipts, evaluate: evaluateClientPostGames },
     await readIdentityAliases(observationUuids(batch.observations)),
   );
   // Only a first acceptance counts: reconciliation and client retries replay

@@ -1,4 +1,4 @@
-import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
+import { RawMatchSchema } from "@scout-for-lol/data";
 import {
   SCOUT_CLIENT_MATCH_TERMINAL_RECEIPT_KIND,
   SCOUT_MATCH_RECEIPT_KINDS,
@@ -46,12 +46,12 @@ vi.mock("#src/temporal/match/match-reads.ts", () => ({
 
 const { ClientBindingReconciliationPending, reconcileProcessedClientBinding } =
   await import("./late-binding.ts");
-const riotMatchId = RiotMatchIdSchema.parse("NA1_1234567890");
-const gameCreation = Date.parse("2026-09-21T12:00:00.000Z");
-const matchData = {
-  metadata: { matchId: riotMatchId },
-  info: { gameCreation },
-};
+const { classicEndOfGameMatch } =
+  await import("#src/testing/scout-client/end-of-game-fixtures.ts");
+const matchData = RawMatchSchema.parse(
+  await Bun.file("../../testdata/rift.json").json(),
+);
+const riotMatchId = matchData.metadata.matchId;
 
 function pipelineState(
   receiptKinds: readonly string[],
@@ -211,4 +211,30 @@ test("replays binding projectors for a match the retired v1 pipeline owned", asy
     stage: "beta",
     riotMatchId,
   });
+});
+
+test("an end-of-game record replays only the duel stage, which reviews it without a timeline", async () => {
+  const record = await classicEndOfGameMatch();
+  mocks.resolveContext.mockResolvedValue({
+    riotMatchId,
+    matchData: record,
+    matchDataSource: "SCOUT_CLIENT",
+    trackedPlayers: [],
+  });
+  mocks.readState.mockResolvedValue(
+    pipelineState([
+      SCOUT_MATCH_RECEIPT_KINDS.settlement,
+      SCOUT_MATCH_RECEIPT_KINDS.progression,
+      SCOUT_MATCH_RECEIPT_KINDS.tournament,
+    ]),
+  );
+
+  await expect(reconcileProcessedClientBinding(riotMatchId)).resolves.toBe(
+    true,
+  );
+
+  // A managed custom result needs the complete match, and so does a timeline.
+  expect(mocks.finalizeCustom).not.toHaveBeenCalled();
+  expect(mocks.fetchTimeline).not.toHaveBeenCalled();
+  expect(mocks.processDuel).toHaveBeenCalledWith(record, undefined, "beta");
 });

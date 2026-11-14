@@ -31,7 +31,7 @@ vi.mock("#src/evidence/recovery-gate.ts", () => ({
   evidenceRecoveryEnabled: () => !io.production,
 }));
 vi.mock("#src/evidence/matches.ts", () => ({
-  resolveCompleteMatch: async () =>
+  resolveCanonicalMatch: async () =>
     io.available
       ? {
           kind: "available",

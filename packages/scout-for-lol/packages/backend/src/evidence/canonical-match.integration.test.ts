@@ -4,13 +4,11 @@ import {
   matchCoverageOf,
   type CanonicalMatch,
 } from "@scout-for-lol/data";
-import { z } from "zod";
 import {
   createTestDatabase,
   testDatabaseModule,
 } from "#src/testing/test-database.ts";
 import { createTestScoutClientDevice } from "#src/testing/scout-client-device.ts";
-import type { EndOfGameBlockFixture } from "#src/testing/scout-client/end-of-game-fixtures.ts";
 import { makeRiotTransportFailure } from "#src/testing/riot-mocks.ts";
 import type { fetchMatchData } from "#src/league/tasks/postmatch/match-data-fetcher.ts";
 
@@ -31,102 +29,24 @@ const { resolveCanonicalMatch, resolveCompleteMatch } =
   await import("./matches.ts");
 const { readSelectedLocalCanonicalMatch } =
   await import("#src/scout-client/canonical-match.ts");
-const { aliasedLcuBundle } =
-  await import("#src/testing/report-lake/lcu-bundle-fixtures.ts");
-const { classicEndOfGameBlock, classicGameflow, classicMatchId } =
+const { classicMatchId } =
   await import("#src/testing/scout-client/end-of-game-fixtures.ts");
+const {
+  END_OF_GAME_DEADLINE_MS: DEADLINE_MS,
+  asRanked,
+  endOfGameUploads,
+  rankedGameflow,
+} = await import("#src/testing/scout-client/end-of-game-uploads.ts");
 
 const owner = DiscordAccountIdSchema.parse("160509172704739328");
 const matchId = await classicMatchId();
-const gameId = matchId.slice(matchId.indexOf("_") + 1);
 const MINUTE = 60_000;
-/** The measured default (`DEFAULT_SCOUT_CLIENT_END_OF_GAME_DEADLINE_SECONDS`). */
-const DEADLINE_MS = 360_000;
-
-function observerOf(block: EndOfGameBlockFixture): string {
-  const observer = block.teams[0]?.players[0]?.puuid;
-  if (observer === undefined) throw new Error("The fixture has players");
-  return observer;
-}
+const uploads = endOfGameUploads(prisma, matchId);
+const { uploadEndOfGame, uploadBundle } = uploads;
 
 /** A second after `at`, so uploads order deterministically. */
 function later(at: Date): Date {
   return new Date(at.getTime() + 1000);
-}
-
-const StoredPayloadSchema = z.object({ resource: z.string(), data: z.json() });
-const sequences = new Map<string, number>();
-
-/** Store one accepted observation the way ingress does, already translated. */
-async function store(input: {
-  deviceId: string;
-  kind: "gameflow" | "post_game";
-  observer: string;
-  payload: unknown;
-  receivedAt: Date;
-}): Promise<string> {
-  const sequence = (sequences.get(input.deviceId) ?? 0) + 1;
-  sequences.set(input.deviceId, sequence);
-  const observationId = crypto.randomUUID();
-  await prisma.scoutClientObservation.create({
-    data: {
-      observationId,
-      deviceId: input.deviceId,
-      sequence: BigInt(sequence),
-      capturedAt: input.receivedAt,
-      receivedAt: input.receivedAt,
-      protocolVersion: 1,
-      schemaVersion: 1,
-      appVersion: "0.1.0",
-      kind: input.kind,
-      localPuuid: input.observer,
-      platformId: "NA1",
-      gameId,
-      payload: StoredPayloadSchema.parse(input.payload),
-      bodyDigest: `digest-${observationId}`,
-      disposition: "ACCEPTED",
-    },
-  });
-  return observationId;
-}
-
-/** A device's gameflow session, then its end-of-game block alone. */
-async function uploadEndOfGame(
-  deviceId: string,
-  receivedAt: Date,
-  edit?: (block: EndOfGameBlockFixture) => void,
-): Promise<string> {
-  const block = await classicEndOfGameBlock();
-  edit?.(block);
-  const observer = observerOf(block);
-  await store({
-    deviceId,
-    kind: "gameflow",
-    observer,
-    payload: classicGameflow(block),
-    receivedAt,
-  });
-  return await store({
-    deviceId,
-    kind: "post_game",
-    observer,
-    payload: { resource: "post_game", data: block },
-    receivedAt,
-  });
-}
-
-async function uploadBundle(deviceId: string, receivedAt: Date) {
-  const block = await classicEndOfGameBlock();
-  return await store({
-    deviceId,
-    kind: "post_game",
-    observer: observerOf(block),
-    payload: {
-      resource: "post_game",
-      data: await aliasedLcuBundle("lcu-postgame-classic"),
-    },
-    receivedAt,
-  });
 }
 
 function expectEndOfGame(match: CanonicalMatch | undefined) {
@@ -135,18 +55,12 @@ function expectEndOfGame(match: CanonicalMatch | undefined) {
   );
 }
 
-/** The same block, as a ranked game Riot would publish. */
-function asRanked(block: EndOfGameBlockFixture) {
-  block.queueType = "RANKED_SOLO_5x5";
-  block.gameMode = "CLASSIC";
-}
-
 let deviceId: string;
 beforeEach(async () => {
   io.fetchMatch.mockReset();
   // Riot never publishes League Classic: a definitive 404.
   io.fetchMatch.mockResolvedValue(undefined);
-  sequences.clear();
+  uploads.reset();
   await prisma.$transaction([
     prisma.scoutClientCanonicalMatch.deleteMany(),
     prisma.scoutClientObservation.deleteMany(),
@@ -278,30 +192,7 @@ describe("resolveCanonicalMatch on an end-of-game-only game", () => {
 
   test("an undecided Riot read never freezes a game Riot publishes", async () => {
     const past = new Date(Date.now() - DEADLINE_MS - MINUTE);
-    const block = await classicEndOfGameBlock();
-    asRanked(block);
-    const observer = observerOf(block);
-    await store({
-      deviceId,
-      kind: "gameflow",
-      observer,
-      payload: classicGameflow(block, {
-        queue: {
-          id: 420,
-          type: block.queueType,
-          gameMode: block.gameMode,
-          mapId: 11,
-        },
-      }),
-      receivedAt: past,
-    });
-    await store({
-      deviceId,
-      kind: "post_game",
-      observer,
-      payload: { resource: "post_game", data: block },
-      receivedAt: past,
-    });
+    await uploadEndOfGame(deviceId, past, asRanked, rankedGameflow);
     io.fetchMatch.mockRejectedValue(makeRiotTransportFailure());
 
     expect(await resolveCanonicalMatch(matchId)).toMatchObject({

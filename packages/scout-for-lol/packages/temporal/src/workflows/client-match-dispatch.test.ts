@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import type { WorkflowStartOptions } from "@temporalio/client";
 import { ApplicationFailure } from "@temporalio/common";
+import { Worker } from "@temporalio/worker";
 import { z } from "zod";
 import {
   IsoInstantSchema,
@@ -1130,3 +1131,96 @@ test("processes a queued client late arrival once Riot discovers it too", async 
   expect(olderStore.calls).toContain("commitMatchObservation");
   expect(log).not.toContain(`${MATCH_ID}:terminal-receipt`);
 }, 90_000);
+
+/** `scout-client-end-of-game-deadline-seconds`' default, as `readyAt` carries it. */
+const END_OF_GAME_DEADLINE_MS = 360_000;
+
+/** An end-of-game-only game's dispatch: ready when its record may freeze. */
+function endOfGameItem(): ScoutClientMatchDispatchItem {
+  return dispatchItem(
+    MATCH_ID,
+    1,
+    IsoInstantSchema.parse(
+      new Date(Date.now() + END_OF_GAME_DEADLINE_MS).toISOString(),
+    ),
+  );
+}
+
+/** Record each match core's observation commits, and resolve on its fan-out. */
+function countingActivities() {
+  const commits: string[] = [];
+  const processed = Promise.withResolvers<true>();
+  const activities = routedMatchActivities(
+    createScoutMatchStore(),
+    createScoutMatchStore(),
+    {
+      beforeCommit: (input) => {
+        commits.push(input.riotMatchId);
+      },
+      onFanOut: (riotMatchId) => {
+        if (riotMatchId === MATCH_ID) processed.resolve(true);
+      },
+    },
+  );
+  return { activities, commits, processed: processed.promise };
+}
+
+describe("an end-of-game-only game", () => {
+  const workflowsPath = new URL("index.ts", import.meta.url).pathname;
+
+  test("starts at its deadline, carried in readyAt, and the history replays", async () => {
+    const { activities, commits, processed } = countingActivities();
+    await harness.startWorkers(activities);
+    const workflowId = "client-match-dispatch-end-of-game-deadline";
+    const dispatcher = await startDispatcher(workflowId);
+
+    await dispatcher.signal(dispatchScoutClientMatchesSignal, [
+      endOfGameItem(),
+    ]);
+    const processedEarly = await Promise.race([
+      processed.then(() => true),
+      new Promise<false>((resolve) => setTimeout(() => resolve(false), 250)),
+    ]);
+    expect(processedEarly).toBe(false);
+
+    await harness.sleep(END_OF_GAME_DEADLINE_MS);
+    await processed;
+    const history = await dispatcher.fetchHistory();
+    await terminateDispatcher(workflowId, "test observed the deadline start");
+
+    expect(commits).toEqual([MATCH_ID]);
+    // No Workflow command changed for this: the history replays as recorded.
+    await Worker.runReplayHistory({ workflowsPath }, history, workflowId);
+  }, 90_000);
+
+  test("a history bundle before the deadline starts the game once, and the history replays", async () => {
+    const { activities, commits, processed } = countingActivities();
+    await harness.startWorkers(activities);
+    const workflowId = "client-match-dispatch-end-of-game-then-bundle";
+    const dispatcher = await startDispatcher(workflowId);
+
+    await dispatcher.signal(dispatchScoutClientMatchesSignal, [
+      endOfGameItem(),
+    ]);
+    // The bundle's dispatch for the same game, ready at once (a queue Riot
+    // never publishes): it merges onto the waiting item and wakes it.
+    await dispatcher.signal(dispatchScoutClientMatchesSignal, [
+      dispatchItem(
+        MATCH_ID,
+        1,
+        IsoInstantSchema.parse(new Date().toISOString()),
+      ),
+    ]);
+    await processed;
+    // A late re-signal of the end-of-game item finds the game already done.
+    await dispatcher.signal(dispatchScoutClientMatchesSignal, [
+      endOfGameItem(),
+    ]);
+    await harness.sleep(END_OF_GAME_DEADLINE_MS);
+    const history = await dispatcher.fetchHistory();
+    await terminateDispatcher(workflowId, "test observed one start");
+
+    expect(commits).toEqual([MATCH_ID]);
+    await Worker.runReplayHistory({ workflowsPath }, history, workflowId);
+  }, 90_000);
+});

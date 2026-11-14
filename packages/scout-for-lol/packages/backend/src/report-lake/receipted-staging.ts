@@ -1,7 +1,7 @@
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import type {
+  CanonicalMatch,
   RawCurrentGameInfo,
-  RawMatch,
   RawTimeline,
 } from "@scout-for-lol/data";
 import type { Db } from "#src/database/index.ts";
@@ -129,7 +129,7 @@ async function receiptStagedFiles(args: {
 
 export async function stageMatchReceipted(
   lakeDir: string,
-  match: RawMatch,
+  match: CanonicalMatch,
   options: ReceiptOptions,
 ): Promise<ReceiptedStagingResult> {
   const matchId = match.metadata.matchId;

@@ -999,8 +999,24 @@ record. The pick is frozen in the same `ScoutClientCanonicalMatch` row as a
 bundle, and never upgraded. `resolveCompleteMatch` reports a frozen record as
 unavailable. Stored-match readers (the archive, competitions' S3 query, lake
 rebuild, Explore review, showcase, scripts) parse `CanonicalMatchSchema`, and
-the lake writes the record's rows with `coverage = 'end_of_game'`. Nothing in
-the match pipeline produces the record yet.
+the lake writes the record's rows with `coverage = 'end_of_game'`.
+
+The producer is the ordinary client dispatch (`scout-client/end-of-game/dispatch.ts`,
+merged into ingress's selection). An accepted end-of-game-only upload that
+converts with its device's earlier gameflow session becomes a dispatch item
+whose `readyAt` is the upload time plus the deadline (never
+before Riot's first refusal); `endOfGameEvidenceReadyAt` decides both that
+and the resolver's eligibility, so the match starts when it can freeze. A
+bundle for the same game merges onto the same item with its earlier `readyAt`,
+and intents are keyed by match and channel, so the game posts once whichever
+record, or the scoreboard report, came first. The per-match Activities resolve
+`resolveCanonicalMatch` through `match-context.ts`; a `pending` answer retries
+the Activity and a `conflict` fails the match for review. Evidence preparation
+pins the record's timeline missing instead of waiting, a managed custom game
+with only a record goes to review (its result needs the complete match), and
+history recovery abandons the record's timeline at once. No Workflow command
+changed. The dispatch runs only behind `scout_client_ingestion`, which is
+hard-disabled in production.
 
 Effect consumers either work on the record or refuse it with a typed outcome,
 never a failure:

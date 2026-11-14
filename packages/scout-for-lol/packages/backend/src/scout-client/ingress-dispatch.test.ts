@@ -6,6 +6,23 @@ import {
 import { acceptedClientMatchDispatches } from "./dispatch-policy.ts";
 import { acceptedClientBindingMatchIds } from "./accepted-observations.ts";
 import { LOCAL_CANONICAL_DELAY_MS } from "#src/evidence/source-grace.ts";
+import {
+  selectEndOfGameDispatches,
+  withEndOfGameDispatches,
+} from "./end-of-game/dispatch.ts";
+import { aliasedLcuBundle } from "#src/testing/report-lake/lcu-bundle-fixtures.ts";
+import {
+  classicEndOfGameBlock,
+  classicGameflow,
+  classicMatchId,
+  type EndOfGameBlockFixture,
+} from "#src/testing/scout-client/end-of-game-fixtures.ts";
+import {
+  END_OF_GAME_DEADLINE_MS,
+  asRanked,
+  observerOf,
+  rankedGameflow,
+} from "#src/testing/scout-client/end-of-game-uploads.ts";
 
 const fixture = RawMatchSchema.parse(
   await Bun.file("../../testdata/rift.json").json(),
@@ -198,5 +215,162 @@ describe("native match dispatch selection", () => {
     expect(
       acceptedClientBindingMatchIds(batch, [accepted(partial.observationId)]),
     ).toEqual([fixture.metadata.matchId]);
+  });
+});
+
+const MINUTE = 60_000;
+
+/**
+ * The Classic game's uploads, ending at the bundle's own end so both are live
+ * completions at `uploadedAt`.
+ */
+async function classicUploads(edit?: (block: EndOfGameBlockFixture) => void) {
+  const bundle = await aliasedLcuBundle("lcu-postgame-classic");
+  const block = await classicEndOfGameBlock();
+  block.endOfGameTimestamp = bundle.timing.gameEndTimestamp;
+  edit?.(block);
+  const uploadedAt = new Date(bundle.timing.gameEndTimestamp + MINUTE);
+  const row = (observationId: string, sequence: number, data: unknown) =>
+    ({
+      protocolVersion: 1,
+      schemaVersion: 1,
+      observationId,
+      sequence,
+      capturedAt: uploadedAt.toISOString(),
+      appVersion: "0.1.0",
+      kind: "post_game",
+      platformId: "NA1",
+      localPuuid: observerOf(block),
+      gameId: block.gameId.toString(),
+      payload: { resource: "post_game", data },
+    }) as const;
+  return {
+    block,
+    uploadedAt,
+    endOfGame: row("00000000-0000-4000-8000-0000000000e1", 21, block),
+    bundle: row("00000000-0000-4000-8000-0000000000b1", 22, bundle),
+  };
+}
+
+/** What ingress dispatches: complete bundles, with end-of-game records merged in. */
+function dispatch(
+  rows: readonly { readonly observationId: string }[],
+  uploadedAt: Date,
+  gameflows: ReadonlyMap<string, readonly unknown[]>,
+  deadlineMs = END_OF_GAME_DEADLINE_MS,
+) {
+  const batch = ScoutClientObservationBatchSchema.parse({ observations: rows });
+  const receipts = rows.map((row) => accepted(row.observationId));
+  return withEndOfGameDispatches(
+    {
+      dispatches: acceptedClientMatchDispatches(batch, receipts, uploadedAt),
+      evaluations: [],
+      games: new Map(),
+    },
+    selectEndOfGameDispatches(batch, receipts, {
+      now: uploadedAt,
+      identities: new Map(),
+      endOfGame: { gameflows, deadlineMs },
+    }),
+  ).dispatches;
+}
+
+describe("end-of-game-only dispatch", () => {
+  test("dispatches the block alone, ready when the record may freeze", async () => {
+    const { block, uploadedAt, endOfGame } = await classicUploads();
+
+    expect(
+      dispatch(
+        [endOfGame],
+        uploadedAt,
+        new Map([[endOfGame.observationId, [classicGameflow(block)]]]),
+      ),
+    ).toEqual([
+      {
+        riotMatchId: await classicMatchId(),
+        sourcePuuid: observerOf(block),
+        deliveryMode: "live",
+        gameEndTimestamp: block.endOfGameTimestamp,
+        readyAt: new Date(
+          uploadedAt.getTime() + END_OF_GAME_DEADLINE_MS,
+        ).toISOString(),
+        completionTargets: [],
+        orderingAssured: false,
+      },
+    ]);
+  });
+
+  test("dispatches nothing for a block with no gameflow session to convert with", async () => {
+    const { uploadedAt, endOfGame } = await classicUploads();
+
+    expect(dispatch([endOfGame], uploadedAt, new Map())).toEqual([]);
+  });
+
+  test("never readies a record before Riot's first refusal on a queue Riot publishes", async () => {
+    const { block, uploadedAt, endOfGame } = await classicUploads(asRanked);
+
+    expect(
+      dispatch(
+        [endOfGame],
+        uploadedAt,
+        new Map([[endOfGame.observationId, [rankedGameflow(block)]]]),
+        MINUTE,
+      ),
+    ).toMatchObject([
+      {
+        readyAt: new Date(
+          uploadedAt.getTime() + LOCAL_CANONICAL_DELAY_MS,
+        ).toISOString(),
+      },
+    ]);
+  });
+
+  test("a bundle for the same game is the one dispatch, at the bundle's readiness", async () => {
+    const { block, uploadedAt, endOfGame, bundle } = await classicUploads();
+    const gameflows = new Map([
+      [endOfGame.observationId, [classicGameflow(block)]],
+    ]);
+    const bundleAlone = dispatch([bundle], uploadedAt, gameflows);
+
+    expect(bundleAlone).toHaveLength(1);
+    expect(dispatch([endOfGame, bundle], uploadedAt, gameflows)).toEqual(
+      bundleAlone,
+    );
+    expect(dispatch([bundle, endOfGame], uploadedAt, gameflows)).toEqual(
+      bundleAlone,
+    );
+  });
+
+  test("counts a converted block once, as an end-of-game outcome of its real queue, with its game", async () => {
+    const { block, uploadedAt, endOfGame } = await classicUploads();
+    const batch = ScoutClientObservationBatchSchema.parse({
+      observations: [endOfGame],
+    });
+    const receipts = [accepted(endOfGame.observationId)];
+    const unconverted = {
+      observationId: endOfGame.observationId,
+      outcome: "end_of_game",
+      gameKind: "unknown",
+    } as const;
+
+    const merged = withEndOfGameDispatches(
+      { dispatches: [], evaluations: [unconverted], games: new Map() },
+      selectEndOfGameDispatches(batch, receipts, {
+        now: uploadedAt,
+        identities: new Map(),
+        endOfGame: {
+          gameflows: new Map([
+            [endOfGame.observationId, [classicGameflow(block)]],
+          ]),
+          deadlineMs: END_OF_GAME_DEADLINE_MS,
+        },
+      }),
+    );
+
+    expect(merged.evaluations).toEqual([
+      { ...unconverted, gameKind: "classic" },
+    ]);
+    // Clash shadowing reads every dispatched game from `games`.
+    expect([...merged.games.keys()]).toEqual([await classicMatchId()]);
   });
 });

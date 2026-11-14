@@ -22,7 +22,11 @@ import { emptyMvpTallyEmbed } from "#src/mvp-votes/tally.ts";
 import { resolveScoutObservedMatchContext } from "#src/temporal/match/match-context.ts";
 import type { ScoutReportComponentsSchema } from "#src/temporal/notification-lane/notification-receipts.ts";
 import type { ScoutAttestedReportArtifact } from "#src/temporal/notification/notification-artifact.ts";
-import { resolveQueueTypeFromGame } from "@scout-for-lol/data";
+import {
+  canonicalMatchCreatedAt,
+  canonicalMatchTournamentCode,
+  resolveQueueTypeFromGame,
+} from "@scout-for-lol/data";
 import { gameResultTimestamp } from "@scout-for-lol/domain/artifacts/game-result.ts";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { ApplicationFailure } from "@temporalio/common";
@@ -243,7 +247,7 @@ export async function renderPostmatchNotification(
       context.matchData.info.queueId,
       context.matchData.info.gameMode,
       context.matchData.info.gameType,
-      context.matchData.info.tournamentCode,
+      canonicalMatchTournamentCode(context.matchData),
     ),
   });
   const message = await generateMatchReport(
@@ -267,7 +271,7 @@ export async function renderPostmatchNotification(
   }
   return disassembleReport(message, context.riotMatchId, {
     queueId: context.matchData.info.queueId,
-    gameCreation: context.matchData.info.gameCreation,
+    gameCreation: canonicalMatchCreatedAt(context.matchData),
   });
 }
 

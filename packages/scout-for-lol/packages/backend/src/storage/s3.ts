@@ -1,10 +1,13 @@
 import type {
+  CanonicalMatch,
   RiotMatchId,
-  RawMatch,
   RawTimeline,
   RawCurrentGameInfo,
 } from "@scout-for-lol/data/index.ts";
-import { matchDataSourceOf } from "@scout-for-lol/data/index.ts";
+import {
+  canonicalMatchCreatedAt,
+  matchDataSourceOf,
+} from "@scout-for-lol/data/index.ts";
 import { saveToS3 } from "#src/storage/s3-helpers.ts";
 import type { StoredObject } from "#src/storage/object-integrity.ts";
 import {
@@ -71,7 +74,7 @@ function archived(kind: ArtifactKind, stored: StoredObject): RawArchiveResult {
  * @param trackedPlayerAliases Array of tracked player aliases in this match (empty array if none)
  */
 export async function archiveMatchToS3(
-  match: RawMatch,
+  match: CanonicalMatch,
   trackedPlayerAliases: string[],
   abortSignal?: AbortSignal,
 ): Promise<RawArchiveResult> {
@@ -87,12 +90,14 @@ export async function archiveMatchToS3(
     metadata: {
       matchId: matchId,
       gameMode: match.info.gameMode,
-      gameCreation: match.info.gameCreation.toString(),
+      // An end-of-game record states no lobby creation; its start stands in,
+      // as it does for every partition and date window.
+      gameCreation: canonicalMatchCreatedAt(match).toString(),
       gameEndTimestamp: match.info.gameEndTimestamp.toString(),
       queueId: match.info.queueId.toString(),
       participantCount: match.info.participants.length.toString(),
       gameDuration: match.info.gameDuration.toString(),
-      gameVersion: match.info.gameVersion,
+      gameVersion: match.info.gameVersion ?? "unknown",
       // S3 object metadata values must be strings. Riot omits this for custom
       // games, and "unknown" is the honest label for a field never sent.
       result: match.info.endOfGameResult ?? "unknown",
@@ -105,7 +110,7 @@ export async function archiveMatchToS3(
     logEmoji: "💾",
     logMessage: "Saving match to S3",
     errorContext: "match",
-    keyDate: new Date(match.info.gameCreation),
+    keyDate: new Date(canonicalMatchCreatedAt(match)),
     additionalLogDetails: {
       participants: match.info.participants.length,
       gameMode: match.info.gameMode,
