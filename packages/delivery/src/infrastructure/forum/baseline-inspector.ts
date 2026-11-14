@@ -7,6 +7,7 @@ import { DELIVERY_KUBERNETES_READERS } from "@shepherdjerred/ops-model/delivery-
 import { DeliveryError } from "#domain/error.ts";
 import type { ApplicationReader } from "#infrastructure/kubernetes/application-reader.ts";
 import {
+  listKubernetes,
   projectedReader,
   type KubernetesRead,
 } from "#infrastructure/kubernetes/projected-reader.ts";
@@ -101,6 +102,8 @@ const PATHS: Record<string, (namespace: string) => string> = {
   Job: (namespace) => `/apis/batch/v1/namespaces/${namespace}/jobs`,
 };
 const Owned = z.object({ items: z.array(z.object({ metadata: Metadata })) });
+/** Most objects of one kind the Forum namespace may hold and still be inspected. */
+const MAX_FORUM_OBJECTS = 1000;
 
 /** Objects in the Forum namespace through the baseline reader; a missing object is never evidence. */
 function forumObjects(read: KubernetesRead, namespace: string) {
@@ -123,8 +126,13 @@ function forumObjects(read: KubernetesRead, namespace: string) {
         );
       return raw;
     },
+    // ReplicaSets, Jobs and their Pods accumulate, so no list is one read.
     list: async (kind: string) =>
-      Owned.parse(await read(collection(kind))).items,
+      Owned.parse({
+        items: await listKubernetes(read, collection(kind), {
+          maxItems: MAX_FORUM_OBJECTS,
+        }),
+      }).items,
   };
 }
 

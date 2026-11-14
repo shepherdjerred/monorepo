@@ -151,6 +151,8 @@ export const CompleteWorkerRecoverySchema =
   recovery.CompleteWorkerRecoverySchema;
 export const WorkerRecoveryObservationSchema =
   recovery.WorkerRecoveryObservationSchema;
+export const WORKER_RECOVERY_OBSERVATION_BOUNDS =
+  recovery.WORKER_RECOVERY_OBSERVATION_BOUNDS;
 export type WorkerRecoveryObservation = recovery.WorkerRecoveryObservation;
 export const FailWorkerRecoverySchema = recovery.FailWorkerRecoverySchema;
 export type RequestWorkerRecovery = recovery.RequestWorkerRecovery;

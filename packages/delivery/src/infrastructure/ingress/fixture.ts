@@ -75,7 +75,7 @@ export function ingressFixture() {
       `/apis/networking.k8s.io/v1/namespaces/${target.namespace}/ingresses/${target.name}`
     )
       return Promise.resolve(structuredClone(ingress));
-    if (path === `/api/v1/namespaces/${target.proxyNamespace}/pods?limit=1000`)
+    if (path === `/api/v1/namespaces/${target.proxyNamespace}/pods?limit=50`)
       return Promise.resolve(structuredClone(pods));
     if (
       path ===

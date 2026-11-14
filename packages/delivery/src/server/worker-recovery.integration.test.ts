@@ -17,6 +17,10 @@ import {
   type WorkerRecoveryReaders,
 } from "#infrastructure/worker-pool/recovery-observation.ts";
 import { createApplicationReader } from "#infrastructure/kubernetes/application-reader.ts";
+import {
+  pagedKubernetes,
+  retainedDeployment,
+} from "#infrastructure/kubernetes/paged-fixture.ts";
 import { PipelineDefinitionSchema } from "#shared/pipeline-contract.ts";
 import { recipeFromPipeline } from "#shared/model/recipe-adapter.ts";
 import { RecipeDefinitionSchema } from "#shared/model/recipe-contract.ts";
@@ -346,8 +350,8 @@ test("the API observes a pending worker recovery with its own readers, never an 
   });
   expect(reads).toEqual([
     "application:temporal",
-    "/apis/apps/v1/namespaces/temporal/deployments",
-    "/api/v1/namespaces/temporal/pods?labelSelector=worker-family",
+    "/apis/apps/v1/namespaces/temporal/deployments?limit=20",
+    "/api/v1/namespaces/temporal/pods?labelSelector=worker-family&limit=20",
   ]);
   // No configured reader or projection pauses; nothing falls back.
   expect(await responseStatus(observe(api().app))).toBe(503);
@@ -370,6 +374,68 @@ test("the API observes a pending worker recovery with its own readers, never an 
     ),
   ).toBe(200);
   expect(await responseStatus(observe())).toBe(409);
+});
+
+test("a namespace with hundreds of retained hosts is observed whole, each read inside its bound", async () => {
+  // 2026-11-14: 100 Deployments (83 retained hosts) made one list 1.29 MB,
+  // past the 1 MiB bound, and every automatic worker recovery answered 503.
+  const { deployment, pool } = await failedWorker();
+  const hosts = Array.from({ length: 400 }, (_, index) =>
+    retainedDeployment(index),
+  );
+  const workerPods = Array.from({ length: 45 }, (_, index) => ({
+    metadata: { name: `worker-${String(index)}`, namespace: "temporal" },
+  }));
+  const cluster = pagedKubernetes({
+    "/apis/apps/v1/namespaces/temporal/deployments": hosts,
+    "/api/v1/namespaces/temporal/pods?labelSelector=worker-family": workerPods,
+  });
+  const { app, client } = api({
+    readApplication: async (name) => ({ metadata: { name } }),
+    readKubernetes: createWorkerRecoveryReader(cluster.read),
+  });
+  const intent = await client.requestWorkerRecovery(deployment.id, {
+    requestId: "observed-recovery-at-scale",
+    expectedEnvironmentGeneration: pool.generation,
+    reason: "Observe a pool that has retained four hundred worker hosts",
+  });
+  const observe = (via = app) =>
+    via.request(`/api/v1/worker-recovery/${intent.id}/observation`, {
+      headers: { Authorization: "Bearer recovery-fixture-executor" },
+    });
+  const response = await observe();
+  expect(response.status).toBe(200);
+  expect(WorkerRecoveryObservationSchema.parse(await response.json())).toEqual({
+    application: { metadata: { name: "temporal" } },
+    deployments: hosts,
+    pods: workerPods,
+  });
+  // 20 pages of Deployments and 3 of Pods, none of them the whole list.
+  expect(cluster.requests).toHaveLength(23);
+  expect(cluster.requests.every((path) => path.includes("limit=20"))).toBe(
+    true,
+  );
+
+  // A read that still exceeds its bound names itself and its size in the 503.
+  const oversized = api({
+    readApplication: async (name) => ({ metadata: { name } }),
+    readKubernetes: createWorkerRecoveryReader(
+      pagedKubernetes(
+        { "/apis/apps/v1/namespaces/temporal/deployments": hosts },
+        100_000,
+      ).read,
+    ),
+  });
+  const refused = await observe(oversized.app);
+  expect(refused.status).toBe(503);
+  expect(await refused.json()).toMatchObject({
+    error: {
+      code: "PAUSED",
+      message: expect.stringMatching(
+        /^Independent readback is unavailable; the projected delivery-worker-recovery-reader read of \/apis\/apps\/v1\/namespaces\/temporal\/deployments exceeded its 100000-byte bound \(stopped after \d+ bytes\)$/u,
+      ),
+    },
+  });
 });
 
 test("every worker host namespace has the declared recovery reader grant", () => {

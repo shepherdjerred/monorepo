@@ -544,6 +544,18 @@ missing projection pauses settlement and keeps ownership.
 | `delivery-forum-baseline-reader`   | get, list, watch Pods, claims, Deployments, ReplicaSets and Jobs in the Forum namespaces                |
 | `delivery-minecraft-report-reader` | a `delivery-tsmc-controller`-audience token; the controller reviews it and allows only its report `get` |
 
+Every projected read is bounded, so a reader never buffers an unbounded body.
+One response is at most 1 MiB. A collection is therefore read in pages of
+`limit` and `continue` (`listKubernetes`), which the API server serves from one
+resource version, and is bounded by an object count instead: a namespace keeps
+one Deployment per retained worker host, so a whole list outgrows any single
+response. One stored Application cannot be paged or narrowed and carries the
+whole frozen worker pool several times over, so the Application reader's bound
+is 4 MiB, above the API server's 3 MiB ceiling for one object. A response over
+its bound pauses settlement and keeps ownership; the API logs
+`delivery_kubernetes_read_failed` with the reader, the read's path and the
+size, and the `PAUSED` body names the read and its size.
+
 `content` intents cover static sites, Scout frontends and Forum. Native
 inspection and bounded repair retain the frozen artifacts and the original
 backup. A failed inspection keeps ownership. A journaled producer host awaiting
