@@ -191,10 +191,11 @@ function addCost(
   totals.set(account, current);
 }
 
-function openAiUrl(
-  path: string,
+/** Pure billing endpoint metadata; constructing a reviewed query performs no request. */
+export function openAiBillingUrl(
+  path: "costs" | "usage/completions",
   params: Record<string, string | readonly string[]>,
-  cursor: string | undefined,
+  cursor?: string,
 ): URL {
   const url = new URL(`https://api.openai.com/v1/organization/${path}`);
   for (const [name, value] of Object.entries(params)) {
@@ -206,7 +207,7 @@ function openAiUrl(
 }
 
 async function openAiPages<RESULT extends z.ZodType>(input: {
-  readonly path: string;
+  readonly path: "costs" | "usage/completions";
   readonly params: Record<string, string | readonly string[]>;
   readonly schema: RESULT;
   readonly adminKey: string;
@@ -219,7 +220,7 @@ async function openAiPages<RESULT extends z.ZodType>(input: {
   do {
     const page = PageSchema.parse(
       await getJson({
-        url: openAiUrl(input.path, input.params, cursor),
+        url: openAiBillingUrl(input.path, input.params, cursor),
         headers: { authorization: `Bearer ${input.adminKey}` },
         fetcher: input.fetcher,
         cancellationSignal: input.cancellationSignal,

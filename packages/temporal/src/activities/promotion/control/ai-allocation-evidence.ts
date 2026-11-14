@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { costForTextUsage, getModel } from "@shepherdjerred/llm-models";
 import type { PromotionAiAllocationRequest } from "@shepherdjerred/ops-model/promotion/ai-allocation.ts";
+import { openAiBillingUrl } from "#shared/llm-billing.ts";
 
 function providerWindow(input: PromotionAiAllocationRequest) {
   const provider = input.provider;
@@ -24,19 +25,14 @@ function providerWindow(input: PromotionAiAllocationRequest) {
     throw new Error(
       "Reviewed provider window must cover the whole closed execution",
     );
-  const url = new URL(
-    "https://api.openai.com/v1/organization/usage/completions",
-  );
-  for (const [key, value] of Object.entries({
+  const url = openAiBillingUrl("usage/completions", {
     start_time: String(start),
     end_time: String(end),
     bucket_width: "1m",
     limit: String(minutes),
-  }))
-    url.searchParams.set(key, value);
-  url.searchParams.append("models[]", provider.model);
-  for (const group of ["api_key_id", "project_id", "model", "service_tier"])
-    url.searchParams.append("group_by[]", group);
+    "models[]": [provider.model],
+    "group_by[]": ["api_key_id", "project_id", "model", "service_tier"],
+  });
   if (
     createHash("sha256").update(url.toString()).digest("hex") !==
     provider.querySha256

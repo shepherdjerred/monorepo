@@ -3,6 +3,7 @@ import {
   DEFAULT_ACCOUNT,
   fetchAnthropicBilling,
   fetchOpenAiBilling,
+  openAiBillingUrl,
   type BillingFetch,
 } from "./llm-billing.ts";
 
@@ -10,6 +11,21 @@ import {
 const NOW = new Date("2026-09-24T15:00:00Z");
 const TODAY = Math.floor(Date.UTC(2026, 8, 24) / 1000);
 const YESTERDAY = TODAY - 86_400;
+
+test("billing query metadata preserves reviewed query bytes without dispatch", () => {
+  expect(
+    openAiBillingUrl("usage/completions", {
+      start_time: "100",
+      end_time: "160",
+      bucket_width: "1m",
+      limit: "1",
+      "models[]": ["reviewed-model"],
+      "group_by[]": ["api_key_id", "project_id", "model", "service_tier"],
+    }).toString(),
+  ).toBe(
+    "https://api.openai.com/v1/organization/usage/completions?start_time=100&end_time=160&bucket_width=1m&limit=1&models%5B%5D=reviewed-model&group_by%5B%5D=api_key_id&group_by%5B%5D=project_id&group_by%5B%5D=model&group_by%5B%5D=service_tier",
+  );
+});
 
 function router(routes: Record<string, (url: URL) => unknown>): {
   fetcher: BillingFetch;
