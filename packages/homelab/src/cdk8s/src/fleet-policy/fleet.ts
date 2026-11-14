@@ -32,6 +32,9 @@ const ContainerSchema = z.looseObject({
       }),
     )
     .optional(),
+  env: z
+    .array(z.looseObject({ name: z.string(), value: z.string().optional() }))
+    .optional(),
   readinessProbe: ProbeSchema.optional(),
   startupProbe: ProbeSchema.optional(),
   restartPolicy: z.string().optional(),

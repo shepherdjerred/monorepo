@@ -13,6 +13,14 @@ import {
   upstreamNamespacesWithoutPolicy,
   workloadsWithoutPolicy,
 } from "./rules.ts";
+import {
+  blockedConfiguredConnections,
+  configuredConnections,
+} from "./configured-endpoints.ts";
+import {
+  apiServerRulesOffEndpoint,
+  postgresClustersClosedToOperator,
+} from "./platform-peers.ts";
 import { unreciprocatedRules } from "./policy-reciprocity.ts";
 import { probePortsNotAdmitted } from "./probe-admission.ts";
 import {
@@ -42,6 +50,9 @@ let fleet: Fleet;
 beforeAll(async () => {
   fleet = await loadFleet();
 });
+
+/** For a rule that has never had an exception and must not gain one. */
+const NO_DEBT: ReadonlySet<string> = new Set();
 
 const RULES: readonly {
   name: string;
@@ -85,6 +96,21 @@ const RULES: readonly {
     allowlist: UNRECIPROCATED_INGRESS_RULES,
   },
   {
+    name: "every Service endpoint a workload's env configures is open in the policies on both ends",
+    violations: blockedConfiguredConnections,
+    allowlist: NO_DEBT,
+  },
+  {
+    name: "every address rule for the API server names the endpoint it advertises",
+    violations: apiServerRulesOffEndpoint,
+    allowlist: NO_DEBT,
+  },
+  {
+    name: "every policed PostgreSQL cluster admits the postgres-operator",
+    violations: postgresClustersClosedToOperator,
+    allowlist: NO_DEBT,
+  },
+  {
     name: "every container that declares a port has a readiness or startup probe",
     violations: portContainersWithoutProbe,
     allowlist: PORT_CONTAINERS_WITHOUT_PROBE,
@@ -113,6 +139,10 @@ describe("fleet policy", () => {
     expect(fleet.applicationNamespaces.size).toBeGreaterThan(50);
     expect(fleet.serviceSelectors.length).toBeGreaterThan(50);
     expect(fleet.backendProbes.length).toBeGreaterThan(40);
+    expect(configuredConnections(fleet).length).toBeGreaterThan(100);
+    expect(
+      fleet.objects.filter(({ kind }) => kind === "postgresql").length,
+    ).toBeGreaterThan(5);
   });
 
   describe.each(RULES)("$name", ({ violations, allowlist }) => {
