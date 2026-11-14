@@ -179,7 +179,7 @@ test("the owner batch producer prepares actual library-only HTTP captures and qu
       runtimeVersion: created.runtimeVersion,
       acknowledgeNoOwnershipTransfer: true,
       selected: created.report.entries
-        .filter((entry) => entry.kind === "media")
+        .filter((entry) => entry.kind === "media" || entry.kind === "file")
         .map((entry) => ({
           provenanceKey: entry.provenanceKey,
           evidenceHash: entry.observationHash,

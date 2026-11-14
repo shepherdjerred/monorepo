@@ -1,4 +1,6 @@
 import { afterAll, beforeAll, expect, test } from "vitest";
+import { randomBytes } from "node:crypto";
+import { z } from "zod";
 import { startMediaTestPostgres } from "#testing/postgres.ts";
 import { GuideBundleSchema } from "#domain/quality-guide/contract.ts";
 import source from "#domain/quality-guide/guide-fixture.json";
@@ -9,6 +11,19 @@ import type { QualityGuideKind } from "#shared/quality-guide/contract.ts";
 import { PrismaQualityGuideAdministration } from "./service.ts";
 import { householdCaptionRequirements } from "./captions.ts";
 import { currentSubtitleWork } from "#automation/subtitles/authority.ts";
+import { CredentialCipher } from "#application/security.ts";
+import { createAutomationTestContext } from "#testing/automation.ts";
+import {
+  grantTestLease,
+  grantTestRequesterAccess,
+} from "#testing/authority.ts";
+import { PrismaMediaCommands } from "#infrastructure/commands.ts";
+import {
+  loadProfile,
+  searchCandidates,
+} from "#automation/acquisition-candidates.ts";
+import { reserveCandidate } from "#automation/acquisition-reservation.ts";
+import { StoredCandidateSchema } from "#automation/providers.ts";
 
 let cluster: Awaited<ReturnType<typeof startMediaTestPostgres>>;
 let owner: MediaActor;
@@ -210,38 +225,104 @@ test("daily selected changes append versions, retain overrides and preserve play
 test("an active reservation defers the current pointer until it drains without changing target generations", async () => {
   const f = fixture();
   const created = await createProfile(f, "series");
+  const db = cluster.database;
+  await grantTestLease(db);
+  await db.mediaRuntimeState.update({
+    where: { id: "singleton" },
+    data: { mode: "active", ownershipConfirmed: true, recoveryEpoch: 0 },
+  });
+  await grantTestRequesterAccess(db, member.id, "fixture-server");
+  const series = await db.mediaItem.create({
+    data: {
+      kind: "series",
+      title: "Guide Reservation Fixture",
+      tmdbId: 123_456,
+    },
+  });
   const media = await cluster.database.mediaItem.create({
     data: {
       kind: "episode",
-      title: "Guide reservation fixture",
+      parentId: series.id,
+      title: "First episode",
       originalLanguage: "en",
+      runtimeMinutes: 45,
       seasonNumber: 1,
       episodeNumber: 1,
-      intents: { create: { profileId: created.profileId, generation: 7 } },
     },
   });
-  const release = await cluster.database.releaseCandidate.create({
-    data: {
-      providerId: "fixture",
-      providerReleaseId: crypto.randomUUID(),
-      title: "Fixture.S01E01.2160p.WEB-DL",
-      attributes: {},
-      evaluation: {},
-      mediaIds: [media.id],
+  const commands = new PrismaMediaCommands(db, {
+    keepDays: 30,
+    serverMachineId: "fixture-server",
+  });
+  await commands.assignProfile(owner, crypto.randomUUID(), media.id, {
+    expectedVersion: media.version,
+    profileId: created.profileId,
+  });
+  const requested = await commands.createRequest(member, crypto.randomUUID(), {
+    mediaId: media.id,
+    subtitleLanguages: [],
+    includeSpecials: false,
+    keepingPolicy: "temporary",
+  });
+  const operationId = z.uuid().parse(requested.operationId);
+  const operation = await db.operation.findUniqueOrThrow({
+    where: { id: operationId },
+  });
+  const input = z
+    .object({ operationId: z.uuid(), mediaId: z.uuid(), generation: z.int() })
+    .parse(operation.payload);
+  await db.mediaProvider.upsert({
+    where: { id: "knaben" },
+    create: { id: "knaben", enabled: true },
+    update: { enabled: true },
+  });
+  const context = createAutomationTestContext(
+    db,
+    new CredentialCipher(randomBytes(32).toString("base64")),
+  );
+  const listing = StoredCandidateSchema.parse({
+    providerId: "knaben",
+    providerReleaseId: crypto.randomUUID(),
+    title: "Guide.Reservation.Fixture.S01E01.1080p.WEB-DL.H264.English-GROUP",
+    sizeBytes: 2_000_000_000,
+    seeders: 100,
+    infoHash: "a".repeat(40),
+    detailsUrl: "https://example.com",
+    download: {
+      kind: "magnet",
+      value: `magnet:?xt=urn:btih:${"a".repeat(40)}`,
     },
+    references: [
+      { namespace: "tmdb", value: String(series.tmdbId), kind: "series" },
+    ],
   });
-  const attempt = await cluster.database.acquisitionAttempt.create({
-    data: {
-      releaseId: release.id,
-      mediaIds: [media.id],
-      generations: { [media.id]: 7 },
-      state: "downloading",
-      operationId: crypto.randomUUID(),
-    },
+  context.providers = {
+    withProvider: async (_id, work) =>
+      work({ search: () => Promise.resolve([listing]) }),
+  };
+  const reservedProfile = await loadProfile(db, media.id);
+  if (reservedProfile === null)
+    throw new Error("Actual requested guide profile missing");
+  const candidates = await searchCandidates(context, media.id, reservedProfile);
+  expect(candidates).toHaveLength(1);
+  const attemptId = await reserveCandidate(context, input, {
+    releaseId: z.uuid().parse(candidates[0]),
+    profile: reservedProfile,
+    epoch: 0,
   });
-  await cluster.database.acquisitionReservation.create({
-    data: { mediaId: media.id, attemptId: attempt.id, generation: 7 },
+  const attempt = await db.acquisitionAttempt.findUniqueOrThrow({
+    where: { id: z.uuid().parse(attemptId) },
   });
+  expect(attempt).toMatchObject({
+    sponsorRequestId: requested.requestId,
+    operationId,
+    state: "reserved",
+  });
+  expect(
+    await db.acquisitionReservation.findUniqueOrThrow({
+      where: { mediaId_edition: { mediaId: media.id, edition: "default" } },
+    }),
+  ).toMatchObject({ attemptId: attempt.id, generation: input.generation });
   const before = await cluster.database.mediaIntent.findUniqueOrThrow({
     where: { mediaId_edition: { mediaId: media.id, edition: "default" } },
   });

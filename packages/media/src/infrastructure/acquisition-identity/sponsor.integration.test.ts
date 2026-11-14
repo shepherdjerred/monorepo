@@ -189,6 +189,7 @@ test.each([
           requesterUserId: managed.id,
           subtitleLanguages: [],
           includeSpecials: false,
+          keepingPolicy: "temporary",
         });
       }
       f.source.providerReleaseId = crypto.randomUUID();

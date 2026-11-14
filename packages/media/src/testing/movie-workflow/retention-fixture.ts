@@ -10,6 +10,9 @@ import { MovieOperationV4Schema } from "#shared/movie-editions/lifecycle/automat
 import { testPlexBindingExecution } from "#testing/plex-binding-execution.ts";
 import { createFixtureLifecycle } from "#testing/fixture-lifecycle.ts";
 import { createManagedMovieFixture } from "./managed-fixture.ts";
+import { completeFixtureRetentionInterests } from "#testing/retention-interest.ts";
+import { pendingInAppWarningHistory } from "#automation/retention/fixtures/elapsed.ts";
+import { refreshRetentionReceipts } from "#automation/notifications/retention-receipts.ts";
 
 /** Only retention policy time advances; publication, warning, receipt and authority clocks stay real. */
 export async function createMovieRetentionFixture(
@@ -59,6 +62,7 @@ export async function createMovieRetentionFixture(
           recipient: receipts.get(input.receipt) ?? null,
         }),
     };
+    await completeFixtureRetentionInterests(base, [f.scope.mediaId], edition);
     const target = await db.mediaIntent.findUniqueOrThrow({
       where: { mediaId_edition: { mediaId: f.scope.mediaId, edition } },
     });
@@ -114,6 +118,10 @@ export async function createMovieRetentionFixture(
             notificationId: delivery.id,
           }),
         ).toEqual({ status: "accepted", reason: null });
+        expect(
+          await refreshRetentionReceipts(context, [f.scope.mediaId], edition),
+        ).toBe(true);
+        await pendingInAppWarningHistory(db, [delivery.eventId]);
         return delivery;
       },
       close: async () => {

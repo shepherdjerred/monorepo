@@ -295,6 +295,18 @@ test("subtitle providers are never queried by torrent discovery", async () => {
 
 test("private provider throttling before torrent download leaves a safely retryable reservation", async () => {
   const data = await fixture();
+  await database().mediaProvider.create({
+    data: {
+      id: "privatehd",
+      enabled: true,
+      seedingPolicy: {
+        kind: "privatehd",
+        verified: true,
+        evidence: "Synthetic PrivateHD fixture obligation, not a live policy",
+        ratio: 1,
+      },
+    },
+  });
   const source = {
     ...data.source,
     providerId: "privatehd",

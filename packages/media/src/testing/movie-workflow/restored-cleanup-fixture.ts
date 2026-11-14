@@ -14,6 +14,9 @@ import { requestTestMovieV4 } from "#testing/movie-v4.ts";
 import { testPublicationExecution } from "#testing/publication-execution.ts";
 import { testPlexBindingExecution } from "#testing/plex-binding-execution.ts";
 import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import { completeFixtureRetentionInterests } from "#testing/retention-interest.ts";
+import { pendingInAppWarningHistory } from "#automation/retention/fixtures/elapsed.ts";
+import { refreshRetentionReceipts } from "#automation/notifications/retention-receipts.ts";
 
 /** Actual A→B upgrade, accepted warning, B quarantine/restore/rebind; only policy time and remote transports are synthetic. */
 export async function createRestoredMovieCleanupFixture(
@@ -61,6 +64,11 @@ export async function createRestoredMovieCleanupFixture(
           recipient: receipts.get(input.receipt) ?? null,
         }),
     };
+    await completeFixtureRetentionInterests(
+      context,
+      [f.scope.mediaId],
+      edition,
+    );
     const target = await f.db.mediaIntent.findUniqueOrThrow({
       where: { mediaId_edition: { mediaId: f.scope.mediaId, edition } },
     });
@@ -110,6 +118,10 @@ export async function createRestoredMovieCleanupFixture(
         notificationId: delivery.id,
       }),
     ).toEqual({ status: "accepted", reason: null });
+    expect(
+      await refreshRetentionReceipts(context, [f.scope.mediaId], edition),
+    ).toBe(true);
+    await pendingInAppWarningHistory(f.db, [delivery.eventId]);
     const evaluated = await evaluateMovieRetentionV4(
       context,
       retentionInput,

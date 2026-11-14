@@ -17,6 +17,7 @@ import { ManifestSchema } from "#filesystem/operations-types.ts";
 import { exists } from "#filesystem/operations-io.ts";
 import { workerFilePath } from "#automation/files/paths/locations.ts";
 import { physicalFile } from "#testing/movie-workflow/physical-file.ts";
+import { pendingInAppWarningHistory } from "#automation/retention/fixtures/elapsed.ts";
 
 /** Real initial scanner/adoption, HTTP household release, and Files/Network runtime; policy alone advances. */
 export async function createMovieHistoryReviewWorkflowFixture(
@@ -27,6 +28,7 @@ export async function createMovieHistoryReviewWorkflowFixture(
     actualMovieExclusion: true,
     canonicalStorage: true,
     startWorkflow,
+    retentionEligible: true,
   });
   let email: Awaited<ReturnType<typeof enableMovieFixtureEmail>> | undefined;
   try {
@@ -75,6 +77,7 @@ export async function createMovieHistoryReviewWorkflowFixture(
       f.db.notificationDelivery.findMany({
         where: {
           userId: f.member.id,
+          channel: { in: ["email", "discord"] },
           event: {
             kind: "retention_warning",
             mediaId: f.scope.mediaId,
@@ -91,6 +94,7 @@ export async function createMovieHistoryReviewWorkflowFixture(
     );
     return {
       input: f.input,
+      releasedInput: f.releasedInput,
       scope: f.scope,
       baseline: f.baseline,
       choice: f.choice,
@@ -138,6 +142,13 @@ export async function createMovieHistoryReviewWorkflowFixture(
       },
       async evidence() {
         const current = await decision();
+        const privateWarnings = await warnings();
+        const inAppWarnings =
+          privateWarnings.length === 0
+            ? []
+            : await pendingInAppWarningHistory(f.db, [
+                ...new Set(privateWarnings.map((row) => row.eventId)),
+              ]);
         const manifest =
           current?.manifest == null
             ? null
@@ -173,8 +184,12 @@ export async function createMovieHistoryReviewWorkflowFixture(
             where: { id: f.input.operationId },
             include: { outbox: true },
           }),
+          releasedOperation: await f.db.operation.findUniqueOrThrow({
+            where: { id: f.releasedInput.operationId },
+          }),
           decision: current,
-          warnings: await warnings(),
+          warnings: privateWarnings,
+          inAppWarnings,
           journals,
           messages: [...mail.messages],
           additions: wire.additions(),

@@ -1,6 +1,10 @@
 import { isDeepStrictEqual } from "node:util";
 import { z } from "zod";
 import type { Database } from "#infrastructure/database.ts";
+import type {
+  NotificationDelivery,
+  NotificationDeliveryAttempt,
+} from "#generated/prisma/client.ts";
 import { queryFixtureDatabase } from "#testing/query-client.ts";
 
 const historical = () => new Date(Date.now() - 8 * 86_400_000);
@@ -89,6 +93,70 @@ export function elapsedWarningClient(
   return client;
 }
 
+/** These fixtures deliberately prove private provider acceptance. In-app
+ * reminders remain unread and never acquire a fabricated provider send. */
+export async function pendingInAppWarningHistory(
+  db: Database,
+  eventIds: string[],
+) {
+  const rows = await db.notificationDelivery.findMany({
+    where: { eventId: { in: eventIds }, channel: "in_app" },
+    orderBy: { id: "asc" },
+  });
+  if (
+    rows.length === 0 ||
+    rows.some(
+      (row) =>
+        row.state !== "pending" ||
+        row.acceptedAt !== null ||
+        row.providerReceipt !== null ||
+        row.providerStatus !== null ||
+        row.reconciledAt !== null ||
+        row.recipientFingerprint !== null ||
+        row.attempts !== 0,
+    )
+  )
+    throw new Error(
+      "Unread in-app warnings changed without their recipient command",
+    );
+  const ids = rows.map((row) => row.id);
+  if (
+    (await db.notificationDeliveryAttempt.count({
+      where: { deliveryId: { in: ids } },
+    })) ||
+    (await db.operation.count({
+      where: { kind: "deliver_notification", targetId: { in: ids } },
+    }))
+  )
+    throw new Error(
+      "In-app warnings cannot have provider attempts or send operations",
+    );
+  return rows;
+}
+
+function requireCurrentPrivateReceipt(
+  delivery: NotificationDelivery,
+  attempt: NotificationDeliveryAttempt | undefined,
+) {
+  if (
+    attempt === undefined ||
+    delivery.state !== "accepted" ||
+    attempt.state !== "accepted" ||
+    delivery.providerReceipt === null ||
+    delivery.providerReceipt !== attempt.providerReceipt ||
+    delivery.recipientFingerprint !== attempt.recipientFingerprint ||
+    delivery.recoveryEpoch !== attempt.recoveryEpoch ||
+    delivery.providerStatus !== "delivered" ||
+    delivery.reconciledAt === null ||
+    delivery.reconciledAt.getTime() > Date.now() ||
+    Date.now() - delivery.reconciledAt.getTime() > 60_000
+  )
+    throw new Error(
+      "Actual private warning receipt is not current and accepted",
+    );
+  return attempt;
+}
+
 export async function warningHistory(db: Database, decisionId: string) {
   const decision = await db.retentionDecision.findUniqueOrThrow({
     where: { id: decisionId },
@@ -101,16 +169,29 @@ export async function warningHistory(db: Database, decisionId: string) {
     where: { eventId: { in: events.map((row) => row.id) } },
     orderBy: { id: "asc" },
   });
+  const inApp = await pendingInAppWarningHistory(
+    db,
+    events.map((row) => row.id),
+  );
+  const privateDeliveries = deliveries.filter(
+    (row) => row.channel !== "in_app",
+  );
+  if (privateDeliveries.length === 0)
+    throw new Error(
+      "Retention fixture requires actual accepted private delivery",
+    );
   const attempts = await db.notificationDeliveryAttempt.findMany({
     where: { deliveryId: { in: deliveries.map((row) => row.id) } },
     orderBy: { id: "asc" },
   });
-  for (const delivery of deliveries) {
+  for (const delivery of privateDeliveries) {
     const event = events.find((row) => row.id === delivery.eventId);
-    const attempt = attempts.find((row) => row.deliveryId === delivery.id);
+    const attempt = requireCurrentPrivateReceipt(
+      delivery,
+      attempts.find((row) => row.deliveryId === delivery.id),
+    );
     if (
       event === undefined ||
-      attempt === undefined ||
       delivery.acceptedAt === null ||
       attempt.finishedAt === null ||
       decision.createdAt > event.createdAt ||
@@ -126,11 +207,15 @@ export async function warningHistory(db: Database, decisionId: string) {
       where: { decisionId },
     }),
     events,
-    deliveries: deliveries.map((row) => ({
+    inApp,
+    deliveries: privateDeliveries.map((row) => ({
       id: row.id,
       eventId: row.eventId,
       userId: row.userId,
       channel: row.channel,
+      state: row.state,
+      recipientFingerprint: row.recipientFingerprint,
+      providerStatus: row.providerStatus,
       providerReceipt: row.providerReceipt,
       acceptedAt: row.acceptedAt,
       createdAt: row.createdAt,

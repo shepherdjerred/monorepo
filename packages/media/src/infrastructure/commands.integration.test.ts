@@ -233,6 +233,7 @@ test("simultaneous version-guarded Keep and remove commands cannot both commit",
     mediaId: media.id,
     subtitleLanguages: [],
     includeSpecials: false,
+    keepingPolicy: "temporary",
   });
   const current = await cluster.database.mediaItem.findUniqueOrThrow({
     where: { id: media.id },

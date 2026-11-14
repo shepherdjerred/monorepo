@@ -10,6 +10,12 @@ const Payload = z.object({
   data: z.string().optional(),
 });
 
+function scopedMovieBudgets(name: string) {
+  return name === "prepareSubtitleSpeechV1"
+    ? { startToClose: 3600, scheduleToClose: 7200 }
+    : { startToClose: 120, scheduleToClose: 180 };
+}
+
 /** SDK history proves the actual caller's budgets, not just mock Activity defaults. */
 export function assertScopedMovieActivityBudgets(
   history: Parameters<typeof historyToJSON>[0],
@@ -24,6 +30,7 @@ export function assertScopedMovieActivityBudgets(
     "prepareMoviePublicationV4",
     "promoteMovieFilesV4",
     "installMovieSubtitlesV4",
+    "prepareSubtitleSpeechV1",
   ]);
   const quotaMethods = new Set([
     "submitMovieTorrentV4",
@@ -37,13 +44,14 @@ export function assertScopedMovieActivityBudgets(
       typeof name === "string",
       "Movie history omitted its Activity identity",
     );
+    const budgets = scopedMovieBudgets(name);
     assert.equal(
       Number(activity.startToCloseTimeout?.seconds?.toString()),
-      120,
+      budgets.startToClose,
     );
     assert.equal(
       Number(activity.scheduleToCloseTimeout?.seconds?.toString()),
-      180,
+      budgets.scheduleToClose,
     );
     assert.equal(
       Number(activity.scheduleToStartTimeout?.seconds?.toString()),
@@ -70,7 +78,7 @@ export function assertScopedMovieActivityBudgets(
 /** Retention keeps the mature observation/Files budgets; acquisition validation stays separate. */
 export function assertScopedMovieRetentionActivityBudgets(
   history: Parameters<typeof historyToJSON>[0],
-  phase: "retention" | "warning" = "retention",
+  phase: "retention" | "warning" | "obsolete" = "retention",
 ) {
   const seen = new Set<string>();
   for (const event of history.events ?? []) {
@@ -87,9 +95,18 @@ export function assertScopedMovieRetentionActivityBudgets(
           "completeMovieRemovalV4",
           "finishMediaOperation",
         ]
-      : ["deliverMediaNotification", "finishMediaOperation"];
+      : phase === "warning"
+        ? ["deliverMediaNotification", "finishMediaOperation"]
+        : ["evaluateMovieRetentionV4", "finishMediaOperation"];
   for (const name of required)
     assert.ok(seen.has(name), `Retention history omitted ${name}`);
+  if (phase === "obsolete") {
+    assert.equal(seen.size, 2);
+    assert.ok(
+      [...seen].every((name) => required.includes(name)),
+      "Obsolete retention scheduled an effect or unrelated Activity",
+    );
+  }
 }
 
 type RetentionScheduledActivity = NonNullable<

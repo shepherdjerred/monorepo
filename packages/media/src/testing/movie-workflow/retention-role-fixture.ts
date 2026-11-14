@@ -15,7 +15,10 @@ import { RemovalPlanSchema } from "#automation/files/types.ts";
 import { ManifestSchema } from "#filesystem/operations-types.ts";
 import { workerFilePath } from "#automation/files/paths/locations.ts";
 import { physicalFile } from "#testing/movie-workflow/physical-file.ts";
-import { warningHistory } from "#automation/retention/fixtures/elapsed.ts";
+import {
+  pendingInAppWarningHistory,
+  warningHistory,
+} from "#automation/retention/fixtures/elapsed.ts";
 
 /** Real published/captioned bytes precede retention; only policy time advances from actual DB milestones. */
 export async function createMovieRetentionWorkflowFixture(
@@ -102,6 +105,25 @@ export async function createMovieRetentionWorkflowFixture(
     async evidence() {
       const current = await decision();
       const warnings = await deliveries();
+      const privateWarnings = warnings.filter(
+        (row) => row.channel !== "in_app",
+      );
+      const inApp =
+        warnings.length === 0
+          ? []
+          : await pendingInAppWarningHistory(f.db, [
+              ...new Set(warnings.map((row) => row.eventId)),
+            ]);
+      const reconciled =
+        privateWarnings.length > 0 &&
+        privateWarnings.every(
+          (row) =>
+            row.state === "accepted" &&
+            row.providerStatus === "delivered" &&
+            row.reconciledAt !== null &&
+            row.reconciledAt.getTime() <= Date.now() &&
+            Date.now() - row.reconciledAt.getTime() <= 60_000,
+        );
       const asset = await f.db.libraryAsset.findUniqueOrThrow({
         where: { id: f.asset.id },
         include: { subtitles: { orderBy: { id: "asc" } }, coverage: true },
@@ -183,13 +205,14 @@ export async function createMovieRetentionWorkflowFixture(
           where: { mediaId_edition: selected },
         }),
         decision: current,
-        deliveries: warnings,
+        deliveries: privateWarnings,
+        inAppDeliveries: inApp,
         asset,
         library,
         quarantined,
         journals,
         warningHistory:
-          current !== null && warnings.some((row) => row.acceptedAt !== null)
+          current !== null && reconciled
             ? await warningHistory(f.db, current.id)
             : null,
         policyAt,

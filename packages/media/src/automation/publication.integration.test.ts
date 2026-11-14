@@ -7,6 +7,7 @@ import { sharedTvFileFixture } from "./native-archive/fixtures/shared-tv.ts";
 import { preparePhysicalPublication } from "./plex-binding/test-fixture.ts";
 import { retentionPlexContext } from "./retention/fixtures/plex.ts";
 import { prepareBoundRetention } from "./retention/lifecycle.test-fixture.ts";
+import { seedFixtureReleasedEpisodes } from "#testing/retention-interest.ts";
 import { createMediaFileActivities } from "./files/activities.ts";
 import { defaultScope } from "#shared/editions/scope.ts";
 import { targetWhere } from "#infrastructure/editions/targets.ts";
@@ -27,6 +28,8 @@ test.each(["acquisition", "restore", "parallel acquisition"])(
     const db = database();
     const files = await sharedTvFileFixture(db, mappedPublicationFixture);
     directories.push(files.directory);
+    if (mode === "restore")
+      await seedFixtureReleasedEpisodes(db, files.user.id);
     if (mode === "parallel acquisition")
       onTestFinished(await grantTestManagedStorage(db));
     const published = await preparePhysicalPublication(files);

@@ -48,6 +48,7 @@ async function fixture(
   const db = h.database();
   const f = await movieFilesV4Fixture(db, h.context(), await h.fixture(), {
     bytes: options.bytes ?? bytes,
+    releaseGroup: "GROUP",
   });
   directories.push(f.files.directory);
   await options.beforeInspection?.(f);
@@ -249,6 +250,7 @@ async function provider(
               machine_translated: false,
               foreign_parts_only: true,
               hearing_impaired: true,
+              feature_details: { tmdb_id: f.media.tmdbId ?? undefined },
               files: [{ file_id: 1, file_name: filename }],
             },
           },

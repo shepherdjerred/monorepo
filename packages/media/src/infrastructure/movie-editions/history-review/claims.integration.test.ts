@@ -58,7 +58,7 @@ test.each(["default", "directors_cut"] as const)(
         definitionDigest: selected.definitionDigest,
         registryVersion: context.registryVersion,
       },
-      options: { subtitleLanguages: ["en"] },
+      options: { subtitleLanguages: ["en"], keepingPolicy: "temporary" },
     });
     const request: MigrationRecord = {
       kind: "request",

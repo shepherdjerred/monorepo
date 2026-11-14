@@ -78,7 +78,7 @@ test("an ordinary language-only request queues ASSRT and installs proven Simplif
                   producer: { source: "人工翻译" },
                   filelist: [
                     {
-                      f: "Film.2026.1080p.WEB-GROUP.zh-Hans.srt",
+                      f: "Test.Film.2026.1080p.WEB-DL.H264-GROUP.zh-Hans.srt",
                       url: "https://file0.assrt.net/fixture",
                     },
                   ],

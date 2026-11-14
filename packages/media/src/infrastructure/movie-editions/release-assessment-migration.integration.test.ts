@@ -1,16 +1,16 @@
 import { expect, test } from "vitest";
 import { automationTestHarness } from "#testing/automation.ts";
 import { captureMovieAttemptChoice } from "#infrastructure/movie-editions/authority.ts";
-import { chooseTestMovieEdition } from "#infrastructure/movie-editions/test-support.ts";
+import { chooseHistoricalTestMovieEdition } from "#testing/historical/movie-choice.ts";
 
 const h = automationTestHarness({
   migrationCeiling: "20261017002300_plex_association_binding",
 });
 
 test("assessment migration preserves literal pre-v4 choices, attempts, source snapshots and committed command replay", async () => {
-  const f = await h.fixture();
+  const f = await h.fixture("123", { chooseMovieEdition: false });
   const db = h.database();
-  const chosen = await chooseTestMovieEdition(db, {
+  const chosen = await chooseHistoricalTestMovieEdition(db, {
     actor: f.user,
     mediaId: f.media.id,
     access: { serverMachineId: "fixture-server", movieSectionId: "1" },
@@ -18,6 +18,10 @@ test("assessment migration preserves literal pre-v4 choices, attempts, source sn
   const request = await db.mediaRequest.findUniqueOrThrow({
     where: { id: chosen.result.requestId },
   });
+  expect(
+    await db.$queryRaw`SELECT to_jsonb(r) ? 'interestState' AS present
+    FROM "MediaRequest" r WHERE id=${request.id}`,
+  ).toEqual([{ present: false }]);
   const scope = {
     rootMediaId: f.media.id,
     mediaId: f.media.id,

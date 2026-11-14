@@ -8,6 +8,7 @@ import { automationTestHarness } from "#testing/automation.ts";
 import { sharedTvFileFixture } from "#automation/native-archive/fixtures/shared-tv.ts";
 import { mappedPublicationFixture } from "#automation/publication-proof/test-fixture.ts";
 import { prepareBoundRetention } from "#automation/retention/lifecycle.test-fixture.ts";
+import { seedFixtureReleasedEpisodes } from "#testing/retention-interest.ts";
 import { preparePhysicalPublication } from "#automation/plex-binding/test-fixture.ts";
 import { workerFilePath } from "./paths/locations.ts";
 import { fileFixture } from "./test-support.ts";
@@ -208,6 +209,7 @@ test("concurrent sibling restore operations receive complete shared-file receipt
   const db = harness.database();
   const f = await sharedTvFileFixture(db, mappedPublicationFixture);
   directories.push(f.directory);
+  await seedFixtureReleasedEpisodes(db, f.user.id);
   const original = await preparePhysicalPublication(f);
   const bound = await prepareBoundRetention(f, original, harness.context());
   const retention = bound.retention;

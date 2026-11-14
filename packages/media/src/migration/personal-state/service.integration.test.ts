@@ -6,6 +6,8 @@ import type { MigrationRecord } from "#shared/migration.ts";
 import { PrismaPersonalMigration } from "./service.ts";
 import { buildMovieRecoveryClaimsV3 } from "#infrastructure/recovery/legacy-claims/movie/projection.ts";
 import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import { lockDefaultScopes } from "#infrastructure/editions/locks.ts";
+import { defaultScope } from "#shared/editions/scope.ts";
 
 const harness = legacyClaimsHarness();
 
@@ -39,6 +41,19 @@ async function fixture(status = 5) {
     historyOnly: [],
   };
   return { ...f, service, selection };
+}
+
+async function establishCurrentMovieTarget(
+  f: Awaited<ReturnType<typeof fixture>>,
+) {
+  await f.db.$transaction((tx) =>
+    lockDefaultScopes(tx, [defaultScope(f.movie.id)], { createMissing: true }),
+  );
+  expect(
+    await f.db.mediaIntent.findUniqueOrThrow({
+      where: { mediaId_edition: defaultScope(f.movie.id) },
+    }),
+  ).toMatchObject({ editionRootId: f.movie.id });
 }
 
 test("independent Plex requester imports as Temporary/following without fabricated movie choice, watched state or transfer", async () => {
@@ -155,6 +170,7 @@ test.each(["migration_household_intent_review_required", "manual_owner_hold"])(
   "only the generated household hold releases after real source accounting (%s)",
   async (reason) => {
     const f = await fixture();
+    await establishCurrentMovieTarget(f);
     await f.db.mediaIntent.upsert({
       where: { mediaId_edition: { mediaId: f.movie.id, edition: "default" } },
       create: { mediaId: f.movie.id, libraryKeep: true },
@@ -210,6 +226,7 @@ test.each(["migration_household_intent_review_required", "manual_owner_hold"])(
 
 test("an additional unaccounted captured approval retains the generated hold", async () => {
   const f = await fixture();
+  await establishCurrentMovieTarget(f);
   await f.capture({ requesterSourceId: "unmapped-old-account" });
   await f.db.mediaIntent.upsert({
     where: { mediaId_edition: { mediaId: f.movie.id, edition: "default" } },
@@ -273,6 +290,7 @@ test("wrong native source lineage cannot account a captured approval", async () 
 
 test("an incomplete import without established library Keep cannot release the generated hold", async () => {
   const f = await fixture();
+  await establishCurrentMovieTarget(f);
   await f.db.mediaIntent.upsert({
     where: { mediaId_edition: { mediaId: f.movie.id, edition: "default" } },
     create: { mediaId: f.movie.id, libraryKeep: false },
@@ -296,4 +314,49 @@ test("an incomplete import without established library Keep cannot release the g
     where: { mediaId_edition: { mediaId: f.movie.id, edition: "default" } },
   });
   expect(hold.releasedAt).toBeNull();
+});
+
+test("an unclassified historical movie target requires genuine lineage review before source claims can activate", async () => {
+  const f = await fixture();
+  const importsBefore = await f.db.applicationEvent.count({
+    where: { kind: "personal_state_imported" },
+  });
+  const target = await f.db.mediaIntent.create({
+    data: { mediaId: f.movie.id, libraryKeep: true },
+  });
+  expect(target.editionRootId).toBeNull();
+  const hold = await f.db.recoveryHold.create({
+    data: {
+      mediaId: f.movie.id,
+      recoveryEpoch: 0,
+      reason: "migration_household_intent_review_required",
+    },
+  });
+  const preview = await f.service.preview(f.owner, f.selection);
+  await expect(
+    f.service.apply(f.owner, crypto.randomUUID(), {
+      ...f.selection,
+      previewHash: preview.previewHash,
+      acknowledgeExistingLibraryKeep: true,
+      acknowledgeTemporaryFollowingClaims: true,
+    }),
+  ).rejects.toMatchObject({ code: "lineage_unresolved" });
+  expect(
+    await f.db.mediaRequest.count({ where: { mediaId: f.movie.id } }),
+  ).toBe(0);
+  expect(
+    await f.db.mediaIntent.findUniqueOrThrow({
+      where: { mediaId_edition: defaultScope(f.movie.id) },
+    }),
+  ).toEqual(target);
+  expect(
+    await f.db.recoveryHold.findUniqueOrThrow({
+      where: { mediaId_edition: defaultScope(f.movie.id) },
+    }),
+  ).toEqual(hold);
+  expect(
+    await f.db.applicationEvent.count({
+      where: { kind: "personal_state_imported" },
+    }),
+  ).toBe(importsBefore);
 });

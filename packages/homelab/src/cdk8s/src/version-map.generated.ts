@@ -3,6 +3,7 @@ import { z } from "zod";
 
 export const VersionMapSchema = z
   .object({
+    ffsubsync: z.string(),
     "realm/SwiftLint": z.string(),
     "docker.io/library/swift": z.string(),
     "bluemap/archive-cli": z.string(),

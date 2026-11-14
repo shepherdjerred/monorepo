@@ -5,7 +5,10 @@ import { automationTestHarness } from "#testing/automation.ts";
 import { movieVideoFixture } from "#testing/movie-video.ts";
 import { requestTestMovieV4 } from "#testing/movie-v4.ts";
 import { testPlexBindingExecution } from "#testing/plex-binding-execution.ts";
-import { libraryBindingFixture } from "#automation/plex-binding/library.test-fixture.ts";
+import {
+  libraryBindingFixture,
+  libraryCaptionFilename,
+} from "#automation/plex-binding/library.test-fixture.ts";
 import { verifyLibraryPlexBinding } from "#automation/plex-binding/library.ts";
 import { LibraryPlexBindingInputV1Schema } from "#shared/plex-binding/activities.ts";
 import {
@@ -45,7 +48,7 @@ test.each(MovieEditionKeySchema.options)(
       (directory) => {
         directories.push(directory);
       },
-      { bytes },
+      { bytes, fileName: libraryCaptionFilename(edition) },
     );
     const scope = {
       mediaId: f.network.media.id,

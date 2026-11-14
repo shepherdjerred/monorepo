@@ -1,14 +1,29 @@
-import { afterAll, beforeAll, expect, test } from "vitest";
+import { afterAll, afterEach, beforeAll, expect, test } from "vitest";
 import { randomBytes } from "node:crypto";
+import { rm } from "node:fs/promises";
+import { z } from "zod";
 import { startMediaTestPostgres } from "#testing/postgres.ts";
-import { grantTestLease } from "#testing/authority.ts";
 import { CredentialCipher } from "#application/security.ts";
-import { lockDefaultScopes } from "#infrastructure/editions/locks.ts";
+import { createAutomationTestContext } from "#testing/automation.ts";
+import { mappedPublicationFixture } from "#automation/publication-proof/test-fixture.ts";
+import { preparePhysicalPublication } from "#automation/plex-binding/test-fixture.ts";
+import { retentionPlexContext } from "#automation/retention/fixtures/plex.ts";
+import { createPublicationActivities } from "#automation/publication.ts";
+import { createRetentionActivities } from "#automation/retention.ts";
+import {
+  observeRequesterWatch,
+  queueRetentionCheck,
+} from "#automation/watch.ts";
 import { RequestInterestCommands } from "#infrastructure/request-interest/commands.ts";
 import { removalNoticeAcceptance } from "#infrastructure/request-interest/notice-proof.ts";
 import { NotificationDeliveryCommands } from "./commands.ts";
 
 let cluster: Awaited<ReturnType<typeof startMediaTestPostgres>>;
+const directories: string[] = [];
+afterEach(async () => {
+  for (const directory of directories.splice(0))
+    await rm(directory, { recursive: true, force: true });
+});
 beforeAll(async () => {
   cluster = await startMediaTestPostgres();
   await cluster.database.mediaRuntimeState.update({
@@ -22,7 +37,15 @@ afterAll(async () => {
 
 async function fixture() {
   const db = cluster.database;
-  await grantTestLease(db);
+  const files = await mappedPublicationFixture(db);
+  directories.push(files.directory);
+  const cipher = new CredentialCipher(randomBytes(32).toString("base64"));
+  const published = await preparePhysicalPublication(files);
+  const transport = await retentionPlexContext(
+    db,
+    createAutomationTestContext(db, cipher),
+    [files.media.id],
+  );
   const owner = await db.mediaUser.create({
     data: {
       plexAccountId: crypto.randomUUID(),
@@ -30,26 +53,30 @@ async function fixture() {
       role: "owner",
     },
   });
-  const member = await db.mediaUser.create({
-    data: {
-      plexAccountId: crypto.randomUUID(),
-      displayName: "Recipient",
-    },
-  });
-  const media = await db.mediaItem.create({
-    data: { kind: "series", title: "Finished temporary show" },
-  });
-  await db.$transaction((tx) =>
-    lockDefaultScopes(tx, [{ mediaId: media.id, edition: "default" }], {
-      createMissing: true,
-    }),
-  );
-  const request = await db.mediaRequest.create({
+  const member = files.user;
+  const media = files.media;
+  await db.credential.create({
     data: {
       userId: member.id,
-      mediaId: media.id,
-      keepingPolicy: "temporary",
+      kind: "plex",
+      ciphertext: cipher.encrypt(
+        JSON.stringify({ serverToken: `synthetic-requester:${member.id}` }),
+        `plex:${member.plexAccountId}`,
+      ),
     },
+  });
+  const publication = createPublicationActivities(transport.context);
+  expect(await publication.publishMediaToPlex(published.input)).toEqual({
+    status: "available",
+    reason: null,
+  });
+  await publication.finalizeMediaAcquisition(published.input);
+  expect(await observeRequesterWatch(transport.context, media.id)).toEqual({
+    complete: true,
+    reason: null,
+  });
+  const request = await db.mediaRequest.findUniqueOrThrow({
+    where: { id: files.request.id },
   });
   const interestCommands = new RequestInterestCommands(db, { keepDays: 30 });
   await interestCommands.execute(member, crypto.randomUUID(), {
@@ -64,39 +91,43 @@ async function fixture() {
       mediaId_edition: { mediaId: media.id, edition: "default" },
     },
   });
-  const decision = await db.retentionDecision.create({
-    data: {
-      mediaId: media.id,
-      generation: intent.generation,
-      state: "warning_pending",
-      evidence: {},
+  const bucket = `reminder-fixture:${crypto.randomUUID()}`;
+  await queueRetentionCheck(transport.context, media.id, bucket);
+  const operation = await db.operation.findUniqueOrThrow({
+    where: {
+      idempotencyKey: `retention:${media.id}:${String(intent.generation)}:${bucket}`,
     },
   });
-  const event = await db.applicationEvent.create({
-    data: {
-      mediaId: media.id,
-      kind: "retention_warning",
-      payload: { decisionId: decision.id, generation: intent.generation },
+  const warning = await createRetentionActivities(
+    transport.context,
+  ).evaluateMediaRetention(
+    z
+      .object({ operationId: z.uuid(), mediaId: z.uuid(), generation: z.int() })
+      .parse(operation.payload),
+  );
+  expect(warning).toMatchObject({ status: "warning" });
+  const decision = await db.retentionDecision.findUniqueOrThrow({
+    where: { id: z.uuid().parse(warning.decisionId) },
+  });
+  const event = await db.applicationEvent.findUniqueOrThrow({
+    where: {
+      id: z.object({ warningEventId: z.uuid() }).parse(decision.evidence)
+        .warningEventId,
     },
   });
-  await db.retentionDecision.update({
-    where: { id: decision.id },
-    data: {
-      evidence: { warningEventId: event.id, recoveryEpoch: 0 },
-    },
+  const delivery = await db.notificationDelivery.findFirstOrThrow({
+    where: { eventId: event.id, userId: member.id, channel: "in_app" },
   });
-  const delivery = await db.notificationDelivery.create({
-    data: {
-      eventId: event.id,
-      userId: member.id,
-      channel: "in_app",
-      state: "pending",
-      recoveryEpoch: 0,
-    },
-  });
+  expect(intent.automationEpoch).toBe(delivery.recoveryEpoch);
+  expect(
+    await db.retentionPlexProjection.count({
+      where: { decisionId: decision.id },
+    }),
+  ).toBe(1);
+  expect(delivery).toMatchObject({ state: "pending", acceptedAt: null });
   const commands = new NotificationDeliveryCommands(
     db,
-    new CredentialCipher(randomBytes(32).toString("base64")),
+    cipher,
     "https://media.fixture",
   );
   return {

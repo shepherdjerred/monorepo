@@ -24,14 +24,15 @@ export function targetHarness() {
   });
   async function setup() {
     const db = harness.database();
-    const f = await fileFixture(db);
+    const f = await fileFixture(db, undefined, {
+      sourceFilename: "Test.Film.2026.1080p.WEB-DL.H264-GROUP.mkv",
+    });
     directories.push(f.directory);
     const video = await f.published();
     const asset = await db.libraryAsset.update({
       where: { id: video.entry.assetId },
       data: {
         plexPublishedAt: new Date(),
-        sourcePath: "/downloads/Film.2026.1080p.WEB-GROUP.mkv",
       },
     });
     await db.mediaItem.update({
@@ -136,7 +137,7 @@ export function subtitleTransport(
       const input = z.object({ file_id: z.number() }).parse(body);
       return Response.json({
         link: `https://dl.opensubtitles.com/${String(input.file_id)}.srt`,
-        file_name: `Film.2026.1080p.WEB-GROUP.en${input.file_id === 2 ? ".forced" : ""}.srt`,
+        file_name: `Test.Film.2026.1080p.WEB-DL.H264-GROUP.en${input.file_id === 2 ? ".forced" : ""}.srt`,
       });
     }
     if (url.hostname === "dl.opensubtitles.com")
@@ -173,7 +174,7 @@ function searchResponse(
           files: [
             {
               file_id: forced ? 2 : 1,
-              file_name: `Film.2026.1080p.WEB-GROUP.en${forced ? ".forced" : ""}.srt`,
+              file_name: `Test.Film.2026.1080p.WEB-DL.H264-GROUP.en${forced ? ".forced" : ""}.srt`,
             },
           ],
         },

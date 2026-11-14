@@ -32,7 +32,10 @@ function service(value: string) {
   );
 }
 function source(value: string) {
-  return value.replace(/-(?:480|576|720|1080|2160)p$/u, "").toLowerCase();
+  const name = value.replace(/-(?:480|576|720|1080|2160)p$/u, "").toLowerCase();
+  // Radarr's measured WEBDL vocabulary and release-parser WEB describe the
+  // same source. WEBRip remains a distinct source.
+  return name === "webdl" || name === "web-dl" ? "web" : name;
 }
 function codec(value: string) {
   return value

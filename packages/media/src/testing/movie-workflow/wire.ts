@@ -24,6 +24,7 @@ export function movieWorkflowWire(
     year?: number;
     resolution?: 1080 | 2160;
     sceneStyle?: boolean;
+    releaseGroup?: string;
     providerReleaseId?: string;
     ratingKey?: string;
     partId?: number;
@@ -36,7 +37,7 @@ export function movieWorkflowWire(
 ) {
   const hash = randomBytes(20).toString("hex");
   const label = MOVIE_EDITION_REGISTRY[input.edition].plexLabel;
-  const title = `${(input.title ?? "Workflow Fixture").replaceAll(" ", ".")}.${String(input.year ?? 2020)}${label === "" ? "" : `.${label.replaceAll(" ", ".")}`}.${String(input.resolution ?? 1080)}p.WEB-DL.H264.${input.sceneStyle === true ? "English-MEDIA" : "ENG"}`;
+  const title = `${(input.title ?? "Workflow Fixture").replaceAll(" ", ".")}.${String(input.year ?? 2020)}${label === "" ? "" : `.${label.replaceAll(" ", ".")}`}.${String(input.resolution ?? 1080)}p.WEB-DL.H264${input.releaseGroup === undefined ? "" : `-${input.releaseGroup}`}.${input.sceneStyle === true ? "English-MEDIA" : "ENG"}`;
   const name = `${title}.mkv`;
   let torrent: Record<string, unknown> | null = null;
   let adds = 0;

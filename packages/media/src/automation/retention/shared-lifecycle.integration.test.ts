@@ -10,6 +10,7 @@ import { observeRequesterWatch } from "#automation/watch.ts";
 import { readCurrentPlexBindings } from "#infrastructure/plex-binding/read.ts";
 import { prepareBoundRetention } from "./lifecycle.test-fixture.ts";
 import { preparePhysicalPublication } from "#automation/plex-binding/test-fixture.ts";
+import { seedFixtureReleasedEpisodes } from "#testing/retention-interest.ts";
 
 const harness = automationTestHarness();
 let fixture: Awaited<ReturnType<typeof prepareBoundRetention>> | undefined;
@@ -20,6 +21,7 @@ beforeEach(async () => {
     mappedPublicationFixture,
   );
   directory = files.directory;
+  await seedFixtureReleasedEpisodes(harness.database(), files.user.id);
   fixture = await prepareBoundRetention(
     files,
     await preparePhysicalPublication(files),

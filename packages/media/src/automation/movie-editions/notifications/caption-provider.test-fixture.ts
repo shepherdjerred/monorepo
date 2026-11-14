@@ -60,6 +60,9 @@ export async function captionProviderFixture(
                     machine_translated: false,
                     foreign_parts_only: false,
                     hearing_impaired: false,
+                    feature_details: {
+                      tmdb_id: query.scoreReferenceV1?.tmdbId ?? undefined,
+                    },
                     files: [{ file_id: 1, file_name: filename }],
                   },
                 },

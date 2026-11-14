@@ -20,6 +20,7 @@ import { requireStorageAuthority } from "#infrastructure/handoff/storage.ts";
 import type { fileFixture } from "#automation/files/test-support.ts";
 import { createNativeQuarantineFileActivities } from "./activities.ts";
 import { storedWorkerPath } from "#automation/files/paths/locations.ts";
+import { seedFixtureReleasedEpisodes } from "#testing/retention-interest.ts";
 
 type QuarantineFixtureSource = {
   file: Awaited<ReturnType<typeof fileFixture>>;
@@ -49,6 +50,8 @@ export async function nativeQuarantineFixture(
         throw new Error(
           "Bound quarantine requires canonical mapping and its trusted server before first publication",
         );
+      if (options.quarantine === undefined && file.media.kind === "episode")
+        await seedFixtureReleasedEpisodes(db, file.user.id);
       return file;
     },
     publication: preparePhysicalPublication,

@@ -4,6 +4,7 @@ import path from "node:path";
 import { z } from "zod";
 import { startMediaTestPostgres } from "#testing/postgres.ts";
 import { adoptedMovieFixture } from "#testing/library-movie.ts";
+import { libraryCaptionFilename } from "#automation/plex-binding/library.test-fixture.ts";
 import { movieVideoFixture } from "#testing/movie-video.ts";
 import { MovieEditionKeySchema } from "#shared/movie-editions/registry.ts";
 import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
@@ -188,6 +189,9 @@ async function provider(f: Awaited<ReturnType<typeof adoptedMovieFixture>>) {
                     machine_translated: false,
                     foreign_parts_only: false,
                     hearing_impaired: false,
+                    feature_details: {
+                      tmdb_id: query.scoreReferenceV1?.tmdbId ?? undefined,
+                    },
                     files: [{ file_id: 1, file_name: filename }],
                   },
                 },
@@ -217,7 +221,7 @@ test.each(MovieEditionKeySchema.options)(
   async (edition) => {
     const f = await adoptedMovieFixture(
       cluster.database,
-      { bytes, edition },
+      { bytes, edition, fileName: libraryCaptionFilename(edition) },
       (directory) => directories.push(directory),
     );
     expect(

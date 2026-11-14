@@ -6,7 +6,10 @@ import { createAutomationTestContext } from "#testing/automation.ts";
 import { verifiedPublicationFixture } from "#automation/publication-proof/verified.test-fixture.ts";
 import { mappedPublicationFixture } from "#automation/publication-proof/test-fixture.ts";
 import { sharedTvFileFixture } from "#automation/native-archive/fixtures/shared-tv.ts";
-import { elapsedWarningClient } from "#automation/retention/fixtures/elapsed.ts";
+import {
+  elapsedWarningClient,
+  pendingInAppWarningHistory,
+} from "#automation/retention/fixtures/elapsed.ts";
 import { boundRetentionFixture } from "#automation/retention/lifecycle.test-fixture.ts";
 import { startMediaTestPostgres } from "#testing/postgres.ts";
 import { CredentialCipher } from "#application/security.ts";
@@ -16,6 +19,10 @@ import type { MediaAutomationContext } from "./context.ts";
 import { createRetentionActivities } from "./retention.ts";
 import { createNotificationActivities } from "./notifications.ts";
 import { createSubtitleActivities } from "./subtitles.ts";
+import {
+  completeFixtureRetentionInterests,
+  seedFixtureReleasedEpisodes,
+} from "#testing/retention-interest.ts";
 
 let cluster: Awaited<ReturnType<typeof startMediaTestPostgres>>;
 const directories: string[] = [];
@@ -33,14 +40,22 @@ afterAll(async () => {
   if (cluster !== undefined) await cluster.close();
 });
 
+async function privateWarningDelivery(userId: string) {
+  const delivery = await cluster.database.notificationDelivery.findFirstOrThrow(
+    {
+      where: { userId, channel: "email", event: { kind: "retention_warning" } },
+    },
+  );
+  await pendingInAppWarningHistory(cluster.database, [delivery.eventId]);
+  return delivery;
+}
+
 test("observe mode and a changed recovery epoch cannot send restored pending notifications", async () => {
   const item = await fixture();
   await createRetentionActivities(item.context).evaluateMediaRetention(
     item.input,
   );
-  const delivery = await cluster.database.notificationDelivery.findFirstOrThrow(
-    { where: { userId: item.user.id } },
-  );
+  const delivery = await privateWarningDelivery(item.user.id);
   const input = {
     operationId: item.input.operationId,
     notificationId: delivery.id,
@@ -90,7 +105,14 @@ async function fixture(episode = false, elapsedWarning = false) {
     createAutomationTestContext(db, cipher),
     undefined,
     episode
-      ? (currentDb) => sharedTvFileFixture(currentDb, mappedPublicationFixture)
+      ? async (currentDb) => {
+          const files = await sharedTvFileFixture(
+            currentDb,
+            mappedPublicationFixture,
+          );
+          await seedFixtureReleasedEpisodes(currentDb, files.user.id);
+          return files;
+        }
       : mappedPublicationFixture,
   );
   directories.push(produced.files.directory);
@@ -104,9 +126,6 @@ async function fixture(episode = false, elapsedWarning = false) {
       emailVerifiedAt: new Date(),
       notificationPreference: { create: { emailEnabled: true } },
     },
-  });
-  const target = await db.mediaIntent.findUniqueOrThrow({
-    where: { mediaId_edition: { mediaId: media.id, edition: "default" } },
   });
   await db.credential.create({
     data: {
@@ -152,6 +171,13 @@ async function fixture(episode = false, elapsedWarning = false) {
       return { receipt: "fixture-receipt" };
     },
   };
+  await completeFixtureRetentionInterests(
+    { ...context, db },
+    produced.published.attempt.mediaIds,
+  );
+  const target = await db.mediaIntent.findUniqueOrThrow({
+    where: { mediaId_edition: { mediaId: media.id, edition: "default" } },
+  });
   return {
     context,
     media,
@@ -173,11 +199,7 @@ test("requires accepted warning and seven full days, then a fresh playback/hold 
   await expect(
     retention.evaluateMediaRetention(item.input),
   ).resolves.toMatchObject({ status: "warning" });
-  const delivery = await cluster.database.notificationDelivery.findFirstOrThrow(
-    {
-      where: { userId: item.user.id },
-    },
-  );
+  const delivery = await privateWarningDelivery(item.user.id);
   await expect(
     createNotificationActivities(item.context).deliverMediaNotification({
       operationId: "notification",
@@ -204,6 +226,7 @@ test("requires accepted warning and seven full days, then a fresh playback/hold 
     await cluster.database.notificationDelivery.findFirstOrThrow({
       where: {
         userId: due.files.user.id,
+        channel: "email",
         event: { kind: "retention_warning" },
       },
     });
@@ -236,11 +259,7 @@ test("unknown delivery is not retried or counted as acceptance", async () => {
   const item = await fixture();
   const retention = createRetentionActivities(item.context);
   await retention.evaluateMediaRetention(item.input);
-  const delivery = await cluster.database.notificationDelivery.findFirstOrThrow(
-    {
-      where: { userId: item.user.id },
-    },
-  );
+  const delivery = await privateWarningDelivery(item.user.id);
   const notifications = createNotificationActivities(item.context);
   item.observation.loseResponse = true;
   const input = { operationId: "notification", notificationId: delivery.id };
@@ -266,9 +285,7 @@ test("a late bounce revokes grace and explicit retry starts seven fresh days", a
   const retention = createRetentionActivities(item.context);
   const notifications = createNotificationActivities(item.context);
   await retention.evaluateMediaRetention(item.input);
-  const delivery = await cluster.database.notificationDelivery.findFirstOrThrow(
-    { where: { userId: item.user.id } },
-  );
+  const delivery = await privateWarningDelivery(item.user.id);
   const input = { operationId: "notification", notificationId: delivery.id };
   await notifications.deliverMediaNotification(input);
   await retention.evaluateMediaRetention(item.input);
@@ -327,9 +344,7 @@ test.each(["keep", "unknown_watch", "unwatched", "preferences"] as const)(
       item.input,
     );
     const db = cluster.database;
-    const delivery = await db.notificationDelivery.findFirstOrThrow({
-      where: { userId: item.user.id },
-    });
+    const delivery = await privateWarningDelivery(item.user.id);
     if (change === "keep")
       await db.retentionHold.create({
         data: { userId: item.user.id, mediaId: item.media.id, isPin: true },

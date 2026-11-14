@@ -5,6 +5,7 @@ import { grantTestRequesterAccess } from "#testing/authority.ts";
 import { sharedTvFileFixture } from "#automation/native-archive/fixtures/shared-tv.ts";
 import { mappedPublicationFixture } from "#automation/publication-proof/test-fixture.ts";
 import { prepareBoundRetention } from "#automation/retention/lifecycle.test-fixture.ts";
+import { seedFixtureReleasedEpisodes } from "#testing/retention-interest.ts";
 import { preparePhysicalPublication } from "#automation/plex-binding/test-fixture.ts";
 import { PrismaMediaCommands } from "#infrastructure/commands.ts";
 import { observeRequesterWatch } from "#automation/watch.ts";
@@ -29,6 +30,7 @@ test.each([true, false])(
     const db = harness.database();
     const files = await sharedTvFileFixture(db, mappedPublicationFixture);
     directories.push(files.directory);
+    await seedFixtureReleasedEpisodes(db, files.user.id);
     const second = await db.mediaUser.create({
       data: {
         plexAccountId: crypto.randomUUID(),

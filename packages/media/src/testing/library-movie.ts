@@ -16,14 +16,16 @@ import { createAutomationTestContext } from "./automation.ts";
 /** Actual reviewed handoff and initial owner; the adopted file has no download attempt. */
 export async function adoptedMovieFixture(
   db: Database,
-  options: { bytes: Uint8Array; edition: MovieEditionKey },
+  options: { bytes: Uint8Array; edition: MovieEditionKey; fileName?: string },
   directoryCreated: (path: string) => void,
 ) {
   const label = MOVIE_EDITION_REGISTRY[options.edition].plexLabel;
   const f = await handoffFixture(db, {
     bytes: options.bytes,
     initialEdition: options.edition,
-    fileName: `Synthetic Film (2020)${options.edition === "default" ? "" : ` {edition-${label}}`}.1080p.ENG.mkv`,
+    fileName:
+      options.fileName ??
+      `Synthetic Film (2020)${options.edition === "default" ? "" : ` {edition-${label}}`}.1080p.ENG.mkv`,
     extendReport({ report, manifest, target }) {
       directoryCreated(path.dirname(path.dirname(target)));
       const manager = manifest.captures.find(

@@ -64,6 +64,7 @@ test("actual unconfigured-section discovery returns only personal protection and
       CreateRequestSchema.parse({
         mediaId: other.id,
         subtitleLanguages: [],
+        keepingPolicy: "temporary",
         includeFutureEpisodes: false,
         includeSpecials: false,
       }),

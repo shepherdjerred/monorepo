@@ -10,11 +10,15 @@ type AccessMode =
 /** Real movie consent and registered-device resolver; only Plex's HTTP responses are synthetic. */
 export async function movieRequesterAccessFixture(
   bytes: Uint8Array = new Uint8Array([1]),
+  options: { releaseGroup?: string } = {},
 ) {
   const accountId = "81001";
   const f = await createMovieWorkflowFixture("default", {
     bytes,
     plexAccountId: accountId,
+    ...(options.releaseGroup === undefined
+      ? {}
+      : { releaseGroup: options.releaseGroup }),
   });
   const { db, context, user } = f.source;
   const device = generateKeyPairSync("ed25519");

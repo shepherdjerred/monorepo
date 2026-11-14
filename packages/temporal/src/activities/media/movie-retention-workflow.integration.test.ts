@@ -117,6 +117,16 @@ test.each([
         evidence.deliveries.every((delivery) => delivery.state === "accepted"),
       );
       expect(accepted.deliveries).toHaveLength(1);
+      expect(accepted.inAppDeliveries).toHaveLength(1);
+      expect(accepted.inAppDeliveries[0]).toMatchObject({
+        state: "pending",
+        acceptedAt: null,
+        providerReceipt: null,
+        providerStatus: null,
+        reconciledAt: null,
+        recipientFingerprint: null,
+        attempts: 0,
+      });
       expect(accepted.deliveries[0]?.acceptedAt?.getTime()).toBeLessThanOrEqual(
         Date.now(),
       );
@@ -172,6 +182,7 @@ test.each([
 );
 
 function assertActualQuarantine(initial: Evidence, quarantined: Evidence) {
+  expect(quarantined.warningHistory).not.toBeNull();
   expect(quarantined.asset).toMatchObject({
     state: "quarantined",
     edition: initial.asset.edition,
@@ -229,6 +240,7 @@ function assertActualPurge(
       .every((journal) => journal.phase === "complete"),
   ).toBe(true);
   expect(final.warningHistory).toEqual(quarantined.warningHistory);
+  expect(final.inAppDeliveries).toEqual(quarantined.inAppDeliveries);
   expect(final.publication).toEqual(initial.publication);
   expect(final.transitions).toEqual(initial.transitions);
   expect(final.binding).toEqual(quarantined.binding);

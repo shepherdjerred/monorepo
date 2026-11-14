@@ -1,5 +1,6 @@
 import { rm } from "node:fs/promises";
 import { z } from "zod";
+import { expect } from "vitest";
 import type { Database } from "#infrastructure/database.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
 import type { fileFixture } from "#automation/files/test-support.ts";
@@ -17,6 +18,8 @@ import {
   preparePhysicalPublication,
 } from "#automation/plex-binding/test-fixture.ts";
 import { retentionPlexContext } from "./fixtures/plex.ts";
+import { completeFixtureRetentionInterests } from "#testing/retention-interest.ts";
+import { refreshRetentionReceipts } from "#automation/notifications/retention-receipts.ts";
 import {
   elapsedWarningClient,
   warningHistory,
@@ -72,6 +75,7 @@ export async function prepareBoundRetention(
         `Actual retention watch failed: ${JSON.stringify(watch)}`,
       );
   }
+  await completeFixtureRetentionInterests(context, attempt.mediaIds);
   const target = await db.mediaIntent.findUniqueOrThrow({
     where: { mediaId_edition: { mediaId: files.media.id, edition: "default" } },
   });
@@ -108,7 +112,7 @@ export async function prepareBoundRetention(
       .object({ warningEventId: z.string() })
       .parse(decision.evidence).warningEventId;
     const deliveries = await db.notificationDelivery.findMany({
-      where: { eventId },
+      where: { eventId, channel: { in: ["email", "discord"] } },
     });
     if (deliveries.length === 0)
       throw new Error("Actual warning producer omitted recipient delivery");
@@ -128,6 +132,7 @@ export async function prepareBoundRetention(
         );
     }
   }
+  expect(await refreshRetentionReceipts(context, attempt.mediaIds)).toBe(true);
   const history = await Promise.all(
     decisions.map(async (decision) => ({
       decisionId: decision.id,

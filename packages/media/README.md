@@ -480,6 +480,41 @@ Media inspection tests also require `ffmpeg` and `ffprobe` on `PATH`; the CI and
 Temporal images install them. The repository's mise configuration supplies the
 upstream `7zz` command used for bounded subtitle archive extraction.
 
+### Native subtitle tools
+
+Native caption and Workflow checks require real `media-subtitle-analysis` and
+`ffsubsync` commands. `runMediaTool` uses the credential-free fixed search path
+`/usr/local/bin:/usr/bin:/bin:/opt/homebrew/bin`; activating a shell virtualenv
+does not expose its tools to the worker. Missing tools fail these checks rather
+than skipping speech measurement or timing alignment.
+
+From the repository root, reproduce the Temporal Dockerfile's isolated,
+hash-locked environment with the matching analysis script:
+
+```sh
+subtitle_tools="$HOME/.cache/media-subtitle-tools-0.5.1"
+uv venv --python 3.13 "$subtitle_tools"
+uv pip install --python "$subtitle_tools/bin/python" --require-hashes --only-binary :all: -r packages/media/scripts/subtitle-build-requirements.txt
+uv pip install --python "$subtitle_tools/bin/python" --require-hashes --no-build-isolation -r packages/media/scripts/subtitle-requirements.txt
+cp packages/media/scripts/subtitle-analysis.py "$subtitle_tools/analysis.py"
+"$subtitle_tools/bin/python" -c 'from importlib.metadata import version; assert version("ffsubsync") == "0.5.1"'
+printf '%s\n' '#!/bin/sh' "exec \"$subtitle_tools/bin/python\" \"$subtitle_tools/analysis.py\" \"\$@\"" > "$subtitle_tools/media-subtitle-analysis"
+chmod +x "$subtitle_tools/media-subtitle-analysis"
+```
+
+Inspect existing command entries before installation. In a writable directory
+already in the fixed search path, expose the two entrypoints without replacing
+unrelated tools; for example, on a Homebrew Apple Silicon host:
+
+```sh
+ln -s "$subtitle_tools/bin/ffsubsync" /opt/homebrew/bin/ffsubsync
+ln -s "$subtitle_tools/media-subtitle-analysis" /opt/homebrew/bin/media-subtitle-analysis
+```
+
+Keep both lock files and `subtitle-analysis.py` from the same checkout used for
+verification. The wrapper retains absolute interpreter/script paths; no worker
+search-path change or system Python package installation is needed.
+
 ### Local system acceptance
 
 With Docker running, the peer check uses the catalog-pinned qBittorrent image,

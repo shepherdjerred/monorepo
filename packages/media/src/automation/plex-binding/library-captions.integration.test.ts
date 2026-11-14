@@ -18,7 +18,10 @@ import { subtitleTargetsReady } from "#automation/subtitles/authority.ts";
 import { findMovieSubtitlesV4 } from "#automation/movie-editions/subtitles/network.ts";
 import { installMovieSubtitlesV4 } from "#automation/files/movie-editions/subtitles.ts";
 import { captionProviderFixture } from "#automation/movie-editions/notifications/caption-provider.test-fixture.ts";
-import { libraryBindingFixture } from "./library.test-fixture.ts";
+import {
+  libraryBindingFixture,
+  libraryCaptionFilename,
+} from "./library.test-fixture.ts";
 import { verifyLibraryPlexBinding } from "./library.ts";
 
 const h = automationTestHarness();
@@ -109,7 +112,11 @@ test.each(
       h.database(),
       edition,
       (directory) => directories.push(directory),
-      { bytes, householdCaptions: true },
+      {
+        bytes,
+        householdCaptions: true,
+        fileName: libraryCaptionFilename(edition),
+      },
     );
     const baseline = await immutableAdoption(f);
     await assertNoAcquisitionOrPersonalDemand(f);

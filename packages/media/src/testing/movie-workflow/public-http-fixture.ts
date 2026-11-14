@@ -125,7 +125,7 @@ export async function createPublicMovieHttpFixture(
         definitionDigest: selected.definitionDigest,
         registryVersion: context.registryVersion,
       },
-      options: { subtitleLanguages: ["en"] },
+      options: { subtitleLanguages: ["en"], keepingPolicy: "temporary" },
     });
     const originalKey = crypto.randomUUID();
     const chosen = MovieRequestResultV3Schema.parse(

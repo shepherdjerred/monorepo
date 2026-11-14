@@ -29,6 +29,7 @@ export async function createMovieWorkflowFixture(
     missingEnglish?: boolean;
     bytes?: Uint8Array;
     plexAccountId?: string;
+    releaseGroup?: string;
   } = {},
 ) {
   const cluster = await startMediaTestPostgres();
@@ -92,13 +93,18 @@ export async function createMovieWorkflowFixture(
     const bytes =
       options.bytes ??
       (options.missingEnglish === true
-        ? await movieVideoFixture(1920, [])
+        ? await movieVideoFixture(1920, [], { speech: true })
         : await movieVideoFixture());
     const wire = movieWorkflowWire(db, {
       mediaId: media.id,
       edition,
       downloads: files.roots.movies.downloads,
       bytes,
+      ...(options.releaseGroup === undefined
+        ? options.missingEnglish === true
+          ? { releaseGroup: "GROUP" }
+          : {}
+        : { releaseGroup: options.releaseGroup }),
     });
     const context = {
       ...createAutomationTestContext(
@@ -153,6 +159,7 @@ export async function createMovieWorkflowFixture(
       watchEvidence: () =>
         db.watchState.findMany({ where: { mediaId: media.id } }),
       fileMovie: createMovieFileFacetV4(files.context),
+      fileContext: files.context,
       finishMediaOperation: completion.finishMediaOperation,
       dispatch: (start: WorkflowStarter) =>
         createOutboxActivities(db, start).dispatchMediaOutbox(),

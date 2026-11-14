@@ -170,7 +170,7 @@ export async function createMovieHistoryFixture(
           definitionDigest: selected.definitionDigest,
           registryVersion: context.registryVersion,
         },
-        options: { subtitleLanguages: ["en"] },
+        options: { subtitleLanguages: ["en"], keepingPolicy: "temporary" },
       });
     };
     const declareRemaining = async (reviewId: string) => {

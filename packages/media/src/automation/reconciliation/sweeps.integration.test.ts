@@ -198,12 +198,12 @@ test("feed sweep records unsupported capability and never disguises title search
     data: { enabled: false },
   });
   await database().mediaProvider.create({
-    data: { id: "thepiratebay", enabled: true },
+    data: { id: "magnetdownload", enabled: true },
   });
   await sweepFeeds(ctx, null, crypto.randomUUID());
   expect(
     await database().mediaProvider.findUniqueOrThrow({
-      where: { id: "thepiratebay" },
+      where: { id: "magnetdownload" },
     }),
   ).toMatchObject({
     feedState: "unsupported_recent_feed",

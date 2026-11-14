@@ -38,7 +38,11 @@ async function chooseFixtureMovie(
 export async function fileFixture(
   db: Database,
   episode?: { seriesId: string; title?: string },
-  options: { plexAccountId?: string; initialHandoffStorage?: boolean } = {},
+  options: {
+    plexAccountId?: string;
+    initialHandoffStorage?: boolean;
+    sourceFilename?: string;
+  } = {},
 ) {
   await grantTestLease(db);
   const directory = await realpath(
@@ -201,7 +205,9 @@ export async function fileFixture(
       userId: user.id,
       epoch: runtime.recoveryEpoch,
     });
-    const filename = `${media.kind === "episode" ? "Coastlines.S01E01." : ""}fixture-${crypto.randomUUID()}.mkv`;
+    const filename =
+      options.sourceFilename ??
+      `${media.kind === "episode" ? "Coastlines.S01E01." : ""}fixture-${crypto.randomUUID()}.mkv`;
     await writeFile(nodePath.join(roots.downloads, filename), content);
     const release = await db.releaseCandidate.create({
       data: {
