@@ -159,3 +159,10 @@ export const CanonicalMatchRecordSchema: z.ZodType<CanonicalMatchRecord> = z
 export function canonicalMatchCreatedAt(match: CanonicalMatch): number {
   return match.info.gameCreation ?? match.info.gameStartTimestamp;
 }
+
+/** The tournament code a Riot match carries; an end-of-game record has none. */
+export function canonicalMatchTournamentCode(
+  match: CanonicalMatch,
+): string | undefined {
+  return "tournamentCode" in match.info ? match.info.tournamentCode : undefined;
+}

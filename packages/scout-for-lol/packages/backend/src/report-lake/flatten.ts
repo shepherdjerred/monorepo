@@ -12,6 +12,7 @@ import type {
 } from "@scout-for-lol/data";
 import {
   canonicalMatchCreatedAt,
+  canonicalMatchTournamentCode,
   computeKda,
   matchCoverageOf,
   matchDataSourceOf,
@@ -91,7 +92,7 @@ export function flattenMatch(match: CanonicalMatch): MatchLakeRow[] {
       match.info.queueId,
       match.info.gameMode,
       match.info.gameType,
-      match.info.tournamentCode,
+      canonicalMatchTournamentCode(match),
     ) ?? null;
   const matchId = match.metadata.matchId;
 
@@ -216,7 +217,7 @@ function isArenaMatch(match: CanonicalMatch): boolean {
       match.info.queueId,
       match.info.gameMode,
       match.info.gameType,
-      match.info.tournamentCode,
+      canonicalMatchTournamentCode(match),
     ) === "arena"
   );
 }

@@ -1,4 +1,5 @@
 import {
+  canonicalMatchTournamentCode,
   computeKda,
   CanonicalMatchRecordSchema,
   resolveQueueTypeFromGame,
@@ -67,7 +68,7 @@ export function includeMatchForReportGraph(
     match.info.queueId,
     match.info.gameMode,
     match.info.gameType,
-    match.info.tournamentCode,
+    canonicalMatchTournamentCode(match),
   );
   return queue !== undefined && queueFilter.includes(queue);
 }
