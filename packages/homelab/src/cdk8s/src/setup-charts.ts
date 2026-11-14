@@ -50,6 +50,7 @@ import { deliveryActivation } from "./resources/delivery/activation.ts";
 import { transitionRendering } from "./release-configuration.ts";
 import { createCompanionCharts } from "./resources/companions/charts.ts";
 import { applyOrdinaryDeliveryImageBindings } from "./ordinary-delivery-image-bindings.ts";
+import { applyEnforcementStaging } from "./enforcement-staging.ts";
 import {
   attachDockerHubPullSecrets,
   prepareDockerHubPullSecrets,
@@ -129,6 +130,8 @@ export async function setupCharts(app: App): Promise<void> {
   // v2 cutover: companions of the upstream-chart Applications take over the
   // objects their constructors render into the root (see resources/companions/).
   if (transitionRendering()) createCompanionCharts(app);
+  // After every chart that renders a NetworkPolicy, companions included.
+  applyEnforcementStaging(app);
   prepareDockerHubPullSecrets(app);
   applyOrdinaryDeliveryImageBindings(app);
   attachDockerHubPullSecrets(app);
