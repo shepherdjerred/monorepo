@@ -130,6 +130,15 @@ function minecraftStatusEgress() {
   };
 }
 
+/**
+ * The Temporal frontend. Only the web pod's activities container is a Temporal
+ * worker (`storm-forum/src/cli.ts worker`), and `temporal-server-netpol`
+ * admits only web pods; the release Job never connects.
+ */
+function temporalEgress() {
+  return { to: [nsPeer("temporal")], ports: [tcp(7233)] };
+}
+
 function forumEgress(component: "web" | "release") {
   return [
     dnsEgressRule(),
@@ -148,11 +157,11 @@ function forumEgress(component: "web" | "release") {
     ...[
       ["seaweedfs", 8333],
       ["postal", 25],
-      ["temporal", 7233],
       ["flipt", 8080],
     ].map(([name, number]) => ({
       to: [nsPeer(String(name))],
       ports: [tcp(Number(number))],
     })),
+    ...(component === "web" ? [temporalEgress()] : []),
   ];
 }
