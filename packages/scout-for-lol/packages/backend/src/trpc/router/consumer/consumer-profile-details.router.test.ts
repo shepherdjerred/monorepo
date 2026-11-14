@@ -22,7 +22,7 @@ import {
 } from "#src/testing/consumer-profile-feature-test.ts";
 import { createOfflineTrpcHarness } from "#src/testing/test-trpc-caller.ts";
 import { testPuuid } from "#src/testing/test-ids.ts";
-import { writeTestLake } from "#src/testing/test-report-lake.ts";
+import { writeTestLake } from "#src/testing/report-lake/test-report-lake.ts";
 import { designAuditMatchFixtures } from "#src/database/design-audit-match-fixture.ts";
 
 const guildOne = DiscordGuildIdSchema.parse("100000000000000061");

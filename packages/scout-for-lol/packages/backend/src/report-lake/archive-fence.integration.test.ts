@@ -29,7 +29,7 @@ import {
 import {
   loadRawMatchFixture,
   rawCurrentGameInfoFixture,
-} from "#src/testing/raw-capture-fixtures.ts";
+} from "#src/testing/report-lake/raw-capture-fixtures.ts";
 import {
   mockS3ObjectStore,
   resetS3TestState,

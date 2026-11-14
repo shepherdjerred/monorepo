@@ -11,7 +11,10 @@ import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import { testGuildId, testPuuid } from "#src/testing/test-ids.ts";
 import { resolveLakeDir } from "#src/report-lake/paths.ts";
-import { resetTestLake, writeTestLake } from "#src/testing/test-report-lake.ts";
+import {
+  resetTestLake,
+  writeTestLake,
+} from "#src/testing/report-lake/test-report-lake.ts";
 import type { TestLakeMatchFact } from "#src/testing/report-lake/rows.ts";
 import { executeReportQuery } from "#src/reports/query/query-engine.ts";
 import {

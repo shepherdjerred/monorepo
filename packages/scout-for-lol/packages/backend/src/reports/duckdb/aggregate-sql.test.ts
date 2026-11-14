@@ -15,7 +15,7 @@ import {
 } from "#src/reports/duckdb/aggregate-sql.ts";
 import { buildPlanColumnMap } from "#src/reports/duckdb/column-map.ts";
 import { frag } from "#src/reports/duckdb/sql-fragment.ts";
-import { paramValues } from "#src/testing/test-lake-files.ts";
+import { paramValues } from "#src/testing/report-lake/test-lake-files.ts";
 
 const MATCH_COLUMNS = buildPlanColumnMap("match");
 

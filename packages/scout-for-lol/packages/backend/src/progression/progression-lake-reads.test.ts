@@ -13,7 +13,10 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import type { TimelineCoverageLakeRow } from "@scout-for-lol/data";
 import { timelineStagingFilePath } from "#src/report-lake/staging.ts";
-import { resetTestLake, writeTestLake } from "#src/testing/test-report-lake.ts";
+import {
+  resetTestLake,
+  writeTestLake,
+} from "#src/testing/report-lake/test-report-lake.ts";
 import { testPuuid } from "#src/testing/test-ids.ts";
 
 const lakeDir = await mkdtemp(path.join(tmpdir(), "scout-progression-lake-"));

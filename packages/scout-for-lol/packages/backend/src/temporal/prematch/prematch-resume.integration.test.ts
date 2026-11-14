@@ -27,7 +27,7 @@ import {
   setS3TestBucket,
 } from "#src/storage/s3-test-helpers.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
-import { rawCurrentGameInfoFixture } from "#src/testing/raw-capture-fixtures.ts";
+import { rawCurrentGameInfoFixture } from "#src/testing/report-lake/raw-capture-fixtures.ts";
 import { resumeArchivedPrematchContext } from "#src/temporal/prematch/prematch-resume.ts";
 
 /**

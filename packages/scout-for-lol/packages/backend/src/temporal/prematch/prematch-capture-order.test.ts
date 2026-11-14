@@ -2,7 +2,7 @@ import { afterEach, describe, expect, test, vi } from "vitest";
 import { ArtifactDescriptorSchema } from "@scout-for-lol/domain/artifacts/descriptors.ts";
 import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { ScoutPrematchGameRefSchema } from "@scout-for-lol/temporal/pipeline-contracts";
-import { rawCurrentGameInfoFixture } from "#src/testing/raw-capture-fixtures.ts";
+import { rawCurrentGameInfoFixture } from "#src/testing/report-lake/raw-capture-fixtures.ts";
 
 /**
  * Which state the capture consults FIRST.

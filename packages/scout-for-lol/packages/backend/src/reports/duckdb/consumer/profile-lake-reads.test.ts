@@ -21,7 +21,10 @@ import {
 import { fetchChampionComparisons } from "#src/reports/duckdb/consumer/profile-champion-comparison.ts";
 import { fetchMatchLoadoutRows } from "#src/reports/duckdb/consumer/match-loadout-lake-reads.ts";
 import { fetchMatchSupport } from "#src/reports/duckdb/community/match-support.ts";
-import { resetTestLake, writeTestLake } from "#src/testing/test-report-lake.ts";
+import {
+  resetTestLake,
+  writeTestLake,
+} from "#src/testing/report-lake/test-report-lake.ts";
 import { testPuuid } from "#src/testing/test-ids.ts";
 
 const lakeDir = await mkdtemp(path.join(tmpdir(), "scout-consumer-lake-"));

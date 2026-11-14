@@ -11,7 +11,10 @@ import {
 } from "@scout-for-lol/data";
 import { createOfflineTrpcHarness } from "#src/testing/test-trpc-caller.ts";
 import { resolveLakeDir } from "#src/report-lake/paths.ts";
-import { resetTestLake, writeTestLake } from "#src/testing/test-report-lake.ts";
+import {
+  resetTestLake,
+  writeTestLake,
+} from "#src/testing/report-lake/test-report-lake.ts";
 import { testPuuid } from "#src/testing/test-ids.ts";
 
 // Offline tRPC harness: real router, no Discord OAuth. See

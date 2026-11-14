@@ -23,7 +23,7 @@ import {
   parenthesize,
   seq,
 } from "#src/reports/duckdb/sql-fragment.ts";
-import { paramValues } from "#src/testing/test-lake-files.ts";
+import { paramValues } from "#src/testing/report-lake/test-lake-files.ts";
 
 const MATCH_COLUMNS = buildPlanColumnMap("match");
 const PREMATCH_COLUMNS = buildPlanColumnMap("prematch");

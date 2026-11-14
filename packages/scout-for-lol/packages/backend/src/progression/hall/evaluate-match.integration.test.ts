@@ -13,7 +13,7 @@ import {
 } from "@scout-for-lol/domain/identity/brands.ts";
 import type * as DatabaseModule from "#src/database/index.ts";
 import type { ProgressionMatchRow } from "#src/progression/progression-lake-reads.ts";
-import { loadRawMatchFixture } from "#src/testing/raw-capture-fixtures.ts";
+import { loadRawMatchFixture } from "#src/testing/report-lake/raw-capture-fixtures.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import {
   testAccountId,

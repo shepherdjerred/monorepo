@@ -5,7 +5,10 @@ import {
 } from "@scout-for-lol/domain/identity/brands.ts";
 import { beforeEach, describe, expect, test } from "vitest";
 import { resolveLakeDir } from "#src/report-lake/paths.ts";
-import { resetTestLake, writeTestLake } from "#src/testing/test-report-lake.ts";
+import {
+  resetTestLake,
+  writeTestLake,
+} from "#src/testing/report-lake/test-report-lake.ts";
 import { testGuildId, testPuuid } from "#src/testing/test-ids.ts";
 import {
   fetchPlayerChampionPool,

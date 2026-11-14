@@ -25,7 +25,7 @@ import {
   type LakeFiles,
 } from "#src/reports/duckdb/lake.ts";
 import { GLOBAL_SCOPE, guildScope } from "#src/reports/duckdb/scope.ts";
-import { writeTestLake } from "#src/testing/test-report-lake.ts";
+import { writeTestLake } from "#src/testing/report-lake/test-report-lake.ts";
 import {
   CountSchema,
   RowSchema,

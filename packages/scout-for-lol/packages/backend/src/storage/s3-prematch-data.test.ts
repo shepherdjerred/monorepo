@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { mockClient } from "aws-sdk-client-mock";
-import { rawCurrentGameInfoFixture } from "#src/testing/raw-capture-fixtures.ts";
+import { rawCurrentGameInfoFixture } from "#src/testing/report-lake/raw-capture-fixtures.ts";
 import {
   getMetrics,
   prematchSpectatorPayloadSaveDurationSeconds,

@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import {
   loadRawMatchFixture,
   rawTimelineFixture,
-} from "#src/testing/raw-capture-fixtures.ts";
+} from "#src/testing/report-lake/raw-capture-fixtures.ts";
 import {
   Sha256DigestSchema,
   RiotMatchIdSchema,

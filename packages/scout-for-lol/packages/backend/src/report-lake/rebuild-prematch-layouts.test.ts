@@ -13,7 +13,7 @@ import type { RawCurrentGameInfo } from "@scout-for-lol/data";
 import { NdjsonFileWriter } from "#src/report-lake/ndjson-writer.ts";
 import { populatePrematchFromS3 } from "#src/report-lake/rebuild-sources.ts";
 import { stagingIdForPrematch } from "#src/report-lake/staging.ts";
-import { rawCurrentGameInfoFixture } from "#src/testing/raw-capture-fixtures.ts";
+import { rawCurrentGameInfoFixture } from "#src/testing/report-lake/raw-capture-fixtures.ts";
 
 /** Only the fields this file asserts on; the row's full shape is pinned elsewhere. */
 const PrematchRowSchema = z.looseObject({ observed_at: z.string() });

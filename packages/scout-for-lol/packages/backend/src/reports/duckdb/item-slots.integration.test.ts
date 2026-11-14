@@ -12,7 +12,7 @@ import { MATCH_UI_READ_COLUMNS } from "#src/report-lake/loadout.ts";
 import type { LakeFiles } from "#src/reports/duckdb/lake.ts";
 import { guildScope } from "#src/reports/duckdb/scope.ts";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
-import { writeTempTestLake } from "#src/testing/test-report-lake.ts";
+import { writeTempTestLake } from "#src/testing/report-lake/test-report-lake.ts";
 import { testGuildId, testPuuid } from "#src/testing/test-ids.ts";
 import {
   COUNT_OUTPUT,

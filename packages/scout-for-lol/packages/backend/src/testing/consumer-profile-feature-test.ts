@@ -10,7 +10,7 @@ import {
   resetFlagOverrides,
 } from "#src/configuration/flags.ts";
 import { resolveLakeDir } from "#src/report-lake/paths.ts";
-import { resetTestLake } from "#src/testing/test-report-lake.ts";
+import { resetTestLake } from "#src/testing/report-lake/test-report-lake.ts";
 
 const PLAYER_PROFILE_FLAG = "scout-consumer-player-profiles-enabled";
 

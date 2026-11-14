@@ -19,7 +19,7 @@ import {
   TEST_GUILD_ID,
   TEST_LAKE_FILES,
   paramValues,
-} from "#src/testing/test-lake-files.ts";
+} from "#src/testing/report-lake/test-lake-files.ts";
 
 function countOutput(name: string): ScoutQlOutput {
   return {

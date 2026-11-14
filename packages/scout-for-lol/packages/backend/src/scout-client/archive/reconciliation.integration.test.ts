@@ -6,7 +6,7 @@ import {
 } from "@scout-for-lol/data";
 import type { ScoutClientObservation } from "#generated/prisma/client/index.js";
 import { createTestDatabase } from "#src/testing/test-database.ts";
-import { createTestScoutClientDevice } from "#src/testing/scout-client-device.ts";
+import { createTestScoutClientDevice } from "#src/testing/scout-client/scout-client-device.ts";
 import { resetConfigurationForTests } from "#src/configuration.ts";
 import {
   rawObservationObject,

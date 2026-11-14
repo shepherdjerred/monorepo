@@ -27,7 +27,10 @@ import {
   testGuildId,
   testPuuid,
 } from "#src/testing/test-ids.ts";
-import { resetTestLake, writeTestLake } from "#src/testing/test-report-lake.ts";
+import {
+  resetTestLake,
+  writeTestLake,
+} from "#src/testing/report-lake/test-report-lake.ts";
 
 const { prisma } = createTestDatabase("competition-analysis-test");
 const serverId = testGuildId("808080");

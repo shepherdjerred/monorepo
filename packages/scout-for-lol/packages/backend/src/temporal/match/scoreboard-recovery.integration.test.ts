@@ -12,7 +12,7 @@ import {
   createTestDatabase,
   testDatabaseModule,
 } from "#src/testing/test-database.ts";
-import { createTestScoutClientDevice } from "#src/testing/scout-client-device.ts";
+import { createTestScoutClientDevice } from "#src/testing/scout-client/scout-client-device.ts";
 import fixture from "#src/scout-client/canonical/testdata/classic-end-of-game.json";
 import type { resolveCanonicalMatch } from "#src/evidence/matches.ts";
 import type { fetchMatchData } from "#src/league/tasks/postmatch/match-data-fetcher.ts";

@@ -5,7 +5,7 @@ import {
   type RiotMatchId,
 } from "@scout-for-lol/domain/identity/brands.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
-import { createTestScoutClientDevice } from "#src/testing/scout-client-device.ts";
+import { createTestScoutClientDevice } from "#src/testing/scout-client/scout-client-device.ts";
 import { readPrematchCoverage } from "./prematch-coverage.ts";
 
 const { prisma } = createTestDatabase("scout-client-prematch-coverage");

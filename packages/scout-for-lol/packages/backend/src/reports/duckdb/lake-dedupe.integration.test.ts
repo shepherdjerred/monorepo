@@ -13,10 +13,10 @@ import {
   type BoundParam,
 } from "#src/reports/duckdb/lake.ts";
 import { duckDbColumnsSpec } from "#src/report-lake/schema.ts";
-import { TEST_LAKE_FILES } from "#src/testing/test-lake-files.ts";
+import { TEST_LAKE_FILES } from "#src/testing/report-lake/test-lake-files.ts";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
 import { frag, seq } from "#src/reports/duckdb/sql-fragment.ts";
-import { testFrameRow } from "#src/testing/test-timeline-rows.ts";
+import { testFrameRow } from "#src/testing/report-lake/test-timeline-rows.ts";
 import { testPuuid } from "#src/testing/test-ids.ts";
 
 /**

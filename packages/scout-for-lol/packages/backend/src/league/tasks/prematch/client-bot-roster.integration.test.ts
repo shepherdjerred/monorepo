@@ -4,7 +4,7 @@ import {
   RawCurrentGameInfoSchema,
 } from "@scout-for-lol/data";
 import { createTestDatabase } from "#src/testing/test-database.ts";
-import { createTestScoutClientDevice } from "#src/testing/scout-client-device.ts";
+import { createTestScoutClientDevice } from "#src/testing/scout-client/scout-client-device.ts";
 
 const { prisma } = createTestDatabase("client-bot-roster");
 

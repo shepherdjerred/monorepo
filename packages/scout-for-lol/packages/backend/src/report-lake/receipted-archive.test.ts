@@ -4,7 +4,7 @@ import {
   loadRawMatchFixture,
   rawCurrentGameInfoFixture,
   rawTimelineFixture,
-} from "#src/testing/raw-capture-fixtures.ts";
+} from "#src/testing/report-lake/raw-capture-fixtures.ts";
 import {
   ArtifactDescriptorSchema,
   ArtifactKindSchema,

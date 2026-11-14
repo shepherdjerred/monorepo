@@ -7,7 +7,7 @@ import {
   RiotMatchIdSchema,
 } from "@scout-for-lol/data";
 import { createTestDatabase } from "#src/testing/test-database.ts";
-import { createTestScoutClientDevice } from "#src/testing/scout-client-device.ts";
+import { createTestScoutClientDevice } from "#src/testing/scout-client/scout-client-device.ts";
 import { z } from "zod";
 import { resetConfigurationForTests } from "#src/configuration.ts";
 
