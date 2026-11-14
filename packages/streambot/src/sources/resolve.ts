@@ -4,7 +4,10 @@ import {
   sourceLabel,
   type Source,
 } from "@shepherdjerred/streambot/sources/source.ts";
-import type { ResolvedSource } from "@shepherdjerred/streambot/machine/types.ts";
+import {
+  type ConcreteResolvedSource,
+  type ResolvedSource,
+} from "@shepherdjerred/streambot/machine/types.ts";
 import { probeFileChapters } from "@shepherdjerred/streambot/sources/chapters.ts";
 import { resolveWithYtdlp } from "@shepherdjerred/streambot/sources/ytdlp.ts";
 import {
@@ -17,12 +20,15 @@ import {
   BlockedSourceError,
   isBlockedSource,
 } from "@shepherdjerred/streambot/moderation/adult-block.ts";
+import type { MediaInfo } from "@shepherdjerred/streambot/sources/probe.ts";
 import {
-  probeMedia,
-  resolutionBucket,
-  type MediaInfo,
-} from "@shepherdjerred/streambot/sources/probe.ts";
-import { setSourceInfo } from "@shepherdjerred/streambot/observability/metrics.ts";
+  probeAndRecordSourceMetadata,
+  probePlaybackSource,
+} from "@shepherdjerred/streambot/sources/source-probe.ts";
+import {
+  assertSportsHasAudioAndVideo,
+  resolveSportsRequest,
+} from "@shepherdjerred/streambot/sources/sports-preparation.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
 import type {
   SportsEvent,
@@ -53,7 +59,7 @@ export type ResolveSourceOptions = {
 };
 
 type InitialResolution = {
-  readonly resolved: ResolvedSource;
+  readonly resolved: ConcreteResolvedSource;
   readonly probed?: MediaInfo | null;
 };
 
@@ -98,29 +104,11 @@ async function resolveLocalSource(
   };
 }
 
-export function assertSportsHasAudioAndVideo(info: MediaInfo | null): void {
-  if (
-    info === null ||
-    info.videoCodec === "unknown" ||
-    info.audioCodec === "unknown" ||
-    info.width === undefined ||
-    info.width <= 0 ||
-    info.height === undefined ||
-    info.height <= 0 ||
-    info.audioChannels === undefined ||
-    info.audioChannels <= 0
-  ) {
-    throw new Error(
-      "The sports HLS source did not provide both audio and video",
-    );
-  }
-}
-
 async function resolveSportsPage(
   source: Extract<Source, { kind: "url" }>,
   signal: AbortSignal,
   resolver: SportsResolver | undefined,
-): Promise<ResolvedSource> {
+): Promise<ConcreteResolvedSource> {
   if (resolver === undefined) {
     throw new Error("Sports browser resolver is not configured");
   }
@@ -148,82 +136,6 @@ async function resolveSportsPage(
  * so the caller can thread fields the pipeline needs (HDR). Best-effort — {@link probeMedia} never
  * throws, and a null result (probe failed) simply skips the update.
  */
-async function probeAndRecordSourceMetadata(
-  config: Config,
-  target: {
-    readonly input: string;
-    readonly title: string;
-    readonly headers?: Readonly<Record<string, string>> | undefined;
-    readonly inputOptions?: readonly string[] | undefined;
-    readonly audioInput?: string | undefined;
-    readonly audioInputHeaders?: Readonly<Record<string, string>> | undefined;
-  },
-  signal: AbortSignal,
-): Promise<MediaInfo | null> {
-  const [primary, audio] = await Promise.all([
-    probeMedia(config, target.input, signal, {
-      headers: target.headers,
-      inputOptions: target.inputOptions,
-    }),
-    target.audioInput === undefined
-      ? Promise.resolve(undefined)
-      : probeMedia(config, target.audioInput, signal, {
-          headers: target.audioInputHeaders,
-        }),
-  ]);
-  if (primary === null || audio === null) {
-    return null;
-  }
-  const info =
-    audio === undefined
-      ? primary
-      : {
-          ...primary,
-          audioCodec: audio.audioCodec,
-          audioChannels: audio.audioChannels,
-          audioStreamIndex: audio.audioStreamIndex ?? 0,
-        };
-  const resolution = resolutionBucket(info.height);
-  log.info("source probed", {
-    title: target.title,
-    videoCodec: info.videoCodec,
-    audioCodec: info.audioCodec,
-    width: info.width,
-    height: info.height,
-    resolution,
-    hdr: info.hdr,
-    pixelFormat: info.pixelFormat,
-    audioChannels: info.audioChannels,
-    durationSeconds: info.durationSeconds,
-  });
-  setSourceInfo({
-    video_codec: info.videoCodec,
-    audio_codec: info.audioCodec,
-    hdr: info.hdr ? "true" : "false",
-    resolution,
-  });
-  return info;
-}
-
-async function probePlaybackSource(
-  config: Config,
-  resolved: ResolvedSource,
-  signal: AbortSignal,
-  sportsSource: boolean,
-): Promise<MediaInfo | null> {
-  return await probeAndRecordSourceMetadata(
-    config,
-    {
-      input: resolved.ffmpegInput,
-      title: resolved.title,
-      headers: resolved.ffmpegInputHeaders,
-      inputOptions: resolved.ffmpegInputOptions,
-      audioInput: sportsSource ? resolved.audioInput : undefined,
-      audioInputHeaders: resolved.audioInputHeaders,
-    },
-    signal,
-  );
-}
 
 /**
  * Re-type an item as music after the final probe found no picture in it.
@@ -232,7 +144,9 @@ async function probePlaybackSource(
  * merge, and the music pipeline runs one input with `-vn`; leaving it set would have
  * `prepareStream` emit `-map 1:a:0` against an input the audio path never opens.
  */
-function demoteToMusic(resolved: ResolvedSource): ResolvedSource {
+function demoteToMusic(
+  resolved: ConcreteResolvedSource,
+): ConcreteResolvedSource {
   const {
     audioInput: _audioInput,
     audioInputHeaders: _audioInputHeaders,
@@ -273,10 +187,10 @@ export class UnsupportedVideoRequestError extends Error {
  * here shrinks the untestable surface to the single call below.
  */
 export function finalizeResolved(
-  resolved: ResolvedSource,
+  resolved: ConcreteResolvedSource,
   info: MediaInfo | null,
   requestedMode: MediaMode | undefined,
-): ResolvedSource {
+): ConcreteResolvedSource {
   const reconciled = reconcileMediaKind(
     resolved.mediaKind,
     // ffprobe reports `"unknown"` only when it found no video stream at all. A FAILED probe is
@@ -297,9 +211,9 @@ export function finalizeResolved(
 }
 
 function withSportsRenditions(
-  resolved: ResolvedSource,
+  resolved: ConcreteResolvedSource,
   info: MediaInfo,
-): ResolvedSource {
+): ConcreteResolvedSource {
   return {
     ...resolved,
     ...(info.videoStreamIndex === undefined
@@ -386,22 +300,20 @@ function lolEventForSource(source: Source): SportsEvent | undefined {
     : undefined;
 }
 
-export async function resolveSource(
+async function resolveInitialSource(
   config: Config,
   source: Source,
   signal: AbortSignal,
-  options?: ResolveSourceOptions,
-): Promise<ResolvedSource> {
-  source = await resolveMusicSourceIfNeeded(config, source, signal, options);
-  if (isBlockedSource(source)) {
-    throw new BlockedSourceError(sourceLabel(source));
-  }
-  let resolved: ResolvedSource;
+  options: ResolveSourceOptions | undefined,
+): Promise<InitialResolution> {
+  let resolved: ConcreteResolvedSource;
   const lolEvent = lolEventForSource(source);
   // `undefined` means "not probed yet"; `null` means "probed and it failed". Conflating the two
   // would re-probe a local file whose probe legitimately returned nothing.
   let probed: MediaInfo | null | undefined;
   if (options?.preResolved !== undefined) {
+    if ("sportsRecipe" in options.preResolved)
+      throw new Error("Deferred sports input was not handled");
     resolved = options.preResolved;
   } else if (lolEvent !== undefined) {
     const initial = await resolveLolSource(
@@ -427,6 +339,24 @@ export async function resolveSource(
   } else {
     resolved = await resolveWithYtdlp(config, source, signal);
   }
+  return { resolved, ...(probed === undefined ? {} : { probed }) };
+}
+
+export async function resolveSource(
+  config: Config,
+  source: Source,
+  signal: AbortSignal,
+  options?: ResolveSourceOptions,
+): Promise<ResolvedSource> {
+  source = await resolveMusicSourceIfNeeded(config, source, signal, options);
+  if (isBlockedSource(source)) {
+    throw new BlockedSourceError(sourceLabel(source));
+  }
+  const sports = await resolveSportsRequest(config, source, signal, options);
+  if (sports !== undefined) return sports;
+  const initial = await resolveInitialSource(config, source, signal, options);
+  let resolved = initial.resolved;
+  const probed = initial.probed;
   resolved = withMusicMetadata(source, resolved);
   // For yt-dlp and pre-resolved sources the ffmpeg input only becomes final once a format has been
   // chosen, so the probe runs here — on the URL the streamer will open, not on some earlier
@@ -447,7 +377,7 @@ export async function resolveSource(
   // stream in media" with ffmpeg already spawned and Go Live already open.
   const finalized = finalizeResolved(resolved, info, source.mode);
   if (sportsSource && finalized.mediaKind !== "video") {
-    throw new Error("The sports HLS source could not be confirmed as video");
+    throw new Error("The sports source could not be confirmed as video");
   }
   if (finalized.mediaKind !== resolved.mediaKind) {
     log.warn("media kind downgraded after probing the chosen input", {
@@ -498,8 +428,8 @@ async function resolveMusicSource(
 
 function withMusicMetadata(
   source: Source,
-  resolved: ResolvedSource,
-): ResolvedSource {
+  resolved: ConcreteResolvedSource,
+): ConcreteResolvedSource {
   return source.music === undefined
     ? resolved
     : { ...resolved, title: sourceLabel(source), playbackSource: source };

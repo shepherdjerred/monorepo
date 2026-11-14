@@ -224,7 +224,7 @@ export function createPlaybackMachine(actors: PlaybackActors) {
             resolved: mustResolved(context),
             volume: context.volume,
             seekSeconds: context.resumeSeekSeconds,
-            pipelineMode: pipelineForAttempt(context.crashRetries),
+            pipelineMode: pipelineForAttempt(context.pipelineRetries),
           }),
           onDone: { target: "advance", actions: "completeStream" },
           onError: [
@@ -265,7 +265,11 @@ export function createPlaybackMachine(actors: PlaybackActors) {
           },
           RESTART: {
             target: "resolving",
-            actions: assign({ resumeSeekSeconds: 0, crashRetries: 0 }),
+            actions: assign({
+              resumeSeekSeconds: 0,
+              crashRetries: 0,
+              pipelineRetries: 0,
+            }),
           },
           SKIP: { target: "skipped", actions: "resetCrashRetries" },
           STOP: {
@@ -327,6 +331,7 @@ export function createPlaybackMachine(actors: PlaybackActors) {
                 ],
                 resumeSeekSeconds: event.positionSeconds,
                 crashRetries: 0,
+                pipelineRetries: 0,
               };
             }),
           },
@@ -347,6 +352,7 @@ export function createPlaybackMachine(actors: PlaybackActors) {
               resumeSeekSeconds: 0,
               pausedPositionSeconds: null,
               crashRetries: 0,
+              pipelineRetries: 0,
             }),
           },
           PLAY_NOW: { target: "resolving", actions: "playNow" },

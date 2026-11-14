@@ -116,6 +116,7 @@ export function initialPlaybackContext(input: PlaybackInput): PlaybackContext {
     lastBlockedRequester: null,
     resumeSeekSeconds: input.initialSeekSeconds ?? 0,
     crashRetries: 0,
+    pipelineRetries: 0,
     completedStreams: 0,
     crashNotice: null,
     pausedPositionSeconds: null,
@@ -150,6 +151,7 @@ export const MACHINE_TYPES: {
     lastBlockedRequester: null,
     resumeSeekSeconds: 0,
     crashRetries: 0,
+    pipelineRetries: 0,
     completedStreams: 0,
     crashNotice: null,
     pausedPositionSeconds: null,
@@ -237,6 +239,7 @@ export function playNowWhileJoiningUpdates(
     resumeSeekSeconds: 0,
     pausedPositionSeconds: null,
     crashRetries: 0,
+    pipelineRetries: 0,
     startPaused: false,
   };
 }
@@ -248,22 +251,23 @@ export function queueCrashRetryUpdates(
 ): Partial<PlaybackContext> {
   const current = mustCurrent(context);
   const attempt = context.crashRetries + 1;
+  const pipelineRetries =
+    context.pipelineRetries + (info.reason === "provider-session" ? 0 : 1);
   return {
     queue: [unresolvedQueuedSource(current), ...context.queue],
     resumeSeekSeconds: Math.max(0, Math.floor(info.positionSeconds)),
     crashRetries: attempt,
+    pipelineRetries,
     crashNotice: {
       nonce: (context.crashNotice?.nonce ?? 0) + 1,
       kind: "retry",
       reason: info.reason,
       title: mustResolved(context).title,
-      ...(mustResolved(context).discontinuousLive === true
-        ? { live: true }
-        : {}),
+      ...(mustResolved(context).live === true ? { live: true } : {}),
       positionSeconds: info.positionSeconds,
       attempt,
       maxAttempts: MAX_CRASH_RETRIES,
-      pipelineMode: noticePipelineMode(context, attempt),
+      pipelineMode: noticePipelineMode(context, pipelineRetries),
     },
   };
 }
@@ -282,6 +286,7 @@ export function crashGiveUpUpdates(
     lastError: info.lastError,
     lastErrorKind: info.reason === "stall" ? "stall" : "crash",
     crashRetries: 0,
+    pipelineRetries: 0,
     crashNotice: {
       nonce: (context.crashNotice?.nonce ?? 0) + 1,
       kind: "gave-up",
@@ -291,7 +296,7 @@ export function crashGiveUpUpdates(
       ...(info.atEndOfMedia === true ? { atEndOfMedia: true } : {}),
       attempt: context.crashRetries,
       maxAttempts: MAX_CRASH_RETRIES,
-      pipelineMode: noticePipelineMode(context, context.crashRetries),
+      pipelineMode: noticePipelineMode(context, context.pipelineRetries),
     },
   };
 }
@@ -313,6 +318,7 @@ export function streamErrorUpdates(
     lastError: getErrorMessage(error),
     lastErrorKind: "generic",
     crashRetries: 0,
+    pipelineRetries: 0,
   };
 }
 

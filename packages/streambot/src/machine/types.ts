@@ -8,6 +8,7 @@ import type {
   SubtitlePref,
 } from "@shepherdjerred/streambot/sources/source.ts";
 import type { Chapter } from "@shepherdjerred/streambot/sources/chapters.ts";
+import type { SportsPlaybackRecipe } from "@shepherdjerred/streambot/sports/prepared-input.ts";
 import type {
   MediaKind,
   MediaKindDecidedBy,
@@ -35,7 +36,8 @@ export type ErrorKind = "blocked" | "generic" | "crash" | "stall" | "timeout";
 export type PipelineMode = "hw" | "hw-upload" | "sw";
 
 /** Why a crash-recovery retry (or give-up) happened — drives the user-facing announcement. */
-export type CrashReason = "crash" | "ended-short" | "stall";
+export type CrashReason =
+  "crash" | "ended-short" | "stall" | "provider-session";
 
 /**
  * One-shot notice that a stream segment died and what the machine did about it. The status
@@ -81,7 +83,7 @@ export type ResolvedSubtitle = {
 };
 
 /** A source resolved to something ffmpeg can read (a local path or a direct stream URL). */
-export type ResolvedSource = {
+export type ConcreteResolvedSource = {
   readonly title: string;
   readonly ffmpegInput: string;
   /** Stable selected source for checkpoint/replay; never the signed ffmpeg input. */
@@ -130,6 +132,7 @@ export type ResolvedSource = {
    * `httpHeaderInputOptions` in `sources/format-select.ts` renders them.
    */
   readonly audioInputHeaders?: Readonly<Record<string, string>>;
+  readonly audioInputOptions?: readonly string[];
   /** Chapter markers (ffprobe for files, yt-dlp for URLs); empty when none are available. */
   readonly chapters: readonly Chapter[];
   /** Burnable subtitle for this source, if one was found and subtitles are enabled. */
@@ -153,6 +156,27 @@ export type ResolvedSource = {
     readonly thumbnailUrl?: string;
   };
 };
+
+/** A probed sports request whose private input is acquired only for an active playback attempt. */
+export type DeferredSportsSource = Omit<
+  ConcreteResolvedSource,
+  | "ffmpegInput"
+  | "ffmpegInputHeaders"
+  | "ffmpegInputOptions"
+  | "audioInput"
+  | "audioInputHeaders"
+  | "audioInputOptions"
+> & {
+  readonly sportsRecipe: SportsPlaybackRecipe;
+  readonly ffmpegInput?: never;
+  readonly ffmpegInputHeaders?: never;
+  readonly ffmpegInputOptions?: never;
+  readonly audioInput?: never;
+  readonly audioInputHeaders?: never;
+  readonly audioInputOptions?: never;
+};
+
+export type ResolvedSource = ConcreteResolvedSource | DeferredSportsSource;
 
 /** A queue entry: a requested source plus who asked for it. */
 export type QueuedSource = {
@@ -206,6 +230,8 @@ export type PlaybackContext = {
    * or playback stops. Orthogonal to the per-boot resume counter (MAX_RESUME_ATTEMPTS).
    */
   crashRetries: number;
+  /** Provider renewal consumes retry budget without changing the encoder pipeline. */
+  pipelineRetries: number;
   /** Natural stream completions distinguish a new loop run from pause, seek, and recovery. */
   completedStreams: number;
   /** One-shot crash/retry notice for the status reporter; null until the first crash. */

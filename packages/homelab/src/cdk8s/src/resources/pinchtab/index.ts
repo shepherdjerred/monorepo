@@ -184,7 +184,10 @@ ip6tables -L OUTPUT -n`,
             allowMacro: false,
             allowScreencast: false,
             allowStateExport: false,
-            allowNetworkIntercept: false,
+            // Streambot inspects free-player bootstrap and media responses.
+            // This capability belongs to the shared daemon and therefore also
+            // applies to its other authenticated clients.
+            allowNetworkIntercept: true,
             allowFileScheme: false,
             trustedResolveCIDRs: [],
             trustedProxyCIDRs: [],

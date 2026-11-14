@@ -227,16 +227,28 @@ stream only to paid subscribers, so they are listed with a Pro label but
 cannot be selected in the web picker, the Discord menu, or a search; a watch
 page whose every stream is Pro gets the same Pro-only reply instead of the
 generic provider error. Playback uses the stable provider page as the source
-identity and resolves the live HLS input at play time through PinchTab. StreamEast
-pages carry their playlist inline, encoded in the first-party player script; the
-resolver decodes it and keeps only an approved playlist host. Other providers'
-approved embedded players are opened and their successful HLS request captured.
-Either way, ffprobe selects a rendition with real video dimensions and audio before
-FFmpeg sends it to Discord. A resolve failure is logged with its redacted cause
-under the `sports` module; the listener sees only a generic provider message. HLS URLs are not written to media history. Live sports
+identity. A queued sports recipe contains only the stable event and selected
+server identity. Validation opens a temporary media session, probes it, then
+closes it. Actual playback prepares a fresh session and closes it on completion,
+failure, cancellation, or replacement.
+
+StreamEast resolves the free server links advertised on the event's watch page. Resolution
+tries free servers for the same event and confirms audio and video with ffprobe
+before selecting one. The provider adapters handle direct HLS, loader-backed HLS,
+and ClearKey CENC media carried by HLS or DASH. A loopback relay normalizes
+provider resources for FFmpeg; DASH audio and video may use independent keys.
+Other providers retain their approved embedded-player resolution.
+Signed media URLs, headers, and content keys stay in the disposable media session,
+outside queue snapshots and media history. Provider failures use bounded error
+categories and listener messages instead of exposing raw responses. Live sports
 offer play, skip/stop, and volume controls only. The bot needs PinchTab's
 `PINCHTAB_BASE_URL` and `PINCHTAB_TOKEN`; the homelab deployment supplies the
-service address and the shared 1Password-backed token. See
+service address and the shared 1Password-backed token.
+
+The shared PinchTab daemon permits response inspection for Streambot's media
+adapters. This capability also applies to its other authenticated clients;
+the browser's private-network firewall and other capability restrictions
+remain in force. See
 [`sports-service.ts`](src/sports/sports-service.ts) for matching,
 [`sports-resolver.ts`](src/sports/sports-resolver.ts) for runtime resolution,
 and the [managed flag inventory](../feature-flags/FLAG-INVENTORY.md) for rollout

@@ -2,8 +2,9 @@ import { createActor, waitFor } from "xstate";
 import { loadConfig } from "@shepherdjerred/streambot/config/index.ts";
 import { createPlaybackMachine } from "@shepherdjerred/streambot/machine/playback-machine.ts";
 import { resolveSource } from "@shepherdjerred/streambot/sources/resolve.ts";
+import { runWithPreparedSportsInput } from "@shepherdjerred/streambot/sources/prepared-sports.ts";
 import { PinchtabSportsBrowser } from "@shepherdjerred/streambot/sports/pinchtab.ts";
-import { BrowserSportsResolver } from "@shepherdjerred/streambot/sports/sports-resolver.ts";
+import { createSportsResolver } from "@shepherdjerred/streambot/sources/create-sports-resolver.ts";
 import {
   LolEsportsClient,
   LolLeagueSchema,
@@ -65,7 +66,7 @@ const browser = new PinchtabSportsBrowser({
     ? {}
     : { profileName: environment.E2E_PINCHTAB_PROFILE }),
 });
-const sportsResolver = new BrowserSportsResolver(browser);
+const sportsResolver = createSportsResolver(browser, config);
 const lol = new LolEsportsClient();
 const streamer = new StreambotStreamer(userToken, config);
 const actor = createActor(
@@ -73,7 +74,13 @@ const actor = createActor(
     joinVoice: streamer.joinVoice,
     resolveSource: (input, signal) =>
       resolveSource(config, input.source, signal, { sportsResolver, lol }),
-    runStream: streamer.runStream,
+    runStream: (input, signal) =>
+      runWithPreparedSportsInput(
+        input,
+        signal,
+        sportsResolver.prepare.bind(sportsResolver),
+        streamer.runStream,
+      ),
     leaveVoice: streamer.leaveVoice,
   }),
   { input: { guildId, channelId, idleTimeoutMs: 1000 } },

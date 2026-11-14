@@ -7,6 +7,15 @@ import type {
 } from "@shepherdjerred/streambot/machine/types.ts";
 import { httpHeaderInputOptions } from "@shepherdjerred/streambot/sources/format-select.ts";
 
+/** A fixed playback slot must never silently switch Discord transports. */
+export function assertPlaybackTransport(
+  actual: ResolvedSource["mediaKind"],
+  expected: ResolvedSource["mediaKind"] | undefined,
+): void {
+  if (expected !== undefined && actual !== expected)
+    throw new Error(`Playback transport mismatch: expected ${expected}`);
+}
+
 /**
  * The ffmpeg options one segment runs with, built as two pure functions of the resolved item.
  *
@@ -34,6 +43,8 @@ export type VideoPrepareOptionsInput = PrepareOptionsInput & {
 export function buildPlaybackPrepareOptions(
   input: VideoPrepareOptionsInput,
 ): Partial<PrepareStreamOptions> {
+  if (input.resolved.ffmpegInput === undefined)
+    throw new Error("Deferred sports input must be prepared before streaming");
   return input.resolved.mediaKind === "music"
     ? buildMusicPrepareOptions(input)
     : buildVideoPrepareOptions(input);
@@ -162,7 +173,10 @@ export function buildVideoPrepareOptions(
             source: resolved.audioInput,
             // A merge result's audio URL is signed separately and carries its own header set;
             // there is no shared top-level `http_headers` to inherit.
-            inputOptions: httpHeaderInputOptions(resolved.audioInputHeaders),
+            inputOptions: [
+              ...httpHeaderInputOptions(resolved.audioInputHeaders),
+              ...(resolved.audioInputOptions ?? []),
+            ],
           },
         }),
   };

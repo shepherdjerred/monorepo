@@ -1,5 +1,7 @@
 import { z } from "zod";
+import { readBrowserJsonResponse } from "./browser-json.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
+import { readSportsMediaPage } from "./media-page.ts";
 import {
   approvedCapturedHlsUrl,
   approvedPlayerFrameUrl,
@@ -11,7 +13,6 @@ import {
 } from "@shepherdjerred/streambot/sports/pinchtab-player.ts";
 
 const log = logger.child("sports-browser");
-const MAX_RESPONSE_BYTES = 2_097_152;
 const PROFILE_NAME = "streambot";
 
 const IdentifierSchema = z.looseObject({
@@ -76,6 +77,13 @@ class PinchtabHttpError extends Error {
 }
 
 export type SportsPageRenderer = {
+  readonly mediaPage?: (
+    url: string,
+    signal: AbortSignal,
+  ) => Promise<{
+    readonly html: string;
+    readonly headers: Readonly<Record<string, string>>;
+  }>;
   readonly html: (url: string, signal: AbortSignal) => Promise<string>;
   readonly runtimeStreams: (
     url: string,
@@ -98,6 +106,21 @@ export class PinchtabSportsBrowser implements SportsPageRenderer {
   private pendingInstance: Promise<string> | null = null;
 
   constructor(private readonly config: PinchtabConfig) {}
+
+  /** Free media bootstrap tickets are bound to the browser's actual User-Agent. */
+  async mediaPage(
+    url: string,
+    signal: AbortSignal,
+  ): Promise<{
+    html: string;
+    headers: Readonly<Record<string, string>>;
+  }> {
+    return await readSportsMediaPage(url, signal, {
+      open: this.openTab.bind(this),
+      json: this.json.bind(this),
+      close: this.closeTab.bind(this),
+    });
+  }
 
   async html(url: string, signal: AbortSignal): Promise<string> {
     const { tabId } = await this.openTab(url, signal);
@@ -432,35 +455,7 @@ export class PinchtabSportsBrowser implements SportsPageRenderer {
     options: RequestInit = {},
   ): Promise<unknown> {
     const response = await this.request(path, signal, options);
-    if (response.body === null) return {};
-    const reader = response.body.getReader();
-    const chunks: Uint8Array[] = [];
-    let size = 0;
-    try {
-      for (;;) {
-        const result = await reader.read();
-        if (result.done) break;
-        const chunk: unknown = result.value;
-        if (!(chunk instanceof Uint8Array)) {
-          throw new TypeError("PinchTab returned an invalid response body");
-        }
-        size += chunk.byteLength;
-        if (size > MAX_RESPONSE_BYTES) {
-          await reader.cancel();
-          throw new Error("PinchTab response exceeded its size limit");
-        }
-        chunks.push(chunk);
-      }
-    } finally {
-      reader.releaseLock();
-    }
-    const bytes = new Uint8Array(size);
-    let offset = 0;
-    for (const chunk of chunks) {
-      bytes.set(chunk, offset);
-      offset += chunk.byteLength;
-    }
-    return JSON.parse(new TextDecoder().decode(bytes));
+    return await readBrowserJsonResponse(response);
   }
 
   private async request(

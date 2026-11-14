@@ -516,7 +516,45 @@ const SENSITIVE_HEADER_NAMES = new Set([
   "proxy-authorization",
   "set-cookie",
   "x-api-key",
+  "x-streambot-media-session",
 ]);
+
+const SENSITIVE_INPUT_OPTIONS = new Set([
+  "-cenc_decryption_key",
+  "-decryption_key",
+  "-decryption_keys",
+  "-seg_format_options",
+]);
+
+/** Scrub content keys even when FFmpeg echoes an invalid option value in stderr. */
+export function redactFfmpegDiagnostics(value: string, args: readonly string[]): string {
+  let redacted = redactMediaUrls(value);
+  for (const [index, argument] of args.entries()) {
+    if (argument === "-headers") {
+      const block = args[index + 1];
+      for (const line of block?.split(/\r?\n/u) ?? []) {
+        const colon = line.indexOf(":");
+        if (colon === -1 || !SENSITIVE_HEADER_NAMES.has(line.slice(0, colon).trim().toLowerCase())) continue;
+        const secret = line.slice(colon + 1).trim();
+        if (secret.length > 0) redacted = redacted.replaceAll(secret, "<redacted>");
+      }
+    }
+    const separator = argument.indexOf("=");
+    const option = separator < 0 ? argument : argument.slice(0, separator);
+    if (!SENSITIVE_INPUT_OPTIONS.has(option)) continue;
+    const secret = separator < 0 ? args[index + 1] : argument.slice(separator + 1);
+    if (secret !== undefined && secret.length > 0) {
+      redacted = redacted.replaceAll(secret, "<redacted>");
+      if (option === "-seg_format_options") {
+        for (const match of secret.matchAll(/(?:^|:)(?:cenc_)?decryption_key=([^:]+)/gu)) {
+          const key = match[1];
+          if (key !== undefined) redacted = redacted.replaceAll(key, "<redacted>");
+        }
+      }
+    }
+  }
+  return redacted;
+}
 
 /** Redact credential-bearing values inside an ffmpeg `-headers` argument, keeping its shape. */
 export function redactHeaderArgument(value: string): string {
@@ -545,9 +583,12 @@ function ffmpegCommandLine(
   // `-headers` takes its value as the NEXT argument, so redaction keys off the preceding flag
   // rather than trying to recognise a credential by shape.
   const rendered = args.map((arg, index) =>
-    redactMediaUrls(
-      args[index - 1] === "-headers" ? redactHeaderArgument(arg) : arg,
-    ),
+    SENSITIVE_INPUT_OPTIONS.has(args[index - 1] ?? "")
+      ? "<redacted>"
+      : redactFfmpegDiagnostics(
+          args[index - 1] === "-headers" ? redactHeaderArgument(arg) : arg,
+          args,
+        ),
   );
   return [executable, ...rendered].map(quoteCommandArgument).join(" ");
 }
@@ -555,6 +596,7 @@ function ffmpegCommandLine(
 function createFfmpegStderrHandler(
   observer: StreamObserver | undefined,
   stderrTail: string[],
+  args: readonly string[],
 ): (line: string) => void {
   const codecData: FfmpegCodecData = {};
   const progress: FfmpegProgress = {};
@@ -575,7 +617,7 @@ function createFfmpegStderrHandler(
   };
 
   return (line: string) => {
-    const redacted = redactMediaUrls(line);
+    const redacted = redactFfmpegDiagnostics(line, args);
     stderrTail.push(redacted);
     if (stderrTail.length > 50) stderrTail.shift();
     observer?.onStderrLine?.(redacted);
@@ -1219,7 +1261,7 @@ export function prepareStream(
 
   const stderrTail: string[] = [];
   const stderrLines = createInterface({ input: child.stderr });
-  const handleStderr = createFfmpegStderrHandler(observer, stderrTail);
+  const handleStderr = createFfmpegStderrHandler(observer, stderrTail, args);
   stderrLines.on("line", handleStderr);
 
   let spawnError: Error | undefined;
@@ -1237,8 +1279,8 @@ export function prepareStream(
       if (cancelSignal?.aborted) reject(cancelSignal.reason);
       else {
         reject(
-          new FfmpegExitError(error.message, {
-            cause: error,
+          new FfmpegExitError(redactFfmpegDiagnostics(error.message, args), {
+            cause: new Error(redactFfmpegDiagnostics(error.message, args)),
             exitCode: null,
             stderrTail: [...stderrTail],
             startTimeSeconds: mergedOptions.startTime,

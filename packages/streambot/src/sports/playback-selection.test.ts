@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { PlaybackCommandBoundaryError } from "@shepherdjerred/streambot/commands/playback-command-errors.ts";
+import { SportsPlaybackError } from "./failures.ts";
 import {
   ChannelIdSchema,
   GuildIdSchema,
@@ -156,6 +157,57 @@ describe("sports playback selection", () => {
       }),
     ).rejects.toThrow("not enabled");
   });
+});
+
+describe("typed sports playback boundary errors", () => {
+  it("preserves the typed reason after all matching providers reject the format", async () => {
+    const selected = selectSportsForRequest({
+      query: "Bears Packers",
+      source: "auto",
+      provider: "auto",
+      scope,
+      enabled: async () => true,
+      signal,
+      catalog: {
+        listToday: async () => events,
+        search: async () => ({ kind: "found", events }),
+      },
+      resolve: async () => {
+        throw new SportsPlaybackError("unsupported-format");
+      },
+      onAmbiguous: vi.fn(),
+    });
+    await expect(selected).rejects.toThrow(
+      "player format Streambot can't play yet",
+    );
+  });
+
+  it.each([
+    ["ended", "That sports event has ended"],
+    ["unsupported-format", "player format Streambot can't play yet"],
+    ["unavailable", "None of this event's free servers"],
+    ["timeout", "The sports provider took too long"],
+    ["session-expired", "could not be renewed"],
+    ["subscriber-only", "only has subscriber streams"],
+  ] as const)(
+    "reports %s without exposing upstream details",
+    async (kind, message) => {
+      const secretCause = new Error("private provider response");
+      const request = selectDirectRequestUrl({
+        query: "https://v2.streameast.ga/nfl/game/",
+        spoken: false,
+        source: "auto",
+        scope,
+        enabled: async () => true,
+        signal,
+        resolve: async () => {
+          throw new SportsPlaybackError(kind, { cause: secretCause });
+        },
+      });
+      await expect(request).rejects.toThrow(message);
+      await expect(request).rejects.not.toThrow(secretCause.message);
+    },
+  );
 });
 
 describe("sports playback boundary errors", () => {
