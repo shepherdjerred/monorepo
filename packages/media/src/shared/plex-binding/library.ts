@@ -3,7 +3,7 @@ import {
   PlexBindingExpectedSchema,
   expectedCoverageMatches,
 } from "./expected.ts";
-import { LibraryAssetReferenceV1Schema } from "#shared/handoff/library-ownership.ts";
+import { LibraryAssetReferenceProtocolSchema } from "#shared/handoff/library-ownership.ts";
 import {
   PlexBindingSnapshotSchema,
   plexScopeKey,
@@ -26,7 +26,7 @@ export const LibraryPlexExpectedV2Schema = z
       z.strictObject({
         kind: z.literal("library_adoption"),
         recoveryEpoch: z.int().nonnegative(),
-        reference: LibraryAssetReferenceV1Schema,
+        reference: LibraryAssetReferenceProtocolSchema,
       }),
     ]),
   })

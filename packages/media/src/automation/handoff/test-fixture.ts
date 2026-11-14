@@ -16,6 +16,7 @@ import snapshot from "#migration/fixtures/resolved-profiles.json" with { type: "
 import {
   MigrationBundleSchema,
   BundleReportSchema,
+  type MigrationSelectionSchema,
 } from "#shared/migration-handoff.ts";
 import {
   PrepareHandoffSchema,
@@ -32,6 +33,25 @@ import {
   MOVIE_EDITION_REGISTRY,
   type MovieEditionKey,
 } from "#shared/movie-editions/registry.ts";
+
+type FixtureReviewSelection = (input: {
+  report: z.infer<typeof BundleReportSchema>;
+}) => z.infer<typeof MigrationSelectionSchema>;
+
+function fixtureReviewSelection(
+  report: z.infer<typeof BundleReportSchema>,
+  entry: z.infer<typeof BundleReportSchema>["entries"][number],
+  selected: FixtureReviewSelection | undefined,
+) {
+  return (
+    selected?.({ report }) ?? [
+      {
+        provenanceKey: entry.provenanceKey,
+        evidenceHash: entry.observationHash,
+      },
+    ]
+  );
+}
 
 export async function handoffFixture(
   db: Database,
@@ -52,6 +72,7 @@ export async function handoffFixture(
       report: z.infer<typeof BundleReportSchema>;
     }) => z.input<typeof PrepareHandoffProtocolSchema>;
     subtitlePolicyResolution?: "unresolved" | "require_simplified";
+    reviewSelection?: FixtureReviewSelection;
     extendReport?: (input: {
       report: z.infer<typeof BundleReportSchema>;
       manifest: z.infer<typeof MigrationBundleSchema>;
@@ -184,12 +205,11 @@ export async function handoffFixture(
       actorId: network.actor.id,
       reportHash: report.reportHash,
       report,
-      selection: [
-        {
-          provenanceKey: mediaEntry.provenanceKey,
-          evidenceHash: mediaEntry.observationHash,
-        },
-      ],
+      selection: fixtureReviewSelection(
+        report,
+        mediaEntry,
+        options.reviewSelection,
+      ),
       recoveryEpoch: 0,
       runtimeVersion: 0,
       status: "approved",

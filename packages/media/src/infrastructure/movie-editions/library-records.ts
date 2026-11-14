@@ -9,6 +9,7 @@ import {
 } from "#infrastructure/handoff/library-receipt.ts";
 import {
   MovieLibraryReferenceV2Schema,
+  MoviePassiveLibraryReferenceV1Schema,
   MoviePublicationAssetV2Schema,
 } from "#shared/movie-editions/publication-v2.ts";
 import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
@@ -16,7 +17,10 @@ import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
 import { nativeJson } from "#infrastructure/native-recovery/snapshots.ts";
 import { movieDefinitionRef } from "./definition.ts";
 import { MOVIE_EDITION_REGISTRY } from "#shared/movie-editions/registry.ts";
-import { initialLibraryAssetVersion } from "#infrastructure/handoff/passive-registration.ts";
+import {
+  initialLibraryAssetVersion,
+  passiveRegistrationApproval,
+} from "#infrastructure/handoff/passive-registration.ts";
 
 const hash = (value: unknown) => identityHash(nativeJson(value));
 type Selection = z.infer<typeof LibraryHandoffSelectionProtocolSchema>;
@@ -64,7 +68,11 @@ export function movieLibraryParentV2FromReceipt(
     request: scope.request,
   });
   const association = plexAssociation(selection.networkEvidence, asset);
-  const reference = MovieLibraryReferenceV2Schema.parse({
+  const ReferenceSchema =
+    passiveRegistrationApproval(scope.request, file) === undefined
+      ? MovieLibraryReferenceV2Schema
+      : MoviePassiveLibraryReferenceV1Schema;
+  const reference = ReferenceSchema.parse({
     kind: "movie_library_adoption_v2",
     scope: asset.scope,
     receiptId: receipt.id,

@@ -79,6 +79,11 @@ export const MovieLibraryReferenceV2Schema = z.strictObject({
   physicalEvidenceHash: Hash,
   subtitleLineage: PublicationSubtitleLineageSchema.optional(),
 });
+/** Only the exact v3 passive-registration receipt can produce this birth version. */
+export const MoviePassiveLibraryReferenceV1Schema =
+  MovieLibraryReferenceV2Schema.extend({
+    assetVersion: z.literal(1),
+  });
 /** Restored bytes have their own physical receipt; their original acquisition remains literal. */
 export const MovieRestoreReferenceV1Schema = z.strictObject({
   kind: z.literal("movie_restore_publication_v1"),
@@ -91,12 +96,14 @@ export const MovieRestoreReferenceV1Schema = z.strictObject({
   physicalEvidenceHash: Hash,
   subtitleLineage: PublicationSubtitleLineageSchema.optional(),
 });
-export const MoviePublicationReferenceV2Schema = z.discriminatedUnion("kind", [
-  MovieTransitionReferenceV2Schema,
-  MovieLibraryReferenceV2Schema,
-  MovieRestoreReferenceV1Schema,
-  MovieRollbackReferenceV1Schema,
-]);
+export const MoviePublicationReferenceV2Schema = z
+  .discriminatedUnion("kind", [
+    MovieTransitionReferenceV2Schema,
+    MovieLibraryReferenceV2Schema,
+    MovieRestoreReferenceV1Schema,
+    MovieRollbackReferenceV1Schema,
+  ])
+  .or(MoviePassiveLibraryReferenceV1Schema);
 export type MovieRestoreReferenceV1 = z.infer<
   typeof MovieRestoreReferenceV1Schema
 >;

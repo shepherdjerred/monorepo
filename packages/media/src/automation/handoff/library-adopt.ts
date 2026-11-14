@@ -55,7 +55,7 @@ export async function adoptLibraryTargets(
     });
     const data = {
       ...(priorKeeping?.libraryPolicyExplicit === true ||
-      !(await hasPhysicalLibrary(tx, selected))
+      !(await hasPhysicalLibrary(tx, selected, scope.files))
         ? {}
         : { libraryKeep: true }),
       profileId: media.profileId,
@@ -133,19 +133,35 @@ export async function adoptLibraryTargets(
 async function hasPhysicalLibrary(
   tx: Prisma.TransactionClient,
   selected: LibraryHandoffScope["targets"][number],
+  files: LibraryHandoffScope["files"],
 ) {
+  const ancestry = {
+    OR: [
+      { id: selected.mediaId },
+      { parentId: selected.mediaId },
+      { parent: { parentId: selected.mediaId } },
+    ],
+  } satisfies Prisma.MediaItemWhereInput;
+  const provedIds = files
+    .filter((file) => file.edition === selected.edition)
+    .flatMap((file) => file.mediaIds);
+  // applyPreparedHandoff has rechecked every selected file's physical proof.
+  // Targets precede native asset/coverage rebinding, so current coverage alone
+  // cannot recognize a fresh file or a passive file's newly reviewed named cut.
+  if (
+    provedIds.length > 0 &&
+    (await tx.mediaItem.findFirst({
+      where: { id: { in: provedIds }, ...ancestry },
+      select: { id: true },
+    })) !== null
+  )
+    return true;
   return (
     (await tx.assetCoverage.findFirst({
       where: {
         current: true,
         edition: selected.edition,
-        media: {
-          OR: [
-            { id: selected.mediaId },
-            { parentId: selected.mediaId },
-            { parent: { parentId: selected.mediaId } },
-          ],
-        },
+        media: ancestry,
       },
       select: { assetId: true },
     })) !== null
