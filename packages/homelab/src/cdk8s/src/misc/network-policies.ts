@@ -20,6 +20,18 @@ import { postgresClusterPodLabels } from "@shepherdjerred/homelab/cdk8s/src/reso
  * the other's.
  */
 
+/**
+ * The home LAN. Traffic that reaches a pod through a `hostPort` or a NodePort
+ * Service with `externalTrafficPolicy: Local` keeps the client's address, so
+ * an Ingress policy on such a pod has to admit the clients by address.
+ */
+const HOME_LAN_CIDR = "192.168.1.0/24";
+
+/** Every device on the home LAN, for a pod LAN clients connect to directly. */
+export function homeLanPeer() {
+  return { ipBlock: { cidr: HOME_LAN_CIDR } };
+}
+
 /** Every pod in the named namespace. */
 export function nsPeer(name: string) {
   return {
@@ -30,6 +42,15 @@ export function nsPeer(name: string) {
 /** One TCP port. */
 export function tcp(port: number) {
   return { port: IntOrString.fromNumber(port), protocol: "TCP" };
+}
+
+/** One UDP port, or with `endPort` the inclusive range that starts at it. */
+export function udp(port: number, endPort?: number) {
+  return {
+    port: IntOrString.fromNumber(port),
+    protocol: "UDP",
+    ...(endPort === undefined ? {} : { endPort }),
+  };
 }
 
 function namespaceIngressRule(namespace: string, ports?: readonly number[]) {
@@ -104,6 +125,19 @@ export function postgresEgress(cluster: string) {
   return {
     to: [{ podSelector: { matchLabels: postgresClusterPodLabels(cluster) } }],
     ports: [tcp(5432)],
+  };
+}
+
+/**
+ * The postgres-operator managing a cluster it created. It connects to the
+ * database pods from its own namespace: SQL on 5432 to sync roles and
+ * databases, and Patroni's REST API on 8008 for status, configuration and
+ * switchover. Every Ingress policy on a cluster's pods needs this rule.
+ */
+export function postgresOperatorIngressRule() {
+  return {
+    from: [nsPeer("postgres-operator")],
+    ports: [tcp(5432), tcp(8008)],
   };
 }
 

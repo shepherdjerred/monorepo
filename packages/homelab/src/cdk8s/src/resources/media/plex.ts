@@ -22,7 +22,15 @@ import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailsca
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
-import { Quantity } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import {
+  KubeNetworkPolicy,
+  Quantity,
+} from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import {
+  homeLanPeer,
+  tcp,
+  udp,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import { onePasswordSecret } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 
 export function createPlexDeployment(
@@ -271,6 +279,34 @@ export function createPlexDeployment(
       Quantity.fromNumber(1),
     ),
   );
+
+  // Plex publishes its client ports as hostPorts, and a hostPort keeps the
+  // client's address, so LAN players and discovery arrive from the LAN rather
+  // than from a pod. `media-ingress-policy` admits only namespaces; this adds
+  // the LAN for the Plex pod alone, on exactly the published ports. Nothing
+  // here admits the internet: remote access through a router port-forward to
+  // 32400 would arrive from public addresses and needs its own rule.
+  new KubeNetworkPolicy(chart, "plex-lan-ingress-policy", {
+    metadata: { name: "plex-lan-ingress-policy" },
+    spec: {
+      podSelector: { matchLabels: deployment.matchLabels },
+      policyTypes: ["Ingress"],
+      ingress: [
+        {
+          from: [homeLanPeer()],
+          ports: [
+            // Web and API, companion, Roku companion, DLNA.
+            ...[32_400, 3005, 8324, 32_469].map((port) => tcp(port)),
+            // DLNA discovery, Bonjour, GDM discovery.
+            udp(1900),
+            udp(5353),
+            udp(32_410),
+            udp(32_412, 32_414),
+          ],
+        },
+      ],
+    },
+  });
 
   // Create ServiceMonitor for Prometheus to scrape Plex metrics
   createServiceMonitor(chart, { name: "plex", interval: "60s" });
