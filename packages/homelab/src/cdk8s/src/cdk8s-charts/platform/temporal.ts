@@ -27,6 +27,7 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/external-auth.ts";
 import {
   nsPeer,
+  cloudflareTunnelPeer,
   tcp,
   postgresEgress,
   dnsEgressRule,
@@ -300,7 +301,7 @@ export function createTemporalChart(app: App) {
       ingress: [
         {
           // Allow from Tailscale and Cloudflare Tunnel
-          from: [nsPeer("tailscale"), nsPeer("cloudflare-tunnel")],
+          from: [nsPeer("tailscale"), cloudflareTunnelPeer()],
           ports: [tcp(8080)],
         },
         // Allow blackbox-exporter's in-cluster health probe

@@ -323,25 +323,9 @@ export const CONTAINERS_WITHOUT_SECCOMP: ReadonlySet<string> = new Set([
  * Registered probe ports a NetworkPolicy closes to one of the peers that
  * connect to them (`<namespace>/<service>:<port> from <source namespace>`):
  * blackbox-exporter in `prometheus`, the Tailscale proxy in `tailscale`, or
- * cloudflared in `cloudflare-tunnel`.
+ * cloudflared in `cloudflare-operator-system`.
  */
 export const PROBE_PORTS_NOT_ADMITTED: ReadonlySet<string> = new Set([
-  // The policy admits the `cloudflare-tunnel` namespace
-  // (`cloudflareTunnelIngressRule`), where no cloudflared pod runs.
-  "bugsink/bugsink-bugsink-service:8000 from cloudflare-operator-system",
-  "freshrss/freshrss-service:80 from cloudflare-operator-system",
-  "glitter-boys-launcher/glitter-boys-launcher-http:8080 from cloudflare-operator-system",
-  "home/home-homeassistant-service:8123 from cloudflare-operator-system",
-  "media/media-plex-service:32400 from cloudflare-operator-system",
-  "media/media-seerr-service:5055 from cloudflare-operator-system",
-  "media/streambot-web:8080 from cloudflare-operator-system",
-  "relay/relay-relay-service:8080 from cloudflare-operator-system",
-  "temporal/temporal-worker-agent-tasks:9467 from cloudflare-operator-system",
-  "temporal/temporal-worker-gh-webhook:9466 from cloudflare-operator-system",
-  "temporal/temporal-worker-sleep-webhook:9469 from cloudflare-operator-system",
-  "temporal/temporal-worker-xcode-cloud-webhook:9468 from cloudflare-operator-system",
-  "trmnl-dashboard/trmnl-dashboard-trmnl-dashboard-service:3000 from cloudflare-operator-system",
-  "woodpecker/woodpecker-server:8000 from cloudflare-operator-system",
   // The gateway's webhook ports are opened to the tunnel only
   // (`temporal-gateway-ingress-netpol`), not to blackbox-exporter.
   "temporal/temporal-worker-agent-tasks:9467 from prometheus",

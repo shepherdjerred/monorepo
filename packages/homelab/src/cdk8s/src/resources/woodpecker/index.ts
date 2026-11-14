@@ -32,6 +32,7 @@ import { CONFIG_EXTENSION_ENDPOINT } from "@shepherdjerred/homelab/cdk8s/src/res
 import { escapeHelmGoTemplate } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/rules/shared.ts";
 import {
   nsPeer,
+  cloudflareTunnelPeer,
   tcp,
   postgresEgress,
   prometheusIngressRule,
@@ -270,7 +271,7 @@ export function createWoodpeckerServer(chart: Chart) {
       policyTypes: ["Egress", "Ingress"],
       ingress: [
         {
-          from: [nsPeer("tailscale"), nsPeer("cloudflare-tunnel")],
+          from: [nsPeer("tailscale"), cloudflareTunnelPeer()],
           ports: [tcp(WOODPECKER_HTTP_PORT)],
         },
         {

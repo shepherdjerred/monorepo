@@ -42,9 +42,21 @@ export function tailscaleIngressRule(ports?: readonly number[]) {
   return namespaceIngressRule("tailscale", ports);
 }
 
-/** Traffic from cloudflared, the public edge, in `cloudflare-tunnel`. */
+/**
+ * The namespace cloudflared, the public edge, runs in. The Cloudflare operator
+ * creates the tunnel Deployment beside itself; the `cloudflare-tunnel`
+ * namespace only holds the `ClusterTunnel` Application and has no pods.
+ */
+const CLOUDFLARE_TUNNEL_NAMESPACE = "cloudflare-operator-system";
+
+/** The cloudflared pods, for a rule that also names other peers. */
+export function cloudflareTunnelPeer() {
+  return nsPeer(CLOUDFLARE_TUNNEL_NAMESPACE);
+}
+
+/** Traffic from cloudflared, the public edge. */
 export function cloudflareTunnelIngressRule(ports?: readonly number[]) {
-  return namespaceIngressRule("cloudflare-tunnel", ports);
+  return namespaceIngressRule(CLOUDFLARE_TUNNEL_NAMESPACE, ports);
 }
 
 /**

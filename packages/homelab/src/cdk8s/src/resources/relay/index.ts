@@ -92,7 +92,7 @@ public_key = "${AUTH_PUBLIC_KEY_2025_10_23}"
 //   authorized member. Tradeoff (accepted): not E2E, and on a public server
 //   relay.md could technically mint a token and read content.
 // - Exposed publicly via Cloudflare Tunnel (outbound-only; no inbound port on
-//   the homelab). Ingress is locked to the cloudflare-tunnel namespace.
+//   the homelab). Ingress is locked to cloudflared (`cloudflareTunnelIngressRule`).
 export function createRelayDeployment(chart: Chart) {
   // Shared SeaweedFS S3 credentials (item id vet52jaeh75chsalu6lulugium),
   // mirrored into the relay namespace. Fields: SEAWEEDFS_ACCESS_KEY_ID /

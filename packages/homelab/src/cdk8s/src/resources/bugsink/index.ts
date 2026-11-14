@@ -21,6 +21,7 @@ import {
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import {
   nsPeer,
+  cloudflareTunnelPeer,
   tcp,
   blackboxProbeIngressRule,
   postgresEgress,
@@ -355,7 +356,7 @@ export function createBugsinkDeployment(chart: Chart) {
             // Tailscale operator
             nsPeer("tailscale"),
             // Cloudflare tunnel
-            nsPeer("cloudflare-tunnel"),
+            cloudflareTunnelPeer(),
           ],
           ports: [tcp(8000)],
         },

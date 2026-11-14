@@ -9,6 +9,7 @@ import {
   dnsEgressRule,
   externalHttpsEgressRule,
   nsPeer,
+  cloudflareTunnelPeer,
   tcp,
   tailscaleIngressRule,
   prometheusIngressRule,
@@ -48,9 +49,7 @@ export function createForumNetwork(chart: Chart, stage: "beta" | "prod"): void {
       ingress: [
         {
           from: [
-            nsPeer(
-              stage === "beta" ? "tailscale" : "cloudflare-operator-system",
-            ),
+            stage === "beta" ? nsPeer("tailscale") : cloudflareTunnelPeer(),
           ],
           ports: [tcp(8080)],
         },

@@ -70,7 +70,7 @@ describe("network policy peer library", () => {
     ).toEqual([
       { from: [namespace("tailscale")], ports: [port(8080)] },
       {
-        from: [namespace("cloudflare-tunnel")],
+        from: [namespace("cloudflare-operator-system")],
         ports: [port(3000), port(3001)],
       },
       { from: [namespace("prometheus")], ports: [port(9090)] },
@@ -89,7 +89,7 @@ describe("network policy peer library", () => {
       }).ingress,
     ).toEqual([
       { from: [namespace("tailscale")] },
-      { from: [namespace("cloudflare-tunnel")] },
+      { from: [namespace("cloudflare-operator-system")] },
       { from: [{ podSelector: {} }] },
     ]);
   });
