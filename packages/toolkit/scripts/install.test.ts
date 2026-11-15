@@ -15,15 +15,39 @@ test("installation remains scoped below the supplied home directory", () => {
   });
 });
 
-test("Windows installs only brim.exe under the user profile", () => {
-  expect(installPaths(String.raw`C:\Users\test`, "win32").brimBinary).toBe(
-    String.raw`C:\Users\test\.local\bin\brim.exe`,
-  );
-  const steps = buildSteps(String.raw`C:\Users\test`, "win32");
-  expect(steps).toHaveLength(1);
-  expect(steps[0]?.argv).toContain("--target=bun-windows-x64");
-  expect(steps[0]?.destination).toBe(
-    String.raw`C:\Users\test\.local\bin\brim.exe`,
+test("Windows installs native toolkit.exe and brim.exe under the user profile", () => {
+  const home = String.raw`C:\Users\Test User`;
+  const steps = buildSteps(home, "win32");
+  expect(steps).toEqual([
+    {
+      argv: [
+        "bun",
+        "build",
+        "./src/index.ts",
+        "--compile",
+        "--target=bun-windows-x64",
+        "--external",
+        "ffmpeg-static",
+        "--outfile=dist/toolkit.exe",
+      ],
+      output: "dist/toolkit.exe",
+      destination: String.raw`C:\Users\Test User\.local\bin\toolkit.exe`,
+    },
+    {
+      argv: [
+        "bun",
+        "build",
+        "./src/brim.ts",
+        "--compile",
+        "--target=bun-windows-x64",
+        "--outfile=dist/brim.exe",
+      ],
+      output: "dist/brim.exe",
+      destination: String.raw`C:\Users\Test User\.local\bin\brim.exe`,
+    },
+  ]);
+  expect(installPaths(home, "win32").legacyBinary).toBe(
+    String.raw`C:\Users\Test User\.local\bin\tools.exe`,
   );
 });
 
