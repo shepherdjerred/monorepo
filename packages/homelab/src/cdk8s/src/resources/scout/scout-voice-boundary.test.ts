@@ -105,6 +105,24 @@ function voiceEnv(stage: "beta" | "prod") {
   return containerOf(voiceDeployment(stage), voiceWorkloadName(stage)).env;
 }
 
+function expectVoiceSecretVolume(
+  deployment: z.infer<typeof DeploymentSpecSchema>,
+  container: ReturnType<typeof containerOf>,
+  optional: boolean,
+) {
+  const mount = container.volumeMounts.find(
+    (candidate) => candidate.mountPath === "/run/secrets/scout-openai",
+  );
+  expect(mount).toBeDefined();
+  const volume = deployment.template.spec.volumes.find(
+    (candidate) => candidate.name === mount?.name,
+  );
+  expect(volume?.secret).toEqual(
+    expect.objectContaining({ secretName: "scout-openai", optional }),
+  );
+  return volume;
+}
+
 describe("Hey Scout voice deployment boundary", () => {
   test("both stages place the shard on their gateway", () => {
     expect(voiceWorkloadName("beta")).toBe("scout-beta-scout-gateway");
@@ -146,7 +164,8 @@ describe("Hey Scout voice deployment boundary", () => {
   });
 
   /**
-   * `optional: true` is deliberate and load-bearing. Please do not "fix" it.
+   * The GATEWAY's `optional: true` is deliberate and load-bearing. The
+   * application pods, by contrast, require the Secret (fail-fast).
    *
    * It reads like a violation of the fail-fast secrets rule, and has been
    * raised as one. It is not, for three reasons that live in the backend:
@@ -163,8 +182,7 @@ describe("Hey Scout voice deployment boundary", () => {
    *    `voice_assistant_enabled` Flipt flag and a boot-time gate "would only
    *    take the pod down"; the asset set is verified in the image's
    *    `voice-smoke` build stage, which fails the build rather than the pod.
-   * 3. Since the runtime-role split this volume lives on the GATEWAY pod,
-   *    which owns the Discord shard. A required Secret leaves a pod
+   * 3. This volume lives on the GATEWAY pod, which owns the Discord shard. A required Secret leaves a pod
    *    unschedulable until the Secret exists, so requiring it here would take
    *    the whole bot — every slash command, not just voice — offline whenever
    *    `scout-openai` is missing or mid-rotation, in exchange for a flag-gated
@@ -185,19 +203,7 @@ describe("Hey Scout voice deployment boundary", () => {
       container.env.some((entry) => entry.name === "VOICE_OPENAI_API_KEY"),
     ).toBe(false);
 
-    const mount = container.volumeMounts.find(
-      (candidate) => candidate.mountPath === "/run/secrets/scout-openai",
-    );
-    expect(mount).toBeDefined();
-    const volume = deployment.template.spec.volumes.find(
-      (candidate) => candidate.name === mount?.name,
-    );
-    expect(volume?.secret).toEqual(
-      expect.objectContaining({
-        secretName: "scout-openai",
-        optional: true,
-      }),
-    );
+    const volume = expectVoiceSecretVolume(deployment, container, true);
     // Asserted on its own as well, so a flip to required fails on the exact
     // property that matters and lands the reader on the reasoning above rather
     // than on a whole-object shape mismatch.
@@ -205,25 +211,51 @@ describe("Hey Scout voice deployment boundary", () => {
   });
 
   /**
-   * The other half of moving voice onto the shard: the `application` role
-   * declares voiceAssistant false, so on a split stage it must carry neither
-   * the credential mount nor the bootstrap env. Leaving them behind would point
-   * VOICE_OPENAI_API_KEY_FILE at a path that pod does not mount, which looks like a
-   * wired credential and is not one.
+   * Decision: the Discord-voice OpenAI key is reused by the Scout Desktop
+   * voice-turn route on the application pod rather than a new scoped key. The
+   * allowance is exactly this key on exactly the application pod, and only its
+   * credential path: the voice assets and wake-word runtime stay on the
+   * gateway.
    */
-  test("a split stage leaves no voice surface on the application pod", () => {
+  test("both stages mount the voice key on the application pod only as a credential", () => {
     for (const stage of ["beta", "prod"] as const) {
       const deployment = backendDeployment(stage);
       const container = containerOf(deployment, `scout-${stage}-scout-backend`);
-      const names = new Set(container.env.map((entry) => entry.name));
-      for (const name of VOICE_ENV_NAMES) {
-        expect(names.has(name)).toBe(false);
-      }
       expect(
-        container.volumeMounts.some(
-          (candidate) => candidate.mountPath === "/run/secrets/scout-openai",
-        ),
-      ).toBe(false);
+        container.env.find(
+          (entry) => entry.name === "VOICE_OPENAI_API_KEY_FILE",
+        )?.value,
+      ).toBe("/run/secrets/scout-openai/OPENAI_API_KEY");
+      for (const name of [
+        "VOICE_OPENAI_API_KEY",
+        "VOICE_ASSETS_DIR",
+        "VOICE_KWS_RUNTIME",
+      ]) {
+        expect(container.env.some((entry) => entry.name === name)).toBe(false);
+      }
+      expectVoiceSecretVolume(deployment, container, false);
+    }
+  });
+
+  // The key is allowed nowhere else: not on the activity worker, and not on the
+  // production gateway (Discord voice stays beta-only).
+  test("no other Scout workload carries the voice key", () => {
+    const allowed = new Set([
+      "scout-beta-scout-backend",
+      "scout-prod-scout-backend",
+      "scout-beta-scout-gateway",
+    ]);
+    for (const stage of ["beta", "prod"] as const) {
+      const deployments = scoutResources(stage).filter(
+        (resource) => resource.kind === "Deployment",
+      );
+      expect(deployments.length).toBeGreaterThan(2);
+      for (const resource of deployments) {
+        if (allowed.has(resource.metadata.name)) continue;
+        const text = JSON.stringify(resource.spec);
+        expect(text).not.toContain("scout-openai");
+        expect(text).not.toContain("VOICE_OPENAI_API_KEY");
+      }
     }
   });
 
@@ -236,21 +268,27 @@ describe("Hey Scout voice deployment boundary", () => {
     expect(JSON.stringify(item.spec)).toContain("scout-openai");
   });
 
-  test("production sets no voice variable at all", () => {
+  test("the production gateway sets no voice variable", () => {
     const names = new Set(voiceEnv("prod").map((entry) => entry.name));
     for (const name of VOICE_ENV_NAMES) {
       expect(names.has(name)).toBe(false);
     }
   });
 
-  test("production provisions no OpenAI rotation unit", () => {
-    expect(
-      scoutResources("prod").some(
-        (resource) =>
-          resource.kind === "OnePasswordItem" &&
-          resource.metadata.name === "scout-openai",
+  // One shared vault item, deliberately: the key is reused, not duplicated per
+  // stage, so production references the same rotation unit as beta.
+  test("production references the same scout-openai rotation unit", () => {
+    const item = findResource(
+      scoutResources("prod"),
+      "OnePasswordItem",
+      "scout-openai",
+    );
+    expect(JSON.stringify(item.spec)).toBe(
+      JSON.stringify(
+        findResource(scoutResources("beta"), "OnePasswordItem", "scout-openai")
+          .spec,
       ),
-    ).toBe(false);
+    );
   });
 
   // A blocked media path is invisible: the voice websocket rides TCP/443 and
