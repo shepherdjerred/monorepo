@@ -236,34 +236,49 @@ test("the original warning allowance accounts cumulatively for both real househo
   const execution = testPlexBindingExecution();
   const budget = new PublicationAuthorityReadBudget();
   expect(budget.take).toBe(101);
-  // Five genuine recipients cost 2 preparation + 18 per composition = 38,
-  // within the unchanged 100-record allowance, rather than exhausting it.
+  // Each composition rechecks binding twice (4), projection (1), and five
+  // requester associations (15): 2 preparation + 20 + 20 = 42 records.
   let claimed = false;
+  const claimTakes: number[] = [];
+  const sendTakes: number[] = [];
+  const sendAfterClaim: boolean[] = [];
   let receipt: string | undefined;
-  expect(
-    await createNotificationActivities({
-      ...f.context,
-      plexBindingExecution: () => execution,
-      movieManagement: { execution, budget },
-      checkpoint: () => {
-        expect(budget.take).toBe(81);
-        claimed = true;
-        return Promise.resolve();
-      },
-      notify: async (message, options) => {
-        expect(claimed).toBe(true);
-        expect(budget.take).toBe(63);
-        const outcome = await f.context.notify(message, options);
-        receipt = outcome.receipt;
-        return outcome;
-      },
-    }).deliverMediaNotification({
-      operationId: command.id,
-      notificationId: delivery.id,
-    }),
-  ).toEqual({ status: "accepted", reason: null });
+  const outcome = await createNotificationActivities({
+    ...f.context,
+    plexBindingExecution: () => execution,
+    movieManagement: { execution, budget },
+    checkpoint: () => {
+      claimTakes.push(budget.take);
+      claimed = true;
+      return Promise.resolve();
+    },
+    notify: async (message, options) => {
+      sendAfterClaim.push(claimed);
+      sendTakes.push(budget.take);
+      const sent = await f.context.notify(message, options);
+      receipt = sent.receipt;
+      return sent;
+    },
+  }).deliverMediaNotification({
+    operationId: command.id,
+    notificationId: delivery.id,
+  });
+  // Assertions stay outside the application's delivery error boundary so a
+  // mismatched charge exposes every captured boundary instead of becoming unknown.
+  expect({
+    outcome,
+    claimTakes,
+    sendTakes,
+    sendAfterClaim,
+    finalTake: budget.take,
+  }).toEqual({
+    outcome: { status: "accepted", reason: null },
+    claimTakes: [79],
+    sendTakes: [59],
+    sendAfterClaim: [true],
+    finalTake: 59,
+  });
   expect(claimed).toBe(true);
-  expect(budget.take).toBe(63);
   expect(f.sent).toHaveLength(1);
   const actualReceipt = z.string().min(1).parse(receipt);
   const accepted = await f.db.notificationDelivery.findUniqueOrThrow({
