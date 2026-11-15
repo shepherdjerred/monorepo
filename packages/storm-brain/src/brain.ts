@@ -65,7 +65,7 @@ export type BrainDependencies = {
 };
 
 export type CreateBrainOptions = {
-  /** The catalog id, for example `gpt-5.6-luna`. Unknown ids fail fast. */
+  /** The catalog id, for example `gpt-6-luna`. Unknown ids fail fast. */
   model: string;
   /** Per-call LLM timeout in milliseconds. */
   timeoutMs: number;

@@ -58,15 +58,15 @@ import { synthesisPrompt } from "#activities/glitter/context/refresh/synthesis/g
 // chunk hit the ceiling — identifying which one meant scanning every cached
 // generation artifact out of the corpus bucket.
 const extractionTruncationError = (chunkKey: string): string =>
-  `GPT-5.6 Luna extraction reached the completion-token limit for ${chunkKey}`;
-// gpt-5.6-luna is a reasoning model at `reasoning_effort: "medium"`, so its
+  `GPT-6 Luna extraction reached the completion-token limit for ${chunkKey}`;
+// gpt-6-luna is a reasoning model at `reasoning_effort: "medium"`, so its
 // hidden reasoning tokens share `max_completion_tokens` with the (large) style
 // synthesis output. Observed live: reasoning + output crossed the former 15k cap
 // and truncated (finish_reason=length → unparseable).
 // 28k gives comfortable headroom over the observed ~15k usage; if a call still
 // truncates, it is retried once at the ceiling below.
 const SYNTHESIS_TRUNCATION_ERROR =
-  "GPT-5.6 Luna synthesis reached the completion-token limit";
+  "GPT-6 Luna synthesis reached the completion-token limit";
 /**
  * Runs one cached Glitter generation call. Chunk extraction and card synthesis
  * differ only in their response schema, schema name, and failure messages —

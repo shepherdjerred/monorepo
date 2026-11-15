@@ -255,7 +255,7 @@ export async function runScenarios(
       exploreModel: input.options.model,
       featureTipPercent: configuration.featureTipPercent,
       featureTipCooldownHours: configuration.featureTipCooldownHours,
-      reportAiModel: configuration.reportAiModel ?? "gpt-5.6-sol",
+      reportAiModel: configuration.reportAiModel ?? "gpt-6.1-sol",
       temporalCallGraphTracing: false,
     },
     startPolling: false,

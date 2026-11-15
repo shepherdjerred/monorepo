@@ -17,7 +17,7 @@ import {
  * pin that decision.
  */
 
-export const EXPLORE_CAPABILITY_EVAL_MODEL = "gpt-5.6-luna";
+export const EXPLORE_CAPABILITY_EVAL_MODEL = "gpt-6-luna";
 
 /**
  * Contractions are expanded on both sides so one phrase covers both forms.

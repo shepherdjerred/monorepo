@@ -31,7 +31,7 @@ import { buildBoundedSynthesisInput } from "./synthesis/glitter-context-refresh-
 import { synthesisPrompt } from "./synthesis/glitter-context-refresh-synthesis-prompt.ts";
 import { GlitterEvidenceError } from "./glitter-context-refresh-evidence-error.ts";
 
-export const RELATIONSHIP_MODEL = "gpt-5.6-luna";
+export const RELATIONSHIP_MODEL = "gpt-6-luna";
 export const RELATIONSHIP_MAX_OUTPUT_TOKENS = 6000;
 export const RELATIONSHIP_INPUT_BYTE_LIMIT = 600_000;
 const MINIMUM_RELATIONSHIP_EVIDENCE = 2;

@@ -143,7 +143,7 @@ export const ConfigSchema = z.object({
   agents: z.object({
     codex: z.object({
       openAiApiKey: OpReferenceSchema,
-      model: z.string().min(1).default("gpt-5.6-luna"),
+      model: z.string().min(1).default("gpt-6-luna"),
     }),
   }),
   docker: z.object({

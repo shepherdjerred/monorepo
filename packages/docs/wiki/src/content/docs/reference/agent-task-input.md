@@ -128,7 +128,7 @@ consume the run's execution timeout.
 
 |                | Codex SDK                        |
 | -------------- | -------------------------------- |
-| Default model  | `gpt-5.6-luna`                   |
+| Default model  | `gpt-6-luna`                     |
 | Schema         | Codex SDK output-schema dialect  |
 | Tools          | danger-full-access agent sandbox |
 | Pinned package | `@openai/codex-sdk`              |

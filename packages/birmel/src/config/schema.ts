@@ -47,9 +47,9 @@ export const DiscordConfigSchema = z.object({
  * gates boot on a key — which is what made the old gateway variable fatal.
  */
 export const LlmConfigSchema = z.object({
-  model: z.string().trim().min(1).default("gpt-5.6-sol"),
-  classifierModel: z.string().trim().min(1).default("gpt-5.4-nano"),
-  memoryModel: z.string().trim().min(1).default("gpt-5.4-nano"),
+  model: z.string().trim().min(1).default("gpt-6.1-sol"),
+  classifierModel: z.string().trim().min(1).default("gpt-6-luna"),
+  memoryModel: z.string().trim().min(1).default("gpt-6-luna"),
   embeddingModel: z.string().trim().min(1).default("text-embedding-3-small"),
   imageModel: z.string().trim().min(1).default("gemini-3-pro-image-preview"),
   reasoningEffort: z
@@ -120,7 +120,7 @@ export const BugsinkConfigSchema = z.object({
 export const PersonaConfigSchema = z.object({
   enabled: z.boolean().default(true),
   defaultPersona: z.string().default("virmel"),
-  styleModel: z.string().default("gpt-5.4-nano"),
+  styleModel: z.string().default("gpt-6-luna"),
 });
 
 /**

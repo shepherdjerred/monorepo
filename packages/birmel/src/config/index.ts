@@ -48,9 +48,9 @@ function loadCoreConfig(environment: Environment) {
       clientId: environment["DISCORD_CLIENT_ID"] ?? "",
     },
     llm: {
-      model: environment["LLM_MODEL"] ?? "gpt-5.6-sol",
-      classifierModel: environment["LLM_CLASSIFIER_MODEL"] ?? "gpt-5.4-nano",
-      memoryModel: environment["LLM_MEMORY_MODEL"] ?? "gpt-5.4-nano",
+      model: environment["LLM_MODEL"] ?? "gpt-6.1-sol",
+      classifierModel: environment["LLM_CLASSIFIER_MODEL"] ?? "gpt-6-luna",
+      memoryModel: environment["LLM_MEMORY_MODEL"] ?? "gpt-6-luna",
       embeddingModel:
         environment["LLM_EMBEDDING_MODEL"] ?? "text-embedding-3-small",
       imageModel:
@@ -115,7 +115,7 @@ function loadFeatureConfig(environment: Environment) {
     persona: {
       enabled: parseBoolean(environment["PERSONA_ENABLED"], true),
       defaultPersona: environment["PERSONA_DEFAULT"] ?? "virmel",
-      styleModel: environment["PERSONA_STYLE_MODEL"] ?? "gpt-5.4-nano",
+      styleModel: environment["PERSONA_STYLE_MODEL"] ?? "gpt-6-luna",
     },
     responder: {
       enabled: parseBoolean(environment["RESPONDER_ENABLED"], true),

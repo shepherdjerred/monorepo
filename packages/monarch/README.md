@@ -54,7 +54,7 @@ General:
 | `--derived-only`           | Apply only what vendors derived from documents       |
 | `--limit <n>`              | Limit transactions to process                        |
 | `--batch-size <n>`         | Batch size for LLM calls (default: 25)               |
-| `--model <id>`             | Stable catalog model ID (default: `gpt-5.6-luna`)    |
+| `--model <id>`             | Stable catalog model ID (default: `gpt-6-luna`)      |
 | `--sample <n>`             | Sample N merchant groups for testing                 |
 | `--verbose`                | Enable debug logging                                 |
 | `--output <path>`          | Save proposed changes to JSON                        |

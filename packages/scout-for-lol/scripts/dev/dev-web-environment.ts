@@ -47,8 +47,8 @@ export const DEFAULT_STATIC_FLAG_OVERRIDES: Record<
   "scout-explore-analysis-enabled": true,
   "scout-explore-model-picker-enabled": true,
   "scout-explore-spend-policy":
-    '{"globalMonthlyMicros":20000000,"userMonthlyMicros":5000000,"turnMicros":500000}',
-  "scout-report-ai-model": "gpt-5.6-sol",
+    '{"globalMonthlyMicros":40000000,"userMonthlyMicros":15000000,"turnMicros":10000000}',
+  "scout-report-ai-model": "gpt-6.1-sol",
   "scout-feature-tip-percent": 10,
   "scout-feature-tip-cooldown-hours": 72,
   "scout-riot-budget-mode": "observe",

@@ -90,7 +90,7 @@ Create a chat from iMessage:
 {
   "title": "Investigate storage alerts",
   "provider": "claude",
-  "model": "claude-opus-5",
+  "model": "claude-opus-5-5",
   "source": {
     "kind": "imessage",
     "conversationId": "photon-conversation-hash"

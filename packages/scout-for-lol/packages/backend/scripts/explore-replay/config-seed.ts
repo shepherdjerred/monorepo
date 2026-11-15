@@ -10,7 +10,7 @@ export function replayDynamicConfigSeed(): DynamicConfigSeed {
     exploreModel: configuration.exploreModel,
     featureTipPercent: configuration.featureTipPercent,
     featureTipCooldownHours: configuration.featureTipCooldownHours,
-    reportAiModel: configuration.reportAiModel ?? "gpt-5.6-sol",
+    reportAiModel: configuration.reportAiModel ?? "gpt-6.1-sol",
     temporalCallGraphTracing: false,
   };
 }

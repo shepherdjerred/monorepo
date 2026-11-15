@@ -26,7 +26,7 @@ export function temporalLlmRuntime(): ReturnType<typeof createLlmRuntime> {
   return runtime;
 }
 
-const SYNTHESIS_MODEL = "gpt-5.6-sol";
+const SYNTHESIS_MODEL = "gpt-6.1-sol";
 const SYNTHESIS_MAX_OUTPUT_TOKENS = 300;
 
 function firstWords(value: string, maximum: number): string {

@@ -35,7 +35,7 @@ function assertClosedLocalOwner(
 }
 
 export const LocalPromotionSettings = z.strictObject({
-  model: z.string().min(1).default("gpt-5.6-luna"),
+  model: z.string().min(1).default("gpt-6-luna"),
   maxSteps: z.number().int().min(1).max(80).default(80),
   timeoutMinutes: z.number().int().min(1).max(15).default(15),
   dailySpendUsd: z.number().nonnegative().max(5).default(5),

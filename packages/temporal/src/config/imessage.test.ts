@@ -21,8 +21,8 @@ describe("iMessage configuration boundaries", () => {
   test("absence resolves the provider model defaults", async () => {
     expect(await imessageChatModels()).toEqual({
       sourceAvailable: true,
-      claudeModel: "claude-opus-5",
-      codexModel: "gpt-5.6-luna",
+      claudeModel: "claude-opus-5-5",
+      codexModel: "gpt-6-luna",
     });
   });
   test("new chats resolve each provider's model without reading retired admission flags", async () => {
@@ -48,8 +48,8 @@ describe("iMessage configuration boundaries", () => {
       flag.mockRejectedValue(new Error("source unavailable"));
       expect(await imessageChatModels()).toEqual({
         sourceAvailable: false,
-        claudeModel: "claude-opus-5",
-        codexModel: "gpt-5.6-luna",
+        claudeModel: "claude-opus-5-5",
+        codexModel: "gpt-6-luna",
       });
       expect(warning).toHaveBeenCalled();
     } finally {

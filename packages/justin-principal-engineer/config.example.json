@@ -30,7 +30,7 @@
   "agents": {
     "codex": {
       "openAiApiKey": "op://Automation/OpenAI/credential",
-      "model": "gpt-5.6-luna"
+      "model": "gpt-6-luna"
     }
   },
   "docker": {

@@ -13,7 +13,7 @@ import type { UsageSummary } from "../usage.ts";
 import { createUsageTracker } from "../usage.ts";
 
 let runtime: LlmRuntime | undefined;
-let modelId = "claude-sonnet-5";
+let modelId = "claude-sonnet-5-5";
 let tracker: ReturnType<typeof createUsageTracker> | undefined;
 let webSearchEnabled = false;
 

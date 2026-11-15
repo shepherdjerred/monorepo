@@ -19,6 +19,7 @@ import {
   EXPLORE_MAX_PROVIDER_INPUT_BOUND,
   exploreProviderInputBound,
 } from "./input-bound.ts";
+import { DEFAULT_EXPLORE_SPEND_POLICY } from "#src/configuration/explore-spend.ts";
 import { reserveExploreCall } from "./ledger.ts";
 
 const db = createTestDatabase("explore-prompt-budget");
@@ -124,6 +125,8 @@ test.each(["gpt-6-luna", "gpt-6.1-sol"])(
       db.prisma,
     );
     expect(reservation.maxOutputTokens).toBe(EXPLORE_MAX_OUTPUT_TOKENS);
-    expect(reservation.amount).toBeLessThanOrEqual(500_000);
+    expect(reservation.amount).toBeLessThanOrEqual(
+      DEFAULT_EXPLORE_SPEND_POLICY.turnMicros,
+    );
   },
 );

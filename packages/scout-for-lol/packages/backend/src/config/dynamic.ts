@@ -183,7 +183,7 @@ const DEFINITION = {
   reportAiModel: {
     schema: z.string().trim().min(1),
     sources: ["flag", "env", "default"],
-    default: "gpt-5.6-sol",
+    default: "gpt-6.1-sol",
     names: { flag: "scout-report-ai-model", env: "REPORT_AI_MODEL" },
   },
   exploreModel: {
@@ -499,7 +499,7 @@ export function reportAiModel(): string {
   return (
     snapshot?.get("reportAiModel") ??
     configuration.reportAiModel ??
-    "gpt-5.6-sol"
+    "gpt-6.1-sol"
   );
 }
 

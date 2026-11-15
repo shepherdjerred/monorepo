@@ -57,7 +57,7 @@ const COMPONENT = "homelab-audit";
 
 const HEARTBEAT_INTERVAL_MS = 10_000;
 
-const DEFAULT_MODEL = "gpt-5.6-luna";
+const DEFAULT_MODEL = "gpt-6-luna";
 const DEFAULT_MAX_TURNS = 80;
 
 const { jsonLog, captureWithContext, safeHeartbeat } =

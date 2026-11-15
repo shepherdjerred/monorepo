@@ -22,7 +22,7 @@ describe("buildAgentTaskSdkConfig", () => {
     );
 
     expect(config.provider).toBe("codex");
-    expect(config.model).toBe("gpt-5.6-luna");
+    expect(config.model).toBe("gpt-6-luna");
     expect(config.outputSchema).toEqual(AGENT_TASK_OUTPUT_JSON_SCHEMA_CODEX);
     expect(config.prompt).toContain("report-only");
   });

@@ -350,7 +350,7 @@ async function run(
   try {
     const agent = await runSeasonAgent({
       workdir: workdir.repoDir,
-      model: input.model ?? "gpt-5.6-luna",
+      model: input.model ?? "gpt-6-luna",
       maxTurns: input.maxTurns ?? 40,
       seasonsFile: SEASONS_FILE,
       seasonsTestFile: SEASONS_TEST_FILE,

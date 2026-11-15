@@ -9,7 +9,7 @@ describe("storm-brain config", () => {
   test("loads defaults", () => {
     const config = loadBrainConfig({ environment: { ...base } });
     return expect(config).resolves.toMatchObject({
-      model: "gpt-5.6-luna",
+      model: "gpt-6-luna",
       maxBodyBytes: 262_144,
       llmTimeoutMs: 60_000,
       port: 3000,
@@ -36,7 +36,7 @@ describe("storm-brain config", () => {
       loadBrainConfig({
         environment: { ...base, PORT: "" },
       }),
-    ).resolves.toMatchObject({ model: "gpt-5.6-luna", port: 3000 });
+    ).resolves.toMatchObject({ model: "gpt-6-luna", port: 3000 });
   });
 
   test("rejects unknown models and clashing ports", async () => {
