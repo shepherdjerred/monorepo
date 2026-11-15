@@ -31,16 +31,39 @@ public struct AntigravityProvider: UsageProvider {
     return PlanOutcome(await planResult, parse: Self.parsePlan).applied(to: usage)
   }
 
-  /// `loadCodeAssist` names the Google AI subscription as `paidTier` ("Google AI Pro"); an
-  /// account without one has only `currentTier` (the free "Antigravity" tier).
+  /// `loadCodeAssist` names the Google AI subscription as `paidTier` ("Google AI Pro" or "Google AI Ultra");
+  /// an account without one has only `currentTier` (the free "Antigravity" tier).
   public static func parsePlan(data: Data) throws -> PlanInfo? {
-    struct Tier: Decodable { let name: String? }
-    struct Answer: Decodable {
-      let paidTier: Tier?
-      let currentTier: Tier?
+    let answer = try JSONDecoder().decode(CodeAssistAnswer.self, from: data)
+    let tier = answer.paidTier ?? answer.currentTier
+    guard let name = tier?.name else { return nil }
+    let cost = monthlyCost(tier: tier, isPaid: answer.paidTier != nil)
+    return PlanInfo(name: name, monthlyCostUSD: cost)
+  }
+
+  private static func monthlyCost(tier: CodeAssistTier?, isPaid: Bool) -> Int? {
+    guard let tier else { return nil }
+    if let id = tier.id {
+      switch id {
+      case "g1-ultra-tier": return 200
+      case "g1-pro-tier": return 20
+      case "free-tier": return 0
+      default: break
+      }
     }
-    let answer = try JSONDecoder().decode(Answer.self, from: data)
-    return PlanInfo(name: answer.paidTier?.name) ?? PlanInfo(name: answer.currentTier?.name)
+    guard let name = tier.name else { return nil }
+    if name.localizedCaseInsensitiveContains("Ultra") {
+      return 200
+    }
+    if name.localizedCaseInsensitiveContains("Pro") {
+      return 20
+    }
+    if !isPaid || name.localizedCaseInsensitiveContains("Free")
+      || name.caseInsensitiveCompare("Antigravity") == .orderedSame
+    {
+      return 0
+    }
+    return nil
   }
 
   public static func locateExecutable(
@@ -64,7 +87,7 @@ public struct AntigravityProvider: UsageProvider {
     var inspected: Set<String> = []
     for candidate in candidates where inspected.insert(candidate.standardizedFileURL.path).inserted
     {
-      guard !candidate.path.contains("agent-bin") else { continue }
+      guard !candidate.pathComponents.contains("agent-bin") else { continue }
       if fileManager.isExecutableFile(atPath: candidate.path) { return candidate }
     }
     throw QuotaError.credentialsMissing(.antigravity)
@@ -211,4 +234,14 @@ private struct AntigravityWindowSpecification {
   var bucketKey: String {
     "\(group)|\(window)"
   }
+}
+
+private struct CodeAssistAnswer: Decodable {
+  let paidTier: CodeAssistTier?
+  let currentTier: CodeAssistTier?
+}
+
+private struct CodeAssistTier: Decodable {
+  let id: String?
+  let name: String?
 }

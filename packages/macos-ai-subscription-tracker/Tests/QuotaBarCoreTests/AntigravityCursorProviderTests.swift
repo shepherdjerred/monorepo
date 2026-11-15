@@ -107,14 +107,25 @@ final class AntigravityCursorProviderTests: XCTestCase {
   }
 
   func testAntigravityPlanPrefersPaidTierOverFreeTier() throws {
-    XCTAssertEqual(
-      try AntigravityProvider.parsePlan(data: fixture("antigravity-code-assist"))?.name,
-      "Google AI Pro")
-    XCTAssertEqual(
-      try AntigravityProvider.parsePlan(
-        data: Data(#"{"currentTier":{"id":"free-tier","name":"Antigravity"}}"#.utf8))?.name,
-      "Antigravity")
+    let proPlan = try AntigravityProvider.parsePlan(data: fixture("antigravity-code-assist"))
+    XCTAssertEqual(proPlan?.name, "Google AI Pro")
+    XCTAssertEqual(proPlan?.monthlyCostUSD, 20)
+
+    let ultraData = Data(#"{"paidTier":{"id":"g1-ultra-tier","name":"Google AI Ultra"}}"#.utf8)
+    let ultraPlan = try AntigravityProvider.parsePlan(data: ultraData)
+    XCTAssertEqual(ultraPlan?.name, "Google AI Ultra")
+    XCTAssertEqual(ultraPlan?.monthlyCostUSD, 200)
+
+    let freePlan = try AntigravityProvider.parsePlan(
+      data: Data(#"{"currentTier":{"id":"free-tier","name":"Antigravity"}}"#.utf8))
+    XCTAssertEqual(freePlan?.name, "Antigravity")
+    XCTAssertEqual(freePlan?.monthlyCostUSD, 0)
+
     XCTAssertNil(try AntigravityProvider.parsePlan(data: Data("{}".utf8)))
+
+    let ultraSnapshot = UsageSnapshot(
+      provider: .antigravity, plan: ultraPlan, windows: [], sourceTimestamp: Date())
+    XCTAssertEqual(SubscriptionPlan.monthlyCostUSD(for: .antigravity, snapshot: ultraSnapshot), 200)
   }
 
   func testAntigravityExecutableDiscoveryUsesPathWithoutShell() throws {
