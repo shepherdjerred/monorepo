@@ -5,10 +5,10 @@
 // SHERPA_ONNX_ARCHIVE_DIR to this directory so it copies the verified archive
 // instead (see package-release.ts and the README's "Release builds").
 //   bun scripts/fetch-sherpa-libs.ts [destination]
-import { createHash } from "node:crypto";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { download, sha256 } from "./verified-download.ts";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const pins: {
@@ -19,10 +19,6 @@ const pins: {
 const destination =
   process.argv[2] ?? join(root, "target/sherpa-onnx-archives");
 
-function sha256(bytes: Uint8Array): string {
-  return createHash("sha256").update(bytes).digest("hex");
-}
-
 await mkdir(destination, { recursive: true });
 for (const [name, expected] of Object.entries(pins.archives)) {
   const path = join(destination, name);
@@ -30,16 +26,7 @@ for (const [name, expected] of Object.entries(pins.archives)) {
   if (cached !== undefined && sha256(cached) === expected) {
     continue;
   }
-  const url = `${pins.baseUrl}/${name}`;
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`${url} returned HTTP ${String(response.status)}`);
-  }
-  const bytes = new Uint8Array(await response.arrayBuffer());
-  const actual = sha256(bytes);
-  if (actual !== expected) {
-    throw new Error(`${url} has SHA-256 ${actual}, expected ${expected}`);
-  }
+  const bytes = await download(`${pins.baseUrl}/${name}`, expected);
   await writeFile(`${path}.partial`, bytes);
   await rename(`${path}.partial`, path);
 }

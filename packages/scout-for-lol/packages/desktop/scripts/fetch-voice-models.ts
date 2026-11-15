@@ -4,7 +4,6 @@
 // scout" verifier and keywords file are copied from backend/assets/voice,
 // where they are already committed. Nothing here is committed under desktop/.
 //   bun scripts/fetch-voice-models.ts [destination]   (default target/voice-models)
-import { createHash } from "node:crypto";
 import {
   copyFile,
   mkdir,
@@ -16,6 +15,7 @@ import {
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { download, sha256 } from "./verified-download.ts";
 import { SCOUT_VOICE_CASCADE } from "../../data/src/scout-client/voice-cascade.schema.ts";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
@@ -23,23 +23,6 @@ const backendAssets = join(root, "../backend/assets/voice");
 const destination = process.argv[2] ?? join(root, "target/voice-models");
 const { models } = SCOUT_VOICE_CASCADE;
 const kws = models.keywordSpotter;
-
-function sha256(bytes: Uint8Array): string {
-  return createHash("sha256").update(bytes).digest("hex");
-}
-
-async function download(url: string, expected: string): Promise<Uint8Array> {
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`${url} returned HTTP ${String(response.status)}`);
-  }
-  const bytes = new Uint8Array(await response.arrayBuffer());
-  const actual = sha256(bytes);
-  if (actual !== expected) {
-    throw new Error(`${url} has SHA-256 ${actual}, expected ${expected}`);
-  }
-  return bytes;
-}
 
 async function check(name: string, expected: string): Promise<void> {
   const actual = sha256(await readFile(join(destination, name)));
