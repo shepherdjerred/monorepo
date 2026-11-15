@@ -30,12 +30,14 @@ import { createWoodpeckerMonitoring } from "@shepherdjerred/homelab/cdk8s/src/re
 import { getOpsSnapshotRuleGroups } from "./rules/ops-snapshot.ts";
 import { getStormBrainRuleGroups } from "./rules/storm-brain.ts";
 import { createBuildkitdMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/buildkitd.ts";
+import { createNetworkPolicyEnforcementMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/network-policy-enforcement.ts";
 import { getAlertingControlRuleGroups } from "./rules/platform/alerting-control.ts";
 import { getGlitterLauncherReleaseRuleGroups } from "./rules/glitter-boys-launcher.ts";
 
 export function createPrometheusMonitoring(chart: Chart) {
   createWoodpeckerMonitoring(chart);
   createBuildkitdMonitoring(chart);
+  createNetworkPolicyEnforcementMonitoring(chart);
 
   new PrometheusRule(chart, "prometheus-media-rules", {
     metadata: {

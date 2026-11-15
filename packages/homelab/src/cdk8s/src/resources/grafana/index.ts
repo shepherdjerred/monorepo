@@ -17,6 +17,7 @@ import { exportStreambotVoiceDashboardJson } from "@shepherdjerred/homelab/cdk8s
 import { exportStaticSiteProbesDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/static-site-probes-dashboard.ts";
 import { exportDiscordPlaysDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/discord-plays-dashboard.ts";
 import { exportAlertDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/alert-dashboard.ts";
+import { exportNetworkPolicyEnforcementDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/network-policy-enforcement-dashboard.ts";
 
 /**
  * Dashboard configuration for creating Grafana dashboard ConfigMaps
@@ -183,6 +184,12 @@ export const ALL_DASHBOARDS: DashboardConfig[] = [
   CI_CAPACITY_DASHBOARD,
   DISCORD_PLAYS_DASHBOARD,
   GITCKUP_DASHBOARD,
+  {
+    id: "network-policy-enforcement-dashboard-configmap",
+    name: "network-policy-enforcement-dashboard",
+    jsonFilename: "network-policy-enforcement.json",
+    exportFn: exportNetworkPolicyEnforcementDashboardJson,
+  },
   SCOUT_DASHBOARD,
   SCOUT_DURABLE_DASHBOARD,
   SMARTCTL_DASHBOARD,
