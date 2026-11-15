@@ -694,6 +694,76 @@ mod render {
         Ok(())
     }
 
+    /// The live game chip, above the composer while a game is live.
+    const LIVE_GAME_CHIP: (f32, f32) = (330., 444.);
+
+    fn ahri_at_seven() -> LiveGameSnapshot {
+        LiveGameSnapshot {
+            game_time_secs: 421,
+            champion: "Ahri".to_owned(),
+            level: 10,
+            kills: 4,
+            deaths: 2,
+            assists: 7,
+            creep_score: 87,
+        }
+    }
+
+    /// Type `keys` into the focused composer and press Enter; what it sent.
+    fn ask(harness: &mut Harness, keys: &[&'static str]) -> Result<Vec<WindowMessage>, Error> {
+        let before = harness.sent()?.len();
+        for key in keys {
+            harness.key(key)?;
+        }
+        harness.key("enter")?;
+        Ok(harness.sent()?.split_off(before))
+    }
+
+    /// "Using your live game": shown while a game is live and on until the
+    /// player turns it off; a question sent with it on asks the supervisor
+    /// to attach the game, and with it off does not.
+    fn live_game_chip(harness: &mut Harness) -> Result<(), Error> {
+        harness.chat(golden::ready()?.parts())?;
+        let idle = harness.capture("chat-no-live-game")?;
+        harness.receive(&SupervisorMessage::LiveGame {
+            live: Some(ahri_at_seven()),
+        })?;
+        let on = harness.capture("chat-live-game-on")?;
+        if on == idle {
+            return Err("a live game did not show the chip".into());
+        }
+        let sent = ask(harness, &["h", "i"])?;
+        if sent
+            != [chat_command(ChatCommand::Send {
+                question: "hi".to_owned(),
+                live_game: true,
+            })]
+        {
+            return Err(format!("a question with the chip on sent {sent:?}").into());
+        }
+        let sent = click_sends(harness, LIVE_GAME_CHIP)?;
+        if !sent.is_empty() {
+            return Err(format!("the chip sent {sent:?}; it is the window's own state").into());
+        }
+        let off = harness.capture("chat-live-game-off")?;
+        if off == on {
+            return Err("turning the chip off did not repaint it".into());
+        }
+        let sent = ask(harness, &["o", "k"])?;
+        if sent
+            != [chat_command(ChatCommand::Send {
+                question: "ok".to_owned(),
+                live_game: false,
+            })]
+        {
+            return Err(format!("a question with the chip off sent {sent:?}").into());
+        }
+        // Back on for the rest of the run, then the game ends.
+        harness.click(LIVE_GAME_CHIP.0, LIVE_GAME_CHIP.1)?;
+        harness.receive(&SupervisorMessage::LiveGame { live: None })?;
+        Ok(())
+    }
+
     /// The Overview's "Live game" line: "Not in a game" until the supervisor
     /// reports one, then the local player's line, then cleared again.
     fn live_game(harness: &mut Harness) -> Result<(), Error> {
@@ -707,15 +777,7 @@ mod render {
             },
         })?;
         harness.receive(&SupervisorMessage::LiveGame {
-            live: Some(LiveGameSnapshot {
-                game_time_secs: 421,
-                champion: "Ahri".to_owned(),
-                level: 10,
-                kills: 4,
-                deaths: 2,
-                assists: 7,
-                creep_score: 87,
-            }),
+            live: Some(ahri_at_seven()),
         })?;
         let playing = harness.capture("live-game")?;
         if idle == playing {
@@ -795,6 +857,7 @@ mod render {
         chat_states(&mut harness)?;
         visual_states(&mut harness)?;
         chat_actions(&mut harness)?;
+        live_game_chip(&mut harness)?;
         status_pages(&mut harness)?;
 
         // Close from the supervisor ends the window's listener cleanly, and

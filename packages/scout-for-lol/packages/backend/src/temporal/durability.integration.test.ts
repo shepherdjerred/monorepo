@@ -422,6 +422,7 @@ test("rebuilds a pending Explore turn from its durable payload", async () => {
     },
     surface: "voice",
     originChannelId: null,
+    coach: null,
   });
   const applicationManager = new ExploreRunManager({ client: prisma });
   const messagesBeforeRejectedStart = await prisma.exploreMessage.findMany({

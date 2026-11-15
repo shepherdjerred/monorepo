@@ -1006,7 +1006,14 @@ carries one is a 400 `invalid_turn`. Voice turns and follow-up chips need their
 own proof before they may carry one. Every turn that carries a context writes a
 `ScoutCoachTurn` row (owner, device, conversation, run and question ids; the
 initiation; the sections sent and accepted; both flags as evaluated) and never
-the context itself. A turn whose row cannot be written is stopped.
+the context itself. The row is written in the transaction that reserves the
+run, so no coach turn starts without it.
+
+The projected context (only the sections the policy let through) is stored on
+the durable run as `coach` and reaches the agent for that turn alone: a
+digest rides just ahead of the question, quoting every device string as game
+data, and `read_game_state(section)` returns one projected section whole. It
+is never replayed with history.
 
 ### Raw observation archive
 

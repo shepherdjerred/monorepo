@@ -3,6 +3,7 @@ import { prisma } from "#src/database/index.ts";
 import { hydrateExploreLoadoutCards } from "#src/explore-match/loadout-view.ts";
 import { hydrateExploreMatchCards } from "#src/explore-match/match-view.ts";
 import { createExploreTools, type RunState } from "#src/explore/agent-tools.ts";
+import { gameContextDigest } from "#src/explore/tools/game-state-tools.ts";
 import type { ExploreAgentParams } from "#src/explore/analysis/agent-types.ts";
 import { hydrateInlineEntities } from "#src/explore/analysis/inline-entities.ts";
 import { authorizedProfileLinks } from "#src/explore/analysis/profile-links.ts";
@@ -463,5 +464,11 @@ export function buildMessages(
       content: `${message.content}${query}${matchCardReplayContext(message.matchCards)}${loadoutCardReplayContext(message.loadoutCards)}${creationIntentReplayContext(message.trace, intentStates)}`,
     };
   });
-  return [...messages, currentQuestion(params)];
+  // The game context is this turn's alone: it rides just ahead of the
+  // question and is never replayed with history.
+  const game: ExploreModelMessage[] =
+    params.coach === undefined || params.coach === null
+      ? []
+      : [{ role: "user", content: gameContextDigest(params.coach) }];
+  return [...messages, ...game, currentQuestion(params)];
 }

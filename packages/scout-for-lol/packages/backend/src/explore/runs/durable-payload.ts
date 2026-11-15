@@ -1,6 +1,9 @@
 import { DiscordGuildIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
 import { z } from "zod";
-import { DiscordChannelIdSchema } from "@scout-for-lol/data";
+import {
+  CoachGameContextSchema,
+  DiscordChannelIdSchema,
+} from "@scout-for-lol/data";
 import { ExploreSurfaceSchema } from "#src/explore/surface.ts";
 
 /**
@@ -34,4 +37,14 @@ export const ExploreDurablePayloadSchema = z.strictObject({
   surface: ExploreSurfaceSchema.default("web"),
   /** Discord channel metadata for mutation drafts; old and non-Discord rows have none. */
   originChannelId: DiscordChannelIdSchema.nullable().default(null),
+  /**
+   * The game a Scout Desktop turn carried, as the coach policy projected it:
+   * only the sections that may reach the agent. Rows written before this field
+   * existed, and turns that carried no context or had every section withheld,
+   * carry none.
+   */
+  coach: z
+    .strictObject({ context: CoachGameContextSchema })
+    .nullable()
+    .default(null),
 });

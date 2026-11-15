@@ -7,34 +7,47 @@ import type {
 } from "./context-policy.ts";
 
 /**
+ * What a coach turn's audit row says beyond its run: which device sent the
+ * context, how the turn began, what the coach policy made of it, and the
+ * flags it was judged under. The run manager writes it with the run.
+ */
+export type CoachTurnRecord = {
+  readonly deviceId: string;
+  readonly initiation: CoachTurnInitiation;
+  readonly projection: CoachContextProjection;
+  readonly flags: CoachPolicyFlags;
+};
+
+/**
  * Record one turn that carried a game context: who sent it from which device,
  * how the turn began, what it carried, what the coach policy let through, and
  * both flags as evaluated. Identifiers and section names only; the context
  * itself never reaches this table.
+ *
+ * Pass the transaction that reserves the run, so a turn is never started
+ * without its row.
  */
 export async function recordCoachTurn(
   client: Pick<Db, "scoutCoachTurn">,
   input: {
     readonly ownerId: DiscordAccountId;
-    readonly deviceId: string;
     readonly run: ExploreActiveRun;
-    readonly initiation: CoachTurnInitiation;
-    readonly projection: CoachContextProjection;
-    readonly flags: CoachPolicyFlags;
+    readonly record: CoachTurnRecord;
   },
 ): Promise<void> {
+  const { record } = input;
   await client.scoutCoachTurn.create({
     data: {
       ownerId: input.ownerId,
-      deviceId: input.deviceId,
+      deviceId: record.deviceId,
       conversationId: input.run.conversationId,
       runId: input.run.runId,
       questionMessageId: input.run.questionMessageId,
-      initiation: input.initiation,
-      sectionsPresent: [...input.projection.present],
-      sectionsAccepted: [...input.projection.accepted],
-      coachEnabled: input.flags.coachEnabled,
-      liveAnswersEnabled: input.flags.liveAnswersEnabled,
+      initiation: record.initiation,
+      sectionsPresent: [...record.projection.present],
+      sectionsAccepted: [...record.projection.accepted],
+      coachEnabled: record.flags.coachEnabled,
+      liveAnswersEnabled: record.flags.liveAnswersEnabled,
     },
   });
 }

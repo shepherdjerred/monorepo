@@ -1,6 +1,7 @@
 import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import {
   EXPLORE_TIMEOUT_MS,
+  type CoachGameContext,
   type DiscordAccountId,
   type DiscordChannelId,
   type ExploreActiveRun,
@@ -8,6 +9,7 @@ import {
   type ExploreTurnRequest,
 } from "@scout-for-lol/data";
 import type { ExploreSurface } from "#src/explore/surface.ts";
+import type { CoachTurnRecord } from "#src/coach/audit.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { streamExploreAgent } from "#src/explore/agent.ts";
 import {
@@ -105,6 +107,11 @@ export class ExploreRunManager {
     context?: {
       surface: ExploreSurface;
       originChannelId?: DiscordChannelId | undefined;
+      /**
+       * A coach turn's audit record. Its projected context reaches the agent,
+       * and its row is written in the transaction that reserves the run.
+       */
+      coach?: CoachTurnRecord | undefined;
     },
   ): Promise<ExploreActiveRun> {
     this.#assertAcceptingRuns();
@@ -153,6 +160,7 @@ export class ExploreRunManager {
         inlineExecutionForTests: this.#inlineExecutionForTests,
         surface: resolvedContext.surface,
         originChannelId: resolvedContext.originChannelId ?? null,
+        coach: resolvedContext.coach ?? null,
         assertAcceptingRuns: () => {
           this.#assertAcceptingRuns();
         },
@@ -272,6 +280,7 @@ export class ExploreRunManager {
     started: StartedTurn;
     surface: ExploreSurface;
     originChannelId: DiscordChannelId | null;
+    coach: CoachGameContext | null;
   }): Promise<void> {
     if (this.#runs.has(input.summary.runId)) return;
     const existingRunId = this.#conversationRuns.get(
@@ -301,6 +310,7 @@ export class ExploreRunManager {
       history: transcript.messages,
       surface: input.surface,
       originChannelId: input.originChannelId,
+      coach: input.coach,
     });
     this.#runs.set(run.summary.runId, run);
     this.#conversationRuns.set(run.summary.conversationId, run.summary.runId);

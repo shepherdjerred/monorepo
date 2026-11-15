@@ -21,6 +21,7 @@ import {
 } from "#src/explore/skills/registry.ts";
 import { createLoadSkillTool } from "#src/explore/skills/tool.ts";
 import { createClashExploreTools } from "#src/explore/tools/clash-tools.ts";
+import { createGameStateTools } from "#src/explore/tools/game-state-tools.ts";
 import { type DareExploreCapability } from "#src/explore/tools/dare-capability.ts";
 import type { HallExploreCapability } from "#src/explore/tools/hall-tools.ts";
 import { createLeagueExploreTools } from "#src/explore/tools/league-tools.ts";
@@ -404,5 +405,8 @@ export function createExploreTools(options: ExploreToolsOptions) {
           track,
         })
       : {}),
+    ...(params.coach === undefined || params.coach === null
+      ? {}
+      : createGameStateTools({ context: params.coach, track })),
   });
 }

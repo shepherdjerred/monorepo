@@ -7,18 +7,14 @@ import {
   ScoutDesktopEmptyRequestSchema,
   ScoutDesktopRunActiveResponseSchema,
   ScoutDesktopRunStopResponseSchema,
-  type ExploreActiveRun,
   type ScoutDesktopApiErrorCode,
 } from "@scout-for-lol/data";
 import { z } from "zod";
-import { recordCoachTurn } from "#src/coach/audit.ts";
+import type { CoachTurnRecord } from "#src/coach/audit.ts";
 import {
   projectGameContext,
-  type CoachContextProjection,
   type CoachPolicyFlags,
-  type CoachTurnInitiation,
 } from "#src/coach/context-policy.ts";
-import { prisma } from "#src/database/index.ts";
 import { observeExploreRun } from "#src/explore/http/http-route.ts";
 import { exploreRunManager } from "#src/explore/runs/run-manager.ts";
 import {
@@ -110,12 +106,6 @@ const RunStartEnvelopeSchema = ExploreTurnRequestSchema.safeExtend({
   gameContext: z.unknown().optional(),
 });
 
-type CoachTurn = {
-  readonly initiation: CoachTurnInitiation;
-  readonly flags: CoachPolicyFlags;
-  readonly projection: CoachContextProjection;
-};
-
 /**
  * Hold a turn's game context to the coach contract and policy.
  *
@@ -128,7 +118,7 @@ async function gateGameContext(
   caller: DesktopExploreCaller,
   question: string | null,
   gameContext: unknown,
-): Promise<CoachTurn | Response> {
+): Promise<CoachTurnRecord | Response> {
   if (question === null) {
     return desktopErrorResponse(
       "invalid_turn",
@@ -159,29 +149,12 @@ async function gateGameContext(
       ),
     );
   }
-  return { initiation, flags, projection: result.projection };
-}
-
-/**
- * Write the turn's audit row. A turn that carried a context and cannot be
- * audited does not keep running.
- */
-async function auditCoachTurn(
-  caller: DesktopExploreCaller,
-  run: ExploreActiveRun,
-  coach: CoachTurn,
-): Promise<void> {
-  try {
-    await recordCoachTurn(prisma, {
-      ownerId: caller.userId,
-      deviceId: caller.device.deviceId,
-      run,
-      ...coach,
-    });
-  } catch (error) {
-    await exploreRunManager.stop(run.runId, caller.userId);
-    throw error;
-  }
+  return {
+    deviceId: caller.device.deviceId,
+    initiation,
+    flags,
+    projection: result.projection,
+  };
 }
 
 const startRun: DesktopRouteHandler = async ({ caller, body }) => {
@@ -205,16 +178,15 @@ const startRun: DesktopRouteHandler = async ({ caller, body }) => {
     return writeLimitedResponse();
   }
   try {
-    const run = ExploreActiveRunSchema.parse(
-      await exploreRunManager.start(
-        { userId: caller.userId },
-        turn,
-        caller.guildIds,
-        { surface: "desktop" },
-      ),
+    // A coach turn's audit row is written in the transaction that reserves
+    // the run, and its projected context is what the agent reads.
+    const run = await exploreRunManager.start(
+      { userId: caller.userId },
+      turn,
+      caller.guildIds,
+      coach === null ? { surface: "desktop" } : { surface: "desktop", coach },
     );
-    if (coach !== null) await auditCoachTurn(caller, run, coach);
-    return desktopJsonResponse(run);
+    return desktopJsonResponse(ExploreActiveRunSchema.parse(run));
   } catch (error) {
     const refusal = classifyExploreStartError(error);
     if (refusal === null) throw error;

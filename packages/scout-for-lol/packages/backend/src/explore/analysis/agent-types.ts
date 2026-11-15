@@ -1,5 +1,6 @@
 import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import type {
+  CoachGameContext,
   DiscordAccountId,
   DiscordChannelId,
   ExploreMessage,
@@ -51,6 +52,12 @@ export type ExploreAgentParams = {
    * `explore/surface.ts`.
    */
   surface: ExploreSurface;
+  /**
+   * The game the asker is in, as the coach policy projected it for this turn
+   * alone: the sections it let through, never anything it withheld. Absent
+   * for a turn that carried none. Earlier turns' contexts are not replayed.
+   */
+  coach?: CoachGameContext | null;
   abortSignal: AbortSignal;
   emit: (event: ExploreStreamEvent) => void | Promise<void>;
 };

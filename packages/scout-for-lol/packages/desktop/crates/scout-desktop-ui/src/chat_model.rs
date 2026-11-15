@@ -106,6 +106,8 @@ pub enum UiAction {
     CancelEdit,
     /// Open or close the model picker.
     TogglePicker,
+    /// Turn the composer's "Using your live game" chip on or off.
+    ToggleLiveGame,
     /// Open the file picker for an image.
     PickImage,
     /// Put a link on the clipboard.
@@ -314,7 +316,27 @@ pub struct ChatUi {
     pub editing: Option<Uuid>,
     /// Whether the model picker is open.
     pub picker_open: bool,
+    /// Whether the supervisor reports a game in progress.
+    pub live_game: bool,
+    /// Whether the player turned the live game chip off. It stays off for
+    /// the rest of the window's life, across games.
+    pub live_game_off: bool,
 }
+
+/// The composer's "Using your live game" chip: whether the next question
+/// carries the game in progress. Shown only while a game is live.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct LiveGameChip {
+    /// Turns it on or off.
+    pub toggle: Control,
+    /// Whether the next question carries the game.
+    pub on: bool,
+}
+
+/// What the chip says while on.
+pub const LIVE_GAME_ON: &str = "Using your live game";
+/// What the chip says once turned off.
+pub const LIVE_GAME_OFF: &str = "Not using your live game";
 
 /// The composer's controls.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -331,6 +353,9 @@ pub struct ComposerModel {
     pub picker: Option<PickerModel>,
     /// The editing banner, while a question is being edited.
     pub editing: Option<EditingModel>,
+    /// The live game chip, while a game is live and a new question is
+    /// being written. An edit never carries the game.
+    pub live_game: Option<LiveGameChip>,
 }
 
 /// An open or blank conversation.
@@ -697,6 +722,18 @@ fn composer(parts: &ChatParts, ui: ChatUi, transcript_open: bool) -> ComposerMod
             label: "Editing your question. Sending adds a new version.",
             cancel: Control::new("chat-cancel-edit", "Cancel", UiAction::CancelEdit),
         });
+    let live_game = (ui.live_game && editing.is_none()).then(|| LiveGameChip {
+        toggle: Control::new(
+            "chat-live-game",
+            if ui.live_game_off {
+                LIVE_GAME_OFF
+            } else {
+                LIVE_GAME_ON
+            },
+            UiAction::ToggleLiveGame,
+        ),
+        on: !ui.live_game_off,
+    });
     ComposerModel {
         // An image still uploading blocks sending: the supervisor refuses the
         // question and the window has already cleared the text.
@@ -712,6 +749,7 @@ fn composer(parts: &ChatParts, ui: ChatUi, transcript_open: bool) -> ComposerMod
         drafts,
         picker,
         editing,
+        live_game,
     }
 }
 
@@ -813,13 +851,15 @@ impl ChatScreen {
     }
 }
 
-/// What the composer's send sends, or none for a blank question.
+/// What the composer's send sends, or none for a blank question. With the
+/// live game chip on, the supervisor attaches the game in progress.
 #[must_use]
-pub fn send_message(text: &str) -> Option<WindowMessage> {
+pub fn send_message(text: &str, live_game: bool) -> Option<WindowMessage> {
     let question = text.trim();
     (!question.is_empty()).then(|| {
         chat(ChatCommand::Send {
             question: question.to_owned(),
+            live_game,
         })
     })
 }
@@ -1110,12 +1150,13 @@ mod tests {
 
     #[test]
     fn the_composer_sends_a_trimmed_question_and_nothing_when_blank() {
-        assert_eq!(send_message("   "), None);
+        assert_eq!(send_message("   ", true), None);
         assert_eq!(
-            send_message(" Who wins? "),
+            send_message(" Who wins? ", true),
             Some(WindowMessage::Chat {
                 command: ChatCommand::Send {
-                    question: "Who wins?".to_owned()
+                    question: "Who wins?".to_owned(),
+                    live_game: true,
                 }
             })
         );
@@ -1337,6 +1378,57 @@ mod tests {
         // With the picker off the server chooses and nothing shows.
         let none = conversation(&golden::ready()?.parts())?;
         assert_eq!(none.composer.picker, None);
+        Ok(())
+    }
+
+    #[test]
+    fn the_live_game_chip_shows_only_in_a_game_and_turns_off() -> TestResult {
+        use super::{LIVE_GAME_OFF, LIVE_GAME_ON};
+
+        let parts = golden::ready()?.parts();
+        let idle = conversation_with(&parts, ChatUi::default())?;
+        assert_eq!(idle.composer.live_game, None, "no game, no chip");
+
+        let playing = ChatUi {
+            live_game: true,
+            ..ChatUi::default()
+        };
+        let chip = conversation_with(&parts, playing)?
+            .composer
+            .live_game
+            .ok_or("chip")?;
+        assert!(chip.on, "on until the player turns it off");
+        assert_eq!(chip.toggle.label, LIVE_GAME_ON);
+        assert_eq!(chip.toggle.action, UiAction::ToggleLiveGame);
+
+        let off = conversation_with(
+            &parts,
+            ChatUi {
+                live_game_off: true,
+                ..playing
+            },
+        )?
+        .composer
+        .live_game
+        .ok_or("chip")?;
+        assert!(!off.on);
+        assert_eq!(off.toggle.label, LIVE_GAME_OFF);
+        Ok(())
+    }
+
+    #[test]
+    fn an_edit_never_offers_the_live_game() -> TestResult {
+        let parts = golden::branched()?.parts();
+        let editing = conversation_with(
+            &parts,
+            ChatUi {
+                editing: Some(golden::BRANCHED_QUESTION),
+                live_game: true,
+                ..ChatUi::default()
+            },
+        )?;
+        assert!(editing.composer.editing.is_some());
+        assert_eq!(editing.composer.live_game, None);
         Ok(())
     }
 

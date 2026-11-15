@@ -370,6 +370,9 @@ describe("desktop Explore runs against a real database", () => {
     ]);
     // Identifiers only: nothing of the game itself is stored.
     expect(JSON.stringify(rows)).not.toContain("Ahri");
+    // The agent answers from the projected context, this turn only.
+    const run = await agentRun(0);
+    expect(run.params.coach).toEqual({ live });
   });
 
   test("the database refuses an audit row outside the coach vocabulary", async () => {

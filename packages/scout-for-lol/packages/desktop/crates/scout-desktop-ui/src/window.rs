@@ -154,13 +154,21 @@ impl<W: Write + 'static> ScoutWindow<W> {
         }
     }
 
+    /// What only this window knows, with whether a game is live.
+    fn chat_ui(&self) -> ChatUi {
+        ChatUi {
+            live_game: self.link.live_game.is_some(),
+            ..self.ui
+        }
+    }
+
     /// The chat screen for the latest parts.
     fn chat_screen(&self) -> ChatScreen {
         ChatScreen::with_ui(
             &self.link.chat,
             &self.link.state,
             &self.link.update,
-            self.ui,
+            self.chat_ui(),
         )
     }
 
@@ -187,7 +195,14 @@ impl<W: Write + 'static> ScoutWindow<W> {
         let editing = model.composer.editing.is_some().then_some(self.ui.editing);
         let message = match editing.flatten() {
             Some(message_id) => edit_message(message_id, &text),
-            None => send_message(&text),
+            None => send_message(
+                &text,
+                model
+                    .composer
+                    .live_game
+                    .as_ref()
+                    .is_some_and(|chip| chip.on),
+            ),
         };
         let Some(message) = message else {
             return;
@@ -262,6 +277,7 @@ impl<W: Write + 'static> ScoutWindow<W> {
                 self.composer.clear(window, cx);
             }
             UiAction::TogglePicker => self.ui.picker_open = !self.ui.picker_open,
+            UiAction::ToggleLiveGame => self.ui.live_game_off = !self.ui.live_game_off,
             UiAction::PickImage => {
                 let attach = self.attach_files();
                 kit::pick_images(cx, move |paths| attach(paths));
@@ -414,7 +430,14 @@ impl<W: Write + 'static> Render for ScoutWindow<W> {
             handler,
             on_images: self.attach_files(),
         };
-        frame(self.page, &self.link, self.build, self.ui, chat, &navigate)
+        frame(
+            self.page,
+            &self.link,
+            self.build,
+            self.chat_ui(),
+            chat,
+            &navigate,
+        )
     }
 }
 

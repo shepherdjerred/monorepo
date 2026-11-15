@@ -1,10 +1,18 @@
 import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { describe, expect, test } from "vitest";
+import {
+  CoachGameContextSchema,
+  DiscordAccountIdSchema,
+} from "@scout-for-lol/data";
+import coachFixtures from "@scout-for-lol/data/scout-client/coach-context.fixtures.json" with { type: "json" };
+import type { ExploreAgentParams } from "#src/explore/analysis/agent-types.ts";
 import { testExploreLoadoutCard } from "#src/explore/loadout-card-test-fixture.ts";
 import {
+  buildMessages,
   loadoutCardReplayContext,
   matchCardReplayContext,
 } from "#src/explore/agent.ts";
+import { gameContextDigest } from "#src/explore/tools/game-state-tools.ts";
 
 describe("matchCardReplayContext", () => {
   test("preserves card order, match IDs, and team results for follow-ups", () => {
@@ -49,5 +57,43 @@ describe("loadoutCardReplayContext", () => {
     expect(loadoutCardReplayContext([card])).toContain(
       "final build Unknown item ID 999999",
     );
+  });
+});
+
+describe("buildMessages with a game context", () => {
+  const coach = CoachGameContextSchema.parse(coachFixtures.valid[0]?.body);
+  const asker = DiscordAccountIdSchema.parse("160509172704739328");
+
+  function params(extra: Partial<ExploreAgentParams>): ExploreAgentParams {
+    return {
+      runId: "3d8f1a62-7b4c-4e29-9a05-c61e2f7b8d43",
+      conversationId: "7c3e5a91-2b64-4d0f-8e17-5a9c4b2d6f30",
+      subject: { kind: "discord_user", id: asker },
+      question: "What should I build next?",
+      history: [],
+      guildIds: [],
+      requesterId: asker,
+      originChannelId: null,
+      surface: "desktop",
+      abortSignal: new AbortController().signal,
+      emit: () => Promise.resolve(),
+      ...extra,
+    };
+  }
+
+  test("the digest rides just ahead of the question", () => {
+    const messages = buildMessages(params({ coach }));
+    expect(messages.slice(-2)).toEqual([
+      { role: "user", content: gameContextDigest(coach) },
+      { role: "user", content: "What should I build next?" },
+    ]);
+  });
+
+  test("a turn without one sends the question alone", () => {
+    for (const extra of [{}, { coach: null }]) {
+      expect(buildMessages(params(extra))).toEqual([
+        { role: "user", content: "What should I build next?" },
+      ]);
+    }
   });
 });
