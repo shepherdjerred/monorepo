@@ -7,6 +7,7 @@ members = [
   "crates/scout-desktop-ui",
   "crates/scout-client-app",
   "crates/scout-explore-client",
+  "crates/scout-voice",
 ]
 
 [workspace.package]

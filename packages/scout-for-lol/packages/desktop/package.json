@@ -11,6 +11,7 @@
     "format": "mise exec -- cargo fmt --all -- --check",
     "format:write": "mise exec -- cargo fmt --all",
     "icons": "bun scripts/build-icons.ts",
+    "voice:models": "bun scripts/fetch-voice-models.ts",
     "prepare-package": "bun scripts/prepare-package.ts",
     "package": "bun run package:stable",
     "package:stable": "SCOUT_DESKTOP_PROFILE=stable mise exec -- cargo packager --release --config packaging/stable.json",

@@ -24,7 +24,7 @@ bun run test
 bun run lint
 ```
 
-The workspace has six crates:
+The workspace has seven crates:
 
 - `scout-client-core`: LCU access, protocol, outbox, credentials, and
   diagnostics. `desktop_api` holds the Explore REST envelopes the pairing
@@ -50,6 +50,11 @@ The workspace has six crates:
   The view models, link and tokens build on every target, so Linux CI builds
   and tests them without GUI libraries.
 
+- `scout-voice`: the local voice cascade (microphone, 16 kHz resampling,
+  "hey scout", end of speech, push-to-talk), producing WAV utterances that
+  never leave the device on their own. Not wired into the app yet; see
+  `crates/scout-voice/README.md`. `cpal` and `sherpa-onnx` are Windows and
+  macOS dependencies only, so Linux CI builds and tests the rest.
 - `scout-client-app`: the `scout-client` binary: the supervisor, its tray, and
   the `egui` window.
 
@@ -801,6 +806,7 @@ implementation, `LocalOnly`, keeps it on the device.
 | Error reports                                                           | Yes, to Bugsink, scrubbed  | On an error or crash                                                          | **Send error reports** |
 | Usage events                                                            | Yes, through the Scout API | On a product event                                                            | **Send usage data**    |
 | Champion select (`live::champ_select` projection)                       | No                         | Not collected yet                                                             | Never sent             |
+| Microphone audio (`scout-voice`)                                        | No                         | Not captured yet: the crate is not wired into the app                         | Never sent             |
 
 ## Diagnostics
 
