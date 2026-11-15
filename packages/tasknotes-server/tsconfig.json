@@ -31,6 +31,6 @@
     "strictBuiltinIteratorReturn": true,
     "noErrorTruncation": true
   },
-  "include": ["src/**/*", "scripts/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["src/**/*", "scripts/**/*", "*.ts"],
+  "exclude": ["node_modules", "dist", "generated"]
 }

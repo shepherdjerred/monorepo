@@ -1,0 +1,11 @@
+{
+  "name": "@shepherdjerred/facet-protocol",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "generated/index.ts",
+  "types": "generated/index.ts",
+  "scripts": {
+    "generate": "bun run generate.ts"
+  }
+}

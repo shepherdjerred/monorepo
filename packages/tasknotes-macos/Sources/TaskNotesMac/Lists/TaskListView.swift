@@ -482,7 +482,7 @@ extension TaskListView {
         }
     }
 
-    private func setPriority(_ ids: Set<TaskId>, to priority: Priority) {
+    private func setPriority(_ ids: Set<TaskId>, to priority: TaskNotesUniFFI.Priority) {
         _Concurrency.Task {
             for id in ids {
                 await store.dispatch(.update(taskId: id, payload: .settingPriority(priority)))

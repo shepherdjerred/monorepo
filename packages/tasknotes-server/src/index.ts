@@ -1,4 +1,5 @@
 import "./bugsink.ts";
+import { stat } from "node:fs/promises";
 import path from "node:path";
 import { Hono } from "hono";
 
@@ -15,6 +16,10 @@ import { loadModelConfig } from "./engine/model-config.ts";
 import { TaskRepository } from "./engine/task-repository.ts";
 import { watchVault } from "./engine/watcher.ts";
 import { v2Routes } from "./v2/routes.ts";
+import { InMemoryFacetStore } from "./v1/in-memory-store.ts";
+import { PrismaFacetStore } from "./v1/prisma-store.ts";
+import { v1Routes } from "./v1/routes.ts";
+import { getDatabase } from "./infrastructure/database.ts";
 
 /**
  * Server: @tasknotes/model-backed engine serving the upstream plugin
@@ -24,15 +29,18 @@ import { v2Routes } from "./v2/routes.ts";
 const app = new Hono();
 
 // Loaded during start(); routes close over the boxes.
+const hasVault = await stat(config.vaultPath).then(
+  () => true,
+  () => false,
+);
 const { config: modelConfig, source: configSource } = await loadModelConfig(
   config.vaultPath,
 );
 const repo = new TaskRepository(config.vaultPath, config.tasksDir, modelConfig);
-// Dot-directory: excluded from vault scans, hidden from Obsidian, but on the
-// vault PVC so replay dedup survives pod restarts.
-const idempotencyStore = new IdempotencyStore(
-  path.join(config.vaultPath, ".tasknotes-server", "idempotency.json"),
-);
+const idempotencyStorePath = hasVault
+  ? path.join(config.vaultPath, ".tasknotes-server", "idempotency.json")
+  : path.join("/tmp", ".tasknotes-server", "idempotency.json");
+const idempotencyStore = new IdempotencyStore(idempotencyStorePath);
 
 app.use("*", loggerMiddleware);
 app.use("*", metricsMiddleware);
@@ -47,6 +55,13 @@ app.route(
   "/",
   v2Routes({ repo, config: modelConfig, vaultPath: config.vaultPath }),
 );
+
+const v1Store =
+  Bun.env["DATABASE_URL"] === undefined || Bun.env["DATABASE_URL"] === ""
+    ? new InMemoryFacetStore()
+    : new PrismaFacetStore(getDatabase());
+
+app.route("/", v1Routes({ store: v1Store }));
 
 // Engine visibility: parse skips and config provenance, next to /api/health.
 app.get("/api/engine-status", (c) =>
@@ -67,36 +82,38 @@ function updateGauges(): void {
 }
 
 async function start(): Promise<void> {
-  // Startup gate: an unreadable vault throws here and kills the pod loudly
-  // instead of serving an empty task list.
-  await repo.scan();
-  await idempotencyStore.init();
+  if (hasVault) {
+    // Startup gate: an unreadable vault throws here and kills the pod loudly
+    // instead of serving an empty task list.
+    await repo.scan();
+    await idempotencyStore.init();
 
-  watchVault(config.vaultPath, {
-    onChanges: (paths) => {
-      void (async () => {
-        try {
-          if (paths.length === 0) {
-            await repo.scan();
-          } else {
-            for (const relPath of paths) {
-              await repo.refreshFile(relPath);
+    watchVault(config.vaultPath, {
+      onChanges: (paths) => {
+        void (async () => {
+          try {
+            if (paths.length === 0) {
+              await repo.scan();
+            } else {
+              for (const relPath of paths) {
+                await repo.refreshFile(relPath);
+              }
             }
+            updateGauges();
+          } catch (error: unknown) {
+            console.error("[watcher] failed to apply vault changes:", error);
           }
-          updateGauges();
-        } catch (error: unknown) {
-          // A rescan/refresh that fails (e.g. the vault root briefly vanished)
-          // must not become an unhandled rejection that tears the process
-          // down — the server keeps serving its last-known task map and the
-          // failure is surfaced in logs, mirroring the watcher's error policy.
-          console.error("[watcher] failed to apply vault changes:", error);
-        }
-      })();
-    },
-    onError: (error) => {
-      console.error("[watcher] error:", error);
-    },
-  });
+        })();
+      },
+      onError: (error) => {
+        console.error("[watcher] error:", error);
+      },
+    });
+  } else {
+    console.log(
+      `[startup] Vault path not found at ${config.vaultPath}; running in database/sync API mode`,
+    );
+  }
 
   updateGauges();
   setInterval(updateGauges, 15_000);

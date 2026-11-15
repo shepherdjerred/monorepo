@@ -131,7 +131,7 @@ extension FilterConfig {
         statuses = Self.toggled(value, in: statuses)
     }
 
-    public mutating func togglePriority(_ value: Priority) {
+    public mutating func togglePriority(_ value: TaskNotesCore.Priority) {
         priorities = Self.toggled(value, in: priorities)
     }
 

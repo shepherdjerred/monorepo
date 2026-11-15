@@ -63,7 +63,7 @@ authorize replacing or rebinding the dataset.
 | `src/tofu`       | OpenTofu stacks, most synthesized from [`../homelab-cdktn`](../homelab-cdktn) — see its [README](src/tofu/README.md) |
 | `src/helm-types` | Generator for type-safe Helm chart value interfaces                                                                  |
 | `mac-ci`         | Bootstrap for the macOS Woodpecker agent (native lanes currently paused) — see its [README](mac-ci/README.md)        |
-| `images`         | Custom Docker images (caddy-s3proxy, obsidian-headless, redlib)                                                      |
+| `images`         | Custom Docker images (caddy-s3proxy, redlib)                                                                         |
 | `scripts`        | Release/automation scripts: helm push, ArgoCD reconcile, tofu stack wrapper, Velero                                  |
 
 ## Platform model

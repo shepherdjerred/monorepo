@@ -5166,16 +5166,6 @@
     },
     {
       "dependent": "tasknotes-server/prod",
-      "prerequisite": "cluster-platform/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "tasknotes-server/prod",
-      "prerequisite": "openebs/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "tasknotes-server/prod",
       "prerequisite": "prometheus/prod",
       "rule": "any-accepted"
     },

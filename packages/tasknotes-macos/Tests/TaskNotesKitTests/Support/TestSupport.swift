@@ -109,7 +109,7 @@ func coreTask(
     id: String,
     title: String? = nil,
     status: TaskStatus = .open,
-    priority: Priority = .normal,
+    priority: TaskNotesUniFFI.Priority = .normal,
     due: String? = nil,
     scheduled: String? = nil,
     recurrence: String? = nil,

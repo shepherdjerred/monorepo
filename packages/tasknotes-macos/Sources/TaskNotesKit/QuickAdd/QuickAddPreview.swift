@@ -139,7 +139,7 @@ public struct QuickAddMark: Sendable, Equatable, Identifiable {
         /// A due date, already bucketed and worded by the core and the locale.
         case due(DateBadge)
         /// A priority. Drawn as a mark, never as a colour.
-        case priority(Priority)
+        case priority(TaskNotesCore.Priority)
         case project
         case context
         case tag

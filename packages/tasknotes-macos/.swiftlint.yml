@@ -66,6 +66,7 @@ excluded:
   # would ever catch. Keep this list in sync with the SwiftPM target that is
   # exempt in `Package.swift`.
   - Sources/TaskNotesUniFFI
+  - Sources/TaskNotesKit/Generated
   - "**/*.generated.swift"
 
 # ── Opt-in rules ────────────────────────────────────────────────────────────
