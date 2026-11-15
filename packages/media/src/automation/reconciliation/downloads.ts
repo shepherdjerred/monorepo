@@ -33,8 +33,35 @@ export async function sweepDownloads(
     await context.refreshWriterLease();
     await context.refreshExclusionProofs();
     await sweepSubtitleReplacements(context);
+    const runtime = await requireActiveRuntime(context.db);
+    if (!runtime.active) await settleUnstartedAcquisitionHolds(context.db);
   }
   return await sweepDownloadAttempts(context, cursor);
+}
+
+/**
+ * The audited inactive-runtime inventory: reconciling reconcile_media commands
+ * whose recorded reason is acquisition_disabled and which never reserved an
+ * attempt. Other kinds stay untouched. Completing them records runtime_observe
+ * and does not retry an external write.
+ */
+export async function settleUnstartedAcquisitionHolds(
+  db: MediaAutomationContext["db"],
+): Promise<number> {
+  return db.$executeRaw`
+    UPDATE "Operation" AS operation
+    SET status = 'completed'::"OperationStatus",
+        result = COALESCE(operation.result, '{}'::jsonb) || jsonb_build_object('reason', 'runtime_observe'),
+        "updatedAt" = NOW()
+    WHERE operation.kind = 'reconcile_media'
+      AND operation.status = 'reconciling'
+      AND operation.result->>'reason' = 'acquisition_disabled'
+      AND NOT EXISTS (
+        SELECT 1 FROM "AcquisitionAttempt" AS attempt
+        WHERE attempt."operationId" = operation.id
+           OR attempt."coordinatorOperationId" = operation.id
+      )
+  `;
 }
 
 async function sweepDownloadAttempts(
