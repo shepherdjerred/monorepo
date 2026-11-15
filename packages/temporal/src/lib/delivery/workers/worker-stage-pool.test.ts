@@ -17,14 +17,21 @@ import {
 } from "#lib/delivery/job-request-limit.ts";
 import { renderApplication } from "#lib/delivery/model/application.ts";
 import { modelWorkerChartSelection } from "#lib/delivery/model/worker-selection.ts";
-import { PLAN, definition, temporal } from "./model-worker-fixture.ts";
+import {
+  CANDIDATE,
+  PLAN,
+  STABLE,
+  definition,
+  retiringStable,
+  temporal,
+} from "./model-worker-fixture.ts";
 import { retiredCentralWorkers } from "./worker-pool-fixture.ts";
 import {
   verifyDeliveryWorkerImages,
   workerImageProofInput,
 } from "./worker-image-proof.ts";
 import { workerRoutingInput } from "./worker-acceptance.ts";
-import { stageWorkerPool } from "./worker-pool.ts";
+import { renderedWorkerPool, stageWorkerPool } from "./worker-pool.ts";
 
 /** The bound a stage request stays under however long the pool's history grows. */
 const STAGE_REQUEST_BOUND = 100 * 1024;
@@ -47,6 +54,21 @@ function withHistory(retired: number): DeploymentDetail {
       },
     },
   });
+}
+
+/** The pool the owned sync renders into the worker chart. */
+function syncedPool(detail: DeploymentDetail) {
+  const recipe = RecipeDefinitionSchema.parse(definition);
+  if (recipe.kind !== "kubernetes-application")
+    throw new Error("temporal is a Kubernetes application recipe");
+  const value = renderApplication(detail, recipe).source.helm?.parameters?.find(
+    (parameter) => parameter.name === "delivery.workerPool",
+  )?.value;
+  if (value === undefined) throw new Error("The sync renders no worker pool");
+  // Helm `--set` escaping of the JSON's commas, brackets and braces.
+  return WorkerPoolSnapshotSchema.parse(
+    JSON.parse(value.replaceAll(/\\(.)/gu, "$1")),
+  );
 }
 
 /** The request `workerJob` freezes into the stage's Job. */
@@ -127,8 +149,10 @@ describe("worker stage requests", () => {
   });
 
   test("the whole pool, as the provenance Job carried it, outgrew the exec limit", () => {
-    // The failing temporal/prod release froze a 60-version pool, 56 of them retired.
-    const detail = withHistory(58);
+    // The failing temporal/prod release froze a 60-version pool, 56 of them
+    // retired, twice: in the detail and in the chart's rendered pool. The
+    // chart now renders live hosts only, so the detail alone carries it here.
+    const detail = withHistory(128);
     const frozen = request("worker-image-provenance", "worker-images", {
       detail: WorkerRolloutSnapshotSchema.parse(detail),
       controlPlane: modelWorkerChartSelection(detail),
@@ -166,25 +190,16 @@ describe("stage worker pool", () => {
     expect(WorkerPoolSnapshotSchema.parse(staged)).toEqual(staged);
   });
 
-  test("the sync renders every retained host while the provenance proof renders the live ones", () => {
+  test("the sync and the provenance proof both render only the live hosts", () => {
     const detail = withHistory(20);
     const pool = detail.deployment.workerSnapshot;
     if (pool === null) throw new Error("The fixture has no worker pool");
-    const recipe = RecipeDefinitionSchema.parse(definition);
-    if (recipe.kind !== "kubernetes-application")
-      throw new Error("temporal is a Kubernetes application recipe");
-    const synced =
-      renderApplication(detail, recipe).source.helm?.parameters?.find(
-        (parameter) => parameter.name === "delivery.workerPool",
-      )?.value ?? "";
+    const synced = syncedPool(detail);
     const proof = workerImageProofInput(detail);
     const proved =
       proof.controlPlane?.selection.parameters["delivery.workerPool"] ?? "";
-    for (const worker of pool.versions) {
-      expect(synced).toContain(worker.buildId);
-      if (worker.replicas === 1) expect(proved).toContain(worker.buildId);
-      else expect(proved).not.toContain(worker.buildId);
-    }
+    expect(synced).toEqual(stageWorkerPool(pool));
+    expect(JSON.parse(proved)).toEqual(synced);
     expect(proof.detail.deployment.workerSnapshot).toEqual(
       stageWorkerPool(pool),
     );
@@ -208,5 +223,65 @@ describe("stage worker pool", () => {
     expect(canonicalJson(input).length).toBeLessThan(
       canonicalJson(WorkerRolloutSnapshotSchema.parse(detail)).length,
     );
+  });
+});
+
+describe("rendered worker pool", () => {
+  test("stays bounded by the live hosts however many retired ones the pool keeps", () => {
+    const detail = withHistory(998);
+    const pool = detail.deployment.workerSnapshot;
+    if (pool === null) throw new Error("The fixture has no worker pool");
+    const synced = syncedPool(detail);
+    expect(synced.versions.map((worker) => worker.buildId)).toEqual([
+      STABLE,
+      CANDIDATE,
+    ]);
+    // Two hosts, where the whole 1000-version pool renders about a megabyte.
+    expect(JSON.stringify(synced).length).toBeLessThan(4096);
+    expect(JSON.stringify(pool).length).toBeGreaterThan(900_000);
+  });
+
+  test("a retirement renders its own retiring host at zero and drops earlier retired ones", () => {
+    const current = retiringStable(temporal([]));
+    const pool = current.deployment.workerSnapshot;
+    if (pool === null) throw new Error("The fixture has no worker pool");
+    const detail = DeploymentDetailSchema.parse({
+      ...current,
+      deployment: {
+        ...current.deployment,
+        workerSnapshot: {
+          ...pool,
+          versions: [...pool.versions, ...retiredCentralWorkers(3)],
+        },
+      },
+    });
+    const synced = syncedPool(detail);
+    expect(
+      synced.versions.map((worker) => [worker.buildId, worker.replicas]),
+    ).toEqual([
+      [STABLE, 0],
+      [CANDIDATE, 1],
+    ]);
+    expect({ ...synced, versions: [] }).toEqual({ ...pool, versions: [] });
+  });
+
+  test("a retired build raised again by a rollback or redeploy renders its host again", () => {
+    const pool = withHistory(3).deployment.workerSnapshot;
+    if (pool === null) throw new Error("The fixture has no worker pool");
+    const [raised] = retiredCentralWorkers(1);
+    if (raised === undefined) throw new Error("No retired fixture host");
+    const restored = WorkerPoolSnapshotSchema.parse({
+      ...pool,
+      versions: pool.versions.map((worker) =>
+        worker.buildId === raised.buildId
+          ? { ...worker, replicas: 1, retiredAt: null }
+          : worker,
+      ),
+    });
+    const rendered = renderedWorkerPool(restored).versions.map(
+      (worker) => worker.buildId,
+    );
+    expect(rendered).toContain(raised.buildId);
+    expect(rendered).toHaveLength(3);
   });
 });

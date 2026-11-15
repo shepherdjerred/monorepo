@@ -83,13 +83,12 @@ function validateHosts(pool: WorkerPoolSnapshot) {
 
 /**
  * The pool a worker stage Job reads: its live hosts only. Delivery keeps every
- * retired host in the frozen pool at zero replicas, so the sync keeps
- * rendering their Deployments, and that pool grows with every rollout. No Job
- * reads a retired host: image provenance proves the live images, routing
- * finds the live candidate, a rollback matches the restored live host, and
- * the control-plane proof's chart render fingerprints only control-plane
- * workloads, which no retained host is. Freezing the whole pool into the
- * request made it outgrow the kernel's per-string exec limit.
+ * retired host in the frozen pool at zero replicas, so that pool grows with
+ * every rollout. No Job reads a retired host: image provenance proves the live
+ * images, routing finds the live candidate, a rollback matches the restored
+ * live host, and the control-plane proof's chart render fingerprints only
+ * control-plane workloads, which no retained host is. Freezing the whole pool
+ * into the request made it outgrow the kernel's per-string exec limit.
  */
 export function stageWorkerPool(pool: WorkerPoolSnapshot): WorkerPoolSnapshot {
   return {
@@ -110,6 +109,30 @@ export function withStageWorkerPool<
   };
 }
 
+/**
+ * The pool the worker chart renders: every live host, plus the host a
+ * `retire-host` deployment is retiring, at zero replicas, so its own sync
+ * scales it down and its step reads the Pods back gone. A host an earlier
+ * retirement already scaled to zero is left out. That retirement's accepted
+ * proof showed Temporal routes nothing to its build and no open execution is
+ * pinned to it, and it has no Pod, so its objects serve nothing; the owned
+ * sync prunes them (`workerSyncPrunes`). The Application, which ArgoCD
+ * stores whole in etcd with several copies of this parameter, then stays
+ * bounded by the live hosts instead of growing with every release. The
+ * frozen pool still keeps every retired row, so a rollback or redeploy that
+ * raises a retired build renders its host again.
+ */
+export function renderedWorkerPool(
+  pool: WorkerPoolSnapshot,
+): WorkerPoolSnapshot {
+  return {
+    ...pool,
+    versions: pool.versions.filter(
+      (worker) => worker.replicas === 1 || worker.id === pool.retiringWorkerId,
+    ),
+  };
+}
+
 export function workerPoolParameters(
   detail: DeploymentDetail,
 ): Record<string, string> {
@@ -117,6 +140,6 @@ export function workerPoolParameters(
   return pool === undefined
     ? {}
     : {
-        "delivery.workerPool": JSON.stringify(pool),
+        "delivery.workerPool": JSON.stringify(renderedWorkerPool(pool)),
       };
 }
