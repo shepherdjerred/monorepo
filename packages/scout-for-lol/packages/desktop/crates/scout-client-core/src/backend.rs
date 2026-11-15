@@ -686,7 +686,11 @@ fn scope_granted_from_refusal(
                 | DesktopApiErrorCode::Unavailable
                 | DesktopApiErrorCode::ReauthorizeRequired,
             ),
-        ) => Some(true),
+        )
+        // The owner's web login expired after the scope check passed.
+        | (StatusCode::UNAUTHORIZED, Some(DesktopApiErrorCode::ReauthorizeRequired)) => {
+            Some(true)
+        }
         _ => None,
     }
 }
@@ -708,6 +712,24 @@ mod tests {
         revocation_is_complete_without_receipt, scope_granted_from_refusal,
     };
     use crate::desktop_api::DesktopApiErrorCode;
+
+    #[test]
+    fn an_expired_owner_login_means_the_scope_is_held() {
+        assert_eq!(
+            scope_granted_from_refusal(
+                StatusCode::UNAUTHORIZED,
+                Some(DesktopApiErrorCode::ReauthorizeRequired)
+            ),
+            Some(true)
+        );
+        assert_eq!(
+            scope_granted_from_refusal(
+                StatusCode::UNAUTHORIZED,
+                Some(DesktopApiErrorCode::Unauthorized)
+            ),
+            None
+        );
+    }
 
     #[test]
     fn only_scope_required_means_the_scope_is_still_missing() {

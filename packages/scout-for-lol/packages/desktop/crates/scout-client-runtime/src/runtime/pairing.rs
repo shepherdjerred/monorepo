@@ -1,7 +1,7 @@
 //! Browser pairing, disconnect, and start-at-login commands.
 
 use chrono::{DateTime, Utc};
-use scout_client_core::backend::{ScopeUpgradeOutcome, ScoutBackendClient};
+use scout_client_core::backend::{BackendError, ScopeUpgradeOutcome, ScoutBackendClient};
 use scout_client_core::credentials::DeviceCredential;
 use scout_client_core::desktop_api::{ChatApprovalRoute, DeviceScope};
 use scout_client_core::diagnostics::{
@@ -85,6 +85,11 @@ async fn start_chat_approval(
                     );
                 }
                 Ok(ScopeUpgradeOutcome::AlreadyGranted) => complete_scope_upgrade(state),
+                // The stored token is no longer accepted (the device was revoked
+                // on the web), so there is no device to upgrade: pair afresh.
+                Err(BackendError::Rejected { status: 401, .. }) => {
+                    start_fresh_pairing(state, backend, pending_pairing).await;
+                }
                 Err(error) => set_error(state, error.to_string()),
             }
         }
