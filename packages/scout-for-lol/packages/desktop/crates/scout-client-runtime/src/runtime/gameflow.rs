@@ -404,7 +404,7 @@ fn remember_game_timing(
     )
 }
 
-const IN_PROGRESS_GAME_KEY: &str = "in_progress_game";
+pub(super) const IN_PROGRESS_GAME_KEY: &str = "in_progress_game";
 
 /// Record the gameflow transition out of `InProgress` as an end witness.
 ///
@@ -492,16 +492,9 @@ pub(super) async fn collect_live_frame(
     {
         let body = serde_json::to_vec(&payload).map_err(|error| error.to_string())?;
         if should_emit_live_game_frame(payloads.get("live_game_frame").map(Vec::as_slice)) {
-            let observation = create_observation(
-                outbox,
-                "live_game_frame",
-                ObservationKind::LiveGameFrame,
-                &payload,
-                local_puuid,
-            )?;
-            outbox
-                .enqueue_coalesced("live_game_frame", &observation)
-                .map_err(|error| error.to_string())?;
+            // The frame stays here: it times the game start. What leaves the
+            // device is only the fact that a game is in progress (AI-635).
+            queue_live_game_frame(outbox, local_puuid)?;
         }
         // Keep the newest frame locally for game-start timing without turning
         // continuously advancing gameTime into a durable server observation.
@@ -510,6 +503,32 @@ pub(super) async fn collect_live_frame(
         payloads.remove("live_game_frame");
     }
     Ok(())
+}
+
+/// The only thing a `live_game_frame` observation says: a game is in progress.
+///
+/// The server reads the observation's kind and never its payload, so the
+/// payload is a fixed marker. The raw Live Client frame carries every
+/// player's Riot ID, summoner name and skin, and none of that is sent. This
+/// function takes no frame, so nothing from one can reach the observation.
+pub(super) fn live_game_frame_marker() -> Value {
+    serde_json::json!({ "inProgress": true })
+}
+
+pub(super) fn queue_live_game_frame(
+    outbox: &ObservationOutbox,
+    local_puuid: Option<&str>,
+) -> Result<(), String> {
+    let observation = create_observation(
+        outbox,
+        "live_game_frame",
+        ObservationKind::LiveGameFrame,
+        &live_game_frame_marker(),
+        local_puuid,
+    )?;
+    outbox
+        .enqueue_coalesced("live_game_frame", &observation)
+        .map_err(|error| error.to_string())
 }
 
 pub(super) fn should_emit_live_game_frame(previous: Option<&[u8]>) -> bool {
@@ -702,6 +721,52 @@ mod tests {
         assert!(should_refresh_lobby(Some(&[1]), &[1], 16));
         assert!(!should_refresh_lobby(Some(&[1]), &[2], 16));
         assert!(!should_refresh_lobby(None, &[1], 16));
+    }
+
+    #[test]
+    fn the_live_frame_observation_carries_no_player_identity()
+    -> Result<(), Box<dyn std::error::Error>> {
+        const FRAME: &str =
+            include_str!("../../../scout-client-core/testdata/live/allgamedata.json");
+        let path = std::env::temp_dir().join(format!("scout-runtime-{}.db", Uuid::new_v4()));
+        let outbox = ObservationOutbox::open(&path)?;
+        queue_live_game_frame(&outbox, Some("puuid"))?;
+
+        let pending = outbox.pending(10)?;
+        assert_eq!(pending.len(), 1);
+        let body = String::from_utf8(pending[0].body.clone())?;
+        let sent: ObservationEnvelope = serde_json::from_slice(&pending[0].body)?;
+        assert_eq!(sent.kind, ObservationKind::LiveGameFrame);
+        assert_eq!(
+            sent.payload,
+            json!({ "resource": "live_game_frame", "data": { "inProgress": true } })
+        );
+
+        // Neither a field that names a player nor any name the real frame held.
+        let frame: Value = serde_json::from_str(FRAME)?;
+        for key in [
+            "riotId",
+            "riotIdGameName",
+            "riotIdTagLine",
+            "summonerName",
+            "skinName",
+            "skinID",
+        ] {
+            assert!(!body.contains(&format!("\"{key}\"")), "{key} was sent");
+        }
+        let mut names = Vec::new();
+        for player in frame["allPlayers"].as_array().ok_or("allPlayers")? {
+            for key in ["riotId", "summonerName", "riotIdGameName"] {
+                names.extend(player[key].as_str().map(str::to_owned));
+            }
+        }
+        assert!(!names.is_empty(), "the fixture must hold names to look for");
+        for name in names {
+            assert!(!body.contains(&name), "{name} was sent");
+        }
+        drop(outbox);
+        std::fs::remove_file(path)?;
+        Ok(())
     }
 
     #[test]

@@ -120,7 +120,7 @@ pub(super) async fn run_collector(
                 {
                     set_error(&state, error);
                 }
-                live_game.tick(&state, &diagnostics).await;
+                live_game.tick(&state, &diagnostics, credential.as_ref().map(|_| &outbox), &payloads).await;
                 collection_workers.tick(&state, &outbox, &diagnostics, tick_number, credential.as_ref().is_some_and(|credential| checked_in_device == Some(credential.device_id))).await;
                 usage.flush_after_check_in(&backend, credential.as_ref(), checked_in_device, &diagnostics);
                 if tick_number % 15 == 1
@@ -313,7 +313,10 @@ pub(super) async fn ensure_checked_in(
 }
 
 /// The loopback Live Client adapter, and the live game state that polls it.
-fn create_live_game(state: &StateHub, diagnostics: &Diagnostics) -> (Option<LiveClient>, LiveGame) {
+fn create_live_game(
+    state: &StateHub,
+    diagnostics: &Arc<Diagnostics>,
+) -> (Option<LiveClient>, LiveGame) {
     let client = match LiveClient::new() {
         Ok(client) => Some(client),
         Err(error) => {

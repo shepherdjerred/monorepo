@@ -2,10 +2,10 @@
 //!
 //! A recording is a series of allowlisted [`LiveSnapshot`]s: one at the start,
 //! one every [`SAMPLE_INTERVAL`], and one whenever the game logs a new event.
-//! It stays on this device. Uploading needs a server observation kind that
-//! does not exist yet, so [`RecordingHandoff`] is the typed place where a
-//! finished recording would be offered, and [`LocalOnly`] is the only
-//! implementation.
+//! It stays on this device until the game ends. Then [`RecordingHandoff`] is
+//! offered the finished recording: [`LocalOnly`] keeps it here, and
+//! [`super::upload::OutboxHandoff`] queues it as a `live_game_recording`
+//! observation and marks the game queued.
 //!
 //! Limits, all enforced here:
 //!
@@ -20,6 +20,7 @@ use std::time::Duration;
 
 use chrono::{DateTime, TimeZone, Utc};
 use rusqlite::{Connection, OptionalExtension, Transaction, params};
+use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 use super::snapshot::LiveSnapshot;
@@ -41,7 +42,10 @@ const SCHEMA: &str = "PRAGMA journal_mode = WAL;
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       started_at_ms INTEGER NOT NULL,
       ended_at_ms INTEGER,
-      status TEXT NOT NULL
+      status TEXT NOT NULL,
+      upload_queued_at_ms INTEGER,
+      upload_observation_id TEXT,
+      upload_refused_reason TEXT
     );
     CREATE TABLE IF NOT EXISTS samples (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -52,6 +56,14 @@ const SCHEMA: &str = "PRAGMA journal_mode = WAL;
       payload TEXT NOT NULL
     );
     CREATE INDEX IF NOT EXISTS samples_by_game ON samples (game_id, id);";
+
+/// Added after the first release of this file, so an existing database gets
+/// them by `ALTER` (`CREATE TABLE IF NOT EXISTS` leaves an old table alone).
+const UPLOAD_COLUMNS: [(&str, &str); 3] = [
+    ("upload_queued_at_ms", "INTEGER"),
+    ("upload_observation_id", "TEXT"),
+    ("upload_refused_reason", "TEXT"),
+];
 
 /// A recording failure.
 #[derive(Debug, Error)]
@@ -72,7 +84,8 @@ pub enum RecordingError {
 pub struct RecordingId(i64);
 
 /// Why a sample was taken.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum SampleTrigger {
     /// The first sample, or the five-second cadence.
     Interval,
@@ -142,6 +155,12 @@ pub struct RecordedGame {
     pub samples: u32,
     /// How many sample bytes it holds.
     pub bytes: u64,
+    /// When it was handed to the upload outbox, once it has been. The outbox
+    /// retries and de-duplicates from there, so a game is queued at most once.
+    pub upload_queued_at: Option<DateTime<Utc>>,
+    /// Why the server refused it, once it has. A refused recording is final:
+    /// it is not queued again.
+    pub upload_refused_reason: Option<String>,
 }
 
 /// One stored sample.
@@ -191,7 +210,18 @@ impl RecordingStore {
     ///
     /// [`RecordingError`] when the database cannot be opened or migrated.
     pub fn open(path: impl AsRef<Path>) -> Result<Self, RecordingError> {
-        Self::from_connection(Connection::open(path)?)
+        Self::from_connection(Connection::open(path)?, true)
+    }
+
+    /// Open the database a running recorder already owns, to update a game's
+    /// upload state. Unlike [`RecordingStore::open`] it leaves a game that is
+    /// still `recording` alone.
+    ///
+    /// # Errors
+    ///
+    /// [`RecordingError`] when the database cannot be opened.
+    pub fn open_shared(path: impl AsRef<Path>) -> Result<Self, RecordingError> {
+        Self::from_connection(Connection::open(path)?, false)
     }
 
     /// A store that lives only as long as this value, for tests.
@@ -200,20 +230,26 @@ impl RecordingStore {
     ///
     /// [`RecordingError`] when SQLite cannot open a memory database.
     pub fn open_in_memory() -> Result<Self, RecordingError> {
-        Self::from_connection(Connection::open_in_memory()?)
+        Self::from_connection(Connection::open_in_memory()?, true)
     }
 
-    fn from_connection(connection: Connection) -> Result<Self, RecordingError> {
+    fn from_connection(
+        connection: Connection,
+        sweep_interrupted: bool,
+    ) -> Result<Self, RecordingError> {
         connection.busy_timeout(Duration::from_secs(5))?;
         connection.execute_batch(SCHEMA)?;
+        add_upload_columns(&connection)?;
         connection.pragma_update(None, "foreign_keys", true)?;
-        connection.execute(
-            "UPDATE games SET status = ?1 WHERE status = ?2",
-            params![
-                GameStatus::Interrupted.as_str(),
-                GameStatus::Recording.as_str()
-            ],
-        )?;
+        if sweep_interrupted {
+            connection.execute(
+                "UPDATE games SET status = ?1 WHERE status = ?2",
+                params![
+                    GameStatus::Interrupted.as_str(),
+                    GameStatus::Recording.as_str()
+                ],
+            )?;
+        }
         Ok(Self { connection })
     }
 
@@ -292,6 +328,43 @@ impl RecordingStore {
         })
     }
 
+    /// Record that a finished game was handed to the upload outbox.
+    ///
+    /// # Errors
+    ///
+    /// [`RecordingError`] on a database failure.
+    pub fn mark_upload_queued(
+        &mut self,
+        id: RecordingId,
+        observation_id: &str,
+        now: DateTime<Utc>,
+    ) -> Result<(), RecordingError> {
+        self.connection.execute(
+            "UPDATE games SET upload_queued_at_ms = ?1, upload_observation_id = ?2
+             WHERE id = ?3",
+            params![millis(now), observation_id, id.0],
+        )?;
+        Ok(())
+    }
+
+    /// Record that the server refused the recording queued as `observation_id`.
+    /// Returns whether a game was marked.
+    ///
+    /// # Errors
+    ///
+    /// [`RecordingError`] on a database failure.
+    pub fn mark_upload_refused(
+        &mut self,
+        observation_id: &str,
+        reason: &str,
+    ) -> Result<bool, RecordingError> {
+        let changed = self.connection.execute(
+            "UPDATE games SET upload_refused_reason = ?1 WHERE upload_observation_id = ?2",
+            params![reason, observation_id],
+        )?;
+        Ok(changed > 0)
+    }
+
     /// Mark a game finished and return its summary.
     ///
     /// # Errors
@@ -331,7 +404,8 @@ impl RecordingStore {
     fn read_games(&self, only: Option<i64>) -> Result<Vec<RecordedGame>, RecordingError> {
         let mut statement = self.connection.prepare(
             "SELECT g.id, g.started_at_ms, g.ended_at_ms, g.status,
-                    COUNT(s.id), COALESCE(SUM(LENGTH(s.payload)), 0)
+                    COUNT(s.id), COALESCE(SUM(LENGTH(s.payload)), 0),
+                    g.upload_queued_at_ms, g.upload_refused_reason
              FROM games g LEFT JOIN samples s ON s.game_id = g.id
              WHERE ?1 IS NULL OR g.id = ?1
              GROUP BY g.id ORDER BY g.started_at_ms DESC, g.id DESC",
@@ -344,10 +418,12 @@ impl RecordingStore {
                 row.get::<_, String>(3)?,
                 row.get::<_, i64>(4)?,
                 row.get::<_, i64>(5)?,
+                row.get::<_, Option<i64>>(6)?,
+                row.get::<_, Option<String>>(7)?,
             ))
         })?;
         rows.map(|row| {
-            let (id, started, ended, status, samples, bytes) = row?;
+            let (id, started, ended, status, samples, bytes, queued, refused) = row?;
             Ok(RecordedGame {
                 id: RecordingId(id),
                 started_at: from_millis(started)?,
@@ -355,6 +431,8 @@ impl RecordingStore {
                 status: GameStatus::parse(&status)?,
                 samples: u32::try_from(samples).unwrap_or(u32::MAX),
                 bytes: u64::try_from(bytes).unwrap_or(0),
+                upload_queued_at: queued.map(from_millis).transpose()?,
+                upload_refused_reason: refused,
             })
         })
         .collect()
@@ -389,6 +467,20 @@ impl RecordingStore {
         })
         .collect()
     }
+}
+
+fn add_upload_columns(connection: &Connection) -> Result<(), RecordingError> {
+    let mut statement = connection.prepare("SELECT name FROM pragma_table_info('games')")?;
+    let present = statement
+        .query_map([], |row| row.get::<_, String>(0))?
+        .collect::<Result<Vec<_>, _>>()?;
+    drop(statement);
+    for (name, kind) in UPLOAD_COLUMNS {
+        if !present.iter().any(|column| column == name) {
+            connection.execute_batch(&format!("ALTER TABLE games ADD COLUMN {name} {kind};"))?;
+        }
+    }
+    Ok(())
 }
 
 fn game_bytes(transaction: &Transaction<'_>, id: RecordingId) -> Result<u64, RecordingError> {
@@ -436,16 +528,14 @@ fn thin_once(transaction: &Transaction<'_>, id: RecordingId) -> Result<bool, Rec
     Ok(!doomed.is_empty())
 }
 
-/// Where a finished recording would be offered for upload.
+/// Where a finished recording is offered.
 ///
-/// Uploading needs a server observation kind (`live_game_recording`) that does
-/// not exist yet and must deploy first. Until then [`LocalOnly`] is the only
-/// implementation, and a recording never leaves this device. The upload will
-/// read the samples with [`RecordingStore::samples`] after the game reaches
-/// `EndOfGame`.
+/// Called once when a game's recording ends, with the store so the handoff can
+/// read the samples and mark the game queued. [`LocalOnly`] keeps every
+/// recording on this device.
 pub trait RecordingHandoff {
     /// A game's recording just ended.
-    fn finished(&self, recording: &RecordedGame);
+    fn finished(&self, recording: &RecordedGame, store: &mut RecordingStore);
 }
 
 /// Keeps every recording on this device.
@@ -453,7 +543,7 @@ pub trait RecordingHandoff {
 pub struct LocalOnly;
 
 impl RecordingHandoff for LocalOnly {
-    fn finished(&self, _recording: &RecordedGame) {}
+    fn finished(&self, _recording: &RecordedGame, _store: &mut RecordingStore) {}
 }
 
 struct ActiveGame {
@@ -483,6 +573,11 @@ impl LiveRecorder {
     #[must_use]
     pub fn store(&self) -> &RecordingStore {
         &self.store
+    }
+
+    /// The underlying store, for marking a recording queued.
+    pub fn store_mut(&mut self) -> &mut RecordingStore {
+        &mut self.store
     }
 
     /// Offer the newest snapshot. A game starts on the first one, and a game
@@ -687,6 +782,41 @@ mod tests {
         let kept: Vec<_> = store.games()?.iter().map(|game| game.id).collect();
         assert!(!kept.contains(&old));
         assert!(kept.contains(&recent));
+        Ok(())
+    }
+
+    #[test]
+    fn a_database_from_before_the_upload_column_gains_it() -> Result<(), Box<dyn std::error::Error>>
+    {
+        let path = std::env::temp_dir().join(format!("scout-rec-{}.sqlite3", uuid::Uuid::new_v4()));
+        {
+            let connection = rusqlite::Connection::open(&path)?;
+            connection.execute_batch(
+                "CREATE TABLE games (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                   started_at_ms INTEGER NOT NULL, ended_at_ms INTEGER, status TEXT NOT NULL);
+                 INSERT INTO games (started_at_ms, status) VALUES (1000, 'finished');",
+            )?;
+        }
+        let mut store = RecordingStore::open(&path)?;
+        let game = store.games()?.remove(0);
+        assert_eq!(game.upload_queued_at, None);
+        store.mark_upload_queued(game.id, "obs-1", start())?;
+        assert!(store.mark_upload_refused("obs-1", "too_large")?);
+        assert!(!store.mark_upload_refused("other", "too_large")?);
+        assert_eq!(
+            store.game(game.id)?.and_then(|g| g.upload_queued_at),
+            Some(start())
+        );
+        assert_eq!(
+            store.game(game.id)?.and_then(|g| g.upload_refused_reason),
+            Some("too_large".to_owned())
+        );
+        drop(store);
+        for suffix in ["", "-wal", "-shm"] {
+            let mut file = path.clone().into_os_string();
+            file.push(suffix);
+            let _ = std::fs::remove_file(file);
+        }
         Ok(())
     }
 

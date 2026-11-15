@@ -49,6 +49,11 @@ import {
   projectObservedGameState,
 } from "./lobby-binding.ts";
 import { selectPostGameDispatches } from "./end-of-game/dispatch.ts";
+import {
+  consumeLiveGameRecording,
+  liveGameRecordingOf,
+  refuseInvalidLiveRecordings,
+} from "./live-recording/live-recording.ts";
 
 const UniqueViolationSchema = z.object({ code: z.literal("P2002") });
 
@@ -235,6 +240,9 @@ export async function ingestObservationBatch(
 ): Promise<readonly Receipt[]> {
   if (!(await isScoutClientEvidenceLive()))
     throw new Error("Scout Client ingestion is disabled in this environment");
+  // Before any write: a recording that is not the allowlisted shape stores
+  // nothing of its batch.
+  refuseInvalidLiveRecordings(batch.observations);
   await learnBatchIdentities(device, batch.observations);
   const identities = await readIdentityAliases(
     observationUuids(batch.observations),
@@ -296,6 +304,16 @@ export async function ingestObservationBatch(
       await bindObservedLobby(observation);
       await bindObservedMatch(observation);
       await projectObservedGameState(observation);
+      const recording = liveGameRecordingOf(observation);
+      if (recording !== null && receipt.outcome === "accepted") {
+        consumeLiveGameRecording({
+          observationId: observation.observationId,
+          deviceId: device.deviceId,
+          ownerId: device.ownerId,
+          gameId: observation.gameId ?? null,
+          recording,
+        });
+      }
     }
     receipts.push(receipt);
   }

@@ -21,8 +21,16 @@ struct ProtocolContract {
     payload: PayloadLimits,
     envelope_string_max_bytes: EnvelopeStringLimits,
     observation_kinds: Vec<String>,
+    live_game_recording: LiveGameRecordingContract,
     quarantine_reasons: Vec<String>,
     client_upgrade_required: ClientUpgradeRequiredContract,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct LiveGameRecordingContract {
+    max_payload_bytes: usize,
+    forbidden_key_fragments: Vec<String>,
 }
 
 #[derive(Deserialize)]
@@ -233,6 +241,10 @@ const PLATFORM_ID_MAX_BYTES: usize = {};
 const LOCAL_PUUID_MAX_BYTES: usize = {};
 pub(crate) const LOBBY_ID_MAX_BYTES: usize = {};
 const GAME_ID_MAX_BYTES: usize = {};
+/// Most serialized bytes of one `live_game_recording` payload.
+pub const LIVE_GAME_RECORDING_MAX_PAYLOAD_BYTES: usize = {};
+/// Lowercase key-name fragments a `live_game_recording` may never carry.
+pub const LIVE_GAME_RECORDING_FORBIDDEN_KEY_FRAGMENTS: &[&str] = &[{}];
 /// HTTP status of a `client_upgrade_required` refusal.
 pub const CLIENT_UPGRADE_REQUIRED_STATUS: u16 = {};
 /// The `error` code of a `client_upgrade_required` refusal.
@@ -267,6 +279,8 @@ pub enum ObservationQuarantineReason {{
         rust_usize(contract.envelope_string_max_bytes.local_puuid),
         rust_usize(contract.envelope_string_max_bytes.lobby_id),
         rust_usize(contract.envelope_string_max_bytes.game_id),
+        rust_usize(contract.live_game_recording.max_payload_bytes),
+        quoted_slice(&contract.live_game_recording.forbidden_key_fragments),
         contract.client_upgrade_required.http_status,
         contract.client_upgrade_required.error,
         enum_variants(&contract.observation_kinds, "observation family")?,

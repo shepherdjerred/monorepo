@@ -13,7 +13,8 @@
 //! - [`champ_select`] projects the champion-select session the same way, so
 //!   hidden champion-select identities never leave the League client call.
 //!
-//! [`recording`] keeps snapshots on this device. Nothing here uploads.
+//! [`recording`] keeps snapshots on this device. [`upload`] queues a finished
+//! game's recording as a `live_game_recording` observation.
 
 pub mod champ_select;
 pub mod gameflow;
@@ -22,3 +23,4 @@ pub mod recording;
 pub mod session;
 pub mod snapshot;
 pub mod source;
+pub mod upload;

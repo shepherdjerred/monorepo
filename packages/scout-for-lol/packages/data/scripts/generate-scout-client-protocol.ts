@@ -27,6 +27,10 @@ const ProtocolContractSchema = z.strictObject({
     gameId: PositiveIntegerSchema,
   }),
   observationKinds: z.array(z.string().min(1)).min(1),
+  liveGameRecording: z.strictObject({
+    maxPayloadBytes: z.number().int().positive(),
+    forbiddenKeyFragments: z.array(z.string().regex(/^[a-z]+$/)).min(1),
+  }),
   quarantineReasons: z.array(z.string().min(1)).min(1),
   // A status every released client already treats as a plain failure: not 401
   // (revocation), 409 (replay deferral) or 503 (designed retry).

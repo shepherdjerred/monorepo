@@ -1,0 +1,511 @@
+{
+  "recording": {
+    "data": {
+      "ended_at": "2026-11-14T12:00:30.000Z",
+      "samples": [
+        {
+          "game_time_secs": 0,
+          "recorded_at": "2026-11-14T12:00:00.000Z",
+          "snapshot": {
+            "event_count": 4,
+            "game": {
+              "game_time_secs": 0,
+              "map": "Map11",
+              "mode": "CLASSIC"
+            },
+            "latest_event": {
+              "id": 3,
+              "kind": "DragonKill",
+              "time_secs": 401.2
+            },
+            "own": {
+              "ability_power": 142.0,
+              "armor": 38.0,
+              "attack_damage": 68.0,
+              "attack_speed": 0.668,
+              "crit_chance": 0.0,
+              "current_resource": 411.0,
+              "gold": 845,
+              "health": 512.0,
+              "magic_resist": 32.0,
+              "max_health": 1010.0,
+              "max_resource": 560.0,
+              "move_speed": 355.0,
+              "resource": "MANA"
+            },
+            "participants": [
+              {
+                "assists": 1,
+                "champion": "Ahri",
+                "creep_score": 69,
+                "deaths": 1,
+                "is_self": true,
+                "items": [
+                  {
+                    "count": 1,
+                    "item_id": 6655,
+                    "name": "Luden's Companion"
+                  },
+                  {
+                    "count": 1,
+                    "item_id": 3020,
+                    "name": "Sorcerer's Shoes"
+                  },
+                  {
+                    "count": 1,
+                    "item_id": 1058,
+                    "name": "Needlessly Large Rod"
+                  }
+                ],
+                "keystone": "Electrocute",
+                "kills": 2,
+                "level": 10,
+                "summoner_spells": ["Flash", "Heal"],
+                "team": "order"
+              },
+              {
+                "assists": 2,
+                "champion": "Lee Sin",
+                "creep_score": 78,
+                "deaths": 2,
+                "is_self": false,
+                "items": [
+                  {
+                    "count": 1,
+                    "item_id": 6692,
+                    "name": "Eclipse"
+                  },
+                  {
+                    "count": 1,
+                    "item_id": 3047,
+                    "name": "Plated Steelcaps"
+                  }
+                ],
+                "keystone": "Conqueror",
+                "kills": 4,
+                "level": 11,
+                "summoner_spells": ["Flash", "Smite"],
+                "team": "order"
+              },
+              {
+                "assists": 3,
+                "champion": "Jinx",
+                "creep_score": 87,
+                "deaths": 0,
+                "is_self": false,
+                "items": [
+                  {
+                    "count": 1,
+                    "item_id": 3031,
+                    "name": "Infinity Edge"
+                  },
+                  {
+                    "count": 1,
+                    "item_id": 3006,
+                    "name": "Berserker's Greaves"
+                  }
+                ],
+                "keystone": "Lethal Tempo",
+                "kills": 0,
+                "level": 12,
+                "summoner_spells": ["Flash", "Heal"],
+                "team": "order"
+              },
+              {
+                "assists": 4,
+                "champion": "Thresh",
+                "creep_score": 96,
+                "deaths": 1,
+                "is_self": false,
+                "items": [
+                  {
+                    "count": 1,
+                    "item_id": 3109,
+                    "name": "Knight's Vow"
+                  }
+                ],
+                "keystone": "Guardian",
+                "kills": 2,
+                "level": 9,
+                "summoner_spells": ["Flash", "Ignite"],
+                "team": "order"
+              },
+              {
+                "assists": 0,
+                "champion": "Ornn",
+                "creep_score": 105,
+                "deaths": 2,
+                "is_self": false,
+                "items": [
+                  {
+                    "count": 1,
+                    "item_id": 3068,
+                    "name": "Sunfire Aegis"
+                  },
+                  {
+                    "count": 1,
+                    "item_id": 3047,
+                    "name": "Plated Steelcaps"
+                  }
+                ],
+                "keystone": "Grasp of the Undying",
+                "kills": 4,
+                "level": 10,
+                "summoner_spells": ["Flash", "Teleport"],
+                "team": "order"
+              },
+              {
+                "assists": 1,
+                "champion": "Zed",
+                "creep_score": 114,
+                "deaths": 0,
+                "is_self": false,
+                "items": [
+                  {
+                    "count": 1,
+                    "item_id": 6692,
+                    "name": "Eclipse"
+                  }
+                ],
+                "keystone": "Electrocute",
+                "kills": 0,
+                "level": 11,
+                "summoner_spells": ["Flash", "Ignite"],
+                "team": "chaos"
+              },
+              {
+                "assists": 2,
+                "champion": "Vi",
+                "creep_score": 123,
+                "deaths": 1,
+                "is_self": false,
+                "items": [
+                  {
+                    "count": 1,
+                    "item_id": 3071,
+                    "name": "Black Cleaver"
+                  }
+                ],
+                "keystone": "Lethal Tempo",
+                "kills": 2,
+                "level": 12,
+                "summoner_spells": ["Flash", "Smite"],
+                "team": "chaos"
+              },
+              {
+                "assists": 3,
+                "champion": "Caitlyn",
+                "creep_score": 132,
+                "deaths": 2,
+                "is_self": false,
+                "items": [
+                  {
+                    "count": 1,
+                    "item_id": 3031,
+                    "name": "Infinity Edge"
+                  }
+                ],
+                "keystone": "Press the Attack",
+                "kills": 4,
+                "level": 9,
+                "summoner_spells": ["Flash", "Heal"],
+                "team": "chaos"
+              },
+              {
+                "assists": 4,
+                "champion": "Lulu",
+                "creep_score": 141,
+                "deaths": 0,
+                "is_self": false,
+                "items": [
+                  {
+                    "count": 1,
+                    "item_id": 3504,
+                    "name": "Ardent Censer"
+                  }
+                ],
+                "keystone": "Guardian",
+                "kills": 0,
+                "level": 10,
+                "summoner_spells": ["Flash", "Exhaust"],
+                "team": "chaos"
+              },
+              {
+                "assists": 0,
+                "champion": "Camille",
+                "creep_score": 150,
+                "deaths": 1,
+                "is_self": false,
+                "items": [
+                  {
+                    "count": 1,
+                    "item_id": 3153,
+                    "name": "Blade of The Ruined King"
+                  }
+                ],
+                "keystone": "Conqueror",
+                "kills": 2,
+                "level": 11,
+                "summoner_spells": ["Flash", "Teleport"],
+                "team": "chaos"
+              }
+            ]
+          },
+          "trigger": "interval"
+        },
+        {
+          "game_time_secs": 6,
+          "recorded_at": "2026-11-14T12:00:06.000Z",
+          "snapshot": {
+            "event_count": 4,
+            "game": {
+              "game_time_secs": 6,
+              "map": "Map11",
+              "mode": "CLASSIC"
+            },
+            "latest_event": {
+              "id": 3,
+              "kind": "DragonKill",
+              "time_secs": 401.2
+            },
+            "own": {
+              "ability_power": 142.0,
+              "armor": 38.0,
+              "attack_damage": 68.0,
+              "attack_speed": 0.668,
+              "crit_chance": 0.0,
+              "current_resource": 411.0,
+              "gold": 845,
+              "health": 512.0,
+              "magic_resist": 32.0,
+              "max_health": 1010.0,
+              "max_resource": 560.0,
+              "move_speed": 355.0,
+              "resource": "MANA"
+            },
+            "participants": [
+              {
+                "assists": 1,
+                "champion": "Ahri",
+                "creep_score": 69,
+                "deaths": 1,
+                "is_self": true,
+                "items": [
+                  {
+                    "count": 1,
+                    "item_id": 6655,
+                    "name": "Luden's Companion"
+                  },
+                  {
+                    "count": 1,
+                    "item_id": 3020,
+                    "name": "Sorcerer's Shoes"
+                  },
+                  {
+                    "count": 1,
+                    "item_id": 1058,
+                    "name": "Needlessly Large Rod"
+                  }
+                ],
+                "keystone": "Electrocute",
+                "kills": 2,
+                "level": 10,
+                "summoner_spells": ["Flash", "Heal"],
+                "team": "order"
+              },
+              {
+                "assists": 2,
+                "champion": "Lee Sin",
+                "creep_score": 78,
+                "deaths": 2,
+                "is_self": false,
+                "items": [
+                  {
+                    "count": 1,
+                    "item_id": 6692,
+                    "name": "Eclipse"
+                  },
+                  {
+                    "count": 1,
+                    "item_id": 3047,
+                    "name": "Plated Steelcaps"
+                  }
+                ],
+                "keystone": "Conqueror",
+                "kills": 4,
+                "level": 11,
+                "summoner_spells": ["Flash", "Smite"],
+                "team": "order"
+              },
+              {
+                "assists": 3,
+                "champion": "Jinx",
+                "creep_score": 87,
+                "deaths": 0,
+                "is_self": false,
+                "items": [
+                  {
+                    "count": 1,
+                    "item_id": 3031,
+                    "name": "Infinity Edge"
+                  },
+                  {
+                    "count": 1,
+                    "item_id": 3006,
+                    "name": "Berserker's Greaves"
+                  }
+                ],
+                "keystone": "Lethal Tempo",
+                "kills": 0,
+                "level": 12,
+                "summoner_spells": ["Flash", "Heal"],
+                "team": "order"
+              },
+              {
+                "assists": 4,
+                "champion": "Thresh",
+                "creep_score": 96,
+                "deaths": 1,
+                "is_self": false,
+                "items": [
+                  {
+                    "count": 1,
+                    "item_id": 3109,
+                    "name": "Knight's Vow"
+                  }
+                ],
+                "keystone": "Guardian",
+                "kills": 2,
+                "level": 9,
+                "summoner_spells": ["Flash", "Ignite"],
+                "team": "order"
+              },
+              {
+                "assists": 0,
+                "champion": "Ornn",
+                "creep_score": 105,
+                "deaths": 2,
+                "is_self": false,
+                "items": [
+                  {
+                    "count": 1,
+                    "item_id": 3068,
+                    "name": "Sunfire Aegis"
+                  },
+                  {
+                    "count": 1,
+                    "item_id": 3047,
+                    "name": "Plated Steelcaps"
+                  }
+                ],
+                "keystone": "Grasp of the Undying",
+                "kills": 4,
+                "level": 10,
+                "summoner_spells": ["Flash", "Teleport"],
+                "team": "order"
+              },
+              {
+                "assists": 1,
+                "champion": "Zed",
+                "creep_score": 114,
+                "deaths": 0,
+                "is_self": false,
+                "items": [
+                  {
+                    "count": 1,
+                    "item_id": 6692,
+                    "name": "Eclipse"
+                  }
+                ],
+                "keystone": "Electrocute",
+                "kills": 0,
+                "level": 11,
+                "summoner_spells": ["Flash", "Ignite"],
+                "team": "chaos"
+              },
+              {
+                "assists": 2,
+                "champion": "Vi",
+                "creep_score": 123,
+                "deaths": 1,
+                "is_self": false,
+                "items": [
+                  {
+                    "count": 1,
+                    "item_id": 3071,
+                    "name": "Black Cleaver"
+                  }
+                ],
+                "keystone": "Lethal Tempo",
+                "kills": 2,
+                "level": 12,
+                "summoner_spells": ["Flash", "Smite"],
+                "team": "chaos"
+              },
+              {
+                "assists": 3,
+                "champion": "Caitlyn",
+                "creep_score": 132,
+                "deaths": 2,
+                "is_self": false,
+                "items": [
+                  {
+                    "count": 1,
+                    "item_id": 3031,
+                    "name": "Infinity Edge"
+                  }
+                ],
+                "keystone": "Press the Attack",
+                "kills": 4,
+                "level": 9,
+                "summoner_spells": ["Flash", "Heal"],
+                "team": "chaos"
+              },
+              {
+                "assists": 4,
+                "champion": "Lulu",
+                "creep_score": 141,
+                "deaths": 0,
+                "is_self": false,
+                "items": [
+                  {
+                    "count": 1,
+                    "item_id": 3504,
+                    "name": "Ardent Censer"
+                  }
+                ],
+                "keystone": "Guardian",
+                "kills": 0,
+                "level": 10,
+                "summoner_spells": ["Flash", "Exhaust"],
+                "team": "chaos"
+              },
+              {
+                "assists": 0,
+                "champion": "Camille",
+                "creep_score": 150,
+                "deaths": 1,
+                "is_self": false,
+                "items": [
+                  {
+                    "count": 1,
+                    "item_id": 3153,
+                    "name": "Blade of The Ruined King"
+                  }
+                ],
+                "keystone": "Conqueror",
+                "kills": 2,
+                "level": 11,
+                "summoner_spells": ["Flash", "Teleport"],
+                "team": "chaos"
+              }
+            ]
+          },
+          "trigger": "event"
+        }
+      ],
+      "started_at": "2026-11-14T12:00:00.000Z"
+    },
+    "resource": "live_game_recording"
+  }
+}

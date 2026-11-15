@@ -84,7 +84,7 @@ impl<S: LiveGameSource, H: RecordingHandoff> LiveGameSession<S, H> {
             return Ok(());
         };
         if let Some(finished) = recorder.observe(snapshot, now)? {
-            self.handoff.finished(&finished);
+            self.handoff.finished(&finished, recorder.store_mut());
         }
         Ok(())
     }
@@ -93,7 +93,7 @@ impl<S: LiveGameSource, H: RecordingHandoff> LiveGameSession<S, H> {
         if let Some(recorder) = &mut self.recorder
             && let Some(finished) = recorder.end_game(now)?
         {
-            self.handoff.finished(&finished);
+            self.handoff.finished(&finished, recorder.store_mut());
         }
         Ok(())
     }
@@ -139,7 +139,7 @@ mod tests {
     struct Collecting(RefCell<Vec<RecordedGame>>);
 
     impl RecordingHandoff for &Collecting {
-        fn finished(&self, recording: &RecordedGame) {
+        fn finished(&self, recording: &RecordedGame, _store: &mut RecordingStore) {
             self.0.borrow_mut().push(recording.clone());
         }
     }

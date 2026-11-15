@@ -799,24 +799,58 @@ new game event. A game is capped at 1 MB of samples; when the next sample would
 not fit, every second interval sample is thinned away, and a sample that still
 cannot fit is dropped. Twenty games are kept for at most 30 days, whichever
 leaves fewer. A game Scout stopped during is marked `interrupted`.
-`RecordingHandoff` is where a finished recording will be offered for upload
-once the server has a `live_game_recording` observation kind; today the only
-implementation, `LocalOnly`, keeps it on the device.
+
+**A finished recording is uploaded once, after the game ends.** When gameflow
+leaves `InProgress` for good (a `Reconnect` keeps the game open), the session
+offers the finished recording to its `RecordingHandoff`. The runtime's
+`OutboxHandoff` (`live::upload`) builds one `live_game_recording` observation
+from the stored samples and puts it in the ordinary outbox, so it retries and
+de-duplicates like every other observation, then stamps the game's
+`upload_queued_at_ms` in `recordings.sqlite3`. The payload is the samples in
+the `LiveSnapshot` shape, in snake_case, and nothing else: no Riot ID, name,
+skin, ward score, cooldown or position, which the client checks again against
+the shared contract's forbidden-key list before queueing. If the wire form is
+over the contract's 1 MiB cap, every second sample is dropped (never the first
+or last) until it fits. Only a `finished` game is queued, and only while the
+device is paired: an unpaired device, or a game that ended with Scout stopped,
+stays local. There is no separate switch for it: like match and replay
+evidence, it is gameplay evidence uploaded while paired, and "Send usage data"
+and "Send error reports" govern product events and crash reports, not
+gameplay. Disconnecting the device stops it. A recording is marked queued when
+the outbox holds it, not when the server acknowledges it.
+
+The server stores a recording under the uploading device and its signed-in
+owner and refuses one that is oversize, carries a forbidden key, or is not
+the allowlisted shape, with a typed `422 live_game_recording_refused`
+(`reason`: `too_large`, `forbidden_key` or `invalid_shape`; `detail` names a
+key or path, never a value). The refusal also names the refused `observationId`, and the
+client treats it as terminal for that one entry: it removes it from the outbox,
+records the reason beside the game in `recordings.sqlite3`
+(`upload_refused_reason`), writes a diagnostics warning, and the observations
+behind it go out on the next tick. A refused recording is never queued again. The post-game review that reads recordings does
+not exist yet.
+
+**The live frame no longer carries the game.** The `live_game_frame`
+observation the client sends once per game now carries only
+`{ "inProgress": true }`. It used to carry the raw `allgamedata` frame, which
+names every player by Riot ID and summoner name. The server reads only the
+observation's kind, never its payload, so nothing changed for it; the raw frame
+stays in memory on the device to time the game start.
 
 ### What leaves this device, and when
 
-| Data                                                                    | Leaves the device?         | When                                                                          | Controlled by          |
-| ----------------------------------------------------------------------- | -------------------------- | ----------------------------------------------------------------------------- | ---------------------- |
-| Live game snapshot (`allgamedata` projection)                           | No                         | Shown in the window only                                                      | Never sent             |
-| Live game recordings (`recordings.sqlite3`)                             | No, local only for now     | Kept 20 games or 30 days; upload arrives with its own server observation kind | Delete the file        |
-| First raw `allgamedata` frame of a game (`live_game_frame` observation) | Yes, to the Scout API      | Once per game, while paired                                                   | Disconnect the device  |
-| Match, lobby, profile and Clash observations                            | Yes, to the Scout API      | While paired, from the outbox                                                 | Disconnect the device  |
-| Replay files                                                            | Yes, to the Scout API      | After a game, while paired                                                    | Disconnect the device  |
-| Explore chat questions                                                  | Yes, to the Scout API      | When you send one                                                             | Not sending            |
-| Error reports                                                           | Yes, to Bugsink, scrubbed  | On an error or crash                                                          | **Send error reports** |
-| Usage events                                                            | Yes, through the Scout API | On a product event                                                            | **Send usage data**    |
-| Champion select (`live::champ_select` projection)                       | No                         | Not collected yet                                                             | Never sent             |
-| Microphone audio (`scout-voice`)                                        | No                         | Not captured yet: the crate is not wired into the app                         | Never sent             |
+| Data                                                         | Leaves the device?         | When                                                                       | Controlled by          |
+| ------------------------------------------------------------ | -------------------------- | -------------------------------------------------------------------------- | ---------------------- |
+| Live game snapshot (`allgamedata` projection)                | No                         | Shown in the window only                                                   | Never sent             |
+| Live game recordings (`recordings.sqlite3`)                  | Yes, to the Scout API      | Once, after the game ends, while paired; kept locally 20 games or 30 days  | Disconnect the device  |
+| Live game in-progress marker (`live_game_frame` observation) | Yes, to the Scout API      | Once per game, while paired; carries no game data (`{"inProgress": true}`) | Disconnect the device  |
+| Match, lobby, profile and Clash observations                 | Yes, to the Scout API      | While paired, from the outbox                                              | Disconnect the device  |
+| Replay files                                                 | Yes, to the Scout API      | After a game, while paired                                                 | Disconnect the device  |
+| Explore chat questions                                       | Yes, to the Scout API      | When you send one                                                          | Not sending            |
+| Error reports                                                | Yes, to Bugsink, scrubbed  | On an error or crash                                                       | **Send error reports** |
+| Usage events                                                 | Yes, through the Scout API | On a product event                                                         | **Send usage data**    |
+| Champion select (`live::champ_select` projection)            | No                         | Not collected yet                                                          | Never sent             |
+| Microphone audio (`scout-voice`)                             | No                         | Not captured yet: the crate is not wired into the app                      | Never sent             |
 
 ## Diagnostics
 
