@@ -6,6 +6,8 @@ import * as qualityGuide from "#workflows/media/quality-guide/workflow.ts";
 import * as subtitleMaintenance from "#workflows/media/subtitle-maintenance/workflow.ts";
 export const maintainMediaSubtitlesV1Workflow =
   subtitleMaintenance.maintainMediaSubtitlesV1Workflow;
+export const maintainMediaSubtitleJobV1Workflow =
+  subtitleMaintenance.maintainMediaSubtitleJobV1Workflow;
 export const refreshMediaQualityGuidesWorkflow =
   qualityGuide.refreshMediaQualityGuidesWorkflow;
 import * as movie from "#workflows/media/movie-editions/acquisition.ts";

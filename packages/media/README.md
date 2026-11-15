@@ -660,6 +660,11 @@ MIT licensed; its revision is evidence for tests, never a production fallback.
 
 The declarative `media-subtitle-wanted-v1` and `media-subtitle-upgrade-v1`
 Temporal schedules inspect bounded pages of owned, published video versions.
+Each planner hands targets to independent, 24-hour-bounded job Workflows and
+awaits only their durable start. A pending target cannot block later assets;
+jobs survive planner completion, page continuation and cancellation. Repeated
+plans retain the same operation identity and do not restart existing, failed
+or cancelled jobs. Native replacement coordinators still own swap and recovery.
 Wanted searches run every six hours; after three weeks from the first failed
 search, that target retries weekly. Upgrades run every twelve hours for captions
 created in the past seven days, including manual origins with genuine accepted

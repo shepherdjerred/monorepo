@@ -3,7 +3,12 @@ import {
   sleep,
   continueAsNew,
   ActivityCancellationType,
+  ChildWorkflowCancellationType,
+  ParentClosePolicy,
+  startChild,
+  WorkflowIdReusePolicy,
 } from "@temporalio/workflow";
+import { WorkflowExecutionAlreadyStartedError } from "@temporalio/common";
 import type {
   SubtitleMaintenanceActivitiesV1,
   SubtitleMaintenanceJobV1,
@@ -185,8 +190,15 @@ async function maintain(job: SubtitleMaintenanceJobV1) {
   );
 }
 
-/** One bounded page per run; native replacement Workflows own all swap,
- * compensation and cleanup effects independently of this recurring planner. */
+/** One durable operation owns each target's polling and native effect receipts. */
+export async function maintainMediaSubtitleJobV1Workflow(
+  job: SubtitleMaintenanceJobV1,
+) {
+  await maintain(job);
+}
+
+/** One bounded page per run; independent job Workflows retain pending work
+ * after this planner returns, continues as new, or is cancelled. */
 export async function maintainMediaSubtitlesV1Workflow(input: {
   mode: SubtitleMaintenanceModeV1;
   cursor?: string | null;
@@ -199,7 +211,22 @@ export async function maintainMediaSubtitlesV1Workflow(input: {
       assetId,
       mode: input.mode,
     });
-    for (const job of jobs) await maintain(job);
+    for (const job of jobs) {
+      try {
+        await startChild(maintainMediaSubtitleJobV1Workflow, {
+          workflowId: `media-operation-${job.operationId}`,
+          taskQueue: TASK_QUEUES.WORKFLOWS,
+          args: [job],
+          parentClosePolicy: ParentClosePolicy.ABANDON,
+          cancellationType: ChildWorkflowCancellationType.ABANDON,
+          workflowIdReusePolicy: WorkflowIdReusePolicy.REJECT_DUPLICATE,
+          workflowExecutionTimeout: "24 hours",
+        });
+      } catch (error: unknown) {
+        if (!(error instanceof WorkflowExecutionAlreadyStartedError))
+          throw error;
+      }
+    }
   }
   if (page.nextCursor !== null)
     await continueAsNew<typeof maintainMediaSubtitlesV1Workflow>({

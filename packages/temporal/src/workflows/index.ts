@@ -427,6 +427,7 @@ export const {
   reconcileMediaPlaybackWorkflow,
   refreshMediaQualityGuidesWorkflow,
   maintainMediaSubtitlesV1Workflow,
+  maintainMediaSubtitleJobV1Workflow,
   rollbackMovieEditionV1Workflow,
   restoreMovieEditionV4Workflow,
   retainMovieEditionV4Workflow,

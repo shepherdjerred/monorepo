@@ -610,6 +610,13 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   // Network mount observation followed by conditional Files sampling; neither
   // branch starts a child Workflow or waits on a Workflow timer.
   "observeMediaCapacityWorkflow",
+  // Two bounded Network Activities; neither starts a child or Workflow timer.
+  "reconcileMediaPlaybackWorkflow",
+  // One bounded guide-refresh Activity; no Workflow-level sleeps.
+  "refreshMediaQualityGuidesWorkflow",
+  // Starts independent durable jobs without joining their polling or native
+  // effects; page continuation and child-start acknowledgement add no timers.
+  "maintainMediaSubtitlesV1Workflow",
   // One outbox-dispatch Activity; dispatched operations run independently.
   "dispatchMediaOutboxWorkflow",
   // At most 20 page Activities per run, then return or continue-as-new. No
