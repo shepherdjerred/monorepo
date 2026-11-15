@@ -9,7 +9,9 @@ use std::path::PathBuf;
 
 use scout_desktop_ipc::{ChatCommand, WindowMessage};
 
-use crate::chat_model::{ChatScreen, ChatUi, SidebarModel, UiAction, edit_message, send_message};
+use crate::chat_model::{
+    ChatScreen, ChatUi, SidebarModel, UiAction, edit_message, edit_target_shown, send_message,
+};
 use crate::chat_view::{self, ChatControls, TAB_SIDEBAR};
 use crate::kit::prelude::{App, Context, IntoElement, Render, Subscription, Task, Window};
 use crate::kit::{
@@ -201,6 +203,18 @@ impl<W: Write + 'static> ScoutWindow<W> {
         }
     }
 
+    /// Cancel an edit whose question is no longer on screen, as Cancel does:
+    /// otherwise its text stays in the composer and sends as a new question
+    /// to whatever is open now.
+    fn drop_stale_edit(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        if let Some(message_id) = self.ui.editing
+            && !edit_target_shown(&self.link.chat, message_id)
+        {
+            self.ui.editing = None;
+            self.composer.clear(window, cx);
+        }
+    }
+
     /// Copy the share link once the supervisor reports it, if the user
     /// just asked for one.
     fn copy_new_share_link(&mut self, cx: &mut Context<Self>) {
@@ -301,6 +315,7 @@ impl<W: Write + 'static> ScoutWindow<W> {
                     {
                         listener(self.link.state.privacy.send_error_reports);
                     }
+                    self.drop_stale_edit(window, cx);
                     self.sync_transcript(cx);
                     self.copy_new_share_link(cx);
                     cx.notify();

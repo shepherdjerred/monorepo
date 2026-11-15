@@ -465,3 +465,144 @@ fn with_the_picker_off_there_is_nothing_to_choose() -> TestResult {
     assert_eq!(session.submit("Hi").ok_or("request")?.model, None);
     Ok(())
 }
+
+#[test]
+fn a_transcript_fetched_before_a_switch_cannot_replace_the_newer_branch() -> TestResult {
+    let mut session = golden::branched()?;
+    // A read of the conversation is in flight when the user switches version.
+    let stale_epoch = session.epoch();
+    session
+        .switch_version(golden::BRANCHED_QUESTION_LAST)
+        .ok_or("the switch starts")?;
+    assert_ne!(session.epoch(), stale_epoch);
+
+    // The switch's own readback lands first and shows the new branch.
+    session.switch_settled(Ok(golden::branched_transcript(Some(golden::SHARE_TOKEN))?));
+    let shown = session.parts().transcript.ok_or("transcript")?.share_url;
+    assert!(shown.is_some());
+
+    // The older read answers late. It is the old branch and is dropped.
+    session.read_back(stale_epoch, golden::branched_transcript(None)?);
+    assert_eq!(
+        session.parts().transcript.ok_or("transcript")?.share_url,
+        shown
+    );
+
+    // A read asked for after the switch is current.
+    session.read_back(session.epoch(), golden::branched_transcript(None)?);
+    assert_eq!(
+        session.parts().transcript.ok_or("transcript")?.share_url,
+        None
+    );
+    Ok(())
+}
+
+#[test]
+fn nothing_starts_until_a_switch_is_read_back() -> TestResult {
+    let mut session = golden::branched()?;
+    session
+        .switch_version(golden::BRANCHED_QUESTION_LAST)
+        .ok_or("the switch starts")?;
+    assert!(session.parts().composer.switching);
+    assert!(session.submit("Sent from the old branch").is_none());
+    assert!(session.edit(golden::BRANCHED_QUESTION, "Edit").is_none());
+    assert!(session.regenerate(golden::BRANCHED_ANSWER).is_none());
+    assert!(
+        session
+            .switch_version(golden::BRANCHED_QUESTION_FIRST)
+            .is_none(),
+        "one switch at a time"
+    );
+
+    // A readback that failed still ends the switch, so chat is not stuck.
+    session.switch_settled(Err(ExploreClientError::NotPaired));
+    assert!(!session.parts().composer.switching);
+
+    let mut session = golden::branched()?;
+    session
+        .switch_version(golden::BRANCHED_QUESTION_LAST)
+        .ok_or("the switch starts")?;
+    session.switch_settled(Ok(golden::branched_transcript(None)?));
+    assert!(session.submit("On the new branch").is_some());
+    Ok(())
+}
+
+#[test]
+fn an_upload_that_lands_after_its_draft_was_removed_is_handed_back_to_discard() -> TestResult {
+    let mut session = golden::ready()?;
+    session.start_new();
+    let job = session.begin_attach("/tmp/late.png").ok_or("job")?;
+    assert_eq!(
+        session.remove_attachment(job.key),
+        None,
+        "nothing stored yet"
+    );
+    assert_eq!(
+        session.upload_finished(job.key, Ok(uploaded(0xc1))),
+        Some(Uuid::from_u128(0xc1)),
+        "the server holds it, so it must be discarded"
+    );
+
+    let failed = session.begin_attach("/tmp/bad.png").ok_or("job")?;
+    session.remove_attachment(failed.key);
+    assert_eq!(
+        session.upload_finished(failed.key, Err(UploadFailure::Local("No.".to_owned()))),
+        None,
+        "a failed upload stored nothing"
+    );
+
+    let kept = session.begin_attach("/tmp/kept.png").ok_or("job")?;
+    assert_eq!(
+        session.upload_finished(kept.key, Ok(uploaded(0xc2))),
+        None,
+        "a draft still in the composer keeps its image"
+    );
+    Ok(())
+}
+
+#[test]
+fn images_held_for_a_starting_question_still_count_toward_the_limit() -> TestResult {
+    let mut session = golden::ready()?;
+    session.start_new();
+    for index in 0..MAX_IMAGES {
+        let job = session
+            .begin_attach(&format!("/tmp/{index}.png"))
+            .ok_or("job")?;
+        let id = 0xd0 + u128::try_from(index)?;
+        session.upload_finished(job.key, Ok(uploaded(id)));
+    }
+    session.submit("Four images").ok_or("request")?;
+    assert!(
+        session.begin_attach("/tmp/extra.png").is_none(),
+        "the four held for the question still count"
+    );
+
+    session.start_failed(&ExploreClientError::Refused(Refusal {
+        code: DesktopApiErrorCode::ConversationBusy,
+        message: "Busy.".to_owned(),
+        retry_after: None,
+    }));
+    assert_eq!(session.parts().composer.drafts.len(), MAX_IMAGES);
+    Ok(())
+}
+
+#[test]
+fn an_edit_cutoff_applies_only_to_the_conversation_it_runs_in() -> TestResult {
+    let mut session = golden::branched()?;
+    // Editing the opening question hides everything under it while it runs.
+    session
+        .edit(golden::BRANCHED_QUESTION, "A different opening question")
+        .ok_or("request")?;
+    let hidden = session.parts().transcript.ok_or("transcript")?;
+    assert_eq!(hidden.messages.len(), 0);
+
+    // The user opens another conversation while the edit is starting.
+    let other = Uuid::from_u128(0x0ddc);
+    let mut transcript = golden::branched_transcript(None)?;
+    transcript.conversation.id = other;
+    session.open(other);
+    session.opened(transcript);
+    let shown = session.parts().transcript.ok_or("transcript")?;
+    assert_eq!(shown.messages.len(), 4, "the other conversation is whole");
+    Ok(())
+}
