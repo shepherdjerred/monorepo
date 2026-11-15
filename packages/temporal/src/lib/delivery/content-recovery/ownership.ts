@@ -22,16 +22,19 @@ export async function contentOwnership(
   context: ContentRecoveryContext,
   connection: Connection,
   read: ContentNativeReader,
-  options: { barrier: BarrierEffects; activeUIDs?: string[] },
+  options: {
+    barrier: BarrierEffects;
+    activeUIDs?: string[];
+    sourceWorkflow?: typeof closedPlatformWorkflow;
+  },
 ): Promise<ContentRecoveryOwnership> {
   const journal = context.intent.dispatchBarrier;
   if (journal === null)
     throw new Error("Content recovery has no durable producer barrier");
   await assertDeliveryDispatchPaused(options.barrier, journal);
-  const sourceWorkflow = await closedPlatformWorkflow(
-    connection,
-    context.deployment.deployment.id,
-  );
+  const sourceWorkflow = await (
+    options.sourceWorkflow ?? closedPlatformWorkflow
+  )(connection, context.deployment.deployment.id);
   const nativeJobs = await proveContentNativeJobs(
     context,
     read,
@@ -39,9 +42,7 @@ export async function contentOwnership(
   );
   await assertDeliveryDispatchPaused(options.barrier, journal);
   return {
-    expectedEnvironmentGeneration:
-      context.intent.expectedEnvironmentGeneration +
-      (context.intent.status === "succeeded" ? 1 : 0),
+    expectedEnvironmentGeneration: context.intent.expectedEnvironmentGeneration,
     snapshotFingerprint: context.intent.snapshotFingerprint,
     observedAt: new Date().toISOString(),
     sourceWorkflow,

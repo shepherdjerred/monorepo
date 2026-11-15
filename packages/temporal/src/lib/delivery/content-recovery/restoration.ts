@@ -32,7 +32,17 @@ export async function restoreContentDispatch(
   context: ContentRecoveryContext,
   connection: Connection,
   read: ContentNativeReader,
+  deps: {
+    api?: typeof deliveryRequest;
+    effects?: BarrierEffects;
+    sourceWorkflow?: Parameters<typeof contentOwnership>[3]["sourceWorkflow"];
+  } = {},
 ) {
+  const api = deps.api ?? deliveryRequest;
+  const ownershipOptions =
+    deps.sourceWorkflow === undefined
+      ? {}
+      : { sourceWorkflow: deps.sourceWorkflow };
   const base = `content-recovery/${encodeURIComponent(context.intent.id)}`;
   const journal = context.intent.dispatchBarrier;
   if (
@@ -43,7 +53,7 @@ export async function restoreContentDispatch(
     throw new Error(
       "Content dispatch restoration requires its settled pending barrier",
     );
-  const effects = contentOuterEffects(context);
+  const effects = deps.effects ?? contentOuterEffects(context);
   const HostSchema = z.object({
     metadata: z.object({ uid: z.string() }),
     spec: z.object({ replicas: z.number(), template: z.unknown() }),
@@ -58,10 +68,11 @@ export async function restoreContentDispatch(
   if (before.spec.replicas === 0) {
     const proof = await contentOwnership(context, connection, read, {
       barrier: effects,
+      ...ownershipOptions,
     });
-    await deliveryRequest(`${base}/admit-restore`, z.unknown(), proof);
+    await api(`${base}/admit-restore`, z.unknown(), proof);
     effects.fence = async () => {
-      const current = await deliveryRequest(base, ContentRecoveryContextSchema);
+      const current = await api(base, ContentRecoveryContextSchema);
       if (
         current.intent.status !== "succeeded" ||
         current.intent.barrierRestoredAt !== null ||
@@ -69,10 +80,13 @@ export async function restoreContentDispatch(
           context.intent.snapshotFingerprint
       )
         throw new Error("Content restoration ownership changed");
-      await deliveryRequest(
+      await api(
         `${base}/admit-restore`,
         z.unknown(),
-        await contentOwnership(current, connection, read, { barrier: effects }),
+        await contentOwnership(current, connection, read, {
+          barrier: effects,
+          ...ownershipOptions,
+        }),
       );
     };
     await restoreDeliveryDispatch(effects, journal);
@@ -127,9 +141,9 @@ export async function restoreContentDispatch(
       )
     ) {
       await requireRestoredOwners(pods, effects, journal.deploymentUID);
-      await deliveryRequest(`${base}/restored`, z.unknown(), {
+      await api(`${base}/restored`, z.unknown(), {
         expectedEnvironmentGeneration:
-          context.intent.expectedEnvironmentGeneration + 1,
+          context.intent.expectedEnvironmentGeneration,
         snapshotFingerprint: context.intent.snapshotFingerprint,
         observedAt: new Date().toISOString(),
         journalFingerprint: contentFingerprint(journal),

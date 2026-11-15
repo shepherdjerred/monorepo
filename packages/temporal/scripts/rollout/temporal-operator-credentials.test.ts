@@ -1,8 +1,12 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import { BatchV1Api, KubeConfig } from "@kubernetes/client-node";
+import { z } from "zod";
 import { resolveCredentials } from "@shepherdjerred/toolkit/lib/credentials.ts";
 import {
+  configureOperatorKubeConfig,
   resolveOperatorTemporalApiKey,
   temporalApiKeyNeedsResolution,
+  type OperatorFetch,
 } from "./temporal-operator-credentials.ts";
 
 const EXTERNAL = "temporal.example.test:443";
@@ -149,5 +153,98 @@ describe("resolveOperatorTemporalApiKey", () => {
     expect(message).not.toContain(fakeToken);
     expect(Bun.env["TEMPORAL_API_KEY"]).toBeUndefined();
     expect(Bun.env["OP_SERVICE_ACCOUNT_TOKEN"]).toBeUndefined();
+  });
+});
+
+describe("configureOperatorKubeConfig", () => {
+  test("injects KUBERNETES_EXEC_INFO on exec users and forwards TLS material to fetch", async () => {
+    const caPem =
+      "-----BEGIN CERTIFICATE-----\nca\n-----END CERTIFICATE-----\n";
+    const certPem =
+      "-----BEGIN CERTIFICATE-----\ncert\n-----END CERTIFICATE-----\n";
+    const keyPem =
+      "-----BEGIN PRIVATE KEY-----\nkey\n-----END PRIVATE KEY-----\n";
+    const kubernetes = new KubeConfig();
+    kubernetes.loadFromOptions({
+      clusters: [
+        {
+          name: "torvalds",
+          server: "https://kubernetes.example.test:6443",
+          caData: Buffer.from(caPem).toString("base64"),
+          skipTLSVerify: false,
+        },
+      ],
+      users: [
+        {
+          name: "admin@torvalds",
+          certData: Buffer.from(certPem).toString("base64"),
+          keyData: Buffer.from(keyPem).toString("base64"),
+          exec: {
+            apiVersion: "client.authentication.k8s.io/v1",
+            command: "toolkit",
+            args: ["kube", "credential"],
+          },
+        },
+      ],
+      contexts: [
+        {
+          name: "admin@torvalds",
+          cluster: "torvalds",
+          user: "admin@torvalds",
+        },
+      ],
+      currentContext: "admin@torvalds",
+    });
+
+    let capturedInit: BunFetchRequestInit | undefined;
+    const transport: OperatorFetch = (_input, init) => {
+      capturedInit = init;
+      return Promise.resolve(
+        Response.json({
+          apiVersion: "batch/v1",
+          kind: "Job",
+          metadata: { name: "test-job", namespace: "storm-forum" },
+        }),
+      );
+    };
+    // Avoid spawning a real subprocess by stubbing applyToHTTPSOptions after exec env check
+    configureOperatorKubeConfig(kubernetes, transport);
+
+    const execEnv = z
+      .object({
+        env: z.array(z.object({ name: z.string(), value: z.string() })),
+      })
+      .parse(kubernetes.getCurrentUser()?.exec).env;
+    expect(execEnv).toContainEqual({
+      name: "KUBERNETES_EXEC_INFO",
+      value: JSON.stringify({
+        apiVersion: "client.authentication.k8s.io/v1",
+        kind: "ExecCredential",
+      }),
+    });
+
+    kubernetes.applyToHTTPSOptions = (opts) => {
+      opts.ca = Buffer.from(caPem);
+      opts.cert = certPem;
+      opts.key = keyPem;
+      return Promise.resolve();
+    };
+
+    const batch = kubernetes.makeApiClient(BatchV1Api);
+    const job = await batch.readNamespacedJob({
+      namespace: "storm-forum",
+      name: "test-job",
+    });
+    expect(job.metadata?.name).toBe("test-job");
+    const tls = z
+      .object({
+        tls: z.object({
+          cert: z.string(),
+          key: z.string(),
+        }),
+      })
+      .parse(capturedInit).tls;
+    expect(tls.cert).toBe(certPem);
+    expect(tls.key).toBe(keyPem);
   });
 });
