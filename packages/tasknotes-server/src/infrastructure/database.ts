@@ -9,8 +9,6 @@ export function createDatabase(connectionString?: string): PrismaClient {
   return new PrismaClient({ adapter: new PrismaPg({ connectionString: url }) });
 }
 
-export type Database = ReturnType<typeof createDatabase>;
-
 let databaseInstance: PrismaClient | null = null;
 
 export function getDatabase(): PrismaClient {

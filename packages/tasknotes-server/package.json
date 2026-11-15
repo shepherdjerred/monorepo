@@ -24,7 +24,6 @@
     "@sentry/bun": "^11.6.0",
     "@shepherdjerred/bugsink-config": "workspace:*",
     "hono": "^4.12.18",
-    "pg": "8.23.0",
     "prom-client": "^15.1.3",
     "tasknotes-types": "workspace:*",
     "zod": "^4.4.3"
@@ -34,7 +33,6 @@
     "@shepherdjerred/architecture": "workspace:*",
     "@shepherdjerred/eslint-config": "workspace:*",
     "@types/bun": "1.4.2",
-    "@types/pg": "^8.11.11",
     "@typescript-eslint/utils": "^8.70.1",
     "eslint": "^10.7.0",
     "jiti": "^2.7.0",
