@@ -3,13 +3,16 @@
 use std::fmt;
 use std::time::Duration;
 
+use base64::Engine as _;
+use base64::engine::general_purpose::STANDARD;
 use reqwest::{Client, RequestBuilder, Response};
 use scout_client_core::backend::backend_origin;
 use scout_client_core::credentials::DeviceCredential;
 use scout_client_core::desktop_api::{
-    ActiveRun, AssetsResponse, ConversationGetRequest, ConversationListResponse, EmptyRequest,
-    ExploreStatusResponse, PNG_CONTENT_TYPE, RunActiveResponse, RunOutcome, RunOutcomeResponse,
-    RunRequest, RunStartRequest, RunStopResponse, VisualizationRequest,
+    ActiveRun, AssetsResponse, AttachmentDiscardRequest, ConversationGetRequest,
+    ConversationListResponse, EmptyRequest, ExploreStatusResponse, ModelsResponse, OkResponse,
+    PNG_CONTENT_TYPE, RunActiveResponse, RunOutcome, RunOutcomeResponse, RunRequest,
+    RunStartRequest, RunStopResponse, SetLeafRequest, ShareResponse, VisualizationRequest,
 };
 use serde::Serialize;
 use serde::de::DeserializeOwned;
@@ -18,7 +21,7 @@ use uuid::Uuid;
 
 use crate::contract::{CONTRACT_HEADER, CONTRACT_VERSION, Route};
 use crate::error::{ExploreClientError, classify_rejection, retry_after};
-use crate::model::Transcript;
+use crate::model::{Attachment, AttachmentMediaType, AttachmentUploadRequest, Transcript};
 
 /// How long a REST call may take end to end.
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(15);
@@ -328,6 +331,108 @@ impl ExploreClient {
         Ok(bytes.to_vec())
     }
 
+    /// `explore/models`: the models the owner may choose between, from the
+    /// source the web's picker uses. Empty while the picker is off.
+    ///
+    /// # Errors
+    ///
+    /// Returns a transport failure, a typed refusal, or a contract mismatch.
+    pub async fn models(&self) -> Result<ModelsResponse, ExploreClientError> {
+        self.call(Route::ExploreModels, &EmptyRequest {}).await
+    }
+
+    /// `explore/conversations/set-leaf`: show the branch through
+    /// `message_id`, which is how the version switcher moves.
+    ///
+    /// # Errors
+    ///
+    /// Returns a transport failure, a typed refusal (`not_found` for a
+    /// conversation that is not the owner's), or a contract mismatch.
+    pub async fn set_leaf(
+        &self,
+        conversation_id: Uuid,
+        message_id: Uuid,
+    ) -> Result<(), ExploreClientError> {
+        let answer: OkResponse = self
+            .call(
+                Route::ExploreConversationsSetLeaf,
+                &SetLeafRequest {
+                    conversation_id,
+                    message_id,
+                },
+            )
+            .await?;
+        expect_ok(&answer, "conversations/set-leaf")
+    }
+
+    /// `explore/conversations/share`: create, or read, the share token.
+    ///
+    /// # Errors
+    ///
+    /// Returns a transport failure, a typed refusal, or a contract mismatch.
+    pub async fn share(&self, conversation_id: Uuid) -> Result<String, ExploreClientError> {
+        let answer: ShareResponse = self
+            .call(
+                Route::ExploreConversationsShare,
+                &ConversationGetRequest { conversation_id },
+            )
+            .await?;
+        Ok(answer.share_token)
+    }
+
+    /// `explore/conversations/revoke-share`: the link stops working.
+    ///
+    /// # Errors
+    ///
+    /// Returns a transport failure, a typed refusal, or a contract mismatch.
+    pub async fn revoke_share(&self, conversation_id: Uuid) -> Result<(), ExploreClientError> {
+        let answer: OkResponse = self
+            .call(
+                Route::ExploreConversationsRevokeShare,
+                &ConversationGetRequest { conversation_id },
+            )
+            .await?;
+        expect_ok(&answer, "conversations/revoke-share")
+    }
+
+    /// `explore/attachments/upload`: store one image for the next question.
+    ///
+    /// # Errors
+    ///
+    /// Returns a transport failure, a typed refusal (`invalid_request` for
+    /// an image the server refuses, `quota_exceeded` at the upload caps), or
+    /// a contract mismatch.
+    pub async fn upload_attachment(
+        &self,
+        media_type: AttachmentMediaType,
+        bytes: &[u8],
+    ) -> Result<Attachment, ExploreClientError> {
+        self.call(
+            Route::ExploreAttachmentsUpload,
+            &AttachmentUploadRequest {
+                media_type,
+                base64: STANDARD.encode(bytes),
+            },
+        )
+        .await
+    }
+
+    /// `explore/attachments/discard`: drop an image that was not sent.
+    ///
+    /// # Errors
+    ///
+    /// Returns a transport failure, a typed refusal (`not_found` for an image
+    /// that is gone, sent, or not the owner's), or a contract mismatch.
+    pub async fn discard_attachment(&self, id: Uuid) -> Result<(), ExploreClientError> {
+        let answer: OkResponse = self
+            .call(
+                Route::ExploreAttachmentsDiscard,
+                &AttachmentDiscardRequest { id },
+            )
+            .await?;
+        expect_ok(&answer, "attachments/discard")
+    }
+
     /// Open `explore/runs/stream` once, returning the response only when it
     /// is a `text/event-stream`.
     pub(crate) async fn open_stream(&self, run_id: Uuid) -> Result<Response, ExploreClientError> {
@@ -352,6 +457,17 @@ impl ExploreClient {
             });
         }
         Ok(response)
+    }
+}
+
+fn expect_ok(answer: &OkResponse, route: &str) -> Result<(), ExploreClientError> {
+    if answer.ok {
+        Ok(())
+    } else {
+        Err(ExploreClientError::Unexpected {
+            status: 200,
+            detail: format!("{route} answered ok: false"),
+        })
     }
 }
 

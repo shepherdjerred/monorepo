@@ -572,6 +572,127 @@ mod render {
         Ok(())
     }
 
+    const BUILD_SCREEN: &str = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/tests/fixtures/build-screen.png"
+    );
+    const SCOREBOARD: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/fixtures/scoreboard.png");
+
+    /// What clicking at `point` sends, as the commands that came out.
+    fn click_sends(harness: &mut Harness, point: (f32, f32)) -> Result<Vec<WindowMessage>, Error> {
+        let before = harness.sent()?.len();
+        harness.click(point.0, point.1)?;
+        Ok(harness.sent()?.split_off(before))
+    }
+
+    fn chat_command(command: ChatCommand) -> WindowMessage {
+        WindowMessage::Chat { command }
+    }
+
+    /// The question's switcher: previous, next. The answer's: the same.
+    const QUESTION_PREVIOUS: (f32, f32) = (580., 136.);
+    const QUESTION_NEXT: (f32, f32) = (658., 136.);
+    const QUESTION_EDIT: (f32, f32) = (703., 136.);
+    const ANSWER_PREVIOUS: (f32, f32) = (240., 234.);
+    const ANSWER_NEXT: (f32, f32) = (315., 234.);
+    const ANSWER_REGENERATE: (f32, f32) = (385., 234.);
+    const OPEN_IN_BROWSER: (f32, f32) = (577., 39.);
+    const SHARE_LINK: (f32, f32) = (693., 39.);
+    const SEND: (f32, f32) = (708., 484.);
+    /// The first draft's Remove button, under its thumbnail.
+    const REMOVE_FIRST_IMAGE: (f32, f32) = (260., 404.);
+    /// The model picker's button, above the composer.
+    const MODEL_PICKER: (f32, f32) = (315., 444.);
+
+    /// Edit and regenerate, the version switcher, image attachments, share
+    /// links and the model picker.
+    fn chat_actions(harness: &mut Harness) -> Result<(), Error> {
+        // The version switcher: arrows name the neighbouring versions, and
+        // the end of the line is disabled.
+        harness.chat(golden::versioned()?.parts())?;
+        harness.capture("chat-versions")?;
+        for (point, target) in [
+            (QUESTION_PREVIOUS, golden::BRANCHED_QUESTION_FIRST),
+            (QUESTION_NEXT, golden::BRANCHED_QUESTION_LAST),
+            (ANSWER_NEXT, golden::BRANCHED_ANSWER_NEXT),
+        ] {
+            let sent = click_sends(harness, point)?;
+            if sent
+                != [chat_command(ChatCommand::SwitchVersion {
+                    message_id: target,
+                })]
+            {
+                return Err(format!("a version arrow sent {sent:?}, not {target}").into());
+            }
+        }
+        let sent = click_sends(harness, ANSWER_PREVIOUS)?;
+        if !sent.is_empty() {
+            return Err(format!("the first version's Previous sent {sent:?}").into());
+        }
+        let sent = click_sends(harness, ANSWER_REGENERATE)?;
+        if sent
+            != [chat_command(ChatCommand::Regenerate {
+                message_id: golden::BRANCHED_ANSWER,
+            })]
+        {
+            return Err(format!("Regenerate sent {sent:?}").into());
+        }
+
+        // Edit puts the question back in the composer; sending it adds a
+        // version of that turn rather than asking again.
+        let sent = click_sends(harness, QUESTION_EDIT)?;
+        if !sent.is_empty() {
+            return Err(format!("Edit sent {sent:?} before anything was typed").into());
+        }
+        harness.capture("chat-editing")?;
+        let sent = click_sends(harness, SEND)?;
+        if sent
+            != [chat_command(ChatCommand::Edit {
+                message_id: golden::BRANCHED_QUESTION,
+                question: "Which bot lane pair wins most in ARAM this month?".to_owned(),
+            })]
+        {
+            return Err(format!("sending an edit sent {sent:?}").into());
+        }
+
+        // Open in browser links to the web conversation.
+        let sent = click_sends(harness, OPEN_IN_BROWSER)?;
+        let expected = format!(
+            "https://scout-for-lol.com/app/explore/{}",
+            golden::BRANCHED_CONVERSATION
+        );
+        if sent != [WindowMessage::OpenUrl { url: expected }] {
+            return Err(format!("Open in browser sent {sent:?}").into());
+        }
+
+        // Sharing: the button asks, and the link shows once Scout answers.
+        let sent = click_sends(harness, SHARE_LINK)?;
+        if sent != [chat_command(ChatCommand::Share)] {
+            return Err(format!("Share link sent {sent:?}").into());
+        }
+        harness.chat(golden::shared()?.parts())?;
+        harness.capture("chat-shared")?;
+
+        // Two images waiting in the composer, with their thumbnails.
+        let composing = golden::composing(BUILD_SCREEN, SCOREBOARD)?.parts();
+        let first_image = composing.composer.drafts[0].key;
+        harness.chat(composing)?;
+        harness.capture("chat-composing")?;
+        let sent = click_sends(harness, REMOVE_FIRST_IMAGE)?;
+        if sent
+            != [chat_command(ChatCommand::RemoveAttachment {
+                key: first_image,
+            })]
+        {
+            return Err(format!("Remove sent {sent:?}").into());
+        }
+
+        // The model picker opens in the window and lists the server's models.
+        harness.click(MODEL_PICKER.0, MODEL_PICKER.1)?;
+        harness.capture("chat-model-picker")?;
+        Ok(())
+    }
+
     fn status_pages(harness: &mut Harness) -> Result<(), Error> {
         for page in PageId::STATUS {
             let (x, y) = status_point(page)?;
@@ -637,6 +758,7 @@ mod render {
 
         chat_states(&mut harness)?;
         visual_states(&mut harness)?;
+        chat_actions(&mut harness)?;
         status_pages(&mut harness)?;
 
         // Close from the supervisor ends the window's listener cleanly, and

@@ -934,6 +934,22 @@ limit; past it the route is 429 `rate_limited` before anything is read. The
 contract's `nativeVisualizationKinds` names the chart kinds Discord and the
 desktop draw as text instead.
 
+The chat actions (`explore-action-routes.ts`, contract version 5) are
+`explore/models`, `conversations/set-leaf`, `conversations/share`,
+`conversations/revoke-share`, `attachments/upload` and `attachments/discard`.
+Each calls what its tRPC procedure calls (`setExploreLeaf`,
+`shareExploreConversation`, `revokeExploreShare`, `uploadExploreAttachment`,
+`discardExploreAttachment`), and a conversation, message or image that is not
+the owner's is a 404 `not_found`. Editing and regenerating are not routes of
+their own: they are `runs/start` with an `attach` point, as on the web, so they
+spend the same quota and active-run slot. Writes are also limited per device
+per minute, on top of the read limit (`rate-limit.ts`): share and revoke 10,
+edit, regenerate and version switching 30, image upload and discard 20, each
+refused with 429 `rate_limited`. Uploads take the web's limits (PNG, JPEG or
+WebP, 10 MiB, and the store's unsent and hourly caps, answered as
+`quota_exceeded`); `explore/models` lists nothing while the model picker flag is
+off.
+
 `scout_desktop_explore_enabled` gates every desktop Explore route. It defaults
 on in beta and production (a player opts in by pairing), so it is a kill
 switch: after authentication and Explore access, it is evaluated for the

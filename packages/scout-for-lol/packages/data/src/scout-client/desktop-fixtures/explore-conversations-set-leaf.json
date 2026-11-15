@@ -1,0 +1,33 @@
+{
+  "route": "explore_conversations_set_leaf",
+  "request": {
+    "conversationId": "7c3e5a91-2b64-4d0f-8e17-5a9c4b2d6f30",
+    "messageId": "e5b7c9d1-3f24-4a6b-8c8e-0d2f4a6b8c01"
+  },
+  "response": {
+    "ok": true
+  },
+  "invalidRequests": [
+    {
+      "reason": "a missing message id",
+      "body": {
+        "conversationId": "7c3e5a91-2b64-4d0f-8e17-5a9c4b2d6f30"
+      }
+    },
+    {
+      "reason": "a malformed message id",
+      "body": {
+        "conversationId": "7c3e5a91-2b64-4d0f-8e17-5a9c4b2d6f30",
+        "messageId": "latest"
+      }
+    },
+    {
+      "reason": "an unknown key",
+      "body": {
+        "conversationId": "7c3e5a91-2b64-4d0f-8e17-5a9c4b2d6f30",
+        "messageId": "e5b7c9d1-3f24-4a6b-8c8e-0d2f4a6b8c01",
+        "leaf": true
+      }
+    }
+  ]
+}

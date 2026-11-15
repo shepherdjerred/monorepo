@@ -5,8 +5,9 @@
 use std::collections::BTreeMap;
 
 use scout_desktop_ipc::{
-    ChatAvailability, ChatCommand, ChatImage, ChatParts, ChatRole, ChatToolStatus, ChatToolStep,
-    ChatVisuals, StateSnapshot, UpdateSnapshot, WindowMessage,
+    ChatAttachment, ChatAvailability, ChatCommand, ChatDraftState, ChatImage, ChatMessage,
+    ChatParts, ChatRole, ChatToolStatus, ChatToolStep, ChatTranscript, ChatVersion, ChatVisuals,
+    StateSnapshot, UpdateSnapshot, WindowMessage,
 };
 use uuid::Uuid;
 
@@ -87,6 +88,115 @@ pub enum Picture<'a> {
 /// What a chart slot says while its image is not there.
 pub const CHART_LOADING: &str = "Drawing the chart…";
 
+/// What a chat button does. Most send a command to the supervisor; the rest
+/// change what only this window knows: what is being edited, whether the
+/// picker is open, the file picker, the clipboard.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum UiAction {
+    /// Send a message to the supervisor.
+    Send(WindowMessage),
+    /// Put a question back in the composer to be edited into a new version.
+    Edit {
+        /// The question.
+        message_id: Uuid,
+        /// Its text.
+        text: String,
+    },
+    /// Stop editing and clear the composer.
+    CancelEdit,
+    /// Open or close the model picker.
+    TogglePicker,
+    /// Open the file picker for an image.
+    PickImage,
+    /// Put a link on the clipboard.
+    CopyLink(String),
+}
+
+/// One chat button.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Control {
+    /// A stable element id, unique on the page.
+    pub id: String,
+    /// What it says.
+    pub label: String,
+    /// What it does.
+    pub action: UiAction,
+    /// Whether it can be used now.
+    pub enabled: bool,
+}
+
+impl Control {
+    fn new(id: impl Into<String>, label: impl Into<String>, action: UiAction) -> Self {
+        Self {
+            id: id.into(),
+            label: label.into(),
+            action,
+            enabled: true,
+        }
+    }
+
+    fn send(id: impl Into<String>, label: impl Into<String>, command: ChatCommand) -> Self {
+        Self::new(id, label, UiAction::Send(chat(command)))
+    }
+}
+
+/// An image shown with a question: a thumbnail when this computer has the
+/// file, a labelled tile when the image was attached elsewhere.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ImageView {
+    /// The image's name or type, for the tile and the accessible text.
+    pub label: String,
+    /// A file to draw.
+    pub thumbnail: Option<String>,
+}
+
+impl ImageView {
+    fn new(attachment: &ChatAttachment) -> Self {
+        Self {
+            label: attachment
+                .media_type
+                .strip_prefix("image/")
+                .unwrap_or("image")
+                .to_ascii_uppercase(),
+            thumbnail: attachment.thumbnail.clone(),
+        }
+    }
+}
+
+/// The "2 of 3" switcher on a turn with several versions.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SwitcherView {
+    /// "2 of 3".
+    pub label: String,
+    /// Step to the version before; disabled on the first.
+    pub previous: Control,
+    /// Step to the version after; disabled on the last.
+    pub next: Control,
+}
+
+impl SwitcherView {
+    fn new(message: &ChatMessage, version: &ChatVersion, enabled: bool) -> Self {
+        let step = |id: &str, label: &str, target: Option<Uuid>| Control {
+            enabled: enabled && target.is_some(),
+            ..target.map_or_else(
+                || Control::new(format!("{id}-{}", message.id), label, UiAction::CancelEdit),
+                |message_id| {
+                    Control::send(
+                        format!("{id}-{}", message.id),
+                        label,
+                        ChatCommand::SwitchVersion { message_id },
+                    )
+                },
+            )
+        };
+        Self {
+            label: format!("{} of {}", version.position, version.count),
+            previous: step("version-previous", "‹", version.previous),
+            next: step("version-next", "›", version.next),
+        }
+    }
+}
+
 /// One row of the transcript: a question, or an answer with its steps.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TranscriptRow {
@@ -110,6 +220,13 @@ pub struct TranscriptRow {
     pub visuals: ChatVisuals,
     /// Where each picture `visuals` names stands.
     pub pictures: BTreeMap<String, ChatImage>,
+    /// Images attached to a question.
+    pub images: Vec<ImageView>,
+    /// The version switcher, when the turn has several versions.
+    pub switcher: Option<SwitcherView>,
+    /// What can be done with this message: edit a question, regenerate an
+    /// answer.
+    pub actions: Vec<Control>,
 }
 
 impl TranscriptRow {
@@ -125,15 +242,95 @@ impl TranscriptRow {
             Some(ChatImage::Failed { message }) => Picture::Failed(message),
         }
     }
+
+    fn pending(key: &str, role: ChatRole, text: String) -> Self {
+        Self {
+            key: key.to_owned(),
+            role,
+            text,
+            streaming: false,
+            tools: Vec::new(),
+            activity: None,
+            caveats: Vec::new(),
+            error: None,
+            images: Vec::new(),
+            switcher: None,
+            actions: Vec::new(),
+            visuals: ChatVisuals::default(),
+            pictures: BTreeMap::new(),
+        }
+    }
+}
+
+/// An image waiting in the composer.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DraftView {
+    /// The file name.
+    pub name: String,
+    /// The file to draw.
+    pub thumbnail: String,
+    /// "Uploading…" or why it failed; none once ready.
+    pub status: Option<String>,
+    /// Whether the status is a failure.
+    pub failed: bool,
+    /// Take it out.
+    pub remove: Control,
+}
+
+/// One choice in the model picker.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PickerOption {
+    /// Choose it.
+    pub control: Control,
+    /// Whether it is the model in use.
+    pub selected: bool,
+}
+
+/// The model picker: a button naming the model in use, and while open, the
+/// models to choose between.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PickerModel {
+    /// Opens and closes the list; names the model in use.
+    pub toggle: Control,
+    /// Whether the list is open.
+    pub open: bool,
+    /// The models, in the server's order.
+    pub options: Vec<PickerOption>,
+}
+
+/// The banner over the composer while a question is being edited.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct EditingModel {
+    /// What it says.
+    pub label: &'static str,
+    /// Stop editing.
+    pub cancel: Control,
+}
+
+/// What only this window knows about the chat page.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct ChatUi {
+    /// The question being edited, until the new version is sent.
+    pub editing: Option<Uuid>,
+    /// Whether the model picker is open.
+    pub picker_open: bool,
 }
 
 /// The composer's controls.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ComposerModel {
     /// Whether a question can be sent now.
     pub can_send: bool,
     /// Whether the running answer can be stopped.
     pub can_stop: bool,
+    /// Attach an image; disabled at the web's four-image cap.
+    pub attach: Control,
+    /// The images attached so far.
+    pub drafts: Vec<DraftView>,
+    /// The model picker; none while the server chooses.
+    pub picker: Option<PickerModel>,
+    /// The editing banner, while a question is being edited.
+    pub editing: Option<EditingModel>,
 }
 
 /// An open or blank conversation.
@@ -151,6 +348,10 @@ pub struct ConversationModel {
     pub reconnecting: bool,
     /// A one-line failure, such as a refused question.
     pub notice: Option<String>,
+    /// "Open in browser" and the share link controls.
+    pub header: Vec<Control>,
+    /// The share link, while the conversation is shared.
+    pub share_url: Option<String>,
 }
 
 /// A chat screen that cannot chat yet, and what the user can do about it.
@@ -172,7 +373,7 @@ pub enum ChatScreen {
     /// Asking Scout whether chat works.
     Loading,
     /// Chat works.
-    Conversation(ConversationModel),
+    Conversation(Box<ConversationModel>),
     /// Chat needs the user first.
     Gate(GateModel),
 }
@@ -327,7 +528,35 @@ fn tools(steps: &[ChatToolStep]) -> Vec<ToolRow> {
     steps.iter().map(ToolRow::new).collect()
 }
 
+fn message_actions(message: &ChatMessage, enabled: bool) -> Vec<Control> {
+    // Editing copies only the text, so a question with images would lose
+    // them. The web hides Edit for these too.
+    if message.role == ChatRole::User && !message.attachments.is_empty() {
+        return Vec::new();
+    }
+    let mut control = match message.role {
+        ChatRole::User => Control::new(
+            format!("edit-{}", message.id),
+            "Edit",
+            UiAction::Edit {
+                message_id: message.id,
+                text: message.content.clone(),
+            },
+        ),
+        ChatRole::Assistant => Control::send(
+            format!("regenerate-{}", message.id),
+            "Regenerate",
+            ChatCommand::Regenerate {
+                message_id: message.id,
+            },
+        ),
+    };
+    control.enabled = enabled;
+    vec![control]
+}
+
 fn rows(parts: &ChatParts) -> Vec<TranscriptRow> {
+    let turn_running = parts.turn.is_some();
     let mut rows: Vec<TranscriptRow> = parts
         .transcript
         .iter()
@@ -353,24 +582,22 @@ fn rows(parts: &ChatParts) -> Vec<TranscriptRow> {
                 })
                 .collect(),
             visuals: message.visuals.clone(),
+            images: message.attachments.iter().map(ImageView::new).collect(),
+            switcher: message
+                .version
+                .as_ref()
+                .map(|version| SwitcherView::new(message, version, !turn_running)),
+            actions: message_actions(message, !turn_running),
         })
         .collect();
     let Some(turn) = &parts.turn else {
         return rows;
     };
     if let Some(question) = &turn.question {
-        rows.push(TranscriptRow {
-            key: PENDING_QUESTION_KEY.to_owned(),
-            role: ChatRole::User,
-            text: question.clone(),
-            streaming: false,
-            tools: Vec::new(),
-            activity: None,
-            caveats: Vec::new(),
-            error: None,
-            visuals: ChatVisuals::default(),
-            pictures: BTreeMap::new(),
-        });
+        let mut row =
+            TranscriptRow::pending(PENDING_QUESTION_KEY, ChatRole::User, question.clone());
+        row.images = turn.attachments.iter().map(ImageView::new).collect();
+        rows.push(row);
     }
     let answering = turn.answer.is_some()
         || turn.activity.is_some()
@@ -378,19 +605,139 @@ fn rows(parts: &ChatParts) -> Vec<TranscriptRow> {
         || turn.error.is_some();
     if answering {
         rows.push(TranscriptRow {
-            key: PENDING_ANSWER_KEY.to_owned(),
-            role: ChatRole::Assistant,
-            text: turn.answer.clone().unwrap_or_default(),
             streaming: turn.error.is_none(),
             tools: tools(&turn.tools),
             activity: turn.activity.clone(),
-            caveats: Vec::new(),
             error: turn.error.clone(),
-            visuals: ChatVisuals::default(),
-            pictures: BTreeMap::new(),
+            ..TranscriptRow::pending(
+                PENDING_ANSWER_KEY,
+                ChatRole::Assistant,
+                turn.answer.clone().unwrap_or_default(),
+            )
         });
     }
     rows
+}
+
+fn composer(parts: &ChatParts, ui: ChatUi, transcript_open: bool) -> ComposerModel {
+    let turn_running = parts.turn.is_some();
+    let composer = &parts.composer;
+    let mut attach = Control::new("chat-attach", "Attach image", UiAction::PickImage);
+    attach.enabled = composer.drafts.len() < usize::try_from(composer.max_images).unwrap_or(0);
+    let drafts = composer
+        .drafts
+        .iter()
+        .map(|draft| {
+            let (status, failed) = match &draft.state {
+                ChatDraftState::Uploading => (Some("Uploading…".to_owned()), false),
+                ChatDraftState::Ready => (None, false),
+                ChatDraftState::Failed { message } => (Some(message.clone()), true),
+            };
+            DraftView {
+                name: draft.name.clone(),
+                thumbnail: draft.thumbnail.clone(),
+                status,
+                failed,
+                remove: Control::send(
+                    format!("remove-{}", draft.key),
+                    "Remove",
+                    ChatCommand::RemoveAttachment { key: draft.key },
+                ),
+            }
+        })
+        .collect();
+    let picker = (!composer.models.is_empty()).then(|| {
+        let current = composer
+            .models
+            .iter()
+            .find(|model| Some(&model.id) == composer.model.as_ref())
+            .map_or("Default model", |model| model.label.as_str());
+        PickerModel {
+            toggle: Control::new(
+                "chat-model",
+                format!("Model: {current}"),
+                UiAction::TogglePicker,
+            ),
+            open: ui.picker_open,
+            options: composer
+                .models
+                .iter()
+                .map(|model| PickerOption {
+                    control: Control::send(
+                        format!("model-{}", model.id),
+                        model.label.clone(),
+                        ChatCommand::ChooseModel {
+                            model: Some(model.id.clone()),
+                        },
+                    ),
+                    selected: Some(&model.id) == composer.model.as_ref(),
+                })
+                .collect(),
+        }
+    });
+    let editing = ui
+        .editing
+        .filter(|_| transcript_open)
+        .filter(|id| {
+            parts
+                .transcript
+                .iter()
+                .flat_map(|transcript| &transcript.messages)
+                .any(|message| message.id == *id)
+        })
+        .map(|_| EditingModel {
+            label: "Editing your question. Sending adds a new version.",
+            cancel: Control::new("chat-cancel-edit", "Cancel", UiAction::CancelEdit),
+        });
+    ComposerModel {
+        // An image still uploading blocks sending: the supervisor refuses the
+        // question and the window has already cleared the text.
+        can_send: !turn_running
+            && !parts
+                .composer
+                .drafts
+                .iter()
+                .any(|draft| matches!(draft.state, ChatDraftState::Uploading)),
+        can_stop: parts.turn.as_ref().is_some_and(|turn| turn.stoppable),
+        attach,
+        drafts,
+        picker,
+        editing,
+    }
+}
+
+/// "Open in browser" and the share link controls for an open conversation.
+fn header(transcript: &ChatTranscript, enabled: bool) -> Vec<Control> {
+    let mut controls = vec![Control::new(
+        "chat-open-browser",
+        "Open in browser",
+        UiAction::Send(WindowMessage::OpenUrl {
+            url: transcript.web_url.clone(),
+        }),
+    )];
+    match &transcript.share_url {
+        None => controls.push(Control::send(
+            "chat-share",
+            "Share link",
+            ChatCommand::Share,
+        )),
+        Some(url) => {
+            controls.push(Control::new(
+                "chat-copy-link",
+                "Copy link",
+                UiAction::CopyLink(url.clone()),
+            ));
+            controls.push(Control::send(
+                "chat-stop-sharing",
+                "Stop sharing",
+                ChatCommand::RevokeShare,
+            ));
+        }
+    }
+    for control in &mut controls[1..] {
+        control.enabled = enabled;
+    }
+    controls
 }
 
 impl ChatScreen {
@@ -398,6 +745,18 @@ impl ChatScreen {
     /// pending pairing) and the update status (for an upgrade).
     #[must_use]
     pub fn new(parts: &ChatParts, state: &StateSnapshot, update: &UpdateSnapshot) -> Self {
+        Self::with_ui(parts, state, update, ChatUi::default())
+    }
+
+    /// [`Self::new`], with what only the window knows: the question being
+    /// edited and whether the model picker is open.
+    #[must_use]
+    pub fn with_ui(
+        parts: &ChatParts,
+        state: &StateSnapshot,
+        update: &UpdateSnapshot,
+        ui: ChatUi,
+    ) -> Self {
         let status = &parts.status;
         if status.availability == ChatAvailability::Loading {
             return Self::Loading;
@@ -426,17 +785,22 @@ impl ChatScreen {
                     .map(|conversation| conversation.title.clone())
             })
             .unwrap_or_else(|| "New chat".to_owned());
-        Self::Conversation(ConversationModel {
+        let open_transcript = parts
+            .transcript
+            .as_ref()
+            .filter(|transcript| Some(transcript.conversation_id) == status.open_conversation);
+        Self::Conversation(Box::new(ConversationModel {
             title,
             rows: rows(parts),
             loading,
-            composer: ComposerModel {
-                can_send: !turn_running,
-                can_stop: parts.turn.as_ref().is_some_and(|turn| turn.stoppable),
-            },
+            composer: composer(parts, ui, open_transcript.is_some()),
             reconnecting: status.reconnecting,
             notice: status.notice.clone(),
-        })
+            header: open_transcript
+                .map(|transcript| header(transcript, !turn_running))
+                .unwrap_or_default(),
+            share_url: open_transcript.and_then(|transcript| transcript.share_url.clone()),
+        }))
     }
 }
 
@@ -446,6 +810,19 @@ pub fn send_message(text: &str) -> Option<WindowMessage> {
     let question = text.trim();
     (!question.is_empty()).then(|| {
         chat(ChatCommand::Send {
+            question: question.to_owned(),
+        })
+    })
+}
+
+/// What the composer's send sends while a question is being edited: the
+/// edit as a new version of that turn.
+#[must_use]
+pub fn edit_message(message_id: Uuid, text: &str) -> Option<WindowMessage> {
+    let question = text.trim();
+    (!question.is_empty()).then(|| {
+        chat(ChatCommand::Edit {
+            message_id,
             question: question.to_owned(),
         })
     })
@@ -464,17 +841,18 @@ mod tests {
         StateSnapshot, UpdateSnapshot, UpdateStatus, WindowMessage,
     };
     use scout_explore_client::golden;
+    use uuid::Uuid;
 
     use super::{
-        ChatScreen, ConversationModel, GateModel, PENDING_ANSWER_KEY, PENDING_QUESTION_KEY,
-        Picture, SidebarModel, send_message, stop_message, stream_fade,
+        ChatScreen, ChatUi, ConversationModel, GateModel, PENDING_ANSWER_KEY, PENDING_QUESTION_KEY,
+        Picture, SidebarModel, UiAction, edit_message, send_message, stop_message, stream_fade,
     };
 
     type TestResult = Result<(), Box<dyn std::error::Error>>;
 
     fn conversation(parts: &ChatParts) -> Result<ConversationModel, String> {
         match ChatScreen::new(parts, &StateSnapshot::default(), &UpdateSnapshot::default()) {
-            ChatScreen::Conversation(model) => Ok(model),
+            ChatScreen::Conversation(model) => Ok(*model),
             other => Err(format!("expected a conversation, got {other:?}")),
         }
     }
@@ -737,5 +1115,251 @@ mod tests {
                 command: ChatCommand::Stop
             }
         );
+    }
+
+    fn conversation_with(parts: &ChatParts, ui: ChatUi) -> Result<ConversationModel, String> {
+        match ChatScreen::with_ui(
+            parts,
+            &StateSnapshot::default(),
+            &UpdateSnapshot::default(),
+            ui,
+        ) {
+            ChatScreen::Conversation(model) => Ok(*model),
+            other => Err(format!("expected a conversation, got {other:?}")),
+        }
+    }
+
+    fn command(command: ChatCommand) -> UiAction {
+        UiAction::Send(WindowMessage::Chat { command })
+    }
+
+    #[test]
+    fn a_turn_with_versions_shows_its_switcher_and_steps_to_the_neighbours() -> TestResult {
+        let model = conversation(&golden::branched()?.parts())?;
+        let question = model.rows[0].switcher.as_ref().ok_or("switcher")?;
+        assert_eq!(question.label, "2 of 3");
+        assert_eq!(
+            question.previous.action,
+            command(ChatCommand::SwitchVersion {
+                message_id: golden::BRANCHED_QUESTION_FIRST
+            })
+        );
+        assert_eq!(
+            question.next.action,
+            command(ChatCommand::SwitchVersion {
+                message_id: golden::BRANCHED_QUESTION_LAST
+            })
+        );
+        assert!(question.previous.enabled && question.next.enabled);
+
+        // The end of the line has nowhere to go.
+        let answer = model.rows[1].switcher.as_ref().ok_or("switcher")?;
+        assert_eq!(answer.label, "1 of 2");
+        assert!(!answer.previous.enabled);
+        assert!(answer.next.enabled);
+        // A turn with one version shows no switcher.
+        assert_eq!(model.rows[2].switcher, None);
+        Ok(())
+    }
+
+    #[test]
+    fn a_question_offers_edit_and_an_answer_regenerate() -> TestResult {
+        let model = conversation(&golden::branched()?.parts())?;
+        assert_eq!(model.rows[0].actions[0].label, "Edit");
+        assert_eq!(
+            model.rows[0].actions[0].action,
+            UiAction::Edit {
+                message_id: golden::BRANCHED_QUESTION,
+                text: "Which bot lane pair wins most in ARAM this month?".to_owned()
+            }
+        );
+        assert_eq!(model.rows[1].actions[0].label, "Regenerate");
+        assert_eq!(
+            model.rows[1].actions[0].action,
+            command(ChatCommand::Regenerate {
+                message_id: golden::BRANCHED_ANSWER
+            })
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn nothing_is_edited_or_switched_while_a_turn_runs() -> TestResult {
+        let mut session = golden::branched()?;
+        session
+            .regenerate(golden::BRANCHED_FOLLOW_UP_ANSWER)
+            .ok_or("request")?;
+        let model = conversation(&session.parts())?;
+        for row in &model.rows {
+            assert!(row.actions.iter().all(|action| !action.enabled), "{row:?}");
+            if let Some(switcher) = &row.switcher {
+                assert!(!switcher.previous.enabled && !switcher.next.enabled);
+            }
+        }
+        assert!(model.header[1..].iter().all(|control| !control.enabled));
+        Ok(())
+    }
+
+    #[test]
+    fn an_attached_image_shows_a_tile_or_its_thumbnail() -> TestResult {
+        let mut parts = golden::branched()?.parts();
+        let question = parts
+            .transcript
+            .as_mut()
+            .and_then(|transcript| transcript.messages.first_mut())
+            .ok_or("question")?;
+        question.attachments = vec![scout_desktop_ipc::ChatAttachment {
+            id: uuid::Uuid::from_u128(9),
+            media_type: "image/png".to_owned(),
+            thumbnail: None,
+        }];
+        let model = conversation(&parts)?;
+        assert!(
+            model.rows[0].actions.is_empty(),
+            "Edit would drop the image, so it is hidden"
+        );
+        let images = &model.rows[0].images;
+        assert_eq!(images.len(), 1);
+        assert_eq!(images[0].label, "PNG");
+        assert_eq!(
+            images[0].thumbnail, None,
+            "attached elsewhere: no local file"
+        );
+
+        let mut session = golden::composing("/tmp/a.png", "/tmp/b.png")?;
+        session.submit("Look").ok_or("request")?;
+        let model = conversation(&session.parts())?;
+        let pending = model
+            .rows
+            .iter()
+            .find(|row| row.key == PENDING_QUESTION_KEY)
+            .ok_or("pending question")?;
+        let thumbnails: Vec<_> = pending
+            .images
+            .iter()
+            .map(|image| image.thumbnail.as_deref())
+            .collect();
+        assert_eq!(thumbnails, [Some("/tmp/a.png"), Some("/tmp/b.png")]);
+        Ok(())
+    }
+
+    #[test]
+    fn the_composer_lists_its_images_and_stops_attaching_at_the_cap() -> TestResult {
+        let model = conversation(&golden::composing("/tmp/a.png", "/tmp/b.png")?.parts())?;
+        assert_eq!(model.composer.drafts.len(), 2);
+        assert_eq!(model.composer.drafts[0].status, None);
+        assert_eq!(model.composer.drafts[0].thumbnail, "/tmp/a.png");
+        assert!(model.composer.attach.enabled);
+        assert_eq!(model.composer.attach.action, UiAction::PickImage);
+
+        let mut session = golden::composing("/tmp/a.png", "/tmp/b.png")?;
+        session.begin_attach("/tmp/c.png").ok_or("third")?;
+        session.begin_attach("/tmp/d.png").ok_or("fourth")?;
+        let model = conversation(&session.parts())?;
+        assert!(!model.composer.attach.enabled, "four is the web's cap");
+        assert_eq!(
+            model.composer.drafts[2].status.as_deref(),
+            Some("Uploading…")
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn the_picker_names_the_model_in_use_and_chooses_through_a_command() -> TestResult {
+        let parts = golden::branched()?.parts();
+        let model = conversation_with(&parts, ChatUi::default())?;
+        let picker = model.composer.picker.ok_or("picker")?;
+        assert_eq!(picker.toggle.label, "Model: GPT-6 Luna · High");
+        assert!(!picker.open);
+        let selected: Vec<_> = picker
+            .options
+            .iter()
+            .map(|option| (option.control.label.as_str(), option.selected))
+            .collect();
+        assert_eq!(
+            selected,
+            [("GPT-6 Luna · High", true), ("GPT-6.1 Sol · High", false)]
+        );
+        assert_eq!(
+            picker.options[1].control.action,
+            command(ChatCommand::ChooseModel {
+                model: Some("gpt-6.1-sol".to_owned())
+            })
+        );
+
+        let open = conversation_with(
+            &parts,
+            ChatUi {
+                picker_open: true,
+                ..ChatUi::default()
+            },
+        )?;
+        assert!(open.composer.picker.ok_or("picker")?.open);
+
+        // With the picker off the server chooses and nothing shows.
+        let none = conversation(&golden::ready()?.parts())?;
+        assert_eq!(none.composer.picker, None);
+        Ok(())
+    }
+
+    #[test]
+    fn a_conversation_links_to_the_web_and_shares() -> TestResult {
+        let model = conversation(&golden::branched()?.parts())?;
+        let labels: Vec<_> = model.header.iter().map(|c| c.label.as_str()).collect();
+        assert_eq!(labels, ["Open in browser", "Share link"]);
+        assert_eq!(
+            model.header[0].action,
+            UiAction::Send(WindowMessage::OpenUrl {
+                url: format!(
+                    "https://scout-for-lol.com/app/explore/{}",
+                    golden::BRANCHED_CONVERSATION
+                )
+            })
+        );
+        assert_eq!(model.header[1].action, command(ChatCommand::Share));
+        assert_eq!(model.share_url, None);
+
+        let shared = conversation(&golden::shared()?.parts())?;
+        let labels: Vec<_> = shared.header.iter().map(|c| c.label.as_str()).collect();
+        assert_eq!(labels, ["Open in browser", "Copy link", "Stop sharing"]);
+        let url = shared.share_url.ok_or("share url")?;
+        assert_eq!(shared.header[1].action, UiAction::CopyLink(url));
+        assert_eq!(shared.header[2].action, command(ChatCommand::RevokeShare));
+
+        // A blank conversation has nothing to open or share.
+        assert_eq!(conversation(&golden::ready()?.parts())?.header, []);
+        Ok(())
+    }
+
+    #[test]
+    fn editing_shows_its_banner_and_sends_a_new_version() -> TestResult {
+        let parts = golden::branched()?.parts();
+        let ui = ChatUi {
+            editing: Some(golden::BRANCHED_QUESTION),
+            ..ChatUi::default()
+        };
+        let model = conversation_with(&parts, ui)?;
+        let banner = model.composer.editing.ok_or("banner")?;
+        assert_eq!(banner.cancel.action, UiAction::CancelEdit);
+
+        // An edit of a message that is no longer on screen is dropped.
+        let gone = ChatUi {
+            editing: Some(Uuid::from_u128(5)),
+            ..ChatUi::default()
+        };
+        assert_eq!(conversation_with(&parts, gone)?.composer.editing, None);
+        assert_eq!(conversation(&parts)?.composer.editing, None);
+
+        assert_eq!(edit_message(golden::BRANCHED_QUESTION, "  "), None);
+        assert_eq!(
+            edit_message(golden::BRANCHED_QUESTION, " Who wins? "),
+            Some(WindowMessage::Chat {
+                command: ChatCommand::Edit {
+                    message_id: golden::BRANCHED_QUESTION,
+                    question: "Who wins?".to_owned()
+                }
+            })
+        );
+        Ok(())
     }
 }

@@ -6,6 +6,7 @@ import {
   ScoutDesktopApiErrorSchema,
   ScoutDesktopConversationGetResponseSchema,
   ScoutDesktopConversationListResponseSchema,
+  ScoutDesktopShareResponseSchema,
 } from "@scout-for-lol/data";
 import { resetConfigurationForTests } from "#src/configuration.ts";
 import { scoutTestVisualization } from "#src/discord/scout/test-fixtures.ts";
@@ -35,6 +36,7 @@ const { appendExploreAnswer, startExploreTurn } =
 const {
   resetDesktopReadRateLimitForTests,
   resetDesktopRenderRateLimitForTests,
+  resetDesktopWriteRateLimitsForTests,
 } = await import("./rate-limit.ts");
 
 const OWNER_ID = DiscordAccountIdSchema.parse("160509172704739328");
@@ -129,12 +131,29 @@ async function answerWithChart(userId: typeof OWNER_ID) {
   };
 }
 
+const GET = GET_PATH;
+const SET_LEAF = SCOUT_DESKTOP_API_ROUTES.explore_conversations_set_leaf.path;
+const SHARE = SCOUT_DESKTOP_API_ROUTES.explore_conversations_share.path;
+const REVOKE = SCOUT_DESKTOP_API_ROUTES.explore_conversations_revoke_share.path;
+const DISCARD = SCOUT_DESKTOP_API_ROUTES.explore_attachments_discard.path;
+
+async function jsonOf(path: string, token: string, body: unknown) {
+  const response = await post(path, token, body);
+  return await response.json();
+}
+
+async function statusOf(path: string, token: string, body: unknown) {
+  const response = await post(path, token, body);
+  return response.status;
+}
+
 beforeEach(async () => {
   Bun.env["ENVIRONMENT"] = "beta";
   Bun.env["EXPLORE_GUILD_ALLOWLIST"] = SHARED_GUILD;
   resetConfigurationForTests();
   resetDesktopReadRateLimitForTests();
   resetDesktopRenderRateLimitForTests();
+  resetDesktopWriteRateLimitsForTests();
   mocks.fetchUserGuilds.mockReset();
   mocks.fetchUserGuilds.mockResolvedValue([guild(SHARED_GUILD)]);
   await prisma.exploreMessage.deleteMany();
@@ -276,5 +295,116 @@ describe("desktop Explore against a real database", () => {
     await expect(
       prisma.$executeRaw`UPDATE "ScoutClientPairing" SET "scopes" = ARRAY[]::TEXT[] WHERE "id" = ${pairing.pairingId}`,
     ).rejects.toThrow();
+  });
+});
+
+describe("desktop chat actions against a real database", () => {
+  test("an edited opening question has two versions, and set-leaf switches between them", async () => {
+    const { token } = await pairedDevice(["ingest", "explore"]);
+    const first = await startExploreTurn(prisma, {
+      conversationId: null,
+      userId: OWNER_ID,
+      question: "Who carries our ARAMs?",
+      attach: { kind: "leaf" },
+      origin: "desktop",
+    });
+    const edited = await startExploreTurn(prisma, {
+      conversationId: first.conversationId,
+      userId: OWNER_ID,
+      question: "Who carries our ARAMs in October?",
+      attach: { kind: "root" },
+      origin: "desktop",
+    });
+
+    const latest = ScoutDesktopConversationGetResponseSchema.parse(
+      await jsonOf(GET, token, { conversationId: first.conversationId }),
+    );
+    expect(latest.messages[0]?.id).toBe(edited.messageId);
+    expect(latest.messages[0]?.versionCount).toBe(2);
+
+    const switched = await post(SET_LEAF, token, {
+      conversationId: first.conversationId,
+      messageId: first.messageId,
+    });
+    expect(switched.status).toBe(200);
+
+    const older = ScoutDesktopConversationGetResponseSchema.parse(
+      await jsonOf(GET, token, { conversationId: first.conversationId }),
+    );
+    expect(older.messages[0]?.id).toBe(first.messageId);
+    expect(older.messages[0]?.versionIndex).toBe(0);
+  });
+
+  test("sharing creates a token, revoking removes it, and neither touches another user's conversation", async () => {
+    const { token } = await pairedDevice(["ingest", "explore"]);
+    const own = await startExploreTurn(prisma, {
+      conversationId: null,
+      userId: OWNER_ID,
+      question: "Mine",
+      attach: { kind: "leaf" },
+      origin: "desktop",
+    });
+    const foreign = await startExploreTurn(prisma, {
+      conversationId: null,
+      userId: OTHER_USER_ID,
+      question: "Theirs",
+      attach: { kind: "leaf" },
+      origin: "web",
+    });
+
+    const shared = await post(SHARE, token, {
+      conversationId: own.conversationId,
+    });
+    expect(shared.status).toBe(200);
+    const { shareToken } = ScoutDesktopShareResponseSchema.parse(
+      await shared.json(),
+    );
+    const stored = await prisma.exploreConversation.findUniqueOrThrow({
+      where: { id: own.conversationId },
+    });
+    expect(stored.shareToken).toBe(shareToken);
+
+    expect(
+      await statusOf(REVOKE, token, { conversationId: own.conversationId }),
+    ).toBe(200);
+    const revoked = await prisma.exploreConversation.findUniqueOrThrow({
+      where: { id: own.conversationId },
+    });
+    expect(revoked.shareToken).toBeNull();
+
+    for (const path of [SHARE, REVOKE]) {
+      const response = await post(path, token, {
+        conversationId: foreign.conversationId,
+      });
+      expect(response.status).toBe(404);
+      expect(await errorCode(response)).toBe("not_found");
+    }
+    const untouched = await prisma.exploreConversation.findUniqueOrThrow({
+      where: { id: foreign.conversationId },
+    });
+    expect(untouched.shareToken).toBeNull();
+  });
+
+  test("set-leaf on another user's conversation, and a discard of an image that is not the owner's, are 404", async () => {
+    const { token } = await pairedDevice(["ingest", "explore"]);
+    const foreign = await startExploreTurn(prisma, {
+      conversationId: null,
+      userId: OTHER_USER_ID,
+      question: "Theirs",
+      attach: { kind: "leaf" },
+      origin: "web",
+    });
+
+    const leaf = await post(SET_LEAF, token, {
+      conversationId: foreign.conversationId,
+      messageId: foreign.messageId,
+    });
+    expect(leaf.status).toBe(404);
+
+    const discard = await post(DISCARD, token, {
+      id: "b1c2d3e4-5f60-4718-8293-a4b5c6d7e8f9",
+    });
+    expect(discard.status).toBe(404);
+    expect(await errorCode(discard)).toBe("not_found");
   });
 });

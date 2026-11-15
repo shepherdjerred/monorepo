@@ -17,7 +17,9 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Duration;
 
-use scout_client_core::desktop_api::{ActiveRun, ConversationListResponse};
+use scout_client_core::desktop_api::{
+    ActiveRun, ConversationListResponse, ModelsResponse, RunStartRequest,
+};
 use scout_desktop_ipc::{ChatAvailability, ChatCommand, ChatImage, ChatParts};
 use tokio::sync::{Semaphore, mpsc, watch};
 use tokio::task::JoinHandle;
@@ -29,8 +31,8 @@ use crate::client::ExploreClient;
 use crate::contract::Route;
 use crate::data_dragon::{DATA_DRAGON_HOST, DataDragon, champion_list_url, rune_list_url};
 use crate::error::ExploreClientError;
-use crate::model::Transcript;
-use crate::session::ChatSession;
+use crate::model::{Attachment, Transcript};
+use crate::session::{AttachJob, ChatSession, UploadFailure, load_image};
 use crate::stream::{StreamEnd, StreamOptions, StreamSignal};
 use crate::visuals::ImageSource;
 
@@ -236,6 +238,11 @@ enum Answer {
     Listed(Result<ConversationListResponse, ExploreClientError>),
     Opened(Result<Transcript, ExploreClientError>),
     Started(Result<ActiveRun, ExploreClientError>),
+    Models(Result<ModelsResponse, ExploreClientError>),
+    Uploaded(Uuid, Result<Attachment, UploadFailure>),
+    /// A version switch, share or revoke finished; the conversation's
+    /// transcript is read again either way it went.
+    Changed(Uuid, Result<(), ExploreClientError>),
     Signal(StreamSignal),
     Ended(Result<StreamEnd, ExploreClientError>),
     Settled(Result<Transcript, ExploreClientError>),
@@ -265,9 +272,10 @@ async fn run(
     parts: watch::Sender<ChatParts>,
 ) {
     let (answers, mut answered) = mpsc::unbounded_channel();
+    let session = ChatSession::with_web_origin(&origin);
     let mut relay = Relay {
         origin,
-        session: ChatSession::new(),
+        session,
         client: None,
         answers,
         follow: None,
@@ -313,16 +321,66 @@ impl Relay {
             }
             ChatCommand::New => self.session.start_new(),
             ChatCommand::Send { question } => {
-                let (Some(client), Some(request)) =
-                    (self.client.clone(), self.session.submit(&question))
-                else {
-                    return;
-                };
-                let answers = self.answers.clone();
-                tokio::spawn(async move {
-                    let _ = answers.send(Answer::Started(client.start_run(&request).await));
-                });
+                let request = self.session.submit(&question);
+                self.start(request);
             }
+            ChatCommand::Edit {
+                message_id,
+                question,
+            } => {
+                let request = self.session.edit(message_id, &question);
+                self.start(request);
+            }
+            ChatCommand::Regenerate { message_id } => {
+                let request = self.session.regenerate(message_id);
+                self.start(request);
+            }
+            ChatCommand::SwitchVersion { message_id } => {
+                if let (Some(client), Some((conversation_id, message_id))) =
+                    (self.client.clone(), self.session.switch_version(message_id))
+                {
+                    self.change(conversation_id, async move {
+                        client.set_leaf(conversation_id, message_id).await
+                    });
+                }
+            }
+            ChatCommand::Attach { path } => {
+                if let (Some(client), Some(job)) =
+                    (self.client.clone(), self.session.begin_attach(&path))
+                {
+                    self.upload(client, job);
+                }
+            }
+            ChatCommand::RemoveAttachment { key } => {
+                if let (Some(client), Some(id)) =
+                    (self.client.clone(), self.session.remove_attachment(key))
+                {
+                    // Best effort: an image the server keeps is reclaimed
+                    // when its hold lapses, so a failure is not worth a notice.
+                    tokio::spawn(async move {
+                        let _ = client.discard_attachment(id).await;
+                    });
+                }
+            }
+            ChatCommand::Share => {
+                if let (Some(client), Some(conversation_id)) =
+                    (self.client.clone(), self.session.shareable())
+                {
+                    self.change(conversation_id, async move {
+                        client.share(conversation_id).await.map(drop)
+                    });
+                }
+            }
+            ChatCommand::RevokeShare => {
+                if let (Some(client), Some(conversation_id)) =
+                    (self.client.clone(), self.session.shareable())
+                {
+                    self.change(conversation_id, async move {
+                        client.revoke_share(conversation_id).await
+                    });
+                }
+            }
+            ChatCommand::ChooseModel { model } => self.session.choose_model(model.as_deref()),
             ChatCommand::Stop => {
                 if let (Some(client), Some(run_id)) = (self.client.clone(), self.session.stop()) {
                     let answers = self.answers.clone();
@@ -334,6 +392,49 @@ impl Relay {
                 }
             }
         }
+    }
+
+    /// Start the turn a command asked for, if the session allowed it.
+    fn start(&self, request: Option<RunStartRequest>) {
+        let (Some(client), Some(request)) = (self.client.clone(), request) else {
+            return;
+        };
+        let answers = self.answers.clone();
+        tokio::spawn(async move {
+            let _ = answers.send(Answer::Started(client.start_run(&request).await));
+        });
+    }
+
+    /// Run a change to one conversation, then read it again.
+    fn change(
+        &self,
+        conversation_id: Uuid,
+        change: impl std::future::Future<Output = Result<(), ExploreClientError>> + Send + 'static,
+    ) {
+        let answers = self.answers.clone();
+        tokio::spawn(async move {
+            let _ = answers.send(Answer::Changed(conversation_id, change.await));
+        });
+    }
+
+    /// Read an image file and upload it.
+    fn upload(&self, client: ExploreClient, job: AttachJob) {
+        let answers = self.answers.clone();
+        tokio::spawn(async move {
+            let AttachJob { key, path } = job;
+            // File reads can block on a slow disk.
+            let loaded = tokio::task::spawn_blocking(move || load_image(&path))
+                .await
+                .unwrap_or_else(|join| Err(format!("Reading the image failed: {join}")));
+            let result = match loaded {
+                Ok((media_type, bytes)) => client
+                    .upload_attachment(media_type, &bytes)
+                    .await
+                    .map_err(UploadFailure::Remote),
+                Err(message) => Err(UploadFailure::Local(message)),
+            };
+            let _ = answers.send(Answer::Uploaded(key, result));
+        });
     }
 
     /// Read the credential again (pairing may have replaced it) and ask for
@@ -370,6 +471,16 @@ impl Relay {
         });
     }
 
+    fn models(&self) {
+        let Some(client) = self.client.clone() else {
+            return;
+        };
+        let answers = self.answers.clone();
+        tokio::spawn(async move {
+            let _ = answers.send(Answer::Models(client.models().await));
+        });
+    }
+
     fn list(&self) {
         let Some(client) = self.client.clone() else {
             return;
@@ -386,6 +497,7 @@ impl Relay {
                 self.load_art(&client);
                 self.client = Some(client);
                 self.list();
+                self.models();
                 if let Some(open) = self.session.open_conversation() {
                     self.fetch(open, Answer::Opened);
                 }
@@ -406,6 +518,18 @@ impl Relay {
                 self.follow_run(run_id);
             }
             Answer::Started(Err(error)) => self.session.start_failed(&error),
+            Answer::Models(Ok(models)) => self.session.models_loaded(models),
+            Answer::Models(Err(error)) => self.session.request_failed(&error),
+            Answer::Uploaded(key, result) => self.session.upload_finished(key, result),
+            Answer::Changed(conversation_id, result) => {
+                if let Err(error) = result {
+                    self.session.request_failed(&error);
+                }
+                // Read it again whichever way it went: a switch moves the
+                // branch, a share adds the link, a refusal shows what is true.
+                self.fetch(conversation_id, Answer::Opened);
+                self.list();
+            }
             Answer::Signal(signal) => self.session.signal(&signal),
             Answer::Ended(end) => {
                 self.follow = None;

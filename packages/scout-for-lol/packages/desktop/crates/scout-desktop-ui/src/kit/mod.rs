@@ -16,7 +16,10 @@ use gpui_kit::{
     WindowOptions, px, size,
 };
 
-pub use chat::{ComposerState, Transcript, TranscriptState, status_line};
+pub use chat::{
+    ComposerState, ControlHandler, Transcript, TranscriptState, control_button, draft_strip,
+    pick_images, status_line,
+};
 pub use components::{
     ButtonStyle, Handler, KeyValueTable, MonoLine, NavItem, NavSection, Page, ScoutButton,
     ScoutToggle, ScrollLog, Shell, StatusRow, action_row, body_text, error_notice, note_text,

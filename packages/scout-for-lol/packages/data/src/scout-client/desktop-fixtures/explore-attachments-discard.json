@@ -1,0 +1,24 @@
+{
+  "route": "explore_attachments_discard",
+  "request": {
+    "id": "b1c2d3e4-5f60-4718-8293-a4b5c6d7e8f9"
+  },
+  "response": {
+    "ok": true
+  },
+  "invalidRequests": [
+    {
+      "reason": "a malformed id",
+      "body": {
+        "id": "1"
+      }
+    },
+    {
+      "reason": "an unknown key",
+      "body": {
+        "id": "b1c2d3e4-5f60-4718-8293-a4b5c6d7e8f9",
+        "all": true
+      }
+    }
+  ]
+}

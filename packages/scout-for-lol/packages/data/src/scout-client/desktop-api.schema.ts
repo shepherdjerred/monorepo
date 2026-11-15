@@ -5,8 +5,14 @@ import {
   ExploreConversationSchema,
   ExploreMessageSchema,
   ExploreQuotaSnapshotSchema,
+  ExploreShareTokenSchema,
   ExploreStreamEventSchema,
 } from "#src/model/reports/explore.ts";
+import { ExploreModelSchema } from "#src/model/reports/explore-model.ts";
+import {
+  EXPLORE_ATTACHMENT_MAX_BYTES,
+  ExploreAttachmentMediaTypeSchema,
+} from "#src/model/reports/explore-attachment.ts";
 
 /**
  * The authenticated REST surface Scout Desktop reads Explore through.
@@ -28,8 +34,11 @@ import {
  * - 3: scope requests, which add a scope to an already paired device.
  * - 4: the game asset version (`explore/assets`) and server-rendered chart
  *   images (`explore/visualization`), the first route that answers a PNG.
+ * - 5: chat actions: the model list, switching versions of a branched turn,
+ *   share links, and image uploads. Editing and regenerating are not routes of
+ *   their own: they are `runs/start` with an `attach` point, as on the web.
  */
-export const SCOUT_DESKTOP_CONTRACT_VERSION = 4;
+export const SCOUT_DESKTOP_CONTRACT_VERSION = 5;
 export const SCOUT_DESKTOP_MINIMUM_CONTRACT_VERSION = 1;
 export const SCOUT_DESKTOP_CONTRACT_HEADER = "X-Scout-Desktop-Contract";
 /** The first contract version that knows the `desktop` conversation origin. */
@@ -136,6 +145,42 @@ export const SCOUT_DESKTOP_API_ROUTES = {
     scope: "explore",
     response: "png",
   },
+  explore_models: {
+    method: "POST",
+    path: "/api/scout-client/v1/explore/models",
+    scope: "explore",
+    response: "json",
+  },
+  explore_conversations_set_leaf: {
+    method: "POST",
+    path: "/api/scout-client/v1/explore/conversations/set-leaf",
+    scope: "explore",
+    response: "json",
+  },
+  explore_conversations_share: {
+    method: "POST",
+    path: "/api/scout-client/v1/explore/conversations/share",
+    scope: "explore",
+    response: "json",
+  },
+  explore_conversations_revoke_share: {
+    method: "POST",
+    path: "/api/scout-client/v1/explore/conversations/revoke-share",
+    scope: "explore",
+    response: "json",
+  },
+  explore_attachments_upload: {
+    method: "POST",
+    path: "/api/scout-client/v1/explore/attachments/upload",
+    scope: "explore",
+    response: "json",
+  },
+  explore_attachments_discard: {
+    method: "POST",
+    path: "/api/scout-client/v1/explore/attachments/discard",
+    scope: "explore",
+    response: "json",
+  },
 } as const satisfies Record<
   string,
   {
@@ -159,6 +204,12 @@ export const ScoutDesktopApiRouteSchema = z.enum([
   "explore_runs_stream",
   "explore_assets",
   "explore_visualization",
+  "explore_models",
+  "explore_conversations_set_leaf",
+  "explore_conversations_share",
+  "explore_conversations_revoke_share",
+  "explore_attachments_upload",
+  "explore_attachments_discard",
 ]);
 
 /** Every typed refusal a desktop route answers with, and its HTTP status. */
@@ -360,4 +411,73 @@ export const SCOUT_DESKTOP_PNG_CONTENT_TYPE = "image/png";
  */
 export const ScoutDesktopPngResponseSchema = z.strictObject({
   contentType: z.literal(SCOUT_DESKTOP_PNG_CONTENT_TYPE),
+});
+
+/*
+ * Chat actions (contract version 5). Each calls what its tRPC procedure
+ * calls, behind the same device authentication, owner access check and
+ * per-device read limit as every other route:
+ *
+ * | Route                                | Request                                 | Response                               | tRPC procedure           |
+ * | ------------------------------------ | --------------------------------------- | -------------------------------------- | ------------------------ |
+ * | `explore/models`                     | `ScoutDesktopEmptyRequestSchema`        | `ScoutDesktopModelsResponseSchema`     | `explore.status`         |
+ * | `conversations/set-leaf`             | `ScoutDesktopSetLeafRequestSchema`      | `ScoutDesktopOkResponseSchema`         | `explore.setLeaf`        |
+ * | `conversations/share`                | `ScoutDesktopConversationGetRequestSchema` | `ScoutDesktopShareResponseSchema`   | `explore.share`          |
+ * | `conversations/revoke-share`         | `ScoutDesktopConversationGetRequestSchema` | `ScoutDesktopOkResponseSchema`      | `explore.revokeShare`    |
+ * | `attachments/upload`                 | `ScoutDesktopAttachmentUploadRequestSchema` | `ExploreAttachmentSchema`          | `explore.uploadAttachment` |
+ * | `attachments/discard`                | `ScoutDesktopAttachmentDiscardRequestSchema` | `ScoutDesktopOkResponseSchema`    | `explore.discardAttachment` |
+ *
+ * A conversation, message or attachment that is not the owner's is a
+ * `not_found`, the same answer a missing one gets.
+ */
+export const ScoutDesktopOkResponseSchema = z.strictObject({
+  ok: z.literal(true),
+});
+
+/**
+ * The models the owner may choose between, from the source the web's picker
+ * uses: the picker's `scout-explore-model-picker-enabled` flag and the shared
+ * option list. With the picker off, `models` is empty and the server picks.
+ */
+export const ScoutDesktopModelsResponseSchema = z.strictObject({
+  pickerEnabled: z.boolean(),
+  defaultModel: ExploreModelSchema,
+  models: z.array(
+    z.strictObject({ id: ExploreModelSchema, label: z.string().min(1) }),
+  ),
+});
+export type ScoutDesktopModelsResponse = z.infer<
+  typeof ScoutDesktopModelsResponseSchema
+>;
+
+/** Switch the branch on screen to the one that runs through `messageId`. */
+export const ScoutDesktopSetLeafRequestSchema = z.strictObject({
+  conversationId: ExploreConversationIdSchema,
+  messageId: z.uuid(),
+});
+
+export const ScoutDesktopShareResponseSchema = z.strictObject({
+  shareToken: ExploreShareTokenSchema,
+});
+
+/**
+ * One image for the next question: the web's `explore.uploadAttachment`
+ * request. The size and type limits are the web's.
+ */
+export const ScoutDesktopAttachmentUploadRequestSchema = z.strictObject({
+  mediaType: ExploreAttachmentMediaTypeSchema,
+  base64: z
+    .string()
+    .min(4)
+    .max(4 * Math.ceil(EXPLORE_ATTACHMENT_MAX_BYTES / 3))
+    .regex(/^[A-Z0-9+/]+={0,2}$/i),
+});
+/** The stored image's reference, the same body the web's upload answers. */
+export const ScoutDesktopAttachmentUploadResponseSchema = z.strictObject({
+  id: z.uuid(),
+  mediaType: ExploreAttachmentMediaTypeSchema,
+});
+
+export const ScoutDesktopAttachmentDiscardRequestSchema = z.strictObject({
+  id: z.uuid(),
 });

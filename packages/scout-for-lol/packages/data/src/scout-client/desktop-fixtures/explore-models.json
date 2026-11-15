@@ -1,0 +1,26 @@
+{
+  "route": "explore_models",
+  "request": {},
+  "response": {
+    "pickerEnabled": true,
+    "defaultModel": "gpt-6-luna",
+    "models": [
+      {
+        "id": "gpt-6-luna",
+        "label": "GPT-6 Luna · High"
+      },
+      {
+        "id": "gpt-6.1-sol",
+        "label": "GPT-6.1 Sol · High"
+      }
+    ]
+  },
+  "invalidRequests": [
+    {
+      "reason": "an unknown key",
+      "body": {
+        "all": true
+      }
+    }
+  ]
+}

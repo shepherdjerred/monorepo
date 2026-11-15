@@ -1,0 +1,92 @@
+{
+  "route": "explore_runs_start",
+  "note": "Editing and regenerating are runs/start with an attach point, exactly as on the web; they are not routes of their own.",
+  "requests": [
+    {
+      "flow": "edit",
+      "request": {
+        "conversationId": "7c3e5a91-2b64-4d0f-8e17-5a9c4b2d6f30",
+        "question": "Who has the best ARAM win rate in October?",
+        "attach": {
+          "kind": "message",
+          "messageId": "a0b1c2d3-e4f5-4607-8182-93a4b5c6d7e8"
+        }
+      }
+    },
+    {
+      "flow": "edit_opening_question",
+      "request": {
+        "conversationId": "7c3e5a91-2b64-4d0f-8e17-5a9c4b2d6f30",
+        "question": "Who carries our ARAMs?",
+        "attach": {
+          "kind": "root"
+        }
+      }
+    },
+    {
+      "flow": "regenerate",
+      "request": {
+        "conversationId": "7c3e5a91-2b64-4d0f-8e17-5a9c4b2d6f30",
+        "question": null,
+        "attach": {
+          "kind": "message",
+          "messageId": "e5b7c9d1-3f24-4a6b-8c8e-0d2f4a6b8c01"
+        },
+        "model": "gpt-6.1-sol"
+      }
+    },
+    {
+      "flow": "ask_with_images",
+      "request": {
+        "conversationId": "7c3e5a91-2b64-4d0f-8e17-5a9c4b2d6f30",
+        "question": "What is wrong with this build?",
+        "attach": {
+          "kind": "leaf"
+        },
+        "attachmentIds": ["b1c2d3e4-5f60-4718-8293-a4b5c6d7e8f9"]
+      }
+    }
+  ],
+  "invalidRequests": [
+    {
+      "reason": "images on a regenerate",
+      "body": {
+        "conversationId": "7c3e5a91-2b64-4d0f-8e17-5a9c4b2d6f30",
+        "question": null,
+        "attach": {
+          "kind": "message",
+          "messageId": "e5b7c9d1-3f24-4a6b-8c8e-0d2f4a6b8c01"
+        },
+        "attachmentIds": ["b1c2d3e4-5f60-4718-8293-a4b5c6d7e8f9"]
+      }
+    },
+    {
+      "reason": "more images than a question may carry",
+      "body": {
+        "conversationId": "7c3e5a91-2b64-4d0f-8e17-5a9c4b2d6f30",
+        "question": "Look",
+        "attach": {
+          "kind": "leaf"
+        },
+        "attachmentIds": [
+          "b1c2d3e4-5f60-4718-8293-a4b5c6d7e8f9",
+          "b1c2d3e4-5f60-4718-8293-a4b5c6d7e8f9",
+          "b1c2d3e4-5f60-4718-8293-a4b5c6d7e8f9",
+          "b1c2d3e4-5f60-4718-8293-a4b5c6d7e8f9",
+          "b1c2d3e4-5f60-4718-8293-a4b5c6d7e8f9"
+        ]
+      }
+    },
+    {
+      "reason": "a model the picker does not offer",
+      "body": {
+        "conversationId": "7c3e5a91-2b64-4d0f-8e17-5a9c4b2d6f30",
+        "question": "Look",
+        "attach": {
+          "kind": "leaf"
+        },
+        "model": "gpt-5"
+      }
+    }
+  ]
+}

@@ -1,10 +1,10 @@
-import { z } from "zod";
-const ModelSchema = z.enum(["gpt-6-luna", "gpt-6.1-sol"]);
+import { EXPLORE_MODEL_OPTIONS, ExploreModelSchema } from "@scout-for-lol/data";
+import type { ExploreModel } from "@scout-for-lol/data";
 
 export function ExploreModelControls(props: {
   enabled: boolean;
-  model: z.infer<typeof ModelSchema>;
-  chooseModel: (model: z.infer<typeof ModelSchema>) => void;
+  model: ExploreModel;
+  chooseModel: (model: ExploreModel) => void;
   spending:
     | {
         userRemainingMicros: number;
@@ -22,12 +22,15 @@ export function ExploreModelControls(props: {
           aria-label="Explore model"
           value={props.model}
           onChange={(event) => {
-            props.chooseModel(ModelSchema.parse(event.target.value));
+            props.chooseModel(ExploreModelSchema.parse(event.target.value));
           }}
           className="rounded-md border border-scout-border bg-scout-surface px-2 py-1 text-scout-ink"
         >
-          <option value="gpt-6-luna">GPT-6 Luna · High</option>
-          <option value="gpt-6.1-sol">GPT-6.1 Sol · High</option>
+          {EXPLORE_MODEL_OPTIONS.map((option) => (
+            <option key={option.id} value={option.id}>
+              {option.label}
+            </option>
+          ))}
         </select>
       </label>
       {props.spending !== undefined && (

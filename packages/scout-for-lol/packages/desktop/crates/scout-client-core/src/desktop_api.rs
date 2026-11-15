@@ -24,7 +24,7 @@ use uuid::Uuid;
 /// Request header carrying the client's desktop contract version.
 pub const DESKTOP_CONTRACT_HEADER: &str = "X-Scout-Desktop-Contract";
 /// Desktop contract version this build speaks.
-pub const DESKTOP_CONTRACT_VERSION: u32 = 4;
+pub const DESKTOP_CONTRACT_VERSION: u32 = 5;
 /// Path of the route that starts an Explore turn.
 pub const EXPLORE_RUNS_START_PATH: &str = "/api/scout-client/v1/explore/runs/start";
 /// Path of the route that stops a running turn.
@@ -363,6 +363,17 @@ pub enum ExploreModel {
     Sol,
 }
 
+impl ExploreModel {
+    /// The model's id on the wire, as the picker and `runs/start` name it.
+    #[must_use]
+    pub const fn id(self) -> &'static str {
+        match self {
+            Self::Luna => "gpt-6-luna",
+            Self::Sol => "gpt-6.1-sol",
+        }
+    }
+}
+
 /// Request to `explore/runs/start`: the web's `explore.start` request.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -483,6 +494,64 @@ pub struct PngResponse {
     pub content_type: PngContentType,
 }
 
+/// One model the picker offers.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ModelOption {
+    /// The id `runs/start` takes.
+    pub id: ExploreModel,
+    /// What the picker shows.
+    pub label: String,
+}
+
+/// Response from `explore/models`: the web picker's models.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ModelsResponse {
+    /// Whether the server lets the owner choose. With it off `models` is
+    /// empty and the server picks.
+    pub picker_enabled: bool,
+    /// The model the server uses when none is chosen.
+    pub default_model: ExploreModel,
+    /// The models the owner may choose between.
+    pub models: Vec<ModelOption>,
+}
+
+/// Request to `explore/conversations/set-leaf`: show the branch through one
+/// message, which is how the version switcher moves between versions.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct SetLeafRequest {
+    /// The conversation.
+    pub conversation_id: Uuid,
+    /// The message whose branch to show; the server follows it to its leaf.
+    pub message_id: Uuid,
+}
+
+/// Response from `set-leaf`, `revoke-share` and `attachments/discard`.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct OkResponse {
+    /// Always true; a thing that is not the owner's is a `not_found` refusal.
+    pub ok: bool,
+}
+
+/// Response from `explore/conversations/share`.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ShareResponse {
+    /// The unguessable token of the share link.
+    pub share_token: String,
+}
+
+/// Request to `explore/attachments/discard`: remove an image not yet sent.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct AttachmentDiscardRequest {
+    /// The uploaded image.
+    pub id: Uuid,
+}
+
 /// How a route answers.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "kebab-case")]
@@ -542,15 +611,17 @@ mod tests {
     use serde_json::Value;
 
     use super::{
-        ActiveRun, AssetsResponse, ConversationListResponse, DESKTOP_CONTRACT_HEADER,
-        DESKTOP_CONTRACT_VERSION, DEVICE_SCOPE_REQUESTS_PATH, DesktopApiContract, DesktopApiError,
-        DeviceScope, EXPLORE_ASSETS_PATH, EXPLORE_CONVERSATIONS_GET_PATH,
-        EXPLORE_CONVERSATIONS_LIST_PATH, EXPLORE_RUNS_ACTIVE_PATH, EXPLORE_RUNS_OUTCOME_PATH,
-        EXPLORE_RUNS_START_PATH, EXPLORE_RUNS_STOP_PATH, EXPLORE_RUNS_STREAM_PATH,
-        EXPLORE_STATUS_PATH, EXPLORE_VISUALIZATION_PATH, EmptyRequest, ExploreStatusResponse,
-        PAIRINGS_V2_PATH, PNG_CONTENT_TYPE, PairingV2Response, PngResponse, RouteResponseKind,
-        RunActiveResponse, RunOutcomeResponse, RunRequest, RunStartRequest, RunStopResponse,
-        ScopeRequest, ScopeRequestResponse, VisualizationRequest,
+        ActiveRun, AssetsResponse, AttachmentDiscardRequest, ConversationGetRequest,
+        ConversationListResponse, DESKTOP_CONTRACT_HEADER, DESKTOP_CONTRACT_VERSION,
+        DEVICE_SCOPE_REQUESTS_PATH, DesktopApiContract, DesktopApiError, DeviceScope,
+        EXPLORE_ASSETS_PATH, EXPLORE_CONVERSATIONS_GET_PATH, EXPLORE_CONVERSATIONS_LIST_PATH,
+        EXPLORE_RUNS_ACTIVE_PATH, EXPLORE_RUNS_OUTCOME_PATH, EXPLORE_RUNS_START_PATH,
+        EXPLORE_RUNS_STOP_PATH, EXPLORE_RUNS_STREAM_PATH, EXPLORE_STATUS_PATH,
+        EXPLORE_VISUALIZATION_PATH, EmptyRequest, ExploreStatusResponse, ModelsResponse,
+        OkResponse, PAIRINGS_V2_PATH, PNG_CONTENT_TYPE, PairingV2Response, PngResponse,
+        RouteResponseKind, RunActiveResponse, RunOutcomeResponse, RunRequest, RunStartRequest,
+        RunStopResponse, ScopeRequest, ScopeRequestResponse, SetLeafRequest, ShareResponse,
+        VisualizationRequest,
     };
     use crate::protocol::CreatePairingRequest;
 
@@ -588,6 +659,26 @@ mod tests {
         include_str!("../../../../data/src/scout-client/desktop-fixtures/explore-assets.json");
     const VISUALIZATION: &str = include_str!(
         "../../../../data/src/scout-client/desktop-fixtures/explore-visualization.json"
+    );
+    const MODELS: &str =
+        include_str!("../../../../data/src/scout-client/desktop-fixtures/explore-models.json");
+    const SET_LEAF: &str = include_str!(
+        "../../../../data/src/scout-client/desktop-fixtures/explore-conversations-set-leaf.json"
+    );
+    const SHARE: &str = include_str!(
+        "../../../../data/src/scout-client/desktop-fixtures/explore-conversations-share.json"
+    );
+    const REVOKE_SHARE: &str = include_str!(
+        "../../../../data/src/scout-client/desktop-fixtures/explore-conversations-revoke-share.json"
+    );
+    const ATTACHMENTS_UPLOAD: &str = include_str!(
+        "../../../../data/src/scout-client/desktop-fixtures/explore-attachments-upload.json"
+    );
+    const ATTACHMENTS_DISCARD: &str = include_str!(
+        "../../../../data/src/scout-client/desktop-fixtures/explore-attachments-discard.json"
+    );
+    const START_ACTIONS: &str = include_str!(
+        "../../../../data/src/scout-client/desktop-fixtures/explore-runs-start-actions.json"
     );
 
     /// Parse strictly, then prove serialising and parsing again is lossless.
@@ -644,11 +735,32 @@ mod tests {
             BTreeMap::from([
                 ("device_scope_requests", DEVICE_SCOPE_REQUESTS_PATH),
                 ("explore_assets", EXPLORE_ASSETS_PATH),
+                (
+                    "explore_attachments_discard",
+                    "/api/scout-client/v1/explore/attachments/discard"
+                ),
+                (
+                    "explore_attachments_upload",
+                    "/api/scout-client/v1/explore/attachments/upload"
+                ),
                 ("explore_conversations_get", EXPLORE_CONVERSATIONS_GET_PATH),
                 (
                     "explore_conversations_list",
                     EXPLORE_CONVERSATIONS_LIST_PATH
                 ),
+                (
+                    "explore_conversations_revoke_share",
+                    "/api/scout-client/v1/explore/conversations/revoke-share"
+                ),
+                (
+                    "explore_conversations_set_leaf",
+                    "/api/scout-client/v1/explore/conversations/set-leaf"
+                ),
+                (
+                    "explore_conversations_share",
+                    "/api/scout-client/v1/explore/conversations/share"
+                ),
+                ("explore_models", "/api/scout-client/v1/explore/models"),
                 ("explore_runs_active", EXPLORE_RUNS_ACTIVE_PATH),
                 ("explore_runs_outcome", EXPLORE_RUNS_OUTCOME_PATH),
                 ("explore_runs_start", EXPLORE_RUNS_START_PATH),
@@ -698,6 +810,12 @@ mod tests {
             RUNS_STREAM,
             ASSETS,
             VISUALIZATION,
+            MODELS,
+            SET_LEAF,
+            SHARE,
+            REVOKE_SHARE,
+            ATTACHMENTS_UPLOAD,
+            ATTACHMENTS_DISCARD,
         ] {
             let fixture: Value = serde_json::from_str(fixture)?;
             named.push(fixture["route"].as_str().ok_or("route name")?.to_owned());
@@ -812,5 +930,58 @@ mod tests {
     #[test]
     fn conversation_list_fixture_parses_strictly() -> TestResult {
         check_route::<EmptyRequest, ConversationListResponse>(LIST, "explore_conversations_list")
+    }
+
+    #[test]
+    fn chat_action_fixtures_parse_strictly() -> TestResult {
+        check_route::<EmptyRequest, ModelsResponse>(MODELS, "explore_models")?;
+        check_route::<SetLeafRequest, OkResponse>(SET_LEAF, "explore_conversations_set_leaf")?;
+        check_route::<ConversationGetRequest, ShareResponse>(SHARE, "explore_conversations_share")?;
+        check_route::<ConversationGetRequest, OkResponse>(
+            REVOKE_SHARE,
+            "explore_conversations_revoke_share",
+        )?;
+        check_route::<AttachmentDiscardRequest, OkResponse>(
+            ATTACHMENTS_DISCARD,
+            "explore_attachments_discard",
+        )
+    }
+
+    #[test]
+    fn edit_regenerate_and_image_turns_are_run_start_bodies() -> TestResult {
+        let fixture: Value = serde_json::from_str(START_ACTIONS)?;
+        assert_eq!(fixture["route"], "explore_runs_start");
+        for case in fixture["requests"].as_array().ok_or("requests")? {
+            let flow = case["flow"].as_str().unwrap_or("?");
+            let request: RunStartRequest = serde_json::from_value(case["request"].clone())?;
+            // A regenerate names no question; everything else asks one.
+            assert_eq!(request.question.is_none(), flow == "regenerate", "{flow}");
+            assert_eq!(
+                serde_json::to_value(&request)?
+                    .as_object()
+                    .map(|object| object.iter().filter(|(_, v)| !v.is_null()).count()),
+                case["request"]
+                    .as_object()
+                    .map(|object| object.iter().filter(|(_, v)| !v.is_null()).count()),
+                "{flow} loses nothing on the way out"
+            );
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn a_model_has_the_id_the_server_names() -> TestResult {
+        let fixture: Value = serde_json::from_str(MODELS)?;
+        let response: ModelsResponse = serde_json::from_value(fixture["response"].clone())?;
+        let ids: Vec<&str> = response.models.iter().map(|model| model.id.id()).collect();
+        let wire: Vec<&str> = fixture["response"]["models"]
+            .as_array()
+            .ok_or("models")?
+            .iter()
+            .filter_map(|model| model["id"].as_str())
+            .collect();
+        assert_eq!(ids, wire);
+        assert_eq!(response.default_model.id(), "gpt-6-luna");
+        Ok(())
     }
 }
