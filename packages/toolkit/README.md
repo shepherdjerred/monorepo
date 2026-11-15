@@ -21,6 +21,10 @@ bun run build
 bun run install:local
 ```
 
+On Windows, `install:local` compiles native x64 `toolkit.exe` and `brim.exe`
+into `%USERPROFILE%\.local\bin`. The forum and Tracker commands use this
+installed toolkit; Brim's Scheduled Task continues to use `brim.exe`.
+
 ## Delivery
 
 `toolkit deploy` uses the Delivery service's shared API and validated contracts.
@@ -1335,9 +1339,9 @@ the AWS profile's credentials file by default; with
 `brim.sync.s3.credentials = "broker"` they resolve at call time through the
 credential broker instead, so an agent host keeps no key file while the
 profile still supplies the endpoint. A pid lock makes an
-overlapping run exit 0. On Windows only `brim.exe` is built (`bun run
-install:local`), and a Scheduled Task from `packages/dotfiles-windows` runs
-`sync push`.
+overlapping run exit 0. On Windows `bun run install:local` builds both
+`toolkit.exe` and `brim.exe`; a Scheduled Task from `packages/dotfiles-windows`
+runs `brim.exe sync push`.
 
 Push also overwrites leaked credentials in each segment before upload:
 Anthropic, OpenAI project and Linear keys, and JWTs whose header and payload

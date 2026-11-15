@@ -34,9 +34,8 @@ export type BuildStep = {
 };
 
 /**
- * What `install:local` compiles on each platform. Windows gets only the
- * standalone `brim` binary: its `sync` verb is the one toolkit feature that
- * runs there (the Scheduled Task's `brim.exe sync push`).
+ * What `install:local` compiles on each platform. Windows installs native
+ * toolkit.exe and brim.exe; the Scheduled Task keeps using brim.exe sync push.
  */
 export function buildSteps(
   home: string,
@@ -45,6 +44,20 @@ export function buildSteps(
   const paths = installPaths(home, platform);
   if (platform === "win32") {
     return [
+      {
+        argv: [
+          "bun",
+          "build",
+          "./src/index.ts",
+          "--compile",
+          "--target=bun-windows-x64",
+          "--external",
+          "ffmpeg-static",
+          "--outfile=dist/toolkit.exe",
+        ],
+        output: "dist/toolkit.exe",
+        destination: paths.binary,
+      },
       {
         argv: [
           "bun",

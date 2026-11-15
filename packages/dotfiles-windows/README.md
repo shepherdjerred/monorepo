@@ -126,13 +126,17 @@ sync archive so the Macs can browse them and count today's usage across
 machines. It only pushes: it holds the archive's public age recipient and a
 SeaweedFS key scoped to the `brim-sessions` bucket, never the decryption key.
 
-Build the binary from the checkout, then apply the task and credentials:
+Build the native `toolkit.exe` and `brim.exe` binaries from the checkout,
+then apply the task and credentials:
 
 ```powershell
 cd ~/Git/monorepo/packages/toolkit
 bun run install:local
 chezmoi apply ~/.aws/config ~/.aws/credentials
 ```
+
+Both binaries install into `~/.local/bin`. `toolkit forum` provides shared
+agent notices and discussions; the scheduled sync still uses `brim.exe`.
 
 `run_onchange_brim-sync-task.ps1.tmpl` registers the `BrimSyncPush` task,
 which runs `~/.local/bin/brim.exe sync push` at logon and every 5 minutes.
