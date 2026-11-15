@@ -32,6 +32,12 @@ import type {
   CommittedCrawlSegment,
   CrawlSegmentSource,
 } from "#src/report-lake/crawl/crawl-sources.ts";
+import {
+  hasCurrentPartials,
+  META_PARTIALS_TABLE,
+  removeDayPartials,
+  writeDayPartials,
+} from "#src/report-lake/crawl/meta-partials.ts";
 import { columnList } from "#src/reports/duckdb/lake/column-list.ts";
 import { withMaintenanceDuckDBConnection } from "#src/reports/duckdb/instance.ts";
 import { PARQUET_COPY_OPTIONS } from "#src/reports/duckdb/writes/parquet.ts";
@@ -97,6 +103,7 @@ async function removeCrawlDay(buildDir: string, day: string): Promise<void> {
       force: true,
     });
   }
+  await removeDayPartials(buildDir, day);
 }
 
 /**
@@ -118,7 +125,7 @@ export async function carryCrawlTables(
     );
     return undefined;
   }
-  for (const table of CRAWL_LAKE_TABLES) {
+  for (const table of [...CRAWL_LAKE_TABLES, META_PARTIALS_TABLE]) {
     const source = path.join(previousDir, table);
     if (!(await isDirectory(source))) continue;
     await linkTreeContents(source, path.join(buildDir, table));
@@ -187,7 +194,7 @@ const MatchIdRowSchema = z.object({ match_id: z.string() });
  * drop every match that names an erased player. A day already in one file
  * with no erased player is left alone.
  */
-export async function compactCrawlDay(input: {
+async function compactCrawlDayFiles(input: {
   buildDir: string;
   buildId: string;
   day: string;
@@ -253,6 +260,37 @@ export async function compactCrawlDay(input: {
   );
 }
 
+/**
+ * Compact one ingest day (above), then derive its daily partial aggregates
+ * (`meta-partials.ts`) from the compacted files. Partials are re-derived
+ * whenever the day's files changed, so a day that lost a match to erasure
+ * loses it from its counts too, and whenever the day has none at the current
+ * definition. A day already compacted with current partials does no work.
+ */
+export async function compactCrawlDay(input: {
+  buildDir: string;
+  buildId: string;
+  day: string;
+  erased: ErasedPuuidHashes;
+  abortSignal?: AbortSignal | undefined;
+}): Promise<{
+  compacted: boolean;
+  erasedMatches: number;
+  partialsWritten: boolean;
+}> {
+  const result = await compactCrawlDayFiles(input);
+  const needed =
+    result.compacted || !(await hasCurrentPartials(input.buildDir, input.day));
+  if (!needed) return { ...result, partialsWritten: false };
+  await writeDayPartials({
+    buildDir: input.buildDir,
+    buildId: input.buildId,
+    day: input.day,
+    abortSignal: input.abortSignal,
+  });
+  return { ...result, partialsWritten: true };
+}
+
 /** Drop every ingest day older than the retention window; returns the days dropped. */
 export async function applyCrawlRetention(input: {
   buildDir: string;
@@ -261,7 +299,7 @@ export async function applyCrawlRetention(input: {
 }): Promise<string[]> {
   const cutoff = crawlRetentionCutoffDay(input.now);
   const dropped = new Set<string>();
-  for (const table of CRAWL_LAKE_TABLES) {
+  for (const table of [...CRAWL_LAKE_TABLES, META_PARTIALS_TABLE]) {
     const tableDir = path.join(input.buildDir, table);
     if (!(await isDirectory(tableDir))) continue;
     const names = await readdir(tableDir);
@@ -289,6 +327,7 @@ export type CrawlMaintenanceSummary = CrawlSegmentTally & {
   carried: boolean;
   rebuiltDays: string[];
   compactedDays: string[];
+  partialDays: string[];
   expiredDays: string[];
 };
 
@@ -300,7 +339,8 @@ export type CrawlMaintenanceSummary = CrawlSegmentTally & {
  * 2. re-derive any retained day whose ledger lacks a committed segment — an
  *    inbox write that never landed, or a crawl schema change;
  * 3. drop days past retention;
- * 4. compact every completed day still in fold fragments.
+ * 4. compact every completed day still in fold fragments, and derive the
+ *    daily meta partials of every completed day that lacks current ones.
  */
 export async function maintainCrawlTables(input: {
   previousDir: string | undefined;
@@ -318,6 +358,7 @@ export async function maintainCrawlTables(input: {
     carried: carried !== undefined,
     rebuiltDays: [],
     compactedDays: [],
+    partialDays: [],
     expiredDays: [],
   };
 
@@ -362,6 +403,7 @@ export async function maintainCrawlTables(input: {
       abortSignal: input.abortSignal,
     });
     if (compaction.compacted) summary.compactedDays.push(day);
+    if (compaction.partialsWritten) summary.partialDays.push(day);
     summary.erasedMatches += compaction.erasedMatches;
   }
 

@@ -19,6 +19,8 @@ const EXACT_ROUTES = new Set<string>([
   "/healthz",
   "/metrics",
   "/api/version",
+  "/api/meta/v1/manifest",
+  "/api/meta/v1/tiers",
   "/api/auth/discord/start",
   "/api/auth/discord/callback",
   "/api/auth/logout",
@@ -36,6 +38,14 @@ const EXACT_ROUTES = new Set<string>([
 
 /** Paths with dynamic segments, mapped to a templated label. */
 const PATTERN_ROUTES: readonly { pattern: RegExp; label: string }[] = [
+  {
+    pattern: /^\/api\/meta\/v1\/champions\/[^/]+$/,
+    label: "/api/meta/v1/champions/:id",
+  },
+  {
+    pattern: /^\/api\/meta\/v1\/matchups\/[^/]+\/[^/]+$/,
+    label: "/api/meta/v1/matchups/:a/:b",
+  },
   {
     pattern: /^\/api\/support\/screenshots\/[^/]+$/,
     label: "/api/support/screenshots/:id",

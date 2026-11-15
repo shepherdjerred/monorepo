@@ -18,6 +18,8 @@ Use these tools for current game facts that are not statistics over Scout's matc
 - `lookup_item` returns the bundled current item data.
 - `lookup_rune` returns the rune tree, slot, and current descriptions.
 - `lookup_summoner_spell` returns current cooldown, range, mode, and level facts.
+- `lookup_champion_meta` returns crawled champion meta: win, pick and ban rates with 95% intervals, core items, builds, runes, spells, skill order and matchups, from Summoner's Rift ranked and normal draft crawl data rather than this server's games. Report the sample size, patch, queue and bracket it names.
+- `list_champion_tiers` returns the crawled tier list for a patch, queue and bracket; tiers are graded on the win-rate interval's lower bound.
 - `lookup_patch_notes` searches Scout's bundled snapshot of the current official patch notes.
 - `compare_patch_changes` compares two structured archived patch snapshots; omit versions for current versus previous.
 

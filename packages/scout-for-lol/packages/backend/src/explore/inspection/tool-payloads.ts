@@ -38,6 +38,8 @@ const PUBLIC_TOOLS = new Set([
   "lookup_rune",
   "lookup_summoner_spell",
   "lookup_patch_notes",
+  "lookup_champion_meta",
+  "list_champion_tiers",
   "compare_patch_changes",
   "resolve_player",
   "materialize_query_dataset",
