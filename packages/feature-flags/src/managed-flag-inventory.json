@@ -2804,6 +2804,46 @@
       "thresholdRollouts": []
     },
     {
+      "key": "scout-participant-crawl-enabled",
+      "owner": "scout",
+      "namespace": "scout",
+      "source": "scout-dynamic",
+      "purpose": "Run Scout's participant crawl: fetch matches of players near tracked matches on spare Riot rate and store them as identified raw segments. Production is also hard-disabled in code until crawl deletion, the privacy page and the Riot declaration are live.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "The crawl foundation ships dark: no Flipt state exists for the flag yet, so beta is enabled by an explicit operator change once the migration is applied and the Riot budget ledger shows headroom.",
+          "issue": "AI-560",
+          "enableWhen": "The participant crawl migration is applied on beta and the Riot budget ledger observes spare crawl-class headroom; then the flag is turned on at 1k matches a day.",
+          "reviewBy": "2026-12-11"
+        },
+        {
+          "environment": "prod",
+          "reason": "Production crawl is gated on crawl deletion, the privacy page and the Riot declaration, and the code hard-disables it in production until then.",
+          "issue": "AI-561",
+          "enableWhen": "Crawl deletion is deployed, the privacy page is live and the Riot declaration is made; then the production hard-disable is removed and the flag turned on.",
+          "reviewBy": "2026-12-11"
+        }
+      ]
+    },
+    {
+      "key": "scout-participant-crawl-daily-match-budget",
+      "owner": "scout",
+      "namespace": "scout",
+      "source": "scout-dynamic",
+      "purpose": "Matches the participant crawl may store per UTC day; the budget ladder is 1000 (beta), 5500, 20000, 55000.",
+      "type": "variant",
+      "default": "1000",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "scout-temporal-call-graph-tracing",
       "owner": "scout",
       "namespace": "scout",

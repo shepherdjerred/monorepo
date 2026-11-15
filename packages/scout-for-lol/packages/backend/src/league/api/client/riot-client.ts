@@ -65,6 +65,7 @@ export class RiotClient {
       reservedRealtimeSlots: options.reservedRealtimeSlots,
       budgetMode: options.budgetMode,
       ledger: options.ledger,
+      onBudgetRefusal: options.onBudgetRefusal,
     });
     this.fetchFn = options.fetchFn ?? fetch;
     this.onPayload = options.onPayload;

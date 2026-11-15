@@ -68,6 +68,7 @@ export const SCOUT_TEMPORAL_QUEUE_CLASSES = [
   "lake",
   "realtime",
   "background",
+  "crawl",
 ] as const;
 
 export type ScoutTemporalQueueClass =
@@ -138,9 +139,15 @@ const DISCORD_WORKERS: readonly ScoutTemporalQueueClass[] = [
   "realtime",
   "background",
 ];
+/**
+ * The participant crawl's Activity queue. It rides the activity-worker pod (no
+ * new Deployment) and `combined`, and is a no-op until its flag is on.
+ */
+const CRAWL_WORKERS: readonly ScoutTemporalQueueClass[] = ["crawl"];
 const GATEWAY_WORKERS: readonly ScoutTemporalQueueClass[] = ["gateway"];
 const COMBINED_DEFERRED_WORKERS: readonly ScoutTemporalQueueClass[] = [
   ...DISCORD_WORKERS,
+  ...CRAWL_WORKERS,
   ...GATEWAY_WORKERS,
 ];
 
@@ -210,7 +217,7 @@ const SCOUT_RUNTIME_CAPABILITIES: Readonly<
     // README for the shared-volume and single-publisher contract.
     reportLakeAccess: true,
     reportLakeFold: false,
-    temporalWorkers: DISCORD_WORKERS,
+    temporalWorkers: [...DISCORD_WORKERS, ...CRAWL_WORKERS],
     deferredTemporalWorkers: NO_WORKERS,
     discordGateway: false,
     gatewayReadyReconciliation: false,

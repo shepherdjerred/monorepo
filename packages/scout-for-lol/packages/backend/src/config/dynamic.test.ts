@@ -7,6 +7,8 @@ import {
   initializeDynamicConfig,
   isDynamicConfigReady,
   llmHourlyTokenBudget,
+  participantCrawlDailyMatchBudget,
+  participantCrawlEnabled,
   riotBudgetMode,
   scoutClientEndOfGameDeadlineSeconds,
   shutdownDynamicConfig,
@@ -163,6 +165,44 @@ describe("scout dynamic config", () => {
       }),
     });
     expect(scoutClientEndOfGameDeadlineSeconds()).toBe(360);
+  });
+
+  test("the participant crawl is off and budgeted at 1k a day until a flag says otherwise", async () => {
+    expect(participantCrawlEnabled()).toBe(false);
+    expect(participantCrawlDailyMatchBudget()).toBe(1000);
+    await initializeDynamicConfig({
+      environment: DISABLED,
+      seed: SEED,
+      startPolling: false,
+    });
+    expect(participantCrawlEnabled()).toBe(false);
+    expect(participantCrawlDailyMatchBudget()).toBe(1000);
+  });
+
+  test("the participant crawl follows its flags, and an explicit false or zero is an answer", async () => {
+    await initializeDynamicConfig({
+      environment: DISABLED,
+      seed: SEED,
+      startPolling: false,
+      provider: new StaticProvider({
+        "scout-participant-crawl-enabled": true,
+        "scout-participant-crawl-daily-match-budget": 5500,
+      }),
+    });
+    expect(participantCrawlEnabled()).toBe(true);
+    expect(participantCrawlDailyMatchBudget()).toBe(5500);
+    await shutdownDynamicConfig();
+    await initializeDynamicConfig({
+      environment: DISABLED,
+      seed: SEED,
+      startPolling: false,
+      provider: new StaticProvider({
+        "scout-participant-crawl-enabled": false,
+        "scout-participant-crawl-daily-match-budget": 0,
+      }),
+    });
+    expect(participantCrawlEnabled()).toBe(false);
+    expect(participantCrawlDailyMatchBudget()).toBe(0);
   });
 
   test("readiness flips with initialize and shutdown", async () => {

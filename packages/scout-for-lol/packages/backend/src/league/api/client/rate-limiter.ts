@@ -23,6 +23,7 @@ import {
 import {
   RIOT_PRIORITIES,
   RiotBudgetLedger,
+  type AdmitReason,
   type RiotBudgetMode,
   type RiotPriority,
 } from "./rate-budget.ts";
@@ -52,6 +53,17 @@ export type RateLimiterOptions = {
   budgetMode?: (() => RiotBudgetMode) | undefined;
   /** Shared budget ledger. Default: a new ledger on the limiter's clock. */
   ledger?: RiotBudgetLedger | undefined;
+  /**
+   * Told of every ledger refusal (`would_defer` in `observe` mode, `deferred`
+   * in `enforce`), so a caller can count its own class's refusals by reason.
+   */
+  onBudgetRefusal?: ((refusal: BudgetRefusal) => void) | undefined;
+};
+
+export type BudgetRefusal = {
+  priority: RiotPriority;
+  outcome: "would_defer" | "deferred";
+  reason: AdmitReason;
 };
 
 export type RateLimitedRequestOptions = {
@@ -168,6 +180,7 @@ export class RateLimiter {
   private readonly runtime: RateLimiterRuntime;
   private readonly budgetMode: () => RiotBudgetMode;
   private readonly ledger: RiotBudgetLedger;
+  private readonly onBudgetRefusal: RateLimiterOptions["onBudgetRefusal"];
   /** Retry-After deadlines keyed by `cooldownKey`. */
   private readonly blockedUntil = new Map<string, number>();
 
@@ -191,6 +204,7 @@ export class RateLimiter {
     this.budgetMode = options.budgetMode ?? (() => "observe");
     this.ledger =
       options.ledger ?? new RiotBudgetLedger({ clock: () => runtime.now() });
+    this.onBudgetRefusal = options.onBudgetRefusal;
   }
 
   private hasCapacityFor(priority: RiotPriority): boolean {
@@ -309,12 +323,22 @@ export class RateLimiter {
           outcome: "would_defer",
           reason: decision.reason,
         });
+        this.onBudgetRefusal?.({
+          priority,
+          outcome: "would_defer",
+          reason: decision.reason,
+        });
         // Sent anyway, so it must hold a reservation its response releases.
         this.ledger.reserve(route, method);
         return;
       }
       riotApiLimiterDecisionsTotal.inc({
         route,
+        priority,
+        outcome: "deferred",
+        reason: decision.reason,
+      });
+      this.onBudgetRefusal?.({
         priority,
         outcome: "deferred",
         reason: decision.reason,

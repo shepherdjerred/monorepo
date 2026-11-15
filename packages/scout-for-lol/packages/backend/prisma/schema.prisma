@@ -2782,3 +2782,79 @@ model DareNotificationPreference {
 
   @@unique([serverId, discordId])
 }
+
+/// One participant the participant crawl may visit. Seeded from the
+/// participants of freshly processed tracked matches (depth 0); a crawled
+/// match's participants join one level deeper. The migration CHECKs depth to
+/// 0..2 and pins the 7-day per-PUUID cooldown: a visited row's `nextEligibleAt`
+/// is never earlier than `lastVisitedAt` plus seven days. `rankTier` and
+/// `rankDivision` hold the bracket from the one league-v4 lookup made per
+/// visited player (`rankedAt` set, both NULL when unranked).
+model CrawlFrontier {
+  puuid          String    @id
+  platformRoute  String
+  depth          Int
+  seedMatchId    String
+  rankTier       String?
+  rankDivision   String?
+  rankedAt       DateTime?
+  lastVisitedAt  DateTime?
+  nextEligibleAt DateTime
+  visitCount     Int       @default(0)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([nextEligibleAt, depth])
+}
+
+/// One crawled match: the dedupe key and the daily-budget ledger. It is not a
+/// MatchObservation and never carries a receipt, so no tracked-corpus consumer
+/// can see it. `segmentSha256` names the raw segment that holds the match.
+model CrawlMatch {
+  riotMatchId     String   @id
+  platformRoute   String
+  queueId         Int
+  gameCreatedAt   DateTime
+  depth           Int
+  visitedPuuid    String
+  timelineSampled Boolean
+  segmentSha256   String
+  crawledAt       DateTime @default(now())
+
+  segment CrawlSegment @relation(fields: [segmentSha256], references: [sha256], onDelete: Restrict)
+
+  @@index([crawledAt])
+  @@index([segmentSha256])
+}
+
+/// One immutable raw segment under `crawl/v1/route=…/dt=…/seg-{sha256}.ndjson.zst`.
+model CrawlSegment {
+  sha256     String   @id
+  objectKey  String   @unique
+  route      String
+  dt         String
+  matchCount Int
+  bytes      Int
+  createdAt  DateTime @default(now())
+
+  matches CrawlMatch[]
+
+  @@index([dt, route])
+}
+
+/// The crawl's single control row (the migration CHECKs `id = 'default'`):
+/// the seeding cursor over tracked-match observations.
+model CrawlControl {
+  id                   String   @id @default("default")
+  seedCursorObservedAt DateTime
+  seedCursorMatchId    String   @default("")
+  updatedAt            DateTime @updatedAt
+}
+
+/// Erased players, by SHA-256 of the PUUID so the list itself holds no
+/// identifier. Checked at crawl admission. The deletion pipeline that writes
+/// it lands later.
+model ErasedPuuid {
+  puuidHash String   @id
+  erasedAt  DateTime @default(now())
+}

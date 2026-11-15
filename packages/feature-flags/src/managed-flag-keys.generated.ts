@@ -190,6 +190,7 @@ export const SCOUT_BOOLEAN_FLAG_KEYS = [
   "scout-explore-analysis-enabled",
   "scout-explore-model-picker-enabled",
   "scout-evidence-recovery-enabled",
+  "scout-participant-crawl-enabled",
   "scout-temporal-call-graph-tracing",
   "scout_client_ingestion",
   "scout_client_result_recovery",
@@ -212,6 +213,7 @@ export const SCOUT_VARIANT_FLAG_KEYS = [
   "scout-feature-tip-percent",
   "scout-report-ai-model",
   "scout-riot-budget-mode",
+  "scout-participant-crawl-daily-match-budget",
 ] as const;
 
 export type ScoutVariantFlagKey = (typeof SCOUT_VARIANT_FLAG_KEYS)[number];

@@ -132,6 +132,17 @@ function schedulesForStage(stage: ScoutStage): ScheduleDefinition[] {
       catchupWindow: CATCHUP_TIGHT,
     }),
     intervalSchedule(stage, {
+      // The participant crawl ships dark: each tick is one Activity that
+      // returns at once while `scout-participant-crawl-enabled` is off (and
+      // production is hard-disabled in code). Like every non-beta Scout
+      // schedule it is created paused in prod.
+      name: "participant-crawl",
+      workflowType: SCOUT_WORKFLOW_NAMES.participantCrawl,
+      args: [{ stage, trigger: "schedule" }],
+      every: "1 minute",
+      catchupWindow: CATCHUP_LIVE,
+    }),
+    intervalSchedule(stage, {
       name: "ingestion-reconciliation",
       workflowType: "scoutIngestionReconciliationWorkflow",
       args: [{ stage, trigger: "schedule" }],

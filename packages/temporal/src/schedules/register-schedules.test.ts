@@ -593,6 +593,7 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "scoutPrematchDiscoveryWorkflow",
   "scoutPostMatchDiscoveryWorkflow",
   "scoutIngestionReconciliationWorkflow",
+  "scoutParticipantCrawlWorkflow",
   "scoutPipelineReconciliationWorkflow",
   "scoutBackgroundJobWorkflow",
   "scoutReportScheduleReconcilerWorkflow",

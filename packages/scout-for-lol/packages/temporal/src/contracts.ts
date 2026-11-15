@@ -120,6 +120,33 @@ export type ScoutIngestionReconciliationInput = z.infer<
   typeof ScoutIngestionReconciliationInputSchema
 >;
 
+export const ScoutParticipantCrawlInputSchema = z.strictObject({
+  stage: ScoutStageSchema,
+  trigger: z.literal("schedule"),
+});
+export type ScoutParticipantCrawlInput = z.infer<
+  typeof ScoutParticipantCrawlInputSchema
+>;
+
+/** How one crawl tick ended; counts only, never identifiers. */
+export const ScoutParticipantCrawlResultSchema = z.strictObject({
+  status: z.enum([
+    "disabled",
+    "budget-exhausted",
+    "completed",
+    "rate-limited",
+    "upstream-error",
+  ]),
+  seededObservations: z.number().int().nonnegative(),
+  admittedPlayers: z.number().int().nonnegative(),
+  playersVisited: z.number().int().nonnegative(),
+  matchesStored: z.number().int().nonnegative(),
+  segmentsWritten: z.number().int().nonnegative(),
+});
+export type ScoutParticipantCrawlResult = z.infer<
+  typeof ScoutParticipantCrawlResultSchema
+>;
+
 /** Frozen capability inventory for unpatched retained queue-canary histories. */
 export const SCOUT_BACKGROUND_JOB_KINDS_V1 = [
   "competition-refresh",

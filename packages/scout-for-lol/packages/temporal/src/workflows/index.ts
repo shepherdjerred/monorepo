@@ -73,6 +73,11 @@ import {
   scoutPipelineReconciliationWorkflow as pipelineReconciliation,
   scoutRecoveryBatchWorkflow as recoveryBatch,
 } from "./durable.ts";
+import { scoutParticipantCrawlWorkflow as participantCrawl } from "./crawl.ts";
+import type {
+  ScoutParticipantCrawlInput,
+  ScoutParticipantCrawlResult,
+} from "#src/contracts.ts";
 import { scoutSilentPostmatchBackfillWorkflow as silentPostmatchBackfill } from "./silent-postmatch-backfill.ts";
 import {
   scoutCustomOperationWorkflow as customOperation,
@@ -105,6 +110,12 @@ export async function scoutIngestionReconciliationWorkflow(
   input: ScoutIngestionReconciliationInput,
 ): Promise<ScoutWorkflowStatus> {
   return await ingestionReconciliation(input);
+}
+
+export async function scoutParticipantCrawlWorkflow(
+  input: ScoutParticipantCrawlInput,
+): Promise<ScoutParticipantCrawlResult> {
+  return await participantCrawl(input);
 }
 
 export async function scoutBackgroundJobWorkflow(
