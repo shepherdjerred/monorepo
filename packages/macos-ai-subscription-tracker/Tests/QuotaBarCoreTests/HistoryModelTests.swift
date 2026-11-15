@@ -66,7 +66,7 @@ import XCTest
       settings: settings,
       store: HistoryModelSnapshotStore(),
       historyStore: historyStore,
-      refresh: QuotaBarRefresh(timeout: .seconds(1), localUsageScan: { _, _ in [:] })
+      refresh: QuotaBarRefresh(timeout: .seconds(1), history: offlineHistory)
     )
   }
 

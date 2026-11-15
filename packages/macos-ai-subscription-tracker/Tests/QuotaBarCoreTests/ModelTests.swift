@@ -128,7 +128,7 @@ final class ModelTests: XCTestCase {
       settings: settings,
       store: MemorySnapshotStore(),
       historyStore: MemoryHistoryStore(),
-      refresh: QuotaBarRefresh(timeout: .seconds(1), localUsageScan: { _, _ in [:] })
+      refresh: QuotaBarRefresh(timeout: .seconds(1), history: offlineHistory)
     )
     XCTAssertEqual(model.overallStatus, .unavailable)
 
@@ -213,7 +213,7 @@ final class ModelTests: XCTestCase {
       settings: settings,
       store: MemorySnapshotStore(),
       historyStore: MemoryHistoryStore(),
-      refresh: QuotaBarRefresh(timeout: .seconds(1), localUsageScan: { _, _ in [:] })
+      refresh: QuotaBarRefresh(timeout: .seconds(1), history: offlineHistory)
     )
 
     model.setProvider(.codex, enabled: true)
@@ -244,7 +244,7 @@ final class ModelTests: XCTestCase {
       settings: settings,
       store: MemorySnapshotStore(),
       historyStore: MemoryHistoryStore(),
-      refresh: QuotaBarRefresh(timeout: .seconds(1), localUsageScan: { _, _ in [:] })
+      refresh: QuotaBarRefresh(timeout: .seconds(1), history: offlineHistory)
     )
     let initialRefresh = Task { await model.refresh() }
     await waitUntil { await codex.fetchCount == 1 }
@@ -348,10 +348,7 @@ private func makeModel(
   store: MemorySnapshotStore = MemorySnapshotStore(),
   historyStore: MemoryHistoryStore = MemoryHistoryStore(),
   timeout: Duration = .seconds(1),
-  minimumInterval: TimeInterval = 60,
-  localUsageScan: @escaping @Sendable (Date, TimeZone) -> [ProviderID: LocalDailyUsage] = { _, _ in
-    [:]
-  }
+  minimumInterval: TimeInterval = 60
 ) -> QuotaBarModel {
   let settings = AppSettings(
     store: MemoryModelSettingsStore(
@@ -365,7 +362,7 @@ private func makeModel(
     settings: settings,
     store: store,
     historyStore: historyStore,
-    refresh: QuotaBarRefresh(timeout: timeout, localUsageScan: localUsageScan)
+    refresh: QuotaBarRefresh(timeout: timeout, history: offlineHistory)
   )
 }
 
@@ -405,7 +402,7 @@ final class StalePublishingTests: XCTestCase {
         store: MemoryModelSettingsStore(enabled: [.codex]), minimumPollingInterval: 60),
       store: store,
       historyStore: MemoryHistoryStore(),
-      refresh: QuotaBarRefresh(timeout: .seconds(1), localUsageScan: { _, _ in [:] })
+      refresh: QuotaBarRefresh(timeout: .seconds(1), history: offlineHistory)
     )
 
     await model.refresh()

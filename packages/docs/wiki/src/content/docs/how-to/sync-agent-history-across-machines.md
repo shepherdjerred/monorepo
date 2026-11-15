@@ -105,8 +105,8 @@ toolkit history search --source codex-mirror "<a phrase from a PC session>"
 Sessions from the other agents use the matching source: `grok-mirror`,
 `kimi-mirror`, `muse-mirror` or `antigravity-mirror`. `brim sync status` lists
 each mirrored machine with its pull time. Brim shows
-an `All machines` line under Claude Code and Codex once another machine has
-usage today.
+an `All machines` line under a provider once another machine has usage for it
+today.
 
 ## Purge a leaked credential
 

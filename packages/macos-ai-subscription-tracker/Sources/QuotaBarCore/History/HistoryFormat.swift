@@ -9,6 +9,11 @@ public enum HistoryFormat {
     return usage.costComplete ? amount : "≥ \(amount)"
   }
 
+  /// A list-price estimate: `cost(_:)`, or `—` when nothing was priced.
+  public static func estimate(_ usage: HistoryUsage) -> String {
+    !usage.costComplete && usage.costUSD == 0 ? noUsage : cost(usage)
+  }
+
   public static func dollars(_ value: Double) -> String {
     if value > 0, value < 0.005 { return "<$0.01" }
     return value.formatted(.currency(code: "USD").locale(Locale(identifier: "en_US")))
@@ -21,11 +26,27 @@ public enum HistoryFormat {
       : "Partial: at least one model has no list price, so this is a lower bound."
   }
 
-  /// `52.5B`, `6.1M`, `40.2K`, `912`.
+  /// `52.5B`, `6.1M`, `40.2K`, `1K`, `912`.
   public static func tokens(_ count: Int) -> String {
-    guard count >= 999_950_000 else { return LocalDailyUsage.tokenText(count) }
-    let tenths = (count / 1_000 * 10 + 500_000) / 1_000_000
-    return "\(tenths / 10).\(tenths % 10)B"
+    if count >= 999_950_000 {
+      let tenths = (count / 1_000 * 10 + 500_000) / 1_000_000
+      return "\(tenths / 10).\(tenths % 10)B"
+    }
+    guard count >= 1_000 else { return String(count) }
+    if count >= 999_950 { return millions(count) }
+    let tenths = roundedTenths(count, unit: 1_000)
+    if tenths >= 10_000 { return millions(count) }
+    if tenths.isMultiple(of: 10) { return "\(tenths / 10)K" }
+    return "\(tenths / 10).\(tenths % 10)K"
+  }
+
+  private static func millions(_ count: Int) -> String {
+    let tenths = roundedTenths(count, unit: 1_000_000)
+    return "\(tenths / 10).\(tenths % 10)M"
+  }
+
+  private static func roundedTenths(_ count: Int, unit: Int) -> Int {
+    (count * 10 + unit / 2) / unit
   }
 
   /// The last path component of a workspace, on either path separator.

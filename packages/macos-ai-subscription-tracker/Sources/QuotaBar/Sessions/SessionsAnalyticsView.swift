@@ -2,21 +2,32 @@ import Charts
 import QuotaBarCore
 import SwiftUI
 
-/// Usage over the selected time range: daily cost and tokens, breakdowns by
-/// model, agent, project, and machine, and the most-used tools.
+/// Usage over the selected time range: cost and tokens per day, week, or
+/// month stacked by agent, model, project, or machine; the last three days'
+/// 5-hour blocks; breakdowns by model, agent, project, and machine; and the
+/// most-used tools.
 struct SessionsAnalyticsView: View {
-  let model: SessionsModel
+  @Bindable var model: SessionsModel
 
   var body: some View {
     Group {
-      if let analytics = model.analytics {
+      if model.analytics != nil || model.periodChart != nil {
         ScrollView {
-          AnalyticsContent(analytics: analytics)
-            .padding(20)
-            .opacity(model.analyticsPhase == .loading ? 0.6 : 1)
+          VStack(alignment: .leading, spacing: 24) {
+            AnalyticsHeader(model: model)
+            if let chart = model.periodChart {
+              PeriodCharts(chart: chart)
+                .opacity(model.periodChartPhase == .loading ? 0.6 : 1)
+            }
+            if let analytics = model.analytics {
+              AnalyticsContent(analytics: analytics)
+                .opacity(model.analyticsPhase == .loading ? 0.6 : 1)
+            }
+          }
+          .padding(20)
         }
         .overlay(alignment: .top) {
-          if let error = model.analyticsPhase.error {
+          if let error = model.analyticsPhase.error ?? model.periodChartPhase.error {
             Label(error.localizedDescription, systemImage: "exclamationmark.triangle")
               .font(.caption)
               .padding(8)
@@ -24,13 +35,62 @@ struct SessionsAnalyticsView: View {
               .padding(8)
           }
         }
-      } else if let error = model.analyticsPhase.error {
+      } else if let error = model.analyticsPhase.error ?? model.periodChartPhase.error {
         HistoryErrorView(error: error)
       } else {
         ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
       }
     }
     .task(id: model.range) { await model.loadAnalytics() }
+    .task(id: model.periodQuery) { await model.loadPeriodChart() }
+  }
+}
+
+/// Totals for the range, and the period and breakdown pickers.
+private struct AnalyticsHeader: View {
+  @Bindable var model: SessionsModel
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 14) {
+      HStack(spacing: 32) {
+        if let chart = model.periodChart {
+          SessionsStat(title: "Estimated cost") { CostText(usage: chart.total.usage) }
+          SessionsStat(title: "Tokens") {
+            Text(HistoryFormat.tokens(chart.total.totalTokens)).monospacedDigit()
+          }
+          SessionsStat(title: "Active \(chart.period.rawValue)s") {
+            Text("\(chart.activePeriods)").monospacedDigit()
+          }
+        }
+        Spacer()
+        Text(model.range.label).font(.caption).foregroundStyle(.secondary)
+      }
+      HStack(spacing: 16) {
+        Picker("Period", selection: $model.usagePeriod) {
+          ForEach(HistoryUsagePeriod.allCases) { Text($0.label).tag($0) }
+        }
+        .pickerStyle(.segmented)
+        .labelsHidden()
+        .frame(width: 220)
+        .help("Bucket usage into calendar days, weeks, or months")
+        Picker("Stack by", selection: $model.usageDimension) {
+          ForEach(HistoryUsageDimension.allCases) { Text($0.label).tag($0) }
+        }
+        .pickerStyle(.menu)
+        .fixedSize()
+        .help("What the cost and token bars are stacked by")
+        Spacer()
+      }
+      if let unpriced = model.periodChart?.unpricedModels, !unpriced.isEmpty {
+        Label(
+          "No list price for \(unpriced.joined(separator: ", ")); costs that include "
+            + (unpriced.count == 1 ? "it" : "them") + " are lower bounds.",
+          systemImage: "info.circle"
+        )
+        .font(.caption)
+        .foregroundStyle(.secondary)
+      }
+    }
   }
 }
 
@@ -39,38 +99,24 @@ private struct AnalyticsContent: View {
 
   var body: some View {
     VStack(alignment: .leading, spacing: 24) {
-      HStack(spacing: 32) {
-        SessionsStat(title: "Estimated cost") { CostText(usage: analytics.total) }
-        SessionsStat(title: "Tokens") {
-          Text(HistoryFormat.tokens(analytics.total.totalTokens)).monospacedDigit()
-        }
-        SessionsStat(title: "Active days") { Text("\(analytics.daily.count)").monospacedDigit() }
-        Spacer()
-        Text(analytics.range.label).font(.caption).foregroundStyle(.secondary)
+      ChartCard(title: "5-hour blocks · last 3 days") {
+        BlocksTimeline(report: analytics.blocks)
       }
-      if analytics.daily.isEmpty {
-        ContentUnavailableView(
-          "No usage", systemImage: "chart.bar",
-          description: Text("No session reported token usage in this range."))
-      } else {
-        ChartCard(title: "Daily cost") { DailyCostChart(points: analytics.daily) }
-        ChartCard(title: "Daily tokens") { DailyTokensChart(points: analytics.daily) }
-        LazyVGrid(
-          columns: [
-            GridItem(.flexible(), spacing: 20, alignment: .top),
-            GridItem(.flexible(), alignment: .top),
-          ],
-          alignment: .leading, spacing: 20
-        ) {
-          breakdown("Cost by model", analytics.byModel) { $0 ?? "Unknown model" }
-          breakdown("Cost by agent", analytics.bySource) { key in
-            key.flatMap(HistorySource.init(rawValue:))?.displayName ?? key ?? "Unknown agent"
-          }
-          breakdown("Cost by project", analytics.byWorkspace) { key in
-            key.map(HistoryFormat.workspaceName) ?? "No project"
-          }
-          breakdown("Cost by machine", analytics.byMachine) { HistoryFormat.machine($0) }
+      LazyVGrid(
+        columns: [
+          GridItem(.flexible(), spacing: 20, alignment: .top),
+          GridItem(.flexible(), alignment: .top),
+        ],
+        alignment: .leading, spacing: 20
+      ) {
+        breakdown("Cost by model", analytics.byModel) { $0 ?? "Unknown model" }
+        breakdown("Cost by agent", analytics.bySource) { key in
+          key.flatMap(HistorySource.init(rawValue:))?.displayName ?? key ?? "Unknown agent"
         }
+        breakdown("Cost by project", analytics.byWorkspace) { key in
+          key.map(HistoryFormat.workspaceName) ?? "No project"
+        }
+        breakdown("Cost by machine", analytics.byMachine) { HistoryFormat.machine($0) }
       }
       // Tool calls are indexed apart from usage, so agents that record no
       // usage (Conductor) still show here.
@@ -100,6 +146,167 @@ private struct AnalyticsContent: View {
   }
 }
 
+/// Cost and tokens per period, stacked by the selected dimension.
+private struct PeriodCharts: View {
+  let chart: UsagePeriodChart
+
+  var body: some View {
+    if chart.points.isEmpty {
+      ContentUnavailableView(
+        "No usage", systemImage: "chart.bar",
+        description: Text("No session reported token usage in this range."))
+    } else {
+      let per = "per \(chart.period.rawValue) by \(chart.dimension.rawValue)"
+      ChartCard(title: "Cost \(per)") {
+        StackedPeriodChart(chart: chart, metric: .cost)
+      }
+      ChartCard(title: "Tokens \(per)") {
+        StackedPeriodChart(chart: chart, metric: .tokens)
+      }
+    }
+  }
+}
+
+private struct StackedPeriodChart: View {
+  enum Metric {
+    case cost
+    case tokens
+  }
+
+  let chart: UsagePeriodChart
+  let metric: Metric
+
+  var body: some View {
+    Chart(chart.points) { point in
+      BarMark(
+        x: .value("Period", point.periodStart, unit: unit),
+        y: .value(metric == .cost ? "Cost" : "Tokens", value(point))
+      )
+      .foregroundStyle(by: .value(chart.dimension.label, point.series))
+    }
+    .chartForegroundStyleScale(domain: chart.series)
+    .chartXAxis {
+      AxisMarks(values: .automatic(desiredCount: 6)) { _ in
+        AxisGridLine(stroke: BrimChartStyle.gridLine).foregroundStyle(BrimChartStyle.gridColor)
+        AxisTick(stroke: BrimChartStyle.gridLine).foregroundStyle(BrimChartStyle.tickColor)
+        AxisValueLabel(format: dateFormat)
+      }
+    }
+    .chartYAxis {
+      AxisMarks(position: .trailing) { value in
+        AxisGridLine(stroke: BrimChartStyle.gridLine).foregroundStyle(BrimChartStyle.gridColor)
+        AxisValueLabel {
+          if let amount = value.as(Double.self) {
+            Text(
+              metric == .cost ? HistoryFormat.dollars(amount) : HistoryFormat.tokens(Int(amount)))
+          }
+        }
+      }
+    }
+    .chartLegend(position: .top, alignment: .leading)
+    .chartPlotStyle { $0.brimPlotArea() }
+    .frame(height: metric == .cost ? 220 : 200)
+    .accessibilityLabel(
+      "\(metric == .cost ? "Estimated cost" : "Tokens") per \(chart.period.rawValue) by "
+        + chart.dimension.rawValue)
+  }
+
+  private func value(_ point: UsagePeriodChart.Point) -> Double {
+    metric == .cost ? point.costUSD : Double(point.tokens)
+  }
+
+  private var unit: Calendar.Component {
+    switch chart.period {
+    case .day: .day
+    case .week: .weekOfYear
+    case .month: .month
+    }
+  }
+
+  private var dateFormat: Date.FormatStyle {
+    chart.period == .month
+      ? .dateTime.month(.abbreviated).year(.twoDigits) : .dateTime.month(.abbreviated).day()
+  }
+}
+
+/// Every agent's 5-hour blocks on one time axis, with the active blocks
+/// highlighted and projected to their end.
+private struct BlocksTimeline: View {
+  let report: HistoryBlocksReport
+
+  var body: some View {
+    if report.blocks.isEmpty {
+      Text("No usage blocks in the last 3 days").font(.caption).foregroundStyle(.secondary)
+    } else {
+      VStack(alignment: .leading, spacing: 8) {
+        Chart {
+          ForEach(report.blocks) { block in
+            BarMark(
+              xStart: .value("Start", block.start),
+              xEnd: .value("End", block.isActive ? min(report.now, block.end) : block.end),
+              y: .value("Agent", block.agent.displayName),
+              height: .ratio(0.45)
+            )
+            .foregroundStyle(block.isActive ? Color.accentColor : Color.secondary.opacity(0.35))
+            .annotation(
+              position: .top, alignment: .leading, spacing: 1,
+              overflowResolution: .init(x: .fit(to: .chart), y: .disabled)
+            ) {
+              Text(HistoryFormat.estimate(block.measured.usage))
+                .font(.caption2.monospacedDigit())
+                .foregroundStyle(block.isActive ? Color.accentColor : Color.secondary)
+            }
+            if block.isActive, report.now < block.end {
+              BarMark(
+                xStart: .value("Start", report.now),
+                xEnd: .value("End", block.end),
+                y: .value("Agent", block.agent.displayName),
+                height: .ratio(0.45)
+              )
+              .foregroundStyle(Color.accentColor.opacity(0.25))
+            }
+          }
+          RuleMark(x: .value("Now", report.now))
+            .lineStyle(StrokeStyle(lineWidth: 1, dash: [3, 3]))
+            .foregroundStyle(.secondary)
+        }
+        .chartXScale(domain: domainStart...domainEnd)
+        .chartYAxis {
+          AxisMarks(position: .leading) { _ in
+            AxisValueLabel()
+          }
+        }
+        .chartXAxis {
+          AxisMarks(values: .stride(by: .hour, count: 12)) { _ in
+            AxisGridLine(stroke: BrimChartStyle.gridLine).foregroundStyle(BrimChartStyle.gridColor)
+            AxisTick(stroke: BrimChartStyle.gridLine).foregroundStyle(BrimChartStyle.tickColor)
+            AxisValueLabel(format: .dateTime.weekday(.abbreviated).hour())
+          }
+        }
+        .chartPlotStyle { $0.brimPlotArea() }
+        .frame(height: CGFloat(agentCount) * 36 + 30)
+        .accessibilityLabel("Five-hour usage blocks per agent over the last three days")
+        ForEach(report.blocks.filter(\.isActive)) { block in
+          Label(block.timelineSummary(at: report.now), systemImage: "flame")
+            .font(.caption)
+            .monospacedDigit()
+            .help(block.helpText)
+        }
+      }
+    }
+  }
+
+  private var agentCount: Int { Set(report.blocks.map(\.agent)).count }
+
+  private var domainStart: Date {
+    report.since ?? report.blocks.map(\.start).min() ?? report.now
+  }
+
+  private var domainEnd: Date {
+    max(report.now, report.blocks.map(\.end).max() ?? report.now)
+  }
+}
+
 private struct ChartCard<Content: View>: View {
   let title: String
   @ViewBuilder let content: Content
@@ -109,75 +316,6 @@ private struct ChartCard<Content: View>: View {
       Text(title).font(.headline)
       content
     }
-  }
-}
-
-private struct DailyCostChart: View {
-  let points: [HistoryDailyPoint]
-
-  var body: some View {
-    Chart(points) { point in
-      BarMark(
-        x: .value("Day", point.day, unit: .day),
-        y: .value("Cost", point.usage.costUSD)
-      )
-      .foregroundStyle(Color.accentColor.gradient)
-    }
-    .chartXAxis { dayAxis }
-    .chartYAxis {
-      AxisMarks(position: .trailing) { value in
-        AxisGridLine(stroke: BrimChartStyle.gridLine).foregroundStyle(BrimChartStyle.gridColor)
-        AxisValueLabel {
-          if let amount = value.as(Double.self) { Text(HistoryFormat.dollars(amount)) }
-        }
-      }
-    }
-    .chartPlotStyle { $0.brimPlotArea() }
-    .frame(height: 200)
-    .accessibilityLabel("Estimated cost per day")
-  }
-}
-
-private struct DailyTokensChart: View {
-  let points: [HistoryDailyPoint]
-
-  var body: some View {
-    Chart {
-      ForEach(points) { point in
-        ForEach(segments(point.usage), id: \.0) { kind, count in
-          BarMark(x: .value("Day", point.day, unit: .day), y: .value("Tokens", count))
-            .foregroundStyle(by: .value("Type", kind))
-        }
-      }
-    }
-    .chartXAxis { dayAxis }
-    .chartYAxis {
-      AxisMarks(position: .trailing) { value in
-        AxisGridLine(stroke: BrimChartStyle.gridLine).foregroundStyle(BrimChartStyle.gridColor)
-        AxisValueLabel {
-          if let count = value.as(Int.self) { Text(HistoryFormat.tokens(count)) }
-        }
-      }
-    }
-    .chartLegend(position: .top, alignment: .leading)
-    .chartPlotStyle { $0.brimPlotArea() }
-    .frame(height: 220)
-    .accessibilityLabel("Tokens per day by type")
-  }
-
-  private func segments(_ usage: HistoryUsage) -> [(String, Int)] {
-    [
-      ("Input", usage.inputTokens), ("Output", usage.outputTokens),
-      ("Cache read", usage.cacheReadTokens), ("Cache write", usage.cacheCreationTokens),
-    ]
-  }
-}
-
-private var dayAxis: some AxisContent {
-  AxisMarks(values: .automatic(desiredCount: 6)) { _ in
-    AxisGridLine(stroke: BrimChartStyle.gridLine).foregroundStyle(BrimChartStyle.gridColor)
-    AxisTick(stroke: BrimChartStyle.gridLine).foregroundStyle(BrimChartStyle.tickColor)
-    AxisValueLabel(format: .dateTime.month(.abbreviated).day())
   }
 }
 

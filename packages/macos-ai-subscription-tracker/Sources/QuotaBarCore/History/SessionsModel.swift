@@ -10,11 +10,17 @@ public final class SessionsModel {
   public static let sessionPageSize = 50
   public static let messagePageSize = 200
   public static let toolLimit = 15
+  /// How far back the Analytics blocks timeline reaches.
+  public static let blocksSince = "3d"
 
   public var selection: SessionsSidebarItem = .all {
     didSet { if selection != oldValue { selectedSessionID = nil } }
   }
   public var range: HistoryTimeRange = .month
+  /// The calendar unit of the Analytics period charts.
+  public var usagePeriod: HistoryUsagePeriod = .day
+  /// What the Analytics period charts are stacked by.
+  public var usageDimension: HistoryUsageDimension = .agent
   /// The search field's text; `submitSearch()` applies it.
   public var searchText = ""
   public var selectedSessionID: Int?
@@ -29,6 +35,8 @@ public final class SessionsModel {
   public private(set) var detailPhase: HistoryLoadPhase = .idle
   public private(set) var analytics: SessionsAnalytics?
   public private(set) var analyticsPhase: HistoryLoadPhase = .idle
+  public private(set) var periodChart: UsagePeriodChart?
+  public private(set) var periodChartPhase: HistoryLoadPhase = .idle
 
   /// The selected session's captured requests (the Requests tab).
   public let captures: CapturesModel
@@ -38,6 +46,7 @@ public final class SessionsModel {
   private var listGeneration = 0
   private var detailGeneration = 0
   private var analyticsGeneration = 0
+  private var periodChartGeneration = 0
 
   public init(client: HistoryClient = HistoryClient(), calendar: Calendar = .current) {
     self.client = client
@@ -120,14 +129,39 @@ public final class SessionsModel {
     }
   }
 
-  /// Daily totals, the four breakdowns, and top tools for `range`.
+  /// Changes whenever the period charts must be reloaded.
+  public var periodQuery: UsagePeriodQuery {
+    UsagePeriodQuery(range: range, period: usagePeriod, dimension: usageDimension)
+  }
+
+  /// The period charts for `periodQuery`, in this Mac's zone and week start.
+  public func loadPeriodChart() async {
+    periodChartGeneration += 1
+    let generation = periodChartGeneration
+    let query = periodQuery
+    periodChartPhase = .loading
+    do {
+      let report = try await client.usageReport(
+        HistoryUsageReportQuery(
+          period: query.period, breakdown: [query.dimension], range: query.range,
+          calendar: calendar))
+      guard generation == periodChartGeneration else { return }
+      periodChart = UsagePeriodChart(report, dimension: query.dimension)
+      periodChartPhase = .loaded
+    } catch {
+      guard generation == periodChartGeneration else { return }
+      periodChartPhase = .failed(error)
+    }
+  }
+
+  /// The four breakdowns, top tools, and recent blocks for `range`.
   public func loadAnalytics() async {
     analyticsGeneration += 1
     let generation = analyticsGeneration
     let range = range
     analyticsPhase = .loading
     do {
-      let loaded = try await Self.fetchAnalytics(client: client, range: range, calendar: calendar)
+      let loaded = try await Self.fetchAnalytics(client: client, range: range)
       guard generation == analyticsGeneration else { return }
       analytics = loaded
       analyticsPhase = .loaded
@@ -168,11 +202,8 @@ public final class SessionsModel {
   }
 
   nonisolated private static func fetchAnalytics(
-    client: HistoryClient, range: HistoryTimeRange, calendar: Calendar
+    client: HistoryClient, range: HistoryTimeRange
   ) async throws(HistoryAPIError) -> SessionsAnalytics {
-    async let day = capture { () async throws(HistoryAPIError) in
-      try await client.usage(groupBy: .day, range: range)
-    }
     async let model = capture { () async throws(HistoryAPIError) in
       try await client.usage(groupBy: .model, range: range)
     }
@@ -188,11 +219,16 @@ public final class SessionsModel {
     async let tools = capture { () async throws(HistoryAPIError) in
       try await client.tools(range: range, limit: toolLimit)
     }
+    async let blocks = capture { () async throws(HistoryAPIError) in
+      try await client.blocks(
+        HistoryBlocksQuery(activeOnly: false, scope: .allMachines, since: blocksSince))
+    }
     let reports = SessionsAnalytics.Reports(
-      day: try await day.get(), model: try await model.get(), source: try await source.get(),
+      model: try await model.get(), source: try await source.get(),
       workspace: try await workspace.get(), machine: try await machine.get())
-    return try SessionsAnalytics(
-      range: range, reports: reports, tools: try await tools.get(), calendar: calendar)
+    return SessionsAnalytics(
+      range: range, reports: reports, tools: try await tools.get(),
+      blocks: try await blocks.get())
   }
 
   nonisolated private static func capture<Value>(

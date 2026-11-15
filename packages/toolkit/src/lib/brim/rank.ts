@@ -1,6 +1,12 @@
 import { z } from "zod";
 import { COCOA_EPOCH_OFFSET_SECONDS, cocoaToMs } from "#lib/brim/cache.ts";
 import type { UsageSnapshot, UsageWindow } from "#lib/brim/cache.ts";
+import {
+  computePace,
+  windowKind,
+  windowUsedPercent,
+  type PaceStatus,
+} from "#lib/brim/pace.ts";
 
 const StaleDetailSchema = z.object({ reason: z.string().min(1) });
 
@@ -86,8 +92,6 @@ export function displayName(provider: string): string {
   return DISPLAY_NAMES[provider] ?? provider;
 }
 
-export type PaceStatus = "ahead" | "on-pace" | "behind";
-
 /** The quota budget a ranking entry is ordered by. */
 export type BudgetKind = "weekly" | "monthly";
 
@@ -138,32 +142,17 @@ export type RankOptions = {
   readonly nowMs?: number;
 };
 
-const WEEK_SECONDS = 7 * 86_400;
-/**
- * Cursor-style billing cycles have no machine-readable length, so monthly
- * pacing assumes a 30-day cycle. Ranking degrades to plain consumption order
- * when the reset falls outside it.
- */
-const MONTH_SECONDS = 30 * 86_400;
-const ON_PACE_TOLERANCE = 0.15;
-
-function kindKey(window: UsageWindow): string {
-  const keys = Object.keys(window.kind);
-  const first = keys[0];
-  return first ?? "";
-}
-
 /** Mirrors `UsageWindow.isWeekly`: exact weekly kinds plus weekly labels. */
 export function isWeeklyWindow(window: UsageWindow): boolean {
   return (
-    kindKey(window) === "weekly" ||
+    windowKind(window) === "weekly" ||
     window.label.toLowerCase().includes("weekly")
   );
 }
 
 export function isMonthlyWindow(window: UsageWindow): boolean {
   return (
-    kindKey(window) === "monthly" ||
+    windowKind(window) === "monthly" ||
     window.label.toLowerCase().includes("monthly")
   );
 }
@@ -174,69 +163,6 @@ export function isMonthlyWindow(window: UsageWindow): boolean {
  */
 export function isFiveHourWindow(window: UsageWindow): boolean {
   return window.label.toLowerCase().includes("5-hour");
-}
-
-function usedValue(window: UsageWindow): number | null {
-  const used = window.usedPercent;
-  if (used === null || used === undefined) return null;
-  return Number.isFinite(used) ? used : null;
-}
-
-function paceForDuration(
-  used: number,
-  secondsRemaining: number,
-  totalSeconds: number,
-): PaceStatus | null {
-  if (
-    !Number.isFinite(secondsRemaining) ||
-    secondsRemaining <= 0 ||
-    secondsRemaining > totalSeconds
-  ) {
-    return null;
-  }
-  const remaining = 100 - used;
-  const daysRemaining = secondsRemaining / 86_400;
-  const evenPace = 100 / (totalSeconds / 86_400);
-  const actualPace = remaining / daysRemaining;
-  if (actualPace >= evenPace * (1 + ON_PACE_TOLERANCE)) return "ahead";
-  return actualPace <= evenPace * (1 - ON_PACE_TOLERANCE)
-    ? "behind"
-    : "on-pace";
-}
-
-/**
- * Port of Brim's `WindowPacing.compute`: compares remaining-per-day against
- * an even weekly burn. Returns null for non-weekly windows, missing data, or
- * resets outside the (0, 7d] range. Times are Cocoa seconds; only their
- * difference matters, so no epoch conversion is needed.
- */
-export function computePace(
-  window: UsageWindow,
-  nowCocoaSeconds: number,
-): PaceStatus | null {
-  if (kindKey(window) !== "weekly") return null;
-  const used = usedValue(window);
-  const resetAt = window.resetAt;
-  return used === null || resetAt === null || resetAt === undefined
-    ? null
-    : paceForDuration(used, resetAt - nowCocoaSeconds, WEEK_SECONDS);
-}
-
-/**
- * Monthly equivalent of `computePace` over an assumed 30-day billing cycle.
- * Cursor exposes no machine-readable cycle length, so this is a ranking aid,
- * not Brim-parity display data.
- */
-export function computeMonthlyPace(
-  window: UsageWindow,
-  nowCocoaSeconds: number,
-): PaceStatus | null {
-  if (kindKey(window) !== "monthly") return null;
-  const used = usedValue(window);
-  const resetAt = window.resetAt;
-  return used === null || resetAt === null || resetAt === undefined
-    ? null
-    : paceForDuration(used, resetAt - nowCocoaSeconds, MONTH_SECONDS);
 }
 
 /** Display rounding for provider percentages (86.4155 -> "86.4%"). */
@@ -325,7 +251,7 @@ type ClassifiedEntry = {
 function tightestFiveHourUsed(windows: readonly UsageWindow[]): number | null {
   let tightest: number | null = null;
   for (const window of windows) {
-    const used = isFiveHourWindow(window) ? usedValue(window) : null;
+    const used = isFiveHourWindow(window) ? windowUsedPercent(window) : null;
     if (used !== null && (tightest === null || used > tightest)) {
       tightest = used;
     }
@@ -347,7 +273,7 @@ function leastUsed(
   let best: UsageWindow | null = null;
   let bestUsed = 0;
   for (const window of windows) {
-    const used = usedValue(window) ?? 0;
+    const used = windowUsedPercent(window) ?? 0;
     if (best === null || used < bestUsed) {
       best = window;
       bestUsed = used;
@@ -363,7 +289,7 @@ function tightestUsed(
   let tightest: UsageWindow | null = null;
   let tightestUsedValue = 0;
   for (const window of windows) {
-    const used = usedValue(window) ?? 0;
+    const used = windowUsedPercent(window) ?? 0;
     if (tightest === null || used > tightestUsedValue) {
       tightest = window;
       tightestUsedValue = used;
@@ -379,12 +305,9 @@ function paceForBudget(
   kind: BudgetKind,
   nowCocoa: number,
 ): PaceStatus | null {
-  const exact = candidates.filter((window) => kindKey(window) === kind);
+  const exact = candidates.filter((window) => windowKind(window) === kind);
   const target = tightestUsed(exact) ?? tightestUsed(candidates);
-  if (target === null) return null;
-  return kind === "weekly"
-    ? computePace(target.window, nowCocoa)
-    : computeMonthlyPace(target.window, nowCocoa);
+  return target === null ? null : computePace(target.window, nowCocoa);
 }
 
 function classifySnapshot(
@@ -426,7 +349,7 @@ function classifySnapshot(
   }
 
   const usable = snapshot.windows.filter(
-    (window) => usedValue(window) !== null,
+    (window) => windowUsedPercent(window) !== null,
   );
   const fiveHourUsed = tightestFiveHourUsed(usable);
   if (fiveHourUsed !== null) {

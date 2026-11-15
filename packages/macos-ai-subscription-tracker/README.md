@@ -38,14 +38,38 @@ unset, adds a "Plan unavailable" note, and never fails or stales the usage.
 The compact subscription view sorts providers by their tightest current quota,
 keeps each quota and reset on one line, and uses pressure colors only for low or
 critical remaining usage. Cached values remain visible but dimmed and stale.
-Claude Code and Codex also show today's token total and an API list-price
-estimate read from their local CLI logs. That caption is separate from the
-quota percentage, the monthly admin invoice, and the API credit balance. A
-missing log directory omits it. An unknown model still counts toward the token
-total and drops the dollar amount for that day. When `brim sync pull` has
-mirrored other machines into `~/.toolkit/brim-sync/mirror/`, a second
-`All machines` line adds their usage for the same calendar day; see
-[Sync agent history across machines](../docs/wiki/src/content/docs/how-to/sync-agent-history-across-machines.md).
+
+Every quota window with a known length is paced: 5-hour and other rolling
+windows by their own duration, weekly windows by a week, monthly windows by the
+calendar month before their reset, and windows typed per model (Antigravity's
+Gemini and Claude/GPT buckets, Claude's scoped weekly limits) by the period
+their label names. The row says whether the remaining share is ahead of, on, or
+behind an even burn, in %/h for windows of a day or less and %/d otherwise.
+When the rate used since the window began would empty it before its reset, the
+row says when instead, for example `behind · runs out ~3:40 PM`.
+
+Under its windows, each provider shows lines from the toolkit history daemon,
+read once per refresh:
+
+- `Block $2.20 · $1.10/h · 2h 20m left`: the agent's active 5-hour usage block
+  across every machine (`/v1/blocks?active=true&machine=all`), with its
+  list-price cost so far, burn rate, and time left. The tooltip has the
+  projected tokens and cost at its end, and whether the block matches the
+  provider's own 5-hour quota window.
+- `Today: 1.2M tok · $4.20`: this Mac's tokens and API list-price estimate for
+  the local calendar day, from one
+  `/v1/usage?period=day&breakdown=agent,model,machine` report. When
+  `brim sync pull` has mirrored another machine that used the agent today, an
+  `All machines` line adds it; see
+  [Sync agent history across machines](../docs/wiki/src/content/docs/how-to/sync-agent-history-across-machines.md).
+
+Providers map to history agents one to one (Claude Code is `claude`, Kimi Code
+is `kimi`, Meta Muse is `muse`, and so on). A cost marked `≥` is a lower bound
+because a model has no list price; the tooltip names those models. `—` means
+nothing could be priced. The estimate is separate from the quota percentage,
+the monthly admin invoice, and the API credit balance. If the daemon is not
+running, the list says so and shows `toolkit history daemon install`; Brim
+never reads agent logs itself.
 The `API & routers` segment reports OpenAI and Anthropic organization API spend
 for the current local month.
 
@@ -63,8 +87,13 @@ for past agent sessions recorded by the toolkit history index:
 - A session's **Conversation** tab pages through its messages (200 at a time).
   Each tool call is collapsed under its tool name, with its **Output** rows
   collapsed inside it. **Usage** breaks its tokens down by type.
-- **Analytics** charts daily cost and tokens, cost by model, agent, project,
-  and machine, and the most-called tools for the selected time range.
+- **Analytics** stacks cost and tokens per day, week, or month by agent,
+  model, project, or machine (`/v1/usage?period=…&breakdown=…` in this Mac's
+  time zone and week start), and notes any models with no list price. A
+  timeline shows every agent's 5-hour blocks over the last three days, with
+  the active ones highlighted and projected to their end. Cost by model,
+  agent, project, and machine, and the most-called tools, follow. Everything
+  covers the selected time range except the blocks timeline.
 
 A session's **Requests** tab lists the raw API requests `brim capture`
 recorded for it (`/v1/captures?session=<id>`): each request's time, model,

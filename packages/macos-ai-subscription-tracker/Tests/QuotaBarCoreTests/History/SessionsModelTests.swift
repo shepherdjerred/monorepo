@@ -193,44 +193,60 @@ final class SessionsModelTests: XCTestCase {
 
   func testLoadsAnalyticsForTheRange() async throws {
     let transport = fixtureTransport()
-    var calendar = Calendar(identifier: .gregorian)
-    calendar.timeZone = utcTimeZone()
-    let model = SessionsModel(client: HistoryClient(transport: transport), calendar: calendar)
+    let model = SessionsModel(client: HistoryClient(transport: transport))
     model.range = .week
     await model.loadAnalytics()
     XCTAssertEqual(model.analyticsPhase, .loaded)
     let analytics = try XCTUnwrap(model.analytics)
     XCTAssertEqual(analytics.range, .week)
-    XCTAssertEqual(
-      analytics.daily.map(\.day), [date("2026-11-07T00:00:00Z"), date("2026-11-08T00:00:00Z")])
-    XCTAssertEqual(analytics.daily.first?.id, date("2026-11-07T00:00:00Z"))
-    XCTAssertEqual(analytics.daily.last?.usage.costUSD, 14.52)
     XCTAssertEqual(analytics.total.costUSD, 15.4)
     XCTAssertEqual(analytics.byModel.map(\.key), ["gpt-5.5-codex", "claude-opus-5-5"])
     XCTAssertEqual(analytics.bySource.map(\.key), ["codex-mirror", "claude"])
     XCTAssertEqual(analytics.byMachine.map(\.key), [nil, "jerred-desktop"])
     XCTAssertEqual(analytics.byWorkspace.count, 2)
     XCTAssertEqual(analytics.tools.map(\.calls), [412, 160, 95])
+    XCTAssertEqual(analytics.blocks.blocks.count, 3)
     let targets = Set(await transport.log.targets)
     XCTAssertTrue(targets.contains("/v1/tools?since=7d&limit=15"))
     XCTAssertTrue(targets.contains("/v1/usage?groupBy=machine&since=7d"))
+    XCTAssertTrue(targets.contains("/v1/blocks?machine=all&since=3d"))
+    XCTAssertFalse(targets.contains { $0.contains("groupBy=day") })
   }
 
-  func testAnalyticsFailsOnAnUnreadableDayKey() async {
-    let model = SessionsModel(
-      client: HistoryClient(
-        transport: FakeHistoryTransport { path, target in
-          let response = try fixtureTransport().handler(path, target)
-          guard target.contains("groupBy=day") else { return response }
-          let text = utf8Text(response.body)
-            .replacingOccurrences(of: "2026-11-07", with: "Saturday")
-          return jsonResponse(text)
-        }))
-    await model.loadAnalytics()
+  func testLoadsThePeriodChartForThePickers() async throws {
+    let transport = fixtureTransport()
+    var calendar = Calendar(identifier: .gregorian)
+    calendar.timeZone = try XCTUnwrap(TimeZone(identifier: "America/Los_Angeles"))
+    calendar.firstWeekday = 2
+    let model = SessionsModel(client: HistoryClient(transport: transport), calendar: calendar)
+    model.range = .month
+    model.usagePeriod = .week
+    model.usageDimension = .machine
     XCTAssertEqual(
-      model.analyticsPhase.error,
-      .decoding(path: "/v1/usage", detail: "day key Saturday is not YYYY-MM-DD"))
-    XCTAssertNil(model.analytics)
+      model.periodQuery, UsagePeriodQuery(range: .month, period: .week, dimension: .machine))
+    await model.loadPeriodChart()
+    XCTAssertEqual(model.periodChartPhase, .loaded)
+    let chart = try XCTUnwrap(model.periodChart)
+    XCTAssertEqual(chart.dimension, .machine)
+    XCTAssertEqual(chart.series, ["This Mac", "jerred-desktop"])
+    XCTAssertEqual(chart.unpricedModels, ["gpt-preview-x"])
+    XCTAssertEqual(chart.activePeriods, 2)
+    let targets = await transport.log.targets
+    XCTAssertEqual(
+      targets,
+      [
+        "/v1/usage?period=week&breakdown=machine&timezone=America%2FLos_Angeles"
+          + "&startOfWeek=monday&since=30d"
+      ])
+  }
+
+  func testAPeriodChartFailureIsTyped() async {
+    let model = SessionsModel(
+      client: HistoryClient(transport: fixtureTransport(failing: "/v1/usage")))
+    await model.loadPeriodChart()
+    XCTAssertEqual(model.periodChartPhase.error?.fixCommand, nil)
+    XCTAssertNotNil(model.periodChartPhase.error)
+    XCTAssertNil(model.periodChart)
   }
 
   func testAnAnalyticsFailureIsTyped() async {

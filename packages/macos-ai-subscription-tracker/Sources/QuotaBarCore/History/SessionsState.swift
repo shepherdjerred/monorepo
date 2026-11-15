@@ -1,4 +1,4 @@
-public import Foundation
+import Foundation
 
 /// What the Sessions window's sidebar has selected.
 public enum SessionsSidebarItem: Hashable, Sendable {
@@ -166,29 +166,21 @@ public struct SessionConversation: Equatable, Sendable {
   }
 }
 
-/// One local calendar day of usage for the daily charts.
-public struct HistoryDailyPoint: Identifiable, Equatable, Sendable {
-  public let day: Date
-  public let usage: HistoryUsage
-  public let sessionCount: Int
-
-  public var id: Date { day }
-}
-
-/// Everything the Analytics pane charts, for one time range.
+/// Everything the Analytics pane shows besides the period charts, for one
+/// time range.
 public struct SessionsAnalytics: Equatable, Sendable {
   public let range: HistoryTimeRange
-  public let daily: [HistoryDailyPoint]
   public let total: HistoryUsage
   public let byModel: [HistoryUsageRow]
   public let bySource: [HistoryUsageRow]
   public let byWorkspace: [HistoryUsageRow]
   public let byMachine: [HistoryUsageRow]
   public let tools: [HistoryToolRow]
+  /// Every machine's 5-hour blocks over the last three days.
+  public let blocks: HistoryBlocksReport
 
-  /// The five `/v1/usage` reports the pane needs, one per grouping.
+  /// The four `/v1/usage` reports the pane needs, one per grouping.
   struct Reports {
-    let day: HistoryUsageReport
     let model: HistoryUsageReport
     let source: HistoryUsageReport
     let workspace: HistoryUsageReport
@@ -196,30 +188,16 @@ public struct SessionsAnalytics: Equatable, Sendable {
   }
 
   init(
-    range: HistoryTimeRange, reports: Reports, tools: HistoryToolsReport, calendar: Calendar
-  ) throws(HistoryAPIError) {
+    range: HistoryTimeRange, reports: Reports, tools: HistoryToolsReport,
+    blocks: HistoryBlocksReport
+  ) {
     self.range = range
-    total = reports.day.total
-    daily = try reports.day.rows.map { row throws(HistoryAPIError) in
-      HistoryDailyPoint(
-        day: try Self.day(row.key, calendar: calendar), usage: row.usage,
-        sessionCount: row.sessionCount)
-    }
+    total = reports.source.total
     byModel = reports.model.rows
     bySource = reports.source.rows
     byWorkspace = reports.workspace.rows
     byMachine = reports.machine.rows
     self.tools = tools.rows
-  }
-
-  private static func day(_ key: String?, calendar: Calendar) throws(HistoryAPIError) -> Date {
-    let parts = key?.split(separator: "-").compactMap { Int($0) } ?? []
-    guard parts.count == 3,
-      let date = calendar.date(
-        from: DateComponents(year: parts[0], month: parts[1], day: parts[2]))
-    else {
-      throw .decoding(path: "/v1/usage", detail: "day key \(key ?? "null") is not YYYY-MM-DD")
-    }
-    return date
+    self.blocks = blocks
   }
 }

@@ -14,6 +14,22 @@ final class HistoryFormatTests: XCTestCase {
     XCTAssertNotNil(HistoryFormat.costNote(HistoryUsage(costComplete: false)))
   }
 
+  func testEstimateIsADashWhenNothingWasPriced() {
+    XCTAssertEqual(HistoryFormat.estimate(HistoryUsage(costUSD: 0, costComplete: false)), "—")
+    XCTAssertEqual(HistoryFormat.estimate(HistoryUsage(costUSD: 0)), "$0.00")
+    XCTAssertEqual(
+      HistoryFormat.estimate(HistoryUsage(costUSD: 1.5, costComplete: false)), "≥ $1.50")
+  }
+
+  func testTokensUseCompactUnits() {
+    XCTAssertEqual(HistoryFormat.tokens(999), "999")
+    XCTAssertEqual(HistoryFormat.tokens(1_000), "1K")
+    XCTAssertEqual(HistoryFormat.tokens(1_500), "1.5K")
+    XCTAssertEqual(HistoryFormat.tokens(999_940), "999.9K")
+    XCTAssertEqual(HistoryFormat.tokens(999_950), "1.0M")
+    XCTAssertEqual(HistoryFormat.tokens(1_200_000), "1.2M")
+  }
+
   func testTokensWorkspacesAndMachines() {
     XCTAssertEqual(HistoryFormat.tokens(6_120_334), "6.1M")
     XCTAssertEqual(HistoryFormat.tokens(912), "912")

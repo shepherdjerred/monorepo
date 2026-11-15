@@ -30,12 +30,18 @@ flowchart LR
 
 ## Boundaries
 
-The subscription side tracks quota. Claude Code and Codex also show today's
-tokens and an API list-price estimate from local CLI logs. That caption is a
-separate ledger from the quota percentage and from monthly API spend. Brim
-keeps it out of the snapshot cache, so a stale quota can still show today's
-logs. The app does not show provider API rate cards, notifications, or a full
-usage dashboard. Local quota samples still power the History graph.
+The subscription side tracks quota. Each provider row also shows the agent's
+active 5-hour usage block and today's tokens and API list-price estimate. Those
+come from the toolkit history daemon, not from Brim reading agent logs, so
+every agent the index reads (Claude Code, Codex, Grok, Kimi Code, Antigravity,
+Meta Muse, Cursor) gets the same treatment, priced by one catalog and counted
+across mirrored machines. They are a separate ledger from the quota percentage
+and from monthly API spend. Brim keeps them out of the snapshot cache, so a
+stale quota can still show today's usage. When the daemon is not running the
+list says so and shows the fix; it does not fall back to parsing logs, because
+a second parser and price list would drift from toolkit's. The app does not
+show provider API rate cards or notifications. Local quota samples still power
+the History graph.
 The popover includes a personal subscription-spend reminder: $200/month each
 for Claude Code and Codex, $20/month each for Google AI Pro and Cursor Pro,
 $30/month for Grok, $40/month for Kimi Code, and $15/month for Meta Muse
@@ -53,6 +59,15 @@ provider sections by current remaining usage. Quota windows and Claude, Codex,
 and Grok reset expirations use compact rows; healthy values stay neutral while orange and red
 are reserved for pressure. Policy-only Fable data, stale snapshots, unknown
 percentages, and provider errors remain explicit without invented progress.
+Pacing compares each window's remaining share with an even burn over its whole
+length. That needs the length, which the provider types give only for rolling,
+weekly, and monthly windows. Windows typed per model, such as Antigravity's
+Gemini and Claude/GPT buckets, name their period only in their label, so Brim
+reads `5-hour`, `weekly`, or `monthly` from the label rather than skipping
+them. A monthly window is the calendar month before its reset. When the rate
+used since a window began would empty it before the reset, the row shows the
+projected run-out time, which says more than a ratio of rates.
+`toolkit brim` ranks with the same duration rules.
 These choices are derived by the
 [quota overview model](https://github.com/shepherdjerred/monorepo/blob/231bac375d228b685e12308a1d02d243cb3d1481/packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/QuotaOverview.swift)
 and rendered by the
@@ -68,12 +83,10 @@ Brim shows them only when the Admin API returns a remaining amount and the
 expiry on that payload. It does not invent an expiration or scrape the billing
 page. Those Admin APIs currently return spend, not credit balances, so the
 card says the balances were not returned while monthly spend still appears.
-Prices for the subscription caption come from a checked-in
-[models.dev](https://models.dev) snapshot, so the menu does not shell out to
-another CLI or price an unknown model at zero. The menu renders that caption
-from the
-[menu-bar view](https://github.com/shepherdjerred/monorepo/blob/231bac375d228b685e12308a1d02d243cb3d1481/packages/macos-ai-subscription-tracker/Sources/QuotaBar/MenuBarView.swift),
-and the credit rows live beside the spend metrics in the
+The usage captions' prices come from toolkit's price catalog through the
+daemon's usage report, which never prices an unknown model at zero: it lists
+the model and marks the cost a lower bound. The credit rows live beside the
+spend metrics in the
 [API platform model](https://github.com/shepherdjerred/monorepo/blob/0f2406136198b98bae3d79d2be1fe9254cf55101/packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/APIPlatform.swift).
 
 Claude and Codex use private authenticated subscription usage surfaces. Claude
@@ -251,13 +264,14 @@ flowchart LR
   M2[Mac: brim sync run] <--> B
   M1 --> X[~/.toolkit/brim-sync/mirror]
   X --> H[toolkit history mirror sources]
-  X --> U[Brim All machines caption]
+  H --> U[Brim usage captions and Sessions]
 ```
 
 The engine lives in toolkit's standalone `brim` binary, not in the Swift app.
 Brim only runs on macOS, while Bun compiles the same code for Windows. Brim
-reads the mirror's [index contract](packages/toolkit/schemas/brim-sync-mirror-index.schema.json)
-from disk and never holds S3 credentials. The
+sees the mirror only through the toolkit history daemon and never holds S3
+credentials; toolkit reads the mirror's
+[index contract](packages/toolkit/schemas/brim-sync-mirror-index.schema.json). The
 [push engine](packages/toolkit/src/lib/brim/sync/push.ts) relies on transcripts
 only growing. Each run uploads just the new complete lines as one segment. A
 file that shrinks or whose tail changes starts a new generation instead of
@@ -296,8 +310,8 @@ indexes it as separate `<agent>-mirror` sources, such as `claude-mirror` and
 `muse-mirror`, labelled by machine. Their tokens are excluded from the usage-export ledger, because each
 machine already exports its own. Codex mirror documents come from the rollout
 JSONL itself: Codex keeps message text in a local database that is not synced.
-Brim's `All machines` caption counts mirrored logs for this Mac's calendar day
-with the same parsers as the local caption.
+Brim's `All machines` caption is the same daemon usage report, split by
+machine, for this Mac's calendar day.
 
 ## Sessions
 
@@ -309,6 +323,16 @@ to the history daemon's read-only
 `~/.toolkit/history/daemon.sock`, which the
 [daemon serves](packages/toolkit/src/lib/history/serve.ts). Brim never opens
 `index.sqlite` or a transcript itself.
+
+Analytics is built on the daemon's calendar usage report and 5-hour blocks.
+The report buckets events into days, weeks, or months of this Mac's time zone
+and week start, so a bar means the same thing as a day in the menu caption.
+Stacking by agent, model, project, or machine is a request parameter rather
+than a client-side join, which keeps the Swift side free of pricing and
+grouping rules. Blocks follow ccusage: a block starts at its first event and
+lasts five hours, unless Brim's own snapshot says the provider's 5-hour quota
+window is current, in which case the active block is that window. The
+timeline therefore lines up with the quota it is spending.
 
 The index is toolkit's private storage. Its tables, its rebuild policy, and
 how each source's transcripts are parsed change with toolkit, and a second

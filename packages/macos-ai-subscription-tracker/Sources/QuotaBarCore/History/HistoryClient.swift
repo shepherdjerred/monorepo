@@ -47,6 +47,20 @@ public struct HistoryClient: Sendable {
     try await fetch(.usage(group, range: range, source: source))
   }
 
+  /// Usage bucketed into calendar periods, broken down by `query.breakdown`.
+  public func usageReport(_ query: HistoryUsageReportQuery) async throws(HistoryAPIError)
+    -> HistoryPeriodUsageReport
+  {
+    try await fetch(.usageReport(query))
+  }
+
+  /// Each agent's 5-hour usage blocks, with the active one's projection.
+  public func blocks(_ query: HistoryBlocksQuery) async throws(HistoryAPIError)
+    -> HistoryBlocksReport
+  {
+    try await fetch(.blocks(query))
+  }
+
   /// Every machine, source, and workspace with indexed sessions.
   public func facets() async throws(HistoryAPIError) -> HistoryFacetsReport {
     try await fetch(.facets)

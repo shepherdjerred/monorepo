@@ -1,10 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { COCOA_EPOCH_OFFSET_SECONDS } from "#lib/brim/cache.ts";
 import type { UsageSnapshot, UsageWindow } from "#lib/brim/cache.ts";
+import { computePace, windowDurationSeconds } from "#lib/brim/pace.ts";
 import {
   ageString,
-  computeMonthlyPace,
-  computePace,
   countdown,
   formatPercent,
   isFiveHourWindow,
@@ -81,6 +80,67 @@ describe("window selectors", () => {
   });
 });
 
+function hoursWin(
+  label: string,
+  kind: Record<string, unknown>,
+  used: number,
+  resetInHours: number,
+): UsageWindow {
+  return {
+    ...win(label, kind, used, null),
+    resetAt: NOW_COCOA + resetInHours * 3600,
+  };
+}
+
+describe("windowDurationSeconds", () => {
+  it("uses a rolling window's own duration", () => {
+    expect(
+      windowDurationSeconds(
+        win("5-hour", { rolling: { durationSeconds: 18_000 } }, 10, 1),
+      ),
+    ).toBe(18_000);
+    expect(
+      windowDurationSeconds(
+        win("Daily", { rolling: { durationSeconds: 86_400 } }, 10, 1),
+      ),
+    ).toBe(86_400);
+  });
+
+  it("reads the period from per-model labels", () => {
+    const gemini = { modelScoped: { model: "Gemini" } };
+    expect(windowDurationSeconds(win("Gemini 5-hour", gemini, 10, 1))).toBe(
+      18_000,
+    );
+    expect(windowDurationSeconds(win("Gemini weekly", gemini, 10, 1))).toBe(
+      7 * 86_400,
+    );
+    expect(windowDurationSeconds(win("Gemini", gemini, 10, 1))).toBe(null);
+    expect(
+      windowDurationSeconds(win("Policy", { entitlement: {} }, 0, 1)),
+    ).toBe(null);
+  });
+
+  it("uses the calendar month before a monthly reset", () => {
+    const window = (ms: number): UsageWindow => ({
+      ...win("Cursor Models", { monthly: {} }, 10, null),
+      resetAt: ms / 1000 - COCOA_EPOCH_OFFSET_SECONDS,
+    });
+    // Oct 22 -> Sep 22 is 30 days; Mar 31 clamps to Feb 28 (2027 is not a leap year).
+    expect(windowDurationSeconds(window(Date.UTC(2026, 9, 22)))).toBe(
+      30 * 86_400,
+    );
+    expect(windowDurationSeconds(window(Date.UTC(2027, 2, 31)))).toBe(
+      31 * 86_400,
+    );
+    expect(windowDurationSeconds(window(Date.UTC(2027, 0, 15)))).toBe(
+      31 * 86_400,
+    );
+    expect(
+      windowDurationSeconds(win("Cursor Models", { monthly: {} }, 10, null)),
+    ).toBe(null);
+  });
+});
+
 describe("computePace", () => {
   it("reports ahead when remaining burn exceeds the even pace", () => {
     // 90% remaining with 2 days left: 45%/d vs ~14.3%/d even.
@@ -94,56 +154,54 @@ describe("computePace", () => {
     expect(computePace(window, NOW_COCOA)).toBe("behind");
   });
 
-  it("returns null for non-weekly kinds, matching Brim", () => {
-    const window = win(
-      "Gemini weekly",
-      { modelScoped: { model: "Gemini" } },
-      10,
-      2,
+  it("paces Antigravity's per-model windows by their label", () => {
+    const gemini = { modelScoped: { model: "Gemini" } };
+    expect(computePace(win("Gemini weekly", gemini, 10, 2), NOW_COCOA)).toBe(
+      "ahead",
     );
-    expect(computePace(window, NOW_COCOA)).toBe(null);
+    // 20% left with 4 of 5 hours to go: 5%/h vs 20%/h even.
+    expect(
+      computePace(hoursWin("Gemini 5-hour", gemini, 80, 4), NOW_COCOA),
+    ).toBe("behind");
   });
 
-  it("returns null for resets outside the (0, 7d] range", () => {
+  it("paces 5-hour rolling windows", () => {
+    // 50% left with 2.5 of 5 hours to go is an even split.
+    expect(
+      computePace(
+        hoursWin("5-hour", { rolling: { durationSeconds: 18_000 } }, 50, 2.5),
+        NOW_COCOA,
+      ),
+    ).toBe("on-pace");
+  });
+
+  it("reports monthly pace over the calendar month", () => {
+    // 90% remaining with 20 days left: 4.5%/d vs ~3.3%/d even.
+    expect(
+      computePace(win("Cursor Models", { monthly: {} }, 10, 20), NOW_COCOA),
+    ).toBe("ahead");
+    // 14% remaining with 9 days left: ~1.6%/d vs ~3.3%/d even.
+    expect(
+      computePace(win("Cursor Models", { monthly: {} }, 86, 9), NOW_COCOA),
+    ).toBe("behind");
+  });
+
+  it("returns null for windows without a duration", () => {
+    expect(computePace(win("Credits", { credits: {} }, 10, 2), NOW_COCOA)).toBe(
+      null,
+    );
+  });
+
+  it("returns null for resets outside the (0, duration] range", () => {
     expect(computePace(win("Weekly", { weekly: {} }, 10, 0), NOW_COCOA)).toBe(
       null,
     );
     expect(computePace(win("Weekly", { weekly: {} }, 10, 8), NOW_COCOA)).toBe(
       null,
     );
-  });
-});
-
-describe("computeMonthlyPace", () => {
-  it("reports ahead with most of a monthly budget left", () => {
-    // 90% remaining with 20 days left: 4.5%/d vs ~3.3%/d even.
-    const window = win("Cursor Models", { monthly: {} }, 10, 20);
-    expect(computeMonthlyPace(window, NOW_COCOA)).toBe("ahead");
-  });
-
-  it("reports behind when a monthly budget is nearly spent", () => {
-    // 14% remaining with 9 days left: ~1.6%/d vs ~3.3%/d even.
-    const window = win("Cursor Models", { monthly: {} }, 86, 9);
-    expect(computeMonthlyPace(window, NOW_COCOA)).toBe("behind");
-  });
-
-  it("returns null for non-monthly kinds", () => {
-    const window = win("Weekly", { weekly: {} }, 10, 3);
-    expect(computeMonthlyPace(window, NOW_COCOA)).toBe(null);
-  });
-
-  it("returns null for resets outside the assumed 30-day cycle", () => {
+    // Sep 21 + 31 days is Oct 22, whose month began Sep 22: 30 days.
     expect(
-      computeMonthlyPace(
-        win("Cursor Models", { monthly: {} }, 10, 0),
-        NOW_COCOA,
-      ),
-    ).toBe(null);
-    expect(
-      computeMonthlyPace(
-        win("Cursor Models", { monthly: {} }, 10, 31),
-        NOW_COCOA,
-      ),
+      computePace(win("Cursor Models", { monthly: {} }, 10, 31), NOW_COCOA),
     ).toBe(null);
   });
 });

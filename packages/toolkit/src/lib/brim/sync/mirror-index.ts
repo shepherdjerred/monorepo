@@ -6,11 +6,11 @@ import type { SyncTool } from "./manifest.ts";
  * `~/.toolkit/brim-sync/mirror/index.json` tells local readers which remote
  * machines have been pulled and where their read-only transcripts live.
  *
- * It is a cross-language contract: `toolkit history` reads it here and Brim
- * (Swift) decodes it in `MirrorIndex.swift`. The checked-in JSON Schema at
- * `packages/toolkit/schemas/brim-sync-mirror-index.schema.json` is the
- * language-neutral source of truth; tests in both languages decode the same
- * fixture, and a TS test keeps this zod schema identical to it.
+ * `toolkit history` reads it here; Brim sees mirrored usage only through the
+ * history daemon. The checked-in JSON Schema at
+ * `packages/toolkit/schemas/brim-sync-mirror-index.schema.json` documents it
+ * language-neutrally; a TS test decodes the shared fixture and keeps this zod
+ * schema identical to it.
  */
 
 export const MIRROR_INDEX_SCHEMA_VERSION = 1;
