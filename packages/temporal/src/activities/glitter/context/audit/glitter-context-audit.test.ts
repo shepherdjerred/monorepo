@@ -194,7 +194,7 @@ describe("Glitter context zero-inference audit", () => {
           if (key.includes("/glitter-style-chunk/")) {
             return storedArtifact({
               key,
-              model: "gpt-5.6-luna",
+              model: "gpt-6-luna",
               callSite: "glitter-style-chunk",
               response: {
                 outcome: "success",
@@ -236,7 +236,7 @@ describe("Glitter context zero-inference audit", () => {
         read: async (key) =>
           storedArtifact({
             key,
-            model: "gpt-5.6-luna",
+            model: "gpt-6-luna",
             callSite: "glitter-context-relationships",
             response: { outcome: "success", value: { proposals: [] } },
           }),
@@ -263,7 +263,7 @@ describe("Glitter context audit failure parity", () => {
         read: async (key) =>
           storedArtifact({
             key,
-            model: "gpt-5.6-luna",
+            model: "gpt-6-luna",
             callSite: "glitter-context-relationships",
             response: {
               outcome: "failure",
@@ -289,7 +289,7 @@ describe("Glitter context audit failure parity", () => {
         read: async (key) =>
           storedArtifact({
             key,
-            model: "gpt-5.6-luna",
+            model: "gpt-6-luna",
             callSite: "glitter-context-relationships",
             response: {
               outcome: "success",
@@ -356,7 +356,7 @@ describe("Glitter context audit failure parity", () => {
           key.includes("/glitter-style-chunk/")
             ? storedArtifact({
                 key,
-                model: "gpt-5.6-luna",
+                model: "gpt-6-luna",
                 callSite: "glitter-style-chunk",
                 response: {
                   outcome: "success",
@@ -375,7 +375,7 @@ describe("Glitter context audit failure parity", () => {
               })
             : storedArtifact({
                 key,
-                model: "gpt-5.6-luna",
+                model: "gpt-6-luna",
                 callSite: key.includes("synthesis-repair")
                   ? "glitter-style-synthesis-repair"
                   : "glitter-style-synthesis",

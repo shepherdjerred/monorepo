@@ -57,7 +57,7 @@ test.each(["beta", "prod"])(
 );
 
 const PromotionSettings = z.strictObject({
-  model: z.literal("gpt-5.6-luna"),
+  model: z.literal("gpt-6-luna"),
   maxSteps: z.literal(80),
   timeoutMinutes: z.literal(15),
   monthlySolverUsd: z.literal(10),
