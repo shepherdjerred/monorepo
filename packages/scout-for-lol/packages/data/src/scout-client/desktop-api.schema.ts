@@ -25,8 +25,9 @@ import {
  * - 1: pairing v2, Explore status and conversation reads.
  * - 2: run start, stop, active, outcome and stream, and the `desktop`
  *   conversation origin, which a version-1 client is told is `web`.
+ * - 3: scope requests, which add a scope to an already paired device.
  */
-export const SCOUT_DESKTOP_CONTRACT_VERSION = 2;
+export const SCOUT_DESKTOP_CONTRACT_VERSION = 3;
 export const SCOUT_DESKTOP_MINIMUM_CONTRACT_VERSION = 1;
 export const SCOUT_DESKTOP_CONTRACT_HEADER = "X-Scout-Desktop-Contract";
 /** The first contract version that knows the `desktop` conversation origin. */
@@ -60,6 +61,12 @@ export const SCOUT_DESKTOP_API_ROUTES = {
   pairings_v2: {
     method: "POST",
     path: "/api/scout-client/v1/pairings/v2",
+    scope: null,
+    response: "json",
+  },
+  device_scope_requests: {
+    method: "POST",
+    path: "/api/scout-client/v1/devices/current/scope-requests",
     scope: null,
     response: "json",
   },
@@ -123,6 +130,7 @@ export const SCOUT_DESKTOP_API_ROUTES = {
 export type ScoutDesktopApiRoute = keyof typeof SCOUT_DESKTOP_API_ROUTES;
 export const ScoutDesktopApiRouteSchema = z.enum([
   "pairings_v2",
+  "device_scope_requests",
   "explore_status",
   "explore_conversations_list",
   "explore_conversations_get",
@@ -143,6 +151,7 @@ export const SCOUT_DESKTOP_API_ERRORS = {
   explore_forbidden: 403,
   not_found: 404,
   conversation_busy: 409,
+  scope_already_granted: 409,
   contract_unsupported: 426,
   rate_limited: 429,
   quota_exceeded: 429,
@@ -159,6 +168,7 @@ export const ScoutDesktopApiErrorCodeSchema = z.enum([
   "explore_forbidden",
   "not_found",
   "conversation_busy",
+  "scope_already_granted",
   "contract_unsupported",
   "rate_limited",
   "quota_exceeded",
@@ -193,6 +203,26 @@ export const ScoutDesktopPairingV2ResponseSchema = z.strictObject({
   scopes: z.array(ScoutDesktopScopeSchema).min(1),
   matchCode: ScoutDesktopPairingMatchCodeSchema,
 });
+
+/**
+ * A paired device asking for scopes it lacks. The device keeps its identity
+ * and token; the request only gives its owner something to approve on the web,
+ * and a device can never grant itself a scope.
+ */
+export const ScoutDesktopScopeRequestSchema = z.strictObject({
+  scopes: z.array(ScoutDesktopScopeSchema).min(1).max(2),
+});
+
+export const ScoutDesktopScopeRequestResponseSchema = z.strictObject({
+  requestId: z.uuid(),
+  approvalUrl: z.url(),
+  expiresAt: z.iso.datetime(),
+  scopes: z.array(ScoutDesktopScopeSchema).min(1),
+  matchCode: ScoutDesktopPairingMatchCodeSchema,
+});
+export type ScoutDesktopScopeRequestResponse = z.infer<
+  typeof ScoutDesktopScopeRequestResponseSchema
+>;
 
 export const ScoutDesktopExploreStatusRequestSchema = z.strictObject({});
 

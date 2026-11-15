@@ -19,7 +19,7 @@ use uuid::Uuid;
 use super::RuntimeCommand;
 use super::collection;
 use super::gameflow::collect_once;
-use super::pairing::{PendingPairing, handle_command, poll_pairing};
+use super::pairing::{CommandContext, PendingPairing, handle_command, poll_pairing};
 use super::paths::outbox_path;
 use super::replay::{
     ReplayUploadTask, cancel_replay_upload, finish_replay_upload, record_backend_outcome,
@@ -77,9 +77,13 @@ pub(super) async fn run_collector(
                     }
                     handle_command(
                         command,
-                        &state,
-                        &backend,
-                        &backend_origin,
+                        CommandContext {
+                            state: &state,
+                            backend: &backend,
+                            backend_origin: &backend_origin,
+                            outbox: &outbox,
+                            diagnostics: &diagnostics,
+                        },
                         &mut credential,
                         &mut pending_pairing,
                     ).await;

@@ -365,6 +365,20 @@ impl ObservationOutbox {
         .collect()
     }
 
+    /// How many observations are still waiting to be delivered.
+    ///
+    /// # Errors
+    ///
+    /// Returns a typed SQLite or numeric-range error.
+    pub fn pending_count(&self) -> Result<u64, OutboxError> {
+        let count: i64 =
+            self.connection()?
+                .query_row("SELECT COUNT(*) FROM observation_outbox", [], |row| {
+                    row.get(0)
+                })?;
+        u64::try_from(count).map_err(|_| OutboxError::SequenceRange)
+    }
+
     /// Remove a server-acknowledged observation.
     ///
     /// # Errors
@@ -1213,8 +1227,10 @@ mod tests {
         outbox.enqueue(&first)?;
         let pending = outbox.pending(100)?;
         assert_eq!(pending.len(), 2);
+        assert_eq!(outbox.pending_count()?, 2);
         assert_eq!(pending[0].sequence, 1);
         assert!(outbox.acknowledge(first.observation_id)?);
+        assert_eq!(outbox.pending_count()?, 1);
         assert_eq!(outbox.pending(100)?.len(), 1);
         assert_eq!(outbox.next_sequence()?, 3);
         assert_eq!(outbox.next_sequence()?, 4);

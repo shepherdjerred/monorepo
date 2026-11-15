@@ -237,7 +237,10 @@ impl ClientRuntime {
         self.log_directory.as_deref()
     }
 
-    /// Begin a new browser pairing request.
+    /// Get approval on the web. A computer that is not paired starts a fresh
+    /// pairing. One that is already paired (the chat window's "Approve on the
+    /// web" when the device lacks `explore`) asks its owner to add the scope
+    /// to the same device, so its id, token and queued uploads are kept.
     pub fn start_pairing(&self) {
         if self.commands.send(RuntimeCommand::StartPairing).is_err() {
             info!("Scout Client collector had already stopped");
@@ -245,6 +248,9 @@ impl ClientRuntime {
     }
 
     /// Delete the local credential and stop uploading until re-paired.
+    ///
+    /// Uploads still queued under the dropped device cannot move to the next
+    /// one, so the status line says how many were discarded.
     pub fn disconnect(&self) {
         if self.commands.send(RuntimeCommand::Disconnect).is_err() {
             info!("Scout Client collector had already stopped");

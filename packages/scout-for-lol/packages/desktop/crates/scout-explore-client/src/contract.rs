@@ -7,10 +7,11 @@ include!(concat!(env!("OUT_DIR"), "/desktop_contract.rs"));
 #[cfg(test)]
 mod tests {
     use scout_client_core::desktop_api::{
-        DESKTOP_CONTRACT_HEADER, DESKTOP_CONTRACT_VERSION, DesktopApiContract, DeviceScope,
-        EXPLORE_CONVERSATIONS_GET_PATH, EXPLORE_CONVERSATIONS_LIST_PATH, EXPLORE_RUNS_ACTIVE_PATH,
-        EXPLORE_RUNS_OUTCOME_PATH, EXPLORE_RUNS_START_PATH, EXPLORE_RUNS_STOP_PATH,
-        EXPLORE_RUNS_STREAM_PATH, EXPLORE_STATUS_PATH, PAIRINGS_V2_PATH, RouteResponseKind,
+        DESKTOP_CONTRACT_HEADER, DESKTOP_CONTRACT_VERSION, DEVICE_SCOPE_REQUESTS_PATH,
+        DesktopApiContract, DeviceScope, EXPLORE_CONVERSATIONS_GET_PATH,
+        EXPLORE_CONVERSATIONS_LIST_PATH, EXPLORE_RUNS_ACTIVE_PATH, EXPLORE_RUNS_OUTCOME_PATH,
+        EXPLORE_RUNS_START_PATH, EXPLORE_RUNS_STOP_PATH, EXPLORE_RUNS_STREAM_PATH,
+        EXPLORE_STATUS_PATH, PAIRINGS_V2_PATH, RouteResponseKind,
     };
 
     use super::{
@@ -53,6 +54,7 @@ mod tests {
         assert_eq!(DESKTOP_CONTRACT_HEADER, CONTRACT_HEADER);
         for (route, path) in [
             (Route::PairingsV2, PAIRINGS_V2_PATH),
+            (Route::DeviceScopeRequests, DEVICE_SCOPE_REQUESTS_PATH),
             (Route::ExploreStatus, EXPLORE_STATUS_PATH),
             (
                 Route::ExploreConversationsList,
@@ -73,9 +75,10 @@ mod tests {
     }
 
     #[test]
-    fn only_pairing_runs_without_the_explore_scope() {
+    fn only_pairing_and_scope_requests_run_without_the_explore_scope() {
         for route in Route::ALL {
-            let expected = (route != Route::PairingsV2).then_some(DeviceScope::Explore);
+            let expected = (route != Route::PairingsV2 && route != Route::DeviceScopeRequests)
+                .then_some(DeviceScope::Explore);
             assert_eq!(route.scope(), expected, "{}", route.name());
         }
     }

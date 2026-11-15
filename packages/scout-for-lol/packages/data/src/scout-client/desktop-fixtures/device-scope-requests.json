@@ -1,0 +1,21 @@
+{
+  "route": "device_scope_requests",
+  "request": { "scopes": ["explore"] },
+  "response": {
+    "requestId": "9c1d5b0e-6f0a-4c43-8d57-2a7b1e3f4a90",
+    "approvalUrl": "https://scout-for-lol.com/app/scout-client/pair/9c1d5b0e-6f0a-4c43-8d57-2a7b1e3f4a90",
+    "expiresAt": "2026-11-14T12:10:00.000Z",
+    "scopes": ["explore"],
+    "matchCode": "R4N-8WD"
+  },
+  "invalidRequests": [
+    { "reason": "an unknown scope", "body": { "scopes": ["admin"] } },
+    {
+      "reason": "an unknown key",
+      "body": {
+        "scopes": ["explore"],
+        "deviceId": "4fa2a856-53af-42a4-85af-5cc085a942a3"
+      }
+    }
+  ]
+}

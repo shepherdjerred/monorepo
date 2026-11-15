@@ -42,7 +42,13 @@ export const scoutClientRouter = router({
     .query(async ({ ctx, input }) => {
       await requireClientFeature(ctx.user.discordId);
       const pairing = await pairingForApproval(input.pairingId);
-      if (pairing === null) {
+      // An upgrade request names an existing device, so its page belongs to
+      // that device's owner alone; anyone else sees nothing.
+      if (
+        pairing === null ||
+        (pairing.upgradeDeviceId !== null &&
+          pairing.upgradeFor?.ownerId !== ctx.user.discordId)
+      ) {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "Pairing not found",
@@ -55,12 +61,15 @@ export const scoutClientRouter = router({
         architecture: pairing.architecture,
         appVersion: pairing.appVersion,
         scopes: pairing.scopes,
+        /** True when approving adds the scopes to the device named here. */
+        upgrade: pairing.upgradeDeviceId !== null,
         // Only a `pairings/v2` request asks for Explore, and only a client
         // that sends one displays the code, so an older client's request is
         // not shown a code its owner has nothing to compare with.
-        matchCode: pairing.scopes.includes("explore")
-          ? pairingMatchCode(pairing.id)
-          : null,
+        matchCode:
+          pairing.upgradeDeviceId !== null || pairing.scopes.includes("explore")
+            ? pairingMatchCode(pairing.id)
+            : null,
         state: pairing.state,
         expiresAt: pairing.expiresAt.toISOString(),
       };
@@ -75,6 +84,12 @@ export const scoutClientRouter = router({
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "Pairing not found",
+        });
+      }
+      if (outcome === "not-owner") {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "This device belongs to a different Scout account",
         });
       }
       if (outcome === "expired") {

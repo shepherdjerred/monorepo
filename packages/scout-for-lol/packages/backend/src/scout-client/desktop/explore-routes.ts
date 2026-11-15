@@ -136,10 +136,10 @@ const ROUTES = new Map<string, DesktopRoute>([
   ),
 ]);
 
-const INVALID_BODY = Symbol("invalid body");
+export const INVALID_BODY = Symbol("invalid body");
 
 /** The JSON body, or {@link INVALID_BODY} for anything a route cannot take. */
-async function readBody(
+export async function readDesktopBody(
   request: Request,
   maxBodyBytes: number,
 ): Promise<unknown> {
@@ -181,7 +181,7 @@ export async function handleDesktopExploreRoute(
   if (contractVersion === null) return contractUnsupportedResponse();
   const auth = await authenticateDesktopExplore(request);
   if (!auth.ok) return auth.response;
-  const body = await readBody(request, route.maxBodyBytes);
+  const body = await readDesktopBody(request, route.maxBodyBytes);
   return body === INVALID_BODY
     ? invalidRequest()
     : await route.handler({

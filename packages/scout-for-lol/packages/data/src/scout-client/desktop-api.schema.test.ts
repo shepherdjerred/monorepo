@@ -6,6 +6,7 @@ import statusFixture from "./desktop-fixtures/explore-status.json" with { type: 
 import listFixture from "./desktop-fixtures/explore-conversations-list.json" with { type: "json" };
 import getFixture from "./desktop-fixtures/explore-conversations-get.json" with { type: "json" };
 import pairingFixture from "./desktop-fixtures/pairings-v2.json" with { type: "json" };
+import scopeRequestFixture from "./desktop-fixtures/device-scope-requests.json" with { type: "json" };
 import startFixture from "./desktop-fixtures/explore-runs-start.json" with { type: "json" };
 import stopFixture from "./desktop-fixtures/explore-runs-stop.json" with { type: "json" };
 import activeFixture from "./desktop-fixtures/explore-runs-active.json" with { type: "json" };
@@ -38,6 +39,8 @@ import {
   ScoutDesktopExploreStatusResponseSchema,
   ScoutDesktopEmptyRequestSchema,
   ScoutDesktopPairingV2ResponseSchema,
+  ScoutDesktopScopeRequestResponseSchema,
+  ScoutDesktopScopeRequestSchema,
   ScoutDesktopRunActiveResponseSchema,
   ScoutDesktopRunStopResponseSchema,
   ScoutDesktopRunStreamResponseSchema,
@@ -61,6 +64,11 @@ const ROUTE_SCHEMAS: Record<
     request: ScoutClientCreatePairingSchema,
     response: ScoutDesktopPairingV2ResponseSchema,
     fixture: pairingFixture,
+  },
+  device_scope_requests: {
+    request: ScoutDesktopScopeRequestSchema,
+    response: ScoutDesktopScopeRequestResponseSchema,
+    fixture: scopeRequestFixture,
   },
   explore_status: {
     request: ScoutDesktopExploreStatusRequestSchema,
@@ -180,6 +188,12 @@ describe("Scout desktop API contract", () => {
     ),
   )("$name refuses $reason", ({ name, body }) => {
     expect(ROUTE_SCHEMAS[name].request.safeParse(body).success).toBe(false);
+  });
+
+  test("a scope request must name at least one scope", () => {
+    expect(
+      ScoutDesktopScopeRequestSchema.safeParse({ scopes: [] }).success,
+    ).toBe(false);
   });
 
   test("an error body refuses an unknown key", () => {

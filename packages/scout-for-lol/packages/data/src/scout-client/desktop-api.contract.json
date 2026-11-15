@@ -1,5 +1,5 @@
 {
-  "contractVersion": 2,
+  "contractVersion": 3,
   "minimumContractVersion": 1,
   "header": "X-Scout-Desktop-Contract",
   "scopes": ["ingest", "explore"],
@@ -8,6 +8,12 @@
     "pairings_v2": {
       "method": "POST",
       "path": "/api/scout-client/v1/pairings/v2",
+      "scope": null,
+      "response": "json"
+    },
+    "device_scope_requests": {
+      "method": "POST",
+      "path": "/api/scout-client/v1/devices/current/scope-requests",
       "scope": null,
       "response": "json"
     },
@@ -82,6 +88,7 @@
     "explore_forbidden": 403,
     "not_found": 404,
     "conversation_busy": 409,
+    "scope_already_granted": 409,
     "contract_unsupported": 426,
     "rate_limited": 429,
     "quota_exceeded": 429,
