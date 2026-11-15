@@ -556,7 +556,9 @@ fn message_actions(message: &ChatMessage, enabled: bool) -> Vec<Control> {
 }
 
 fn rows(parts: &ChatParts) -> Vec<TranscriptRow> {
-    let turn_running = parts.turn.is_some();
+    // Versions, Edit and Regenerate wait for a running turn, and for a
+    // version switch that has not been read back yet.
+    let turn_running = parts.turn.is_some() || parts.composer.switching;
     let mut rows: Vec<TranscriptRow> = parts
         .transcript
         .iter()
@@ -619,6 +621,18 @@ fn rows(parts: &ChatParts) -> Vec<TranscriptRow> {
     rows
 }
 
+/// Whether the question being edited is still on screen. Opening another
+/// conversation or switching to another branch takes it away, and the edit
+/// goes with it.
+#[must_use]
+pub fn edit_target_shown(parts: &ChatParts, message_id: Uuid) -> bool {
+    parts
+        .transcript
+        .iter()
+        .flat_map(|transcript| &transcript.messages)
+        .any(|message| message.id == message_id)
+}
+
 fn composer(parts: &ChatParts, ui: ChatUi, transcript_open: bool) -> ComposerModel {
     let turn_running = parts.turn.is_some();
     let composer = &parts.composer;
@@ -678,13 +692,7 @@ fn composer(parts: &ChatParts, ui: ChatUi, transcript_open: bool) -> ComposerMod
     let editing = ui
         .editing
         .filter(|_| transcript_open)
-        .filter(|id| {
-            parts
-                .transcript
-                .iter()
-                .flat_map(|transcript| &transcript.messages)
-                .any(|message| message.id == *id)
-        })
+        .filter(|id| edit_target_shown(parts, *id))
         .map(|_| EditingModel {
             label: "Editing your question. Sending adds a new version.",
             cancel: Control::new("chat-cancel-edit", "Cancel", UiAction::CancelEdit),
@@ -693,6 +701,7 @@ fn composer(parts: &ChatParts, ui: ChatUi, transcript_open: bool) -> ComposerMod
         // An image still uploading blocks sending: the supervisor refuses the
         // question and the window has already cleared the text.
         can_send: !turn_running
+            && !composer.switching
             && !parts
                 .composer
                 .drafts
@@ -845,7 +854,8 @@ mod tests {
 
     use super::{
         ChatScreen, ChatUi, ConversationModel, GateModel, PENDING_ANSWER_KEY, PENDING_QUESTION_KEY,
-        Picture, SidebarModel, UiAction, edit_message, send_message, stop_message, stream_fade,
+        Picture, SidebarModel, UiAction, edit_message, edit_target_shown, send_message,
+        stop_message, stream_fade,
     };
 
     type TestResult = Result<(), Box<dyn std::error::Error>>;
@@ -1197,6 +1207,34 @@ mod tests {
             }
         }
         assert!(model.header[1..].iter().all(|control| !control.enabled));
+        Ok(())
+    }
+
+    #[test]
+    fn nothing_is_sent_edited_or_switched_while_a_version_switch_is_read_back() -> TestResult {
+        let mut session = golden::branched()?;
+        session
+            .switch_version(golden::BRANCHED_QUESTION_LAST)
+            .ok_or("the switch starts")?;
+        let model = conversation(&session.parts())?;
+        assert!(!model.composer.can_send);
+        for row in &model.rows {
+            assert!(row.actions.iter().all(|action| !action.enabled), "{row:?}");
+            if let Some(switcher) = &row.switcher {
+                assert!(!switcher.previous.enabled && !switcher.next.enabled);
+            }
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn an_edit_ends_with_its_question_leaving_the_screen() -> TestResult {
+        let parts = golden::branched()?.parts();
+        assert!(edit_target_shown(&parts, golden::BRANCHED_QUESTION));
+        // Another conversation, or another branch, does not hold it.
+        let other = golden::ready()?.parts();
+        assert!(!edit_target_shown(&other, golden::BRANCHED_QUESTION));
+        assert!(!edit_target_shown(&parts, Uuid::from_u128(1)));
         Ok(())
     }
 

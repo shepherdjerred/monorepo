@@ -8,6 +8,7 @@
 //! golden reducer fixtures drive the same code the app runs.
 
 use std::collections::{BTreeMap, HashMap};
+use std::io::Read;
 use std::path::{Path, PathBuf};
 
 use scout_client_core::desktop_api::{
@@ -90,10 +91,26 @@ pub fn load_image(path: &Path) -> Result<(AttachmentMediaType, Vec<u8>), String>
     if metadata.len() > MAX_IMAGE_BYTES {
         return Err("Images can be at most 10 MiB.".to_owned());
     }
-    let bytes = std::fs::read(path).map_err(|_| "That image could not be read.".to_owned())?;
+    // The file may have grown since `metadata`, so the read itself is bounded.
+    let file = std::fs::File::open(path).map_err(|_| "That image could not be read.".to_owned())?;
+    let bytes = read_bounded(file)?;
     let media_type = AttachmentMediaType::sniff(&bytes)
         .ok_or_else(|| "Choose a PNG, JPEG, or WebP image.".to_owned())?;
     Ok((media_type, bytes))
+}
+
+/// Read at most [`MAX_IMAGE_BYTES`] from `reader`; one byte more is refused
+/// rather than buffered.
+fn read_bounded(reader: impl Read) -> Result<Vec<u8>, String> {
+    let mut bytes = Vec::new();
+    reader
+        .take(MAX_IMAGE_BYTES + 1)
+        .read_to_end(&mut bytes)
+        .map_err(|_| "That image could not be read.".to_owned())?;
+    if u64::try_from(bytes.len()).is_ok_and(|read| read > MAX_IMAGE_BYTES) {
+        return Err("Images can be at most 10 MiB.".to_owned());
+    }
+    Ok(bytes)
 }
 
 /// The turn being followed, and the run the server created for it.
@@ -130,6 +147,12 @@ pub struct ChatSession {
     thumbnails: HashMap<Uuid, PathBuf>,
     models: Option<ModelsResponse>,
     chosen_model: Option<ExploreModel>,
+    /// A version switch is changing the branch on the server and its
+    /// transcript has not been read back: nothing else may start.
+    switching: bool,
+    /// Counts version switches. A transcript fetched before the latest one
+    /// began describes the old branch and is refused.
+    epoch: u64,
 }
 
 impl Default for ChatSession {
@@ -217,6 +240,8 @@ impl ChatSession {
             thumbnails: HashMap::new(),
             models: None,
             chosen_model: None,
+            switching: false,
+            epoch: 0,
         }
     }
 
@@ -333,6 +358,32 @@ impl ChatSession {
         }
     }
 
+    /// The version-switch count to stamp on a transcript fetch, so
+    /// [`Self::read_back`] can tell a stale answer from a current one.
+    #[must_use]
+    pub const fn epoch(&self) -> u64 {
+        self.epoch
+    }
+
+    /// A transcript fetched while the switch count was `epoch` arrived. One
+    /// fetched before the latest version switch began shows the old branch
+    /// and is dropped; so is one for a conversation no longer on screen.
+    pub fn read_back(&mut self, epoch: u64, transcript: Transcript) {
+        if epoch == self.epoch {
+            self.opened(transcript);
+        }
+    }
+
+    /// The transcript read after a version switch arrived, or could not be
+    /// read. Either way the switch is over and chat may start again.
+    pub fn switch_settled(&mut self, result: Result<Transcript, ExploreClientError>) {
+        self.switching = false;
+        match result {
+            Ok(transcript) => self.opened(transcript),
+            Err(error) => self.request_failed(&error),
+        }
+    }
+
     /// The models the owner may choose between loaded. A choice the server no
     /// longer offers is forgotten.
     pub fn models_loaded(&mut self, models: ModelsResponse) {
@@ -367,7 +418,10 @@ impl ChatSession {
             return None;
         }
         let path = PathBuf::from(path);
-        if self.drafts.len() >= MAX_IMAGES {
+        // Drafts a pending question took come back if it is refused, so they
+        // still count toward the limit.
+        let stashed = self.turn.as_ref().map_or(0, |turn| turn.stash.len());
+        if self.drafts.len() + stashed >= MAX_IMAGES {
             self.notice = Some(format!("A question can carry at most {MAX_IMAGES} images."));
             return None;
         }
@@ -395,10 +449,15 @@ impl ChatSession {
     }
 
     /// An upload finished. A refusal marks the draft failed and names why; a
-    /// refusal that gates chat gates it.
-    pub fn upload_finished(&mut self, key: Uuid, result: Result<Attachment, UploadFailure>) {
+    /// refusal that gates chat gates it. Returns the stored image to discard
+    /// on the server when the draft was removed while it uploaded.
+    pub fn upload_finished(
+        &mut self,
+        key: Uuid,
+        result: Result<Attachment, UploadFailure>,
+    ) -> Option<Uuid> {
         let Some(draft) = self.drafts.iter_mut().find(|draft| draft.key == key) else {
-            return;
+            return result.ok().map(|attachment| attachment.id);
         };
         match result {
             Ok(attachment) => {
@@ -415,6 +474,7 @@ impl ChatSession {
                 self.request_failed(&error);
             }
         }
+        None
     }
 
     /// Take an image out of the composer. Returns the stored image to
@@ -429,7 +489,7 @@ impl ChatSession {
 
     /// Whether a new turn may start now.
     fn can_start(&self) -> bool {
-        self.availability == ChatAvailability::Ready && self.turn.is_none()
+        self.availability == ChatAvailability::Ready && self.turn.is_none() && !self.switching
     }
 
     /// The images that go with the next question, or none when one is still
@@ -601,7 +661,16 @@ impl ChatSession {
             .messages
             .iter()
             .any(|message| message.sibling_ids.contains(&message_id));
-        known.then_some((transcript.conversation.id, message_id))
+        let conversation = transcript.conversation.id;
+        if !known {
+            return None;
+        }
+        // Until the new branch is read back, a question would attach to the
+        // branch on screen while the server has already moved, and an older
+        // fetch could put the old branch back.
+        self.switching = true;
+        self.epoch += 1;
+        Some((conversation, message_id))
     }
 
     /// The open conversation to share or stop sharing, when it can be.
@@ -783,6 +852,13 @@ impl ChatSession {
             .map_or(0, |transcript| transcript.messages.len());
         self.turn
             .as_ref()
+            // A cutoff belongs to the conversation its turn runs in.
+            .filter(|turn| {
+                self.transcript
+                    .as_ref()
+                    .map(|transcript| transcript.conversation.id)
+                    == turn.view.turn.conversation_id
+            })
             .and_then(|turn| turn.keep)
             .map_or(held, |keep| keep.min(held))
     }
@@ -807,6 +883,7 @@ impl ChatSession {
                 })
                 .collect(),
             max_images: u32::try_from(MAX_IMAGES).unwrap_or(u32::MAX),
+            switching: self.switching,
             models: picker.map_or_else(Vec::new, |models| {
                 models
                     .models
@@ -970,12 +1047,29 @@ mod tests {
     use scout_desktop_ipc::{ChatAvailability, ChatToolStatus};
     use uuid::Uuid;
 
-    use super::{ChatSession, MAX_QUESTION_CHARS};
+    use super::{ChatSession, MAX_IMAGE_BYTES, MAX_QUESTION_CHARS, read_bounded};
     use crate::error::{ExploreClientError, Refusal};
     use crate::model::StreamEvent;
     use crate::stream::{StreamEnd, StreamSignal};
 
     type TestResult = Result<(), Box<dyn std::error::Error>>;
+
+    #[test]
+    fn a_file_that_grew_past_the_limit_is_refused_without_reading_it_all() {
+        use std::io::Read;
+        // An endless reader stands in for a file replaced after its size was
+        // checked: only one byte past the limit may ever be taken from it.
+        let limit = usize::try_from(MAX_IMAGE_BYTES).unwrap_or(usize::MAX);
+        assert_eq!(
+            read_bounded(std::io::repeat(0)),
+            Err("Images can be at most 10 MiB.".to_owned())
+        );
+        assert_eq!(
+            read_bounded(std::io::repeat(7).take(MAX_IMAGE_BYTES)).map(|bytes| bytes.len()),
+            Ok(limit),
+            "exactly the limit is fine"
+        );
+    }
 
     fn refused(code: DesktopApiErrorCode) -> ExploreClientError {
         ExploreClientError::Refused(Refusal {

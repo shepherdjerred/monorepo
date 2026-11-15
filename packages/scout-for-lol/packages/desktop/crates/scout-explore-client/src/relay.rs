@@ -236,13 +236,21 @@ impl ChatRelay {
 enum Answer {
     Client(Result<ExploreClient, ExploreClientError>),
     Listed(Result<ConversationListResponse, ExploreClientError>),
-    Opened(Result<Transcript, ExploreClientError>),
+    /// A transcript read for a conversation, stamped with the version-switch
+    /// count when it was asked for.
+    Opened(u64, Result<Transcript, ExploreClientError>),
+    /// The transcript read back after a version switch.
+    Switched(Result<Transcript, ExploreClientError>),
     Started(Result<ActiveRun, ExploreClientError>),
     Models(Result<ModelsResponse, ExploreClientError>),
     Uploaded(Uuid, Result<Attachment, UploadFailure>),
     /// A version switch, share or revoke finished; the conversation's
     /// transcript is read again either way it went.
-    Changed(Uuid, Result<(), ExploreClientError>),
+    Changed {
+        conversation_id: Uuid,
+        switch: bool,
+        result: Result<(), ExploreClientError>,
+    },
     Signal(StreamSignal),
     Ended(Result<StreamEnd, ExploreClientError>),
     Settled(Result<Transcript, ExploreClientError>),
@@ -316,7 +324,7 @@ impl Relay {
                     self.requested.remove(&key);
                 }
                 if self.session.open(conversation_id) {
-                    self.fetch(conversation_id, Answer::Opened);
+                    self.fetch_opened(conversation_id);
                 }
             }
             ChatCommand::New => self.session.start_new(),
@@ -336,10 +344,12 @@ impl Relay {
                 self.start(request);
             }
             ChatCommand::SwitchVersion { message_id } => {
-                if let (Some(client), Some((conversation_id, message_id))) =
-                    (self.client.clone(), self.session.switch_version(message_id))
+                // Ask the session last: it marks the switch as under way.
+                if let Some(client) = self.client.clone()
+                    && let Some((conversation_id, message_id)) =
+                        self.session.switch_version(message_id)
                 {
-                    self.change(conversation_id, async move {
+                    self.change(conversation_id, true, async move {
                         client.set_leaf(conversation_id, message_id).await
                     });
                 }
@@ -366,7 +376,7 @@ impl Relay {
                 if let (Some(client), Some(conversation_id)) =
                     (self.client.clone(), self.session.shareable())
                 {
-                    self.change(conversation_id, async move {
+                    self.change(conversation_id, false, async move {
                         client.share(conversation_id).await.map(drop)
                     });
                 }
@@ -375,7 +385,7 @@ impl Relay {
                 if let (Some(client), Some(conversation_id)) =
                     (self.client.clone(), self.session.shareable())
                 {
-                    self.change(conversation_id, async move {
+                    self.change(conversation_id, false, async move {
                         client.revoke_share(conversation_id).await
                     });
                 }
@@ -409,11 +419,16 @@ impl Relay {
     fn change(
         &self,
         conversation_id: Uuid,
+        switch: bool,
         change: impl std::future::Future<Output = Result<(), ExploreClientError>> + Send + 'static,
     ) {
         let answers = self.answers.clone();
         tokio::spawn(async move {
-            let _ = answers.send(Answer::Changed(conversation_id, change.await));
+            let _ = answers.send(Answer::Changed {
+                conversation_id,
+                switch,
+                result: change.await,
+            });
         });
     }
 
@@ -457,10 +472,17 @@ impl Relay {
         });
     }
 
+    /// Read a conversation for the screen, stamped so a switch that starts
+    /// meanwhile makes the answer stale.
+    fn fetch_opened(&self, conversation_id: Uuid) {
+        let epoch = self.session.epoch();
+        self.fetch(conversation_id, move |result| Answer::Opened(epoch, result));
+    }
+
     fn fetch(
         &self,
         conversation_id: Uuid,
-        wrap: fn(Result<Transcript, ExploreClientError>) -> Answer,
+        wrap: impl FnOnce(Result<Transcript, ExploreClientError>) -> Answer + Send + 'static,
     ) {
         let Some(client) = self.client.clone() else {
             return;
@@ -499,7 +521,7 @@ impl Relay {
                 self.list();
                 self.models();
                 if let Some(open) = self.session.open_conversation() {
-                    self.fetch(open, Answer::Opened);
+                    self.fetch_opened(open);
                 }
             }
             Answer::Client(Err(error)) => {
@@ -508,8 +530,9 @@ impl Relay {
             }
             Answer::Listed(Ok(list)) => self.session.listed(list),
             Answer::Listed(Err(error)) => self.session.refresh_failed(&error),
-            Answer::Opened(Ok(transcript)) => self.session.opened(transcript),
-            Answer::Opened(Err(error)) | Answer::Failed(error) => {
+            Answer::Opened(epoch, Ok(transcript)) => self.session.read_back(epoch, transcript),
+            Answer::Switched(result) => self.session.switch_settled(result),
+            Answer::Opened(_, Err(error)) | Answer::Failed(error) => {
                 self.session.request_failed(&error);
             }
             Answer::Started(Ok(run)) => {
@@ -520,14 +543,34 @@ impl Relay {
             Answer::Started(Err(error)) => self.session.start_failed(&error),
             Answer::Models(Ok(models)) => self.session.models_loaded(models),
             Answer::Models(Err(error)) => self.session.request_failed(&error),
-            Answer::Uploaded(key, result) => self.session.upload_finished(key, result),
-            Answer::Changed(conversation_id, result) => {
+            Answer::Uploaded(key, result) => {
+                if let (Some(client), Some(id)) = (
+                    self.client.clone(),
+                    self.session.upload_finished(key, result),
+                ) {
+                    // The draft was removed while this uploaded. Best effort,
+                    // like RemoveAttachment: the hold lapses on its own.
+                    tokio::spawn(async move {
+                        let _ = client.discard_attachment(id).await;
+                    });
+                }
+            }
+            Answer::Changed {
+                conversation_id,
+                switch,
+                result,
+            } => {
                 if let Err(error) = result {
                     self.session.request_failed(&error);
                 }
                 // Read it again whichever way it went: a switch moves the
                 // branch, a share adds the link, a refusal shows what is true.
-                self.fetch(conversation_id, Answer::Opened);
+                // A switch settles on its own readback, failed or not.
+                if switch {
+                    self.fetch(conversation_id, Answer::Switched);
+                } else {
+                    self.fetch_opened(conversation_id);
+                }
                 self.list();
             }
             Answer::Signal(signal) => self.session.signal(&signal),

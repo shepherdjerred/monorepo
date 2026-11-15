@@ -541,6 +541,7 @@ mod tests {
                         },
                     ],
                     max_images: 4,
+                    switching: false,
                     models: vec![ChatModelOption {
                         id: "gpt-6-luna".to_owned(),
                         label: "GPT-6 Luna · High".to_owned(),

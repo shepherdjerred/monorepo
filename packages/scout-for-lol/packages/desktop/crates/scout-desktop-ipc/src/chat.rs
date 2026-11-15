@@ -243,6 +243,9 @@ pub struct ChatComposer {
     pub models: Vec<ChatModelOption>,
     /// The model the next question uses, when there is a choice.
     pub model: Option<String>,
+    /// A version switch is being read back: sending, editing, regenerating
+    /// and switching again wait for it.
+    pub switching: bool,
 }
 
 /// A chat request from the window. The supervisor answers with chat parts.
@@ -476,6 +479,7 @@ mod tests {
                     state: ChatDraftState::Uploading,
                 }],
                 max_images: 4,
+                switching: false,
                 ..ChatComposer::default()
             },
             ..before.clone()
