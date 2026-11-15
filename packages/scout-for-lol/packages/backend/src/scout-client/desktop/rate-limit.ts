@@ -58,3 +58,24 @@ export function desktopReadAllowed(
 export function resetDesktopReadRateLimitForTests(now = Date.now()): void {
   readLimiter.reset(now);
 }
+
+/**
+ * Chart renders per device. Drawing a chart is CPU-bound work on the request
+ * path (ECharts to SVG to PNG), far costlier than a read, so a device gets a
+ * third of its read budget for it. The desktop caches every chart it draws
+ * on disk, so reopening a conversation does not spend it again.
+ */
+const renderLimiter = deviceWindowLimiter(20);
+
+export const DESKTOP_RENDER_LIMIT_PER_MINUTE = renderLimiter.limit;
+
+export function desktopRenderAllowed(
+  deviceId: string,
+  now = Date.now(),
+): boolean {
+  return renderLimiter.allow(deviceId, now);
+}
+
+export function resetDesktopRenderRateLimitForTests(now = Date.now()): void {
+  renderLimiter.reset(now);
+}

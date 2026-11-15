@@ -39,6 +39,17 @@ pub(super) fn log_directory() -> Option<PathBuf> {
     Some(data_directory()?.join("logs"))
 }
 
+/// Where Explore chat caches the charts and card art it shows. Like the
+/// outbox, it falls back to the temporary directory when there is no per-user
+/// data directory.
+#[must_use]
+pub fn explore_cache_directory() -> PathBuf {
+    data_directory().map_or_else(
+        || std::env::temp_dir().join("scout-explore-cache"),
+        |directory| directory.join("explore-cache"),
+    )
+}
+
 pub(super) fn outbox_path(backend_origin: &str, device_id: Option<Uuid>) -> PathBuf {
     let file_name = outbox_file_name(backend_origin, device_id);
     data_directory().map_or_else(

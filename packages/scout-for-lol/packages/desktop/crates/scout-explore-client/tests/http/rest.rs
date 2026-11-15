@@ -201,3 +201,63 @@ fn a_remote_http_origin_is_refused_and_debug_hides_the_token() -> TestResult {
     assert!(debug.contains("https://scout.example/"), "{debug}");
     Ok(())
 }
+
+#[tokio::test]
+async fn the_chart_route_reads_a_png_and_refuses_anything_else() -> TestResult {
+    let chart = golden(fixture!("explore-visualization.json"))?;
+    let assets = golden(fixture!("explore-assets.json"))?;
+    let mut png = scout_explore_client::PNG_SIGNATURE.to_vec();
+    png.extend_from_slice(b"stub chart body");
+    let server = MockServer::start(vec![
+        (
+            Route::ExploreVisualization.path(),
+            vec![
+                Reply::Bytes {
+                    content_type: "image/png",
+                    body: png.clone(),
+                },
+                Reply::Bytes {
+                    content_type: "image/png",
+                    body: b"<svg/>".to_vec(),
+                },
+                Reply::Bytes {
+                    content_type: "image/svg+xml",
+                    body: png.clone(),
+                },
+                Reply::json(404, r#"{"error":"not_found","message":"Chart not found."}"#),
+            ],
+        ),
+        served(Route::ExploreAssets, &assets),
+    ])
+    .await?;
+    let client = server.client()?;
+    let id = |value: &Value| Uuid::parse_str(value.as_str().unwrap_or_default());
+    let conversation = id(&chart["request"]["conversationId"])?;
+    let message = id(&chart["request"]["messageId"])?;
+
+    assert_eq!(client.visualization(conversation, message).await?, png);
+    assert_authenticated(&server, Route::ExploreVisualization, &chart)?;
+    for expected in ["not a PNG", "not image/png"] {
+        match client.visualization(conversation, message).await {
+            Err(ExploreClientError::Unexpected { detail, .. }) => {
+                assert!(detail.contains(expected), "{detail}");
+            }
+            other => return Err(format!("expected a broken contract, got {other:?}").into()),
+        }
+    }
+    match client.visualization(conversation, message).await {
+        Err(ExploreClientError::Refused(refusal)) => {
+            assert_eq!(refusal.code, DesktopApiErrorCode::NotFound);
+        }
+        other => return Err(format!("expected not_found, got {other:?}").into()),
+    }
+
+    let version = client.assets().await?;
+    assert_eq!(
+        serde_json::to_value(&version)?,
+        assets["response"],
+        "assets reads the golden answer"
+    );
+    assert_authenticated(&server, Route::ExploreAssets, &assets)?;
+    Ok(())
+}

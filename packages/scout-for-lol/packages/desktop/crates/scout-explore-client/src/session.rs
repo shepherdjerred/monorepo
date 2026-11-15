@@ -7,19 +7,23 @@
 //! [`ChatSession::parts`]. Keeping the transitions pure is what lets the
 //! golden reducer fixtures drive the same code the app runs.
 
+use std::collections::BTreeMap;
+
 use scout_client_core::desktop_api::{
     ActiveRun, AttachPoint, ConversationListResponse, ConversationSummary, RunStartRequest,
 };
 use scout_desktop_ipc::{
-    ChatAvailability, ChatConversation, ChatMessage, ChatParts, ChatRole, ChatStatus,
-    ChatToolStatus, ChatToolStep, ChatTranscript, ChatTurn,
+    ChatAvailability, ChatConversation, ChatImage, ChatMessage, ChatParts, ChatRole, ChatStatus,
+    ChatToolStatus, ChatToolStep, ChatTranscript, ChatTurn, ChatVisuals,
 };
 use uuid::Uuid;
 
+use crate::data_dragon::DataDragon;
 use crate::error::{ExploreClientError, Recovery};
 use crate::model::{ExploreMessage, MessageRole, TraceEntry, TraceStatus, Transcript};
 use crate::reducer::{PendingTurn, TurnPhase, TurnView, visible_pending};
 use crate::stream::{StreamEnd, StreamSignal};
+use crate::visuals::{ImageSource, chat_visuals, image_sources};
 
 /// The longest question the composer sends, matching the web's limit.
 pub const MAX_QUESTION_CHARS: usize = 4_000;
@@ -41,6 +45,10 @@ pub struct ChatSession {
     open: Option<Uuid>,
     transcript: Option<Transcript>,
     turn: Option<FollowedTurn>,
+    /// Card art, once Scout has named its version and the catalog loaded.
+    art: Option<DataDragon>,
+    /// Pictures fetched or failed, by key; anything else wanted is loading.
+    images: BTreeMap<String, ChatImage>,
 }
 
 /// What a failed request means for chat as a whole.
@@ -120,6 +128,51 @@ impl ChatSession {
             Failure::Gate(availability) => self.availability = availability,
             Failure::Notice(message) => self.notice = Some(message),
         }
+    }
+
+    /// Card art can be resolved from now on.
+    pub fn art_loaded(&mut self, art: DataDragon) {
+        self.art = Some(art);
+    }
+
+    /// One picture landed or failed.
+    pub fn image_loaded(&mut self, key: String, image: ChatImage) {
+        self.images.insert(key, image);
+    }
+
+    /// Forget pictures that failed, so the next look asks for them again.
+    /// Returns their keys.
+    pub fn forget_failed_images(&mut self) -> Vec<String> {
+        let failed: Vec<String> = self
+            .images
+            .iter()
+            .filter(|(_, image)| matches!(image, ChatImage::Failed { .. }))
+            .map(|(key, _)| key.clone())
+            .collect();
+        for key in &failed {
+            self.images.remove(key);
+        }
+        failed
+    }
+
+    /// Every picture the open transcript names, and how to fetch each, in
+    /// transcript order without repeats.
+    #[must_use]
+    pub fn wanted_images(&self) -> Vec<(String, ImageSource)> {
+        let Some(transcript) = &self.transcript else {
+            return Vec::new();
+        };
+        let conversation_id = transcript.conversation.id;
+        let mut seen = std::collections::BTreeSet::new();
+        transcript
+            .messages
+            .iter()
+            .flat_map(|message| {
+                let visuals = chat_visuals(message, conversation_id, self.art.as_ref());
+                image_sources(conversation_id, message.id, &visuals)
+            })
+            .filter(|(key, _)| seen.insert(key.clone()))
+            .collect()
     }
 
     /// Show `conversation_id`. Returns whether its transcript must be fetched.
@@ -314,8 +367,19 @@ impl ChatSession {
                     title: summary.title.clone(),
                 })
                 .collect(),
-            transcript: self.transcript.as_ref().map(chat_transcript),
+            transcript: self
+                .transcript
+                .as_ref()
+                .map(|transcript| chat_transcript(transcript, self.art.as_ref())),
             turn: self.turn.as_ref().map(|turn| self.chat_turn(turn)),
+            images: self
+                .wanted_images()
+                .into_iter()
+                .map(|(key, _)| {
+                    let image = self.images.get(&key).cloned().unwrap_or(ChatImage::Loading);
+                    (key, image)
+                })
+                .collect(),
         }
     }
 
@@ -354,9 +418,18 @@ pub fn tool_step(entry: &TraceEntry) -> ChatToolStep {
     }
 }
 
-/// One persisted message as the transcript renders it.
+/// One persisted message as the transcript renders it, with card art from
+/// `art` once it has loaded.
 #[must_use]
-pub fn chat_message(message: &ExploreMessage) -> ChatMessage {
+pub fn chat_message(
+    message: &ExploreMessage,
+    conversation_id: Uuid,
+    art: Option<&DataDragon>,
+) -> ChatMessage {
+    let visuals = match message.role {
+        MessageRole::User => ChatVisuals::default(),
+        MessageRole::Assistant => chat_visuals(message, conversation_id, art),
+    };
     ChatMessage {
         id: message.id,
         role: match message.role {
@@ -366,16 +439,22 @@ pub fn chat_message(message: &ExploreMessage) -> ChatMessage {
         content: message.content.clone(),
         tools: message.trace.iter().map(tool_step).collect(),
         caveats: message.caveats.clone(),
+        visuals,
     }
 }
 
 /// A transcript as the window renders it.
 #[must_use]
-pub fn chat_transcript(transcript: &Transcript) -> ChatTranscript {
+pub fn chat_transcript(transcript: &Transcript, art: Option<&DataDragon>) -> ChatTranscript {
+    let conversation_id = transcript.conversation.id;
     ChatTranscript {
-        conversation_id: transcript.conversation.id,
+        conversation_id,
         title: transcript.conversation.title.clone(),
-        messages: transcript.messages.iter().map(chat_message).collect(),
+        messages: transcript
+            .messages
+            .iter()
+            .map(|message| chat_message(message, conversation_id, art))
+            .collect(),
     }
 }
 

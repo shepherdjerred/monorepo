@@ -14,6 +14,7 @@ import {
   type ExploreTranscript,
   type ReportAiPreviewSummary,
   type VisualizationSnapshot,
+  VisualizationSnapshotSchema,
 } from "@scout-for-lol/data";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import {
@@ -442,6 +443,37 @@ export async function loadExploreSpokenContent(
     select: { spokenContent: true },
   });
   return row?.spokenContent ?? null;
+}
+
+/**
+ * Load the chart one persisted answer carries, for a surface that draws it
+ * as an image. Any answer the owner can reach counts, not only the branch on
+ * screen, so an older version keeps its chart. Another user's conversation,
+ * a question, and an answer without a chart all read as null.
+ */
+export async function loadExploreVisualization(
+  prisma: Pick<ExtendedPrismaClient, "exploreMessage">,
+  input: {
+    conversationId: string;
+    messageId: ExploreMessage["id"];
+    userId: DiscordAccountId;
+  },
+): Promise<VisualizationSnapshot | null> {
+  const row = await prisma.exploreMessage.findFirst({
+    where: {
+      id: input.messageId,
+      conversationId: input.conversationId,
+      role: "assistant",
+      conversation: { userId: input.userId },
+    },
+    select: { visualization: true },
+  });
+  const stored = row?.visualization ?? null;
+  // A stored chart that no longer parses is a bug in whatever wrote it, so
+  // it throws rather than reading as "no chart".
+  return stored === null
+    ? null
+    : VisualizationSnapshotSchema.parse(JSON.parse(stored));
 }
 
 /**

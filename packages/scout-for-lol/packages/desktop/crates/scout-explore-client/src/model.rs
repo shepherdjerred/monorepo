@@ -415,8 +415,8 @@ pub struct PreviewSummary {
 /// The server validates the whole snapshot against
 /// `VisualizationSnapshotSchema` before sending it, and the desktop shows
 /// charts as the PNG the server renders from the same snapshot, so this
-/// client checks only that it is a version-1 snapshot object and keeps it
-/// intact for the UI to hand back.
+/// client checks only what it reads itself: the version, the kind, the title
+/// and whether it is a sparkline. Everything else stays intact.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(try_from = "Map<String, Value>", into = "Map<String, Value>")]
 pub struct Visualization(Map<String, Value>);
@@ -427,6 +427,31 @@ impl Visualization {
     pub fn as_json(&self) -> &Map<String, Value> {
         &self.0
     }
+
+    /// The chart kind, such as `BAR_CHART` or `TABLE`.
+    #[must_use]
+    pub fn kind(&self) -> &str {
+        self.0
+            .get("kind")
+            .and_then(Value::as_str)
+            .unwrap_or_default()
+    }
+
+    /// The chart's title, if it has one.
+    #[must_use]
+    pub fn title(&self) -> Option<&str> {
+        self.0.get("title").and_then(Value::as_str)
+    }
+
+    /// Whether it draws as a sparkline, which is always an image.
+    #[must_use]
+    pub fn sparkline(&self) -> bool {
+        self.0
+            .get("display")
+            .and_then(|display| display.get("sparkline"))
+            .and_then(Value::as_bool)
+            .unwrap_or_default()
+    }
 }
 
 impl TryFrom<Map<String, Value>> for Visualization {
@@ -435,6 +460,23 @@ impl TryFrom<Map<String, Value>> for Visualization {
     fn try_from(value: Map<String, Value>) -> Result<Self, Self::Error> {
         if value.get("version") != Some(&Value::from(1)) {
             return Err("a visualization snapshot must be version 1".to_owned());
+        }
+        if value
+            .get("kind")
+            .and_then(Value::as_str)
+            .is_none_or(str::is_empty)
+        {
+            return Err("a visualization snapshot must name its kind".to_owned());
+        }
+        if !matches!(value.get("title"), Some(Value::String(_) | Value::Null)) {
+            return Err("a visualization snapshot's title must be text or null".to_owned());
+        }
+        if !value
+            .get("display")
+            .and_then(|display| display.get("sparkline"))
+            .is_some_and(Value::is_boolean)
+        {
+            return Err("a visualization snapshot must say whether it is a sparkline".to_owned());
         }
         Ok(Self(value))
     }

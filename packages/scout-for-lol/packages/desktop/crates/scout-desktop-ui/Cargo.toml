@@ -40,6 +40,9 @@ serde_json.workspace = true
 # with the versions GPUI resolves to.
 [target.'cfg(target_os = "macos")'.dev-dependencies]
 async-channel.workspace = true
+# Writes the stub chart and card art the offscreen render shows; GPUI already
+# links this version.
+image = { version = "0.25.10", default-features = false, features = ["png"] }
 gpui = { workspace = true, features = ["test-support"] }
 gpui-platform = { workspace = true, features = ["runtime_shaders", "test-support"] }
 

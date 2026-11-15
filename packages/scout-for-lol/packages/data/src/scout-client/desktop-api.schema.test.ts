@@ -12,6 +12,9 @@ import stopFixture from "./desktop-fixtures/explore-runs-stop.json" with { type:
 import activeFixture from "./desktop-fixtures/explore-runs-active.json" with { type: "json" };
 import outcomeFixture from "./desktop-fixtures/explore-runs-outcome.json" with { type: "json" };
 import streamFixture from "./desktop-fixtures/explore-runs-stream.json" with { type: "json" };
+import assetsFixture from "./desktop-fixtures/explore-assets.json" with { type: "json" };
+import visualizationFixture from "./desktop-fixtures/explore-visualization.json" with { type: "json" };
+import visualsFixture from "./desktop-fixtures/explore-conversations-get-visuals.json" with { type: "json" };
 import { ScoutClientCreatePairingSchema } from "./protocol.schema.ts";
 import {
   ExploreActiveRunSchema,
@@ -28,6 +31,10 @@ import {
   SCOUT_DESKTOP_ORIGIN_CONTRACT_VERSION,
   SCOUT_DESKTOP_PAIRING_V2_SCOPES,
   SCOUT_DESKTOP_STREAM_EVENT_TYPES,
+  SCOUT_NATIVE_VISUALIZATION_KINDS,
+  ScoutDesktopAssetsResponseSchema,
+  ScoutDesktopPngResponseSchema,
+  ScoutDesktopVisualizationRequestSchema,
   ScoutDesktopApiErrorCodeSchema,
   ScoutDesktopApiErrorSchema,
   ScoutDesktopApiRouteSchema,
@@ -110,6 +117,16 @@ const ROUTE_SCHEMAS: Record<
     response: ScoutDesktopRunStreamResponseSchema,
     fixture: streamFixture,
   },
+  explore_assets: {
+    request: ScoutDesktopEmptyRequestSchema,
+    response: ScoutDesktopAssetsResponseSchema,
+    fixture: assetsFixture,
+  },
+  explore_visualization: {
+    request: ScoutDesktopVisualizationRequestSchema,
+    response: ScoutDesktopPngResponseSchema,
+    fixture: visualizationFixture,
+  },
 };
 
 const routeNames = ScoutDesktopApiRouteSchema.options;
@@ -135,6 +152,9 @@ describe("Scout desktop API contract", () => {
     expect(SCOUT_DESKTOP_API_ERRORS).toEqual(rawContract.errors);
     expect(ScoutDesktopApiErrorCodeSchema.options).toEqual(
       Object.keys(rawContract.errors),
+    );
+    expect(SCOUT_NATIVE_VISUALIZATION_KINDS).toEqual(
+      rawContract.nativeVisualizationKinds,
     );
   });
 
@@ -171,6 +191,29 @@ describe("Scout desktop API contract", () => {
       (name) => SCOUT_DESKTOP_API_ROUTES[name].response === "event-stream",
     );
     expect(streaming).toEqual(["explore_runs_stream"]);
+  });
+
+  test("only the chart route answers with a PNG", () => {
+    const images = routeNames.filter(
+      (name) => SCOUT_DESKTOP_API_ROUTES[name].response === "png",
+    );
+    expect(images).toEqual(["explore_visualization"]);
+  });
+
+  test("the visuals transcript holds a chart, a native table and both cards", () => {
+    const { messages } = ScoutDesktopConversationGetResponseSchema.parse(
+      visualsFixture.response,
+    );
+    const kinds = messages.flatMap((message) =>
+      message.visualization === null ? [] : [message.visualization.kind],
+    );
+    expect(kinds).toEqual(["BAR_CHART", "TABLE"]);
+    expect(
+      kinds.map((kind) => SCOUT_NATIVE_VISUALIZATION_KINDS.includes(kind)),
+    ).toEqual([false, true]);
+    expect(messages.flatMap((message) => message.matchCards)).toHaveLength(1);
+    expect(messages.flatMap((message) => message.loadoutCards)).toHaveLength(1);
+    expect(visualizationFixture.request.messageId).toBe(messages[1]?.id);
   });
 
   test.each(routeNames)("%s golden bodies round-trip", (name) => {

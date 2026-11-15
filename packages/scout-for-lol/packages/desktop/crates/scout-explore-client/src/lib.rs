@@ -11,13 +11,18 @@
 //!   turn renders.
 //! - [`session`]: one desktop chat session as pure state, projected onto the
 //!   window's IPC chat parts.
+//! - [`visuals`]: an answer's chart or table and its match and loadout cards,
+//!   as the window renders them, with [`data_dragon`] for card art.
+//! - [`asset_cache`]: the bounded disk cache charts and card art land in.
 //! - [`relay`]: the supervisor's task that runs the client against a session
 //!   and publishes those parts, so the credential never leaves the supervisor.
 //!
 //! The crate has no UI dependency; the window renders the parts it publishes.
 
+pub mod asset_cache;
 mod client;
 pub mod contract;
+pub mod data_dragon;
 mod error;
 #[cfg(feature = "golden")]
 pub mod golden;
@@ -26,6 +31,7 @@ pub mod reducer;
 pub mod relay;
 pub mod session;
 pub mod stream;
+pub mod visuals;
 
-pub use client::{ExploreClient, STREAM_IDLE_TIMEOUT};
+pub use client::{ExploreClient, MAX_CHART_BYTES, PNG_SIGNATURE, STREAM_IDLE_TIMEOUT};
 pub use error::{ExploreClientError, Recovery, Refusal};

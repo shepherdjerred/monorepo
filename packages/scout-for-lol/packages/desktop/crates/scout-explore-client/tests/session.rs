@@ -4,7 +4,9 @@
 
 #![cfg(feature = "golden")]
 
-use scout_desktop_ipc::{ChatAvailability, ChatRole, ChatToolStatus};
+use scout_desktop_ipc::{
+    ChatAvailability, ChatImage, ChatRole, ChatToolStatus, ChatVisual, ChatVisuals,
+};
 use scout_explore_client::golden;
 use scout_explore_client::session::chat_transcript;
 
@@ -112,7 +114,7 @@ fn an_error_the_run_reported_outlives_the_turn_as_a_notice() -> TestResult {
 
 #[test]
 fn a_transcript_keeps_roles_caveats_and_no_raw_payloads() -> TestResult {
-    let transcript = chat_transcript(&golden::transcript()?);
+    let transcript = chat_transcript(&golden::transcript()?, None);
     assert_eq!(transcript.title, "Who carries our ARAMs?");
     let answer = transcript
         .messages
@@ -120,7 +122,8 @@ fn a_transcript_keeps_roles_caveats_and_no_raw_payloads() -> TestResult {
         .find(|message| message.role == ChatRole::Assistant)
         .ok_or("no answer")?;
     assert_eq!(answer.caveats, ["Only games Scout recorded are counted."]);
-    // The IPC type has no field for query text, raw tool payloads or cards.
+    // The IPC type has no field for query text or raw tool payloads, and
+    // cards cross only as their rendered projection.
     let wire = serde_json::to_value(&transcript)?;
     for absent in [
         "queryText",
@@ -131,5 +134,64 @@ fn a_transcript_keeps_roles_caveats_and_no_raw_payloads() -> TestResult {
     ] {
         assert!(!wire.to_string().contains(absent), "{absent} crossed IPC");
     }
+    Ok(())
+}
+
+#[test]
+fn an_answer_with_visuals_asks_for_its_chart_and_art_and_shows_them_as_they_land() -> TestResult {
+    let mut session = golden::visuals()?;
+    let wanted = session.wanted_images();
+    let parts = session.parts();
+    let transcript = parts.transcript.as_ref().ok_or("transcript")?;
+    let chart = match &transcript.messages[1].visuals.visual {
+        Some(ChatVisual::Chart { image, .. }) => image.clone(),
+        other => return Err(format!("expected a chart, got {other:?}").into()),
+    };
+    assert!(matches!(
+        transcript.messages[3].visuals.visual,
+        Some(ChatVisual::Table(_))
+    ));
+    assert_eq!(wanted.first().map(|(key, _)| key), Some(&chart));
+    assert_eq!(parts.images.len(), wanted.len());
+    assert!(
+        parts
+            .images
+            .values()
+            .all(|image| *image == ChatImage::Loading)
+    );
+    // Ten champions on the match card, and the loadout's art without the
+    // empty slot or repeats (Jinx and Kraken Slayer are named twice).
+    assert_eq!(wanted.len(), 1 + 10 + 6 + 2 + 5 + 3);
+    // A question carries no visuals.
+    assert_eq!(transcript.messages[0].visuals, ChatVisuals::default());
+
+    session.image_loaded(
+        chart.clone(),
+        ChatImage::Ready {
+            path: "/cache/chart.asset".to_owned(),
+        },
+    );
+    let failed = wanted[1].0.clone();
+    session.image_loaded(
+        failed.clone(),
+        ChatImage::Failed {
+            message: "offline".to_owned(),
+        },
+    );
+    let parts = session.parts();
+    assert_eq!(
+        parts.images.get(&chart),
+        Some(&ChatImage::Ready {
+            path: "/cache/chart.asset".to_owned()
+        })
+    );
+    assert_eq!(
+        session.forget_failed_images(),
+        std::slice::from_ref(&failed)
+    );
+    assert_eq!(
+        session.parts().images.get(&failed),
+        Some(&ChatImage::Loading)
+    );
     Ok(())
 }

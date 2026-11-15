@@ -28,6 +28,7 @@ struct DesktopContract {
     pairing_scopes: Vec<String>,
     routes: BTreeMap<String, ContractRoute>,
     stream_events: Vec<String>,
+    native_visualization_kinds: Vec<String>,
     errors: BTreeMap<String, u16>,
 }
 
@@ -122,7 +123,7 @@ fn validate(contract: &DesktopContract) -> Result<(), io::Error> {
             )));
         }
         match route.response.as_str() {
-            "json" => {}
+            "json" | "png" => {}
             "event-stream" => streaming += 1,
             other => {
                 return Err(invalid_contract(format!(
@@ -147,6 +148,7 @@ fn validate(contract: &DesktopContract) -> Result<(), io::Error> {
     for event in &contract.stream_events {
         pascal_case(event)?;
     }
+    validate_native_kinds(&contract.native_visualization_kinds)?;
     for (code, status) in &contract.errors {
         pascal_case(code)?;
         if !(400..=599).contains(status) {
@@ -156,6 +158,58 @@ fn validate(contract: &DesktopContract) -> Result<(), io::Error> {
         }
     }
     Ok(())
+}
+
+fn validate_native_kinds(kinds: &[String]) -> Result<(), io::Error> {
+    let unique: BTreeSet<&str> = kinds.iter().map(String::as_str).collect();
+    if unique.is_empty()
+        || unique.len() != kinds.len()
+        || unique.iter().any(|kind| {
+            kind.is_empty()
+                || !kind
+                    .bytes()
+                    .all(|byte| byte.is_ascii_uppercase() || byte == b'_')
+        })
+    {
+        return Err(invalid_contract(
+            "nativeVisualizationKinds must be unique, non-empty SCREAMING_SNAKE_CASE",
+        ));
+    }
+    Ok(())
+}
+
+/// The body of a `const fn` that is true for `variants` alone.
+fn matches_any(variants: &[String]) -> String {
+    if variants.is_empty() {
+        "false".to_owned()
+    } else {
+        format!("matches!(self, {})", variants.join(" | "))
+    }
+}
+
+/// Each string as a Rust string literal, comma-separated.
+fn literals(values: &[String]) -> String {
+    values
+        .iter()
+        .map(|value| format!("{value:?}"))
+        .collect::<Vec<_>>()
+        .join(", ")
+}
+
+/// `refusal_status`'s match arms: each refusal code and its HTTP status.
+fn refusal_arms(errors: &BTreeMap<String, u16>) -> Result<String, io::Error> {
+    let statuses = errors
+        .iter()
+        .map(|(code, status)| {
+            pascal_case(code).map(|variant| {
+                (
+                    format!("DesktopApiErrorCode::{variant}"),
+                    status.to_string(),
+                )
+            })
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    Ok(grouped_arms("        ", statuses))
 }
 
 /// Match arms with one arm per distinct value, so equal values share an arm.
@@ -177,6 +231,7 @@ fn render(contract: &DesktopContract) -> Result<String, io::Error> {
     let mut paths = Vec::new();
     let mut scopes = Vec::new();
     let mut streaming = Vec::new();
+    let mut images = Vec::new();
     for (name, route) in &contract.routes {
         let variant = pascal_case(name)?;
         variants.push(format!(
@@ -193,6 +248,9 @@ fn render(contract: &DesktopContract) -> Result<String, io::Error> {
         if route.response == "event-stream" {
             streaming.push(format!("Self::{variant}"));
         }
+        if route.response == "png" {
+            images.push(format!("Self::{variant}"));
+        }
     }
     let all = contract
         .routes
@@ -200,27 +258,12 @@ fn render(contract: &DesktopContract) -> Result<String, io::Error> {
         .map(|name| pascal_case(name).map(|variant| format!("Self::{variant}")))
         .collect::<Result<Vec<_>, _>>()?
         .join(", ");
-    let events = contract
-        .stream_events
-        .iter()
-        .map(|event| format!("{event:?}"))
-        .collect::<Vec<_>>()
-        .join(", ");
-    let statuses = contract
-        .errors
-        .iter()
-        .map(|(code, status)| {
-            pascal_case(code).map(|variant| {
-                (
-                    format!("DesktopApiErrorCode::{variant}"),
-                    status.to_string(),
-                )
-            })
-        })
-        .collect::<Result<Vec<_>, _>>()?;
-    let statuses = grouped_arms("        ", statuses);
+    let events = literals(&contract.stream_events);
+    let statuses = refusal_arms(&contract.errors)?;
     let scopes = grouped_arms("            ", scopes);
     let streaming = streaming.join(" | ");
+    let images = matches_any(&images);
+    let native_kinds = literals(&contract.native_visualization_kinds);
     Ok(format!(
         r"// Generated from desktop-api.contract.json by build.rs. Do not edit.
 
@@ -270,10 +313,19 @@ impl Route {{
     pub const fn streams(self) -> bool {{
         matches!(self, {streaming})
     }}
+
+    /// Whether the route answers with one `image/png` body.
+    #[must_use]
+    pub const fn answers_png(self) -> bool {{
+        {images}
+    }}
 }}
 
 /// Every `runs/stream` event type, in contract order.
 pub const STREAM_EVENT_TYPES: &[&str] = &[{events}];
+
+/// Chart kinds drawn as native rows, not as the server's PNG.
+pub const NATIVE_VISUALIZATION_KINDS: &[&str] = &[{native_kinds}];
 
 /// The HTTP status the contract gives a refusal.
 #[must_use]

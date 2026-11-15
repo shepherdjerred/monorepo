@@ -921,6 +921,19 @@ observer as `/api/explore/stream`: a snapshot on attach, then live events, then
 at most `DESKTOP_STREAMS_PER_DEVICE` open streams in a process; one more is 429
 `stream_limit`.
 
+Answers' visuals use `assets` and `visualization` (`explore-routes.ts`).
+`assets` names the Data Dragon version the server's asset bundle was built
+from (`latestVersion`), which the desktop fetches card art at. `visualization`
+takes `{ conversationId, messageId }`, reads that answer's stored chart through
+`loadExploreVisualization` (owner-scoped: another user's answer, a question or
+an answer without a chart is 404 `not_found`) and answers the PNG
+`visualizationSnapshotToImage` draws, the same image Discord posts, as
+`image/png`. Drawing is CPU-bound on the request path, so each device gets
+`DESKTOP_RENDER_LIMIT_PER_MINUTE` (20) renders a minute on top of the read
+limit; past it the route is 429 `rate_limited` before anything is read. The
+contract's `nativeVisualizationKinds` names the chart kinds Discord and the
+desktop draw as text instead.
+
 `scout_desktop_explore_enabled` gates every desktop Explore route. It defaults
 on in beta and production (a player opts in by pairing), so it is a kill
 switch: after authentication and Explore access, it is evaluated for the

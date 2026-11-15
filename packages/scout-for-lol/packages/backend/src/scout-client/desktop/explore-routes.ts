@@ -2,6 +2,11 @@ import {
   EXPLORE_REQUEST_MAX_BYTES,
   SCOUT_DESKTOP_API_ROUTES,
   SCOUT_DESKTOP_ORIGIN_CONTRACT_VERSION,
+  SCOUT_DESKTOP_PNG_CONTENT_TYPE,
+  ScoutDesktopEmptyRequestSchema,
+  ScoutDesktopVisualizationRequestSchema,
+  latestVersion,
+  type ScoutDesktopAssetsResponse,
   ScoutDesktopConversationGetRequestSchema,
   ScoutDesktopConversationGetResponseSchema,
   ScoutDesktopConversationListRequestSchema,
@@ -11,11 +16,13 @@ import {
   type ExploreConversationOrigin,
   type ScoutDesktopExploreStatusResponse,
 } from "@scout-for-lol/data";
+import { visualizationSnapshotToImage } from "@scout-for-lol/report";
 import { prisma } from "#src/database/index.ts";
 import { exploreStatusFor } from "#src/explore/spending/status.ts";
 import {
   listExploreConversations,
   loadExploreTranscript,
+  loadExploreVisualization,
 } from "#src/explore/store.ts";
 import { readBodyWithinLimit } from "#src/utils/bounded-request-body.ts";
 import { authenticateDesktopExplore } from "./auth.ts";
@@ -23,6 +30,7 @@ import {
   acceptedContractVersion,
   contractUnsupportedResponse,
   desktopErrorResponse,
+  desktopHeaders,
   desktopJsonResponse,
 } from "./contract.ts";
 import {
@@ -31,14 +39,21 @@ import {
   type DesktopRoute,
   type DesktopRouteHandler,
 } from "./explore-run-routes.ts";
+import { desktopRenderAllowed } from "./rate-limit.ts";
 
 /**
  * Explore over REST for Scout Desktop.
  *
  * Each route calls the same store, status or run-manager function its tRPC
  * procedure calls, so the desktop and the web share one implementation. The
- * conversation reads live here; starting, stopping and observing runs live in
- * `explore-run-routes.ts`.
+ * conversation reads and an answer's visuals live here; starting, stopping
+ * and observing runs live in `explore-run-routes.ts`.
+ *
+ * Charts are drawn by the same `visualizationSnapshotToImage` Discord posts,
+ * so every chart kind the web draws works on the desktop without a native
+ * renderer; the desktop draws only the contract's native kinds itself. Card
+ * art comes straight from Data Dragon at the version this server's asset
+ * bundle was built from, so the client never pins one.
  */
 
 /** Read bodies are a handful of ids; anything larger is not a read. */
@@ -111,6 +126,46 @@ const getConversation: DesktopRouteHandler = async ({
       );
 };
 
+const ASSETS: ScoutDesktopAssetsResponse = {
+  dataDragonVersion: latestVersion,
+};
+
+const assets: DesktopRouteHandler = ({ body }) =>
+  Promise.resolve(
+    ScoutDesktopEmptyRequestSchema.safeParse(body).success
+      ? desktopJsonResponse(ASSETS)
+      : invalidRequest(),
+  );
+
+const visualization: DesktopRouteHandler = async ({ caller, body }) => {
+  const input = ScoutDesktopVisualizationRequestSchema.safeParse(body);
+  if (!input.success) return invalidRequest();
+  // Counted before the read, so a device that loops on a missing chart
+  // spends its render budget too.
+  if (!desktopRenderAllowed(caller.device.deviceId)) {
+    return desktopErrorResponse(
+      "rate_limited",
+      "Too many charts from this device. Try again shortly.",
+    );
+  }
+  const snapshot = await loadExploreVisualization(prisma, {
+    conversationId: input.data.conversationId,
+    messageId: input.data.messageId,
+    userId: caller.userId,
+  });
+  // Another user's answer is indistinguishable from one without a chart.
+  if (snapshot === null) {
+    return desktopErrorResponse("not_found", "Chart not found.");
+  }
+  return new Response(new Uint8Array(visualizationSnapshotToImage(snapshot)), {
+    status: 200,
+    headers: {
+      ...desktopHeaders(),
+      "Content-Type": SCOUT_DESKTOP_PNG_CONTENT_TYPE,
+    },
+  });
+};
+
 const ROUTES = new Map<string, DesktopRoute>([
   [
     SCOUT_DESKTOP_API_ROUTES.explore_status.path,
@@ -123,6 +178,14 @@ const ROUTES = new Map<string, DesktopRoute>([
   [
     SCOUT_DESKTOP_API_ROUTES.explore_conversations_get.path,
     { handler: getConversation, maxBodyBytes: MAX_READ_BODY_BYTES },
+  ],
+  [
+    SCOUT_DESKTOP_API_ROUTES.explore_assets.path,
+    { handler: assets, maxBodyBytes: MAX_READ_BODY_BYTES },
+  ],
+  [
+    SCOUT_DESKTOP_API_ROUTES.explore_visualization.path,
+    { handler: visualization, maxBodyBytes: MAX_READ_BODY_BYTES },
   ],
   ...DESKTOP_RUN_ROUTES.map(
     ({ path, handler, turn }) =>

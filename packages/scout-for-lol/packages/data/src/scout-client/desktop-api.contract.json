@@ -1,5 +1,5 @@
 {
-  "contractVersion": 3,
+  "contractVersion": 4,
   "minimumContractVersion": 1,
   "header": "X-Scout-Desktop-Contract",
   "scopes": ["ingest", "explore"],
@@ -64,6 +64,18 @@
       "path": "/api/scout-client/v1/explore/runs/stream",
       "scope": "explore",
       "response": "event-stream"
+    },
+    "explore_assets": {
+      "method": "POST",
+      "path": "/api/scout-client/v1/explore/assets",
+      "scope": "explore",
+      "response": "json"
+    },
+    "explore_visualization": {
+      "method": "POST",
+      "path": "/api/scout-client/v1/explore/visualization",
+      "scope": "explore",
+      "response": "png"
     }
   },
   "streamEvents": [
@@ -79,6 +91,7 @@
     "error",
     "done"
   ],
+  "nativeVisualizationKinds": ["TABLE", "LIST", "LEADERBOARD", "KPI_CARD"],
   "errors": {
     "invalid_request": 400,
     "invalid_turn": 400,

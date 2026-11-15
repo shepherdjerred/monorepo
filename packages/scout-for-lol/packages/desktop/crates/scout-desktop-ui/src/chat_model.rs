@@ -2,9 +2,11 @@
 //! relays. Nothing here knows about GPUI, so it builds and is tested on every
 //! target; the chat view renders these structs and nothing else.
 
+use std::collections::BTreeMap;
+
 use scout_desktop_ipc::{
-    ChatAvailability, ChatCommand, ChatParts, ChatRole, ChatToolStatus, ChatToolStep,
-    StateSnapshot, UpdateSnapshot, WindowMessage,
+    ChatAvailability, ChatCommand, ChatImage, ChatParts, ChatRole, ChatToolStatus, ChatToolStep,
+    ChatVisuals, StateSnapshot, UpdateSnapshot, WindowMessage,
 };
 use uuid::Uuid;
 
@@ -69,6 +71,22 @@ fn format_duration(milliseconds: u64) -> String {
     }
 }
 
+/// What one picture slot shows.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Picture<'a> {
+    /// Nothing to fetch: an empty slot, or an id the game data lacks.
+    Absent,
+    /// The supervisor is fetching it.
+    Loading,
+    /// The cached file to draw.
+    Ready(&'a str),
+    /// Why it could not be fetched.
+    Failed(&'a str),
+}
+
+/// What a chart slot says while its image is not there.
+pub const CHART_LOADING: &str = "Drawing the chart…";
+
 /// One row of the transcript: a question, or an answer with its steps.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TranscriptRow {
@@ -88,6 +106,25 @@ pub struct TranscriptRow {
     pub caveats: Vec<String>,
     /// The error a run reported.
     pub error: Option<String>,
+    /// A persisted answer's chart or table and its cards.
+    pub visuals: ChatVisuals,
+    /// Where each picture `visuals` names stands.
+    pub pictures: BTreeMap<String, ChatImage>,
+}
+
+impl TranscriptRow {
+    /// What the picture named `key` shows.
+    #[must_use]
+    pub fn picture(&self, key: Option<&str>) -> Picture<'_> {
+        let Some(key) = key else {
+            return Picture::Absent;
+        };
+        match self.pictures.get(key) {
+            None | Some(ChatImage::Loading) => Picture::Loading,
+            Some(ChatImage::Ready { path }) => Picture::Ready(path),
+            Some(ChatImage::Failed { message }) => Picture::Failed(message),
+        }
+    }
 }
 
 /// The composer's controls.
@@ -304,6 +341,18 @@ fn rows(parts: &ChatParts) -> Vec<TranscriptRow> {
             activity: None,
             caveats: message.caveats.clone(),
             error: None,
+            pictures: message
+                .visuals
+                .image_keys()
+                .into_iter()
+                .filter_map(|key| {
+                    parts
+                        .images
+                        .get(key)
+                        .map(|image| (key.to_owned(), image.clone()))
+                })
+                .collect(),
+            visuals: message.visuals.clone(),
         })
         .collect();
     let Some(turn) = &parts.turn else {
@@ -319,6 +368,8 @@ fn rows(parts: &ChatParts) -> Vec<TranscriptRow> {
             activity: None,
             caveats: Vec::new(),
             error: None,
+            visuals: ChatVisuals::default(),
+            pictures: BTreeMap::new(),
         });
     }
     let answering = turn.answer.is_some()
@@ -335,6 +386,8 @@ fn rows(parts: &ChatParts) -> Vec<TranscriptRow> {
             activity: turn.activity.clone(),
             caveats: Vec::new(),
             error: turn.error.clone(),
+            visuals: ChatVisuals::default(),
+            pictures: BTreeMap::new(),
         });
     }
     rows
@@ -414,7 +467,7 @@ mod tests {
 
     use super::{
         ChatScreen, ConversationModel, GateModel, PENDING_ANSWER_KEY, PENDING_QUESTION_KEY,
-        SidebarModel, send_message, stop_message, stream_fade,
+        Picture, SidebarModel, send_message, stop_message, stream_fade,
     };
 
     type TestResult = Result<(), Box<dyn std::error::Error>>;
@@ -623,6 +676,40 @@ mod tests {
         assert!(model.reconnecting);
         assert_eq!(model.rows[1].tools[1].status_label, "Running");
         assert_eq!(model.rows[1].tools[1].duration, None);
+        Ok(())
+    }
+
+    #[test]
+    fn an_answer_row_carries_its_visuals_and_where_each_picture_stands() -> TestResult {
+        use scout_desktop_ipc::{ChatImage, ChatVisual};
+
+        let mut parts = golden::visuals()?.parts();
+        let model = conversation(&parts)?;
+        assert_eq!(model.title, "My Jinx this month");
+        assert_eq!(model.rows.len(), 8);
+        let Some(ChatVisual::Chart { image, .. }) = model.rows[1].visuals.visual.clone() else {
+            return Err("the first answer should be a chart".into());
+        };
+        assert_eq!(model.rows[1].picture(Some(&image)), Picture::Loading);
+        assert_eq!(model.rows[0].picture(None), Picture::Absent);
+
+        parts.images.insert(
+            image.clone(),
+            ChatImage::Ready {
+                path: "/cache/chart.asset".to_owned(),
+            },
+        );
+        let model = conversation(&parts)?;
+        assert_eq!(
+            model.rows[1].picture(Some(&image)),
+            Picture::Ready("/cache/chart.asset")
+        );
+        assert_eq!(model.rows[5].visuals.match_cards.len(), 1);
+        assert_eq!(model.rows[7].visuals.loadout_cards.len(), 1);
+        assert!(
+            model.rows[3].pictures.is_empty(),
+            "a native table names no pictures"
+        );
         Ok(())
     }
 

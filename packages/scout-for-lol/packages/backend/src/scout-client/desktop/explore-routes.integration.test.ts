@@ -8,6 +8,7 @@ import {
   ScoutDesktopConversationListResponseSchema,
 } from "@scout-for-lol/data";
 import { resetConfigurationForTests } from "#src/configuration.ts";
+import { scoutTestVisualization } from "#src/discord/scout/test-fixtures.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 
 const { prisma } = createTestDatabase("scout-client-desktop-explore");
@@ -29,8 +30,12 @@ vi.doMock("#src/trpc/auth-web-helpers.ts", () => ({
 const { handleScoutClientRoute } = await import("#src/scout-client/http.ts");
 const { approvePairing, createPairing, exchangePairing, revokeDevice } =
   await import("#src/scout-client/pairing.ts");
-const { startExploreTurn } = await import("#src/explore/store.ts");
-const { resetDesktopReadRateLimitForTests } = await import("./rate-limit.ts");
+const { appendExploreAnswer, startExploreTurn } =
+  await import("#src/explore/store.ts");
+const {
+  resetDesktopReadRateLimitForTests,
+  resetDesktopRenderRateLimitForTests,
+} = await import("./rate-limit.ts");
 
 const OWNER_ID = DiscordAccountIdSchema.parse("160509172704739328");
 const OTHER_USER_ID = DiscordAccountIdSchema.parse("160509172704739329");
@@ -87,12 +92,49 @@ async function errorCode(response: Response) {
 
 const LIST_PATH = SCOUT_DESKTOP_API_ROUTES.explore_conversations_list.path;
 const GET_PATH = SCOUT_DESKTOP_API_ROUTES.explore_conversations_get.path;
+const CHART_PATH = SCOUT_DESKTOP_API_ROUTES.explore_visualization.path;
+const PNG_SIGNATURE = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
+
+/** A question and an answer that carries a chart, as a finished run stores it. */
+async function answerWithChart(userId: typeof OWNER_ID) {
+  const started = await startExploreTurn(prisma, {
+    conversationId: null,
+    userId,
+    question: "Which champions win most?",
+    attach: { kind: "leaf" },
+    origin: "desktop",
+  });
+  const answer = await appendExploreAnswer(prisma, {
+    conversationId: started.conversationId,
+    parentMessageId: started.messageId,
+    guildIds: [],
+    answer: {
+      answer: "Ahri wins most often.",
+      title: null,
+      queryText: null,
+      includeVisualization: true,
+      caveats: [],
+      followUps: [],
+      matchCards: [],
+      loadoutCards: [],
+    },
+    preview: null,
+    visualization: scoutTestVisualization,
+    trace: [],
+  });
+  return {
+    conversationId: started.conversationId,
+    questionId: started.messageId,
+    answerId: answer.id,
+  };
+}
 
 beforeEach(async () => {
   Bun.env["ENVIRONMENT"] = "beta";
   Bun.env["EXPLORE_GUILD_ALLOWLIST"] = SHARED_GUILD;
   resetConfigurationForTests();
   resetDesktopReadRateLimitForTests();
+  resetDesktopRenderRateLimitForTests();
   mocks.fetchUserGuilds.mockReset();
   mocks.fetchUserGuilds.mockResolvedValue([guild(SHARED_GUILD)]);
   await prisma.exploreMessage.deleteMany();
@@ -198,6 +240,31 @@ describe("desktop Explore against a real database", () => {
 
     expect(response.status).toBe(403);
     expect(await errorCode(response)).toBe("explore_forbidden");
+  });
+
+  test("the chart route draws only the owner's stored chart", async () => {
+    const { token } = await pairedDevice(["ingest", "explore"]);
+    const own = await answerWithChart(OWNER_ID);
+    const foreign = await answerWithChart(OTHER_USER_ID);
+
+    const drawn = await post(CHART_PATH, token, {
+      conversationId: own.conversationId,
+      messageId: own.answerId,
+    });
+    expect(drawn.status).toBe(200);
+    expect(drawn.headers.get("Content-Type")).toBe("image/png");
+    const bytes = new Uint8Array(await drawn.arrayBuffer());
+    expect([...bytes.slice(0, PNG_SIGNATURE.length)]).toEqual(PNG_SIGNATURE);
+
+    for (const body of [
+      { conversationId: foreign.conversationId, messageId: foreign.answerId },
+      { conversationId: own.conversationId, messageId: foreign.answerId },
+      { conversationId: own.conversationId, messageId: own.questionId },
+    ]) {
+      const refused = await post(CHART_PATH, token, body);
+      expect(refused.status).toBe(404);
+      expect(await errorCode(refused)).toBe("not_found");
+    }
   });
 
   test("the database refuses a scope outside the contract", async () => {

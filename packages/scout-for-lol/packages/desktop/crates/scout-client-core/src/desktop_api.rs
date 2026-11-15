@@ -24,7 +24,7 @@ use uuid::Uuid;
 /// Request header carrying the client's desktop contract version.
 pub const DESKTOP_CONTRACT_HEADER: &str = "X-Scout-Desktop-Contract";
 /// Desktop contract version this build speaks.
-pub const DESKTOP_CONTRACT_VERSION: u32 = 3;
+pub const DESKTOP_CONTRACT_VERSION: u32 = 4;
 /// Path of the route that starts an Explore turn.
 pub const EXPLORE_RUNS_START_PATH: &str = "/api/scout-client/v1/explore/runs/start";
 /// Path of the route that stops a running turn.
@@ -45,6 +45,12 @@ pub const EXPLORE_STATUS_PATH: &str = "/api/scout-client/v1/explore/status";
 pub const EXPLORE_CONVERSATIONS_LIST_PATH: &str = "/api/scout-client/v1/explore/conversations/list";
 /// Path of the conversation transcript route.
 pub const EXPLORE_CONVERSATIONS_GET_PATH: &str = "/api/scout-client/v1/explore/conversations/get";
+/// Path of the route that names the game asset version.
+pub const EXPLORE_ASSETS_PATH: &str = "/api/scout-client/v1/explore/assets";
+/// Path of the `image/png` route that draws one answer's chart.
+pub const EXPLORE_VISUALIZATION_PATH: &str = "/api/scout-client/v1/explore/visualization";
+/// The content type of a `png` route's answer.
+pub const PNG_CONTENT_TYPE: &str = "image/png";
 
 /// What a device credential may do.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
@@ -440,6 +446,43 @@ pub struct RunOutcomeResponse {
     pub outcome: Option<RunOutcome>,
 }
 
+/// Response from `explore/assets`: the Data Dragon version the server's own
+/// asset bundle was built from, which card art is fetched at.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct AssetsResponse {
+    /// A Data Dragon version such as `16.22.1`.
+    pub data_dragon_version: String,
+}
+
+/// Request to `explore/visualization`: the persisted answer whose chart to
+/// draw.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct VisualizationRequest {
+    /// The conversation it is in.
+    pub conversation_id: Uuid,
+    /// The answer.
+    pub message_id: Uuid,
+}
+
+/// The one content type a `png` route answers with.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum PngContentType {
+    /// `image/png`.
+    #[serde(rename = "image/png")]
+    Png,
+}
+
+/// What a `png` route's golden fixture records: its body is image bytes, so
+/// the content type is all a client relies on.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct PngResponse {
+    /// Always `image/png`.
+    pub content_type: PngContentType,
+}
+
 /// How a route answers.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "kebab-case")]
@@ -448,6 +491,8 @@ pub enum RouteResponseKind {
     Json,
     /// A `text/event-stream` of [`StreamEvent`] frames.
     EventStream,
+    /// One `image/png` body.
+    Png,
 }
 
 /// One route in the shared contract.
@@ -482,6 +527,8 @@ pub struct DesktopApiContract {
     pub routes: BTreeMap<String, DesktopRoute>,
     /// Every `runs/stream` event type.
     pub stream_events: Vec<String>,
+    /// Chart kinds drawn as native rows rather than as the server's PNG.
+    pub native_visualization_kinds: Vec<String>,
     /// Refusal codes and their HTTP status.
     pub errors: BTreeMap<DesktopApiErrorCode, u16>,
 }
@@ -495,14 +542,15 @@ mod tests {
     use serde_json::Value;
 
     use super::{
-        ActiveRun, ConversationListResponse, DESKTOP_CONTRACT_HEADER, DESKTOP_CONTRACT_VERSION,
-        DEVICE_SCOPE_REQUESTS_PATH, DesktopApiContract, DesktopApiError, DeviceScope,
-        EXPLORE_CONVERSATIONS_GET_PATH, EXPLORE_CONVERSATIONS_LIST_PATH, EXPLORE_RUNS_ACTIVE_PATH,
-        EXPLORE_RUNS_OUTCOME_PATH, EXPLORE_RUNS_START_PATH, EXPLORE_RUNS_STOP_PATH,
-        EXPLORE_RUNS_STREAM_PATH, EXPLORE_STATUS_PATH, EmptyRequest, ExploreStatusResponse,
-        PAIRINGS_V2_PATH, PairingV2Response, RouteResponseKind, RunActiveResponse,
-        RunOutcomeResponse, RunRequest, RunStartRequest, RunStopResponse, ScopeRequest,
-        ScopeRequestResponse,
+        ActiveRun, AssetsResponse, ConversationListResponse, DESKTOP_CONTRACT_HEADER,
+        DESKTOP_CONTRACT_VERSION, DEVICE_SCOPE_REQUESTS_PATH, DesktopApiContract, DesktopApiError,
+        DeviceScope, EXPLORE_ASSETS_PATH, EXPLORE_CONVERSATIONS_GET_PATH,
+        EXPLORE_CONVERSATIONS_LIST_PATH, EXPLORE_RUNS_ACTIVE_PATH, EXPLORE_RUNS_OUTCOME_PATH,
+        EXPLORE_RUNS_START_PATH, EXPLORE_RUNS_STOP_PATH, EXPLORE_RUNS_STREAM_PATH,
+        EXPLORE_STATUS_PATH, EXPLORE_VISUALIZATION_PATH, EmptyRequest, ExploreStatusResponse,
+        PAIRINGS_V2_PATH, PNG_CONTENT_TYPE, PairingV2Response, PngResponse, RouteResponseKind,
+        RunActiveResponse, RunOutcomeResponse, RunRequest, RunStartRequest, RunStopResponse,
+        ScopeRequest, ScopeRequestResponse, VisualizationRequest,
     };
     use crate::protocol::CreatePairingRequest;
 
@@ -536,6 +584,11 @@ mod tests {
     );
     const RUNS_STREAM: &str =
         include_str!("../../../../data/src/scout-client/desktop-fixtures/explore-runs-stream.json");
+    const ASSETS: &str =
+        include_str!("../../../../data/src/scout-client/desktop-fixtures/explore-assets.json");
+    const VISUALIZATION: &str = include_str!(
+        "../../../../data/src/scout-client/desktop-fixtures/explore-visualization.json"
+    );
 
     /// Parse strictly, then prove serialising and parsing again is lossless.
     fn round_trip<T>(value: &Value) -> TestResult
@@ -590,6 +643,7 @@ mod tests {
             paths,
             BTreeMap::from([
                 ("device_scope_requests", DEVICE_SCOPE_REQUESTS_PATH),
+                ("explore_assets", EXPLORE_ASSETS_PATH),
                 ("explore_conversations_get", EXPLORE_CONVERSATIONS_GET_PATH),
                 (
                     "explore_conversations_list",
@@ -601,6 +655,7 @@ mod tests {
                 ("explore_runs_stop", EXPLORE_RUNS_STOP_PATH),
                 ("explore_runs_stream", EXPLORE_RUNS_STREAM_PATH),
                 ("explore_status", EXPLORE_STATUS_PATH),
+                ("explore_visualization", EXPLORE_VISUALIZATION_PATH),
                 ("pairings_v2", PAIRINGS_V2_PATH),
             ])
         );
@@ -612,6 +667,17 @@ mod tests {
             .map(|(name, _)| name.as_str())
             .collect();
         assert_eq!(streaming, vec!["explore_runs_stream"]);
+        let images: Vec<&str> = contract
+            .routes
+            .iter()
+            .filter(|(_, route)| route.response == RouteResponseKind::Png)
+            .map(|(name, _)| name.as_str())
+            .collect();
+        assert_eq!(images, vec!["explore_visualization"]);
+        assert_eq!(
+            contract.native_visualization_kinds,
+            ["TABLE", "LIST", "LEADERBOARD", "KPI_CARD"]
+        );
         Ok(())
     }
 
@@ -630,6 +696,8 @@ mod tests {
             RUNS_ACTIVE,
             RUNS_OUTCOME,
             RUNS_STREAM,
+            ASSETS,
+            VISUALIZATION,
         ] {
             let fixture: Value = serde_json::from_str(fixture)?;
             named.push(fixture["route"].as_str().ok_or("route name")?.to_owned());
@@ -649,6 +717,19 @@ mod tests {
         let fixture: Value = serde_json::from_str(RUNS_START)?;
         let request: RunStartRequest = serde_json::from_value(fixture["request"].clone())?;
         assert_eq!(serde_json::to_value(&request)?, fixture["request"]);
+        Ok(())
+    }
+
+    #[test]
+    fn assets_fixture_parses_strictly() -> TestResult {
+        check_route::<EmptyRequest, AssetsResponse>(ASSETS, "explore_assets")
+    }
+
+    #[test]
+    fn visualization_fixture_parses_strictly_and_names_png() -> TestResult {
+        check_route::<VisualizationRequest, PngResponse>(VISUALIZATION, "explore_visualization")?;
+        let fixture: Value = serde_json::from_str(VISUALIZATION)?;
+        assert_eq!(fixture["response"]["contentType"], PNG_CONTENT_TYPE);
         Ok(())
     }
 

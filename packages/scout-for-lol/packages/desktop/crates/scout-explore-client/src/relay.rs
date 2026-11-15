@@ -5,18 +5,170 @@
 //! it for uploads; the window, which renders on the GPU and can be lost with
 //! it, never sees the bearer. It sends [`ChatCommand`]s over IPC and renders
 //! the [`ChatParts`] this relay publishes.
+//!
+//! The relay also fetches every picture the open transcript names into the
+//! disk cache: each chart from `explore/visualization` with the device
+//! credential, one at a time so a long conversation stays inside the
+//! device's render budget, and card art from Data Dragon, a few at a time.
+//! The window reads the cached files; it never fetches anything itself.
+
+use std::collections::HashSet;
+use std::path::PathBuf;
+use std::sync::Arc;
+use std::time::Duration;
 
 use scout_client_core::desktop_api::{ActiveRun, ConversationListResponse};
-use scout_desktop_ipc::{ChatAvailability, ChatCommand, ChatParts};
-use tokio::sync::{mpsc, watch};
+use scout_desktop_ipc::{ChatAvailability, ChatCommand, ChatImage, ChatParts};
+use tokio::sync::{Semaphore, mpsc, watch};
 use tokio::task::JoinHandle;
+use url::Url;
 use uuid::Uuid;
 
+use crate::asset_cache::{AssetCache, DEFAULT_CAPACITY_BYTES};
 use crate::client::ExploreClient;
+use crate::contract::Route;
+use crate::data_dragon::{DATA_DRAGON_HOST, DataDragon, champion_list_url, rune_list_url};
 use crate::error::ExploreClientError;
 use crate::model::Transcript;
 use crate::session::ChatSession;
 use crate::stream::{StreamEnd, StreamOptions, StreamSignal};
+use crate::visuals::ImageSource;
+
+/// How long one Data Dragon download may take.
+const ART_TIMEOUT: Duration = Duration::from_secs(15);
+/// The largest Data Dragon file chat accepts; `champion.json` is the largest.
+const MAX_ART_BYTES: usize = 4 * 1024 * 1024;
+/// Data Dragon downloads in flight at once.
+const ART_CONCURRENCY: usize = 6;
+/// What a picture that could not be fetched says.
+const ART_FAILED: &str = "This image is unavailable.";
+
+/// Where pictures come from and land: the disk cache, the Data Dragon
+/// client, and how many of each may be in flight.
+#[derive(Debug)]
+struct Pictures {
+    cache: Result<AssetCache, String>,
+    http: Result<reqwest::Client, String>,
+    art_permits: Semaphore,
+    chart_permits: Semaphore,
+}
+
+impl Pictures {
+    fn open(directory: PathBuf) -> Self {
+        Self {
+            cache: AssetCache::open(directory, DEFAULT_CAPACITY_BYTES)
+                .map_err(|error| format!("Scout could not keep images on this computer: {error}")),
+            http: reqwest::Client::builder()
+                .timeout(ART_TIMEOUT)
+                .build()
+                .map_err(|error| error.to_string()),
+            art_permits: Semaphore::new(ART_CONCURRENCY),
+            chart_permits: Semaphore::new(1),
+        }
+    }
+
+    fn cache(&self) -> Result<&AssetCache, String> {
+        self.cache.as_ref().map_err(Clone::clone)
+    }
+
+    async fn cached(self: &Arc<Self>, key: &str) -> Result<Option<PathBuf>, String> {
+        self.cache()?;
+        let pictures = Arc::clone(self);
+        let key = key.to_owned();
+        tokio::task::spawn_blocking(move || pictures.cache().map(|cache| cache.get(&key)))
+            .await
+            .map_err(|error| error.to_string())?
+    }
+
+    async fn store(self: &Arc<Self>, key: &str, bytes: Vec<u8>) -> Result<PathBuf, String> {
+        let pictures = Arc::clone(self);
+        let key = key.to_owned();
+        tokio::task::spawn_blocking(move || {
+            pictures
+                .cache()?
+                .put(&key, &bytes)
+                .map_err(|error| error.to_string())
+        })
+        .await
+        .map_err(|error| error.to_string())?
+    }
+
+    /// A Data Dragon file, from the cache or downloaded into it. Only
+    /// `https://ddragon.leagueoflegends.com` is ever fetched.
+    async fn art(self: &Arc<Self>, url: &str) -> Result<PathBuf, String> {
+        let parsed = Url::parse(url).map_err(|error| error.to_string())?;
+        if parsed.scheme() != "https" || parsed.host_str() != Some(DATA_DRAGON_HOST) {
+            return Err(format!("{url} is not a Data Dragon URL"));
+        }
+        if let Some(path) = self.cached(url).await? {
+            return Ok(path);
+        }
+        let _permit = self
+            .art_permits
+            .acquire()
+            .await
+            .map_err(|error| error.to_string())?;
+        let http = self.http.as_ref().map_err(Clone::clone)?;
+        let response = http
+            .get(parsed)
+            .send()
+            .await
+            .and_then(reqwest::Response::error_for_status)
+            .map_err(|error| error.to_string())?;
+        let bytes = response.bytes().await.map_err(|error| error.to_string())?;
+        if bytes.len() > MAX_ART_BYTES {
+            return Err(format!("{url} is {} bytes", bytes.len()));
+        }
+        self.store(url, bytes.to_vec()).await
+    }
+
+    /// One answer's chart, from the cache or drawn by Scout into it.
+    async fn chart(
+        self: &Arc<Self>,
+        client: &ExploreClient,
+        conversation_id: Uuid,
+        message_id: Uuid,
+    ) -> Result<PathBuf, String> {
+        // A persisted answer's chart never changes, so it is cached by the
+        // backend and the answer alone.
+        let key = format!(
+            "{}{}#{conversation_id}/{message_id}",
+            client.origin().trim_end_matches('/'),
+            Route::ExploreVisualization.path()
+        );
+        if let Some(path) = self.cached(&key).await? {
+            return Ok(path);
+        }
+        let _permit = self
+            .chart_permits
+            .acquire()
+            .await
+            .map_err(|error| error.to_string())?;
+        let bytes = client
+            .visualization(conversation_id, message_id)
+            .await
+            .map_err(|error| {
+                error.refusal().map_or_else(
+                    || "Scout could not draw this chart.".to_owned(),
+                    |refusal| refusal.message.clone(),
+                )
+            })?;
+        self.store(&key, bytes).await
+    }
+
+    /// Card art's catalog at the version Scout names.
+    async fn data_dragon(self: &Arc<Self>, client: &ExploreClient) -> Result<DataDragon, String> {
+        let version = client
+            .assets()
+            .await
+            .map_err(|error| error.to_string())?
+            .data_dragon_version;
+        let read = |path: PathBuf| std::fs::read(path).map_err(|error| error.to_string());
+        let champions = read(self.art(&champion_list_url(&version)).await?)?;
+        let runes = read(self.art(&rune_list_url(&version)).await?)?;
+        DataDragon::from_documents(&version, &champions, &runes).map_err(|error| error.to_string())
+    }
+}
 
 /// The supervisor's handle on the chat relay.
 #[derive(Debug, Clone)]
@@ -26,13 +178,14 @@ pub struct ChatRelay {
 }
 
 impl ChatRelay {
-    /// Start the relay for `origin` on the current Tokio runtime. It asks
-    /// Scout nothing until the first [`ChatCommand::Refresh`], which the
-    /// supervisor sends when a window opens.
+    /// Start the relay for `origin` on the current Tokio runtime, caching
+    /// pictures in `cache_directory`. It asks Scout nothing until the first
+    /// [`ChatCommand::Refresh`], which the supervisor sends when a window
+    /// opens.
     #[must_use]
-    pub fn spawn(origin: String) -> Self {
+    pub fn spawn(origin: String, cache_directory: PathBuf) -> Self {
         let (relay, commands, parts) = Self::detached();
-        tokio::spawn(run(origin, commands, parts));
+        tokio::spawn(run(origin, cache_directory, commands, parts));
         relay
     }
 
@@ -87,6 +240,11 @@ enum Answer {
     Ended(Result<StreamEnd, ExploreClientError>),
     Settled(Result<Transcript, ExploreClientError>),
     Failed(ExploreClientError),
+    Art(Result<DataDragon, String>),
+    Picture {
+        key: String,
+        fetched: Result<PathBuf, String>,
+    },
 }
 
 struct Relay {
@@ -95,10 +253,14 @@ struct Relay {
     client: Option<ExploreClient>,
     answers: mpsc::UnboundedSender<Answer>,
     follow: Option<JoinHandle<()>>,
+    pictures: Arc<Pictures>,
+    /// Picture keys already asked for, so each is fetched once.
+    requested: HashSet<String>,
 }
 
 async fn run(
     origin: String,
+    cache_directory: PathBuf,
     mut commands: mpsc::UnboundedReceiver<ChatCommand>,
     parts: watch::Sender<ChatParts>,
 ) {
@@ -109,6 +271,8 @@ async fn run(
         client: None,
         answers,
         follow: None,
+        pictures: Arc::new(Pictures::open(cache_directory)),
+        requested: HashSet::new(),
     };
     loop {
         tokio::select! {
@@ -118,6 +282,7 @@ async fn run(
             },
             Some(answer) = answered.recv() => relay.answer(answer),
         }
+        relay.fetch_pictures();
         let next = relay.session.parts();
         parts.send_if_modified(|current| {
             if *current == next {
@@ -138,6 +303,10 @@ impl Relay {
         match command {
             ChatCommand::Refresh => self.refresh(),
             ChatCommand::Open { conversation_id } => {
+                // Looking again retries what failed to load last time.
+                for key in self.session.forget_failed_images() {
+                    self.requested.remove(&key);
+                }
                 if self.session.open(conversation_id) {
                     self.fetch(conversation_id, Answer::Opened);
                 }
@@ -214,6 +383,7 @@ impl Relay {
     fn answer(&mut self, answer: Answer) {
         match answer {
             Answer::Client(Ok(client)) => {
+                self.load_art(&client);
                 self.client = Some(client);
                 self.list();
                 if let Some(open) = self.session.open_conversation() {
@@ -247,6 +417,56 @@ impl Relay {
             }
             Answer::Settled(Ok(transcript)) => self.session.settled(transcript),
             Answer::Settled(Err(error)) => self.session.settle_failed(&error),
+            // Without the catalog, cards keep their labelled placeholders;
+            // the next refresh tries again.
+            Answer::Art(Ok(art)) => self.session.art_loaded(art),
+            Answer::Art(Err(_)) => {}
+            Answer::Picture { key, fetched } => {
+                let image = match fetched {
+                    Ok(path) => ChatImage::Ready {
+                        path: path.to_string_lossy().into_owned(),
+                    },
+                    Err(message) => ChatImage::Failed { message },
+                };
+                self.session.image_loaded(key, image);
+            }
+        }
+    }
+
+    fn load_art(&self, client: &ExploreClient) {
+        let client = client.clone();
+        let pictures = Arc::clone(&self.pictures);
+        let answers = self.answers.clone();
+        tokio::spawn(async move {
+            let _ = answers.send(Answer::Art(pictures.data_dragon(&client).await));
+        });
+    }
+
+    /// Ask for every picture the transcript names that has not been asked
+    /// for yet.
+    fn fetch_pictures(&mut self) {
+        let Some(client) = self.client.clone() else {
+            return;
+        };
+        for (key, source) in self.session.wanted_images() {
+            if !self.requested.insert(key.clone()) {
+                continue;
+            }
+            let client = client.clone();
+            let pictures = Arc::clone(&self.pictures);
+            let answers = self.answers.clone();
+            tokio::spawn(async move {
+                let fetched = match source {
+                    ImageSource::Chart {
+                        conversation_id,
+                        message_id,
+                    } => pictures.chart(&client, conversation_id, message_id).await,
+                    ImageSource::Art { url } => {
+                        pictures.art(&url).await.map_err(|_| ART_FAILED.to_owned())
+                    }
+                };
+                let _ = answers.send(Answer::Picture { key, fetched });
+            });
         }
     }
 

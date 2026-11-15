@@ -19,15 +19,22 @@
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 
+use std::collections::BTreeMap;
+
 mod chat;
+mod chat_visuals;
 
 pub use chat::{
     ChatAvailability, ChatCommand, ChatConversation, ChatMessage, ChatParts, ChatRole, ChatStatus,
     ChatToolStatus, ChatToolStep, ChatTranscript, ChatTurn,
 };
+pub use chat_visuals::{
+    ChatIcon, ChatImage, ChatLoadoutCard, ChatMatchCard, ChatMatchPlayer, ChatMatchTeam, ChatTable,
+    ChatTableLayout, ChatVisual, ChatVisuals,
+};
 
 /// The version both ends must announce in their `hello`.
-pub const PROTOCOL_VERSION: u32 = 4;
+pub const PROTOCOL_VERSION: u32 = 5;
 
 /// A message from the supervisor to the window.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -81,6 +88,11 @@ pub enum SupervisorMessage {
     ChatTurn {
         /// The turn.
         turn: Option<ChatTurn>,
+    },
+    /// Where each picture the transcript names stands, by key.
+    ChatImages {
+        /// The pictures.
+        images: BTreeMap<String, ChatImage>,
     },
     /// Bring the window to the front (the tray's "Open" while it is running).
     Show,
@@ -347,11 +359,11 @@ mod tests {
     use uuid::Uuid;
 
     use super::{
-        ChatAvailability, ChatCommand, ChatConversation, ChatMessage, ChatRole, ChatStatus,
-        ChatToolStatus, ChatToolStep, ChatTranscript, ChatTurn, CounterReading,
-        DiagnosticsSnapshot, GameflowPhase, PROTOCOL_VERSION, PrivacySnapshot, StateSnapshot,
-        SupervisorMessage, UpdateSnapshot, UpdateStatus, WindowMessage, check_protocol,
-        decode_line, encode_line,
+        ChatAvailability, ChatCommand, ChatConversation, ChatImage, ChatMessage, ChatRole,
+        ChatStatus, ChatToolStatus, ChatToolStep, ChatTranscript, ChatTurn, ChatVisual,
+        ChatVisuals, CounterReading, DiagnosticsSnapshot, GameflowPhase, PROTOCOL_VERSION,
+        PrivacySnapshot, StateSnapshot, SupervisorMessage, UpdateSnapshot, UpdateStatus,
+        WindowMessage, check_protocol, decode_line, encode_line,
     };
 
     const CONVERSATION: Uuid = Uuid::from_u128(0x0b5e_4a1c_7f00_4e5a_9c1d_2f3e_4a5b_6c7d);
@@ -392,6 +404,15 @@ mod tests {
                         content: "**54%** over 40 games.\n\n| a | b |".to_owned(),
                         tools: vec![step.clone()],
                         caveats: vec!["Ranked solo only.".to_owned()],
+                        visuals: ChatVisuals {
+                            visual: Some(ChatVisual::Chart {
+                                image: "chart:a:b".to_owned(),
+                                label: "Bar chart: Jinx win rate".to_owned(),
+                                description: "Week 1: 54%".to_owned(),
+                            }),
+                            match_cards: Vec::new(),
+                            loadout_cards: Vec::new(),
+                        },
                     }],
                 }),
             },
@@ -412,6 +433,19 @@ mod tests {
                 }),
             },
             SupervisorMessage::ChatTurn { turn: None },
+            SupervisorMessage::ChatImages {
+                images: [
+                    ("chart:a:b".to_owned(), ChatImage::Loading),
+                    (
+                        "https://ddragon.leagueoflegends.com/cdn/16.22.1/img/item/3031.png"
+                            .to_owned(),
+                        ChatImage::Failed {
+                            message: "offline".to_owned(),
+                        },
+                    ),
+                ]
+                .into(),
+            },
         ]
     }
 

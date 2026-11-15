@@ -9,6 +9,7 @@
 mod chat;
 mod components;
 mod theme;
+mod visuals;
 
 use gpui_kit::{
     AppContext as _, Bounds, ClipboardItem, QuitMode, Render, TitlebarOptions, WindowBounds,

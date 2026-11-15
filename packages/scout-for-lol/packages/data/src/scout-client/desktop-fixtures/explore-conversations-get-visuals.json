@@ -1,0 +1,924 @@
+{
+  "route": "explore_conversations_get",
+  "request": {
+    "conversationId": "0f4d6c1e-8a51-4c62-9a1e-3b7f2d9c5e10"
+  },
+  "response": {
+    "conversation": {
+      "id": "0f4d6c1e-8a51-4c62-9a1e-3b7f2d9c5e10",
+      "title": "My Jinx this month",
+      "preferredModel": null,
+      "origin": "desktop",
+      "shareToken": null,
+      "sharedLeafId": null,
+      "createdAt": "2026-11-14T09:11:00.000Z",
+      "updatedAt": "2026-11-14T09:18:00.000Z"
+    },
+    "messages": [
+      {
+        "id": "7c1d0001-2b3a-4c5d-8e6f-000000000001",
+        "role": "user",
+        "parentId": null,
+        "siblingIds": ["7c1d0001-2b3a-4c5d-8e6f-000000000001"],
+        "versionIndex": 0,
+        "versionCount": 1,
+        "content": "Which bot lane pair wins most this month?",
+        "queryText": null,
+        "caveats": [],
+        "followUps": [],
+        "preview": null,
+        "visualization": null,
+        "matchCards": [],
+        "loadoutCards": [],
+        "guildIds": [],
+        "attachments": [],
+        "trace": [],
+        "createdAt": "2026-11-14T09:11:00.000Z"
+      },
+      {
+        "id": "7c1d0002-2b3a-4c5d-8e6f-000000000002",
+        "role": "assistant",
+        "parentId": "7c1d0001-2b3a-4c5d-8e6f-000000000001",
+        "siblingIds": ["7c1d0002-2b3a-4c5d-8e6f-000000000002"],
+        "versionIndex": 0,
+        "versionCount": 1,
+        "content": "Jinx and Lulu lead the server's bot lanes with a 61% win rate over 31 games.",
+        "queryText": null,
+        "caveats": [],
+        "followUps": [],
+        "preview": {
+          "columns": [
+            {
+              "key": "pair",
+              "label": "Bot lane pair",
+              "format": "text"
+            },
+            {
+              "key": "win_rate",
+              "label": "Win rate",
+              "format": "percent"
+            }
+          ],
+          "rows": [
+            {
+              "label": "Jinx + Lulu",
+              "games": 31,
+              "values": [
+                {
+                  "column": "pair",
+                  "value": "Jinx + Lulu"
+                },
+                {
+                  "column": "win_rate",
+                  "value": 0.61
+                }
+              ]
+            },
+            {
+              "label": "Jinx + Nami",
+              "games": 22,
+              "values": [
+                {
+                  "column": "pair",
+                  "value": "Jinx + Nami"
+                },
+                {
+                  "column": "win_rate",
+                  "value": 0.55
+                }
+              ]
+            },
+            {
+              "label": "Kai'Sa + Rell",
+              "games": 25,
+              "values": [
+                {
+                  "column": "pair",
+                  "value": "Kai'Sa + Rell"
+                },
+                {
+                  "column": "win_rate",
+                  "value": 0.52
+                }
+              ]
+            },
+            {
+              "label": "Ezreal + Karma",
+              "games": 19,
+              "values": [
+                {
+                  "column": "pair",
+                  "value": "Ezreal + Karma"
+                },
+                {
+                  "column": "win_rate",
+                  "value": 0.47
+                }
+              ]
+            }
+          ],
+          "visualizationRows": [],
+          "rowsReturned": 4,
+          "rowsScanned": 412,
+          "renderKind": "BAR_CHART"
+        },
+        "visualization": {
+          "version": 1,
+          "generatedAt": "2026-11-14T09:13:05.000Z",
+          "kind": "BAR_CHART",
+          "title": "Win rate by bot lane pair",
+          "temporal": null,
+          "bucket": null,
+          "display": {
+            "theme": null,
+            "palette": null,
+            "smooth": false,
+            "stack": "none",
+            "rollingWindow": null,
+            "cumulative": false,
+            "sparkline": false
+          },
+          "series": [
+            {
+              "id": "win_rate",
+              "label": "Win rate",
+              "metric": "win_rate",
+              "displayKind": "percent",
+              "additive": false,
+              "points": [
+                {
+                  "key": "jinx---lulu",
+                  "label": "Jinx + Lulu",
+                  "start": "2026-11-01T00:00:00.000Z",
+                  "end": "2026-11-14T00:00:00.000Z",
+                  "value": 0.61,
+                  "evidence": {
+                    "games": 31,
+                    "sampleSize": 31
+                  }
+                },
+                {
+                  "key": "jinx---nami",
+                  "label": "Jinx + Nami",
+                  "start": "2026-11-01T00:00:00.000Z",
+                  "end": "2026-11-14T00:00:00.000Z",
+                  "value": 0.55,
+                  "evidence": {
+                    "games": 22,
+                    "sampleSize": 22
+                  }
+                },
+                {
+                  "key": "kaisa---rell",
+                  "label": "Kai'Sa + Rell",
+                  "start": "2026-11-01T00:00:00.000Z",
+                  "end": "2026-11-14T00:00:00.000Z",
+                  "value": 0.52,
+                  "evidence": {
+                    "games": 25,
+                    "sampleSize": 25
+                  }
+                },
+                {
+                  "key": "ezreal---karma",
+                  "label": "Ezreal + Karma",
+                  "start": "2026-11-01T00:00:00.000Z",
+                  "end": "2026-11-14T00:00:00.000Z",
+                  "value": 0.47,
+                  "evidence": {
+                    "games": 19,
+                    "sampleSize": 19
+                  }
+                }
+              ]
+            }
+          ],
+          "annotations": [],
+          "trends": []
+        },
+        "matchCards": [],
+        "loadoutCards": [],
+        "guildIds": ["123456789012345678"],
+        "attachments": [],
+        "trace": [],
+        "createdAt": "2026-11-14T09:12:00.000Z"
+      },
+      {
+        "id": "7c1d0003-2b3a-4c5d-8e6f-000000000003",
+        "role": "user",
+        "parentId": "7c1d0002-2b3a-4c5d-8e6f-000000000002",
+        "siblingIds": ["7c1d0003-2b3a-4c5d-8e6f-000000000003"],
+        "versionIndex": 0,
+        "versionCount": 1,
+        "content": "Which champions do I play most?",
+        "queryText": null,
+        "caveats": [],
+        "followUps": [],
+        "preview": null,
+        "visualization": null,
+        "matchCards": [],
+        "loadoutCards": [],
+        "guildIds": [],
+        "attachments": [],
+        "trace": [],
+        "createdAt": "2026-11-14T09:13:00.000Z"
+      },
+      {
+        "id": "7c1d0004-2b3a-4c5d-8e6f-000000000004",
+        "role": "assistant",
+        "parentId": "7c1d0003-2b3a-4c5d-8e6f-000000000003",
+        "siblingIds": ["7c1d0004-2b3a-4c5d-8e6f-000000000004"],
+        "versionIndex": 0,
+        "versionCount": 1,
+        "content": "Jinx is your most played champion this month.",
+        "queryText": null,
+        "caveats": [],
+        "followUps": [],
+        "preview": {
+          "columns": [
+            {
+              "key": "champion",
+              "label": "Champion",
+              "format": "text",
+              "asset": "champion"
+            },
+            {
+              "key": "games",
+              "label": "Games",
+              "format": "integer"
+            },
+            {
+              "key": "win_rate",
+              "label": "Win rate",
+              "format": "percent"
+            }
+          ],
+          "rows": [
+            {
+              "label": "Jinx",
+              "games": 41,
+              "values": [
+                {
+                  "column": "champion",
+                  "value": "Jinx"
+                },
+                {
+                  "column": "games",
+                  "value": 41
+                },
+                {
+                  "column": "win_rate",
+                  "value": 0.58
+                }
+              ]
+            },
+            {
+              "label": "Lux",
+              "games": 36,
+              "values": [
+                {
+                  "column": "champion",
+                  "value": "Lux"
+                },
+                {
+                  "column": "games",
+                  "value": 36
+                },
+                {
+                  "column": "win_rate",
+                  "value": 0.53
+                }
+              ]
+            },
+            {
+              "label": "Ezreal",
+              "games": 29,
+              "values": [
+                {
+                  "column": "champion",
+                  "value": "Ezreal"
+                },
+                {
+                  "column": "games",
+                  "value": 29
+                },
+                {
+                  "column": "win_rate",
+                  "value": 0.48
+                }
+              ]
+            }
+          ],
+          "visualizationRows": [],
+          "rowsReturned": 3,
+          "rowsScanned": 412,
+          "renderKind": "TABLE"
+        },
+        "visualization": {
+          "version": 1,
+          "generatedAt": "2026-11-14T09:13:05.000Z",
+          "kind": "TABLE",
+          "title": "Most played champions",
+          "temporal": null,
+          "bucket": null,
+          "display": {
+            "theme": null,
+            "palette": null,
+            "smooth": false,
+            "stack": "none",
+            "rollingWindow": null,
+            "cumulative": false,
+            "sparkline": false
+          },
+          "series": [
+            {
+              "id": "games",
+              "label": "Games",
+              "metric": "games",
+              "displayKind": "count",
+              "additive": true,
+              "points": [
+                {
+                  "key": "jinx",
+                  "label": "Jinx",
+                  "start": "2026-11-01T00:00:00.000Z",
+                  "end": "2026-11-14T00:00:00.000Z",
+                  "value": 41.0,
+                  "evidence": {
+                    "games": 41,
+                    "sampleSize": 41
+                  }
+                },
+                {
+                  "key": "lux",
+                  "label": "Lux",
+                  "start": "2026-11-01T00:00:00.000Z",
+                  "end": "2026-11-14T00:00:00.000Z",
+                  "value": 36.0,
+                  "evidence": {
+                    "games": 36,
+                    "sampleSize": 36
+                  }
+                },
+                {
+                  "key": "ezreal",
+                  "label": "Ezreal",
+                  "start": "2026-11-01T00:00:00.000Z",
+                  "end": "2026-11-14T00:00:00.000Z",
+                  "value": 29.0,
+                  "evidence": {
+                    "games": 29,
+                    "sampleSize": 29
+                  }
+                }
+              ]
+            }
+          ],
+          "annotations": [],
+          "trends": []
+        },
+        "matchCards": [],
+        "loadoutCards": [],
+        "guildIds": ["123456789012345678"],
+        "attachments": [],
+        "trace": [],
+        "createdAt": "2026-11-14T09:14:00.000Z"
+      },
+      {
+        "id": "7c1d0005-2b3a-4c5d-8e6f-000000000005",
+        "role": "user",
+        "parentId": "7c1d0004-2b3a-4c5d-8e6f-000000000004",
+        "siblingIds": ["7c1d0005-2b3a-4c5d-8e6f-000000000005"],
+        "versionIndex": 0,
+        "versionCount": 1,
+        "content": "Show me my best Jinx game.",
+        "queryText": null,
+        "caveats": [],
+        "followUps": [],
+        "preview": null,
+        "visualization": null,
+        "matchCards": [],
+        "loadoutCards": [],
+        "guildIds": [],
+        "attachments": [],
+        "trace": [],
+        "createdAt": "2026-11-14T09:15:00.000Z"
+      },
+      {
+        "id": "7c1d0006-2b3a-4c5d-8e6f-000000000006",
+        "role": "assistant",
+        "parentId": "7c1d0005-2b3a-4c5d-8e6f-000000000005",
+        "siblingIds": ["7c1d0006-2b3a-4c5d-8e6f-000000000006"],
+        "versionIndex": 0,
+        "versionCount": 1,
+        "content": "Your best Jinx game was a 14/3/18 win in Ranked Solo/Duo.",
+        "queryText": null,
+        "caveats": [],
+        "followUps": [],
+        "preview": null,
+        "visualization": null,
+        "matchCards": [
+          {
+            "size": "L",
+            "match": {
+              "matchId": "NA1_5012345678",
+              "gameCreationMs": 1763110200000,
+              "gameDurationSeconds": 1694,
+              "queue": "Ranked Solo/Duo",
+              "queueId": 420,
+              "gameMode": "CLASSIC",
+              "gameType": "MATCHED_GAME",
+              "gameVersion": "16.22.712.4321",
+              "mapId": 11,
+              "teams": [
+                {
+                  "teamId": 100,
+                  "win": true,
+                  "kills": 38,
+                  "objectives": {
+                    "turrets": 9,
+                    "inhibitors": 2,
+                    "barons": 1,
+                    "dragons": 3
+                  },
+                  "participants": [
+                    {
+                      "participantId": 1,
+                      "riotId": {
+                        "gameName": "Scout",
+                        "tagLine": "NA1"
+                      },
+                      "championId": 222,
+                      "championName": "Jinx",
+                      "position": "BOTTOM",
+                      "kills": 14,
+                      "deaths": 3,
+                      "assists": 18,
+                      "creepScore": 43,
+                      "goldEarned": 9250,
+                      "visionScore": 6,
+                      "damageToChampions": 15900,
+                      "killParticipation": 0.5,
+                      "damageShare": 0.2,
+                      "objectives": {
+                        "turrets": 1,
+                        "inhibitors": 0,
+                        "barons": 0,
+                        "dragons": 0
+                      }
+                    },
+                    {
+                      "participantId": 2,
+                      "riotId": {
+                        "gameName": "Lantern",
+                        "tagLine": "NA1"
+                      },
+                      "championId": 117,
+                      "championName": "Lulu",
+                      "position": "UTILITY",
+                      "kills": 2,
+                      "deaths": 4,
+                      "assists": 27,
+                      "creepScore": 46,
+                      "goldEarned": 9500,
+                      "visionScore": 7,
+                      "damageToChampions": 16800,
+                      "killParticipation": 0.5,
+                      "damageShare": 0.2,
+                      "objectives": {
+                        "turrets": 1,
+                        "inhibitors": 0,
+                        "barons": 0,
+                        "dragons": 0
+                      }
+                    },
+                    {
+                      "participantId": 3,
+                      "riotId": {
+                        "gameName": "Raven",
+                        "tagLine": "EUW"
+                      },
+                      "championId": 103,
+                      "championName": "Ahri",
+                      "position": "MIDDLE",
+                      "kills": 9,
+                      "deaths": 5,
+                      "assists": 12,
+                      "creepScore": 49,
+                      "goldEarned": 9750,
+                      "visionScore": 8,
+                      "damageToChampions": 17700,
+                      "killParticipation": 0.5,
+                      "damageShare": 0.2,
+                      "objectives": {
+                        "turrets": 1,
+                        "inhibitors": 0,
+                        "barons": 0,
+                        "dragons": 0
+                      }
+                    },
+                    {
+                      "participantId": 4,
+                      "riotId": {
+                        "gameName": "Bramble",
+                        "tagLine": "NA1"
+                      },
+                      "championId": 86,
+                      "championName": "Garen",
+                      "position": "TOP",
+                      "kills": 6,
+                      "deaths": 6,
+                      "assists": 9,
+                      "creepScore": 52,
+                      "goldEarned": 10000,
+                      "visionScore": 9,
+                      "damageToChampions": 18600,
+                      "killParticipation": 0.5,
+                      "damageShare": 0.2,
+                      "objectives": {
+                        "turrets": 1,
+                        "inhibitors": 0,
+                        "barons": 0,
+                        "dragons": 0
+                      }
+                    },
+                    {
+                      "participantId": 5,
+                      "riotId": {
+                        "gameName": "Kestrel",
+                        "tagLine": null
+                      },
+                      "championId": 64,
+                      "championName": "LeeSin",
+                      "position": "JUNGLE",
+                      "kills": 7,
+                      "deaths": 4,
+                      "assists": 15,
+                      "creepScore": 55,
+                      "goldEarned": 10250,
+                      "visionScore": 10,
+                      "damageToChampions": 19500,
+                      "killParticipation": 0.5,
+                      "damageShare": 0.2,
+                      "objectives": {
+                        "turrets": 1,
+                        "inhibitors": 0,
+                        "barons": 0,
+                        "dragons": 0
+                      }
+                    }
+                  ]
+                },
+                {
+                  "teamId": 200,
+                  "win": false,
+                  "kills": 24,
+                  "objectives": {
+                    "turrets": 3,
+                    "inhibitors": 0,
+                    "barons": 0,
+                    "dragons": 1
+                  },
+                  "participants": [
+                    {
+                      "participantId": 6,
+                      "riotId": {
+                        "gameName": "Harbor",
+                        "tagLine": "NA1"
+                      },
+                      "championId": 51,
+                      "championName": "Caitlyn",
+                      "position": "BOTTOM",
+                      "kills": 8,
+                      "deaths": 9,
+                      "assists": 6,
+                      "creepScore": 58,
+                      "goldEarned": 10500,
+                      "visionScore": 11,
+                      "damageToChampions": 20400,
+                      "killParticipation": 0.5,
+                      "damageShare": 0.2,
+                      "objectives": {
+                        "turrets": 1,
+                        "inhibitors": 0,
+                        "barons": 0,
+                        "dragons": 0
+                      }
+                    },
+                    {
+                      "participantId": 7,
+                      "riotId": {
+                        "gameName": "Mist",
+                        "tagLine": "NA1"
+                      },
+                      "championId": 412,
+                      "championName": "Thresh",
+                      "position": "UTILITY",
+                      "kills": 1,
+                      "deaths": 8,
+                      "assists": 14,
+                      "creepScore": 61,
+                      "goldEarned": 10750,
+                      "visionScore": 12,
+                      "damageToChampions": 21300,
+                      "killParticipation": 0.5,
+                      "damageShare": 0.2,
+                      "objectives": {
+                        "turrets": 1,
+                        "inhibitors": 0,
+                        "barons": 0,
+                        "dragons": 0
+                      }
+                    },
+                    {
+                      "participantId": 8,
+                      "riotId": {
+                        "gameName": "Ember",
+                        "tagLine": "NA1"
+                      },
+                      "championId": 157,
+                      "championName": "Yasuo",
+                      "position": "MIDDLE",
+                      "kills": 6,
+                      "deaths": 9,
+                      "assists": 5,
+                      "creepScore": 64,
+                      "goldEarned": 11000,
+                      "visionScore": 13,
+                      "damageToChampions": 22200,
+                      "killParticipation": 0.5,
+                      "damageShare": 0.2,
+                      "objectives": {
+                        "turrets": 1,
+                        "inhibitors": 0,
+                        "barons": 0,
+                        "dragons": 0
+                      }
+                    },
+                    {
+                      "participantId": 9,
+                      "riotId": {
+                        "gameName": "Quill",
+                        "tagLine": "NA1"
+                      },
+                      "championId": 122,
+                      "championName": "Darius",
+                      "position": "TOP",
+                      "kills": 5,
+                      "deaths": 7,
+                      "assists": 4,
+                      "creepScore": 67,
+                      "goldEarned": 11250,
+                      "visionScore": 14,
+                      "damageToChampions": 23100,
+                      "killParticipation": 0.5,
+                      "damageShare": 0.2,
+                      "objectives": {
+                        "turrets": 1,
+                        "inhibitors": 0,
+                        "barons": 0,
+                        "dragons": 0
+                      }
+                    },
+                    {
+                      "participantId": 10,
+                      "riotId": {
+                        "gameName": "Sable",
+                        "tagLine": "NA1"
+                      },
+                      "championId": 121,
+                      "championName": "Khazix",
+                      "position": "JUNGLE",
+                      "kills": 4,
+                      "deaths": 7,
+                      "assists": 8,
+                      "creepScore": 70,
+                      "goldEarned": 11500,
+                      "visionScore": 15,
+                      "damageToChampions": 24000,
+                      "killParticipation": 0.5,
+                      "damageShare": 0.2,
+                      "objectives": {
+                        "turrets": 1,
+                        "inhibitors": 0,
+                        "barons": 0,
+                        "dragons": 0
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "loadoutCards": [],
+        "guildIds": ["123456789012345678"],
+        "attachments": [],
+        "trace": [],
+        "createdAt": "2026-11-14T09:16:00.000Z"
+      },
+      {
+        "id": "7c1d0007-2b3a-4c5d-8e6f-000000000007",
+        "role": "user",
+        "parentId": "7c1d0006-2b3a-4c5d-8e6f-000000000006",
+        "siblingIds": ["7c1d0007-2b3a-4c5d-8e6f-000000000007"],
+        "versionIndex": 0,
+        "versionCount": 1,
+        "content": "What did I build in it?",
+        "queryText": null,
+        "caveats": [],
+        "followUps": [],
+        "preview": null,
+        "visualization": null,
+        "matchCards": [],
+        "loadoutCards": [],
+        "guildIds": [],
+        "attachments": [],
+        "trace": [],
+        "createdAt": "2026-11-14T09:17:00.000Z"
+      },
+      {
+        "id": "7c1d0008-2b3a-4c5d-8e6f-000000000008",
+        "role": "assistant",
+        "parentId": "7c1d0007-2b3a-4c5d-8e6f-000000000007",
+        "siblingIds": ["7c1d0008-2b3a-4c5d-8e6f-000000000008"],
+        "versionIndex": 0,
+        "versionCount": 1,
+        "content": "You went Kraken Slayer into Infinity Edge with Arcane Comet.",
+        "queryText": null,
+        "caveats": [],
+        "followUps": [],
+        "preview": null,
+        "visualization": null,
+        "matchCards": [],
+        "loadoutCards": [
+          {
+            "size": "L",
+            "matchId": "NA1_5012345678",
+            "participantId": 1,
+            "championId": 222,
+            "championName": "Jinx",
+            "gameDurationSeconds": 1694,
+            "finalItems": [
+              {
+                "slot": 0,
+                "itemId": 6672,
+                "name": "Kraken Slayer"
+              },
+              {
+                "slot": 1,
+                "itemId": 3006,
+                "name": "Berserker's Greaves"
+              },
+              {
+                "slot": 2,
+                "itemId": 3031,
+                "name": "Infinity Edge"
+              },
+              {
+                "slot": 3,
+                "itemId": 3085,
+                "name": "Runaan's Hurricane"
+              },
+              {
+                "slot": 4,
+                "itemId": 3036,
+                "name": "Lord Dominik's Regards"
+              },
+              {
+                "slot": 5,
+                "itemId": null,
+                "name": null
+              },
+              {
+                "slot": 6,
+                "itemId": 3363,
+                "name": "Farsight Alteration"
+              }
+            ],
+            "spells": [
+              {
+                "slot": 1,
+                "spellId": "SummonerFlash",
+                "name": "Flash"
+              },
+              {
+                "slot": 2,
+                "spellId": "SummonerHeal",
+                "name": "Heal"
+              }
+            ],
+            "runePage": {
+              "primaryTree": {
+                "id": 8200,
+                "assetKey": "7202_Sorcery",
+                "name": "Sorcery",
+                "known": true
+              },
+              "keystone": {
+                "id": 8229,
+                "assetKey": "ArcaneComet",
+                "name": "Arcane Comet",
+                "known": true
+              },
+              "primaryRunes": [
+                {
+                  "id": 8226,
+                  "assetKey": "ManaflowBand",
+                  "name": "Manaflow Band",
+                  "known": true
+                },
+                {
+                  "id": 8210,
+                  "assetKey": "Transcendence",
+                  "name": "Transcendence",
+                  "known": true
+                },
+                {
+                  "id": 8237,
+                  "assetKey": "Scorch",
+                  "name": "Scorch",
+                  "known": true
+                }
+              ],
+              "secondaryTree": {
+                "id": 8300,
+                "assetKey": "7203_Whimsy",
+                "name": "Inspiration",
+                "known": true
+              },
+              "secondaryRunes": [
+                {
+                  "id": 8304,
+                  "assetKey": "MagicalFootwear",
+                  "name": "Magical Footwear",
+                  "known": true
+                },
+                {
+                  "id": 8345,
+                  "assetKey": "BiscuitDelivery",
+                  "name": "Biscuit Delivery",
+                  "known": true
+                }
+              ],
+              "shards": [
+                {
+                  "slot": "offense",
+                  "id": 5005
+                },
+                {
+                  "slot": "flex",
+                  "id": 5008
+                },
+                {
+                  "slot": "defense",
+                  "id": 5011
+                }
+              ]
+            },
+            "buildPathRecorded": true,
+            "buildPathTruncated": false,
+            "buildPath": [
+              {
+                "minute": 0,
+                "itemId": 1055,
+                "name": "Doran's Blade",
+                "kind": "purchase"
+              },
+              {
+                "minute": 9,
+                "itemId": 6672,
+                "name": "Kraken Slayer",
+                "kind": "purchase"
+              }
+            ],
+            "skillOrder": [
+              {
+                "level": 1,
+                "skill": "Q"
+              },
+              {
+                "level": 2,
+                "skill": "W"
+              },
+              {
+                "level": 3,
+                "skill": "E"
+              }
+            ]
+          }
+        ],
+        "guildIds": ["123456789012345678"],
+        "attachments": [],
+        "trace": [],
+        "createdAt": "2026-11-14T09:18:00.000Z"
+      }
+    ]
+  },
+  "invalidRequests": [
+    {
+      "reason": "a missing conversation id",
+      "body": {}
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "route": "explore_visualization",
+  "request": {
+    "conversationId": "0f4d6c1e-8a51-4c62-9a1e-3b7f2d9c5e10",
+    "messageId": "7c1d0002-2b3a-4c5d-8e6f-000000000002"
+  },
+  "response": {
+    "contentType": "image/png"
+  },
+  "invalidRequests": [
+    {
+      "reason": "a missing message id",
+      "body": {
+        "conversationId": "0f4d6c1e-8a51-4c62-9a1e-3b7f2d9c5e10"
+      }
+    },
+    {
+      "reason": "a malformed message id",
+      "body": {
+        "conversationId": "0f4d6c1e-8a51-4c62-9a1e-3b7f2d9c5e10",
+        "messageId": "not-a-uuid"
+      }
+    },
+    {
+      "reason": "an unknown key",
+      "body": {
+        "conversationId": "0f4d6c1e-8a51-4c62-9a1e-3b7f2d9c5e10",
+        "messageId": "7c1d0002-2b3a-4c5d-8e6f-000000000002",
+        "theme": "light"
+      }
+    }
+  ]
+}

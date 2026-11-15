@@ -219,7 +219,10 @@ fn supervise(arguments: &[String], toolkit: WindowToolkit) -> ExitCode {
                     // Only the gpui window renders chat. The relay holds the
                     // device credential here, never in the window process.
                     let supervisor = if toolkit == WindowToolkit::Gpui {
-                        supervisor.with_chat(ChatRelay::spawn(origin))
+                        supervisor.with_chat(ChatRelay::spawn(
+                            origin,
+                            scout_client_runtime::runtime::explore_cache_directory(),
+                        ))
                     } else {
                         supervisor
                     };
