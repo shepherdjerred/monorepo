@@ -2,10 +2,13 @@ import type { PrometheusRuleSpecGroups } from "@shepherdjerred/homelab/cdk8s/gen
 import { PrometheusRuleSpecGroupsRulesExpr } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com";
 import { escapePrometheusTemplate } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/rules/shared.ts";
 import { VELERO_SCHEDULES } from "@shepherdjerred/homelab/cdk8s/src/resources/velero/velero-schedules.ts";
+import { zfsPvcUsedBytesExpression } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/rules/platform/resource-monitoring-zfs.ts";
 
 /**
- * Requested storage of the claims the Velero schedules actually select. Every
- * schedule's labelSelector is `velero.io/backup=enabled`
+ * Actual ZFS usage of the claims the Velero schedules select, including blocks
+ * retained by local snapshots. Requested capacity is not backup cost: a large,
+ * mostly empty claim would otherwise alert despite transferring little data.
+ * Every schedule's labelSelector is `velero.io/backup=enabled`
  * (resources/argo-applications/storage/velero.ts), and kube-state-metrics
  * exports that label (persistentvolumeclaims=[velero.io/backup] in
  * grafana-values.ts). Disposable caches and unlabelled claims are never backed
@@ -13,7 +16,7 @@ import { VELERO_SCHEDULES } from "@shepherdjerred/homelab/cdk8s/src/resources/ve
  * duplicate label series a second kube-state-metrics replica exports during a
  * rollout.
  */
-const BACKED_UP_PVC_REQUEST_BYTES = `kube_persistentvolumeclaim_resource_requests_storage_bytes
+const BACKED_UP_PVC_USED_BYTES = `${zfsPvcUsedBytesExpression}
 * on (namespace, persistentvolumeclaim) group_left()
 max by (namespace, persistentvolumeclaim) (kube_persistentvolumeclaim_labels{label_velero_io_backup="enabled"})`;
 
@@ -26,25 +29,25 @@ export function getVeleroRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           record: "velero:pvc_volume_size_bytes",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            `sum by (namespace) (${BACKED_UP_PVC_REQUEST_BYTES})`,
+            `sum by (namespace) (${BACKED_UP_PVC_USED_BYTES})`,
           ),
         },
         {
           record: "velero:pvc_total_size_bytes",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            `sum(${BACKED_UP_PVC_REQUEST_BYTES})`,
+            `sum(${BACKED_UP_PVC_USED_BYTES})`,
           ),
         },
         {
           alert: "VeleroTotalPVCSizeExcessive",
           annotations: {
-            summary: "Total Velero-backed PVC size is very large",
+            summary: "Total Velero-backed PVC data is very large",
             message: escapePrometheusTemplate(
-              "Velero-backed PVCs request {{ $value | humanize1024 }}B in total. Large volumes can make Velero backups expensive or slow; review backup exclusions.",
+              "Velero-backed PVCs use {{ $value | humanize1024 }}B in total, including local snapshots. Large volumes can make Velero backups expensive or slow; review backup exclusions.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            `sum(${BACKED_UP_PVC_REQUEST_BYTES}) > 2 * 1024 * 1024 * 1024 * 1024`,
+            `sum(${BACKED_UP_PVC_USED_BYTES}) > 2 * 1024 * 1024 * 1024 * 1024`,
           ),
           for: "15m",
           labels: {
@@ -54,13 +57,13 @@ export function getVeleroRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "VeleroNamespacePVCSizeExcessive",
           annotations: {
-            summary: "Namespace has large Velero-backed PVC volume size",
+            summary: "Namespace has large Velero-backed PVC data",
             message: escapePrometheusTemplate(
-              "Namespace {{ $labels.namespace }} has {{ $value | humanize1024 }}B of requested storage in Velero-backed PVCs. Review backup policy and exclusions for this namespace.",
+              "Namespace {{ $labels.namespace }} has {{ $value | humanize1024 }}B of ZFS data in Velero-backed PVCs, including local snapshots. Review backup policy and exclusions for this namespace.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            `sum by (namespace) (${BACKED_UP_PVC_REQUEST_BYTES}) > 500 * 1024 * 1024 * 1024`,
+            `sum by (namespace) (${BACKED_UP_PVC_USED_BYTES}) > 500 * 1024 * 1024 * 1024`,
           ),
           for: "15m",
           labels: {

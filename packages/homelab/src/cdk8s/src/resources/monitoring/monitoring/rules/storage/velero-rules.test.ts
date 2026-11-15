@@ -27,9 +27,9 @@ const GIB = 1024 ** 3;
 const TIB = 1024 ** 4;
 
 /**
- * A claim as kube-state-metrics reports it: its storage request and its label
- * series, which carries `label_velero_io_backup` only when the claim has the
- * label. `instances` models a second exporter replica during a rollout.
+ * A Bound claim's ZFS usage and Kubernetes ownership series. The label series
+ * carries `label_velero_io_backup` only when the claim has the label.
+ * `instances` models a second exporter replica during a rollout.
  */
 function claim(input: {
   namespace: string;
@@ -39,14 +39,23 @@ function claim(input: {
   instances?: readonly string[];
 }) {
   const key = `namespace="${input.namespace}",persistentvolumeclaim="${input.name}"`;
+  const volume = `pvc-${input.namespace}-${input.name}`;
   const backupLabel =
     input.backup === undefined
       ? ""
       : `,label_velero_io_backup="${input.backup}"`;
   return [
     {
-      series: `kube_persistentvolumeclaim_resource_requests_storage_bytes{${key},instance="ksm-a"}`,
+      series: `zfs_dataset_used_bytes{dataset_name="zfspv-pool-nvme/${volume}"}`,
       values: String(input.bytes),
+    },
+    {
+      series: `kube_persistentvolumeclaim_info{${key},volumename="${volume}"}`,
+      values: "1",
+    },
+    {
+      series: `kube_persistentvolumeclaim_status_phase{${key},phase="Bound"}`,
+      values: "1",
     },
     ...(input.instances ?? ["ksm-a"]).map((instance) => ({
       series: `kube_persistentvolumeclaim_labels{${key},instance="${instance}"${backupLabel}}`,

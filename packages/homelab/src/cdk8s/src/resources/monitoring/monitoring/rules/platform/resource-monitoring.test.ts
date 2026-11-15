@@ -251,6 +251,11 @@ describe("predictive PVC capacity alerts", () => {
     );
     expect(critical?.for).toBe("6h");
     expect(critical?.labels?.["severity"]).toBe("critical");
+    for (const rule of [warning, critical]) {
+      expect(rule?.expr.value).toContain(
+        'kubelet_volume_stats_used_bytes{namespace="turbo-cache",persistentvolumeclaim="turbo-cache-liskov"}',
+      );
+    }
   });
 });
 

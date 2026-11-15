@@ -22,6 +22,12 @@ export const PERIODICALLY_PRUNED_PVCS = [
     // packages/temporal/src/schedules/schedule-definitions.ts
     prunedBy: "ci-uv-cache-prune-weekly",
   },
+  {
+    namespace: "turbo-cache",
+    claim: "turbo-cache-liskov",
+    // packages/temporal/src/schedules/schedule-definitions-early.ts
+    prunedBy: "turbo-cache-clean-daily",
+  },
 ] as const;
 
 function periodicallyPrunedClaimSelector(): string {
