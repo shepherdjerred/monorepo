@@ -674,6 +674,10 @@ model ScoutClientPairing {
   /// What the approver grants: `ingest`, plus `explore` for a `pairings/v2`
   /// request. The exchanged device inherits exactly this list.
   scopes          String[]  @default(["ingest"])
+  /// Set for a scope upgrade: the already paired device that asked for more
+  /// scopes. Approving it adds `scopes` to that device in place; it is never
+  /// exchanged for a new credential.
+  upgradeDeviceId String?
   state           String    @default("PENDING")
   expiresAt       DateTime
   approvedAt      DateTime?
@@ -683,9 +687,11 @@ model ScoutClientPairing {
   updatedAt       DateTime  @updatedAt
 
   approvedBy User?              @relation("ScoutClientPairingApprover", fields: [approvedById], references: [discordId], onDelete: SetNull)
-  device     ScoutClientDevice?
+  device     ScoutClientDevice?          @relation("ScoutClientPairingDevice")
+  upgradeFor ScoutClientDevice?          @relation("ScoutClientScopeUpgrade", fields: [upgradeDeviceId], references: [id], onDelete: Cascade)
 
   @@index([state, expiresAt])
+  @@index([upgradeDeviceId, state])
   @@index([approvedById, createdAt])
 }
 
@@ -702,7 +708,8 @@ model ScoutClientDevice {
   appVersion      String
   protocolVersion Int
   /// Copied from the approved pairing. A device paired before scopes existed
-  /// holds `ingest` only and must pair again to read Explore.
+  /// holds `ingest` only until its owner approves a scope upgrade, which adds
+  /// scopes to this same row without changing the device id or token.
   scopes          String[]  @default(["ingest"])
   deviceState     String    @default("ACTIVE")
   lastSeenAt      DateTime?
@@ -711,7 +718,8 @@ model ScoutClientDevice {
   updatedAt       DateTime  @updatedAt
 
   owner           User                        @relation(fields: [ownerId], references: [discordId], onDelete: Cascade)
-  pairing         ScoutClientPairing          @relation(fields: [pairingId], references: [id], onDelete: Restrict)
+  pairing         ScoutClientPairing          @relation("ScoutClientPairingDevice", fields: [pairingId], references: [id], onDelete: Restrict)
+  scopeUpgrades   ScoutClientPairing[]        @relation("ScoutClientScopeUpgrade")
   observations    ScoutClientObservation[]
   replayArtifacts ScoutClientReplayArtifact[]
   versions        ScoutClientDeviceVersion[]

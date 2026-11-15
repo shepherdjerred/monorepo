@@ -4,6 +4,7 @@ import {
   type DiscordAccountId,
   type ScoutDesktopScope,
 } from "@scout-for-lol/data";
+import type { ScopedScoutClient } from "./access/authentication.ts";
 import { z } from "zod";
 import { prisma } from "#src/database/index.ts";
 import { getAppOrigin } from "#src/trpc/auth-web-helpers.ts";
@@ -97,6 +98,75 @@ export async function createPairing(
   };
 }
 
+export type ScopeUpgradeCreation =
+  | {
+      readonly status: "created";
+      readonly requestId: string;
+      readonly approvalUrl: string;
+      readonly expiresAt: string;
+      readonly scopes: readonly ScoutDesktopScope[];
+      readonly matchCode: string;
+    }
+  | { readonly status: "already-granted" };
+
+/**
+ * Ask the owner to add scopes to a device that is already paired.
+ *
+ * The device proved itself with its token, but that proves nothing about what
+ * its owner wants: this only records a pending request on the existing
+ * approval page. Nothing changes on the device until a signed-in owner
+ * approves it, so a device can never grant itself a scope. The request carries
+ * no pairing secret and is never exchanged: approval edits the device row in
+ * place, which is why its id, its token and the uploads queued under them are
+ * untouched.
+ */
+export async function createScopeUpgrade(
+  device: ScopedScoutClient,
+  requested: readonly ScoutDesktopScope[],
+  now = new Date(),
+): Promise<ScopeUpgradeCreation> {
+  const missing = [...new Set(requested)].filter(
+    (scope) => !device.scopes.includes(scope),
+  );
+  if (missing.length === 0) return { status: "already-granted" };
+  const scopes = PairingScopesSchema.parse(missing);
+  const row = await prisma.scoutClientDevice.findUniqueOrThrow({
+    where: { id: device.deviceId },
+    select: {
+      deviceName: true,
+      platform: true,
+      architecture: true,
+      appVersion: true,
+      protocolVersion: true,
+    },
+  });
+  // One open request per device: asking again replaces the earlier link.
+  await prisma.scoutClientPairing.updateMany({
+    where: { upgradeDeviceId: device.deviceId, state: "PENDING" },
+    data: { state: "EXPIRED" },
+  });
+  const expiresAt = new Date(now.getTime() + PAIRING_TTL_MS);
+  const request = await prisma.scoutClientPairing.create({
+    data: {
+      // Unique and unguessable, and discarded: nothing can exchange it.
+      secretDigest: secretDigest(randomSecret("scp_")),
+      ...row,
+      scopes,
+      upgradeDeviceId: device.deviceId,
+      expiresAt,
+    },
+    select: { id: true },
+  });
+  return {
+    status: "created",
+    requestId: request.id,
+    approvalUrl: `${getAppOrigin()}/app/scout-client/pair/${request.id}`,
+    expiresAt: expiresAt.toISOString(),
+    scopes,
+    matchCode: pairingMatchCode(request.id),
+  };
+}
+
 export async function pairingForApproval(pairingId: string, now = new Date()) {
   const pairing = await prisma.scoutClientPairing.findUnique({
     where: { id: pairingId },
@@ -110,6 +180,8 @@ export async function pairingForApproval(pairingId: string, now = new Date()) {
       state: true,
       expiresAt: true,
       approvedById: true,
+      upgradeDeviceId: true,
+      upgradeFor: { select: { ownerId: true, deviceState: true } },
     },
   });
   if (pairing === null) return null;
@@ -126,22 +198,86 @@ export async function pairingForApproval(pairingId: string, now = new Date()) {
   return { ...pairing, scopes, state };
 }
 
+export type PairingApproval =
+  "approved" | "expired" | "already-approved" | "not-found" | "not-owner";
+
+/**
+ * Approve a pairing as a signed-in web user.
+ *
+ * A scope upgrade is applied here, in one transaction with the approval: the
+ * device row gains the scopes, keeping its id and token. Only the device's
+ * own owner can approve it; anyone else is told it is not theirs.
+ */
 export async function approvePairing(
   pairingId: string,
   approverId: DiscordAccountId,
   now = new Date(),
-): Promise<"approved" | "expired" | "already-approved" | "not-found"> {
+): Promise<PairingApproval> {
   const pairing = await pairingForApproval(pairingId, now);
   if (pairing === null) return "not-found";
+  if (
+    pairing.upgradeDeviceId !== null &&
+    pairing.upgradeFor?.ownerId !== approverId
+  ) {
+    return "not-owner";
+  }
   if (pairing.state === "EXPIRED" || pairing.expiresAt <= now) return "expired";
   if (pairing.state !== "PENDING") {
     return pairing.approvedById === approverId ? "already-approved" : "expired";
+  }
+  if (pairing.upgradeDeviceId !== null) {
+    return await approveScopeUpgrade(
+      {
+        pairingId: pairing.id,
+        deviceId: pairing.upgradeDeviceId,
+        scopes: pairing.scopes,
+      },
+      approverId,
+      now,
+    );
   }
   const claimed = await prisma.scoutClientPairing.updateMany({
     where: { id: pairingId, state: "PENDING", expiresAt: { gt: now } },
     data: { state: "APPROVED", approvedById: approverId, approvedAt: now },
   });
   return claimed.count === 1 ? "approved" : "expired";
+}
+
+async function approveScopeUpgrade(
+  upgrade: {
+    readonly pairingId: string;
+    readonly deviceId: string;
+    readonly scopes: readonly ScoutDesktopScope[];
+  },
+  approverId: DiscordAccountId,
+  now: Date,
+): Promise<PairingApproval> {
+  const { pairingId, deviceId, scopes } = upgrade;
+  return await prisma.$transaction(async (transaction) => {
+    const device = await transaction.scoutClientDevice.findFirst({
+      where: { id: deviceId, ownerId: approverId, deviceState: "ACTIVE" },
+      select: { scopes: true },
+    });
+    if (device === null) return "not-owner";
+    const claimed = await transaction.scoutClientPairing.updateMany({
+      where: { id: pairingId, state: "PENDING", expiresAt: { gt: now } },
+      data: {
+        state: "EXCHANGED",
+        approvedById: approverId,
+        approvedAt: now,
+        exchangedAt: now,
+      },
+    });
+    if (claimed.count !== 1) return "expired";
+    const granted = PairingScopesSchema.parse([
+      ...new Set([...device.scopes, ...scopes]),
+    ]);
+    await transaction.scoutClientDevice.update({
+      where: { id: deviceId },
+      data: { scopes: { set: granted } },
+    });
+    return "approved";
+  });
 }
 
 export async function exchangePairing(
@@ -152,7 +288,11 @@ export async function exchangePairing(
   const pairing = await prisma.scoutClientPairing.findUnique({
     where: { id: pairingId },
   });
-  if (pairing === null || !digestMatches(pairingSecret, pairing.secretDigest)) {
+  // A scope upgrade has no secret anyone holds; it is never exchanged.
+  if (
+    pairing?.upgradeDeviceId !== null ||
+    !digestMatches(pairingSecret, pairing.secretDigest)
+  ) {
     return null;
   }
   const state = PairingStateSchema.parse(pairing.state);

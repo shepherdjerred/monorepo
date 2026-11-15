@@ -30,6 +30,7 @@ import { pairingCreationAllowed } from "./pairing-rate-limit.ts";
 import { acceptDesktopEvent } from "./desktop/events.ts";
 import { contractRefusal, desktopErrorResponse } from "./desktop/contract.ts";
 import { handleDesktopExploreRoute } from "./desktop/explore-routes.ts";
+import { handleScopeRequestRoute } from "./desktop/scope-requests.ts";
 import {
   ingestObservationBatch,
   nextScoutClientObservationSequence,
@@ -341,6 +342,11 @@ export async function handleScoutClientRoute(
     url.pathname,
   );
   if (desktopResponse !== null) return desktopResponse;
+  const scopeRequestResponse = await handleScopeRequestRoute(
+    request,
+    url.pathname,
+  );
+  if (scopeRequestResponse !== null) return scopeRequestResponse;
   const replayMatch = REPLAY_PATH.exec(url.pathname);
   // Decided from Flipt before any pairing, authentication or body read, so a
   // closed environment touches no database. Self-revocation stays open: a

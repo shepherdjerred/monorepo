@@ -20,6 +20,8 @@ type PairingSummary = {
   readonly architecture: string;
   readonly appVersion: string;
   readonly scopes: readonly ScoutDesktopScope[];
+  /** Approving adds the scopes to this already paired device. */
+  readonly upgrade: boolean;
   /** Shown only for a request from a client that displays it too. */
   readonly matchCode: string | null;
   readonly state: "PENDING" | "APPROVED" | "EXCHANGED" | "EXPIRED";
@@ -41,11 +43,35 @@ const SCOPE_COPY: Record<
   },
 };
 
+const PAIRING_COPY = {
+  title: "Pair Scout Client",
+  description: "Approve only if you started this request on your own computer.",
+  scopesHeading: "This device will be able to",
+  button: "Approve this device",
+  failure:
+    "Pairing could not be approved. Start a new request from Scout Client.",
+  approved:
+    "Approved. You can return to Scout Client; it will finish pairing automatically.",
+};
+
+/** An already paired device asking to add scopes to itself. */
+const UPGRADE_COPY = {
+  title: "Add chat to this device",
+  description:
+    "This device is already paired. Approving adds the permissions below to it; nothing else about it changes.",
+  scopesHeading: "This device will also be able to",
+  button: "Add chat to this device",
+  failure:
+    "This request could not be approved with your account. Start a new request from Scout Desktop.",
+  approved: "Approved. Chat is now on this device; return to Scout Desktop.",
+};
+
 export function ScoutClientPairingCard(props: {
   readonly pairing: PairingSummary;
   readonly approvalState: "idle" | "pending" | "error";
   readonly onApprove: () => void;
 }) {
+  const copy = props.pairing.upgrade ? UPGRADE_COPY : PAIRING_COPY;
   const mayApprove = props.pairing.state === "PENDING";
   const approved =
     props.pairing.state === "APPROVED" || props.pairing.state === "EXCHANGED";
@@ -54,10 +80,8 @@ export function ScoutClientPairingCard(props: {
     <div className="mx-auto max-w-md px-4 py-12">
       <Card>
         <CardHeader>
-          <h1 className="scout-card__title">Pair Scout Client</h1>
-          <CardDescription>
-            Approve only if you started this request on your own computer.
-          </CardDescription>
+          <h1 className="scout-card__title">{copy.title}</h1>
+          <CardDescription>{copy.description}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-5">
           {props.pairing.matchCode === null ? null : (
@@ -95,7 +119,7 @@ export function ScoutClientPairingCard(props: {
               id="pairing-scopes-heading"
               className="text-sm font-semibold text-scout-ink"
             >
-              This device will be able to
+              {copy.scopesHeading}
             </h2>
             <ul className="space-y-2 text-sm">
               {props.pairing.scopes.map((scope) => (
@@ -109,15 +133,11 @@ export function ScoutClientPairingCard(props: {
             </ul>
           </section>
           {props.approvalState === "error" && (
-            <p className="text-sm text-scout-danger">
-              Pairing could not be approved. Start a new request from Scout
-              Client.
-            </p>
+            <p className="text-sm text-scout-danger">{copy.failure}</p>
           )}
           {approved ? (
             <p className="text-sm">
-              Approved. You can return to Scout Client; it will finish pairing
-              automatically.{" "}
+              {copy.approved}{" "}
               <a className="underline" href="/app/scout-client/history">
                 View your recovered games.
               </a>
@@ -128,9 +148,7 @@ export function ScoutClientPairingCard(props: {
               disabled={props.approvalState === "pending"}
               onClick={props.onApprove}
             >
-              {props.approvalState === "pending"
-                ? "Approving…"
-                : "Approve this device"}
+              {props.approvalState === "pending" ? "Approving…" : copy.button}
             </Button>
           ) : (
             <p className="text-sm text-scout-danger">

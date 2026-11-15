@@ -73,9 +73,11 @@ impl Refusal {
             | DesktopApiErrorCode::Unavailable => Recovery::RetryLater {
                 after: self.retry_after,
             },
-            DesktopApiErrorCode::InvalidRequest | DesktopApiErrorCode::InvalidTurn => {
-                Recovery::FixRequest
-            }
+            // The runtime reads this refusal itself and never surfaces it; it
+            // means the request was already satisfied, not that it can retry.
+            DesktopApiErrorCode::InvalidRequest
+            | DesktopApiErrorCode::InvalidTurn
+            | DesktopApiErrorCode::ScopeAlreadyGranted => Recovery::FixRequest,
         }
     }
 }
@@ -225,9 +227,9 @@ mod tests {
             | DesktopApiErrorCode::QuotaExceeded
             | DesktopApiErrorCode::StreamLimit
             | DesktopApiErrorCode::Unavailable => Recovery::RetryLater { after },
-            DesktopApiErrorCode::InvalidRequest | DesktopApiErrorCode::InvalidTurn => {
-                Recovery::FixRequest
-            }
+            DesktopApiErrorCode::InvalidRequest
+            | DesktopApiErrorCode::InvalidTurn
+            | DesktopApiErrorCode::ScopeAlreadyGranted => Recovery::FixRequest,
         }
     }
 
@@ -235,7 +237,7 @@ mod tests {
     fn every_golden_refusal_maps_to_its_typed_error() -> TestResult {
         let fixtures: Value = serde_json::from_str(ERRORS)?;
         let fixtures = fixtures["errors"].as_array().ok_or("error fixtures")?;
-        assert_eq!(fixtures.len(), 14);
+        assert_eq!(fixtures.len(), 15);
         let after = Some(Duration::from_secs(60));
         for fixture in fixtures {
             let status = u16::try_from(fixture["status"].as_u64().ok_or("status")?)?;

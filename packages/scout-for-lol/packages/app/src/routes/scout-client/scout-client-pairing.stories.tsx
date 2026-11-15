@@ -7,6 +7,7 @@ const pending = {
   architecture: "x86_64",
   appVersion: "0.1.0",
   scopes: ["ingest"],
+  upgrade: false,
   matchCode: null,
   state: "PENDING",
 } as const;
@@ -39,6 +40,20 @@ export const DesktopExploreApproval: Story = {
       appVersion: "0.4.0",
       scopes: ["ingest", "explore"],
       matchCode: "K7M-4QX",
+    },
+  },
+};
+
+/** An already paired Scout Desktop asking to add chat to its own device. */
+export const ScopeUpgradeApproval: Story = {
+  args: {
+    pairing: {
+      ...pending,
+      deviceName: "Scout Desktop on DESKTOP-7Q2",
+      appVersion: "0.4.0",
+      scopes: ["explore"],
+      upgrade: true,
+      matchCode: "R4N-8WD",
     },
   },
 };

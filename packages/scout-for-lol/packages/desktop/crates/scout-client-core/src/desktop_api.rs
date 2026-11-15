@@ -24,7 +24,7 @@ use uuid::Uuid;
 /// Request header carrying the client's desktop contract version.
 pub const DESKTOP_CONTRACT_HEADER: &str = "X-Scout-Desktop-Contract";
 /// Desktop contract version this build speaks.
-pub const DESKTOP_CONTRACT_VERSION: u32 = 2;
+pub const DESKTOP_CONTRACT_VERSION: u32 = 3;
 /// Path of the route that starts an Explore turn.
 pub const EXPLORE_RUNS_START_PATH: &str = "/api/scout-client/v1/explore/runs/start";
 /// Path of the route that stops a running turn.
@@ -37,6 +37,8 @@ pub const EXPLORE_RUNS_OUTCOME_PATH: &str = "/api/scout-client/v1/explore/runs/o
 pub const EXPLORE_RUNS_STREAM_PATH: &str = "/api/scout-client/v1/explore/runs/stream";
 /// Path of the pairing route that asks for `ingest` and `explore`.
 pub const PAIRINGS_V2_PATH: &str = "/api/scout-client/v1/pairings/v2";
+/// Path of the route a paired device asks its owner to add scopes through.
+pub const DEVICE_SCOPE_REQUESTS_PATH: &str = "/api/scout-client/v1/devices/current/scope-requests";
 /// Path of the Explore status route.
 pub const EXPLORE_STATUS_PATH: &str = "/api/scout-client/v1/explore/status";
 /// Path of the conversation list route.
@@ -52,6 +54,32 @@ pub enum DeviceScope {
     Ingest,
     /// Read and ask Explore as the device's owner.
     Explore,
+}
+
+/// How the chat window gets its `explore` scope onto this computer.
+///
+/// A device that is already paired holds a valid token and only lacks a scope,
+/// so it asks its owner to add the scope to that same device: its id, its
+/// token and the outbox keyed by them stay exactly as they are. Only a
+/// computer that is not paired at all starts a fresh pairing.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ChatApprovalRoute {
+    /// `devices/current/scope-requests`, authenticated by the existing token.
+    ScopeUpgrade,
+    /// `pairings/v2`, which issues a new device.
+    FreshPairing,
+}
+
+impl ChatApprovalRoute {
+    /// The route for a computer that is, or is not, paired.
+    #[must_use]
+    pub const fn for_paired(paired: bool) -> Self {
+        if paired {
+            Self::ScopeUpgrade
+        } else {
+            Self::FreshPairing
+        }
+    }
 }
 
 /// A typed refusal from a desktop route.
@@ -74,6 +102,8 @@ pub enum DesktopApiErrorCode {
     NotFound,
     /// The conversation already has an answer running.
     ConversationBusy,
+    /// The device already holds every scope a scope request asked for.
+    ScopeAlreadyGranted,
     /// This build's contract is older than the server accepts.
     ContractUnsupported,
     /// Too many requests from this device.
@@ -112,6 +142,33 @@ pub struct PairingV2Response {
     /// RFC3339 expiry.
     pub expires_at: DateTime<Utc>,
     /// Scopes the approver is asked to grant.
+    pub scopes: Vec<DeviceScope>,
+    /// Code the approval page shows beside this request.
+    pub match_code: String,
+}
+
+/// Body of `devices/current/scope-requests`: the scopes this device lacks.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ScopeRequest {
+    /// Scopes the owner is asked to add to this device.
+    pub scopes: Vec<DeviceScope>,
+}
+
+/// Response from `devices/current/scope-requests`.
+///
+/// There is no secret: the device authenticates with the token it already
+/// holds, and approval changes that same device in place.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ScopeRequestResponse {
+    /// Public request identifier.
+    pub request_id: Uuid,
+    /// Browser approval URL.
+    pub approval_url: String,
+    /// RFC3339 expiry.
+    pub expires_at: DateTime<Utc>,
+    /// Scopes the owner is asked to add.
     pub scopes: Vec<DeviceScope>,
     /// Code the approval page shows beside this request.
     pub match_code: String,
@@ -439,12 +496,13 @@ mod tests {
 
     use super::{
         ActiveRun, ConversationListResponse, DESKTOP_CONTRACT_HEADER, DESKTOP_CONTRACT_VERSION,
-        DesktopApiContract, DesktopApiError, DeviceScope, EXPLORE_CONVERSATIONS_GET_PATH,
-        EXPLORE_CONVERSATIONS_LIST_PATH, EXPLORE_RUNS_ACTIVE_PATH, EXPLORE_RUNS_OUTCOME_PATH,
-        EXPLORE_RUNS_START_PATH, EXPLORE_RUNS_STOP_PATH, EXPLORE_RUNS_STREAM_PATH,
-        EXPLORE_STATUS_PATH, EmptyRequest, ExploreStatusResponse, PAIRINGS_V2_PATH,
-        PairingV2Response, RouteResponseKind, RunActiveResponse, RunOutcomeResponse, RunRequest,
-        RunStartRequest, RunStopResponse,
+        DEVICE_SCOPE_REQUESTS_PATH, DesktopApiContract, DesktopApiError, DeviceScope,
+        EXPLORE_CONVERSATIONS_GET_PATH, EXPLORE_CONVERSATIONS_LIST_PATH, EXPLORE_RUNS_ACTIVE_PATH,
+        EXPLORE_RUNS_OUTCOME_PATH, EXPLORE_RUNS_START_PATH, EXPLORE_RUNS_STOP_PATH,
+        EXPLORE_RUNS_STREAM_PATH, EXPLORE_STATUS_PATH, EmptyRequest, ExploreStatusResponse,
+        PAIRINGS_V2_PATH, PairingV2Response, RouteResponseKind, RunActiveResponse,
+        RunOutcomeResponse, RunRequest, RunStartRequest, RunStopResponse, ScopeRequest,
+        ScopeRequestResponse,
     };
     use crate::protocol::CreatePairingRequest;
 
@@ -456,6 +514,9 @@ mod tests {
         include_str!("../../../../data/src/scout-client/desktop-fixtures/errors.json");
     const PAIRINGS_V2: &str =
         include_str!("../../../../data/src/scout-client/desktop-fixtures/pairings-v2.json");
+    const SCOPE_REQUESTS: &str = include_str!(
+        "../../../../data/src/scout-client/desktop-fixtures/device-scope-requests.json"
+    );
     const STATUS: &str =
         include_str!("../../../../data/src/scout-client/desktop-fixtures/explore-status.json");
     const LIST: &str = include_str!(
@@ -528,6 +589,7 @@ mod tests {
         assert_eq!(
             paths,
             BTreeMap::from([
+                ("device_scope_requests", DEVICE_SCOPE_REQUESTS_PATH),
                 ("explore_conversations_get", EXPLORE_CONVERSATIONS_GET_PATH),
                 (
                     "explore_conversations_list",
@@ -559,6 +621,7 @@ mod tests {
         let mut named = Vec::new();
         for fixture in [
             PAIRINGS_V2,
+            SCOPE_REQUESTS,
             STATUS,
             LIST,
             GET,
@@ -639,6 +702,25 @@ mod tests {
     #[test]
     fn pairing_v2_fixture_parses_strictly() -> TestResult {
         check_route::<CreatePairingRequest, PairingV2Response>(PAIRINGS_V2, "pairings_v2")
+    }
+
+    #[test]
+    fn a_paired_device_upgrades_and_an_unpaired_one_pairs() {
+        use super::ChatApprovalRoute;
+
+        assert_eq!(
+            ChatApprovalRoute::for_paired(true),
+            ChatApprovalRoute::ScopeUpgrade
+        );
+        assert_eq!(
+            ChatApprovalRoute::for_paired(false),
+            ChatApprovalRoute::FreshPairing
+        );
+    }
+
+    #[test]
+    fn scope_request_fixture_parses_strictly() -> TestResult {
+        check_route::<ScopeRequest, ScopeRequestResponse>(SCOPE_REQUESTS, "device_scope_requests")
     }
 
     #[test]

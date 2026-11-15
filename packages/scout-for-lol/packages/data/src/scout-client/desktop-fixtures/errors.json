@@ -54,6 +54,13 @@
       }
     },
     {
+      "status": 409,
+      "body": {
+        "error": "scope_already_granted",
+        "message": "This device already has those permissions."
+      }
+    },
+    {
       "status": 426,
       "body": {
         "error": "contract_unsupported",

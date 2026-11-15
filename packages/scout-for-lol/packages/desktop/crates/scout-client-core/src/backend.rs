@@ -12,7 +12,9 @@ use uuid::Uuid;
 
 use crate::credentials::DeviceCredential;
 use crate::desktop_api::{
-    DESKTOP_CONTRACT_HEADER, DESKTOP_CONTRACT_VERSION, PAIRINGS_V2_PATH, PairingV2Response,
+    DESKTOP_CONTRACT_HEADER, DESKTOP_CONTRACT_VERSION, DEVICE_SCOPE_REQUESTS_PATH, DesktopApiError,
+    DesktopApiErrorCode, DeviceScope, EXPLORE_STATUS_PATH, EmptyRequest, PAIRINGS_V2_PATH,
+    PairingV2Response, ScopeRequest, ScopeRequestResponse,
 };
 use crate::diagnostics::sanitize_detail;
 use crate::protocol::{
@@ -53,6 +55,15 @@ pub fn backend_origin(origin: &str) -> Result<Url, BackendError> {
     }
     parsed.set_path("");
     Ok(parsed)
+}
+
+/// What the server did with a scope request.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ScopeUpgradeOutcome {
+    /// A pending request now waits for the owner on the approval page.
+    Requested(ScopeRequestResponse),
+    /// The device already holds every scope that was asked for.
+    AlreadyGranted,
 }
 
 /// Durable replay relay receipt.
@@ -184,6 +195,87 @@ impl ScoutBackendClient {
             .json()
             .await
             .map_err(BackendError::Request)
+    }
+
+    /// Ask this already paired device's owner to add `scopes` to it.
+    ///
+    /// The device keeps its id and token; only the owner's approval on the
+    /// web changes what it may do.
+    ///
+    /// # Errors
+    ///
+    /// Returns a typed transport or server-status error.
+    pub async fn request_scope_upgrade(
+        &self,
+        credential: &DeviceCredential,
+        scopes: &[DeviceScope],
+    ) -> Result<ScopeUpgradeOutcome, BackendError> {
+        let response = self
+            .http
+            .post(self.endpoint(DEVICE_SCOPE_REQUESTS_PATH)?)
+            .header(
+                DESKTOP_CONTRACT_HEADER,
+                DESKTOP_CONTRACT_VERSION.to_string(),
+            )
+            .bearer_auth(&credential.token)
+            .json(&ScopeRequest {
+                scopes: scopes.to_vec(),
+            })
+            .send()
+            .await
+            .map_err(BackendError::Request)?;
+        if response.status() == StatusCode::CONFLICT {
+            let body = response.text().await.map_err(BackendError::Request)?;
+            return match serde_json::from_str::<DesktopApiError>(&body) {
+                Ok(refusal) if refusal.error == DesktopApiErrorCode::ScopeAlreadyGranted => {
+                    Ok(ScopeUpgradeOutcome::AlreadyGranted)
+                }
+                _ => Err(rejection(StatusCode::CONFLICT.as_u16(), body.trim())),
+            };
+        }
+        response
+            .checked()
+            .await?
+            .json()
+            .await
+            .map(ScopeUpgradeOutcome::Requested)
+            .map_err(BackendError::Request)
+    }
+
+    /// Whether the server now lets this device use Explore.
+    ///
+    /// Reads the cheapest `explore` route. The server checks the scope before
+    /// anything else about Explore, so any answer past `scope_required` means
+    /// the scope is held, whatever else it says about access.
+    ///
+    /// # Errors
+    ///
+    /// Returns a typed transport or server-status error when the device is no
+    /// longer authorized or the server could not answer.
+    pub async fn explore_scope_granted(
+        &self,
+        credential: &DeviceCredential,
+    ) -> Result<bool, BackendError> {
+        let response = self
+            .http
+            .post(self.endpoint(EXPLORE_STATUS_PATH)?)
+            .header(
+                DESKTOP_CONTRACT_HEADER,
+                DESKTOP_CONTRACT_VERSION.to_string(),
+            )
+            .bearer_auth(&credential.token)
+            .json(&EmptyRequest {})
+            .send()
+            .await
+            .map_err(BackendError::Request)?;
+        let status = response.status();
+        if status.is_success() {
+            return Ok(true);
+        }
+        let body = response.text().await.unwrap_or_default();
+        let refusal = serde_json::from_str::<DesktopApiError>(&body).ok();
+        scope_granted_from_refusal(status, refusal.as_ref().map(|refusal| refusal.error))
+            .ok_or_else(|| rejection(status.as_u16(), body.trim()))
     }
 
     /// Poll a pairing request exactly until approval or terminal state.
@@ -576,6 +668,33 @@ struct RejectionBody {
     error: String,
 }
 
+/// Read an Explore refusal for whether the scope is held: `Some(false)` only
+/// for `scope_required`, `Some(true)` for any refusal the server reaches after
+/// the scope check, and `None` for one that says nothing about scope
+/// (unauthorized, rate limited, a server error).
+fn scope_granted_from_refusal(
+    status: StatusCode,
+    error: Option<DesktopApiErrorCode>,
+) -> Option<bool> {
+    match (status, error) {
+        (StatusCode::FORBIDDEN, Some(DesktopApiErrorCode::ScopeRequired)) => Some(false),
+        (
+            StatusCode::FORBIDDEN | StatusCode::SERVICE_UNAVAILABLE,
+            Some(
+                DesktopApiErrorCode::ExploreForbidden
+                | DesktopApiErrorCode::FeatureDisabled
+                | DesktopApiErrorCode::Unavailable
+                | DesktopApiErrorCode::ReauthorizeRequired,
+            ),
+        )
+        // The owner's web login expired after the scope check passed.
+        | (StatusCode::UNAUTHORIZED, Some(DesktopApiErrorCode::ReauthorizeRequired)) => {
+            Some(true)
+        }
+        _ => None,
+    }
+}
+
 fn replay_status_should_be_deferred(status: StatusCode) -> bool {
     status == StatusCode::CONFLICT
 }
@@ -590,8 +709,67 @@ mod tests {
 
     use super::{
         BackendError, ScoutBackendClient, replay_status_should_be_deferred,
-        revocation_is_complete_without_receipt,
+        revocation_is_complete_without_receipt, scope_granted_from_refusal,
     };
+    use crate::desktop_api::DesktopApiErrorCode;
+
+    #[test]
+    fn an_expired_owner_login_means_the_scope_is_held() {
+        assert_eq!(
+            scope_granted_from_refusal(
+                StatusCode::UNAUTHORIZED,
+                Some(DesktopApiErrorCode::ReauthorizeRequired)
+            ),
+            Some(true)
+        );
+        assert_eq!(
+            scope_granted_from_refusal(
+                StatusCode::UNAUTHORIZED,
+                Some(DesktopApiErrorCode::Unauthorized)
+            ),
+            None
+        );
+    }
+
+    #[test]
+    fn only_scope_required_means_the_scope_is_still_missing() {
+        let forbidden = StatusCode::FORBIDDEN;
+        assert_eq!(
+            scope_granted_from_refusal(forbidden, Some(DesktopApiErrorCode::ScopeRequired)),
+            Some(false)
+        );
+        // Past the scope check, whatever else the server says about Explore.
+        assert_eq!(
+            scope_granted_from_refusal(forbidden, Some(DesktopApiErrorCode::ExploreForbidden)),
+            Some(true)
+        );
+        assert_eq!(
+            scope_granted_from_refusal(
+                StatusCode::SERVICE_UNAVAILABLE,
+                Some(DesktopApiErrorCode::FeatureDisabled)
+            ),
+            Some(true)
+        );
+        // Before the scope check, or not a refusal at all: nothing is learned.
+        assert_eq!(
+            scope_granted_from_refusal(
+                StatusCode::UNAUTHORIZED,
+                Some(DesktopApiErrorCode::Unauthorized)
+            ),
+            None
+        );
+        assert_eq!(
+            scope_granted_from_refusal(
+                StatusCode::TOO_MANY_REQUESTS,
+                Some(DesktopApiErrorCode::RateLimited)
+            ),
+            None
+        );
+        assert_eq!(
+            scope_granted_from_refusal(StatusCode::BAD_GATEWAY, None),
+            None
+        );
+    }
 
     #[test]
     fn defers_replay_conflicts_without_hiding_terminal_rejections() {
