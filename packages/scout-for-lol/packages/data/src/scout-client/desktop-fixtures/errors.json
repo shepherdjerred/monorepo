@@ -15,6 +15,13 @@
       }
     },
     {
+      "status": 400,
+      "body": {
+        "error": "invalid_game_context",
+        "message": "The game context does not match the coach contract."
+      }
+    },
+    {
       "status": 401,
       "body": {
         "error": "unauthorized",

@@ -1,6 +1,7 @@
 import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
 import {
   DiscordAccountIdSchema,
+  EXPLORE_REQUEST_MAX_BYTES,
   SCOUT_DESKTOP_API_ROUTES,
   SCOUT_DESKTOP_CONTRACT_HEADER,
   SCOUT_DESKTOP_CONTRACT_VERSION,
@@ -26,6 +27,7 @@ import streamFixture from "@scout-for-lol/data/scout-client/desktop-fixtures/exp
 import assetsFixture from "@scout-for-lol/data/scout-client/desktop-fixtures/explore-assets.json" with { type: "json" };
 import visualizationFixture from "@scout-for-lol/data/scout-client/desktop-fixtures/explore-visualization.json" with { type: "json" };
 import visualsFixture from "@scout-for-lol/data/scout-client/desktop-fixtures/explore-conversations-get-visuals.json" with { type: "json" };
+import coachFixtures from "@scout-for-lol/data/scout-client/coach-context.fixtures.json" with { type: "json" };
 import { exploreQuotaLimits } from "#src/config/dynamic.ts";
 
 const mocks = vi.hoisted(() => ({
@@ -40,6 +42,7 @@ const mocks = vi.hoisted(() => ({
   listConversations: vi.fn(),
   loadTranscript: vi.fn(),
   startRun: vi.fn(),
+  createCoachTurn: vi.fn(),
   stopRun: vi.fn(),
   listRuns: vi.fn(),
   runOutcome: vi.fn(),
@@ -56,6 +59,7 @@ vi.mock("#src/database/index.ts", () => ({
       create: mocks.createPairing,
       deleteMany: mocks.deletePairings,
     },
+    scoutCoachTurn: { create: mocks.createCoachTurn },
   },
 }));
 vi.mock("#src/lib/discord-rest.ts", async (importOriginal) => ({
@@ -794,6 +798,188 @@ describe("desktop Explore run routes", () => {
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual(outcomeFixture.response);
     expect(mocks.runOutcome).toHaveBeenCalledWith(RUN_ID, OWNER_ID);
+  });
+});
+
+/** Answer the two coach flags as given, and every other flag on. */
+function coachFlags(values: {
+  readonly coach: boolean;
+  readonly live: boolean;
+}): void {
+  const answers: Readonly<Record<string, boolean>> = {
+    scout_desktop_coach: values.coach,
+    scout_coach_live_answers: values.live,
+  };
+  mocks.isPolicyEnabled.mockImplementation(
+    async (name: string) => answers[name] ?? true,
+  );
+}
+
+describe("a game context on runs/start", () => {
+  const complete = z
+    .record(z.string(), z.unknown())
+    .parse(coachFixtures.valid[0]?.body);
+  const liveTurn = {
+    ...startFixture.request,
+    gameContext: { live: complete["live"], postgame: complete["postgame"] },
+  };
+
+  test("a typed question carries it, without it reaching the turn request, and is audited", async () => {
+    mocks.startRun.mockResolvedValue(startFixture.response);
+
+    const response = await send(desktopRequest(START_PATH, { body: liveTurn }));
+
+    expect(response.status).toBe(200);
+    expect(mocks.startRun).toHaveBeenCalledWith(
+      { userId: OWNER_ID },
+      startFixture.request,
+      [SHARED_GUILD],
+      { surface: "desktop" },
+    );
+    expect(mocks.createCoachTurn).toHaveBeenCalledExactlyOnceWith({
+      data: {
+        ownerId: OWNER_ID,
+        deviceId: DEVICE_ID,
+        conversationId: startFixture.response.conversationId,
+        runId: startFixture.response.runId,
+        questionMessageId: startFixture.response.questionMessageId,
+        initiation: "player_typed",
+        sectionsPresent: ["live", "postgame"],
+        sectionsAccepted: ["live", "postgame"],
+        coachEnabled: true,
+        liveAnswersEnabled: true,
+      },
+    });
+  });
+
+  test.each([
+    [{ coach: true, live: false }, ["postgame"]],
+    [{ coach: false, live: true }, []],
+  ] as const)(
+    "with the flags %o the turn still runs and records %o accepted",
+    async (values, accepted) => {
+      coachFlags(values);
+      mocks.startRun.mockResolvedValue(startFixture.response);
+
+      const response = await send(
+        desktopRequest(START_PATH, { body: liveTurn }),
+      );
+
+      expect(response.status).toBe(200);
+      expect(mocks.createCoachTurn).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          sectionsPresent: ["live", "postgame"],
+          sectionsAccepted: accepted,
+          coachEnabled: values.coach,
+          liveAnswersEnabled: values.live,
+        }),
+      });
+    },
+  );
+
+  test("both flags are read for the owner, then each eligible server", async () => {
+    coachFlags({ coach: false, live: false });
+    mocks.startRun.mockResolvedValue(startFixture.response);
+
+    await send(desktopRequest(START_PATH, { body: liveTurn }));
+
+    const coachCalls = mocks.isPolicyEnabled.mock.calls.filter(
+      ([name]) => name !== "scout_desktop_explore_enabled",
+    );
+    expect(coachCalls).toEqual([
+      ["scout_desktop_coach", { user: OWNER_ID }],
+      ["scout_desktop_coach", { server: SHARED_GUILD }],
+      ["scout_coach_live_answers", { user: OWNER_ID }],
+      ["scout_coach_live_answers", { server: SHARED_GUILD }],
+    ]);
+  });
+
+  test("a regenerate, which names no typed question, cannot carry one", async () => {
+    const response = await send(
+      desktopRequest(START_PATH, {
+        body: {
+          conversationId: CONVERSATION_ID,
+          question: null,
+          attach: { kind: "message", messageId: RUN_ID },
+          gameContext: { postgame: complete["postgame"] },
+        },
+      }),
+    );
+
+    expect(response.status).toBe(400);
+    expect(await errorCode(response)).toBe("invalid_turn");
+    expect(mocks.startRun).not.toHaveBeenCalled();
+    expect(mocks.createCoachTurn).not.toHaveBeenCalled();
+  });
+
+  test.each(coachFixtures.invalid)(
+    "refuses $reason as invalid_game_context before any run",
+    async ({ body }) => {
+      const response = await send(
+        desktopRequest(START_PATH, {
+          body: { ...startFixture.request, gameContext: body },
+        }),
+      );
+
+      expect(response.status).toBe(400);
+      expect(await errorCode(response)).toBe("invalid_game_context");
+      expect(mocks.startRun).not.toHaveBeenCalled();
+      expect(mocks.createCoachTurn).not.toHaveBeenCalled();
+    },
+  );
+
+  test("an Arena-sized live game is more than a question-sized body, and still starts", async () => {
+    mocks.startRun.mockResolvedValue(startFixture.response);
+    const live = z
+      .object({ participants: z.array(z.record(z.string(), z.unknown())) })
+      .loose()
+      .parse(complete["live"]);
+    const item = { itemId: 6655, name: "€".repeat(96), count: 1 };
+    const body = {
+      ...startFixture.request,
+      gameContext: {
+        live: {
+          ...live,
+          participants: Array.from({ length: 16 }, (_, index) => ({
+            ...live.participants[index % live.participants.length],
+            items: Array.from({ length: 7 }, () => item),
+          })),
+        },
+      },
+    };
+    expect(JSON.stringify(body).length).toBeGreaterThan(
+      EXPLORE_REQUEST_MAX_BYTES,
+    );
+
+    const response = await send(desktopRequest(START_PATH, { body }));
+
+    expect(response.status).toBe(200);
+    expect(mocks.createCoachTurn).toHaveBeenCalledOnce();
+  });
+
+  test("a turn without one reads no coach flag and writes no audit row", async () => {
+    mocks.startRun.mockResolvedValue(startFixture.response);
+
+    await send(desktopRequest(START_PATH, { body: startFixture.request }));
+
+    expect(
+      mocks.isPolicyEnabled.mock.calls.map(([name]) => name),
+    ).not.toContain("scout_desktop_coach");
+    expect(mocks.createCoachTurn).not.toHaveBeenCalled();
+  });
+
+  test("a turn whose audit row cannot be written is stopped", async () => {
+    mocks.startRun.mockResolvedValue(startFixture.response);
+    mocks.createCoachTurn.mockRejectedValueOnce(new Error("database down"));
+    mocks.stopRun.mockResolvedValue(true);
+
+    await expect(
+      send(desktopRequest(START_PATH, { body: liveTurn })),
+    ).rejects.toThrow("database down");
+    expect(mocks.stopRun).toHaveBeenCalledWith(
+      startFixture.response.runId,
+      OWNER_ID,
+    );
   });
 });
 

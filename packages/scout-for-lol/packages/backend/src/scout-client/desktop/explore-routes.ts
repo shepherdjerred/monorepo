@@ -1,5 +1,5 @@
 import {
-  EXPLORE_REQUEST_MAX_BYTES,
+  SCOUT_DESKTOP_RUN_START_MAX_BYTES,
   SCOUT_DESKTOP_API_ROUTES,
   SCOUT_DESKTOP_ORIGIN_CONTRACT_VERSION,
   SCOUT_DESKTOP_PNG_CONTENT_TYPE,
@@ -195,7 +195,9 @@ const ROUTES = new Map<string, DesktopRoute>([
         path,
         {
           handler,
-          maxBodyBytes: turn ? EXPLORE_REQUEST_MAX_BYTES : MAX_READ_BODY_BYTES,
+          maxBodyBytes: turn
+            ? SCOUT_DESKTOP_RUN_START_MAX_BYTES
+            : MAX_READ_BODY_BYTES,
         },
       ] as const,
   ),

@@ -164,6 +164,8 @@ export type FlagName =
   | "scout_client_ingestion"
   | "scout_client_result_recovery"
   | "scout_desktop_explore_enabled"
+  | "scout_desktop_coach"
+  | "scout_coach_live_answers"
   | "scout_operations_console_enabled"
   | "scout_durable_orchestration_enabled"
   | "scout_support_conversations_enabled"
@@ -360,6 +362,29 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
    * server, and the same answer is this fallback when the provider is down.
    */
   scout_desktop_explore_enabled: { default: true, overrides: [] },
+  /**
+   * The Scout Desktop coach: whether a game context a desktop turn carries may
+   * reach Explore at all. `runs/start` (`scout-client/desktop/explore-run-routes.ts`)
+   * reads it only for a turn that carries a context, and
+   * `coach/context-policy.ts` applies it.
+   *
+   * On everywhere, like the desktop Explore switch it rides on: the player
+   * opts in by pairing chat and choosing to send their game. The flag is the
+   * kill switch; off, every section is withheld and the turn is answered
+   * without it.
+   */
+  scout_desktop_coach: { default: true, overrides: [] },
+  /**
+   * Live game state on a turn the player started. Read beside
+   * `scout_desktop_coach` and applied by `coach/context-policy.ts`; no value of
+   * it lets live state through on a turn the player did not start.
+   *
+   * On everywhere: it is the Riot kill switch for
+   * player-asked live answers, which Riot's published policy does not cover,
+   * not a rollout gate. The content limit holds by contract whatever its
+   * value: the live section has no field for anything the player cannot see.
+   */
+  scout_coach_live_answers: { default: true, overrides: [] },
   /**
    * The "Hey Scout" voice assistant (`/scout join` + `/scout leave`).
    *

@@ -54,6 +54,7 @@ import { defineArchitecture } from "@shepherdjerred/architecture";
 export const layers = [
   "alerts",
   "analytics",
+  "coach",
   "dares",
   "config",
   "configuration",

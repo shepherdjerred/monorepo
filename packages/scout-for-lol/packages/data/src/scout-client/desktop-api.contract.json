@@ -1,5 +1,5 @@
 {
-  "contractVersion": 5,
+  "contractVersion": 6,
   "minimumContractVersion": 1,
   "header": "X-Scout-Desktop-Contract",
   "scopes": ["ingest", "explore"],
@@ -131,6 +131,7 @@
   "errors": {
     "invalid_request": 400,
     "invalid_turn": 400,
+    "invalid_game_context": 400,
     "unauthorized": 401,
     "reauthorize_required": 401,
     "scope_required": 403,

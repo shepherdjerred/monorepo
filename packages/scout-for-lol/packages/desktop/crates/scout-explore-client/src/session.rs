@@ -575,6 +575,9 @@ impl ChatSession {
                 .filter(|models| models.picker_enabled)
                 .map(|models| self.chosen_model.unwrap_or(models.default_model)),
             attachment_ids: (!attachment_ids.is_empty()).then_some(attachment_ids),
+            // Chat attaches no game yet; a context rides only on a question
+            // the player typed, which the composer has to prove.
+            game_context: None,
         }
     }
 

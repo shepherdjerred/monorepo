@@ -7,15 +7,25 @@ import {
   ScoutDesktopEmptyRequestSchema,
   ScoutDesktopRunActiveResponseSchema,
   ScoutDesktopRunStopResponseSchema,
+  type ExploreActiveRun,
   type ScoutDesktopApiErrorCode,
 } from "@scout-for-lol/data";
+import { z } from "zod";
+import { recordCoachTurn } from "#src/coach/audit.ts";
+import {
+  projectGameContext,
+  type CoachContextProjection,
+  type CoachPolicyFlags,
+  type CoachTurnInitiation,
+} from "#src/coach/context-policy.ts";
+import { prisma } from "#src/database/index.ts";
 import { observeExploreRun } from "#src/explore/http/http-route.ts";
 import { exploreRunManager } from "#src/explore/runs/run-manager.ts";
 import {
   classifyExploreStartError,
   type ExploreStartRefusal,
 } from "#src/explore/runs/start-refusal.ts";
-import type { DesktopExploreCaller } from "./auth.ts";
+import { isOwnerFlagEnabled, type DesktopExploreCaller } from "./auth.ts";
 import {
   desktopErrorResponse,
   desktopHeaders,
@@ -90,28 +100,121 @@ function startRefusalResponse(refusal: ExploreStartRefusal): Response {
   );
 }
 
+/**
+ * `runs/start` as the route reads it: the turn, and the game context still
+ * unparsed, so a context that breaks the coach contract earns its own typed
+ * refusal rather than `invalid_request`. `ScoutDesktopRunStartRequestSchema`
+ * is the same body with the context parsed.
+ */
+const RunStartEnvelopeSchema = ExploreTurnRequestSchema.safeExtend({
+  gameContext: z.unknown().optional(),
+});
+
+type CoachTurn = {
+  readonly initiation: CoachTurnInitiation;
+  readonly flags: CoachPolicyFlags;
+  readonly projection: CoachContextProjection;
+};
+
+/**
+ * Hold a turn's game context to the coach contract and policy.
+ *
+ * The proof of player initiation here is minimal: the context rides on a
+ * question the player typed, which a regenerate (no new question) never has.
+ * Voice turns and follow-up chips each need their own proof before they may
+ * carry one.
+ */
+async function gateGameContext(
+  caller: DesktopExploreCaller,
+  question: string | null,
+  gameContext: unknown,
+): Promise<CoachTurn | Response> {
+  if (question === null) {
+    return desktopErrorResponse(
+      "invalid_turn",
+      "Only a question you typed can carry your game.",
+    );
+  }
+  const initiation = "player_typed";
+  const flags: CoachPolicyFlags = {
+    coachEnabled: await isOwnerFlagEnabled(
+      "scout_desktop_coach",
+      caller.userId,
+      caller.guildIds,
+    ),
+    liveAnswersEnabled: await isOwnerFlagEnabled(
+      "scout_coach_live_answers",
+      caller.userId,
+      caller.guildIds,
+    ),
+  };
+  const result = projectGameContext(gameContext, { initiation, flags });
+  if (!result.ok) {
+    const where = result.issues.slice(0, 5).join(", ");
+    return desktopErrorResponse(
+      "invalid_game_context",
+      `The game context does not match the coach contract at ${where}.`.slice(
+        0,
+        MESSAGE_MAX_LENGTH,
+      ),
+    );
+  }
+  return { initiation, flags, projection: result.projection };
+}
+
+/**
+ * Write the turn's audit row. A turn that carried a context and cannot be
+ * audited does not keep running.
+ */
+async function auditCoachTurn(
+  caller: DesktopExploreCaller,
+  run: ExploreActiveRun,
+  coach: CoachTurn,
+): Promise<void> {
+  try {
+    await recordCoachTurn(prisma, {
+      ownerId: caller.userId,
+      deviceId: caller.device.deviceId,
+      run,
+      ...coach,
+    });
+  } catch (error) {
+    await exploreRunManager.stop(run.runId, caller.userId);
+    throw error;
+  }
+}
+
 const startRun: DesktopRouteHandler = async ({ caller, body }) => {
-  const input = ExploreTurnRequestSchema.safeParse(body);
+  const input = RunStartEnvelopeSchema.safeParse(body);
   if (!input.success) return invalidRequest();
+  const { gameContext, ...turn } = input.data;
+  const coach =
+    gameContext === undefined
+      ? null
+      : await gateGameContext(caller, turn.question, gameContext);
+  if (coach instanceof Response) return coach;
   // An edit or a regenerate names where it attaches; a plain question
   // continues the branch on screen. Both start through the same manager and
   // spend the same quota, so this limit only paces how fast one device may
   // fork a conversation.
   if (
-    input.data.conversationId !== null &&
-    input.data.attach.kind !== "leaf" &&
+    turn.conversationId !== null &&
+    turn.attach.kind !== "leaf" &&
     !desktopWriteAllowed("edit", caller.device.deviceId)
   ) {
     return writeLimitedResponse();
   }
   try {
-    const run = await exploreRunManager.start(
-      { userId: caller.userId },
-      input.data,
-      caller.guildIds,
-      { surface: "desktop" },
+    const run = ExploreActiveRunSchema.parse(
+      await exploreRunManager.start(
+        { userId: caller.userId },
+        turn,
+        caller.guildIds,
+        { surface: "desktop" },
+      ),
     );
-    return desktopJsonResponse(ExploreActiveRunSchema.parse(run));
+    if (coach !== null) await auditCoachTurn(caller, run, coach);
+    return desktopJsonResponse(run);
   } catch (error) {
     const refusal = classifyExploreStartError(error);
     if (refusal === null) throw error;
