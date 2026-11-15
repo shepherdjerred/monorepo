@@ -49,6 +49,7 @@ public struct MuseProvider: UsageProvider {
     var inspected: Set<String> = []
     for candidate in candidates where inspected.insert(candidate.standardizedFileURL.path).inserted
     {
+      guard !candidate.path.contains("agent-bin") else { continue }
       if fileManager.isExecutableFile(atPath: candidate.path) { return candidate }
     }
     throw QuotaError.credentialsMissing(.muse)
@@ -58,6 +59,32 @@ public struct MuseProvider: UsageProvider {
     let response = try ProviderDecoder.decode(
       MuseUsageResponse.self, from: data, provider: .muse)
     guard let allowance = response.allowance else {
+      if response.reason == "server_sent_no_usage" {
+        let windows = [
+          try UsageWindow.validated(
+            id: "muse-window",
+            label: "5-hour",
+            kind: .rolling(durationSeconds: 300 * 60),
+            usedPercent: 0,
+            resetAt: nil,
+            sourceTimestamp: now
+          ),
+          try UsageWindow.validated(
+            id: "muse-weekly",
+            label: "Weekly",
+            kind: .weekly,
+            usedPercent: 0,
+            resetAt: nil,
+            sourceTimestamp: now
+          ),
+        ]
+        return UsageSnapshot(
+          provider: .muse,
+          windows: windows.sorted { $0.label < $1.label },
+          notes: ["Uses the signed-in Muse CLI without reading or storing its token."],
+          sourceTimestamp: now
+        )
+      }
       throw QuotaError.credentialsMissing(.muse)
     }
     var notes = ["Uses the signed-in Muse CLI without reading or storing its token."]
@@ -125,6 +152,7 @@ public struct MuseProvider: UsageProvider {
 
 private struct MuseUsageResponse: Decodable {
   let allowance: MuseAllowance?
+  let reason: String?
 }
 
 private struct MuseAllowance: Decodable {

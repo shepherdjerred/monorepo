@@ -1,3 +1,4 @@
+import CommonCrypto
 import Foundation
 
 struct TokenValue {
@@ -190,4 +191,116 @@ private func normalizedDate(_ value: Double?) -> Date? {
   guard let value else { return nil }
   let seconds = value > 10_000_000_000 ? value / 1_000 : value
   return Date(timeIntervalSince1970: seconds)
+}
+
+enum CursorSafeStorageCodec {
+  static let prefix = "cursor-safe-storage:v1:"
+  private static let salt = "saltysalt"
+  private static let iterations: UInt32 = 1003
+  private static let iv = [UInt8](repeating: 0x20, count: kCCBlockSizeAES128)
+
+  static func decrypt(
+    encryptedToken: String,
+    keychain: any KeychainReading
+  ) throws -> String {
+    guard encryptedToken.hasPrefix(prefix) else {
+      return encryptedToken
+    }
+    let passwordData: Data
+    if let data = try keychain.read(service: "Cursor Safe Storage", account: "Cursor Key") {
+      passwordData = data
+    } else if let data = try keychain.read(service: "Cursor Safe Storage", account: nil) {
+      passwordData = data
+    } else {
+      throw QuotaError.credentialsMissing(.cursor)
+    }
+
+    let base64Part = String(encryptedToken.dropFirst(prefix.count))
+    guard let rawData = Data(base64Encoded: base64Part) else {
+      throw QuotaError.malformedResponse(.cursor)
+    }
+    let ciphertext = rawData.starts(with: Data("v10".utf8)) ? rawData.dropFirst(3) : rawData
+
+    let derivedKey = try deriveKey(from: passwordData)
+    let decryptedData = try crypt(
+      operation: CCOperation(kCCDecrypt),
+      data: ciphertext,
+      key: derivedKey
+    )
+
+    guard let decryptedString = String(data: decryptedData, encoding: .utf8) else {
+      throw QuotaError.malformedResponse(.cursor)
+    }
+    let trimmed = decryptedString.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !trimmed.isEmpty else {
+      throw QuotaError.credentialEmpty
+    }
+    return trimmed
+  }
+
+  static func encrypt(
+    token: String,
+    passwordData: Data
+  ) throws -> String {
+    let derivedKey = try deriveKey(from: passwordData)
+    let encryptedData = try crypt(
+      operation: CCOperation(kCCEncrypt),
+      data: Data(token.utf8),
+      key: derivedKey
+    )
+    var payload = Data("v10".utf8)
+    payload.append(encryptedData)
+    return prefix + payload.base64EncodedString()
+  }
+
+  private static func deriveKey(from passwordData: Data) throws -> [UInt8] {
+    var derivedKey = [UInt8](repeating: 0, count: kCCKeySizeAES128)
+    let pbkdfStatus = passwordData.withUnsafeBytes { pwBytes in
+      salt.withCString { saltBytes in
+        CCKeyDerivationPBKDF(
+          CCPBKDFAlgorithm(kCCPBKDF2),
+          pwBytes.baseAddress?.assumingMemoryBound(to: Int8.self),
+          passwordData.count,
+          saltBytes,
+          salt.utf8.count,
+          CCPseudoRandomAlgorithm(kCCPRFHmacAlgSHA1),
+          iterations,
+          &derivedKey,
+          kCCKeySizeAES128
+        )
+      }
+    }
+    guard pbkdfStatus == kCCSuccess else {
+      throw QuotaError.commandFailed("CommonCrypto PBKDF")
+    }
+    return derivedKey
+  }
+
+  private static func crypt(
+    operation: CCOperation,
+    data: Data,
+    key: [UInt8]
+  ) throws -> Data {
+    var outputBytes = [UInt8](repeating: 0, count: data.count + kCCBlockSizeAES128)
+    var numBytesProcessed: size_t = 0
+    let inputBytes = [UInt8](data)
+
+    let status = CCCrypt(
+      operation,
+      CCAlgorithm(kCCAlgorithmAES),
+      CCOptions(kCCOptionPKCS7Padding),
+      key,
+      kCCKeySizeAES128,
+      iv,
+      inputBytes,
+      inputBytes.count,
+      &outputBytes,
+      outputBytes.count,
+      &numBytesProcessed
+    )
+    guard status == kCCSuccess else {
+      throw QuotaError.commandFailed("CommonCrypto AES")
+    }
+    return Data(bytes: outputBytes, count: numBytesProcessed)
+  }
 }

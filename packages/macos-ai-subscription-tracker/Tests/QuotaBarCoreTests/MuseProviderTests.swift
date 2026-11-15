@@ -32,6 +32,38 @@ final class MuseProviderTests: XCTestCase {
     }
   }
 
+  func testMuseServerSentNoUsageReturnsZeroUsageWindows() throws {
+    let noUsage = Data(
+      (#"{"schemaVersion":1,"allowance":null,"reason":"server_sent_no_usage","#
+        + #""hint":"the server sent no usage data for this subscription"}"#).utf8)
+    let snapshot = try MuseProvider.parse(data: noUsage)
+    XCTAssertEqual(snapshot.windows.map(\.label), ["5-hour", "Weekly"])
+    XCTAssertEqual(snapshot.windows.compactMap(\.usedPercent), [0, 0])
+    XCTAssertTrue(
+      snapshot.notes.contains("Uses the signed-in Muse CLI without reading or storing its token."))
+  }
+
+  func testMuseLocateExecutableIgnoresAgentBin() throws {
+    let root = try temporaryDirectory()
+    defer { try? FileManager.default.removeItem(at: root) }
+    let agentBin = root.appendingPathComponent(".local/share/agent-bin")
+    let realBin = root.appendingPathComponent("bin")
+    try FileManager.default.createDirectory(at: agentBin, withIntermediateDirectories: true)
+    try FileManager.default.createDirectory(at: realBin, withIntermediateDirectories: true)
+    let fakeWrapper = agentBin.appendingPathComponent("muse")
+    let fakeReal = realBin.appendingPathComponent("muse")
+    FileManager.default.createFile(
+      atPath: fakeWrapper.path, contents: Data("fake".utf8),
+      attributes: [.posixPermissions: 0o755])
+    FileManager.default.createFile(
+      atPath: fakeReal.path, contents: Data("fake".utf8),
+      attributes: [.posixPermissions: 0o755])
+
+    let environment = ["PATH": "\(agentBin.path):\(realBin.path)"]
+    let located = try MuseProvider.locateExecutable(environment: environment, homeDirectory: root)
+    XCTAssertEqual(located.path, fakeReal.path)
+  }
+
   func testMuseDropsWindowsWithoutUsablePercentages() throws {
     let snapshot = try MuseProvider.parse(data: museUsage(windowUsed: 62, weeklyUsed: nil))
     XCTAssertEqual(snapshot.windows.map(\.label), ["5-hour"])

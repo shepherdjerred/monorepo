@@ -39,6 +39,111 @@ final class CursorCredentialTests: XCTestCase {
     }
   }
 
+  func testCursorReadsEncryptedTokenFromStateDatabase() throws {
+    let root = try temporaryDirectory()
+    defer { try? FileManager.default.removeItem(at: root) }
+    let database = root.appendingPathComponent("cursor-state.vscdb")
+    let passwordData = Data("cursor-encryption-key".utf8)
+    let encrypted = try CursorSafeStorageCodec.encrypt(
+      token: "cursor-decrypted-token",
+      passwordData: passwordData
+    )
+    try createCursorDatabase(at: database, accessToken: encrypted)
+
+    let keychain = FakeKeychain()
+    keychain.seed(passwordData, service: "Cursor Safe Storage", account: "Cursor Key")
+
+    let store = LocalCredentialStore(
+      homeDirectory: root,
+      cursorStateDatabase: database,
+      cursorKeychain: keychain
+    )
+
+    let credential = try store.credential(for: .cursor, rejecting: nil)
+    XCTAssertEqual(credential.accessToken, "cursor-decrypted-token")
+    XCTAssertEqual(credential.source, database.path)
+  }
+
+  func testCursorReadsTokenFromKeychain() throws {
+    let root = try temporaryDirectory()
+    defer { try? FileManager.default.removeItem(at: root) }
+
+    let keychain = FakeKeychain()
+    keychain.seed(Data("keychain-access-token".utf8), service: "cursor-access-token")
+
+    let store = LocalCredentialStore(
+      homeDirectory: root,
+      cursorKeychain: keychain
+    )
+
+    let credential = try store.credential(for: .cursor, rejecting: nil)
+    XCTAssertEqual(credential.accessToken, "keychain-access-token")
+    XCTAssertEqual(credential.source, "Cursor Keychain")
+  }
+
+  func testCursorPrefersKeychainAndFallsBackToDatabaseWhenRejected() throws {
+    let root = try temporaryDirectory()
+    defer { try? FileManager.default.removeItem(at: root) }
+    let database = root.appendingPathComponent("cursor-state.vscdb")
+    try createCursorDatabase(at: database, accessToken: "database-fallback-token")
+
+    let keychain = FakeKeychain()
+    keychain.seed(Data("keychain-first-token".utf8), service: "cursor-access-token")
+
+    let store = LocalCredentialStore(
+      homeDirectory: root,
+      cursorStateDatabase: database,
+      cursorKeychain: keychain
+    )
+
+    let first = try store.credential(for: .cursor, rejecting: nil)
+    XCTAssertEqual(first.accessToken, "keychain-first-token")
+    XCTAssertEqual(first.source, "Cursor Keychain")
+
+    let second = try store.credential(for: .cursor, rejecting: first)
+    XCTAssertEqual(second.accessToken, "database-fallback-token")
+    XCTAssertEqual(second.source, database.path)
+  }
+
+  func testCursorEncryptedTokenWithoutPasswordThrowsCredentialsMissing() throws {
+    let root = try temporaryDirectory()
+    defer { try? FileManager.default.removeItem(at: root) }
+    let database = root.appendingPathComponent("cursor-state.vscdb")
+    let encrypted = "cursor-safe-storage:v1:AAAA"
+    try createCursorDatabase(at: database, accessToken: encrypted)
+
+    let store = LocalCredentialStore(
+      homeDirectory: root,
+      cursorStateDatabase: database,
+      cursorKeychain: FakeKeychain()
+    )
+
+    XCTAssertThrowsError(try store.credential(for: .cursor, rejecting: nil)) { error in
+      XCTAssertEqual(error as? QuotaError, .credentialsMissing(.cursor))
+    }
+  }
+
+  func testCursorMalformedEncryptedTokenThrowsMalformedResponse() throws {
+    let root = try temporaryDirectory()
+    defer { try? FileManager.default.removeItem(at: root) }
+    let database = root.appendingPathComponent("cursor-state.vscdb")
+    let malformed = "cursor-safe-storage:v1:not-valid-base64?!"
+    try createCursorDatabase(at: database, accessToken: malformed)
+
+    let keychain = FakeKeychain()
+    keychain.seed(Data("password".utf8), service: "Cursor Safe Storage", account: "Cursor Key")
+
+    let store = LocalCredentialStore(
+      homeDirectory: root,
+      cursorStateDatabase: database,
+      cursorKeychain: keychain
+    )
+
+    XCTAssertThrowsError(try store.credential(for: .cursor, rejecting: nil)) { error in
+      XCTAssertEqual(error as? QuotaError, .malformedResponse(.cursor))
+    }
+  }
+
   private func createCursorDatabase(at url: URL, accessToken: String) throws {
     try FileManager.default.createDirectory(
       at: url.deletingLastPathComponent(),
