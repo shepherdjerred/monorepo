@@ -1,17 +1,26 @@
 import { captureDetail, listCaptures } from "#lib/history/captures/queries.ts";
 import type { CaptureStore } from "#lib/history/captures/store.ts";
 import type { HistoryIndex } from "#lib/history/index.ts";
-import { ftsQuery, parseSince } from "#lib/history/query/query.ts";
+import { ftsQuery } from "#lib/history/query/query.ts";
 import { publicRecord } from "#lib/history/query/results.ts";
-import {
-  HistorySourceNameSchema,
-  type HistoryMessage,
-  type HistoryRecord,
-  type HistorySourceName,
-  type HistoryWarning,
+import type {
+  HistoryMessage,
+  HistoryRecord,
+  HistoryWarning,
 } from "#lib/history/types.ts";
+import type { UsageSnapshot } from "#lib/brim/cache.ts";
+import { historyBlocks, parseBlocksParams } from "#lib/history/blocks.ts";
 import {
-  HISTORY_API_VERSION,
+  isUsageReportRequest,
+  parseUsageReportParams,
+} from "#lib/history/usage-report.ts";
+import { BadRequest, NotFound, sinceParam, sourceParam } from "./params.ts";
+import { HISTORY_API_VERSION } from "./schema-common.ts";
+import {
+  HistoryApiBlocksResponseSchema,
+  HistoryApiUsageReportResponseSchema,
+} from "./report-schema.ts";
+import {
   HistoryApiCaptureDetailResponseSchema,
   HistoryApiCapturesResponseSchema,
   HistoryApiErrorSchema,
@@ -32,12 +41,20 @@ export type HistoryApiDependencies = {
     readonly messages: ReadonlyMap<string, readonly HistoryMessage[]>;
     readonly warnings: readonly HistoryWarning[];
   }>;
+  /** The clock for relative `since` values and block burn rates. */
+  readonly now: () => Date;
+  /**
+   * Brim's quota snapshots for aligning 5-hour blocks, or null when this
+   * machine has no Brim cache.
+   */
+  readonly loadQuotaSnapshots: () => Promise<readonly UsageSnapshot[] | null>;
 };
 
-/** A request the client got wrong; answered with HTTP 400. */
-class BadRequest extends Error {}
-
-class NotFound extends Error {}
+/** What a synchronous route reads. */
+type RouteContext = {
+  readonly index: HistoryIndex;
+  readonly now: Date;
+};
 
 const DEFAULT_PAGE = 50;
 const MAX_PAGE = 500;
@@ -71,34 +88,10 @@ function intParam(
   return value;
 }
 
-/** Absent means no lower bound; otherwise the CLI's `--since` grammar. */
-function sinceParam(params: URLSearchParams): string | null {
-  const raw = params.get("since");
-  if (raw === null) {
-    return null;
-  }
-  try {
-    return parseSince(raw);
-  } catch (error: unknown) {
-    throw new BadRequest(
-      error instanceof Error ? error.message : String(error),
-    );
-  }
-}
-
-function sourceParam(params: URLSearchParams): HistorySourceName | null {
-  const raw = params.get("source");
-  if (raw === null) {
-    return null;
-  }
-  const parsed = HistorySourceNameSchema.safeParse(raw);
-  if (!parsed.success) {
-    throw new BadRequest(`Unknown history source "${raw}"`);
-  }
-  return parsed.data;
-}
-
-function listSessions(index: HistoryIndex, params: URLSearchParams): Response {
+function listSessions(
+  { index, now }: RouteContext,
+  params: URLSearchParams,
+): Response {
   const limit = intParam(params, {
     name: "limit",
     fallback: DEFAULT_PAGE,
@@ -111,7 +104,7 @@ function listSessions(index: HistoryIndex, params: URLSearchParams): Response {
     max: Number.MAX_SAFE_INTEGER,
   });
   const page = index.sessions({
-    since: sinceParam(params),
+    since: sinceParam(params, now),
     source: sourceParam(params),
     machine: params.get("machine"),
     workspace: params.get("workspace"),
@@ -128,7 +121,7 @@ function listSessions(index: HistoryIndex, params: URLSearchParams): Response {
 }
 
 function searchSessions(
-  index: HistoryIndex,
+  { index, now }: RouteContext,
   params: URLSearchParams,
 ): Response {
   const query = (params.get("q") ?? "").trim();
@@ -152,7 +145,7 @@ function searchSessions(
   });
   const { ids, hasMore } = index.readSnapshot(() => {
     const records = index.search(query, {
-      since: sinceParam(params),
+      since: sinceParam(params, now),
       source: sourceParam(params),
       machine: params.get("machine"),
       workspace: params.get("workspace"),
@@ -222,7 +215,17 @@ async function sessionDetail(
   );
 }
 
-function usage(index: HistoryIndex, params: URLSearchParams): Response {
+function usage(
+  { index, now }: RouteContext,
+  params: URLSearchParams,
+): Response {
+  if (isUsageReportRequest(params)) {
+    return Response.json(
+      HistoryApiUsageReportResponseSchema.parse(
+        index.usageReport(parseUsageReportParams(params, now)),
+      ),
+    );
+  }
   const groupBy = HistoryApiUsageGroupSchema.safeParse(
     params.get("groupBy") ?? "day",
   );
@@ -235,18 +238,21 @@ function usage(index: HistoryIndex, params: URLSearchParams): Response {
     HistoryApiUsageResponseSchema.parse(
       index.usageGroups({
         groupBy: groupBy.data,
-        since: sinceParam(params),
+        since: sinceParam(params, now),
         source: sourceParam(params),
       }),
     ),
   );
 }
 
-function tools(index: HistoryIndex, params: URLSearchParams): Response {
+function tools(
+  { index, now }: RouteContext,
+  params: URLSearchParams,
+): Response {
   return Response.json(
     HistoryApiToolsResponseSchema.parse(
       index.tools({
-        since: sinceParam(params),
+        since: sinceParam(params, now),
         limit: intParam(params, {
           name: "limit",
           fallback: 50,
@@ -258,7 +264,7 @@ function tools(index: HistoryIndex, params: URLSearchParams): Response {
   );
 }
 
-function facets(index: HistoryIndex): Response {
+function facets({ index }: RouteContext): Response {
   return Response.json(HistoryApiFacetsResponseSchema.parse(index.facets()));
 }
 
@@ -327,9 +333,25 @@ function capture(dependencies: HistoryApiDependencies, id: number): Response {
   );
 }
 
+async function blocks(
+  dependencies: HistoryApiDependencies,
+  params: URLSearchParams,
+): Promise<Response> {
+  const now = dependencies.now();
+  const query = parseBlocksParams(params, now);
+  return Response.json(
+    HistoryApiBlocksResponseSchema.parse(
+      historyBlocks(dependencies.index, query, {
+        now,
+        snapshots: await dependencies.loadQuotaSnapshots(),
+      }),
+    ),
+  );
+}
+
 const ROUTES = new Map<
   string,
-  (index: HistoryIndex, params: URLSearchParams) => Response
+  (context: RouteContext, params: URLSearchParams) => Response
 >([
   ["/v1/sessions", listSessions],
   ["/v1/search", searchSessions],
@@ -364,7 +386,13 @@ export async function handleHistoryApiRequest(
   try {
     const route = ROUTES.get(url.pathname);
     if (route !== undefined) {
-      return route(dependencies.index, params);
+      return route(
+        { index: dependencies.index, now: dependencies.now() },
+        params,
+      );
+    }
+    if (url.pathname === "/v1/blocks") {
+      return await blocks(dependencies, params);
     }
     if (url.pathname === "/v1/captures") {
       return captures(dependencies, params);

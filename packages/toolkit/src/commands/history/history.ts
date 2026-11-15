@@ -1,6 +1,5 @@
 import { parseArgs } from "node:util";
 import { parseMessageLimit, selectShowMessages } from "#lib/history/context.ts";
-import { HistoryIndex } from "#lib/history/index.ts";
 import { ftsQuery, parseLimit, parseSince } from "#lib/history/query/query.ts";
 import {
   historyDaemonRequest,
@@ -30,10 +29,18 @@ import {
 import { currentHistoryRuntimes } from "#lib/history/runtime.ts";
 import { createHistorySources } from "#lib/history/sources.ts";
 import { addExcerpts, targetedMessages } from "#lib/history/targeted.ts";
+import { HISTORY_AGENT_NAMES } from "#lib/history/agents.ts";
 import {
+  HISTORY_SOURCE_NAMES,
   HistorySourceNameSchema,
   type HistorySourceName,
 } from "#lib/history/types.ts";
+import { withReadOnlyIndex } from "./read-index.ts";
+import {
+  blocksCommand,
+  usageReportCommand,
+  wantsUsageReport,
+} from "./reports.ts";
 
 const USAGE = `
 toolkit history — search local agent conversation history
@@ -44,15 +51,21 @@ Search and browse the existing local index:
   toolkit history show <id> [--query <text>] [--messages 8] [--include-tools] [--json]
   toolkit history sources [--json]
   toolkit history usage [--since 7d] [--source <name>] [--json]
+  toolkit history usage --period day|week|month [--breakdown agent,model,project,machine]
+      [--since <when>] [--until <when>] [--timezone <IANA zone>] [--start-of-week monday|sunday]
+      [--agent <agent>] [--source <name>] [--machine local|<id>] [--project <path>] [--json]
+  toolkit history blocks [--active] [--agent <agent>] [--since 3d] [--machine local|all|<id>] [--json]
 
 --since accepts 7d, 24h, 1w, an ISO date, or "all" (no lower bound); omitting
-it defaults to 7d.
+it defaults to 7d, except for the period report (no lower bound) and blocks
+(3d). In the period report a bare YYYY-MM-DD is midnight in --timezone.
 
 Manage background ingestion:
   toolkit history daemon install
   toolkit history daemon start|stop|uninstall|status|reindex
 
-Sources: conductor, claude, codex, cursor, antigravity, grok
+Sources: ${HISTORY_SOURCE_NAMES.join(", ")}
+Agents (--agent; a mirror counts as its agent): ${HISTORY_AGENT_NAMES.join(", ")}
 `;
 function parseSource(value: string | undefined): HistorySourceName | null {
   if (value === undefined) {
@@ -81,25 +94,6 @@ function parseCommon(args: string[]) {
     },
     allowPositionals: true,
   });
-}
-
-async function withReadOnlyIndex<T>(
-  callback: (index: HistoryIndex) => Promise<T> | T,
-): Promise<T> {
-  const index = await HistoryIndex.open(
-    defaultHistoryRuntimePaths(),
-    true,
-  ).catch((error: unknown) => {
-    throw new Error(
-      `History index is not available. Run 'toolkit history daemon install' and wait for its first scan. ${error instanceof Error ? error.message : String(error)}`,
-      { cause: error },
-    );
-  });
-  try {
-    return await callback(index);
-  } finally {
-    index.close();
-  }
 }
 
 function sourceDefinitions() {
@@ -327,6 +321,10 @@ function formatCost(costUsd: number, costComplete: boolean): string {
 }
 
 async function usageCommand(args: string[]): Promise<void> {
+  if (wantsUsageReport(args)) {
+    await usageReportCommand(args);
+    return;
+  }
   const { values } = parseCommon(args);
   const source = parseSource(values.source);
   const since = parseSince(values.since);
@@ -461,6 +459,9 @@ export async function handleHistoryCommand(
         break;
       case "usage":
         await usageCommand(args);
+        break;
+      case "blocks":
+        await blocksCommand(args);
         break;
       case "daemon":
         await daemonCommand(args);

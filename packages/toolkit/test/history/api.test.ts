@@ -27,6 +27,7 @@ import type {
 } from "#lib/history/types.ts";
 import { describeSchemaContracts } from "#test/support/schema-contracts.ts";
 
+const FIXED_NOW = new Date("2026-11-09T12:00:00.000Z");
 const roots: string[] = [];
 const stores = new Map<HistoryIndex, CaptureStore>();
 
@@ -183,7 +184,13 @@ async function get(
   method = "GET",
 ): Promise<{ status: number; body: unknown }> {
   const response = await handleHistoryApiRequest(
-    { index, captures: storeFor(index), readMessages },
+    {
+      index,
+      captures: storeFor(index),
+      readMessages,
+      now: () => FIXED_NOW,
+      loadQuotaSnapshots: () => Promise.resolve(null),
+    },
     new Request(`http://history${pathAndQuery}`, { method }),
   );
   if (response === null) {
@@ -379,7 +386,13 @@ describe("history API", () => {
     const index = await fixtureIndex();
     expect(await fetchStatus(index, "/v1/sessions", "POST")).toBe(405);
     const control = await handleHistoryApiRequest(
-      { index, captures: storeFor(index), readMessages },
+      {
+        index,
+        captures: storeFor(index),
+        readMessages,
+        now: () => FIXED_NOW,
+        loadQuotaSnapshots: () => Promise.resolve(null),
+      },
       new Request("http://history/status"),
     );
     expect(control).toBeNull();

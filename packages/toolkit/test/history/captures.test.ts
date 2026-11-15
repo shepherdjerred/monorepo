@@ -133,6 +133,8 @@ async function get(
       captures: context.store,
       readMessages: () =>
         Promise.resolve({ messages: new Map(), warnings: [] }),
+      now: () => new Date(),
+      loadQuotaSnapshots: () => Promise.resolve(null),
     },
     new Request(`http://history${url}`),
   );

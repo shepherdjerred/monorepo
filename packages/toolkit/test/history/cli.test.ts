@@ -11,6 +11,10 @@ import {
 } from "#lib/history/paths.ts";
 import { createHistorySources } from "#lib/history/sources.ts";
 import {
+  runHistoryCli,
+  type HistoryCliResult,
+} from "#test/support/history-cli.ts";
+import {
   EMPTY_DOCUMENT_DETAILS,
   type HistorySourceResult,
 } from "#lib/history/types.ts";
@@ -136,31 +140,12 @@ async function runHistory(
   args: readonly string[],
   conductorSessionId = "different-session",
   codexThreadId = "different-thread",
-): Promise<{
-  readonly exitCode: number;
-  readonly stdout: string;
-  readonly stderr: string;
-}> {
-  const child = Bun.spawn(
-    [process.execPath, "run", "src/index.ts", "history", ...args],
-    {
-      cwd: path.join(import.meta.dir, "../.."),
-      env: {
-        ...Bun.env,
-        HOME: fixtureHome,
-        CONDUCTOR_SESSION_ID: conductorSessionId,
-        CODEX_THREAD_ID: codexThreadId,
-      },
-      stdout: "pipe",
-      stderr: "pipe",
-    },
-  );
-  const [exitCode, stdout, stderr] = await Promise.all([
-    child.exited,
-    new Response(child.stdout).text(),
-    new Response(child.stderr).text(),
-  ]);
-  return { exitCode, stdout, stderr };
+): Promise<HistoryCliResult> {
+  return runHistoryCli(args, {
+    HOME: fixtureHome,
+    CONDUCTOR_SESSION_ID: conductorSessionId,
+    CODEX_THREAD_ID: codexThreadId,
+  });
 }
 
 describe("history JSON interfaces", () => {

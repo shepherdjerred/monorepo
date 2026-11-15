@@ -1024,6 +1024,8 @@ the index and never performs live service checks.
 | `history show <ID> [--query TEXT] [--messages 8] [--include-tools] [--json]` | Read bounded, role-aware conversation context |
 | `history sources [--json]`                                                   | Show source availability and scan errors      |
 | `history usage [--since 7d] [--source NAME] [--json]`                        | Token counts and estimated cost by source     |
+| `history usage --period day\|week\|month [--breakdown LIST] [--json]`        | Calendar usage report (see below)             |
+| `history blocks [--active] [--agent NAME] [--machine all] [--json]`          | 5-hour usage blocks with burn rate            |
 | `history daemon install`                                                     | Install and start the macOS LaunchAgent       |
 | `history daemon status\|reindex`                                             | Inspect or refresh ingestion                  |
 | `history daemon stop\|start\|uninstall`                                      | Manage the LaunchAgent lifecycle              |
@@ -1036,10 +1038,13 @@ toolkit history show <ID_FROM_SEARCH> --query "argocd prune"
 toolkit history sources
 toolkit history usage --since 30d
 toolkit history usage --since all
+toolkit history usage --period week --breakdown agent,model --since 30d
+toolkit history blocks --active
 ```
 
 `--since` accepts `7d`/`24h`/`1w`, an ISO date, or `all` for no lower bound;
-omitting it defaults to the last 7 days on every `history` subcommand.
+omitting it defaults to the last 7 days, except for the period report (no
+lower bound) and `blocks` (3 days).
 
 Search ranks title, dialogue, and tool text separately and uses recency only to
 break relevance ties. Unquoted terms keep AND-prefix behavior; pass literal
@@ -1082,16 +1087,18 @@ The daemon also serves a read-only JSON API over its socket for Brim's
 Sessions window. Every endpoint is `GET`. `since` takes the CLI's `--since`
 grammar, and omitting it means no lower bound.
 
-| Endpoint                                                                | Returns                                                                      |
-| ----------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| `/v1/sessions?since&source&machine&workspace&limit&offset`              | Sessions, newest first, with branch, model, counts, and usage                |
-| `/v1/search?q&since&source&machine&workspace&limit&offset`              | The same session shape, ranked by BM25                                       |
-| `/v1/sessions/<id>?offset&limit`                                        | One session plus a page of full messages, with tool names                    |
-| `/v1/usage?groupBy=day\|source\|model\|workspace\|machine&since&source` | Usage totals per group (`day` is the local calendar day)                     |
-| `/v1/tools?since&limit`                                                 | Tool calls and the number of sessions that made them, per tool               |
-| `/v1/facets`                                                            | Every machine, source, and workspace with indexed sessions, and their counts |
-| `/v1/captures?session&limit&offset`                                     | Captured requests (see [Brim capture](#brim-capture))                        |
-| `/v1/captures/<id>`                                                     | One captured request, rebuilt, with its new blocks                           |
+| Endpoint                                                                | Returns                                                                        |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `/v1/sessions?since&source&machine&workspace&limit&offset`              | Sessions, newest first, with branch, model, counts, and usage                  |
+| `/v1/search?q&since&source&machine&workspace&limit&offset`              | The same session shape, ranked by BM25                                         |
+| `/v1/sessions/<id>?offset&limit`                                        | One session plus a page of full messages, with tool names                      |
+| `/v1/usage?groupBy=day\|source\|model\|workspace\|machine&since&source` | Usage totals per group (`day` is the local calendar day)                       |
+| `/v1/usage?period=day\|week\|month&breakdown&timezone&startOfWeek&…`    | Calendar usage report (see [Usage reports](#usage-reports-and-blocks))         |
+| `/v1/blocks?agent&active&since&machine`                                 | 5-hour usage blocks per agent (see [Usage reports](#usage-reports-and-blocks)) |
+| `/v1/tools?since&limit`                                                 | Tool calls and the number of sessions that made them, per tool                 |
+| `/v1/facets`                                                            | Every machine, source, and workspace with indexed sessions, and their counts   |
+| `/v1/captures?session&limit&offset`                                     | Captured requests (see [Brim capture](#brim-capture))                          |
+| `/v1/captures/<id>`                                                     | One captured request, rebuilt, with its new blocks                             |
 
 `machine=local` selects this machine's own sessions; mirrored sessions carry
 their `brim sync` machine id. A session's `usageEvents` of zero means its
@@ -1101,11 +1108,47 @@ Bad parameters return 400 and a missing session 404, both as `{ error }`. The
 contracts are the
 `schemas/history-api-*.schema.json` files, with shared fixtures under
 `schemas/fixtures/`; a test keeps them identical to the zod schemas in
-`src/lib/history/api/schema.ts`.
+`src/lib/history/api/schema.ts` and `src/lib/history/api/report-schema.ts`.
 
 ```bash
 curl --unix-socket ~/.toolkit/history/daemon.sock 'http://history/v1/usage?groupBy=model&since=7d'
+curl --unix-socket ~/.toolkit/history/daemon.sock 'http://history/v1/blocks?active=true'
 ```
+
+##### Usage reports and blocks
+
+`/v1/usage?period=…` and `toolkit history usage --period` print the same
+ccusage-style report: usage events bucketed into calendar days, weeks, or
+months of `timezone` (an IANA zone, default the daemon's local zone; weeks
+start on `startOfWeek`, `monday` or `sunday`). Each period carries totals and,
+when `breakdown` names any of `agent`, `model`, `project` (the session
+workspace), and `machine`, one row per combination; a dimension the request
+did not name is null. `since` and `until` (exclusive) take the `--since`
+grammar, and a bare `YYYY-MM-DD` is midnight in the report's zone. `agent`,
+`source`, `machine` (`local` or a mirrored machine id), and `project` filter
+the events. `total.unpricedModels` lists models with billable tokens the
+price catalog cannot price, so their cost is a lower bound. Without `period`,
+`/v1/usage` keeps its `groupBy` shape.
+
+The agent is the user-facing tool: `claude` and `claude-mirror` are both
+Claude Code, and `machine` tells them apart. Agents are the source names
+without the `-mirror` suffix.
+
+`/v1/blocks` and `toolkit history blocks` group each agent's usage into
+5-hour blocks the way ccusage does: a block starts at its first event floored
+to the UTC hour and lasts five hours, the first event at or after its end
+starts the next block, and the idle time between two listed blocks is a gap.
+When Brim's snapshot cache (`~/Library/Application Support/QuotaBar/snapshots.json`)
+has a provider `5-hour` quota window that is current for an agent, the active
+block is that window instead (`alignedToQuota: true`), from its reset minus
+five hours to its reset; the block before it ends no later than its start.
+A provider with several 5-hour windows (Antigravity's per-model buckets) uses
+the most consumed one. The active block's `projection` measures tokens per
+minute and cost per hour from its first event to now and projects them to the
+block's end. Blocks read this machine's events by default; `machine=all` adds
+mirrored machines and `machine=<id>` reads one. `active=true` lists only
+active blocks, and `since` (default 3 days) lists blocks ending after it while
+still building them from the start of their chain.
 
 ##### Token and cost tracking
 
