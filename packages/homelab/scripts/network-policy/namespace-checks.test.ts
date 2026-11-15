@@ -265,16 +265,27 @@ describe("blackbox probes", () => {
 });
 
 describe("denials", () => {
-  const lines = [
-    "[pod/kube-flannel-a] verdict=deny tracker/tracker-0 -> flipt/flipt-0:8080",
-    "[pod/kube-flannel-a] verdict=accept tracker/tracker-0 -> kube-system/dns",
-    "[pod/kube-flannel-b] packet dropped my-tracker/x -> media/plex",
-    "[pod/kube-flannel-b] Denied by policy: media/plex -> tracker/tracker-0",
-  ];
+  const a = "[pod/kube-flannel-a/kube-network-policies]";
+  const b = "[pod/kube-flannel-b/kube-network-policies]";
+  const [evalA7, deniedA7, evalB7, deniedB7, evalA8, limited] = [
+    `${a} I1114 12:00:00.1 1 logging.go:67] "Evaluating packet" id=7 direction="egress" srcPod="tracker/tracker-0" dstPod="flipt/flipt-0"`,
+    `${a} I1114 12:00:00.2 1 engine.go:57] "Packet denied by egress policy" id=7`,
+    `${b} I1114 12:00:00.3 1 logging.go:67] "Evaluating packet" id=7 direction="ingress" srcPod="my-tracker/x" dstPod="media/plex-0"`,
+    `${b} I1114 12:00:00.4 1 engine.go:68] "Packet denied by ingress policy" id=7`,
+    `${a} I1114 12:00:00.5 1 logging.go:67] "Evaluating packet" id=8 direction="egress" srcPod="tracker/tracker-0" dstPod="kube-system/coredns-1"`,
+    `${b} I1114 12:00:00.6 1 networkpolicy.go:279] "Pod has limited all egress traffic" pod="tracker/tracker-0" policy="tracker/deny-all"`,
+  ] as const;
+  const lines = [evalA7, deniedA7, evalB7, deniedB7, evalA8, limited];
 
-  test("are lines that look like a denial and name the namespace as a word", () => {
-    expect(denialsFor("tracker", lines)).toEqual([lines[0], lines[3]]);
-    expect(denialsFor("media", lines)).toEqual([lines[2], lines[3]]);
+  test("pair each denial with the same agent's packet line and match the namespace by pod", () => {
+    expect(denialsFor("tracker", lines)).toEqual([
+      `${deniedA7} <- ${evalA7}`,
+      limited,
+    ]);
+    expect(denialsFor("media", lines)).toEqual([`${deniedB7} <- ${evalB7}`]);
+    expect(denialsFor("flipt", lines)).toEqual([`${deniedA7} <- ${evalA7}`]);
+    expect(denialsFor("my", lines)).toEqual([]);
+    expect(denialsFor("kube-system", lines)).toEqual([]);
   });
 
   test("are a note, and not available without the enforcer", () => {
@@ -282,7 +293,7 @@ describe("denials", () => {
       evaluateDenials("tracker", { available: true, lines, minutes: 10 }),
     ).toMatchObject({
       status: "info",
-      summary: "2 log lines look like denials in the last 10m",
+      summary: "2 denials involving this namespace in the last 10m",
     });
     expect(
       evaluateDenials("tracker", { available: false, reason: "no container" }),

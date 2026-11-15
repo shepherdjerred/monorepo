@@ -411,16 +411,69 @@ export type EnforcerLog =
   | { available: true; lines: readonly string[]; minutes: number }
   | { available: false; reason: string };
 
-const DENIAL = /den(?:y|ied)|drop|reject/iu;
+// kube-network-policies v1.1.2 (klog text). A denial line carries only the
+// packet id; the "Evaluating packet" line logged before it, by the same agent,
+// names the pods. Only deny-all policies log their own name.
+// https://github.com/kubernetes-sigs/kube-network-policies/blob/v1.1.2/pkg/networkpolicy/engine.go
+const DENIED = /"Packet denied by (?:egress|ingress) policy".*?\bid=(\d+)/u;
+const EVALUATING = /"Evaluating packet".*?\bid=(\d+)/u;
+const LIMITED = /"Pod has limited all (?:egress|ingress) traffic"/u;
 const SHOWN_DENIALS = 5;
 
-/** Log lines that look like a denial and name the namespace as a whole word. */
+/** `kubectl logs --prefix` names the agent pod; packet ids are per agent. */
+function agentOf(line: string): string {
+  return /^\[[^\]]+\]/u.exec(line)?.[0] ?? "";
+}
+
+function field(line: string, key: string): string | undefined {
+  return new RegExp(String.raw`\b${key}="([^"]+)"`, "u").exec(line)?.[1];
+}
+
+function inNamespace(
+  reference: string | undefined,
+  namespace: string,
+): boolean {
+  return reference?.startsWith(`${namespace}/`) ?? false;
+}
+
+/**
+ * Denials whose source or destination pod is in the namespace, each paired
+ * with the packet description that names the pods, plus deny-all matches for
+ * the namespace's pods or policies.
+ */
 export function denialsFor(
   namespace: string,
   lines: readonly string[],
 ): string[] {
-  const named = new RegExp(`(?<![a-z0-9-])${namespace}(?![a-z0-9-])`, "u");
-  return lines.filter((line) => DENIAL.test(line) && named.test(line));
+  const evaluated = new Map<string, string>();
+  const denials: string[] = [];
+  for (const line of lines) {
+    const evaluating = EVALUATING.exec(line);
+    if (evaluating !== null) {
+      evaluated.set(`${agentOf(line)}#${evaluating[1] ?? ""}`, line);
+      continue;
+    }
+    const denied = DENIED.exec(line);
+    if (denied !== null) {
+      const packet = evaluated.get(`${agentOf(line)}#${denied[1] ?? ""}`);
+      if (
+        packet !== undefined &&
+        (inNamespace(field(packet, "srcPod"), namespace) ||
+          inNamespace(field(packet, "dstPod"), namespace))
+      ) {
+        denials.push(`${line} <- ${packet}`);
+      }
+      continue;
+    }
+    if (
+      LIMITED.test(line) &&
+      (inNamespace(field(line, "pod"), namespace) ||
+        inNamespace(field(line, "policy"), namespace))
+    ) {
+      denials.push(line);
+    }
+  }
+  return denials;
 }
 
 /** A note, never a gate: the enforcer has no deny-only log to count from. */
@@ -440,7 +493,7 @@ export function evaluateDenials(
   return {
     check: "denials",
     status: "info",
-    summary: `${String(denials.length)} log lines look like denials in the last ${String(log.minutes)}m`,
+    summary: `${String(denials.length)} denials involving this namespace in the last ${String(log.minutes)}m`,
     details: denials.slice(0, SHOWN_DENIALS),
   };
 }
