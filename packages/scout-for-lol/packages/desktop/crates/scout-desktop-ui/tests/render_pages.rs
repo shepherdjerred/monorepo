@@ -590,12 +590,12 @@ mod render {
     }
 
     /// The question's switcher: previous, next. The answer's: the same.
-    const QUESTION_PREVIOUS: (f32, f32) = (580., 212.);
-    const QUESTION_NEXT: (f32, f32) = (658., 212.);
-    const QUESTION_EDIT: (f32, f32) = (703., 212.);
-    const ANSWER_PREVIOUS: (f32, f32) = (240., 310.);
-    const ANSWER_NEXT: (f32, f32) = (315., 310.);
-    const ANSWER_REGENERATE: (f32, f32) = (385., 310.);
+    const QUESTION_PREVIOUS: (f32, f32) = (580., 136.);
+    const QUESTION_NEXT: (f32, f32) = (658., 136.);
+    const QUESTION_EDIT: (f32, f32) = (703., 136.);
+    const ANSWER_PREVIOUS: (f32, f32) = (240., 234.);
+    const ANSWER_NEXT: (f32, f32) = (315., 234.);
+    const ANSWER_REGENERATE: (f32, f32) = (385., 234.);
     const OPEN_IN_BROWSER: (f32, f32) = (577., 39.);
     const SHARE_LINK: (f32, f32) = (693., 39.);
     const SEND: (f32, f32) = (708., 484.);

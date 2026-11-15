@@ -529,6 +529,11 @@ fn tools(steps: &[ChatToolStep]) -> Vec<ToolRow> {
 }
 
 fn message_actions(message: &ChatMessage, enabled: bool) -> Vec<Control> {
+    // Editing copies only the text, so a question with images would lose
+    // them. The web hides Edit for these too.
+    if message.role == ChatRole::User && !message.attachments.is_empty() {
+        return Vec::new();
+    }
     let mut control = match message.role {
         ChatRole::User => Control::new(
             format!("edit-{}", message.id),
@@ -685,7 +690,14 @@ fn composer(parts: &ChatParts, ui: ChatUi, transcript_open: bool) -> ComposerMod
             cancel: Control::new("chat-cancel-edit", "Cancel", UiAction::CancelEdit),
         });
     ComposerModel {
-        can_send: !turn_running,
+        // An image still uploading blocks sending: the supervisor refuses the
+        // question and the window has already cleared the text.
+        can_send: !turn_running
+            && !parts
+                .composer
+                .drafts
+                .iter()
+                .any(|draft| matches!(draft.state, ChatDraftState::Uploading)),
         can_stop: parts.turn.as_ref().is_some_and(|turn| turn.stoppable),
         attach,
         drafts,
@@ -1190,7 +1202,22 @@ mod tests {
 
     #[test]
     fn an_attached_image_shows_a_tile_or_its_thumbnail() -> TestResult {
-        let model = conversation(&golden::branched()?.parts())?;
+        let mut parts = golden::branched()?.parts();
+        let question = parts
+            .transcript
+            .as_mut()
+            .and_then(|transcript| transcript.messages.first_mut())
+            .ok_or("question")?;
+        question.attachments = vec![scout_desktop_ipc::ChatAttachment {
+            id: uuid::Uuid::from_u128(9),
+            media_type: "image/png".to_owned(),
+            thumbnail: None,
+        }];
+        let model = conversation(&parts)?;
+        assert!(
+            model.rows[0].actions.is_empty(),
+            "Edit would drop the image, so it is hidden"
+        );
         let images = &model.rows[0].images;
         assert_eq!(images.len(), 1);
         assert_eq!(images[0].label, "PNG");

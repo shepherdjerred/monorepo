@@ -402,7 +402,7 @@ fn a_conversation_links_to_the_web_and_a_shared_one_to_its_share_page() -> TestR
 }
 
 #[test]
-fn the_model_picker_offers_the_servers_models_and_sends_only_a_choice() -> TestResult {
+fn the_model_picker_offers_the_servers_models_and_sends_what_it_shows() -> TestResult {
     let mut session = golden::branched()?;
     let composer = session.parts().composer;
     assert_eq!(
@@ -419,7 +419,11 @@ fn the_model_picker_offers_the_servers_models_and_sends_only_a_choice() -> TestR
         "the default shows"
     );
     let unchosen = session.submit("First").ok_or("request")?;
-    assert_eq!(unchosen.model, None, "the server's default needs no model");
+    assert_eq!(
+        unchosen.model,
+        Some(ExploreModel::Luna),
+        "the displayed default is sent, so a conversation's remembered model cannot differ"
+    );
 
     let mut session = golden::branched()?;
     session.choose_model(Some("gpt-6.1-sol"));

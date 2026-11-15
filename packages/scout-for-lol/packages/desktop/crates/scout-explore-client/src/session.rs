@@ -507,11 +507,13 @@ impl ChatSession {
             conversation_id: self.open,
             question,
             attach,
+            // Send what the picker shows, so the model that runs is the one
+            // on screen even when a conversation remembers another.
             model: self
                 .models
                 .as_ref()
                 .filter(|models| models.picker_enabled)
-                .and(self.chosen_model),
+                .map(|models| self.chosen_model.unwrap_or(models.default_model)),
             attachment_ids: (!attachment_ids.is_empty()).then_some(attachment_ids),
         }
     }

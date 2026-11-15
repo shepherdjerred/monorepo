@@ -311,10 +311,6 @@ pub fn branched_transcript(share_token: Option<&str>) -> Result<Transcript, Gold
                 "versionIndex": 1,
                 "versionCount": 3,
                 "content": "Which bot lane pair wins most in ARAM this month?",
-                "attachments": [{
-                    "id": "b1c2d3e4-5f60-4718-8293-a4b5c6d7e8f9",
-                    "mediaType": "image/png"
-                }],
                 "createdAt": created,
             },
             {
