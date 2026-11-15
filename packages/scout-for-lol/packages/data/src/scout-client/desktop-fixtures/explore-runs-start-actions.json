@@ -45,6 +45,67 @@
         },
         "attachmentIds": ["b1c2d3e4-5f60-4718-8293-a4b5c6d7e8f9"]
       }
+    },
+    {
+      "flow": "ask_with_live_game",
+      "request": {
+        "conversationId": "7c3e5a91-2b64-4d0f-8e17-5a9c4b2d6f30",
+        "question": "What should I build next?",
+        "attach": {
+          "kind": "leaf"
+        },
+        "gameContext": {
+          "live": {
+            "game": {
+              "mode": "CLASSIC",
+              "map": "Map11",
+              "gameTimeSecs": 421
+            },
+            "own": {
+              "gold": 845,
+              "maxHealth": 1180.5,
+              "health": 902.25,
+              "resource": "MANA",
+              "maxResource": 840,
+              "currentResource": 512.5,
+              "armor": 38.4,
+              "magicResist": 30,
+              "attackDamage": 64,
+              "abilityPower": 132.5,
+              "attackSpeed": 0.703,
+              "moveSpeed": 345,
+              "critChance": 0
+            },
+            "participants": [
+              {
+                "team": "order",
+                "isSelf": true,
+                "champion": "Ahri",
+                "level": 10,
+                "kills": 4,
+                "deaths": 2,
+                "assists": 7,
+                "creepScore": 87,
+                "items": [
+                  {
+                    "itemId": 6655,
+                    "name": "Luden's Companion",
+                    "count": 1
+                  }
+                ],
+                "summonerSpells": ["Flash", "Ignite"],
+                "keystone": "Electrocute"
+              }
+            ],
+            "eventCount": 4,
+            "latestEvent": {
+              "id": 3,
+              "kind": "DragonKill",
+              "timeSecs": 398.5
+            }
+          }
+        }
+      }
     }
   ],
   "invalidRequests": [
@@ -86,6 +147,38 @@
           "kind": "leaf"
         },
         "model": "gpt-5"
+      }
+    },
+    {
+      "reason": "a game context on a regenerate",
+      "body": {
+        "conversationId": "7c3e5a91-2b64-4d0f-8e17-5a9c4b2d6f30",
+        "question": null,
+        "attach": {
+          "kind": "message",
+          "messageId": "e5b7c9d1-3f24-4a6b-8c8e-0d2f4a6b8c01"
+        },
+        "gameContext": {
+          "postgame": {
+            "matchId": "NA1_5663121007"
+          }
+        }
+      }
+    },
+    {
+      "reason": "a game context that breaks the coach contract",
+      "body": {
+        "conversationId": null,
+        "question": "Where is their jungler?",
+        "attach": {
+          "kind": "leaf"
+        },
+        "gameContext": {
+          "postgame": {
+            "matchId": "NA1_5663121007",
+            "junglerPosition": "top river"
+          }
+        }
       }
     }
   ]

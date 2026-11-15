@@ -27,7 +27,6 @@ import {
   ExploreActiveRunSchema,
   ExploreRunObserveRequestSchema,
   ExploreRunOutcomeResultSchema,
-  ExploreTurnRequestSchema,
 } from "#src/model/reports/explore.ts";
 import { EXPLORE_ATTACHMENT_MAX_BYTES } from "#src/model/reports/explore-attachment.ts";
 import {
@@ -68,6 +67,7 @@ import {
   ScoutDesktopScopeRequestResponseSchema,
   ScoutDesktopScopeRequestSchema,
   ScoutDesktopRunActiveResponseSchema,
+  ScoutDesktopRunStartRequestSchema,
   ScoutDesktopRunStopResponseSchema,
   ScoutDesktopRunStreamResponseSchema,
   ScoutDesktopScopeSchema,
@@ -112,7 +112,7 @@ const ROUTE_SCHEMAS: Record<
     fixture: getFixture,
   },
   explore_runs_start: {
-    request: ExploreTurnRequestSchema,
+    request: ScoutDesktopRunStartRequestSchema,
     response: ExploreActiveRunSchema,
     fixture: startFixture,
   },
@@ -282,15 +282,18 @@ describe("Scout desktop API contract", () => {
     expect(ROUTE_SCHEMAS[name].request.safeParse(body).success).toBe(false);
   });
 
-  test("editing, regenerating and asking with images are runs/start bodies", () => {
+  test("editing, regenerating, images and a live game are runs/start bodies", () => {
     expect(startActionsFixture.route).toBe("explore_runs_start");
     for (const { flow, request } of startActionsFixture.requests) {
-      expect(ExploreTurnRequestSchema.parse(request), flow).toEqual(request);
+      expect(ScoutDesktopRunStartRequestSchema.parse(request), flow).toEqual(
+        request,
+      );
     }
     for (const { reason, body } of startActionsFixture.invalidRequests) {
-      expect(ExploreTurnRequestSchema.safeParse(body).success, reason).toBe(
-        false,
-      );
+      expect(
+        ScoutDesktopRunStartRequestSchema.safeParse(body).success,
+        reason,
+      ).toBe(false);
     }
   });
 

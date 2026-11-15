@@ -40,6 +40,7 @@ import { resetConfigurationForTests } from "#src/configuration.ts";
 import { secretDigest } from "#src/scout-client/secrets.ts";
 import { createTestScoutClientDevice } from "#src/testing/scout-client/scout-client-device.ts";
 import { createOfflineTrpcHarness } from "#src/testing/test-trpc-caller.ts";
+import coachFixtures from "@scout-for-lol/data/scout-client/coach-context.fixtures.json" with { type: "json" };
 
 type ControlledRun = {
   readonly params: ExploreAgentParams;
@@ -337,6 +338,77 @@ describe("desktop Explore runs against a real database", () => {
     expect(response.status).toBe(403);
     expect(await refusal(response)).toBe("scope_required");
     expect(runs).toHaveLength(0);
+  });
+
+  test("a turn carrying a live game writes one audit row of identifiers", async () => {
+    const token = await deviceToken();
+    const live = coachFixtures.valid[0]?.body.live;
+
+    const response = await post(ROUTES.explore_runs_start.path, token, {
+      ...QUESTION,
+      gameContext: { live },
+    });
+    expect(response.status).toBe(200);
+    const summary = ExploreActiveRunSchema.parse(await response.json());
+
+    const rows = await trpc.prisma.scoutCoachTurn.findMany();
+    expect(rows).toEqual([
+      {
+        id: expect.any(String),
+        ownerId: OWNER,
+        deviceId: expect.any(String),
+        conversationId: summary.conversationId,
+        runId: summary.runId,
+        questionMessageId: summary.questionMessageId,
+        initiation: "player_typed",
+        sectionsPresent: ["live"],
+        sectionsAccepted: ["live"],
+        coachEnabled: true,
+        liveAnswersEnabled: true,
+        createdAt: expect.any(Date),
+      },
+    ]);
+    // Identifiers only: nothing of the game itself is stored.
+    expect(JSON.stringify(rows)).not.toContain("Ahri");
+  });
+
+  test("the database refuses an audit row outside the coach vocabulary", async () => {
+    const token = await deviceToken();
+    const summary = await startRun(token);
+    const deviceRow = await trpc.prisma.scoutClientDevice.findFirstOrThrow();
+
+    await expect(
+      trpc.prisma.scoutCoachTurn.create({
+        data: {
+          ownerId: OWNER,
+          deviceId: deviceRow.id,
+          conversationId: summary.conversationId,
+          runId: summary.runId,
+          questionMessageId: summary.questionMessageId,
+          initiation: "voice",
+          sectionsPresent: ["live"],
+          sectionsAccepted: ["live"],
+          coachEnabled: true,
+          liveAnswersEnabled: true,
+        },
+      }),
+    ).rejects.toThrow();
+    await expect(
+      trpc.prisma.scoutCoachTurn.create({
+        data: {
+          ownerId: OWNER,
+          deviceId: deviceRow.id,
+          conversationId: summary.conversationId,
+          runId: summary.runId,
+          questionMessageId: summary.questionMessageId,
+          initiation: "player_typed",
+          sectionsPresent: ["postgame"],
+          sectionsAccepted: ["live"],
+          coachEnabled: true,
+          liveAnswersEnabled: true,
+        },
+      }),
+    ).rejects.toThrow();
   });
 });
 

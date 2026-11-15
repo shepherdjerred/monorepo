@@ -21,10 +21,12 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+use crate::coach_context::GameContext;
+
 /// Request header carrying the client's desktop contract version.
 pub const DESKTOP_CONTRACT_HEADER: &str = "X-Scout-Desktop-Contract";
 /// Desktop contract version this build speaks.
-pub const DESKTOP_CONTRACT_VERSION: u32 = 5;
+pub const DESKTOP_CONTRACT_VERSION: u32 = 6;
 /// Path of the route that starts an Explore turn.
 pub const EXPLORE_RUNS_START_PATH: &str = "/api/scout-client/v1/explore/runs/start";
 /// Path of the route that stops a running turn.
@@ -96,6 +98,8 @@ pub enum DesktopApiErrorCode {
     InvalidRequest,
     /// The turn cannot start as asked, such as answering a missing question.
     InvalidTurn,
+    /// The turn's game context breaks the coach contract.
+    InvalidGameContext,
     /// No active device credential.
     Unauthorized,
     /// The owner's Discord grant expired; they must sign in on the web again.
@@ -374,8 +378,9 @@ impl ExploreModel {
     }
 }
 
-/// Request to `explore/runs/start`: the web's `explore.start` request.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+/// Request to `explore/runs/start`: the web's `explore.start` request, and
+/// the game the player is in when they typed the question.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct RunStartRequest {
     /// The conversation to continue, or none to start a new one.
@@ -390,6 +395,14 @@ pub struct RunStartRequest {
     /// Uploaded images for a new question; omitted when there are none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub attachment_ids: Option<Vec<Uuid>>,
+    /// The game context of a question the player typed; omitted otherwise.
+    /// The server refuses one on a turn without a question.
+    #[serde(
+        default,
+        deserialize_with = "crate::coach_context::present",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub game_context: Option<GameContext>,
 }
 
 /// A turn the server is answering: the answer to `runs/start`, and each entry

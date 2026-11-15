@@ -5,6 +5,7 @@ export * from "./scout-client/post-game-outcome.ts";
 export * from "./scout-client/lcu-clash.schema.ts";
 export * from "./scout-client/desktop-events.schema.ts";
 export * from "./scout-client/desktop-api.schema.ts";
+export * from "./scout-client/coach-context.schema.ts";
 export * from "./seasons.ts";
 
 export * from "./league/data-source.ts";

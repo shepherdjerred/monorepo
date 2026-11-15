@@ -1,0 +1,261 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://scout-for-lol.com/schemas/scout-client/coach-context.schema.json",
+  "title": "Scout coach game context",
+  "description": "The game state Scout Desktop may attach to an Explore turn. Every section is an allowlist of what the player can see in their own client: no Riot ID or summoner name, no skin, no enemy ward score, no cooldown or summoner timer, and no map position. Unknown keys are refused at every level. Zod (coach-context.schema.ts) and serde (scout-client-core coach_context.rs) both hold the shared fixtures in coach-context.fixtures.json to this file.",
+  "type": "object",
+  "properties": {
+    "champSelect": { "$ref": "#/$defs/champSelect" },
+    "pregame": { "$ref": "#/$defs/pregame" },
+    "live": { "$ref": "#/$defs/live" },
+    "postgame": { "$ref": "#/$defs/postgame" }
+  },
+  "additionalProperties": false,
+  "minProperties": 1,
+  "$defs": {
+    "u8": { "type": "integer", "minimum": 0, "maximum": 255 },
+    "u32": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+    "name": { "type": "string", "minLength": 1, "maxLength": 64 },
+    "team": { "type": "string", "enum": ["order", "chaos"] },
+    "summonerSpells": {
+      "description": "The two summoner spell names, never their cooldown state.",
+      "type": "array",
+      "prefixItems": [{ "$ref": "#/$defs/name" }, { "$ref": "#/$defs/name" }],
+      "items": false,
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "keystone": {
+      "anyOf": [{ "$ref": "#/$defs/name" }, { "type": "null" }]
+    },
+    "champSelect": {
+      "description": "What the champion-select screen shows: champions, bans and the local team's assigned roles. Enemy summoners stay hidden.",
+      "type": "object",
+      "properties": {
+        "phase": {
+          "anyOf": [
+            { "type": "string", "minLength": 1, "maxLength": 32 },
+            { "type": "null" }
+          ]
+        },
+        "localCellId": { "$ref": "#/$defs/u8" },
+        "myTeam": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/allySlot" },
+          "maxItems": 5
+        },
+        "theirTeam": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/enemySlot" },
+          "maxItems": 5
+        },
+        "myBans": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/u32" },
+          "maxItems": 5
+        },
+        "theirBans": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/u32" },
+          "maxItems": 5
+        }
+      },
+      "required": [
+        "phase",
+        "localCellId",
+        "myTeam",
+        "theirTeam",
+        "myBans",
+        "theirBans"
+      ],
+      "additionalProperties": false
+    },
+    "allySlot": {
+      "type": "object",
+      "properties": {
+        "cellId": { "$ref": "#/$defs/u8" },
+        "championId": { "$ref": "#/$defs/u32" },
+        "assignedRole": {
+          "anyOf": [
+            { "type": "string", "minLength": 1, "maxLength": 16 },
+            { "type": "null" }
+          ]
+        }
+      },
+      "required": ["cellId", "championId", "assignedRole"],
+      "additionalProperties": false
+    },
+    "enemySlot": {
+      "type": "object",
+      "properties": {
+        "cellId": { "$ref": "#/$defs/u8" },
+        "championId": { "$ref": "#/$defs/u32" }
+      },
+      "required": ["cellId", "championId"],
+      "additionalProperties": false
+    },
+    "pregame": {
+      "description": "The loading screen: mode, map, and each player's champion, spells and keystone.",
+      "type": "object",
+      "properties": {
+        "game": {
+          "type": "object",
+          "properties": {
+            "mode": { "$ref": "#/$defs/name" },
+            "map": { "$ref": "#/$defs/name" }
+          },
+          "required": ["mode", "map"],
+          "additionalProperties": false
+        },
+        "participants": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/pregameParticipant" },
+          "maxItems": 16
+        }
+      },
+      "required": ["game", "participants"],
+      "additionalProperties": false
+    },
+    "pregameParticipant": {
+      "type": "object",
+      "properties": {
+        "team": { "$ref": "#/$defs/team" },
+        "isSelf": { "type": "boolean" },
+        "champion": { "$ref": "#/$defs/name" },
+        "summonerSpells": { "$ref": "#/$defs/summonerSpells" },
+        "keystone": { "$ref": "#/$defs/keystone" }
+      },
+      "required": ["team", "isSelf", "champion", "summonerSpells", "keystone"],
+      "additionalProperties": false
+    },
+    "live": {
+      "description": "The allowlisted LiveSnapshot: the local player's stats panel, and for both teams the scoreboard columns.",
+      "type": "object",
+      "properties": {
+        "game": {
+          "type": "object",
+          "properties": {
+            "mode": { "$ref": "#/$defs/name" },
+            "map": { "$ref": "#/$defs/name" },
+            "gameTimeSecs": { "$ref": "#/$defs/u32" }
+          },
+          "required": ["mode", "map", "gameTimeSecs"],
+          "additionalProperties": false
+        },
+        "own": { "$ref": "#/$defs/ownStats" },
+        "participants": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/liveParticipant" },
+          "maxItems": 16
+        },
+        "eventCount": { "$ref": "#/$defs/u32" },
+        "latestEvent": {
+          "anyOf": [{ "$ref": "#/$defs/liveEvent" }, { "type": "null" }]
+        }
+      },
+      "required": ["game", "own", "participants", "eventCount", "latestEvent"],
+      "additionalProperties": false
+    },
+    "ownStats": {
+      "type": "object",
+      "properties": {
+        "gold": { "$ref": "#/$defs/u32" },
+        "maxHealth": { "type": "number" },
+        "health": { "type": "number" },
+        "resource": { "$ref": "#/$defs/name" },
+        "maxResource": { "type": "number" },
+        "currentResource": { "type": "number" },
+        "armor": { "type": "number" },
+        "magicResist": { "type": "number" },
+        "attackDamage": { "type": "number" },
+        "abilityPower": { "type": "number" },
+        "attackSpeed": { "type": "number" },
+        "moveSpeed": { "type": "number" },
+        "critChance": { "type": "number" }
+      },
+      "required": [
+        "gold",
+        "maxHealth",
+        "health",
+        "resource",
+        "maxResource",
+        "currentResource",
+        "armor",
+        "magicResist",
+        "attackDamage",
+        "abilityPower",
+        "attackSpeed",
+        "moveSpeed",
+        "critChance"
+      ],
+      "additionalProperties": false
+    },
+    "liveParticipant": {
+      "type": "object",
+      "properties": {
+        "team": { "$ref": "#/$defs/team" },
+        "isSelf": { "type": "boolean" },
+        "champion": { "$ref": "#/$defs/name" },
+        "level": { "$ref": "#/$defs/u8" },
+        "kills": { "$ref": "#/$defs/u32" },
+        "deaths": { "$ref": "#/$defs/u32" },
+        "assists": { "$ref": "#/$defs/u32" },
+        "creepScore": { "$ref": "#/$defs/u32" },
+        "items": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/liveItem" },
+          "maxItems": 7
+        },
+        "summonerSpells": { "$ref": "#/$defs/summonerSpells" },
+        "keystone": { "$ref": "#/$defs/keystone" }
+      },
+      "required": [
+        "team",
+        "isSelf",
+        "champion",
+        "level",
+        "kills",
+        "deaths",
+        "assists",
+        "creepScore",
+        "items",
+        "summonerSpells",
+        "keystone"
+      ],
+      "additionalProperties": false
+    },
+    "liveItem": {
+      "type": "object",
+      "properties": {
+        "itemId": { "$ref": "#/$defs/u32" },
+        "name": { "type": "string", "minLength": 1, "maxLength": 96 },
+        "count": { "$ref": "#/$defs/u8" }
+      },
+      "required": ["itemId", "name", "count"],
+      "additionalProperties": false
+    },
+    "liveEvent": {
+      "description": "The newest game event by name and time; the players involved are not kept.",
+      "type": "object",
+      "properties": {
+        "id": { "$ref": "#/$defs/u32" },
+        "kind": { "$ref": "#/$defs/name" },
+        "timeSecs": { "type": "number", "minimum": 0 }
+      },
+      "required": ["id", "kind", "timeSecs"],
+      "additionalProperties": false
+    },
+    "postgame": {
+      "description": "The finished game, by Riot match ID only; the review reads the stored match.",
+      "type": "object",
+      "properties": {
+        "matchId": {
+          "type": "string",
+          "pattern": "^[A-Z0-9]{2,6}_\\d{1,20}$"
+        }
+      },
+      "required": ["matchId"],
+      "additionalProperties": false
+    }
+  }
+}

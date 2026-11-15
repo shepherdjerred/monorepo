@@ -7,12 +7,18 @@ import {
   ExploreQuotaSnapshotSchema,
   ExploreShareTokenSchema,
   ExploreStreamEventSchema,
+  EXPLORE_REQUEST_MAX_BYTES,
+  ExploreTurnRequestSchema,
 } from "#src/model/reports/explore.ts";
 import { ExploreModelSchema } from "#src/model/reports/explore-model.ts";
 import {
   EXPLORE_ATTACHMENT_MAX_BYTES,
   ExploreAttachmentMediaTypeSchema,
 } from "#src/model/reports/explore-attachment.ts";
+import {
+  COACH_GAME_CONTEXT_MAX_BYTES,
+  CoachGameContextSchema,
+} from "./coach-context.schema.ts";
 
 /**
  * The authenticated REST surface Scout Desktop reads Explore through.
@@ -37,8 +43,14 @@ import {
  * - 5: chat actions: the model list, switching versions of a branched turn,
  *   share links, and image uploads. Editing and regenerating are not routes of
  *   their own: they are `runs/start` with an `attach` point, as on the web.
+ * - 6: `runs/start` takes an optional `gameContext` (`coach-context.schema.json`)
+ *   on a question the player typed, refused as `invalid_game_context` when it
+ *   breaks that contract. It is the one request field an existing route has
+ *   gained: a request field changes nothing a client reads, a client that
+ *   predates it never sends it, and the code it can be refused with is
+ *   answered only to a client that sent one. The server deploys first.
  */
-export const SCOUT_DESKTOP_CONTRACT_VERSION = 5;
+export const SCOUT_DESKTOP_CONTRACT_VERSION = 6;
 export const SCOUT_DESKTOP_MINIMUM_CONTRACT_VERSION = 1;
 export const SCOUT_DESKTOP_CONTRACT_HEADER = "X-Scout-Desktop-Contract";
 /** The first contract version that knows the `desktop` conversation origin. */
@@ -216,6 +228,7 @@ export const ScoutDesktopApiRouteSchema = z.enum([
 export const SCOUT_DESKTOP_API_ERRORS = {
   invalid_request: 400,
   invalid_turn: 400,
+  invalid_game_context: 400,
   unauthorized: 401,
   reauthorize_required: 401,
   scope_required: 403,
@@ -233,6 +246,7 @@ export const SCOUT_DESKTOP_API_ERRORS = {
 export const ScoutDesktopApiErrorCodeSchema = z.enum([
   "invalid_request",
   "invalid_turn",
+  "invalid_game_context",
   "unauthorized",
   "reauthorize_required",
   "scope_required",
@@ -336,7 +350,7 @@ export const ScoutDesktopConversationGetResponseSchema = z.strictObject({
  *
  * | Route          | Request                          | Response                              |
  * | -------------- | -------------------------------- | ------------------------------------- |
- * | `runs/start`   | `ExploreTurnRequestSchema`       | `ExploreActiveRunSchema`              |
+ * | `runs/start`   | `ScoutDesktopRunStartRequestSchema` | `ExploreActiveRunSchema`           |
  * | `runs/stop`    | `ExploreRunObserveRequestSchema` | `ScoutDesktopRunStopResponseSchema`   |
  * | `runs/active`  | `ScoutDesktopEmptyRequestSchema` | `ScoutDesktopRunActiveResponseSchema` |
  * | `runs/outcome` | `ExploreRunObserveRequestSchema` | `ExploreRunOutcomeResultSchema`       |
@@ -346,6 +360,29 @@ export const ScoutDesktopConversationGetResponseSchema = z.strictObject({
  * `explore.start`, so a desktop turn spends the owner's one Explore quota.
  */
 export const ScoutDesktopEmptyRequestSchema = z.strictObject({});
+
+/**
+ * `runs/start`: the web's turn request, plus the game the player is in when
+ * they typed the question. Only a question they typed may carry it, so a
+ * regenerate, which names no new question, never does. Whether each section
+ * reaches the agent is the server's coach policy, not this schema.
+ */
+export const ScoutDesktopRunStartRequestSchema =
+  ExploreTurnRequestSchema.safeExtend({
+    gameContext: CoachGameContextSchema.optional(),
+  }).refine(
+    (request) => request.gameContext === undefined || request.question !== null,
+    {
+      message: "Only a question the player typed carries a game context.",
+      path: ["gameContext"],
+    },
+  );
+/** The largest `runs/start` body: the web's turn plus the largest context. */
+export const SCOUT_DESKTOP_RUN_START_MAX_BYTES =
+  EXPLORE_REQUEST_MAX_BYTES + COACH_GAME_CONTEXT_MAX_BYTES;
+export type ScoutDesktopRunStartRequest = z.infer<
+  typeof ScoutDesktopRunStartRequestSchema
+>;
 
 export const ScoutDesktopRunStopResponseSchema = z.strictObject({
   ok: z.literal(true),

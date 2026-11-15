@@ -962,9 +962,40 @@ bodies in `desktop-fixtures/` are parsed by the Zod schemas and by the strict
 serde types in `scout-client-core/src/desktop_api.rs`, and both suites require
 a fixture for every route, error code and stream event type. Bodies are strict
 in both directions, so a change adds a route rather than a field on an existing
-one. An enum gains a member only behind a contract version: a client declaring
-contract 1 reads a `desktop` conversation origin as `web`, as a browser bundle
-below `explore.get` version 5 does.
+one. The one exception is `runs/start`'s optional `gameContext` (contract 6):
+a request field a client that predates it never sends, refused with a code only
+a client that sent one can receive. An enum gains a member only behind a
+contract version: a client declaring contract 1 reads a `desktop` conversation
+origin as `web`, as a browser bundle below `explore.get` version 5 does.
+
+#### Coach game context
+
+A desktop turn may carry the game the player is in as `gameContext`, held to
+`data/src/scout-client/coach-context.schema.json` (sections `champSelect`,
+`pregame`, `live` and `postgame`). The schema is the content limit: nothing the
+player cannot see in their own client, so no Riot ID or summoner name, skin,
+enemy ward score, cooldown or summoner timer, or map position has a field, and
+every object refuses unknown keys. Zod and the serde types in
+`scout-client-core/src/coach_context.rs` both run the shared accept and reject
+fixtures, and the Zod schema's JSON Schema export must equal the file.
+
+`coach/context-policy.ts` (`projectGameContext`) is the server's gate. A
+context that breaks the contract is a 400 `invalid_game_context` before any
+run starts. A valid one is projected section by section: every section needs
+`scout_desktop_coach`, and `live` additionally needs a player-initiated turn and
+`scout_coach_live_answers`. A withheld section is dropped and the turn runs
+without it. Riot's published policy does not cover answering a question the
+player asked from live state, so `scout_coach_live_answers` is its kill switch.
+Both flags default on in beta and production, are read for the owner and then
+each eligible server, and are evaluated only for a turn that carries a context.
+
+Player initiation is proven minimally: a context rides only on a question the
+player typed (`runs/start` with a non-null `question`); a regenerate that
+carries one is a 400 `invalid_turn`. Voice turns and follow-up chips need their
+own proof before they may carry one. Every turn that carries a context writes a
+`ScoutCoachTurn` row (owner, device, conversation, run and question ids; the
+initiation; the sections sent and accepted; both flags as evaluated) and never
+the context itself. A turn whose row cannot be written is stopped.
 
 ### Raw observation archive
 

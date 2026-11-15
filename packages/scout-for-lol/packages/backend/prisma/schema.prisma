@@ -619,6 +619,7 @@ model User {
   challengeRuns        ChallengeRun[]
   scoutClientDevices   ScoutClientDevice[]
   scoutClientApprovals ScoutClientPairing[]  @relation("ScoutClientPairingApprover")
+  scoutCoachTurns      ScoutCoachTurn[]
   riotAccounts         RiotAccountPreference[]
   riotLinkAttempts     RiotOAuthLinkAttempt[]
 }
@@ -723,6 +724,7 @@ model ScoutClientDevice {
   observations    ScoutClientObservation[]
   replayArtifacts ScoutClientReplayArtifact[]
   versions        ScoutClientDeviceVersion[]
+  coachTurns      ScoutCoachTurn[]
 
   @@index([ownerId, deviceState])
   @@index([lastSeenAt])
@@ -959,6 +961,39 @@ model ScoutClientCanonicalMatch {
   sourceObservation ScoutClientObservation @relation(fields: [sourceObservationId], references: [observationId], onDelete: Restrict)
 
   @@index([selectedAt])
+}
+
+/// One Explore turn from Scout Desktop that carried a game context, written
+/// whether or not any of it reached the agent. It answers "which turns sent
+/// what kind of game state, and why was it allowed": the sections the device
+/// sent and the ones the coach policy let through, how the turn began, and
+/// both flags as evaluated. Identifiers only; the context itself is never
+/// stored here. The conversation and run ids are plain values, so the record
+/// outlives a deleted conversation; it goes with its owner or device.
+model ScoutCoachTurn {
+  id                 String   @id @default(uuid())
+  ownerId            String
+  deviceId           String
+  conversationId     String
+  runId              String   @unique
+  questionMessageId  String
+  /// `player_typed` or `app_initiated` (`coach/context-policy.ts`).
+  initiation         String
+  /// Sections, in contract order: `champSelect`, `pregame`, `live`, `postgame`.
+  sectionsPresent    String[]
+  sectionsAccepted   String[]
+  /// `scout_desktop_coach` as evaluated for this turn.
+  coachEnabled       Boolean
+  /// `scout_coach_live_answers` as evaluated for this turn.
+  liveAnswersEnabled Boolean
+  createdAt          DateTime @default(now())
+
+  owner  User              @relation(fields: [ownerId], references: [discordId], onDelete: Cascade)
+  device ScoutClientDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId, createdAt])
+  @@index([deviceId, createdAt])
+  @@index([conversationId])
 }
 
 /// A saved explore conversation. Explore queries the whole report lake rather

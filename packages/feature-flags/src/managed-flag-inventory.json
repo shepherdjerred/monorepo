@@ -2624,6 +2624,30 @@
       "thresholdRollouts": []
     },
     {
+      "key": "scout_desktop_coach",
+      "owner": "scout",
+      "namespace": "scout",
+      "source": "scout-policy",
+      "purpose": "Master switch for the Scout Desktop coach: whether any game context a desktop turn carries may reach Explore. Evaluated per device owner (user, then the owner's Explore-eligible servers); off withholds every section and the turn is answered without it.",
+      "type": "boolean",
+      "default": true,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "scout_coach_live_answers",
+      "owner": "scout",
+      "namespace": "scout",
+      "source": "scout-policy",
+      "purpose": "Riot kill switch for live game state on player-asked coach turns. Evaluated per device owner (user, then the owner's Explore-eligible servers); off withholds the live section, and no value lets live state through on a turn the player did not start.",
+      "type": "boolean",
+      "default": true,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "scout-consumer-player-profiles-enabled",
       "owner": "scout",
       "namespace": "scout",

@@ -1,6 +1,7 @@
 //! Portable collection and delivery core for the Scout desktop client.
 
 pub mod backend;
+pub mod coach_context;
 pub mod credentials;
 pub mod desktop_api;
 pub mod diagnostics;
