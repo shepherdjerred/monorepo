@@ -17,18 +17,21 @@ import type {
 } from "@shepherdjerred/voice-assistant/ports.ts";
 import { realtimeErrorToError } from "./realtime-errors.ts";
 import {
-  ConversationItemCreatedEventSchema,
-  ConversationItemDeletedEventSchema,
   OutputAudioTranscriptEventSchema,
   TranscriptionCompletedEventSchema,
   TranscriptionFailedEventSchema,
   type CompletedTranscription,
 } from "./realtime-events.ts";
+import { buildRealtimeSessionConfig } from "./realtime-transcript.ts";
 import {
-  buildRealtimeSessionConfig,
-  normalizeTranscript,
-  verifyWakeTranscript,
-} from "./realtime-transcript.ts";
+  createVerifiedCommandItem,
+  deleteInputAudioItem,
+  finishBareWakeTurn,
+  finishRealtimeResponseTurn,
+  finishRejectedWakeTurn,
+  resolveTurnWake,
+  runVerifiedCommandRoute,
+} from "./realtime-turn-helpers.ts";
 
 export type RealtimeTurnTools = NonNullable<
   RealtimeAgentConfiguration["tools"]
@@ -40,10 +43,35 @@ export type RealtimeTurnToolContext = {
   readonly attempt: VoiceAttemptHandle;
 };
 
+export type RealtimeVerifiedCommandRouteInput = {
+  readonly command: string;
+  readonly transcript: string;
+  readonly signal: AbortSignal;
+  readonly mutationGate: VoiceMutationGate;
+  readonly attempt: VoiceAttemptHandle;
+  readonly assistantAudio: AssistantAudioSink;
+};
+
+export type RealtimeVerifiedCommandRouteResult =
+  | {
+      readonly handled: true;
+      readonly toolCalls?: readonly string[];
+      readonly assistantText?: string;
+      readonly mutated?: boolean;
+    }
+  | {
+      readonly handled: false;
+    };
+
+export type RealtimeVerifiedCommandRouter = (
+  input: RealtimeVerifiedCommandRouteInput,
+) => Promise<RealtimeVerifiedCommandRouteResult>;
+
 /**
  * Everything phrase-, product-, and account-specific about one Realtime command turn.
- * The turn mechanics (privacy invariants, abort/timeout races, response.create-free rejected
- * and bare-wake paths) live in {@link runRealtimeCommandTurn} and never vary per consumer.
+ * The turn mechanics (privacy invariants, abort/timeout races, response.create-free rejected,
+ * bare-wake, and pre-response routed paths) live in {@link runRealtimeCommandTurn} and never vary
+ * per consumer.
  */
 export type RealtimeTurnOptions = {
   readonly apiKey: string | undefined;
@@ -57,6 +85,12 @@ export type RealtimeTurnOptions = {
   /** Normalized leading wake prefixes accepted by the strict transcript gate. */
   readonly wakePrefixes: readonly string[];
   readonly tools: (context: RealtimeTurnToolContext) => RealtimeTurnTools;
+  /**
+   * Optional pre-response hook invoked after wake verification and raw-audio item deletion,
+   * before `conversation.item.create` + `response.create`. Returning `{ handled: true, ... }`
+   * skips the Realtime response entirely and closes the session cleanly.
+   */
+  readonly routeVerifiedCommand?: RealtimeVerifiedCommandRouter;
   readonly metrics: RealtimeTurnMetrics;
   readonly observability: VoiceObservability;
 };
@@ -84,6 +118,8 @@ export type RealtimeCommandTurnResult = {
   readonly wakeVerified: boolean;
   readonly mutated: boolean;
   readonly normalizedCommand: string | null;
+  readonly toolCalls?: readonly string[];
+  readonly assistantText?: string;
   /**
    * Left unset by this package — it has no concept of "clarification". A consumer whose tools
    * can ask a clarifying question computes this itself (see streambot's `realtime-voice.ts`)
@@ -91,13 +127,6 @@ export type RealtimeCommandTurnResult = {
    */
   readonly clarificationRequested?: boolean;
 };
-
-function audioTokenCount(details: readonly Record<string, number>[]): number {
-  return details.reduce(
-    (total, item) => total + (item["audio_tokens"] ?? 0),
-    0,
-  );
-}
 
 function recordTranscriptionUsage(
   metrics: RealtimeTurnMetrics,
@@ -179,13 +208,21 @@ export async function runRealtimeCommandTurn(
     }),
   });
   let firstAudio = true;
+  const markFirstAudio = (): boolean => {
+    if (!firstAudio) return false;
+    firstAudio = false;
+    return true;
+  };
   let failureStage = "connect";
+  const replyTranscriptParts: string[] = [];
+  const observedToolCallNames: string[] = [];
   const transcription = new Promise<CompletedTranscription>(
     (resolve, reject) => {
       session.on("transport_event", (event) => {
         const outputTranscript =
           OutputAudioTranscriptEventSchema.safeParse(event);
         if (outputTranscript.success) {
+          replyTranscriptParts.push(outputTranscript.data.transcript);
           attempt.replyTranscript(outputTranscript.data.transcript);
         }
         const completed = TranscriptionCompletedEventSchema.safeParse(event);
@@ -223,15 +260,15 @@ export async function runRealtimeCommandTurn(
     // The transport reports the function call before the SDK starts executing it. Counting at
     // this boundary closes an SDK ordering race where `agent_end` for the tool-request response
     // can arrive before `agent_tool_start`/`agent_tool_end`.
-    session.transport.on("function_call", () => {
+    session.transport.on("function_call", (call) => {
       observedToolCalls += 1;
+      observedToolCallNames.push(call.name);
     });
     session.on("agent_tool_end", () => {
       completedToolCalls += 1;
     });
     session.on("audio", (event) => {
-      if (firstAudio) {
-        firstAudio = false;
+      if (markFirstAudio()) {
         metrics.wakeToReplySeconds.observe(
           (Date.now() - input.activatedAtMs) / 1000,
         );
@@ -300,40 +337,20 @@ export async function runRealtimeCommandTurn(
     );
     recordTranscriptionUsage(metrics, transcriptionResult.usage);
     attempt.cloudUsage({ transcription: transcriptionResult.usage });
-    const verified =
-      input.wakeRequired === false
-        ? {
-            normalized: normalizeTranscript(transcriptionResult.transcript),
-            command: normalizeTranscript(transcriptionResult.transcript),
-          }
-        : verifyWakeTranscript(
-            transcriptionResult.transcript,
-            options.wakePrefixes,
-          );
+    const verified = resolveTurnWake(
+      transcriptionResult.transcript,
+      options.wakePrefixes,
+      input.wakeRequired,
+    );
     if (verified === null) {
-      attempt.transcription({
+      return await finishRejectedWakeTurn({
         transcript: transcriptionResult.transcript,
-        normalizedCommand: null,
-        outcome: "rejected",
+        feedbackClips: input.feedbackClips,
+        assistantAudio: input.assistantAudio,
+        interruption,
+        attempt,
+        metrics,
       });
-      attempt.cloudOutcome("transcript-rejected");
-      metrics.transcriptVerifications.inc({ outcome: "rejected" });
-      metrics.turns.inc({ outcome: "transcript-rejected" });
-      // Still response.create-free: the retry line is a local pre-rendered clip, so nothing
-      // about the rejected audio reaches the Realtime model — but the speaker is no longer
-      // left wondering whether the assistant heard anything at all.
-      if (input.feedbackClips === undefined) {
-        await input.assistantAudio.cancel();
-      } else {
-        input.assistantAudio.enqueue(input.feedbackClips.retry);
-        await Promise.race([input.assistantAudio.finish(), interruption]);
-      }
-      return {
-        transcript: transcriptionResult.transcript,
-        wakeVerified: false,
-        mutated: false,
-        normalizedCommand: null,
-      };
     }
     attempt.transcription({
       transcript: transcriptionResult.transcript,
@@ -342,65 +359,48 @@ export async function runRealtimeCommandTurn(
     });
     metrics.transcriptVerifications.inc({ outcome: "accepted" });
     if (verified.command.length === 0) {
-      // A bare wake phrase used to bill a full Realtime response just to ask what to do.
-      // The prompt is a local clip instead; no conversation item is created and no response is
-      // requested, and the finally below closes the session immediately.
-      metrics.turns.inc({ outcome: "bare-wake" });
-      if (input.feedbackClips === undefined) {
-        await input.assistantAudio.cancel();
-      } else {
-        input.assistantAudio.enqueue(input.feedbackClips.prompt);
-        await Promise.race([input.assistantAudio.finish(), interruption]);
-      }
-      return {
+      return await finishBareWakeTurn({
         transcript: transcriptionResult.transcript,
-        wakeVerified: true,
-        mutated: false,
-        normalizedCommand: "",
-      };
+        feedbackClips: input.feedbackClips,
+        assistantAudio: input.assistantAudio,
+        interruption,
+        metrics,
+      });
     }
     failureStage = "verified-command";
+    await deleteInputAudioItem(
+      session,
+      transcriptionResult.item_id,
+      interruption,
+      sessionFailure,
+    );
 
-    const deleted = new Promise<void>((resolve) => {
-      session.on("transport_event", (event) => {
-        const parsed = ConversationItemDeletedEventSchema.safeParse(event);
-        if (
-          parsed.success &&
-          parsed.data.item_id === transcriptionResult.item_id
-        ) {
-          resolve();
-        }
+    if (options.routeVerifiedCommand !== undefined) {
+      failureStage = "command-routing";
+      const routedResult = await runVerifiedCommandRoute({
+        routeVerifiedCommand: options.routeVerifiedCommand,
+        command: verified.command,
+        transcript: transcriptionResult.transcript,
+        activatedAtMs: input.activatedAtMs,
+        transactionSignal,
+        interruption,
+        mutationGate,
+        attempt,
+        assistantAudio: input.assistantAudio,
+        metrics,
+        stagePrefix,
+        markFirstAudio,
       });
-    });
-    session.transport.sendEvent({
-      type: "conversation.item.delete",
-      item_id: transcriptionResult.item_id,
-    });
-    await Promise.race([deleted, interruption, sessionFailure]);
+      if (routedResult !== null) return routedResult;
+      failureStage = "verified-command";
+    }
 
-    // The Realtime API rejects a conversation item.id longer than 32 chars
-    // (`string_above_max_length`). "verified-command-" + a 36-char UUID was 53,
-    // so every command insertion failed and no turn ever produced a command.
-    // A dash-stripped UUID slice keeps it unique and well under the cap.
-    const verifiedCommandItemId = `vc-${crypto.randomUUID().replaceAll("-", "").slice(0, 24)}`;
-    const created = new Promise<void>((resolve) => {
-      session.on("transport_event", (event) => {
-        const parsed = ConversationItemCreatedEventSchema.safeParse(event);
-        if (parsed.success && parsed.data.item.id === verifiedCommandItemId) {
-          resolve();
-        }
-      });
-    });
-    session.transport.sendEvent({
-      type: "conversation.item.create",
-      item: {
-        id: verifiedCommandItemId,
-        type: "message",
-        role: "user",
-        content: [{ type: "input_text", text: verified.command }],
-      },
-    });
-    await Promise.race([created, interruption, sessionFailure]);
+    await createVerifiedCommandItem(
+      session,
+      verified.command,
+      interruption,
+      sessionFailure,
+    );
     failureStage = "response";
     metrics.cloudRequests.inc({ stage: "response", outcome: "request" });
     await attempt.runStage(`${stagePrefix}.openai.response`, {}, async () => {
@@ -414,29 +414,16 @@ export async function runRealtimeCommandTurn(
     // and the lifecycle's input gate shut. On expiry the catch below cancels the sink, which
     // truncates the queue and lets this drain settle within one packet.
     await Promise.race([input.assistantAudio.finish(), interruption]);
-    const inputAudio = audioTokenCount(session.usage.inputTokensDetails);
-    const outputAudio = audioTokenCount(session.usage.outputTokensDetails);
-    if (inputAudio > 0)
-      metrics.audioTokens.inc({ direction: "input" }, inputAudio);
-    if (outputAudio > 0)
-      metrics.audioTokens.inc({ direction: "output" }, outputAudio);
-    attempt.cloudUsage({
-      transcription: transcriptionResult.usage,
-      realtime: {
-        inputAudioTokens: inputAudio,
-        outputAudioTokens: outputAudio,
-      },
+    return finishRealtimeResponseTurn({
+      session,
+      transcriptionResult,
+      command: verified.command,
+      mutationGate,
+      observedToolCallNames,
+      replyTranscriptParts,
+      metrics,
+      attempt,
     });
-    metrics.turns.inc({
-      outcome: mutationGate.hasMutated ? "command" : "no-command",
-    });
-    attempt.cloudOutcome("success");
-    return {
-      transcript: transcriptionResult.transcript,
-      wakeVerified: true,
-      mutated: mutationGate.hasMutated,
-      normalizedCommand: verified.command,
-    };
   } catch (error) {
     if (input.signal?.aborted === true) {
       metrics.turns.inc({ outcome: "interrupted" });
