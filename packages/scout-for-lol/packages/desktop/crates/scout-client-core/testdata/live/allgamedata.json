@@ -1,0 +1,900 @@
+{
+  "activePlayer": {
+    "abilities": {
+      "E": {
+        "abilityLevel": 2,
+        "displayName": "E",
+        "id": "EID",
+        "rawDescription": "d",
+        "rawDisplayName": "n"
+      },
+      "Passive": {
+        "displayName": "Passive",
+        "id": "P",
+        "rawDescription": "d",
+        "rawDisplayName": "n"
+      },
+      "Q": {
+        "abilityLevel": 4,
+        "displayName": "Q",
+        "id": "QID",
+        "rawDescription": "d",
+        "rawDisplayName": "n"
+      },
+      "R": {
+        "abilityLevel": 1,
+        "displayName": "R",
+        "id": "RID",
+        "rawDescription": "d",
+        "rawDisplayName": "n"
+      },
+      "W": {
+        "abilityLevel": 1,
+        "displayName": "W",
+        "id": "WID",
+        "rawDescription": "d",
+        "rawDisplayName": "n"
+      }
+    },
+    "championStats": {
+      "abilityHaste": 20.0,
+      "abilityPower": 142.0,
+      "armor": 38.0,
+      "armorPenetrationFlat": 0.0,
+      "armorPenetrationPercent": 1.0,
+      "attackDamage": 68.0,
+      "attackRange": 550.0,
+      "attackSpeed": 0.668,
+      "bonusArmorPenetrationPercent": 1.0,
+      "bonusMagicPenetrationPercent": 1.0,
+      "critChance": 0.0,
+      "critDamage": 175.0,
+      "currentHealth": 512.0,
+      "healShieldPower": 0.0,
+      "healthRegenRate": 8.2,
+      "lifeSteal": 0.0,
+      "magicLethality": 0.0,
+      "magicPenetrationFlat": 0.0,
+      "magicPenetrationPercent": 1.0,
+      "magicResist": 32.0,
+      "maxHealth": 1010.0,
+      "moveSpeed": 355.0,
+      "omnivamp": 0.0,
+      "physicalLethality": 0.0,
+      "physicalVamp": 0.0,
+      "resourceMax": 560.0,
+      "resourceRegenRate": 9.1,
+      "resourceType": "MANA",
+      "resourceValue": 411.0,
+      "spellVamp": 0.0,
+      "tenacity": 0.0
+    },
+    "currentGold": 845.6,
+    "fullRunes": {
+      "generalRunes": [
+        {
+          "displayName": "Electrocute",
+          "id": 8112,
+          "rawDescription": "perk_desc",
+          "rawDisplayName": "perk_Electrocute"
+        }
+      ],
+      "keystone": {
+        "displayName": "Electrocute",
+        "id": 8112,
+        "rawDescription": "perk_desc",
+        "rawDisplayName": "perk_Electrocute"
+      },
+      "primaryRuneTree": {
+        "displayName": "Domination",
+        "id": 8112,
+        "rawDescription": "perk_desc",
+        "rawDisplayName": "perk_Domination"
+      },
+      "secondaryRuneTree": {
+        "displayName": "Sorcery",
+        "id": 8112,
+        "rawDescription": "perk_desc",
+        "rawDisplayName": "perk_Sorcery"
+      },
+      "statRunes": [
+        {
+          "id": 5008,
+          "rawDescription": "s",
+          "rawDisplayName": "StatMod"
+        }
+      ]
+    },
+    "level": 10,
+    "riotId": "Fixture Player 1#FX1",
+    "riotIdGameName": "Fixture Player 1",
+    "riotIdTagLine": "FX1",
+    "summonerName": "Fixture Player 1",
+    "teamRelativeColors": true
+  },
+  "allPlayers": [
+    {
+      "championName": "Ahri",
+      "isBot": false,
+      "isDead": false,
+      "items": [
+        {
+          "canUse": false,
+          "consumable": false,
+          "count": 1,
+          "displayName": "Luden's Companion",
+          "itemID": 6655,
+          "price": 1000,
+          "rawDescription": "item_desc",
+          "rawDisplayName": "Item_Luden's_Companion",
+          "slot": 0
+        },
+        {
+          "canUse": false,
+          "consumable": false,
+          "count": 1,
+          "displayName": "Sorcerer's Shoes",
+          "itemID": 3020,
+          "price": 1000,
+          "rawDescription": "item_desc",
+          "rawDisplayName": "Item_Sorcerer's_Shoes",
+          "slot": 1
+        },
+        {
+          "canUse": false,
+          "consumable": false,
+          "count": 1,
+          "displayName": "Needlessly Large Rod",
+          "itemID": 1058,
+          "price": 1000,
+          "rawDescription": "item_desc",
+          "rawDisplayName": "Item_Needlessly_Large_Rod",
+          "slot": 2
+        }
+      ],
+      "level": 10,
+      "position": "MIDDLE",
+      "rawChampionName": "game_character_displayname_Ahri",
+      "rawSkinName": "game_character_skin_displayname_Ahri_0",
+      "respawnTimer": 0.0,
+      "riotId": "Fixture Player 1#FX1",
+      "riotIdGameName": "Fixture Player 1",
+      "riotIdTagLine": "FX1",
+      "runes": {
+        "keystone": {
+          "displayName": "Electrocute",
+          "id": 8112,
+          "rawDescription": "perk_desc",
+          "rawDisplayName": "perk_Electrocute"
+        },
+        "primaryRuneTree": {
+          "displayName": "Domination",
+          "id": 8112,
+          "rawDescription": "perk_desc",
+          "rawDisplayName": "perk_Domination"
+        },
+        "secondaryRuneTree": {
+          "displayName": "Sorcery",
+          "id": 8112,
+          "rawDescription": "perk_desc",
+          "rawDisplayName": "perk_Sorcery"
+        }
+      },
+      "scores": {
+        "assists": 1,
+        "creepScore": 69,
+        "deaths": 1,
+        "kills": 2,
+        "wardScore": 1.5
+      },
+      "skinID": 1,
+      "skinName": "Skin of fixture 1",
+      "summonerName": "Fixture Player 1",
+      "summonerSpells": {
+        "summonerSpellOne": {
+          "displayName": "Flash",
+          "rawDescription": "GeneratedTip_SummonerSpell_Flash_Description",
+          "rawDisplayName": "GeneratedTip_SummonerSpell_Flash_DisplayName"
+        },
+        "summonerSpellTwo": {
+          "displayName": "Heal",
+          "rawDescription": "GeneratedTip_SummonerSpell_Heal_Description",
+          "rawDisplayName": "GeneratedTip_SummonerSpell_Heal_DisplayName"
+        }
+      },
+      "team": "ORDER"
+    },
+    {
+      "championName": "Lee Sin",
+      "isBot": false,
+      "isDead": false,
+      "items": [
+        {
+          "canUse": false,
+          "consumable": false,
+          "count": 1,
+          "displayName": "Eclipse",
+          "itemID": 6692,
+          "price": 1000,
+          "rawDescription": "item_desc",
+          "rawDisplayName": "Item_Eclipse",
+          "slot": 0
+        },
+        {
+          "canUse": false,
+          "consumable": false,
+          "count": 1,
+          "displayName": "Plated Steelcaps",
+          "itemID": 3047,
+          "price": 1000,
+          "rawDescription": "item_desc",
+          "rawDisplayName": "Item_Plated_Steelcaps",
+          "slot": 1
+        }
+      ],
+      "level": 11,
+      "position": "JUNGLE",
+      "rawChampionName": "game_character_displayname_LeeSin",
+      "rawSkinName": "game_character_skin_displayname_LeeSin_0",
+      "respawnTimer": 0.0,
+      "riotId": "Fixture Player 2#FX2",
+      "riotIdGameName": "Fixture Player 2",
+      "riotIdTagLine": "FX2",
+      "runes": {
+        "keystone": {
+          "displayName": "Conqueror",
+          "id": 8112,
+          "rawDescription": "perk_desc",
+          "rawDisplayName": "perk_Conqueror"
+        },
+        "primaryRuneTree": {
+          "displayName": "Domination",
+          "id": 8112,
+          "rawDescription": "perk_desc",
+          "rawDisplayName": "perk_Domination"
+        },
+        "secondaryRuneTree": {
+          "displayName": "Sorcery",
+          "id": 8112,
+          "rawDescription": "perk_desc",
+          "rawDisplayName": "perk_Sorcery"
+        }
+      },
+      "scores": {
+        "assists": 2,
+        "creepScore": 78,
+        "deaths": 2,
+        "kills": 4,
+        "wardScore": 2.5
+      },
+      "skinID": 2,
+      "skinName": "Skin of fixture 2",
+      "summonerName": "Fixture Player 2",
+      "summonerSpells": {
+        "summonerSpellOne": {
+          "displayName": "Flash",
+          "rawDescription": "GeneratedTip_SummonerSpell_Flash_Description",
+          "rawDisplayName": "GeneratedTip_SummonerSpell_Flash_DisplayName"
+        },
+        "summonerSpellTwo": {
+          "displayName": "Smite",
+          "rawDescription": "GeneratedTip_SummonerSpell_Smite_Description",
+          "rawDisplayName": "GeneratedTip_SummonerSpell_Smite_DisplayName"
+        }
+      },
+      "team": "ORDER"
+    },
+    {
+      "championName": "Jinx",
+      "isBot": false,
+      "isDead": false,
+      "items": [
+        {
+          "canUse": false,
+          "consumable": false,
+          "count": 1,
+          "displayName": "Infinity Edge",
+          "itemID": 3031,
+          "price": 1000,
+          "rawDescription": "item_desc",
+          "rawDisplayName": "Item_Infinity_Edge",
+          "slot": 0
+        },
+        {
+          "canUse": false,
+          "consumable": false,
+          "count": 1,
+          "displayName": "Berserker's Greaves",
+          "itemID": 3006,
+          "price": 1000,
+          "rawDescription": "item_desc",
+          "rawDisplayName": "Item_Berserker's_Greaves",
+          "slot": 1
+        }
+      ],
+      "level": 12,
+      "position": "BOTTOM",
+      "rawChampionName": "game_character_displayname_Jinx",
+      "rawSkinName": "game_character_skin_displayname_Jinx_0",
+      "respawnTimer": 0.0,
+      "riotId": "Fixture Player 3#FX3",
+      "riotIdGameName": "Fixture Player 3",
+      "riotIdTagLine": "FX3",
+      "runes": {
+        "keystone": {
+          "displayName": "Lethal Tempo",
+          "id": 8112,
+          "rawDescription": "perk_desc",
+          "rawDisplayName": "perk_LethalTempo"
+        },
+        "primaryRuneTree": {
+          "displayName": "Domination",
+          "id": 8112,
+          "rawDescription": "perk_desc",
+          "rawDisplayName": "perk_Domination"
+        },
+        "secondaryRuneTree": {
+          "displayName": "Sorcery",
+          "id": 8112,
+          "rawDescription": "perk_desc",
+          "rawDisplayName": "perk_Sorcery"
+        }
+      },
+      "scores": {
+        "assists": 3,
+        "creepScore": 87,
+        "deaths": 0,
+        "kills": 0,
+        "wardScore": 3.5
+      },
+      "skinID": 3,
+      "skinName": "Skin of fixture 3",
+      "summonerName": "Fixture Player 3",
+      "summonerSpells": {
+        "summonerSpellOne": {
+          "displayName": "Flash",
+          "rawDescription": "GeneratedTip_SummonerSpell_Flash_Description",
+          "rawDisplayName": "GeneratedTip_SummonerSpell_Flash_DisplayName"
+        },
+        "summonerSpellTwo": {
+          "displayName": "Heal",
+          "rawDescription": "GeneratedTip_SummonerSpell_Heal_Description",
+          "rawDisplayName": "GeneratedTip_SummonerSpell_Heal_DisplayName"
+        }
+      },
+      "team": "ORDER"
+    },
+    {
+      "championName": "Thresh",
+      "isBot": false,
+      "isDead": false,
+      "items": [
+        {
+          "canUse": false,
+          "consumable": false,
+          "count": 1,
+          "displayName": "Knight's Vow",
+          "itemID": 3109,
+          "price": 1000,
+          "rawDescription": "item_desc",
+          "rawDisplayName": "Item_Knight's_Vow",
+          "slot": 0
+        }
+      ],
+      "level": 9,
+      "position": "UTILITY",
+      "rawChampionName": "game_character_displayname_Thresh",
+      "rawSkinName": "game_character_skin_displayname_Thresh_0",
+      "respawnTimer": 0.0,
+      "riotId": "Fixture Player 4#FX4",
+      "riotIdGameName": "Fixture Player 4",
+      "riotIdTagLine": "FX4",
+      "runes": {
+        "keystone": {
+          "displayName": "Guardian",
+          "id": 8112,
+          "rawDescription": "perk_desc",
+          "rawDisplayName": "perk_Guardian"
+        },
+        "primaryRuneTree": {
+          "displayName": "Domination",
+          "id": 8112,
+          "rawDescription": "perk_desc",
+          "rawDisplayName": "perk_Domination"
+        },
+        "secondaryRuneTree": {
+          "displayName": "Sorcery",
+          "id": 8112,
+          "rawDescription": "perk_desc",
+          "rawDisplayName": "perk_Sorcery"
+        }
+      },
+      "scores": {
+        "assists": 4,
+        "creepScore": 96,
+        "deaths": 1,
+        "kills": 2,
+        "wardScore": 4.5
+      },
+      "skinID": 4,
+      "skinName": "Skin of fixture 4",
+      "summonerName": "Fixture Player 4",
+      "summonerSpells": {
+        "summonerSpellOne": {
+          "displayName": "Flash",
+          "rawDescription": "GeneratedTip_SummonerSpell_Flash_Description",
+          "rawDisplayName": "GeneratedTip_SummonerSpell_Flash_DisplayName"
+        },
+        "summonerSpellTwo": {
+          "displayName": "Ignite",
+          "rawDescription": "GeneratedTip_SummonerSpell_Ignite_Description",
+          "rawDisplayName": "GeneratedTip_SummonerSpell_Ignite_DisplayName"
+        }
+      },
+      "team": "ORDER"
+    },
+    {
+      "championName": "Ornn",
+      "isBot": false,
+      "isDead": false,
+      "items": [
+        {
+          "canUse": false,
+          "consumable": false,
+          "count": 1,
+          "displayName": "Sunfire Aegis",
+          "itemID": 3068,
+          "price": 1000,
+          "rawDescription": "item_desc",
+          "rawDisplayName": "Item_Sunfire_Aegis",
+          "slot": 0
+        },
+        {
+          "canUse": false,
+          "consumable": false,
+          "count": 1,
+          "displayName": "Plated Steelcaps",
+          "itemID": 3047,
+          "price": 1000,
+          "rawDescription": "item_desc",
+          "rawDisplayName": "Item_Plated_Steelcaps",
+          "slot": 1
+        }
+      ],
+      "level": 10,
+      "position": "TOP",
+      "rawChampionName": "game_character_displayname_Ornn",
+      "rawSkinName": "game_character_skin_displayname_Ornn_0",
+      "respawnTimer": 0.0,
+      "riotId": "Fixture Player 5#FX5",
+      "riotIdGameName": "Fixture Player 5",
+      "riotIdTagLine": "FX5",
+      "runes": {
+        "keystone": {
+          "displayName": "Grasp of the Undying",
+          "id": 8112,
+          "rawDescription": "perk_desc",
+          "rawDisplayName": "perk_GraspoftheUndying"
+        },
+        "primaryRuneTree": {
+          "displayName": "Domination",
+          "id": 8112,
+          "rawDescription": "perk_desc",
+          "rawDisplayName": "perk_Domination"
+        },
+        "secondaryRuneTree": {
+          "displayName": "Sorcery",
+          "id": 8112,
+          "rawDescription": "perk_desc",
+          "rawDisplayName": "perk_Sorcery"
+        }
+      },
+      "scores": {
+        "assists": 0,
+        "creepScore": 105,
+        "deaths": 2,
+        "kills": 4,
+        "wardScore": 5.5
+      },
+      "skinID": 5,
+      "skinName": "Skin of fixture 5",
+      "summonerName": "Fixture Player 5",
+      "summonerSpells": {
+        "summonerSpellOne": {
+          "displayName": "Flash",
+          "rawDescription": "GeneratedTip_SummonerSpell_Flash_Description",
+          "rawDisplayName": "GeneratedTip_SummonerSpell_Flash_DisplayName"
+        },
+        "summonerSpellTwo": {
+          "displayName": "Teleport",
+          "rawDescription": "GeneratedTip_SummonerSpell_Teleport_Description",
+          "rawDisplayName": "GeneratedTip_SummonerSpell_Teleport_DisplayName"
+        }
+      },
+      "team": "ORDER"
+    },
+    {
+      "championName": "Zed",
+      "isBot": false,
+      "isDead": true,
+      "items": [
+        {
+          "canUse": false,
+          "consumable": false,
+          "count": 1,
+          "displayName": "Eclipse",
+          "itemID": 6692,
+          "price": 1000,
+          "rawDescription": "item_desc",
+          "rawDisplayName": "Item_Eclipse",
+          "slot": 0
+        }
+      ],
+      "level": 11,
+      "position": "MIDDLE",
+      "rawChampionName": "game_character_displayname_Zed",
+      "rawSkinName": "game_character_skin_displayname_Zed_0",
+      "respawnTimer": 12.5,
+      "riotId": "Fixture Player 6#FX6",
+      "riotIdGameName": "Fixture Player 6",
+      "riotIdTagLine": "FX6",
+      "runes": {
+        "keystone": {
+          "displayName": "Electrocute",
+          "id": 8112,
+          "rawDescription": "perk_desc",
+          "rawDisplayName": "perk_Electrocute"
+        },
+        "primaryRuneTree": {
+          "displayName": "Domination",
+          "id": 8112,
+          "rawDescription": "perk_desc",
+          "rawDisplayName": "perk_Domination"
+        },
+        "secondaryRuneTree": {
+          "displayName": "Sorcery",
+          "id": 8112,
+          "rawDescription": "perk_desc",
+          "rawDisplayName": "perk_Sorcery"
+        }
+      },
+      "scores": {
+        "assists": 1,
+        "creepScore": 114,
+        "deaths": 0,
+        "kills": 0,
+        "wardScore": 6.5
+      },
+      "skinID": 6,
+      "skinName": "Skin of fixture 6",
+      "summonerName": "Fixture Player 6",
+      "summonerSpells": {
+        "summonerSpellOne": {
+          "displayName": "Flash",
+          "rawDescription": "GeneratedTip_SummonerSpell_Flash_Description",
+          "rawDisplayName": "GeneratedTip_SummonerSpell_Flash_DisplayName"
+        },
+        "summonerSpellTwo": {
+          "displayName": "Ignite",
+          "rawDescription": "GeneratedTip_SummonerSpell_Ignite_Description",
+          "rawDisplayName": "GeneratedTip_SummonerSpell_Ignite_DisplayName"
+        }
+      },
+      "team": "CHAOS"
+    },
+    {
+      "championName": "Vi",
+      "isBot": false,
+      "isDead": false,
+      "items": [
+        {
+          "canUse": false,
+          "consumable": false,
+          "count": 1,
+          "displayName": "Black Cleaver",
+          "itemID": 3071,
+          "price": 1000,
+          "rawDescription": "item_desc",
+          "rawDisplayName": "Item_Black_Cleaver",
+          "slot": 0
+        }
+      ],
+      "level": 12,
+      "position": "JUNGLE",
+      "rawChampionName": "game_character_displayname_Vi",
+      "rawSkinName": "game_character_skin_displayname_Vi_0",
+      "respawnTimer": 0.0,
+      "riotId": "Fixture Player 7#FX7",
+      "riotIdGameName": "Fixture Player 7",
+      "riotIdTagLine": "FX7",
+      "runes": {
+        "keystone": {
+          "displayName": "Lethal Tempo",
+          "id": 8112,
+          "rawDescription": "perk_desc",
+          "rawDisplayName": "perk_LethalTempo"
+        },
+        "primaryRuneTree": {
+          "displayName": "Domination",
+          "id": 8112,
+          "rawDescription": "perk_desc",
+          "rawDisplayName": "perk_Domination"
+        },
+        "secondaryRuneTree": {
+          "displayName": "Sorcery",
+          "id": 8112,
+          "rawDescription": "perk_desc",
+          "rawDisplayName": "perk_Sorcery"
+        }
+      },
+      "scores": {
+        "assists": 2,
+        "creepScore": 123,
+        "deaths": 1,
+        "kills": 2,
+        "wardScore": 7.5
+      },
+      "skinID": 7,
+      "skinName": "Skin of fixture 7",
+      "summonerName": "Fixture Player 7",
+      "summonerSpells": {
+        "summonerSpellOne": {
+          "displayName": "Flash",
+          "rawDescription": "GeneratedTip_SummonerSpell_Flash_Description",
+          "rawDisplayName": "GeneratedTip_SummonerSpell_Flash_DisplayName"
+        },
+        "summonerSpellTwo": {
+          "displayName": "Smite",
+          "rawDescription": "GeneratedTip_SummonerSpell_Smite_Description",
+          "rawDisplayName": "GeneratedTip_SummonerSpell_Smite_DisplayName"
+        }
+      },
+      "team": "CHAOS"
+    },
+    {
+      "championName": "Caitlyn",
+      "isBot": false,
+      "isDead": false,
+      "items": [
+        {
+          "canUse": false,
+          "consumable": false,
+          "count": 1,
+          "displayName": "Infinity Edge",
+          "itemID": 3031,
+          "price": 1000,
+          "rawDescription": "item_desc",
+          "rawDisplayName": "Item_Infinity_Edge",
+          "slot": 0
+        }
+      ],
+      "level": 9,
+      "position": "BOTTOM",
+      "rawChampionName": "game_character_displayname_Caitlyn",
+      "rawSkinName": "game_character_skin_displayname_Caitlyn_0",
+      "respawnTimer": 0.0,
+      "riotId": "Fixture Player 8#FX8",
+      "riotIdGameName": "Fixture Player 8",
+      "riotIdTagLine": "FX8",
+      "runes": {
+        "keystone": {
+          "displayName": "Press the Attack",
+          "id": 8112,
+          "rawDescription": "perk_desc",
+          "rawDisplayName": "perk_PresstheAttack"
+        },
+        "primaryRuneTree": {
+          "displayName": "Domination",
+          "id": 8112,
+          "rawDescription": "perk_desc",
+          "rawDisplayName": "perk_Domination"
+        },
+        "secondaryRuneTree": {
+          "displayName": "Sorcery",
+          "id": 8112,
+          "rawDescription": "perk_desc",
+          "rawDisplayName": "perk_Sorcery"
+        }
+      },
+      "scores": {
+        "assists": 3,
+        "creepScore": 132,
+        "deaths": 2,
+        "kills": 4,
+        "wardScore": 8.5
+      },
+      "skinID": 8,
+      "skinName": "Skin of fixture 8",
+      "summonerName": "Fixture Player 8",
+      "summonerSpells": {
+        "summonerSpellOne": {
+          "displayName": "Flash",
+          "rawDescription": "GeneratedTip_SummonerSpell_Flash_Description",
+          "rawDisplayName": "GeneratedTip_SummonerSpell_Flash_DisplayName"
+        },
+        "summonerSpellTwo": {
+          "displayName": "Heal",
+          "rawDescription": "GeneratedTip_SummonerSpell_Heal_Description",
+          "rawDisplayName": "GeneratedTip_SummonerSpell_Heal_DisplayName"
+        }
+      },
+      "team": "CHAOS"
+    },
+    {
+      "championName": "Lulu",
+      "isBot": false,
+      "isDead": false,
+      "items": [
+        {
+          "canUse": false,
+          "consumable": false,
+          "count": 1,
+          "displayName": "Ardent Censer",
+          "itemID": 3504,
+          "price": 1000,
+          "rawDescription": "item_desc",
+          "rawDisplayName": "Item_Ardent_Censer",
+          "slot": 0
+        }
+      ],
+      "level": 10,
+      "position": "UTILITY",
+      "rawChampionName": "game_character_displayname_Lulu",
+      "rawSkinName": "game_character_skin_displayname_Lulu_0",
+      "respawnTimer": 0.0,
+      "riotId": "Fixture Player 9#FX9",
+      "riotIdGameName": "Fixture Player 9",
+      "riotIdTagLine": "FX9",
+      "runes": {
+        "keystone": {
+          "displayName": "Guardian",
+          "id": 8112,
+          "rawDescription": "perk_desc",
+          "rawDisplayName": "perk_Guardian"
+        },
+        "primaryRuneTree": {
+          "displayName": "Domination",
+          "id": 8112,
+          "rawDescription": "perk_desc",
+          "rawDisplayName": "perk_Domination"
+        },
+        "secondaryRuneTree": {
+          "displayName": "Sorcery",
+          "id": 8112,
+          "rawDescription": "perk_desc",
+          "rawDisplayName": "perk_Sorcery"
+        }
+      },
+      "scores": {
+        "assists": 4,
+        "creepScore": 141,
+        "deaths": 0,
+        "kills": 0,
+        "wardScore": 9.5
+      },
+      "skinID": 9,
+      "skinName": "Skin of fixture 9",
+      "summonerName": "Fixture Player 9",
+      "summonerSpells": {
+        "summonerSpellOne": {
+          "displayName": "Flash",
+          "rawDescription": "GeneratedTip_SummonerSpell_Flash_Description",
+          "rawDisplayName": "GeneratedTip_SummonerSpell_Flash_DisplayName"
+        },
+        "summonerSpellTwo": {
+          "displayName": "Exhaust",
+          "rawDescription": "GeneratedTip_SummonerSpell_Exhaust_Description",
+          "rawDisplayName": "GeneratedTip_SummonerSpell_Exhaust_DisplayName"
+        }
+      },
+      "team": "CHAOS"
+    },
+    {
+      "championName": "Camille",
+      "isBot": false,
+      "isDead": false,
+      "items": [
+        {
+          "canUse": false,
+          "consumable": false,
+          "count": 1,
+          "displayName": "Blade of The Ruined King",
+          "itemID": 3153,
+          "price": 1000,
+          "rawDescription": "item_desc",
+          "rawDisplayName": "Item_Blade_of_The_Ruined_King",
+          "slot": 0
+        }
+      ],
+      "level": 11,
+      "position": "TOP",
+      "rawChampionName": "game_character_displayname_Camille",
+      "rawSkinName": "game_character_skin_displayname_Camille_0",
+      "respawnTimer": 0.0,
+      "riotId": "Fixture Player 10#FX10",
+      "riotIdGameName": "Fixture Player 10",
+      "riotIdTagLine": "FX10",
+      "runes": {
+        "keystone": {
+          "displayName": "Conqueror",
+          "id": 8112,
+          "rawDescription": "perk_desc",
+          "rawDisplayName": "perk_Conqueror"
+        },
+        "primaryRuneTree": {
+          "displayName": "Domination",
+          "id": 8112,
+          "rawDescription": "perk_desc",
+          "rawDisplayName": "perk_Domination"
+        },
+        "secondaryRuneTree": {
+          "displayName": "Sorcery",
+          "id": 8112,
+          "rawDescription": "perk_desc",
+          "rawDisplayName": "perk_Sorcery"
+        }
+      },
+      "scores": {
+        "assists": 0,
+        "creepScore": 150,
+        "deaths": 1,
+        "kills": 2,
+        "wardScore": 10.5
+      },
+      "skinID": 10,
+      "skinName": "Skin of fixture 10",
+      "summonerName": "Fixture Player 10",
+      "summonerSpells": {
+        "summonerSpellOne": {
+          "displayName": "Flash",
+          "rawDescription": "GeneratedTip_SummonerSpell_Flash_Description",
+          "rawDisplayName": "GeneratedTip_SummonerSpell_Flash_DisplayName"
+        },
+        "summonerSpellTwo": {
+          "displayName": "Teleport",
+          "rawDescription": "GeneratedTip_SummonerSpell_Teleport_Description",
+          "rawDisplayName": "GeneratedTip_SummonerSpell_Teleport_DisplayName"
+        }
+      },
+      "team": "CHAOS"
+    }
+  ],
+  "events": {
+    "Events": [
+      {
+        "EventID": 0,
+        "EventName": "GameStart",
+        "EventTime": 0.05
+      },
+      {
+        "EventID": 1,
+        "EventName": "MinionsSpawning",
+        "EventTime": 65.0
+      },
+      {
+        "EventID": 2,
+        "EventName": "ChampionKill",
+        "EventTime": 312.4,
+        "Assisters": ["Fixture Player 4"],
+        "KillerName": "Fixture Player 1",
+        "VictimName": "Fixture Player 6"
+      },
+      {
+        "EventID": 3,
+        "EventName": "DragonKill",
+        "EventTime": 401.2,
+        "Assisters": [],
+        "DragonType": "Earth",
+        "KillerName": "Fixture Player 2",
+        "Stolen": "False"
+      }
+    ]
+  },
+  "gameData": {
+    "gameMode": "CLASSIC",
+    "gameTime": 421.7,
+    "mapName": "Map11",
+    "mapNumber": 11,
+    "mapTerrain": "Default"
+  }
+}

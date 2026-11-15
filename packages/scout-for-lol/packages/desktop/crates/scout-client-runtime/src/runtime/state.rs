@@ -1,75 +1,17 @@
 //! The published runtime snapshot and its typed gameflow phase.
 
 use scout_client_core::backend::BackendError;
+use scout_client_core::live::snapshot::LiveSnapshot;
 use scout_client_core::settings::PrivacySettings;
 use tokio::sync::watch;
 
-/// Gameflow phase as the League client reports it, for subscribers that react
-/// to phase changes (an overlay, a coach) and need nothing else.
-#[derive(Debug, Clone, PartialEq, Eq, Default)]
-pub enum GameflowPhase {
-    /// No signed-in League client is reachable.
-    #[default]
-    Disconnected,
-    /// The client is open and idle.
-    None,
-    /// In a lobby.
-    Lobby,
-    /// Searching for a match.
-    Matchmaking,
-    /// Checked into a tournament.
-    CheckedIntoTournament,
-    /// A match was found and awaits acceptance.
-    ReadyCheck,
-    /// Champion select.
-    ChampSelect,
-    /// Loading into the game.
-    GameStart,
-    /// The game failed to launch.
-    FailedToLaunch,
-    /// In a game.
-    InProgress,
-    /// Reconnecting to a game.
-    Reconnect,
-    /// Waiting for end-of-game stats.
-    WaitingForStats,
-    /// Just before the end-of-game screen.
-    PreEndOfGame,
-    /// The end-of-game screen.
-    EndOfGame,
-    /// The game ended in error.
-    TerminatedInError,
-    /// A phase this build does not know, carried verbatim.
-    Unrecognized(String),
-}
+pub use scout_client_core::live::gameflow::GameflowPhase;
 
-impl GameflowPhase {
-    fn from_label(label: &str) -> Self {
-        match label {
-            "None" => Self::None,
-            "Lobby" => Self::Lobby,
-            "Matchmaking" => Self::Matchmaking,
-            "CheckedIntoTournament" => Self::CheckedIntoTournament,
-            "ReadyCheck" => Self::ReadyCheck,
-            "ChampSelect" => Self::ChampSelect,
-            "GameStart" => Self::GameStart,
-            "FailedToLaunch" => Self::FailedToLaunch,
-            "InProgress" => Self::InProgress,
-            "Reconnect" => Self::Reconnect,
-            "WaitingForStats" => Self::WaitingForStats,
-            "PreEndOfGame" => Self::PreEndOfGame,
-            "EndOfGame" => Self::EndOfGame,
-            "TerminatedInError" => Self::TerminatedInError,
-            other => Self::Unrecognized(other.to_owned()),
-        }
-    }
-
-    fn of(snapshot: &RuntimeState) -> Self {
-        snapshot
-            .gameflow_phase
-            .as_deref()
-            .map_or(Self::Disconnected, Self::from_label)
-    }
+fn phase_of(snapshot: &RuntimeState) -> GameflowPhase {
+    snapshot
+        .gameflow_phase
+        .as_deref()
+        .map_or(GameflowPhase::Disconnected, GameflowPhase::from_label)
 }
 
 /// The two watch channels the collector publishes through.
@@ -94,6 +36,10 @@ impl StateHub {
 
     pub(super) fn subscribe_phase(&self) -> watch::Receiver<GameflowPhase> {
         self.phase.subscribe()
+    }
+
+    pub(super) fn current_phase(&self) -> GameflowPhase {
+        self.phase.borrow().clone()
     }
 }
 
@@ -127,6 +73,9 @@ pub struct RuntimeState {
     /// The oldest build Scout accepts, while it refuses this one as too old.
     /// Observations stay queued until an upgraded build checks in.
     pub upgrade_required: Option<String>,
+    /// The allowlisted live game state while a game is in progress and
+    /// serving data.
+    pub live_game: Option<LiveSnapshot>,
     last_runtime_error: Option<String>,
     last_replay_error: Option<String>,
 }
@@ -189,7 +138,7 @@ pub(super) fn synchronize_last_error(snapshot: &mut RuntimeState) {
 pub(super) fn update_state(state: &StateHub, update: impl FnOnce(&mut RuntimeState)) {
     state.snapshot.send_modify(|snapshot| {
         update(snapshot);
-        let next = GameflowPhase::of(snapshot);
+        let next = phase_of(snapshot);
         state.phase.send_if_modified(|current| {
             if *current == next {
                 return false;

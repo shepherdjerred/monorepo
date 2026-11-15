@@ -27,6 +27,7 @@ mod collection;
 mod collector;
 mod gameflow;
 mod history;
+mod live_game;
 mod observe;
 mod pairing;
 mod paths;

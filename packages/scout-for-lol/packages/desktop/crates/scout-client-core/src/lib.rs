@@ -5,6 +5,7 @@ pub mod credentials;
 pub mod desktop_api;
 pub mod diagnostics;
 pub mod lcu;
+pub mod live;
 pub mod outbox;
 pub mod profile;
 pub mod protocol;
