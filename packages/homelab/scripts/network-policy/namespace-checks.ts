@@ -413,11 +413,12 @@ export type EnforcerLog =
 
 // kube-network-policies v1.1.2 (klog text). A denial line carries only the
 // packet id; the "Evaluating packet" line logged before it, by the same agent,
-// names the pods. Only deny-all policies log their own name.
+// names the pods. A deny-all policy also logs "Pod has limited all … traffic",
+// but that is logged while policies are visited, before the final verdict, so
+// it is not counted: another policy may still allow the packet.
 // https://github.com/kubernetes-sigs/kube-network-policies/blob/v1.1.2/pkg/networkpolicy/engine.go
 const DENIED = /"Packet denied by (?:egress|ingress) policy".*?\bid=(\d+)/u;
 const EVALUATING = /"Evaluating packet".*?\bid=(\d+)/u;
-const LIMITED = /"Pod has limited all (?:egress|ingress) traffic"/u;
 const SHOWN_DENIALS = 5;
 
 /** `kubectl logs --prefix` names the agent pod; packet ids are per agent. */
@@ -438,8 +439,7 @@ function inNamespace(
 
 /**
  * Denials whose source or destination pod is in the namespace, each paired
- * with the packet description that names the pods, plus deny-all matches for
- * the namespace's pods or policies.
+ * with the packet description that names the pods.
  */
 export function denialsFor(
   namespace: string,
@@ -463,14 +463,6 @@ export function denialsFor(
       ) {
         denials.push(`${line} <- ${packet}`);
       }
-      continue;
-    }
-    if (
-      LIMITED.test(line) &&
-      (inNamespace(field(line, "pod"), namespace) ||
-        inNamespace(field(line, "policy"), namespace))
-    ) {
-      denials.push(line);
     }
   }
   return denials;

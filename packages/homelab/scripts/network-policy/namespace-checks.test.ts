@@ -278,10 +278,8 @@ describe("denials", () => {
   const lines = [evalA7, deniedA7, evalB7, deniedB7, evalA8, limited];
 
   test("pair each denial with the same agent's packet line and match the namespace by pod", () => {
-    expect(denialsFor("tracker", lines)).toEqual([
-      `${deniedA7} <- ${evalA7}`,
-      limited,
-    ]);
+    // A deny-all visit is not a verdict: another policy may still allow it.
+    expect(denialsFor("tracker", lines)).toEqual([`${deniedA7} <- ${evalA7}`]);
     expect(denialsFor("media", lines)).toEqual([`${deniedB7} <- ${evalB7}`]);
     expect(denialsFor("flipt", lines)).toEqual([`${deniedA7} <- ${evalA7}`]);
     expect(denialsFor("my", lines)).toEqual([]);
@@ -293,7 +291,7 @@ describe("denials", () => {
       evaluateDenials("tracker", { available: true, lines, minutes: 10 }),
     ).toMatchObject({
       status: "info",
-      summary: "2 denials involving this namespace in the last 10m",
+      summary: "1 denials involving this namespace in the last 10m",
     });
     expect(
       evaluateDenials("tracker", { available: false, reason: "no container" }),
