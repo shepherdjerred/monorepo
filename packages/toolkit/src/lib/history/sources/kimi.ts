@@ -54,9 +54,13 @@ const MAIN_AGENT = "main";
 const WIRE_FILE = "wire.jsonl";
 const STATE_FILE = "state.json";
 
+/**
+ * `title` (with `titleKind` and `lastPrompt`, which this reader ignores) is
+ * absent until Kimi generates one, so an untitled session is valid.
+ */
 const KimiStateSchema = z.object({
   id: z.string().min(1),
-  title: z.string(),
+  title: z.string().optional(),
   cwd: z.string().min(1),
   createdAt: z.number().int().positive(),
   updatedAt: z.number().int().positive(),
@@ -173,10 +177,51 @@ function toolResultContent(
 }
 
 /**
+ * What a prompt or steer is, by its `origin.kind`: `user` is typed by the
+ * user; `task` is a background task's `<notification>` that Kimi injects as a
+ * prompt, which is tool output, not dialogue; `skill_activation` is a skill's
+ * injected instructions and is not indexed. Any other origin is a contract
+ * change this reader has not classified.
+ */
+function kimiInputMessages(
+  record: Record<string, unknown>,
+  createdAt: string | null,
+  location: UsageFieldLocation,
+  maxCharacters: number,
+): HistoryMessage[] {
+  const origin = stringValue(parseRecord(record["origin"])?.["kind"]);
+  switch (origin ?? "") {
+    case "user": {
+      return parseConversationEnvelope(
+        { role: "user", content: textParts(record["input"]) },
+        "user",
+        createdAt,
+        maxCharacters,
+      );
+    }
+    case "task": {
+      return parseConversationEnvelope(
+        { role: "tool", content: textParts(record["input"]) },
+        "tool",
+        createdAt,
+        maxCharacters,
+      );
+    }
+    case "skill_activation": {
+      return [];
+    }
+    default: {
+      throw new Error(
+        `Kimi input has an unknown origin "${origin ?? "missing"}" on line ${String(location.lineNumber)} in ${location.filePath}`,
+      );
+    }
+  }
+}
+
+/**
  * Dialogue comes from these records only:
- * - `turn.prompt` (and `turn.steer` typed by the user mid-turn) are user
- *   messages. Steers injected by skill activation are instructions, not
- *   dialogue.
+ * - `turn.prompt` and `turn.steer` (a message sent mid-turn), classified by
+ *   origin in `kimiInputMessages`.
  * - `agent.message.appended` with role `assistant` is the reply; its `think`
  *   parts are reasoning and are not indexed. Its `toolCalls` repeat the
  *   loop's `tool.call` events, which are the one tool-call source.
@@ -192,24 +237,9 @@ function kimiMessages(
   maxCharacters: number,
 ): HistoryMessage[] {
   switch (stringValue(record["type"]) ?? "") {
-    case "turn.prompt": {
-      return parseConversationEnvelope(
-        { role: "user", content: textParts(record["input"]) },
-        "user",
-        createdAt,
-        maxCharacters,
-      );
-    }
+    case "turn.prompt":
     case "turn.steer": {
-      const origin = parseRecord(record["origin"]);
-      return stringValue(origin?.["kind"]) === "user"
-        ? parseConversationEnvelope(
-            { role: "user", content: textParts(record["input"]) },
-            "user",
-            createdAt,
-            maxCharacters,
-          )
-        : [];
+      return kimiInputMessages(record, createdAt, location, maxCharacters);
     }
     case "agent.message.appended": {
       const message = parseRecord(parseRecord(record["message"])?.["message"]);
@@ -365,11 +395,11 @@ async function kimiDocument(
 ): Promise<HistoryDocument> {
   const state = await readKimiState(path.join(wire.sessionDir, STATE_FILE));
   const parsed = await readKimiWire(wire.file, INDEXED_MESSAGE_PARSE_LIMIT);
+  // An untitled session is named by its first user prompt.
+  const stateTitle = state.title?.trim() ?? "";
   const baseTitle = firstText(
-    state.title.length > 0
-      ? state.title
-      : (openingPrompt(parsed.messages) ?? state.id),
-    "Kimi Code session",
+    stateTitle.length > 0 ? stateTitle : (openingPrompt(parsed.messages) ?? ""),
+    "Untitled Kimi session",
   );
   const isMain = wire.agentId === MAIN_AGENT;
   const agentType = state.agents[wire.agentId]?.type ?? wire.agentId;

@@ -57,6 +57,8 @@ const MuseSessionRowSchema = z.object({
   workspace_root: z.string().nullable(),
   git_branch: z.string().nullable(),
   msp_branch: z.string().nullable(),
+  /** Set on a forked session: the session it was forked from. */
+  msp_fork_source_session_id: z.string().nullable(),
   title: z.string(),
   created_at_us: z.number().int().positive().nullable(),
   updated_at_us: z.number().int().positive().nullable(),
@@ -71,6 +73,13 @@ type MuseLog = {
   /** The root index row: its own for a root session, its parent's otherwise. */
   readonly row: MuseSessionRow;
   readonly subagent: boolean;
+  /**
+   * For a forked root session, the title of the session it was forked from
+   * (empty when that session is no longer indexed); null otherwise. The
+   * document model has no parent link, so the fork's title names it, the way
+   * a subagent's names its parent.
+   */
+  readonly forkOf: string | null;
 };
 
 function microsecondsToIso(value: number | null): string | null {
@@ -86,7 +95,8 @@ async function museSessionRows(dbPath: string): Promise<MuseSessionRow[]> {
     return rows(
       database,
       `SELECT session_id, session_dir, session_log_path, layout,
-              workspace_root, git_branch, msp_branch, title,
+              workspace_root, git_branch, msp_branch,
+              msp_fork_source_session_id, title,
               created_at_us, updated_at_us
          FROM sessions
         ORDER BY created_at_us, session_id`,
@@ -118,6 +128,15 @@ async function subagentLogs(sessionDir: string): Promise<string[]> {
  * broken contract, not an empty session. Subagent directories without a log
  * yet (a child that has not started) are skipped.
  */
+/** See `MuseLog.forkOf`. */
+function forkSourceTitle(
+  row: MuseSessionRow,
+  titles: ReadonlyMap<string, string>,
+): string | null {
+  const source = row.msp_fork_source_session_id;
+  return source === null ? null : (titles.get(source) ?? "");
+}
+
 async function museLogs(
   rowsList: readonly MuseSessionRow[],
   museRoot: string,
@@ -125,6 +144,7 @@ async function museLogs(
 ): Promise<MuseLog[]> {
   const logs: MuseLog[] = [];
   const seen = new Set<string>();
+  const titles = new Map(rowsList.map((row) => [row.session_id, row.title]));
   for (const indexed of rowsList) {
     if (indexed.layout !== "session_jsonl") {
       throw new Error(
@@ -151,6 +171,7 @@ async function museLogs(
         sessionId: row.session_id,
         row,
         subagent: false,
+        forkOf: forkSourceTitle(row, titles),
       });
     }
     for (const file of await subagentLogs(row.session_dir)) {
@@ -161,6 +182,7 @@ async function museLogs(
           sessionId: path.basename(path.dirname(file)),
           row,
           subagent: true,
+          forkOf: null,
         });
       }
     }
@@ -184,7 +206,7 @@ async function museDocument(
         `[subagent of ${parentTitle}] ${openingPrompt(transcript.messages) ?? log.sessionId}`,
         parentTitle,
       )
-    : parentTitle;
+    : museRootTitle(parentTitle, log.forkOf);
   return makeHistoryDocument(
     {
       source: "muse",
@@ -224,8 +246,23 @@ async function museDocument(
  * index database's own stat is deliberately not part of it: its WAL and
  * shared-memory files change on every Muse write and read.
  */
-function rowSignature(row: MuseSessionRow): string {
+function museRootTitle(title: string, forkOf: string | null): string {
+  if (forkOf === null) {
+    return title;
+  }
+  const source = firstText(forkOf, "");
+  return firstText(
+    source === title || source.length === 0
+      ? `[fork] ${title}`
+      : `[fork of ${source}] ${title}`,
+    title,
+  );
+}
+
+function rowSignature(log: MuseLog): string {
+  const { row } = log;
   return JSON.stringify([
+    log.forkOf,
     row.title,
     row.workspace_root,
     row.git_branch,
@@ -265,7 +302,7 @@ async function scanMuse(
   const signatures = new Map(
     logs.map((log) => [
       log.file,
-      `${stats.signatures.get(log.file) ?? "missing"}|${rowSignature(log.row)}`,
+      `${stats.signatures.get(log.file) ?? "missing"}|${rowSignature(log)}`,
     ]),
   );
   const fingerprint = [...signatures.values()].join("|");

@@ -212,7 +212,8 @@ const SESSIONS_TABLE = `
     status TEXT NOT NULL,
     msp_branch TEXT,
     msp_kind TEXT,
-    msp_parent_session_id TEXT
+    msp_parent_session_id TEXT,
+    msp_fork_source_session_id TEXT
   )`;
 
 export function setMuseTitle(dbPath: string, title: string): void {
@@ -267,4 +268,83 @@ export async function writeMuseFixture(
     );
   database.close();
   return { museRoot, sessionDir, dbPath };
+}
+
+export const MUSE_FORK_ID = "019a0000-0000-7000-8000-00000000b003";
+
+/**
+ * A fork of the fixture session, as Muse writes one: its log opens with
+ * `session.fork.*` bookkeeping that carries no `recorded_at` and copies the
+ * source's turns, and its index row names the source session.
+ */
+export async function addMuseFork(
+  fixture: MuseFixture,
+  title = "Muse fork title",
+): Promise<string> {
+  const id = MUSE_FORK_ID;
+  const sessionDir = path.join(fixture.museRoot, "sessions/2026/11/12", id);
+  await mkdir(sessionDir, { recursive: true });
+  const fork = (payloadType: string, payload: Record<string, unknown>) => ({
+    schema_version: 1,
+    id: `fork-${payloadType}`,
+    stream: { kind: "session", id },
+    sequence: 0,
+    record_type: payloadType,
+    durability: "durable",
+    payload_type: payloadType,
+    payload_schema_version: 1,
+    payload,
+  });
+  const logPath = path.join(sessionDir, "session.jsonl");
+  await writeFile(
+    logPath,
+    jsonl([
+      fork("session.fork.created", {
+        fork_session_id: id,
+        source_session_id: MUSE_SESSION_ID,
+        fork: { kind: "explicit" },
+      }),
+      fork("session.fork.model_prefix", {
+        fork_session_id: id,
+        model_messages: [{ role: "user", content: [{ text: "copied" }] }],
+      }),
+      fork("session.fork.turn", {
+        fork_session_id: id,
+        turn_index: 0,
+        turn: { prompt: "muse-copied-prompt-marker", answer: "copied answer" },
+      }),
+      run(id, 30, { kind: "started", prompt: "Continue muse-fork-marker" }),
+      run(id, 31, {
+        kind: "model_completed",
+        usage: museUsage({
+          input_tokens: 500,
+          cached_tokens: 0,
+          cache_read_tokens: 0,
+        }),
+        model: "muse-wonder-1.0",
+      }),
+    ]),
+  );
+  const database = new Database(fixture.dbPath);
+  database
+    .prepare(
+      `INSERT INTO sessions (session_id, session_stream_id, session_dir,
+         session_log_path, layout, workspace_root, title, search_text,
+         created_at_us, updated_at_us, prompt_count, status,
+         msp_fork_source_session_id)
+       VALUES (?, ?, ?, ?, 'session_jsonl', '/Users/example/project', ?, '',
+         ?, ?, 1, 'valid', ?)`,
+    )
+    .run(
+      id,
+      id,
+      sessionDir,
+      logPath,
+      title,
+      MUSE_UPDATED_US + 1,
+      MUSE_UPDATED_US + 2,
+      MUSE_SESSION_ID,
+    );
+  database.close();
+  return path.relative(fixture.museRoot, logPath);
 }

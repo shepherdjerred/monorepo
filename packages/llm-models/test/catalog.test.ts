@@ -432,7 +432,7 @@ describe("native pricing dimensions", () => {
 });
 
 describe("pricingOnly models", () => {
-  const PRICING_ONLY = ["kimi-k3.1-pro", "kimi-k3.1-pro-highspeed"];
+  const PRICING_ONLY = ["kimi-k3.1-pro", "kimi-k3.1-pro-highspeed", "grok-4.7"];
 
   test("Kimi K3.1 Pro is priced from Moonshot's published rates", () => {
     expect(getModel("kimi-k3.1-pro")).toMatchObject({
@@ -496,9 +496,77 @@ describe("pricingOnly models", () => {
       modelsByProvider("moonshot")
         .map((model) => model.id)
         .sort(),
-    ).toEqual(PRICING_ONLY);
+    ).toEqual(PRICING_ONLY.filter((id) => id.startsWith("kimi-")));
     for (const model of modelsByProvider("moonshot")) {
       expect(model.pricingOnly).toBe(true);
     }
+  });
+});
+
+describe("GPT-6 tier prices", () => {
+  // Published standard rates per 1M tokens: input / cached input / output.
+  test.each([
+    ["gpt-6.1-terra", 1, 0.05, 5],
+    ["gpt-6-sol", 2, 0.2, 10],
+    ["gpt-6-astra", 10, 1, 50],
+  ])("%s", (id, input, cached, output) => {
+    expect(getModel(id)).toMatchObject({
+      provider: "openai",
+      routes: {
+        native: { provider: "openai", modelId: id, endpoint: "language" },
+        codexSdk: { modelId: id },
+      },
+    });
+    expect(
+      costForTextUsage(id, {
+        inputTokens: 100_000,
+        outputTokens: 100_000,
+        cachedInputTokens: 100_000,
+      }),
+    ).toBeCloseTo((cached + output) / 10, 9);
+    expect(
+      costForTextUsage(id, { inputTokens: 100_000, outputTokens: 0 }),
+    ).toBeCloseTo(input / 10, 9);
+    // Above 272K prompt tokens the whole request bills at 2x input, 1.5x output.
+    expect(
+      costForTextUsage(id, { inputTokens: 300_000, outputTokens: 100_000 }),
+    ).toBeCloseTo(
+      (300_000 * input * 2 + 100_000 * output * 1.5) / 1_000_000,
+      9,
+    );
+  });
+});
+
+describe("Grok 4.7", () => {
+  test("is a pricing-only xAI model", () => {
+    expect(getModel("grok-4.7")).toMatchObject({
+      provider: "xai",
+      pricingOnly: true,
+      routes: {},
+    });
+    for (const model of modelsByProvider("xai")) {
+      expect(model.pricingOnly).toBe(true);
+    }
+  });
+
+  test("prices short prompts at $2 / $0.50 cached / $6 per 1M", () => {
+    // 600 uncached input, 400 cached input (a subset of input), 200 output.
+    expect(
+      costForTextUsage("grok-4.7", {
+        inputTokens: 1000,
+        cachedInputTokens: 400,
+        outputTokens: 200,
+      }),
+    ).toBeCloseTo(2600e-6, 12);
+  });
+
+  test("bills every token at 2x once the prompt reaches 200k tokens", () => {
+    const usage = { cachedInputTokens: 100_000, outputTokens: 1000 };
+    expect(
+      costForTextUsage("grok-4.7", { ...usage, inputTokens: 199_999 }),
+    ).toBeCloseTo((99_999 * 2 + 100_000 * 0.5 + 1000 * 6) / 1e6, 9);
+    expect(
+      costForTextUsage("grok-4.7", { ...usage, inputTokens: 200_000 }),
+    ).toBeCloseTo(((100_000 * 2 + 100_000 * 0.5 + 1000 * 6) * 2) / 1e6, 9);
   });
 });
