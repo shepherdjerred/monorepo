@@ -19,6 +19,7 @@ import {
   fetchFullMatchTeams,
   type LakeMatchParticipantRow,
 } from "#src/reports/duckdb/consumer/profile-lake-reads.ts";
+import { ALL_POPULATION } from "#src/reports/duckdb/lake/all-population.ts";
 
 function requiredFirst(
   rows: LakeMatchParticipantRow[],
@@ -186,7 +187,8 @@ export async function supportedExploreMatchIds(input: {
 }): Promise<Set<string>> {
   const lookup =
     input.lookup ??
-    (async (matchId: RiotMatchId) => await fetchFullMatch({ matchId }));
+    (async (matchId: RiotMatchId) =>
+      await fetchFullMatch({ matchId, population: ALL_POPULATION }));
   const supported = await Promise.all(
     [...input.matchIds].map(async (matchId) => {
       const rows = await lookup(matchId);
@@ -210,8 +212,14 @@ export async function hydrateExploreMatchCards(input: {
   return await Promise.all(
     input.requests.map(async (request) => {
       const [rows, teamRows] = await Promise.all([
-        fetchFullMatch({ matchId: request.matchId }),
-        fetchFullMatchTeams({ matchId: request.matchId }),
+        fetchFullMatch({
+          matchId: request.matchId,
+          population: ALL_POPULATION,
+        }),
+        fetchFullMatchTeams({
+          matchId: request.matchId,
+          population: ALL_POPULATION,
+        }),
       ]);
       return ExploreMatchCardSchema.parse({
         size: request.size,

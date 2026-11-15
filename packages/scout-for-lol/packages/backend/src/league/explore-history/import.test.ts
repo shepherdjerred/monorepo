@@ -63,7 +63,7 @@ vi.doMock("#src/reports/duckdb/lake.ts", () => ({
     _dir: string,
     work: (files: object) => Promise<unknown>,
   ) => work({}),
-  buildMatchesSource: () => ({ sql: "known matches", params: [] }),
+  buildMatchDimensionSource: () => ({ sql: "known matches", params: [] }),
   listParam: (values: unknown) => values,
 }));
 const { importExploreRankedHistory } = await import("./import.ts");

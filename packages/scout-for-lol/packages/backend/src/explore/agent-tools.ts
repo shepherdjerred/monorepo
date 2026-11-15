@@ -44,6 +44,7 @@ import {
 } from "#src/reports/ai/scoutql-tools.ts";
 import { fetchMatchSupport } from "#src/reports/duckdb/community/match-support.ts";
 import { ScopeRefusedError } from "#src/reports/duckdb/plan-source.ts";
+import { ScanBudgetExceededError } from "#src/reports/duckdb/plan-budget.ts";
 import { resolvePlayerIdentities } from "#src/reports/identity.ts";
 import { executeReportQuery } from "#src/reports/query/query-engine.ts";
 import {
@@ -184,6 +185,7 @@ export function createExploreTools(options: ExploreToolsOptions) {
           query: inputData.query,
           guildIds: turn.guildIds,
           abortSignal: params.abortSignal,
+          population: turn.population,
         });
         const candidates = await Promise.all(
           found.map(async (identity) => {
@@ -264,6 +266,7 @@ export function createExploreTools(options: ExploreToolsOptions) {
           prisma,
           scope: turn.scope,
           askerGuildIds: turn.guildIds,
+          population: turn.population,
           queryText: validation.formattedQueryText,
           rowLimitCeiling: EXPLORE_MODEL_PREVIEW_MAX_ROWS,
           abortSignal: params.abortSignal,
@@ -279,6 +282,10 @@ export function createExploreTools(options: ExploreToolsOptions) {
             return {
               refused: `${error.message} Run it again with servers null.`,
             };
+          }
+          // Too wide a global scan: the fix is a narrower window, not a retry.
+          if (error instanceof ScanBudgetExceededError) {
+            return { refused: error.message };
           }
           throw error;
         });

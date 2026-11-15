@@ -28,6 +28,7 @@ describe("resolveTurnScope", () => {
       ok: true,
       scope: GLOBAL_SCOPE,
       guildIds: [ALPHA, BETA],
+      population: "all",
     });
   });
 
@@ -36,6 +37,7 @@ describe("resolveTurnScope", () => {
       ok: true,
       scope: guildScope(ALPHA),
       guildIds: [ALPHA],
+      population: "tracked",
     });
   });
 
@@ -45,6 +47,7 @@ describe("resolveTurnScope", () => {
       ok: true,
       scope: { kind: "servers", serverIds: [ALPHA, BETA] },
       guildIds: [ALPHA, BETA],
+      population: "tracked",
     });
   });
 

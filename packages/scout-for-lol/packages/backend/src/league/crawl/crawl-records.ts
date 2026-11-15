@@ -32,7 +32,8 @@ export function isCrawlableMatch(envelope: CrawlMatchEnvelope): boolean {
   );
 }
 
-const REDUCED_EVENT_TYPES: ReadonlySet<string> = new Set([
+/** The timeline events a crawled match keeps; the lake reads nothing else from them. */
+export const REDUCED_EVENT_TYPES: ReadonlySet<string> = new Set([
   "ITEM_PURCHASED",
   "ITEM_SOLD",
   "ITEM_DESTROYED",

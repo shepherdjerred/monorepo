@@ -19,11 +19,12 @@ import { resolveLakeDir } from "#src/report-lake/paths.ts";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
 import { bindParams } from "#src/reports/duckdb/lake-reads.ts";
 import {
-  buildMatchesSource,
+  buildMatchDimensionSource,
   listParam,
   withLakeQueryRetry,
 } from "#src/reports/duckdb/lake.ts";
 import { runSettledWorkers } from "#src/league/explore-history/worker-pool.ts";
+import { ALL_POPULATION } from "#src/reports/duckdb/lake/all-population.ts";
 
 const MAX_PARALLEL_MATCH_READS = 5;
 
@@ -34,10 +35,14 @@ async function fetchKnownMatchIds(
 ): Promise<Set<string>> {
   if (matchIds.length === 0) return new Set();
   return await withLakeQueryRetry(resolveLakeDir(), async (files) => {
-    const source = buildMatchesSource(files, {
-      sql: "match_id IN (SELECT unnest(?))",
-      params: [listParam(matchIds)],
-    });
+    // A crawled game already answers a global question, so it is not fetched
+    // from Riot again. It stays crawl-only: the import does not copy it into
+    // the tracked lake, and retention drops it with its crawl day.
+    const source = buildMatchDimensionSource(
+      files,
+      { sql: "match_id IN (SELECT unnest(?))", params: [listParam(matchIds)] },
+      { population: ALL_POPULATION },
+    );
     if (source === undefined) return new Set();
     return await withDuckDBConnection(async (session) => {
       const rows = await session.run(

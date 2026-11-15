@@ -32,6 +32,7 @@ import {
   type BoundParam,
   type SqlFragment,
 } from "#src/reports/duckdb/lake.ts";
+import type { LakePopulation } from "#src/reports/duckdb/lake/population.ts";
 
 const LakeIntSchema = z.union([z.bigint(), z.number()]).transform(Number);
 
@@ -112,6 +113,8 @@ export type LakeMatchParticipantRow = z.infer<typeof MatchParticipantRowSchema>;
 export async function fetchFullMatch(options: {
   matchId: RiotMatchId;
   lakeDir?: string;
+  /** `all` finds a crawled game too (Explore's match cards); default tracked. */
+  population?: LakePopulation;
 }): Promise<LakeMatchParticipantRow[]> {
   return await withLakeQueryRetry(
     options.lakeDir ?? resolveLakeDir(),
@@ -123,6 +126,7 @@ export async function fetchFullMatch(options: {
           params: [scalarParam(options.matchId)],
         },
         MATCH_UI_READ_COLUMNS,
+        { population: options.population },
       );
       if (source === undefined) return [];
       return await runSource({
@@ -147,14 +151,16 @@ export async function fetchFullMatch(options: {
 export async function fetchFullMatchTeams(options: {
   matchId: RiotMatchId;
   lakeDir?: string;
+  population?: LakePopulation;
 }): Promise<MatchTeamLakeRow[]> {
   return await withLakeQueryRetry(
     options.lakeDir ?? resolveLakeDir(),
     async (files) => {
-      const source = buildMatchTeamsSource(files, {
-        sql: "match_id = ?",
-        params: [scalarParam(options.matchId)],
-      });
+      const source = buildMatchTeamsSource(
+        files,
+        { sql: "match_id = ?", params: [scalarParam(options.matchId)] },
+        { population: options.population },
+      );
       if (source === undefined) return [];
       return await runSource({
         source,

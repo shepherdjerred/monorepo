@@ -207,6 +207,7 @@ export function createAnalysisTools(
             queryText: input.queryText,
             scope: scope.scope,
             askerGuildIds: scope.guildIds,
+            population: scope.population,
             rowLimitCeiling: 50_001,
             abortSignal: params.abortSignal,
           });

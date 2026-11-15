@@ -2413,9 +2413,32 @@ stored per UTC day.
     rebuild and at compaction: a match naming an erased player is dropped.
     Rewriting already-published days and raw segments on erasure is the later
     deletion pipeline's job.
-  - Crawl files are listed in `LakeFiles.crawl` only when the build's crawl
-    schema is current, and no reader uses them yet: every tracked read is
+  - Crawl files are listed in `LakeFiles.crawl` (with ingest day and size)
+    only when the build's crawl schema is current. Every tracked read is
     byte-identical with or without them (`crawl-lake-isolation.test.ts`).
+- **Populations.** Lake source builders take `population: "tracked" | "all"`,
+  default `tracked`. `all` unions the crawl branch by name: no dedupe window
+  (the crawl stores a match once), anti-joined on every tracked match id so a
+  tracked copy always wins, with a `provenance` column (`'tracked'` or
+  `'crawl'`, also a ScoutQL column). The `all` value is branded and minted only
+  by `reports/duckdb/lake/all-population.ts`; `all-population.test.ts`
+  allow-lists its importers: global Explore turns (`server-scope.ts`, so
+  `run_report_query`, `materialize_query_dataset` and `resolve_player` with
+  `servers: null`), `riot-player-tools.ts`, the on-demand import's known-id
+  check, the Explore match router and match cards, and `review_match`'s
+  crawled-game answer. Dares, progression, community, consumer and
+  server-scope reads stay tracked; a server scope refuses `all`.
+- **Global cost guards.** A global plan opens only the crawl ingest days that
+  can hold a game in its window (`[start, end + 28 days]`), then
+  `enforceCrawlScanBudget` (beside `enforcePlanNodeBudget`) refuses a plan
+  whose remaining crawl Parquet exceeds 3 GiB, telling the asker to narrow the
+  window. Identity resolution reads the narrow identity dimension
+  (`buildIdentityDimensionSource`: Riot ID, match time and dedupe key) instead
+  of whole participant rows. Timeline event plans read crawled timelines only
+  when a top-level filter restricts `event_type` to item and skill events;
+  frames never come from the crawl, and crawled games write no
+  `timeline_coverage`. `review_match` on a crawled game answers that Scout has
+  no stored match document for it.
 - **Metrics.** `scout_crawl_matches_crawled_total`, `scout_crawl_frontier_size`,
   `scout_crawl_budget_refusals_total{reason}`, `scout_crawl_riot_429_total` and
   `scout_crawl_ticks_total`.

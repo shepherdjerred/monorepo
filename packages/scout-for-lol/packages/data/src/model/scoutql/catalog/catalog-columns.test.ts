@@ -105,6 +105,9 @@ describe("virtual dimensions match what the engine can compute", () => {
       .map((column) => column.name);
     expect(virtuals).toEqual([
       "player",
+      // 'tracked' or 'crawl', added per union branch (column-map.ts
+      // PROVENANCE_COLUMN); 'crawl' only in a global query.
+      "provenance",
       "champion",
       "patch",
       "outcome",

@@ -12,6 +12,10 @@ import {
   summarizeRecordedMatch,
 } from "#src/explore/analysis/match-review.ts";
 import { readRawDocuments } from "#src/explore/analysis/raw-lake-read.ts";
+import {
+  CRAWLED_MATCH_REVIEW_REFUSAL,
+  isCrawlOnlyMatch,
+} from "#src/explore/analysis/crawled-match.ts";
 import type { ToolTracker } from "#src/reports/ai/scoutql-tools.ts";
 
 /**
@@ -75,6 +79,19 @@ export function createMatchReviewTools(
       execute: (input) =>
         track("review_match", async () => {
           const data = await documentsFor(input.matchId);
+          const hasMatchDocument = data.documents.some(
+            (document) =>
+              document.matchId === input.matchId && document.kind === "match",
+          );
+          if (
+            !hasMatchDocument &&
+            (await isCrawlOnlyMatch({
+              matchId: input.matchId,
+              abortSignal: params.abortSignal,
+            }))
+          ) {
+            return z.json().parse(CRAWLED_MATCH_REVIEW_REFUSAL);
+          }
           const result =
             input.participantId === null
               ? recordedMatchRoster(data, input.matchId)
