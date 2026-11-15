@@ -33,33 +33,8 @@ export async function sweepDownloads(
     await context.refreshWriterLease();
     await context.refreshExclusionProofs();
     await sweepSubtitleReplacements(context);
-    const runtime = await requireActiveRuntime(context.db);
-    if (!runtime.active) await settleUnstartedAcquisitionHolds(context.db);
   }
   return await sweepDownloadAttempts(context, cursor);
-}
-
-/**
- * Inactive runtime deferred these commands before any attempt or torrent.
- * Completing them drops the reconciliation page without retrying an external write.
- * The next due bucket queues a new command once the runtime is active.
- */
-export async function settleUnstartedAcquisitionHolds(
-  db: MediaAutomationContext["db"],
-): Promise<number> {
-  return db.$executeRaw`
-    UPDATE "Operation" AS operation
-    SET status = 'completed'::"OperationStatus",
-        result = COALESCE(operation.result, '{}'::jsonb) || jsonb_build_object('reason', 'runtime_observe'),
-        "updatedAt" = CURRENT_TIMESTAMP
-    WHERE operation.status = 'reconciling'
-      AND operation.result->>'reason' = 'acquisition_disabled'
-      AND NOT EXISTS (
-        SELECT 1 FROM "AcquisitionAttempt" AS attempt
-        WHERE attempt."operationId" = operation.id
-           OR attempt."coordinatorOperationId" = operation.id
-      )
-  `;
 }
 
 async function sweepDownloadAttempts(
