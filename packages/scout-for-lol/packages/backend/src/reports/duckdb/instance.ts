@@ -133,7 +133,80 @@ type DuckDBPool = {
 const MAX_CONCURRENT_MAINTENANCE_CONNECTIONS = 1;
 const MAINTENANCE_THREADS = "2";
 const MAINTENANCE_MEMORY_LIMIT = "2GB";
-const MAINTENANCE_MAX_TEMP_SIZE = "4GiB";
+
+const DEFAULT_SPILL_BUDGET = "7GiB";
+const MIB = 1024 ** 2;
+const GIB = 1024 ** 3;
+
+/**
+ * The most the maintenance instance may spill.
+ *
+ * Every maintenance statement is a streaming COPY. Folds and rebuilds feed
+ * NDJSON to Parquet in batches of at most 64 MiB, with partition writers
+ * flushed every 2,048 rows and at most four open (writes/parquet.ts).
+ * `compactCrawlDay` and `rebuildCrawlDay` read one ingest day, tens to low
+ * hundreds of MB of Parquet at the top crawl budget, and write one file with
+ * no ORDER BY, aggregate or wide join; the only join is the erased-match
+ * filter over a short id list. None of them holds sort or hash state past
+ * the 2 GB memory limit, so spill is a margin, not a working set. Before the
+ * split these ran under the report instance's cap; carving 1 GiB out of that
+ * same budget keeps the process total where it was.
+ */
+const MAINTENANCE_SPILL_CAP_BYTES = GIB;
+
+const SIZE_UNITS: Record<string, number> = {
+  b: 1,
+  kb: 1000,
+  mb: 1000 ** 2,
+  gb: 1000 ** 3,
+  tb: 1000 ** 4,
+  kib: 1024,
+  mib: MIB,
+  gib: GIB,
+  tib: 1024 ** 4,
+};
+
+/** Bytes in a DuckDB size string such as `7GiB` or `3GB`. */
+function sizeBytes(value: string): number {
+  const match = /^(\d+(?:\.\d+)?) ?([a-z]*)$/iu.exec(value.trim());
+  const suffix = match?.[2] ?? "";
+  const unit = SIZE_UNITS[suffix === "" ? "b" : suffix.toLowerCase()];
+  if (unit === undefined || match?.[1] === undefined) {
+    throw new Error(`Not a DuckDB size: ${value}`);
+  }
+  return Math.floor(Number(match[1]) * unit);
+}
+
+export type DuckDbSpillBudgets = {
+  reportBytes: number;
+  maintenanceBytes: number;
+  /** The settings DuckDB receives, in whole MiB. */
+  report: string;
+  maintenance: string;
+};
+
+/**
+ * Split the process's one spill budget between the two instances.
+ *
+ * `REPORT_DUCKDB_MAX_TEMP_SIZE` is the cap the deployment derives from the
+ * scratch volume it mounts (homelab `SCOUT_DUCKDB_SCRATCH`: the volume size
+ * less headroom), so it is the single declared size. Both instances spill to
+ * that volume, so their caps are carved from it rather than set beside it:
+ * maintenance takes at most 1 GiB (and never more than a quarter), report
+ * queries keep the rest, and the two always sum to no more than the budget.
+ */
+export function duckDbSpillBudgets(totalSpill: string): DuckDbSpillBudgets {
+  const total = sizeBytes(totalSpill);
+  const maintenanceBytes =
+    Math.floor(Math.min(MAINTENANCE_SPILL_CAP_BYTES, total / 4) / MIB) * MIB;
+  const reportBytes = Math.floor((total - maintenanceBytes) / MIB) * MIB;
+  return {
+    reportBytes,
+    maintenanceBytes,
+    report: `${(reportBytes / MIB).toString()}MiB`,
+    maintenance: `${(maintenanceBytes / MIB).toString()}MiB`,
+  };
+}
 
 const reportPool: DuckDBPool = {
   name: "report",
@@ -154,17 +227,21 @@ function spillSettings(pool: DuckDBPool): Record<string, string> {
   const configuredTempDir: unknown = configuration.reportDuckDbTempDir;
   const configuredMaxTemp: unknown = configuration.reportDuckDbMaxTempSize;
   if (typeof configuredTempDir !== "string") return {};
+  const budgets = duckDbSpillBudgets(
+    typeof configuredMaxTemp === "string"
+      ? configuredMaxTemp
+      : DEFAULT_SPILL_BUDGET,
+  );
   // A query larger than memory_limit spills here instead of failing.
   if (pool.name === "maintenance") {
     return {
       temp_directory: path.join(configuredTempDir, "maintenance"),
-      max_temp_directory_size: MAINTENANCE_MAX_TEMP_SIZE,
+      max_temp_directory_size: budgets.maintenance,
     };
   }
   return {
     temp_directory: configuredTempDir,
-    max_temp_directory_size:
-      typeof configuredMaxTemp === "string" ? configuredMaxTemp : "7GiB",
+    max_temp_directory_size: budgets.report,
   };
 }
 

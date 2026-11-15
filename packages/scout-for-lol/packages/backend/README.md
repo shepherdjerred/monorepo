@@ -281,9 +281,13 @@ output writers keeps wide documents within the existing DuckDB budget.
 
 Lake writes — folds, rebuilds and crawl-day compaction — run on a separate
 `maintenance` DuckDB instance: one connection at a time, 2 threads, a 2 GB
-memory limit, spilling to `<REPORT_DUCKDB_TEMP_DIR>/maintenance` (at most
-4 GiB). Report queries keep their own instance and both slots, so a long fold
-or nightly rebuild no longer halves interactive query capacity. The instance
+memory limit, spilling to `<REPORT_DUCKDB_TEMP_DIR>/maintenance`. Report
+queries keep their own instance and both slots, so a long fold or nightly
+rebuild no longer halves interactive query capacity. Both instances spill to
+the same scratch volume, so `REPORT_DUCKDB_MAX_TEMP_SIZE` (7 GiB of the 8 GiB
+volume as deployed) is split between them, never added to: maintenance gets
+at most 1 GiB, since all of its work is streaming COPY, and report queries
+keep the rest (`duckDbSpillBudgets` in `reports/duckdb/instance.ts`). The instance
 is created on first use, so only the pod that publishes the lake pays for it.
 
 The GitOps child sync wait covers the same 40-minute cold-start budget as the
