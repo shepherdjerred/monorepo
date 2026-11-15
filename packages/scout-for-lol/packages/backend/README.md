@@ -2468,8 +2468,11 @@ stored per UTC day.
     ledger at the rewritten segments. After publish it sets `lakeErasedAt`.
     A rewritten segment keeps every other line byte for byte, so the rewrite
     is deterministic and a second run is a no-op.
-  - Backups keep prior versions for 30 days. Tracked-corpus erasure is not
-    covered.
+  - Backups are not rewritten. Raw segments: the Backblaze
+    `seaweedfs-backups` bucket keeps a deleted object 30 days. Lake and
+    PostgreSQL volumes: Velero snapshots live up to 90 days (monthly TTL),
+    and `sjerred-velero` keeps hidden versions 30 more. PostgreSQL has no WAL
+    archive. Tracked-corpus erasure is not covered.
   - Crawl files are listed in `LakeFiles.crawl` (with ingest day and size)
     only when the build's crawl schema is current. Every tracked read is
     byte-identical with or without them (`crawl-lake-isolation.test.ts`).

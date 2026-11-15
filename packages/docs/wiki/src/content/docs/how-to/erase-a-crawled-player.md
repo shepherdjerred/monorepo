@@ -93,8 +93,22 @@ where the last one stopped.
    crawled games.
 
 :::caution[Copies outside the live system]
-Database and object-store backups keep prior versions for 30 days, so an erased
-player is gone from backups 30 days after the request completes. The lake keeps
+Erasure does not reach backups. Each store keeps the player until its own
+retention expires:
+
+- Raw segments (`crawl/v1` in the `scout-<stage>` SeaweedFS bucket):
+  `filer.backup` mirrors the delete to the Backblaze `seaweedfs-backups`
+  bucket, which keeps the previous version for 30 days.
+- Report lake (the `scout-storage-claim` volume) and PostgreSQL (the
+  `pgdata-scout-<stage>-postgresql-0` volume): Velero snapshots both volumes
+  every 6 hours (kept 3 days), daily (7 days), weekly (30 days) and monthly
+  (90 days). The player stays in the monthly snapshot for up to 90 days. The
+  Backblaze `sjerred-velero` bucket then keeps hidden versions a further 30
+  days.
+- PostgreSQL has no WAL archive: the `archive_command` is `/bin/true`, so the
+  snapshots above are its only backup.
+
+The lake keeps
 the build before the current one on disk until the next build publishes,
 normally the next fold. Nothing reads it once a newer build is current.
 :::
