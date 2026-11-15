@@ -344,6 +344,13 @@ export const zfsDatasetSnapshotCount = new Gauge({
   registers: [register],
 });
 
+export const veleroManagedSnapshotCount = new Gauge({
+  name: "velero_managed_snapshot_count",
+  help: "Velero schedule-managed ZFS snapshot count per PVC dataset (live + orphan)",
+  labelNames: ["node", "pool", "dataset"] as const,
+  registers: [register],
+});
+
 export const veleroOrphanBackupCrsTotal = new Gauge({
   name: "velero_orphan_backup_crs_total",
   help: "ZFSBackup CRs whose Velero Backup is gone and which are older than the 24h fence",
