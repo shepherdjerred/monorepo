@@ -146,6 +146,11 @@ export function createTemporalServerDeployment(
         // 3.9 GiB of its 4 GiB for days before an OOM kill. A soft limit at
         // 80% makes the runtime collect harder instead of crossing the limit.
         GOMEMLIMIT: EnvValue.fromValue("3200MiB"),
+        // Pin the runtime to two threads. An unset GOMAXPROCS follows the
+        // cgroup limit when the image's Go is container-aware, and the host
+        // CPU count otherwise. Two threads cover frontend, history, and
+        // matching for the current long-poll load without taking the node.
+        GOMAXPROCS: EnvValue.fromValue("2"),
       },
       securityContext: {
         user: UID,
@@ -168,9 +173,15 @@ export function createTemporalServerDeployment(
         { path: "/tmp", volume: tmpVolume },
       ],
       resources: {
+        // Measured 2026-11-15 on torvalds (3.2 of 27 allocatable cores in
+        // use): the container sat at its 1 CPU limit for six hours and 99.9%
+        // of CFS periods were throttled. The alert has been open since
+        // 2026-11-10. Request the core it already consumes. The limit is 4x
+        // that so two GOMAXPROCS threads plus GC fit under the quota instead
+        // of tripping it every period.
         cpu: {
-          request: Cpu.millis(100),
-          limit: Cpu.millis(1000),
+          request: Cpu.millis(1000),
+          limit: Cpu.millis(4000),
         },
         // Measured working set (7d, 2026-10-31): p95 3.16Gi, max 3.5Gi.
         // Request p95 plus a margin; the limit leaves room above the max.

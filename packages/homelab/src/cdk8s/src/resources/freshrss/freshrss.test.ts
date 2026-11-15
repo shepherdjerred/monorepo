@@ -90,6 +90,12 @@ describe("FreshRSS chart", () => {
                   .object({
                     name: z.string(),
                     args: z.array(z.string()).optional(),
+                    resources: z
+                      .object({
+                        requests: z.record(z.string(), z.string()),
+                        limits: z.record(z.string(), z.string()),
+                      })
+                      .optional(),
                     securityContext: z.unknown().optional(),
                     volumeMounts: z.array(z.unknown()),
                   })
@@ -121,6 +127,10 @@ describe("FreshRSS chart", () => {
     expect(localSettingsReconciler.args?.[0]).toContain(
       "reconcile-filters.php",
     );
+    expect(localSettingsReconciler.resources).toEqual({
+      requests: { cpu: "5m", memory: "16Mi" },
+      limits: { cpu: "1000m", memory: "64Mi" },
+    });
     expect(
       z
         .object({

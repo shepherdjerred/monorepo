@@ -160,8 +160,8 @@ describe("Temporal server configuration", () => {
     const containerResources = serverDeployment().containers[0]?.resources;
 
     expect(containerResources).toEqual({
-      requests: { cpu: "100m", memory: "3584Mi" },
-      limits: { cpu: "1000m", memory: "5120Mi" },
+      requests: { cpu: "1000m", memory: "3584Mi" },
+      limits: { cpu: "4000m", memory: "5120Mi" },
     });
   });
 
@@ -174,6 +174,7 @@ describe("Temporal server configuration", () => {
     );
     // 3200 MiB of the 4096 MiB limit leaves room for non-heap memory.
     expect(env.get("GOMEMLIMIT")).toBe("3200MiB");
+    expect(env.get("GOMAXPROCS")).toBe("2");
   });
 
   test("drops only the unused matching-service histograms", () => {
