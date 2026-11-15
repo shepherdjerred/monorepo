@@ -113,6 +113,9 @@ are one-shot and each command starts a new saved conversation.
 - Queue-canary replay retains its original capability inventory behind a Temporal
   patch marker. New canaries use the current background-job contract; retired
   kinds are accepted only when replaying the corresponding unpatched history.
+  New canaries probe each slot-budgeted Activity queue on its reserved
+  `-probe` sibling queue, so real work holding a slot cannot fail a release.
+  Unpatched histories keep probing the work queues.
 - Applied migrations preserve database upgrade history. Current schemas exclude
   the retired economy, and migration removes its terminal delivery/work metadata
   while retaining Dare receipts and refusing unfinished or uncertain deliveries.

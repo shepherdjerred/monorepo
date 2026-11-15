@@ -12,16 +12,19 @@ import {
   ScoutActiveBackgroundJobKindSchema,
   SCOUT_BACKGROUND_JOB_KINDS_V1,
   ScoutQueueCanaryProbeResultSchema,
+  SCOUT_RESERVED_PROBE_QUEUE_CLASSES,
   type ScoutQueueCanaryInput,
   type ScoutQueueCanaryProbeInput,
   type ScoutQueueCanaryProbeResult,
 } from "#src/contracts.ts";
-import { scoutTaskQueues } from "#src/identifiers.ts";
+import { scoutProbeTaskQueues, scoutTaskQueues } from "#src/identifiers.ts";
 import { createScoutWorkerPool } from "./worker-pool.test-fixtures.ts";
 
 let environment: TestWorkflowEnvironment;
 const pool = createScoutWorkerPool();
 const queues = scoutTaskQueues("dev");
+const probeQueues = scoutProbeTaskQueues("dev");
+const reservedProbePatch = "scout-queue-canary-reserved-probe-slots";
 const workflowsPath = new URL("index.ts", import.meta.url).pathname;
 const capabilityPatch = "scout-queue-canary-background-kinds-v3";
 type History = Awaited<ReturnType<WorkflowHandle["fetchHistory"]>>;
@@ -51,6 +54,13 @@ function hasCapabilityPatch(
   });
 }
 
+function scheduledActivityQueues(history: History): string[] {
+  return (history.events ?? []).flatMap((event) => {
+    const name = event.activityTaskScheduledEventAttributes?.taskQueue?.name;
+    return typeof name === "string" ? [name] : [];
+  });
+}
+
 /** Compile the retained pre-patch branch without recording the new marker. */
 async function legacyWorkflowBundle(v2 = false) {
   const directory = await mkdtemp(path.join(tmpdir(), "scout-canary-legacy-"));
@@ -60,8 +70,12 @@ async function legacyWorkflowBundle(v2 = false) {
       loader,
       String.raw`module.exports = function(source) {
       const marker = /patched\(\s*["']scout-queue-canary-background-kinds-v[23]["']\s*\)/g;
+      const reserved = /patched\(\s*["']scout-queue-canary-reserved-probe-slots["']\s*\)/g;
       if ((source.match(marker) || []).length !== 2) throw Error("Expected exact retained patch boundary");
-      return source.replace(marker, match => match.includes("v3") || !${JSON.stringify(v2)} ? "false" : match);
+      if ((source.match(reserved) || []).length !== 1) throw Error("Expected exact reserved-probe patch boundary");
+      return source
+        .replace(reserved, "false")
+        .replace(marker, match => match.includes("v3") || !${JSON.stringify(v2)} ? "false" : match);
     };`,
     );
     return await bundleWorkflowCode({
@@ -112,6 +126,22 @@ beforeEach(async () => {
       }),
     );
   }
+  for (const queueClass of SCOUT_RESERVED_PROBE_QUEUE_CLASSES) {
+    await pool.start(
+      await Worker.create({
+        connection: environment.nativeConnection,
+        taskQueue: probeQueues[queueClass],
+        activities: {
+          probeQueue: (input: ScoutQueueCanaryProbeInput) =>
+            Promise.resolve({
+              ...input,
+              taskQueue: queues[queueClass],
+              probeTaskQueue: probeQueues[queueClass],
+            }),
+        },
+      }),
+    );
+  }
 }, 60_000);
 
 afterEach(async () => {
@@ -155,6 +185,7 @@ test("reports candidate-compiled capabilities instead of echoing the requested s
   }
   const history = await handle.fetchHistory();
   expect(hasCapabilityPatch(history)).toBe(true);
+  expect(hasCapabilityPatch(history, reservedProbePatch)).toBe(true);
   await Worker.runReplayHistory({ workflowsPath }, history);
   for (const kind of ["custom-nights-expiry", "unknown-job"]) {
     expect(
@@ -217,6 +248,16 @@ test.each([false, true])(
     expect(
       hasCapabilityPatch(history, "scout-queue-canary-background-kinds-v2"),
     ).toBe(v2);
+    expect(hasCapabilityPatch(history, reservedProbePatch)).toBe(false);
+    expect(scheduledActivityQueues(history).toSorted()).toEqual(
+      [
+        queues.realtime,
+        queues.interactive,
+        queues.background,
+        queues.lake,
+        queues.gateway,
+      ].toSorted(),
+    );
     expect(
       history.events?.at(-1)?.workflowExecutionCompletedEventAttributes,
     ).toBeDefined();
@@ -247,4 +288,33 @@ test("explicitly proves the gateway queue when Customs durability is requested",
     taskQueue: "scout-dev-gateway",
     backgroundJobKinds: undefined,
   });
+}, 30_000);
+
+test("probes every work queue from its reserved sibling, never from a work slot", async () => {
+  const handle = await environment.client.workflow.start(
+    "scoutQueueCanaryWorkflow",
+    {
+      taskQueue: queues.workflow,
+      workflowId: "canary-reserved-probe-slots",
+      args: [{ stage: "dev", canaryId: "reserved", includeGateway: true }],
+    },
+  );
+  const results = z
+    .array(ScoutQueueCanaryProbeResultSchema)
+    .parse(await handle.result());
+  expect(results).toHaveLength(5);
+  for (const queueClass of SCOUT_RESERVED_PROBE_QUEUE_CLASSES) {
+    expect(results).toContainEqual(
+      expect.objectContaining({
+        queueClass,
+        taskQueue: queues[queueClass],
+        probeTaskQueue: probeQueues[queueClass],
+      }),
+    );
+  }
+  const history = await handle.fetchHistory();
+  expect(scheduledActivityQueues(history).toSorted()).toEqual(
+    [...Object.values(probeQueues), queues.gateway].toSorted(),
+  );
+  await Worker.runReplayHistory({ workflowsPath }, history);
 }, 30_000);

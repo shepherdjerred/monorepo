@@ -250,6 +250,26 @@ export const ScoutQueueClassSchema = z.enum([
 ]);
 export type ScoutQueueClass = z.infer<typeof ScoutQueueClassSchema>;
 
+/**
+ * The Activity queue classes whose release-canary probe runs on a reserved
+ * sibling queue rather than on the work queue itself
+ * (`scoutProbeTaskQueues`).
+ *
+ * These queues run real work under deliberately small slot budgets — one slot
+ * each for `background` and `lake` — so a probe dispatched onto them waits
+ * behind whatever long Activity holds the slot, and a release gate that
+ * waited there measured load instead of the candidate. `gateway` is excluded
+ * because its queue runs nothing but the probe.
+ */
+export const ScoutReservedProbeQueueClassSchema = ScoutQueueClassSchema.exclude(
+  ["gateway"],
+);
+export type ScoutReservedProbeQueueClass = z.infer<
+  typeof ScoutReservedProbeQueueClassSchema
+>;
+export const SCOUT_RESERVED_PROBE_QUEUE_CLASSES =
+  ScoutReservedProbeQueueClassSchema.options;
+
 export const ScoutQueueCanaryInputSchema = z.object({
   stage: ScoutStageSchema,
   canaryId: OpaqueIdentifierSchema,
@@ -268,7 +288,13 @@ export type ScoutQueueCanaryProbeInput = z.infer<
 
 export const ScoutQueueCanaryProbeResultSchema =
   ScoutQueueCanaryProbeInputSchema.extend({
+    /** The work queue the probe proves is polled. */
     taskQueue: z.string().min(1),
+    /**
+     * The reserved probe queue the probe executed on, when it ran beside its
+     * work queue rather than on it (`scoutProbeTaskQueues`).
+     */
+    probeTaskQueue: z.string().min(1).optional(),
   });
 export type ScoutQueueCanaryProbeResult = z.infer<
   typeof ScoutQueueCanaryProbeResultSchema

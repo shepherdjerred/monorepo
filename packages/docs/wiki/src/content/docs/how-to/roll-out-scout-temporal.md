@@ -69,6 +69,12 @@ The result must name `scout-beta-realtime`, `scout-beta-interactive`,
 `scout-beta-background`, `scout-beta-lake`, and `scout-beta-gateway`. A missing result means that
 Activity Worker is not polling its declared queue; stop the rollout.
 
+Every result except `gateway` also names a `probeTaskQueue`, such as
+`scout-beta-background-probe`. The probe runs on that reserved queue, served by
+the same process as the work queue with its own slots, so a long Activity
+holding the single `background` or `lake` slot cannot delay the canary. The
+probe still fails if the work-queue Worker beside it is not running.
+
 ## Verify hosted queue ownership
 
 1. Confirm the application runs the `application` role, and the dedicated

@@ -140,6 +140,27 @@ export function lakeActivities(stage: ScoutStage) {
   });
 }
 
+/**
+ * The queue canary's probe budget. A probe does no work, so these bound how
+ * long the release gate waits for a poller, not how long work may run.
+ */
+export const QUEUE_PROBE_ACTIVITY_OPTIONS = {
+  startToCloseTimeout: "10 seconds",
+  scheduleToCloseTimeout: "1 minute",
+  retry: { maximumAttempts: 3 },
+} satisfies QueueActivityOptions;
+
+/**
+ * The canary probe on a queue that serves nothing else: a reserved
+ * `scout-{stage}-{class}-probe` queue, or `gateway`.
+ */
+export function queueProbeActivities(taskQueue: string) {
+  return proxyActivities<Pick<ScoutTemporalActivities, "probeQueue">>({
+    taskQueue,
+    ...QUEUE_PROBE_ACTIVITY_OPTIONS,
+  });
+}
+
 // ───────────────────────────────────────────────────────────────────────────
 // Durable match pipeline
 // ───────────────────────────────────────────────────────────────────────────

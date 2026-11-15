@@ -94,7 +94,7 @@ export async function runIngestionReconciliation(): Promise<void> {
   // during downtime recovery. Exactly one backend replica executes the
   // background activity queue (replicas: 1, Recreate strategy in the homelab
   // scout chart) and its worker runs one activity at a time
-  // (maxConcurrentActivityTaskExecutions: 1 in connected-runtime.ts), so the
+  // (`WORK_QUEUE_SLOTS` in activity-worker-plan.ts), so the
   // overlapping start dequeues only after the prior run finished — that
   // ordering is what lets the completion-recency check reliably observe the
   // previous run. The checkpoint lives on the BotState row rather than in
