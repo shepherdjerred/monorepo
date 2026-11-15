@@ -17,6 +17,8 @@ import {
 } from "#shared/plex-binding/watch.ts";
 import { MovieOperationV4Schema } from "#shared/movie-editions/lifecycle/automation-v4.ts";
 import { observeRequesterWatch } from "#automation/watch.ts";
+import { RequestInterestCommands } from "#infrastructure/request-interest/commands.ts";
+import { movieFixtureConsent } from "#testing/retention/movie-fixtures.ts";
 import { evaluateMovieRetentionV4 } from "./evaluate.ts";
 import { quarantineMovieFilesV4 } from "./quarantine.ts";
 
@@ -194,75 +196,126 @@ test.each(MovieEditionKeySchema.options)(
   60_000,
 );
 
-test("an actual quarantined named-cut unwatch queues its scoped restore without a default restore or new acquisition", async () => {
-  const { f, decisionId } = await quarantined("directors_cut");
-  expect(await evaluate(f, () => new Date())).toMatchObject({
-    status: "grace",
-  });
-  const original = await immutableParents(f, decisionId);
-  const watched = await quarantinedWatch(f);
-  const attempts = await f.db.acquisitionAttempt.findMany({
-    where: { mediaIds: { has: f.scope.mediaId } },
-    orderBy: { id: "asc" },
-  });
-  const target = await f.db.mediaIntent.findUniqueOrThrow({
-    where: {
-      mediaId_edition: { mediaId: f.scope.mediaId, edition: f.scope.edition },
-    },
-  });
-  f.source.wire.setWatched(false);
-  const execution = testPlexBindingExecution();
-  const budget = new PublicationAuthorityReadBudget();
-  expect(
-    await observeRequesterWatch(
-      {
-        ...f.context,
-        now: () => new Date(),
-        plexBindingExecution: () => execution,
-        movieManagement: { execution, budget },
-      },
-      f.scope.mediaId,
-      { edition: f.scope.edition },
-    ),
-  ).toEqual({ complete: true, reason: null });
-  expect(() => budget.consume(0)).not.toThrow();
-  const unwatched = await quarantinedWatch(f);
-  expect(unwatched.row.watched).toBe(false);
-  expect(unwatched.authority).toEqual(watched.authority);
-  const commands = await f.db.operation.findMany({
-    where: { targetId: f.scope.mediaId, kind: "restore_movie_edition_v4" },
-    include: { outbox: true },
-  });
-  expect(commands).toHaveLength(1);
-  const restore = commands[0];
-  if (restore === undefined)
-    throw new Error("Actual unwatch omitted its restore command");
-  expect(
-    MovieOperationV4Schema.parse(
-      z.object(MovieOperationV4Schema.shape).parse(restore.payload),
-    ),
-  ).toEqual({
-    schemaVersion: 4,
-    operationId: restore.id,
-    mediaId: f.scope.mediaId,
-    scope: f.scope,
-    generation: target.generation + 1,
-  });
-  expect(restore.outbox?.payload).toEqual(restore.payload);
-  expect(
-    await f.db.operation.count({
-      where: {
-        targetId: f.scope.mediaId,
-        kind: { in: ["restore_media", "restore_native_quarantine"] },
-      },
-    }),
-  ).toBe(0);
-  expect(
-    await f.db.acquisitionAttempt.findMany({
+test.each(["default", "directors_cut"] as const)(
+  "an actual quarantined %s unwatch remains observational until explicit Keep watching queues its exact scoped restore",
+  async (edition) => {
+    const { f, decisionId } = await quarantined(edition);
+    expect(await evaluate(f, () => new Date())).toMatchObject({
+      status: "grace",
+    });
+    const original = await immutableParents(f, decisionId);
+    const watched = await quarantinedWatch(f);
+    const attempts = await f.db.acquisitionAttempt.findMany({
       where: { mediaIds: { has: f.scope.mediaId } },
       orderBy: { id: "asc" },
-    }),
-  ).toEqual(attempts);
-  expect(f.source.wire.additions()).toBe(1);
-  expect(await immutableParents(f, decisionId)).toEqual(original);
-}, 60_000);
+    });
+    const { target, request } = await movieFixtureConsent(f, f.source.user.id);
+    expect(request).toMatchObject({
+      keepingPolicy: "temporary",
+      interestState: "finished",
+      interestReleaseReason: "watched",
+    });
+    f.source.wire.setWatched(false);
+    const execution = testPlexBindingExecution();
+    const budget = new PublicationAuthorityReadBudget();
+    expect(
+      await observeRequesterWatch(
+        {
+          ...f.context,
+          now: () => new Date(),
+          plexBindingExecution: () => execution,
+          movieManagement: { execution, budget },
+        },
+        f.scope.mediaId,
+        { edition: f.scope.edition },
+      ),
+    ).toEqual({ complete: true, reason: null });
+    expect(() => budget.consume(0)).not.toThrow();
+    const unwatched = await quarantinedWatch(f);
+    expect(unwatched.row.watched).toBe(false);
+    expect(unwatched.authority).toEqual(watched.authority);
+    expect(
+      await f.db.operation.count({
+        where: { targetId: f.scope.mediaId, kind: "restore_movie_edition_v4" },
+      }),
+    ).toBe(0);
+    expect(
+      await f.db.applicationEvent.count({
+        where: { mediaId: f.scope.mediaId, kind: "media_marked_unwatched" },
+      }),
+    ).toBe(0);
+    expect(
+      await f.db.mediaRequest.findUniqueOrThrow({ where: { id: request.id } }),
+    ).toEqual(request);
+    expect(
+      await f.db.mediaIntent.findUniqueOrThrow({
+        where: {
+          mediaId_edition: { mediaId: f.scope.mediaId, edition },
+        },
+      }),
+    ).toEqual(target);
+    expect(await immutableParents(f, decisionId)).toEqual(original);
+    expect(await evaluate(f, () => new Date())).toMatchObject({
+      status: "grace",
+      decisionId,
+    });
+    expect(
+      await evaluate(f, () => new Date(Date.now() + 8 * 86_400_000)),
+    ).toMatchObject({ status: "purge", decisionId });
+    expect(
+      await new RequestInterestCommands(f.db, { keepDays: 30 }).execute(
+        f.source.user,
+        crypto.randomUUID(),
+        {
+          schemaVersion: 1,
+          requestId: request.id,
+          expectedVersion: request.version,
+          expectedInterestRevision: request.interestRevision,
+          action: "continue",
+        },
+      ),
+    ).toMatchObject({
+      state: "following",
+      interestRevision: request.interestRevision + 1,
+    });
+    const commands = await f.db.operation.findMany({
+      where: { targetId: f.scope.mediaId, kind: "restore_movie_edition_v4" },
+      include: { outbox: true },
+    });
+    expect(commands).toHaveLength(1);
+    const restore = commands[0];
+    if (restore === undefined)
+      throw new Error(
+        "Explicit Keep watching omitted its scoped restore command",
+      );
+    expect(
+      MovieOperationV4Schema.parse(
+        z.object(MovieOperationV4Schema.shape).parse(restore.payload),
+      ),
+    ).toEqual({
+      schemaVersion: 4,
+      operationId: restore.id,
+      mediaId: f.scope.mediaId,
+      scope: f.scope,
+      generation: target.generation + 1,
+    });
+    expect(restore.outbox?.payload).toEqual(restore.payload);
+    expect(
+      await f.db.operation.count({
+        where: {
+          targetId: f.scope.mediaId,
+          kind: { in: ["restore_media", "restore_native_quarantine"] },
+        },
+      }),
+    ).toBe(0);
+    expect(
+      await f.db.acquisitionAttempt.findMany({
+        where: { mediaIds: { has: f.scope.mediaId } },
+        orderBy: { id: "asc" },
+      }),
+    ).toEqual(attempts);
+    expect(f.source.wire.additions()).toBe(1);
+    expect(await immutableParents(f, decisionId)).toEqual(original);
+  },
+  60_000,
+);

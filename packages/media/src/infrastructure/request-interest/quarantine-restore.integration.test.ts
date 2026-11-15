@@ -15,6 +15,8 @@ import { createMediaFileActivities } from "#automation/files/activities.ts";
 import { createPublicationActivities } from "#automation/publication.ts";
 import { createMovieRetentionFixture } from "#testing/movie-workflow/retention-fixture.ts";
 import { testPublicationExecution } from "#testing/publication-execution.ts";
+import { testPlexBindingExecution } from "#testing/plex-binding-execution.ts";
+import { observeRequesterWatch } from "#automation/watch.ts";
 import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { quarantineMovieFilesV4 } from "#automation/movie-editions/retention/quarantine.ts";
 import { restoreMovieFilesV4 } from "#automation/movie-editions/retention/restore.ts";
@@ -28,6 +30,7 @@ import {
 import { seedFixtureReleasedEpisodes } from "#testing/retention-interest.ts";
 import { preparePhysicalPublication } from "#automation/plex-binding/test-fixture.ts";
 import { createCoverageActivities } from "#automation/reconciliation/coverage.ts";
+import { continueQuarantinedInterest } from "./quarantine-release.test-fixture.ts";
 
 const h = automationTestHarness();
 const movies = retentionMovieFixtures();
@@ -41,9 +44,6 @@ type Subject = {
 
 async function continued(subject: Subject) {
   const { db, user, mediaId, edition } = subject;
-  const request = await db.mediaRequest.findUniqueOrThrow({
-    where: { userId_mediaId_edition: { userId: user.id, mediaId, edition } },
-  });
   const prior = await db.operation.findMany({
     where: { userId: user.id, targetId: mediaId },
     select: { id: true },
@@ -55,21 +55,12 @@ async function continued(subject: Subject) {
     where: { mediaIds: { has: mediaId } },
     orderBy: { id: "asc" },
   });
-  const commands = new RequestInterestCommands(db, { keepDays: 30 });
-  const key = crypto.randomUUID();
-  const input = {
-    schemaVersion: 1 as const,
-    requestId: request.id,
-    expectedVersion: request.version,
-    expectedInterestRevision: request.interestRevision,
-    action: "continue" as const,
-  };
-  const result = await commands.execute(user, key, input);
-  expect(result).toMatchObject({
-    state: "following",
-    version: request.version + 1,
-    interestRevision: request.interestRevision + 1,
-  });
+  const renewal = await continueQuarantinedInterest(
+    { db },
+    user,
+    mediaId,
+    edition,
+  );
   const operation = await db.operation.findMany({
     where: {
       userId: user.id,
@@ -86,7 +77,7 @@ async function continued(subject: Subject) {
   const target = await db.mediaIntent.findUniqueOrThrow({
     where: { mediaId_edition: { mediaId, edition } },
   });
-  expect(await commands.execute(user, key, input)).toEqual(result);
+  expect(await renewal.replay()).toEqual(renewal.result);
   expect(
     await db.mediaIntent.findUniqueOrThrow({
       where: { mediaId_edition: { mediaId, edition } },
@@ -204,6 +195,34 @@ test.each(["default", "directors_cut"] as const)(
         },
       },
     });
+    f.source.wire.setWatched(false);
+    const execution = testPlexBindingExecution();
+    expect(
+      await observeRequesterWatch(
+        {
+          ...f.context,
+          now: () => new Date(),
+          plexBindingExecution: () => execution,
+          movieManagement: {
+            execution,
+            budget: new PublicationAuthorityReadBudget(),
+          },
+        },
+        f.scope.mediaId,
+        { edition },
+      ),
+    ).toEqual({ complete: true, reason: null });
+    expect(
+      await f.db.operation.count({
+        where: {
+          targetId: f.scope.mediaId,
+          kind: "restore_movie_edition_v4",
+        },
+      }),
+    ).toBe(0);
+    expect(
+      await f.db.mediaRequest.findUniqueOrThrow({ where: { id: before.id } }),
+    ).toEqual(before);
     const command = await continued({
       db: f.db,
       user: f.source.user,

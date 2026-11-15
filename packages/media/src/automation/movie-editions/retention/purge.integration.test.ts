@@ -306,7 +306,7 @@ test.each(MovieEditionKeySchema.options)(
   60_000,
 );
 
-test.each(["keep", "generation", "unwatch", "sdk"] as const)(
+test.each(["keep", "generation", "renewed_unwatch", "sdk"] as const)(
   "%s protects an eligible quarantined movie and both captions from purge",
   async (change) => {
     const { f, input } = await ready("extended_cut");
@@ -324,14 +324,14 @@ test.each(["keep", "generation", "unwatch", "sdk"] as const)(
           until: new Date(Date.now() + 30 * 86_400_000),
         },
       });
-    if (change === "generation")
+    if (change === "generation" || change === "renewed_unwatch")
       await requestTestMovieV4(
         f.db,
         f.source.user,
         f.scope.mediaId,
         f.scope.edition,
       );
-    if (change === "unwatch") {
+    if (change === "renewed_unwatch") {
       f.source.wire.setWatched(false);
       expect(
         await observeRequesterWatch(f.context, f.scope.mediaId, {

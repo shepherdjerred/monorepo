@@ -30,12 +30,9 @@ export type QuarantineReleaseScope = {
 };
 
 export function finalQuarantineRelease(request: ReleasedRequest, now: Date) {
-  return (
-    currentReleasedInterest(request, now) &&
-    ["finished_manually", "dropped_manually", "lost_interest"].includes(
-      request.interestReleaseReason ?? "",
-    )
-  );
+  // Plex unwatch is observation, not renewed viewing consent. Automatic
+  // completion stays released until Keep watching or Request again.
+  return currentReleasedInterest(request, now);
 }
 
 /** Suppresses only this viewer's restore demand. Full physical-cohort removal

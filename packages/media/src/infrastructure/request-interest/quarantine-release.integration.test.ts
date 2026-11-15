@@ -10,7 +10,10 @@ import {
 } from "#testing/retention/movie-fixtures.ts";
 import { seedFixtureReleasedEpisodes } from "#testing/retention-interest.ts";
 import { preparePhysicalPublication } from "#automation/plex-binding/test-fixture.ts";
-import { prepareBoundRetention } from "#automation/retention/lifecycle.test-fixture.ts";
+import {
+  prepareBoundRetention,
+  defaultRetentionInterestSnapshot,
+} from "#automation/retention/lifecycle.test-fixture.ts";
 import { elapsedQuarantineClient } from "#automation/files/plex-binding/elapsed-quarantine.test-support.ts";
 import { createMediaFileActivities } from "#automation/files/activities.ts";
 import { RemovalPlanSchema } from "#automation/files/types.ts";
@@ -29,7 +32,10 @@ const h = automationTestHarness();
 const movies = retentionMovieFixtures();
 const closers = movies.closers;
 
-async function ordinary(scenario: InitialInterestScenario, shared = false) {
+async function ordinary(
+  scenario: InitialInterestScenario | "watched",
+  shared = false,
+) {
   const db = h.database();
   const files = shared
     ? await sharedTvFileFixture(db, mappedPublicationFixture)
@@ -40,7 +46,7 @@ async function ordinary(scenario: InitialInterestScenario, shared = false) {
     files,
     await preparePhysicalPublication(files),
     h.context(),
-    scenario,
+    scenario === "watched" ? undefined : scenario,
   );
   const timing = await elapsedQuarantineClient(db, {
     ...f.retention.input,
@@ -72,14 +78,7 @@ async function ordinary(scenario: InitialInterestScenario, shared = false) {
 async function assertStableFalse(f: Awaited<ReturnType<typeof ordinary>>) {
   const db = h.database();
   const ids = f.published.entry.mediaIds;
-  const requests = await db.mediaRequest.findMany({
-    where: { mediaId: { in: ids } },
-    orderBy: { id: "asc" },
-  });
-  const targets = await db.mediaIntent.findMany({
-    where: { mediaId: { in: ids }, edition: "default" },
-    orderBy: { mediaId: "asc" },
-  });
+  const interests = await defaultRetentionInterestSnapshot(db, ids);
   const restores = await db.operation.findMany({
     where: {
       kind: {
@@ -97,18 +96,7 @@ async function assertStableFalse(f: Awaited<ReturnType<typeof ordinary>>) {
     expect(await f.observe(false)).toEqual(
       ids.map(() => ({ complete: true, reason: null })),
     );
-  expect(
-    await db.mediaRequest.findMany({
-      where: { mediaId: { in: ids } },
-      orderBy: { id: "asc" },
-    }),
-  ).toEqual(requests);
-  expect(
-    await db.mediaIntent.findMany({
-      where: { mediaId: { in: ids }, edition: "default" },
-      orderBy: { mediaId: "asc" },
-    }),
-  ).toEqual(targets);
+  expect(await defaultRetentionInterestSnapshot(db, ids)).toEqual(interests);
   expect(
     await db.operation.findMany({
       where: {
@@ -145,6 +133,7 @@ test.each([
   "finished_manually",
   "dropped_manually",
   "owner_temporary",
+  "watched",
 ] as const)(
   "ordinary %s false remains observational and permits physical purge at the original seven-day deadline",
   async (scenario) => {
@@ -180,14 +169,19 @@ test.each([
   60_000,
 );
 
-test.each(["lost_interest", "finished_manually", "dropped_manually"] as const)(
+test.each([
+  "lost_interest",
+  "finished_manually",
+  "dropped_manually",
+  "watched",
+] as const)(
   "named %s false settles without reviving the claim or creating a restore",
   async (scenario) => {
     const f = await createMovieRetentionFixture(
       "directors_cut",
       movies.bytes(),
       true,
-      scenario,
+      scenario === "watched" ? undefined : scenario,
     );
     closers.push(f.close);
     const { due, now } = await acceptedFixtureMovieWarning(
@@ -212,6 +206,7 @@ test.each(["lost_interest", "finished_manually", "dropped_manually"] as const)(
         scope: f.scope,
       },
     );
+    f.source.wire.setWatched(false);
     const before = {
       request: await f.db.mediaRequest.findMany({
         where: { mediaId: f.scope.mediaId, edition: f.scope.edition },

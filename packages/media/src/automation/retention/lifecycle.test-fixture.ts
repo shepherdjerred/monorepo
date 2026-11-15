@@ -40,6 +40,23 @@ type RetentionFixtureOptions = {
   afterPublicationBeforeInterestCompletion?: () => Promise<void>;
 };
 
+/** Complete ordered consent and target state for observational watch checks. */
+export async function defaultRetentionInterestSnapshot(
+  db: Database,
+  mediaIds: readonly string[],
+) {
+  return {
+    requests: await db.mediaRequest.findMany({
+      where: { mediaId: { in: [...mediaIds] } },
+      orderBy: { id: "asc" },
+    }),
+    targets: await db.mediaIntent.findMany({
+      where: { mediaId: { in: [...mediaIds] }, edition: "default" },
+      orderBy: { mediaId: "asc" },
+    }),
+  };
+}
+
 function retentionFixtureOptions(
   value?: InitialInterestScenario | RetentionFixtureOptions,
 ): RetentionFixtureOptions | undefined {

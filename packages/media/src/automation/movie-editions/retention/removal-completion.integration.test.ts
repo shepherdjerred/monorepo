@@ -22,6 +22,7 @@ import { createRestoredMovieFixture } from "#testing/movie-workflow/restore-fixt
 import { publishRestoredMovieToPlexV4 } from "./restore-plex.ts";
 import { finalizeMovieRestorationV4 } from "./restore-finalization.ts";
 import { MovieRestorationNoticeV4Schema } from "#shared/movie-editions/notifications-v4.ts";
+import { movieFixtureConsent } from "#testing/retention/movie-fixtures.ts";
 import {
   bindPlexTransactionDeadline,
   plexBindingFreshness,
@@ -84,20 +85,7 @@ async function physicalHistory(f: MovieRemovalNoticeFixture) {
 }
 
 async function cancel(f: MovieRemovalNoticeFixture) {
-  const target = await f.db.mediaIntent.findUniqueOrThrow({
-    where: {
-      mediaId_edition: { mediaId: f.scope.mediaId, edition: f.scope.edition },
-    },
-  });
-  const request = await f.db.mediaRequest.findUniqueOrThrow({
-    where: {
-      userId_mediaId_edition: {
-        userId: f.source.user.id,
-        mediaId: f.scope.mediaId,
-        edition: f.scope.edition,
-      },
-    },
-  });
+  const { target, request } = await movieFixtureConsent(f, f.source.user.id);
   const commands = new MovieLifecycleCommands(f.db, {
     keepDays: 30,
     serverMachineId: "fixture-server",

@@ -31,34 +31,37 @@ function scope(): QuarantineReleaseScope {
   };
 }
 
-test.each(["lost_interest", "finished_manually", "dropped_manually"] as const)(
-  "%s settles without renewing or granting restoration",
-  (reason) => {
-    const released = {
-      ...root,
-      interestState:
-        reason === "lost_interest"
-          ? ("expired" as const)
-          : reason === "finished_manually"
-            ? ("finished" as const)
-            : ("dropped" as const),
-      interestReleaseReason: reason,
-    };
-    const claim = { ...released, coverageSources: [] };
-    expect(
-      quarantinedReleaseObservationOnly(
-        {
-          participants: [{ id: "member", restricted: false, role: "member" }],
-          household: { ...household, roots: [released] },
-          claims: [claim],
-          cohortClaims: [claim],
-        },
-        "member",
-        new Date(2000),
-      ),
-    ).toBe(true);
-  },
-);
+test.each([
+  "lost_interest",
+  "finished_manually",
+  "dropped_manually",
+  "watched",
+  "series_finished",
+] as const)("%s settles without renewing or granting restoration", (reason) => {
+  const released = {
+    ...root,
+    interestState:
+      reason === "lost_interest"
+        ? ("expired" as const)
+        : reason === "dropped_manually"
+          ? ("dropped" as const)
+          : ("finished" as const),
+    interestReleaseReason: reason,
+  };
+  const claim = { ...released, coverageSources: [] };
+  expect(
+    quarantinedReleaseObservationOnly(
+      {
+        participants: [{ id: "member", restricted: false, role: "member" }],
+        household: { ...household, roots: [released] },
+        claims: [claim],
+        cohortClaims: [claim],
+      },
+      "member",
+      new Date(2000),
+    ),
+  ).toBe(true);
+});
 
 test("a genuine following parent overrides the same user's Finished direct leaf", () => {
   const parent = {
@@ -112,7 +115,7 @@ test("a genuine following parent overrides the same user's Finished direct leaf"
   );
 });
 
-test("automatic completion, unknown metadata and restricted/unmapped actors keep the existing protective path", () => {
+test("unknown release metadata and restricted/unmapped actors keep the existing protective path", () => {
   const current = scope();
   expect(
     quarantinedReleaseObservationOnly(current, "other", new Date(2000)),
@@ -128,11 +131,6 @@ test("automatic completion, unknown metadata and restricted/unmapped actors keep
     ),
   ).toBe(false);
   for (const patch of [
-    { interestState: "finished" as const, interestReleaseReason: "watched" },
-    {
-      interestState: "finished" as const,
-      interestReleaseReason: "series_finished",
-    },
     { interestReleaseReason: null },
     { interestReleasedAt: null },
     { interestReleasedAt: new Date(3000) },
@@ -153,7 +151,7 @@ test("automatic completion, unknown metadata and restricted/unmapped actors keep
   }
 });
 
-test("one manual release never hides another automatic completion pending the product choice", () => {
+test("manual and automatic releases both remain observational without renewed consent", () => {
   const current = scope();
   expect(
     quarantinedReleaseObservationOnly(
@@ -174,10 +172,10 @@ test("one manual release never hides another automatic completion pending the pr
       "member",
       new Date(2000),
     ),
-  ).toBe(false);
+  ).toBe(true);
 });
 
-test("an automatic Finished sibling outside the selected household keeps the pending automatic branch", () => {
+test("automatic Finished siblings remain observational while unknown or inactive claims protect", () => {
   const current = scope();
   const manual = {
     ...root,
@@ -201,7 +199,7 @@ test("an automatic Finished sibling outside the selected household keeps the pen
   };
   expect(
     quarantinedReleaseObservationOnly(siblingScope, "member", new Date(2000)),
-  ).toBe(false);
+  ).toBe(true);
   expect(
     quarantinedReleaseObservationOnly(
       {
@@ -236,7 +234,7 @@ test("an automatic Finished sibling outside the selected household keeps the pen
       "member",
       new Date(2000),
     ),
-  ).toBe(false);
+  ).toBe(true);
   expect(
     quarantinedReleaseObservationOnly(
       { ...siblingScope, cohortClaims: [manual, { ...manual, active: false }] },
@@ -304,7 +302,7 @@ test("only the current explicit Temporary owner without request or following/Kee
       "member",
       new Date(2000),
     ),
-  ).toBe(false);
+  ).toBe(true);
   expect(
     quarantinedReleaseObservationOnly(
       {

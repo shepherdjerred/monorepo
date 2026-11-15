@@ -8,6 +8,24 @@ import type { automaticSubtitleHarness } from "#automation/subtitle-maintenance/
 import { createSubtitleReplacementActivities } from "#automation/subtitle-replacement/activities.ts";
 import type { createMovieRetentionFixture } from "#testing/movie-workflow/retention-fixture.ts";
 
+/** Exact edition target and personal consent used before lifecycle commands. */
+export async function movieFixtureConsent(
+  f: Pick<
+    Awaited<ReturnType<typeof createMovieRetentionFixture>>,
+    "db" | "scope"
+  >,
+  userId: string,
+) {
+  const scope = { mediaId: f.scope.mediaId, edition: f.scope.edition };
+  const [target, request] = await Promise.all([
+    f.db.mediaIntent.findUniqueOrThrow({ where: { mediaId_edition: scope } }),
+    f.db.mediaRequest.findUniqueOrThrow({
+      where: { userId_mediaId_edition: { userId, ...scope } },
+    }),
+  ]);
+  return { target, request };
+}
+
 /** One actual video per suite; each consumer retains its own disposable resources. */
 export function retentionMovieFixtures() {
   let video: Uint8Array | undefined;

@@ -215,6 +215,27 @@ test("separates network credentials from writable media mounts", () => {
     expect(container).toBeDefined();
     const mounts = container?.volumeMounts ?? [];
     const env = container?.env.map((value) => value.name) ?? [];
+    ["DISCORD_CLIENT_ID", "DISCORD_CLIENT_SECRET", "DISCORD_BOT_TOKEN"].forEach(
+      (key) => {
+        const binding = container?.env.find((entry) => entry.name === key);
+        const expected =
+          key === "DISCORD_BOT_TOKEN"
+            ? deployment.metadata.name.endsWith("media-network")
+            : deployment.metadata.name.endsWith("media-api");
+        if (expected) {
+          expect(binding).toMatchObject({
+            valueFrom: {
+              secretKeyRef: {
+                name: "media-streambot-config",
+                key: key === "DISCORD_BOT_TOKEN" ? "BOT_TOKEN" : key,
+              },
+            },
+          });
+          expect(binding?.value).toBeUndefined();
+          expect(binding?.valueFrom?.secretKeyRef?.optional).not.toBe(true);
+        } else expect(binding).toBeUndefined();
+      },
+    );
     if (deployment.metadata.name.endsWith("media-files")) {
       const serverBinding = container?.env.find(
         (value) => value.name === "PLEX_SERVER_MACHINE_ID",
@@ -250,7 +271,6 @@ test("separates network credentials from writable media mounts", () => {
     if (deployment.metadata.name.endsWith("media-network")) {
       expect(env).toContain("TMDB_API_KEY");
     }
-    expect(env).not.toContain("DISCORD_CLIENT_SECRET");
   }
 });
 

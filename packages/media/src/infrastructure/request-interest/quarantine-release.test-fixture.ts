@@ -23,6 +23,36 @@ export type InitialInterestScenario =
   | "owner_temporary";
 const DAY = 86_400_000;
 
+/** A real requester command; callers replay after their own immutable snapshots. */
+export async function continueQuarantinedInterest(
+  context: Pick<MediaAutomationContext, "db">,
+  user: MediaActor,
+  mediaId: string,
+  edition: MovieEditionKey = "default",
+) {
+  const request = await context.db.mediaRequest.findUniqueOrThrow({
+    where: {
+      userId_mediaId_edition: { userId: user.id, mediaId, edition },
+    },
+  });
+  const commands = new RequestInterestCommands(context.db, { keepDays: 30 });
+  const key = crypto.randomUUID();
+  const input = {
+    schemaVersion: 1 as const,
+    requestId: request.id,
+    expectedVersion: request.version,
+    expectedInterestRevision: request.interestRevision,
+    action: "continue" as const,
+  };
+  const result = await commands.execute(user, key, input);
+  expect(result).toMatchObject({
+    state: "following",
+    version: request.version + 1,
+    interestRevision: request.interestRevision + 1,
+  });
+  return { result, replay: () => commands.execute(user, key, input) };
+}
+
 /** Real consent/expiry before warning birth. Only ORIGINAL policy-time writes
  * simulate elapsed days; watch authority, current identities and sessions stay native. */
 export async function prepareInitialReleasedInterest(

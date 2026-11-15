@@ -33,6 +33,8 @@ or rebound identities protect the request. Ordinary Keep watching resumes an
 unfinished cycle and retains completed-episode credit. Re-requesting after manual
 Finished, Drop, expiry or cancellation also preserves that cycle. Normal 30/60-day
 inactivity clocks and private-notice rules still apply from the renewed interest.
+Marking automatically finished content unwatched in Plex does not renew interest
+or restore quarantined files. Keep watching or Request again is required.
 
 Inactivity clocks advance only when proven usable, unwatched content is
 available: 30 days before starting, or 60 days without further meaningful
@@ -270,7 +272,8 @@ movie associations, including the unmarked choice, queue scoped v4 watch and
 retention work; version-1 associations retain their original payloads and hashes.
 Each hint checks its stored operation, generation, epoch and binding before reading
 the requester's current metadata. A scrobble event alone never proves watched
-state. An authenticated unwatched observation of quarantined v4 bytes queues
+state. An authenticated unwatched observation of quarantined v4 bytes remains
+observational after released interest; explicit renewed interest queues
 restoration for that exact edition.
 
 The internal movie Files contract is a version-2 object, separate from the
@@ -1413,17 +1416,20 @@ ordinary authority guards remain protected. A queued command is not delivery
 acceptance; verify its attempt and provider receipt. The owner recovery page
 reviews protections and does not itself restore writer or storage authority.
 
-The deployment currently omits Discord credentials. Before configuring Discord,
-provision `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET`, and `DISCORD_BOT_TOKEN`
-in the Media bootstrap item through the repository's password-manager workflow.
-Then add required secret-key references for the OAuth ID and secret to
-[`api.ts`](../homelab/src/cdk8s/src/resources/media/application/api.ts), and the
-bot token only to the network worker in
+Media reuses the existing Streambot Discord application and its
+`media-streambot-config` Secret. The owning `streambot-config` password-manager
+item supplies `DISCORD_CLIENT_ID` and `DISCORD_CLIENT_SECRET` only to
+[`api.ts`](../homelab/src/cdk8s/src/resources/media/application/api.ts); its
+existing `BOT_TOKEN` supplies `DISCORD_BOT_TOKEN` only to the network worker in
 [`workers.ts`](../homelab/src/cdk8s/src/resources/media/application/workers.ts).
-The files worker and workflow executor receive none. Both OAuth fields must be
-configured together; partial configuration fails API startup. Keep Discord flags
-disabled until provisioning, deployment, and authenticated delivery verification
-are complete; optional secret references are prohibited by homelab policy.
+The files worker and workflow executor receive none. Provision the app's actual
+client ID in that same item, preserve its existing credentials, and refresh the
+committed vault snapshot before deploying these required references. Preserve
+Streambot's existing OAuth redirect when adding Media's canonical origin followed
+by `/notifications/discord` to the same application's redirects. Both OAuth
+fields must be configured together; partial configuration fails API startup.
+Keep Discord flags disabled until provisioning, deployment, and authenticated
+delivery verification are complete; optional secret references are prohibited.
 
 ## Restore preparation command
 

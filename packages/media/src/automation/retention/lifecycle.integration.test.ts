@@ -6,6 +6,7 @@ import { createPublicationActivities } from "#automation/publication.ts";
 import { readCurrentPlexBindings } from "#infrastructure/plex-binding/read.ts";
 import { z } from "zod";
 import { boundRetentionFixture } from "./lifecycle.test-fixture.ts";
+import { continueQuarantinedInterest } from "#infrastructure/request-interest/quarantine-release.test-fixture.ts";
 
 const harness = automationTestHarness();
 let fixture: Awaited<ReturnType<typeof boundRetentionFixture>> | undefined;
@@ -23,7 +24,7 @@ function current() {
   return fixture;
 }
 
-test("actual warning birth and simulated elapsed grace produce a bound quarantine; unknown then false queues one restore and rebinds actual restored bytes", async () => {
+test("actual quarantine observes Plex unwatch without restoring; explicit Keep watching restores and rebinds the actual bytes", async () => {
   const f = current(),
     db = harness.database();
   expect(f.retention.decision.state).toBe("grace_period");
@@ -59,25 +60,35 @@ test("actual warning birth and simulated elapsed grace produce a bound quarantin
       where: { targetId: f.files.media.id, kind: "restore_media" },
     }),
   ).toBe(0);
-  expect(await f.observe(false)).toEqual([{ complete: true, reason: null }]);
-  const restores = await db.operation.findMany({
-    where: { targetId: f.files.media.id, kind: "restore_media" },
+  const requests = await db.mediaRequest.findMany({
+    where: { mediaId: f.files.media.id },
+    orderBy: { id: "asc" },
   });
-  expect(restores).toHaveLength(1);
-  const restore = restores[0];
-  if (restore === undefined)
-    throw new Error("Actual bound false omitted restore command");
+  expect(requests).toEqual([
+    expect.objectContaining({
+      keepingPolicy: "temporary",
+      interestState: "finished",
+      interestReleaseReason: "watched",
+    }),
+  ]);
   const generation = await db.mediaIntent.findUniqueOrThrow({
     where: {
       mediaId_edition: { mediaId: f.files.media.id, edition: "default" },
     },
   });
-  expect(await f.observe(false)).toEqual([{ complete: true, reason: null }]);
+  for (let observation = 0; observation < 2; observation++)
+    expect(await f.observe(false)).toEqual([{ complete: true, reason: null }]);
   expect(
     await db.operation.findMany({
       where: { targetId: f.files.media.id, kind: "restore_media" },
     }),
-  ).toEqual(restores);
+  ).toEqual([]);
+  expect(
+    await db.mediaRequest.findMany({
+      where: { mediaId: f.files.media.id },
+      orderBy: { id: "asc" },
+    }),
+  ).toEqual(requests);
   expect(
     await db.mediaIntent.findUniqueOrThrow({
       where: {
@@ -85,6 +96,22 @@ test("actual warning birth and simulated elapsed grace produce a bound quarantin
       },
     }),
   ).toEqual(generation);
+  expect(
+    await db.libraryAsset.findUniqueOrThrow({ where: { id: f.asset.id } }),
+  ).toMatchObject({ state: "quarantined" });
+  const renewed = await continueQuarantinedInterest(
+    f.context,
+    f.files.user,
+    f.files.media.id,
+  );
+  expect(await renewed.replay()).toEqual(renewed.result);
+  const restores = await db.operation.findMany({
+    where: { targetId: f.files.media.id, kind: "restore_media" },
+  });
+  expect(restores).toHaveLength(1);
+  const restore = restores[0];
+  if (restore === undefined)
+    throw new Error("Explicit Keep watching omitted its restore command");
   const input = z
     .object({ operationId: z.uuid(), mediaId: z.uuid(), generation: z.int() })
     .parse(restore.payload);
