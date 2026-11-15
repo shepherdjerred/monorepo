@@ -1,0 +1,37 @@
+[package]
+name = "scout-voice"
+description = "Local wake word, VAD and utterance capture for Scout Desktop; audio never leaves the device"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+hex.workspace = true
+hound = "3.5.1"
+rubato = "5.1.0"
+scout-client-core = { path = "../scout-client-core" }
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+thiserror.workspace = true
+# The phrase verifier runs in pure Rust, not a second ONNX Runtime: sherpa-onnx
+# links ONNX Runtime 1.28 statically, and adding `ort` beside it duplicates 525
+# symbols at link time (see README "Spike results").
+tract-onnx = "0.23.10"
+
+# The microphone and the sherpa-onnx runtime exist only where the app ships.
+# Linux builds and tests the contract, resampler, verifier, state machine and
+# pipeline without them: cpal needs ALSA headers there, and sherpa-onnx's own
+# CI excludes static linking on x86_64 Linux.
+[target.'cfg(any(windows, target_os = "macos"))'.dependencies]
+cpal = "0.18.2"
+sherpa-onnx = "=2.0.1"
+
+[[bench]]
+name = "pipeline"
+harness = false
+
+[lints]
+workspace = true

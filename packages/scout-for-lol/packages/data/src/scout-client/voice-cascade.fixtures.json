@@ -1,0 +1,82 @@
+{
+  "note": "Each fixture sets one value at `path` in voice-cascade.contract.json, then expects the Zod schema and the Rust serde reader in scout-voice to agree on the result.",
+  "valid": [
+    {
+      "reason": "the shared contract as committed",
+      "path": [],
+      "value": null
+    },
+    {
+      "reason": "a stricter keyword threshold",
+      "path": ["wake", "keywordSpotter", "keywordsThreshold"],
+      "value": 0.25
+    },
+    {
+      "reason": "a longer end-of-speech silence",
+      "path": ["vad", "minSilenceMs"],
+      "value": 900
+    }
+  ],
+  "invalid": [
+    {
+      "reason": "a sample rate the models were not trained at",
+      "path": ["audio", "sampleRateHz"],
+      "value": 44100
+    },
+    {
+      "reason": "stereo capture",
+      "path": ["audio", "channels"],
+      "value": 2
+    },
+    {
+      "reason": "an unknown contract version",
+      "path": ["contractVersion"],
+      "value": 2
+    },
+    {
+      "reason": "an unknown top-level key",
+      "path": ["streaming"],
+      "value": true
+    },
+    {
+      "reason": "no wake phrase",
+      "path": ["wake", "phrases"],
+      "value": []
+    },
+    {
+      "reason": "a VAD threshold above one",
+      "path": ["vad", "threshold"],
+      "value": 1.5
+    },
+    {
+      "reason": "a Silero window size other than 512 samples",
+      "path": ["vad", "windowSamples"],
+      "value": 500
+    },
+    {
+      "reason": "a negative fragment tail",
+      "path": ["wake", "fragmentTailMs", "HEY"],
+      "value": -1
+    },
+    {
+      "reason": "a zero utterance limit",
+      "path": ["utterance", "maxUtteranceMs"],
+      "value": 0
+    },
+    {
+      "reason": "a pre-roll shorter than the verifier window",
+      "path": ["utterance", "preRollMs"],
+      "value": 1500
+    },
+    {
+      "reason": "a malformed checksum",
+      "path": ["models", "vad", "sha256"],
+      "value": "abc"
+    },
+    {
+      "reason": "a model download over plain HTTP",
+      "path": ["models", "vad", "url"],
+      "value": "http://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx"
+    }
+  ]
+}

@@ -32,6 +32,17 @@ for (const name of [
   }
 }
 
+// sherpa-onnx-sys downloads its native library at build time unchecked. Fetch
+// the pinned archives, verify their SHA-256, and point the build at them.
+const sherpaArchives = join(root, "target", "sherpa-onnx-archives");
+const fetchSherpa = Bun.spawn(
+  ["bun", "scripts/fetch-sherpa-libs.ts", sherpaArchives],
+  { cwd: root, stdout: "inherit", stderr: "inherit" },
+);
+if ((await fetchSherpa.exited) !== 0) {
+  throw new Error("fetching the pinned sherpa-onnx archives failed");
+}
+
 const packager = Bun.spawn(
   [
     "mise",
@@ -45,7 +56,11 @@ const packager = Bun.spawn(
   ],
   {
     cwd: root,
-    env: { ...process.env, SCOUT_DESKTOP_PROFILE: channel },
+    env: {
+      ...process.env,
+      SCOUT_DESKTOP_PROFILE: channel,
+      SHERPA_ONNX_ARCHIVE_DIR: sherpaArchives,
+    },
     stdout: "inherit",
     stderr: "inherit",
   },

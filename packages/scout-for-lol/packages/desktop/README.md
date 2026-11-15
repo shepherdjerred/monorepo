@@ -24,7 +24,7 @@ bun run test
 bun run lint
 ```
 
-The workspace has six crates:
+The workspace has seven crates:
 
 - `scout-client-core`: LCU access, protocol, outbox, credentials, and
   diagnostics. `desktop_api` holds the Explore REST envelopes the pairing
@@ -50,6 +50,11 @@ The workspace has six crates:
   The view models, link and tokens build on every target, so Linux CI builds
   and tests them without GUI libraries.
 
+- `scout-voice`: the local voice cascade (microphone, 16 kHz resampling,
+  "hey scout", end of speech, push-to-talk), producing WAV utterances that
+  never leave the device on their own. Not wired into the app yet; see
+  `crates/scout-voice/README.md`. `cpal` and `sherpa-onnx` are Windows and
+  macOS dependencies only, so Linux CI builds and tests the rest.
 - `scout-client-app`: the `scout-client` binary: the supervisor, its tray, and
   the `egui` window.
 
@@ -443,6 +448,16 @@ the platform the format targets. These scripts produce unsigned installers;
 operating-system code signing (Authenticode, notarization) is not part of
 them yet, and update signing is a separate step in "Releasing an update".
 
+### Release builds and the sherpa-onnx library
+
+`scout-voice` links sherpa-onnx, whose build script downloads a native
+archive without a checksum. `bun run release:package:<channel>` first runs
+`bun run voice:sherpa-libs`, which fetches the archives pinned in
+`sherpa-onnx-libs.json` into `target/sherpa-onnx-archives` and verifies their
+SHA-256, then builds with `SHERPA_ONNX_ARCHIVE_DIR` pointing there. Build
+releases from a clean `target/`, since the build script trusts an
+already-extracted copy. See `crates/scout-voice/README.md` for bumping the pin.
+
 ### Self-update
 
 A packaged build keeps itself current. The supervisor (never the window, and
@@ -801,6 +816,7 @@ implementation, `LocalOnly`, keeps it on the device.
 | Error reports                                                           | Yes, to Bugsink, scrubbed  | On an error or crash                                                          | **Send error reports** |
 | Usage events                                                            | Yes, through the Scout API | On a product event                                                            | **Send usage data**    |
 | Champion select (`live::champ_select` projection)                       | No                         | Not collected yet                                                             | Never sent             |
+| Microphone audio (`scout-voice`)                                        | No                         | Not captured yet: the crate is not wired into the app                         | Never sent             |
 
 ## Diagnostics
 

@@ -1,0 +1,10 @@
+{
+  "version": "2.0.1",
+  "baseUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.1",
+  "archives": {
+    "sherpa-onnx-v2.0.1-win-x64-static-MT-Release-lib.tar.bz2": "23e7b986b197eda0bbc47ff3d7d5c87afd6ef2b9077214ba26b0f1ec52ef0e66",
+    "sherpa-onnx-v2.0.1-win-arm64-static-MT-Release-lib.tar.bz2": "ef118817dcf0a585974159855ff8b2a0f4c8069a158766dfd92a5f702b0173be",
+    "sherpa-onnx-v2.0.1-osx-x64-static-lib.tar.bz2": "6a3cb3c14104d3a02e7b2a6cd5621f590b14892cce7d0bc0935f7655ef518938",
+    "sherpa-onnx-v2.0.1-osx-arm64-static-lib.tar.bz2": "d7a9b14f337958e7373c8c650f046df33d210bbaff2f33cb8322dda663ee5e1c"
+  }
+}

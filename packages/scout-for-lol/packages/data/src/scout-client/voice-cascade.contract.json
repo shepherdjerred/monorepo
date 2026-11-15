@@ -1,0 +1,83 @@
+{
+  "contractVersion": 1,
+  "audio": {
+    "sampleRateHz": 16000,
+    "channels": 1,
+    "frameMs": 20
+  },
+  "wake": {
+    "phrases": ["hey scout"],
+    "transcriptPrefixes": ["hey scout", "a scout", "hey scott"],
+    "keywordSpotter": {
+      "featureDim": 80,
+      "maxActivePaths": 8,
+      "numTrailingBlanks": 1,
+      "keywordsScore": 2,
+      "keywordsThreshold": 0.05,
+      "numThreads": 1
+    },
+    "fragmentTailMs": {
+      "HEY_SCOUT": 0,
+      "SCOUT": 0,
+      "HEY": 500
+    },
+    "fragmentTailMarginMs": 150,
+    "verificationDelayMs": 1250,
+    "verifierWindowMs": 2000
+  },
+  "vad": {
+    "threshold": 0.5,
+    "minSilenceMs": 650,
+    "minSpeechMs": 200,
+    "windowSamples": 512,
+    "maxSpeechMs": 15000,
+    "bufferSeconds": 30
+  },
+  "utterance": {
+    "preRollMs": 2000,
+    "maxUtteranceMs": 15000,
+    "postVerificationMs": 300
+  },
+  "models": {
+    "keywordSpotter": {
+      "archiveUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/kws-models/sherpa-onnx-kws-zipformer-gigaspeech-3.3M-2024-01-01.tar.bz2",
+      "archiveSha256": "f170013b4716e41b62b9bfd809687c207cef798ef9bc6534d524e17af9b6561a",
+      "encoder": {
+        "name": "encoder-epoch-12-avg-2-chunk-16-left-64.int8.onnx",
+        "sha256": "1e721676515bcd42a186979733981213c66c80db680e1cc582dfedf3be76e678"
+      },
+      "decoder": {
+        "name": "decoder-epoch-12-avg-2-chunk-16-left-64.int8.onnx",
+        "sha256": "e40ff43297abe815e8898494c17e71bba2152d9d40fa3eb803f75d0f7533329a"
+      },
+      "joiner": {
+        "name": "joiner-epoch-12-avg-2-chunk-16-left-64.int8.onnx",
+        "sha256": "eae9da0c7e1e6c6a3f4cc42d167899c388f6c6701b94cb96320e4f55df79624c"
+      },
+      "tokens": {
+        "name": "tokens.txt",
+        "sha256": "fd2ded4050a55d2b1578870ba8697d02371980217806b7558bd0a5cc60f3ba53"
+      },
+      "bpe": {
+        "name": "bpe.model",
+        "sha256": "c8a2a0129c4ab8e463164c142f82d25649661b122c8cd0b7aab5c9e80b90ad24"
+      },
+      "keywords": {
+        "name": "hey-scout.txt",
+        "sha256": "599a563ab40a0629494e476febf5766d98d70fce79eb228b13649cec39b19147"
+      }
+    },
+    "vad": {
+      "url": "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx",
+      "name": "silero_vad.onnx",
+      "sha256": "9e2449e1087496d8d4caba907f23e0bd3f78d91fa552479bb9c23ac09cbb1fd6"
+    },
+    "verifier": {
+      "manifest": "wake-verifier.json",
+      "melspectrogram": "melspectrogram.onnx",
+      "embedding": "embedding_model.onnx",
+      "classifier": "hey_scout.onnx",
+      "smokePositive": "hey-scout-smoke.wav"
+    }
+  }
+}
