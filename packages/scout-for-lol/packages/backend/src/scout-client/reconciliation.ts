@@ -100,8 +100,8 @@ async function recoverRow(
   }
   await projectClashEntity(observation);
   const projection = await projectClientGameResult(observation);
-  if (projection === "unsupported_mode") {
-    // Terminal: Riot supplies this mode's results, so retrying cannot help.
+  if (projection === "unsupported_mode" || projection === "skipped") {
+    // Terminal: retrying cannot produce a different result.
     scoutClientProjectionOutcomesTotal.inc({ outcome: projection });
     await prisma.scoutClientObservation.update({
       where: { observationId: row.observationId },

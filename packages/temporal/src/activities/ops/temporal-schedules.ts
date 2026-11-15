@@ -36,11 +36,16 @@ export function scheduleOutcome(
   const stale =
     now.getTime() - Date.parse(observation.observedAt) >
     OPS_POLICY.scheduleObservationMaxAgeMinutes * 60_000;
+  const hasNeverRun =
+    observation.numActionsTaken === 0 &&
+    observation.actions.length === 0 &&
+    observation.completedActions.length === 0 &&
+    observation.running === false;
   const unknown =
     stale ||
     newerUnknown ||
     observation.running === null ||
-    (!observation.paused && terminal === undefined);
+    (!observation.paused && terminal === undefined && !hasNeverRun);
   return {
     terminal,
     success,

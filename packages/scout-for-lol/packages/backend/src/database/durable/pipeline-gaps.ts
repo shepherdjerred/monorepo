@@ -104,8 +104,9 @@ export async function oldestReadyNotificationIntentAt(
  * rule that pages at one — a systemic mint failure misses unfiltered matches
  * too, and it cannot fire on a correct deployment. The subscription and its
  * account must predate the last cursor advance, so a subscription added later
- * does not retroactively make an old match look owed. Disabled accounts and
- * preferences changed after completion are excluded too: re-enabling must not
+ * does not retroactively make an old match look owed. Disabled accounts,
+ * preferences, or subscriptions changed after completion are excluded too:
+ * re-enabling or clearing filters after match completion must not
  * retroactively make an intentionally skipped match look owed. This remains
  * conservative when re-verification changes the preference row's timestamp.
  *
@@ -168,7 +169,8 @@ export async function countUnmintedLivePostmatchMatches(
                                          AND (p."matchNotificationsEnabled" = false
                                               OR p."updatedAt" > m."completedAt"))
                       AND a."createdTime" <= m."completedAt"
-                      AND s."createdTime" <= m."completedAt")`);
+                      AND s."createdTime" <= m."completedAt"
+                      AND s."updatedTime" <= m."completedAt")`);
   return singleRow(z.strictObject({ count: z.number().int() }), rows).count;
 }
 

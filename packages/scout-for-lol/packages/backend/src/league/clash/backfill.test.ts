@@ -3,6 +3,7 @@ import { LeaguePuuidSchema } from "@scout-for-lol/data";
 import {
   clashSightingWriteFromLake,
   clashLakeRowsMissingFromSightings,
+  LakeClashGameSchema,
 } from "./backfill.ts";
 
 describe("clashSightingWriteFromLake", () => {
@@ -110,5 +111,21 @@ describe("clashSightingWriteFromLake", () => {
         },
       ]),
     ).toEqual([]);
+  });
+
+  test("parses DuckDB list-value objects for teams and champions", () => {
+    const raw = {
+      platform_id: "EUW1",
+      game_id: "8047057941",
+      queue_id: 700,
+      start_ms: 1_731_600_000_000,
+      teams: { items: [100, 100, 100, 100, 100, 200, 200, 200, 200, 200] },
+      champions: { items: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] },
+    };
+    const parsed = LakeClashGameSchema.parse(raw);
+    expect(parsed.teams).toEqual([
+      100, 100, 100, 100, 100, 200, 200, 200, 200, 200,
+    ]);
+    expect(parsed.champions).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
   });
 });

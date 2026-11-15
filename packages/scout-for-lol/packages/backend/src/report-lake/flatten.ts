@@ -120,7 +120,7 @@ export function flattenMatch(match: CanonicalMatch): MatchLakeRow[] {
     coverage: matchCoverageOf(match.metadata),
     end_of_game_result: match.info.endOfGameResult ?? null,
     map_id: match.info.mapId,
-    puuid: participant.puuid,
+    puuid: participant.puuid === "BOT" ? null : participant.puuid,
     participant_kind: participantKindOf(participant),
     participant_id: participant.participantId,
     team_id: participant.teamId,

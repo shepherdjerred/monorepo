@@ -48,6 +48,7 @@ export type ScheduleHealthObservation = {
   pauseNote?: string;
   nextScheduledAt?: string;
   observedAt: string;
+  numActionsTaken?: number;
   /** null means a cached running action could not be described. */
   running: boolean | null;
   actions: ScheduleExecutionObservation[];
@@ -291,6 +292,7 @@ async function inspectScheduleHealthInScope(
                 description.info.nextActionTimes[0].toISOString(),
             }),
         observedAt: now.toISOString(),
+        numActionsTaken: description.info.numActionsTaken,
         actions,
         completedActions,
         running,

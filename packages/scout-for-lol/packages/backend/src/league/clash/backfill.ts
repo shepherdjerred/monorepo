@@ -186,13 +186,22 @@ async function loadClashLakeRows(puuids: string[]): Promise<LakeClashRow[]> {
   });
 }
 
-const LakeClashGameSchema = z.object({
+const DuckDbListSchema = z.object({
+  items: z.array(LakeIntSchema),
+});
+
+const LakeListSchema = z.preprocess((val) => {
+  const parsed = DuckDbListSchema.safeParse(val);
+  return parsed.success ? parsed.data.items : val;
+}, z.array(LakeIntSchema));
+
+export const LakeClashGameSchema = z.object({
   platform_id: z.string(),
   game_id: z.string(),
   queue_id: LakeIntSchema,
   start_ms: LakeIntSchema,
-  teams: z.array(LakeIntSchema),
-  champions: z.array(LakeIntSchema),
+  teams: LakeListSchema,
+  champions: LakeListSchema,
 });
 
 type LakeClashGame = z.infer<typeof LakeClashGameSchema>;

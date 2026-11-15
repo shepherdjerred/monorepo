@@ -48,7 +48,11 @@ describe("stored participant identity", () => {
     const [first, ...rest] = match.info.participants;
     if (first === undefined) throw new Error("Fixture has no participants");
 
-    for (const puuid of ["BOT", "00000000-0000-0000-0000-000000000000", null]) {
+    for (const puuid of [
+      "invalid-short",
+      "00000000-0000-0000-0000-000000000000",
+      null,
+    ]) {
       const result = RawMatchSchema.safeParse({
         ...match,
         info: { ...match.info, participants: [{ ...first, puuid }, ...rest] },
@@ -56,6 +60,24 @@ describe("stored participant identity", () => {
       expect(result.success).toBe(false);
       expect(result.error?.issues[0]?.message).toMatch(/78-character/u);
     }
+  });
+
+  test("a Riot Match-V5 document with bot PUUID parses as a bot", async () => {
+    const match = await riotMatch();
+    const [first, ...rest] = match.info.participants;
+    if (first === undefined) throw new Error("Fixture has no participants");
+
+    const result = RawMatchSchema.parse({
+      ...match,
+      info: {
+        ...match.info,
+        participants: [{ ...first, puuid: "BOT" }, ...rest],
+      },
+    });
+    expect(participantKindOf(result.info.participants[0]!)).toBe("bot");
+    expect(participantIdentityOf(result.info.participants[0]!)).toEqual({
+      kind: "bot",
+    });
   });
 
   test("a Riot document never states a participant kind", async () => {
