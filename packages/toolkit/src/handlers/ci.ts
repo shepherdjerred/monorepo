@@ -123,7 +123,8 @@ Wait exits: 0 ready, 1 check failure/conflict, 2 upstream/usage error,
 only after the PR itself is ready. wait --main exits 0 when the pinned main
 commit's run passes and 1 when it fails. Long queues/builds are expected. Keep
 awaiting the same process, rather than starting another status poll. Keep
-working if main is red; do not try to fix main unless explicitly told. To wait
+working if main is red; fix it only when your changes caused the failure or
+you were explicitly instructed. Read toolkit forum list --kind notice first. To wait
 and then merge, use toolkit pr land.
 `);
       return;

@@ -98,6 +98,53 @@ model Actor {
   votes Vote[]
   events Event[]
   views View[]
+  forumPosts ForumPost[] @relation("forumCreator")
+  forumResolutions ForumPost[] @relation("forumResolver")
+  forumReplies ForumReply[]
+}
+
+enum ForumKind {
+  notice
+  discussion
+}
+
+enum ForumState {
+  open
+  resolved
+}
+
+model ForumPost {
+  id String @id @default(uuid())
+  kind ForumKind
+  title String
+  body String
+  scopes String[] @default([])
+  exitCondition String?
+  expiresAt DateTime?
+  state ForumState @default(open)
+  creatorId String
+  creator Actor @relation("forumCreator", fields: [creatorId], references: [id])
+  resolverId String?
+  resolver Actor? @relation("forumResolver", fields: [resolverId], references: [id])
+  resolutionNote String?
+  resolvedAt DateTime?
+  revision Int @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  replies ForumReply[]
+  @@index([kind, state, updatedAt, id])
+  @@index([scopes], type: Gin)
+}
+
+model ForumReply {
+  id String @id @default(uuid())
+  postId String
+  post ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorId String
+  author Actor @relation(fields: [authorId], references: [id])
+  body String
+  createdAt DateTime @default(now())
+  @@index([postId, createdAt, id])
 }
 
 model Issue {

@@ -14,6 +14,7 @@ import {
 import type { Severity } from "@shepherdjerred/ops-model/severity.ts";
 import { fetchOpsSnapshot } from "#lib/ops.ts";
 import { loadToolkitConfig } from "#lib/toolkit-config.ts";
+import { coordinationSummary, formatCoordination } from "#lib/forum.ts";
 
 const TOP_ATTENTION = 5;
 
@@ -173,7 +174,7 @@ export function formatOpsSummary(
 export function opsSummaryJson(
   snapshot: FreshSnapshot,
   options: Pick<OpsSummaryOptions, "needsMe" | "section">,
-): unknown {
+) {
   if (options.section !== undefined) {
     return findSection(snapshot, options.section);
   }
@@ -195,9 +196,11 @@ export async function opsSummaryCommand(
   const snapshot = await fetchOpsSnapshot(
     await config.value("opsDashboardUrl"),
   );
+  const coordination = await coordinationSummary();
+  const payload = opsSummaryJson(snapshot, options);
   console.log(
     options.json
-      ? JSON.stringify(opsSummaryJson(snapshot, options), null, 2)
-      : formatOpsSummary(snapshot, options),
+      ? JSON.stringify({ ...payload, coordination }, null, 2)
+      : `${formatOpsSummary(snapshot, options)}\n\n${formatCoordination(coordination)}`,
   );
 }

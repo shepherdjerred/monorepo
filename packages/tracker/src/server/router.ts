@@ -1,11 +1,15 @@
-import { initTRPC, TRPCError } from "@trpc/server";
+import { TRPCError } from "@trpc/server";
+import { t, procedure, mutation } from "./rpc.ts";
 import { z } from "zod";
-import { Prisma } from "#generated/prisma/client.ts";
-import { TrackerError } from "#domain/error.ts";
-import type { Issues } from "#infrastructure/issues.ts";
-import type { Collaboration } from "#infrastructure/collaboration.ts";
-import type { Catalog } from "#infrastructure/catalog.ts";
-import type { Attachments } from "#infrastructure/attachments.ts";
+import {
+  ForumListSchema,
+  ForumReferenceSchema,
+  CreateForumPostSchema,
+  UpdateForumPostSchema,
+  ReplyForumSchema,
+  ResolveForumSchema,
+  ReopenForumSchema,
+} from "#shared/forum.ts";
 import { presentActor } from "#infrastructure/issue-repository.ts";
 import {
   BulkUpdateIssuesSchema,
@@ -25,48 +29,22 @@ import {
   ViewReferenceSchema,
 } from "#shared/schema.ts";
 
-export type RouterContext = {
-  issues: Issues;
-  collaboration: Collaboration;
-  catalog: Catalog;
-  attachments: Attachments;
-  requestId: string;
-  writesEnabled: () => Promise<boolean>;
-  liveUpdatesEnabled: () => Promise<boolean>;
-};
-const t = initTRPC.context<RouterContext>().create();
-const procedure = t.procedure.use(async ({ next }) => {
-  const result = await next();
-  if (!result.ok) {
-    const cause = result.error.cause;
-    if (cause instanceof TrackerError)
-      throw new TRPCError({ code: cause.code, message: cause.message });
-    if (cause instanceof Prisma.PrismaClientKnownRequestError) {
-      if (cause.code === "P2002")
-        throw new TRPCError({
-          code: "CONFLICT",
-          message: "This record already exists",
-        });
-      if (cause.code === "P2025")
-        throw new TRPCError({ code: "NOT_FOUND", message: "Record not found" });
-      if (cause.code === "P2003")
-        throw new TRPCError({
-          code: "CONFLICT",
-          message: "The record is still in use",
-        });
-    }
-  }
-  return result;
-});
-const mutation = procedure.input(MutationSchema).use(async ({ ctx, next }) => {
-  if (!(await ctx.writesEnabled()))
-    throw new TRPCError({
-      code: "FORBIDDEN",
-      message: "Tracker writes are paused",
-    });
+const teamInput = z.object({ teamKey: TeamKeySchema.optional() }).default({});
+const forumProcedure = procedure.use(async ({ ctx, next }) => {
+  if (!(await ctx.forumEnabled()))
+    throw new TRPCError({ code: "FORBIDDEN", message: "Forum is disabled" });
   return next();
 });
-const teamInput = z.object({ teamKey: TeamKeySchema.optional() }).default({});
+const forumMutation = forumProcedure
+  .input(MutationSchema)
+  .use(async ({ ctx, next }) => {
+    if (!(await ctx.writesEnabled()))
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: "Tracker writes are paused",
+      });
+    return next();
+  });
 const eventsInput = z
   .object({
     identifier: IdentifierSchema.optional(),
@@ -154,6 +132,36 @@ const activity = procedure
   });
 
 export const appRouter = t.router({
+  forum: t.router({
+    list: forumProcedure
+      .input(ForumListSchema)
+      .query(({ ctx, input }) => ctx.forum.list(input)),
+    search: forumProcedure
+      .input(
+        ForumListSchema.extend({
+          state: ForumListSchema.shape.state.default("all"),
+        }),
+      )
+      .query(({ ctx, input }) => ctx.forum.list(input)),
+    byId: forumProcedure
+      .input(ForumReferenceSchema)
+      .query(({ ctx, input }) => ctx.forum.byId(input.id)),
+    create: forumMutation
+      .input(CreateForumPostSchema)
+      .mutation(({ ctx, input }) => ctx.forum.create(input, ctx.requestId)),
+    update: forumMutation
+      .input(UpdateForumPostSchema)
+      .mutation(({ ctx, input }) => ctx.forum.update(input, ctx.requestId)),
+    reply: forumMutation
+      .input(ReplyForumSchema)
+      .mutation(({ ctx, input }) => ctx.forum.reply(input, ctx.requestId)),
+    resolve: forumMutation
+      .input(ResolveForumSchema)
+      .mutation(({ ctx, input }) => ctx.forum.resolve(input, ctx.requestId)),
+    reopen: forumMutation
+      .input(ReopenForumSchema)
+      .mutation(({ ctx, input }) => ctx.forum.reopen(input, ctx.requestId)),
+  }),
   maintenance: t.router({
     cleanupStaged: mutation.mutation(({ ctx, input }) =>
       ctx.attachments.cleanupStaged(
@@ -186,6 +194,7 @@ export const appRouter = t.router({
         ctx.liveUpdatesEnabled(),
       ]);
       return {
+        forumEnabled: await ctx.forumEnabled(),
         teams,
         states,
         labels,

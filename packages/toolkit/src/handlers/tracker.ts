@@ -3,11 +3,9 @@ import { issueCommand } from "#commands/tracker/issues.ts";
 import { catalogCommand } from "#commands/tracker/catalog.ts";
 import { viewCommand } from "#commands/tracker/views.ts";
 import { parseTrackerArgs, required } from "#commands/tracker/options.ts";
-import { trackerApi, trackerClient, trackerUrl } from "#lib/tracker/client.ts";
-import { actorContext, detectActor } from "#lib/tracker/actor.ts";
-import { loadToolkitConfig } from "#lib/toolkit-config.ts";
+import { trackerApi } from "#lib/tracker/client.ts";
+import { trackerContext } from "#lib/tracker/context.ts";
 import { identityHook } from "#lib/tracker/hooks.ts";
-import { claudeModel } from "#lib/tracker/model.ts";
 
 const HELP = `toolkit tracker <COMMAND> [OPTIONS]
 
@@ -79,30 +77,8 @@ export async function handleTrackerCommand(
     );
     return;
   }
-  const config = await loadToolkitConfig();
-  const url = trackerUrl(values.url ?? (await config.value("trackerUrl")));
-  const actor = async () => {
-    const model = await claudeModel(Bun.env);
-    return detectActor(
-      {
-        ...Bun.env,
-        ...(values["actor-key"] === undefined
-          ? {}
-          : { TRACKER_ACTOR_KEY: values["actor-key"] }),
-        ...(values["actor-kind"] === undefined
-          ? {}
-          : { TRACKER_ACTOR_KIND: values["actor-kind"] }),
-        ...(values["actor-name"] === undefined
-          ? {}
-          : { TRACKER_ACTOR_NAME: values["actor-name"] }),
-      },
-      {
-        ...actorContext(await config.value("trackerActorName")),
-        ...(model === undefined ? {} : { model }),
-      },
-    );
-  };
-  const context = { url, actor, client: trackerClient(url) };
+  const context = await trackerContext(values);
+  const { url, actor } = context;
   let result: unknown;
   switch (subcommand) {
     case "whoami":

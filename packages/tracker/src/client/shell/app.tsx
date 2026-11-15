@@ -53,6 +53,7 @@ const headings = {
   home: "Tracker",
   issues: "Issues",
   board: "Board",
+  forum: "Forum",
   projects: "Projects",
   actors: "Actors",
   activity: "Activity",
@@ -96,6 +97,13 @@ function WorkspaceSkeleton({ route }: { route: RouteInfo }) {
       return (
         <div className="reading-page">
           <ActorsSkeleton />
+        </div>
+      );
+    }
+    case "forum": {
+      return (
+        <div className="reading-page">
+          <ActivitySkeleton />
         </div>
       );
     }

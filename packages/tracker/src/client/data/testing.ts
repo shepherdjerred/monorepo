@@ -59,6 +59,7 @@ export const workspaceFixture: BootstrapData = {
   actors: [actor("human:jerred", "Jerred"), actor("agent:helper", "Helper")],
   views: [],
   writesEnabled: true,
+  forumEnabled: true,
   liveUpdatesEnabled: true,
 };
 

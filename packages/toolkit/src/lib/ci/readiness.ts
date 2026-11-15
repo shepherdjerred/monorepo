@@ -264,7 +264,7 @@ function redMainVerdict(policy: MainPolicy): Verdict {
     : {
         outcome: "main_red",
         reasons: [
-          "The PR is ready, but main is red. Keep working; do not try to fix main unless explicitly told.",
+          "The PR is ready, but main is red. Read active notices with toolkit forum list --kind notice; repair main only when your changes caused the failure or you were explicitly instructed. Otherwise continue your task.",
         ],
         commands: ["toolkit ci main", "toolkit ci explain --main"],
       };

@@ -1,3 +1,4 @@
+import { Forum } from "#infrastructure/forum.ts";
 import { expect, it } from "vitest";
 import { TRPCError } from "@trpc/server";
 import { Attachments } from "#infrastructure/attachments.ts";
@@ -20,6 +21,8 @@ const caller = (writesEnabled = true) =>
     ),
     requestId: "views",
     writesEnabled: () => Promise.resolve(writesEnabled),
+    forum: new Forum(suite.database, suite.unit),
+    forumEnabled: async () => true,
     liveUpdatesEnabled: () => Promise.resolve(false),
   });
 async function failure(work: Promise<unknown>, code: string) {

@@ -9,6 +9,7 @@ import {
 import { viewCommand } from "#commands/tracker/views.ts";
 import { catalogCommand } from "#commands/tracker/catalog.ts";
 import { requiredCredentialsFor } from "#lib/credential-commands.ts";
+import { trackerRequest } from "./request.ts";
 
 test("tracker commands never request Linear or other platform credentials", () => {
   for (const command of ["whoami", "issue", "api", "identity-hook"]) {
@@ -26,13 +27,9 @@ function fixture() {
     hostname: "127.0.0.1",
     port: 0,
     async fetch(request) {
-      const url = new URL(request.url);
-      const procedure = url.pathname.slice("/trpc/".length);
-      const input: unknown =
-        request.method === "GET"
-          ? JSON.parse(url.searchParams.get("input") ?? "{}")
-          : await request.json();
-      requests.push({ procedure, input, method: request.method });
+      const received = await trackerRequest(request);
+      requests.push(received);
+      const { procedure } = received;
       const data =
         procedure === "states.list"
           ? [{ name: "In progress", type: "started" }]

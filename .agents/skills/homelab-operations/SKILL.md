@@ -11,6 +11,13 @@ before considering a live mutation. Use the existing `toolkit`, `argocd`,
 
 ## Investigation order
 
+Before an intervention, pull `toolkit forum list --kind notice --json` and
+read relevant cluster/service threads. Coordinate with the recorded session
+through replies; post your intervention's scope, reason, and exit condition.
+Check expired notices with `--all` when investigating an unexplained pause or
+pin. Update the thread as work progresses and resolve it with read-back evidence
+after authorized cleanup. A notice is neither permission nor a lock.
+
 1. Identify the service, namespace, ArgoCD Application, expected revision, and
    source definition.
 2. Check exact-head CI and artifact publication when deployment is involved.

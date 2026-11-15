@@ -11,6 +11,7 @@ import {
   Search,
   Settings2,
   Users,
+  MessagesSquare,
 } from "lucide-react";
 import type { BootstrapData } from "#client/data/api.ts";
 import { Modal, Swatch } from "#client/ui/ui.tsx";
@@ -21,12 +22,13 @@ import { ViewsNav } from "#client/saved-views/views-nav.tsx";
 const links = [
   { name: "Issues", path: "/issues", icon: List },
   { name: "Board", path: "/board", icon: LayoutGrid },
+  { name: "Forum", path: "/forum", icon: MessagesSquare },
   { name: "Projects", path: "/projects", icon: Folder },
   { name: "Actors", path: "/actors", icon: Users },
   { name: "Activity", path: "/activity", icon: Activity },
 ];
 // The phone's bottom bar has room for five; these live behind "More".
-const overflow = ["/actors", "/settings"];
+const overflow = ["/actors", "/settings", "/forum"];
 export function Sidebar({
   bootstrap,
   teamKey,
@@ -177,6 +179,10 @@ export function MoreSheet({
         </div>
       )}
       <nav className="sheet-links" aria-label="More navigation">
+        <NavLink to="/forum" onClick={close}>
+          <MessagesSquare size={18} />
+          Forum
+        </NavLink>
         <NavLink to="/actors" onClick={close}>
           <Users size={18} />
           Actors

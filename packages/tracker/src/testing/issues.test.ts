@@ -1,3 +1,4 @@
+import { Forum } from "#infrastructure/forum.ts";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -387,6 +388,8 @@ it("rejects actorless mutations, pauses writes, and round-trips safe attachments
     catalog: new Catalog(unit),
     requestId: "test",
     writesEnabled: async () => false,
+    forum: new Forum(suite.database, unit),
+    forumEnabled: async () => true,
     liveUpdatesEnabled: async () => false,
   };
   const caller = appRouter.createCaller(context);
@@ -456,6 +459,8 @@ it("caches hashed assets forever and revalidates the page that names them", asyn
       catalog: new Catalog(unit),
       writesEnabled: async () => true,
       attachmentMaxBytes: async () => 1000,
+      forum: new Forum(suite.database, unit),
+      forumEnabled: async () => true,
       liveUpdatesEnabled: async () => false,
       changes: createChangeHub(suite.url),
       clientRoot,

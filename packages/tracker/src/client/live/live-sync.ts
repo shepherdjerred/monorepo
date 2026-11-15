@@ -267,6 +267,14 @@ export function createLiveSync(deps: LiveSyncDeps) {
         scope.votes ? new Set([...activityKeys, ...voteKeys]) : activityKeys,
       ),
     ];
+    if (batch.some((change) => change.entityType.startsWith("forum"))) {
+      work.push(
+        client.invalidateQueries({
+          queryKey: ["forum"],
+          refetchType: "active",
+        }),
+      );
+    }
     if (scope.catalog || unknownActor(batch)) {
       work.push(
         client.invalidateQueries({

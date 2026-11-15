@@ -1,3 +1,4 @@
+import { Forum } from "#infrastructure/forum.ts";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { z } from "zod";
 import { managedBooleanDefault } from "@shepherdjerred/feature-flags/managed-flag-inventory.ts";
@@ -90,6 +91,8 @@ function appFor(changes: ChangeHub, enabled: boolean, heartbeatMs?: number) {
     catalog: new Catalog(unit),
     attachments: new Attachments(suite.database, unit, memoryObjectStore()),
     writesEnabled: () => Promise.resolve(true),
+    forum: new Forum(suite.database, unit),
+    forumEnabled: async () => true,
     liveUpdatesEnabled: () => Promise.resolve(enabled),
     attachmentMaxBytes: () => Promise.resolve(1000),
     changes,

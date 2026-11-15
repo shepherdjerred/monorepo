@@ -4,7 +4,8 @@ import { serveStatic } from "hono/bun";
 import { bodyLimit } from "hono/body-limit";
 import { secureHeaders } from "hono/secure-headers";
 import { z } from "zod";
-import { appRouter, type RouterContext } from "./router.ts";
+import { appRouter } from "./router.ts";
+import type { RouterContext } from "./rpc.ts";
 import {
   registerEventsRoute,
   type EventsRouteOptions,

@@ -13,6 +13,7 @@ import {
 import { buildPrHealthReport } from "#lib/ci/health.ts";
 import { sanitizeText } from "#lib/ci/redaction.ts";
 import { requiredChecks } from "#lib/ci/readiness.ts";
+import { coordinationSummary, formatCoordination } from "#lib/forum.ts";
 
 export type HealthOptions = { json?: boolean | undefined };
 
@@ -59,9 +60,12 @@ export async function healthCommand(
       state: review.state,
     })),
   });
+  const coordination = await coordinationSummary(["main", "ci"]);
   console.log(
     sanitizeText(
-      options.json === true ? formatJson(report) : formatHealthReport(report),
+      options.json === true
+        ? formatJson({ ...report, coordination })
+        : `${formatHealthReport(report)}\n${formatCoordination(coordination)}`,
       [token, config.token],
     ),
   );
