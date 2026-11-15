@@ -289,13 +289,13 @@ impl<K: KeywordSpotter, V: VoiceActivity, W: WakeVerifier> VoicePipeline<K, V, W
             fragment: hit.fragment.clone(),
         });
         let pre_roll: Vec<f32> = self.pre_roll.drain(..).collect();
-        // Prime the VAD with the frame the spotter fired on, as the
-        // TypeScript lifecycle does, so speech already under way counts.
-        let boundary_start = pre_roll.len().saturating_sub(self.frame_samples);
-        let boundary = pre_roll[boundary_start..].to_vec();
-        self.start_capture(pre_roll);
-        self.vad.accept(&boundary);
-        self.observe_vad();
+        // Prime the VAD with the whole retained pre-roll, so speech that ended
+        // before the spotter fired still counts and endpointing can complete.
+        self.start_capture(pre_roll.clone());
+        for frame in pre_roll.chunks(self.frame_samples) {
+            self.vad.accept(frame);
+            self.observe_vad();
+        }
         // sherpa resets its stream on a match, so timestamps restart here.
         self.spotter_stream_samples = 0;
         self.apply(VoiceEvent::WakeCandidate);
