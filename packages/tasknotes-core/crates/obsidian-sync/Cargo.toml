@@ -1,0 +1,24 @@
+[package]
+name = "obsidian-sync"
+description = "Sans-I/O Obsidian Sync encryption and protocol compatibility."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+hex.workspace = true
+aes-gcm.workspace = true
+aes-siv.workspace = true
+hkdf.workspace = true
+scrypt.workspace = true
+sha2.workspace = true
+unicode-normalization.workspace = true
+zeroize.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+
+[lints]
+workspace = true

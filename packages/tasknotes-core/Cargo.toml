@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["crates/tasknotes-core", "crates/tasknotes-core-ffi", "crates/tasknotes-runtime", "xtask"]
+members = ["crates/tasknotes-core", "crates/tasknotes-core-ffi", "crates/tasknotes-vault", "crates/tasknotes-runtime", "crates/obsidian-sync", "xtask"]
 
 [workspace.package]
 version = "0.1.0"

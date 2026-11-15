@@ -8,15 +8,7 @@ import {
   type Task,
 } from "../protocol/generated.ts";
 
-export type CreateTaskInput = {
-  id?: string | undefined;
-  userId: string;
-  projectId: string;
-  sectionId?: string | null | undefined;
-  parentId?: string | null | undefined;
-  title: string;
-  description?: string | undefined;
-  priority?: Priority | string | undefined;
+export type TaskScheduleOptions = {
   childOrder?: number | undefined;
   dueDate?: Date | null | undefined;
   dueDatetime?: Date | null | undefined;
@@ -28,22 +20,24 @@ export type CreateTaskInput = {
   completedAt?: Date | null | undefined;
 };
 
-export type UpdateTaskInput = {
+export type CreateTaskInput = TaskScheduleOptions & {
+  id?: string | undefined;
+  userId: string;
+  projectId: string;
+  sectionId?: string | null | undefined;
+  parentId?: string | null | undefined;
+  title: string;
+  description?: string | undefined;
+  priority?: Priority | string | undefined;
+};
+
+export type UpdateTaskInput = TaskScheduleOptions & {
   title?: string | undefined;
   description?: string | undefined;
   priority?: Priority | string | undefined;
   projectId?: string | undefined;
   sectionId?: string | null | undefined;
   parentId?: string | null | undefined;
-  childOrder?: number | undefined;
-  dueDate?: Date | null | undefined;
-  dueDatetime?: Date | null | undefined;
-  dueTimezone?: string | null | undefined;
-  dueString?: string | null | undefined;
-  isRecurring?: boolean | undefined;
-  recurrenceRule?: string | null | undefined;
-  completed?: boolean | undefined;
-  completedAt?: Date | null | undefined;
   isDeleted?: boolean | undefined;
 };
 

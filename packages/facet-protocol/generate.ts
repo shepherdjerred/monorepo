@@ -1,6 +1,14 @@
 import { $ } from "bun";
 import path from "node:path";
 
+const whichTypeshare = await $`which typeshare`.quiet().nothrow();
+if (whichTypeshare.exitCode !== 0) {
+  console.log(
+    "typeshare CLI not found in PATH; using pre-generated protocol files.",
+  );
+  process.exit(0);
+}
+
 const protocolDir = import.meta.dir;
 const root = path.resolve(protocolDir, "../..");
 
