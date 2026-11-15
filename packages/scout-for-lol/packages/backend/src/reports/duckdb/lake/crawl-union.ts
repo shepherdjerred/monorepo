@@ -30,6 +30,9 @@ import {
  *   anti-joined on `match_id` against every tracked match id — unfiltered, so
  *   a tracked match the query's predicate excludes is not read back from the
  *   crawl instead — and a game is never counted twice.
+ * - **An erased player is gone at once.** While an erasure's lake rewrite has
+ *   not published, its hash is in `LakeFiles.crawlTombstones` and the branch
+ *   is anti-joined on every crawled match naming that player.
  *
  * Columns the crawl table lacks (the reduced timeline's frame fields, the
  * tracked timeline's partitioning) read as NULL, and the predicate is applied
@@ -76,6 +79,27 @@ function crawlProjection(
     .join(", ");
 }
 
+/**
+ * Every crawled match naming a tombstoned player, from the same build's
+ * `matches_crawl` files. A match is dropped whole, as the fold drops it, so
+ * no table of the crawl branch shows any part of it.
+ */
+function tombstonedMatchIds(files: LakeFiles): SqlFragment | undefined {
+  if (files.crawlTombstones.length === 0) return undefined;
+  if (files.crawl.matches.length === 0) {
+    throw new Error(
+      "Crawl tombstones need the build's matches_crawl files to find the matches they hide",
+    );
+  }
+  return {
+    sql: "SELECT DISTINCT match_id FROM read_parquet(?, hive_partitioning = false) WHERE puuid IS NOT NULL AND sha256(puuid) IN (SELECT unnest(?))",
+    params: [
+      { kind: "list", values: crawlFilePaths(files.crawl.matches) },
+      { kind: "list", values: [...files.crawlTombstones] },
+    ],
+  };
+}
+
 function crawlBranch(input: {
   files: LakeFiles;
   crawlFiles: readonly CrawlFile[];
@@ -85,11 +109,20 @@ function crawlBranch(input: {
 }): SqlFragment {
   const where =
     input.predicate.sql.length > 0 ? ` WHERE ${input.predicate.sql}` : "";
-  const rows = `SELECT * FROM (SELECT ${crawlProjection(input.columns, input.crawlColumns)}, 'crawl' AS provenance FROM read_parquet(?, hive_partitioning = false))${where}`;
-  const rowParams: BoundParam[] = [
+  const visible = `SELECT * FROM (SELECT ${crawlProjection(input.columns, input.crawlColumns)}, 'crawl' AS provenance FROM read_parquet(?, hive_partitioning = false))${where}`;
+  const visibleParams: BoundParam[] = [
     { kind: "list", values: crawlFilePaths(input.crawlFiles) },
     ...input.predicate.params,
   ];
+  const tombstoned = tombstonedMatchIds(input.files);
+  const rows =
+    tombstoned === undefined
+      ? visible
+      : `SELECT v.* FROM (${visible}) v ANTI JOIN (${tombstoned.sql}) t ON v.match_id = t.match_id`;
+  const rowParams: BoundParam[] =
+    tombstoned === undefined
+      ? visibleParams
+      : [...visibleParams, ...tombstoned.params];
   const keys = trackedMatchKeys(input.files);
   if (keys === undefined) return { sql: rows, params: rowParams };
   return {

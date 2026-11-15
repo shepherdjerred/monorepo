@@ -12,6 +12,8 @@ import { readCurrentBuildDir } from "#src/report-lake/paths.ts";
 import { compileScoutQlPlanQuery } from "#src/reports/duckdb/compile-plan.ts";
 import { ALL_POPULATION } from "#src/reports/duckdb/lake/all-population.ts";
 import { resolveLakeFiles, type LakeFiles } from "#src/reports/duckdb/lake.ts";
+import { replaceCrawlTombstoneSourceForTests } from "#src/reports/duckdb/lake/crawl-tombstones.ts";
+import { puuidHash } from "#src/league/crawl/crawl-config.ts";
 import {
   CRAWL_SCAN_BUDGET_BYTES,
   ScanBudgetExceededError,
@@ -54,6 +56,9 @@ const CRAWL_ONLY = "NA1_8000000003";
 let lakeDir: string;
 let before: LakeFiles;
 let files: LakeFiles;
+/** What `ErasedPuuid` would hold with `lakeErasedAt` null; empty but for the tombstone tests. */
+let tombstones: string[] = [];
+let restoreTombstones: () => void;
 
 function plan(overrides: Partial<ScoutQlPlan> = {}): ScoutQlPlan {
   return {
@@ -79,6 +84,9 @@ const BY_MATCH = plan({
 });
 
 beforeAll(async () => {
+  restoreTombstones = replaceCrawlTombstoneSourceForTests(() =>
+    Promise.resolve(tombstones),
+  );
   lakeDir = await mkdtemp(path.join(tmpdir(), "crawl-global-scope-"));
   const [, sharedPuuid] = await crawlFixturePuuids();
   if (sharedPuuid === undefined) throw new Error("fixture has no players");
@@ -128,6 +136,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  restoreTombstones();
   await rm(lakeDir, { recursive: true, force: true });
 });
 
@@ -325,6 +334,86 @@ describe("the crawl scan budget", () => {
         limit: 100,
       }),
     ).toBeDefined();
+  });
+});
+
+describe("erasure tombstones", () => {
+  test("hide every crawled match naming an erased player before any file is rewritten", async () => {
+    const [erasedPuuid] = await crawlFixturePuuids();
+    if (erasedPuuid === undefined) throw new Error("fixture has no players");
+    const filesBefore = files.crawl.matches.map((file) => file.path);
+    tombstones = [puuidHash(erasedPuuid)];
+    try {
+      const tombstoned = await resolveLakeFiles(lakeDir);
+      expect(tombstoned.crawlTombstones).toEqual(tombstones);
+      // The same crawl files are read; the query drops the matches.
+      expect(tombstoned.crawl.matches.map((file) => file.path)).toEqual(
+        filesBefore,
+      );
+      const { rows } = await runPlan({
+        plan: BY_MATCH,
+        scope: GLOBAL_SCOPE,
+        files: tombstoned,
+        range: RANGE,
+        limit: 100,
+        population: ALL_POPULATION,
+      });
+      // Both crawled games name the player: the crawl-only one is gone, and
+      // the tracked copy of the shared game is not crawl data and stays.
+      expect(counts(rows)).toEqual([
+        [SHARED, 1],
+        ["NA1_8000000002", 1],
+      ]);
+      const identities = await resolvePlayerIdentities({
+        query: "NightHeight#EUW",
+        guildIds: [SERVER_ID],
+        lakeDir,
+        population: ALL_POPULATION,
+      });
+      expect(identities).toEqual([]);
+    } finally {
+      tombstones = [];
+    }
+  });
+
+  test("a tombstone for a player the crawl never stored changes nothing", async () => {
+    tombstones = [puuidHash("not-a-crawled-player".padEnd(78, "0"))];
+    try {
+      const { rows } = await runPlan({
+        plan: BY_MATCH,
+        scope: GLOBAL_SCOPE,
+        files: await resolveLakeFiles(lakeDir),
+        range: RANGE,
+        limit: 100,
+        population: ALL_POPULATION,
+      });
+      expect(counts(rows)).toEqual([
+        [SHARED, 1],
+        ["NA1_8000000002", 1],
+        [CRAWL_ONLY, 10],
+      ]);
+    } finally {
+      tombstones = [];
+    }
+  });
+
+  test("tracked reads never consult tombstones", async () => {
+    tombstones = [puuidHash(testPuuid("8842"))];
+    try {
+      const tracked = await runPlan({
+        plan: BY_MATCH,
+        scope: GLOBAL_SCOPE,
+        files: await resolveLakeFiles(lakeDir),
+        range: RANGE,
+        limit: 100,
+      });
+      expect(counts(tracked.rows)).toEqual([
+        [SHARED, 1],
+        ["NA1_8000000002", 1],
+      ]);
+    } finally {
+      tombstones = [];
+    }
   });
 });
 

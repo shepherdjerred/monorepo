@@ -109,6 +109,7 @@ const EMPTY_LAKE: LakeFiles = {
   timelineCoverageParquet: [],
   timelineCoverageStaging: [],
   crawl: NO_CRAWL_LAKE_FILES,
+  crawlTombstones: [],
 };
 
 describe("pushdown", () => {

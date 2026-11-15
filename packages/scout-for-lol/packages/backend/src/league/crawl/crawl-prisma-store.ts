@@ -5,12 +5,13 @@ import {
   crawlCooldownEnd,
   puuidHash,
 } from "./crawl-config.ts";
-import type {
-  CommitInput,
-  CrawlStore,
-  FrontierPlayer,
-  NewFrontierPlayer,
-  SeedCursor,
+import {
+  CrawlErasureFenceError,
+  type CommitInput,
+  type CrawlStore,
+  type FrontierPlayer,
+  type NewFrontierPlayer,
+  type SeedCursor,
 } from "./crawl-store.ts";
 
 const CONTROL_ID = "default";
@@ -195,8 +196,20 @@ export function createPrismaCrawlStore(
       });
     },
 
+    async erasureMark() {
+      return await prisma.erasedPuuid.count();
+    },
+
     async commit(input: CommitInput) {
       await prisma.$transaction(async (tx) => {
+        // SHARE blocks an erasure insert (ROW EXCLUSIVE) until this commits,
+        // and sees every erasure committed before it: either this tick's rows
+        // are visible to the erasure's sweep, or the tick sees the erasure and
+        // stops here.
+        await tx.$executeRaw`LOCK TABLE "ErasedPuuid" IN SHARE MODE`;
+        if ((await tx.erasedPuuid.count()) !== input.erasureMark) {
+          throw new CrawlErasureFenceError();
+        }
         for (const { segment, matches } of input.segments) {
           await tx.crawlSegment.createMany({
             data: [
@@ -234,6 +247,14 @@ export function createPrismaCrawlStore(
           });
         }
         await admitPlayers(tx, input.children, input.now);
+      });
+    },
+
+    async queueObjectDeletions(objectKeys) {
+      if (objectKeys.length === 0) return;
+      await prisma.crawlObjectDeletion.createMany({
+        data: objectKeys.map((objectKey) => ({ objectKey })),
+        skipDuplicates: true,
       });
     },
 

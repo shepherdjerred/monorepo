@@ -8,14 +8,16 @@ import { assertReportLakeAccess } from "#src/reports/duckdb/lake/access.ts";
 import {
   NO_CRAWL_LAKE_FILES,
   resolveCrawlLakeFiles,
+  type CrawlLakeFiles,
 } from "#src/reports/duckdb/lake/crawl-files.ts";
+import { loadCrawlTombstones } from "#src/reports/duckdb/lake/crawl-tombstones.ts";
 import type { LakeFiles } from "#src/reports/duckdb/lake/files.ts";
 
 /**
  * Which files one report-lake query reads: the published build's Parquet,
- * the staging generations beside it, and the build's crawl tables. Captured
- * together per attempt so `retryLakeQuery` can replay a read whose snapshot
- * disappeared under it.
+ * the staging generations beside it, the build's crawl tables, and the
+ * erasure tombstones for them. Captured together per attempt so
+ * `retryLakeQuery` can replay a read whose snapshot disappeared under it.
  */
 
 async function globParquet(root: string, table: string): Promise<string[]> {
@@ -80,6 +82,7 @@ export async function resolveLakeFiles(
       timelineCoverageParquet: [],
       timelineCoverageStaging,
       crawl: NO_CRAWL_LAKE_FILES,
+      crawlTombstones: [],
     };
   }
   const [
@@ -107,6 +110,19 @@ export async function resolveLakeFiles(
   const accountsParquet = (await Bun.file(accountsPath).exists())
     ? accountsPath
     : undefined;
+  const crawl = await resolveCrawlLakeFiles(buildDir);
+  const crawlTombstones = hasCrawlFiles(crawl)
+    ? await loadCrawlTombstones()
+    : [];
+  // An erasure is marked complete only after the build without it publishes,
+  // so tombstones read while this build is still CURRENT cover every match
+  // it holds. If CURRENT moved, the snapshot retry resolves again.
+  if (
+    crawlTombstones.length > 0 &&
+    (await readCurrentBuildDir(lakeDir)) !== buildDir
+  ) {
+    throw new Error("CURRENT changed while reading crawl tombstones");
+  }
   return {
     matchesParquet,
     matchesStaging,
@@ -127,6 +143,11 @@ export async function resolveLakeFiles(
     timelineParticipantFramesStaging,
     timelineCoverageParquet,
     timelineCoverageStaging,
-    crawl: await resolveCrawlLakeFiles(buildDir),
+    crawl,
+    crawlTombstones,
   };
+}
+
+function hasCrawlFiles(crawl: CrawlLakeFiles): boolean {
+  return Object.values(crawl).some((files) => files.length > 0);
 }

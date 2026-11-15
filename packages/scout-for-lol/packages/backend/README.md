@@ -2417,7 +2417,11 @@ stored per UTC day.
   and no `MatchObservation`, and nothing under `crawl/` is under a prefix the
   competition scan, the nightly rebuild's `games/` read or `recovery-scan.ts`
   lists; `crawl-storage-isolation.test.ts` pins that. `ErasedPuuid` (hashes
-  only) is checked at admission, at claim, and before a match is stored.
+  only) is checked at admission, at claim, before a match is stored, and
+  again inside the commit: the tick reads the erasure count when it starts,
+  and the commit locks `ErasedPuuid` in `SHARE` mode and refuses
+  (`CrawlErasureFenceError`) if the count moved, queueing the segments it
+  already wrote in `CrawlObjectDeletion`.
 - **Report lake.** After each commit the Activity drops the same segment bytes
   into `<lakeDir>/crawl-inbox/<day>_<sha256>.ndjson.zst` (a temporary file
   renamed into place, so the folding pod never reads half a segment). The lake
@@ -2442,8 +2446,30 @@ stored per UTC day.
     (`compactCrawlDay`).
   - `ErasedPuuid` is checked again when a segment is read, at fold, at day
     rebuild and at compaction: a match naming an erased player is dropped.
-    Rewriting already-published days and raw segments on erasure is the later
-    deletion pipeline's job.
+- **Erasure.** `scripts/repair/erase-crawled-player.ts` (dry run by default)
+  calls `league/crawl/crawl-erasure.ts`: one transaction records the PUUID's
+  SHA-256 in `ErasedPuuid` and deletes its `CrawlFrontier` row, then
+  `explore/inspection/erasure-redaction.ts` redacts stored Explore tool
+  payloads, assistant turns (what share links render) and run progress that
+  name the PUUID or Riot ID. The operator how-to is the wiki page "Erase a
+  crawled player".
+  - **Tombstone.** Until `lakeErasedAt` is set, the hash is in
+    `LakeFiles.crawlTombstones` (read from PostgreSQL for any build with crawl
+    files, before CURRENT is re-checked), and every crawl branch is
+    anti-joined on the crawled matches naming it. The erased player is gone
+    from global reads before any file changes; tracked reads never read
+    tombstones.
+  - **Durable rewrite.** Every lake fold and nightly rebuild runs
+    `runCrawlErasureStep` (`report-lake/crawl/crawl-erasure-step.ts`) in its
+    unpublished build: it drains `CrawlObjectDeletion`, sweeps raw segments for
+    unfinished erasures (`crawl-raw-erasure.ts`; 500 segments a fold, 10,000 a
+    rebuild, cursor per erasure on `ErasedPuuid`), rewrites each `*_crawl`
+    file holding an erased match (`crawl-lake-erasure.ts`) and points the
+    ledger at the rewritten segments. After publish it sets `lakeErasedAt`.
+    A rewritten segment keeps every other line byte for byte, so the rewrite
+    is deterministic and a second run is a no-op.
+  - Backups keep prior versions for 30 days. Tracked-corpus erasure is not
+    covered.
   - Crawl files are listed in `LakeFiles.crawl` (with ingest day and size)
     only when the build's crawl schema is current. Every tracked read is
     byte-identical with or without them (`crawl-lake-isolation.test.ts`).

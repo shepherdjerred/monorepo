@@ -2875,6 +2875,7 @@ model CrawlSegment {
   matches CrawlMatch[]
 
   @@index([dt, route])
+  @@index([createdAt, sha256])
 }
 
 /// The crawl's single control row (the migration CHECKs `id = 'default'`):
@@ -2887,9 +2888,36 @@ model CrawlControl {
 }
 
 /// Erased players, by SHA-256 of the PUUID so the list itself holds no
-/// identifier. Checked at crawl admission. The deletion pipeline that writes
-/// it lands later.
+/// identifier. Written by the erasure request (`league/crawl/crawl-erasure.ts`)
+/// and checked at crawl admission, claim, commit, segment read, fold, day
+/// rebuild and compaction. The progress columns record the durable rewrite
+/// (`report-lake/crawl/crawl-erasure-step.ts`): until `lakeErasedAt` is set the
+/// hash is a query-time tombstone on every global crawl read.
 model ErasedPuuid {
-  puuidHash String   @id
-  erasedAt  DateTime @default(now())
+  puuidHash          String    @id
+  erasedAt           DateTime  @default(now())
+  /// Raw-segment sweep cursor: every `CrawlSegment` at or before
+  /// (`createdAt`, `sha256`) has been checked and rewritten without the player.
+  rawCursorCreatedAt DateTime?
+  rawCursorSha256    String?
+  /// Set once the sweep reached the last committed segment.
+  rawSweptAt         DateTime?
+  /// Set once a published lake build no longer holds the player's matches.
+  lakeErasedAt       DateTime?
+  segmentsRewritten  Int       @default(0)
+  matchesRemoved     Int       @default(0)
+  /// Explore tool payloads, messages and runs redacted at request time.
+  copiesRedacted     Int       @default(0)
+
+  @@index([lakeErasedAt])
+  @@index([rawSweptAt])
+}
+
+/// A crawl object that must be deleted from S3: the original of a segment the
+/// erasure sweep rewrote, or a segment a crawl tick wrote and then could not
+/// commit because an erasure landed first. The sweep deletes the object and
+/// then the row, so a crash between the two only repeats an idempotent delete.
+model CrawlObjectDeletion {
+  objectKey String   @id
+  createdAt DateTime @default(now())
 }
