@@ -88,7 +88,8 @@ impl WindowState {
             chat @ (SupervisorMessage::ChatStatus { .. }
             | SupervisorMessage::ChatConversations { .. }
             | SupervisorMessage::ChatTranscript { .. }
-            | SupervisorMessage::ChatTurn { .. }) => {
+            | SupervisorMessage::ChatTurn { .. }
+            | SupervisorMessage::ChatImages { .. }) => {
                 self.chat.receive(chat);
                 Effect::Render
             }

@@ -194,6 +194,7 @@ impl RenderOnce for Row {
                 .into_any_element();
         }
         let fade = stream_fade(row.streaming, cx.reduce_motion());
+        let visuals = super::visuals::visuals(&row);
         v_flex()
             .w_full()
             .gap_2()
@@ -205,6 +206,7 @@ impl RenderOnce for Row {
                         .selectable(true),
                 )
             }))
+            .children(visuals)
             .children(row.activity.map(|activity| {
                 div()
                     .text_sm()

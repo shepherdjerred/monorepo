@@ -26,8 +26,10 @@ import {
  * - 2: run start, stop, active, outcome and stream, and the `desktop`
  *   conversation origin, which a version-1 client is told is `web`.
  * - 3: scope requests, which add a scope to an already paired device.
+ * - 4: the game asset version (`explore/assets`) and server-rendered chart
+ *   images (`explore/visualization`), the first route that answers a PNG.
  */
-export const SCOUT_DESKTOP_CONTRACT_VERSION = 3;
+export const SCOUT_DESKTOP_CONTRACT_VERSION = 4;
 export const SCOUT_DESKTOP_MINIMUM_CONTRACT_VERSION = 1;
 export const SCOUT_DESKTOP_CONTRACT_HEADER = "X-Scout-Desktop-Contract";
 /** The first contract version that knows the `desktop` conversation origin. */
@@ -48,10 +50,14 @@ export const SCOUT_DESKTOP_PAIRING_V2_SCOPES = [
   "explore",
 ] as const satisfies readonly ScoutDesktopScope[];
 
-/** How a route answers: one JSON body, or a `text/event-stream` of events. */
+/**
+ * How a route answers: one JSON body, a `text/event-stream` of events, or one
+ * `image/png` body.
+ */
 export const ScoutDesktopRouteResponseKindSchema = z.enum([
   "json",
   "event-stream",
+  "png",
 ]);
 export type ScoutDesktopRouteResponseKind = z.infer<
   typeof ScoutDesktopRouteResponseKindSchema
@@ -118,6 +124,18 @@ export const SCOUT_DESKTOP_API_ROUTES = {
     scope: "explore",
     response: "event-stream",
   },
+  explore_assets: {
+    method: "POST",
+    path: "/api/scout-client/v1/explore/assets",
+    scope: "explore",
+    response: "json",
+  },
+  explore_visualization: {
+    method: "POST",
+    path: "/api/scout-client/v1/explore/visualization",
+    scope: "explore",
+    response: "png",
+  },
 } as const satisfies Record<
   string,
   {
@@ -139,6 +157,8 @@ export const ScoutDesktopApiRouteSchema = z.enum([
   "explore_runs_active",
   "explore_runs_outcome",
   "explore_runs_stream",
+  "explore_assets",
+  "explore_visualization",
 ]);
 
 /** Every typed refusal a desktop route answers with, and its HTTP status. */
@@ -300,3 +320,44 @@ export const ScoutDesktopRunStreamResponseSchema = z.strictObject({
 /** Every stream event type, in `ExploreStreamEventSchema`'s order. */
 export const SCOUT_DESKTOP_STREAM_EVENT_TYPES: readonly string[] =
   ExploreStreamEventSchema.options.map((option) => option.shape.type.value);
+
+/**
+ * The chart kinds every Scout surface draws as native text — a table, a list
+ * or a headline number — instead of a chart image: Discord as an embed, the
+ * desktop as native rows. Every other kind is the PNG
+ * `visualizationSnapshotToImage` renders.
+ */
+export const SCOUT_NATIVE_VISUALIZATION_KINDS: readonly string[] = [
+  "TABLE",
+  "LIST",
+  "LEADERBOARD",
+  "KPI_CARD",
+];
+
+/**
+ * The game asset version the desktop builds Data Dragon image URLs with: the
+ * version the server's own asset bundle was built from, so the client never
+ * pins one.
+ */
+export const ScoutDesktopAssetsResponseSchema = z.strictObject({
+  dataDragonVersion: z.string().regex(/^\d+\.\d+\.\d+$/),
+});
+export type ScoutDesktopAssetsResponse = z.infer<
+  typeof ScoutDesktopAssetsResponseSchema
+>;
+
+/** One persisted answer whose chart to render. */
+export const ScoutDesktopVisualizationRequestSchema = z.strictObject({
+  conversationId: ExploreConversationIdSchema,
+  messageId: z.uuid(),
+});
+
+export const SCOUT_DESKTOP_PNG_CONTENT_TYPE = "image/png";
+
+/**
+ * A `png` route answers with the image bytes, not JSON. Its golden fixture
+ * records the content type, which is all a client may rely on.
+ */
+export const ScoutDesktopPngResponseSchema = z.strictObject({
+  contentType: z.literal(SCOUT_DESKTOP_PNG_CONTENT_TYPE),
+});

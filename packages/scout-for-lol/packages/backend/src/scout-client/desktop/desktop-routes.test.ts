@@ -8,7 +8,9 @@ import {
   ScoutDesktopConversationGetResponseSchema,
   ScoutDesktopConversationListResponseSchema,
   ScoutDesktopExploreStatusResponseSchema,
+  ScoutDesktopAssetsResponseSchema,
   ScoutDesktopPairingV2ResponseSchema,
+  latestVersion,
 } from "@scout-for-lol/data";
 import { z } from "zod";
 import { resetConfigurationForTests } from "#src/configuration.ts";
@@ -21,6 +23,9 @@ import stopFixture from "@scout-for-lol/data/scout-client/desktop-fixtures/explo
 import activeFixture from "@scout-for-lol/data/scout-client/desktop-fixtures/explore-runs-active.json" with { type: "json" };
 import outcomeFixture from "@scout-for-lol/data/scout-client/desktop-fixtures/explore-runs-outcome.json" with { type: "json" };
 import streamFixture from "@scout-for-lol/data/scout-client/desktop-fixtures/explore-runs-stream.json" with { type: "json" };
+import assetsFixture from "@scout-for-lol/data/scout-client/desktop-fixtures/explore-assets.json" with { type: "json" };
+import visualizationFixture from "@scout-for-lol/data/scout-client/desktop-fixtures/explore-visualization.json" with { type: "json" };
+import visualsFixture from "@scout-for-lol/data/scout-client/desktop-fixtures/explore-conversations-get-visuals.json" with { type: "json" };
 import { exploreQuotaLimits } from "#src/config/dynamic.ts";
 
 const mocks = vi.hoisted(() => ({
@@ -39,6 +44,8 @@ const mocks = vi.hoisted(() => ({
   listRuns: vi.fn(),
   runOutcome: vi.fn(),
   subscribeRun: vi.fn(),
+  loadVisualization: vi.fn(),
+  renderChart: vi.fn(),
 }));
 
 vi.mock("#src/database/index.ts", () => ({
@@ -72,6 +79,13 @@ vi.mock("#src/explore/store.ts", async (importOriginal) => ({
   ...(await importOriginal()),
   listExploreConversations: mocks.listConversations,
   loadExploreTranscript: mocks.loadTranscript,
+  loadExploreVisualization: mocks.loadVisualization,
+}));
+// Drawing a chart is the report package's job; here it is a stub PNG, so the
+// route's auth, ownership, limit and headers are what is under test.
+vi.mock("@scout-for-lol/report", async (importOriginal) => ({
+  ...(await importOriginal()),
+  visualizationSnapshotToImage: mocks.renderChart,
 }));
 vi.mock("#src/trpc/auth-web-helpers.ts", () => ({
   getAppOrigin: () => "https://scout.invalid",
@@ -90,8 +104,12 @@ vi.mock("#src/explore/runs/run-manager.ts", async (importOriginal) => ({
 }));
 
 const { handleScoutClientRoute } = await import("#src/scout-client/http.ts");
-const { resetDesktopReadRateLimitForTests, DESKTOP_READ_LIMIT_PER_MINUTE } =
-  await import("./rate-limit.ts");
+const {
+  resetDesktopReadRateLimitForTests,
+  resetDesktopRenderRateLimitForTests,
+  DESKTOP_READ_LIMIT_PER_MINUTE,
+  DESKTOP_RENDER_LIMIT_PER_MINUTE,
+} = await import("./rate-limit.ts");
 const { resetPairingRateLimitForTests } =
   await import("#src/scout-client/pairing-rate-limit.ts");
 const {
@@ -177,6 +195,7 @@ beforeEach(() => {
   Bun.env["EXPLORE_GUILD_ALLOWLIST"] = SHARED_GUILD;
   resetConfigurationForTests();
   resetDesktopReadRateLimitForTests();
+  resetDesktopRenderRateLimitForTests();
   resetPairingRateLimitForTests();
   resetDesktopStreamSlotsForTests();
   resetExploreRateLimitStateForTests();
@@ -315,6 +334,7 @@ const EXPLORE_ROUTES = Object.entries(SCOUT_DESKTOP_API_ROUTES).filter(
 describe("desktop Explore flag", () => {
   test("every Explore route is covered", () => {
     expect(EXPLORE_ROUTES.map(([name]) => name).toSorted()).toEqual([
+      "explore_assets",
       "explore_conversations_get",
       "explore_conversations_list",
       "explore_runs_active",
@@ -323,6 +343,7 @@ describe("desktop Explore flag", () => {
       "explore_runs_stop",
       "explore_runs_stream",
       "explore_status",
+      "explore_visualization",
     ]);
   });
 
@@ -338,6 +359,7 @@ describe("desktop Explore flag", () => {
       expect(mocks.exploreStatusFor).not.toHaveBeenCalled();
       expect(mocks.startRun).not.toHaveBeenCalled();
       expect(mocks.subscribeRun).not.toHaveBeenCalled();
+      expect(mocks.loadVisualization).not.toHaveBeenCalled();
     },
   );
 
@@ -1001,4 +1023,123 @@ describe("conversation origin by contract version", () => {
       expect(transcript.conversation.origin).toBe(origin);
     },
   );
+});
+
+describe("desktop chart and asset routes", () => {
+  const ASSETS_PATH = SCOUT_DESKTOP_API_ROUTES.explore_assets.path;
+  const CHART_PATH = SCOUT_DESKTOP_API_ROUTES.explore_visualization.path;
+  const chart = visualsFixture.response.messages[1]?.visualization;
+  const stubPng = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+
+  function chartRequest(overrides: Record<string, unknown> = {}) {
+    return desktopRequest(CHART_PATH, {
+      body: { ...visualizationFixture.request, ...overrides },
+    });
+  }
+
+  beforeEach(() => {
+    mocks.loadVisualization.mockResolvedValue(chart);
+    mocks.renderChart.mockReturnValue(stubPng);
+  });
+
+  test("assets name the Data Dragon version the server's bundle was built from", async () => {
+    const response = await send(desktopRequest(ASSETS_PATH));
+
+    expect(response.status).toBe(200);
+    expect(
+      ScoutDesktopAssetsResponseSchema.parse(await response.json()),
+    ).toEqual({ dataDragonVersion: latestVersion });
+  });
+
+  test("assets refuse a body with keys", async () => {
+    const response = await send(
+      desktopRequest(ASSETS_PATH, {
+        body: assetsFixture.invalidRequests[0]?.body,
+      }),
+    );
+
+    expect(response.status).toBe(400);
+  });
+
+  test("the owner's chart is the rendered PNG", async () => {
+    const response = await send(chartRequest());
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("Content-Type")).toBe(
+      visualizationFixture.response.contentType,
+    );
+    expect(response.headers.get(SCOUT_DESKTOP_CONTRACT_HEADER)).toBe(
+      String(SCOUT_DESKTOP_CONTRACT_VERSION),
+    );
+    expect(response.headers.get("Cache-Control")).toBe("no-store");
+    expect(Buffer.from(await response.arrayBuffer())).toEqual(stubPng);
+    expect(mocks.loadVisualization).toHaveBeenCalledWith(expect.anything(), {
+      conversationId: visualizationFixture.request.conversationId,
+      messageId: visualizationFixture.request.messageId,
+      userId: OWNER_ID,
+    });
+    expect(mocks.renderChart).toHaveBeenCalledWith(chart);
+  });
+
+  test("another user's answer, or one without a chart, is not found", async () => {
+    mocks.loadVisualization.mockResolvedValue(null);
+
+    const response = await send(chartRequest());
+
+    expect(response.status).toBe(404);
+    expect(await errorCode(response)).toBe("not_found");
+    expect(mocks.renderChart).not.toHaveBeenCalled();
+  });
+
+  test.each(visualizationFixture.invalidRequests)(
+    "a chart request with $reason is invalid",
+    async ({ body }) => {
+      const response = await send(desktopRequest(CHART_PATH, { body }));
+
+      expect(response.status).toBe(400);
+      expect(await errorCode(response)).toBe("invalid_request");
+      expect(mocks.loadVisualization).not.toHaveBeenCalled();
+    },
+  );
+
+  test("an ingest-only device cannot draw charts", async () => {
+    mocks.findDevice.mockResolvedValue(device({ scopes: ["ingest"] }));
+
+    const response = await send(chartRequest());
+
+    expect(response.status).toBe(403);
+    expect(await errorCode(response)).toBe("scope_required");
+    expect(mocks.loadVisualization).not.toHaveBeenCalled();
+  });
+
+  test("a device without a credential cannot draw charts", async () => {
+    mocks.findDevice.mockResolvedValue(null);
+
+    const response = await send(chartRequest());
+
+    expect(response.status).toBe(401);
+    expect(mocks.renderChart).not.toHaveBeenCalled();
+  });
+
+  test("renders are limited per device, below the read limit", async () => {
+    expect(DESKTOP_RENDER_LIMIT_PER_MINUTE).toBeLessThan(
+      DESKTOP_READ_LIMIT_PER_MINUTE,
+    );
+    for (let call = 0; call < DESKTOP_RENDER_LIMIT_PER_MINUTE; call += 1) {
+      const drawn = await send(chartRequest());
+      expect(drawn.status).toBe(200);
+    }
+
+    const refused = await send(chartRequest());
+
+    expect(refused.status).toBe(429);
+    expect(await errorCode(refused)).toBe("rate_limited");
+    expect(refused.headers.get("Retry-After")).toBe("60");
+    expect(mocks.renderChart).toHaveBeenCalledTimes(
+      DESKTOP_RENDER_LIMIT_PER_MINUTE,
+    );
+    // Reads are counted apart, so a device out of renders still reads.
+    const read = await send(desktopRequest(STATUS_PATH));
+    expect(read.status).toBe(200);
+  });
 });

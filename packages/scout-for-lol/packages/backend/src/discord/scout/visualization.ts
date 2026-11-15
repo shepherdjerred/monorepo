@@ -7,6 +7,7 @@ import {
 import {
   evidenceGames,
   isLowSampleGameCount,
+  SCOUT_NATIVE_VISUALIZATION_KINDS,
   type ExploreMessage,
   type ReportAiPreviewSummary,
   type VisualizationSnapshot,
@@ -27,7 +28,8 @@ import {
   type NativeRowValue,
 } from "#src/discord/scout/visualization-format.ts";
 
-const NATIVE_KINDS = new Set(["TABLE", "LIST", "LEADERBOARD", "KPI_CARD"]);
+// The same kinds Scout Desktop draws natively, from the shared contract.
+const NATIVE_KINDS = new Set(SCOUT_NATIVE_VISUALIZATION_KINDS);
 const MAX_NATIVE_ROWS = 12;
 const MAX_EMBED_DESCRIPTION = 3900;
 const MAX_EMBED_TITLE = 256;

@@ -73,8 +73,9 @@ The two talk over the child's stdio, one JSON object per line, tagged by
 `type` (`scout-desktop-ipc`). The supervisor sends a `hello` with the protocol
 version and whether a tray exists, then `state` snapshots (the runtime state
 plus diagnostics counters and recent events), `phase` changes, `update` (the
-self-update state), the four chat parts (`chat_status`,
-`chat_conversations`, `chat_transcript`, `chat_turn`; see "Explore chat"), the
+self-update state), the five chat parts (`chat_status`,
+`chat_conversations`, `chat_transcript`, `chat_turn`, `chat_images`; see
+"Explore chat"), the
 diagnostics bundle on request, `show`, and `close`. The window sends its own
 `hello`, then `pair`, `disconnect`, `open_url` (http and https only),
 `open_log_folder`, `request_diagnostics`, `set_start_at_login`, `set_privacy`,
@@ -252,8 +253,9 @@ golden bodies in `data/src/scout-client/desktop-fixtures/`.
 - `model`: strict serde types (`deny_unknown_fields`) for transcript
   messages, traces, query results, match and loadout cards, and every
   `runs/stream` event. Fields the Zod schemas default are defaulted here too.
-  A chart snapshot is carried without interpretation, because the window
-  shows the PNG the server renders from it.
+  A chart snapshot is carried without interpretation beyond its kind, title
+  and sparkline flag, because the window shows the PNG the server renders
+  from it.
 - `ExploreClient`: one typed method per Explore route. It reads the device
   credential from the operating-system store, sends
   `X-Scout-Desktop-Contract` on every request, and maps every refusal to
@@ -277,10 +279,28 @@ golden bodies in `data/src/scout-client/desktop-fixtures/`.
   `desktop-fixtures/explore-turn-reducer.json`.
 
 - `session`: one desktop chat session as pure state (availability, the
-  conversation list, the open transcript, and the `TurnView` in flight),
-  projected onto the window's IPC chat parts.
+  conversation list, the open transcript, the `TurnView` in flight, the card
+  art catalog, and where each picture stands), projected onto the window's
+  IPC chat parts.
+- `visuals`: an answer's chart, table and cards as the window draws them.
+  A chart whose kind is in the contract's `nativeVisualizationKinds` (table,
+  list, leaderboard, headline number; the same kinds Discord draws as text)
+  becomes formatted rows; any other chart is the PNG `explore/visualization`
+  renders with `visualizationSnapshotToImage`, the renderer Discord posts.
+  Every chart, card and icon carries an accessible name, and a chart's
+  values are its accessible description.
+- `data_dragon`: card art URLs at the Data Dragon version `explore/assets`
+  names; the build pins none. Champion and rune ids resolve through that
+  version's `champion.json` and `runesReforged.json`.
+- `asset_cache`: a disk cache keyed by URL in `explore-cache/` under the data
+  directory, capped at 64 MiB and trimmed least recently used first, with use
+  kept in each file's modification time.
 - `relay`: `ChatRelay`, the supervisor's task that runs the client against a
-  session and publishes the parts.
+  session and publishes the parts. It also fetches every picture the open
+  transcript names into the cache: charts one at a time with the device
+  credential, card art from `ddragon.leagueoflegends.com` (the only host it
+  fetches art from) six at a time. A picture that failed is asked for again
+  the next time its conversation is opened.
 
 The REST and stream tests run against a scripted loopback HTTP server in
 `crates/scout-explore-client/tests/http`. With the `golden` feature,
@@ -298,9 +318,11 @@ already holds the device credential for uploads, and the window renders on
 the GPU and can be lost with it, so the bearer never enters the window
 process. Only when the `gpui-kit` window is selected does the supervisor
 start a `ChatRelay`; it asks Scout nothing until a window opens. The window
-sends `chat` commands and renders four parts, each sent only when it changes,
-so a streamed answer re-sends only the in-flight turn (`ChatParts::changes_since`).
-The parts carry no bearer, query text, raw tool payloads or cards.
+sends `chat` commands and renders five parts, each sent only when it changes,
+so a streamed answer re-sends only the in-flight turn and a picture landing
+re-sends only `chat_images` (`ChatParts::changes_since`). The parts carry no
+bearer, query text or raw tool payloads; cards cross as their rendered
+projection, and pictures as paths to files in the supervisor's cache.
 
 Screens follow the relay's availability:
 
@@ -317,17 +339,21 @@ Screens follow the relay's availability:
 - **Ready**: the transcript is a virtual list (`MessageScroller`) that follows
   the newest row. Answers render as Markdown with the text view's
   `stream_fade`, which reduced motion turns off; each answer lists its tool
-  steps as summary rows. A dropped stream shows "Reconnecting…" in the
-  header until the next frame. The composer sends on Return or Send; Stop
-  appears while a run can be stopped.
+  steps as summary rows, then its chart or table, match cards (queue,
+  length, score, and each team's champions, Riot IDs and KDA) and loadout
+  cards (champion, final items, summoner spells and runes). A chart shows
+  "Drawing the chart…" in a fixed-height frame until its PNG lands, or the
+  refusal's message if Scout would not draw it. A dropped stream shows
+  "Reconnecting…" in the header until the next frame. The composer sends on
+  Return or Send; Stop appears while a run can be stopped.
 
 Keyboard order is the composer, Send, Stop, then the sidebar (New chat, each
 conversation, the status pages); a focused sidebar entry takes Return or
 Space like a click. The focus ring is the theme's `focus` token.
 
-Not in the window yet: charts (the server-rendered PNG), match and loadout
-cards, attachments, edit, regenerate and version switching, share links, the
-model picker and the @-mention picker.
+Not in the window yet: native interactive charts, attachments, edit,
+regenerate and version switching, share links, the model picker and the
+@-mention picker.
 
 ## Release profiles
 
@@ -559,6 +585,9 @@ The Riot lockfile credential stays local and is redacted by construction. The
 client is not an arbitrary LCU proxy and does not collect chat, friends, social,
 store, or purchase data. Device credentials use the OS credential store. Raw
 observations survive transient network failures in the local SQLite outbox.
+Chat's card art comes from Riot's public Data Dragon CDN without a credential
+or any identifier beyond the request itself; charts come from Scout with the
+device credential. Both are cached in the data directory.
 
 The League client puts chat credentials in payloads the client does collect —
 `multiUserChatPassword` and `mucJwtDto` in end-of-game blocks, a chat room

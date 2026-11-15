@@ -6,10 +6,15 @@
 //! golden `runs/stream` body answers it. [`streaming`] stops before `final`;
 //! [`settled`] plays the rest (without the golden `error` frame, which
 //! [`interrupted`] keeps) and lands the persisted answer with its tool steps.
+//!
+//! [`visuals`] opens the golden visuals transcript instead: a bar chart, a
+//! native table, a match card and a loadout card, with card art resolved
+//! against trimmed Data Dragon documents ([`data_dragon`]).
 
 use scout_client_core::desktop_api::{ActiveRun, ConversationListResponse, RunOutcome};
 use serde_json::{Value, json};
 
+use crate::data_dragon::{DataDragon, DataDragonError};
 use crate::model::{RunStreamFrames, StreamEvent, Transcript};
 use crate::reducer::PendingTurn;
 use crate::session::ChatSession;
@@ -26,6 +31,49 @@ pub const CONVERSATIONS_GET: &str = include_str!(
 /// The golden run stream.
 pub const RUNS_STREAM: &str =
     include_str!("../../../../data/src/scout-client/desktop-fixtures/explore-runs-stream.json");
+
+/// The golden transcript with a chart, a native table and both cards.
+pub const CONVERSATIONS_GET_VISUALS: &str = include_str!(
+    "../../../../data/src/scout-client/desktop-fixtures/explore-conversations-get-visuals.json"
+);
+/// The Data Dragon version the golden `explore/assets` answer names.
+pub const DATA_DRAGON_VERSION: &str = "16.22.1";
+
+/// `champion.json`, trimmed to the champions in the visuals transcript.
+const CHAMPIONS: &str = r#"{ "data": {
+    "Jinx": { "id": "Jinx", "key": "222" },
+    "Lulu": { "id": "Lulu", "key": "117" },
+    "Ahri": { "id": "Ahri", "key": "103" },
+    "Garen": { "id": "Garen", "key": "86" },
+    "LeeSin": { "id": "LeeSin", "key": "64" },
+    "Caitlyn": { "id": "Caitlyn", "key": "51" },
+    "Thresh": { "id": "Thresh", "key": "412" },
+    "Yasuo": { "id": "Yasuo", "key": "157" },
+    "Darius": { "id": "Darius", "key": "122" },
+    "Khazix": { "id": "Khazix", "key": "121" }
+} }"#;
+
+/// `runesReforged.json`, trimmed to the runes in the visuals transcript.
+const RUNES: &str = r#"[
+    { "id": 8200, "icon": "perk-images/Styles/7202_Sorcery.png", "slots": [
+        { "runes": [{ "id": 8229, "icon": "perk-images/Styles/Sorcery/ArcaneComet/ArcaneComet.png" }] },
+        { "runes": [{ "id": 8226, "icon": "perk-images/Styles/Sorcery/ManaflowBand/ManaflowBand.png" }] },
+        { "runes": [{ "id": 8210, "icon": "perk-images/Styles/Sorcery/Transcendence/Transcendence.png" }] },
+        { "runes": [{ "id": 8237, "icon": "perk-images/Styles/Sorcery/Scorch/Scorch.png" }] }
+    ] },
+    { "id": 8300, "icon": "perk-images/Styles/7203_Whimsy.png", "slots": [
+        { "runes": [{ "id": 8304, "icon": "perk-images/Styles/Inspiration/MagicalFootwear/MagicalFootwear.png" }] },
+        { "runes": [{ "id": 8345, "icon": "perk-images/Styles/Inspiration/BiscuitDelivery/BiscuitDelivery.png" }] }
+    ] }
+]"#;
+
+/// Card art for the visuals transcript at [`DATA_DRAGON_VERSION`].
+///
+/// # Errors
+/// The trimmed documents do not parse.
+pub fn data_dragon() -> Result<DataDragon, DataDragonError> {
+    DataDragon::from_documents(DATA_DRAGON_VERSION, CHAMPIONS.as_bytes(), RUNES.as_bytes())
+}
 
 /// What the owner asks in the golden run.
 pub const QUESTION: &str = "Which bot lane pair wins most in ARAM this month?";
@@ -171,6 +219,20 @@ fn finish(keep_error: bool) -> Result<ChatSession, GoldenError> {
         .stream_ended(Ok(StreamEnd::Done(RunOutcome::Succeeded)))
         .ok_or("the golden run did not ask for its transcript")?;
     session.settled(landed(&events)?);
+    Ok(session)
+}
+
+/// A session showing the golden visuals transcript with its card art
+/// resolved; every picture is still loading.
+///
+/// # Errors
+/// A golden file does not parse.
+pub fn visuals() -> Result<ChatSession, GoldenError> {
+    let transcript: Transcript = serde_json::from_value(response(CONVERSATIONS_GET_VISUALS)?)?;
+    let mut session = ready()?;
+    session.open(transcript.conversation.id);
+    session.opened(transcript);
+    session.art_loaded(data_dragon()?);
     Ok(session)
 }
 

@@ -37,6 +37,7 @@ mod upload;
 mod usage;
 
 pub(crate) use paths::data_directory;
+pub use paths::explore_cache_directory;
 pub use state::{GameflowPhase, RuntimeState};
 
 /// Latest-value subscription to the UI snapshot.

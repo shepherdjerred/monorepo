@@ -5,6 +5,9 @@
 //!
 //! The chat states come from the golden Explore fixtures played through the
 //! supervisor's chat session, so what renders here is what the relay sends.
+//! The visuals states show the golden visuals transcript one answer at a
+//! time, with a stub PNG standing in for Scout's chart and flat squares for
+//! card art, written where the supervisor's cache would hold them.
 //!
 //! Set `SCOUT_DESKTOP_UI_CAPTURE_DIR` to also write one PNG per state there; a
 //! terminal without Screen Recording access cannot capture the live window.
@@ -36,9 +39,9 @@ mod render {
         WindowBounds, WindowOptions, px, size,
     };
     use scout_desktop_ipc::{
-        ChatAvailability, ChatCommand, ChatParts, ChatStatus, CounterReading, DiagnosticsSnapshot,
-        GameflowPhase, PROTOCOL_VERSION, PrivacySnapshot, StateSnapshot, SupervisorMessage,
-        UpdateSnapshot, UpdateStatus, WindowMessage, decode_line, encode_line,
+        ChatAvailability, ChatCommand, ChatImage, ChatParts, ChatStatus, CounterReading,
+        DiagnosticsSnapshot, GameflowPhase, PROTOCOL_VERSION, PrivacySnapshot, StateSnapshot,
+        SupervisorMessage, UpdateSnapshot, UpdateStatus, WindowMessage, decode_line, encode_line,
     };
     use scout_desktop_ui::BuildInfo;
     use scout_desktop_ui::preview::{Incoming, Outbound, ScoutWindow, prepare};
@@ -432,6 +435,143 @@ mod render {
         Ok(())
     }
 
+    /// A stub chart: four bars on the chart surface, so the frame shows
+    /// a picture rather than a flat fill.
+    fn stub_chart(path: &std::path::Path) -> Result<(), Error> {
+        // Bar heights in percent of the frame.
+        let bars = [61_u32, 55, 52, 47];
+        let (width, height) = (720_u32, 360_u32);
+        let image = image::RgbaImage::from_fn(width, height, |x, y| {
+            let band = x * 4 / width;
+            let left = band * width / 4;
+            let inside = x > left + 30 && x < left + width / 4 - 30;
+            let bar = usize::try_from(band)
+                .ok()
+                .and_then(|index| bars.get(index))
+                .copied()
+                .unwrap_or(0);
+            let top = height - bar * height / 100;
+            if inside && y > top {
+                image::Rgba([0x3B, 0x82, 0xC4, 0xFF])
+            } else if y % 90 == 0 {
+                image::Rgba([0x2A, 0x33, 0x3D, 0xFF])
+            } else {
+                image::Rgba([0x0A, 0x14, 0x1E, 0xFF])
+            }
+        });
+        image.save(path)?;
+        Ok(())
+    }
+
+    /// A flat square in a color picked from `seed`, standing in for art.
+    fn stub_art(path: &std::path::Path, seed: usize) -> Result<(), Error> {
+        let palette = [
+            [0xC8, 0xAA, 0x6E],
+            [0x3B, 0x82, 0xC4],
+            [0x5B, 0xA8, 0x7A],
+            [0xB0, 0x5C, 0x8E],
+            [0xD0, 0x7A, 0x3A],
+        ];
+        let [r, g, b] = palette[seed % palette.len()];
+        image::RgbaImage::from_fn(64, 64, |x, y| {
+            let edge = x < 4 || y < 4 || x > 59 || y > 59;
+            if edge {
+                image::Rgba([r / 2, g / 2, b / 2, 0xFF])
+            } else {
+                image::Rgba([r, g, b, 0xFF])
+            }
+        })
+        .save(path)?;
+        Ok(())
+    }
+
+    /// The golden visuals session with every picture written to disk.
+    fn visuals_with_pictures() -> Result<ChatParts, Error> {
+        let mut parts = golden::visuals()?.parts();
+        let directory =
+            std::env::temp_dir().join(format!("scout-render-pictures-{}", std::process::id()));
+        std::fs::create_dir_all(&directory)?;
+        let mut images = std::collections::BTreeMap::new();
+        for (index, key) in parts.images.keys().enumerate() {
+            let path = directory.join(format!("{index}.png"));
+            if key.starts_with("chart:") {
+                stub_chart(&path)?;
+            } else {
+                stub_art(&path, index)?;
+            }
+            images.insert(
+                key.clone(),
+                ChatImage::Ready {
+                    path: path.to_string_lossy().into_owned(),
+                },
+            );
+        }
+        parts.images = images;
+        Ok(parts)
+    }
+
+    /// `parts` showing only messages `from..from + 2`: one question and its
+    /// answer, so each capture frames one kind of visual.
+    fn one_answer(parts: &ChatParts, from: usize) -> Result<ChatParts, Error> {
+        let mut shown = parts.clone();
+        let transcript = shown.transcript.as_mut().ok_or("no transcript")?;
+        transcript.messages = transcript
+            .messages
+            .get(from..from + 2)
+            .ok_or("the visuals transcript is too short")?
+            .to_vec();
+        Ok(shown)
+    }
+
+    /// Let the window read and decode the pictures it was just told about.
+    fn settle_pictures(harness: &mut Harness) -> Result<(), Error> {
+        for _ in 0..20 {
+            harness.cx.run_until_parked();
+            std::thread::sleep(std::time::Duration::from_millis(25));
+            harness
+                .cx
+                .update_window(harness.window, |_, window, _| window.refresh())?;
+        }
+        harness.cx.run_until_parked();
+        Ok(())
+    }
+
+    fn visual_states(harness: &mut Harness) -> Result<(), Error> {
+        let parts = visuals_with_pictures()?;
+
+        // The chart while Scout draws it, then drawn.
+        let mut loading = one_answer(&parts, 0)?;
+        for image in loading.images.values_mut() {
+            *image = ChatImage::Loading;
+        }
+        harness.chat(loading)?;
+        harness.capture("chat-chart-loading")?;
+        let mut failed = one_answer(&parts, 0)?;
+        for image in failed.images.values_mut() {
+            *image = ChatImage::Failed {
+                message: "Too many charts from this device. Try again shortly.".to_owned(),
+            };
+        }
+        harness.chat(failed)?;
+        harness.capture("chat-chart-failed")?;
+        harness.chat(one_answer(&parts, 0)?)?;
+        settle_pictures(harness)?;
+        harness.capture("chat-chart")?;
+
+        harness.chat(one_answer(&parts, 2)?)?;
+        settle_pictures(harness)?;
+        harness.capture("chat-table")?;
+
+        harness.chat(one_answer(&parts, 4)?)?;
+        settle_pictures(harness)?;
+        harness.capture("chat-match-card")?;
+
+        harness.chat(one_answer(&parts, 6)?)?;
+        settle_pictures(harness)?;
+        harness.capture("chat-loadout-card")?;
+        Ok(())
+    }
+
     fn status_pages(harness: &mut Harness) -> Result<(), Error> {
         for page in PageId::STATUS {
             let (x, y) = status_point(page)?;
@@ -496,6 +636,7 @@ mod render {
         })?;
 
         chat_states(&mut harness)?;
+        visual_states(&mut harness)?;
         status_pages(&mut harness)?;
 
         // Close from the supervisor ends the window's listener cleanly, and

@@ -4,7 +4,8 @@
 use scout_client_core::desktop_api::{ConversationGetRequest, RunOutcome, RunRequest};
 use scout_explore_client::contract::STREAM_EVENT_TYPES;
 use scout_explore_client::model::{
-    ExploreMessage, RunStreamFrames, StreamEvent, TraceDetails, TraceEntry, TraceStatus, Transcript,
+    ExploreMessage, RunStreamFrames, StreamEvent, TraceDetails, TraceEntry, TraceStatus,
+    Transcript, Visualization,
 };
 use scout_explore_client::reducer::{
     INTERRUPTED_CAVEAT, PendingTurn, STOPPED_CAVEAT, TurnView, resolve_run_completion,
@@ -19,6 +20,9 @@ type TestResult = Result<(), Box<dyn std::error::Error>>;
 
 const GET: &str = include_str!(
     "../../../../data/src/scout-client/desktop-fixtures/explore-conversations-get.json"
+);
+const VISUALS: &str = include_str!(
+    "../../../../data/src/scout-client/desktop-fixtures/explore-conversations-get-visuals.json"
 );
 const RUNS_STREAM: &str =
     include_str!("../../../../data/src/scout-client/desktop-fixtures/explore-runs-stream.json");
@@ -61,6 +65,11 @@ where
 #[test]
 fn the_golden_transcript_parses_strictly() -> TestResult {
     check_route::<ConversationGetRequest, Transcript>(GET, "explore_conversations_get")
+}
+
+#[test]
+fn the_golden_visuals_transcript_parses_strictly() -> TestResult {
+    check_route::<ConversationGetRequest, Transcript>(VISUALS, "explore_conversations_get")
 }
 
 #[test]
@@ -165,9 +174,32 @@ fn a_visualization_must_be_a_version_one_snapshot() {
             "createdAt": "2026-11-13T20:03:40.000Z"
         })
     };
-    assert!(serde_json::from_value::<ExploreMessage>(message(json!({ "version": 1 }))).is_ok());
-    assert!(serde_json::from_value::<ExploreMessage>(message(json!({ "version": 2 }))).is_err());
+    let snapshot = |version: u32| {
+        json!({
+            "version": version,
+            "kind": "BAR_CHART",
+            "title": null,
+            "display": { "sparkline": false },
+        })
+    };
+    let parsed = serde_json::from_value::<ExploreMessage>(message(snapshot(1)));
+    let chart = parsed.ok().and_then(|message| message.visualization);
+    assert_eq!(chart.as_ref().map(Visualization::kind), Some("BAR_CHART"));
+    assert_eq!(chart.as_ref().and_then(|chart| chart.title()), None);
+    assert!(serde_json::from_value::<ExploreMessage>(message(snapshot(2))).is_err());
     assert!(serde_json::from_value::<ExploreMessage>(message(json!([1]))).is_err());
+    // The client reads the kind, title and sparkline flag, so it refuses a
+    // snapshot that does not state them.
+    for missing in ["kind", "title", "display"] {
+        let mut incomplete = snapshot(1);
+        if let Some(fields) = incomplete.as_object_mut() {
+            fields.remove(missing);
+        }
+        assert!(
+            serde_json::from_value::<ExploreMessage>(message(incomplete)).is_err(),
+            "{missing}"
+        );
+    }
 }
 
 /// `toMatchObject` semantics: objects match on the expected keys, arrays

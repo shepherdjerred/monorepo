@@ -30,6 +30,11 @@ pub enum Reply {
     },
     /// A `text/event-stream` that writes `frames`, then closes or stalls.
     Stream { frames: Vec<String>, stall: bool },
+    /// A binary body with its content type.
+    Bytes {
+        content_type: &'static str,
+        body: Vec<u8>,
+    },
 }
 
 impl Reply {
@@ -55,7 +60,7 @@ impl Reply {
                     headers,
                 }
             }
-            stream @ Self::Stream { .. } => stream,
+            other @ (Self::Stream { .. } | Self::Bytes { .. }) => other,
         }
     }
 
@@ -257,6 +262,18 @@ async fn serve(
                     .as_bytes(),
                 )
                 .await?;
+        }
+        Some(Reply::Bytes { content_type, body }) => {
+            stream
+                .write_all(
+                    format!(
+                        "HTTP/1.1 200 OK\r\ncontent-type: {content_type}\r\ncontent-length: {}\r\nconnection: close\r\n\r\n",
+                        body.len()
+                    )
+                    .as_bytes(),
+                )
+                .await?;
+            stream.write_all(&body).await?;
         }
         Some(Reply::Stream { frames, stall }) => {
             stream

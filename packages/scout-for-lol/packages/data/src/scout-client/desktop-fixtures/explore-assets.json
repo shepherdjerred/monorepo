@@ -1,0 +1,15 @@
+{
+  "route": "explore_assets",
+  "request": {},
+  "response": {
+    "dataDragonVersion": "16.22.1"
+  },
+  "invalidRequests": [
+    {
+      "reason": "an unknown key",
+      "body": {
+        "version": "16.22.1"
+      }
+    }
+  ]
+}

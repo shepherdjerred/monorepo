@@ -7,10 +7,13 @@
 //! The supervisor sends each part on its own message when it changes, so a
 //! streamed answer re-sends only the in-flight turn, never the transcript.
 
+use std::collections::BTreeMap;
+
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::SupervisorMessage;
+use crate::chat_visuals::{ChatImage, ChatVisuals};
 
 /// Whether chat can be used, and if not, what the user must do.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -114,6 +117,8 @@ pub struct ChatMessage {
     pub tools: Vec<ChatToolStep>,
     /// Caveats under an answer.
     pub caveats: Vec<String>,
+    /// The answer's chart or table and its cards.
+    pub visuals: ChatVisuals,
 }
 
 /// The open conversation's persisted branch.
@@ -170,7 +175,7 @@ pub enum ChatCommand {
     Stop,
 }
 
-/// Everything chat renders: the four parts the supervisor sends.
+/// Everything chat renders: the five parts the supervisor sends.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct ChatParts {
     /// Availability, connection and notice.
@@ -181,6 +186,8 @@ pub struct ChatParts {
     pub transcript: Option<ChatTranscript>,
     /// The in-flight turn.
     pub turn: Option<ChatTurn>,
+    /// Where each picture the transcript names stands, by key.
+    pub images: BTreeMap<String, ChatImage>,
 }
 
 impl ChatParts {
@@ -210,6 +217,11 @@ impl ChatParts {
                 turn: self.turn.clone(),
             });
         }
+        if changed(|now, then| now.images != then.images) {
+            messages.push(SupervisorMessage::ChatImages {
+                images: self.images.clone(),
+            });
+        }
         messages
     }
 
@@ -222,6 +234,7 @@ impl ChatParts {
             }
             SupervisorMessage::ChatTranscript { transcript } => self.transcript = transcript,
             SupervisorMessage::ChatTurn { turn } => self.turn = turn,
+            SupervisorMessage::ChatImages { images } => self.images = images,
             _ => return false,
         }
         true
@@ -236,7 +249,7 @@ mod tests {
     #[test]
     fn a_new_window_gets_every_part_and_a_delta_only_what_changed() {
         let before = ChatParts::default();
-        assert_eq!(before.changes_since(None).len(), 4);
+        assert_eq!(before.changes_since(None).len(), 5);
         assert_eq!(before.changes_since(Some(&before)), []);
 
         let streaming = ChatParts {
@@ -259,6 +272,32 @@ mod tests {
         }
         assert_eq!(window, streaming);
         assert!(!window.receive(SupervisorMessage::Show));
+    }
+
+    #[test]
+    fn an_image_landing_resends_only_the_images() {
+        use crate::ChatImage;
+
+        let loading = ChatParts {
+            images: [("chart".to_owned(), ChatImage::Loading)].into(),
+            ..ChatParts::default()
+        };
+        let landed = ChatParts {
+            images: [(
+                "chart".to_owned(),
+                ChatImage::Ready {
+                    path: "/cache/a.png".to_owned(),
+                },
+            )]
+            .into(),
+            ..loading.clone()
+        };
+        assert_eq!(
+            landed.changes_since(Some(&loading)),
+            [SupervisorMessage::ChatImages {
+                images: landed.images.clone()
+            }]
+        );
     }
 
     #[test]

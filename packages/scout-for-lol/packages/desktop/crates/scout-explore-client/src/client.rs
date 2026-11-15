@@ -7,9 +7,9 @@ use reqwest::{Client, RequestBuilder, Response};
 use scout_client_core::backend::backend_origin;
 use scout_client_core::credentials::DeviceCredential;
 use scout_client_core::desktop_api::{
-    ActiveRun, ConversationGetRequest, ConversationListResponse, EmptyRequest,
-    ExploreStatusResponse, RunActiveResponse, RunOutcome, RunOutcomeResponse, RunRequest,
-    RunStartRequest, RunStopResponse,
+    ActiveRun, AssetsResponse, ConversationGetRequest, ConversationListResponse, EmptyRequest,
+    ExploreStatusResponse, PNG_CONTENT_TYPE, RunActiveResponse, RunOutcome, RunOutcomeResponse,
+    RunRequest, RunStartRequest, RunStopResponse, VisualizationRequest,
 };
 use serde::Serialize;
 use serde::de::DeserializeOwned;
@@ -28,6 +28,10 @@ const CONNECT_TIMEOUT: Duration = Duration::from_secs(5);
 /// server re-sends the run's snapshot about once a second, so a healthy
 /// stream never comes close.
 pub const STREAM_IDLE_TIMEOUT: Duration = Duration::from_secs(30);
+/// The largest chart image this client accepts.
+pub const MAX_CHART_BYTES: usize = 8 * 1024 * 1024;
+/// Every PNG file starts with these bytes.
+pub const PNG_SIGNATURE: [u8; 8] = [0x89, b'P', b'N', b'G', 0x0d, 0x0a, 0x1a, 0x0a];
 
 /// Scout Desktop's client for Explore, authenticated as the paired device.
 ///
@@ -118,6 +122,12 @@ impl ExploreClient {
     #[must_use]
     pub const fn device_id(&self) -> Uuid {
         self.credential.device_id
+    }
+
+    /// The backend this client talks to.
+    #[must_use]
+    pub fn origin(&self) -> &str {
+        self.origin.as_str()
     }
 
     fn post(&self, http: &Client, route: Route) -> Result<RequestBuilder, ExploreClientError> {
@@ -252,6 +262,70 @@ impl ExploreClient {
             .call(Route::ExploreRunsOutcome, &RunRequest { run_id })
             .await?;
         Ok(answer.outcome)
+    }
+
+    /// `explore/assets`: the Data Dragon version card art is fetched at.
+    ///
+    /// # Errors
+    ///
+    /// Returns a transport failure, a typed refusal, or a contract mismatch.
+    pub async fn assets(&self) -> Result<AssetsResponse, ExploreClientError> {
+        self.call(Route::ExploreAssets, &EmptyRequest {}).await
+    }
+
+    /// `explore/visualization`: the PNG Scout renders for one persisted
+    /// answer's chart.
+    ///
+    /// # Errors
+    ///
+    /// Returns a transport failure, a typed refusal (`not_found` for an
+    /// answer without a chart or not the owner's, `rate_limited` past the
+    /// device's render budget), or [`ExploreClientError::Unexpected`] for a
+    /// body that is not a PNG within [`MAX_CHART_BYTES`].
+    pub async fn visualization(
+        &self,
+        conversation_id: Uuid,
+        message_id: Uuid,
+    ) -> Result<Vec<u8>, ExploreClientError> {
+        let response = checked(
+            self.post(&self.http, Route::ExploreVisualization)?
+                .header(reqwest::header::ACCEPT, PNG_CONTENT_TYPE)
+                .json(&VisualizationRequest {
+                    conversation_id,
+                    message_id,
+                })
+                .send()
+                .await
+                .map_err(ExploreClientError::Transport)?,
+        )
+        .await?;
+        let status = response.status().as_u16();
+        let content_type = response
+            .headers()
+            .get(reqwest::header::CONTENT_TYPE)
+            .and_then(|value| value.to_str().ok())
+            .unwrap_or_default()
+            .to_owned();
+        if content_type != PNG_CONTENT_TYPE {
+            return Err(ExploreClientError::Unexpected {
+                status,
+                detail: format!("visualization answered {content_type:?}, not {PNG_CONTENT_TYPE}"),
+            });
+        }
+        let bytes = response
+            .bytes()
+            .await
+            .map_err(ExploreClientError::Transport)?;
+        if bytes.len() > MAX_CHART_BYTES || !bytes.starts_with(&PNG_SIGNATURE) {
+            return Err(ExploreClientError::Unexpected {
+                status,
+                detail: format!(
+                    "visualization answered {} bytes that are not a PNG",
+                    bytes.len()
+                ),
+            });
+        }
+        Ok(bytes.to_vec())
     }
 
     /// Open `explore/runs/stream` once, returning the response only when it
