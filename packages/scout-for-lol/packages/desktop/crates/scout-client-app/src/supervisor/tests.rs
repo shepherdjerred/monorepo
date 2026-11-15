@@ -7,7 +7,8 @@ use scout_client_core::settings::PrivacySettings;
 use scout_client_core::telemetry::{UsageEvent, WindowCrashCause, WindowCrashOutcome};
 use scout_client_runtime::instance::{InstanceLock, InstanceLockError};
 use scout_client_runtime::runtime::{GameflowPhase, PhaseReceiver, RuntimeState, StateReceiver};
-use scout_desktop_ipc::{PROTOCOL_VERSION, SupervisorMessage};
+use scout_desktop_ipc::{ChatCommand, ChatTurn, PROTOCOL_VERSION, SupervisorMessage};
+use scout_explore_client::relay::ChatRelay;
 use tokio::sync::{mpsc, watch};
 
 use crate::updater::policy::UpdateConfig;
@@ -203,23 +204,39 @@ fn start_with(
     updates: Option<UpdateHandle>,
     phase: GameflowPhase,
 ) -> Result<Harness, Box<dyn std::error::Error>> {
+    start_configured(
+        launcher,
+        tray_available,
+        open_window,
+        phase,
+        |supervisor| match updates {
+            Some(updates) => supervisor.with_updates(updates),
+            None => supervisor,
+        },
+    )
+}
+
+fn start_configured(
+    launcher: WindowLauncher,
+    tray_available: bool,
+    open_window: bool,
+    phase: GameflowPhase,
+    configure: impl FnOnce(Supervisor<FakeCollector>) -> Supervisor<FakeCollector>,
+) -> Result<Harness, Box<dyn std::error::Error>> {
     let directory = scratch_directory()?;
     let lock = InstanceLock::acquire_in(&directory)?;
     let (collector, calls, diagnostics, usage) = FakeCollector::new();
     let (runtime_state, phase_sender) = collector.senders();
     phase_sender.send_replace(phase);
     let (control, receiver) = mpsc::unbounded_channel();
-    let mut supervisor = Supervisor::new(
+    let supervisor = configure(Supervisor::new(
         lock,
         collector,
         launcher,
         receiver,
         tray_available,
         open_window,
-    );
-    if let Some(updates) = updates {
-        supervisor = supervisor.with_updates(updates);
-    }
+    ));
     let status = supervisor.status();
     let run = tokio::spawn(supervisor.run());
     Ok(Harness {
@@ -376,6 +393,7 @@ async fn a_write_to_a_window_that_already_exited_does_not_blame_the_supervisor()
         relaunch: true,
         cause: None,
         last_state: None,
+        last_chat: None,
     };
     let (_control, receiver) = mpsc::unbounded_channel();
     let supervisor = Supervisor::new(
@@ -809,6 +827,112 @@ async fn the_install_waits_for_the_game_to_end() -> TestResult {
     let (exit, _calls, _diagnostics, directory) = harness.finish().await?;
     assert_eq!(exit, SupervisorExit::Updating);
     assert_eq!(updater.installs(), [(version("0.2.0"), true)]);
+    std::fs::remove_dir_all(directory)?;
+    Ok(())
+}
+
+async fn next_command(
+    commands: &mut mpsc::UnboundedReceiver<ChatCommand>,
+) -> Result<ChatCommand, Box<dyn std::error::Error>> {
+    tokio::time::timeout(PATIENCE, commands.recv())
+        .await?
+        .ok_or_else(|| "the chat relay's command channel closed".into())
+}
+
+#[cfg(unix)]
+#[tokio::test]
+async fn chat_commands_reach_the_relay_and_only_changed_parts_reach_the_window() -> TestResult {
+    let scratch = scratch_directory()?;
+    let received = scratch.join("received");
+    // The window asks a question, records every line it is sent, and quits
+    // once the streamed answer arrives.
+    let script = format!(
+        r#"printf '{{"type":"hello","protocol":{PROTOCOL_VERSION}}}\n'
+printf '{{"type":"chat","command":{{"action":"send","question":"Who wins?"}}}}\n'
+while IFS= read -r line; do
+  printf '%s\n' "$line" >> "$1"
+  case "$line" in
+    *'"answer":"Jinx"'*) printf '{{"type":"quit"}}\n' ;;
+    *'"type":"close"'*) exit 0 ;;
+  esac
+done
+exit 0"#
+    );
+    let (relay, mut commands, parts) = ChatRelay::detached();
+    let received_path = received.to_str().ok_or("scratch path is not UTF-8")?;
+    let harness = start_configured(
+        sh(&script, &[received_path]),
+        true,
+        true,
+        GameflowPhase::default(),
+        |supervisor| supervisor.with_chat(relay),
+    )?;
+    // Opening the window reloads the list; the window's question follows.
+    assert_eq!(next_command(&mut commands).await?, ChatCommand::Refresh);
+    assert_eq!(
+        next_command(&mut commands).await?,
+        ChatCommand::Send {
+            question: "Who wins?".to_owned()
+        }
+    );
+    parts.send_modify(|parts| {
+        parts.turn = Some(ChatTurn {
+            answer: Some("Jinx".to_owned()),
+            ..ChatTurn::default()
+        });
+    });
+    let (exit, _calls, _diagnostics, directory) = harness.finish().await?;
+    assert_eq!(exit, SupervisorExit::Quit);
+    let lines = std::fs::read_to_string(&received)?;
+    let count = |kind: &str| {
+        lines
+            .lines()
+            .filter(|line| line.starts_with(&format!("{{\"type\":\"{kind}\"")))
+            .count()
+    };
+    // Launch sends every part once; the answer re-sends only the turn.
+    assert_eq!(
+        [
+            count("chat_status"),
+            count("chat_conversations"),
+            count("chat_transcript"),
+            count("chat_turn"),
+        ],
+        [1, 1, 1, 2],
+        "{lines}"
+    );
+    std::fs::remove_dir_all(directory)?;
+    std::fs::remove_dir_all(scratch)?;
+    Ok(())
+}
+
+#[tokio::test]
+async fn a_finished_pairing_asks_chat_to_check_again() -> TestResult {
+    let (relay, mut commands, _parts) = ChatRelay::detached();
+    let mut harness = start_configured(
+        sh(&window_script(""), &[]),
+        true,
+        true,
+        GameflowPhase::default(),
+        |supervisor| supervisor.with_chat(relay),
+    )?;
+    harness.wait_for(|status| status.running).await?;
+    // The window's launch asked once; the pairing asks again.
+    assert_eq!(next_command(&mut commands).await?, ChatCommand::Refresh);
+    // A device paired before chat asks for approval while still paired...
+    harness.runtime_state.send_modify(|state| {
+        state.paired = true;
+        state.approval_url = Some("https://beta.scout-for-lol.com/pair/abc".to_owned());
+    });
+    assert_eq!(next_command(&mut commands).await?, ChatCommand::Refresh);
+    // ...and the approval ending, with the device still paired, asks again.
+    harness
+        .runtime_state
+        .send_modify(|state| state.approval_url = None);
+    assert_eq!(next_command(&mut commands).await?, ChatCommand::Refresh);
+    harness.control.send(Control::Quit)?;
+    let (exit, _calls, _diagnostics, directory) = harness.finish().await?;
+    assert_eq!(exit, SupervisorExit::Quit);
     std::fs::remove_dir_all(directory)?;
     Ok(())
 }

@@ -207,6 +207,12 @@ fn receive(inbox: &Mutex<Inbox>, error_gate: &SendGate, line: &str) -> Result<()
         SupervisorMessage::DiagnosticsBundle { text } => inbox.bundle = Some(text),
         SupervisorMessage::Show => inbox.show = true,
         SupervisorMessage::Close => inbox.close = true,
+        // The supervisor relays chat only to the gpui window, which renders
+        // it; the egui window has no chat page.
+        SupervisorMessage::ChatStatus { .. }
+        | SupervisorMessage::ChatConversations { .. }
+        | SupervisorMessage::ChatTranscript { .. }
+        | SupervisorMessage::ChatTurn { .. } => {}
     }
     Ok(())
 }

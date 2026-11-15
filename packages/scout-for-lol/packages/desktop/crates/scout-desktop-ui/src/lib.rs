@@ -9,6 +9,9 @@
 //! gpui-kit. The view models, IPC link and theme tokens build on every
 //! target, so Linux CI still builds and tests them.
 
+pub mod chat_model;
+#[cfg(any(windows, target_os = "macos"))]
+mod chat_view;
 #[cfg(any(windows, target_os = "macos"))]
 mod kit;
 pub mod link;

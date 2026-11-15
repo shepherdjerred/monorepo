@@ -116,6 +116,8 @@ pub struct RuntimeState {
     pub pairing_status: Option<String>,
     /// Browser approval URL while pairing is pending.
     pub approval_url: Option<String>,
+    /// The code the approval page shows beside the pending pairing request.
+    pub pairing_match_code: Option<String>,
     /// Pending durable observations.
     pub pending_observations: usize,
     /// Last successful upload time.

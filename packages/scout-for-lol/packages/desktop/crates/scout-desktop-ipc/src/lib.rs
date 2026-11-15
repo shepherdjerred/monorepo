@@ -19,8 +19,15 @@
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 
+mod chat;
+
+pub use chat::{
+    ChatAvailability, ChatCommand, ChatConversation, ChatMessage, ChatParts, ChatRole, ChatStatus,
+    ChatToolStatus, ChatToolStep, ChatTranscript, ChatTurn,
+};
+
 /// The version both ends must announce in their `hello`.
-pub const PROTOCOL_VERSION: u32 = 3;
+pub const PROTOCOL_VERSION: u32 = 4;
 
 /// A message from the supervisor to the window.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -55,6 +62,26 @@ pub enum SupervisorMessage {
         /// What the window shows.
         update: UpdateSnapshot,
     },
+    /// Whether chat works, and the connection and notice lines.
+    ChatStatus {
+        /// The chat status.
+        status: ChatStatus,
+    },
+    /// The owner's conversations, most recent first.
+    ChatConversations {
+        /// The sidebar list.
+        conversations: Vec<ChatConversation>,
+    },
+    /// The open conversation's branch, or none for a blank conversation.
+    ChatTranscript {
+        /// The transcript.
+        transcript: Option<ChatTranscript>,
+    },
+    /// The in-flight turn, or none when nothing is running.
+    ChatTurn {
+        /// The turn.
+        turn: Option<ChatTurn>,
+    },
     /// Bring the window to the front (the tray's "Open" while it is running).
     Show,
     /// Scout is quitting: close the window and exit.
@@ -83,6 +110,11 @@ pub enum WindowMessage {
     OpenLogFolder,
     /// Ask for [`SupervisorMessage::DiagnosticsBundle`].
     RequestDiagnostics,
+    /// A chat request, answered with chat parts.
+    Chat {
+        /// What to do.
+        command: ChatCommand,
+    },
     /// Change the start-at-login registration.
     SetStartAtLogin {
         /// Whether Scout Client starts at login.
@@ -121,6 +153,8 @@ pub struct StateSnapshot {
     pub pairing_status: Option<String>,
     /// Browser approval URL while pairing is pending.
     pub approval_url: Option<String>,
+    /// The code the approval page shows beside this pairing request.
+    pub pairing_match_code: Option<String>,
     /// Pending durable observations.
     pub pending_observations: u64,
     /// Last successful upload time.
@@ -310,11 +344,76 @@ pub fn decode_line<T: DeserializeOwned>(line: &str) -> Result<T, CodecError> {
 
 #[cfg(test)]
 mod tests {
+    use uuid::Uuid;
+
     use super::{
-        CounterReading, DiagnosticsSnapshot, GameflowPhase, PROTOCOL_VERSION, PrivacySnapshot,
-        StateSnapshot, SupervisorMessage, UpdateSnapshot, UpdateStatus, WindowMessage,
-        check_protocol, decode_line, encode_line,
+        ChatAvailability, ChatCommand, ChatConversation, ChatMessage, ChatRole, ChatStatus,
+        ChatToolStatus, ChatToolStep, ChatTranscript, ChatTurn, CounterReading,
+        DiagnosticsSnapshot, GameflowPhase, PROTOCOL_VERSION, PrivacySnapshot, StateSnapshot,
+        SupervisorMessage, UpdateSnapshot, UpdateStatus, WindowMessage, check_protocol,
+        decode_line, encode_line,
     };
+
+    const CONVERSATION: Uuid = Uuid::from_u128(0x0b5e_4a1c_7f00_4e5a_9c1d_2f3e_4a5b_6c7d);
+
+    fn chat_messages() -> Vec<SupervisorMessage> {
+        let step = ChatToolStep {
+            summary: "Ran a Scout report query.".to_owned(),
+            status: ChatToolStatus::Succeeded,
+            duration_ms: Some(1_240),
+        };
+        vec![
+            SupervisorMessage::ChatStatus {
+                status: ChatStatus::default(),
+            },
+            SupervisorMessage::ChatStatus {
+                status: ChatStatus {
+                    availability: ChatAvailability::Unavailable {
+                        message: "Scout is unreachable.".to_owned(),
+                    },
+                    open_conversation: Some(CONVERSATION),
+                    reconnecting: true,
+                    notice: Some("That question is too long.".to_owned()),
+                },
+            },
+            SupervisorMessage::ChatConversations {
+                conversations: vec![ChatConversation {
+                    id: CONVERSATION,
+                    title: "Jinx win rate".to_owned(),
+                }],
+            },
+            SupervisorMessage::ChatTranscript {
+                transcript: Some(ChatTranscript {
+                    conversation_id: CONVERSATION,
+                    title: "Jinx win rate".to_owned(),
+                    messages: vec![ChatMessage {
+                        id: CONVERSATION,
+                        role: ChatRole::Assistant,
+                        content: "**54%** over 40 games.\n\n| a | b |".to_owned(),
+                        tools: vec![step.clone()],
+                        caveats: vec!["Ranked solo only.".to_owned()],
+                    }],
+                }),
+            },
+            SupervisorMessage::ChatTranscript { transcript: None },
+            SupervisorMessage::ChatTurn {
+                turn: Some(ChatTurn {
+                    stoppable: true,
+                    question: Some("How is my Jinx?".to_owned()),
+                    answer: Some("Your Jinx".to_owned()),
+                    activity: Some("Running the query".to_owned()),
+                    stopping: false,
+                    tools: vec![ChatToolStep {
+                        status: ChatToolStatus::Running,
+                        duration_ms: None,
+                        ..step
+                    }],
+                    error: None,
+                }),
+            },
+            SupervisorMessage::ChatTurn { turn: None },
+        ]
+    }
 
     fn sample_state() -> StateSnapshot {
         StateSnapshot {
@@ -329,6 +428,7 @@ mod tests {
             },
             pairing_status: None,
             approval_url: Some("https://beta.scout-for-lol.com/pair/abc".to_owned()),
+            pairing_match_code: Some("K7Q-2M".to_owned()),
             pending_observations: 4,
             last_upload_at: Some("2026-11-11T10:00:00Z".to_owned()),
             last_error: Some("League unavailable\nReplay capture: relay".to_owned()),
@@ -371,7 +471,9 @@ mod tests {
             },
             SupervisorMessage::Show,
             SupervisorMessage::Close,
-        ];
+        ]
+        .into_iter()
+        .chain(chat_messages());
         for message in messages {
             let line = encode_line(&message)?;
             assert!(line.ends_with('\n'));
@@ -416,6 +518,25 @@ mod tests {
             },
             WindowMessage::OpenLogFolder,
             WindowMessage::RequestDiagnostics,
+            WindowMessage::Chat {
+                command: ChatCommand::Refresh,
+            },
+            WindowMessage::Chat {
+                command: ChatCommand::Open {
+                    conversation_id: CONVERSATION,
+                },
+            },
+            WindowMessage::Chat {
+                command: ChatCommand::New,
+            },
+            WindowMessage::Chat {
+                command: ChatCommand::Send {
+                    question: "Line one\nline two".to_owned(),
+                },
+            },
+            WindowMessage::Chat {
+                command: ChatCommand::Stop,
+            },
             WindowMessage::SetStartAtLogin { enabled: true },
             WindowMessage::SetPrivacy {
                 send_error_reports: false,
@@ -448,6 +569,58 @@ mod tests {
             WindowMessage::Quit
         );
         Ok(())
+    }
+
+    #[test]
+    fn chat_parts_have_a_fixed_wire_shape() -> Result<(), super::CodecError> {
+        assert_eq!(
+            encode_line(&WindowMessage::Chat {
+                command: ChatCommand::Send {
+                    question: "Hi".to_owned()
+                }
+            })?,
+            "{\"type\":\"chat\",\"command\":{\"action\":\"send\",\"question\":\"Hi\"}}\n"
+        );
+        assert_eq!(
+            encode_line(&SupervisorMessage::ChatStatus {
+                status: ChatStatus {
+                    availability: ChatAvailability::TurnedOff,
+                    open_conversation: None,
+                    reconnecting: false,
+                    notice: None,
+                }
+            })?,
+            "{\"type\":\"chat_status\",\"status\":{\"availability\":{\"state\":\"turned_off\"},\"open_conversation\":null,\"reconnecting\":false,\"notice\":null}}\n"
+        );
+        assert_eq!(
+            encode_line(&SupervisorMessage::ChatTurn { turn: None })?,
+            "{\"type\":\"chat_turn\",\"turn\":null}\n"
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn chat_parts_refuse_what_the_contract_does_not_name() {
+        // An unknown command, a stray field, a malformed id and a missing
+        // field all break the link.
+        for line in [
+            r#"{"type":"chat","command":{"action":"share"}}"#,
+            r#"{"type":"chat","command":{"action":"send","question":"x","model":"sol"}}"#,
+            r#"{"type":"chat","command":{"action":"open","conversation_id":"not-a-uuid"}}"#,
+            r#"{"type":"chat","command":{"action":"send"}}"#,
+        ] {
+            assert!(decode_line::<WindowMessage>(line).is_err(), "{line}");
+        }
+        // An unknown availability or tool status, a raw payload, and a field
+        // the sidebar does not carry are refused on the supervisor's side too.
+        for line in [
+            r#"{"type":"chat_status","status":{"availability":{"state":"maybe"},"open_conversation":null,"reconnecting":false,"notice":null}}"#,
+            r#"{"type":"chat_turn","turn":{"stoppable":true,"question":null,"answer":null,"activity":null,"stopping":false,"tools":[{"summary":"x","status":"paused","duration_ms":null}],"error":null}}"#,
+            r#"{"type":"chat_turn","turn":{"stoppable":true,"question":null,"answer":null,"activity":null,"stopping":false,"tools":[],"error":null,"raw":"{}"}}"#,
+            r#"{"type":"chat_conversations","conversations":[{"id":"0b5e4a1c-7f00-4e5a-9c1d-2f3e4a5b6c7d","title":"x","origin":"web"}]}"#,
+        ] {
+            assert!(decode_line::<SupervisorMessage>(line).is_err(), "{line}");
+        }
     }
 
     #[test]

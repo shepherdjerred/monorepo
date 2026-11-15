@@ -37,7 +37,10 @@ pub(super) async fn handle_command(
                 app_version: env!("CARGO_PKG_VERSION").to_owned(),
                 protocol_version: scout_client_core::protocol::PROTOCOL_VERSION,
             };
-            match backend.create_pairing(&request).await {
+            // A desktop pairing asks for uploads and Explore chat together,
+            // so one approval covers both. A device paired before chat
+            // existed approves again the same way.
+            match backend.create_desktop_pairing(&request).await {
                 Ok(pairing) => {
                     let url = pairing.approval_url.clone();
                     *pending_pairing = Some(PendingPairing {
@@ -47,6 +50,7 @@ pub(super) async fn handle_command(
                     update_state(state, |snapshot| {
                         snapshot.pairing_status = Some("Waiting for browser approval".to_owned());
                         snapshot.approval_url = Some(url.clone());
+                        snapshot.pairing_match_code = Some(pairing.match_code.clone());
                         clear_runtime_error(snapshot);
                     });
                     if let Err(error) = open::that(&url) {
@@ -102,6 +106,7 @@ pub(super) async fn disconnect(
                 snapshot.paired = false;
                 snapshot.pairing_status = Some("Disconnected".to_owned());
                 snapshot.approval_url = None;
+                snapshot.pairing_match_code = None;
                 clear_runtime_error(snapshot);
             });
         }
@@ -144,6 +149,7 @@ pub(super) async fn poll_pairing(
                 snapshot.paired = true;
                 snapshot.pairing_status = Some("Paired".to_owned());
                 snapshot.approval_url = None;
+                snapshot.pairing_match_code = None;
                 clear_runtime_error(snapshot);
             });
             Ok(())
@@ -153,6 +159,7 @@ pub(super) async fn poll_pairing(
             update_state(state, |snapshot| {
                 snapshot.pairing_status = Some("Pairing expired; start again".to_owned());
                 snapshot.approval_url = None;
+                snapshot.pairing_match_code = None;
             });
             Ok(())
         }

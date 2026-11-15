@@ -21,9 +21,11 @@ use scout_client_runtime::runtime::{
     ClientRuntime, GameflowPhase, PhaseReceiver, RuntimeState, StateReceiver,
 };
 use scout_desktop_ipc::{
-    CounterReading, DiagnosticsSnapshot, PROTOCOL_VERSION, PrivacySnapshot, StateSnapshot,
-    SupervisorMessage, UpdateSnapshot, WindowMessage, check_protocol, decode_line, encode_line,
+    ChatCommand, ChatParts, CounterReading, DiagnosticsSnapshot, PROTOCOL_VERSION, PrivacySnapshot,
+    StateSnapshot, SupervisorMessage, UpdateSnapshot, WindowMessage, check_protocol, decode_line,
+    encode_line,
 };
+use scout_explore_client::relay::ChatRelay;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader, Lines};
 use tokio::process::{Child, ChildStdin, ChildStdout, Command};
 use tokio::sync::{mpsc, watch};
@@ -183,6 +185,9 @@ pub struct Supervisor<C: Collector> {
     status: watch::Sender<WindowStatus>,
     /// The self-updater, when this build has one.
     updates: Option<UpdateHandle>,
+    /// Explore chat, when the window renders it. The credential it uses stays
+    /// in this process; the window only sees the chat parts.
+    chat: Option<ChatRelay>,
     /// Held for the supervisor's life, so a second supervisor cannot share the
     /// outbox. The window process never takes it.
     _instance_lock: scout_client_runtime::instance::InstanceLock,
@@ -207,6 +212,7 @@ impl<C: Collector> Supervisor<C> {
             open_window,
             status: watch::channel(WindowStatus::default()).0,
             updates: None,
+            chat: None,
             _instance_lock: instance_lock,
         }
     }
@@ -215,6 +221,13 @@ impl<C: Collector> Supervisor<C> {
     #[must_use]
     pub fn with_updates(mut self, updates: UpdateHandle) -> Self {
         self.updates = Some(updates);
+        self
+    }
+
+    /// Relay Explore chat between the window and Scout.
+    #[must_use]
+    pub fn with_chat(mut self, chat: ChatRelay) -> Self {
+        self.chat = Some(chat);
         self
     }
 
@@ -238,6 +251,8 @@ impl<C: Collector> Supervisor<C> {
             window = self.launch(&state, &phase).await;
         }
         let mut update_status = self.updates.as_ref().map(UpdateHandle::subscribe);
+        let mut chat_parts = self.chat.as_ref().map(ChatRelay::subscribe);
+        let mut pairing = pairing_key(&state.borrow());
         let mut refresh = tokio::time::interval(REFRESH);
         refresh.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
         let exit = loop {
@@ -282,14 +297,12 @@ impl<C: Collector> Supervisor<C> {
                     }
                 },
                 Ok(()) = state.changed() => {
-                    // A 426 means this build is below the backend's minimum:
-                    // look for the release that fixes that right away.
-                    let refused = state.borrow().upgrade_required.is_some();
-                    if let Some(updates) = &self.updates {
-                        updates.observe_upgrade_required(refused);
-                    }
+                    self.state_changed(window.as_mut(), &state, &mut pairing).await;
+                }
+                true = parts_changed(&mut chat_parts) => {
+                    self.observe_upgrade_required(&state);
                     if let Some(running) = window.as_mut() {
-                        self.send_state(running, &state).await;
+                        self.send_chat(running).await;
                     }
                 }
                 true = update_changed(&mut update_status) => {
@@ -328,6 +341,55 @@ impl<C: Collector> Supervisor<C> {
             updates.install(false, &phase.borrow());
         }
         exit
+    }
+
+    async fn state_changed(
+        &self,
+        window: Option<&mut Window>,
+        state: &StateReceiver,
+        pairing: &mut (bool, bool),
+    ) {
+        self.observe_upgrade_required(state);
+        // A finished pairing (or a disconnect) changes what chat may do, so
+        // ask Scout again. A device that approves chat while already paired
+        // stays paired, so the end of its pending approval counts too.
+        let now = pairing_key(&state.borrow());
+        if now != *pairing {
+            *pairing = now;
+            self.chat_command(ChatCommand::Refresh);
+        }
+        if let Some(running) = window {
+            self.send_state(running, state).await;
+        }
+    }
+
+    /// A 426 means this build is below the backend's minimum: look for the
+    /// release that fixes that right away. Uploads and chat each say so.
+    fn observe_upgrade_required(&self, state: &StateReceiver) {
+        let refused = state.borrow().upgrade_required.is_some()
+            || self.chat.as_ref().is_some_and(ChatRelay::upgrade_required);
+        if let Some(updates) = &self.updates {
+            updates.observe_upgrade_required(refused);
+        }
+    }
+
+    fn chat_command(&self, command: ChatCommand) {
+        if let Some(chat) = &self.chat {
+            chat.send(command);
+        }
+    }
+
+    /// Bring the window's chat up to date, sending only the parts that
+    /// changed since it last heard.
+    async fn send_chat(&self, window: &mut Window) {
+        let Some(chat) = &self.chat else {
+            return;
+        };
+        let parts = chat.subscribe().borrow().clone();
+        for message in parts.changes_since(window.last_chat.as_ref()) {
+            self.deliver(window, &message).await;
+        }
+        window.last_chat = Some(parts);
     }
 
     /// Start a staged update's installer when the app has sat idle. Returns
@@ -380,6 +442,7 @@ impl<C: Collector> Supervisor<C> {
             relaunch: true,
             cause: None,
             last_state: None,
+            last_chat: None,
         };
         self.deliver(
             &mut window,
@@ -393,6 +456,9 @@ impl<C: Collector> Supervisor<C> {
         let message = phase_message(&phase.borrow());
         self.deliver(&mut window, &message).await;
         self.send_update(&mut window).await;
+        self.send_chat(&mut window).await;
+        // A window that opens reloads the conversation list.
+        self.chat_command(ChatCommand::Refresh);
         Some(window)
     }
 
@@ -447,6 +513,7 @@ impl<C: Collector> Supervisor<C> {
                 self.deliver(window, &SupervisorMessage::DiagnosticsBundle { text })
                     .await;
             }
+            WindowMessage::Chat { command } => self.chat_command(command),
             WindowMessage::Quit => return Handled::Quit,
         }
         Handled::Continue
@@ -619,6 +686,8 @@ struct Window {
     /// Why the supervisor killed it, when it did; otherwise it exited alone.
     cause: Option<WindowCrashCause>,
     last_state: Option<StateSnapshot>,
+    /// The chat parts this window holds, so a change sends only its delta.
+    last_chat: Option<ChatParts>,
 }
 
 impl Window {
@@ -681,6 +750,19 @@ async fn update_changed(receiver: &mut Option<watch::Receiver<UpdateSnapshot>>) 
     }
 }
 
+/// Whether the device is paired, and whether an approval is pending.
+fn pairing_key(state: &RuntimeState) -> (bool, bool) {
+    (state.paired, state.approval_url.is_some())
+}
+
+/// The next change to the chat parts, or pending forever without chat.
+async fn parts_changed(receiver: &mut Option<watch::Receiver<ChatParts>>) -> bool {
+    match receiver {
+        Some(receiver) => receiver.changed().await.is_ok(),
+        None => std::future::pending().await,
+    }
+}
+
 fn open_web_page(url: &str) {
     match url::Url::parse(url) {
         Ok(parsed) if matches!(parsed.scheme(), "http" | "https") => {
@@ -711,6 +793,7 @@ pub fn snapshot(
         },
         pairing_status: state.pairing_status.clone(),
         approval_url: state.approval_url.clone(),
+        pairing_match_code: state.pairing_match_code.clone(),
         pending_observations: u64::try_from(state.pending_observations).unwrap_or(u64::MAX),
         last_upload_at: state.last_upload_at.clone(),
         last_error: state.last_error.clone(),
